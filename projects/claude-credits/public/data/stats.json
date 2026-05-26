@@ -28,8 +28,8 @@
     "modelBreakdown": [
       {
         "model": "Opus 4.7",
-        "sessions": 39224,
-        "tokensProcessed": 10719704867
+        "sessions": 39959,
+        "tokensProcessed": 10998235388
       },
       {
         "model": "<synthetic>",
@@ -38,27 +38,27 @@
       }
     ],
     "projectCount": 9,
-    "tokenWindowDays": 30,
-    "tokenWindowEndISO": "2026-05-25T18:26:39.878Z",
+    "tokenWindowDays": 31,
+    "tokenWindowEndISO": "2026-05-26T16:59:49.273Z",
     "tokenWindowStartISO": "2026-04-25T13:40:35.593Z",
-    "totalAllBytes": 546373411,
-    "totalAllFiles": 2020,
-    "totalAuthoredBytes": 59819919,
-    "totalAuthoredFiles": 2077,
-    "totalAuthoredLines": 532094,
-    "totalCommits": 1110,
+    "totalAllBytes": 549753882,
+    "totalAllFiles": 2066,
+    "totalAuthoredBytes": 59972197,
+    "totalAuthoredFiles": 2118,
+    "totalAuthoredLines": 535849,
+    "totalCommits": 1145,
     "totalDiscardedAssets": 85,
     "totalIterationProxies": 17,
-    "totalPipelineGeneratedBytes": 485223897,
-    "totalPipelineGeneratedFiles": 452,
+    "totalPipelineGeneratedBytes": 488451844,
+    "totalPipelineGeneratedFiles": 457,
     "totalPlanCount": 74,
     "totalPlanLines": 81827,
-    "totalSessions": 39227,
-    "totalTestCases": 3621,
-    "totalTestLines": 66256,
-    "totalTokensFresh": 346199312,
-    "totalTokensProcessed": 10719704867,
-    "totalToolGeneratedBytes": 886670,
+    "totalSessions": 39962,
+    "totalTestCases": 3704,
+    "totalTestLines": 66787,
+    "totalTokensFresh": 345919379,
+    "totalTokensProcessed": 10998235388,
+    "totalToolGeneratedBytes": 886916,
     "totalToolGeneratedFiles": 9
   },
   "meta": [
@@ -75,12 +75,6 @@
         "assetModificationEvents": 0,
         "assetUniquePathsTouched": 0,
         "commitMessageLines": 200,
-        "commitsByAuthor": [
-          {
-            "author": "mbriggsy",
-            "count": 14
-          }
-        ],
         "discardedAssetByKind": {},
         "discardedAssetEvents": 0,
         "discardedAssetFiles": 0,
@@ -89,22 +83,6 @@
         "lastCommitISO": "2026-05-25T12:14:08-04:00",
         "lifetimeLinesAdded": 6502,
         "lifetimeLinesRemoved": 50,
-        "linesByAuthor": [
-          {
-            "author": "mbriggsy",
-            "coAuthoredCommits": 0,
-            "commits": 14,
-            "linesAdded": 6502,
-            "linesRemoved": 50
-          },
-          {
-            "author": "Claude Opus 4.7 (1M context)",
-            "coAuthoredCommits": 14,
-            "commits": 0,
-            "linesAdded": 6502,
-            "linesRemoved": 50
-          }
-        ],
         "projectAgeDays": 1,
         "timeline": {
           "activeDays": 2,
@@ -132,11 +110,11 @@
         "uniqueFilesTouched": 36
       },
       "grandTotals": {
-        "allBytes": 230779,
+        "allBytes": 232070,
         "allFiles": 36,
-        "authoredBytes": 191850,
+        "authoredBytes": 193141,
         "authoredFiles": 35,
-        "authoredLines": 5182,
+        "authoredLines": 5201,
         "pipelineGeneratedBytes": 0,
         "pipelineGeneratedFiles": 0,
         "toolGeneratedBytes": 38929,
@@ -150,9 +128,9 @@
         "regenScriptCount": 0,
         "sampleEvalRunCount": 0
       },
-      "scannedAt": "2026-05-25T18:26:55.947Z",
-      "testCases": 51,
-      "testLines": 1251,
+      "scannedAt": "2026-05-26T17:00:10.394Z",
+      "testCases": 52,
+      "testLines": 1268,
       "tiers": [
         {
           "categories": [
@@ -160,18 +138,18 @@
               "category": "code",
               "subcategories": [
                 {
-                  "bytes": 130027,
+                  "bytes": 130487,
                   "files": 18,
-                  "nonBlankLines": 3283,
+                  "nonBlankLines": 3285,
                   "subcategory": "source",
-                  "totalLines": 3543
+                  "totalLines": 3545
                 },
                 {
-                  "bytes": 46717,
+                  "bytes": 47548,
                   "files": 10,
-                  "nonBlankLines": 1150,
+                  "nonBlankLines": 1166,
                   "subcategory": "tests",
-                  "totalLines": 1251
+                  "totalLines": 1268
                 },
                 {
                   "bytes": 2128,
@@ -182,11 +160,11 @@
                 }
               ],
               "totals": {
-                "bytes": 178872,
+                "bytes": 180163,
                 "files": 33,
-                "nonBlankLines": 4522,
+                "nonBlankLines": 4540,
                 "subcategory": "<totals>",
-                "totalLines": 4884
+                "totalLines": 4903
               }
             },
             {
@@ -211,11 +189,11 @@
           ],
           "tier": "authored",
           "totals": {
-            "bytes": 191850,
+            "bytes": 193141,
             "files": 35,
-            "nonBlankLines": 4761,
+            "nonBlankLines": 4779,
             "subcategory": "<totals>",
-            "totalLines": 5182
+            "totalLines": 5201
           }
         },
         {
@@ -264,18 +242,18 @@
       "tokens": null,
       "topSubcategories": [
         {
-          "bytes": 130027,
+          "bytes": 130487,
           "category": "code",
           "files": 18,
-          "lines": 3543,
+          "lines": 3545,
           "subcategory": "source",
           "tier": "authored"
         },
         {
-          "bytes": 46717,
+          "bytes": 47548,
           "category": "code",
           "files": 10,
-          "lines": 1251,
+          "lines": 1268,
           "subcategory": "tests",
           "tier": "authored"
         },
@@ -309,48 +287,26 @@
       "assetBytesByKind": {
         "audio": 0,
         "fonts": 131248,
-        "images": 463,
+        "images": 3228410,
         "misc-media": 0,
         "video": 0
       },
       "editorial": null,
       "git": {
-        "assetModificationEvents": 4,
-        "assetUniquePathsTouched": 4,
-        "commitMessageLines": 943,
-        "commitsByAuthor": [
-          {
-            "author": "mbriggsy",
-            "count": 54
-          }
-        ],
+        "assetModificationEvents": 9,
+        "assetUniquePathsTouched": 9,
+        "commitMessageLines": 1123,
         "discardedAssetByKind": {},
         "discardedAssetEvents": 0,
         "discardedAssetFiles": 0,
         "firstCommitISO": "2026-05-23T23:58:49-04:00",
         "isGitRepo": true,
-        "lastCommitISO": "2026-05-25T14:08:29-04:00",
-        "lifetimeLinesAdded": 16542,
-        "lifetimeLinesRemoved": 3208,
-        "linesByAuthor": [
-          {
-            "author": "mbriggsy",
-            "coAuthoredCommits": 0,
-            "commits": 54,
-            "linesAdded": 16542,
-            "linesRemoved": 3208
-          },
-          {
-            "author": "Claude Opus 4.7 (1M context)",
-            "coAuthoredCommits": 50,
-            "commits": 0,
-            "linesAdded": 15576,
-            "linesRemoved": 2407
-          }
-        ],
-        "projectAgeDays": 1,
+        "lastCommitISO": "2026-05-26T12:53:05-04:00",
+        "lifetimeLinesAdded": 20691,
+        "lifetimeLinesRemoved": 3612,
+        "projectAgeDays": 2,
         "timeline": {
-          "activeDays": 3,
+          "activeDays": 4,
           "commitsByDay": [
             {
               "count": 1,
@@ -361,8 +317,12 @@
               "date": "2026-05-24"
             },
             {
-              "count": 24,
+              "count": 43,
               "date": "2026-05-25"
+            },
+            {
+              "count": 7,
+              "date": "2026-05-26"
             }
           ],
           "largestSingleCommit": {
@@ -371,22 +331,22 @@
             "linesRemoved": 2
           },
           "peakDay": {
-            "count": 29,
-            "date": "2026-05-24"
+            "count": 43,
+            "date": "2026-05-25"
           }
         },
-        "totalCommits": 54,
-        "uniqueFilesTouched": 71
+        "totalCommits": 80,
+        "uniqueFilesTouched": 117
       },
       "grandTotals": {
-        "allBytes": 985557,
-        "allFiles": 58,
-        "authoredBytes": 815943,
-        "authoredFiles": 53,
-        "authoredLines": 12130,
-        "pipelineGeneratedBytes": 131711,
-        "pipelineGeneratedFiles": 4,
-        "toolGeneratedBytes": 37903,
+        "allBytes": 4364737,
+        "allFiles": 104,
+        "authoredBytes": 966930,
+        "authoredFiles": 94,
+        "authoredLines": 15866,
+        "pipelineGeneratedBytes": 3359658,
+        "pipelineGeneratedFiles": 9,
+        "toolGeneratedBytes": 38149,
         "toolGeneratedFiles": 1
       },
       "planCount": 12,
@@ -397,9 +357,9 @@
         "regenScriptCount": 0,
         "sampleEvalRunCount": 0
       },
-      "scannedAt": "2026-05-25T18:26:57.100Z",
-      "testCases": 23,
-      "testLines": 72,
+      "scannedAt": "2026-05-26T17:00:11.792Z",
+      "testCases": 105,
+      "testLines": 586,
       "tiers": [
         {
           "categories": [
@@ -407,7 +367,7 @@
               "category": "docs",
               "subcategories": [
                 {
-                  "bytes": 622912,
+                  "bytes": 622990,
                   "files": 12,
                   "nonBlankLines": 5404,
                   "subcategory": "plans",
@@ -421,56 +381,51 @@
                   "totalLines": 424
                 },
                 {
-                  "bytes": 17235,
+                  "bytes": 21836,
                   "files": 2,
-                  "nonBlankLines": 73,
+                  "nonBlankLines": 75,
                   "subcategory": "readmes",
-                  "totalLines": 99
+                  "totalLines": 101
                 },
                 {
-                  "bytes": 6995,
-                  "files": 2,
-                  "nonBlankLines": 83,
+                  "bytes": 21648,
+                  "files": 7,
+                  "nonBlankLines": 306,
                   "subcategory": "insights",
-                  "totalLines": 102
+                  "totalLines": 387
                 }
               ],
               "totals": {
-                "bytes": 678202,
-                "files": 18,
-                "nonBlankLines": 5868,
+                "bytes": 697534,
+                "files": 23,
+                "nonBlankLines": 6093,
                 "subcategory": "<totals>",
-                "totalLines": 7535
-              }
-            },
-            {
-              "category": "data",
-              "subcategories": [
-                {
-                  "bytes": 96664,
-                  "files": 2,
-                  "nonBlankLines": 3600,
-                  "subcategory": "lookup-tables",
-                  "totalLines": 3600
-                }
-              ],
-              "totals": {
-                "bytes": 96664,
-                "files": 2,
-                "nonBlankLines": 3600,
-                "subcategory": "<totals>",
-                "totalLines": 3600
+                "totalLines": 7822
               }
             },
             {
               "category": "code",
               "subcategories": [
                 {
-                  "bytes": 13033,
-                  "files": 17,
-                  "nonBlankLines": 293,
+                  "bytes": 85825,
+                  "files": 35,
+                  "nonBlankLines": 1810,
                   "subcategory": "source",
-                  "totalLines": 317
+                  "totalLines": 1970
+                },
+                {
+                  "bytes": 37193,
+                  "files": 17,
+                  "nonBlankLines": 1238,
+                  "subcategory": "styles",
+                  "totalLines": 1309
+                },
+                {
+                  "bytes": 26669,
+                  "files": 7,
+                  "nonBlankLines": 530,
+                  "subcategory": "tests",
+                  "totalLines": 586
                 },
                 {
                   "bytes": 11304,
@@ -480,25 +435,11 @@
                   "totalLines": 241
                 },
                 {
-                  "bytes": 8881,
+                  "bytes": 2608,
                   "files": 5,
-                  "nonBlankLines": 218,
-                  "subcategory": "styles",
-                  "totalLines": 236
-                },
-                {
-                  "bytes": 4353,
-                  "files": 1,
-                  "nonBlankLines": 68,
-                  "subcategory": "tests",
-                  "totalLines": 72
-                },
-                {
-                  "bytes": 2508,
-                  "files": 5,
-                  "nonBlankLines": 98,
+                  "nonBlankLines": 101,
                   "subcategory": "config",
-                  "totalLines": 109
+                  "totalLines": 113
                 },
                 {
                   "bytes": 998,
@@ -509,21 +450,40 @@
                 }
               ],
               "totals": {
-                "bytes": 41077,
-                "files": 33,
-                "nonBlankLines": 916,
+                "bytes": 164597,
+                "files": 69,
+                "nonBlankLines": 3918,
                 "subcategory": "<totals>",
-                "totalLines": 995
+                "totalLines": 4239
+              }
+            },
+            {
+              "category": "data",
+              "subcategories": [
+                {
+                  "bytes": 104799,
+                  "files": 2,
+                  "nonBlankLines": 3805,
+                  "subcategory": "lookup-tables",
+                  "totalLines": 3805
+                }
+              ],
+              "totals": {
+                "bytes": 104799,
+                "files": 2,
+                "nonBlankLines": 3805,
+                "subcategory": "<totals>",
+                "totalLines": 3805
               }
             }
           ],
           "tier": "authored",
           "totals": {
-            "bytes": 815943,
-            "files": 53,
-            "nonBlankLines": 10384,
+            "bytes": 966930,
+            "files": 94,
+            "nonBlankLines": 13816,
             "subcategory": "<totals>",
-            "totalLines": 12130
+            "totalLines": 15866
           }
         },
         {
@@ -532,23 +492,23 @@
               "category": "assets",
               "subcategories": [
                 {
+                  "bytes": 3228410,
+                  "files": 6,
+                  "nonBlankLines": 0,
+                  "subcategory": "images",
+                  "totalLines": 0
+                },
+                {
                   "bytes": 131248,
                   "files": 3,
                   "nonBlankLines": 0,
                   "subcategory": "fonts",
                   "totalLines": 0
-                },
-                {
-                  "bytes": 463,
-                  "files": 1,
-                  "nonBlankLines": 0,
-                  "subcategory": "images",
-                  "totalLines": 0
                 }
               ],
               "totals": {
-                "bytes": 131711,
-                "files": 4,
+                "bytes": 3359658,
+                "files": 9,
                 "nonBlankLines": 0,
                 "subcategory": "<totals>",
                 "totalLines": 0
@@ -557,8 +517,8 @@
           ],
           "tier": "pipeline-generated",
           "totals": {
-            "bytes": 131711,
-            "files": 4,
+            "bytes": 3359658,
+            "files": 9,
             "nonBlankLines": 0,
             "subcategory": "<totals>",
             "totalLines": 0
@@ -570,29 +530,29 @@
               "category": "lockfiles",
               "subcategories": [
                 {
-                  "bytes": 37903,
+                  "bytes": 38149,
                   "files": 1,
-                  "nonBlankLines": 957,
+                  "nonBlankLines": 964,
                   "subcategory": "lockfiles",
-                  "totalLines": 1198
+                  "totalLines": 1207
                 }
               ],
               "totals": {
-                "bytes": 37903,
+                "bytes": 38149,
                 "files": 1,
-                "nonBlankLines": 957,
+                "nonBlankLines": 964,
                 "subcategory": "<totals>",
-                "totalLines": 1198
+                "totalLines": 1207
               }
             }
           ],
           "tier": "tool-generated",
           "totals": {
-            "bytes": 37903,
+            "bytes": 38149,
             "files": 1,
-            "nonBlankLines": 957,
+            "nonBlankLines": 964,
             "subcategory": "<totals>",
-            "totalLines": 1198
+            "totalLines": 1207
           }
         }
       ],
@@ -600,30 +560,38 @@
         "byModel": [
           {
             "model": "Opus 4.7",
-            "sessions": 4234,
-            "tokensProcessed": 1044372286
+            "sessions": 5381,
+            "tokensProcessed": 1416488598
           }
         ],
-        "cacheCreationInputTokens": 34999503,
-        "cacheReadInputTokens": 999484894,
-        "inputTokens": 844322,
-        "outputTokens": 9043567,
+        "cacheCreationInputTokens": 42339623,
+        "cacheReadInputTokens": 1361974385,
+        "inputTokens": 1143301,
+        "outputTokens": 11031289,
         "parseHealth": {
           "fileReadErrors": 0,
           "lineParseErrors": 0,
           "usageShapeWarnings": 0
         },
-        "sessionCount": 4234,
+        "sessionCount": 5381,
         "sidechainTokens": 0,
-        "tokensFresh": 44887392,
-        "tokensProcessed": 1044372286,
-        "windowDays": 1,
-        "windowEndISO": "2026-05-25T18:26:39.878Z",
+        "tokensFresh": 54514213,
+        "tokensProcessed": 1416488598,
+        "windowDays": 2,
+        "windowEndISO": "2026-05-26T16:59:49.273Z",
         "windowStartISO": "2026-05-24T03:28:43.459Z"
       },
       "topSubcategories": [
         {
-          "bytes": 622912,
+          "bytes": 3228410,
+          "category": "assets",
+          "files": 6,
+          "lines": 0,
+          "subcategory": "images",
+          "tier": "pipeline-generated"
+        },
+        {
+          "bytes": 622990,
           "category": "docs",
           "files": 12,
           "lines": 6910,
@@ -639,27 +607,19 @@
           "tier": "pipeline-generated"
         },
         {
-          "bytes": 96664,
+          "bytes": 104799,
           "category": "data",
           "files": 2,
-          "lines": 3600,
+          "lines": 3805,
           "subcategory": "lookup-tables",
           "tier": "authored"
         },
         {
-          "bytes": 37903,
-          "category": "lockfiles",
-          "files": 1,
-          "lines": 1198,
-          "subcategory": "lockfiles",
-          "tier": "tool-generated"
-        },
-        {
-          "bytes": 31060,
-          "category": "docs",
-          "files": 2,
-          "lines": 424,
-          "subcategory": "general",
+          "bytes": 85825,
+          "category": "code",
+          "files": 35,
+          "lines": 1970,
+          "subcategory": "source",
           "tier": "authored"
         }
       ]
@@ -690,13 +650,7 @@
       "git": {
         "assetModificationEvents": 196,
         "assetUniquePathsTouched": 137,
-        "commitMessageLines": 15607,
-        "commitsByAuthor": [
-          {
-            "author": "mbriggsy",
-            "count": 606
-          }
-        ],
+        "commitMessageLines": 15631,
         "discardedAssetByKind": {
           "images": 22
         },
@@ -704,35 +658,12 @@
         "discardedAssetFiles": 22,
         "firstCommitISO": "2026-04-08T21:27:47-04:00",
         "isGitRepo": true,
-        "lastCommitISO": "2026-05-24T23:27:19-04:00",
-        "lifetimeLinesAdded": 241276,
+        "lastCommitISO": "2026-05-25T14:27:55-04:00",
+        "lifetimeLinesAdded": 241289,
         "lifetimeLinesRemoved": 40577,
-        "linesByAuthor": [
-          {
-            "author": "mbriggsy",
-            "coAuthoredCommits": 0,
-            "commits": 606,
-            "linesAdded": 241276,
-            "linesRemoved": 40577
-          },
-          {
-            "author": "Claude Opus 4.7 (1M context)",
-            "coAuthoredCommits": 393,
-            "commits": 0,
-            "linesAdded": 151923,
-            "linesRemoved": 31283
-          },
-          {
-            "author": "Claude Opus 4.6 (1M context)",
-            "coAuthoredCommits": 70,
-            "commits": 0,
-            "linesAdded": 50148,
-            "linesRemoved": 6012
-          }
-        ],
         "projectAgeDays": 46,
         "timeline": {
-          "activeDays": 38,
+          "activeDays": 39,
           "commitsByDay": [
             {
               "count": 5,
@@ -885,6 +816,10 @@
             {
               "count": 4,
               "date": "2026-05-24"
+            },
+            {
+              "count": 1,
+              "date": "2026-05-25"
             }
           ],
           "largestSingleCommit": {
@@ -897,7 +832,7 @@
             "date": "2026-04-24"
           }
         },
-        "totalCommits": 606,
+        "totalCommits": 607,
         "uniqueFilesTouched": 980
       },
       "grandTotals": {
@@ -919,7 +854,7 @@
         "regenScriptCount": 7,
         "sampleEvalRunCount": 10
       },
-      "scannedAt": "2026-05-25T18:26:46.404Z",
+      "scannedAt": "2026-05-26T17:00:00.194Z",
       "testCases": 1326,
       "testLines": 28488,
       "tiers": [
@@ -1290,40 +1225,18 @@
       "git": {
         "assetModificationEvents": 0,
         "assetUniquePathsTouched": 0,
-        "commitMessageLines": 180,
-        "commitsByAuthor": [
-          {
-            "author": "mbriggsy",
-            "count": 25
-          }
-        ],
+        "commitMessageLines": 204,
         "discardedAssetByKind": {},
         "discardedAssetEvents": 0,
         "discardedAssetFiles": 0,
         "firstCommitISO": "2026-04-17T12:26:18-04:00",
         "isGitRepo": true,
-        "lastCommitISO": "2026-05-13T19:18:45-04:00",
-        "lifetimeLinesAdded": 5089,
+        "lastCommitISO": "2026-05-25T14:27:55-04:00",
+        "lifetimeLinesAdded": 5099,
         "lifetimeLinesRemoved": 1547,
-        "linesByAuthor": [
-          {
-            "author": "mbriggsy",
-            "coAuthoredCommits": 0,
-            "commits": 25,
-            "linesAdded": 5089,
-            "linesRemoved": 1547
-          },
-          {
-            "author": "Claude Opus 4.7 (1M context)",
-            "coAuthoredCommits": 24,
-            "commits": 0,
-            "linesAdded": 5078,
-            "linesRemoved": 1547
-          }
-        ],
-        "projectAgeDays": 26,
+        "projectAgeDays": 38,
         "timeline": {
-          "activeDays": 6,
+          "activeDays": 7,
           "commitsByDay": [
             {
               "count": 2,
@@ -1348,6 +1261,10 @@
             {
               "count": 1,
               "date": "2026-05-13"
+            },
+            {
+              "count": 1,
+              "date": "2026-05-25"
             }
           ],
           "largestSingleCommit": {
@@ -1360,8 +1277,8 @@
             "date": "2026-04-26"
           }
         },
-        "totalCommits": 25,
-        "uniqueFilesTouched": 18
+        "totalCommits": 26,
+        "uniqueFilesTouched": 19
       },
       "grandTotals": {
         "allBytes": 127990,
@@ -1382,7 +1299,7 @@
         "regenScriptCount": 0,
         "sampleEvalRunCount": 0
       },
-      "scannedAt": "2026-05-25T18:26:47.380Z",
+      "scannedAt": "2026-05-26T17:00:01.221Z",
       "testCases": 0,
       "testLines": 0,
       "tiers": [
@@ -1489,26 +1406,26 @@
         "byModel": [
           {
             "model": "Opus 4.7",
-            "sessions": 1382,
-            "tokensProcessed": 378749753
+            "sessions": 970,
+            "tokensProcessed": 285163962
           }
         ],
-        "cacheCreationInputTokens": 14034162,
-        "cacheReadInputTokens": 360806508,
-        "inputTokens": 5420,
-        "outputTokens": 3903663,
+        "cacheCreationInputTokens": 6219551,
+        "cacheReadInputTokens": 277127471,
+        "inputTokens": 3606,
+        "outputTokens": 1813334,
         "parseHealth": {
           "fileReadErrors": 0,
           "lineParseErrors": 0,
           "usageShapeWarnings": 0
         },
-        "sessionCount": 1382,
+        "sessionCount": 970,
         "sidechainTokens": 0,
-        "tokensFresh": 17943245,
-        "tokensProcessed": 378749753,
-        "windowDays": 1,
+        "tokensFresh": 8036491,
+        "tokensProcessed": 285163962,
+        "windowDays": 0,
         "windowEndISO": "2026-04-27T13:58:09.119Z",
-        "windowStartISO": "2026-04-25T15:30:27.341Z"
+        "windowStartISO": "2026-04-26T16:06:53.938Z"
       },
       "topSubcategories": [
         {
@@ -1569,47 +1486,18 @@
       "git": {
         "assetModificationEvents": 0,
         "assetUniquePathsTouched": 0,
-        "commitMessageLines": 59,
-        "commitsByAuthor": [
-          {
-            "author": "mbriggsy",
-            "count": 5
-          }
-        ],
+        "commitMessageLines": 83,
         "discardedAssetByKind": {},
         "discardedAssetEvents": 0,
         "discardedAssetFiles": 0,
         "firstCommitISO": "2026-04-01T15:10:03-04:00",
         "isGitRepo": true,
-        "lastCommitISO": "2026-04-22T22:50:09-04:00",
-        "lifetimeLinesAdded": 1184,
+        "lastCommitISO": "2026-05-25T14:27:55-04:00",
+        "lifetimeLinesAdded": 1194,
         "lifetimeLinesRemoved": 22,
-        "linesByAuthor": [
-          {
-            "author": "mbriggsy",
-            "coAuthoredCommits": 0,
-            "commits": 5,
-            "linesAdded": 1184,
-            "linesRemoved": 22
-          },
-          {
-            "author": "Claude Opus 4.6 (1M context)",
-            "coAuthoredCommits": 4,
-            "commits": 0,
-            "linesAdded": 1070,
-            "linesRemoved": 20
-          },
-          {
-            "author": "Claude Opus 4.7 (1M context)",
-            "coAuthoredCommits": 1,
-            "commits": 0,
-            "linesAdded": 114,
-            "linesRemoved": 2
-          }
-        ],
-        "projectAgeDays": 21,
+        "projectAgeDays": 53,
         "timeline": {
-          "activeDays": 5,
+          "activeDays": 6,
           "commitsByDay": [
             {
               "count": 1,
@@ -1630,6 +1518,10 @@
             {
               "count": 1,
               "date": "2026-04-22"
+            },
+            {
+              "count": 1,
+              "date": "2026-05-25"
             }
           ],
           "largestSingleCommit": {
@@ -1639,11 +1531,11 @@
           },
           "peakDay": {
             "count": 1,
-            "date": "2026-04-22"
+            "date": "2026-05-25"
           }
         },
-        "totalCommits": 5,
-        "uniqueFilesTouched": 10
+        "totalCommits": 6,
+        "uniqueFilesTouched": 11
       },
       "grandTotals": {
         "allBytes": 41407,
@@ -1664,7 +1556,7 @@
         "regenScriptCount": 0,
         "sampleEvalRunCount": 0
       },
-      "scannedAt": "2026-05-25T18:26:48.275Z",
+      "scannedAt": "2026-05-26T17:00:02.169Z",
       "testCases": 0,
       "testLines": 0,
       "tiers": [
@@ -1827,47 +1719,18 @@
       "git": {
         "assetModificationEvents": 0,
         "assetUniquePathsTouched": 0,
-        "commitMessageLines": 54,
-        "commitsByAuthor": [
-          {
-            "author": "mbriggsy",
-            "count": 4
-          }
-        ],
+        "commitMessageLines": 78,
         "discardedAssetByKind": {},
         "discardedAssetEvents": 0,
         "discardedAssetFiles": 0,
         "firstCommitISO": "2026-02-21T21:57:03-05:00",
         "isGitRepo": true,
-        "lastCommitISO": "2026-05-13T19:18:45-04:00",
-        "lifetimeLinesAdded": 3370,
+        "lastCommitISO": "2026-05-25T14:27:55-04:00",
+        "lifetimeLinesAdded": 3380,
         "lifetimeLinesRemoved": 11,
-        "linesByAuthor": [
-          {
-            "author": "mbriggsy",
-            "coAuthoredCommits": 0,
-            "commits": 4,
-            "linesAdded": 3370,
-            "linesRemoved": 11
-          },
-          {
-            "author": "Claude Opus 4.6 (1M context)",
-            "coAuthoredCommits": 1,
-            "commits": 0,
-            "linesAdded": 14,
-            "linesRemoved": 7
-          },
-          {
-            "author": "Claude Opus 4.7 (1M context)",
-            "coAuthoredCommits": 1,
-            "commits": 0,
-            "linesAdded": 3,
-            "linesRemoved": 1
-          }
-        ],
-        "projectAgeDays": 80,
+        "projectAgeDays": 92,
         "timeline": {
-          "activeDays": 4,
+          "activeDays": 5,
           "commitsByDay": [
             {
               "count": 1,
@@ -1884,6 +1747,10 @@
             {
               "count": 1,
               "date": "2026-05-13"
+            },
+            {
+              "count": 1,
+              "date": "2026-05-25"
             }
           ],
           "largestSingleCommit": {
@@ -1893,11 +1760,11 @@
           },
           "peakDay": {
             "count": 1,
-            "date": "2026-05-13"
+            "date": "2026-05-25"
           }
         },
-        "totalCommits": 4,
-        "uniqueFilesTouched": 7
+        "totalCommits": 5,
+        "uniqueFilesTouched": 8
       },
       "grandTotals": {
         "allBytes": 126432,
@@ -1918,7 +1785,7 @@
         "regenScriptCount": 0,
         "sampleEvalRunCount": 0
       },
-      "scannedAt": "2026-05-25T18:26:49.187Z",
+      "scannedAt": "2026-05-26T17:00:03.120Z",
       "testCases": 0,
       "testLines": 0,
       "tiers": [
@@ -2103,40 +1970,18 @@
       "git": {
         "assetModificationEvents": 0,
         "assetUniquePathsTouched": 0,
-        "commitMessageLines": 166,
-        "commitsByAuthor": [
-          {
-            "author": "mbriggsy",
-            "count": 29
-          }
-        ],
+        "commitMessageLines": 190,
         "discardedAssetByKind": {},
         "discardedAssetEvents": 0,
         "discardedAssetFiles": 0,
         "firstCommitISO": "2026-03-31T21:38:06-04:00",
         "isGitRepo": true,
-        "lastCommitISO": "2026-04-09T10:49:31-04:00",
-        "lifetimeLinesAdded": 10582,
+        "lastCommitISO": "2026-05-25T14:27:55-04:00",
+        "lifetimeLinesAdded": 10592,
         "lifetimeLinesRemoved": 5706,
-        "linesByAuthor": [
-          {
-            "author": "mbriggsy",
-            "coAuthoredCommits": 0,
-            "commits": 29,
-            "linesAdded": 10582,
-            "linesRemoved": 5706
-          },
-          {
-            "author": "Claude Opus 4.6 (1M context)",
-            "coAuthoredCommits": 29,
-            "commits": 0,
-            "linesAdded": 10582,
-            "linesRemoved": 5706
-          }
-        ],
-        "projectAgeDays": 8,
+        "projectAgeDays": 54,
         "timeline": {
-          "activeDays": 7,
+          "activeDays": 8,
           "commitsByDay": [
             {
               "count": 1,
@@ -2165,6 +2010,10 @@
             {
               "count": 6,
               "date": "2026-04-09"
+            },
+            {
+              "count": 1,
+              "date": "2026-05-25"
             }
           ],
           "largestSingleCommit": {
@@ -2177,8 +2026,8 @@
             "date": "2026-04-01"
           }
         },
-        "totalCommits": 29,
-        "uniqueFilesTouched": 121
+        "totalCommits": 30,
+        "uniqueFilesTouched": 122
       },
       "grandTotals": {
         "allBytes": 182795,
@@ -2199,7 +2048,7 @@
         "regenScriptCount": 0,
         "sampleEvalRunCount": 0
       },
-      "scannedAt": "2026-05-25T18:26:50.119Z",
+      "scannedAt": "2026-05-26T17:00:04.123Z",
       "testCases": 0,
       "testLines": 0,
       "tiers": [
@@ -2377,40 +2226,18 @@
       "git": {
         "assetModificationEvents": 0,
         "assetUniquePathsTouched": 0,
-        "commitMessageLines": 28,
-        "commitsByAuthor": [
-          {
-            "author": "mbriggsy",
-            "count": 3
-          }
-        ],
+        "commitMessageLines": 52,
         "discardedAssetByKind": {},
         "discardedAssetEvents": 0,
         "discardedAssetFiles": 0,
         "firstCommitISO": "2026-02-21T21:57:03-05:00",
         "isGitRepo": true,
-        "lastCommitISO": "2026-05-09T16:50:51Z",
-        "lifetimeLinesAdded": 4840,
+        "lastCommitISO": "2026-05-25T14:27:55-04:00",
+        "lifetimeLinesAdded": 4850,
         "lifetimeLinesRemoved": 0,
-        "linesByAuthor": [
-          {
-            "author": "mbriggsy",
-            "coAuthoredCommits": 0,
-            "commits": 3,
-            "linesAdded": 4840,
-            "linesRemoved": 0
-          },
-          {
-            "author": "Claude Opus 4.6 (1M context)",
-            "coAuthoredCommits": 1,
-            "commits": 0,
-            "linesAdded": 40,
-            "linesRemoved": 0
-          }
-        ],
-        "projectAgeDays": 76,
+        "projectAgeDays": 92,
         "timeline": {
-          "activeDays": 3,
+          "activeDays": 4,
           "commitsByDay": [
             {
               "count": 1,
@@ -2423,6 +2250,10 @@
             {
               "count": 1,
               "date": "2026-05-09"
+            },
+            {
+              "count": 1,
+              "date": "2026-05-25"
             }
           ],
           "largestSingleCommit": {
@@ -2432,11 +2263,11 @@
           },
           "peakDay": {
             "count": 1,
-            "date": "2026-05-09"
+            "date": "2026-05-25"
           }
         },
-        "totalCommits": 3,
-        "uniqueFilesTouched": 9
+        "totalCommits": 4,
+        "uniqueFilesTouched": 10
       },
       "grandTotals": {
         "allBytes": 180235,
@@ -2457,7 +2288,7 @@
         "regenScriptCount": 0,
         "sampleEvalRunCount": 0
       },
-      "scannedAt": "2026-05-25T18:26:51.025Z",
+      "scannedAt": "2026-05-26T17:00:05.066Z",
       "testCases": 19,
       "testLines": 144,
       "tiers": [
@@ -2669,61 +2500,18 @@
       "git": {
         "assetModificationEvents": 0,
         "assetUniquePathsTouched": 0,
-        "commitMessageLines": 846,
-        "commitsByAuthor": [
-          {
-            "author": "mbriggsy",
-            "count": 177
-          }
-        ],
+        "commitMessageLines": 870,
         "discardedAssetByKind": {},
         "discardedAssetEvents": 0,
         "discardedAssetFiles": 0,
         "firstCommitISO": "2026-02-27T12:09:51-05:00",
         "isGitRepo": true,
-        "lastCommitISO": "2026-05-13T19:18:45-04:00",
-        "lifetimeLinesAdded": 52965,
+        "lastCommitISO": "2026-05-25T14:27:55-04:00",
+        "lifetimeLinesAdded": 52976,
         "lifetimeLinesRemoved": 5936,
-        "linesByAuthor": [
-          {
-            "author": "mbriggsy",
-            "coAuthoredCommits": 0,
-            "commits": 177,
-            "linesAdded": 52965,
-            "linesRemoved": 5936
-          },
-          {
-            "author": "Claude Opus 4.6",
-            "coAuthoredCommits": 127,
-            "commits": 0,
-            "linesAdded": 41736,
-            "linesRemoved": 3859
-          },
-          {
-            "author": "Claude Sonnet 4.6",
-            "coAuthoredCommits": 2,
-            "commits": 0,
-            "linesAdded": 857,
-            "linesRemoved": 0
-          },
-          {
-            "author": "Claude Opus 4.6 (1M context)",
-            "coAuthoredCommits": 3,
-            "commits": 0,
-            "linesAdded": 27,
-            "linesRemoved": 2
-          },
-          {
-            "author": "Claude Opus 4.7 (1M context)",
-            "coAuthoredCommits": 1,
-            "commits": 0,
-            "linesAdded": 5,
-            "linesRemoved": 1
-          }
-        ],
-        "projectAgeDays": 75,
+        "projectAgeDays": 87,
         "timeline": {
-          "activeDays": 11,
+          "activeDays": 12,
           "commitsByDay": [
             {
               "count": 50,
@@ -2768,6 +2556,10 @@
             {
               "count": 1,
               "date": "2026-05-13"
+            },
+            {
+              "count": 1,
+              "date": "2026-05-25"
             }
           ],
           "largestSingleCommit": {
@@ -2780,8 +2572,8 @@
             "date": "2026-02-27"
           }
         },
-        "totalCommits": 177,
-        "uniqueFilesTouched": 219
+        "totalCommits": 178,
+        "uniqueFilesTouched": 220
       },
       "grandTotals": {
         "allBytes": 18126668,
@@ -2802,7 +2594,7 @@
         "regenScriptCount": 0,
         "sampleEvalRunCount": 0
       },
-      "scannedAt": "2026-05-25T18:26:52.197Z",
+      "scannedAt": "2026-05-26T17:00:06.318Z",
       "testCases": 381,
       "testLines": 5270,
       "tiers": [
@@ -3028,54 +2820,18 @@
       "git": {
         "assetModificationEvents": 9,
         "assetUniquePathsTouched": 9,
-        "commitMessageLines": 352,
-        "commitsByAuthor": [
-          {
-            "author": "mbriggsy",
-            "count": 72
-          }
-        ],
+        "commitMessageLines": 376,
         "discardedAssetByKind": {},
         "discardedAssetEvents": 0,
         "discardedAssetFiles": 0,
         "firstCommitISO": "2026-03-11T13:20:20-04:00",
         "isGitRepo": true,
-        "lastCommitISO": "2026-05-13T19:18:45-04:00",
-        "lifetimeLinesAdded": 37877,
+        "lastCommitISO": "2026-05-25T14:27:55-04:00",
+        "lifetimeLinesAdded": 37888,
         "lifetimeLinesRemoved": 2172,
-        "linesByAuthor": [
-          {
-            "author": "mbriggsy",
-            "coAuthoredCommits": 0,
-            "commits": 72,
-            "linesAdded": 37877,
-            "linesRemoved": 2172
-          },
-          {
-            "author": "Claude Opus 4.6",
-            "coAuthoredCommits": 29,
-            "commits": 0,
-            "linesAdded": 15736,
-            "linesRemoved": 1530
-          },
-          {
-            "author": "Claude Opus 4.6 (1M context)",
-            "coAuthoredCommits": 9,
-            "commits": 0,
-            "linesAdded": 1712,
-            "linesRemoved": 50
-          },
-          {
-            "author": "Claude Opus 4.7 (1M context)",
-            "coAuthoredCommits": 1,
-            "commits": 0,
-            "linesAdded": 2,
-            "linesRemoved": 1
-          }
-        ],
-        "projectAgeDays": 63,
+        "projectAgeDays": 75,
         "timeline": {
-          "activeDays": 8,
+          "activeDays": 9,
           "commitsByDay": [
             {
               "count": 14,
@@ -3108,6 +2864,10 @@
             {
               "count": 1,
               "date": "2026-05-13"
+            },
+            {
+              "count": 1,
+              "date": "2026-05-25"
             }
           ],
           "largestSingleCommit": {
@@ -3120,8 +2880,8 @@
             "date": "2026-03-12"
           }
         },
-        "totalCommits": 72,
-        "uniqueFilesTouched": 158
+        "totalCommits": 73,
+        "uniqueFilesTouched": 159
       },
       "grandTotals": {
         "allBytes": 32516276,
@@ -3142,7 +2902,7 @@
         "regenScriptCount": 0,
         "sampleEvalRunCount": 0
       },
-      "scannedAt": "2026-05-25T18:26:53.436Z",
+      "scannedAt": "2026-05-26T17:00:07.636Z",
       "testCases": 504,
       "testLines": 7303,
       "tiers": [
@@ -3393,13 +3153,7 @@
       "git": {
         "assetModificationEvents": 416,
         "assetUniquePathsTouched": 228,
-        "commitMessageLines": 845,
-        "commitsByAuthor": [
-          {
-            "author": "mbriggsy",
-            "count": 113
-          }
-        ],
+        "commitMessageLines": 869,
         "discardedAssetByKind": {
           "audio": 55,
           "images": 6,
@@ -3409,42 +3163,12 @@
         "discardedAssetFiles": 63,
         "firstCommitISO": "2026-03-22T19:05:02-04:00",
         "isGitRepo": true,
-        "lastCommitISO": "2026-05-13T19:18:45-04:00",
-        "lifetimeLinesAdded": 71674,
+        "lastCommitISO": "2026-05-25T14:27:55-04:00",
+        "lifetimeLinesAdded": 71691,
         "lifetimeLinesRemoved": 7682,
-        "linesByAuthor": [
-          {
-            "author": "mbriggsy",
-            "coAuthoredCommits": 0,
-            "commits": 113,
-            "linesAdded": 71674,
-            "linesRemoved": 7682
-          },
-          {
-            "author": "Claude Opus 4.6 (1M context)",
-            "coAuthoredCommits": 105,
-            "commits": 0,
-            "linesAdded": 50556,
-            "linesRemoved": 10622
-          },
-          {
-            "author": "Claude",
-            "coAuthoredCommits": 7,
-            "commits": 0,
-            "linesAdded": 878,
-            "linesRemoved": 864
-          },
-          {
-            "author": "Claude Opus 4.7 (1M context)",
-            "coAuthoredCommits": 1,
-            "commits": 0,
-            "linesAdded": 56,
-            "linesRemoved": 1
-          }
-        ],
-        "projectAgeDays": 52,
+        "projectAgeDays": 63,
         "timeline": {
-          "activeDays": 10,
+          "activeDays": 11,
           "commitsByDay": [
             {
               "count": 13,
@@ -3485,6 +3209,10 @@
             {
               "count": 1,
               "date": "2026-05-13"
+            },
+            {
+              "count": 1,
+              "date": "2026-05-25"
             }
           ],
           "largestSingleCommit": {
@@ -3497,8 +3225,8 @@
             "date": "2026-03-25"
           }
         },
-        "totalCommits": 113,
-        "uniqueFilesTouched": 501
+        "totalCommits": 114,
+        "uniqueFilesTouched": 502
       },
       "grandTotals": {
         "allBytes": 35890246,
@@ -3519,7 +3247,7 @@
         "regenScriptCount": 0,
         "sampleEvalRunCount": 0
       },
-      "scannedAt": "2026-05-25T18:26:55.256Z",
+      "scannedAt": "2026-05-26T17:00:09.648Z",
       "testCases": 752,
       "testLines": 17925,
       "tiers": [
@@ -3770,5 +3498,5 @@
       ]
     }
   ],
-  "scannedAt": "2026-05-25T18:27:02.749Z"
+  "scannedAt": "2026-05-26T17:00:17.843Z"
 }

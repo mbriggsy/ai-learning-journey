@@ -55,4 +55,21 @@ describe('§0.10 — stats.json shape allowlist', () => {
   it('ALLOWED_KEY_PATHS has no duplicate entries', () => {
     expect(new Set(ALLOWED_KEY_PATHS).size).toBe(ALLOWED_KEY_PATHS.length);
   });
+
+  // Authorship is silent (§11) and a scraped per-author breakdown inverts the thesis. These keys
+  // must NEVER ship — the subset test alone wouldn't catch a re-add to BOTH output and allowlist,
+  // so assert their absence directly. (sha + projectPath are PII, same contract.)
+  it('strips the per-author + PII keys from the published shape entirely', async () => {
+    const { report } = await buildMultiProjectReport({
+      homeDir: fx.homeDir,
+      projectPaths: fx.projectPaths,
+      metaPaths: fx.metaPaths,
+      archivePaths: fx.archivePaths,
+    });
+    const paths = new Set<string>();
+    collectKeyPaths(stripForPublish(report), '', paths);
+    for (const banned of ['linesByAuthor', 'commitsByAuthor', 'projectPath', 'sha']) {
+      expect([...paths].some((p) => p.includes(banned))).toBe(false);
+    }
+  });
 });

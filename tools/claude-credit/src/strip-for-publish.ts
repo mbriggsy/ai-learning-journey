@@ -1,12 +1,19 @@
 /**
  * PRIVACY: produces the public-safe JSON shape for stats.json.
  *
- * Two structural rules:
+ * Structural rules:
  *   1. Drop every `projectPath` key (absolute on-disk path — PII) anywhere in
  *      the tree (projects[] AND meta[], both ProjectReport[]).
  *   2. Drop `git.timeline.largestSingleCommit.sha` — a private-repo commit id
  *      with no client use (the site renders only linesAdded). The only `sha`
  *      key in the shape, so dropping the bare name is precise.
+ *   3. Drop `git.linesByAuthor` and `git.commitsByAuthor` — per-author breakdowns.
+ *      Authorship is SILENT (ideation §11): no surface renders them, and worse,
+ *      git credits the human as commit author with Claude as Co-Authored-By, so a
+ *      scraped `linesByAuthor` INVERTS the autonomous-build thesis ("the human
+ *      wrote most of it"). Unused + thesis-contradicting → not published. Both are
+ *      unique key names (only on GitStats), so dropping the bare names is precise.
+ *      The tool still COMPUTES them internally (general-purpose); only publish drops.
  *
  * The hand-coded ALLOWED_KEY_PATHS list is the structural enforcement of
  * "what may ship publicly". The §0.10 stats-shape test asserts the stripped
@@ -21,7 +28,7 @@
 import type { MultiProjectReport } from './taxonomy.js';
 
 /** Keys removed from the published shape wherever they appear. */
-const DROP_KEYS = new Set(['projectPath', 'sha']);
+const DROP_KEYS = new Set(['projectPath', 'sha', 'linesByAuthor', 'commitsByAuthor']);
 
 function deepStrip(value: unknown): unknown {
   if (Array.isArray(value)) return value.map(deepStrip);
@@ -119,8 +126,8 @@ export const ALLOWED_KEY_PATHS: readonly string[] = [
     `${root}[].tiers[].totals.nonBlankLines`,
     `${root}[].git.isGitRepo`,
     `${root}[].git.totalCommits`,
-    `${root}[].git.commitsByAuthor[].author`,
-    `${root}[].git.commitsByAuthor[].count`,
+    // git.commitsByAuthor + git.linesByAuthor are DROPPED (DROP_KEYS) — authorship is silent
+    // and a scraped per-author breakdown inverts the thesis. Not published.
     `${root}[].git.lifetimeLinesAdded`,
     `${root}[].git.lifetimeLinesRemoved`,
     `${root}[].git.uniqueFilesTouched`,
@@ -136,11 +143,6 @@ export const ALLOWED_KEY_PATHS: readonly string[] = [
     `${root}[].git.firstCommitISO`,
     `${root}[].git.lastCommitISO`,
     `${root}[].git.projectAgeDays`,
-    `${root}[].git.linesByAuthor[].author`,
-    `${root}[].git.linesByAuthor[].commits`,
-    `${root}[].git.linesByAuthor[].linesAdded`,
-    `${root}[].git.linesByAuthor[].linesRemoved`,
-    `${root}[].git.linesByAuthor[].coAuthoredCommits`,
     `${root}[].git.timeline.commitsByDay[].date`,
     `${root}[].git.timeline.commitsByDay[].count`,
     `${root}[].git.timeline.activeDays`,

@@ -2,6 +2,10 @@ import { useRef } from 'react'
 import type { ProjectReport } from '@/types'
 import { formatBytes } from '@/lib/format'
 import { buildDonutSegments, totalMediaBytes, type DonutSegment } from '@/lib/donut'
+import { gsap, useGSAP, ScrollTrigger } from '@/motion/gsap-context'
+import { ease } from '@/motion/easings'
+import { duration } from '@/motion/tokens'
+import { prefersReducedMotion } from '@/motion/reduced-motion'
 import styles from './AssetDonut.module.css'
 
 const R = 40
@@ -42,6 +46,43 @@ export function AssetDonut({ assetBytesByKind }: { assetBytesByKind: ProjectRepo
   // SVG carries the whole breakdown for screen readers (the visual is decorative on its own).
   const ariaLabel = `Media by type: ${segments.map((s) => `${s.label} ${formatBytes(s.bytes)}`).join(', ')}.`
 
+  // DrawSVG reveal (C3) — the page's one flourish. Reduced-motion / dead-layer → the C2 static
+  // arcs + visible legend stand (CSS default). The GLOBAL refresh self-heal lives on the page's
+  // block-reveal useGSAP, so a donut above the fold on a deep-link still fires on that refresh.
+  useGSAP(
+    () => {
+      const root = donutRef.current
+      if (!root || prefersReducedMotion()) return // C2 static donut + legend stay visible
+      const arcs = gsap.utils.toArray<SVGCircleElement>('[data-donut-arc]', root)
+      const legend = gsap.utils.toArray<HTMLElement>('[data-donut-legend]', root)
+      if (arcs.length === 0) return
+
+      // Hidden state in JS (P0 — never CSS): collapse each arc to zero length, hide the legend.
+      gsap.set(arcs, { drawSVG: '0% 0%' })
+      gsap.set(legend, { autoAlpha: 0 })
+
+      const trigger = ScrollTrigger.create({
+        trigger: root,
+        start: 'top 80%',
+        once: true,
+        onEnter: () => {
+          const tl = gsap.timeline()
+          // Each arc draws to its own segment range (start%→end% of the real circumference);
+          // the per-segment stagger communicates "distinct buckets" (emil).
+          arcs.forEach((arc, i) => {
+            const s = arc.dataset.drawStart ?? '0'
+            const e = arc.dataset.drawEnd ?? '0'
+            tl.to(arc, { drawSVG: `${s}% ${e}%`, duration: duration.reveal, ease: ease.arrive }, i * 0.08)
+          })
+          // Legend + byte labels fade in AFTER the ring settles (not synced per-segment).
+          tl.to(legend, { autoAlpha: 1, duration: 0.5, ease: ease.arrive }, '>-0.15')
+        },
+      })
+      return () => trigger.kill()
+    },
+    { scope: donutRef, dependencies: [] },
+  )
+
   return (
     <div className={styles.donut} ref={donutRef}>
       <div className={styles.ring}>
@@ -65,7 +106,7 @@ export function AssetDonut({ assetBytesByKind }: { assetBytesByKind: ProjectRepo
         </div>
       </div>
 
-      <ul className={styles.legend}>
+      <ul className={styles.legend} data-donut-legend>
         {segments.map((seg, i) => (
           <li key={seg.key} className={styles.legendRow}>
             <span
@@ -87,6 +128,10 @@ function Arc({ seg, palette }: { seg: DonutSegment; palette: { stroke: string; o
   return (
     <circle
       data-donut-arc
+      // C3 DrawSVG targets (percent of the real circumference) — read by the reveal timeline so
+      // motion never depends on the segments array's render order matching the DOM.
+      data-draw-start={seg.start * 100}
+      data-draw-end={(seg.start + seg.sweep) * 100}
       cx={CX}
       cy={CY}
       r={R}
@@ -95,7 +140,9 @@ function Arc({ seg, palette }: { seg: DonutSegment; palette: { stroke: string; o
       strokeOpacity={palette.opacity}
       strokeWidth={14}
       strokeLinecap="butt"
-      // Real-circumference dash: draw `dash`, gap the rest; offset to the segment's start angle.
+      // C2 static resting state: real-circumference dash (draw `dash`, gap the rest; offset to the
+      // segment's start angle). DrawSVG resolves its %s against the SAME 2πr, so the animated rest
+      // state lands here exactly. reduced-motion / dead-layer renders this fully-drawn arc.
       strokeDasharray={`${dash} ${CIRCUMFERENCE - dash}`}
       strokeDashoffset={-seg.start * CIRCUMFERENCE}
     />

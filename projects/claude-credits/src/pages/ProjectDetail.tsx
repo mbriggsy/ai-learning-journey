@@ -1,6 +1,9 @@
-import { Fragment, useEffect, type ReactNode } from 'react'
+import { Fragment, useEffect, useRef, type ReactNode } from 'react'
 import { useParams, Link } from 'react-router'
 import { useStats } from '@/hooks/useStats'
+import { gsap, useGSAP, ScrollTrigger } from '@/motion/gsap-context'
+import { duration, stagger } from '@/motion/tokens'
+import { prefersReducedMotion } from '@/motion/reduced-motion'
 import { findProject, buildComposition } from '@/lib/composition'
 import { totalMediaBytes } from '@/lib/donut'
 import { isCadenceTrustworthy } from '@/lib/cadence'
@@ -24,14 +27,91 @@ export default function ProjectDetail() {
   const { name } = useParams<{ name: string }>()
   const report = useStats()
   const project = findProject(report, name)
+  const pageRef = useRef<HTMLElement>(null)
 
   useEffect(() => {
     document.title = project ? `${project.projectName} · claude-credits` : 'Not found · claude-credits'
   }, [project])
 
+  // Block-level scroll reveals (Decision 6): each MOVEMENT fades+rises once, block-level (not
+  // per-child — a long reading page). The donut is NOT a [data-block] — it owns its DrawSVG draw.
+  // Mirrors ProjectGrid: JS-only hidden state (P0 — dead layer leaves all movements visible),
+  // scoped node lists (insight 004), refreshInit y-reset + restore, and the global refresh
+  // self-heal (which also fires the donut's trigger when it's above the fold on a deep-link).
+  useGSAP(
+    () => {
+      const root = pageRef.current
+      const blocks = () => (root ? gsap.utils.toArray<HTMLElement>('[data-block]', root) : [])
+
+      // Unconditional global refresh self-heal — fonts/hero-image/gallery load late and shift
+      // positions; also fires already-in-view triggers (this page's blocks + the donut) on mount.
+      const onLoad = () => ScrollTrigger.refresh()
+      window.addEventListener('load', onLoad, { once: true })
+      let cancelled = false
+      let rafId = 0
+      let timerId = 0
+      const settled = new Promise<void>((resolve) => {
+        timerId = window.setTimeout(resolve, 1500)
+        void document.fonts.ready.then(() => resolve())
+      })
+      void settled.then(() => {
+        if (cancelled) return
+        rafId = requestAnimationFrame(() => ScrollTrigger.refresh())
+      })
+      const cleanupRefresh = () => {
+        cancelled = true
+        clearTimeout(timerId)
+        cancelAnimationFrame(rafId)
+        window.removeEventListener('load', onLoad)
+      }
+
+      if (!root || prefersReducedMotion()) return cleanupRefresh // movements stay visible (CSS default)
+
+      // The not-found page mounts this same hook with NO [data-block] elements — skip the
+      // hidden-state set + batch so gsap isn't handed an empty target (warns), but keep the
+      // global refresh self-heal above.
+      const initial = blocks()
+      if (initial.length === 0) return cleanupRefresh
+
+      gsap.set(initial, { autoAlpha: 0, y: 24 }) // smaller rise than the grid — a reading page
+
+      const resetY = () => {
+        if (pageRef.current) gsap.set(blocks(), { y: 0 })
+      }
+      const restoreY = () => {
+        if (!pageRef.current) return
+        const hidden = blocks().filter((el) => Number(gsap.getProperty(el, 'autoAlpha')) < 1)
+        if (hidden.length) gsap.set(hidden, { y: 24 })
+      }
+      ScrollTrigger.addEventListener('refreshInit', resetY)
+      ScrollTrigger.addEventListener('refresh', restoreY)
+
+      ScrollTrigger.batch(blocks(), {
+        start: 'top 88%',
+        once: true,
+        onEnter: (els) =>
+          gsap.to(els, {
+            autoAlpha: 1,
+            y: 0,
+            duration: duration.reveal,
+            ease: 'weighted-arrive',
+            stagger: stagger.tiles,
+            overwrite: true,
+          }),
+      })
+
+      return () => {
+        cleanupRefresh()
+        ScrollTrigger.removeEventListener('refreshInit', resetY)
+        ScrollTrigger.removeEventListener('refresh', restoreY)
+      }
+    },
+    { scope: pageRef, dependencies: [] },
+  )
+
   if (!project) {
     return (
-      <main className={styles.page}>
+      <main className={styles.page} ref={pageRef}>
         <BackLink />
         <section className={styles.notFound}>
           <h1 className={styles.notFoundHeading}>No project by that name.</h1>
@@ -132,7 +212,7 @@ export default function ProjectDetail() {
   const rendered = movements.filter((m) => m.node)
 
   return (
-    <main className={styles.page}>
+    <main className={styles.page} ref={pageRef}>
       <BackLink />
       <article className={styles.shell}>
         {rendered.map((m, i) => {

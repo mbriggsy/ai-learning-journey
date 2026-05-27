@@ -73,7 +73,7 @@ Empty value = not yet done.
 | Update cadence | **Local refresh, committed** — a dedicated `refresh-credits` skill (or manual `pnpm refresh`) regenerates `stats.json` on the dev machine *where session history lives*, commits it, and pushes; Vercel auto-deploys the committed file. **No CI regenerates data** (a clean runner has no session JSONLs → null tokens). The site shows an "as of <date>" from `scannedAt`. See [phase-8-deploy.md](phase-8-deploy.md) Decisions 1, 2, 9. |
 | Domain (v1) | **Free `*.vercel.app` subdomain** — `ai-journey-stats.vercel.app` if available. |
 | Color palette | **Claude owns it** (Briggsy is color blind). TWO first-class palettes — dark (deep midnight teal + warm orange + cream) AND light (warm cream paper + deeper warm orange + warm gold + near-black warm text). NO iridescent gimmickry in either. |
-| Light/dark mode | **Both first-class. NOT a bolt-on.** `prefers-color-scheme` honored automatically. Briggsy's own Windows preference is LIGHT — the site he visits defaults to light. Each mode gets its own design pass and its own polish gate. v1 ships with both. (Manual toggle is a v1.1 add if needed; OS respect is the v1 first-class behavior.) |
+| Light/dark mode | **Both first-class. NOT a bolt-on.** `prefers-color-scheme` honored automatically. Briggsy's own Windows preference is LIGHT — the site he visits defaults to light. Each mode gets its own design pass and its own polish gate. v1 ships with both. (Manual toggle **shipped in v1** — promoted from the v1.1 deferral 2026-05-27: a top-right `ThemeToggle` sets `data-theme` + persists to localStorage; OS preference stays the default.) |
 | Privacy | **Strip `projectPath` from JSON before commit.** Project names + categorized counts + git stats are safe to publish. Individual filepaths must not leak. |
 | Pages | **Landing (hero + project grid)**, **per-project detail**, **about**. Three routes. No more for v1. |
 | Audience | **AI-curious peers.** Builder-to-builder voice. |
@@ -167,7 +167,7 @@ The reference implementation lives at `projects/undercover-mob-boss/public/how-t
 - Server-side rendering
 - Analytics / telemetry
 - Internationalization
-- Manual light/dark theme toggle UI button (v1 honors `prefers-color-scheme` automatically — manual toggle is a v1.1 add if needed). Both palettes ARE in v1; the toggle UI is the only deferred piece.
+- ~~Manual light/dark theme toggle UI button~~ — **SHIPPED in v1** (2026-05-27, promoted from v1.1 once real review showed hiding a whole mode behind OS settings / a `?theme=` URL was the gap). Top-right `ThemeToggle`, `data-theme` + localStorage, OS-preference default. No longer deferred.
 - Mobile-only patterns (PWA app-shell, mobile-only nav, install prompts, push). Site is responsive-desktop-led — mobile must shine via responsive design, NOT a separate mobile experience.
 - File-type churn distribution (expensive, low ROI)
 - Anthropic API / Imagen cost per project (data not in repo)

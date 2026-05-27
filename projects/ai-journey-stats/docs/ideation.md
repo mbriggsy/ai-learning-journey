@@ -95,7 +95,7 @@ Anchor reference: `projects/undercover-mob-boss/public/how-to-play.html` — mat
 
 ### 10. Light AND dark mode: both first-class
 
-Both palettes get their own design pass; both must pass the water-bead bar. `prefers-color-scheme` honored automatically. Manual toggle UI is v1.1; OS respect is the v1 first-class behavior.
+Both palettes get their own design pass; both must pass the water-bead bar. `prefers-color-scheme` honored automatically. Manual toggle UI **shipped in v1** (2026-05-27, promoted from v1.1 once real use showed hiding a mode behind OS settings was the gap); OS preference remains the default.
 
 Token architecture: semantic-over-physical so modes are CSS variable swaps, not parallel stylesheets.
 

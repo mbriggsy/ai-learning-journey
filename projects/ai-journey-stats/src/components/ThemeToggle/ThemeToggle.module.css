@@ -1,0 +1,51 @@
+/* The light/dark switch — fixed top-right, notch/safe-area aware. Glass surface to match the
+   tiles; the hero owns the gold, so this stays neutral (semantic tokens → adapts per mode). */
+.toggle {
+  position: fixed;
+  top: calc(var(--space-4) + env(safe-area-inset-top, 0px));
+  right: calc(var(--space-4) + env(safe-area-inset-right, 0px));
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  width: 44px; /* Apple HIG tap-target minimum */
+  height: 44px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-elevated);
+  -webkit-backdrop-filter: blur(var(--surface-glass-blur));
+  backdrop-filter: blur(var(--surface-glass-blur));
+  box-shadow: var(--shadow-tile);
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.toggle svg {
+  display: block;
+  width: 20px;
+  height: 20px;
+}
+
+/* Hover lift — fine pointers only so touch never traps it (matches the tiles). */
+@media (hover: hover) and (pointer: fine) {
+  .toggle {
+    transition:
+      transform 0.18s ease,
+      box-shadow 0.18s ease,
+      border-color 0.18s ease;
+  }
+  .toggle:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-hover);
+    border-color: var(--border-strong);
+  }
+}
+
+/* Press feedback (ungated — a tap should show it) + keyboard focus ring (matches every
+   interactive surface: 2px accent, 3px offset, instant). */
+.toggle:active {
+  transform: scale(0.94);
+}
+.toggle:focus-visible {
+  outline: 2px solid var(--accent-focus);
+  outline-offset: 3px;
+}

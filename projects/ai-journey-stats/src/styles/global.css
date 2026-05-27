@@ -4,8 +4,19 @@ html, body {
      thumbprint on the waxed hood. */
   scrollbar-width: none;
   -ms-overflow-style: none;
+  /* Kill the grey/blue tap flash on touch — another thumbprint on the waxed hood.
+     Affordance is carried by the :active scale + settled tile state, not a default flash. */
+  -webkit-tap-highlight-color: transparent;
 }
 html::-webkit-scrollbar, body::-webkit-scrollbar { display: none; }
+
+/* Themed text selection — a faint warm wash in the page's own accent, never the
+   browser's stray blue (off-palette on cream/midnight; AI-slop checklist). Semantic
+   tokens → adapts to light/dark automatically. Text keeps its colour; only the wash swaps. */
+::selection {
+  background: color-mix(in srgb, var(--accent-primary) 24%, transparent);
+  color: var(--text-primary);
+}
 
 body {
   min-height: 100vh;

@@ -2,7 +2,14 @@ import { useRef } from 'react'
 import { Link } from 'react-router'
 import { useStats } from '@/hooks/useStats'
 import { prefersReducedMotion } from '@/motion/reduced-motion'
-import { formatInt, formatBytes, formatTokens, formatModelList, formatAsOf } from '@/lib/format'
+import {
+  formatInt,
+  formatBytes,
+  formatTokens,
+  formatModelList,
+  formatAsOf,
+  formatWindowClause,
+} from '@/lib/format'
 import { gsap, useGSAP } from '@/motion/gsap-context'
 import { duration, stagger } from '@/motion/tokens'
 import { HeroCounter } from './HeroCounter'
@@ -22,12 +29,8 @@ export function Hero() {
   const hasAuthored = combined.totalAuthoredLines > 0
 
   const modelClause = formatModelList(combined.modelBreakdown)
-  const windowClause =
-    combined.tokenWindowDays === null
-      ? null
-      : combined.tokenWindowDays === 0
-        ? 'across under a day of session retention' // avoid the "<" char in static HTML
-        : `across ${combined.tokenWindowDays} ${combined.tokenWindowDays === 1 ? 'day' : 'days'} of session retention`
+  // Shared honest window clause (one source — code review F5) so Hero/TokensBlock/Close never drift.
+  const windowClause = formatWindowClause(combined.tokenWindowDays)
   // Staleness-honesty signal (Phase 8 Decision 9): the data is refreshed manually, so surface
   // when it was last measured. Quiet — it rides the honest sub-line beside the window. Shared,
   // guarded, UTC-pinned formatter: malformed scannedAt → null → the "as of" clause is omitted

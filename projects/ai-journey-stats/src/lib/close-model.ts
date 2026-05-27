@@ -1,4 +1,5 @@
 import type { MultiProjectReport } from '@/types'
+import { formatWindowClause } from './format'
 
 /**
  * The close's layered null-degrade display model (Phase 7, ideation §4). Pure — the testable
@@ -29,18 +30,13 @@ type CloseInputs = Pick<MultiProjectReport['combined'], 'tokenWindowDays' | 'tot
 
 export function deriveCloseModel(combined: CloseInputs, projectCount: number): CloseModel {
   const windowDays = combined.tokenWindowDays
-  const windowLine =
-    windowDays === null
-      ? null
-      : windowDays === 0
-        ? 'measured over under a day of session retention'
-        : `measured over a ${windowDays}-day window`
 
   return {
     projectCount,
     projectLabel: projectCount === 1 ? 'project' : 'projects',
     hasTokens: windowDays !== null,
     hasAuthored: combined.totalAuthoredLines > 0,
-    windowLine,
+    // Shared honest clause (code review F5) — one wording across Hero/TokensBlock/Close.
+    windowLine: formatWindowClause(windowDays),
   }
 }

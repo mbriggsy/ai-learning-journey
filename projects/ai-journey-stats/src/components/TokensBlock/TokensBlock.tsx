@@ -1,6 +1,6 @@
 import clsx from 'clsx'
 import type { TokenStats } from '@/types'
-import { formatInt, formatTokens, formatShortDate } from '@/lib/format'
+import { formatInt, formatTokens, formatShortDate, formatWindowClause } from '@/lib/format'
 import styles from './TokensBlock.module.css'
 
 /**
@@ -17,12 +17,7 @@ export function TokensBlock({ tokens }: { tokens: TokenStats }) {
   // Drop 0-token models (the <synthetic> parser sentinel) — same principle as formatModelList.
   const models = byModel.filter((m) => m.tokensProcessed > 0)
 
-  const windowClause =
-    windowDays === null
-      ? null
-      : windowDays === 0
-        ? 'across under a day of session retention'
-        : `across ${formatInt(windowDays)} ${windowDays === 1 ? 'day' : 'days'} of session retention`
+  const windowClause = formatWindowClause(windowDays)
   const start = formatShortDate(windowStartISO)
   const end = formatShortDate(windowEndISO)
   const range = start && end ? `${start} → ${end}` : null

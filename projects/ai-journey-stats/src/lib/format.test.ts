@@ -1,5 +1,15 @@
 import { describe, it, expect } from 'vitest'
-import { formatTokens, pickTokenUnit, formatInt, formatBytes, formatModelList, padCounter, formatShortDate } from './format'
+import {
+  formatTokens,
+  pickTokenUnit,
+  formatInt,
+  formatBytes,
+  formatModelList,
+  padCounter,
+  formatShortDate,
+  formatAsOf,
+  formatWindowClause,
+} from './format'
 
 const FS = ' ' // U+2007 figure space — must match the pad char in format.ts
 
@@ -81,6 +91,32 @@ describe('formatShortDate', () => {
     expect(formatShortDate('2026-05-09')).toBe('May 9'))
   it('renders a window-range pair sensibly when joined by the caller', () =>
     expect(`${formatShortDate('2026-04-07')} → ${formatShortDate('2026-05-24')}`).toBe('Apr 7 → May 24'))
+})
+
+describe('formatAsOf (staleness date — month-short + day + YEAR)', () => {
+  it('renders the year (unlike formatShortDate)', () =>
+    expect(formatAsOf('2026-05-27')).toBe('May 27, 2026'))
+  it('takes the date portion from a full ISO timestamp with offset', () =>
+    expect(formatAsOf('2026-03-12T12:34:18-04:00')).toBe('Mar 12, 2026'))
+  it('null → null', () => expect(formatAsOf(null)).toBeNull())
+  it('non-date input → null (never "Invalid Date")', () => {
+    expect(formatAsOf('not a date')).toBeNull()
+    expect(formatAsOf('')).toBeNull()
+  })
+  // Same TZ guard as formatShortDate: UTC-anchored, no day-shift west of UTC.
+  it('does not shift the calendar day under timezone', () =>
+    expect(formatAsOf('2026-01-01')).toBe('Jan 1, 2026'))
+})
+
+describe('formatWindowClause (one honest clause across Hero/TokensBlock/Close — F5)', () => {
+  it('null → null (unmeasured → caller omits the clause)', () =>
+    expect(formatWindowClause(null)).toBeNull())
+  it('0 → "across under a day" (spells out "<" for static HTML)', () =>
+    expect(formatWindowClause(0)).toBe('across under a day of session retention'))
+  it('1 → singular "day"', () =>
+    expect(formatWindowClause(1)).toBe('across 1 day of session retention'))
+  it('N → "across N days of session retention"', () =>
+    expect(formatWindowClause(30)).toBe('across 30 days of session retention'))
 })
 
 describe('padCounter (constant-width counter frames)', () => {

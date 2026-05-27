@@ -64,11 +64,8 @@ Grid = **9 project tiles + 1 "the misses" archive coda = 10 surfaces** (no meta 
 
 ## Code-review follow-ups (Phase 6/7 review 2026-05-27 — deferred, not blocking)
 
-Phases 3–7 now carry `code-reviewed:` frontmatter (3/4 = 2026-05-25, 5 = 2026-05-26, 6/7 = 2026-05-27). A phase isn't "done" until `code-reviewed:` is stamped. Phase 6/7 review applied F1–F4 (About: autoAlpha→opacity focus fix, guarded `formatAsOf`, back-link hover underline, external-link `target=_blank`) + migrated the Hero `asOf` to the same guarded `formatAsOf` (killed the M-01 duplication + ADV-006 TZ drift). These surfaced but remain deferred:
+Phases 3–7 carry `code-reviewed:` frontmatter (3/4 = 2026-05-25, 5 = 2026-05-26, 6/7 = 2026-05-27). A phase isn't "done" until `code-reviewed:` is stamped. ALL substantive Phase 6/7 review findings are resolved: F1–F4 (About focus/date/a11y/links) + Hero `asOf` twin + F10 (Close null-degrade → tested `deriveCloseModel`) + F5/F8 (window clause unified to "across N days …" via shared `formatWindowClause`, Briggsy-locked 2026-05-27). Only cosmetic P3s remain:
 
-- **F5 — window-clause voice drift:** `Close.tsx:40-45` says "measured over …" while `Hero.tsx:25-30` + `TokensBlock.tsx:20-25` say "across …" — same measurement, visible on one scroll. Extract `formatWindowClause(days)` to `format.ts`, unify all three. (Voice call — Briggsy's wording.)
-- **F10 — Close null-degrade is untested:** extract the predicate (`projectCount`, `hasTokens = tokenWindowDays !== null`, `hasAuthored > 0`, windowLine null/0/N) into `deriveCloseState()` in a lib module and test all 6 branches (matches the project's pure-logic test convention; the inline JSX version can silently regress).
-- **F8 (P3 edge) — `windowDays === 0` grammar:** Close renders "measured over under a day of session retention" (double-preposition). Only fires on a single same-day session. Fix wording if/when F5's `formatWindowClause` lands.
 - **F7 (P3, site-wide) — ease token bypass:** About/Close/Hero/ProjectGrid/ProjectDetail use the bare string `'weighted-arrive'` instead of importing `ease.arrive`. Cheap consistency pass; do it when next touching motion.
 - **P3 cleanup (advisory):** `1500ms` settle timeout repeated in Close/ProjectGrid/ProjectDetail → name it in `motion/tokens.ts`; `.tableIntro` ≈ `.prose` in About.module.css; `y:24`/`y:40` rise offsets unnamed. Optional `data-value` raw integers on Close figure spans (agent-native, zero visual change).
 

@@ -28,23 +28,27 @@ describe('deriveCloseModel', () => {
     })
   })
 
-  describe('windowLine wording', () => {
+  describe('windowLine wording (shared formatWindowClause — unified across surfaces, F5)', () => {
     it('null → null (no clause)', () => {
       expect(deriveCloseModel(combined(null, 1), 9).windowLine).toBeNull()
     })
 
-    it('0 → "under a day" phrasing (avoids the "<" char in static HTML)', () => {
+    it('0 → "across under a day" phrasing (avoids the "<" char in static HTML)', () => {
       expect(deriveCloseModel(combined(0, 1), 9).windowLine).toBe(
-        'measured over under a day of session retention',
+        'across under a day of session retention',
       )
     })
 
-    it('positive N → "measured over a N-day window"', () => {
-      expect(deriveCloseModel(combined(30, 1), 9).windowLine).toBe('measured over a 30-day window')
+    it('positive N → "across N days of session retention"', () => {
+      expect(deriveCloseModel(combined(30, 1), 9).windowLine).toBe(
+        'across 30 days of session retention',
+      )
     })
 
-    it('window of 1 still renders the N-day form', () => {
-      expect(deriveCloseModel(combined(1, 1), 9).windowLine).toBe('measured over a 1-day window')
+    it('window of 1 → singular "day"', () => {
+      expect(deriveCloseModel(combined(1, 1), 9).windowLine).toBe(
+        'across 1 day of session retention',
+      )
     })
   })
 

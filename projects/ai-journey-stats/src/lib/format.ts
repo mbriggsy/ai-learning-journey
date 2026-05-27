@@ -69,6 +69,20 @@ export function formatModelList(models: ModelBreakdown): string {
 }
 
 /**
+ * Token-retention window → the honest human clause "across 30 days of session retention". The
+ * token tally is a window-bounded floor (session JSONLs rotate ~30 days), never a lifetime claim
+ * (ideation §2). ONE shared source for the Hero sub-line, the TokensBlock footnote, AND the Close
+ * qualifier so the wording can't drift between surfaces (code review F5, 2026-05-27). `null → null`
+ * (unmeasured → the caller omits the clause). The "<" char is spelled out ("under a day") to stay
+ * safe in static HTML.
+ */
+export function formatWindowClause(days: number | null): string | null {
+  if (days === null) return null
+  if (days === 0) return 'across under a day of session retention'
+  return `across ${days} ${days === 1 ? 'day' : 'days'} of session retention`
+}
+
+/**
  * ISO date → short human date "Apr 22" (en-US, month-short + day, no year). `null → null`.
  * Used by the cadence peak-day callout + the token-window range.
  *

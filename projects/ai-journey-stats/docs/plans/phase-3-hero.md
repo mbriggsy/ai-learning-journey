@@ -3,6 +3,7 @@ created: 2026-05-24T09:46:48-04:00
 deepened: 2026-05-24T18:07:15-04:00
 doc-reviewed: 2026-05-24T18:23:05-04:00
 coded: 2026-05-25T15:09:38-04:00
+code-reviewed: 2026-05-25
 ---
 
 # Phase 3 — Hero (the first "wow")

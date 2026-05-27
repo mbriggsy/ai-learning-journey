@@ -3,6 +3,7 @@ created: 2026-05-24T09:46:48-04:00
 deepened: 2026-05-24T21:30:00-04:00
 doc-reviewed: 2026-05-24T22:15:00-04:00
 coded: 2026-05-26T12:25:00-04:00
+code-reviewed: 2026-05-26
 ---
 
 # Phase 5 — Project detail page

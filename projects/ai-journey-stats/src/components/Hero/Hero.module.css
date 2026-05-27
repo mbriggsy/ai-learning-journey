@@ -57,7 +57,7 @@
    deliberate block, never a viewport-overflowing single line. */
 .unitLabel {
   font-family: var(--font-body);
-  font-size: var(--text-meta);
+  font-size: var(--text-body); /* a step up from --text-meta — the unit label reads as the number's caption, above the honest sub-line in hierarchy */
   font-variant-caps: all-small-caps;
   letter-spacing: 0.12em;
   color: var(--text-secondary);

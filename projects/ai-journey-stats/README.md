@@ -1,5 +1,7 @@
 # ai-journey-stats
 
+**Live → https://ai-journey-stats.vercel.app**
+
 A Vercel-hosted visual showcase of the credit data across the monorepo's projects,
 measured by the `project-metrics` CLI. Built with Vite 8 + React 19 + TypeScript + GSAP.
 

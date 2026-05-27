@@ -53,7 +53,9 @@ The **detail page is where you act:** a **"Source →"** link (always — every 
 
 ### 4. No bottom CTA — the page ends on the work (Briggsy, 2026-05-24)
 
-**The site is the drippy celebration of the WORK, not a pitch for the tool.** It ends on the magnitude of what got built — no button, no install command, no "Source on GitHub" link, nothing to click. The work is the final word.
+**The site is the drippy celebration of the WORK, not a pitch for the tool.** It ends on no button, no install command, no "Source on GitHub" link, nothing to click — the work is the final word.
+
+> **UPDATE 2026-05-27 (Briggsy).** The close now states the work's *thesis* at display weight — *"Claude wrote all of it. Briggsy directed — and answered a question or two."* (the §11 sign-off, promoted from About) — rather than re-printing the hero's magnitude figures, which read as padding (Phase 9 cold-read). Still nothing-to-click; the magnitude shock stays the hero's job. Supersedes Phase 7's three-figure magnitude stack.
 
 - `project-metrics` is the *tape measure* we used to count the work. It is ours, internal, **not a product the site promotes**. We do NOT publish it to npm for v1.
 - Supersedes the earlier "dual CTA — tool pitch + GitHub link / the site IS a demo of the tool" framing. That made the visit end on tool-promotion, which is exactly what this site is not about.
@@ -106,7 +108,7 @@ The site brags by being stunning and showing the WORK — magnitude, projects, p
 - NO human-vs-Claude authorship split viz, NO "0 lines authored by the human" headline, NO proof mechanism. This is our experiment — it owes no one proof.
 - The hero's magnitude (tokens / lines / projects) IS the flex — it shows off the work without litigating authorship.
 - Consequence: the per-tile tier bar is cut (Phase 4) and the per-project "AUTHORED BY" split is cut/reframed (Phase 5) — both are the same noise.
-- The "autonomous-SDLC experiments" framing may appear as LIGHT context on the About page, never as a scoreboard. **Candidate line for that light touch** (Briggsy, 2026-05-24): *"Claude wrote all of it. Briggsy directed — and answered a question or two."* — a warm, self-deprecating nod to the ATC/pilot dynamic that earns a smile, not a metric or proof. Placement (About intro / footer / etc.) is a Phase 6 call.
+- The "autonomous-SDLC experiments" framing may appear as LIGHT context on the About page, never as a scoreboard. **Candidate line for that light touch** (Briggsy, 2026-05-24): *"Claude wrote all of it. Briggsy directed — and answered a question or two."* — a warm, self-deprecating nod to the ATC/pilot dynamic that earns a smile, not a metric or proof. **Placement (Briggsy 2026-05-27): the LANDING CLOSE at display weight AND the About footer** — promoted from a quiet About-only footnote to the site's final, most-prominent word, superseding Phase 7's three-figure magnitude stack (the hero already owns the magnitude). Stays §11-compliant: a warm note, never a metric/scoreboard.
 
 ---
 
@@ -117,7 +119,7 @@ The site brags by being stunning and showing the WORK — magnitude, projects, p
 | 1. Hero | Brag the size | Landing page top |
 | 2. Project grid | Show the work + per-project hooks | Landing page below hero |
 | 3. Per-project detail | Tell the story | `/project/:name` |
-| 4. The close | The page ends on the magnitude of the work — no CTA, nothing to click (§4) | End of landing page |
+| 4. The close | The page ends on the project's thesis at display weight — *"Claude wrote all of it…"* — no CTA, nothing to click (§4/§11, updated 2026-05-27) | End of landing page |
 
 ---
 

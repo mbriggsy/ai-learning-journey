@@ -3,39 +3,26 @@ import { gsap, useGSAP, ScrollTrigger } from '@/motion/gsap-context'
 import { duration, stagger } from '@/motion/tokens'
 import { ease } from '@/motion/easings'
 import { prefersReducedMotion } from '@/motion/reduced-motion'
-import { useStats } from '@/hooks/useStats'
-import { formatInt, formatTokens } from '@/lib/format'
-import { deriveCloseModel } from '@/lib/close-model'
 import styles from './Close.module.css'
 
 /**
- * The close — the editorial spine's final beat (Phase 7, ideation §4). A summative
- * three-figure magnitude stack at the bottom of the Landing page: project breadth ·
- * token magnitude · authored lines. Declarative, no tagline, nothing clickable — the
- * size of the work is the last word (the tool is never pitched; ideation §4/§7/§11).
+ * The close — the editorial spine's final beat (Phase 7, ideation §4/§11). The landing page
+ * ends on the project's THESIS at display weight, not a re-print of the hero's numbers:
  *
- * Leads with PROJECT COUNT (the breadth the grid just demonstrated) so it reads as the
- * accumulation of everything scrolled, NOT a re-print of the hero's token lead.
+ *   "Claude wrote all of it. Briggsy directed — and answered a question or two."
  *
- * Null-degrade is LAYERED (mirrors the hero, Phase 3) — each line shown independently:
- *   • projects — the structural FLOOR; always present (the site can't render without it).
- *   • tokens + window — iff `tokenWindowDays !== null` (the "did we measure tokens" signal;
- *     a clean clone / CI has no JSONLs → null. NOT `totalTokensProcessed > 0`, which would
- *     conflate genuine measured-zero with unmeasured — the bug the hero's predicate fixes).
- *   • authored lines — iff `totalAuthoredLines > 0` (a CI tarball with no git reads 0;
- *     never render a "0 lines" beat).
- * Worst case (no JSONLs, no git) degrades to projects-only — never empty, never NaN.
+ * Declarative, type-on-background, nothing clickable. This is the §11 sign-off promoted from a
+ * quiet About footnote to the site's final, most-prominent word (Briggsy 2026-05-27) — it
+ * SUPERSEDES the locked three-figure magnitude stack: the hero already owns the magnitude, so
+ * repeating it here read as padding (cold-read finding). The line is warm/self-deprecating, not
+ * a who-wrote-what scoreboard, so it stays inside §11's spirit. Static text → no data dependency,
+ * no null-degrade (the old deriveCloseModel + close-model.ts were removed with the stats).
+ *
+ * The lead clause leads; the second clause follows in a softer weight/colour and a beat later —
+ * the same number-then-context rhythm as the hero reveal.
  */
 export function Close() {
   const closeRef = useRef<HTMLElement>(null) // GSAP scope root for the reveal
-  const { combined, projects, archiveCollective } = useStats()
-  // Active + shelved. DERIVED (not a `combined` field); `report.meta` feeds magnitude
-  // but is NOT in the count — mirrors the hero (Phase 3).
-  const projectCount = projects.length + (archiveCollective?.projectCount ?? 0)
-
-  // Layered null-degrade decisions — extracted to a pure, unit-tested helper (close-model.ts).
-  // The predicate intent (hasTokens uses `!== null`, NOT `> 0`; windowLine honesty) lives there.
-  const { projectLabel, hasTokens, hasAuthored, windowLine } = deriveCloseModel(combined, projectCount)
 
   // Reveal-on-scroll in the site's `weighted` dialect — the close is below the fold, so it
   // reveals as the visitor scrolls to it. Everything lives in ONE useGSAP({scope}) so the dev
@@ -141,31 +128,15 @@ export function Close() {
   )
 
   return (
-    <section ref={closeRef} className={styles.close} aria-label="Summary">
-      {/* projects — structural floor, always shown */}
-      <div className={styles.figure} data-reveal>
-        <span className={`${styles.number} tabular`}>{formatInt(projectCount)}</span>
-        <span className={styles.label}>{projectLabel}</span>
-      </div>
-
-      {hasTokens && (
-        <div className={styles.figure} data-reveal>
-          <span className={`${styles.number} tabular`}>
-            {formatTokens(combined.totalTokensProcessed)}
-          </span>
-          <span className={styles.label}>tokens processed</span>
-          {windowLine && <span className={styles.qualifier}>{windowLine}</span>}
-        </div>
-      )}
-
-      {hasAuthored && (
-        <div className={styles.figure} data-reveal>
-          <span className={`${styles.number} tabular`}>
-            {formatInt(combined.totalAuthoredLines)}
-          </span>
-          <span className={styles.label}>lines authored</span>
-        </div>
-      )}
+    <section ref={closeRef} className={styles.close} aria-label="In closing">
+      <p className={styles.signoff}>
+        <span className={styles.lead} data-reveal>
+          Claude wrote all of it.
+        </span>
+        <span className={styles.aside} data-reveal>
+          Briggsy directed — and answered a question or two.
+        </span>
+      </p>
     </section>
   )
 }

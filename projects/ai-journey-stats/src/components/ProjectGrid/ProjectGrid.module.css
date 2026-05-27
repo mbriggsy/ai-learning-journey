@@ -8,7 +8,10 @@
   /* auto-fit: 1 col on phones → 2 at ~640px → 3 at ~960px+. minmax floor 320px. */
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   gap: var(--space-6);
-  align-items: start;
+  /* stretch (not start): every tile fills its row's height, so a text tile paired with a
+     taller 16:9-image tile never leaves a ragged gap. The tile distributes its own content
+     (hook pinned to the bottom) so the filled height reads as an editorial column, not padding. */
+  align-items: stretch;
 }
 
 /* "The misses" band separator — label above a full-width hairline, spans the grid. The

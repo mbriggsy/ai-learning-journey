@@ -8,6 +8,7 @@
 .tile {
   position: relative; /* anchor for the stretched ::after link */
   display: flex;
+  flex: 1; /* fill the grid row's stretched height so tiles in a row match (no ragged gap) */
   flex-direction: column;
   background: var(--surface-elevated);
   -webkit-backdrop-filter: blur(var(--surface-glass-blur));
@@ -41,6 +42,7 @@
 
 .content {
   display: flex;
+  flex: 1; /* fill the tile's height below the image so the hook can pin to the bottom edge */
   flex-direction: column;
   gap: var(--space-3);
   padding: var(--space-6);
@@ -96,7 +98,9 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
-  margin: var(--space-2) 0 0;
+  /* auto top margin pins the gold hook to the tile's bottom edge → an even stat baseline
+     across a row. Collapses to the flex gap when the tile is the row's natural-height tallest. */
+  margin: auto 0 0;
 }
 .hookValue {
   font-family: var(--font-display);

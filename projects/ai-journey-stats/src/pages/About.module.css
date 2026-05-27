@@ -25,6 +25,9 @@
 }
 .backLink:hover {
   color: var(--text-primary);
+  /* Non-color affordance (Briggsy is color blind): hover must not rely on the color shift alone. */
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 .backLink:focus-visible {
   outline: 2px solid var(--accent-focus);

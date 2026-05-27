@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { Link } from 'react-router'
 import { useStats } from '@/hooks/useStats'
+import { formatAsOf } from '@/lib/format'
 import { gsap, useGSAP } from '@/motion/gsap-context'
 import { duration } from '@/motion/tokens'
 import { prefersReducedMotion } from '@/motion/reduced-motion'
@@ -59,13 +60,15 @@ export default function About() {
   }, [])
 
   // The page's single motion moment (Decision 6): ONE quiet fade-in on the wrapper, in the site's
-  // `weighted` dialect — no section stagger. JS-hidden via gsap.from (never a CSS opacity:0), so a
-  // dead motion layer leaves every word of this reading page visible. reducedMotion → no tween.
+  // `weighted` dialect — no section stagger. Fades `opacity`, NOT autoAlpha: this <main> holds the
+  // back-link + two external links, and autoAlpha's `visibility: hidden` would drop them from the
+  // tab order for the whole fade (insight 006). gsap.from (not a CSS opacity:0) still means a dead
+  // motion layer leaves every word of this reading page visible. reducedMotion → no tween.
   useGSAP(
     () => {
       if (reducedMotion) return
       gsap.from(pageRef.current, {
-        autoAlpha: 0,
+        opacity: 0,
         y: 8,
         duration: duration.reveal,
         ease: 'weighted-arrive',
@@ -74,13 +77,10 @@ export default function About() {
     { scope: pageRef, dependencies: [] },
   )
 
-  // Staleness honesty (Phase 8 Decision 9): the data is refreshed by hand, so surface when it
-  // was last measured. Mirrors the Hero's "as of" formatting exactly.
-  const asOf = new Date(scannedAt).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  })
+  // Staleness honesty (Phase 8 Decision 9): the data is refreshed by hand, so surface when it was
+  // last measured. Shared, guarded, UTC-pinned formatter — a malformed scannedAt → null → the line
+  // is omitted (never "Invalid Date"), and the date never drifts a day for viewers west of UTC.
+  const asOf = formatAsOf(scannedAt)
 
   return (
     <main className={styles.page} ref={pageRef}>
@@ -192,6 +192,7 @@ export default function About() {
               <a
                 className={`${styles.link} ${styles.linkRow}`}
                 href={TOOL_README_URL}
+                target="_blank"
                 rel="noopener noreferrer"
               >
                 Full methodology in the project-metrics README →
@@ -208,7 +209,7 @@ export default function About() {
                 automatically from <span className={styles.code}>main</span>. A push ships the page;
                 it doesn&rsquo;t recount the work.
               </p>
-              <p className={styles.asOf}>Numbers as of {asOf}.</p>
+              {asOf && <p className={styles.asOf}>Numbers as of {asOf}.</p>}
             </div>
 
             {/* §6 — Open source. */}
@@ -217,7 +218,12 @@ export default function About() {
               <p className={`${styles.prose} ${styles.proseQuiet}`}>
                 The projects and the tool that measured them are open source.
               </p>
-              <a className={`${styles.link} ${styles.linkRow}`} href={REPO_URL} rel="noopener noreferrer">
+              <a
+                className={`${styles.link} ${styles.linkRow}`}
+                href={REPO_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
                 github.com/mbriggsy/ai-learning-journey →
               </a>
             </div>

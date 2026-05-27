@@ -86,6 +86,27 @@ export function formatShortDate(iso: string | null): string | null {
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' })
 }
 
+/**
+ * ISO date → "as of" long date "May 27, 2026" (en-US, month-short + day + YEAR). `null → null`.
+ * Same UTC-pinning + Invalid-Date guard as formatShortDate, just carrying the year — so a malformed
+ * `scannedAt` yields null and the caller OMITS the staleness line rather than rendering the literal
+ * "Invalid Date" (or throwing a RangeError on stricter engines). Used by the Hero honest sub-line
+ * + the About methodology "Numbers as of …" line.
+ */
+export function formatAsOf(iso: string | null): string | null {
+  if (!iso) return null
+  const m = iso.match(/^(\d{4})-(\d{2})-(\d{2})/)
+  if (!m) return null
+  const date = new Date(Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3])))
+  if (Number.isNaN(date.getTime())) return null
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    timeZone: 'UTC',
+  })
+}
+
 // U+2007 FIGURE SPACE — same advance width as a digit in tabular fonts, but invisible.
 // MUST stay U+2007: a normal space (U+0020) is NOT digit-width and would defeat the
 // constant-width guard. The test pins the exact codepoint so an encoding swap fails loudly.

@@ -15,34 +15,30 @@
 .signoff {
   display: grid;
   place-items: center;
-  gap: var(--space-4);
-  max-width: 28ch;
+  gap: var(--space-1); /* tight — two lines of one quiet sentence each */
+  max-width: min(92vw, 40rem); /* wide enough that each clause holds its own line on desktop */
   margin: 0;
 }
 
-/* Lead clause — the weight. Display face, the close's largest type (a calm peer of the hero
-   number, never tiny). */
-.lead {
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: var(--text-display-lg); /* clamp(2.25rem, 8vw, 4.5rem) */
-  line-height: var(--leading-heading); /* 1.05 */
-  letter-spacing: var(--tracking-display); /* -0.04em */
-  color: var(--text-primary);
+/* A quiet two-line sign-off — roughly card-body size (a touch bigger on wide screens), scaling
+   DOWN with the viewport so each clause keeps to one line. Bespoke clamp (not a type-scale token)
+   because the two-line fit needs a smaller mobile floor than --text-body-lg gives. Each clause is
+   its own grid row → its own line; the lead carries a little weight + primary colour, the aside
+   follows in a softer weight + --text-secondary (AA-clear at this size). */
+.lead,
+.aside {
+  font-family: var(--font-body);
+  font-size: clamp(0.95rem, 1.5vw, 1.2rem);
+  line-height: var(--leading-body);
   text-wrap: balance;
 }
-
-/* Second clause — the warm beat. Subordinate by weight + colour, but still substantial display
-   type (not a footnote). --text-secondary clears AA comfortably at this size. */
+.lead {
+  font-weight: 600;
+  color: var(--text-primary);
+}
 .aside {
-  max-width: 26ch; /* slightly wider — it's the longer sentence */
-  font-family: var(--font-display);
-  font-weight: 500;
-  font-size: var(--text-display-md); /* clamp(1.5rem, 5vw, 2.25rem) */
-  line-height: var(--leading-tile); /* 1.15 — two lines breathe */
-  letter-spacing: var(--tracking-tile);
+  font-weight: 400;
   color: var(--text-secondary);
-  text-wrap: balance;
 }
 
 /* phone (Phase 1 mobile cascade: 600px). Bottom padding clears the iPhone home indicator
@@ -51,8 +47,5 @@
   .close {
     padding: var(--space-16) var(--space-4)
       calc(var(--space-16) + env(safe-area-inset-bottom, 0px));
-  }
-  .signoff {
-    gap: var(--space-3);
   }
 }

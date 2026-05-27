@@ -73,6 +73,22 @@ Full review artifact: `.context/compound-engineering/ce-review/20260527-p6p7-cod
 
 ---
 
+## Phase 8 — deploy (STAGED 2026-05-27; BLOCKED on Vercel CLI for the finish)
+
+Codeable steps DONE + verified (no `coded:` stamp yet — Phase 8 isn't done until the site is live in both modes with real numbers, the real gate):
+- **8.2 `vercel.json` AUGMENTED** — added `ignoreCommand` (monorepo build-skip), `/assets` immutable cache + explicit `nosniff`; CSP untouched. Valid JSON, clean prod build (`stats.json` + `index.html` in `dist/`). Rewrite/header behavior validates at first deploy (vite preview can't honor vercel.json — per plan §8.2).
+- **8.3 `.github/workflows/verify-ai-journey-stats.yml`** — LIGHT (`pnpm exec vite build` only, path-filtered to `projects/ai-journey-stats/**`). PROVEN: `vite build` exits 0 with `tools/project-metrics/dist` hidden (Decision 5 — zero sibling-tool build dep). "Runs green on push / no-trigger on BURNED-only" validates on first push.
+- **8.4 skill `refresh-ai-journey-stats`** (project-local `.claude/skills/`). **NAME DEVIATION (flag):** plan said `refresh-credits` — that's the PRE-rename name; used `refresh-ai-journey-stats` to parallel the verify workflow + stay consistent post-rename. `squeaky-clean` untouched (Decision 2). Tool build + `pnpm refresh` both verified working.
+
+**BLOCKER — the finish needs you (Vercel CLI is not installed/authed on this machine; `vercel` = command not found):**
+1. Install + auth the CLI: `! npm i -g vercel` then `! vercel login` (interactive browser — can't be automated).
+2. `! vercel link` from `projects/ai-journey-stats/` → Root Directory = `projects/ai-journey-stats`, preset Vite. (`.vercel/` is already gitignored.)
+3. First deploy: `! vercel --prod` (bypasses the `ignoreCommand` uncertainty on push #1 — §8.5). Claim `ai-journey-stats.vercel.app`, fall back to `ai-journey-stats-briggsy` if taken.
+4. Live smoke BOTH modes: real non-null hero number + window + "as of" date, `/data/stats.json` serves JSON (not the SPA fallback), 0 console/404. THEN stamp phase-8 `coded:` + check verification gate.
+Go/no-go prereqs already GREEN: `packageManager: pnpm@10.30.3`, cascade applied (docs/plans/README.md cadence/verify/#8d), Decision 9 "as of" render live (Hero + About).
+
+---
+
 ## Landmines
 
 - **Authorship is SILENT** (ideation §11, locked 2026-05-24). The site brags by showing the WORK, NOT a who-wrote-what scoreboard, and owes no one proof. NO authorship-split viz, NO "0 lines" headline. Per-tile **tier bar is CUT** (Phase 4); per-project **AUTHORED-BY split is CUT** (Phase 5). About gets only the warm light-touch line.

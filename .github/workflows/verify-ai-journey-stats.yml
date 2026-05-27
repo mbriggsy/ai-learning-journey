@@ -1,0 +1,37 @@
+name: Verify ai-journey-stats
+
+# LIGHT verify (Phase 8 Decision 6): confirms the site still bundles into a deployable dist/ on a
+# clean runner — nothing more. It does NOT deploy (Vercel git-integration does), NOT regenerate data
+# (refresh is local-only — Decision 1), NOT build the sibling tools/project-metrics, and NOT run the
+# test suite. The full typecheck + tests + in-process publish guard run in the LOCAL pre-push checks;
+# CI is a backup that catches "the site no longer builds". Kept light on purpose so a
+# tools/project-metrics-only change can never false-alarm red here (no cross-package dependency).
+#
+# Why `vite build` and not `pnpm build`: `pnpm build` is `tsc --noEmit && vite build`, and the full
+# tsc pulls in scripts/refresh-stats.ts → tools/project-metrics/dist types (gitignored, absent on a
+# clean runner). esbuild (vite build) erases the type-only re-export in src/types.ts, so the bundle
+# needs nothing from tools/. Running `vite build` directly keeps CI free of the sibling-tool build.
+
+on:
+  push:
+    branches: [main]
+    paths: ['projects/ai-journey-stats/**']
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: projects/ai-journey-stats
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: projects/ai-journey-stats/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec vite build

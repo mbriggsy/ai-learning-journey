@@ -46,7 +46,7 @@
 
   /* Type — 7-step clamp scale (genuinely mobile-first: each vw track crosses its
      floor in the phone→tablet range, so secondary type scales on phones too) */
-  --text-display-hero: clamp(4rem, 18vw, 22rem);     /* THE big number — matches Phase 3 + README ~22rem */
+  --text-display-hero: clamp(4rem, 16vw, 19rem);     /* THE big number — dialed down a step from 18vw/22rem (Briggsy 2026-05-27); 4rem mobile floor unchanged */
   --text-display-lg: clamp(2.25rem, 8vw, 4.5rem);
   --text-display-md: clamp(1.5rem, 5vw, 2.25rem);
   --text-stat-callout: clamp(2rem, 7vw, 3.5rem);

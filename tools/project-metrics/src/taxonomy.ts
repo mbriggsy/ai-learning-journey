@@ -211,14 +211,12 @@ export interface TokenStats {
 export interface EditorialContent {
   oneLiner: string;
   hookStat: { label: string; value: string };
-  heroImage: string | null;
   liveUrl: string | null;
   repoUrl: string | null;
   // 2-value enum; 'shelved' kept open for future per-archive detail pages.
   // NO 'meta' value — meta entries carry editorial: null (no status), ideation §7.
   status: 'active' | 'shelved';
   description: string;
-  gallery: string[];
   largestCommitCaption?: string; // optional Briggsy-authored caption next to largestSingleCommit
 }
 

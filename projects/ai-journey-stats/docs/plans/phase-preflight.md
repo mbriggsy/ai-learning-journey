@@ -7,6 +7,8 @@ coded: 2026-05-25
 
 # Phase −1 — Pre-flight verifications
 
+> **⚠ ALSO SUPERSEDED (Phase 9, 2026-05-27): NO project imagery.** The `## Capture queue`, every `heroImage`/`heroImage_mobile_safe`/`gallery` row, and the −1.4 visual-asset-inventory column are MOOT — Briggsy cut imagery entirely (type-forward everywhere). See TODO's "no imagery" landmine.
+
 > **EXECUTED 2026-05-24 · then 3 decisions changed.** This plan was written before Briggsy locked **no bottom CTA**, **no meta tiles**, and **no npm publish** (ideation §4 + §7, README decisions table, TODO SCOPE CHANGE block — those are authoritative). Wherever this file says *"meta tiles / 12 surfaces / 2 meta projects / the tools divider / publish / CTA states A·B·C,"* the executed + locked reality is **"no meta / 10 surfaces (9 active + 1 archive coda) / no publish / no CTA."** Retained as the execution record (the squatter-deploy methodology and npm-availability check are the durable value). Do not act on its meta/CTA/publish steps.
 
 **Prereq:** Read [README.md](README.md) first — the bar, locked decisions, and visual system live there. This file is the executable recipe for the five gates.

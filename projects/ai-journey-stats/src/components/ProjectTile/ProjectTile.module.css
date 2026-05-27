@@ -16,7 +16,7 @@
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-tile);
   box-shadow: var(--shadow-tile);
-  overflow: hidden; /* clip the hero image to the tile radius + reserve hover scale (C3) */
+  overflow: hidden; /* clip content to the tile radius + reserve the hover scale (C3) */
 }
 
 /* keyboard focus rings the WHOLE card (the stretched link is the hit-target), not just the
@@ -26,30 +26,14 @@
   outline-offset: 2px;
 }
 
-/* (0) hero image — 16:9, full-bleed to the tile inner radius */
-.imageFrame {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 16 / 9;
-  overflow: hidden; /* frame for the C3 hover scale */
-}
-.image {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
+/* Type-led content fills the whole tile. The extra top padding gives the type room to breathe
+   so the tile reads deliberately type-led (Phase 9: the site carries no project imagery). */
 .content {
   display: flex;
-  flex: 1; /* fill the tile's height below the image so the hook can pin to the bottom edge */
+  flex: 1; /* fill the tile's height so the hook can pin to the bottom edge */
   flex-direction: column;
   gap: var(--space-3);
   padding: var(--space-6);
-}
-/* type-forward (no image): the content gains the image's vertical space as top breathing
-   room so the tile reads deliberately type-led, never shorter/broken. */
-.typeForward .content {
   padding-top: var(--space-8);
 }
 
@@ -130,12 +114,6 @@
     transition:
       transform 0.25s cubic-bezier(0.3, 0, 0.4, 1.05),
       box-shadow 0.25s ease; /* enter */
-  }
-  .image {
-    transition: transform 0.3s cubic-bezier(0.3, 0, 0.4, 1.05);
-  }
-  .tile:hover .image {
-    transform: scale(1.04);
   }
 }
 /* Press feedback — INTENTIONALLY ungated (a touch tap should show it). */

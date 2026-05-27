@@ -28,8 +28,8 @@
     "modelBreakdown": [
       {
         "model": "Opus 4.7",
-        "sessions": 34155,
-        "tokensProcessed": 9448814910
+        "sessions": 33901,
+        "tokensProcessed": 9355592354
       },
       {
         "model": "<synthetic>",
@@ -39,25 +39,25 @@
     ],
     "projectCount": 9,
     "tokenWindowDays": 30,
-    "tokenWindowEndISO": "2026-05-27T13:40:22.117Z",
-    "tokenWindowStartISO": "2026-04-26T16:06:53.938Z",
-    "totalAllBytes": 549786894,
+    "tokenWindowEndISO": "2026-05-27T23:38:52.540Z",
+    "tokenWindowStartISO": "2026-04-27T16:54:56.507Z",
+    "totalAllBytes": 546570276,
     "totalAllFiles": 2069,
-    "totalAuthoredBytes": 60005207,
-    "totalAuthoredFiles": 2121,
-    "totalAuthoredLines": 536384,
-    "totalCommits": 1063,
+    "totalAuthoredBytes": 60016536,
+    "totalAuthoredFiles": 2126,
+    "totalAuthoredLines": 536408,
+    "totalCommits": 1085,
     "totalDiscardedAssets": 85,
     "totalIterationProxies": 17,
-    "totalPipelineGeneratedBytes": 488451846,
-    "totalPipelineGeneratedFiles": 457,
+    "totalPipelineGeneratedBytes": 485223899,
+    "totalPipelineGeneratedFiles": 452,
     "totalPlanCount": 74,
-    "totalPlanLines": 81827,
-    "totalSessions": 34158,
-    "totalTestCases": 3704,
-    "totalTestLines": 66787,
-    "totalTokensFresh": 288187261,
-    "totalTokensProcessed": 9448814910,
+    "totalPlanLines": 81834,
+    "totalSessions": 33904,
+    "totalTestCases": 3719,
+    "totalTestLines": 66884,
+    "totalTokensFresh": 284386087,
+    "totalTokensProcessed": 9355592354,
     "totalToolGeneratedBytes": 886916,
     "totalToolGeneratedFiles": 9
   },
@@ -106,11 +106,11 @@
         "uniqueFilesTouched": 36
       },
       "grandTotals": {
-        "allBytes": 232214,
+        "allBytes": 230342,
         "allFiles": 36,
-        "authoredBytes": 193285,
+        "authoredBytes": 191413,
         "authoredFiles": 35,
-        "authoredLines": 5201,
+        "authoredLines": 5146,
         "pipelineGeneratedBytes": 0,
         "pipelineGeneratedFiles": 0,
         "toolGeneratedBytes": 38929,
@@ -124,9 +124,9 @@
         "regenScriptCount": 0,
         "sampleEvalRunCount": 0
       },
-      "scannedAt": "2026-05-27T13:40:32.255Z",
-      "testCases": 52,
-      "testLines": 1268,
+      "scannedAt": "2026-05-27T23:39:01.278Z",
+      "testCases": 51,
+      "testLines": 1252,
       "tiers": [
         {
           "categories": [
@@ -134,18 +134,18 @@
               "category": "code",
               "subcategories": [
                 {
-                  "bytes": 130561,
+                  "bytes": 129245,
                   "files": 18,
-                  "nonBlankLines": 3285,
+                  "nonBlankLines": 3248,
                   "subcategory": "source",
-                  "totalLines": 3545
+                  "totalLines": 3506
                 },
                 {
-                  "bytes": 47558,
+                  "bytes": 47002,
                   "files": 10,
-                  "nonBlankLines": 1166,
+                  "nonBlankLines": 1151,
                   "subcategory": "tests",
-                  "totalLines": 1268
+                  "totalLines": 1252
                 },
                 {
                   "bytes": 2134,
@@ -156,11 +156,11 @@
                 }
               ],
               "totals": {
-                "bytes": 180253,
+                "bytes": 178381,
                 "files": 33,
-                "nonBlankLines": 4540,
+                "nonBlankLines": 4488,
                 "subcategory": "<totals>",
-                "totalLines": 4903
+                "totalLines": 4848
               }
             },
             {
@@ -185,11 +185,11 @@
           ],
           "tier": "authored",
           "totals": {
-            "bytes": 193285,
+            "bytes": 191413,
             "files": 35,
-            "nonBlankLines": 4779,
+            "nonBlankLines": 4727,
             "subcategory": "<totals>",
-            "totalLines": 5201
+            "totalLines": 5146
           }
         },
         {
@@ -238,18 +238,18 @@
       "tokens": null,
       "topSubcategories": [
         {
-          "bytes": 130561,
+          "bytes": 129245,
           "category": "code",
           "files": 18,
-          "lines": 3545,
+          "lines": 3506,
           "subcategory": "source",
           "tier": "authored"
         },
         {
-          "bytes": 47558,
+          "bytes": 47002,
           "category": "code",
           "files": 10,
-          "lines": 1268,
+          "lines": 1252,
           "subcategory": "tests",
           "tier": "authored"
         },
@@ -283,7 +283,7 @@
       "assetBytesByKind": {
         "audio": 0,
         "fonts": 131248,
-        "images": 3228412,
+        "images": 465,
         "misc-media": 0,
         "video": 0
       },
@@ -291,21 +291,21 @@
       "git": {
         "assetModificationEvents": 9,
         "assetUniquePathsTouched": 9,
-        "commitMessageLines": 4,
+        "commitMessageLines": 208,
         "discardedAssetByKind": {},
         "discardedAssetEvents": 0,
         "discardedAssetFiles": 0,
         "firstCommitISO": "2026-05-27T09:37:21-04:00",
         "isGitRepo": true,
-        "lastCommitISO": "2026-05-27T09:37:21-04:00",
-        "lifetimeLinesAdded": 17564,
-        "lifetimeLinesRemoved": 0,
+        "lastCommitISO": "2026-05-27T19:11:56-04:00",
+        "lifetimeLinesAdded": 18674,
+        "lifetimeLinesRemoved": 581,
         "projectAgeDays": 0,
         "timeline": {
           "activeDays": 1,
           "commitsByDay": [
             {
-              "count": 1,
+              "count": 23,
               "date": "2026-05-27"
             }
           ],
@@ -315,35 +315,35 @@
             "linesRemoved": 0
           },
           "peakDay": {
-            "count": 1,
+            "count": 23,
             "date": "2026-05-27"
           }
         },
-        "totalCommits": 1,
-        "uniqueFilesTouched": 106
+        "totalCommits": 23,
+        "uniqueFilesTouched": 116
       },
       "grandTotals": {
-        "allBytes": 4394264,
+        "allBytes": 1180215,
         "allFiles": 107,
-        "authoredBytes": 996455,
-        "authoredFiles": 97,
-        "authoredLines": 16351,
-        "pipelineGeneratedBytes": 3359660,
-        "pipelineGeneratedFiles": 9,
+        "authoredBytes": 1010353,
+        "authoredFiles": 102,
+        "authoredLines": 16441,
+        "pipelineGeneratedBytes": 131713,
+        "pipelineGeneratedFiles": 4,
         "toolGeneratedBytes": 38149,
         "toolGeneratedFiles": 1
       },
       "planCount": 12,
-      "planLines": 6910,
+      "planLines": 6917,
       "projectName": "ai-journey-stats",
       "proxies": {
         "iterationProxyTotal": 0,
         "regenScriptCount": 0,
         "sampleEvalRunCount": 0
       },
-      "scannedAt": "2026-05-27T13:40:32.681Z",
-      "testCases": 105,
-      "testLines": 586,
+      "scannedAt": "2026-05-27T23:39:01.770Z",
+      "testCases": 121,
+      "testLines": 699,
       "tiers": [
         {
           "categories": [
@@ -351,72 +351,72 @@
               "category": "docs",
               "subcategories": [
                 {
-                  "bytes": 624645,
+                  "bytes": 625954,
                   "files": 12,
-                  "nonBlankLines": 5404,
+                  "nonBlankLines": 5410,
                   "subcategory": "plans",
-                  "totalLines": 6910
+                  "totalLines": 6917
                 },
                 {
-                  "bytes": 31092,
-                  "files": 2,
-                  "nonBlankLines": 308,
+                  "bytes": 35816,
+                  "files": 3,
+                  "nonBlankLines": 345,
                   "subcategory": "general",
-                  "totalLines": 424
+                  "totalLines": 475
                 },
                 {
-                  "bytes": 27184,
+                  "bytes": 31847,
                   "files": 2,
-                  "nonBlankLines": 83,
+                  "nonBlankLines": 107,
                   "subcategory": "readmes",
-                  "totalLines": 110
+                  "totalLines": 151
                 },
                 {
-                  "bytes": 21658,
-                  "files": 7,
-                  "nonBlankLines": 306,
+                  "bytes": 24626,
+                  "files": 8,
+                  "nonBlankLines": 347,
                   "subcategory": "insights",
-                  "totalLines": 387
+                  "totalLines": 439
                 }
               ],
               "totals": {
-                "bytes": 704579,
-                "files": 23,
-                "nonBlankLines": 6101,
+                "bytes": 718243,
+                "files": 25,
+                "nonBlankLines": 6209,
                 "subcategory": "<totals>",
-                "totalLines": 7831
+                "totalLines": 7982
               }
             },
             {
               "category": "code",
               "subcategories": [
                 {
-                  "bytes": 104510,
-                  "files": 36,
-                  "nonBlankLines": 2183,
+                  "bytes": 103933,
+                  "files": 38,
+                  "nonBlankLines": 2166,
                   "subcategory": "source",
-                  "totalLines": 2375
+                  "totalLines": 2357
                 },
                 {
-                  "bytes": 48491,
+                  "bytes": 48075,
                   "files": 19,
-                  "nonBlankLines": 1570,
+                  "nonBlankLines": 1481,
                   "subcategory": "styles",
-                  "totalLines": 1668
+                  "totalLines": 1575
                 },
                 {
-                  "bytes": 26673,
-                  "files": 7,
-                  "nonBlankLines": 530,
+                  "bytes": 31218,
+                  "files": 9,
+                  "nonBlankLines": 630,
                   "subcategory": "tests",
-                  "totalLines": 586
+                  "totalLines": 699
                 },
                 {
-                  "bytes": 11318,
-                  "files": 4,
-                  "nonBlankLines": 220,
+                  "bytes": 7005,
+                  "files": 3,
+                  "nonBlankLines": 127,
                   "subcategory": "build-scripts",
-                  "totalLines": 241
+                  "totalLines": 139
                 },
                 {
                   "bytes": 2612,
@@ -434,40 +434,40 @@
                 }
               ],
               "totals": {
-                "bytes": 194606,
-                "files": 72,
-                "nonBlankLines": 4623,
+                "bytes": 193845,
+                "files": 75,
+                "nonBlankLines": 4524,
                 "subcategory": "<totals>",
-                "totalLines": 5003
+                "totalLines": 4903
               }
             },
             {
               "category": "data",
               "subcategories": [
                 {
-                  "bytes": 97270,
+                  "bytes": 98265,
                   "files": 2,
-                  "nonBlankLines": 3517,
+                  "nonBlankLines": 3556,
                   "subcategory": "lookup-tables",
-                  "totalLines": 3517
+                  "totalLines": 3556
                 }
               ],
               "totals": {
-                "bytes": 97270,
+                "bytes": 98265,
                 "files": 2,
-                "nonBlankLines": 3517,
+                "nonBlankLines": 3556,
                 "subcategory": "<totals>",
-                "totalLines": 3517
+                "totalLines": 3556
               }
             }
           ],
           "tier": "authored",
           "totals": {
-            "bytes": 996455,
-            "files": 97,
-            "nonBlankLines": 14241,
+            "bytes": 1010353,
+            "files": 102,
+            "nonBlankLines": 14289,
             "subcategory": "<totals>",
-            "totalLines": 16351
+            "totalLines": 16441
           }
         },
         {
@@ -476,23 +476,23 @@
               "category": "assets",
               "subcategories": [
                 {
-                  "bytes": 3228412,
-                  "files": 6,
-                  "nonBlankLines": 0,
-                  "subcategory": "images",
-                  "totalLines": 0
-                },
-                {
                   "bytes": 131248,
                   "files": 3,
                   "nonBlankLines": 0,
                   "subcategory": "fonts",
                   "totalLines": 0
+                },
+                {
+                  "bytes": 465,
+                  "files": 1,
+                  "nonBlankLines": 0,
+                  "subcategory": "images",
+                  "totalLines": 0
                 }
               ],
               "totals": {
-                "bytes": 3359660,
-                "files": 9,
+                "bytes": 131713,
+                "files": 4,
                 "nonBlankLines": 0,
                 "subcategory": "<totals>",
                 "totalLines": 0
@@ -501,8 +501,8 @@
           ],
           "tier": "pipeline-generated",
           "totals": {
-            "bytes": 3359660,
-            "files": 9,
+            "bytes": 131713,
+            "files": 4,
             "nonBlankLines": 0,
             "subcategory": "<totals>",
             "totalLines": 0
@@ -544,41 +544,33 @@
         "byModel": [
           {
             "model": "Opus 4.7",
-            "sessions": 36,
-            "tokensProcessed": 2267380
+            "sessions": 1114,
+            "tokensProcessed": 284128387
           }
         ],
-        "cacheCreationInputTokens": 168944,
-        "cacheReadInputTokens": 2054132,
-        "inputTokens": 27478,
-        "outputTokens": 16826,
+        "cacheCreationInputTokens": 5405503,
+        "cacheReadInputTokens": 276774959,
+        "inputTokens": 227573,
+        "outputTokens": 1720352,
         "parseHealth": {
           "fileReadErrors": 0,
           "lineParseErrors": 0,
           "usageShapeWarnings": 0
         },
-        "sessionCount": 36,
+        "sessionCount": 1114,
         "sidechainTokens": 0,
-        "tokensFresh": 213248,
-        "tokensProcessed": 2267380,
+        "tokensFresh": 7353428,
+        "tokensProcessed": 284128387,
         "windowDays": 0,
-        "windowEndISO": "2026-05-27T13:40:22.117Z",
+        "windowEndISO": "2026-05-27T23:38:52.540Z",
         "windowStartISO": "2026-05-27T13:35:25.279Z"
       },
       "topSubcategories": [
         {
-          "bytes": 3228412,
-          "category": "assets",
-          "files": 6,
-          "lines": 0,
-          "subcategory": "images",
-          "tier": "pipeline-generated"
-        },
-        {
-          "bytes": 624645,
+          "bytes": 625954,
           "category": "docs",
           "files": 12,
-          "lines": 6910,
+          "lines": 6917,
           "subcategory": "plans",
           "tier": "authored"
         },
@@ -591,19 +583,27 @@
           "tier": "pipeline-generated"
         },
         {
-          "bytes": 104510,
+          "bytes": 103933,
           "category": "code",
-          "files": 36,
-          "lines": 2375,
+          "files": 38,
+          "lines": 2357,
           "subcategory": "source",
           "tier": "authored"
         },
         {
-          "bytes": 97270,
+          "bytes": 98265,
           "category": "data",
           "files": 2,
-          "lines": 3517,
+          "lines": 3556,
           "subcategory": "lookup-tables",
+          "tier": "authored"
+        },
+        {
+          "bytes": 48075,
+          "category": "code",
+          "files": 19,
+          "lines": 1575,
+          "subcategory": "styles",
           "tier": "authored"
         }
       ]
@@ -620,8 +620,6 @@
       },
       "editorial": {
         "description": "Real-time browser card game for 2–10 players on the couch. Built to prove a visual bar — Archer-coded illustration over Cloudflare Workers + Durable Objects.",
-        "gallery": [],
-        "heroImage": "/assets/burned/operative-silhouette.png",
         "hookStat": {
           "label": "CARDS",
           "value": "120"
@@ -824,11 +822,11 @@
         "uniqueFilesTouched": 981
       },
       "grandTotals": {
-        "allBytes": 446476833,
+        "allBytes": 446476684,
         "allFiles": 1093,
-        "authoredBytes": 9269787,
+        "authoredBytes": 9269638,
         "authoredFiles": 820,
-        "authoredLines": 190329,
+        "authoredLines": 190327,
         "pipelineGeneratedBytes": 436926606,
         "pipelineGeneratedFiles": 271,
         "toolGeneratedBytes": 280440,
@@ -842,7 +840,7 @@
         "regenScriptCount": 7,
         "sampleEvalRunCount": 10
       },
-      "scannedAt": "2026-05-27T13:40:27.081Z",
+      "scannedAt": "2026-05-27T23:38:56.718Z",
       "testCases": 1326,
       "testLines": 28488,
       "tiers": [
@@ -981,29 +979,29 @@
               "category": "data",
               "subcategories": [
                 {
-                  "bytes": 33407,
+                  "bytes": 33258,
                   "files": 16,
-                  "nonBlankLines": 469,
+                  "nonBlankLines": 467,
                   "subcategory": "lookup-tables",
-                  "totalLines": 482
+                  "totalLines": 480
                 }
               ],
               "totals": {
-                "bytes": 33407,
+                "bytes": 33258,
                 "files": 16,
-                "nonBlankLines": 469,
+                "nonBlankLines": 467,
                 "subcategory": "<totals>",
-                "totalLines": 482
+                "totalLines": 480
               }
             }
           ],
           "tier": "authored",
           "totals": {
-            "bytes": 9269787,
+            "bytes": 9269638,
             "files": 820,
-            "nonBlankLines": 163831,
+            "nonBlankLines": 163829,
             "subcategory": "<totals>",
-            "totalLines": 190329
+            "totalLines": 190327
           }
         },
         {
@@ -1120,8 +1118,8 @@
         "byModel": [
           {
             "model": "Opus 4.7",
-            "sessions": 33149,
-            "tokensProcessed": 9161383568
+            "sessions": 32787,
+            "tokensProcessed": 9071463967
           },
           {
             "model": "<synthetic>",
@@ -1129,22 +1127,22 @@
             "tokensProcessed": 0
           }
         ],
-        "cacheCreationInputTokens": 228147875,
-        "cacheReadInputTokens": 8881446046,
-        "inputTokens": 348204,
-        "outputTokens": 51441443,
+        "cacheCreationInputTokens": 225766448,
+        "cacheReadInputTokens": 8794431308,
+        "inputTokens": 345677,
+        "outputTokens": 50920534,
         "parseHealth": {
           "fileReadErrors": 0,
           "lineParseErrors": 0,
           "usageShapeWarnings": 0
         },
-        "sessionCount": 33152,
+        "sessionCount": 32790,
         "sidechainTokens": 0,
-        "tokensFresh": 279937522,
-        "tokensProcessed": 9161383568,
-        "windowDays": 28,
+        "tokensFresh": 277032659,
+        "tokensProcessed": 9071463967,
+        "windowDays": 27,
         "windowEndISO": "2026-05-24T23:42:09.653Z",
-        "windowStartISO": "2026-04-26T16:08:54.449Z"
+        "windowStartISO": "2026-04-27T16:54:56.507Z"
       },
       "topSubcategories": [
         {
@@ -1199,8 +1197,6 @@
       },
       "editorial": {
         "description": "Cloud data pipelines in the Azure focus stack — ADF, Databricks, Unity Catalog. The real question underneath: how do the agentic-workflow learnings from these projects apply to the enterprise data landscape?",
-        "gallery": [],
-        "heroImage": null,
         "hookStat": {
           "label": "STACK",
           "value": "ADF+UC"
@@ -1291,7 +1287,7 @@
         "regenScriptCount": 0,
         "sampleEvalRunCount": 0
       },
-      "scannedAt": "2026-05-27T13:40:27.519Z",
+      "scannedAt": "2026-05-27T23:38:57.051Z",
       "testCases": 0,
       "testLines": 0,
       "tiers": [
@@ -1394,31 +1390,7 @@
           }
         }
       ],
-      "tokens": {
-        "byModel": [
-          {
-            "model": "Opus 4.7",
-            "sessions": 970,
-            "tokensProcessed": 285163962
-          }
-        ],
-        "cacheCreationInputTokens": 6219551,
-        "cacheReadInputTokens": 277127471,
-        "inputTokens": 3606,
-        "outputTokens": 1813334,
-        "parseHealth": {
-          "fileReadErrors": 0,
-          "lineParseErrors": 0,
-          "usageShapeWarnings": 0
-        },
-        "sessionCount": 970,
-        "sidechainTokens": 0,
-        "tokensFresh": 8036491,
-        "tokensProcessed": 285163962,
-        "windowDays": 0,
-        "windowEndISO": "2026-04-27T13:58:09.119Z",
-        "windowStartISO": "2026-04-26T16:06:53.938Z"
-      },
+      "tokens": null,
       "topSubcategories": [
         {
           "bytes": 82380,
@@ -1464,8 +1436,6 @@
       },
       "editorial": {
         "description": "PreToolUse + Stop + PostToolUse hooks for Claude Code. Built after losing a session to WebFetch hanging — the rules are the lessons, and it's the source of the elite-engineer manifesto that ships into every session.",
-        "gallery": [],
-        "heroImage": null,
         "hookStat": {
           "label": "HOOKS",
           "value": "5"
@@ -1552,7 +1522,7 @@
         "regenScriptCount": 0,
         "sampleEvalRunCount": 0
       },
-      "scannedAt": "2026-05-27T13:40:27.869Z",
+      "scannedAt": "2026-05-27T23:38:57.371Z",
       "testCases": 0,
       "testLines": 0,
       "tiers": [
@@ -1701,8 +1671,6 @@
       },
       "editorial": {
         "description": "Classic arcade clone with ghost AI. Built to test how small a game could be without frameworks.",
-        "gallery": [],
-        "heroImage": null,
         "hookStat": {
           "label": "GHOSTS",
           "value": "4"
@@ -1785,7 +1753,7 @@
         "regenScriptCount": 0,
         "sampleEvalRunCount": 0
       },
-      "scannedAt": "2026-05-27T13:40:28.229Z",
+      "scannedAt": "2026-05-27T23:38:57.699Z",
       "testCases": 0,
       "testLines": 0,
       "tiers": [
@@ -1956,8 +1924,6 @@
       },
       "editorial": {
         "description": "Three custom Claude skills: /distill (preserve lessons), /brief (recall them), and a doc-audit quality gate. Built after losing context to fresh sessions one too many times.",
-        "gallery": [],
-        "heroImage": null,
         "hookStat": {
           "label": "PASS RATE",
           "value": "100%"
@@ -2052,7 +2018,7 @@
         "regenScriptCount": 0,
         "sampleEvalRunCount": 0
       },
-      "scannedAt": "2026-05-27T13:40:28.620Z",
+      "scannedAt": "2026-05-27T23:38:58.055Z",
       "testCases": 0,
       "testLines": 0,
       "tiers": [
@@ -2216,8 +2182,6 @@
       },
       "editorial": {
         "description": "Three-by-three grid, two players, classic rules. Built as a calibration project for the smallest scope project-metrics could measure.",
-        "gallery": [],
-        "heroImage": null,
         "hookStat": {
           "label": "FILES",
           "value": "4"
@@ -2296,7 +2260,7 @@
         "regenScriptCount": 0,
         "sampleEvalRunCount": 0
       },
-      "scannedAt": "2026-05-27T13:40:28.975Z",
+      "scannedAt": "2026-05-27T23:38:58.378Z",
       "testCases": 19,
       "testLines": 144,
       "tiers": [
@@ -2494,8 +2458,6 @@
       },
       "editorial": {
         "description": "Top-down racing game with a learned agent driving the car. The foundation — TDR-04 inherits the engine and adds the polish.",
-        "gallery": [],
-        "heroImage": null,
         "hookStat": {
           "label": "STACK",
           "value": "ONNX+RL"
@@ -2588,11 +2550,11 @@
         "uniqueFilesTouched": 221
       },
       "grandTotals": {
-        "allBytes": 18126672,
+        "allBytes": 18126589,
         "allFiles": 210,
-        "authoredBytes": 18089076,
+        "authoredBytes": 18088993,
         "authoredFiles": 209,
-        "authoredLines": 81607,
+        "authoredLines": 81606,
         "pipelineGeneratedBytes": 0,
         "pipelineGeneratedFiles": 0,
         "toolGeneratedBytes": 37596,
@@ -2606,7 +2568,7 @@
         "regenScriptCount": 0,
         "sampleEvalRunCount": 0
       },
-      "scannedAt": "2026-05-27T13:40:29.641Z",
+      "scannedAt": "2026-05-27T23:38:58.967Z",
       "testCases": 381,
       "testLines": 5270,
       "tiers": [
@@ -2696,29 +2658,29 @@
               "category": "data",
               "subcategories": [
                 {
-                  "bytes": 12031,
+                  "bytes": 11948,
                   "files": 7,
-                  "nonBlankLines": 243,
+                  "nonBlankLines": 242,
                   "subcategory": "lookup-tables",
-                  "totalLines": 261
+                  "totalLines": 260
                 }
               ],
               "totals": {
-                "bytes": 12031,
+                "bytes": 11948,
                 "files": 7,
-                "nonBlankLines": 243,
+                "nonBlankLines": 242,
                 "subcategory": "<totals>",
-                "totalLines": 261
+                "totalLines": 260
               }
             }
           ],
           "tier": "authored",
           "totals": {
-            "bytes": 18089076,
+            "bytes": 18088993,
             "files": 209,
-            "nonBlankLines": 73759,
+            "nonBlankLines": 73758,
             "subcategory": "<totals>",
-            "totalLines": 81607
+            "totalLines": 81606
           }
         },
         {
@@ -2818,8 +2780,6 @@
       },
       "editorial": {
         "description": "Three tracks, sprite atlas, menu UI, and a 487-test verification baseline. Built end-to-end across 8 phases — the last game before the games-pause pivot.",
-        "gallery": [],
-        "heroImage": null,
         "hookStat": {
           "label": "TESTS",
           "value": "487"
@@ -2900,11 +2860,11 @@
         "uniqueFilesTouched": 160
       },
       "grandTotals": {
-        "allBytes": 32516280,
+        "allBytes": 32516177,
         "allFiles": 161,
-        "authoredBytes": 17490615,
+        "authoredBytes": 17490512,
         "authoredFiles": 151,
-        "authoredLines": 81134,
+        "authoredLines": 81133,
         "pipelineGeneratedBytes": 14944718,
         "pipelineGeneratedFiles": 9,
         "toolGeneratedBytes": 80947,
@@ -2918,7 +2878,7 @@
         "regenScriptCount": 0,
         "sampleEvalRunCount": 0
       },
-      "scannedAt": "2026-05-27T13:40:30.404Z",
+      "scannedAt": "2026-05-27T23:38:59.644Z",
       "testCases": 504,
       "testLines": 7303,
       "tiers": [
@@ -3008,29 +2968,29 @@
               "category": "data",
               "subcategories": [
                 {
-                  "bytes": 13643,
+                  "bytes": 13540,
                   "files": 9,
-                  "nonBlankLines": 326,
+                  "nonBlankLines": 325,
                   "subcategory": "lookup-tables",
-                  "totalLines": 344
+                  "totalLines": 343
                 }
               ],
               "totals": {
-                "bytes": 13643,
+                "bytes": 13540,
                 "files": 9,
-                "nonBlankLines": 326,
+                "nonBlankLines": 325,
                 "subcategory": "<totals>",
-                "totalLines": 344
+                "totalLines": 343
               }
             }
           ],
           "tier": "authored",
           "totals": {
-            "bytes": 17490615,
+            "bytes": 17490512,
             "files": 151,
-            "nonBlankLines": 75267,
+            "nonBlankLines": 75266,
             "subcategory": "<totals>",
-            "totalLines": 81134
+            "totalLines": 81133
           }
         },
         {
@@ -3150,13 +3110,6 @@
       },
       "editorial": {
         "description": "Jackbox-style party game — shared TV screen, phone controllers, hidden-role voting. Its how-to-play page is 1700 lines of responsive HTML done right: single-column collapse, breakpoint-scaled type.",
-        "gallery": [
-          "/assets/undercover-mob-boss/trailer-blueprint.jpg",
-          "/assets/undercover-mob-boss/trailer-city-closeup.jpg",
-          "/assets/undercover-mob-boss/trailer-dossier-spread.jpg",
-          "/assets/undercover-mob-boss/trailer-table-overhead.jpg"
-        ],
-        "heroImage": "/assets/undercover-mob-boss/trailer-table-overhead.jpg",
         "hookStat": {
           "label": "PLAYERS",
           "value": "2–10"
@@ -3249,11 +3202,11 @@
         "uniqueFilesTouched": 503
       },
       "grandTotals": {
-        "allBytes": 35890250,
+        "allBytes": 35889888,
         "allFiles": 382,
-        "authoredBytes": 2390986,
+        "authoredBytes": 2390624,
         "authoredFiles": 213,
-        "authoredLines": 55976,
+        "authoredLines": 55969,
         "pipelineGeneratedBytes": 33220025,
         "pipelineGeneratedFiles": 167,
         "toolGeneratedBytes": 279239,
@@ -3267,7 +3220,7 @@
         "regenScriptCount": 0,
         "sampleEvalRunCount": 0
       },
-      "scannedAt": "2026-05-27T13:40:31.880Z",
+      "scannedAt": "2026-05-27T23:39:00.976Z",
       "testCases": 752,
       "testLines": 17925,
       "tiers": [
@@ -3364,29 +3317,29 @@
               "category": "data",
               "subcategories": [
                 {
-                  "bytes": 3275,
+                  "bytes": 2913,
                   "files": 3,
-                  "nonBlankLines": 77,
+                  "nonBlankLines": 70,
                   "subcategory": "lookup-tables",
-                  "totalLines": 77
+                  "totalLines": 70
                 }
               ],
               "totals": {
-                "bytes": 3275,
+                "bytes": 2913,
                 "files": 3,
-                "nonBlankLines": 77,
+                "nonBlankLines": 70,
                 "subcategory": "<totals>",
-                "totalLines": 77
+                "totalLines": 70
               }
             }
           ],
           "tier": "authored",
           "totals": {
-            "bytes": 2390986,
+            "bytes": 2390624,
             "files": 213,
-            "nonBlankLines": 47687,
+            "nonBlankLines": 47680,
             "subcategory": "<totals>",
-            "totalLines": 55976
+            "totalLines": 55969
           }
         },
         {
@@ -3518,5 +3471,5 @@
       ]
     }
   ],
-  "scannedAt": "2026-05-27T13:40:35.471Z"
+  "scannedAt": "2026-05-27T23:39:04.021Z"
 }

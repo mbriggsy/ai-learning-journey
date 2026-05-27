@@ -1,6 +1,6 @@
 {
   "name": "project-metrics",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Project-agnostic CLI that tallies every byte of authored / pipeline-generated work in a project. For exec slides and video stat sheets.",
   "type": "module",
   "bin": {

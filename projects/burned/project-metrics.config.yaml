@@ -19,13 +19,11 @@ generationLogs:
     label: "Pipeline generations (Imagen / TTS / ffmpeg)"
 
 # Editorial content for the ai-journey-stats showcase site (locked 2026-05-25).
-# heroImage is the interim arena art; swap to the origin-video lead frame when rendered.
 editorial:
   oneLiner: "Couch-of-friends spy comedy. Archer-coded card game in the browser."
   hookStat:
     label: "CARDS"
     value: "120"
-  heroImage: "public/assets/arena/operative-silhouette.png"
   liveUrl: "https://burned-cxa.pages.dev/board"
   repoUrl: "https://github.com/mbriggsy/ai-learning-journey/tree/main/projects/burned"
   status: "active"

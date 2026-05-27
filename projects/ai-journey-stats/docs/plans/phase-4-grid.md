@@ -6,6 +6,8 @@ coded: 2026-05-25T16:00:14-04:00
 code-reviewed: 2026-05-25
 ---
 
+> **⚠ SUPERSEDED in part (Phase 9, 2026-05-27): the tile carries NO hero image.** Briggsy cut project imagery entirely — `ProjectTile` is type-forward only (name · one-liner · ONE gold hook). The `heroImage` element/null-degrade rows, the age ribbon, the runtime-404→type-forward fallback, and the "all-`heroImage`-null reveal" notes below are historical; the reveal/refresh + sort + clean-tile architecture still stands. See TODO's "no imagery" landmine.
+
 # Phase 4 — Project grid
 
 **Prereq:** Read [README.md](README.md) first — the bar, locked decisions, and visual system live there. Read [phase-1-scaffold.md](phase-1-scaffold.md) (the motion foundation + semantic tokens this phase consumes), [phase-2-data-wiring.md](phase-2-data-wiring.md) (the `useStats()` non-null contract + field-level null discipline), [phase-3-hero.md](phase-3-hero.md) (the `src/lib/format.ts`, `src/components/<Name>/` folder, and `useGSAP` patterns this phase REUSES), and [phase-0-data-gaps.md](phase-0-data-gaps.md) (the data contract this phase renders against — `editorial`, `kind`, `git.projectAgeDays`, `grandTotals`, `archiveCollective`). This file is the decisions-not-code recipe for the project grid below the hero.

@@ -28,7 +28,7 @@ async function plainDir(files: Record<string, string>): Promise<string> {
 
 /**
  * Build a full multi-project fixture exercising every Phase-0 path:
- * - active-a: git + editorial config (heroImage exists) + test file + plan + asset
+ * - active-a: git + editorial config + test file + plan + image asset (byte-counting)
  * - active-b: git, no editorial
  * - active-c: NO git (graceful-degradation: git.firstCommitISO null)
  * - meta-tool: git + editorial config (MUST be forced null in meta[])
@@ -50,7 +50,6 @@ export async function buildMultiFixture(): Promise<MultiFixture> {
           'editorial:',
           '  oneLiner: "Active A — the rich one"',
           '  hookStat: { label: "TESTS", value: "metric:testCases" }',
-          '  heroImage: public/assets/images/hero.png',
           '  repoUrl: https://example.com/a',
           '  status: active',
           '  description: |',

@@ -6,6 +6,8 @@ coded: 2026-05-26T12:25:00-04:00
 code-reviewed: 2026-05-26
 ---
 
+> **⚠ SUPERSEDED in part (Phase 9, 2026-05-27): the detail page carries NO imagery.** Briggsy cut project imagery entirely — the `DetailHero` is a type-led single-column opener (no image split), and **Movement 6 (the Gallery + lightbox) is removed** (`Gallery/` deleted). The `heroImage`/`gallery` rows, the magazine split, and the lightbox spec below are historical. The AssetDonut, tokens ledger, composition inventory, cadence, and invitation links all still stand. See TODO's "no imagery" landmine. (Insights 006/007 document the now-removed Gallery's lightbox bugs — the lessons are general and stay.)
+
 # Phase 5 — Project detail page
 
 **Prereq:** Read [README.md](README.md) first — the bar, locked decisions, and visual system live there. Read [phase-1-scaffold.md](phase-1-scaffold.md) (the route skeleton + tokens + motion foundation this phase consumes; it already scaffolds `/project/:name` and anticipates "Phase 5's tier breakdown" + "DrawSVG → Phase 5"), [phase-2-data-wiring.md](phase-2-data-wiring.md) (the `useStats()` non-null contract + the privacy allowlist this phase EXTENDS), [phase-3-hero.md](phase-3-hero.md) (the `src/lib/format.ts` formatters + the `useGSAP`/reduced-motion/`<Name>/<Name>.module.css` component pattern this phase REUSES), [phase-4-grid.md](phase-4-grid.md) (the `LiveLinkButton` it reuses, the `grid-order.ts` pure-derivation+test pattern it mirrors, and the **P0 invisible-content guard** + `ScrollTrigger.batch` reveal pattern it inherits), and [phase-0-data-gaps.md](phase-0-data-gaps.md) (the data contract this page renders against). This file is the decisions-not-code recipe for the per-project detail page.

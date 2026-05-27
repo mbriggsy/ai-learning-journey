@@ -1,6 +1,8 @@
 # ai-journey-stats — editorial worksheet
 
-**Status:** Briggsy voice review COMPLETE via chat 2026-05-25 (one-liners + hooks + descriptions + the 6 misses all locked). Outstanding + non-blocking: hero-image captures (parallel).
+> **⚠ SUPERSEDED in part (2026-05-27): the site carries NO project imagery.** Briggsy cut imagery entirely (type-forward everywhere) — the projects were too heterogeneous for a consistent image grid. Every `heroImage:`, `heroImage_mobile_safe:`, `gallery:`, and the `## Capture queue` block below is **moot**. The one-liners, hookStats, descriptions, and the "misses" copy still stand. See TODO's "no imagery" landmine.
+
+**Status:** Briggsy voice review COMPLETE via chat 2026-05-25 (one-liners + hooks + descriptions + the 6 misses all locked).
 **Schema source:** [phase-0-data-gaps.md §0.6](plans/phase-0-data-gaps.md) — `EditorialContent` type.
 **Locked decisions (2026-05-24/25):** site celebrates the WORK, not the tool · **no meta tiles** — tool + site get no tile, but ARE counted in `combined` totals ("count everything", ideation §7) · **no bottom CTA** — the page ends on the work (ideation §4) · **clean tiles** — no tile buttons; live/source links live on the detail page (ideation §3) · `project-metrics` **not published** to npm · grid = **9 real projects + 1 "the misses" archive coda = 10 surfaces** · `repoUrl` wired to detail page.
 

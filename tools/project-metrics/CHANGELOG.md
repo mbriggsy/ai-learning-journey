@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.2.1 — 2026-05-27
+
+### Removed
+
+- **`editorial.heroImage` + `editorial.gallery`** — dropped from `EditorialContent`,
+  `validateEditorial`, the `report.ts` existence-check, and the `ALLOWED_KEY_PATHS`
+  publish allowlist. The ai-journey-stats site went type-forward everywhere (project
+  imagery was irreconcilably inconsistent across heterogeneous projects), so the image
+  fields are no longer consumed or published. `assetBytesByKind` (media volume as data)
+  is unaffected — it remains the on-thesis visual-output measurement.
+
 ## 0.2.0 — 2026-05-25
 
 Phase 0 data contract for the ai-journey-stats showcase site. All changes are

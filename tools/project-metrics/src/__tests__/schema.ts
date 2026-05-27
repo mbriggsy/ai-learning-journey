@@ -90,12 +90,10 @@ const tokenStats = z.object({
 const editorialContent = z.object({
   oneLiner: z.string(),
   hookStat: z.object({ label: z.string(), value: z.string() }),
-  heroImage: z.string().nullable(),
   liveUrl: z.string().nullable(),
   repoUrl: z.string().nullable(),
   status: z.enum(['active', 'shelved']),
   description: z.string(),
-  gallery: z.array(z.string()),
   largestCommitCaption: z.string().optional(),
 });
 

@@ -141,10 +141,8 @@ describe('validateEditorial', () => {
     expect(value).toMatchObject({
       oneLiner: 'A thing',
       status: 'active',
-      heroImage: null,
       liveUrl: null,
       repoUrl: null,
-      gallery: [],
     });
   });
 
@@ -152,16 +150,5 @@ describe('validateEditorial', () => {
     const { value, warnings } = validateEditorial({ oneLiner: 'only this' });
     expect(value).toBeNull();
     expect(warnings.length).toBeGreaterThan(0);
-  });
-
-  it('rejects an absolute heroImage path (privacy guard) and nulls it', () => {
-    const { value, warnings } = validateEditorial({
-      oneLiner: 'x',
-      hookStat: { label: 'L', value: 'v' },
-      description: 'd',
-      heroImage: 'C:/Users/brigg/secret.png',
-    });
-    expect(value?.heroImage).toBeNull();
-    expect(warnings.some((w) => w.includes('heroImage'))).toBe(true);
   });
 });

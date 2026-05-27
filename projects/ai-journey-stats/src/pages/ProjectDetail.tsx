@@ -14,7 +14,6 @@ import { TokensBlock } from '@/components/TokensBlock/TokensBlock'
 import { AssetDonut } from '@/components/AssetDonut/AssetDonut'
 import { CompositionInventory } from '@/components/CompositionInventory/CompositionInventory'
 import { CadenceSparkline } from '@/components/CadenceSparkline/CadenceSparkline'
-import { Gallery } from '@/components/Gallery/Gallery'
 import { LiveLinkButton } from '@/components/LiveLinkButton/LiveLinkButton'
 import styles from './ProjectDetail.module.css'
 
@@ -27,7 +26,7 @@ const BackLink = () => (
 // Movement groups drive the hairline dividers (rendered only between GROUPS). A literal union
 // (not bare `string`) makes a typo in any movement's group a compile error rather than a silent
 // misplaced/missing divider.
-type MovementGroup = 'opener' | 'magnitude' | 'work' | 'rhythm' | 'proof' | 'invitation'
+type MovementGroup = 'opener' | 'magnitude' | 'work' | 'rhythm' | 'invitation'
 type Movement = { key: string; group: MovementGroup; block: boolean; node: ReactNode | null }
 
 export default function ProjectDetail() {
@@ -50,8 +49,8 @@ export default function ProjectDetail() {
       const root = pageRef.current
       const blocks = () => (root ? gsap.utils.toArray<HTMLElement>('[data-block]', root) : [])
 
-      // Unconditional global refresh self-heal — fonts/hero-image/gallery load late and shift
-      // positions; also fires already-in-view triggers (this page's blocks + the donut) on mount.
+      // Unconditional global refresh self-heal — fonts load late and shift positions; also fires
+      // already-in-view triggers (this page's blocks + the donut) on mount.
       const onLoad = () => ScrollTrigger.refresh()
       window.addEventListener('load', onLoad, { once: true })
       let cancelled = false
@@ -195,12 +194,6 @@ export default function ProjectDetail() {
           {iterationSentence && <p className={styles.iteration}>{iterationSentence}</p>}
         </div>
       ) : null,
-    },
-    {
-      key: 'gallery',
-      group: 'proof',
-      block: true,
-      node: editorial?.gallery?.length ? <Gallery images={editorial.gallery} /> : null,
     },
     {
       key: 'invitation',

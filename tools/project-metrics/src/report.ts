@@ -1,4 +1,3 @@
-import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import { compileRules, DEFAULT_RULES, classify } from './classifier.js';
 import { loadProjectConfig, validateEditorial } from './config.js';
@@ -120,24 +119,11 @@ export async function buildProjectReport(opts: BuildReportOptions): Promise<Proj
     }
   }
 
-  // 0.6 — editorial: validate, existence-check heroImage, resolve metric refs.
+  // 0.6 — editorial: validate, resolve metric refs.
   const { value: editorialRaw, warnings: editorialWarnings } = validateEditorial(config.editorial);
   warnings.push(...editorialWarnings);
   let editorial: EditorialContent | null = null;
   if (editorialRaw) {
-    // heroImage path is project-relative (absolute rejected at validation) — safe to reflect.
-    let heroImage = editorialRaw.heroImage;
-    if (heroImage) {
-      const abs = path.join(rootDir, heroImage);
-      const exists = await fs
-        .stat(abs)
-        .then(() => true)
-        .catch(() => false);
-      if (!exists) {
-        warnings.push(`editorial.heroImage path does not exist: ${heroImage}`);
-        heroImage = null;
-      }
-    }
     // Resolve a `metric:<key>` hookStat value against this project's own numbers.
     const metrics: Record<string, number> = {
       testCases,
@@ -159,7 +145,6 @@ export async function buildProjectReport(opts: BuildReportOptions): Promise<Proj
     // Fresh literal so a cached config-load object is never mutated in place.
     editorial = {
       ...editorialRaw,
-      heroImage,
       hookStat: { label: editorialRaw.hookStat.label, value: hookValue },
     };
   }

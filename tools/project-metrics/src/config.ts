@@ -41,12 +41,10 @@ export interface ProjectConfig {
   editorial?: {
     oneLiner: string;
     hookStat: { label: string; value: string };
-    heroImage?: string | null;
     liveUrl?: string | null;
     repoUrl?: string | null;
     status?: 'active' | 'shelved';
     description: string;
-    gallery?: string[];
     largestCommitCaption?: string;
   };
 }
@@ -54,7 +52,6 @@ export interface ProjectConfig {
 /**
  * 0.6 — validate + normalize a raw `editorial` config block. Pure; returns the
  * typed value (or null when required fields are missing/mistyped) plus warnings.
- * Rejects absolute heroImage paths (they would leak into the public warnings[]).
  */
 export function validateEditorial(raw: unknown): {
   value: EditorialContent | null;
@@ -80,30 +77,13 @@ export function validateEditorial(raw: unknown): {
     warnings.push(`editorial.status '${String(r.status)}' invalid — defaulting to 'active'.`);
   }
 
-  let heroImage: string | null = null;
-  if (typeof r.heroImage === 'string' && r.heroImage.length > 0) {
-    if (/^[/\\~]/.test(r.heroImage) || /^[A-Za-z]:/.test(r.heroImage)) {
-      warnings.push(
-        `editorial.heroImage must be a project-relative path, got an absolute path — set to null.`,
-      );
-    } else {
-      heroImage = r.heroImage;
-    }
-  }
-
-  const gallery = Array.isArray(r.gallery)
-    ? r.gallery.filter((g): g is string => typeof g === 'string')
-    : [];
-
   const value: EditorialContent = {
     oneLiner: r.oneLiner,
     hookStat: { label: hs.label, value: hs.value },
-    heroImage,
     liveUrl: typeof r.liveUrl === 'string' ? r.liveUrl : null,
     repoUrl: typeof r.repoUrl === 'string' ? r.repoUrl : null,
     status,
     description: r.description,
-    gallery,
   };
   if (typeof r.largestCommitCaption === 'string') value.largestCommitCaption = r.largestCommitCaption;
   return { value, warnings };

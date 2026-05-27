@@ -7,6 +7,8 @@ coded: 2026-05-25T12:14:49-04:00
 
 # Phase 0 — Data contract (`tools/project-metrics/`)
 
+> **⚠ CONTRACT CHANGED (Phase 9, 2026-05-27): `editorial.heroImage` + `editorial.gallery` REMOVED** (tool 0.2.1). The site went type-forward (no imagery), so the validator's heroImage absolute-path rejection + existence-check and the `gallery` field below are gone. Everything else in the §0.6 editorial contract still stands. See `tools/project-metrics/CHANGELOG.md` 0.2.1.
+
 **Prereq:** Read [README.md](README.md) first — the bar, locked decisions, and visual system live there. This file is the decisions-not-code recipe for the data contract Phase 1+ renders against.
 
 Phase 0 lands the full data contract for the site: six new data field groups in the CLI's report shape, the multi-project config parser extension, the CLI surface parity to render the new fields (§0.8), the test harness bootstrap with fixture-based integration tests (§0.10), and the privacy-by-construction enforcement (shared `strip-for-publish.ts` + allowlist test). The phase name was "Fill data gaps" pre-doc-review — renamed at doc-review time because the scope is the full contract, not just field-adds. None of this is visual work; it's the data spine. The site renders nothing meaningful until these land.

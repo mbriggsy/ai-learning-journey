@@ -2,7 +2,6 @@ import { promises as fs } from 'node:fs'
 import path from 'node:path'
 import { buildMultiProjectReport } from '../../../tools/project-metrics/dist/multi-report.js'
 import { stripForPublish } from '../../../tools/project-metrics/dist/strip-for-publish.js'
-import { copyEditorialAssets } from './copy-editorial-assets.js'
 import { assertPublishSafe } from './publish-guard.js'
 import { stableStringify } from './stable-stringify.js'
 
@@ -42,11 +41,10 @@ async function main(): Promise<void> {
   }
 
   // ORDER IS LOAD-BEARING:
-  await copyEditorialAssets(report) // 1. needs projectPath (still present) to resolve sources
-  const safe = stripForPublish(report) // 2. shared fn: deep-clone + delete every projectPath
-  assertPublishSafe(safe) // 3. throw before writing if any PII/secret string slipped through
+  const safe = stripForPublish(report) // 1. shared fn: deep-clone + delete every projectPath
+  assertPublishSafe(safe) // 2. throw before writing if any PII/secret string slipped through
   await fs.mkdir(path.dirname(OUT), { recursive: true })
-  await fs.writeFile(OUT, stableStringify(safe), 'utf8') // 4. deterministic write
+  await fs.writeFile(OUT, stableStringify(safe), 'utf8') // 3. deterministic write
 
   process.stdout.write(`refresh: wrote ${OUT}\n`)
 }

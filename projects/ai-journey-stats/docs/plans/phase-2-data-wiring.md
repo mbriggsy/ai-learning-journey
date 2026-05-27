@@ -5,6 +5,8 @@ doc-reviewed: 2026-05-24T16:25:44-04:00
 coded: 2026-05-25T14:07:34-04:00
 ---
 
+> **⚠ SUPERSEDED in part (Phase 9, 2026-05-27): no project imagery → no asset copy.** Briggsy cut imagery entirely. `copy-editorial-assets.ts` and the `heroImage`/`gallery` path-rewrite step are **DELETED**; `refresh-stats.ts` now goes straight from `buildMultiProjectReport` → `stripForPublish` → guard → write. The asset-copy pipeline, the `public/assets/<projectName>/` generated dirs, and the heroImage path-rewrite notes below are historical. The strip/guard/stable-write data path still stands. See TODO's "no imagery" landmine.
+
 > **EXECUTED 2026-05-25 — ATC decisions + build-time corrections (code is now truth):**
 > 1. **Privacy guard = API-key SHAPES, not the english-word list (ATC).** HARD path/PII patterns still scan every string (the real vector). The SECOND tier is now real key fingerprints (`sk-ant-`, `sk-`/`sk-proj-`, Google `AIza`, GitHub `gh*_`, AWS `AKIA`, Slack `xox*`, PEM blocks) — NOT secret/password/username/email words. Key-shapes never false-positive on prose, so the `.editorial.` carve-out (Open decision #1 / Decision 5) is **GONE**. Catches actual leaked keys; the pipeline never touches `.env` anyway.
 > 2. **~~`commitsByAuthor` KEPT in the published JSON~~ — REVERSED 2026-05-26 (ATC):** `commitsByAuthor` AND `linesByAuthor` are now STRIPPED from the published JSON (`stripForPublish` DROP_KEYS) — unused by the site (authorship is silent, ideation §11) and thesis-inverting on a public/scrapeable JSON. `warnings[]` is also dropped. (The tool still COMPUTES both internally; only publish drops them. Open decision #4 below is thus RESOLVED → drop.)

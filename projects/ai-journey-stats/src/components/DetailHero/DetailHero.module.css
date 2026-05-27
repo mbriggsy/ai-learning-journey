@@ -1,18 +1,5 @@
-/* ~58/42 text/image split, vertically centered. minmax(0,…) lets the text column shrink
-   instead of overflowing. type-forward (no image) → single column, name steps up a size. */
+/* Type-led opener — a single stacked column (the site carries no project imagery, Phase 9). */
 .hero {
-  display: grid;
-  gap: var(--space-12);
-  align-items: center;
-}
-.hasImage {
-  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
-}
-.typeForward {
-  grid-template-columns: 1fr;
-}
-
-.text {
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
@@ -22,16 +9,12 @@
   margin: 0;
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: var(--text-display-md);
+  font-size: var(--text-display-lg);
   line-height: var(--leading-heading);
   letter-spacing: var(--tracking-display);
   color: var(--text-primary);
   text-wrap: balance;
   overflow-wrap: break-word;
-}
-/* type-forward: the name carries the whole opener, so it steps up to the large display size. */
-.typeForward .name {
-  font-size: var(--text-display-lg);
 }
 
 .subtitle {
@@ -50,32 +33,4 @@
   line-height: var(--leading-body);
   color: var(--text-secondary);
   text-wrap: pretty;
-}
-
-/* 16:9 image, clipped to the tile radius, cover-fit. */
-.imageFrame {
-  width: 100%;
-  aspect-ratio: 16 / 9;
-  border-radius: var(--radius-tile);
-  overflow: hidden;
-  box-shadow: var(--shadow-tile);
-}
-.image {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-/* Mobile: single column, text then image (source order already text→image). Image becomes a
-   full-width band. width:100% (NOT 100vw → no scrollbar overflow). */
-@media (max-width: 768px) {
-  .hero,
-  .hasImage {
-    grid-template-columns: 1fr;
-    gap: var(--space-8);
-  }
-  .name {
-    font-size: var(--text-display-lg);
-  }
 }

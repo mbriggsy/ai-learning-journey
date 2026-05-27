@@ -199,12 +199,10 @@ export const ALLOWED_KEY_PATHS: readonly string[] = [
     `${root}[].editorial.oneLiner`,
     `${root}[].editorial.hookStat.label`,
     `${root}[].editorial.hookStat.value`,
-    `${root}[].editorial.heroImage`,
     `${root}[].editorial.liveUrl`,
     `${root}[].editorial.repoUrl`,
     `${root}[].editorial.status`,
     `${root}[].editorial.description`,
-    `${root}[].editorial.gallery[]`,
     `${root}[].editorial.largestCommitCaption`,
   ]),
 ];

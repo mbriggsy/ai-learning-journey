@@ -276,15 +276,29 @@
   display: flex;
   justify-content: center;
 }
+/* Matches the landing close: two quiet lines (one sentence each), fluid + card-sized. */
 .signOff {
+  display: grid;
+  place-items: center;
+  gap: var(--space-1);
+  max-width: min(92vw, 40rem);
   margin: 0;
-  max-width: 40ch;
   text-align: center;
+}
+.signOffLead,
+.signOffAside {
   font-family: var(--font-body);
-  font-size: var(--text-body);
+  font-size: clamp(0.95rem, 1.5vw, 1.2rem);
   line-height: var(--leading-body);
+  text-wrap: balance;
+}
+.signOffLead {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.signOffAside {
+  font-weight: 400;
   color: var(--text-secondary);
-  text-wrap: pretty;
 }
 
 @media (max-width: 600px) {

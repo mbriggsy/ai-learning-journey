@@ -236,7 +236,8 @@ export default function About() {
         {/* Closing sign-off — the one sanctioned authorship nod (§11). Endnote, not a stat. */}
         <section className={styles.signOffWrap}>
           <p className={styles.signOff}>
-            Claude wrote all of it. Briggsy directed — and answered a question or two.
+            <span className={styles.signOffLead}>Claude wrote all of it.</span>
+            <span className={styles.signOffAside}>Briggsy directed — and answered a question or two.</span>
           </p>
         </section>
       </article>

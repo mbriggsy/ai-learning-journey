@@ -4,6 +4,7 @@ import { useStats } from '@/hooks/useStats'
 import { formatAsOf } from '@/lib/format'
 import { gsap, useGSAP } from '@/motion/gsap-context'
 import { duration } from '@/motion/tokens'
+import { ease } from '@/motion/easings'
 import { prefersReducedMotion } from '@/motion/reduced-motion'
 import styles from './About.module.css'
 
@@ -71,7 +72,7 @@ export default function About() {
         opacity: 0,
         y: 8,
         duration: duration.reveal,
-        ease: 'weighted-arrive',
+        ease: ease.arrive,
       })
     },
     { scope: pageRef, dependencies: [] },

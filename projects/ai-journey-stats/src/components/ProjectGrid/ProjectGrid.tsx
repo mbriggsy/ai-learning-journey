@@ -1,6 +1,7 @@
 import { useRef } from 'react'
 import { gsap, useGSAP, ScrollTrigger } from '@/motion/gsap-context'
 import { duration, stagger } from '@/motion/tokens'
+import { ease } from '@/motion/easings'
 import { prefersReducedMotion } from '@/motion/reduced-motion'
 import { useStats } from '@/hooks/useStats'
 import { buildGridModel } from '@/lib/grid-order'
@@ -89,7 +90,7 @@ export function ProjectGrid() {
             autoAlpha: 1,
             y: 0,
             duration: duration.reveal,
-            ease: 'weighted-arrive',
+            ease: ease.arrive,
             stagger: stagger.tiles,
             overwrite: true,
           }),

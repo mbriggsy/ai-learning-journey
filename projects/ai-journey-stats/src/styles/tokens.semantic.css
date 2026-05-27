@@ -82,7 +82,7 @@
     --text-secondary: var(--c-warm-slate);
     --text-muted: rgba(74, 74, 82, 0.82); /* alpha floored at AA: 0.82 → ~4.9:1 over --surface-page (0.6 was ~3.0:1, failed). Keep in sync w/ the @media + [data-theme] blocks. Do NOT lower. */
     --text-on-accent: var(--c-cream-paper);
-    --text-link: var(--c-orange-light);
+    --text-link: var(--c-orange-deep-light); /* AA 5.0:1 on cream — decoupled from --accent-primary (#d4631a is 3.33:1: fine for large/decorative accent, fails AA for link-size text). Phase 9 contrast gate. Keep in sync w/ [data-theme] block. */
     --accent-primary: var(--c-orange-light);
     --accent-stat-highlight: var(--c-gold-light);
     --accent-danger: var(--c-danger-light);
@@ -110,7 +110,7 @@
   --text-secondary: var(--c-warm-slate);
   --text-muted: rgba(74, 74, 82, 0.82); /* AA floor — synced with the @media light block above */
   --text-on-accent: var(--c-cream-paper);
-  --text-link: var(--c-orange-light);
+  --text-link: var(--c-orange-deep-light); /* AA 5.0:1 on cream — synced with the @media light block; decoupled from --accent-primary. */
   --accent-primary: var(--c-orange-light);
   --accent-stat-highlight: var(--c-gold-light);
   --accent-danger: var(--c-danger-light);

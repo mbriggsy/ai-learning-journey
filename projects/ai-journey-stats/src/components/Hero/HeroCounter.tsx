@@ -1,6 +1,7 @@
 import { useRef, type CSSProperties } from 'react'
 import { gsap, useGSAP } from '@/motion/gsap-context'
 import { duration } from '@/motion/tokens'
+import { ease } from '@/motion/easings'
 import { prefersReducedMotion } from '@/motion/reduced-motion'
 import { formatTokens, pickTokenUnit, padCounter } from '@/lib/format'
 import styles from './Hero.module.css'
@@ -38,7 +39,7 @@ export function HeroCounter({ value, srUnit }: { value: number; srUnit: string }
       gsap.to(proxy, {
         val: value,
         duration: duration.counter, // 2.4s
-        ease: 'weighted-settle', // registered in Phase 1 easings.ts (boot-imported)
+        ease: ease.settle,
         snap: { val: 1 },
         onUpdate: () => {
           el.textContent = render(proxy.val)

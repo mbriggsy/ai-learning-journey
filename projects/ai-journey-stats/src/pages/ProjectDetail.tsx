@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router'
 import { useStats } from '@/hooks/useStats'
 import { gsap, useGSAP, ScrollTrigger } from '@/motion/gsap-context'
 import { duration, stagger } from '@/motion/tokens'
+import { ease } from '@/motion/easings'
 import { prefersReducedMotion } from '@/motion/reduced-motion'
 import { findProject, buildComposition } from '@/lib/composition'
 import { totalMediaBytes } from '@/lib/donut'
@@ -100,7 +101,7 @@ export default function ProjectDetail() {
             autoAlpha: 1,
             y: 0,
             duration: duration.reveal,
-            ease: 'weighted-arrive',
+            ease: ease.arrive,
             stagger: stagger.tiles,
             overwrite: true,
           }),

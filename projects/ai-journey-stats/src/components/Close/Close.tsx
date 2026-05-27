@@ -1,6 +1,7 @@
 import { useRef } from 'react'
 import { gsap, useGSAP, ScrollTrigger } from '@/motion/gsap-context'
 import { duration, stagger } from '@/motion/tokens'
+import { ease } from '@/motion/easings'
 import { prefersReducedMotion } from '@/motion/reduced-motion'
 import { useStats } from '@/hooks/useStats'
 import { formatInt, formatTokens } from '@/lib/format'
@@ -70,7 +71,7 @@ export function Close() {
           autoAlpha: 1,
           y: 0,
           duration: duration.reveal,
-          ease: 'weighted-arrive',
+          ease: ease.arrive,
           stagger: stagger.supportingLines,
           overwrite: true,
         })

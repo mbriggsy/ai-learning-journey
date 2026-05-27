@@ -12,6 +12,7 @@ import {
 } from '@/lib/format'
 import { gsap, useGSAP } from '@/motion/gsap-context'
 import { duration, stagger } from '@/motion/tokens'
+import { ease } from '@/motion/easings'
 import { HeroCounter } from './HeroCounter'
 import styles from './Hero.module.css'
 
@@ -53,13 +54,13 @@ export function Hero() {
         autoAlpha: 0,
         y: 12,
         duration: 0.6,
-        ease: 'weighted-arrive',
+        ease: ease.arrive,
       })
       gsap.from(gsap.utils.toArray('[data-reveal="after"]', heroRef.current), {
         autoAlpha: 0,
         y: 16,
         duration: 0.6,
-        ease: 'weighted-arrive',
+        ease: ease.arrive,
         stagger: stagger.supportingLines, // 0.08
         delay: duration.counter, // 2.4 — secondary context follows the magnitude
       })

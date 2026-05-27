@@ -4,6 +4,7 @@ import { duration, stagger } from '@/motion/tokens'
 import { prefersReducedMotion } from '@/motion/reduced-motion'
 import { useStats } from '@/hooks/useStats'
 import { formatInt, formatTokens } from '@/lib/format'
+import { deriveCloseModel } from '@/lib/close-model'
 import styles from './Close.module.css'
 
 /**
@@ -31,18 +32,9 @@ export function Close() {
   // but is NOT in the count — mirrors the hero (Phase 3).
   const projectCount = projects.length + (archiveCollective?.projectCount ?? 0)
 
-  const hasTokens = combined.tokenWindowDays !== null
-  const hasAuthored = combined.totalAuthoredLines > 0
-
-  // Retention-window honesty (ideation §2): the token tally is a window-bounded floor,
-  // never a bare "lifetime" claim. The "as of <date>" freshness stays the hero/About's job.
-  const windowDays = combined.tokenWindowDays
-  const windowLine =
-    windowDays === null
-      ? null
-      : windowDays === 0
-        ? 'measured over under a day of session retention'
-        : `measured over a ${windowDays}-day window`
+  // Layered null-degrade decisions — extracted to a pure, unit-tested helper (close-model.ts).
+  // The predicate intent (hasTokens uses `!== null`, NOT `> 0`; windowLine honesty) lives there.
+  const { projectLabel, hasTokens, hasAuthored, windowLine } = deriveCloseModel(combined, projectCount)
 
   // Reveal-on-scroll in the site's `weighted` dialect — the close is below the fold, so it
   // reveals as the visitor scrolls to it. Everything lives in ONE useGSAP({scope}) so the dev
@@ -152,7 +144,7 @@ export function Close() {
       {/* projects — structural floor, always shown */}
       <div className={styles.figure} data-reveal>
         <span className={`${styles.number} tabular`}>{formatInt(projectCount)}</span>
-        <span className={styles.label}>{projectCount === 1 ? 'project' : 'projects'}</span>
+        <span className={styles.label}>{projectLabel}</span>
       </div>
 
       {hasTokens && (

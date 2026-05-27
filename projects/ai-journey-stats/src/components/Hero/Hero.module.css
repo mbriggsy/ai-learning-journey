@@ -19,7 +19,7 @@
 .counter {
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: var(--text-display-hero); /* clamp(4rem, 16vw, 19rem) — Phase 1 token, dialed down 2026-05-27 */
+  font-size: var(--text-display-hero); /* clamp(2.75rem, 10vw, 11rem) — Phase 1 token, dialed down hard 2026-05-27 */
   line-height: var(--leading-display-hero); /* 0.95 — single-line numbers ONLY */
   letter-spacing: var(--tracking-display); /* -0.04em */
   min-width: var(--counter-ch, auto); /* reserve width → no tick-up reflow */

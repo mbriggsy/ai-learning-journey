@@ -14,7 +14,8 @@ old work.
 - [`2026-05-24-trailer-structure.md`](2026-05-24-trailer-structure.md)
   — the spine. Story Circle compressed to 6 trailer beats.
 - [`2026-05-24-origin-event-brainstorm.md`](2026-05-24-origin-event-brainstorm.md)
-  — 6 origin-event engines (DECISION PENDING — pick one to start).
+  — 6 origin-event engines + the **LOCKED engine decision (2026-05-28)**:
+  a fusion (#4 open · #2 spine · #3 gut-punch tag). See its §DECISION.
 
 ## Current state
 
@@ -27,10 +28,13 @@ old work.
   briefing-at-you frame). Reuses the tuned Eleanor "matriarch" voice
   asset. Narrator = named "Janet" (in-world matriarch, outside-observer). See
   principles doc §RESOLVED.
-- **NEXT ACTION:** 6 origin-event engines drafted (see brainstorm doc).
-  Briggsy picks one (lean: #2 "She Gave It Two Weeks"; #3 highest
-  ceiling/risk; possible fusion) → then build the new beat sheet against
-  the bar + spine. Nothing in the brainstorm is locked yet.
+- **ENGINE LOCKED (2026-05-28):** fusion — **#4 Game Night** open (warm
+  true cold-open, the laugh) · **#2 Two Weeks** spine (disbelief→awe, owns
+  the middle) · **#3 Origin of Janet** gut-punch tag (*"…not a word came
+  from his hand. Including mine."*). Full decision + the four tag
+  non-negotiables in the brainstorm doc's §DECISION.
+- **NEXT ACTION:** build the new beat sheet against the locked engine +
+  the bar + the spine.
 
 ## Superseded v1 work (reference only — do not extend)
 

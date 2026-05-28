@@ -1,6 +1,6 @@
 # Origin Trailer v2 — Beat Sheet DRAFT (2026-05-28)
 
-**Status:** DRAFT v3 for review. Built against the LOCKED engine
+**Status:** DRAFT v4 for review. Built against the LOCKED engine
 (§DECISION in `2026-05-24-origin-event-brainstorm.md`), the 6-point bar
 (`…-principles.md`), and the 6-beat spine (`…-trailer-structure.md`).
 
@@ -31,11 +31,36 @@ grudgingly impressed (CODED cadence, never cloned).
 - **"up to ten"** for player count (2–10, not always 10) — both spots.
 - **Runtime confirmed** ~119s. "Takes as long as it takes." No trimming.
 
-**Real facts used (verified 2026-05-28, not copied):**
-- **1,413 tests** — exact, `npx vitest list`.
-- **15,856 lines** implementation code (117 files); **10,040 lines** test
-  code (45 files); **85,549 lines** planning/spec/design docs (203 files)
-  — all from `git ls-files` + `wc -l`. Planning : code ≈ **5.4 : 1**.
+### v4 changes (number correction, 2026-05-28)
+- **CRITICAL FIX — wrong scope.** The v2/v3 numbers (16K code / 10K tests /
+  85K planning / 1,413 tests / "5×") were ad-hoc `git` counts scoped to
+  `src/` for code but ALL docs for planning — apples-to-oranges, and they
+  **contradicted the published stats site**. Briggsy caught it (the site
+  says 62K planning, not 85K).
+- **Now using the canonical, Briggsy-locked site buckets** (the trailer
+  MUST agree with the public stats site): Application LOC **43,357**,
+  testing **29,033**, planning **62,082**, test cases **1,326**.
+- **"I counted five" is DEAD** — false on real numbers (planning ÷ app =
+  1.4×, not 5×). Replaced with button 1: "More planning than code.
+  'Measure twice,' they say. This one never stopped." — TRUE (62K > 43K)
+  and keeps the over-planning DNA.
+- All test-count instances 1,413 → **1,326** (gauntlet, proof ×2, tag).
+
+**Real facts used (CANONICAL — from the published stats site; NOT ad-hoc git counts):**
+- **Application LOC: 43,357** (code: source + styles + markup) ·
+  **Testing: 29,033** (tests + fixtures) · **Implementation planning:
+  62,082** (docs/plans) · **Total authored: 190,402**. Source:
+  `projects/ai-journey-stats/public/data/stats.json` (refreshed
+  2026-05-28), computed by `tools/project-metrics`, bucket definitions
+  Briggsy-locked 2026-05-27 (`ai-journey-stats/src/lib/composition.ts`).
+- **Test cases: 1,326** (the site's published static count). `npx vitest
+  list` reports 1,413 at runtime (it.each expansion) — the trailer uses
+  the site's **1,326** so the two never contradict in public.
+- Spoken roundings round DOWN (honest): "forty-three thousand" /
+  "twenty-nine thousand" / "sixty-two thousand" / "thirteen hundred and
+  twenty-six."
+- **The TRUE flex:** planning (62K) **exceeds** the application code (43K)
+  — "more planning than code." (NOT 5×; do not resurrect that.)
 - Game = faithful Exploding Kittens: Party Pack port — 120-card deck,
   2–10 players, same-room; one shared TV screen + private phone
   controllers; lose by drawing **BURNED**. World = The Pendleton Agency.
@@ -43,9 +68,8 @@ grudgingly impressed (CODED cadence, never cloned).
   Cloudflare Workers Durable Objects. He wrote no code — direction,
   taste, ambition.
 
-**Target runtime:** ~119s (≈2 min). Trim points flagged at beats 4 & 5 if
-it drags. Proportions still honor the lock: warm #4 open, #2 owns the
-spine, #3 tag = ~3s.
+**Target runtime:** ~119s (≈2 min) — locked. Proportions still honor the
+lock: warm #4 open, #2 owns the spine, #3 tag = ~3s.
 
 ---
 
@@ -115,21 +139,22 @@ build pays them off.
 ## Beat 4 — THE BUILD + SCALE  ·  engine #2 spine  ·  ~22s  ·  bar 2,3,4 / peak: awe → deadpan
 
 **Job:** The method + the SCALE, as escalating concrete numbers. Honest
-flex begins. (Trim point if runtime runs hot: cut the test-code line.)
+flex begins.
 
 **VO (Janet):**
 > "He didn't write it. Any of it. He pointed — and the machine wrote.
 >
-> Sixteen thousand lines of code, in a language he'd never touched. Ten
-> thousand more, written for the sole purpose of attacking the first
-> sixteen. And eighty-five thousand lines of plans, specs, and design
-> behind all of it.
+> Forty-three thousand lines of code, in a language he'd never touched.
+> Twenty-nine thousand more, written for the sole purpose of attacking the
+> first forty-three. And sixty-two thousand lines of planning behind all
+> of it.
 >
-> *[beat]* 'Measure twice,' the saying goes. *[dry]* I counted five."
+> *[beat]* More planning than code. *[dry]* 'Measure twice,' they say.
+> *This* one never stopped."
 
-**Visual:** Numbers stamping on screen and escalating —
-16,000 → +10,000 → 85,000 — the planning bar dwarfing the code bar. The
-ratio is the visual punchline.
+**Visual:** Numbers stamping on screen —
+43,000 → 29,000 → 62,000 — planning standing as the tallest bar of the
+three. "More planning than code" is the visual punchline (true: 62K > 43K).
 
 **Bar:** stats delivered as escalating *images* with a deadpan turn (2,3);
 autonomy owned honestly — "he didn't write it. Any of it." (4).
@@ -139,7 +164,7 @@ autonomy owned honestly — "he didn't write it. Any of it." (4).
 ## Beat 5 — THE GAUNTLET (challenger agents)  ·  engine #2 spine  ·  ~18s  ·  bar 2,3 / peak: laugh
 
 **Job:** UMB-DNA adversarial testing, BURNED-native. The comedy engine.
-NO voting. (Trim point: drop one chaos image if hot.)
+NO voting.
 
 **VO (Janet):**
 > "Then it did the genuinely deranged thing. It built a swarm of
@@ -150,10 +175,10 @@ NO voting. (Trim point: drop one chaos image if hot.)
 > into certain death and enjoyed it. They yanked their phones offline
 > mid-turn, just to see what would fall over.
 >
-> Fourteen hundred and thirteen times."
+> Thirteen hundred and twenty-six times."
 
 **Visual:** The challenger swarm — phone UIs hammered, BURNED cards forced
-onto opponents, disconnect spinners, a chaos counter climbing to 1413.
+onto opponents, disconnect spinners, a chaos counter climbing to 1326.
 
 **Bar:** vivid true images, zero jargon (2); the drunk-spiteful-agents
 picture in Janet's deadpan is the cold-viewer laugh (3). All chaos is
@@ -167,8 +192,8 @@ BURNED-true (forcing the BURNED draw, disconnects) — no borrowed voting.
 BURNED-native, NOT UMB's caffeine button.
 
 **VO (Janet):**
-> "Fourteen hundred and thirteen attempts to break it. *[beat]* Fourteen
-> hundred and thirteen failures. The most belligerent test subjects ever
+> "Thirteen hundred and twenty-six attempts to break it. *[beat]* Thirteen
+> hundred and twenty-six failures. The most belligerent test subjects ever
 > assembled — and the only thing in the room that never once fell over was
 > the thing nobody had laid a hand on.
 >
@@ -180,7 +205,7 @@ BURNED-native, NOT UMB's caffeine button.
 > machine did the rest."
 
 **Visual:** Chaos resolves to a clean holding screen, counter locks
-**1413 / 1413** → cut to a late-night desk, one lamp. Dryness softening to
+**1326 / 1326** → cut to a late-night desk, one lamp. Dryness softening to
 affection.
 
 **Bar:** earned deadpan snap (3); real self-deprecating cost (5); flex
@@ -201,7 +226,7 @@ had laid a hand on" + "a thing that doesn't have eyes" seed the tag twice.
 > He bet a machine could build something worth playing. *[beat]* He was
 > right.
 >
-> And not one word of this — the game, the swarm, the fourteen hundred
+> And not one word of this — the game, the swarm, the thirteen hundred
 > tests… this very trailer… came from his hand."
 >
 > *[long beat — air]*

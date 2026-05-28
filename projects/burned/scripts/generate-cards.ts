@@ -305,11 +305,12 @@ const CARDS: CardPrompt[] = [
       'the LEFT man wears a dark charcoal suit and a fedora, the RIGHT man is bald and wears a burnt-orange suit, two visually distinct men not twins, ' +
       'a small slim flat stack of hundred-dollar bills sits on the bar counter between them, resting directly on the polished wood, just sitting there — NO motion, NO streaks, NO speed lines, NO shadows-that-look-like-shapes, NO coaster NO placemat NO envelope beneath it, just plain cash on plain wood, ' +
       'a glass tumbler of amber whiskey with ice sits on the counter between them, ' +
-      'warm amber backlit liquor bottles fill the shelves behind the bar, a single amber pendant lamp hangs over the counter, ' +
+      'warm amber backlit liquor bottles fill the shelves behind the bar — the rows of backlit bottle shelves continue UNBROKEN all the way to BOTH the far-left and far-right edges of the frame, evenly lit corner to corner with no dark gaps, a single amber pendant lamp hangs over the counter, ' +
       'the scene is clean and simple — no smoke, no cigarettes, no clutter — just two guys, whiskey, and the cash slide, ' +
-      'deep charcoal and dark teal shadows around the edges, warm amber and burnt orange dominant palette from the bar lights, ' +
+      'soft deep teal and charcoal tones confined to the lower corners only, kept as gentle gradients NEVER hard-edged shapes, warm amber and burnt orange dominant palette from the bar lights, ' +
       'clandestine late-night favor-asking energy, an unspoken debt changing hands, ' +
       'the scene fills the entire square frame edge to edge with NO white borders NO vignette NO padding, every corner contains bar atmosphere, ' +
+      'NO dark angular wedge, NO diagonal shadow slab, NO black triangular panel, NO phantom door or wall edge cutting across or down onto the liquor shelves — the backbar shelving reads as one clean unbroken wall of bottles, ' +
       'NO text NO letters NO words NO numbers NO writing anywhere in the scene, no denominations no serial numbers, ' +
       'mid-century modern 1960s spy-film noir aesthetic, bold geometric angular style, flat illustration, ' +
       'square full-bleed composition centered on the cash brick mid-slide',

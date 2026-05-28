@@ -7,322 +7,80 @@ the history. (Rule: `feedback-todo-is-not-a-diary.md`.)
 
 ## 1. Active priorities
 
-### Current state (verified 2026-05-23)
+### Current state (verified 2026-05-23, re-confirmed 2026-05-28 — git shows zero `src/` or `videos/trailer/` code touched since; intervening commits are docs-only)
 
 - Tests: **1407 pass** | 6 expected fail (68/68 files green)
-- Trailer subpackage tests: **220 pass | 0 expected-fail** (11 files)
+- Trailer subpackage tests: **220 pass | 0 expected-fail** (11 files) — v1 Remotion infra retained, reusable for v2
 - Typecheck: clean (`pnpm typecheck` root + `videos/trailer/`)
 - Phone player entry: **19.17 KB gz**
 - DramaOverlay lazy chunk: **2.34 KB gz**
 - HOW-TO-PLAY bundle: `howtoplay-*.js` **33.90 KB gz** + shared GSAP **27.21 KB gz**
 - Protocol version: **v6**
-- Trailer runtime: **3180f / 106s @ 30fps** (TOTAL_FRAMES)
 - Phase 2 ElevenLabs spend: **$0.87 / $50** ceiling
 
-### Origin trailer
+### Origin trailer v2 — ACTIVE
 
-Plans (8) drafted, deepened, document-reviewed at
-`docs/plans/origin-trailer/` (phase-0 through phase-7 + `roadmap.md`
-ADR ledger). Sequential phase execution.
+Clean-slate rebuild after v1 teardown (2026-05-24 — v1 was a
+feature-list briefing with no human, no bet, no earned payoff).
+Workspace + locked decisions: **`docs/plans/origin-trailer-v2/`**.
+Read its `README.md` first; `2026-05-24-origin-trailer-principles.md`
+is the bar everything downstream is judged against.
 
-**Phase 0 / 1 / 2 / 3 — ✅ CLOSED.** Cleared sequentially 2026-05-18 →
-2026-05-22. See plan checkboxes + git log for unit history. Per-phase
-EXIT docs + sign-off sentinels under
-`videos/trailer/sample-eval/voice-pipeline/` + `videos/trailer/PHASE-0-EXIT.md`
-+ `videos/trailer/PHASE-3-EXIT.md`.
+**LOCKED:**
+- **Direction** — origin *story*, not feature briefing.
+- **Voice** — Janet: Malory-CODED dry matriarch, outside-observer
+  stance (recounts the bet, never reverts to briefing-at-you). Reuses
+  the tuned ElevenLabs Eleanor "matriarch" asset. Settings + gotchas
+  live in §2 landmines + the voice-pipeline note below.
+- **Engine (2026-05-28)** — fusion: **#4 Game Night** warm open ·
+  **#2 Two Weeks** disbelief→awe spine · **#3 Origin-of-Janet**
+  gut-punch tag (*"…not a word came from his hand. Including mine."*).
+  Decision + the four tag non-negotiables in
+  `2026-05-24-origin-event-brainstorm.md` §DECISION.
+- **Beat sheet (2026-05-28, draft v4)** — full VO, 7 beats, ~119s,
+  canonical stats-site numbers (43K app LOC / 29K tests / 62K planning
+  / 1,326 tests). Reviewed + approved by Briggsy.
+  `2026-05-28-beat-sheet-draft.md`.
 
-Hand-off contracts now in place:
-- **Phase 1 → Phase 2/3/4:** `videos/trailer/BEAT-SHEET.md` (frozen).
-- **Phase 2 → Phase 4:** `videos/trailer/src/lib/audio-manifest.ts` —
-  16 typed `AudioAsset` entries (R5=keep; 86.10s cumulative measured
-  audio across 106s composition window). Phase 4 imports for
-  `<Audio>` placement per asset-inventory.md hand-off doc.
-- **Phase 3 → Phase 4:** `videos/trailer/src/lib/visual-manifest.ts`
-  + `videos/trailer/PHASE-3-EXIT.md`. Manifest helper exports:
-  `HTP_ASSET` (1), `R15_CHROME` (8 SVGs), `BRIEFING` (10),
-  `TITLE_SEQ` (4), `MUSIC_BED` (1). Card-art SSoT remains
-  `card-roster.ts` (not duplicated in visual-manifest).
+**NEXT ACTION — visual direction.** Two forks to settle first (parked
+in the beat sheet's "Open questions"):
+1. **Medium** — hybrid (Archer-style build + real gameplay at the
+   payoff) vs all-motion-graphics vs gameplay-forward. *[Claude leans
+   hybrid.]*
+2. **Human on screen?** — silhouette / hands / an empty chair vs zero
+   humans (Janet's VO carries it).
 
-**Phase 3 — ✅ CLOSED** (Unit 3.7 landed 2026-05-22). Final units:
-Unit 3.0 (HTP vocab vendoring + drift gate), Unit 3.1 (HTP fullpage
-capture 1920×19848 against production), Unit 3.2 (17-entry typed
-card-roster + cascade-halo column geometry + bidirectional drift
-tests), Unit 3.3 (briefing-room set-dressing — 4 NEW SVGs:
-venetian-blinds, depth-plane Option A brass nameplate, dossier-
-folder-closed, dossier-folder-open), Unit 3.4 (R15 chrome stamps
-SPLIT-LAYER — 8 SVGs for 4 R15 instances × frame + text; CVD probe
-clears STRICT 0.10 oklab floor across 6 pairs / 3 deficiency sims),
-Unit 3.5 (music bed — "Spy Glass" by Kevin MacLeod CC-BY 4.0, $0
-paid), Unit 3.6 (cold-open title-sequence — 3 NEW SVGs + composite
-proof), **Unit 3.7 (typed visual-manifest + 12 drift-gate tests + 9
-per-family safe-square composites + 2 cross-family scene composites
-[S02 frame-300 briefing reveal + S04 frame-1950 cascade payoff
-stamp slap] + PHASE-3-EXIT.md hand-off doc).** Cumulative Imagen
-spend: **$0.00 / $6 cap.**
+Then the smaller ones: game-night footage approach, scale-cascade
+reuse, title-card timing.
 
-**Phase 4 — IN-FLIGHT** (entry 2026-05-22). Remotion composite at
-`docs/plans/origin-trailer/phase-4-remotion-composite.md`. Entry
-prerequisite status:
-- **Token-import strategy** — LOCKED Option C (fixed-value shim) at
-  Phase 4 deepening 2026-05-17 per Fork 3 + amendment SA-7.
-- ~~**Variable woff2 weight `'200 700'` syntax SPIKE**~~
-  **RESOLVED-BY-PHASE-0 (correction 2026-05-22).** Phase 0 Unit 0.5
-  already validated. `useFonts.ts` ships production variable-axis
-  pattern. Phase 4 Unit 4.0 DROPPED — see insight 066 + Phase 4 plan
-  Unit 4.0 banner. Deepening MA-7 missed the Phase 0 disposition.
-- **Briefing-room reference renders** (`case-banner-reference.png`,
-  `comms-ticker-reference.png`) deferred to Phase 4 invocation —
-  needs BURNED in playing-state game.
+**Reusable v1 infra** (`videos/trailer/`): Remotion harness,
+transitions, font/color libs, voice pipeline, HTP capture — all
+retained and reusable. The v1 *story* + briefing-room concept are
+**reference-only — do not extend.** v1 phase plans archived at
+`docs/plans/origin-trailer/` (phase-0…7); v1 beat sheet at
+`videos/trailer/BEAT-SHEET.md`.
 
-**Unit 4.0a — COMPLETED 2026-05-22.** Decision doc at `videos/trailer/
-sample-eval/composite-build/umb-v3-component-triage.md`. Net: **ZERO**
-UMB v3 components vendored. FadeTransition SUPERSEDED-BY-EXISTING
-`SceneFadeToBlack.tsx` (Phase 0 spike artifact; deepening miss — same
-family as insight 066); 5 TAKE-AS-INSPIRATION; 7 SKIP (incl. FilmGrain
-confirmed via Briggsy visual eval).
+### Voice pipeline — read before v2 generates new VO
 
-**Unit 4.1 — COMPLETED 2026-05-22.** Verification doc at
-`videos/trailer/sample-eval/composite-build/scaffold.md`. Net: 8 Remotion
-compositions registered (`BurnedTrailer` master + 6 `PreviewS0N…`
-standalone + `PreviewS04Peak` fast-iteration window) using camelCase IDs
-(Remotion 4.0.438 `isCompositionIdValid` rejects underscores — caught at
-first still-render; plan body's `Preview_S0N_…` form was illegal).
-Skeletal scenes scaffolded with shared `ScaffoldSceneFrame` helper +
-S01-specific 3×3 font-validation panel. `<MusicBed>` 15-anchor envelope
-re-derived against TOTAL_FRAMES=3180 (plan body's anchors were for the
-pre-Tier-4 2850-frame budget — insight #061 enumeration decay). ESLint
-`no-restricted-imports` rule blocks core `Audio` import per ADR #17
-(scoped to `videos/trailer/src/**`; root `pnpm lint` now includes the
-trailer subdir).
+A new beat sheet means a fresh ElevenLabs TTS pass. Before re-running
+the pipeline for v2, mind these (hard-won in v1):
 
-**Unit 4.1 carry-back: Phase 2 staticPath discipline correction.** During
-master render verification, Remotion 404'd on every VO cue. Root cause:
-`cueStaticPath()` emitted `audio/lines/<f>` but ADR #15 + the trailer's
-`setPublicDir('../../public')` require `trailer/audio/lines/<f>`. Phase
-3.5's music bed got the convention right; Phase 2 missed it. Fix
-(included in same commit): moved 16 .wav + 16 .processed + 16 raw + 16
-.sha256 sidecars from `videos/trailer/public/audio/lines/` → BURNED-root
-`public/trailer/audio/lines/`; updated `cueStaticPath` helper + 6 script
-WAV/LINES/OUT dir constants + script-coverage test + preflight gitignore
-pattern; regenerated `audio-manifest.ts`; added NEW
-`audio-manifest.test.ts` mirroring `visual-manifest.test.ts`'s file-
-existence forward gate (4 new assertions; would have caught the original
-drift). Trailer-local `public/audio/` dir removed (empty post-move). Root
-`.gitignore` adds `public/trailer/audio/lines/`. `visual-manifest.test.ts`
-`EXCLUDED_TRAILER_DIRS` adds `trailer/audio/lines` (owned by audio
-manifest).
-
-**Unit 4.2 — COMPLETED 2026-05-22.** Verification doc at
-`videos/trailer/sample-eval/composite-build/s01-archer-test.md`.
-Compressed-Archer cold-open: 3 operative card flashes (Janet → Dash →
-Neal per `COLD_OPEN_CARDS_DISPLAY_ORDER`) with EASE_OUT_EMIL entries +
-ochre-name-plate nameplate overlay; R15 #1 OPERATION PENDLETON stamp
-(split-layer SVG via new `R15Stamp` component + cream-12 paper plate
-per BEAT-SHEET line 144) lands at frame 150 tilted -12°; BURNED card-
-art (`burned.webp`) revealed at frame 180 via `LOGO_SPRING_COLD`
-spring (mass 0.5, damping 11, stiffness 200, overshootClamping false).
-Phase 0 carry-forward font-validation panel migrated to one-off
-evidence at `sample-eval/composite-build/font-validation.png`. New
-production components: `R15Stamp.tsx` (with `paperBg` prop —
-component-level cream plate fix; Phase 3 SVGs are transparent), 
-`OperativeCardFrame.tsx` (consumes Phase 3 Unit 3.6
-`operative-card-frame.svg`). New animation primitives:
-`STAMP_SLAP_PAYOFF`, `LOGO_SPRING_COLD`, `archerStampSlap` helper.
-Phase 0 spike components (`R15ChromeStamp`, `OperativePortraitFlash`,
-`BurnedLogoPlate`) stay for regression renders. Render evidence:
-`out/s01-cold-open.mp4` (1.9 MB, H264 CRF 18, 210 frames / 7.0 s) +
-PNG stills at frames 30/90/150/156/162/180/210. Briggsy-eye sentinel
-`briggsy-review-4.2.signoff` written.
-
-**Unit 4.3 — COMPLETED 2026-05-23.** Verification doc at
-`videos/trailer/sample-eval/composite-build/s02-archer-test.md`.
-12-second briefing-room establishing shot: mahogany base + venetian-
-blind drift (EASE_OUT_EMIL pan over scene duration) + dossier folder
-crossfade closed→open at scene-relative 30-90 (EASE_DRAWER cubic-
-bezier(0.32, 0.72, 0, 1) front-loaded drawer feel) + inlined Pendleton
-crest watermark top-left + depth-plane brass nameplate bottom-right
-(Phase 3 Unit 3.3 Option A — plan body's "brass-nameplate.svg" name
-is stale; actual on-disk is `depth-plane.svg`) + CommsTicker bottom
-strip holding "// CHANNEL OPEN" during scene-relative 30-330 per
-design-lens hold-during-VO behavior. New production components:
-`BriefingRoomBackground.tsx`, `DossierFolder.tsx`, `CommsTicker.tsx`.
-New animation primitives: `EASE_DRAWER_FN` + `EASE_IN_OUT_FN` (function
-forms of timing.ts CSS strings — SSoT pair per insight #057). Render
-evidence: `out/s02-briefing-setup.mp4` (2.3 MB, H264 CRF 18) + 5 PNG
-stills at frames 0/60/120/240/359. Briggsy-eye sentinel
-`briggsy-review-4.3.signoff` written.
-
-**Unit 4.4 — COMPLETED 2026-05-23 (R3, post-redo).** R1 HARD ZERO (vertical thumbnail column) → R2 (cascade with bigger cards, Briggsy flagged dead time) → R3 (VO-beat-aligned across full 27s, "lock it"). Verification doc at `videos/trailer/sample-eval/composite-build/s03-archer-test.md`. Briggsy-eye sentinel `briggsy-review-4.4.signoff` written. Cards now `OperativeCardFrame` at scale 0.45 (360×450) in diagonal cascade spanning full canvas; cascade entries restagger to land while Dash narrates ("Our autonomous field assets infiltrated the contract last quarter"); Otto-aside lands at rel 110 ("Seven operatives in the active roster"); Agent X spotlight pulse + paperwork marginalia ("// FILE: [REDACTED]  // PAPERWORK: 0") land during the "refuses to file any paperwork" beat; new `DeckStack` component (stack-of-3 card-backs + "120" badge + "// OPERATIONS" subtitle, archerStampSlap('payoff') envelope) lands at rel 437 with "Mission: a deck of one hundred and twenty operations"; new `BurnedCardReveal` component (burned.webp 440×440 with LOGO_SPRING_COLD spring + burned-fire multi-shadow glow + fade-out hook) lands dead-center at rel 540 with "One ends your career instantly"; cascade subtle "awkward lean" (scale +0.02 / rotate +1° triangle envelope) at rel 650-720 carries the dark-sting "Or ensure your colleagues don't"; BURNED fades 700-740 so cascade re-emerges for closing. Render evidence: `out/s03-mission-background.mp4` (7.5 MB, H264 CRF 18) + `out/s03-with-audio.mp4` (FFmpeg-muxed VO #1+#2 review-only build) + key stills at frames 90/130/220/460/580/680/750.
-
-**Unit 4.5 — COMPLETED 2026-05-23 (R2, coupled audio re-pace + visual
-rewrite).** R1 shipped a linear HTP scroll + 4 GoofyStatCaption overlays
-+ 6-card CardArtHalo column. Briggsy ear-checked the muxed review build
-and called audio over-talk; eye-checked the visual and called the
-scroll "conveyor belt — looks weird." R2 bundled the fixes: replaced
-the linear scroll with a 7-page dossier cascade that rhymes with S03's
-operative-card motion vocabulary (NEW `DossierPage.tsx` paper shell
-with land-overshoot + Y-drop + entry-tilt-resolves-to-final + chrome-
-decay opacity 1.0→0.55 envelopes; NEW `DossierPageCascade.tsx`
-orchestrator with 7 inline content components — P1 Pendleton cover, P2
-14,000 pages, P3 redacted 3:17 AM, P4 1,407 contingency tick-grid, P5
-6 unrehearsed with burned-fire strike-through, P6 17/5-hats inline-SVG
-glyphs, P7 7/6/1 budget breakdown). Audio re-pace: 6 of 8 cue
-startFrames shifted +21 to +115 against actualFrames + 5f inter-cue
-gap; 12 WAVs renamed; `audio-manifest.ts` regenerated; timing.ts
-`STACKED_PAYOFF_FRAME` 2280→2304, `PAYOFF_VO_END_FRAME` 2340→2367,
-`PAYOFF_HOLD_FRAMES` 30→3 (audio-through-fade design — last 12f of
-payoff VO play through S04TailFadeToBlack); `MusicBed.tsx` envelope 5
-anchors re-aligned (2010→2125, 2190→2214, 2280→2304, 2325→2352,
-2340→2367); `transitions.ts` doc comments updated; `timing.test.ts`
-assertions updated. Verification doc at `videos/trailer/sample-eval/
-composite-build/s04-archer-test.md`. Briggsy-eye sentinel
-`briggsy-review-4.5.signoff` written. Render evidence:
-`out/s04-receipts-cascade.mp4` (7.9 MB silent) + `out/s04-with-audio.mp4`
-(7.1 MB FFmpeg-muxed 8 VO cues at R2 offsets). R1 components shelved-
-not-deleted: `HtpDossierHero.tsx`, `CardArtHalo.tsx`,
-`GoofyStatCaption.tsx`. `htp-fullpage.png` asset untouched on disk.
-Distilled: insight #067 (cue startFrames against expectedFrames creates
-overtalk — read from audio-manifest, not script.ts expectedFrames) +
-insight #068 (foreign motion dialect inside a coherent visual album
-reads "weird" regardless of easing — rip-out beats patch).
-
-**Unit 4.5 R3 — PATCH 2026-05-23.** Briggsy-eye on shipped R2 caught P2
-"14,000" numeral page-bleed: `BigNumeral` fontSize=132 sized for short
-numerals ("17", "6") overflowed the 352px content area of the default
-400×520 DossierPage by ~38px on the left edge (bled onto mahogany).
-Fix: added optional `fontSize` prop to BigNumeral (default 132 preserved
-for P5/P6/P4); overrode to 96 at P2 only. Page geometry locked (page-
-width bump would cascade-conflict with P5 right edge at cx=880+200=1080
-already sharing desk space). P4 "1,407" (5 chars) at default 132 still
-fits (~324px in 352px) — verified via frame-350 single-frame render.
-Verification stills (gitignored `out/`): `s04-frame-90-p2-check.png`
-("14,000" contained) + `s04-frame-350-p4-check.png` ("1,407" contained).
-Commit `8677e3ba`.
-
-**Unit 4.6 — COMPLETED 2026-05-23 (R2, post-pan-fix).** R1 mechanical
-PASS via placeholder static loop. Briggsy-eye flagged "static image"
-on the rendered MP4; R2 added time-varying crop y-offset so the
-placeholder slowly pans down the 1920×19848 HTP fullpage capture over
-the 18s window. Phase 5 real gameplay.mp4 overwrites this anyway —
-the pan is placeholder-only motion under the head-fade so transition
-mechanics feel right. Scene composition: `<AbsoluteFill #000>` + 540f
-`<Sequence>` wrapping `<OffthreadVideo muted objectFit:cover>` +
-mandatory `<S05HeadFadeFromBlack endFrame={15} />` (symmetric pair to
-S04TailFadeToBlack — combined 30f fade-through-black is the Archer
-chapter-break grammar). NO CommsTicker per BEAT-SHEET §S05 line 619
-("clean visual focus for live-gameplay frame"); iris-wipe deferred to
-Unit 4.8. Pure visual — composition-level audio map in
-`TrailerComposition.tsx` auto-serves s05-cue-2610-dash (sparse) +
-s05-cue-2730-dash (R5 scream `[shouts]`). Phase 5 handoff ships 4
-runnable scripts: `generate-placeholder-gameplay.ts` (FFmpeg with
-`-g 30 -keyint_min 30 -vsync cfr` for OffthreadVideo seeking + time-
-varying crop pan); `sync-gameplay-clip.ts` (postinstall/prerender/
-prestudio hook writing `src/lib/gameplay-clip-source.ts` constant —
-the scene file CAN'T existsSync because Remotion bundles for browser
-context where `node:fs` is unavailable); `verify-gameplay-clip.ts`
-(ffprobe 3-gate: 540f / 1920×1080 / no audio + soft luma warning;
-uses ffmpeg `-i` direct input + signalstats stderr parse to dodge
-the lavfi `movie=` colon-escape footgun on Windows paths);
-`verify-s05-head-fade.ts` (grep gate making the mandatory overlay
-executable). Render evidence: `out/s05-gameplay-dissolve.mp4` (49.4 MB,
-H264 CRF 18, 540f / 18.000s; size jumped from 7.9 MB to 49.4 MB after
-R2 pan added — every frame has different content so inter-frame
-compression can't kick in). Verification doc at `videos/trailer/
-sample-eval/composite-build/s05-archer-test.md`. Briggsy-eye sentinel
-`briggsy-review-4.6.signoff` PENDING (Briggsy may write against
-placeholder build now OR defer until Phase 5 real-clip ship — both
-valid; Phase 4 Unit 4.10 master-render entry gated on all 6 signoffs).
-Commits `e79468fc` (Unit 4.6 ship) + `ec14bcc2` (R2 pan).
-
-**Phase 2 carry-forwards → Phase 3+** (stitch / silenceremove
-generalizations):
-
-- **`silencedetect` writes to STDERR, not stdout** (caught + fixed
-  2026-05-21 Unit 2.6). Same gotcha as Unit 2.5's `loudnorm`. Project
-  pattern: any FFmpeg filter that emits diagnostic data needs
-  `spawnSync` capture, not `execFileSync` (which returns stdout
-  only). Both Unit 2.5 (`runFFmpegJson`) and Unit 2.6
-  (`detectSilences`) now use spawnSync — if another silencedetect /
-  loudnorm / volumedetect / showinfo-style filter joins the pipeline,
-  copy that pattern.
-- **Phase 1 doc-drift on BEAT-token format** (logged 2026-05-21).
-  Phase 2 plan §Unit 2.6 deepening claims Phase 1 ships `[BEAT NNNms]`
-  (integer milliseconds) but `src/lib/script.ts` actually ships
-  `[BEAT 0.3s]` (decimal seconds). `stitch-beats.ts` parser handles
-  BOTH. If Phase 1 reopens in Unit 2.7, decide on ONE canonical form
-  and update the plan + script + parser to match — currently
-  resilient-by-accident.
-- **Per-segment trim cushion = 5 ms inside stitch, 50 ms in
-  post-process** (LANDMINE, 2026-05-21). Two different
-  `start_silence` values intentionally. If you ever generalize the
-  silenceremove helper into a shared utility, parameterize the
-  cushion — they are NOT the same number for the same reason.
-  `stitch-beats.ts` comment explains.
-
-**Phase 2 carry-forwards → Phase 4 mix tests** (loudness drift +
-FFmpeg muxer gotcha):
-
-- **Loudnorm drift on short cues (≤3s).** Per current
-  `audio-manifest.ts` (post-R2 rename): s04-cue-1380 ("Operational
-  planning") -17.95, s04-cue-1551 -19.17, s04-cue-1987 ("Seventeen
-  asset illustrations…") -17.27, s04-cue-2304 (S04-payoff "They WERE
-  the operation.") -17.21 — all measure 1-3 LU off the -16 target
-  after two-pass loudnorm. Known limitation per
-  k.ylo.ph/loudnorm.html — two-pass mitigates but doesn't eliminate
-  on clips <3s. Phase 4 Remotion bed-ducking math may need a tiny
-  bump on these specific cues if mix tests show them ducking too far.
-  Track but don't pre-correct. (Re-derive frames from the manifest,
-  not from this list — insights #061 + #067.)
-- **FFmpeg muxer inference fails on `.wav.tmp` filenames** (caught +
-  fixed 2026-05-21 Unit 2.5). FFmpeg picks output muxer from the
-  filename extension; `.tmp` isn't a known audio format and FFmpeg
-  refuses to run. Fix shipped: explicit `-f wav` on both atomic-write
-  passes in `post-process-tts.ts`. If you add another FFmpeg
-  invocation with a `.tmp` target elsewhere, copy the `-f wav` (or
-  whatever target format) flag.
-
-**Phase 2 carry-forwards → Phase 4 + future TTS work** (regen + hash
-+ audition hygiene):
-
-- **S06-phrasing actual vs expected drift.** Phase 1 ships
-  `expectedFrames: 12`; codegen-measured actual is 19f. Briggsy
-  ear-locked the delivery — `expectedFrames` not amended. Phase 4
-  uses `actualFrames` from the manifest for audio placement; the
-  `expectedFrames` stays as the original budget for reference. If a
-  future Phase 1 reopen amends the script, regen the manifest.
-- **Hash-input gap (CARRY OVER, EXTENDED).** `hashCueInputs` covers
-  cue.text + engine + voiceId + prefixTag + adapter SHA + priming key
-  — but NOT in-client overrides:
-  · `cold-open-prototype.ts COLD_OPEN_SPEAKER.voiceSettings`
-    (Janet cuntiness)
-  · `tts-clients/elevenlabs.ts SCREAM_AUDITED_SETTINGS` (Vera scream)
-  · `tts-clients/elevenlabs.ts PHRASING_INTERJECTIVE_SETTINGS`
-    (S06-phrasing — NEW 2026-05-21)
-  Future tunes of any of those need `--force` to re-render, OR add a
-  source-file SHA to the hash inputs. Same class of bug as the original
-  adapter-SHA gap doc-review caught.
-- **Audition WAV artifacts.** `videos/trailer/sample-eval/voice-pipeline/
-  mallory-audition/` (5 Shared Library auditions + Eleanor) and
-  `mallory-design/` (3 Voice Design previews) are gitignored locally.
-  Keep on disk for reference; they don't ship.
-- **`previous_text` / `next_text` re-enable.** `eleven_v3` model
-  doesn't support context-priming yet (API returns 400
-  `unsupported_model`). Gated off in `tts-clients/elevenlabs.ts`;
-  re-enable when ElevenLabs ships v3 priming. Priming map
-  (`context-priming-overrides.json`) preserved for that future.
-
-**Phase 1 carry-forwards → Phase 3/4/6:**
-
-- **Cold-read gate for Unit 1.6** — operational standard is **N=1
-  Briggsy self-read** (24h cool-off + MUSHRA-shaped Likert rubric per
-  ADR #13r). Pre-drafted R11-cut bridge lines activate if the
-  self-read hard-fails. Memory: `feedback-listener-panels-default-to-n1.md`.
-- **Phase 4 — S06 closing-card breathing room** may surface 45–50
-  frames reads cleaner than the locked floor of 40 frames.
-- **Phase 4 voice-filter scoring fix** — Path A scoring treats
-  female-voice keyword matches equally with male; picked voice
-  (Roger) is correct via gender label bonus, but ranking
-  presentation is misleading. Fix when revisited.
+- **Voice locks + ElevenLabs API gotchas** (Janet=Eleanor settings,
+  PCM→MP3 silent downgrade on Creator tier, `eleven_v3` rejects
+  context priming, hash-input gaps) — all in §2 landmines.
+- **Loudnorm drift on short cues (≤3s)** — two-pass mitigates but
+  doesn't eliminate; clips land 1–3 LU off the −16 target. Bed-ducking
+  math may need per-cue bumps. Track, don't pre-correct.
+- **`silencedetect` / `loudnorm` write to STDERR** — capture with
+  `spawnSync`, not `execFileSync` (returns stdout only).
+- **FFmpeg muxer inference fails on `.wav.tmp` targets** — pass
+  explicit `-f wav`.
+- **Hash-input gap** — in-client `voiceSettings` overrides
+  (`COLD_OPEN_SPEAKER`, `SCREAM_AUDITED_SETTINGS`,
+  `PHRASING_INTERJECTIVE_SETTINGS`) aren't in `hashCueInputs`; a tune
+  needs `--force` to re-render.
+- **Cold-read gate** — N=1 Briggsy self-read (24h cool-off + MUSHRA
+  Likert rubric). Memory: `feedback-listener-panels-default-to-n1.md`.
 
 ---
 

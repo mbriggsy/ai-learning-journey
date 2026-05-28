@@ -5,9 +5,10 @@
  * `check-tts-readiness.ts` pattern — cwd-independent), exposes
  * `assertEnv(key)` + `assertEngineEnv(engine)` for fail-fast preflight.
  *
- * Windows env vars resolve case-insensitively in Node, so the .env
- * keys `ElevenLabs_API_KEY` / `OpenAI_KEY` answer to the canonical
- * uppercase lookups used throughout the Phase 2 scripts.
+ * The .env keys are canonical UPPER_SNAKE (`ELEVENLABS_API_KEY` /
+ * `OPENAI_API_KEY`) as of 2026-05-28, matching the uppercase lookups used
+ * throughout the Phase 2 scripts on every platform — not just Windows, which
+ * used to mask mixed-case drift case-insensitively (see insight 055).
  */
 import { config as loadDotenv } from 'dotenv';
 import { dirname, resolve } from 'node:path';

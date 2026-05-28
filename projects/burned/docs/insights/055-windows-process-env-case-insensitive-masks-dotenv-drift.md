@@ -5,7 +5,9 @@ modules: [videos/trailer/scripts/generate-tone-clip.ts, videos/trailer/scripts/g
 tags: [env-vars, dotenv, nodejs, windows-posix-divergence, ci-fragility, trailer-tts]
 severity: P3
 discovered_while: Phase 0 Unit 0.4 tone clip render — initial render misdiagnosed as "key missing" after a narrow grep over .env
-status: OPEN
+status: RESOLVED
+resolved: 2026-05-28
+resolution: Applied fix (A) — renamed `.env` keys to canonical UPPER_SNAKE (`ElevenLabs_API_KEY`→`ELEVENLABS_API_KEY`, `OpenAI_KEY`→`OPENAI_API_KEY`). Note the OpenAI key was a NAME mismatch too (`OpenAI_KEY` vs reader `OPENAI_API_KEY`), not just case — it would have read undefined even on Windows. Verified: `set -a && source .env && set +a` now resolves both vars in bash (case-sensitive), and ElevenLabs `GET /v1/user` returns 200. Prompted by installing elevenlabs/skills, whose curl path reads `$ELEVENLABS_API_KEY` in bash and would have broken on the old mixed-case name.
 ---
 
 ## Problem

@@ -3,9 +3,10 @@
  *
  * The BURNED-root .env is shell-sourced before running
  * (`set -a && source ../../.env && set +a`), so keys live in process.env.
- * assertEnv fails fast with a clear message if a key is missing, and falls
- * back to a case-insensitive lookup (the .env uses mixed-case keys like
- * `ElevenLabs_API_KEY`; Windows env is case-insensitive, bash is not).
+ * assertEnv fails fast with a clear message if a key is missing, and keeps a
+ * case-insensitive lookup as defense. The .env keys are canonical UPPER_SNAKE
+ * as of 2026-05-28 (e.g. `ELEVENLABS_API_KEY`), so the fallback rarely fires —
+ * it only mattered back when the file used mixed-case keys (see insight 055).
  */
 export function assertEnv(key: string): string {
   const direct = process.env[key]

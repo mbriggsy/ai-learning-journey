@@ -167,7 +167,7 @@ autonomy owned honestly — "he didn't write it. Any of it." (4).
 NO voting.
 
 **VO (Janet):**
-> "Then it did the genuinely deranged thing. It built a swarm of
+> "Then it did the genuinely deranged thing. It unleashed a swarm of
 > adversaries — agents whose only job was to hunt the game's weak points
 > and break them.
 >
@@ -193,9 +193,9 @@ BURNED-native, NOT UMB's caffeine button.
 
 **VO (Janet):**
 > "Thirteen hundred and twenty-six attempts to break it. *[beat]* Thirteen
-> hundred and twenty-six failures. The most belligerent test subjects ever
-> assembled — and the only thing in the room that never once fell over was
-> the thing nobody had laid a hand on.
+> hundred and twenty-six times, it didn't. The most belligerent test
+> subjects ever assembled — and the only thing in the room that never once
+> fell over was the one built by the machine.
 >
 > *[turn — softer]* What did it cost him? Not code — he never wrote a word
 > of it. It cost him sleep. A lot of sleep. The specific madness of a man who'll stand
@@ -209,8 +209,9 @@ BURNED-native, NOT UMB's caffeine button.
 affection.
 
 **Bar:** earned deadpan snap (3); real self-deprecating cost (5); flex
-owned without a brag — "the machine did the rest" (4). "the thing nobody
-had laid a hand on" + "a thing that doesn't have eyes" seed the tag twice.
+owned without a brag — "the machine did the rest" (4). "built by the
+machine" + "a thing that doesn't have eyes" both pre-load the tag's reveal
+(the machine made everything — including, it turns out, the voice).
 
 ---
 

@@ -8,6 +8,7 @@
     "render": "remotion render src/index.ts",
     "still:foundation": "remotion still src/index.ts FoundationProof out/foundation-proof.png --frame 40",
     "render:foundation": "remotion render src/index.ts FoundationProof out/foundation-proof.mp4 --codec h264 --crf 18",
+    "tts:test": "tsx scripts/generate-vo.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

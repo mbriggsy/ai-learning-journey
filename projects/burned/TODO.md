@@ -18,69 +18,96 @@ the history. (Rule: `feedback-todo-is-not-a-diary.md`.)
 - Protocol version: **v6**
 - Phase 2 ElevenLabs spend: **$0.87 / $50** ceiling
 
-### Origin trailer v2 — ACTIVE
+### Origin trailer v2 — ACTIVE (mid voice-casting)
 
-Clean-slate rebuild after v1 teardown (2026-05-24 — v1 was a
-feature-list briefing with no human, no bet, no earned payoff).
-Workspace + locked decisions: **`docs/plans/origin-trailer-v2/`**.
-Read its `README.md` first; `2026-05-24-origin-trailer-principles.md`
-is the bar everything downstream is judged against.
+Clean-slate rebuild after v1 teardown. Workspace + locked decisions:
+**`docs/plans/origin-trailer-v2/`** (read `README.md` first;
+`2026-05-24-origin-trailer-principles.md` is the bar). v1 frozen at git
+tag **`origin-trailer-v1`** (fully recoverable: `git checkout origin-trailer-v1`).
+
+**Fresh project: `videos/origin-trailer/`** — clean Remotion project,
+stands up + renders. `FoundationProof` composition proves the living-UI
+mechanism end-to-end (real card art + real `MinimalCard` CSS + real token
+legend + real `card-defs` data, borrowed across the package wall,
+frame-animated). `pnpm typecheck` + `pnpm still:foundation` both green.
+The old `videos/trailer/` is **PARKED** (holds v1 + the voice-pipeline
+source) — recoverable via the tag; remove once v2 no longer references it.
 
 **LOCKED:**
 - **Direction** — origin *story*, not feature briefing.
-- **Voice** — Janet: Malory-CODED dry matriarch, outside-observer
-  stance (recounts the bet, never reverts to briefing-at-you). Reuses
-  the tuned ElevenLabs Eleanor "matriarch" asset. Settings + gotchas
-  live in §2 landmines + the voice-pipeline note below.
-- **Engine (2026-05-28)** — fusion: **#4 Game Night** warm open ·
-  **#2 Two Weeks** disbelief→awe spine · **#3 Origin-of-Janet**
-  gut-punch tag (*"…not a word came from his hand. Including mine."*).
-  Decision + the four tag non-negotiables in
-  `2026-05-24-origin-event-brainstorm.md` §DECISION.
-- **Beat sheet (2026-05-28, draft v4)** — full VO, 7 beats, ~119s,
-  canonical stats-site numbers (43K app LOC / 29K tests / 62K planning
-  / 1,326 tests). Reviewed + approved by Briggsy.
-  `2026-05-28-beat-sheet-draft.md`.
+- **Medium = living UI** — borrow the REAL game UI/art/CSS into Remotion and
+  frame-animate it (cards staged/drawn/fanned, discard pile growing, comms-
+  intercept log filling). NOT raw gameplay capture (dead — turn-based card
+  UI is flat on-screen, the fun's in the room). NOT static assets (the v1
+  roster trap). Wiring = **Option B** (cross-tree import via `@shared` /
+  `@client` aliases) — PROVEN. Live *animated* components stay home (they
+  carry the game's motion engine + store); inert pieces (CSS, art, data,
+  pure helpers) cross over.
+- **Engine** — fusion: #4 Game Night open · #2 Two Weeks spine ·
+  #3 Origin-of-Janet gut-punch tag. `…-origin-event-brainstorm.md` §DECISION.
+- **Beat sheet (draft v4)** — full VO, 7 beats, ~119s, canonical site
+  numbers. Briggsy-approved. `2026-05-28-beat-sheet-draft.md`.
+- **Voice pipeline** — rebuilt clean in `videos/origin-trailer/scripts/`
+  (Janet-only: client + ffmpeg + env libs, all v1 fixes ported).
+  `pnpm tts:test` generates one line — proven end-to-end (valid 48k mono PCM).
 
-**NEXT ACTION — visual direction.** Two forks to settle first (parked
-in the beat sheet's "Open questions"):
-1. **Medium** — hybrid (Archer-style build + real gameplay at the
-   payoff) vs all-motion-graphics vs gameplay-forward. *[Claude leans
-   hybrid.]*
-2. **Human on screen?** — silhouette / hands / an empty chair vs zero
-   humans (Janet's VO carries it).
+**Janet's character (drives the voice cast):** white, American, **New
+Yorker**, ~50s, very rich, slightly-always-annoyed, drinker, former smoker.
+**Jessica-Walter / Malory Archer / Lucille Bluth-CODED** (coded, never
+cloned). Eleanor (v1's British "matriarch") is **REJECTED** — too lovely,
+British, wrong identity.
 
-Then the smaller ones: game-night footage approach, scale-cascade
-reuse, title-card timing.
+**NEXT ACTION — pick Janet's voice, then generate the VO.** In order:
+1. **Pick the voice.** The Shared Library has no Janet (4 scout passes via
+   `scripts/scout-voices.ts`). Went Voice Design — 3 custom candidates await
+   Briggsy's ear:
+   - `videos/origin-trailer/out/janet-design/janet-design-{1,2,3}.wav`
+     (gitignored — persist locally on this machine). generated_voice_ids:
+     **1=`EoDa7hvgmJaoYm7ECtqK`** · **2=`taFm23Y66T3plEyIjJQz`** ·
+     **3=`FRUua1AWADB2AcKn86Lt`**.
+   - Library fallback (closest off-the-shelf): **Cameo**
+     (`Rm14i2uPTqCL0k0wW7KI` — "sophisticated, rich, husky").
+   - Re-spin/tweak: edit `JANET_DESCRIPTION` in `scripts/design-janet-voice.ts`,
+     `pnpm tsx scripts/design-janet-voice.ts` (3 fresh per run). **LANDMINE:**
+     `generated_voice_id`s may expire server-side — mint the pick promptly OR
+     re-run (the WAVs still play locally regardless).
+2. **Mint + lock.** From the chosen generated_voice_id, create the real voice
+   (`POST /v1/text-to-voice/create-voice-from-preview`), then set `voiceId` +
+   `settings` in `scripts/voice/janet.ts`. **LANDMINE:** janet.ts currently
+   still points at Eleanor (`2qQJWjw5XdG80GreshqG`) with experimental cunty
+   settings (stab 0.22 / style 0.60) — TRANSITIONAL, replace on pick. Cunty
+   direction = lower stability + higher style; settings CAN'T add rasp
+   (that's timbre — the reason we recast the voice).
+3. **Author the v2 cue list** — beat-sheet prose → structured cues (the v1
+   `src/lib/script.ts` equivalent). Strip stage directions (`[dry]`,
+   `[turn — softer]` — ElevenLabs reads prose aloud); route `[beat]` /
+   `[long beat]` to FFmpeg silence stitch (NOT an API tag).
+4. **Generate + process the VO**, then build the visual scenes **timed to the
+   VO durations** (audio first, visuals second — v1's correct order).
 
-**Reusable v1 infra** (`videos/trailer/`): Remotion harness,
-transitions, font/color libs, voice pipeline, HTP capture — all
-retained and reusable. The v1 *story* + briefing-room concept are
-**reference-only — do not extend.** v1 phase plans archived at
-`docs/plans/origin-trailer/` (phase-0…7); v1 beat sheet at
-`videos/trailer/BEAT-SHEET.md`.
+**Still-open creative forks** (for when scenes get built, after VO): human on
+screen? (silhouette/hands/2am-desk vs zero humans); scale-number treatment
+(bar-growth vs plain type); logline placement (beat 1 vs payoff); "Including
+mine" exact wording. All parked in the beat sheet's "Open questions".
 
-### Voice pipeline — read before v2 generates new VO
+### Voice-pipeline gotchas — for v2 VO generation
 
-A new beat sheet means a fresh ElevenLabs TTS pass. Before re-running
-the pipeline for v2, mind these (hard-won in v1):
-
-- **Voice locks + ElevenLabs API gotchas** (Janet=Eleanor settings,
-  PCM→MP3 silent downgrade on Creator tier, `eleven_v3` rejects
-  context priming, hash-input gaps) — all in §2 landmines.
-- **Loudnorm drift on short cues (≤3s)** — two-pass mitigates but
-  doesn't eliminate; clips land 1–3 LU off the −16 target. Bed-ducking
-  math may need per-cue bumps. Track, don't pre-correct.
-- **`silencedetect` / `loudnorm` write to STDERR** — capture with
-  `spawnSync`, not `execFileSync` (returns stdout only).
-- **FFmpeg muxer inference fails on `.wav.tmp` targets** — pass
-  explicit `-f wav`.
-- **Hash-input gap** — in-client `voiceSettings` overrides
-  (`COLD_OPEN_SPEAKER`, `SCREAM_AUDITED_SETTINGS`,
-  `PHRASING_INTERJECTIVE_SETTINGS`) aren't in `hashCueInputs`; a tune
-  needs `--force` to re-render.
-- **Cold-read gate** — N=1 Briggsy self-read (24h cool-off + MUSHRA
-  Likert rubric). Memory: `feedback-listener-panels-default-to-n1.md`.
+(v1-hardened; the rebuilt client in `videos/origin-trailer/scripts/tts-clients/`
+already ports these — mind them when extending:)
+- **PCM→MP3 silent downgrade on Creator tier** — request `mp3_44100_192`,
+  convert to 48k mono WAV via ffmpeg.
+- **Loudnorm drift on short cues (≤3s)** — 1–3 LU off −16; bed-ducking may
+  need per-cue bumps. Track, don't pre-correct.
+- **`silencedetect`/`loudnorm` write to STDERR** — `spawnSync`, not `execFileSync`.
+- **FFmpeg muxer fails on `.wav.tmp`** — explicit `-f wav`.
+- **`eleven_v3` rejects `previous_text`/`next_text` priming** (400).
+- **first `pnpm install` in `videos/origin-trailer/` needs the
+  `--ignore-workspace` CLI flag** — the `.npmrc` setting alone didn't stop the
+  workspace walk-up (an unflagged install pruned the root node_modules —
+  harmless, restored via `pnpm install` at root).
+- **Remotion loads `remotion.config.ts` as CJS** — resolve alias paths via
+  `process.cwd()`, NOT `import.meta.dirname` (empty under CJS).
+- **Cold-read gate** — N=1 Briggsy self-read. `feedback-listener-panels-default-to-n1.md`.
 
 ---
 

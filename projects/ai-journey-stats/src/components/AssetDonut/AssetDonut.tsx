@@ -87,42 +87,45 @@ export function AssetDonut({ assetBytesByKind }: { assetBytesByKind: ProjectRepo
   )
 
   return (
-    <div className={styles.donut} ref={donutRef}>
-      <div className={styles.ring}>
-        <svg
-          className={styles.svg}
-          viewBox="0 0 100 100"
-          preserveAspectRatio="xMidYMid meet"
-          role="img"
-          aria-label={ariaLabel}
-        >
-          {/* Rotate so 0% sits at 12 o'clock; segments laid head-to-tail by dash offset. */}
-          <g transform={`rotate(-90 ${CX} ${CY})`}>
-            {segments.map((seg, i) => (
-              <Arc key={seg.key} seg={seg} palette={paletteAt(i)} />
-            ))}
-          </g>
-        </svg>
-        <div className={styles.center} data-donut-center aria-hidden>
-          <span className={styles.centerValue}>{formatBytes(total)}</span>
-          <span className={styles.centerLabel}>generated</span>
+    <section className={styles.section} aria-label="Audio and visuals">
+      <p className={styles.label}>Audio &amp; visuals</p>
+      <div className={styles.donut} ref={donutRef}>
+        <div className={styles.ring}>
+          <svg
+            className={styles.svg}
+            viewBox="0 0 100 100"
+            preserveAspectRatio="xMidYMid meet"
+            role="img"
+            aria-label={ariaLabel}
+          >
+            {/* Rotate so 0% sits at 12 o'clock; segments laid head-to-tail by dash offset. */}
+            <g transform={`rotate(-90 ${CX} ${CY})`}>
+              {segments.map((seg, i) => (
+                <Arc key={seg.key} seg={seg} palette={paletteAt(i)} />
+              ))}
+            </g>
+          </svg>
+          <div className={styles.center} data-donut-center aria-hidden>
+            <span className={styles.centerValue}>{formatBytes(total)}</span>
+            <span className={styles.centerLabel}>generated</span>
+          </div>
         </div>
-      </div>
 
-      <ul className={styles.legend} data-donut-legend>
-        {segments.map((seg, i) => (
-          <li key={seg.key} className={styles.legendRow}>
-            <span
-              className={styles.swatch}
-              style={{ background: paletteAt(i).stroke, opacity: paletteAt(i).opacity }}
-              aria-hidden
-            />
-            <span className={styles.legendLabel}>{seg.label}</span>
-            <span className={`${styles.legendBytes} tabular`}>{formatBytes(seg.bytes)}</span>
-          </li>
-        ))}
-      </ul>
-    </div>
+        <ul className={styles.legend} data-donut-legend>
+          {segments.map((seg, i) => (
+            <li key={seg.key} className={styles.legendRow}>
+              <span
+                className={styles.swatch}
+                style={{ background: paletteAt(i).stroke, opacity: paletteAt(i).opacity }}
+                aria-hidden
+              />
+              <span className={styles.legendLabel}>{seg.label}</span>
+              <span className={`${styles.legendBytes} tabular`}>{formatBytes(seg.bytes)}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
   )
 }
 

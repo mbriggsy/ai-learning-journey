@@ -1,4 +1,4 @@
-.inventory {
+.section {
   display: flex;
   flex-direction: column;
   gap: var(--space-6);
@@ -12,35 +12,22 @@
   color: var(--text-secondary);
 }
 
-.items {
+/* 2×2 quadrant on desktop — the four buckets stay balanced and the longer labels
+   ("lines of implementation planning") get a full column. Single column on phones. */
+.grid {
   list-style: none;
   margin: 0;
   padding: 0;
-}
-/* ≥4 items: a 4-column grid on desktop so 8 kinds land as two clean rows of four (a partial
-   last row left-aligns, deliberate). 3-col at tablet, 2-col on phones. */
-.grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   row-gap: var(--space-8);
-  column-gap: var(--space-6);
-}
-@media (max-width: 900px) {
-  .grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
+  column-gap: var(--space-12);
 }
 @media (max-width: 560px) {
   .grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: 1fr;
+    row-gap: var(--space-6);
   }
-}
-/* ≤3 items (Decision 12 floor): a centered row, never a gapped grid with empty columns. */
-.row {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: var(--space-12);
 }
 
 .item {
@@ -48,11 +35,10 @@
   flex-direction: column;
   gap: var(--space-2);
 }
-.value {
+/* lines = the headline brag (display, primary). Files is the supporting count below. */
+.lines {
   font-family: var(--font-display);
   font-weight: 700;
-  /* display-md, not stat-callout — substantial but doesn't compete with the hero/gold for an
-     8-item set; final sizing is a Phase 9 dial. */
   font-size: var(--text-display-md);
   line-height: 1;
   color: var(--text-primary);
@@ -63,4 +49,10 @@
   font-variant-caps: all-small-caps;
   letter-spacing: 0.08em;
   color: var(--text-secondary);
+}
+.files {
+  font-family: var(--font-mono);
+  font-size: var(--text-meta);
+  letter-spacing: var(--tracking-meta);
+  color: var(--text-muted);
 }

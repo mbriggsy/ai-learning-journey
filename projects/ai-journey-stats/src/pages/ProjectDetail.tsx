@@ -5,14 +5,14 @@ import { gsap, useGSAP, ScrollTrigger } from '@/motion/gsap-context'
 import { duration, stagger } from '@/motion/tokens'
 import { ease } from '@/motion/easings'
 import { prefersReducedMotion } from '@/motion/reduced-motion'
-import { findProject, buildComposition } from '@/lib/composition'
+import { findProject, buildCodeMetrics } from '@/lib/composition'
 import { totalMediaBytes } from '@/lib/donut'
 import { isCadenceTrustworthy } from '@/lib/cadence'
 import { formatInt } from '@/lib/format'
 import { DetailHero } from '@/components/DetailHero/DetailHero'
 import { TokensBlock } from '@/components/TokensBlock/TokensBlock'
 import { AssetDonut } from '@/components/AssetDonut/AssetDonut'
-import { CompositionInventory } from '@/components/CompositionInventory/CompositionInventory'
+import { CodeMetrics } from '@/components/CodeMetrics/CodeMetrics'
 import { CadenceSparkline } from '@/components/CadenceSparkline/CadenceSparkline'
 import { LiveLinkButton } from '@/components/LiveLinkButton/LiveLinkButton'
 import styles from './ProjectDetail.module.css'
@@ -137,7 +137,7 @@ export default function ProjectDetail() {
   // Field-level null-degrade gates (each movement omits cleanly when its data is absent).
   const hasDescription = Boolean(editorial?.description)
   const hasMedia = totalMediaBytes(assetBytesByKind) > 0
-  const inventory = buildComposition(project)
+  const codeMetrics = buildCodeMetrics(project)
   const showCadence = isCadenceTrustworthy(git.timeline)
   // Iteration caption is INDEPENDENT of the cadence gate (ATC 2026-05-26): it is not git-date
   // derived, so it stays honest even where the cadence is omitted, and auto-omits at 0/0/0.
@@ -171,16 +171,16 @@ export default function ProjectDetail() {
       node: hasDescription ? <p className={styles.description}>{editorial!.description}</p> : null,
     },
     {
+      key: 'codeMetrics',
+      group: 'work',
+      block: true,
+      node: codeMetrics.length > 0 ? <CodeMetrics metrics={codeMetrics} /> : null,
+    },
+    {
       key: 'donut',
       group: 'work',
       block: false,
       node: hasMedia ? <AssetDonut assetBytesByKind={assetBytesByKind} /> : null,
-    },
-    {
-      key: 'inventory',
-      group: 'work',
-      block: true,
-      node: inventory.length > 0 ? <CompositionInventory items={inventory} /> : null,
     },
     {
       key: 'rhythm',

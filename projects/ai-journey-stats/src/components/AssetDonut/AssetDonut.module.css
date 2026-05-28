@@ -1,3 +1,19 @@
+/* Labeled section: the small-caps heading sits above the donut+legend (matches the
+   TokensBlock / CodeMetrics section-label pattern). */
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+.label {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: var(--text-meta);
+  font-variant-caps: all-small-caps;
+  letter-spacing: 0.12em;
+  color: var(--text-secondary);
+}
+
 /* Donut + legend side-by-side on desktop, stacked on mobile. No card. */
 .donut {
   display: flex;

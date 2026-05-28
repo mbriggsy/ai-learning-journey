@@ -6,7 +6,7 @@ coded: 2026-05-26T12:25:00-04:00
 code-reviewed: 2026-05-26
 ---
 
-> **⚠ SUPERSEDED in part (Phase 9, 2026-05-27): the detail page carries NO imagery.** Briggsy cut project imagery entirely — the `DetailHero` is a type-led single-column opener (no image split), and **Movement 6 (the Gallery + lightbox) is removed** (`Gallery/` deleted). The `heroImage`/`gallery` rows, the magazine split, and the lightbox spec below are historical. The AssetDonut, tokens ledger, composition inventory, cadence, and invitation links all still stand. See TODO's "no imagery" landmine. (Insights 006/007 document the now-removed Gallery's lightbox bugs — the lessons are general and stay.)
+> **⚠ SUPERSEDED in part (Phase 9, 2026-05-27): the detail page carries NO imagery.** Briggsy cut project imagery entirely — the `DetailHero` is a type-led single-column opener (no image split), and **Movement 6 (the Gallery + lightbox) is removed** (`Gallery/` deleted). The `heroImage`/`gallery` rows, the magazine split, and the lightbox spec below are historical. The tokens ledger, cadence, and invitation links still stand. **The old "what got built" inventory was reframed (2026-05-27) into a CODE METRICS quadrant** — application LOC / lines of testing / lines of implementation planning / lines of config, each with file counts (`buildCodeMetrics`, app LOC = source+styles+markup, build-scripts excluded) — and the AssetDonut now carries an **"Audio & visuals"** heading and sits BELOW the code metrics. See TODO's "no imagery" landmine. (Insights 006/007 document the now-removed Gallery's lightbox bugs — the lessons are general and stay.)
 
 # Phase 5 — Project detail page
 

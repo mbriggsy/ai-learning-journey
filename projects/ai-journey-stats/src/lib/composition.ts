@@ -1,34 +1,35 @@
-import type {
-  MultiProjectReport,
-  ProjectReport,
-  TierReport,
-  CategoryReport,
-  SubcategoryStats,
-} from '@/types'
+import type { MultiProjectReport, ProjectReport, TierReport, CategoryReport } from '@/types'
 
 /**
- * The "WHAT GOT BUILT" composition inventory (Phase 5 Decision 3/4).
+ * The "CODE METRICS" breakdown of an autonomous build (Phase 5 / Phase 9 reframe).
  *
- * Tells the BREADTH of an autonomous build — code, tests, plans, prompts, configs,
- * images, audio, video — each in its NATURAL unit so nothing lies (code in lines,
- * docs/configs/tests in files, media in counts). This is deliberately NOT the
- * authored-vs-pipeline PROVENANCE split (cut, ideation §11 / Decision 1-2) and NOT
- * `topSubcategories` (top-5-by-bytes reliably reads "video, images, more video").
+ * Four authored buckets, each in LINES with a supporting FILE count: application code,
+ * test code, implementation-planning docs, and config. This is deliberately NOT the
+ * authored-vs-pipeline PROVENANCE split (cut, ideation §11) and NOT `topSubcategories`
+ * (top-5-by-bytes reads "video, images, more video"). Generated media lives in the
+ * AssetDonut ("Audio & visuals"), not here.
+ *
+ * Bucket definitions (Briggsy-locked 2026-05-27):
+ *   - Application LOC = authored code source + styles + markup (the running product;
+ *     build/tooling scripts are NOT the application, so they're excluded).
+ *   - Test lines     = authored code tests + test-fixtures.
+ *   - Planning       = authored docs plans (implementation planning specifically — NOT
+ *     all docs; README/triage/narrative/insights are not "planning").
+ *   - Config         = authored code config.
  *
  * Pure + tested, mirroring grid-order.ts. Walks the published `report.tiers[]` tree;
- * the choice of WHICH kinds to show + their labels + units is a presentation decision
- * and lives here, not in the project-metrics CLI.
+ * the choice of WHICH buckets + their labels is a presentation decision, lives here.
  */
 
-export type CompositionUnit = 'lines' | 'files' | 'count'
-
-export interface CompositionItem {
-  /** Stable key for React lists + the selector identity. */
+export interface CodeMetric {
+  /** Stable key for React lists. */
   key: string
-  /** Evocative small-caps label rendered under the value. */
+  /** Small-caps label rendered under the line count. */
   label: string
-  value: number
-  unit: CompositionUnit
+  /** The headline number — total lines across this bucket's subcategories. */
+  lines: number
+  /** Supporting count — files across this bucket's subcategories. */
+  files: number
 }
 
 // --- tier-tree lookups (defensive: a missing node resolves to 0, never throws) ---
@@ -41,49 +42,53 @@ function findCategory(report: ProjectReport, tier: string, category: string): Ca
   return findTier(report, tier)?.categories.find((c) => c.category === category)
 }
 
-function findSubcategory(
+/** Sum {lines, files} across a set of subcategories within one tier/category. Missing → 0. */
+function sumSubcategories(
   report: ProjectReport,
   tier: string,
   category: string,
-  subcategory: string,
-): SubcategoryStats | undefined {
-  return findCategory(report, tier, category)?.subcategories.find((s) => s.subcategory === subcategory)
+  subcategories: readonly string[],
+): { lines: number; files: number } {
+  const cat = findCategory(report, tier, category)
+  let lines = 0
+  let files = 0
+  for (const name of subcategories) {
+    const s = cat?.subcategories.find((x) => x.subcategory === name)
+    if (s) {
+      lines += s.totalLines ?? 0
+      files += s.files ?? 0
+    }
+  }
+  return { lines, files }
 }
 
 /**
- * The CURATED, ORDERED selector set (the editorial edit-point for the kind inventory).
- * Each resolves a single number from the tier tree; a missing node → 0 → omitted below.
- *
- * Label honesty (Decision 3): `pipeline-generated/assets/audio` is ALL audio — music
- * beds, SFX, royalty-free stems, TTS — so it is "audio files", never "voice lines".
- * `plans & docs` uses the pre-computed CategoryReport.totals (a summed SubcategoryStats),
- * not a hand-rolled subcategory sum.
+ * The CURATED, ORDERED bucket set (the editorial edit-point). Each sums one or more
+ * subcategories from the tier tree; a bucket with 0 lines AND 0 files is omitted below.
  */
-const SELECTORS: ReadonlyArray<{
+const BUCKETS: ReadonlyArray<{
   key: string
   label: string
-  unit: CompositionUnit
-  resolve: (r: ProjectReport) => number
+  tier: string
+  category: string
+  subcategories: readonly string[]
 }> = [
-  { key: 'code', label: 'lines of code', unit: 'lines', resolve: (r) => findSubcategory(r, 'authored', 'code', 'source')?.totalLines ?? 0 },
-  { key: 'tests', label: 'tests', unit: 'files', resolve: (r) => findSubcategory(r, 'authored', 'code', 'tests')?.files ?? 0 },
-  { key: 'docs', label: 'plans & docs', unit: 'files', resolve: (r) => findCategory(r, 'authored', 'docs')?.totals.files ?? 0 },
-  { key: 'prompts', label: 'generation prompts', unit: 'files', resolve: (r) => findSubcategory(r, 'authored', 'data', 'generation-prompts')?.files ?? 0 },
-  { key: 'configs', label: 'config files', unit: 'files', resolve: (r) => findSubcategory(r, 'authored', 'code', 'config')?.files ?? 0 },
-  { key: 'images', label: 'images', unit: 'count', resolve: (r) => findSubcategory(r, 'pipeline-generated', 'assets', 'images')?.files ?? 0 },
-  { key: 'audio', label: 'audio files', unit: 'count', resolve: (r) => findSubcategory(r, 'pipeline-generated', 'assets', 'audio')?.files ?? 0 },
-  { key: 'video', label: 'video renders', unit: 'count', resolve: (r) => findSubcategory(r, 'pipeline-generated', 'assets', 'video')?.files ?? 0 },
+  { key: 'app', label: 'application LOC', tier: 'authored', category: 'code', subcategories: ['source', 'styles', 'markup'] },
+  { key: 'tests', label: 'lines of testing', tier: 'authored', category: 'code', subcategories: ['tests', 'test-fixtures'] },
+  { key: 'plans', label: 'lines of implementation planning', tier: 'authored', category: 'docs', subcategories: ['plans'] },
+  { key: 'config', label: 'lines of config', tier: 'authored', category: 'code', subcategories: ['config'] },
 ]
 
 /**
- * Build the curated kind callouts for one project, in selector order, OMITTING any
- * kind whose resolved value is 0 (the inventory reflects THIS project's real breadth —
- * never "0 audio files"). Read-only; does not mutate the report.
+ * Build the code-metric buckets for one project, in bucket order, OMITTING any bucket
+ * with 0 lines AND 0 files (so a data-sparse toy never renders "0 config lines"). The
+ * line count is the headline; the file count supports it. Read-only; no mutation.
  */
-export function buildComposition(report: ProjectReport): CompositionItem[] {
-  return SELECTORS.map(({ key, label, unit, resolve }) => ({ key, label, unit, value: resolve(report) })).filter(
-    (item) => item.value > 0,
-  )
+export function buildCodeMetrics(report: ProjectReport): CodeMetric[] {
+  return BUCKETS.map(({ key, label, tier, category, subcategories }) => {
+    const { lines, files } = sumSubcategories(report, tier, category, subcategories)
+    return { key, label, lines, files }
+  }).filter((m) => m.lines > 0 || m.files > 0)
 }
 
 /**

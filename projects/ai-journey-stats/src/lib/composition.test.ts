@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest'
 import type { MultiProjectReport, ProjectReport, SubcategoryStats } from '@/types'
-import { buildComposition, findProject } from './composition'
+import { buildCodeMetrics, findProject } from './composition'
 
-// Fixture builders — buildComposition reads only report.tiers[]; findProject reads only
+// Fixture builders — buildCodeMetrics reads only report.tiers[]; findProject reads only
 // projects[].projectName. Cast the rest away (matches grid-order.test.ts style).
 const sub = (subcategory: string, over: Partial<SubcategoryStats> = {}): SubcategoryStats => ({
   subcategory,
@@ -13,7 +13,13 @@ const sub = (subcategory: string, over: Partial<SubcategoryStats> = {}): Subcate
   ...over,
 })
 
-/** A rich tiers[] tree: code(source lines + tests files + config files), docs(two subcats), data(prompts), assets(images/audio/video). */
+/**
+ * A rich tiers[] tree exercising every bucket's MULTI-subcategory sum:
+ *   - application LOC = source + styles + markup   (build-scripts present but EXCLUDED)
+ *   - test lines      = tests + test-fixtures
+ *   - planning        = docs/plans (docs/readmes present but EXCLUDED — not planning)
+ *   - config          = config
+ */
 const richTiers = () =>
   [
     {
@@ -21,31 +27,22 @@ const richTiers = () =>
       categories: [
         {
           category: 'code',
-          subcategories: [sub('source', { totalLines: 38412 }), sub('tests', { files: 1247 }), sub('config', { files: 120 })],
+          subcategories: [
+            sub('source', { totalLines: 30000, files: 200 }),
+            sub('styles', { totalLines: 8000, files: 60 }),
+            sub('markup', { totalLines: 500, files: 4 }),
+            sub('build-scripts', { totalLines: 17000, files: 50 }), // EXCLUDED from application LOC
+            sub('tests', { totalLines: 25000, files: 100 }),
+            sub('test-fixtures', { totalLines: 500, files: 3 }),
+            sub('config', { totalLines: 600, files: 15 }),
+          ],
           totals: sub('code'),
         },
         {
           category: 'docs',
-          // plans & docs uses the pre-computed category TOTALS, not a manual subcat sum. The
-          // totals (100) DIVERGE from the listed subcats (70+22=92) on purpose, so the test fails
-          // if the impl ever sums subcategories instead of reading totals.files.
-          subcategories: [sub('plans', { files: 70 }), sub('readmes', { files: 22 })],
-          totals: sub('docs', { files: 100 }),
-        },
-        {
-          category: 'data',
-          subcategories: [sub('generation-prompts', { files: 56 })],
-          totals: sub('data'),
-        },
-      ],
-    },
-    {
-      tier: 'pipeline-generated',
-      categories: [
-        {
-          category: 'assets',
-          subcategories: [sub('images', { files: 2140 }), sub('audio', { files: 340 }), sub('video', { files: 18 })],
-          totals: sub('assets'),
+          // Only `plans` is implementation planning; readmes are NOT.
+          subcategories: [sub('plans', { totalLines: 61000, files: 36 }), sub('readmes', { totalLines: 1200, files: 7 })],
+          totals: sub('docs'),
         },
       ],
     },
@@ -53,56 +50,51 @@ const richTiers = () =>
 
 const proj = (over: Partial<ProjectReport>): ProjectReport => over as unknown as ProjectReport
 
-describe('buildComposition', () => {
-  it('happy path: a full tree yields the curated kinds in selector order with correct values + units', () => {
-    const out = buildComposition(proj({ tiers: richTiers() }))
+describe('buildCodeMetrics', () => {
+  it('happy path: four buckets in order, each summing its subcategories into lines + files', () => {
+    const out = buildCodeMetrics(proj({ tiers: richTiers() }))
     expect(out).toEqual([
-      { key: 'code', label: 'lines of code', unit: 'lines', value: 38412 },
-      { key: 'tests', label: 'tests', unit: 'files', value: 1247 },
-      { key: 'docs', label: 'plans & docs', unit: 'files', value: 100 },
-      { key: 'prompts', label: 'generation prompts', unit: 'files', value: 56 },
-      { key: 'configs', label: 'config files', unit: 'files', value: 120 },
-      { key: 'images', label: 'images', unit: 'count', value: 2140 },
-      { key: 'audio', label: 'audio files', unit: 'count', value: 340 },
-      { key: 'video', label: 'video renders', unit: 'count', value: 18 },
+      { key: 'app', label: 'application LOC', lines: 38500, files: 264 }, // source+styles+markup (NOT build-scripts)
+      { key: 'tests', label: 'lines of testing', lines: 25500, files: 103 }, // tests + test-fixtures
+      { key: 'plans', label: 'lines of implementation planning', lines: 61000, files: 36 }, // plans only
+      { key: 'config', label: 'lines of config', lines: 600, files: 15 },
     ])
   })
 
-  it('uses the pre-computed docs category TOTALS, not a subcategory sum', () => {
-    const out = buildComposition(proj({ tiers: richTiers() }))
-    // totals.files = 100 while the listed subcats sum to 70 + 22 = 92; reading totals yields 100,
-    // a manual subcat sum would yield 92 — this assertion fails loudly if the impl regresses.
-    expect(out.find((i) => i.key === 'docs')?.value).toBe(100)
+  it('application LOC EXCLUDES build/tooling scripts (Briggsy-locked 2026-05-27)', () => {
+    const out = buildCodeMetrics(proj({ tiers: richTiers() }))
+    // 30000+8000+500 = 38500; if build-scripts (17000) leaked in it would be 55500.
+    expect(out.find((m) => m.key === 'app')?.lines).toBe(38500)
   })
 
-  it('omits zero-count kinds (a project with no audio/video shows neither — never "0")', () => {
+  it('planning is docs/plans ONLY, not all docs (readmes excluded)', () => {
+    const out = buildCodeMetrics(proj({ tiers: richTiers() }))
+    expect(out.find((m) => m.key === 'plans')?.lines).toBe(61000) // not 62200
+  })
+
+  it('omits a bucket with 0 lines AND 0 files (a toy with no config/plans shows neither)', () => {
     const tiers = [
       {
         tier: 'authored',
-        categories: [{ category: 'code', subcategories: [sub('source', { totalLines: 500 })], totals: sub('code') }],
+        categories: [{ category: 'code', subcategories: [sub('source', { totalLines: 500, files: 5 })], totals: sub('code') }],
       },
     ] as unknown as ProjectReport['tiers']
-    const out = buildComposition(proj({ tiers }))
-    expect(out.map((i) => i.key)).toEqual(['code'])
-  })
-
-  it('resolves a missing category/subcategory node to 0 and omits it (never throws)', () => {
-    const tiers = [{ tier: 'authored', categories: [] }] as unknown as ProjectReport['tiers']
-    expect(buildComposition(proj({ tiers }))).toEqual([])
+    const out = buildCodeMetrics(proj({ tiers }))
+    expect(out.map((m) => m.key)).toEqual(['app'])
   })
 
   it('empty tiers[] → []', () => {
-    expect(buildComposition(proj({ tiers: [] }))).toEqual([])
+    expect(buildCodeMetrics(proj({ tiers: [] }))).toEqual([])
   })
 
   it('missing tiers entirely → [] (defensive, no throw)', () => {
-    expect(buildComposition(proj({}))).toEqual([])
+    expect(buildCodeMetrics(proj({}))).toEqual([])
   })
 
   it('does not mutate the input report', () => {
     const report = proj({ tiers: richTiers() })
     const snapshot = JSON.stringify(report)
-    buildComposition(report)
+    buildCodeMetrics(report)
     expect(JSON.stringify(report)).toBe(snapshot)
   })
 })

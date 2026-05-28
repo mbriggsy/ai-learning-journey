@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.2.3 — 2026-05-27
+
+### Fixed
+
+- **`docs-plans` glob still missed non-`docs/` planning conventions** — broadened
+  further to match the planning DIRECTORY wherever it lives plus the `*-plan.md`
+  filename: added `**/.planning/**/*.md` (TDR-02's `.planning/phases/**` workspace)
+  and `**/*-plan.md` (data-engineering's `atc/02-plan.md`). Effect: top-down-racer-02
+  0 → 78 plans / 25,993 lines; data-engineering 0 → 1 / 60. burned (36), UMB (11),
+  TDR-04 (8) unchanged — the filename rule produced no false positives elsewhere.
+
 ## 0.2.2 — 2026-05-27
 
 ### Fixed

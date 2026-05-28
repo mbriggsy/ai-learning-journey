@@ -328,11 +328,22 @@ export const DEFAULT_RULES: ClassifierRule[] = [
   // ---- Authored.docs (path-based, specific → general) ----
   {
     name: 'docs-plans',
-    // `docs/**/plans/**` (picomatch globstar matches zero+ segments) catches both `docs/plans/`
-    // AND versioned layouts like `docs/v1/plans/` · `docs/v2/plans/` — a common convention the
-    // narrow `docs/plans/` glob missed (e.g. UMB filed 11 plans under docs/v1|v2/plans).
+    // Planning lives under wildly different conventions across projects, so match the planning
+    // DIRECTORY (whatever it's called) plus the `*-plan.md` filename. Picomatch globstar matches
+    // zero+ segments, so `docs/**/plans/**` covers plain `docs/plans/` AND versioned `docs/v1/plans/`.
+    //   - `docs/**/plans|phases/**` — burned/TDR-04 (`docs/plans/`), UMB (`docs/v1|v2/plans/`)
+    //   - `**/.planning/**`         — TDR-02's `.planning/phases/**` workspace (PLAN + SUMMARY + notes)
+    //   - `**/*-plan.md`            — data-engineering's `atc/02-plan.md` and any plan-named stray
     match: {
-      pathGlobs: ['docs/**/plans/**/*.md', 'docs/**/phases/**/*.md', '**/docs/**/plans/**/*.md', '**/docs/**/phases/**/*.md'],
+      pathGlobs: [
+        'docs/**/plans/**/*.md',
+        'docs/**/phases/**/*.md',
+        '**/docs/**/plans/**/*.md',
+        '**/docs/**/phases/**/*.md',
+        '**/.planning/**/*.md',
+        '**/*-plan.md',
+        '**/*-PLAN.md',
+      ],
     },
     tier: 'authored',
     category: 'docs',

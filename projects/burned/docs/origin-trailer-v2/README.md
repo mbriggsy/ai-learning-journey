@@ -11,6 +11,10 @@ old work.
   — the bar. Decodes *why UMB's V3 origin trailer hit* and converts it
   into a 6-point acceptance test the new trailer must clear. **Read this
   first.** Everything downstream is judged against it.
+- [`2026-05-24-trailer-structure.md`](2026-05-24-trailer-structure.md)
+  — the spine. Story Circle compressed to 6 trailer beats.
+- [`2026-05-24-origin-event-brainstorm.md`](2026-05-24-origin-event-brainstorm.md)
+  — 6 origin-event engines (DECISION PENDING — pick one to start).
 
 ## Current state
 
@@ -18,10 +22,15 @@ old work.
   *principle* of UMB's hit (true human-bet story, concrete images,
   escalation to an earned punchline, honest showcase, human cost as the
   heart). Do NOT remake UMB's surface.
-- **OPEN — owner Briggsy:** the voice fork (does Sterling-CODED carry a
-  true human-bet story, or does the trailer tell it straight with
-  spy-comedy wit, free of the briefing-room cage?). Resolve before the
-  rebuild brainstorm. See the principles doc, §OPEN.
+- **Voice RESOLVED (2026-05-24):** Malory-CODED dry matriarch narrating
+  from outside the fiction (fused — keeps spy DNA, drops the
+  briefing-at-you frame). Reuses the tuned Eleanor "matriarch" voice
+  asset. Narrator = named "Janet" (in-world matriarch, outside-observer). See
+  principles doc §RESOLVED.
+- **NEXT ACTION:** 6 origin-event engines drafted (see brainstorm doc).
+  Briggsy picks one (lean: #2 "She Gave It Two Weeks"; #3 highest
+  ceiling/risk; possible fusion) → then build the new beat sheet against
+  the bar + spine. Nothing in the brainstorm is locked yet.
 
 ## Superseded v1 work (reference only — do not extend)
 

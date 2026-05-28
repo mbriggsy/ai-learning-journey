@@ -113,13 +113,35 @@ The new beat sheet passes only if:
 
 ---
 
-## OPEN — voice fork (unresolved)
+## RESOLVED — voice fork (2026-05-24)
 
-Can BURNED's Sterling-CODED spy voice *carry* a true human-bet story
-(fuse them), or should the trailer tell the true story straight with
-spy-comedy *wit* but without trapping itself in the Pendleton briefing
-fiction (the frame the R6 key over-tightened)? Taste call — owner:
-Briggsy. Resolve before the rebuild brainstorm.
+**Fused, with the narrator moved OUTSIDE the fiction.** The trailer keeps
+BURNED's spy-comedy DNA, but the narrator is a **Malory-CODED dry
+matriarch** telling the tale of the human's bet — not a briefer
+lecturing the recruit. This recovers UMB's Charon outside-narrator
+distance (affectionate, dry, grudgingly impressed) in BURNED's own
+voice, and it cures v1's core disease (narrator *inside* the briefing,
+talking *at* you).
 
-See [[project-burned-sterling-coded-voice]]: voice is Sterling-CODED
-cadence mimicry, never Benjamin-cloned identity — whichever fork wins.
+- **Voice asset = reuse, not rebuild.** The tuned ElevenLabs Eleanor
+  "matriarch" settings (already proven) become the trailer narrator.
+  Recast from Dash (Sterling-CODED briefer) to the matriarch.
+- **Through-line:** the *"…I'm just impressed"* → *"…we're just
+  impressed"* bookend becomes the spine, not tacked-on closing chrome.
+
+**Guardrails:**
+- **Malory-CODED, never cloned** — register/cadence mimicry, never a
+  Jessica-Walter identity dupe. Parallels
+  [[project-burned-sterling-coded-voice]].
+- **Narrator ≠ protagonist** — she narrates; Briggsy's bet stays the
+  hero. The matriarch never upstages the subject.
+
+**Narrator (resolved 2026-05-24):** named **"Janet"** — the in-world
+Pendleton matriarch (one of BURNED's 6 characters) narrates. **Guardrail:**
+even as a named in-world character she holds the OUTSIDE-observer stance
+(dryly recounting Briggsy's bet), never reverting to in-world
+briefing-at-you. Named ≠ inside the fiction — Charon was named too.
+
+See [[project-burned-sterling-coded-voice]]: voice is CODED
+cadence mimicry, never cloned identity — the matriarch follows the same
+rule as Sterling.

@@ -328,7 +328,12 @@ export const DEFAULT_RULES: ClassifierRule[] = [
   // ---- Authored.docs (path-based, specific → general) ----
   {
     name: 'docs-plans',
-    match: { pathGlobs: ['docs/plans/**/*.md', 'docs/phases/**/*.md', '**/docs/plans/**/*.md'] },
+    // `docs/**/plans/**` (picomatch globstar matches zero+ segments) catches both `docs/plans/`
+    // AND versioned layouts like `docs/v1/plans/` · `docs/v2/plans/` — a common convention the
+    // narrow `docs/plans/` glob missed (e.g. UMB filed 11 plans under docs/v1|v2/plans).
+    match: {
+      pathGlobs: ['docs/**/plans/**/*.md', 'docs/**/phases/**/*.md', '**/docs/**/plans/**/*.md', '**/docs/**/phases/**/*.md'],
+    },
     tier: 'authored',
     category: 'docs',
     subcategory: 'plans',

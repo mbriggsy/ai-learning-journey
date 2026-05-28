@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.2.2 — 2026-05-27
+
+### Fixed
+
+- **`docs-plans` classifier glob too narrow** — only matched `docs/plans/` and
+  `docs/phases/`, missing the common versioned layout `docs/v1/plans/` ·
+  `docs/v2/plans/`. Broadened to `docs/**/plans/**` (+ phases), so versioned plan
+  dirs now count as implementation planning. (e.g. undercover-mob-boss: 0 → 11 plans
+  / 11,190 lines.) Picomatch globstar matches zero segments, so the plain `docs/plans/`
+  layout still matches — verified burned (36) and top-down-racer-04 (8) unchanged.
+
 ## 0.2.1 — 2026-05-27
 
 ### Removed

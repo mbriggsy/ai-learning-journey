@@ -6,9 +6,9 @@ UMB hit and converts it into the acceptance bar for the BURNED origin
 rebuild. It is the spec the new beat sheet has to satisfy.
 
 **Source artifact:** UMB V3 narration script —
-`../../../undercover-mob-boss/scripts/narrator-prompts.ts`
+`../../../../undercover-mob-boss/scripts/narrator-prompts.ts`
 (`TRAILER_V3_PROMPTS`). The BURNED draft this replaces:
-`../../videos/trailer/BEAT-SHEET.md`.
+`../../../videos/trailer/BEAT-SHEET.md`.
 
 ---
 

@@ -33,8 +33,18 @@ old work.
   the middle) · **#3 Origin of Janet** gut-punch tag (*"…not a word came
   from his hand. Including mine."*). Full decision + the four tag
   non-negotiables in the brainstorm doc's §DECISION.
-- **NEXT ACTION:** build the new beat sheet against the locked engine +
-  the bar + the spine.
+- **BEAT SHEET LOCKED (2026-05-28):** full VO script, 7 beats, ~119s —
+  [`2026-05-28-beat-sheet-draft.md`](2026-05-28-beat-sheet-draft.md) (DRAFT
+  v4). Numbers are canonical from the stats site (43K app LOC / 29K tests /
+  62K planning / 1,326 tests), not ad-hoc git counts. Script reviewed +
+  approved by Briggsy.
+- **NEXT ACTION — visual direction.** Two forks to decide first (in the
+  beat sheet's "Open questions"): (1) **medium** — hybrid (Archer-style
+  build + real gameplay at the payoff) vs all-motion-graphics vs
+  gameplay-forward [Claude leans hybrid]; (2) **is the human on screen** —
+  silhouette / hands / a chair vs zero humans, Janet's VO carries it. Then
+  the rest of the open questions (game-night footage, scale cascade reuse,
+  title-card timing). Production infra reusable in `videos/trailer/`.
 
 ## Superseded v1 work (reference only — do not extend)
 

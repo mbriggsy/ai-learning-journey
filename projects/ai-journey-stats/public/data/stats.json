@@ -28,36 +28,36 @@
     "modelBreakdown": [
       {
         "model": "Opus 4.7",
-        "sessions": 33869,
-        "tokensProcessed": 9356604240
+        "sessions": 34280,
+        "tokensProcessed": 9440075094
       },
       {
         "model": "<synthetic>",
-        "sessions": 3,
+        "sessions": 4,
         "tokensProcessed": 0
       }
     ],
     "projectCount": 9,
     "tokenWindowDays": 30,
-    "tokenWindowEndISO": "2026-05-28T00:42:59.063Z",
+    "tokenWindowEndISO": "2026-05-28T14:54:30.586Z",
     "tokenWindowStartISO": "2026-04-27T21:00:37.075Z",
-    "totalAllBytes": 546575972,
-    "totalAllFiles": 2069,
-    "totalAuthoredBytes": 60022232,
-    "totalAuthoredFiles": 2126,
-    "totalAuthoredLines": 536449,
-    "totalCommits": 1094,
+    "totalAllBytes": 546579383,
+    "totalAllFiles": 2070,
+    "totalAuthoredBytes": 60025643,
+    "totalAuthoredFiles": 2127,
+    "totalAuthoredLines": 536536,
+    "totalCommits": 1099,
     "totalDiscardedAssets": 90,
     "totalIterationProxies": 17,
     "totalPipelineGeneratedBytes": 485223899,
     "totalPipelineGeneratedFiles": 452,
-    "totalPlanCount": 164,
-    "totalPlanLines": 119087,
-    "totalSessions": 33872,
+    "totalPlanCount": 168,
+    "totalPlanLines": 119405,
+    "totalSessions": 34284,
     "totalTestCases": 3719,
     "totalTestLines": 66876,
-    "totalTokensFresh": 282327417,
-    "totalTokensProcessed": 9356604240,
+    "totalTokensFresh": 286467564,
+    "totalTokensProcessed": 9440075094,
     "totalToolGeneratedBytes": 886916,
     "totalToolGeneratedFiles": 9
   },
@@ -74,15 +74,15 @@
       "git": {
         "assetModificationEvents": 0,
         "assetUniquePathsTouched": 0,
-        "commitMessageLines": 50,
+        "commitMessageLines": 62,
         "discardedAssetByKind": {},
         "discardedAssetEvents": 0,
         "discardedAssetFiles": 0,
         "firstCommitISO": "2026-05-26T17:14:34-04:00",
         "isGitRepo": true,
-        "lastCommitISO": "2026-05-27T20:38:51-04:00",
-        "lifetimeLinesAdded": 6503,
-        "lifetimeLinesRemoved": 60,
+        "lastCommitISO": "2026-05-27T20:45:43-04:00",
+        "lifetimeLinesAdded": 6530,
+        "lifetimeLinesRemoved": 65,
         "projectAgeDays": 1,
         "timeline": {
           "activeDays": 2,
@@ -92,7 +92,7 @@
               "date": "2026-05-26"
             },
             {
-              "count": 2,
+              "count": 3,
               "date": "2026-05-27"
             }
           ],
@@ -102,19 +102,19 @@
             "linesRemoved": 0
           },
           "peakDay": {
-            "count": 2,
+            "count": 3,
             "date": "2026-05-27"
           }
         },
-        "totalCommits": 3,
+        "totalCommits": 4,
         "uniqueFilesTouched": 36
       },
       "grandTotals": {
-        "allBytes": 232193,
+        "allBytes": 232736,
         "allFiles": 36,
-        "authoredBytes": 193264,
+        "authoredBytes": 193807,
         "authoredFiles": 35,
-        "authoredLines": 5184,
+        "authoredLines": 5195,
         "pipelineGeneratedBytes": 0,
         "pipelineGeneratedFiles": 0,
         "toolGeneratedBytes": 38929,
@@ -128,7 +128,7 @@
         "regenScriptCount": 0,
         "sampleEvalRunCount": 0
       },
-      "scannedAt": "2026-05-28T00:43:20.878Z",
+      "scannedAt": "2026-05-28T14:54:40.471Z",
       "testCases": 51,
       "testLines": 1252,
       "tiers": [
@@ -171,29 +171,29 @@
               "category": "docs",
               "subcategories": [
                 {
-                  "bytes": 14108,
+                  "bytes": 14651,
                   "files": 2,
-                  "nonBlankLines": 255,
+                  "nonBlankLines": 263,
                   "subcategory": "readmes",
-                  "totalLines": 320
+                  "totalLines": 331
                 }
               ],
               "totals": {
-                "bytes": 14108,
+                "bytes": 14651,
                 "files": 2,
-                "nonBlankLines": 255,
+                "nonBlankLines": 263,
                 "subcategory": "<totals>",
-                "totalLines": 320
+                "totalLines": 331
               }
             }
           ],
           "tier": "authored",
           "totals": {
-            "bytes": 193264,
+            "bytes": 193807,
             "files": 35,
-            "nonBlankLines": 4759,
+            "nonBlankLines": 4767,
             "subcategory": "<totals>",
-            "totalLines": 5184
+            "totalLines": 5195
           }
         },
         {
@@ -239,7 +239,31 @@
           }
         }
       ],
-      "tokens": null,
+      "tokens": {
+        "byModel": [
+          {
+            "model": "Opus 4.7",
+            "sessions": 56,
+            "tokensProcessed": 4794906
+          }
+        ],
+        "cacheCreationInputTokens": 292536,
+        "cacheReadInputTokens": 4397389,
+        "inputTokens": 42424,
+        "outputTokens": 62557,
+        "parseHealth": {
+          "fileReadErrors": 0,
+          "lineParseErrors": 0,
+          "usageShapeWarnings": 0
+        },
+        "sessionCount": 56,
+        "sidechainTokens": 0,
+        "tokensFresh": 397517,
+        "tokensProcessed": 4794906,
+        "windowDays": 0,
+        "windowEndISO": "2026-05-28T14:49:59.652Z",
+        "windowStartISO": "2026-05-28T14:41:56.307Z"
+      },
       "topSubcategories": [
         {
           "bytes": 130020,
@@ -266,10 +290,10 @@
           "tier": "tool-generated"
         },
         {
-          "bytes": 14108,
+          "bytes": 14651,
           "category": "docs",
           "files": 2,
-          "lines": 320,
+          "lines": 331,
           "subcategory": "readmes",
           "tier": "authored"
         },
@@ -295,7 +319,7 @@
       "git": {
         "assetModificationEvents": 14,
         "assetUniquePathsTouched": 9,
-        "commitMessageLines": 253,
+        "commitMessageLines": 271,
         "discardedAssetByKind": {
           "images": 5
         },
@@ -303,15 +327,15 @@
         "discardedAssetFiles": 5,
         "firstCommitISO": "2026-05-27T09:37:21-04:00",
         "isGitRepo": true,
-        "lastCommitISO": "2026-05-27T20:38:51-04:00",
-        "lifetimeLinesAdded": 19345,
-        "lifetimeLinesRemoved": 1688,
+        "lastCommitISO": "2026-05-27T21:05:07-04:00",
+        "lifetimeLinesAdded": 19480,
+        "lifetimeLinesRemoved": 1822,
         "projectAgeDays": 0,
         "timeline": {
           "activeDays": 1,
           "commitsByDay": [
             {
-              "count": 26,
+              "count": 28,
               "date": "2026-05-27"
             }
           ],
@@ -321,19 +345,19 @@
             "linesRemoved": 0
           },
           "peakDay": {
-            "count": 26,
+            "count": 28,
             "date": "2026-05-27"
           }
         },
-        "totalCommits": 26,
+        "totalCommits": 28,
         "uniqueFilesTouched": 118
       },
       "grandTotals": {
-        "allBytes": 1184060,
+        "allBytes": 1182116,
         "allFiles": 107,
-        "authoredBytes": 1014198,
+        "authoredBytes": 1012254,
         "authoredFiles": 102,
-        "authoredLines": 16444,
+        "authoredLines": 16445,
         "pipelineGeneratedBytes": 131713,
         "pipelineGeneratedFiles": 4,
         "toolGeneratedBytes": 38149,
@@ -347,7 +371,7 @@
         "regenScriptCount": 0,
         "sampleEvalRunCount": 0
       },
-      "scannedAt": "2026-05-28T00:43:21.429Z",
+      "scannedAt": "2026-05-28T14:54:41.110Z",
       "testCases": 121,
       "testLines": 691,
       "tiers": [
@@ -357,7 +381,7 @@
               "category": "docs",
               "subcategories": [
                 {
-                  "bytes": 628659,
+                  "bytes": 628670,
                   "files": 12,
                   "nonBlankLines": 5415,
                   "subcategory": "plans",
@@ -371,11 +395,11 @@
                   "totalLines": 477
                 },
                 {
-                  "bytes": 33519,
+                  "bytes": 31169,
                   "files": 2,
-                  "nonBlankLines": 109,
+                  "nonBlankLines": 97,
                   "subcategory": "readmes",
-                  "totalLines": 153
+                  "totalLines": 139
                 },
                 {
                   "bytes": 24626,
@@ -386,11 +410,11 @@
                 }
               ],
               "totals": {
-                "bytes": 722985,
+                "bytes": 720646,
                 "files": 25,
-                "nonBlankLines": 6217,
+                "nonBlankLines": 6205,
                 "subcategory": "<totals>",
-                "totalLines": 7996
+                "totalLines": 7982
               }
             },
             {
@@ -451,29 +475,29 @@
               "category": "data",
               "subcategories": [
                 {
-                  "bytes": 97463,
+                  "bytes": 97858,
                   "files": 2,
-                  "nonBlankLines": 3538,
+                  "nonBlankLines": 3553,
                   "subcategory": "lookup-tables",
-                  "totalLines": 3538
+                  "totalLines": 3553
                 }
               ],
               "totals": {
-                "bytes": 97463,
+                "bytes": 97858,
                 "files": 2,
-                "nonBlankLines": 3538,
+                "nonBlankLines": 3553,
                 "subcategory": "<totals>",
-                "totalLines": 3538
+                "totalLines": 3553
               }
             }
           ],
           "tier": "authored",
           "totals": {
-            "bytes": 1014198,
+            "bytes": 1012254,
             "files": 102,
-            "nonBlankLines": 14287,
+            "nonBlankLines": 14290,
             "subcategory": "<totals>",
-            "totalLines": 16444
+            "totalLines": 16445
           }
         },
         {
@@ -550,30 +574,35 @@
         "byModel": [
           {
             "model": "Opus 4.7",
-            "sessions": 1378,
-            "tokensProcessed": 349306650
+            "sessions": 1733,
+            "tokensProcessed": 427982598
+          },
+          {
+            "model": "<synthetic>",
+            "sessions": 1,
+            "tokensProcessed": 0
           }
         ],
-        "cacheCreationInputTokens": 5980640,
-        "cacheReadInputTokens": 341039509,
-        "inputTokens": 233647,
-        "outputTokens": 2052854,
+        "cacheCreationInputTokens": 9021370,
+        "cacheReadInputTokens": 415972827,
+        "inputTokens": 333114,
+        "outputTokens": 2655287,
         "parseHealth": {
           "fileReadErrors": 0,
           "lineParseErrors": 0,
           "usageShapeWarnings": 0
         },
-        "sessionCount": 1378,
+        "sessionCount": 1734,
         "sidechainTokens": 0,
-        "tokensFresh": 8267141,
-        "tokensProcessed": 349306650,
-        "windowDays": 0,
-        "windowEndISO": "2026-05-28T00:42:59.063Z",
-        "windowStartISO": "2026-05-27T13:35:25.279Z"
+        "tokensFresh": 12009771,
+        "tokensProcessed": 427982598,
+        "windowDays": 3,
+        "windowEndISO": "2026-05-28T14:54:30.586Z",
+        "windowStartISO": "2026-05-25T00:02:16.614Z"
       },
       "topSubcategories": [
         {
-          "bytes": 628659,
+          "bytes": 628670,
           "category": "docs",
           "files": 12,
           "lines": 6927,
@@ -597,10 +626,10 @@
           "tier": "authored"
         },
         {
-          "bytes": 97463,
+          "bytes": 97858,
           "category": "data",
           "files": 2,
-          "lines": 3538,
+          "lines": 3553,
           "subcategory": "lookup-tables",
           "tier": "authored"
         },
@@ -638,7 +667,7 @@
       "git": {
         "assetModificationEvents": 196,
         "assetUniquePathsTouched": 137,
-        "commitMessageLines": 15671,
+        "commitMessageLines": 15689,
         "discardedAssetByKind": {
           "images": 22
         },
@@ -646,10 +675,10 @@
         "discardedAssetFiles": 22,
         "firstCommitISO": "2026-04-08T21:27:47-04:00",
         "isGitRepo": true,
-        "lastCommitISO": "2026-05-27T19:48:13-04:00",
-        "lifetimeLinesAdded": 241292,
-        "lifetimeLinesRemoved": 40582,
-        "projectAgeDays": 48,
+        "lastCommitISO": "2026-05-27T21:54:20-04:00",
+        "lifetimeLinesAdded": 241472,
+        "lifetimeLinesRemoved": 40602,
+        "projectAgeDays": 49,
         "timeline": {
           "activeDays": 41,
           "commitsByDay": [
@@ -814,7 +843,7 @@
               "date": "2026-05-26"
             },
             {
-              "count": 1,
+              "count": 3,
               "date": "2026-05-27"
             }
           ],
@@ -828,29 +857,29 @@
             "date": "2026-04-24"
           }
         },
-        "totalCommits": 609,
-        "uniqueFilesTouched": 981
+        "totalCommits": 611,
+        "uniqueFilesTouched": 987
       },
       "grandTotals": {
-        "allBytes": 446476684,
-        "allFiles": 1093,
-        "authoredBytes": 9269638,
-        "authoredFiles": 820,
-        "authoredLines": 190327,
+        "allBytes": 446481496,
+        "allFiles": 1094,
+        "authoredBytes": 9274450,
+        "authoredFiles": 821,
+        "authoredLines": 190402,
         "pipelineGeneratedBytes": 436926606,
         "pipelineGeneratedFiles": 271,
         "toolGeneratedBytes": 280440,
         "toolGeneratedFiles": 2
       },
-      "planCount": 36,
-      "planLines": 61764,
+      "planCount": 40,
+      "planLines": 62082,
       "projectName": "burned",
       "proxies": {
         "iterationProxyTotal": 17,
         "regenScriptCount": 7,
         "sampleEvalRunCount": 10
       },
-      "scannedAt": "2026-05-28T00:43:16.023Z",
+      "scannedAt": "2026-05-28T14:54:35.067Z",
       "testCases": 1326,
       "testLines": 28488,
       "tiers": [
@@ -860,18 +889,18 @@
               "category": "docs",
               "subcategories": [
                 {
-                  "bytes": 3455629,
-                  "files": 36,
-                  "nonBlankLines": 51925,
+                  "bytes": 3472627,
+                  "files": 40,
+                  "nonBlankLines": 52176,
                   "subcategory": "plans",
-                  "totalLines": 61764
+                  "totalLines": 62082
                 },
                 {
-                  "bytes": 717353,
-                  "files": 39,
-                  "nonBlankLines": 11497,
+                  "bytes": 706790,
+                  "files": 37,
+                  "nonBlankLines": 11333,
                   "subcategory": "general",
-                  "totalLines": 13849
+                  "totalLines": 13640
                 },
                 {
                   "bytes": 574157,
@@ -895,11 +924,11 @@
                   "totalLines": 5771
                 },
                 {
-                  "bytes": 80583,
-                  "files": 7,
-                  "nonBlankLines": 1125,
+                  "bytes": 78960,
+                  "files": 6,
+                  "nonBlankLines": 1098,
                   "subcategory": "readmes",
-                  "totalLines": 1276
+                  "totalLines": 1242
                 },
                 {
                   "bytes": 62127,
@@ -917,11 +946,11 @@
                 }
               ],
               "totals": {
-                "bytes": 5806390,
-                "files": 286,
-                "nonBlankLines": 81414,
+                "bytes": 5811202,
+                "files": 287,
+                "nonBlankLines": 81474,
                 "subcategory": "<totals>",
-                "totalLines": 99267
+                "totalLines": 99342
               }
             },
             {
@@ -1007,11 +1036,11 @@
           ],
           "tier": "authored",
           "totals": {
-            "bytes": 9269638,
-            "files": 820,
-            "nonBlankLines": 163829,
+            "bytes": 9274450,
+            "files": 821,
+            "nonBlankLines": 163889,
             "subcategory": "<totals>",
-            "totalLines": 190327
+            "totalLines": 190402
           }
         },
         {
@@ -1188,10 +1217,10 @@
           "tier": "pipeline-generated"
         },
         {
-          "bytes": 3455629,
+          "bytes": 3472627,
           "category": "docs",
-          "files": 36,
-          "lines": 61764,
+          "files": 40,
+          "lines": 62082,
           "subcategory": "plans",
           "tier": "authored"
         }
@@ -1297,7 +1326,7 @@
         "regenScriptCount": 0,
         "sampleEvalRunCount": 0
       },
-      "scannedAt": "2026-05-28T00:43:16.413Z",
+      "scannedAt": "2026-05-28T14:54:35.466Z",
       "testCases": 0,
       "testLines": 0,
       "tiers": [
@@ -1547,7 +1576,7 @@
         "regenScriptCount": 0,
         "sampleEvalRunCount": 0
       },
-      "scannedAt": "2026-05-28T00:43:16.776Z",
+      "scannedAt": "2026-05-28T14:54:35.869Z",
       "testCases": 0,
       "testLines": 0,
       "tiers": [
@@ -1778,7 +1807,7 @@
         "regenScriptCount": 0,
         "sampleEvalRunCount": 0
       },
-      "scannedAt": "2026-05-28T00:43:17.136Z",
+      "scannedAt": "2026-05-28T14:54:36.261Z",
       "testCases": 0,
       "testLines": 0,
       "tiers": [
@@ -2043,7 +2072,7 @@
         "regenScriptCount": 0,
         "sampleEvalRunCount": 0
       },
-      "scannedAt": "2026-05-28T00:43:17.527Z",
+      "scannedAt": "2026-05-28T14:54:36.660Z",
       "testCases": 0,
       "testLines": 0,
       "tiers": [
@@ -2285,7 +2314,7 @@
         "regenScriptCount": 0,
         "sampleEvalRunCount": 0
       },
-      "scannedAt": "2026-05-28T00:43:17.883Z",
+      "scannedAt": "2026-05-28T14:54:37.054Z",
       "testCases": 19,
       "testLines": 144,
       "tiers": [
@@ -2597,7 +2626,7 @@
         "regenScriptCount": 0,
         "sampleEvalRunCount": 0
       },
-      "scannedAt": "2026-05-28T00:43:18.524Z",
+      "scannedAt": "2026-05-28T14:54:37.807Z",
       "testCases": 381,
       "testLines": 5270,
       "tiers": [
@@ -2911,7 +2940,7 @@
         "regenScriptCount": 0,
         "sampleEvalRunCount": 0
       },
-      "scannedAt": "2026-05-28T00:43:19.234Z",
+      "scannedAt": "2026-05-28T14:54:38.674Z",
       "testCases": 504,
       "testLines": 7303,
       "tiers": [
@@ -3257,7 +3286,7 @@
         "regenScriptCount": 0,
         "sampleEvalRunCount": 0
       },
-      "scannedAt": "2026-05-28T00:43:20.540Z",
+      "scannedAt": "2026-05-28T14:54:40.085Z",
       "testCases": 752,
       "testLines": 17925,
       "tiers": [
@@ -3515,5 +3544,5 @@
       ]
     }
   ],
-  "scannedAt": "2026-05-28T00:43:23.906Z"
+  "scannedAt": "2026-05-28T14:54:43.754Z"
 }

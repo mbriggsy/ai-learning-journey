@@ -1,0 +1,26 @@
+{
+  "name": "burned-origin-trailer",
+  "version": "2.0.0",
+  "description": "BURNED origin trailer (v2) — Remotion video project. Living-UI build that borrows real game components/art across the package wall. v1 archived at git tag origin-trailer-v1.",
+  "type": "module",
+  "scripts": {
+    "studio": "remotion studio src/index.ts",
+    "render": "remotion render src/index.ts",
+    "still:foundation": "remotion still src/index.ts FoundationProof out/foundation-proof.png --frame 40",
+    "render:foundation": "remotion render src/index.ts FoundationProof out/foundation-proof.mp4 --codec h264 --crf 18",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.438",
+    "@remotion/fonts": "4.0.438",
+    "@remotion/media": "4.0.438",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "remotion": "4.0.438"
+  },
+  "devDependencies": {
+    "@types/react": "^19.1.0",
+    "tsx": "^4.20.0",
+    "typescript": "^5.9.3"
+  }
+}

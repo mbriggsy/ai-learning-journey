@@ -7,18 +7,17 @@ the history. (Rule: `feedback-todo-is-not-a-diary.md`.)
 
 ## 1. Active priorities
 
-### Current state (verified 2026-05-23, re-confirmed 2026-05-28 — git shows zero `src/` or `videos/trailer/` code touched since; intervening commits are docs-only)
+### Current state (game `src/` verified 2026-05-23, unchanged since — this session only touched `videos/origin-trailer/` + docs)
 
 - Tests: **1407 pass** | 6 expected fail (68/68 files green)
-- Trailer subpackage tests: **220 pass | 0 expected-fail** (11 files) — v1 Remotion infra retained, reusable for v2
-- Typecheck: clean (`pnpm typecheck` root + `videos/trailer/`)
+- Typecheck: clean (`pnpm typecheck` root + `videos/origin-trailer/`)
 - Phone player entry: **19.17 KB gz**
 - DramaOverlay lazy chunk: **2.34 KB gz**
 - HOW-TO-PLAY bundle: `howtoplay-*.js` **33.90 KB gz** + shared GSAP **27.21 KB gz**
 - Protocol version: **v6**
 - Phase 2 ElevenLabs spend: **$0.87 / $50** ceiling
 
-### Origin trailer v2 — ACTIVE (mid voice-casting)
+### Origin trailer v2 — ACTIVE (VO bed LOCKED; next = visual scenes)
 
 Clean-slate rebuild after v1 teardown. Workspace + locked decisions:
 **`docs/plans/origin-trailer-v2/`** (read `README.md` first;
@@ -30,8 +29,10 @@ stands up + renders. `FoundationProof` composition proves the living-UI
 mechanism end-to-end (real card art + real `MinimalCard` CSS + real token
 legend + real `card-defs` data, borrowed across the package wall,
 frame-animated). `pnpm typecheck` + `pnpm still:foundation` both green.
-The old `videos/trailer/` is **PARKED** (holds v1 + the voice-pipeline
-source) — recoverable via the tag; remove once v2 no longer references it.
+The old `videos/trailer/` (v1) was **DELETED 2026-05-29** — fully preserved in
+the `origin-trailer-v1` tag. To borrow v1 infra later (e.g. the
+`s04-receipts-cascade` motion for the scale visual), `git checkout
+origin-trailer-v1 -- videos/trailer/<path>`.
 
 **LOCKED:**
 - **Direction** — origin *story*, not feature briefing.
@@ -46,12 +47,13 @@ source) — recoverable via the tag; remove once v2 no longer references it.
 - **Engine** — fusion: #4 Game Night open · #2 Two Weeks spine ·
   #3 Origin-of-Janet gut-punch tag. `…-origin-event-brainstorm.md` §DECISION.
 - **Beat sheet (draft v5)** — full VO, 7 beats, canonical site numbers.
-  Briggsy-approved. Runtime ~3–3.5 min (est. 216–265s; the old ~119s target
-  was unvalidated, corrected 2026-05-28 — "accept the longer cut, no
-  trimming"). `2026-05-28-beat-sheet-draft.md`.
-- **Voice pipeline** — rebuilt clean in `videos/origin-trailer/scripts/`
-  (Janet-only: client + ffmpeg + env libs, all v1 fixes ported).
-  `pnpm tts:test` generates one line — proven end-to-end (valid 48k mono PCM).
+  Briggsy-approved. Runtime **MEASURED 3:01** after the surgical trim +
+  Eleanor pacing (was 4:25 untrimmed; old ~119s target was unvalidated).
+  `2026-05-28-beat-sheet-draft.md`.
+- **Voice pipeline** — `videos/origin-trailer/scripts/` (Janet-only: client +
+  ffmpeg + env libs). `pnpm tts:test` walks the full cue list → per-cue WAVs +
+  stitched master + manifest. Speech cached by exact text; a trailing-clip
+  guard regenerates hot takes (insight 069).
 
 **Janet's character (drives the voice cast):** white, American, **New
 Yorker**, ~50s, very rich, slightly-always-annoyed, drinker, former smoker.
@@ -80,31 +82,32 @@ Gentler fallback if she ever reads unstable: stab 0.40 / style 0.45.
   - **Rasp rule still holds:** settings CAN'T add rasp (timbre, not a knob).
     Designed-rasp candidates (`out/janet-design/`) archived; not the pick.
 
-**CUE LIST AUTHORED (2026-05-28).** `scripts/voice/script.ts` — 27 speech
-cues + 20 silence pauses across all 7 beats, verbatim from the approved beat
-sheet. Audio-first: NO frames (visuals timed to measured VO later). Stage
-directions held as `direction` metadata (never in `text`, never sent to API);
-`[beat]`/`[long beat]`/`[hold]` are typed `silence` cues for FFmpeg stitch.
-`pnpm cues:check` gates the VOICE_DIRECTION leak rule + beat coverage +
-runtime estimate (529 words + 12.8s silence → ~216–265s). Typecheck clean.
+**CUE LIST + VO GENERATED (2026-05-29).** `scripts/voice/script.ts` — 24 speech
+cues + 23 silence pauses across all 7 beats. Audio-first: NO frames (visuals
+timed to measured VO later). Stage directions held as `direction` metadata
+(never in `text`, never sent to API); pauses are typed `silence` cues
+(`tiny`/`paragraph`/`boundary`/`beat`/`turn`/`long-beat`) for FFmpeg stitch.
+Surgically trimmed 529 → 420 words (Beat 5 chaos + the Janet-synthetic reveal
+cut) and pauses ear-tuned. `pnpm cues:check` gates the VOICE_DIRECTION leak
+rule + beat coverage + runtime. **Master: `out/vo/janet-vo-master.wav`, 3:01,
+all 24 cues verified clip-clean (tail peak ≤ −12 dB).**
 
-**NEXT ACTION — generate + process the VO.** In order:
-1. **Wire `generate-vo.ts` to consume `JANET_CUES`** — iterate cues in order:
-   `speech` → `generateJanet({ text })` (text ONLY — the leak rule); `silence`
-   → silent WAV of `ms`; concat all → full VO bed. Add an FFmpeg silence-gen
-   helper to `lib/ffmpeg.ts` (none exists yet). Per-cue WAVs + a stitched
-   master + a measured-durations manifest (the real runtime, finally).
-2. **Process + ear-pass** — loudnorm per v1 gotchas; N=1 Briggsy cold-read of
-   the full bed. Tune `SILENCE_MS` + any per-cue delivery by ear. The
-   `…Hmph.` non-verbal needs the production-flag test (may drop to a breath).
-3. **Then build the visual scenes timed to the measured VO durations**
-   (audio first, visuals second — v1's correct order). Resolve the still-open
-   creative forks below as scenes get built.
+**NEXT ACTION — build the visual scenes, timed to the measured VO.** The VO bed
+is locked; `out/vo/manifest.json` has every cue's exact start + duration to
+time scenes against (audio-first order — v1's correct order).
+1. **Stand up the v2 scene compositions** in `videos/origin-trailer/src/` on
+   the proven living-UI foundation (FoundationProof / Option-B cross-tree
+   `@shared` + `@client` import). One scene per beat, timed to the manifest.
+2. **Resolve the creative forks** (below) as each scene gets built.
+3. **Wire the VO master + scenes into the Remotion composition; render.** For
+   the scale visual, optionally borrow v1's `s04-receipts-cascade` motion
+   (`git checkout origin-trailer-v1 -- videos/trailer/...`).
 
-**Still-open creative forks** (for when scenes get built, after VO): human on
-screen? (silhouette/hands/2am-desk vs zero humans); scale-number treatment
-(bar-growth vs plain type); logline placement (beat 1 vs payoff); "Including
-mine" exact wording. All parked in the beat sheet's "Open questions".
+**Still-open creative forks** (for when scenes get built): human on screen?
+(silhouette/hands/2am-desk vs zero humans); scale-number treatment (bar-growth
+vs plain type); logline placement (beat 1 vs payoff). (The "Including mine"
+wording fork is MOOT — the reveal was cut.) Parked in the beat sheet's "Open
+questions".
 
 ### Voice-pipeline gotchas — for v2 VO generation
 

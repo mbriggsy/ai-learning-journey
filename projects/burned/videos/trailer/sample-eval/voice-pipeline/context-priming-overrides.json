@@ -1,6 +1,0 @@
-{
-  "$schema": "Phase 2 cueId → adjacent-cue priming map. ElevenLabs uses previous_text/next_text body fields; cross-scene boundaries omit by design.",
-  "S01-cold-open": {
-    "previous": "Operation Pendleton has been running for the better part of a decade now. The asset behind it — code-name BURNED — was never supposed to be operational. Honestly the whole thing started as a tax write-off."
-  }
-}

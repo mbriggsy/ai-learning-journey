@@ -7,8 +7,8 @@ rebuild. It is the spec the new beat sheet has to satisfy.
 
 **Source artifact:** UMB V3 narration script —
 `../../../../undercover-mob-boss/scripts/narrator-prompts.ts`
-(`TRAILER_V3_PROMPTS`). The BURNED draft this replaces:
-`../../../videos/trailer/BEAT-SHEET.md`.
+(`TRAILER_V3_PROMPTS`). The BURNED draft this replaces: v1's `BEAT-SHEET.md`
+(in the `origin-trailer-v1` tag — `videos/trailer/` was deleted 2026-05-29).
 
 ---
 

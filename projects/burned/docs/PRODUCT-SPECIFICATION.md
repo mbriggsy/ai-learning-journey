@@ -138,7 +138,7 @@ The shipped beats below illustrate the shape — every one is an entendre-coded 
 2. Read it aloud as if a stranger were hearing it cold (no Sterling/Archer-context priming).
 3. Does it have an obvious sexual double meaning or unmistakable innuendo?
 4. If YES — tag it. If NO — strip the tag, OR rewrite the setup until the entendre reads cold.
-5. Any new code constant that ships a Phrasing! beat replicates the contract-test shape established in `videos/trailer/scripts/tone-prototype.test.ts` (asserts the entendre setup precedes the tag verbatim) so a future edit can't silently strip the entendre and ship an unearned beat.
+5. Any new code constant that ships a Phrasing! beat replicates the contract-test shape established in v1's `tone-prototype.test.ts` (preserved in the `origin-trailer-v1` tag; asserts the entendre setup precedes the tag verbatim) so a future edit can't silently strip the entendre and ship an unearned beat.
 
 **The failure mode** to watch for: porting copy verbatim from a plan/brainstorm document without re-checking the trigger. Captured 2026-05-18 during Phase 0 Unit 0.4 — `TONE_SAMPLE_PARAGRAPH` v1 ended *"Try and find a human one. ...Phrasing."* with no entendre setup; the tag was unearned. v2 inserted *"Hard to put down."* (literal: page-turner; entendre on "hard") to earn the beat.
 

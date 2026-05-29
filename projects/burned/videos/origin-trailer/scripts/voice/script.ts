@@ -31,8 +31,8 @@
  * ordering is sacred per the beat sheet's non-negotiables: "Including mine"
  * gets its full silent HOLD before the warm "This kid…" button returns.
  *
- * Companion: `janet.ts` (the locked voice). Mirrors the v1
- * `videos/trailer/src/lib/script.ts` precedent, minus the frame machinery.
+ * Companion: `janet.ts` (the locked voice). Mirrors the v1 `src/lib/script.ts`
+ * precedent (preserved in the `origin-trailer-v1` git tag), minus the frames.
  */
 
 export type Beat = 1 | 2 | 3 | 4 | 5 | 6 | 7

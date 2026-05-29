@@ -294,8 +294,8 @@ assume.
 3. ~~Runtime~~ — RESOLVED: ~3–3.5 min (accept the longer cut, no trimming;
    the ~119s target was unvalidated — see v5 changes). "Takes as long as it takes."
 4. **Scale visual** — do the numbers stamp as plain type, or as the
-   Archer-style cascade the v1 infra already built (`s04-receipts-cascade`
-   in `videos/trailer/out/`)? Reusing that asset's motion may save a build.
+   Archer-style cascade the v1 infra built (`s04-receipts-cascade`, now in the
+   `origin-trailer-v1` tag)? Reusing that motion may save a build.
 5. ~~**"Including mine" exact wording**~~ — MOOT: the Janet-is-synthetic
    reveal was cut 2026-05-29 (see v6 changes).
 6. **Logline placement** — currently front-loaded (beat 1). Alt: a thinner

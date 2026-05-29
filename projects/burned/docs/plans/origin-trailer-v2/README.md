@@ -44,13 +44,14 @@ old work.
   gameplay-forward [Claude leans hybrid]; (2) **is the human on screen** —
   silhouette / hands / a chair vs zero humans, Janet's VO carries it. Then
   the rest of the open questions (game-night footage, scale cascade reuse,
-  title-card timing). Production infra reusable in `videos/trailer/`.
+  title-card timing). v1 production infra is in the `origin-trailer-v1` tag.
 
 ## Superseded v1 work (reference only — do not extend)
 
 - `../origin-trailer/` — v1 phase plans (phase-0 … phase-7).
 - `../../ideation/2026-05-15-origin-trailer-brainstorm.md` — v1 brainstorm.
-- `../../../videos/trailer/BEAT-SHEET.md` — v1 locked beat sheet (the
-  torn-down draft). Production *infrastructure* in `../../../videos/trailer/`
-  (Remotion composite, voice pipeline, font/color/transition libs) is
-  reusable; the v1 *story and briefing-room concept* are not.
+- v1 locked beat sheet + production *infrastructure* (Remotion composite,
+  voice pipeline, font/color/transition libs) — `videos/trailer/` was DELETED
+  2026-05-29; recover from the `origin-trailer-v1` tag (`git checkout
+  origin-trailer-v1 -- videos/trailer/<path>`). The infra is reusable; the v1
+  *story and briefing-room concept* are not.

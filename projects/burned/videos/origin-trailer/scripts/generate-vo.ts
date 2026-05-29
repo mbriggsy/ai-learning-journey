@@ -25,7 +25,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { Buffer } from 'node:buffer'
-import { ffmpegPreflight, silentWav48kMono, concatWavs, wavDurationSec } from './lib/ffmpeg.js'
+import { ffmpegPreflight, silentWav48kMono, concatWavs, wavDurationSec, tailPeakDb } from './lib/ffmpeg.js'
 import { generateJanet } from './tts-clients/elevenlabs.js'
 import { JANET_CUES, SPEECH_CUES, type Cue } from './voice/script.js'
 
@@ -38,6 +38,14 @@ const MANIFEST_PATH = join(OUT_DIR, 'manifest.json')
 /** Rate-limit courtesy between real API calls (client also retries 429). */
 const API_GAP_MS = 400
 const sleep = (ms: number): Promise<void> => new Promise((r) => setTimeout(r, ms))
+
+/**
+ * Trailing-clip guard. ElevenLabs stochastically returns takes whose final
+ * word is tail-truncated (ends hot instead of decaying). A clean take's last
+ * ~120ms peaks well below this; a clipped one ends near speaking energy.
+ */
+const TAIL_CLIP_PEAK_DB = -12
+const MAX_TAKES = 4
 
 type ManifestEntry = {
   id: string
@@ -53,18 +61,30 @@ type ManifestEntry = {
 
 async function resolveSpeech(
   cue: Extract<Cue, { kind: 'speech' }>,
-): Promise<{ wav: Buffer; cached: boolean; chars: number }> {
+): Promise<{ wav: Buffer; cached: boolean; chars: number; takes: number; clipped: boolean }> {
   const wavPath = join(CUE_DIR, `${cue.id}.wav`)
   const txtPath = join(CUE_DIR, `${cue.id}.txt`)
   const cacheHit =
     !FORCE && existsSync(wavPath) && existsSync(txtPath) && readFileSync(txtPath, 'utf-8') === cue.text
-  if (cacheHit) return { wav: readFileSync(wavPath), cached: true, chars: 0 }
+  if (cacheHit) return { wav: readFileSync(wavPath), cached: true, chars: 0, takes: 0, clipped: false }
 
-  const wav = await generateJanet({ text: cue.text })
+  // Regenerate until the tail decays cleanly (or we exhaust MAX_TAKES). The
+  // …Hmph. non-verbal legitimately ends short/quiet, but a hot tail there
+  // would also just retry harmlessly within the cap.
+  let wav: Buffer
+  let takes = 0
+  let peak: number
+  do {
+    if (takes > 0) await sleep(API_GAP_MS)
+    wav = await generateJanet({ text: cue.text })
+    takes++
+    peak = tailPeakDb(wav)
+  } while (peak > TAIL_CLIP_PEAK_DB && takes < MAX_TAKES)
+
   writeFileSync(wavPath, wav)
   writeFileSync(txtPath, cue.text)
   await sleep(API_GAP_MS)
-  return { wav, cached: false, chars: cue.text.length }
+  return { wav, cached: false, chars: cue.text.length * takes, takes, clipped: peak > TAIL_CLIP_PEAK_DB }
 }
 
 async function main(): Promise<void> {
@@ -85,10 +105,14 @@ async function main(): Promise<void> {
   for (const cue of JANET_CUES) {
     let wav: Buffer
     let cached = false
+    let takes = 0
+    let clipped = false
     if (cue.kind === 'speech') {
       const r = await resolveSpeech(cue)
       wav = r.wav
       cached = r.cached
+      takes = r.takes
+      clipped = r.clipped
       charsSpent += r.chars
       if (!r.cached) generated++
     } else {
@@ -109,9 +133,14 @@ async function main(): Promise<void> {
         : { ms: cue.ms }),
     })
 
-    const tag = cue.kind === 'speech' ? (cached ? 'cache' : 'gen  ') : 'sil  '
-    const flag = cue.kind === 'speech' && cue.nonVerbal ? '  ⚑ non-verbal (test for breath)' : ''
-    console.log(`  [b${cue.beat}] ${tag} ${cue.id.padEnd(20)} ${durationSec.toFixed(2)}s${flag}`)
+    const tag = cue.kind === 'speech' ? (cached ? 'cache' : takes > 1 ? `gen×${takes}` : 'gen  ') : 'sil  '
+    const flags = [
+      cue.kind === 'speech' && cue.nonVerbal ? '⚑ non-verbal (test for breath)' : '',
+      clipped ? '⚠ STILL clipped after retries — inspect' : '',
+    ]
+      .filter(Boolean)
+      .join('  ')
+    console.log(`  [b${cue.beat}] ${tag.padEnd(5)} ${cue.id.padEnd(20)} ${durationSec.toFixed(2)}s${flags ? '  ' + flags : ''}`)
     startSec += durationSec
   }
 

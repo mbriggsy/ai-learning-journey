@@ -2,7 +2,7 @@
  * FFmpeg wrappers for the v2 voice pipeline. Ported from the v1 trailer
  * (proven). argv arrays via execFileSync — never through a shell.
  */
-import { execFileSync as runArgv } from 'node:child_process'
+import { execFileSync as runArgv, spawnSync } from 'node:child_process'
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -121,6 +121,31 @@ export function concatWavs(segments: readonly Buffer[]): Buffer {
       { cwd: tmpDir, stdio: ['ignore', 'pipe', 'pipe'] },
     )
     return readFileSync(outPath)
+  } finally {
+    rmSync(tmpDir, { recursive: true, force: true })
+  }
+}
+
+/**
+ * Peak level (dB) of a WAV's final `ms` — the trailing-clip detector. A clean
+ * ElevenLabs take decays into its release/silence (peak well below ~-12 dB in
+ * the last ~120ms); a stochastically tail-truncated take ends mid-word at near
+ * speaking energy (peak ~-8 to -10 dB). astats writes to STDERR, so spawnSync
+ * (NOT execFileSync — the v1 STDERR landmine). Returns -Infinity on silence.
+ */
+export function tailPeakDb(wav: Buffer, ms = 120): number {
+  const tmpDir = mkdtempSync(join(tmpdir(), 'burned-tail-'))
+  const wavPath = join(tmpDir, 'tail.wav')
+  try {
+    writeFileSync(wavPath, wav)
+    const res = spawnSync(
+      'ffmpeg',
+      ['-sseof', `-${(ms / 1000).toFixed(3)}`, '-i', wavPath, '-af', 'astats=metadata=1', '-f', 'null', '-'],
+      { encoding: 'utf-8' },
+    )
+    const matches = [...(res.stderr || '').matchAll(/Peak level dB:\s*(-?\d+(?:\.\d+)?)/g)]
+    if (matches.length === 0) return -Infinity // pure-silence tail prints "-inf" (unmatched)
+    return parseFloat(matches[matches.length - 1][1]!)
   } finally {
     rmSync(tmpDir, { recursive: true, force: true })
   }

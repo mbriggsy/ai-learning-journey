@@ -7,6 +7,10 @@ import { BurnedCardHero, BURNED_CARD_HERO_FRAMES } from './scenes/BurnedCardHero
 import { Beat1ColdOpen, BEAT1_FRAMES } from './scenes/Beat1ColdOpen'
 import { Beat7Payoff, BEAT7_FRAMES } from './scenes/Beat7Payoff'
 import { Beat3DoubleDown, BEAT3_FRAMES } from './scenes/Beat3DoubleDown'
+import { Beat2TheBet, BEAT2_FRAMES } from './scenes/Beat2TheBet'
+import { Beat4TheNumbers, BEAT4_FRAMES } from './scenes/Beat4TheNumbers'
+import { Beat5TheSwarm, BEAT5_FRAMES } from './scenes/Beat5TheSwarm'
+import { Beat6Proof, BEAT6_FRAMES } from './scenes/Beat6Proof'
 import { OriginTrailer } from './OriginTrailer'
 import { FPS, WIDTH, HEIGHT, TOTAL_FRAMES } from './lib/timeline'
 
@@ -67,6 +71,38 @@ export const Root: React.FC = () => {
         id="Beat3DoubleDown"
         component={Beat3DoubleDown}
         durationInFrames={BEAT3_FRAMES}
+        fps={FPS}
+        width={WIDTH}
+        height={HEIGHT}
+      />
+      <Composition
+        id="Beat2TheBet"
+        component={Beat2TheBet}
+        durationInFrames={BEAT2_FRAMES}
+        fps={FPS}
+        width={WIDTH}
+        height={HEIGHT}
+      />
+      <Composition
+        id="Beat4TheNumbers"
+        component={Beat4TheNumbers}
+        durationInFrames={BEAT4_FRAMES}
+        fps={FPS}
+        width={WIDTH}
+        height={HEIGHT}
+      />
+      <Composition
+        id="Beat5TheSwarm"
+        component={Beat5TheSwarm}
+        durationInFrames={BEAT5_FRAMES}
+        fps={FPS}
+        width={WIDTH}
+        height={HEIGHT}
+      />
+      <Composition
+        id="Beat6Proof"
+        component={Beat6Proof}
+        durationInFrames={BEAT6_FRAMES}
         fps={FPS}
         width={WIDTH}
         height={HEIGHT}

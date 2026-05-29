@@ -37,7 +37,7 @@ Compound Engineering (CE) â€” Plan â†’ Work â†’ Review â†’ C
 Assets are generated via **Gemini Imagen 4 API** â€” no human art tools, no manual steps.
 - Script: `scripts/generate-assets.ts`
 - Prompts: `scripts/asset-prompts.ts` (versioned in git)
-- API key: `.env` â†’ `GEMINI_API_KEY` (gitignored)
+- API key: repo-root `.env` (`../../.env`, auto-loaded by `generate-assets`) â†’ `GEMINI_API_KEY` (gitignored)
 - Run: `pnpm run generate-assets`
 - Output: `assets/raw/` â†’ processed to `public/assets/`
 

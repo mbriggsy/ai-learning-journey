@@ -42,8 +42,11 @@ pnpm run generate-narrator # generate narrator audio via Gemini TTS
 - `videos/trailer/` — Remotion video project (cinematic trailer, separate pnpm workspace)
 
 ## Environment Variables
-See `.env.example`. Requires:
-- `GEMINI_API_KEY` — Gemini API with billing enabled (used for both Imagen 4 assets and TTS narrator)
+Shared secrets live in the **repo-root** `.env` (see `../../.env.example`), loaded
+via `tsx --env-file=../../.env --env-file-if-exists=.env` in the gen scripts:
+- `GEMINI_API_KEY` — Gemini API with billing enabled (both Imagen 4 assets and TTS narrator)
+
+Project-local `.env` (see `.env.example`) holds only `VITE_PARTYKIT_HOST` and `STITCH_API_KEY`.
 
 ## Architectural Decisions
 - See `docs/v1/spec/SPEC.md` for V1 spec (LOCKED)

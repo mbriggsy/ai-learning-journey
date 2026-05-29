@@ -3,18 +3,13 @@ import {
   AbsoluteFill,
   Audio,
   Img,
-  staticFile,
   useCurrentFrame,
   useVideoConfig,
   spring,
   interpolate,
   Easing,
 } from 'remotion'
-import cardStyles from '@client/shared/MinimalCard.module.css'
-import { CARD_DEF_BY_TYPE } from '@shared/card-defs'
-import { cardAccent } from '@client/shared/card-accents'
-import { CardIcon } from '@client/shared/card-icons'
-import type { CardType } from '@shared/types'
+import { TrailerCard } from '../lib/TrailerCard'
 import '@client/shared/tokens/primitives.css'
 import '@client/shared/tokens/semantic.css'
 // Trailer-own assets:
@@ -51,29 +46,6 @@ const T = {
 }
 
 export const BEAT1_FRAMES = sec(T.end)
-
-/** Real BURNED-deck card — FoundationProof borrow path (real art + CSS + data). */
-const TrailerCard: React.FC<{ type: CardType; width?: number }> = ({ type, width = 360 }) => {
-  const def = CARD_DEF_BY_TYPE[type]
-  const accent = cardAccent(type)
-  return (
-    <div style={{ width }}>
-      <div
-        className={cardStyles.card}
-        style={{ '--card-accent': accent.fill, '--card-glow-color': accent.glow } as React.CSSProperties}
-      >
-        <div className={cardStyles.cardHeader}>
-          <CardIcon type={type} />
-          <span className={cardStyles.cardName}>{def.name}</span>
-        </div>
-        <span className="cardIllustration">
-          <Img src={staticFile(`assets/cards/${type}.webp`)} alt="" />
-        </span>
-        <span className={cardStyles.cardDesc}>{def.description}</span>
-      </div>
-    </div>
-  )
-}
 
 /** Damped camera shake — a brief jolt with weight, decaying to zero. */
 const shake = (frame: number, startF: number, durF: number, mag: number) => {

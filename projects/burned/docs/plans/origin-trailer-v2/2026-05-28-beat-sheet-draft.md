@@ -62,6 +62,21 @@ grudgingly impressed (CODED cadence, never cloned).
   `pnpm cues:check` is the runtime source of truth. The proportional shape
   (warm #4 open · #2 owns the spine · #3 tag short) still holds.
 
+### v6 changes (surgical trim + reveal cut, 2026-05-29)
+- **Surgical length trim.** Briggsy passed through the VO blocks lifting
+  phrases that didn't earn their length (Beat 5's chaos imagery + "1326 times"
+  punch cut hardest; smaller lifts across 2/3/4/6). Cue list re-ported +
+  regenerated. 529 → **420 spoken words**; runtime ~4:25 → **~3:30**.
+- **The Janet-is-synthetic reveal is CUT (on purpose).** "Including mine" and
+  Beat 6's "a thing that doesn't have eyes" pre-load are gone. Beat 7's
+  *"…this very trailer… was written by him"* now carries the machine-made-
+  everything point in one line; the ending caps on warmth, not a twist.
+  Trade knowingly accepted: we lose the retroactive "the narrator isn't real"
+  gut-punch for length. **Engine note:** this guts engine #3's payoff
+  (Origin-of-Janet gut-punch tag) — the locked fusion in
+  `2026-05-24-origin-event-brainstorm.md` §DECISION still lists #3 and may
+  want a matching amendment; flagged, not yet edited.
+
 **Real facts used (CANONICAL — from the published stats site; NOT ad-hoc git counts):**
 - **Application LOC: 43,357** (code: source + styles + markup) ·
   **Testing: 29,033** (tests + fixtures) · **Implementation planning:
@@ -118,11 +133,11 @@ drawing, the BURNED card, a friend groaning out).
 **Job:** State the dare. The thesis. Plant the skepticism through-line.
 
 **VO (Janet):**
-> "The man at that table builds spreadsheets for a living. Pipelines. The
-> quiet machinery nobody thanks you for. One night — several bourbons
-> deep — he decided that card game deserved a screen. There was just the
-> one problem. He had no idea how to build it *himself*. *[beat]* That a
-> machine could? He hadn't a flicker of doubt.
+>
+> "The man at that table builds data pipelines. The
+> quiet machinery nobody thanks you for. One night he decided that card game deserved a screen. There was just the
+> one problem. He had no idea how to build it *himself*. *[beat]* He knew the
+> machine could. He hadn't a flicker of doubt.
 >
 > *[dry]* I had several. I gave it two weeks."
 
@@ -137,9 +152,10 @@ hero (Briggsy abstracted — see open question #2).
 himself, he made it *harder*. Each clause is a real, harder bet.
 
 **VO (Janet):**
-> "Now — a sensible man builds something small. One screen. One player. A
-> toy. *[beat]* He did the opposite. He wanted up to ten of you in the same
-> room. A television running the table, ten phones hiding ten secret
+>
+> "Now — a sensible man builds something small.
+> *[beat]* He did the opposite. He wanted up to ten of you in the same
+> room. Ten phones hiding ten secret
 > hands, every move landing the instant you made it. And it had to look
 > like a real studio made it — or it wasn't worth making.
 >
@@ -159,7 +175,8 @@ build pays them off.
 flex begins.
 
 **VO (Janet):**
-> "He didn't write it. Any of it. He pointed — and the machine wrote.
+>
+> "He didn't write it. Any of it. He pointed — and the machine built.
 >
 > Forty-three thousand lines of code, in a language he'd never touched.
 > Twenty-nine thousand more, written for the sole purpose of attacking the
@@ -167,7 +184,6 @@ flex begins.
 > of it.
 >
 > *[beat]* More planning than code. *[dry]* 'Measure twice,' they say.
-> *This* one never stopped."
 
 **Visual:** Numbers stamping on screen —
 43,000 → 29,000 → 62,000 — planning standing as the tallest bar of the
@@ -184,15 +200,11 @@ autonomy owned honestly — "he didn't write it. Any of it." (4).
 NO voting.
 
 **VO (Janet):**
+>
 > "Then it did the genuinely deranged thing. It unleashed a swarm of
 > adversaries — agents whose only job was to hunt the game's weak points
 > and break them.
 >
-> They played drunk. They rage-tapped the glass. They forced each other
-> into certain death and enjoyed it. They yanked their phones offline
-> mid-turn, just to see what would fall over.
->
-> Thirteen hundred and twenty-six times."
 
 **Visual:** The challenger swarm — phone UIs hammered, BURNED cards forced
 onto opponents, disconnect spinners, a chaos counter climbing to 1326.
@@ -210,15 +222,12 @@ BURNED-native, NOT UMB's caffeine button.
 
 **VO (Janet):**
 > "Thirteen hundred and twenty-six attempts to break it. *[beat]* Thirteen
-> hundred and twenty-six times, it didn't. The most belligerent test
-> subjects ever assembled — and the only thing in the room that never once
-> fell over was the one built by the machine.
+> hundred and twenty-six times, it didn't. 
 >
-> *[turn — softer]* What did it cost him? Not code — he never wrote a word
-> of it. It cost him sleep. A lot of sleep. The specific madness of a man who'll stand
+> *[turn — softer]* What did it cost him? 
+> Sleep. A lot of sleep. The specific madness of a man who'll stand
 > over a screen at two in the morning and tell a machine, 'no — make it
-> *beautiful*' — to a thing that doesn't have eyes. He gave it taste.
-> Ambition. An unreasonable refusal to accept 'good enough.' *[beat]* The
+> *beautiful*.' He gave it an unreasonable refusal to accept 'good enough.' *[beat]* The
 > machine did the rest."
 
 **Visual:** Chaos resolves to a clean holding screen, counter locks
@@ -226,15 +235,13 @@ BURNED-native, NOT UMB's caffeine button.
 affection.
 
 **Bar:** earned deadpan snap (3); real self-deprecating cost (5); flex
-owned without a brag — "the machine did the rest" (4). "built by the
-machine" + "a thing that doesn't have eyes" both pre-load the tag's reveal
-(the machine made everything — including, it turns out, the voice).
+owned without a brag — "the machine did the rest" (4).
 
 ---
 
-## Beat 7 — RETURN + TAG  ·  engine #3 subset  ·  ~16s  ·  bar 4,6 / peak: satisfaction → gut-punch
+## Beat 7 — RETURN + TAG  ·  engine #2 bookend (#3 gut-punch reveal CUT 2026-05-29)  ·  bar 4,6 / peak: satisfaction → warmth
 
-**Job:** Gameplay payoff + the honest claim + the gut-punch button.
+**Job:** Gameplay payoff + the honest autonomy claim + the warm button.
 
 **VO (Janet):**
 > "What did he get in return? *[beat]* A game. A real one. A hundred and
@@ -244,40 +251,33 @@ machine" + "a thing that doesn't have eyes" both pre-load the tag's reveal
 > He bet a machine could build something worth playing. *[beat]* He was
 > right.
 >
-> And not one word of this — the game, the swarm, the thirteen hundred
-> tests… this very trailer… came from his hand."
+> And not one piece of this — the game, the swarm, the thirteen hundred
+> tests, every image, every second of audio, this very trailer — was created by him."
 >
-> *[long beat — air]*
->
-> "Including mine."
->
-> *[hold — the reveal detonates in silence, on black. Do NOT crowd it.]*
->
-> *[then, unhurried — the matriarch's guard drops a half-inch]*
+> *[turn — unhurried; the matriarch's guard drops a half-inch. A held breath, not a detonation.]*
 >
 > "This kid is starting to impress me." *[beat]* "…Hmph."
 
 **Visual:** Real gameplay — friends laughing/betraying each other on TV +
-phones. Title card **BURNED**. Black on "Including mine." Hold black
-through the final warm button.
+phones. Title card **BURNED**. Hold black through the final warm button.
 
 **Why the second button works:** it lands the principles-doc bookend out
-loud (skeptic → grudgingly impressed — the #2 engine's final note) AND
-re-humanizes Janet immediately after the reveal that she's synthetic. The
-trailer ends on *warmth*, not on the clever twist — the antidote to the
-"wow, Claude built this" trap. "This kid" is Malory's power-diminutive:
-affection without upstaging the protagonist.
+loud — skeptic → grudgingly impressed, the #2 engine's final note. Janet,
+who gave the bet two weeks, concedes the kid pulled it off. The trailer ends
+on *warmth*, not on the autonomy stat — the antidote to the "wow, Claude
+built this" trap. "This kid" is Malory's power-diminutive: affection without
+upstaging the protagonist.
 
-**The non-negotiables (or the tag gets cut):**
-1. Janet reads as a fully-real person the entire runtime — zero earlier
-   hints she's synthetic. One wink kills it.
-2. **Double-button timing is sacred.** "Including mine" gets its FULL
-   silent detonation FIRST. Only after the reveal lands does the warm
-   "This kid…" button return. If the second line crowds the first, the
-   gut-punch dies and the warmth gains nothing.
-3. The reveal fires *after* the beat-6 heart, never instead of it.
-4. Never explained. "This kid is starting to impress me" expresses
-   *feeling*, not exposition — it must NOT explain the reveal.
+**The non-negotiables (or the warm button gets cut):**
+1. The warm button fires *after* the beat-6 heart, never instead of it.
+2. **Timing.** Let "…was created by him" breathe before "This kid…" returns
+   — the guard drops on a turn, not a hard cut.
+3. Never explained. "This kid is starting to impress me" expresses
+   *feeling*, not exposition.
+
+(Reveal cut 2026-05-29 — the old Janet-is-synthetic "Including mine"
+detonation + its "fully-real person / one wink kills it" guardrail are gone;
+see v6 changes. The warmth now caps the autonomy claim, not a twist.)
 
 **Production flag:** "…Hmph." is a non-verbal — the Eleanor voice asset
 may need coaxing to perform it, or it drops to a breath. Test, don't
@@ -296,8 +296,8 @@ assume.
 4. **Scale visual** — do the numbers stamp as plain type, or as the
    Archer-style cascade the v1 infra already built (`s04-receipts-cascade`
    in `videos/trailer/out/`)? Reusing that asset's motion may save a build.
-5. **"Including mine" exact wording** — pressure-test: *"Including these
-   words."* / *"Including the voice."* / *"Including mine."* (current).
+5. ~~**"Including mine" exact wording**~~ — MOOT: the Janet-is-synthetic
+   reveal was cut 2026-05-29 (see v6 changes).
 6. **Logline placement** — currently front-loaded (beat 1). Alt: a thinner
    seed up front + fuller logline at the beat-7 payoff. Front-load reads
    clearer; flag if it feels like it slows the open.

@@ -22,14 +22,27 @@ export interface GenerateArgs {
   readonly text: string
 }
 
-export async function generateJanet(args: GenerateArgs): Promise<Buffer> {
+/** Minimal voice shape the TTS call needs. JANET_VOICE + A/B candidates satisfy it. */
+export interface VoiceConfig {
+  readonly voiceId: string
+  readonly modelId: string
+  readonly settings: {
+    readonly stability: number
+    readonly similarity_boost: number
+    readonly style: number
+    readonly use_speaker_boost: boolean
+    readonly speed: number
+  }
+}
+
+export async function generateVoice(voice: VoiceConfig, args: GenerateArgs): Promise<Buffer> {
   const apiKey = assertEnv('ELEVENLABS_API_KEY')
-  const url = `https://api.elevenlabs.io/v1/text-to-speech/${JANET_VOICE.voiceId}`
+  const url = `https://api.elevenlabs.io/v1/text-to-speech/${voice.voiceId}`
 
   const body = {
     text: args.text,
-    voice_settings: JANET_VOICE.settings,
-    model_id: JANET_VOICE.modelId,
+    voice_settings: voice.settings,
+    model_id: voice.modelId,
     output_format: 'mp3_44100_192',
   }
 
@@ -71,3 +84,6 @@ export async function generateJanet(args: GenerateArgs): Promise<Buffer> {
 
   throw new Error('ElevenLabs retries exhausted')
 }
+
+/** The locked narrator (JANET_VOICE). Thin wrapper for callers that just want Janet. */
+export const generateJanet = (args: GenerateArgs): Promise<Buffer> => generateVoice(JANET_VOICE, args)

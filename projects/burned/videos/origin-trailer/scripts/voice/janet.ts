@@ -2,35 +2,34 @@
  * Janet — the v2 trailer's single narrator. Malory-CODED dry matriarch,
  * outside-observer stance (recounts Briggsy's bet; never briefs-at-you).
  *
- * LOCKED voice (2026-05-28, Briggsy's ear): ElevenLabs "Kristen – Cold Evil
- * Queen Villain" (Shared Library, professional). American, cold/controlled
- * regal command — the cuntiness lands as icy authority rather than British
- * grace. Used directly by voiceId (no library-add needed — the shared
- * voiceId resolves for TTS as-is; proven on the casting audition).
+ * LOCKED voice (2026-05-29, Briggsy's ear, full-content A/B): ElevenLabs
+ * "Eleanor – Gracious and Authoritative" (Shared Library), cunty-matriarch-
+ * tuned. British drawl that lands the Jessica-Walter / Malory DNA. Used
+ * directly by voiceId (shared voiceId resolves for TTS as-is).
  *
- * SETTINGS = the voice's own stored defaults, captured verbatim from
- * GET /v1/voices/{id}/settings. The casting audition that cleared Briggsy
- * sent NO voice_settings, so it ran on these defaults — locking them here
- * reproduces exactly the read he approved. Deviate only by ear, never by
- * carrying another voice's tuning (Eleanor's stab 0.22 / style 0.60 push
- * was timbre-specific and would distort this voice).
+ * SETTINGS = the v2 cunty push (stab 0.22 / style 0.60, drawled 0.85) — lower
+ * stability lets the disdain swing, higher style exaggerates the contempt.
+ * This is the exact config Briggsy heard + chose in the A/B. The gentler
+ * v1-cleared profile (stab 0.40 / style 0.45) is the fallback if she ever
+ * reads too unstable. Deviate only by ear.
  *
- * Casting history: Sarah (too reassuring) -> Sloane (too polished) ->
- * Eleanor (British, rejected — too lovely/wrong identity) -> rasp-forward
- * Voice-Design designs (close but lost to the real thing) -> Kristen Cold
- * Evil Queen. Briggsy's note on the rasp re-spins: cold queen won; the
- * designed rasp didn't beat the original's read. See memory
- * [[project-burned-origin-trailer-v2]].
+ * Casting history: Sarah (too reassuring) -> Sloane (too polished) -> Eleanor
+ * (v1 lock) -> Kristen Cold Evil Queen (2026-05-28, locked off a single
+ * audition LINE) -> back to Eleanor (2026-05-29). The reversal: on the full
+ * trimmed VO, the one-line snap judgment ("Eleanor too lovely/British/wrong")
+ * didn't hold — Eleanor's drawl beat Kristen's icy control over four minutes.
+ * The A/B (out/vo/{kristen,eleanor}/) is why we caught it. Lesson: cast on
+ * the real content, not a teaser line. See [[project-burned-origin-trailer-v2]].
  */
 export const JANET_VOICE = {
-  voiceLibraryName: 'Kristen – Cold Evil Queen Villain (Shared Library)',
-  voiceId: 'Qbw4VpyUrHEG7NigKzty',
+  voiceLibraryName: 'Eleanor – Gracious and Authoritative (Shared Library)',
+  voiceId: '2qQJWjw5XdG80GreshqG',
   modelId: 'eleven_v3',
   settings: {
-    stability: 0.32,
-    similarity_boost: 0.58,
-    style: 0.58,
+    stability: 0.22,
+    similarity_boost: 0.75,
+    style: 0.6,
     use_speaker_boost: true,
-    speed: 0.9,
+    speed: 0.85,
   },
 } as const

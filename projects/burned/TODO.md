@@ -56,25 +56,29 @@ source) — recoverable via the tag; remove once v2 no longer references it.
 **Janet's character (drives the voice cast):** white, American, **New
 Yorker**, ~50s, very rich, slightly-always-annoyed, drinker, former smoker.
 **Jessica-Walter / Malory Archer / Lucille Bluth-CODED** (coded, never
-cloned). Eleanor (v1's British "matriarch") is **REJECTED** — too lovely,
-British, wrong identity.
+cloned). Voice = **Eleanor** — British drawl that carries the Malory DNA;
+the American-NY character riding a British accent is intentional + reconciled
+(see VOICE LOCKED).
 
-**VOICE LOCKED (2026-05-28).** Janet = **"Kristen – Cold Evil Queen Villain"**
-(Shared Library, professional, `Qbw4VpyUrHEG7NigKzty`). American, cold/
-controlled regal command — cuntiness lands as icy authority, not British
-grace. Used directly by voiceId (no library-add / no mint — shared voiceId
-resolves for TTS as-is). `scripts/voice/janet.ts` updated; settings = the
-voice's own stored defaults (stab 0.32 / sim 0.58 / style 0.58 / speed 0.9),
-captured verbatim because the cleared audition ran on defaults. `pnpm tts:test`
-re-verified end-to-end (valid 8.0s 48k mono PCM). Eleanor pointer + cunty-push
-settings are GONE.
-  - Casting path: Sarah → Sloane → Eleanor (rejected) → rasp-forward Voice-
-    Design designs (close, lost to the real thing) → Kristen Cold Evil Queen.
-    Designed-rasp candidates (`out/janet-design/` IDs `2BD3…`/`7kpQ…`/`0UhN…`)
-    archived locally; not the pick.
-  - **LANDMINE retired:** janet.ts no longer points at Eleanor. The "settings
-    CAN'T add rasp (timbre, not a knob)" rule still holds — proven again this
-    pass (rasp had to come from voice selection, not settings).
+**VOICE LOCKED (2026-05-29).** Janet = **"Eleanor – Gracious and
+Authoritative"** (Shared Library, `2qQJWjw5XdG80GreshqG`), cunty-matriarch-
+tuned. Used directly by voiceId (shared voiceId resolves for TTS as-is).
+Settings = the v2 cunty push (**stab 0.22 / sim 0.75 / style 0.60 /
+speaker_boost / speed 0.85**) — the exact config Briggsy chose in the A/B.
+Gentler fallback if she ever reads unstable: stab 0.40 / style 0.45.
+`scripts/voice/janet.ts` updated; typecheck clean.
+  - Casting path: Sarah → Sloane → Eleanor (v1) → Kristen Cold Evil Queen
+    (2026-05-28, locked off ONE audition line) → **back to Eleanor**
+    (2026-05-29, full-content A/B). The reversal: on the full ~3:24 trimmed
+    VO the one-line "Eleanor too lovely/British" snap judgment didn't hold —
+    her drawl beat Kristen's icy control over four minutes. A/B masters live
+    at `out/vo/{kristen,eleanor}/`. **Lesson: cast on the real content, not a
+    teaser line.**
+  - British accent on the American-NY-coded character is INTENTIONAL +
+    reconciled (the Malory DNA transfers across the accent; the Q-from-Bond
+    cadence ref is British anyway). Don't "fix" the accent.
+  - **Rasp rule still holds:** settings CAN'T add rasp (timbre, not a knob).
+    Designed-rasp candidates (`out/janet-design/`) archived; not the pick.
 
 **CUE LIST AUTHORED (2026-05-28).** `scripts/voice/script.ts` — 27 speech
 cues + 20 silence pauses across all 7 beats, verbatim from the approved beat

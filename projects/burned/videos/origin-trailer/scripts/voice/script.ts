@@ -39,14 +39,16 @@ export type Beat = 1 | 2 | 3 | 4 | 5 | 6 | 7
 
 /** Why a pause exists — drives ear-tuning priority + future visual sync. */
 export type SilenceReason =
+  | 'tiny' // a quick breath, smaller than a paragraph — e.g. before a snappy logline
   | 'paragraph' // natural breath between paragraphs
   | 'beat' // the beat sheet's [beat] — a deliberate dramatic hold
   | 'turn' // a register shift ([dry] / [turn — softer]) needs air to land
-  | 'long-beat' // [long beat — air] — the pre-reveal vacuum (Beat 7)
+  | 'long-beat' // a long, deliberate pause — the guard-drop turn before the warm button (Beat 7)
   | 'hold' // [hold] — the reveal detonates in silence, on black (Beat 7)
 
 /** Named first-draft durations (ms). Ear-tuned at generation; relative order in Beat 7 is sacred. */
 export const SILENCE_MS = {
+  tiny: 250,
   paragraph: 400,
   beat: 550,
   turn: 650,
@@ -100,19 +102,21 @@ export const JANET_CUES: readonly Cue[] = [
     text: 'The rules are simple. Draw a card. Don\'t draw the one that gets you burned. And do everything short of decent to make sure the person next to you draws it first. Last cover standing wins.',
   },
 
+  silence('b1-to-b2', 1, 'paragraph'),
+
   // ─── Beat 2 — THE BET (engine #2, spine starts) ───
   {
     kind: 'speech',
     id: 'b2-problem',
     beat: 2,
-    text: 'The man at that table builds spreadsheets for a living. Pipelines. The quiet machinery nobody thanks you for. One night — several bourbons deep — he decided that card game deserved a screen. There was just the one problem. He had no idea how to build it himself.',
+    text: 'The man at that table builds data pipelines. The quiet machinery nobody thanks you for. One night he decided that card game deserved a screen. There was just the one problem. He had no idea how to build it himself.',
   },
   silence('b2-beat', 2, 'beat'),
   {
     kind: 'speech',
     id: 'b2-machine',
     beat: 2,
-    text: 'That a machine could? He hadn\'t a flicker of doubt.',
+    text: 'He knew the machine could. He hadn\'t a flicker of doubt.',
   },
   silence('b2-turn', 2, 'turn'),
   {
@@ -123,19 +127,21 @@ export const JANET_CUES: readonly Cue[] = [
     direction: '[dry] — the skepticism through-line plants here; Janet as the doubt the protagonist lacks.',
   },
 
+  silence('b2-to-b3', 2, 'paragraph'),
+
   // ─── Beat 3 — THE DOUBLE-DOWN (engine #2 spine) ───
   {
     kind: 'speech',
     id: 'b3-sensible',
     beat: 3,
-    text: 'Now — a sensible man builds something small. One screen. One player. A toy.',
+    text: 'Now — a sensible man builds something small.',
   },
   silence('b3-beat', 3, 'beat'),
   {
     kind: 'speech',
     id: 'b3-opposite',
     beat: 3,
-    text: 'He did the opposite. He wanted up to ten of you in the same room. A television running the table, ten phones hiding ten secret hands, every move landing the instant you made it. And it had to look like a real studio made it — or it wasn\'t worth making.',
+    text: 'He did the opposite. He wanted up to ten of you in the same room. Ten phones hiding ten secret hands, every move landing the instant you made it. And it had to look like a real studio made it — or it wasn\'t worth making.',
   },
   silence('b3-para', 3, 'paragraph'),
   {
@@ -145,12 +151,14 @@ export const JANET_CUES: readonly Cue[] = [
     text: 'He didn\'t raise the bar once. He kept moving it out of his own reach.',
   },
 
+  silence('b3-to-b4', 3, 'paragraph'),
+
   // ─── Beat 4 — THE BUILD + SCALE (engine #2 spine) ───
   {
     kind: 'speech',
     id: 'b4-pointed',
     beat: 4,
-    text: 'He didn\'t write it. Any of it. He pointed — and the machine wrote.',
+    text: 'He didn\'t write it. Any of it. He pointed — and the machine built.',
   },
   silence('b4-para', 4, 'paragraph'),
   {
@@ -173,9 +181,11 @@ export const JANET_CUES: readonly Cue[] = [
     kind: 'speech',
     id: 'b4-measure-twice',
     beat: 4,
-    text: '\'Measure twice,\' they say. This one never stopped.',
+    text: '\'Measure twice,\' they say.',
     direction: '[dry] — deadpan turn; the over-planning DNA owned without a brag.',
   },
+
+  silence('b4-to-b5', 4, 'paragraph'),
 
   // ─── Beat 5 — THE GAUNTLET (challenger agents, engine #2 spine) ───
   {
@@ -184,20 +194,10 @@ export const JANET_CUES: readonly Cue[] = [
     beat: 5,
     text: 'Then it did the genuinely deranged thing. It unleashed a swarm of adversaries — agents whose only job was to hunt the game\'s weak points and break them.',
   },
-  silence('b5-para', 5, 'paragraph'),
-  {
-    kind: 'speech',
-    id: 'b5-chaos',
-    beat: 5,
-    text: 'They played drunk. They rage-tapped the glass. They forced each other into certain death and enjoyed it. They yanked their phones offline mid-turn, just to see what would fall over.',
-  },
-  silence('b5-setup', 5, 'beat'),
-  {
-    kind: 'speech',
-    id: 'b5-count',
-    beat: 5,
-    text: 'Thirteen hundred and twenty-six times.',
-  },
+  // Beat 5 trimmed to the single deranged-swarm line (2026-05-29) — the chaos
+  // imagery + "1326 times" punch were cut for length. Scene-transition breath
+  // into the proof beat (also separates "break them" / "attempts to break it").
+  silence('b5-to-b6', 5, 'paragraph'),
 
   // ─── Beat 6 — THE PROOF + COST (engine #2 spine) ───
   {
@@ -211,14 +211,14 @@ export const JANET_CUES: readonly Cue[] = [
     kind: 'speech',
     id: 'b6-held',
     beat: 6,
-    text: 'Thirteen hundred and twenty-six times, it didn\'t. The most belligerent test subjects ever assembled — and the only thing in the room that never once fell over was the one built by the machine.',
+    text: 'Thirteen hundred and twenty-six times, it didn\'t.',
   },
   silence('b6-turn', 6, 'turn'),
   {
     kind: 'speech',
     id: 'b6-cost',
     beat: 6,
-    text: 'What did it cost him? Not code — he never wrote a word of it. It cost him sleep. A lot of sleep. The specific madness of a man who\'ll stand over a screen at two in the morning and tell a machine, \'no — make it beautiful\' — to a thing that doesn\'t have eyes. He gave it taste. Ambition. An unreasonable refusal to accept \'good enough.\'',
+    text: 'What did it cost him? Sleep. A lot of sleep. The specific madness of a man who\'ll stand over a screen at two in the morning and tell a machine, \'no — make it beautiful.\' He gave it an unreasonable refusal to accept \'good enough.\'',
     direction: '[turn — softer] — the dryness softens to affection; the heart of the piece. Hold the register through the whole passage.',
   },
   silence('b6-beat-rest', 6, 'beat'),
@@ -228,6 +228,8 @@ export const JANET_CUES: readonly Cue[] = [
     beat: 6,
     text: 'The machine did the rest.',
   },
+
+  silence('b6-to-b7', 6, 'paragraph'),
 
   // ─── Beat 7 — RETURN + TAG (engine #3 subset) ───
   {
@@ -262,25 +264,19 @@ export const JANET_CUES: readonly Cue[] = [
     kind: 'speech',
     id: 'b7-came-from-hand',
     beat: 7,
-    text: 'And not one word of this — the game, the swarm, the thirteen hundred tests… this very trailer… came from his hand.',
+    text: 'And not one piece of this — the game, the swarm, the thirteen hundred tests, every image, every second of audio, this very trailer — was created by him.',
   },
-  // NON-NEGOTIABLE: "Including mine" gets its full silent air FIRST, then the
-  // reveal detonates in silence on black BEFORE the warm button returns.
-  silence('b7-long-beat', 7, 'long-beat'),
-  {
-    kind: 'speech',
-    id: 'b7-including-mine',
-    beat: 7,
-    text: 'Including mine.',
-    direction: 'The reveal. Lands flat and unhurried — Janet is not winking. The silence after it does the work.',
-  },
-  silence('b7-hold', 7, 'hold'),
+  // The autonomy claim turns to warmth — the matriarch's guard drops a half-inch.
+  // (The Janet-is-synthetic "Including mine" reveal was cut for length 2026-05-29;
+  // "…was written by him" now carries the machine-made-everything point. This is a
+  // turn-to-warmth pause, NOT the old reveal detonation — hence 'turn', not 'hold'.)
+  silence('b7-turn-to-warmth', 7, 'long-beat'),
   {
     kind: 'speech',
     id: 'b7-this-kid',
     beat: 7,
     text: 'This kid is starting to impress me.',
-    direction: '[then, unhurried — the matriarch\'s guard drops a half-inch]. Warmth, not exposition. Must NOT explain the reveal.',
+    direction: '[then, unhurried — the matriarch\'s guard drops a half-inch]. Warmth, not exposition — the skeptic→impressed bookend.',
   },
   silence('b7-beat-hmph', 7, 'beat'),
   {

@@ -1,20 +1,22 @@
 /**
- * v2 voice pipeline — full VO generation (2026-05-28).
+ * v2 voice pipeline — full VO generation (audio-first).
  *
  * Walks the authored cue list (`voice/script.ts`) in order and produces:
  *   - per-cue WAVs in        out/vo/cues/<id>.wav   (48k mono PCM)
  *   - the stitched master in out/vo/janet-vo-master.wav
  *   - a measured manifest in out/vo/manifest.json   (real per-cue durations
- *     + cumulative start offsets — the honest runtime, finally)
+ *     + cumulative start offsets — the honest runtime)
+ *
+ * Single locked narrator (Janet = Eleanor, see voice/janet.ts). The casting
+ * A/B that picked her ran a two-candidate variant of this script
+ * (2026-05-29); the generic `generateVoice(voice, …)` client entry stays
+ * available if another A/B is ever needed.
  *
  * Order is audio-first: we generate + MEASURE here; visuals get timed to
  * these durations later. Speech cues hit ElevenLabs; silence cues are
  * generated locally (cheap) and ALWAYS rebuilt so SILENCE_MS ear-tuning
- * takes effect without re-spending API characters.
- *
- * Speech caching: a per-cue `<id>.txt` sidecar stores the exact text last
- * generated. On re-run, a speech cue whose text is unchanged reuses its WAV
- * (no API call). `--force` regenerates every speech cue.
+ * takes effect without re-spending API characters. Per-cue `<id>.txt`
+ * sidecars cache by exact text; `--force` regenerates all speech.
  *
  * Run from videos/origin-trailer/:
  *   set -a && source ../../.env && set +a && pnpm tts:test            (cached)
@@ -118,7 +120,7 @@ async function main(): Promise<void> {
   const totalSec = wavDurationSec(master)
   writeFileSync(
     MANIFEST_PATH,
-    JSON.stringify({ totalSec: Number(totalSec.toFixed(3)), generatedAt: null, cues: manifest }, null, 2),
+    JSON.stringify({ totalSec: Number(totalSec.toFixed(3)), cues: manifest }, null, 2),
   )
 
   const mm = Math.floor(totalSec / 60)

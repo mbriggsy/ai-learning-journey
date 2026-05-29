@@ -6,6 +6,7 @@ import { WinnerProof, WINNER_PROOF_FRAMES } from './scenes/WinnerProof'
 import { BurnedCardHero, BURNED_CARD_HERO_FRAMES } from './scenes/BurnedCardHero'
 import { Beat1ColdOpen, BEAT1_FRAMES } from './scenes/Beat1ColdOpen'
 import { Beat7Payoff, BEAT7_FRAMES } from './scenes/Beat7Payoff'
+import { Beat3DoubleDown, BEAT3_FRAMES } from './scenes/Beat3DoubleDown'
 import { OriginTrailer } from './OriginTrailer'
 import { FPS, WIDTH, HEIGHT, TOTAL_FRAMES } from './lib/timeline'
 
@@ -58,6 +59,14 @@ export const Root: React.FC = () => {
         id="Beat7Payoff"
         component={Beat7Payoff}
         durationInFrames={BEAT7_FRAMES}
+        fps={FPS}
+        width={WIDTH}
+        height={HEIGHT}
+      />
+      <Composition
+        id="Beat3DoubleDown"
+        component={Beat3DoubleDown}
+        durationInFrames={BEAT3_FRAMES}
         fps={FPS}
         width={WIDTH}
         height={HEIGHT}

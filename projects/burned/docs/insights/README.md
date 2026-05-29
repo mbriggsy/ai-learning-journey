@@ -6,7 +6,7 @@ date: 2026-05-09
 
 # BURNED insights — categorized index
 
-53 numbered insights captured during the BURNED build. Engineering insights
+70 numbered insights captured during the BURNED build. Engineering insights
 document HOW THE CODE/STACK WORKS (bug → root cause → fix). Process insights
 document HOW WE WORK (doc shape, agent behavior, review patterns,
 instrumentation methodology).
@@ -59,6 +59,7 @@ appropriate bucket. Number monotonically; don't reuse numbers.
 | 054 | `pnpm install` silently no-ops nested packages outside the workspace `packages:` glob | Sub-second `Done in X ms` with no `Progress:` line = silent skip; ship `.npmrc ignore-workspace=true` |
 | 055 | Node `process.env` is case-insensitive on Windows but case-sensitive on POSIX — silently masks mixed-case `.env` drift | A green Windows render proves nothing about Linux/CI; normalize `.env` to UPPER_SNAKE_CASE or fall back across cases |
 | 067 | Scene cue startFrames spaced against expectedFrames overlap when actualFrames overrun | Phase 1 budgets ≠ Phase 2 truths — read frames from audio-manifest.ts (actualFrames + buffer), never expectedFrames slots |
+| 069 | ElevenLabs v3 returns stochastically tail-clipped TTS takes | A clean pipeline can still emit a defective take — gate generation on measured tail-decay (last-120ms peak ≤ −12 dB), regen until clean; cached pre-guard takes need a re-scan |
 
 ## Process
 
@@ -81,6 +82,7 @@ appropriate bucket. Number monotonically; don't reuse numbers.
 | 053 | Seat-agent bug suspicions are hypotheses — verify against the engine event log before treating as a defect | Agent reports are suspicions; ground-truth is `events.jsonl` — verify before patching |
 | 066 | Prior-phase exit dispositions can supersede later-plan units — deepening agents miss the "already done" signal | Grep `PHASE-N-EXIT.md` + spike-results.md before executing any unit; exit-doc DROP wins over later-plan re-add |
 | 068 | A foreign motion dialect inside a coherent visual album reads "weird" regardless of easing-curve perfection | When one scene reads "off," suspect motion-vocabulary mismatch BEFORE easing — patch path softens the misfit, rip-out path treats the cause |
+| 070 | A verification scan reported false-clean because `bc` is absent on Windows git-bash | A scan that can silently no-op is worse than none — use awk (not bc) for float compares, fail loud on missing tools, self-test gates against a planted positive |
 
 ---
 

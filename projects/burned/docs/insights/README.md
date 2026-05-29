@@ -6,7 +6,7 @@ date: 2026-05-09
 
 # BURNED insights — categorized index
 
-70 numbered insights captured during the BURNED build. Engineering insights
+71 numbered insights captured during the BURNED build. Engineering insights
 document HOW THE CODE/STACK WORKS (bug → root cause → fix). Process insights
 document HOW WE WORK (doc shape, agent behavior, review patterns,
 instrumentation methodology).
@@ -60,6 +60,7 @@ appropriate bucket. Number monotonically; don't reuse numbers.
 | 055 | Node `process.env` is case-insensitive on Windows but case-sensitive on POSIX — silently masks mixed-case `.env` drift | A green Windows render proves nothing about Linux/CI; normalize `.env` to UPPER_SNAKE_CASE or fall back across cases |
 | 067 | Scene cue startFrames spaced against expectedFrames overlap when actualFrames overrun | Phase 1 budgets ≠ Phase 2 truths — read frames from audio-manifest.ts (actualFrames + buffer), never expectedFrames slots |
 | 069 | ElevenLabs v3 returns stochastically tail-clipped TTS takes | A clean pipeline can still emit a defective take — gate generation on measured tail-decay (last-120ms peak ≤ −12 dB), regen until clean; cached pre-guard takes need a re-scan |
+| 071 | Borrowed Framer `m` components render at their hidden `initial` state under Remotion stills | Prop-driven isn't enough to borrow into Remotion — if it uses Framer `m`, reconstruct the shell from its real CSS + helpers and Remotion-drive the motion |
 
 ## Process
 

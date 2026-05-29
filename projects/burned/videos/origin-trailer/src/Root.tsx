@@ -4,6 +4,7 @@ import { useFonts } from './hooks/useFonts'
 import { FoundationProof, FOUNDATION_PROOF_FRAMES } from './scenes/FoundationProof'
 import { WinnerProof, WINNER_PROOF_FRAMES } from './scenes/WinnerProof'
 import { BurnedCardHero, BURNED_CARD_HERO_FRAMES } from './scenes/BurnedCardHero'
+import { Beat1ColdOpen, BEAT1_FRAMES } from './scenes/Beat1ColdOpen'
 import { OriginTrailer } from './OriginTrailer'
 import { FPS, WIDTH, HEIGHT, TOTAL_FRAMES } from './lib/timeline'
 
@@ -40,6 +41,14 @@ export const Root: React.FC = () => {
         id="BurnedCardHero"
         component={BurnedCardHero}
         durationInFrames={BURNED_CARD_HERO_FRAMES}
+        fps={FPS}
+        width={WIDTH}
+        height={HEIGHT}
+      />
+      <Composition
+        id="Beat1ColdOpen"
+        component={Beat1ColdOpen}
+        durationInFrames={BEAT1_FRAMES}
         fps={FPS}
         width={WIDTH}
         height={HEIGHT}

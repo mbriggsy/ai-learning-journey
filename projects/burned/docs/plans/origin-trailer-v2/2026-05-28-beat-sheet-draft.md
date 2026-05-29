@@ -29,7 +29,8 @@ grudgingly impressed (CODED cadence, never cloned).
   and **drops** the spoken "Five times more planning than code" — the
   on-screen number cascade carries the ratio; the line was redundant.
 - **"up to ten"** for player count (2–10, not always 10) — both spots.
-- **Runtime confirmed** ~119s. "Takes as long as it takes." No trimming.
+- **Runtime** — "Takes as long as it takes." No trimming. (The ~119s figure
+  here is SUPERSEDED — see v5 changes; real est. ~216–265s.)
 
 ### v4 changes (number correction, 2026-05-28)
 - **CRITICAL FIX — wrong scope.** The v2/v3 numbers (16K code / 10K tests /
@@ -45,6 +46,21 @@ grudgingly impressed (CODED cadence, never cloned).
   'Measure twice,' they say. This one never stopped." — TRUE (62K > 43K)
   and keeps the over-planning DNA.
 - All test-count instances 1,413 → **1,326** (gauntlet, proof ×2, tag).
+
+### v5 changes (runtime reality, 2026-05-28)
+- **CRITICAL FIX — the ~119s target was never real.** Authoring the cue list
+  (`videos/origin-trailer/scripts/voice/script.ts`) + `pnpm cues:check`
+  measured the approved prose at **529 spoken words + 12.8s of silence** =
+  **est. ~216–265s** at Janet's pace (~2.1–2.6 wps; the `tts:test` line ran
+  ~19 words in ~8s). The ~119s figure was never validated against
+  word-count × pace — it implied ~4 wps, which this dry-matriarch voice
+  never hits.
+- **Briggsy's call (2026-05-28): ACCEPT THE LONGER CUT.** Keep all approved
+  prose; runtime is **~3–3.5 min** ("takes as long as it takes"). No
+  trimming. Exact runtime confirmed at the generation+measure pass.
+- **The per-beat "~Ns" header labels below are SUPERSEDED estimates** —
+  `pnpm cues:check` is the runtime source of truth. The proportional shape
+  (warm #4 open · #2 owns the spine · #3 tag short) still holds.
 
 **Real facts used (CANONICAL — from the published stats site; NOT ad-hoc git counts):**
 - **Application LOC: 43,357** (code: source + styles + markup) ·
@@ -68,8 +84,9 @@ grudgingly impressed (CODED cadence, never cloned).
   Cloudflare Workers Durable Objects. He wrote no code — direction,
   taste, ambition.
 
-**Target runtime:** ~119s (≈2 min) — locked. Proportions still honor the
-lock: warm #4 open, #2 owns the spine, #3 tag = ~3s.
+**Target runtime:** ~3–3.5 min (est. ~216–265s, confirmed at generation;
+see v5 changes — the old ~119s was unvalidated and is dead). Proportions
+still honor the shape: warm #4 open, #2 owns the spine, #3 tag short.
 
 ---
 
@@ -274,7 +291,8 @@ assume.
    Briefing-Room recreation? Changes how "true images" in beat 1 read.
 2. **Briggsy on screen?** Draft keeps the bet the hero (silhouette /
    back-of-head). Confirm — face or no face.
-3. ~~Runtime~~ — RESOLVED: stays ~119s. "Takes as long as it takes."
+3. ~~Runtime~~ — RESOLVED: ~3–3.5 min (accept the longer cut, no trimming;
+   the ~119s target was unvalidated — see v5 changes). "Takes as long as it takes."
 4. **Scale visual** — do the numbers stamp as plain type, or as the
    Archer-style cascade the v1 infra already built (`s04-receipts-cascade`
    in `videos/trailer/out/`)? Reusing that asset's motion may save a build.

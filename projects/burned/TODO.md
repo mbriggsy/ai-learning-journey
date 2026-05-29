@@ -45,8 +45,10 @@ source) — recoverable via the tag; remove once v2 no longer references it.
   pure helpers) cross over.
 - **Engine** — fusion: #4 Game Night open · #2 Two Weeks spine ·
   #3 Origin-of-Janet gut-punch tag. `…-origin-event-brainstorm.md` §DECISION.
-- **Beat sheet (draft v4)** — full VO, 7 beats, ~119s, canonical site
-  numbers. Briggsy-approved. `2026-05-28-beat-sheet-draft.md`.
+- **Beat sheet (draft v5)** — full VO, 7 beats, canonical site numbers.
+  Briggsy-approved. Runtime ~3–3.5 min (est. 216–265s; the old ~119s target
+  was unvalidated, corrected 2026-05-28 — "accept the longer cut, no
+  trimming"). `2026-05-28-beat-sheet-draft.md`.
 - **Voice pipeline** — rebuilt clean in `videos/origin-trailer/scripts/`
   (Janet-only: client + ffmpeg + env libs, all v1 fixes ported).
   `pnpm tts:test` generates one line — proven end-to-end (valid 48k mono PCM).
@@ -74,13 +76,26 @@ settings are GONE.
     CAN'T add rasp (timbre, not a knob)" rule still holds — proven again this
     pass (rasp had to come from voice selection, not settings).
 
-**NEXT ACTION — author the cue list, then generate the VO.** In order:
-1. **Author the v2 cue list** — beat-sheet prose → structured cues (the v1
-   `src/lib/script.ts` equivalent). Strip stage directions (`[dry]`,
-   `[turn — softer]` — ElevenLabs reads prose aloud); route `[beat]` /
-   `[long beat]` to FFmpeg silence stitch (NOT an API tag).
-2. **Generate + process the VO**, then build the visual scenes **timed to the
-   VO durations** (audio first, visuals second — v1's correct order).
+**CUE LIST AUTHORED (2026-05-28).** `scripts/voice/script.ts` — 27 speech
+cues + 20 silence pauses across all 7 beats, verbatim from the approved beat
+sheet. Audio-first: NO frames (visuals timed to measured VO later). Stage
+directions held as `direction` metadata (never in `text`, never sent to API);
+`[beat]`/`[long beat]`/`[hold]` are typed `silence` cues for FFmpeg stitch.
+`pnpm cues:check` gates the VOICE_DIRECTION leak rule + beat coverage +
+runtime estimate (529 words + 12.8s silence → ~216–265s). Typecheck clean.
+
+**NEXT ACTION — generate + process the VO.** In order:
+1. **Wire `generate-vo.ts` to consume `JANET_CUES`** — iterate cues in order:
+   `speech` → `generateJanet({ text })` (text ONLY — the leak rule); `silence`
+   → silent WAV of `ms`; concat all → full VO bed. Add an FFmpeg silence-gen
+   helper to `lib/ffmpeg.ts` (none exists yet). Per-cue WAVs + a stitched
+   master + a measured-durations manifest (the real runtime, finally).
+2. **Process + ear-pass** — loudnorm per v1 gotchas; N=1 Briggsy cold-read of
+   the full bed. Tune `SILENCE_MS` + any per-cue delivery by ear. The
+   `…Hmph.` non-verbal needs the production-flag test (may drop to a breath).
+3. **Then build the visual scenes timed to the measured VO durations**
+   (audio first, visuals second — v1's correct order). Resolve the still-open
+   creative forks below as scenes get built.
 
 **Still-open creative forks** (for when scenes get built, after VO): human on
 screen? (silhouette/hands/2am-desk vs zero humans); scale-number treatment

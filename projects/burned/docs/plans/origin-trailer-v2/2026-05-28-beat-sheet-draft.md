@@ -251,8 +251,8 @@ owned without a brag — "the machine did the rest" (4).
 > He bet a machine could build something worth playing. *[beat]* He was
 > right.
 >
-> And not one piece of this — the game, the swarm, the thirteen hundred
-> tests, every image, every second of audio, this very trailer — was created by him."
+> And not one piece of this was created by him — not a single image, not
+> one second of audio, not even this trailer."
 >
 > *[turn — unhurried; the matriarch's guard drops a half-inch. A held breath, not a detonation.]*
 >

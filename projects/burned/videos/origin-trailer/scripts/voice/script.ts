@@ -266,7 +266,7 @@ export const JANET_CUES: readonly Cue[] = [
     kind: 'speech',
     id: 'b7-came-from-hand',
     beat: 7,
-    text: 'And not one piece of this — the game, the swarm, the thirteen hundred tests, every image, every second of audio, this very trailer — was created by him.',
+    text: 'And not one piece of this was created by him — not a single image, not one second of audio, not even this trailer.',
   },
   // The autonomy claim turns to warmth — the matriarch's guard drops a half-inch.
   // (The Janet-is-synthetic "Including mine" reveal was cut for length 2026-05-29;

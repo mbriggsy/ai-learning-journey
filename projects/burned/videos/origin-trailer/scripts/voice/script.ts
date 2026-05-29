@@ -40,7 +40,8 @@ export type Beat = 1 | 2 | 3 | 4 | 5 | 6 | 7
 /** Why a pause exists — drives ear-tuning priority + future visual sync. */
 export type SilenceReason =
   | 'tiny' // a quick breath, smaller than a paragraph — e.g. before a snappy logline
-  | 'paragraph' // natural breath between paragraphs
+  | 'paragraph' // natural breath between paragraphs (within a beat)
+  | 'boundary' // subject-change pause BETWEEN two narrative beats (longer than an in-beat paragraph)
   | 'beat' // the beat sheet's [beat] — a deliberate dramatic hold
   | 'turn' // a register shift ([dry] / [turn — softer]) needs air to land
   | 'long-beat' // a long, deliberate pause — the guard-drop turn before the warm button (Beat 7)
@@ -50,6 +51,7 @@ export type SilenceReason =
 export const SILENCE_MS = {
   tiny: 250,
   paragraph: 400,
+  boundary: 600,
   beat: 550,
   turn: 650,
   longBeat: 1300,
@@ -102,7 +104,7 @@ export const JANET_CUES: readonly Cue[] = [
     text: 'The rules are simple. Draw a card. Don\'t draw the one that gets you burned. And do everything short of decent to make sure the person next to you draws it first. Last cover standing wins.',
   },
 
-  silence('b1-to-b2', 1, 'paragraph'),
+  silence('b1-to-b2', 1, 'boundary'),
 
   // ─── Beat 2 — THE BET (engine #2, spine starts) ───
   {
@@ -127,7 +129,7 @@ export const JANET_CUES: readonly Cue[] = [
     direction: '[dry] — the skepticism through-line plants here; Janet as the doubt the protagonist lacks.',
   },
 
-  silence('b2-to-b3', 2, 'paragraph'),
+  silence('b2-to-b3', 2, 'boundary'),
 
   // ─── Beat 3 — THE DOUBLE-DOWN (engine #2 spine) ───
   {
@@ -151,7 +153,7 @@ export const JANET_CUES: readonly Cue[] = [
     text: 'He didn\'t raise the bar once. He kept moving it out of his own reach.',
   },
 
-  silence('b3-to-b4', 3, 'paragraph'),
+  silence('b3-to-b4', 3, 'boundary'),
 
   // ─── Beat 4 — THE BUILD + SCALE (engine #2 spine) ───
   {
@@ -185,7 +187,7 @@ export const JANET_CUES: readonly Cue[] = [
     direction: '[dry] — deadpan turn; the over-planning DNA owned without a brag.',
   },
 
-  silence('b4-to-b5', 4, 'paragraph'),
+  silence('b4-to-b5', 4, 'boundary'),
 
   // ─── Beat 5 — THE GAUNTLET (challenger agents, engine #2 spine) ───
   {
@@ -197,7 +199,7 @@ export const JANET_CUES: readonly Cue[] = [
   // Beat 5 trimmed to the single deranged-swarm line (2026-05-29) — the chaos
   // imagery + "1326 times" punch were cut for length. Scene-transition breath
   // into the proof beat (also separates "break them" / "attempts to break it").
-  silence('b5-to-b6', 5, 'paragraph'),
+  silence('b5-to-b6', 5, 'boundary'),
 
   // ─── Beat 6 — THE PROOF + COST (engine #2 spine) ───
   {
@@ -229,7 +231,7 @@ export const JANET_CUES: readonly Cue[] = [
     text: 'The machine did the rest.',
   },
 
-  silence('b6-to-b7', 6, 'paragraph'),
+  silence('b6-to-b7', 6, 'boundary'),
 
   // ─── Beat 7 — RETURN + TAG (engine #3 subset) ───
   {

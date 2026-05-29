@@ -8,6 +8,7 @@
     "esModuleInterop": true,
     "isolatedModules": true,
     "moduleDetection": "force",
+    "resolveJsonModule": true,
     "skipLibCheck": true,
     "noEmit": true,
     "baseUrl": ".",

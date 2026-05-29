@@ -2,16 +2,22 @@ import React from 'react'
 import { Composition } from 'remotion'
 import { useFonts } from './hooks/useFonts'
 import { FoundationProof, FOUNDATION_PROOF_FRAMES } from './scenes/FoundationProof'
-
-const WIDTH = 1920
-const HEIGHT = 1080
-const FPS = 30
+import { OriginTrailer } from './OriginTrailer'
+import { FPS, WIDTH, HEIGHT, TOTAL_FRAMES } from './lib/timeline'
 
 export const Root: React.FC = () => {
   useFonts()
 
   return (
     <>
+      <Composition
+        id="OriginTrailer"
+        component={OriginTrailer}
+        durationInFrames={TOTAL_FRAMES}
+        fps={FPS}
+        width={WIDTH}
+        height={HEIGHT}
+      />
       <Composition
         id="FoundationProof"
         component={FoundationProof}

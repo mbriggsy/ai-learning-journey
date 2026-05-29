@@ -38,13 +38,25 @@ old work.
   v4). Numbers are canonical from the stats site (43K app LOC / 29K tests /
   62K planning / 1,326 tests), not ad-hoc git counts. Script reviewed +
   approved by Briggsy.
-- **NEXT ACTION — visual direction.** Two forks to decide first (in the
-  beat sheet's "Open questions"): (1) **medium** — hybrid (Archer-style
-  build + real gameplay at the payoff) vs all-motion-graphics vs
-  gameplay-forward [Claude leans hybrid]; (2) **is the human on screen** —
-  silhouette / hands / a chair vs zero humans, Janet's VO carries it. Then
-  the rest of the open questions (game-night footage, scale cascade reuse,
-  title-card timing). v1 production infra is in the `origin-trailer-v1` tag.
+- **HUMAN-ON-SCREEN FORK RESOLVED (2026-05-29):** yes, the human is on
+  screen — *our Briggsy*, the everyman data engineer, seen **from behind**
+  (face never shows; recognized by the spiky blonde silhouette). Not Dash.
+- **ANCHOR LOCKED (2026-05-29):** the character/style anchor is
+  `videos/origin-trailer/src/assets/briggsy-anchor.png` — wide three-quarter
+  rear establishing shot, warm lamp pool over a folding table (bourbon glass
+  + scattered cards as lit foreground props), deep-teal midnight with bold
+  Saul Bass background shards, Archer cel style. This frame's palette +
+  light language is the template every beat visual is judged against.
+  Pipeline: Imagen-4 generate (`scripts/trailer-briggsy-test.ts`) for the
+  base, then **Nano Banana Pro surgical edits** (`scripts/trailer-briggsy-edit.ts`,
+  takes a base filename arg) for targeted fixes. Versioned takes + a
+  contact-sheet viewer land in the gitignored `temp/trailer/`.
+- **NEXT ACTION — batch beat visuals.** Generate each beat's scene against
+  the locked anchor + beat sheet, one beat at a time, replacing the
+  `BeatPlaceholder` scenes. Remaining open forks: (1) **medium** — hybrid
+  (Archer build + real gameplay at the payoff) vs all-motion-graphics
+  [Claude leans hybrid]; (2) game-night footage, scale-cascade reuse,
+  title-card timing. v1 production infra is in the `origin-trailer-v1` tag.
 
 ## Superseded v1 work (reference only — do not extend)
 

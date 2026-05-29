@@ -2,29 +2,35 @@
  * Janet — the v2 trailer's single narrator. Malory-CODED dry matriarch,
  * outside-observer stance (recounts Briggsy's bet; never briefs-at-you).
  *
- * LOCKED voice — the one v2 decision carried verbatim from v1 (Phase 2
- * Unit 2.3 re-lock, Briggsy's ear cleared it): ElevenLabs "Eleanor –
- * Gracious and Authoritative" (Shared Library), cunty-matriarch-tuned.
- * The British accent rides the Q-from-Bond cadence; brief was "always
- * drinking but you'd never know it" + experienced-not-frail.
+ * LOCKED voice (2026-05-28, Briggsy's ear): ElevenLabs "Kristen – Cold Evil
+ * Queen Villain" (Shared Library, professional). American, cold/controlled
+ * regal command — the cuntiness lands as icy authority rather than British
+ * grace. Used directly by voiceId (no library-add needed — the shared
+ * voiceId resolves for TTS as-is; proven on the casting audition).
  *
- * Do NOT retune without re-auditioning — the v1 history is Sarah (too
- * reassuring) -> Sloane (too polished) -> Eleanor, and settings v1
- * (stab 0.85/style 0.05) -> v2 (0.55/0.30) -> v3 (current). See memory
- * [[project-burned-origin-trailer-v2]] + the v1 cold-open-prototype audit.
+ * SETTINGS = the voice's own stored defaults, captured verbatim from
+ * GET /v1/voices/{id}/settings. The casting audition that cleared Briggsy
+ * sent NO voice_settings, so it ran on these defaults — locking them here
+ * reproduces exactly the read he approved. Deviate only by ear, never by
+ * carrying another voice's tuning (Eleanor's stab 0.22 / style 0.60 push
+ * was timbre-specific and would distort this voice).
+ *
+ * Casting history: Sarah (too reassuring) -> Sloane (too polished) ->
+ * Eleanor (British, rejected — too lovely/wrong identity) -> rasp-forward
+ * Voice-Design designs (close but lost to the real thing) -> Kristen Cold
+ * Evil Queen. Briggsy's note on the rasp re-spins: cold queen won; the
+ * designed rasp didn't beat the original's read. See memory
+ * [[project-burned-origin-trailer-v2]].
  */
 export const JANET_VOICE = {
-  voiceLibraryName: 'Eleanor – Gracious and Authoritative (Shared Library)',
-  voiceId: '2qQJWjw5XdG80GreshqG',
+  voiceLibraryName: 'Kristen – Cold Evil Queen Villain (Shared Library)',
+  voiceId: 'Qbw4VpyUrHEG7NigKzty',
   modelId: 'eleven_v3',
-  // v2 cunty push (2026-05-28): dragged meaner than v1's final baseline
-  // (stab 0.40 / style 0.45) per Briggsy — lower stability lets the disdain
-  // swing, higher style exaggerates the contempt. Iterating by ear.
   settings: {
-    stability: 0.22,
-    similarity_boost: 0.75,
-    style: 0.60,
+    stability: 0.32,
+    similarity_boost: 0.58,
+    style: 0.58,
     use_speaker_boost: true,
-    speed: 0.85,
+    speed: 0.9,
   },
 } as const

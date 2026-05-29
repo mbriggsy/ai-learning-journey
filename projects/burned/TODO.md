@@ -57,32 +57,29 @@ Yorker**, ~50s, very rich, slightly-always-annoyed, drinker, former smoker.
 cloned). Eleanor (v1's British "matriarch") is **REJECTED** — too lovely,
 British, wrong identity.
 
-**NEXT ACTION — pick Janet's voice, then generate the VO.** In order:
-1. **Pick the voice.** The Shared Library has no Janet (4 scout passes via
-   `scripts/scout-voices.ts`). Went Voice Design — 3 custom candidates await
-   Briggsy's ear:
-   - `videos/origin-trailer/out/janet-design/janet-design-{1,2,3}.wav`
-     (gitignored — persist locally on this machine). generated_voice_ids:
-     **1=`EoDa7hvgmJaoYm7ECtqK`** · **2=`taFm23Y66T3plEyIjJQz`** ·
-     **3=`FRUua1AWADB2AcKn86Lt`**.
-   - Library fallback (closest off-the-shelf): **Cameo**
-     (`Rm14i2uPTqCL0k0wW7KI` — "sophisticated, rich, husky").
-   - Re-spin/tweak: edit `JANET_DESCRIPTION` in `scripts/design-janet-voice.ts`,
-     `pnpm tsx scripts/design-janet-voice.ts` (3 fresh per run). **LANDMINE:**
-     `generated_voice_id`s may expire server-side — mint the pick promptly OR
-     re-run (the WAVs still play locally regardless).
-2. **Mint + lock.** From the chosen generated_voice_id, create the real voice
-   (`POST /v1/text-to-voice/create-voice-from-preview`), then set `voiceId` +
-   `settings` in `scripts/voice/janet.ts`. **LANDMINE:** janet.ts currently
-   still points at Eleanor (`2qQJWjw5XdG80GreshqG`) with experimental cunty
-   settings (stab 0.22 / style 0.60) — TRANSITIONAL, replace on pick. Cunty
-   direction = lower stability + higher style; settings CAN'T add rasp
-   (that's timbre — the reason we recast the voice).
-3. **Author the v2 cue list** — beat-sheet prose → structured cues (the v1
+**VOICE LOCKED (2026-05-28).** Janet = **"Kristen – Cold Evil Queen Villain"**
+(Shared Library, professional, `Qbw4VpyUrHEG7NigKzty`). American, cold/
+controlled regal command — cuntiness lands as icy authority, not British
+grace. Used directly by voiceId (no library-add / no mint — shared voiceId
+resolves for TTS as-is). `scripts/voice/janet.ts` updated; settings = the
+voice's own stored defaults (stab 0.32 / sim 0.58 / style 0.58 / speed 0.9),
+captured verbatim because the cleared audition ran on defaults. `pnpm tts:test`
+re-verified end-to-end (valid 8.0s 48k mono PCM). Eleanor pointer + cunty-push
+settings are GONE.
+  - Casting path: Sarah → Sloane → Eleanor (rejected) → rasp-forward Voice-
+    Design designs (close, lost to the real thing) → Kristen Cold Evil Queen.
+    Designed-rasp candidates (`out/janet-design/` IDs `2BD3…`/`7kpQ…`/`0UhN…`)
+    archived locally; not the pick.
+  - **LANDMINE retired:** janet.ts no longer points at Eleanor. The "settings
+    CAN'T add rasp (timbre, not a knob)" rule still holds — proven again this
+    pass (rasp had to come from voice selection, not settings).
+
+**NEXT ACTION — author the cue list, then generate the VO.** In order:
+1. **Author the v2 cue list** — beat-sheet prose → structured cues (the v1
    `src/lib/script.ts` equivalent). Strip stage directions (`[dry]`,
    `[turn — softer]` — ElevenLabs reads prose aloud); route `[beat]` /
    `[long beat]` to FFmpeg silence stitch (NOT an API tag).
-4. **Generate + process the VO**, then build the visual scenes **timed to the
+2. **Generate + process the VO**, then build the visual scenes **timed to the
    VO durations** (audio first, visuals second — v1's correct order).
 
 **Still-open creative forks** (for when scenes get built, after VO): human on

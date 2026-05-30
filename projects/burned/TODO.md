@@ -17,7 +17,7 @@ the history. (Rule: `feedback-todo-is-not-a-diary.md`.)
 - Protocol version: **v6**
 - Phase 2 ElevenLabs spend: **$0.87 / $50** ceiling
 
-### Origin trailer v2 — ACTIVE (VO bed LOCKED; next = visual scenes)
+### Origin trailer v2 — ACTIVE (all 7 beats BUILT + assembled; next = full-cut review + polish)
 
 Clean-slate rebuild after v1 teardown. Workspace + locked decisions:
 **`docs/plans/origin-trailer-v2/`** (read `README.md` first;
@@ -85,22 +85,57 @@ cut) and pauses ear-tuned. `pnpm cues:check` gates the VOICE_DIRECTION leak
 rule + beat coverage + runtime. **Master: `out/vo/janet-vo-master.wav`, 3:01,
 all 24 cues verified clip-clean (tail peak ≤ −12 dB).**
 
-**NEXT ACTION — build the visual scenes, timed to the measured VO.** The VO bed
-is locked; `out/vo/manifest.json` has every cue's exact start + duration to
-time scenes against (audio-first order — v1's correct order).
-1. **Stand up the v2 scene compositions** in `videos/origin-trailer/src/` on
-   the proven living-UI foundation (FoundationProof / Option-B cross-tree
-   `@shared` + `@client` import). One scene per beat, timed to the manifest.
-2. **Resolve the creative forks** (below) as each scene gets built.
-3. **Wire the VO master + scenes into the Remotion composition; render.** For
-   the scale visual, optionally borrow v1's `s04-receipts-cascade` motion
-   (`git checkout origin-trailer-v1 -- videos/trailer/...`).
+**ALL 7 BEATS BUILT + FULL TRAILER ASSEMBLED (2026-05-30).** Each beat = its own
+scene `videos/origin-trailer/src/scenes/Beat{N}*.tsx`, owning its audio slice
+(`<Audio src={voMaster} startFrom={sec(beatStartSec)}>`). `OriginTrailer.tsx`
+sequences all 7 at manifest beat-start frames (`BEAT_STARTS` array) → gapless
+~3:01 cut. Full render: `out/burned-origin-trailer.mp4` (~55 MB, h264). Shared
+`lib/TrailerCard.tsx` = the real-card borrow path used by every beat. Sent to
+Briggsy for full-cut review 2026-05-30 (he likes the direction; "show off the
+imagery" addressed via the Beat-3 deck gallery + card moments in 4/5).
 
-**Still-open creative forks** (for when scenes get built): human on screen?
-(silhouette/hands/2am-desk vs zero humans); scale-number treatment (bar-growth
-vs plain type); logline placement (beat 1 vs payoff). (The "Including mine"
-wording fork is MOOT — the reveal was cut.) Parked in the beat sheet's "Open
-questions".
+**Beat map:** 1 cold-open (anchor → Dash draw → BURNED slam → betrayal → last
+standing) · 2 the-bet (anchor → dark screen+cursor → spark → "TWO WEEKS") ·
+3 double-down + **deck gallery** (form factors → 12-card art gallery → rise) ·
+4 numbers (card flurry → honest bar chart CODE 43,357 / TESTS 29,033 / PLANNING
+62,082, planning tallest) · 5 swarm (kinetic chaos, BURNED rain) · 6 proof+cost
+(counter → 1326/1326 "it held" → anchor 2am heart) · 7 payoff (BURNED kill →
+roster fan → BURNED wordmark stamp → warm "…Hmph" button).
+
+**THE GRAMMAR (the bar — Briggsy "way better, love the direction"):** illustration
+for MOOD → real game cards/UI in MOTION → cut to Janet. Cards/UI = ALWAYS real
+(`TrailerCard` / real `.webp` + `MinimalCard` CSS), NEVER Imagen playing cards
+(his correction). Illustration ONLY for environments / the from-behind silhouette
+anchor (`src/assets/briggsy-anchor.png`) / Bass graphics. Remotion drives all
+motion — borrowed Framer `m` renders at hidden `initial` under stills
+(**insight 071**); reconstruct shells from real CSS, never import live
+`GameOver`/`Hand`. Title cards = native Clash Display wordmark, not Imagen.
+
+**UNFINISHED FIXES (prescriptions, priority order):**
+1. **Verify full-cut audio sync + flow** — `out/burned-origin-trailer.mp4`
+   rendered but no human has heard it end-to-end. Each beat's `startFrom` is
+   placed at its manifest frame; if a beat's `T.end` drifts from its `Sequence`
+   window the audio could clip at a boundary. Watch the file; if a beat's audio
+   cuts early, widen that beat's window via `BEAT_STARTS` in `OriginTrailer.tsx`
+   or extend its `T.end`. All beat `T.end`s currently match the manifest spans.
+2. **Beat-to-beat transitions** — currently hard cuts to black (each scene
+   self-fades at its `T.end`). Add cross-beat transitions in `OriginTrailer.tsx`
+   (dip-to-black baseline; consider a 0.3s BURNED-card match-cut on 1↔5↔7).
+3. **Beat 2 + 3 phone/bet screens read empty** — `Beat2TheBet.tsx`: the 880×480
+   bet-screen `div` is too bare (add faint code lines). `Beat3DoubleDown.tsx`:
+   `PhoneWithHand` hands barely peek — raise `bottom: -w*0.42` → `-w*0.30` and/or
+   bump card width `w*0.52`.
+4. **Beat 7 title holds ~15s** (`Beat7Payoff.tsx`, titleStamp 16.54 → end 32.63).
+   If it drags on review, add drifting embers / slow vignette breath over the
+   wordmark.
+
+**THEN:** music bed (free/$0 — see `project-burned-music-bed-budget` memory);
+final full render; update README/SETUP stats in one pass (`feedback-stats-single-source`).
+
+**Studio** (`pnpm -C videos/origin-trailer studio`, port 3000): `OriginTrailer`
+(full) + `Beat1ColdOpen`…`Beat7Payoff`. The `FoundationProof` / `WinnerProof` /
+`BurnedCardHero` comps are de-risking SCAFFOLDING, not trailer beats — never
+present them as deliverables (cost a session 2026-05-29).
 
 ### Voice-pipeline gotchas — for v2 VO generation
 

@@ -15,6 +15,7 @@
 import { JANET_CUES, SPEECH_CUES, type Beat } from './voice/script.js'
 
 const FORBIDDEN = /[[\]*]/ // brackets (stage dirs) or asterisks (markdown emphasis)
+const N_BEATS = 6 // short recut (2026-05-31): 6 beats, brag-forward
 let failed = false
 const fail = (msg: string): void => {
   console.error(`✗ ${msg}`)
@@ -35,7 +36,7 @@ for (const cue of JANET_CUES) {
   ids.add(cue.id)
 }
 const beatsPresent = new Set<Beat>(JANET_CUES.map((c) => c.beat))
-for (let b = 1 as Beat; b <= 7; b = (b + 1) as Beat) {
+for (let b = 1 as Beat; b <= N_BEATS; b = (b + 1) as Beat) {
   if (!beatsPresent.has(b)) fail(`beat ${b} has no cues`)
 }
 
@@ -48,10 +49,10 @@ const totalSilenceMs = JANET_CUES.reduce((ms, c) => ms + (c.kind === 'silence' ?
 // (≈2.4 wps, padding included). Bracket the estimate deadpan↔brisk.
 const PACE = { deadpan: 2.1, brisk: 2.6 } as const
 const estSec = (wps: number): number => totalWords / wps + totalSilenceMs / 1000
-const TARGET_SEC = 119
+const TARGET_SEC = 70 // short recut target (~60–75s)
 
 console.log('\nPer-beat spoken words:')
-for (let b = 1 as Beat; b <= 7; b = (b + 1) as Beat) {
+for (let b = 1 as Beat; b <= N_BEATS; b = (b + 1) as Beat) {
   const w = SPEECH_CUES.filter((c) => c.beat === b).reduce((n, c) => n + wordsOf(c.text), 0)
   console.log(`  beat ${b}: ${w} words`)
 }
@@ -76,4 +77,4 @@ if (failed) {
   console.error('\n✗ cue-list check FAILED')
   process.exit(1)
 }
-console.log('\n✓ cue-list check passed (leak gate clean, all 7 beats present)')
+console.log(`\n✓ cue-list check passed (leak gate clean, all ${N_BEATS} beats present)`)

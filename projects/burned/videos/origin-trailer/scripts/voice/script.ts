@@ -89,205 +89,126 @@ const silence = (id: string, beat: Beat, reason: SilenceReason): SilenceCue => (
 })
 
 export const JANET_CUES: readonly Cue[] = [
-  // ─── Beat 1 — OPEN + WHAT IT IS (engine #4 + logline) ───
+  // ═══ SHORT RECUT (2026-05-31) ═══
+  // The brag is the TEXT now, not the subtext: an AI + one man built this. Six
+  // beats, brag-forward, ~70s. The hinge ("So he didn't" → the machine) cuts
+  // straight into the BuildHero terminal engine. Janet stays Malory-dry; the
+  // wink ("Not even me") IS the closer. Supersedes the 3:01 narrated cut.
+
+  // ─── Beat 1 — HOOK (kinetic roster cold open) ───
   {
     kind: 'speech',
-    id: 'b1-origin',
+    id: 'b1-hook',
     beat: 1,
-    text: 'Every great operation begins the same way. Not in a war room. Not with a directive from on high. It begins with bourbon, a folding table, and a card game nobody could stop playing.',
-  },
-  silence('b1-para', 1, 'paragraph'),
-  {
-    kind: 'speech',
-    id: 'b1-rules',
-    beat: 1,
-    text: 'The rules are simple. Draw a card. Don\'t draw the one that gets you burned. And do everything short of decent to make sure the person next to you draws it first. Last cover standing wins.',
+    text: 'Every great operation has an origin story.',
   },
 
   silence('b1-to-b2', 1, 'boundary'),
 
-  // ─── Beat 2 — THE BET (engine #2, spine starts) ───
+  // ─── Beat 2 — THE MAN + THE PROBLEM ───
   {
     kind: 'speech',
-    id: 'b2-problem',
+    id: 'b2-man',
     beat: 2,
-    text: 'The man at that table builds data pipelines. The quiet machinery nobody thanks you for. One night he decided that card game deserved a screen. There was just the one problem. He had no idea how to build it himself.',
+    text: 'This one starts with a man who builds data pipelines. The quiet machinery nobody thanks you for. One night, he decided his favorite card game deserved a screen.',
   },
   silence('b2-beat', 2, 'beat'),
   {
     kind: 'speech',
-    id: 'b2-machine',
+    id: 'b2-problem',
     beat: 2,
-    text: 'He knew the machine could. He hadn\'t a flicker of doubt.',
-  },
-  silence('b2-turn', 2, 'turn'),
-  {
-    kind: 'speech',
-    id: 'b2-janet-doubt',
-    beat: 2,
-    text: 'I had several. I gave it two weeks.',
-    direction: '[dry] — the skepticism through-line plants here; Janet as the doubt the protagonist lacks.',
+    text: 'There was just one problem. He had no idea how to build it himself.',
   },
 
   silence('b2-to-b3', 2, 'boundary'),
 
-  // ─── Beat 3 — THE DOUBLE-DOWN (engine #2 spine) ───
+  // ─── Beat 3 — THE HINGE → THE MACHINE (cut to terminal) ───
   {
     kind: 'speech',
-    id: 'b3-sensible',
+    id: 'b3-hinge',
     beat: 3,
-    text: 'Now — a sensible man builds something small.',
+    text: 'So he didn\'t.',
+    direction: '[dry] — the pivot. This line cuts straight into the terminal ripping (BuildHero). The gag is the gap: "couldn\'t build it" → the machine builds it.',
   },
-  silence('b3-beat', 3, 'beat'),
+  silence('b3-turn', 3, 'turn'),
   {
     kind: 'speech',
-    id: 'b3-opposite',
+    id: 'b3-machine',
     beat: 3,
-    text: 'He did the opposite. He wanted up to ten of you in the same room. Ten phones hiding ten secret hands, every move landing the instant you made it. And it had to look like a real studio made it — or it wasn\'t worth making.',
-  },
-  silence('b3-para', 3, 'paragraph'),
-  {
-    kind: 'speech',
-    id: 'b3-moving-bar',
-    beat: 3,
-    text: 'He didn\'t raise the bar once. He kept moving it out of his own reach.',
+    text: 'He handed it to a machine. And he pointed.',
   },
 
   silence('b3-to-b4', 3, 'boundary'),
 
-  // ─── Beat 4 — THE BUILD + SCALE (engine #2 spine) ───
+  // ─── Beat 4 — THE BRAG / SCALE ───
   {
     kind: 'speech',
-    id: 'b4-pointed',
+    id: 'b4-brag',
     beat: 4,
-    text: 'He didn\'t write it. Any of it. He pointed — and the machine built.',
-  },
-  silence('b4-para', 4, 'paragraph'),
-  {
-    kind: 'speech',
-    id: 'b4-numbers',
-    beat: 4,
-    // Canonical site buckets (beat sheet v4): app 43,357 / testing 29,033 / planning 62,082.
-    // Spoken roundings round DOWN (honest). Numbers spelled so v3 reads them as words.
-    text: 'Forty-three thousand lines of code, in a language he\'d never touched. Twenty-nine thousand more, written for the sole purpose of attacking the first forty-three. And sixty-two thousand lines of planning behind all of it.',
+    // Spoken roundings round DOWN (honest): code 43,357 → "forty-three thousand";
+    // tests 1407 → "fourteen hundred"; 120 cards exact. Numbers spelled so v3 reads as words.
+    text: 'Two weeks. Forty-three thousand lines of code, in a language he\'d never touched. A hundred and twenty cards. Fourteen hundred tests, written to attack his own game.',
   },
   silence('b4-beat', 4, 'beat'),
   {
     kind: 'speech',
-    id: 'b4-more-planning',
+    id: 'b4-measure',
     beat: 4,
-    text: 'More planning than code.',
-  },
-  silence('b4-kicker-turn', 4, 'turn'),
-  {
-    kind: 'speech',
-    id: 'b4-measure-twice',
-    beat: 4,
-    text: '\'Measure twice,\' they say.',
-    direction: '[dry] — deadpan turn; the over-planning DNA owned without a brag.',
+    text: 'More planning than code. \'Measure twice,\' they say.',
+    direction: '[dry] — deadpan; the over-planning DNA owned without a brag.',
   },
 
   silence('b4-to-b5', 4, 'boundary'),
 
-  // ─── Beat 5 — THE GAUNTLET (challenger agents, engine #2 spine) ───
+  // ─── Beat 5 — THE GAUNTLET + IT\'S GOOD ───
   {
     kind: 'speech',
-    id: 'b5-deranged',
+    id: 'b5-gauntlet',
     beat: 5,
-    text: 'Then it did the genuinely deranged thing. It unleashed a swarm of adversaries — agents whose only job was to hunt the game\'s weak points and break them.',
+    text: 'Then a swarm of machines tried to break it. It held. Every time.',
   },
-  // Beat 5 trimmed to the single deranged-swarm line (2026-05-29) — the chaos
-  // imagery + "1326 times" punch were cut for length. Scene-transition breath
-  // into the proof beat (also separates "break them" / "attempts to break it").
+  silence('b5-turn', 5, 'turn'),
+  {
+    kind: 'speech',
+    id: 'b5-good',
+    beat: 5,
+    text: 'And somehow, the thing is good.',
+    direction: '[the dryness cracks a half-inch toward respect]',
+  },
+
   silence('b5-to-b6', 5, 'boundary'),
 
-  // ─── Beat 6 — THE PROOF + COST (engine #2 spine) ───
+  // ─── Beat 6 — THE BUTTON + THE WINK ───
   {
     kind: 'speech',
-    id: 'b6-attempts',
+    id: 'b6-bet',
     beat: 6,
-    text: 'Thirteen hundred and twenty-six attempts to break it.',
+    text: 'He bet a machine could build something worth playing. He was right.',
   },
-  silence('b6-beat', 6, 'beat'),
+  silence('b6-para', 6, 'paragraph'),
   {
     kind: 'speech',
-    id: 'b6-held',
+    id: 'b6-reveal',
     beat: 6,
-    text: 'Thirteen hundred and twenty-six times, it didn\'t.',
+    text: 'Not one piece of this was made by him. Not an image. Not a sound. Not even me.',
+    direction: '[dry — the wink] — Janet reveals the narration itself is machine-made. The "built by an agent" punchline, played straight.',
   },
-  silence('b6-turn', 6, 'turn'),
+  silence('b6-turn-to-warmth', 6, 'long-beat'),
   {
     kind: 'speech',
-    id: 'b6-cost',
+    id: 'b6-impress',
     beat: 6,
-    text: 'What did it cost him? Sleep. A lot of sleep. The specific madness of a man who\'ll stand over a screen at two in the morning and tell a machine, \'no — make it beautiful.\' He gave it an unreasonable refusal to accept \'good enough.\'',
-    direction: '[turn — softer] — the dryness softens to affection; the heart of the piece. Hold the register through the whole passage.',
-  },
-  silence('b6-beat-rest', 6, 'beat'),
-  {
-    kind: 'speech',
-    id: 'b6-machine-rest',
-    beat: 6,
-    text: 'The machine did the rest.',
-  },
-
-  silence('b6-to-b7', 6, 'boundary'),
-
-  // ─── Beat 7 — RETURN + TAG (engine #3 subset) ───
-  {
-    kind: 'speech',
-    id: 'b7-return-q',
-    beat: 7,
-    text: 'What did he get in return?',
-  },
-  silence('b7-beat-1', 7, 'beat'),
-  {
-    kind: 'speech',
-    id: 'b7-game',
-    beat: 7,
-    text: 'A game. A real one. A hundred and twenty cards, up to ten of your closest friends, and not one shred of honor among them.',
-  },
-  silence('b7-para-1', 7, 'paragraph'),
-  {
-    kind: 'speech',
-    id: 'b7-bet',
-    beat: 7,
-    text: 'He bet a machine could build something worth playing.',
-  },
-  silence('b7-beat-2', 7, 'beat'),
-  {
-    kind: 'speech',
-    id: 'b7-right',
-    beat: 7,
-    text: 'He was right.',
-  },
-  silence('b7-para-2', 7, 'paragraph'),
-  {
-    kind: 'speech',
-    id: 'b7-came-from-hand',
-    beat: 7,
-    text: 'And not one piece of this was created by him — not a single image, not one second of audio, not even this trailer.',
-  },
-  // The autonomy claim turns to warmth — the matriarch's guard drops a half-inch.
-  // (The Janet-is-synthetic "Including mine" reveal was cut for length 2026-05-29;
-  // "…was written by him" now carries the machine-made-everything point. This is a
-  // turn-to-warmth pause, NOT the old reveal detonation — hence 'turn', not 'hold'.)
-  silence('b7-turn-to-warmth', 7, 'long-beat'),
-  {
-    kind: 'speech',
-    id: 'b7-this-kid',
-    beat: 7,
     text: 'This kid is starting to impress me.',
     direction: '[then, unhurried — the matriarch\'s guard drops a half-inch]. Warmth, not exposition — the skeptic→impressed bookend.',
   },
-  silence('b7-beat-hmph', 7, 'beat'),
+  silence('b6-beat-hmph', 6, 'beat'),
   {
     kind: 'speech',
-    id: 'b7-hmph',
-    beat: 7,
+    id: 'b6-hmph',
+    beat: 6,
     text: '…Hmph.',
     nonVerbal: true,
-    direction: 'PRODUCTION FLAG (beat sheet): non-verbal — the voice may render this as a breath rather than a word. Test, don\'t assume; if it drops, capture a separate breath take or trim the cue.',
+    direction: 'PRODUCTION FLAG: non-verbal — the voice may render this as a breath rather than a word. Test, don\'t assume; if it drops, capture a separate breath take or trim the cue.',
   },
 ] as const
 

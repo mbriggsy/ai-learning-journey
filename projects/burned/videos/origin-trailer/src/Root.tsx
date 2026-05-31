@@ -11,6 +11,12 @@ import { Beat2TheBet, BEAT2_FRAMES } from './scenes/Beat2TheBet'
 import { Beat4TheNumbers, BEAT4_FRAMES } from './scenes/Beat4TheNumbers'
 import { Beat5TheSwarm, BEAT5_FRAMES } from './scenes/Beat5TheSwarm'
 import { Beat6Proof, BEAT6_FRAMES } from './scenes/Beat6Proof'
+import { BuildHero, BUILD_HERO_FRAMES } from './scenes/BuildHero'
+import { ColdOpenRoster, COLD_OPEN_ROSTER_FRAMES } from './scenes/ColdOpenRoster'
+import { Beat2Man, BEAT2_MAN_FRAMES } from './scenes/Beat2Man'
+import { Beat5Gauntlet, BEAT5_GAUNTLET_FRAMES } from './scenes/Beat5Gauntlet'
+import { Beat6Wink, BEAT6_WINK_FRAMES } from './scenes/Beat6Wink'
+import { ShortCut, SHORT_CUT_FRAMES } from './ShortCut'
 import { OriginTrailer } from './OriginTrailer'
 import { FPS, WIDTH, HEIGHT, TOTAL_FRAMES } from './lib/timeline'
 
@@ -103,6 +109,54 @@ export const Root: React.FC = () => {
         id="Beat6Proof"
         component={Beat6Proof}
         durationInFrames={BEAT6_FRAMES}
+        fps={FPS}
+        width={WIDTH}
+        height={HEIGHT}
+      />
+      <Composition
+        id="BuildHero"
+        component={BuildHero}
+        durationInFrames={BUILD_HERO_FRAMES}
+        fps={FPS}
+        width={WIDTH}
+        height={HEIGHT}
+      />
+      <Composition
+        id="ColdOpenRoster"
+        component={ColdOpenRoster}
+        durationInFrames={COLD_OPEN_ROSTER_FRAMES}
+        fps={FPS}
+        width={WIDTH}
+        height={HEIGHT}
+      />
+      <Composition
+        id="Beat2Man"
+        component={Beat2Man}
+        durationInFrames={BEAT2_MAN_FRAMES}
+        fps={FPS}
+        width={WIDTH}
+        height={HEIGHT}
+      />
+      <Composition
+        id="Beat5Gauntlet"
+        component={Beat5Gauntlet}
+        durationInFrames={BEAT5_GAUNTLET_FRAMES}
+        fps={FPS}
+        width={WIDTH}
+        height={HEIGHT}
+      />
+      <Composition
+        id="Beat6Wink"
+        component={Beat6Wink}
+        durationInFrames={BEAT6_WINK_FRAMES}
+        fps={FPS}
+        width={WIDTH}
+        height={HEIGHT}
+      />
+      <Composition
+        id="ShortCut"
+        component={ShortCut}
+        durationInFrames={SHORT_CUT_FRAMES}
         fps={FPS}
         width={WIDTH}
         height={HEIGHT}

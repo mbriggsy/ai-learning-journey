@@ -1,0 +1,387 @@
+import React from 'react'
+import {
+  AbsoluteFill,
+  useCurrentFrame,
+  useVideoConfig,
+  spring,
+  interpolate,
+  Easing,
+} from 'remotion'
+import { TrailerCard } from '../lib/TrailerCard'
+import type { CardType } from '@shared/types'
+import '@client/shared/tokens/primitives.css'
+import '@client/shared/tokens/semantic.css'
+
+/**
+ * BUILD HERO — prototype (2026-05-31). The antidote to the "dead terminal."
+ *
+ * The brag, shown not said: a real Claude Code session WRITING the game on
+ * screen. Actual `src/shared/card-defs.ts` source streams in like an agent is
+ * typing it, the live test counter ramps to 1407 — then the money shot: the
+ * real `dash-barlowe` source line RESOLVES into the finished rendered card.
+ * Code → the beautiful thing. The gap between "an AI typing" and "this game"
+ * IS the brag. Standalone, silent — validates the visual mechanism before the
+ * full recut adopts it.
+ *
+ * Real receipts only: every code line below is verbatim from card-defs.ts; the
+ * card is the real TrailerCard borrow path (real art + real MinimalCard CSS).
+ */
+
+const FPS = 30
+const sec = (s: number) => Math.round(s * FPS)
+
+// --- Palette (Archer / BURNED tokens, hand-mapped for the editor) ---
+const C = {
+  bg: '#06100f',
+  panel: '#0a1c20',
+  panelEdge: '#1b3a3e',
+  chrome: '#5f8b8f',
+  punct: '#5f8b8f',
+  keyword: '#6fb3d6',
+  string: '#ffb86b',
+  key: '#7fd1d1',
+  comment: '#3f6b6f',
+  text: '#cfe3e3',
+  amber: '#ffb000',
+  green: '#54d6a0',
+}
+
+type Tok = { t: string; c: string }
+const kw = (t: string): Tok => ({ t, c: C.keyword })
+const st = (t: string): Tok => ({ t, c: C.string })
+const ky = (t: string): Tok => ({ t, c: C.key })
+const pu = (t: string): Tok => ({ t, c: C.punct })
+const tx = (t: string): Tok => ({ t, c: C.text })
+const cm = (t: string): Tok => ({ t, c: C.comment })
+
+// Real card-defs.ts source. Lines 5+6 (dash-barlowe) are the hero entry.
+const LINES: Tok[][] = [
+  [cm('// src/shared/card-defs.ts — 120 cards, one source of truth')],
+  [kw('export const '), tx('CARD_DEFS'), pu(' = ['), tx('')],
+  [pu('  { '), ky('type'), pu(": "), st("'burned'"), pu(',     '), ky('name'), pu(": "), st("'Burned'"), pu(',     '), ky('category'), pu(": "), st("'burned'"), pu(' },')],
+  [pu('  { '), ky('type'), pu(": "), st("'extraction'"), pu(', '), ky('name'), pu(": "), st("'Extraction'"), pu(', '), ky('category'), pu(": "), st("'extraction'"), pu(' },')],
+  [pu('  { '), ky('type'), pu(": "), st("'agent-x'"), pu(',    '), ky('name'), pu(": "), st("'Agent X'"), pu(',    '), ky('category'), pu(": "), st("'wild'"), pu(' },')],
+  [pu('  { '), ky('type'), pu(": "), st("'dash-barlowe'"), pu(', '), ky('name'), pu(": "), st("'Dash Barlowe'"), pu(', '), ky('category'), pu(": "), st("'operative'"), pu(',')],
+  [pu('    '), ky('description'), pu(": "), st("'Powerless alone. Pairs steal random. Triples named steal.'"), pu(' },')],
+  [cm('  // …114 more')],
+  [pu('] '), kw('as const satisfies '), tx('readonly CardDef[]')],
+]
+
+const lineLen = (line: Tok[]) => line.reduce((n, tk) => n + tk.t.length, 0)
+const LINE_LENS = LINES.map(lineLen)
+const HERO_LINES = [5, 6] // the dash-barlowe entry
+
+// The rest of the real deck — blooms out behind the hero card to show scale.
+// Real card types from card-defs.ts (dash is the hero, rendered separately).
+const DECK: CardType[] = [
+  'burned', 'extraction', 'reassign', 'direct-order', 'go-dark', 'intel-briefing',
+  'falsify-intel', 'burn-the-files', 'back-channel', 'call-in-a-favor', 'intercepted',
+  'agent-x', 'vera-khan', 'sable-ashworth', 'janet-broadside', 'neal-proctor',
+]
+
+const T = {
+  panelIn: 0.0,
+  typeStart: 0.45,
+  typeCps: 105, // chars/sec — agent speed
+  lockIn: 5.0, // hero line locks + rest dims
+  compile: 5.7, // compile scan begins
+  cardSpring: 6.0, // dash blooms from the code line
+  panelOut: 6.0, // panel dissolves as the card takes over
+  deckStart: 7.05, // the rest of the deck blooms out around the hero
+  statIn: 8.3, // "120 CARDS · 1407 TESTS" stamp
+  fadeStart: 10.0,
+  end: 10.7,
+}
+
+export const BUILD_HERO_FRAMES = sec(T.end)
+
+// --- Deck grid layout: 17 real cards, dash in the dead-center slot ---
+const ROWS = [6, 5, 6] // 17 slots; dash occupies slot 8 (center of middle row)
+const DASH_SLOT = 8
+const GRID = { cw: 170, ch: 238, gx: 18, gy: 16 }
+function slotPos(slot: number): { x: number; y: number } {
+  let idx = slot
+  let row = 0
+  while (idx >= ROWS[row]) {
+    idx -= ROWS[row]
+    row++
+  }
+  const n = ROWS[row]
+  const rowW = n * GRID.cw + (n - 1) * GRID.gx
+  const totalH = ROWS.length * GRID.ch + (ROWS.length - 1) * GRID.gy
+  const x = -rowW / 2 + idx * (GRID.cw + GRID.gx) + GRID.cw / 2
+  const y = -totalH / 2 + row * (GRID.ch + GRID.gy) + GRID.ch / 2
+  return { x, y }
+}
+const DASH_POS = slotPos(DASH_SLOT)
+// deck card j → slot (skip the dash slot)
+const deckSlot = (j: number) => (j < DASH_SLOT ? j : j + 1)
+
+/** Render a code line up to `maxChars` revealed; returns [spans, cursorShown]. */
+function RenderLine({ line, maxChars }: { line: Tok[]; maxChars: number }) {
+  let used = 0
+  const out: React.ReactNode[] = []
+  for (let i = 0; i < line.length; i++) {
+    const tk = line[i]
+    if (used >= maxChars) break
+    const take = Math.min(tk.t.length, maxChars - used)
+    out.push(
+      <span key={i} style={{ color: tk.c }}>
+        {tk.t.slice(0, take)}
+      </span>,
+    )
+    used += take
+  }
+  return <>{out}</>
+}
+
+export const BuildHero: React.FC<{ fadeOut?: boolean }> = ({ fadeOut = true }) => {
+  const frame = useCurrentFrame()
+  const { fps } = useVideoConfig()
+
+  // --- Typing reveal: global char budget walked across lines ---
+  const revealed = Math.max(0, (frame - sec(T.typeStart)) / fps) * T.typeCps
+  let budget = revealed
+  let activeLine = 0
+  const lineChars: number[] = []
+  for (let i = 0; i < LINES.length; i++) {
+    const len = LINE_LENS[i]
+    if (budget >= len + 2) {
+      lineChars.push(len)
+      budget -= len + 2 // +2 = newline "cost", paces the cascade
+      activeLine = i + 1
+    } else {
+      lineChars.push(Math.max(0, Math.floor(budget)))
+      activeLine = i
+      budget = -1
+    }
+  }
+  const typingDone = activeLine >= LINES.length
+
+  // --- Panel entrance + exit ---
+  const panelIn = spring({ frame: frame - sec(T.panelIn), fps, config: { damping: 18, stiffness: 120, mass: 0.8 } })
+  const panelEnter = interpolate(panelIn, [0, 1], [0.94, 1])
+  const panelDissolve = interpolate(frame, [sec(T.panelOut), sec(T.panelOut + 1.1)], [1, 0], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+    easing: Easing.in(Easing.cubic),
+  })
+
+  // --- Hero-line lock: rest of code dims, focus ring on dash entry ---
+  const lock = interpolate(frame, [sec(T.lockIn), sec(T.lockIn + 0.5)], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+  const dimOthers = 1 - lock * 0.78
+
+  // --- Compile scan sweep over the panel ---
+  const scan = interpolate(frame, [sec(T.compile), sec(T.compile + 0.7)], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+  const scanVisible = frame >= sec(T.compile) && frame < sec(T.compile + 0.9)
+
+  // --- Dash blooms out of the code line, then settles as the deck's hero ---
+  const cardS = spring({ frame: frame - sec(T.cardSpring), fps, config: { damping: 15, stiffness: 110, mass: 0.9 } })
+  const cardVisible = frame >= sec(T.cardSpring)
+  const bloomScale = interpolate(cardS, [0, 1], [0.16, 1]) // 0.16 → full hero bloom
+  // settle: shrink from full-screen hero to its (still-dominant) grid-hero size
+  const settle = interpolate(frame, [sec(T.deckStart), sec(T.deckStart + 0.9)], [1, 0.6], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+    easing: Easing.inOut(Easing.cubic),
+  })
+  const cardScale = bloomScale * settle
+  const breath = Math.sin((frame - sec(T.deckStart)) * 0.06) * 6 // gentle hero float
+  const cardY = interpolate(cardS, [0, 1], [40, 0]) + (frame > sec(T.deckStart) ? breath : 0)
+  const cardOpacity = interpolate(frame, [sec(T.cardSpring), sec(T.cardSpring + 0.35)], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+  const cardGlow = interpolate(cardS, [0, 0.6, 1], [0, 1, 0.7])
+  // materialize sliver → card: a bright horizontal flash at bloom origin
+  const sliver = interpolate(frame, [sec(T.cardSpring - 0.15), sec(T.cardSpring + 0.25), sec(T.cardSpring + 0.7)], [0, 1, 0], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+  })
+
+  // --- Stat stamp: 120 cards · live test counter ---
+  const statS = spring({ frame: frame - sec(T.statIn), fps, config: { damping: 16, stiffness: 160, mass: 0.7 } })
+  const statVisible = frame >= sec(T.statIn)
+  const statOpacity = statVisible ? interpolate(statS, [0, 0.3], [0, 1], { extrapolateRight: 'clamp' }) : 0
+  const testCount = Math.round(
+    interpolate(frame, [sec(T.statIn), sec(T.statIn + 1.4)], [0, 1407], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }),
+  )
+  const testsDone = testCount >= 1407
+
+  // --- Live status (always-on machine activity while typing) ---
+  const dotPhase = Math.floor((frame / 8) % 4)
+  const dots = '.'.repeat(dotPhase)
+  const liveTests = Math.round(
+    interpolate(frame, [sec(T.typeStart), sec(T.lockIn)], [0, 1407], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }),
+  )
+
+  const fade = fadeOut ? interpolate(frame, [sec(T.fadeStart), sec(T.end)], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }) : 0
+
+  const cursorOn = Math.floor(frame / 8) % 2 === 0
+
+  return (
+    <AbsoluteFill style={{ background: `radial-gradient(125% 95% at 50% 44%, #122a2e 0%, #0a1a1d 58%, ${C.bg} 100%)` }}>
+      {/* ===== CODE EDITOR PANEL ===== */}
+      <AbsoluteFill style={{ justifyContent: 'center', alignItems: 'center', opacity: panelDissolve }}>
+        <div
+          style={{
+            width: 1320,
+            transform: `scale(${panelEnter})`,
+            borderRadius: 12,
+            background: `linear-gradient(160deg, ${C.panel}, #060f11)`,
+            border: `1px solid ${C.panelEdge}`,
+            boxShadow: '0 40px 120px rgba(0,0,0,0.6)',
+            overflow: 'hidden',
+            position: 'relative',
+          }}
+        >
+          {/* window chrome */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '14px 20px', borderBottom: `1px solid ${C.panelEdge}`, background: '#08171a' }}>
+            <span style={{ width: 11, height: 11, borderRadius: '50%', background: '#e0431f' }} />
+            <span style={{ width: 11, height: 11, borderRadius: '50%', background: '#ffb000' }} />
+            <span style={{ width: 11, height: 11, borderRadius: '50%', background: '#54d6a0' }} />
+            <span style={{ marginLeft: 14, fontFamily: "'JetBrains Mono', monospace", fontSize: 17, color: C.chrome }}>card-defs.ts</span>
+            <span style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 9 }}>
+              <span style={{ width: 9, height: 9, borderRadius: '50%', background: C.green, boxShadow: `0 0 10px ${C.green}` }} />
+              <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 16, color: C.chrome }}>
+                claude is writing{typingDone ? ' ✓' : dots}
+              </span>
+            </span>
+          </div>
+
+          {/* code body */}
+          <div style={{ padding: '26px 30px 30px 24px', fontFamily: "'JetBrains Mono', monospace", fontSize: 25, lineHeight: '40px' }}>
+            {LINES.map((line, i) => {
+              const isHero = HERO_LINES.includes(i)
+              const op = isHero ? 1 : dimOthers
+              return (
+                <div key={i} style={{ display: 'flex', whiteSpace: 'pre', opacity: op, position: 'relative' }}>
+                  <span style={{ width: 38, color: '#2c5256', userSelect: 'none', flexShrink: 0 }}>{i + 1}</span>
+                  <span style={{ position: 'relative' }}>
+                    <RenderLine line={line} maxChars={lineChars[i]} />
+                    {/* typing cursor on the active line */}
+                    {i === activeLine && !typingDone && cursorOn && (
+                      <span style={{ display: 'inline-block', width: 11, height: 26, marginLeft: 1, background: C.amber, verticalAlign: 'text-bottom', boxShadow: `0 0 10px ${C.amber}` }} />
+                    )}
+                  </span>
+                </div>
+              )
+            })}
+          </div>
+
+          {/* focus ring on the hero entry */}
+          <div
+            style={{
+              position: 'absolute',
+              left: 18,
+              right: 18,
+              // lines are 40px tall; body padding-top 26 + chrome ~50 + 5 lines above hero
+              top: 50 + 26 + 5 * 40 - 4,
+              height: 2 * 40 + 8,
+              borderRadius: 8,
+              border: `1.5px solid ${C.amber}`,
+              boxShadow: `0 0 26px ${C.amber}55, inset 0 0 26px ${C.amber}22`,
+              opacity: lock * panelDissolve,
+              background: `${C.amber}0d`,
+            }}
+          />
+
+          {/* compile scan sweep */}
+          {scanVisible && (
+            <div
+              style={{
+                position: 'absolute',
+                left: 0,
+                right: 0,
+                top: `${scan * 100}%`,
+                height: 3,
+                background: `linear-gradient(90deg, transparent, ${C.amber}, transparent)`,
+                boxShadow: `0 0 24px ${C.amber}`,
+              }}
+            />
+          )}
+
+          {/* bottom status bar — live test ticker */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '12px 22px', borderTop: `1px solid ${C.panelEdge}`, background: '#08171a', fontFamily: "'JetBrains Mono', monospace", fontSize: 16 }}>
+            <span style={{ color: C.chrome }}>main</span>
+            <span style={{ color: C.comment }}>•</span>
+            <span style={{ color: liveTests >= 1407 ? C.green : C.chrome }}>
+              {liveTests >= 1407 ? '✓ 1407 tests passing' : `running tests… ${liveTests}`}
+            </span>
+            <span style={{ marginLeft: 'auto', color: C.string }}>+59 commits</span>
+          </div>
+        </div>
+      </AbsoluteFill>
+
+      {/* ===== THE TRANSFORM — card blooms from the code ===== */}
+      {sliver > 0 && (
+        <AbsoluteFill style={{ justifyContent: 'center', alignItems: 'center' }}>
+          <div style={{ width: 520, height: 4, background: `linear-gradient(90deg, transparent, ${C.amber}, transparent)`, opacity: sliver, boxShadow: `0 0 40px ${C.amber}`, transform: `translateY(${cardY}px)` }} />
+        </AbsoluteFill>
+      )}
+
+      {/* ===== THE DECK BLOOMS — 16 real cards assemble around the hero ===== */}
+      {frame >= sec(T.deckStart) && (
+        <AbsoluteFill style={{ justifyContent: 'center', alignItems: 'center' }}>
+          {DECK.map((type, j) => {
+            const { x, y } = slotPos(deckSlot(j))
+            const dist = Math.hypot(x - DASH_POS.x, y - DASH_POS.y)
+            const s = spring({ frame: frame - sec(T.deckStart) - dist * 0.028, fps, config: { damping: 14, stiffness: 135, mass: 0.7 } })
+            const sc = interpolate(s, [0, 1], [0.32, 1])
+            const op = interpolate(s, [0, 0.5], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+            return (
+              <div
+                key={type}
+                style={{
+                  position: 'absolute',
+                  left: '50%',
+                  top: '50%',
+                  transform: `translate(calc(-50% + ${x}px), calc(-50% + ${y}px)) scale(${sc})`,
+                  opacity: op,
+                  filter: 'brightness(0.62) saturate(0.92)',
+                }}
+              >
+                <TrailerCard type={type} width={GRID.cw} />
+              </div>
+            )
+          })}
+        </AbsoluteFill>
+      )}
+
+      {/* ===== THE HERO — dash, front & center, bright ===== */}
+      {cardVisible && (
+        <AbsoluteFill style={{ justifyContent: 'center', alignItems: 'center' }}>
+          {/* glow halo */}
+          <div style={{ position: 'absolute', width: 720, height: 720, borderRadius: '50%', background: `radial-gradient(circle, ${C.amber}38 0%, transparent 60%)`, opacity: cardGlow }} />
+          <div style={{ transform: `translateY(${cardY}px) scale(${cardScale})`, opacity: cardOpacity, filter: `drop-shadow(0 24px 60px rgba(0,0,0,0.6))` }}>
+            <TrailerCard type="dash-barlowe" width={440} />
+          </div>
+        </AbsoluteFill>
+      )}
+
+      {/* ===== STAT STAMP ===== */}
+      {statVisible && (
+        <AbsoluteFill style={{ justifyContent: 'flex-end', alignItems: 'center', paddingBottom: 88, opacity: statOpacity }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 24, fontFamily: "'JetBrains Mono', monospace" }}>
+            <span style={{ fontSize: 28, letterSpacing: '0.16em', color: C.text }}>
+              <b style={{ color: C.amber }}>43,357</b> LINES
+            </span>
+            <span style={{ color: C.comment, fontSize: 24 }}>·</span>
+            <span style={{ fontSize: 28, letterSpacing: '0.16em', color: C.text }}>
+              <b style={{ color: C.amber }}>120</b> CARDS
+            </span>
+            <span style={{ color: C.comment, fontSize: 24 }}>·</span>
+            <span style={{ fontSize: 28, letterSpacing: '0.16em', color: testsDone ? C.green : C.text }}>
+              <b style={{ color: testsDone ? C.green : C.amber }}>{testCount}</b> TESTS{testsDone ? ' ✓' : ''}
+            </span>
+          </div>
+        </AbsoluteFill>
+      )}
+
+      {/* cinematic overlays */}
+      <AbsoluteFill style={{ background: 'radial-gradient(130% 100% at 50% 48%, transparent 54%, #04080899 100%)', pointerEvents: 'none' }} />
+      <AbsoluteFill style={{ opacity: 0.05, pointerEvents: 'none', backgroundImage: GRAIN_URI, backgroundSize: '220px 220px' }} />
+      <AbsoluteFill style={{ background: '#000', opacity: fade }} />
+    </AbsoluteFill>
+  )
+}
+
+const GRAIN_URI =
+  "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")"

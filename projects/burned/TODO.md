@@ -17,7 +17,20 @@ the history. (Rule: `feedback-todo-is-not-a-diary.md`.)
 - Protocol version: **v6**
 - Phase 2 ElevenLabs spend: **$0.87 / $50** ceiling
 
-### Origin trailer v2 — ACTIVE (all 7 beats BUILT + assembled; next = full-cut review + polish)
+### Origin trailer v2 — ACTIVE (canonical cut chosen + polished; next = optional SFX/music upgrades)
+
+**CURRENT STATE (2026-05-31):** The 3:01 narrated assembly was superseded by a
+**~84s "short recut"**, then a finale-roster A/B was run and **B won**. The
+canonical cut is composition **`Trailer`** (`videos/origin-trailer/src/Trailer.tsx`)
+— quiet briefing-room cold open → story → roster operatives slam in as the FINALE
+(slam SFX) → boom → locked BURNED card ("…NARRATED BY MACHINES / ONE HUMAN
+DIRECTED"). Render: `pnpm render Trailer out/trailer.mp4`. The roster-at-open
+alternate is saved as `TrailerAltRosterOpen`; the old 3:01 cut + its beats are
+registered under `archive-*`. **See `videos/origin-trailer/README.md` for the full
+cut map.** The kid wears a Phillies HARPER #3 cream jersey (the anchor).
+
+Open (not blocking): the ElevenLabs key lacks `sound_generation` (finale SFX are
+DSP-synthesized — `scripts/synth-sfx.py`); a music bed is still $0/unstarted.
 
 Clean-slate rebuild after v1 teardown. Workspace + locked decisions:
 **`docs/plans/origin-trailer-v2/`** (read `README.md` first;

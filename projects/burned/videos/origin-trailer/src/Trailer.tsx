@@ -13,12 +13,16 @@ import slamHit from './assets/audio/slam-hit.wav'
 import burnedBoom from './assets/audio/burned-boom.wav'
 
 /**
- * SHORT CUT — FINALE-ROSTER A/B (experiment, 2026-05-31). Same VO + story as
- * ShortCut, roster SLAM moved from open to close. Tight cold open (VO starts at
- * 2s — no dead air) → story (beats 2-6) → Beat 6 ends on the warm "…Hmph" (no
- * card) → the roster operatives slam in as the cast reveal → lands on the LOCKED
- * BURNED end card (the "fucking good" one: …NARRATED BY MACHINES / ONE HUMAN
- * DIRECTED) → fade. ShortCut (committed) stays as the A-cut for comparison.
+ * TRAILER — THE CANONICAL CUT (chosen 2026-05-31, B won the A/B). Render:
+ * `pnpm render Trailer out/trailer.mp4`. ~84s.
+ *
+ * Tight briefing-room cold open (VO starts ~2s in, no dead air) → the story
+ * (beats 2-6) → Beat 6 ends on the warm "…Hmph" (no card) → the roster operatives
+ * slam in as the cast reveal (slam SFX) → a deep boom lands the LOCKED BURNED end
+ * card (…NARRATED BY MACHINES / ONE HUMAN DIRECTED) → fade.
+ *
+ * The roster-at-OPEN structure is preserved as the alternate in
+ * TrailerAltRosterOpen.tsx (comp id "TrailerAltRosterOpen").
  */
 
 const sec = (s: number) => Math.round(s * FPS)
@@ -30,12 +34,12 @@ const BEAT6_DUR = sec(18.4) // ends on black just after "…Hmph" (no end card)
 const ROSTER_FROM = sec(at(6)) + BEAT6_DUR
 const ROSTER_SLAM_DUR = sec(5.6) // reticle + operative slams + flurry, cut before the roster's own BURNED
 const CARD_FROM = ROSTER_FROM + sec(5.0) // locked end card slams in as the flurry peaks
-export const SHORT_CUT_FINALE_FRAMES = CARD_FROM + BURNED_END_CARD_FRAMES
+export const TRAILER_FRAMES = CARD_FROM + BURNED_END_CARD_FRAMES
 
 // Operative-slam impact times (roster-local sec): INTRO 0.85 + i*CARD_STEP 0.68.
 const SLAM_LOCAL = [0.85, 1.53, 2.21, 2.89, 3.57, 4.25]
 
-export const ShortCutFinale: React.FC = () => {
+export const Trailer: React.FC = () => {
   return (
     <AbsoluteFill style={{ background: '#000' }}>
       {/* single VO track */}

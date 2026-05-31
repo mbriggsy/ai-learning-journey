@@ -9,9 +9,12 @@ import { Beat6Wink, BEAT6_WINK_FRAMES } from './scenes/Beat6Wink'
 import voMaster from '../out/vo/janet-vo-master.wav'
 
 /**
- * SHORT CUT (2026-05-31) — the brag-forward recut, full 7-scene assembly to the
- * new 73.7s Janet VO. One VO track; scenes sequenced at (VO_START + manifest
- * beat start).
+ * TRAILER — ALTERNATE (roster-at-OPEN). The retired A-cut, SAVED for reference
+ * after B (Trailer.tsx, roster-as-finale) won the A/B on 2026-05-31. Render:
+ * `pnpm render TrailerAltRosterOpen out/trailer-alt-A.mp4`.
+ *
+ * Brag-forward recut, full 7-scene assembly to the 70.8s Janet VO. One VO track;
+ * scenes sequenced at (VO_START + manifest beat start).
  *
  * The roster cold open runs as a kinetic pre-title; Janet's hook line lands over
  * the BURNED hold (VO_START), then the story drives:
@@ -35,9 +38,9 @@ const VO_START = 5.5 // VO master begins here (hook lands over the BURNED hold)
 const at = (beat: number) => VO_START + VO_BEAT[beat - 1]
 
 // Full cut: beat 6 begins at at(6) and runs its own length (VO tail + end card).
-export const SHORT_CUT_FRAMES = sec(at(6)) + BEAT6_WINK_FRAMES
+export const TRAILER_ALT_FRAMES = sec(at(6)) + BEAT6_WINK_FRAMES
 
-export const ShortCut: React.FC = () => {
+export const TrailerAltRosterOpen: React.FC = () => {
   return (
     <AbsoluteFill style={{ background: '#000' }}>
       {/* single VO track */}

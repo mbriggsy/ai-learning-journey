@@ -93,7 +93,7 @@ const Voiceprint: React.FC<{ frame: number; live: boolean; color: string; w?: nu
   )
 }
 
-export const Beat6Wink: React.FC = () => {
+export const Beat6Wink: React.FC<{ showEndCard?: boolean }> = ({ showEndCard = true }) => {
   const frame = useCurrentFrame()
   const { fps } = useVideoConfig()
 
@@ -109,7 +109,9 @@ export const Beat6Wink: React.FC = () => {
 
   // ── WARMTH — guard drops ──
   const warmth = interpolate(frame, [sec(T.warmth), sec(T.warmth + 1.2)], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
-  const warmthOut = interpolate(frame, [sec(T.endCard - 0.6), sec(T.endCard + 0.5)], [1, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+  const warmthOut = showEndCard
+    ? interpolate(frame, [sec(T.endCard - 0.6), sec(T.endCard + 0.5)], [1, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+    : 1 // finale variant: warmth holds through "…Hmph", then the black fade covers it
   const anchorKb = interpolate(frame, [sec(T.warmth), sec(T.endCard)], [1.06, 1.13], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
 
   // ── END CARD ──
@@ -119,7 +121,9 @@ export const Beat6Wink: React.FC = () => {
   const endOp = endVisible ? interpolate(endS, [0, 0.3], [0, 1], { extrapolateRight: 'clamp' }) : 0
   const thesisOp = interpolate(frame, [sec(T.endCard + 0.5), sec(T.endCard + 1.2)], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
 
-  const fade = interpolate(frame, [sec(T.fadeStart), sec(T.end)], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+  const fade = showEndCard
+    ? interpolate(frame, [sec(T.fadeStart), sec(T.end)], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+    : interpolate(frame, [sec(17.4), sec(18.4)], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }) // finale variant: fade to black after "…Hmph"
 
   const bgWarm = warmth * warmthOut
 
@@ -259,8 +263,8 @@ export const Beat6Wink: React.FC = () => {
         </AbsoluteFill>
       )}
 
-      {/* ===== END CARD — quiet BURNED + thesis bookend ===== */}
-      {endVisible && (
+      {/* ===== END CARD — quiet BURNED + thesis bookend (suppressed in finale variant) ===== */}
+      {showEndCard && endVisible && (
         <AbsoluteFill style={{ justifyContent: 'center', alignItems: 'center', opacity: endOp }}>
           <div style={{ textAlign: 'center', transform: `scale(${endScale})` }}>
             <div style={{ fontFamily: display, fontWeight: 900, fontSize: 150, lineHeight: 0.9, letterSpacing: '-0.02em', color: C.cream, textShadow: `0 0 70px ${C.burn}77` }}>

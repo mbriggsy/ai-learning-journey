@@ -17,6 +17,7 @@ import { Beat2Man, BEAT2_MAN_FRAMES } from './scenes/Beat2Man'
 import { Beat5Gauntlet, BEAT5_GAUNTLET_FRAMES } from './scenes/Beat5Gauntlet'
 import { Beat6Wink, BEAT6_WINK_FRAMES } from './scenes/Beat6Wink'
 import { ShortCut, SHORT_CUT_FRAMES } from './ShortCut'
+import { ShortCutFinale, SHORT_CUT_FINALE_FRAMES } from './ShortCutFinale'
 import { OriginTrailer } from './OriginTrailer'
 import { FPS, WIDTH, HEIGHT, TOTAL_FRAMES } from './lib/timeline'
 
@@ -157,6 +158,14 @@ export const Root: React.FC = () => {
         id="ShortCut"
         component={ShortCut}
         durationInFrames={SHORT_CUT_FRAMES}
+        fps={FPS}
+        width={WIDTH}
+        height={HEIGHT}
+      />
+      <Composition
+        id="ShortCutFinale"
+        component={ShortCutFinale}
+        durationInFrames={SHORT_CUT_FINALE_FRAMES}
         fps={FPS}
         width={WIDTH}
         height={HEIGHT}

@@ -27,7 +27,9 @@ import voMaster from '../out/vo/janet-vo-master.wav'
 const sec = (s: number) => Math.round(s * FPS)
 
 // Manifest beat starts (global VO sec) + total — from out/vo/manifest.json.
-const VO_BEAT = [0, 4.2, 22.47, 28.04, 46.71, 56.52, 73.73]
+// (b4 shortened after dropping "Two weeks", the test-attack clause, AND "120
+//  cards"; b3 "and he directed" added ~0.3s. Total 73.73 → 70.77.)
+const VO_BEAT = [0, 4.2, 22.47, 28.36, 43.75, 53.56, 70.77]
 const VO_START = 5.5 // VO master begins here (hook lands over the BURNED hold)
 
 const at = (beat: number) => VO_START + VO_BEAT[beat - 1]
@@ -53,12 +55,15 @@ export const ShortCut: React.FC = () => {
         <Beat2Man />
       </Sequence>
 
-      {/* 3 + 4 — THE HINGE → THE MACHINE BUILDS (engine spans the brag) */}
-      <Sequence from={sec(at(3))} durationInFrames={sec(at(5)) - sec(at(3))} name="3-4 Build">
+      {/* 3 + 4 — THE HINGE → THE MACHINE BUILDS (engine spans the brag).
+          Held 0.5s past beat-5 start so Beat5 cross-dissolves in over its final
+          frame (slicker than a hard cut). fadeOut={false} → holds, no black. */}
+      <Sequence from={sec(at(3))} durationInFrames={sec(at(5)) - sec(at(3)) + sec(0.5)} name="3-4 Build">
         <BuildHero fadeOut={false} />
       </Sequence>
 
-      {/* 5 — THE GAUNTLET: swarm of machines → IT HELD → "the thing is good" */}
+      {/* 5 — THE GAUNTLET: swarm of machines → IT HELD → "the thing is good".
+          Declared after Build → fades in (sceneIn) on top during the overlap. */}
       <Sequence from={sec(at(5))} durationInFrames={sec(at(6)) - sec(at(5))} name="5 Gauntlet">
         <Beat5Gauntlet />
       </Sequence>

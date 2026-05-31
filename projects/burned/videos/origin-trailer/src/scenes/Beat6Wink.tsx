@@ -60,8 +60,8 @@ const T = {
   warmth: 13.7, // "This kid is starting to impress me." — guard drops
   hmph: 16.17, // "…Hmph."
   endCard: 17.4, // quiet BURNED + thesis
-  fadeStart: 19.2,
-  end: 19.9,
+  fadeStart: 20.2, // +1s hold on BURNED before the fade (let it breathe)
+  end: 20.9,
 }
 export const BEAT6_WINK_FRAMES = sec(T.end)
 
@@ -271,7 +271,7 @@ export const Beat6Wink: React.FC = () => {
                 WRITTEN · DESIGNED · CODED · SCORED · NARRATED BY MACHINES
               </span>
               <span style={{ fontFamily: mono, fontSize: 19, letterSpacing: '0.42em', color: C.amber }}>
-                ONE HUMAN POINTED.
+                ONE HUMAN DIRECTED.
               </span>
             </div>
           </div>

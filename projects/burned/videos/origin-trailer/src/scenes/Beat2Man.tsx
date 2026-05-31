@@ -30,12 +30,13 @@ const C = {
   panelEdge: '#1b3a3e',
 }
 
+// Local frames (beat 2 starts global 9.7s → local = global − 9.7).
 const T = {
   pipeIn: 0.3,
-  cardsIn: 5.6, // "his favorite card game"
-  cardsOut: 10.8,
-  screenRise: 11.0, // "deserved a screen"
-  editorAt: 12.79, // b2-problem — "no idea how to build it himself"
+  cardsIn: 8.0, // global ~17.7s — lands on "his favorite card game" (was 15.3s, too early)
+  cardsOut: 13.0, // cards linger through "deserved a screen", fade on "one problem"
+  screenRise: 13.6, // global ~23.3s — empty terminal rises
+  editorAt: 14.3, // global ~24.0s — "0 lines" lands exactly on "no idea how to build it himself"
   end: 18.27,
 }
 export const BEAT2_MAN_FRAMES = sec(T.end)
@@ -131,12 +132,11 @@ export const Beat2Man: React.FC = () => {
               </span>
             </div>
             <div style={{ height: 360, position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-              {/* before editor: a card on the screen */}
-              <div style={{ opacity: 1 - toEditor, transform: `scale(${interpolate(toEditor, [0, 1], [1, 0.7])})`, position: 'absolute' }}>
-                <TrailerCard type="dash-barlowe" width={200} />
-              </div>
-              {/* editor: empty, blinking cursor — "no idea how to build it" */}
-              <div style={{ opacity: toEditor, position: 'absolute', inset: 0, padding: '24px 28px', fontFamily: "'JetBrains Mono', monospace", fontSize: 22 }}>
+              {/* the screen is EMPTY — he had no idea how to build it. No rendered
+                  card here: a finished card before any code is a contradiction,
+                  and it would steal Dash's real entrance (the bloom-from-code in
+                  BuildHero). Just the bare cursor on line 1 — 0 lines. */}
+              <div style={{ position: 'absolute', inset: 0, padding: '24px 28px', fontFamily: "'JetBrains Mono', monospace", fontSize: 22 }}>
                 <span style={{ color: '#2c5256', marginRight: 16 }}>1</span>
                 <span style={{ display: 'inline-block', width: 11, height: 24, background: C.chrome, opacity: cursorOn ? 0.8 : 0.15, verticalAlign: 'text-bottom' }} />
               </div>

@@ -135,7 +135,7 @@ export const JANET_CUES: readonly Cue[] = [
     kind: 'speech',
     id: 'b3-machine',
     beat: 3,
-    text: 'He handed it to a machine. And he pointed.',
+    text: 'He handed it to a machine. And he directed.',
   },
 
   silence('b3-to-b4', 3, 'boundary'),
@@ -145,9 +145,14 @@ export const JANET_CUES: readonly Cue[] = [
     kind: 'speech',
     id: 'b4-brag',
     beat: 4,
-    // Spoken roundings round DOWN (honest): code 43,357 → "forty-three thousand";
-    // tests 1407 → "fourteen hundred"; 120 cards exact. Numbers spelled so v3 reads as words.
-    text: 'Two weeks. Forty-three thousand lines of code, in a language he\'d never touched. A hundred and twenty cards. Fourteen hundred tests, written to attack his own game.',
+    // Spoken roundings round DOWN (honest, nearest thousand) from the canonical
+    // ai-journey-stats dashboard: code 43,357 → "forty-three thousand"; test code
+    // 29,033 → "twenty-nine thousand"; planning 62,082 → "sixty-two thousand".
+    // Numbers spelled so the TTS reads them as words. The metrics are LINES only
+    // (code/tests/planning) — "120 cards" dropped (off-axis stat) and the 1,407
+    // test-COUNT lives in beat 5 (the gauntlet/attack), not here. "Two weeks"
+    // dropped: this beat is about deliberateness (more planning than code), not speed.
+    text: 'Forty-three thousand lines of code, in a language he\'d never touched. Twenty-nine thousand more in tests. Sixty-two thousand in planning.',
   },
   silence('b4-beat', 4, 'beat'),
   {

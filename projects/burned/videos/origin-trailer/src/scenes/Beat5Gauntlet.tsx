@@ -95,17 +95,20 @@ export const Beat5Gauntlet: React.FC = () => {
   // Warm "good" bloom.
   const good = interpolate(frame, [sec(T.good), sec(T.good + 1.3)], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
 
-  // Cluster jitter under assault; settles bright on "good".
-  const jitterAmp = assault * 9
+  // Cluster jitter under assault; winds down to DEAD STILL by "the thing is good".
+  const settle = interpolate(frame, [sec(T.held), sec(T.good)], [1, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+  const jitterAmp = assault * 9 * settle
   const jx = Math.sin(frame * 0.9) * jitterAmp
   const jy = Math.cos(frame * 1.13) * jitterAmp
   const clusterScale = interpolate(frame, [sec(T.good), sec(T.good + 1.1)], [1, 1.06], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic) })
   const clusterBright = 0.78 + good * 0.34
 
   const fade = interpolate(frame, [sec(T.fadeStart), sec(T.end)], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+  // Cross-dissolve IN over BuildHero's held final frame (slicker than a hard cut).
+  const sceneIn = interpolate(frame, [0, sec(0.5)], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
 
   return (
-    <AbsoluteFill style={{ background: `radial-gradient(125% 95% at 50% 46%, ${good > 0 ? '#16302e' : '#1a2b2c'} 0%, #0c1719 58%, ${C.bg} 100%)`, overflow: 'hidden' }}>
+    <AbsoluteFill style={{ opacity: sceneIn, background: `radial-gradient(125% 95% at 50% 46%, ${good > 0 ? '#16302e' : '#1a2b2c'} 0%, #0c1719 58%, ${C.bg} 100%)`, overflow: 'hidden' }}>
       {/* ===== SWARM — machine agents converge + fire red attack beams ===== */}
       <AbsoluteFill style={{ pointerEvents: 'none' }}>
         {Array.from({ length: SWARM_N }).map((_, i) => {

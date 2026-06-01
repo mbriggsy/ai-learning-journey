@@ -78,7 +78,7 @@ Committed artifacts: `vercel.json` (CSP/cache/SPA-rewrite + **`buildCommand: pnp
 
 ## Phase 9 — visual polish (DONE — `coded:` stamped 2026-05-27)
 
-**Briggsy signed off after eye-on review (phone, both modes, all routes); `coded:` stamped 2026-05-27.** README verification 12–18 = his eye-on pass; 17 (live site: 0 console/network/404) + 19 (zero hex in `src/components/`) re-verified with evidence 2026-05-27. **All phases −1 → 9 are now `coded:` — the build is complete.** Site 153 tests + tool 44 tests, typecheck + build clean; live at https://ai-journey-stats.vercel.app.
+**Briggsy signed off after eye-on review (phone, both modes, all routes); `coded:` stamped 2026-05-27.** README verification 12–18 = his eye-on pass; 17 (live site: 0 console/network/404) + 19 (zero hex in `src/components/`) re-verified with evidence 2026-05-27. **All phases −1 → 9 are now `coded:` — the build is complete.** Site 161 tests + tool 44 tests, typecheck + build clean; live at https://ai-journey-stats.vercel.app.
 
 **Deferred (non-blocking, NOT bar gates):**
 - **Satoshi subset** — toolchain PROVEN (fonttools+brotli installed on Python 3.14; subset = 15.1KB vs 41.6KB, ~26KB first-paint win). NOT wired. To wire: `python -m fontTools.subset public/assets/fonts/Satoshi-Variable.woff2 --unicodes=U+0020-007E,U+00A0,U+00B7,U+2013,U+2014,U+2192,U+2026 --flavor=woff2 --output-file=public/assets/fonts/Satoshi-Variable.woff2`, then eye-check the hero number + tile titles still render all glyphs.

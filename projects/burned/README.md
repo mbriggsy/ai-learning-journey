@@ -11,7 +11,7 @@
 
 <p align="center">
   <a href="https://burnedgame.pages.dev/board"><strong>▶ Play live</strong></a> ·
-  <a href="https://youtu.be/c-QTDREcIzI">Watch the trailer</a> ·
+  <a href="https://youtu.be/Aa0U2h1kNgQ">Watch the trailer</a> ·
   <a href="#built-by-machines-directed-by-one-human">How it was built</a>
 </p>
 
@@ -23,7 +23,7 @@ It's a spy-comedy reskin of *Exploding Kittens: Party Pack* (the [rules referenc
 
 ## ▶ Watch the trailer
 
-[![Watch the BURNED origin trailer](https://img.youtube.com/vi/c-QTDREcIzI/maxresdefault.jpg)](https://youtu.be/c-QTDREcIzI)
+[![Watch the BURNED origin trailer](https://img.youtube.com/vi/Aa0U2h1kNgQ/maxresdefault.jpg)](https://youtu.be/Aa0U2h1kNgQ)
 
 ## Play it now
 

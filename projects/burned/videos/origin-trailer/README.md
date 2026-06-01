@@ -40,3 +40,22 @@ pnpm render TrailerAltRosterOpen out/trailer-alt-A.mp4   # the saved alternate
   any VO regen.
 - Scenes are silent; the cut composition owns the single VO track.
 - Real cards via `src/lib/TrailerCard.tsx` (the FoundationProof borrow path).
+
+## Voice-pipeline gotchas (regenerating VO)
+
+Hardened during the v2 build; the client in `scripts/tts-clients/` already ports
+these — mind them if you extend the pipeline. (Deeper writeups: insights 054 /
+062 / 067 and `docs/plans/origin-trailer/phase-2-voice-pipeline.md`.)
+
+- **PCM→MP3 silent downgrade on Creator tier** — request `mp3_44100_192`, then
+  convert to 48k mono WAV via ffmpeg.
+- **Loudnorm drift on short cues (≤3s)** — runs 1–3 LU off −16; track, don't
+  pre-correct.
+- **`silencedetect`/`loudnorm` write to STDERR** — use `spawnSync`, not `execFileSync`.
+- **FFmpeg muxer fails on `.wav.tmp`** — pass an explicit `-f wav`.
+- **`eleven_v3` rejects `previous_text`/`next_text` priming** (400).
+- **First `pnpm install` here needs the `--ignore-workspace` CLI flag** — the
+  `.npmrc` setting alone doesn't stop the workspace walk-up (insight 054).
+- **Remotion loads `remotion.config.ts` as CJS** — resolve alias paths via
+  `process.cwd()`, NOT `import.meta.dirname` (empty under CJS).
+- **Cold-read gate = N=1 Briggsy self-read** (`feedback-listener-panels-default-to-n1`).

@@ -23,5 +23,8 @@ Thumbs.db
 # Playwright MCP verification artifacts (snapshots, console/network logs)
 .playwright-mcp/
 
+# Screenshot dropbox — Briggsy saves review screenshots here; scratch, never committed.
+temp/
+
 # ce:review run artifacts (transient, per-run)
 .context/

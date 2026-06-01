@@ -4,29 +4,6 @@
 
 > **House rule — TODO is NOT a diary.** Actionable items only. No session history, no "what we did" logs, no narrative addenda. The git log has the history. If a line isn't an open thing Claude or Briggsy can act on, it doesn't belong here. Strip cruft when you find it.
 
-## OPEN (P0, 2026-06-01) — fix Vercel auto-deploy (root cause, NOT a deploy hook)
-
-The live site is STALE: `scannedAt` **2026-05-28** (4 days old). Today's `pnpm refresh`
-is committed (`2bcf4699` — corrects BURNED's liveUrl to `burnedgame.pages.dev` + credits
-the v2 trailer renders) but **never published** — Vercel didn't build it.
-
-**Symptom:** of 3 pushes today touching this dir, only `cf98c853` deployed (~20s after
-push); `2bcf4699` (586-line stats change) and `e5c64863` (README change) did **not**
-trigger a build. Auto-deploy fires *sometimes* and silently skips most pushes.
-**Briggsy: fix the auto-deploy itself — NOT a deploy-hook workaround.**
-
-**Leading suspect:** `vercel.json` → `"ignoreCommand": "git diff --quiet HEAD^ HEAD ./"`.
-VERIFY (don't assume): (a) Vercel's exit-code contract for ignoreCommand (which exit =
-build vs skip), and (b) whether Vercel's shallow clone even contains `HEAD^` — if it's
-depth-1, `HEAD^` is missing and the diff's behavior is undefined, which would explain the
-inconsistent skips.
-
-**Next session (needs Vercel dashboard — Briggsy):** Project → Settings → Git → inspect
-**Ignored Build Step** + **Root Directory**; open Deployments and read why `2bcf4699` /
-`e5c64863` were skipped/errored. Likely fix: repair or drop the `ignoreCommand` (or make
-`HEAD^` resolvable). Then re-test: a `pnpm refresh` push must deploy **every** time.
-A successful deploy of HEAD republishes today's data (burnedgame / 170,535 lines).
-
 ## Where the depth lives
 
 - **`docs/ideation.md`** — WHAT decisions (audience, hero framing, content shape, CTA, bar revisions, mobile + light/dark, **§11 authorship-is-silent**). The steering reference. Re-read before any visual or content call.
@@ -93,7 +70,7 @@ Full review artifact: `.context/compound-engineering/ce-review/20260527-p6p7-cod
 
 **Live: https://ai-journey-stats.vercel.app** — Vercel **dashboard git-integration** (NOT the CLI); auto-redeploys on any push touching `projects/ai-journey-stats/**`. Verified eye-on the LIVE site: light + dark + mobile-390 all at the bar, 0 console errors, 0 failed loads (9/9 resources 200), real fresh data (9.45B tokens · 30-day window · "as of May 27, 2026" · 536,384 lines · 15 projects), `/data/stats.json` = 200 `application/json` (not the SPA fallback). `coded:` stamped on phase-8. Project renamed in Vercel `ai-learning-journey`→`ai-journey-stats` (the earlier `-lac` was a global-namespace collision suffix on the default domain).
 
-Committed artifacts: `vercel.json` (CSP/cache/SPA-rewrite + `ignoreCommand` build-skip + **`buildCommand: pnpm exec vite build`** — see Landmines), `.github/workflows/verify-ai-journey-stats.yml` (LIGHT vite-build only), skill `refresh-ai-journey-stats`.
+Committed artifacts: `vercel.json` (CSP/cache/SPA-rewrite + **`buildCommand: pnpm exec vite build`** — see Landmines; **no `ignoreCommand`** — removed 2026-06-01, see Landmine below), `.github/workflows/verify-ai-journey-stats.yml` (LIGHT vite-build only), skill `refresh-ai-journey-stats`.
 
 **Optional, non-blocking:** the GitHub `verify` workflow + Vercel both skip typecheck (can't run tsc without the tool's gitignored `dist/`). True CI typecheck would need either building the tool in CI or repointing `src/types.ts`/`scripts/refresh-stats.ts` at the tool's committed `src/*.ts` instead of `dist/*.js` — deferred (Decision 5 keeps the deploy path tool-free; typecheck stays a local gate via `pnpm build`/`pnpm typecheck`).
 
@@ -137,5 +114,6 @@ Committed artifacts: `vercel.json` (CSP/cache/SPA-rewrite + `ignoreCommand` buil
 - **ai-journey-stats stats.json self-counts** into `meta` totals (~0.7%, converges) — expected "count everything" behavior, not a bug.
 - **★ GIT DATES ARE UNRELIABLE PER-PROJECT in this monorepo (found 2026-05-25).** `projectAgeDays`/`firstCommitISO`/`lastCommitISO` are path-scoped first→last commit, but several projects' "first commit" is a Feb-21 bulk import ("Initial commit - Tic-Tac-Toe, PacMan, and OpenClaw") = the repo's birthday, not the project's start; "last commit" is any incidental later touch (README, the editorial configs). So per-project age/duration from git is garbage (tic-tac-toe showed 76d for ~1hr of work). The age ribbon was CUT. **Phase 5's cadence viz RESOLVED 2026-05-26:** `isCadenceTrustworthy(timeline)` gates the sparkline + callouts — rendered only where git history is a genuine rhythm (no 2026-02-21 bulk-import day, `activeDays >= 5`); the polluted toys (tic-tac-toe, pacman) omit the whole Movement 5. DetailHero also dropped the "Born N days ago" clause (same pollution). The iteration caption (asset revisions/discarded/eval-runs) is NOT git-date-derived → kept, independent of the gate. The trustworthy signal for real build-time is still the **session JSONLs** (active-work timestamps), NOT git dates — but those are mostly rotated/path-mismatched (8/9 projects show `tokens:null`), so a future build-time viz can't lean on them yet.
 - **FUTURE IDEA (Briggsy, 2026-05-25 — not committed):** show the **progression of complexity + build-time across projects** — narrative = "even agentic SDLC takes real time (way less than human-driven, but time nonetheless)." Feasible via session-JSONL active-work-time (see git-dates landmine above), NOT git calendar dates. Parking-lot; revisit when the per-project time signal exists.
+- **NO `ignoreCommand` in `vercel.json` — do NOT re-add it (removed 2026-06-01).** It once held `git diff --quiet HEAD^ HEAD ./` to skip builds for non-stats commits. Root cause of the stale-site bug (confirmed in Vercel build logs): it collides with Vercel's *superseded-commit auto-cancellation*. In a rapid push burst, a stats-bearing commit's deploy gets canceled in favor of a later unrelated (e.g. burned-only) commit; that survivor's `HEAD^..HEAD` diff sees no stats-dir change and skips — even though its cumulative tree DOES contain the fresh `stats.json`. The one-commit window asks "did the LAST commit touch this dir," not "is the deployed tree different from live." Removing it makes freshness correct-by-construction (every push builds the tip, which always carries the latest committed data); supersession cancellation stays on and is harmless. Cost = unrelated monorepo commits also rebuild this tiny static site (~12s, identical output). **Never trade that back for a build-skip optimization — a wrong skip silently staled the site, defeating its entire purpose.**
 - **Vercel build MUST be `pnpm exec vite build`, NOT `pnpm build` (= `tsc --noEmit && vite build`).** `src/types.ts` (type-only) + `scripts/refresh-stats.ts` (value) import from `tools/project-metrics/dist/*.js`, which is **gitignored** → absent on Vercel's clean clone → `tsc` fails: TS2307 on the contract import cascading to a TS7006 implicit-any storm (14 errors, ONE root cause). esbuild ERASES the type-only import and never bundles the Node-only refresh script, so `vite build` alone succeeds (proven by hiding `dist/` locally). Enforced via `buildCommand` in `vercel.json`; local `pnpm build` keeps its full typecheck because `dist/` exists locally. Decision 5 = "deploy path has zero sibling-tool build dep" — never repoint Vercel at `pnpm build`.
 - **Router dep is `react-router` (v7), NOT `react-router-dom`.** pnpm strict node_modules won't hoist the transitive `react-router`, so `react-router-dom` makes the canonical `import … from 'react-router'` fail. Never `pnpm add react-router-dom`. Also: `package.json` keeps `pnpm.onlyBuiltDependencies: ["esbuild"]` or Vite loses its platform binary.

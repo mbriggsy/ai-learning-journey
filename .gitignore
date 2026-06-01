@@ -26,3 +26,4 @@ Thumbs.db
 # Vault config (app.json, core-plugins.json, appearance.json) stays tracked.
 .obsidian/workspace.json
 .obsidian/workspace-mobile.json
+.secrets/

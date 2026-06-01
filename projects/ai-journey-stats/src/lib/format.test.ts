@@ -5,6 +5,7 @@ import {
   formatInt,
   formatBytes,
   formatModelList,
+  splitSentences,
   padCounter,
   formatShortDate,
   formatAsOf,
@@ -57,23 +58,53 @@ describe('formatBytes', () => {
 })
 
 describe('formatModelList', () => {
-  it('uppercases + joins with middot', () =>
+  it('uppercases into tokens (no join — the Hero owns separators + nowrap)', () =>
     expect(
       formatModelList([
         { model: 'Opus 4.7', sessions: 1, tokensProcessed: 1 },
         { model: 'Sonnet 4.6', sessions: 1, tokensProcessed: 1 },
       ]),
-    ).toBe('OPUS 4.7 · SONNET 4.6'))
-  it('empty breakdown yields no clause', () => expect(formatModelList([])).toBe(''))
+    ).toEqual(['OPUS 4.7', 'SONNET 4.6']))
+  it('empty breakdown yields no tokens', () => expect(formatModelList([])).toEqual([]))
   it('drops a 0-token model (e.g. the <synthetic> parser sentinel)', () =>
     expect(
       formatModelList([
         { model: 'Opus 4.7', sessions: 39224, tokensProcessed: 10_719_704_867 },
         { model: '<synthetic>', sessions: 3, tokensProcessed: 0 },
       ]),
-    ).toBe('OPUS 4.7'))
-  it('all-zero breakdown yields no clause', () =>
-    expect(formatModelList([{ model: '<synthetic>', sessions: 3, tokensProcessed: 0 }])).toBe(''))
+    ).toEqual(['OPUS 4.7']))
+  it('all-zero breakdown yields no tokens', () =>
+    expect(formatModelList([{ model: '<synthetic>', sessions: 3, tokensProcessed: 0 }])).toEqual(
+      [],
+    ))
+})
+
+describe('splitSentences', () => {
+  it('splits a multi-sentence one-liner', () =>
+    expect(splitSentences('Couch-of-friends spy comedy. Archer-coded card game in the browser.')).toEqual([
+      'Couch-of-friends spy comedy.',
+      'Archer-coded card game in the browser.',
+    ]))
+  it('handles three short sentences', () =>
+    expect(splitSentences('Pac-Man clone. Browser. No frameworks.')).toEqual([
+      'Pac-Man clone.',
+      'Browser.',
+      'No frameworks.',
+    ]))
+  it('does NOT split on a colon or list commas', () =>
+    expect(splitSentences('Slash-commands Claude reaches for: distill, brief, doc-audit.')).toEqual([
+      'Slash-commands Claude reaches for: distill, brief, doc-audit.',
+    ]))
+  it('does NOT split inside an en-dash range or em-dash clause', () =>
+    expect(
+      splitSentences('Real-time card game for 2–10 players — Archer-coded over Workers.'),
+    ).toEqual(['Real-time card game for 2–10 players — Archer-coded over Workers.']))
+  it('single sentence is a no-op', () =>
+    expect(splitSentences('Briggsy family verified.')).toEqual(['Briggsy family verified.']))
+  it('empty / whitespace yields []', () => {
+    expect(splitSentences('')).toEqual([])
+    expect(splitSentences('   ')).toEqual([])
+  })
 })
 
 describe('formatShortDate', () => {

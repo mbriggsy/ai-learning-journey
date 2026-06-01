@@ -1,6 +1,7 @@
 import clsx from 'clsx'
 import type { ProjectReport } from '@/types'
 import { formatInt } from '@/lib/format'
+import { Sentences } from '@/components/Sentences/Sentences'
 import styles from './DetailHero.module.css'
 
 /**
@@ -22,7 +23,11 @@ export function DetailHero({ project }: { project: ProjectReport }) {
       <p className={clsx(styles.subtitle, 'tabular')}>
         {formatInt(git.totalCommits)} commits · {formatInt(grandTotals.allFiles)} files
       </p>
-      {editorial?.oneLiner && <p className={styles.oneLiner}>{editorial.oneLiner}</p>}
+      {editorial?.oneLiner && (
+        <p className={styles.oneLiner}>
+          <Sentences text={editorial.oneLiner} />
+        </p>
+      )}
     </header>
   )
 }

@@ -1,0 +1,5 @@
+/* One sentence per line. block so a long sentence still wraps naturally within its own line,
+   rather than every sentence sharing one wrapped paragraph. */
+.line {
+  display: block;
+}

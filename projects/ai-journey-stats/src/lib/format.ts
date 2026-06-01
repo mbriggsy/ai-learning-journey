@@ -53,19 +53,35 @@ export function formatBytes(n: number): string {
 }
 
 /**
- * Derived model clause for the unit label (Phase 3 Decision 3 — DATA-DERIVED, never
+ * Derived model names for the unit label (Phase 3 Decision 3 — DATA-DERIVED, never
  * hardcoded). Models that processed ZERO tokens are dropped: the clause is a "what
  * built this" credibility signal, and a 0-token model built nothing. This also keeps
  * parser sentinels like `<synthetic>` (sessions with an undetermined model, 0 tokens)
  * off the hero — rendering a literal "<SYNTHETIC>" on the centerpiece is a slop signal.
  * The filter is principled, not a name blocklist, so it stays rotation-immune.
- * Empty (or all-zero) breakdown → "" (no trailing clause).
+ *
+ * Returns the uppercased names as TOKENS (not a joined string): the Hero renders each as a
+ * non-breaking segment so a name like "OPUS 4.7" never splits across a line break (the wrap
+ * lands only on the ` · ` separators between segments). Empty/all-zero breakdown → [].
  */
-export function formatModelList(models: ModelBreakdown): string {
-  return models
-    .filter((m) => m.tokensProcessed > 0)
-    .map((m) => m.model.toUpperCase())
-    .join(' · ')
+export function formatModelList(models: ModelBreakdown): string[] {
+  return models.filter((m) => m.tokensProcessed > 0).map((m) => m.model.toUpperCase())
+}
+
+/**
+ * Split a short editorial string into its sentences (one per element) so a caller can render
+ * each on its own line — one-liners read better as a sentence stack (Briggsy, 2026-06-01).
+ * Uses the platform's locale-aware sentence segmenter, which correctly leaves hyphenated terms
+ * ("Pac-Man"), en/em-dashes ("2–10", " — "), version numbers, and colons intact — unlike a
+ * naive period-split. Degrades to the whole string as one line where Segmenter is unavailable
+ * (older engines); single-sentence input is a no-op. Empty/whitespace → [].
+ */
+export function splitSentences(text: string): string[] {
+  const trimmed = text.trim()
+  if (!trimmed) return []
+  if (typeof Intl === 'undefined' || !('Segmenter' in Intl)) return [trimmed]
+  const segmenter = new Intl.Segmenter('en', { granularity: 'sentence' })
+  return Array.from(segmenter.segment(trimmed), (s) => s.segment.trim()).filter(Boolean)
 }
 
 /**

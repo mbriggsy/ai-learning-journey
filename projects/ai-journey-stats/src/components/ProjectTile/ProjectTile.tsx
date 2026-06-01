@@ -2,6 +2,7 @@ import { Link } from 'react-router'
 import clsx from 'clsx'
 import type { ProjectReport } from '@/types'
 import { formatInt } from '@/lib/format'
+import { Sentences } from '@/components/Sentences/Sentences'
 import styles from './ProjectTile.module.css'
 
 // The whole-card single-link tile (Phase 4 Decision 16): the name is the only <Link>; its
@@ -30,7 +31,11 @@ export function ProjectTile({ project }: { project: ProjectReport }) {
             </Link>
           </h3>
 
-          {editorial?.oneLiner && <p className={styles.oneLiner}>{editorial.oneLiner}</p>}
+          {editorial?.oneLiner && (
+            <p className={styles.oneLiner}>
+              <Sentences text={editorial.oneLiner} />
+            </p>
+          )}
 
           <p className={styles.hook}>
             <span className={clsx(styles.hookValue, 'tabular')}>{hook.value}</span>

@@ -70,6 +70,12 @@
   color: var(--text-muted);
 } /* decorative — --text-muted floored at AA (Phase 3 prereq) */
 
+/* Keeps a multi-word/hyphenated segment ("OPUS 4.7", "TOOL-GENERATED") whole — the unit label
+   and taxonomy hint break only at the separators between segments, never mid-term. */
+.nowrap {
+  white-space: nowrap;
+}
+
 /* (3) honest sub-line — quiet but LEGIBLE. Uses --text-secondary (≥7:1, passes WCAG AA):
    it carries the `fresh` credibility anchor, so it's information-bearing, not decorative. */
 .honest {
@@ -109,6 +115,11 @@
   color: var(--text-muted); /* decorative; --text-muted floored at AA */
   border-radius: var(--radius-chip);
   transition: color 0.25s ease; /* motion tokens live in TS; literal here */
+}
+/* single flex child: lets the hint flow as balanced inline text (so nowrap tier-name segments
+   break only at the separators) instead of as overflowing flex items. */
+.hintText {
+  text-wrap: balance;
 }
 .taxonomyHint:hover {
   color: var(--text-secondary);

@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { Fragment, useRef } from 'react'
 import { Link } from 'react-router'
 import { useStats } from '@/hooks/useStats'
 import { prefersReducedMotion } from '@/motion/reduced-motion'
@@ -29,7 +29,7 @@ export function Hero() {
   // a "0 LINES AUTHORED" hero (the bar forbids a zero hero).
   const hasAuthored = combined.totalAuthoredLines > 0
 
-  const modelClause = formatModelList(combined.modelBreakdown)
+  const modelTokens = formatModelList(combined.modelBreakdown)
   // Shared honest window clause (one source — code review F5) so Hero/TokensBlock/Close never drift.
   const windowClause = formatWindowClause(combined.tokenWindowDays)
   // Staleness-honesty signal (Phase 8 Decision 9): the data is refreshed manually, so surface
@@ -83,8 +83,15 @@ export function Hero() {
           <>
             <HeroCounter value={combined.totalTokensProcessed} srUnit="tokens processed" />
             <p className={styles.unitLabel}>
-              TOKENS PROCESSED
-              {modelClause && <span className={styles.modelClause}> · {modelClause}</span>}
+              {/* Each segment is nowrap so a model name ("OPUS 4.7") never splits mid-name;
+                  the line breaks only at the ` · ` separators between segments. */}
+              <span className={styles.nowrap}>TOKENS PROCESSED</span>
+              {modelTokens.map((m) => (
+                <Fragment key={m}>
+                  {' '}
+                  <span className={`${styles.nowrap} ${styles.modelClause}`}>· {m}</span>
+                </Fragment>
+              ))}
             </p>
             <p className={styles.honest}>
               <span className="tabular">{formatTokens(combined.totalTokensFresh)}</span> fresh
@@ -127,7 +134,16 @@ export function Hero() {
       )}
 
       <Link to="/about" className={styles.taxonomyHint} data-reveal="after">
-        AUTHORED · PIPELINE-GENERATED · TOOL-GENERATED — what each tier means →
+        {/* ONE wrapper span = a single flex item, so the content flows as inline text (the
+            container is inline-flex for the tap-target box). Tier names are nowrap so
+            "TOOL-GENERATED" never splits at its hyphen; the trailing phrase wraps freely, with
+            "means →" kept whole so the arrow can't orphan. */}
+        <span className={styles.hintText}>
+          <span className={styles.nowrap}>AUTHORED ·</span>{' '}
+          <span className={styles.nowrap}>PIPELINE-GENERATED ·</span>{' '}
+          <span className={styles.nowrap}>TOOL-GENERATED</span> — what each tier{' '}
+          <span className={styles.nowrap}>means →</span>
+        </span>
       </Link>
     </section>
   )

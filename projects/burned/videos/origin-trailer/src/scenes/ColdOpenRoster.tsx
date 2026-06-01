@@ -46,10 +46,10 @@ const ROSTER: Op[] = [
   { type: 'agent-x', name: 'AGENT X', epithet: '[ REDACTED ]' },
 ]
 
-const INTRO = 0.85
+const INTRO = 1.85 // PENDLETON AGENCY classification stamp gets a full second to breathe before the operatives slam (Briggsy note 2026-06-01)
 const CARD_STEP = 0.68 // hard handoff cadence — Archer-title rhythm
 const FIRST = INTRO
-const FLURRY = FIRST + ROSTER.length * CARD_STEP // 0.85 + 6*0.68 = 4.93
+const FLURRY = FIRST + ROSTER.length * CARD_STEP // 1.85 + 6*0.68 = 5.93
 const BURNED_IN = FLURRY + 0.55
 const END = BURNED_IN + 4.2 // hold the wordmark long enough for Janet's hook line
 

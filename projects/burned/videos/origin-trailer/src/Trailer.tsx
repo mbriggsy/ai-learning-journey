@@ -35,12 +35,12 @@ const at = (beat: number) => VO_START + VO_BEAT[beat - 1]
 
 const BEAT6_DUR = sec(18.4) // ends on black just after "…Hmph" (no end card)
 const ROSTER_FROM = sec(at(6)) + BEAT6_DUR
-const ROSTER_SLAM_DUR = sec(5.6) // reticle + operative slams + flurry, cut before the roster's own BURNED
-const CARD_FROM = ROSTER_FROM + sec(5.0) // locked end card slams in as the flurry peaks
+const ROSTER_SLAM_DUR = sec(6.6) // reticle + 1s stamp breath + operative slams + flurry (end card covers the handoff)
+const CARD_FROM = ROSTER_FROM + sec(6.0) // end card slams in as the flurry peaks — lands on the music's brass-slam downbeat (~80.5s)
 export const TRAILER_FRAMES = CARD_FROM + BURNED_END_CARD_FRAMES
 
-// Operative-slam impact times (roster-local sec): INTRO 0.85 + i*CARD_STEP 0.68.
-const SLAM_LOCAL = [0.85, 1.53, 2.21, 2.89, 3.57, 4.25]
+// Operative-slam impact times (roster-local sec): INTRO 1.85 + i*CARD_STEP 0.68.
+const SLAM_LOCAL = [1.85, 2.53, 3.21, 3.89, 4.57, 5.25]
 
 // The music is THREE layered cues, hard-cut on Janet's dramatic turns (each cut
 // is a SEPARATE recording slamming in — new texture appearing is what reads as a

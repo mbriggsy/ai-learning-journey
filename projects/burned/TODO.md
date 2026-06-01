@@ -7,9 +7,31 @@ the history. (Rule: `feedback-todo-is-not-a-diary.md`.)
 
 ## 1. Active priorities
 
-**Nothing queued.** The app and the origin trailer are both shipped. Trailer cut
-map / render / audio / voice-pipeline gotchas live in
-`videos/origin-trailer/README.md`.
+### Origin trailer re-cut — RENDERED, awaiting Briggsy's YouTube upload (2026-06-01)
+
+Stats re-pegged post-v1-teardown (CODE **33,420** · TESTS **27,299** · PLANNING
+**62,450** · panel `+660` commits); Janet's brag VO regenerated; bars + both
+`VO_BEAT` maps re-synced (measured via silencedetect); stats block nudged down a
+pinch. Final master: `videos/origin-trailer/out/trailer.mp4` (84.4s; source at
+`5f7dc069`). Visually verified — **audio sync UNVERIFIED** (Briggsy's Dell had no
+speakers; reboot pending).
+
+**Next (Briggsy):** reboot → cold-watch the master (bar-to-voice sync + the pinch)
+→ upload to YouTube Studio (Data-API blocked by Advanced Protection) → delete/unlist
+the old `c-QTDREcIzI` → hand Claude the new URL.
+
+**Then (Claude, the moment the new URL lands) — cascade it, exact sites:**
+- `README.md:14` — `<a href="https://youtu.be/c-QTDREcIzI">` → new URL
+- `README.md:26` — the badge's `img.youtube.com/vi/c-QTDREcIzI/maxresdefault.jpg`
+  thumbnail AND its `youtu.be/c-QTDREcIzI` link → new video ID (both)
+- `~/.claude/projects/C--Users-brigg-ai-learning-journey/memory/user-google-advanced-protection.md:31`
+  — "First trailer shipped this way: https://youtu.be/c-QTDREcIzI" → new URL
+- If sync reads off: nudge the bar `at` cues in `src/scenes/BuildHero.tsx:99-101`
+  (TESTS 11.2 / PLANNING 14.2 are the measured marks) + re-render.
+
+Not blocking, by-design: `docs/plans/origin-trailer-v2/2026-05-28-beat-sheet-draft.md`
+still cites the pre-re-peg figures (43,357 etc.) — left as a dated historical draft;
+sync only if you want it aligned. The app and the trailer are otherwise shipped.
 
 ### Project health (re-verified 2026-06-01; board lobby + GameTable share `BriefingRoom`)
 

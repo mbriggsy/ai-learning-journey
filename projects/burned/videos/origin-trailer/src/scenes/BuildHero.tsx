@@ -81,10 +81,11 @@ const T = {
   panelOut: 6.0, // panel dissolves as the card takes over
   deckStart: 7.05, // hero settles from full bloom to its dominant hold size
   // Stat bars reveal in sync with Janet naming each figure. BuildHero spans
-  // beats 3+4; beat-4 brag starts ~local 5.6s. Clause landings (approx):
-  //   "forty-three thousand lines of code" ~6.3 · "twenty-nine thousand…tests"
-  //   ~10.6 · "sixty-two thousand in planning" ~13.1 (towers). The towering
-  //   frame then holds under "more planning than code. measure twice."
+  // beats 3+4; the brag cue starts ~local 5.89s. Clause landings MEASURED off
+  // the regenerated cue (silencedetect, 2026-06-01, ~0.1s lead): "thirty-three
+  // thousand lines of code" ~6.3 · "twenty-seven thousand…tests" ~11.2 ·
+  // "sixty-two thousand in planning" ~14.2 (towers). The towering frame then
+  // holds under "more planning than code. measure twice."
   barsIn: 6.3,
   fadeStart: 20.3, // (standalone preview only; in ShortCut fadeOut=false → hard cut to beat 5)
   end: 21.0, // matches the ShortCut beat-3+4 span (at(5)-at(3) ≈ 21s)
@@ -96,11 +97,11 @@ export const BUILD_HERO_FRAMES = sec(T.end)
 // PLANNING visibly dominates CODE (the "more planning than code" thesis, shown).
 // `at` = BuildHero-local second the bar fills, synced to Janet naming it.
 const STAT_BARS = [
-  { label: 'CODE', value: 43357, at: 6.3 },
-  { label: 'TESTS', value: 29033, at: 10.6 },
-  { label: 'PLANNING', value: 62082, at: 13.1 },
+  { label: 'CODE', value: 33420, at: 6.3 },
+  { label: 'TESTS', value: 27299, at: 11.2 },
+  { label: 'PLANNING', value: 62450, at: 14.2 },
 ] as const
-const STAT_MAX = 62082
+const STAT_MAX = 62450
 const BAR_TRACK = 660 // px at full (PLANNING)
 
 // The deck — real card types from card-defs.ts (dash is the hero, separate).
@@ -312,7 +313,7 @@ export const BuildHero: React.FC<{ fadeOut?: boolean }> = ({ fadeOut = true }) =
             <span style={{ color: typingDone ? C.green : C.chrome }}>
               {typingDone ? '✓ all tests green' : 'running tests…'}
             </span>
-            <span style={{ marginLeft: 'auto', color: C.string }}>+611 commits</span>
+            <span style={{ marginLeft: 'auto', color: C.string }}>+660 commits</span>
           </div>
         </div>
       </AbsoluteFill>

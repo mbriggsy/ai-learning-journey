@@ -29,7 +29,7 @@ import executionBed from './assets/audio/trailer-bed-execution.mp3'
  */
 
 const sec = (s: number) => Math.round(s * FPS)
-const VO_BEAT = [0, 4.2, 22.47, 28.36, 43.75, 53.56, 70.77]
+const VO_BEAT = [0, 4.2, 22.47, 28.36, 44.31, 54.12, 71.33]
 const VO_START = 2.0 // tight cold open — ~2s before Janet's hook (was 5.5)
 const at = (beat: number) => VO_START + VO_BEAT[beat - 1]
 

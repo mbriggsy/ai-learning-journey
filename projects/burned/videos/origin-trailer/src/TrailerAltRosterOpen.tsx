@@ -31,8 +31,9 @@ const sec = (s: number) => Math.round(s * FPS)
 
 // Manifest beat starts (global VO sec) + total — from out/vo/manifest.json.
 // (b4 shortened after dropping "Two weeks", the test-attack clause, AND "120
-//  cards"; b3 "and he directed" added ~0.3s. Total 73.73 → 70.77.)
-const VO_BEAT = [0, 4.2, 22.47, 28.36, 43.75, 53.56, 70.77]
+//  cards"; b3 "and he directed" added ~0.3s. Total 73.73 → 70.77 → 71.33
+//  after the 2026-06-01 brag re-peg, +0.56s.)
+const VO_BEAT = [0, 4.2, 22.47, 28.36, 44.31, 54.12, 71.33]
 const VO_START = 5.5 // VO master begins here (hook lands over the BURNED hold)
 
 const at = (beat: number) => VO_START + VO_BEAT[beat - 1]

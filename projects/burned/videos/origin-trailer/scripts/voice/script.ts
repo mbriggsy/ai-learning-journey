@@ -146,13 +146,14 @@ export const JANET_CUES: readonly Cue[] = [
     id: 'b4-brag',
     beat: 4,
     // Spoken roundings round DOWN (honest, nearest thousand) from the canonical
-    // ai-journey-stats dashboard: code 43,357 → "forty-three thousand"; test code
-    // 29,033 → "twenty-nine thousand"; planning 62,082 → "sixty-two thousand".
+    // ai-journey-stats dashboard, re-pegged 2026-06-01 after the v1-trailer
+    // teardown removed code: code 33,420 → "thirty-three thousand"; test code
+    // 27,299 → "twenty-seven thousand"; planning 62,450 → "sixty-two thousand".
     // Numbers spelled so the TTS reads them as words. The metrics are LINES only
     // (code/tests/planning) — "120 cards" dropped (off-axis stat) and the 1,407
     // test-COUNT lives in beat 5 (the gauntlet/attack), not here. "Two weeks"
     // dropped: this beat is about deliberateness (more planning than code), not speed.
-    text: 'Forty-three thousand lines of code, in a language he\'d never touched. Twenty-nine thousand more in tests. Sixty-two thousand in planning.',
+    text: 'Thirty-three thousand lines of code, in a language he\'d never touched. Twenty-seven thousand more in tests. Sixty-two thousand in planning.',
   },
   silence('b4-beat', 4, 'beat'),
   {

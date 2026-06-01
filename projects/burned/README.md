@@ -39,11 +39,11 @@ The human leverage was in the planning, not the typing:
 
 | | |
 |--:|:--|
-| **~16,000** | lines of application code |
-| **~10,000** | lines of tests |
-| **~92,000** | lines of planning & design docs |
+| **~43,000** | lines of code |
+| **~29,000** | lines of tests |
+| **~62,000** | lines of planning docs |
 
-*More planning than code — by a wide margin.* The human's job was taste and direction; the machines did the build. BURNED is, first and foremost, an **engineering proving ground** for that thesis — a real, polished, shipping multiplayer product, made end to end that way.
+*More planning than code.* The human's job was taste and direction; the machines did the build. BURNED is, first and foremost, an **engineering proving ground** for that thesis — a real, polished, shipping multiplayer product, made end to end that way.
 
 ## How it plays
 

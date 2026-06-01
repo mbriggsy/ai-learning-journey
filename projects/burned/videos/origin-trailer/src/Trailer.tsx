@@ -1,5 +1,5 @@
 import React from 'react'
-import { AbsoluteFill, Audio, Sequence } from 'remotion'
+import { AbsoluteFill, Audio, Sequence, interpolate } from 'remotion'
 import { FPS } from './lib/timeline'
 import { ColdHook } from './scenes/ColdHook'
 import { Beat2Man } from './scenes/Beat2Man'
@@ -11,6 +11,9 @@ import { BurnedEndCard, BURNED_END_CARD_FRAMES } from './scenes/BurnedEndCard'
 import voMaster from '../out/vo/janet-vo-master.wav'
 import slamHit from './assets/audio/slam-hit.wav'
 import burnedBoom from './assets/audio/burned-boom.wav'
+import musicBed from './assets/audio/trailer-bed.mp3'
+import introBed from './assets/audio/trailer-bed-intro.mp3'
+import executionBed from './assets/audio/trailer-bed-execution.mp3'
 
 /**
  * TRAILER — THE CANONICAL CUT (chosen 2026-05-31, B won the A/B). Render:
@@ -39,9 +42,72 @@ export const TRAILER_FRAMES = CARD_FROM + BURNED_END_CARD_FRAMES
 // Operative-slam impact times (roster-local sec): INTRO 0.85 + i*CARD_STEP 0.68.
 const SLAM_LOCAL = [0.85, 1.53, 2.21, 2.89, 3.57, 4.25]
 
+// The music is THREE layered cues, hard-cut on Janet's dramatic turns (each cut
+// is a SEPARATE recording slamming in — new texture appearing is what reads as a
+// gear-change; the EL model won't deliver that inside one continuous cue):
+//
+//   introBed      → SETUP + CURIOUS, 0–24.5s, then killed
+//   executionBed  → hard-cut in on "So he didn't" (24.5s), driving to the seam
+//   musicBed      → the Briggsy-approved ATTACK → WINK → FINALE → TITLE, 45.6–84s
+//
+// Cuts land on "So he didn't" (24.5s) and "swarm"+brass-crash (45.6s) — both
+// dramatic beats that mask the key change between cues.
+const EXEC_FROM = 24.5
+const SEAM = 45.6
+
+/**
+ * INTRO envelope — SETUP + CURIOUS only, then dies at 24.5s where the execution
+ * cue hard-cuts in. Present SETUP (0.30) → duck CURIOUS down (0.19; it's a
+ * delicate "spark of an idea," and the pullback makes the execution cut hit
+ * harder by contrast) → fast fade to 0 by 24.6s so the cut is clean.
+ */
+const introVolume = (f: number): number =>
+  interpolate(
+    f,
+    [0, sec(1), sec(2), sec(12), sec(14), sec(23.5), sec(24.3), sec(24.6)],
+    [0, 0.34, 0.30, 0.30, 0.19, 0.19, 0.19, 0],
+    { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' },
+  )
+
+/**
+ * EXECUTION envelope — RELATIVE to the Sequence that starts at EXEC_FROM (24.5s).
+ * A near-instant fade-in (0.15s, click-free) so the cut SLAMS, holds at 0.24
+ * (a touch lower than the other beds — it's a dense drums+brass cue that masks
+ * Janet, so it sits back to keep her clear), then fades OUT across "Measure
+ * twice" (~42→45s comp): the music recedes so her kicker lands clean, leaving a
+ * beat of breath before the attack slams in at the seam.
+ */
+const executionVolume = (f: number): number =>
+  interpolate(
+    f,
+    [0, sec(0.15), sec(42 - EXEC_FROM), sec(45 - EXEC_FROM)],
+    [0, 0.24, 0.24, 0],
+    { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' },
+  )
+
+/**
+ * MAIN-bed envelope — silent until the seam, then EXACTLY the dynamics Briggsy
+ * approved: a low 0.16 bed under the gauntlet + wink, swelling to 0.38 as the
+ * roster slams in and the VO ends, peaking under the BURNED title before a fade.
+ */
+const mainVolume = (f: number): number =>
+  interpolate(
+    f,
+    [0, sec(SEAM), sec(46.0), ROSTER_FROM, CARD_FROM, TRAILER_FRAMES - sec(0.8), TRAILER_FRAMES],
+    [0, 0, 0.16, 0.16, 0.38, 0.38, 0],
+    { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' },
+  )
+
 export const Trailer: React.FC = () => {
   return (
     <AbsoluteFill style={{ background: '#000' }}>
+      {/* MUSIC — three layered cues, hard-cut on Janet's turns (see notes above) */}
+      <Audio src={introBed} volume={introVolume} />
+      <Sequence from={sec(EXEC_FROM)} name="Execution cut">
+        <Audio src={executionBed} trimBefore={sec(2)} volume={executionVolume} />
+      </Sequence>
+      <Audio src={musicBed} volume={mainVolume} />
+
       {/* single VO track */}
       <Sequence from={sec(VO_START)} name="VO">
         <Audio src={voMaster} />

@@ -24,7 +24,7 @@ editorial:
   hookStat:
     label: "CARDS"
     value: "120"
-  liveUrl: "https://burned-cxa.pages.dev/board"
+  liveUrl: "https://burnedgame.pages.dev/board"
   repoUrl: "https://github.com/mbriggsy/ai-learning-journey/tree/main/projects/burned"
   status: "active"
   description: "Real-time browser card game for 2–10 players on the couch. Built to prove a visual bar — Archer-coded illustration over Cloudflare Workers + Durable Objects."

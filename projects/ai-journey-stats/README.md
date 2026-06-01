@@ -18,7 +18,7 @@ counts toward the credit total. Figures are computed from git, not hand-entered.
 - `pnpm build` — typecheck + production build to `dist/`
 - `pnpm typecheck` — types only
 - `pnpm preview` — serve the built `dist/`
-- `pnpm refresh` — regenerate `public/data/stats.json` (Phase 2+)
+- `pnpm refresh` — re-measure every project and regenerate `public/data/stats.json` (committing + pushing the result redeploys the site)
 
 ## Stack
 Vite 8 · React 19 · react-router 7 (declarative `BrowserRouter`) · GSAP 3.14.2 (+ @gsap/react) · TypeScript 5.9

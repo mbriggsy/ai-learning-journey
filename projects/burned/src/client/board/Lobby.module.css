@@ -1,46 +1,55 @@
 /* Lobby.module.css
-   Board — first-impression screen. Room code + QR + player roster + Start button.
-   Must feel visually identical to the GameTable it transitions into — shared
-   palette, shared background structure, shared typographic vocabulary. This is
-   Pattern B3 resolution: Lobby and GameTable are one product.
+   Board — first-impression title card. Renders INSIDE <BriefingRoom>, so the
+   felt / mahogany frame / venetian blinds come from the shared world and the
+   lobby is literally the same room the GameTable lives in.
+
+   Composition (landscape, WIDTH-constrained per spec §3.4):
+     ┌ masthead — agency wordmark BURNED ───────────────────────┐
+     │ stage — two desk objects:                                │
+     │    deploy terminal (QR/room code)  │  manila case folder  │
+     │                                    │  (active operatives) │
+     └ deploy bar — CLEARED HOT plaque + Operations Manual ──────┘
+
+   The two stage objects are deliberately DIFFERENT materials (a dark briefing
+   device + a manila folder) so they read as two distinct things on the desk,
+   not a two-of-a-kind redundancy.
 */
 
 @layer components {
 
-.container {
+/* ─── Root grid ─── */
+
+.lobby {
   position: relative;
+  height: 100%;
+  box-sizing: border-box;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: clamp(18px, 2.4vh, 44px);
+  /* Clear the mahogany frame on every edge + breathing room. */
+  padding:
+    calc(var(--size-wood-frame-thickness) + clamp(20px, 2.4vh, 44px))
+    calc(var(--size-wood-frame-thickness) + clamp(28px, 3.5vw, 96px));
+  color: var(--color-fg-primary);
+  font-family: var(--font-body);
+}
+
+/* Connecting / pre-lobby — centered terminal line on the bare felt. */
+.connecting {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ─── Masthead — agency wordmark ─── */
+
+.masthead {
   display: flex;
   flex-direction: column;
   align-items: center;
-  box-sizing: border-box;  /* min-height: 100vh is total box, not content box, so
-     vertical padding doesn't inflate outer height past viewport. */
-  min-height: 100vh;
-  padding: var(--space-fluid-loose-board) var(--space-fluid-base-board) var(--space-fluid-base-board);
-  color: var(--color-fg-primary);
-  font-family: var(--font-body);
-  overflow: hidden;
-
-  /* Game-table felt — same stack as GameTable.module.css for visual continuity */
-  background:
-    radial-gradient(ellipse 50% 40% at 50% 35%,
-      color-mix(in oklab, var(--color-accent-drama) 30%, transparent) 0%,
-      color-mix(in oklab, var(--color-accent-drama) 14%, transparent) 40%,
-      transparent 65%),
-    radial-gradient(ellipse 80% 70% at 50% 50%,
-      color-mix(in oklab, var(--color-teal-5) 40%, transparent) 0%,
-      color-mix(in oklab, var(--color-teal-4) 22%, transparent) 40%,
-      transparent 65%),
-    radial-gradient(ellipse 85% 85% at 50% 50%,
-      transparent 40%,
-      color-mix(in oklab, var(--color-charcoal-1) 55%, transparent) 80%,
-      color-mix(in oklab, var(--color-charcoal-1) 78%, transparent) 100%),
-    linear-gradient(175deg,
-      var(--color-teal-3) 0%,
-      var(--color-teal-2) 50%,
-      var(--color-teal-1) 100%);
+  gap: var(--space-2);
 }
-
-/* ─── Title — classified agency wordmark ─── */
 
 .classified {
   font-family: var(--font-mono);
@@ -50,8 +59,7 @@
   text-transform: uppercase;
   color: color-mix(in oklab, var(--color-cream-11) 50%, transparent);
   text-align: center;
-  margin: 0 0 var(--space-2);
-  flex-shrink: 0;
+  margin: 0;
 }
 
 .title {
@@ -59,12 +67,12 @@
   font-size: var(--text-display);
   font-weight: 900;
   text-transform: uppercase;
-  letter-spacing: -0.015em;  /* tight geometric stamp, not airy */
+  letter-spacing: -0.015em;
+  line-height: 0.92;
   text-align: center;
-  margin-bottom: var(--space-3);
-  flex-shrink: 0;
+  margin: 0;
   color: var(--color-accent-burned);
-  /* Stamped ink feel — inner cream highlight + deep ambient glow */
+  /* Stamped ink — inner cream highlight + deep ambient glow */
   text-shadow:
     0 1px 0 color-mix(in oklab, var(--color-cream-12) 18%, transparent),
     0 0 50px color-mix(in oklab, var(--color-accent-burned) 50%, transparent),
@@ -74,42 +82,83 @@
 /* Thick orange classified bar — notched left end for stamp vocabulary */
 .titleAccent {
   display: block;
-  width: calc(var(--size-title-accent-width) * 1.15);
+  width: calc(var(--size-title-accent-width) * 1.25);
   height: 5px;
-  margin: 0 auto var(--space-8);
+  margin-top: var(--space-1);
   background: var(--color-accent-burned);
   clip-path: polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%);
   box-shadow: 0 0 20px color-mix(in oklab, var(--color-accent-burned) 40%, transparent);
 }
 
-/* ─── QR section ─── */
+/* ─── Stage — the two desk objects ─── */
 
-.qrSection {
+.stage {
+  display: grid;
+  grid-template-columns: minmax(300px, 0.82fr) minmax(360px, 1fr);
+  /* Explicit definite row so the folder's percentage max-height resolves
+     against it (an auto row is indefinite — percentages silently fail and
+     the folder overflows its cell, the bug Briggsy caught). */
+  grid-template-rows: minmax(0, 1fr);
+  gap: clamp(28px, 4vw, 104px);
+  align-items: center;
+  justify-items: center;
+  width: 100%;
+  max-width: clamp(840px, 80vw, 1560px);
+  margin: 0 auto;
+  min-height: 0;
+  height: 100%;
+}
+
+/* ── Deploy terminal — dark check-in device on the desk ── */
+
+.deployStation {
+  position: relative;
+  align-self: center;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--space-2);
-  margin-bottom: var(--space-6);
-  flex-shrink: 0;
+  gap: var(--space-3);
+  padding: clamp(22px, 2vw, 40px) clamp(22px, 2vw, 44px) clamp(20px, 1.8vw, 36px);
+  border-radius: 3px;
+  background: linear-gradient(
+    180deg,
+    color-mix(in oklab, var(--color-charcoal-1) 82%, transparent) 0%,
+    color-mix(in oklab, var(--color-charcoal-2) 90%, transparent) 100%
+  );
+  box-shadow:
+    inset 0 1px 0 color-mix(in oklab, var(--color-cream-12) 8%, transparent),
+    inset 0 -1px 0 color-mix(in oklab, var(--color-charcoal-1) 60%, transparent),
+    0 10px 26px color-mix(in oklab, var(--color-charcoal-1) 55%, transparent),
+    0 3px 6px color-mix(in oklab, var(--color-charcoal-1) 50%, transparent);
+}
+
+/* Ochre top hairline — same "live device" cue as the player-strip tiles. */
+.deployStation::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 14px;
+  right: 14px;
+  height: 2px;
+  background: color-mix(in oklab, var(--color-accent-drama) 32%, transparent);
+  pointer-events: none;
 }
 
 .deployLabel {
   font-family: var(--font-mono);
   font-size: var(--text-caption-board);
   font-weight: 600;
-  letter-spacing: 0.35em;
+  letter-spacing: 0.32em;
   text-transform: uppercase;
-  color: color-mix(in oklab, var(--color-accent-drama) 75%, transparent);
-  margin-bottom: var(--space-2);
+  color: color-mix(in oklab, var(--color-accent-drama) 80%, transparent);
 }
 
-/* QR frame — cream ground with four L-shaped classified corner brackets.
-   Brackets sit OUTSIDE the cream pad; layered linear-gradients give precise 2px
-   strokes with no pseudo-element overhead. */
+/* QR frame — cream ground with four L-shaped classified corner brackets that
+   sit OUTSIDE the cream pad. Layered linear-gradients give precise 2px strokes
+   with no pseudo-element overhead. */
 .qrFrame {
   position: relative;
   padding: var(--space-3);
-  border: none;
   border-radius: 2px;
   background-color: color-mix(in oklab, var(--color-cream-12) 94%, transparent);
   background-image:
@@ -122,24 +171,26 @@
     linear-gradient(var(--color-accent-burned), var(--color-accent-burned)),
     linear-gradient(var(--color-accent-burned), var(--color-accent-burned));
   background-size:
-    14px 2px, 2px 14px,   /* TL horiz + vert */
-    14px 2px, 2px 14px,   /* TR horiz + vert */
-    14px 2px, 2px 14px,   /* BL horiz + vert */
-    14px 2px, 2px 14px;   /* BR horiz + vert */
+    18px 2px, 2px 18px,
+    18px 2px, 2px 18px,
+    18px 2px, 2px 18px,
+    18px 2px, 2px 18px;
   background-position:
-    -6px -6px,                           2px -6px,             /* TL */
-    calc(100% + 6px) -6px,               calc(100% - 2px) -6px,/* TR */
-    -6px calc(100% + 6px),               2px calc(100% - 6px), /* BL */
-    calc(100% + 6px) calc(100% + 6px),   calc(100% - 2px) calc(100% - 6px); /* BR */
+    -7px -7px,                           2px -7px,
+    calc(100% + 7px) -7px,               calc(100% - 2px) -7px,
+    -7px calc(100% + 7px),               2px calc(100% - 7px),
+    calc(100% + 7px) calc(100% + 7px),   calc(100% - 2px) calc(100% - 7px);
   background-repeat: no-repeat;
   background-origin: border-box;
   background-clip: border-box;
   box-shadow:
     var(--shadow-md),
-    0 0 50px color-mix(in oklab, var(--color-accent-burned) 8%, transparent);
+    0 0 50px color-mix(in oklab, var(--color-accent-burned) 10%, transparent);
 }
 
-/* Room code — monospace agent identifier with bracket framing */
+/* Room code — monospace agent identifier with bracket framing.
+   Class name must keep "roomCode" — e2e fixtures read the code via
+   [class*="roomCode"]. */
 .roomCode {
   display: inline-flex;
   align-items: baseline;
@@ -149,9 +200,8 @@
   font-weight: 700;
   letter-spacing: 0.28em;
   font-variant-numeric: tabular-nums;
-  color: var(--color-fg-primary);
-  padding: var(--space-2) var(--space-4);
-  margin-top: var(--space-3);
+  color: var(--color-cream-12);
+  padding: var(--space-1) var(--space-4);
 }
 
 .roomCode::before,
@@ -161,7 +211,7 @@
   font-weight: 400;
   color: var(--color-accent-burned);
   letter-spacing: 0;
-  opacity: 0.8;
+  opacity: 0.85;
 }
 
 .roomCode::before { content: '[ '; }
@@ -170,242 +220,191 @@
 .hint {
   font-family: var(--font-mono);
   font-size: var(--text-caption-board);
-  color: color-mix(in oklab, var(--color-cream-11) 55%, transparent);
+  color: color-mix(in oklab, var(--color-cream-11) 58%, transparent);
   letter-spacing: 0.22em;
   text-transform: uppercase;
 }
 
-/* Operations Manual link — classified caption between the QR block and
-   the roster. Reads as in-universe chrome (mono caps, ochre, `// `
-   prefix to match the rest of the Pendleton vocabulary). Anchor element
-   so it works as a tap target in dev/laptop browsers; on a real
-   non-touch TV it reads as classified type.
+/* Divider between the check-in block and the deploy action below it. */
+.deployDivider {
+  width: 64%;
+  height: 1px;
+  margin: var(--space-2) 0 var(--space-1);
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    color-mix(in oklab, var(--color-accent-drama) 45%, transparent) 50%,
+    transparent 100%
+  );
+}
 
-   Brightness pass 2026-05-14: dropped the 80% color-mix + 0.82 opacity
-   buffer so the link is fully visible against the dark teal felt. The
-   ochre-9 base + small text-shadow halo carries it without screaming.
+/* ── Active operatives — a manila case folder tossed on the desk ── */
 
-   Sheen pass 2026-05-14: a cream highlight clips to the text glyphs via
-   `background-clip: text` and sweeps right-to-left on the ambient cycle
-   (same token the start button's disabled-state sheen uses, so both
-   surfaces read as the same kind of "alive" classified chrome). The
-   `//` prefix sits in its own span so it keeps its warmer burned-orange
-   identity rather than getting pulled into the sheen gradient. */
-.manualLink {
-  margin: calc(var(--space-1) * -1) 0 var(--space-5);
-  display: inline-flex;
-  align-items: baseline;
-  gap: 0.55em;
+.rosterFolder {
+  position: relative;
+  /* Sized to content (no empty stretch), capped to the stage cell so a full
+     roster on a short viewport scrolls internally instead of running off. */
+  align-self: center;
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 620px;
+  min-height: 0;
+  padding: clamp(18px, 1.8vw, 32px) clamp(18px, 1.6vw, 30px) clamp(16px, 1.4vw, 26px);
+  /* Manila face + warm paper gradient + subliminal vertical fiber — matches
+     the DossierFeed folder so the lobby roster and the in-game COMMS dossier
+     are the same paper stock. */
+  background-color: var(--color-manila-face);
+  background-image:
+    repeating-linear-gradient(
+      90deg,
+      transparent 0,
+      transparent 2px,
+      color-mix(in oklab, var(--color-manila-shadow) 8%, transparent) 2px,
+      color-mix(in oklab, var(--color-manila-shadow) 8%, transparent) 3px
+    ),
+    linear-gradient(
+      168deg,
+      color-mix(in oklab, var(--color-manila-face) 96%, var(--color-cream-12)) 0%,
+      var(--color-manila-face) 45%,
+      color-mix(in oklab, var(--color-manila-face) 90%, var(--color-manila-shadow)) 100%
+    );
+  border-radius: 2px;
+  box-shadow:
+    inset 0 0 0 1px color-mix(in oklab, var(--color-manila-shadow) 55%, transparent),
+    inset 0 -2px 6px color-mix(in oklab, var(--color-manila-shadow) 30%, transparent),
+    0 3px 5px color-mix(in oklab, var(--color-charcoal-1) 50%, transparent),
+    0 16px 30px color-mix(in oklab, var(--color-charcoal-1) 35%, transparent);
+}
+
+/* Burned-red folder tab — top-right trapezoid, classic manila vocabulary. */
+.rosterTab {
+  position: absolute;
+  top: 0;
+  right: 30px;
+  transform: translateY(-78%);
+  padding: 6px 22px 9px;
+  background: var(--color-manila-tab);
+  color: color-mix(in oklab, var(--color-cream-12) 94%, transparent);
   font-family: var(--font-mono);
   font-size: var(--text-caption-board);
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: 0.28em;
   text-transform: uppercase;
-  color: var(--color-accent-drama);
-  text-decoration: none;
-  text-shadow:
-    0 0 10px color-mix(in oklab, var(--color-accent-drama) 32%, transparent),
-    0 0 22px color-mix(in oklab, var(--color-accent-drama) 16%, transparent);
-  transition: text-shadow var(--motion-duration-fast) var(--motion-ease-base);
-  flex-shrink: 0;
+  white-space: nowrap;
+  clip-path: polygon(14px 0, calc(100% - 14px) 0, 100% 100%, 0 100%);
+  box-shadow:
+    inset 0 1px 0 color-mix(in oklab, var(--color-cream-12) 20%, transparent),
+    inset 0 -1px 0 color-mix(in oklab, var(--color-charcoal-1) 55%, transparent),
+    0 -2px 6px color-mix(in oklab, var(--color-charcoal-1) 35%, transparent);
 }
 
-/* Trailing → arrow — the affordance signal. The `//` label prefix used
-   to live in this slot, but `// CAPS LETTERSPACED` is the codebase's
-   established vocabulary for NON-INTERACTIVE chrome captions (`//
-   Deploy Operative`, `// Briefing`, `// Operation`), and using it on
-   an interactive link confused readers into thinking the manual link
-   was another static label. The trailing arrow restores the
-   tap-to-act signal — same arrow vocabulary the brief's PlayCTA uses
-   at its CTA button. Nudges right on hover (desktop) or via a periodic
-   "attract" cycle (touch devices) so the affordance signal carries
-   across input modalities — phones can't fire the hover state, so a
-   gated idle animation provides the equivalent "I'm alive" cue. */
-.manualLinkArrow {
-  display: inline-block;
-  margin-left: 0.55em;
-  font-family: var(--font-mono);
-  font-weight: 500;
-  letter-spacing: 0;  /* override link's 0.28em — arrows aren't typeset */
-  color: var(--color-accent-burned);
-  transition: transform var(--motion-duration-fast) var(--motion-ease-decelerate);
-  will-change: transform;
+.rosterTab::before {
+  content: '// ';
+  opacity: 0.55;
+  font-weight: 400;
 }
 
-/* Touch-only attract loop. Brief nudge once per 2.4s cycle, settles
-   back — reads as a soft "tap me" beacon. Gated to `pointer: coarse`
-   so non-touch TVs (which fall under `hover: none` but use `pointer:
-   fine` for remotes/keyboards) don't get a phantom-animated arrow on
-   a non-interactive display. */
-@media (hover: none) and (pointer: coarse) {
-  .manualLinkArrow {
-    animation: manualLinkArrowAttract 2.4s ease-in-out infinite;
-  }
-}
-
-@keyframes manualLinkArrowAttract {
-  0%, 75%, 100% { transform: translateX(0); }
-  85%          { transform: translateX(3px); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .manualLinkArrow {
-    animation: none;
-  }
-}
-
-.manualLinkText {
-  /* Sheen highlight — cream pass clipped to glyph shapes. The 220% bg
-     size + keyframed background-position creates a moving highlight
-     that crosses the text every ambient cycle. `-webkit-text-fill-color`
-     supplies the resting ochre while the gradient overrides where it's
-     opaque (the bright spot of the sweep). */
-  background-image: linear-gradient(
-    105deg,
-    transparent 38%,
-    color-mix(in oklab, var(--color-cream-12) 78%, transparent) 50%,
-    transparent 62%
-  );
-  background-size: 220% 100%;
-  background-repeat: no-repeat;
-  background-position: 200% 0;
-  background-clip: text;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: var(--color-accent-drama);
-  animation: manualLinkSheen var(--motion-duration-ambient) linear infinite;
-}
-
-/* Hold off-screen → sweep across → hold off-screen again. The hold band
-   (0-55% of the cycle) keeps the highlight from feeling constant — it
-   reads as a periodic pass, not a marquee. Linear easing per Emil's
-   constant-motion rule (the sheen movement itself is constant; the
-   keyframes do the cadence shaping). */
-@keyframes manualLinkSheen {
-  0%, 55%   { background-position: 200% 0; }
-  100%      { background-position: -100% 0; }
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .manualLink:hover {
-    text-shadow:
-      0 0 14px color-mix(in oklab, var(--color-accent-drama) 50%, transparent),
-      0 0 28px color-mix(in oklab, var(--color-accent-drama) 25%, transparent);
-    text-decoration: underline;
-    text-underline-offset: 4px;
-    text-decoration-thickness: 1px;
-    text-decoration-color: color-mix(in oklab, var(--color-accent-drama) 60%, transparent);
-  }
-  .manualLink:hover .manualLinkArrow {
-    transform: translateX(3px);
-  }
-}
-
-.manualLink:focus-visible {
-  outline: 2px solid var(--color-border-focus);
-  outline-offset: 4px;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .manualLinkText {
-    animation: none;
-  }
-}
-
-/* ─── Player roster ─── */
-
-.roster {
-  width: 100%;
-  /* When the roster holds many players, widen the max-width so the 2-col
-     grid below gives each playerCard ~280px instead of cramping to 220px.
-     At 1920vw the roster max becomes ~700px wide → two ~330px columns
-     after gap. E2E audit 2026-04-23 C-01. */
-  max-width: min(100%, calc(var(--size-lobby-roster-max-width) + 140px));
-  /* Grid so 5+ players pack into 2 columns — prevents the 10-player
-     roster overflowing a 1080vh TV (the CLEARED HOT start button was
-     217px below the fold). auto-fill + minmax(260px,1fr): 1 column
-     below ~540px container, 2 columns above. Tile sort order is left-
-     to-right top-to-bottom (natural DOM). */
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: var(--space-2);
-  margin-bottom: var(--space-6);
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  scrollbar-width: none;
-  align-content: start;
-}
-
-.roster::-webkit-scrollbar {
-  display: none;
-}
-
-.rosterHeader {
+.rosterHead {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   justify-content: space-between;
-  padding: var(--space-2) var(--space-2) var(--space-3);
-  border-bottom: 1px solid color-mix(in oklab, var(--color-accent-burned) 25%, transparent);
-  margin-bottom: var(--space-2);
-  /* Span full roster width in the 2-col grid — header is a single row
-     above the player tiles. E2E audit 2026-04-23 C-01. */
-  grid-column: 1 / -1;
+  gap: var(--space-3);
+  padding-bottom: var(--space-3);
+  margin-bottom: var(--space-3);
+  border-bottom: 1px solid color-mix(in oklab, var(--color-manila-shadow) 55%, transparent);
 }
 
 .rosterLabel {
   font-family: var(--font-mono);
   font-size: var(--text-caption-board);
-  font-weight: 600;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.25em;
-  color: color-mix(in oklab, var(--color-accent-drama) 80%, transparent);
+  letter-spacing: 0.28em;
+  color: color-mix(in oklab, var(--color-charcoal-1) 72%, var(--color-cordovan-2));
+}
+
+.rosterLabel::before {
+  content: '// ';
+  opacity: 0.5;
+  font-weight: 400;
 }
 
 .rosterCount {
   font-family: var(--font-mono);
   font-size: var(--text-caption-board);
-  font-weight: 600;
+  font-weight: 700;
   font-variant-numeric: tabular-nums;
-  color: color-mix(in oklab, var(--color-cream-11) 75%, transparent);
-  letter-spacing: 0.1em;
+  letter-spacing: 0.12em;
+  color: color-mix(in oklab, var(--color-charcoal-1) 60%, var(--color-cordovan-2));
 }
 
-/* ─── Player card ─── */
+.rosterBody {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
 
-.playerCard {
+.rosterBody::-webkit-scrollbar { display: none; }
+
+/* One operative — a typewriter report slip on the manila face. */
+.operative {
   display: flex;
   align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-3) var(--space-4);
-  background: linear-gradient(
-    165deg,
-    color-mix(in oklab, var(--color-bg-elevated) 92%, transparent) 0%,
-    color-mix(in oklab, var(--color-bg-surface) 96%, transparent) 100%
-  );
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-md);
-  overflow: hidden;
-  box-shadow: var(--shadow-md);
+  gap: 12px;
+  padding: 9px 14px;
+  background: color-mix(in oklab, var(--color-manila-face) 94%, var(--color-cream-12));
+  border: 1px solid color-mix(in oklab, var(--color-manila-shadow) 55%, transparent);
+  border-left: 3px solid var(--color-accent-burned);
+  border-radius: 2px;
+  box-shadow:
+    0 1px 2px color-mix(in oklab, var(--color-charcoal-1) 22%, transparent),
+    0 3px 7px color-mix(in oklab, var(--color-charcoal-1) 16%, transparent);
+  color: color-mix(in oklab, var(--color-charcoal-1) 82%, var(--color-cordovan-2));
 }
 
-.playerName {
-  font-size: var(--text-body);
-  font-weight: 500;
-  flex: 1;
-}
-
-.disconnectedBadge {
+.operativeIndex {
+  font-family: var(--font-mono);
   font-size: var(--text-caption-board);
-  font-weight: 600;
-  color: var(--color-fg-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.08em;
+  color: color-mix(in oklab, var(--color-accent-burned) 80%, var(--color-charcoal-1));
+  flex: 0 0 auto;
 }
 
-/* ─── Waiting state ───
-   Stretches to fill available vertical space so the empty lobby / pre-players
-   roster don't read as a dead white zone in the middle of the TV. Classified-
-   terminal type treatment matches the rest of the briefing vocabulary. */
+.operativeName {
+  flex: 1;
+  font-family: var(--font-display);
+  font-size: var(--text-body);
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: color-mix(in oklab, var(--color-charcoal-1) 88%, var(--color-cordovan-2));
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.operativeStatus {
+  flex: 0 0 auto;
+  font-family: var(--font-mono);
+  font-size: calc(var(--text-caption-board) * 0.9);
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: color-mix(in oklab, var(--color-charcoal-1) 50%, var(--color-cordovan-2));
+}
+
+/* Off-grid — the word carries the meaning (color-blind safe); red is accent. */
+.operativeStatus[data-off] { color: var(--color-accent-burned); }
+
+/* ─── Waiting state (connecting + empty roster) ─── */
 
 .waiting {
   flex: 1 1 auto;
@@ -416,12 +415,17 @@
   gap: var(--space-3);
   padding: var(--space-8) 0;
   text-align: center;
-  color: color-mix(in oklab, var(--color-cream-11) 40%, transparent);
+  color: color-mix(in oklab, var(--color-cream-11) 42%, transparent);
   font-family: var(--font-mono);
   font-size: var(--text-caption-board);
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.25em;
+}
+
+/* Empty roster sits on manila — switch to ink so it reads as a stamped note. */
+.rosterBody .waiting {
+  color: color-mix(in oklab, var(--color-charcoal-1) 55%, var(--color-cordovan-2));
 }
 
 .waitingDots {
@@ -434,7 +438,7 @@
   width: var(--space-1);
   height: var(--space-1);
   border-radius: var(--radius-full);
-  background: var(--color-fg-muted);
+  background: currentColor;
   animation: lobbyDotPulse var(--motion-duration-pulse) var(--motion-ease-base) infinite;
 }
 
@@ -446,8 +450,10 @@
   40% { opacity: 1; transform: scale(1); }
 }
 
-/* ─── Start button — Pendleton Agency "DEPLOY" title card ─── */
+/* ─── Deploy action — CLEARED HOT plaque + Operations Manual ─── */
 
+/* Start button — Pendleton Agency "DEPLOY" title-card plaque.
+   Text must stay "Cleared Hot" — e2e clicks button:has-text("Cleared Hot"). */
 .startButton {
   position: relative;
   padding: calc(var(--space-4) + 2px) var(--space-12);
@@ -455,22 +461,16 @@
   font-size: var(--text-title);
   font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.18em;  /* stamped, spaced */
+  letter-spacing: 0.18em;
   border: none;
-  border-radius: 2px;  /* sharp classified corners */
+  border-radius: 2px;
   background: var(--color-accent-burned);
   color: var(--color-cream-12);
   cursor: pointer;
-  flex-shrink: 0;
   z-index: var(--z-raised);
-  /* Transitions only GPU-composited properties (transform + box-shadow).
-     letter-spacing was previously transitioned on hover; dropped — it
-     triggers layout every step and the translateY + box-shadow intensify
-     already signal the hover lift without the type-animation flourish. */
   transition:
     transform var(--motion-duration-fast) var(--motion-ease-base),
     box-shadow var(--motion-duration-fast) var(--motion-ease-base);
-  /* Double-line stamp border + subtle inner highlight */
   box-shadow:
     inset 0 0 0 1px color-mix(in oklab, var(--color-cream-12) 42%, transparent),
     inset 0 0 0 5px transparent,
@@ -495,7 +495,7 @@
   pointer-events: none;
 }
 
-/* Classified bracket decorations flanking the label */
+/* Classified bracket prefix flanking the label */
 .startButton::before {
   content: '// ';
   font-family: var(--font-mono);
@@ -510,10 +510,6 @@
   50% { opacity: 1; }
 }
 
-/* Hover lift — desktop only. Touch devices (including hybrid laptops with
-   a stylus or trackpad + touchscreen) fire sticky hover on tap without
-   the stricter pointer: fine guard. Matches MinimalCard / GameOver.playAgain
-   / JoinScreen / SmartActionBox gating. */
 @media (hover: hover) and (pointer: fine) {
   .startButton:hover {
     transform: translateY(-2px);
@@ -541,11 +537,8 @@
   outline-offset: 5px;
 }
 
-/* Disabled state — waiting for more operatives. The cream sheen slides
-   left-to-right every ambient cycle, telegraphing "actively listening"
-   without the opacity pulse that was previously the only motion. Emil
-   called out opacity-pulse as the generic AI-polish move; a moving sheen
-   reads as real radio traffic / briefing-room chatter. */
+/* Disabled — waiting for more operatives. Cream sheen slides across every
+   ambient cycle, telegraphing "actively listening" without an opacity pulse. */
 .startButton:disabled {
   background:
     linear-gradient(
@@ -575,8 +568,6 @@
 .startButton:disabled::after { display: none; }
 .startButton:disabled::before { opacity: 0.3; }
 
-/* ─── Forced colors (Windows High Contrast) — Deepening addition ─── */
-
 @media (forced-colors: active) {
   .startButton {
     border: 2px solid ButtonText;
@@ -585,12 +576,96 @@
   .startButton::after { display: none; }
 }
 
+/* ─── Operations Manual link ─── */
+
+.manualLink {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.55em;
+  font-family: var(--font-mono);
+  font-size: var(--text-caption-board);
+  font-weight: 600;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--color-accent-drama);
+  text-decoration: none;
+  text-shadow:
+    0 0 10px color-mix(in oklab, var(--color-accent-drama) 32%, transparent),
+    0 0 22px color-mix(in oklab, var(--color-accent-drama) 16%, transparent);
+  transition: text-shadow var(--motion-duration-fast) var(--motion-ease-base);
+}
+
+.manualLinkText {
+  background-image: linear-gradient(
+    105deg,
+    transparent 38%,
+    color-mix(in oklab, var(--color-cream-12) 78%, transparent) 50%,
+    transparent 62%
+  );
+  background-size: 220% 100%;
+  background-repeat: no-repeat;
+  background-position: 200% 0;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: var(--color-accent-drama);
+  animation: manualLinkSheen var(--motion-duration-ambient) linear infinite;
+}
+
+@keyframes manualLinkSheen {
+  0%, 55%   { background-position: 200% 0; }
+  100%      { background-position: -100% 0; }
+}
+
+.manualLinkArrow {
+  display: inline-block;
+  margin-left: 0.2em;
+  font-family: var(--font-mono);
+  font-weight: 500;
+  letter-spacing: 0;
+  color: var(--color-accent-burned);
+  transition: transform var(--motion-duration-fast) var(--motion-ease-decelerate);
+  will-change: transform;
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .manualLinkArrow {
+    animation: manualLinkArrowAttract 2.4s ease-in-out infinite;
+  }
+}
+
+@keyframes manualLinkArrowAttract {
+  0%, 75%, 100% { transform: translateX(0); }
+  85%          { transform: translateX(3px); }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .manualLink:hover {
+    text-shadow:
+      0 0 14px color-mix(in oklab, var(--color-accent-drama) 50%, transparent),
+      0 0 28px color-mix(in oklab, var(--color-accent-drama) 25%, transparent);
+    text-decoration: underline;
+    text-underline-offset: 4px;
+    text-decoration-thickness: 1px;
+    text-decoration-color: color-mix(in oklab, var(--color-accent-drama) 60%, transparent);
+  }
+  .manualLink:hover .manualLinkArrow {
+    transform: translateX(3px);
+  }
+}
+
+.manualLink:focus-visible {
+  outline: 2px solid var(--color-border-focus);
+  outline-offset: 4px;
+}
+
 /* ─── Reduced motion ─── */
 
 @media (prefers-reduced-motion: reduce) {
   .startButton::after { animation: none; opacity: 0.6; }
   .startButton:disabled { animation: none; }
   .waitingDot { animation: none; opacity: 0.5; }
+  .manualLinkText { animation: none; }
+  .manualLinkArrow { animation: none; }
 }
 
 } /* @layer components */

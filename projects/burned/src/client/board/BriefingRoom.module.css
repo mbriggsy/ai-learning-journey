@@ -1,0 +1,225 @@
+/* BriefingRoom.module.css
+   The shared war-room world used by BOTH the Lobby and the GameTable: felt desk
+   surface, fabric-weave grain, table-edge inlay, mahogany frame, and the
+   venetian-blind sun rake. Values are lifted verbatim from GameTable.module.css
+   so the lobby and the table are the same physical room.
+
+   Axis discipline: board view is WIDTH-constrained. The root uses `height:
+   100vh` (the board's sanctioned dedicated-viewport root) and child geometry
+   sizes against vw through the board tokens.
+*/
+
+@layer components {
+
+.room {
+  position: relative;
+  box-sizing: border-box;
+  height: 100vh;
+  font-family: var(--font-body);
+  color: var(--color-fg-primary);
+  overflow: hidden;
+  contain: layout style;
+
+  /* Layered war-room surface (5 gradients stacked) — see GameTable for the
+     per-layer rationale. Kept identical so the two screens match. */
+  background:
+    radial-gradient(ellipse 50% 40% at 50% 48%,
+      color-mix(in oklab, var(--color-accent-drama) 35%, transparent) 0%,
+      color-mix(in oklab, var(--color-accent-drama) 18%, transparent) 30%,
+      transparent 60%),
+    radial-gradient(ellipse 80% 70% at 50% 50%,
+      color-mix(in oklab, var(--color-teal-5) 40%, transparent) 0%,
+      color-mix(in oklab, var(--color-teal-4) 25%, transparent) 40%,
+      transparent 65%),
+    radial-gradient(ellipse 75% 75% at 50% 50%,
+      transparent 30%,
+      color-mix(in oklab, var(--color-charcoal-1) 65%, transparent) 70%,
+      color-mix(in oklab, var(--color-charcoal-1) 90%, transparent) 100%),
+    repeating-conic-gradient(
+      color-mix(in oklab, var(--color-teal-3) 8%, transparent) 0%,
+      color-mix(in oklab, var(--color-teal-2) 6%, transparent) 0.5%,
+      color-mix(in oklab, var(--color-teal-4) 9%, transparent) 1%
+    ),
+    linear-gradient(170deg,
+      var(--color-teal-3) 0%,
+      var(--color-teal-2) 50%,
+      var(--color-teal-1) 100%);
+}
+
+/* Fabric weave cross-hatching — subtle cream grain over the base gradient */
+.room::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      color-mix(in oklab, var(--color-cream-12) 2%, transparent) 2px,
+      color-mix(in oklab, var(--color-cream-12) 2%, transparent) 3px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 2px,
+      color-mix(in oklab, var(--color-cream-12) 2%, transparent) 2px,
+      color-mix(in oklab, var(--color-cream-12) 2%, transparent) 3px
+    );
+  pointer-events: none;
+  z-index: var(--z-base);
+}
+
+/* Table edge — geometric rectangular frame behind the mahogany inlay. */
+.room::after {
+  content: '';
+  position: absolute;
+  top: 3%;
+  left: 2.5%;
+  right: 2.5%;
+  bottom: 3%;
+  border: 1px solid color-mix(in oklab, var(--color-accent-drama) 18%, transparent);
+  border-radius: var(--radius-xl);
+  box-shadow:
+    inset 0 0 80px color-mix(in oklab, var(--color-charcoal-1) 25%, transparent),
+    0 0 1px color-mix(in oklab, var(--color-accent-drama) 12%, transparent);
+  pointer-events: none;
+  z-index: var(--z-base);
+}
+
+/* ─── Mahogany wood frame — briefing-table edge inlay ─── */
+.woodFrame {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: var(--z-base);
+  box-shadow:
+    inset 0 0 0 calc(var(--size-wood-frame-thickness) + 1px) transparent,
+    inset 0 0 24px color-mix(in oklab, var(--color-charcoal-1) 55%, transparent),
+    inset 0 2px 0 color-mix(in oklab, var(--color-ochre-10) 22%, transparent);
+}
+
+.woodTop,
+.woodBottom,
+.woodLeft,
+.woodRight {
+  position: absolute;
+  background-size: auto 100%;
+  background-repeat: repeat-x;
+}
+
+.woodTop,
+.woodBottom {
+  filter: brightness(0.78) saturate(0.88) hue-rotate(-4deg);
+}
+
+.woodTop {
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--size-wood-frame-thickness);
+  background-image: url('/assets/arena/mahogany-horizontal.png');
+}
+
+.woodBottom {
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: var(--size-wood-frame-thickness);
+  background-image: url('/assets/arena/mahogany-horizontal.png');
+  transform: scaleY(-1);
+}
+
+.woodLeft {
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: var(--size-wood-frame-thickness);
+  background-image: url('/assets/arena/mahogany-vertical.png');
+  background-size: 100% auto;
+  background-repeat: repeat-y;
+}
+
+.woodRight {
+  top: 0;
+  bottom: 0;
+  right: 0;
+  width: var(--size-wood-frame-thickness);
+  background-image: url('/assets/arena/mahogany-vertical.png');
+  background-size: 100% auto;
+  background-repeat: repeat-y;
+  transform: scaleX(-1);
+}
+
+/* ─── Venetian-blind shadow rake ─── */
+.blindRakeLeft,
+.blindRakeRight {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: var(--size-blind-rake-width);
+  pointer-events: none;
+  z-index: var(--z-base);
+  background-image:
+    repeating-linear-gradient(
+      4deg,
+      transparent 0,
+      transparent 28px,
+      color-mix(in oklab, var(--color-ochre-11) 38%, transparent) 28px,
+      color-mix(in oklab, var(--color-ochre-11) 38%, transparent) 32px,
+      transparent 32px,
+      transparent 48px,
+      color-mix(in oklab, var(--color-charcoal-1) 62%, transparent) 48px,
+      color-mix(in oklab, var(--color-charcoal-1) 62%, transparent) 60px,
+      transparent 60px,
+      transparent 72px
+    );
+  opacity: 0.8;
+  mix-blend-mode: overlay;
+}
+
+.blindRakeLeft {
+  left: 0;
+  mask-image: linear-gradient(
+    90deg,
+    rgba(0,0,0,0.3) 0%,
+    black 22%,
+    black 62%,
+    transparent 100%
+  );
+  animation: briefingSunDriftLeft 14s var(--motion-ease-base) infinite;
+}
+
+.blindRakeRight {
+  right: 0;
+  mask-image: linear-gradient(
+    270deg,
+    rgba(0,0,0,0.3) 0%,
+    black 22%,
+    black 62%,
+    transparent 100%
+  );
+  animation: briefingSunDriftRight 14s var(--motion-ease-base) infinite;
+}
+
+@keyframes briefingSunDriftLeft {
+  0%, 100% { background-position: 0 0; opacity: 0.7; }
+  50%      { background-position: 5px 0; opacity: 0.85; }
+}
+@keyframes briefingSunDriftRight {
+  0%, 100% { background-position: 0 0; opacity: 0.7; }
+  50%      { background-position: -5px 0; opacity: 0.85; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .blindRakeLeft, .blindRakeRight { animation: none; }
+}
+
+/* Content layer — consumer composition sits above the ambient world. */
+.content {
+  position: relative;
+  z-index: var(--z-raised);
+  height: 100%;
+}
+
+} /* @layer components */

@@ -371,7 +371,7 @@ export const BuildHero: React.FC<{ fadeOut?: boolean }> = ({ fadeOut = true }) =
 
       {/* ===== STAT BARS — the brag as bars; PLANNING towers over CODE ===== */}
       {barsVisible && (
-        <AbsoluteFill style={{ justifyContent: 'flex-end', alignItems: 'center', paddingBottom: 70 }}>
+        <AbsoluteFill style={{ justifyContent: 'flex-end', alignItems: 'center', paddingBottom: 44 }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16, fontFamily: "'JetBrains Mono', monospace" }}>
             {STAT_BARS.map((b) => {
               const grow = interpolate(frame, [sec(b.at), sec(b.at + 1.1)], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic) })

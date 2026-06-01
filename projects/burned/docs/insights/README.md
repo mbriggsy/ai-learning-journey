@@ -6,7 +6,7 @@ date: 2026-05-09
 
 # BURNED insights — categorized index
 
-71 numbered insights captured during the BURNED build. Engineering insights
+72 numbered insights captured during the BURNED build. Engineering insights
 document HOW THE CODE/STACK WORKS (bug → root cause → fix). Process insights
 document HOW WE WORK (doc shape, agent behavior, review patterns,
 instrumentation methodology).
@@ -61,6 +61,7 @@ appropriate bucket. Number monotonically; don't reuse numbers.
 | 067 | Scene cue startFrames spaced against expectedFrames overlap when actualFrames overrun | Phase 1 budgets ≠ Phase 2 truths — read frames from audio-manifest.ts (actualFrames + buffer), never expectedFrames slots |
 | 069 | ElevenLabs v3 returns stochastically tail-clipped TTS takes | A clean pipeline can still emit a defective take — gate generation on measured tail-decay (last-120ms peak ≤ −12 dB), regen until clean; cached pre-guard takes need a re-scan |
 | 071 | Borrowed Framer `m` components render at their hidden `initial` state under Remotion stills | Prop-driven isn't enough to borrow into Remotion — if it uses Framer `m`, reconstruct the shell from its real CSS + helpers and Remotion-drive the motion |
+| 072 | Vite 8 dev server serves a stale 500 for a module after a transient bad-parse HMR, surviving browser reloads | A console 500 on a `?t=<fixed>` URL that survives reloads while `pnpm build` passes + page renders is a stale HMR cache, not a code bug — restart Vite, never edit code |
 
 ## Process
 

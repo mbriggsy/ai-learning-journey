@@ -35,6 +35,7 @@ Rules for the local dev loop, debugging, dev hooks, and tooling. Read when setti
 
 ## Recovery
 
+- **Vite stale HMR 500 (phantom error).** A console `500` on a module's `?t=<fixed-number>` URL that *survives browser reloads* while `pnpm build` succeeds AND the page renders is a stale dev-HMR transform cache — Vite cached a transient bad-parse from a mid-edit HMR cycle and keeps re-serving it. It is NOT a code defect. Trust the rolldown prod build, not the dev console. Fix: restart Vite (kill port 5173, re-run `pnpm dev`) — never edit code chasing it. Full write-up: [`docs/insights/072-vite-dev-caches-failed-hmr-transform.md`](../insights/072-vite-dev-caches-failed-hmr-transform.md).
 - **`.chrome-dev-profile/` is gitignored.** Delete to reset dev Chrome profile.
 - **Wrangler local SQLite corruption recovery.** `taskkill //F //IM workerd.exe && rm -rf .wrangler/state`.
 - **Over-staged commit (not yet pushed).** `git reset --soft HEAD~1` to undo the commit while keeping every file's stage state intact. Then `git reset` (no args) to unstage everything, `git add` your intended files by name, re-commit. File contents preserved throughout; only staging state moves.

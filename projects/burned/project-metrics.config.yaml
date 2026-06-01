@@ -1,16 +1,17 @@
 # project-metrics per-project config for BURNED.
 #
 # BURNED's trailer pipeline writes rendered .mp4 / .wav outputs to gitignored
-# directories (videos/trailer/out/ and public/trailer/) — the repo is public
-# and these renders are too big to commit. They ARE Claude+Briggsy work
-# though, so we rescue them from .gitignore here so they count toward the
-# credit total.
+# directories — the repo is public and these renders are too big to commit.
+# They ARE Claude+Briggsy work though, so we rescue them from .gitignore here
+# so they count toward the credit total.
+#   - videos/origin-trailer/out/  — the canonical v2 trailer (renders + Janet VO)
+#   - public/trailer/             — v1 trailer output assets still on disk
+# (v1 source dirs videos/trailer/* were deleted 2026-05-29, so their old rescue
+#  paths are gone; v1 renders are recoverable via the `origin-trailer-v1` tag.)
 
 includeFromGitignore:
-  - videos/trailer/out/**
+  - videos/origin-trailer/out/**
   - public/trailer/**
-  - public/trailer/audio/**
-  - videos/trailer/sample-eval/**
 
 # Generation logs — wired for v2; not yet read by v1.
 generationLogs:

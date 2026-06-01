@@ -312,12 +312,21 @@ question is settled BY the mechanism choice:
 | **A (Playwright)** | YES (browser chrome may show URL bar; even if hidden, page-rendered context is the deployed URL) | **HARD prerequisite** — must show canonical `burned.pages.dev` (NOT `burned-cxa.pages.dev` auto-generated preview which undermines "shipped"; NOT `http://192.168.x.x:5173` local-dev which catastrophically fails R13a) | Phase 5 (capture-time gating) |
 | **B (OBS physical camera)** | NO — capture frames the TV + table-with-phones; no URL bar visible | Desirable but NOT blocking for capture; Phase 7 distribution copy carries production URL textually | Phase 7 (distribution copy) |
 
-The pre-deepening "Pages project name is `burned`" research holds:
+> **⚠️ CORRECTION (2026-06-01): the research below is WRONG.** `burned.pages.dev`
+> is **not ours** — it's squatted by an unrelated Cloudflare account (verified: it
+> serves a parked error page). `burned-cxa.pages.dev` was **not** a preview/canary;
+> it was the *production* subdomain, collision-suffixed because `burned.pages.dev`
+> was already taken globally. The project has since been migrated to **`burnedgame`**
+> → canonical URL is now **`burnedgame.pages.dev`**. See `docs/DEPLOY.md` for the
+> verified truth. (The trailer was already captured under the old URL; this note
+> exists so the false claim doesn't propagate.)
+
+~~The pre-deepening "Pages project name is `burned`" research holds:
 canonical URL is `burned.pages.dev`. The `burned-cxa.pages.dev` URL
 in `ActRemote.tsx` IS a PR-preview / canary subdomain (verified post-
 absorption — Cloudflare Pages auto-generates `<project>-<short>.pages.dev`
 preview URLs for non-canonical deploys; `cxa` is the short-hash).
-Phase 5 entry under Mechanism A FORCES canonical URL OR aborts.
+Phase 5 entry under Mechanism A FORCES canonical URL OR aborts.~~
 
 **Phase 5 entry gate (Unit 5.0): if migration is not green by
 2026-05-24** (one week from candidate Phase 5 entry):

@@ -70,9 +70,17 @@ jobs:
           cache-dependency-path: projects/burned/pnpm-lock.yaml
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
+      # Ensure the Pages project exists (idempotent). Created via direct-upload
+      # so it has NO Cloudflare Git integration — avoids the failing
+      # `pages-build-deployment` check that plagued the old "burned" project.
+      - name: Ensure Pages project exists
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: pnpm exec wrangler pages project create burnedgame --production-branch=main || echo "project already exists — continuing"
       - uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy dist --project-name=burned --branch=main --commit-dirty=true
+          command: pages deploy dist --project-name=burnedgame --branch=main --commit-dirty=true
           workingDirectory: projects/burned

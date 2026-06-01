@@ -41,7 +41,7 @@ describe('isGodOriginAllowed', () => {
   })
 
   it('rejects public-internet origins even without allowlist', () => {
-    expect(isGodOriginAllowed('https://burned.pages.dev', [])).toBe(false)
+    expect(isGodOriginAllowed('https://burnedgame.pages.dev', [])).toBe(false)
     expect(isGodOriginAllowed('https://evil.com', [])).toBe(false)
     expect(isGodOriginAllowed('https://203.0.113.1', [])).toBe(false) // TEST-NET-3, public
   })
@@ -75,7 +75,7 @@ function isReject(d: GodAuthDecision): d is Extract<GodAuthDecision, { ok: false
 
 describe('evaluateGodAuth — rejection sequence', () => {
   const LAN = 'http://192.168.1.10:8787'
-  const PUBLIC = 'https://burned.pages.dev'
+  const PUBLIC = 'https://burnedgame.pages.dev'
 
   it('playtest mode off → 4004 "Playtest mode off"', () => {
     const d = evaluateGodAuth({ origin: LAN, token: 'anything', env: env(), rateLimiter: openLimiter })

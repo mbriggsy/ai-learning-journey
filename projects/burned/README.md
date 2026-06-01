@@ -9,13 +9,13 @@ A spy-comedy card game — rethemed from [Exploding Kittens Party Pack](https://
 
 ## Play
 
-**Live at [burned-cxa.pages.dev](https://burned-cxa.pages.dev/board)** — open `/board` on a TV or laptop to host, then phones scan the QR code to join.
+**Live at [burnedgame.pages.dev](https://burnedgame.pages.dev/board)** — open `/board` on a TV or laptop to host, then phones scan the QR code to join.
 
 | Surface | URL |
 |---|---|
-| Board (TV) | https://burned-cxa.pages.dev/board |
-| Phone join (via QR) | https://burned-cxa.pages.dev/player?room=&lt;CODE&gt; |
-| Operations Manual | https://burned-cxa.pages.dev/howtoplay |
+| Board (TV) | https://burnedgame.pages.dev/board |
+| Phone join (via QR) | https://burnedgame.pages.dev/player?room=&lt;CODE&gt; |
+| Operations Manual | https://burnedgame.pages.dev/howtoplay |
 
 ## Project Map
 

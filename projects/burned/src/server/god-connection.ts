@@ -39,7 +39,7 @@ export type GodAuthDecision =
  *     `PLAYTEST_GOD_ORIGINS`)
  *
  * Rejects everything else, including the public player origin
- * `https://burned.pages.dev`. Rationale: the god role is omniscient; a
+ * `https://burnedgame.pages.dev`. Rationale: the god role is omniscient; a
  * leaked token must not be exploitable without also controlling a LAN
  * endpoint or an explicitly allowlisted origin.
  */

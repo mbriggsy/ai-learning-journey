@@ -7,18 +7,21 @@ the history. (Rule: `feedback-todo-is-not-a-diary.md`.)
 
 ## 1. Active priorities
 
-### Origin trailer re-cut — RENDERED, awaiting Briggsy's YouTube upload (2026-06-01)
+### Origin trailer re-cut — RENDERED + Briggsy-verified, awaiting YouTube upload (2026-06-01)
 
 Stats re-pegged post-v1-teardown (CODE **33,420** · TESTS **27,299** · PLANNING
 **62,450** · panel `+660` commits); Janet's brag VO regenerated; bars + both
-`VO_BEAT` maps re-synced (measured via silencedetect); stats block nudged down a
-pinch. Final master: `videos/origin-trailer/out/trailer.mp4` (84.4s; source at
-`5f7dc069`). Visually verified — **audio sync UNVERIFIED** (Briggsy's Dell had no
-speakers; reboot pending).
+`VO_BEAT` maps re-synced. Finale then re-timed (`65dc3179`): the Pendleton stamp
+gets a full-second breath and BURNED now lands at 80.53s on the music's brass-slam
+downbeat (was jammed in the dip — the "compressed" feel). Final master:
+`videos/origin-trailer/out/trailer.mp4` (**85.4s**). **Briggsy cold-watched —
+"looks/sounds great."** Audio + visuals verified.
 
-**Next (Briggsy):** reboot → cold-watch the master (bar-to-voice sync + the pinch)
-→ upload to YouTube Studio (Data-API blocked by Advanced Protection) → delete/unlist
-the old `c-QTDREcIzI` → hand Claude the new URL.
+**Next (Briggsy):** upload `out/trailer.mp4` to YouTube Studio (Data-API blocked
+by Advanced Protection; metadata locked in `scripts/youtube/upload_trailer.py` —
+title/description/tags) → delete/unlist the old `c-QTDREcIzI` → hand Claude the
+new URL. Thumbnail ready at `out/thumbnail.jpg` (still valid — re-time changed no
+art).
 
 **Then (Claude, the moment the new URL lands) — cascade it, exact sites:**
 - `README.md:14` — `<a href="https://youtu.be/c-QTDREcIzI">` → new URL
@@ -26,8 +29,6 @@ the old `c-QTDREcIzI` → hand Claude the new URL.
   thumbnail AND its `youtu.be/c-QTDREcIzI` link → new video ID (both)
 - `~/.claude/projects/C--Users-brigg-ai-learning-journey/memory/user-google-advanced-protection.md:31`
   — "First trailer shipped this way: https://youtu.be/c-QTDREcIzI" → new URL
-- If sync reads off: nudge the bar `at` cues in `src/scenes/BuildHero.tsx:99-101`
-  (TESTS 11.2 / PLANNING 14.2 are the measured marks) + re-render.
 
 Not blocking, by-design: `docs/plans/origin-trailer-v2/2026-05-28-beat-sheet-draft.md`
 still cites the pre-re-peg figures (43,357 etc.) — left as a dated historical draft;

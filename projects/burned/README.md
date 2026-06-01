@@ -35,15 +35,11 @@ Here's the part that makes this repo unusual.
 
 A guy who builds data pipelines wanted his favorite card game on a screen — and had no idea how to build it. So he didn't. He handed it to an AI and *directed.* Not one image, not one sound, not one line of the application code was written by his hand.
 
-The human leverage was in the planning, not the typing:
+The human leverage was in the planning, not the typing — there's *more planning than code* in this repo. The human's job was taste and direction; the machines did the build.
 
-| | |
-|--:|:--|
-| **~43,000** | lines of code |
-| **~29,000** | lines of tests |
-| **~62,000** | lines of planning docs |
+The receipts — line counts, asset tallies, token spend, and exactly how each is measured — live at **[ai-journey-stats](../ai-journey-stats/README.md)**, computed from git across every project (so they're always current, never hand-copied here).
 
-*More planning than code.* The human's job was taste and direction; the machines did the build. BURNED is, first and foremost, an **engineering proving ground** for that thesis — a real, polished, shipping multiplayer product, made end to end that way.
+BURNED is, first and foremost, an **engineering proving ground** for that thesis — a real, polished, shipping multiplayer product, made end to end that way.
 
 ## How it plays
 

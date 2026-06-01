@@ -3,7 +3,12 @@
 **Live → https://ai-journey-stats.vercel.app**
 
 A Vercel-hosted visual showcase of the credit data across the monorepo's projects,
-measured by the `project-metrics` CLI. Built with Vite 8 + React 19 + TypeScript + GSAP.
+measured by the [`project-metrics`](../../tools/project-metrics/README.md) CLI.
+Built with Vite 8 + React 19 + TypeScript + GSAP.
+
+**How the numbers are counted** → see [`project-metrics`](../../tools/project-metrics/README.md):
+the **tier model** (authored vs. pipeline-generated vs. tool-generated) and exactly what
+counts toward the credit total. Figures are computed from git, not hand-entered.
 
 ## Setup
     pnpm install

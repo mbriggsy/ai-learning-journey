@@ -30,7 +30,7 @@ The client connects to the Worker via `VITE_PARTYKIT_HOST`, baked in at build ti
 
 WebSocket connections are upgraded by the Worker. Cloudflare handles WSS termination automatically — production clients connect over WSS without code changes.
 
-> **Heads-up — the old `burned` project still has a broken CF Git integration.** The original `burned` Pages project was *also* connected to the repo via Cloudflare's native Git integration, which fails on every push (`pages-build-deployment` red ✗ — monorepo, no root-dir config). The GitHub Actions wrangler deploy is the real one. `burnedgame` is created via direct-upload only, so it has **no** Git integration and no red ✗. Delete the old `burned` project (dashboard or an API token with Pages:Edit) to clear the lingering failing check.
+> **History (resolved 2026-06-01):** the original `burned` project was *also* wired to Cloudflare's native Git integration, which failed on every push (`pages-build-deployment` red ✗ — monorepo, no root-dir config). It was deleted during the `burned → burnedgame` migration, which cleared that check. `burnedgame` is created via **direct-upload only** (the `wrangler pages deploy` in CI) — no Git integration, so no red ✗. Keep it that way: do not "Connect to Git" on `burnedgame` in the dashboard.
 
 ## Pre-deploy checklist
 
@@ -80,7 +80,6 @@ Cloudflare Pages keeps every deploy. Roll back via the dashboard ("Deployments" 
 `src/server/room.ts` accepts WebSocket upgrades from:
 - `localhost` and LAN IPs (dev)
 - `https://burnedgame.pages.dev` (canonical prod hostname)
-- `https://burned-cxa.pages.dev` (transitional — old project subdomain; remove after the old `burned` project is deleted)
 
 Any new dev origin or alternate prod hostname must be allowlisted in code before connections succeed. See `docs/conventions/server.md` for the relevant rule.
 
@@ -95,5 +94,4 @@ When the wire format changes:
 
 ## Open items
 
-- **Delete the old `burned` Pages project** to clear the lingering failing `pages-build-deployment` check and free the `burned-cxa.pages.dev` subdomain. Needs the dashboard or an API token with Pages:Edit (the local wrangler OAuth token 403s on Pages management). Once done, drop `https://burned-cxa.pages.dev` from the `room.ts` allowlist.
-- A scoped `CLOUDFLARE_API_TOKEN` (Account → Pages:Edit) in the root `.env` would let Claude manage Pages projects locally (list/create/delete) instead of only through CI.
+- A scoped `CLOUDFLARE_API_TOKEN` (Account → Pages:Edit) lives in the root `.env` for local Pages management (list/create/delete). Wrangler's *OAuth* login is not authorized for the Pages REST API (403) — use the API token for any local Pages admin.

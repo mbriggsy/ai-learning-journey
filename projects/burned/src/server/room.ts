@@ -249,7 +249,6 @@ export class GameRoom extends Server<Env> {
     // on connect.
     const allowedOrigins = [
       'https://burnedgame.pages.dev',      // canonical prod (Pages project "burnedgame")
-      'https://burned-cxa.pages.dev',      // transitional — old "burned" project subdomain; remove after the old project is deleted
       'http://localhost:5173', 'http://localhost:4173',
     ]
     // In dev, allow any local network origin (192.168.x.x, 10.x.x.x, etc.)

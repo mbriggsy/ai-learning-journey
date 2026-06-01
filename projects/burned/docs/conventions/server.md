@@ -20,7 +20,7 @@ Rules for `src/server/`, Cloudflare Workers, Durable Objects, WebSocket protocol
 ## Protocol
 
 - **Protocol version bumps.** When the wire format changes, bump `PROTOCOL_VERSION` in `src/shared/protocol.ts` AND update `gameStore.test.ts`. Mismatched clients get "Game updated — please refresh."
-- **Origin allowlist** at `src/server/room.ts` connection accept. Localhost + LAN for dev; `https://burnedgame.pages.dev` in prod (plus the transitional `https://burned-cxa.pages.dev` until the old Pages project is deleted). Any new dev origin must be whitelisted.
+- **Origin allowlist** at `src/server/room.ts` connection accept. Localhost + LAN for dev; `https://burnedgame.pages.dev` in prod. Any new dev origin must be whitelisted.
 
 ## Playtest harness MCP topology
 

@@ -61,16 +61,15 @@ For phone testing during development, use your machine's local IP instead of `lo
 - **[Vitest](https://vitest.dev/)** — unit testing. Same config pattern as UMB.
 - **[Playwright](https://playwright.dev/)** — E2E testing. Multi-browser context for simulating board + phone clients.
 
-## Deployment (planned — not yet deployed)
+## Deployment
 
-> **Status:** Nothing has been deployed to Cloudflare yet. Spec §8.5 acceptance criteria are unchecked. The plan below is the intended target shape; treat as a roadmap, not a description of current reality.
+BURNED is **live**:
 
-- **Client (planned):** Cloudflare Pages — auto-deploy via GitHub Actions on push to main
-- **Server (planned):** Wrangler deploy via GitHub Actions (server deploys before client)
-- **Cost (target):** $0 (free tier covers everything for a party game)
-- **Rollback (planned):** CF Pages instant rollback via dashboard; wrangler via git revert + redeploy
+- **Client:** [burnedgame.pages.dev](https://burnedgame.pages.dev/board) (Cloudflare Pages)
+- **Server:** Cloudflare Workers + Durable Objects (`burned.briggsy007.workers.dev`)
+- **Cost:** $0 (free tier)
 
-See [phase-6-hardening-deploy.md](../plans/_archive/engine-build/phase-6-hardening-deploy.md) for the original deployment pipeline plan (archived from the engine-build phase set; current deploy work is gated behind the visual rebuild and playtest harness landing — see `TODO.md` §4 carryover).
+Deploys run automatically via GitHub Actions (`.github/workflows/deploy-burned.yml`) on every push to `main` that touches `projects/burned/**` — server first, then client. See **[DEPLOY.md](DEPLOY.md)** for the full pipeline, the project-name-vs-subdomain notes, rollback steps, and origin allowlist.
 
 ## Troubleshooting
 

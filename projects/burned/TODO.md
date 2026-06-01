@@ -18,7 +18,14 @@ the history. (Rule: `feedback-todo-is-not-a-diary.md`.)
 - Phase 2 ElevenLabs spend: **$0.87 / $50** ceiling (TTS only; excludes the
   2026-05-31 music-bed generations — ~6 Music API calls, not separately metered)
 
-### Origin trailer v2 — ACTIVE (canonical cut chosen + polished + scored; next = optional SFX upgrade)
+### Origin trailer v2 — SHIPPED to YouTube 2026-06-01 (open: optional SFX upgrade)
+
+**SHIPPED 2026-06-01:** canonical cut is public → **https://youtu.be/c-QTDREcIzI**
+(uploaded via YouTube Studio — the Data-API path is blocked by Google Advanced
+Protection on briggsy007@gmail.com; see memory `user-google-advanced-protection`).
+Gold master = `videos/origin-trailer/out/trailer.mp4` (fresh render from HEAD,
+music bed verified: 1 silence gap vs the pre-music cut's 11). Upload script staged
+at `scripts/youtube/upload_trailer.py` (usable only with a verified OAuth app / non-APP account).
 
 **CURRENT STATE (2026-05-31):** The 3:01 narrated assembly was superseded by a
 **~84s "short recut"**, then a finale-roster A/B was run and **B won**. The

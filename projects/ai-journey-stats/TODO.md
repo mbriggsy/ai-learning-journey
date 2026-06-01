@@ -4,6 +4,29 @@
 
 > **House rule — TODO is NOT a diary.** Actionable items only. No session history, no "what we did" logs, no narrative addenda. The git log has the history. If a line isn't an open thing Claude or Briggsy can act on, it doesn't belong here. Strip cruft when you find it.
 
+## OPEN (P0, 2026-06-01) — fix Vercel auto-deploy (root cause, NOT a deploy hook)
+
+The live site is STALE: `scannedAt` **2026-05-28** (4 days old). Today's `pnpm refresh`
+is committed (`2bcf4699` — corrects BURNED's liveUrl to `burnedgame.pages.dev` + credits
+the v2 trailer renders) but **never published** — Vercel didn't build it.
+
+**Symptom:** of 3 pushes today touching this dir, only `cf98c853` deployed (~20s after
+push); `2bcf4699` (586-line stats change) and `e5c64863` (README change) did **not**
+trigger a build. Auto-deploy fires *sometimes* and silently skips most pushes.
+**Briggsy: fix the auto-deploy itself — NOT a deploy-hook workaround.**
+
+**Leading suspect:** `vercel.json` → `"ignoreCommand": "git diff --quiet HEAD^ HEAD ./"`.
+VERIFY (don't assume): (a) Vercel's exit-code contract for ignoreCommand (which exit =
+build vs skip), and (b) whether Vercel's shallow clone even contains `HEAD^` — if it's
+depth-1, `HEAD^` is missing and the diff's behavior is undefined, which would explain the
+inconsistent skips.
+
+**Next session (needs Vercel dashboard — Briggsy):** Project → Settings → Git → inspect
+**Ignored Build Step** + **Root Directory**; open Deployments and read why `2bcf4699` /
+`e5c64863` were skipped/errored. Likely fix: repair or drop the `ignoreCommand` (or make
+`HEAD^` resolvable). Then re-test: a `pnpm refresh` push must deploy **every** time.
+A successful deploy of HEAD republishes today's data (burnedgame / 170,535 lines).
+
 ## Where the depth lives
 
 - **`docs/ideation.md`** — WHAT decisions (audience, hero framing, content shape, CTA, bar revisions, mobile + light/dark, **§11 authorship-is-silent**). The steering reference. Re-read before any visual or content call.

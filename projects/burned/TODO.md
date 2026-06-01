@@ -7,7 +7,7 @@ the history. (Rule: `feedback-todo-is-not-a-diary.md`.)
 
 ## 1. Active priorities
 
-### Current state (game `src/` verified 2026-05-23, unchanged since — this session only touched `videos/origin-trailer/` + docs)
+### Current state (stats re-verified 2026-06-01; board lobby + GameTable now share `BriefingRoom`)
 
 - Tests: **1407 pass** | 6 expected fail (68/68 files green)
 - Typecheck: clean (`pnpm typecheck` root + `videos/origin-trailer/`)
@@ -187,6 +187,24 @@ already ports these — mind them when extending:)
 Active warnings only. Older landmines have moved to `docs/insights/` and
 `CLAUDE.md`.
 
+- **The war-room WORLD lives in `BriefingRoom`** (`src/client/board/BriefingRoom.tsx`
+  + `.module.css`, commit `a8466d02`): felt surface, fabric weave, table-edge inlay,
+  mahogany frame, venetian blinds. BOTH the Lobby AND the GameTable render their
+  content inside `<BriefingRoom>` — they are the same room. Edit the world ONCE in
+  `BriefingRoom.module.css`. Do NOT re-add felt/frame/blind CSS to
+  `GameTable.module.css` or `Lobby.module.css` (that duplication was just removed).
+  The board-root `height: 100vh` lives on `.room` now; `.table` and `.lobby` are
+  `height: 100%`. Full-bleed `100vh` is intentional (Briggsy chose it 2026-06-01 over
+  `100dvh`/fit-inside) — a too-short *window* clips the bleed edge but a fullscreen TV
+  doesn't; don't "fix" it.
+- **Lobby roster folder content-sizes, then caps + scrolls** (commit `52fdf282`). The
+  manila `// ROSTER` folder is sized to its operatives; on a short viewport (≤~720px
+  height with 9-10 players) the body scrolls internally (last rows scroll under). This
+  is intentional graceful degradation — 1080p+ fits all 10. Do NOT make the folder
+  `align-self: stretch` to "fill" the space: that reintroduces the dead-space overflow
+  Briggsy caught (the folder ran past the viewport). The cap works because `.stage` has
+  a definite `grid-template-rows: minmax(0, 1fr)` so the folder's `max-height: 100%`
+  resolves; keep that row.
 - **Absolute-positioned cards in `.fan` are anchored to `.piles` center,
   not `.fan` center** (commit `b274a12b`, 2026-05-14). The three discard
   layers (`.top`, `.behind1`, `.behind2`) are `position: absolute` with

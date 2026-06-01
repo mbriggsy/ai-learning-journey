@@ -15,9 +15,10 @@ the history. (Rule: `feedback-todo-is-not-a-diary.md`.)
 - DramaOverlay lazy chunk: **2.34 KB gz**
 - HOW-TO-PLAY bundle: `howtoplay-*.js` **33.90 KB gz** + shared GSAP **27.21 KB gz**
 - Protocol version: **v6**
-- Phase 2 ElevenLabs spend: **$0.87 / $50** ceiling
+- Phase 2 ElevenLabs spend: **$0.87 / $50** ceiling (TTS only; excludes the
+  2026-05-31 music-bed generations — ~6 Music API calls, not separately metered)
 
-### Origin trailer v2 — ACTIVE (canonical cut chosen + polished; next = optional SFX/music upgrades)
+### Origin trailer v2 — ACTIVE (canonical cut chosen + polished + scored; next = optional SFX upgrade)
 
 **CURRENT STATE (2026-05-31):** The 3:01 narrated assembly was superseded by a
 **~84s "short recut"**, then a finale-roster A/B was run and **B won**. The
@@ -29,8 +30,18 @@ alternate is saved as `TrailerAltRosterOpen`; the old 3:01 cut + its beats are
 registered under `archive-*`. **See `videos/origin-trailer/README.md` for the full
 cut map.** The kid wears a Phillies HARPER #3 cream jersey (the anchor).
 
+**Music bed SHIPPED 2026-05-31** (`Trailer.tsx`, commit `aae37304`): three
+Archer-coded ElevenLabs Music cues hard-cut to Janet's VO turns — intro
+(setup→curious) → execution (slams in on "So he didn't", fades across "Measure
+twice") → the approved attack/wink/finale/title. Regenerate via
+`scripts/generate-music.ts {main|intro|execution}`. KEY LESSON: the EL model
+won't ramp intensity early inside one cue, and RMS meters are blind to
+"intensity" — perceived gear-changes come from HARD-CUTTING separate recordings
+on a dramatic beat. Budget memory `project-burned-music-bed-budget` updated (EL
+Music approved as per-asset spend, not a music sub).
+
 Open (not blocking): the ElevenLabs key lacks `sound_generation` (finale SFX are
-DSP-synthesized — `scripts/synth-sfx.py`); a music bed is still $0/unstarted.
+DSP-synthesized — `scripts/synth-sfx.py`).
 
 Clean-slate rebuild after v1 teardown. Workspace + locked decisions:
 **`docs/plans/origin-trailer-v2/`** (read `README.md` first;
@@ -142,8 +153,8 @@ motion — borrowed Framer `m` renders at hidden `initial` under stills
    If it drags on review, add drifting embers / slow vignette breath over the
    wordmark.
 
-**THEN:** music bed (free/$0 — see `project-burned-music-bed-budget` memory);
-final full render; update README/SETUP stats in one pass (`feedback-stats-single-source`).
+**THEN:** ~~music bed~~ (DONE — see above); final full render; update README/SETUP
+stats in one pass (`feedback-stats-single-source`).
 
 **Studio** (`pnpm -C videos/origin-trailer studio`, port 3000): `OriginTrailer`
 (full) + `Beat1ColdOpen`…`Beat7Payoff`. The `FoundationProof` / `WinnerProof` /

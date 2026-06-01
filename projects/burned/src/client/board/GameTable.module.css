@@ -2,9 +2,14 @@
    Board — war-room briefing table with dramatic overhead lighting.
    Grid-based full-bleed layout; children are absolute-positioned against the grid.
 
-   Axis discipline: board view is WIDTH-constrained. The outermost .table uses
-   `height: 100vh` (allowed exactly once, for the board's dedicated-viewport
-   root) and every child sizes against `vw` through the Phase 1 board tokens.
+   The shared war-room WORLD (felt surface, fabric weave, table-edge inlay,
+   mahogany frame, venetian blinds) now lives in <BriefingRoom> — GameTable
+   renders its grid INSIDE it so the lobby and the table are the same room.
+   This file owns only the desk-layout grid + the play-surface children.
+
+   Axis discipline: board view is WIDTH-constrained. BriefingRoom owns the
+   `height: 100vh` viewport root; .table fills it (`height: 100%`) and every
+   child sizes against `vw` through the Phase 1 board tokens.
 */
 
 @layer components {
@@ -13,240 +18,16 @@
   position: relative;
   display: grid;
   grid-template-rows: auto 1fr auto;  /* announcement feed | play area | status bar */
-  box-sizing: border-box;  /* keep outer height == 100vh so contain:layout's
-     fixed-position descendants (StatusBar) anchor to the visible viewport edge,
-     not 44px below fold once 22px vertical padding is added. */
-  height: 100vh;
+  box-sizing: border-box;  /* keep outer height == BriefingRoom's 100vh so
+     contain:layout's fixed-position descendants (StatusBar) anchor to the
+     visible viewport edge, not below fold once vertical padding is added. */
+  height: 100%;
   padding: var(--space-fluid-base-board) var(--space-fluid-loose-board);
   font-family: var(--font-body);
   color: var(--color-fg-primary);
   overflow: hidden;
   contain: layout style;  /* Deepening: 8 paint layers on a full-bleed 4K element.
      Prevents child animation repaints from propagating up. */
-
-  /* Layered war-room surface (5 gradients stacked):
-     1. Overhead spotlight — hot amber pool dead-center (draws the eye to the action)
-     2. Wide warm ambient fill — teal cocktail-lounge undertone
-     3. Heavy vignette — dark edges force center attention
-     4. Fabric weave grain — subtle felt texture
-     5. Base deep teal-charcoal — Dreamland mid-century warmth, NOT poker-green
-  */
-  background:
-    /* 1: overhead spotlight */
-    radial-gradient(ellipse 50% 40% at 50% 48%,
-      color-mix(in oklab, var(--color-accent-drama) 35%, transparent) 0%,
-      color-mix(in oklab, var(--color-accent-drama) 18%, transparent) 30%,
-      transparent 60%),
-    /* 2: wide warm ambient */
-    radial-gradient(ellipse 80% 70% at 50% 50%,
-      color-mix(in oklab, var(--color-teal-5) 40%, transparent) 0%,
-      color-mix(in oklab, var(--color-teal-4) 25%, transparent) 40%,
-      transparent 65%),
-    /* 3: heavy vignette */
-    radial-gradient(ellipse 75% 75% at 50% 50%,
-      transparent 30%,
-      color-mix(in oklab, var(--color-charcoal-1) 65%, transparent) 70%,
-      color-mix(in oklab, var(--color-charcoal-1) 90%, transparent) 100%),
-    /* 4: fabric weave micro-grain */
-    repeating-conic-gradient(
-      color-mix(in oklab, var(--color-teal-3) 8%, transparent) 0%,
-      color-mix(in oklab, var(--color-teal-2) 6%, transparent) 0.5%,
-      color-mix(in oklab, var(--color-teal-4) 9%, transparent) 1%
-    ),
-    /* 5: base teal-charcoal gradient */
-    linear-gradient(170deg,
-      var(--color-teal-3) 0%,
-      var(--color-teal-2) 50%,
-      var(--color-teal-1) 100%);
-}
-
-/* Fabric weave cross-hatching — subtle cream grain over the base gradient */
-.table::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background-image:
-    repeating-linear-gradient(
-      0deg,
-      transparent,
-      transparent 2px,
-      color-mix(in oklab, var(--color-cream-12) 2%, transparent) 2px,
-      color-mix(in oklab, var(--color-cream-12) 2%, transparent) 3px
-    ),
-    repeating-linear-gradient(
-      90deg,
-      transparent,
-      transparent 2px,
-      color-mix(in oklab, var(--color-cream-12) 2%, transparent) 2px,
-      color-mix(in oklab, var(--color-cream-12) 2%, transparent) 3px
-    );
-  pointer-events: none;
-  z-index: var(--z-base);
-}
-
-/* Table edge — geometric rectangular frame, mid-century modern.
-   Now sits BEHIND the mahogany wood frame so the wood carries the hard edge. */
-.table::after {
-  content: '';
-  position: absolute;
-  top: 3%;
-  left: 2.5%;
-  right: 2.5%;
-  bottom: 3%;
-  border: 1px solid color-mix(in oklab, var(--color-accent-drama) 18%, transparent);
-  border-radius: var(--radius-xl);
-  box-shadow:
-    inset 0 0 80px color-mix(in oklab, var(--color-charcoal-1) 25%, transparent),
-    0 0 1px color-mix(in oklab, var(--color-accent-drama) 12%, transparent);
-  pointer-events: none;
-  z-index: var(--z-raised);
-}
-
-/* ─── Mahogany wood frame — briefing-table edge inlay ───
-   Four edge strips so grain flows correctly per side: horizontal on top and
-   bottom, vertical on left and right. This is the Archer "Mother's office"
-   vocabulary — everything happens on a piece of 1947 furniture. */
-.woodFrame {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: var(--z-base);
-  /* Inner bevel + outer depth — sells the raised-frame illusion. The shadow
-     rides on the container so it reads continuously across the four edges. */
-  box-shadow:
-    inset 0 0 0 calc(var(--size-wood-frame-thickness) + 1px) transparent,
-    inset 0 0 24px color-mix(in oklab, var(--color-charcoal-1) 55%, transparent),
-    inset 0 2px 0 color-mix(in oklab, var(--color-ochre-10) 22%, transparent);
-}
-
-.woodTop,
-.woodBottom,
-.woodLeft,
-.woodRight {
-  position: absolute;
-  background-size: auto 100%;
-  background-repeat: repeat-x;
-}
-
-.woodTop,
-.woodBottom {
-  /* Imagen's horizontal tile came back noticeably brighter/oranger than the
-     vertical plate. Dark-down + slightly desaturate to unify the two so the
-     frame reads as one continuous piece of mahogany, not two woods joined. */
-  filter: brightness(0.78) saturate(0.88) hue-rotate(-4deg);
-}
-
-.woodTop {
-  top: 0;
-  left: 0;
-  right: 0;
-  height: var(--size-wood-frame-thickness);
-  background-image: url('/assets/arena/mahogany-horizontal.png');
-}
-
-.woodBottom {
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: var(--size-wood-frame-thickness);
-  background-image: url('/assets/arena/mahogany-horizontal.png');
-  /* Mirror vertically so the light from the tile's highlight lands on the
-     inner edge (toward the table center) on both top and bottom. */
-  transform: scaleY(-1);
-}
-
-.woodLeft {
-  top: 0;
-  bottom: 0;
-  left: 0;
-  width: var(--size-wood-frame-thickness);
-  background-image: url('/assets/arena/mahogany-vertical.png');
-  background-size: 100% auto;
-  background-repeat: repeat-y;
-}
-
-.woodRight {
-  top: 0;
-  bottom: 0;
-  right: 0;
-  width: var(--size-wood-frame-thickness);
-  background-image: url('/assets/arena/mahogany-vertical.png');
-  background-size: 100% auto;
-  background-repeat: repeat-y;
-  /* Mirror horizontally so highlight is on the inner edge on both sides. */
-  transform: scaleX(-1);
-}
-
-/* ─── Venetian-blind shadow rake — left side ───
-   Horizontal amber-warm bands raked at a slight angle simulating tungsten
-   light pouring through blinds (Mother's office, every episode). Fades into
-   the center so the midline stays readable. */
-.blindRakeLeft,
-.blindRakeRight {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: var(--size-blind-rake-width);
-  pointer-events: none;
-  z-index: var(--z-base);
-  background-image:
-    /* Horizontal venetian-blind slat shadow — the signature Mother's-office
-       look from Archer. Alternating warm amber light gaps and deep charcoal
-       slat shadows. Each cycle ~72px (gap + slat). */
-    repeating-linear-gradient(
-      4deg, /* near-horizontal with a tiny downward tilt — afternoon sun angle */
-      transparent 0,
-      transparent 28px,
-      color-mix(in oklab, var(--color-ochre-11) 38%, transparent) 28px,
-      color-mix(in oklab, var(--color-ochre-11) 38%, transparent) 32px,
-      transparent 32px,
-      transparent 48px,
-      color-mix(in oklab, var(--color-charcoal-1) 62%, transparent) 48px,
-      color-mix(in oklab, var(--color-charcoal-1) 62%, transparent) 60px,
-      transparent 60px,
-      transparent 72px
-    );
-  opacity: 0.8;
-  mix-blend-mode: overlay;
-}
-
-.blindRakeLeft {
-  left: 0;
-  mask-image: linear-gradient(
-    90deg,
-    rgba(0,0,0,0.3) 0%,
-    black 22%,
-    black 62%,
-    transparent 100%
-  );
-  animation: sunDriftLeft 14s var(--motion-ease-base) infinite;
-}
-
-.blindRakeRight {
-  right: 0;
-  mask-image: linear-gradient(
-    270deg,
-    rgba(0,0,0,0.3) 0%,
-    black 22%,
-    black 62%,
-    transparent 100%
-  );
-  animation: sunDriftRight 14s var(--motion-ease-base) infinite;
-}
-
-/* Afternoon sun crawl — horizontal drift of 3-4px across the slats +
-   modest opacity swell. Very slow so it's subliminal, not distracting. */
-@keyframes sunDriftLeft {
-  0%, 100% { background-position: 0 0; opacity: 0.7; }
-  50%      { background-position: 5px 0; opacity: 0.85; }
-}
-@keyframes sunDriftRight {
-  0%, 100% { background-position: 0 0; opacity: 0.7; }
-  50%      { background-position: -5px 0; opacity: 0.85; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .blindRakeLeft, .blindRakeRight { animation: none; }
 }
 
 /* ─── Left-side ambient CASE BANNER ─────────────────────────────────

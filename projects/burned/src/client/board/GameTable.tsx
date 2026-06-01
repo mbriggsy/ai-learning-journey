@@ -5,6 +5,7 @@ import {
 import { PlayerStrip } from './PlayerStrip'
 import { Arena } from './Arena'
 import { BlotterContent } from './BlotterContent'
+import { BriefingRoom } from './BriefingRoom'
 import { NopeCountdownBar } from './NopeCountdownBar'
 import { HOWTOPLAY_URL } from '@client/shared/howtoplayUrl'
 import styles from './GameTable.module.css'
@@ -15,28 +16,13 @@ export function GameTable() {
   const flashRef = useRef<HTMLDivElement>(null)
 
   return (
-    <div className={styles.table}>
-      {/* Venetian-blind shadow rake — Archer "Mother's office" vocabulary.
-          Lives behind everything, low-opacity, masked toward the center. */}
-      <div className={styles.blindRakeLeft} aria-hidden="true" />
-      <div className={styles.blindRakeRight} aria-hidden="true" />
-
+    <BriefingRoom>
+      <div className={styles.table}>
       {/* Desk surface — piles, COMMS feed, and turn status sit directly on
           the mahogany frame's interior. Phase 1: naked on wood (no paper
           underlay). Phase 2+ rebuilds each zone's physical-object treatment
           (tabletop shadows, manila dossier, brass nameplate). */}
       <BlotterContent />
-
-      {/* Mahogany wood edge inlay — briefing-table border. Four sub-divs so
-          each edge gets grain in the correct direction (horizontal on top/
-          bottom, vertical on left/right). The overlaid bevel shadow sells
-          the raised-frame illusion. */}
-      <div className={styles.woodFrame} aria-hidden="true">
-        <div className={styles.woodTop} />
-        <div className={styles.woodBottom} />
-        <div className={styles.woodLeft} />
-        <div className={styles.woodRight} />
-      </div>
 
       {/* Left ambient case banner — Pendleton Agency mission chrome.
           Reads as a typeset briefing-board poster, NOT a stamped paper
@@ -100,6 +86,7 @@ export function GameTable() {
 
       {/* Full-screen event flash — GSAP target */}
       <div ref={flashRef} className={styles.eventFlash} />
-    </div>
+      </div>
+    </BriefingRoom>
   )
 }

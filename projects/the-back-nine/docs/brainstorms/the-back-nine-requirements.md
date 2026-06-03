@@ -39,7 +39,7 @@ flowchart TD
 
 **The Confidence Spine (the magic moment)**
 - R1. The product answers one primary question — *"Can I retire, and when?"* — as its central, first-class surface. Everything else is subordinate to it.
-- R2. The answer is a **plain-language confidence statement** that leads with the verdict and bakes in honest odds in human terms (e.g., *"You can retire at 62 — in 9 of 10 versions of your future, the money lasts."*). For a couple it is framed for the household ("you both") and is honest about the survivor case. No histograms, no bare percentages-as-jargon, no dashboard on the primary surface. The statement's meaning must not depend on color alone.
+- R2. The answer is a **plain-language confidence statement** that leads with the verdict and bakes in honest odds in human terms (e.g., *"You can retire at 62 — in 9 of 10 versions of your future, the money lasts."*). For a couple it is framed for the household ("you both") and is honest about the survivor case. **Borderline/off-track answers follow Kitces's "probability of adjustment" framing — never "failure"** — expressed as the dollar move that keeps the plan safe (e.g., *"in 4 of 10 futures, you'd trim spending ~$600/month"*): honest, calm, actionable. No histograms, no bare percentages-as-jargon, no dashboard on the primary surface. The statement's meaning must not depend on color alone.
 - R3. The engine models a **distribution of possible futures** (uncertainty is a primary modeling input, not bolted on), not a single deterministic projection. The confidence statement is the humanized reading of that distribution.
 - R4. After the verdict, all supporting detail — the range, the assumptions, the underlying math — is reachable on demand but **never shown unsolicited** on the first surface.
 
@@ -92,6 +92,21 @@ flowchart TD
 - **Privacy / local-first is the product's identity, not a detail.** *"We can't see your money, by design"* is load-bearing — elevated from deferred architecture to a positioning pillar, and gated by R15 (provable before spoken).
 - **Regulatory posture = the Boldin template (verified, 3-0 in research) — disclaimer only.** A battle-tested path to stay on the tool side of the Investment Advisers Act line. NOTE: the research verified the *disclaimer* posture, **not** the behavior of selectively surfacing a personalized opportunity (R10a) — see Outstanding Questions.
 
+## Technical Foundation (research-resolved 2026-06-03)
+
+Both fronts the brainstorm deferred are now answered from cited sources via direct grounded search + primary docs. (The deep-research *workflow* failed three times — fetch/verifier crashes — so these decisions deliberately do **not** come from that broken pipeline.)
+
+**Engine — Monte Carlo, framed as "probability of adjustment."**
+- Monte Carlo simulation, 1000+ paths — what ProjectionLab and Boldin both use, and it produces the "X of 10 futures" language natively. Arithmetic-average growth (not compound) to avoid double-counting volatility. Optional historical-sequence cross-check.
+- Defaults (all user-overridable per R6/R7): ~3% inflation; deliberately **conservative** real returns (don't overfit to favorable US history — Pfau); SSA cohort life tables for joint-and-survivor longevity.
+- **Result framing follows Kitces:** never "probability of failure." The off-track/borderline answer is the **dollar adjustment** that keeps the plan safe (*"in 4 of 10 futures, you'd trim spending ~$600/month"*). This is the confidence-statement grammar and it resolves the off-track delivery problem.
+
+**Form factor — Web, local-first PWA.**
+- Frictionless on-ramp (a URL, no install) — serves the consumability wedge. The engine runs client-side in **WASM + Web Workers** (near-native; fast enough for live what-if recompute), so web costs nothing on correctness.
+- Data lives in the browser, **encrypted at rest** (WebCrypto, non-extractable key in IndexedDB, key derived from the user's passphrase). *"Server holds only ciphertext"* is honestly deliverable. E2E cross-device sync (**Jazz** is the best-evidenced E2E engine; Evolu stays unverified) is a later add, not v1.
+- **Honest caveat (per R15):** web re-serves the app code each visit, so the trust promise covers data at rest / in transit, not a malicious-code-update threat model. Disclose, don't hide. A **Tauri v2 desktop** wrapper (OS keychain + SQLCipher-encrypted SQLite; avoid the maybe-deprecated Stronghold plugin) is the future trust-maximalist upgrade — keep the core portable.
+- **Recovery (R17/R18):** the universal E2E model — a client-generated **recovery phrase stored outside the app** + mandatory export. No password reset, by design, clearly communicated.
+
 ## Dependencies / Assumptions
 - Assumes a **US** tax/retirement context (Roth, Social Security, federal brackets) for MVP.
 - Assumes **manual data entry** is sufficient for a credible first answer (handover-locked).
@@ -99,22 +114,19 @@ flowchart TD
 
 ## Outstanding Questions
 
-### Resolve Before Planning — via focused research (see Next Steps)
-- [Affects R3, correctness][Needs research] **Engine fidelity:** which modeling approach produces an honest *"X of 10 futures"* a literate skeptic trusts (Monte Carlo vs historical-sequence-of-returns vs other), and what default capital-market assumptions (returns, inflation, longevity) ship behind the guided on-ramp. Correctness-critical — this is the actual product, not a footnote.
-- [Affects all, R15–R18][Needs research] **Form factor (web vs desktop) + data location (local-first + E2E vs other).** The front the prior verifier crashed on — unverified, not decided. Now load-bearing for the product's identity (R15) and coupled to the engine's execution location (client vs server) and the live-tuning recompute budget (R10c).
+### Resolved Before Planning
+- **Household-vs-single → couple** (see Key Decisions).
+- **Engine fidelity → Monte Carlo, "probability of adjustment" framing** (see Technical Foundation).
+- **Form factor / data location → Web, local-first PWA, encrypted-at-rest** (see Technical Foundation).
 
-*(Resolved since last pass: household-vs-single → **couple**; see Key Decisions.)*
+*Nothing remains blocking. The doc is ready for `/ce:plan`.*
 
 ### Deferred to Planning
-- [Affects R2][Design] The exact **plain-language grammar** for the confidence statement across outcome states (on-track / borderline / off-track), including **what action/affordance, if any, accompanies a bad-news answer** — calm and honest in all three, without relying on color.
+- [Affects R2][Design] The exact **on-screen wording and affordance** for each outcome state — the *framing* is decided (probability-of-adjustment-in-dollars; see Technical Foundation), but the precise copy and the next-action a bad-news answer offers are a design pass, without relying on color.
 - [Affects R10][Design] How **"two futures"** is rendered legibly side-by-side without collapsing into a chart-heavy comparison.
 - [Affects R1, R5][Design] The **cold-start / zero-data first screen** (what a brand-new user sees before any input), and the **returning-user re-entry view** (saved answer + staleness, not a re-run of intake).
 - [Affects R10–R13][Regulatory] **Verified disclaimer ≠ verified surfacing.** Does the software *selectively surfacing a personalized Roth opportunity* (R10a), based on the user's own data, stay on the tool side of the advice line — or does the selection behavior itself brush it, regardless of how the copy is worded? Needs a regulatory gut-check on the *mechanic*, not just the string.
 
 ## Next Steps
-- **Household resolved (couple)** — see Key Decisions.
-- **Two focused research passes run BEFORE `/ce:plan`** (both are "I don't know from memory," and both reshape the plan's structure):
-  1. **Engine fidelity** — Monte Carlo vs historical-sequence-of-returns, plus the default capital-market assumptions (returns, inflation, longevity) that ship behind the guided on-ramp. Correctness-critical.
-  2. **Local-first / E2E architecture maturity + web-vs-desktop** — the front the prior verifier crashed on; now load-bearing for the product's identity and coupled to where the engine runs.
-- **UX-pain receipt research dropped** — that was competitive positioning ammo, and we're the only game in town.
-- Then `-> /ce:plan` for structured implementation planning.
+- All blocking questions resolved (household, engine, form factor — see Key Decisions + Technical Foundation).
+- `-> /ce:plan` for structured implementation planning.

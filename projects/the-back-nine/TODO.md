@@ -9,7 +9,7 @@ Requirements locked + reviewed (7-persona). No code yet. Ready to plan.
 1. Run `/ce:plan` against `docs/brainstorms/the-back-nine-requirements.md` → structured implementation plan. Likely units: WASM Monte Carlo engine, encrypted local store (WebCrypto + IndexedDB), guided on-ramp, confidence-statement component (incl. "probability of adjustment" off-track grammar), Roth-lever flow.
 
 ## Open Items
-- [ ] **Regulatory surfacing gut-check** — does the software *selectively surfacing* a personalized Roth opportunity (R10a) stay on the tool side of the advice line, or does the selection mechanic itself brush it? We verified the *disclaimer*, not the *surfacing*. Resolve before that lever ships.
+- _(none — surfacing-mechanic posture resolved 2026-06-03: disclaimer + categorical trigger + user-initiated math; grounded education-vs-advice pass deferred until the posture is load-bearing in a real Terms doc / marketing claim.)_
 
 ## Landmines
 - **`deep-research` workflow broken** — 3× StructuredOutput crashes; its "refuted" verdicts are verifier false-negatives. Self-serve via `gemini-grounding` + `curl`; always read the `failures` block, not just the summary.

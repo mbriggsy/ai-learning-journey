@@ -90,7 +90,7 @@ flowchart TD
 - **Master principle = calm by default, depth on demand.** Progressive disclosure is the entire architecture, input *and* output.
 - **Household = couple (locked).** User #1's situation. The engine models joint longevity (money lasts to the *second* death), survivor Social Security, and married-filing-jointly brackets; the survivor's tax cliff is the Roth lever's headline story.
 - **Privacy / local-first is the product's identity, not a detail.** *"We can't see your money, by design"* is load-bearing — elevated from deferred architecture to a positioning pillar, and gated by R15 (provable before spoken).
-- **Regulatory posture = the Boldin template (verified, 3-0 in research) — disclaimer only.** A battle-tested path to stay on the tool side of the Investment Advisers Act line. NOTE: the research verified the *disclaimer* posture, **not** the behavior of selectively surfacing a personalized opportunity (R10a) — see Outstanding Questions.
+- **Regulatory posture = Boldin disclaimer template + a tool-behaving surfacing mechanic.** Baseline (verified, 3-0 in research): an explicit *"informational and educational — not legal, tax, or investment advice; validate any strategy with a licensed professional"* disclaimer, carried in **both** a Terms/License agreement **and** in-product (R13). The surfacing mechanic is designed to *earn* that posture, not lean on it — because a disclaimer shields words, not behavior: **(1) the trigger is categorical** (a general fact about couples filing jointly, not a personalized verdict about this user), **(2) the personalized analysis is user-initiated** (the two-futures math computes only when the user opens the lever — a calculator they reach for, not a push), and **(3) the payload is math/hypotheticals only** (R12). This is a **decided design posture, not a verified legal bright-line** — research verified the *disclaimer*, not the *surfacing mechanic*. Per R15 spirit: before this becomes load-bearing in a real Terms doc or a marketing claim, run a grounded investment-education-vs-advice verification pass.
 
 ## Technical Foundation (research-resolved 2026-06-03)
 
@@ -118,6 +118,7 @@ Both fronts the brainstorm deferred are now answered from cited sources via dire
 - **Household-vs-single → couple** (see Key Decisions).
 - **Engine fidelity → Monte Carlo, "probability of adjustment" framing** (see Technical Foundation).
 - **Form factor / data location → Web, local-first PWA, encrypted-at-rest** (see Technical Foundation).
+- **Surfacing-mechanic regulatory posture → disclaimer + tool-behaving mechanic** (categorical trigger, user-initiated analysis, math-only payload). Decided design posture, not a verified bright-line — grounded education-vs-advice pass deferred until the posture is load-bearing in a real Terms doc or marketing claim (see Key Decisions).
 
 *Nothing remains blocking. The doc is ready for `/ce:plan`.*
 
@@ -125,7 +126,6 @@ Both fronts the brainstorm deferred are now answered from cited sources via dire
 - [Affects R2][Design] The exact **on-screen wording and affordance** for each outcome state — the *framing* is decided (probability-of-adjustment-in-dollars; see Technical Foundation), but the precise copy and the next-action a bad-news answer offers are a design pass, without relying on color.
 - [Affects R10][Design] How **"two futures"** is rendered legibly side-by-side without collapsing into a chart-heavy comparison.
 - [Affects R1, R5][Design] The **cold-start / zero-data first screen** (what a brand-new user sees before any input), and the **returning-user re-entry view** (saved answer + staleness, not a re-run of intake).
-- [Affects R10–R13][Regulatory] **Verified disclaimer ≠ verified surfacing.** Does the software *selectively surfacing a personalized Roth opportunity* (R10a), based on the user's own data, stay on the tool side of the advice line — or does the selection behavior itself brush it, regardless of how the copy is worded? Needs a regulatory gut-check on the *mechanic*, not just the string.
 
 ## Next Steps
 - All blocking questions resolved (household, engine, form factor — see Key Decisions + Technical Foundation).

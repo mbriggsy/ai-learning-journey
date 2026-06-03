@@ -4,6 +4,10 @@ type: feat
 parent: docs/brainstorms/the-back-nine-requirements.md
 date: 2026-06-03
 status: active
+deepened:        # YYYY-MM-DD — set when all phases deepened
+doc-reviewed:    # YYYY-MM-DD — set when document-review passes
+coded:           # YYYY-MM-DD — set when all phases implemented
+code-reviewed:   # YYYY-MM-DD — set when all phase code reviewed
 phases:
   - phase-1-foundation.md        # not started — scaffold, engine core, encrypted store
   - phase-2-first-answer.md      # not started — intake, viz, confidence statement

@@ -5,6 +5,10 @@ phase: 2
 parent: docs/plans/mvp-confidence-spine/roadmap.md
 date: 2026-06-03
 status: not-started
+deepened:        # YYYY-MM-DD
+doc-reviewed:    # YYYY-MM-DD
+coded:           # YYYY-MM-DD
+code-reviewed:   # YYYY-MM-DD
 ---
 
 # Phase 2 — The First Answer (the magic moment)

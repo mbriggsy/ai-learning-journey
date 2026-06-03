@@ -23,7 +23,7 @@
 
 ## Status
 
-Landscape research + brainstorm + 7-persona document-review **complete**. All architectural forks locked (form factor, engine, household, regulatory posture, data location). **Next: `/ce:plan`.** Current decisions, requirements, success criteria, and the technical foundation all live in `docs/brainstorms/the-back-nine-requirements.md`.
+Landscape research + brainstorm + 7-persona document-review **complete**. All architectural forks locked (form factor, engine, household, regulatory posture, data location). **Foundation research verified** 2026-06-03 — a hand-rolled 4-strand research + adversarial-verification workflow (UX pain, local-first architecture, regulatory line, engine reference cases) confirmed the thesis, sharpened the regulatory posture, corrected the Jazz/KDF/engine-number assumptions, and produced the engine validation contract. Evidence: `docs/research/foundation-findings-2026-06-03.md`; corrections folded into the requirements doc. **Next: `/ce:plan`.** Current decisions, requirements, success criteria, and the technical foundation all live in `docs/brainstorms/the-back-nine-requirements.md`.
 
 ## Standing landmines
 

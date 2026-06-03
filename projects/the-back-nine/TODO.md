@@ -3,13 +3,17 @@
 > Actionable items only. Decisions live in `docs/brainstorms/the-back-nine-requirements.md`; cross-session learnings live in memory + `/distill` insights. No session history here.
 
 ## Current State
-Requirements locked + reviewed (7-persona). **Foundation research verified** 2026-06-03 (4-strand research + adversarial-verification workflow → `docs/research/foundation-findings-2026-06-03.md`; corrections folded into the requirements doc). No code yet. Ready to plan.
+Requirements locked + 7-persona reviewed. **Foundation research verified** 2026-06-03 (`docs/research/foundation-findings-2026-06-03.md`). **MVP plan written** 2026-06-03 → `docs/plans/mvp-confidence-spine/` (roadmap + 3 phase docs, burned-style frontmatter w/ `deepened`/`doc-reviewed`/`coded`/`code-reviewed` lifecycle stamps, all empty). 9 units across 3 phases. **NOT deepened yet** (depth tier only — no `deepened:` stamp). New decisions locked: **engine = TypeScript** (WASM = fast-follow); **unlock = passphrase each session, memory-only key, no username**; **KDF = PBKDF2-600k**; magic-moment-first onboarding; shared household credential; married-couple precondition. No code yet.
 
 ## Next Steps (priority order)
-1. Run `/ce:plan` against `docs/brainstorms/the-back-nine-requirements.md` → structured implementation plan. Likely units: WASM Monte Carlo engine (single Worker; log-drift μ=arith−σ²/2; Trinity/Bengen validation cases), encrypted local store (WebCrypto AES-GCM; KDF + key-persistence decisions per findings §Strand 2), guided on-ramp, confidence-statement component (incl. "probability of adjustment" off-track grammar), Roth-lever flow (calculator, never a verdict — see regulatory landmine).
+1. **Deepen the 3 phase docs** (`docs/plans/mvp-confidence-spine/phase-{1,2,3}-*.md`) — Briggsy's "write-all-phases-then-deepen" rhythm. Read the ce:plan `references/deepening-workflow.md` (or `/deepen-plan`). Use Sequential Thinking for synthesis ([[deepen-plan-lessons]]); **watch the deepening-drift anti-pattern** — grep each body for OLD patterns claimed "Resolved" in headers ([[feedback-deepening-drift-anti-pattern]]); verify critical fixes against the findings doc. Stamp `deepened:` on each phase + the roadmap roll-up when done.
+2. **`document-review`** the roadmap + 3 phase docs (multi-persona: coherence, feasibility, scope, security, design). Stamp `doc-reviewed:`.
+3. **Then `/ce:work`** Phase 1 — the `enforce-brief-before-work.sh` hook will block until `/brief` runs, so run `/brief` first (verified 2026-06-03: hook gates `ce:work` only, not `ce:plan`).
 
 ## Open Items
-- _(none — surfacing-mechanic posture resolved 2026-06-03: disclaimer + categorical trigger + user-initiated math; grounded education-vs-advice pass deferred until the posture is load-bearing in a real Terms doc / marketing claim.)_
+- [ ] **Back-annotate the requirements doc?** The plan *extended* the requirements (survivor-phase modeling — survivor-SS step-down, ~75% spending ratio, two-regime horizon, death-order; the 6-state outcome matrix; married precondition). Decide whether to fold these back into `the-back-nine-requirements.md` so spec and plan don't drift. (Briggsy to decide.)
+- [ ] **Brief-before-planning hook?** Optionally add `ce:plan`/`ce:brainstorm` to `enforce-brief-before-work.sh`'s block-list (currently gates `ce:work` only). Likely redundant since `ce:plan` runs learnings-research natively. (Briggsy to decide.)
+- [ ] Residual gates (don't block deepening): confirm SSA cohort life-table data against the real table files before Unit 1 relies on it; attorney review of exact Roth-lever copy before any Terms/marketing.
 
 ## Landmines
 - **Roth lever = calculator, NEVER a verdict.** Under Reg BI, a *recommendation* of an account type (Traditional-vs-Roth, rollovers) is treated as an "investment strategy involving securities"; a user-driven calculator isn't. The no-verdict + categorical-trigger + no-securities/no-asset-location guardrail is load-bearing, not stylistic. (findings §Strand 3)

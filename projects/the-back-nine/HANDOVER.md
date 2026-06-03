@@ -23,7 +23,9 @@
 
 ## Status
 
-Landscape research + brainstorm + 7-persona document-review **complete**. All architectural forks locked (form factor, engine, household, regulatory posture, data location). **Foundation research verified** 2026-06-03 — a hand-rolled 4-strand research + adversarial-verification workflow (UX pain, local-first architecture, regulatory line, engine reference cases) confirmed the thesis, sharpened the regulatory posture, corrected the Jazz/KDF/engine-number assumptions, and produced the engine validation contract. Evidence: `docs/research/foundation-findings-2026-06-03.md`; corrections folded into the requirements doc. **Next: `/ce:plan`.** Current decisions, requirements, success criteria, and the technical foundation all live in `docs/brainstorms/the-back-nine-requirements.md`.
+Landscape research + brainstorm + 7-persona document-review **complete**. All architectural forks locked. **Foundation research verified** 2026-06-03 (`docs/research/foundation-findings-2026-06-03.md`). **MVP plan written** 2026-06-03 → `docs/plans/mvp-confidence-spine/` (roadmap + 3 phase docs; 9 units; burned-style frontmatter with `deepened`/`doc-reviewed`/`coded`/`code-reviewed` lifecycle stamps). Planning-time decisions locked: **engine = TypeScript** (WASM = fast-follow), **unlock = passphrase each session / memory-only key / no username** (PBKDF2-600k), magic-moment-first onboarding, shared household credential, married-couple precondition.
+
+**Next: deepen the 3 phase docs, then `document-review`, then `/ce:work`** (see `TODO.md` for the exact sequence + landmines). The plan is NOT yet deepened — depth tier only. Decisions/requirements/foundation: `docs/brainstorms/the-back-nine-requirements.md` + `docs/research/foundation-findings-2026-06-03.md`.
 
 ## Standing landmines
 

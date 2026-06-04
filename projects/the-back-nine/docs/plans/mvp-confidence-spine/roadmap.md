@@ -4,14 +4,14 @@ type: feat
 parent: docs/brainstorms/the-back-nine-requirements.md
 date: 2026-06-03
 status: active
-deepened:        # YYYY-MM-DD — set when all phases deepened
-doc-reviewed:    # YYYY-MM-DD — set when document-review passes
+deepened: 2026-06-04        # all three phases deepened
+doc-reviewed: 2026-06-04    # all three phases document-reviewed (7-persona)
 coded:           # YYYY-MM-DD — set when all phases implemented
 code-reviewed:   # YYYY-MM-DD — set when all phase code reviewed
 phases:
-  - phase-1-foundation.md        # not started — scaffold, engine core, encrypted store
+  - phase-1-foundation.md        # deepened + doc-reviewed — scaffold, engine core, encrypted store (Units 0–2); + Phase-3 tracked amendments (tax overlay, model-only re-encrypt, recovery-gate)
   - phase-2-first-answer.md      # deepened + doc-reviewed — progressive intake, viz, confidence statement, first-Save flow (Units 3–6)
-  - phase-3-depth-on-demand.md   # not started — sharpen loop, Roth lever, re-entry (Units 7–9)
+  - phase-3-depth-on-demand.md   # deepened + doc-reviewed — sharpen loop, Roth lever, re-entry (Units 7–9)
 ---
 
 # The Back Nine MVP — Confidence Spine — Roadmap
@@ -49,7 +49,7 @@ Every requirement from the origin doc maps to a phase below (R-numbers are the o
 - **No account aggregation / Plaid** — manual-first (origin).
 - **No budgeting / transaction tracking / categorization** — Monarch's lane.
 - **No individualized advice / "you should" directives, ever.**
-- **No tax modeling beyond the single Roth-conversion lever.**
+- **No tax modeling beyond the single Roth-conversion lever.** *(Phase-3-driven sharpening, 2026-06-04 — names what IS in vs out: the lever DOES carry a federal-tax model — 2026 MFJ/single ordinary brackets + standard deduction (+ age-65/senior-bonus) + birth-year-derived RMDs + **Social-Security provisional-income taxation** — because the survivor's tax cliff IS the lever (R9). OUT, disclosed as omissions next to the delta: IRMAA, ACA cliffs, NIIT, state tax, cap-gains stacking. All tax numbers live in findings §Strand 5.)*
 - **No live net-worth / portfolio aggregation surface (#4).**
 - **No cross-device E2E sync** — single-device, local-first.
 
@@ -106,6 +106,8 @@ All external best-practice research is **already verified** in `docs/research/fo
 - **Collect both spouses' sex** (Briggsy's call, 2026-06-03): required to select the sex-specific SSA cohort curves for joint-and-survivor longevity (P=pₓ+pᵧ−pₓ·pᵧ); handles same-sex couples honestly. Not a defaulted assumption — it drives the product's core survivor horizon.
 - **Display denominator pinned at 10** (Phase-2 deepening): every user-facing natural-frequency renders "**X of 10**" across the verdict, the survivor readout, and the Roth delta — one denominator, never re-based between surfaces; coupled to the 10/10-honesty clamp (tops out at "more than 9 of 10").
 - **Account-type buckets deferred to Phase-3 lever-open** (Phase-2 deepening): intake collects ONE total-savings figure (protecting the ~8-input on-ramp); the pre-tax / Roth / taxable split is collected when the user opens the Roth lever (Phase-3 Unit 8 mini-intake + a `schemaVersion`-bumped `model.ts` field).
+
+- **Roth lever = a CRN-safe tax-and-accounts OVERLAY on the engine, not a thin consumer** (Phase-3 deepening; Briggsy's call, 2026-06-04 — "the most complete honest picture, SS-tax IN"): the spine engine is tax-blind, so a tax-blind conversion delta is **sign-inverted** (every conversion looks worse). `simulate.ts` gains a multi-account + federal-tax **overlay** (per-person pre-tax/Roth/taxable buckets; ordinary-income tax on withdrawals + RMDs + the conversion; **SS provisional-income taxation**; MFJ→single at the sampled first death), structured like the earned-income bridge — a per-year deterministic **cash-term transform indexed by absolute year, CRN-safe (zero extra draws), OFF-by-default reducing byte-identically to the tax-free Trinity/Bengen spine**, ON only for the Roth arms. **All buckets share ONE market draw/year** (preserves CRN *and* structurally forecloses asset-location modeling — the #1 IAA tripwire). The tax-aware "without" arm reads below the tax-blind spine, so the lever **reframes at open** ("now tax-aware, both arms") and the saved spine headline is never silently overwritten. Re-opens deepened Phase 1 (tracked — see Phase-3 cascade ledger). Tax numbers live in findings §Strand 5.
 - **Phase 2 gains a first-Save-flow unit ⇒ Phase 2 = Units 3–6; Phase 3 renumbered to Units 7–9.** The user-facing Save/recovery/export surface (the trust handoff Phase 1 Unit 2 deferred) is **Unit 6**. The `TwoFutures` *component* is now built in **Phase-3 Unit 8** against `roth.ts` (its only real consumer); Phase-2 Unit 4 ships the band + the reusable two-series **encoding tokens**.
 
 ## Open Questions
@@ -136,18 +138,19 @@ All external best-practice research is **already verified** in `docs/research/fo
     │   │   ├── rng.ts              # mulberry32 (port) + Box-Muller normal
     │   │   ├── longevity.ts        # cohort tables + joint-and-survivor (P=px+py−px·py)
     │   │   ├── simulate.ts         # paths, log-drift μ=arith−σ²/2, survivor phase + earned-income bridge
+    │   │   │                       #   + (Phase 3) tax/multi-account OVERLAY (OFF-by-default = tax-free spine; ON for Roth arms)
     │   │   ├── confidence.ts       # distribution → "X of N" + dollar-adjustment + state
     │   │   ├── historical.ts       # (Phase 1) deterministic backtest — the EXACT oracle for Trinity/Bengen
-    │   │   ├── roth.ts             # (Phase 3) with/without arms, common random numbers
-    │   │   │                       #   (CRN seam itself is a Phase-1 contract in simulate.ts)
+    │   │   ├── roth.ts             # (Phase 3) orchestrates 2 arms + conversion event over the tax overlay;
+    │   │   │                       #   does NOT re-implement decumulation; CRN seam is a Phase-1 contract
     │   │   ├── engine.worker.ts    # Comlink-exposed engine API
-    │   │   └── reference/          # Trinity/Bengen golden-case fixtures + validation tests
+    │   │   └── reference/          # Trinity/Bengen golden fixtures + (Phase 3) 2026 tax tables + Uniform-Lifetime divisors (§Strand 5; committed, directional-until-pinned)
     │   ├── crypto/                 # WebCrypto wrappers (PBKDF2, AES-GCM), recovery phrase
     │   ├── store/                  # idb persistence, session lifecycle, export/restore, in-memory orchestrator (memoryModel)
     │   ├── intake/                 # PROGRESSIVE one-question flow + R19 sanity + cold-start + intake→engine map
     │   ├── viz/                    # colorblind-safe SVG: band + signal-token primitives (palette); TwoFutures built in Phase 3
     │   ├── ui/                     # confidence statement, six-state + survivor readout, copy catalog, first-Save flow, sharpen loop, Roth lever, re-entry
-    │   ├── shared/                 # types, money/format utils, the model schema
+    │   ├── shared/                 # types, money/format utils, the model schema (+ Phase-3 @ schemaVersion 2: account buckets, per-person birth year, tax-vintage stamps)
     │   └── main.tsx
     └── docs/                       # (existing) brainstorms, research, plans
 
@@ -191,7 +194,7 @@ The load-bearing seam: **intake and the first answer never touch disk** (magic-m
 
 ## System-Wide Impact
 
-- **Interaction graph:** the **seeded-RNG determinism contract** spans Units 1, 3, 7, 8 — the engine (1), the Phase-2 `memoryModel` orchestrator that owns the recompute home + the minted seed (3), and the Phase-3 sharpen/Roth consumers (7, 8); any recompute must reuse the scenario seed or the headline jitters. The **copyGuard** (R12) is owned by Unit 5 and consumed by Unit 8. The **non-color signal primitives** are single-sourced in `viz/palette.ts` (Unit 4) with two consumers (verdict-state in Unit 5, series-identity in Units 4/8).
+- **Interaction graph:** the **seeded-RNG determinism contract** spans Units 1, 3, 7, 8 — the engine (1), the Phase-2 `memoryModel` orchestrator that owns the recompute home + the minted seed (3), and the Phase-3 sharpen/Roth consumers (7, 8); any recompute must reuse the scenario seed or the headline jitters. **The CRN-safe-regime-shifter set now spans four inputs** (Phase-3 deepening): the survivor two-regime boundary + the earned-income bridge (Phase 1/2) **plus the Roth tax-and-accounts overlay and the death-order conditional** — all change *which* draws are consumed, never how many or their order: the overlay (like the bridge) is a deterministic per-year cash-term transform, and the death-order conditional **filters the existing path population** (same seed, same draws — no re-draw, no re-index; it requires Phase-1 longevity to retain per-path survivor identity) (Phase-3 contracts #1, #2, #3 cascade to Phase-1 contract #1). The **copyGuard** (R12) is owned by Unit 5 and consumed by Unit 8. The **non-color signal primitives** are single-sourced in `viz/palette.ts` (Unit 4) with two consumers (verdict-state in Unit 5, series-identity in Units 4/8).
 - **Error propagation:** wrong-passphrase, failed-decrypt, and impossible-input all surface as *calm inline* states, never stack traces or silently-wrong answers (R19, the bar).
 - **State lifecycle risks:** the **in-memory → encrypted-persistence boundary** (Units 2/3, surfaced to the user by Unit 6's first-Save flow) is the critical seam — persisting intake data before the passphrase exists breaks R16; a PWA auto-reload mid-write (Unit 0's `prompt`-not-`autoUpdate` decision; the user-accepted-update-mid-write test is owned by Unit 6) could tear a write.
 - **API surface parity:** the **non-color signal** must be consistent across the confidence statement (Unit 5), viz (Unit 4), and Roth lever (Unit 8) — enforced by single-sourcing the primitives in `viz/palette.ts` (Unit 4) and exposing the signal in the **accessibility tree**, not merely grayscale-visible.
@@ -211,6 +214,10 @@ The load-bearing seam: **intake and the first answer never touch disk** (magic-m
 | "We can't see your money" claimed before it's provable (R15) | Copy gated on Unit 2's evidence (no key/plaintext in the store) — provable before spoken |
 | Color-blind reviewer (the N=1) can't fast-scan outcomes | Non-color signal is the primary channel; grayscale tests + oklab probe (Units 4/5) |
 | Greenfield crypto/Worker/MC with zero monorepo precedent | findings doc is the spec; `/distill` each first gotcha; lean on `burned/rng.ts` + verified integration mechanics |
+| Tax-blind engine → a Roth conversion delta is **sign-inverted** (every conversion looks worse) — calm-but-wrong, fails the bar | The Roth tax-and-accounts overlay (Phase-3 contract #1); both arms run at identical tax fidelity; OFF-by-default reduces byte-identically to the validated tax-free spine (Phase-3 deepening) |
+| The tax-aware "without" arm drifts from the spine headline the user anchored on → distrust | Reframe-at-lever-open ("now tax-aware, both arms"); the conversion=0+taxes-off byte-identical-to-spine invariant; saved spine headline never silently overwritten (Phase-3 Unit 8) |
+| Death-order flip silently breaks CRN (it swaps the survivor's sex-specific curve) → the survivor delta jitters | Fixed per-spouse longevity lanes in the max-horizon matrix; death-order added to contract #1's CRN-safe enumeration + a matching CRN test (Phase-3 contract #3) |
+| Per-account return assumptions = asset-location modeling (the #1 IAA tripwire) | ONE shared market draw/year across all buckets — buckets differ only in tax treatment; structural, not a copy promise (Phase-3 contract #2) |
 
 ## Alternative Approaches Considered
 

@@ -9,6 +9,8 @@ method: hand-rolled fan-out workflow (4 strands × research + adversarial verifi
 
 The cited evidence behind the requirements doc's locked decisions. Four strands, each researched then **adversarially verified** by a second agent that tried to refute every load-bearing claim. **All verifier corrections below are already applied** — the raw research contained real errors (fabricated benchmarks, a misstated crypto hierarchy, an inverted recovery-flow claim, a missing SEC counter-authority, and a dangerous wrong Trinity number); this doc carries the corrected version. Confidence tags are preserved — do **not** flatten "defensible" or "directional" into "verified."
 
+> **Strand 5 (tax reference) was added 2026-06-04 during Phase-3 planning** — the Roth lever needs concrete tax numbers and the original four strands carried none. It was verified via gemini-grounding (multi-source, 2026-06-04), carries its own provenance + exit-gate, and is held to the same "pin the primary before calling it golden" discipline as Strand 4's datasets.
+
 > Requirements decisions live in `../brainstorms/the-back-nine-requirements.md`. This doc is the *why*; that doc is the *what*. Reference numbers live **here only** (avoid stat-drift).
 
 ---
@@ -121,6 +123,56 @@ The **100%-bond = ~70%** row is the **diagnostic case**: a correct engine with i
 ### Still-unverified (this strand)
 - Case A (Bengen 1966) bit-exactness depends on the exact Ibbotson dataset — pin before relying.
 - SSA figures (table designations, "~53% at-least-one-to-90") were grounded-search-verified, **not** parsed from the SSA tables directly (SSA bot-blocks curl) — confirm against the actual table files before load-bearing.
+
+---
+
+## Strand 5 — Tax reference for the Roth lever (added 2026-06-04, Phase-3 planning)
+
+*The Roth-conversion lever (Phase 3 Unit 8) is the only surface that consumes federal tax numbers. Per the roadmap's single-source rule ("reference numbers live in the findings doc only"), they live **here**, not inlined in the plan. Verified via gemini-grounding 2026-06-04 (Tax Foundation 2026 bracket tables; IRS RMD FAQ; SECURE 2.0; OBBBA). **Confidence: defensible/directional — NOT yet pinned to the IRS primaries (see exit gate). Mark fixtures "directional" in code until pinned, exactly as Strand 4 does.***
+
+### The legal basis (this is itself a staleness-stamp fact)
+**The One Big Beautiful Bill Act (OBBBA), signed 2025-07-04, made the TCJA individual rate structure (10/12/22/24/32/35/37) and the elevated standard deduction PERMANENT** — so 2026 is **not** a TCJA-sunset reversion to pre-2018 brackets, which is what would have happened absent legislation (TCJA individual provisions were set to expire 12/31/2025). **Why this matters for the build:** Unit 9's "tax-table vintage" staleness clock is therefore *not* tracking a known one-time 2026 reversion — it tracks (a) annual inflation indexing of a permanent bracket structure, (b) the senior-bonus-deduction sunset (below — a *guaranteed* future staleness), (c) the RMD-age step (below), and (d) any future law change. **Stamp the legal basis (OBBBA-2025), not just the year**, so a future statutory change is falsifiable rather than mistaken for inflation drift.
+
+### 2026 federal MFJ ordinary-income brackets (taxable income)
+| Rate | MFJ taxable income |
+|---|---|
+| 10% | ≤ $24,800 |
+| 12% | $24,801 – $100,800 |
+| 22% | $100,801 – $211,400 |
+| 24% | $211,401 – $403,550 |
+| 32% | $403,551 – $512,450 |
+| 35% | $512,451 – $768,700 |
+| 37% | > $768,700 |
+
+### The widow(er)'s-penalty drivers (the lever's headline math)
+- **2026 MFJ standard deduction = $32,200.** Single ≈ **half** (≈ $16,100 — pin exact against the IRS Rev. Proc.; 2025 was MFJ $31,500 / single $15,750, exactly 2×).
+- After the first death, an empty-nest retired couple files **SINGLE the year after** (year of death = still MFJ; Qualifying-Surviving-Spouse MFJ-equivalent rates apply for up to two following years **only with a dependent child in the home** — which the target couple almost never has, so **no QSS grace** — IRS Pub 501). The survivor's same real dollars then fall into **~half-width single brackets with ~half the standard deduction** → the "tax cliff" converting-while-both-file-MFJ defuses. The **joint→survivor two-regime boundary Phase 1 already models doubles as the MFJ→single filing-status switch** — no new boundary.
+- **Additional age-65+ standard deduction** ≈ $1,650/spouse MFJ (2026) — supporting, pin exact.
+
+### RMD start age — birth-year-derived, NOT a flat 73 (SECURE 2.0)
+- born **≤ 1950 → 72**; born **1951–1959 → 73**; born **1960 or later → 75** (the 75 step is **effective 2033**). (The 1959 statutory drafting glitch resolves to **73** — current standard interpretation.) RMD = the IRS **Uniform Lifetime Table** divisor applied to the prior-year-end pre-tax balance; first RMD due by April 1 of the year after reaching RMD age. **The age is a per-person function of birth year and is legislatively scheduled to change (the 2033 step) — so it is a vintage-stamped/birth-year-keyed input, never a hardcoded literal.**
+
+### Temporary Senior Bonus Deduction (OBBBA) — a guaranteed-to-go-stale provision
+- **$6,000 per person age 65+ ($12,000 MFJ)**, on top of the standard deduction, claimable whether itemizing or not. **MAGI phase-out:** begins single > $75k / MFJ > $150k, reduced 6% per dollar over, fully gone single > $175k / MFJ > $250k. **Available tax years 2025–2028 only; SUNSETS after 2028** unless extended. → Unit 9 must carry an explicit **sunset marker** (a calm note when an answer computed pre-2029 is viewed in/after 2029).
+
+### MVP tax-scope line (decided 2026-06-04, Briggsy's call — "the most complete picture")
+**IN the engine's Roth tax model:** federal MFJ + single ordinary-income brackets, the standard deduction (+ age-65 additions + the senior-bonus deduction with its phase-out & sunset), birth-year-derived RMDs (Uniform Lifetime), the conversion taxed as ordinary income stacked on that year's other ordinary income, **and Social-Security provisional-income taxation (the "tax torpedo")** — because SS taxation is a core part of the survivor's *actual* marginal bracket, modeling it is part of an honest survivor cliff, not the "full-return modeling" R9 defers. **OUT (disclosed as omissions next to the delta, candidate future levers):** IRMAA Medicare-premium surcharges, ACA premium-tax-credit cliffs, NIIT, state income tax, capital-gains/qualified-dividend stacking.
+
+**The falsifiable IN/OUT line (so "the cliff IS the lever" stays principled, not self-justifying):** a tax effect is **IN** iff it moves the **survivor's ordinary-income marginal bracket that the conversion stacks into** — the cliff the lever headlines (brackets, standard deduction, RMD-forced ordinary income, and SS provisional-income taxation all do). It is **OUT** iff it is a separate surcharge / credit / parallel-tax system that does not move that bracket (IRMAA = a Medicare-premium surcharge; ACA = a premium-tax-credit cliff; NIIT = a 3.8% surtax; state tax = a parallel system). That is the bright line R9's "no tax modeling beyond the single Roth lever" needs.
+
+### Social-Security benefit taxation (the "tax torpedo" — the numbers + the landmines)
+- **Provisional ("combined") income = AGI excluding SS + tax-exempt interest + 50% of SS benefits.** MFJ tiers (the fraction of benefits that enters ordinary taxable income): **provisional < $32,000 → 0%; $32,000–$44,000 → up to 50%; > $44,000 → up to 85%** (single: $25,000 / $34,000). Exact inclusion follows the IRS Pub. 915 worksheet.
+- **These thresholds are NOT inflation-indexed — frozen since 1983 ($32k) / 1993 ($44k).** So they have **no vintage/staleness clock** (unlike the brackets, which inflation-index annually): they are constants, not a dated fixture, and a frozen constant cannot go "stale." (This is *why* more retirees are caught each year — a feature to model honestly, not a bug.)
+- **Computational landmine — the circularity (a per-year fixed-point, NOT a one-pass transform):** taxable SS depends on provisional income, which depends on the year's other ordinary income — including the **gross-up** withdrawal needed to cover spending + tax, which depends on the tax. The overlay resolves this per simulated year as a **bounded fixed-point** (iterate provisional-income → taxable-SS → tax → gross-up to convergence, a few passes; deterministic, reads **zero** random draws — so still CRN-safe). The engine seam must pin the convergence rule (iterate-to-stable or a fixed small pass count).
+- **Not modeled (pending legislation):** the proposed "You Earned It, You Keep It Act" (would eliminate SS taxation) is **NOT law** as of 2026 — do not model speculative legislation; if enacted it becomes a §Strand-5 update + a tax-vintage bump.
+- Pin all the above against **IRS Pub. 915** before the SS-tax fixture is golden.
+
+*(All of §Strand 5 sharpens — does not breach — R9's "no tax modeling beyond the single Roth lever": the survivor cliff IS the lever, and the falsifiable line above bounds it.)*
+
+### Still-unverified (this strand — the exit gate; clear before any fixture is "golden")
+- The 2026 bracket edges + standard deduction + age-65 addition + senior-bonus figures were **grounded-search-verified (Tax Foundation et al.), not parsed from the IRS primary**. Pin against the **IRS Revenue Procedure** publishing the 2026 inflation adjustments and **Pub. 501** (filing status / QSS) before the fixture is load-bearing.
+- RMD divisors: pin against **IRS Pub. 590-B** (Uniform Lifetime Table) — same posture as Strand 4's Ibbotson/SSA gates.
+- **The exact Roth-lever copy + the categorical-trigger condition + the no-securities/no-asset-location boundary remain the §Strand 3 securities/IA attorney-gate** — a wrong tax fact OR an over-personalized trigger on the one regulated lever is exactly what that gate exists for.
 
 ---
 

@@ -10,8 +10,8 @@ coded:           # YYYY-MM-DD — set when all phases implemented
 code-reviewed:   # YYYY-MM-DD — set when all phase code reviewed
 phases:
   - phase-1-foundation.md        # not started — scaffold, engine core, encrypted store
-  - phase-2-first-answer.md      # not started — intake, viz, confidence statement
-  - phase-3-depth-on-demand.md   # not started — sharpen loop, Roth lever, re-entry
+  - phase-2-first-answer.md      # deepened + doc-reviewed — progressive intake, viz, confidence statement, first-Save flow (Units 3–6)
+  - phase-3-depth-on-demand.md   # not started — sharpen loop, Roth lever, re-entry (Units 7–9)
 ---
 
 # The Back Nine MVP — Confidence Spine — Roadmap
@@ -37,10 +37,10 @@ Every requirement from the origin doc maps to a phase below (R-numbers are the o
 | Requirement | Where |
 |---|---|
 | R1–R4 — one question → plain-language probabilistic confidence statement, depth on demand | Phase 1 (Unit 1), Phase 2 (Unit 5) |
-| R5–R8 — guided intake; escape hatch; every assumption visible+editable; refinement tightens the band | Phase 2 (Unit 3), Phase 3 (Unit 6) |
-| R9–R11 — exactly one Roth lever; surface→two-futures→tune; quiet/invited | Phase 3 (Unit 7) |
-| R12–R14 — math/hypotheticals never directives; educational disclaimer; plain not dumbed-down | Phase 1 (Unit 0 disclaimer), Phase 2 (Unit 5), Phase 3 (Unit 7) — string-level |
-| R15–R18 — privacy provable before spoken; encrypted at rest + lock; recovery posture; export/backup | Phase 1 (Unit 2) |
+| R5–R8 — guided intake; escape hatch; every assumption visible+editable; refinement tightens the band | Phase 2 (Unit 3), Phase 3 (Unit 7) |
+| R9–R11 — exactly one Roth lever; surface→two-futures→tune; quiet/invited | Phase 3 (Unit 8) |
+| R12–R14 — math/hypotheticals never directives; educational disclaimer; plain not dumbed-down | Phase 1 (Unit 0 disclaimer), Phase 2 (Unit 5), Phase 3 (Unit 8) — string-level |
+| R15–R18 — privacy provable before spoken; encrypted at rest + lock; recovery posture; export/backup | Phase 1 (Unit 2 mechanism), **Phase 2 (Unit 6 — the user-facing first-Save flow: passphrase-set, recovery-phrase display, mandatory export)** |
 | R19 — manual entry sanity-checked, never silently broken/falsely confident | Phase 2 (Unit 3) |
 | Success criteria — first answer in one sitting; one answer not a dashboard; assumptions reachable in one interaction; Roth what-if visibly moves the answer; correctness vs reference cases; N=1 cold-read; no directive strings | Phases 1–3 |
 
@@ -101,6 +101,13 @@ All external best-practice research is **already verified** in `docs/research/fo
 - **Recovery + export + restore are one mechanism** (extends origin): in a no-sync MVP the phrase alone recovers nothing — the **encrypted export file + phrase are a pair**. Export = encrypted blob; restore = import file + phrase → set new passphrase. Onboarding copy states the pairing.
 - **Regulatory posture enforced at the string level** (findings §Strand 3): the quiet Roth surface names **no personalized dollar figure** (categorical only); personalization appears only after user-initiated open; a lint rejects forbidden verbs ("you should", "we recommend", "you will save", "guaranteed", "optimal"). Calculator, never a verdict; never names securities, asset classes, or asset *location*.
 
+- **Progressive, engine-gated intake** (Phase-2 deepening, 2026-06-03): the first answer co-exists with intake and **resolves from indeterminate → verdict on each question-commit**, making "indeterminate = the expected first answer" literally true (R8/R5). Still one answer, no dashboard; the range/band is on-demand (R4), never on the first frame.
+- **Earned-income bridge regime** (Briggsy's call, 2026-06-03): per-person retirement timing is modeled — earned income **nets against spending** in the window where one spouse still earns. An income-phase overlay orthogonal to the joint→survivor longevity regimes and **CRN-safe**, it **reduces exactly to the Trinity/Bengen-validated decumulation when no spouse has earned income in any simulated year** (the pure-retiree case — `netWithdrawal == spending`; **not** merely "equal retirement years", which only removes the asymmetric window). Each earner's income window truncates at `min(retirementYear, sampledDeathYear)` per path (never credit a dead earner). MVP-minimal (flat real income, net-against-spending; no salary growth / surplus contributions). *(Re-opens deepened Phase 1 Unit 1 — tracked amendment.)*
+- **Collect both spouses' sex** (Briggsy's call, 2026-06-03): required to select the sex-specific SSA cohort curves for joint-and-survivor longevity (P=pₓ+pᵧ−pₓ·pᵧ); handles same-sex couples honestly. Not a defaulted assumption — it drives the product's core survivor horizon.
+- **Display denominator pinned at 10** (Phase-2 deepening): every user-facing natural-frequency renders "**X of 10**" across the verdict, the survivor readout, and the Roth delta — one denominator, never re-based between surfaces; coupled to the 10/10-honesty clamp (tops out at "more than 9 of 10").
+- **Account-type buckets deferred to Phase-3 lever-open** (Phase-2 deepening): intake collects ONE total-savings figure (protecting the ~8-input on-ramp); the pre-tax / Roth / taxable split is collected when the user opens the Roth lever (Phase-3 Unit 8 mini-intake + a `schemaVersion`-bumped `model.ts` field).
+- **Phase 2 gains a first-Save-flow unit ⇒ Phase 2 = Units 3–6; Phase 3 renumbered to Units 7–9.** The user-facing Save/recovery/export surface (the trust handoff Phase 1 Unit 2 deferred) is **Unit 6**. The `TwoFutures` *component* is now built in **Phase-3 Unit 8** against `roth.ts` (its only real consumer); Phase-2 Unit 4 ships the band + the reusable two-series **encoding tokens**.
+
 ## Open Questions
 
 ### Resolved During Planning
@@ -112,6 +119,8 @@ All external best-practice research is **already verified** in `docs/research/fo
 - Survivor-spending default + whether death-order is user-pickable vs probability-weighted (Phase 1/3 — start editable ~75% + explicit hypothetical; revisit after cold-read).
 - `culori` oklab probe thresholds for the chosen palette (Phase 2 — run the probe, pick by table).
 - Concrete bundle-budget number (Phase 1 — set against first real build; burned's "<100 KB gz initial" is the reference).
+- Bridge-regime refinements (Phase 1/2 — MVP is flat real earned income netting against spending; salary-growth curve and surplus-contribution modeling are deferred, surfaced as editable assumptions).
+- Self-hosted display + body typeface choices and the type-scale ramp (Phase 2 Unit 5 — direction is decided "refined minimalism, not AI defaults"; exact faces picked at implementation, validated by the N=1 cold-read).
 
 ## Output Structure
 
@@ -126,7 +135,7 @@ All external best-practice research is **already verified** in `docs/research/fo
     │   ├── engine/                 # Monte Carlo — pure, deterministic, runs in a Worker
     │   │   ├── rng.ts              # mulberry32 (port) + Box-Muller normal
     │   │   ├── longevity.ts        # cohort tables + joint-and-survivor (P=px+py−px·py)
-    │   │   ├── simulate.ts         # paths, log-drift μ=arith−σ²/2, survivor phase
+    │   │   ├── simulate.ts         # paths, log-drift μ=arith−σ²/2, survivor phase + earned-income bridge
     │   │   ├── confidence.ts       # distribution → "X of N" + dollar-adjustment + state
     │   │   ├── historical.ts       # (Phase 1) deterministic backtest — the EXACT oracle for Trinity/Bengen
     │   │   ├── roth.ts             # (Phase 3) with/without arms, common random numbers
@@ -134,10 +143,10 @@ All external best-practice research is **already verified** in `docs/research/fo
     │   │   ├── engine.worker.ts    # Comlink-exposed engine API
     │   │   └── reference/          # Trinity/Bengen golden-case fixtures + validation tests
     │   ├── crypto/                 # WebCrypto wrappers (PBKDF2, AES-GCM), recovery phrase
-    │   ├── store/                  # idb persistence, session lifecycle, export/restore
-    │   ├── intake/                 # guided one-question flow + R19 sanity checks
-    │   ├── viz/                    # colorblind-safe SVG primitives (band, two-futures)
-    │   ├── ui/                     # confidence statement, outcome states, sharpen loop, Roth lever, re-entry
+    │   ├── store/                  # idb persistence, session lifecycle, export/restore, in-memory orchestrator (memoryModel)
+    │   ├── intake/                 # PROGRESSIVE one-question flow + R19 sanity + cold-start + intake→engine map
+    │   ├── viz/                    # colorblind-safe SVG: band + signal-token primitives (palette); TwoFutures built in Phase 3
+    │   ├── ui/                     # confidence statement, six-state + survivor readout, copy catalog, first-Save flow, sharpen loop, Roth lever, re-entry
     │   ├── shared/                 # types, money/format utils, the model schema
     │   └── main.tsx
     └── docs/                       # (existing) brainstorms, research, plans
@@ -182,10 +191,10 @@ The load-bearing seam: **intake and the first answer never touch disk** (magic-m
 
 ## System-Wide Impact
 
-- **Interaction graph:** the **seeded-RNG determinism contract** spans Units 1, 6, 7 — any recompute (sharpen edit, Roth tune) must reuse the scenario seed or the headline jitters. The **copyGuard** (R12) spans Units 5 and 7.
+- **Interaction graph:** the **seeded-RNG determinism contract** spans Units 1, 3, 7, 8 — the engine (1), the Phase-2 `memoryModel` orchestrator that owns the recompute home + the minted seed (3), and the Phase-3 sharpen/Roth consumers (7, 8); any recompute must reuse the scenario seed or the headline jitters. The **copyGuard** (R12) is owned by Unit 5 and consumed by Unit 8. The **non-color signal primitives** are single-sourced in `viz/palette.ts` (Unit 4) with two consumers (verdict-state in Unit 5, series-identity in Units 4/8).
 - **Error propagation:** wrong-passphrase, failed-decrypt, and impossible-input all surface as *calm inline* states, never stack traces or silently-wrong answers (R19, the bar).
-- **State lifecycle risks:** the **in-memory → encrypted-persistence boundary** (Units 2/3) is the critical seam — persisting intake data before the passphrase exists breaks R16; a PWA auto-reload mid-write (Unit 0's `prompt`-not-`autoUpdate` decision) could tear a write.
-- **API surface parity:** the **non-color signal** must be consistent across the confidence statement (Unit 5), viz (Unit 4), and Roth lever (Unit 7).
+- **State lifecycle risks:** the **in-memory → encrypted-persistence boundary** (Units 2/3, surfaced to the user by Unit 6's first-Save flow) is the critical seam — persisting intake data before the passphrase exists breaks R16; a PWA auto-reload mid-write (Unit 0's `prompt`-not-`autoUpdate` decision; the user-accepted-update-mid-write test is owned by Unit 6) could tear a write.
+- **API surface parity:** the **non-color signal** must be consistent across the confidence statement (Unit 5), viz (Unit 4), and Roth lever (Unit 8) — enforced by single-sourcing the primitives in `viz/palette.ts` (Unit 4) and exposing the signal in the **accessibility tree**, not merely grayscale-visible.
 - **Integration coverage:** save→reload→unlock and export→wipe→restore (Unit 2) are cross-layer guarantees mocks won't prove — exercise end-to-end (Playwright).
 - **Unchanged invariants:** no backend, no network calls with user financial data, no telemetry of model contents — the local-first invariant is load-bearing for R15 and must not be quietly broken.
 
@@ -193,11 +202,11 @@ The load-bearing seam: **intake and the first answer never touch disk** (magic-m
 
 | Risk | Mitigation |
 |------|------------|
-| Monte Carlo noise makes the headline jitter across re-runs / slider drags → trust collapses | Deterministic seeded RNG keyed per scenario; common random numbers across Roth arms; rounding hysteresis (Unit 1, enforced in 6/7) |
+| Monte Carlo noise makes the headline jitter across re-runs / slider drags → trust collapses | Deterministic seeded RNG keyed per scenario; common random numbers across Roth arms; rounding hysteresis (Unit 1, enforced in 7/8) |
 | A correctness bug yields a calm-but-wrong number (worse than no tool) | Trinity/Bengen golden-case validation, fail-loud + self-tested vs a planted wrong number (Unit 1); N=1 cold-read gate |
 | Intake data hits disk in the clear before the key exists | Magic-moment-first: in-memory until explicit Save + passphrase (Units 2/3); integration test asserts no IndexedDB write during intake |
 | Surviving spouse locked out of the survivor's own finances | Shared household credential; recovery phrase + export are a two-person artifact (Unit 2) |
-| Regulatory drift: a personalized verdict or asset-location phrasing crosses the IAA line | Calculator-never-verdict; categorical surface names no dollar figure; string-level copyGuard; no securities/asset-location (Units 5/7); attorney review before any Terms/marketing (deferred) |
+| Regulatory drift: a personalized verdict or asset-location phrasing crosses the IAA line | Calculator-never-verdict; categorical surface names no dollar figure; string-level copyGuard; no securities/asset-location (Units 5/8); attorney review before any Terms/marketing (deferred) |
 | PWA `autoUpdate` reloads a tab mid-encrypt-write, tearing an IndexedDB write | `prompt` mode + update toast, not `autoUpdate` (Unit 0) |
 | "We can't see your money" claimed before it's provable (R15) | Copy gated on Unit 2's evidence (no key/plaintext in the store) — provable before spoken |
 | Color-blind reviewer (the N=1) can't fast-scan outcomes | Non-color signal is the primary channel; grayscale tests + oklab probe (Units 4/5) |

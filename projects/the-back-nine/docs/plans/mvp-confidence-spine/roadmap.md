@@ -16,6 +16,9 @@ phases:
 
 # The Back Nine MVP — Confidence Spine — Roadmap
 
+> # ⚠️ SUPERSEDED — pending the 4-phase re-plan (2026-06-04 thesis reset)
+> **This roadmap AND the three phase docs in this directory describe the OLD direction** — a *commercial* single-Roth-lever calculator across 3 phases (Units 0–9). The **2026-06-04 thesis reset** (`../direction-reset-2026-06-04.md`, ratified) makes The Back Nine a **personal recommend-second co-pilot with a solver** over *two* controls (sequencing + conversion) + a budget builder + income-aware healthcare, restructured into **4 phases** (Foundation → First Answer → Controls → Solver & Recommendation). Source of truth = the **north-star** (`../direction-reset-2026-06-04.md`) + the **rewritten requirements v2** (`../../brainstorms/the-back-nine-requirements.md`). **Phase 1 (engine) and Phase 2 (confidence statement) below are largely REUSABLE; Phase 3 splits into Controls + Solver.** Do not start work from this doc — await the `/ce:plan` 4-phase re-plan (see `TODO.md`).
+
 > *Parent document for the MVP build. It carries the research, the cross-cutting decisions, and the phase breakdown. The three phase files inherit their quality bar, requirements trace, and technical decisions from this document. When a phase file disagrees with the roadmap, the roadmap wins unless the roadmap is demonstrably wrong — in which case we update the roadmap.*
 >
 > **Paths are relative to `projects/the-back-nine/`.** Two source documents are authoritative:

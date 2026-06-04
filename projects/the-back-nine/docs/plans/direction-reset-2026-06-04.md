@@ -4,7 +4,7 @@ type: feat
 date: 2026-06-04
 status: active
 supersedes: "the commercial framing of docs/brainstorms/the-back-nine-requirements.md + the single-Roth-lever scope of docs/plans/mvp-confidence-spine/"
-ratified:        # YYYY-MM-DD — set when Briggsy confirms this captures the product
+ratified: 2026-06-04   # Briggsy: "cleared for takeoff"
 sources:
   - docs/research/foundation-findings-2026-06-03.md   # §Strand 1-5 (regulatory strand now archive-as-rationale)
   - "impact assessment 2026-06-04 (7-lens + 2-critic workflow wf_27462f20)"

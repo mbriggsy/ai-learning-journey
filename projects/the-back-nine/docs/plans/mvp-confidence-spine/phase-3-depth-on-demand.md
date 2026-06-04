@@ -4,7 +4,7 @@ type: feat
 phase: 3
 parent: docs/plans/mvp-confidence-spine/roadmap.md
 date: 2026-06-03
-status: not-started
+status: superseded-pending-replan   # 2026-06-04 thesis reset → ../direction-reset-2026-06-04.md (splits into Controls + Solver phases)
 deepened: 2026-06-04
 doc-reviewed: 2026-06-04
 coded:           # YYYY-MM-DD

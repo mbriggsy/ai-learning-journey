@@ -62,6 +62,8 @@ Strongest, most refutation-resistant findings:
 
 ## Strand 3 — Regulatory: Roth what-if vs the Investment Advisers Act
 
+> **⚠️ ARCHIVE-AS-RATIONALE (2026-06-04 thesis reset).** The Back Nine is now a **personal, non-commercial tool** (`../plans/direction-reset-2026-06-04.md`). Reg BI / the Investment Advisers Act govern *compensated advice to clients*; this product meets neither the relationship nor the compensation prong, so **this entire strand is no longer a live constraint.** It is retained as the documented *why* — the rationale behind the v1 guardrails (no-verdict, no-optimizer, categorical-only triggers, the attorney-gate) — so a future **re-commercialization** can re-instate them deliberately rather than rediscover them. The honesty descendants survive on their own merits (certainty-hygiene, no-false-precision); only the *regulatory* obligations lapse. Nothing below binds the current build.
+
 ### Bottom line
 **The posture holds — but the load-bearing defense is not the disclaimer.** It is that **a Roth-conversion what-if that names no securities is probably not "advice about securities" at all**, so the IAA threshold (Prong A of the §202(a)(11) ABC(S) test) likely never closes. A Roth conversion is a decision about the *tax wrapper and timing of income recognition*, not the *advisability of investing in/buying/selling securities*. The disclaimer is good hygiene; **"not securities advice" is the actual shield.** Confidence: **defensible, not airtight** — there is **no on-point SEC no-action letter**, and the defense degrades on drift.
 
@@ -92,6 +94,13 @@ The Reg BI/RIA contradiction; the absence of an on-point SEC no-action letter; a
 ## Strand 4 — Engine correctness reference cases (the validation contract)
 
 The Success Criteria demand the engine be "validated against known-good reference cases." Here they are. **Verifier corrections applied — the raw research had a landmine (a wrong Trinity bond number designated as a golden oracle, which would have failed a *correct* engine).**
+
+### Solver validation — NEW (2026-06-04): the *recommendation* must be right, not just the number
+The 2026-06-04 thesis reset (`../plans/direction-reset-2026-06-04.md`) makes the product **recommend** a strategy, so the contract GROWS. The cases below validate the engine's *number*; a recommender needs three more classes, all **gating before the solver is allowed to speak** (a wrong recommended strategy costs real dollars):
+- **(a) Optimality / ranking oracle** — hand-computable cases where the best drawdown/conversion order is *known* (conventional taxable→tax-deferred→Roth ordering; a textbook bracket-filling Roth optimum), so a confidently-wrong recommendation **fails loud** — the way Trinity/Bengen make "the number is right" testable.
+- **(b) Ranking-stability under CRN** — the *ranking* (not just each pairwise delta) must be stable on the shared draw matrix, or the recommendation jitters. Generalize the 2-arm CRN test to **K candidate strategies → identical normals path-for-path** across the survivor MFJ→single transition.
+- **(c) Grade calibration** — "just do it" must *actually* be robust across the futures and "coin-flip" *actually* a coin-flip. The sole human gate (N=1 cold-read) judges a grade's **tone** but is structurally unable to judge its **correctness** — so this automated oracle is the only backstop on a tool moving real money.
+- **Optimizer's-curse correction (part of the contract):** argmax over many candidates on ONE seed overfits that seed's noise → the in-sample winner's score is optimistically biased. **Report graded confidence on an independent held-out seed-set** (or paired top-K dispersion). Compounded: directional-until-pinned fixtures decide the exact near-ties the optimizer overfits, so **pinning the §Strand-5 primaries is a hard solver prerequisite**, not a residual gate.
 
 ### Golden / exact (historical — right/wrong answers)
 Trinity Study (Cooley/Hubbard/Walz 1998), **vintage-locked: 1926–1995, S&P 500 + LONG-TERM CORPORATE bonds, inflation-adjusted withdrawals, success = balance > $0 at horizon end, annual rebalance:**
@@ -126,9 +135,11 @@ The **100%-bond = ~70%** row is the **diagnostic case**: a correct engine with i
 
 ---
 
-## Strand 5 — Tax reference for the Roth lever (added 2026-06-04, Phase-3 planning)
+## Strand 5 — Tax reference for the strategy solver (added 2026-06-04; scope grown to multi-control + healthcare)
 
-*The Roth-conversion lever (Phase 3 Unit 8) is the only surface that consumes federal tax numbers. Per the roadmap's single-source rule ("reference numbers live in the findings doc only"), they live **here**, not inlined in the plan. Verified via gemini-grounding 2026-06-04 (Tax Foundation 2026 bracket tables; IRS RMD FAQ; SECURE 2.0; OBBBA). **Confidence: defensible/directional — NOT yet pinned to the IRS primaries (see exit gate). Mark fixtures "directional" in code until pinned, exactly as Strand 4 does.***
+> **Scope grown (2026-06-04 thesis reset).** Strand 5 began as the numbers for a *single Roth lever*; the reset makes the product a **multi-control solver** (withdrawal sequencing + conversion) with **income-dependent healthcare**, so the tax surface is bigger. **§Strand 5 is now TWO sources together:** the bracket/RMD/SS-tax reference below **plus** the dedicated **`./pre65-healthcare-aca-hsa-2026-06-04.md`** grounding note (ACA-PTC, IRMAA, HSA — cited, directional until pinned). **New falsifiable IN/OUT line:** a tax/health effect is **IN iff withdrawal sequencing or a conversion can move it** — IN: ordinary brackets, standard deduction, RMDs, SS-taxation, MFJ→single, **ACA-PTC (pre-65), IRMAA (post-65), cap-gains/qualified-dividend stacking**; OUT-but-disclosed: NIIT, state. **Two distinct MAGI calculators** (ACA-MAGI ≠ IRMAA-MAGI). **Legislative landmine:** the enhanced ACA subsidies **expired 12/31/2025, unre-enacted as of 2026-06-04** → model the **400% FPL cliff as the 2026 base case**, expose "enhanced" as a scenario toggle, **re-verify every build.**
+
+*Per the single-source rule ("reference numbers live in the findings doc only"), tax numbers live **here**, not inlined in the plan. Verified via gemini-grounding 2026-06-04 (Tax Foundation 2026 bracket tables; IRS RMD FAQ; SECURE 2.0; OBBBA; + the healthcare note's IRS/CMS primaries). **Confidence: defensible/directional — NOT yet pinned to the IRS primaries (see exit gate). Mark fixtures "directional" in code until pinned, exactly as Strand 4 does.***
 
 ### The legal basis (this is itself a staleness-stamp fact)
 **The One Big Beautiful Bill Act (OBBBA), signed 2025-07-04, made the TCJA individual rate structure (10/12/22/24/32/35/37) and the elevated standard deduction PERMANENT** — so 2026 is **not** a TCJA-sunset reversion to pre-2018 brackets, which is what would have happened absent legislation (TCJA individual provisions were set to expire 12/31/2025). **Why this matters for the build:** Unit 9's "tax-table vintage" staleness clock is therefore *not* tracking a known one-time 2026 reversion — it tracks (a) annual inflation indexing of a permanent bracket structure, (b) the senior-bonus-deduction sunset (below — a *guaranteed* future staleness), (c) the RMD-age step (below), and (d) any future law change. **Stamp the legal basis (OBBBA-2025), not just the year**, so a future statutory change is falsifiable rather than mistaken for inflation drift.
@@ -177,6 +188,8 @@ The **100%-bond = ~70%** row is the **diagnostic case**: a correct engine with i
 ---
 
 ## What this changes in the requirements doc (summary)
+
+> **Superseded in part by the 2026-06-04 thesis reset.** The summary below reflects what the 2026-06-03 research changed in the *v1* requirements. Item 4 (Regulatory) is now **archive-as-rationale** — see the Strand 3 banner and `../plans/direction-reset-2026-06-04.md`. Items 1–3, 5 still hold (and the engine validation contract has since GROWN for the solver — see the Strand 4 "Solver validation" subsection).
 1. **Problem Frame** — consumability thesis now evidence-verified; refine to "consumability AND trustworthy data handling."
 2. **Technical Foundation / Engine** — add the validation contract; sharpen "arithmetic-average growth" → log-drift μ = arithmetic − σ²/2; cohort + joint-survivor longevity.
 3. **Technical Foundation / Form factor** — single-worker WASM (skip SAB); non-extractable-key-is-convenience-not-boundary (gates R15); Argon2id-WASM vs PBKDF2-600k fork; **downgrade Jazz (alpha)**; keyring-crate path; recovery sharpening.

@@ -1,35 +1,44 @@
 # The Back Nine — Session Handover
 
 > Orientation doc — read this first when resuming in this directory.
-> **Source of truth for current decisions = `docs/brainstorms/the-back-nine-requirements.md`.**
-> This file is the durable charter (the *why*); the requirements doc holds the locked *what/how*; `TODO.md` is the actionable queue. Don't re-decide locked items here.
+> **Sources of truth:** the **north-star** `docs/plans/direction-reset-2026-06-04.md` (the *why* — ratified charter) + the **requirements v2** `docs/brainstorms/the-back-nine-requirements.md` (the locked *what/how*). `TODO.md` is the actionable queue. This file only orients; don't re-decide locked items here — when this file disagrees with the north-star, the north-star wins.
 
 ## What this is
 
-**The Back Nine** — a retirement / wealth / tax-planning product. Golf metaphor for the second half of life: every shot counts more, you're playing for the finish.
+**The Back Nine** — a retirement / wealth / tax-strategy tool. Golf metaphor for the second half of life: every shot counts more, you're playing for the finish.
 
-**NOT an engineering proving ground.** A potential **commercial product**. The bar is not "does it run" — it's *"would a stranger pay for this and trust it with their net worth."* Treat every decision at that altitude.
+**A PERSONAL tool — Briggsy's laptop plus a handful of friends, never sold. NOT a commercial product.** The bar is not "would a stranger pay for this" — it's *"would I and my friends bet real retirement money on this answer."* Removing the commercial/regulatory net does **not** lower the bar; it **transfers the load onto honesty + engine validation, which get STRICTER** — because the product now *recommends*, and **calm-but-wrong is the cardinal sin.**
 
-## The four founding answers (from Briggsy)
+## The thesis (the product in three sentences)
 
-1. **Audience:** Briggsy first, built as a potential commercial product from day one.
-2. **Scope:** retirement glidepath projections + live wealth picture + tax-move planning, woven together, room to grow. (MVP deliberately narrows to the *confidence spine + one Roth lever* — see requirements doc.)
+1. **Tell me where I stand** — *"your essentials are safe in 10 of 10 futures; your full lifestyle holds in 7"* (the confidence spine — the first magic moment).
+2. **Then "here's what we'd do about it"** — a recommended, **confidence-graded** strategy over **two coupled controls** (withdrawal **sequencing** + Roth **conversion**) that funds your budget the tax-smartest way, with the full reasoning **one tap down**.
+3. **You stay the pilot** — safety is the default floor, but **you pick the goal** above it (leave more · pay less tax · live bigger now), and every recommendation wears its own hedge on the headline.
+
+**Consumability is still the wedge** — incumbents have the math and lose on feeling hostile; making this domain feel calm and legible *is* the product. There is no market to win — the only bar is whether Briggsy and his friends trust the answer.
+
+## The founding shape (from Briggsy)
+
+1. **Audience:** Briggsy + a few financially-literate friends betting real retirement money. Never sold.
+2. **Scope:** the confidence spine **plus** a recommend-second solver over two controls (sequencing + conversion), funding a **user-built budget** toward a **user-picked goal**, with **income-aware healthcare** (pre-65 ACA-PTC, post-65 IRMAA, HSA). See requirements v2.
 3. **Data:** manual entry first; Plaid-style linking later only if **"crazily hardened."**
-4. **Form factor:** consumability is the HUGE factor. (Decided: **web, local-first PWA** — see requirements doc.)
+4. **Form factor:** consumability is the HUGE factor → **web, local-first PWA**, encrypted at rest, no backend.
 
-## The thesis (the wedge)
+## Status (2026-06-04)
 
-**Consumability is the wedge.** Every incumbent has the features and the math; they all feel *hostile*. The product that makes this domain feel **calm and legible** wins. UX is not polish — it *is* the product. We assume we're the only game in town; the only competition is the quality bar itself.
+**Thesis reset ratified** ("cleared for takeoff"). Foundation docs cascaded **and seam-swept clean** (11-doc cross-document drift sweep, 2026-06-04):
+- **North-star** written + ratified (`docs/plans/direction-reset-2026-06-04.md`).
+- **Requirements rewritten to v2** (personal tool, recommend-second, two controls, lexicographic objective, healthcare-IN).
+- **Foundation-findings cascaded:** §Strand 3 → archive-as-rationale; §Strand 4 grown (solver validation); §Strand 5 grown (multi-control + healthcare); residual single-lever/attorney-gate body drift corrected.
+- **Healthcare research persisted** (`docs/research/pre65-healthcare-aca-hsa-2026-06-04.md`).
+- The **3 phase docs in `docs/plans/mvp-confidence-spine/` (+ the roadmap) are `superseded-pending-replan`** — they describe the OLD 3-phase single-Roth-lever direction. Phase 1 engine + Phase 2 confidence statement are largely reusable; Phase 3 splits into Controls + Solver.
 
-## Status
-
-Landscape research + brainstorm + 7-persona document-review **complete**. All architectural forks locked. **Foundation research verified** 2026-06-03 (`docs/research/foundation-findings-2026-06-03.md`). **MVP plan written** 2026-06-03 → `docs/plans/mvp-confidence-spine/` (roadmap + 3 phase docs; 9 units; burned-style frontmatter with `deepened`/`doc-reviewed`/`coded`/`code-reviewed` lifecycle stamps). Planning-time decisions locked: **engine = TypeScript** (WASM = fast-follow), **unlock = passphrase each session / memory-only key / no username** (PBKDF2-600k), magic-moment-first onboarding, shared household credential, married-couple precondition.
-
-**Next: deepen the 3 phase docs, then `document-review`, then `/ce:work`** (see `TODO.md` for the exact sequence + landmines). The plan is NOT yet deepened — depth tier only. Decisions/requirements/foundation: `docs/brainstorms/the-back-nine-requirements.md` + `docs/research/foundation-findings-2026-06-03.md`.
+**NEXT: the 4-phase `/ce:plan` re-plan** — Foundation → First Answer → **Controls** (manual sequencing + Roth) → **Solver & Recommendation**. See `TODO.md` for the exact sequence + landmines. **Do NOT deepen or `/ce:work` the 3 superseded phase docs.**
 
 ## Standing landmines
 
-- **No bullshitting the market.** Competitive, regulatory, and library claims get verified against sources before they go load-bearing. "I don't know yet" beats a confident-wrong claim that calcifies.
-- **Commercial bar.** There's a real user who isn't Briggsy. User-seat empathy is mandatory.
+- **No bullshitting.** Competitive, regulatory, library, and tax/health claims get verified against sources before they go load-bearing. "I don't know yet" beats a confident-wrong claim that calcifies.
+- **Load transfer.** Friends bet identical real money with *less* protection and trust you *more* — so the honesty + engine-validation bar **RISES**, it does not soften. *"It's just for friends" must never excuse a calm-but-wrong recommendation.*
+- **Objective ≡ headline metric**, or the product recommends a move that worsens its own hero number (D1 lexicographic resolves it). The full carried-landmines set lives in the north-star's "Carried landmines" section — read it before the re-plan.
 - **Manual-first is intentional.** Don't reach for Plaid until the experience is proven and the hardening story is real.
-- **The `deep-research` workflow is currently broken** (StructuredOutput crashes; its "refuted" verdicts are verifier false-negatives, not real refutations). Self-serve research via `gemini-grounding` + `curl`.
+- **The `deep-research` workflow is broken** (StructuredOutput crashes; its "refuted" verdicts are verifier false-negatives). Self-serve research via `gemini-grounding` + `curl`.

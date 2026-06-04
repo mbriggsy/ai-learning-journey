@@ -54,7 +54,7 @@ flowchart TD
 **The On-Ramp (input)**
 - **R5.** First contact is a **guided, one-question-at-a-time intake** (calm, advisor-style). The **fast first answer runs on a single total spend figure**; the itemized budget (R20) is the *deepening*, not the on-ramp — the calm first answer is never gated behind a full budget. Never a wall of forms.
 - **R6.** A **power-user escape hatch** lets a user set any assumption precisely at any point, without walking the guided path.
-- **R7.** **Every assumption the flow makes on the user's behalf is visible and editable on demand** — *and this gains weight under recommend-first:* a recommended strategy must expose its inputs **and its reasoning** for the user to trust and approve it.
+- **R7.** **Every assumption the flow makes on the user's behalf is visible and editable on demand** — *and this gains weight under recommend-second:* a recommended strategy must expose its inputs **and its reasoning** for the user to trust and approve it.
 - **R8.** **Input mirrors output:** the user reaches a caveated answer quickly, then *sharpens*. Each piece of added precision **sharpens the confidence band** — it *narrows* on added precision and *shifts honestly* on a corrected value (it does not only ever narrow). Refinement is rewarding, never punished for honesty.
 
 **The Budget (the spending model — NEW)**

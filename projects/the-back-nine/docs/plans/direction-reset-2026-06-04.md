@@ -17,7 +17,7 @@ sources:
 
 ## What changed (one paragraph)
 
-The Back Nine moves from a **commercial product** (held-out-to-the-public, regulated, a single user-driven Roth-conversion calculator) to a **personal tool** (Briggsy's laptop + a few friends, never sold). That single change unlocks the product it always wanted to be: a **recommend-first co-pilot with a solver** that proposes a confidence-graded *strategy* over **two coupled tax controls** (withdrawal sequencing + Roth conversion), funding a **user-built budget** toward a **user-chosen goal**, with **income-aware healthcare** modeled across the Medicare line. The regulatory guardrails relax to wording; **the load transfers to honesty + engine validation, which harden.**
+The Back Nine moves from a **commercial product** (held-out-to-the-public, regulated, a single user-driven Roth-conversion calculator) to a **personal tool** (Briggsy's laptop + a few friends, never sold). That single change unlocks the product it always wanted to be: a **recommend-second co-pilot with a solver** (the spine answer stays the first beat; the recommendation is the immediate second — see D2) that proposes a confidence-graded *strategy* over **two coupled tax controls** (withdrawal sequencing + Roth conversion), funding a **user-built budget** toward a **user-chosen goal**, with **income-aware healthcare** modeled across the Medicare line. The regulatory guardrails relax to wording; **the load transfers to honesty + engine validation, which harden.**
 
 ## The thesis (the product in three sentences)
 
@@ -71,7 +71,7 @@ Phase 1 engine core (determinism, joint-and-survivor longevity, Trinity/Bengen v
 
 ## What RE-OPENS
 
-- **Requirements doc — thesis-level** (not back-annotation): rewrite R9–R13 (kill "exactly one lever" / "calculator-never-optimizer" / "no individualized directive"); relax R13/R15–R18 to personal hygiene (re-justify anything kept on engineering grounds, not the dead marketing claim); add net-new requirements (sequencing-as-a-control, the objective function, recommend-first posture, the solver, confidence-grading, comparative transparency, the headline-hedge invariant, the budget builder, income-aware healthcare).
+- **Requirements doc — thesis-level** (not back-annotation): rewrite R9–R13 (kill "exactly one lever" / "calculator-never-optimizer" / "no individualized directive"); relax R13/R15–R18 to personal hygiene (re-justify anything kept on engineering grounds, not the dead marketing claim); add net-new requirements (sequencing-as-a-control, the objective function, recommend-second posture (per D2), the solver, confidence-grading, comparative transparency, the headline-hedge invariant, the budget builder, income-aware healthcare).
 - **Foundation findings:** **§Strand 3 (regulatory) → archive-as-rationale** (the WHY, in case of future re-commercialization); invalidate the attorney-gate everywhere. **§Strand 4 grows** (solver validation: an optimality/ranking oracle, ranking-stability-under-CRN, grade-calibration). **§Strand 5 grows** (sequencing tax + the healthcare grounding note).
 - **The deepened Phase 3** splits: → **P3 Controls** (sharpen + manual sequencing + Roth control + re-entry) and **P4 Solver & Recommendation** (objective, search, grading, comparative transparency, recommendation surface).
 
@@ -87,7 +87,7 @@ Phase 1 engine core (determinism, joint-and-survivor longevity, Trinity/Bengen v
 
 ## Next steps
 
-1. **Briggsy ratifies this north-star** (set `ratified:`).
-2. **Requirements re-open** (thesis-level rewrite, tracked).
-3. **Re-plan into 4 phases**; cascade the §Strand 4/5 growth; fold the full healthcare grounding note into §Strand 5.
-4. **Update memory** (`project-the-back-nine` line still says "commercial product") **and TODO**.
+1. ✅ **Ratified** 2026-06-04 (`ratified:` set — "cleared for takeoff").
+2. ✅ **Requirements re-opened** → rewritten to v2 (`../brainstorms/the-back-nine-requirements.md`); foundation-findings cascaded (§Strand 3 → archive, §Strand 4/5 grown) and seam-swept clean 2026-06-04.
+3. **→ Re-plan into 4 phases** (Foundation → First Answer → Controls → Solver & Recommendation); cascade the §Strand 4/5 growth; fold the healthcare grounding note into §Strand 5. **‹the live next step›**
+4. ✅ **Memory + TODO updated** to the personal-tool / recommend-second direction.

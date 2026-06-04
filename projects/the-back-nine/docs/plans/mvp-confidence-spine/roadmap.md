@@ -3,7 +3,7 @@ title: "The Back Nine MVP — Confidence Spine — Roadmap"
 type: feat
 parent: docs/brainstorms/the-back-nine-requirements.md
 date: 2026-06-03
-status: active
+status: superseded-pending-replan   # 2026-06-04 thesis reset → ../direction-reset-2026-06-04.md (Phase 1/2 reusable; Phase 3 splits into Controls + Solver)
 deepened: 2026-06-04        # all three phases deepened
 doc-reviewed: 2026-06-04    # all three phases document-reviewed (7-persona)
 coded:           # YYYY-MM-DD — set when all phases implemented

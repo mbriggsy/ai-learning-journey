@@ -128,7 +128,9 @@ All external best-practice research is **already verified** in `docs/research/fo
     │   │   ├── longevity.ts        # cohort tables + joint-and-survivor (P=px+py−px·py)
     │   │   ├── simulate.ts         # paths, log-drift μ=arith−σ²/2, survivor phase
     │   │   ├── confidence.ts       # distribution → "X of N" + dollar-adjustment + state
-    │   │   ├── roth.ts             # with/without arms, common random numbers
+    │   │   ├── historical.ts       # (Phase 1) deterministic backtest — the EXACT oracle for Trinity/Bengen
+    │   │   ├── roth.ts             # (Phase 3) with/without arms, common random numbers
+    │   │   │                       #   (CRN seam itself is a Phase-1 contract in simulate.ts)
     │   │   ├── engine.worker.ts    # Comlink-exposed engine API
     │   │   └── reference/          # Trinity/Bengen golden-case fixtures + validation tests
     │   ├── crypto/                 # WebCrypto wrappers (PBKDF2, AES-GCM), recovery phrase

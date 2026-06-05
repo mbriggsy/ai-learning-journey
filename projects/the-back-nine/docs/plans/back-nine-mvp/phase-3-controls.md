@@ -96,7 +96,7 @@ code-reviewed:   # YYYY-MM-DD
 
 **Files:**
 - Create: `src/ui/SequencingControl.tsx` (named-policy picker + custom-order editor), `src/ui/RothLever.tsx`, `src/ui/RothSurface.tsx` (the quiet categorical teaser), `src/ui/RothTuner.tsx`, `src/ui/RothAccounts.tsx` (lever-open bucket mini-intake), `src/viz/TwoFutures.tsx` (the two-series **component** — built here against `roth.ts`'s real emission, reusing P2·U6 tokens; **string-free**, all text via props), `src/engine/roth.ts` (**orchestrates the two arms + the conversion event over the P1·U2/U3 overlays; does NOT re-implement decumulation/taxes/RMDs/fixed-points**)
-- Modify: `src/shared/model.ts` (per-person pre-tax / Roth / taxable bucket fields + **per-person birth year** + the **sequencing-policy** field + bracket-vintage stamp, under the single schemaVersion-2 bump — contract #5), `src/ui/copy.ts` (the control surfaces' strings + the single-sourced **hedge-token catalog**), `src/ui/copyGuard.ts` (the **require-the-hedge** lint + the new Roth/control numeric slots)
+- Modify: `src/shared/model.ts` (per-person pre-tax / Roth / taxable bucket fields + **per-person birth year** + the **sequencing-policy** field + the **tax-vintage stamps** (tax-table/bracket + RMD-age-rule + senior-bonus-sunset — the three control-gating tax clocks Unit 13 checks, not a single bracket stamp), under the single schemaVersion-2 bump — contract #5), `src/ui/copy.ts` (the control surfaces' strings + the single-sourced **hedge-token catalog**), `src/ui/copyGuard.ts` (the **require-the-hedge** lint + the new Roth/control numeric slots)
 - Test: `src/engine/__tests__/roth.test.ts`, `src/ui/__tests__/sequencingControl.test.tsx`, `rothLever.test.tsx`, `src/ui/__tests__/copyGuard.test.ts` (the hedge lint)
 
 **Approach:**

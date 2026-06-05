@@ -31,9 +31,9 @@
 - **Requirements rewritten to v2** (personal tool, recommend-second, two controls, lexicographic objective, healthcare-IN).
 - **Foundation-findings cascaded:** §Strand 3 → archive-as-rationale; §Strand 4 grown (solver validation); §Strand 5 grown (multi-control + healthcare); residual single-lever/attorney-gate body drift corrected.
 - **Healthcare research persisted** (`docs/research/pre65-healthcare-aca-hsa-2026-06-04.md`).
-- The **3 phase docs in `docs/plans/mvp-confidence-spine/` (+ the roadmap) are `superseded-pending-replan`** — they describe the OLD 3-phase single-Roth-lever direction. Phase 1 engine + Phase 2 confidence statement are largely reusable; Phase 3 splits into Controls + Solver.
+- **Re-plan IN PROGRESS.** The live plan is **`docs/plans/back-nine-mvp/roadmap.md`** (4 phases / 18 units, written 2026-06-04). The old `docs/plans/mvp-confidence-spine/` (roadmap + phase-1/2/3) is `superseded-pending-replan` history — kept because Phase 1 engine + Phase 2 confidence statement are ≈80% reusable (mine, don't rebuild). **Do NOT `/ce:work` the superseded docs.**
 
-**NEXT: the 4-phase `/ce:plan` re-plan** — Foundation → First Answer → **Controls** (manual sequencing + Roth) → **Solver & Recommendation**. See `TODO.md` for the exact sequence + landmines. **Do NOT deepen or `/ce:work` the 3 superseded phase docs.**
+**NEXT: draft the 4 phase docs** (`phase-1-foundation` → `phase-4-solver-recommendation`) in `docs/plans/back-nine-mvp/` in one workflow, then the `/ce:plan` confidence-check + document-review, then `/ce:work` foundation-first. Exact sequence + the mining map + landmines: **`TODO.md`**.
 
 ## Standing landmines
 

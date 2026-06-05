@@ -1,30 +1,28 @@
 # The Back Nine — TODO
 
-> Actionable items only. The product definition lives in `docs/plans/direction-reset-2026-06-04.md` (north-star) + `docs/brainstorms/the-back-nine-requirements.md` (v2). Landmines live in the north-star's "Carried landmines" section + memory. No session history here.
+> Actionable items only. The live plan is `docs/plans/back-nine-mvp/roadmap.md` (the 4-phase spine). Product definition: `docs/plans/direction-reset-2026-06-04.md` (north-star) + `docs/brainstorms/the-back-nine-requirements.md` (v2). Landmines + solver-blocking exit gates live in the roadmap's "Risks" + "Validation Gates" sections. No session history here.
 
 ## Current State
-**Thesis reset 2026-06-04 — ratified ("cleared for takeoff").** The Back Nine is now a **personal** tool (not commercial): a **recommend-second co-pilot with a solver** over two controls (withdrawal **sequencing** + Roth **conversion**) that funds a **user-built budget** toward a **user-picked goal**, safety-floor-first. Reg guardrails relaxed to wording; the load transferred to honesty + validation (which harden).
-
-**Foundation docs cascaded (done 2026-06-04):** north-star written + ratified; **requirements rewritten to v2**; foundation-findings **§Strand 3 → archive-as-rationale, §Strand 4 grown (solver validation), §Strand 5 grown (multi-control + healthcare)**; **healthcare research persisted** (`docs/research/pre65-healthcare-aca-hsa-2026-06-04.md`); **memory updated**. The **3 deepened phase docs in `docs/plans/mvp-confidence-spine/` are SUPERSEDED-pending-replan** (they describe the old 3-phase single-Roth-lever direction).
+**4-phase re-plan IN PROGRESS.** Foundation docs are clean on **both** axes — directional drift (sweep, commit `4d9af107`) and referential/logical integrity (audit, commit `82cd6e8a`). The **roadmap is written** (`docs/plans/back-nine-mvp/roadmap.md`): 4 phases / 18 units, the cross-cutting determinism-CRN-honesty spine, and all 5 open-question resolutions. The superseded `docs/plans/mvp-confidence-spine/` (roadmap + phase-1/2/3) is intact as history and is ≈80% mineable. **The 4 phase docs are NOT yet written — that is the immediate next step.**
 
 ## Next Steps (priority order)
-1. **The 4-phase RE-PLAN via `/ce:plan`** — Foundation → First Answer → **Controls** (manual sequencing + conversion, a shippable cold-read milestone) → **Solver & Recommendation**. Reuse: Phase 1 engine + Phase 2 confidence statement are largely intact; the **solver + recommendation surface + budget builder + the tax/healthcare overlay** are the new layer. Within the re-plan:
-   - Fold the full healthcare grounding note into the §Strand-5 plan surfaces; bake the §Strand-4 **solver validation** (optimality oracle, ranking-stability, grade calibration) into the engine plan as **gating before the solver speaks**.
-   - Carry the adversarial landmines from the north-star (objective ≡ headline metric; optimizer's curse → held-out seed; disclosed-omission-inverts-ranking; stale saved rec = an executed action; require-the-hedge lint).
-2. **Then `/ce:work`** foundation-first (run `/brief` first — the hook gates `ce:work`, not `ce:plan`).
+1. **Draft the 4 phase docs in `docs/plans/back-nine-mvp/`** — `phase-1-foundation.md`, `phase-2-first-answer.md`, `phase-3-controls.md`, `phase-4-solver-recommendation.md` — in **one workflow** (per the phase-plan-drafting rule: all phase files in one pass, deepen after). For each agent: the roadmap (the unit map + decisions), requirements v2, foundation-findings §Strand 5, the healthcare doc, **and the corresponding superseded phase doc to mine**. Mining map:
+   - **P1 ← superseded phase-1** (U0/U1/U4 port near-verbatim; U2 = elevate old Unit 8's tax overlay to core; **U3 healthcare overlay is net-new** — ACA-MAGI + IRMAA-MAGI calculators, ACA pre-65 fixed-point + cliff/enhanced toggle, IRMAA 2-yr lag, HSA 4th bucket; add **sequencing as a pluggable drawdown-policy** to U1).
+   - **P2 ← superseded phase-2** (U5/U6/U7/U8 port near-verbatim; add the **passphrase-strength gate** to U8).
+   - **P3 ← superseded phase-3** (U10 Roth + U12 sharpen + U13 re-entry port; **U9 budget builder + U11 healthcare surfaces + the manual sequencing control are net-new**). The old phase-3 "cascade ledger" (its end section) lists the tracked Phase-1/2 amendments — fold them in.
+   - **P4 = net-new** (U14 validation harness gates U15 solver; U16 recommendation; U17 stale-rec). No superseded doc to mine — build from the roadmap + the north-star landmines.
+   - Run a **cross-phase coherence pass** (the deepening-drift + cross-phase-seam anti-patterns are live risks).
+2. **Then the `/ce:plan` confidence check (Phase 5.3) + the mandatory document-review** on the full plan set; set the roadmap's `deepened:` / `doc-reviewed:` stamps.
+3. **Then `/ce:work` foundation-first** (run `/brief` first — the hook gates `ce:work`, not `ce:plan`). Start at P1·U0 (scaffold) → U1 (engine).
 
-## Open Items
-- [ ] **MVP solver search-space + compute profile** — confirm "named drawdown policies × conversion grid" (proportional / taxable-first / pre-tax-first / bracket-fill) and measure candidate-count × 1k-path cost to re-confirm **TS-vs-WASM** (WASM may move from fast-follow toward load-bearing; rec is solve-once-on-demand, not live-drag).
-- [ ] **Lexicographic objective — define the "survival-equivalent" band** (so the over-funded pivot to the surplus metric is crisp, not arbitrary).
-- [ ] **Passphrase-strength floor** — min-entropy gate at creation (PBKDF2-600k is the only brute-force defense).
-- [ ] **Spending-trajectory + SS-claiming-age** — confirmed chapter-two levers (SS-timing especially matters for the survivor benefit). Out of MVP; flagged so they aren't lost.
+## Open Items (resolve in the phase docs or defer explicitly)
+- **mulberry32 32-bit period vs a counter-based PRNG** at MC trial counts — U1 spike (the roadmap defers this to implementation; the phase doc should name the spike).
+- **The "never depleted" persisted sentinel** — decide before the schema locks (NOT Infinity/NaN — they become `null` through JSON; learnings `archive/do-not-disturb/009`). P1·U4.
+- **Exact ε** for the survival-equivalent band (P4·U14 oracle calibration); **exact passphrase-strength threshold** (P2·U8).
+- **One canonical year-keyed tax/health constants module** (`src/engine/constants/`) — the phase docs must route every dated constant through it (plan/engine/tests/copyGuard-allowlist all read it; learnings `burned/057,061,063`).
 
-## Exit gates (now SOLVER-BLOCKING — block calling a fixture/recommendation "golden")
-- [ ] **SSA cohort curves** vs the real `table4c7.html` (bot-blocks fetch → manual + committed snapshot) — load-bearing for the survivor differentiator.
-- [ ] **Pin engine datasets:** Bengen's Ibbotson intermediate-government series; a true long-term-CORPORATE series for Trinity (cFIREsim is Shiller=government → directional, not exact).
-- [ ] **Pin §Strand-5 tax+health numbers to primaries:** 2026 Rev. Proc. (brackets/std-ded), Pub. 590-B (Uniform Lifetime Table), Pub. 915 (SS-tax), **Pub. 969 (HSA), §36B/Pub. 974 (ACA-PTC), CMS (IRMAA brackets + 2026 Part B)**.
-- [ ] **Re-verify the enhanced-ACA-subsidy legislative status at EVERY build** — live, possibly-retroactive policy (expired 12/31/2025, unre-enacted as of 2026-06-04). Model 400% FPL cliff as base; "enhanced" = a scenario toggle.
-- [ ] **NEW — the solver optimality oracle** (a hand-computable known-best drawdown/conversion case) must exist before the solver is allowed to recommend. The N=1 cold-read judges grade *tone*, not *correctness*.
+## Cleanup
+- **Stray temp file `UsersbriggAppDataLocalTempowasp_pw.html`** (~89KB, a Playwright temp artifact with a mangled-path filename) sits in the project root — delete before scaffolding, never commit. (Surfaced by the repo-research agent.)
 
 ## Landmines
-See the north-star's **"Carried landmines"** section (`docs/plans/direction-reset-2026-06-04.md`) and `project-the-back-nine` memory for the full set — they're maintained there to avoid drift. The single most important: **"it's just for friends" must NEVER soften validation** — friends risk identical real money with less protection. Calm-but-wrong is the cardinal sin.
+The full set lives in the roadmap ("Risks & Dependencies" + "Validation Gates") and the north-star's "Carried landmines." The single most important: **"it's just for friends" must NEVER soften validation** — calm-but-wrong is the cardinal sin and the bar RISES for a recommender. And: **the solver optimality oracle (U14) must exist and pass BEFORE the solver (U15) is allowed to recommend** — the N=1 cold-read judges tone, not correctness.

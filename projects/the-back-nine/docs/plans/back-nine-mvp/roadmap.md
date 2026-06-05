@@ -232,7 +232,7 @@ The new layer. **Validation is built and passing before the solver is allowed to
 
 - **Interaction graph:** the determinism/CRN spine is consumed by the spine answer (P2), every manual control (P3), and the solver (P4). The overlays (U2/U3) are shared by the controls and the solver. The copy catalog + copyGuard span every user-facing surface.
 - **Error propagation:** the engine returns a calm tri-state (`pending` | `resolved-distribution` | `calm-error`); no `NaN`/`Infinity` escapes a percentile; the worker stays alive/reusable; a worker-construction failure falls back to a main-thread run.
-- **State lifecycle risks:** first-save atomicity (one IndexedDB transaction — a partial vault strands the survivor); the v1→v2 schema migration; model-only re-encrypt under the existing DK; session-only sticky-rounding fields re-seated on re-entry.
+- **State lifecycle risks:** first-save atomicity (one IndexedDB transaction — a partial vault strands the survivor); the v1→v2→v3 schema migration (P3 buckets/budget, P4 solver seeds/goal/saved-rec); model-only re-encrypt under the existing DK; session-only sticky-rounding fields re-seated on re-entry.
 - **API surface parity:** the two controls (sequencing + conversion) share the overlay; whatever a control can express, the solver searches.
 - **Unchanged invariants:** the spine's Trinity/Bengen golden numbers are **never** perturbed by any overlay or control (every overlay reduces byte-identically to the spine when off); the saved spine headline is reproducible byte-identically under its persisted seed.
 

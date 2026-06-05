@@ -24,16 +24,14 @@
 3. **Data:** manual entry first; Plaid-style linking later only if **"crazily hardened."**
 4. **Form factor:** consumability is the HUGE factor → **web, local-first PWA**, encrypted at rest, no backend.
 
-## Status (2026-06-04)
+## Status (2026-06-05)
 
-**Thesis reset ratified** ("cleared for takeoff"). Foundation docs cascaded **and seam-swept clean** (11-doc cross-document drift sweep, 2026-06-04):
-- **North-star** written + ratified (`docs/plans/direction-reset-2026-06-04.md`).
-- **Requirements rewritten to v2** (personal tool, recommend-second, two controls, lexicographic objective, healthcare-IN).
-- **Foundation-findings cascaded:** §Strand 3 → archive-as-rationale; §Strand 4 grown (solver validation); §Strand 5 grown (multi-control + healthcare); residual single-lever/attorney-gate body drift corrected.
-- **Healthcare research persisted** (`docs/research/pre65-healthcare-aca-hsa-2026-06-04.md`).
-- **Re-plan IN PROGRESS.** The live plan is **`docs/plans/back-nine-mvp/roadmap.md`** (4 phases / 18 units, written 2026-06-04). The old `docs/plans/mvp-confidence-spine/` (roadmap + phase-1/2/3) is `superseded-pending-replan` history — kept because Phase 1 engine + Phase 2 confidence statement are ≈80% reusable (mine, don't rebuild). **Do NOT `/ce:work` the superseded docs.**
+**Thesis reset ratified** ("cleared for takeoff"); the **MVP plan set is now LOCKED and airtight.** The full planning pipeline is complete:
+- **North-star** written + ratified (`docs/plans/direction-reset-2026-06-04.md`); **requirements v2** locked (personal tool, recommend-second, two controls, lexicographic objective, healthcare-IN); foundation-findings cascaded + healthcare research persisted.
+- **Live plan = `docs/plans/back-nine-mvp/`** (roadmap + 4 phase docs, 4 phases / 18 units U0–U17). The old `docs/plans/mvp-confidence-spine/` is `superseded` history — Phase 1 engine + Phase 2 confidence statement ≈80% reusable (mine, don't rebuild). **Do NOT `/ce:work` the superseded docs.**
+- **Deepen (29-agent) + document-review (13-agent) + cover-to-cover airtight read (6-agent) all DONE and folded clean** (no amendment headers); `deepened:` + `doc-reviewed:` stamps set 2026-06-05 across all 5 docs. 4 ATC decisions folded (live-bigger-now = confidence-over-chosen-shape · leave-more = after-tax-to-heirs with §1014 IN · selection-stage shrinkage IN · both solver axes co-equal). Commits `f6ae11fb`, `43ca1e79`.
 
-**NEXT: weighted deepen → document-review.** The 4 phase docs are **WRITTEN + coherence-swept** (commit `91d17f84`; `phase-1-foundation` U0–U4 · `phase-2-first-answer` U5–U8 · `phase-3-controls` U9–U13 · `phase-4-solver-recommendation` U14–U17). Next session: a **weighted deepen** (Briggsy's call — full-broad on the net-new surface: all of P4 + P1·U3 + P3·U9/U11, "do not use fast path"; light touch on the ported units that already carry deepen+review), then the **document-review** on the full set (fold findings clean — no "tracked amendment" headers), then `/ce:work` foundation-first. Exact sequence + the per-unit weighting + landmines: **`TODO.md`**.
+**NEXT: code.** `/brief` (the Stop hook gates `ce:work`) → `/ce:work` foundation-first, starting at **P1·U0** (scaffold/CI/CSP/constants) → **P1·U1** (MC engine + determinism/CRN + Trinity/Bengen). U1–U3 are parallelizable, zero-precedent, highest-risk — lock first. Exact next steps + the deferred-to-implementation items + landmines: **`TODO.md`**.
 
 ## Standing landmines
 

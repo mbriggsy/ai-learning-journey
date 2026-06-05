@@ -19,10 +19,14 @@ jobs:
         working-directory: projects/the-back-nine
     steps:
       - uses: actions/checkout@v4
-      # No `version` input — action-setup reads the exact pin from package.json's
-      # `packageManager` field (pnpm@10.30.3). Passing both conflicts ("Multiple
-      # versions of pnpm specified") and `version: 10` would float off the pin.
+      # `version` is REQUIRED here: action-setup runs at the repo ROOT (it ignores
+      # defaults.run.working-directory), and this monorepo has no root package.json,
+      # so it can't read the project's `packageManager` pin. `version: 10` is the
+      # proven house pattern (matches deploy-burned.yml + verify-ai-journey-stats.yml);
+      # the lockfile is the actual dependency-reproducibility guarantee.
       - uses: pnpm/action-setup@v4
+        with:
+          version: 10
       - uses: actions/setup-node@v4
         with:
           node-version: 22

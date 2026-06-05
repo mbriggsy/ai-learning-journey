@@ -41,7 +41,7 @@ These are the rules the engine can rely on as current law. Confidence HIGH unles
 **IRMAA 2-year lookback** *(Source: CMS/SSA; The Finance Buff (Harry Sit) computing from the CMS announcement, cross-checked Kiplinger/Humana — all agree)*
 - IRMAA is an income-based surcharge on Medicare **Part B and Part D**. **Year-N surcharge is set by MAGI from year N−2 → 2026 IRMAA is set by 2024 MAGI.**
 - **IRMAA-MAGI = AGI + tax-exempt interest.** It does **NOT** add back the non-taxable SS portion. **IRMAA-MAGI ≠ ACA-MAGI** — the engine needs **two separate MAGI calculators.**
-- **Step-function brackets with hard cliffs, per person.** $1 over a threshold → the full surcharge for that bracket; a couple pays it **twice**. 2026 first tier: single > $109,000 / **MFJ > $218,000**. 2026 Part B totals climb $284.10 → $689.80/mo across tiers; Part D IRMAA $14.50 → $91.00. First four brackets are inflation-indexed annually; **top tier (≥$500k single / ≥$750k MFJ) is frozen through 2027**, adjusts 2028.
+- **Step-function brackets with hard cliffs, per person.** $1 over a threshold → the full surcharge for that bracket; a couple pays it **twice**. 2026 first tier: single > $109,000 / **MFJ > $218,000**. 2026 Part B totals climb $284.10 → $689.90/mo across tiers; Part D IRMAA $14.50 → $91.00. First four brackets are inflation-indexed annually; **top tier (≥$500k single / ≥$750k MFJ) is frozen through 2027**, adjusts 2028.
 - **A voluntary Roth conversion is NOT an SSA-44 life-changing event** — you cannot appeal away IRMAA you caused by your own conversion. (Retirement/work-stoppage IS a qualifying event.)
 
 ---

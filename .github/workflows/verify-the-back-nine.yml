@@ -7,9 +7,16 @@ name: Verify The Back Nine
 on:
   push:
     branches: [main]
-    paths: ['projects/the-back-nine/**']
+    # Include this workflow file so a change to the gate itself re-runs the gate
+    # (it lives outside projects/the-back-nine/, so the project path alone misses it).
+    paths:
+      - 'projects/the-back-nine/**'
+      - '.github/workflows/verify-the-back-nine.yml'
   pull_request:
-    paths: ['projects/the-back-nine/**']
+    paths:
+      - 'projects/the-back-nine/**'
+      - '.github/workflows/verify-the-back-nine.yml'
+  workflow_dispatch: {}
 
 jobs:
   verify:

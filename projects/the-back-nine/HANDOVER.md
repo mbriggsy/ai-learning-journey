@@ -33,7 +33,7 @@
 - **Healthcare research persisted** (`docs/research/pre65-healthcare-aca-hsa-2026-06-04.md`).
 - **Re-plan IN PROGRESS.** The live plan is **`docs/plans/back-nine-mvp/roadmap.md`** (4 phases / 18 units, written 2026-06-04). The old `docs/plans/mvp-confidence-spine/` (roadmap + phase-1/2/3) is `superseded-pending-replan` history — kept because Phase 1 engine + Phase 2 confidence statement are ≈80% reusable (mine, don't rebuild). **Do NOT `/ce:work` the superseded docs.**
 
-**NEXT: draft the 4 phase docs** (`phase-1-foundation` → `phase-4-solver-recommendation`) in `docs/plans/back-nine-mvp/` in one workflow, then the `/ce:plan` confidence-check + document-review, then `/ce:work` foundation-first. Exact sequence + the mining map + landmines: **`TODO.md`**.
+**NEXT: weighted deepen → document-review.** The 4 phase docs are **WRITTEN + coherence-swept** (commit `91d17f84`; `phase-1-foundation` U0–U4 · `phase-2-first-answer` U5–U8 · `phase-3-controls` U9–U13 · `phase-4-solver-recommendation` U14–U17). Next session: a **weighted deepen** (Briggsy's call — full-broad on the net-new surface: all of P4 + P1·U3 + P3·U9/U11, "do not use fast path"; light touch on the ported units that already carry deepen+review), then the **document-review** on the full set (fold findings clean — no "tracked amendment" headers), then `/ce:work` foundation-first. Exact sequence + the per-unit weighting + landmines: **`TODO.md`**.
 
 ## Standing landmines
 

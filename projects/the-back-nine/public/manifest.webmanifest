@@ -1,0 +1,10 @@
+{
+  "name": "The Back Nine",
+  "short_name": "Back Nine",
+  "description": "A personal retirement and tax-strategy co-pilot.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0b3d2e",
+  "theme_color": "#0b3d2e"
+}

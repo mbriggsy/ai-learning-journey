@@ -1,2 +1,21 @@
 # Scratch / workflow artifacts — never committed (temp files belong outside the repo)
 temp/
+
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+dev-dist/
+
+# Test / coverage artifacts
+coverage/
+test-results/
+playwright-report/
+*.tsbuildinfo
+
+# Local env / editor cruft
+*.local
+.DS_Store
+.vite/
+.playwright-mcp/

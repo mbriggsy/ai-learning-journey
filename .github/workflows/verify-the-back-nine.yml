@@ -1,0 +1,39 @@
+name: Verify The Back Nine
+
+# Unlike verify-ai-journey-stats.yml (build-only), the-back-nine's engine + crypto
+# ARE the product, so CI runs the FULL gate: ACA re-verify, lint (layer boundaries
+# + engine purity), typecheck, tests, build, and the initial-JS byte budget.
+
+on:
+  push:
+    branches: [main]
+    paths: ['projects/the-back-nine/**']
+  pull_request:
+    paths: ['projects/the-back-nine/**']
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: projects/the-back-nine
+    steps:
+      - uses: actions/checkout@v4
+      # No `version` input — action-setup reads the exact pin from package.json's
+      # `packageManager` field (pnpm@10.30.3). Passing both conflicts ("Multiple
+      # versions of pnpm specified") and `version: 10` would float off the pin.
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: projects/the-back-nine/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      # Fail fast on a stale/unconfirmed ACA legislative assumption.
+      - run: pnpm verify:aca
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm build
+      # Needs dist/ — runs after build.
+      - run: pnpm verify:bundle

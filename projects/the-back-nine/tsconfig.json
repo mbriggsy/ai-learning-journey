@@ -1,0 +1,35 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "lib": ["DOM", "DOM.Iterable", "ESNext"],
+    "types": ["node", "vite/client"],
+
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitOverride": true,
+
+    "noEmit": true,
+    "isolatedModules": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+
+    "baseUrl": ".",
+    "paths": {
+      "@engine/*": ["src/engine/*"],
+      "@crypto/*": ["src/crypto/*"],
+      "@store/*": ["src/store/*"],
+      "@intake/*": ["src/intake/*"],
+      "@budget/*": ["src/budget/*"],
+      "@viz/*": ["src/viz/*"],
+      "@ui/*": ["src/ui/*"],
+      "@shared/*": ["src/shared/*"]
+    }
+  },
+  "include": ["src", "vite-env.d.ts", "scripts/**/*.ts", "vite.config.ts"],
+  "exclude": ["node_modules", "dist"]
+}

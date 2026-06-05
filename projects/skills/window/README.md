@@ -27,7 +27,7 @@ The tail is a headroom read against the 70% wrap line (the point where it's wort
 
 ## Why Not Just `/context`
 
-`/context` dumps a ~300-line category table the instant it fires. On a phone you can't scroll past the first screen, and a summary-after-the-fact doesn't un-dump it. `/window` is the inversion: the parser runs on the PC, and **only the one line reaches the phone**.
+`/context` dumps a ~300-line category table the instant it fires. On a phone, that's a seemingly endless scroll of table content to thumb past, and a summary-after-the-fact doesn't un-dump it. `/window` is the inversion: the parser runs on the PC, and **only the one line reaches the phone**.
 
 The one thing `/window` can't do is the per-category breakdown — it's a total. If you actually want to know *what's* eating the window, that's the single case where `/context` earns its dump; type it yourself.
 

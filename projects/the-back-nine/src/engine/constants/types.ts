@@ -93,3 +93,27 @@ export interface RmdAgeBand {
   /** Tax year the band takes effect, when scheduled in the future. */
   readonly effectiveFrom?: number
 }
+
+/** The preferential LTCG / qualified-dividend rate schedule for one filing status.
+ *  Thresholds are TOTAL taxable income (the gain stacks on top of ordinary income);
+ *  20% applies above `fifteenRateUpTo`. */
+export interface CapitalGainsRateBreakpoints {
+  /** Top of the 0% band (the "maximum zero rate amount"). */
+  readonly zeroRateUpTo: number
+  /** Top of the 15% band (the "maximum 15-percent rate amount"); 20% applies above. */
+  readonly fifteenRateUpTo: number
+}
+
+/** 0/15/20% LTCG / qualified-dividend breakpoints by filing status (§1(h)). */
+export interface CapitalGainsBreakpoints {
+  readonly single: CapitalGainsRateBreakpoints
+  readonly mfj: CapitalGainsRateBreakpoints
+}
+
+/** One row of the IRS Uniform Lifetime Table (Pub 590-B Table III). `divisor` is the
+ *  distribution period (RMD = prior-year-end pre-tax balance ÷ divisor). Age 120 is the
+ *  published "120 and over" terminal bucket — the consumer clamps any age ≥ 120 to it. */
+export interface UniformLifetimeDivisor {
+  readonly age: number
+  readonly divisor: number
+}

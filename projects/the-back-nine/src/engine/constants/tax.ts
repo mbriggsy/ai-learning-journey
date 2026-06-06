@@ -10,9 +10,11 @@
 import {
   sourced,
   unsourced,
+  type CapitalGainsBreakpoints,
   type ConstantEntry,
   type OrdinaryBracket,
   type RmdAgeBand,
+  type UniformLifetimeDivisor,
 } from './types'
 
 export const TAX_YEAR = 2026
@@ -45,12 +47,31 @@ export const ordinaryBracketsMFJ = sourced<readonly OrdinaryBracket[]>(
   },
 )
 
-/** GAP — single ordinary brackets are IN scope but the research gives no dollar
- *  table (only "~half-width of MFJ"). Must be sourced before the MFJ→single
- *  survivor transition (U2) is anything but directional. */
-export const ordinaryBracketsSingle = unsourced(
-  'IRS Revenue Procedure (2026) — single ordinary-income brackets',
-  'Single brackets are ~half-width of MFJ but the exact dollar table was not in the research; load-bearing for the MFJ→single widow(er) penalty.',
+/** 2026 ordinary-income brackets — SINGLE (taxable income). Load-bearing for the
+ *  MFJ→single widow(er) penalty (the survivor's same real dollars fall into these
+ *  ~half-width brackets). LANDMINE: edges 1–5 are EXACTLY half of the MFJ table, but
+ *  the 37% edge ($640,600) is NOT half of MFJ's $768,700 — the 35% single bracket is
+ *  much wider than "half of MFJ". Every edge is typed literally; never derive single
+ *  by halving MFJ. (MFS shares these lower edges but its 37% edge is $384,350 — also
+ *  not this table.) */
+export const ordinaryBracketsSingle = sourced<readonly OrdinaryBracket[]>(
+  [
+    { rate: 0.1, upTo: 12_400 },
+    { rate: 0.12, upTo: 50_400 },
+    { rate: 0.22, upTo: 105_700 },
+    { rate: 0.24, upTo: 201_775 },
+    { rate: 0.32, upTo: 256_225 },
+    { rate: 0.35, upTo: 640_600 },
+    { rate: 0.37, upTo: null },
+  ],
+  {
+    citation:
+      'IRS Rev. Proc. 2025-32 Table 3 (§1(j)(2)(C)), grounded + adversarially verified against the parsed rp-25-32.pdf + Tax Foundation 2026',
+    directionalUntilPinned: true,
+    pinTo: 'IRS Revenue Procedure 2025-32 (2026 inflation adjustments) — Table 3, single filers',
+    legalBasis: 'OBBBA P.L. 119-21 / H.R.1',
+    note: '37% edge $640,600 is NOT ½ of MFJ $768,700 (edges 1–5 are ½); type literally, never halve MFJ.',
+  },
 )
 
 /** Standard deduction (2026). */
@@ -61,10 +82,11 @@ export const standardDeductionMFJ = sourced(32_200, {
 })
 
 export const standardDeductionSingle = sourced(16_100, {
-  citation: 'findings §Strand 5 (≈ half MFJ; "pin exact")',
+  citation:
+    'IRS Rev. Proc. 2025-32 §.16(1), grounded + adversarially verified against the parsed rp-25-32.pdf + Tax Foundation 2026',
   directionalUntilPinned: true,
-  pinTo: 'IRS Revenue Procedure (2026)',
-  note: 'Approximate (≈ half MFJ) — confirm exact.',
+  pinTo: 'IRS Revenue Procedure 2025-32 (2026) — §.16(1)',
+  note: 'Confirmed exact $16,100 (= ½ MFJ $32,200; 2025 was $15,750). Basic deduction only — the age-65 addition and the senior bonus stack separately.',
 })
 
 /** Age-65+ additional standard deduction, per spouse, MFJ (2026). */
@@ -74,12 +96,19 @@ export const age65AdditionMFJ = sourced(1_650, {
   pinTo: 'IRS Revenue Procedure (2026)',
 })
 
-/** GAP — the single-filer age-65 addition was not given (typically larger than the
- *  MFJ per-person figure). Needed for the survivor (single) years. */
-export const age65AdditionSingle = unsourced(
-  'IRS Revenue Procedure (2026) — single age-65 additional standard deduction',
-  'Not given in the research; typically larger than the MFJ per-person figure; applies in the survivor (single-filing) years.',
-)
+/** 2026 age-65+ additional standard deduction — SINGLE / Head-of-Household (IRC §63(f)).
+ *  Applies in the survivor (single-filing) years. LANDMINE: this is the long-standing
+ *  §63(f) age/blindness addition — SEPARATE from and STACKABLE with the OBBBA $6,000
+ *  senior bonus (`seniorBonus`); never fold them together. The single figure ($2,050)
+ *  is LARGER than the MFJ per-spouse figure ($1,650) — not a 2×/½ relationship, type
+ *  both literally. Per-box: a single filer who is 65+ AND blind claims 2 × $2,050. */
+export const age65AdditionSingle = sourced(2_050, {
+  citation:
+    'IRS Rev. Proc. 2025-32 §.16(3) (IRC §63(f)), grounded + adversarially verified against the parsed rp-25-32.pdf + Tax Foundation 2026',
+  directionalUntilPinned: true,
+  pinTo: 'IRS Revenue Procedure 2025-32 (2026) — §.16(3) / IRC §63(f)',
+  note: 'Distinct from the OBBBA $6,000 senior bonus (they stack). Single $2,050 > MFJ per-spouse $1,650. Inflation-indexed (2025 was $2,000).',
+})
 
 /**
  * Temporary Senior Bonus Deduction (OBBBA): $6,000 per person age 65+ ($12,000
@@ -120,13 +149,111 @@ export const rmdStartAge = sourced<readonly RmdAgeBand[]>(
   },
 )
 
-/** GAP — the IRS Uniform Lifetime Table divisors (per age) are not in the research,
- *  only named. ALSO must encode the Joint Life & Last Survivor table for a sole-
- *  beneficiary spouse >10 years younger (yields a smaller RMD; flat Uniform
- *  Lifetime overstates forced income for the age-gapped couples this tool models). */
-export const uniformLifetimeTableDivisors = unsourced(
-  'IRS Pub 590-B — Uniform Lifetime Table (+ Joint Life & Last Survivor Table)',
-  'Per-age divisors not given. Encode BOTH tables + the >10yr-younger-sole-spouse switch. RMD is non-convertible (must be distributed as ordinary income first; cannot be satisfied/reduced by a Roth conversion).',
+/**
+ * IRS Uniform Lifetime Table (Pub 590-B Table III / Treas. Reg. §1.401(a)(9)-9(c)) —
+ * the CURRENT post-2022 table (T.D. 9930, effective for distributions on/after
+ * 2022-01-01; the longer-life-expectancy revision). `divisor` is the distribution
+ * period: RMD = prior-year-end pre-tax balance ÷ divisor[age in the distribution year].
+ *
+ * STABLE — mortality-based, NOT inflation-indexed, so 2026 uses the identical table;
+ * vintage-stamped to the reg, not a tax year (no annual staleness clock). RMD is
+ * NON-CONVERTIBLE: it must be distributed as ordinary income first and cannot be
+ * satisfied or reduced by a Roth conversion (a hard legality constraint for U2/U10/U15).
+ *
+ * LANDMINES: (1) NOT the pre-2022 table (which started at age 70 and had 72 = 25.6) —
+ * a ~7% RMD error if confused. (2) Table starts at 72; the 73-start (born 1951–1959)
+ * and 75-start (born 1960+, from 2033) cohorts simply never use the earlier rows.
+ * (3) Age 120 is the published "120 and over" terminal bucket — clamp any age ≥ 120 to
+ * 2.0, never extrapolate. (4) The tail is irregular (113 = 3.1 skips 3.2; 118 = 2.5
+ * skips 2.6; 119 = 2.3 skips 2.4) — transcribed exactly, never smoothed.
+ */
+export const uniformLifetimeTableDivisors = sourced<readonly UniformLifetimeDivisor[]>(
+  [
+    { age: 72, divisor: 27.4 },
+    { age: 73, divisor: 26.5 },
+    { age: 74, divisor: 25.5 },
+    { age: 75, divisor: 24.6 },
+    { age: 76, divisor: 23.7 },
+    { age: 77, divisor: 22.9 },
+    { age: 78, divisor: 22.0 },
+    { age: 79, divisor: 21.1 },
+    { age: 80, divisor: 20.2 },
+    { age: 81, divisor: 19.4 },
+    { age: 82, divisor: 18.5 },
+    { age: 83, divisor: 17.7 },
+    { age: 84, divisor: 16.8 },
+    { age: 85, divisor: 16.0 },
+    { age: 86, divisor: 15.2 },
+    { age: 87, divisor: 14.4 },
+    { age: 88, divisor: 13.7 },
+    { age: 89, divisor: 12.9 },
+    { age: 90, divisor: 12.2 },
+    { age: 91, divisor: 11.5 },
+    { age: 92, divisor: 10.8 },
+    { age: 93, divisor: 10.1 },
+    { age: 94, divisor: 9.5 },
+    { age: 95, divisor: 8.9 },
+    { age: 96, divisor: 8.4 },
+    { age: 97, divisor: 7.8 },
+    { age: 98, divisor: 7.3 },
+    { age: 99, divisor: 6.8 },
+    { age: 100, divisor: 6.4 },
+    { age: 101, divisor: 6.0 },
+    { age: 102, divisor: 5.6 },
+    { age: 103, divisor: 5.2 },
+    { age: 104, divisor: 4.9 },
+    { age: 105, divisor: 4.6 },
+    { age: 106, divisor: 4.3 },
+    { age: 107, divisor: 4.1 },
+    { age: 108, divisor: 3.9 },
+    { age: 109, divisor: 3.7 },
+    { age: 110, divisor: 3.5 },
+    { age: 111, divisor: 3.4 },
+    { age: 112, divisor: 3.3 },
+    { age: 113, divisor: 3.1 },
+    { age: 114, divisor: 3.0 },
+    { age: 115, divisor: 2.9 },
+    { age: 116, divisor: 2.8 },
+    { age: 117, divisor: 2.7 },
+    { age: 118, divisor: 2.5 },
+    { age: 119, divisor: 2.3 },
+    { age: 120, divisor: 2.0 },
+  ],
+  {
+    citation:
+      'IRS Pub 590-B Table III / Treas. Reg. §1.401(a)(9)-9(c), grounded + adversarially verified verbatim against the parsed eCFR 26 CFR 1.401(a)(9)-9(c)',
+    directionalUntilPinned: true,
+    pinTo: 'IRS Pub 590-B Appendix B Table III (Uniform Lifetime)',
+    legalBasis: 'T.D. 9930 (effective 2022-01-01)',
+    note: 'Post-2022 table, STABLE (not inflation-indexed). Clamp age ≥ 120 → 2.0. RMD is non-convertible.',
+  },
+)
+
+/** GAP — the Joint Life & Last Survivor Table (Pub 590-B Table II / Treas. Reg.
+ *  §1.401(a)(9)-9(d)) for a sole-beneficiary spouse >10 years younger. The MECHANICS
+ *  are verified; the ~3,000-cell grid is NOT yet transcribed, so this stays a throw-on-
+ *  read gap (transcribing values I do not have would be a silent fabrication).
+ *
+ *  VERIFIED RULE (encode at transcription time): the owner uses Table II instead of the
+ *  Uniform Lifetime Table for a year ONLY IF the spouse is the SOLE beneficiary the
+ *  ENTIRE year AND is MORE THAN 10 years younger (gap ≥ 11; exactly-10-younger stays on
+ *  Table III, which already bakes in a hypothetical 10-yr-younger beneficiary). The grid
+ *  is SYMMETRIC (cell(a,b) = cell(b,a)) and RE-ENTERED by both ages every year for the
+ *  owner's lifetime RMD (NOT the inherited "subtract-one" method). Larger divisor →
+ *  smaller RMD. Verified anchor cells: owner75/spouse64 = 25.3; owner76/spouse60 = 28.2;
+ *  consistency cell(75,65) = 24.6 = Uniform Lifetime age-75.
+ *
+ *  ENCODING (DND/012): TRANSCRIBE + COMMIT the published grid verbatim — do NOT compute
+ *  cells from the engine's own actuarial formula (that proves typing, not correctness);
+ *  the eCFR §1.401(a)(9)-9(d) grid is the independent transcription oracle. Restrict to
+ *  the reachable owner-72..120 × younger-spouse rectangle, exploit symmetry, clamp 120,
+ *  finite 1-decimal numbers only (DND/009). Couples to U1's death-order conditional
+ *  filter — revert to Table III if the spouse dies / is no longer the sole beneficiary.
+ *  Using Table III for a >10yr-younger sole spouse OVERSTATES forced income and can
+ *  INVERT a sequencing/conversion ranking (a disclosed-omission flip). */
+export const jointLifeLastSurvivorTable = unsourced(
+  'IRS Pub 590-B Table II (Joint Life & Last Survivor) / Treas. Reg. §1.401(a)(9)-9(d)',
+  'Mechanics verified (>10yr-younger sole-spouse switch, gap ≥ 11, symmetric, annual re-entry; anchors 75/64=25.3, 76/60=28.2). The ~3,000-cell grid still needs transcription + a golden test against the eCFR reg before it can be read.',
 )
 
 /**
@@ -148,11 +275,30 @@ export const ssProvisionalThresholds = sourced(
   },
 )
 
-/** GAP — capital-gains / qualified-dividend rate breakpoints (0/15/20%) are IN
- *  scope (stacked on ordinary income) but no dollar figures were given. */
-export const capitalGainsBreakpoints = unsourced(
-  'IRS Revenue Procedure (2026) — 0/15/20% LTCG / qualified-dividend breakpoints',
-  'Cap-gains/QD stacking is IN scope (separate rate schedule stacked on ordinary income); the breakpoint dollars were not in the research.',
+/** 2026 long-term capital-gains / qualified-dividend rate breakpoints (§1(h)) — the
+ *  preferential 0/15/20% schedule, by filing status. Thresholds are TOTAL taxable
+ *  income; the gain STACKS on top of ordinary income (fill the ordinary brackets first,
+ *  then the gain sits on top), so a couple with large RMDs + SS + conversions can blow
+ *  past the 0% ceiling even on a small gain — compute the gain's rate from total taxable
+ *  income, never the gain alone. 20% applies above `fifteenRateUpTo`.
+ *
+ *  LANDMINES: (1) do NOT derive single from MFJ by halving — the 0% single top ($49,450)
+ *  IS half MFJ, but the 15% single top ($545,500) is NOT half MFJ ($613,700). (2) On the
+ *  first death the survivor flips MFJ→single and the 0% ceiling drops $98,900 → $49,450
+ *  (a real lever effect). (3) NIIT (3.8%) is a separate surtax (`niit`), not part of
+ *  these edges. (MFS, out of scope, is exactly half MFJ: $49,450 / $306,850.) */
+export const capitalGainsBreakpoints = sourced<CapitalGainsBreakpoints>(
+  {
+    single: { zeroRateUpTo: 49_450, fifteenRateUpTo: 545_500 },
+    mfj: { zeroRateUpTo: 98_900, fifteenRateUpTo: 613_700 },
+  },
+  {
+    citation:
+      'IRS Rev. Proc. 2025-32 §4.03 (§1(h) maximum capital-gains rate), grounded + adversarially verified against the parsed rp-25-32.pdf + Tax Foundation 2026 Table 6',
+    directionalUntilPinned: true,
+    pinTo: 'IRS Revenue Procedure 2025-32 (2026) — §4.03 (§1(h))',
+    note: 'Total-taxable-income thresholds; gain stacks on ordinary income. Single 15%-top is NOT ½ MFJ. Survivor MFJ→single drops the 0% ceiling $98,900→$49,450.',
+  },
 )
 
 /** MFJ → single filing transition at the first death (no QSS grace for the
@@ -210,6 +356,7 @@ export const taxConstants = {
   seniorBonus,
   rmdStartAge,
   uniformLifetimeTableDivisors,
+  jointLifeLastSurvivorTable,
   ssProvisionalThresholds,
   capitalGainsBreakpoints,
   mfjToSingleTransition,

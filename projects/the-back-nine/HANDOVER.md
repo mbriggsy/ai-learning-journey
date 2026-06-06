@@ -24,14 +24,16 @@
 3. **Data:** manual entry first; Plaid-style linking later only if **"crazily hardened."**
 4. **Form factor:** consumability is the HUGE factor → **web, local-first PWA**, encrypted at rest, no backend.
 
-## Status (2026-06-05)
+## Status (2026-06-06)
 
 **Thesis reset ratified** ("cleared for takeoff"); the **MVP plan set is now LOCKED and airtight.** The full planning pipeline is complete:
 - **North-star** written + ratified (`docs/plans/direction-reset-2026-06-04.md`); **requirements v2** locked (personal tool, recommend-second, two controls, lexicographic objective, healthcare-IN); foundation-findings cascaded + healthcare research persisted.
 - **Live plan = `docs/plans/back-nine-mvp/`** (roadmap + 4 phase docs, 4 phases / 18 units U0–U17). The v1 `mvp-confidence-spine` plan it superseded (Phase 1 engine + Phase 2 confidence statement, ≈80% mined into the live plan) was removed from the tree 2026-06-06 and lives in git history.
 - **Deepen (29-agent) + document-review (13-agent) + cover-to-cover airtight read (6-agent) all DONE and folded clean** (no amendment headers); `deepened:` + `doc-reviewed:` stamps set 2026-06-05 across all 5 docs. 4 ATC decisions folded (live-bigger-now = confidence-over-chosen-shape · leave-more = after-tax-to-heirs with §1014 IN · selection-stage shrinkage IN · both solver axes co-equal). Commits `f6ae11fb`, `43ca1e79`.
 
-**NEXT: code.** `/brief` (the Stop hook gates `ce:work`) → `/ce:work` foundation-first, starting at **P1·U0** (scaffold/CI/CSP/constants) → **P1·U1** (MC engine + determinism/CRN + Trinity/Bengen). U1–U3 are parallelizable, zero-precedent, highest-risk — lock first. Exact next steps + the deferred-to-implementation items + landmines: **`TODO.md`**.
+**Code shipped:** P1·U0 (scaffold/CI/CSP/constants) + P1·U1 (MC engine · determinism/CRN · Trinity/Bengen — in-browser verified) + **P1·U2 (tax overlay) M1–M4** (overlay seam · RMD · ordinary-income tax · SS provisional-income fixed-point), all built **standalone** in `taxOverlay.ts`, **NOT yet wired into `simulate.ts`** (that's M6). 190 tests green, bundle 195.4 KiB.
+
+**NEXT: `/brief` → `/ce:work` P1·U2 M5** — Roth conversion + cap-gains/QD stacking (extend `solveGrossWithdrawal`, the same fixed point; reduce-to-M4 byte-identity when conversion=0 ∧ cap-gains=0; watch fixed-point convergence / pass-cap). Full M5 scope + the deferred-to-implementation items + landmines: **`TODO.md`** (Next Steps #1).
 
 ## Standing landmines
 

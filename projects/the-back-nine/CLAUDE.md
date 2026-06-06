@@ -13,7 +13,7 @@ A **personal** (never-sold) retirement / tax-strategy co-pilot for a married cou
 3. **Live plan:** [`docs/plans/back-nine-mvp/`](docs/plans/back-nine-mvp/) — roadmap + 4 phase docs (U0–U17).
 4. **Verified reference numbers:** `docs/research/foundation-findings-2026-06-03.md` (§Strand 1–5) + `docs/research/pre65-healthcare-aca-hsa-2026-06-04.md`.
 
-When any doc contradicts the north-star, the **north-star wins**. `TODO.md` is the work queue. The superseded `docs/plans/mvp-confidence-spine/` is mined history — never `/ce:work` it.
+When any doc contradicts the north-star, the **north-star wins**. `TODO.md` is the work queue.
 
 ## Commands
 

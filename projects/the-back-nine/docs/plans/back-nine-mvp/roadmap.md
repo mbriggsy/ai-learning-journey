@@ -5,7 +5,7 @@ status: active
 date: 2026-06-04
 origin: docs/brainstorms/the-back-nine-requirements.md   # v2 (the locked what/how)
 north-star: docs/plans/direction-reset-2026-06-04.md     # the why (ratified)
-supersedes: docs/plans/mvp-confidence-spine/   # the v1 3-phase single-Roth-lever plan (kept as superseded-pending-replan history)
+supersedes: docs/plans/mvp-confidence-spine/   # the v1 3-phase single-Roth-lever plan — removed from the tree 2026-06-06, in git history
 deepened:           2026-06-05   # weighted 29-agent deepen, folded clean
 doc-reviewed:       2026-06-05   # 13-agent persona document-review, folded clean
 coded:              # YYYY-MM-DD — set when all phases implemented
@@ -27,7 +27,7 @@ phases:
 
 The Back Nine is a **personal** (never-sold) retirement / tax-strategy co-pilot for a married couple. It answers one question — *"Can we retire, and how do we do it best?"* — as a calm, plain-language confidence statement (the first magic moment), then, as the immediate **second beat**, **recommends** a confidence-graded strategy over **two coupled tax controls** (withdrawal **sequencing** + Roth **conversion**) that funds a **user-built budget** toward a **user-chosen goal**, the full reasoning one tap down. Safety is the default floor; the user picks the goal above it.
 
-This roadmap restructures the superseded `docs/plans/mvp-confidence-spine/` plan into **four phases**. The 2026-06-04 thesis reset moved the product from a commercial single-Roth-lever calculator to a personal recommend-second solver; the regulatory guardrails relaxed to wording and **the load transferred onto honesty + engine validation, which harden** (R25). The deterministic engine, the tax-and-accounts overlay, and the encrypted store **survive** from the prior plan (≈80% reusable); the **budget builder**, **withdrawal-sequencing as a second control**, the **income-aware healthcare overlay**, and the **entire solver + recommendation layer** are net-new.
+This roadmap restructures the superseded v1 plan (`mvp-confidence-spine`, removed from the tree 2026-06-06 — in git history) into **four phases**. The 2026-06-04 thesis reset moved the product from a commercial single-Roth-lever calculator to a personal recommend-second solver; the regulatory guardrails relaxed to wording and **the load transferred onto honesty + engine validation, which harden** (R25). The deterministic engine, the tax-and-accounts overlay, and the encrypted store **survive** from the prior plan (≈80% reusable); the **budget builder**, **withdrawal-sequencing as a second control**, the **income-aware healthcare overlay**, and the **entire solver + recommendation layer** are net-new.
 
 ## Problem Frame
 
@@ -112,7 +112,7 @@ Every requirement maps to a phase/unit. Numbers are v2 (`docs/brainstorms/the-ba
 - **Income fixed-points are per-year, bounded, zero-draw, CRN-safe.** SS provisional-income taxation and the **pre-65 ACA cost** are each a per-year fixed-point (cost depends on MAGI which depends on the strategy). **Two distinct MAGI calculators** (ACA-MAGI ≠ IRMAA-MAGI). IRMAA is a **2-year-lagged** surcharge.
 - **Honesty load-transfer → copyGuard reshapes.** The reg ban-list (no-verdict / categorical-only / attorney-gate) relaxes to wording; copyGuard gains a **require-the-hedge** lint — a *positive/require* assertion that every control readout and the recommendation headline wears its probabilistic hedge — in addition to the surviving certainty-hygiene + catastrophe-lexicon checks. *"It's just for friends" never softens validation.*
 - **One canonical, year-keyed constants module** (`src/engine/constants/`) cites `findings §Strand 5` + the healthcare doc, marks every figure **directional-until-pinned**, and is the single source plan/engine/tests/copyGuard-allowlist all read.
-- **Doc structure:** this roadmap + four phase docs in `docs/plans/back-nine-mvp/`; the superseded `docs/plans/mvp-confidence-spine/` stays as history. Reference numbers never inlined here.
+- **Doc structure:** this roadmap + four phase docs in `docs/plans/back-nine-mvp/`; the superseded v1 `mvp-confidence-spine` plan was removed from the tree 2026-06-06 (in git history). Reference numbers never inlined here.
 
 ## Open Questions
 
@@ -269,5 +269,5 @@ These extend the engine exit gates to the recommendation. Until each clears, the
 - **Origin requirements:** `docs/brainstorms/the-back-nine-requirements.md` (v2).
 - **Verified foundation + reference numbers:** `docs/research/foundation-findings-2026-06-03.md` (`§Strand 1–5`).
 - **Healthcare grounding:** `docs/research/pre65-healthcare-aca-hsa-2026-06-04.md`.
-- **Superseded prior plan (history, ≈80% mined):** `docs/plans/mvp-confidence-spine/` (roadmap + phase-1/2/3).
+- **Superseded prior plan (≈80% mined into this plan; removed from the tree 2026-06-06, in git history):** `docs/plans/mvp-confidence-spine/` (roadmap + phase-1/2/3).
 - **House conventions + reusable patterns:** `projects/burned/` (toolchain, `src/server/rng.ts`, the `docs/insights/` learnings cited above).

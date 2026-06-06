@@ -3,7 +3,7 @@ title: "The Back Nine — Direction Reset (north-star)"
 type: feat
 date: 2026-06-04
 status: active
-supersedes: "the commercial framing of docs/brainstorms/the-back-nine-requirements.md + the single-Roth-lever scope of docs/plans/mvp-confidence-spine/"
+supersedes: "the commercial framing of docs/brainstorms/the-back-nine-requirements.md + the single-Roth-lever scope of docs/plans/mvp-confidence-spine/ (the v1 plan was removed from the tree 2026-06-06; in git history)"
 ratified: 2026-06-04   # Briggsy: "cleared for takeoff"
 sources:
   - docs/research/foundation-findings-2026-06-03.md   # §Strand 1-5 (regulatory strand now archive-as-rationale)

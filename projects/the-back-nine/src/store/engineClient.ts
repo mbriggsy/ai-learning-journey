@@ -17,7 +17,7 @@
  * import store (ESLint layer boundary).
  */
 import * as Comlink from 'comlink'
-import type { EngineApi } from '@engine/engine.worker'
+import type { EngineApi } from '@engine/engineProtocol'
 
 const worker = new Worker(new URL('../engine/engine.worker.ts', import.meta.url), {
   type: 'module',

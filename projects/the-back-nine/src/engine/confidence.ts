@@ -1,0 +1,155 @@
+/**
+ * Distribution → the first-answer reading (PURE: one run → one reading).
+ *
+ * Owns the raw→display rounding target for the headline + dollar, the outcome-state
+ * selection, and every band edge. Cross-engine robustness (contract #1, findings
+ * §Strand 2) — stated precisely: the survival statistic is `survivors / paths`, an
+ * EXACT integer ratio given the count, so it does NOT drift bit-to-bit across engines.
+ * The residual cross-engine risk is a single path landing within transcendental
+ * rounding-noise of depletion and flipping the COUNT by ±1 (measure-zero for realistic
+ * inputs). Quantizing to a coarse 1% grid BEFORE the band-edge decision gives margin
+ * that absorbs MOST such ±1/paths flips (they rarely straddle a grid boundary) and
+ * stabilizes the X-of-10 mapping against last-ULP noise in the rounding math — so a
+ * screenshot reproduces across engines in the overwhelming common case. It is NOT an
+ * absolute bit-identical promise; that is the WASM cross-engine-determinism trigger
+ * (CLAUDE.md). This is STATELESS (priorHeadline = null); cross-edit sticky rounding is a
+ * P2/P3 concern built on the emitted margins.
+ *
+ * Framing rule (Kitces): never "probability of failure" — the reading is survival /
+ * coverage ("X of 10 futures your plan covers"), and the top of scale is the
+ * over-funded near-ceiling, never a bald "10 of 10" (false certainty).
+ */
+import {
+  NEVER_DEPLETED,
+  isDepleted,
+  type Distribution,
+  type DollarAdjustment,
+  type Headline,
+  type OutcomeState,
+  type SimulationParams,
+  type SimulationResult,
+} from '@shared/model'
+import type { SimOutput } from '@engine/simulate'
+
+/** Coarse quantization grid for the survival statistic — 1% is ~13 orders of
+ *  magnitude above last-ULP noise, so it absorbs cross-engine transcendental drift
+ *  while staying finer than the 10% band width. */
+export const SURVIVAL_GRID = 0.01
+
+/** Outcome-state band edges on the QUANTIZED survival fraction (engine-owned).
+ *  Below `borderline` is off-track; the already-failing verdict is reserved for the
+ *  near-total + EARLY-death case (unfundable from the start), not a late failure. */
+export const BANDS = {
+  overFunded: 0.98, // ≥ → over-funded near-ceiling
+  onTrack: 0.85, // ≥ → on-track
+  borderline: 0.65, // ≥ → borderline; below → off-track
+} as const
+
+/** Display step for the monthly dollar figure ($/month) — the rounding the margin
+ *  metadata measures distance to. */
+export const DOLLAR_STEP = 10
+
+const quantizeSurvival = (s: number): number => Math.round(s / SURVIVAL_GRID) * SURVIVAL_GRID
+
+/** Nearest distance to a band edge where `round(s*10)` flips (the (k+0.5)/10 points). */
+function marginToXOfTenEdge(survival: number): number {
+  const scaled = survival * 10
+  const nearestFlip = Math.round(scaled - 0.5) + 0.5 // nearest half-integer
+  return Math.abs(scaled - nearestFlip) / 10
+}
+
+function median(sorted: readonly number[]): number {
+  const n = sorted.length
+  if (n === 0) return 0
+  const mid = Math.floor(n / 2)
+  if (n % 2 === 1) return sorted[mid] ?? 0
+  return ((sorted[mid - 1] ?? 0) + (sorted[mid] ?? 0)) / 2
+}
+
+function percentile(sorted: readonly number[], p: number): number {
+  if (sorted.length === 0) return 0
+  const idx = Math.min(sorted.length - 1, Math.max(0, Math.floor(p * (sorted.length - 1))))
+  return sorted[idx] ?? 0
+}
+
+/** Median absolute year of depletion among the paths that actually depleted. */
+function medianDepletionYear(depletionYears: readonly number[]): number {
+  const depleted = depletionYears.filter(isDepleted).sort((a, b) => a - b)
+  return depleted.length === 0 ? NEVER_DEPLETED : median(depleted)
+}
+
+function selectOutcomeState(quantized: number, distribution: Distribution): OutcomeState {
+  // already-failing: essentially everything fails AND it dies EARLY (the $0-portfolio
+  // / unfundable case — "depleted before the horizon even runs"). A plan that fails
+  // late in bad futures is off-track, not already-failing.
+  if (quantized <= 0.02) {
+    const medDeplete = medianDepletionYear(distribution.depletionYears)
+    return medDeplete !== NEVER_DEPLETED && medDeplete <= 2 ? 'already-failing' : 'off-track'
+  }
+  if (quantized >= BANDS.overFunded) return 'over-funded'
+  if (quantized >= BANDS.onTrack) return 'on-track'
+  if (quantized >= BANDS.borderline) return 'borderline'
+  return 'off-track'
+}
+
+function buildHeadline(distribution: Distribution): Headline {
+  const survival = distribution.survivalFraction
+  const quantized = quantizeSurvival(survival)
+  const state = selectOutcomeState(quantized, distribution)
+  // 10/10-honesty clamp: the displayed reading never reaches 10 (false certainty);
+  // the over-funded ceiling reads "9 of 10" with the over-funded state carrying the
+  // "more than enough" framing. Tie-break: round-half-up (defined + stable).
+  const xOfTen = Math.max(0, Math.min(9, Math.round(quantized * 10)))
+  return {
+    xOfTen: { value: xOfTen, marginToEdge: marginToXOfTenEdge(quantized) },
+    outcomeState: state,
+  }
+}
+
+function buildDollar(distribution: Distribution, params: SimulationParams, state: OutcomeState): DollarAdjustment {
+  const sortedTerminal = [...distribution.terminalValuesReal].sort((a, b) => a - b)
+  const p10 = percentile(sortedTerminal, 0.1) // conservative (bad-futures) terminal
+  const monthlySpend = params.annualSpendingReal / 12
+
+  // Direction from the verdict; magnitude is a COARSE single-run estimate (the precise
+  // optimal-spending solve is the P4 solver — this is a first-answer hint, not a solve).
+  let direction: DollarAdjustment['direction']
+  let perMonth: number
+  if (state === 'over-funded' || (state === 'on-track' && p10 > 0)) {
+    // Even the conservative future leaves a surplus → room to spend its safe draw.
+    direction = 'room'
+    perMonth = (p10 * 0.04) / 12
+  } else if (state === 'borderline') {
+    direction = 'on-the-line'
+    perMonth = 0
+  } else {
+    // off-track / already-failing → trim. Coarse proxy: a fraction of current spend
+    // scaled by the shortfall in survival below the on-track floor.
+    direction = 'trim'
+    const gap = Math.max(0, BANDS.onTrack - quantizeSurvival(distribution.survivalFraction))
+    perMonth = -monthlySpend * gap
+  }
+
+  const marginToEdge = Math.abs(perMonth - (Math.round(perMonth / DOLLAR_STEP) * DOLLAR_STEP))
+  return { perMonthReal: { value: perMonth, marginToEdge }, direction }
+}
+
+/** The defined indeterminate reading — minimal/incoherent input yields the honest
+ *  "not enough to answer" first answer, never a falsely confident number. */
+function indeterminateResult(seed: number): SimulationResult {
+  return {
+    distribution: { terminalValuesReal: [], depletionYears: [], survivalFraction: 0 },
+    headline: { xOfTen: { value: 0, marginToEdge: 0 }, outcomeState: 'indeterminate' },
+    dollar: { perMonthReal: { value: 0, marginToEdge: 0 }, direction: 'on-the-line' },
+    seed,
+  }
+}
+
+/** Map a simulation output to the first-answer reading. */
+export function summarize(output: SimOutput, params: SimulationParams, seed: number): SimulationResult {
+  if (output.indeterminate) return indeterminateResult(seed)
+  const distribution = output.distribution
+  const headline = buildHeadline(distribution)
+  const dollar = buildDollar(distribution, params, headline.outcomeState)
+  return { distribution, headline, dollar, seed }
+}

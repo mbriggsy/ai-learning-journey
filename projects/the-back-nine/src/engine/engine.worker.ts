@@ -1,25 +1,15 @@
 /**
- * Engine worker entry — the Comlink boundary for the pure Monte Carlo engine.
+ * Engine worker ENTRY — the Comlink bootstrap. All testable logic lives in
+ * engineProtocol.ts (pure, no `expose` side-effect); this module's only job is to
+ * expose that API in the worker scope. Kept thin so importing the protocol for tests
+ * never runs `Comlink.expose` (which needs the worker's `self`).
  *
- * U0 SCAFFOLD STUB. It exposes only a liveness probe so a clean build emits and
- * precaches a hashed worker chunk and the main-thread Comlink wiring is proven
- * end-to-end. U1 replaces the stub body with the real engine (simulate.ts):
- * `simulate(params, seed)` returning the terminal-value distribution.
- *
- * Engine purity (ESLint-enforced in src/engine/**): this entry reads NO clock,
- * entropy source, or environment. The 32-bit seed is INJECTED by the caller
- * (the P2 memoryModel orchestration layer), never generated here.
+ * Engine purity (ESLint-enforced): reads no clock/entropy/environment; the seed is
+ * injected by the caller.
  */
 import * as Comlink from 'comlink'
+import { engineApi } from '@engine/engineProtocol'
 
-const engineApi = {
-  /** Liveness probe — U0 only. Replaced by `simulate(params, seed)` in U1. */
-  ping(): 'pong' {
-    return 'pong'
-  },
-}
-
-/** The shape the main-thread handle (src/store/engineClient.ts) wraps. */
-export type EngineApi = typeof engineApi
+export type { EngineApi } from '@engine/engineProtocol'
 
 Comlink.expose(engineApi)

@@ -125,6 +125,11 @@ export function cashTermsForYear(
       survivorClaimed = true
     }
   }
+  // Survivor SS = the LARGER single benefit (the step-down), but ONLY once the survivor reaches their
+  // OWN claim age. MVP simplification: no early §202 survivor benefit on the deceased's record (which a
+  // real widow(er) could claim from age 60) — so the years between the first death and the survivor's
+  // own claim age carry $0 SS. This UNDERSTATES income → larger `net` → a harder horizon: the CONSERVATIVE
+  // direction for the survival floor. `net` and `ss` both use this same figure, so they never disagree.
   if (!allAlive && aliveCount >= 1) ss = survivorClaimed ? maxBenefit : 0
 
   return { net: Math.max(0, spending - earned - ss), ss }
@@ -159,6 +164,11 @@ function validateParams(params: SimulationParams): string | null {
   if (!Number.isInteger(params.maxHorizonYears) || params.maxHorizonYears <= 0)
     return 'maxHorizonYears must be a positive integer'
   if (params.people.length === 0) return 'no people'
+  // The model is a COUPLE (1 person is the degenerate case; 2 is the couple). Beyond two, the
+  // survivor step-down (`allAlive` flips on the FIRST death) and the MFJ→single filing flip
+  // (`living.length >= 2`) no longer agree — there is no real filing status for a 3-adult household
+  // — so reject it as indeterminate rather than compute a calm-but-wrong answer (model.ts: MVP couple).
+  if (params.people.length > 2) return 'more than two people unsupported (the model is a couple)'
   for (const p of params.people) {
     if (!Number.isFinite(p.currentAge) || p.currentAge <= 0) return 'person age invalid'
     if (!finiteNonNeg(p.earnedIncomeReal) || !finiteNonNeg(p.socialSecurityReal)) return 'person income invalid'
@@ -199,6 +209,14 @@ function validateParams(params: SimulationParams): string | null {
     if (o.taxEnabled && b.taxable > 0 && (o.initialTaxableBasis === undefined || !finiteNonNeg(o.initialTaxableBasis)))
       return 'overlay initialTaxableBasis required (tax on + taxable bucket non-empty)'
     if (o.conversions !== undefined && !o.conversions.every(finiteNonNeg)) return 'overlay conversions invalid'
+    // bracket-fill ceilings: a non-finite entry poisons the allocation (a NaN survives `?? +Infinity`
+    // and makes the gross-up never converge → an uncaught throw, or a NaN ledger with tax off). Allow
+    // finite ≥ 0 OR the +Infinity no-ceiling sentinel; reject NaN / −Infinity / negative (R19).
+    if (
+      o.bracketFillCeilings !== undefined &&
+      !o.bracketFillCeilings.every((c) => (Number.isFinite(c) && c >= 0) || c === Number.POSITIVE_INFINITY)
+    )
+      return 'overlay bracketFillCeilings invalid'
   }
   return null
 }

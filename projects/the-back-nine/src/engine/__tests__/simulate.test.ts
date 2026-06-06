@@ -235,10 +235,36 @@ describe('R19 engine half + dire-but-honest edges', () => {
       { taxEnabled: true, rmdEnabled: false, startCalendarYear: 2026, buckets: { taxable: 500_000, pretax: 500_000, roth: 0 }, filing: 'mfj' }, // tax on + taxable>0, basis MISSING
       { taxEnabled: false, rmdEnabled: false, startCalendarYear: NaN, buckets: { taxable: 0, pretax: P, roth: 0 }, filing: 'mfj' }, // NaN calendar anchor
       { taxEnabled: true, rmdEnabled: false, startCalendarYear: 2026, buckets: { taxable: 0, pretax: P, roth: 0 }, filing: 'mfj', conversions: [NaN] }, // non-finite conversion
+      { taxEnabled: true, rmdEnabled: false, startCalendarYear: 2026, buckets: { taxable: 0, pretax: P, roth: 0 }, filing: 'mfj', bracketFillCeilings: [NaN] }, // non-finite ceiling
+      { taxEnabled: true, rmdEnabled: false, startCalendarYear: 2026, buckets: { taxable: 0, pretax: P, roth: 0 }, filing: 'mfj', bracketFillCeilings: [-100] }, // negative ceiling
     ]
     for (const overlay of overlays) {
       expect(simulate({ ...base, overlay }, 1).indeterminate).toBe(true)
     }
+  })
+
+  it('a NaN bracket-fill ceiling returns indeterminate, NEVER an uncaught throw (the R19 hole the review found)', () => {
+    // With drawdownPolicy 'bracket-fill' + tax ON, a NaN ceiling survives `?? +Infinity`, poisons the
+    // allocation, and (absent the validateParams guard) makes the gross-up run all 128 passes and THROW
+    // out of simulate. The guard must convert it to the defined indeterminate output. A regression here
+    // would surface as a thrown error failing this test, not a quiet false.
+    const P = 1_000_000
+    const params = makeParams({
+      initialPortfolio: P,
+      annualSpendingReal: 60_000,
+      drawdownPolicy: 'bracket-fill',
+      longevityMode: 'fixed-horizon',
+      maxHorizonYears: 5,
+      paths: 10,
+      overlay: { taxEnabled: true, rmdEnabled: false, startCalendarYear: 2026, buckets: { taxable: 0, pretax: P, roth: 0 }, filing: 'mfj', bracketFillCeilings: [NaN, NaN, NaN, NaN, NaN] },
+    })
+    expect(() => simulate(params, 1)).not.toThrow()
+    expect(simulate(params, 1).indeterminate).toBe(true)
+  })
+
+  it('more than two people is rejected as indeterminate (the couple model, never a calm-but-wrong 3-adult answer)', () => {
+    const third: PersonInputs = { ...MALE_65, currentAge: 60 }
+    expect(simulate(makeParams({ people: [MALE_65, FEMALE_65, third] }), 1).indeterminate).toBe(true)
   })
 })
 

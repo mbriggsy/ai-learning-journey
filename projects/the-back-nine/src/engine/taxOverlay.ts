@@ -19,7 +19,7 @@
  * `stepYear` applies to the total — buckets differ only in tax treatment, never in
  * return assumption (this is what structurally forecloses asset-location).
  *
- * MILESTONE STATUS — built incrementally. This is M4: SS provisional-income taxation.
+ * MILESTONE STATUS — built incrementally. This is M5: Roth conversion + cap-gains/QD stacking.
  *   - M1 (done): the seam + the reduce-to-spine lock.
  *   - M2 (done): RMD-forced distribution as a pre-tax→taxable ledger relocation. With tax
  *     OFF an active RMD is TOTAL-NEUTRAL (the two buckets grow identically, contract #2).
@@ -29,16 +29,25 @@
  *     a bounded per-year FIXED POINT (gross = net + tax, tax depends on the pre-tax drawn,
  *     which depends on the gross). This is where an RMD finally BITES: the tax leaves the
  *     portfolio, so terminalReal drops BELOW the spine. CRN-safe (the fixed point reads zero draws).
- *   - M4 (this): the Social-Security provisional-income layer (IRS Pub 915 Worksheet 1) folds
+ *   - M4 (done): the Social-Security provisional-income layer (IRS Pub 915 Worksheet 1) folds
  *     INTO the SAME fixed point. Ordinary income = the pre-tax distributed + the taxable portion
  *     of the SS benefit; provisional income (pre-tax distributed + 50% of the benefit) rises with
- *     the gross-up, so the SS inclusion is solved jointly, not bolted on. The SS-inclusive total
- *     is also the MAGI driving the senior-bonus phase-out. The ×1.85 "tax torpedo" raises the
- *     contraction factor (GROSS_UP_MAX_PASSES 64→128, proven). Funding a year from Roth/taxable
- *     instead of pre-tax keeps provisional down — the SS-torpedo half of why sequencing is a
- *     control (R9). Cap-gains / taxable-basis realizations enter provisional in M5.
- *   - M5+ (extend {@link solveGrossWithdrawal}): Roth conversions + cap-gains/QD stacking; M6 the
- *     MFJ→single survivor filing switch + the wire into `simulate.ts`.
+ *     the gross-up, so the SS inclusion is solved jointly, not bolted on. The ×1.85 "tax torpedo"
+ *     raises the contraction factor. Funding a year from Roth/taxable instead of pre-tax keeps
+ *     provisional down — the SS-torpedo half of why sequencing is a control (R9).
+ *   - M5 (this): Roth CONVERSION (pretax→roth relocation, taxed as ordinary income, RMD-first
+ *     legality) + CAP-GAINS/QD STACKING (a taxable-bucket withdrawal realizes a pro-rata capital
+ *     gain, taxed at the preferential 0/15/20% schedule STACKED on ordinary taxable income). Both
+ *     fold into the SAME fixed point. The realized gain now ALSO enters provisional income (M4's
+ *     deferred boundary) and the senior-bonus MAGI — but is taxed at preferential rates, never the
+ *     ordinary base, and is sheltered by any unused deduction (the QDCGT-worksheet effect). The
+ *     new ledger is the taxable bucket's BASIS (absolute $, NOT scaled by growth — growth is
+ *     unrealized gain). Within-year order: RMD → conversion (reserved out of the draw pool) →
+ *     spending. QD is subsumed into realization-on-withdrawal (no sourced dividend-yield constant;
+ *     the annual-dividend MAGI bump is an OUT-but-disclosed, optimistic-direction boundary — it
+ *     sharpens once U3's ACA/IRMAA cliffs land). Worst-case contraction k ≈ 0.74 (the cap-gains
+ *     15→20% straddle × the SS torpedo); GROSS_UP_MAX_PASSES stays 128 (proven, see below).
+ *   - M6 (next): the MFJ→single survivor filing switch + the wire into `simulate.ts`.
  *
  * PURE: no entropy/clock/environment (the engine-purity lint covers `src/engine/**`).
  */
@@ -55,7 +64,9 @@ import {
   age65AdditionSingle,
   seniorBonus,
   ssProvisionalThresholds,
+  capitalGainsBreakpoints,
   type OrdinaryBracket,
+  type CapitalGainsRateBreakpoints,
 } from '@engine/constants'
 import { NEVER_DEPLETED, type DepletionYear, type DrawdownPolicy } from '@shared/model'
 
@@ -93,9 +104,41 @@ export type TaxOverlayConfig =
   | { readonly taxEnabled: boolean; readonly rmdEnabled: boolean; readonly household: Household }
 
 /** A tax-aware decumulation result: the spine's total-trajectory result (the only thing
- *  the outcome distribution reads), plus the final per-bucket balances (auxiliary). */
+ *  the outcome distribution reads), plus the final per-bucket balances + the taxable
+ *  bucket's horizon-end cost basis (auxiliary ledger; the latter makes `finalBuckets.taxable`
+ *  interpretable as value-vs-embedded-gain). NOTE: `finalTaxableBasis` is horizon-END basis;
+ *  the P4 §1014/IRD leave-more objective needs basis at each path's sampled DEATH year (a
+ *  different figure, landing with M6's longevity wiring) — this field is not yet that surface. */
 export interface TaxAwareResult extends DecumulationResult {
   readonly finalBuckets: AccountBuckets
+  /** The taxable bucket's cost basis at the end of the horizon (real $, finite per DND/009;
+   *  0 when the portfolio depleted). Unscaled by market growth — appreciation is unrealized gain. */
+  readonly finalTaxableBasis: number
+}
+
+/**
+ * The optional per-year tax-input streams + the taxable cost basis, grouped into ONE object so
+ * the two same-typed `number[]` streams (`ssBenefits`, `conversions`) can never be silently
+ * transposed at a call site (a positional swap would compile clean and tax conversions as Social
+ * Security — calm-but-wrong). All fields are read ONLY when tax is ON; with tax OFF the overlay is
+ * a pure pass-through (reduce-to-spine), so an absent object is the EXHAUSTIVE-OFF anchor.
+ *
+ * The streams are indexed by ABSOLUTE year and aligned to `netWithdrawals`; a missing tail entry
+ * defaults to 0 (no benefit / no conversion that year — `?? 0`), NEVER ending the path (the
+ * returns/withdrawals arrays govern the horizon). When M6 wires the overlay into `simulate.ts`,
+ * the spine supplies these alongside `netWithdrawals` as independent per-year inputs.
+ */
+export interface TaxYearInputs {
+  /** Per-year real Social-Security benefit (M4). Drives provisional-income SS taxation. */
+  readonly ssBenefits?: readonly number[]
+  /** Per-year requested Roth conversion (M5): pretax→roth relocation taxed as ordinary income.
+   *  Clamped per year to `[0, priorYearEndPretax − RMD]` (RMD-first legality; the RMD is
+   *  non-convertible). The conversion's principal is NOT spent — only its tax joins the gross-up. */
+  readonly conversions?: readonly number[]
+  /** The taxable bucket's cost basis at year 0 (real $). REQUIRED when tax is ON and the taxable
+   *  bucket is non-empty — there is NO safe default (0 over-taxes every realization; the full value
+   *  silently makes cap-gains a no-op), so an absent basis FAILS LOUD (burned/062). */
+  readonly initialTaxableBasis?: number
 }
 
 const EMPTY_BUCKETS: AccountBuckets = { taxable: 0, pretax: 0, roth: 0 }
@@ -115,24 +158,45 @@ const ULT_DIVISOR_BY_AGE: ReadonlyMap<number, number> = new Map(
 const ULT_MAX_AGE = uniformLifetimeTableDivisors.value.reduce((max, row) => Math.max(max, row.age), 0)
 
 // Gross-up fixed-point controls. The per-year map gross ↦ net + tax(gross) is a monotone,
-// continuous, piecewise-linear self-map that starts below its UNIQUE fixed point (slope < 1
-// everywhere ⇒ one crossing) and converges from below at a linear rate set by the effective
-// marginal rate k = bracketRate × (1 + ssInclusionSlope) × (senior-bonus phase-out factor).
-// ssInclusionSlope ≤ 0.85 is the Social-Security "tax torpedo" (M4): an extra ordinary dollar
-// pulls up to 0.85 of an SS dollar into taxation (income response ≤ ×1.85). The worst-case
-// corner k = 0.37 × 1.85 ≈ 0.685 IS reachable: at a LARGE benefit with a SMALL net draw the
-// fixed point sits in the top 37% bracket WHILE taxable-SS is still uncapped (the 0.85·SS
-// ceiling binds only once provisional ≳ benefit + ~37k, which a small net never reaches) and
-// the senior bonus is long gone. Convergence is geometric, so the pass count grows LOGARITH-
-// MICALLY with the tax bill (~6 passes per 10× income = ln10 / ln(1/0.685)). MEASURED (pre-tax-
-// only, the worst case): realistic benefits ≤ $150k converge in ≤ 32 passes — BUT the validated
-// input domain does not bound the benefit, so the cap must cover the tail: SS $1M needs 64–74
-// passes (M3's old 64 was AT the edge and would THROW just above it), $5M ~80, $500M ~91. 128
-// covers any tax up to ~$10^13 (a benefit ~$10^14), beyond any conceivable input. The 64→128
-// raise was therefore NECESSARY for the high-benefit tail, not cosmetic; the early-exit on
-// convergence keeps the common case cheap. MAX_PASSES stays a FAIL-LOUD backstop — a non-
-// converged year THROWS, never an in-range default (burned/062). (The convergence stress sweep
-// in the tests exercises SS up to $5M to lock this tail so the cap can't be silently trimmed.)
+// continuous, piecewise-linear self-map that starts below its UNIQUE fixed point and converges
+// from below at a linear rate set by the worst-case effective marginal rate k = d(tax)/d(gross)
+// of a marginal PRE-TAX gross dollar. That dollar lifts ordinary taxable income by (1 +
+// ssInclusionSlope) — the Social-Security "tax torpedo" (M4): an extra ordinary dollar pulls up
+// to 0.85 of an SS dollar into taxation (income response ≤ ×1.85) — and, with the realized
+// capital gain stacked on TOP of ordinary taxable income (M5), pushing ordinary income up also
+// shoves that fixed gain block ACROSS a cap-gains rate breakpoint, owing the rate JUMP on the
+// shifted dollars.
+//
+//   k = (m_ord + j) × (1 + ssInclusionSlope)
+//
+// where m_ord ≤ 0.37 is the ordinary marginal rate and j is the cap-gains rate jump at a
+// STRADDLED breakpoint (0.15 at the 0→15% point, 0.05 at the 15→20% point; 0 if the gain block
+// straddles neither). M4's worst case was k = 0.37 × 1.85 ≈ 0.685 (top 37% bracket, torpedo
+// uncapped). M5's worst REACHABLE corner is HIGHER: ordinary taxable income parked in the 35%
+// bracket with a realized-gain block straddling the MFJ 15→20% cap-gains breakpoint while the
+// torpedo is still uncapped → k = (0.35 + 0.05) × 1.85 ≈ 0.74. Witness: nonSS pre-tax draw +
+// conversion ≈ $150k, a huge SS benefit (~$0.8M, keeping taxable-SS uncapped: 0.85·SS still
+// above the inclusion) so ordinary income ≈ $645k → ordinary taxable just under the 15→20%
+// breakpoint with the gain on top, senior bonus long gone, marginal dollar pre-tax-sourced.
+//
+// The other corners are all LOWER and mutually DISJOINT by income region: the 37% bracket sits
+// ABOVE both cap-gains breakpoints (j = 0 → k = 0.685); the 0→15% straddle needs the 12% bracket
+// (k ≈ 0.50); the senior-bonus phase-out band sits at ≤ 24% with the torpedo often capped
+// (k ≲ 0.61). So k_sup ≈ 0.74. IMPORTANT: the contraction is NOT automatic — the UNCONSTRAINED
+// sum of marginal channels (ordinary + torpedo + senior-bonus + cap-gains straddle) exceeds 1, so
+// slope < 1 rests entirely on these regimes being unreachable simultaneously. A future constants
+// change (a breakpoint shift) could open a k ≥ 1 corner and silently break convergence — re-derive
+// k if the breakpoints move (insight 006: a probe that "confirms" the old k is usually sampling
+// the wrong regime; the cap-gains corner is invisible to a pre-tax-only / large-net probe).
+//
+// 128 passes SUFFICES at k ≈ 0.74 (geometric: ~ln(tax/ε)/ln(1/0.74) ≈ 98 passes even at the
+// self-limiting ~$0.7M tax that corner pins; the unbounded-tax tail sits at the milder k = 0.685
+// → ~122 passes only at a ~$10^13 tax, far beyond any input). The early-exit on convergence keeps
+// the common case cheap; MAX_PASSES stays a FAIL-LOUD backstop — a non-converged year THROWS,
+// never an in-range default (burned/062). The convergence stress sweep in the tests probes the
+// k ≈ 0.74 regime directly (low-basis taxable pool straddling the breakpoints × large SS ×
+// conversions × SMALL net) so the cap can't be silently trimmed toward a value that throws in
+// production for real gain-straddle inputs.
 const GROSS_UP_EPSILON = 1e-7 // dollars
 const GROSS_UP_MAX_PASSES = 128
 
@@ -237,6 +301,87 @@ export function taxableSocialSecurity(
 }
 
 // =========================================================================
+// Long-term capital-gains / qualified-dividend taxation (M5) — IRS §1(h).
+// The preferential 0/15/20% schedule STACKED on ordinary taxable income: the ordinary
+// brackets fill first, then the gain sits on top, so the gain's rate keys off TOTAL
+// taxable income (ordinary + gain), never the gain alone. The two band ceilings come
+// from the canonical constant; the 0/15/20 RATES are STRUCTURAL §1(h) — the same role
+// the `rate` field plays in the ordinary bracket table — and are part of
+// CapitalGainsRateBreakpoints' documented contract ("20% applies above fifteenRateUpTo"),
+// so they live here as structural law, not as separate dated figures (they are not
+// inflation-indexed; only the breakpoints are the directional-until-pinned dated values).
+// =========================================================================
+
+const CG_FIFTEEN_RATE = 0.15
+const CG_TWENTY_RATE = 0.2
+
+function capitalGainsBreakpointsFor(filing: FilingStatus): CapitalGainsRateBreakpoints {
+  return filing === 'mfj' ? capitalGainsBreakpoints.value.mfj : capitalGainsBreakpoints.value.single
+}
+
+/**
+ * The preferential tax on `gainSubjectToTax` of long-term capital gain / qualified dividends,
+ * STACKED on `ordinaryTaxableIncome` (§1(h)). The gain occupies the band
+ * `(ordinaryTaxableIncome, ordinaryTaxableIncome + gain]`: the portion up to the 0%-band ceiling
+ * is untaxed, the portion up to the 15%-band ceiling is 15%, the rest 20%. The rate is a function
+ * of TOTAL taxable income, never the gain in isolation — large RMDs + SS + conversions can push a
+ * small gain past the 0% ceiling.
+ *
+ * `gainSubjectToTax` is the gain AFTER any unused deduction has sheltered it (see
+ * {@link ordinaryPlusCapitalGainsTax}). It is floored at 0: a realized LOSS is not a negative tax
+ * — MVP forgoes the §1211 $3k ordinary offset + carryforward (an OUT-but-disclosed conservatism).
+ */
+export function capitalGainsTax(
+  gainSubjectToTax: number,
+  ordinaryTaxableIncome: number,
+  filing: FilingStatus,
+): number {
+  const gain = Math.max(0, gainSubjectToTax)
+  if (gain <= 0) return 0
+  const base = Math.max(0, ordinaryTaxableIncome)
+  const { zeroRateUpTo, fifteenRateUpTo } = capitalGainsBreakpointsFor(filing)
+  const top = base + gain
+  // The gain dollars sitting in each preferential band (stacked above ordinary taxable income).
+  const at15 = Math.max(0, Math.min(top, fifteenRateUpTo) - Math.max(base, zeroRateUpTo))
+  const at20 = Math.max(0, top - Math.max(base, fifteenRateUpTo))
+  return CG_FIFTEEN_RATE * at15 + CG_TWENTY_RATE * at20
+}
+
+/**
+ * The full per-year federal tax (M5): progressive ordinary tax on the deduction-reduced ordinary
+ * income PLUS the preferential cap-gains tax on the realized gain stacked on top.
+ *
+ * Two subtleties the naive form gets wrong (both calm-but-wrong in this tool's CENTRAL regimes):
+ *   1. The deduction stack is computed on the gain-INCLUSIVE MAGI — a realized gain is in AGI, so
+ *      it phases out the senior bonus. (The gain is still taxed at preferential rates, never folded
+ *      into the ordinary bracket base.)
+ *   2. Any deduction left UNUSED by ordinary income shelters the gain (the QDCGT-worksheet effect):
+ *      a low-ordinary-income retiree living off a brokerage realizes gain into the 0% band. So the
+ *      gain's taxable portion is `max(0, realizedGain − max(0, deduction − ordinaryIncome))`.
+ *
+ * With `realizedGain = 0` this is byte-identical to {@link ordinaryIncomeTax} (MAGI = ordinary
+ * income, nothing to shelter or stack), so an overlay year with no taxable-bucket realization
+ * reduces EXACTLY to the M3/M4 fixed point.
+ */
+export function ordinaryPlusCapitalGainsTax(
+  ordinaryIncome: number,
+  realizedGain: number,
+  filing: FilingStatus,
+  count65: number,
+): number {
+  const gain = Math.max(0, realizedGain)
+  const magi = ordinaryIncome + gain
+  const deduction = deductionStack(filing, count65, magi)
+  const ordinaryTaxable = Math.max(0, ordinaryIncome - deduction)
+  const leftoverDeduction = Math.max(0, deduction - ordinaryIncome)
+  const gainTaxable = Math.max(0, gain - leftoverDeduction)
+  return (
+    progressiveOrdinaryTax(ordinaryTaxable, bracketsFor(filing)) +
+    capitalGainsTax(gainTaxable, ordinaryTaxable, filing)
+  )
+}
+
+// =========================================================================
 // Ages
 // =========================================================================
 
@@ -310,59 +455,86 @@ function rmdForYear(priorYearEndPretax: number, config: TaxOverlayConfig, t: num
 
 /**
  * Solve the per-year gross withdrawal as a bounded fixed point: withdraw enough to net `net`
- * of spending AFTER the ordinary tax that withdrawal itself triggers.
+ * of spending AFTER the tax that withdrawal itself triggers.
  *
- * Ordinary income has two parts: the pre-tax actually distributed = `max(alloc.pretax, rmd)`
- * (spending/tax-funded pre-tax, or the forced RMD, whichever is larger), PLUS the portion of
- * the Social-Security benefit pulled into taxation (M4). Provisional income — which selects
- * that SS portion via {@link taxableSocialSecurity} — is the pre-tax distribution + 50% of the
- * benefit, so it RISES with the gross-up: the SS layer folds into the SAME fixed point rather
- * than sitting outside it. The combined ordinary income also serves as the MAGI that
- * {@link ordinaryIncomeTax} feeds into the senior-bonus phase-out.
+ * `drawPool` is the bucket state the spending draw allocates against — the Roth `conversion` has
+ * ALREADY been relocated out of pre-tax into Roth by the caller (so the draw can never re-claim
+ * the converted pre-tax). Each pass:
+ *   - The taxable draw realizes a pro-rata share of embedded capital gain
+ *     (`alloc.taxable × (1 − basis/value)`, floored at 0 for down-market losses).
+ *   - Ordinary income = the pre-tax distributed (`max(alloc.pretax, rmd)`) + the `conversion`
+ *     (ordinary income; it does NOT satisfy the non-convertible RMD) + the taxable portion of SS.
+ *   - Provisional income — selecting that SS portion via {@link taxableSocialSecurity} — now
+ *     includes the realized gain in its "other income" (M5: cap gains are in AGI), so the SS layer
+ *     and the cap-gains realization both fold into the SAME fixed point rather than sitting outside.
+ *   - The tax is {@link ordinaryPlusCapitalGainsTax}: progressive ordinary tax on the deduction-
+ *     reduced ordinary income + the preferential cap-gains tax on the gain stacked on top, with the
+ *     senior-bonus deduction phased on the gain-inclusive MAGI and any unused deduction sheltering
+ *     the gain.
  *
- * Monotone-increasing and bounded (a contraction, effective marginal rate < 1 even with the
- * ×1.85 SS torpedo — see {@link GROSS_UP_MAX_PASSES}) → converges from below. THROWS if it has
- * not converged within {@link GROSS_UP_MAX_PASSES} (no in-range default, burned/062).
+ * Monotone-increasing and bounded (a contraction — worst-case effective marginal rate k ≈ 0.74,
+ * see {@link GROSS_UP_MAX_PASSES}) → converges from below. THROWS if it has not converged within
+ * {@link GROSS_UP_MAX_PASSES} (no in-range default, burned/062).
  */
 function solveGrossWithdrawal(
   net: number,
-  buckets: AccountBuckets,
+  drawPool: AccountBuckets,
   policy: DrawdownPolicy,
   rmd: number,
+  conversion: number,
+  taxableBasis: number,
   filing: FilingStatus,
   count65: number,
   ssBenefit: number,
 ): number {
+  const taxableValue = drawPool.taxable
   let gross = net
   for (let pass = 0; pass < GROSS_UP_MAX_PASSES; pass++) {
-    const alloc = allocateWithdrawal(buckets, gross, policy)
-    const nonSSordinary = Math.max(alloc.pretax, rmd)
-    // SS provisional-income coupling (M4): part of the benefit joins ordinary income, and the
-    // SS-inclusive total is also the MAGI ordinaryIncomeTax phases the senior bonus against.
-    const ordinaryIncome = nonSSordinary + taxableSocialSecurity(nonSSordinary, ssBenefit, filing)
-    const nextGross = net + ordinaryIncomeTax(ordinaryIncome, filing, count65)
+    const alloc = allocateWithdrawal(drawPool, gross, policy)
+    // Cap-gains realization (M5): the taxable draw realizes a pro-rata share of embedded gain.
+    // A down-market loss (basis > value) floors at 0 — never a negative gain feeding the tax or
+    // provisional income (the §1211 loss offset is OUT-but-disclosed).
+    const realizedGain =
+      taxableValue > 0 ? Math.max(0, alloc.taxable * (1 - taxableBasis / taxableValue)) : 0
+    // Ordinary income = pre-tax distributed (spending-or-RMD, whichever binds) + the conversion
+    // (ordinary income, non-RMD-satisfying) + the taxable portion of SS. The realized gain joins
+    // provisional's "other income" (lifting taxable SS) but is taxed at preferential rates inside
+    // ordinaryPlusCapitalGainsTax — never folded into the ordinary base.
+    const nonSSordinary = Math.max(alloc.pretax, rmd) + conversion
+    const ordinaryIncome =
+      nonSSordinary + taxableSocialSecurity(nonSSordinary + realizedGain, ssBenefit, filing)
+    const nextGross = net + ordinaryPlusCapitalGainsTax(ordinaryIncome, realizedGain, filing, count65)
     if (Math.abs(nextGross - gross) < GROSS_UP_EPSILON) return nextGross
     gross = nextGross
   }
   throw new Error(
-    `tax gross-up did not converge in ${GROSS_UP_MAX_PASSES} passes (net=${net}, rmd=${rmd}, ss=${ssBenefit}) — refusing an unconverged tax (burned/062)`,
+    `tax gross-up did not converge in ${GROSS_UP_MAX_PASSES} passes (net=${net}, rmd=${rmd}, ss=${ssBenefit}, conversion=${conversion}) — refusing an unconverged tax (burned/062)`,
   )
 }
 
 /**
- * Run a tax-aware decumulation path. Tracks per-bucket balances for the tax computation
- * while advancing the authoritative TOTAL through the shared {@link stepYear}, so the
- * total trajectory matches the spine byte-for-byte under the OFF condition.
+ * Run a tax-aware decumulation path. Tracks per-bucket balances + the taxable cost basis for the
+ * tax computation while advancing the authoritative TOTAL through the shared {@link stepYear}, so
+ * the total trajectory matches the spine byte-for-byte under the OFF condition.
  *
- * The three return/withdrawal arrays are indexed by ABSOLUTE year and the net-withdrawal
- * length is the horizon (the aligned-length contract `runDecumulation` uses).
+ * The return/withdrawal arrays are indexed by ABSOLUTE year and the net-withdrawal length is the
+ * horizon (the aligned-length contract `runDecumulation` uses). `taxInputs` carries the per-year SS
+ * + conversion streams and the initial taxable basis (see {@link TaxYearInputs}) — read ONLY when
+ * tax is ON, so with tax OFF the overlay reduces byte-identically to the spine regardless of them.
  *
- * `ssBenefits` (M4) is a parallel per-year stream of the household's real Social-Security
- * benefit, used ONLY to compute taxable SS inside the gross-up. It is read solely when tax
- * is ON; with tax OFF (or an absent / all-zero stream) it never touches the trajectory, so
- * the reduce-to-spine and reduce-to-M3 invariants hold. (When M6 wires the overlay into
- * `simulate.ts`, the spine supplies both `netWithdrawals` — spending net of SS — AND this
- * benefit stream; the two are independent per-year inputs.)
+ * WITHIN-YEAR ORDER (M5): RMD → conversion → spending draw.
+ *   1. RMD (M2): forced, non-convertible, from the prior-year-end pre-tax balance.
+ *   2. Conversion (M5): clamped to `[0, priorYearEndPretax − rmd]` (RMD reserved first — the RMD is
+ *      non-convertible) and relocated pre-tax→roth in the DRAW-TIME buckets BEFORE the spending
+ *      allocation, so the spending draw can never re-claim the converted pre-tax (no double-spend).
+ *      The clamp uses the prior-year-end pre-tax (gross-independent) so the conversion is a CONSTANT
+ *      inside the fixed point — it never couples the iteration into 2-D.
+ *   3. Spending draw (M3/M4): the gross-up fixed point over the conversion-reduced pool.
+ * Both the RMD relocation and the conversion are intra-portfolio, so the only money that LEAVES is
+ * the grossed-up spending+tax `drawn` (via stepYear); the bucket sum always reconciles to the total.
+ *
+ * (When M6 wires the overlay into `simulate.ts`, the spine supplies `netWithdrawals` — spending net
+ * of SS — alongside these inputs as independent per-year streams.)
  */
 export function runTaxAwareDecumulation(
   initialBuckets: AccountBuckets,
@@ -372,9 +544,23 @@ export function runTaxAwareDecumulation(
   stockWeight: number,
   policy: DrawdownPolicy,
   config: TaxOverlayConfig,
-  ssBenefits: readonly number[] = [],
+  taxInputs: TaxYearInputs = {},
 ): TaxAwareResult {
+  const { ssBenefits = [], conversions = [], initialTaxableBasis } = taxInputs
+
+  // Initial taxable basis is REQUIRED when tax is on and the taxable bucket is non-empty — there
+  // is no safe default (0 over-taxes every realization; the full value silently no-ops cap-gains),
+  // so an absent basis fails loud (burned/062). When the taxable bucket starts empty, basis is 0
+  // and only RMD relocations (already-taxed, full-basis dollars) can build it.
+  if (config.taxEnabled && initialBuckets.taxable > 0 && initialTaxableBasis === undefined) {
+    throw new Error(
+      '[taxOverlay] initialTaxableBasis is required when tax is on and the taxable bucket is ' +
+        'non-empty — no in-range default for a figure that moves the answer (burned/062)',
+    )
+  }
+
   let buckets = initialBuckets
+  let basis = initialTaxableBasis ?? 0
   const total0 = totalAcrossBuckets(initialBuckets)
   // Construct the initial state with the SAME formula simulate.ts uses (stock = w·P,
   // bond = (1−w)·P) so a collapsed-pool run is byte-identical to the spine's
@@ -395,27 +581,41 @@ export function runTaxAwareDecumulation(
     // year's post-growth state (at t = 0, the initial balance) — exactly the RMD's basis.
     const rmd = rmdForYear(buckets.pretax, config, t)
 
+    // Roth conversion (M5): clamp to feasibility AFTER reserving the non-convertible RMD, using the
+    // prior-year-end pre-tax (gross-independent ⇒ constant inside the fixed point). Apply it to the
+    // DRAW-TIME buckets (pre-tax→roth) so the spending allocation runs against the conversion-reduced
+    // pre-tax and can never double-spend it. Read only when tax is ON (so a conversion stream with
+    // tax OFF is a no-op — the reduce-to-spine anchor stays clean).
+    const conversion = config.taxEnabled ? Math.max(0, Math.min(conversions[t] ?? 0, buckets.pretax - rmd)) : 0
+    const drawPool: AccountBuckets =
+      conversion > 0
+        ? { taxable: buckets.taxable, pretax: buckets.pretax - conversion, roth: buckets.roth + conversion }
+        : buckets
+
     // Gross up for tax. When off, grossWithdrawal === net EXACTLY (no float op added), so the
     // stepYear recurrence is identical to the spine's. When on, solve the fixed point: withdraw
-    // enough to net `net` after the ordinary tax on the pre-tax distributed; the tax dollars
-    // LEAVE the portfolio, so terminalReal drops below the spine (the M3 presence companion).
+    // enough to net `net` after the tax (ordinary on the pre-tax distributed + conversion +
+    // taxable SS, preferential on the realized gain); the tax dollars LEAVE the portfolio, so
+    // terminalReal drops below the spine (the presence companion).
     const grossWithdrawal =
       config.taxEnabled
         ? solveGrossWithdrawal(
             net,
-            buckets,
+            drawPool,
             policy,
             rmd,
+            conversion,
+            basis,
             config.household.filing,
             count65PlusInSimYear(config.household, t),
             ssBenefits[t] ?? 0,
           )
         : net
 
-    // Per-bucket ledger: which buckets fund this withdrawal (consumed by the tax math).
-    // Capped at what exists, exactly like the spine.
-    const totalBefore = totalAcrossBuckets(buckets)
-    const alloc = allocateWithdrawal(buckets, grossWithdrawal, policy)
+    // Per-bucket ledger: which buckets fund this withdrawal (consumed by the tax math). Allocated
+    // against the CONVERSION-REDUCED drawPool, capped at what exists — exactly like the spine.
+    const totalBefore = totalAcrossBuckets(buckets) // === totalAcrossBuckets(drawPool)
+    const alloc = allocateWithdrawal(drawPool, grossWithdrawal, policy)
     const drawn = alloc.taxable + alloc.pretax + alloc.roth
 
     // Advance the AUTHORITATIVE total via the shared stepYear (byte-identical to spine).
@@ -424,6 +624,7 @@ export function runTaxAwareDecumulation(
 
     if (step.depleted) {
       buckets = EMPTY_BUCKETS
+      basis = 0
       depletionYear = t
       break
     }
@@ -434,19 +635,23 @@ export function runTaxAwareDecumulation(
     const afterWithdrawal = totalBefore - drawn
     if (afterWithdrawal > 0) {
       const scale = totalValue(state) / afterWithdrawal
-      let pretaxPost = Math.max(0, buckets.pretax - alloc.pretax)
-      let taxablePost = Math.max(0, buckets.taxable - alloc.taxable)
-      const rothPost = Math.max(0, buckets.roth - alloc.roth)
 
-      // RMD-forced distribution: spending/tax already pulled `alloc.pretax` from pre-tax; the
-      // RMD forces a MINIMUM pre-tax distribution, so only the EXCESS beyond that is force-
-      // relocated to taxable (unspent, reinvested). This moves money BETWEEN two buckets — it
-      // never changes `pretaxPost + taxablePost`, so the bucket sum still reconciles to the
-      // authoritative total. (With tax off the whole step is total-neutral; with tax on the
-      // total already dropped via the grossed-up withdrawal through stepYear.)
-      const forcedExcess = Math.min(Math.max(0, rmd - alloc.pretax), pretaxPost)
-      pretaxPost -= forcedExcess
-      taxablePost += forcedExcess
+      // RMD-forced distribution: spending/tax already pulled `alloc.pretax` from pre-tax; the RMD
+      // forces a MINIMUM pre-tax distribution, so only the EXCESS beyond that is force-relocated to
+      // taxable (unspent, reinvested). The RMD relocation AND the conversion are both intra-portfolio
+      // (pre-tax↔taxable, pre-tax↔roth), so their ± pairs cancel in the bucket sum: pretaxPost +
+      // taxablePost + rothPost = totalBefore − drawn = afterWithdrawal exactly. Allocating on drawPool
+      // guarantees alloc.pretax ≤ drawPool.pretax, so every bucket stays ≥ 0.
+      const forcedExcess = Math.min(Math.max(0, rmd - alloc.pretax), drawPool.pretax - alloc.pretax)
+      const pretaxPost = drawPool.pretax - alloc.pretax - forcedExcess
+      const taxablePost = drawPool.taxable - alloc.taxable + forcedExcess
+      const rothPost = drawPool.roth - alloc.roth
+
+      // Taxable basis (M5): the draw removes basis pro-rata to the taxable value; the RMD-relocated
+      // dollars enter at FULL basis (already ordinary-taxed → after-tax money). Basis is NOT scaled by
+      // growth — market appreciation is unrealized gain (scaling basis would zero all future gain).
+      const taxableValue = drawPool.taxable
+      basis = (taxableValue > 0 ? basis * (1 - alloc.taxable / taxableValue) : basis) + forcedExcess
 
       buckets = {
         taxable: taxablePost * scale,
@@ -455,8 +660,9 @@ export function runTaxAwareDecumulation(
       }
     } else {
       buckets = EMPTY_BUCKETS
+      basis = 0
     }
   }
 
-  return { terminalReal: totalValue(state), depletionYear, finalBuckets: buckets }
+  return { terminalReal: totalValue(state), depletionYear, finalBuckets: buckets, finalTaxableBasis: basis }
 }

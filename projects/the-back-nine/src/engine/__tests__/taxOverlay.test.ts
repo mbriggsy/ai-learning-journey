@@ -2,14 +2,16 @@ import { describe, it, expect } from 'vitest'
 import {
   runTaxAwareDecumulation,
   ordinaryIncomeTax,
+  ordinaryPlusCapitalGainsTax,
+  capitalGainsTax,
   taxableSocialSecurity,
   type TaxOverlayConfig,
   type Household,
 } from '@engine/taxOverlay'
 import { runDecumulation, type PortfolioState } from '@engine/decumulation'
 import { DRAWDOWN_POLICIES, NEVER_DEPLETED } from '@shared/model'
-import type { AccountBuckets } from '@engine/sequencing'
-import { uniformLifetimeTableDivisors } from '@engine/constants'
+import { totalAcrossBuckets, type AccountBuckets } from '@engine/sequencing'
+import { uniformLifetimeTableDivisors, capitalGainsBreakpoints } from '@engine/constants'
 
 // ---------------------------------------------------------------------------
 // Deterministic fixtures (no RNG — the seam is a pure transform). Mixed-sign real
@@ -327,7 +329,7 @@ describe('taxOverlay — M3 ordinary-income tax', () => {
   const TAX_ON: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: false, household: mkHousehold(2026, 1959, 1959) }
   const P = 1_000_000
 
-  describe('only the pre-tax distribution is ordinary income in M3 (Roth + taxable basis deferred to M5)', () => {
+  describe('Roth is never ordinary income; a taxable draw realizes only its GAIN (M5 evolves the M3 line)', () => {
     const oneSpend = [60_000]
     it('a Roth-only pool incurs no ordinary tax even with tax ON → byte-identical to the spine', () => {
       const got = runTaxAwareDecumulation({ taxable: 0, pretax: 0, roth: P }, realStock, realBond, oneSpend, STOCK_W, 'pre-tax-first', TAX_ON)
@@ -335,8 +337,12 @@ describe('taxOverlay — M3 ordinary-income tax', () => {
       expect(got.terminalReal).toBe(sp.terminalReal)
       expect(got.depletionYear).toBe(sp.depletionYear)
     })
-    it('a taxable-only pool incurs no ORDINARY tax in M3 (its gain is cap-gains, M5) → byte-identical to the spine', () => {
-      const got = runTaxAwareDecumulation({ taxable: P, pretax: 0, roth: 0 }, realStock, realBond, oneSpend, STOCK_W, 'taxable-first', TAX_ON)
+    it('an ALL-BASIS taxable pool realizes no gain (basis = value) → still byte-identical to the spine even with tax ON', () => {
+      // M3 took "taxable draw = no tax" on faith; M5 makes it conditional on the embedded gain.
+      // A freshly-deposited pool (basis = value) has zero gain, so a taxable draw is pure return
+      // of basis → no cap-gains tax → byte-identical. (The gain-bearing case ends BELOW the spine —
+      // tested in the M5 block.) initialTaxableBasis is required here (tax ON + taxable > 0).
+      const got = runTaxAwareDecumulation({ taxable: P, pretax: 0, roth: 0 }, realStock, realBond, oneSpend, STOCK_W, 'taxable-first', TAX_ON, { initialTaxableBasis: P })
       const sp = spine(P, oneSpend)
       expect(got.terminalReal).toBe(sp.terminalReal)
       expect(got.depletionYear).toBe(sp.depletionYear)
@@ -416,7 +422,10 @@ describe('taxOverlay — M3 ordinary-income tax', () => {
       const buckets: AccountBuckets = { taxable: 250_000, pretax: 500_000, roth: 250_000 }
       const total = 1_000_000
       const net = 200_000
-      const on = runTaxAwareDecumulation(buckets, realStock, realBond, [net], STOCK_W, 'proportional', TAX_ON)
+      // All-basis taxable (basis = value) so the proportional taxable draw realizes ZERO gain —
+      // isolating the "ordinary income is a fraction of the gross" property from M5's cap-gains
+      // (which gets its own multi-bucket test in the M5 block).
+      const on = runTaxAwareDecumulation(buckets, realStock, realBond, [net], STOCK_W, 'proportional', TAX_ON, { initialTaxableBasis: 250_000 })
       const sp = spine(total, [net])
       const gross = solveGross(net, 500_000 / total, 'mfj', 2) // ordinary income = gross × pretax share
       expect(gross).toBeGreaterThan(net) // tax was owed on the pre-tax fraction
@@ -581,7 +590,7 @@ describe('taxOverlay — M4 Social Security provisional-income fixed point', () 
       const oneSpend = [60_000]
       const buckets: AccountBuckets = { taxable: 0, pretax: P, roth: 0 }
       const absent = runTaxAwareDecumulation(buckets, realStock, realBond, oneSpend, STOCK_W, 'pre-tax-first', bothBorn1959MFJ)
-      const zeroStream = runTaxAwareDecumulation(buckets, realStock, realBond, oneSpend, STOCK_W, 'pre-tax-first', bothBorn1959MFJ, [0])
+      const zeroStream = runTaxAwareDecumulation(buckets, realStock, realBond, oneSpend, STOCK_W, 'pre-tax-first', bothBorn1959MFJ, { ssBenefits: [0] })
       expect(zeroStream.terminalReal).toBe(absent.terminalReal)
       expect(zeroStream.depletionYear).toBe(absent.depletionYear)
     })
@@ -591,7 +600,7 @@ describe('taxOverlay — M4 Social Security provisional-income fixed point', () 
     it('a positive SS stream + tax OFF → byte-identical to the spine (the OFF anchor is unperturbed)', () => {
       const oneSpend = [60_000]
       const buckets: AccountBuckets = { taxable: 0, pretax: P, roth: 0 }
-      const got = runTaxAwareDecumulation(buckets, realStock, realBond, oneSpend, STOCK_W, 'pre-tax-first', OFF, flat(50_000))
+      const got = runTaxAwareDecumulation(buckets, realStock, realBond, oneSpend, STOCK_W, 'pre-tax-first', OFF, { ssBenefits: flat(50_000) })
       const sp = spine(P, oneSpend)
       expect(got.terminalReal).toBe(sp.terminalReal)
       expect(got.depletionYear).toBe(sp.depletionYear)
@@ -607,8 +616,8 @@ describe('taxOverlay — M4 Social Security provisional-income fixed point', () 
       const cfg: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: true, household: mkHousehold(2026, 1948, 1950) }
       const buckets: AccountBuckets = { taxable: 0, pretax: pool, roth: 0 }
       const oneSpend = [40_000]
-      const withSS = runTaxAwareDecumulation(buckets, realStock, realBond, oneSpend, STOCK_W, 'pre-tax-first', cfg, [60_000])
-      const noSS = runTaxAwareDecumulation(buckets, realStock, realBond, oneSpend, STOCK_W, 'pre-tax-first', cfg, [0])
+      const withSS = runTaxAwareDecumulation(buckets, realStock, realBond, oneSpend, STOCK_W, 'pre-tax-first', cfg, { ssBenefits: [60_000] })
+      const noSS = runTaxAwareDecumulation(buckets, realStock, realBond, oneSpend, STOCK_W, 'pre-tax-first', cfg, { ssBenefits: [0] })
       const sp = spine(pool, oneSpend)
       // direction: SS inclusion → strictly more tax → strictly below the no-SS run, itself below the spine.
       expect(withSS.terminalReal).toBeLessThan(noSS.terminalReal)
@@ -629,7 +638,7 @@ describe('taxOverlay — M4 Social Security provisional-income fixed point', () 
       // diverge here.
       const pool = 3_000_000
       const net = 200_000
-      const on = runTaxAwareDecumulation({ taxable: 0, pretax: pool, roth: 0 }, realStock, realBond, [net], STOCK_W, 'pre-tax-first', bothBorn1959MFJ, [50_000])
+      const on = runTaxAwareDecumulation({ taxable: 0, pretax: pool, roth: 0 }, realStock, realBond, [net], STOCK_W, 'pre-tax-first', bothBorn1959MFJ, { ssBenefits: [50_000] })
       const sp = spine(pool, [net])
       const gross = solveGrossWithSS(net, (g) => g, 50_000, 'mfj', 2)
       expect(gross + taxableSocialSecurity(gross, 50_000, 'mfj')).toBeGreaterThan(150_000) // genuinely in the phase-out band
@@ -643,7 +652,7 @@ describe('taxOverlay — M4 Social Security provisional-income fixed point', () 
       const cfg: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: true, household: mkHousehold(2026, 1948, 1950) }
       const buckets: AccountBuckets = { taxable: 0, pretax: 2_000_000, roth: 0 }
       const spend = [120_000]
-      const run = () => runTaxAwareDecumulation(buckets, realStock, realBond, spend, STOCK_W, 'pre-tax-first', cfg, [70_000])
+      const run = () => runTaxAwareDecumulation(buckets, realStock, realBond, spend, STOCK_W, 'pre-tax-first', cfg, { ssBenefits: [70_000] })
       const a = run()
       const b = run()
       expect(Number.isFinite(a.terminalReal)).toBe(true) // converged (did not throw / NaN)
@@ -665,7 +674,7 @@ describe('taxOverlay — M4 Social Security provisional-income fixed point', () 
         for (const spend of [0, 60_000, 200_000, 800_000]) {
           for (const ss of [0, 40_000, 80_000, 150_000, 1_000_000, 5_000_000]) {
             expect(() =>
-              runTaxAwareDecumulation({ taxable: 0, pretax: pool, roth: 0 }, realStock, realBond, [spend], STOCK_W, 'pre-tax-first', cfg, [ss]),
+              runTaxAwareDecumulation({ taxable: 0, pretax: pool, roth: 0 }, realStock, realBond, [spend], STOCK_W, 'pre-tax-first', cfg, { ssBenefits: [ss] }),
             ).not.toThrow()
           }
         }
@@ -685,8 +694,8 @@ describe('taxOverlay — M4 Social Security provisional-income fixed point', () 
       const total = 1_000_000
       const oneSpend = [50_000]
       const ss = [50_000]
-      const preTaxPool = runTaxAwareDecumulation({ taxable: 0, pretax: total, roth: 0 }, realStock, realBond, oneSpend, STOCK_W, 'pre-tax-first', bothBorn1959MFJ, ss)
-      const rothPool = runTaxAwareDecumulation({ taxable: 0, pretax: 0, roth: total }, realStock, realBond, oneSpend, STOCK_W, 'pre-tax-first', bothBorn1959MFJ, ss)
+      const preTaxPool = runTaxAwareDecumulation({ taxable: 0, pretax: total, roth: 0 }, realStock, realBond, oneSpend, STOCK_W, 'pre-tax-first', bothBorn1959MFJ, { ssBenefits: ss })
+      const rothPool = runTaxAwareDecumulation({ taxable: 0, pretax: 0, roth: total }, realStock, realBond, oneSpend, STOCK_W, 'pre-tax-first', bothBorn1959MFJ, { ssBenefits: ss })
       const sp = spine(total, oneSpend)
       // Roth-funded: nonSS ordinary income = 0, provisional = ½×50k = 25k ≤ 32k → 0 taxable SS → no tax → spine.
       expect(taxableSocialSecurity(0, 50_000, 'mfj')).toBe(0) // the premise: at 0 other income this SS is untaxed
@@ -711,7 +720,7 @@ describe('taxOverlay — M4 Social Security provisional-income fixed point', () 
 
     it('a delayed-claiming stream [0, 0, 50k] taxes SS in YEAR 2 ONLY — matches the spine on the per-year-resolved grosses', () => {
       const ssStream = [0, 0, 50_000]
-      const on = runTaxAwareDecumulation(buckets, realStock, realBond, threeYears, STOCK_W, 'pre-tax-first', bothBorn1959MFJ, ssStream)
+      const on = runTaxAwareDecumulation(buckets, realStock, realBond, threeYears, STOCK_W, 'pre-tax-first', bothBorn1959MFJ, { ssBenefits: ssStream })
       // non-vacuous: year-2 SS genuinely raises that year's gross (else the test can't discriminate the year).
       expect(grossFor(50_000)).toBeGreaterThan(grossFor(0))
       // correct per-year alignment ⇒ overlay total === spine on [solve(0), solve(0), solve(50k)]. An always-[0]
@@ -725,7 +734,7 @@ describe('taxOverlay — M4 Social Security provisional-income fixed point', () 
     it('an SS stream SHORTER than the horizon defaults the missing tail years to 0 SS (the ?? 0 contract), never a throw', () => {
       // length-1 stream [50k] on a 3-year horizon → year 0 taxed on SS, years 1–2 default to 0 SS (no SS that
       // year), NOT an end-of-data break (returns/withdrawals govern the horizon, not the SS stream).
-      const on = runTaxAwareDecumulation(buckets, realStock, realBond, threeYears, STOCK_W, 'pre-tax-first', bothBorn1959MFJ, [50_000])
+      const on = runTaxAwareDecumulation(buckets, realStock, realBond, threeYears, STOCK_W, 'pre-tax-first', bothBorn1959MFJ, { ssBenefits: [50_000] })
       const ref = spine(pool, [grossFor(50_000), grossFor(0), grossFor(0)])
       expect(on.terminalReal).toBeCloseTo(ref.terminalReal, 2)
     })
@@ -744,11 +753,441 @@ describe('taxOverlay — M4 Social Security provisional-income fixed point', () 
       }
       const pool = 1_000_000
       const net = 50_000
-      const on = runTaxAwareDecumulation({ taxable: 0, pretax: pool, roth: 0 }, realStock, realBond, [net], STOCK_W, 'pre-tax-first', single, [40_000])
+      const on = runTaxAwareDecumulation({ taxable: 0, pretax: pool, roth: 0 }, realStock, realBond, [net], STOCK_W, 'pre-tax-first', single, { ssBenefits: [40_000] })
       const sp = spine(pool, [net])
       const gross = solveGrossWithSS(net, (g) => g, 40_000, 'single', 1)
       expect(gross).toBeGreaterThan(net) // the draw + the single-threshold taxable SS are taxed
       expect(on.terminalReal / sp.terminalReal).toBeCloseTo((pool - gross) / (pool - net), 8)
     })
+  })
+})
+
+describe('taxOverlay — M5 Roth conversion + cap-gains/QD stacking', () => {
+  const P = 1_000_000
+  // Both 67 at startCalendarYear 2026 (full 65+ deduction stack, NO RMD yet) — isolates conversion
+  // + cap-gains from the RMD mechanic, and keeps the gross itself driving ordinary income (the live
+  // feedback path, not an RMD that pins nonSS to a constant).
+  const TAX_ON_NO_RMD: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: false, household: mkHousehold(2026, 1959, 1959) }
+  // Owner 78 / spouse 76 (born 1948/1950): RMD active, full 65+ deduction stack.
+  const RMD78: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: true, household: mkHousehold(2026, 1948, 1950) }
+
+  // ===========================================================================
+  // (CG) The pure capitalGainsTax helper — externally-derived §1(h) stacking fixtures (DND/012).
+  // capitalGainsTax(gainSubjectToTax, ordinaryTaxableIncome, filing) stacks the gain ABOVE ordinary
+  // taxable income: 0% up to the zero-rate ceiling, 15% to the fifteen-rate ceiling, 20% above. Each
+  // expected number is hand-traced from the published breakpoints, never from the engine's own fn.
+  // ===========================================================================
+  describe('capitalGainsTax stacks the gain on ordinary taxable income (DND/012)', () => {
+    it('a gain wholly inside the 0% band owes nothing (MFJ, no ordinary income)', () => {
+      expect(capitalGainsTax(50_000, 0, 'mfj')).toBe(0) // top 50k < the MFJ 0%-ceiling 98,900
+    })
+    it('a gain wholly inside the 0% band with some ordinary income below the ceiling owes nothing', () => {
+      expect(capitalGainsTax(40_000, 50_000, 'mfj')).toBe(0) // top 90k < 98,900
+    })
+    it('a gain straddling the 0→15 ceiling pays 15% only on the portion above it (MFJ)', () => {
+      // ord 80k + gain 40k → top 120k; the 98,900 ceiling splits it: 18,900 at 0%, 21,100 at 15%.
+      expect(capitalGainsTax(40_000, 80_000, 'mfj')).toBeCloseTo(3_165, 6) // 0.15 × 21,100
+    })
+    it('a gain wholly inside the 15% band (MFJ)', () => {
+      expect(capitalGainsTax(50_000, 200_000, 'mfj')).toBeCloseTo(7_500, 6) // 0.15 × 50,000
+    })
+    it('a gain straddling the 15→20 ceiling pays 20% only above it (MFJ)', () => {
+      // ord 600k + gain 30k → top 630k; the 15%-ceiling (613,700) splits the gain: 13,700 at 15%,
+      // 16,300 at 20% → 2,055 + 3,260 = 5,315.
+      expect(capitalGainsTax(30_000, 600_000, 'mfj')).toBeCloseTo(5_315, 6)
+    })
+    it('a gain wholly inside the 20% band (MFJ, ordinary income above the 15%-ceiling)', () => {
+      expect(capitalGainsTax(50_000, 700_000, 'mfj')).toBeCloseTo(10_000, 6) // 0.20 × 50,000
+    })
+    it('the SINGLE breakpoints are not half of MFJ — straddling the single 0→15 ceiling', () => {
+      // ord 40k + gain 20k → top 60k; the single 0%-ceiling (49,450) splits it: 9,450 at 0%,
+      // 10,550 at 15% → 1,582.50.
+      expect(capitalGainsTax(20_000, 40_000, 'single')).toBeCloseTo(1_582.5, 6)
+    })
+    it('a zero or negative gain is never taxed (no negative cap-gains tax)', () => {
+      expect(capitalGainsTax(0, 100_000, 'mfj')).toBe(0)
+      expect(capitalGainsTax(-5_000, 100_000, 'mfj')).toBe(0)
+    })
+    it('the gain rate keys off TOTAL taxable income, never the gain alone (a small gain can still pay 15%)', () => {
+      // a $10k gain with $300k ordinary income is entirely above the 0%-ceiling → 15%, not 0%.
+      expect(capitalGainsTax(10_000, 300_000, 'mfj')).toBeCloseTo(1_500, 6)
+    })
+  })
+
+  // ===========================================================================
+  // (OPC) ordinaryPlusCapitalGainsTax — the deduction-shelter (the CRITICAL low-income-retiree
+  // regime) + the gain-inclusive MAGI coupling + reduce-to-ordinary. Hand-derived (DND/012).
+  // ===========================================================================
+  describe('ordinaryPlusCapitalGainsTax shelters the gain with unused deduction + phases the bonus on gain-inclusive MAGI', () => {
+    it('the unused deduction shelters the gain — a low-ordinary-income brokerage retiree owes $0 (NOT phantom tax)', () => {
+      // O = 20k ordinary, gain 120k, MFJ both 65 → deduction 47,500. Ordinary taxable = 0; the leftover
+      // 27,500 of deduction shelters the gain → gainTaxable 92,500, which is still < the 98,900 0%-ceiling
+      // → $0. The raw-gain bug would tax the FULL 120k and invent $3,165 of phantom tax on a $0 bill.
+      expect(ordinaryPlusCapitalGainsTax(20_000, 120_000, 'mfj', 2)).toBe(0)
+      expect(capitalGainsTax(120_000, 0, 'mfj')).toBeCloseTo(3_165, 6) // the phantom tax the shelter avoids
+    })
+    it('the senior bonus phases on the GAIN-inclusive MAGI, not ordinary income alone', () => {
+      // O = 120k, gain 100k → MAGI 220k (NOT 120k). Bonus = 12,000 − 0.06×(220k−150k) = 7,800 →
+      // deduction 43,300 → ordinary taxable 76,700 → ordinary tax 2,480 + 6,228 = 8,708. Gain fully
+      // above the deduction → gainTaxable 100k stacked on 76,700: 22,200 at 0%, 77,800 at 15% = 11,670.
+      // Total 20,378. A magi=ordinary-income bug keeps the full bonus and under-taxes (~19,244).
+      expect(ordinaryPlusCapitalGainsTax(120_000, 100_000, 'mfj', 2)).toBeCloseTo(20_378, 6)
+    })
+    it('with zero realized gain it is byte-identical to ordinaryIncomeTax (reduce-to-M3/M4 at the fn level)', () => {
+      for (const o of [0, 80_000, 150_000, 250_000]) {
+        expect(ordinaryPlusCapitalGainsTax(o, 0, 'mfj', 2)).toBe(ordinaryIncomeTax(o, 'mfj', 2))
+        expect(ordinaryPlusCapitalGainsTax(o, 0, 'single', 1)).toBe(ordinaryIncomeTax(o, 'single', 1))
+      }
+    })
+  })
+
+  // A per-year gross-up re-solve using ONLY the golden pure fns (capitalGainsTax + ordinaryIncomeTax,
+  // composed in ordinaryPlusCapitalGainsTax; taxableSocialSecurity for the SS layer) — the external
+  // oracle for the integration tests, mirroring M3/M4's solveGross helpers. A WIRING bug (wrong draw
+  // pool, gain not in provisional, gain taxed as ordinary) makes the engine disagree with this.
+  const solveGrossM5 = (
+    net: number,
+    nonSSfromGross: (g: number) => number,
+    gainFromGross: (g: number) => number,
+    ss: number,
+    filing: 'mfj' | 'single',
+    count65: number,
+  ): number => {
+    let gross = net
+    for (let i = 0; i < 400; i++) {
+      const nonSS = nonSSfromGross(gross)
+      const rg = gainFromGross(gross)
+      const ordInc = nonSS + taxableSocialSecurity(nonSS + rg, ss, filing)
+      gross = net + ordinaryPlusCapitalGainsTax(ordInc, rg, filing, count65)
+    }
+    return gross
+  }
+
+  // ===========================================================================
+  // Reduce-to-spine / reduce-to-M4 with the new conversion + basis inputs.
+  // ===========================================================================
+  describe('reduce-to-spine / reduce-to-M4: conversions + basis never perturb the OFF or zero-input anchors', () => {
+    it('a positive conversion stream with tax OFF is byte-identical to the spine (the OFF anchor is unperturbed)', () => {
+      const got = runTaxAwareDecumulation({ taxable: 0, pretax: P, roth: 0 }, realStock, realBond, flat(40_000), STOCK_W, 'pre-tax-first', OFF, { conversions: flat(50_000) })
+      const sp = spine(P, flat(40_000))
+      expect(got.terminalReal).toBe(sp.terminalReal)
+      expect(got.depletionYear).toBe(sp.depletionYear)
+    })
+    it('conversions all-zero === conversions absent === the M4 fixed point (pre-tax pool, tax ON)', () => {
+      const buckets: AccountBuckets = { taxable: 0, pretax: P, roth: 0 }
+      const absent = runTaxAwareDecumulation(buckets, realStock, realBond, [60_000], STOCK_W, 'pre-tax-first', TAX_ON_NO_RMD)
+      const zeroConv = runTaxAwareDecumulation(buckets, realStock, realBond, [60_000], STOCK_W, 'pre-tax-first', TAX_ON_NO_RMD, { conversions: [0] })
+      expect(zeroConv.terminalReal).toBe(absent.terminalReal)
+      expect(zeroConv.depletionYear).toBe(absent.depletionYear)
+    })
+    it('an all-basis taxable pool (basis = value) with tax ON realizes no gain → byte-identical to the spine', () => {
+      const got = runTaxAwareDecumulation({ taxable: P, pretax: 0, roth: 0 }, realStock, realBond, [60_000], STOCK_W, 'taxable-first', TAX_ON_NO_RMD, { initialTaxableBasis: P })
+      const sp = spine(P, [60_000])
+      expect(got.terminalReal).toBe(sp.terminalReal)
+      expect(got.depletionYear).toBe(sp.depletionYear)
+    })
+  })
+
+  // ===========================================================================
+  // Cap-gains in the decumulation: a gain-bearing taxable draw ends BELOW the spine; the engine
+  // matches the external re-solve; losses floor at 0 (no phantom refund).
+  // ===========================================================================
+  describe('a taxable draw realizes a pro-rata gain that bites (and matches the re-solve)', () => {
+    it('a gain-bearing taxable pool ends strictly below the equal-value all-basis pool, and matches the re-solve', () => {
+      const value = 2_000_000
+      const basis = 500_000 // gain fraction 0.75
+      const net = 300_000
+      const gain = runTaxAwareDecumulation({ taxable: value, pretax: 0, roth: 0 }, realStock, realBond, [net], STOCK_W, 'taxable-first', TAX_ON_NO_RMD, { initialTaxableBasis: basis })
+      const allBasis = runTaxAwareDecumulation({ taxable: value, pretax: 0, roth: 0 }, realStock, realBond, [net], STOCK_W, 'taxable-first', TAX_ON_NO_RMD, { initialTaxableBasis: value })
+      const sp = spine(value, [net])
+      // all-basis realizes no gain → spine; the gain pool pays cap-gains tax → strictly below.
+      expect(allBasis.terminalReal).toBe(sp.terminalReal)
+      expect(gain.terminalReal).toBeLessThan(allBasis.terminalReal)
+      // magnitude: taxable-first on a taxable-only pool → no pretax/ordinary; the realized gain is
+      // the gross × the gain fraction; re-solve the fixed point with the golden fns.
+      const gross = solveGrossM5(net, () => 0, (g) => g * (1 - basis / value), 0, 'mfj', 2)
+      expect(gross).toBeGreaterThan(net) // cap-gains tax was genuinely owed
+      expect(gain.terminalReal / sp.terminalReal).toBeCloseTo((value - gross) / (value - net), 8)
+    })
+
+    it('a realized LOSS (basis > value) floors at 0 — no phantom refund, byte-identical to the spine', () => {
+      // An underwater taxable pool: basis 800k on a 500k value. The "gain" is negative ⇒ floored to 0
+      // ⇒ no cap-gains tax ⇒ byte-identical to the spine. Crucially NOT ABOVE the spine (a negative
+      // tax / loss refund would push it above) — the §1211 loss benefit is OUT-but-disclosed.
+      const got = runTaxAwareDecumulation({ taxable: 500_000, pretax: 0, roth: 0 }, realStock, realBond, [40_000], STOCK_W, 'taxable-first', TAX_ON_NO_RMD, { initialTaxableBasis: 800_000 })
+      const sp = spine(500_000, [40_000])
+      expect(got.terminalReal).toBe(sp.terminalReal)
+    })
+  })
+
+  // ===========================================================================
+  // Roth conversion mechanics: RMD-first legality, feasibility clamp, per-year alignment, presence.
+  // ===========================================================================
+  describe('Roth conversion: RMD-first legality, the feasibility clamp, per-year alignment', () => {
+    it('a conversion on a pre-tax pool moves pretax→roth and ends below the no-conversion run (matches the re-solve)', () => {
+      const net = 40_000
+      const C = 100_000
+      const buckets: AccountBuckets = { taxable: 0, pretax: P, roth: 0 }
+      const withConv = runTaxAwareDecumulation(buckets, realStock, realBond, [net], STOCK_W, 'pre-tax-first', TAX_ON_NO_RMD, { conversions: [C] })
+      const noConv = runTaxAwareDecumulation(buckets, realStock, realBond, [net], STOCK_W, 'pre-tax-first', TAX_ON_NO_RMD, { conversions: [0] })
+      const sp = spine(P, [net])
+      // presence: the conversion is ordinary income → more tax → strictly below the no-conversion run,
+      // and the converted dollars now live in Roth (which the no-conversion run never funds).
+      expect(withConv.terminalReal).toBeLessThan(noConv.terminalReal)
+      expect(withConv.finalBuckets.roth).toBeGreaterThan(0)
+      expect(noConv.finalBuckets.roth).toBe(0)
+      // magnitude: pre-tax-first pre-tax-only → ordinary income = gross (the draw) + C; re-solve.
+      const gross = solveGrossM5(net, (g) => g + C, () => 0, 0, 'mfj', 2)
+      expect(gross).toBeGreaterThan(net)
+      expect(withConv.terminalReal / sp.terminalReal).toBeCloseTo((P - gross) / (P - net), 8)
+    })
+
+    it('the conversion is ON TOP of the non-convertible RMD (it cannot satisfy or reduce it)', () => {
+      // owner 78 → RMD ≈ 1.5M ÷ 22 ≈ 68k, ABOVE the 40k spend; a 100k conversion is ordinary income
+      // STACKED on the forced RMD, never replacing it. So ordinary income = max(draw, rmd) + C.
+      const pool = 1_500_000
+      const net = 40_000
+      const C = 100_000
+      const buckets: AccountBuckets = { taxable: 0, pretax: pool, roth: 0 }
+      const withConv = runTaxAwareDecumulation(buckets, realStock, realBond, [net], STOCK_W, 'pre-tax-first', RMD78, { conversions: [C] })
+      const noConv = runTaxAwareDecumulation(buckets, realStock, realBond, [net], STOCK_W, 'pre-tax-first', RMD78, { conversions: [0] })
+      const sp = spine(pool, [net])
+      const rmd = pool / ultDivisor(78)
+      // the conversion adds C of ordinary income on top of the RMD → strictly more tax → below no-conv.
+      expect(withConv.terminalReal).toBeLessThan(noConv.terminalReal)
+      // the RMD relocation still happened (pretax→taxable forced excess) AND the conversion landed in Roth.
+      expect(withConv.finalBuckets.taxable).toBeGreaterThan(0)
+      expect(withConv.finalBuckets.roth).toBeGreaterThan(0)
+      // magnitude: ordinary income = max(draw, rmd) + C; re-solve and match the terminal ratio.
+      const gross = solveGrossM5(net, (g) => Math.max(g, rmd) + C, () => 0, 0, 'mfj', 2)
+      expect(withConv.terminalReal / sp.terminalReal).toBeCloseTo((pool - gross) / (pool - net), 8)
+    })
+
+    it('the conversion is clamped to [0, pretax − RMD] — over-requests all clamp to the same result', () => {
+      const pool = 1_500_000
+      const net = 40_000
+      const buckets: AccountBuckets = { taxable: 0, pretax: pool, roth: 0 }
+      // Two over-the-clamp requests (both ≫ the pretax pool) must clamp identically...
+      const overA = runTaxAwareDecumulation(buckets, realStock, realBond, [net], STOCK_W, 'pre-tax-first', RMD78, { conversions: [2_000_000] })
+      const overB = runTaxAwareDecumulation(buckets, realStock, realBond, [net], STOCK_W, 'pre-tax-first', RMD78, { conversions: [9_000_000] })
+      const none = runTaxAwareDecumulation(buckets, realStock, realBond, [net], STOCK_W, 'pre-tax-first', RMD78, { conversions: [0] })
+      expect(overA.terminalReal).toBe(overB.terminalReal)
+      expect(overA.finalBuckets.roth).toBe(overB.finalBuckets.roth)
+      // ...and the clamp is BINDING (a zero conversion genuinely differs).
+      expect(overA.finalBuckets.roth).toBeGreaterThan(none.finalBuckets.roth)
+    })
+
+    it('the conversion stream is read per-year, aligned to netWithdrawals ([0,0,C] converts in year 2 only)', () => {
+      const net = 50_000
+      const pool = 2_000_000
+      const buckets: AccountBuckets = { taxable: 0, pretax: pool, roth: 0 }
+      const threeYears = [net, net, net]
+      const grossFor = (c: number) => solveGrossM5(net, (g) => g + c, () => 0, 0, 'mfj', 2)
+      const on = runTaxAwareDecumulation(buckets, realStock, realBond, threeYears, STOCK_W, 'pre-tax-first', TAX_ON_NO_RMD, { conversions: [0, 0, 100_000] })
+      // non-vacuous: a year-2 conversion genuinely raises that year's gross.
+      expect(grossFor(100_000)).toBeGreaterThan(grossFor(0))
+      // correct [t] alignment ⇒ overlay total === spine on [solve(0), solve(0), solve(100k)]; an
+      // always-[0] read or an off-by-one diverges by ~$thousands (≫ the 1e-7 fixed-point epsilon).
+      const ref = spine(pool, [grossFor(0), grossFor(0), grossFor(100_000)])
+      expect(on.terminalReal).toBeCloseTo(ref.terminalReal, 2)
+      expect(on.depletionYear).toBe(ref.depletionYear)
+    })
+  })
+
+  // ===========================================================================
+  // The ledger sum-reconciliation invariant (the CRITICAL #1 guard): with conversion + RMD +
+  // cap-gains all present, ΣfinalBuckets must equal the authoritative total under EVERY policy, and
+  // no bucket may go negative (the pretax double-spend the draw-pool reservation prevents).
+  // ===========================================================================
+  describe('the bucket ledger reconciles to the authoritative total with conversion + RMD + cap-gains (every policy)', () => {
+    // owner 78 (RMD active) + a low-basis taxable pool (embedded gain) + a per-year conversion +
+    // an SS stream — every M5 mechanic live at once, over the full horizon.
+    const multi: AccountBuckets = { taxable: 200_000, pretax: 700_000, roth: 100_000 }
+    for (const policy of DRAWDOWN_POLICIES) {
+      it(`${policy}: ΣfinalBuckets === terminalReal and no bucket goes negative`, () => {
+        const got = runTaxAwareDecumulation(multi, realStock, realBond, flat(50_000), STOCK_W, policy, RMD78, {
+          ssBenefits: flat(30_000),
+          conversions: flat(60_000),
+          initialTaxableBasis: 50_000, // low basis → real embedded gain
+        })
+        if (got.depletionYear === NEVER_DEPLETED) {
+          expect(Math.abs(totalAcrossBuckets(got.finalBuckets) / got.terminalReal - 1)).toBeLessThan(1e-9)
+        }
+        expect(got.finalBuckets.taxable).toBeGreaterThanOrEqual(0)
+        expect(got.finalBuckets.pretax).toBeGreaterThanOrEqual(0)
+        expect(got.finalBuckets.roth).toBeGreaterThanOrEqual(0)
+        expect(got.finalTaxableBasis).toBeGreaterThanOrEqual(0)
+        expect(Number.isFinite(got.finalTaxableBasis)).toBe(true)
+      })
+    }
+
+    it('the pretax double-spend trigger (pre-tax-first + pretax-heavy + a large conversion) reconciles, no negative bucket', () => {
+      // The exact regime the naive "allocate on full pretax then subtract the conversion" bug drove
+      // negative: pre-tax-first, a pretax-only pool, a conversion that is a large fraction of pretax.
+      const buckets: AccountBuckets = { taxable: 0, pretax: P, roth: 0 }
+      const got = runTaxAwareDecumulation(buckets, realStock, realBond, flat(40_000), STOCK_W, 'pre-tax-first', TAX_ON_NO_RMD, { conversions: flat(300_000) })
+      if (got.depletionYear === NEVER_DEPLETED) {
+        expect(Math.abs(totalAcrossBuckets(got.finalBuckets) / got.terminalReal - 1)).toBeLessThan(1e-9)
+      }
+      expect(got.finalBuckets.pretax).toBeGreaterThanOrEqual(0)
+      expect(got.finalBuckets.taxable).toBeGreaterThanOrEqual(0)
+      expect(got.finalBuckets.roth).toBeGreaterThanOrEqual(0)
+    })
+  })
+
+  // ===========================================================================
+  // finalTaxableBasis exposure + required-input fail-loud (burned/062).
+  // ===========================================================================
+  describe('finalTaxableBasis + the required-basis fail-loud gate', () => {
+    it('finalTaxableBasis is 0 when the portfolio depletes (no stale basis on an empty bucket)', () => {
+      // a small taxable pool spent to depletion mid-horizon.
+      const got = runTaxAwareDecumulation({ taxable: 150_000, pretax: 0, roth: 0 }, realStock, realBond, flat(40_000), STOCK_W, 'taxable-first', TAX_ON_NO_RMD, { initialTaxableBasis: 100_000 })
+      expect(got.depletionYear).toBeGreaterThanOrEqual(0)
+      expect(got.depletionYear).toBeLessThan(H)
+      expect(got.finalTaxableBasis).toBe(0)
+      expect(got.finalBuckets.taxable).toBe(0)
+    })
+
+    it('a required initial taxable basis is fail-loud when tax is ON and the taxable bucket is non-empty (burned/062)', () => {
+      expect(() =>
+        runTaxAwareDecumulation({ taxable: 100_000, pretax: 0, roth: 0 }, realStock, realBond, [40_000], STOCK_W, 'taxable-first', TAX_ON_NO_RMD),
+      ).toThrow(/initialTaxableBasis is required/)
+    })
+
+    it('an absent basis is FINE when tax is OFF (basis is never read) or the taxable bucket starts empty', () => {
+      expect(() =>
+        runTaxAwareDecumulation({ taxable: 100_000, pretax: 0, roth: 0 }, realStock, realBond, [40_000], STOCK_W, 'taxable-first', OFF),
+      ).not.toThrow()
+      expect(() =>
+        runTaxAwareDecumulation({ taxable: 0, pretax: P, roth: 0 }, realStock, realBond, [40_000], STOCK_W, 'pre-tax-first', TAX_ON_NO_RMD),
+      ).not.toThrow()
+    })
+  })
+
+  // ===========================================================================
+  // Convergence: the extended fixed point still converges across the cap-gains + conversion + SS
+  // regime — INCLUDING the small-net / low-basis / large-SS corner (k ≈ 0.74) the pre-tax-only M4
+  // sweep can never reach (insight 006). None may hit the fail-loud 128-pass cap.
+  // ===========================================================================
+  describe('the cap-gains + conversion + SS fixed point converges WITHOUT hitting the fail-loud cap (k ≈ 0.74)', () => {
+    it('a low-basis taxable pool × large SS × conversions × SMALL net converges across the stress sweep', () => {
+      // A mixed pool (half pretax → ordinary income, half LOW-basis taxable → large realized gain) so the
+      // gain block straddles the cap-gains breakpoints while the SS torpedo is live and a conversion piles
+      // on ordinary income — the k ≈ 0.74 corner. SS runs to $5M and net to 0 (the slow regime). Locking
+      // this here means a future trim of the 128 cap fails LOUD in CI rather than throwing for real inputs.
+      for (const pool of [500_000, 2_000_000, 10_000_000, 50_000_000]) {
+        for (const spend of [0, 60_000]) {
+          for (const ss of [0, 1_000_000, 5_000_000]) {
+            for (const conv of [0, 200_000]) {
+              const buckets: AccountBuckets = { taxable: pool / 2, pretax: pool / 2, roth: 0 }
+              expect(() =>
+                runTaxAwareDecumulation(buckets, realStock, realBond, [spend], STOCK_W, 'proportional', TAX_ON_NO_RMD, {
+                  ssBenefits: [ss],
+                  conversions: [conv],
+                  initialTaxableBasis: 1, // basis ≈ 0 → near-100% of the taxable draw is realized gain
+                }),
+              ).not.toThrow()
+            }
+          }
+        }
+      }
+    })
+
+    it('a torpedo + cap-gains + conversion case converges deterministically (byte-identical across runs)', () => {
+      const buckets: AccountBuckets = { taxable: 1_000_000, pretax: 1_000_000, roth: 0 }
+      const run = () =>
+        runTaxAwareDecumulation(buckets, realStock, realBond, [120_000], STOCK_W, 'proportional', RMD78, {
+          ssBenefits: [70_000],
+          conversions: [150_000],
+          initialTaxableBasis: 100_000,
+        })
+      const a = run()
+      const b = run()
+      expect(Number.isFinite(a.terminalReal)).toBe(true)
+      expect(a.terminalReal).toBeGreaterThan(0)
+      expect(a.terminalReal).toBe(b.terminalReal)
+      expect(a.finalTaxableBasis).toBe(b.finalTaxableBasis)
+    })
+  })
+
+  // ===========================================================================
+  // Integration MAGNITUDE coverage (adversarial-review gaps): the M5 couplings that a regression
+  // could break while every other test stays green. Each pins the engine's terminal against an
+  // EXTERNAL re-solve (solveGrossM5 / a hand-built trajectory), never the engine's own output.
+  // ===========================================================================
+  describe('integration magnitude: the M5 couplings under regression guard', () => {
+    it('a realized gain + an SS benefit + a conversion together (proportional) match the joint re-solve', () => {
+      // {taxable 600k (basis 100k → gain fraction 5/6), pretax 400k}, total 1M, both 67 (no RMD).
+      // A 50k conversion → drawPool {taxable 600k, pretax 350k, roth 50k}. Under proportional,
+      // alloc.pretax = gross×0.35, alloc.taxable = gross×0.60 → realizedGain = gross×0.60×(5/6) = gross×0.50.
+      // The headline M5 interaction: the conversion's ordinary income AND the realized gain both ride the
+      // SS-torpedo provisional, and the gain stacks at preferential rates. A regression that dropped the
+      // gain from provisional income (the ~$15k-unguarded coupling the review flagged) diverges here, as
+      // does dropping the conversion or mis-realizing the proportional gain.
+      const value = 600_000
+      const basis = 100_000
+      const pretax = 400_000
+      const total = 1_000_000
+      const net = 80_000
+      const ss = 50_000
+      const C = 50_000
+      const buckets: AccountBuckets = { taxable: value, pretax, roth: 0 }
+      const on = runTaxAwareDecumulation(buckets, realStock, realBond, [net], STOCK_W, 'proportional', TAX_ON_NO_RMD, { ssBenefits: [ss], conversions: [C], initialTaxableBasis: basis })
+      const sp = spine(total, [net])
+      // proportional shares are over the conversion-reduced drawPool: pretax (400k−50k)/1M, taxable 600k/1M.
+      const gross = solveGrossM5(
+        net,
+        (g) => g * ((pretax - C) / total) + C, // nonSS = alloc.pretax + the conversion (both ordinary)
+        (g) => g * (value / total) * (1 - basis / value), // pro-rata realized gain
+        ss,
+        'mfj',
+        2,
+      )
+      expect(gross).toBeGreaterThan(net) // ordinary + cap-gains + SS torpedo all genuinely owed
+      expect(on.terminalReal / sp.terminalReal).toBeCloseTo((total - gross) / (total - net), 8)
+    })
+
+    it('the taxable-basis recurrence holds ACROSS years (a 2-year externally-derived fixture, M2 precedent)', () => {
+      // taxable-only, taxable-first, no RMD/SS/conversion. Growth lifts the taxable VALUE but NOT the
+      // basis (basis-no-scale), so the year-1 gain fraction strictly exceeds year-0's — a cross-year
+      // wiring a single-year fixture cannot pin (exactly the gap M2 closed for the RMD recurrence).
+      const V = 2_000_000
+      const B = 500_000
+      const net = 200_000
+      const buckets: AccountBuckets = { taxable: V, pretax: 0, roth: 0 }
+      const on = runTaxAwareDecumulation(buckets, realStock, realBond, [net, net], STOCK_W, 'taxable-first', TAX_ON_NO_RMD, { initialTaxableBasis: B })
+      // Reconstruct the 2-year trajectory independently (taxable-first taxable-only → alloc.taxable = gross).
+      const g0 = solveGrossM5(net, () => 0, (g) => g * (1 - B / V), 0, 'mfj', 2)
+      const scale0 = spine(V, [0]).terminalReal / V // the year-0 blended growth factor (zero-withdrawal probe)
+      const value1 = (V - g0) * scale0 // taxable value at the start of year 1 (grown)
+      const basis1 = B * (1 - g0 / V) // basis depleted pro-rata, UNSCALED — the load-bearing recurrence
+      const g1 = solveGrossM5(net, () => 0, (g) => g * (1 - basis1 / value1), 0, 'mfj', 2)
+      // the year-1 gain fraction rose because growth raised value, not basis (proves basis-no-scale across years).
+      expect(1 - basis1 / value1).toBeGreaterThan(1 - B / V)
+      const ref = spine(V, [g0, g1])
+      expect(on.terminalReal).toBeCloseTo(ref.terminalReal, 2)
+    })
+
+    it('cap-gains runs through the decumulation for a SINGLE filer (the survivor/widow-torpedo breakpoints)', () => {
+      // The single 0% cap-gains ceiling is far below MFJ's, so the survivor pays 15% on gains that were
+      // 0%-rated while both were alive. Exercises capitalGainsBreakpointsFor('single') end-to-end in the
+      // decumulation (the pure fn covered it; no integration test did). M6 flips MFJ→single here.
+      const value = 1_000_000
+      const basis = 100_000
+      const net = 150_000
+      const single: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: false, household: { startCalendarYear: 2026, filing: 'single', owner: { birthYear: 1959 } } }
+      const on = runTaxAwareDecumulation({ taxable: value, pretax: 0, roth: 0 }, realStock, realBond, [net], STOCK_W, 'taxable-first', single, { initialTaxableBasis: basis })
+      const sp = spine(value, [net])
+      const gross = solveGrossM5(net, () => 0, (g) => g * (1 - basis / value), 0, 'single', 1)
+      expect(gross).toBeGreaterThan(net) // the single breakpoints push the gain past the 0% band → tax owed
+      expect(on.terminalReal / sp.terminalReal).toBeCloseTo((value - gross) / (value - net), 8)
+    })
+  })
+
+  // A reference to the sourced breakpoint so the test documents the straddle regime WITHOUT inlining
+  // the guarded dated figure (the single-source gate forbids it outside the constants module).
+  it('the cap-gains breakpoints are read from the canonical constant (not inlined here)', () => {
+    expect(capitalGainsBreakpoints.value.mfj.fifteenRateUpTo).toBeGreaterThan(capitalGainsBreakpoints.value.mfj.zeroRateUpTo)
+    expect(capitalGainsBreakpoints.value.single.zeroRateUpTo).toBeLessThan(capitalGainsBreakpoints.value.mfj.zeroRateUpTo)
   })
 })

@@ -7,10 +7,11 @@
  * the copyGuard allowlist all READ this module; a constant is never re-typed
  * elsewhere (the single-source grep test enforces it).
  *
- * A figure named by the research but with NO value yet (single-filer brackets,
- * the Uniform Lifetime divisors, the cap-gains breakpoints) is an `Unsourced`
- * sentinel: reading `.value` THROWS, so a missing figure can never be confused
- * with a plausible measurement (burned/062 — no in-range default fallbacks).
+ * A figure the research NAMES but does not yet VALUE — now only the Joint Life &
+ * Last Survivor grid (`jointLifeLastSurvivorTable`); the single-filer brackets, the
+ * Uniform Lifetime divisors, and the cap-gains breakpoints have since been sourced —
+ * is an `Unsourced` sentinel: reading `.value` THROWS, so a missing figure can never
+ * be confused with a plausible measurement (burned/062 — no in-range default fallbacks).
  */
 
 /** A dated figure with provenance. */

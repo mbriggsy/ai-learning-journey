@@ -33,3 +33,4 @@ load-bearing ones (see `CLAUDE.md` for how each applies here):
 - [004 — monorepo CI: action-setup reads repo root + workflow self-trigger](004-monorepo-ci-pnpm-and-workflow-self-trigger.md)
 - [005 — verify review findings before folding; reviewers should be read-only](005-verify-review-findings-and-readonly-reviewers.md)
 - [006 — a convergence probe that contradicted the algebra was sampling the wrong regime](006-gross-up-convergence-probe-wrong-regime.md)
+- [007 — cap-gains stacking raised the gross-up's worst-case k to ≈0.74 and made the contraction rest on regime-disjointness](007-capgains-stacking-raised-convergence-k-and-broke-automatic-contraction.md)

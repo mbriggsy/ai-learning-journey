@@ -19,61 +19,73 @@
  * `stepYear` applies to the total — buckets differ only in tax treatment, never in
  * return assumption (this is what structurally forecloses asset-location).
  *
- * MILESTONE STATUS — built incrementally. This is M2: the RMD forced distribution.
+ * MILESTONE STATUS — built incrementally. This is M3: ordinary-income tax.
  *   - M1 (done): the seam + the reduce-to-spine lock.
- *   - M2 (this): RMD-forced distribution. Past the birth-year RMD age (`rmdStartAge`),
- *     the prior-year-end pre-tax balance ÷ the Uniform Lifetime divisor must leave
- *     pre-tax. RMD is NON-CONVERTIBLE (distributed as ordinary income first). KEY
- *     PROPERTY (corrected from the locked plan's original framing): with tax OFF an
- *     active RMD is TOTAL-NEUTRAL — it relocates pre-tax→taxable, and contract #2 makes
- *     those two buckets grow identically, so the relocation never moves the portfolio
- *     TOTAL. `terminalReal`/`depletionYear` come from `stepYear` on the gross withdrawal,
- *     which the RMD never touches when tax is off → byte-identical to the spine. Only the
- *     ordinary-income TAX on the RMD (M3) makes it bite (cash actually leaves to the IRS).
- *   - M3+ (the marked `grossUpForYear` seam): ordinary-income tax on the bracket schedule,
- *     the Social-Security provisional-income fixed-point, Roth conversions, capital-gains/
- *     qualified-dividend stacking, and the MFJ→single survivor filing switch. Each lands
- *     with its own externally-derived golden fixture (DND/012) and its CRN test.
+ *   - M2 (done): RMD-forced distribution as a pre-tax→taxable ledger relocation. With tax
+ *     OFF an active RMD is TOTAL-NEUTRAL (the two buckets grow identically, contract #2).
+ *   - M3 (this): ordinary-income tax on the bracket schedule (MFJ/single) + the deduction
+ *     stack (standard + age-65 addition + senior bonus with its MAGI phase-out). The cash
+ *     a year needs is grossed up to net `spending` AFTER the tax that withdrawal triggers —
+ *     a bounded per-year FIXED POINT (gross = net + tax, tax depends on the pre-tax drawn,
+ *     which depends on the gross). Ordinary income = the pre-tax actually distributed =
+ *     max(alloc.pretax, rmd). Roth + taxable-basis withdrawals are NOT ordinary income here
+ *     (cap-gains/QD stacking is M5). This is where an RMD finally BITES: the tax leaves the
+ *     portfolio, so terminalReal drops BELOW the spine — the M2 ledger relocation alone was
+ *     total-neutral; M3's tax on it is not. CRN-safe (the fixed point reads zero draws).
+ *   - M4+ (extend {@link solveGrossWithdrawal}): the SS provisional-income layer folds into
+ *     the SAME fixed point; M5 adds Roth conversions + cap-gains/QD stacking; M6 the
+ *     MFJ→single survivor filing switch + the wire into `simulate.ts`.
  *
  * PURE: no entropy/clock/environment (the engine-purity lint covers `src/engine/**`).
  */
 import { stepYear, totalValue, type DecumulationResult, type PortfolioState } from '@engine/decumulation'
 import { allocateWithdrawal, totalAcrossBuckets, type AccountBuckets } from '@engine/sequencing'
-import { rmdStartAge, uniformLifetimeTableDivisors } from '@engine/constants'
+import {
+  rmdStartAge,
+  uniformLifetimeTableDivisors,
+  ordinaryBracketsMFJ,
+  ordinaryBracketsSingle,
+  standardDeductionMFJ,
+  standardDeductionSingle,
+  age65AdditionMFJ,
+  age65AdditionSingle,
+  seniorBonus,
+  type OrdinaryBracket,
+} from '@engine/constants'
 import { NEVER_DEPLETED, type DepletionYear, type DrawdownPolicy } from '@shared/model'
 
+export type FilingStatus = 'mfj' | 'single'
+
 /** One person the overlay ages each simulated year. Birth year keys the SECURE-2.0 RMD
- *  start-age band (72/73/75); age in sim-year `t` = `startCalendarYear + t − birthYear`
- *  (a ±1yr birth-month approximation, sufficient for the discrete threshold). */
+ *  start-age band (72/73/75) AND the age-65 deduction additions; age in sim-year `t` =
+ *  `startCalendarYear + t − birthYear` (a ±1yr birth-month approximation, sufficient for
+ *  the discrete thresholds). */
 export interface OverlayPerson {
   readonly birthYear: number
 }
 
+/** The household the overlay taxes: the filing status, the calendar anchor, and the people
+ *  whose ages drive RMDs + the 65+ deduction additions. M3 uses a fixed `filing`; the
+ *  MFJ→single survivor switch (flipping `filing` at the first death) is M6. */
+export interface Household {
+  readonly startCalendarYear: number
+  readonly filing: FilingStatus
+  /** The pre-tax pool's owner, whose age drives the pool RMD (per-person pre-tax splitting
+   *  is deferred to M6's schemaVersion-2 shape). */
+  readonly owner: OverlayPerson
+  readonly spouse?: OverlayPerson
+}
+
 /**
- * Overlay configuration. `taxEnabled` and `rmdEnabled` are INDEPENDENT switches: an RMD is
- * a forced-distribution mechanic, not a tax, so "taxes off" alone does not silence it — the
- * EXHAUSTIVE OFF condition (the reduce-to-spine golden anchor) requires BOTH off (plus
- * buckets collapsed + conversion 0). The RMD parameters live only in the `rmdEnabled: true`
- * branch (a discriminated union) so an OFF config cannot carry a meaningless owner age.
- *
- * M3+ extends this with per-year filing status, the conversion schedule, and the tax-year
- * vintage the bracket schedule reads.
+ * Overlay configuration. `taxEnabled` and `rmdEnabled` are INDEPENDENT switches — RMD is a
+ * forced-distribution mechanic, not a tax, and tax can apply with no RMD (a 60-year-old's
+ * pre-tax withdrawals). Any ON config carries the `household` (tax needs ages + filing even
+ * when RMD is off); the bare `{ taxEnabled: false, rmdEnabled: false }` is the EXHAUSTIVE-OFF
+ * golden anchor (no household, a pure pass-through that reduces byte-identically to the spine).
  */
-export type TaxOverlayConfig = { readonly taxEnabled: boolean } & (
-  | { readonly rmdEnabled: false }
-  | {
-      readonly rmdEnabled: true
-      /** Calendar year of sim-year `t = 0`, so `age(t) = startCalendarYear + t − birthYear`. */
-      readonly startCalendarYear: number
-      /** The pre-tax pool's owner, whose age drives the pool RMD in M2. Per-person pre-tax
-       *  splitting (each spouse's own IRA + own RMD) is deferred to M6's schemaVersion-2
-       *  bucket/birth-year shape — M2 attributes the single pooled pre-tax to one owner. */
-      readonly owner: OverlayPerson
-      /** Carried for the {@link selectRmdDivisor} JLLS seam (the >10yr-younger sole-spouse
-       *  path); ignored by the M2 Uniform-Lifetime stub. */
-      readonly spouse?: OverlayPerson
-    }
-)
+export type TaxOverlayConfig =
+  | { readonly taxEnabled: false; readonly rmdEnabled: false }
+  | { readonly taxEnabled: boolean; readonly rmdEnabled: boolean; readonly household: Household }
 
 /** A tax-aware decumulation result: the spine's total-trajectory result (the only thing
  *  the outcome distribution reads), plus the final per-bucket balances (auxiliary). */
@@ -83,6 +95,12 @@ export interface TaxAwareResult extends DecumulationResult {
 
 const EMPTY_BUCKETS: AccountBuckets = { taxable: 0, pretax: 0, roth: 0 }
 
+// The statutory age threshold for the §63(f) age-65 additional standard deduction AND the
+// OBBBA senior bonus. It is structurally embedded in the constant identifiers themselves
+// (`age65Addition*`, `seniorBonus.perPerson65Plus`), not a free-floating sourced figure, so
+// it is named here rather than added to the curated constants table.
+const AGE_65_THRESHOLD = 65
+
 // The Uniform Lifetime Table as an O(1) lookup, derived once from the canonical constant —
 // the max age is the published "120 and over" terminal bucket; any older age clamps to it
 // (derived from the table, never an inlined 120, so the single-source grep cannot trip).
@@ -91,22 +109,104 @@ const ULT_DIVISOR_BY_AGE: ReadonlyMap<number, number> = new Map(
 )
 const ULT_MAX_AGE = uniformLifetimeTableDivisors.value.reduce((max, row) => Math.max(max, row.age), 0)
 
+// Gross-up fixed-point controls. The iteration is a geometric contraction (the effective
+// marginal rate — bracket rate, inflated ≤ ×1.06 inside the senior-bonus phase-out band — is
+// < 1), so a handful of passes converge to the cent. MAX_PASSES is a FAIL-LOUD backstop, not
+// an in-range default (burned/062): a year that has not converged THROWS rather than ship a
+// silently-wrong tax.
+const GROSS_UP_EPSILON = 1e-7 // dollars
+const GROSS_UP_MAX_PASSES = 64
+
+// =========================================================================
+// Pure ordinary-income tax (M3). Reads ONLY the canonical constants — no dated
+// figure is inlined (the bracket edges live in `@engine/constants`).
+// =========================================================================
+
+function bracketsFor(filing: FilingStatus): readonly OrdinaryBracket[] {
+  return filing === 'mfj' ? ordinaryBracketsMFJ.value : ordinaryBracketsSingle.value
+}
+
+/** The layered progressive tax on `taxableIncome` over a filing status's bracket schedule.
+ *  Each band taxes the income that falls into `(prevEdge, upTo]` at its marginal rate; the
+ *  open top band (`upTo === null`) taxes everything above the last edge. */
+function progressiveOrdinaryTax(taxableIncome: number, brackets: readonly OrdinaryBracket[]): number {
+  if (taxableIncome <= 0) return 0
+  let tax = 0
+  let prevEdge = 0
+  for (const band of brackets) {
+    const top = band.upTo === null ? taxableIncome : Math.min(taxableIncome, band.upTo)
+    if (top > prevEdge) tax += (top - prevEdge) * band.rate
+    if (band.upTo === null || taxableIncome <= band.upTo) break
+    prevEdge = band.upTo
+  }
+  return tax
+}
+
+/** The OBBBA senior bonus for a filing status, count of 65+ filers, and MAGI: the base
+ *  (`perPerson65Plus` × count) reduced linearly at `phaseOutRatePerDollar` above the
+ *  filing-status phase-out start, floored at 0. The linear form is authoritative; the
+ *  count-specific `fullyGoneAbove` ceilings are consistent with it (and 0 below the start). */
+function seniorBonusFor(filing: FilingStatus, count65: number, magi: number): number {
+  if (count65 === 0) return 0
+  const sb = seniorBonus.value
+  const base = sb.perPerson65Plus * count65
+  const start = filing === 'mfj' ? sb.phaseOutStart.mfj : sb.phaseOutStart.single
+  return Math.max(0, base - sb.phaseOutRatePerDollar * Math.max(0, magi - start))
+}
+
+/** The full M3 deduction stack: standard deduction + age-65 addition × (65+ filers) +
+ *  the senior bonus. Every figure is read from the canonical constants module. */
+function deductionStack(filing: FilingStatus, count65: number, magi: number): number {
+  const std = filing === 'mfj' ? standardDeductionMFJ.value : standardDeductionSingle.value
+  const age65 = (filing === 'mfj' ? age65AdditionMFJ.value : age65AdditionSingle.value) * count65
+  return std + age65 + seniorBonusFor(filing, count65, magi)
+}
+
+/**
+ * Ordinary-income tax (M3): the deduction stack subtracted from ordinary income, then the
+ * progressive brackets. In M3 MAGI = ordinary income (Social-Security inclusion, cap-gains,
+ * and tax-exempt interest enter MAGI in M4/M5). Roth and taxable-basis withdrawals are NOT
+ * ordinary income here — only the pre-tax distribution (withdrawals + RMD) is taxed.
+ */
+export function ordinaryIncomeTax(ordinaryIncome: number, filing: FilingStatus, count65: number): number {
+  const taxable = Math.max(0, ordinaryIncome - deductionStack(filing, count65, ordinaryIncome))
+  return progressiveOrdinaryTax(taxable, bracketsFor(filing))
+}
+
+// =========================================================================
+// Ages
+// =========================================================================
+
+function ageInSimYear(person: OverlayPerson, startCalendarYear: number, t: number): number {
+  return startCalendarYear + t - person.birthYear
+}
+
+/** The count of the household's filers who are ≥ 65 in sim-year `t` (drives the age-65
+ *  addition multiplier and the senior-bonus base). */
+function count65PlusInSimYear(household: Household, t: number): number {
+  let count = 0
+  if (ageInSimYear(household.owner, household.startCalendarYear, t) >= AGE_65_THRESHOLD) count++
+  if (household.spouse && ageInSimYear(household.spouse, household.startCalendarYear, t) >= AGE_65_THRESHOLD) count++
+  return count
+}
+
+// =========================================================================
+// RMD (M2)
+// =========================================================================
+
 /** The SECURE-2.0 RMD start age for a birth-year cohort (72 / 73 / 75), read from the
  *  canonical band table. The age-75 band carries `effectiveFrom 2033`, but anyone born
- *  1960+ reaches 75 in 2035+, so the date is always satisfied for the reachable population
- *  — no branch on it (a branch with no reachable effect would be dead code). */
+ *  1960+ reaches 75 in 2035+, so the date is always satisfied for the reachable population. */
 function rmdStartAgeForBirthYear(birthYear: number): number {
   for (const band of rmdStartAge.value) {
     if (band.bornThrough === null || birthYear <= band.bornThrough) return band.age
   }
-  // The canonical table's terminal band has `bornThrough: null`, so a match is guaranteed.
   throw new Error('rmdStartAge has no open-ended terminal band')
 }
 
 /** The Uniform Lifetime Table divisor for a distribution-year age (Pub 590-B Table III).
  *  Age ≥ the terminal bucket clamps to it (2.0). Below the table's first row (72) throws —
- *  an RMD is not due there, so the lookup is never reached for a real distribution year
- *  (fail loud rather than fabricate a default, burned/062). */
+ *  an RMD is not due there, so the lookup is never reached for a real distribution year. */
 function uniformLifetimeDivisor(age: number): number {
   const divisor = ULT_DIVISOR_BY_AGE.get(Math.min(age, ULT_MAX_AGE))
   if (divisor === undefined) {
@@ -120,9 +220,8 @@ function uniformLifetimeDivisor(age: number): number {
  * Table. When the sole beneficiary is a spouse MORE THAN 10 years younger (gap ≥ 11), the
  * IRS Joint-Life & Last-Survivor table (Pub 590-B Table II) applies and yields a SMALLER
  * RMD — but its ~3,000-cell grid is the open constants gap (`jointLifeLastSurvivorTable`
- * throws on read), so this milestone stubs to ULT. exactly-10-younger stays on ULT (Table
- * III already bakes in a hypothetical 10-yr-younger beneficiary). `spouseAge` is threaded
- * now so the signature is stable when the grid lands.
+ * throws on read), so this milestone stubs to ULT. `spouseAge` is threaded for the JLLS
+ * landing.
  */
 function selectRmdDivisor(ownerAge: number, _spouseAge?: number): number {
   return uniformLifetimeDivisor(ownerAge)
@@ -131,32 +230,48 @@ function selectRmdDivisor(ownerAge: number, _spouseAge?: number): number {
 /**
  * The forced RMD for sim-year `t`: the prior-year-end pre-tax balance ÷ the owner's divisor,
  * once the owner reaches their birth-year RMD age (else 0). NON-CONVERTIBLE — distributed as
- * ordinary income FIRST (the manual control P3·U10 + the solver P4·U15 consume this as a hard
- * legality constraint). Reads ZERO draws (CRN-safe). The ordinary-income TAX on this lands in
- * {@link grossUpForYear} at M3; here the result only relocates pre-tax→taxable (total-neutral
- * with tax off).
+ * ordinary income FIRST. Reads ZERO draws (CRN-safe).
  */
 function rmdForYear(priorYearEndPretax: number, config: TaxOverlayConfig, t: number): number {
   if (!config.rmdEnabled) return 0
-  const ownerAge = config.startCalendarYear + t - config.owner.birthYear
-  if (ownerAge < rmdStartAgeForBirthYear(config.owner.birthYear)) return 0
-  const spouseAge = config.spouse ? config.startCalendarYear + t - config.spouse.birthYear : undefined
+  const { owner, spouse, startCalendarYear } = config.household
+  const ownerAge = startCalendarYear + t - owner.birthYear
+  if (ownerAge < rmdStartAgeForBirthYear(owner.birthYear)) return 0
+  const spouseAge = spouse ? startCalendarYear + t - spouse.birthYear : undefined
   return priorYearEndPretax / selectRmdDivisor(ownerAge, spouseAge)
 }
 
+// =========================================================================
+// The gross-up fixed point (M3)
+// =========================================================================
+
 /**
- * The per-year gross-up: the extra cash (tax + conversion tax) a year's withdrawal must
- * cover beyond the net spending need. ZERO when the overlay is off — the byte-identical-
- * reduction clause.
- *
- * M2 placeholder: returns 0. The RMD-forced distribution is handled as a ledger relocation
- * in the loop below (total-neutral with tax off); the ordinary-income tax ON that RMD, plus
- * the SS-fixed-point / conversion / cap-gains math, lands HERE in M3+, reading the sourced
- * constants from `@engine/constants`.
+ * Solve the per-year gross withdrawal as a bounded fixed point: withdraw enough to net `net`
+ * of spending AFTER the ordinary tax that withdrawal itself triggers. Ordinary income = the
+ * pre-tax actually distributed = `max(alloc.pretax, rmd)` (spending/tax-funded pre-tax, or the
+ * forced RMD, whichever is larger). Monotone-increasing and bounded (a geometric contraction,
+ * effective marginal rate < 1) → converges in a few passes. THROWS if it has not converged
+ * within {@link GROSS_UP_MAX_PASSES} (no in-range default for an unconverged value, burned/062).
  */
-function grossUpForYear(_year: number, _buckets: AccountBuckets, _config: TaxOverlayConfig): number {
-  // M3+ insertion point. Intentionally inert in M2 so the seam is proven first.
-  return 0
+function solveGrossWithdrawal(
+  net: number,
+  buckets: AccountBuckets,
+  policy: DrawdownPolicy,
+  rmd: number,
+  filing: FilingStatus,
+  count65: number,
+): number {
+  let gross = net
+  for (let pass = 0; pass < GROSS_UP_MAX_PASSES; pass++) {
+    const alloc = allocateWithdrawal(buckets, gross, policy)
+    const ordinaryIncome = Math.max(alloc.pretax, rmd)
+    const nextGross = net + ordinaryIncomeTax(ordinaryIncome, filing, count65)
+    if (Math.abs(nextGross - gross) < GROSS_UP_EPSILON) return nextGross
+    gross = nextGross
+  }
+  throw new Error(
+    `tax gross-up did not converge in ${GROSS_UP_MAX_PASSES} passes (net=${net}, rmd=${rmd}) — refusing an unconverged tax (burned/062)`,
+  )
 }
 
 /**
@@ -197,13 +312,17 @@ export function runTaxAwareDecumulation(
     // year's post-growth state (at t = 0, the initial balance) — exactly the RMD's basis.
     const rmd = rmdForYear(buckets.pretax, config, t)
 
-    // Gross up for tax. When off, grossWithdrawal === net EXACTLY (no float op added),
-    // so the stepYear recurrence is identical to the spine's. The RMD does NOT enter the
-    // gross withdrawal with tax off — it relocates within the portfolio, it is not spent.
-    const grossWithdrawal = config.taxEnabled ? net + grossUpForYear(t, buckets, config) : net
+    // Gross up for tax. When off, grossWithdrawal === net EXACTLY (no float op added), so the
+    // stepYear recurrence is identical to the spine's. When on, solve the fixed point: withdraw
+    // enough to net `net` after the ordinary tax on the pre-tax distributed; the tax dollars
+    // LEAVE the portfolio, so terminalReal drops below the spine (the M3 presence companion).
+    const grossWithdrawal =
+      config.taxEnabled
+        ? solveGrossWithdrawal(net, buckets, policy, rmd, config.household.filing, count65PlusInSimYear(config.household, t))
+        : net
 
-    // Per-bucket ledger: which buckets fund this withdrawal (consumed by the tax math in
-    // M3+; inert on the total). Capped at what exists, exactly like the spine.
+    // Per-bucket ledger: which buckets fund this withdrawal (consumed by the tax math).
+    // Capped at what exists, exactly like the spine.
     const totalBefore = totalAcrossBuckets(buckets)
     const alloc = allocateWithdrawal(buckets, grossWithdrawal, policy)
     const drawn = alloc.taxable + alloc.pretax + alloc.roth
@@ -228,12 +347,12 @@ export function runTaxAwareDecumulation(
       let taxablePost = Math.max(0, buckets.taxable - alloc.taxable)
       const rothPost = Math.max(0, buckets.roth - alloc.roth)
 
-      // RMD-forced distribution: spending already pulled `alloc.pretax` from pre-tax; the
-      // RMD forces a MINIMUM pre-tax distribution, so only the EXCESS beyond spending is
-      // force-relocated to taxable (unspent, reinvested). This moves money BETWEEN two
-      // buckets — it never changes `pretaxPost + taxablePost`, so `afterWithdrawal`/`scale`/
-      // the authoritative total are all untouched and terminalReal stays byte-identical to
-      // the spine. Only the M3 ordinary-income tax (via grossWithdrawal) makes it bite.
+      // RMD-forced distribution: spending/tax already pulled `alloc.pretax` from pre-tax; the
+      // RMD forces a MINIMUM pre-tax distribution, so only the EXCESS beyond that is force-
+      // relocated to taxable (unspent, reinvested). This moves money BETWEEN two buckets — it
+      // never changes `pretaxPost + taxablePost`, so the bucket sum still reconciles to the
+      // authoritative total. (With tax off the whole step is total-neutral; with tax on the
+      // total already dropped via the grossed-up withdrawal through stepYear.)
       const forcedExcess = Math.min(Math.max(0, rmd - alloc.pretax), pretaxPost)
       pretaxPost -= forcedExcess
       taxablePost += forcedExcess

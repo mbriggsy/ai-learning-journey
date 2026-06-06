@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { runTaxAwareDecumulation, type TaxOverlayConfig } from '@engine/taxOverlay'
+import { runTaxAwareDecumulation, ordinaryIncomeTax, type TaxOverlayConfig, type Household } from '@engine/taxOverlay'
 import { runDecumulation, type PortfolioState } from '@engine/decumulation'
 import { DRAWDOWN_POLICIES, NEVER_DEPLETED } from '@shared/model'
 import type { AccountBuckets } from '@engine/sequencing'
@@ -15,6 +15,14 @@ const realStock = Array.from({ length: H }, (_, t) => 0.07 + 0.18 * Math.sin(t *
 const realBond = Array.from({ length: H }, (_, t) => 0.025 + 0.06 * Math.cos(t * 0.7))
 
 const OFF: TaxOverlayConfig = { taxEnabled: false, rmdEnabled: false }
+
+/** A minimal MFJ household for the RMD/tax configs (filing fixed MFJ until the M6 switch). */
+const mkHousehold = (startCalendarYear: number, owner: number, spouse?: number): Household => ({
+  startCalendarYear,
+  filing: 'mfj',
+  owner: { birthYear: owner },
+  ...(spouse !== undefined ? { spouse: { birthYear: spouse } } : {}),
+})
 
 /** The spine's decumulation, initialised EXACTLY as simulate.ts does (stock = w·P,
  *  bond = (1−w)·P) so byte-identity is a fair comparison. */
@@ -125,7 +133,7 @@ describe('taxOverlay — M2 RMD forced distribution', () => {
   const noSpend = [0]
 
   function oneYear(birthYear: number, startCalendarYear: number): ReturnType<typeof runTaxAwareDecumulation> {
-    const config: TaxOverlayConfig = { taxEnabled: false, rmdEnabled: true, startCalendarYear, owner: { birthYear } }
+    const config: TaxOverlayConfig = { taxEnabled: false, rmdEnabled: true, household: mkHousehold(startCalendarYear, birthYear) }
     return runTaxAwareDecumulation(pretaxOnly(PRETAX), realStock, realBond, noSpend, STOCK_W, 'proportional', config)
   }
 
@@ -175,7 +183,7 @@ describe('taxOverlay — M2 RMD forced distribution', () => {
       // This closed form depends on the GROWN year-0-end pre-tax being year-1's basis, so it
       // FAILS under a fixed-initial-balance basis OR a current-pre-growth basis — the exact
       // wrong-basis bugs the single-year (t=0) magnitude fixtures cannot distinguish.
-      const config: TaxOverlayConfig = { taxEnabled: false, rmdEnabled: true, startCalendarYear: 1955 + 73, owner: { birthYear: 1955 } }
+      const config: TaxOverlayConfig = { taxEnabled: false, rmdEnabled: true, household: mkHousehold(1955 + 73, 1955) }
       const got = runTaxAwareDecumulation(pretaxOnly(PRETAX), realStock, realBond, [0, 0], STOCK_W, 'proportional', config)
       const d73 = ultDivisor(73)
       const d74 = ultDivisor(74)
@@ -191,12 +199,7 @@ describe('taxOverlay — M2 RMD forced distribution', () => {
     const P = 1_000_000
     const withdrawals = flat(40_000)
     // age 78 at t=0; RMD (~1M/22 ≈ 45.5k) exceeds the 40k spend, so the excess force-relocates.
-    const RMD_ON: TaxOverlayConfig = {
-      taxEnabled: false,
-      rmdEnabled: true,
-      startCalendarYear: 2026,
-      owner: { birthYear: 1948 },
-    }
+    const RMD_ON: TaxOverlayConfig = { taxEnabled: false, rmdEnabled: true, household: mkHousehold(2026, 1948) }
     const run = (config: TaxOverlayConfig) =>
       runTaxAwareDecumulation(pretaxOnly(P), realStock, realBond, withdrawals, STOCK_W, 'pre-tax-first', config)
 
@@ -263,13 +266,204 @@ describe('taxOverlay — M2 RMD forced distribution', () => {
       // & Last-Survivor table (a SMALLER RMD) once its grid is transcribed (M6). M2 deliberately
       // stubs to ULT: the relocated fraction must equal the no-spouse ULT result (1/divisor(78))
       // exactly, AND this exercises the spouseAge thread that is otherwise dead in tests.
-      const base = { taxEnabled: false as const, rmdEnabled: true as const, startCalendarYear: 2026, owner: { birthYear: 1948 } }
-      const withSpouse = runTaxAwareDecumulation(pretaxOnly(PRETAX), realStock, realBond, [0], STOCK_W, 'proportional', { ...base, spouse: { birthYear: 1962 } })
-      const noSpouse = runTaxAwareDecumulation(pretaxOnly(PRETAX), realStock, realBond, [0], STOCK_W, 'proportional', base)
+      const withSpouse = runTaxAwareDecumulation(pretaxOnly(PRETAX), realStock, realBond, [0], STOCK_W, 'proportional', {
+        taxEnabled: false,
+        rmdEnabled: true,
+        household: mkHousehold(2026, 1948, 1962),
+      })
+      const noSpouse = runTaxAwareDecumulation(pretaxOnly(PRETAX), realStock, realBond, [0], STOCK_W, 'proportional', {
+        taxEnabled: false,
+        rmdEnabled: true,
+        household: mkHousehold(2026, 1948),
+      })
       // spouse threaded but ignored → byte-identical to the no-spouse run...
       expect(withSpouse.finalBuckets.taxable).toBe(noSpouse.finalBuckets.taxable)
       // ...and the relocated fraction is exactly the ULT divisor for the owner's age 78 (not a JLLS value).
       expect(withSpouse.finalBuckets.taxable / withSpouse.terminalReal).toBeCloseTo(1 / ultDivisor(78), 12)
+    })
+  })
+})
+
+describe('taxOverlay — M3 ordinary-income tax', () => {
+  describe('ordinaryIncomeTax matches independently hand-derived 2026 fixtures (DND/012)', () => {
+    // Each fixture was cross-checked by THREE independent computers + a separate hand-calc,
+    // none of which saw the engine. The deduction stack = standard + age-65 addition × (65+
+    // filers) + the OBBBA senior bonus (with its MAGI phase-out); the 2026 MFJ/single brackets
+    // are read from the constants module. Asserted to the cent (toBeCloseTo 6 ≈ float dust only).
+    it('MFJ, both 67, $150k ordinary income (senior bonus FULL) → $11,974', () => {
+      // deduction 47,500 → taxable 102,500 → 2,480 + 9,120 + 374
+      expect(ordinaryIncomeTax(150_000, 'mfj', 2)).toBeCloseTo(11_974, 6)
+    })
+    it('MFJ, both 67, $250k ordinary income (senior bonus PHASING OUT) → $35,294', () => {
+      // bonus 12,000 − 0.06×(250k−150k) = 6,000 → deduction 41,500 → taxable 208,500
+      expect(ordinaryIncomeTax(250_000, 'mfj', 2)).toBeCloseTo(35_294, 6)
+    })
+    it('single survivor, 67, $80k ordinary income → $7,065 (the half-width brackets + smaller stack)', () => {
+      // bonus 6,000 − 0.06×(80k−75k) = 5,700 → deduction 23,850 → taxable 56,150
+      expect(ordinaryIncomeTax(80_000, 'single', 1)).toBeCloseTo(7_065, 6)
+    })
+    it('income at or below the deduction stack owes nothing (no negative tax, no spurious floor)', () => {
+      expect(ordinaryIncomeTax(0, 'mfj', 2)).toBe(0)
+      expect(ordinaryIncomeTax(40_000, 'mfj', 2)).toBe(0) // 40k < the 47,500 deduction stack
+    })
+
+    it('taxable income exactly on a bracket edge + a dollar above the deduction (the break-condition boundary)', () => {
+      // ordinary income 72,300 = deduction (47,500) + 24,800 → taxable EXACTLY 24,800, the 10/12
+      // edge: the whole band is taxed at 10% and the 12% band must NOT open (break at `<= upTo`).
+      expect(ordinaryIncomeTax(72_300, 'mfj', 2)).toBeCloseTo(2_480, 6)
+      // a single dollar above the 47,500 deduction stack → exactly 10 cents (the first taxable $).
+      expect(ordinaryIncomeTax(47_501, 'mfj', 2)).toBeCloseTo(0.1, 6)
+    })
+  })
+
+  // owner + spouse both born 1959 → both 67 at startCalendarYear 2026: the full 65+ deduction
+  // stack applies, but no RMD yet (band 73), isolating the ordinary tax from the RMD mechanic.
+  const TAX_ON: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: false, household: mkHousehold(2026, 1959, 1959) }
+  const P = 1_000_000
+
+  describe('only the pre-tax distribution is ordinary income in M3 (Roth + taxable basis deferred to M5)', () => {
+    const oneSpend = [60_000]
+    it('a Roth-only pool incurs no ordinary tax even with tax ON → byte-identical to the spine', () => {
+      const got = runTaxAwareDecumulation({ taxable: 0, pretax: 0, roth: P }, realStock, realBond, oneSpend, STOCK_W, 'pre-tax-first', TAX_ON)
+      const sp = spine(P, oneSpend)
+      expect(got.terminalReal).toBe(sp.terminalReal)
+      expect(got.depletionYear).toBe(sp.depletionYear)
+    })
+    it('a taxable-only pool incurs no ORDINARY tax in M3 (its gain is cap-gains, M5) → byte-identical to the spine', () => {
+      const got = runTaxAwareDecumulation({ taxable: P, pretax: 0, roth: 0 }, realStock, realBond, oneSpend, STOCK_W, 'taxable-first', TAX_ON)
+      const sp = spine(P, oneSpend)
+      expect(got.terminalReal).toBe(sp.terminalReal)
+      expect(got.depletionYear).toBe(sp.depletionYear)
+    })
+  })
+
+  describe('tax ON makes the portfolio end BELOW the spine — the inverse of M2 total-neutrality', () => {
+    const oneSpend = [60_000]
+    it('presence companion (burned/027): a pre-tax pool taxed ON ends strictly below the tax-OFF run', () => {
+      const buckets: AccountBuckets = { taxable: 0, pretax: P, roth: 0 }
+      const on = runTaxAwareDecumulation(buckets, realStock, realBond, oneSpend, STOCK_W, 'pre-tax-first', TAX_ON)
+      const off = runTaxAwareDecumulation(buckets, realStock, realBond, oneSpend, STOCK_W, 'pre-tax-first', OFF)
+      expect(on.terminalReal).toBeLessThan(off.terminalReal) // the tax dollars left to the IRS
+      expect(off.terminalReal).toBe(spine(P, oneSpend).terminalReal) // OFF still reduces to the spine
+    })
+  })
+
+  describe('the gross-up fixed point nets exactly `spending` after the tax it triggers', () => {
+    it('the engine drives gross = net + ordinaryIncomeTax(gross) to self-consistency (independently re-solved)', () => {
+      const net = 100_000
+      const buckets: AccountBuckets = { taxable: 0, pretax: P, roth: 0 }
+      const on = runTaxAwareDecumulation(buckets, realStock, realBond, [net], STOCK_W, 'pre-tax-first', TAX_ON)
+      const sp = spine(P, [net])
+      // Independently re-solve the fixed point with the (golden-tested) pure tax fn. On a
+      // pre-tax-only pool drawn pre-tax-first, ordinary income == the gross withdrawal.
+      let gross = net
+      for (let i = 0; i < 100; i++) gross = net + ordinaryIncomeTax(gross, 'mfj', 2)
+      // Both runs grow by the SAME shared factor, so the terminal RATIO cancels growth and the
+      // engine must have withdrawn exactly `gross` (vs the spine's `net`): a real gross-up.
+      expect(gross).toBeGreaterThan(net) // sanity: tax was actually owed
+      expect(on.terminalReal / sp.terminalReal).toBeCloseTo((P - gross) / (P - net), 8)
+    })
+  })
+
+  describe('an active RMD now BITES: M2 was total-neutral with tax off, M3 taxes the forced income', () => {
+    it('tax ON + an active RMD ends below the spine — the forced distribution itself creates the taxable income', () => {
+      // owner 78 (born 1948), spouse 76 (born 1950): the full 65+ deduction stack ($47,500).
+      // A $1.5M pre-tax pool forces an RMD of ~$68,182 (1.5M ÷ 22) — ABOVE both the $40k spend
+      // AND the deduction, so the tax is driven by the FORCED RMD income, not the spending
+      // ($40k alone is below the deduction → would owe nothing). This is the RMD biting.
+      const pool = 1_500_000
+      const cfg: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: true, household: mkHousehold(2026, 1948, 1950) }
+      const cfgRmdOnlyTaxOff: TaxOverlayConfig = { taxEnabled: false, rmdEnabled: true, household: mkHousehold(2026, 1948, 1950) }
+      const buckets: AccountBuckets = { taxable: 0, pretax: pool, roth: 0 }
+      const oneSpend = [40_000]
+      const taxed = runTaxAwareDecumulation(buckets, realStock, realBond, oneSpend, STOCK_W, 'pre-tax-first', cfg)
+      const rmdOnlyTaxOff = runTaxAwareDecumulation(buckets, realStock, realBond, oneSpend, STOCK_W, 'pre-tax-first', cfgRmdOnlyTaxOff)
+      const sp = spine(pool, oneSpend)
+      // M2: the RMD alone (tax off) was total-neutral === the spine...
+      expect(rmdOnlyTaxOff.terminalReal).toBe(sp.terminalReal)
+      // ...M3: taxing that forced ordinary income drains real cash → strictly below the spine.
+      expect(taxed.terminalReal).toBeLessThan(sp.terminalReal)
+      // magnitude (not just direction): the RMD (1.5M ÷ 22) exceeds the spending draw, so it IS the
+      // ordinary income and the year-0 tax is fixed — independently pin the gross + the terminal ratio.
+      const rmd0 = pool / ultDivisor(78)
+      const expectedGross = 40_000 + ordinaryIncomeTax(rmd0, 'mfj', 2)
+      expect(taxed.terminalReal / sp.terminalReal).toBeCloseTo((pool - expectedGross) / (pool - 40_000), 8)
+    })
+  })
+
+  describe('the gross-up under realistic coupling (adversarial hardening)', () => {
+    // Independently re-solve the per-year fixed point with the golden-tested pure tax fn, then assert
+    // the engine withdrew exactly that gross via the growth-cancelling terminal ratio. `pretaxFrac` is
+    // the share of the gross that is pre-tax (hence ordinary income): 1 for a pre-tax-only pool drawn
+    // pre-tax-first, pretax/total for a proportional draw.
+    const solveGross = (net: number, pretaxFrac: number, filing: 'mfj' | 'single', count65: number) => {
+      let gross = net
+      for (let i = 0; i < 200; i++) gross = net + ordinaryIncomeTax(gross * pretaxFrac, filing, count65)
+      return gross
+    }
+
+    it('multi-bucket · proportional · tax ON — ordinary income is a strict FRACTION of the gross', () => {
+      // {taxable, pretax, roth} all non-empty: under proportional, alloc.pretax = gross × (pretax/total),
+      // so the taxed ordinary income is a fraction of the withdrawal and the gross-up spills tax-free
+      // into the taxable + roth co-residents. This is the realistic regime solveGrossWithdrawal exists
+      // for — the single-bucket tax-ON tests only ever drive ordinary income ∈ {0, gross}.
+      const buckets: AccountBuckets = { taxable: 250_000, pretax: 500_000, roth: 250_000 }
+      const total = 1_000_000
+      const net = 200_000
+      const on = runTaxAwareDecumulation(buckets, realStock, realBond, [net], STOCK_W, 'proportional', TAX_ON)
+      const sp = spine(total, [net])
+      const gross = solveGross(net, 500_000 / total, 'mfj', 2) // ordinary income = gross × pretax share
+      expect(gross).toBeGreaterThan(net) // tax was owed on the pre-tax fraction
+      expect(on.terminalReal / sp.terminalReal).toBeCloseTo((total - gross) / (total - net), 8)
+    })
+
+    it('the senior-bonus phase-out is driven THROUGH the gross-up loop (the inflated-marginal regime)', () => {
+      // a large net pushes the grossed-up MAGI into the MFJ 150k–350k phase-out band, where each extra
+      // income dollar ALSO shrinks the bonus — the ×1.06 effective marginal rate the contraction rests
+      // on. pre-tax-only, pre-tax-first → ordinary income == gross.
+      const pool = 2_000_000
+      const net = 160_000
+      const on = runTaxAwareDecumulation({ taxable: 0, pretax: pool, roth: 0 }, realStock, realBond, [net], STOCK_W, 'pre-tax-first', TAX_ON)
+      const sp = spine(pool, [net])
+      const gross = solveGross(net, 1, 'mfj', 2)
+      expect(gross).toBeGreaterThan(150_000) // genuinely in the phase-out band (else this proves nothing)
+      expect(gross).toBeLessThan(350_000)
+      expect(on.terminalReal / sp.terminalReal).toBeCloseTo((pool - gross) / (pool - net), 8)
+    })
+
+    it('tax ON depletes no LATER than the spine — the tax drains real cash faster', () => {
+      // pre-tax pool, spend above the deduction so tax is owed; the pool depletes mid-horizon.
+      const pool = 150_000
+      const spend = flat(60_000)
+      const on = runTaxAwareDecumulation({ taxable: 0, pretax: pool, roth: 0 }, realStock, realBond, spend, STOCK_W, 'pre-tax-first', TAX_ON)
+      const sp = spine(pool, spend)
+      // both genuinely deplete within the horizon (non-vacuous)...
+      expect(sp.depletionYear).toBeGreaterThanOrEqual(0)
+      expect(sp.depletionYear).toBeLessThan(H)
+      expect(on.depletionYear).toBeGreaterThanOrEqual(0)
+      expect(on.depletionYear).toBeLessThan(H)
+      // ...tax drains faster, so it depletes no later, and the ledger zeroes on depletion.
+      expect(on.depletionYear).toBeLessThanOrEqual(sp.depletionYear)
+      expect(on.finalBuckets.pretax).toBe(0)
+      expect(on.finalBuckets.taxable).toBe(0)
+      expect(on.finalBuckets.roth).toBe(0)
+    })
+
+    it('a SINGLE-filer household grosses up through the single schedule + single phase-out', () => {
+      // filing 'single', one 67-year-old (count65=1), no RMD. Exercises the single deduction stack, the
+      // half-width single brackets, AND the single $75k phase-out — all end-to-end through the loop.
+      const pool = 1_000_000
+      const net = 80_000
+      const single: TaxOverlayConfig = {
+        taxEnabled: true,
+        rmdEnabled: false,
+        household: { startCalendarYear: 2026, filing: 'single', owner: { birthYear: 1959 } },
+      }
+      const on = runTaxAwareDecumulation({ taxable: 0, pretax: pool, roth: 0 }, realStock, realBond, [net], STOCK_W, 'pre-tax-first', single)
+      const sp = spine(pool, [net])
+      const gross = solveGross(net, 1, 'single', 1)
+      expect(gross).toBeGreaterThan(net)
+      expect(on.terminalReal / sp.terminalReal).toBeCloseTo((pool - gross) / (pool - net), 8)
     })
   })
 })

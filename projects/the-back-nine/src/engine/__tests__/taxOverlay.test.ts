@@ -7,6 +7,7 @@ import {
   taxableSocialSecurity,
   type TaxOverlayConfig,
   type Household,
+  type HouseholdYear,
 } from '@engine/taxOverlay'
 import { runDecumulation, type PortfolioState } from '@engine/decumulation'
 import { DRAWDOWN_POLICIES, NEVER_DEPLETED } from '@shared/model'
@@ -1189,5 +1190,95 @@ describe('taxOverlay — M5 Roth conversion + cap-gains/QD stacking', () => {
   it('the cap-gains breakpoints are read from the canonical constant (not inlined here)', () => {
     expect(capitalGainsBreakpoints.value.mfj.fifteenRateUpTo).toBeGreaterThan(capitalGainsBreakpoints.value.mfj.zeroRateUpTo)
     expect(capitalGainsBreakpoints.value.single.zeroRateUpTo).toBeLessThan(capitalGainsBreakpoints.value.mfj.zeroRateUpTo)
+  })
+})
+
+describe('taxOverlay — M6a MFJ→single survivor filing switch (per-year HouseholdYear regime)', () => {
+  const P = 1_000_000
+  const TAX_ON_NO_RMD: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: false, household: mkHousehold(2026, 1959, 1959) }
+  const both1959: HouseholdYear = { living: [{ birthYear: 1959 }, { birthYear: 1959 }] }
+  const survivor1959: HouseholdYear = { living: [{ birthYear: 1959 }] }
+
+  /** SS-folded per-year gross re-solve using ONLY the golden pure fns (mirrors the M4 helper),
+   *  parameterised by filing + count65 so the survivor (single) year is re-solved correctly. */
+  const solveGrossWithSS = (net: number, ss: number, filing: 'mfj' | 'single', count65: number): number => {
+    let gross = net
+    for (let i = 0; i < 300; i++) {
+      gross = net + ordinaryIncomeTax(gross + taxableSocialSecurity(gross, ss, filing), filing, count65)
+    }
+    return gross
+  }
+
+  describe('the stream is INERT under the reduce conditions (no perturbation of the M1–M5 anchors)', () => {
+    it('an injected "both alive every year" stream is byte-identical to the static MFJ run (no transition ⇒ M5)', () => {
+      const buckets = { taxable: 0, pretax: P, roth: 0 }
+      const withStream = runTaxAwareDecumulation(buckets, realStock, realBond, [60_000, 60_000], STOCK_W, 'pre-tax-first', TAX_ON_NO_RMD, {
+        ssBenefits: [50_000, 50_000],
+        householdYears: [both1959, both1959],
+      })
+      const staticRun = runTaxAwareDecumulation(buckets, realStock, realBond, [60_000, 60_000], STOCK_W, 'pre-tax-first', TAX_ON_NO_RMD, {
+        ssBenefits: [50_000, 50_000],
+      })
+      expect(withStream.terminalReal).toBe(staticRun.terminalReal)
+      expect(withStream.depletionYear).toBe(staticRun.depletionYear)
+    })
+
+    it('a survivor-transition stream with tax OFF is byte-identical to the spine (the OFF anchor is unperturbed)', () => {
+      const got = runTaxAwareDecumulation({ taxable: 0, pretax: P, roth: 0 }, realStock, realBond, [60_000, 60_000], STOCK_W, 'pre-tax-first', OFF, {
+        householdYears: [both1959, survivor1959],
+      })
+      const sp = spine(P, [60_000, 60_000])
+      expect(got.terminalReal).toBe(sp.terminalReal)
+      expect(got.depletionYear).toBe(sp.depletionYear)
+    })
+  })
+
+  describe('the widow torpedo: the survivor year taxes the SAME SS at the half-width SINGLE thresholds', () => {
+    it('year 0 (both alive → MFJ) then year 1 (survivor → single) matches the per-year-resolved grosses', () => {
+      // pre-tax-only, pre-tax-first, both 67 (no RMD) → each year nonSS = that year's gross. Same $40k SS
+      // both years; the filing flips MFJ→single at the first death, so year 1 taxes MORE of the same SS
+      // (single 25k/34k thresholds + the single deduction stack + count65 1) — the widow torpedo.
+      const net = 50_000
+      const ss = 40_000
+      const pool = 2_000_000
+      const stream = [both1959, survivor1959]
+      const on = runTaxAwareDecumulation({ taxable: 0, pretax: pool, roth: 0 }, realStock, realBond, [net, net], STOCK_W, 'pre-tax-first', TAX_ON_NO_RMD, {
+        ssBenefits: [ss, ss],
+        householdYears: stream,
+      })
+      const g0 = solveGrossWithSS(net, ss, 'mfj', 2) // both alive
+      const g1 = solveGrossWithSS(net, ss, 'single', 1) // survivor
+      // non-vacuous: the single year genuinely taxes the same income MORE (else the flip proves nothing).
+      expect(g1).toBeGreaterThan(g0)
+      // correct per-year filing ⇒ overlay total === spine on [g0(mfj), g1(single)]. A model that stayed MFJ
+      // in year 1 would use g0 again and diverge by ~$thousands (≫ the 1e-7 fixed-point epsilon).
+      const ref = spine(pool, [g0, g1])
+      expect(on.terminalReal).toBeCloseTo(ref.terminalReal, 2)
+      expect(on.depletionYear).toBe(ref.depletionYear)
+    })
+  })
+
+  describe('the aggregated pre-tax pool passes to the surviving spouse (RMD keys off the SURVIVOR’s age)', () => {
+    it('a >RMD-age owner dies; the younger survivor inherits → the pool’s RMD PAUSES (relocates less than the static run)', () => {
+      // owner born 1948 (age 78 at 2026 → RMD active), spouse born 1962 (age 64 → no RMD; band 75). Tax OFF,
+      // RMD ON, pre-tax-only, no spend. Year 0: both alive → RMD on the owner (age 78), the forced excess
+      // relocates pre-tax→taxable. Year 1: the survivor stream makes the YOUNG spouse (age 65 < 75) the pool
+      // holder → RMD 0 (paused). The static run (no stream) keeps the dead owner as holder → year-1 RMD fires
+      // again. So the survivor-aware run relocates strictly LESS — the spousal-rollover RMD-age switch.
+      const PRETAX = 500_000
+      const cfg: TaxOverlayConfig = { taxEnabled: false, rmdEnabled: true, household: mkHousehold(2026, 1948, 1962) }
+      const buckets = { taxable: 0, pretax: PRETAX, roth: 0 }
+      const survivorStream = [{ living: [{ birthYear: 1948 }, { birthYear: 1962 }] }, { living: [{ birthYear: 1962 }] }]
+      const survived = runTaxAwareDecumulation(buckets, realStock, realBond, [0, 0], STOCK_W, 'pre-tax-first', cfg, { householdYears: survivorStream })
+      const staticBoth = runTaxAwareDecumulation(buckets, realStock, realBond, [0, 0], STOCK_W, 'pre-tax-first', cfg)
+      // year-0 RMD fired in BOTH (presence: the owner was 78) — the survivor run is non-vacuous...
+      expect(survived.finalBuckets.taxable).toBeGreaterThan(0)
+      // ...but the survivor run skipped year-1's forced distribution (the young heir is below RMD age) → less relocation.
+      expect(survived.finalBuckets.taxable).toBeLessThan(staticBoth.finalBuckets.taxable)
+      // tax OFF ⇒ both relocations are total-neutral, so the TOTAL is byte-identical to the spine in either case.
+      const sp = spine(PRETAX, [0, 0])
+      expect(survived.terminalReal).toBe(sp.terminalReal)
+      expect(staticBoth.terminalReal).toBe(sp.terminalReal)
+    })
   })
 })

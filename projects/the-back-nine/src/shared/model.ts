@@ -162,6 +162,49 @@ export const DRAWDOWN_POLICIES = [
 ] as const
 
 // ---------------------------------------------------------------------------
+// Tax-and-accounts overlay input (U2). Federal filing status is shared vocabulary
+// (the engine's tax overlay + the persisted scenario both speak it). The overlay is
+// OPTIONAL on the engine input: absent ⇒ the tax-blind spine (every existing first-
+// answer path); present ⇒ `simulate` runs the tax-aware decumulation.
+// ---------------------------------------------------------------------------
+
+/** Federal income-tax filing status. MFJ for the couple; flips to single the year after the
+ *  first death (no QSS grace — §Strand 5). The engine's tax overlay re-exports this. */
+export type FilingStatus = 'mfj' | 'single'
+
+/** A three-bucket account split by tax treatment (real dollars). Structurally the engine's
+ *  `AccountBuckets`; the canonical plaintext vocabulary lives here in the leaf layer. */
+export interface AccountBalances {
+  /** Brokerage / after-tax: a withdrawal realizes a pro-rata capital gain. */
+  readonly taxable: number
+  /** Traditional / pre-tax (IRA/401k): withdrawals + RMDs are ordinary income. */
+  readonly pretax: number
+  /** Roth: tax-free growth and withdrawals. */
+  readonly roth: number
+}
+
+/** The engine-side tax/accounts overlay input (U2 · M6a). `taxEnabled` and `rmdEnabled` are
+ *  INDEPENDENT switches (RMD is a forced-distribution mechanic, not a tax). M6a uses one
+ *  AGGREGATED pre-tax pool (per-person pre-tax splitting + the >10yr-younger-spouse JLLS divisor
+ *  are M6b); `buckets` must sum to `initialPortfolio` (validated, R19). */
+export interface OverlayParams {
+  readonly taxEnabled: boolean
+  readonly rmdEnabled: boolean
+  /** The simulation's year-0 calendar anchor (drives RMD ages + the senior-bonus 65+ count). */
+  readonly startCalendarYear: number
+  /** Aggregated initial account split; the sum must equal `initialPortfolio`. */
+  readonly buckets: AccountBalances
+  /** Year-0 cost basis of the taxable bucket (real $). REQUIRED when `taxEnabled` and the taxable
+   *  bucket is non-empty — no safe default (burned/062); the engine rejects an absent basis (R19). */
+  readonly initialTaxableBasis?: number
+  /** Initial filing status; the engine flips it to single at the sampled first death (M6a). */
+  readonly filing: FilingStatus
+  /** Per-year requested Roth conversions, indexed by ABSOLUTE year (clamped to the legal pre-tax
+   *  pool net of the non-convertible RMD inside the engine). */
+  readonly conversions?: readonly number[]
+}
+
+// ---------------------------------------------------------------------------
 // Engine parameters (the injected, pure input to `simulate`).
 // ---------------------------------------------------------------------------
 
@@ -200,6 +243,12 @@ export interface SimulationParams {
    *     spending (no mortality) — the Trinity-comparable validation mode the Mode-B
    *     MC band asserts against the 30-year historical anchor. */
   readonly longevityMode: 'sampled' | 'fixed-horizon'
+  /** The tax-and-accounts overlay (U2). ABSENT ⇒ the tax-blind spine (the only mode the P2
+   *  first-answer runs); PRESENT ⇒ `simulate` runs the tax-aware decumulation, feeding the
+   *  per-year survivor regime + SS + conversion streams it derives from the death timeline.
+   *  Under the EXHAUSTIVE OFF condition (single pool, tax off, RMD-inert, conversion 0) the
+   *  tax-aware run is byte-identical to the spine (the reduce-to-spine golden, contract #3). */
+  readonly overlay?: OverlayParams
 }
 
 // ---------------------------------------------------------------------------
@@ -287,4 +336,55 @@ export interface Scenario {
   /** The injected 32-bit seed, persisted as a first-class field so a reopened plan
    *  reproduces byte-identically (contract #1). */
   readonly seed: number
+}
+
+// ---------------------------------------------------------------------------
+// schemaVersion-2 scenario shape (U2 · M6a). The v1 spine inputs + the tax-overlay
+// fields: PER-PERSON account buckets + birth year, the household filing status, and
+// provenance stamps. DEFINED HERE for the contract; first WRITTEN to disk by Phase 3
+// (the P2 first-answer runs with the overlay OFF, so a v1 scenario is still valid),
+// and the schemaVersion 1→2 migration ladder is owned by U4. NOT YET CONSUMED: the
+// engine reads the AGGREGATED `OverlayParams` (P2 intake maps these per-person fields
+// down to it); per-person pre-tax RMD splitting is M6b.
+// ---------------------------------------------------------------------------
+
+/** One spouse's account split + birth year (schemaVersion-2). Aligned by index to a v2
+ *  scenario's `people`. `birthYear` keys the SECURE-2.0 RMD band + the age-65 deduction; in P2
+ *  intake it derives from the calendar year − age (a ±1yr birth-month approximation, sufficient
+ *  for the discrete thresholds). `taxableBasis` is the year-0 cost basis of `taxable` (real $);
+ *  bundling it here forecloses the parallel-array transposition footgun. */
+export interface PersonAccounts {
+  readonly birthYear: number
+  readonly taxable: number
+  /** Year-0 cost basis of the taxable bucket (real $); ≤ `taxable` (the rest is unrealized gain). */
+  readonly taxableBasis: number
+  readonly pretax: number
+  readonly roth: number
+}
+
+/** The schemaVersion-2 plaintext scenario: the v1 spine inputs + the U2 tax-overlay fields.
+ *  Additive over v1 — every v1 field carries through unchanged, so the migration is a pure
+ *  extension (U4). The provenance stamps make a statutory bracket change read as a deliberate
+ *  vintage bump, never silent inflation drift. */
+export interface ScenarioV2 {
+  /** Migration discriminant — read before any other field on decrypt (U4). */
+  readonly schemaVersion: 2
+  readonly initialPortfolio: number
+  readonly annualSpendingReal: number
+  readonly stockWeight: number
+  readonly people: readonly PersonInputs[]
+  readonly survivorSpendingRatio: number
+  readonly drawdownPolicy: DrawdownPolicy
+  readonly seed: number
+  // --- U2 tax-overlay additions (additive over v1) ---
+  /** Per-person account buckets + birth year, aligned by index to `people`. */
+  readonly accounts: readonly PersonAccounts[]
+  /** Household filing status while the couple is intact (flips to single at the first death). */
+  readonly filing: FilingStatus
+  /** The simulation's year-0 calendar anchor (drives RMD ages + the senior-bonus 65+ count). */
+  readonly startCalendarYear: number
+  /** The tax-table vintage applied (e.g. `'OBBBA-2025'`) — a bracket change is a vintage bump. */
+  readonly taxVintage: string
+  /** The methodology app-default version stamp (which default market/assumption set was applied). */
+  readonly appDefaultVersion: string
 }

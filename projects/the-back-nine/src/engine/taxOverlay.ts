@@ -19,7 +19,8 @@
  * `stepYear` applies to the total — buckets differ only in tax treatment, never in
  * return assumption (this is what structurally forecloses asset-location).
  *
- * MILESTONE STATUS — built incrementally. This is M5: Roth conversion + cap-gains/QD stacking.
+ * MILESTONE STATUS — built incrementally. This is M6a: the MFJ→single survivor filing switch
+ * (the wire into `simulate.ts` lives there).
  *   - M1 (done): the seam + the reduce-to-spine lock.
  *   - M2 (done): RMD-forced distribution as a pre-tax→taxable ledger relocation. With tax
  *     OFF an active RMD is TOTAL-NEUTRAL (the two buckets grow identically, contract #2).
@@ -47,7 +48,15 @@
  *     the annual-dividend MAGI bump is an OUT-but-disclosed, optimistic-direction boundary — it
  *     sharpens once U3's ACA/IRMAA cliffs land). Worst-case contraction k ≈ 0.74 (the cap-gains
  *     15→20% straddle × the SS torpedo); GROSS_UP_MAX_PASSES stays 128 (proven, see below).
- *   - M6 (next): the MFJ→single survivor filing switch + the wire into `simulate.ts`.
+ *   - M6a (this): the MFJ→single survivor filing switch. The overlay reads a per-year
+ *     {@link HouseholdYear} regime ({@link TaxYearInputs.householdYears}) — supplied by
+ *     `simulate.ts`, which owns the per-path death timeline — so filing, the 65+ deduction
+ *     count, and the RMD-owner age all become survivor-aware. With NO stream the static
+ *     household (both alive every year, filing as configured) is used VERBATIM, so every
+ *     M1–M5 fixture is byte-identical. The aggregated pre-tax pool passes to the surviving
+ *     spouse on the first death (spousal rollover ⇒ RMD on the survivor's own age, which can
+ *     pause if they are below their RMD start age). Per-person pre-tax splitting + the
+ *     >10yr-younger-spouse JLLS divisor are M6b.
  *
  * PURE: no entropy/clock/environment (the engine-purity lint covers `src/engine/**`).
  */
@@ -68,9 +77,11 @@ import {
   type OrdinaryBracket,
   type CapitalGainsRateBreakpoints,
 } from '@engine/constants'
-import { NEVER_DEPLETED, type DepletionYear, type DrawdownPolicy } from '@shared/model'
+import { NEVER_DEPLETED, type DepletionYear, type DrawdownPolicy, type FilingStatus } from '@shared/model'
 
-export type FilingStatus = 'mfj' | 'single'
+// Filing status is shared model vocabulary (the persisted scenario speaks it too). Re-exported
+// here so existing `@engine/taxOverlay` importers keep their path.
+export type { FilingStatus }
 
 /** One person the overlay ages each simulated year. Birth year keys the SECURE-2.0 RMD
  *  start-age band (72/73/75) AND the age-65 deduction additions; age in sim-year `t` =
@@ -87,9 +98,28 @@ export interface Household {
   readonly startCalendarYear: number
   readonly filing: FilingStatus
   /** The pre-tax pool's owner, whose age drives the pool RMD (per-person pre-tax splitting
-   *  is deferred to M6's schemaVersion-2 shape). */
+   *  is deferred to M6b's schemaVersion-2 shape). */
   readonly owner: OverlayPerson
   readonly spouse?: OverlayPerson
+}
+
+/**
+ * One simulated year's household regime (M6a) — the survivor-aware override `simulate.ts`
+ * supplies per-year (it owns the per-path death timeline). `living` is the people alive that
+ * year, in PEOPLE-ORDER, so `living[0]` is the aggregated pre-tax pool's holder: the original
+ * owner while alive, else the surviving spouse who inherited it (spousal rollover ⇒ the RMD
+ * keys off the survivor's OWN age + RMD-start band, which can pause RMDs if they are younger).
+ *
+ * Filing is derived: MFJ iff ≥2 are alive, else single — the survivor files single the year
+ * AFTER the first death (no QSS grace, §Strand 5: the empty-nest retired couple). The 65+
+ * deduction count is the count of living filers ≥ 65 that year. `living[1]` (when present) is
+ * the sole-spouse beneficiary threaded to the JLLS divisor seam (M6b; ULT in M6a).
+ *
+ * Absent (no `householdYears` stream) ⇒ the STATIC household: both people present every year,
+ * filing as configured — the verbatim M1–M5 path, so every existing fixture is byte-identical.
+ */
+export interface HouseholdYear {
+  readonly living: readonly OverlayPerson[]
 }
 
 /**
@@ -120,13 +150,14 @@ export interface TaxAwareResult extends DecumulationResult {
  * The optional per-year tax-input streams + the taxable cost basis, grouped into ONE object so
  * the two same-typed `number[]` streams (`ssBenefits`, `conversions`) can never be silently
  * transposed at a call site (a positional swap would compile clean and tax conversions as Social
- * Security — calm-but-wrong). All fields are read ONLY when tax is ON; with tax OFF the overlay is
- * a pure pass-through (reduce-to-spine), so an absent object is the EXHAUSTIVE-OFF anchor.
+ * Security — calm-but-wrong). The financial streams (`ssBenefits`/`conversions`/`initialTaxableBasis`)
+ * are read ONLY when tax is ON; with tax OFF the overlay is a pure pass-through (reduce-to-spine),
+ * so an absent object is the EXHAUSTIVE-OFF anchor.
  *
  * The streams are indexed by ABSOLUTE year and aligned to `netWithdrawals`; a missing tail entry
  * defaults to 0 (no benefit / no conversion that year — `?? 0`), NEVER ending the path (the
- * returns/withdrawals arrays govern the horizon). When M6 wires the overlay into `simulate.ts`,
- * the spine supplies these alongside `netWithdrawals` as independent per-year inputs.
+ * returns/withdrawals arrays govern the horizon). `simulate.ts` (M6a) supplies these alongside
+ * `netWithdrawals` as independent per-year inputs.
  */
 export interface TaxYearInputs {
   /** Per-year real Social-Security benefit (M4). Drives provisional-income SS taxation. */
@@ -139,6 +170,12 @@ export interface TaxYearInputs {
    *  bucket is non-empty — there is NO safe default (0 over-taxes every realization; the full value
    *  silently makes cap-gains a no-op), so an absent basis FAILS LOUD (burned/062). */
   readonly initialTaxableBasis?: number
+  /** Per-year household regime (M6a): the survivor-aware filing / 65+ count / RMD-owner override
+   *  {@link HouseholdYear}. Read whenever tax OR RMD is on (the survivor RMD-owner switch matters
+   *  even with tax off); ABSENT ⇒ the static household every year (the verbatim M1–M5 path). It
+   *  never threatens reduce-to-spine: under the EXHAUSTIVE OFF condition the gross-up is inert
+   *  (gross = net) and the RMD is 0, so the regime changes nothing regardless of its contents. */
+  readonly householdYears?: readonly HouseholdYear[]
 }
 
 const EMPTY_BUCKETS: AccountBuckets = { taxable: 0, pretax: 0, roth: 0 }
@@ -398,6 +435,45 @@ function count65PlusInSimYear(household: Household, t: number): number {
   return count
 }
 
+/** Sim-year `t`'s resolved tax identity: the filing status, the 65+ deduction count, and the
+ *  RMD pool-holder (+ the JLLS sole-spouse arg, M6b). */
+interface ResolvedYear {
+  readonly filing: FilingStatus
+  readonly count65: number
+  /** The aggregated pre-tax pool's holder this year — the survivor after the first death.
+   *  `undefined` only if nobody is alive (defensive; the horizon guarantees ≥1 living). */
+  readonly rmdOwner: OverlayPerson | undefined
+  /** The sole-spouse beneficiary for the JLLS divisor seam (M6b); ULT-ignored in M6a. */
+  readonly rmdSpouse: OverlayPerson | undefined
+}
+
+/**
+ * Resolve sim-year `t`'s filing / 65+ count / RMD-owner (M6a). With an injected per-year
+ * {@link HouseholdYear} stream (supplied by `simulate.ts`, which owns the death timeline) the
+ * LIVING set drives all three: filing is MFJ iff ≥2 alive else single, the 65+ count is the
+ * living filers ≥ 65, and the pool holder is `living[0]` (people-order ⇒ the original owner
+ * while alive, else the surviving spouse who inherited it). WITHOUT a stream entry it falls back
+ * to the static household — both people present every year, filing as configured — VERBATIM the
+ * M1–M5 behaviour (so every existing fixture is byte-identical). Reads ZERO draws (CRN-safe).
+ */
+function resolveYear(household: Household, householdYears: readonly HouseholdYear[], t: number): ResolvedYear {
+  const injected = householdYears[t]
+  if (injected !== undefined) {
+    const living = injected.living
+    const filing: FilingStatus = living.length >= 2 ? 'mfj' : 'single'
+    let count65 = 0
+    for (const p of living) if (ageInSimYear(p, household.startCalendarYear, t) >= AGE_65_THRESHOLD) count65++
+    return { filing, count65, rmdOwner: living[0], rmdSpouse: living[1] }
+  }
+  // Static (M5): both people present every year, filing as configured — verbatim M1–M5.
+  return {
+    filing: household.filing,
+    count65: count65PlusInSimYear(household, t),
+    rmdOwner: household.owner,
+    rmdSpouse: household.spouse,
+  }
+}
+
 // =========================================================================
 // RMD (M2)
 // =========================================================================
@@ -436,15 +512,20 @@ function selectRmdDivisor(ownerAge: number, _spouseAge?: number): number {
 }
 
 /**
- * The forced RMD for sim-year `t`: the prior-year-end pre-tax balance ÷ the owner's divisor,
- * once the owner reaches their birth-year RMD age (else 0). NON-CONVERTIBLE — distributed as
- * ordinary income FIRST. Reads ZERO draws (CRN-safe).
+ * The forced RMD for sim-year `t`: the prior-year-end pre-tax balance ÷ the (resolved) owner's
+ * divisor, once that owner reaches their birth-year RMD age (else 0). The owner is the year's
+ * pool holder — the survivor after the first death (spousal rollover), so post-death the RMD
+ * keys off the SURVIVOR's own age + RMD-start band (and pauses if they are younger than it).
+ * NON-CONVERTIBLE — distributed as ordinary income FIRST. Reads ZERO draws (CRN-safe).
  */
-function rmdForYear(priorYearEndPretax: number, config: TaxOverlayConfig, t: number): number {
+function rmdForYear(priorYearEndPretax: number, config: TaxOverlayConfig, resolved: ResolvedYear, t: number): number {
   if (!config.rmdEnabled) return 0
-  const { owner, spouse, startCalendarYear } = config.household
+  const owner = resolved.rmdOwner
+  if (owner === undefined) return 0 // nobody alive to force-distribute (defensive)
+  const { startCalendarYear } = config.household
   const ownerAge = startCalendarYear + t - owner.birthYear
   if (ownerAge < rmdStartAgeForBirthYear(owner.birthYear)) return 0
+  const spouse = resolved.rmdSpouse
   const spouseAge = spouse ? startCalendarYear + t - spouse.birthYear : undefined
   return priorYearEndPretax / selectRmdDivisor(ownerAge, spouseAge)
 }
@@ -546,7 +627,7 @@ export function runTaxAwareDecumulation(
   config: TaxOverlayConfig,
   taxInputs: TaxYearInputs = {},
 ): TaxAwareResult {
-  const { ssBenefits = [], conversions = [], initialTaxableBasis } = taxInputs
+  const { ssBenefits = [], conversions = [], initialTaxableBasis, householdYears = [] } = taxInputs
 
   // Initial taxable basis is REQUIRED when tax is on and the taxable bucket is non-empty — there
   // is no safe default (0 over-taxes every realization; the full value silently no-ops cap-gains),
@@ -577,9 +658,15 @@ export function runTaxAwareDecumulation(
     // Aligned-length contract: a missing entry is the end of data, not a 0 year.
     if (rs === undefined || rb === undefined || net === undefined) break
 
+    // Per-year household regime (M6a): the survivor-aware filing / 65+ count / RMD-owner, from the
+    // injected stream when present, else the static household (verbatim M1–M5). Resolved only when
+    // the overlay is active (tax or RMD on ⇒ the ON config carries `household`); under the
+    // EXHAUSTIVE OFF condition it is never consulted (gross = net, rmd = 0).
+    const regime = config.taxEnabled || config.rmdEnabled ? resolveYear(config.household, householdYears, t) : undefined
+
     // Prior-year-end pre-tax balance: at the top of the iteration `buckets` holds last
     // year's post-growth state (at t = 0, the initial balance) — exactly the RMD's basis.
-    const rmd = rmdForYear(buckets.pretax, config, t)
+    const rmd = regime ? rmdForYear(buckets.pretax, config, regime, t) : 0
 
     // Roth conversion (M5): clamp to feasibility AFTER reserving the non-convertible RMD, using the
     // prior-year-end pre-tax (gross-independent ⇒ constant inside the fixed point). Apply it to the
@@ -598,7 +685,7 @@ export function runTaxAwareDecumulation(
     // taxable SS, preferential on the realized gain); the tax dollars LEAVE the portfolio, so
     // terminalReal drops below the spine (the presence companion).
     const grossWithdrawal =
-      config.taxEnabled
+      config.taxEnabled && regime
         ? solveGrossWithdrawal(
             net,
             drawPool,
@@ -606,8 +693,8 @@ export function runTaxAwareDecumulation(
             rmd,
             conversion,
             basis,
-            config.household.filing,
-            count65PlusInSimYear(config.household, t),
+            regime.filing,
+            regime.count65,
             ssBenefits[t] ?? 0,
           )
         : net

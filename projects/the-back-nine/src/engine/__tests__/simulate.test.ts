@@ -1,10 +1,19 @@
 import { describe, it, expect } from 'vitest'
-import { simulate, buildDraws, netWithdrawalForYear, type PersonOffsets, type SimOutput } from '@engine/simulate'
+import {
+  simulate,
+  buildDraws,
+  netWithdrawalForYear,
+  cashTermsForYear,
+  type PersonOffsets,
+  type SimOutput,
+} from '@engine/simulate'
 import { validationMarket } from '@engine/reference/methodology'
 import { sampleCouplePath } from '@engine/longevity'
 import { toRealSeries, rollingSuccessRate } from '@engine/historical'
 import { SHILLER_1925_1995 } from '@engine/reference/shillerSeries'
-import { NEVER_DEPLETED, type SimulationParams, type PersonInputs } from '@shared/model'
+import { runTaxAwareDecumulation, type HouseholdYear, type OverlayPerson } from '@engine/taxOverlay'
+import { toLogMoments, simpleReturnFromNormal } from '@engine/rng'
+import { NEVER_DEPLETED, type SimulationParams, type PersonInputs, type OverlayParams } from '@shared/model'
 
 const MALE_65: PersonInputs = {
   sex: 'male', currentAge: 65, retirementAge: 65,
@@ -32,6 +41,8 @@ const dist = (o: SimOutput) => {
   if (o.indeterminate) throw new Error(`unexpected indeterminate: ${o.reason}`)
   return o.distribution
 }
+
+const flatN = (len: number, val: number): number[] => Array.from({ length: len }, () => val)
 
 describe('Mode B — MC runs strictly below the SAME-ENGINE historical anchor', () => {
   const realShiller = toRealSeries(SHILLER_1925_1995)
@@ -213,5 +224,274 @@ describe('R19 engine half + dire-but-honest edges', () => {
     expect(Number.isFinite(d.survivalFraction)).toBe(true)
     expect(d.terminalValuesReal.every(Number.isFinite)).toBe(true)
     expect(d.depletionYears.every(Number.isFinite)).toBe(true)
+  })
+
+  it('an incomputable overlay returns the defined indeterminate output (R19), never a crash', () => {
+    const P = 1_000_000
+    const base = makeParams({ initialPortfolio: P, annualSpendingReal: 40_000 })
+    const overlays: OverlayParams[] = [
+      { taxEnabled: false, rmdEnabled: false, startCalendarYear: 2026, buckets: { taxable: 0, pretax: P - 1_000, roth: 0 }, filing: 'mfj' }, // buckets ≠ P (≫ the float-dust tolerance)
+      { taxEnabled: false, rmdEnabled: false, startCalendarYear: 2026, buckets: { taxable: -1, pretax: P + 1, roth: 0 }, filing: 'mfj' }, // negative bucket
+      { taxEnabled: true, rmdEnabled: false, startCalendarYear: 2026, buckets: { taxable: 500_000, pretax: 500_000, roth: 0 }, filing: 'mfj' }, // tax on + taxable>0, basis MISSING
+      { taxEnabled: false, rmdEnabled: false, startCalendarYear: NaN, buckets: { taxable: 0, pretax: P, roth: 0 }, filing: 'mfj' }, // NaN calendar anchor
+      { taxEnabled: true, rmdEnabled: false, startCalendarYear: 2026, buckets: { taxable: 0, pretax: P, roth: 0 }, filing: 'mfj', conversions: [NaN] }, // non-finite conversion
+    ]
+    for (const overlay of overlays) {
+      expect(simulate({ ...base, overlay }, 1).indeterminate).toBe(true)
+    }
+  })
+})
+
+// ===========================================================================
+// U2 · M6a — the tax-and-accounts overlay wired into the spine. The tax MATH is exhaustively
+// golden at the overlay level (taxOverlay.test.ts); these anchor the WIRING: reduce-to-spine
+// THROUGH simulate, zero-draw CRN across the survivor MFJ→single transition, faithful per-year
+// input assembly across a death, and the birth-year-derived RMD age. Realistic DOLLAR scale
+// (P = $1M) — the tax brackets are in real dollars, so the abstract-unit spine scale (P = 1000)
+// would leave every draw below the deduction and the tax inert.
+// ===========================================================================
+describe('U2 overlay wired into simulate (M6a)', () => {
+  const COUPLE = makeParams({
+    people: [MALE_65, FEMALE_65],
+    longevityMode: 'sampled',
+    maxHorizonYears: 55,
+    annualSpendingReal: 45,
+    paths: 4000,
+  })
+  const offOverlay = (p: SimulationParams): OverlayParams => ({
+    taxEnabled: false,
+    rmdEnabled: false,
+    startCalendarYear: 2026,
+    buckets: { taxable: 0, pretax: p.initialPortfolio, roth: 0 },
+    filing: 'mfj',
+  })
+
+  describe('reduce-to-spine THROUGH simulate: an overlay-ON path under the EXHAUSTIVE OFF condition === the spine', () => {
+    it('collapsed single pool + tax off + RMD off + no conversion → byte-identical to the overlay-absent spine (couple, sampled — survivor transitions present)', () => {
+      const spineDist = dist(simulate(COUPLE, 2468))
+      const withOverlayOff = dist(simulate({ ...COUPLE, overlay: offOverlay(COUPLE) }, 2468))
+      expect(withOverlayOff.terminalValuesReal).toEqual(spineDist.terminalValuesReal)
+      expect(withOverlayOff.depletionYears).toEqual(spineDist.depletionYears)
+      expect(withOverlayOff.survivalFraction).toBe(spineDist.survivalFraction)
+    })
+
+    it('a MULTI-bucket split with a non-proportional policy is STILL byte-identical with tax off (the policy is total-neutral)', () => {
+      // buckets split across all three (sum = P) + taxable-first: the policy moves WHICH bucket funds
+      // each year but never the total trajectory (one shared stepYear), so it reduces to the spine too.
+      const split: OverlayParams = {
+        taxEnabled: false,
+        rmdEnabled: false,
+        startCalendarYear: 2026,
+        buckets: { taxable: 300, pretax: 500, roth: 200 }, // sums to COUPLE.initialPortfolio = 1000
+        filing: 'mfj',
+      }
+      const spineDist = dist(simulate(COUPLE, 2468))
+      const withOverlayOff = dist(simulate({ ...COUPLE, drawdownPolicy: 'taxable-first', overlay: split }, 2468))
+      expect(withOverlayOff.terminalValuesReal).toEqual(spineDist.terminalValuesReal)
+      expect(withOverlayOff.depletionYears).toEqual(spineDist.depletionYears)
+    })
+  })
+
+  describe('CRN: two candidates differing ONLY in conversion amount draw identically across the survivor transition', () => {
+    const P = 1_000_000
+    const crnBase = makeParams({
+      people: [MALE_65, FEMALE_65],
+      longevityMode: 'sampled',
+      maxHorizonYears: 55,
+      annualSpendingReal: 45_000,
+      initialPortfolio: P,
+      paths: 2000,
+    })
+    const withConv = (conversions: readonly number[]): SimulationParams => ({
+      ...crnBase,
+      overlay: { taxEnabled: true, rmdEnabled: true, startCalendarYear: 2026, buckets: { taxable: 0, pretax: P, roth: 0 }, filing: 'mfj', conversions },
+    })
+
+    it('the draw schedule is dimension-only (conversion is not a buildDraws arg) and the run is deterministic', () => {
+      // CRN: buildDraws(seed, paths, maxHorizon, peopleCount) — the conversion amount is NOT one of
+      // its arguments, so the normals + longevity draws are byte-identical regardless of conversion.
+      expect(buildDraws(2468, crnBase.paths, crnBase.maxHorizonYears, 2)).toEqual(
+        buildDraws(2468, crnBase.paths, crnBase.maxHorizonYears, 2),
+      )
+      const a = dist(simulate(withConv(flatN(55, 30_000)), 2468))
+      const b = dist(simulate(withConv(flatN(55, 30_000)), 2468))
+      // deterministic + no desync NaN anywhere (a draw desync would scramble per-path returns).
+      expect(a.terminalValuesReal).toEqual(b.terminalValuesReal)
+      expect(a.terminalValuesReal.every(Number.isFinite)).toBe(true)
+    })
+
+    it('the conversion MATTERS (the overlay does tax work) — yet at least one path crosses the survivor transition', () => {
+      const noConv = dist(simulate(withConv([]), 2468))
+      const conv = dist(simulate(withConv(flatN(55, 50_000)), 2468))
+      expect(conv.terminalValuesReal).not.toEqual(noConv.terminalValuesReal)
+      // presence companion (burned/027): the "across the MFJ→single transition" claim is non-vacuous.
+      const draws = buildDraws(2468, crnBase.paths, crnBase.maxHorizonYears, 2)
+      let transitions = 0
+      for (let p = 0; p < crnBase.paths; p++) {
+        const path = sampleCouplePath([MALE_65, FEMALE_65], draws.longevityU[p] ?? [])
+        if (path.firstDeathYear < Math.min(path.lastDeathYear, crnBase.maxHorizonYears) && path.firstDeathYear < crnBase.maxHorizonYears)
+          transitions++
+      }
+      expect(transitions).toBeGreaterThan(0)
+    })
+
+    it('the per-path delta is MONOTONE + jitter-free in the conversion amount (a draw desync would oscillate)', () => {
+      // Fixed-horizon couple, SHORT horizon, a single year-0 conversion, pre-tax-first (Roth drawn last,
+      // so its tax-free-withdrawal benefit cannot fire in-window) → the only effect of a larger conversion
+      // is more upfront ordinary tax LEAVING the portfolio. With byte-identical draws the per-path terminal
+      // is therefore a clean monotone-decreasing function of the conversion amount; a draw desync (the bug
+      // CRN guards against) would scramble per-path returns and break monotonicity.
+      const fhBase = makeParams({
+        people: [MALE_65, FEMALE_65],
+        longevityMode: 'fixed-horizon',
+        maxHorizonYears: 3,
+        annualSpendingReal: 40_000,
+        initialPortfolio: P,
+        drawdownPolicy: 'pre-tax-first',
+        paths: 300,
+      })
+      const run = (c: number) =>
+        dist(simulate({ ...fhBase, overlay: { taxEnabled: true, rmdEnabled: false, startCalendarYear: 2026, buckets: { taxable: 0, pretax: P, roth: 0 }, filing: 'mfj', conversions: [c] } }, 2468)).terminalValuesReal
+      const t0 = run(0)
+      const t1 = run(50_000)
+      const t2 = run(100_000)
+      for (let p = 0; p < t0.length; p++) {
+        expect(t1[p]!).toBeLessThanOrEqual(t0[p]!)
+        expect(t2[p]!).toBeLessThanOrEqual(t1[p]!)
+      }
+      // non-vacuous: the conversion genuinely moved the terminal (else monotonicity is trivially true).
+      expect(t2[0]!).toBeLessThan(t0[0]!)
+    })
+  })
+
+  describe('the RMD start age is birth-year-derived THROUGH simulate (SECURE-2.0 bands, never a flat 73)', () => {
+    it('a born-1955 cohort’s RMD bites at age 73; a born-1960 cohort’s does not (band 75) → byte-identical to the spine', () => {
+      // Single filer, age 73, fixed-horizon 2 years (ages 73–74 — below the born-1960 band 75, so that
+      // cohort has NO RMD in-window). Spend below the single deduction stack so the ONLY tax driver is the
+      // forced RMD. born-1955 (band 73): RMD ≈ 1M/26.5 ≈ 37.7k forces income above the deduction → tax →
+      // strictly below the spine, every path. born-1960 (band 75): no RMD in-window + a sub-deduction draw
+      // → 0 tax → byte-identical to the spine. Proves simulate derives birthYear = startCalendarYear − age.
+      const P = 1_000_000
+      const spend = 12_000 // safely below the single age-65 deduction stack → no tax from the draw itself
+      const person: PersonInputs = { ...MALE_65, currentAge: 73, retirementAge: 73 }
+      const mk = (startCalendarYear: number): SimulationParams =>
+        makeParams({
+          initialPortfolio: P,
+          annualSpendingReal: spend,
+          stockWeight: 0.5,
+          people: [person],
+          longevityMode: 'fixed-horizon',
+          maxHorizonYears: 2,
+          paths: 200,
+          overlay: { taxEnabled: true, rmdEnabled: true, startCalendarYear, buckets: { taxable: 0, pretax: P, roth: 0 }, filing: 'single' },
+        })
+      const spineRun = dist(
+        simulate(
+          makeParams({ initialPortfolio: P, annualSpendingReal: spend, stockWeight: 0.5, people: [person], longevityMode: 'fixed-horizon', maxHorizonYears: 2, paths: 200 }),
+          4321,
+        ),
+      )
+      const born1955 = dist(simulate(mk(2028), 4321)) // 2028 − 73 = born 1955 → band 73
+      const born1960 = dist(simulate(mk(2033), 4321)) // 2033 − 73 = born 1960 → band 75
+      // born-1960: no RMD in-window + a sub-deduction draw → no tax → byte-identical to the spine.
+      expect(born1960.terminalValuesReal).toEqual(spineRun.terminalValuesReal)
+      // born-1955: the forced RMD income clears the deduction → tax leaves → strictly below the spine.
+      for (let p = 0; p < spineRun.terminalValuesReal.length; p++) {
+        expect(born1955.terminalValuesReal[p]!).toBeLessThan(spineRun.terminalValuesReal[p]!)
+      }
+    })
+  })
+
+  describe('faithful input assembly: a 1-path overlay run === a direct overlay call on the reconstructed inputs (across a survivor transition)', () => {
+    it('the survivor MFJ→single flip + SS step-down + conversion stream are all assembled correctly through simulate', () => {
+      // 1 path, sampled longevity, an old couple so a first death lands within the horizon. Reconstruct
+      // EXACTLY what simulate feeds the overlay — the seeded returns, the death-driven withdrawals + SS
+      // step-down (via the SAME cashTermsForYear seam), the survivor householdYears, and the conversion
+      // stream — call runTaxAwareDecumulation directly, and assert simulate's terminal/depletion match.
+      // The tax MATH is the overlay's golden fixtures; this pins simulate's ASSEMBLY of the overlay
+      // inputs across the MFJ→single transition (a wiring bug — wrong householdYears order, SS not
+      // stepped down, off-by-one stream, wrong bucket/config — diverges here).
+      const P = 1_000_000
+      const startCalendarYear = 2026
+      const seed = 909
+      const MALE_75: PersonInputs = { sex: 'male', currentAge: 75, retirementAge: 75, earnedIncomeReal: 0, socialSecurityReal: 30_000, socialSecurityClaimAge: 75 }
+      const FEMALE_72: PersonInputs = { sex: 'female', currentAge: 72, retirementAge: 72, earnedIncomeReal: 0, socialSecurityReal: 20_000, socialSecurityClaimAge: 72 }
+      const people = [MALE_75, FEMALE_72]
+      const conversions = flatN(40, 25_000)
+      const params = makeParams({
+        initialPortfolio: P,
+        annualSpendingReal: 60_000,
+        stockWeight: 0.5,
+        people,
+        longevityMode: 'sampled',
+        maxHorizonYears: 40,
+        paths: 1,
+        drawdownPolicy: 'pre-tax-first',
+        overlay: { taxEnabled: true, rmdEnabled: true, startCalendarYear, buckets: { taxable: 0, pretax: P, roth: 0 }, filing: 'mfj', conversions },
+      })
+
+      // --- Reconstruct simulate's single-path overlay inputs from the public engine primitives ---
+      const draws = buildDraws(seed, 1, params.maxHorizonYears, 2)
+      const longevityPeople = people.map((p) => ({ sex: p.sex, currentAge: p.currentAge }))
+      const path = sampleCouplePath(longevityPeople, draws.longevityU[0] ?? [])
+      const deathOffsets = [...path.deathYearOffsets]
+      const horizon = Math.min(path.lastDeathYear, params.maxHorizonYears)
+      expect(path.firstDeathYear).toBeLessThan(horizon) // non-vacuous: the flip actually happens
+
+      const offsets: PersonOffsets[] = people.map((p) => ({
+        retire: p.retirementAge - p.currentAge,
+        claim: p.socialSecurityClaimAge - p.currentAge,
+        earnedIncomeReal: p.earnedIncomeReal,
+        socialSecurityReal: p.socialSecurityReal,
+      }))
+      const maxBenefit = people.reduce((m, p) => Math.max(m, p.socialSecurityReal), 0)
+      const logStock = toLogMoments(params.market.stock.mean, params.market.stock.stdDev)
+      const logBond = toLogMoments(params.market.bond.mean, params.market.bond.stdDev)
+      const rho = params.market.stockBondCorrelation
+      const sqrt1mRho2 = Math.sqrt(Math.max(0, 1 - rho * rho))
+      const overlayPeople: OverlayPerson[] = people.map((p) => ({ birthYear: startCalendarYear - p.currentAge }))
+
+      const realStock: number[] = []
+      const realBond: number[] = []
+      const withdrawals: number[] = []
+      const ssBenefits: number[] = []
+      const householdYears: HouseholdYear[] = []
+      const sRow = draws.stockZ[0] ?? []
+      const bRow = draws.bondZ[0] ?? []
+      for (let t = 0; t < horizon; t++) {
+        const zs = sRow[t]
+        const zbRaw = bRow[t]
+        if (zs === undefined || zbRaw === undefined) break
+        const zb = rho * zs + sqrt1mRho2 * zbRaw
+        realStock.push(simpleReturnFromNormal(logStock, zs))
+        realBond.push(simpleReturnFromNormal(logBond, zb))
+        const cash = cashTermsForYear(t, params, offsets, deathOffsets, maxBenefit)
+        withdrawals.push(cash.net)
+        ssBenefits.push(cash.ss)
+        const living: OverlayPerson[] = []
+        for (let i = 0; i < overlayPeople.length; i++) {
+          const op = overlayPeople[i]
+          if (op !== undefined && t < (deathOffsets[i] ?? 0)) living.push(op)
+        }
+        householdYears.push({ living })
+      }
+      // Independent cross-check that the regime genuinely flips MFJ→single at the first death.
+      expect(householdYears[0]!.living.length).toBe(2) // both alive at t=0 → MFJ
+      expect(householdYears[horizon - 1]!.living.length).toBe(1) // a lone survivor at the last year → single
+
+      const ref = runTaxAwareDecumulation(
+        { taxable: 0, pretax: P, roth: 0 },
+        realStock,
+        realBond,
+        withdrawals,
+        params.stockWeight,
+        'pre-tax-first',
+        { taxEnabled: true, rmdEnabled: true, household: { startCalendarYear, filing: 'mfj', owner: overlayPeople[0]!, spouse: overlayPeople[1]! } },
+        { ssBenefits, conversions, householdYears },
+      )
+      const sim = dist(simulate(params, seed))
+      expect(sim.terminalValuesReal[0]!).toBe(ref.terminalReal)
+      expect(sim.depletionYears[0]!).toBe(ref.depletionYear)
+    })
   })
 })

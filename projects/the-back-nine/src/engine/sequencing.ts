@@ -9,8 +9,15 @@
  * P1 SCOPE: the spine runs on a single pool, where every policy is INERT (one bucket
  * → one source). This module is built + unit-tested here against the account-bucket
  * abstraction; it is WIRED into the per-year decumulation in U2, where the buckets
- * (and the tax context `bracket-fill` needs) actually exist. `bracket-fill` therefore
- * degrades to `pre-tax-first` here — its tax-aware behavior is validated in U2.
+ * (and the tax context `bracket-fill` needs) actually exist.
+ *
+ * `bracket-fill` (U2 · M6a) is the MECHANISM — fill discretionary pre-tax (cheap ordinary
+ * income) up to an INJECTED per-year ceiling, then draw tax-free (taxable, then Roth) — with
+ * the ceiling VALUE supplied by the caller, NOT decided here: a tax-bracket edge today, the
+ * binding ACA-subsidy MAGI ceiling once U3's cliffs exist (`pre65-healthcare-aca-hsa-2026-06-04`
+ * §line 74: during ACA years the subsidy ceiling, not the tax bracket, is the binding constraint).
+ * With NO ceiling (`+Infinity`) it degrades to `pre-tax-first` — the prior behaviour, so a single
+ * pool stays inert (reduce-to-spine).
  */
 import type { DrawdownPolicy } from '@shared/model'
 
@@ -59,6 +66,33 @@ function proportional(buckets: AccountBuckets, target: number, total: number): B
 }
 
 /**
+ * Bracket-fill (U2 · M6a): fill DISCRETIONARY pre-tax up to `ceiling` (the cheap ordinary-income
+ * room — a tax-bracket edge now, an ACA-MAGI ceiling in U3), then draw the rest tax-free (taxable,
+ * then Roth — Roth preserved last). If the tax-free buckets cannot cover the remaining spending,
+ * fall back to drawing the rest from pre-tax ABOVE the ceiling: the ceiling caps *discretionary*
+ * ordinary income, it must never leave a year's spending unfunded. `ceiling === +Infinity` recovers
+ * `pre-tax-first` exactly (the no-ceiling default). The per-bucket draws sum to `target` whenever the
+ * buckets collectively cover it, and no bucket is ever overdrawn.
+ */
+function bracketFill(buckets: AccountBuckets, target: number, ceiling: number): BucketWithdrawals {
+  const out: BucketWithdrawals = { ...ZERO }
+  let remaining = target
+  // 1. Pre-tax up to the ceiling (never more than the balance or the remaining need).
+  out.pretax = Math.min(remaining, buckets.pretax, Math.max(0, ceiling))
+  remaining -= out.pretax
+  // 2. Tax-free / preferential: taxable, then Roth.
+  out.taxable = Math.min(remaining, buckets.taxable)
+  remaining -= out.taxable
+  out.roth = Math.min(remaining, buckets.roth)
+  remaining -= out.roth
+  // 3. Tax-free exhausted but spending still short → the rest from pre-tax above the ceiling.
+  if (remaining > 0) {
+    out.pretax += Math.min(remaining, buckets.pretax - out.pretax)
+  }
+  return out
+}
+
+/**
  * Allocate a net withdrawal across the buckets per `policy`. The per-bucket draws sum
  * to `min(max(0, netWithdrawal), totalAvailable)` — you cannot draw more than exists.
  * PURE: a deterministic function of balances + policy, no randomness (CRN-neutral).
@@ -70,6 +104,9 @@ export function allocateWithdrawal(
   buckets: AccountBuckets,
   netWithdrawal: number,
   policy: DrawdownPolicy,
+  /** `bracket-fill` only: the year's max DISCRETIONARY pre-tax draw (the cheap ordinary-income
+   *  room to the caller's target edge). `+Infinity` (the default) ⇒ no ceiling ⇒ `pre-tax-first`. */
+  bracketFillCeiling: number = Number.POSITIVE_INFINITY,
 ): BucketWithdrawals {
   const total = totalAcrossBuckets(buckets)
   const target = Math.min(Math.max(0, netWithdrawal), total)
@@ -83,9 +120,7 @@ export function allocateWithdrawal(
     case 'pre-tax-first':
       return ordered(buckets, target, ORDER['pre-tax-first'])
     case 'bracket-fill':
-      // U1 fallback: the tax-aware fill (fill ordinary income to a bracket/cliff edge
-      // before drawing tax-free) needs the U2 tax overlay + U3 health ceiling. Until
-      // then it follows pre-tax-first; its real behavior is validated in U2.
-      return ordered(buckets, target, ORDER['pre-tax-first'])
+      // Fill pre-tax to the injected ceiling, then tax-free; `+Infinity` recovers pre-tax-first.
+      return bracketFill(buckets, target, bracketFillCeiling)
   }
 }

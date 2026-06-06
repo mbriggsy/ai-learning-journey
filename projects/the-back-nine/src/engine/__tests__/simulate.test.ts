@@ -402,6 +402,34 @@ describe('U2 overlay wired into simulate (M6a)', () => {
     })
   })
 
+  describe('bracket-fill is wired through simulate (the OverlayParams.bracketFillCeilings passthrough)', () => {
+    it('a sub-deduction ceiling fills cheap pre-tax then draws Roth tax-free → higher terminal than pre-tax-first', () => {
+      // {pretax 1M, roth 1M} = $2M, both 67 (no RMD/SS), fixed-horizon 5y, $100k spend. The $40k ceiling is
+      // below the $47,500 MFJ deduction, so bracket-fill pays $0 tax (cheap pre-tax + tax-free Roth) and ends
+      // at the spine; pre-tax-first leaks tax. Proves the ceiling stream reaches the overlay through simulate.
+      const P = 2_000_000
+      const base = makeParams({
+        initialPortfolio: P,
+        annualSpendingReal: 100_000,
+        stockWeight: 0.5,
+        people: [{ ...MALE_65, currentAge: 67, retirementAge: 67 }, { ...FEMALE_65, currentAge: 67, retirementAge: 67 }],
+        longevityMode: 'fixed-horizon',
+        maxHorizonYears: 5,
+        paths: 200,
+      })
+      const overlay = (taxEnabled: boolean): OverlayParams => ({ taxEnabled, rmdEnabled: false, startCalendarYear: 2026, buckets: { taxable: 0, pretax: 1_000_000, roth: 1_000_000 }, filing: 'mfj' })
+      const spineRun = dist(simulate(base, 4321))
+      const bracketFill = dist(simulate({ ...base, drawdownPolicy: 'bracket-fill', overlay: { ...overlay(true), bracketFillCeilings: flatN(5, 40_000) } }, 4321))
+      const preTaxFirst = dist(simulate({ ...base, drawdownPolicy: 'pre-tax-first', overlay: overlay(true) }, 4321))
+      // bracket-fill pays $0 tax (sub-deduction ceiling) → byte-identical to the spine, every path...
+      expect(bracketFill.terminalValuesReal).toEqual(spineRun.terminalValuesReal)
+      // ...and strictly above pre-tax-first, which leaks tax on the full pre-tax draw.
+      for (let p = 0; p < spineRun.terminalValuesReal.length; p++) {
+        expect(bracketFill.terminalValuesReal[p]!).toBeGreaterThan(preTaxFirst.terminalValuesReal[p]!)
+      }
+    })
+  })
+
   describe('faithful input assembly: a 1-path overlay run === a direct overlay call on the reconstructed inputs (across a survivor transition)', () => {
     it('the survivor MFJ→single flip + SS step-down + conversion stream are all assembled correctly through simulate', () => {
       // 1 path, sampled longevity, an old couple so a first death lands within the horizon. Reconstruct

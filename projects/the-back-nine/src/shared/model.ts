@@ -202,6 +202,11 @@ export interface OverlayParams {
   /** Per-year requested Roth conversions, indexed by ABSOLUTE year (clamped to the legal pre-tax
    *  pool net of the non-convertible RMD inside the engine). */
   readonly conversions?: readonly number[]
+  /** Per-year `bracket-fill` ceiling (the max discretionary pre-tax draw — the cheap ordinary-income
+   *  room to the caller's target edge), indexed by ABSOLUTE year. Read ONLY when `drawdownPolicy` is
+   *  `bracket-fill`; a missing entry ⇒ the pre-tax-first fallback. The caller (P3 control / P4 solver,
+   *  a tax-bracket edge today and an ACA-MAGI cliff once U3 lands) computes the dollar cap. */
+  readonly bracketFillCeilings?: readonly number[]
 }
 
 // ---------------------------------------------------------------------------

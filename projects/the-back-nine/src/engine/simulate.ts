@@ -331,6 +331,7 @@ export function simulate(params: SimulationParams, seed: number): SimOutput {
           conversions: overlay.conversions ?? [],
           initialTaxableBasis: overlay.initialTaxableBasis,
           householdYears,
+          bracketFillCeilings: overlay.bracketFillCeilings ?? [],
         },
       )
     } else {

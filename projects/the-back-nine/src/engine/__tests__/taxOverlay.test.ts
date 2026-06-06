@@ -1282,3 +1282,92 @@ describe('taxOverlay — M6a MFJ→single survivor filing switch (per-year House
     })
   })
 })
+
+describe('taxOverlay — M6a bracket-fill (the injected tax-aware ceiling)', () => {
+  const TAX_ON_NO_RMD: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: false, household: mkHousehold(2026, 1959, 1959) }
+  const RMD78: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: true, household: mkHousehold(2026, 1948, 1950) }
+
+  it('fills pre-tax only to the ceiling then draws tax-free → strictly LOWER lifetime tax than pre-tax-first', () => {
+    // {pretax 1M, roth 1M}, both 67 (no RMD/SS), $100k spend, 5 years. The bracket-fill ceiling ($40k)
+    // sits BELOW the $47,500 MFJ age-65 deduction, so the $40k of cheap pre-tax draw is taxed at $0 and
+    // the remaining $60k comes from Roth tax-free → ZERO tax every year. pre-tax-first instead draws the
+    // whole $100k from pre-tax → ordinary income far above the deduction → real tax leaves the portfolio.
+    const buckets: AccountBuckets = { taxable: 0, pretax: 1_000_000, roth: 1_000_000 }
+    const spend = Array.from({ length: 5 }, () => 100_000)
+    const ceiling = Array.from({ length: 5 }, () => 40_000)
+    const bf = runTaxAwareDecumulation(buckets, realStock, realBond, spend, STOCK_W, 'bracket-fill', TAX_ON_NO_RMD, { bracketFillCeilings: ceiling })
+    const pf = runTaxAwareDecumulation(buckets, realStock, realBond, spend, STOCK_W, 'pre-tax-first', TAX_ON_NO_RMD)
+    const sp = spine(2_000_000, spend)
+    // the cheap $40k pre-tax draw is below the deduction → $0 tax every year → byte-identical to the spine...
+    expect(bf.terminalReal).toBe(sp.terminalReal)
+    // ...while pre-tax-first leaks real tax → strictly below. bracket-fill keeps more wealth: lower lifetime tax.
+    expect(pf.terminalReal).toBeLessThan(sp.terminalReal)
+    expect(bf.terminalReal).toBeGreaterThan(pf.terminalReal)
+  })
+
+  it('the RMD still forces ordinary income ABOVE the ceiling (the ceiling caps DISCRETIONARY draws only)', () => {
+    // owner 78 → RMD ≈ 1.5M/22 ≈ 68k, far above a $20k ceiling. The forced distribution is non-discretionary,
+    // so it is taxed in full regardless of the ceiling — bracket-fill cannot shelter a forced RMD. The run
+    // therefore still ends BELOW the spine (the RMD bites), proving the ceiling does not suppress the RMD.
+    const buckets: AccountBuckets = { taxable: 0, pretax: 1_500_000, roth: 500_000 }
+    const spend = [40_000]
+    const bf = runTaxAwareDecumulation(buckets, realStock, realBond, spend, STOCK_W, 'bracket-fill', RMD78, { bracketFillCeilings: [20_000] })
+    const sp = spine(2_000_000, spend)
+    expect(bf.terminalReal).toBeLessThan(sp.terminalReal) // the forced RMD income is taxed despite the low ceiling
+    // and the RMD relocation still happened (forced excess pre-tax → taxable, beyond the $40k spend).
+    expect(bf.finalBuckets.taxable).toBeGreaterThan(0)
+  })
+
+  it('an absent ceiling stream makes bracket-fill === pre-tax-first through the decumulation (the fallback)', () => {
+    const buckets: AccountBuckets = { taxable: 0, pretax: 700_000, roth: 300_000 }
+    const spend = flat(60_000)
+    const bf = runTaxAwareDecumulation(buckets, realStock, realBond, spend, STOCK_W, 'bracket-fill', TAX_ON_NO_RMD)
+    const pf = runTaxAwareDecumulation(buckets, realStock, realBond, spend, STOCK_W, 'pre-tax-first', TAX_ON_NO_RMD)
+    expect(bf.terminalReal).toBe(pf.terminalReal)
+    expect(bf.finalBuckets.pretax).toBe(pf.finalBuckets.pretax)
+  })
+
+  it('the gross-up converges under bracket-fill across the k≈0.74 corner (no fail-loud cap, insight 006/007)', () => {
+    // A low ceiling forces the spill into a LOW-BASIS taxable pool (large realized gain straddling the
+    // cap-gains breakpoints) while a large SS benefit keeps the torpedo live — the same worst-case corner
+    // proportional reaches. If bracket-fill opened a HIGHER corner than the proven k≈0.74, the 128-pass cap
+    // would throw here. (Roth last so the taxable spill — and its gain — is forced.)
+    for (const pool of [2_000_000, 10_000_000, 50_000_000]) {
+      for (const ss of [0, 1_000_000, 5_000_000]) {
+        for (const ceiling of [0, 20_000]) {
+          const buckets: AccountBuckets = { taxable: pool / 2, pretax: pool / 2, roth: 0 }
+          expect(() =>
+            runTaxAwareDecumulation(buckets, realStock, realBond, [0], STOCK_W, 'bracket-fill', TAX_ON_NO_RMD, {
+              ssBenefits: [ss],
+              initialTaxableBasis: 1, // basis ≈ 0 → the taxable spill is almost all realized gain
+              bracketFillCeilings: [ceiling],
+            }),
+          ).not.toThrow()
+        }
+      }
+    }
+  })
+
+  it('the SINGLE-filer survivor path converges across the same k≈0.74 corner (insight 006: prove, don’t assume)', () => {
+    // The M4/M5 convergence sweeps were MFJ; the survivor files SINGLE. The single brackets are half-width
+    // but the worst-case contraction is the SAME shape — top ordinary rate 0.37, the cap-gains 15→20% jump
+    // 0.05, and the ×1.85 SS torpedo are all filing-INDEPENDENT, so k_sup ≈ 0.74 holds for single too. Rather
+    // than trust that (insight 006: a probe can sample the wrong regime), drive the single-filer fixed point
+    // through the small-net / low-basis / large-SS corner and confirm the 128-pass cap never throws.
+    const single: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: false, household: { startCalendarYear: 2026, filing: 'single', owner: { birthYear: 1959 } } }
+    for (const pool of [2_000_000, 10_000_000, 50_000_000]) {
+      for (const ss of [0, 1_000_000, 5_000_000]) {
+        for (const conv of [0, 200_000]) {
+          const buckets: AccountBuckets = { taxable: pool / 2, pretax: pool / 2, roth: 0 }
+          expect(() =>
+            runTaxAwareDecumulation(buckets, realStock, realBond, [0], STOCK_W, 'proportional', single, {
+              ssBenefits: [ss],
+              conversions: [conv],
+              initialTaxableBasis: 1,
+            }),
+          ).not.toThrow()
+        }
+      }
+    }
+  })
+})

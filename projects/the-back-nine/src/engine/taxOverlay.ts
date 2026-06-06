@@ -176,6 +176,13 @@ export interface TaxYearInputs {
    *  never threatens reduce-to-spine: under the EXHAUSTIVE OFF condition the gross-up is inert
    *  (gross = net) and the RMD is 0, so the regime changes nothing regardless of its contents. */
   readonly householdYears?: readonly HouseholdYear[]
+  /** Per-year `bracket-fill` ceiling (M6a): the max DISCRETIONARY pre-tax draw that year — the
+   *  cheap ordinary-income room to the caller's target edge (a tax bracket now, an ACA-MAGI cliff
+   *  in U3). Read ONLY when the policy is `bracket-fill`; a missing entry ⇒ `+Infinity` ⇒ the
+   *  pre-tax-first fallback, so an absent stream leaves `bracket-fill` reducing to the spine on a
+   *  single pool. The caller computes the dollar cap (the engine provides the mechanism, not the
+   *  ceiling — the substrate the P3 control + P4 solver drive). */
+  readonly bracketFillCeilings?: readonly number[]
 }
 
 const EMPTY_BUCKETS: AccountBuckets = { taxable: 0, pretax: 0, roth: 0 }
@@ -567,11 +574,12 @@ function solveGrossWithdrawal(
   filing: FilingStatus,
   count65: number,
   ssBenefit: number,
+  bracketFillCeiling: number,
 ): number {
   const taxableValue = drawPool.taxable
   let gross = net
   for (let pass = 0; pass < GROSS_UP_MAX_PASSES; pass++) {
-    const alloc = allocateWithdrawal(drawPool, gross, policy)
+    const alloc = allocateWithdrawal(drawPool, gross, policy, bracketFillCeiling)
     // Cap-gains realization (M5): the taxable draw realizes a pro-rata share of embedded gain.
     // A down-market loss (basis > value) floors at 0 — never a negative gain feeding the tax or
     // provisional income (the §1211 loss offset is OUT-but-disclosed).
@@ -627,7 +635,7 @@ export function runTaxAwareDecumulation(
   config: TaxOverlayConfig,
   taxInputs: TaxYearInputs = {},
 ): TaxAwareResult {
-  const { ssBenefits = [], conversions = [], initialTaxableBasis, householdYears = [] } = taxInputs
+  const { ssBenefits = [], conversions = [], initialTaxableBasis, householdYears = [], bracketFillCeilings = [] } = taxInputs
 
   // Initial taxable basis is REQUIRED when tax is on and the taxable bucket is non-empty — there
   // is no safe default (0 over-taxes every realization; the full value silently no-ops cap-gains),
@@ -668,6 +676,11 @@ export function runTaxAwareDecumulation(
     // year's post-growth state (at t = 0, the initial balance) — exactly the RMD's basis.
     const rmd = regime ? rmdForYear(buckets.pretax, config, regime, t) : 0
 
+    // bracket-fill ceiling (M6a): the year's max discretionary pre-tax draw. Used by BOTH the
+    // gross-up fixed point and the ledger allocation so they agree. A missing entry ⇒ +Infinity ⇒
+    // the pre-tax-first fallback (so an absent stream / non-bracket-fill policy is unaffected).
+    const bracketFillCeiling = bracketFillCeilings[t] ?? Number.POSITIVE_INFINITY
+
     // Roth conversion (M5): clamp to feasibility AFTER reserving the non-convertible RMD, using the
     // prior-year-end pre-tax (gross-independent ⇒ constant inside the fixed point). Apply it to the
     // DRAW-TIME buckets (pre-tax→roth) so the spending allocation runs against the conversion-reduced
@@ -696,13 +709,14 @@ export function runTaxAwareDecumulation(
             regime.filing,
             regime.count65,
             ssBenefits[t] ?? 0,
+            bracketFillCeiling,
           )
         : net
 
     // Per-bucket ledger: which buckets fund this withdrawal (consumed by the tax math). Allocated
     // against the CONVERSION-REDUCED drawPool, capped at what exists — exactly like the spine.
     const totalBefore = totalAcrossBuckets(buckets) // === totalAcrossBuckets(drawPool)
-    const alloc = allocateWithdrawal(drawPool, grossWithdrawal, policy)
+    const alloc = allocateWithdrawal(drawPool, grossWithdrawal, policy, bracketFillCeiling)
     const drawn = alloc.taxable + alloc.pretax + alloc.roth
 
     // Advance the AUTHORITATIVE total via the shared stepYear (byte-identical to spine).

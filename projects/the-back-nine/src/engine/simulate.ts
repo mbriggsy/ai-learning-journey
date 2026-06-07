@@ -24,7 +24,7 @@ import {
   type HouseholdYear,
   type OverlayPerson,
 } from '@engine/taxOverlay'
-import { NEVER_DEPLETED, type DepletionYear, type Distribution, type SimulationParams } from '@shared/model'
+import { DRAWDOWN_POLICIES, NEVER_DEPLETED, type DepletionYear, type Distribution, type SimulationParams } from '@shared/model'
 
 /** The CRN draw matrices — pure in (seed, dimensions). */
 export interface Draws {
@@ -163,6 +163,16 @@ function validateParams(params: SimulationParams): string | null {
   if (!Number.isInteger(params.paths) || params.paths <= 0) return 'paths must be a positive integer'
   if (!Number.isInteger(params.maxHorizonYears) || params.maxHorizonYears <= 0)
     return 'maxHorizonYears must be a positive integer'
+  // Enum params cross the SAME untyped structured-clone worker boundary as the numbers; validate
+  // membership HERE (R19) so an out-of-union value returns the defined indeterminate output. Without
+  // this, a bad `drawdownPolicy` reaches allocateWithdrawal's switch (no default) → undefined → a
+  // TypeError caught as a calm-error (an internal-failure, not the contracted indeterminate reading),
+  // and any `longevityMode` ≠ 'fixed-horizon' SILENTLY runs the sampled survival model — a calm-but-
+  // wrong answer, the cardinal sin. (Both fields predate the per-stream R19 hardening and were never
+  // re-audited — surfaced by the U3-exit code-review pilot.)
+  if (!DRAWDOWN_POLICIES.includes(params.drawdownPolicy)) return 'drawdownPolicy unsupported'
+  if (params.longevityMode !== 'sampled' && params.longevityMode !== 'fixed-horizon')
+    return 'longevityMode unsupported'
   if (params.people.length === 0) return 'no people'
   // The model is a COUPLE (1 person is the degenerate case; 2 is the couple). Beyond two, the
   // survivor step-down (`allAlive` flips on the FIRST death) and the MFJ→single filing flip
@@ -172,6 +182,17 @@ function validateParams(params: SimulationParams): string | null {
   for (const p of params.people) {
     if (!Number.isFinite(p.currentAge) || p.currentAge <= 0) return 'person age invalid'
     if (!finiteNonNeg(p.earnedIncomeReal) || !finiteNonNeg(p.socialSecurityReal)) return 'person income invalid'
+    // retirementAge / socialSecurityClaimAge drive the offsets (retire/claim = age − currentAge). A
+    // NaN there makes `t < o.retire` / `t >= o.claim` silently FALSE (every comparison with NaN is
+    // false, insight 010), so the earned-income bridge AND Social Security would be DROPPED → a larger
+    // net → a calm-but-wrong, too-pessimistic survival reading, not the indeterminate output R19
+    // promises. Finiteness ONLY — an already-retired/claimed person (age < currentAge ⇒ a negative
+    // offset) is legitimate, so no ≥currentAge floor. `sex` indexes the cohort mortality table
+    // (survivalProbability r[sex]); an out-of-union value → NaN survival → max longevity, silently
+    // changing the answer. (Original U1 person fields, never re-audited — U3-exit code-review pilot.)
+    if (!Number.isFinite(p.retirementAge)) return 'person retirementAge invalid'
+    if (!Number.isFinite(p.socialSecurityClaimAge)) return 'person socialSecurityClaimAge invalid'
+    if (p.sex !== 'male' && p.sex !== 'female') return 'person sex invalid'
   }
   for (const m of [params.market.stock, params.market.bond]) {
     // mean must be > -1 so phi = 1 + mean > 0 stays in toLogMoments' domain; mean <= -1
@@ -206,7 +227,15 @@ function validateParams(params: SimulationParams): string | null {
     const bucketSum = b.taxable + b.pretax + b.roth
     if (Math.abs(bucketSum - params.initialPortfolio) > 1e-6 * Math.max(1, Math.abs(params.initialPortfolio)))
       return 'overlay buckets must sum to initialPortfolio'
-    if (o.taxEnabled && b.taxable > 0 && (o.initialTaxableBasis === undefined || !finiteNonNeg(o.initialTaxableBasis)))
+    // Finiteness is checked UNCONDITIONALLY when present — NOT gated on `b.taxable > 0`. A NaN basis with
+    // an EMPTY starting taxable bucket would otherwise slip both this gate and the overlay backstop, sit
+    // dormant (year 0's realizedGain short-circuits on taxableValue===0), then poison the gross-up once an
+    // RMD relocation rebuilds the taxable bucket → an uncaught mid-path throw instead of the indeterminate
+    // output R19 promises (insight 008/010 — a `?? 0` does not coalesce NaN). The required-when-non-empty
+    // check stays separate. (U3-exit code-review pilot.)
+    if (o.initialTaxableBasis !== undefined && !finiteNonNeg(o.initialTaxableBasis))
+      return 'overlay initialTaxableBasis invalid'
+    if (o.taxEnabled && b.taxable > 0 && o.initialTaxableBasis === undefined)
       return 'overlay initialTaxableBasis required (tax on + taxable bucket non-empty)'
     if (o.conversions !== undefined && !o.conversions.every(finiteNonNeg)) return 'overlay conversions invalid'
     // bracket-fill ceilings: a non-finite entry poisons the allocation (a NaN survives `?? +Infinity`

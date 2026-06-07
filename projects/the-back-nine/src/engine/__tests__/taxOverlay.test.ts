@@ -1508,7 +1508,7 @@ describe('taxOverlay — M6b·B per-person pre-tax splitting', () => {
       expect(per.finalBuckets).toEqual({ taxable: 0, pretax: 0, roth: 0 })
     })
 
-    it('rejects a living set that is not the household’s own OverlayPerson references (R19 fail-loud, not silent all-dead)', () => {
+    it('rejects a TOTAL reference mismatch — a living set of fresh literals matching nobody (R19 fail-loud, not silent all-dead)', () => {
       const cfg: TaxOverlayConfig = { taxEnabled: false, rmdEnabled: true, household: mkHousehold(2026, 1948, 1962) }
       // Fresh literals — value-equal to the household but DISTINCT references → match nobody. Without the
       // guard this silently marks everyone dead → zero RMD forever (calm-but-wrong). It must fail loud.
@@ -1518,7 +1518,23 @@ describe('taxOverlay — M6b·B per-person pre-tax splitting', () => {
           initialPretaxByPerson: [1_000_000, 1_000_000],
           householdYears: mismatched,
         }),
-      ).toThrow(/matches no household person/)
+      ).toThrow(/not one of the household canonical people/)
+    })
+
+    it('rejects a PARTIAL reference mismatch — one real ref + one stranger (the backstop must catch more than the all-dead case)', () => {
+      // The future P3/P4 DIRECT caller the backstop exists for could thread ONE correct OverlayPerson ref
+      // and ONE distinct-but-equal object. The OLD guard (`!alive.some`) saw a live member and PASSED —
+      // then silently rolled the "dead" spouse's IRA to the survivor and forced RMD on the wrong owner's
+      // age/divisor (calm-but-wrong). The count-mismatch guard rejects it. (U3-exit code-review pilot.)
+      const household = mkHousehold(2026, 1948, 1962)
+      const cfg: TaxOverlayConfig = { taxEnabled: false, rmdEnabled: true, household }
+      const partial: HouseholdYear[] = [{ living: [household.owner, { birthYear: 1962 }] }] // owner real, spouse a stranger
+      expect(() =>
+        runTaxAwareDecumulation({ taxable: 0, pretax: 2_000_000, roth: 0 }, realStock, realBond, [0], STOCK_W, 'proportional', cfg, {
+          initialPretaxByPerson: [1_000_000, 1_000_000],
+          householdYears: partial,
+        }),
+      ).toThrow(/not one of the household canonical people/)
     })
   })
 
@@ -1956,5 +1972,28 @@ describe('taxOverlay — M3 Slice 5: the integrated PTC value-correctness batter
   it('the FPL anchors the battery is built on match the canonical constants', () => {
     expect(FPL2).toBe(21_150) // fplForHousehold(2) — the 2025 HHS household-of-2 guideline
     expect(CLIFF).toBe(84_600) // 4.0 × FPL(2) — the 400% cliff the fixtures straddle
+  })
+
+  // U3-exit code-review pilot (correctness-2): totalNetPremiumReal accrues ONLY for a year the portfolio
+  // actually funds. A priced pre-65 year that depletes (its grossed-up withdrawal — premium included —
+  // exceeds the pool) must NOT count a premium the plan failed to pay (the accrual sits AFTER the
+  // depletion check). Premiums are counted only while the plan is solvent.
+  describe('totalNetPremiumReal does not over-accrue in a depletion year (correctness-2)', () => {
+    const priced: TaxYearInputs = { healthcareEnabled: true, slcsp: [15_000], enrolledPremium: [15_000] }
+
+    it('a priced pre-65 year that DEPLETES accrues NO premium (terminal 0, depletionYear 0)', () => {
+      const small: AccountBuckets = { taxable: 0, pretax: 5_000, roth: 0 } // ≪ the 50,000 net + premium + tax
+      const r = runTaxAwareDecumulation(small, [0], [0], [50_000], STOCK_W, 'pre-tax-first', PRE65, priced)
+      expect(r.depletionYear).toBe(0) // presence: it actually depleted
+      expect(r.terminalReal).toBe(0)
+      expect(r.totalNetPremiumReal).toBe(0) // the un-fundable year's premium is NOT counted
+    })
+
+    it('the SAME priced year with a pool that SURVIVES does accrue its premium (the zero is the depletion, not a blanket suppression)', () => {
+      const big: AccountBuckets = { taxable: 0, pretax: P, roth: 0 }
+      const r = runTaxAwareDecumulation(big, [0], [0], [50_000], STOCK_W, 'pre-tax-first', PRE65, priced)
+      expect(r.depletionYear).toBe(NEVER_DEPLETED)
+      expect(r.totalNetPremiumReal).toBeGreaterThan(0)
+    })
   })
 })

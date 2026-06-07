@@ -734,18 +734,29 @@ function advancePerPersonLedger(
  * (the named sign-inversion). The `gross` scalar is byte-identical to the pre-M3 scalar return, so
  * the reduce-to-spine golden is untouched.
  */
-function solveGrossWithdrawal(
-  net: number,
-  drawPool: AccountBuckets,
-  policy: DrawdownPolicy,
-  rmd: number,
-  conversion: number,
-  taxableBasis: number,
-  filing: FilingStatus,
-  count65: number,
-  ssBenefit: number,
-  bracketFillCeiling: number,
-): GrossUpSolution {
+/**
+ * The year-constant inputs to {@link solveGrossWithdrawal}, bundled into ONE named object so the
+ * seven same-typed scalars (rmd, conversion, taxableBasis, count65, ssBenefit, bracketFillCeiling …)
+ * can never be silently TRANSPOSED at a call site — a positional swap would compile clean and
+ * mis-tax the year (the calm-but-wrong class). This mirrors the exact discipline {@link TaxYearInputs}
+ * already applies to the per-year streams. `net` stays a separate leading argument because the ACA
+ * solver's `fundNet` closure VARIES it (baseNet + a candidate premium) while this context is fixed.
+ * (U3-exit code-review pilot — ts-idiom.)
+ */
+interface GrossUpContext {
+  readonly drawPool: AccountBuckets
+  readonly policy: DrawdownPolicy
+  readonly rmd: number
+  readonly conversion: number
+  readonly taxableBasis: number
+  readonly filing: FilingStatus
+  readonly count65: number
+  readonly ssBenefit: number
+  readonly bracketFillCeiling: number
+}
+
+function solveGrossWithdrawal(net: number, ctx: GrossUpContext): GrossUpSolution {
+  const { drawPool, policy, rmd, conversion, taxableBasis, filing, count65, ssBenefit, bracketFillCeiling } = ctx
   const taxableValue = drawPool.taxable
   let gross = net
   for (let pass = 0; pass < GROSS_UP_MAX_PASSES; pass++) {
@@ -874,6 +885,13 @@ export function runTaxAwareDecumulation(
   // is no safe default (0 over-taxes every realization; the full value silently no-ops cap-gains),
   // so an absent basis fails loud (burned/062). When the taxable bucket starts empty, basis is 0
   // and only RMD relocations (already-taxed, full-basis dollars) can build it.
+  // Finiteness UNCONDITIONALLY when present (mirror of validateParams) — NOT gated on taxable > 0. A NaN
+  // basis with an EMPTY starting taxable bucket otherwise slips both gates, sits dormant (year 0's
+  // realizedGain short-circuits on taxableValue === 0), then poisons the gross-up once an RMD relocation
+  // rebuilds the taxable bucket (`?? 0` below does not coalesce NaN — insight 008/010). (U3-exit pilot.)
+  if (initialTaxableBasis !== undefined && !(Number.isFinite(initialTaxableBasis) && initialTaxableBasis >= 0)) {
+    throw new Error('[taxOverlay] initialTaxableBasis must be finite and ≥ 0 (a NaN survives `?? 0` — insight 008/010)')
+  }
   if (config.taxEnabled && initialBuckets.taxable > 0 && initialTaxableBasis === undefined) {
     throw new Error(
       '[taxOverlay] initialTaxableBasis is required when tax is on and the taxable bucket is ' +
@@ -951,9 +969,17 @@ export function runTaxAwareDecumulation(
       // caller threaded distinct-but-equal objects instead of the household's own — which would
       // SILENTLY mark everyone dead → zero RMD forever (calm-but-wrong, the cardinal sin). Reject it.
       const injected = householdYears[t]
-      if (injected !== undefined && injected.living.length > 0 && !alive.some((a) => a)) {
+      // Fail-loud on ANY reference mismatch (R19): aliveCanonical matches the living set to the canonical
+      // people BY REFERENCE. If the count of canonical people found alive ≠ the living-set size, the caller
+      // threaded a distinct-but-equal object instead of the household's own — a TOTAL mismatch (marks
+      // everyone dead → zero RMD forever) OR a PARTIAL one (one good ref + one stranger → silently rolls a
+      // living spouse's IRA to the wrong survivor and forces RMD on the wrong owner's age/divisor). Both are
+      // calm-but-wrong, the cardinal sin. The production caller (simulate) threads identical references so
+      // this never fires; it guards the future P3/P4 DIRECT caller the backstop exists for. (U3-exit
+      // code-review pilot — the prior `!alive.some` check caught only the TOTAL mismatch, not the partial.)
+      if (injected !== undefined && alive.filter((a) => a).length !== injected.living.length) {
         throw new Error(
-          '[taxOverlay] householdYears living set matches no household person (per-person path requires the SAME OverlayPerson references as the household)',
+          '[taxOverlay] householdYears living set has a member that is not one of the household canonical people (per-person path requires the SAME OverlayPerson references as the household)',
         )
       }
       const survivor = alive.findIndex((a) => a)
@@ -1000,23 +1026,25 @@ export function runTaxAwareDecumulation(
     // prices, the net premium is funded INSIDE grossWithdrawal (so terminalReal drops — the presence
     // companion), and accrues to `totalNetPremiumReal` (the parallel accounting surface).
     let grossWithdrawal: number
+    // Captured here, ACCRUED after the depletion check (correctness fix below) — never inline, so a year
+    // the portfolio cannot fund does not over-count a premium it failed to pay.
+    let acaNetPremiumThisYear = 0
     if (config.taxEnabled && regime) {
       // The inner tax gross-up as a closure the ACA solver probes at (baseNet + a candidate premium).
-      // Identical call + args as the non-ACA branch below, so `fundNet(net).gross` is byte-identical
-      // to the pre-Slice-4 path.
-      const fundNet = (netTotal: number): GrossUpSolution =>
-        solveGrossWithdrawal(
-          netTotal,
-          drawPool,
-          policy,
-          rmd,
-          conversion,
-          basis,
-          regime.filing,
-          regime.count65,
-          ssBenefits[t] ?? 0,
-          bracketFillCeiling,
-        )
+      // The year-constant inputs are bundled into one NAMED context (no positional transposition risk),
+      // and `fundNet(net).gross` stays byte-identical to the pre-Slice-4 path.
+      const grossUpCtx: GrossUpContext = {
+        drawPool,
+        policy,
+        rmd,
+        conversion,
+        taxableBasis: basis,
+        filing: regime.filing,
+        count65: regime.count65,
+        ssBenefit: ssBenefits[t] ?? 0,
+        bracketFillCeiling,
+      }
+      const fundNet = (netTotal: number): GrossUpSolution => solveGrossWithdrawal(netTotal, grossUpCtx)
       // AGE GATE (red-team blocker): ACA prices ONLY when ≥1 living member is pre-65. With every
       // living member ≥ 65 (all on Medicare) there is no marketplace household — zero the cost, never
       // a phantom post-65 subsidy (post-65 IRMAA is M4's job). pre65 = livingCount − living-65+.
@@ -1047,7 +1075,7 @@ export function runTaxAwareDecumulation(
           fundNet,
         )
         grossWithdrawal = aca.gross
-        totalNetPremiumReal += aca.netPremium
+        acaNetPremiumThisYear = aca.netPremium
       } else {
         grossWithdrawal = fundNet(net).gross
       }
@@ -1072,6 +1100,13 @@ export function runTaxAwareDecumulation(
       depletionYear = t
       break
     }
+
+    // ACA net premium accrues ONLY for a year the portfolio actually funded — AFTER the depletion check,
+    // so a year that could not fund its grossed-up withdrawal (the premium is inside it) never over-accrues
+    // a premium the plan failed to pay. terminalReal / depletionYear are unaffected (the premium already
+    // flowed through grossWithdrawal → stepYear); this keeps totalNetPremiumReal — the parallel accounting
+    // surface — internally consistent with the depletion the same withdrawal caused. (U3-exit pilot.)
+    totalNetPremiumReal += acaNetPremiumThisYear
 
     // Re-derive the buckets as fractions of the authoritative new total: each bucket's
     // post-withdrawal share grown by the one shared factor (no asset-location). The total

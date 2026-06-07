@@ -260,6 +260,39 @@ describe('R19 engine half + dire-but-honest edges', () => {
     }
   })
 
+  it('R19 enum + person-field + empty-bucket-basis gaps → indeterminate (U3-exit code-review pilot)', () => {
+    // These all arrive over the SAME untyped structured-clone worker boundary the gate exists to defend;
+    // each previously slipped to a calm-but-wrong reading or a mid-path throw rather than indeterminate.
+    const P = 1_000_000
+    const base = makeParams({ initialPortfolio: P, annualSpendingReal: 40_000 })
+
+    // architecture-1 — out-of-union enums. A bad drawdownPolicy would otherwise reach allocateWithdrawal's
+    // switch → undefined → TypeError → calm-error; any longevityMode ≠ 'fixed-horizon' would SILENTLY run
+    // the sampled survival model (a different answer). Casts simulate the untyped boundary.
+    expect(simulate(makeParams({ drawdownPolicy: 'bogus' as unknown as SimulationParams['drawdownPolicy'] }), 1).indeterminate).toBe(true)
+    expect(simulate(makeParams({ longevityMode: 'bogus' as unknown as SimulationParams['longevityMode'] }), 1).indeterminate).toBe(true)
+
+    // architecture-2 — a NaN retirementAge/claimAge makes `t < o.retire` / `t >= o.claim` silently false
+    // (every NaN compare is false) → the bridge + SS drop → a too-pessimistic calm-but-wrong reading; an
+    // out-of-union sex → NaN cohort survival → max longevity. All must be indeterminate, never silent.
+    expect(simulate(makeParams({ people: [{ ...MALE_65, retirementAge: NaN }] }), 1).indeterminate).toBe(true)
+    expect(simulate(makeParams({ people: [{ ...MALE_65, socialSecurityClaimAge: NaN }] }), 1).indeterminate).toBe(true)
+    expect(simulate(makeParams({ people: [{ ...MALE_65, sex: 'other' as unknown as PersonInputs['sex'] }] }), 1).indeterminate).toBe(true)
+
+    // correctness-3 — a NaN initialTaxableBasis with an EMPTY starting taxable bucket previously slipped
+    // the `taxable > 0`-gated finiteness check, sat dormant, then poisoned the gross-up once an RMD
+    // relocation rebuilt the taxable bucket (a mid-path throw). Finiteness is now unconditional.
+    const nanBasisEmptyTaxable: OverlayParams = {
+      taxEnabled: true,
+      rmdEnabled: true,
+      startCalendarYear: 2026,
+      buckets: { taxable: 0, pretax: P, roth: 0 },
+      filing: 'mfj',
+      initialTaxableBasis: NaN,
+    }
+    expect(simulate({ ...base, overlay: nanBasisEmptyTaxable }, 1).indeterminate).toBe(true)
+  })
+
   it('a NaN bracket-fill ceiling returns indeterminate, NEVER an uncaught throw (the R19 hole the review found)', () => {
     // With drawdownPolicy 'bracket-fill' + tax ON, a NaN ceiling survives `?? +Infinity`, poisons the
     // allocation, and (absent the validateParams guard) makes the gross-up run all 128 passes and THROW

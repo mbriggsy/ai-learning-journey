@@ -83,6 +83,35 @@ describe('margins + framing', () => {
   })
 })
 
+// U3-exit code-review pilot (testing-1): the displayed $/month figure had its MAGNITUDE entirely
+// unasserted — only direction + finiteness were tested, so a sign flip, a wrong 0.04, a /12-vs-/1 slip,
+// or a wrong gap formula would all pass green (a calm-but-wrong recommendation). Pin the values.
+describe('the displayed $/month MAGNITUDE is pinned, not just its direction', () => {
+  // params.annualSpendingReal === 48 ⇒ monthlySpend === 4.
+  it('room = p10 × 4% ÷ 12; trim = −monthlySpend × gap-below-on-track; on-the-line = exactly 0', () => {
+    // room: over-funded, p10 = 120,000 ⇒ (120,000 × 0.04) / 12 = 400/mo.
+    const room = summarize(out(0.99, [], [120_000]), params, 1).dollar
+    expect(room.direction).toBe('room')
+    expect(room.perMonthReal.value).toBeCloseTo(400, 6)
+    // trim: 30% survival ⇒ gap = onTrack(0.85) − quantize(0.30) = 0.55 ⇒ −4 × 0.55 = −2.2/mo.
+    const trim = summarize(out(0.3, [10, 12, 14]), params, 1).dollar
+    expect(trim.direction).toBe('trim')
+    expect(trim.perMonthReal.value).toBeCloseTo(-2.2, 6)
+    // on-the-line: borderline ⇒ exactly 0.
+    const hold = summarize(out(0.75), params, 1).dollar
+    expect(hold.direction).toBe('on-the-line')
+    expect(hold.perMonthReal.value).toBe(0)
+  })
+
+  it('an on-track plan with a DEPLETED bad decile (p10 ≤ 0) HOLDS — it never emits a contradictory "trim"', () => {
+    // survival 0.88 = on-track, but terminals include zeros ⇒ percentile(·, 0.1) = 0 ⇒ p10 ≤ 0. The prior
+    // code fell this through to 'trim' (an on-track headline paired with a trim dollar — contradictory).
+    const r = summarize(out(0.88, [], [0, 0, 100, 200, 300]), params, 1).dollar
+    expect(r.direction).toBe('on-the-line')
+    expect(r.perMonthReal.value).toBe(0)
+  })
+})
+
 describe('indeterminate — the honest non-answer', () => {
   it('an indeterminate sim output yields the indeterminate state, not a confident number', () => {
     const r = summarize({ indeterminate: true, reason: 'no people' }, params, 99)

@@ -122,5 +122,12 @@ export function allocateWithdrawal(
     case 'bracket-fill':
       // Fill pre-tax to the injected ceiling, then tax-free; `+Infinity` recovers pre-tax-first.
       return bracketFill(buckets, target, bracketFillCeiling)
+    default:
+      // The union is exhaustive at compile time, but the worker boundary is untyped (structured
+      // clone) — an out-of-union policy here would otherwise fall through and return `undefined`,
+      // which the caller dereferences (alloc.pretax) → TypeError → calm-error. simulate's
+      // validateParams rejects this upstream as indeterminate; THIS is the fail-loud backstop for a
+      // direct caller, never a silent undefined (burned/062). (U3-exit code-review pilot.)
+      throw new Error(`[sequencing] unknown drawdown policy: ${String(policy)}`)
   }
 }

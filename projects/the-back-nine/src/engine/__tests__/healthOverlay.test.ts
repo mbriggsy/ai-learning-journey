@@ -220,4 +220,32 @@ describe('healthOverlay — M3 Slice 2: solveAcaFundedGross (bisection + cliff b
     // A NaN MAGI from the inner gross-up must throw, never sail through `magi > cliff` as "under".
     expect(() => solveAcaFundedGross(40_000, 24_000, 24_000, FPL2, REVERTED, flatMagi(NaN))).toThrow(/non-finite ACA-MAGI/)
   })
+
+  // U3-exit code-review pilot (correctness-1): the reverted table's applicable % JUMPS at 133% FPL
+  // (2.10→3.14), so the residual netPremium(P)−P is NOT globally monotone — it jumps UP where MAGI
+  // crosses 1.33×FPL, admitting TWO self-consistent roots (an under-133% one at 2.10% and an over-133%
+  // one at 3.14%). The prior single bisection converged to a bracketing-dependent (here, the more
+  // expensive over-133%) root. The segmented solver must find BOTH and return the CHEAPEST feasible —
+  // the rational household's equilibrium, the cost-correct direction.
+  it('the 133%-FPL applicable-% discontinuity: picks the CHEAPER under-133% equilibrium, not the over-133% one', () => {
+    // MAGI(P) = baseNet + P (linearMagi slope 1). FPL(2) = 21,150 ⇒ 133% FPL = 28,129.50. baseNet 27,400
+    // ⇒ MAGI spans [27,400, 31,400], straddling 133%. SLCSP = enrolled = 4,000 ⇒ netPremium = applicable%×MAGI.
+    //   UNDER-133% root (2.10%): P = 0.021×(27,400+P)/(1) ⇒ 0.979P = 575.40 ⇒ P = 587.7426, MAGI = 27,987.7426.
+    //   OVER-133% root (≈3.14%+ interp): a SEPARATE, more expensive self-consistent equilibrium (~888) —
+    //   what the un-segmented single bisection converged to. The cheapest feasible is the under-133% one.
+    const r = solveAcaFundedGross(27_400, 4_000, 4_000, FPL2, REVERTED, linearMagi(0, 1))
+    expect(r.overCliff).toBe(false)
+    expect(r.belowFloor).toBe(false)
+    // THE regression assertion: the converged MAGI is on the CHEAP (under-133%) side. The prior single
+    // bisection landed ABOVE 28,129.50 (the over-133% root) — this fails on the un-segmented solver.
+    expect(r.magi).toBeLessThan(1.33 * FPL2)
+    expect(r.netPremium).toBeCloseTo(587.7426, 2)
+    expect(r.magi).toBeCloseTo(27_987.7426, 1)
+    expect(r.gross).toBeCloseTo(27_987.7426, 1) // baseNet + netPremium (linearMagi: gross = the funded net)
+    // SELF-CONSISTENCY (a true equilibrium): the net premium implied at the converged MAGI by the
+    // independently-tested slidingScalePtc equals the returned net premium.
+    const impliedPtc = slidingScalePtc(r.magi, 4_000, FPL2, REVERTED)
+    const impliedNet = Math.max(0, 4_000 - Math.min(impliedPtc, 4_000))
+    expect(impliedNet).toBeCloseTo(r.netPremium, 4)
+  })
 })

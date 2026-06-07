@@ -148,10 +148,16 @@ export interface AcaSolution {
 
 // Bisection controls. The bracket [0, enrolled] is STRUCTURAL (net premium is physically bounded:
 // PTC ≥ 0 ⇒ net ≤ enrolled; net = max(0, enrolled − PTC) ⇒ net ≥ 0), so it needs no probing/expansion.
-// The residual r(P) = impliedNetPremium(P) − P is monotone DECREASING (the outer ACA loop is a gentle
-// contraction, slope ≈ applicable% ≤ ~0.10 — research §4b), with r(0) ≥ 0 and r(enrolled) ≤ 0, so a
-// unique root exists and bisection is unconditionally convergent. 64 halvings shrink any realistic
-// enrolled premium far below a cent; a non-converged solve THROWS (fail-loud, never a default, burned/062).
+// The residual r(P) = impliedNetPremium(P) − P is monotone DECREASING WITHIN a single applicable-% band
+// (the outer ACA loop is a gentle contraction there, slope ≈ applicable% ≤ ~0.10 — research §4b), but it
+// is NOT globally monotone: the reverted table's applicable % JUMPS UP at 133% FPL (2.10→3.14), so r jumps
+// UP where MAGI crosses 1.33×FPL and TWO self-consistent roots can bracket it (an under-133% one at 2.10%,
+// an over-133% one at 3.14%). solveAcaFundedGross therefore SPLITS [0, enrolled] at the net premium where
+// MAGI crosses each applicable-% discontinuity, bisects each (now-monotone) segment, and picks the CHEAPEST
+// feasible self-consistent root — the rational household's equilibrium, and the same "pick cheaper" rule the
+// cliff branch already uses. 64 halvings shrink any realistic premium far below a cent; a non-converged
+// segment solve THROWS (fail-loud, never a default, burned/062). (Globally-unique-root was the M3 assumption
+// the U3-exit code-review pilot corrected — the 133% kink was previously unhandled.)
 const ACA_MAX_PASSES = 64
 const ACA_EPSILON = 1e-6 // dollars (net-premium / bracket-width precision)
 
@@ -206,6 +212,25 @@ export function slidingScalePtc(
 }
 
 /**
+ * The FPL-fraction thresholds where the applicable-% schedule JUMPS — a band whose low % differs from the
+ * previous band's high %. The ACA residual netPremium(P)−P is monotone WITHIN a band but jumps UP at such a
+ * threshold, so {@link solveAcaFundedGross} splits its bracket there to keep each segment monotone. The
+ * reverted table has exactly ONE (133% FPL: 2.10→3.14); the enhanced table has none (every band joins
+ * continuously). Continuous KINKS (slope changes with matching endpoints) need no split — only true jumps.
+ */
+function applicablePctDiscontinuityFractions(table: AcaApplicablePercentageTable): number[] {
+  const out: number[] = []
+  for (let i = 1; i < table.bands.length; i++) {
+    const prev = table.bands[i - 1]
+    const cur = table.bands[i]
+    if (prev !== undefined && cur !== undefined && cur.applicablePctLow !== prev.applicablePctHigh) {
+      out.push(cur.fplFractionLow)
+    }
+  }
+  return out
+}
+
+/**
  * Solve the self-consistent gross withdrawal that funds `baseNet` of spending PLUS the year's net
  * ACA premium, given the benchmark `slcsp`, the actual `enrolled` premium, the household's
  * `fplDollar`, the applicable-% `table` (reverted = cliff regime; enhanced = no cliff), and the
@@ -217,13 +242,16 @@ export function slidingScalePtc(
  *     quantized-OVER the cliff, no under-cliff solution can exist (MAGI rises with the withdrawal),
  *     so go straight to the over-cliff (PTC=0) solve — skipping the bisection (the plan's named
  *     "high-spend, no feasible under-cliff" case).
- *  3. Bisect the cliff-removed residual over [0, enrolled] for the under-cliff candidate.
- *  4. Feasibility — quantize MAGI by CEIL (conservative: never admit a strictly-over household as
- *     eligible; insight 010 near-edge flip) and compare to the cliff dollar. If over ⇒ infeasible ⇒
- *     over-cliff solve. STRICT cliff: 400% FPL EXACTLY is eligible (IRC §36B 100–400% inclusive).
- *  5. The under-cliff candidate is provably CHEAPER than over-cliff when feasible (less premium ⇒
- *     less withdrawal ⇒ smaller gross — `fundNet` is monotone), so "pick cheaper" = use it. The
- *     monotonicity is asserted in the tests rather than paying an extra `fundNet` call here.
+ *  3. SPLIT [0, enrolled] at the net premiums where MAGI crosses an applicable-% DISCONTINUITY (the
+ *     133%-FPL kink in the reverted table), so the residual is monotone within each segment. Without
+ *     this the residual jumps UP at the kink → two self-consistent roots → a bracketing-dependent
+ *     converge. No discontinuity in range (incl. the enhanced table) ⇒ one segment ⇒ the prior path.
+ *  4. Bisect each monotone segment for a self-consistent under-cliff root; quantize MAGI by CEIL
+ *     (conservative: never admit a strictly-over household as eligible; insight 010 near-edge flip)
+ *     and drop any root over the cliff. STRICT cliff: 400% FPL EXACTLY is eligible (IRC §36B 100–400%).
+ *  5. Among the feasible roots pick the CHEAPEST (least net premium ⇒ least withdrawal ⇒ smallest gross
+ *     — `fundNet` is monotone): the rational household's equilibrium, and consistent with preferring
+ *     under-cliff over over-cliff. None feasible ⇒ the over-cliff (PTC=0) solve.
  *
  * Enhanced regime (`cliffFplFraction === null`): no cliff branch — the bisection's sliding scale
  * already includes the flat-8.5% open top band above 400% FPL, so it is always feasible.
@@ -264,53 +292,103 @@ export function solveAcaFundedGross(
     return { gross: sol.gross, netPremium: enrolled, ptc: 0, magi, components: sol.components, belowFloor: false, overCliff: true }
   }
 
-  // (2) probe-at-0 short-circuit: even the lowest-withdrawal assumption is over the cliff ⇒ no feasible
-  // under-cliff solution (MAGI is monotone in the withdrawal). Ceil-quantize (conservative).
-  if (cliffMagi !== null) {
-    const at0 = probeAt(0)
-    if (Math.ceil(at0.magi) > cliffMagi) return overCliffSolution()
-  }
-
-  // (3) Bisect the cliff-removed residual r(P) = netPremium(P) − P over [0, enrolled]. Monotone
-  // decreasing; r(0) ≥ 0, r(enrolled) ≤ 0. Finiteness-gated termination (insight 010).
-  let lo = 0
-  let hi = enrolled
-  let converged: ReturnType<typeof probeAt> | null = null
-  for (let pass = 0; pass < ACA_MAX_PASSES; pass++) {
-    const mid = (lo + hi) / 2
-    const e = probeAt(mid)
-    const r = e.netPremium - mid
-    if (!Number.isFinite(r)) throw new Error('[healthOverlay] non-finite ACA residual (insight 010)')
-    if (Math.abs(r) < ACA_EPSILON || hi - lo < ACA_EPSILON) {
-      converged = e
-      break
+  // Solve the cliff-removed residual r(P) = netPremium(P) − P over a SINGLE monotone segment [lo, hi]
+  // (r is strictly decreasing there). Returns the converged probe, or null when the segment holds no root
+  // (r has the same sign at both ends ⇒ the root lives in another segment). Finiteness-gated (insight 010).
+  const bisectSegment = (lo: number, hi: number): ReturnType<typeof probeAt> | null => {
+    const loProbe = probeAt(lo)
+    const hiProbe = probeAt(hi)
+    const rLo = loProbe.netPremium - lo
+    const rHi = hiProbe.netPremium - hi
+    if (!Number.isFinite(rLo) || !Number.isFinite(rHi)) {
+      throw new Error('[healthOverlay] non-finite ACA residual (insight 010)')
     }
-    if (r > 0) lo = mid
-    else hi = mid
-  }
-  if (converged === null) {
+    if (Math.abs(rLo) < ACA_EPSILON) return loProbe
+    if (Math.abs(rHi) < ACA_EPSILON) return hiProbe
+    if (rLo < 0 || rHi > 0) return null // no sign change ⇒ the root is outside this segment
+    let a = lo
+    let b = hi
+    for (let pass = 0; pass < ACA_MAX_PASSES; pass++) {
+      const mid = (a + b) / 2
+      const e = probeAt(mid)
+      const r = e.netPremium - mid
+      if (!Number.isFinite(r)) throw new Error('[healthOverlay] non-finite ACA residual (insight 010)')
+      if (Math.abs(r) < ACA_EPSILON || b - a < ACA_EPSILON) return e
+      if (r > 0) a = mid
+      else b = mid
+    }
     throw new Error(
       `[healthOverlay] ACA net-premium bisection did not converge in ${ACA_MAX_PASSES} passes ` +
         `(baseNet=${baseNet}, slcsp=${slcsp}, enrolled=${enrolled}) — refusing an unconverged premium (burned/062)`,
     )
   }
 
-  // (4) Feasibility: is the under-cliff candidate actually under the cliff? CEIL-quantize MAGI so a
-  // value within rounding noise of the cliff is treated CONSERVATIVELY as over (insight 010). STRICT
-  // cliff — 400% FPL exactly (ceil(magi) === cliffMagi) stays eligible.
-  if (cliffMagi !== null && Math.ceil(converged.magi) > cliffMagi) {
-    return overCliffSolution()
+  // (2) probe-at-0: if even the lowest-withdrawal assumption is over the cliff, no under-cliff solution can
+  // exist (MAGI rises monotonically with the withdrawal). Ceil-quantize (conservative; insight 010).
+  const at0 = probeAt(0)
+  if (cliffMagi !== null && Math.ceil(at0.magi) > cliffMagi) return overCliffSolution()
+
+  // (3) Partition [0, enrolled] at the net premiums where MAGI crosses an applicable-% DISCONTINUITY so each
+  // segment's residual is monotone. r jumps UP at such a threshold (the 133%-FPL kink, 2.10→3.14), which
+  // would otherwise admit TWO self-consistent roots and let a single bisection converge to a bracketing-
+  // dependent one. MAGI is monotone-increasing in P (via fundNet), so each crossing maps to ONE net premium,
+  // found by an inner bisection. (No discontinuity in range — incl. the whole enhanced table — ⇒ no split ⇒
+  // identical to the prior single-bisection path, so every existing fixture is byte-identical.)
+  const atEnrolled = probeAt(enrolled)
+  const findPForMagi = (targetMagi: number): number => {
+    let a = 0
+    let b = enrolled
+    for (let pass = 0; pass < ACA_MAX_PASSES; pass++) {
+      const mid = (a + b) / 2
+      if (probeAt(mid).magi < targetMagi) a = mid
+      else b = mid
+      if (b - a < ACA_EPSILON) break
+    }
+    return (a + b) / 2
+  }
+  const splitPs = applicablePctDiscontinuityFractions(table)
+    .map((frac) => frac * fplDollar)
+    .filter((tau) => tau > at0.magi && tau < atEnrolled.magi)
+    .map(findPForMagi)
+    .sort((x, y) => x - y)
+  const bounds = [0, ...splitPs, enrolled]
+
+  // (4) Bisect each monotone segment; among the FEASIBLE (under-cliff) self-consistent roots keep the
+  // CHEAPEST (lowest net premium ⇒ lowest gross — the rational household's equilibrium, and the same
+  // "pick cheaper" rule the cliff branch uses).
+  let best: ReturnType<typeof probeAt> | null = null
+  for (let s = 0; s < bounds.length - 1; s++) {
+    const lo = bounds[s] ?? 0
+    const hiRaw = bounds[s + 1] ?? enrolled
+    // An interior upper bound IS a discontinuity (MAGI = threshold there evaluates with the NEXT band);
+    // sample the sign just inside it so this segment stays on its own monotone branch (insight 010 near-edge).
+    const interiorRight = s + 1 < bounds.length - 1
+    const hi = interiorRight ? Math.max(lo, hiRaw - ACA_EPSILON) : hiRaw
+    const root = bisectSegment(lo, hi)
+    if (root === null) continue
+    if (cliffMagi !== null && Math.ceil(root.magi) > cliffMagi) continue // infeasible — over the 400% cliff
+    if (best === null || root.netPremium < best.netPremium) best = root
   }
 
-  // (5) Feasible (or enhanced/no-cliff). Below the 100%-FPL floor the PTC was forced to 0 inside
+  // (5) No feasible under-cliff root in any segment ⇒ over the cliff: fund the full enrolled premium at
+  // PTC = 0 (the cliff regime). Enhanced/no-cliff always yields a feasible root, so best ≠ null there.
+  if (best === null) {
+    if (cliffMagi !== null) return overCliffSolution()
+    throw new Error(
+      `[healthOverlay] ACA net-premium solve found no feasible root in any segment ` +
+        `(baseNet=${baseNet}, slcsp=${slcsp}, enrolled=${enrolled}) — refusing an unconverged premium (burned/062)`,
+    )
+  }
+
+  // (6) Feasible (or enhanced/no-cliff). Below the 100%-FPL floor the PTC was forced to 0 inside
   // slidingScalePtc (conservative); surface the disclosure flag.
-  const belowFloor = converged.magi / fplDollar < table.eligibilityFloorFplFraction
+  const belowFloor = best.magi / fplDollar < table.eligibilityFloorFplFraction
   return {
-    gross: converged.sol.gross,
-    netPremium: converged.netPremium,
-    ptc: converged.ptc,
-    magi: converged.magi,
-    components: converged.sol.components,
+    gross: best.sol.gross,
+    netPremium: best.netPremium,
+    ptc: best.ptc,
+    magi: best.magi,
+    components: best.sol.components,
     belowFloor,
     overCliff: false,
   }

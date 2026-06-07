@@ -119,7 +119,12 @@ function buildDollar(distribution: Distribution, params: SimulationParams, state
     // Even the conservative future leaves a surplus → room to spend its safe draw.
     direction = 'room'
     perMonth = (p10 * 0.04) / 12
-  } else if (state === 'borderline') {
+  } else if (state === 'borderline' || state === 'on-track') {
+    // 'on-track' reaches here only when p10 ≤ 0 (the bad-decile future is depleted: survival in
+    // [85%, 90%) ⇒ >10% of paths fail). The plan is mostly on track but its downside is rough, so HOLD —
+    // never tell an on-track plan to 'trim' (a self-contradicting message vs the headline), and never
+    // offer 'room' off a depleted bad decile. (U3-exit code-review pilot — the prior code fell an
+    // on-track/p10≤0 plan through to 'trim'.)
     direction = 'on-the-line'
     perMonth = 0
   } else {

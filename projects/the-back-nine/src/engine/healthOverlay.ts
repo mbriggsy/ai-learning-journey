@@ -72,6 +72,18 @@ export interface MagiComponents {
 }
 
 /**
+ * A solved per-year gross-up (M3): the converged gross withdrawal PLUS the floored MAGI ingredients
+ * read off the converging pass. Surfacing the components HERE — instead of recomputing MAGI off a
+ * raw taxable-gain ledger — is the load-bearing fix for the named sign-inversion (a down-market
+ * negative gain would understate MAGI; see the M3 wiring landmines above). `taxOverlay.ts`'s
+ * `solveGrossWithdrawal` produces this; the ACA solver consumes `acaMagi(components)` off it.
+ */
+export interface GrossUpSolution {
+  readonly gross: number
+  readonly components: MagiComponents
+}
+
+/**
  * ACA-MAGI (pre-65 premium-tax-credit basis): `AGI + non-taxable SS` (+ muni interest + excluded
  * foreign income, both 0 in the MVP), so the FULL Social-Security benefit effectively counts (the
  * non-taxable portion is added back on top of the taxable portion already in AGI). Drives the

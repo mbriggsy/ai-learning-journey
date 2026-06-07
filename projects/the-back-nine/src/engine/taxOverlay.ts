@@ -86,6 +86,7 @@ import {
   type OrdinaryBracket,
   type CapitalGainsRateBreakpoints,
 } from '@engine/constants'
+import type { GrossUpSolution } from '@engine/healthOverlay'
 import { NEVER_DEPLETED, type DepletionYear, type DrawdownPolicy, type FilingStatus } from '@shared/model'
 
 // Filing status is shared model vocabulary (the persisted scenario speaks it too). Re-exported
@@ -696,6 +697,12 @@ function advancePerPersonLedger(
  * Monotone-increasing and bounded (a contraction — worst-case effective marginal rate k ≈ 0.74,
  * see {@link GROSS_UP_MAX_PASSES}) → converges from below. THROWS if it has not converged within
  * {@link GROSS_UP_MAX_PASSES} (no in-range default, burned/062).
+ *
+ * Returns the converged gross AND the floored MAGI ingredients read off the converging pass (M3 —
+ * a {@link GrossUpSolution}): the ACA solver derives `acaMagi(components)` from these EXACT floored
+ * locals (realizedGain after its Math.max(0,·)) rather than recomputing MAGI off a raw-gain ledger
+ * (the named sign-inversion). The `gross` scalar is byte-identical to the pre-M3 scalar return, so
+ * the reduce-to-spine golden is untouched.
  */
 function solveGrossWithdrawal(
   net: number,
@@ -708,7 +715,7 @@ function solveGrossWithdrawal(
   count65: number,
   ssBenefit: number,
   bracketFillCeiling: number,
-): number {
+): GrossUpSolution {
   const taxableValue = drawPool.taxable
   let gross = net
   for (let pass = 0; pass < GROSS_UP_MAX_PASSES; pass++) {
@@ -723,10 +730,21 @@ function solveGrossWithdrawal(
     // provisional's "other income" (lifting taxable SS) but is taxed at preferential rates inside
     // ordinaryPlusCapitalGainsTax — never folded into the ordinary base.
     const nonSSordinary = Math.max(alloc.pretax, rmd) + conversion
-    const ordinaryIncome =
-      nonSSordinary + taxableSocialSecurity(nonSSordinary + realizedGain, ssBenefit, filing)
+    // Surface the taxable-SS local (M3): the identical value + call as before, so `nextGross` stays
+    // byte-identical — now also fed to the returned MagiComponents so acaMagi reads the FLOORED
+    // converged locals (never recomputed off a raw-gain ledger; the named sign-inversion).
+    const ssBenefitTaxable = taxableSocialSecurity(nonSSordinary + realizedGain, ssBenefit, filing)
+    const ordinaryIncome = nonSSordinary + ssBenefitTaxable
     const nextGross = net + ordinaryPlusCapitalGainsTax(ordinaryIncome, realizedGain, filing, count65)
-    if (Math.abs(nextGross - gross) < GROSS_UP_EPSILON) return nextGross
+    if (Math.abs(nextGross - gross) < GROSS_UP_EPSILON) {
+      // Components key off THIS converging pass's gross (pre-update); the |nextGross − gross| < 1e-7
+      // lag is sub-penny — far below the dollar grid the M3 cliff branch quantizes to. Do NOT
+      // recompute at nextGross (an extra pass whose .gross could be returned by mistake — byte risk).
+      return {
+        gross: nextGross,
+        components: { nonSSordinary, realizedGain, ssBenefitFull: ssBenefit, ssBenefitTaxable },
+      }
+    }
     gross = nextGross
   }
   throw new Error(
@@ -918,7 +936,7 @@ export function runTaxAwareDecumulation(
             regime.count65,
             ssBenefits[t] ?? 0,
             bracketFillCeiling,
-          )
+          ).gross
         : net
 
     // Per-bucket ledger: which buckets fund this withdrawal (consumed by the tax math). Allocated

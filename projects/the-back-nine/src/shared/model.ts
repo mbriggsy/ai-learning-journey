@@ -213,6 +213,27 @@ export interface OverlayParams {
    *  `bracket-fill`; a missing entry ⇒ the pre-tax-first fallback. The caller (P3 control / P4 solver,
    *  a tax-bracket edge today and an ACA-MAGI cliff once U3 lands) computes the dollar cap. */
   readonly bracketFillCeilings?: readonly number[]
+  // --- U3 healthcare overlay streams (consumed from M3 Slice 4; absent/`healthcareEnabled` false ⇒
+  //     the healthcare-blind path, byte-identical to the spine). Each cost stream is per-year real $,
+  //     indexed by ABSOLUTE year, and carries its own `Number.isFinite`-FIRST R19 guard at
+  //     `validateParams` (insights 008/010) — as-we-go (DON'T front-load a guessed input shape). ---
+  /** Master switch for the pre-65 ACA / post-65 IRMAA healthcare overlay. ABSENT/false ⇒ no healthcare
+   *  cost is priced (reduce-to-spine). NOTE: enabling alone never prices a premium — the per-year ACA
+   *  predicate ALSO requires a finite positive `enrolledPremium[t]`, so a stray `true` in a year with no
+   *  premium is inert (the finiteness-FIRST predicate, M3 Slice 4). */
+  readonly healthcareEnabled?: boolean
+  /** Selects the ARPA/IRA ENHANCED applicable-% table (no 400%-FPL cliff; flat 8.5% open top band) over
+   *  the statutory cliff regime (`acaApplicablePercentageEnhanced` vs `acaApplicablePercentage`). Both
+   *  tables ship verbatim from primary law (never faked), so the caller picks the regime matching the
+   *  plan year's enacted subsidy law. ABSENT/false ⇒ the statutory cliff regime. */
+  readonly enhancedSubsidies?: boolean
+  /** Per-year Second-Lowest-Cost Silver Plan premium (real $), the §36B benchmark the Premium Tax Credit
+   *  is computed against (`PTC = max(0, slcsp − applicable% × MAGI)`), indexed by ABSOLUTE year. */
+  readonly slcsp?: readonly number[]
+  /** Per-year enrolled-plan premium the household actually pays BEFORE any PTC (real $), indexed by
+   *  ABSOLUTE year — the structural upper bound on the net premium (`net = max(0, enrolled − PTC)`). A
+   *  finite positive value in a pre-65 year triggers the ACA fixed point (M3 Slice 4). */
+  readonly enrolledPremium?: readonly number[]
 }
 
 // ---------------------------------------------------------------------------

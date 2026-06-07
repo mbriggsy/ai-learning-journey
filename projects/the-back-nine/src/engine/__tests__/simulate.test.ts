@@ -241,6 +241,15 @@ describe('R19 engine half + dire-but-honest edges', () => {
       { taxEnabled: false, rmdEnabled: true, startCalendarYear: 2026, buckets: { taxable: 0, pretax: P, roth: 0 }, filing: 'mfj', pretaxByPerson: [P - 1_000] }, // sum ≠ buckets.pretax
       { taxEnabled: false, rmdEnabled: true, startCalendarYear: 2026, buckets: { taxable: 0, pretax: P, roth: 0 }, filing: 'mfj', pretaxByPerson: [NaN] }, // non-finite entry
       { taxEnabled: false, rmdEnabled: true, startCalendarYear: 2026, buckets: { taxable: 0, pretax: P, roth: 0 }, filing: 'mfj', pretaxByPerson: [P / 2, P / 2] }, // length ≠ people (base has 1)
+      // U3 healthcare cost streams (M3 Slice 3) — finiteness-FIRST, mirroring `conversions`. The
+      // +Infinity case is load-bearing: it is REJECTED here (a real premium has no +Infinity sentinel),
+      // the OPPOSITE of a bracket-fill ceiling — a regression that copied the ceiling guard would let it pass.
+      { taxEnabled: false, rmdEnabled: false, startCalendarYear: 2026, buckets: { taxable: 0, pretax: P, roth: 0 }, filing: 'mfj', slcsp: [NaN] }, // non-finite SLCSP
+      { taxEnabled: false, rmdEnabled: false, startCalendarYear: 2026, buckets: { taxable: 0, pretax: P, roth: 0 }, filing: 'mfj', slcsp: [-1] }, // negative SLCSP
+      { taxEnabled: false, rmdEnabled: false, startCalendarYear: 2026, buckets: { taxable: 0, pretax: P, roth: 0 }, filing: 'mfj', slcsp: [Infinity] }, // +Infinity SLCSP — REJECTED (unlike a ceiling)
+      { taxEnabled: false, rmdEnabled: false, startCalendarYear: 2026, buckets: { taxable: 0, pretax: P, roth: 0 }, filing: 'mfj', enrolledPremium: [NaN] }, // non-finite enrolled premium
+      { taxEnabled: false, rmdEnabled: false, startCalendarYear: 2026, buckets: { taxable: 0, pretax: P, roth: 0 }, filing: 'mfj', enrolledPremium: [-1] }, // negative enrolled premium
+      { taxEnabled: false, rmdEnabled: false, startCalendarYear: 2026, buckets: { taxable: 0, pretax: P, roth: 0 }, filing: 'mfj', enrolledPremium: [Infinity] }, // +Infinity enrolled premium — REJECTED
     ]
     for (const overlay of overlays) {
       expect(simulate({ ...base, overlay }, 1).indeterminate).toBe(true)
@@ -319,6 +328,26 @@ describe('U2 overlay wired into simulate (M6a)', () => {
       const withOverlayOff = dist(simulate({ ...COUPLE, drawdownPolicy: 'taxable-first', overlay: split }, 2468))
       expect(withOverlayOff.terminalValuesReal).toEqual(spineDist.terminalValuesReal)
       expect(withOverlayOff.depletionYears).toEqual(spineDist.depletionYears)
+    })
+
+    it('U3 healthcare fields PRESENT but disabled (healthcareEnabled false + populated SLCSP/enrolled streams) → byte-identical to the spine (the permanent healthcare reduce-to-spine contract)', () => {
+      // M3 Slice 3 plumbs the U3 streams at the type + R19 gate but NOTHING consumes them yet (Slice 4
+      // wires them into the loop). Even with fully-populated cost streams present and the enhanced-table
+      // toggle set, healthcareEnabled false MUST be byte-identical to the overlay-absent spine — the
+      // permanent contract that the healthcare-OFF path never perturbs the Trinity/Bengen decumulation.
+      // (Asserting OFF rather than a stray true keeps the test durable: Slice 4 makes a true MATTER.)
+      const withHealthFields: OverlayParams = {
+        ...offOverlay(COUPLE),
+        healthcareEnabled: false,
+        enhancedSubsidies: false,
+        slcsp: flatN(55, 12_000),
+        enrolledPremium: flatN(55, 15_000),
+      }
+      const spineDist = dist(simulate(COUPLE, 2468))
+      const withHealthOff = dist(simulate({ ...COUPLE, overlay: withHealthFields }, 2468))
+      expect(withHealthOff.terminalValuesReal).toEqual(spineDist.terminalValuesReal)
+      expect(withHealthOff.depletionYears).toEqual(spineDist.depletionYears)
+      expect(withHealthOff.survivalFraction).toBe(spineDist.survivalFraction)
     })
   })
 

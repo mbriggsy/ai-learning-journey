@@ -228,6 +228,15 @@ function validateParams(params: SimulationParams): string | null {
       if (Math.abs(ppSum - b.pretax) > 1e-6 * Math.max(1, Math.abs(b.pretax)))
         return 'overlay pretaxByPerson must sum to buckets.pretax'
     }
+    // U3 healthcare cost streams (consumed from M3 Slice 4; gated here at the R19 frontline so a bad
+    // premium returns the defined indeterminate output rather than detonating mid-path). Finiteness
+    // FIRST, mirroring the `conversions` guard — DELIBERATELY NOT `bracketFillCeilings`: a real dollar
+    // premium has NO +Infinity no-ceiling sentinel, so +Infinity is REJECTED here. A NaN/Infinity/negative
+    // SLCSP or enrolled premium is rejected (insight 008/010 — a NaN sails through the later `enrolled > 0`
+    // relational predicate and would silently DROP a real premium → the calm-but-wrong understatement).
+    if (o.slcsp !== undefined && !o.slcsp.every(finiteNonNeg)) return 'overlay slcsp invalid'
+    if (o.enrolledPremium !== undefined && !o.enrolledPremium.every(finiteNonNeg))
+      return 'overlay enrolledPremium invalid'
   }
   return null
 }

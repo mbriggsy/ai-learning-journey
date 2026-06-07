@@ -85,11 +85,13 @@ import {
   capitalGainsBreakpoints,
   acaApplicablePercentage,
   acaApplicablePercentageEnhanced,
+  irmaa,
+  partB2026,
   type OrdinaryBracket,
   type CapitalGainsRateBreakpoints,
   type AcaApplicablePercentageTable,
 } from '@engine/constants'
-import { solveAcaFundedGross, fplForHousehold, type GrossUpSolution } from '@engine/healthOverlay'
+import { solveAcaFundedGross, fplForHousehold, medicareAnnualCost, irmaaMagi, type GrossUpSolution } from '@engine/healthOverlay'
 import { NEVER_DEPLETED, type DepletionYear, type DrawdownPolicy, type FilingStatus } from '@shared/model'
 
 // Filing status is shared model vocabulary (the persisted scenario speaks it too). Re-exported
@@ -163,6 +165,13 @@ export interface TaxAwareResult extends DecumulationResult {
    *  zeroed it). It NEVER perturbs the reduce-to-spine total: `terminalReal` already reflects each
    *  premium via the grossed-up withdrawal that funds it — this is the parallel ACCOUNTING surface. */
   readonly totalNetPremiumReal: number
+  /** Σ of every year's post-65 Medicare premium cost actually funded (real $; U3 · M4): the base
+   *  Part B premium + the IRMAA Part B/D surcharge, per Medicare-enrolled (≥65) member. 0 when the
+   *  healthcare overlay is off / inert or nobody is ≥65. Like `totalNetPremiumReal` it is the parallel
+   *  ACCOUNTING surface — `terminalReal` already reflects each cost via the grossed-up withdrawal that
+   *  funds it, so this never perturbs the reduce-to-spine total. (The income-sensitive surcharge is the
+   *  strategy-relevant slice; the base premium is the income-invariant remainder.) */
+  readonly totalMedicareCostReal: number
 }
 
 /**
@@ -228,6 +237,12 @@ export interface TaxYearInputs {
   /** Per-year enrolled-plan premium the household pays BEFORE any PTC (real $), indexed by ABSOLUTE
    *  year. A finite positive entry in a pre-65 year triggers the outer ACA fixed point. */
   readonly enrolledPremium?: readonly number[]
+  /** The 2 PRE-SIM IRMAA-MAGI values `[MAGI[−2], MAGI[−1]]` (real $), seeding the post-65 IRMAA
+   *  feed-forward for sim years 0..lookback−1 (M4). Year t's surcharge keys off IRMAA-MAGI[t−2]; for
+   *  t < lookback the lagged MAGI predates the sim, so it comes from here. REQUIRED (fail-loud) iff a
+   *  member is Medicare-enrolled (≥65) in such a year — a default 0 would zero the surcharge → understate
+   *  cost → overstate survival (burned/062). Read only when healthcare is on (⇒ tax on); inert otherwise. */
+  readonly irmaaMagiSeed?: readonly number[]
 }
 
 const EMPTY_BUCKETS: AccountBuckets = { taxable: 0, pretax: 0, roth: 0 }
@@ -838,6 +853,7 @@ export function runTaxAwareDecumulation(
     enhancedSubsidies = false,
     slcsp = [],
     enrolledPremium = [],
+    irmaaMagiSeed = [],
   } = taxInputs
 
   // Healthcare requires tax (U3 · M3 Slice 4): the ACA PTC keys off ACA-MAGI, which this engine
@@ -890,6 +906,19 @@ export function runTaxAwareDecumulation(
       : acaApplicablePercentage.value
     : undefined
   let totalNetPremiumReal = 0
+
+  // IRMAA (M4): the post-65 Medicare cost is a 2-year-LAGGED feed-forward (research §4c), NOT a fixed
+  // point. The schedule + base Part B premium + the lookback length are run-invariant; bind them once.
+  // The lookback is READ from the constant (never a hard-coded 2). `irmaaMagiHistory[t]` records this
+  // engine's IRMAA-MAGI at every healthcare-on year's converged gross — EVEN pre-65 years, whose MAGI
+  // feeds a later Medicare year's surcharge (the lagged feed-forward); for t < lookback the lagged year
+  // predates the sim, so the surcharge reads `irmaaMagiSeed` instead. acaTable !== undefined IS the
+  // healthcare gate, so when healthcare is off none of this runs and reduce-to-spine is untouched.
+  const irmaaSchedule = irmaa.value
+  const irmaaLookback = irmaaSchedule.magiLookbackYears
+  const partBBaseMonthly = partB2026.value.standardPremiumMonthly
+  const irmaaMagiHistory: number[] = []
+  let totalMedicareCostReal = 0
 
   // Initial taxable basis is REQUIRED when tax is on and the taxable bucket is non-empty — there
   // is no safe default (0 over-taxes every realization; the full value silently no-ops cap-gains),
@@ -1029,20 +1058,48 @@ export function runTaxAwareDecumulation(
         ? { taxable: buckets.taxable, pretax: buckets.pretax - conversion, roth: buckets.roth + conversion }
         : buckets
 
-    // Gross up for tax (M3–M5), then — when the pre-65 ACA overlay is active THIS year — wrap that
-    // gross-up in the OUTER ACA premium-funding fixed point (U3 · M3 Slice 4). When tax is off,
-    // grossWithdrawal === net EXACTLY (spine recurrence); when healthcare is off / inert it is the
-    // tax-only gross — so reduce-to-spine + every M1–M6b fixture stays byte-identical. When ACA
-    // prices, the net premium is funded INSIDE grossWithdrawal (so terminalReal drops — the presence
-    // companion), and accrues to `totalNetPremiumReal` (the parallel accounting surface).
+    // Gross up for tax (M3–M5), then fold in the income-aware HEALTHCARE cost: the post-65 IRMAA
+    // Medicare cost (M4 — a known constant, added to the funded net) AND, when a member is pre-65 this
+    // year, the OUTER pre-65 ACA premium-funding fixed point (U3 · M3 Slice 4) wrapping the gross-up.
+    // When tax is off, grossWithdrawal === net EXACTLY (spine recurrence); when healthcare is off /
+    // inert (no Medicare cost, no priced premium) fundingNet === net (`net + 0`) and grossWithdrawal is
+    // the tax-only gross — so reduce-to-spine + every M1–M6b + every pre-65 M3 fixture stays
+    // byte-identical. When healthcare prices, the cost is funded INSIDE grossWithdrawal (terminalReal
+    // drops — the presence companion) and accrues to the parallel accounting surfaces.
     let grossWithdrawal: number
-    // Captured here, ACCRUED after the depletion check (correctness fix below) — never inline, so a year
-    // the portfolio cannot fund does not over-count a premium it failed to pay.
+    // Captured here, ACCRUED after the depletion check — never inline, so a year the portfolio cannot
+    // fund does not over-count a premium/surcharge it failed to pay.
     let acaNetPremiumThisYear = 0
+    let medicareCostThisYear = 0
     if (config.taxEnabled && regime) {
-      // The inner tax gross-up as a closure the ACA solver probes at (baseNet + a candidate premium).
-      // The year-constant inputs are bundled into one NAMED context (no positional transposition risk),
-      // and `fundNet(net).gross` stays byte-identical to the pre-Slice-4 path.
+      // IRMAA (M4): the year's post-65 Medicare cost is a CONSTANT addend to the spending the gross-up
+      // funds — keyed off IRMAA-MAGI[t−lookback] (already known), so it is NEVER a fixed point and NEVER
+      // a search variable (the step discontinuity, insight 013, cannot reach a root-finder here). Priced
+      // when ≥1 member is Medicare-enrolled (regime.count65 > 0 — the post-65 mirror of the ACA pre-65
+      // gate) AND healthcare is on (acaTable !== undefined). `filing[t−lookback]` is the threshold column,
+      // so the survivor MFJ→single flip is itself lagged +2yr; for t < lookback the lagged MAGI + filing
+      // predate the sim, supplied via irmaaMagiSeed + the initial household filing (both alive pre-sim).
+      if (acaTable !== undefined && regime.count65 > 0) {
+        const lag = t - irmaaLookback
+        const magiForBill = lag >= 0 ? irmaaMagiHistory[lag] : irmaaMagiSeed[t]
+        // Finiteness FIRST (insight 010): a missing seed for a near-65 start, or a NaN, must FAIL LOUD —
+        // never default 0 (a phantom $0 surcharge → understated cost → overstated survival, the cardinal
+        // calm-but-wrong sin; burned/062). validateParams shields `simulate`; this is the direct-caller backstop.
+        if (magiForBill === undefined || !Number.isFinite(magiForBill)) {
+          throw new Error(
+            `[taxOverlay] IRMAA needs a finite IRMAA-MAGI[t−${irmaaLookback}] for sim year ${t} (a Medicare-enrolled member) — ` +
+              `supply irmaaMagiSeed[${t}] for a sim starting within ${irmaaLookback}yr of age 65 (no default 0; burned/062, insight 010)`,
+          )
+        }
+        const filingForBill = lag >= 0 ? resolveYear(config.household, householdYears, lag).filing : config.household.filing
+        medicareCostThisYear = medicareAnnualCost(magiForBill, filingForBill, regime.count65, irmaaSchedule, partBBaseMonthly)
+      }
+      // The cash this year must fund = base spending + the (known) Medicare cost. With no Medicare cost
+      // (pre-65 / healthcare off) fundingNet === net EXACTLY (`net + 0`), so the pre-65 path is untouched.
+      const fundingNet = net + medicareCostThisYear
+
+      // The inner tax gross-up as a closure the ACA solver probes at (fundingNet + a candidate premium).
+      // The year-constant inputs are bundled into one NAMED context (no positional transposition risk).
       const grossUpCtx: GrossUpContext = {
         drawPool,
         policy,
@@ -1055,17 +1112,16 @@ export function runTaxAwareDecumulation(
         bracketFillCeiling,
       }
       const fundNet = (netTotal: number): GrossUpSolution => solveGrossWithdrawal(netTotal, grossUpCtx)
-      // AGE GATE (red-team blocker): ACA prices ONLY when ≥1 living member is pre-65. With every
-      // living member ≥ 65 (all on Medicare) there is no marketplace household — zero the cost, never
-      // a phantom post-65 subsidy (post-65 IRMAA is M4's job). pre65 = livingCount − living-65+.
+      // AGE GATE (red-team blocker): ACA prices ONLY when ≥1 living member is pre-65. With every living
+      // member ≥ 65 (all on Medicare) there is no marketplace household — zero the ACA cost (post-65 is
+      // IRMAA's job above), never a phantom subsidy. pre65 = livingCount − living-65+.
       const pre65 = regime.livingCount - regime.count65
       const enrolledThisYear = enrolledPremium[t]
-      // The per-year price/skip gate. `acaTable !== undefined` IS the healthcareEnabled gate (the table
-      // is selected iff healthcare is on) and narrows the table type for the solver call. The up-front
-      // backstop above already rejected any PRESENT non-finite/negative enrolled/slcsp (and validateParams
-      // does the same for `simulate`), so here `enrolledThisYear !== undefined` distinguishes a legitimate
-      // "no marketplace coverage this year" (absent/short → tax-only) from a priced year; `Number.isFinite
-      // && > 0` is then the belt-and-suspenders price decision (a NaN can no longer reach this line).
+      // The per-year ACA price/skip gate (`acaTable !== undefined` IS the healthcareEnabled gate; the
+      // up-front backstop already rejected any PRESENT non-finite/negative enrolled/slcsp). A priced year
+      // funds fundingNet (spending + Medicare) PLUS the net ACA premium; a non-priced year just grosses
+      // up fundingNet for tax. BOTH record this year's IRMAA-MAGI (the lagged feed-forward source for
+      // year t+lookback) off the converged FLOORED components — never a raw-gain ledger (the sign-inversion).
       if (
         acaTable !== undefined &&
         enrolledThisYear !== undefined &&
@@ -1074,10 +1130,9 @@ export function runTaxAwareDecumulation(
         pre65 > 0
       ) {
         // A missing benchmark in a priced year fails LOUD via the solver's own R19 backstop
-        // (NaN → throw → the worker's calm-error), never a silent phantom subsidy (slcsp[t] = 0 is
-        // the EXPLICIT no-subsidy value; an absent entry is a caller misconfiguration). burned/062.
+        // (NaN → throw → the worker's calm-error), never a silent phantom subsidy. burned/062.
         const aca = solveAcaFundedGross(
-          net,
+          fundingNet,
           slcsp[t] ?? Number.NaN,
           enrolledThisYear,
           fplForHousehold(regime.livingCount),
@@ -1086,8 +1141,16 @@ export function runTaxAwareDecumulation(
         )
         grossWithdrawal = aca.gross
         acaNetPremiumThisYear = aca.netPremium
+        irmaaMagiHistory[t] = irmaaMagi(aca.components)
       } else {
-        grossWithdrawal = fundNet(net).gross
+        const sol = fundNet(fundingNet)
+        grossWithdrawal = sol.gross
+        // Record IRMAA-MAGI only when healthcare is on (acaTable !== undefined); a healthcare-off
+        // tax-only year keeps the history empty (no IRMAA, reduce-to-spine untouched). The one-pass
+        // components lag (< 1e-7) is far below the $1 INTEGER IRMAA grid (insight 012 — no ceil helps
+        // on a `> N` branch), so a lag-induced tier flip is measure-zero (the same residual the ACA
+        // cliff already accepts off these components).
+        if (acaTable !== undefined) irmaaMagiHistory[t] = irmaaMagi(sol.components)
       }
     } else {
       grossWithdrawal = net
@@ -1117,6 +1180,9 @@ export function runTaxAwareDecumulation(
     // flowed through grossWithdrawal → stepYear); this keeps totalNetPremiumReal — the parallel accounting
     // surface — internally consistent with the depletion the same withdrawal caused. (U3-exit pilot.)
     totalNetPremiumReal += acaNetPremiumThisYear
+    // IRMAA Medicare cost accrues on the SAME after-depletion footing (the parallel post-65 accounting
+    // surface) — a year that could not fund its grossed-up withdrawal never over-counts the surcharge.
+    totalMedicareCostReal += medicareCostThisYear
 
     // Re-derive the buckets as fractions of the authoritative new total: each bucket's
     // post-withdrawal share grown by the one shared factor (no asset-location). The total
@@ -1165,5 +1231,12 @@ export function runTaxAwareDecumulation(
     }
   }
 
-  return { terminalReal: totalValue(state), depletionYear, finalBuckets: buckets, finalTaxableBasis: basis, totalNetPremiumReal }
+  return {
+    terminalReal: totalValue(state),
+    depletionYear,
+    finalBuckets: buckets,
+    finalTaxableBasis: basis,
+    totalNetPremiumReal,
+    totalMedicareCostReal,
+  }
 }

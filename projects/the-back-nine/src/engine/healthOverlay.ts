@@ -34,7 +34,8 @@
  *      cliff test, a value within rounding noise of 4.00×FPL can flip the branch (insight 010 —
  *      a near-edge comparison). Quantize the cliff decision like `confidence.ts` does the headline.
  */
-import { federalPovertyGuidelines, type AcaApplicablePercentageTable } from '@engine/constants'
+import { federalPovertyGuidelines, type AcaApplicablePercentageTable, type IrmaaSchedule } from '@engine/constants'
+import type { FilingStatus } from '@shared/model'
 
 /**
  * The per-year ingredients BOTH MAGIs are built from — the tax overlay's converged-gross
@@ -405,4 +406,79 @@ export function solveAcaFundedGross(
     belowFloor,
     overCliff: false,
   }
+}
+
+// =========================================================================
+// The post-65 IRMAA surcharge + full Medicare cost (M4).
+//
+// Post-65 the household enrolls in Medicare and (premium-free Part A assumed) loses the ACA PTC —
+// income-sensitivity switches OFF the ACA cliff and ON the IRMAA step (research §76). IRMAA is a
+// 2-year-LAGGED FEED-FORWARD, NOT a fixed point (research §4c): the surcharge for year t keys off
+// IRMAA-MAGI[t−2], which is already known, so within year t it is a CONSTANT addend to the spending
+// the gross-up funds — never a search variable, so the step-discontinuity hazard (insight 013) cannot
+// reach a root-finder here (it would only bite if a solver searched over an IRMAA-affected quantity).
+// These two functions are the pure pieces; the per-year IRMAA-MAGI history, the 2yr lag, the seed for
+// a sim starting near 65, and the survivor MFJ→single threshold flip (lagged +2yr, since year t's
+// threshold uses filing[t−2]) all live in taxOverlay.ts's runTaxAwareDecumulation.
+//
+// PURE: a function of (the IRMAA-MAGI scalar, filing, the constants). Reads ZERO draws (CRN-safe).
+// =========================================================================
+
+/**
+ * The per-person MONTHLY IRMAA surcharge (Part B + Part D combined) for an IRMAA-MAGI + filing
+ * status: the highest tier whose threshold IRMAA-MAGI STRICTLY EXCEEDS, else 0 (the implicit base
+ * tier — no surcharge). A PURE STEP function: $1 over a threshold owes the FULL tier (research §4c).
+ *
+ * The thresholds are lower-bound-EXCLUSIVE INTEGER dollars, so the raw `magi > threshold` compare is
+ * used directly — NO ceil/round "for noise" (insight 012: `ceil(x) > N ⟺ x > N` for integer N, a
+ * provable no-op on the branch; an exact-threshold MAGI is measure-zero and the conservative
+ * cost-overstating direction is inherent in the step's lower-exclusivity).
+ *
+ * Finiteness FIRST (insight 010): a NaN MAGI sails through every `>` comparison as false and would
+ * silently return 0 — a phantom no-surcharge → understated cost → overstated survival, the cardinal
+ * calm-but-wrong sin. Reject it loudly before any compare (burned/062), never coerce.
+ */
+export function irmaaTierSurchargeMonthly(magi: number, filing: FilingStatus, schedule: IrmaaSchedule): number {
+  if (!Number.isFinite(magi)) {
+    throw new Error(
+      `[healthOverlay] irmaaTierSurchargeMonthly: IRMAA-MAGI must be finite (got ${magi}) — a NaN passes every > compare (insight 010)`,
+    )
+  }
+  // tiers are ascending (constants.shape pins it); the LAST one strictly exceeded is the highest.
+  let surchargeMonthly = 0
+  for (const tier of schedule.tiers) {
+    const threshold = filing === 'mfj' ? tier.mfjMagiThreshold : tier.singleMagiThreshold
+    if (magi > threshold) surchargeMonthly = tier.partBSurchargeMonthly + tier.partDSurchargeMonthly
+  }
+  return surchargeMonthly
+}
+
+/**
+ * The full post-65 Medicare premium cost for one year (real $): the income-INVARIANT base Part B
+ * premium PLUS the income-sensitive IRMAA surcharge (Part B + Part D), per Medicare-enrolled person,
+ * annualized (×12). `enrolledCount` is the household's ≥65 count that year (the mirror of the ACA
+ * pre-65 gate); a couple both enrolled pays ×2 BY THE COUNT, never a hard-coded ×2 (research §44/§4c).
+ *
+ * The overlay funds this whole cost (the post-65 analog of funding the full pre-65 net ACA premium),
+ * so terminalReal drops by the grossed-up withdrawal that pays it. SCOPE — disclosed boundaries,
+ * never silent omissions (the cardinal rule):
+ *   - Part D BASE plan premium is NOT modeled (plan-specific, no sourced constant; the user budgets
+ *     their chosen Part D plan). Only the income-related Part D SURCHARGE is here.
+ *   - The Part B deductible / OOP cost-sharing is not a premium — it is HSA / OOP-medical (M5).
+ *   - Premium-free Part A is assumed (a retired couple with a 40-quarter history, §Strand 5);
+ *     purchased Part A premiums (partA2026) are out of scope.
+ *
+ * `irmaaMagiForBill` is IRMAA-MAGI[t−2] (the 2-year lag) and `filing` is the filing status of THAT
+ * lagged year (so the survivor MFJ→single threshold flip is itself lagged +2yr) — both from the caller.
+ */
+export function medicareAnnualCost(
+  irmaaMagiForBill: number,
+  filing: FilingStatus,
+  enrolledCount: number,
+  schedule: IrmaaSchedule,
+  partBBaseMonthly: number,
+): number {
+  if (enrolledCount <= 0) return 0
+  const surchargeMonthly = irmaaTierSurchargeMonthly(irmaaMagiForBill, filing, schedule)
+  return enrolledCount * (partBBaseMonthly + surchargeMonthly) * 12
 }

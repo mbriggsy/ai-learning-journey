@@ -718,22 +718,27 @@ describe('U3 healthcare overlay wired into simulate (M3 Slice 4)', () => {
     }
   })
 
-  it('the AGE GATE through simulate: an all-≥65 couple with the same enrolled premium is byte-identical to healthcare OFF', () => {
-    // The same scenario aged past 65 (currentAge 70 → ages 70–72): every member is ≥65, so the age
-    // gate suppresses ACA — no phantom post-65 subsidy, byte-identical to the tax-only run.
+  it('the AGE GATE through simulate: an all-≥65 couple gets NO ACA subsidy, but M4 IRMAA now prices the post-65 cost (the handoff at 65)', () => {
+    // The same scenario aged past 65 (currentAge 70 → ages 70–72): every member is ≥65, so the ACA age
+    // gate suppresses any PTC — but M4's IRMAA now funds the post-65 Medicare cost instead, so the run is
+    // NO LONGER byte-identical to healthcare-off (the income-aware curve is continuous across 65). A
+    // pre-sim IRMAA-MAGI seed is required because both spouses are Medicare-enrolled in years 0..1.
     const post = makeParams({
       ...base,
       people: [{ ...MALE_65, currentAge: 70, retirementAge: 70 }, { ...FEMALE_65, currentAge: 70, retirementAge: 70 }],
     })
     const on = dist(
       simulate(
-        { ...post, overlay: { ...overlayBase, healthcareEnabled: true, slcsp: flatN(3, 15_000), enrolledPremium: flatN(3, 15_000) } },
+        { ...post, overlay: { ...overlayBase, healthcareEnabled: true, slcsp: flatN(3, 15_000), enrolledPremium: flatN(3, 15_000), irmaaMagiSeed: [60_000, 60_000] } },
         2468,
       ),
     )
     const off = dist(simulate({ ...post, overlay: overlayBase }, 2468))
-    expect(on.terminalValuesReal).toEqual(off.terminalValuesReal)
-    expect(on.depletionYears).toEqual(off.depletionYears)
+    // ACA never fired (no pre-65 member), but IRMAA's Medicare cost left the portfolio on every path.
+    expect(on.terminalValuesReal).not.toEqual(off.terminalValuesReal)
+    for (let p = 0; p < on.terminalValuesReal.length; p++) {
+      expect(on.terminalValuesReal[p]!).toBeLessThan(off.terminalValuesReal[p]!)
+    }
   })
 
   describe('M3 Slice 5 — CRN stability across the ACA wiring (the healthcare branch draws ZERO)', () => {

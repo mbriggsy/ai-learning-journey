@@ -13,7 +13,7 @@ import {
 import { runDecumulation, type PortfolioState } from '@engine/decumulation'
 import { DRAWDOWN_POLICIES, NEVER_DEPLETED } from '@shared/model'
 import { totalAcrossBuckets, type AccountBuckets } from '@engine/sequencing'
-import { uniformLifetimeTableDivisors, capitalGainsBreakpoints } from '@engine/constants'
+import { uniformLifetimeTableDivisors, capitalGainsBreakpoints, irmaa, partB2026 } from '@engine/constants'
 import { fplForHousehold } from '@engine/healthOverlay'
 
 // ---------------------------------------------------------------------------
@@ -1678,6 +1678,9 @@ describe('taxOverlay — M3 Slice 4: the pre-65 ACA overlay wired into runTaxAwa
     healthcareEnabled: true,
     slcsp: yr3(15_000),
     enrolledPremium: yr3(15_000),
+    // A low pre-sim IRMAA-MAGI seed (below tier 1) so a POST65/MIXED run prices only the base Part B
+    // premium, no surcharge (M4). PRE65 runs (count65 = 0) never read it — the seed is inert there.
+    irmaaMagiSeed: [60_000, 60_000],
     ...over,
   })
 
@@ -1697,12 +1700,15 @@ describe('taxOverlay — M3 Slice 4: the pre-65 ACA overlay wired into runTaxAwa
   })
 
   describe('AGE GATE (red-team blocker): ACA prices ONLY when ≥1 living member is pre-65', () => {
-    it('an all-≥65 household with the SAME enrolled premium prices NOTHING (no phantom post-65 subsidy) → byte-identical to the tax-only run', () => {
+    it('an all-≥65 household gets NO ACA subsidy (the age gate) — and M4 IRMAA now carries the post-65 cost (the handoff at 65)', () => {
+      // The ACA→IRMAA handoff: post-65 the ACA gate zeroes any PTC (no phantom post-65 subsidy), but the
+      // income-aware cost does NOT vanish — IRMAA's base Medicare premium (+ surcharge) now funds instead.
+      // (Pre-M4 this was byte-identical to the tax-only run; M4 makes the post-65 healthcare cost REAL.)
       const gated = runTaxAwareDecumulation(buckets, realStock, realBond, baseNet, STOCK_W, 'pre-tax-first', POST65, health())
       const taxOnly = runTaxAwareDecumulation(buckets, realStock, realBond, baseNet, STOCK_W, 'pre-tax-first', POST65)
-      expect(gated.totalNetPremiumReal).toBe(0) // the age gate zeroed the cost
-      expect(gated.terminalReal).toBe(taxOnly.terminalReal) // byte-identical — ACA never fired
-      expect(gated.depletionYear).toBe(taxOnly.depletionYear)
+      expect(gated.totalNetPremiumReal).toBe(0) // ACA age gate: no pre-65 marketplace subsidy
+      expect(gated.totalMedicareCostReal).toBeGreaterThan(0) // ...but IRMAA Medicare cost now fires post-65
+      expect(gated.terminalReal).toBeLessThan(taxOnly.terminalReal) // the Medicare cost (+ its tax) left the portfolio
     })
 
     it('non-vacuous: the SAME enrolled premium DOES price for the otherwise-identical pre-65 household (age is the only mover)', () => {
@@ -2063,5 +2069,141 @@ describe('taxOverlay — M3 Slice 5: the integrated PTC value-correctness batter
       expect(r.depletionYear).toBe(NEVER_DEPLETED)
       expect(r.totalNetPremiumReal).toBeGreaterThan(0)
     })
+  })
+})
+
+// ===========================================================================
+// U3 · M4 — the post-65 IRMAA 2-year-lagged feed-forward wired into runTaxAwareDecumulation.
+//
+// The pure surcharge step function is golden at the unit level (healthOverlay.test.ts M4). This
+// battery proves the INTEGRATION: the year-t Medicare cost = base Part B premium + IRMAA surcharge
+// (from IRMAA-MAGI[t−2]), funded inside the gross-up, accrued to totalMedicareCostReal. It pins the
+// load-bearing M4 contracts a quick read would miss:
+//   - the lag is EXACTLY 2 years (a year-0 conversion moves the surcharge at year 2, never 0/1) — insight 014;
+//   - the surcharge keys off IRMAA-MAGI (TAXABLE SS), not ACA-MAGI (FULL SS) — the same dollars as SS
+//     escape a surcharge that the same dollars as a conversion trigger (the TODO mandate);
+//   - the survivor MFJ→single threshold flip is itself lagged +2yr (year t uses filing[t−2]) — insight 014;
+//   - reduce-to-spine: with no Medicare-enrolled member the cost is 0 and the path is byte-identical.
+//
+// EXTERNALLY DERIVED (DND/012): the base premium + the per-tier surcharge are READ from the committed
+// constants (re-typing a dated figure trips the copyGuard); the per-year-cost FORMULA (count × (base +
+// surcharge) × 12) is the independent hand oracle, never `medicareAnnualCost` itself.
+// ===========================================================================
+describe('taxOverlay — M4: the post-65 IRMAA feed-forward (externally derived, DND/012)', () => {
+  const PP = 2_000_000 // a big pretax pool — these multi-year runs never deplete
+  const POOL: AccountBuckets = { taxable: 0, pretax: PP, roth: 0 }
+  // Both born 1959 ⇒ age 67 at 2026 (Medicare-enrolled every year, count65 = 2). MFJ, tax on, RMD off
+  // (67 < the 73 RMD-start age — no RMD to muddy MAGI). The healthcare cost is pure IRMAA (no pre-65
+  // member ⇒ ACA never prices, so slcsp/enrolledPremium are omitted).
+  const POST65: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: false, household: mkHousehold(2026, 1959, 1959) }
+  const IRMAA_SCHED = irmaa.value
+  const BASE = partB2026.value.standardPremiumMonthly // read, never re-typed (copyGuard)
+  const lowSeed = [60_000, 60_000] // pre-sim IRMAA-MAGI below tier 1 ⇒ base premium only, no surcharge
+  // The independent hand oracle for one year's full Medicare cost: count × (base + surcharge) × 12.
+  const surchargeMonthly = (tierIdx: number) =>
+    IRMAA_SCHED.tiers[tierIdx]!.partBSurchargeMonthly + IRMAA_SCHED.tiers[tierIdx]!.partDSurchargeMonthly
+  const medicareAnnual = (count: number, tierIdx: number | null) =>
+    count * (BASE + (tierIdx === null ? 0 : surchargeMonthly(tierIdx))) * 12
+  const run = (net: readonly number[], inputs: TaxYearInputs, cfg: TaxOverlayConfig = POST65) =>
+    runTaxAwareDecumulation(POOL, realStock, realBond, net, STOCK_W, 'pre-tax-first', cfg, inputs)
+
+  it('presence + value: a post-65 couple funds the base Part B premium (×2 enrolled, ×12) that leaves the portfolio', () => {
+    const on = run([40_000], { healthcareEnabled: true, irmaaMagiSeed: lowSeed })
+    const off = run([40_000], {})
+    expect(on.totalMedicareCostReal).toBeCloseTo(medicareAnnual(2, null), 4) // 2 enrolled, base only (low seed)
+    expect(on.terminalReal).toBeLessThan(off.terminalReal) // the cost (+ its tax gross-up) left the portfolio
+    expect(off.totalMedicareCostReal).toBe(0) // healthcare off prices nothing (reduce-to-spine)
+  })
+
+  it('a high pre-sim seed drives the IRMAA surcharge: tier selected on the MFJ threshold, charged ×2 enrolled', () => {
+    // seed[0] = $1 over the MFJ tier-1 threshold ⇒ tier 1 (lower-bound-exclusive), filing[t−2] = MFJ
+    // (pre-sim, both alive), count65 = 2 ⇒ 2 × (base + tier-1 surcharge) × 12.
+    const seedHi = [IRMAA_SCHED.tiers[0]!.mfjMagiThreshold + 1, 60_000]
+    const r = run([40_000], { healthcareEnabled: true, irmaaMagiSeed: seedHi })
+    expect(r.totalMedicareCostReal).toBeCloseTo(medicareAnnual(2, 0), 4)
+  })
+
+  it('the lag is EXACTLY 2 years: a year-0 conversion moves the surcharge at year 2, NEVER years 0 or 1 (insight 014)', () => {
+    const bigConv = [IRMAA_SCHED.tiers[1]!.mfjMagiThreshold, 0, 0] // a year-0 conversion that lifts MAGI[0] over a tier
+    const noConv = [0, 0, 0]
+    const inputs = (conv: number[]): TaxYearInputs => ({ healthcareEnabled: true, irmaaMagiSeed: lowSeed, conversions: conv })
+    // 2-year horizon: years 0,1 surcharge keys off the (low) SEED, never the conversion ⇒ BYTE-identical
+    // Medicare cost with vs without the year-0 conversion. Proves there is no 0-lag and no 1-lag.
+    expect(run([40_000, 40_000], inputs(bigConv)).totalMedicareCostReal).toBe(
+      run([40_000, 40_000], inputs(noConv)).totalMedicareCostReal,
+    )
+    // 3-year horizon: year 2 reads IRMAA-MAGI[0], which the year-0 conversion pushed over a tier ⇒ strictly
+    // MORE Medicare cost. The effect appears for the FIRST time at year 2 — the +2 lag, exactly.
+    expect(run([40_000, 40_000, 40_000], inputs(bigConv)).totalMedicareCostReal).toBeGreaterThan(
+      run([40_000, 40_000, 40_000], inputs(noConv)).totalMedicareCostReal,
+    )
+  })
+
+  it('the surcharge keys off IRMAA-MAGI (TAXABLE SS), not ACA-MAGI (FULL SS): SS dollars escape a surcharge that conversion dollars trigger', () => {
+    const bigSS = 240_000
+    // Run SS: a large SS benefit. IRMAA-MAGI counts only the TAXABLE portion (≪ full benefit here — the
+    // 85% cap is not even reached), so year-2's IRMAA-MAGI[0] ≈ a small ordinary draw + ~$100k taxable SS
+    // ≈ $135k, well below the MFJ tier-1 threshold ($218k) ⇒ NO surcharge in any year (years 0,1 from the
+    // low seed, year 2 from IRMAA-MAGI[0]). If the engine WRONGLY used ACA-MAGI = full SS, IRMAA-MAGI[0]
+    // would be ≈ $275k (> $218k) and year 2 WOULD be surcharged — so the exact base-only total proves taxable-SS.
+    const runSS = run([20_000, 20_000, 20_000], { healthcareEnabled: true, irmaaMagiSeed: lowSeed, ssBenefits: [bigSS, bigSS, bigSS] })
+    // Run CONV: the SAME $240k delivered as a fully-ordinary year-0 Roth conversion ⇒ IRMAA-MAGI[0] ≫ $218k
+    // ⇒ year 2 IS surcharged. The contrast isolates the SS treatment as the only mover.
+    const runConv = run([20_000, 20_000, 20_000], { healthcareEnabled: true, irmaaMagiSeed: lowSeed, conversions: [bigSS, 0, 0] })
+    expect(runSS.totalMedicareCostReal).toBeCloseTo(medicareAnnual(2, null) * 3, 4) // all 3 years base only — no surcharge
+    expect(runConv.totalMedicareCostReal).toBeGreaterThan(runSS.totalMedicareCostReal) // the conversion DID trigger year 2
+  })
+
+  it('the survivor MFJ→single threshold flip is lagged +2yr: the widow(er)’s penalty lands at year d+2 (insight 014)', () => {
+    // owner + spouse both born 1955 (age 71 at 2026, Medicare every year). The spouse dies at offset 2 ⇒
+    // both alive years 0,1; the survivor (owner) alone from year 2. Filing[t] is MFJ years 0,1 then single.
+    // The IRMAA threshold for year t uses filing[t−2], so the survivor is still MFJ-thresholded in years 2,3
+    // and only flips to the (tighter) single thresholds at year 4 = d+2. A conversion in years 1 and 2 puts
+    // IRMAA-MAGI[1] and IRMAA-MAGI[2] ≈ $150k — between the single tier-1 ($109k) and MFJ tier-1 ($218k)
+    // thresholds. So year 3 (uses MAGI[1], MFJ-thresholded) is NOT surcharged, but year 4 (uses MAGI[2],
+    // single-thresholded) IS — same income, only the threshold column moved, exactly 2 years after the death.
+    const owner = { birthYear: 1955 }
+    const spouse = { birthYear: 1955 }
+    const cfg: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: false, household: { startCalendarYear: 2026, filing: 'mfj', owner, spouse } }
+    const living: HouseholdYear[] = [
+      { living: [owner, spouse] }, // year 0
+      { living: [owner, spouse] }, // year 1
+      { living: [owner] }, // year 2 — spouse died at offset 2 (survivor files single from here)
+      { living: [owner] }, // year 3
+      { living: [owner] }, // year 4
+    ]
+    const inputs = (years: number): TaxYearInputs => ({
+      healthcareEnabled: true,
+      irmaaMagiSeed: lowSeed,
+      conversions: [0, 90_000, 90_000, 0, 0].slice(0, years), // years 1,2 → MAGI[1],MAGI[2] ≈ $150k
+      householdYears: living.slice(0, years),
+    })
+    const net = [40_000, 40_000, 40_000, 40_000, 40_000]
+    const total = (years: number) => run(net.slice(0, years), inputs(years), cfg).totalMedicareCostReal
+    // Isolate each year's Medicare cost by horizon differencing.
+    const year3Cost = total(4) - total(3) // survivor, MFJ-thresholded (filing[1]) on MAGI[1] ≈ $150k < $218k
+    const year4Cost = total(5) - total(4) // survivor, SINGLE-thresholded (filing[2]) on MAGI[2] ≈ $150k > $109k
+    expect(year3Cost).toBeCloseTo(medicareAnnual(1, null), 4) // 1 survivor, NO surcharge (still MFJ-thresholded)
+    expect(year4Cost).toBeGreaterThan(medicareAnnual(1, null)) // the single-threshold surcharge has now landed
+    expect(year4Cost).toBeGreaterThan(year3Cost) // the widow(er)’s penalty — same income, +2yr after the death
+  })
+
+  it('reduce-to-spine + determinism: IRMAA is inert with healthcare off, and a healthcare-on run is byte-stable', () => {
+    const off = run([40_000, 40_000], {})
+    const spineRun = spine(PP, [40_000, 40_000])
+    expect(off.totalMedicareCostReal).toBe(0)
+    expect(off.terminalReal).toBeCloseTo(spineRun.terminalReal, 6) // tax-off + single-pool ⇒ the spine
+    const a = run([40_000, 40_000], { healthcareEnabled: true, irmaaMagiSeed: lowSeed })
+    const b = run([40_000, 40_000], { healthcareEnabled: true, irmaaMagiSeed: lowSeed })
+    expect(a.totalMedicareCostReal).toBe(b.totalMedicareCostReal) // deterministic (zero draws)
+    expect(a.terminalReal).toBe(b.terminalReal)
+  })
+
+  it('fail-loud (burned/062): a Medicare-enrolled early year with NO seed throws — never a default-0 phantom surcharge', () => {
+    // POST65 both 67 ⇒ count65 = 2 in year 0, which needs IRMAA-MAGI[−2] = irmaaMagiSeed[0]. Absent ⇒ throw
+    // (the direct-caller backstop; validateParams returns indeterminate for `simulate`). A default 0 would
+    // zero the surcharge → understate cost → overstate survival (the cardinal calm-but-wrong sin).
+    expect(() => run([40_000], { healthcareEnabled: true })).toThrow(/irmaaMagiSeed/)
+    expect(() => run([40_000], { healthcareEnabled: true, irmaaMagiSeed: [Number.NaN, 60_000] })).toThrow(/irmaaMagiSeed|finite/)
   })
 })

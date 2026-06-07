@@ -234,6 +234,14 @@ export interface OverlayParams {
    *  ABSOLUTE year — the structural upper bound on the net premium (`net = max(0, enrolled − PTC)`). A
    *  finite positive value in a pre-65 year triggers the ACA fixed point (M3 Slice 4). */
   readonly enrolledPremium?: readonly number[]
+  /** The 2 PRE-SIM IRMAA-MAGI values `[MAGI[−2], MAGI[−1]]` (real $), seeding the post-65 IRMAA
+   *  2-year-lagged feed-forward (M4). Year t's surcharge keys off IRMAA-MAGI[t−2]; for t < 2 that
+   *  year is before the sim, so the caller supplies the household's actual prior MAGI (e.g. from recent
+   *  returns). REQUIRED (fail-loud, never default 0) iff a member is Medicare-enrolled (≥65) in year 0
+   *  (needs seed[0]) or year 1 (needs seed[1]); a default-0 would falsely zero the surcharge →
+   *  understate cost → overstate survival (the cardinal calm-but-wrong sin). Unused once the sim has
+   *  ≥2 years of its own history. ABSENT is legitimate when no one is near 65 at the start. */
+  readonly irmaaMagiSeed?: readonly number[]
 }
 
 // ---------------------------------------------------------------------------

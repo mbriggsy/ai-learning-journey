@@ -24,6 +24,7 @@ import {
   type HouseholdYear,
   type OverlayPerson,
 } from '@engine/taxOverlay'
+import { irmaa } from '@engine/constants'
 import { DRAWDOWN_POLICIES, NEVER_DEPLETED, type DepletionYear, type Distribution, type SimulationParams } from '@shared/model'
 
 /** The CRN draw matrices — pure in (seed, dimensions). */
@@ -275,6 +276,10 @@ function validateParams(params: SimulationParams): string | null {
     if (o.slcsp !== undefined && !o.slcsp.every(finiteNonNeg)) return 'overlay slcsp invalid'
     if (o.enrolledPremium !== undefined && !o.enrolledPremium.every(finiteNonNeg))
       return 'overlay enrolledPremium invalid'
+    // IRMAA pre-sim MAGI seed (M4): finiteness FIRST whenever present (insight 008/010 — a NaN would
+    // sail through the seed-required relational check below AND poison the surcharge tier compare). A
+    // seed is a real IRMAA-MAGI (AGI), so finite ≥ 0 (0 is the legitimate low-income value).
+    if (o.irmaaMagiSeed !== undefined && !o.irmaaMagiSeed.every(finiteNonNeg)) return 'overlay irmaaMagiSeed invalid'
     // Healthcare pricing is MAGI-driven and MAGI comes ONLY from the tax solver, so healthcare with
     // tax OFF is incoherent — reject it as indeterminate rather than silently drop the premium (the
     // survival-overstating, unsafe direction). The R19 frontline mirror of the overlay's own backstop
@@ -292,6 +297,21 @@ function validateParams(params: SimulationParams): string | null {
         const e = enrolled[t]
         if (e !== undefined && Number.isFinite(e) && e > 0 && !Number.isFinite(slcsp[t]))
           return 'overlay slcsp must cover every enrolled-premium year'
+      }
+      // IRMAA seed COVERAGE (M4; mirrors the overlay backstop — the "fail-loud at BOTH layers" rule): a
+      // year t < lookback whose surcharge keys off pre-sim IRMAA-MAGI[t−lookback] needs `irmaaMagiSeed[t]`
+      // whenever a member is Medicare-enrolled (≥65) that year. Age in sim year t = currentAge + t (the
+      // overlay's birthYear = startCalendarYear − currentAge), so "≥65 in year t" ⇔ currentAge + t ≥ 65.
+      // CONSERVATIVE on death: require the seed if ANY person is age-eligible (they are enrolled on the
+      // paths where they live). Missing → the defined indeterminate output, never a mid-path throw and
+      // never a default 0 (a phantom $0 surcharge → understated cost → overstated survival; burned/062).
+      // The lookback is READ from the constant so this can never drift from the overlay's own lookback.
+      const lookback = irmaa.value.magiLookbackYears
+      const seed = o.irmaaMagiSeed ?? []
+      for (let t = 0; t < lookback; t++) {
+        const medicareEnrolledThisYear = params.people.some((pp) => pp.currentAge + t >= 65)
+        if (medicareEnrolledThisYear && !Number.isFinite(seed[t]))
+          return `overlay irmaaMagiSeed[${t}] required (a member is Medicare-enrolled within ${lookback}yr of the start)`
       }
     }
   }
@@ -439,6 +459,9 @@ export function simulate(params: SimulationParams, seed: number): SimOutput {
                 enhancedSubsidies: overlay.enhancedSubsidies ?? false,
                 slcsp: overlay.slcsp ?? [],
                 enrolledPremium: overlay.enrolledPremium ?? [],
+                // IRMAA pre-sim MAGI seed (M4): only the lagged early years read it; the validateParams
+                // gate has already required it whenever a member is Medicare-enrolled (≥65) in years 0..lookback−1.
+                irmaaMagiSeed: overlay.irmaaMagiSeed ?? [],
               }
             : {}),
         },

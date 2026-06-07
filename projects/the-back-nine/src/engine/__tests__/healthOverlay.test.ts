@@ -6,10 +6,12 @@ import {
   slidingScalePtc,
   applicableContributionFraction,
   fplForHousehold,
+  irmaaTierSurchargeMonthly,
+  medicareAnnualCost,
   type MagiComponents,
   type FundNet,
 } from '@engine/healthOverlay'
-import { acaApplicablePercentage, acaApplicablePercentageEnhanced } from '@engine/constants'
+import { acaApplicablePercentage, acaApplicablePercentageEnhanced, irmaa, partB2026 } from '@engine/constants'
 
 // ---------------------------------------------------------------------------
 // P1·U3 · M2 — the two MAGI calculators are PROVABLY DISTINCT.
@@ -247,5 +249,104 @@ describe('healthOverlay — M3 Slice 2: solveAcaFundedGross (bisection + cliff b
     const impliedPtc = slidingScalePtc(r.magi, 4_000, FPL2, REVERTED)
     const impliedNet = Math.max(0, 4_000 - Math.min(impliedPtc, 4_000))
     expect(impliedNet).toBeCloseTo(r.netPremium, 4)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// P1·U3 · M4 — the post-65 IRMAA surcharge + full Medicare cost (pure step function).
+//
+// Externally-derived (DND/012): every expected dollar below is hand-computed from the committed
+// `irmaa` constant + `partB2026.standardPremiumMonthly`, never by re-running the function under test.
+// The threshold INPUTS are read FROM the constant (the single-source copyGuard forbids re-typing a
+// dated figure — CLAUDE.md), and the boundary is probed at threshold and threshold+1; the expected
+// SURCHARGES (95.7 = 81.2+14.5 etc.) are hand-summed literals, an independent check.
+//
+// IRMAA is a PURE STEP function: a tier applies when IRMAA-MAGI STRICTLY EXCEEDS its threshold
+// (lower-bound-EXCLUSIVE; $1 over → the FULL tier — research §4c, insight 013). The combined
+// per-person monthly surcharge is Part B + Part D; the full annual cost adds the income-INVARIANT
+// base Part B premium and scales by the Medicare-enrolled (65+) count × 12. The thresholds are
+// INTEGER dollars, so NO ceil/round "for noise" is applied (insight 012 — a provable no-op on a
+// `> N` branch); the conservative direction is inherent in the step.
+//
+//   Tier   Part B surch + Part D surch = combined monthly
+//   1       81.2 + 14.5  =  95.7
+//   2       (tier-2 B) + 37.5  = 240.4
+//   3       324.6 + 60.4  = 385.0
+//   4       446.3 + 83.3  = 529.6
+//   5       487.0 + 91.0  = 578.0   (the frozen top tier breaks MFJ = 2×single)
+// ---------------------------------------------------------------------------
+
+const IRMAA = irmaa.value
+const PARTB_BASE = partB2026.value.standardPremiumMonthly // read, never re-typed (copyGuard)
+// Threshold inputs read from the constant (single-source); +1 probes the exclusive boundary.
+const T = IRMAA.tiers
+const singleThresh = (i: number) => T[i]!.singleMagiThreshold
+const mfjThresh = (i: number) => T[i]!.mfjMagiThreshold
+
+describe('healthOverlay — M4: irmaaTierSurchargeMonthly (the pure per-person step function)', () => {
+  it('returns 0 below the first tier (the base/standard tier is implicit — no surcharge)', () => {
+    expect(irmaaTierSurchargeMonthly(singleThresh(0) - 9_000, 'single', IRMAA)).toBe(0)
+    expect(irmaaTierSurchargeMonthly(singleThresh(0) - 1, 'single', IRMAA)).toBe(0)
+    expect(irmaaTierSurchargeMonthly(mfjThresh(0) - 1, 'mfj', IRMAA)).toBe(0)
+  })
+
+  it('the threshold is lower-bound-EXCLUSIVE: AT the threshold = no surcharge, $1 OVER = the full tier (insight 013)', () => {
+    expect(irmaaTierSurchargeMonthly(singleThresh(0), 'single', IRMAA)).toBe(0) // exactly at → not exceeded
+    expect(irmaaTierSurchargeMonthly(singleThresh(0) + 1, 'single', IRMAA)).toBeCloseTo(95.7, 6) // $1 over → tier 1
+    expect(irmaaTierSurchargeMonthly(mfjThresh(0), 'mfj', IRMAA)).toBe(0)
+    expect(irmaaTierSurchargeMonthly(mfjThresh(0) + 1, 'mfj', IRMAA)).toBeCloseTo(95.7, 6)
+  })
+
+  it('selects the HIGHEST tier strictly exceeded (single schedule)', () => {
+    expect(irmaaTierSurchargeMonthly(singleThresh(1), 'single', IRMAA)).toBeCloseTo(95.7, 6) // AT tier-2 edge ⇒ still tier 1
+    expect(irmaaTierSurchargeMonthly(singleThresh(1) + 1, 'single', IRMAA)).toBeCloseTo(240.4, 6) // tier 2
+    expect(irmaaTierSurchargeMonthly(singleThresh(2) + 1, 'single', IRMAA)).toBeCloseTo(385.0, 6) // tier 3
+    expect(irmaaTierSurchargeMonthly(singleThresh(3) + 1, 'single', IRMAA)).toBeCloseTo(529.6, 6) // tier 4
+    expect(irmaaTierSurchargeMonthly(singleThresh(4) + 1, 'single', IRMAA)).toBeCloseTo(578.0, 6) // tier 5
+  })
+
+  it('MFJ uses the doubled thresholds (tiers 1–4) — a couple-income that is tier 2 single is below tier 1 MFJ', () => {
+    // A MAGI between the single tier-2 edge and the MFJ tier-1 edge: single → tier 2, MFJ → 0.
+    const m = singleThresh(1) + 1 // > single tier-2 edge, and (= 137,001) < MFJ tier-1 edge (218,000)
+    expect(irmaaTierSurchargeMonthly(m, 'single', IRMAA)).toBeCloseTo(240.4, 6)
+    expect(irmaaTierSurchargeMonthly(m, 'mfj', IRMAA)).toBe(0)
+  })
+
+  it('the FROZEN top tier breaks MFJ = 2×single (the top MFJ edge is NOT 2× the single edge)', () => {
+    // Just over the top MFJ edge → tier 5. If that edge were 2×single, this MAGI would be only tier 4.
+    expect(irmaaTierSurchargeMonthly(mfjThresh(4) + 10_000, 'mfj', IRMAA)).toBeCloseTo(578.0, 6)
+    expect(irmaaTierSurchargeMonthly(mfjThresh(3) + 10_000, 'mfj', IRMAA)).toBeCloseTo(529.6, 6) // tier 4 (not yet top)
+    // The structural fact the freeze creates: the top MFJ edge is strictly below 2× the top single edge.
+    expect(mfjThresh(4)).toBeLessThan(2 * singleThresh(4))
+  })
+
+  it('R19: a non-finite MAGI fails LOUD before any tier comparison (insight 010 — every compare with NaN is false)', () => {
+    expect(() => irmaaTierSurchargeMonthly(NaN, 'single', IRMAA)).toThrow(/finite/)
+    expect(() => irmaaTierSurchargeMonthly(Infinity, 'mfj', IRMAA)).toThrow(/finite/)
+  })
+})
+
+describe('healthOverlay — M4: medicareAnnualCost (base Part B + IRMAA surcharge) × enrolled × 12', () => {
+  it('below the first tier: only the income-invariant base Part B premium (no surcharge)', () => {
+    // 1 enrolled, MAGI below tier 1: PARTB_BASE × 12 (no surcharge).
+    expect(medicareAnnualCost(singleThresh(0) - 9_000, 'single', 1, IRMAA, PARTB_BASE)).toBeCloseTo(PARTB_BASE * 12, 6)
+  })
+
+  it('tier 1 single: (base + surcharge 95.7) × 12 per person', () => {
+    // MAGI just over tier-1 edge → (PARTB_BASE + 95.7) × 12.
+    expect(medicareAnnualCost(singleThresh(0) + 1, 'single', 1, IRMAA, PARTB_BASE)).toBeCloseTo((PARTB_BASE + 95.7) * 12, 6)
+  })
+
+  it('per-person scaling: a couple both enrolled pays exactly twice (×count, never hardcoded ×2)', () => {
+    // MFJ, MAGI just over tier-2 edge → surcharge 240.4; (base + 240.4) × 12 per person; ×2 for two enrolled.
+    const m = mfjThresh(1) + 1
+    const one = medicareAnnualCost(m, 'mfj', 1, IRMAA, PARTB_BASE)
+    const two = medicareAnnualCost(m, 'mfj', 2, IRMAA, PARTB_BASE)
+    expect(one).toBeCloseTo((PARTB_BASE + 240.4) * 12, 6)
+    expect(two).toBeCloseTo(2 * one, 6)
+  })
+
+  it('zero enrolled (nobody on Medicare) = zero cost (the pre-65 / reduce-to-spine domain)', () => {
+    expect(medicareAnnualCost(mfjThresh(1) + 1, 'mfj', 0, IRMAA, PARTB_BASE)).toBe(0)
   })
 })

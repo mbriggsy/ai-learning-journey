@@ -5,7 +5,13 @@
  *
  * The spine reads NOTHING from here; only the healthcare overlay (U3) consumes it.
  */
-import { sourced, type ConstantEntry } from './types'
+import {
+  sourced,
+  type ConstantEntry,
+  type AcaApplicablePercentageTable,
+  type FederalPovertyGuidelines,
+  type IrmaaSchedule,
+} from './types'
 
 export const COVERAGE_YEAR = 2026
 
@@ -34,29 +40,49 @@ export const acaEnhancedSubsidyStatus = sourced(
   },
 )
 
-/** ACA applicable-percentage sliding scale (2026 reverted regime). */
-export const acaApplicablePercentage = sourced(
-  { scaleLowPct: 2.1, scaleHighPct: 9.96, interiorEndpointsPct: [2.1, 4.19, 6.6, 8.44, 9.96] as const },
+/** ACA applicable-percentage sliding scale + the PTC eligibility window (2026
+ *  reverted / pre-ARPA regime). Each band's applicable % is LINEARLY interpolated;
+ *  the 400% subsidy cliff is BACK for 2026. Read verbatim from IRS Rev. Proc.
+ *  2025-25 §3.01 and cross-verified against an independent secondary; the only
+ *  previously-missing value was the 133%-band lower bound (3.14%). LEGISLATIVELY
+ *  GATED (reVerifyEveryBuild) — if the enhanced subsidies are restored, the cliff
+ *  disappears and the whole scale changes. */
+export const acaApplicablePercentage = sourced<AcaApplicablePercentageTable>(
   {
-    citation: 'pre65-healthcare doc; IRS Rev. Proc. 2025-25',
+    bands: [
+      { fplFractionLow: 0, fplFractionHigh: 1.33, applicablePctLow: 2.1, applicablePctHigh: 2.1 },
+      { fplFractionLow: 1.33, fplFractionHigh: 1.5, applicablePctLow: 3.14, applicablePctHigh: 4.19 },
+      { fplFractionLow: 1.5, fplFractionHigh: 2.0, applicablePctLow: 4.19, applicablePctHigh: 6.6 },
+      { fplFractionLow: 2.0, fplFractionHigh: 2.5, applicablePctLow: 6.6, applicablePctHigh: 8.44 },
+      { fplFractionLow: 2.5, fplFractionHigh: 3.0, applicablePctLow: 8.44, applicablePctHigh: 9.96 },
+      { fplFractionLow: 3.0, fplFractionHigh: 4.0, applicablePctLow: 9.96, applicablePctHigh: 9.96 },
+    ],
+    cliffFplFraction: 4.0,
+    eligibilityFloorFplFraction: 1.0,
+  },
+  {
+    citation:
+      'IRS Rev. Proc. 2025-25 §3.01 (rp-25-25.pdf, read verbatim cell-by-cell) + secondary cross-verified (currentfederaltaxdevelopments.com; healthinsurance.org) — zero disagreement',
     directionalUntilPinned: true,
-    pinTo: 'IRS Rev. Proc. 2025-25 (rp-25-25.pdf)',
+    pinTo: 'IRS Rev. Proc. 2025-25 §3.01 (irs.gov/pub/irs-drop/rp-25-25.pdf)',
     reVerifyEveryBuild: true,
-    note: 'Reverted/cliff regime for 2026 (vs 0–8.5% enhanced 2021–2025). Confirm every bracket-edge decimal; sliding by FPL band.',
+    note: '2026 REVERTED regime (vs 0–8.5% enhanced 2021–2025). Applicable % is LINEARLY interpolated within each FPL band; the 400% subsidy cliff is BACK (PTC = 0 strictly above 400% FPL). PTC eligibility floor = 100% FPL (below = Medicaid, OUT-but-disclosed, state-dependent). The FPL% denominator for 2026 coverage uses the 2025 HHS guidelines (prior-year).',
   },
 )
 
-/** 400% FPL subsidy cliff (back for 2026): $1 over → loss of ALL premium tax
- *  credits. Household-of-2 ≈ $84,600 (a rounded approximation, NOT from the HHS
- *  primary). 2026 coverage uses the 2025 HHS poverty guidelines. */
-export const aca400FplCliff = sourced(
-  { householdOf2Approx: 84_600, fplBasisYear: 2025, note: 'AK/HI higher' },
+/** 2025 HHS Federal Poverty Guidelines (48 contiguous states + DC) — the table ACA
+ *  uses for the 2026 COVERAGE year (the prior-year guidelines apply). A household of
+ *  N = base + (N − 1) × perAdditionalPerson. The 400% cliff DOLLAR is DERIVED
+ *  (4.0 × FPL(householdSize)), never re-typed — e.g. household-of-2 = $21,150 →
+ *  cliff $84,600 exactly. Alaska/Hawaii have separate higher tables (OUT-but-disclosed). */
+export const federalPovertyGuidelines = sourced<FederalPovertyGuidelines>(
+  { guidelineYear: 2025, base: 15_650, perAdditionalPerson: 5_500 },
   {
-    citation: 'pre65-healthcare doc (rounded; not the HHS table)',
+    citation:
+      '2025 HHS Poverty Guidelines, 48 contiguous + DC (ASPE computations table + Federal Register, cross-verified); base + uniform $5,500 increment reconstruct all household sizes exactly',
     directionalUntilPinned: true,
-    pinTo: 'HHS 2025 Poverty Guidelines (Federal Register)',
-    reVerifyEveryBuild: true,
-    note: 'Also need 100% / 138% / 400% FPL thresholds for household-of-2. Coverage-year eligibility uses the prior year’s FPL (2026 coverage → 2025 FPL).',
+    pinTo: 'HHS 2025 Poverty Guidelines (Federal Register, ~Jan 2025)',
+    note: '2025 guidelines drive 2026 ACA coverage-year eligibility (prior-year FPL). household(N) = 15,650 + (N−1)×5,500; household-of-2 = 21,150; 400% = 84,600 (DERIVED, not stored). AK/HI separate higher tables OUT-but-disclosed.',
   },
 )
 
@@ -75,23 +101,33 @@ export const acaPtc = sourced(
   },
 )
 
-/** IRMAA — income surcharge on Medicare Part B & D. 2-year MAGI lookback; per-
- *  person hard cliffs (a couple pays it ×enrolled count). */
-export const irmaa = sourced(
+/** IRMAA — the income surcharge on Medicare Part B & D. 2026 surcharges are set by
+ *  2024 MAGI (a 2-year lookback). A HARD step-function (per person): $1 over a tier
+ *  threshold → that tier's FULL surcharge. The standard Part B premium lives in
+ *  `partB2026` (single-sourced); per-tier TOTALS are derived (base + surcharge),
+ *  never re-typed. Cross-verified vs CMS + The Finance Buff + an internal cost-share
+ *  identity (Part B total = {25/35/50/65/80/85}% × full cost). MFJ thresholds = 2×
+ *  single for tiers 1–4; the frozen top tier deliberately breaks it (750k ≠ 2×500k). */
+export const irmaa = sourced<IrmaaSchedule>(
   {
-    lagYears: 2,
-    firstTier: { single: 109_000, mfj: 218_000 },
-    partBSurchargeMonthlyRange: [284.1, 689.9] as const,
-    partDSurchargeMonthlyRange: [14.5, 91.0] as const,
+    magiLookbackYears: 2,
+    tiers: [
+      { singleMagiThreshold: 109_000, mfjMagiThreshold: 218_000, partBSurchargeMonthly: 81.2, partDSurchargeMonthly: 14.5 },
+      { singleMagiThreshold: 137_000, mfjMagiThreshold: 274_000, partBSurchargeMonthly: 202.9, partDSurchargeMonthly: 37.5 },
+      { singleMagiThreshold: 171_000, mfjMagiThreshold: 342_000, partBSurchargeMonthly: 324.6, partDSurchargeMonthly: 60.4 },
+      { singleMagiThreshold: 205_000, mfjMagiThreshold: 410_000, partBSurchargeMonthly: 446.3, partDSurchargeMonthly: 83.3 },
+      { singleMagiThreshold: 500_000, mfjMagiThreshold: 750_000, partBSurchargeMonthly: 487.0, partDSurchargeMonthly: 91.0 },
+    ],
     perPerson: true,
     topTierFrozenThrough: 2027,
     rothConversionIsSsa44LifeChangingEvent: false,
   },
   {
-    citation: 'pre65-healthcare doc; CMS/SSA',
+    citation:
+      'CMS "2026 Medicare Parts A & B Premiums and Deductibles" fact sheet + the 2026 Part D IRMAA release (Nov 2025), cross-verified vs The Finance Buff (computing from CMS) + an internal cost-share identity — zero disagreement',
     directionalUntilPinned: true,
-    pinTo: 'CMS IRMAA fact sheet / Federal Register; IRMAA-MAGI per SSA / 1040',
-    note: '2026 IRMAA set by 2024 MAGI. Step-function: $1 over → full surcharge for that bracket. First four brackets inflation-indexed; top tier (≥$500k single / ≥$750k MFJ) frozen through 2027, adjusts 2028. A voluntary Roth conversion cannot be appealed away (NOT a life-changing event); retirement/work-stoppage IS.',
+    pinTo: 'CMS 2026 IRMAA fact sheet / Federal Register notice; IRMAA-MAGI per SSA / 1040',
+    note: '2026 IRMAA set by 2024 MAGI (2-yr lookback). Per person (a couple both enrolled pays ×2). Lower-bound-EXCLUSIVE thresholds ($1 over → full tier). First four thresholds inflation-index annually; the top tier (≥$500k single / ≥$750k MFJ) is frozen through 2027, re-indexes 2028. A voluntary Roth conversion is NOT an SSA-44 life-changing event. MFS uses single thresholds then one step at $391k (OUT — couple model only).',
   },
 )
 
@@ -192,7 +228,7 @@ export const obbbaHsa2026 = sourced(
 export const healthConstants = {
   acaEnhancedSubsidyStatus,
   acaApplicablePercentage,
-  aca400FplCliff,
+  federalPovertyGuidelines,
   acaPtc,
   irmaa,
   partB2026,

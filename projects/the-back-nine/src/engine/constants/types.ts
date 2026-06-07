@@ -138,3 +138,83 @@ export interface JointLifeLastSurvivorTable {
    *  minSpouseAge]` for spouse ages `minSpouseAge..(ownerAge − 11)`. Finite 1-decimals. */
   readonly byOwnerThenSpouse: Readonly<Record<number, readonly number[]>>
 }
+
+// ---- Healthcare value shapes (U3) -------------------------------------------
+
+/** One band of the ACA premium-tax-credit applicable-percentage schedule (IRC
+ *  § 36B(b)(3)(A); the year's IRS Rev. Proc.). WITHIN a band the "applicable
+ *  percentage" — the share of income a household is expected to contribute toward
+ *  the benchmark plan — is LINEARLY interpolated between `applicablePctLow` (at
+ *  `fplFractionLow`) and `applicablePctHigh` (at `fplFractionHigh`). Bands are
+ *  contiguous; income is a fraction of the Federal Poverty Line. */
+export interface AcaApplicablePercentageBand {
+  /** Lower bound of the band, as a fraction of FPL (e.g. 1.33 = 133% FPL). */
+  readonly fplFractionLow: number
+  /** Upper bound of the band, as a fraction of FPL (e.g. 1.5 = 150% FPL). */
+  readonly fplFractionHigh: number
+  /** Applicable percentage (of income) at the band's lower bound. */
+  readonly applicablePctLow: number
+  /** Applicable percentage at the band's upper bound; interpolated linearly within. */
+  readonly applicablePctHigh: number
+}
+
+/** The ACA applicable-percentage sliding scale + the PTC eligibility window.
+ *  `cliffFplFraction` is the 400%-FPL "subsidy cliff" — PTC → $0 strictly above it
+ *  under the 2026 reverted/pre-ARPA regime; `eligibilityFloorFplFraction` is the
+ *  100%-FPL PTC floor (below it is Medicaid territory — OUT-but-disclosed,
+ *  state-dependent). Bands are ascending and contiguous up to the cliff. */
+export interface AcaApplicablePercentageTable {
+  readonly bands: readonly AcaApplicablePercentageBand[]
+  /** PTC drops to $0 strictly above this FPL fraction (the 2026 cliff = 4.0). */
+  readonly cliffFplFraction: number
+  /** PTC eligibility floor as an FPL fraction (1.0); below it, generally Medicaid. */
+  readonly eligibilityFloorFplFraction: number
+}
+
+/** The HHS Federal Poverty Guidelines for the 48 contiguous states + DC. A household
+ *  of N = `base + (N − 1) × perAdditionalPerson`. ACA uses the PRIOR year's guidelines
+ *  for a coverage year (the 2025 guidelines drive the 2026 coverage year). Alaska &
+ *  Hawaii have separate, higher tables (OUT-but-disclosed for the MVP). The 400%-cliff
+ *  DOLLAR is derived (4.0 × FPL(householdSize)), never stored. */
+export interface FederalPovertyGuidelines {
+  /** The guideline year (2025 guidelines → 2026 ACA coverage year). */
+  readonly guidelineYear: number
+  /** Household-of-1 dollar amount. */
+  readonly base: number
+  /** Per-additional-person increment. */
+  readonly perAdditionalPerson: number
+}
+
+/** One IRMAA SURCHARGE tier (Medicare Part B + Part D income-related adjustment). A
+ *  tier applies when MAGI STRICTLY EXCEEDS its threshold (lower-bound-exclusive: $1
+ *  over → the full tier); the consumer selects the highest tier whose threshold is
+ *  exceeded, else no surcharge. Surcharges are PER ENROLLED PERSON and ADD to the
+ *  standard Part B premium (Part D has no modeled base — only the surcharge). */
+export interface IrmaaTier {
+  /** MAGI threshold for SINGLE filers; the tier applies when MAGI > this. */
+  readonly singleMagiThreshold: number
+  /** MAGI threshold for MARRIED-FILING-JOINTLY; the tier applies when MAGI > this. */
+  readonly mfjMagiThreshold: number
+  /** Monthly Part B IRMAA surcharge (on top of the standard premium), per person. */
+  readonly partBSurchargeMonthly: number
+  /** Monthly Part D IRMAA surcharge, per person. */
+  readonly partDSurchargeMonthly: number
+}
+
+/** The IRMAA schedule. IRMAA uses a `magiLookbackYears`-year-lagged MAGI (2026 IRMAA
+ *  is set by 2024 MAGI). `tiers` are the SURCHARGE tiers in ascending MAGI order; the
+ *  base/standard tier (no surcharge) is IMPLICIT — return 0 below the first threshold.
+ *  The standard Part B premium lives in `partB2026` (single-sourced); per-tier TOTALS
+ *  are derived (base + surcharge), never re-typed here. */
+export interface IrmaaSchedule {
+  /** Years of MAGI lookback (2 — 2026 IRMAA keys off 2024 MAGI). */
+  readonly magiLookbackYears: number
+  /** Surcharge tiers, ascending; selection = the highest tier whose threshold MAGI exceeds. */
+  readonly tiers: readonly IrmaaTier[]
+  /** Surcharge is charged per enrolled person (a couple both enrolled pays it twice). */
+  readonly perPerson: boolean
+  /** The top tier's threshold is inflation-frozen through this year (then re-indexes). */
+  readonly topTierFrozenThrough: number
+  /** A voluntary Roth conversion is NOT an SSA-44 life-changing event (cannot appeal it away). */
+  readonly rothConversionIsSsa44LifeChangingEvent: boolean
+}

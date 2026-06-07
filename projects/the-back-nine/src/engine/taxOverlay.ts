@@ -868,6 +868,16 @@ export function runTaxAwareDecumulation(
     if (!slcsp.every((x) => Number.isFinite(x) && x >= 0)) {
       throw new Error('[taxOverlay] slcsp entries must be finite and ≥ 0 (burned/062)')
     }
+    // COVERAGE (mirror validateParams' frontline gate — the "fail-loud at BOTH layers" discipline):
+    // a PRICED year (finite enrolled > 0) needs a finite §36B benchmark. `.every` above SKIPS holes, so
+    // it does NOT catch a missing slcsp[t] in a priced year — without this loop a direct caller (P3/P4)
+    // hits the per-year `slcsp[t] ?? NaN` → the solver's mid-path R19 throw instead of this descriptive
+    // up-front backstop. (slcsp[t] = 0 stays the EXPLICIT no-subsidy value; ABSENT is the error.) U3-exit pilot.
+    for (let t = 0; t < enrolledPremium.length; t++) {
+      const e = enrolledPremium[t]
+      if (e !== undefined && Number.isFinite(e) && e > 0 && !Number.isFinite(slcsp[t]))
+        throw new Error('[taxOverlay] slcsp must cover every enrolled-premium year — a priced year needs a finite §36B benchmark (burned/062)')
+    }
   }
 
   // The ACA applicable-% table is year-invariant; select it ONCE per run. `enhanced` = the ARPA/IRA

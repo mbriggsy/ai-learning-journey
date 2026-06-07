@@ -220,6 +220,15 @@ function validateParams(params: SimulationParams): string | null {
   const o = params.overlay
   if (o !== undefined) {
     if (!Number.isFinite(o.startCalendarYear)) return 'overlay startCalendarYear invalid'
+    // `filing` crosses the untyped structured-clone worker boundary like every other enum — validate
+    // membership HERE (R19), exactly as the U3-exit pilot did for drawdownPolicy/longevityMode/sex. An
+    // out-of-union value silently selects the `single` branch in every `filing === 'mfj' ? …` dispatch
+    // (taxOverlay), taxing a couple on single brackets + half deduction + lower SS thresholds = calm-but-
+    // wrong. NOTE: the `simulate` path OVERRIDES this per-year in resolveYear (filing is derived from the
+    // living-count when a householdYears stream is present, which simulate always supplies), so this seed
+    // bites only a direct runTaxAwareDecumulation caller's static fallback — but R19 validates every
+    // boundary input regardless of which path consumes it. (U3-exit code-review-pilot follow-up.)
+    if (o.filing !== 'mfj' && o.filing !== 'single') return 'overlay filing invalid'
     const b = o.buckets
     if (!finiteNonNeg(b.taxable) || !finiteNonNeg(b.pretax) || !finiteNonNeg(b.roth)) return 'overlay buckets invalid'
     // The overlay's total IS the portfolio: the buckets must sum to initialPortfolio (a relative

@@ -1915,6 +1915,74 @@ describe('taxOverlay — M3 Slice 5: the integrated PTC value-correctness batter
     })
   })
 
+  describe('survivor death shrinks the ACA household → the 400% cliff drops to FPL-of-1 (the untested inversion)', () => {
+    // When a pre-65 spouse dies, resolveYear's livingCount falls 2→1, so taxOverlay feeds
+    // fplForHousehold(1) to the ACA solve — the 400% cliff drops from 4×FPL2 = 84,600 to 4×FPL1 = 62,600.
+    // A survivor whose MAGI sits in (62,600, 84,600] was subsidized as a couple but is now OVER the cliff
+    // (PTC=0). The mechanism (taxOverlay.ts: fplForHousehold(regime.livingCount)) shipped in M3 Slice 4,
+    // but NO test exercised a mid-horizon death with ACA on — surfaced by the U3-exit code-review pilot
+    // (both the genuine ce:review run and the ultracode holistic pass converged on it). The cliff dollars
+    // are derived from the committed FPL constants (never re-typed); the per-year premiums use the same
+    // zero-return read-off + the proven cliff-pair UNDER fixture (MAGI 84,000) for the couple year.
+    const FPL1 = fplForHousehold(1) // 15,650 (2025 HHS, household of 1)
+    const CLIFF1 = 4 * FPL1 // single-survivor 400% cliff = 62,600 (derived, never stored)
+    const SLCSP_ENR = 20_000
+
+    it('the cliff dollar is survivor-aware: an 84,000 MAGI is UNDER the couple cliff but OVER the single cliff', () => {
+      expect(CLIFF).toBeCloseTo(84_600, 2) // couple (FPL2) — defined at the Slice-5 head
+      expect(CLIFF1).toBeCloseTo(62_600, 2) // survivor (FPL1)
+      expect(84_000).toBeGreaterThan(CLIFF1) // the danger band: over the single cliff…
+      expect(84_000).toBeLessThan(CLIFF) // …yet under the couple cliff
+    })
+
+    // COUPLE year (livingCount 2, static MFJ): the proven cliff-pair UNDER fixture — MAGI 84,000 < 84,600
+    // ⇒ a REAL PTC (contribution 0.0996×84,000 = 8,366.40; gross 84,000).
+    const coupleYr = () => oneYear(69_913.6, { healthcareEnabled: true, slcsp: [SLCSP_ENR], enrolledPremium: [SLCSP_ENR] })
+    // SURVIVOR year (livingCount 1): SAME baseNet/streams, but a ONE-entry living set ⇒ resolveYear derives
+    // single filing + livingCount 1 ⇒ cliff 62,600. baseNet 69,913.60 alone already exceeds 62,600, so MAGI
+    // is over the single cliff at every premium ⇒ PTC=0 ⇒ the FULL enrolled is funded. (No per-person ledger
+    // ⇒ the aliveCanonical reference guard does not fire, so a fresh birthYear stands in — as in the M6b tests.)
+    const survivorYr = () =>
+      runTaxAwareDecumulation(PRETAX_ONLY, Z1, Z1, [69_913.6], STOCK_W, 'pre-tax-first', PRE65, {
+        healthcareEnabled: true,
+        slcsp: [SLCSP_ENR],
+        enrolledPremium: [SLCSP_ENR],
+        householdYears: [{ living: [{ birthYear: 1966 }] }],
+      })
+
+    it('the SAME income subsidized as a couple goes PTC=0 as a survivor (the cliff inversion)', () => {
+      const couple = coupleYr()
+      const survivor = survivorYr()
+      // couple: a real PTC — net premium ≪ enrolled (under the 84,600 cliff)
+      expect(couple.totalNetPremiumReal).toBeCloseTo(8_366.4, 2)
+      expect(couple.terminalReal).toBeCloseTo(P - 84_000, 2)
+      // survivor: the subsidy VANISHES — the full enrolled premium is funded (over the 62,600 cliff)
+      expect(survivor.totalNetPremiumReal).toBe(SLCSP_ENR)
+      // non-vacuous: the survivor genuinely pays MORE for the identical spending (the inversion)
+      expect(survivor.totalNetPremiumReal).toBeGreaterThan(couple.totalNetPremiumReal)
+    })
+
+    it('a mid-horizon death FLIPS the cliff within ONE run: year 0 (couple) subsidized, year 1 (survivor) full-premium', () => {
+      // The transition the static fixtures cannot reach: a 2-year stream living [both]→[survivor].
+      // resolveYear must switch fplForHousehold(2)→fplForHousehold(1) at the death year.
+      const transition = runTaxAwareDecumulation(PRETAX_ONLY, [0, 0], [0, 0], [69_913.6, 69_913.6], STOCK_W, 'pre-tax-first', PRE65, {
+        healthcareEnabled: true,
+        slcsp: [SLCSP_ENR, SLCSP_ENR],
+        enrolledPremium: [SLCSP_ENR, SLCSP_ENR],
+        householdYears: [{ living: [{ birthYear: 1966 }, { birthYear: 1966 }] }, { living: [{ birthYear: 1966 }] }],
+      })
+      const couple = coupleYr()
+      const survivor = survivorYr()
+      // Decomposition (zero returns ⇒ each year reads independently; the huge pre-tax pool means year 1's
+      // allocation is identical to the standalone survivor year): the run's net-premium total is EXACTLY the
+      // couple-year PTC'd premium + the survivor-year FULL premium → proves the FPL household size switched
+      // mid-run. A model that kept livingCount=2 in year 1 would still subsidize it (≪ 20,000).
+      expect(transition.totalNetPremiumReal).toBeCloseTo(8_366.4 + SLCSP_ENR, 2)
+      // terminal identity: P − gross0 − gross1 = coupleYr.terminal + survivorYr.terminal − P.
+      expect(transition.terminalReal).toBeCloseTo(couple.terminalReal + survivor.terminalReal - P, 2)
+    })
+  })
+
   describe('near-cliff quantization: a sub-dollar MAGI wobble cannot flip the ceil-quantized branch', () => {
     // The cliff feasibility test is `Math.ceil(MAGI) > cliffMagi` with cliffMagi = 84,600 (an integer):
     // the decision lives on the DOLLAR grid while the ACA bisection converges sub-penny (ε = 1e-6), so

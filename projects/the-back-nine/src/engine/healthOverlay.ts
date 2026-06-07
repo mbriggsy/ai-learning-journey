@@ -190,7 +190,12 @@ export function applicableContributionFraction(fplFraction: number, table: AcaAp
   }
   // Reverted regime, above the top finite band: flat-extend the last band's high % (cliff-removed).
   const last = table.bands[table.bands.length - 1]
-  return (last ? last.applicablePctHigh : 0) / 100
+  // An EMPTY bands array is a MALFORMED table, not a 0%-contribution household: returning 0 here would
+  // mean PTC = SLCSP (a phantom FULL subsidy) for everyone — the calm-but-wrong, survival-overstating
+  // direction. Fail loud rather than default a figure the table failed to provide (burned/062). Dead for
+  // the shipped 6-band tables; guards a future/corrupt vintage across the untyped boundary. (U3-exit pilot.)
+  if (last === undefined) throw new Error('[healthOverlay] applicableContributionFraction: table has no bands (burned/062)')
+  return last.applicablePctHigh / 100
 }
 
 /**
@@ -342,9 +347,17 @@ export function solveAcaFundedGross(
       const mid = (a + b) / 2
       if (probeAt(mid).magi < targetMagi) a = mid
       else b = mid
-      if (b - a < ACA_EPSILON) break
+      if (b - a < ACA_EPSILON) return (a + b) / 2 // converged — the located split net premium
     }
-    return (a + b) / 2
+    // Fail-loud SYMMETRY with bisectSegment (burned/062): 64 halvings of [0, enrolled] shrink the
+    // bracket far below ACA_EPSILON, so this is unreachable in practice — but a SILENT (a+b)/2 on an
+    // unconverged bracket is a MIS-LOCATED split point (a wrong segment boundary → the wrong, more-
+    // expensive root, no thrown error). Refuse it rather than default. (U3-exit code-review-pilot
+    // follow-up — the inner split-locator was the one iterative solve here that did NOT fail loud.)
+    throw new Error(
+      `[healthOverlay] findPForMagi (MAGI-discontinuity split) did not converge in ${ACA_MAX_PASSES} ` +
+        `passes (targetMagi=${targetMagi}, enrolled=${enrolled}) — refusing a mis-split premium (burned/062)`,
+    )
   }
   const splitPs = applicablePctDiscontinuityFractions(table)
     .map((frac) => frac * fplDollar)

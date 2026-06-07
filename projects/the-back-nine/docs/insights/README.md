@@ -40,3 +40,4 @@ load-bearing ones (see `CLAUDE.md` for how each applies here):
 - [011 — externally-deriving a golden fixture through a solver whose API returns only aggregates (the zero-return read-off trick)](011-externally-deriving-a-fixture-through-an-aggregate-only-solver-api.md)
 - [012 — ceil-quantizing MAGI against an integer cliff is a no-op vs a raw compare (it does NOT absorb float noise)](012-ceil-quantizing-against-an-integer-cliff-is-a-no-op-vs-a-raw-compare.md)
 - [013 — a discontinuity in a sourced table silently breaks a root-finder's monotonicity premise (segment the bracket at the jump)](013-a-table-discontinuity-silently-breaks-a-root-finders-monotonicity-premise.md)
+- [014 — a threshold whose location depends on an evolving state variable needs its CROSSING year tested, not just static positions (the survivor ACA cliff drop)](014-a-mid-simulation-state-change-moves-a-threshold-so-test-the-crossing-year-not-just-static-positions.md)

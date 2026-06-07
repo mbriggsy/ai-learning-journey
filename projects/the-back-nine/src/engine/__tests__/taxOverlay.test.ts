@@ -269,12 +269,13 @@ describe('taxOverlay — M2 RMD forced distribution', () => {
     })
   })
 
-  describe('the RMD divisor seam stubs to ULT regardless of spouse (M2 — the JLLS grid is deferred)', () => {
-    it('a >10yr-younger sole spouse still uses the Uniform Lifetime divisor (spouse threaded but ignored)', () => {
-      // owner 78 (born 1948), spouse 64 (born 1962) — a 14yr gap that WILL switch to the Joint-Life
-      // & Last-Survivor table (a SMALLER RMD) once its grid is transcribed (M6). M2 deliberately
-      // stubs to ULT: the relocated fraction must equal the no-spouse ULT result (1/divisor(78))
-      // exactly, AND this exercises the spouseAge thread that is otherwise dead in tests.
+  describe('the RMD divisor switches to Joint Life & Last Survivor for a >10yr-younger sole spouse (M6b)', () => {
+    it('a >10yr-younger sole spouse uses the Joint-Life divisor — a LARGER divisor → a SMALLER forced RMD than ULT', () => {
+      // owner 78 (born 1948), spouse 64 (born 1962): a 14yr gap (≥ 11) → Table II applies. The
+      // published Joint Life & Last Survivor divisor for (78, 64) is 24.8 (vs Uniform Lifetime
+      // age-78 = 22.0) — the larger divisor forces a SMALLER distribution. Tax OFF, RMD ON,
+      // pre-tax only, no spend, ONE year → the relocated taxable fraction is exactly 1/divisor
+      // (the relocation is total-neutral with tax off, contract #2 — the growth cancels).
       const withSpouse = runTaxAwareDecumulation(pretaxOnly(PRETAX), realStock, realBond, [0], STOCK_W, 'proportional', {
         taxEnabled: false,
         rmdEnabled: true,
@@ -283,12 +284,32 @@ describe('taxOverlay — M2 RMD forced distribution', () => {
       const noSpouse = runTaxAwareDecumulation(pretaxOnly(PRETAX), realStock, realBond, [0], STOCK_W, 'proportional', {
         taxEnabled: false,
         rmdEnabled: true,
+        household: mkHousehold(2026, 1948), // single owner → Uniform Lifetime age-78
+      })
+      // The relocated fraction is the published Joint-Life divisor for (78, 64), NOT ULT(78).
+      expect(withSpouse.finalBuckets.taxable / withSpouse.terminalReal).toBeCloseTo(1 / 24.8, 12)
+      // ...and it forces STRICTLY LESS than the no-spouse ULT(78) run (the age-gap relief).
+      expect(withSpouse.finalBuckets.taxable).toBeLessThan(noSpouse.finalBuckets.taxable)
+      expect(noSpouse.finalBuckets.taxable / noSpouse.terminalReal).toBeCloseTo(1 / ultDivisor(78), 12)
+      // tax OFF ⇒ the relocation is total-neutral: the TOTAL stays byte-identical to the spine.
+      expect(withSpouse.terminalReal).toBe(spine(PRETAX, [0]).terminalReal)
+    })
+
+    it('exactly-10-younger stays on the Uniform Lifetime Table (the gap-11 threshold, not gap-10)', () => {
+      // owner 78 (born 1948), spouse 68 (born 1958): gap EXACTLY 10 → ULT (Table III already bakes
+      // in a hypothetical 10-yr-younger beneficiary). Byte-identical to the single-owner ULT run.
+      const gap10 = runTaxAwareDecumulation(pretaxOnly(PRETAX), realStock, realBond, [0], STOCK_W, 'proportional', {
+        taxEnabled: false,
+        rmdEnabled: true,
+        household: mkHousehold(2026, 1948, 1958),
+      })
+      const noSpouse = runTaxAwareDecumulation(pretaxOnly(PRETAX), realStock, realBond, [0], STOCK_W, 'proportional', {
+        taxEnabled: false,
+        rmdEnabled: true,
         household: mkHousehold(2026, 1948),
       })
-      // spouse threaded but ignored → byte-identical to the no-spouse run...
-      expect(withSpouse.finalBuckets.taxable).toBe(noSpouse.finalBuckets.taxable)
-      // ...and the relocated fraction is exactly the ULT divisor for the owner's age 78 (not a JLLS value).
-      expect(withSpouse.finalBuckets.taxable / withSpouse.terminalReal).toBeCloseTo(1 / ultDivisor(78), 12)
+      expect(gap10.finalBuckets.taxable).toBe(noSpouse.finalBuckets.taxable)
+      expect(gap10.finalBuckets.taxable / gap10.terminalReal).toBeCloseTo(1 / ultDivisor(78), 12)
     })
   })
 })
@@ -1369,5 +1390,30 @@ describe('taxOverlay — M6a bracket-fill (the injected tax-aware ceiling)', () 
         }
       }
     }
+  })
+})
+
+describe('taxOverlay — M6b age-gap golden (Joint Life relief moves the after-tax outcome)', () => {
+  it('one extra year of spouse-youth across the gap-11 threshold lowers forced tax → a strictly higher terminal', () => {
+    // CLEAN ISOLATION of the Joint-Life switch. Both couples: owner 78 (born 1948), MFJ, and BOTH
+    // spouses are 65+ (count65 = 2 → an IDENTICAL deduction stack), a large pre-tax pool with modest
+    // spend so the RMD forces a TAXED distribution every year. The ONLY difference is the spouse's age
+    // straddling the gap-11 threshold (so the divisor is the sole moving part):
+    //   - JLLS couple: spouse 67 (born 1959) → gap 11 → Joint-Life divisor 22.7 (a SMALLER RMD)
+    //   - ULT  couple: spouse 68 (born 1958) → gap 10 → Uniform Lifetime divisor 22.0 (a LARGER RMD)
+    // So flat ULT OVERSTATES forced income for the age-gapped couple; the Joint-Life table relieves it,
+    // and the relieved couple is taxed LESS and ends with strictly MORE (the ranking-relevant effect).
+    const buckets: AccountBuckets = { taxable: 0, pretax: 2_000_000, roth: 0 }
+    const spend = flat(40_000)
+    const jllsCfg: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: true, household: mkHousehold(2026, 1948, 1959) }
+    const ultCfg: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: true, household: mkHousehold(2026, 1948, 1958) }
+    const jlls = runTaxAwareDecumulation(buckets, realStock, realBond, spend, STOCK_W, 'pre-tax-first', jllsCfg)
+    const ult = runTaxAwareDecumulation(buckets, realStock, realBond, spend, STOCK_W, 'pre-tax-first', ultCfg)
+    // Presence (burned/027): both actually paid RMD-forced tax — terminal BELOW the tax-free spine.
+    const ref = spine(2_000_000, spend)
+    expect(jlls.terminalReal).toBeLessThan(ref.terminalReal)
+    expect(ult.terminalReal).toBeLessThan(ref.terminalReal)
+    // The Joint-Life relief: the gap-11 couple forces less, is taxed less, and ends with STRICTLY MORE.
+    expect(jlls.terminalReal).toBeGreaterThan(ult.terminalReal)
   })
 })

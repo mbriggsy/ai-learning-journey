@@ -7,11 +7,11 @@
  * the copyGuard allowlist all READ this module; a constant is never re-typed
  * elsewhere (the single-source grep test enforces it).
  *
- * A figure the research NAMES but does not yet VALUE — now only the Joint Life &
- * Last Survivor grid (`jointLifeLastSurvivorTable`); the single-filer brackets, the
- * Uniform Lifetime divisors, and the cap-gains breakpoints have since been sourced —
- * is an `Unsourced` sentinel: reading `.value` THROWS, so a missing figure can never
- * be confused with a plausible measurement (burned/062 — no in-range default fallbacks).
+ * Every tax figure is now SOURCED (the Joint Life & Last Survivor grid — the last gap —
+ * landed in U2·M6b). The `Unsourced` sentinel mechanism remains for any FUTURE gap: a
+ * figure the research NAMES but does not yet VALUE is an `Unsourced` whose `.value` THROWS,
+ * so a missing figure can never be confused with a plausible measurement (burned/062 — no
+ * in-range default fallbacks).
  */
 
 /** A dated figure with provenance. */
@@ -117,4 +117,24 @@ export interface CapitalGainsBreakpoints {
 export interface UniformLifetimeDivisor {
   readonly age: number
   readonly divisor: number
+}
+
+/** The IRS Joint Life & Last Survivor Table (Pub 590-B Table II / Treas. Reg.
+ *  § 1.401(a)(9)-9(d)) — the owner × younger-spouse rectangle used for an owner's
+ *  lifetime RMD when the SOLE beneficiary spouse is MORE THAN 10 years younger
+ *  (gap ≥ 11). A LARGER divisor than the Uniform Lifetime Table → a SMALLER forced
+ *  distribution (the age-gap relief). The grid is symmetric in the reg; only the
+ *  reachable rectangle is stored. Lookup: `byOwnerThenSpouse[ownerAge][spouseAge −
+ *  minSpouseAge]`. Ages ≥ {@link maxAge} clamp to the "120 and over" terminal bucket. */
+export interface JointLifeLastSurvivorTable {
+  /** Smallest owner age present — the earliest SECURE-2.0 RMD start age (72). */
+  readonly minOwnerAge: number
+  /** The published "120 and over" terminal age; older ages clamp to it (DND/009). */
+  readonly maxAge: number
+  /** Smallest spouse age present (1 — the full reachable rectangle, so no validated
+   *  input ever falls below the table). */
+  readonly minSpouseAge: number
+  /** Divisor rows keyed by owner age: `byOwnerThenSpouse[ownerAge][spouseAge −
+   *  minSpouseAge]` for spouse ages `minSpouseAge..(ownerAge − 11)`. Finite 1-decimals. */
+  readonly byOwnerThenSpouse: Readonly<Record<number, readonly number[]>>
 }

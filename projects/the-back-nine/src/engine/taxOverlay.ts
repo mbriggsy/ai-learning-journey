@@ -55,8 +55,12 @@
  *     household (both alive every year, filing as configured) is used VERBATIM, so every
  *     M1–M5 fixture is byte-identical. The aggregated pre-tax pool passes to the surviving
  *     spouse on the first death (spousal rollover ⇒ RMD on the survivor's own age, which can
- *     pause if they are below their RMD start age). Per-person pre-tax splitting + the
- *     >10yr-younger-spouse JLLS divisor are M6b.
+ *     pause if they are below their RMD start age).
+ *   - M6b·A (this): the Joint Life & Last Survivor divisor. `selectRmdDivisor` switches off
+ *     the Uniform Lifetime Table when the sole-beneficiary spouse is >10yr younger (gap ≥ 11),
+ *     using the now-SOURCED Pub 590-B Table II grid (a LARGER divisor → a SMALLER RMD — flat
+ *     ULT overstates forced income for an age-gapped couple and can invert a conversion
+ *     ranking). Per-person pre-tax splitting (each spouse's IRA on its own age) remains M6b·B.
  *
  * PURE: no entropy/clock/environment (the engine-purity lint covers `src/engine/**`).
  */
@@ -65,6 +69,7 @@ import { allocateWithdrawal, totalAcrossBuckets, type AccountBuckets } from '@en
 import {
   rmdStartAge,
   uniformLifetimeTableDivisors,
+  jointLifeLastSurvivorTable,
   ordinaryBracketsMFJ,
   ordinaryBracketsSingle,
   standardDeductionMFJ,
@@ -113,7 +118,8 @@ export interface Household {
  * Filing is derived: MFJ iff ≥2 are alive, else single — the survivor files single the year
  * AFTER the first death (no QSS grace, §Strand 5: the empty-nest retired couple). The 65+
  * deduction count is the count of living filers ≥ 65 that year. `living[1]` (when present) is
- * the sole-spouse beneficiary threaded to the JLLS divisor seam (M6b; ULT in M6a).
+ * the sole-spouse beneficiary whose age drives the JLLS divisor (M6b·A — a >10yr-younger
+ * sole spouse switches the owner's RMD off ULT onto the Joint Life & Last Survivor table).
  *
  * Absent (no `householdYears` stream) ⇒ the STATIC household: both people present every year,
  * filing as configured — the verbatim M1–M5 path, so every existing fixture is byte-identical.
@@ -200,6 +206,10 @@ const ULT_DIVISOR_BY_AGE: ReadonlyMap<number, number> = new Map(
   uniformLifetimeTableDivisors.value.map((row) => [row.age, row.divisor]),
 )
 const ULT_MAX_AGE = uniformLifetimeTableDivisors.value.reduce((max, row) => Math.max(max, row.age), 0)
+
+// The Joint Life & Last Survivor grid (Pub 590-B Table II), read once from the canonical
+// constant. Used only for the >10yr-younger sole-spouse RMD (gap ≥ 11) — see selectRmdDivisor.
+const JLLS = jointLifeLastSurvivorTable.value
 
 // Gross-up fixed-point controls. The per-year map gross ↦ net + tax(gross) is a monotone,
 // continuous, piecewise-linear self-map that starts below its UNIQUE fixed point and converges
@@ -450,7 +460,7 @@ interface ResolvedYear {
   /** The aggregated pre-tax pool's holder this year — the survivor after the first death.
    *  `undefined` only if nobody is alive (defensive; the horizon guarantees ≥1 living). */
   readonly rmdOwner: OverlayPerson | undefined
-  /** The sole-spouse beneficiary for the JLLS divisor seam (M6b); ULT-ignored in M6a. */
+  /** The sole-spouse beneficiary whose age selects the JLLS divisor (M6b·A) when >10yr younger. */
   readonly rmdSpouse: OverlayPerson | undefined
 }
 
@@ -507,14 +517,38 @@ function uniformLifetimeDivisor(age: number): number {
 }
 
 /**
- * SEAM — the divisor for an owner's lifetime RMD. M2 STUB: always the Uniform Lifetime
- * Table. When the sole beneficiary is a spouse MORE THAN 10 years younger (gap ≥ 11), the
- * IRS Joint-Life & Last-Survivor table (Pub 590-B Table II) applies and yields a SMALLER
- * RMD — but its ~3,000-cell grid is the open constants gap (`jointLifeLastSurvivorTable`
- * throws on read), so this milestone stubs to ULT. `spouseAge` is threaded for the JLLS
- * landing.
+ * The Joint Life & Last Survivor distribution period (Pub 590-B Table II) for an owner aged
+ * `ownerAge` whose sole-beneficiary spouse is aged `spouseAge` (>10yr younger, gap ≥ 11).
+ * Both ages clamp into the stored owner-72..120 × younger-spouse rectangle: ages ≥ 120 hit
+ * the "120 and over" terminal bucket (DND/009), and the spouse is clamped to the gap-11
+ * rectangle boundary for the sim-unreachable >120 owner tail (where a clamped owner would
+ * otherwise narrow the gap below 11) — at those terminal ages the divisor is ~2.0 either way.
  */
-function selectRmdDivisor(ownerAge: number, _spouseAge?: number): number {
+function jointLifeLastSurvivorDivisor(ownerAge: number, spouseAge: number): number {
+  const owner = Math.min(Math.max(ownerAge, JLLS.minOwnerAge), JLLS.maxAge)
+  const spouse = Math.min(Math.max(spouseAge, JLLS.minSpouseAge), owner - 11)
+  const divisor = JLLS.byOwnerThenSpouse[owner]?.[spouse - JLLS.minSpouseAge]
+  if (divisor === undefined) {
+    throw new Error(`no Joint Life & Last Survivor divisor for owner ${ownerAge}, spouse ${spouseAge}`)
+  }
+  return divisor
+}
+
+/**
+ * SEAM — the divisor for an owner's lifetime RMD (M6b). The Uniform Lifetime Table is the
+ * default, EXCEPT when the sole beneficiary is a spouse MORE THAN 10 years younger (gap ≥
+ * 11): then the IRS Joint Life & Last Survivor table (Pub 590-B Table II) applies and yields
+ * a LARGER divisor → a SMALLER RMD (the age-gap relief this product exists to model — flat
+ * ULT OVERSTATES forced income for an age-gapped couple and can invert a conversion ranking).
+ * Exactly-10-younger stays on ULT (which already bakes in a hypothetical 10-yr-younger
+ * beneficiary). In the couple model the spouse is the sole IRA beneficiary by assumption; the
+ * caller passes the living spouse's age (or `undefined` for a single owner / no surviving
+ * spouse → ULT).
+ */
+function selectRmdDivisor(ownerAge: number, spouseAge?: number): number {
+  if (spouseAge !== undefined && ownerAge - spouseAge > 10) {
+    return jointLifeLastSurvivorDivisor(ownerAge, spouseAge)
+  }
   return uniformLifetimeDivisor(ownerAge)
 }
 

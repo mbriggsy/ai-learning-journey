@@ -40,12 +40,13 @@ describe('canonical constants — shape & provenance (contract #6)', () => {
     }
   })
 
-  it('the 4 named tax gaps are now SOURCED + still directional (U2 prerequisite closed; pin gate still pending)', () => {
+  it('the formerly-unsourced tax gaps are now ALL SOURCED + still directional (U2 closed; pin gate still pending)', () => {
     for (const key of [
       'ordinaryBracketsSingle',
       'age65AdditionSingle',
       'capitalGainsBreakpoints',
       'uniformLifetimeTableDivisors',
+      'jointLifeLastSurvivorTable', // the last gap — closed in M6b
     ] as const) {
       const entry = taxConstants[key]
       expect(isUnsourced(entry), `${key} is sourced (not a throw-on-read gap)`).toBe(false)
@@ -54,9 +55,41 @@ describe('canonical constants — shape & provenance (contract #6)', () => {
     }
   })
 
-  it('the Joint Life & Last Survivor grid (Table II) remains the one tracked tax gap (mechanics verified, ~3k-cell grid pending)', () => {
-    expect(isUnsourced(taxConstants.jointLifeLastSurvivorTable)).toBe(true)
-    expect(() => taxConstants.jointLifeLastSurvivorTable.value).toThrow(/not yet sourced/)
+  it('the Joint Life & Last Survivor grid (Table II) matches its independent oracle + the reg structure (M6b, DND/012)', () => {
+    const entry = taxConstants.jointLifeLastSurvivorTable
+    expect(isUnsourced(entry), 'JLLS is sourced (the last tax gap, closed in M6b)').toBe(false)
+    if (isUnsourced(entry)) return // narrow the type
+    const t = entry.value
+    // Domain: owner 72..120, spouse 1..(owner-11); 49 owner rows, each the right width.
+    expect([t.minOwnerAge, t.maxAge, t.minSpouseAge]).toEqual([72, 120, 1])
+    expect(Object.keys(t.byOwnerThenSpouse)).toHaveLength(49)
+    const cell = (owner: number, spouse: number) => t.byOwnerThenSpouse[owner]?.[spouse - t.minSpouseAge]
+    // Independently-documented anchor cells (known BEFORE transcription — DND/012).
+    expect(cell(75, 64), 'anchor owner75/spouse64').toBe(25.3)
+    expect(cell(76, 60), 'anchor owner76/spouse60').toBe(28.2)
+    // The eCFR-vs-Pub-590-B discrepancy resolution, pinned as a regression guard: the
+    // authoritative reg prints (90,76) twice as 14.7; Pub 590-B's lone 14.8 was rejected.
+    expect(cell(90, 76), 'eCFR (90,76) resolved over Pub 590-B 14.8').toBe(14.7)
+    const ult = new Map(taxConstants.uniformLifetimeTableDivisors.value.map((r) => [r.age, r.divisor]))
+    for (let owner = t.minOwnerAge; owner <= t.maxAge; owner++) {
+      const row = t.byOwnerThenSpouse[owner]
+      expect(row, `owner ${owner} row present`).toBeDefined()
+      if (!row) continue
+      expect(row.length, `owner ${owner} covers spouse 1..${owner - 11}`).toBe(owner - 11)
+      // Relief-vs-ULT: the smallest stored gap (spouse = owner-11) yields a divisor ≥ ULT
+      // (which bakes in a 10-yr-younger beneficiary), strictly larger below the terminal
+      // convergence — so a >10yr-younger sole spouse is forced to distribute LESS, never more.
+      const gap11 = row[row.length - 1] ?? 0
+      const u = ult.get(owner) ?? 0
+      expect(gap11 >= u, `JLLS(${owner},${owner - 11}) ≥ ULT(${owner})`).toBe(true)
+      if (owner <= 110) expect(gap11 > u, `JLLS(${owner},${owner - 11}) > ULT(${owner})`).toBe(true)
+      // Monotone non-increasing as the spouse ages; finite 1-decimals > 0 (DND/009).
+      for (let i = 0; i < row.length; i++) {
+        const v = row[i] ?? NaN
+        expect(Number.isFinite(v) && v > 0 && Math.abs(v * 10 - Math.round(v * 10)) < 1e-9).toBe(true)
+        if (i > 0) expect((row[i] ?? 0) <= (row[i - 1] ?? 0), `owner ${owner} monotone at spouse ${i + 1}`).toBe(true)
+      }
+    }
   })
 
   it('the sourced tax gaps carry their landmine-guarding shapes (a "half of MFJ" regression fails loud)', () => {

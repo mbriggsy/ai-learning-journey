@@ -9,13 +9,14 @@
  */
 import {
   sourced,
-  unsourced,
   type CapitalGainsBreakpoints,
   type ConstantEntry,
+  type JointLifeLastSurvivorTable,
   type OrdinaryBracket,
   type RmdAgeBand,
   type UniformLifetimeDivisor,
 } from './types'
+import { jointLifeLastSurvivorData } from './jointLifeLastSurvivor.data'
 
 export const TAX_YEAR = 2026
 
@@ -229,32 +230,34 @@ export const uniformLifetimeTableDivisors = sourced<readonly UniformLifetimeDivi
   },
 )
 
-/** GAP — the Joint Life & Last Survivor Table (Pub 590-B Table II / Treas. Reg.
- *  §1.401(a)(9)-9(d)) for a sole-beneficiary spouse >10 years younger. The MECHANICS
- *  are verified; the ~3,000-cell grid is NOT yet transcribed, so this stays a throw-on-
- *  read gap (transcribing values I do not have would be a silent fabrication).
+/** The Joint Life & Last Survivor Table (Pub 590-B Table II / Treas. Reg.
+ *  §1.401(a)(9)-9(d)) — SOURCED (M6b). Used for an owner's lifetime RMD ONLY when the
+ *  spouse is the SOLE beneficiary the ENTIRE year AND is MORE THAN 10 years younger
+ *  (gap ≥ 11; exactly-10-younger stays on the Uniform Lifetime Table, which already
+ *  bakes in a hypothetical 10-yr-younger beneficiary). The grid is SYMMETRIC (cell(a,b)
+ *  = cell(b,a)) and RE-ENTERED by both ages every year for the owner's lifetime RMD (NOT
+ *  the inherited "subtract-one" method). A LARGER divisor → a SMALLER RMD: using the
+ *  Uniform Lifetime Table for a >10yr-younger sole spouse OVERSTATES forced income and
+ *  can INVERT a sequencing/conversion ranking (a disclosed-omission flip).
  *
- *  VERIFIED RULE (encode at transcription time): the owner uses Table II instead of the
- *  Uniform Lifetime Table for a year ONLY IF the spouse is the SOLE beneficiary the
- *  ENTIRE year AND is MORE THAN 10 years younger (gap ≥ 11; exactly-10-younger stays on
- *  Table III, which already bakes in a hypothetical 10-yr-younger beneficiary). The grid
- *  is SYMMETRIC (cell(a,b) = cell(b,a)) and RE-ENTERED by both ages every year for the
- *  owner's lifetime RMD (NOT the inherited "subtract-one" method). Larger divisor →
- *  smaller RMD. Verified anchor cells: owner75/spouse64 = 25.3; owner76/spouse60 = 28.2;
- *  consistency cell(75,65) = 24.6 = Uniform Lifetime age-75.
- *
- *  ENCODING (DND/012): TRANSCRIBE + COMMIT the published grid verbatim — do NOT compute
- *  cells from the engine's own actuarial formula (that proves typing, not correctness);
- *  the eCFR §1.401(a)(9)-9(d) grid is the independent transcription oracle. Restrict to
- *  the reachable owner-72..120 × younger-spouse rectangle, exploit symmetry, clamp 120,
- *  finite 1-decimal numbers only (DND/009). Couples to U1's death-order conditional
- *  filter — revert to Table III if the spouse dies / is no longer the sole beneficiary.
- *  Using Table III for a >10yr-younger sole spouse OVERSTATES forced income and can
- *  INVERT a sequencing/conversion ranking (a disclosed-omission flip). */
-export const jointLifeLastSurvivorTable = unsourced(
-  'IRS Pub 590-B Table II (Joint Life & Last Survivor) / Treas. Reg. §1.401(a)(9)-9(d)',
-  'Mechanics verified (>10yr-younger sole-spouse switch, gap ≥ 11, symmetric, annual re-entry; anchors 75/64=25.3, 76/60=28.2). The ~3,000-cell grid still needs transcription + a golden test against the eCFR reg before it can be read.',
-)
+ *  PROVENANCE + VERIFICATION live in the data module header
+ *  ({@link ./jointLifeLastSurvivor.data}): transcribed verbatim from the authoritative
+ *  eCFR §1.401(a)(9)-9(d) XML (DND/012 — never computed from the engine's own actuarial
+ *  formula), cross-verified vs IRS Pub 590-B Table II (2,626/2,627 cells; the lone
+ *  (90,76) disagreement resolved to the reg's 14.7), with full symmetry + the
+ *  JLLS(age,age-10)==Uniform-Lifetime(age) identity + the documented anchors
+ *  (75/64=25.3, 76/60=28.2) all asserted as a golden in `taxOverlay.test.ts`. The
+ *  reachable owner-72..120 × younger-spouse rectangle only; ages ≥ 120 clamp (DND/009).
+ *  Stays `directionalUntilPinned` with the other tax figures until the P1-exit pin pass
+ *  (don't flip piecemeal) — though sourced directly from the legal primary. */
+export const jointLifeLastSurvivorTable = sourced<JointLifeLastSurvivorTable>(jointLifeLastSurvivorData, {
+  citation:
+    'eCFR 26 CFR 1.401(a)(9)-9(d) (authoritative reg, machine-readable GPO XML), cross-verified verbatim vs IRS Pub 590-B Table II',
+  directionalUntilPinned: true,
+  pinTo: 'IRS Pub 590-B Appendix B Table II (Joint Life & Last Survivor)',
+  legalBasis: 'T.D. 9930 (effective 2022-01-01)',
+  note: 'Post-2022 table, STABLE (not inflation-indexed). Owner×younger-spouse rectangle (gap ≥ 11). Clamp age ≥ 120. RMD is non-convertible.',
+})
 
 /**
  * Social Security provisional-income taxation thresholds. FROZEN since 1983/1993 —

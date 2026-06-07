@@ -56,11 +56,15 @@
  *     M1–M5 fixture is byte-identical. The aggregated pre-tax pool passes to the surviving
  *     spouse on the first death (spousal rollover ⇒ RMD on the survivor's own age, which can
  *     pause if they are below their RMD start age).
- *   - M6b·A (this): the Joint Life & Last Survivor divisor. `selectRmdDivisor` switches off
- *     the Uniform Lifetime Table when the sole-beneficiary spouse is >10yr younger (gap ≥ 11),
- *     using the now-SOURCED Pub 590-B Table II grid (a LARGER divisor → a SMALLER RMD — flat
- *     ULT overstates forced income for an age-gapped couple and can invert a conversion
- *     ranking). Per-person pre-tax splitting (each spouse's IRA on its own age) remains M6b·B.
+ *   - M6b·A: the Joint Life & Last Survivor divisor. `selectRmdDivisor` switches off the Uniform
+ *     Lifetime Table when the sole-beneficiary spouse is >10yr younger (gap ≥ 11), using the
+ *     now-SOURCED Pub 590-B Table II grid (a LARGER divisor → a SMALLER RMD — flat ULT overstates
+ *     forced income for an age-gapped couple and can invert a conversion ranking).
+ *   - M6b·B (this): per-person pre-tax splitting. When the caller supplies `initialPretaxByPerson`,
+ *     each spouse's IRA forces its OWN RMD on its OWN age (+ its own sole-spouse beneficiary), and
+ *     a deceased spouse's IRA rolls to the survivor — tracked in a per-person sub-ledger of
+ *     `buckets.pretax` (Σ === it). ABSENT ⇒ the M6a aggregate pool (all pre-tax on the owner), the
+ *     byte-identical default; the two paths agree when all pre-tax sits on the owner (equivalence golden).
  *
  * PURE: no entropy/clock/environment (the engine-purity lint covers `src/engine/**`).
  */
@@ -189,6 +193,14 @@ export interface TaxYearInputs {
    *  single pool. The caller computes the dollar cap (the engine provides the mechanism, not the
    *  ceiling — the substrate the P3 control + P4 solver drive). */
   readonly bracketFillCeilings?: readonly number[]
+  /** Per-person INITIAL pre-tax split (M6b·B), aligned by index to the household's canonical
+   *  people (owner = 0, spouse = 1). Its sum MUST equal `initialBuckets.pretax` (validated).
+   *  PRESENT ⇒ each spouse's IRA computes its OWN RMD on its OWN age (+ its own sole-spouse
+   *  beneficiary for the Joint-Life divisor); a deceased spouse's IRA rolls to the survivor.
+   *  ABSENT ⇒ the M6a AGGREGATE pool (all pre-tax attributed to the owner) — the verbatim
+   *  M1–M6a path, byte-identical. Read only when the overlay is active (tax or RMD on); with
+   *  the EXHAUSTIVE OFF condition the aggregate path runs and reduce-to-spine is untouched. */
+  readonly initialPretaxByPerson?: readonly number[]
 }
 
 const EMPTY_BUCKETS: AccountBuckets = { taxable: 0, pretax: 0, roth: 0 }
@@ -572,6 +584,93 @@ function rmdForYear(priorYearEndPretax: number, config: TaxOverlayConfig, resolv
 }
 
 // =========================================================================
+// Per-person pre-tax splitting (M6b·B)
+// =========================================================================
+// M6a tracked ONE aggregated pre-tax pool RMD'd on the holder's age. M6b·B splits pre-tax PER
+// PERSON so each spouse's IRA is forced on its OWN age + its OWN sole-spouse beneficiary (the
+// Joint-Life divisor). The per-person ledger is a sub-ledger of `buckets.pretax` (Σ === it); it
+// is active ONLY when the caller supplies `initialPretaxByPerson`. With it ABSENT the aggregate
+// M6a path runs verbatim (byte-identical). The two paths AGREE when all pre-tax sits on the owner
+// (the equivalence golden) — x/x = 1 and 0/x = 0 are exact, so the pro-rata splits reduce cleanly.
+
+/** The household's canonical people in owner→spouse order — the per-person ledger's index basis. */
+function canonicalPeople(household: Household): readonly OverlayPerson[] {
+  return household.spouse ? [household.owner, household.spouse] : [household.owner]
+}
+
+/** Per-canonical-person alive-ness for sim-year `t`. With an injected living set a canonical
+ *  person is alive iff present BY REFERENCE — `simulate` threads the SAME `OverlayPerson` objects
+ *  through `household.owner`/`spouse` and the `living` array, so identity is stable across years.
+ *  With no stream the static household keeps both alive every year (the no-death per-person case). */
+function aliveCanonical(
+  people: readonly OverlayPerson[],
+  householdYears: readonly HouseholdYear[],
+  t: number,
+): boolean[] {
+  const injected = householdYears[t]
+  if (injected === undefined) return people.map(() => true)
+  return people.map((p) => injected.living.includes(p))
+}
+
+/** Each LIVING person's forced RMD on THEIR OWN prior-year-end pre-tax ÷ THEIR OWN divisor (own
+ *  age + own sole-spouse beneficiary), once past their birth-year RMD age (else 0). A deceased
+ *  person's pre-tax has already rolled to the survivor (see the loop), so only living holders
+ *  distribute. The sole-spouse beneficiary is the OTHER living canonical person (the couple model). */
+function perPersonRmd(
+  ledger: readonly number[],
+  people: readonly OverlayPerson[],
+  alive: readonly boolean[],
+  startCalendarYear: number,
+  rmdEnabled: boolean,
+  t: number,
+): number[] {
+  return people.map((person, i) => {
+    if (!rmdEnabled || !alive[i]) return 0
+    const pretax = ledger[i] ?? 0
+    if (pretax <= 0) return 0
+    const age = startCalendarYear + t - person.birthYear
+    if (age < rmdStartAgeForBirthYear(person.birthYear)) return 0
+    const otherIdx = i === 0 ? 1 : 0
+    const other = people[otherIdx]
+    const spouseAge = other && alive[otherIdx] ? startCalendarYear + t - other.birthYear : undefined
+    return pretax / selectRmdDivisor(age, spouseAge)
+  })
+}
+
+/**
+ * Advance the per-person pre-tax ledger one year and return the AGGREGATE forced excess (Σ
+ * per-person), which the aggregate bucket update consumes too — so `Σ ledger_post` reconciles to
+ * `buckets.pretax_post`. The aggregate spending pre-tax draw and the (already aggregate-clamped)
+ * conversion are split pro-rata across living holders: the conversion by per-person CONVERTIBLE
+ * room (`pretax − rmd`, RMD-first legality), the spending draw by draw-time balance. Each person's
+ * RMD excess beyond their own spending draw relocates to (aggregate) taxable; survivors grow by
+ * the one shared factor (contract #2 — no asset-location). `ledger` is MUTATED to post-growth.
+ */
+function advancePerPersonLedger(
+  ledger: number[],
+  perRmd: readonly number[],
+  conversion: number,
+  allocPretax: number,
+  scale: number,
+): number {
+  const convertible = ledger.map((p, i) => Math.max(0, p - (perRmd[i] ?? 0)))
+  const totalConvertible = convertible.reduce((a, b) => a + b, 0)
+  const drawPretax = ledger.map(
+    (p, i) => p - (totalConvertible > 0 ? conversion * (convertible[i]! / totalConvertible) : 0),
+  )
+  const totalDraw = drawPretax.reduce((a, b) => a + b, 0)
+  let forcedExcessTotal = 0
+  for (let i = 0; i < ledger.length; i++) {
+    const dp = drawPretax[i]!
+    const ap = totalDraw > 0 ? allocPretax * (dp / totalDraw) : 0
+    const fe = Math.min(Math.max(0, (perRmd[i] ?? 0) - ap), dp - ap)
+    forcedExcessTotal += fe
+    ledger[i] = (dp - ap - fe) * scale
+  }
+  return forcedExcessTotal
+}
+
+// =========================================================================
 // The gross-up fixed point (M3)
 // =========================================================================
 
@@ -669,7 +768,14 @@ export function runTaxAwareDecumulation(
   config: TaxOverlayConfig,
   taxInputs: TaxYearInputs = {},
 ): TaxAwareResult {
-  const { ssBenefits = [], conversions = [], initialTaxableBasis, householdYears = [], bracketFillCeilings = [] } = taxInputs
+  const {
+    ssBenefits = [],
+    conversions = [],
+    initialTaxableBasis,
+    householdYears = [],
+    bracketFillCeilings = [],
+    initialPretaxByPerson,
+  } = taxInputs
 
   // Initial taxable basis is REQUIRED when tax is on and the taxable bucket is non-empty — there
   // is no safe default (0 over-taxes every realization; the full value silently no-ops cap-gains),
@@ -680,6 +786,39 @@ export function runTaxAwareDecumulation(
       '[taxOverlay] initialTaxableBasis is required when tax is on and the taxable bucket is ' +
         'non-empty — no in-range default for a figure that moves the answer (burned/062)',
     )
+  }
+
+  // Per-person pre-tax sub-ledger (M6b·B). Active ONLY when the caller supplies the per-person
+  // split AND the overlay does work (tax or RMD on) — otherwise null, and the aggregate M6a path
+  // runs verbatim (reduce-to-spine + every M1–M6a fixture byte-identical). The split must sum to
+  // the aggregate pre-tax (no silent reconciliation; burned/062 fail-loud) and align to the
+  // household's canonical people.
+  // Narrow the config union to its `household` once (the ON variant carries it; OFF does not).
+  const household = config.taxEnabled || config.rmdEnabled ? config.household : undefined
+  const people = household ? canonicalPeople(household) : []
+  let pretaxLedger: number[] | null = null
+  if (initialPretaxByPerson !== undefined && household) {
+    // Finiteness FIRST (insight 008): a NaN entry survives the sum guard below —
+    // `Math.abs(NaN − x) > tol` is `false`, so the throw would NOT fire and the NaN would poison
+    // the per-person ledger (tax off → NaN buckets) or run the gross-up to its 128-pass throw (tax
+    // on). validateParams shields `simulate`, but this is the engine's own fail-loud backstop for a
+    // direct caller (a future P3 control / P4 solver computing a split by arithmetic). Reject
+    // non-finite / negative entries loudly — never coerce (burned/062).
+    if (!initialPretaxByPerson.every((x) => Number.isFinite(x) && x >= 0)) {
+      throw new Error('[taxOverlay] initialPretaxByPerson entries must be finite and ≥ 0 (a NaN survives the sum guard — insight 008)')
+    }
+    if (initialPretaxByPerson.length !== people.length) {
+      throw new Error(
+        `[taxOverlay] initialPretaxByPerson has ${initialPretaxByPerson.length} entries but the household has ${people.length} people`,
+      )
+    }
+    const sum = initialPretaxByPerson.reduce((a, b) => a + b, 0)
+    if (Math.abs(sum - initialBuckets.pretax) > 1e-6 * Math.max(1, Math.abs(initialBuckets.pretax))) {
+      throw new Error(
+        `[taxOverlay] initialPretaxByPerson must sum to the aggregate pre-tax ${initialBuckets.pretax} (got ${sum}) — no silent reconciliation (burned/062)`,
+      )
+    }
+    pretaxLedger = [...initialPretaxByPerson]
   }
 
   let buckets = initialBuckets
@@ -706,9 +845,44 @@ export function runTaxAwareDecumulation(
     // EXHAUSTIVE OFF condition it is never consulted (gross = net, rmd = 0).
     const regime = config.taxEnabled || config.rmdEnabled ? resolveYear(config.household, householdYears, t) : undefined
 
-    // Prior-year-end pre-tax balance: at the top of the iteration `buckets` holds last
-    // year's post-growth state (at t = 0, the initial balance) — exactly the RMD's basis.
-    const rmd = regime ? rmdForYear(buckets.pretax, config, regime, t) : 0
+    // Spousal rollover (M6b·B): a deceased canonical person's pre-tax IRA passes to the surviving
+    // spouse, so the survivor's RMD keys off the COMBINED balance + their OWN age. Idempotent (a
+    // dead person holds 0 after the first roll). Per-person path only; the aggregate M6a path
+    // already routes the single pool to the survivor via resolveYear (rmdOwner = living[0]).
+    let alive: boolean[] | null = null
+    let perRmd: number[] | null = null
+    if (pretaxLedger) {
+      alive = aliveCanonical(people, householdYears, t)
+      // Fail-loud on a reference mismatch (R19): aliveCanonical matches the living set to the
+      // canonical people BY REFERENCE. If a year's living set is non-empty yet matches NOBODY, the
+      // caller threaded distinct-but-equal objects instead of the household's own — which would
+      // SILENTLY mark everyone dead → zero RMD forever (calm-but-wrong, the cardinal sin). Reject it.
+      const injected = householdYears[t]
+      if (injected !== undefined && injected.living.length > 0 && !alive.some((a) => a)) {
+        throw new Error(
+          '[taxOverlay] householdYears living set matches no household person (per-person path requires the SAME OverlayPerson references as the household)',
+        )
+      }
+      const survivor = alive.findIndex((a) => a)
+      for (let i = 0; i < pretaxLedger.length; i++) {
+        if (!alive[i] && pretaxLedger[i]! > 0 && survivor >= 0) {
+          pretaxLedger[survivor]! += pretaxLedger[i]!
+          pretaxLedger[i] = 0
+        }
+      }
+    }
+
+    // Prior-year-end pre-tax balance: at the top of the iteration `buckets` holds last year's
+    // post-growth state (at t = 0, the initial balance) — exactly the RMD's basis. The per-person
+    // path sums each living spouse's own-age forced distribution (M6b·B); the aggregate path keys
+    // the single pool off the resolved holder (M6a). Both feed the gross-up as one total `rmd`.
+    let rmd: number
+    if (pretaxLedger && alive && household) {
+      perRmd = perPersonRmd(pretaxLedger, people, alive, household.startCalendarYear, config.rmdEnabled, t)
+      rmd = perRmd.reduce((a, b) => a + b, 0)
+    } else {
+      rmd = regime ? rmdForYear(buckets.pretax, config, regime, t) : 0
+    }
 
     // bracket-fill ceiling (M6a): the year's max discretionary pre-tax draw. Used by BOTH the
     // gross-up fixed point and the ledger allocation so they agree. A missing entry ⇒ +Infinity ⇒
@@ -760,6 +934,7 @@ export function runTaxAwareDecumulation(
     if (step.depleted) {
       buckets = EMPTY_BUCKETS
       basis = 0
+      if (pretaxLedger) pretaxLedger.fill(0)
       depletionYear = t
       break
     }
@@ -770,6 +945,7 @@ export function runTaxAwareDecumulation(
     const afterWithdrawal = totalBefore - drawn
     if (afterWithdrawal > 0) {
       const scale = totalValue(state) / afterWithdrawal
+      const taxableValue = drawPool.taxable
 
       // RMD-forced distribution: spending/tax already pulled `alloc.pretax` from pre-tax; the RMD
       // forces a MINIMUM pre-tax distribution, so only the EXCESS beyond that is force-relocated to
@@ -777,25 +953,36 @@ export function runTaxAwareDecumulation(
       // (pre-tax↔taxable, pre-tax↔roth), so their ± pairs cancel in the bucket sum: pretaxPost +
       // taxablePost + rothPost = totalBefore − drawn = afterWithdrawal exactly. Allocating on drawPool
       // guarantees alloc.pretax ≤ drawPool.pretax, so every bucket stays ≥ 0.
-      const forcedExcess = Math.min(Math.max(0, rmd - alloc.pretax), drawPool.pretax - alloc.pretax)
-      const pretaxPost = drawPool.pretax - alloc.pretax - forcedExcess
+      let forcedExcess: number
+      let pretaxPostScaled: number
+      if (pretaxLedger && perRmd) {
+        // Per-person (M6b·B): split the conversion (by convertible room) + the spending pre-tax draw
+        // (by balance) pro-rata across living holders, relocate each spouse's own RMD excess, and grow
+        // survivors by the shared factor. The aggregate forced excess is the per-person SUM, and the
+        // aggregate pre-tax IS the ledger sum — kept exactly reconciled (no parallel-ledger drift).
+        forcedExcess = advancePerPersonLedger(pretaxLedger, perRmd, conversion, alloc.pretax, scale)
+        pretaxPostScaled = pretaxLedger.reduce((a, b) => a + b, 0)
+      } else {
+        forcedExcess = Math.min(Math.max(0, rmd - alloc.pretax), drawPool.pretax - alloc.pretax)
+        pretaxPostScaled = (drawPool.pretax - alloc.pretax - forcedExcess) * scale
+      }
       const taxablePost = drawPool.taxable - alloc.taxable + forcedExcess
       const rothPost = drawPool.roth - alloc.roth
 
       // Taxable basis (M5): the draw removes basis pro-rata to the taxable value; the RMD-relocated
       // dollars enter at FULL basis (already ordinary-taxed → after-tax money). Basis is NOT scaled by
       // growth — market appreciation is unrealized gain (scaling basis would zero all future gain).
-      const taxableValue = drawPool.taxable
       basis = (taxableValue > 0 ? basis * (1 - alloc.taxable / taxableValue) : basis) + forcedExcess
 
       buckets = {
         taxable: taxablePost * scale,
-        pretax: pretaxPost * scale,
+        pretax: pretaxPostScaled,
         roth: rothPost * scale,
       }
     } else {
       buckets = EMPTY_BUCKETS
       basis = 0
+      if (pretaxLedger) pretaxLedger.fill(0)
     }
   }
 

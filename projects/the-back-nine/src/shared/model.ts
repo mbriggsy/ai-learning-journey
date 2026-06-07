@@ -183,10 +183,10 @@ export interface AccountBalances {
   readonly roth: number
 }
 
-/** The engine-side tax/accounts overlay input (U2 · M6a). `taxEnabled` and `rmdEnabled` are
- *  INDEPENDENT switches (RMD is a forced-distribution mechanic, not a tax). M6a uses one
- *  AGGREGATED pre-tax pool (per-person pre-tax splitting + the >10yr-younger-spouse JLLS divisor
- *  are M6b); `buckets` must sum to `initialPortfolio` (validated, R19). */
+/** The engine-side tax/accounts overlay input (U2). `taxEnabled` and `rmdEnabled` are INDEPENDENT
+ *  switches (RMD is a forced-distribution mechanic, not a tax). `buckets` must sum to
+ *  `initialPortfolio` (validated, R19); the >10yr-younger-spouse JLLS divisor (M6b·A) and the
+ *  optional per-person pre-tax split (M6b·B, `pretaxByPerson`) ride on top. */
 export interface OverlayParams {
   readonly taxEnabled: boolean
   readonly rmdEnabled: boolean
@@ -194,6 +194,12 @@ export interface OverlayParams {
   readonly startCalendarYear: number
   /** Aggregated initial account split; the sum must equal `initialPortfolio`. */
   readonly buckets: AccountBalances
+  /** Per-person INITIAL pre-tax split (U2·M6b·B), aligned by index to `people` (owner = 0, spouse
+   *  = 1). Its sum must equal `buckets.pretax` (validated, R19). PRESENT ⇒ each spouse's IRA forces
+   *  its OWN RMD on its OWN age (+ its own sole-spouse Joint-Life beneficiary), and a deceased
+   *  spouse's IRA rolls to the survivor. ABSENT ⇒ the M6a aggregate pool (all pre-tax on the owner)
+   *  — the byte-identical default. P2 intake maps the schemaVersion-2 `PersonAccounts.pretax` here. */
+  readonly pretaxByPerson?: readonly number[]
   /** Year-0 cost basis of the taxable bucket (real $). REQUIRED when `taxEnabled` and the taxable
    *  bucket is non-empty — no safe default (burned/062); the engine rejects an absent basis (R19). */
   readonly initialTaxableBasis?: number

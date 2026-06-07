@@ -8,6 +8,7 @@ import {
   type TaxOverlayConfig,
   type Household,
   type HouseholdYear,
+  type TaxYearInputs,
 } from '@engine/taxOverlay'
 import { runDecumulation, type PortfolioState } from '@engine/decumulation'
 import { DRAWDOWN_POLICIES, NEVER_DEPLETED } from '@shared/model'
@@ -1415,5 +1416,224 @@ describe('taxOverlay — M6b age-gap golden (Joint Life relief moves the after-t
     expect(ult.terminalReal).toBeLessThan(ref.terminalReal)
     // The Joint-Life relief: the gap-11 couple forces less, is taxed less, and ends with STRICTLY MORE.
     expect(jlls.terminalReal).toBeGreaterThan(ult.terminalReal)
+  })
+})
+
+describe('taxOverlay — M6b·B per-person pre-tax splitting', () => {
+  // EQUIVALENCE GOLDEN: the per-person path with ALL pre-tax on the owner reduces byte-identically
+  // to the aggregate M6a path — proving the pro-rata conversion/draw splits + the sub-ledger are
+  // correct (x/x = 1 and 0/x = 0 are exact, so a single non-zero holder collapses cleanly).
+  describe('all-on-owner per-person split is byte-identical to the aggregate pool', () => {
+    const cfgRmd: TaxOverlayConfig = { taxEnabled: false, rmdEnabled: true, household: mkHousehold(2026, 1948, 1950) }
+    const cfgTax: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: true, household: mkHousehold(2026, 1948, 1950) }
+    const cases: Array<{ name: string; cfg: TaxOverlayConfig; buckets: AccountBuckets; inputs: TaxYearInputs }> = [
+      { name: 'rmd on, tax off', cfg: cfgRmd, buckets: { taxable: 0, pretax: 1_000_000, roth: 0 }, inputs: {} },
+      {
+        name: 'tax on + conversion + SS + taxable basis',
+        cfg: cfgTax,
+        buckets: { taxable: 200_000, pretax: 800_000, roth: 0 },
+        inputs: { initialTaxableBasis: 50_000, conversions: flat(30_000), ssBenefits: flat(40_000) },
+      },
+    ]
+    for (const { name, cfg, buckets, inputs } of cases) {
+      it(name, () => {
+        const spend = flat(50_000)
+        const agg = runTaxAwareDecumulation(buckets, realStock, realBond, spend, STOCK_W, 'proportional', cfg, inputs)
+        const per = runTaxAwareDecumulation(buckets, realStock, realBond, spend, STOCK_W, 'proportional', cfg, {
+          ...inputs,
+          initialPretaxByPerson: [buckets.pretax, 0],
+        })
+        // terminalReal/depletionYear come from the authoritative `state` → byte-identical (toBe).
+        expect(per.terminalReal).toBe(agg.terminalReal)
+        expect(per.depletionYear).toBe(agg.depletionYear)
+        // The auxiliary ledger reconciles to the same buckets + basis.
+        expect(per.finalBuckets.pretax).toBeCloseTo(agg.finalBuckets.pretax, 6)
+        expect(per.finalBuckets.taxable).toBeCloseTo(agg.finalBuckets.taxable, 6)
+        expect(per.finalTaxableBasis).toBeCloseTo(agg.finalTaxableBasis, 6)
+      })
+    }
+
+    it('a single-person household per-person split [P] is byte-identical to the aggregate', () => {
+      const cfg: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: true, household: mkHousehold(2026, 1948) }
+      const buckets: AccountBuckets = { taxable: 0, pretax: 1_000_000, roth: 0 }
+      const spend = flat(50_000)
+      const agg = runTaxAwareDecumulation(buckets, realStock, realBond, spend, STOCK_W, 'pre-tax-first', cfg, { ssBenefits: flat(30_000) })
+      const per = runTaxAwareDecumulation(buckets, realStock, realBond, spend, STOCK_W, 'pre-tax-first', cfg, {
+        ssBenefits: flat(30_000),
+        initialPretaxByPerson: [1_000_000],
+      })
+      expect(per.terminalReal).toBe(agg.terminalReal)
+      expect(per.depletionYear).toBe(agg.depletionYear)
+    })
+
+    it('rejects a per-person split that does not sum to the aggregate pre-tax (fail-loud, burned/062)', () => {
+      expect(() =>
+        runTaxAwareDecumulation({ taxable: 0, pretax: 1_000_000, roth: 0 }, realStock, realBond, [0], STOCK_W, 'proportional', cfgRmd, {
+          initialPretaxByPerson: [600_000, 300_000], // sums to 900k, not 1M
+        }),
+      ).toThrow(/must sum to the aggregate pre-tax/)
+    })
+
+    it('the engine’s OWN backstop rejects a NaN per-person entry (a NaN survives the sum guard — insight 008)', () => {
+      // [NaN, 1M] is length-2 + "sums" past the sum check (Math.abs(NaN − 1M) > tol is false). Without
+      // the per-entry finiteness guard this NaN-poisons the ledger / throws uncaught mid-path. The engine
+      // backstops it even though validateParams already shields simulate (a direct caller hits this).
+      expect(() =>
+        runTaxAwareDecumulation({ taxable: 0, pretax: 1_000_000, roth: 0 }, realStock, realBond, [0], STOCK_W, 'proportional', cfgRmd, {
+          initialPretaxByPerson: [NaN, 1_000_000],
+        }),
+      ).toThrow(/finite and ≥ 0/)
+    })
+
+    it('rejects a NEGATIVE per-person entry even when the split sums correctly', () => {
+      expect(() =>
+        runTaxAwareDecumulation({ taxable: 0, pretax: 1_000_000, roth: 0 }, realStock, realBond, [0], STOCK_W, 'proportional', cfgRmd, {
+          initialPretaxByPerson: [-100_000, 1_100_000], // sums to 1M but one entry < 0
+        }),
+      ).toThrow(/finite and ≥ 0/)
+    })
+
+    it('an all-on-owner per-person run that DEPLETES matches the aggregate depletion + zeroes the ledger', () => {
+      // Small pool + heavy spend → depletes mid-horizon. All-on-owner must match the aggregate path
+      // exactly (terminalReal 0, same depletionYear) and zero the per-person ledger (no NaN/desync leak).
+      const buckets: AccountBuckets = { taxable: 0, pretax: 150_000, roth: 0 }
+      const cfg: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: true, household: mkHousehold(2026, 1948, 1950) }
+      const spend = flat(60_000)
+      const agg = runTaxAwareDecumulation(buckets, realStock, realBond, spend, STOCK_W, 'pre-tax-first', cfg)
+      const per = runTaxAwareDecumulation(buckets, realStock, realBond, spend, STOCK_W, 'pre-tax-first', cfg, { initialPretaxByPerson: [150_000, 0] })
+      expect(per.depletionYear).not.toBe(NEVER_DEPLETED) // presence: it actually depleted
+      expect(per.depletionYear).toBe(agg.depletionYear)
+      expect(per.terminalReal).toBe(agg.terminalReal)
+      expect(per.finalBuckets).toEqual({ taxable: 0, pretax: 0, roth: 0 })
+    })
+
+    it('rejects a living set that is not the household’s own OverlayPerson references (R19 fail-loud, not silent all-dead)', () => {
+      const cfg: TaxOverlayConfig = { taxEnabled: false, rmdEnabled: true, household: mkHousehold(2026, 1948, 1962) }
+      // Fresh literals — value-equal to the household but DISTINCT references → match nobody. Without the
+      // guard this silently marks everyone dead → zero RMD forever (calm-but-wrong). It must fail loud.
+      const mismatched: HouseholdYear[] = [{ living: [{ birthYear: 1948 }, { birthYear: 1962 }] }]
+      expect(() =>
+        runTaxAwareDecumulation({ taxable: 0, pretax: 2_000_000, roth: 0 }, realStock, realBond, [0], STOCK_W, 'proportional', cfg, {
+          initialPretaxByPerson: [1_000_000, 1_000_000],
+          householdYears: mismatched,
+        }),
+      ).toThrow(/matches no household person/)
+    })
+  })
+
+  // The meatiest per-person branch: BOTH spouses RMD-active with DIFFERENT own-age divisors forcing
+  // into the shared taxable bucket. Externally-derived (DND/012): the relocation is the SUM of each
+  // own-age forced distribution, NOT the aggregate over-forcing on a single age.
+  it('two RMD-active spouses each force on their OWN published divisor (DND/012)', () => {
+    // owner 80 (born 1946) + spouse 76 (born 1950), BOTH past RMD age, each $1M. Beneficiaries: owner's
+    // is spouse 76 (gap 4 → ULT), spouse's is owner 80 (older → ULT). Tax OFF, no spend, one year.
+    const buckets: AccountBuckets = { taxable: 0, pretax: 2_000_000, roth: 0 }
+    const cfg: TaxOverlayConfig = { taxEnabled: false, rmdEnabled: true, household: mkHousehold(2026, 1946, 1950) }
+    const per = runTaxAwareDecumulation(buckets, realStock, realBond, [0], STOCK_W, 'proportional', cfg, {
+      initialPretaxByPerson: [1_000_000, 1_000_000],
+    })
+    const agg = runTaxAwareDecumulation(buckets, realStock, realBond, [0], STOCK_W, 'proportional', cfg)
+    // Independent expected relocation = $1M / Uniform-Lifetime(80) + $1M / Uniform-Lifetime(76).
+    const expectedRelocated = 1_000_000 / ultDivisor(80) + 1_000_000 / ultDivisor(76)
+    expect(per.finalBuckets.taxable / per.terminalReal).toBeCloseTo(expectedRelocated / 2_000_000, 10)
+    // RMD-relocated dollars enter taxable at FULL basis — the two-holder spill is tracked.
+    expect(per.finalTaxableBasis).toBeCloseTo(expectedRelocated, 4)
+    // The aggregate over-forces the WHOLE $2M on the owner's age (ULT-80) → relocates strictly more.
+    expect(agg.finalBuckets.taxable / agg.terminalReal).toBeCloseTo(1 / ultDivisor(80), 10)
+    expect(per.finalBuckets.taxable).toBeLessThan(agg.finalBuckets.taxable)
+    expect(per.terminalReal).toBe(spine(2_000_000, [0]).terminalReal) // tax off ⇒ total-neutral
+  })
+
+  it('bracket-fill composes with the per-person split — the buckets reconcile to the authoritative total', () => {
+    const cfg: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: true, household: mkHousehold(2026, 1948, 1958) }
+    const buckets: AccountBuckets = { taxable: 0, pretax: 1_000_000, roth: 1_000_000 }
+    const r = runTaxAwareDecumulation(buckets, realStock, realBond, flat(80_000), STOCK_W, 'bracket-fill', cfg, {
+      initialPretaxByPerson: [600_000, 400_000],
+      bracketFillCeilings: flat(30_000),
+    })
+    expect(Math.abs(totalAcrossBuckets(r.finalBuckets) - r.terminalReal)).toBeLessThan(1e-6 * r.terminalReal)
+  })
+
+  it('the per-person path converges within the 128-pass cap at the small-net / large-SS corner (insight 006)', () => {
+    // The convergence math is filing-/attribution-independent (per-person rmd = Σ pretax_i/divisor_i ≤
+    // pool/2.0, the same bound the aggregate sweeps probe), but lock it under the SPLIT path too.
+    const cfg: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: true, household: mkHousehold(2026, 1946, 1950) }
+    for (const ss of [0, 1_000_000, 5_000_000]) {
+      expect(() =>
+        runTaxAwareDecumulation({ taxable: 1, pretax: 4_000_000, roth: 0 }, realStock, realBond, [0], STOCK_W, 'proportional', cfg, {
+          initialPretaxByPerson: [2_000_000, 2_000_000],
+          ssBenefits: [ss],
+          initialTaxableBasis: 1,
+        }),
+      ).not.toThrow()
+    }
+  })
+
+  // Each spouse's IRA RMDs on its OWN age: a younger spouse below their RMD age is NOT forced even
+  // though the older spouse is — so per-person forces LESS than the aggregate pool, which over-forces
+  // the WHOLE balance on the owner's age. (The owner's >10yr-younger beneficiary also gets JLLS.)
+  it('per-person forces only the RMD-age spouse; the younger spouse pauses (vs the aggregate over-forcing)', () => {
+    // owner 78 (born 1948, RMD age 72 → active), spouse 64 (born 1962, RMD age 75 → NOT active).
+    // Each holds $1M pre-tax ($2M total). Tax OFF, RMD ON, no spend, one year → total-neutral.
+    const buckets: AccountBuckets = { taxable: 0, pretax: 2_000_000, roth: 0 }
+    const cfg: TaxOverlayConfig = { taxEnabled: false, rmdEnabled: true, household: mkHousehold(2026, 1948, 1962) }
+    const per = runTaxAwareDecumulation(buckets, realStock, realBond, [0], STOCK_W, 'proportional', cfg, {
+      initialPretaxByPerson: [1_000_000, 1_000_000],
+    })
+    const agg = runTaxAwareDecumulation(buckets, realStock, realBond, [0], STOCK_W, 'proportional', cfg)
+    // Per-person relocates ONLY the owner's $1M ÷ JLLS(78,64)=24.8; the spouse's $1M pauses (64 < 75).
+    expect(per.finalBuckets.taxable / per.terminalReal).toBeCloseTo(1_000_000 / 24.8 / 2_000_000, 10)
+    // Aggregate over-forces the whole $2M on the owner's age → relocates twice as much.
+    expect(agg.finalBuckets.taxable / agg.terminalReal).toBeCloseTo(2_000_000 / 24.8 / 2_000_000, 10)
+    expect(per.finalBuckets.taxable).toBeLessThan(agg.finalBuckets.taxable)
+    expect(per.terminalReal).toBe(spine(2_000_000, [0]).terminalReal) // tax off ⇒ total-neutral
+  })
+
+  // Spousal rollover: the RMD-age spouse dies; their IRA passes to the younger survivor (below their
+  // own RMD age) → the RMD PAUSES, so the death run relocates strictly less than the both-alive run.
+  it('a deceased spouse’s IRA rolls to the younger survivor → the RMD pauses', () => {
+    const owner = { birthYear: 1948 } // 78 at 2026, RMD active
+    const spouse = { birthYear: 1962 } // 64 at 2026, RMD age 75 → not active
+    const cfg: TaxOverlayConfig = {
+      taxEnabled: false,
+      rmdEnabled: true,
+      household: { startCalendarYear: 2026, filing: 'mfj', owner, spouse },
+    }
+    const buckets: AccountBuckets = { taxable: 0, pretax: 2_000_000, roth: 0 }
+    const split = [1_000_000, 1_000_000]
+    // Both alive 2 years (no stream): the owner RMDs both years; the young spouse never does.
+    const bothAlive = runTaxAwareDecumulation(buckets, realStock, realBond, [0, 0], STOCK_W, 'proportional', cfg, {
+      initialPretaxByPerson: split,
+    })
+    // Owner dies after year 0 (stream: [both, spouse-only]) — SAME refs as the household (identity).
+    const stream: HouseholdYear[] = [{ living: [owner, spouse] }, { living: [spouse] }]
+    const ownerDies = runTaxAwareDecumulation(buckets, realStock, realBond, [0, 0], STOCK_W, 'proportional', cfg, {
+      initialPretaxByPerson: split,
+      householdYears: stream,
+    })
+    expect(ownerDies.finalBuckets.taxable).toBeGreaterThan(0) // presence: year-0 RMD fired
+    // The survivor inherited the owner's IRA but is below their own RMD age → year-1 forced dist pauses.
+    expect(ownerDies.finalBuckets.taxable).toBeLessThan(bothAlive.finalBuckets.taxable)
+    const ref = spine(2_000_000, [0, 0]).terminalReal
+    expect(ownerDies.terminalReal).toBe(ref) // tax off ⇒ total-neutral
+    expect(bothAlive.terminalReal).toBe(ref)
+  })
+
+  // The after-tax value (tax ON): per-person defers the younger spouse's forced income until THEY
+  // reach their own RMD age, so it is taxed less in the early years → a strictly higher terminal than
+  // the aggregate model, which over-forces the whole pool on the owner's age from year 0.
+  it('per-person defers the younger spouse’s forced income → strictly higher terminal (tax on)', () => {
+    // owner 78 (RMD active), spouse 68 (born 1958, RMD age 73 → starts mid-horizon). Each $1M.
+    const cfg: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: true, household: mkHousehold(2026, 1948, 1958) }
+    const buckets: AccountBuckets = { taxable: 0, pretax: 2_000_000, roth: 0 }
+    const spend = flat(40_000)
+    const per = runTaxAwareDecumulation(buckets, realStock, realBond, spend, STOCK_W, 'pre-tax-first', cfg, {
+      initialPretaxByPerson: [1_000_000, 1_000_000],
+    })
+    const agg = runTaxAwareDecumulation(buckets, realStock, realBond, spend, STOCK_W, 'pre-tax-first', cfg)
+    const ref = spine(2_000_000, spend)
+    expect(per.terminalReal).toBeLessThan(ref.terminalReal) // presence: paid RMD-forced tax
+    expect(agg.terminalReal).toBeLessThan(ref.terminalReal)
+    expect(per.terminalReal).toBeGreaterThan(agg.terminalReal) // deferral → less early tax → more
   })
 })

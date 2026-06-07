@@ -237,6 +237,10 @@ describe('R19 engine half + dire-but-honest edges', () => {
       { taxEnabled: true, rmdEnabled: false, startCalendarYear: 2026, buckets: { taxable: 0, pretax: P, roth: 0 }, filing: 'mfj', conversions: [NaN] }, // non-finite conversion
       { taxEnabled: true, rmdEnabled: false, startCalendarYear: 2026, buckets: { taxable: 0, pretax: P, roth: 0 }, filing: 'mfj', bracketFillCeilings: [NaN] }, // non-finite ceiling
       { taxEnabled: true, rmdEnabled: false, startCalendarYear: 2026, buckets: { taxable: 0, pretax: P, roth: 0 }, filing: 'mfj', bracketFillCeilings: [-100] }, // negative ceiling
+      // Per-person pre-tax split (M6b·B) — guard the new stream like its siblings (insight 008):
+      { taxEnabled: false, rmdEnabled: true, startCalendarYear: 2026, buckets: { taxable: 0, pretax: P, roth: 0 }, filing: 'mfj', pretaxByPerson: [P - 1_000] }, // sum ≠ buckets.pretax
+      { taxEnabled: false, rmdEnabled: true, startCalendarYear: 2026, buckets: { taxable: 0, pretax: P, roth: 0 }, filing: 'mfj', pretaxByPerson: [NaN] }, // non-finite entry
+      { taxEnabled: false, rmdEnabled: true, startCalendarYear: 2026, buckets: { taxable: 0, pretax: P, roth: 0 }, filing: 'mfj', pretaxByPerson: [P / 2, P / 2] }, // length ≠ people (base has 1)
     ]
     for (const overlay of overlays) {
       expect(simulate({ ...base, overlay }, 1).indeterminate).toBe(true)
@@ -547,5 +551,57 @@ describe('U2 overlay wired into simulate (M6a)', () => {
       expect(sim.terminalValuesReal[0]!).toBe(ref.terminalReal)
       expect(sim.depletionYears[0]!).toBe(ref.depletionYear)
     })
+  })
+})
+
+// ===========================================================================
+// U2 · M6b·B — per-person pre-tax splitting wired through simulate (OverlayParams.pretaxByPerson).
+// ===========================================================================
+describe('U2 per-person pre-tax splitting wired into simulate (M6b·B)', () => {
+  // An age-gapped couple, both already retired, a large pre-tax pool so RMDs bite. Fixed-horizon
+  // (no deaths) isolates the per-person RMD-deferral effect from the survivor transition.
+  const P = 2_000_000
+  const older: PersonInputs = { ...MALE_65, currentAge: 78, retirementAge: 78 } // born 1948, RMD active
+  const younger: PersonInputs = { ...FEMALE_65, currentAge: 68, retirementAge: 68 } // born 1958, RMD age 73 → mid-horizon
+  const base = makeParams({
+    people: [older, younger],
+    initialPortfolio: P,
+    annualSpendingReal: 40_000,
+    stockWeight: 0.5,
+    longevityMode: 'fixed-horizon',
+    maxHorizonYears: 10,
+    paths: 200,
+  })
+  const aggOverlay: OverlayParams = {
+    taxEnabled: true,
+    rmdEnabled: true,
+    startCalendarYear: 2026,
+    buckets: { taxable: 0, pretax: P, roth: 0 },
+    filing: 'mfj',
+  }
+  const mean = (xs: readonly number[]) => xs.reduce((a, b) => a + b, 0) / xs.length
+
+  it('all-on-owner per-person split is byte-identical to the aggregate pool THROUGH simulate', () => {
+    const agg = dist(simulate({ ...base, drawdownPolicy: 'pre-tax-first', overlay: aggOverlay }, 2468))
+    const allOwner = dist(
+      simulate({ ...base, drawdownPolicy: 'pre-tax-first', overlay: { ...aggOverlay, pretaxByPerson: [P, 0] } }, 2468),
+    )
+    expect(allOwner.terminalValuesReal).toEqual(agg.terminalValuesReal)
+    expect(allOwner.depletionYears).toEqual(agg.depletionYears)
+  })
+
+  it('splitting the pool per-person defers the younger spouse’s RMD → less early tax → a higher distribution', () => {
+    const agg = dist(simulate({ ...base, drawdownPolicy: 'pre-tax-first', overlay: aggOverlay }, 2468))
+    const split = dist(
+      simulate(
+        { ...base, drawdownPolicy: 'pre-tax-first', overlay: { ...aggOverlay, pretaxByPerson: [P / 2, P / 2] } },
+        2468,
+      ),
+    )
+    // The aggregate over-forces the whole $2M on the 78-yr-old's age from year 0; the per-person split
+    // forces only the older spouse's $1M until the younger reaches 73 — less early ordinary income, so
+    // less tax leaves the portfolio. Under one shared seed (CRN) the split run ends materially richer.
+    expect(split.terminalValuesReal).not.toEqual(agg.terminalValuesReal)
+    expect(mean(split.terminalValuesReal)).toBeGreaterThan(mean(agg.terminalValuesReal))
   })
 })

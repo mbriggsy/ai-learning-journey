@@ -217,6 +217,17 @@ function validateParams(params: SimulationParams): string | null {
       !o.bracketFillCeilings.every((c) => (Number.isFinite(c) && c >= 0) || c === Number.POSITIVE_INFINITY)
     )
       return 'overlay bracketFillCeilings invalid'
+    // Per-person pre-tax split (M6b·B): one finite ≥ 0 entry per person, summing to the aggregate
+    // pre-tax. Guard the new stream at the R19 gate exactly like its siblings — a NaN or a length
+    // mismatch would otherwise detonate mid-path (a NaN divisor poisons the ledger; a short array
+    // mis-maps a spouse's IRA) instead of returning the defined indeterminate output (insight 008).
+    if (o.pretaxByPerson !== undefined) {
+      if (!o.pretaxByPerson.every(finiteNonNeg)) return 'overlay pretaxByPerson invalid'
+      if (o.pretaxByPerson.length !== params.people.length) return 'overlay pretaxByPerson length must match people'
+      const ppSum = o.pretaxByPerson.reduce((acc, x) => acc + x, 0)
+      if (Math.abs(ppSum - b.pretax) > 1e-6 * Math.max(1, Math.abs(b.pretax)))
+        return 'overlay pretaxByPerson must sum to buckets.pretax'
+    }
   }
   return null
 }
@@ -350,6 +361,9 @@ export function simulate(params: SimulationParams, seed: number): SimOutput {
           initialTaxableBasis: overlay.initialTaxableBasis,
           householdYears,
           bracketFillCeilings: overlay.bracketFillCeilings ?? [],
+          // Per-person pre-tax split (M6b·B): aligned to `people` (= the overlay's canonical
+          // owner→spouse order). Absent ⇒ the aggregate pool (byte-identical M6a path).
+          ...(overlay.pretaxByPerson ? { initialPretaxByPerson: overlay.pretaxByPerson } : {}),
         },
       )
     } else {

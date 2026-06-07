@@ -37,3 +37,5 @@ load-bearing ones (see `CLAUDE.md` for how each applies here):
 - [008 — a NaN survives `?? default`, so an unguarded sibling input stream becomes a calm-but-wrong crash](008-nan-survives-nullish-coalescing-in-an-unguarded-input-stream.md)
 - [009 — cross-verifying a transcribed ~3,000-cell federal reference table (eCFR XML + Pub 590-B diff + symmetry + cross-table identity)](009-cross-verifying-a-transcribed-federal-reference-table.md)
 - [010 — a NaN passes a tolerance/range guard (every comparison with NaN is false); knowing the `??` form (008) didn't prevent the `>` form](010-nan-passes-a-relational-guard-because-every-comparison-with-nan-is-false.md)
+- [011 — externally-deriving a golden fixture through a solver whose API returns only aggregates (the zero-return read-off trick)](011-externally-deriving-a-fixture-through-an-aggregate-only-solver-api.md)
+- [012 — ceil-quantizing MAGI against an integer cliff is a no-op vs a raw compare (it does NOT absorb float noise)](012-ceil-quantizing-against-an-integer-cliff-is-a-no-op-vs-a-raw-compare.md)

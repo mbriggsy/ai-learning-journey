@@ -36,3 +36,4 @@ load-bearing ones (see `CLAUDE.md` for how each applies here):
 - [007 — cap-gains stacking raised the gross-up's worst-case k to ≈0.74 and made the contraction rest on regime-disjointness](007-capgains-stacking-raised-convergence-k-and-broke-automatic-contraction.md)
 - [008 — a NaN survives `?? default`, so an unguarded sibling input stream becomes a calm-but-wrong crash](008-nan-survives-nullish-coalescing-in-an-unguarded-input-stream.md)
 - [009 — cross-verifying a transcribed ~3,000-cell federal reference table (eCFR XML + Pub 590-B diff + symmetry + cross-table identity)](009-cross-verifying-a-transcribed-federal-reference-table.md)
+- [010 — a NaN passes a tolerance/range guard (every comparison with NaN is false); knowing the `??` form (008) didn't prevent the `>` form](010-nan-passes-a-relational-guard-because-every-comparison-with-nan-is-false.md)

@@ -70,6 +70,38 @@ export const acaApplicablePercentage = sourced<AcaApplicablePercentageTable>(
   },
 )
 
+/** ACA applicable-percentage sliding scale for the ARPA/IRA ENHANCED regime (the 2021–2025
+ *  temporary percentages — the SCENARIO TOGGLE, NOT the 2026 base case). Read verbatim from IRC
+ *  §36B(b)(3)(A)(iii) (added by ARPA 2021 §9661, extended by IRA 2022 §12001) and cross-verified
+ *  against KFF / healthinsurance.org / IRS. Two structural differences from the reverted table:
+ *  (1) the percentages are FIXED, not inflation-indexed (clause (ii) "shall not apply"); (2) there
+ *  is NO 400% cliff — above 400% FPL the contribution is capped at a flat 8.5% (the open top band,
+ *  `fplFractionHigh: null`), so `cliffFplFraction` is null. LEGISLATIVELY GATED (reVerifyEveryBuild):
+ *  the 2026 extension is pending and possibly retroactive — this is the regime the engine toggles. */
+export const acaApplicablePercentageEnhanced = sourced<AcaApplicablePercentageTable>(
+  {
+    bands: [
+      { fplFractionLow: 0, fplFractionHigh: 1.5, applicablePctLow: 0, applicablePctHigh: 0 },
+      { fplFractionLow: 1.5, fplFractionHigh: 2.0, applicablePctLow: 0, applicablePctHigh: 2.0 },
+      { fplFractionLow: 2.0, fplFractionHigh: 2.5, applicablePctLow: 2.0, applicablePctHigh: 4.0 },
+      { fplFractionLow: 2.5, fplFractionHigh: 3.0, applicablePctLow: 4.0, applicablePctHigh: 6.0 },
+      { fplFractionLow: 3.0, fplFractionHigh: 4.0, applicablePctLow: 6.0, applicablePctHigh: 8.5 },
+      { fplFractionLow: 4.0, fplFractionHigh: null, applicablePctLow: 8.5, applicablePctHigh: 8.5 },
+    ],
+    cliffFplFraction: null,
+    eligibilityFloorFplFraction: 1.0,
+  },
+  {
+    citation:
+      'IRC §36B(b)(3)(A)(iii) (ARPA 2021 §9661, extended by IRA 2022 §12001), read verbatim from Cornell LII (law.cornell.edu/uscode/text/26/36B) + cross-verified vs KFF / healthinsurance.org / IRS (gemini-grounding) — zero disagreement; clause (ii) indexing does NOT apply (fixed statutory percentages)',
+    directionalUntilPinned: true,
+    pinTo: 'IRC §36B(b)(3)(A)(iii) — the enacted ARPA/IRA statute (+ any 2026 extension notice)',
+    reVerifyEveryBuild: true,
+    legalBasis: 'ARPA 2021 §9661; IRA 2022 §12001',
+    note: 'The 2021–2025 ENHANCED regime — the scenario TOGGLE; the 2026 base case is the reverted/cliff-on `acaApplicablePercentage`. Percentages are FIXED (clause (ii) indexing does NOT apply). NO 400% cliff: the open top band (fplFractionHigh null) caps the contribution at a flat 8.5% above 400% FPL. The pending 2026 extension is possibly retroactive — never hard-code "enhanced forever" NOR "reverted forever".',
+  },
+)
+
 /** 2025 HHS Federal Poverty Guidelines (48 contiguous states + DC) — the table ACA
  *  uses for the 2026 COVERAGE year (the prior-year guidelines apply). A household of
  *  N = base + (N − 1) × perAdditionalPerson. The 400% cliff DOLLAR is DERIVED
@@ -228,6 +260,7 @@ export const obbbaHsa2026 = sourced(
 export const healthConstants = {
   acaEnhancedSubsidyStatus,
   acaApplicablePercentage,
+  acaApplicablePercentageEnhanced,
   federalPovertyGuidelines,
   acaPtc,
   irmaa,

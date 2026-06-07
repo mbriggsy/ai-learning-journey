@@ -132,7 +132,7 @@ describe('canonical constants — shape & provenance (contract #6)', () => {
     expect(t.bands[1]?.applicablePctLow, 'the one value this milestone had to fetch (133% lower bound)').toBe(3.14)
     t.bands.forEach((b, i) => {
       expect(Number.isFinite(b.fplFractionLow) && Number.isFinite(b.fplFractionHigh)).toBe(true)
-      expect(b.fplFractionHigh > b.fplFractionLow, `band ${i} width > 0`).toBe(true)
+      expect(b.fplFractionHigh !== null && b.fplFractionHigh > b.fplFractionLow, `band ${i} width > 0`).toBe(true)
       expect(b.applicablePctHigh >= b.applicablePctLow, `band ${i} non-decreasing within`).toBe(true)
       expect(b.applicablePctLow >= 0 && b.applicablePctHigh <= 100, `band ${i} a valid %`).toBe(true)
       const prev = t.bands[i - 1]
@@ -142,6 +142,48 @@ describe('canonical constants — shape & provenance (contract #6)', () => {
       }
     })
     expect(t.bands[t.bands.length - 1]?.fplFractionHigh, 'top band ends at the cliff').toBe(t.cliffFplFraction)
+  })
+
+  it('the ENHANCED ACA applicable-% table (ARPA/IRA, the toggle regime) has NO cliff + a flat-8.5% open top band, verbatim from §36B(b)(3)(A)(iii) (U3·E, DND/012)', () => {
+    const entry = healthConstants.acaApplicablePercentageEnhanced
+    expect(entry.directionalUntilPinned, 'directional until the enacted-statute pin').toBe(true)
+    expect(entry.reVerifyEveryBuild, 'legislatively gated (the 2026 extension is pending/retroactive)').toBe(true)
+    const t = entry.value
+    // The defining structural facts: NO cliff (null), and the 100%-FPL Medicaid floor still applies.
+    expect(t.cliffFplFraction, 'enhanced regime has NO 400% cliff').toBeNull()
+    expect(t.eligibilityFloorFplFraction, '100% FPL PTC floor (Medicaid below)').toBe(1.0)
+    expect(t.bands).toHaveLength(6)
+    // Pin EVERY band value, externally-derived from the statute (DND/012) — an in-order single-digit
+    // corruption of any interior bound fails loud.
+    expect(t.bands.map((b) => b.fplFractionLow)).toEqual([0, 1.5, 2.0, 2.5, 3.0, 4.0])
+    expect(t.bands.map((b) => b.fplFractionHigh)).toEqual([1.5, 2.0, 2.5, 3.0, 4.0, null])
+    expect(t.bands.map((b) => b.applicablePctLow)).toEqual([0, 0, 2.0, 4.0, 6.0, 8.5])
+    expect(t.bands.map((b) => b.applicablePctHigh)).toEqual([0, 2.0, 4.0, 6.0, 8.5, 8.5])
+    // The open top band: "400% and higher" is FLAT 8.5% (fplFractionHigh null, low === high).
+    const top = t.bands[t.bands.length - 1]
+    expect(top?.fplFractionHigh, 'open top band').toBeNull()
+    expect(top?.applicablePctLow === top?.applicablePctHigh, 'top band is flat (8.5%)').toBe(true)
+    // The invariant generalizes (cf. the reverted table line above): the top band ends exactly
+    // where the cliff begins — here both are null (no cliff, open band).
+    expect(top?.fplFractionHigh, 'top band high === cliffFplFraction (null === null)').toBe(t.cliffFplFraction)
+    t.bands.forEach((b, i) => {
+      const prev = t.bands[i - 1]
+      if (prev) {
+        expect(prev.fplFractionHigh, `band ${i} contiguous`).toBe(b.fplFractionLow)
+        // Internal continuity (insight 009 self-check): each band's initial % === the prior band's
+        // final %, so the sliding scale is continuous (0,0,2,4,6,8.5) — no transcription jump.
+        expect(b.applicablePctLow, `band ${i} continuous % (initial === prior final)`).toBe(prev.applicablePctHigh)
+      }
+      // DND/009 finiteness: every % finite; fplFractionHigh finite OR the open-band null.
+      expect(Number.isFinite(b.applicablePctLow) && Number.isFinite(b.applicablePctHigh)).toBe(true)
+      expect(b.fplFractionHigh === null || Number.isFinite(b.fplFractionHigh)).toBe(true)
+    })
+    // Cross-table identity: the enhanced regime is strictly MORE generous than the 2026 reverted
+    // table at a shared FPL edge (at 200% FPL: enhanced 2.0% vs reverted 6.6% required contribution).
+    const reverted = healthConstants.acaApplicablePercentage.value
+    const enhAt200 = t.bands.find((b) => b.fplFractionHigh === 2.0)?.applicablePctHigh
+    const revAt200 = reverted.bands.find((b) => b.fplFractionHigh === 2.0)?.applicablePctHigh
+    expect(enhAt200 !== undefined && revAt200 !== undefined && enhAt200 < revAt200, 'enhanced more generous at 200% FPL').toBe(true)
   })
 
   it('the 2025 HHS FPL guidelines reconstruct household sizes + derive the 400% cliff exactly (U3·M1)', () => {
@@ -154,8 +196,11 @@ describe('canonical constants — shape & provenance (contract #6)', () => {
     const fpl = (n: number) => t.base + (n - 1) * t.perAdditionalPerson
     expect(fpl(2), 'household-of-2').toBe(21_150)
     // Cross-table identity (insight 009): the 400% cliff dollar is DERIVED, not stored —
-    // 4.0 × FPL(2) = 84,600 (the figure the old rounded constant hard-coded).
-    expect(fpl(2) * healthConstants.acaApplicablePercentage.value.cliffFplFraction).toBe(84_600)
+    // 4.0 × FPL(2) = 84,600 (the figure the old rounded constant hard-coded). The reverted regime
+    // always carries a NUMERIC cliff (only the enhanced regime's cliffFplFraction is null).
+    const revertedCliff = healthConstants.acaApplicablePercentage.value.cliffFplFraction
+    expect(revertedCliff, 'reverted regime carries a numeric 400% cliff').toBe(4.0)
+    expect(fpl(2) * (revertedCliff ?? 0)).toBe(84_600)
     expect(Number.isFinite(t.base) && t.base > 0).toBe(true)
     expect(Number.isFinite(t.perAdditionalPerson) && t.perAdditionalPerson > 0).toBe(true)
   })

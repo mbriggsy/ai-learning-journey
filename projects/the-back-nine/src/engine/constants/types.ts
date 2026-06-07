@@ -150,23 +150,29 @@ export interface JointLifeLastSurvivorTable {
 export interface AcaApplicablePercentageBand {
   /** Lower bound of the band, as a fraction of FPL (e.g. 1.33 = 133% FPL). */
   readonly fplFractionLow: number
-  /** Upper bound of the band, as a fraction of FPL (e.g. 1.5 = 150% FPL). */
-  readonly fplFractionHigh: number
+  /** Upper bound of the band, as a fraction of FPL (e.g. 1.5 = 150% FPL). `null` marks the
+   *  OPEN-ENDED top band — the enhanced regime's "400% and higher" tier (IRC §36B(b)(3)(A)(iii)),
+   *  which is FLAT (applicablePctLow === applicablePctHigh), mirroring {@link OrdinaryBracket.upTo}.
+   *  In the 2026 reverted regime there is no open band — the cliff handles above-400%. */
+  readonly fplFractionHigh: number | null
   /** Applicable percentage (of income) at the band's lower bound. */
   readonly applicablePctLow: number
   /** Applicable percentage at the band's upper bound; interpolated linearly within. */
   readonly applicablePctHigh: number
 }
 
-/** The ACA applicable-percentage sliding scale + the PTC eligibility window.
- *  `cliffFplFraction` is the 400%-FPL "subsidy cliff" — PTC → $0 strictly above it
- *  under the 2026 reverted/pre-ARPA regime; `eligibilityFloorFplFraction` is the
- *  100%-FPL PTC floor (below it is Medicaid territory — OUT-but-disclosed,
- *  state-dependent). Bands are ascending and contiguous up to the cliff. */
+/** The ACA applicable-percentage sliding scale + the PTC eligibility window. Two regimes share
+ *  this shape: the 2026 REVERTED table (`cliffFplFraction` = 4.0, a hard 400%-FPL cliff) and the
+ *  ARPA/IRA ENHANCED table (`cliffFplFraction` = null, NO cliff — an open top band caps the
+ *  contribution at a flat % above 400% FPL). `eligibilityFloorFplFraction` is the 100%-FPL PTC
+ *  floor (below it is Medicaid territory — OUT-but-disclosed, state-dependent). Bands are ascending
+ *  and contiguous; the top band ends exactly where the cliff begins (or both are open/null). */
 export interface AcaApplicablePercentageTable {
   readonly bands: readonly AcaApplicablePercentageBand[]
-  /** PTC drops to $0 strictly above this FPL fraction (the 2026 cliff = 4.0). */
-  readonly cliffFplFraction: number
+  /** PTC drops to $0 strictly above this FPL fraction (the 2026 reverted cliff = 4.0). `null`
+   *  marks the ARPA/IRA ENHANCED regime — NO cliff; above 400% FPL the contribution is capped at
+   *  the open top band's flat percentage (8.5%) instead of the credit zeroing. */
+  readonly cliffFplFraction: number | null
   /** PTC eligibility floor as an FPL fraction (1.0); below it, generally Medicaid. */
   readonly eligibilityFloorFplFraction: number
 }

@@ -15,6 +15,16 @@
 
 **Plan set remains LOCKED** (roadmap + 4 phase docs).
 
+## ⚑ NEXT SESSION — START HERE
+
+**State:** clean working tree · all gates green (typecheck · 317 tests · lint · verify:aca · bundle 195.4 KiB) · last commit `59de94af` (the 8 U3-exit pilot fixes) pushed. Plan LOCKED; P1·U3 M1–M3 + the pilot fixes SHIPPED. M4 (IRMAA) is the next product milestone.
+
+**First — a small fork on the code-review STRATEGY, then M4.** The pilot validated ce's review *agents* (the lenses) but BYPASSED the `ce:review` *skill's own orchestration* (tiering / confidence-gating / merge-dedup / synthesis) — so the **turnkey tool's value + raw signal-to-noise is still UNvalidated**, and the adopted cadence is the *custom-Workflow* approach (see the pilot block below). My lean: settle this ONCE before institutionalizing the cadence across U4–U17.
+- **(a) [my lean] Run the real-tool head-to-head (free, ~1 pass):** in a throwaway worktree at the PRE-fix engine (`b86d7c3d`), run the ACTUAL `ce:review` skill (and/or `/code-review` at `max`; `/code-review ultra` is Briggsy-triggered + billed) scoped to `src/engine/**`. Score ITS raw output the SAME way (NEW×REAL×MATERIAL · did it independently catch our 8 · its noise) and compare to the custom Workflow. Then finalize the cadence verdict. → THEN M4.
+- **(b) Skip it:** accept the agent-level verdict + the custom-Workflow cadence as-is → straight to M4.
+
+**Then — `/ce:work` M4 (IRMAA 2yr-lagged feed-forward)** (details in Next Steps §1; insight 013 applies directly — IRMAA is a step function).
+
 ## ✅ Code-review pilot — DONE (2026-06-07): it earned its keep; lean cadence adopted
 
 First formal multi-persona review of `src/engine/**` (10 personas → adversarial-verify each finding → NEW×REAL×MATERIAL classify; Claude-orchestrated read-only Workflow). **Verdict: NOT theater.** 43 raised · 42 real (1 false positive, correctly refuted) · **8 NEW×MATERIAL** that 317 tests + 12 insights + every per-milestone adversarial pass had MISSED — incl. a real algorithmic gap in just-shipped M3 code (the 133% ACA bisection) + three holes in the "airtight" R19 gate. **All 8 fixed + tested this session** (folded into Current State). Lesson → insight [013](docs/insights/013-a-table-discontinuity-silently-breaks-a-root-finders-monotonicity-premise.md).
@@ -25,6 +35,8 @@ First formal multi-persona review of `src/engine/**` (10 personas → adversaria
 - **DO** a LEAN holistic re-audit at **UNIT boundaries** (U-complete, not per-milestone): **correctness + architecture** core, **testing** for user-facing-value coverage, + one **TS-idiom/API-shape** glance. Read-only Workflow; sweep scratch files after (insight 005).
 - **DON'T** run the full 10-persona pass per milestone (6 of 10 added nothing material; ~6.9M tokens/run). **FOLD** maintainability/simplicity into an ESLint `max-lines`/complexity rule if we ever want to police it mechanically; perf = the existing deferred measured pass; **security = a TARGETED lens at U4** (the new crypto/KDF surface), not recurring OWASP.
 - `/code-review ultra` (billed, Briggsy-triggered, Claude can't launch) stays available for a deeper cloud pass on a unit if wanted.
+
+**⚠ Precision (what the pilot did vs did NOT test):** it ran ce's review **agents** (the `compound-engineering:review:*` subagents — `architecture-strategist`, `code-simplicity-reviewer`, `correctness-reviewer`, etc.) via a **custom Workflow** I authored — it did **NOT** run the `ce:review` **skill** or `/code-review` itself. So the *lenses* were genuinely ce's (the per-persona verdict is real), but the skill's own orchestration — conditional **tiering** (it wouldn't run all 10), **confidence-gating**, **merge/dedup**, **synthesis** — plus the turnkey tool's **raw signal-to-noise without my contracts-brief + adversarial-verify scaffolding** are UNvalidated. The "lean cadence" above = the custom-Workflow approach. Whether the turnkey `ce:review`/`/code-review ultra` beats it is the **OPEN head-to-head** in START-HERE.
 
 ## Next Steps (priority order)
 1. **P1·U3 — the healthcare overlay (IN PROGRESS; M1+M2+M3 COMPLETE + the U3-exit code-review pilot fixes SHIPPED 2026-06-07; ⚑ M4 IRMAA is the NEXT action).** Spec: `phase-1-foundation.md` (Unit 3) + `docs/research/pre65-healthcare-aca-hsa-2026-06-04.md`. Remaining milestones — mirror U2's M1→M6b; **test-first on the golden anchors**; multi-lens read-only review per milestone (insight 005, sweep scratch files). **STANDING DECISION — AS-WE-GO (supersedes the original seam-first M2):** the `healthcareEnabled` toggle + each cost-input stream (SLCSP, enrolled premium, OOP-medical, MAGI-seed) + the reduce-to-spine wiring land WITH their first consumer (M3+), each carrying its own **`Number.isFinite`-FIRST** R19 guard at BOTH `validateParams` (simulate.ts) AND the overlay backstop (insights 008/010) — the proven U2 pattern; never front-load a guessed input shape (e.g. SLCSP may need per-enrollee structure M3 reveals).

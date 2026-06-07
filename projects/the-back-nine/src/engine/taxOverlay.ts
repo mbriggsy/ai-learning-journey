@@ -83,10 +83,13 @@ import {
   seniorBonus,
   ssProvisionalThresholds,
   capitalGainsBreakpoints,
+  acaApplicablePercentage,
+  acaApplicablePercentageEnhanced,
   type OrdinaryBracket,
   type CapitalGainsRateBreakpoints,
+  type AcaApplicablePercentageTable,
 } from '@engine/constants'
-import type { GrossUpSolution } from '@engine/healthOverlay'
+import { solveAcaFundedGross, fplForHousehold, type GrossUpSolution } from '@engine/healthOverlay'
 import { NEVER_DEPLETED, type DepletionYear, type DrawdownPolicy, type FilingStatus } from '@shared/model'
 
 // Filing status is shared model vocabulary (the persisted scenario speaks it too). Re-exported
@@ -155,6 +158,11 @@ export interface TaxAwareResult extends DecumulationResult {
   /** The taxable bucket's cost basis at the end of the horizon (real $, finite per DND/009;
    *  0 when the portfolio depleted). Unscaled by market growth — appreciation is unrealized gain. */
   readonly finalTaxableBasis: number
+  /** Σ of every year's pre-65 ACA net premium actually paid (real $; U3 · M3 Slice 4). 0 when the
+   *  healthcare overlay is off / inert (healthcare disabled, no enrolled premium, or the age gate
+   *  zeroed it). It NEVER perturbs the reduce-to-spine total: `terminalReal` already reflects each
+   *  premium via the grossed-up withdrawal that funds it — this is the parallel ACCOUNTING surface. */
+  readonly totalNetPremiumReal: number
 }
 
 /**
@@ -202,6 +210,24 @@ export interface TaxYearInputs {
    *  M1–M6a path, byte-identical. Read only when the overlay is active (tax or RMD on); with
    *  the EXHAUSTIVE OFF condition the aggregate path runs and reduce-to-spine is untouched. */
   readonly initialPretaxByPerson?: readonly number[]
+  // --- U3 · M3 Slice 4: the pre-65 ACA premium-funding streams. ABSENT / `healthcareEnabled` false
+  //     ⇒ the healthcare-blind path (byte-identical to the M6b overlay). ACA is structurally coupled
+  //     to tax (its MAGI comes from the gross-up's components), so `healthcareEnabled` with tax OFF
+  //     fails loud (the overlay backstop, mirroring `simulate`'s validateParams). ---
+  /** Master switch for the pre-65 ACA overlay. Per year it prices ONLY when ALSO a finite positive
+   *  `enrolledPremium[t]` is supplied AND ≥1 living member is pre-65 (the age gate); otherwise the
+   *  year is the tax-only gross-up (inert). REQUIRES `config.taxEnabled`. */
+  readonly healthcareEnabled?: boolean
+  /** Selects the ARPA/IRA ENHANCED applicable-% table (no 400%-FPL cliff; flat 8.5% open top band)
+   *  over the statutory cliff regime. ABSENT/false ⇒ the statutory cliff regime. */
+  readonly enhancedSubsidies?: boolean
+  /** Per-year Second-Lowest-Cost Silver Plan benchmark premium (real $), the §36B PTC basis, indexed
+   *  by ABSOLUTE year. In a priced year a MISSING/non-finite entry fails LOUD through the ACA solver's
+   *  R19 backstop (burned/062) — `slcsp[t] = 0` is the EXPLICIT no-subsidy value, absent is an error. */
+  readonly slcsp?: readonly number[]
+  /** Per-year enrolled-plan premium the household pays BEFORE any PTC (real $), indexed by ABSOLUTE
+   *  year. A finite positive entry in a pre-65 year triggers the outer ACA fixed point. */
+  readonly enrolledPremium?: readonly number[]
 }
 
 const EMPTY_BUCKETS: AccountBuckets = { taxable: 0, pretax: 0, roth: 0 }
@@ -470,6 +496,9 @@ function count65PlusInSimYear(household: Household, t: number): number {
 interface ResolvedYear {
   readonly filing: FilingStatus
   readonly count65: number
+  /** People alive this year = the ACA FPL household size (U3 · M3 Slice 4). The pre-65 count the
+   *  age gate reads is `livingCount − count65` (living members under 65). */
+  readonly livingCount: number
   /** The aggregated pre-tax pool's holder this year — the survivor after the first death.
    *  `undefined` only if nobody is alive (defensive; the horizon guarantees ≥1 living). */
   readonly rmdOwner: OverlayPerson | undefined
@@ -493,12 +522,13 @@ function resolveYear(household: Household, householdYears: readonly HouseholdYea
     const filing: FilingStatus = living.length >= 2 ? 'mfj' : 'single'
     let count65 = 0
     for (const p of living) if (ageInSimYear(p, household.startCalendarYear, t) >= AGE_65_THRESHOLD) count65++
-    return { filing, count65, rmdOwner: living[0], rmdSpouse: living[1] }
+    return { filing, count65, livingCount: living.length, rmdOwner: living[0], rmdSpouse: living[1] }
   }
   // Static (M5): both people present every year, filing as configured — verbatim M1–M5.
   return {
     filing: household.filing,
     count65: count65PlusInSimYear(household, t),
+    livingCount: household.spouse ? 2 : 1,
     rmdOwner: household.owner,
     rmdSpouse: household.spouse,
   }
@@ -793,7 +823,52 @@ export function runTaxAwareDecumulation(
     householdYears = [],
     bracketFillCeilings = [],
     initialPretaxByPerson,
+    healthcareEnabled = false,
+    enhancedSubsidies = false,
+    slcsp = [],
+    enrolledPremium = [],
   } = taxInputs
+
+  // Healthcare requires tax (U3 · M3 Slice 4): the ACA PTC keys off ACA-MAGI, which this engine
+  // derives ONLY from the tax gross-up's converged components — so pricing ACA with tax OFF is
+  // incoherent (there is no gross-up to read MAGI from). validateParams shields `simulate`; this is
+  // the overlay's own fail-loud backstop for a direct caller — a silent premium drop is the unsafe,
+  // survival-overstating direction, never the calm-but-wrong sin (burned/062).
+  if (healthcareEnabled && !config.taxEnabled) {
+    throw new Error(
+      '[taxOverlay] healthcareEnabled requires taxEnabled — the ACA PTC is MAGI-driven and MAGI comes from the tax solver',
+    )
+  }
+
+  // Overlay fail-loud backstop for the health cost streams (the "BOTH validateParams AND the overlay
+  // backstop" discipline — mirroring initialPretaxByPerson/initialTaxableBasis below). validateParams
+  // shields `simulate`; THIS protects a direct caller (a future P3 control / P4 solver). A PRESENT
+  // non-finite / negative entry is a misconfiguration → throw, never let the per-year `> 0` predicate
+  // silently route it to the no-ACA branch — an un-priced premium UNDERSTATES cost → overstates
+  // survival (the calm-but-wrong sin); and for +Infinity the predicate would otherwise SUPPRESS the
+  // ACA solver's own R19 throw. An ABSENT / short entry stays legitimate (no marketplace coverage that
+  // year — employer / COBRA / spouse plan), so `.every` (which skips holes) is exactly the right shape.
+  if (healthcareEnabled) {
+    if (!enrolledPremium.every((x) => Number.isFinite(x) && x >= 0)) {
+      throw new Error(
+        '[taxOverlay] enrolledPremium entries must be finite and ≥ 0 — a non-finite premium is silently un-priced by the per-year predicate (the cost-understating, survival-overstating direction; burned/062, insight 010)',
+      )
+    }
+    if (!slcsp.every((x) => Number.isFinite(x) && x >= 0)) {
+      throw new Error('[taxOverlay] slcsp entries must be finite and ≥ 0 (burned/062)')
+    }
+  }
+
+  // The ACA applicable-% table is year-invariant; select it ONCE per run. `enhanced` = the ARPA/IRA
+  // no-cliff regime (flat 8.5% open top band), absent/false = the statutory 400%-FPL cliff regime.
+  // `undefined` when healthcare is off — which doubles as the per-year "price ACA this year?" gate
+  // (and narrows the table type at the solver call site).
+  const acaTable: AcaApplicablePercentageTable | undefined = healthcareEnabled
+    ? enhancedSubsidies
+      ? acaApplicablePercentageEnhanced.value
+      : acaApplicablePercentage.value
+    : undefined
+  let totalNetPremiumReal = 0
 
   // Initial taxable basis is REQUIRED when tax is on and the taxable bucket is non-empty — there
   // is no safe default (0 over-taxes every realization; the full value silently no-ops cap-gains),
@@ -918,26 +993,67 @@ export function runTaxAwareDecumulation(
         ? { taxable: buckets.taxable, pretax: buckets.pretax - conversion, roth: buckets.roth + conversion }
         : buckets
 
-    // Gross up for tax. When off, grossWithdrawal === net EXACTLY (no float op added), so the
-    // stepYear recurrence is identical to the spine's. When on, solve the fixed point: withdraw
-    // enough to net `net` after the tax (ordinary on the pre-tax distributed + conversion +
-    // taxable SS, preferential on the realized gain); the tax dollars LEAVE the portfolio, so
-    // terminalReal drops below the spine (the presence companion).
-    const grossWithdrawal =
-      config.taxEnabled && regime
-        ? solveGrossWithdrawal(
-            net,
-            drawPool,
-            policy,
-            rmd,
-            conversion,
-            basis,
-            regime.filing,
-            regime.count65,
-            ssBenefits[t] ?? 0,
-            bracketFillCeiling,
-          ).gross
-        : net
+    // Gross up for tax (M3–M5), then — when the pre-65 ACA overlay is active THIS year — wrap that
+    // gross-up in the OUTER ACA premium-funding fixed point (U3 · M3 Slice 4). When tax is off,
+    // grossWithdrawal === net EXACTLY (spine recurrence); when healthcare is off / inert it is the
+    // tax-only gross — so reduce-to-spine + every M1–M6b fixture stays byte-identical. When ACA
+    // prices, the net premium is funded INSIDE grossWithdrawal (so terminalReal drops — the presence
+    // companion), and accrues to `totalNetPremiumReal` (the parallel accounting surface).
+    let grossWithdrawal: number
+    if (config.taxEnabled && regime) {
+      // The inner tax gross-up as a closure the ACA solver probes at (baseNet + a candidate premium).
+      // Identical call + args as the non-ACA branch below, so `fundNet(net).gross` is byte-identical
+      // to the pre-Slice-4 path.
+      const fundNet = (netTotal: number): GrossUpSolution =>
+        solveGrossWithdrawal(
+          netTotal,
+          drawPool,
+          policy,
+          rmd,
+          conversion,
+          basis,
+          regime.filing,
+          regime.count65,
+          ssBenefits[t] ?? 0,
+          bracketFillCeiling,
+        )
+      // AGE GATE (red-team blocker): ACA prices ONLY when ≥1 living member is pre-65. With every
+      // living member ≥ 65 (all on Medicare) there is no marketplace household — zero the cost, never
+      // a phantom post-65 subsidy (post-65 IRMAA is M4's job). pre65 = livingCount − living-65+.
+      const pre65 = regime.livingCount - regime.count65
+      const enrolledThisYear = enrolledPremium[t]
+      // The per-year price/skip gate. `acaTable !== undefined` IS the healthcareEnabled gate (the table
+      // is selected iff healthcare is on) and narrows the table type for the solver call. The up-front
+      // backstop above already rejected any PRESENT non-finite/negative enrolled/slcsp (and validateParams
+      // does the same for `simulate`), so here `enrolledThisYear !== undefined` distinguishes a legitimate
+      // "no marketplace coverage this year" (absent/short → tax-only) from a priced year; `Number.isFinite
+      // && > 0` is then the belt-and-suspenders price decision (a NaN can no longer reach this line).
+      if (
+        acaTable !== undefined &&
+        enrolledThisYear !== undefined &&
+        Number.isFinite(enrolledThisYear) &&
+        enrolledThisYear > 0 &&
+        pre65 > 0
+      ) {
+        // A missing benchmark in a priced year fails LOUD via the solver's own R19 backstop
+        // (NaN → throw → the worker's calm-error), never a silent phantom subsidy (slcsp[t] = 0 is
+        // the EXPLICIT no-subsidy value; an absent entry is a caller misconfiguration). burned/062.
+        const aca = solveAcaFundedGross(
+          net,
+          slcsp[t] ?? Number.NaN,
+          enrolledThisYear,
+          fplForHousehold(regime.livingCount),
+          acaTable,
+          fundNet,
+        )
+        grossWithdrawal = aca.gross
+        totalNetPremiumReal += aca.netPremium
+      } else {
+        grossWithdrawal = fundNet(net).gross
+      }
+    } else {
+      grossWithdrawal = net
+    }
 
     // Per-bucket ledger: which buckets fund this withdrawal (consumed by the tax math). Allocated
     // against the CONVERSION-REDUCED drawPool, capped at what exists — exactly like the spine.
@@ -1004,5 +1120,5 @@ export function runTaxAwareDecumulation(
     }
   }
 
-  return { terminalReal: totalValue(state), depletionYear, finalBuckets: buckets, finalTaxableBasis: basis }
+  return { terminalReal: totalValue(state), depletionYear, finalBuckets: buckets, finalTaxableBasis: basis, totalNetPremiumReal }
 }

@@ -1637,3 +1637,126 @@ describe('taxOverlay — M6b·B per-person pre-tax splitting', () => {
     expect(per.terminalReal).toBeGreaterThan(agg.terminalReal) // deferral → less early tax → more
   })
 })
+
+// ===========================================================================
+// U3 · M3 Slice 4 — the pre-65 ACA premium-funding overlay wired into the decumulation.
+// The pure solver (solveAcaFundedGross) is exhaustively golden at the unit level
+// (healthOverlay.test.ts); these pin the WIRING: the outer ACA fixed point wraps the inner tax
+// gross-up, the net premium leaves the portfolio (presence), the AGE GATE suppresses ACA once every
+// living member is ≥65 (never a phantom post-65 subsidy), the inert paths stay byte-identical, and
+// healthcare-with-tax-off fails loud. (The integrated PTC-VALUE fixtures land in Slice 5.)
+// ===========================================================================
+describe('taxOverlay — M3 Slice 4: the pre-65 ACA overlay wired into runTaxAwareDecumulation', () => {
+  const P = 1_000_000
+  const yr3 = (a: number): number[] => [a, a, a]
+  // A pre-65 couple (both born 1966 → age 60 at 2026, under 65 across a 3-year horizon) so the age
+  // gate is OPEN; tax on, no RMD (age 60). A pretax-only pool drawn pre-tax-first ⇒ MAGI = the gross,
+  // landing ≈ 55–65k = ~260–300% FPL (FPL2 = 21,150, cliff 84,600) → UNDER the cliff with a real PTC.
+  const PRE65: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: false, household: mkHousehold(2026, 1966, 1966) }
+  // The same couple aged past 65 (both born 1950 → age 76), tax on, no RMD ⇒ the age gate is CLOSED.
+  const POST65: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: false, household: mkHousehold(2026, 1950, 1950) }
+  const buckets: AccountBuckets = { taxable: 0, pretax: P, roth: 0 }
+  const baseNet = yr3(40_000)
+  const health = (over: Partial<TaxYearInputs> = {}): TaxYearInputs => ({
+    healthcareEnabled: true,
+    slcsp: yr3(15_000),
+    enrolledPremium: yr3(15_000),
+    ...over,
+  })
+
+  describe('presence companion: a pre-65 household actually pays a net premium that leaves the portfolio', () => {
+    it('healthcare ON funds a positive net premium (a real PTC applied) and ends BELOW the tax-only run', () => {
+      const on = runTaxAwareDecumulation(buckets, realStock, realBond, baseNet, STOCK_W, 'pre-tax-first', PRE65, health())
+      const off = runTaxAwareDecumulation(buckets, realStock, realBond, baseNet, STOCK_W, 'pre-tax-first', PRE65)
+      // a real premium was paid (presence, non-vacuous)...
+      expect(on.totalNetPremiumReal).toBeGreaterThan(0)
+      // ...and a real PTC offset it — the net premium is STRICTLY BELOW the full enrolled (under-cliff)...
+      expect(on.totalNetPremiumReal).toBeLessThan(3 * 15_000)
+      // ...the premium (and its tax gross-up) left the portfolio → strictly below the tax-only run...
+      expect(on.terminalReal).toBeLessThan(off.terminalReal)
+      // ...and the tax-only run prices NOTHING.
+      expect(off.totalNetPremiumReal).toBe(0)
+    })
+  })
+
+  describe('AGE GATE (red-team blocker): ACA prices ONLY when ≥1 living member is pre-65', () => {
+    it('an all-≥65 household with the SAME enrolled premium prices NOTHING (no phantom post-65 subsidy) → byte-identical to the tax-only run', () => {
+      const gated = runTaxAwareDecumulation(buckets, realStock, realBond, baseNet, STOCK_W, 'pre-tax-first', POST65, health())
+      const taxOnly = runTaxAwareDecumulation(buckets, realStock, realBond, baseNet, STOCK_W, 'pre-tax-first', POST65)
+      expect(gated.totalNetPremiumReal).toBe(0) // the age gate zeroed the cost
+      expect(gated.terminalReal).toBe(taxOnly.terminalReal) // byte-identical — ACA never fired
+      expect(gated.depletionYear).toBe(taxOnly.depletionYear)
+    })
+
+    it('non-vacuous: the SAME enrolled premium DOES price for the otherwise-identical pre-65 household (age is the only mover)', () => {
+      const pre = runTaxAwareDecumulation(buckets, realStock, realBond, baseNet, STOCK_W, 'pre-tax-first', PRE65, health())
+      const post = runTaxAwareDecumulation(buckets, realStock, realBond, baseNet, STOCK_W, 'pre-tax-first', POST65, health())
+      expect(pre.totalNetPremiumReal).toBeGreaterThan(0) // pre-65 prices...
+      expect(post.totalNetPremiumReal).toBe(0) // ...≥65 does not — the age gate is the only difference
+    })
+
+    it('a MIXED-age couple (one pre-65, one ≥65) STILL prices — the gate is "ANY pre-65 member", not "ALL pre-65"', () => {
+      // owner 60 (born 1966, pre-65) + spouse 71 (born 1955, ≥65) → pre65 = livingCount(2) − count65(1) = 1
+      // > 0, so ACA prices on the household-of-2 FPL. This is the gate's DISCRIMINATING case: a regression
+      // to `count65 === 0` (ALL pre-65) would wrongly SUPPRESS a real subsidy here — the calm-but-wrong sin.
+      const MIXED: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: false, household: mkHousehold(2026, 1966, 1955) }
+      const mixed = runTaxAwareDecumulation(buckets, realStock, realBond, baseNet, STOCK_W, 'pre-tax-first', MIXED, health())
+      expect(mixed.totalNetPremiumReal).toBeGreaterThan(0)
+    })
+  })
+
+  describe('inert paths stay byte-identical (the finiteness-FIRST predicate + healthcare-off)', () => {
+    it('healthcareEnabled with an all-zero enrolled stream prices nothing → byte-identical to the tax-only run', () => {
+      const z = runTaxAwareDecumulation(buckets, realStock, realBond, baseNet, STOCK_W, 'pre-tax-first', PRE65, health({ enrolledPremium: yr3(0) }))
+      const off = runTaxAwareDecumulation(buckets, realStock, realBond, baseNet, STOCK_W, 'pre-tax-first', PRE65)
+      expect(z.totalNetPremiumReal).toBe(0)
+      expect(z.terminalReal).toBe(off.terminalReal)
+    })
+
+    it('healthcare streams PRESENT but disabled (tax OFF) are inert → byte-identical to the spine', () => {
+      const got = runTaxAwareDecumulation(buckets, realStock, realBond, baseNet, STOCK_W, 'pre-tax-first', OFF, {
+        slcsp: yr3(15_000),
+        enrolledPremium: yr3(15_000),
+      })
+      const sp = spine(P, baseNet)
+      expect(got.terminalReal).toBe(sp.terminalReal)
+      expect(got.depletionYear).toBe(sp.depletionYear)
+      expect(got.totalNetPremiumReal).toBe(0)
+    })
+  })
+
+  describe('fail-loud backstops (burned/062)', () => {
+    it('healthcareEnabled with tax OFF throws — ACA is MAGI-driven (the overlay backstop mirrors validateParams)', () => {
+      expect(() =>
+        runTaxAwareDecumulation(buckets, realStock, realBond, baseNet, STOCK_W, 'pre-tax-first', OFF, health()),
+      ).toThrow(/healthcareEnabled requires taxEnabled/)
+    })
+
+    it('a MISSING benchmark (slcsp) in a priced year fails loud — never a silent phantom subsidy', () => {
+      // enrolled > 0 in a pre-65 year, but no slcsp[t] ⇒ NaN reaches the solver's R19 backstop ⇒ throw.
+      expect(() =>
+        runTaxAwareDecumulation(buckets, realStock, realBond, baseNet, STOCK_W, 'pre-tax-first', PRE65, health({ slcsp: [] })),
+      ).toThrow(/slcsp/)
+    })
+
+    it('a PRESENT non-finite/negative enrolled premium fails loud at the overlay backstop — never a silent un-priced drop', () => {
+      // The direct-caller (P3/P4) backstop: a corrupt enrolled premium must THROW, not fall through the
+      // per-year predicate to the no-ACA branch (which would understate cost → overstate survival). For
+      // +Infinity especially, the predicate would otherwise suppress the solver's own throw. (validateParams
+      // already shields `simulate`; this mirrors that guard for a direct caller — the BOTH-layers discipline.)
+      for (const bad of [NaN, Infinity, -1]) {
+        expect(() =>
+          runTaxAwareDecumulation(buckets, realStock, realBond, baseNet, STOCK_W, 'pre-tax-first', PRE65, health({ enrolledPremium: yr3(bad) })),
+        ).toThrow(/enrolledPremium/)
+      }
+    })
+
+    it('a PRESENT non-finite/negative slcsp fails loud at the overlay backstop too (symmetric with enrolled)', () => {
+      for (const bad of [NaN, Infinity, -1]) {
+        expect(() =>
+          runTaxAwareDecumulation(buckets, realStock, realBond, baseNet, STOCK_W, 'pre-tax-first', PRE65, health({ slcsp: yr3(bad) })),
+        ).toThrow(/slcsp/)
+      }
+    })
+  })
+})

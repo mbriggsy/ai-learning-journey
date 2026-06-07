@@ -237,6 +237,25 @@ function validateParams(params: SimulationParams): string | null {
     if (o.slcsp !== undefined && !o.slcsp.every(finiteNonNeg)) return 'overlay slcsp invalid'
     if (o.enrolledPremium !== undefined && !o.enrolledPremium.every(finiteNonNeg))
       return 'overlay enrolledPremium invalid'
+    // Healthcare pricing is MAGI-driven and MAGI comes ONLY from the tax solver, so healthcare with
+    // tax OFF is incoherent — reject it as indeterminate rather than silently drop the premium (the
+    // survival-overstating, unsafe direction). The R19 frontline mirror of the overlay's own backstop
+    // (taxOverlay throws the same condition for a direct caller). M3 Slice 4.
+    if (o.healthcareEnabled && !o.taxEnabled) return 'overlay healthcareEnabled requires taxEnabled'
+    // Slcsp COVERAGE: a priced ACA year (enrolled > 0 AND pre-65) needs a finite §36B benchmark; a
+    // missing slcsp there would make the overlay throw mid-path. Priced years ⊆ enrolled>0 years, so
+    // requiring slcsp[t] finite wherever enrolledPremium[t] is finite-positive shields `simulate` —
+    // it returns the defined indeterminate output, never a mid-path throw (the same pre-check the
+    // required taxable basis gets above). slcsp[t] = 0 is the EXPLICIT no-subsidy value; absent is an error.
+    if (o.healthcareEnabled) {
+      const enrolled = o.enrolledPremium ?? []
+      const slcsp = o.slcsp ?? []
+      for (let t = 0; t < enrolled.length; t++) {
+        const e = enrolled[t]
+        if (e !== undefined && Number.isFinite(e) && e > 0 && !Number.isFinite(slcsp[t]))
+          return 'overlay slcsp must cover every enrolled-premium year'
+      }
+    }
   }
   return null
 }
@@ -373,6 +392,17 @@ export function simulate(params: SimulationParams, seed: number): SimOutput {
           // Per-person pre-tax split (M6b·B): aligned to `people` (= the overlay's canonical
           // owner→spouse order). Absent ⇒ the aggregate pool (byte-identical M6a path).
           ...(overlay.pretaxByPerson ? { initialPretaxByPerson: overlay.pretaxByPerson } : {}),
+          // U3 · M3 Slice 4 healthcare streams: spread ONLY when the overlay is enabled, so a
+          // healthcare-off run passes the byte-identical pre-Slice-4 taxInputs (reduce-to-spine).
+          // validateParams has already rejected healthcareEnabled with tax off (indeterminate).
+          ...(overlay.healthcareEnabled
+            ? {
+                healthcareEnabled: true,
+                enhancedSubsidies: overlay.enhancedSubsidies ?? false,
+                slcsp: overlay.slcsp ?? [],
+                enrolledPremium: overlay.enrolledPremium ?? [],
+              }
+            : {}),
         },
       )
     } else {

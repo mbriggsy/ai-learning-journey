@@ -250,6 +250,10 @@ describe('R19 engine half + dire-but-honest edges', () => {
       { taxEnabled: false, rmdEnabled: false, startCalendarYear: 2026, buckets: { taxable: 0, pretax: P, roth: 0 }, filing: 'mfj', enrolledPremium: [NaN] }, // non-finite enrolled premium
       { taxEnabled: false, rmdEnabled: false, startCalendarYear: 2026, buckets: { taxable: 0, pretax: P, roth: 0 }, filing: 'mfj', enrolledPremium: [-1] }, // negative enrolled premium
       { taxEnabled: false, rmdEnabled: false, startCalendarYear: 2026, buckets: { taxable: 0, pretax: P, roth: 0 }, filing: 'mfj', enrolledPremium: [Infinity] }, // +Infinity enrolled premium — REJECTED
+      // U3 · M3 Slice 4 — healthcare is MAGI-driven, so healthcareEnabled with tax OFF is incoherent:
+      { taxEnabled: false, rmdEnabled: false, startCalendarYear: 2026, buckets: { taxable: 0, pretax: P, roth: 0 }, filing: 'mfj', healthcareEnabled: true }, // healthcare requires tax
+      // a priced enrolled year with NO slcsp benchmark → clean indeterminate (not a mid-path throw):
+      { taxEnabled: true, rmdEnabled: false, startCalendarYear: 2026, buckets: { taxable: 0, pretax: P, roth: 0 }, filing: 'mfj', healthcareEnabled: true, enrolledPremium: [15_000], slcsp: [] }, // enrolled>0, slcsp absent → slcsp-coverage gate
     ]
     for (const overlay of overlays) {
       expect(simulate({ ...base, overlay }, 1).indeterminate).toBe(true)
@@ -632,5 +636,70 @@ describe('U2 per-person pre-tax splitting wired into simulate (M6b·B)', () => {
     // less tax leaves the portfolio. Under one shared seed (CRN) the split run ends materially richer.
     expect(split.terminalValuesReal).not.toEqual(agg.terminalValuesReal)
     expect(mean(split.terminalValuesReal)).toBeGreaterThan(mean(agg.terminalValuesReal))
+  })
+})
+
+// ===========================================================================
+// U3 · M3 Slice 4 — the pre-65 ACA overlay wired THROUGH simulate. The overlay-level wiring (the
+// outer ACA fixed point, the age gate, the fail-loud backstops) is golden in taxOverlay.test.ts;
+// this anchors the END-TO-END path: simulate assembles the per-path householdYears + threads the
+// health streams, so a pre-65 couple's premiums move the headline distribution, and healthcare-off
+// stays byte-identical to the spine (the Slice-3 reduce-to-spine test, still green with consumption live).
+// ===========================================================================
+describe('U3 healthcare overlay wired into simulate (M3 Slice 4)', () => {
+  // A pre-65 couple (age 60), fixed-horizon 3 years (ages 60–62, under 65 every year ⇒ the age gate
+  // is OPEN), tax on, no RMD. A pretax-only pool drawn pre-tax-first keeps MAGI under the 400% cliff.
+  const P = 1_000_000
+  const pre65m: PersonInputs = { ...MALE_65, currentAge: 60, retirementAge: 60 }
+  const pre65f: PersonInputs = { ...FEMALE_65, currentAge: 60, retirementAge: 60 }
+  const base = makeParams({
+    initialPortfolio: P,
+    annualSpendingReal: 40_000,
+    people: [pre65m, pre65f],
+    longevityMode: 'fixed-horizon',
+    maxHorizonYears: 3,
+    paths: 100,
+    drawdownPolicy: 'pre-tax-first',
+  })
+  const overlayBase: OverlayParams = {
+    taxEnabled: true,
+    rmdEnabled: false,
+    startCalendarYear: 2026,
+    buckets: { taxable: 0, pretax: P, roth: 0 },
+    filing: 'mfj',
+  }
+
+  it('healthcare ON prices ACA premiums that leave the portfolio → every path ends strictly below healthcare OFF', () => {
+    const on = dist(
+      simulate(
+        { ...base, overlay: { ...overlayBase, healthcareEnabled: true, slcsp: flatN(3, 15_000), enrolledPremium: flatN(3, 15_000) } },
+        2468,
+      ),
+    )
+    const off = dist(simulate({ ...base, overlay: overlayBase }, 2468))
+    // CRN: same seed, same dimensions → the ONLY difference is the ACA premium cost. Non-vacuous +
+    // directional: every path's terminal drops (the net premium + its tax gross-up left the portfolio).
+    expect(on.terminalValuesReal).not.toEqual(off.terminalValuesReal)
+    for (let p = 0; p < on.terminalValuesReal.length; p++) {
+      expect(on.terminalValuesReal[p]!).toBeLessThan(off.terminalValuesReal[p]!)
+    }
+  })
+
+  it('the AGE GATE through simulate: an all-≥65 couple with the same enrolled premium is byte-identical to healthcare OFF', () => {
+    // The same scenario aged past 65 (currentAge 70 → ages 70–72): every member is ≥65, so the age
+    // gate suppresses ACA — no phantom post-65 subsidy, byte-identical to the tax-only run.
+    const post = makeParams({
+      ...base,
+      people: [{ ...MALE_65, currentAge: 70, retirementAge: 70 }, { ...FEMALE_65, currentAge: 70, retirementAge: 70 }],
+    })
+    const on = dist(
+      simulate(
+        { ...post, overlay: { ...overlayBase, healthcareEnabled: true, slcsp: flatN(3, 15_000), enrolledPremium: flatN(3, 15_000) } },
+        2468,
+      ),
+    )
+    const off = dist(simulate({ ...post, overlay: overlayBase }, 2468))
+    expect(on.terminalValuesReal).toEqual(off.terminalValuesReal)
+    expect(on.depletionYears).toEqual(off.depletionYears)
   })
 })

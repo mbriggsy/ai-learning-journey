@@ -702,4 +702,49 @@ describe('U3 healthcare overlay wired into simulate (M3 Slice 4)', () => {
     expect(on.terminalValuesReal).toEqual(off.terminalValuesReal)
     expect(on.depletionYears).toEqual(off.depletionYears)
   })
+
+  describe('M3 Slice 5 — CRN stability across the ACA wiring (the healthcare branch draws ZERO)', () => {
+    // The ACA outer fixed point + the cliff branch are pure cash-term transforms (zero draws), so two
+    // candidates differing only in a CONTROL — here the Roth conversion, which moves ACA-MAGI and can
+    // cross the 400% cliff — must still draw normals identical path-for-path WITH healthcare ON. Proof:
+    // (1) buildDraws is dimension-only (conversion/healthcare are not its args); (2) a same-input run
+    // repeats byte-identically with no desync NaN; (3) the per-path terminal is a clean MONOTONE
+    // function of the conversion — a draw desync (the bug CRN guards against) would scramble per-path
+    // returns and break monotonicity. (The pure ACA solve is golden in taxOverlay.test.ts Slice 5.)
+    const withConv = (conversions: readonly number[]): SimulationParams => ({
+      ...base,
+      overlay: {
+        ...overlayBase,
+        healthcareEnabled: true,
+        slcsp: flatN(3, 15_000),
+        enrolledPremium: flatN(3, 15_000),
+        conversions,
+      },
+    })
+
+    it('a healthcare-ON run is deterministic + finite, and the draw schedule is dimension-only (no desync)', () => {
+      expect(buildDraws(2468, base.paths, base.maxHorizonYears, 2)).toEqual(
+        buildDraws(2468, base.paths, base.maxHorizonYears, 2),
+      )
+      const a = dist(simulate(withConv(flatN(3, 20_000)), 2468))
+      const b = dist(simulate(withConv(flatN(3, 20_000)), 2468))
+      expect(a.terminalValuesReal).toEqual(b.terminalValuesReal)
+      expect(a.terminalValuesReal.every(Number.isFinite)).toBe(true)
+    })
+
+    it('two conversion candidates draw identically: the per-path terminal is monotone (jitter-free) in the conversion — including across the cliff', () => {
+      // conv 0 → MAGI ≈ 45k (under cliff, PTC applies); 20k → ≈ 65k (still under); 40k → ≈ 85k (OVER the
+      // cliff, PTC lost). Each step removes more grossed-up tax (and, at the crossing, the whole subsidy)
+      // → strictly less terminal on EVERY path. Shared draws make that monotone; a desync would oscillate.
+      const t0 = dist(simulate(withConv(flatN(3, 0)), 2468)).terminalValuesReal
+      const t1 = dist(simulate(withConv(flatN(3, 20_000)), 2468)).terminalValuesReal
+      const t2 = dist(simulate(withConv(flatN(3, 40_000)), 2468)).terminalValuesReal
+      for (let p = 0; p < t0.length; p++) {
+        expect(t1[p]!).toBeLessThanOrEqual(t0[p]!)
+        expect(t2[p]!).toBeLessThanOrEqual(t1[p]!)
+      }
+      // non-vacuous: the conversion genuinely moved the terminal (else monotonicity is trivially true).
+      expect(t2[0]!).toBeLessThan(t0[0]!)
+    })
+  })
 })

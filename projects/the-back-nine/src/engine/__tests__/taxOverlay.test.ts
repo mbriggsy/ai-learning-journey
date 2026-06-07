@@ -14,6 +14,7 @@ import { runDecumulation, type PortfolioState } from '@engine/decumulation'
 import { DRAWDOWN_POLICIES, NEVER_DEPLETED } from '@shared/model'
 import { totalAcrossBuckets, type AccountBuckets } from '@engine/sequencing'
 import { uniformLifetimeTableDivisors, capitalGainsBreakpoints } from '@engine/constants'
+import { fplForHousehold } from '@engine/healthOverlay'
 
 // ---------------------------------------------------------------------------
 // Deterministic fixtures (no RNG — the seam is a pure transform). Mixed-sign real
@@ -1758,5 +1759,202 @@ describe('taxOverlay — M3 Slice 4: the pre-65 ACA overlay wired into runTaxAwa
         ).toThrow(/slcsp/)
       }
     })
+  })
+})
+
+// ===========================================================================
+// U3 · M3 Slice 5 — the INTEGRATED PTC value-correctness battery (the last M3 slice).
+//
+// Slice 4 pinned the WIRING (presence, age gate, reduce-to-spine, fail-loud); the pure ACA solver
+// is golden against a SYNTHETIC fundNet in healthOverlay.test.ts. This battery proves the integrated
+// path is VALUE-correct: the REAL inner tax gross-up (solveGrossWithdrawal) feeding the REAL ACA
+// outer solve produces the right dollars end-to-end — calm-but-WRONG is the sin (CLAUDE.md), so the
+// honesty bar is the externally-derived number, not "> 0".
+//
+// EXTERNALLY DERIVED (DND/012 + insight 009): every expected figure is hand-computed below from the
+// published §36B PTC formula + the committed 2026 constants, by an INDEPENDENT path — never by
+// re-running the engine. A golden computed via the engine's own formula proves typing, not correctness.
+//
+// THE READ-OFF TRICK. One pre-65 year with ZERO market returns makes `stepYear` an identity on the
+// post-withdrawal total (afterWithdrawal × (1+0)), so `terminalReal === P − grossWithdrawal` EXACTLY
+// (decumulation.ts: the `bond = afterWithdrawal − stock` complement avoids any split drift). The
+// converged gross — hence the inner tax AND the funded net premium — is therefore read straight off
+// the terminal, and `totalNetPremiumReal` is the single year's net premium directly. Two equations
+// (terminalReal, totalNetPremiumReal) pin the whole nested fixed point.
+//
+// THE TAX REGIME (held constant across the battery). A pre-65 MFJ couple both born 1966 → age 60 at
+// startCalendarYear 2026, so count65 = 0 and the deduction stack is a FLAT MFJ standard deduction
+// $32,200 (no age-65 addition, no senior bonus — both gated on count65). FPL(2) = $21,150 (2025 HHS,
+// household of 2) → 400% cliff = $84,600. pre65 = livingCount(2) − count65(0) = 2 ⇒ ACA prices.
+// MFJ ordinary brackets: 10% to $24,800, then 12% to $100,800. A pretax-only pool drawn pre-tax-first
+// makes ordinary income = the pre-tax distributed (+ any conversion), with NO SS and NO realized gain,
+// so ACA-MAGI = grossWithdrawal (+ conversion). The gross-up fixed point gross = net + tax(gross) is
+// solved exactly by hand within a single bracket; the ACA bisection then finds net premium = the §36B
+// contribution (SLCSP = enrolled ⇒ netPremium = min(enrolled, applicable% × MAGI)).
+// ===========================================================================
+describe('taxOverlay — M3 Slice 5: the integrated PTC value-correctness battery (externally derived, DND/012)', () => {
+  const P = 1_000_000
+  // FPL is READ through the exported helper (single-source; never re-type the HHS base — copyGuard).
+  const FPL2 = fplForHousehold(2) // 21,150 (2025 HHS, household of 2)
+  const CLIFF = 4 * FPL2 // 400% cliff = 84,600 (derived, never stored)
+  // Both born 1966 ⇒ age 60 at 2026 (pre-65, count65 = 0). MFJ. Tax on, RMD off. count65 = 0 ⇒ the
+  // deduction stack is the flat 2026 MFJ standard deduction $32,200; MFJ brackets 10% to $24,800 then
+  // 12% to $100,800 (all stated in each fixture's derivation comment; the engine reads them from
+  // @engine/constants — they are never re-typed in executable test code).
+  const PRE65: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: false, household: mkHousehold(2026, 1966, 1966) }
+  const PRETAX_ONLY: AccountBuckets = { taxable: 0, pretax: P, roth: 0 }
+  const Z1 = [0] // one year, ZERO return ⇒ terminalReal = P − gross EXACTLY
+
+  /** One pre-65 zero-return year. terminalReal = P − gross; totalNetPremiumReal = the year's net premium. */
+  const oneYear = (baseNet: number, inputs: TaxYearInputs, cfg: TaxOverlayConfig = PRE65) =>
+    runTaxAwareDecumulation(PRETAX_ONLY, Z1, Z1, [baseNet], STOCK_W, 'pre-tax-first', cfg, inputs)
+
+  describe('the 4 externally-derived PTC fixtures through the INTEGRATED solver', () => {
+    it('under-cliff-clean: MAGI = 250% FPL lands on the 8.44% band boundary → exact PTC, net premium, gross', () => {
+      // MAGI = gross = 52,875 = 2.5 × 21,150 (250% FPL). applicable% = 8.44% (band [2.5,3.0] low,
+      // exact boundary, no interpolation). contribution = 0.0844 × 52,875 = 4,462.65.
+      // SLCSP = enrolled = 15,000 ⇒ PTC = 15,000 − 4,462.65 = 10,537.35, net premium = 4,462.65.
+      // tax(52,875): taxable = 52,875 − 32,200 = 20,675 (≤ 24,800) → 10% → 2,067.50.
+      // gross = net + tax where net = baseNet + netPremium ⇒ baseNet = 52,875 − 2,067.50 − 4,462.65 = 46,344.85.
+      const r = oneYear(46_344.85, { healthcareEnabled: true, slcsp: [15_000], enrolledPremium: [15_000] })
+      expect(r.totalNetPremiumReal).toBeCloseTo(4_462.65, 2) // ⇒ PTC = 15,000 − 4,462.65 = 10,537.35
+      expect(r.terminalReal).toBeCloseTo(P - 52_875, 2) // gross = 52,875 (MAGI exactly 250% FPL, under the cliff)
+    })
+
+    it('interpolation-interior: MAGI = 175% FPL → the LINEARLY interpolated 5.395% contribution', () => {
+      // MAGI = gross = 37,012.50 = 1.75 × 21,150 (175% FPL). Band [1.5,2.0], w = 0.5 →
+      // applicable% = (4.19 + 0.5×(6.60−4.19))/100 = 5.395%. contribution = 0.05395 × 37,012.50 = 1,996.824375.
+      // SLCSP = enrolled = 12,000 ⇒ PTC = 10,003.175625, net premium = 1,996.824375.
+      // tax(37,012.50): taxable = 4,812.50 (≤ 24,800) → 10% → 481.25.
+      // baseNet = 37,012.50 − 481.25 − 1,996.824375 = 34,534.425625.
+      const r = oneYear(34_534.425625, { healthcareEnabled: true, slcsp: [12_000], enrolledPremium: [12_000] })
+      expect(r.totalNetPremiumReal).toBeCloseTo(1_996.824375, 2)
+      expect(r.terminalReal).toBeCloseTo(P - 37_012.5, 2)
+    })
+
+    it('cliff-pair: a household just-under vs over the 400% cliff — the subsidy vanishes discontinuously', () => {
+      // UNDER: MAGI = gross = 84,000 (3.972× FPL, band [3.0,4.0] flat 9.96%). contribution =
+      // 0.0996 × 84,000 = 8,366.40 < enrolled 20,000 ⇒ PTC = 11,633.60, net premium = 8,366.40.
+      // tax(84,000): taxable = 51,800 → 2,480 + 0.12×27,000 = 5,720. baseNet = 84,000 − 5,720 − 8,366.40 = 69,913.60.
+      const under = oneYear(69_913.6, { healthcareEnabled: true, slcsp: [20_000], enrolledPremium: [20_000] })
+      expect(under.totalNetPremiumReal).toBeCloseTo(8_366.4, 2) // a REAL PTC (net premium ≪ enrolled)
+      expect(under.terminalReal).toBeCloseTo(P - 84_000, 2)
+
+      // OVER: baseNet 71,000 pushes the self-consistent under-cliff MAGI to ≈ 85,392 (> 84,600), so the
+      // post-bisection feasibility check rejects it → the over-cliff (PTC = 0) solve funds the FULL
+      // enrolled 20,000. gross = (71,000 + 20,000) + tax(gross); in the 12% band tax = 0.12·gross − 4,360
+      // ⇒ 0.88·gross = 86,640 ⇒ gross = 98,454.5454…  (MAGI 98,454.55 — comfortably over the cliff).
+      const over = oneYear(71_000, { healthcareEnabled: true, slcsp: [20_000], enrolledPremium: [20_000] })
+      expect(over.totalNetPremiumReal).toBe(20_000) // PTC = 0 — the WHOLE subsidy is gone over the cliff
+      expect(over.terminalReal).toBeCloseTo(P - 86_640 / 0.88, 2)
+      // The discontinuity: a ~1,086 baseNet step erased an 11,633.60 PTC and dropped the terminal far
+      // more than that step (lost subsidy + the extra tax-grossed-up withdrawal that funds the full premium).
+      expect(under.terminalReal - over.terminalReal).toBeGreaterThan(11_633.6)
+    })
+
+    it('D6 inversion (the load-bearing test): a conversion that is cheap under tax-only goes net-NEGATIVE over the cliff', () => {
+      // The case that justifies D6 (a disclosed omission INVERTS which strategy wins). A pretax→roth
+      // conversion adds to ordinary income (so ACA-MAGI = gross + conversion) but is intra-portfolio —
+      // only its TAX leaves — so the effective rate ON the conversion = (terminal drop)/(conversion bump).
+      //
+      // baseNet 40,000, SLCSP = enrolled = 18,000.
+      //  BASELINE conversion 29,913.60 → MAGI = 84,000 (UNDER the cliff): netPremium = 0.0996×84,000 =
+      //    8,366.40 (PTC 9,633.60); tax(84,000) = 5,720; gross = 40,000 + 8,366.40 + 5,720 = 54,086.40.
+      //  BUMPED conversion 39,913.60 (= +10,000) → MAGI crosses the cliff → over-cliff (PTC 0), netPremium
+      //    = full 18,000; gross = (40,000 + 18,000) + tax(MAGI), MAGI = gross + 39,913.60 ⇒ in the 12% band
+      //    0.88·MAGI = 93,553.60 ⇒ MAGI = 106,310.909…, tax = 8,397.3091, gross = 66,397.3091.
+      const conv = (c: number) =>
+        oneYear(40_000, { healthcareEnabled: true, slcsp: [18_000], enrolledPremium: [18_000], conversions: [c] })
+      const base = conv(29_913.6)
+      const bumped = conv(39_913.6)
+      expect(base.totalNetPremiumReal).toBeCloseTo(8_366.4, 2)
+      expect(base.terminalReal).toBeCloseTo(P - 54_086.4, 2)
+      expect(bumped.totalNetPremiumReal).toBe(18_000) // the cliff zeroed the PTC
+      expect(bumped.terminalReal).toBeCloseTo(P - 66_397.30909, 2)
+
+      // The healthcare-AWARE effective rate on the $10,000 conversion bump: terminal fell 12,310.91 →
+      // 123.1% — the conversion DESTROYED 1.23× its face value (lost subsidy 9,633.60 + extra grossed-up
+      // tax 2,677.31). > 100% = net-negative (the ">100% effective rate" the healthcare doc §line 73 names).
+      const Δconv = 10_000
+      const healthEffRate = (base.terminalReal - bumped.terminalReal) / Δconv
+      expect(healthEffRate).toBeCloseTo(1.2310909, 4)
+      expect(healthEffRate).toBeGreaterThan(1) // NET-NEGATIVE — the conversion is wealth-destroying
+
+      // The INVERSION: the SAME two conversions under a tax-ONLY model (healthcare off) cost only the
+      // gross-up tax = 12%/(1−12%) = 13.636% — a CHEAP, "good" conversion. tax-only terminals:
+      //   c=29,913.60 → MAGI 74,492.727, tax 4,579.1273, gross 44,579.1273.
+      //   c=39,913.60 → MAGI 85,856.364, tax 5,942.7636, gross 45,942.7636.
+      const taxOnly = (c: number) => oneYear(40_000, { conversions: [c] }) // NO healthcare ⇒ tax-only
+      const tBase = taxOnly(29_913.6)
+      const tBumped = taxOnly(39_913.6)
+      expect(tBase.terminalReal).toBeCloseTo(P - 44_579.12727, 2)
+      expect(tBumped.terminalReal).toBeCloseTo(P - 45_942.76364, 2)
+      const taxEffRate = (tBase.terminalReal - tBumped.terminalReal) / Δconv
+      expect(taxEffRate).toBeCloseTo(0.1363636, 4)
+      expect(taxEffRate).toBeLessThan(1) // CHEAP under tax-only — the ranking the cliff inverts
+
+      // The omission inverts the ranking, it does not merely blunt the delta: 13.6% → 123.1% (a ~9× jump
+      // across the boundary), tax-only-cheap flipping to healthcare-aware wealth-destroying.
+      expect(healthEffRate).toBeGreaterThan(taxEffRate * 8)
+    })
+  })
+
+  describe('near-cliff quantization: a sub-dollar MAGI wobble cannot flip the ceil-quantized branch', () => {
+    // The cliff feasibility test is `Math.ceil(MAGI) > cliffMagi` with cliffMagi = 84,600 (an integer):
+    // the decision lives on the DOLLAR grid while the ACA bisection converges sub-penny (ε = 1e-6), so
+    // the cents of a near-cliff MAGI never move it across the integer boundary. (Conservative by design:
+    // ceil errs toward "over" — never admits a strictly-over household as eligible; insight 010.)
+    it('a household one DOLLAR under the cliff keeps the full subsidy (cents are quantized away)', () => {
+      // MAGI = gross = 84,599 (ceil 84,599 ≤ 84,600 ⇒ eligible). contribution = 0.0996×84,599 = 8,426.0604.
+      // tax(84,599): taxable 52,399 → 2,480 + 0.12×27,599 = 5,791.88. baseNet = 84,599 − 5,791.88 − 8,426.0604 = 70,381.0596.
+      const r = oneYear(70_381.0596, { healthcareEnabled: true, slcsp: [20_000], enrolledPremium: [20_000] })
+      expect(r.totalNetPremiumReal).toBeCloseTo(8_426.0604, 2) // eligible: net premium ≪ enrolled, NOT 20,000
+      expect(r.terminalReal).toBeCloseTo(P - 84_599, 2)
+      // Determinism at the edge (a draw/float desync would jitter): the same run repeats byte-identically.
+      const again = oneYear(70_381.0596, { healthcareEnabled: true, slcsp: [20_000], enrolledPremium: [20_000] })
+      expect(again.terminalReal).toBe(r.terminalReal)
+      expect(again.totalNetPremiumReal).toBe(r.totalNetPremiumReal)
+    })
+
+    it('a household whose under-cliff MAGI lands ~10 dollars OVER flips to the no-subsidy branch', () => {
+      // baseNet 70,389.644 ⇒ self-consistent under-cliff MAGI = (70,389.644 − 4,360)/0.7804 ≈ 84,610 > 84,600
+      // ⇒ feasibility rejects ⇒ over-cliff (PTC 0, full enrolled). The boundary is sharp and correctly placed.
+      const r = oneYear(70_389.644, { healthcareEnabled: true, slcsp: [20_000], enrolledPremium: [20_000] })
+      expect(r.totalNetPremiumReal).toBe(20_000) // over-cliff: the whole subsidy is gone
+    })
+  })
+
+  describe('enhanced-subsidy toggle: flipping the regime removes the cliff and changes the result', () => {
+    it('a 500%-FPL household pays the full premium under the reverted cliff but is subsidised at a flat 8.5% when enhanced', () => {
+      // SAME baseNet 88,431.25 and SAME enrolled 20,000 — only the regime toggle differs.
+      //  REVERTED (cliff ON): MAGI is over 84,600 ⇒ over-cliff (PTC 0), full enrolled 20,000.
+      //    gross = (88,431.25 + 20,000) + tax(gross); 12% band ⇒ 0.88·gross = 104,071.25 ⇒ gross = 118,262.784.
+      //  ENHANCED (no cliff): the open top band caps the contribution at a flat 8.5% ABOVE 400% FPL.
+      //    MAGI = gross = 105,750 (500% FPL): contribution = 0.085×105,750 = 8,988.75 (PTC 11,011.25),
+      //    net premium = 8,988.75. tax(105,750) = 2,480 + 0.12×48,750 = 8,330. baseNet = 105,750 − 8,330 − 8,988.75 = 88,431.25. ✓
+      const slcsp = [20_000]
+      const enrolledPremium = [20_000]
+      const reverted = oneYear(88_431.25, { healthcareEnabled: true, slcsp, enrolledPremium })
+      const enhanced = oneYear(88_431.25, { healthcareEnabled: true, enhancedSubsidies: true, slcsp, enrolledPremium })
+
+      expect(reverted.totalNetPremiumReal).toBe(20_000) // cliff regime: a 500%-FPL household gets nothing
+      expect(reverted.terminalReal).toBeCloseTo(P - 104_071.25 / 0.88, 2)
+
+      expect(enhanced.totalNetPremiumReal).toBeCloseTo(8_988.75, 2) // enhanced: a real PTC over 400% FPL
+      expect(enhanced.terminalReal).toBeCloseTo(P - 105_750, 2)
+
+      // The toggle MATTERS: flipping enhanced on rescued an 11,011.25 PTC and lifted the terminal.
+      expect(enhanced.totalNetPremiumReal).toBeLessThan(reverted.totalNetPremiumReal)
+      expect(enhanced.terminalReal).toBeGreaterThan(reverted.terminalReal)
+      expect(reverted.totalNetPremiumReal - enhanced.totalNetPremiumReal).toBeCloseTo(11_011.25, 2)
+    })
+  })
+
+  // Anchor: the FPL/cliff the battery's hand-derivations assume are the ones the engine reads (a
+  // constants drift that shifted FPL would silently move every fixture). FPL2 is READ through
+  // fplForHousehold (single-source) and the cliff is DERIVED — neither is a re-typed source figure.
+  it('the FPL anchors the battery is built on match the canonical constants', () => {
+    expect(FPL2).toBe(21_150) // fplForHousehold(2) — the 2025 HHS household-of-2 guideline
+    expect(CLIFF).toBe(84_600) // 4.0 × FPL(2) — the 400% cliff the fixtures straddle
   })
 })

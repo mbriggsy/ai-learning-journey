@@ -331,8 +331,12 @@ export interface Distribution {
   /** Per-path depth of failure: the absolute year index of depletion, or
    *  {@link NEVER_DEPLETED}. Length === paths. */
   readonly depletionYears: readonly DepletionYear[]
-  /** Fraction of paths whose essentials were covered every year (the survival floor
-   *  statistic the X-of-10 reads). Continuous in [0, 1], pre-quantization. */
+  /** Fraction of paths that survived every year — the survival floor statistic the X-of-10 reads.
+   *  Continuous in [0, 1], pre-quantization. Computed as `survivors / paths`, where a path FAILS by
+   *  depleting against the FULL `annualSpendingReal`. The product frames this as the *essentials*
+   *  floor, but in P1/P2 essentials ≡ full spend (the single-total-spend degenerate budget — see
+   *  phase-3's "degenerate budget"); the essentials-vs-full split arrives in P3·U9. Until then this
+   *  is full-spend survival — never read an "essentials-only" meaning off it. */
   readonly survivalFraction: number
 }
 

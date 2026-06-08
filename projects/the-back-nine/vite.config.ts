@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite'
+import { defineConfig, configDefaults } from 'vitest/config'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
@@ -55,5 +55,12 @@ export default defineConfig({
     // no inline) would block, breaking the app on Vercel as well as locally.
     // This is what makes the CSP achievable without 'unsafe-inline'.
     modulePreload: { polyfill: false },
+  },
+  test: {
+    // Vitest owns the co-located unit/integration suite (`*.test.ts`). The browser
+    // CSP-enforcement e2e (`e2e/*.spec.ts`) is Playwright's — exclude it so Vitest does
+    // not try to run a Playwright spec (it has no page fixture → it would fail). Run it
+    // via `pnpm verify:csp`.
+    exclude: [...configDefaults.exclude, 'e2e/**'],
   },
 })

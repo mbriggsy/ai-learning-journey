@@ -1,5 +1,8 @@
-# Scratch / workflow artifacts — never committed (temp files belong outside the repo)
+# Scratch / workflow artifacts — never committed (temp files belong outside the repo).
+# `temp-*` also catches root-level scratch (e.g. review-agent `temp-probe-*.mjs` debris) that the
+# `temp/` directory rule alone would miss — a root scratch file otherwise lints red + risks `git add`.
 temp/
+temp-*
 
 # Dependencies
 node_modules/

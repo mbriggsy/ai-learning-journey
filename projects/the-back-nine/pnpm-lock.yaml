@@ -40,7 +40,7 @@ importers:
         specifier: ^0.4.0
         version: 0.4.1(vitest@4.1.8)
       '@playwright/test':
-        specifier: ^1.59.1
+        specifier: 1.60.0
         version: 1.60.0
       '@types/node':
         specifier: ^25.6.0

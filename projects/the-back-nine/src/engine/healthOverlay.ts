@@ -6,33 +6,29 @@
  * spending) and reduces byte-identically to the spine when off. The whole unit is PURE — no
  * entropy/clock/environment (the engine-purity lint covers `src/engine/**`).
  *
- * MILESTONE STATUS — built incrementally, mirroring U2's arc; per-milestone detail is in git log.
- *   - M1 (done): the federal constants foundation (`constants/health.ts` — ACA applicable-%,
- *     FPL guidelines, the IRMAA schedule).
- *   - M2 (this): the TWO MAGI calculators. ACA-MAGI and IRMAA-MAGI are deliberately distinct
- *     numbers (research §4a) — the single fact the whole pre-65↔post-65 model rests on. They are
- *     pure functions of the tax overlay's converged per-year quantities; they are NOT yet wired
- *     into `simulate`'s loop and compute NO ACA/IRMAA cost (that is M3/M4). The healthcare
- *     on/off toggle + the cost-input streams + the reduce-to-spine wiring land with their first
- *     consumer (M3), each carrying its own R19 finiteness guard (insights 008/010) — the proven
- *     U2 pattern, rather than locking a guessed input shape three milestones early.
- *   - M3+: the ACA pre-65 fixed-point + explicit 400%-FPL cliff branch; the IRMAA 2-yr-lagged
- *     feed-forward; the HSA 4th bucket; integration into `simulate.ts` on the existing
- *     `living`/`HouseholdYear` loop + the survivor flip (ACA immediate, IRMAA +2yr).
- *   See docs/plans/back-nine-mvp/phase-1-foundation.md (Unit 3) +
- *   docs/research/pre65-healthcare-aca-hsa-2026-06-04.md.
+ * STATUS (per-milestone detail in git log; the load-bearing tested contracts in CLAUDE.md +
+ * docs/insights/): U3 ships M1–M4 — the federal constants (`constants/health.ts`: ACA applicable-%,
+ * FPL guidelines, the IRMAA schedule), the TWO MAGI calculators (below; ACA-MAGI and IRMAA-MAGI are
+ * deliberately distinct numbers, research §4a — the single fact the whole pre-65↔post-65 model rests
+ * on), the pre-65 ACA premium fixed-point + explicit 400%-FPL cliff (`solveAcaFundedGross`, wired
+ * into `taxOverlay.ts`/`simulate.ts`), and the post-65 IRMAA 2-yr-lagged feed-forward. M5 (the HSA
+ * 4th bucket) + M6 (the final cross-overlay integration) remain. Each cost-input stream + its
+ * reduce-to-spine wiring lands with its first consumer, carrying a `Number.isFinite`-first R19 guard
+ * at BOTH `validateParams` and the overlay backstop (insights 008/010 — the proven U2 as-we-go
+ * pattern). See docs/plans/back-nine-mvp/phase-1-foundation.md (Unit 3) +
+ * docs/research/pre65-healthcare-aca-hsa-2026-06-04.md.
  *
- * M3 WIRING LANDMINES (do not rediscover at runtime — surfaced by the M2 adversarial review):
- *   1. SURFACE THE FLOORED COMPONENTS, don't recompute. The components below are the converged-
- *      gross locals inside `taxOverlay.ts`'s `solveGrossWithdrawal` (~lines 719-727), which today
- *      returns only the scalar gross. M3 must refactor it to EMIT those exact locals — in
- *      particular `realizedGain` AFTER the `Math.max(0, …)` floor at line 720. Re-deriving MAGI
- *      from a raw taxable-bucket gain/loss ledger instead would let a down-market NEGATIVE gain
- *      flow in and UNDERSTATE both MAGIs — the project's named calm-but-wrong sign-inversion
- *      (an understated MAGI makes a conversion look cheaper than it is).
- *   2. THE 400%-FPL CLIFF IS A RELATIONAL BRANCH. When M3 feeds real (float) MAGI into the ACA
- *      cliff test, a value within rounding noise of 4.00×FPL can flip the branch (insight 010 —
- *      a near-edge comparison). Quantize the cliff decision like `confidence.ts` does the headline.
+ * LOAD-BEARING CONTRACTS (do not regress; each is documented + tested at its implementation site):
+ *   1. MAGI is read ONLY off the tax overlay's converged FLOORED components. `taxOverlay.ts`'s
+ *      `solveGrossWithdrawal` emits them on a {@link GrossUpSolution} (the `realizedGain` is already
+ *      past its `Math.max(0, …)` floor). Re-deriving MAGI from a raw taxable-gain/loss ledger would
+ *      let a down-market NEGATIVE gain flow in and UNDERSTATE both MAGIs — the project's named
+ *      calm-but-wrong sign-inversion (an understated MAGI makes a conversion look cheaper than it is).
+ *   2. The 400%-FPL cliff is a RELATIONAL branch on float MAGI: CEIL-quantize before the compare
+ *      (insight 010 — a value within rounding noise of 4.00×FPL must never flip eligible↔ineligible).
+ *   FORWARD LANDMINE (not yet built): if a muni bucket is ever added, its tax-exempt interest must
+ *   enter BOTH MAGIs AND §86 provisional income (`taxableSocialSecurity`) in the SAME change (see the
+ *   MagiComponents note below) — touching the MAGIs alone still understates IRMAA-MAGI.
  */
 import { federalPovertyGuidelines, type AcaApplicablePercentageTable, type IrmaaSchedule } from '@engine/constants'
 import type { FilingStatus } from '@shared/model'

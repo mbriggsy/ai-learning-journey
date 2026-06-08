@@ -48,3 +48,17 @@ jobs:
       - run: pnpm build
       # Needs dist/ — runs after build.
       - run: pnpm verify:bundle
+      # Browser ENFORCEMENT of the strict CSP — the in-memory decrypted model's only guard (at-rest
+      # crypto does nothing for cleartext in the JS heap). The vitest guard checks the vercel.json
+      # STRING; this serves dist/ through a header-applying harness and asserts a real Chromium blocks
+      # an injected inline script + still constructs the engine worker. --with-deps pulls the OS libs
+      # headless chromium needs on ubuntu; chromium-only (we don't test firefox/webkit).
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm verify:csp
+      # Surface the HTML report (+ traces) when the CSP e2e fails, so a CI-only failure is debuggable.
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: projects/the-back-nine/playwright-report/
+          retention-days: 14

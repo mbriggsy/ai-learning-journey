@@ -15,7 +15,8 @@
     "test:watch": "vitest",
     "lint": "eslint .",
     "verify:bundle": "tsx scripts/verify-prod-bundle.ts",
-    "verify:aca": "tsx scripts/verify-aca-status.ts"
+    "verify:aca": "tsx scripts/verify-aca-status.ts",
+    "verify:csp": "playwright test"
   },
   "dependencies": {
     "@zxcvbn-ts/core": "^3.0.4",
@@ -30,7 +31,7 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@fast-check/vitest": "^0.4.0",
-    "@playwright/test": "^1.59.1",
+    "@playwright/test": "1.60.0",
     "@types/node": "^25.6.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",

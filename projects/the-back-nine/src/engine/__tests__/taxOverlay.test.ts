@@ -2206,4 +2206,70 @@ describe('taxOverlay — M4: the post-65 IRMAA feed-forward (externally derived,
     expect(() => run([40_000], { healthcareEnabled: true })).toThrow(/irmaaMagiSeed/)
     expect(() => run([40_000], { healthcareEnabled: true, irmaaMagiSeed: [Number.NaN, 60_000] })).toThrow(/irmaaMagiSeed|finite/)
   })
+
+  // ---- U3·M4 holistic review (opus, 2026-06-07): close the test gaps the review + the break-the-code
+  //      adversary surfaced. ALL are value-level regression guards on correct code (zero production bugs
+  //      found); each is externally derived (DND/012). ----
+
+  it('the per-year seed index is load-bearing: seed[0] bills year 0, seed[1] bills year 1 (a constant-first-seed regression fails here) — adversary', () => {
+    // Distinct seeds: A is $1 over the MFJ tier-1 threshold ⇒ year 0 is surcharged at tier 1; B is below ⇒
+    // year 1 is base-only. seed[0]→year0 (IRMAA-MAGI[−2]), seed[1]→year1 (IRMAA-MAGI[−1]). The only existing
+    // distinct-valued seed fixture runs a 1-year horizon (reads seed[0] only) and every multi-year fixture
+    // uses an EQUAL seed — so a regression reading seed[0] (or any wrong offset) for year 1 passes them all.
+    const A = IRMAA_SCHED.tiers[0]!.mfjMagiThreshold + 1 // tier 1 (lower-bound-exclusive)
+    const B = 60_000 // below tier 1 ⇒ base only
+    const distinct: TaxYearInputs = { healthcareEnabled: true, irmaaMagiSeed: [A, B] }
+    const year0 = run([40_000], distinct).totalMedicareCostReal
+    const both = run([40_000, 40_000], distinct).totalMedicareCostReal
+    expect(year0).toBeCloseTo(medicareAnnual(2, 0), 4) // seed[0] = A ⇒ tier 1 at year 0
+    expect(both - year0).toBeCloseTo(medicareAnnual(2, null), 4) // seed[1] = B ⇒ base only at year 1
+  })
+
+  it('cross-65 feed-forward (the MAIN path, NO seed): a pre-65 year records the IRMAA-MAGI that bills the first post-65 surcharge 2 years later', () => {
+    // Couple born 1963 ⇒ age 63,64 (pre-65, count65 = 0) in years 0,1 and 65 (count65 = 2) in year 2. No
+    // seed: year 2's surcharge reads irmaaMagiHistory[0], RECORDED in the pre-65 year 0. A regression that
+    // gated that recording on count65 > 0 would leave history[0] undefined ⇒ the year-2 backstop throws ⇒
+    // this test fails loud. A $900k year-0 conversion makes IRMAA-MAGI[0] = gross + conversion ≥ the
+    // conversion > $750k MFJ ⇒ the top tier (index 4) BY CONSTRUCTION, robust to the gross-up's tax detail.
+    const cross: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: false, household: mkHousehold(2026, 1963, 1963) }
+    const inputs: TaxYearInputs = { healthcareEnabled: true, conversions: [900_000, 0, 0] } // NO irmaaMagiSeed
+    const total = (years: number) => run([40_000, 40_000, 40_000].slice(0, years), inputs, cross).totalMedicareCostReal
+    expect(total(2)).toBe(0) // years 0,1 pre-65 ⇒ zero Medicare cost (count65 = 0)
+    expect(total(3) - total(2)).toBeCloseTo(medicareAnnual(2, 4), 4) // year 2: first surcharge, top tier, from pre-65 history[0]
+  })
+
+  it('the pre-65 ACA-priced year records IRMAA-MAGI off TAXABLE SS (the ACA branch uses irmaaMagi, not acaMagi), across the 65 handoff', () => {
+    // Both born 1963 ⇒ years 0,1 pre-65 AND ACA-priced (enrolled premium present) ⇒ irmaaMagiHistory is
+    // recorded via the ACA branch; year 2 both 65 ⇒ reads history[0]. A $240k benefit delivered as SS counts
+    // only its TAXABLE portion in IRMAA-MAGI (≪ full) ⇒ a lower year-2 tier; the SAME dollars as a Roth
+    // conversion are fully ordinary ⇒ a higher tier. If the ACA-branch recording wrongly used acaMagi (FULL
+    // SS), the SS run's history[0] would equal the conversion run's and the two totals would TIE.
+    const cross: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: false, household: mkHousehold(2026, 1963, 1963) }
+    const aca: TaxYearInputs = { healthcareEnabled: true, slcsp: [15_000, 15_000], enrolledPremium: [15_000, 15_000] }
+    const bigSS = 240_000
+    const runSS = run([20_000, 20_000, 20_000], { ...aca, ssBenefits: [bigSS, bigSS, bigSS] }, cross)
+    const runConv = run([20_000, 20_000, 20_000], { ...aca, conversions: [bigSS, 0, 0] }, cross)
+    // taxable-SS keeps the SS run at a lower IRMAA tier than the fully-ordinary conversion run; acaMagi would tie them.
+    expect(runSS.totalMedicareCostReal).toBeLessThan(runConv.totalMedicareCostReal)
+  })
+
+  describe('totalMedicareCostReal does not over-accrue in a depletion year (the named landmine)', () => {
+    it('a post-65 year that DEPLETES accrues NO Medicare cost (the accrual sits AFTER the depletion check)', () => {
+      const small: AccountBuckets = { taxable: 0, pretax: 5_000, roth: 0 } // ≪ the 50,000 net + Medicare + tax
+      const r = runTaxAwareDecumulation(small, [0], [0], [50_000], STOCK_W, 'pre-tax-first', POST65, {
+        healthcareEnabled: true,
+        irmaaMagiSeed: lowSeed,
+      })
+      expect(r.depletionYear).toBe(0) // presence: it actually depleted
+      expect(r.totalMedicareCostReal).toBe(0) // the un-fundable year's Medicare cost is NOT counted
+    })
+    it('the SAME post-65 year with a pool that SURVIVES does accrue (the zero is the depletion, not blanket suppression)', () => {
+      const r = runTaxAwareDecumulation(POOL, [0], [0], [50_000], STOCK_W, 'pre-tax-first', POST65, {
+        healthcareEnabled: true,
+        irmaaMagiSeed: lowSeed,
+      })
+      expect(r.depletionYear).toBe(NEVER_DEPLETED)
+      expect(r.totalMedicareCostReal).toBeGreaterThan(0)
+    })
+  })
 })

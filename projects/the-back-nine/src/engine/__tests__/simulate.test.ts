@@ -260,6 +260,32 @@ describe('R19 engine half + dire-but-honest edges', () => {
     }
   })
 
+  it('R19 frontline (M4): a Medicare-enrolled member with a missing / NaN / negative irmaaMagiSeed returns the DEFINED indeterminate output, never a throw', () => {
+    // The overlay backstop THROW is proven in taxOverlay.test.ts (the direct-caller path); this pins the
+    // OTHER mandated layer of "fail-loud at BOTH layers" — the R19 frontline must convert a missing/non-finite
+    // seed into {indeterminate} (a default-0 surcharge would understate cost → overstate survival, burned/062).
+    // Both spouses age 65 ⇒ Medicare-enrolled in year 0 ⇒ years 0..lookback-1 REQUIRE the seed.
+    const P = 1_000_000
+    const base = makeParams({ initialPortfolio: P, annualSpendingReal: 40_000, people: [MALE_65, FEMALE_65] })
+    const overlay = (extra: Partial<OverlayParams>): OverlayParams => ({
+      taxEnabled: true,
+      rmdEnabled: false,
+      startCalendarYear: 2026,
+      buckets: { taxable: 0, pretax: P, roth: 0 },
+      filing: 'mfj',
+      healthcareEnabled: true,
+      ...extra,
+    })
+    const reasonOf = (o: OverlayParams): string => {
+      const r = simulate({ ...base, overlay: o }, 1)
+      expect(r.indeterminate).toBe(true) // the DEFINED output — simulate did NOT throw/crash (R19)
+      return r.indeterminate ? r.reason : ''
+    }
+    expect(reasonOf(overlay({}))).toMatch(/irmaaMagiSeed/) // MISSING seed → the coverage gate (simulate.ts:311-315)
+    expect(reasonOf(overlay({ irmaaMagiSeed: [Number.NaN, 60_000] }))).toMatch(/irmaaMagiSeed/) // NaN → finiteness gate (:282)
+    expect(reasonOf(overlay({ irmaaMagiSeed: [-1, 60_000] }))).toMatch(/irmaaMagiSeed/) // negative → finiteness gate (:282)
+  })
+
   it('R19 enum + person-field + empty-bucket-basis gaps → indeterminate (U3-exit code-review pilot)', () => {
     // These all arrive over the SAME untyped structured-clone worker boundary the gate exists to defend;
     // each previously slipped to a calm-but-wrong reading or a mid-path throw rather than indeterminate.

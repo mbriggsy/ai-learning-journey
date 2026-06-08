@@ -37,6 +37,7 @@ const LENSES = [
   { key: 'idiom', agentType: 'compound-engineering:review:kieran-typescript-reviewer' }, // ← stack-specific
   { key: 'simplicity', agentType: 'compound-engineering:review:code-simplicity-reviewer' },
   { key: 'api-contract', agentType: 'compound-engineering:review:api-contract-reviewer' },
+  { key: 'adversarial', agentType: 'compound-engineering:review:adversarial-reviewer' }, // ← ALWAYS-ON floor (≥1); on a high-risk change escalate to a diverse panel (one per failure-mode angle)
   // + conditionals, e.g.: { key: 'security', agentType: 'compound-engineering:review:security-reviewer' },
 ]
 
@@ -77,6 +78,11 @@ const VERDICT_SCHEMA = {
   },
 }
 
+// The adversary (key 'adversarial') gets an extra directive — its job is to GENERATE failure scenarios,
+// not check a list. Appended ONLY for that lens, so every other reviewer's prompt stays byte-identical
+// (a resume keeps them cached). For a diverse panel, give each adversary ONE of the angles below.
+const ADVERSARIAL = `\n\nADVERSARY MODE — your job is to BREAK this code, not tick a checklist. Construct CONCRETE failure scenarios with EXACT inputs that make the unit return a confidently-WRONG result (the project's cardinal sin). Hunt the seams the value lenses miss — pick the angle(s) that fit: boundary/discontinuity (thresholds, cliffs, exact-edge values), temporal/state-evolution (a mid-run state change that moves a threshold), numerical/finiteness (NaN/Inf/sign flips, a default that masks a missing figure), core invariants (can you perturb a determinism/identity invariant?), the direct-caller contract (short/partial/edge inputs the production caller never sends). Think "what wrong code passes the green suite?" — mutation-survival seams. For EACH: give the exact input and the wrong output you predict, so a verifier can reproduce it against source. A scenario you cannot make concrete is not a finding. Do NOT target documented deliberate values.`
+
 const REVIEW = (l) => `You are the ${l.key} reviewer in a HOLISTIC, contract-calibrated code review.
 PROJECT: ${PROJ}.  SCOPE: ${SCOPE}
 Read the WHOLE files (not just changed lines) — judge new↔existing interactions and whole-subsystem invariants.
@@ -85,7 +91,7 @@ PROJECT CONTRACT BRIEF (judge against THESE; do not flag the listed deliberate v
 ${BRIEF}
 
 Return ONLY the structured object. Suppress confidence<0.60. Concrete code evidence per finding.
-Weight findings that could produce a confidently-WRONG result (the project's worst failure).`
+Weight findings that could produce a confidently-WRONG result (the project's worst failure).${l.key === 'adversarial' ? ADVERSARIAL : ''}`
 
 const VERIFY = (f) => `Adversarially verify this review finding AGAINST THE ACTUAL SOURCE in ${PROJ}.
 Finding: ${JSON.stringify(f)}
@@ -99,10 +105,10 @@ Right-size the severity from what the code shows. Return ONLY the structured ver
 phase('Review')
 const reviewed = await pipeline(
   LENSES,
-  (l) => agent(REVIEW(l), { label: `review:${l.key}`, phase: 'Review', schema: FINDING_SCHEMA, model: 'sonnet', agentType: l.agentType }),
+  (l) => agent(REVIEW(l), { label: `review:${l.key}`, phase: 'Review', schema: FINDING_SCHEMA, model: 'opus', agentType: l.agentType }),
   (r, l) =>
     parallel((r?.findings ?? []).map((f) => () =>
-      agent(VERIFY(f), { label: `verify:${l.key}:${f.file}`, phase: 'Verify', schema: VERDICT_SCHEMA, model: 'sonnet' })
+      agent(VERIFY(f), { label: `verify:${l.key}:${f.file}`, phase: 'Verify', schema: VERDICT_SCHEMA, model: 'opus' })
         .then((v) => ({ ...f, lens: l.key, verdict: v })),
     )),
 )
@@ -121,4 +127,6 @@ return { confirmed, advisory: all.filter((f) => !confirmed.includes(f)) }
 ## Notes
 - The reviewer agents are read-only; still sweep `git status` + any scratch dirs after (they sometimes leave probe files).
 - If the platform lacks subagents, run lenses sequentially — same stages, same schema.
+- **Model: run reviewers AND verifiers on the latest/greatest** (`model: 'opus'` or inherit the session model) — never hardcode a mid-tier for the fan-out.
+- **Adversary: ≥1 always.** On a high-risk change escalate to a diverse panel — one adversary per failure-mode angle (boundary · temporal/state · numerical · invariant · direct-caller), each a DISTINCT prompt (N identical ≈ 1) — and scale the verify vote with it.
 - Scale verifiers: for a high-stakes finding, fan out 2–3 independent verifiers and take the majority.

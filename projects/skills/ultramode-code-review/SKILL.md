@@ -51,6 +51,7 @@ The brief = the invariants a change must not break · the values not to flag · 
 | language idiom | the stack's agent — `kieran-typescript-reviewer` / `kieran-python-reviewer` / `dhh-rails-reviewer` / … |
 | simplicity / YAGNI | `compound-engineering:review:code-simplicity-reviewer` |
 | api-contract / persistence glance | `compound-engineering:review:api-contract-reviewer` |
+| **adversarial (≥1, always-on)** — *constructs* failure scenarios to make the code return a confidently-wrong result | `compound-engineering:review:adversarial-reviewer` |
 
 **Conditional — add ONLY when the diff's nature warrants it** (never all every time; each pick needs a reason you can name and announce):
 - `security-reviewer` — auth, crypto/KDF, user input, permissions, a public boundary.
@@ -62,8 +63,10 @@ The brief = the invariants a change must not break · the values not to flag · 
 
 Announce the team + the one-line reason for each conditional pick before fanning out.
 
+**The adversary scales with risk (≥1 always; more only when warranted).** At least one break-the-code adversary runs on *every* review. It is a third, distinct kind of skepticism: the value lenses *check contracts*, the verify stage (step 5) only *refutes findings already raised* — the adversary alone *generates* "what wrong code passes the green suite?" findings (mutation-survival seams), which the others structurally can't. For a high-risk change — a new threshold/cliff/discontinuity, a fixed-point/solver, code touching a core invariant (CRN, reduce-to-spine, purity), a new persisted shape, or correctness-critical money/state math — escalate to a *diverse panel* of adversaries, each assigned a DISTINCT failure-mode angle (boundary/discontinuity · temporal/state-evolution · numerical/finiteness · invariant · direct-caller-contract). Diversity, not replication — N identical "break it" agents ≈ 1; N angles ≈ N. Scale the verify vote with the adversary count (2–3 independent refuters on any acted-on P0/P1) so more generators *sharpen* signal-to-noise instead of flooding it. Never run a fixed N for show — **scrutiny scales with risk, never ceremony.**
+
 ### 4 · Run the review (a read-only Workflow)
-Fan the selected reviewers out in a Workflow (parallel), each given: the **contract brief**, the file list, the holistic scope (instruct them to read whole files, not just added lines), and a compact findings schema (`title · severity P0–P3 · file · line · confidence · why · suggested_fix`). Reviewers are **read-only** (no edits; sweep any scratch files they leave). Use the mid-tier model for the fan-out; keep orchestration on the strong model. See `references/workflow-template.md` for a ready-to-adapt script.
+Fan the selected reviewers out in a Workflow (parallel), each given: the **contract brief**, the file list, the holistic scope (instruct them to read whole files, not just added lines), and a compact findings schema (`title · severity P0–P3 · file · line · confidence · why · suggested_fix`). Reviewers are **read-only** (no edits; sweep any scratch files they leave). Run the reviewers AND the verifiers on the **latest, most capable model** — inherit the session model (e.g. `model: 'opus'`); **never hardcode a mid-tier (`sonnet`) for the fan-out.** Quality is the deliverable: on a correctness-critical review, economizing the reviewer's model is the wrong tradeoff (and a mid-tier reviewer is more likely to both miss signal and emit noise the verify stage then has to clean up). See `references/workflow-template.md` for a ready-to-adapt script.
 
 ### 5 · Adversarially verify EVERY acted-on finding against source — MANDATORY
 Do not skip this; it is what makes the review worth trusting. For each finding worth acting on, go back to the **actual code** and confirm it:
@@ -85,4 +88,4 @@ Hand reviewers the project's *values* (from step 2) so they don't flag deliberat
 ## Notes
 - This is the single proven track, not a multi-track bake-off — run it once, well.
 - It does not need a clean tree or a GitHub remote; `base:<ref>` works on local history.
-- Scale the fan-out to the change: a small unit → the always-on lenses; a large or risky one → add the conditionals + more verifiers per finding.
+- Scale the fan-out to the change: a small unit → the always-on lenses (incl. ≥1 adversary); a large or risky one → add the conditionals, escalate the adversary to a diverse panel (distinct failure-mode angles), and add more verifiers per finding.

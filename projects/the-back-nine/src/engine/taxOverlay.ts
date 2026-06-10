@@ -288,22 +288,29 @@ export interface TaxYearInputs {
   readonly contributions?: readonly YearContribution[]
 }
 
-/** One year's pre-collapsed per-bucket contribution inflow (C2). All real $, finite ≥ 0
- *  (NaN-first-guarded at BOTH validateParams and the overlay backstop — insights 008/010). */
+/** One year's per-person, per-bucket contribution inflow (C2). All real $, finite ≥ 0
+ *  (NaN-first-guarded at BOTH validateParams and the overlay backstop — insights 008/010).
+ *
+ *  EVERY channel is PER-PERSON (aligned to the household's canonical people: owner = 0,
+ *  spouse = 1) — deliberately, not just pretax: per-person attribution is what lets the
+ *  overlay DEATH-VET every credit (a nonzero slot on a DEAD person fails loud on all four
+ *  channels). The C2 boundary review's wave-2 panel proved the alternative untenable both
+ *  ways: an unattributable aggregate scalar can NEVER be death-vetted (the phantom dead-
+ *  spouse credit lands silently — optimistic), while a blunt "reject any aggregate when
+ *  someone is dead" throws on the LEGITIMATE surviving-worker contribution simulate itself
+ *  emits. Attribution dissolves the dilemma. The overlay sums each channel internally. */
 export interface YearContribution {
-  /** → the taxable bucket; enters at FULL basis (after-tax dollars: basis += this, UNSCALED). */
-  readonly taxable: number
-  /** Per-CANONICAL-PERSON pretax contribution incl. the employer match (match → pretax even on
-   *  a Roth 401(k) deferral — the confirmed default rule), aligned to the household's canonical
-   *  people (owner = 0, spouse = 1). Σ = the aggregate pretax credit; when the per-person
-   *  pre-tax ledger is active each slot credits its OWN person's ledger (an aggregate-only
-   *  credit would desync next year's per-person RMD — the no-parallel-ledger-drift contract).
-   *  A nonzero credit on a DEAD person's slot fails loud (the caller owns death truncation). */
+  /** → the taxable bucket; each dollar enters at FULL basis (after-tax: basis += Σ, UNSCALED). */
+  readonly taxableByPerson: readonly number[]
+  /** → the pretax bucket, incl. the employer match (match → pretax even on a Roth 401(k)
+   *  deferral — the confirmed default rule). When the per-person pre-tax ledger is active each
+   *  slot credits its OWN person's ledger (an aggregate-only credit would desync next year's
+   *  per-person RMD — the no-parallel-ledger-drift contract). */
   readonly pretaxByPerson: readonly number[]
   /** → the roth bucket. */
-  readonly roth: number
+  readonly rothByPerson: readonly number[]
   /** → the hsa bucket (already owner-enrollment-zeroed by the caller's assembly — C2 §3b). */
-  readonly hsa: number
+  readonly hsaByPerson: readonly number[]
 }
 
 const EMPTY_BUCKETS: AccountBuckets = { taxable: 0, pretax: 0, roth: 0, hsa: 0 }
@@ -1042,22 +1049,28 @@ export function runTaxAwareDecumulation(
     )
   }
   // C2: the contribution inflow stream — the overlay's own fail-loud backstop (the "BOTH
-  // validateParams AND the overlay backstop" discipline). Finiteness FIRST on every field
+  // validateParams AND the overlay backstop" discipline). Finiteness FIRST on every entry
   // (insights 008/010 — a NaN sails through `?? 0`, every relational compare, AND the
   // hsa-liveness `> 0` below, then poisons the stepYear credit / the ledger / the basis).
   // A NEGATIVE entry would be a disguised withdrawal that bypasses the draw allocation —
   // rejected, never coerced (burned/062). Holes/short entries stay legitimate ($0 years).
+  // The assembled SUMS are checked too (the wave-2 numerical adversary's catch): two finite
+  // per-slot entries can sum to +Infinity (1.5e308 + 1.5e308), and an Infinity that reaches
+  // stepYear rides to a non-finite terminal reported as SURVIVED — per-entry finiteness alone
+  // does not bound the credit.
   const finiteNonNegC = (x: number) => Number.isFinite(x) && x >= 0
   for (const c of contributions) {
     if (c === undefined) continue
-    if (
-      !finiteNonNegC(c.taxable) ||
-      !finiteNonNegC(c.roth) ||
-      !finiteNonNegC(c.hsa) ||
-      !c.pretaxByPerson.every(finiteNonNegC)
-    ) {
+    const channels = [c.taxableByPerson, c.pretaxByPerson, c.rothByPerson, c.hsaByPerson]
+    if (!channels.every((ch) => ch.every(finiteNonNegC))) {
       throw new Error(
-        '[taxOverlay] contributions entries must be finite and ≥ 0 in every bucket — a NaN poisons the end-of-year credit and a negative is a disguised withdrawal bypassing the draw allocation (insights 008/010; burned/062)',
+        '[taxOverlay] contributions entries must be finite and ≥ 0 in every channel — a NaN poisons the end-of-year credit and a negative is a disguised withdrawal bypassing the draw allocation (insights 008/010; burned/062)',
+      )
+    }
+    const yearTotal = channels.reduce((acc, ch) => acc + ch.reduce((a, b) => a + b, 0), 0)
+    if (!Number.isFinite(yearTotal)) {
+      throw new Error(
+        '[taxOverlay] a year’s ASSEMBLED contribution total is non-finite — finite entries can still overflow their sum, and an Infinity credit would ride to a non-finite terminal reported as survived (the calm-but-wrong-optimistic escape; insights 008/010)',
       )
     }
   }
@@ -1074,7 +1087,8 @@ export function runTaxAwareDecumulation(
   // arrive ⇒ monotone non-increasing balance ⇒ initial-balance gating still covers every year),
   // so hsa absent/0 with no inflow stays byte-identical to the 3-bucket overlay by construction.
   const hsaLive =
-    (initialBuckets.hsa ?? 0) > 0 || contributions.some((c) => c !== undefined && c.hsa > 0)
+    (initialBuckets.hsa ?? 0) > 0 ||
+    contributions.some((c) => c !== undefined && c.hsaByPerson.some((x) => x > 0))
 
   // Per-person pre-tax sub-ledger (M6b·B). Active ONLY when the caller supplies the per-person
   // split AND the overlay does work (tax or RMD on) — otherwise null, and the aggregate M6a path
@@ -1150,13 +1164,17 @@ export function runTaxAwareDecumulation(
     if (rs === undefined || rb === undefined || net === undefined) break
 
     // C2: this year's contribution inflow (auxiliary stream — a missing entry is a $0 year).
-    // Collapsed once here; every downstream read is a plain local, and with no contributions
-    // all five are EXACTLY 0, so every `x + 0` fold below is an IEEE no-op (reduce-to-spine).
+    // Each per-person channel collapses once here; every downstream read is a plain local, and
+    // with no contributions all five are EXACTLY 0, so every `x + 0` fold below is an IEEE
+    // no-op (reduce-to-spine). The up-front backstop has already proven every entry and every
+    // assembled sum finite.
+    const sumC = (xs: readonly number[] | undefined) =>
+      xs === undefined ? 0 : xs.reduce((a, b) => a + b, 0)
     const yearC = contributions[t]
-    const cTaxable = yearC?.taxable ?? 0
-    const cPretaxTotal = yearC === undefined ? 0 : yearC.pretaxByPerson.reduce((a, b) => a + b, 0)
-    const cRoth = yearC?.roth ?? 0
-    const cHsa = yearC?.hsa ?? 0
+    const cTaxable = sumC(yearC?.taxableByPerson)
+    const cPretaxTotal = sumC(yearC?.pretaxByPerson)
+    const cRoth = sumC(yearC?.rothByPerson)
+    const cHsa = sumC(yearC?.hsaByPerson)
     const contributionTotal = cTaxable + cPretaxTotal + cRoth + cHsa
 
     // Per-year household regime (M6a): the survivor-aware filing / 65+ count / RMD-owner, from the
@@ -1206,28 +1224,38 @@ export function runTaxAwareDecumulation(
         }
       }
     }
-    // C2 §7: a nonzero pretax contribution credited to a DEAD person's slot is incoherent input —
-    // the caller assembles the per-year amounts death-truncated PER-PATH (the B×C consequence), so
-    // a violation means a phantom dead-spouse contribution is about to overstate the nest egg
-    // (the calm-but-wrong-OPTIMISTIC direction). Validated on the PROPERTY — a per-person credit
-    // meeting a death signal — NOT on the ledger consumer (insight 020: the C2 boundary review
-    // caught this guard nested inside the ledger path, leaving the AGGREGATE pool to silently sum
-    // a dead slot via cPretaxTotal). Runs whenever a household + a contribution year exist; with
-    // no householdYears stream aliveCanonical reads all-alive and the guard is inert (throw-or-
-    // nothing — it never changes a value, so presence-keyed byte-identity is untouched). The
-    // alignment guard is the overlay mirror of validateParams' length check (two-layer rule): a
-    // pretaxByPerson longer than the canonical people carries slots no death signal can vet.
+    // C2 §7: a nonzero contribution credited to a DEAD person's slot — on ANY of the four
+    // channels — is incoherent input: the caller assembles the per-year amounts death-truncated
+    // PER-PATH (the B×C consequence), so a violation means a phantom dead-spouse contribution is
+    // about to overstate the nest egg (the calm-but-wrong-OPTIMISTIC direction). Validated on the
+    // PROPERTY — a per-person credit meeting a death signal — NOT on the ledger consumer (insight
+    // 020, caught twice by the C2 boundary review: round 1 found the guard nested inside the
+    // ledger path; round 2 found it covering only the pretax channel while taxable/roth/hsa were
+    // unattributable aggregates — fixed by making EVERY channel per-person, which is also what
+    // lets this guard be precise instead of rejecting a legitimate surviving worker's credit).
+    // With no householdYears stream aliveCanonical reads all-alive and the guard is inert
+    // (throw-or-nothing — it never changes a value, so presence-keyed byte-identity holds). The
+    // alignment guard is the overlay mirror of validateParams' length check (two-layer rule):
+    // a channel longer than the canonical people carries slots no death signal can vet.
     if (yearC !== undefined && alive !== null && household !== undefined) {
-      if (yearC.pretaxByPerson.length > people.length) {
-        throw new Error(
-          `[taxOverlay] contributions pretaxByPerson has ${yearC.pretaxByPerson.length} slots but the household has ${people.length} canonical people — excess slots cannot be death-vetted (burned/062)`,
-        )
-      }
-      for (let i = 0; i < alive.length; i++) {
-        if ((yearC.pretaxByPerson[i] ?? 0) > 0 && !alive[i]) {
+      const channels: ReadonlyArray<readonly number[]> = [
+        yearC.taxableByPerson,
+        yearC.pretaxByPerson,
+        yearC.rothByPerson,
+        yearC.hsaByPerson,
+      ]
+      for (const ch of channels) {
+        if (ch.length > people.length) {
           throw new Error(
-            '[taxOverlay] a contribution credited to a DEAD person’s pretax ledger slot — the caller owns per-path death truncation (C2 §7); a phantom dead-spouse contribution overstates the nest egg',
+            `[taxOverlay] a contributions channel has ${ch.length} slots but the household has ${people.length} canonical people — excess slots cannot be death-vetted (burned/062)`,
           )
+        }
+        for (let i = 0; i < alive.length; i++) {
+          if ((ch[i] ?? 0) > 0 && !alive[i]) {
+            throw new Error(
+              '[taxOverlay] a contribution credited to a DEAD person’s slot — the caller owns per-path death truncation (C2 §7); a phantom dead-spouse contribution overstates the nest egg',
+            )
+          }
         }
       }
     }

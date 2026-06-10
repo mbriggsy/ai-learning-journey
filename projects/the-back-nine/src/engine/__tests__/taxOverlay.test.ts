@@ -2935,7 +2935,7 @@ describe('C2 — the contribution fold (§2c): destination, direction, and the e
       0.5,
       'proportional',
       OFF,
-      { contributions: [{ taxable: 0, pretaxByPerson: [50], roth: 0, hsa: 0 }] },
+      { contributions: [{ taxableByPerson: [0], pretaxByPerson: [50], rothByPerson: [0], hsaByPerson: [0] }] },
     )
     expect(got.depletionYear).toBe(NEVER_DEPLETED)
     expect(got.finalBuckets.taxable).toBeCloseTo(660, 9)
@@ -2956,10 +2956,32 @@ describe('C2 — the contribution fold (§2c): destination, direction, and the e
       0.5,
       'proportional',
       OFF,
-      { contributions: [{ taxable: 0, pretaxByPerson: [50], roth: 0, hsa: 0 }] },
+      { contributions: [{ taxableByPerson: [0], pretaxByPerson: [50], rothByPerson: [0], hsaByPerson: [0] }] },
     )
     expect(got.terminalReal).toBeCloseTo(1150, 9)
     expect(got.terminalReal).toBeLessThan(1155)
+  })
+
+  it('ROTH destination golden: the roth credit lands in roth exactly; siblings grow only (the wave-2 discrimination gap)', () => {
+    // The same hand-derived fixture-B family with the destination moved to roth (the wave-2
+    // testing lens caught roth as the ONE §2c channel never pinned to a discriminating value —
+    // a sum-preserving reroute of cRoth survived the suite): scale 1.1; roth 100·1.1 + 50 = 160;
+    // taxable 660 and pretax 330 growth-only; terminal 1150. A reroute of the roth credit into
+    // any sibling now diverges from BOTH the credited and the growth-only assertions.
+    const got = runTaxAwareDecumulation(
+      { taxable: 600, pretax: 300, roth: 100 },
+      [0.1],
+      [0.1],
+      [0],
+      0.5,
+      'proportional',
+      OFF,
+      { contributions: [{ taxableByPerson: [0], pretaxByPerson: [0], rothByPerson: [50], hsaByPerson: [0] }] },
+    )
+    expect(got.finalBuckets.taxable).toBeCloseTo(660, 9)
+    expect(got.finalBuckets.pretax).toBeCloseTo(330, 9)
+    expect(got.finalBuckets.roth).toBeCloseTo(160, 9)
+    expect(got.terminalReal).toBeCloseTo(1150, 9)
   })
 
   it('TAXABLE projection: a taxable contribution raises value AND basis at full, unscaled value (tax ON)', () => {
@@ -2978,8 +3000,8 @@ describe('C2 — the contribution fold (§2c): destination, direction, and the e
       {
         initialTaxableBasis: 1000,
         contributions: [
-          { taxable: 100, pretaxByPerson: [0], roth: 0, hsa: 0 },
-          { taxable: 100, pretaxByPerson: [0], roth: 0, hsa: 0 },
+          { taxableByPerson: [100], pretaxByPerson: [0], rothByPerson: [0], hsaByPerson: [0] },
+          { taxableByPerson: [100], pretaxByPerson: [0], rothByPerson: [0], hsaByPerson: [0] },
         ],
       },
     )
@@ -3005,7 +3027,7 @@ describe('C2 — the contribution fold (§2c): destination, direction, and the e
     }
     const zeroC: TaxYearInputs = {
       ...dense,
-      contributions: flat(0).map(() => ({ taxable: 0, pretaxByPerson: [0, 0], roth: 0, hsa: 0 })),
+      contributions: flat(0).map(() => ({ taxableByPerson: [0, 0], pretaxByPerson: [0, 0], rothByPerson: [0, 0], hsaByPerson: [0, 0] })),
     }
     const absent = runTaxAwareDecumulation(buckets, realStock, realBond, flat(45_000), STOCK_W, 'proportional', cfg, dense)
     const zeros = runTaxAwareDecumulation(buckets, realStock, realBond, flat(45_000), STOCK_W, 'proportional', cfg, zeroC)
@@ -3030,7 +3052,7 @@ describe('C2 — the contribution fold (§2c): destination, direction, and the e
     const withC: TaxYearInputs = {
       ...dense,
       // Five inflow years across all four destinations (the hsa entry exercises the live-hsa fold).
-      contributions: Array.from({ length: 5 }, () => ({ taxable: 5_000, pretaxByPerson: [3_000, 2_000], roth: 1_000, hsa: 500 })),
+      contributions: Array.from({ length: 5 }, () => ({ taxableByPerson: [5_000, 0], pretaxByPerson: [3_000, 2_000], rothByPerson: [1_000, 0], hsaByPerson: [500, 0] })),
     }
     const base = runTaxAwareDecumulation(buckets, realStock, realBond, flat(45_000), STOCK_W, 'proportional', cfg, dense)
     const got = runTaxAwareDecumulation(buckets, realStock, realBond, flat(45_000), STOCK_W, 'proportional', cfg, withC)
@@ -3063,7 +3085,7 @@ describe('C2 — the per-person ledger credit (§2c) and the RMD-overlap identit
       cfg,
       {
         initialPretaxByPerson: [1000, 1000],
-        contributions: [{ taxable: 0, pretaxByPerson: [0, 100], roth: 0, hsa: 0 }],
+        contributions: [{ taxableByPerson: [0, 0], pretaxByPerson: [0, 100], rothByPerson: [0, 0], hsaByPerson: [0, 0] }],
       },
     )
     expect(got.depletionYear).toBe(NEVER_DEPLETED)
@@ -3090,7 +3112,7 @@ describe('C2 — the per-person ledger credit (§2c) and the RMD-overlap identit
         cfg,
         { ...(contributions ? { contributions } : {}) },
       )
-    const withC = run([{ taxable: 0, pretaxByPerson: [200], roth: 0, hsa: 0 }])
+    const withC = run([{ taxableByPerson: [0], pretaxByPerson: [200], rothByPerson: [0], hsaByPerson: [0] }])
     const without = run()
     const gross = 1_000_000 - without.terminalReal
     expect(gross).toBeGreaterThan(0) // the forced-RMD tax really flowed in a net-0 year
@@ -3114,7 +3136,7 @@ describe('C2 — the per-person ledger credit (§2c) and the RMD-overlap identit
         {
           initialPretaxByPerson: [1000, 1000],
           householdYears: [{ living: [hh.owner] }], // the spouse is dead at t=0
-          contributions: [{ taxable: 0, pretaxByPerson: [0, 100], roth: 0, hsa: 0 }], // …yet carries a credit
+          contributions: [{ taxableByPerson: [0, 0], pretaxByPerson: [0, 100], rothByPerson: [0, 0], hsaByPerson: [0, 0] }], // …yet carries a credit
         },
       ),
     ).toThrow(/DEAD person/)
@@ -3139,13 +3161,13 @@ describe('C2 — the per-person ledger credit (§2c) and the RMD-overlap identit
         cfg,
         {
           householdYears: [{ living: [hh.owner] }], // the spouse is dead at t=0
-          contributions: [{ taxable: 0, pretaxByPerson: [0, 100], roth: 0, hsa: 0 }],
+          contributions: [{ taxableByPerson: [0, 0], pretaxByPerson: [0, 100], rothByPerson: [0, 0], hsaByPerson: [0, 0] }],
         },
       ),
     ).toThrow(/DEAD person/)
   })
 
-  it('a pretaxByPerson with MORE slots than the canonical people fails loud (excess slots cannot be death-vetted)', () => {
+  it('a contributions channel with MORE slots than the canonical people fails loud (excess slots cannot be death-vetted)', () => {
     const hh = mkHousehold(2026, 1951, 1961)
     const cfg: TaxOverlayConfig = { taxEnabled: false, rmdEnabled: true, household: hh }
     expect(() =>
@@ -3157,7 +3179,7 @@ describe('C2 — the per-person ledger credit (§2c) and the RMD-overlap identit
         0.5,
         'proportional',
         cfg,
-        { contributions: [{ taxable: 0, pretaxByPerson: [0, 0, 100], roth: 0, hsa: 0 }] },
+        { contributions: [{ taxableByPerson: [0, 0], pretaxByPerson: [0, 0, 100], rothByPerson: [0, 0], hsaByPerson: [0, 0] }] },
       ),
     ).toThrow(/canonical people/)
   })
@@ -3166,7 +3188,7 @@ describe('C2 — the per-person ledger credit (§2c) and the RMD-overlap identit
 describe('C2 — hsaLive is re-derived from the inflow (the M5 forward landmine, resolved)', () => {
   const cfg: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: false, household: mkHousehold(2026, 1980) }
   const hsaInflow: TaxYearInputs['contributions'] = [
-    { taxable: 0, pretaxByPerson: [0], roth: 0, hsa: 5_000 },
+    { taxableByPerson: [0], pretaxByPerson: [0], rothByPerson: [0], hsaByPerson: [5_000] },
   ]
 
   it('a positive hsa inflow alone makes the run hsa-live: the owner identity is REQUIRED', () => {
@@ -3222,7 +3244,7 @@ describe('C2 — §6 overlay arm, the R19 backstop, and the depleted-year forfei
           healthcareEnabled: true,
           enrolledPremium: [12_000],
           slcsp: [11_000],
-          contributions: [{ taxable: 0, pretaxByPerson: [100], roth: 0, hsa: 0 }],
+          contributions: [{ taxableByPerson: [0], pretaxByPerson: [100], rothByPerson: [0], hsaByPerson: [0] }],
         },
       ),
     ).toThrow(/priced ACA year cannot carry a contribution/)
@@ -3230,9 +3252,13 @@ describe('C2 — §6 overlay arm, the R19 backstop, and the depleted-year forfei
 
   it('R19 backstop: a NaN or negative contribution entry throws up-front (finiteness FIRST)', () => {
     const bad: Array<TaxYearInputs['contributions']> = [
-      [{ taxable: Number.NaN, pretaxByPerson: [0], roth: 0, hsa: 0 }],
-      [{ taxable: 0, pretaxByPerson: [-5], roth: 0, hsa: 0 }],
-      [{ taxable: 0, pretaxByPerson: [0], roth: 0, hsa: Number.POSITIVE_INFINITY }],
+      [{ taxableByPerson: [Number.NaN], pretaxByPerson: [0], rothByPerson: [0], hsaByPerson: [0] }],
+      [{ taxableByPerson: [0], pretaxByPerson: [-5], rothByPerson: [0], hsaByPerson: [0] }],
+      [{ taxableByPerson: [0], pretaxByPerson: [0], rothByPerson: [0], hsaByPerson: [Number.POSITIVE_INFINITY] }],
+      // FINITE per-slot entries whose ASSEMBLED sum overflows to +Infinity (the wave-2 adversary):
+      // per-entry finiteness alone would pass this, and the Infinity credit would ride to a
+      // non-finite terminal reported as survived. The Σ arm of the backstop rejects it.
+      [{ taxableByPerson: [0, 0], pretaxByPerson: [1.5e308, 1.5e308], rothByPerson: [0, 0], hsaByPerson: [0, 0] }],
     ]
     for (const contributions of bad) {
       expect(() =>
@@ -3246,7 +3272,7 @@ describe('C2 — §6 overlay arm, the R19 backstop, and the depleted-year forfei
           OFF,
           { contributions },
         ),
-      ).toThrow(/contributions/)
+      ).toThrow(/contribution/)
     }
   })
 
@@ -3267,8 +3293,8 @@ describe('C2 — §6 overlay arm, the R19 backstop, and the depleted-year forfei
       {
         ssBenefits: [200_000, 200_000],
         contributions: [
-          { taxable: 0, pretaxByPerson: [50], roth: 0, hsa: 0 },
-          { taxable: 0, pretaxByPerson: [50], roth: 0, hsa: 0 },
+          { taxableByPerson: [0], pretaxByPerson: [50], rothByPerson: [0], hsaByPerson: [0] },
+          { taxableByPerson: [0], pretaxByPerson: [50], rothByPerson: [0], hsaByPerson: [0] },
         ],
       },
     )

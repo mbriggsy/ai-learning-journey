@@ -1022,18 +1022,18 @@ describe('C2 — the per-path contribution assembly seam (contributionsForYear)'
 
   it('stops at retirement (t ≥ retire ⇒ 0) and an already-retired person has an EMPTY window', () => {
     const acc: AccumulationParams = { contributionsByPerson: [{ taxable: [7, 7, 7, 7] }] }
-    expect(contributionsForYear(2, acc, [O(3)], [50], [P()]).taxable).toBe(7)
-    expect(contributionsForYear(3, acc, [O(3)], [50], [P()]).taxable).toBe(0)
+    expect(contributionsForYear(2, acc, [O(3)], [50], [P()]).taxableByPerson).toEqual([7])
+    expect(contributionsForYear(3, acc, [O(3)], [50], [P()]).taxableByPerson).toEqual([0])
     // Defensive: stray entered contributions on an already-retired person (offset ≤ 0) never land.
-    expect(contributionsForYear(0, acc, [O(0)], [50], [P()]).taxable).toBe(0)
+    expect(contributionsForYear(0, acc, [O(0)], [50], [P()]).taxableByPerson).toEqual([0])
   })
 
   it('employer match → PRETAX always, even on a Roth deferral (the confirmed default rule)', () => {
     const acc: AccumulationParams = { contributionsByPerson: [{ roth: [100], employerMatch: [50] }] }
     const yc = contributionsForYear(0, acc, [O(5)], [50], [P()])
-    expect(yc.roth).toBe(100)
+    expect(yc.rothByPerson).toEqual([100])
     expect(yc.pretaxByPerson).toEqual([50]) // the match, in the contributor's OWN slot
-    expect(yc.taxable).toBe(0)
+    expect(yc.taxableByPerson).toEqual([0])
   })
 
   it('HSA zeroing keys to the CONTRIBUTING person’s own enrollment onset — never the spouse’s', () => {
@@ -1041,15 +1041,16 @@ describe('C2 — the per-path contribution assembly seam (contributionsForYear)'
     const acc: AccumulationParams = { contributionsByPerson: [{ hsa: [7, 7, 7, 7] }, { hsa: [9, 9, 9, 9] }] }
     const offsets = [O(10), O(10)]
     const people = [P({ currentAge: 63 }), P({ currentAge: 70, sex: 'female' })]
-    // t=0: person 0 contributes (63 < 65); person 1 is zeroed (70 ≥ 65 — their OWN onset). A
-    // spouse-keyed mutant would invert this to 9 (person 1 keyed off the 63-year-old) — fails.
-    expect(contributionsForYear(0, acc, offsets, [50, 50], people).hsa).toBe(7)
+    // t=0: person 0 contributes (63 < 65); person 1 is zeroed (70 ≥ 65 — their OWN onset). The
+    // per-slot shape discriminates the spouse-keyed mutant structurally: keyed off the spouse it
+    // would read [0, 9] — the exact inversion of the correct [7, 0].
+    expect(contributionsForYear(0, acc, offsets, [50, 50], people).hsaByPerson).toEqual([7, 0])
     // t=1: person 0 is 64 — still contributing.
-    expect(contributionsForYear(1, acc, offsets, [50, 50], people).hsa).toBe(7)
+    expect(contributionsForYear(1, acc, offsets, [50, 50], people).hsaByPerson).toEqual([7, 0])
     // t=2: person 0 crosses their own 65th sim-year — zeroed (the biological default onset; C3's
     // per-person signal threads through this same predicate; no signal field ships in C2, so the
     // default predicate itself is what this pins).
-    expect(contributionsForYear(2, acc, offsets, [50, 50], people).hsa).toBe(0)
+    expect(contributionsForYear(2, acc, offsets, [50, 50], people).hsaByPerson).toEqual([0, 0])
   })
 })
 
@@ -1146,6 +1147,29 @@ describe('C2 — the R19 gates (NaN-first, alignment, the zero-balance start, §
       const out = simulate(makeParams({ people: [workingPerson], overlay: offOverlayWith(1000, acc) }), 1)
       expect(out.indeterminate).toBe(true)
     }
+  })
+
+  it('two FINITE per-slot entries whose sum overflows to +Infinity are rejected (the wave-2 adversary’s catch)', () => {
+    // Each entry passes per-entry finiteness (1.5e308 < MAX_VALUE) but the assembled year total
+    // is +Infinity — which would ride through stepYear to a non-finite terminal counted as
+    // SURVIVED (survivalFraction 1.0, the calm-but-wrong-optimistic escape). The Σ arm rejects it.
+    const couple: PersonInputs[] = [workingPerson, { ...workingPerson, sex: 'female' }]
+    const out = simulate(
+      makeParams({
+        people: couple,
+        overlay: {
+          taxEnabled: false,
+          rmdEnabled: false,
+          startCalendarYear: 2026,
+          buckets: { taxable: 1000, pretax: 0, roth: 0 },
+          filing: 'mfj',
+          accumulation: { contributionsByPerson: [{ pretax: [1.5e308] }, { pretax: [1.5e308] }] },
+        },
+      }),
+      1,
+    )
+    expect(out.indeterminate).toBe(true)
+    if (out.indeterminate) expect(out.reason).toContain('overflow')
   })
 
   it('a contributionsByPerson length mismatch is rejected (never silently re-indexed)', () => {

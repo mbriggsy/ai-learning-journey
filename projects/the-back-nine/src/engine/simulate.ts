@@ -208,10 +208,14 @@ export function contributionsForYear(
   people: readonly PersonInputs[],
 ): YearContribution {
   const byPerson = accumulation.contributionsByPerson
-  let cTaxable = 0
-  let cRoth = 0
-  let cHsa = 0
+  // EVERY channel stays per-person through the wire (never collapsed to a household scalar):
+  // per-person attribution is what lets the overlay's dead-slot guard vet all four channels
+  // precisely — an unattributable aggregate can neither be death-vetted nor safely rejected
+  // (the C2 boundary review, wave 2). The overlay sums each channel internally.
+  const cTaxableByPerson: number[] = new Array(people.length).fill(0)
   const cPretaxByPerson: number[] = new Array(people.length).fill(0)
+  const cRothByPerson: number[] = new Array(people.length).fill(0)
+  const cHsaByPerson: number[] = new Array(people.length).fill(0)
   for (let i = 0; i < byPerson.length; i++) {
     const pc = byPerson[i]
     const o = offsets[i]
@@ -219,8 +223,8 @@ export function contributionsForYear(
     if (pc === undefined || o === undefined || person === undefined) continue
     const aliveWorking = t < (deathOffsets[i] ?? 0) && t < o.retire
     if (!aliveWorking) continue
-    cTaxable += pc.taxable?.[t] ?? 0
-    cRoth += pc.roth?.[t] ?? 0
+    cTaxableByPerson[i] = pc.taxable?.[t] ?? 0
+    cRothByPerson[i] = pc.roth?.[t] ?? 0
     // Employer match → pretax ALWAYS (the confirmed default rule — a Roth employer match is a
     // deferred SECURE 2.0 §604 option), credited to the contributing person's OWN ledger slot
     // alongside their deferral.
@@ -230,9 +234,14 @@ export function contributionsForYear(
     // medicareZeroesContribution from the premium privilege). Absent-signal default = the owner's
     // 65th sim-year (`currentAge_i + t ≥ 65` — today's biological predicate); C3's per-person
     // onset signal threads through this same predicate.
-    if (person.currentAge + t < 65) cHsa += pc.hsa?.[t] ?? 0
+    if (person.currentAge + t < 65) cHsaByPerson[i] = pc.hsa?.[t] ?? 0
   }
-  return { taxable: cTaxable, pretaxByPerson: cPretaxByPerson, roth: cRoth, hsa: cHsa }
+  return {
+    taxableByPerson: cTaxableByPerson,
+    pretaxByPerson: cPretaxByPerson,
+    rothByPerson: cRothByPerson,
+    hsaByPerson: cHsaByPerson,
+  }
 }
 
 /** Validate the engine's numeric domain (R19, engine half). Returns a reason string
@@ -394,11 +403,31 @@ function validateParams(params: SimulationParams): string | null {
         return 'overlay accumulation contributionsByPerson length must match people'
       // Every stream entry finite ≥ 0 (NaN-first; real dollars — NO +Infinity sentinel; a negative
       // is a disguised withdrawal bypassing the draw allocation). Holes/short tails stay legal ($0).
+      let maxLen = 0
       for (const pc of acc.contributionsByPerson) {
         for (const stream of [pc.taxable, pc.pretax, pc.roth, pc.hsa, pc.employerMatch]) {
-          if (stream !== undefined && !stream.every(finiteNonNeg))
-            return 'overlay accumulation contribution stream invalid'
+          if (stream === undefined) continue
+          if (!stream.every(finiteNonNeg)) return 'overlay accumulation contribution stream invalid'
+          if (stream.length > maxLen) maxLen = stream.length
         }
+      }
+      // The ASSEMBLED per-year sums must be finite too (the wave-2 numerical adversary's catch):
+      // two finite per-slot entries can sum to +Infinity, and an Infinity credit rides through
+      // stepYear to a non-finite terminal counted as SURVIVED — the calm-but-wrong-optimistic
+      // escape per-entry finiteness alone cannot stop. The all-alive sum is the MAXIMUM any
+      // death-truncated assembly can produce (entries are ≥ 0), so finite here ⇒ finite per-path.
+      for (let t = 0; t < maxLen; t++) {
+        let yearTotal = 0
+        for (const pc of acc.contributionsByPerson) {
+          yearTotal +=
+            (pc.taxable?.[t] ?? 0) +
+            (pc.pretax?.[t] ?? 0) +
+            (pc.roth?.[t] ?? 0) +
+            (pc.hsa?.[t] ?? 0) +
+            (pc.employerMatch?.[t] ?? 0)
+        }
+        if (!Number.isFinite(yearTotal))
+          return 'overlay accumulation contributions overflow (a year’s assembled total is non-finite)'
       }
       // The zero-balance start (C2 §2): stepYear's depletion predicate (`afterWithdrawal <= 0`)
       // would mark a $0-start run depleted at t = 0 and the depleted branch would silently swallow

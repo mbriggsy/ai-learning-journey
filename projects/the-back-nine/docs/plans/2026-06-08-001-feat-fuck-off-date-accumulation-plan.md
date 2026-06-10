@@ -357,7 +357,7 @@ The work is four tracks. **Track A (doc reconciliation)** and **Track B (HSA spe
 
 ---
 
-- [ ] **C2: Accumulation projection — the signed per-bucket contribution-inflow term**
+- [x] **C2: Accumulation projection — the signed per-bucket contribution-inflow term** *(COMPLETE 2026-06-10 — commits `bdc28566` + 2 boundary-review folds; 11-lens ultramode review: 4 confirmed of 10 deduped (the dead-slot guard lifted to the property; every `YearContribution` channel made PER-PERSON — the insight-024 attribution fix, a deliberate deviation from this unit's pre-collapsed-scalar text; the Σ-overflow arm at both layers; the roth-destination golden), 2 refuted; 40 new tests (461 total), every golden externally derived + 2-deriver panel-triangulated; insights 023/024. One deliberate deviation recorded: `YearContribution` carries per-person arrays on ALL FOUR channels (not collapsed scalars) so the overlay can death-vet every credit — an unattributable aggregate can neither be vetted nor safely rejected.)*
 
 **Goal:** Extend the engine with the pre-retirement saving phase: a per-bucket **contribution inflow** (+ employer match → pretax; + HSA contributions per R38) in the working years on the **existing** draw stream, producing the retirement-onset balance + basis the existing decumulation consumes — reducing **byte-identically** to today when contributions are zero or the phase is empty.
 

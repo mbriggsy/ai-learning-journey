@@ -2564,3 +2564,119 @@ describe('taxOverlay — M5 · Slice 2: qualified HSA spend (cap-only stream, MA
     })
   })
 })
+
+// ===========================================================================
+// U3 · M5 · Slices 3–4 — OWNER-AGE KEYING, the ACA-PREMIUM TRAP, and the
+// LAUNDERING negative battery (externally derived, DND/012).
+//
+// THE DIFFERENCING IDENTITY (zero-return years): when the HSA pays the WHOLE
+// Medicare cost, the gross-up solves the IDENTICAL fixed point as a healthcare-
+// OFF run (fundingNet = net in both), so
+//     terminal_withHsa − terminal_off = H − medicareCost      EXACTLY
+// — no tax-table hand-derivation needed, and any gross-up drag (a planted arm
+// that routes the premium through the taxable withdrawal) breaks the identity.
+// The Medicare oracle is the M4 hand formula: count × (BASE + surcharge) × 12,
+// with BASE read from the committed constant (copyGuard — never re-typed).
+// ===========================================================================
+describe('taxOverlay — M5 · Slices 3–4: owner-age keying, the ACA-premium trap, the laundering battery', () => {
+  const P = 1_000_000
+  const HSA = 100_000
+  const BASE = partB2026.value.standardPremiumMonthly
+  const lowSeed = [60_000, 60_000] // pre-sim IRMAA-MAGI below tier 1 ⇒ base premium only
+  const Z1 = [0]
+
+  describe('the owner-65+ Medicare-premium privilege (Pub 969 exception 4 — owner-age-keyed)', () => {
+    // Both born 1959 ⇒ 67 at 2026: count65 = 2, Medicare cost = 2 × BASE × 12 (low seed, no surcharge).
+    const BOTH67: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: false, household: mkHousehold(2026, 1959, 1959) }
+    const mc2 = 2 * BASE * 12
+
+    it('owner 65+: the HSA pays the ENTIRE Medicare premium — the gross-up never sees it (the differencing identity)', () => {
+      const withHsa = runTaxAwareDecumulation(
+        { taxable: 0, pretax: P, roth: 0, hsa: HSA },
+        Z1, Z1, [40_000], STOCK_W, 'pre-tax-first', BOTH67,
+        { healthcareEnabled: true, irmaaMagiSeed: lowSeed, hsaOwnerIndex: 0 },
+      )
+      const off = runTaxAwareDecumulation(
+        { taxable: 0, pretax: P, roth: 0 },
+        Z1, Z1, [40_000], STOCK_W, 'pre-tax-first', BOTH67,
+      )
+      expect(withHsa.totalQualifiedHsaSpendReal).toBeCloseTo(mc2, 8) // EXACTLY the premium — never the 40k spending (laundering floor)
+      expect(withHsa.totalMedicareCostReal).toBeCloseTo(mc2, 8) // the gross-cost surface still accrues the full bill
+      expect(withHsa.terminalReal - off.terminalReal).toBeCloseTo(HSA - mc2, 6) // zero gross-up drag — HSA paid it all
+      expect(withHsa.finalBuckets.hsa).toBeCloseTo(HSA - mc2, 6)
+    })
+
+    // The DISCRIMINATING PAIR (insight 015): an age-gap couple — owner born 1966 (60), spouse born
+    // 1959 (67). count65 = 1 ⇒ Medicare cost = 1 × BASE × 12. ONLY the hsaOwnerIndex differs between
+    // the two arms; a wrong-index (or rmdOwner-keyed, or any-member-65+) mutation fails one of them.
+    const GAP: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: false, household: mkHousehold(2026, 1966, 1959) }
+    const mc1 = 1 * BASE * 12
+
+    it('the UNDER-65 owner closes the privilege — a 65+ SPOUSE does not open it (the negative arm)', () => {
+      const r = runTaxAwareDecumulation(
+        { taxable: 0, pretax: P, roth: 0, hsa: HSA },
+        Z1, Z1, [40_000], STOCK_W, 'pre-tax-first', GAP,
+        { healthcareEnabled: true, irmaaMagiSeed: lowSeed, hsaOwnerIndex: 0 },
+      )
+      const noHsaSameBill = runTaxAwareDecumulation(
+        { taxable: 0, pretax: P, roth: 0 },
+        Z1, Z1, [40_000], STOCK_W, 'pre-tax-first', GAP,
+        { healthcareEnabled: true, irmaaMagiSeed: lowSeed },
+      )
+      expect(r.totalQualifiedHsaSpendReal).toBe(0) // privilege CLOSED — the spouse's premium is not qualified
+      expect(r.terminalReal - noHsaSameBill.terminalReal).toBeCloseTo(HSA, 6) // the hsa rode fully untouched
+    })
+
+    it('the SAME fixture with the 65+ spouse as OWNER opens it (the positive arm of the pair)', () => {
+      const r = runTaxAwareDecumulation(
+        { taxable: 0, pretax: P, roth: 0, hsa: HSA },
+        Z1, Z1, [40_000], STOCK_W, 'pre-tax-first', GAP,
+        { healthcareEnabled: true, irmaaMagiSeed: lowSeed, hsaOwnerIndex: 1 },
+      )
+      const off = runTaxAwareDecumulation(
+        { taxable: 0, pretax: P, roth: 0 },
+        Z1, Z1, [40_000], STOCK_W, 'pre-tax-first', GAP,
+      )
+      expect(r.totalQualifiedHsaSpendReal).toBeCloseTo(mc1, 8) // privilege OPEN via the owner's age
+      expect(r.terminalReal - off.terminalReal).toBeCloseTo(HSA - mc1, 6) // the differencing identity again
+    })
+
+    it('SPOUSAL ROLLOVER re-keys the privilege at the death year (insight 014 — test the crossing, not the endpoints)', () => {
+      // Person 0 born 1959 (67, Medicare every year); person 1 born 1966 (60) OWNS the HSA.
+      // y0: owner(60) alive ⇒ privilege CLOSED ⇒ spend 0 (the bill is grossed up).
+      // y1: the OWNER DIES ⇒ the HSA rolls to the 67yo survivor ⇒ privilege OPENS ⇒ spend = BASE×12.
+      // A planted privilege-dies-with-the-owner arm yields 0; an always-open arm yields 2×BASE×12;
+      // a rollover-to-wrong-person arm yields 0 — the single-year total discriminates all three.
+      const cfg: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: false, household: mkHousehold(2026, 1959, 1966) }
+      const hh = cfg.taxEnabled ? cfg.household : (undefined as never)
+      const years = [
+        { living: [hh.owner, hh.spouse!] }, // y0: both alive (the SAME refs — the canonical-people contract)
+        { living: [hh.owner] }, // y1: the HSA-owning spouse died
+      ]
+      const r = runTaxAwareDecumulation(
+        { taxable: 0, pretax: P, roth: 0, hsa: HSA },
+        [0, 0], [0, 0], [40_000, 40_000], STOCK_W, 'pre-tax-first', cfg,
+        { healthcareEnabled: true, irmaaMagiSeed: lowSeed, hsaOwnerIndex: 1, householdYears: years },
+      )
+      expect(r.totalQualifiedHsaSpendReal).toBeCloseTo(1 * BASE * 12, 8) // y1 ONLY — the crossing year pinned
+      expect(r.finalBuckets.hsa).toBeCloseTo(HSA - 1 * BASE * 12, 6)
+    })
+  })
+
+  describe('the ACA-premium trap (wired): a fat HSA never touches the marketplace premium', () => {
+    it('a priced ACA year funds the FULL net premium from the portfolio — HSA spend stays 0 (oop = 0, owner pre-65)', () => {
+      // The M3 250%-FPL fixture + a fat HSA: MAGI 52,875, net premium 4,462.65 — UNCHANGED by the
+      // HSA (a planted cap-includes-premium arm would pay 4,462.65 from the HSA and shift both
+      // surfaces + the terminal). Both born 1966 (60) ⇒ count65 = 0, the M3 tax regime verbatim.
+      const PRE65: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: false, household: mkHousehold(2026, 1966, 1966) }
+      const r = runTaxAwareDecumulation(
+        { taxable: 0, pretax: P, roth: 0, hsa: HSA },
+        Z1, Z1, [46_344.85], STOCK_W, 'pre-tax-first', PRE65,
+        { healthcareEnabled: true, slcsp: [15_000], enrolledPremium: [15_000], hsaOwnerIndex: 0 },
+      )
+      expect(r.totalNetPremiumReal).toBeCloseTo(4_462.65, 2) // the §36B bill, fully portfolio-funded
+      expect(r.totalQualifiedHsaSpendReal).toBe(0) // THE TRAP: the marketplace premium is not HSA-payable
+      expect(r.terminalReal).toBeCloseTo(P + HSA - 52_875, 2) // gross unchanged; the hsa rode untouched
+    })
+  })
+})

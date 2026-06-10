@@ -3303,3 +3303,163 @@ describe('C2 — §6 overlay arm, the R19 backstop, and the depleted-year forfei
     expect(totalAcrossBuckets(got.finalBuckets)).toBe(0)
   })
 })
+
+// ===========================================================================
+// C3 §3b — the per-person Medicare ONSET (the enrolled count), the ADDITIVE
+// working-year IRMAA-MAGI override, and the bridge-mask fail-loud arms.
+//
+// THE SPLIT UNDER TEST: ONLY the IRMAA gate + pricing count key off the per-person
+// onset (`medicareEnrolledCount` — living ∩ {t ≥ onset_i}); `count65` stays BIOLOGICAL
+// for the §63(f)/senior-bonus deduction stack and the ACA pre65 denominator. A member
+// working past 65 (onset > their 65th sim-year) accrues ZERO Medicare cost ENTIRELY —
+// base Part B included — while keeping the age-65 deduction. Absent signal ⇒ the
+// biological predicate VERBATIM (byte-identity).
+//
+// EXTERNALLY DERIVED (DND/012): the hand oracle is count × (base + surcharge) × 12 off
+// the committed constants (never medicareAnnualCost itself); every fixture parameter is
+// walked through the engine's selection predicates (insight 023 — tier thresholds are
+// MFJ here because mkHousehold pins filing 'mfj').
+// ===========================================================================
+describe('taxOverlay — C3 §3b: per-person Medicare onset + additive override + the bridge-mask arms', () => {
+  const PP = 2_000_000
+  const POOL: AccountBuckets = { taxable: 0, pretax: PP, roth: 0 }
+  const IRMAA_SCHED = irmaa.value
+  const BASE = partB2026.value.standardPremiumMonthly
+  const lowSeed = [60_000, 60_000]
+  const surchargeMonthly = (tierIdx: number) =>
+    IRMAA_SCHED.tiers[tierIdx]!.partBSurchargeMonthly + IRMAA_SCHED.tiers[tierIdx]!.partDSurchargeMonthly
+  const medicareAnnual = (count: number, tierIdx: number | null) =>
+    count * (BASE + (tierIdx === null ? 0 : surchargeMonthly(tierIdx))) * 12
+  // A still-working 66yo (born 1960, age 66 at 2026): onset [3] = Medicare at the work stop.
+  const W66: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: false, household: mkHousehold(2026, 1960) }
+  const run = (net: readonly number[], inputs: TaxYearInputs, cfg: TaxOverlayConfig) =>
+    runTaxAwareDecumulation(POOL, realStock, realBond, net, STOCK_W, 'pre-tax-first', cfg, inputs)
+
+  it('work-past-65 suppression: a 66yo with onset 3 accrues ZERO Medicare cost (base included) through the working years — and needs NO seed', () => {
+    // Years 0..2: enrolled count 0 (onset 3) ⇒ the IRMAA block never runs ⇒ no seed demanded
+    // (the biological predicate would have REQUIRED seed[0]/seed[1] — the false-rejection class)
+    // and totalMedicareCostReal stays 0 ENTIRELY (the pricing count gates base + surcharge both).
+    const on = run([40_000, 40_000, 40_000], { healthcareEnabled: true, medicareOnsetSimYear: [3] }, W66)
+    expect(on.totalMedicareCostReal).toBe(0)
+    // count65 stays BIOLOGICAL (the 66yo keeps the age-65 deduction): the healthcare-on run with
+    // zero Medicare cost and no priced ACA is BYTE-identical to healthcare-off — a re-keyed
+    // count65 would shrink the deduction, raise the tax, and break this exact equality.
+    const off = run([40_000, 40_000, 40_000], {}, W66)
+    expect(on.terminalReal).toBe(off.terminalReal)
+  })
+
+  it('the DISCRIMINATING pair: absent onset = biological (enrolled from t=0, seed demanded, base priced) — supplied onset delays it', () => {
+    // Absent signal: the 66yo is biologically enrolled in years 0,1 ⇒ the seed throw fires.
+    expect(() => run([40_000, 40_000], { healthcareEnabled: true }, W66)).toThrow(/irmaaMagiSeed/)
+    // Seed supplied: the SAME run prices base Part B ×1 ×12 per year — vs ZERO under onset [3].
+    const biological = run([40_000, 40_000], { healthcareEnabled: true, irmaaMagiSeed: lowSeed }, W66)
+    expect(biological.totalMedicareCostReal).toBeCloseTo(medicareAnnual(1, null) * 2, 4)
+  })
+
+  it('enrollment STARTS at the onset: year 3 prices off the override-free recorded history (base tier)', () => {
+    const r = run([40_000, 40_000, 40_000, 40_000], { healthcareEnabled: true, medicareOnsetSimYear: [3] }, W66)
+    // Years 0..2 free; year 3: lag = 1 → history[1] (computed ≈ a 40k gross-up MAGI ≪ tier 1) → base only.
+    expect(r.totalMedicareCostReal).toBeCloseTo(medicareAnnual(1, null), 4)
+  })
+
+  it('the retired-spouse discriminator: a retired 67yo spouse of a still-working 66yo IS priced from t=0 (per-person, never household max)', () => {
+    // owner born 1960 (66, working — onset 3); spouse born 1959 (67, retired — onset −2).
+    const cfg: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: false, household: mkHousehold(2026, 1960, 1959) }
+    const r = run([40_000, 40_000, 40_000], { healthcareEnabled: true, medicareOnsetSimYear: [3, -2], irmaaMagiSeed: lowSeed }, cfg)
+    // EXACTLY one enrolled member each of years 0..2: a household max(65th, work-stop) design
+    // would price ZERO (nobody until year 3); a biological-only design would price ×2. Both fail.
+    expect(r.totalMedicareCostReal).toBeCloseTo(medicareAnnual(1, null) * 3, 4)
+  })
+
+  it('absent-onset byte-identity: an explicit biological onset array reproduces the absent-signal run EXACTLY', () => {
+    const post65: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: false, household: mkHousehold(2026, 1959, 1959) }
+    const absent = run([40_000, 40_000, 40_000], { healthcareEnabled: true, irmaaMagiSeed: lowSeed }, post65)
+    // Born 1959 ⇒ age 67 at 2026 ⇒ biological onset = 65 − 67 = −2 per person.
+    const explicit = run(
+      [40_000, 40_000, 40_000],
+      { healthcareEnabled: true, irmaaMagiSeed: lowSeed, medicareOnsetSimYear: [-2, -2] },
+      post65,
+    )
+    expect(explicit.totalMedicareCostReal).toBe(absent.totalMedicareCostReal)
+    expect(explicit.terminalReal).toBe(absent.terminalReal)
+  })
+
+  describe('the working-year IRMAA-MAGI override (ADDITIVE into history — §3b)', () => {
+    // Onset 2 (= the lookback): the FIRST enrolled year (t=2) lag-reads t=0, a working year.
+    const onset2: TaxYearInputs = { healthcareEnabled: true, medicareOnsetSimYear: [2] }
+    const net3 = [0, 0, 0] // working years carry net 0 (the §7 clamp's overlay-side value)
+
+    it('control (the ≈$0-tier symptom): with NO override, the lag-read working year prices the lowest tier', () => {
+      const r = run(net3, onset2, W66)
+      // history[0] = computed-only ≈ $0 (net 0, no conversion) → year 2 base only — the exact
+      // silent understatement the override exists to prevent (here it is the FIXTURE, not a bug:
+      // the validateParams arm + the mask arm are what forbid this configuration in production).
+      expect(r.totalMedicareCostReal).toBeCloseTo(medicareAnnual(1, null), 4)
+    })
+
+    it('the override prices the surcharge implied by working-year income (above tier-1 — below it a $0 surcharge proves nothing)', () => {
+      // override 230k > MFJ tier-1 218k ⇒ year 2 bills tier 1.
+      const r = run(net3, { ...onset2, irmaaMagiOverride: [230_000, 230_000] }, W66)
+      expect(r.totalMedicareCostReal).toBeCloseTo(medicareAnnual(1, 0), 4)
+    })
+
+    it('ADDITIVITY: a working-year Roth conversion lands ON TOP of the override (a planted replacement-write fails)', () => {
+      // history[0] = 230k (override) + 50k (the conversion is computed nonSSordinary) = 280k >
+      // MFJ tier-2 274k ⇒ tier 2. A replacement write reads 230k ⇒ tier 1; max() likewise.
+      const r = run(net3, { ...onset2, irmaaMagiOverride: [230_000, 230_000], conversions: [50_000, 0, 0] }, W66)
+      expect(r.totalMedicareCostReal).toBeCloseTo(medicareAnnual(1, 1), 4)
+    })
+  })
+
+  describe('the bridge-mask fail-loud arms (mask-conditional — the recorded §3b limitation)', () => {
+    it('the masked LAGGED-READ throw: a bridge year at the lagged index with no finite override coverage throws (the seed-throw mirror)', () => {
+      expect(() =>
+        run([0, 0, 0], { healthcareEnabled: true, medicareOnsetSimYear: [2], bridgeYearMask: [true, true, false] }, W66),
+      ).toThrow(/irmaaMagiOverride/)
+      // Override coverage of the masked lagged index satisfies the arm (no throw).
+      const ok = run(
+        [0, 0, 0],
+        { healthcareEnabled: true, medicareOnsetSimYear: [2], bridgeYearMask: [true, true, false], irmaaMagiOverride: [230_000, 230_000] },
+        W66,
+      )
+      expect(ok.totalMedicareCostReal).toBeCloseTo(medicareAnnual(1, 0), 4)
+    })
+
+    it('the masked ACA price-gate throw: a priced ACA year on a bridge year is wage-blind — unpriceable, rejected', () => {
+      // A pre-65 single (born 1970, 56): year 0 priced (enrolled 12k, slcsp 11k) on a masked bridge year.
+      const pre65: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: false, household: mkHousehold(2026, 1970) }
+      const inputs: TaxYearInputs = { healthcareEnabled: true, enrolledPremium: [12_000], slcsp: [11_000] }
+      expect(() => run([40_000], { ...inputs, bridgeYearMask: [true] }, pre65)).toThrow(/wage-blind|BRIDGE/)
+      // Control: the same year unmasked prices normally (the probe works; the arm is the only difference).
+      const ok = run([40_000], { ...inputs, bridgeYearMask: [false] }, pre65)
+      expect(ok.totalNetPremiumReal).toBeGreaterThan(0)
+    })
+  })
+
+  describe('backstop guards (insights 008/010 — NaN-first at the overlay layer)', () => {
+    it('rejects a NaN / non-integer onset, a misaligned onset, a NaN override, and a non-boolean mask', () => {
+      const inputs = (extra: Partial<TaxYearInputs>): TaxYearInputs => ({ healthcareEnabled: true, irmaaMagiSeed: lowSeed, ...extra })
+      expect(() => run([40_000], inputs({ medicareOnsetSimYear: [Number.NaN] }), W66)).toThrow(/medicareOnsetSimYear/)
+      expect(() => run([40_000], inputs({ medicareOnsetSimYear: [1.5] }), W66)).toThrow(/medicareOnsetSimYear/)
+      expect(() => run([40_000], inputs({ medicareOnsetSimYear: [0, 0] }), W66)).toThrow(/medicareOnsetSimYear/)
+      expect(() => run([40_000], inputs({ irmaaMagiOverride: [Number.NaN] }), W66)).toThrow(/irmaaMagiOverride/)
+      expect(() => run([40_000], inputs({ irmaaMagiOverride: [-1] }), W66)).toThrow(/irmaaMagiOverride/)
+      expect(() => run([40_000], inputs({ bridgeYearMask: [1 as unknown as boolean] }), W66)).toThrow(/bridgeYearMask/)
+    })
+
+    it('the onset is the FOURTH consumer of OverlayPerson reference identity (insight 020): distinct-but-equal living refs throw', () => {
+      const hh = mkHousehold(2026, 1959, 1959)
+      const cfg: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: false, household: hh }
+      const strangers: HouseholdYear[] = [{ living: [{ birthYear: 1959 }, { birthYear: 1959 }] }]
+      // With the onset supplied, the reference-integrity guard must fire (the enrolled count keys
+      // onset by canonical reference match — a stranger ref would silently fall back biological).
+      expect(() =>
+        run([40_000], { healthcareEnabled: true, irmaaMagiSeed: lowSeed, medicareOnsetSimYear: [-2, -2], householdYears: strangers }, cfg),
+      ).toThrow(/canonical people/)
+      // Control: WITHOUT the onset (and no other consumer), the same strangers run fine —
+      // resolveYear reads them age-wise only (the pre-C3 behavior, unchanged).
+      const ok = run([40_000], { healthcareEnabled: true, irmaaMagiSeed: lowSeed, householdYears: strangers }, cfg)
+      expect(ok.totalMedicareCostReal).toBeCloseTo(medicareAnnual(2, null), 4)
+    })
+  })
+})

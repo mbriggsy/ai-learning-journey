@@ -206,6 +206,7 @@ export function contributionsForYear(
   offsets: readonly PersonOffsets[],
   deathOffsets: readonly number[],
   people: readonly PersonInputs[],
+  medicareOnsetSimYear?: readonly number[],
 ): YearContribution {
   const byPerson = accumulation.contributionsByPerson
   // EVERY channel stays per-person through the wire (never collapsed to a household scalar):
@@ -231,10 +232,13 @@ export function contributionsForYear(
     cPretaxByPerson[i] = (pc.pretax?.[t] ?? 0) + (pc.employerMatch?.[t] ?? 0)
     // HSA contributions zero from THIS person's Medicare-enrollment onset — keyed to the
     // contributing OWNER, never the spouse (C2 §3b; mirrors the constants table's separation of
-    // medicareZeroesContribution from the premium privilege). Absent-signal default = the owner's
-    // 65th sim-year (`currentAge_i + t ≥ 65` — today's biological predicate); C3's per-person
-    // onset signal threads through this same predicate.
-    if (person.currentAge + t < 65) cHsaByPerson[i] = pc.hsa?.[t] ?? 0
+    // medicareZeroesContribution from the premium privilege). The C3 per-person onset signal
+    // threads through this predicate: absent-signal default = the owner's 65th sim-year
+    // (`t < 65 − currentAge_i` ⇔ `currentAge_i + t < 65` — today's biological predicate
+    // verbatim); with a work-past-65 onset (employer coverage delays Medicare) the owner's HSA
+    // contribution stays LIVE in [their 65th sim-year, onset) — a planted age-keyed zeroing
+    // fails the discriminating test.
+    if (t < (medicareOnsetSimYear?.[i] ?? 65 - person.currentAge)) cHsaByPerson[i] = pc.hsa?.[t] ?? 0
   }
   return {
     taxableByPerson: cTaxableByPerson,
@@ -380,6 +384,20 @@ function validateParams(params: SimulationParams): string | null {
     // sail through the seed-required relational check below AND poison the surcharge tier compare). A
     // seed is a real IRMAA-MAGI (AGI), so finite ≥ 0 (0 is the legitimate low-income value).
     if (o.irmaaMagiSeed !== undefined && !o.irmaaMagiSeed.every(finiteNonNeg)) return 'overlay irmaaMagiSeed invalid'
+    // C3 §3b — the per-person Medicare onset: finite INTEGER sim-year indices (any sign — ≤ 0 is
+    // "enrolled before the sim"), one per person (the canonical alignment, mirroring pretaxByPerson).
+    // A NaN onset makes `t >= onset` false forever — a silently never-enrolled member (zero Medicare
+    // cost, the optimistic direction; insight 010). Guarded UNCONDITIONALLY when present — the
+    // contribution-zeroing predicate consumes it even with healthcare off.
+    if (o.medicareOnsetSimYear !== undefined) {
+      if (!o.medicareOnsetSimYear.every((x) => Number.isInteger(x))) return 'overlay medicareOnsetSimYear invalid'
+      if (o.medicareOnsetSimYear.length !== params.people.length)
+        return 'overlay medicareOnsetSimYear length must match people'
+    }
+    // C3 §3b — the working-year IRMAA-MAGI override: a real-dollar MAGI, finite ≥ 0 (holes legal —
+    // the coverage arm below decides WHICH years need it). NaN-first, mirroring its stream siblings.
+    if (o.irmaaMagiOverride !== undefined && !o.irmaaMagiOverride.every(finiteNonNeg))
+      return 'overlay irmaaMagiOverride invalid'
     // U3 · M5 — the HSA spend-side inputs, guarded like their siblings (insights 008/010):
     // oopMedical is a real dollar cost — finite ≥ 0, NO +Infinity sentinel (mirror slcsp, NOT the
     // bracket-fill ceilings). A NaN would poison the qualified-spend cap's Math.min mid-path.
@@ -481,18 +499,84 @@ function validateParams(params: SimulationParams): string | null {
       }
       // IRMAA seed COVERAGE (M4; mirrors the overlay backstop — the "fail-loud at BOTH layers" rule): a
       // year t < lookback whose surcharge keys off pre-sim IRMAA-MAGI[t−lookback] needs `irmaaMagiSeed[t]`
-      // whenever a member is Medicare-enrolled (≥65) that year. Age in sim year t = currentAge + t (the
-      // overlay's birthYear = startCalendarYear − currentAge), so "≥65 in year t" ⇔ currentAge + t ≥ 65.
-      // CONSERVATIVE on death: require the seed if ANY person is age-eligible (they are enrolled on the
-      // paths where they live). Missing → the defined indeterminate output, never a mid-path throw and
-      // never a default 0 (a phantom $0 surcharge → understated cost → overstated survival; burned/062).
-      // The lookback is READ from the constant so this can never drift from the overlay's own lookback.
+      // whenever a member is Medicare-ENROLLED that year. C3 §3b RE-KEYED this off the per-person onset:
+      // enrolled in year t ⇔ t ≥ onset_i, with the absent-signal default onset_i = 65 − currentAge_i —
+      // PROVABLY today's biological predicate verbatim (t ≥ 65 − currentAge ⇔ currentAge + t ≥ 65; the
+      // overlay's birthYear = startCalendarYear − currentAge). Without the re-key, a member 65+ but still
+      // WORKING inside the first lookback years (onset = their work stop) would spuriously force the
+      // whole date-search indeterminate — a loud FALSE rejection blocking the date (under the sweep's
+      // all-or-nothing policy a per-candidate rejection is never silently dropped). CONSERVATIVE on
+      // death: require the seed if ANY person is enrollment-eligible (they are enrolled on the paths
+      // where they live). Missing → the defined indeterminate output, never a mid-path throw and never a
+      // default 0 (a phantom $0 surcharge → understated cost → overstated survival; burned/062). The
+      // lookback is READ from the constant so this can never drift from the overlay's own lookback.
       const lookback = irmaa.value.magiLookbackYears
       const seed = o.irmaaMagiSeed ?? []
+      const onsetFor = (i: number): number => {
+        const pp = params.people[i]
+        return o.medicareOnsetSimYear?.[i] ?? (pp !== undefined ? 65 - pp.currentAge : Number.POSITIVE_INFINITY)
+      }
+      const anyoneEnrolledAt = (t: number): boolean => params.people.some((_, i) => t >= onsetFor(i))
       for (let t = 0; t < lookback; t++) {
-        const medicareEnrolledThisYear = params.people.some((pp) => pp.currentAge + t >= 65)
-        if (medicareEnrolledThisYear && !Number.isFinite(seed[t]))
+        if (anyoneEnrolledAt(t) && !Number.isFinite(seed[t]))
           return `overlay irmaaMagiSeed[${t}] required (a member is Medicare-enrolled within ${lookback}yr of the start)`
+      }
+      // The t ≥ lookback MIRROR (C3 §3b — the latent shipped hole, ENFORCED here rather than resting
+      // on caller discipline): a BRIDGE year u (a still-working person with earned income — the
+      // bridge's own predicate shape, death-blind/conservative) inside the IRMAA lookback of any
+      // member's onset is a year a future Medicare bill will LAG-READ — and the recorded MAGI there
+      // is the §7-clamped working year's computed ≈$0 (FINITE, so the overlay's seed throw can never
+      // fire) → lowest tier → understated surcharge → a falsely-EARLY date, SILENTLY. Require finite
+      // working-year override coverage of every such year; the overlay's masked lagged-read throw is
+      // the per-path backstop arm (the two-layer rule).
+      const override = o.irmaaMagiOverride ?? []
+      const isBridgeYear = (u: number): boolean =>
+        params.people.some((pp) => u < pp.retirementAge - pp.currentAge && pp.earnedIncomeReal > 0)
+      for (let u = 0; u + lookback < params.maxHorizonYears; u++) {
+        if (!isBridgeYear(u)) continue
+        if (anyoneEnrolledAt(u + lookback) && !Number.isFinite(override[u]))
+          return `overlay irmaaMagiOverride[${u}] required (bridge year ${u} is inside the IRMAA lookback of a Medicare-enrolled year — a clamped working year's computed MAGI is ≈$0, silently understating the surcharge)`
+      }
+      // The wage-blind ACA sibling arm (C3 §3b): a PRICED ACA year landing on a BRIDGE year computes
+      // ACA-MAGI with NO wage component (`earnedIncomeReal` is netted away upstream of the overlay;
+      // MagiComponents has no wage term) — wage-blind in BOTH directions, OPTIMISTIC in the subsidy
+      // band (wages shrink the net withdrawal → computed MAGI ≈ withdrawals only → phantom near-max
+      // PTC → understated cost), conservative only below the 100%-FPL floor — so the year is
+      // UNPRICEABLE, not one-directionally boundable: rejection beats disclosure. Unreachable in both
+      // v1 routes by construction (healthcareStreams zeroes premiums while anyone works; an
+      // all-retired household has no bridge years) — this guards a direct caller / the deferred
+      // per-person-asymmetry feature (whose retired-on-ACA + working-spouse household is the
+      // canonical instance and is pinned blocked on this arm).
+      {
+        const enrolledStream = o.enrolledPremium ?? []
+        for (let t = 0; t < enrolledStream.length; t++) {
+          const e = enrolledStream[t]
+          if (e !== undefined && Number.isFinite(e) && e > 0 && isBridgeYear(t))
+            return `overlay enrolledPremium[${t}] prices an ACA year on a BRIDGE year (working wages are invisible to ACA-MAGI — the year is unpriceable wage-blind; premiums belong in the retired window)`
+        }
+      }
+      // The date-route ACA coverage rule (C3 §3b / D1): with the accumulation construct present (the
+      // v1 date-route marker — every `buildCandidateParams(Y)` candidate carries it for the §7
+      // clamp), forcing `healthcareEnabled` alone is NOT sufficient — an ABSENT stream passes the
+      // guards above as `?? []` with zero iterations, and the overlay then prices ZERO healthcare:
+      // the silent healthcare-blind date, the cardinal optimistic direction. Every PRE-65 RETIRED
+      // year of every member (entered ages, death-blind/conservative) must carry FINITE
+      // enrolledPremium + slcsp coverage — an explicit 0 is the legitimate "no marketplace cost"
+      // entry (employer retiree coverage); ABSENT is the error. The all-65+-at-Y=0 household needs
+      // nothing (every window below is empty — the per-person Medicare onset machinery suffices).
+      if (o.accumulation !== undefined) {
+        const enrolledStream = o.enrolledPremium ?? []
+        const slcspStream = o.slcsp ?? []
+        for (let i = 0; i < params.people.length; i++) {
+          const pp = params.people[i]
+          if (pp === undefined) continue
+          const windowStart = Math.max(0, pp.retirementAge - pp.currentAge)
+          const windowEnd = Math.min(65 - pp.currentAge, params.maxHorizonYears)
+          for (let t = windowStart; t < windowEnd; t++) {
+            if (!Number.isFinite(enrolledStream[t]) || !Number.isFinite(slcspStream[t]))
+              return `overlay enrolledPremium/slcsp must cover sim-year ${t} (a pre-65 retired year) — an absent entry silently prices ZERO healthcare into the date (enter 0 explicitly for a no-marketplace year)`
+          }
+        }
       }
     }
   }
@@ -590,6 +674,7 @@ export function simulate(params: SimulationParams, seed: number): SimOutput {
     const ssBenefits: number[] = []
     const householdYears: HouseholdYear[] = []
     const contributionYears: YearContribution[] = []
+    const bridgeMask: boolean[] = []
     for (let t = 0; t < horizon; t++) {
       const zs = sRow?.[t]
       const zbRaw = bRow?.[t]
@@ -607,12 +692,27 @@ export function simulate(params: SimulationParams, seed: number): SimOutput {
           if (op !== undefined && t < (deathOffsets[i] ?? 0)) living.push(op)
         }
         householdYears.push({ living })
+        // C3 §3b: the per-path bridge-year mask — the bridge's own dead-earner predicate shape
+        // (`t < retire_i && t < death_i && earned_i > 0`), assembled here because deaths are
+        // per-path. Zero-draw, CRN-safe; consumed only by the overlay's two throw-or-nothing
+        // fail-loud arms (the masked lagged read + the ACA price gate), so supplying it can
+        // never perturb a value (byte-identity by construction).
+        if (overlay.healthcareEnabled) {
+          bridgeMask.push(
+            offsets.some(
+              (o, i) => o.earnedIncomeReal > 0 && t < o.retire && t < (deathOffsets[i] ?? 0),
+            ),
+          )
+        }
         // C2 §7 (the B×C consequence): this PATH's per-year per-bucket contribution amounts,
         // assembled per-path because deathOffsets exist only inside the path loop (one
         // per-candidate transform cannot see per-path deaths). CRN-safe zero-draw work, exactly
-        // like the cash terms above — see {@link contributionsForYear}.
+        // like the cash terms above — see {@link contributionsForYear}. The per-person Medicare
+        // onset threads into the HSA zeroing predicate (C3 §3b).
         if (overlay.accumulation) {
-          contributionYears.push(contributionsForYear(t, overlay.accumulation, offsets, deathOffsets, people))
+          contributionYears.push(
+            contributionsForYear(t, overlay.accumulation, offsets, deathOffsets, people, overlay.medicareOnsetSimYear),
+          )
         }
       }
     }
@@ -657,8 +757,16 @@ export function simulate(params: SimulationParams, seed: number): SimOutput {
                 slcsp: overlay.slcsp ?? [],
                 enrolledPremium: overlay.enrolledPremium ?? [],
                 // IRMAA pre-sim MAGI seed (M4): only the lagged early years read it; the validateParams
-                // gate has already required it whenever a member is Medicare-enrolled (≥65) in years 0..lookback−1.
+                // gate has already required it whenever a member is Medicare-ENROLLED (per-person onset,
+                // biological-65 default) in years 0..lookback−1.
                 irmaaMagiSeed: overlay.irmaaMagiSeed ?? [],
+                // C3 §3b: the per-person onset + the working-year additive override + the per-path
+                // bridge mask, all inside this healthcareEnabled spread so the healthcare-off
+                // taxInputs stay byte-identical. The mask is always supplied (throw-or-nothing —
+                // it can never perturb a value); onset/override spread only when present.
+                bridgeYearMask: bridgeMask,
+                ...(overlay.medicareOnsetSimYear ? { medicareOnsetSimYear: overlay.medicareOnsetSimYear } : {}),
+                ...(overlay.irmaaMagiOverride ? { irmaaMagiOverride: overlay.irmaaMagiOverride } : {}),
               }
             : {}),
         },

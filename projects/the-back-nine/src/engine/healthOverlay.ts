@@ -455,8 +455,11 @@ export function irmaaTierSurchargeMonthly(magi: number, filing: FilingStatus, sc
 /**
  * The full post-65 Medicare premium cost for one year (real $): the income-INVARIANT base Part B
  * premium PLUS the income-sensitive IRMAA surcharge (Part B + Part D), per Medicare-enrolled person,
- * annualized (×12). `enrolledCount` is the household's ≥65 count that year (the mirror of the ACA
- * pre-65 gate); a couple both enrolled pays ×2 BY THE COUNT, never a hard-coded ×2 (research §44/§4c).
+ * annualized (×12). `enrolledCount` is the household's Medicare-ENROLLED living count that year
+ * (C3 §3b: per-person onset-aware — `|living ∩ {i : t ≥ onset_i}|`, with biological 65 the
+ * absent-signal default; a member working past 65 is NOT enrolled, so their base Part B never
+ * prices — the mirror of the ACA pre-65 gate); a couple both enrolled pays ×2 BY THE COUNT,
+ * never a hard-coded ×2 (research §44/§4c).
  *
  * The overlay funds this whole cost (the post-65 analog of funding the full pre-65 net ACA premium),
  * so terminalReal drops by the grossed-up withdrawal that pays it. SCOPE — disclosed boundaries,

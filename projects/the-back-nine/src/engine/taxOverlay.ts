@@ -96,7 +96,7 @@ import {
   type CapitalGainsRateBreakpoints,
   type AcaApplicablePercentageTable,
 } from '@engine/constants'
-import { solveAcaFundedGross, fplForHousehold, medicareAnnualCost, irmaaMagi, hsaQualifiedSpend, type GrossUpSolution } from '@engine/healthOverlay'
+import { solveAcaFundedGross, fplForHousehold, medicareAnnualCost, irmaaMagi, hsaQualifiedSpend, type GrossUpSolution, type MagiComponents } from '@engine/healthOverlay'
 import { NEVER_DEPLETED, type DepletionYear, type DrawdownPolicy, type FilingStatus } from '@shared/model'
 
 // Filing status is shared model vocabulary (the persisted scenario speaks it too). Re-exported
@@ -255,6 +255,41 @@ export interface TaxYearInputs {
    *  member is Medicare-enrolled (≥65) in such a year — a default 0 would zero the surcharge → understate
    *  cost → overstate survival (burned/062). Read only when healthcare is on (⇒ tax on); inert otherwise. */
   readonly irmaaMagiSeed?: readonly number[]
+  // --- C3 §3b: the per-person Medicare onset + the working-year IRMAA-MAGI override + the
+  //     bridge-year mask. ALL THREE absent ⇒ the byte-identical pre-C3 overlay (the onset
+  //     default IS today's biological predicate; the override write is `+ 0`; the mask arms
+  //     are throw-or-nothing). ---
+  /** Per-person Medicare-enrollment ONSET (sim-year terms), aligned to the household's CANONICAL
+   *  people (owner = 0, spouse = 1 — the M6b alignment): person i is Medicare-enrolled from
+   *  sim-year `medicareOnsetSimYear[i]` (≤ 0 = enrolled before the sim). ABSENT ⇒ biological 65
+   *  (`ageInSimYear ≥ 65`) — provably today's predicate verbatim. ONLY the IRMAA gate + pricing
+   *  count read it (`resolveYear`'s `medicareEnrolledCount`); `count65` stays BIOLOGICAL for the
+   *  §63(f)/senior-bonus deduction stack and the ACA `pre65` denominator (a 65+ worker keeps the
+   *  age-65 deduction and is not a marketplace member). The enrolled count intersects the LIVING
+   *  set (a dead spouse is never billed) — a 4th consumer of OverlayPerson reference identity. */
+  readonly medicareOnsetSimYear?: readonly number[]
+  /** Per-year ADDITIVE working-year IRMAA-MAGI override (real $, ABSOLUTE-year-indexed): the
+   *  recording sites write `irmaaMagiHistory[t] = override[t] + irmaaMagi(components)` — ADDITIVE,
+   *  never replacement (a working-year conversion / claimed-while-working SS / a 73+ worker's RMD
+   *  lands in the COMPUTED component; replacement or max() would understate; additive errs only
+   *  conservative/later, and equals replacement in the common clamped working year whose computed
+   *  MAGI is exactly 0). Covers the bridge years a lagged read can land on (the seed covers only
+   *  `t < lookback` — structurally the ONLY window it can reach). */
+  readonly irmaaMagiOverride?: readonly number[]
+  /** Per-year bridge-year mask (`bridge[t] = ∃i: t < retireOffset_i && t < deathOffset_i &&
+   *  earnedIncomeReal_i > 0` — the bridge's own dead-earner predicate shape), assembled PER-PATH
+   *  by `simulate` beside `householdYears` (zero-draw, CRN-safe). The overlay's two C3 fail-loud
+   *  arms ride it: (1) the masked LAGGED-READ throw — `lag ≥ 0 && mask[lag]` with no finite
+   *  override coverage of `lag` ⇒ throw (the true mirror of the `irmaaMagiSeed` throw: the lagged
+   *  read otherwise returns a FINITE ≈$0 clamped-working-year MAGI → lowest tier → understated
+   *  surcharge, SILENTLY); (2) the ACA price-gate arm — a PRICED ACA year at a masked `t` is
+   *  wage-blind (MagiComponents has no wage component → phantom near-max PTC in the subsidy band,
+   *  the OPTIMISTIC direction) ⇒ throw. HONEST LIMITATION (recorded, §3b): both arms are
+   *  necessarily MASK-CONDITIONAL for a direct caller — an omitted mask is byte-identity-
+   *  indistinguishable from a no-bridge run (`netWithdrawals` arrives pre-collapsed, so "bridge
+   *  year" is structurally inexpressible without it); `healthcareStreams.ts` + this mask are what
+   *  any bridge-carrying caller supplies. Absent ⇒ byte-identical (throw-or-nothing; burned/062). */
+  readonly bridgeYearMask?: readonly boolean[]
   // --- U3 · M5: the HSA spend-side streams. ABSENT / `hsa` 0 ⇒ the 3-bucket path byte-identical. ---
   /** Per-year out-of-pocket QUALIFIED medical cost (real $), indexed by ABSOLUTE year. CAP-ONLY —
    *  PINNED: it sizes the HSA qualified-spend cap and NEVER joins the year's funding need (the
@@ -579,6 +614,14 @@ function count65PlusInSimYear(household: Household, t: number): number {
 interface ResolvedYear {
   readonly filing: FilingStatus
   readonly count65: number
+  /** The Medicare-ENROLLED living count (C3 §3b): `|living ∩ {i : t ≥ onset_i}|`. With no onset
+   *  signal it EQUALS `count65` (the biological default — today's predicate verbatim, byte-
+   *  identical). ONLY the IRMAA gate + pricing count read this; everything else (the deduction
+   *  stack, the ACA `pre65` denominator) stays on the biological `count65` — a 65+ member working
+   *  past 65 (onset > their 65th sim-year) keeps the age-65 deduction and stays out of the
+   *  marketplace count while accruing ZERO Medicare cost (base Part B included — the pricing
+   *  count gates both). */
+  readonly medicareEnrolledCount: number
   /** People alive this year = the ACA FPL household size (U3 · M3 Slice 4). The pre-65 count the
    *  age gate reads is `livingCount − count65` (living members under 65). */
   readonly livingCount: number
@@ -598,19 +641,48 @@ interface ResolvedYear {
  * to the static household — both people present every year, filing as configured — VERBATIM the
  * M1–M5 behaviour (so every existing fixture is byte-identical). Reads ZERO draws (CRN-safe).
  */
-function resolveYear(household: Household, householdYears: readonly HouseholdYear[], t: number): ResolvedYear {
+function resolveYear(
+  household: Household,
+  householdYears: readonly HouseholdYear[],
+  t: number,
+  medicareOnsetSimYear?: readonly number[],
+): ResolvedYear {
+  // The per-person Medicare-enrollment predicate (C3 §3b). With NO onset signal it is the
+  // biological-65 predicate VERBATIM (`ageInSimYear ≥ 65` — the same compare count65 makes), so
+  // medicareEnrolledCount === count65 by construction and every pre-C3 run is byte-identical.
+  // With a signal, the canonical INDEX keys the lookup (owner = 0, spouse = 1 — the M6b
+  // alignment); a living ref matching NEITHER canonical person is a reference-identity breach
+  // the up-front guard in the year loop rejects loudly (insight 020 — the onset consumer is in
+  // its gate), so the defensive biological fallback here is never the silent answer.
+  const enrolledAt = (p: OverlayPerson, canonicalIdx: number): boolean => {
+    const onset = canonicalIdx >= 0 ? medicareOnsetSimYear?.[canonicalIdx] : undefined
+    if (onset !== undefined) return t >= onset
+    return ageInSimYear(p, household.startCalendarYear, t) >= AGE_65_THRESHOLD
+  }
+  const canonicalIndexOf = (p: OverlayPerson): number =>
+    p === household.owner ? 0 : p === household.spouse ? 1 : -1
   const injected = householdYears[t]
   if (injected !== undefined) {
     const living = injected.living
     const filing: FilingStatus = living.length >= 2 ? 'mfj' : 'single'
     let count65 = 0
-    for (const p of living) if (ageInSimYear(p, household.startCalendarYear, t) >= AGE_65_THRESHOLD) count65++
-    return { filing, count65, livingCount: living.length, rmdOwner: living[0], rmdSpouse: living[1] }
+    let medicareEnrolledCount = 0
+    for (const p of living) {
+      if (ageInSimYear(p, household.startCalendarYear, t) >= AGE_65_THRESHOLD) count65++
+      // The enrolled count INTERSECTS the living set (C3 §3b) — computed here, the sibling of
+      // count65, so a dead spouse is never billed (a count over all entered persons would bill
+      // a dead member's Part B forever).
+      if (enrolledAt(p, canonicalIndexOf(p))) medicareEnrolledCount++
+    }
+    return { filing, count65, medicareEnrolledCount, livingCount: living.length, rmdOwner: living[0], rmdSpouse: living[1] }
   }
   // Static (M5): both people present every year, filing as configured — verbatim M1–M5.
+  let staticEnrolled = enrolledAt(household.owner, 0) ? 1 : 0
+  if (household.spouse && enrolledAt(household.spouse, 1)) staticEnrolled++
   return {
     filing: household.filing,
     count65: count65PlusInSimYear(household, t),
+    medicareEnrolledCount: staticEnrolled,
     livingCount: household.spouse ? 2 : 1,
     rmdOwner: household.owner,
     rmdSpouse: household.spouse,
@@ -922,6 +994,9 @@ export function runTaxAwareDecumulation(
     slcsp = [],
     enrolledPremium = [],
     irmaaMagiSeed = [],
+    medicareOnsetSimYear,
+    irmaaMagiOverride = [],
+    bridgeYearMask = [],
     oopMedical = [],
     hsaOwnerIndex,
     contributions = [],
@@ -965,6 +1040,25 @@ export function runTaxAwareDecumulation(
       if (e !== undefined && Number.isFinite(e) && e > 0 && !Number.isFinite(slcsp[t]))
         throw new Error('[taxOverlay] slcsp must cover every enrolled-premium year — a priced year needs a finite §36B benchmark (burned/062)')
     }
+  }
+
+  // C3 §3b — the onset / override / mask streams, guarded like their siblings (the "BOTH
+  // validateParams AND the overlay backstop" discipline; insights 008/010 finiteness-FIRST).
+  // The onset is a SIM-YEAR index: finite INTEGER, any sign (≤ 0 = enrolled pre-sim); a NaN
+  // would make `t >= onset` false forever — a silently never-enrolled member (zero Medicare
+  // cost, the optimistic direction). The override is a real-dollar MAGI: finite ≥ 0, holes
+  // legal (`.every` skips them — coverage is the validateParams arms' job). The mask is
+  // booleans (holes legal = not a bridge year).
+  if (medicareOnsetSimYear !== undefined && !medicareOnsetSimYear.every((x) => Number.isInteger(x))) {
+    throw new Error(
+      '[taxOverlay] medicareOnsetSimYear entries must be finite integers (sim-year indices) — a NaN onset silently never-enrolls a member (insight 010)',
+    )
+  }
+  if (!irmaaMagiOverride.every((x) => Number.isFinite(x) && x >= 0)) {
+    throw new Error('[taxOverlay] irmaaMagiOverride entries must be finite and ≥ 0 (insights 008/010; burned/062)')
+  }
+  if (!bridgeYearMask.every((x) => typeof x === 'boolean')) {
+    throw new Error('[taxOverlay] bridgeYearMask entries must be booleans (a truthy non-boolean is a mis-built mask)')
   }
 
   // The ACA applicable-% table is year-invariant; select it ONCE per run. `enhanced` = the ARPA/IRA
@@ -1112,6 +1206,14 @@ export function runTaxAwareDecumulation(
       )
     }
   }
+  // The onset aligns to the CANONICAL people (owner = 0, spouse = 1 — the M6b alignment, the
+  // same rule as initialPretaxByPerson): a short array silently never-enrolls the spouse, a
+  // long one carries slots no person owns — reject, never re-index (burned/062).
+  if (medicareOnsetSimYear !== undefined && household && medicareOnsetSimYear.length !== people.length) {
+    throw new Error(
+      `[taxOverlay] medicareOnsetSimYear has ${medicareOnsetSimYear.length} entries but the household has ${people.length} people — never silently re-indexed`,
+    )
+  }
   if (config.taxEnabled && hsaLive && hsaOwnerIndex === undefined) {
     throw new Error(
       '[taxOverlay] hsaOwnerIndex is required when tax is on and the hsa bucket is non-empty — ' +
@@ -1181,7 +1283,10 @@ export function runTaxAwareDecumulation(
     // injected stream when present, else the static household (verbatim M1–M5). Resolved only when
     // the overlay is active (tax or RMD on ⇒ the ON config carries `household`); under the
     // EXHAUSTIVE OFF condition it is never consulted (gross = net, rmd = 0).
-    const regime = config.taxEnabled || config.rmdEnabled ? resolveYear(config.household, householdYears, t) : undefined
+    const regime =
+      config.taxEnabled || config.rmdEnabled
+        ? resolveYear(config.household, householdYears, t, medicareOnsetSimYear)
+        : undefined
 
     // Spousal rollover (M6b·B): a deceased canonical person's pre-tax IRA passes to the surviving
     // spouse, so the survivor's RMD keys off the COMBINED balance + their OWN age. Idempotent (a
@@ -1202,8 +1307,16 @@ export function runTaxAwareDecumulation(
     // the future P3/P4 DIRECT caller the backstop discipline exists for. (U3-exit pilot caught the
     // ledger half; the M5 boundary review caught the unguarded hsa half; the C2 boundary review
     // caught the credit half gated on its first consumer — insight 020, recurring in the unit
-    // that cited it.)
-    if (pretaxLedger || (hsaLive && hsaOwnerPerson !== undefined) || (yearC !== undefined && household !== undefined)) {
+    // that cited it. C3 adds the FOURTH consumer: the Medicare-enrolled count keys each living
+    // member's onset by canonical INDEX via reference match, so a stranger ref would silently
+    // fall back to the biological predicate — un-delaying a 65+ worker's Medicare, the
+    // cost-understating direction.)
+    if (
+      pretaxLedger ||
+      (hsaLive && hsaOwnerPerson !== undefined) ||
+      (yearC !== undefined && household !== undefined) ||
+      (medicareOnsetSimYear !== undefined && household !== undefined)
+    ) {
       alive = aliveCanonical(people, householdYears, t)
       const injected = householdYears[t]
       // ANY mismatch — TOTAL (marks everyone dead) or PARTIAL (one good ref + one stranger →
@@ -1306,12 +1419,29 @@ export function runTaxAwareDecumulation(
       // IRMAA (M4): the year's post-65 Medicare cost is a CONSTANT addend to the spending the gross-up
       // funds — keyed off IRMAA-MAGI[t−lookback] (already known), so it is NEVER a fixed point and NEVER
       // a search variable (the step discontinuity, insight 013, cannot reach a root-finder here). Priced
-      // when ≥1 member is Medicare-enrolled (regime.count65 > 0 — the post-65 mirror of the ACA pre-65
-      // gate) AND healthcare is on (acaTable !== undefined). `filing[t−lookback]` is the threshold column,
-      // so the survivor MFJ→single flip is itself lagged +2yr; for t < lookback the lagged MAGI + filing
-      // predate the sim, supplied via irmaaMagiSeed + the initial household filing (both alive pre-sim).
-      if (acaTable !== undefined && regime.count65 > 0) {
+      // when ≥1 member is Medicare-ENROLLED (regime.medicareEnrolledCount > 0 — per-person onset-aware,
+      // C3 §3b; the absent-signal default is biological 65, today's predicate verbatim — the post-65
+      // mirror of the ACA pre-65 gate) AND healthcare is on (acaTable !== undefined). A member working
+      // past 65 (onset > their 65th sim-year) accrues ZERO Medicare cost ENTIRELY during the working
+      // years — base Part B included, the pricing count gates both — while `count65` stays biological
+      // for the deduction stack + the ACA pre65 denominator. `filing[t−lookback]` is the threshold
+      // column, so the survivor MFJ→single flip is itself lagged +2yr; for t < lookback the lagged MAGI
+      // + filing predate the sim, supplied via irmaaMagiSeed + the initial household filing.
+      if (acaTable !== undefined && regime.medicareEnrolledCount > 0) {
         const lag = t - irmaaLookback
+        // The masked LAGGED-READ arm (C3 §3b — the true mirror of the seed throw below, which cannot
+        // fire here: a lagged read landing on a clamped WORKING year returns a FINITE ≈$0 computed
+        // MAGI → lowest tier → understated surcharge → a falsely-early date, SILENTLY). A bridge year
+        // at the lagged index demands finite override coverage of that index — the additive write
+        // below is what recorded it into history, so absent coverage means the recorded value was
+        // computed-only ≈$0. Mask-conditional for a direct caller (recorded limitation, §3b).
+        if (lag >= 0 && bridgeYearMask[lag] === true && !Number.isFinite(irmaaMagiOverride[lag])) {
+          throw new Error(
+            `[taxOverlay] IRMAA's lagged read lands on BRIDGE year ${lag} with no finite irmaaMagiOverride[${lag}] — ` +
+              `a clamped working year's computed IRMAA-MAGI is ≈$0, silently pricing the lowest tier (understated cost, ` +
+              `the falsely-early-date direction); supply the working-year override (C3 §3b; burned/062)`,
+          )
+        }
         const magiForBill = lag >= 0 ? irmaaMagiHistory[lag] : irmaaMagiSeed[t]
         // Finiteness FIRST (insight 010): a missing seed for a near-65 start, or a NaN, must FAIL LOUD —
         // never default 0 (a phantom $0 surcharge → understated cost → overstated survival, the cardinal
@@ -1322,8 +1452,17 @@ export function runTaxAwareDecumulation(
               `supply irmaaMagiSeed[${t}] for a sim starting within ${irmaaLookback}yr of age 65 (no default 0; burned/062, insight 010)`,
           )
         }
-        const filingForBill = lag >= 0 ? resolveYear(config.household, householdYears, lag).filing : config.household.filing
-        medicareCostThisYear = medicareAnnualCost(magiForBill, filingForBill, regime.count65, irmaaSchedule, partBBaseMonthly)
+        const filingForBill =
+          lag >= 0
+            ? resolveYear(config.household, householdYears, lag, medicareOnsetSimYear).filing
+            : config.household.filing
+        medicareCostThisYear = medicareAnnualCost(
+          magiForBill,
+          filingForBill,
+          regime.medicareEnrolledCount,
+          irmaaSchedule,
+          partBBaseMonthly,
+        )
       }
       // HSA qualified spend (U3 · M5): the MAGI-invisible dollars the hsa bucket pays this year —
       // capped at the qualified set (OOP medical + the owner-65+ Medicare premiums; the ACA premium
@@ -1380,6 +1519,7 @@ export function runTaxAwareDecumulation(
       // funds fundingNet (spending + Medicare) PLUS the net ACA premium; a non-priced year just grosses
       // up fundingNet for tax. BOTH record this year's IRMAA-MAGI (the lagged feed-forward source for
       // year t+lookback) off the converged FLOORED components — never a raw-gain ledger (the sign-inversion).
+      let magiComponentsThisYear: MagiComponents
       if (
         acaTable !== undefined &&
         enrolledThisYear !== undefined &&
@@ -1399,6 +1539,20 @@ export function runTaxAwareDecumulation(
             '[taxOverlay] a priced ACA year cannot carry a contribution inflow — contributions and ACA pricing are temporally disjoint in the v1 model (C2 §6; the HSA-contribution MAGI deduction is unmodeled, so the year would price wrong)',
           )
         }
+        // The masked ACA arm (C3 §3b — the wage-blind sibling): a PRICED ACA year on a BRIDGE year
+        // computes ACA-MAGI with no wage component (`earnedIncomeReal` is netted away upstream;
+        // MagiComponents has no wage term) — wage-blind in BOTH directions, OPTIMISTIC in the
+        // subsidy band (wages shrink the net withdrawal → computed MAGI ≈ withdrawals only →
+        // phantom near-max PTC → understated cost), so the year is UNPRICEABLE, not boundable —
+        // rejection beats disclosure. validateParams' sibling arm shields `simulate`; this is the
+        // mask-conditional direct-caller backstop (recorded limitation, §3b).
+        if (bridgeYearMask[t] === true) {
+          throw new Error(
+            `[taxOverlay] a priced ACA year cannot land on BRIDGE year ${t} — ACA-MAGI is wage-blind ` +
+              `(phantom near-max PTC in the subsidy band, the cost-understating direction), so the year is ` +
+              `unpriceable (C3 §3b; burned/062)`,
+          )
+        }
         // A missing benchmark in a priced year fails LOUD via the solver's own R19 backstop
         // (NaN → throw → the worker's calm-error), never a silent phantom subsidy. burned/062.
         const aca = solveAcaFundedGross(
@@ -1411,16 +1565,24 @@ export function runTaxAwareDecumulation(
         )
         grossWithdrawal = aca.gross
         acaNetPremiumThisYear = aca.netPremium
-        irmaaMagiHistory[t] = irmaaMagi(aca.components)
+        magiComponentsThisYear = aca.components
       } else {
         const sol = fundNet(fundingNet)
         grossWithdrawal = sol.gross
-        // Record IRMAA-MAGI only when healthcare is on (acaTable !== undefined); a healthcare-off
-        // tax-only year keeps the history empty (no IRMAA, reduce-to-spine untouched). The one-pass
-        // components lag (< 1e-7) is far below the $1 INTEGER IRMAA grid (insight 012 — no ceil helps
-        // on a `> N` branch), so a lag-induced tier flip is measure-zero (the same residual the ACA
-        // cliff already accepts off these components).
-        if (acaTable !== undefined) irmaaMagiHistory[t] = irmaaMagi(sol.components)
+        magiComponentsThisYear = sol.components
+      }
+      // Record this year's IRMAA-MAGI — ONE post-branch write covering BOTH recording sites (C3
+      // §3b), only when healthcare is on (acaTable !== undefined; a healthcare-off tax-only year
+      // keeps the history empty — no IRMAA, reduce-to-spine untouched). The working-year override
+      // is ADDITIVE, never replacement: a working-year Roth conversion / claimed-while-working SS
+      // / a 73+ worker's RMD lands in the COMPUTED component (replacement or max() would
+      // understate the sum; additive errs only conservative/later, and equals replacement in the
+      // common clamped working year whose computed MAGI is exactly 0). Override absent ⇒ `0 + x`,
+      // an exact IEEE no-op (byte-identical). The one-pass components lag (< 1e-7) is far below
+      // the $1 INTEGER IRMAA grid (insight 012 — no ceil helps on a `> N` branch), so a
+      // lag-induced tier flip is measure-zero (the same residual the ACA cliff already accepts).
+      if (acaTable !== undefined) {
+        irmaaMagiHistory[t] = (irmaaMagiOverride[t] ?? 0) + irmaaMagi(magiComponentsThisYear)
       }
     } else {
       grossWithdrawal = net

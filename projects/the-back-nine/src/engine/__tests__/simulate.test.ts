@@ -1198,8 +1198,14 @@ describe('C2 — the R19 gates (NaN-first, alignment, the zero-balance start, §
   })
 
   it('§6 — a contribution overlapping a PRICED ACA year is rejected at the frontline (run-level arm)', () => {
+    // A retired 64yo (NO bridge years — the C3 wage-blind arm is deliberately out of this
+    // fixture's domain, so what fires is the §6 empty-overlap arm itself): the entered
+    // contribution stream erroneously carries an entry at the one priced pre-65 retired year.
+    // (The original C2 fixture put the premium on a WORKING year — re-anchored when C3's
+    // wage-blind ACA arm made a bridge-year premium its own, earlier rejection.)
+    const retired64: PersonInputs = { ...MALE_65, currentAge: 64, retirementAge: 64 }
     const overlap: SimulationParams = makeParams({
-      people: [workingPerson],
+      people: [retired64],
       overlay: {
         taxEnabled: true,
         rmdEnabled: false,
@@ -1209,6 +1215,7 @@ describe('C2 — the R19 gates (NaN-first, alignment, the zero-balance start, §
         healthcareEnabled: true,
         enrolledPremium: [12_000],
         slcsp: [11_000],
+        irmaaMagiSeed: [60_000, 60_000], // the 64yo is Medicare-enrolled at t=1 (their 65th sim-year)
         accumulation: { contributionsByPerson: [{ pretax: [1_000] }] },
       },
     })
@@ -1216,7 +1223,8 @@ describe('C2 — the R19 gates (NaN-first, alignment, the zero-balance start, §
     expect(out.indeterminate).toBe(true)
     if (out.indeterminate) expect(out.reason).toContain('ACA')
     // Control: the SAME shape with the contribution moved OFF the priced year resolves (the gate
-    // rejects the overlap, not the construct).
+    // rejects the overlap, not the construct). Year 1 is the 64yo's 65th — outside both the §6
+    // overlap domain and the C3 date-route coverage window ([0, 1) is fully covered above).
     const disjoint = simulate(
       {
         ...overlap,
@@ -1248,5 +1256,178 @@ describe('C2 — the R19 gates (NaN-first, alignment, the zero-balance start, §
     // With the owner supplied, the same params resolve.
     const withOwner = simulate({ ...noOwner, overlay: { ...noOwner.overlay!, hsaOwnerIndex: 0 } }, 1)
     expect(withOwner.indeterminate).toBe(false)
+  })
+})
+
+// ===========================================================================
+// C3 §3b — the four validateParams arms (the R19 frontline mirror of the overlay's
+// onset/override/mask machinery) + the onset-threaded HSA contribution seam.
+// ===========================================================================
+describe('C3 — the R19 arms: onset re-key, override coverage, the wage-blind ACA sibling, date-route coverage', () => {
+  // A still-working 66yo (currentAge 66, stops at 69 — offset 3) with earned income: the
+  // latent-shipped-hole household (bridge years inside the IRMAA lookback of their own onset).
+  const working66: PersonInputs = {
+    sex: 'male', currentAge: 66, retirementAge: 69,
+    earnedIncomeReal: 50, socialSecurityReal: 0, socialSecurityClaimAge: 70,
+  }
+  const overlay66 = (extra: Partial<OverlayParams>): OverlayParams => ({
+    taxEnabled: true,
+    rmdEnabled: false,
+    startCalendarYear: 2026,
+    buckets: { taxable: 0, pretax: 1000, roth: 0 },
+    filing: 'mfj',
+    healthcareEnabled: true,
+    ...extra,
+  })
+
+  it('arm (a) — the seed-coverage loop is ONSET-keyed: a 65+ member still working needs NO seed (the false-rejection guard)', () => {
+    // Biological keying would demand irmaaMagiSeed[0]/[1] (the 66yo is 65+ in years 0,1) and
+    // spuriously block the whole candidate. Onset [3] ⇒ not enrolled until year 3 ⇒ no seed —
+    // but arm (b) then requires the override for bridge years 1,2 (enrolled at 3,4). Supplied ⇒
+    // the params RESOLVE with neither seed nor false rejection.
+    const out = simulate(
+      makeParams({
+        people: [working66],
+        overlay: overlay66({ medicareOnsetSimYear: [3], irmaaMagiOverride: [60_000, 60_000, 60_000] }),
+      }),
+      1,
+    )
+    expect(out.indeterminate).toBe(false)
+    // The biological CONTROL (no onset): the seed gate fires — proving the re-key changed which
+    // gate governs, rather than silently passing both.
+    const control = simulate(makeParams({ people: [working66], overlay: overlay66({}) }), 1)
+    expect(control.indeterminate).toBe(true)
+    if (control.indeterminate) expect(control.reason).toContain('irmaaMagiSeed')
+  })
+
+  it('arm (b) — a bridge year inside the IRMAA lookback of an onset demands the override (the latent shipped hole, enforced)', () => {
+    const out = simulate(
+      makeParams({ people: [working66], overlay: overlay66({ medicareOnsetSimYear: [3] }) }),
+      1,
+    )
+    expect(out.indeterminate).toBe(true)
+    if (out.indeterminate) expect(out.reason).toContain('irmaaMagiOverride')
+  })
+
+  it('arm (d) — a PRICED ACA year on a bridge year is rejected (wage-blind: the year is unpriceable)', () => {
+    // The pre-C3 shape this fixture replaces silently priced the year off withdrawal-only MAGI
+    // (phantom near-max PTC — the optimistic direction). A working 55yo with a premium at the
+    // bridge year 0:
+    const working55: PersonInputs = { ...working66, currentAge: 55, retirementAge: 60 }
+    const out = simulate(
+      makeParams({
+        people: [working55],
+        overlay: overlay66({ enrolledPremium: [12_000], slcsp: [11_000] }),
+      }),
+      1,
+    )
+    expect(out.indeterminate).toBe(true)
+    if (out.indeterminate) expect(out.reason).toMatch(/BRIDGE|wage/i)
+    // Control: the SAME premium entered as an EXPLICIT 0 in the bridge years and real from the
+    // work stop resolves (the healthcareStreams window-gate shape — 0 is entered, not absent).
+    const gated = simulate(
+      makeParams({
+        people: [working55],
+        overlay: overlay66({
+          accumulation: { contributionsByPerson: [{}] },
+          enrolledPremium: [0, 0, 0, 0, 0, 120, 120, 120, 120, 120],
+          slcsp: [0, 0, 0, 0, 0, 110, 110, 110, 110, 110],
+        }),
+      }),
+      1,
+    )
+    expect(gated.indeterminate).toBe(false)
+  })
+
+  it('arm (c) — the date-route coverage rule: with the accumulation construct, a HOLE in a pre-65 retired year is the error (explicit 0 is legal)', () => {
+    const working55: PersonInputs = { ...working66, currentAge: 55, retirementAge: 60 }
+    // Years 5..9 are the pre-65 retired window; year 9 is left ABSENT (the silent
+    // healthcare-blind hole the ?? [] fallback used to wave through).
+    const out = simulate(
+      makeParams({
+        people: [working55],
+        overlay: overlay66({
+          accumulation: { contributionsByPerson: [{}] },
+          enrolledPremium: [0, 0, 0, 0, 0, 120, 120, 120, 120],
+          slcsp: [0, 0, 0, 0, 0, 110, 110, 110, 110],
+        }),
+      }),
+      1,
+    )
+    expect(out.indeterminate).toBe(true)
+    if (out.indeterminate) expect(out.reason).toContain('cover sim-year 9')
+    // WITHOUT the construct (plain decumulation), the same partial schedule stays legal — the
+    // M3 "no marketplace coverage that year" semantics are unchanged off the date route.
+    const plain = simulate(
+      makeParams({
+        people: [{ ...working55, retirementAge: 55, earnedIncomeReal: 0 }],
+        overlay: overlay66({ enrolledPremium: [120], slcsp: [110] }),
+      }),
+      1,
+    )
+    expect(plain.indeterminate).toBe(false)
+  })
+
+  it('R19 — a NaN/short onset and a NaN override return the defined indeterminate output (insights 008/010)', () => {
+    const bad = (extra: Partial<OverlayParams>): boolean =>
+      simulate(makeParams({ people: [working66], overlay: overlay66(extra) }), 1).indeterminate
+    expect(bad({ medicareOnsetSimYear: [Number.NaN] })).toBe(true)
+    expect(bad({ medicareOnsetSimYear: [1.5] })).toBe(true)
+    expect(bad({ medicareOnsetSimYear: [0, 0] })).toBe(true) // length ≠ people
+    expect(bad({ irmaaMagiOverride: [Number.NaN] })).toBe(true)
+    expect(bad({ irmaaMagiOverride: [-1] })).toBe(true)
+  })
+
+  it('absent-onset byte-identity at the simulate layer (sampled longevity — the living-set intersection is exercised)', () => {
+    const seventy: PersonInputs = { ...MALE_65, currentAge: 70, retirementAge: 70 }
+    const base = makeParams({
+      initialPortfolio: 1_000_000,
+      annualSpendingReal: 40_000,
+      people: [seventy, { ...seventy, sex: 'female' }],
+      longevityMode: 'sampled',
+      paths: 500,
+    })
+    const overlay = (extra: Partial<OverlayParams>): OverlayParams => ({
+      taxEnabled: true,
+      rmdEnabled: false,
+      startCalendarYear: 2026,
+      buckets: { taxable: 0, pretax: 1_000_000, roth: 0 },
+      filing: 'mfj',
+      healthcareEnabled: true,
+      irmaaMagiSeed: [60_000, 60_000],
+      ...extra,
+    })
+    const absent = simulate({ ...base, overlay: overlay({}) }, 2468)
+    // Biological onset for a 70yo is 65 − 70 = −5: the explicit array must reproduce the
+    // absent-signal run EXACTLY (same seed, same dims — the byte-identity contract).
+    const explicit = simulate({ ...base, overlay: overlay({ medicareOnsetSimYear: [-5, -5] }) }, 2468)
+    expect(explicit).toEqual(absent)
+  })
+})
+
+describe('C3 — the onset-threaded HSA contribution zeroing (contributionsForYear)', () => {
+  const offsets: PersonOffsets[] = [{ retire: 3, claim: 10, earnedIncomeReal: 50, socialSecurityReal: 0 }]
+  const acc: AccumulationParams = { contributionsByPerson: [{ hsa: [100, 100, 100] }] }
+  const person: PersonInputs = {
+    sex: 'male', currentAge: 66, retirementAge: 69,
+    earnedIncomeReal: 50, socialSecurityReal: 0, socialSecurityClaimAge: 70,
+  }
+
+  it('HSA stays LIVE while working past 65 with a supplied onset (a planted age-keyed zeroing fails)', () => {
+    // The 66yo works through year 2 (onset 3 — employer coverage delays Medicare): their HSA
+    // contribution at t=1 (age 67!) is still credited. The biological default would zero it.
+    const withOnset = contributionsForYear(1, acc, offsets, [30], [person], [3])
+    expect(withOnset.hsaByPerson).toEqual([100])
+    const biological = contributionsForYear(1, acc, offsets, [30], [person])
+    expect(biological.hsaByPerson).toEqual([0])
+  })
+
+  it('the onset is the ZEROING boundary: t = onset zeroes even mid-working-window', () => {
+    // Onset 2 < retire 3: the year t = 2 is working but Medicare-enrolled ⇒ contribution zeroed
+    // (enrollment, not work status, is the §223(b)(7) boundary).
+    const atOnset = contributionsForYear(2, acc, offsets, [30], [person], [2])
+    expect(atOnset.hsaByPerson).toEqual([0])
+    const beforeOnset = contributionsForYear(1, acc, offsets, [30], [person], [2])
+    expect(beforeOnset.hsaByPerson).toEqual([100])
   })
 })

@@ -6,6 +6,9 @@ import {
   DRAWDOWN_POLICIES,
   type OutcomeState,
   type DepletionYear,
+  type DateOffsetReading,
+  type DateSearchOutcome,
+  type DateTrackOutcome,
 } from '@shared/model'
 
 describe('outcome-state set (single-sourced engine vocabulary)', () => {
@@ -60,5 +63,85 @@ describe('drawdown policy set (sequencing substrate)', () => {
     expect([...DRAWDOWN_POLICIES].sort()).toEqual(
       ['bracket-fill', 'pre-tax-first', 'proportional', 'taxable-first'].sort(),
     )
+  })
+})
+
+describe('DateSearchOutcome family — DND/009 persisted-finite round-trip (the NEVER_DEPLETED mirror)', () => {
+  // The model.ts contract on the C3 vocabulary promises every persisted field is a finite
+  // numeric and the no-offset arms simply CARRY NO offset field (never an Infinity/NaN
+  // sentinel, never an explicit undefined). The producer (decideTrack) enforces finiteness
+  // at runtime today — these tests are the U4-persistence regression guard the sentinel
+  // already has at lines above (a future Infinity would silently null on the IndexedDB
+  // write and corrupt a reopened plan).
+  const curve: readonly DateOffsetReading[] = [
+    { offsetYears: 0, survivalFraction: 0.7, quantizedLowerBound: 0.69, clears: false },
+    { offsetYears: 1, survivalFraction: 0.91, quantizedLowerBound: 0.9, clears: true },
+    { offsetYears: 2, survivalFraction: 0.93, quantizedLowerBound: 0.92, clears: true },
+  ]
+  const confirmed: DateTrackOutcome = {
+    kind: 'confirmed-date',
+    offsetYears: 1,
+    grade: { quantizedLowerBound: 0.9, survivalFraction: 0.91, marginAboveBar: 0.05 },
+    nonMonotoneOffsets: [],
+    curve,
+  }
+
+  it('a fully-populated dates outcome round-trips through JSON intact, every numeric FINITE after the trip', () => {
+    const before: DateSearchOutcome = {
+      kind: 'dates',
+      floor: confirmed,
+      lifestyle: confirmed,
+      tier: 'final',
+      windowTopYears: 2,
+      seed: 12345,
+    }
+    const after = JSON.parse(JSON.stringify(before)) as typeof before
+    expect(after).toEqual(before)
+    // The explicit finiteness sweep is the load-bearing half: toEqual alone cannot catch a
+    // future Infinity/NaN (JSON nulls it on BOTH sides of the comparison only when the
+    // producer emits it — sweep the post-trip numerics directly).
+    expect(Number.isFinite(after.windowTopYears)).toBe(true)
+    expect(Number.isFinite(after.seed)).toBe(true)
+    for (const track of [after.floor, after.lifestyle]) {
+      if (track.kind === 'no-date-in-window') continue
+      expect(Number.isFinite(track.offsetYears)).toBe(true)
+      expect(Number.isFinite(track.grade.quantizedLowerBound)).toBe(true)
+      expect(Number.isFinite(track.grade.survivalFraction)).toBe(true)
+      expect(Number.isFinite(track.grade.marginAboveBar)).toBe(true)
+      for (const r of track.curve) {
+        expect(Number.isFinite(r.offsetYears)).toBe(true)
+        expect(Number.isFinite(r.survivalFraction)).toBe(true)
+        expect(Number.isFinite(r.quantizedLowerBound)).toBe(true)
+      }
+      for (const n of track.nonMonotoneOffsets) expect(Number.isFinite(n)).toBe(true)
+    }
+  })
+
+  it('the no-date arm carries NO offset key — and stays key-ABSENT through the trip', () => {
+    // The load-bearing assertion is the `in` check, NOT toEqual: a regression that emits
+    // `offsetYears: undefined` serializes away to absent and toEqual would silently pass —
+    // only an explicit key-presence check pins the "carry no offset field" promise.
+    const noDate: DateTrackOutcome = { kind: 'no-date-in-window', nonMonotoneOffsets: [1], curve }
+    const before: DateSearchOutcome = {
+      kind: 'dates',
+      floor: noDate,
+      lifestyle: noDate,
+      tier: 'provisional',
+      windowTopYears: 2,
+      seed: 7,
+    }
+    const after = JSON.parse(JSON.stringify(before)) as typeof before
+    expect(after).toEqual(before)
+    expect('offsetYears' in after.floor).toBe(false)
+    expect('grade' in after.floor).toBe(false)
+  })
+
+  it('the cancelled and input-failure run-level arms round-trip intact', () => {
+    const cancelled: DateSearchOutcome = { kind: 'cancelled' }
+    expect(JSON.parse(JSON.stringify(cancelled))).toEqual(cancelled)
+    const failed: DateSearchOutcome = { kind: 'input-failure', reason: 'candidate Y=0 rejected: x' }
+    const afterFailed = JSON.parse(JSON.stringify(failed)) as typeof failed
+    expect(afterFailed).toEqual(failed)
+    if (afterFailed.kind === 'input-failure') expect(typeof afterFailed.reason).toBe('string')
   })
 })

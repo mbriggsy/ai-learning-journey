@@ -165,6 +165,14 @@ export function buildCandidateParams(
   if (!Number.isInteger(offsetYears) || offsetYears < 0) {
     throw new Error(`[dateSearch] offsetYears must be a non-negative integer (got ${offsetYears})`)
   }
+  // Symmetric with the Y guard (a structural-misuse throw for direct callers): a bad `paths`
+  // here would land on the candidate and only surface as a downstream validateParams rejection
+  // misattributed to the candidate — or, for a caller that skips re-validation and hand-feeds
+  // decideTrack, as a silently mis-sized SE (an optimistic crown). runDateSearch always injects
+  // the tier's pinned count, so this bites only the direct caller it names.
+  if (!Number.isInteger(paths) || paths <= 0) {
+    throw new Error(`[dateSearch] paths must be a positive integer (got ${paths})`)
+  }
 
   // (1) Per-person retirement overrides — still-working → currentAge + Y; retired verbatim.
   const people = params.people.map((p) =>
@@ -234,9 +242,32 @@ export interface OffsetSurvival {
  */
 export function decideTrack(curve: readonly OffsetSurvival[], paths: number): DateTrackOutcome {
   if (curve.length === 0) throw new Error('[dateSearch] decideTrack requires a non-empty curve')
+  // `paths` MUST be the path count every curve entry was actually sampled at (the SE at each
+  // offset is √(p̂(1−p̂)/paths)): a caller passing fractions sampled at 2k with paths=16k gets a
+  // too-narrow haircut — an optimistic crown. runDateSearch guarantees the coupling (one pinned
+  // tier for both); a direct caller owns it. Single-sourced by contract, not carried per-entry
+  // (the persisted OffsetSurvival shape stays minimal).
   if (!Number.isInteger(paths) || paths <= 0) {
     throw new Error(`[dateSearch] decideTrack paths must be a positive integer (got ${paths})`)
   }
+  // THE DENSE-AXIS CONTRACT (v1): offsetYears === its array index, contiguous from 0. The rule's
+  // entire honesty argument — "the earliest offset that clears AND KEEPS CLEARING through the
+  // window top" — requires every intermediate offset to have been EVALUATED; on a gapped curve
+  // an unevaluated dip between the crowned offset and the top (the exact ACA-cliff signature,
+  // insight 013) would be skipped, crowning a falsely-EARLY date: the cardinal optimistic sin.
+  // So a gapped/unsorted/re-based curve is rejected loudly, never "handled". This is also what
+  // the only production producer emits (runDateSearch's dense 0..top sweep), and it makes any
+  // index↔offset confusion in the suffix walk below HARMLESS by construction (the two are equal
+  // — insight 015's mutation class closed by contract, not by detection). U9's two-track split
+  // threads two spend figures through the SAME dense sweep, so the contract survives U9; revisit
+  // only if the offset axis itself ever changes shape.
+  curve.forEach((c, i) => {
+    if (!Number.isInteger(c.offsetYears) || c.offsetYears !== i) {
+      throw new Error(
+        `[dateSearch] decideTrack requires a dense contiguous offset axis — offsetYears must equal its index (got ${c.offsetYears} at index ${i}); a gap would let an unevaluated dip crown a falsely-early date`,
+      )
+    }
+  })
   const readings: DateOffsetReading[] = curve.map((c) => {
     const p = c.survivalFraction
     // Finiteness FIRST (insight 010): a NaN survival would sail through the ≥-bar compare
@@ -321,6 +352,15 @@ export async function runDateSearch(
 ): Promise<DateSearchOutcome> {
   const { params } = input
   const paths = DATE_SEARCH_PATHS[opts.tier]
+  // The seed is PERSISTED on the 'dates' outcome with a bit-identical-reproduction contract
+  // (model.ts — a reopened plan re-runs the identical headline), and a non-finite seed would
+  // JSON-null on the U4 write (DND/009) while the engine silently ran on `seed|0 = 0` — the
+  // persisted record would not even match what produced the result. Reject it as the defined
+  // input failure (NaN-first, insight 010). The headline route's RNG-seed posture is tracked
+  // separately (TODO) — this guards the NEW persisted surface C3 introduces.
+  if (!Number.isInteger(seed)) {
+    return { kind: 'input-failure', reason: `seed must be a finite integer (got ${seed})` }
+  }
   if (params.people.length === 0) {
     return { kind: 'input-failure', reason: 'no people — the household is empty' }
   }
@@ -348,6 +388,16 @@ export async function runDateSearch(
   // The window top is the keeps-holding evidence anchor: a horizon at or below it would
   // grade the top candidates on an EMPTY retirement window (survival ≈ 1 by construction —
   // a structurally false clearing), so reject the degenerate geometry loudly.
+  //
+  // DISCLOSED SHALLOW-WINDOW RESIDUAL (C3 boundary review, 4 lenses converged): the guard's
+  // principled core is NON-EMPTINESS — at maxHorizonYears == windowTop + 1 the Y = top
+  // candidate still grades on a single retirement year (survival structurally near 1, the
+  // optimistic direction), and the effect decays continuously as the horizon grows. No
+  // principled minimum exists to pin here (any MIN_RETIREMENT_GRADING_YEARS would be vibed,
+  // not derived — the §3c constants are pinned-or-nothing), and a real household's horizon is
+  // longevity-derived (30–50yr), so the shallow geometry is reachable only by pathological
+  // input. Accepted + pinned by a boundary test; D1's input shaping owns any user-facing
+  // floor above this engine minimum.
   if (params.maxHorizonYears <= DATE_OFFSET_WINDOW_TOP) {
     return {
       kind: 'input-failure',

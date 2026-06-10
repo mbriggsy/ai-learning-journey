@@ -281,18 +281,24 @@ export function validateParams(params: SimulationParams): string | null {
   // — so reject it as indeterminate rather than compute a calm-but-wrong answer (model.ts: MVP couple).
   if (params.people.length > 2) return 'more than two people unsupported (the model is a couple)'
   for (const p of params.people) {
-    if (!Number.isFinite(p.currentAge) || p.currentAge <= 0) return 'person age invalid'
+    if (!Number.isInteger(p.currentAge) || p.currentAge <= 0) return 'person age invalid (whole years)'
     if (!finiteNonNeg(p.earnedIncomeReal) || !finiteNonNeg(p.socialSecurityReal)) return 'person income invalid'
     // retirementAge / socialSecurityClaimAge drive the offsets (retire/claim = age − currentAge). A
     // NaN there makes `t < o.retire` / `t >= o.claim` silently FALSE (every comparison with NaN is
     // false, insight 010), so the earned-income bridge AND Social Security would be DROPPED → a larger
     // net → a calm-but-wrong, too-pessimistic survival reading, not the indeterminate output R19
-    // promises. Finiteness ONLY — an already-retired/claimed person (age < currentAge ⇒ a negative
+    // promises. INTEGER, not just finite — model.ts documents all three ages as whole-year, and the
+    // date route derives sim-year INDICES from them (medicareOnsetForPerson = max(65 − currentAge,
+    // retireOffset), healthcareStreams' windowStart = max retireOffset → `new Array(windowStart)`):
+    // a fractional age would either throw a bare RangeError or be rejected downstream as a derived-
+    // field error ("medicareOnsetSimYear invalid") that misattributes the root cause; reject the
+    // entered field here instead. An already-retired/claimed person (age < currentAge ⇒ a negative
     // offset) is legitimate, so no ≥currentAge floor. `sex` indexes the cohort mortality table
     // (survivalProbability r[sex]); an out-of-union value → NaN survival → max longevity, silently
-    // changing the answer. (Original U1 person fields, never re-audited — U3-exit code-review pilot.)
-    if (!Number.isFinite(p.retirementAge)) return 'person retirementAge invalid'
-    if (!Number.isFinite(p.socialSecurityClaimAge)) return 'person socialSecurityClaimAge invalid'
+    // changing the answer. (Original U1 person fields, never re-audited — U3-exit code-review pilot;
+    // integer-ness tightened by the C3 boundary review.)
+    if (!Number.isInteger(p.retirementAge)) return 'person retirementAge invalid (whole years)'
+    if (!Number.isInteger(p.socialSecurityClaimAge)) return 'person socialSecurityClaimAge invalid (whole years)'
     if (p.sex !== 'male' && p.sex !== 'female') return 'person sex invalid'
   }
   for (const m of [params.market.stock, params.market.bond]) {
@@ -526,16 +532,33 @@ export function validateParams(params: SimulationParams): string | null {
           return `overlay irmaaMagiSeed[${t}] required (a member is Medicare-enrolled within ${lookback}yr of the start)`
       }
       // The t ≥ lookback MIRROR (C3 §3b — the latent shipped hole, ENFORCED here rather than resting
-      // on caller discipline): a BRIDGE year u (a still-working person with earned income — the
-      // bridge's own predicate shape, death-blind/conservative) inside the IRMAA lookback of any
-      // member's onset is a year a future Medicare bill will LAG-READ — and the recorded MAGI there
-      // is the §7-clamped working year's computed ≈$0 (FINITE, so the overlay's seed throw can never
-      // fire) → lowest tier → understated surcharge → a falsely-EARLY date, SILENTLY. Require finite
-      // working-year override coverage of every such year; the overlay's masked lagged-read throw is
-      // the per-path backstop arm (the two-layer rule).
+      // on caller discipline): a BRIDGE year u inside the IRMAA lookback of any member's onset is a
+      // year a future Medicare bill will LAG-READ — and the recorded MAGI there is the §7-clamped
+      // working year's computed ≈$0 (FINITE, so the overlay's seed throw can never fire) → lowest
+      // tier → understated surcharge → a falsely-EARLY date, SILENTLY. Require finite working-year
+      // override coverage of every such year; the overlay's masked lagged-read throw is the per-path
+      // backstop arm (the two-layer rule).
+      //
+      // THE PREDICATE IS KEYED TO THE HAZARD'S CREATOR, not to the bridge alone (insight 020 — gate
+      // a guard on the PROPERTY, its third recurrence): the ≈$0 recorded MAGI has TWO creators with
+      // different domains. (1) A salaried worker's wages are invisible to the overlay (MagiComponents
+      // has no wage term) — income-positive, construct or not. (2) The §7 working-year clamp zeroes
+      // the draws whose MAGI the overlay would otherwise compute — and the clamp's own predicate
+      // (`livingWorker`, cashTermsForYear) is income-BLIND, firing for a zero-earned-income
+      // still-working person too (earnedIncomeReal 0 is a first-class bridge-off state, model.ts).
+      // So under the accumulation construct EVERY still-working person's years are guard-relevant,
+      // not just the salaried — an earned>0-only predicate here let the zero-income worker's clamped
+      // ≈$0 reach the lag-read unguarded (the C3 boundary review's P1). Without the construct the
+      // clamp never fires and a zero-income worker's computed draw-MAGI is honest, so the income-
+      // positive shape stays exact there. The honest override for a zero-income worker is their
+      // entered working-year MAGI figure (K-1/investment/deferred comp — or an explicit 0, which for
+      // a genuinely-zero-MAGI household is the CORRECT lowest-tier answer, never a rejection).
+      const accumulating = o.accumulation !== undefined
       const override = o.irmaaMagiOverride ?? []
       const isBridgeYear = (u: number): boolean =>
-        params.people.some((pp) => u < pp.retirementAge - pp.currentAge && pp.earnedIncomeReal > 0)
+        params.people.some(
+          (pp) => u < pp.retirementAge - pp.currentAge && (pp.earnedIncomeReal > 0 || accumulating),
+        )
       for (let u = 0; u + lookback < params.maxHorizonYears; u++) {
         if (!isBridgeYear(u)) continue
         if (anyoneEnrolledAt(u + lookback) && !Number.isFinite(override[u]))
@@ -696,15 +719,21 @@ export function simulate(params: SimulationParams, seed: number): SimOutput {
           if (op !== undefined && t < (deathOffsets[i] ?? 0)) living.push(op)
         }
         householdYears.push({ living })
-        // C3 §3b: the per-path bridge-year mask — the bridge's own dead-earner predicate shape
-        // (`t < retire_i && t < death_i && earned_i > 0`), assembled here because deaths are
-        // per-path. Zero-draw, CRN-safe; consumed only by the overlay's two throw-or-nothing
+        // C3 §3b: the per-path bridge-year mask — the dead-earner predicate shape
+        // (`t < retire_i && t < death_i && (earned_i > 0 || accumulation present)`), assembled here
+        // because deaths are per-path. The construct-gated income-blind widening mirrors
+        // validateParams' isBridgeYear EXACTLY (insight 020 — the guard keys to the hazard's
+        // creator): under the accumulation construct the §7 clamp zeroes a zero-income worker's
+        // draw-MAGI too, so their working years must also arm the overlay's fail-loud reads.
+        // Zero-draw, CRN-safe; consumed only by the overlay's two throw-or-nothing
         // fail-loud arms (the masked lagged read + the ACA price gate), so supplying it can
         // never perturb a value (byte-identity by construction).
         if (overlay.healthcareEnabled) {
+          const accumulating = overlay.accumulation !== undefined
           bridgeMask.push(
             offsets.some(
-              (o, i) => o.earnedIncomeReal > 0 && t < o.retire && t < (deathOffsets[i] ?? 0),
+              (o, i) =>
+                (o.earnedIncomeReal > 0 || accumulating) && t < o.retire && t < (deathOffsets[i] ?? 0),
             ),
           )
         }

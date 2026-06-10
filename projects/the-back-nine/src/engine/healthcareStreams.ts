@@ -126,9 +126,14 @@ export function buildHealthcareStreams(
 ): BuiltHealthStreams {
   if (people.length === 0) throw new Error('[healthcareStreams] at least one person is required')
   for (const p of people) {
-    if (!Number.isFinite(p.currentAge) || !Number.isFinite(p.retireOffset)) {
+    // INTEGER, not just finite (C3 boundary review): these are sim-year indices/whole-year ages
+    // by contract. A fractional retireOffset has TWO failure shapes, one loud-but-bare and one
+    // silent — `new Array(windowStart)` below throws an undescriptive RangeError when figures
+    // are supplied, and with NO figures the fractional windowStart silently corrupts every
+    // `t < windowStart` window gate instead (un-gating working years). Reject both here.
+    if (!Number.isInteger(p.currentAge) || !Number.isInteger(p.retireOffset)) {
       throw new Error(
-        '[healthcareStreams] currentAge/retireOffset must be finite — a NaN offset silently mis-windows every stream (insight 010)',
+        '[healthcareStreams] currentAge/retireOffset must be whole-year integers — a NaN/fractional offset silently mis-windows every stream (insight 010)',
       )
     }
   }

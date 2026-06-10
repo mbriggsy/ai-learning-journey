@@ -65,6 +65,14 @@ export async function profileDateSearch(
   // runs first — identical dims, identical overlay machinery).
   const single = simulate(buildCandidateParams(input, 0, paths), seed)
   const t1 = now()
+  // Finite AND monotone (≥, never > — equal stamps under a coarse clock are legitimate and
+  // already routed to the Infinity ratio below): a backwards/non-finite injected clock would
+  // otherwise report a NEGATIVE or NaN interval as if measured — and a negative ratio sails
+  // UNDER any `< budget` linearity check, a vacuous pass dressed as evidence. A lying clock
+  // is a measurement fault; refuse it, never report it.
+  if (!Number.isFinite(t1) || t1 < t0) {
+    throw new Error('[dateSearchProfile] the injected clock went non-finite/backwards across the baseline (insight 010)')
+  }
   if (single.indeterminate) {
     throw new Error(
       `[dateSearchProfile] the baseline candidate is indeterminate (${single.reason}) — profile a runnable input (the gate measures compute, not validation)`,
@@ -73,6 +81,9 @@ export async function profileDateSearch(
 
   const outcome = await runDateSearch(input, seed, { tier })
   const t2 = now()
+  if (!Number.isFinite(t2) || t2 < t1) {
+    throw new Error('[dateSearchProfile] the injected clock went non-finite/backwards across the sweep (insight 010)')
+  }
 
   const singleSimulateMs = t1 - t0
   const sweepMs = t2 - t1
@@ -85,6 +96,6 @@ export async function profileDateSearch(
     // budget check must then use a bigger fixture, not trust a vacuous ratio).
     ratioVsSingle: singleSimulateMs > 0 ? sweepMs / singleSimulateMs : Number.POSITIVE_INFINITY,
     candidateCount: DATE_OFFSET_WINDOW_TOP + 1,
-    outcomeKind: outcome.kind === 'dates' ? 'dates' : outcome.kind,
+    outcomeKind: outcome.kind,
   }
 }

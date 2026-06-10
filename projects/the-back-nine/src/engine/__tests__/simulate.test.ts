@@ -1378,6 +1378,64 @@ describe('C3 — the R19 arms: onset re-key, override coverage, the wage-blind A
     expect(bad({ irmaaMagiOverride: [-1] })).toBe(true)
   })
 
+  it('arm (b) RE-KEY (insight 020) — a ZERO-income still-working person under the construct demands the same override', () => {
+    // The §7 clamp keys on `t < retire` alone (income-BLIND), so a zero-earned-income
+    // worker's clamped years record the same ≈$0 computed MAGI a salaried worker's do — but
+    // the pre-fix bridge predicate (earned > 0) waved exactly them through: lowest tier,
+    // understated Medicare cost, a falsely-early date, SILENTLY (the C3 boundary review's
+    // P1). The guard now keys to the clamp's own domain: under the accumulation construct,
+    // EVERY still-working person's years are bridge years.
+    const zeroIncome66: PersonInputs = { ...working66, earnedIncomeReal: 0 }
+    const noOverride = simulate(
+      makeParams({
+        people: [zeroIncome66],
+        overlay: overlay66({
+          accumulation: { contributionsByPerson: [{}] },
+          medicareOnsetSimYear: [3],
+        }),
+      }),
+      1,
+    )
+    expect(noOverride.indeterminate).toBe(true)
+    if (noOverride.indeterminate) expect(noOverride.reason).toContain('irmaaMagiOverride')
+    // An EXPLICIT-0 override satisfies coverage and the run resolves: for a genuinely-zero-
+    // MAGI household (living on non-portfolio cash — not income) the clamped lowest-tier
+    // read IS the correct answer. Coverage is what the arm demands, never a positive value.
+    const explicitZero = simulate(
+      makeParams({
+        people: [zeroIncome66],
+        overlay: overlay66({
+          accumulation: { contributionsByPerson: [{}] },
+          medicareOnsetSimYear: [3],
+          irmaaMagiOverride: [0, 0, 0],
+        }),
+      }),
+      1,
+    )
+    expect(explicitZero.indeterminate).toBe(false)
+    // Construct-ABSENT control: plain decumulation never clamps — the computed draw-MAGI is
+    // honest there, so the zero-income worker owes NO override (the income-positive bridge
+    // shape stays exact off the accumulation route).
+    const plain = simulate(
+      makeParams({ people: [zeroIncome66], overlay: overlay66({ medicareOnsetSimYear: [3] }) }),
+      1,
+    )
+    expect(plain.indeterminate).toBe(false)
+  })
+
+  it('R19 — fractional ages are rejected as the ENTERED field (whole-year contract), never a derived-onset misattribution', () => {
+    // Pre-fix, a fractional currentAge passed finiteness and detonated downstream as a
+    // derived-field rejection ("medicareOnsetSimYear invalid") or a bare RangeError in
+    // healthcareStreams — pointing away from the field the user actually entered.
+    const frac = (over: Partial<PersonInputs>): ReturnType<typeof simulate> =>
+      simulate(makeParams({ people: [{ ...working66, ...over }] }), 1)
+    const byAge = frac({ currentAge: 66.5 })
+    expect(byAge.indeterminate).toBe(true)
+    if (byAge.indeterminate) expect(byAge.reason).toContain('age')
+    expect(frac({ retirementAge: 69.5 }).indeterminate).toBe(true)
+    expect(frac({ socialSecurityClaimAge: 70.5 }).indeterminate).toBe(true)
+  })
+
   it('absent-onset byte-identity at the simulate layer (sampled longevity — the living-set intersection is exercised)', () => {
     const seventy: PersonInputs = { ...MALE_65, currentAge: 70, retirementAge: 70 }
     const base = makeParams({
@@ -1429,5 +1487,26 @@ describe('C3 — the onset-threaded HSA contribution zeroing (contributionsForYe
     expect(atOnset.hsaByPerson).toEqual([0])
     const beforeOnset = contributionsForYear(1, acc, offsets, [30], [person], [2])
     expect(beforeOnset.hsaByPerson).toEqual([100])
+  })
+
+  it('TWO persons, DISTINCT supplied onsets + DISTINCT streams: each owner zeroes at THEIR OWN onset (an onset-array index swap inverts)', () => {
+    // Every prior supplied-onset fixture is single-person, so a planted `onset[1 − i]` swap
+    // read a hole and fell to a DIFFERENT default — caught only accidentally (insight 015/024:
+    // an equal-valued or single-slot fixture cannot discriminate an index swap). Here both
+    // onsets are supplied, in-bounds, and DIFFERENT, with distinct stream values: correct
+    // [10, 0] at t = 2; the swap reads [0, 20] — the exact inversion, structurally observable.
+    const acc2: AccumulationParams = {
+      contributionsByPerson: [{ hsa: [10, 10, 10] }, { hsa: [20, 20, 20] }],
+    }
+    const offsets2: PersonOffsets[] = [
+      { retire: 10, claim: 99, earnedIncomeReal: 50, socialSecurityReal: 0 },
+      { retire: 10, claim: 99, earnedIncomeReal: 50, socialSecurityReal: 0 },
+    ]
+    const people2: PersonInputs[] = [person, { ...person, sex: 'female' }]
+    // Onsets [3, 1]: at t = 2 person 0 (onset 3) still contributes; person 1 (onset 1) is
+    // enrolled and zeroed. Both alive ∧ working (retire 10, deaths 50) — never vacuous.
+    expect(contributionsForYear(2, acc2, offsets2, [50, 50], people2, [3, 1]).hsaByPerson).toEqual([10, 0])
+    // t = 0: both pre-onset — both live (the presence companion, burned/027).
+    expect(contributionsForYear(0, acc2, offsets2, [50, 50], people2, [3, 1]).hsaByPerson).toEqual([10, 20])
   })
 })

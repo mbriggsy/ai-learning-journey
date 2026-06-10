@@ -155,6 +155,46 @@ describe('C3 — the epoch-gated date-search seam (cooperative cancellation, pla
     expect(r.ok).toBe(true)
     if (r.ok) expect(r.outcome.kind).toBe('cancelled')
   })
+
+  it('THE LINCHPIN (mid-sweep interleave): a setLatestEpoch landing through the REAL macrotask yield cancels an in-flight sweep', { timeout: 60_000 }, async () => {
+    // Every other cancellation test PRE-SETS the epoch (the cancel fires at gate 0) or
+    // injects a synchronous gate — none proves the load-bearing engineProtocol claim that
+    // the setTimeout(0) yield actually lets a message land BETWEEN candidates. This one
+    // does: start the sweep UNAWAITED (it runs synchronously to the first gate's yield and
+    // queues T_sweep0), queue the test's own macrotask SECOND, then commit a newer epoch
+    // from it. FIFO macrotask ordering — not wall-clock — guarantees exactly one candidate
+    // runs before the commit lands, so the next gate must see it and cancel (a slow CI
+    // slows candidates; it cannot reorder same-delay timeouts). Assert the KIND only, not
+    // the candidate count — a future yield-placement refactor may shift WHERE the cancel
+    // lands, which is fine; never landing is the regression. NOTE the epoch literals across
+    // this file deliberately ASCEND (latestEpoch is module-level, monotonic, never reset):
+    // this pair must sit above the high-water mark of every test before it.
+    const inFlight = engineApi.runDateSearch(sweepInput, 1, 'provisional', 1000)
+    await new Promise((r) => setTimeout(r, 0)) // one real macrotask turn
+    engineApi.setLatestEpoch(1100) // lands while the sweep yields between candidates
+    const wire = await inFlight
+    expect(wire.kind).toBe('date-search')
+    if (wire.kind === 'date-search') expect(wire.outcome.kind).toBe('cancelled')
+  })
+
+  it('the NEGATIVE CONTROL: the identical unawaited start with NO newer commit runs to dates (the cancel above is CAUSED by the mid-sweep commit)', { timeout: 60_000 }, async () => {
+    const inFlight = engineApi.runDateSearch(sweepInput, 1, 'provisional', 1100)
+    await new Promise((r) => setTimeout(r, 0)) // the same one-macrotask schedule, no commit
+    const wire = await inFlight
+    expect(wire.kind).toBe('date-search')
+    if (wire.kind === 'date-search') expect(wire.outcome.kind).toBe('dates')
+  })
+
+  it('a NaN REQUEST epoch is a defined input-failure, never a silent permanent cancel (setLatestEpoch’s symmetric twin, insight 010)', async () => {
+    // Ungated, `NaN >= latestEpoch` is false at the FIRST gate: every sweep would report
+    // 'cancelled' with no diagnostic — a permanently-spinning caller, not a calm rejection.
+    const wire = await runDateSearchEngine(sweepInput, 1, 'provisional', Number.NaN)
+    expect(wire.kind).toBe('date-search')
+    if (wire.kind === 'date-search') {
+      expect(wire.outcome.kind).toBe('input-failure')
+      if (wire.outcome.kind === 'input-failure') expect(wire.outcome.reason).toContain('requestEpoch')
+    }
+  })
 })
 
 describe('C3 — the compute-profile gate (both regimes, the pinned final tier)', () => {
@@ -184,5 +224,14 @@ describe('C3 — the compute-profile gate (both regimes, the pinned final tier)'
     // LINEARITY: ≈ 11 single runs + validation. A quadratic regression (re-draw / re-validate
     // per candidate-year) lands ≈ 121× — the generous CI-jitter bound still catches it.
     expect(profile.ratioVsSingle).toBeLessThan(40)
+  })
+
+  it('a BACKWARDS injected clock is REFUSED — a negative interval would pass any "< budget" check as vacuous evidence', { timeout: 60_000 }, async () => {
+    // The clock is injected (engine purity), so nothing forces monotonicity; report-only or
+    // not, a negative ratio presented as a measurement is a lie. Equal stamps stay legal
+    // (the coarse-clock case routes to the Infinity-ratio guard, not a throw).
+    let calls = 0
+    const lyingClock = (): number => (calls++ === 0 ? 100 : 50)
+    await expect(profileDateSearch(sweepInput, 1, 'provisional', lyingClock)).rejects.toThrow(/backwards/)
   })
 })

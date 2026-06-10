@@ -74,6 +74,18 @@ export async function runDateSearchEngine(
   tier: DateSearchTier,
   requestEpoch: number,
 ): Promise<DateSearchWire> {
+  // The SYMMETRIC twin of setLatestEpoch's guard (insight 010): a NaN REQUEST epoch makes the
+  // gate's `requestEpoch >= latestEpoch` false on the very first check — every sweep would
+  // return a silent 'cancelled' (a permanently-spinning UI, no diagnostic), masquerading as
+  // cooperative cancellation. Reject it as a defined input failure HERE, the impurity-adjacent
+  // seam — the pure sweep deliberately knows only the injected `shouldContinue` and cannot
+  // distinguish "NaN epoch" from a legitimate "newer request" cancel.
+  if (!Number.isFinite(requestEpoch)) {
+    return {
+      kind: 'date-search',
+      outcome: { kind: 'input-failure', reason: `requestEpoch must be finite (got ${requestEpoch})` },
+    }
+  }
   try {
     const outcome = await sweepDateSearch(input, seed, {
       tier,

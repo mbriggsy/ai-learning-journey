@@ -174,6 +174,17 @@ describe('structural misuse fails loud (builder inputs are buildCandidateParams 
     expect(() => buildHealthcareStreams([{ currentAge: 55, retireOffset: Number.NaN }], {})).toThrow()
   })
 
+  it('rejects a FRACTIONAL currentAge / retireOffset with the descriptive throw — never a bare RangeError or a silent mis-window', () => {
+    // Pre-fix, a fractional max offset had TWO failure shapes: with figures supplied,
+    // `new Array(5.5)` threw an undescriptive RangeError; with none, the fractional
+    // windowStart silently corrupted every `t < windowStart` gate (un-gating working years).
+    // These are sim-year indices/whole-year ages by contract — reject both shapes loudly.
+    expect(() =>
+      buildHealthcareStreams([{ currentAge: 55, retireOffset: 5.5 }], { workingYearIrmaaMagiByPerson: [90_000] }),
+    ).toThrow(/whole-year/)
+    expect(() => buildHealthcareStreams([{ currentAge: 55.5, retireOffset: 5 }], {})).toThrow(/whole-year/)
+  })
+
   it('rejects an empty household', () => {
     expect(() => buildHealthcareStreams([], {})).toThrow()
   })

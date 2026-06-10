@@ -202,6 +202,26 @@ describe('decideTrack — the quantized-lower-bound earliest-holds-and-keeps-hol
     expect(out.kind).toBe('confirmed-date')
     if (out.kind === 'confirmed-date') expect(out.nonMonotoneOffsets).toEqual([1])
   })
+
+  it('rejects a NON-DENSE offset axis loudly — a gap/re-base/non-integer would let an UNEVALUATED dip crown a falsely-early date', () => {
+    // The rule's honesty argument ("clears AND keeps clearing through the top") requires
+    // every intermediate offset to have been EVALUATED; a gapped curve could skip the exact
+    // ACA-cliff dip the rule exists to catch (insight 013). The guard also closes the
+    // index↔offset mutation class by CONTRACT (offsetYears === index ⇒ confusion harmless,
+    // insight 015) — every fixture above is dense by construction and could not discriminate it.
+    const gapped = [
+      { offsetYears: 0, survivalFraction: HI },
+      { offsetYears: 2, survivalFraction: HI }, // offset 1 unevaluated
+    ]
+    expect(() => decideTrack(gapped, FINAL)).toThrow(/dense contiguous/i)
+    const reBased = curveOf(Array.from({ length: 11 }, () => HI)).map((c) => ({
+      ...c,
+      offsetYears: c.offsetYears + 1, // starts at 1, not 0
+    }))
+    expect(() => decideTrack(reBased, FINAL)).toThrow(/dense contiguous/i)
+    expect(() => decideTrack([{ offsetYears: 0.5, survivalFraction: HI }], FINAL)).toThrow(/dense contiguous/i)
+    expect(() => decideTrack([{ offsetYears: Number.NaN, survivalFraction: HI }], FINAL)).toThrow(/dense contiguous/i)
+  })
 })
 
 describe('the DESIGNED tolerance (§3c — pinned, not vibed)', () => {
@@ -383,6 +403,44 @@ describe('runDateSearch — the sweep grammar', () => {
     expect(out.kind).toBe('cancelled')
     expect(calls).toBe(4) // 3 candidates ran; the 4th gate refused — nothing date-shaped escaped
   })
+
+  it('a non-integer seed is the DEFINED input failure (the persisted bit-identical-reproduction contract, DND/009)', async () => {
+    // A NaN seed would run the engine on `seed|0 = 0` while persisting null — the saved plan
+    // could not even reproduce what produced it. NaN-first, before any candidate work.
+    const nan = await runDateSearch({ params: coupleParams }, Number.NaN, { tier: 'provisional' })
+    expect(nan.kind).toBe('input-failure')
+    if (nan.kind === 'input-failure') expect(nan.reason).toContain('seed')
+    const frac = await runDateSearch({ params: coupleParams }, 1.5, { tier: 'provisional' })
+    expect(frac.kind).toBe('input-failure')
+  })
+
+  it('the horizon-guard boundary: maxHorizon == windowTop rejects; windowTop + 1 is ACCEPTED (the disclosed shallow-window residual)', { timeout: 60_000 }, async () => {
+    const working66: PersonInputs = { ...A55, currentAge: 66, retirementAge: 69 }
+    const base = (maxHorizonYears: number): DateSearchInput => ({
+      params: {
+        ...coupleParams,
+        maxHorizonYears,
+        people: [working66],
+        overlay: {
+          ...coupleOverlay,
+          enrolledPremium: undefined,
+          slcsp: undefined,
+          oopMedical: undefined,
+          irmaaMagiSeed: [60_000, 60_000],
+        },
+      },
+      workingYearIrmaaMagiByPerson: [120_000],
+    })
+    const rejected = await runDateSearch(base(DATE_OFFSET_WINDOW_TOP), 1, { tier: 'provisional' })
+    expect(rejected.kind).toBe('input-failure')
+    if (rejected.kind === 'input-failure') expect(rejected.reason).toContain('window top')
+    // windowTop + 1 passes — the Y = top candidate then grades on a SINGLE retirement year
+    // (survival structurally near 1, the optimistic direction). Accepted + documented at the
+    // guard: the principled core is non-emptiness, any larger minimum would be vibed, and a
+    // real horizon is longevity-derived (30–50yr) — D1's input shaping owns a user-facing floor.
+    const accepted = await runDateSearch(base(DATE_OFFSET_WINDOW_TOP + 1), 1, { tier: 'provisional' })
+    expect(accepted.kind).toBe('dates')
+  })
 })
 
 // ---------------------------------------------------------------------------
@@ -465,5 +523,20 @@ describe('runDateSearch — integration (the pinned-tier engine runs)', () => {
     const b = simulate(twin, 4242)
     expect(a.indeterminate).toBe(false)
     expect(a).toEqual(b)
+  })
+
+  it('the Y == 0 golden under SAMPLED longevity (the couple): presence stays inert across IN-WINDOW deaths', { timeout: 120_000 }, () => {
+    // The fixed-horizon golden above never reaches the per-path death branches — precisely
+    // where the onset machinery and the per-path guards run their death arms (the 2→1 living
+    // shrink). This sibling pins the SAME presence-inertness with sampled deaths live, so a
+    // future regression in the death-path guards cannot slip through the one reduce-to-spine
+    // surface that was previously asserted only death-free (C3 boundary review).
+    const candidate = buildCandidateParams(coupleInput, 0, DATE_SEARCH_PATHS.final)
+    const sampled: SimulationParams = { ...candidate, longevityMode: 'sampled' }
+    const { accumulation: _drop, ...overlayRest } = sampled.overlay!
+    const twin: SimulationParams = { ...sampled, overlay: overlayRest }
+    const a = simulate(sampled, 4242)
+    expect(a.indeterminate).toBe(false)
+    expect(a).toEqual(simulate(twin, 4242))
   })
 })

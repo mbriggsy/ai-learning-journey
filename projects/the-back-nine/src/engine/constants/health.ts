@@ -7,6 +7,7 @@
  */
 import {
   sourced,
+  type AcaAgeRatingCurve,
   type ConstantEntry,
   type AcaApplicablePercentageTable,
   type FederalPovertyGuidelines,
@@ -204,20 +205,81 @@ export const magiDefinitions = sourced(
   },
 )
 
-/** HSA contribution limits + HDHP thresholds (2026). */
-export const hsa2026 = sourced(
+// NOTE: the HSA contribution limits + HDHP thresholds (`hsa2026`) MOVED to
+// `contributions.ts` at C1 — they are CONTRIBUTION-limit figures (one canonical home,
+// burned/057). This module keeps the SPEND-side HSA rules below.
+
+/** The federal default age-rating curve for ACA individual-market premiums (45 CFR
+ *  147.102(d)-(e) — the standard 3:1 adult curve, effective for plan years ≥ 2018).
+ *  D1's today's-quote → per-age-schedule escalator consumes it: an entered ACA quote
+ *  at the household's current age scales along the curve to price the retired pre-65
+ *  window at each age (the C1 entry shape for plan §3b's age-anchored streams).
+ *  Age 21 is the reference (1.000); 64 carries the 3.000 cap; 65+ is Medicare
+ *  territory (never read). This is the federal DEFAULT — some states rate on their
+ *  own curves (AL, DC, MA, MN, MS, OR, UT) and NY/VT community-rate (no age factor):
+ *  OUT-but-disclosed, same class as the AK/HI FPL tables. */
+export const acaAgeRatingCurve = sourced<AcaAgeRatingCurve>(
   {
-    contributionSelfOnly: 4_400,
-    contributionFamily: 8_750,
-    hdhpMinDeductible: { selfOnly: 1_700, family: 3_400 },
-    maxOutOfPocket: { selfOnly: 8_500, family: 17_000 },
-    catchUp55Plus: 1_000,
+    childFactorThrough14: 0.765,
+    factors: [
+      { age: 15, factor: 0.833 },
+      { age: 16, factor: 0.859 },
+      { age: 17, factor: 0.885 },
+      { age: 18, factor: 0.913 },
+      { age: 19, factor: 0.941 },
+      { age: 20, factor: 0.970 },
+      { age: 21, factor: 1.000 },
+      { age: 22, factor: 1.000 },
+      { age: 23, factor: 1.000 },
+      { age: 24, factor: 1.000 },
+      { age: 25, factor: 1.004 },
+      { age: 26, factor: 1.024 },
+      { age: 27, factor: 1.048 },
+      { age: 28, factor: 1.087 },
+      { age: 29, factor: 1.119 },
+      { age: 30, factor: 1.135 },
+      { age: 31, factor: 1.159 },
+      { age: 32, factor: 1.183 },
+      { age: 33, factor: 1.198 },
+      { age: 34, factor: 1.214 },
+      { age: 35, factor: 1.222 },
+      { age: 36, factor: 1.230 },
+      { age: 37, factor: 1.238 },
+      { age: 38, factor: 1.246 },
+      { age: 39, factor: 1.262 },
+      { age: 40, factor: 1.278 },
+      { age: 41, factor: 1.302 },
+      { age: 42, factor: 1.325 },
+      { age: 43, factor: 1.357 },
+      { age: 44, factor: 1.397 },
+      { age: 45, factor: 1.444 },
+      { age: 46, factor: 1.500 },
+      { age: 47, factor: 1.563 },
+      { age: 48, factor: 1.635 },
+      { age: 49, factor: 1.706 },
+      { age: 50, factor: 1.786 },
+      { age: 51, factor: 1.865 },
+      { age: 52, factor: 1.952 },
+      { age: 53, factor: 2.040 },
+      { age: 54, factor: 2.135 },
+      { age: 55, factor: 2.230 },
+      { age: 56, factor: 2.333 },
+      { age: 57, factor: 2.437 },
+      { age: 58, factor: 2.548 },
+      { age: 59, factor: 2.603 },
+      { age: 60, factor: 2.714 },
+      { age: 61, factor: 2.810 },
+      { age: 62, factor: 2.873 },
+      { age: 63, factor: 2.952 },
+      { age: 64, factor: 3.000 },
+    ],
   },
   {
-    citation: 'pre65-healthcare doc; IRS Rev. Proc. 2025-19',
+    citation:
+      'CMS/CCIIO Insurance Standards Bulletin "Guidance Regarding Age Curves and State Reporting" (2016-12-16), Appendix I "Federal default standard age curve" (cms.gov PDF, fetched + parsed 2026-06-10; adult curve traceable to 77 FR 70584 at 70595, child bands to 81 FR 61456 at 61462) — cross-verified CELL-FOR-CELL against an independently-typeset secondary (ValuePenguin/LendingTree age-ratio table), zero disagreement; pdftotext column misalignment caught + realigned, proven by column parity AND the independent secondary',
     directionalUntilPinned: true,
-    pinTo: 'IRS Rev. Proc. 2025-19 (rp-25-19.pdf)',
-    note: 'Catch-up (55+) is +$1,000 in EACH spouse’s OWN HSA (cannot stack in one account).',
+    pinTo: 'CMS CCIIO age-curve guidance Appendix I (45 CFR 147.102) — confirm still the operative default for the coverage year',
+    note: 'Factors are premium ratios to the age-21 base (3:1 adult cap, ACA §1201/PHS Act §2701). The 2018-effective curve remains operative (CMS has issued no superseding curve; 2026 state rate filings still apply it). Consumer = D1 quote escalator only — the engine prices off the constructed per-year premium streams, never this curve directly.',
   },
 )
 
@@ -261,13 +323,13 @@ export const healthConstants = {
   acaEnhancedSubsidyStatus,
   acaApplicablePercentage,
   acaApplicablePercentageEnhanced,
+  acaAgeRatingCurve,
   federalPovertyGuidelines,
   acaPtc,
   irmaa,
   partB2026,
   partA2026,
   magiDefinitions,
-  hsa2026,
   hsaFourthBucketRules,
   obbbaHsa2026,
 } satisfies Record<string, ConstantEntry>

@@ -1,7 +1,13 @@
 import { describe, it, expect } from 'vitest'
 import { readFileSync, readdirSync, statSync } from 'node:fs'
 import { join, relative, sep } from 'node:path'
-import { ALL_CONSTANTS, taxConstants, healthConstants } from '../index'
+import {
+  ALL_CONSTANTS,
+  taxConstants,
+  healthConstants,
+  contributionConstants,
+  catchUpForAge,
+} from '../index'
 import { isUnsourced } from '../types'
 
 const SRC = join(process.cwd(), 'src')
@@ -258,8 +264,169 @@ describe('canonical constants — shape & provenance (contract #6)', () => {
   })
 
   it('ALL_CONSTANTS is DERIVED from the tables, never hand-listed (burned/061)', () => {
-    const expected = Object.keys(taxConstants).length + Object.keys(healthConstants).length
+    const expected =
+      Object.keys(taxConstants).length +
+      Object.keys(healthConstants).length +
+      Object.keys(contributionConstants).length
     expect(Object.keys(ALL_CONSTANTS).length).toBe(expected)
+  })
+
+  describe('C1 contribution limits — tiers, identities, provenance (Notice 2025-67 / Rev. Proc. 2025-19, verbatim-read 2026-06-10)', () => {
+    it('the age-band catch-up lookup resolves by YEAR-END attained age + account kind, including the 64 step-down', () => {
+      // employer plan: below 50 → 0; 50–59 → regular; 60–63 → §109 super; 64+ steps DOWN to regular
+      expect(catchUpForAge(35, 'employerPlan')).toBe(0)
+      expect(catchUpForAge(50, 'employerPlan')).toBe(8_000)
+      expect(catchUpForAge(59, 'employerPlan')).toBe(8_000)
+      expect(catchUpForAge(60, 'employerPlan')).toBe(11_250)
+      expect(catchUpForAge(63, 'employerPlan')).toBe(11_250)
+      // THE per-runway-year fact (C1 unit): the super band EXPIRES — a 64-yo is back on the regular tier
+      expect(catchUpForAge(64, 'employerPlan')).toBe(8_000)
+      expect(catchUpForAge(75, 'employerPlan')).toBe(8_000)
+      // IRA: the §108-INDEXED catch-up — 2026 is its first-ever move off $1,000 (a $1,000 here is stale)
+      expect(catchUpForAge(49, 'ira')).toBe(0)
+      expect(catchUpForAge(50, 'ira')).toBe(1_100)
+      expect(catchUpForAge(70, 'ira')).toBe(1_100)
+      // HSA: 55+, statutorily FIXED $1,000 (derived from hsa2026, never re-typed — burned/061)
+      expect(catchUpForAge(54, 'hsa')).toBe(0)
+      expect(catchUpForAge(55, 'hsa')).toBe(1_000)
+      expect(catchUpForAge(64, 'hsa')).toBe(1_000)
+    })
+
+    it('a NaN/Infinity/negative age throws BEFORE any band comparison (insights 008/010)', () => {
+      expect(() => catchUpForAge(Number.NaN, 'employerPlan')).toThrow(/finite/)
+      expect(() => catchUpForAge(Number.POSITIVE_INFINITY, 'ira')).toThrow(/finite/)
+      expect(() => catchUpForAge(-1, 'hsa')).toThrow(/finite/)
+    })
+
+    it('a FRACTIONAL age throws — the integer-band seams (59,60)/(63,64) must never return a silent $0 (insight 020; burned/062; review fold)', () => {
+      // Year-end attained age is an integer by definition; 59.5 matches NO band and
+      // `?? 0` would return a plausible default indistinguishable from below-50.
+      expect(() => catchUpForAge(59.5, 'employerPlan')).toThrow(/INTEGER/)
+      expect(() => catchUpForAge(63.5, 'employerPlan')).toThrow(/INTEGER/)
+      expect(() => catchUpForAge(54.5, 'hsa')).toThrow(/INTEGER/)
+    })
+
+    it('an out-of-human-range age throws — the birth-year-passed-as-age units bug (the 120 terminal-bucket precedent; review fold)', () => {
+      // 1975 would otherwise silently resolve to the 64+ tier ($8,000) — wrong but plausible.
+      expect(() => catchUpForAge(1_975, 'employerPlan')).toThrow(/120/)
+      expect(() => catchUpForAge(121, 'ira')).toThrow(/120/)
+      expect(catchUpForAge(120, 'employerPlan'), 'the 120 boundary itself is valid').toBe(8_000)
+    })
+
+    it('a runtime stray account kind throws — never silently priced as the last branch (the sequencing.ts exhaustive-switch pattern; review fold)', () => {
+      // Simulates untyped persisted/imported data arriving through a cast (the U4 surface).
+      expect(() => catchUpForAge(60, 'employer_plan' as unknown as Parameters<typeof catchUpForAge>[1])).toThrow(/unknown account kind/)
+    })
+
+    it('the 64+ step-down band IS the regular age-50 tier — a structural identity, not a numeric coincidence (burned/061; review fold)', () => {
+      const bands = contributionConstants.employerPlan2026.value.catchUpBands
+      expect(bands[bands.length - 1]?.amount, '§414(v)(2)(B)(i): the super band expiring reverts to the regular tier').toBe(bands[0]?.amount)
+    })
+
+    it('the IRA limit is pinned + its own note’s cross-axis identity (Notice 2025-67 verbatim; review fold — this was the ONE unpinned C1 figure)', () => {
+      const ira = contributionConstants.ira2026.value
+      expect(ira.contributionLimit, 'Notice 2025-67: "increased from $7,000 to $7,500" — a stale $7,000 must fail').toBe(7_500)
+      expect(
+        ira.contributionLimit + (ira.catchUpBands[0]?.amount ?? Number.NaN),
+        'the entry’s own note: 50+ total = $8,600 (insight 009 internal cross-axis)',
+      ).toBe(8_600)
+    })
+
+    it('the §109 super amount is its OWN COLA figure — NEVER 150% × the current-year regular catch-up (the wrong-derivation guard)', () => {
+      const plan = contributionConstants.employerPlan2026.value
+      const superBand = plan.catchUpBands.find((b) => b.fromAge === 60)
+      const regular = plan.catchUpBands.find((b) => b.fromAge === 50)
+      expect(superBand?.amount, 'Notice 2025-67: "remains $11,250"').toBe(11_250)
+      // 150% × the 2026 regular ($8,000) = $12,000 — the plausible wrong derivation a
+      // future maintainer would reach for; the statutory base is 150% × the 2024 $7,500.
+      expect(superBand?.amount).not.toBe(1.5 * (regular?.amount ?? 0))
+      expect(superBand?.toAge, 'the super band ends at 63 (attain 64 ⇒ regular tier, whole year)').toBe(63)
+      expect(superBand?.legalBasis, '§109 provenance carried on the band').toMatch(/SECURE 2\.0 §109/)
+    })
+
+    it('employer-plan catch-up bands are contiguous from 50 with an open-ended tail (the step-down is IN the data)', () => {
+      const bands = contributionConstants.employerPlan2026.value.catchUpBands
+      expect(bands[0]?.fromAge).toBe(50)
+      expect(bands[bands.length - 1]?.toAge, 'last band open-ended').toBeNull()
+      for (let i = 1; i < bands.length; i++) {
+        const prev = bands[i - 1]
+        const cur = bands[i]
+        expect(prev?.toAge, `band ${i - 1} is closed before a successor`).not.toBeNull()
+        expect(cur?.fromAge, `band ${i} contiguous with band ${i - 1}`).toBe((prev?.toAge ?? Number.NaN) + 1)
+        expect(Number.isFinite(cur?.amount ?? Number.NaN) && (cur?.amount ?? 0) > 0).toBe(true)
+      }
+    })
+
+    it('the §415(c) ceiling exceeds deferral + the largest catch-up (internal cross-axis; catch-ups sit ON TOP of 415c — insight 009)', () => {
+      const deferral = contributionConstants.employerPlan2026.value.electiveDeferral
+      const maxCatchUp = Math.max(
+        ...contributionConstants.employerPlan2026.value.catchUpBands.map((b) => b.amount),
+      )
+      expect(deferral).toBe(24_500)
+      expect(contributionConstants.annualAdditions415c2026.value).toBe(72_000)
+      expect(
+        contributionConstants.annualAdditions415c2026.value,
+        '415c leaves employer room above the full employee deferral + catch-up',
+      ).toBeGreaterThan(deferral + maxCatchUp)
+    })
+
+    it('hsa2026 MOVED from health to contributions intact (one canonical home, burned/057; catch-up cites the STATUTE, not the Rev. Proc.)', () => {
+      expect('contributions.hsa2026' in ALL_CONSTANTS).toBe(true)
+      expect('health.hsa2026' in ALL_CONSTANTS, 'the old health-table key is gone').toBe(false)
+      expect(contributionConstants.hsa2026.value).toEqual({
+        contributionSelfOnly: 4_400,
+        contributionFamily: 8_750,
+        hdhpMinDeductible: { selfOnly: 1_700, family: 3_400 },
+        maxOutOfPocket: { selfOnly: 8_500, family: 17_000 },
+        catchUp55Plus: 1_000,
+      })
+      // The $1,000 catch-up appears NOWHERE in Rev. Proc. 2025-19 — it is IRC §223(b)(3)(B),
+      // statutorily fixed since 2009. The provenance must say so or the pin pass will look
+      // for a COLA figure that does not exist.
+      expect(contributionConstants.hsa2026.citation).toMatch(/223\(b\)\(3\)\(B\)/)
+    })
+  })
+
+  describe('C1 — the federal default age-rating curve (45 CFR 147.102, CMS Appendix I)', () => {
+    it('anchors, the 3:1 cap, monotone non-decreasing, contiguous 15..64 (externally-derived, DND/012)', () => {
+      const entry = healthConstants.acaAgeRatingCurve
+      expect(entry.directionalUntilPinned, 'directional until the P1-exit pin pass').toBe(true)
+      const t = entry.value
+      expect(t.childFactorThrough14, 'the post-2018 child band').toBe(0.765)
+      expect(t.factors, 'one row per single year of age, 15..64').toHaveLength(50)
+      const at = (age: number) => t.factors.find((f) => f.age === age)?.factor
+      // Independently-documented anchors (known BEFORE transcription — DND/012):
+      expect(at(21), 'the reference age').toBe(1.0)
+      expect(at(24), 'ages 21–24 all 1.000').toBe(1.0)
+      expect(at(64), 'the terminal adult age').toBe(3.0)
+      expect((at(64) ?? 0) / (at(21) ?? Number.NaN), 'EXACTLY the 3:1 statutory cap').toBe(3.0)
+      expect(at(50), 'interior anchor (CMS Appendix I)').toBe(1.786)
+      expect(at(60), 'interior anchor (CMS Appendix I)').toBe(2.714)
+      // Pin the FULL 50-cell vector (the sibling-table pattern — IRMAA tiers + ACA bands
+      // pin every interior value for exactly this reason): with only 5 anchors +
+      // monotonicity, 45 cells were mutable without any red — e.g. a monotone-but-wrong
+      // linear ramp over ages 25–49 (+17% at age 35) passed the suite (the review's
+      // adversary-data catch). Transcribed from the research artifact (CMS Appendix I,
+      // cross-verified vs the independently-typeset secondary) — NOT from health.ts,
+      // keeping the axis independent (DND/012).
+      expect(t.factors.map((f) => f.factor)).toEqual([
+        0.833, 0.859, 0.885, 0.913, 0.941, 0.970, 1.000, 1.000, 1.000, 1.000,
+        1.004, 1.024, 1.048, 1.087, 1.119, 1.135, 1.159, 1.183, 1.198, 1.214,
+        1.222, 1.230, 1.238, 1.246, 1.262, 1.278, 1.302, 1.325, 1.357, 1.397,
+        1.444, 1.500, 1.563, 1.635, 1.706, 1.786, 1.865, 1.952, 2.040, 2.135,
+        2.230, 2.333, 2.437, 2.548, 2.603, 2.714, 2.810, 2.873, 2.952, 3.000,
+      ])
+      t.factors.forEach((f, i) => {
+        expect(Number.isFinite(f.factor) && f.factor > 0, `age ${f.age} finite > 0 (DND/009)`).toBe(true)
+        expect(f.age, 'contiguous single-year ages from 15').toBe(15 + i)
+        const prev = t.factors[i - 1]
+        if (prev) expect(f.factor >= prev.factor, `age ${f.age} monotone non-decreasing`).toBe(true)
+      })
+      expect(
+        t.childFactorThrough14 < (t.factors[0]?.factor ?? 0),
+        'the child factor sits below the age-15 factor',
+      ).toBe(true)
+    })
   })
 
   // burned/063 single-source gate + burned/027 presence companion: distinctive
@@ -273,6 +440,10 @@ describe('canonical constants — shape & provenance (contract #6)', () => {
       // health.ts). The 400% cliff dollar ($84,600) is now DERIVED (4 × FPL) and the per-tier
       // Part B TOTALS (e.g. $689.90) are derived (base + surcharge) — neither is a stored literal.
       '109000', '15650', '137000', '171000', '205000', '274000', '342000', '410000', '750000',
+      // C1 contribution limits (single-sourced in contributions.ts): the 2026 deferral,
+      // the §109 super catch-up, the §415(c) ceiling. (Smaller figures like 8,000/1,100
+      // are too collision-prone for a substring gate — the shape tests pin them instead.)
+      '24500', '11250', '72000',
     ]
     // Underscore-insensitive so 768_700 and 768700 both match.
     const norm = (s: string) => s.replace(/_/g, '')
@@ -303,6 +474,37 @@ describe('canonical constants — shape & provenance (contract #6)', () => {
         }
       }
       expect(offenders, 'inlined constants found (read them from @engine/constants instead)').toEqual([])
+    })
+
+    // The SECOND C1 table (engine/reference/tickerBlend.ts) gets its own scoped gate —
+    // the C1 spec groups it into the same burned/063 assertion, and the main gate's
+    // allowlist (engine/constants/ only) cannot recognize the blend module as a
+    // canonical home (review fold). Multi-decimal allocation values are the
+    // distinctive markers (VBIAX bond 37.67 · VTINX bond 67.79 · VWELX stock 66.62).
+    const DISTINCTIVE_BLEND = ['37.67', '67.79', '66.62']
+    const inBlendHome = (f: string) => rel(f) === 'engine/reference/tickerBlend.ts'
+    // This file carries the marker array itself — the main gate skips it implicitly
+    // (it lives inside the allowlisted constants dir); the blend gate must skip it
+    // explicitly or the gate flags its own DISTINCTIVE_BLEND literals.
+    const isThisGateFile = (f: string) => rel(f) === 'engine/constants/__tests__/constants.shape.test.ts'
+
+    it('presence companion — every distinctive blend value exists in tickerBlend.ts (burned/027)', () => {
+      const blob = norm(allTs.filter(inBlendHome).map((f) => readFileSync(f, 'utf-8')).join('\n'))
+      for (const v of DISTINCTIVE_BLEND) {
+        expect(blob.includes(v), `${v} present in tickerBlend.ts`).toBe(true)
+      }
+    })
+
+    it('the blend gate — no distinctive blend value appears in any src file outside its home (burned/063)', () => {
+      const offenders: string[] = []
+      for (const f of allTs) {
+        if (inBlendHome(f) || isThisGateFile(f)) continue
+        const blob = norm(readFileSync(f, 'utf-8'))
+        for (const v of DISTINCTIVE_BLEND) {
+          if (blob.includes(v)) offenders.push(`${relative(SRC, f)} inlines ${v}`)
+        }
+      }
+      expect(offenders, 'inlined blend values found (read them from the tickerBlend module instead)').toEqual([])
     })
   })
 })

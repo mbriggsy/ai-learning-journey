@@ -191,6 +191,61 @@ export interface FederalPovertyGuidelines {
   readonly perAdditionalPerson: number
 }
 
+/** The federal default age-rating curve for ACA individual-market premiums (45 CFR
+ *  147.102(e) — the standard 3:1 adult curve most states use). D1's today's-quote →
+ *  per-age premium escalator consumes it: an entered ACA quote at the current age is
+ *  scaled along the curve to price the retired pre-65 window at each age. Ages 0–14
+ *  share one child factor; 15..64 are single-year factors; 65+ is Medicare territory
+ *  (the curve is never read there). Age 21 is the reference (factor 1.000); age 64
+ *  carries the 3.000 cap. */
+export interface AcaAgeRatingCurve {
+  /** The single factor for ages 0–14 (the post-2018 child band). */
+  readonly childFactorThrough14: number
+  /** One row per single year of age, 15..64 inclusive, contiguous ascending. */
+  readonly factors: readonly AgeRatingFactor[]
+}
+
+/** One single-year age-rating factor. */
+export interface AgeRatingFactor {
+  readonly age: number
+  readonly factor: number
+}
+
+// ---- Contribution-limit value shapes (C1) ------------------------------------
+
+/** One age-band catch-up tier. A band applies when the contributor's year-end age
+ *  falls in [fromAge, toAge] (both inclusive; `toAge: null` = open-ended). Bands are
+ *  ascending and NON-OVERLAPPING, so a per-runway-year lookup steps down automatically
+ *  when a band expires (the SECURE 2.0 §109 60–63 "super" band ends at 64 — encoding
+ *  the step-down IN the data is what lets intakeMap apply the ceiling per runway year
+ *  instead of flat-projecting a today-legal amount through 64+, the calm-but-wrong-
+ *  optimistic direction the C1 spec names). */
+export interface CatchUpBand {
+  readonly fromAge: number
+  readonly toAge: number | null
+  readonly amount: number
+  /** Statutory provenance for a band that exists by a specific section (e.g. §109). */
+  readonly legalBasis?: string
+}
+
+/** Employer-plan (401(k)/403(b)) elective-deferral limit + age-banded catch-ups.
+ *  These are INTAKE SANITY CEILINGS (R19) + the per-runway-year expansion rule —
+ *  never a per-year engine formula (the engine consumes the user's entered amounts;
+ *  C1 unit, plan §5). */
+export interface EmployerPlanLimits {
+  /** IRC §402(g) elective-deferral limit (employee salary deferral, all plans combined). */
+  readonly electiveDeferral: number
+  /** Ascending non-overlapping catch-up bands; the 60–63 §109 band REPLACES the
+   *  age-50 band for those ages (in lieu of, not additive) and expires at 64. */
+  readonly catchUpBands: readonly CatchUpBand[]
+}
+
+/** IRA contribution limit + the (SECURE 2.0 §108, now-indexed) age-50 catch-up. */
+export interface IraLimits {
+  readonly contributionLimit: number
+  readonly catchUpBands: readonly CatchUpBand[]
+}
+
 /** One IRMAA SURCHARGE tier (Medicare Part B + Part D income-related adjustment). A
  *  tier applies when MAGI STRICTLY EXCEEDS its threshold (lower-bound-exclusive: $1
  *  over → the full tier); the consumer selects the highest tier whose threshold is

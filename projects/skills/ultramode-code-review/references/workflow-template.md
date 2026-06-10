@@ -127,6 +127,6 @@ return { confirmed, advisory: all.filter((f) => !confirmed.includes(f)) }
 ## Notes
 - The reviewer agents are read-only; still sweep `git status` + any scratch dirs after (they sometimes leave probe files).
 - If the platform lacks subagents, run lenses sequentially — same stages, same schema.
-- **Model: run reviewers AND verifiers on the latest/greatest** (`model: 'opus'` or inherit the session model) — never hardcode a mid-tier for the fan-out.
+- **Model: run reviewers AND verifiers on `model: 'opus'` — explicitly, on every `agent()` call.** Never hardcode a mid-tier (`sonnet`/`haiku`) for the fan-out, and never omit `model` to inherit the session model (a pricier main-loop tier like Fable 5 then bleeds into every fan-out agent: higher rate × ~30% more tokens).
 - **Adversary: ≥1 always.** On a high-risk change escalate to a diverse panel — one adversary per failure-mode angle (boundary · temporal/state · numerical · invariant · direct-caller), each a DISTINCT prompt (N identical ≈ 1) — and scale the verify vote with it.
 - Scale verifiers: for a high-stakes finding, fan out 2–3 independent verifiers and take the majority.

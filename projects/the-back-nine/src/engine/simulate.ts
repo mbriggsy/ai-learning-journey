@@ -249,8 +249,12 @@ export function contributionsForYear(
 }
 
 /** Validate the engine's numeric domain (R19, engine half). Returns a reason string
- *  for an indeterminate input, or null when the params are computable. */
-function validateParams(params: SimulationParams): string | null {
+ *  for an indeterminate input, or null when the params are computable. EXPORTED for the
+ *  date-search's all-or-nothing up-front pass (C3 §3): every candidate is validated
+ *  BEFORE any 16k-path run is dispatched, so a rejecting candidate fails the RUN with the
+ *  named reason — never drop-and-continue (an unevaluated offset voids the "earliest"
+ *  claim), never a wasted sweep. Cheap and draw-free by construction. */
+export function validateParams(params: SimulationParams): string | null {
   const finiteNonNeg = (x: number) => Number.isFinite(x) && x >= 0
   if (!finiteNonNeg(params.initialPortfolio)) return 'initialPortfolio invalid'
   if (!finiteNonNeg(params.annualSpendingReal)) return 'annualSpendingReal invalid'

@@ -49,7 +49,12 @@ export const BANDS = {
  *  metadata measures distance to. */
 export const DOLLAR_STEP = 10
 
-const quantizeSurvival = (s: number): number => Math.round(s / SURVIVAL_GRID) * SURVIVAL_GRID
+/** Quantize a survival-type statistic to the coarse grid BEFORE any band-edge decision —
+ *  the cross-engine screenshot-reproduction idiom. EXPORTED for the date-search (C3 §3c):
+ *  the date is DEFINED as "the earliest offset at which the headline reads on-track-or-
+ *  better", so its rule must be the headline's OWN quantize-then-compare — never a
+ *  re-typed grid or a raw compare (objective ≡ headline). */
+export const quantizeSurvival = (s: number): number => Math.round(s / SURVIVAL_GRID) * SURVIVAL_GRID
 
 /** Nearest distance to a band edge where `round(s*10)` flips (the (k+0.5)/10 points). */
 function marginToXOfTenEdge(survival: number): number {

@@ -258,6 +258,14 @@ describe('R19 engine half + dire-but-honest edges', () => {
       { taxEnabled: false, rmdEnabled: false, startCalendarYear: 2026, buckets: { taxable: 0, pretax: P, roth: 0, hsa: NaN }, filing: 'mfj' }, // NaN hsa → finiteness gate
       { taxEnabled: false, rmdEnabled: false, startCalendarYear: 2026, buckets: { taxable: 0, pretax: P, roth: 0, hsa: -1 }, filing: 'mfj' }, // negative hsa
       { taxEnabled: false, rmdEnabled: false, startCalendarYear: 2026, buckets: { taxable: 0, pretax: P, roth: 0, hsa: 50_000 }, filing: 'mfj' }, // 4-bucket sum = P + 50k ≠ P — hsa is PART of the portfolio total
+      // U3 · M5 Slice 2 — the spend-side streams (oopMedical is a real dollar cost: NO +Infinity sentinel):
+      { taxEnabled: false, rmdEnabled: false, startCalendarYear: 2026, buckets: { taxable: 0, pretax: P, roth: 0 }, filing: 'mfj', oopMedical: [NaN] }, // non-finite OOP
+      { taxEnabled: false, rmdEnabled: false, startCalendarYear: 2026, buckets: { taxable: 0, pretax: P, roth: 0 }, filing: 'mfj', oopMedical: [-1] }, // negative OOP
+      { taxEnabled: false, rmdEnabled: false, startCalendarYear: 2026, buckets: { taxable: 0, pretax: P, roth: 0 }, filing: 'mfj', oopMedical: [Infinity] }, // +Infinity OOP — REJECTED (would un-cap the qualified spend)
+      { taxEnabled: true, rmdEnabled: false, startCalendarYear: 2026, buckets: { taxable: 0, pretax: P - 50_000, roth: 0, hsa: 50_000 }, filing: 'mfj' }, // tax on + hsa > 0, hsaOwnerIndex MISSING → required (burned/062)
+      { taxEnabled: true, rmdEnabled: false, startCalendarYear: 2026, buckets: { taxable: 0, pretax: P - 50_000, roth: 0, hsa: 50_000 }, filing: 'mfj', hsaOwnerIndex: -1 }, // out of range
+      { taxEnabled: true, rmdEnabled: false, startCalendarYear: 2026, buckets: { taxable: 0, pretax: P - 50_000, roth: 0, hsa: 50_000 }, filing: 'mfj', hsaOwnerIndex: 0.5 }, // non-integer
+      { taxEnabled: true, rmdEnabled: false, startCalendarYear: 2026, buckets: { taxable: 0, pretax: P - 50_000, roth: 0, hsa: 50_000 }, filing: 'mfj', hsaOwnerIndex: 5 }, // ≥ people.length
     ]
     for (const overlay of overlays) {
       expect(simulate({ ...base, overlay }, 1).indeterminate).toBe(true)

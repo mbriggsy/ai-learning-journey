@@ -287,6 +287,20 @@ function validateParams(params: SimulationParams): string | null {
     // sail through the seed-required relational check below AND poison the surcharge tier compare). A
     // seed is a real IRMAA-MAGI (AGI), so finite ≥ 0 (0 is the legitimate low-income value).
     if (o.irmaaMagiSeed !== undefined && !o.irmaaMagiSeed.every(finiteNonNeg)) return 'overlay irmaaMagiSeed invalid'
+    // U3 · M5 — the HSA spend-side inputs, guarded like their siblings (insights 008/010):
+    // oopMedical is a real dollar cost — finite ≥ 0, NO +Infinity sentinel (mirror slcsp, NOT the
+    // bracket-fill ceilings). A NaN would poison the qualified-spend cap's Math.min mid-path.
+    if (o.oopMedical !== undefined && !o.oopMedical.every(finiteNonNeg)) return 'overlay oopMedical invalid'
+    // The HSA owner identity: REQUIRED when tax is on and the hsa bucket is non-empty (the 65+
+    // Medicare-premium privilege keys to the OWNER's age — a person-0 default would turn the
+    // privilege on early for a spouse-owned HSA, the optimistic direction; burned/062). When
+    // present it must be a canonical-people index (integer membership, the M6b alignment).
+    if (o.hsaOwnerIndex !== undefined) {
+      if (!Number.isInteger(o.hsaOwnerIndex) || o.hsaOwnerIndex < 0 || o.hsaOwnerIndex >= params.people.length)
+        return 'overlay hsaOwnerIndex invalid (must index the household people)'
+    }
+    if (o.taxEnabled && (b.hsa ?? 0) > 0 && o.hsaOwnerIndex === undefined)
+      return 'overlay hsaOwnerIndex required (tax on + hsa bucket non-empty)'
     // Healthcare pricing is MAGI-driven and MAGI comes ONLY from the tax solver, so healthcare with
     // tax OFF is incoherent — reject it as indeterminate rather than silently drop the premium (the
     // survival-overstating, unsafe direction). The R19 frontline mirror of the overlay's own backstop
@@ -457,6 +471,11 @@ export function simulate(params: SimulationParams, seed: number): SimOutput {
           // Per-person pre-tax split (M6b·B): aligned to `people` (= the overlay's canonical
           // owner→spouse order). Absent ⇒ the aggregate pool (byte-identical M6a path).
           ...(overlay.pretaxByPerson ? { initialPretaxByPerson: overlay.pretaxByPerson } : {}),
+          // U3 · M5 HSA spend-side inputs: spread only when present (absent ⇒ the byte-identical
+          // pre-M5 taxInputs). They ride with tax alone — an HSA pays OOP medical MAGI-invisibly
+          // even when the ACA/IRMAA pricing (healthcareEnabled) is off (medicareCost is just 0).
+          ...(overlay.oopMedical ? { oopMedical: overlay.oopMedical } : {}),
+          ...(overlay.hsaOwnerIndex !== undefined ? { hsaOwnerIndex: overlay.hsaOwnerIndex } : {}),
           // U3 · M3 Slice 4 healthcare streams: spread ONLY when the overlay is enabled, so a
           // healthcare-off run passes the byte-identical pre-Slice-4 taxInputs (reduce-to-spine).
           // validateParams has already rejected healthcareEnabled with tax off (indeterminate).

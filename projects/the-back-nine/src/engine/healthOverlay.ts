@@ -478,3 +478,74 @@ export function medicareAnnualCost(
   const surchargeMonthly = irmaaTierSurchargeMonthly(irmaaMagiForBill, filing, schedule)
   return enrolledCount * (partBBaseMonthly + surchargeMonthly) * 12
 }
+
+// =========================================================================
+// The HSA 4th bucket — qualified spend (U3 · M5, SPEND side; contributions are
+// the accumulation track's C2). Pub 969 rules ship verbatim in
+// `constants/health.ts` (`hsaFourthBucketRules`); this is their engine.
+// =========================================================================
+
+/**
+ * The year's QUALIFIED, MAGI-INVISIBLE HSA spend (U3 · M5) — the dollars the HSA bucket may pay
+ * out tax-free this year. The cap is the year's HSA-payable medical outlay:
+ *
+ *     min( hsaBalance,                                  — you cannot spend what you do not have
+ *          oopMedical + (ownerIs65Plus ? medicareCost : 0),  — the QUALIFIED set (Pub 969)
+ *          fundingNeed )                                — never more than the year actually spends
+ *
+ * THE QUALIFIED SET, verbatim from `hsaFourthBucketRules` (Pub 969 / IRC §223):
+ *   - Out-of-pocket medical (`oopMedical[t]`, the modeled stream) — qualified at ANY age.
+ *   - Medicare premiums (base Part B + the IRMAA surcharge — a premium surcharge is still a
+ *     premium under exception (4) "Medicare and other health coverage if you were 65 or older";
+ *     Medigap is excluded and is NOT modeled) — qualified ONLY when the HSA OWNER (the account
+ *     beneficiary) is 65+. The privilege keys to the OWNER's age, NEVER the spouse's: a 65+
+ *     spouse's premiums are unqualified while the owner is under 65 (`ownerIs65Plus` is the
+ *     caller-resolved owner gate, spousal-rollover aware).
+ *   - THE TRAP (structural): the ACA marketplace premium is NOT in the formula — it is never
+ *     HSA-payable in the normal case (COBRA / unemployment-comp exceptions are out of the MVP,
+ *     disclosed). A cap that included the enrolled/net premium would overstate "HSA covers
+ *     healthcare" — the calm-but-wrong-optimistic direction.
+ *
+ * `fundingNeed` is the year's total non-ACA-premium cash need (`net + medicareCost`): clamping at
+ * it keeps an incoherent `oopMedical > spending` input well-defined (the HSA pays at most what
+ * the household actually spends; the excess stays in the bucket) and guarantees the caller's
+ * `fundingNet = fundingNeed − spend ≥ 0` (the gross-up never receives a negative need).
+ *
+ * MAGI-INVISIBILITY is BY CONSTRUCTION: the returned spend reduces what the portfolio must fund
+ * BEFORE the gross-up, and never enters `MagiComponents` (not `nonSSordinary`, not
+ * `realizedGain`) — so both MAGIs genuinely DROP when medical is HSA-funded instead of
+ * IRA-funded (the loop-breaking lever, research §4a).
+ *
+ * THE LAUNDERING CONTRACT (the post-65 NON-qualified path — NOT routed in M5): a post-65
+ * non-qualified HSA withdrawal is ORDINARY INCOME (the 20% penalty is waived at 65, the income
+ * inclusion is not — `hsaFourthBucketRules.penaltyWaivedAt65`); it would enter
+ * `MagiComponents.nonSSordinary` at its producer (`solveGrossWithdrawal`), raising BOTH MAGIs.
+ * The M5 engine never produces one — HSA outflow is qualified-only (this cap) and the general
+ * drawdown structurally cannot reach the bucket (`GeneralBucketKey`); the engine instead
+ * declares general-depletion with a stranded HSA (conservative, disclosed). FORWARD LANDMINE:
+ * any future consumer that routes non-qualified HSA spend (the P4 solver's last-resort draw)
+ * MUST add it to `nonSSordinary` in the SAME change — an MAGI-free general draw from the HSA is
+ * the named income-laundering bug.
+ *
+ * Finiteness FIRST (insight 010): every argument is validated before any compare — a NaN sails
+ * through `Math.min` (NaN propagates) into the funding arithmetic and would poison the year.
+ */
+export function hsaQualifiedSpend(args: {
+  readonly hsaBalance: number
+  readonly oopMedical: number
+  readonly medicareCost: number
+  readonly ownerIs65Plus: boolean
+  readonly fundingNeed: number
+}): number {
+  const { hsaBalance, oopMedical, medicareCost, ownerIs65Plus, fundingNeed } = args
+  if (!Number.isFinite(hsaBalance) || hsaBalance < 0)
+    throw new Error(`[healthOverlay] hsaQualifiedSpend: hsaBalance must be finite and ≥ 0 (got ${hsaBalance}) — insight 010`)
+  if (!Number.isFinite(oopMedical) || oopMedical < 0)
+    throw new Error(`[healthOverlay] hsaQualifiedSpend: oopMedical must be finite and ≥ 0 (got ${oopMedical}) — insight 010`)
+  if (!Number.isFinite(medicareCost) || medicareCost < 0)
+    throw new Error(`[healthOverlay] hsaQualifiedSpend: medicareCost must be finite and ≥ 0 (got ${medicareCost}) — insight 010`)
+  if (!Number.isFinite(fundingNeed) || fundingNeed < 0)
+    throw new Error(`[healthOverlay] hsaQualifiedSpend: fundingNeed must be finite and ≥ 0 (got ${fundingNeed}) — insight 010`)
+  const qualifiedCap = oopMedical + (ownerIs65Plus ? medicareCost : 0)
+  return Math.min(hsaBalance, qualifiedCap, fundingNeed)
+}

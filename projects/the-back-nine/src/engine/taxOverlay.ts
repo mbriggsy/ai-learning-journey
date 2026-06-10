@@ -91,7 +91,7 @@ import {
   type CapitalGainsRateBreakpoints,
   type AcaApplicablePercentageTable,
 } from '@engine/constants'
-import { solveAcaFundedGross, fplForHousehold, medicareAnnualCost, irmaaMagi, type GrossUpSolution } from '@engine/healthOverlay'
+import { solveAcaFundedGross, fplForHousehold, medicareAnnualCost, irmaaMagi, hsaQualifiedSpend, type GrossUpSolution } from '@engine/healthOverlay'
 import { NEVER_DEPLETED, type DepletionYear, type DrawdownPolicy, type FilingStatus } from '@shared/model'
 
 // Filing status is shared model vocabulary (the persisted scenario speaks it too). Re-exported
@@ -172,6 +172,13 @@ export interface TaxAwareResult extends DecumulationResult {
    *  funds it, so this never perturbs the reduce-to-spine total. (The income-sensitive surcharge is the
    *  strategy-relevant slice; the base premium is the income-invariant remainder.) */
   readonly totalMedicareCostReal: number
+  /** Σ of every year's QUALIFIED, MAGI-invisible HSA spend actually paid out of the hsa bucket
+   *  (real $; U3 · M5). 0 when the hsa bucket is absent/empty or tax is off. The parallel ACCOUNTING
+   *  surface, like its two siblings above: the spend already flowed through the year's outflow
+   *  (`grossWithdrawal + hsaSpend` → stepYear) and the hsa ledger, so this never perturbs the
+   *  reduce-to-spine total; accrued AFTER the depletion check (a year the portfolio could not fund
+   *  accrues nothing). */
+  readonly totalQualifiedHsaSpendReal: number
 }
 
 /**
@@ -243,6 +250,23 @@ export interface TaxYearInputs {
    *  member is Medicare-enrolled (≥65) in such a year — a default 0 would zero the surcharge → understate
    *  cost → overstate survival (burned/062). Read only when healthcare is on (⇒ tax on); inert otherwise. */
   readonly irmaaMagiSeed?: readonly number[]
+  // --- U3 · M5: the HSA spend-side streams. ABSENT / `hsa` 0 ⇒ the 3-bucket path byte-identical. ---
+  /** Per-year out-of-pocket QUALIFIED medical cost (real $), indexed by ABSOLUTE year. CAP-ONLY —
+   *  PINNED: it sizes the HSA qualified-spend cap and NEVER joins the year's funding need (the
+   *  household retirement-spend figure is DEFINED as already including OOP medical — the containment
+   *  premise; premiums are the only health cost priced on top). A missing tail entry ⇒ 0 (no OOP that
+   *  year). Read only when tax is ON and the run has a live hsa bucket; inert otherwise — at `hsa = 0`
+   *  an OOP-bearing year's gross need is UNCHANGED (the falsifiable cap-only contract). */
+  readonly oopMedical?: readonly number[]
+  /** WHICH canonical person owns the household HSA (0 = owner, 1 = spouse — the `people` index,
+   *  M6b alignment). The 65+ Medicare-premium spend privilege keys to the OWNER's age, never the
+   *  spouse's (Pub 969 via `hsaFourthBucketRules`), so the identity moves the answer: REQUIRED
+   *  (fail-loud, burned/062 — a person-0 default is an in-range default) whenever tax is ON and the
+   *  hsa bucket is non-empty. On the owner's death the HSA rolls to the surviving spouse (the
+   *  spouse-beneficiary assumption) and the privilege re-keys to the survivor's age IMMEDIATELY
+   *  (ownership transfers at death — unlike IRMAA's +2yr billing lag). v1 models ONE household HSA;
+   *  per-person HSA splitting (each spouse's own account) arrives with C2's contribution side. */
+  readonly hsaOwnerIndex?: number
 }
 
 const EMPTY_BUCKETS: AccountBuckets = { taxable: 0, pretax: 0, roth: 0, hsa: 0 }
@@ -854,6 +878,8 @@ export function runTaxAwareDecumulation(
     slcsp = [],
     enrolledPremium = [],
     irmaaMagiSeed = [],
+    oopMedical = [],
+    hsaOwnerIndex,
   } = taxInputs
 
   // Healthcare requires tax (U3 · M3 Slice 4): the ACA PTC keys off ACA-MAGI, which this engine
@@ -919,6 +945,7 @@ export function runTaxAwareDecumulation(
   const partBBaseMonthly = partB2026.value.standardPremiumMonthly
   const irmaaMagiHistory: number[] = []
   let totalMedicareCostReal = 0
+  let totalQualifiedHsaSpendReal = 0
 
   // Initial taxable basis is REQUIRED when tax is on and the taxable bucket is non-empty — there
   // is no safe default (0 over-taxes every realization; the full value silently no-ops cap-gains),
@@ -945,6 +972,19 @@ export function runTaxAwareDecumulation(
   if (initialBuckets.hsa !== undefined && !(Number.isFinite(initialBuckets.hsa) && initialBuckets.hsa >= 0)) {
     throw new Error('[taxOverlay] buckets.hsa must be finite and ≥ 0 (a NaN survives every relational guard — insight 010)')
   }
+  // The oopMedical stream (U3 · M5): finite ≥ 0 when present — a NaN/Infinity entry would poison the
+  // qualified-spend cap's Math.min (NaN propagates; +Infinity would un-cap it). A real dollar cost has
+  // NO +Infinity sentinel (mirror slcsp/enrolledPremium, NOT bracketFillCeilings). `.every` skips holes
+  // — an absent/short stream is the legitimate no-OOP default (cap-only; burned/062's absent-⇒-default).
+  if (!oopMedical.every((x) => Number.isFinite(x) && x >= 0)) {
+    throw new Error('[taxOverlay] oopMedical entries must be finite and ≥ 0 (insights 008/010; burned/062)')
+  }
+  // HSA liveness is a RUN-level constant (U3 · M5): the 4th-bucket semantics (the owner requirement,
+  // the general-depletion check, the qualified-spend mechanics) exist only when the run STARTS with
+  // an HSA balance. Gating on the initial balance — not the per-year one — keeps the semantics stable
+  // as the HSA drains, and makes `hsa` absent/0 byte-identical to the 3-bucket overlay by construction
+  // (the gated code never executes, so no new float operation can perturb the spine; reduce-to-spine).
+  const hsaLive = (initialBuckets.hsa ?? 0) > 0
 
   // Per-person pre-tax sub-ledger (M6b·B). Active ONLY when the caller supplies the per-person
   // split AND the overlay does work (tax or RMD on) — otherwise null, and the aggregate M6a path
@@ -954,6 +994,28 @@ export function runTaxAwareDecumulation(
   // Narrow the config union to its `household` once (the ON variant carries it; OFF does not).
   const household = config.taxEnabled || config.rmdEnabled ? config.household : undefined
   const people = household ? canonicalPeople(household) : []
+
+  // The HSA owner identity (U3 · M5): the 65+ Medicare-premium spend privilege keys to the OWNER's
+  // age (never the spouse's), so with a live hsa under tax the identity MOVES THE ANSWER — REQUIRED,
+  // never defaulted to person 0 (an in-range default is exactly burned/062's sin: a spouse-owned HSA
+  // would borrow the older owner's age and turn the privilege on early — the optimistic direction).
+  // Membership is validated whenever checkable (a household exists); the index aligns to the
+  // canonical people (owner = 0, spouse = 1 — the M6b convention). validateParams mirrors both.
+  if (hsaOwnerIndex !== undefined && household) {
+    if (!Number.isInteger(hsaOwnerIndex) || hsaOwnerIndex < 0 || hsaOwnerIndex >= people.length) {
+      throw new Error(
+        `[taxOverlay] hsaOwnerIndex must be an integer index into the household's canonical people (got ${hsaOwnerIndex}, people: ${people.length})`,
+      )
+    }
+  }
+  if (config.taxEnabled && hsaLive && hsaOwnerIndex === undefined) {
+    throw new Error(
+      '[taxOverlay] hsaOwnerIndex is required when tax is on and the hsa bucket is non-empty — ' +
+        'the 65+ Medicare-premium privilege keys to the OWNER’s age, no in-range default (burned/062)',
+    )
+  }
+  const hsaOwnerPerson = hsaOwnerIndex !== undefined ? people[hsaOwnerIndex] : undefined
+
   let pretaxLedger: number[] | null = null
   if (initialPretaxByPerson !== undefined && household) {
     // Finiteness FIRST (insight 008): a NaN entry survives the sum guard below —
@@ -981,12 +1043,6 @@ export function runTaxAwareDecumulation(
 
   let buckets = initialBuckets
   let basis = initialTaxableBasis ?? 0
-  // HSA liveness is a RUN-level constant (U3 · M5): the 4th-bucket semantics (the general-depletion
-  // check below + the qualified-spend mechanics) exist only when the run STARTS with an HSA balance.
-  // Gating on the initial balance — not the per-year one — keeps the semantics stable as the HSA
-  // drains, and makes `hsa` absent/0 byte-identical to the 3-bucket overlay by construction (the
-  // gated code never executes, so no new float operation can perturb the spine; reduce-to-spine).
-  const hsaLive = (initialBuckets.hsa ?? 0) > 0
   const total0 = totalAcrossBuckets(initialBuckets)
   // Construct the initial state with the SAME formula simulate.ts uses (stock = w·P,
   // bond = (1−w)·P) so a collapsed-pool run is byte-identical to the spine's
@@ -1085,6 +1141,7 @@ export function runTaxAwareDecumulation(
     // fund does not over-count a premium/surcharge it failed to pay.
     let acaNetPremiumThisYear = 0
     let medicareCostThisYear = 0
+    let hsaSpendThisYear = 0
     if (config.taxEnabled && regime) {
       // IRMAA (M4): the year's post-65 Medicare cost is a CONSTANT addend to the spending the gross-up
       // funds — keyed off IRMAA-MAGI[t−lookback] (already known), so it is NEVER a fixed point and NEVER
@@ -1108,9 +1165,36 @@ export function runTaxAwareDecumulation(
         const filingForBill = lag >= 0 ? resolveYear(config.household, householdYears, lag).filing : config.household.filing
         medicareCostThisYear = medicareAnnualCost(magiForBill, filingForBill, regime.count65, irmaaSchedule, partBBaseMonthly)
       }
-      // The cash this year must fund = base spending + the (known) Medicare cost. With no Medicare cost
-      // (pre-65 / healthcare off) fundingNet === net EXACTLY (`net + 0`), so the pre-65 path is untouched.
-      const fundingNet = net + medicareCostThisYear
+      // HSA qualified spend (U3 · M5): the MAGI-invisible dollars the hsa bucket pays this year —
+      // capped at the qualified set (OOP medical + the owner-65+ Medicare premiums; the ACA premium
+      // is structurally NOT in the cap — the trap) and at the year's funding need. Every input is
+      // year-known and gross-INDEPENDENT (prior-year-end hsa balance, the exogenous OOP stream, the
+      // lagged-constant Medicare cost), so the spend is a CONSTANT inside both the gross-up fixed
+      // point and the ACA bisection — never a search variable (insight 013 stays out of the residual).
+      // Owner resolution: the entered owner while alive (living refs are exposed as rmdOwner/rmdSpouse,
+      // people-order), else the surviving spouse — the spousal rollover transfers OWNERSHIP at death,
+      // so the privilege re-keys to the survivor's age IMMEDIATELY (ACA-FPL-style, not IRMAA-lagged).
+      if (hsaLive) {
+        const ownerAlive =
+          hsaOwnerPerson !== undefined && (regime.rmdOwner === hsaOwnerPerson || regime.rmdSpouse === hsaOwnerPerson)
+        const effectiveOwner = ownerAlive ? hsaOwnerPerson : regime.rmdOwner
+        const ownerIs65Plus =
+          effectiveOwner !== undefined &&
+          ageInSimYear(effectiveOwner, config.household.startCalendarYear, t) >= AGE_65_THRESHOLD
+        hsaSpendThisYear = hsaQualifiedSpend({
+          hsaBalance: drawPool.hsa ?? 0,
+          oopMedical: oopMedical[t] ?? 0,
+          medicareCost: medicareCostThisYear,
+          ownerIs65Plus,
+          fundingNeed: net + medicareCostThisYear,
+        })
+      }
+      // The cash this year must fund = base spending + the (known) Medicare cost − the qualified
+      // HSA-paid portion (U3 · M5: the hsa bucket pays its share OUTSIDE the gross-up, so the
+      // taxable withdrawal — and through it both MAGIs — genuinely DROPS: the loop-breaking lever).
+      // With no Medicare cost and no live hsa, fundingNet === net EXACTLY (`net + 0 − 0`), so the
+      // pre-65 / pre-M5 paths are untouched. ≥ 0 by the cap's fundingNeed clamp.
+      const fundingNet = net + medicareCostThisYear - hsaSpendThisYear
 
       // The inner tax gross-up as a closure the ACA solver probes at (fundingNet + a candidate premium).
       // The year-constant inputs are bundled into one NAMED context (no positional transposition risk).
@@ -1198,8 +1282,10 @@ export function runTaxAwareDecumulation(
       break
     }
 
-    // Advance the AUTHORITATIVE total via the shared stepYear (byte-identical to spine).
-    const step = stepYear(state, rs, rb, grossWithdrawal, stockWeight)
+    // Advance the AUTHORITATIVE total via the shared stepYear (byte-identical to spine). The year's
+    // total outflow = the general-bucket gross withdrawal + the hsa-paid qualified spend (U3 · M5 —
+    // `+ 0` exactly when no hsa is live, so the spine recurrence is untouched).
+    const step = stepYear(state, rs, rb, grossWithdrawal + hsaSpendThisYear, stockWeight)
     state = step.state
 
     if (step.depleted) {
@@ -1219,11 +1305,15 @@ export function runTaxAwareDecumulation(
     // IRMAA Medicare cost accrues on the SAME after-depletion footing (the parallel post-65 accounting
     // surface) — a year that could not fund its grossed-up withdrawal never over-counts the surcharge.
     totalMedicareCostReal += medicareCostThisYear
+    // The qualified HSA spend accrues on the SAME footing (U3 · M5, the third parallel surface).
+    totalQualifiedHsaSpendReal += hsaSpendThisYear
 
     // Re-derive the buckets as fractions of the authoritative new total: each bucket's
     // post-withdrawal share grown by the one shared factor (no asset-location). The total
-    // is stepYear's output; the buckets are scaled to sum to it.
-    const afterWithdrawal = totalBefore - drawn
+    // is stepYear's output; the buckets are scaled to sum to it. The hsa outflow leaves the
+    // ledger here too (U3 · M5): afterWithdrawal = totalBefore − general drawn − hsa spend,
+    // matching stepYear's outflow exactly (`− 0` when no hsa is live — the spine recurrence).
+    const afterWithdrawal = totalBefore - drawn - hsaSpendThisYear
     if (afterWithdrawal > 0) {
       const scale = totalValue(state) / afterWithdrawal
       const taxableValue = drawPool.taxable
@@ -1259,10 +1349,11 @@ export function runTaxAwareDecumulation(
         taxable: taxablePost * scale,
         pretax: pretaxPostScaled,
         roth: rothPost * scale,
-        // The MEDICAL-EARMARKED 4th bucket (U3 · M5) rides the SAME shared growth factor as every
-        // other bucket (contract #2 — one market draw, no per-bucket return). General draws never
-        // touch it (`alloc` cannot even name it — `GeneralBucketKey`); qualified spend lands M5.
-        hsa: (drawPool.hsa ?? 0) * scale,
+        // The MEDICAL-EARMARKED 4th bucket (U3 · M5): the year's qualified spend leaves it, then it
+        // grows by the SAME shared factor as every other bucket (contract #2 — one market draw, no
+        // per-bucket return). General draws never touch it (`alloc` cannot even name it —
+        // `GeneralBucketKey`); ≥ 0 because the spend is capped at the balance.
+        hsa: ((drawPool.hsa ?? 0) - hsaSpendThisYear) * scale,
       }
     } else {
       buckets = EMPTY_BUCKETS
@@ -1278,5 +1369,6 @@ export function runTaxAwareDecumulation(
     finalTaxableBasis: basis,
     totalNetPremiumReal,
     totalMedicareCostReal,
+    totalQualifiedHsaSpendReal,
   }
 }

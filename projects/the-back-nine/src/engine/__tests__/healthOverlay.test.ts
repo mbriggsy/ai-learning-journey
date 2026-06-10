@@ -8,6 +8,7 @@ import {
   fplForHousehold,
   irmaaTierSurchargeMonthly,
   medicareAnnualCost,
+  hsaQualifiedSpend,
   type MagiComponents,
   type FundNet,
 } from '@engine/healthOverlay'
@@ -348,5 +349,59 @@ describe('healthOverlay — M4: medicareAnnualCost (base Part B + IRMAA surcharg
 
   it('zero enrolled (nobody on Medicare) = zero cost (the pre-65 / reduce-to-spine domain)', () => {
     expect(medicareAnnualCost(mfjThresh(1) + 1, 'mfj', 0, IRMAA, PARTB_BASE)).toBe(0)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// U3 · M5 — hsaQualifiedSpend (the pure qualified-spend cap).
+//
+// Externally-derived (DND/012): every expected figure is the hand-applied Pub 969
+// rule (the qualified set = OOP at any age + Medicare premiums ONLY when the OWNER
+// is 65+; the ACA premium is structurally absent from the formula — the trap),
+// never a re-run of the function under test.
+// ---------------------------------------------------------------------------
+describe('U3 · M5 — hsaQualifiedSpend (pure cap goldens, DND/012)', () => {
+  it('owner UNDER 65: the cap is OOP alone — Medicare premiums are NOT qualified (the owner-age key)', () => {
+    // min(50,000, 8,000 + 0, 60,000) = 8,000 — the 5,000 Medicare cost is excluded while the owner
+    // is under 65 (a 65+ SPOUSE does not open the privilege — Pub 969, owner-age-keyed).
+    expect(
+      hsaQualifiedSpend({ hsaBalance: 50_000, oopMedical: 8_000, medicareCost: 5_000, ownerIs65Plus: false, fundingNeed: 60_000 }),
+    ).toBe(8_000)
+  })
+
+  it('owner 65+: Medicare premiums join the qualified set', () => {
+    // min(50,000, 8,000 + 5,000, 60,000) = 13,000.
+    expect(
+      hsaQualifiedSpend({ hsaBalance: 50_000, oopMedical: 8_000, medicareCost: 5_000, ownerIs65Plus: true, fundingNeed: 60_000 }),
+    ).toBe(13_000)
+  })
+
+  it('the balance binds: you cannot spend what you do not have', () => {
+    expect(
+      hsaQualifiedSpend({ hsaBalance: 3_000, oopMedical: 8_000, medicareCost: 0, ownerIs65Plus: false, fundingNeed: 60_000 }),
+    ).toBe(3_000)
+  })
+
+  it('the funding need binds: the HSA pays at most what the year actually spends (an incoherent oop > spending stays defined)', () => {
+    expect(
+      hsaQualifiedSpend({ hsaBalance: 50_000, oopMedical: 40_000, medicareCost: 0, ownerIs65Plus: false, fundingNeed: 10_000 }),
+    ).toBe(10_000)
+  })
+
+  it('zero OOP + owner under 65 ⇒ zero spend (general spending can NEVER flow through the cap — the laundering floor)', () => {
+    expect(
+      hsaQualifiedSpend({ hsaBalance: 500_000, oopMedical: 0, medicareCost: 0, ownerIs65Plus: false, fundingNeed: 100_000 }),
+    ).toBe(0)
+  })
+
+  it('R19: every argument is finiteness-checked FIRST (a NaN propagates through Math.min — insight 010)', () => {
+    const good = { hsaBalance: 10_000, oopMedical: 1_000, medicareCost: 0, ownerIs65Plus: false, fundingNeed: 50_000 }
+    expect(() => hsaQualifiedSpend({ ...good, hsaBalance: NaN })).toThrow(/hsaBalance/)
+    expect(() => hsaQualifiedSpend({ ...good, hsaBalance: -1 })).toThrow(/hsaBalance/)
+    expect(() => hsaQualifiedSpend({ ...good, oopMedical: NaN })).toThrow(/oopMedical/)
+    expect(() => hsaQualifiedSpend({ ...good, oopMedical: Infinity })).toThrow(/oopMedical/)
+    expect(() => hsaQualifiedSpend({ ...good, medicareCost: NaN })).toThrow(/medicareCost/)
+    expect(() => hsaQualifiedSpend({ ...good, fundingNeed: NaN })).toThrow(/fundingNeed/)
+    expect(() => hsaQualifiedSpend({ ...good, fundingNeed: -5 })).toThrow(/fundingNeed/)
   })
 })

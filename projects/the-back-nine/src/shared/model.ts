@@ -246,6 +246,19 @@ export interface OverlayParams {
    *  understate cost → overstate survival (the cardinal calm-but-wrong sin). Unused once the sim has
    *  ≥2 years of its own history. ABSENT is legitimate when no one is near 65 at the start. */
   readonly irmaaMagiSeed?: readonly number[]
+  // --- U3 · M5: the HSA spend-side inputs (absent / `buckets.hsa` 0 ⇒ the 3-bucket path,
+  //     byte-identical — the as-we-go default). ---
+  /** Per-year out-of-pocket QUALIFIED medical cost (real $), indexed by ABSOLUTE year. CAP-ONLY —
+   *  PINNED: it sizes the HSA qualified-spend cap and NEVER joins the funding need (the household
+   *  spending figure is DEFINED as already including OOP medical — the containment premise; premiums
+   *  are the only health cost priced on top). At `buckets.hsa = 0` the stream is inert. */
+  readonly oopMedical?: readonly number[]
+  /** WHICH person owns the household HSA (the `people` index: 0 = owner, 1 = spouse). The 65+
+   *  Medicare-premium spend privilege keys to the OWNER's age, never the spouse's (Pub 969), so this
+   *  is REQUIRED whenever `taxEnabled` and `buckets.hsa > 0` — a person-0 default would mis-key the
+   *  privilege for a spouse-owned HSA (burned/062). On the owner's death the HSA rolls to the
+   *  surviving spouse and the privilege re-keys immediately. */
+  readonly hsaOwnerIndex?: number
 }
 
 // ---------------------------------------------------------------------------

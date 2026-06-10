@@ -2340,9 +2340,13 @@ describe('taxOverlay — M5 · Slice 1: the hsa bucket rides (reduce-to-spine + 
 
     it('tax ON: the riding hsa changes NOTHING about the taxed general trajectory (decomposes identically)', () => {
       const cfg: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: false, household: mkHousehold(2026, 1966, 1968) }
+      // tax ON + hsa > 0 requires the owner identity (Slice 2). With NO oopMedical stream and
+      // healthcare OFF (no Medicare cost priced — medicareCost = 0 even after the owner turns 65
+      // at t = 5), the qualified cap is 0 every year: the hsa rides untouched, so the OFF-arm
+      // decomposition identity must hold under tax too.
       const withHsa = runTaxAwareDecumulation(
         { taxable: 0, pretax: G, roth: 0, hsa: HSA },
-        realStock, realBond, W, STOCK_W, 'pre-tax-first', cfg,
+        realStock, realBond, W, STOCK_W, 'pre-tax-first', cfg, { hsaOwnerIndex: 0 },
       )
       const generalOnly = runTaxAwareDecumulation(
         { taxable: 0, pretax: G, roth: 0 },
@@ -2396,6 +2400,167 @@ describe('taxOverlay — M5 · Slice 1: the hsa bucket rides (reduce-to-spine + 
           ),
         ).toThrow(/hsa/)
       }
+    })
+  })
+})
+
+// ===========================================================================
+// U3 · M5 · Slice 2 — the QUALIFIED-SPEND mechanics (externally derived, DND/012).
+//
+// THE READ-OFF TRICK (the M3 Slice-5 idiom): zero-return years make stepYear an
+// identity on the post-outflow total, so terminalReal = P_total − Σ(gross + hsaSpend)
+// EXACTLY, and the parallel surfaces read each year's figures directly. THE TAX
+// REGIME mirrors M3 Slice 5: MFJ both born 1966 (age 60 at 2026, count65 = 0,
+// flat $32,200 standard deduction; 10% to $24,800 taxable, then 12%) — every
+// expected gross below is the hand-solved fixed point gross = fundingNet + tax(gross),
+// never an engine re-run.
+// ===========================================================================
+describe('taxOverlay — M5 · Slice 2: qualified HSA spend (cap-only stream, MAGI-invisible funding)', () => {
+  const G = 1_000_000
+  const PRE65: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: false, household: mkHousehold(2026, 1966, 1966) }
+
+  it('the headline: HSA pays the OOP, the gross-up funds ONLY the rest — the medical never enters the tax base', () => {
+    // baseNet 60,000, oop 10,000, hsa 50,000 (owner 0, under 65 — privilege closed, but OOP is
+    // qualified at any age). hsaSpend = min(50,000, 10,000 + 0, 60,000) = 10,000.
+    // fundingNet = 60,000 − 10,000 = 50,000. Hand-solved gross-up (10% bracket):
+    //   gross = 50,000 + 0.10 × (gross − 32,200)  ⇒  0.9·gross = 46,780  ⇒  gross = 51,977.77̄
+    //   (taxable 19,777.78 ≤ 24,800 ✓ — the bracket assumption holds).
+    // Year outflow = gross + hsaSpend; terminal = (G + 50,000) − gross − 10,000.
+    const r = runTaxAwareDecumulation(
+      { taxable: 0, pretax: G, roth: 0, hsa: 50_000 },
+      [0], [0], [60_000], STOCK_W, 'pre-tax-first', PRE65,
+      { oopMedical: [10_000], hsaOwnerIndex: 0 },
+    )
+    const gross = 46_780 / 0.9
+    expect(r.terminalReal).toBeCloseTo(G + 50_000 - gross - 10_000, 6)
+    expect(r.totalQualifiedHsaSpendReal).toBe(10_000)
+    expect(r.finalBuckets.hsa).toBeCloseTo(40_000, 6) // (50,000 − 10,000) × scale-of-1 (zero returns)
+    expect(r.depletionYear).toBe(NEVER_DEPLETED)
+  })
+
+  it('control arm: the SAME spending with hsa = 0 grosses up the FULL 60,000 — and crosses into the 12% bracket', () => {
+    // fundingNet = 60,000 (no HSA). 10%-bracket solve gives taxable 30,888.89 > 24,800 — REJECTED;
+    // 12% bracket: gross = 60,000 + 2,480 + 0.12 × (gross − 57,000) ⇒ 0.88·gross = 55,640
+    // ⇒ gross = 63,227.27̄  (taxable 31,027.27 in the 12% band ✓).
+    // The 11,249.49 gross gap vs the HSA arm IS the MAGI-invisibility dividend made visible.
+    const r = runTaxAwareDecumulation(
+      { taxable: 0, pretax: G, roth: 0 },
+      [0], [0], [60_000], STOCK_W, 'pre-tax-first', PRE65,
+      { oopMedical: [10_000] }, // present but INERT at hsa = 0 (cap-only)
+    )
+    expect(r.terminalReal).toBeCloseTo(G - 55_640 / 0.88, 6)
+    expect(r.totalQualifiedHsaSpendReal).toBe(0)
+  })
+
+  it('cap-only is FALSIFIABLE: at hsa = 0 an OOP-bearing year is BYTE-IDENTICAL to the OOP-absent year (a fundingNet-joined arm fails)', () => {
+    const mk = (inputs: TaxYearInputs) =>
+      runTaxAwareDecumulation(
+        { taxable: 0, pretax: G, roth: 0, hsa: 0 },
+        realStock, realBond, flat(60_000), STOCK_W, 'pre-tax-first', PRE65, inputs,
+      )
+    const withOop = mk({ oopMedical: flat(10_000) })
+    const without = mk({})
+    expect(withOop.terminalReal).toBe(without.terminalReal) // byte-identical — the stream sizes a cap, never the need
+    expect(withOop.depletionYear).toBe(without.depletionYear)
+    expect(withOop.totalQualifiedHsaSpendReal).toBe(0)
+  })
+
+  it('the prior-year-end balance is the cap base: a 15,000 HSA against 10,000/yr OOP spends 10,000 then 5,000 (the 2-year recurrence)', () => {
+    // y0: spend min(15,000, 10,000, 60,000) = 10,000 → fundingNet 50,000 → gross 51,977.77̄ (above).
+    // y0-end hsa = 5,000 (zero growth). y1: spend min(5,000, 10,000, 60,000) = 5,000 — the BALANCE
+    // binds (a fixed-initial-balance bug would spend 10,000 again); fundingNet = 55,000 → 12% band:
+    //   0.88·gross = 55,000 + 2,480 − 6,840 = 50,640 ⇒ gross = 57,545.45̄  (taxable 25,345.45 ✓).
+    const r = runTaxAwareDecumulation(
+      { taxable: 0, pretax: G, roth: 0, hsa: 15_000 },
+      [0, 0], [0, 0], [60_000, 60_000], STOCK_W, 'pre-tax-first', PRE65,
+      { oopMedical: [10_000, 10_000], hsaOwnerIndex: 0 },
+    )
+    const gross0 = 46_780 / 0.9
+    const gross1 = 50_640 / 0.88
+    expect(r.totalQualifiedHsaSpendReal).toBe(15_000)
+    expect(r.finalBuckets.hsa).toBeCloseTo(0, 8)
+    expect(r.terminalReal).toBeCloseTo(G + 15_000 - (gross0 + 10_000) - (gross1 + 5_000), 6)
+  })
+
+  it('the oopMedical stream is read PER-YEAR, aligned to netWithdrawals ([0, 0, X] spends in year 2 only)', () => {
+    // y0/y1: no OOP ⇒ no spend ⇒ gross 63,227.27̄ each (the control-arm solve). y2: spend 10,000 ⇒
+    // gross 51,977.77̄. A [t]→[0] indexing bug (or a constant-stream read) fails the terminal.
+    const r = runTaxAwareDecumulation(
+      { taxable: 0, pretax: G, roth: 0, hsa: 50_000 },
+      [0, 0, 0], [0, 0, 0], [60_000, 60_000, 60_000], STOCK_W, 'pre-tax-first', PRE65,
+      { oopMedical: [0, 0, 10_000], hsaOwnerIndex: 0 },
+    )
+    const grossNoSpend = 55_640 / 0.88
+    const grossSpend = 46_780 / 0.9
+    expect(r.totalQualifiedHsaSpendReal).toBe(10_000)
+    expect(r.terminalReal).toBeCloseTo(G + 50_000 - 2 * grossNoSpend - (grossSpend + 10_000), 6)
+  })
+
+  it('the ACA loop-breaker: HSA-funded medical adds 10,000 of REAL spending without moving MAGI or the premium', () => {
+    // CONTROL = the M3 under-cliff-clean fixture verbatim: baseNet 46,344.85, slcsp = enrolled =
+    // 15,000 → MAGI 52,875 (250% FPL exactly), net premium 4,462.65, gross 52,875.
+    // HSA ARM: baseNet 56,344.85 (10,000 MORE real spending) + oop 10,000 paid by the HSA ⇒
+    // fundingNet = 46,344.85 — the IDENTICAL inner problem ⇒ the SAME MAGI 52,875 and the SAME
+    // 4,462.65 net premium. The household spent 10,000 more with ZERO subsidy cost — the
+    // loop-breaking lever (research §4a: HSA spending counts toward NEITHER MAGI).
+    const control = runTaxAwareDecumulation(
+      { taxable: 0, pretax: G, roth: 0 },
+      [0], [0], [46_344.85], STOCK_W, 'pre-tax-first', PRE65,
+      { healthcareEnabled: true, slcsp: [15_000], enrolledPremium: [15_000] },
+    )
+    const hsaArm = runTaxAwareDecumulation(
+      { taxable: 0, pretax: G, roth: 0, hsa: 50_000 },
+      [0], [0], [56_344.85], STOCK_W, 'pre-tax-first', PRE65,
+      { healthcareEnabled: true, slcsp: [15_000], enrolledPremium: [15_000], oopMedical: [10_000], hsaOwnerIndex: 0 },
+    )
+    expect(control.totalNetPremiumReal).toBeCloseTo(4_462.65, 2)
+    expect(hsaArm.totalNetPremiumReal).toBeCloseTo(4_462.65, 2) // SAME premium — MAGI did not move
+    expect(control.terminalReal).toBeCloseTo(G - 52_875, 2)
+    expect(hsaArm.terminalReal).toBeCloseTo(G + 50_000 - 52_875 - 10_000, 2) // same gross + the hsa outflow
+    expect(hsaArm.totalQualifiedHsaSpendReal).toBe(10_000)
+  })
+
+  describe('R19 (direct caller): the slice-2 inputs fail LOUD at the overlay backstop', () => {
+    it('a NaN / negative / +Infinity oopMedical entry throws (a real dollar cost has no +Infinity sentinel)', () => {
+      for (const bad of [NaN, -1, Infinity]) {
+        expect(() =>
+          runTaxAwareDecumulation(
+            { taxable: 0, pretax: G, roth: 0, hsa: 10_000 },
+            [0], [0], [40_000], STOCK_W, 'pre-tax-first', PRE65,
+            { oopMedical: [bad], hsaOwnerIndex: 0 },
+          ),
+        ).toThrow(/oopMedical/)
+      }
+    })
+
+    it('tax on + hsa > 0 with NO owner identity throws — a person-0 default is an in-range default (burned/062)', () => {
+      expect(() =>
+        runTaxAwareDecumulation(
+          { taxable: 0, pretax: G, roth: 0, hsa: 10_000 },
+          [0], [0], [40_000], STOCK_W, 'pre-tax-first', PRE65,
+        ),
+      ).toThrow(/hsaOwnerIndex/)
+    })
+
+    it('an out-of-range / non-integer owner index throws', () => {
+      for (const bad of [-1, 2, 0.5]) {
+        expect(() =>
+          runTaxAwareDecumulation(
+            { taxable: 0, pretax: G, roth: 0, hsa: 10_000 },
+            [0], [0], [40_000], STOCK_W, 'pre-tax-first', PRE65,
+            { hsaOwnerIndex: bad },
+          ),
+        ).toThrow(/hsaOwnerIndex/)
+      }
+    })
+
+    it('hsa = 0 needs NO owner identity (the requirement keys to a live hsa, not the field family)', () => {
+      expect(() =>
+        runTaxAwareDecumulation(
+          { taxable: 0, pretax: G, roth: 0, hsa: 0 },
+          [0], [0], [40_000], STOCK_W, 'pre-tax-first', PRE65,
+        ),
+      ).not.toThrow()
     })
   })
 })

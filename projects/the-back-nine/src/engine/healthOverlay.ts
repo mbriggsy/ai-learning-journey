@@ -7,15 +7,18 @@
  * entropy/clock/environment (the engine-purity lint covers `src/engine/**`).
  *
  * STATUS (per-milestone detail in git log; the load-bearing tested contracts in CLAUDE.md +
- * docs/insights/): U3 ships M1–M4 — the federal constants (`constants/health.ts`: ACA applicable-%,
+ * docs/insights/): U3 ships M1–M5 — the federal constants (`constants/health.ts`: ACA applicable-%,
  * FPL guidelines, the IRMAA schedule), the TWO MAGI calculators (below; ACA-MAGI and IRMAA-MAGI are
  * deliberately distinct numbers, research §4a — the single fact the whole pre-65↔post-65 model rests
  * on), the pre-65 ACA premium fixed-point + explicit 400%-FPL cliff (`solveAcaFundedGross`, wired
- * into `taxOverlay.ts`/`simulate.ts`), and the post-65 IRMAA 2-yr-lagged feed-forward. M5 (the HSA
- * 4th bucket) + M6 (the final cross-overlay integration) remain. Each cost-input stream + its
- * reduce-to-spine wiring lands with its first consumer, carrying a `Number.isFinite`-first R19 guard
- * at BOTH `validateParams` and the overlay backstop (insights 008/010 — the proven U2 as-we-go
- * pattern). See docs/plans/back-nine-mvp/phase-1-foundation.md (Unit 3) +
+ * into `taxOverlay.ts`/`simulate.ts`), the post-65 IRMAA 2-yr-lagged feed-forward, and M5's HSA 4th
+ * bucket SPEND side (`hsaQualifiedSpend` below, wired into `taxOverlay.ts` — the 2026-06-08 reshape
+ * moved HSA *contributions* to the accumulation track's C2). M6 (the final cross-overlay
+ * integration) remains. Each cost-input stream + its reduce-to-spine wiring lands with its first
+ * consumer, carrying a `Number.isFinite`-first R19 guard at BOTH `validateParams` and the overlay
+ * backstop (insights 008/010 — the proven U2 as-we-go pattern). See
+ * docs/plans/back-nine-mvp/phase-1-foundation.md (Unit 3) +
+ * docs/plans/2026-06-08-001-feat-fuck-off-date-accumulation-plan.md (B1) +
  * docs/research/pre65-healthcare-aca-hsa-2026-06-04.md.
  *
  * LOAD-BEARING CONTRACTS (do not regress; each is documented + tested at its implementation site):

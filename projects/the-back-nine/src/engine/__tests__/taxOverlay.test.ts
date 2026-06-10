@@ -2703,9 +2703,10 @@ describe('taxOverlay — M5 · Slice 5: Σ(4 buckets) === terminalReal under eve
   for (const policy of DRAWDOWN_POLICIES) {
     it(`${policy}: the 4-bucket sum reconciles to the terminal and no bucket goes negative`, () => {
       const got = runTaxAwareDecumulation(buckets, realStock, realBond, flat(45_000), STOCK_W, policy, cfg, inputs)
-      if (got.depletionYear === NEVER_DEPLETED) {
-        expect(Math.abs(totalAcrossBuckets(got.finalBuckets) / got.terminalReal - 1)).toBeLessThan(1e-9)
-      }
+      // The fixture is sized to SURVIVE — assert it, so the reconciliation can never go silently
+      // vacuous behind a depletion branch (the M5 boundary review caught the unguarded `if`).
+      expect(got.depletionYear).toBe(NEVER_DEPLETED)
+      expect(Math.abs(totalAcrossBuckets(got.finalBuckets) / got.terminalReal - 1)).toBeLessThan(1e-9)
       expect(got.finalBuckets.taxable).toBeGreaterThanOrEqual(0)
       expect(got.finalBuckets.pretax).toBeGreaterThanOrEqual(0)
       expect(got.finalBuckets.roth).toBeGreaterThanOrEqual(0)
@@ -2714,4 +2715,87 @@ describe('taxOverlay — M5 · Slice 5: Σ(4 buckets) === terminalReal under eve
       expect(got.totalQualifiedHsaSpendReal).toBeGreaterThan(0)
     })
   }
+})
+
+// ===========================================================================
+// U3 · M5 — the BOUNDARY-REVIEW battery (the ultramode pass on the M5 unit).
+// Each test below closes a verified mutation-survival seam or crossing gap the
+// review found: a wrong implementation that passed the pre-review green suite
+// now fails a named fixture (insights 014/015).
+// ===========================================================================
+describe('taxOverlay — M5 boundary review: the verified seams', () => {
+  const BASE = partB2026.value.standardPremiumMonthly
+  const lowSeed = [60_000, 60_000]
+
+  it('a GENERAL-DEPLETION year accrues NO totalQualifiedHsaSpendReal (the third parallel surface gets the sibling depletion test)', () => {
+    // tax ON + live hsa + oop > 0, general pool too small for the year-0 gross: the spend WAS
+    // computed (5,000) but the year is unfundable — the guard breaks BEFORE the accrual, so the
+    // surface must read 0 (an inline accrual, or the guard moved below the accruals, fails here —
+    // exactly the over-accrue class the totalNetPremiumReal / totalMedicareCostReal siblings pin).
+    const cfg: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: false, household: mkHousehold(2026, 1966, 1966) }
+    const r = runTaxAwareDecumulation(
+      { taxable: 10_000, pretax: 0, roth: 0, hsa: 100_000 },
+      [0], [0], [30_000], STOCK_W, 'taxable-first', cfg,
+      { oopMedical: [5_000], hsaOwnerIndex: 0, initialTaxableBasis: 10_000 },
+    )
+    expect(r.depletionYear).toBe(0)
+    expect(r.terminalReal).toBe(0)
+    expect(r.totalQualifiedHsaSpendReal).toBe(0) // the unfundable year paid nothing
+    expect(r.totalNetPremiumReal).toBe(0)
+    expect(r.totalMedicareCostReal).toBe(0)
+  })
+
+  it('the owner AGING INTO 65 mid-run opens the privilege at the birthday year (insight 014 — the third crossing)', () => {
+    // Both born 1962 ⇒ 64 at t=0 (count65 = 0, no Medicare cost), 65 at t=1 (count65 = 2, the
+    // privilege opens via the owner''s OWN birthday — no death involved). oop = 0 isolates the
+    // premium component: y0 spend 0 (nothing priced), y1 spend = 2×BASE×12 (low seed, base only).
+    // A frozen age-at-year-0 implementation (ownerIs65Plus hoisted out of the loop — the plausible
+    // P4 hot-loop refactor) yields 0 and fails.
+    const cfg: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: false, household: mkHousehold(2026, 1962, 1962) }
+    const r = runTaxAwareDecumulation(
+      { taxable: 0, pretax: 1_000_000, roth: 0, hsa: 100_000 },
+      [0, 0], [0, 0], [40_000, 40_000], STOCK_W, 'pre-tax-first', cfg,
+      { healthcareEnabled: true, irmaaMagiSeed: lowSeed, hsaOwnerIndex: 0 },
+    )
+    const mc1 = 2 * BASE * 12
+    expect(r.totalQualifiedHsaSpendReal).toBeCloseTo(mc1, 8) // year 1 ONLY — the crossing pinned
+    expect(r.finalBuckets.hsa).toBeCloseTo(100_000 - mc1, 6)
+  })
+
+  it('fundingNeed includes the Medicare cost: a tiny-net heavy-medical year spends net + medicareCost, never just net', () => {
+    // Both 67, net = 1,000 (an SS-covered household), oop = 50,000 (a heavy medical year),
+    // hsa = 100,000. cap = oop + mc (owner 65+); fundingNeed = net + mc BINDS:
+    // spend = 1,000 + 2×BASE×12. A `fundingNeed: net` mutation spends only 1,000 — the seam the
+    // review found undiscriminated (every prior fixture had the clamp slack). fundingNet then = 0
+    // ⇒ gross = 0 (nothing to tax) ⇒ terminal = P + H − spend exactly (zero returns).
+    const cfg: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: false, household: mkHousehold(2026, 1959, 1959) }
+    const P = 1_000_000
+    const r = runTaxAwareDecumulation(
+      { taxable: 0, pretax: P, roth: 0, hsa: 100_000 },
+      [0], [0], [1_000], STOCK_W, 'pre-tax-first', cfg,
+      { healthcareEnabled: true, irmaaMagiSeed: lowSeed, oopMedical: [50_000], hsaOwnerIndex: 0 },
+    )
+    const spend = 1_000 + 2 * BASE * 12
+    expect(r.totalQualifiedHsaSpendReal).toBeCloseTo(spend, 8)
+    expect(r.terminalReal).toBeCloseTo(P + 100_000 - spend, 6)
+  })
+
+  it('R19: a direct caller threading value-equal (non-canonical) OverlayPerson refs with a live hsa fails LOUD — the aggregate-path mirror of the per-person reference guard', () => {
+    // The owner-alive re-key (`rmdOwner === hsaOwnerPerson`) is reference-identity logic; fresh
+    // `{ birthYear }` literals would silently re-key a spouse-owned HSA to living[0]''s age (the
+    // optimistic direction). The hoisted guard must throw — exactly like the per-person path does.
+    const cfg: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: false, household: mkHousehold(2026, 1966, 1959) }
+    expect(() =>
+      runTaxAwareDecumulation(
+        { taxable: 0, pretax: 1_000_000, roth: 0, hsa: 100_000 },
+        [0], [0], [40_000], STOCK_W, 'pre-tax-first', cfg,
+        {
+          healthcareEnabled: true,
+          irmaaMagiSeed: lowSeed,
+          hsaOwnerIndex: 1,
+          householdYears: [{ living: [{ birthYear: 1966 }, { birthYear: 1959 }] }], // fresh literals — NOT the canonical refs
+        },
+      ),
+    ).toThrow(/canonical people/)
+  })
 })

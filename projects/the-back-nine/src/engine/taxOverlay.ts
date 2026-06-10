@@ -10,10 +10,15 @@
  * portfolio TOTAL is advanced by the SAME {@link stepYear} the validated spine uses —
  * the overlay never re-implements the growth/rebalance math, so within-year order can
  * never drift. Per-bucket balances are a parallel ledger consumed only by the tax
- * computation; they never feed back into the total when tax is OFF. Therefore under
+ * computation; they never feed back into the total when tax is OFF — with ONE deliberate,
+ * tested M5 exception: when the run starts with a live `hsa` bucket, the LEDGER's
+ * general-drawable split drives the general-depletion guard (a year whose gross need
+ * exceeds taxable+pretax+roth is unfundable even though the hsa-inclusive total is
+ * positive), under ANY config including OFF. That guard is `hsaLive`-gated, so the
+ * EXHAUSTIVE OFF condition below — which has no hsa bucket — is untouched. Under
  * the EXHAUSTIVE OFF condition — buckets collapsed to one pool AND conversion = 0 AND
- * tax off AND RMD-inert — the total trajectory is BYTE-IDENTICAL (same seed) to the
- * Trinity/Bengen-validated spine. The golden cases are never perturbed.
+ * tax off AND RMD-inert (AND no hsa bucket) — the total trajectory is BYTE-IDENTICAL
+ * (same seed) to the Trinity/Bengen-validated spine. The golden cases are never perturbed.
  *
  * One shared market draw (contract #2): every bucket grows by the SAME blended return
  * `stepYear` applies to the total — buckets differ only in tax treatment, never in
@@ -984,6 +989,12 @@ export function runTaxAwareDecumulation(
   // an HSA balance. Gating on the initial balance — not the per-year one — keeps the semantics stable
   // as the HSA drains, and makes `hsa` absent/0 byte-identical to the 3-bucket overlay by construction
   // (the gated code never executes, so no new float operation can perturb the spine; reduce-to-spine).
+  // PREMISE (load-bearing): the M5 spend-side hsa has NO INFLOWS — the balance is monotone
+  // non-increasing, so initial-balance gating covers every year. FORWARD LANDMINE (C2): when the
+  // accumulation track lands HSA CONTRIBUTIONS, a run can start at hsa = 0 and GAIN a balance
+  // mid-run — `hsaLive` must be re-derived in the SAME change (presence-keyed on the contribution
+  // stream as well, mirroring the accumulation plan's presence-keyed construct), else the spend
+  // mechanics + the general-depletion guard stay dark for exactly those runs (silent, optimistic).
   const hsaLive = (initialBuckets.hsa ?? 0) > 0
 
   // Per-person pre-tax sub-ledger (M6b·B). Active ONLY when the caller supplies the per-person
@@ -1071,26 +1082,30 @@ export function runTaxAwareDecumulation(
     // already routes the single pool to the survivor via resolveYear (rmdOwner = living[0]).
     let alive: boolean[] | null = null
     let perRmd: number[] | null = null
-    if (pretaxLedger) {
+    // Reference-identity integrity (R19): aliveCanonical matches the living set to the canonical
+    // people BY REFERENCE. TWO consumers depend on that identity: the per-person pre-tax ledger
+    // (rollover + per-person RMD) AND the M5 hsa OWNER-alive resolution below (`rmdOwner ===
+    // hsaOwnerPerson` — the 65+ Medicare-premium privilege re-key). A caller threading
+    // distinct-but-equal objects instead of the household's own would silently mark everyone
+    // dead (zero RMD forever) on the ledger path, or silently re-key a spouse-owned HSA to
+    // living[0]'s age on the hsa path (privilege opens early when person 0 is older — the
+    // optimistic, calm-but-wrong direction). Fail loud for BOTH consumers — the production caller
+    // (simulate) threads identical references so this never fires; it guards the future P3/P4
+    // DIRECT caller the backstop discipline exists for. (U3-exit pilot caught the ledger half; the
+    // M5 boundary review caught that the hsa half was unguarded on the aggregate path.)
+    if (pretaxLedger || (hsaLive && hsaOwnerPerson !== undefined)) {
       alive = aliveCanonical(people, householdYears, t)
-      // Fail-loud on a reference mismatch (R19): aliveCanonical matches the living set to the
-      // canonical people BY REFERENCE. If a year's living set is non-empty yet matches NOBODY, the
-      // caller threaded distinct-but-equal objects instead of the household's own — which would
-      // SILENTLY mark everyone dead → zero RMD forever (calm-but-wrong, the cardinal sin). Reject it.
       const injected = householdYears[t]
-      // Fail-loud on ANY reference mismatch (R19): aliveCanonical matches the living set to the canonical
-      // people BY REFERENCE. If the count of canonical people found alive ≠ the living-set size, the caller
-      // threaded a distinct-but-equal object instead of the household's own — a TOTAL mismatch (marks
-      // everyone dead → zero RMD forever) OR a PARTIAL one (one good ref + one stranger → silently rolls a
-      // living spouse's IRA to the wrong survivor and forces RMD on the wrong owner's age/divisor). Both are
-      // calm-but-wrong, the cardinal sin. The production caller (simulate) threads identical references so
-      // this never fires; it guards the future P3/P4 DIRECT caller the backstop exists for. (U3-exit
-      // code-review pilot — the prior `!alive.some` check caught only the TOTAL mismatch, not the partial.)
+      // ANY mismatch — TOTAL (marks everyone dead) or PARTIAL (one good ref + one stranger →
+      // wrong rollover target / wrong RMD age / wrong hsa owner) — is rejected. (U3-exit
+      // code-review pilot — the prior `!alive.some` check caught only the TOTAL mismatch.)
       if (injected !== undefined && alive.filter((a) => a).length !== injected.living.length) {
         throw new Error(
-          '[taxOverlay] householdYears living set has a member that is not one of the household canonical people (per-person path requires the SAME OverlayPerson references as the household)',
+          '[taxOverlay] householdYears living set has a member that is not one of the household canonical people (the per-person ledger AND the hsa owner resolution require the SAME OverlayPerson references as the household)',
         )
       }
+    }
+    if (pretaxLedger && alive) {
       const survivor = alive.findIndex((a) => a)
       for (let i = 0; i < pretaxLedger.length; i++) {
         if (!alive[i] && pretaxLedger[i]! > 0 && survivor >= 0) {

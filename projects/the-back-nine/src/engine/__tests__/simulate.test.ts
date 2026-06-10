@@ -894,3 +894,43 @@ describe('U3 · M5 HSA spend wired into simulate', () => {
     expect(t2[0]!).toBeGreaterThan(t0[0]!) // non-vacuous: the cap genuinely moved the terminal
   })
 })
+
+// The M5 boundary review: the hsaOwnerIndex pass-through was never exercised with a value the
+// answer DEPENDS on — a hardcode-0 mutation in the taxInputs spread survived green (insight 015).
+describe('U3 · M5 — the hsaOwnerIndex wire pass-through is answer-bearing', () => {
+  it('an age-gap couple: owner 1 (the 67yo) opens the Medicare-premium privilege; owner 0 (the 60yo) does not — through the FULL simulate wire', () => {
+    const P = 1_000_000
+    const H = 80_000
+    const m60: PersonInputs = { ...MALE_65, currentAge: 60, retirementAge: 60 }
+    const f67: PersonInputs = { ...FEMALE_65, currentAge: 67, retirementAge: 67 }
+    const base = makeParams({
+      initialPortfolio: P,
+      annualSpendingReal: 60_000,
+      people: [m60, f67],
+      longevityMode: 'fixed-horizon',
+      maxHorizonYears: 2,
+      paths: 50,
+      drawdownPolicy: 'pre-tax-first',
+    })
+    const overlay = (hsaOwnerIndex: number): OverlayParams => ({
+      taxEnabled: true,
+      rmdEnabled: false,
+      startCalendarYear: 2026,
+      buckets: { taxable: 0, pretax: P - H, roth: 0, hsa: H },
+      filing: 'mfj',
+      healthcareEnabled: true,
+      irmaaMagiSeed: [60_000, 60_000], // f67 is Medicare-enrolled in years 0,1
+      hsaOwnerIndex,
+    })
+    const owner1 = dist(simulate({ ...base, overlay: overlay(1) }, 2468)) // the 67yo owns the HSA — privilege OPEN
+    const owner0 = dist(simulate({ ...base, overlay: overlay(0) }, 2468)) // the 60yo owns it — privilege CLOSED
+    // Same seed + dims (CRN): the ONLY difference is WHOSE age keys the privilege. With the
+    // privilege open the Medicare premium is HSA-paid (no gross-up drag) ⇒ every path ends higher.
+    // A hardcoded index anywhere in the wire makes these byte-identical — and fails here.
+    expect(owner1.terminalValuesReal).not.toEqual(owner0.terminalValuesReal)
+    for (let p = 0; p < owner1.terminalValuesReal.length; p++) {
+      expect(owner1.terminalValuesReal[p]!).toBeGreaterThanOrEqual(owner0.terminalValuesReal[p]!)
+    }
+    expect(owner1.terminalValuesReal[0]!).toBeGreaterThan(owner0.terminalValuesReal[0]!) // non-vacuous
+  })
+})

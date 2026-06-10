@@ -24,6 +24,7 @@ import {
   type HouseholdYear,
   type OverlayPerson,
 } from '@engine/taxOverlay'
+import { totalAcrossBuckets } from '@engine/sequencing'
 import { irmaa } from '@engine/constants'
 import { DRAWDOWN_POLICIES, NEVER_DEPLETED, type DepletionYear, type Distribution, type SimulationParams } from '@shared/model'
 
@@ -240,8 +241,9 @@ function validateParams(params: SimulationParams): string | null {
     // The overlay's total IS the portfolio: the buckets (ALL FOUR — the medical-earmarked hsa is
     // part of the portfolio and rides the one shared market draw) must sum to initialPortfolio (a
     // relative tolerance absorbs the caller's float dust) so a collapsed-pool overlay reduces to
-    // the spine.
-    const bucketSum = b.taxable + b.pretax + b.roth + (b.hsa ?? 0)
+    // the spine. The sum is the CANONICAL totalAcrossBuckets — never re-derived inline, so a future
+    // 5th bucket cannot silently desync the gate from the engine's own total (single-source).
+    const bucketSum = totalAcrossBuckets(b)
     if (Math.abs(bucketSum - params.initialPortfolio) > 1e-6 * Math.max(1, Math.abs(params.initialPortfolio)))
       return 'overlay buckets must sum to initialPortfolio'
     // Finiteness is checked UNCONDITIONALLY when present — NOT gated on `b.taxable > 0`. A NaN basis with

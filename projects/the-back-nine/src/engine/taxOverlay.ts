@@ -267,11 +267,43 @@ export interface TaxYearInputs {
    *  M6b alignment). The 65+ Medicare-premium spend privilege keys to the OWNER's age, never the
    *  spouse's (Pub 969 via `hsaFourthBucketRules`), so the identity moves the answer: REQUIRED
    *  (fail-loud, burned/062 — a person-0 default is an in-range default) whenever tax is ON and the
-   *  hsa bucket is non-empty. On the owner's death the HSA rolls to the surviving spouse (the
+   *  run can ever hold HSA dollars (initial balance OR a positive hsa contribution inflow — the C2
+   *  `hsaLive` property). On the owner's death the HSA rolls to the surviving spouse (the
    *  spouse-beneficiary assumption) and the privilege re-keys to the survivor's age IMMEDIATELY
    *  (ownership transfers at death — unlike IRMAA's +2yr billing lag). v1 models ONE household HSA;
-   *  per-person HSA splitting (each spouse's own account) arrives with C2's contribution side. */
+   *  the contribution side (C2) routes each person's hsa stream into this one household bucket. */
   readonly hsaOwnerIndex?: number
+  // --- C2: the accumulation contribution inflows. ABSENT ⇒ the byte-identical decumulation-only
+  //     overlay (every read is `?? 0` and every fold is `x + 0`, exact IEEE no-ops). ---
+  /** Per-year, PRE-COLLAPSED per-bucket contribution inflows (C2 §2c), indexed by ABSOLUTE year,
+   *  AUXILIARY (a missing/short/holed entry ⇒ a $0-inflow year, never the end of data). The
+   *  CALLER assembles these PER-PATH (§7's B×C consequence): person-keyed streams → the
+   *  alive∧working filter (`t < deathOffset_i && t < retire_i`) → the HSA owner-enrollment
+   *  zeroing → person→bucket aggregation — assembling death-truncation here per-path is what
+   *  stops a dead spouse's phantom contributions resurrecting at the overlay layer. Each year's
+   *  amounts are credited END-OF-YEAR at face value AFTER the bucket-scale (stepYear owns the
+   *  crediting convention, contract #3); they never enter the draw pool, the withdrawal
+   *  allocation, the RMD forced-excess base, or the basis pro-rata denominator (an end-of-year
+   *  arrival is not drawable, convertible, or RMD-base in its arrival year). */
+  readonly contributions?: readonly YearContribution[]
+}
+
+/** One year's pre-collapsed per-bucket contribution inflow (C2). All real $, finite ≥ 0
+ *  (NaN-first-guarded at BOTH validateParams and the overlay backstop — insights 008/010). */
+export interface YearContribution {
+  /** → the taxable bucket; enters at FULL basis (after-tax dollars: basis += this, UNSCALED). */
+  readonly taxable: number
+  /** Per-CANONICAL-PERSON pretax contribution incl. the employer match (match → pretax even on
+   *  a Roth 401(k) deferral — the confirmed default rule), aligned to the household's canonical
+   *  people (owner = 0, spouse = 1). Σ = the aggregate pretax credit; when the per-person
+   *  pre-tax ledger is active each slot credits its OWN person's ledger (an aggregate-only
+   *  credit would desync next year's per-person RMD — the no-parallel-ledger-drift contract).
+   *  A nonzero credit on a DEAD person's slot fails loud (the caller owns death truncation). */
+  readonly pretaxByPerson: readonly number[]
+  /** → the roth bucket. */
+  readonly roth: number
+  /** → the hsa bucket (already owner-enrollment-zeroed by the caller's assembly — C2 §3b). */
+  readonly hsa: number
 }
 
 const EMPTY_BUCKETS: AccountBuckets = { taxable: 0, pretax: 0, roth: 0, hsa: 0 }
@@ -885,6 +917,7 @@ export function runTaxAwareDecumulation(
     irmaaMagiSeed = [],
     oopMedical = [],
     hsaOwnerIndex,
+    contributions = [],
   } = taxInputs
 
   // Healthcare requires tax (U3 · M3 Slice 4): the ACA PTC keys off ACA-MAGI, which this engine
@@ -1008,18 +1041,40 @@ export function runTaxAwareDecumulation(
       '[taxOverlay] netWithdrawals entries must be finite and ≥ 0 — a negative draw would mint money into the portfolio (simulate clamps at 0 in cashTermsForYear; contributions are the accumulation plan’s explicit signed term, never a negative withdrawal)',
     )
   }
+  // C2: the contribution inflow stream — the overlay's own fail-loud backstop (the "BOTH
+  // validateParams AND the overlay backstop" discipline). Finiteness FIRST on every field
+  // (insights 008/010 — a NaN sails through `?? 0`, every relational compare, AND the
+  // hsa-liveness `> 0` below, then poisons the stepYear credit / the ledger / the basis).
+  // A NEGATIVE entry would be a disguised withdrawal that bypasses the draw allocation —
+  // rejected, never coerced (burned/062). Holes/short entries stay legitimate ($0 years).
+  const finiteNonNegC = (x: number) => Number.isFinite(x) && x >= 0
+  for (const c of contributions) {
+    if (c === undefined) continue
+    if (
+      !finiteNonNegC(c.taxable) ||
+      !finiteNonNegC(c.roth) ||
+      !finiteNonNegC(c.hsa) ||
+      !c.pretaxByPerson.every(finiteNonNegC)
+    ) {
+      throw new Error(
+        '[taxOverlay] contributions entries must be finite and ≥ 0 in every bucket — a NaN poisons the end-of-year credit and a negative is a disguised withdrawal bypassing the draw allocation (insights 008/010; burned/062)',
+      )
+    }
+  }
+
   // HSA liveness is a RUN-level constant (U3 · M5): the 4th-bucket semantics (the owner requirement,
-  // the general-depletion check, the qualified-spend mechanics) exist only when the run STARTS with
-  // an HSA balance. Gating on the initial balance — not the per-year one — keeps the semantics stable
-  // as the HSA drains, and makes `hsa` absent/0 byte-identical to the 3-bucket overlay by construction
-  // (the gated code never executes, so no new float operation can perturb the spine; reduce-to-spine).
-  // PREMISE (load-bearing): the M5 spend-side hsa has NO INFLOWS — the balance is monotone
-  // non-increasing, so initial-balance gating covers every year. FORWARD LANDMINE (C2): when the
-  // accumulation track lands HSA CONTRIBUTIONS, a run can start at hsa = 0 and GAIN a balance
-  // mid-run — `hsaLive` must be re-derived in the SAME change (presence-keyed on the contribution
-  // stream as well, mirroring the accumulation plan's presence-keyed construct), else the spend
-  // mechanics + the general-depletion guard stay dark for exactly those runs (silent, optimistic).
-  const hsaLive = (initialBuckets.hsa ?? 0) > 0
+  // the general-depletion check, the qualified-spend mechanics) exist only when the run can EVER
+  // hold HSA dollars. C2 RE-DERIVED the property (the M5 forward landmine, resolved here): the M5
+  // premise "the hsa has no inflows, so the initial balance covers every year" breaks once the
+  // accumulation construct can land HSA CONTRIBUTIONS mid-run — a run starting at hsa = 0 with a
+  // positive hsa inflow would otherwise leave the spend mechanics + the general-depletion guard
+  // dark (silent, optimistic). The gate is on the PROPERTY — "can the run ever hold hsa dollars"
+  // — not on any one consumer (insight 020): initial balance > 0 OR any year's hsa inflow > 0.
+  // A zero-valued/absent contribution stream leaves the M5 derivation verbatim (no inflow can
+  // arrive ⇒ monotone non-increasing balance ⇒ initial-balance gating still covers every year),
+  // so hsa absent/0 with no inflow stays byte-identical to the 3-bucket overlay by construction.
+  const hsaLive =
+    (initialBuckets.hsa ?? 0) > 0 || contributions.some((c) => c !== undefined && c.hsa > 0)
 
   // Per-person pre-tax sub-ledger (M6b·B). Active ONLY when the caller supplies the per-person
   // split AND the overlay does work (tax or RMD on) — otherwise null, and the aggregate M6a path
@@ -1094,6 +1149,16 @@ export function runTaxAwareDecumulation(
     // Aligned-length contract: a missing entry is the end of data, not a 0 year.
     if (rs === undefined || rb === undefined || net === undefined) break
 
+    // C2: this year's contribution inflow (auxiliary stream — a missing entry is a $0 year).
+    // Collapsed once here; every downstream read is a plain local, and with no contributions
+    // all five are EXACTLY 0, so every `x + 0` fold below is an IEEE no-op (reduce-to-spine).
+    const yearC = contributions[t]
+    const cTaxable = yearC?.taxable ?? 0
+    const cPretaxTotal = yearC === undefined ? 0 : yearC.pretaxByPerson.reduce((a, b) => a + b, 0)
+    const cRoth = yearC?.roth ?? 0
+    const cHsa = yearC?.hsa ?? 0
+    const contributionTotal = cTaxable + cPretaxTotal + cRoth + cHsa
+
     // Per-year household regime (M6a): the survivor-aware filing / 65+ count / RMD-owner, from the
     // injected stream when present, else the static household (verbatim M1–M5). Resolved only when
     // the overlay is active (tax or RMD on ⇒ the ON config carries `household`); under the
@@ -1135,6 +1200,20 @@ export function runTaxAwareDecumulation(
         if (!alive[i] && pretaxLedger[i]! > 0 && survivor >= 0) {
           pretaxLedger[survivor]! += pretaxLedger[i]!
           pretaxLedger[i] = 0
+        }
+      }
+      // C2 §7: a nonzero pretax contribution credited to a DEAD person's slot is incoherent input —
+      // the caller assembles the per-year amounts death-truncated PER-PATH (the B×C consequence), so
+      // a violation means a phantom dead-spouse contribution is about to overstate the nest egg.
+      // Validated ONCE here (both fold branches below then credit living slots unconditionally) —
+      // fail loud, never silently resurrect or silently drop (burned/062).
+      if (yearC !== undefined) {
+        for (let i = 0; i < alive.length; i++) {
+          if ((yearC.pretaxByPerson[i] ?? 0) > 0 && !alive[i]) {
+            throw new Error(
+              '[taxOverlay] a contribution credited to a DEAD person’s pretax ledger slot — the caller owns per-path death truncation (C2 §7); a phantom dead-spouse contribution overstates the nest egg',
+            )
+          }
         }
       }
     }
@@ -1266,6 +1345,18 @@ export function runTaxAwareDecumulation(
         enrolledThisYear > 0 &&
         pre65 > 0
       ) {
+        // §6 EMPTY-OVERLAP INVARIANT (C2): a priced ACA year can NEVER carry a contribution. In
+        // the v1 model contributions occupy the working years and ACA pricing the retired pre-65
+        // window — the same boundary `Y` (R31 + R33), so the overlap is structurally empty; an
+        // input carrying both is incoherent (the model does not price the HSA-contribution MAGI
+        // deduction, so the year would be priced WRONG, not conservatively). FAIL LOUD — this is
+        // the falsifiable structural guard that replaces the vacuous date==date comparison (§6);
+        // the "may be slightly earlier" one-directional reading is D2's disclosure copy, not code.
+        if (contributionTotal > 0) {
+          throw new Error(
+            '[taxOverlay] a priced ACA year cannot carry a contribution inflow — contributions and ACA pricing are temporally disjoint in the v1 model (C2 §6; the HSA-contribution MAGI deduction is unmodeled, so the year would price wrong)',
+          )
+        }
         // A missing benchmark in a priced year fails LOUD via the solver's own R19 backstop
         // (NaN → throw → the worker's calm-error), never a silent phantom subsidy. burned/062.
         const aca = solveAcaFundedGross(
@@ -1323,8 +1414,10 @@ export function runTaxAwareDecumulation(
 
     // Advance the AUTHORITATIVE total via the shared stepYear (byte-identical to spine). The year's
     // total outflow = the general-bucket gross withdrawal + the hsa-paid qualified spend (U3 · M5 —
-    // `+ 0` exactly when no hsa is live, so the spine recurrence is untouched).
-    const step = stepYear(state, rs, rb, grossWithdrawal + hsaSpendThisYear, stockWeight)
+    // `+ 0` exactly when no hsa is live, so the spine recurrence is untouched). The year's
+    // contribution inflow rides the SAME call (C2 — stepYear is the ONE crediting owner, contract
+    // #3): credited end-of-year, after the return step, `+ 0` exactly when nothing is contributed.
+    const step = stepYear(state, rs, rb, grossWithdrawal + hsaSpendThisYear, stockWeight, contributionTotal)
     state = step.state
 
     if (step.depleted) {
@@ -1352,9 +1445,13 @@ export function runTaxAwareDecumulation(
     // is stepYear's output; the buckets are scaled to sum to it. The hsa outflow leaves the
     // ledger here too (U3 · M5): afterWithdrawal = totalBefore − general drawn − hsa spend,
     // matching stepYear's outflow exactly (`− 0` when no hsa is live — the spine recurrence).
+    // The scale reads stepYear's GROWTH-ONLY total (C2 §2c), never `totalValue(state)`: with a
+    // contribution credited end-of-year the state total includes it, and a credit-inclusive
+    // scale would SMEAR the contribution pro-rata across every bucket (asset-location) instead
+    // of crediting its named destination below. At contribution = 0 the two are byte-identical.
     const afterWithdrawal = totalBefore - drawn - hsaSpendThisYear
     if (afterWithdrawal > 0) {
-      const scale = totalValue(state) / afterWithdrawal
+      const scale = step.growthOnlyTotal / afterWithdrawal
       const taxableValue = drawPool.taxable
 
       // RMD-forced distribution: spending/tax already pulled `alloc.pretax` from pre-tax; the RMD
@@ -1371,10 +1468,21 @@ export function runTaxAwareDecumulation(
         // survivors by the shared factor. The aggregate forced excess is the per-person SUM, and the
         // aggregate pre-tax IS the ledger sum — kept exactly reconciled (no parallel-ledger drift).
         forcedExcess = advancePerPersonLedger(pretaxLedger, perRmd, conversion, alloc.pretax, scale)
+        // C2 §2c: credit each person's pretax contribution (incl. match) to THEIR OWN ledger slot,
+        // AFTER the growth scale, at face value — `buckets.pretax` is DEFINED as the ledger sum
+        // under perRmd, so an aggregate-only credit would desync next year's per-person RMD (the
+        // no-parallel-ledger-drift contract). Dead-slot credits were already rejected loud at the
+        // rollover block above (the caller owns per-path death truncation, §7's B×C).
+        if (yearC !== undefined) {
+          for (let i = 0; i < pretaxLedger.length; i++) {
+            pretaxLedger[i]! += yearC.pretaxByPerson[i] ?? 0
+          }
+        }
         pretaxPostScaled = pretaxLedger.reduce((a, b) => a + b, 0)
       } else {
         forcedExcess = Math.min(Math.max(0, rmd - alloc.pretax), drawPool.pretax - alloc.pretax)
-        pretaxPostScaled = (drawPool.pretax - alloc.pretax - forcedExcess) * scale
+        // C2 §2c (aggregate path): the pretax credit lands after the scale, at face value.
+        pretaxPostScaled = (drawPool.pretax - alloc.pretax - forcedExcess) * scale + cPretaxTotal
       }
       const taxablePost = drawPool.taxable - alloc.taxable + forcedExcess
       const rothPost = drawPool.roth - alloc.roth
@@ -1382,22 +1490,48 @@ export function runTaxAwareDecumulation(
       // Taxable basis (M5): the draw removes basis pro-rata to the taxable value; the RMD-relocated
       // dollars enter at FULL basis (already ordinary-taxed → after-tax money). Basis is NOT scaled by
       // growth — market appreciation is unrealized gain (scaling basis would zero all future gain).
-      basis = (taxableValue > 0 ? basis * (1 - alloc.taxable / taxableValue) : basis) + forcedExcess
+      // C2: a taxable CONTRIBUTION also enters at FULL basis (after-tax dollars: basis += the
+      // contribution, UNSCALED), applied AFTER the pro-rata reduction — whose denominator
+      // (`taxableValue` = the draw-time balance) correctly excludes the end-of-year arrival.
+      basis = (taxableValue > 0 ? basis * (1 - alloc.taxable / taxableValue) : basis) + forcedExcess + cTaxable
 
       buckets = {
-        taxable: taxablePost * scale,
+        // C2 §2c: each destination bucket takes its contribution AFTER the growth scale, at face
+        // value (the end-of-year credit earns no arrival-year growth — the pinned conservative
+        // convention; a before-the-scale fold would either grant phantom growth or smear the
+        // inflow pro-rata across every bucket). `+ 0` exactly when nothing is contributed.
+        taxable: taxablePost * scale + cTaxable,
         pretax: pretaxPostScaled,
-        roth: rothPost * scale,
+        roth: rothPost * scale + cRoth,
         // The MEDICAL-EARMARKED 4th bucket (U3 · M5): the year's qualified spend leaves it, then it
         // grows by the SAME shared factor as every other bucket (contract #2 — one market draw, no
         // per-bucket return). General draws never touch it (`alloc` cannot even name it —
-        // `GeneralBucketKey`); ≥ 0 because the spend is capped at the balance.
-        hsa: ((drawPool.hsa ?? 0) - hsaSpendThisYear) * scale,
+        // `GeneralBucketKey`); ≥ 0 because the spend is capped at the balance. The C2 hsa
+        // contribution (already owner-enrollment-zeroed by the caller) credits in last.
+        hsa: ((drawPool.hsa ?? 0) - hsaSpendThisYear) * scale + cHsa,
       }
     } else {
-      buckets = EMPTY_BUCKETS
-      basis = 0
-      if (pretaxLedger) pretaxLedger.fill(0)
+      // Knife-edge: the ledger lineage read ≤ 0 while stepYear's state lineage stayed positive
+      // (float-dust divergence — the pre-C2 behavior zeroes the buckets and lets the state dust
+      // ride). C2: stepYear still credited this year's contribution into the state, so the
+      // buckets must carry it too — fresh buckets holding exactly the year's inflow (and the
+      // taxable basis = the taxable inflow), else Σbuckets would diverge from the authoritative
+      // total by the whole contribution, not dust. With no contribution this is byte-identical
+      // to the pre-C2 zeroing (EMPTY_BUCKETS / 0 / fill(0)).
+      basis = cTaxable
+      if (pretaxLedger) {
+        pretaxLedger.fill(0)
+        // Dead-slot credits were already rejected loud at the rollover block above (C2 §7).
+        if (yearC !== undefined) {
+          for (let i = 0; i < pretaxLedger.length; i++) {
+            pretaxLedger[i]! += yearC.pretaxByPerson[i] ?? 0
+          }
+        }
+      }
+      buckets =
+        yearC === undefined
+          ? EMPTY_BUCKETS
+          : { taxable: cTaxable, pretax: cPretaxTotal, roth: cRoth, hsa: cHsa }
     }
   }
 

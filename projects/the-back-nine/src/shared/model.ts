@@ -187,6 +187,40 @@ export interface AccountBalances {
   readonly hsa?: number
 }
 
+/** One person's per-account contribution streams (C2 — the accumulation plan's signed inflow
+ *  term). Each stream is per-year real $, indexed by ABSOLUTE sim-year, AUXILIARY (a missing/
+ *  short entry ⇒ $0 that year, never the end of data). The intake layer expands the entered
+ *  flat-real amounts into these streams, applying the age-band contribution ceilings PER RUNWAY
+ *  YEAR (the §109 super catch-up expires at 64 — a flat projection would compound legally-
+ *  impossible amounts, the calm-but-wrong-optimistic sin); the ENGINE consumes the streams as
+ *  given and enforces only the structural boundaries (per-path death truncation + the
+ *  retirement stop + the HSA Medicare-enrollment zeroing — C2 §7/§3b). */
+export interface PersonContributionStreams {
+  /** → the taxable bucket; an after-tax dollar enters at FULL basis (basis += contribution). */
+  readonly taxable?: readonly number[]
+  /** → the pretax bucket (this person's OWN ledger slot when the per-person split is active). */
+  readonly pretax?: readonly number[]
+  /** → the roth bucket. */
+  readonly roth?: readonly number[]
+  /** → the hsa bucket; zeroed from THIS person's Medicare-enrollment onset (default: their
+   *  65th sim-year — keyed to the contributing owner, never the spouse; C2 §3b). */
+  readonly hsa?: readonly number[]
+  /** Employer match — ALWAYS lands in the pretax bucket (the confirmed default rule), even
+   *  when the employee deferral is Roth (a SECURE 2.0 §604 Roth match is a deferred option). */
+  readonly employerMatch?: readonly number[]
+}
+
+/** The accumulation construct (C2). Its PRESENCE — not its values — is the gate (§1): present ⇒
+ *  the working-year zero-withdrawal clamp is live (§7) and the contribution inflows fold into the
+ *  per-year update; ABSENT ⇒ the byte-identical decumulation-only engine. A zero-valued-but-
+ *  constructed run is deliberately NOT byte-identical to construct-absent (the clamp changes
+ *  working-year nets) — presence-keyed, never value-derived (a 1¢ contribution change must never
+ *  flip the draw regime). */
+export interface AccumulationParams {
+  /** Per-person contribution streams, aligned by index to `people` (validated, R19). */
+  readonly contributionsByPerson: readonly PersonContributionStreams[]
+}
+
 /** The engine-side tax/accounts overlay input (U2). `taxEnabled` and `rmdEnabled` are INDEPENDENT
  *  switches (RMD is a forced-distribution mechanic, not a tax). `buckets` must sum to
  *  `initialPortfolio` (validated, R19); the >10yr-younger-spouse JLLS divisor (M6b·A) and the
@@ -255,10 +289,19 @@ export interface OverlayParams {
   readonly oopMedical?: readonly number[]
   /** WHICH person owns the household HSA (the `people` index: 0 = owner, 1 = spouse). The 65+
    *  Medicare-premium spend privilege keys to the OWNER's age, never the spouse's (Pub 969), so this
-   *  is REQUIRED whenever `taxEnabled` and `buckets.hsa > 0` — a person-0 default would mis-key the
-   *  privilege for a spouse-owned HSA (burned/062). On the owner's death the HSA rolls to the
-   *  surviving spouse and the privilege re-keys immediately. */
+   *  is REQUIRED whenever `taxEnabled` and the run can ever hold HSA dollars (`buckets.hsa > 0` OR a
+   *  positive hsa contribution stream — C2 re-derived the liveness property) — a person-0 default
+   *  would mis-key the privilege for a spouse-owned HSA (burned/062). On the owner's death the HSA
+   *  rolls to the surviving spouse and the privilege re-keys immediately. */
   readonly hsaOwnerIndex?: number
+  // --- C2: the accumulation construct (the pre-retirement saving phase). ABSENT ⇒ the
+  //     byte-identical decumulation-only engine (presence-keyed, §1). ---
+  /** The accumulation construct (C2): per-person per-account contribution streams. PRESENT ⇒ the
+   *  working years carry the contribution inflow and the household's spending net is clamped to 0
+   *  while a LIVING person is still working (the household lives on salary — §7); the engine
+   *  rejects `initialPortfolio === 0` with the construct present (a $0 start would read depleted
+   *  at t=0 and silently swallow every contribution — R19). */
+  readonly accumulation?: AccumulationParams
 }
 
 // ---------------------------------------------------------------------------
@@ -427,6 +470,12 @@ export interface PersonAccounts {
    *  these into the aggregated `OverlayParams.buckets.hsa` + derives `hsaOwnerIndex`. Optional
    *  under the schemaVersion-2 additive bump: absent ⇒ 0. */
   readonly hsa?: number
+  /** This person's per-account contribution streams (C2; the persisted mirror of the engine's
+   *  `AccumulationParams.contributionsByPerson[i]`). Additive under schemaVersion-2 — absent ⇒
+   *  no contributions (the decumulation-only scenario). NOT YET WRITTEN to disk: P2 intake
+   *  expands the entered flat-real amounts into these streams (per-runway-year age-band
+   *  ceilings) and maps them down to `OverlayParams.accumulation`. */
+  readonly contributions?: PersonContributionStreams
 }
 
 /** The schemaVersion-2 plaintext scenario: the v1 spine inputs + the U2 tax-overlay fields.

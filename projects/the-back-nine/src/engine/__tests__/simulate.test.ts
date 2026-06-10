@@ -4,6 +4,7 @@ import {
   buildDraws,
   netWithdrawalForYear,
   cashTermsForYear,
+  contributionsForYear,
   type PersonOffsets,
   type SimOutput,
 } from '@engine/simulate'
@@ -13,7 +14,13 @@ import { toRealSeries, rollingSuccessRate } from '@engine/historical'
 import { SHILLER_1925_1995 } from '@engine/reference/shillerSeries'
 import { runTaxAwareDecumulation, type HouseholdYear, type OverlayPerson } from '@engine/taxOverlay'
 import { toLogMoments, simpleReturnFromNormal } from '@engine/rng'
-import { NEVER_DEPLETED, type SimulationParams, type PersonInputs, type OverlayParams } from '@shared/model'
+import {
+  NEVER_DEPLETED,
+  type AccumulationParams,
+  type SimulationParams,
+  type PersonInputs,
+  type OverlayParams,
+} from '@shared/model'
 
 const MALE_65: PersonInputs = {
   sex: 'male', currentAge: 65, retirementAge: 65,
@@ -932,5 +939,290 @@ describe('U3 · M5 — the hsaOwnerIndex wire pass-through is answer-bearing', (
       expect(owner1.terminalValuesReal[p]!).toBeGreaterThanOrEqual(owner0.terminalValuesReal[p]!)
     }
     expect(owner1.terminalValuesReal[0]!).toBeGreaterThan(owner0.terminalValuesReal[0]!) // non-vacuous
+  })
+})
+
+// ===========================================================================
+// C2 — the accumulation construct: the §7 working-year clamp (presence-gated,
+// death-aware), the per-path contribution assembly seam, byte-identity, CRN,
+// and the R19 gates. Plan: 2026-06-08-001 §1/§2/§7.
+// ===========================================================================
+
+/** An EXHAUSTIVE-OFF overlay (single taxable pool, tax/RMD off) carrying an optional
+ *  accumulation construct — the minimal vehicle for the §7 clamp + presence-gate tests. */
+const offOverlayWith = (portfolio: number, accumulation?: AccumulationParams): OverlayParams => ({
+  taxEnabled: false,
+  rmdEnabled: false,
+  startCalendarYear: 2026,
+  buckets: { taxable: portfolio, pretax: 0, roth: 0 },
+  filing: 'mfj',
+  ...(accumulation ? { accumulation } : {}),
+})
+
+describe('C2 §7 — the working-year zero-withdrawal clamp (presence-gated, death-aware)', () => {
+  const seamParams = makeParams({ annualSpendingReal: 100, survivorSpendingRatio: 0.75 })
+  /** The same params with a ZERO-VALUED construct: presence alone must flip the clamp (§1). */
+  const constructed = (people = 1): SimulationParams => ({
+    ...seamParams,
+    overlay: offOverlayWith(
+      seamParams.initialPortfolio,
+      { contributionsByPerson: Array.from({ length: people }, () => ({})) },
+    ),
+  })
+  const working: PersonOffsets = { retire: 10, claim: 99, earnedIncomeReal: 50, socialSecurityReal: 0 }
+
+  it('a working year with a living worker draws ZERO — even when spending exceeds salary + SS', () => {
+    // Construct ABSENT: spending 100 − earned 50 = 50. Construct PRESENT (zero-valued!): the
+    // household lives on salary — net 0, no contribute-and-draw double-count. The VALUE of the
+    // contribution never enters the predicate (presence-keyed, §1).
+    expect(netWithdrawalForYear(2, seamParams, [working], [50], 0)).toBe(50)
+    expect(netWithdrawalForYear(2, constructed(), [working], [50], 0)).toBe(0)
+  })
+
+  it('SURVIVOR-DRAW arm: once the sole living worker dies, the clamp stops and the survivor draws normally', () => {
+    // Person dies at 3; at t=5 there is NO living worker, so the survivor cash semantics run
+    // verbatim: survivor-ratio spending 75, no SS → net 75 (the shipped dead-earner seam value).
+    // A planted death-blind `t < retire` clamp would return 0 here — flipping the engine's
+    // deliberately-conservative survivor paths maximally optimistic (the §7 cardinal hazard).
+    expect(netWithdrawalForYear(5, constructed(), [working], [3], 0)).toBe(75)
+  })
+
+  it('a COUPLE stays clamped while ANY living worker remains (the surviving worker covers the household)', () => {
+    const earnerA: PersonOffsets = { retire: 10, claim: 99, earnedIncomeReal: 50, socialSecurityReal: 0 }
+    const earnerB: PersonOffsets = { retire: 8, claim: 99, earnedIncomeReal: 30, socialSecurityReal: 0 }
+    // A dead at 3, B alive and working at t=5: survivor spending 75 − earned 30 = 45 unclamped;
+    // the clamp (a living worker exists) takes it to 0.
+    expect(netWithdrawalForYear(5, seamParams, [earnerA, earnerB], [3, 50], 0)).toBe(45)
+    expect(netWithdrawalForYear(5, constructed(2), [earnerA, earnerB], [3, 50], 0)).toBe(0)
+  })
+
+  it('an already-retired person (offset ≤ 0) never trips the clamp', () => {
+    const retiredClaiming: PersonOffsets = { retire: 0, claim: 0, earnedIncomeReal: 0, socialSecurityReal: 30 }
+    // No working years exist — the construct is inert and the net is the plain retirement draw.
+    expect(netWithdrawalForYear(5, constructed(), [retiredClaiming], [50], 30)).toBe(100 - 30)
+  })
+})
+
+describe('C2 — the per-path contribution assembly seam (contributionsForYear)', () => {
+  const P = (over: Partial<PersonInputs> = {}): PersonInputs => ({ ...MALE_65, currentAge: 55, retirementAge: 65, ...over })
+  const O = (retire: number): PersonOffsets => ({ retire, claim: 99, earnedIncomeReal: 0, socialSecurityReal: 0 })
+
+  it('death-truncates PER PERSON: a dead spouse contributes nothing from the death year (two arms)', () => {
+    const acc: AccumulationParams = {
+      contributionsByPerson: [{ pretax: [10, 10, 10, 10, 10, 10] }, { pretax: [5, 5, 5, 5, 5, 5] }],
+    }
+    const offsets = [O(10), O(10)]
+    const people = [P(), P({ sex: 'female' })]
+    // Both alive at t=2: both contribute.
+    expect(contributionsForYear(2, acc, offsets, [3, 50], people).pretaxByPerson).toEqual([10, 5])
+    // Person 0 dead at 3 → t=4 carries ONLY person 1 (a planted untruncated stream — the phantom
+    // dead-spouse contribution — would still show 10 in slot 0 and fail this).
+    expect(contributionsForYear(4, acc, offsets, [3, 50], people).pretaxByPerson).toEqual([0, 5])
+  })
+
+  it('stops at retirement (t ≥ retire ⇒ 0) and an already-retired person has an EMPTY window', () => {
+    const acc: AccumulationParams = { contributionsByPerson: [{ taxable: [7, 7, 7, 7] }] }
+    expect(contributionsForYear(2, acc, [O(3)], [50], [P()]).taxable).toBe(7)
+    expect(contributionsForYear(3, acc, [O(3)], [50], [P()]).taxable).toBe(0)
+    // Defensive: stray entered contributions on an already-retired person (offset ≤ 0) never land.
+    expect(contributionsForYear(0, acc, [O(0)], [50], [P()]).taxable).toBe(0)
+  })
+
+  it('employer match → PRETAX always, even on a Roth deferral (the confirmed default rule)', () => {
+    const acc: AccumulationParams = { contributionsByPerson: [{ roth: [100], employerMatch: [50] }] }
+    const yc = contributionsForYear(0, acc, [O(5)], [50], [P()])
+    expect(yc.roth).toBe(100)
+    expect(yc.pretaxByPerson).toEqual([50]) // the match, in the contributor's OWN slot
+    expect(yc.taxable).toBe(0)
+  })
+
+  it('HSA zeroing keys to the CONTRIBUTING person’s own enrollment onset — never the spouse’s', () => {
+    // Person 0 is 63 (own onset in 2 years); person 1 is 70 (already enrolled). Both still working.
+    const acc: AccumulationParams = { contributionsByPerson: [{ hsa: [7, 7, 7, 7] }, { hsa: [9, 9, 9, 9] }] }
+    const offsets = [O(10), O(10)]
+    const people = [P({ currentAge: 63 }), P({ currentAge: 70, sex: 'female' })]
+    // t=0: person 0 contributes (63 < 65); person 1 is zeroed (70 ≥ 65 — their OWN onset). A
+    // spouse-keyed mutant would invert this to 9 (person 1 keyed off the 63-year-old) — fails.
+    expect(contributionsForYear(0, acc, offsets, [50, 50], people).hsa).toBe(7)
+    // t=1: person 0 is 64 — still contributing.
+    expect(contributionsForYear(1, acc, offsets, [50, 50], people).hsa).toBe(7)
+    // t=2: person 0 crosses their own 65th sim-year — zeroed (the biological default onset; C3's
+    // per-person signal threads through this same predicate; no signal field ships in C2, so the
+    // default predicate itself is what this pins).
+    expect(contributionsForYear(2, acc, offsets, [50, 50], people).hsa).toBe(0)
+  })
+})
+
+describe('C2 §1 — byte-identity is PRESENCE-keyed (absent ⇔ the spine; zero-valued-constructed ≠ absent)', () => {
+  it('construct ABSENT: the EXHAUSTIVE-OFF overlay still reduces byte-identically to the plain spine', () => {
+    // The 421-test pre-C2 suite is the real pin (it passed unchanged through the signature
+    // change); this golden re-asserts the reduce-to-spine anchor post-C2 explicitly.
+    const base = makeParams({ paths: 400, maxHorizonYears: 20 })
+    const noOverlay = dist(simulate(base, 4242))
+    const offOverlay = dist(simulate({ ...base, overlay: offOverlayWith(base.initialPortfolio) }, 4242))
+    expect(offOverlay.terminalValuesReal).toEqual(noOverlay.terminalValuesReal)
+    expect(offOverlay.depletionYears).toEqual(noOverlay.depletionYears)
+  })
+
+  it('an ALL-RETIRED household with a construct (even NONZERO streams) is byte-identical — the Y == 0 empty phase', () => {
+    // retire offset ≤ 0 ⇒ zero working years ⇒ nothing clamps AND every stream window is empty
+    // (the entered values are never consumed) ⇒ byte-identical to construct-absent, same dims,
+    // zero extra draws. This is the engine-level `Y == 0` golden of §1.
+    const base = makeParams({ paths: 400, longevityMode: 'sampled', maxHorizonYears: 30 })
+    const absent = dist(simulate({ ...base, overlay: offOverlayWith(base.initialPortfolio) }, 777))
+    const constructed = dist(
+      simulate(
+        {
+          ...base,
+          overlay: offOverlayWith(base.initialPortfolio, {
+            contributionsByPerson: [{ pretax: [50, 50, 50], taxable: [10], hsa: [5] }],
+          }),
+        },
+        777,
+      ),
+    )
+    expect(constructed.terminalValuesReal).toEqual(absent.terminalValuesReal)
+    expect(constructed.depletionYears).toEqual(absent.depletionYears)
+    expect(constructed.survivalFraction).toBe(absent.survivalFraction)
+  })
+
+  it('the NEGATIVE companion: a ZERO-VALUED-but-constructed run with a still-working drawing household DIFFERS', () => {
+    // currentAge 60 → 5 working years; spending 40 > earned 25, so absent-construct working years
+    // draw 15 while the §7 clamp zeroes them — proving the presence gate (not the values) owns
+    // byte-identity. (The §1 deliberate non-identity: never "fix" this into equality.)
+    const working: PersonInputs = { ...MALE_65, currentAge: 60, retirementAge: 65, earnedIncomeReal: 25 }
+    const base = makeParams({ people: [working], maxHorizonYears: 35, paths: 400 })
+    const absent = dist(simulate({ ...base, overlay: offOverlayWith(base.initialPortfolio) }, 909))
+    const zeroConstructed = dist(
+      simulate({ ...base, overlay: offOverlayWith(base.initialPortfolio, { contributionsByPerson: [{}] }) }, 909),
+    )
+    expect(zeroConstructed.terminalValuesReal).not.toEqual(absent.terminalValuesReal)
+  })
+})
+
+describe('C2 — CRN across contribution-stop offsets (the draw schedule never moves)', () => {
+  const mkArm = (retirementAge: number, pretaxStream: readonly number[]): SimulationParams => {
+    const person: PersonInputs = { ...MALE_65, currentAge: 60, retirementAge, earnedIncomeReal: 0 }
+    return makeParams({
+      people: [person],
+      annualSpendingReal: 0, // isolate the draw schedule: every net is 0 in both arms
+      longevityMode: 'sampled',
+      maxHorizonYears: 45,
+      paths: 300,
+      overlay: offOverlayWith(1000, { contributionsByPerson: [{ pretax: pretaxStream }] }),
+    })
+  }
+
+  it('two stop offsets under one seed consume IDENTICAL draws (zero-valued arm) — and the boundary shift is real (presence arm)', () => {
+    // Zero-valued streams + zero spending: terminals reflect ONLY growth over each path's
+    // death-sampled horizon. If the assembly consumed even one draw as a function of the stop
+    // offset, the longevity uniforms would shift between the arms and the death horizons — and
+    // therefore the terminals — would diverge. Identical ⇒ the schedule is dimension-only.
+    const zeroA = dist(simulate(mkArm(62, [0, 0, 0, 0, 0]), 1357))
+    const zeroB = dist(simulate(mkArm(65, [0, 0, 0, 0, 0]), 1357))
+    expect(zeroA.terminalValuesReal).toEqual(zeroB.terminalValuesReal)
+    expect(zeroA.depletionYears).toEqual(zeroB.depletionYears)
+    // Presence companion (burned/027): with REAL contributions the two stop boundaries truncate
+    // differently (2 vs 5 inflow years) — the arms genuinely differ, so the identity above is
+    // not vacuous.
+    const liveA = dist(simulate(mkArm(62, [10, 10, 10, 10, 10]), 1357))
+    const liveB = dist(simulate(mkArm(65, [10, 10, 10, 10, 10]), 1357))
+    expect(liveA.terminalValuesReal).not.toEqual(liveB.terminalValuesReal)
+  })
+})
+
+describe('C2 — the R19 gates (NaN-first, alignment, the zero-balance start, §6, hsa liveness)', () => {
+  const workingPerson: PersonInputs = { ...MALE_65, currentAge: 55, retirementAge: 60, earnedIncomeReal: 50 }
+
+  it('a NaN / negative / Infinity contribution entry returns the defined indeterminate output', () => {
+    const cases: AccumulationParams[] = [
+      { contributionsByPerson: [{ pretax: [Number.NaN] }] },
+      { contributionsByPerson: [{ taxable: [-5] }] },
+      { contributionsByPerson: [{ roth: [Number.POSITIVE_INFINITY] }] },
+      { contributionsByPerson: [{ employerMatch: [Number.NaN] }] },
+      { contributionsByPerson: [{ hsa: [Number.NaN] }] },
+    ]
+    for (const acc of cases) {
+      const out = simulate(makeParams({ people: [workingPerson], overlay: offOverlayWith(1000, acc) }), 1)
+      expect(out.indeterminate).toBe(true)
+    }
+  })
+
+  it('a contributionsByPerson length mismatch is rejected (never silently re-indexed)', () => {
+    const out = simulate(
+      makeParams({ people: [workingPerson], overlay: offOverlayWith(1000, { contributionsByPerson: [] }) }),
+      1,
+    )
+    expect(out.indeterminate).toBe(true)
+    if (out.indeterminate) expect(out.reason).toContain('length')
+  })
+
+  it('the ZERO-BALANCE start is rejected calmly (a $0 start would read depleted-at-t0 and swallow every contribution)', () => {
+    const out = simulate(
+      makeParams({
+        initialPortfolio: 0,
+        people: [workingPerson],
+        overlay: offOverlayWith(0, { contributionsByPerson: [{ pretax: [100] }] }),
+      }),
+      1,
+    )
+    expect(out.indeterminate).toBe(true)
+    if (out.indeterminate) expect(out.reason).toContain('starting balance')
+    // The construct-ABSENT $0-portfolio run stays a legitimate already-failing read (unchanged).
+    const absent = simulate(makeParams({ initialPortfolio: 0, annualSpendingReal: 40 }), 1)
+    expect(absent.indeterminate).toBe(false)
+  })
+
+  it('§6 — a contribution overlapping a PRICED ACA year is rejected at the frontline (run-level arm)', () => {
+    const overlap: SimulationParams = makeParams({
+      people: [workingPerson],
+      overlay: {
+        taxEnabled: true,
+        rmdEnabled: false,
+        startCalendarYear: 2026,
+        buckets: { taxable: 0, pretax: 1000, roth: 0 },
+        filing: 'mfj',
+        healthcareEnabled: true,
+        enrolledPremium: [12_000],
+        slcsp: [11_000],
+        accumulation: { contributionsByPerson: [{ pretax: [1_000] }] },
+      },
+    })
+    const out = simulate(overlap, 1)
+    expect(out.indeterminate).toBe(true)
+    if (out.indeterminate) expect(out.reason).toContain('ACA')
+    // Control: the SAME shape with the contribution moved OFF the priced year resolves (the gate
+    // rejects the overlap, not the construct).
+    const disjoint = simulate(
+      {
+        ...overlap,
+        overlay: {
+          ...overlap.overlay!,
+          accumulation: { contributionsByPerson: [{ pretax: [0, 1_000] }] },
+        },
+      },
+      1,
+    )
+    expect(disjoint.indeterminate).toBe(false)
+  })
+
+  it('hsa LIVENESS (insight 020): a positive hsa contribution stream alone now requires hsaOwnerIndex under tax', () => {
+    const noOwner: SimulationParams = makeParams({
+      people: [workingPerson],
+      overlay: {
+        taxEnabled: true,
+        rmdEnabled: false,
+        startCalendarYear: 2026,
+        buckets: { taxable: 0, pretax: 1000, roth: 0 },
+        filing: 'mfj',
+        accumulation: { contributionsByPerson: [{ hsa: [100] }] },
+      },
+    })
+    const out = simulate(noOwner, 1)
+    expect(out.indeterminate).toBe(true)
+    if (out.indeterminate) expect(out.reason).toContain('hsaOwnerIndex')
+    // With the owner supplied, the same params resolve.
+    const withOwner = simulate({ ...noOwner, overlay: { ...noOwner.overlay!, hsaOwnerIndex: 0 } }, 1)
+    expect(withOwner.indeterminate).toBe(false)
   })
 })

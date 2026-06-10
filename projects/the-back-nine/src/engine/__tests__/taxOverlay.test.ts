@@ -2912,3 +2912,326 @@ describe('taxOverlay — M5 boundary review #2: the re-verified seams', () => {
     })
   })
 })
+
+// ===========================================================================
+// C2 — the signed per-bucket contribution-inflow term (§2c): the after-the-scale
+// fold, the destination/direction goldens, the per-person ledger credit, the
+// RMD-overlap differencing identity, the hsaLive re-derive, §6, and the R19
+// backstop. Every expected dollar is externally derived (hand math + the
+// independent derivation panel — DND/012), never via the engine's own formula.
+// ===========================================================================
+describe('C2 — the contribution fold (§2c): destination, direction, and the externally-derived projections', () => {
+  it('DESTINATION golden: the named bucket takes exactly the contribution; the others change only by growth', () => {
+    // Hand-derived + panel-confirmed (fixture B): buckets 600/300/100 (total 1000), w 0.5, both
+    // returns +10%, net 0, 50 → pretax end-of-year. Scale = 1100/1000 = 1.1 (the GROWTH-ONLY
+    // total): taxable 660, pretax 330 + 50 = 380, roth 110, terminal 1150. A proportional SMEAR
+    // (scale = 1150/1000 = 1.15) would read taxable 690 — fails; a BEFORE-the-scale fold
+    // ((300+50)·1.1 = 385) fails too (phantom arrival-year growth).
+    const got = runTaxAwareDecumulation(
+      { taxable: 600, pretax: 300, roth: 100 },
+      [0.1],
+      [0.1],
+      [0],
+      0.5,
+      'proportional',
+      OFF,
+      { contributions: [{ taxable: 0, pretaxByPerson: [50], roth: 0, hsa: 0 }] },
+    )
+    expect(got.depletionYear).toBe(NEVER_DEPLETED)
+    expect(got.finalBuckets.taxable).toBeCloseTo(660, 9)
+    expect(got.finalBuckets.pretax).toBeCloseTo(380, 9)
+    expect(got.finalBuckets.roth).toBeCloseTo(110, 9)
+    expect(got.terminalReal).toBeCloseTo(1150, 9)
+  })
+
+  it('DIRECTION golden (§2d): end-of-year crediting lands strictly BELOW the start-of-year mirror', () => {
+    // The start-of-year-credited mirror (the WRONG, optimistic convention) compounds the 50:
+    // (1000 + 50)·1.1 = 1155. The engine's 1150 is strictly below — the conservative convention
+    // shipped, never its optimistic mirror (a falsely-earlier work-optional date).
+    const got = runTaxAwareDecumulation(
+      { taxable: 600, pretax: 300, roth: 100 },
+      [0.1],
+      [0.1],
+      [0],
+      0.5,
+      'proportional',
+      OFF,
+      { contributions: [{ taxable: 0, pretaxByPerson: [50], roth: 0, hsa: 0 }] },
+    )
+    expect(got.terminalReal).toBeCloseTo(1150, 9)
+    expect(got.terminalReal).toBeLessThan(1155)
+  })
+
+  it('TAXABLE projection: a taxable contribution raises value AND basis at full, unscaled value (tax ON)', () => {
+    // Hand-derived + panel-confirmed (fixture C): taxable 1000 (basis 1000), returns +10% then
+    // 0%, net 0, +100 taxable end of each year → value 1300, basis 1200 (growth never touches
+    // basis; each contribution enters at full basis — after-tax dollars).
+    const cfg: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: false, household: mkHousehold(2026, 1980) }
+    const got = runTaxAwareDecumulation(
+      { taxable: 1000, pretax: 0, roth: 0 },
+      [0.1, 0],
+      [0.1, 0],
+      [0, 0],
+      0.5,
+      'proportional',
+      cfg,
+      {
+        initialTaxableBasis: 1000,
+        contributions: [
+          { taxable: 100, pretaxByPerson: [0], roth: 0, hsa: 0 },
+          { taxable: 100, pretaxByPerson: [0], roth: 0, hsa: 0 },
+        ],
+      },
+    )
+    expect(got.terminalReal).toBeCloseTo(1300, 9)
+    expect(got.finalBuckets.taxable).toBeCloseTo(1300, 9)
+    expect(got.finalTaxableBasis).toBeCloseTo(1200, 9)
+  })
+
+  it('ZERO-VALUED contribution entries are byte-identical to an absent stream (everything live, tax ON)', () => {
+    // The reduce-to-spine-class exactness check on the densest co-live fixture (the M5 Slice-5
+    // configuration): a stream of all-zero YearContributions folds as exact IEEE no-ops.
+    const cfg: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: true, household: mkHousehold(2026, 1952, 1955) }
+    const buckets: AccountBuckets = { taxable: 300_000, pretax: 500_000, roth: 150_000, hsa: 50_000 }
+    const dense: TaxYearInputs = {
+      initialTaxableBasis: 200_000,
+      conversions: flat(10_000),
+      ssBenefits: flat(30_000),
+      oopMedical: flat(6_000),
+      hsaOwnerIndex: 0,
+      healthcareEnabled: true,
+      irmaaMagiSeed: [60_000, 60_000],
+      initialPretaxByPerson: [350_000, 150_000],
+    }
+    const zeroC: TaxYearInputs = {
+      ...dense,
+      contributions: flat(0).map(() => ({ taxable: 0, pretaxByPerson: [0, 0], roth: 0, hsa: 0 })),
+    }
+    const absent = runTaxAwareDecumulation(buckets, realStock, realBond, flat(45_000), STOCK_W, 'proportional', cfg, dense)
+    const zeros = runTaxAwareDecumulation(buckets, realStock, realBond, flat(45_000), STOCK_W, 'proportional', cfg, zeroC)
+    expect(zeros.terminalReal).toBe(absent.terminalReal) // exact, not close-to
+    expect(zeros.finalBuckets).toEqual(absent.finalBuckets)
+    expect(zeros.finalTaxableBasis).toBe(absent.finalTaxableBasis)
+  })
+
+  it('Σbuckets reconciles + the inflow GROWS the total (presence companion) under the dense co-live fixture', () => {
+    const cfg: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: true, household: mkHousehold(2026, 1952, 1955) }
+    const buckets: AccountBuckets = { taxable: 300_000, pretax: 500_000, roth: 150_000, hsa: 50_000 }
+    const dense: TaxYearInputs = {
+      initialTaxableBasis: 200_000,
+      conversions: flat(10_000),
+      ssBenefits: flat(30_000),
+      oopMedical: flat(6_000),
+      hsaOwnerIndex: 0,
+      healthcareEnabled: true,
+      irmaaMagiSeed: [60_000, 60_000],
+      initialPretaxByPerson: [350_000, 150_000],
+    }
+    const withC: TaxYearInputs = {
+      ...dense,
+      // Five inflow years across all four destinations (the hsa entry exercises the live-hsa fold).
+      contributions: Array.from({ length: 5 }, () => ({ taxable: 5_000, pretaxByPerson: [3_000, 2_000], roth: 1_000, hsa: 500 })),
+    }
+    const base = runTaxAwareDecumulation(buckets, realStock, realBond, flat(45_000), STOCK_W, 'proportional', cfg, dense)
+    const got = runTaxAwareDecumulation(buckets, realStock, realBond, flat(45_000), STOCK_W, 'proportional', cfg, withC)
+    expect(got.depletionYear).toBe(NEVER_DEPLETED)
+    // The 4-bucket reconciliation guard holds with the inflow live (the total now GROWS by it).
+    expect(Math.abs(totalAcrossBuckets(got.finalBuckets) / got.terminalReal - 1)).toBeLessThan(1e-9)
+    expect(got.terminalReal).toBeGreaterThan(base.terminalReal) // burned/027 presence companion
+  })
+})
+
+describe('C2 — the per-person ledger credit (§2c) and the RMD-overlap identity (§2)', () => {
+  it('credits the CONTRIBUTOR’s own slot: next year’s per-person RMD prices off the credited ledger', () => {
+    // Hand-derived + panel-confirmed (fixture D, two independent derivations agreeing to 7
+    // decimals): owner 75 (ULT 24.6 → 23.7 at 76 — the spouse is EXACTLY 10 years younger, so
+    // the JLLS >10yr switch stays off), spouse 65 (no RMD until 75). Ledger [1000, 1000], zero
+    // returns, zero draws, RMD on / tax off; +100 → the SPOUSE's slot at the end of year 0.
+    //   y0: owner RMD 1000/24.6 = 40.650406504… → taxable; spouse slot 1000 + 100 = 1100.
+    //   y1: owner RMD 959.349593…/23.7 = 40.478885801… → taxable.
+    //   final: taxable 81.129292…, pretax 2018.870708…, terminal 2100 (conservation).
+    // The WRONG-credit mutant (the 100 on the OWNER's slot) inflates year-1's RMD base:
+    // taxable would read 85.348701… — this fixture discriminates the slot (insight 015).
+    const cfg: TaxOverlayConfig = { taxEnabled: false, rmdEnabled: true, household: mkHousehold(2026, 1951, 1961) }
+    const got = runTaxAwareDecumulation(
+      { taxable: 0, pretax: 2000, roth: 0 },
+      [0, 0],
+      [0, 0],
+      [0, 0],
+      0.5,
+      'proportional',
+      cfg,
+      {
+        initialPretaxByPerson: [1000, 1000],
+        contributions: [{ taxable: 0, pretaxByPerson: [0, 100], roth: 0, hsa: 0 }],
+      },
+    )
+    expect(got.depletionYear).toBe(NEVER_DEPLETED)
+    expect(got.finalBuckets.taxable).toBeCloseTo(81.1292923, 6)
+    expect(got.finalBuckets.pretax).toBeCloseTo(2018.8707077, 6)
+    expect(got.terminalReal).toBeCloseTo(2100, 9)
+  })
+
+  it('RMD-age OVERLAP companion: a working year (net 0) with a forced RMD gross-up still credits exactly C (§2c is overlap-safe)', () => {
+    // A 75-year-old still-working owner: net 0 (the §7 clamp's working-year value), RMD forced,
+    // tax ON → the year carries a REAL outflow (the RMD's tax) and an inflow at once. The
+    // differencing identity (insight 011-ext): the contribution never enters the solver, so the
+    // with-C and without-C arms differ by EXACTLY C — in the pretax bucket and the terminal —
+    // while the gross (read back via zero returns: gross = P − terminal_without) is unchanged.
+    const cfg: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: true, household: mkHousehold(2026, 1951) }
+    const run = (contributions?: TaxYearInputs['contributions']) =>
+      runTaxAwareDecumulation(
+        { taxable: 0, pretax: 1_000_000, roth: 0 },
+        [0],
+        [0],
+        [0],
+        0.5,
+        'pre-tax-first',
+        cfg,
+        { ...(contributions ? { contributions } : {}) },
+      )
+    const withC = run([{ taxable: 0, pretaxByPerson: [200], roth: 0, hsa: 0 }])
+    const without = run()
+    const gross = 1_000_000 - without.terminalReal
+    expect(gross).toBeGreaterThan(0) // the forced-RMD tax really flowed in a net-0 year
+    expect(withC.terminalReal - without.terminalReal).toBeCloseTo(200, 6)
+    expect(withC.finalBuckets.pretax - without.finalBuckets.pretax).toBeCloseTo(200, 6)
+    expect(withC.finalBuckets.taxable).toBeCloseTo(without.finalBuckets.taxable, 9) // untouched by C
+  })
+
+  it('a contribution credited to a DEAD person’s slot fails loud (the caller owns death truncation, §7)', () => {
+    const hh = mkHousehold(2026, 1951, 1961)
+    const cfg: TaxOverlayConfig = { taxEnabled: false, rmdEnabled: true, household: hh }
+    expect(() =>
+      runTaxAwareDecumulation(
+        { taxable: 0, pretax: 2000, roth: 0 },
+        [0],
+        [0],
+        [0],
+        0.5,
+        'proportional',
+        cfg,
+        {
+          initialPretaxByPerson: [1000, 1000],
+          householdYears: [{ living: [hh.owner] }], // the spouse is dead at t=0
+          contributions: [{ taxable: 0, pretaxByPerson: [0, 100], roth: 0, hsa: 0 }], // …yet carries a credit
+        },
+      ),
+    ).toThrow(/DEAD person/)
+  })
+})
+
+describe('C2 — hsaLive is re-derived from the inflow (the M5 forward landmine, resolved)', () => {
+  const cfg: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: false, household: mkHousehold(2026, 1980) }
+  const hsaInflow: TaxYearInputs['contributions'] = [
+    { taxable: 0, pretaxByPerson: [0], roth: 0, hsa: 5_000 },
+  ]
+
+  it('a positive hsa inflow alone makes the run hsa-live: the owner identity is REQUIRED', () => {
+    expect(() =>
+      runTaxAwareDecumulation(
+        { taxable: 100_000, pretax: 0, roth: 0 }, // hsa bucket ABSENT — pre-C2 this run was not hsa-live
+        [0, 0],
+        [0, 0],
+        [2_000, 2_000],
+        0.5,
+        'proportional',
+        cfg,
+        { initialTaxableBasis: 100_000, contributions: hsaInflow },
+      ),
+    ).toThrow(/hsaOwnerIndex/)
+  })
+
+  it('the spend mechanics are LIVE for a contributed-from-zero hsa (the landmine’s silent-dark failure mode)', () => {
+    // hsa starts ABSENT; 5,000 arrives end of year 0; year 1's 1,000 OOP is then HSA-paid.
+    // Under the OLD initial-balance-only derivation the spend mechanics stayed dark and the
+    // qualified spend would read 0 — exactly the silent, optimistic hole the re-derive closes.
+    // Zero returns: terminal = 100,000 + 5,000 − 2,000 (y0 gross) − 2,000 (y1 gross 1,000 +
+    // hsa-paid 1,000) = 101,000; basis == value throughout so the draws realize no gain (tax 0).
+    const got = runTaxAwareDecumulation(
+      { taxable: 100_000, pretax: 0, roth: 0 },
+      [0, 0],
+      [0, 0],
+      [2_000, 2_000],
+      0.5,
+      'proportional',
+      cfg,
+      { initialTaxableBasis: 100_000, hsaOwnerIndex: 0, oopMedical: [0, 1_000], contributions: hsaInflow },
+    )
+    expect(got.totalQualifiedHsaSpendReal).toBeCloseTo(1_000, 9)
+    expect(got.terminalReal).toBeCloseTo(101_000, 6)
+    expect(got.finalBuckets.hsa).toBeCloseTo(4_000, 6) // 5,000 in − 1,000 qualified out
+  })
+})
+
+describe('C2 — §6 overlay arm, the R19 backstop, and the depleted-year forfeit', () => {
+  it('§6: a PRICED ACA year carrying a contribution throws (the falsifiable empty-overlap invariant)', () => {
+    const cfg: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: false, household: mkHousehold(2026, 1980) }
+    expect(() =>
+      runTaxAwareDecumulation(
+        { taxable: 0, pretax: 50_000, roth: 0 },
+        [0],
+        [0],
+        [0],
+        0.5,
+        'proportional',
+        cfg,
+        {
+          healthcareEnabled: true,
+          enrolledPremium: [12_000],
+          slcsp: [11_000],
+          contributions: [{ taxable: 0, pretaxByPerson: [100], roth: 0, hsa: 0 }],
+        },
+      ),
+    ).toThrow(/priced ACA year cannot carry a contribution/)
+  })
+
+  it('R19 backstop: a NaN or negative contribution entry throws up-front (finiteness FIRST)', () => {
+    const bad: Array<TaxYearInputs['contributions']> = [
+      [{ taxable: Number.NaN, pretaxByPerson: [0], roth: 0, hsa: 0 }],
+      [{ taxable: 0, pretaxByPerson: [-5], roth: 0, hsa: 0 }],
+      [{ taxable: 0, pretaxByPerson: [0], roth: 0, hsa: Number.POSITIVE_INFINITY }],
+    ]
+    for (const contributions of bad) {
+      expect(() =>
+        runTaxAwareDecumulation(
+          { taxable: 1000, pretax: 0, roth: 0 },
+          [0],
+          [0],
+          [0],
+          0.5,
+          'proportional',
+          OFF,
+          { contributions },
+        ),
+      ).toThrow(/contributions/)
+    }
+  })
+
+  it('a year the portfolio cannot fund FORFEITS its contribution (the defined conservative outcome, §2)', () => {
+    // A working-year overlay-FORCED flow exceeding the balance: SS 200k claimed-while-working
+    // drives a tax bill far beyond the 100-dollar portfolio → depleted at t = 0; the year-0
+    // contribution (and every later one) is forfeited — terminal 0, never 0 + C (pessimistic-
+    // only; `indeterminate` stays reserved for input failure).
+    const cfg: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: false, household: mkHousehold(2026, 1980) }
+    const got = runTaxAwareDecumulation(
+      { taxable: 0, pretax: 100, roth: 0 },
+      [0, 0],
+      [0, 0],
+      [0, 0],
+      0.5,
+      'proportional',
+      cfg,
+      {
+        ssBenefits: [200_000, 200_000],
+        contributions: [
+          { taxable: 0, pretaxByPerson: [50], roth: 0, hsa: 0 },
+          { taxable: 0, pretaxByPerson: [50], roth: 0, hsa: 0 },
+        ],
+      },
+    )
+    expect(got.depletionYear).toBe(0)
+    expect(got.terminalReal).toBe(0)
+    expect(totalAcrossBuckets(got.finalBuckets)).toBe(0)
+  })
+})

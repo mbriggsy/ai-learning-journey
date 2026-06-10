@@ -73,6 +73,21 @@ describe('Trinity-style rolling backtest (DIRECTIONAL — Shiller govt bonds)', 
   })
 })
 
+describe('C2 — the Trinity oracle is byte-identical through the runDecumulation signature change', () => {
+  it('the rolling success COUNTS are pinned exactly (the appended-and-absent contribution param moves nothing)', () => {
+    // The backtest runs through the SAME runDecumulation whose signature C2 extended with the
+    // appended optional contribution stream (contract #3). With the stream absent every credit
+    // is an exact IEEE no-op, so the as-shipped pre-C2 counts hold byte-identically — these are
+    // the exact observed values the directional bands above bracket (41/41 at 50/50; 23/41 at
+    // 100% bonds). A count flip here means the signature change perturbed the oracle.
+    const cfg: BacktestConfig = { initialPortfolio: 1000, withdrawalRate: 0.04, stockWeight: 0.5, horizonYears: 30 }
+    const blend = rollingSuccessRate(real, cfg)
+    const bond = rollingSuccessRate(real, { ...cfg, stockWeight: 0 })
+    expect([blend.successes, blend.windows]).toEqual([41, 41])
+    expect([bond.successes, bond.windows]).toEqual([23, 41])
+  })
+})
+
 describe('backtestWindow — boundary behaviour', () => {
   it('returns false for a window that runs past the data', () => {
     expect(backtestWindow(real, real.length - 5, {

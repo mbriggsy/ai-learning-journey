@@ -31,17 +31,40 @@ export interface StepResult {
   /** True iff the net withdrawal could not be funded this year (the portfolio hit
    *  zero). Once true the caller stops drawing — balances stay at zero. */
   readonly depleted: boolean
+  /** The portfolio total AFTER withdraw → rebalance → grow but BEFORE the end-of-year
+   *  contribution credit (C2 §2c). The tax overlay's bucket-scale MUST read THIS, never
+   *  `totalValue(state)`: scaling buckets by the credit-inclusive total would smear the
+   *  contribution pro-rata across every bucket (an asset-location violation) instead of
+   *  crediting its named destination. Equal to `totalValue(state)` exactly when the
+   *  contribution is 0 (the reduce-to-spine condition); 0 on a depleted year. */
+  readonly growthOnlyTotal: number
 }
 
 /**
  * One year of decumulation. PINNED order (contract #3):
  *   1. take the (already-net) withdrawal from the total,
  *   2. rebalance the post-withdrawal total to the target stock weight,
- *   3. apply that year's real returns per asset.
+ *   3. apply that year's real returns per asset,
+ *   4. credit the year's contribution END-OF-YEAR, at face value (C2 §2).
  *
  * `netWithdrawal` is the cash actually needed AFTER the bridge nets it down and the
  * overlays gross it up — `stepYear` never sees spending, taxes, or premiums, only the
  * single net number. If it exceeds the portfolio, the year depletes (balances → 0).
+ *
+ * `contribution` is the accumulation plan's signed inflow term (C2). stepYear is the ONE
+ * owner of the crediting convention (contract #3 — the order can never drift between the
+ * spine and an overlay): the contribution is credited AFTER the return step, so a
+ * contributed dollar earns NO growth in its arrival year. That is the CONSERVATIVE
+ * direction — real payroll contributions arrive across the year (~half a year of growth
+ * on average), so full-year crediting (the start-of-year mirror) would OVERSTATE the
+ * retirement-onset balance → an earlier reported work-optional date → the calm-but-wrong-
+ * OPTIMISTIC sin (R25); end-of-year crediting understates it → later/safer, never
+ * optimistic (the same conservative-direction discipline as the survivor-SS gap in
+ * `simulate.ts` cashTermsForYear). A DEPLETED year credits NOTHING — the path forfeits
+ * the arrival-year contribution along with all later ones (defined conservative outcome,
+ * C2 §2: depletion is the per-path grammar; `indeterminate` stays input-failure-only).
+ * At `contribution = 0` every added operation is an exact IEEE no-op (`0 × w = 0`,
+ * `x + 0 = x`), so the pre-C2 paths are byte-identical by construction.
  */
 export function stepYear(
   state: PortfolioState,
@@ -49,19 +72,25 @@ export function stepYear(
   realBondReturn: number,
   netWithdrawal: number,
   stockWeight: number,
+  contribution: number = 0,
 ): StepResult {
   const afterWithdrawal = totalValue(state) - netWithdrawal
   if (afterWithdrawal <= 0) {
-    return { state: { stock: 0, bond: 0 }, depleted: true }
+    return { state: { stock: 0, bond: 0 }, depleted: true, growthOnlyTotal: 0 }
   }
   const stock = stockWeight * afterWithdrawal
   const bond = afterWithdrawal - stock // exact complement (no second multiply drift)
+  const grownStock = stock * (1 + realStockReturn)
+  const grownBond = bond * (1 + realBondReturn)
   return {
     state: {
-      stock: stock * (1 + realStockReturn),
-      bond: bond * (1 + realBondReturn),
+      // The end-of-year credit, split at the target weight (next year's rebalance reads
+      // only the total, so the split is presentational — the TOTAL carries the contract).
+      stock: grownStock + contribution * stockWeight,
+      bond: grownBond + contribution * (1 - stockWeight),
     },
     depleted: false,
+    growthOnlyTotal: grownStock + grownBond,
   }
 }
 
@@ -80,6 +109,14 @@ export interface DecumulationResult {
  * indexed by ABSOLUTE year and must each cover the horizon; running out of data ends
  * the path (the data length is the horizon — never a silent 0-return year). After
  * depletion the portfolio stays at zero.
+ *
+ * `contributions` (C2, appended AFTER `stockWeight` — never inserted before it, which
+ * would silently re-bind every existing call's `stockWeight` argument) is the optional
+ * per-year signed inflow stream, indexed by ABSOLUTE year like the others but AUXILIARY:
+ * a missing/short entry is a 0-inflow year (`?? 0`), NEVER the end of data — the
+ * returns/withdrawals arrays alone govern the horizon (the same auxiliary-stream
+ * convention as the overlay's `ssBenefits`/`conversions`). ABSENT ⇒ zero inflow every
+ * year ⇒ byte-identical to the pre-C2 path (the reduce-to-spine condition).
  */
 export function runDecumulation(
   initial: PortfolioState,
@@ -87,6 +124,7 @@ export function runDecumulation(
   realBondReturns: readonly number[],
   netWithdrawals: readonly number[],
   stockWeight: number,
+  contributions?: readonly number[],
 ): DecumulationResult {
   let state = initial
   let depletionYear: DepletionYear = NEVER_DEPLETED
@@ -99,7 +137,7 @@ export function runDecumulation(
     // Aligned-length contract: a missing entry is the end of data, not a 0 year.
     if (rs === undefined || rb === undefined || w === undefined) break
 
-    const step = stepYear(state, rs, rb, w, stockWeight)
+    const step = stepYear(state, rs, rb, w, stockWeight, contributions?.[t] ?? 0)
     state = step.state
     if (step.depleted) {
       depletionYear = t

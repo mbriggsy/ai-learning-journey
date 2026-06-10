@@ -23,10 +23,19 @@ import {
   type Household,
   type HouseholdYear,
   type OverlayPerson,
+  type YearContribution,
 } from '@engine/taxOverlay'
 import { totalAcrossBuckets } from '@engine/sequencing'
 import { irmaa } from '@engine/constants'
-import { DRAWDOWN_POLICIES, NEVER_DEPLETED, type DepletionYear, type Distribution, type SimulationParams } from '@shared/model'
+import {
+  DRAWDOWN_POLICIES,
+  NEVER_DEPLETED,
+  type AccumulationParams,
+  type DepletionYear,
+  type Distribution,
+  type PersonInputs,
+  type SimulationParams,
+} from '@shared/model'
 
 /** The CRN draw matrices — pure in (seed, dimensions). */
 export interface Draws {
@@ -115,12 +124,16 @@ export function cashTermsForYear(
   let earned = 0
   let ss = 0
   let survivorClaimed = false
+  let livingWorker = false
   for (let i = 0; i < offsets.length; i++) {
     const o = offsets[i]
     const death = deathOffsets[i] ?? 0
     if (o === undefined) continue
     const alive = t < death
-    if (alive && t < o.retire) earned += o.earnedIncomeReal
+    if (alive && t < o.retire) {
+      earned += o.earnedIncomeReal
+      livingWorker = true
+    }
     if (allAlive) {
       if (alive && t >= o.claim) ss += o.socialSecurityReal
     } else if (alive && t >= o.claim) {
@@ -134,12 +147,35 @@ export function cashTermsForYear(
   // direction for the survival floor. `net` and `ss` both use this same figure, so they never disagree.
   if (!allAlive && aliveCount >= 1) ss = survivorClaimed ? maxBenefit : 0
 
-  return { net: Math.max(0, spending - earned - ss), ss }
+  // C2 §7 — the working-year zero-withdrawal clamp, PRESENCE-GATED on the accumulation construct
+  // and DEATH-AWARE. While the construct is present AND at least one LIVING person is still working
+  // (`t < deathOffset_i && t < retire_i` — the bridge's own dead-earner predicate shape), the
+  // household lives on salary: the spending net is 0, never a portfolio draw (you cannot both save
+  // and fund a spending gap from the same household cash — the contribute-and-draw double-count).
+  // DEATH-AWARE because a death-blind `t < Y` clamp would zero a surviving retiree's REAL draws for
+  // the rest of the runway — flipping the engine's deliberately-conservative survivor paths
+  // (survivor step-down above, the dead-earner bridge, the survivor-SS understatement) maximally
+  // OPTIMISTIC on exactly the top-of-window candidates that decide a date crowning: the cardinal
+  // calm-but-wrong direction. Once the last living worker dies, the clamp simply stops firing and
+  // the existing survivor cash semantics draw normally. PRESENCE-gated (never value-derived) so a
+  // 1¢ contribution change can never flip the draw regime, and a construct-ABSENT run — every
+  // shipped pre-C2 caller — is byte-identical by construction. Direction: the clamp only ever
+  // REMOVES withdrawals → weakly higher balances → a weakly earlier date; optimistic ONLY for a
+  // household that really draws from the portfolio while working (disclosed — D2 owns the copy).
+  // `ss` is NOT clamped: a claimed-while-working benefit still flows to the tax overlay as
+  // provisional income (an overlay-forced working-year outflow is legal — §2's overlap-safe fold).
+  const accumulating = params.overlay?.accumulation !== undefined
+  const net = accumulating && livingWorker ? 0 : Math.max(0, spending - earned - ss)
+  return { net, ss }
 }
 
 /**
  * The net withdrawal the portfolio funds for one year — spending net of the earned-income bridge
- * and Social Security, clamped at 0 (never a contribution back). A thin projection of
+ * and Social Security, clamped at 0. The clamp means income never flows back INTO the portfolio
+ * through this seam; contributions are the accumulation construct's EXPLICIT signed inflow term
+ * (C2 §2 — assembled separately and credited end-of-year by `stepYear`), never a negative
+ * withdrawal here. With the construct present, working years with a living worker return 0
+ * outright (the §7 clamp — the household lives on salary). A thin projection of
  * {@link cashTermsForYear}; exported for direct unit testing of the seam (bridge truncation at
  * death, SS step-down, clamp).
  */
@@ -151,6 +187,52 @@ export function netWithdrawalForYear(
   maxBenefit: number,
 ): number {
   return cashTermsForYear(t, params, offsets, deathOffsets, maxBenefit).net
+}
+
+/**
+ * One path-year's per-bucket contribution inflow (C2 §7's B×C consequence) — the assembly seam.
+ * Person-keyed streams → the alive∧working filter (`t < deathOffset_i && t < retire_i`, the
+ * bridge's own dead-earner predicate shape) → the HSA owner-enrollment zeroing → person→bucket
+ * aggregation. PER-PATH because death truncation is per-path (a dead spouse's phantom
+ * contributions would overstate the nest egg — the optimistic direction); an already-retired
+ * person (retire offset ≤ 0) has an empty window and contributes never, with zero special-casing.
+ * Consumes ZERO draws (CRN-safe — a pure function of the death timeline + the entered streams).
+ * Exported for direct unit testing of the seam (death truncation, match→pretax routing, the
+ * owner-keyed HSA zeroing) — the same convention as {@link cashTermsForYear}.
+ */
+export function contributionsForYear(
+  t: number,
+  accumulation: AccumulationParams,
+  offsets: readonly PersonOffsets[],
+  deathOffsets: readonly number[],
+  people: readonly PersonInputs[],
+): YearContribution {
+  const byPerson = accumulation.contributionsByPerson
+  let cTaxable = 0
+  let cRoth = 0
+  let cHsa = 0
+  const cPretaxByPerson: number[] = new Array(people.length).fill(0)
+  for (let i = 0; i < byPerson.length; i++) {
+    const pc = byPerson[i]
+    const o = offsets[i]
+    const person = people[i]
+    if (pc === undefined || o === undefined || person === undefined) continue
+    const aliveWorking = t < (deathOffsets[i] ?? 0) && t < o.retire
+    if (!aliveWorking) continue
+    cTaxable += pc.taxable?.[t] ?? 0
+    cRoth += pc.roth?.[t] ?? 0
+    // Employer match → pretax ALWAYS (the confirmed default rule — a Roth employer match is a
+    // deferred SECURE 2.0 §604 option), credited to the contributing person's OWN ledger slot
+    // alongside their deferral.
+    cPretaxByPerson[i] = (pc.pretax?.[t] ?? 0) + (pc.employerMatch?.[t] ?? 0)
+    // HSA contributions zero from THIS person's Medicare-enrollment onset — keyed to the
+    // contributing OWNER, never the spouse (C2 §3b; mirrors the constants table's separation of
+    // medicareZeroesContribution from the premium privilege). Absent-signal default = the owner's
+    // 65th sim-year (`currentAge_i + t ≥ 65` — today's biological predicate); C3's per-person
+    // onset signal threads through this same predicate.
+    if (person.currentAge + t < 65) cHsa += pc.hsa?.[t] ?? 0
+  }
+  return { taxable: cTaxable, pretaxByPerson: cPretaxByPerson, roth: cRoth, hsa: cHsa }
 }
 
 /** Validate the engine's numeric domain (R19, engine half). Returns a reason string
@@ -301,8 +383,55 @@ function validateParams(params: SimulationParams): string | null {
       if (!Number.isInteger(o.hsaOwnerIndex) || o.hsaOwnerIndex < 0 || o.hsaOwnerIndex >= params.people.length)
         return 'overlay hsaOwnerIndex invalid (must index the household people)'
     }
-    if (o.taxEnabled && (b.hsa ?? 0) > 0 && o.hsaOwnerIndex === undefined)
-      return 'overlay hsaOwnerIndex required (tax on + hsa bucket non-empty)'
+    // C2: the accumulation construct — validated BEFORE the hsa-owner requirement below, because
+    // hsa LIVENESS is now derived from the contribution streams too (a NaN hsa stream must read
+    // as invalid input here, never silently decide liveness — insights 008/010 finiteness-FIRST).
+    const acc = o.accumulation
+    if (acc !== undefined) {
+      // Aligned per person (mirror pretaxByPerson): a short/long array silently mis-maps a
+      // spouse's contributions — reject, never re-index.
+      if (acc.contributionsByPerson.length !== params.people.length)
+        return 'overlay accumulation contributionsByPerson length must match people'
+      // Every stream entry finite ≥ 0 (NaN-first; real dollars — NO +Infinity sentinel; a negative
+      // is a disguised withdrawal bypassing the draw allocation). Holes/short tails stay legal ($0).
+      for (const pc of acc.contributionsByPerson) {
+        for (const stream of [pc.taxable, pc.pretax, pc.roth, pc.hsa, pc.employerMatch]) {
+          if (stream !== undefined && !stream.every(finiteNonNeg))
+            return 'overlay accumulation contribution stream invalid'
+        }
+      }
+      // The zero-balance start (C2 §2): stepYear's depletion predicate (`afterWithdrawal <= 0`)
+      // would mark a $0-start run depleted at t = 0 and the depleted branch would silently swallow
+      // every later contribution — reject as indeterminate (calm: "enter at least one account
+      // balance"), removing the t=0 instance WITHOUT touching the spine's depletion predicate.
+      if (params.initialPortfolio === 0)
+        return 'accumulation requires a non-zero starting balance — enter at least one account balance'
+      // §6 empty-overlap (run-level conservative arm; the overlay throw is the per-path mirror): a
+      // priced ACA year (finite enrolled > 0, any person pre-65 that year — entered ages, the
+      // all-alive conservative reading) carrying ANY entered contribution is incoherent v1 input —
+      // contributions occupy working years, ACA pricing the retired pre-65 window (R31 + R33).
+      if (o.healthcareEnabled) {
+        const enrolled = o.enrolledPremium ?? []
+        for (let t = 0; t < enrolled.length; t++) {
+          const e = enrolled[t]
+          if (e === undefined || !Number.isFinite(e) || e <= 0) continue
+          if (!params.people.some((pp) => pp.currentAge + t < 65)) continue
+          const anyContribution = acc.contributionsByPerson.some((pc) =>
+            [pc.taxable, pc.pretax, pc.roth, pc.hsa, pc.employerMatch].some((s) => (s?.[t] ?? 0) > 0),
+          )
+          if (anyContribution)
+            return 'overlay accumulation contribution overlaps a priced ACA year (contributions and ACA pricing are temporally disjoint — C2 §6)'
+        }
+      }
+    }
+    // The hsa-owner requirement keys off the C2-re-derived LIVENESS property (insight 020 — gate on
+    // the property, not its first consumer): an initial balance OR a positive hsa contribution
+    // inflow makes the run hsa-live, and the 65+ Medicare-premium privilege then needs the owner.
+    const hsaContributionInflow =
+      acc !== undefined &&
+      acc.contributionsByPerson.some((pc) => (pc.hsa ?? []).some((x) => x > 0))
+    if (o.taxEnabled && ((b.hsa ?? 0) > 0 || hsaContributionInflow) && o.hsaOwnerIndex === undefined)
+      return 'overlay hsaOwnerIndex required (tax on + the run can hold hsa dollars)'
     // Healthcare pricing is MAGI-driven and MAGI comes ONLY from the tax solver, so healthcare with
     // tax OFF is incoherent — reject it as indeterminate rather than silently drop the premium (the
     // survival-overstating, unsafe direction). The R19 frontline mirror of the overlay's own backstop
@@ -431,6 +560,7 @@ export function simulate(params: SimulationParams, seed: number): SimOutput {
     const withdrawals: number[] = []
     const ssBenefits: number[] = []
     const householdYears: HouseholdYear[] = []
+    const contributionYears: YearContribution[] = []
     for (let t = 0; t < horizon; t++) {
       const zs = sRow?.[t]
       const zbRaw = bRow?.[t]
@@ -448,6 +578,13 @@ export function simulate(params: SimulationParams, seed: number): SimOutput {
           if (op !== undefined && t < (deathOffsets[i] ?? 0)) living.push(op)
         }
         householdYears.push({ living })
+        // C2 §7 (the B×C consequence): this PATH's per-year per-bucket contribution amounts,
+        // assembled per-path because deathOffsets exist only inside the path loop (one
+        // per-candidate transform cannot see per-path deaths). CRN-safe zero-draw work, exactly
+        // like the cash terms above — see {@link contributionsForYear}.
+        if (overlay.accumulation) {
+          contributionYears.push(contributionsForYear(t, overlay.accumulation, offsets, deathOffsets, people))
+        }
       }
     }
 
@@ -478,6 +615,9 @@ export function simulate(params: SimulationParams, seed: number): SimOutput {
           // even when the ACA/IRMAA pricing (healthcareEnabled) is off (medicareCost is just 0).
           ...(overlay.oopMedical ? { oopMedical: overlay.oopMedical } : {}),
           ...(overlay.hsaOwnerIndex !== undefined ? { hsaOwnerIndex: overlay.hsaOwnerIndex } : {}),
+          // C2: the per-path assembled contribution inflows — spread ONLY when the accumulation
+          // construct is present (absent ⇒ the byte-identical pre-C2 taxInputs, presence-keyed §1).
+          ...(overlay.accumulation ? { contributions: contributionYears } : {}),
           // U3 · M3 Slice 4 healthcare streams: spread ONLY when the overlay is enabled, so a
           // healthcare-off run passes the byte-identical pre-Slice-4 taxInputs (reduce-to-spine).
           // validateParams has already rejected healthcareEnabled with tax off (indeterminate).

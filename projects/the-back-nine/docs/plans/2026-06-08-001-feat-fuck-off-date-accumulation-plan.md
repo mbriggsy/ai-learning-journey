@@ -323,7 +323,7 @@ The work is four tracks. **Track A (doc reconciliation)** and **Track B (HSA spe
 
 ### Track C — Accumulation engine (the foundational pivot)
 
-- [ ] **C1: Contribution + HSA-limit constants + the ticker→asset-class blend table**
+- [x] **C1: Contribution + HSA-limit constants + the ticker→asset-class blend table** *(COMPLETE 2026-06-10 — commits `f40da86c`+`08f826be`; 8-lens ultramode review folded 10 advisory-grade findings, zero live bugs; insights 021/022. Two deliberate deviations from this unit's text, both recorded: the table shipped at 161 families (the amended External-References bullet carries the population + pin-pass sizing), and `hsa2026` MOVED health→contributions rather than being re-typed (the one-canonical-home rule overrides the Files list's literal reading; its catch-up provenance corrected to IRC §223(b)(3)(B)). Pin-pass traps: insight 022 — 11,250 and 1,100 are correct; their "obvious corrections" are wrong.)*
 
 **Goal:** Two new directional-until-pinned reference tables: the 2026 contribution/HSA limits (for intake R19 sanity ceilings) and the bundled ticker→`{stock,bond,cash}` blend table (for R37 auto-derivation of the household stock weight).
 

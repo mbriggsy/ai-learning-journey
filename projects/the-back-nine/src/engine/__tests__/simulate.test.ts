@@ -824,3 +824,73 @@ describe('U3 healthcare overlay wired into simulate (M3 Slice 4)', () => {
     })
   })
 })
+
+// ===========================================================================
+// U3 · M5 — the HSA spend side wired THROUGH simulate. The mechanics are golden
+// at the overlay level (taxOverlay.test.ts M5 slices); this anchors the
+// END-TO-END path: simulate threads oopMedical/hsaOwnerIndex, the spend moves
+// the headline distribution, and the cap-only/absent defaults stay byte-identical.
+// ===========================================================================
+describe('U3 · M5 HSA spend wired into simulate', () => {
+  const P = 1_000_000
+  const H = 80_000
+  const pre65m: PersonInputs = { ...MALE_65, currentAge: 60, retirementAge: 60 }
+  const pre65f: PersonInputs = { ...FEMALE_65, currentAge: 60, retirementAge: 60 }
+  const base = makeParams({
+    initialPortfolio: P,
+    annualSpendingReal: 60_000,
+    people: [pre65m, pre65f],
+    longevityMode: 'fixed-horizon',
+    maxHorizonYears: 3,
+    paths: 100,
+    drawdownPolicy: 'pre-tax-first',
+  })
+  const hsaOverlay: OverlayParams = {
+    taxEnabled: true,
+    rmdEnabled: false,
+    startCalendarYear: 2026,
+    buckets: { taxable: 0, pretax: P - H, roth: 0, hsa: H },
+    filing: 'mfj',
+    hsaOwnerIndex: 0,
+  }
+
+  it('an OOP stream paid by the HSA lifts EVERY path (less gross-up drag, same seed) — presence through the wire', () => {
+    // With oopMedical: each year min(hsa, 10k, need) of the SAME spending is HSA-funded ⇒ the
+    // taxable withdrawal (and its tax) shrinks ⇒ total outflow strictly drops ⇒ every path ends
+    // higher. Without it the hsa just rides. CRN: same seed + dims ⇒ path-for-path comparable.
+    const withOop = dist(simulate({ ...base, overlay: { ...hsaOverlay, oopMedical: [10_000, 10_000, 10_000] } }, 2468))
+    const without = dist(simulate({ ...base, overlay: hsaOverlay }, 2468))
+    expect(withOop.terminalValuesReal).not.toEqual(without.terminalValuesReal)
+    for (let p = 0; p < withOop.terminalValuesReal.length; p++) {
+      expect(withOop.terminalValuesReal[p]!).toBeGreaterThan(without.terminalValuesReal[p]!)
+    }
+  })
+
+  it('cap-only THROUGH the wire: at hsa = 0 an OOP stream changes NOTHING (byte-identical distribution)', () => {
+    const zeroHsa: OverlayParams = { ...hsaOverlay, buckets: { taxable: 0, pretax: P, roth: 0, hsa: 0 } }
+    const { hsaOwnerIndex: _unused, ...zeroHsaNoOwner } = zeroHsa
+    const withOop = dist(simulate({ ...base, overlay: { ...zeroHsaNoOwner, oopMedical: [10_000, 10_000, 10_000] } }, 2468))
+    const without = dist(simulate({ ...base, overlay: zeroHsaNoOwner }, 2468))
+    expect(withOop.terminalValuesReal).toEqual(without.terminalValuesReal) // byte-identical — the stream sizes a cap, never the need
+    expect(withOop.depletionYears).toEqual(without.depletionYears)
+  })
+
+  it('CRN across the HSA wiring: deterministic repeat, dimension-only draws, and per-path monotone in the OOP cap', () => {
+    // The qualified spend is a zero-draw cash transform: two candidates differing only in oopMedical
+    // share every draw. More HSA-payable OOP (same spending) ⇒ weakly higher terminal on EVERY path;
+    // a draw desync would scramble returns and break the per-path monotonicity.
+    const withOop = (oop: number) =>
+      dist(simulate({ ...base, overlay: { ...hsaOverlay, oopMedical: [oop, oop, oop] } }, 2468)).terminalValuesReal
+    const a = withOop(5_000)
+    const b = withOop(5_000)
+    expect(a).toEqual(b) // deterministic repeat — no desync
+    const t0 = withOop(0)
+    const t1 = withOop(5_000)
+    const t2 = withOop(12_000)
+    for (let p = 0; p < t0.length; p++) {
+      expect(t1[p]!).toBeGreaterThanOrEqual(t0[p]!)
+      expect(t2[p]!).toBeGreaterThanOrEqual(t1[p]!)
+    }
+    expect(t2[0]!).toBeGreaterThan(t0[0]!) // non-vacuous: the cap genuinely moved the terminal
+  })
+})

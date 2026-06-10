@@ -2680,3 +2680,38 @@ describe('taxOverlay — M5 · Slices 3–4: owner-age keying, the ACA-premium t
     })
   })
 })
+
+// ===========================================================================
+// U3 · M5 · Slice 5 — the 4-bucket ledger reconciliation (the CRITICAL #1 guard
+// extended to the hsa bucket) under EVERY policy with every mechanic live.
+// ===========================================================================
+describe('taxOverlay — M5 · Slice 5: Σ(4 buckets) === terminalReal under every policy with everything live', () => {
+  // Market returns + RMD (born 1952 ⇒ RMD active) + conversions + SS + a live hsa draining against
+  // a real OOP stream — the densest co-live configuration the overlay supports pre-M6.
+  const cfg: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: true, household: mkHousehold(2026, 1952, 1955) }
+  const buckets: AccountBuckets = { taxable: 300_000, pretax: 500_000, roth: 150_000, hsa: 50_000 }
+  const inputs: TaxYearInputs = {
+    initialTaxableBasis: 200_000,
+    conversions: flat(10_000),
+    ssBenefits: flat(30_000),
+    oopMedical: flat(6_000),
+    hsaOwnerIndex: 0,
+    healthcareEnabled: true,
+    irmaaMagiSeed: [60_000, 60_000],
+  }
+
+  for (const policy of DRAWDOWN_POLICIES) {
+    it(`${policy}: the 4-bucket sum reconciles to the terminal and no bucket goes negative`, () => {
+      const got = runTaxAwareDecumulation(buckets, realStock, realBond, flat(45_000), STOCK_W, policy, cfg, inputs)
+      if (got.depletionYear === NEVER_DEPLETED) {
+        expect(Math.abs(totalAcrossBuckets(got.finalBuckets) / got.terminalReal - 1)).toBeLessThan(1e-9)
+      }
+      expect(got.finalBuckets.taxable).toBeGreaterThanOrEqual(0)
+      expect(got.finalBuckets.pretax).toBeGreaterThanOrEqual(0)
+      expect(got.finalBuckets.roth).toBeGreaterThanOrEqual(0)
+      expect(got.finalBuckets.hsa ?? 0).toBeGreaterThanOrEqual(0)
+      // presence (burned/027): the hsa genuinely spent against the OOP stream (non-vacuous sweep)
+      expect(got.totalQualifiedHsaSpendReal).toBeGreaterThan(0)
+    })
+  }
+})

@@ -8,12 +8,13 @@ north-star: docs/plans/direction-reset-2026-06-04.md     # the why (ratified)
 supersedes: docs/plans/mvp-confidence-spine/   # the v1 3-phase single-Roth-lever plan — removed from the tree 2026-06-06, in git history
 deepened:           2026-06-05   # weighted 29-agent deepen, folded clean
 doc-reviewed:       2026-06-05   # 13-agent persona document-review, folded clean
+amended:            2026-06-10   # accumulation → the fuck-off date (R26–R39, full projection) folded per docs/plans/2026-06-08-001-feat-fuck-off-date-accumulation-plan.md — amend, don't renumber; that plan is the live home of the C1–C3/D1–D2/B1 unit detail
 coded:              # YYYY-MM-DD — set when all phases implemented
 code-reviewed:      # YYYY-MM-DD
 phases:
-  - phase-1-foundation.md              # engine core + two-control substrate + tax & healthcare overlays + encrypted store + scaffold (U0–U4)
-  - phase-2-first-answer.md            # single-total-spend magic moment: intake, viz, confidence statement, first-Save (U5–U8)
-  - phase-3-controls.md                # budget builder + manual sequencing + Roth + healthcare surfaces + sharpen + re-entry (U9–U13)
+  - phase-1-foundation.md              # engine core + two-control substrate + tax & healthcare overlays + encrypted store + scaffold (U0–U4; + C1–C3 accumulation/date-search per the 2026-06-08 amendment)
+  - phase-2-first-answer.md            # the magic moment: account-level setup (D1, the U5 reshape) + state-adaptive first answer (D2) + viz + confidence statement + first-Save (U5–U8 as amended 2026-06-08)
+  - phase-3-controls.md                # budget builder + manual sequencing + Roth + healthcare surfaces + sharpen + re-entry (U9–U13; U13 gains the date-staleness extension)
   - phase-4-solver-recommendation.md   # solver validation harness → solver → recommendation surface → stale-rec handling (U14–U17)
 ---
 
@@ -29,13 +30,25 @@ The Back Nine is a **personal** (never-sold) retirement / tax-strategy co-pilot 
 
 This roadmap restructures the superseded v1 plan (`mvp-confidence-spine`, removed from the tree 2026-06-06 — in git history) into **four phases**. The 2026-06-04 thesis reset moved the product from a commercial single-Roth-lever calculator to a personal recommend-second solver; the regulatory guardrails relaxed to wording and **the load transferred onto honesty + engine validation, which harden** (R25). The deterministic engine, the tax-and-accounts overlay, and the encrypted store **survive** from the prior plan (≈80% reusable); the **budget builder**, **withdrawal-sequencing as a second control**, the **income-aware healthcare overlay**, and the **entire solver + recommendation layer** are net-new.
 
+> **Amendment — the full projection, 2026-06-08 (folded 2026-06-10).** The thesis expanded from decumulation-only to **accumulation → decumulation** (master requirements **R26–R39**; north-star banner 2026-06-08): the pre-retirement saving phase is modeled, and a **not-yet-retired** household's first magic moment is **the fuck-off date** — two confidence-graded work-optional dates, computed by sweeping the household work-stop date-offset `Y` over the *existing* engine (never a new engine). The amendment **extends this roadmap without renumbering** the shipped U0–U17 (those references are load-bearing across the codebase + insights). The new units live as **tracks** in `docs/plans/2026-06-08-001-feat-fuck-off-date-accumulation-plan.md` — **the live home of their per-unit detail** (this roadmap stays the index): **C1** (contribution/ticker constants) · **C2** (accumulation projection) · **C3** (the date-search) land at Phase-1 engine altitude; **D1** (account-level setup, the U5 reshape) · **D2** (the state-adaptive date surface) land at Phase-2; **B1** resumes U3·M5 (HSA spend). The fold map:
+>
+> | Existing | Amendment |
+> |---|---|
+> | Master requirements (R1–R25) | + R26–R39; the ~3-min Success Criterion → ~5-min account-level / surface-early (the one master edit) |
+> | This roadmap (U0–U17) | requirements trace + scope + key decisions + validation gates extended (below) |
+> | P1 Foundation | + accumulation projection (C2), the date-search (C3), contribution + ticker constants (C1) |
+> | P2 First Answer (U5 intake, U7 surface) | reshaped: account-level setup (D1), state-adaptive date surface (D2) |
+> | P3·U9 budget | the two-date split rides U9's degenerate-collapse (note only) |
+> | P3·U13 staleness | the date answer joins the per-surface staleness map |
+> | U3·M5 (HSA) | resumes spend-only (B1); contributions move to C2 |
+
 ## Problem Frame
 
 Retirement/wealth/tax planning is a domain everyone makes feel **hostile** (verified: `findings §Strand 1` — the best-sourced cross-product finding is *"different tools give wildly different answers → users distrust any single number"*). Incumbents lose on **consumability** and on **account-sync/data-plumbing breakage** — both of which a **manual-first, local-first** design sidesteps. Because this is a personal tool acted on by friends with real retirement money, the cardinal sin is **calm-but-wrong**: a confidently-stated wrong *recommendation* is worse than no tool, and the honesty bar **rises** for a recommender. UX *and* correctness are the product. The only competition is the quality bar itself.
 
 ## Requirements Trace
 
-Every requirement maps to a phase/unit. Numbers are v2 (`docs/brainstorms/the-back-nine-requirements.md`). `SC#` = the Success Criteria list there.
+Every requirement maps to a phase/unit. Numbers are v2-as-amended (`docs/brainstorms/the-back-nine-requirements.md` — R26–R39 added 2026-06-08). `SC#` = the Success Criteria list there. C1–C3/D1–D2/B1 unit detail lives in `docs/plans/2026-06-08-001-feat-fuck-off-date-accumulation-plan.md`.
 
 | Req | Where |
 |---|---|
@@ -43,7 +56,7 @@ Every requirement maps to a phase/unit. Numbers are v2 (`docs/brainstorms/the-ba
 | **R2** plain-language confidence statement, survival-vs-lifestyle separation, no color-alone | P2·U7 (single metric), P3·U9 (the two-tier essentials/lifestyle reading) |
 | **R3** distribution of futures | P1·U1 |
 | **R4** detail on demand, never unsolicited | P2·U7, P3·U10–U12, P4·U16 |
-| **R5** guided one-question intake on a single total-spend figure | P2·U5 |
+| **R5** guided one-question intake *(the single-total-spend on-ramp superseded 2026-06-08 by R35's account-level setup — one flow, both user states)* | P2·U5 → D1 (the U5 reshape) |
 | **R6** power-user escape hatch | P3·U12 |
 | **R7** every assumption (and every recommendation input/reasoning) visible+editable | P3·U12, P4·U16 |
 | **R8** input mirrors output; refinement *sharpens* (narrows on precision, shifts on a correction) | P2·U5, P3·U12 |
@@ -65,6 +78,20 @@ Every requirement maps to a phase/unit. Numbers are v2 (`docs/brainstorms/the-ba
 | **R24** income-dependent healthcare across the Medicare line (ACA-PTC / IRMAA / HSA) | overlay P1·U3; surfaces P3·U11 |
 | **R25** cardinal honesty: calm-but-wrong is the sin; the bar rises for a recommender; "just for friends" never softens validation | validation P4·U14; copyGuard everywhere; N=1 cold-reads |
 | **SC** correctness two-tier (engine number right + recommendation right vs an optimality/ranking oracle, ranking-stability, grade calibration) | P1·U1 (number), P4·U14 (recommendation) |
+| **R26** the fuck-off date = the existing engine swept over the household work-stop **date-offset `Y`** (never a household "age"); **non-monotone-robust** exhaustive sweep, never a bisection | C3 (`dateSearch.ts`) |
+| **R27** the answer is **two dates** (floor + lifestyle) from the lexicographic objective; one-sided window-floor semantic | C3 (engine) + D2 (surface); the two-track split rides P3·U9's degenerate-collapse |
+| **R28** both dates **confidence-graded**, never hard lines; re-grade on strategy override | C3 + D2 |
+| **R29** framing **adapts to user state** (date for not-yet-retired; spine confidence for already-retired) | D2 (state-adaptive first answer) |
+| **R30** model the pre-retirement accumulation phase (contributions + growth → retirement-onset balance + basis) | C2 (accumulation projection) |
+| **R31** contributions **per-account, flat-real, stop at the tested date**; employer **match** captured (pre-tax even on a Roth 401k) | C2 (engine) + D1 (intake) + C1 (limit constants) |
+| **R32** v1 **projects**, does not optimize accumulation; solver stays decumulation-only | Scope Boundaries; C3 (date-search ≠ solver) |
+| **R33** healthcare **OFF during accumulation, ON at the tested date** — per-candidate cost-stream construction (the engine has no retirement gate) | C3 (`buildCandidateParams(Y)`) + C2 |
+| **R34** accumulation **inherits the engine invariants** — ONE continuous absolute-year draw timeline (CRN); one per-path future end-to-end; empty phase reduces byte-identically | C2 (the load-bearing engine contract) |
+| **R35** the first answer from a **~5-min account-level guided setup**, surface-early, single entry pass, both user states | D1 (intake reshape) + the master Success-Criterion edit (done 2026-06-10) |
+| **R36** account **values user-entered; no live price lookup** | D1 + Scope Boundaries |
+| **R37** per-ticker holdings **collapse to one household blend**; bundled ticker→asset-class table + manual classification; basis per account, not per lot | C1 (`tickerBlend.ts`) + D1 (entry + manual fallback) |
+| **R38** HSA **contributions → accumulation**; HSA **spend → decumulation** (the resumed U3·M5) | C2 (contributions) + B1 (U3·M5 spend) |
+| **R39** new PII inherits encryption + the schema ladder (additive `schemaVersion` bump) | C2/D1 schema fields; consumed by P1·U4's migration ladder |
 
 ## Scope Boundaries
 
@@ -75,11 +102,23 @@ Every requirement maps to a phase/unit. Numbers are v2 (`docs/brainstorms/the-ba
 - **Bounded solver search** — named drawdown policies × a conversion grid, not a full continuous optimizer.
 - **No live net-worth / portfolio-aggregation surface in MVP.**
 
+*Accumulation-side boundaries (added 2026-06-08):*
+- **Accumulation is IN — as a bounded near-retirement on-ramp**, never a decades-out FIRE / "are you on track" calculator (protects the decumulation-strategy thesis; avoids commoditization).
+- **v1 projects, does not optimize, accumulation** — no contribution-strategy recommendations; the solver's controls stay decumulation-only (R32; traditional-vs-Roth contribution allocation → chapter two below).
+- **No live market data / price feeds** — account values are user-entered (R36; consistent with `connect-src 'self'` + offline-first + deterministic replay).
+- **No accumulation-phase income-tax engine**, no working-years budget detail, no raise/promotion modeling — flat-real contributions; tax character rides the destination bucket (R31/R34). With the accumulation construct present, working-year portfolio withdrawals are **clamped to zero while a living worker remains** (plan §7 — never simultaneous save-and-draw).
+- **The "retired-but-still-contributing" HSA-MAGI edge is bounded + disclosed, not modeled** (plan §6 — the one-directional conservative argument with the 100%-FPL-floor carve-out; the falsifiable empty-overlap invariant is the engine guard).
+
 ### Deferred to Separate Tasks (chapter two — named, not in MVP)
 - **SS-claiming-age** as a solver-optimized control (heavy; big for the survivor benefit) — future phase.
 - A full **continuous** optimizer; a **"die-with-zero"** spend-down solver (needs a disclosed life-value model) — i.e. a solver that tells the user *how much **more** they could sustainably spend*. The MVP *live bigger now* goal is the lighter, in-scope statistic — the **confidence that the user's already-chosen front-loaded discretionary shape holds** (the solver funds it tax-smartly; it never raises a spend amount, contract #8a). Raising the spend amount itself is this deferred solver.
 - **Asset-location** — modelable later only as a *deterministic per-bucket tilt on the one shared draw* (must never become a separate per-bucket draw — that breaks CRN).
 - **E2E cross-device sync** (post-MVP; the encrypted-export pair is the MVP durability backstop).
+- **Optimizing accumulation** — traditional-vs-Roth contribution allocation to pull the date in (a genuine *tax* optimization the solver could own; deferred-for-sequencing, not an off-thesis exclusion — R32).
+- **A 3-asset cash sleeve** — v1 folds `cash` into the bond sleeve (the engine is 2-asset; a separate cash draw would break the 2-asset CRN contract).
+- **Target-date-fund glide curves** — v1 ships a **static-snapshot** blend per TDF (disclosed "today's allocation, held constant"); the years-to-target glide is the named correctness upgrade.
+- **Roth employer match** (SECURE 2.0 §604, optional plan feature) — v1 routes all match to pre-tax (the default rule).
+- **Per-person asymmetric retirement-date search** — v1 sweeps one household date-offset `Y`; per-person asymmetry stays an editable assumption applied on top.
 
 ## Context & Research
 
@@ -113,6 +152,11 @@ Every requirement maps to a phase/unit. Numbers are v2 (`docs/brainstorms/the-ba
 - **Honesty load-transfer → copyGuard reshapes.** The reg ban-list (no-verdict / categorical-only / attorney-gate) relaxes to wording; copyGuard gains a **require-the-hedge** lint — a *positive/require* assertion that every control readout and the recommendation headline wears its probabilistic hedge — in addition to the surviving certainty-hygiene + catastrophe-lexicon checks. *"It's just for friends" never softens validation.*
 - **One canonical, year-keyed constants module** (`src/engine/constants/`) cites `findings §Strand 5` + the healthcare doc, marks every figure **directional-until-pinned**, and is the single source plan/engine/tests/copyGuard-allowlist all read.
 - **Doc structure:** this roadmap + four phase docs in `docs/plans/back-nine-mvp/`; the superseded v1 `mvp-confidence-spine` plan was removed from the tree 2026-06-06 (in git history). Reference numbers never inlined here.
+
+*Accumulation-side decisions (added 2026-06-08; full engineering detail = the accumulation plan's §0–§7):*
+- **ONE continuous absolute-year draw timeline — already the architecture (plan §1, R34).** The engine timeline starts at t=0 (today) and the earned-income bridge already occupies the working years; accumulation adds a per-bucket **contribution inflow** into those existing slots — never a separate pre-phase draw stream, no `maxHorizon`/dimension change. The empty phase (`Y == 0`) consumes zero extra draws. **Byte-identity is PRESENCE-keyed:** the reduce-to-spine OFF condition is "the accumulation construct *absent* from params," not "all contributions 0" (the §7 working-year clamp changes nets whenever the construct is present).
+- **The signed inflow term + its own goldens (plan §2).** `stepYear` gains a per-year signed flow with a pinned within-year pipeline: withdraw → rebalance → grow → **credit the contribution end-of-year at face value** (a contributed dollar earns no growth in its arrival year — the *conservative* convention; full-year crediting would overstate the onset balance → a falsely-early date, the calm-but-wrong-optimistic sin). Per-bucket destination at **full basis**; match → pre-tax; the overlay fold is **after the bucket-scale, at face value**, with the per-person-ledger credit. New goldens include construct-absent byte-identity, the per-year `Σbuckets == runningTotal` inflow invariant, and the overlay-path **destination-bucket + direction** pair.
+- **The date-search is NOT the solver — and NOT bias-free (plan §3).** An outer **exhaustive** sweep over a bounded window of household date-offsets (≤~11 candidates, pinned width), each candidate = the existing `simulate` on the same seed (CRN). **Non-monotone-robust** (insight 013): earliest offset that clears **and keeps clearing** through the window, never a bisection. Selection is on a **conservative quantized lower confidence bound** (`p̂ − z·SE`, z = 1.645, quantized to `SURVIVAL_GRID`) against the headline's own `BANDS.onTrack` bar (**objective ≡ headline** — no second metric), at a pinned per-candidate path count (16k final / 2000 provisional two-tier). **Three first-class outcomes per track:** confirmed date / window-edge-unconfirmed (explicit tail disclosure) / **no-date-in-window** (a defined answer, never "never free," never a crash). Healthcare-on-at-the-tested-date is per-candidate **cost-stream construction** (`buildCandidateParams(Y)`), per-person Medicare onset, and the additive working-year IRMAA-MAGI override — the engine has no retirement gate (R33).
 
 ## Open Questions
 
@@ -205,11 +249,12 @@ The two hardest surfaces (correctness + trust) plus the overlays both controls s
 - **U1** MC engine core + validation contract (determinism, CRN, joint-survivor longevity retaining survivor identity, Trinity/Bengen externally-derived fixtures, **sequencing as a pluggable policy**).
 - **U2** Tax-and-accounts overlay (buckets, ordinary tax, RMD birth-year, SS provisional-income fixed-point, MFJ→single; reduces-to-spine when off).
 - **U3** Healthcare overlay (ACA-MAGI + IRMAA-MAGI calculators; ACA pre-65 fixed-point + cliff/enhanced toggle; IRMAA 2-yr lag; HSA 4th bucket; reduces-to-spine when off).
-- **U4** Encrypted store + key lifecycle + recovery/export (PBKDF2-600k, AES-GCM, DK hierarchy, recovery phrase, schemaVersion). *Parallelizable with U1–U3.*
+- **U4** Encrypted store + key lifecycle + recovery/export (PBKDF2-600k, AES-GCM, DK hierarchy, recovery phrase, schemaVersion). *Parallelizable with U1–U3; its migration entry must cover the v2-with-accounts shape before D1's first Save (U4 before D1).*
+- *(Amendment 2026-06-08 — Phase-1 engine altitude; detail in the accumulation plan:)* **C1** contribution-limit + ticker-blend constants (Notice 2025-67 / Rev. Proc. 2025-19 / issuer-or-EDGAR; directional-until-pinned) · **C2** the accumulation projection (signed inflow on the one continuous timeline; presence-keyed reduce-to-spine) · **C3** the date-search (`dateSearch.ts` — exhaustive, non-monotone-robust, quantized-lower-bound selection).
 
 ### Phase 2 — First Answer (U5–U8) → `phase-2-first-answer.md`
-The magic moment end-to-end on a **single total-spend** figure (the budget is the P3 deepening).
-- **U5** Guided progressive on-ramp + in-memory orchestrator + R19 sanity.
+The magic moment end-to-end. *(Amended 2026-06-08: the on-ramp is the **~5-min account-level setup** — the single-total-spend on-ramp is superseded for both user states; the household spend figure survives as a collected input, and the itemized budget stays the P3 deepening.)*
+- **U5** Guided progressive on-ramp + in-memory orchestrator + R19 sanity. *(Reshaped → **D1** account-level setup, surface-early, single entry pass; + **D2** the state-adaptive first answer — date-first for not-yet-retired, spine-first for already-retired. Detail in the accumulation plan, Track D.)*
 - **U6** Colorblind-safe viz primitives (confidence band + two-series encoding).
 - **U7** Confidence statement surface + outcome-state system + survivor readout (copyGuard born here).
 - **U8** First-Save flow + recovery-phrase display + mandatory export + **passphrase-strength gate**.
@@ -220,7 +265,7 @@ The budget + both manual controls + healthcare surfaces. A shippable cold-read m
 - **U10** Manual withdrawal-sequencing control + Roth-conversion lever (both drive the U2 overlay; require-the-hedge lint introduced).
 - **U11** Healthcare surfaces (ACA cliff + enhanced toggle + re-verify gate; IRMAA cliffs; HSA entry) over the U3 overlay.
 - **U12** Sharpen loop + assumption editing + escape hatch.
-- **U13** Returning-user re-entry + per-surface staleness (incl. tax + healthcare vintages + budget line items).
+- **U13** Returning-user re-entry + per-surface staleness (incl. tax + healthcare vintages + budget line items). *(Amended 2026-06-08: the **date answer joins the per-surface staleness map** — fixture-vintage clocks for the contribution-limit + ticker-blend tables, user-entered re-confirms riding the balance-drift confirm class, and the calendar-label re-presentation rule with "~N years out" re-derived, never replayed. Detail in phase-3's U13 extension.)*
 
 ### Phase 4 — Solver & Recommendation (U14–U17) → `phase-4-solver-recommendation.md`
 The new layer. **Validation is built and passing before the solver is allowed to recommend.**
@@ -262,6 +307,9 @@ These extend the engine exit gates to the recommendation. Until each clears, the
 - **The enhanced-ACA-subsidy legislative status re-verified at EVERY build** — live, possibly-retroactive policy.
 - **The solver optimality oracle** (hand-computable known-best drawdown/conversion cases — five of them, including the **after-tax leave-more** inversion and the **no-change** case) exists and passes **before the solver is allowed to recommend** (U14 gates U15). The gate is the **harness-minted "oracle-cleared" token** taken as a required parameter by the solve-as-recommendation entry, withheld until the oracle, ranking-stability, grade calibration (with the named-driver probe + the deterministic B-family), the held-out-seed defense, **and** the structural clauses — every rec-relevant §Strand-5/healthcare primary pinned (`directionalUntilPinned === false`) **and** ε calibrated — all pass; skipping validation or recommending on directional fixtures is a *compile* error. The N=1 cold-read judges *tone*, not *correctness*.
 - **The survivor-spending ratio** (the ~75% default that scales the survivor's spending and so rides the Tier-1 survival floor) is **grounded to a citable retirement-research range** (e.g. Blanchett survivor-spending literature), source-stamped like every other constant, and its **dangerous direction documented** (too-low understates survivor need — the unsafe direction for the survivor product); it stays editable but is no longer an un-sourced silent default under the hero metric (P1·U1).
+- *(Added 2026-06-08.)* **The 2026 contribution-limit constants are directional-until-pinned** against IRS **Notice 2025-67** (401k/IRA/catch-up + §415(c)) and **Rev. Proc. 2025-19** (HSA limits + HDHP definitions), with SECURE 2.0 §§108/109 carried as `legalBasis` provenance (C1). Same discipline as every §Strand-5 figure.
+- *(Added 2026-06-08.)* **The ticker→asset-class blend table is directional-until-pinned** against the **issuer product-page allocation panel, with SEC EDGAR N-PORT as the independent backstop** (DND/012); TDF static snapshots disclosed as "today's allocation, held constant" (C1).
+- *(Added 2026-06-08.)* **The date-search carries the non-monotone-robust contract** (insight 013 — exhaustive sweep, keeps-holding rule, never a bisection; a planted monotonicity-assuming selector must fail) **and the empty-phase byte-identity gate** (`Y == 0` / construct-absent reduces byte-identically to plain decumulation at the same path dimensions) before any date is surfaced (C2/C3).
 
 ## Sources & References
 

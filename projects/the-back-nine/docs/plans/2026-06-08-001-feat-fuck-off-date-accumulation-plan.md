@@ -227,7 +227,7 @@ The work is four tracks. **Track A (doc reconciliation)** and **Track B (HSA spe
 
 ---
 
-- [ ] **A2: Amend the roadmap**
+- [x] **A2: Amend the roadmap** *(done 2026-06-10)*
 
 **Goal:** The roadmap (`docs/plans/back-nine-mvp/roadmap.md`) reflects the new tracks/units, scope, decisions, and validation gates without renumbering the shipped U0–U17 references.
 

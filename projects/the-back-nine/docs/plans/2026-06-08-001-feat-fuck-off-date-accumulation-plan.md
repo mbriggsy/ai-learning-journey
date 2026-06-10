@@ -279,7 +279,7 @@ The work is four tracks. **Track A (doc reconciliation)** and **Track B (HSA spe
 
 ### Track B — Decumulation HSA spend (independent; resume first/parallel)
 
-- [ ] **B1: U3·M5 — HSA 4th bucket (SPEND side), reshaped**
+- [x] **B1: U3·M5 — HSA 4th bucket (SPEND side), reshaped** *(COMPLETE 2026-06-10 — commits `2527f5ec`→`b0c88f7c`; 11-lens boundary review folded; one deliberate deviation from the Files list: the "post-65 non-qualified income-inclusion path" is encoded as the tested laundering CONTRACT (the forward landmine at the `nonSSordinary` producer + the structural type exclusion + the discriminating battery), not a routed dead branch — the as-we-go discipline governs; any future consumer (the P4 last-resort draw) adds the income inclusion in the SAME change. C2 must re-derive `hsaLive` — see the forward landmine at `taxOverlay.ts`.)*
 
 **Goal:** Extend the engine to a fourth account bucket — HSA **spend** behavior on the decumulation side — MAGI-invisible for qualified medical spend, ordinary-income (raising both MAGIs) for post-65 non-qualified spend, owner-age-keyed Medicare-premium privilege, the ACA-premium-not-qualified trap, Medicare-zeroes-contribution. **Spend-only** — HSA contributions belong to accumulation (C2).
 

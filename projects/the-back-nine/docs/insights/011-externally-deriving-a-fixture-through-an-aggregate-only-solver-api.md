@@ -50,3 +50,15 @@ M4 IRMAA (assert the surcharge that leaves the portfolio), M5 HSA (qualified vs 
 effect), and the P4 solver's per-candidate fixtures — every case that must assert a converged internal
 quantity through an aggregate-only result. Generally: any layered/fixed-point engine whose public API
 hides the intermediate you need to value-check.
+
+## Extended — the DIFFERENCING identity (M5, 2026-06-10): cancel the solve itself, not just the growth
+
+The read-off trick neutralizes the stages BETWEEN the internal value and the output. M5 added the
+sibling move: construct TWO runs whose internal solve is **provably identical**, so the solve cancels
+out of their DIFFERENCE and the assertion needs zero tax-table hand-math. When the HSA pays the whole
+Medicare bill, the gross-up's funding need is `net` in BOTH the hsa-arm and a healthcare-OFF control —
+the identical fixed point — so (zero returns, one year)
+`terminal_withHsa − terminal_off = H − medicareCost` **exactly**, whatever the tax tables say.
+Any gross-up drag (a planted arm that routes the premium through the taxable withdrawal) breaks the
+identity. Use it when the upstream math is NOT hand-solvable (the 65+ deduction stack) but a pair of
+runs with the same inner problem is constructible: assert the difference, not the level.

@@ -6,7 +6,7 @@
  * chunk). Keeping the boundary structural — not reliant on bundler tree-shaking — means
  * a future main-thread import can never silently drag the engine across the worker line.
  */
-import type { DollarAdjustment, Headline, SimulationResult } from '@shared/model'
+import type { DateSearchOutcome, DollarAdjustment, Headline, SimulationResult } from '@shared/model'
 
 /** A resolved result in WIRE form: the big arrays as transferable typed-array buffers,
  *  the small fields by structured clone. `depletionYears` is Int32 (it carries the −1
@@ -46,4 +46,31 @@ export function fromWire(wire: EngineWire): EngineResult {
       seed: wire.seed,
     },
   }
+}
+
+// ---------------------------------------------------------------------------
+// The date-search wire (C3). DELIBERATELY thin: the per-offset curve is ≤ ~11 points
+// per track, so the @shared result shape crosses by STRUCTURED CLONE — the transferable
+// typed-array machinery above serves the 2000+-element headline buffers, not an 11-point
+// curve. `DateSearchOutcome` already carries its own calm grammar (input-failure /
+// cancelled are DEFINED outcomes); the wire's calm-error arm is reserved for an
+// UNEXPECTED engine throw (the worker never dies mid-sweep — calm-error-total, like
+// `runEngine`).
+// ---------------------------------------------------------------------------
+
+/** The worker's date-search return contract — a defined outcome or a calm error. */
+export type DateSearchWire =
+  | { readonly kind: 'date-search'; readonly outcome: DateSearchOutcome }
+  | { readonly kind: 'calm-error'; readonly reason: string }
+
+/** Reconstructed main-thread date-search result, or a calm error to render. */
+export type DateSearchResult =
+  | { readonly ok: true; readonly outcome: DateSearchOutcome }
+  | { readonly ok: false; readonly reason: string }
+
+/** UNPACK a date-search wire result — compute-free (structured clone already delivered
+ *  the value model; nothing widens). */
+export function dateSearchFromWire(wire: DateSearchWire): DateSearchResult {
+  if (wire.kind === 'calm-error') return { ok: false, reason: wire.reason }
+  return { ok: true, outcome: wire.outcome }
 }

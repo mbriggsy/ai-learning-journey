@@ -984,6 +984,30 @@ export function runTaxAwareDecumulation(
   if (!oopMedical.every((x) => Number.isFinite(x) && x >= 0)) {
     throw new Error('[taxOverlay] oopMedical entries must be finite and ≥ 0 (insights 008/010; burned/062)')
   }
+  // bracketFillCeilings (M5 boundary review): the one stream the per-year loop consumes UNCONDITIONALLY
+  // (even tax OFF), yet it had a frontline guard only (validateParams) — no overlay backstop. A PRESENT
+  // NaN survives `?? +Infinity`, NaN-poisons the allocation, and with tax OFF silently zeroes the ledger
+  // (`NaN > 0` is false → the EMPTY else-branch); with a live hsa the general-depletion guard then reads
+  // that zeroed ledger as a real shortfall → a FALSE depletion (terminal 0) on a healthy portfolio — a
+  // wrong HEADLINE, not just a cosmetic ledger. Same rule as validateParams: finite ≥ 0 OR the explicit
+  // +Infinity no-ceiling sentinel; `.every` skips holes (an absent year IS the no-ceiling default).
+  if (!bracketFillCeilings.every((c) => (Number.isFinite(c) && c >= 0) || c === Number.POSITIVE_INFINITY)) {
+    throw new Error(
+      '[taxOverlay] bracketFillCeilings entries must be finite ≥ 0 or +Infinity (the no-ceiling sentinel) — a NaN silently zeroes the ledger and falsifies the headline under a live hsa (insights 008/010)',
+    )
+  }
+  // netWithdrawals (M5 boundary review): the draw stream itself was the ONE caller-supplied input with
+  // no overlay backstop. A negative entry is silently MINTED INTO the portfolio (stepYear adds it; the
+  // scale then smears the phantom inflow pro-rata into every bucket — the medical-earmarked hsa
+  // included); a NaN sails to a NaN terminal with NEVER_DEPLETED (survival overstated, the cardinal
+  // direction). simulate can never produce either — `cashTermsForYear` clamps the household net at 0
+  // ("never a contribution back"); contributions land as an explicit modeled feature (the accumulation
+  // plan's §2/§7 signed inflow term), never as a negative draw. Guard the direct caller loudly.
+  if (!netWithdrawals.every((x) => Number.isFinite(x) && x >= 0)) {
+    throw new Error(
+      '[taxOverlay] netWithdrawals entries must be finite and ≥ 0 — a negative draw would mint money into the portfolio (simulate clamps at 0 in cashTermsForYear; contributions are the accumulation plan’s explicit signed term, never a negative withdrawal)',
+    )
+  }
   // HSA liveness is a RUN-level constant (U3 · M5): the 4th-bucket semantics (the owner requirement,
   // the general-depletion check, the qualified-spend mechanics) exist only when the run STARTS with
   // an HSA balance. Gating on the initial balance — not the per-year one — keeps the semantics stable

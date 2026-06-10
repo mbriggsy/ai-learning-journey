@@ -2698,6 +2698,9 @@ describe('taxOverlay — M5 · Slice 5: Σ(4 buckets) === terminalReal under eve
     hsaOwnerIndex: 0,
     healthcareEnabled: true,
     irmaaMagiSeed: [60_000, 60_000],
+    // The per-person pre-tax ledger runs CO-LIVE with the hsa bucket (the M5 boundary review found
+    // the combination — the realistic couple configuration — exercised by zero tests; sums to 500k).
+    initialPretaxByPerson: [350_000, 150_000],
   }
 
   for (const policy of DRAWDOWN_POLICIES) {
@@ -2797,5 +2800,115 @@ describe('taxOverlay — M5 boundary review: the verified seams', () => {
         },
       ),
     ).toThrow(/canonical people/)
+  })
+})
+
+// ===========================================================================
+// U3 · M5 — boundary-review fold #2 (the four findings whose verifiers had to
+// be re-run): exact absent-vs-zero equality under TAX ON, the hsa × per-person-
+// ledger co-live arm, and the two missing overlay backstops.
+// ===========================================================================
+describe('taxOverlay — M5 boundary review #2: the re-verified seams', () => {
+  const BASE = partB2026.value.standardPremiumMonthly
+  const lowSeed = [60_000, 60_000]
+
+  it('hsa ABSENT vs hsa: 0 is byte-identical under TAX ON + healthcare (toBe-exact — the zero===absent sibling ssBenefits/conversions already have)', () => {
+    // The dense Slice-5 fixture, hsa: 0 vs the key OMITTED. hsaOwnerIndex stays in BOTH arms (the
+    // membership guard accepts an in-range index regardless of liveness; the required-guard fires
+    // only when hsaLive). A presence-keyed (`!== undefined`) split anywhere in the engine would
+    // diverge here — this is the tripwire for the SCHEDULED C2 hsaLive re-derivation.
+    const cfg: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: true, household: mkHousehold(2026, 1952, 1955) }
+    const inputs: TaxYearInputs = {
+      initialTaxableBasis: 200_000,
+      conversions: flat(10_000),
+      ssBenefits: flat(30_000),
+      oopMedical: flat(6_000),
+      hsaOwnerIndex: 0,
+      healthcareEnabled: true,
+      irmaaMagiSeed: lowSeed,
+    }
+    const zero = runTaxAwareDecumulation(
+      { taxable: 300_000, pretax: 500_000, roth: 150_000, hsa: 0 },
+      realStock, realBond, flat(45_000), STOCK_W, 'pre-tax-first', cfg, inputs,
+    )
+    const absent = runTaxAwareDecumulation(
+      { taxable: 300_000, pretax: 500_000, roth: 150_000 },
+      realStock, realBond, flat(45_000), STOCK_W, 'pre-tax-first', cfg, inputs,
+    )
+    expect(zero.terminalReal).toBe(absent.terminalReal)
+    expect(zero.depletionYear).toBe(absent.depletionYear)
+    expect(zero.totalQualifiedHsaSpendReal).toBe(absent.totalQualifiedHsaSpendReal)
+    expect(zero.totalNetPremiumReal).toBe(absent.totalNetPremiumReal)
+    expect(zero.totalMedicareCostReal).toBe(absent.totalMedicareCostReal)
+    expect(zero.finalBuckets).toEqual(absent.finalBuckets)
+  })
+
+  it('hsa × per-person pretax ledger CO-LIVE: the owner-death year fires BOTH same-year re-keys (ledger rollover + hsa privilege) and still reconciles', () => {
+    // Person 0 born 1952 (74 — RMD active, 65+); person 1 born 1962 (64) owns the HSA. Person 1
+    // dies after year 0: the SAME year must (a) roll person 1''s pre-tax IRA to the survivor
+    // (the M6b ledger re-key) AND (b) roll the HSA to the 65+ survivor — opening the
+    // Medicare-premium privilege (the M5 re-key). The two sub-ledgers are only ever tested in
+    // isolation elsewhere; a regression in their interaction passes every other test.
+    const cfg: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: true, household: mkHousehold(2026, 1952, 1962) }
+    const hh = cfg.taxEnabled ? cfg.household : (undefined as never)
+    const years = [
+      { living: [hh.owner, hh.spouse!] }, // y0: both alive (canonical refs — the guard requires them)
+      { living: [hh.owner] }, // y1: the HSA-owning spouse died
+      { living: [hh.owner] },
+    ]
+    const r = runTaxAwareDecumulation(
+      { taxable: 0, pretax: 500_000, roth: 0, hsa: 100_000 },
+      [0, 0, 0], [0, 0, 0], [40_000, 40_000, 40_000], STOCK_W, 'pre-tax-first', cfg,
+      {
+        initialTaxableBasis: 0,
+        initialPretaxByPerson: [350_000, 150_000],
+        householdYears: years,
+        healthcareEnabled: true,
+        irmaaMagiSeed: lowSeed,
+        hsaOwnerIndex: 1,
+      },
+    )
+    // y0: owner(64) alive ⇒ privilege CLOSED (count65 = 1, the bill grossed up, spend 0).
+    // y1, y2: the HSA rolled to the 65+ survivor ⇒ spend = 1 × BASE × 12 each year (low seed).
+    expect(r.totalQualifiedHsaSpendReal).toBeCloseTo(2 * (1 * BASE * 12), 6)
+    // and the 4-bucket ledger still reconciles to the terminal with both re-keys fired:
+    expect(Math.abs(totalAcrossBuckets(r.finalBuckets) / r.terminalReal - 1)).toBeLessThan(1e-9)
+    expect(r.depletionYear).toBe(NEVER_DEPLETED)
+  })
+
+  describe('the two missing overlay backstops (R19 at BOTH layers — the direct-caller throws)', () => {
+    const cfg: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: false, household: mkHousehold(2026, 1966, 1966) }
+
+    it('a NaN / −Infinity / negative bracketFillCeilings entry throws up-front (it was frontline-only — the NaN silently zeroed the ledger, and a live hsa turned that into a FALSE depletion)', () => {
+      for (const bad of [NaN, -1, Number.NEGATIVE_INFINITY]) {
+        expect(() =>
+          runTaxAwareDecumulation(
+            { taxable: 0, pretax: 1_000_000, roth: 0, hsa: 50_000 },
+            [0], [0], [40_000], STOCK_W, 'bracket-fill', cfg,
+            { bracketFillCeilings: [bad], hsaOwnerIndex: 0 },
+          ),
+        ).toThrow(/bracketFillCeilings/)
+      }
+      // +Infinity stays LEGAL — the explicit no-ceiling sentinel (the bracket-fill default).
+      expect(() =>
+        runTaxAwareDecumulation(
+          { taxable: 0, pretax: 1_000_000, roth: 0, hsa: 50_000 },
+          [0], [0], [40_000], STOCK_W, 'bracket-fill', cfg,
+          { bracketFillCeilings: [Number.POSITIVE_INFINITY], hsaOwnerIndex: 0 },
+        ),
+      ).not.toThrow()
+    })
+
+    it('a negative / NaN netWithdrawals entry throws up-front (a negative draw would MINT money into the portfolio — hsa included; a NaN sails to a NaN terminal)', () => {
+      for (const bad of [-20_000, NaN]) {
+        expect(() =>
+          runTaxAwareDecumulation(
+            { taxable: 0, pretax: 1_000_000, roth: 0, hsa: 50_000 },
+            [0], [0], [bad], STOCK_W, 'pre-tax-first', cfg,
+            { hsaOwnerIndex: 0 },
+          ),
+        ).toThrow(/netWithdrawals/)
+      }
+    })
   })
 })

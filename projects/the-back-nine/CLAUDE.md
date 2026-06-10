@@ -2,15 +2,15 @@
 
 ## What this is
 
-A **personal** (never-sold) retirement / tax-strategy co-pilot for a married couple: a calm, plain-language **confidence statement** (the first magic moment), then a **recommend-second**, confidence-graded strategy over two coupled tax controls (withdrawal **sequencing** + Roth **conversion**) that funds a user-built budget toward a user-chosen goal.
+A **personal** (never-sold) retirement / tax-strategy co-pilot for a married couple. The first magic moment is **state-adaptive** (R26–R39, the 2026-06-08 full-projection expansion): for a **not-yet-retired** household, **the fuck-off date** — two confidence-graded work-optional dates from sweeping the household date-offset over the same engine (accumulation is a bounded near-retirement on-ramp, never a FIRE calculator); for an **already-retired** household, the calm plain-language **confidence statement**. Then — both states — a **recommend-second**, confidence-graded strategy over two coupled tax controls (withdrawal **sequencing** + Roth **conversion**) that funds a user-built budget toward a user-chosen goal.
 
 **The cardinal rule: calm-but-wrong is the sin.** Friends bet real retirement money on this answer with *less* protection than a commercial tool — so the honesty + engine-validation bar **rises**, it never softens. *"It's just for friends" never excuses a confidently-wrong recommendation.*
 
 ## The Contract (source-of-truth precedence)
 
 1. **North-star (the *why*):** [`docs/plans/direction-reset-2026-06-04.md`](docs/plans/direction-reset-2026-06-04.md) — ratified charter.
-2. **Requirements v2 (the locked *what/how*):** [`docs/brainstorms/the-back-nine-requirements.md`](docs/brainstorms/the-back-nine-requirements.md).
-3. **Live plan:** [`docs/plans/back-nine-mvp/`](docs/plans/back-nine-mvp/) — roadmap + 4 phase docs (U0–U17).
+2. **Requirements v2-as-amended (the locked *what/how*, R1–R39):** [`docs/brainstorms/the-back-nine-requirements.md`](docs/brainstorms/the-back-nine-requirements.md).
+3. **Live plan:** [`docs/plans/back-nine-mvp/`](docs/plans/back-nine-mvp/) — roadmap + 4 phase docs (U0–U17, amended 2026-06-10 for the accumulation fold) + [`docs/plans/2026-06-08-001-feat-fuck-off-date-accumulation-plan.md`](docs/plans/2026-06-08-001-feat-fuck-off-date-accumulation-plan.md) (the live home of the C1–C3/D1–D2/B1 unit detail + the §0–§7 decision record).
 4. **Verified reference numbers:** `docs/research/foundation-findings-2026-06-03.md` (§Strand 1–5) + `docs/research/pre65-healthcare-aca-hsa-2026-06-04.md`.
 
 When any doc contradicts the north-star, the **north-star wins**. `TODO.md` is the work queue.

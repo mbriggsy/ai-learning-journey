@@ -13,6 +13,7 @@ amends:
   - docs/plans/back-nine-mvp/phase-1-foundation.md       # engine: accumulation + date-search + constants
   - docs/plans/back-nine-mvp/phase-2-first-answer.md     # intake reshape + the date surface
   - docs/plans/back-nine-mvp/phase-3-controls.md         # the two-date split rides U9's degenerate-collapse
+  - docs/plans/back-nine-mvp/phase-4-solver-recommendation.md   # banner + 2 inline supersessions only (added at the 2026-06-10 verification fold): the tax-blind/single-figure on-ramp premise in U15/U16
 ---
 
 # The Fuck-Off Date — Full Projection (accumulation → decumulation)
@@ -184,6 +185,7 @@ flowchart LR
 | P1 Foundation | + accumulation projection (C2), the date-search (C3), contribution + ticker constants (C1) |
 | P2 First Answer (U5 intake, U7 surface) | reshaped: account-level setup (D1), state-adaptive date surface (D2) |
 | P3·U9 budget | the two-date split rides U9's degenerate-collapse (note only) |
+| P3·U13 staleness | the date answer joins the per-surface staleness map |
 | U3·M5 (HSA) | resumes spend-only (B1); contributions move to C2 |
 
 ## Implementation Units

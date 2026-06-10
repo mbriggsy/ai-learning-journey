@@ -1,7 +1,8 @@
 ---
 date: 2026-06-08
 topic: the-fuck-off-date
-status: active
+status: folded
+folded: "2026-06-10 — R26–R39 now live in the-back-nine-requirements.md §\"Accumulation → the Fuck-Off Date\" (Track A·A1), with folding-time corrections applied THERE: the household date-offset-Y axis (this doc's 'retirement age' sweep is historical), the one-sided window-floor semantic (replacing 'may already be in the past'), R33's stream-construction mechanism (no retirement boundary exists in the overlay), per-account-not-per-lot basis, the R39 PII extension. This body is preserved as the historical record — read the master for the current text."
 amends: "the-back-nine-requirements.md (v2) — extends the thesis from decumulation-only to accumulation → decumulation. Requirements numbered R26+ to fold into the master unambiguously."
 ---
 
@@ -102,4 +103,4 @@ flowchart LR
 - `[Affects R28]` *(Now specified in R34 — verification, not an open choice.)* Confirm in implementation that the date's confidence is read off **one per-path future end-to-end** (runway + decumulation on the same CRN path), so final-working-year sequence risk is priced in and not smoothed by an averaged-balance handoff (adversarial).
 
 ## Next Steps
-`-> /ce:plan` — re-plan: fold R26–R39 into the master requirements + the U0–U17 roadmap (new intake/engine units for the accumulation phase + the date-search), and resume U3·M5 (HSA spend) on the decumulation side.
+✅ **Done (2026-06-10).** Re-planned (`../plans/2026-06-08-001-feat-fuck-off-date-accumulation-plan.md`, CLEAN) and **folded** into the master requirements (R26–R39, §"Accumulation → the Fuck-Off Date"), the roadmap, and the phase docs (Track A). U3·M5 (HSA spend) resumes as Track B1.

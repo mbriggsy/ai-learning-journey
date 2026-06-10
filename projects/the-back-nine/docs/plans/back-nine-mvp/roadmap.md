@@ -119,6 +119,7 @@ Every requirement maps to a phase/unit. Numbers are v2-as-amended (`docs/brainst
 - **Target-date-fund glide curves** — v1 ships a **static-snapshot** blend per TDF (disclosed "today's allocation, held constant"); the years-to-target glide is the named correctness upgrade.
 - **Roth employer match** (SECURE 2.0 §604, optional plan feature) — v1 routes all match to pre-tax (the default rule).
 - **Per-person asymmetric retirement-date search** — v1 sweeps one household date-offset `Y`; per-person asymmetry stays an editable assumption applied on top.
+- **`belowFloor` threading to the date-search result** — the per-track 100%-FPL-floor disclosure's flag (the floor>lifestyle signature's user-facing explanation), first consumed by the U9-era cross-track surface; v1 owes only the §3c assertion removal + result-shape mirrors + fixture scoping (detail in the accumulation plan).
 
 ## Context & Research
 

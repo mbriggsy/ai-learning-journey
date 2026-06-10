@@ -92,5 +92,5 @@ Phase 1 engine core (determinism, joint-and-survivor longevity, Trinity/Bengen v
 
 1. ✅ **Ratified** 2026-06-04 (`ratified:` set — "cleared for takeoff").
 2. ✅ **Requirements re-opened** → rewritten to v2 (`../brainstorms/the-back-nine-requirements.md`); foundation-findings cascaded (§Strand 3 → archive, §Strand 4/5 grown) and seam-swept clean 2026-06-04.
-3. **→ Re-plan into 4 phases** (Foundation → First Answer → Controls → Solver & Recommendation); cascade the §Strand 4/5 growth; fold the healthcare grounding note into §Strand 5. **‹the live next step›**
+3. ✅ **Re-planned into 4 phases** (`back-nine-mvp/` — deepened + doc-reviewed 2026-06-05) with the §Strand 4/5 growth cascaded; **amended 2026-06-08 by the accumulation re-plan** (`2026-06-08-001-feat-fuck-off-date-accumulation-plan.md`, folded 2026-06-10 — see the amendment banner above). The live next step lives in `TODO.md` (ce:work).
 4. ✅ **Memory + TODO updated** to the personal-tool / recommend-second direction.

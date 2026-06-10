@@ -5,6 +5,7 @@ date: 2026-06-04
 status: active
 supersedes: "the commercial framing of docs/brainstorms/the-back-nine-requirements.md + the single-Roth-lever scope of docs/plans/mvp-confidence-spine/ (the v1 plan was removed from the tree 2026-06-06; in git history)"
 ratified: 2026-06-04   # Briggsy: "cleared for takeoff"
+amended: "2026-06-08 — accumulation → the fuck-off date (R26–R39, full projection; Briggsy ATC). Banner below; folded 2026-06-10."
 sources:
   - docs/research/foundation-findings-2026-06-03.md   # §Strand 1-5 (regulatory strand now archive-as-rationale)
   - "impact assessment 2026-06-04 (7-lens + 2-critic workflow wf_27462f20)"
@@ -14,6 +15,8 @@ sources:
 # Direction Reset — what The Back Nine is now
 
 > This is the new north-star. It captures decisions made in conversation 2026-06-04 that **re-open the locked requirements doc at thesis level** and reshape the MVP. It is the source the requirements rewrite + the phase re-plan cascade from. Decisions, not code.
+
+> **Amendment — the full projection, 2026-06-08 (Briggsy ATC; banner folded 2026-06-10).** The thesis EXPANDED from decumulation-only to **accumulation → decumulation**: the pre-retirement saving phase is modeled, and for a **not-yet-retired** household the first magic moment is **the fuck-off date** (the *work-optional* date, delivered as **two confidence-graded dates**) — the existing confidence engine swept over the household work-stop date-offset, never a new engine. Everything below stands **unchanged for the already-retired user** (the spine confidence statement remains their lead — R29 is state-adaptive framing, one product), and the decumulation strategist remains the center of gravity: accumulation is a **bounded near-retirement on-ramp** in its service, not a FIRE calculator; **v1 projects the user's stated savings plan, it does not optimize it** (contribution-strategy optimization joins the chapter-two list). **One line below is superseded:** the §"The budget builder" *on-ramp protection* bullet ("the fast first answer still runs on a single total spend number") — replaced by **R35's ~5-minute account-level guided setup**, one intake flow for both user states, the answer surfacing and sharpening during entry; the household spend figure survives as a collected input (the itemized budget stays the P3·U9 deepening — that part of the bullet stands). Requirements: **R26–R39** (`../brainstorms/the-back-nine-requirements.md` §"Accumulation → the Fuck-Off Date"); the re-plan: `2026-06-08-001-feat-fuck-off-date-accumulation-plan.md`. *This banner exists so the north-star itself carries the expansion — the precedence rule ("the north-star wins") must never leave a lower doc more current than this one.*
 
 ## What changed (one paragraph)
 
@@ -55,7 +58,7 @@ The user expresses spending as a categorized, time-boxed plan; the **solver fund
 - **Tier 1 floor** = essentials always covered across futures (the honest "will I be OK").
 - **Tier 2 surplus** = discretionary (travel, fun) — what "live bigger now" spends and the solver optimizes the funding of.
 - The headline gets more humane: *"essentials safe 10/10; full lifestyle 7/10 — in the other 3 you'd trim travel, not go hungry; here's the plan that pushes 7→9."*
-- **On-ramp protection:** the fast first answer still runs on a single total spend number; the itemized budget is the **deepening** (sharpen loop), not the on-ramp.
+- **On-ramp protection:** ~~the fast first answer still runs on a single total spend number~~ *(superseded 2026-06-08 — see the amendment banner: R35's account-level setup is the on-ramp for both user states, surfacing early)*; the itemized budget is the **deepening** (sharpen loop), not the on-ramp — that part stands.
 
 ## Healthcare — the income-dependent cost (grounding: workflow wf_0e97dfc3, 2026-06-04; fold into §Strand 5)
 

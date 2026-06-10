@@ -102,4 +102,4 @@ flowchart LR
 - `[Affects R28]` *(Now specified in R34 — verification, not an open choice.)* Confirm in implementation that the date's confidence is read off **one per-path future end-to-end** (runway + decumulation on the same CRN path), so final-working-year sequence risk is priced in and not smoothed by an averaged-balance handoff (adversarial).
 
 ## Next Steps
-`-> /ce:plan` — re-plan: fold R26–R38 into the master requirements + the U0–U17 roadmap (new intake/engine units for the accumulation phase + the date-search), and resume U3·M5 (HSA spend) on the decumulation side.
+`-> /ce:plan` — re-plan: fold R26–R39 into the master requirements + the U0–U17 roadmap (new intake/engine units for the accumulation phase + the date-search), and resume U3·M5 (HSA spend) on the decumulation side.

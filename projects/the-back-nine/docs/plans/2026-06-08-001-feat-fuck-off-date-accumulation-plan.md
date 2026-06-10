@@ -194,7 +194,7 @@ The work is four tracks. **Track A (doc reconciliation)** and **Track B (HSA spe
 
 ### Track A — Source-of-truth reconciliation (decisions, not code)
 
-- [ ] **A1: Fold R26–R39 into the master requirements**
+- [x] **A1: Fold R26–R39 into the master requirements** *(done 2026-06-10 — + the north-star amendment banner, a Briggsy-approved scope addition resolving the on-ramp-protection contradiction at the precedence top)*
 
 **Goal:** The master requirements doc (`docs/brainstorms/the-back-nine-requirements.md`) becomes the single source of truth for the full accumulation→decumulation thesis.
 

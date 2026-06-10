@@ -280,6 +280,28 @@ export interface OverlayParams {
    *  understate cost → overstate survival (the cardinal calm-but-wrong sin). Unused once the sim has
    *  ≥2 years of its own history. ABSENT is legitimate when no one is near 65 at the start. */
   readonly irmaaMagiSeed?: readonly number[]
+  /** Per-person Medicare-enrollment ONSET in SIM-YEAR terms (C3 §3b), aligned by index to `people`:
+   *  person i is Medicare-enrolled (IRMAA-priced + Part B-billed) from sim-year
+   *  `medicareOnsetSimYear[i]`; values ≤ 0 mean enrolled before the sim. ABSENT ⇒ the biological-65
+   *  default (`t ≥ 65 − currentAge_i` ⇔ `currentAge_i + t ≥ 65` — provably today's predicate
+   *  verbatim, byte-identical). The date-search supplies `onset_i = max(65 − currentAge_i,
+   *  retireOffset_i)` (employer coverage past 65 delays Medicare — the only off-switch for a member
+   *  working past 65, since no premium stream gates IRMAA; `healthcareStreams.ts` builds it). ONLY
+   *  the IRMAA gate + pricing count key off this; the §63(f)/senior-bonus `count65` and the ACA
+   *  `pre65` denominator stay BIOLOGICAL (a 65+ worker still gets the age-65 deduction and is still
+   *  not a marketplace member). The HSA contribution zeroing keys off the contributing OWNER's onset. */
+  readonly medicareOnsetSimYear?: readonly number[]
+  /** Per-year ADDITIVE working-year IRMAA-MAGI override (real $, C3 §3b), indexed by ABSOLUTE year:
+   *  the overlay records `irmaaMagiHistory[t] = override[t] + computed irmaaMagi` — ADDITIVE, never
+   *  replacement (a working-year Roth conversion, claimed-while-working SS, or a 73+ worker's RMD
+   *  lands in the COMPUTED component; replacement or `max()` would understate the sum; additive errs
+   *  only conservative/later and equals replacement in the common clamped working year whose computed
+   *  MAGI is exactly 0). REQUIRED (coverage-gated at `validateParams`) for bridge years inside the
+   *  IRMAA lookback of any member's onset: the lagged read at such a year otherwise finds a clamped
+   *  working year's ≈$0 computed MAGI → lowest tier → understated surcharge → a falsely-EARLY date,
+   *  SILENTLY (0 is finite — the fail-loud seed guard only catches undefined/NaN). Built
+   *  conservatively-HIGH from entered working-year income (`healthcareStreams.ts`). */
+  readonly irmaaMagiOverride?: readonly number[]
   // --- U3 · M5: the HSA spend-side inputs (absent / `buckets.hsa` 0 ⇒ the 3-bucket path,
   //     byte-identical — the as-we-go default). ---
   /** Per-year out-of-pocket QUALIFIED medical cost (real $), indexed by ABSOLUTE year. CAP-ONLY —
@@ -477,6 +499,122 @@ export interface PersonAccounts {
    *  ceilings) and maps them down to `OverlayParams.accumulation`. */
   readonly contributions?: PersonContributionStreams
 }
+
+// ---------------------------------------------------------------------------
+// The date-search result vocabulary (C3 — the fuck-off date). Lives HERE (the leaf
+// layer) because the worker wire (`engineWire.ts`) must speak it while importing only
+// @shared. Three FIRST-CLASS outcomes per track (§3c) — `indeterminate` stays reserved
+// for INPUT failure (a no-date is a defined ANSWER on valid input), the `OutcomeState`
+// enum stays closed (never a 7th state), and every persisted field is a finite numeric
+// (DND/009 — the NEVER_DEPLETED = −1 precedent; the no-offset cases simply carry no
+// offset field, never an Infinity/NaN sentinel).
+// ---------------------------------------------------------------------------
+
+/** The date-search compute tier (§3c, the two-tier posture): during-entry surface-early
+ *  refires run at the headline path count (`provisional` — the coarser haircut errs
+ *  later/conservative, rendered under D1's provisional string class); the FINAL crowned
+ *  date (+ every post-completion/override re-grade) runs at the pinned 16k (`final` —
+ *  the designed-tolerance assertion scopes here). The path counts are pinned engine
+ *  constants (dateSearch.ts), not caller-tunable numbers. */
+export type DateSearchTier = 'provisional' | 'final'
+
+/** One evaluated candidate offset's reading — the per-offset curve entry (surfaced on
+ *  every outcome, load-bearing for the no-date answer's calm explanation). */
+export interface DateOffsetReading {
+  /** The candidate offset Y (whole sim-years from today; the date = today + Y). */
+  readonly offsetYears: number
+  /** The point-estimate survival fraction at this offset (`survivors / paths`). */
+  readonly survivalFraction: number
+  /** The conservative one-sided lower confidence bound (`p̂ − z·SE`), QUANTIZED to the
+   *  survival grid BEFORE the bar comparison — the value the crowning rule reads (§3c:
+   *  reading the lower bound is what stops a lucky-noise offset from being crowned a
+   *  false-earliest date; the point estimate is always ≥ it, the disclosed margin). */
+  readonly quantizedLowerBound: number
+  /** `quantizedLowerBound ≥ BANDS.onTrack` — the per-offset clear/fail the rule reads. */
+  readonly clears: boolean
+}
+
+/** The grade a crowned (or window-edge) date carries: the SAME quantized lower bound that
+ *  crowned it (one run, one statistic, one grade — objective ≡ headline, §3c; the
+ *  drill-down renders THIS, never an independent recompute) + its margin above the bar. */
+export interface DateGrade {
+  /** The crowned offset's quantized lower bound (the conservative grade). */
+  readonly quantizedLowerBound: number
+  /** The crowned offset's point-estimate survival (≥ the bound — the conservative margin,
+   *  disclosed; a drill-down can only read equal-or-better, never worse). */
+  readonly survivalFraction: number
+  /** `quantizedLowerBound − BANDS.onTrack` (≥ 0 for a crowned date) — the lower-bound
+   *  margin, the date↔confidence tradeoff made explicit (R28). */
+  readonly marginAboveBar: number
+}
+
+/** One track's (floor / lifestyle) date-search outcome — the three first-class cases (§3c).
+ *  The candidate = the earliest offset whose quantized lower bound clears AND keeps clearing
+ *  through the window top (equivalently: the start of the longest clearing suffix; it exists
+ *  iff the top offset clears). */
+export type DateTrackOutcome =
+  | {
+      /** The candidate exists BELOW the window top (≥ 1 later offset of keeps-holding
+       *  evidence by construction). A floor candidate (`offsetYears === 0`) reads
+       *  "work-optional AT today" — the one-sided window-FLOOR semantic: maximal evidence,
+       *  no extra disclosure (never a claim about the past — negative offsets are never
+       *  evaluated, by design). */
+      readonly kind: 'confirmed-date'
+      readonly offsetYears: number
+      readonly grade: DateGrade
+      /** Cleared-then-dipped offsets BELOW the candidate (the non-monotone-region
+       *  disclosure — the ACA-cliff signature; empty when the curve is clean). */
+      readonly nonMonotoneOffsets: readonly number[]
+      readonly curve: readonly DateOffsetReading[]
+    }
+  | {
+      /** The candidate IS the window top: ZERO later offsets of evidence (the keeps-holding
+       *  rule is vacuous) — reported WITH the unconfirmed-tail disclosure, never silently
+       *  crowned (unconfirmed-optimistic) and never folded into no-date (pessimistic-false).
+       *  Carries the non-monotone disclosure TOO when earlier offsets cleared-then-dipped. */
+      readonly kind: 'window-edge-unconfirmed'
+      readonly offsetYears: number
+      readonly grade: DateGrade
+      readonly nonMonotoneOffsets: readonly number[]
+      readonly curve: readonly DateOffsetReading[]
+    }
+  | {
+      /** No candidate (the top offset fails — nothing clears, or a dip never recovers
+       *  in-window): a first-class DEFINED result — "no work-optional date within the
+       *  window" — never "never free," never silently the window-top offset, never a crash,
+       *  never `indeterminate`. The curve carries the calm per-offset explanation. */
+      readonly kind: 'no-date-in-window'
+      readonly nonMonotoneOffsets: readonly number[]
+      readonly curve: readonly DateOffsetReading[]
+    }
+
+/** The run-level date-search outcome. `input-failure` is the indeterminate-CLASS variant
+ *  (the §0 grammar): an all-retired household (the offset axis is undefined — never a
+ *  `Y == 0` "work-optional today" crown), an ANY-candidate `validateParams` rejection (the
+ *  all-or-nothing policy: an unevaluated offset voids the "earliest" claim, so a rejecting
+ *  candidate fails the RUN, naming the offending input — never drop-and-continue), or a
+ *  zero-width window. `cancelled` = the cooperative mid-sweep stop (a lock / a newer
+ *  request): no further candidate dispatched, nothing date-shaped rendered. */
+export type DateSearchOutcome =
+  | {
+      readonly kind: 'dates'
+      /** The essentials-floor track. In the v1 degenerate (single-total-spend) budget the
+       *  two tracks are byte-identical and the dates COINCIDE (rendered as one); the
+       *  P3·U9 budget split separates them. The SHAPE admits every mixed case now —
+       *  {floor: date, lifestyle: no-date}, the mirrors, and floor > lifestyle (the
+       *  100%-FPL-floor signature, correct surprising-but-honest output) — the behavioral
+       *  mixed tests ride U9 (insight 014). */
+      readonly floor: DateTrackOutcome
+      /** The full-budget lifestyle track (terminates independently). */
+      readonly lifestyle: DateTrackOutcome
+      readonly tier: DateSearchTier
+      /** The window top this run evaluated (the §3c evidence anchor — a persisted result
+       *  names its own window; a width change re-runs the honesty battery). */
+      readonly windowTopYears: number
+      readonly seed: number
+    }
+  | { readonly kind: 'input-failure'; readonly reason: string }
+  | { readonly kind: 'cancelled' }
 
 /** The schemaVersion-2 plaintext scenario: the v1 spine inputs + the U2 tax-overlay fields.
  *  Additive over v1 — every v1 field carries through unchanged, so the migration is a pure

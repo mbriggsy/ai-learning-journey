@@ -3119,6 +3119,48 @@ describe('C2 — the per-person ledger credit (§2c) and the RMD-overlap identit
       ),
     ).toThrow(/DEAD person/)
   })
+
+  it('the dead-slot guard fires on the AGGREGATE pre-tax path too (C2 boundary review — insight 020, the property not the consumer)', () => {
+    // NO initialPretaxByPerson (the aggregate pool — pretaxLedger null) and NO hsa: pre-fix,
+    // `alive` was never computed on this path, so a dead spouse's pretax credit summed silently
+    // into cPretaxTotal and inflated the aggregate pool — the calm-but-wrong-OPTIMISTIC phantom
+    // contribution the §7 guard exists to forbid. The guard is now gated on the PROPERTY (a
+    // per-person credit meeting a death signal), so deleting it on either path goes red here.
+    const hh = mkHousehold(2026, 1951, 1961)
+    const cfg: TaxOverlayConfig = { taxEnabled: false, rmdEnabled: true, household: hh }
+    expect(() =>
+      runTaxAwareDecumulation(
+        { taxable: 0, pretax: 2000, roth: 0 },
+        [0],
+        [0],
+        [0],
+        0.5,
+        'proportional',
+        cfg,
+        {
+          householdYears: [{ living: [hh.owner] }], // the spouse is dead at t=0
+          contributions: [{ taxable: 0, pretaxByPerson: [0, 100], roth: 0, hsa: 0 }],
+        },
+      ),
+    ).toThrow(/DEAD person/)
+  })
+
+  it('a pretaxByPerson with MORE slots than the canonical people fails loud (excess slots cannot be death-vetted)', () => {
+    const hh = mkHousehold(2026, 1951, 1961)
+    const cfg: TaxOverlayConfig = { taxEnabled: false, rmdEnabled: true, household: hh }
+    expect(() =>
+      runTaxAwareDecumulation(
+        { taxable: 0, pretax: 2000, roth: 0 },
+        [0],
+        [0],
+        [0],
+        0.5,
+        'proportional',
+        cfg,
+        { contributions: [{ taxable: 0, pretaxByPerson: [0, 0, 100], roth: 0, hsa: 0 }] },
+      ),
+    ).toThrow(/canonical people/)
+  })
 })
 
 describe('C2 — hsaLive is re-derived from the inflow (the M5 forward landmine, resolved)', () => {

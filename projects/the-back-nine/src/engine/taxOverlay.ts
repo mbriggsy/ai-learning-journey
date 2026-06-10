@@ -1172,17 +1172,20 @@ export function runTaxAwareDecumulation(
     let alive: boolean[] | null = null
     let perRmd: number[] | null = null
     // Reference-identity integrity (R19): aliveCanonical matches the living set to the canonical
-    // people BY REFERENCE. TWO consumers depend on that identity: the per-person pre-tax ledger
-    // (rollover + per-person RMD) AND the M5 hsa OWNER-alive resolution below (`rmdOwner ===
-    // hsaOwnerPerson` — the 65+ Medicare-premium privilege re-key). A caller threading
-    // distinct-but-equal objects instead of the household's own would silently mark everyone
-    // dead (zero RMD forever) on the ledger path, or silently re-key a spouse-owned HSA to
-    // living[0]'s age on the hsa path (privilege opens early when person 0 is older — the
-    // optimistic, calm-but-wrong direction). Fail loud for BOTH consumers — the production caller
-    // (simulate) threads identical references so this never fires; it guards the future P3/P4
-    // DIRECT caller the backstop discipline exists for. (U3-exit pilot caught the ledger half; the
-    // M5 boundary review caught that the hsa half was unguarded on the aggregate path.)
-    if (pretaxLedger || (hsaLive && hsaOwnerPerson !== undefined)) {
+    // people BY REFERENCE. THREE consumers depend on that identity: the per-person pre-tax ledger
+    // (rollover + per-person RMD), the M5 hsa OWNER-alive resolution below (`rmdOwner ===
+    // hsaOwnerPerson` — the 65+ Medicare-premium privilege re-key), AND the C2 per-person
+    // contribution credit (the dead-slot validation just below — live on the AGGREGATE pre-tax
+    // path too, not only the ledger path). A caller threading distinct-but-equal objects instead
+    // of the household's own would silently mark everyone dead (zero RMD forever) on the ledger
+    // path, silently re-key a spouse-owned HSA to living[0]'s age on the hsa path, or read every
+    // contribution slot as a dead-slot violation on the credit path. Fail loud for ALL consumers —
+    // the production caller (simulate) threads identical references so this never fires; it guards
+    // the future P3/P4 DIRECT caller the backstop discipline exists for. (U3-exit pilot caught the
+    // ledger half; the M5 boundary review caught the unguarded hsa half; the C2 boundary review
+    // caught the credit half gated on its first consumer — insight 020, recurring in the unit
+    // that cited it.)
+    if (pretaxLedger || (hsaLive && hsaOwnerPerson !== undefined) || (yearC !== undefined && household !== undefined)) {
       alive = aliveCanonical(people, householdYears, t)
       const injected = householdYears[t]
       // ANY mismatch — TOTAL (marks everyone dead) or PARTIAL (one good ref + one stranger →
@@ -1190,7 +1193,7 @@ export function runTaxAwareDecumulation(
       // code-review pilot — the prior `!alive.some` check caught only the TOTAL mismatch.)
       if (injected !== undefined && alive.filter((a) => a).length !== injected.living.length) {
         throw new Error(
-          '[taxOverlay] householdYears living set has a member that is not one of the household canonical people (the per-person ledger AND the hsa owner resolution require the SAME OverlayPerson references as the household)',
+          '[taxOverlay] householdYears living set has a member that is not one of the household canonical people (the per-person ledger, the hsa owner resolution, AND the contribution credit require the SAME OverlayPerson references as the household)',
         )
       }
     }
@@ -1202,18 +1205,29 @@ export function runTaxAwareDecumulation(
           pretaxLedger[i] = 0
         }
       }
-      // C2 §7: a nonzero pretax contribution credited to a DEAD person's slot is incoherent input —
-      // the caller assembles the per-year amounts death-truncated PER-PATH (the B×C consequence), so
-      // a violation means a phantom dead-spouse contribution is about to overstate the nest egg.
-      // Validated ONCE here (both fold branches below then credit living slots unconditionally) —
-      // fail loud, never silently resurrect or silently drop (burned/062).
-      if (yearC !== undefined) {
-        for (let i = 0; i < alive.length; i++) {
-          if ((yearC.pretaxByPerson[i] ?? 0) > 0 && !alive[i]) {
-            throw new Error(
-              '[taxOverlay] a contribution credited to a DEAD person’s pretax ledger slot — the caller owns per-path death truncation (C2 §7); a phantom dead-spouse contribution overstates the nest egg',
-            )
-          }
+    }
+    // C2 §7: a nonzero pretax contribution credited to a DEAD person's slot is incoherent input —
+    // the caller assembles the per-year amounts death-truncated PER-PATH (the B×C consequence), so
+    // a violation means a phantom dead-spouse contribution is about to overstate the nest egg
+    // (the calm-but-wrong-OPTIMISTIC direction). Validated on the PROPERTY — a per-person credit
+    // meeting a death signal — NOT on the ledger consumer (insight 020: the C2 boundary review
+    // caught this guard nested inside the ledger path, leaving the AGGREGATE pool to silently sum
+    // a dead slot via cPretaxTotal). Runs whenever a household + a contribution year exist; with
+    // no householdYears stream aliveCanonical reads all-alive and the guard is inert (throw-or-
+    // nothing — it never changes a value, so presence-keyed byte-identity is untouched). The
+    // alignment guard is the overlay mirror of validateParams' length check (two-layer rule): a
+    // pretaxByPerson longer than the canonical people carries slots no death signal can vet.
+    if (yearC !== undefined && alive !== null && household !== undefined) {
+      if (yearC.pretaxByPerson.length > people.length) {
+        throw new Error(
+          `[taxOverlay] contributions pretaxByPerson has ${yearC.pretaxByPerson.length} slots but the household has ${people.length} canonical people — excess slots cannot be death-vetted (burned/062)`,
+        )
+      }
+      for (let i = 0; i < alive.length; i++) {
+        if ((yearC.pretaxByPerson[i] ?? 0) > 0 && !alive[i]) {
+          throw new Error(
+            '[taxOverlay] a contribution credited to a DEAD person’s pretax ledger slot — the caller owns per-path death truncation (C2 §7); a phantom dead-spouse contribution overstates the nest egg',
+          )
         }
       }
     }

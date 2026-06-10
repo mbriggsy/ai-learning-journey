@@ -3463,3 +3463,255 @@ describe('taxOverlay — C3 §3b: per-person Medicare onset + additive override 
     })
   })
 })
+
+// ===========================================================================
+// M6 — the FINAL cross-overlay integration battery (externally derived, DND/012).
+//
+// Everything before this block tests each overlay's seam mostly in ISOLATION (ACA in the
+// M3 battery, IRMAA in the M4 battery, HSA in the M5 battery, each with its own
+// reduce-to-spine + presence arms). M6's contract is the COUPLING: the same household,
+// the same year, every income-aware cost live at once — because the costs FEED each
+// other (the Medicare bill raises the funding net the ACA solve prices; the HSA's
+// qualified spend lowers it; the ACA years' converged MAGIs are the history the IRMAA
+// bill lag-reads two years later) and a regression in the coupling is invisible to
+// every single-overlay fixture.
+//
+// DERIVATION REGIME (the zero-return read-off, insight 011 — every fixture):
+//   - A pretax-only pool drawn pre-tax-first, no SS, no realized gain ⇒ MAGI = gross.
+//   - ZERO market returns ⇒ terminalReal = P − Σ(gross + hsaSpend) EXACTLY.
+//   - The gross-up in one named bracket regime reduces to a LINEAR closed form
+//     (12% MFJ, count65 = 1, full senior bonus: tax = 0.12·g − 5,278 on taxable in
+//     (24,800, 100,800); 22% single survivor, bonus PHASED: D(g) = 28,650 − 0.06·g ⇒
+//     tax = 0.2332·g − 11,591 on taxable in (50,400, 105,700)) — each fixture's comment
+//     names its regime and the solved value is checked interior to it (insight 023).
+//   - The ACA root in the FLAT 300–400%-FPL band (9.96%) is the linear self-consistent
+//     solution M = (fundingNet + (enrolled − slcsp) − 5,278) / (0.88 − 0.0996);
+//     net premium = (enrolled − slcsp) + 0.0996·M.
+// Every expected value was derived by this hand algebra AND cross-checked by an
+// independent 6-deriver / 2-method panel (numeric fixed-point iteration vs closed form)
+// + a rule-selection boundary audit (insight 023) — never by the engine (DND/012).
+// Dollar figures from the federal tables are READ from @engine/constants (copyGuard).
+// ===========================================================================
+describe('taxOverlay — M6: the cross-overlay integration battery (ACA × IRMAA × HSA, externally derived, DND/012)', () => {
+  const IRMAA_SCHED = irmaa.value
+  const BASE = partB2026.value.standardPremiumMonthly
+  const FPL2 = fplForHousehold(2) // 21,150 (2025 HHS, household of 2)
+  const surchargeMonthly = (tierIdx: number) =>
+    IRMAA_SCHED.tiers[tierIdx]!.partBSurchargeMonthly + IRMAA_SCHED.tiers[tierIdx]!.partDSurchargeMonthly
+  const medicareAnnual = (count: number, tierIdx: number | null) =>
+    count * (BASE + (tierIdx === null ? 0 : surchargeMonthly(tierIdx))) * 12
+
+  describe('the dual-regime year: ONE household pays IRMAA ×1 (MFJ column) AND receives ACA-PTC, same income, same year', () => {
+    // The plan's named scenario (phase-1 U3 "IRMAA enrolled-count + seeding"): an age-gap couple —
+    // owner born 1960 (66, Medicare-enrolled) + spouse born 1963 (63, the marketplace member).
+    // count65 = 1, medicareEnrolledCount = 1, pre65 = livingCount(2) − count65(1) = 1 ⇒ BOTH
+    // regimes price simultaneously: the Medicare bill is a CONSTANT addend to the spending the
+    // ACA fixed point funds (fundingNet = net + medicareCost), so the IRMAA column choice
+    // propagates INTO the ACA premium — the cross-overlay coupling under test. The existing
+    // MIXED-age test (the age gate) asserts only the ACA side; the ×1 enrolled count was
+    // previously pinned only at the healthOverlay unit level, never integrated.
+    //
+    // TAX REGIME (both arms): MFJ, count65 = 1 ⇒ deduction = 32,200 + 1,650 + senior bonus
+    // 6,000 (full — MAGI ≪ 150,000) = 39,850; the root's taxable sits in the 12% band ⇒
+    // tax = 2,480 + 0.12·(taxable − 24,800) = 0.12·g − 5,278. ACA: the root MAGI sits in the
+    // FLAT 300–400% band (9.96%) ⇒ M = (fundingNet + 2,000 − 5,278)/0.7804 with
+    // enrolled 16,000 / slcsp 14,000; netPremium = 2,000 + 0.0996·M.
+    const P = 1_000_000
+    const MIXED: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: false, household: mkHousehold(2026, 1960, 1963) }
+    const oneYr = (net: number, seed0: number) =>
+      runTaxAwareDecumulation({ taxable: 0, pretax: P, roth: 0 }, [0], [0], [net], STOCK_W, 'pre-tax-first', MIXED, {
+        healthcareEnabled: true,
+        slcsp: [14_000],
+        enrolledPremium: [16_000],
+        irmaaMagiSeed: [seed0],
+      })
+
+    it('arm 1 — a seed BETWEEN the single and MFJ tier-1 thresholds bills the MFJ column (base only, ×1) while the ACA premium prices off the Medicare-inclusive gross', () => {
+      // seed 150,000: OVER the single tier-1 threshold (109,000) but UNDER MFJ tier-1 (218,000) —
+      // the column discriminator: a single-column regression would charge tier 1 here. ×1 enrolled
+      // (never ×2 — only the 66yo is on Medicare): medicareCost = 1 × base × 12 = 2,434.80.
+      // fundingNet = 55,000 + 2,434.80 = 57,434.80 ⇒ M = (57,434.80 + 2,000 − 5,278)/0.7804
+      // = 69,396.2071 (3.281× FPL, flat-band interior; taxable 29,546.21, 12%-band interior).
+      // netPremium = 2,000 + 0.0996·M = 8,911.8622. terminal = P − M.
+      const r = oneYr(55_000, 150_000)
+      expect(r.totalMedicareCostReal).toBeCloseTo(medicareAnnual(1, null), 8) // MFJ column, ×1, base only
+      expect(r.totalNetPremiumReal).toBeCloseTo(8_911.8622, 2)
+      expect(r.terminalReal).toBeCloseTo(P - 69_396.2071, 2)
+    })
+
+    it('arm 2 — a seed over the MFJ tier-1 threshold fires the surcharge ×1 AND raises the ACA premium through the funding coupling', () => {
+      // seed = the MFJ tier-1 threshold + 2,000 (strictly over tier 1, well under tier 2) ⇒
+      // medicareCost = 1 × (base + tier-1 surcharge) × 12 = 3,583.20. The EXTRA 1,148.40 of
+      // Medicare cost flows INTO the ACA solve: fundingNet = 58,583.20 ⇒
+      // M = (58,583.20 + 2,000 − 5,278)/0.7804 = 70,867.7601 (3.351× FPL ✓; taxable 31,017.76 ✓);
+      // netPremium = 9,058.4289 — HIGHER than arm 1 by 0.0996·ΔM (the coupling: a Medicare
+      // surcharge erodes the ACA subsidy through the funded MAGI; a model pricing the two
+      // overlays independently would hold the premium fixed across the arms).
+      const r = oneYr(55_000, IRMAA_SCHED.tiers[0]!.mfjMagiThreshold + 2_000)
+      expect(r.totalMedicareCostReal).toBeCloseTo(medicareAnnual(1, 0), 8) // tier 1 fired, still ×1
+      expect(r.totalNetPremiumReal).toBeCloseTo(9_058.4289, 2)
+      expect(r.terminalReal).toBeCloseTo(P - 70_867.7601, 2)
+    })
+  })
+
+  describe('all three cost surfaces live in ONE year: ACA premium + Medicare cost + HSA qualified spend', () => {
+    // The same 66+63 household with a 50,000 HSA owned by the 66yo (65+ ⇒ the Medicare-premium
+    // spend privilege is OPEN) and 5,000 of OOP medical. The HSA pays the WHOLE medical stack
+    // (oop + the owner's Medicare premium — the ACA premium structurally NOT in the cap), and
+    // that payment feeds BACK into the ACA solve: fundingNet = net + medicareCost − hsaSpend,
+    // so both MAGIs genuinely drop and the PTC RISES — the loop-breaking lever, priced through
+    // all three overlays at once.
+    const TOTAL = 1_050_000
+    const MIXED: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: false, household: mkHousehold(2026, 1960, 1963) }
+    const allThree = () =>
+      runTaxAwareDecumulation(
+        { taxable: 0, pretax: 1_000_000, roth: 0, hsa: 50_000 },
+        [0],
+        [0],
+        [60_500],
+        STOCK_W,
+        'pre-tax-first',
+        MIXED,
+        {
+          healthcareEnabled: true,
+          slcsp: [14_000],
+          enrolledPremium: [16_000],
+          irmaaMagiSeed: [150_000],
+          oopMedical: [5_000],
+          hsaOwnerIndex: 0,
+        },
+      )
+
+    it('values: the HSA pays oop + the owner’s Medicare premium; the ACA solve prices off the HSA-reduced funding net; all three totals land exactly', () => {
+      // medicareCost = 2,434.80 (MFJ column, base, ×1 — arm-1 regime). qualified cap =
+      // 5,000 + 2,434.80 = 7,434.80 (< balance 50,000, < need 62,934.80) ⇒ hsaSpend = 7,434.80.
+      // fundingNet = 60,500 + 2,434.80 − 7,434.80 = 55,500 ⇒ M = (55,500 + 2,000 − 5,278)/0.7804
+      // = 66,916.9657 (3.164× FPL ✓ flat band; taxable 27,066.97 ✓ 12% band).
+      // netPremium = 2,000 + 0.0996·M = 8,664.9298. terminal = 1,050,000 − M − hsaSpend
+      // (the HSA outflow leaves the portfolio beside the gross). hsa after = 50,000 − 7,434.80.
+      const r = allThree()
+      expect(r.totalMedicareCostReal).toBeCloseTo(medicareAnnual(1, null), 8)
+      expect(r.totalQualifiedHsaSpendReal).toBeCloseTo(5_000 + medicareAnnual(1, null), 8)
+      expect(r.totalNetPremiumReal).toBeCloseTo(8_664.9298, 2)
+      expect(r.terminalReal).toBeCloseTo(TOTAL - 66_916.9657 - 7_434.8, 2)
+      expect(r.finalBuckets.hsa).toBeCloseTo(42_565.2, 6)
+    })
+
+    it('the loop-breaking lever, cross-overlay: the no-HSA twin pays a strictly HIGHER ACA premium off the SAME spending (MAGI genuinely dropped)', () => {
+      // Twin: identical but hsa absent + no oop (total 1,000,000). fundingNet = 62,934.80 ⇒
+      // M = (62,934.80 + 2,000 − 5,278)/0.7804 = 76,443.8749 (3.614× FPL ✓; taxable 36,593.87 ✓);
+      // netPremium = 9,613.8099. The HSA-funded household's premium is ~949 LOWER — the
+      // MAGI-invisibility of qualified HSA spend, measured THROUGH the integrated ACA solve.
+      const twin = runTaxAwareDecumulation(
+        { taxable: 0, pretax: 1_000_000, roth: 0 },
+        [0],
+        [0],
+        [60_500],
+        STOCK_W,
+        'pre-tax-first',
+        MIXED,
+        { healthcareEnabled: true, slcsp: [14_000], enrolledPremium: [16_000], irmaaMagiSeed: [150_000] },
+      )
+      expect(twin.totalNetPremiumReal).toBeCloseTo(9_613.8099, 2)
+      expect(twin.totalQualifiedHsaSpendReal).toBe(0)
+      expect(allThree().totalNetPremiumReal).toBeLessThan(twin.totalNetPremiumReal)
+    })
+  })
+
+  describe('both survivor clocks in ONE scenario: ACA stops at the death year; IRMAA bills MFJ thresholds for 2 more years, then flips', () => {
+    // Owner born 1959 (67 — Medicare-enrolled, SURVIVES); spouse born 1965 (61 — the marketplace
+    // member, dies at the end of year 1). Five zero-return years, enrolled 16,000 / slcsp 14,000
+    // supplied for ALL five (so the ACA stop at t=2 is the DEATH's doing, never the stream
+    // ending — and never the spouse aging into 65, which a static-household regression would
+    // hit only at t=4). The ACA years run OVER the 400% cliff (probe-at-0 MAGI 104,723 > 84,600)
+    // ⇒ PTC = 0, netPremium = the full enrolled 16,000 EXACTLY (no bisection — the over-cliff
+    // branch is closed-form), keeping the clock assertions byte-clean.
+    //
+    // THE TWO CLOCKS (one death event, t=2):
+    //   ACA: pre65 = livingCount(1) − count65(1) = 0 from t=2 ⇒ the premium stops IMMEDIATELY.
+    //   IRMAA: year t bills IRMAA-MAGI[t−2] against filing[t−2] ⇒ t=2,3 still bill the MFJ
+    //   column (both alive at the lagged years 0,1); the SINGLE column first bites at t=4 —
+    //   on a MAGI recorded at t=2. Both lagged MAGIs (history[1] = 122,905.45 from the
+    //   ACA-priced year, history[2] = 118,471.31 from the survivor year) sit BETWEEN the
+    //   single tier-1 threshold (109,000) and the MFJ tier-1 threshold (218,000), and below
+    //   single tier-2 (137,000) — so the t=3→t=4 bill jump is PURELY the threshold column
+    //   flipping, the mistimed-widow-penalty mechanism itself (insight 014: the crossing year).
+    //
+    // PER-YEAR DERIVATIONS (each value interior to its named regime — insight 023):
+    //   t=0,1 (MFJ, count65=1, full bonus, 12% band): over-cliff gross funds fundingNet + 16,000
+    //     = 95,000 + 2,434.80 + 16,000 ⇒ g = (113,434.80 − 5,278)/0.88 = 122,905.4545
+    //     (taxable 83,055.45 ∈ (24,800, 100,800) ✓; MAGI < 150,000 ⇒ bonus full ✓).
+    //   t=2,3 (single survivor, count65=1, bonus PHASED, 22% band): D(g) = 16,100 + 2,050 +
+    //     (6,000 − 0.06(g − 75,000)) = 28,650 − 0.06g ⇒ tax = 0.2332·g − 11,591 ⇒
+    //     g = (100,000 + 2,434.80 − 11,591)/0.7668 = 118,471.3093 (bonus 3,391.72 ∈ (0, 6,000) ✓;
+    //     taxable 96,929.59 ∈ (50,400, 105,700) ✓).
+    //   t=4 (single, tier-1 surcharge now in the bill): g = (100,000 + 3,583.20 − 11,591)/0.7668
+    //     = 119,968.9619 (bonus 3,301.86 ✓; taxable 98,517.10 ✓).
+    // TOTALS: medicare = 4 × 2,434.80 + 3,583.20 = 13,322.40; premium = 2 × 16,000 = 32,000;
+    // terminal = 2,000,000 − (2×122,905.4545 + 2×118,471.3093 + 119,968.9619) = 1,397,277.5103.
+    const owner = { birthYear: 1959 }
+    const spouse = { birthYear: 1965 }
+    const cfg: TaxOverlayConfig = {
+      taxEnabled: true,
+      rmdEnabled: false,
+      household: { startCalendarYear: 2026, filing: 'mfj', owner, spouse },
+    }
+    const living: HouseholdYear[] = [
+      { living: [owner, spouse] }, // t=0
+      { living: [owner, spouse] }, // t=1
+      { living: [owner] }, // t=2 — the death year (ACA stops HERE; IRMAA still bills MFJ)
+      { living: [owner] }, // t=3 — IRMAA still MFJ (filing[1])
+      { living: [owner] }, // t=4 — IRMAA flips to SINGLE (filing[2]) — the widow penalty lands
+    ]
+    const NETS = [95_000, 95_000, 100_000, 100_000, 100_000]
+    const runYears = (years: number) =>
+      runTaxAwareDecumulation(
+        { taxable: 0, pretax: 2_000_000, roth: 0 },
+        [0, 0, 0, 0, 0].slice(0, years),
+        [0, 0, 0, 0, 0].slice(0, years),
+        NETS.slice(0, years),
+        STOCK_W,
+        'pre-tax-first',
+        cfg,
+        {
+          healthcareEnabled: true,
+          slcsp: [14_000, 14_000, 14_000, 14_000, 14_000].slice(0, years),
+          enrolledPremium: [16_000, 16_000, 16_000, 16_000, 16_000].slice(0, years),
+          irmaaMagiSeed: [150_000, 150_000],
+          householdYears: living.slice(0, years),
+        },
+      )
+
+    it('the ACA clock is IMMEDIATE: the premium accrues for exactly the two both-alive years and stops at the death year (streams still present)', () => {
+      // Horizon differencing pins WHICH years paid: t=0,1 pay the full over-cliff 16,000 each;
+      // t=2 pays NOTHING though enrolled[2] = 16,000 is present — the death, not the data, ended it.
+      expect(runYears(2).totalNetPremiumReal).toBe(32_000) // over-cliff ⇒ EXACT (no bisection)
+      expect(runYears(3).totalNetPremiumReal).toBe(32_000) // t=2 added ZERO — the immediate clock
+      expect(runYears(5).totalNetPremiumReal).toBe(32_000)
+    })
+
+    it('the IRMAA clock is +2yr: t=2,3 bill the MFJ column (no surcharge on a 109k–218k MAGI); the single column — and the surcharge — first land at t=4', () => {
+      // Per-year Medicare cost via horizon differencing. t=2: lag reads MAGI[0] = 122,905.45
+      // against filing[0] = MFJ ⇒ under 218,000 ⇒ base only — the widow is STILL billed as MFJ
+      // (the mistimed-penalty mechanism). t=4: lag reads MAGI[2] = 118,471.31 against
+      // filing[2] = SINGLE ⇒ over 109,000 ⇒ tier-1 surcharge ×1. A current-filing regression
+      // (filing[t]) would surcharge t=2,3 too; a current-MAGI regression (MAGI[t]) moves the
+      // dollar values; a dead-member-billing regression (the spouse turns 65 at t=4 — dead)
+      // would bill ×2 at t=4. Each fails these exact figures.
+      const t2Cost = runYears(3).totalMedicareCostReal - runYears(2).totalMedicareCostReal
+      const t3Cost = runYears(4).totalMedicareCostReal - runYears(3).totalMedicareCostReal
+      const t4Cost = runYears(5).totalMedicareCostReal - runYears(4).totalMedicareCostReal
+      expect(t2Cost).toBeCloseTo(medicareAnnual(1, null), 8) // MFJ column at t=2 — no surcharge
+      expect(t3Cost).toBeCloseTo(medicareAnnual(1, null), 8) // MFJ column at t=3 — no surcharge
+      expect(t4Cost).toBeCloseTo(medicareAnnual(1, 0), 8) // SINGLE column at t=4 — tier 1, ×1
+    })
+
+    it('the full 5-year value chain lands exactly (terminal + both health totals — the integrated cross-overlay golden)', () => {
+      const r = runYears(5)
+      expect(r.depletionYear).toBe(NEVER_DEPLETED)
+      expect(r.totalMedicareCostReal).toBeCloseTo(4 * medicareAnnual(1, null) + medicareAnnual(1, 0), 8)
+      expect(r.totalNetPremiumReal).toBe(32_000)
+      expect(r.terminalReal).toBeCloseTo(1_397_277.5103, 2)
+    })
+  })
+})

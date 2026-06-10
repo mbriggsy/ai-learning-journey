@@ -1510,3 +1510,110 @@ describe('C3 — the onset-threaded HSA contribution zeroing (contributionsForYe
     expect(contributionsForYear(0, acc2, offsets2, [50, 50], people2, [3, 1]).hsaByPerson).toEqual([10, 20])
   })
 })
+
+// ===========================================================================
+// M6 — full-stack CRN through simulate: ACA + IRMAA + HSA + the survivor flip,
+// ALL live in one run, two candidates differing ONLY in conversion amount.
+//
+// The existing CRN tests each cover ONE wiring (the survivor transition, the ACA
+// branch, the HSA branch, the contribution offsets) — none runs the WHOLE stack at
+// once, yet the P4 solver's ranking premise is CRN over candidates that carry it
+// all. The couple ages 64 + 63 put the 63→65 Medicare handoff IN-window (ACA prices
+// t=0,1; Medicare enrollment arrives at t=1 and t=2; the pre-65 years' converged
+// MAGIs are the history the t=3+ IRMAA bills lag-read), sampled longevity puts
+// survivor MFJ→single transitions on real paths, and the year-0 conversion's tax +
+// PTC erosion + 2-yr-lagged surcharge all ride the SAME dimension-only draws.
+// ===========================================================================
+describe('M6 — full-stack CRN through simulate (ACA × IRMAA × HSA × survivor flip live)', () => {
+  const P = 1_000_000
+  const HSA = 30_000
+  const M64: PersonInputs = {
+    sex: 'male', currentAge: 64, retirementAge: 64,
+    earnedIncomeReal: 0, socialSecurityReal: 0, socialSecurityClaimAge: 70,
+  }
+  const F63: PersonInputs = { ...M64, sex: 'female', currentAge: 63 }
+  const base = makeParams({
+    initialPortfolio: P,
+    annualSpendingReal: 60_000,
+    people: [M64, F63],
+    longevityMode: 'sampled',
+    maxHorizonYears: 13, // the 64yo (born 1962, RMD band 75) hits RMD at t=11 — in-window on surviving paths
+    drawdownPolicy: 'pre-tax-first',
+    paths: 400,
+  })
+  const fullStack = (conversions: readonly number[]): SimulationParams => ({
+    ...base,
+    overlay: {
+      taxEnabled: true,
+      rmdEnabled: true,
+      startCalendarYear: 2026,
+      buckets: { taxable: 0, pretax: P - HSA, roth: 0, hsa: HSA },
+      filing: 'mfj',
+      healthcareEnabled: true,
+      // ACA prices t=0 (both pre-65) and t=1 (the 63yo still 64); the age gate closes at t=2.
+      slcsp: [11_000, 11_000],
+      enrolledPremium: [12_000, 12_000],
+      // The 64yo enrolls at t=1 (biological 65) ⇒ validateParams requires seed[1] (a t<2 bill).
+      irmaaMagiSeed: [0, 120_000],
+      oopMedical: flatN(13, 2_000),
+      hsaOwnerIndex: 0,
+      conversions,
+    },
+  })
+
+  it('deterministic repeat: the full stack resolves and reproduces byte-identically (no draw desync anywhere in the coupled wiring)', () => {
+    const a = simulate(fullStack([40_000]), 2468)
+    const b = simulate(fullStack([40_000]), 2468)
+    expect(a.indeterminate).toBe(false)
+    expect(a).toEqual(b)
+    const d = dist(a)
+    expect(d.terminalValuesReal.every(Number.isFinite)).toBe(true)
+  })
+
+  it('per-path MONOTONE in the year-0 conversion with the whole stack live — every coupled channel moves the same direction on shared draws', () => {
+    // A larger year-0 conversion can only (1) pay more upfront ordinary tax, (2) raise the
+    // priced year's ACA-MAGI ⇒ erode the PTC ⇒ a higher net premium, and (3) raise
+    // IRMAA-MAGI[0] ⇒ a weakly higher t=2 Medicare bill — every channel monotone
+    // non-increasing in the terminal, and the converted Roth principal cannot pay off
+    // in-window under pre-tax-first (Roth drawn last; the pool never exhausts at this scale).
+    // With byte-identical dimension-only draws the per-path terminal is therefore monotone
+    // DECREASING in the conversion; any draw desync across the coupled stack would scramble
+    // returns and break it. (The same shape as the tax-only and HSA monotone CRN tests —
+    // here ALL the overlays are live at once.)
+    const run = (c: number) => dist(simulate(fullStack([c]), 2468)).terminalValuesReal
+    const t0 = run(0)
+    const t1 = run(40_000)
+    const t2 = run(80_000)
+    for (let p = 0; p < t0.length; p++) {
+      expect(t1[p]!).toBeLessThanOrEqual(t0[p]!)
+      expect(t2[p]!).toBeLessThanOrEqual(t1[p]!)
+    }
+    expect(t2[0]!).toBeLessThan(t0[0]!) // non-vacuous: the conversion genuinely moved the terminal
+  })
+
+  it('presence companions (burned/027): the stack genuinely priced — and survivor transitions occur on real paths', () => {
+    // The no-conversion full-stack run differs from the tax-only twin (healthcare + hsa
+    // stripped): the ACA premiums, Medicare costs, and HSA-paid OOP all moved real dollars.
+    const stack = dist(simulate(fullStack([]), 2468))
+    const taxOnlyTwin: SimulationParams = {
+      ...base,
+      overlay: {
+        taxEnabled: true,
+        rmdEnabled: true,
+        startCalendarYear: 2026,
+        buckets: { taxable: 0, pretax: P, roth: 0 },
+        filing: 'mfj',
+      },
+    }
+    expect(stack.terminalValuesReal).not.toEqual(dist(simulate(taxOnlyTwin, 2468)).terminalValuesReal)
+    // The "across the survivor flip" claim is non-vacuous: count the sampled MFJ→single
+    // transitions inside the horizon (the same construction simulate uses).
+    const draws = buildDraws(2468, base.paths, base.maxHorizonYears, 2)
+    let transitions = 0
+    for (let p = 0; p < base.paths; p++) {
+      const path = sampleCouplePath([M64, F63], draws.longevityU[p] ?? [])
+      if (path.firstDeathYear < Math.min(path.lastDeathYear, base.maxHorizonYears)) transitions++
+    }
+    expect(transitions).toBeGreaterThan(0)
+  })
+})

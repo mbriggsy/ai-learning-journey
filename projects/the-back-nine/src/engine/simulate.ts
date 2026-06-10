@@ -232,9 +232,16 @@ function validateParams(params: SimulationParams): string | null {
     if (o.filing !== 'mfj' && o.filing !== 'single') return 'overlay filing invalid'
     const b = o.buckets
     if (!finiteNonNeg(b.taxable) || !finiteNonNeg(b.pretax) || !finiteNonNeg(b.roth)) return 'overlay buckets invalid'
-    // The overlay's total IS the portfolio: the buckets must sum to initialPortfolio (a relative
-    // tolerance absorbs the caller's float dust) so a collapsed-pool overlay reduces to the spine.
-    const bucketSum = b.taxable + b.pretax + b.roth
+    // The hsa bucket (U3 · M5) is optional (absent ⇒ 0, reduce-to-spine) but when PRESENT it is
+    // finiteness-checked like its siblings — a NaN here would poison the hsa-inclusive total and
+    // the qualified-spend clamp, both of which sit behind relational guards a NaN sails through
+    // (insights 008/010: finiteness FIRST, before any compare).
+    if (b.hsa !== undefined && !finiteNonNeg(b.hsa)) return 'overlay buckets invalid'
+    // The overlay's total IS the portfolio: the buckets (ALL FOUR — the medical-earmarked hsa is
+    // part of the portfolio and rides the one shared market draw) must sum to initialPortfolio (a
+    // relative tolerance absorbs the caller's float dust) so a collapsed-pool overlay reduces to
+    // the spine.
+    const bucketSum = b.taxable + b.pretax + b.roth + (b.hsa ?? 0)
     if (Math.abs(bucketSum - params.initialPortfolio) > 1e-6 * Math.max(1, Math.abs(params.initialPortfolio)))
       return 'overlay buckets must sum to initialPortfolio'
     // Finiteness is checked UNCONDITIONALLY when present — NOT gated on `b.taxable > 0`. A NaN basis with

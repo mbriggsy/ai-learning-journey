@@ -1505,7 +1505,8 @@ describe('taxOverlay — M6b·B per-person pre-tax splitting', () => {
       expect(per.depletionYear).not.toBe(NEVER_DEPLETED) // presence: it actually depleted
       expect(per.depletionYear).toBe(agg.depletionYear)
       expect(per.terminalReal).toBe(agg.terminalReal)
-      expect(per.finalBuckets).toEqual({ taxable: 0, pretax: 0, roth: 0 })
+      // The depleted-bucket shape carries the 4th (hsa) bucket since U3 · M5 — zeroed like its siblings.
+      expect(per.finalBuckets).toEqual({ taxable: 0, pretax: 0, roth: 0, hsa: 0 })
     })
 
     it('rejects a TOTAL reference mismatch — a living set of fresh literals matching nobody (R19 fail-loud, not silent all-dead)', () => {
@@ -2270,6 +2271,131 @@ describe('taxOverlay — M4: the post-65 IRMAA feed-forward (externally derived,
       })
       expect(r.depletionYear).toBe(NEVER_DEPLETED)
       expect(r.totalMedicareCostReal).toBeGreaterThan(0)
+    })
+  })
+})
+
+// ===========================================================================
+// U3 · M5 — the HSA 4th bucket (SPEND side), Slice 1: the bucket TYPE rides the
+// ledger. hsa is MEDICAL-EARMARKED: it shares the one market draw (contract #2)
+// but is never a general drawdown source; absent/0 ⇒ byte-identical (reduce-to-
+// spine, the as-we-go default). Spend mechanics land in the later M5 slices.
+// ===========================================================================
+describe('taxOverlay — M5 · Slice 1: the hsa bucket rides (reduce-to-spine + the general-depletion guard)', () => {
+  describe('reduce-to-spine: an EXPLICIT hsa: 0 is byte-identical to the spine (the absent-hsa anchor is the untouched existing suite)', () => {
+    const scenarios = [
+      { name: 'survives', portfolio: 1_000_000, withdrawals: flat(40_000) },
+      { name: 'depletes', portfolio: 150_000, withdrawals: flat(40_000) },
+    ]
+    for (const s of scenarios) {
+      const expected = spine(s.portfolio, s.withdrawals)
+      for (const policy of DRAWDOWN_POLICIES) {
+        it(`${s.name} · pretax-only + hsa: 0 · ${policy} → identical terminal + depletion year`, () => {
+          const got = runTaxAwareDecumulation(
+            { taxable: 0, pretax: s.portfolio, roth: 0, hsa: 0 },
+            realStock,
+            realBond,
+            s.withdrawals,
+            STOCK_W,
+            policy,
+            OFF,
+          )
+          expect(got.terminalReal).toBe(expected.terminalReal)
+          expect(got.depletionYear).toBe(expected.depletionYear)
+        })
+      }
+    }
+  })
+
+  describe('a riding hsa > 0 shares the ONE market draw and is untouched by general draws', () => {
+    const G = 1_000_000
+    const HSA = 120_000
+    const W = flat(40_000)
+
+    it('decomposition: terminal(general + hsa) === terminal(general-only) + the grown hsa (presence companion: it genuinely grew)', () => {
+      // Same draws funded from the same general pool; the hsa rides untouched. The general
+      // trajectory is therefore IDENTICAL (same stepYear inputs year-for-year is false — the
+      // authoritative total includes hsa — but the LEDGER decomposes exactly: every general
+      // bucket evolves on drawn-vs-scale arithmetic whose inputs match the general-only run,
+      // and the hsa grows by the same shared factor). Pin the decomposition through the API:
+      const withHsa = runTaxAwareDecumulation(
+        { taxable: 0, pretax: G, roth: 0, hsa: HSA },
+        realStock, realBond, W, STOCK_W, 'pre-tax-first', OFF,
+      )
+      const generalOnly = runTaxAwareDecumulation(
+        { taxable: 0, pretax: G, roth: 0 },
+        realStock, realBond, W, STOCK_W, 'pre-tax-first', OFF,
+      )
+      // The hsa grew by the cumulative shared blended factor = a zero-withdrawal spine on HSA alone
+      // (each year: rebalance to w, grow by the blended return — the same one-draw factor every
+      // bucket shares; an hsa-specific return assumption would break this identity).
+      const grownHsa = spine(HSA, flat(0)).terminalReal
+      expect(withHsa.depletionYear).toBe(generalOnly.depletionYear)
+      expect(withHsa.finalBuckets.hsa).toBeGreaterThan(HSA) // presence: it actually grew (returns are net-positive)
+      expect(Math.abs((withHsa.finalBuckets.hsa ?? NaN) / grownHsa - 1)).toBeLessThan(1e-9)
+      expect(Math.abs(withHsa.terminalReal / (generalOnly.terminalReal + grownHsa) - 1)).toBeLessThan(1e-9)
+      // and the general buckets match the general-only run (the draws never touched hsa):
+      expect(Math.abs((withHsa.finalBuckets.pretax || 0) / (generalOnly.finalBuckets.pretax || 1) - 1)).toBeLessThan(1e-9)
+    })
+
+    it('tax ON: the riding hsa changes NOTHING about the taxed general trajectory (decomposes identically)', () => {
+      const cfg: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: false, household: mkHousehold(2026, 1966, 1968) }
+      const withHsa = runTaxAwareDecumulation(
+        { taxable: 0, pretax: G, roth: 0, hsa: HSA },
+        realStock, realBond, W, STOCK_W, 'pre-tax-first', cfg,
+      )
+      const generalOnly = runTaxAwareDecumulation(
+        { taxable: 0, pretax: G, roth: 0 },
+        realStock, realBond, W, STOCK_W, 'pre-tax-first', cfg,
+      )
+      const grownHsa = spine(HSA, flat(0)).terminalReal
+      expect(withHsa.depletionYear).toBe(generalOnly.depletionYear)
+      expect(Math.abs(withHsa.terminalReal / (generalOnly.terminalReal + grownHsa) - 1)).toBeLessThan(1e-9)
+    })
+  })
+
+  describe('the GENERAL-DEPLETION guard: a fat hsa can never fund general spending (the M5 laundering bug discriminator)', () => {
+    it('general pool exhausted + fat hsa ⇒ DEPLETED (stranded hsa forfeited, the conservative direction)', () => {
+      // year 0: gross need 60k > generalDrawable 50k, while the hsa-inclusive total (1.05M) could
+      // "afford" it — a laundering implementation (no guard) survives for years on HSA dollars.
+      const r = runTaxAwareDecumulation(
+        { taxable: 50_000, pretax: 0, roth: 0, hsa: 1_000_000 },
+        realStock, realBond, flat(60_000), STOCK_W, 'taxable-first', OFF,
+      )
+      expect(r.depletionYear).toBe(0)
+      expect(r.terminalReal).toBe(0)
+      expect(r.finalBuckets).toEqual({ taxable: 0, pretax: 0, roth: 0, hsa: 0 })
+    })
+
+    it('control arm: the SAME dollars all-general survives — the depletion above came from the split, not the total', () => {
+      const r = runTaxAwareDecumulation(
+        { taxable: 1_050_000, pretax: 0, roth: 0 },
+        realStock, realBond, flat(60_000), STOCK_W, 'taxable-first', OFF,
+      )
+      expect(r.depletionYear).toBe(NEVER_DEPLETED)
+    })
+
+    it('the exact-exhaustion year is still fundable (strict >, not ≥) and depletion lands the NEXT year', () => {
+      // year 0 draws the general pool to exactly 0 (no growth applied to a zeroed bucket);
+      // year 1 then has gross 1 > general 0 ⇒ depleted at t = 1 with the hsa still riding.
+      const r = runTaxAwareDecumulation(
+        { taxable: 60_000, pretax: 0, roth: 0, hsa: 100_000 },
+        realStock, realBond, [60_000, 1, 1], STOCK_W, 'taxable-first', OFF,
+      )
+      expect(r.depletionYear).toBe(1)
+    })
+  })
+
+  describe('R19 backstop (direct caller): a bad hsa fails LOUD at the overlay (mirror of validateParams)', () => {
+    it('NaN / negative / Infinity hsa throws with the descriptive message (finiteness before any compare — insight 010)', () => {
+      for (const bad of [NaN, -1, Infinity]) {
+        expect(() =>
+          runTaxAwareDecumulation(
+            { taxable: 0, pretax: 100_000, roth: 0, hsa: bad },
+            realStock, realBond, flat(10_000), STOCK_W, 'pre-tax-first', OFF,
+          ),
+        ).toThrow(/hsa/)
+      }
     })
   })
 })

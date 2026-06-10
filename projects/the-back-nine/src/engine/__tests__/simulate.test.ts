@@ -254,6 +254,10 @@ describe('R19 engine half + dire-but-honest edges', () => {
       { taxEnabled: false, rmdEnabled: false, startCalendarYear: 2026, buckets: { taxable: 0, pretax: P, roth: 0 }, filing: 'mfj', healthcareEnabled: true }, // healthcare requires tax
       // a priced enrolled year with NO slcsp benchmark → clean indeterminate (not a mid-path throw):
       { taxEnabled: true, rmdEnabled: false, startCalendarYear: 2026, buckets: { taxable: 0, pretax: P, roth: 0 }, filing: 'mfj', healthcareEnabled: true, enrolledPremium: [15_000], slcsp: [] }, // enrolled>0, slcsp absent → slcsp-coverage gate
+      // U3 · M5 — the hsa 4th bucket joins the R19 gate like its siblings (insights 008/010):
+      { taxEnabled: false, rmdEnabled: false, startCalendarYear: 2026, buckets: { taxable: 0, pretax: P, roth: 0, hsa: NaN }, filing: 'mfj' }, // NaN hsa → finiteness gate
+      { taxEnabled: false, rmdEnabled: false, startCalendarYear: 2026, buckets: { taxable: 0, pretax: P, roth: 0, hsa: -1 }, filing: 'mfj' }, // negative hsa
+      { taxEnabled: false, rmdEnabled: false, startCalendarYear: 2026, buckets: { taxable: 0, pretax: P, roth: 0, hsa: 50_000 }, filing: 'mfj' }, // 4-bucket sum = P + 50k ≠ P — hsa is PART of the portfolio total
     ]
     for (const overlay of overlays) {
       expect(simulate({ ...base, overlay }, 1).indeterminate).toBe(true)

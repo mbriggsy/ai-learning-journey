@@ -69,7 +69,7 @@
  * PURE: no entropy/clock/environment (the engine-purity lint covers `src/engine/**`).
  */
 import { stepYear, totalValue, type DecumulationResult, type PortfolioState } from '@engine/decumulation'
-import { allocateWithdrawal, totalAcrossBuckets, type AccountBuckets } from '@engine/sequencing'
+import { allocateWithdrawal, generalDrawableTotal, totalAcrossBuckets, type AccountBuckets } from '@engine/sequencing'
 import {
   rmdStartAge,
   uniformLifetimeTableDivisors,
@@ -245,7 +245,7 @@ export interface TaxYearInputs {
   readonly irmaaMagiSeed?: readonly number[]
 }
 
-const EMPTY_BUCKETS: AccountBuckets = { taxable: 0, pretax: 0, roth: 0 }
+const EMPTY_BUCKETS: AccountBuckets = { taxable: 0, pretax: 0, roth: 0, hsa: 0 }
 
 // The statutory age threshold for the §63(f) age-65 additional standard deduction AND the
 // OBBBA senior bonus. It is structurally embedded in the constant identifiers themselves
@@ -938,6 +938,14 @@ export function runTaxAwareDecumulation(
     )
   }
 
+  // The hsa bucket (U3 · M5): finiteness UNCONDITIONALLY when present (the same mirror-of-
+  // validateParams footing as the basis guard above) — a NaN hsa poisons the hsa-inclusive
+  // total AND the general-depletion compare, both relational guards a NaN sails through
+  // (insights 008/010). validateParams shields `simulate`; this is the direct-caller backstop.
+  if (initialBuckets.hsa !== undefined && !(Number.isFinite(initialBuckets.hsa) && initialBuckets.hsa >= 0)) {
+    throw new Error('[taxOverlay] buckets.hsa must be finite and ≥ 0 (a NaN survives every relational guard — insight 010)')
+  }
+
   // Per-person pre-tax sub-ledger (M6b·B). Active ONLY when the caller supplies the per-person
   // split AND the overlay does work (tax or RMD on) — otherwise null, and the aggregate M6a path
   // runs verbatim (reduce-to-spine + every M1–M6a fixture byte-identical). The split must sum to
@@ -973,6 +981,12 @@ export function runTaxAwareDecumulation(
 
   let buckets = initialBuckets
   let basis = initialTaxableBasis ?? 0
+  // HSA liveness is a RUN-level constant (U3 · M5): the 4th-bucket semantics (the general-depletion
+  // check below + the qualified-spend mechanics) exist only when the run STARTS with an HSA balance.
+  // Gating on the initial balance — not the per-year one — keeps the semantics stable as the HSA
+  // drains, and makes `hsa` absent/0 byte-identical to the 3-bucket overlay by construction (the
+  // gated code never executes, so no new float operation can perturb the spine; reduce-to-spine).
+  const hsaLive = (initialBuckets.hsa ?? 0) > 0
   const total0 = totalAcrossBuckets(initialBuckets)
   // Construct the initial state with the SAME formula simulate.ts uses (stock = w·P,
   // bond = (1−w)·P) so a collapsed-pool run is byte-identical to the spine's
@@ -1055,7 +1069,7 @@ export function runTaxAwareDecumulation(
     const conversion = config.taxEnabled ? Math.max(0, Math.min(conversions[t] ?? 0, buckets.pretax - rmd)) : 0
     const drawPool: AccountBuckets =
       conversion > 0
-        ? { taxable: buckets.taxable, pretax: buckets.pretax - conversion, roth: buckets.roth + conversion }
+        ? { taxable: buckets.taxable, pretax: buckets.pretax - conversion, roth: buckets.roth + conversion, hsa: buckets.hsa }
         : buckets
 
     // Gross up for tax (M3–M5), then fold in the income-aware HEALTHCARE cost: the post-65 IRMAA
@@ -1162,6 +1176,28 @@ export function runTaxAwareDecumulation(
     const alloc = allocateWithdrawal(drawPool, grossWithdrawal, policy, bracketFillCeiling)
     const drawn = alloc.taxable + alloc.pretax + alloc.roth
 
+    // GENERAL-DEPLETION (U3 · M5): with a live HSA the authoritative total (which `stepYear`'s own
+    // depletion predicate reads) includes MEDICAL-EARMARKED dollars a spending withdrawal may not
+    // touch — so a year whose gross need exceeds the GENERAL-drawable pool is unfundable even while
+    // the hsa-inclusive total is positive. Without this check the shortfall would silently ride the
+    // total — HSA dollars laundered into general spending (the M5 laundering bug). Declared depleted
+    // with the stranded HSA forfeited (terminal 0, the existing depleted-path convention) — the
+    // CONSERVATIVE direction (understates survival; post-65 HSA-as-ordinary-income last resort is a
+    // DISCLOSED non-feature, the survivor-SS class). Strict `>` on validated-finite quantities: the
+    // exact-exhaustion year is fundable; ledger-vs-state float dust can only deplete a knife-edge
+    // path one year EARLY (conservative, measure-zero — the stepYear `<= 0` knife-edge class).
+    // Gated on `hsaLive`, NEVER on the per-year balance: at hsa = 0 this branch does not exist, so
+    // reduce-to-spine is untouched (the ledger and state totals are different float lineages, and an
+    // ungated compare could disagree with stepYear's predicate by one ulp on a knife-edge path).
+    if (hsaLive && grossWithdrawal > generalDrawableTotal(drawPool)) {
+      state = { stock: 0, bond: 0 }
+      buckets = EMPTY_BUCKETS
+      basis = 0
+      if (pretaxLedger) pretaxLedger.fill(0)
+      depletionYear = t
+      break
+    }
+
     // Advance the AUTHORITATIVE total via the shared stepYear (byte-identical to spine).
     const step = stepYear(state, rs, rb, grossWithdrawal, stockWeight)
     state = step.state
@@ -1223,6 +1259,10 @@ export function runTaxAwareDecumulation(
         taxable: taxablePost * scale,
         pretax: pretaxPostScaled,
         roth: rothPost * scale,
+        // The MEDICAL-EARMARKED 4th bucket (U3 · M5) rides the SAME shared growth factor as every
+        // other bucket (contract #2 — one market draw, no per-bucket return). General draws never
+        // touch it (`alloc` cannot even name it — `GeneralBucketKey`); qualified spend lands M5.
+        hsa: (drawPool.hsa ?? 0) * scale,
       }
     } else {
       buckets = EMPTY_BUCKETS

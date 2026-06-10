@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { allocateWithdrawal, totalAcrossBuckets, type AccountBuckets, type BucketWithdrawals } from '@engine/sequencing'
+import { allocateWithdrawal, generalDrawableTotal, totalAcrossBuckets, type AccountBuckets, type BucketWithdrawals } from '@engine/sequencing'
 import { DRAWDOWN_POLICIES } from '@shared/model'
 
 const sum = (w: BucketWithdrawals): number => w.taxable + w.pretax + w.roth
@@ -121,5 +121,47 @@ describe('reduce-to-spine: policy is INERT on a single pool', () => {
     const a = allocateWithdrawal(multi, 273.5, 'proportional')
     const b = allocateWithdrawal(multi, 273.5, 'proportional')
     expect(a).toEqual(b)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// U3 · M5 — the hsa 4th bucket is MEDICAL-EARMARKED: structurally outside the
+// general drawdown order. `BucketWithdrawals` is keyed on `GeneralBucketKey`
+// (compile-time guard); these pin the RUNTIME half.
+// ---------------------------------------------------------------------------
+describe('U3 · M5 — hsa is never a general drawdown source', () => {
+  const withHsa: AccountBuckets = { taxable: 300, pretax: 500, roth: 200, hsa: 10_000 }
+
+  it('the two totals split exactly at hsa (insight 014 crossing: dark at hsa = 0)', () => {
+    expect(generalDrawableTotal(withHsa)).toBe(1000)
+    expect(totalAcrossBuckets(withHsa)).toBe(11_000)
+    // dark at hsa = 0 / absent — the split is invisible there (the crossing class):
+    expect(generalDrawableTotal(multi)).toBe(totalAcrossBuckets(multi))
+    expect(generalDrawableTotal({ ...multi, hsa: 0 })).toBe(totalAcrossBuckets({ ...multi, hsa: 0 }))
+  })
+
+  it('an over-withdrawal clamps to the GENERAL total — the fat hsa bucket funds nothing (the laundering guard)', () => {
+    for (const policy of DRAWDOWN_POLICIES) {
+      const w = allocateWithdrawal(withHsa, 5_000, policy)
+      // drains the three general buckets exactly; hsa dollars never enter the draw
+      expect(sum(w)).toBeCloseTo(generalDrawableTotal(withHsa), 9)
+      // the returned record cannot even name hsa (GeneralBucketKey) — pin the runtime shape too
+      expect(Object.keys(w).sort()).toEqual(['pretax', 'roth', 'taxable'])
+    }
+  })
+
+  it('allocation with an hsa present is byte-identical to the same general buckets without it', () => {
+    for (const policy of DRAWDOWN_POLICIES) {
+      expect(allocateWithdrawal(withHsa, 400, policy)).toEqual(allocateWithdrawal(multi, 400, policy))
+    }
+  })
+
+  it('proportional shares are computed over the GENERAL total, never the hsa-inclusive one', () => {
+    // 400 over a 1000 general pool → 40% of each general bucket. An hsa-inclusive denominator
+    // (11,000) would yield ~3.6% shares summing to ~36 — a planted hsa-inclusive arm fails loudly.
+    const w = allocateWithdrawal(withHsa, 400, 'proportional')
+    expect(w.taxable).toBeCloseTo(120, 9)
+    expect(w.pretax).toBeCloseTo(200, 9)
+    expect(w.roth).toBeCloseTo(80, 9)
   })
 })

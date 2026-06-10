@@ -21,29 +21,48 @@
  */
 import type { DrawdownPolicy } from '@shared/model'
 
-/** The account buckets the policy allocates across. (HSA — a 4th, medical-earmarked
- *  bucket — is added in U3; the spine + the general drawdown order are these three.) */
+/** The account buckets the policy allocates across. `hsa` (U3 · M5) is the 4th,
+ *  MEDICAL-EARMARKED bucket: it shares the one market draw like every bucket (contract #2)
+ *  but is NEVER a general drawdown source — qualified medical outflow only (`taxOverlay.ts`
+ *  drains it against the year's qualified cap; Pub 969 via `hsaFourthBucketRules`). Optional:
+ *  absent ⇒ 0 ⇒ byte-identical to the 3-bucket overlay (the as-we-go reduce-to-spine default). */
 export interface AccountBuckets {
   readonly taxable: number
   readonly pretax: number
   readonly roth: number
+  readonly hsa?: number
 }
 
 export type BucketKey = keyof AccountBuckets
-export type BucketWithdrawals = Record<BucketKey, number>
+/** The GENERAL drawdown sources — every bucket EXCEPT the medical-earmarked `hsa`. Typing the
+ *  draw orders and the withdrawal record on this key (not `BucketKey`) makes "general spending
+ *  can never be routed through the HSA" a COMPILE-TIME fact, not a runtime convention — the
+ *  structural half of the M5 laundering guard (the behavioral half is the general-depletion
+ *  check in `taxOverlay.ts`). */
+export type GeneralBucketKey = Exclude<BucketKey, 'hsa'>
+export type BucketWithdrawals = Record<GeneralBucketKey, number>
 
 const ZERO: BucketWithdrawals = { taxable: 0, pretax: 0, roth: 0 }
 
-export const totalAcrossBuckets = (b: AccountBuckets): number => b.taxable + b.pretax + b.roth
+/** The hsa-INCLUSIVE portfolio total — the authoritative figure `stepYear` advances (all four
+ *  buckets ride the one shared market draw). Distinct from {@link generalDrawableTotal}: the two
+ *  diverge exactly when `hsa > 0` (dark at `hsa = 0` — insight 014's crossing class). */
+export const totalAcrossBuckets = (b: AccountBuckets): number => b.taxable + b.pretax + b.roth + (b.hsa ?? 0)
 
-/** Conventional fixed draw orders (taxable→pre-tax→Roth is the textbook default). */
-const ORDER: Record<'taxable-first' | 'pre-tax-first', readonly BucketKey[]> = {
+/** The GENERAL-drawable total (taxable + pretax + roth) — what a year's spending withdrawal can
+ *  actually be funded from. The `hsa` bucket is excluded: it pays only the qualified-medical cap
+ *  (U3 · M5), never general spending. */
+export const generalDrawableTotal = (b: AccountBuckets): number => b.taxable + b.pretax + b.roth
+
+/** Conventional fixed draw orders (taxable→pre-tax→Roth is the textbook default). Typed on
+ *  `GeneralBucketKey`, so an order naming `hsa` is a compile error (the M5 laundering guard). */
+const ORDER: Record<'taxable-first' | 'pre-tax-first', readonly GeneralBucketKey[]> = {
   'taxable-first': ['taxable', 'pretax', 'roth'],
   'pre-tax-first': ['pretax', 'taxable', 'roth'],
 }
 
 /** Draw `target` from the buckets in `order`, exhausting each before the next. */
-function ordered(buckets: AccountBuckets, target: number, order: readonly BucketKey[]): BucketWithdrawals {
+function ordered(buckets: AccountBuckets, target: number, order: readonly GeneralBucketKey[]): BucketWithdrawals {
   const out: BucketWithdrawals = { ...ZERO }
   let remaining = target
   for (const key of order) {
@@ -93,9 +112,11 @@ function bracketFill(buckets: AccountBuckets, target: number, ceiling: number): 
 }
 
 /**
- * Allocate a net withdrawal across the buckets per `policy`. The per-bucket draws sum
- * to `min(max(0, netWithdrawal), totalAvailable)` — you cannot draw more than exists.
- * PURE: a deterministic function of balances + policy, no randomness (CRN-neutral).
+ * Allocate a net withdrawal across the GENERAL buckets per `policy`. The per-bucket draws sum
+ * to `min(max(0, netWithdrawal), generalDrawableTotal)` — you cannot draw more than exists, and
+ * the medical-earmarked `hsa` bucket is never a source (the returned record cannot even name it
+ * — `BucketWithdrawals` is keyed on `GeneralBucketKey`). PURE: a deterministic function of
+ * balances + policy, no randomness (CRN-neutral).
  *
  * On a SINGLE non-empty bucket every policy returns the identical allocation (drawing
  * from the only source) — the "policy inert on one pool" half of reduce-to-spine.
@@ -108,7 +129,7 @@ export function allocateWithdrawal(
    *  room to the caller's target edge). `+Infinity` (the default) ⇒ no ceiling ⇒ `pre-tax-first`. */
   bracketFillCeiling: number = Number.POSITIVE_INFINITY,
 ): BucketWithdrawals {
-  const total = totalAcrossBuckets(buckets)
+  const total = generalDrawableTotal(buckets)
   const target = Math.min(Math.max(0, netWithdrawal), total)
   if (target === 0) return { ...ZERO }
 

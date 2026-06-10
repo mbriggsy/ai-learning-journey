@@ -172,7 +172,7 @@ export const DRAWDOWN_POLICIES = [
  *  first death (no QSS grace — §Strand 5). The engine's tax overlay re-exports this. */
 export type FilingStatus = 'mfj' | 'single'
 
-/** A three-bucket account split by tax treatment (real dollars). Structurally the engine's
+/** An account split by tax treatment (real dollars). Structurally the engine's
  *  `AccountBuckets`; the canonical plaintext vocabulary lives here in the leaf layer. */
 export interface AccountBalances {
   /** Brokerage / after-tax: a withdrawal realizes a pro-rata capital gain. */
@@ -181,6 +181,10 @@ export interface AccountBalances {
   readonly pretax: number
   /** Roth: tax-free growth and withdrawals. */
   readonly roth: number
+  /** HSA (U3 · M5): the 4th, MEDICAL-EARMARKED bucket — qualified medical spend is tax-free and
+   *  MAGI-invisible; it is NEVER a general drawdown source. Optional under the schemaVersion-2
+   *  additive bump: absent ⇒ 0 ⇒ byte-identical to the 3-bucket model. */
+  readonly hsa?: number
 }
 
 /** The engine-side tax/accounts overlay input (U2). `taxEnabled` and `rmdEnabled` are INDEPENDENT
@@ -404,6 +408,12 @@ export interface PersonAccounts {
   readonly taxableBasis: number
   readonly pretax: number
   readonly roth: number
+  /** This person's OWN HSA (U3 · M5; real $). Per-person because HSA ownership is individual —
+   *  the 65+ Medicare-premium spend privilege keys to the OWNER's age and the 55+ catch-up lands
+   *  in each spouse's own account (Pub 969 via `hsaFourthBucketRules`/`hsa2026`). Intake sums
+   *  these into the aggregated `OverlayParams.buckets.hsa` + derives `hsaOwnerIndex`. Optional
+   *  under the schemaVersion-2 additive bump: absent ⇒ 0. */
+  readonly hsa?: number
 }
 
 /** The schemaVersion-2 plaintext scenario: the v1 spine inputs + the U2 tax-overlay fields.

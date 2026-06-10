@@ -254,7 +254,7 @@ The work is four tracks. **Track A (doc reconciliation)** and **Track B (HSA spe
 
 ---
 
-- [ ] **A3: Amend the affected phase docs**
+- [x] **A3: Amend the affected phase docs** *(done 2026-06-10 — C1/C2/C3 + D1/D2 unit bodies transplanted VERBATIM into phase-1/phase-2 via programmatic line-range extraction, zero transcription drift; phase docs' §N references resolve to this plan's Key Technical Decisions)*
 
 **Goal:** The phase docs carry the new units at their correct altitude.
 

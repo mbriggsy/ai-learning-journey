@@ -1,0 +1,147 @@
+/*
+ * Base element layer — the quiet defaults every surface inherits.
+ * Reads ONLY tokens.css var()s (the canonical-source rule); components add their own
+ * stylesheets on top. No utility framework — this product's CSS stays small and intentional.
+ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+* {
+  margin: 0;
+}
+
+html {
+  /* Light-only by deliberate decision (P2): one mode, perfect. color-scheme keeps
+   * UA-rendered form internals (carets, selects, scrollbars) on the light path. */
+  color-scheme: light;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  font-weight: var(--weight-body);
+  line-height: var(--leading-body);
+  /* THE FIGURE LAW: tabular lining numerals everywhere, by inheritance — a dollar
+   * figure that updates in place changes value without shifting position. Set once
+   * here, never bolted per-component (back-nine-design §tabular). Verified against
+   * the real loaded fonts in e2e/design-tokens.spec.ts. */
+  font-variant-numeric: tabular-nums lining-nums;
+  /* Variable fonts carry real weights 200–900; never fake a weight. Italic files are
+   * deliberately not shipped (lean) — permit style synthesis so an <em> still slants. */
+  font-synthesis: style;
+  min-height: 100svh;
+}
+
+/* ----- typography defaults ----- */
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  font-weight: var(--weight-display);
+  font-optical-sizing: auto; /* Fraunces opsz: display cut at large sizes, sturdier small */
+  line-height: var(--leading-display);
+  letter-spacing: var(--tracking-display);
+  text-wrap: balance;
+  color: var(--brand);
+}
+
+h4,
+h5,
+h6 {
+  font-family: var(--font-body);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-tight);
+  text-wrap: balance;
+}
+
+p {
+  text-wrap: pretty;
+  max-width: var(--measure);
+}
+
+small {
+  font-size: var(--text-sm);
+  color: var(--ink-muted);
+}
+
+::selection {
+  background: var(--brand-tint);
+}
+
+/* ----- interactive element resets ----- */
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  font-variant-numeric: inherit;
+  color: inherit;
+  letter-spacing: inherit;
+}
+
+button,
+a,
+input,
+select,
+textarea,
+label {
+  touch-action: manipulation; /* no double-tap-zoom delay on the intake's controls */
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent; /* we provide our own pressed state (scale 0.97) */
+}
+
+a {
+  color: var(--brand);
+  text-underline-offset: 0.15em;
+}
+
+img,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+/* ----- focus: one global, always-visible ring (never outline:none anywhere) ----- */
+
+:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+/* ----- accessibility utilities ----- */
+
+/* The visually-hidden pattern for SR-only text + the polite live region (clear-after-
+ * announce discipline lives with the component — burned/045). */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Reduced motion: movement is dropped at the COMPONENT level (each animation branches
+ * on prefers-reduced-motion / useReducedMotion and keeps a short comprehension fade —
+ * a global duration-kill would also kill the fades the a11y contract deliberately
+ * keeps). This base layer only neutralizes scroll movement. */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}

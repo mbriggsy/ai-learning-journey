@@ -28,6 +28,12 @@ export default defineConfig({
         // Precache the shell INCLUDING the hashed engine-worker .js chunk so the
         // offline shell can spin the engine on a second visit.
         globPatterns: ['**/*.{js,css,html,webmanifest,woff2}'],
+        // The fontsource CSS registers every language subset behind unicode-range —
+        // the browser lazily fetches only what it renders (English UI: latin, plus
+        // latin-ext for diacritic names), but the precache would eagerly fetch ALL
+        // of them. Keep the dead subsets out of the offline cache; if one is ever
+        // genuinely rendered online it still loads + HTTP-caches normally.
+        globIgnores: ['**/*-greek*', '**/*-cyrillic*', '**/*-vietnamese*'],
         // Offline SPA navigations fall back to the precached shell.
         navigateFallback: 'index.html',
         // Explicit (agent F): the 2 MiB default silently drops larger precache

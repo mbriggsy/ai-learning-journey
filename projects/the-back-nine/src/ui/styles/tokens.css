@@ -1,0 +1,119 @@
+/*
+ * The Clubhouse Ledger — the canonical UI token sheet (design direction ratified 2026-06-11).
+ *
+ * A beautifully set book about your money, read in late-afternoon light: warm paper,
+ * deep fairway-green ink, an editorial serif for words, a quiet sans for data.
+ * Distinctive through restraint and typography — never a dashboard, never a casino.
+ *
+ * CANONICAL-SOURCE RULE (mirrors src/engine/constants/ discipline): every color, scale
+ * step, duration, and easing the UI uses is named HERE and read via var() — never
+ * re-typed at a call site. src/ui/__tests__/tokens.test.ts re-derives the WCAG
+ * contrast facts from THIS file's committed text (the source-bind pattern,
+ * docs/insights/032) and fails on any pair that drops below its floor.
+ *
+ * COLOR LAW (back-nine-design skill — the reader is color blind):
+ *   - Brand green is CHROME ONLY. Data/series/verdict colors draw exclusively from
+ *     the Okabe–Ito set and live in src/viz/palette.ts (U6) — never here, never mixed.
+ *   - The one chromatic exception below is --error-ink: a darkened DERIVATIVE of
+ *     Okabe–Ito vermilion #D55E00 (same hue family, L dropped for 4.5:1 text contrast
+ *     on paper) — named as a derivative per the palette law, never labeled "Okabe–Ito".
+ *     Error state never rides color alone: icon + adjacent text always lead.
+ *
+ * TYPE LAW: Fraunces carries WORDS (display); Source Sans 3 carries BODY/UI and EVERY
+ * NUMERAL. font-variant-numeric: tabular-nums is set globally in base.css (inherited),
+ * so a figure can never jitter horizontally on recompute — verified by a real-browser
+ * width test in e2e/design-tokens.spec.ts (a font silently lacking `tnum` is a false
+ * green; the e2e is the proof, not this comment).
+ */
+
+:root {
+  /* ----- color: surfaces ----- */
+  --paper: #faf7f2; /* warm cream page — calmer than stark white for long reading */
+  --paper-raised: #ffffff; /* input wells, raised moments */
+  --brand-tint: #e3eee7; /* selected/active wash — always paired with a non-color signal */
+  --error-fill: #f9e8dc; /* error field wash — decorative; icon + text carry the signal */
+
+  /* ----- color: ink (text) — every pair vs its surface gated ≥ 4.5:1 ----- */
+  --ink: #1d2b24; /* primary text — 13.8:1 on paper */
+  --ink-muted: #44584e; /* secondary text, help text — 7.1:1 on paper */
+  --error-ink: #9a4300; /* derived: Okabe–Ito vermilion #D55E00, darkened for 6.2:1 text contrast */
+
+  /* ----- color: brand (chrome only — never a data encoding) ----- */
+  --brand: #0b3d2e; /* the committed U0 theme green — headings, CTAs, focus, 11.4:1 on paper */
+  --brand-press: #082b21; /* pressed/active darkening */
+  --on-brand: #faf7f2; /* text on brand surfaces — 10.9:1 on brand */
+
+  /* ----- color: lines — UI component boundaries gated ≥ 3:1 vs surface ----- */
+  --line-control: #75867d; /* field/control borders — 3.6:1 on paper, 3.8:1 on white */
+  --line-soft: #ded7cb; /* decorative dividers/hairlines — no contrast requirement */
+
+  /* ----- type: families ----- */
+  --font-display: 'Fraunces Variable', Georgia, 'Times New Roman', serif;
+  --font-body: 'Source Sans 3 Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  /* ----- type: fluid scale (portrait phone is the constraining axis; body never < 16px
+   *        so iOS form fields never trigger auto-zoom) ----- */
+  --text-xs: 0.8125rem; /* 13px — overlines, fine print */
+  --text-sm: clamp(0.9375rem, 0.9rem + 0.2vw, 1rem); /* 15→16px — labels, captions */
+  --text-base: clamp(1.0625rem, 1.03rem + 0.2vw, 1.125rem); /* 17→18px — body, inputs */
+  --text-lg: clamp(1.25rem, 1.18rem + 0.35vw, 1.375rem); /* 20→22px — emphasized body */
+  --text-xl: clamp(1.625rem, 1.42rem + 0.9vw, 2rem); /* 26→32px — step headings */
+  --text-2xl: clamp(2.125rem, 1.9rem + 1.4vw, 2.75rem); /* 34→44px — answer headline */
+  --text-hero: clamp(2.875rem, 2.5rem + 2.6vw, 4rem); /* 46→64px — the magic-moment figure */
+
+  --weight-body: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-display: 600; /* Fraunces at semibold + high opsz = the warm editorial cut */
+
+  --leading-body: 1.55;
+  --leading-tight: 1.3;
+  --leading-display: 1.12;
+
+  --tracking-display: -0.01em;
+  --tracking-overline: 0.06em;
+
+  /* ----- space: 4px grid ----- */
+  --space-1: 0.25rem; /* 4 */
+  --space-2: 0.5rem; /* 8 */
+  --space-3: 0.75rem; /* 12 */
+  --space-4: 1rem; /* 16 */
+  --space-5: 1.25rem; /* 20 */
+  --space-6: 1.5rem; /* 24 */
+  --space-7: 2rem; /* 32 */
+  --space-8: 2.5rem; /* 40 */
+  --space-9: 3rem; /* 48 */
+  --space-10: 4rem; /* 64 */
+  --space-11: 5rem; /* 80 */
+  --space-12: 6rem; /* 96 */
+
+  /* ----- layout ----- */
+  --measure: 36rem; /* prose/question column width */
+  --gutter: clamp(1rem, 4vw, 1.75rem); /* page side padding */
+  --field-h: 3.25rem; /* 52px — full-size touch field */
+  --tap-min: 2.75rem; /* 44px — practical touch floor (WCAG 2.5.8 hard min is 24px) */
+
+  /* ----- shape ----- */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-pill: 999px;
+
+  /* ----- elevation (used sparingly — hairlines do most of the work) ----- */
+  --shadow-soft: 0 2px 12px rgb(11 61 46 / 0.08);
+  --shadow-raised: 0 8px 28px rgb(11 61 46 / 0.12);
+
+  /* ----- motion (emil-design-eng: strong custom curves; UI under 300ms;
+   *        transitions/springs only — never restart-from-zero keyframes on dynamic UI) ----- */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --dur-press: 140ms; /* button/press feedback */
+  --dur-fast: 180ms; /* hovers, small fades, error appear/clear */
+  --dur-step: 260ms; /* intake step slide+fade */
+  --dur-reveal: 420ms; /* first-time reveals only (band first draw — occasional moments) */
+
+  /* ----- stacking ----- */
+  --z-thread: 10; /* the quiet progress thread */
+  --z-toast: 100; /* update toast */
+  --z-overlay: 200; /* portaled overlays (always portal — transform-ancestor trap, burned/013) */
+}

@@ -405,6 +405,41 @@ export interface DollarAdjustment {
   readonly direction: 'trim' | 'room' | 'on-the-line'
 }
 
+/** Per-path tax-aware solver surfaces (U3·M6 — the strategic review's SOLVER OUTPUT
+ *  CONTRACT, the P4 argmax inputs). PRESENT on a {@link Distribution} iff the run carried
+ *  the tax overlay (presence-keyed — a spine run has no tax data, and zero-fill would
+ *  CONTRADICT `terminalValuesReal`, so absence is the honest shape). Six parallel arrays,
+ *  each length === paths, every entry a finite number (DND/009 — they cross the worker
+ *  wire and will persist).
+ *
+ *  The `terminal*` figures are each path's state at ITS OWN horizon end — in `sampled`
+ *  longevity mode that is the couple's SAMPLED last-death year (the §1014/IRD
+ *  leave-more-to-heirs surface: pre-tax = IRD to heirs, taxable's embedded gain
+ *  steps up, Roth passes tax-free), capped at `maxHorizonYears` (a path whose couple
+ *  outlives the window reports the window end — the censored case); in `fixed-horizon`
+ *  mode it is the fixed horizon end. A depleted path reports zeros.
+ *
+ *  These are parallel ACCOUNTING surfaces (the `totalNetPremiumReal` pattern): they never
+ *  perturb the headline trajectory, and `objective ≡ headline` means the P4 objective
+ *  reads THESE — never recomputes them in objective.ts (the M3 sign-inversion class). */
+export interface TaxAwareDistribution {
+  /** Σ federal income tax actually paid across the path's funded years (real $; ordinary +
+   *  preferential cap-gains, the engine's full tax model). Accrued AFTER the depletion
+   *  check — a year the portfolio could not fund counts nothing (the sibling rule). */
+  readonly lifetimeTaxPaidReal: readonly number[]
+  /** The taxable bucket's value at the path's horizon end (real $). */
+  readonly terminalTaxableReal: readonly number[]
+  /** The pre-tax bucket at the path's horizon end — the IRD-to-heirs surface (real $). */
+  readonly terminalPretaxReal: readonly number[]
+  /** The Roth bucket at the path's horizon end (real $). */
+  readonly terminalRothReal: readonly number[]
+  /** The HSA bucket at the path's horizon end (real $; 0 when the run had no HSA). */
+  readonly terminalHsaReal: readonly number[]
+  /** The taxable bucket's COST BASIS at the path's horizon end (real $) — with
+   *  `terminalTaxableReal` it gives the embedded gain §1014 forgives at death. */
+  readonly terminalTaxableBasisReal: readonly number[]
+}
+
 /** The raw, continuous distribution the headline rounds FROM — emitted alongside the
  *  rounded outputs so callers can re-round under their own (stateful) rules. */
 export interface Distribution {
@@ -420,6 +455,9 @@ export interface Distribution {
    *  phase-3's "degenerate budget"); the essentials-vs-full split arrives in P3·U9. Until then this
    *  is full-spend survival — never read an "essentials-only" meaning off it. */
   readonly survivalFraction: number
+  /** Per-path tax-aware solver surfaces (U3·M6). PRESENT iff the run carried the tax
+   *  overlay — see {@link TaxAwareDistribution} for the presence contract. */
+  readonly taxAware?: TaxAwareDistribution
 }
 
 /** The resolved engine output. */

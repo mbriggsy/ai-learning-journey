@@ -27,7 +27,9 @@ describe('worker pack/unpack — equivalence to the in-thread run', () => {
 
   it('fromWire(runEngine(...)) is byte-identical to simulate+summarize in-thread', () => {
     const seed = 24680
-    const inThread = summarize(simulate(params, seed), params, seed)
+    const out = simulate(params, seed)
+    if (out.infeasible) throw new Error('unexpected infeasible') // summarize excludes the M6 sentinel arm by type
+    const inThread = summarize(out, params, seed)
     const reconstructed = fromWire(runEngine(params, seed))
     expect(reconstructed.ok).toBe(true)
     if (!reconstructed.ok) return
@@ -68,6 +70,69 @@ describe('the calm-error arm + totality (the worker never dies)', () => {
 
   it('runEngine is total — pathological params return a wire, never throw', () => {
     expect(() => runEngine({ ...params, initialPortfolio: NaN, paths: -5 }, 1)).not.toThrow()
+  })
+})
+
+// ===========================================================================
+// M6 Slice 2 — the solver surfaces + the infeasible sentinel ACROSS THE WIRE.
+// ===========================================================================
+describe('M6 — taxAware across the wire (presence-keyed Float64 buffers) + the infeasible arm', () => {
+  const overlayParams: SimulationParams = {
+    ...params,
+    initialPortfolio: 1_000_000,
+    annualSpendingReal: 60_000,
+    paths: 200,
+    maxHorizonYears: 10,
+    drawdownPolicy: 'pre-tax-first',
+    overlay: {
+      taxEnabled: true,
+      rmdEnabled: false,
+      startCalendarYear: 2026,
+      buckets: { taxable: 300_000, pretax: 600_000, roth: 100_000 },
+      filing: 'single',
+      initialTaxableBasis: 200_000,
+    },
+  }
+
+  it('an overlay run packs six transferable Float64 surfaces that reconstruct byte-identically in-thread', () => {
+    const wire = runEngine(overlayParams, 24680)
+    expect(wire.kind).toBe('resolved')
+    if (wire.kind !== 'resolved') return
+    expect(wire.taxAware).toBeDefined()
+    if (!wire.taxAware) return
+    for (const arr of Object.values(wire.taxAware)) {
+      expect(arr).toBeInstanceOf(Float64Array)
+      expect(arr.length).toBe(overlayParams.paths)
+    }
+    // The reconstruction widens back to the EXACT in-thread value model (Float64 is exact).
+    const out = simulate(overlayParams, 24680)
+    if (out.indeterminate || out.infeasible) throw new Error('expected resolved')
+    const r = fromWire(wire)
+    expect(r.ok).toBe(true)
+    if (!r.ok) return
+    expect(r.result.distribution.taxAware).toEqual(out.distribution.taxAware)
+  })
+
+  it('a SPINE run carries NO taxAware on the wire (presence-keyed — absence is the honest shape)', () => {
+    const wire = runEngine(params, 24680) // the module fixture has no overlay
+    expect(wire.kind).toBe('resolved')
+    if (wire.kind !== 'resolved') return
+    expect(wire.taxAware).toBeUndefined()
+    const r = fromWire(wire)
+    if (!r.ok) throw new Error('expected ok')
+    expect(r.result.distribution.taxAware).toBeUndefined()
+  })
+
+  it('the INFEASIBLE wire arm renders as a calm {ok:false} (the P4 solver reads the typed arm; the display collapses it)', () => {
+    // The arm is constructed directly: no shipped input reaches it through simulate today
+    // (the two-layer R19 discipline + float saturation close every known trigger — see the
+    // simulate-level reachability test), so this pins the WIRE contract: the typed
+    // distinction survives to the wire for the future K-candidate solver, and today's
+    // display consumer renders it exactly like a calm error.
+    const wire: EngineWire = { kind: 'infeasible', reason: 'tax gross-up did not converge in 128 passes (…)', pathIndex: 7 }
+    const r = fromWire(wire)
+    expect(r.ok).toBe(false)
+    if (!r.ok) expect(r.reason).toMatch(/converge/)
   })
 })
 

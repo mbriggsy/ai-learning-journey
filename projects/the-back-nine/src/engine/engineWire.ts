@@ -8,6 +8,18 @@
  */
 import type { DateSearchOutcome, DollarAdjustment, Headline, SimulationResult } from '@shared/model'
 
+/** The per-path tax-aware solver surfaces in WIRE form (U3·M6 — `Distribution.taxAware`
+ *  as six transferable Float64 buffers). PRESENT iff the run carried the tax overlay
+ *  (the same presence contract as the value model — absence is the honest spine shape). */
+export interface TaxAwareWire {
+  readonly lifetimeTaxPaidReal: Float64Array
+  readonly terminalTaxableReal: Float64Array
+  readonly terminalPretaxReal: Float64Array
+  readonly terminalRothReal: Float64Array
+  readonly terminalHsaReal: Float64Array
+  readonly terminalTaxableBasisReal: Float64Array
+}
+
 /** A resolved result in WIRE form: the big arrays as transferable typed-array buffers,
  *  the small fields by structured clone. `depletionYears` is Int32 (it carries the −1
  *  NEVER_DEPLETED sentinel, an integer); terminals are Float64 (exact for the doubles). */
@@ -19,10 +31,18 @@ export interface ResolvedWire {
   readonly headline: Headline
   readonly dollar: DollarAdjustment
   readonly seed: number
+  /** The M6 solver surfaces — present iff the run carried the tax overlay. */
+  readonly taxAware?: TaxAwareWire
 }
 
-/** The worker's return contract — a resolved reading or a calm error (never a throw). */
-export type EngineWire = ResolvedWire | { readonly kind: 'calm-error'; readonly reason: string }
+/** The worker's return contract — a resolved reading, the typed per-candidate INFEASIBLE
+ *  sentinel (M6: a path's overlay computation failed mid-run on R19-valid input — the P4
+ *  solver ranks it worst; today's UI renders it as a calm error), or a calm error (an
+ *  UNEXPECTED internal throw). Never a worker death. */
+export type EngineWire =
+  | ResolvedWire
+  | { readonly kind: 'infeasible'; readonly reason: string; readonly pathIndex: number }
+  | { readonly kind: 'calm-error'; readonly reason: string }
 
 /** Reconstructed main-thread result, or a calm error to render. */
 export type EngineResult =
@@ -30,9 +50,12 @@ export type EngineResult =
   | { readonly ok: false; readonly reason: string }
 
 /** UNPACK a wire result back to a SimulationResult on the main-thread side. The typed
- *  arrays widen back to plain number[] (the value model the rest of the app reads). */
+ *  arrays widen back to plain number[] (the value model the rest of the app reads).
+ *  The infeasible arm renders exactly like a calm error for the P2 display consumer —
+ *  the typed distinction lives at the WIRE (and at `simulate` itself) for the P4 solver. */
 export function fromWire(wire: EngineWire): EngineResult {
   if (wire.kind === 'calm-error') return { ok: false, reason: wire.reason }
+  if (wire.kind === 'infeasible') return { ok: false, reason: wire.reason }
   return {
     ok: true,
     result: {
@@ -40,6 +63,18 @@ export function fromWire(wire: EngineWire): EngineResult {
         terminalValuesReal: Array.from(wire.terminalValuesReal),
         depletionYears: Array.from(wire.depletionYears),
         survivalFraction: wire.survivalFraction,
+        ...(wire.taxAware
+          ? {
+              taxAware: {
+                lifetimeTaxPaidReal: Array.from(wire.taxAware.lifetimeTaxPaidReal),
+                terminalTaxableReal: Array.from(wire.taxAware.terminalTaxableReal),
+                terminalPretaxReal: Array.from(wire.taxAware.terminalPretaxReal),
+                terminalRothReal: Array.from(wire.taxAware.terminalRothReal),
+                terminalHsaReal: Array.from(wire.taxAware.terminalHsaReal),
+                terminalTaxableBasisReal: Array.from(wire.taxAware.terminalTaxableBasisReal),
+              },
+            }
+          : {}),
       },
       headline: wire.headline,
       dollar: wire.dollar,

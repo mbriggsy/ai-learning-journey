@@ -440,6 +440,17 @@ export async function runDateSearch(
       // is a gate/engine disagreement — surface it through the same calm grammar.
       return { kind: 'input-failure', reason: `candidate Y=${y} rejected: ${out.reason}` }
     }
+    if (out.infeasible) {
+      // The typed per-candidate INFEASIBLE sentinel (M6): a path's overlay computation
+      // failed mid-run on gate-valid input (a solver non-convergence / fail-loud backstop).
+      // The all-or-nothing policy applies exactly as for a rejection — an unevaluated
+      // offset voids the "earliest" claim, so the RUN fails with the named reason (never
+      // drop-and-continue, never a generic calm-error that hides WHICH offset broke).
+      return {
+        kind: 'input-failure',
+        reason: `candidate Y=${y} infeasible: ${out.reason} (path ${out.pathIndex})`,
+      }
+    }
     curve.push({ offsetYears: y, survivalFraction: out.distribution.survivalFraction })
   }
 

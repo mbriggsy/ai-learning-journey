@@ -3495,7 +3495,6 @@ describe('taxOverlay — C3 §3b: per-person Medicare onset + additive override 
 describe('taxOverlay — M6: the cross-overlay integration battery (ACA × IRMAA × HSA, externally derived, DND/012)', () => {
   const IRMAA_SCHED = irmaa.value
   const BASE = partB2026.value.standardPremiumMonthly
-  const FPL2 = fplForHousehold(2) // 21,150 (2025 HHS, household of 2)
   const surchargeMonthly = (tierIdx: number) =>
     IRMAA_SCHED.tiers[tierIdx]!.partBSurchargeMonthly + IRMAA_SCHED.tiers[tierIdx]!.partDSurchargeMonthly
   const medicareAnnual = (count: number, tierIdx: number | null) =>
@@ -3712,6 +3711,63 @@ describe('taxOverlay — M6: the cross-overlay integration battery (ACA × IRMAA
       expect(r.totalMedicareCostReal).toBeCloseTo(4 * medicareAnnual(1, null) + medicareAnnual(1, 0), 8)
       expect(r.totalNetPremiumReal).toBe(32_000)
       expect(r.terminalReal).toBeCloseTo(1_397_277.5103, 2)
+    })
+  })
+
+  // -------------------------------------------------------------------------
+  // M6 Slice 2 — totalTaxPaidReal, the FOURTH parallel accounting surface (the
+  // solver output contract's lifetime-tax half). Externally derived (DND/012):
+  // every expected tax is the hand-solved closed form, never the engine's.
+  // -------------------------------------------------------------------------
+  describe('totalTaxPaidReal — the lifetime-tax accounting surface (M6 Slice 2)', () => {
+    it('a tax-only zero-return year reads back the exact hand-solved tax (gross − net)', () => {
+      // MFJ both born 1966 (60 — count65 = 0 ⇒ flat 32,200 deduction). net 50,000, 10% regime:
+      // g = (50,000 − 3,220)/0.9 = 51,977.7778 (taxable 19,777.78 ≤ 24,800 ✓) ⇒ tax = 1,977.7778.
+      const cfg: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: false, household: mkHousehold(2026, 1966, 1966) }
+      const r = runTaxAwareDecumulation({ taxable: 0, pretax: 1_000_000, roth: 0 }, [0], [0], [50_000], STOCK_W, 'pre-tax-first', cfg, {})
+      expect(r.totalTaxPaidReal).toBeCloseTo(1_977.7778, 2)
+      expect(r.terminalReal).toBeCloseTo(1_000_000 - 51_977.7778, 2)
+    })
+
+    it('a dual-regime year separates the FOUR surfaces exactly: tax ≠ premium ≠ Medicare ≠ HSA (the arm-1 fixture decomposed)', () => {
+      // The dual-regime arm-1 fixture: gross = 69,396.2071 funds fundingNet 57,434.80 +
+      // premium 8,911.8622 + TAX — so tax = 0.12·g − 5,278 = 3,049.5448 (the 12%-regime
+      // closed form, panel-confirmed). Each cost lands on ITS OWN surface, none double-counted:
+      // gross = fundingNet + premium + tax reconciles to the dollar.
+      const MIXED: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: false, household: mkHousehold(2026, 1960, 1963) }
+      const r = runTaxAwareDecumulation({ taxable: 0, pretax: 1_000_000, roth: 0 }, [0], [0], [55_000], STOCK_W, 'pre-tax-first', MIXED, {
+        healthcareEnabled: true,
+        slcsp: [14_000],
+        enrolledPremium: [16_000],
+        irmaaMagiSeed: [150_000],
+      })
+      expect(r.totalTaxPaidReal).toBeCloseTo(3_049.5448, 2)
+      // The reconciliation identity: the year's gross (= P − terminal) decomposes EXACTLY into
+      // spending + Medicare + premium + tax (the four ways a dollar leaves beyond the portfolio).
+      const gross = 1_000_000 - r.terminalReal
+      expect(gross).toBeCloseTo(55_000 + r.totalMedicareCostReal + r.totalNetPremiumReal + r.totalTaxPaidReal, 6)
+    })
+
+    it('tax OFF ⇒ 0; a sub-deduction year ⇒ EXACTLY 0 (gross === net, no float residue)', () => {
+      const off = runTaxAwareDecumulation({ taxable: 0, pretax: 500_000, roth: 0 }, [0], [0], [20_000], STOCK_W, 'pre-tax-first', OFF, {})
+      expect(off.totalTaxPaidReal).toBe(0)
+      // Tax ON but the draw sits under the deduction stack: the gross-up converges at gross = net
+      // on its first pass ⇒ tax = net − net = 0 exactly (no accumulated dust on the new surface).
+      const cfg: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: false, household: mkHousehold(2026, 1966, 1966) }
+      const sub = runTaxAwareDecumulation({ taxable: 0, pretax: 500_000, roth: 0 }, [0], [0], [20_000], STOCK_W, 'pre-tax-first', cfg, {})
+      expect(sub.totalTaxPaidReal).toBe(0)
+    })
+
+    it('a depletion year accrues NO tax (the fourth surface sits AFTER the depletion check, like its three siblings)', () => {
+      // net 95,000 on a 100,000 pool: the gross-up converges ABOVE the pool (the capped-alloc
+      // fixed point lands ≈ 102,640 with ≈ 7,640 of computed tax), the year cannot fund it ⇒
+      // depleted at t = 0 — and the tax the year FAILED to pay is never counted (the same
+      // over-accrual class the premium/Medicare/HSA siblings pin). An accrual placed BEFORE
+      // the depletion check would report ≈ 7,640 here, not 0 — the discriminating arm.
+      const cfg: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: false, household: mkHousehold(2026, 1966, 1966) }
+      const r = runTaxAwareDecumulation({ taxable: 0, pretax: 100_000, roth: 0 }, [0], [0], [95_000], STOCK_W, 'pre-tax-first', cfg, {})
+      expect(r.depletionYear).toBe(0)
+      expect(r.totalTaxPaidReal).toBe(0)
     })
   })
 })

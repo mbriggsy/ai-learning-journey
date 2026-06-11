@@ -157,14 +157,25 @@ export type TaxOverlayConfig =
 /** A tax-aware decumulation result: the spine's total-trajectory result (the only thing
  *  the outcome distribution reads), plus the final per-bucket balances + the taxable
  *  bucket's horizon-end cost basis (auxiliary ledger; the latter makes `finalBuckets.taxable`
- *  interpretable as value-vs-embedded-gain). NOTE: `finalTaxableBasis` is horizon-END basis;
- *  the P4 §1014/IRD leave-more objective needs basis at each path's sampled DEATH year (a
- *  different figure, landing with M6's longevity wiring) — this field is not yet that surface. */
+ *  interpretable as value-vs-embedded-gain). NOTE (M6): `finalTaxableBasis`/`finalBuckets`
+ *  are this RUN's horizon-end figures — and `simulate` calls the overlay with each path's
+ *  OWN horizon (`min(sampled last death, maxHorizonYears)`), so per-path they ARE the
+ *  sampled-death-year snapshot the P4 §1014/IRD leave-more objective needs; `simulate`
+ *  collects them onto `Distribution.taxAware` (the solver output contract). */
 export interface TaxAwareResult extends DecumulationResult {
   readonly finalBuckets: AccountBuckets
   /** The taxable bucket's cost basis at the end of the horizon (real $, finite per DND/009;
    *  0 when the portfolio depleted). Unscaled by market growth — appreciation is unrealized gain. */
   readonly finalTaxableBasis: number
+  /** Σ of every year's federal income tax actually paid (real $; U3 · M6 — the solver output
+   *  contract's lifetime-tax surface): the gross-up's ordinary + preferential cap-gains tax,
+   *  read off the converged year as `grossWithdrawal − fundingNet − netAcaPremium` (the dollars
+   *  that left BEYOND spending, Medicare cost, HSA-paid spend, and the ACA premium — each of
+   *  those is its own surface). 0 with tax off. The FOURTH parallel ACCOUNTING surface: it
+   *  never perturbs the reduce-to-spine total (the tax already left via the grossed-up
+   *  withdrawal) and accrues AFTER the depletion check like its three siblings. PURE
+   *  ACCOUNTING, never a solver search variable (insight 013 stays out of every residual). */
+  readonly totalTaxPaidReal: number
   /** Σ of every year's pre-65 ACA net premium actually paid (real $; U3 · M3 Slice 4). 0 when the
    *  healthcare overlay is off / inert (healthcare disabled, no enrolled premium, or the age gate
    *  zeroed it). It NEVER perturbs the reduce-to-spine total: `terminalReal` already reflects each
@@ -1085,6 +1096,7 @@ export function runTaxAwareDecumulation(
   const irmaaMagiHistory: number[] = []
   let totalMedicareCostReal = 0
   let totalQualifiedHsaSpendReal = 0
+  let totalTaxPaidReal = 0
 
   // Initial taxable basis is REQUIRED when tax is on and the taxable bucket is non-empty — there
   // is no safe default (0 over-taxes every realization; the full value silently no-ops cap-gains),
@@ -1415,6 +1427,7 @@ export function runTaxAwareDecumulation(
     let acaNetPremiumThisYear = 0
     let medicareCostThisYear = 0
     let hsaSpendThisYear = 0
+    let taxPaidThisYear = 0
     if (config.taxEnabled && regime) {
       // IRMAA (M4): the year's post-65 Medicare cost is a CONSTANT addend to the spending the gross-up
       // funds — keyed off IRMAA-MAGI[t−lookback] (already known), so it is NEVER a fixed point and NEVER
@@ -1584,6 +1597,13 @@ export function runTaxAwareDecumulation(
       if (acaTable !== undefined) {
         irmaaMagiHistory[t] = (irmaaMagiOverride[t] ?? 0) + irmaaMagi(magiComponentsThisYear)
       }
+      // The year's federal tax, read off the converged identities (U3 · M6 — the lifetime-tax
+      // surface): the gross funds EXACTLY fundingNet + netAcaPremium + tax in both branches
+      // (the ACA solve's gross is fundNet(fundingNet + P*).gross = that sum; the else branch
+      // is the P* = 0 case), so the difference IS the tax — no solver plumbing, no recompute
+      // (objective ≡ headline: a re-derived tax could drift from the converged one). Sub-cent
+      // residual only: the ACA root's |impliedNet − P*| < 1e-6 bisection tolerance.
+      taxPaidThisYear = grossWithdrawal - fundingNet - acaNetPremiumThisYear
     } else {
       grossWithdrawal = net
     }
@@ -1643,6 +1663,8 @@ export function runTaxAwareDecumulation(
     totalMedicareCostReal += medicareCostThisYear
     // The qualified HSA spend accrues on the SAME footing (U3 · M5, the third parallel surface).
     totalQualifiedHsaSpendReal += hsaSpendThisYear
+    // The year's federal tax accrues on the SAME footing (U3 · M6, the fourth parallel surface).
+    totalTaxPaidReal += taxPaidThisYear
 
     // Re-derive the buckets as fractions of the authoritative new total: each bucket's
     // post-withdrawal share grown by the one shared factor (no asset-location). The total
@@ -1747,5 +1769,6 @@ export function runTaxAwareDecumulation(
     totalNetPremiumReal,
     totalMedicareCostReal,
     totalQualifiedHsaSpendReal,
+    totalTaxPaidReal,
   }
 }

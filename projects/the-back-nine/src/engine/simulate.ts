@@ -82,10 +82,53 @@ export function buildDraws(
   return { stockZ, bondZ, longevityU }
 }
 
-/** Either a valid distribution, or the defined indeterminate output (R19). */
-export type SimOutput =
-  | { readonly indeterminate: false; readonly distribution: Distribution }
-  | { readonly indeterminate: true; readonly reason: string }
+/** A resolved simulation: the full distribution (with the tax-aware solver surfaces when
+ *  the run carried the overlay). The `infeasible?: never` lets a consumer narrow the
+ *  three-arm union with plain truthiness (`out.infeasible` is undefined here). */
+export interface SimResolved {
+  readonly indeterminate: false
+  readonly distribution: Distribution
+  readonly infeasible?: never
+}
+
+/** The defined indeterminate output (R19): the INPUT was incomputable — rejected by
+ *  `validateParams` BEFORE any path ran. Distinct from {@link SimInfeasible}. */
+export interface SimIndeterminate {
+  readonly indeterminate: true
+  readonly reason: string
+  readonly infeasible?: never
+}
+
+/** The typed per-candidate INFEASIBLE sentinel (U3·M6 — the strategic review's P1):
+ *  the input passed the R19 gate but a path's overlay computation FAILED mid-run (a
+ *  solver non-convergence — the gross-up 128-pass cap, the ACA bisection, a fail-loud
+ *  backstop). The contract: the CANDIDATE is infeasible as a whole — never a silently
+ *  dropped path (the banned silent measurement: the dropped class would be exactly the
+ *  aggressive near-cliff candidates) and never an uncaught throw (which would abort a
+ *  future K-candidate solver batch). A P4 solver ranks this WORST; the headline route
+ *  surfaces it as a calm error; the date route fails the run with the named reason
+ *  (all-or-nothing — an unevaluated offset voids the "earliest" claim). DND/009: all
+ *  fields are plain JSON-safe values (they cross the worker wire). Deterministic in
+ *  (params, seed) like every other output — the same candidate fails at the same path.
+ *
+ *  REACHABILITY (M6, empirically pinned in the sentinel tests): currently UNREACHABLE
+ *  through gate-valid input — every known overlay throw has a validateParams mirror
+ *  (the two-layer R19 discipline), and the gross-up's 128-pass cap is closed by float
+ *  SATURATION (the monotone contraction's iterates fixpoint within ~95–105 passes at
+ *  any scale — they cannot 2-cycle). The arm is the typed contract for the
+ *  unknown-unknown + future overlay couplings, decided before the P4 solver layers on. */
+export interface SimInfeasible {
+  readonly indeterminate: false
+  readonly infeasible: true
+  /** The thrown overlay error's message — names the failing quantity (fail-loud style). */
+  readonly reason: string
+  /** The path whose computation threw (the first one — evaluation stops there). */
+  readonly pathIndex: number
+}
+
+/** A valid distribution, the defined indeterminate output (R19), or the per-candidate
+ *  infeasible sentinel (M6). */
+export type SimOutput = SimResolved | SimIndeterminate | SimInfeasible
 
 /** Per-person, simulation-relative offsets (whole years from year 0). */
 export interface PersonOffsets {
@@ -667,6 +710,23 @@ export function simulate(params: SimulationParams, seed: number): SimOutput {
   const depletionYears: DepletionYear[] = new Array(paths)
   let survivors = 0
 
+  // The per-path tax-aware solver surfaces (U3·M6 — the solver output contract), collected
+  // iff the run carries the overlay (presence-keyed: a spine run has no tax data, and
+  // zero-fill would contradict terminalValuesReal — absence is the honest shape). Each
+  // overlay call already runs to THIS path's own horizon (min(sampled last death,
+  // maxHorizonYears)), so the overlay's horizon-end buckets/basis ARE the sampled-death-year
+  // snapshot the §1014/IRD objective needs — this is pure collection, no new overlay math.
+  const taxAware = overlay
+    ? {
+        lifetimeTaxPaidReal: new Array<number>(paths),
+        terminalTaxableReal: new Array<number>(paths),
+        terminalPretaxReal: new Array<number>(paths),
+        terminalRothReal: new Array<number>(paths),
+        terminalHsaReal: new Array<number>(paths),
+        terminalTaxableBasisReal: new Array<number>(paths),
+      }
+    : undefined
+
   for (let p = 0; p < paths; p++) {
     // Death years per person on this path (sampled), then the per-path horizon.
     let deathOffsets: number[]
@@ -684,6 +744,16 @@ export function simulate(params: SimulationParams, seed: number): SimOutput {
       terminalValuesReal[p] = params.initialPortfolio
       depletionYears[p] = NEVER_DEPLETED
       survivors++
+      if (taxAware && overlay) {
+        // A zero-length horizon never ran the overlay: the path's "horizon-end" state IS the
+        // initial state — no tax paid, the entered buckets/basis verbatim.
+        taxAware.lifetimeTaxPaidReal[p] = 0
+        taxAware.terminalTaxableReal[p] = overlay.buckets.taxable
+        taxAware.terminalPretaxReal[p] = overlay.buckets.pretax
+        taxAware.terminalRothReal[p] = overlay.buckets.roth
+        taxAware.terminalHsaReal[p] = overlay.buckets.hsa ?? 0
+        taxAware.terminalTaxableBasisReal[p] = overlay.initialTaxableBasis ?? 0
+      }
       continue
     }
 
@@ -755,7 +825,9 @@ export function simulate(params: SimulationParams, seed: number): SimOutput {
       // Tax-aware decumulation. `overlay.buckets` (sum === initialPortfolio, validated) IS the
       // total, so a collapsed pool under the EXHAUSTIVE OFF condition reduces byte-identically to
       // the spine branch below (the reduce-to-spine golden, contract #3).
-      res = runTaxAwareDecumulation(
+      let taxRes: ReturnType<typeof runTaxAwareDecumulation>
+      try {
+        taxRes = runTaxAwareDecumulation(
         overlay.buckets,
         realStock,
         realBond,
@@ -804,6 +876,34 @@ export function simulate(params: SimulationParams, seed: number): SimOutput {
             : {}),
         },
       )
+      } catch (e) {
+        // The typed per-candidate INFEASIBLE sentinel (M6 — the strategic review's P1). The
+        // catch is deliberately TIGHT around the overlay call: validateParams has already
+        // converted every known-bad INPUT into `indeterminate`, so a throw here is a
+        // mid-computation failure (a solver non-convergence, a fail-loud backstop). The
+        // CANDIDATE fails as a whole — never a silently dropped path (the banned silent
+        // measurement: the dropped class would be exactly the aggressive near-cliff
+        // candidates the optimizer's curse bites hardest), never an uncaught throw (which
+        // would today collapse to a generic calm-error and tomorrow abort a P4 K-batch).
+        // Deterministic in (params, seed): the same candidate fails at the same path.
+        return {
+          indeterminate: false,
+          infeasible: true,
+          reason: e instanceof Error ? e.message : String(e),
+          pathIndex: p,
+        }
+      }
+      res = taxRes
+      if (taxAware) {
+        // The path's OWN horizon just ended (sampled: the couple's last death, capped at the
+        // window) — the overlay's horizon-end figures are this path's death-year snapshot.
+        taxAware.lifetimeTaxPaidReal[p] = taxRes.totalTaxPaidReal
+        taxAware.terminalTaxableReal[p] = taxRes.finalBuckets.taxable
+        taxAware.terminalPretaxReal[p] = taxRes.finalBuckets.pretax
+        taxAware.terminalRothReal[p] = taxRes.finalBuckets.roth
+        taxAware.terminalHsaReal[p] = taxRes.finalBuckets.hsa ?? 0
+        taxAware.terminalTaxableBasisReal[p] = taxRes.finalTaxableBasis
+      }
     } else {
       const initial: PortfolioState = {
         stock: params.stockWeight * params.initialPortfolio,
@@ -822,6 +922,8 @@ export function simulate(params: SimulationParams, seed: number): SimOutput {
       terminalValuesReal,
       depletionYears,
       survivalFraction: paths > 0 ? survivors / paths : 0,
+      // The per-path solver surfaces ride iff the overlay ran (presence-keyed, M6).
+      ...(taxAware ? { taxAware } : {}),
     },
   }
 }

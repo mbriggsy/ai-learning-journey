@@ -23,11 +23,16 @@ export { fromWire, dateSearchFromWire } from '@engine/engineWire'
 
 /**
  * Run the engine and PACK the result into wire form. Total: any unexpected throw is
- * caught and returned as `calm-error` (the worker never dies).
+ * caught and returned as `calm-error` (the worker never dies). The typed INFEASIBLE
+ * sentinel (M6) is dispatched BEFORE summarize — it has no distribution to read and is
+ * not the indeterminate input-failure (summarize's parameter type excludes it).
  */
 export function runEngine(params: SimulationParams, seed: number): EngineWire {
   try {
-    const result = summarize(simulate(params, seed), params, seed)
+    const out = simulate(params, seed)
+    if (out.infeasible) return { kind: 'infeasible', reason: out.reason, pathIndex: out.pathIndex }
+    const result = summarize(out, params, seed)
+    const taxAware = result.distribution.taxAware
     return {
       kind: 'resolved',
       terminalValuesReal: Float64Array.from(result.distribution.terminalValuesReal),
@@ -36,6 +41,20 @@ export function runEngine(params: SimulationParams, seed: number): EngineWire {
       headline: result.headline,
       dollar: result.dollar,
       seed: result.seed,
+      // The M6 per-path solver surfaces ride as six more transferable Float64 buffers,
+      // present iff the run carried the overlay (the same presence key as the value model).
+      ...(taxAware
+        ? {
+            taxAware: {
+              lifetimeTaxPaidReal: Float64Array.from(taxAware.lifetimeTaxPaidReal),
+              terminalTaxableReal: Float64Array.from(taxAware.terminalTaxableReal),
+              terminalPretaxReal: Float64Array.from(taxAware.terminalPretaxReal),
+              terminalRothReal: Float64Array.from(taxAware.terminalRothReal),
+              terminalHsaReal: Float64Array.from(taxAware.terminalHsaReal),
+              terminalTaxableBasisReal: Float64Array.from(taxAware.terminalTaxableBasisReal),
+            },
+          }
+        : {}),
     }
   } catch (e) {
     return { kind: 'calm-error', reason: e instanceof Error ? e.message : 'engine error' }
@@ -110,9 +129,22 @@ export const engineApi = {
   run(params: SimulationParams, seed: number): EngineWire {
     const wire = runEngine(params, seed)
     if (wire.kind === 'resolved') {
-      // Transfer (detach) the two big buffers — the worker keeps none for reuse and
-      // allocates fresh per run (protects the CRN path + the future K-candidate batch).
-      return Comlink.transfer(wire, [wire.terminalValuesReal.buffer, wire.depletionYears.buffer])
+      // Transfer (detach) the big buffers — the worker keeps none for reuse and allocates
+      // fresh per run (protects the CRN path + the future K-candidate batch). The M6
+      // taxAware buffers join the list explicitly when present (an enumerated list, never
+      // Object.values — a non-buffer field added later must not silently join a transfer).
+      const buffers = [wire.terminalValuesReal.buffer, wire.depletionYears.buffer]
+      if (wire.taxAware) {
+        buffers.push(
+          wire.taxAware.lifetimeTaxPaidReal.buffer,
+          wire.taxAware.terminalTaxableReal.buffer,
+          wire.taxAware.terminalPretaxReal.buffer,
+          wire.taxAware.terminalRothReal.buffer,
+          wire.taxAware.terminalHsaReal.buffer,
+          wire.taxAware.terminalTaxableBasisReal.buffer,
+        )
+      }
+      return Comlink.transfer(wire, buffers)
     }
     return wire
   },

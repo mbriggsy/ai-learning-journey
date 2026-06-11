@@ -155,8 +155,15 @@ function indeterminateResult(seed: number): SimulationResult {
   }
 }
 
-/** Map a simulation output to the first-answer reading. */
-export function summarize(output: SimOutput, params: SimulationParams, seed: number): SimulationResult {
+/** Map a simulation output to the first-answer reading. The INFEASIBLE arm is excluded at
+ *  the type level (M6): an infeasible candidate has NO distribution to read and is not the
+ *  indeterminate input-failure — the caller (engineProtocol's `runEngine`, the P4 solver)
+ *  must dispatch it BEFORE summarizing, so a new call site cannot silently conflate the two. */
+export function summarize(
+  output: Exclude<SimOutput, { infeasible: true }>,
+  params: SimulationParams,
+  seed: number,
+): SimulationResult {
   if (output.indeterminate) return indeterminateResult(seed)
   const distribution = output.distribution
   const headline = buildHeadline(distribution)

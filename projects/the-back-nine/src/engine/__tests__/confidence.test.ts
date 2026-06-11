@@ -16,7 +16,13 @@ const params: SimulationParams = {
 }
 
 /** Build a SimOutput with a chosen survival fraction (depletions optional). */
-function out(survivalFraction: number, depletionYears: number[] = [], terminals: number[] = []): SimOutput {
+// Returns the RESOLVED arm specifically (summarize's parameter type excludes the M6
+// infeasible sentinel — the caller dispatches that arm before summarizing).
+function out(
+  survivalFraction: number,
+  depletionYears: number[] = [],
+  terminals: number[] = [],
+): Exclude<SimOutput, { infeasible: true }> {
   const dist: Distribution = { terminalValuesReal: terminals, depletionYears, survivalFraction }
   return { indeterminate: false, distribution: dist }
 }
@@ -122,11 +128,13 @@ describe('indeterminate — the honest non-answer', () => {
 
   it('integrates: a degenerate sim → indeterminate reading end-to-end', () => {
     const bad = simulate({ ...params, people: [] }, 5)
+    if (bad.infeasible) throw new Error('unexpected infeasible') // summarize excludes the M6 sentinel arm by type
     expect(summarize(bad, params, 5).headline.outcomeState).toBe('indeterminate')
   })
 
   it('integrates: a $0 portfolio → already-failing reading end-to-end', () => {
     const dead = simulate({ ...params, initialPortfolio: 0 }, 5)
+    if (dead.infeasible) throw new Error('unexpected infeasible')
     expect(summarize(dead, { ...params, initialPortfolio: 0 }, 5).headline.outcomeState).toBe('already-failing')
   })
 })

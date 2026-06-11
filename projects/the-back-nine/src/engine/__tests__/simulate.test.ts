@@ -46,6 +46,7 @@ function makeParams(over: Partial<SimulationParams> = {}): SimulationParams {
 
 const dist = (o: SimOutput) => {
   if (o.indeterminate) throw new Error(`unexpected indeterminate: ${o.reason}`)
+  if (o.infeasible) throw new Error(`unexpected infeasible: ${o.reason}`)
   return o.distribution
 }
 
@@ -1615,5 +1616,196 @@ describe('M6 — full-stack CRN through simulate (ACA × IRMAA × HSA × survivo
       if (path.firstDeathYear < Math.min(path.lastDeathYear, base.maxHorizonYears)) transitions++
     }
     expect(transitions).toBeGreaterThan(0)
+  })
+})
+
+// ===========================================================================
+// M6 Slice 2 — the solver output contract through simulate: the per-path
+// tax-aware surfaces (Distribution.taxAware) + the typed INFEASIBLE sentinel.
+// ===========================================================================
+describe('M6 — Distribution.taxAware: the per-path solver surfaces (presence-keyed)', () => {
+  const P = 1_000_000
+  const M80: PersonInputs = {
+    sex: 'male', currentAge: 80, retirementAge: 80,
+    earnedIncomeReal: 0, socialSecurityReal: 24_000, socialSecurityClaimAge: 70,
+  }
+  const F78: PersonInputs = { ...M80, sex: 'female', currentAge: 78, socialSecurityReal: 18_000 }
+  // ZERO-volatility market: toLogMoments(mean, 0) ⇒ every year's return = mean exactly,
+  // independent of the normal draw — so each path is a DETERMINISTIC function of its
+  // sampled death years and the test can reconstruct it exactly.
+  const zeroVol = {
+    stock: { mean: 0.03, stdDev: 0 },
+    bond: { mean: 0.01, stdDev: 0 },
+    inflation: { mean: 0, stdDev: 0 },
+    stockBondCorrelation: 0,
+    space: 'simple',
+    returnsAreReal: true,
+  } as const
+  const overlayParams: SimulationParams = makeParams({
+    initialPortfolio: P,
+    annualSpendingReal: 90_000,
+    people: [M80, F78],
+    longevityMode: 'sampled',
+    maxHorizonYears: 25,
+    drawdownPolicy: 'pre-tax-first',
+    market: zeroVol,
+    paths: 12,
+    overlay: {
+      taxEnabled: true,
+      rmdEnabled: true, // both past their RMD start age — the forced distribution is live
+      startCalendarYear: 2026,
+      buckets: { taxable: 400_000, pretax: 500_000, roth: 100_000 },
+      filing: 'mfj',
+      initialTaxableBasis: 250_000,
+    },
+  })
+
+  it('presence-keyed: an overlay run carries six length-=paths surfaces; a spine run carries NONE (absence is the honest shape)', () => {
+    const withOverlay = dist(simulate(overlayParams, 2468))
+    const ta = withOverlay.taxAware
+    expect(ta).toBeDefined()
+    if (!ta) return
+    for (const arr of [ta.lifetimeTaxPaidReal, ta.terminalTaxableReal, ta.terminalPretaxReal, ta.terminalRothReal, ta.terminalHsaReal, ta.terminalTaxableBasisReal]) {
+      expect(arr.length).toBe(overlayParams.paths)
+      expect(arr.every(Number.isFinite)).toBe(true) // DND/009 — these cross the wire and persist
+    }
+    // A genuine tax was paid on some path (presence companion — RMD-forced income + SS).
+    expect(ta.lifetimeTaxPaidReal.some((t) => t > 0)).toBe(true)
+    // The spine run (no overlay) has NO taxAware — zero-fill would contradict terminalValuesReal.
+    const { overlay: _o, ...rest } = overlayParams
+    const spine = dist(simulate(rest, 2468))
+    expect(spine.taxAware).toBeUndefined()
+  })
+
+  it('faithful per-path collection: every surface equals a DIRECT per-path overlay run on the identical assembled inputs (byte-exact)', () => {
+    // Reconstruct each path exactly as simulate does (zero-vol market ⇒ returns are flat
+    // mean; deaths from the same draws; cash terms from the exported seam) and compare all
+    // six collected surfaces to the direct runTaxAwareDecumulation result. This pins the
+    // COLLECTION (simulate threads each path's result faithfully — per-path death horizons
+    // included); the VALUES are pinned by the overlay's own externally-derived batteries.
+    const out = dist(simulate(overlayParams, 97531))
+    const ta = out.taxAware
+    expect(ta).toBeDefined()
+    if (!ta) return
+    const draws = buildDraws(97531, overlayParams.paths, overlayParams.maxHorizonYears, 2)
+    // The flat zero-vol returns BYTE-identically as the engine computes them (e^{ln(1+m)} − 1
+    // can differ from m by an ulp — derive through the same conversion, never the raw mean).
+    const rs = simpleReturnFromNormal(toLogMoments(0.03, 0), 0)
+    const rb = simpleReturnFromNormal(toLogMoments(0.01, 0), 0)
+    const offsets: PersonOffsets[] = overlayParams.people.map((pp) => ({
+      retire: pp.retirementAge - pp.currentAge,
+      claim: pp.socialSecurityClaimAge - pp.currentAge,
+      earnedIncomeReal: pp.earnedIncomeReal,
+      socialSecurityReal: pp.socialSecurityReal,
+    }))
+    const maxBenefit = Math.max(...overlayParams.people.map((pp) => pp.socialSecurityReal))
+    const people: OverlayPerson[] = overlayParams.people.map((pp) => ({ birthYear: 2026 - pp.currentAge }))
+    const cfg = {
+      taxEnabled: true,
+      rmdEnabled: true,
+      household: { startCalendarYear: 2026, filing: 'mfj' as const, owner: people[0]!, spouse: people[1]! },
+    }
+    for (let p = 0; p < overlayParams.paths; p++) {
+      const path = sampleCouplePath(
+        overlayParams.people.map((pp) => ({ sex: pp.sex, currentAge: pp.currentAge })),
+        draws.longevityU[p] ?? [],
+      )
+      const horizon = Math.min(path.lastDeathYear, overlayParams.maxHorizonYears)
+      const withdrawals: number[] = []
+      const ss: number[] = []
+      const householdYears: HouseholdYear[] = []
+      for (let t = 0; t < horizon; t++) {
+        const cash = cashTermsForYear(t, overlayParams, offsets, [...path.deathYearOffsets], maxBenefit)
+        withdrawals.push(cash.net)
+        ss.push(cash.ss)
+        householdYears.push({ living: people.filter((_, i) => t < (path.deathYearOffsets[i] ?? 0)) })
+      }
+      const direct = runTaxAwareDecumulation(
+        { taxable: 400_000, pretax: 500_000, roth: 100_000 },
+        flatN(horizon, rs),
+        flatN(horizon, rb),
+        withdrawals,
+        overlayParams.stockWeight,
+        'pre-tax-first',
+        cfg,
+        { ssBenefits: ss, conversions: [], initialTaxableBasis: 250_000, householdYears, bracketFillCeilings: [] },
+      )
+      expect(ta.lifetimeTaxPaidReal[p]).toBe(direct.totalTaxPaidReal)
+      expect(ta.terminalTaxableReal[p]).toBe(direct.finalBuckets.taxable)
+      expect(ta.terminalPretaxReal[p]).toBe(direct.finalBuckets.pretax)
+      expect(ta.terminalRothReal[p]).toBe(direct.finalBuckets.roth)
+      expect(ta.terminalHsaReal[p]).toBe(direct.finalBuckets.hsa ?? 0)
+      expect(ta.terminalTaxableBasisReal[p]).toBe(direct.finalTaxableBasis)
+      // ...and the surfaces reconcile to the headline: Σ buckets === the path's terminal.
+      expect(
+        ta.terminalTaxableReal[p]! + ta.terminalPretaxReal[p]! + ta.terminalRothReal[p]! + ta.terminalHsaReal[p]!,
+      ).toBeCloseTo(out.terminalValuesReal[p]!, 6)
+    }
+    // Non-vacuous: the sampled horizons genuinely differ across paths (per-path death years),
+    // so the per-path surfaces are death-year snapshots, not one shared horizon-end.
+    const horizons = new Set<number>()
+    for (let p = 0; p < overlayParams.paths; p++) {
+      const path = sampleCouplePath(
+        overlayParams.people.map((pp) => ({ sex: pp.sex, currentAge: pp.currentAge })),
+        draws.longevityU[p] ?? [],
+      )
+      horizons.add(Math.min(path.lastDeathYear, overlayParams.maxHorizonYears))
+    }
+    expect(horizons.size).toBeGreaterThan(1)
+  })
+})
+
+describe('M6 — the typed per-candidate INFEASIBLE sentinel (the strategic review’s P1)', () => {
+  // REACHABILITY (the M6 finding, empirically pinned below): the sentinel arm is currently
+  // UNREACHABLE through `simulate` with gate-valid input — and that is the two-layer R19
+  // discipline doing its job, twice over. (1) Every known overlay throw has a validateParams
+  // mirror that pre-rejects the input as `indeterminate`. (2) The one cap a naive read
+  // expects to be trippable — the gross-up's 128-pass fail-loud — is closed by FLOAT
+  // SATURATION: the per-year map is a monotone-increasing contraction, so its iterates are
+  // monotone and CANNOT 2-cycle; once the gap to the fixed point falls below one ulp of the
+  // iterate (~95–105 passes at ANY scale — the relative gap hits 2⁻⁵² at a scale-independent
+  // pass count) the float sequence becomes exactly constant and the |Δ| < ε exit fires. The
+  // eps-bound (insight 006: ~91 passes at $500M, logarithmic in the tax) governs only
+  // mid-scale taxes and stays under 128 for the whole validated domain. So the sentinel is
+  // the typed contract for the UNKNOWN-unknown (a future overlay coupling, a regression, the
+  // P4 candidate generator's exotic corners) — decided and wired BEFORE the solver layers on
+  // (the strategic review's "cheaper now" P1); the end-to-end planted-fail case lands with
+  // the U14 oracle harness, which can mint one.
+  const giantSS: SimulationParams = makeParams({
+    initialPortfolio: 1_000_000,
+    annualSpendingReal: 40_000,
+    people: [{ ...MALE_65, socialSecurityReal: 1e200 }],
+    longevityMode: 'fixed-horizon',
+    maxHorizonYears: 3,
+    paths: 50,
+    drawdownPolicy: 'pre-tax-first',
+    overlay: {
+      taxEnabled: true,
+      rmdEnabled: false,
+      startCalendarYear: 2026,
+      buckets: { taxable: 0, pretax: 1_000_000, roth: 0 },
+      filing: 'single',
+    },
+  })
+
+  it('the saturation fact: a finite 1e200 SS benefit RESOLVES under the 128-pass cap (no input-side planted-fail exists)', () => {
+    // The strongest candidate trigger — an R19-passing astronomically-large SS benefit whose
+    // eps-convergence would need ~1,250 passes — still resolves: float saturation fixpoints
+    // the monotone iteration far below the cap. This pins WHY the sentinel has no reachable
+    // trigger today; if a future map change (a non-monotone tax term, a higher k) breaks the
+    // saturation argument, this test's premise — resolved, not infeasible — fails loudly and
+    // the reachability note above must be re-derived.
+    const out = simulate(giantSS, 2468)
+    expect(out.indeterminate).toBe(false)
+    expect(out.infeasible).toBeUndefined() // resolved — the cap was never hit
+    const d = dist(out)
+    expect(d.terminalValuesReal.every(Number.isFinite)).toBe(true) // and nothing escaped as NaN/∞
+  })
+
+  it('the sentinel arm is deterministic-by-construction and the resolved arms carry no stray flag', () => {
+    // The same (params, seed) reproduces byte-identically through the new collection +
+    // sentinel plumbing (a sentinel, if one ever fires, rides the same determinism: the
+    // first failing path is a pure function of params + seed).
+    expect(simulate(giantSS, 2468)).toEqual(simulate(giantSS, 2468))
   })
 })

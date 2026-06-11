@@ -33,6 +33,14 @@ const MAX_MODEL_AGE = 119
 const SS_CLAIM_MIN = 62
 const SS_CLAIM_MAX = 70
 
+/** The ambiguous-magnitude band (R19 period defense, line one): an ENTERED
+ *  spend figure inside this band is coherent as BOTH a monthly and an annual
+ *  amount, so intake FORCES an explicit period answer rather than computing on
+ *  the default — the engine can never run on 1/12× or 12× the real figure.
+ *  Judgment band, deliberately wide-conservative. */
+const SPEND_AMBIGUOUS_MIN = 8_000
+const SPEND_AMBIGUOUS_MAX = 50_000
+
 /** Field paths — the violation↔field association targets (aria-describedby ids
  *  derive from these). */
 export type FieldPath = string
@@ -52,8 +60,10 @@ interface SanityRule {
   /** The field this rule guards (the firing site — must be touched to fire). */
   readonly target: (draft: ScenarioDraft) => readonly FieldPath[]
   /** Returns violations given EVERY input it needs is present; absent inputs ⇒
-   *  the rule simply does not fire (never a default — burned/062). */
-  readonly check: (draft: ScenarioDraft) => readonly SanityViolation[]
+   *  the rule simply does not fire (never a default — burned/062). `touched`
+   *  is available for confirmation-class rules (the period force-confirm
+   *  clears the instant its control is explicitly answered). */
+  readonly check: (draft: ScenarioDraft, touched: ReadonlySet<FieldPath>) => readonly SanityViolation[]
 }
 
 const perPerson = (
@@ -112,6 +122,30 @@ const RULES: readonly SanityRule[] = [
       ),
   },
   {
+    // The period force-confirm (R19, line one of the monthly-vs-annual
+    // defense): a spend figure coherent BOTH ways blocks advance until the
+    // user explicitly answers the period control — never silently computed on
+    // the entry default. Renders through the same calm grammar; clears the
+    // instant the segment is tapped (touched gains 'spendEntryPeriod').
+    id: 'spend-period-unconfirmed',
+    target: () => ['annualSpendingReal'],
+    check: (d, touched) => {
+      if (d.annualSpendingReal === undefined || !Number.isFinite(d.annualSpendingReal)) return []
+      if (touched.has('spendEntryPeriod')) return []
+      const entered =
+        d.spendEntryPeriod === 'month' ? d.annualSpendingReal / 12 : d.annualSpendingReal
+      return entered >= SPEND_AMBIGUOUS_MIN && entered <= SPEND_AMBIGUOUS_MAX
+        ? [
+            {
+              rule: 'spend-period-unconfirmed',
+              field: 'annualSpendingReal',
+              messageKey: 'periodConfirmPrompt',
+            },
+          ]
+        : []
+    },
+  },
+  {
     // The engine's longevity table tops out at 119 (SSA snapshot support) — an
     // age past it is a model-domain impossibility, not an implausibility.
     id: 'age-beyond-model',
@@ -137,13 +171,14 @@ export function validateDraft(
   draft: ScenarioDraft,
   touched: ReadonlySet<FieldPath>,
 ): readonly SanityViolation[] {
-  return RULES.flatMap((rule) => rule.check(draft)).filter((v) => touched.has(v.field))
+  return RULES.flatMap((rule) => rule.check(draft, touched)).filter((v) => touched.has(v.field))
 }
 
 /** Violations for ONE field (the blur-time per-field check). */
 export function validateField(
   draft: ScenarioDraft,
   field: FieldPath,
+  touched: ReadonlySet<FieldPath> = new Set(),
 ): readonly SanityViolation[] {
-  return RULES.flatMap((rule) => rule.check(draft)).filter((v) => v.field === field)
+  return RULES.flatMap((rule) => rule.check(draft, touched)).filter((v) => v.field === field)
 }

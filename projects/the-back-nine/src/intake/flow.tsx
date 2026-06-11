@@ -68,8 +68,12 @@ export function IntakeFlow({ steps, model, onComplete }: IntakeFlowProps) {
   const [direction, setDirection] = useState<'forward' | 'back'>('forward')
   const [touched, setTouched] = useState<ReadonlySet<FieldPath>>(() => new Set())
 
-  const step = steps[index]
-  if (step === undefined) throw new Error(`intake flow: no step at index ${index}`)
+  // Conditional steps derive from the draft (work-status / age gates), so a
+  // back-nav edit can SHRINK the sequence while we're standing past the cut —
+  // clamp rather than crash (the draft keeps every answer regardless).
+  const safeIndex = Math.min(index, steps.length - 1)
+  const step = steps[safeIndex]
+  if (step === undefined) throw new Error('intake flow: empty step list')
 
   const headingRef = useFocusHeadingOnStep(step.id)
 
@@ -102,27 +106,31 @@ export function IntakeFlow({ steps, model, onComplete }: IntakeFlowProps) {
     const nextTouched = new Set(touched)
     for (const f of step.fields) nextTouched.add(f)
     setTouched(nextTouched)
-    const blocking = validateDraft(snapshot.draft, nextTouched).some((v) =>
+    // Validate against the model's CURRENT draft, not this render's closure: a
+    // blur-commit and the Continue tap can land in the same task (programmatic
+    // dispatch, exotic browsers), and the closure would be one commit stale —
+    // letting an unconfirmed value slip past its gate.
+    const blocking = validateDraft(model.getSnapshot().draft, nextTouched).some((v) =>
       step.fields.includes(v.field),
     )
     if (blocking) return
 
-    if (index + 1 < steps.length) {
+    if (safeIndex + 1 < steps.length) {
       setDirection('forward')
-      setIndex(index + 1)
-      announcerRef.current?.announce(slots.questionPosition(index + 2))
+      setIndex(safeIndex + 1)
+      announcerRef.current?.announce(slots.questionPosition(safeIndex + 2))
     } else {
       onComplete?.()
     }
     void model.recompute() // question-COMMIT, never per keystroke
-  }, [index, model, onComplete, snapshot.draft, step.fields, steps.length, touched])
+  }, [safeIndex, model, onComplete, step.fields, steps.length, touched])
 
   const back = useCallback(() => {
-    if (index === 0) return
+    if (safeIndex === 0) return
     setDirection('back')
-    setIndex(index - 1) // never gated; the draft keeps every downstream answer
-    announcerRef.current?.announce(slots.questionPosition(index))
-  }, [index])
+    setIndex(safeIndex - 1) // never gated; the draft keeps every downstream answer
+    announcerRef.current?.announce(slots.questionPosition(safeIndex))
+  }, [safeIndex])
 
   const api: StepApi = useMemo(
     () => ({ draft: snapshot.draft, update: model.update, commitField, violationsFor }),
@@ -139,11 +147,11 @@ export function IntakeFlow({ steps, model, onComplete }: IntakeFlowProps) {
           aria-label={copy.flowProgressLabel}
           aria-valuemin={1}
           aria-valuemax={steps.length}
-          aria-valuenow={index + 1}
+          aria-valuenow={safeIndex + 1}
         >
           <div
             className="progress-thread-fill"
-            style={{ width: `${((index + 1) / steps.length) * 100}%` }}
+            style={{ width: `${((safeIndex + 1) / steps.length) * 100}%` }}
           />
         </div>
       </header>
@@ -159,7 +167,7 @@ export function IntakeFlow({ steps, model, onComplete }: IntakeFlowProps) {
           <button type="button" className="btn-primary" onClick={advance}>
             {copy.flowNext}
           </button>
-          {index > 0 && (
+          {safeIndex > 0 && (
             <button type="button" className="btn-quiet" onClick={back}>
               {copy.flowBack}
             </button>

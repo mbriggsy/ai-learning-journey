@@ -22,6 +22,7 @@ const draft = (
   taxVintage: 'OBBBA-2025',
   appDefaultVersion: 'test',
   ...over,
+  spendEntryPeriod: over.spendEntryPeriod ?? 'month',
 })
 
 const touchedAll = new Set([

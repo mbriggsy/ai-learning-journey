@@ -155,6 +155,121 @@
   }
 }
 
+/* ----- fields ----- */
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.field-label {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--ink);
+}
+
+.field-input {
+  min-height: var(--field-h);
+  width: 100%;
+  padding: 0 var(--space-4);
+  border: 1px solid var(--line-control);
+  border-radius: var(--radius-md);
+  background: var(--paper-raised);
+  font-size: var(--text-base); /* ≥16px — iOS never auto-zooms the intake */
+  transition: border-color var(--dur-fast) ease;
+}
+
+.field-input[aria-invalid='true'] {
+  border-color: var(--error-ink);
+  border-width: 2px;
+}
+
+.field-help {
+  font-size: var(--text-sm);
+  color: var(--ink-muted);
+}
+
+/* ----- paired two-person screens ----- */
+
+.person-group {
+  border: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.person-group + .person-group {
+  margin-block-start: var(--space-6);
+  padding-block-start: var(--space-6);
+  border-block-start: 1px solid var(--line-soft);
+}
+
+.person-legend {
+  font-family: var(--font-display);
+  font-optical-sizing: auto;
+  font-weight: var(--weight-display);
+  font-size: var(--text-lg);
+  color: var(--brand);
+  padding: 0;
+  margin-block-end: var(--space-2);
+  /* A legend floats INTO the fieldset's border box by default, so the
+   * between-spouse hairline would strike through the name — float resets the
+   * legend to a normal block (the standard escape hatch). */
+  float: left;
+  width: 100%;
+}
+
+/* ----- segmented control (active segment by WEIGHT + FILL, never hue alone) ----- */
+
+.segmented {
+  border: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.segmented-track {
+  display: flex;
+  border: 1px solid var(--line-control);
+  border-radius: var(--radius-md);
+  background: var(--paper-raised);
+  padding: var(--space-1);
+  gap: var(--space-1);
+}
+
+.segment {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--tap-min);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  color: var(--ink-muted);
+  cursor: pointer;
+  transition:
+    background-color var(--dur-fast) ease,
+    color var(--dur-fast) ease;
+}
+
+.segment-active {
+  background: var(--brand-tint);
+  color: var(--brand);
+  font-weight: var(--weight-semibold); /* weight + fill carry the state */
+  box-shadow: inset 0 0 0 1.5px var(--brand);
+}
+
+/* The radio inside is sr-only; surface its focus on the segment label. */
+.segment:has(input:focus-visible) {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
 /* ----- the R19 calm error grammar (shape + text lead; color reinforces) ----- */
 
 .field-error {

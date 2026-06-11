@@ -1,0 +1,441 @@
+import type { ReactNode } from 'react'
+import { copy } from '@ui/copy'
+import type { PersonDraft, ScenarioDraft } from '@store/memoryModel'
+import type { WorkStatus } from '@shared/model'
+import { CurrencyField, IntegerField, NameField, SegmentedControl } from './fields'
+import { FieldError } from './FieldError'
+import { personField } from './sanity'
+import type { StepApi, StepDef } from './flow'
+
+/**
+ * The household PREAMBLE (D1): everything asked BEFORE the account loop, so
+ * `validateParams` acceptance — and the first provisional answer — is reachable
+ * as soon as the first account lands (the spend figure and the ACA questions
+ * deliberately ride the preamble for exactly that reason; a planted
+ * question-after-the-loop ordering fails the surface-early test).
+ *
+ * The step list is DERIVED from the draft (conditional gates below), so it
+ * recomputes as answers land; the flow clamps its index if a back-nav edit
+ * shrinks the sequence.
+ *
+ * Conditional gates:
+ *  - income           ⇐ any person ASKED-working;
+ *  - health quote     ⇐ any person under 65 (or age unanswered) — everyone-65+
+ *                       needs no ACA inputs (the per-person Medicare onset
+ *                       machinery suffices, §0 exception);
+ *  - working income   ⇐ any person ASKED-working (the §3b IRMAA override
+ *                       source — a RETURN income figure, never a salary echo);
+ *  - IRMAA seed       ⇐ any person 64+ (Medicare's 2-year lookback can reach
+ *                       pre-sim tax years; the engine's own coverage rule is
+ *                       the backstop if this gate ever under-asks).
+ *
+ * Work-status drives the branch (asked, never inferred): RETIRED ⇒ the stop
+ * age is asked (≤ currentAge legitimate — the status-conditional R19 rule) and
+ * the now-inapplicable facts are ZEROED (salary, the working-year figure);
+ * WORKING ⇒ no retirement-date question exists anywhere — the date IS the
+ * product's answer (intakeMap constructs the placeholder at param-build; the
+ * draft never stores one, so a placeholder can never masquerade as entered).
+ */
+
+const updatePerson = (
+  api: StepApi,
+  index: 0 | 1,
+  patch: Partial<PersonDraft>,
+): void => {
+  api.update((d) => {
+    const people: [PersonDraft, PersonDraft] = [{ ...d.people[0] }, { ...d.people[1] }]
+    people[index] = { ...people[index], ...patch }
+    return { ...d, people }
+  })
+}
+
+const legendFor = (draft: ScenarioDraft, index: 0 | 1): string =>
+  draft.people[index].name ?? (index === 0 ? copy.personYou : copy.personSpouse)
+
+/** Paired two-person screen: one fieldset per spouse, the pairing programmatic
+ *  (legend = the entered name), never two near-identical sequential screens.
+ *  `include` drops a person the question doesn't apply to ENTIRELY — an empty
+ *  named group with a dangling divider reads as a broken screen. */
+function Paired({
+  api,
+  render,
+  include = () => true,
+}: {
+  api: StepApi
+  render: (person: PersonDraft, index: 0 | 1) => ReactNode
+  include?: (person: PersonDraft, index: 0 | 1) => boolean
+}) {
+  return (
+    <>
+      {([0, 1] as const)
+        .filter((i) => include(api.draft.people[i], i))
+        .map((i) => (
+          <fieldset className="person-group" key={i}>
+            <legend className="person-legend">{legendFor(api.draft, i)}</legend>
+            {render(api.draft.people[i], i)}
+          </fieldset>
+        ))}
+    </>
+  )
+}
+
+const errorsFor = (api: StepApi, field: string): ReactNode =>
+  api
+    .violationsFor(field)
+    .map((v) => <FieldError key={v.rule} field={v.field} messageKey={v.messageKey} />)
+
+// ---------------------------------------------------------------------------
+// steps
+// ---------------------------------------------------------------------------
+
+const namesStep: StepDef = {
+  id: 'names',
+  headingKey: 'qNamesHeading',
+  fields: [personField(0, 'birthYear'), personField(1, 'birthYear')],
+  render: (api) => (
+    <Paired
+      api={api}
+      render={(p, i) => (
+        <>
+          <NameField
+            labelKey="nameLabel"
+            value={p.name}
+            autoCompleteToken={i === 0 ? 'given-name' : 'off'}
+            onCommit={(name) => updatePerson(api, i, { name })}
+          />
+          <IntegerField
+            labelKey="birthYearLabel"
+            placeholderKey="birthYearPlaceholder"
+            field={personField(i, 'birthYear')}
+            value={p.birthYear}
+            invalid={api.violationsFor(personField(i, 'birthYear')).length > 0}
+            onCommit={(birthYear) => {
+              // currentAge derives ONCE here (whole-year convention — the same
+              // ±1yr birth-month approximation PersonAccounts.birthYear pins).
+              updatePerson(api, i, {
+                birthYear,
+                currentAge:
+                  birthYear === undefined ? undefined : api.draft.startCalendarYear - birthYear,
+              })
+              api.commitField(personField(i, 'birthYear'))
+            }}
+          />
+          {errorsFor(api, personField(i, 'birthYear'))}
+        </>
+      )}
+    />
+  ),
+}
+
+const workStep: StepDef = {
+  id: 'work',
+  headingKey: 'qWorkHeading',
+  fields: [personField(0, 'retirementAge'), personField(1, 'retirementAge')],
+  render: (api) => (
+    <Paired
+      api={api}
+      render={(p, i) => (
+        <>
+          <SegmentedControl<WorkStatus>
+            legendKey="workStatusLegend"
+            name={`work-${i}`}
+            options={[
+              { value: 'working', labelKey: 'workStatusWorking' },
+              { value: 'retired', labelKey: 'workStatusRetired' },
+            ]}
+            value={p.workStatus}
+            onChange={(workStatus) => {
+              if (workStatus === 'working') {
+                // No retirement date exists for a still-working person — clear
+                // any stale stop age and re-open the salary question.
+                updatePerson(api, i, {
+                  workStatus,
+                  retirementAge: undefined,
+                  earnedIncomeReal: undefined,
+                })
+              } else {
+                // Retired: the inapplicable facts are ZEROED (engine-inert),
+                // never left to dangle as absent-required.
+                updatePerson(api, i, { workStatus, earnedIncomeReal: 0 })
+              }
+            }}
+          />
+          {p.workStatus === 'retired' && (
+            <>
+              <IntegerField
+                labelKey="stopAgeLabel"
+                helpKey="stopAgeHelp"
+                field={personField(i, 'retirementAge')}
+                value={p.retirementAge}
+                invalid={api.violationsFor(personField(i, 'retirementAge')).length > 0}
+                onCommit={(retirementAge) => {
+                  updatePerson(api, i, { retirementAge })
+                  api.commitField(personField(i, 'retirementAge'))
+                }}
+              />
+              {errorsFor(api, personField(i, 'retirementAge'))}
+            </>
+          )}
+        </>
+      )}
+    />
+  ),
+}
+
+const incomeStep: StepDef = {
+  id: 'income',
+  headingKey: 'qIncomeHeading',
+  fields: [],
+  render: (api) => (
+    <Paired
+      api={api}
+      include={(p) => p.workStatus === 'working'}
+      render={(p, i) => (
+        <CurrencyField
+          labelKey="salaryLabel"
+          helpKey="salaryHelp"
+          field={personField(i, 'earnedIncomeReal')}
+          value={p.earnedIncomeReal}
+          onCommit={(earnedIncomeReal) => updatePerson(api, i, { earnedIncomeReal })}
+        />
+      )}
+    />
+  ),
+}
+
+const ssStep: StepDef = {
+  id: 'social-security',
+  headingKey: 'qSsHeading',
+  fields: [personField(0, 'socialSecurityClaimAge'), personField(1, 'socialSecurityClaimAge')],
+  render: (api) => (
+    <Paired
+      api={api}
+      render={(p, i) => (
+        <>
+          <CurrencyField
+            labelKey="ssAmountLabel"
+            helpKey="ssAmountHelp"
+            field={personField(i, 'socialSecurityReal')}
+            value={p.socialSecurityReal}
+            onCommit={(socialSecurityReal) => updatePerson(api, i, { socialSecurityReal })}
+          />
+          <IntegerField
+            labelKey="ssClaimLabel"
+            field={personField(i, 'socialSecurityClaimAge')}
+            value={p.socialSecurityClaimAge}
+            invalid={api.violationsFor(personField(i, 'socialSecurityClaimAge')).length > 0}
+            onCommit={(socialSecurityClaimAge) => {
+              updatePerson(api, i, { socialSecurityClaimAge })
+              api.commitField(personField(i, 'socialSecurityClaimAge'))
+            }}
+          />
+          {errorsFor(api, personField(i, 'socialSecurityClaimAge'))}
+        </>
+      )}
+    />
+  ),
+}
+
+const spendStep: StepDef = {
+  id: 'spend',
+  headingKey: 'qSpendHeading',
+  fields: ['annualSpendingReal'],
+  render: (api) => {
+    const annual = api.draft.annualSpendingReal
+    const period = api.draft.spendEntryPeriod
+    const displayed = annual === undefined ? undefined : period === 'month' ? annual / 12 : annual
+    return (
+      <>
+        <CurrencyField
+          labelKey="spendLabel"
+          helpKey="spendHelp"
+          field="annualSpendingReal"
+          value={displayed}
+          invalid={api.violationsFor('annualSpendingReal').length > 0}
+          onCommit={(entered) => {
+            // Canonical ANNUAL in the model; the entered unit rides
+            // spendEntryPeriod (an explicit answer, persisted — fidelity rule).
+            api.update((d) => ({
+              ...d,
+              annualSpendingReal:
+                entered === undefined
+                  ? undefined
+                  : d.spendEntryPeriod === 'month'
+                    ? entered * 12
+                    : entered,
+            }))
+            api.commitField('annualSpendingReal')
+          }}
+        />
+        <SegmentedControl
+          legendKey="periodLegend"
+          name="spend-period"
+          options={[
+            { value: 'month', labelKey: 'periodMonth' },
+            { value: 'year', labelKey: 'periodYear' },
+          ]}
+          value={period}
+          onChange={(next) => {
+            // Re-base the canonical annual to the SAME entered digits under the
+            // new unit (the figure the user typed is the truth; the unit moves).
+            api.update((d) => {
+              const enteredNow =
+                d.annualSpendingReal === undefined
+                  ? undefined
+                  : d.spendEntryPeriod === 'month'
+                    ? d.annualSpendingReal / 12
+                    : d.annualSpendingReal
+              return {
+                ...d,
+                spendEntryPeriod: next,
+                annualSpendingReal:
+                  enteredNow === undefined ? undefined : next === 'month' ? enteredNow * 12 : enteredNow,
+              }
+            })
+            api.commitField('spendEntryPeriod') // the explicit answer — clears the force-confirm
+          }}
+        />
+        {errorsFor(api, 'annualSpendingReal')}
+      </>
+    )
+  },
+}
+
+const healthQuoteStep: StepDef = {
+  id: 'health-quote',
+  headingKey: 'qHealthHeading',
+  fields: [],
+  render: (api) => (
+    <>
+      <CurrencyField
+        labelKey="enrolledPremiumLabel"
+        helpKey="healthQuoteHelp"
+        field="health.enrolledPremiumMonthlyToday"
+        value={api.draft.health.enrolledPremiumMonthlyToday}
+        onCommit={(v) =>
+          api.update((d) => ({ ...d, health: { ...d.health, enrolledPremiumMonthlyToday: v } }))
+        }
+      />
+      <CurrencyField
+        labelKey="slcspLabel"
+        field="health.slcspMonthlyToday"
+        value={api.draft.health.slcspMonthlyToday}
+        onCommit={(v) =>
+          api.update((d) => ({ ...d, health: { ...d.health, slcspMonthlyToday: v } }))
+        }
+      />
+    </>
+  ),
+}
+
+const oopStep: StepDef = {
+  id: 'oop-medical',
+  headingKey: 'qOopHeading',
+  fields: [],
+  render: (api) => (
+    <CurrencyField
+      labelKey="oopLabel"
+      helpKey="oopHelp"
+      field="health.oopMedicalAnnual"
+      value={api.draft.health.oopMedicalAnnual}
+      onCommit={(v) => api.update((d) => ({ ...d, health: { ...d.health, oopMedicalAnnual: v } }))}
+    />
+  ),
+}
+
+const workIncomeStep: StepDef = {
+  id: 'working-income',
+  headingKey: 'qWorkIncomeHeading',
+  fields: [],
+  render: (api) => (
+    <Paired
+      api={api}
+      include={(p) => p.workStatus === 'working'}
+      render={(_p, i) => (
+          <CurrencyField
+            labelKey="workIncomeLabel"
+            helpKey="workIncomeHelp"
+            field={`health.workingYearIrmaaMagiByPerson.${i}`}
+            value={api.draft.health.workingYearIrmaaMagiByPerson?.[i]}
+            onCommit={(v) =>
+              api.update((d) => {
+                // Per-person, aligned to people; a RETIRED member's slot is 0
+                // (the inapplicable-question zeroing — engine-inert, their
+                // working-year count is zero).
+                const next: (number | undefined)[] = [
+                  d.health.workingYearIrmaaMagiByPerson?.[0],
+                  d.health.workingYearIrmaaMagiByPerson?.[1],
+                ]
+                next[i] = v
+                for (const j of [0, 1] as const) {
+                  if (d.people[j].workStatus === 'retired') next[j] = 0
+                }
+                return {
+                  ...d,
+                  health: { ...d.health, workingYearIrmaaMagiByPerson: next },
+                }
+              })
+            }
+          />
+      )}
+    />
+  ),
+}
+
+const irmaaSeedStep: StepDef = {
+  id: 'irmaa-seed',
+  headingKey: 'qIrmaaSeedHeading',
+  fields: [],
+  render: (api) => (
+    <>
+      <CurrencyField
+        labelKey="irmaaSeedTwoBackLabel"
+        helpKey="irmaaSeedHelp"
+        field="health.irmaaMagiSeed.0"
+        value={api.draft.health.irmaaMagiSeed?.[0]}
+        onCommit={(v) =>
+          api.update((d) => ({
+            ...d,
+            health: { ...d.health, irmaaMagiSeed: [v, d.health.irmaaMagiSeed?.[1]] },
+          }))
+        }
+      />
+      <CurrencyField
+        labelKey="irmaaSeedOneBackLabel"
+        field="health.irmaaMagiSeed.1"
+        value={api.draft.health.irmaaMagiSeed?.[1]}
+        onCommit={(v) =>
+          api.update((d) => ({
+            ...d,
+            health: { ...d.health, irmaaMagiSeed: [d.health.irmaaMagiSeed?.[0], v] },
+          }))
+        }
+      />
+    </>
+  ),
+}
+
+// ---------------------------------------------------------------------------
+// the conditional sequence
+// ---------------------------------------------------------------------------
+
+const anyWorking = (d: ScenarioDraft): boolean =>
+  d.people.some((p) => p.workStatus === 'working')
+
+const anyPre65OrUnknown = (d: ScenarioDraft): boolean =>
+  d.people.some((p) => p.currentAge === undefined || p.currentAge < 65)
+
+const anyNearMedicare = (d: ScenarioDraft): boolean =>
+  d.people.some((p) => p.currentAge !== undefined && p.currentAge >= 64)
+
+/** The preamble sequence for the current draft state. */
+export function preambleSteps(draft: ScenarioDraft): readonly StepDef[] {
+  const steps: StepDef[] = [namesStep, workStep]
+  if (anyWorking(draft)) steps.push(incomeStep)
+  steps.push(ssStep, spendStep)
+  if (anyPre65OrUnknown(draft)) steps.push(healthQuoteStep)
+  steps.push(oopStep)
+  if (anyWorking(draft)) steps.push(workIncomeStep)
+  if (anyNearMedicare(draft)) steps.push(irmaaSeedStep)
+  return steps
+}

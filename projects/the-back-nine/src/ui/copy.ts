@@ -41,6 +41,53 @@ export const copy = {
   // SR-announced position (the quiet thread carries no visible counter — the
   // flow is variable-length, so a visible "Step N of M" would be inaccurate).
   flowSrPosition: 'New question',
+  // --- the preamble questions (D1 — paired two-person screens) ---
+  personYou: 'You',
+  personSpouse: 'Your spouse',
+  qNamesHeading: 'First — who are the two of you?',
+  nameLabel: 'First name',
+  birthYearLabel: 'Birth year',
+  birthYearPlaceholder: 'e.g. 1962',
+  qWorkHeading: 'Where does work stand today?',
+  workStatusLegend: 'Work status',
+  workStatusWorking: 'Still working',
+  workStatusRetired: 'Already retired',
+  stopAgeLabel: 'The age work stopped',
+  stopAgeHelp: 'The age this person actually stopped working — even if Social Security came later.',
+  qIncomeHeading: 'What does work pay?',
+  salaryLabel: 'Yearly pay, before tax',
+  salaryHelp: 'A steady figure in today’s dollars is enough.',
+  qSsHeading: 'Social Security',
+  ssAmountLabel: 'Estimated yearly benefit',
+  ssAmountHelp: 'From the ssa.gov statement, in today’s dollars.',
+  ssClaimLabel: 'Planned claim age (62–70)',
+  qSpendHeading: 'What does your life cost?',
+  spendLabel: 'Household spending, all in',
+  spendHelp:
+    'Everything — housing, food, insurance, fun. The whole household, not just the bills that feel like retirement.',
+  periodMonth: 'Each month',
+  periodYear: 'Each year',
+  periodLegend: 'That figure is…',
+  periodConfirmPrompt:
+    'Quick check — that figure reads either way. Each month, or each year?',
+  qHealthHeading: 'Health coverage before Medicare',
+  enrolledPremiumLabel: 'Monthly premium of a plan you’d pick',
+  slcspLabel: 'Benchmark Silver plan, monthly',
+  healthQuoteHelp:
+    'From a marketplace quote for your age and ZIP — healthcare.gov or the KFF calculator. The tool never guesses a premium; it prices only what you enter. Fine to continue without it — the answer simply waits on it.',
+  qOopHeading: 'Out-of-pocket health costs',
+  oopLabel: 'A typical year, out of pocket',
+  oopHelp:
+    'Premiums are added on top by the tool; out-of-pocket costs should already be inside your spending figure — this only sizes your HSA’s tax-free draw.',
+  qWorkIncomeHeading: 'Income while still working',
+  workIncomeLabel: 'Taxable income on a recent return',
+  workIncomeHelp:
+    'Used to price the first Medicare years, which look back two years. The income figure from a recent tax return — investment and other income counts, not just salary.',
+  qIrmaaSeedHeading: 'Your last two tax returns',
+  irmaaSeedTwoBackLabel: 'Income, two years back',
+  irmaaSeedOneBackLabel: 'Income, last year',
+  irmaaSeedHelp:
+    'Medicare premiums key off income from two years before — these two figures anchor the first projected years.',
   // --- R19 calm error grammar (icon + adjacent text; color never alone) ---
   errStopAgeInFuture:
     'This stop age is later than their current age — for someone already retired, it’s the age work actually stopped. Did you mean still working?',

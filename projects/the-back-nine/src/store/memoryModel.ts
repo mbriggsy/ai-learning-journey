@@ -71,6 +71,17 @@ import type { EngineClient } from './engineClient'
 /** Person mid-entry: every asked fact optional until answered. */
 export type PersonDraft = Partial<PersonInputsV3>
 
+/** Health entry mid-population: same fields as `HealthIntakeV3`, but the
+ *  per-person/per-year arrays tolerate HOLES (an unanswered member) while the
+ *  flow is in progress. The persisted V3 arrays are complete by construction —
+ *  Save gates on completeness (U8), and JSON would silently null an undefined
+ *  element (DND/009), so holes never reach disk. */
+export interface HealthDraft
+  extends Omit<HealthIntakeV3, 'workingYearIrmaaMagiByPerson' | 'irmaaMagiSeed'> {
+  readonly workingYearIrmaaMagiByPerson?: readonly (number | undefined)[]
+  readonly irmaaMagiSeed?: readonly (number | undefined)[]
+}
+
 /** The single in-memory plaintext shape (contract (e)). */
 export interface ScenarioDraft
   extends Partial<
@@ -78,6 +89,7 @@ export interface ScenarioDraft
   >,
     Pick<
       ScenarioV3,
+      | 'spendEntryPeriod'
       | 'survivorSpendingRatio'
       | 'drawdownPolicy'
       | 'filing'
@@ -88,7 +100,7 @@ export interface ScenarioDraft
   readonly people: readonly [PersonDraft, PersonDraft]
   readonly enteredAccounts: readonly EnteredAccount[]
   readonly tickerClassifications: Readonly<Record<string, TickerClassification>>
-  readonly health: HealthIntakeV3
+  readonly health: HealthDraft
 }
 
 // Compile-time: a completed draft's field set IS the v3 field set — no parallel
@@ -177,7 +189,10 @@ export function createMemoryModel(deps: MemoryModelDeps): MemoryModel {
     tickerClassifications: {},
     health: {},
     // Methodology defaults — pre-applied and SURFACED (R7; editable in P3),
-    // never silent stand-ins for a required user-fact.
+    // never silent stand-ins for a required user-fact. (spendEntryPeriod is the
+    // documented ENTRY default — the ambiguous-band force-confirm makes the
+    // user own it explicitly before the engine ever runs on it.)
+    spendEntryPeriod: 'month',
     survivorSpendingRatio: 0.75,
     drawdownPolicy: 'proportional',
     filing: 'mfj',

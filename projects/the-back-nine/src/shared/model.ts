@@ -827,6 +827,14 @@ export interface HealthIntakeV3 {
   readonly workingYearIrmaaMagiByPerson?: readonly number[]
 }
 
+/** The display unit the household spend figure was ANSWERED in. An explicit
+ *  user answer (the ambiguous-magnitude force-confirm makes it one — R19), so
+ *  it persists per the single-shape fidelity rule; `annualSpendingReal` stays
+ *  the canonical engine quantity (annual = entered ×12 when monthly — a unit
+ *  preference beside its value, not a second source). */
+export const SPEND_ENTRY_PERIODS = ['month', 'year'] as const
+export type SpendEntryPeriod = (typeof SPEND_ENTRY_PERIODS)[number]
+
 /** The schemaVersion-3 plaintext scenario: the account-level intake truth.
  *  See the section comment above for the define-now/write-at-U8 contract and the
  *  deliberate fidelity-over-duplication shape change vs v2. */
@@ -843,6 +851,7 @@ export interface ScenarioV3 {
   /** The household retirement-spend figure (the preamble question — the v1
    *  degenerate budget; the P3 budget builder reconciles to it). */
   readonly annualSpendingReal: number
+  readonly spendEntryPeriod: SpendEntryPeriod
   readonly survivorSpendingRatio: number
   readonly drawdownPolicy: DrawdownPolicy
   readonly filing: FilingStatus
@@ -865,6 +874,7 @@ export const SCENARIO_V3_FIELDS = [
   'tickerClassifications',
   'health',
   'annualSpendingReal',
+  'spendEntryPeriod',
   'survivorSpendingRatio',
   'drawdownPolicy',
   'filing',

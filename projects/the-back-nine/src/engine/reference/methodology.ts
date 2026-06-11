@@ -42,7 +42,7 @@ export const validationMarket: Sourced<MarketAssumptions> = sourced(
     citation:
       'findings §Strand 4; Ibbotson SBBI 1926–2020 nominal (S&P ~12.1%/σ19.8, intermediate-govt ~5.3%/σ5.6, CPI ~3.0%/σ4.1), converted to real (gemini-grounding 2026-06-05)',
     directionalUntilPinned: true,
-    pinTo: 'Ibbotson/Morningstar SBBI Yearbook (the 1926–1995 vintage series)',
+    pinTo: 're-derive from the committed Damodaran series (reference/damodaranSeries.ts, landed 2026-06-11) at a deliberate re-calibration pass — exact SBBI RETIRED (commercial, edition-revised); these summary moments stay directional until that pass',
     note: 'VALIDATION ONLY — calibrates the Mode-B MC band to Trinity behavior. Not a user default. Real intermediate-government bonds (NOT corporate), to pair with Bengen.',
   },
 )

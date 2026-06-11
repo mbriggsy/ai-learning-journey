@@ -8,16 +8,22 @@
  *  (1) self-consistency — reproduces a committed fixture (here: hand-derived
  *      mechanical goldens + the Shiller-series rolling-window rate), so an engine
  *      regression fails loud;
- *  (2) directional — lands NEAR the published Trinity/Bengen figures (right band),
- *      not exact: the committed Shiller series uses long-term GOVERNMENT bonds
- *      (yield-as-return), not Trinity's long-term CORPORATE nor Bengen's
- *      intermediate-government, so exact equality is gated on pinning those datasets
- *      (the P1 exit gate). The MC band (simulate.ts) is asserted strictly BELOW this
- *      anchor in the stress region.
+ *  (2) directional — lands NEAR the published Trinity/Bengen figures (right band).
+ *      TWO committed series feed it: the Shiller govt-bond series (the original
+ *      golden anchor — yield-as-return, runs at the top of the band) and the
+ *      Damodaran total-return series (damodaranSeries.ts, the re-scoped P1-exit
+ *      proxy pin, 2026-06-11: the Aaa-corporate Trinity arm lands 37/39 ≈ 94.9%
+ *      vs the published 95.1%; the 10yr-Treasury Bengen arm runs CONSERVATIVE by
+ *      duration vs his 5yr intermediate). Bit-exact published-figure equality is
+ *      RETIRED — SBBI is commercial + edition-revised, and Bengen's own 1994-95
+ *      tail was estimated — so survive/fail + pinned window counts are the honest
+ *      bar. The MC band (simulate.ts) is asserted strictly BELOW this anchor in
+ *      the stress region.
  */
 import { runDecumulation, type PortfolioState } from '@engine/decumulation'
 import { NEVER_DEPLETED } from '@shared/model'
 import { type ShillerYear } from '@engine/reference/shillerSeries'
+import { type DamodaranYear } from '@engine/reference/damodaranSeries'
 
 /** One year of REAL (inflation-adjusted) returns. */
 export interface RealYear {
@@ -46,6 +52,34 @@ export function toRealSeries(series: readonly ShillerYear[]): RealYear[] {
     })
   }
   return out
+}
+
+/**
+ * Deflate the Damodaran total-return series to REAL annual returns. Unlike the
+ * Shiller path (CPI LEVELS — the first year needs a prior level), Damodaran
+ * carries each year's inflation RATE directly, so every committed year converts
+ * and the output covers 1928-1995 in full. `bondLeg` selects the validation arm:
+ * 'aaaCorporate' = the Trinity long-term-corporate proxy (the high-grade match),
+ * 'baaCorporate' = the one-notch-lower comparison arm, 'tbond10' = the Bengen
+ * intermediate-government proxy (duration-conservative; see the series header).
+ */
+export function damodaranToReal(
+  series: readonly DamodaranYear[],
+  bondLeg: 'aaaCorporate' | 'baaCorporate' | 'tbond10',
+): RealYear[] {
+  return series.map(y => {
+    const bondNominal =
+      bondLeg === 'aaaCorporate'
+        ? y.aaaCorporateNominal
+        : bondLeg === 'baaCorporate'
+          ? y.baaCorporateNominal
+          : y.tbond10Nominal
+    return {
+      year: y.year,
+      realStock: (1 + y.stockNominal) / (1 + y.inflationRate) - 1,
+      realBond: (1 + bondNominal) / (1 + y.inflationRate) - 1,
+    }
+  })
 }
 
 /** A backtest configuration (Trinity/Bengen shape). */

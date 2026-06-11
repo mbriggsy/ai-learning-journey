@@ -8,8 +8,10 @@
  * leg as the Shiller long-term GOVERNMENT rate used yield-as-return (no duration /
  * price effect) - NOT Trinity's long-term CORPORATE bonds, NOR Bengen's
  * intermediate-term GOVERNMENT total return. So a backtest on this series lands
- * DIRECTIONALLY near the published Trinity/Bengen figures (right band), exact only
- * once the corporate / Ibbotson-intermediate series is pinned (the P1 exit gate).
+ * DIRECTIONALLY near the published Trinity/Bengen figures (right band). The
+ * total-return validation arms landed 2026-06-11 as damodaranSeries.ts (the
+ * re-scoped proxy pin — bit-exact retired); THIS series stays the untouched
+ * golden anchor the spine fixtures are pinned to.
  *
  * stockNominal = price growth + dividend yield (cFIREsim applies the dividend to the
  * start-of-year value). bondNominal = the year's long-term government yield. 1925 is

@@ -88,7 +88,51 @@ export const copy = {
   irmaaSeedOneBackLabel: 'Income, last year',
   irmaaSeedHelp:
     'Medicare premiums key off income from two years before — these two figures anchor the first projected years.',
+  // --- the account loop (D1 — variable-length, single entry pass) ---
+  qAccountsHeading: 'Now, the accounts themselves',
+  accountsIntro:
+    'One at a time, from your statements — type, balance, what it holds, and what still goes in each year.',
+  accountsEmpty: 'No accounts yet.',
+  addAccount: 'Add an account',
+  accountSave: 'Add this account',
+  accountCancel: 'Never mind',
+  accountEdit: 'Edit',
+  accountRemove: 'Remove',
+  accountOwnerLegend: 'Whose account is this?',
+  accountKindLegend: 'What kind of account?',
+  kind401k: '401(k)',
+  kind403b: '403(b)',
+  kindTraditionalIra: 'Traditional IRA',
+  kindRoth401k: 'Roth 401(k)',
+  kindRothIra: 'Roth IRA',
+  kindBrokerage: 'Brokerage / taxable',
+  kindHsa: 'HSA',
+  accountValueLabel: 'Balance today',
+  accountBasisLabel: 'Cost basis',
+  accountBasisHelp:
+    'From the statement’s cost-basis line — what was paid in, before growth. The rest is treated as unrealized gain.',
+  accountTickerLabel: 'Main holding’s ticker',
+  accountTickerHelp:
+    'The fund or ETF symbol — VTSAX, FXAIX, a target-date fund. Leave it blank if there isn’t one and classify the mix instead.',
+  tdfDisclosure:
+    'A target-date fund — the projection holds today’s allocation constant rather than following the fund’s future glide.',
+  accountContributionLabel: 'Going in each year',
+  accountMatchLabel: 'Employer match each year',
+  // --- the manual classifier (R37 fallback — never a silent default blend) ---
+  classifierLegend: 'What does it mostly hold?',
+  classifyStocks: 'Mostly stocks',
+  classifyBonds: 'Mostly bonds',
+  classifyCash: 'Cash',
+  classifierAdvanced: 'Set exact percentages',
+  classifierStockPct: 'Stocks %',
+  classifierBondPct: 'Bonds %',
+  classifierCashPct: 'Cash %',
+  errClassifierSum: 'Those percentages need to add up to 100.',
   // --- R19 calm error grammar (icon + adjacent text; color never alone) ---
+  errContributionCeiling:
+    'That’s more than this year’s legal contribution limit for this account type at this age — combined across accounts of the same kind.',
+  errAdditionsCeiling:
+    'Together, the contribution and employer match are above what one plan can legally receive in a year.',
   errStopAgeInFuture:
     'This stop age is later than their current age — for someone already retired, it’s the age work actually stopped. Did you mean still working?',
   errSsClaimWindow:
@@ -110,6 +154,13 @@ export const slots = {
   /** SR-announced flow position (the visible thread carries no counter — the
    *  flow is variable-length). */
   questionPosition: (n: number): string => `Question ${n}`,
+  /** The resolved-blend feedback line under a recognized ticker (R37). The
+   *  percentage is the issuer's own figure via C1 — a fact echo, not a claim. */
+  blendResolved: (name: string, stockPct: number): string =>
+    `${name} — about ${Math.round(stockPct)}% stocks`,
+  /** One committed account in the loop's quiet list. */
+  accountSummary: (kindLabel: string, owner: string, valueFormatted: string): string =>
+    `${kindLabel} · ${owner} · $${valueFormatted}`,
 } as const
 
 /**

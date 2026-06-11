@@ -286,6 +286,161 @@
   margin-block-start: 0.15em;
 }
 
+/* ----- the account loop ----- */
+
+.btn-secondary {
+  min-height: var(--field-h);
+  width: 100%;
+  border: 1.5px solid var(--brand);
+  border-radius: var(--radius-md);
+  background: none;
+  color: var(--brand);
+  font-size: var(--text-base);
+  font-weight: var(--weight-semibold);
+  cursor: pointer;
+  transition:
+    transform var(--dur-press) var(--ease-out),
+    background-color var(--dur-fast) ease;
+}
+
+.btn-secondary:active {
+  transform: scale(0.97);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .btn-secondary:hover {
+    background: var(--brand-tint);
+  }
+}
+
+.accounts-empty {
+  color: var(--ink-muted);
+  font-size: var(--text-sm);
+}
+
+.account-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.account-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding-block: var(--space-3);
+  border-block-end: 1px solid var(--line-soft);
+}
+
+.account-summary {
+  font-weight: var(--weight-medium);
+}
+
+.account-row-actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.account-row-actions .btn-quiet {
+  min-height: var(--tap-min);
+}
+
+.account-entry {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+/* While an account entry form is open, ITS actions are the only actions — the
+ * step's Continue/Back yield (two stacked primary CTAs read as a broken
+ * screen, and advancing mid-entry would abandon the form). Commit or cancel
+ * first; the nav returns with the list. */
+.step-body:has(.account-entry) + .intake-nav {
+  display: none;
+}
+
+.account-entry-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-block-start: var(--space-4);
+}
+
+/* ----- the kind list (radio rows — big calm targets) ----- */
+
+.kind-list {
+  border: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.kind-row {
+  display: flex;
+  align-items: center;
+  min-height: var(--tap-min);
+  padding: var(--space-2) var(--space-4);
+  border: 1px solid var(--line-control);
+  border-radius: var(--radius-md);
+  background: var(--paper-raised);
+  cursor: pointer;
+  transition:
+    background-color var(--dur-fast) ease,
+    box-shadow var(--dur-fast) ease;
+}
+
+.kind-row-active {
+  background: var(--brand-tint);
+  color: var(--brand);
+  font-weight: var(--weight-semibold);
+  box-shadow: inset 0 0 0 1.5px var(--brand);
+}
+
+.kind-row:has(input:focus-visible) {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+/* ----- ticker blend feedback + classifier ----- */
+
+.blend-resolved {
+  font-size: var(--text-sm);
+  color: var(--brand);
+  font-weight: var(--weight-medium);
+}
+
+.blend-tdf-note {
+  display: block;
+  margin-block-start: var(--space-1);
+  color: var(--ink-muted);
+  font-weight: var(--weight-body);
+}
+
+.classifier {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.classifier-exact {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.classifier-pct {
+  flex: 1;
+}
+
+.classifier-toggle {
+  align-self: flex-start;
+}
+
 /* ----- the cold-start frame ----- */
 
 .cold-start {

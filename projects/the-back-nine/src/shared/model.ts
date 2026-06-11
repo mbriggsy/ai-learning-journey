@@ -770,6 +770,11 @@ export interface EnteredAccount {
   /** Primary holding's ticker. Absent or unrecognized ⇒ the manual classifier is
    *  REQUIRED (burned/062 — an unknown ticker is never a silent default blend). */
   readonly ticker?: string
+  /** Manual blend for a TICKER-LESS account (stable value, company stock, "just
+   *  cash"). A ticker the table misses classifies into the household
+   *  `tickerClassifications` map instead (ticker-keyed — answered once, reused
+   *  across accounts); this field exists only for the no-ticker case. */
+  readonly manualBlend?: TickerClassification
   /** Today's balance (real $). */
   readonly valueToday: number
   /** Cost basis (real $) — taxable kinds only; summed per person → `taxableBasis`

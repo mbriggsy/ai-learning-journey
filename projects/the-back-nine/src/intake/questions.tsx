@@ -1,10 +1,11 @@
-import type { ReactNode } from 'react'
-import { copy } from '@ui/copy'
+import { useState, type ReactNode } from 'react'
+import { copy, slots } from '@ui/copy'
 import type { PersonDraft, ScenarioDraft } from '@store/memoryModel'
 import type { WorkStatus } from '@shared/model'
-import { CurrencyField, IntegerField, NameField, SegmentedControl } from './fields'
+import { CurrencyField, IntegerField, NameField, SegmentedControl, formatMoney } from './fields'
 import { FieldError } from './FieldError'
-import { personField } from './sanity'
+import { accountField, personField } from './sanity'
+import { AccountEntry, kindLabel } from './AccountEntry'
 import type { StepApi, StepDef } from './flow'
 
 /**
@@ -416,6 +417,100 @@ const irmaaSeedStep: StepDef = {
 }
 
 // ---------------------------------------------------------------------------
+// the account loop (a real COMPONENT — it owns list-vs-form view state)
+// ---------------------------------------------------------------------------
+
+function AccountsStep({ api }: { api: StepApi }) {
+  const [editing, setEditing] = useState<number | 'new' | null>(null)
+
+  if (editing !== null) {
+    const initial = editing === 'new' ? undefined : api.draft.enteredAccounts[editing]
+    return (
+      <AccountEntry
+        draft={api.draft}
+        initial={initial}
+        onCancel={() => setEditing(null)}
+        onClassifyTicker={(ticker, c) =>
+          api.update((d) => ({
+            ...d,
+            tickerClassifications: { ...d.tickerClassifications, [ticker]: c },
+          }))
+        }
+        onSave={(account) => {
+          api.update((d) => {
+            const next = [...d.enteredAccounts]
+            if (editing === 'new') next.push(account)
+            else next[editing] = account
+            return { ...d, enteredAccounts: next }
+          })
+          setEditing(null)
+        }}
+      />
+    )
+  }
+
+  return (
+    <>
+      <p className="field-help">{copy.accountsIntro}</p>
+      {api.draft.enteredAccounts.length === 0 && (
+        <p className="accounts-empty">{copy.accountsEmpty}</p>
+      )}
+      <ul className="account-list">
+        {api.draft.enteredAccounts.map((a, i) => (
+          <li key={i} className="account-row">
+            <span className="account-summary">
+              {slots.accountSummary(
+                kindLabel(a.kind),
+                api.draft.people[a.ownerIndex]?.name ??
+                  (a.ownerIndex === 0 ? copy.personYou : copy.personSpouse),
+                formatMoney(a.valueToday),
+              )}
+            </span>
+            <span className="account-row-actions">
+              <button type="button" className="btn-quiet" onClick={() => setEditing(i)}>
+                {copy.accountEdit}
+              </button>
+              <button
+                type="button"
+                className="btn-quiet"
+                onClick={() =>
+                  api.update((d) => ({
+                    ...d,
+                    enteredAccounts: d.enteredAccounts.filter((_, j) => j !== i),
+                  }))
+                }
+              >
+                {copy.accountRemove}
+              </button>
+            </span>
+            {api.violationsFor(accountField(i, 'annualContribution')).map((v) => (
+              <FieldError key={v.rule} field={v.field} messageKey={v.messageKey} />
+            ))}
+            {api.violationsFor(accountField(i, 'employerMatchAnnual')).map((v) => (
+              <FieldError key={v.rule} field={v.field} messageKey={v.messageKey} />
+            ))}
+          </li>
+        ))}
+      </ul>
+      <button type="button" className="btn-secondary" onClick={() => setEditing('new')}>
+        {copy.addAccount}
+      </button>
+    </>
+  )
+}
+
+/** The accounts step derives its sanity-gate fields from the committed list. */
+const accountsStep = (draft: ScenarioDraft): StepDef => ({
+  id: 'accounts',
+  headingKey: 'qAccountsHeading',
+  fields: draft.enteredAccounts.flatMap((_, i) => [
+    accountField(i, 'annualContribution'),
+    accountField(i, 'employerMatchAnnual'),
+  ]),
+  render: (api) => <AccountsStep api={api} />,
+})
+
+// ---------------------------------------------------------------------------
 // the conditional sequence
 // ---------------------------------------------------------------------------
 
@@ -428,8 +523,10 @@ const anyPre65OrUnknown = (d: ScenarioDraft): boolean =>
 const anyNearMedicare = (d: ScenarioDraft): boolean =>
   d.people.some((p) => p.currentAge !== undefined && p.currentAge >= 64)
 
-/** The preamble sequence for the current draft state. */
-export function preambleSteps(draft: ScenarioDraft): readonly StepDef[] {
+/** The full intake sequence for the current draft state: the household
+ *  preamble (spend + ACA inputs BEFORE the loop — first-acceptance
+ *  reachability), then the variable-length account loop. */
+export function intakeSteps(draft: ScenarioDraft): readonly StepDef[] {
   const steps: StepDef[] = [namesStep, workStep]
   if (anyWorking(draft)) steps.push(incomeStep)
   steps.push(ssStep, spendStep)
@@ -437,5 +534,6 @@ export function preambleSteps(draft: ScenarioDraft): readonly StepDef[] {
   steps.push(oopStep)
   if (anyWorking(draft)) steps.push(workIncomeStep)
   if (anyNearMedicare(draft)) steps.push(irmaaSeedStep)
+  steps.push(accountsStep(draft))
   return steps
 }

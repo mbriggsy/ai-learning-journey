@@ -3,7 +3,7 @@ import { useMemo, useSyncExternalStore } from 'react'
 import { afterEach, describe, expect, it } from 'vitest'
 import '@testing-library/jest-dom/vitest'
 import { cleanup, render, screen, fireEvent } from '@testing-library/react'
-import { preambleSteps } from '../questions'
+import { intakeSteps } from '../questions'
 import { IntakeFlow } from '../flow'
 import { createMemoryModel, type MemoryModel, type ScenarioDraft } from '@store/memoryModel'
 import type { EngineClient } from '@store/engineClient'
@@ -40,7 +40,7 @@ function freshModel(): MemoryModel {
 /** The same shape the app mounts: steps derived from the live draft. */
 function Harness({ model }: { model: MemoryModel }) {
   const snap = useSyncExternalStore(model.subscribe, model.getSnapshot)
-  const steps = useMemo(() => preambleSteps(snap.draft), [snap.draft])
+  const steps = useMemo(() => intakeSteps(snap.draft), [snap.draft])
   return <IntakeFlow steps={steps} model={model} />
 }
 
@@ -59,11 +59,11 @@ const setStatuses = (model: MemoryModel, s0: 'working' | 'retired', s1: 'working
 
 const heading = () => screen.getByRole('heading', { level: 2 }).textContent
 
-describe('preambleSteps — conditional gates', () => {
+describe('intakeSteps — conditional gates', () => {
   it('an all-retired household skips the salary AND working-income steps', () => {
     const m = freshModel()
     setStatuses(m, 'retired', 'retired')
-    const ids = preambleSteps(draft(m)).map((s) => s.id)
+    const ids = intakeSteps(draft(m)).map((s) => s.id)
     expect(ids).not.toContain('income')
     expect(ids).not.toContain('working-income')
   })
@@ -71,7 +71,7 @@ describe('preambleSteps — conditional gates', () => {
   it('any working member adds salary + working-income; both appear for a mixed household', () => {
     const m = freshModel()
     setStatuses(m, 'working', 'retired')
-    const ids = preambleSteps(draft(m)).map((s) => s.id)
+    const ids = intakeSteps(draft(m)).map((s) => s.id)
     expect(ids).toContain('income')
     expect(ids).toContain('working-income')
   })
@@ -85,23 +85,23 @@ describe('preambleSteps — conditional gates', () => {
         { ...d.people[1], currentAge: 66, birthYear: 1960 },
       ],
     }))
-    expect(preambleSteps(draft(m)).map((s) => s.id)).not.toContain('health-quote')
+    expect(intakeSteps(draft(m)).map((s) => s.id)).not.toContain('health-quote')
 
     m.update((d) => ({ ...d, people: [{ ...d.people[0], currentAge: 62, birthYear: 1964 }, d.people[1]] }))
-    expect(preambleSteps(draft(m)).map((s) => s.id)).toContain('health-quote')
+    expect(intakeSteps(draft(m)).map((s) => s.id)).toContain('health-quote')
   })
 
   it('unknown ages keep the ACA quote step (ask until proven 65+, never silently skip)', () => {
     const m = freshModel()
-    expect(preambleSteps(draft(m)).map((s) => s.id)).toContain('health-quote')
+    expect(intakeSteps(draft(m)).map((s) => s.id)).toContain('health-quote')
   })
 
   it('the IRMAA seed step appears only with a member 64+ (the 2-year lookback reach)', () => {
     const m = freshModel()
     m.update((d) => ({ ...d, people: [{ ...d.people[0], currentAge: 63 }, { ...d.people[1], currentAge: 60 }] }))
-    expect(preambleSteps(draft(m)).map((s) => s.id)).not.toContain('irmaa-seed')
+    expect(intakeSteps(draft(m)).map((s) => s.id)).not.toContain('irmaa-seed')
     m.update((d) => ({ ...d, people: [{ ...d.people[0], currentAge: 64 }, d.people[1]] }))
-    expect(preambleSteps(draft(m)).map((s) => s.id)).toContain('irmaa-seed')
+    expect(intakeSteps(draft(m)).map((s) => s.id)).toContain('irmaa-seed')
   })
 })
 

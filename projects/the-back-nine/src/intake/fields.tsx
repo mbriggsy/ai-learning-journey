@@ -181,6 +181,13 @@ export function NameField({
   )
 }
 
+/** A segment's label comes from the catalog (labelKey) or — for genuinely
+ *  dynamic content like the entered spouse names — a plain string. */
+export type SegmentOption<V extends string> = { readonly value: V } & (
+  | { readonly labelKey: CopyKey; readonly label?: never }
+  | { readonly label: string; readonly labelKey?: never }
+)
+
 /**
  * Segmented control — real radios under segment labels (form-native a11y).
  * The active segment reads by WEIGHT + FILL, never hue alone (the law).
@@ -194,7 +201,7 @@ export function SegmentedControl<V extends string>({
   name,
 }: {
   readonly legendKey: CopyKey
-  readonly options: ReadonlyArray<{ readonly value: V; readonly labelKey: CopyKey }>
+  readonly options: ReadonlyArray<SegmentOption<V>>
   readonly value: V | undefined
   readonly onChange: (value: V) => void
   readonly name: string
@@ -221,7 +228,7 @@ export function SegmentedControl<V extends string>({
               // tap). Idempotent for normal selections.
               onClick={() => onChange(opt.value)}
             />
-            {copy[opt.labelKey]}
+            {opt.label ?? copy[opt.labelKey]}
           </label>
         ))}
       </div>

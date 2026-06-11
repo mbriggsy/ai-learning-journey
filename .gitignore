@@ -1,6 +1,7 @@
 node_modules/
 *.txt
 !**/requirements.txt
+!**/LICENSE-upstream.txt
 
 # Virtual environments (never commit these!)
 .venv/

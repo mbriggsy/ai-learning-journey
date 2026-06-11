@@ -70,6 +70,17 @@ When any doc contradicts the north-star, the **north-star wins**. `TODO.md` is t
 - **Stale-HMR (burned/072):** a frozen `?t=<ms>` 500 in the Vite dev overlay while `pnpm build` passes is a stale HMR cache — **restart the dev server, don't hunt a phantom bug.** Make multi-edit refactors atomic.
 - **CI assumes Linux case-sensitivity (burned/055):** a green local Windows run is not proof; normalize env keys to UPPER_SNAKE.
 
+## UI design skills (P2+ — load before ANY UI surface is touched)
+
+Four skills, each with a distinct job (evaluated 2026-06-11; ui-ux-pro-max REJECTED — permission-system writes, greenfield-landing-page bias, Windows-hostile packaging):
+
+1. **`compound-engineering:frontend-design`** (the Every variant) — aesthetic direction + lifecycle (context detection, calm-dashboard Module B, screenshot verification). **NEVER the official `frontend-design` plugin skill** — it defaults to "pick an EXTREME / maximalist / UNFORGETTABLE," the wrong tone for this product. Every bare `/frontend-design` reference in older plan docs means THIS variant.
+2. **`emil-design-eng`** (global user skill) — motion/micro-interaction craft: timing, easing, the motion@12 hardware-acceleration trap, reduced-motion.
+3. **`back-nine-design`** (project skill, `.claude/skills/`) — project law the market doesn't cover: color-blind-safe encoding (color is NEVER the only signal — WCAG AA contrast does NOT satisfy this), confidence-band/fan-chart honesty, intake-form UX, the CSP/`<MotionConfig nonce>` landmine, PWA/offline UX.
+4. **`web-design-guidelines`** (project skill, vendored from `vercel/agent-skills` — adapted: WebFetch stripped) — the post-build REVIEW lens (a11y, `tabular-nums`, reduced-motion checklist).
+
+Precedence on conflict: back-nine-design (project law) > emil-design-eng (motion) > frontend-design (direction) > web-design-guidelines (review).
+
 ## The bar
 
 NASA standard — quality is the deliverable, not completion. Verify in the real environment before claiming done. The automated optimality oracle judges *correctness*; the N=1 cold-read judges *tone* — never the reverse.

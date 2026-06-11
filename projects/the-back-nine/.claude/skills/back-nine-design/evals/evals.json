@@ -1,0 +1,62 @@
+{
+  "skill_name": "back-nine-design",
+  "notes": "Iteration-1 run 2026-06-11: with-skill 26/26 (100%) vs baseline 19/26 (73%), 1 run/arm (directional). Assertions below carry the iteration-1 grader refinements: eval-0 A3 split in two, eval-0 palette assertion tightened against derived-shade mislabeling, eval-1 gained two functional assertions. Workspace artifacts live in system temp (back-nine-design-workspace), never the repo.",
+  "evals": [
+    {
+      "id": 0,
+      "eval_name": "confidence-band-viz",
+      "prompt": "Build a React + TypeScript component called ConfidenceBand for a personal retirement-planning app. It renders a projection fan: portfolio value (real dollars) over household years, with 10th/25th/50th/75th/90th percentile series passed as props (number arrays of equal length plus a years array), and a verdict state prop that is one of 'on-track' | 'borderline' | 'off-track' | 'indeterminate' | 'over-funded' | 'already-failing'. Render as inline SVG, no charting library. Include whatever styling (CSS file) you need. The component must communicate which region is the median vs the tails, handle the indeterminate state, and show the verdict. Write the component and its CSS to the output directory as ConfidenceBand.tsx and confidence-band.css. Do not modify any existing project files.",
+      "expected_output": "A chart whose band is a single-hue lightness ramp, y-axis anchored at $0 linear, percentile edges labeled with direct in-chart text, verdict rendered as word + distinct icon shape, tabular-nums, no count-up animation, indeterminate as a wide low-emphasis placeholder without a median line, colors from Okabe-Ito tokens (derived shades correctly named).",
+      "assertions": [
+        "Band fill is a single-hue lightness/alpha ramp (all band colors are variations of ONE hue), not a multi-hue or rainbow gradient across percentile regions",
+        "Y-axis scale is linear and anchored at $0 — no log scale, no truncated baseline that starts above zero; depleted (zero) values map to the $0 baseline so a ruin case is drawable",
+        "Median vs tail regions are identified by direct in-chart text labels (e.g. 'median', '10th-90th') rendered within/adjacent to the chart",
+        "Region identity is never conveyed by a legend keyed only by color (a legend, if present, carries non-color cues and is not the sole identification)",
+        "Verdict state renders as a word plus a non-color visual cue (icon/shape/weight); color is never the only channel distinguishing good from bad states",
+        "Indeterminate state renders a deliberately wide, low-emphasis placeholder WITHOUT a median line — not a thin precise band or a confident single line",
+        "No count-up/odometer number animation; if any animation exists it respects prefers-reduced-motion",
+        "font-variant-numeric: tabular-nums (or tnum feature) is applied to numeric figures/axis labels",
+        "Data/series/band colors are exact Okabe-Ito values defined as named tokens; any derived shade shares its base OI hue (within ~3 deg oklch, L/alpha-only variation) and is named/commented as a derivative — no token or comment claims 'Okabe-Ito' for an off-hue value, and no off-palette raw hex appears at usage sites"
+      ],
+      "files": []
+    },
+    {
+      "id": 1,
+      "eval_name": "intake-spending-step",
+      "prompt": "Build a React + TypeScript component for one step of a multi-step financial intake flow: the question 'How much does your household spend?'. It needs a currency input, a way for the user to indicate whether the figure is per month or per year, validation (the value must be a positive number), an error display, and Continue/Back buttons that call onAdvance/onBack props. The component receives and updates the value via props (value/onChange). Style it for mobile. Write the component and its CSS to the output directory as SpendingStep.tsx and spending-step.css. Do not modify any existing project files.",
+      "expected_output": "Visible bound label, type='text' with inputmode='decimal', autocomplete='off', format-on-blur with raw number in state, blur/advance validation that clears on re-edit, role='alert' + icon + text errors, shape/weight segmented period control, focus-to-heading, 24px+ targets, tabular-nums — and functionally: positive-number predicate enforced, Back never gated by validation.",
+      "assertions": [
+        "A visible label is programmatically bound to the input (label[for]/id or wrapping label); a placeholder is NOT used as the label",
+        "Currency input is type='text' (or typeless) with inputmode='decimal' — NOT input type='number'",
+        "The financial input has autocomplete='off'",
+        "Display formatting (thousands separators) is applied on blur, not on every keystroke; the model/state stores a raw numeric value",
+        "Validation fires on blur and/or on attempt-to-advance, never per keystroke; the error clears as soon as the field is re-edited",
+        "The error is announced and associated: role='alert' (or aria-live), aria-invalid on the field, aria-describedby pointing at the error, and the error carries an icon + plain text (not color-only)",
+        "An explicit per-month vs per-year segmented control exists; the active segment is distinguished by shape/weight/border, not hue alone",
+        "Focus management targets the step heading (tabindex='-1' + focus) rather than autofocusing the input on mount",
+        "Touch targets are at least 24x24 CSS px (44px practical floor for the primary field) in the CSS",
+        "font-variant-numeric: tabular-nums is applied to displayed monetary figures",
+        "FUNCTIONAL: the positive-number validation actually rejects 0 and negative values (the predicate is value > 0, not >= 0 or mere presence)",
+        "FUNCTIONAL: onBack is invocable regardless of validation state — only Continue/advance is gated by validity"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "eval_name": "verdict-state-display",
+      "prompt": "Build a React + TypeScript component called VerdictSignal for a retirement-planning app. It takes a state prop ('on-track' | 'borderline' | 'off-track' | 'indeterminate' | 'over-funded' | 'already-failing'), a confidence count out of 10 (number), and an approximate dollar magnitude (number). It renders the household's current standing as a compact signal the user sees first on the main screen. Make the six states clearly distinguishable at a glance and accessible. Write the component and its CSS to the output directory as VerdictSignal.tsx and verdict-signal.css. Do not modify any existing project files.",
+      "expected_output": "Six states as word + distinct icon silhouette with color as reinforcement only, literal 'X of 10' text with the 'more than 9 of 10' top clamp, no bare colored gauge, aria-labels, static figures, tabular-nums, calm non-prescriptive copy.",
+      "assertions": [
+        "Each of the six states renders a verdict word plus a distinct icon/shape silhouette; the six icons are distinguishable without color",
+        "Good vs bad states are never differentiated by red/green color alone — a non-color channel (word, shape, weight) always carries the distinction",
+        "The confidence count renders as literal text 'X of 10'; values at the top of the scale display as 'more than 9 of 10' (the string '10 of 10' is unreachable)",
+        "The count is not represented solely by a colored gauge/bar; if a bar/thread exists it encodes position by fill proportion with text alongside",
+        "Icons/graphics carry aria-label (or equivalent a11y-tree text) naming the state; the verdict is reachable as text by a screen reader",
+        "Displayed figures are static — no count-up/odometer animation on the count or the dollar magnitude",
+        "font-variant-numeric: tabular-nums is applied to the numeric figures",
+        "Copy is calm and non-prescriptive: no imperative advice verbs ('you should', 'make sure'), no alarm styling (all-caps warnings, exclamation-heavy text)"
+      ],
+      "files": []
+    }
+  ]
+}

@@ -76,6 +76,14 @@ export const isDepleted = (d: DepletionYear): boolean => d !== NEVER_DEPLETED &&
  *  curves, never a hardcoded constant). */
 export type Sex = 'male' | 'female'
 
+/** Exhaustive vocabulary array (the codec's membership surface — same compile-time
+ *  exhaustiveness pattern as OUTCOME_STATES, so the union and the array can't drift). */
+export const SEXES = ['male', 'female'] as const
+type _SexesCover = (typeof SEXES)[number] extends Sex ? true : never
+type _SexCovered = Sex extends (typeof SEXES)[number] ? true : never
+const _sexesExhaustive: _SexesCover & _SexCovered = true
+void _sexesExhaustive
+
 /** One spouse's inputs for the spine. Ages are in whole years at the simulation's
  *  year 0; the earned-income bridge truncates a person's income at the earlier of
  *  their retirement year and their sampled death year (never credit a dead earner). */
@@ -171,6 +179,13 @@ export const DRAWDOWN_POLICIES = [
 /** Federal income-tax filing status. MFJ for the couple; flips to single the year after the
  *  first death (no QSS grace — §Strand 5). The engine's tax overlay re-exports this. */
 export type FilingStatus = 'mfj' | 'single'
+
+/** Exhaustive vocabulary array (the codec's membership surface). */
+export const FILING_STATUSES = ['mfj', 'single'] as const
+type _FilingsCover = (typeof FILING_STATUSES)[number] extends FilingStatus ? true : never
+type _FilingCovered = FilingStatus extends (typeof FILING_STATUSES)[number] ? true : never
+const _filingsExhaustive: _FilingsCover & _FilingCovered = true
+void _filingsExhaustive
 
 /** An account split by tax treatment (real dollars). Structurally the engine's
  *  `AccountBuckets`; the canonical plaintext vocabulary lives here in the leaf layer. */
@@ -679,4 +694,90 @@ export interface ScenarioV2 {
   readonly taxVintage: string
   /** The methodology app-default version stamp (which default market/assumption set was applied). */
   readonly appDefaultVersion: string
+}
+
+/** The union of persistable plaintext scenario shapes (every version the decode
+ *  ladder accepts today). ScenarioV3 (healthcare + accumulation persistence) lands
+ *  WITH its first producer — P2 intake — per the as-we-go standing decision; the
+ *  codec's unknown-version branch is what makes that deferral safe (a v3 blob read
+ *  by this build surfaces the calm "saved by a newer version" state, never a
+ *  mis-parse and never healthcare silently OFF). */
+export type AnyScenario = Scenario | ScenarioV2
+
+// ---------------------------------------------------------------------------
+// The at-rest vault record shapes (P1·U4) — the SINGLE-SOURCED definition the
+// serializer (src/store/db.ts) writes and the no-key-leak security gate asserts
+// against (burned/063: the gate imports THESE shapes/field sets, so adding a field
+// to a record cannot silently bypass the "no raw key material" check; the
+// compile-time checks below force the field arrays to track the interfaces).
+//
+// Exactly THREE record types exist. The wraps each carry their OWN fresh salt + IV;
+// the model record carries no salt (DK is raw random bytes, not derived). Bytes are
+// Uint8Array on purpose — IndexedDB structured-clones them natively.
+// ---------------------------------------------------------------------------
+
+/** The model encrypted under DK. */
+export interface ModelRecord {
+  readonly iv: Uint8Array
+  readonly ciphertext: Uint8Array
+}
+
+/** DK wrapped under a credential key (passphrase- or recovery-derived). `salt` is the
+ *  KDF salt the credential key was derived with; `wrappedDataKey` is AES-GCM ciphertext
+ *  of the raw DK bytes — NEVER the raw bytes (the at-rest blob is exactly
+ *  PBKDF2-strength protected, no more). */
+export interface WrapRecord {
+  readonly salt: Uint8Array
+  readonly iv: Uint8Array
+  readonly wrappedDataKey: Uint8Array
+}
+
+/** The exhaustive field sets — the no-leak gate's iteration surface. */
+export const MODEL_RECORD_FIELDS = ['iv', 'ciphertext'] as const
+export const WRAP_RECORD_FIELDS = ['salt', 'iv', 'wrappedDataKey'] as const
+
+// Compile-time: the field arrays exactly cover the interfaces (both directions).
+type _ModelFieldsCover = (typeof MODEL_RECORD_FIELDS)[number] extends keyof ModelRecord ? true : never
+type _ModelKeysCovered = keyof ModelRecord extends (typeof MODEL_RECORD_FIELDS)[number] ? true : never
+type _WrapFieldsCover = (typeof WRAP_RECORD_FIELDS)[number] extends keyof WrapRecord ? true : never
+type _WrapKeysCovered = keyof WrapRecord extends (typeof WRAP_RECORD_FIELDS)[number] ? true : never
+const _recordFieldsExhaustive: _ModelFieldsCover & _ModelKeysCovered & _WrapFieldsCover & _WrapKeysCovered = true
+void _recordFieldsExhaustive
+
+/** The vault's fixed IndexedDB geometry: one DB, one object store, three keys. */
+export const VAULT_DB_NAME = 'the-back-nine-vault'
+export const VAULT_STORE_NAME = 'vault'
+export const VAULT_KEYS = ['model', 'passphraseWrap', 'recoveryWrap'] as const
+export type VaultKey = (typeof VAULT_KEYS)[number]
+
+// ---------------------------------------------------------------------------
+// The export/backup envelope (P1·U4). Export = encrypted blob; restore = file +
+// recovery phrase → set new passphrase. The file carries the model box + the
+// recoveryWrap ONLY — deliberately NOT the passphraseWrap: the spec'd restore path
+// re-mints a fresh passphrase wrap, and carrying the old one would make an exported
+// file sitting in cloud storage openable by the (possibly weak, possibly shared)
+// OLD passphrase — widening the negative-pairing guarantee ("file without the
+// phrase recovers nothing") into a hole. Bytes are base64 strings (a JSON file).
+// `format` + `formatVersion` are checked BEFORE any decrypt (a foreign/corrupt file
+// surfaces as "this backup file looks damaged", never a GCM stack trace).
+// ---------------------------------------------------------------------------
+
+export const BACKUP_FORMAT = 'the-back-nine-backup'
+export const BACKUP_FORMAT_VERSION = 1
+
+/** A GCM box with base64-encoded bytes (the JSON-file form of a vault box). */
+export interface BackupBoxV1 {
+  readonly iv: string
+  readonly ciphertext: string
+}
+
+export interface BackupFileV1 {
+  readonly format: typeof BACKUP_FORMAT
+  readonly formatVersion: typeof BACKUP_FORMAT_VERSION
+  readonly model: BackupBoxV1
+  readonly recoveryWrap: {
+    readonly salt: string
+    readonly iv: string
+    readonly wrappedDataKey: string
+  }
 }

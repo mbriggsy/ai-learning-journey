@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
 import { describe, it, expect } from 'vitest'
 import {
   survivalToYear,
@@ -32,6 +34,48 @@ describe('cohort survival table — shape', () => {
     // SSA TR2024 CSVs (reference/ssa-snapshot/), independent of the engine's table read.
     expect(survivalProbability('male', 90)).toBeCloseTo(0.320872, 5)
     expect(survivalProbability('female', 90)).toBeCloseTo(0.434841, 5)
+  })
+})
+
+describe('the full-vector source bind (insight 021 — review fold 2026-06-11)', () => {
+  // The adversary lens proved the prior guard set (shape + two S(90) anchors) admits a
+  // SMOOTH interior corruption — including the optimistic-direction one (a 0.99-scaled
+  // male curve shortens sampled horizons → inflates the headline). The bind below kills
+  // the whole class: EVERY baked value must re-derive from the committed SSA CSVs.
+  const parseLx = (file: string, birthYear: number): Map<number, number> => {
+    const text = readFileSync(
+      fileURLToPath(new URL(`../reference/ssa-snapshot/${file}`, import.meta.url)),
+      'utf8',
+    )
+    const lines = text.split(/\r?\n/)
+    const start = lines.findIndex((l) => l.startsWith('Year,x,'))
+    expect(start, `${file} carries the Year,x,q(x),l(x) header`).toBeGreaterThan(-1)
+    const lx = new Map<number, number>()
+    for (const line of lines.slice(start + 1)) {
+      const parts = line.split(',')
+      if (Number(parts[0]) !== birthYear) continue
+      lx.set(Number(parts[1]), Number(parts[3]))
+    }
+    return lx
+  }
+
+  it('every COHORT_SURVIVAL value re-derives as l(age)/l(65) from the committed CSVs (male 1969 / female 1972)', () => {
+    const m = parseLx('CohLifeTables_M_Alt2_TR2024.csv', 1969)
+    const f = parseLx('CohLifeTables_F_Alt2_TR2024.csv', 1972)
+    const m65 = m.get(65)
+    const f65 = f.get(65)
+    expect(m65, 'male cohort 1969 present with l(65) > 0').toBeGreaterThan(0)
+    expect(f65, 'female cohort 1972 present with l(65) > 0').toBeGreaterThan(0)
+    expect(COHORT_SURVIVAL, 'ages 65..119 inclusive').toHaveLength(55)
+    for (const row of COHORT_SURVIVAL) {
+      const lm = m.get(row.age)
+      const lf = f.get(row.age)
+      expect(lm !== undefined && lf !== undefined, `age ${row.age} present in both CSVs`).toBe(true)
+      // toBe-exact: the generator stored Number(x.toFixed(6)); the same rounding here
+      // reproduces it bit-for-bit, so ANY divergence — however smooth — fails loud.
+      expect(row.male, `male S(${row.age}|65) binds to the CSV`).toBe(Number((lm! / (m65 ?? 1)).toFixed(6)))
+      expect(row.female, `female S(${row.age}|65) binds to the CSV`).toBe(Number((lf! / (f65 ?? 1)).toFixed(6)))
+    }
   })
 })
 

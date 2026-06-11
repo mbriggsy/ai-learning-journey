@@ -112,6 +112,10 @@ describe('ticker → blend reference table (C1, R37)', () => {
   })
 
   it('TDF series shape: each issuer series holds less stock at 2030 than at 2050 (coarse — glide-plateau noise is REAL issuer data, strict monotonicity is deliberately NOT asserted)', () => {
+    // Accepted residual (review 2026-06-11, adversary lens): a transpose of two
+    // NON-anchored adjacent rungs (e.g. a 2040↔2045 swap) passes these coarse bands.
+    // Deliberate — intake shows the user the resolved blend, and the full-ladder
+    // tolerance check it would take lives with the per-issuer glide upgrade (D1).
     const pairs: ReadonlyArray<readonly [string, string]> = [
       ['VTHRX', 'VFIFX'], // Vanguard Target Retirement
       ['FXIFX', 'FIPFX'], // Fidelity Freedom Index

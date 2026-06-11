@@ -27,10 +27,14 @@
  * filename. The period table at /STATS/table4c6.html is real; its cohort
  * sibling lives only in the HistEst downloadables used here.
  *
- * The table runs 65..119 (full SSA support; the integer l(x) reaches 0 at male
- * 117 / female 119 for these cohorts — the terminal row is the data's own zero,
- * and survival past 119 is clamped to 0). Women survive materially longer at
- * every age — the reason the engine MUST key on sex, never one blended rate.
+ * The table runs 65..119 (full SSA support). Tail facts for THESE cohorts
+ * (review-corrected 2026-06-11): the male integer l(x) first hits 0 at age 118
+ * (117 is his last NONZERO row, S=0.000013); the FEMALE cohort is still nonzero
+ * at the 119 terminus (l(119)=1, S=0.000011) — her terminal value is NOT the
+ * data's own zero; survival past 119 is clamped to 0 by SURVIVAL_MAX_AGE (a
+ * deliberate conservative truncation of her off-table age-120 death). Women
+ * survive materially longer at every age — the reason the engine MUST key on
+ * sex, never one blended rate.
  */
 import type { Sex } from '@shared/model'
 

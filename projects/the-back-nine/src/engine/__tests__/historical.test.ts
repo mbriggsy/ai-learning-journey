@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
 import { describe, it, expect } from 'vitest'
 import { toRealSeries, damodaranToReal, rollingSuccessRate, backtestWindow, type BacktestConfig, type RealYear } from '@engine/historical'
 import { SHILLER_1925_1995 } from '@engine/reference/shillerSeries'
@@ -141,6 +143,41 @@ describe('Damodaran series — structure + externally-derived spot goldens', () 
     const y1931 = DAMODARAN_1928_1995.find(y => y.year === 1931)
     expect(y1931?.aaaCorporateNominal).toBeGreaterThan(-0.02) // ≈ −1.6%
     expect(y1931?.baaCorporateNominal).toBeLessThan(-0.15) // ≈ −15.7%
+  })
+
+  it('every DamodaranYear binds to the committed extraction snapshot (insight 021 — review fold 2026-06-11)', () => {
+    // The adversary proved the window COUNTS are integral guards: a ±3pp corruption of a
+    // non-anchored interior year flips no count, and the 8 spot goldens never touch
+    // stockNominal or the Trinity-arm aaaCorporateNominal. This bind kills the class:
+    // EVERY cell must equal the committed extraction (damodaran-snapshot/, sha256-pinned,
+    // itself validated 8/8 vs an independent recon agent + cross-sheet 68/68 at extract
+    // time). toBe-exact: both sides are the same doubles through String()/JSON round-trips.
+    interface ExtractRow {
+      readonly year: number
+      readonly aaa: number
+      readonly baa: number
+      readonly tbond10: number
+      readonly stock: number
+      readonly inflation: number
+    }
+    const raw = JSON.parse(
+      readFileSync(
+        fileURLToPath(new URL('../reference/damodaran-snapshot/damodaran-extract.json', import.meta.url)),
+        'utf8',
+      ),
+    ) as readonly ExtractRow[]
+    expect(raw).toHaveLength(68)
+    DAMODARAN_1928_1995.forEach((y, i) => {
+      const r = raw[i]
+      expect(r, `snapshot row ${i} present`).toBeDefined()
+      if (!r) return
+      expect(y.year).toBe(r.year)
+      expect(y.stockNominal, `stock ${y.year}`).toBe(r.stock)
+      expect(y.aaaCorporateNominal, `aaa ${y.year}`).toBe(r.aaa)
+      expect(y.baaCorporateNominal, `baa ${y.year}`).toBe(r.baa)
+      expect(y.tbond10Nominal, `tbond10 ${y.year}`).toBe(r.tbond10)
+      expect(y.inflationRate, `inflation ${y.year}`).toBe(r.inflation)
+    })
   })
 })
 

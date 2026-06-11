@@ -8,8 +8,9 @@
  * each spouse's death year (inverse-transform on the survival curve) and reports the
  * first-death year + the survivor's index per path. The couple last-survivor figure
  * is DERIVED from the two shipped sex-specific curves through the formula — never a
- * hardcoded constant (a single blended rate is arithmetically inconsistent: a sex-
- * differentiated pair yields ~0.55 to age 90, not the 0.4375 a symmetric 0.25 gives).
+ * hardcoded constant (a single blended rate is arithmetically inconsistent: the
+ * SSA-pinned 1969/1972 cohort pair yields ~0.62 to age 90, where a symmetric
+ * blended rate would land far lower — the 0.25-each toy case gives 0.4375).
  *
  * Independence is assumed (real spousal mortality is positively correlated), which
  * mildly OVERSTATES last-survivor probability — acceptable because it errs SAFE for a

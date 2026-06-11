@@ -27,18 +27,20 @@ describe('cohort survival table — shape', () => {
     }
   })
 
-  it('the grounded anchor holds: male S(90)≈0.28, female S(90)≈0.38', () => {
-    expect(survivalProbability('male', 90)).toBeCloseTo(0.28, 2)
-    expect(survivalProbability('female', 90)).toBeCloseTo(0.38, 2)
+  it('the SSA-pinned anchors hold: male S(90)=0.320872 (1969 cohort), female S(90)=0.434841 (1972 cohort)', () => {
+    // EXTERNALLY derived (DND/012): l(90)/l(65) computed straight from the committed
+    // SSA TR2024 CSVs (reference/ssa-snapshot/), independent of the engine's table read.
+    expect(survivalProbability('male', 90)).toBeCloseTo(0.320872, 5)
+    expect(survivalProbability('female', 90)).toBeCloseTo(0.434841, 5)
   })
 })
 
 describe('couple last-survivor is DERIVED, never hardcoded', () => {
-  it('to age 90 ≈ 0.55, and materially exceeds either single life', () => {
+  it('to age 90 ≈ 0.62 (SSA 1969/1972 cohorts), and materially exceeds either single life', () => {
     const couple = coupleSurvivalToYear(MALE_65, FEMALE_65, 25) // both reach 90
     const male = survivalToYear(MALE_65, 25)
     const female = survivalToYear(FEMALE_65, 25)
-    expect(couple).toBeCloseTo(0.554, 2)
+    expect(couple).toBeCloseTo(0.6162, 3)
     expect(couple).toBeGreaterThan(male)
     expect(couple).toBeGreaterThan(female)
     // exactly the formula on the two curves (not a constant)
@@ -46,8 +48,8 @@ describe('couple last-survivor is DERIVED, never hardcoded', () => {
   })
 
   it('is NOT the symmetric-rate fallacy (0.25+0.25−0.0625=0.4375 is wrong)', () => {
-    // A single blended rate applied to both would give 0.4375; the sex-differentiated
-    // pair gives ~0.55 — proving the engine uses two curves, not one.
+    // A symmetric 0.25-each toy rate applied to both would give 0.4375; the
+    // sex-differentiated SSA pair gives ~0.62 — proving the engine uses two curves.
     expect(coupleSurvivalToYear(MALE_65, FEMALE_65, 25)).toBeGreaterThan(0.5)
   })
 })
@@ -60,7 +62,7 @@ describe('sampling reproduces the curve (internal consistency, law of large numb
     for (let i = 0; i < n; i++) {
       if (sampleDeathYearOffset(MALE_65, rand()) > 25) aliveAt90++
     }
-    expect(aliveAt90 / n).toBeCloseTo(survivalToYear(MALE_65, 25), 2) // ≈ 0.28
+    expect(aliveAt90 / n).toBeCloseTo(survivalToYear(MALE_65, 25), 2) // ≈ 0.32
   })
 
   it('the sampled COUPLE survival-to-90 equals the FORMULA on the two curves', () => {

@@ -52,7 +52,8 @@ it's a plausible wrong *table*, and smoothness is its camouflage.
 
 ## Also Applies To
 
-Every P1-exit pin-pass replacement (SSA table4c7 cohort curves, the Trinity corporate
+Every P1-exit pin-pass replacement (the SSA cohort curves — "table4c7" proved a
+PHANTOM filename, corrected at the pin 2026-06-11 — the Trinity corporate
 bond series, Ibbotson) — when the directional table is swapped for the pinned one,
 the test must pin the full replacement vector, not just re-anchor endpoints. The JLLS
 grid already does this via structural axes STRONGER than smoothness (symmetry +

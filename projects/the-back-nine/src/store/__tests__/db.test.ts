@@ -154,6 +154,19 @@ describe('atomicity', () => {
   })
 })
 
+describe('writeVault is TOTAL (clears stale strays in the same transaction)', () => {
+  it('a stray record beyond the three defined keys does not survive a full-vault write', async () => {
+    const db = await openVaultDb()
+    const tx = db.transaction(VAULT_STORE_NAME, 'readwrite')
+    void tx.objectStore(VAULT_STORE_NAME).put({ junk: bytes(1) }, 'strayKey').catch(() => undefined)
+    await tx.done
+
+    await writeVault(db, fixtureVault())
+    const keys = await db.getAllKeys(VAULT_STORE_NAME)
+    expect([...keys].sort()).toEqual(['model', 'passphraseWrap', 'recoveryWrap'])
+  })
+})
+
 describe('rewriteModel (the model-only re-encrypt entry point — the P3/P4 vault-upgrade primitive)', () => {
   it('replaces ONLY the model record; both wraps stay byte-identical', async () => {
     const db = await openVaultDb()

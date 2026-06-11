@@ -62,7 +62,6 @@ export interface TrustLoopReport {
   readonly restoreOk: boolean
   readonly reopenWithNewPassphraseOk: boolean
   readonly restoredModelEqual: boolean
-  readonly persistGrantedSeen: boolean
 }
 
 /** The full save → lock → unlock → export → wipe → restore loop on REAL IndexedDB. */
@@ -113,7 +112,6 @@ export async function runTrustLoop(): Promise<TrustLoopReport> {
     restoreOk: restored.ok,
     reopenWithNewPassphraseOk: reopenResult.ok,
     restoredModelEqual: modelsEqual(restoredModel, { ...MODEL, annualSpendingReal: 51_000 }),
-    persistGrantedSeen: true,
   }
 }
 

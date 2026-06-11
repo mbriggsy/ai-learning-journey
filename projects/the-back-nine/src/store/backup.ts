@@ -32,7 +32,7 @@ import { decodeScenario } from '@shared/scenarioCodec'
 import { CipherAuthError, decrypt, rewrapDataKey, unwrapDataKey } from '../crypto/cipher'
 import { SALT_BYTES, deriveNewPassphraseKey, deriveRecoveryKey, type FloorCheckedPassphrase } from '../crypto/kdf'
 import { phraseToEntropy, type PhraseDecode } from '../crypto/recoveryPhrase'
-import { loadVault, writeVault, type VaultDb } from './db'
+import { loadVault, serializeVaultWrite, writeVault, type VaultDb } from './db'
 
 export type ExportResult =
   | { readonly ok: true; readonly file: string }
@@ -43,8 +43,17 @@ export type RestoreResult =
   | { readonly ok: true }
   | {
       readonly ok: false
+      /** `wrong-recovery-phrase` is GCM-ambiguous BY NATURE: a bit-rotted recoveryWrap
+       *  with the CORRECT phrase is cryptographically indistinguishable from a wrong
+       *  phrase with an intact wrap. The P2 copy must hedge BOTH ways ("that phrase
+       *  doesn't match this backup — or the file is damaged; try another export"). */
       readonly reason: 'vault-exists' | 'file-damaged' | 'newer-format' | 'wrong-recovery-phrase' | 'quota'
     }
+  /** The backup's MODEL was written by a newer app (schemaVersion above this build's
+   *  ladder) — intact data, wrong app vintage. NEVER 'file-damaged' (telling a
+   *  survivor their good backup is corrupt is the calm-but-wrong sin). Distinct from
+   *  'newer-format' (the file ENVELOPE version). */
+  | { readonly ok: false; readonly reason: 'newer-version'; readonly got: number }
   | { readonly ok: false; readonly reason: 'phrase-invalid'; readonly phrase: Exclude<PhraseDecode, { ok: true }> }
   | { readonly ok: false; readonly reason: 'write-failed'; readonly detail: string }
 
@@ -109,6 +118,9 @@ export async function restoreVault(
   phrase: string,
   newPassphrase: FloorCheckedPassphrase,
 ): Promise<RestoreResult> {
+  // Fast-path refusal before any crypto (UX); the AUTHORITATIVE check re-runs inside
+  // the serialized critical section with the write (two no-vault tabs racing restores
+  // cannot both pass that one — the U4 boundary-review TOCTOU fold).
   const existing = await loadVault(db)
   if (existing.kind === 'vault') return { ok: false, reason: 'vault-exists' }
 
@@ -145,29 +157,39 @@ export async function restoreVault(
     throw e
   }
 
-  // The phrase OPENED the wrap — a GCM failure on the model is file damage, and a
-  // structurally invalid plaintext is equally a damaged backup (never half-restored).
+  // The phrase OPENED the wrap — a GCM failure on the model is file damage; a
+  // structurally invalid plaintext is equally a damaged backup; but an intact model
+  // written by a NEWER app is its own honest state, never "damaged".
   try {
     const plaintext = await decrypt(dk, { iv: modelIv, ciphertext: modelCiphertext })
     const decoded = decodeScenario(plaintext)
-    if (!decoded.ok) return { ok: false, reason: 'file-damaged' }
+    if (!decoded.ok) {
+      if (decoded.reason === 'newer-version') return { ok: false, reason: 'newer-version', got: decoded.got }
+      return { ok: false, reason: 'file-damaged' }
+    }
   } catch (e) {
     if (e instanceof CipherAuthError) return { ok: false, reason: 'file-damaged' }
     throw e
   }
 
   // Mint the fresh passphrase wrap (raw DK stays function-scoped in cipher.ts) and
-  // land everything in ONE atomic write.
+  // land everything in ONE atomic write, with the no-vault check INSIDE the same
+  // serialized critical section (check-then-write is atomic realm-wide + cross-tab).
   const newSalt = crypto.getRandomValues(new Uint8Array(SALT_BYTES))
   const newPassKey = await deriveNewPassphraseKey(newPassphrase, newSalt)
   const newWrapBox = await rewrapDataKey(recoveryKey, fileWrap, newPassKey)
   const passphraseWrap: WrapRecord = { salt: newSalt, iv: newWrapBox.iv, wrappedDataKey: newWrapBox.ciphertext }
 
-  const written = await writeVault(db, {
-    model: { iv: modelIv, ciphertext: modelCiphertext },
-    passphraseWrap,
-    recoveryWrap: { salt: recoverySalt, iv: recoveryIv, wrappedDataKey: recoveryWrapped },
+  const written = await serializeVaultWrite(async () => {
+    const check = await loadVault(db)
+    if (check.kind === 'vault') return 'vault-exists' as const
+    return writeVault(db, {
+      model: { iv: modelIv, ciphertext: modelCiphertext },
+      passphraseWrap,
+      recoveryWrap: { salt: recoverySalt, iv: recoveryIv, wrappedDataKey: recoveryWrapped },
+    })
   })
+  if (written === 'vault-exists') return { ok: false, reason: 'vault-exists' }
   if (!written.ok) {
     if (written.reason === 'quota') return { ok: false, reason: 'quota' }
     return { ok: false, reason: 'write-failed', detail: written.reason === 'no-vault' ? 'vault missing' : written.detail }

@@ -62,6 +62,41 @@ export async function openVaultDb(): Promise<VaultDb> {
   })
 }
 
+// ---------------------------------------------------------------------------
+// Vault-write serialization — the ONE primitive every vault mutator runs under
+// (the session's saves/wraps AND backup.ts's restore). Two layers compose:
+//   - a module-level FIFO chain: serializes every caller in this JS realm (all
+//     sessions in one tab share it — the U4 review's same-realm TOCTOU fix);
+//   - a cross-tab Web Lock per step (real browsers): serializes across tabs.
+// Check-then-write critical sections (firstSave's vault-exists check, restore's
+// no-vault check) run their CHECK inside the same serialized fn as their WRITE,
+// which is what makes "two tabs both first-saving/restoring" unable to splice a
+// mixed vault (one tab's model under another tab's wraps — undecryptable).
+// ---------------------------------------------------------------------------
+
+const WEB_LOCK_NAME = 'the-back-nine-vault-write'
+
+const underWebLock = <T>(fn: () => Promise<T>): Promise<T> => {
+  if (typeof navigator !== 'undefined' && navigator.locks?.request) {
+    return navigator.locks.request(WEB_LOCK_NAME, fn) as Promise<T>
+  }
+  return fn()
+}
+
+let realmWriteChain: Promise<void> = Promise.resolve()
+
+/** Run `fn` serialized after every previously enqueued vault write (realm-wide),
+ *  under the cross-tab Web Lock. The chain swallows rejections (a failed write
+ *  never poisons the FIFO); the returned promise carries `fn`'s own outcome. */
+export function serializeVaultWrite<T>(fn: () => Promise<T>): Promise<T> {
+  const run = realmWriteChain.then(() => underWebLock(fn))
+  realmWriteChain = run.then(
+    () => undefined,
+    () => undefined,
+  )
+  return run
+}
+
 /** Strict shape check against the single-sourced field sets: exactly the defined
  *  fields, every one a Uint8Array. An extra field is damage, not tolerance — a field
  *  this gate doesn't know is a field that could carry key material unnoticed. */
@@ -152,11 +187,13 @@ async function inWriteTransaction(
 }
 
 /** The full-vault write: first save AND restore both land here — model + both wraps,
- *  all-or-nothing. */
+ *  all-or-nothing, TOTAL (the store is cleared in the same transaction first, so a
+ *  restore over a damaged/partial vault can never leave a stale stray record). */
 export async function writeVault(db: VaultDb, records: VaultRecords): Promise<VaultWrite> {
   return inWriteTransaction(db, async (store) => {
     // Per-put promises reject with AbortError if the tx aborts — the transaction's
     // own `done` carries the real outcome, so the per-put rejections are swallowed.
+    void store.clear().catch(() => undefined)
     void store.put(records.model, 'model').catch(() => undefined)
     void store.put(records.passphraseWrap, 'passphraseWrap').catch(() => undefined)
     void store.put(records.recoveryWrap, 'recoveryWrap').catch(() => undefined)

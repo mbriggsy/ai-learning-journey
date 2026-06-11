@@ -3,12 +3,26 @@
  *
  * CONTRACT #4, STATED ONCE (the one predicate): a write is permitted iff
  *   (a derived session DK exists) AND (the on-disk passphraseWrap is current or was
- *   just minted this session) AND (this session is the single active writer).
+ *   just minted this session) AND (this session is the single active writer) AND
+ *   (no lock is in progress).
  * The SAME `writable()` seam refuses an unkeyed write, a recovery-unlocked write
- * before the mandatory new-passphrase re-mint, and a second-tab write — there is no
- * second hand-enforced rule to drift. This is the structural guarantee that makes
- * the survivor-stranded catastrophe (saving while the on-disk passphraseWrap still
- * encodes a forgotten passphrase) impossible by construction.
+ * before the mandatory new-passphrase re-mint, a second-tab write, AND a write
+ * issued during a lock's drain window — there is no second hand-enforced rule to
+ * drift. This is the structural guarantee that makes the survivor-stranded
+ * catastrophe (saving while the on-disk passphraseWrap still encodes a forgotten
+ * passphrase) impossible by construction.
+ *
+ * LOCK AUTHORITY (the U4 boundary-review fold): `lock()` is SYNCHRONOUSLY
+ * authoritative. At entry it bumps the session epoch and raises `locking` before
+ * any await, so (a) `writable()` refuses new writes immediately, (b) no new
+ * unlock/recovery/firstSave can start mid-drain, and (c) every long-running op
+ * (unlock / recoveryUnlock / firstSave / setNewPassphrase / save) captures the
+ * epoch at entry and re-checks it after each await BEFORE installing any state or
+ * restoring any status — a lock that lands during a ~1s PBKDF2 derive cancels the
+ * op (typed 'cancelled') instead of being resurrected over. The secret-drop in
+ * lock() sits in a `finally`, so even a rejecting Web Locks request (document
+ * not fully active during unload — exactly when lock-on-close fires) cannot leave
+ * keys resident or the state machine wedged.
  *
  * HONEST LOCK: JS/WebCrypto cannot byte-scrub a CryptoKey or a string. `lock()`
  * drops this session's ONLY references to the keys and the decrypted model (GC-
@@ -30,9 +44,18 @@
  * claim protocol closes the sequential case: a second tab unlocking an already-
  * unlocked vault is told so and stays read-only. (Two tabs unlocking in the SAME
  * ~150 ms probe window can still both claim — a disclosed residual; their writes
- * remain serialized and untorn via Web Locks.) A recovery unlock CLAIMS writer-hood
- * immediately (its only exit is the re-mint write) and is refused outright if
- * another tab is active.
+ * remain serialized and untorn via Web Locks, and the check-inside-critical-section
+ * pattern below keeps firstSave/restore from ever splicing a mixed vault.) A
+ * recovery unlock CLAIMS writer-hood immediately (its only exit is the re-mint
+ * write) and is refused outright if another tab is active.
+ *
+ * WRITE FAILURE CONTRACT: the three write ops (firstSave / setNewPassphrase / save)
+ * return typed results for EVERY failure — an unexpected crypto/locks throw maps to
+ * 'write-failed', never a raw rejection (the calm "couldn't save, use your export"
+ * states are the UI contract). unlock/recoveryUnlock keep loud rethrow for
+ * non-CipherAuthError programming errors on purpose: their typed arms all describe
+ * the VAULT's condition, and mislabeling an internal bug as "data damaged" would be
+ * the calm-but-wrong sin in the scariest direction.
  */
 import { type AnyScenario } from '@shared/model'
 import { decodeScenario, encodeScenario } from '@shared/scenarioCodec'
@@ -58,6 +81,7 @@ import {
   loadVault,
   replacePassphraseWrap,
   rewriteModel,
+  serializeVaultWrite,
   writeVault,
   type VaultDb,
   type VaultWrite,
@@ -67,20 +91,25 @@ export type SessionStatus = 'locked' | 'unlocking' | 'securing' | 'unlocked' | '
 
 export type FirstSaveResult =
   | { readonly ok: true; readonly recoveryPhrase: readonly string[] }
-  | { readonly ok: false; readonly reason: 'not-locked' | 'vault-exists' | 'open-in-another-tab' | 'quota' }
+  | {
+      readonly ok: false
+      readonly reason: 'not-locked' | 'vault-exists' | 'open-in-another-tab' | 'cancelled' | 'quota'
+    }
   | { readonly ok: false; readonly reason: 'write-failed'; readonly detail: string }
 
 export type UnlockResult =
   | { readonly ok: true; readonly readOnly: boolean }
-  | { readonly ok: false; readonly reason: 'not-locked' | 'no-vault' | 'wrong-passphrase' | 'newer-version' }
+  | { readonly ok: false; readonly reason: 'not-locked' | 'no-vault' | 'wrong-passphrase' | 'cancelled' }
+  | { readonly ok: false; readonly reason: 'newer-version'; readonly got: number }
   | { readonly ok: false; readonly reason: 'data-damaged'; readonly detail: string }
 
 export type RecoveryUnlockResult =
   | { readonly ok: true }
   | {
       readonly ok: false
-      readonly reason: 'not-locked' | 'no-vault' | 'wrong-recovery-phrase' | 'newer-version' | 'open-in-another-tab'
+      readonly reason: 'not-locked' | 'no-vault' | 'wrong-recovery-phrase' | 'open-in-another-tab' | 'cancelled'
     }
+  | { readonly ok: false; readonly reason: 'newer-version'; readonly got: number }
   | { readonly ok: false; readonly reason: 'phrase-invalid'; readonly phrase: Exclude<PhraseDecode, { ok: true }> }
   | { readonly ok: false; readonly reason: 'data-damaged'; readonly detail: string }
 
@@ -91,18 +120,28 @@ export type SaveResult =
 
 export type SetPassphraseResult =
   | { readonly ok: true }
-  | { readonly ok: false; readonly reason: 'no-session-key' | 'open-in-another-tab' | 'quota' }
+  | {
+      readonly ok: false
+      readonly reason: 'no-session-key' | 'open-in-another-tab' | 'op-in-flight' | 'cancelled' | 'quota'
+    }
   | { readonly ok: false; readonly reason: 'write-failed'; readonly detail: string }
 
 export interface VaultSession {
   status(): SessionStatus
+  /** The live in-memory model. Typed deeply readonly — treat it as immutable; a
+   *  caller mutating through a cast desyncs memory from disk (the readonly types
+   *  are this project's enforcement style, same as the engine's). */
   currentModel(): AnyScenario | null
-  /** Monotone lock counter — the engine-result discard predicate: a run's result is
-   *  rendered only if `lockEpoch()` still equals its value when the run started. */
+  /** Monotone lock counter, bumped SYNCHRONOUSLY at every lock() entry — the
+   *  engine-result discard predicate: a run's result is rendered only if
+   *  `lockEpoch()` still equals its value when the run started. The session's own
+   *  long ops consult the same counter to cancel across a lock. */
   lockEpoch(): number
   /** The U0 PWA-update signal (true while a vault transaction is in flight). */
   isWriteInFlight(): boolean
-  /** Resolves once the current write tail commits — the deferred-skipWaiting hook. */
+  /** Resolves once the write tail AT CALL TIME commits — the deferred-skipWaiting
+   *  hook. A write enqueued AFTER this call is not covered: the U0 handler must
+   *  re-check `isWriteInFlight()` immediately before applying the update. */
   whenNoWriteInFlight(): Promise<void>
   firstSave(scenario: AnyScenario, passphrase: FloorCheckedPassphrase): Promise<FirstSaveResult>
   unlock(passphrase: string): Promise<UnlockResult>
@@ -115,7 +154,6 @@ export interface VaultSession {
 const VAULT_SESSION_CHANNEL = 'the-back-nine-vault-session'
 /** How long a probing tab waits to hear an active writer before claiming. */
 const CLAIM_WAIT_MS = 150
-const WEB_LOCK_NAME = 'the-back-nine-vault-write'
 
 const freshSalt = (): Uint8Array<ArrayBuffer> => crypto.getRandomValues(new Uint8Array(SALT_BYTES))
 
@@ -128,6 +166,12 @@ const mapWriteFailure = (w: Extract<VaultWrite, { ok: false }>): WriteFailure =>
     ? { ok: false, reason: 'quota' }
     : { ok: false, reason: 'write-failed', detail: w.reason === 'no-vault' ? 'vault missing' : w.detail }
 
+const asWriteFailed = (e: unknown): WriteFailure => ({
+  ok: false,
+  reason: 'write-failed',
+  detail: e instanceof Error ? e.message : String(e),
+})
+
 export function createSession(db: VaultDb): VaultSession {
   // --- the in-memory secrets (the ONLY references; lock() nulls them) ---
   let dataKey: CryptoKey | null = null
@@ -138,27 +182,34 @@ export function createSession(db: VaultDb): VaultSession {
   let secondTab = false
 
   let status: SessionStatus = 'locked'
+  /** The generation token: bumped synchronously at lock() ENTRY. Long ops capture it
+   *  and re-check after every await before mutating session state. */
   let epoch = 0
+  /** True from lock() entry until its finally — the synchronous-authority flag. */
+  let locking = false
 
-  // --- the write mutex (in-process FIFO; each step ALSO under a Web Lock cross-tab) ---
-  let chain: Promise<void> = Promise.resolve()
+  // --- write accounting (serialization itself lives in db.serializeVaultWrite:
+  //     one module-level FIFO per realm + a cross-tab Web Lock per step) ---
   let writesInFlight = 0
-  const underWebLock = <T>(fn: () => Promise<T>): Promise<T> => {
-    if (typeof navigator !== 'undefined' && navigator.locks?.request) {
-      return navigator.locks.request(WEB_LOCK_NAME, fn) as Promise<T>
-    }
-    return fn()
-  }
+  let writeTail: Promise<void> = Promise.resolve()
   function enqueueWrite<T>(fn: () => Promise<T>): Promise<T> {
     writesInFlight++
-    const run = chain.then(() => underWebLock(fn))
-    chain = run.then(
+    const run = serializeVaultWrite(fn)
+    writeTail = run.then(
       () => undefined,
       () => undefined,
     )
-    void run.finally(() => {
-      writesInFlight--
-    })
+    // .then(onOk, onErr) — NOT .finally(), whose return re-propagates a rejection
+    // into a void-ed (hence unhandled) promise. The caller of enqueueWrite owns
+    // run's outcome; this side-channel only does the accounting.
+    void run.then(
+      () => {
+        writesInFlight--
+      },
+      () => {
+        writesInFlight--
+      },
+    )
     return run
   }
 
@@ -204,9 +255,14 @@ export function createSession(db: VaultDb): VaultSession {
     channel = null
     respondHandler = null
   }
+  /** A failed/cancelled claim attempt must not strand an open channel: close it
+   *  unless this session actually became a responder (lock() owns that close). */
+  function releaseChannelIfUnclaimed(): void {
+    if (respondHandler === null) releaseChannel()
+  }
 
-  /** THE seam — contract #4 as one predicate. Every write path consults exactly this. */
-  const writable = (): boolean => dataKey !== null && passphraseWrapCurrent && !secondTab
+  /** THE seam — contract #4 as one predicate. Every model save consults exactly this. */
+  const writable = (): boolean => dataKey !== null && passphraseWrapCurrent && !secondTab && !locking
 
   function dropSecrets(): void {
     dataKey = null
@@ -222,12 +278,16 @@ export function createSession(db: VaultDb): VaultSession {
     currentModel: () => model,
     lockEpoch: () => epoch,
     isWriteInFlight: () => writesInFlight > 0,
-    whenNoWriteInFlight: () => chain.then(() => undefined),
+    whenNoWriteInFlight: () => writeTail.then(() => undefined),
 
     async firstSave(scenario, passphrase) {
-      if (status !== 'locked') return { ok: false, reason: 'not-locked' }
+      if (status !== 'locked' || locking) return { ok: false, reason: 'not-locked' }
+      const gen = epoch
       status = 'securing'
       try {
+        // Fast-path refusal BEFORE the ~1s derive (UX); the authoritative check
+        // re-runs INSIDE the serialized critical section below (correctness — two
+        // tabs racing firstSave cannot both pass that one).
         const existing = await loadVault(db)
         if (existing.kind !== 'no-vault') return { ok: false, reason: 'vault-exists' }
         if (await probeActiveWriter()) return { ok: false, reason: 'open-in-another-tab' }
@@ -243,42 +303,58 @@ export function createSession(db: VaultDb): VaultSession {
         const minted = await mintWrappedDataKey(passKey, recKey)
         const modelBox = await encrypt(minted.dataKey, encodeScenario(scenario))
 
-        const written = await enqueueWrite(() =>
-          writeVault(db, {
-            model: { iv: modelBox.iv, ciphertext: modelBox.ciphertext },
-            passphraseWrap: {
-              salt: passphraseSalt,
-              iv: minted.passphraseWrap.iv,
-              wrappedDataKey: minted.passphraseWrap.ciphertext,
-            },
-            recoveryWrap: {
-              salt: recoverySalt,
-              iv: minted.recoveryWrap.iv,
-              wrappedDataKey: minted.recoveryWrap.ciphertext,
-            },
-          }),
-        )
-        if (!written.ok) {
-          const failure = mapWriteFailure(written)
-          return failure.reason === 'quota' ? { ok: false, reason: 'quota' } : failure
-        }
+        // A lock that landed during the derive cancels BEFORE anything reaches disk.
+        if (epoch !== gen) return { ok: false, reason: 'cancelled' }
 
-        dataKey = minted.dataKey
-        credentialKey = passKey
-        credentialWrap = minted.passphraseWrap
-        model = scenario
-        passphraseWrapCurrent = true
-        secondTab = false
-        claimWriter()
-        status = 'unlocked'
+        let written: VaultWrite | 'vault-exists'
+        try {
+          written = await enqueueWrite(async () => {
+            const check = await loadVault(db)
+            if (check.kind !== 'no-vault') return 'vault-exists' as const
+            return writeVault(db, {
+              model: { iv: modelBox.iv, ciphertext: modelBox.ciphertext },
+              passphraseWrap: {
+                salt: passphraseSalt,
+                iv: minted.passphraseWrap.iv,
+                wrappedDataKey: minted.passphraseWrap.ciphertext,
+              },
+              recoveryWrap: {
+                salt: recoverySalt,
+                iv: minted.recoveryWrap.iv,
+                wrappedDataKey: minted.recoveryWrap.ciphertext,
+              },
+            })
+          })
+        } catch (e) {
+          return asWriteFailed(e)
+        }
+        if (written === 'vault-exists') return { ok: false, reason: 'vault-exists' }
+        if (!written.ok) return mapWriteFailure(written)
+
+        // The vault EXISTS on disk now — the phrase MUST reach the caller even if a
+        // lock intervened (a committed vault whose phrase nobody saw is a stranded
+        // vault, strictly worse than a stale in-memory install). Installs are
+        // gen-gated; the returned phrase is not.
+        if (epoch === gen) {
+          dataKey = minted.dataKey
+          credentialKey = passKey
+          credentialWrap = minted.passphraseWrap
+          model = scenario
+          passphraseWrapCurrent = true
+          secondTab = false
+          claimWriter()
+          status = 'unlocked'
+        }
         return { ok: true, recoveryPhrase: words }
       } finally {
-        if (status === 'securing') status = 'locked'
+        if (status === 'securing' && epoch === gen) status = 'locked'
+        if (status !== 'unlocked') releaseChannelIfUnclaimed()
       }
     },
 
     async unlock(passphrase) {
-      if (status !== 'locked') return { ok: false, reason: 'not-locked' }
+      if (status !== 'locked' || locking) return { ok: false, reason: 'not-locked' }
+      const gen = epoch
       status = 'unlocking'
       try {
         const vault = await loadVault(db)
@@ -314,11 +390,16 @@ export function createSession(db: VaultDb): VaultSession {
         }
         const decoded = decodeScenario(plaintext)
         if (!decoded.ok) {
-          if (decoded.reason === 'newer-version') return { ok: false, reason: 'newer-version' }
+          if (decoded.reason === 'newer-version') return { ok: false, reason: 'newer-version', got: decoded.got }
           return { ok: false, reason: 'data-damaged', detail: decoded.detail }
         }
 
         const otherTabActive = await probeActiveWriter()
+
+        // A lock that landed during the derive wins: discard the freshly derived
+        // keys (they fall out of scope, GC-eligible) instead of resurrecting.
+        if (epoch !== gen) return { ok: false, reason: 'cancelled' }
+
         dataKey = dk
         credentialKey = passKey
         credentialWrap = {
@@ -332,12 +413,14 @@ export function createSession(db: VaultDb): VaultSession {
         status = 'unlocked'
         return { ok: true, readOnly: otherTabActive }
       } finally {
-        if (status === 'unlocking') status = 'locked'
+        if (status === 'unlocking' && epoch === gen) status = 'locked'
+        if (status !== 'unlocked') releaseChannelIfUnclaimed()
       }
     },
 
     async recoveryUnlock(phrase) {
-      if (status !== 'locked') return { ok: false, reason: 'not-locked' }
+      if (status !== 'locked' || locking) return { ok: false, reason: 'not-locked' }
+      const gen = epoch
       status = 'unlocking'
       try {
         const vault = await loadVault(db)
@@ -377,9 +460,11 @@ export function createSession(db: VaultDb): VaultSession {
         }
         const decoded = decodeScenario(plaintext)
         if (!decoded.ok) {
-          if (decoded.reason === 'newer-version') return { ok: false, reason: 'newer-version' }
+          if (decoded.reason === 'newer-version') return { ok: false, reason: 'newer-version', got: decoded.got }
           return { ok: false, reason: 'data-damaged', detail: decoded.detail }
         }
+
+        if (epoch !== gen) return { ok: false, reason: 'cancelled' }
 
         dataKey = dk
         credentialKey = recKey
@@ -397,7 +482,8 @@ export function createSession(db: VaultDb): VaultSession {
         status = 'recovery-unlocked'
         return { ok: true }
       } finally {
-        if (status === 'unlocking') status = 'locked'
+        if (status === 'unlocking' && epoch === gen) status = 'locked'
+        if (status !== 'recovery-unlocked') releaseChannelIfUnclaimed()
       }
     },
 
@@ -406,51 +492,89 @@ export function createSession(db: VaultDb): VaultSession {
         return { ok: false, reason: 'no-session-key' }
       }
       if (secondTab) return { ok: false, reason: 'open-in-another-tab' }
+      // Reentrancy guard: a double-submit must not race two re-mints (the second
+      // failing call would otherwise wedge 'securing' over the first's result).
+      if (status === 'securing' || status === 'unlocking' || locking) return { ok: false, reason: 'op-in-flight' }
+      const gen = epoch
       const priorStatus = status
+      // Local captures: a lock() landing mid-derive nulls the session fields, and this
+      // op must fail by the GEN CHECK (a clean 'cancelled'), never by a null-deref
+      // surfacing as a bogus crypto error.
+      const credKey = credentialKey
+      const credWrap = credentialWrap
       status = 'securing'
       try {
         const salt = freshSalt()
         const newKey = await deriveNewPassphraseKey(passphrase, salt)
-        const newWrap = await rewrapDataKey(credentialKey, credentialWrap, newKey)
+        // A lock that landed during the ~1s derive cancels before any further work.
+        if (epoch !== gen) return { ok: false, reason: 'cancelled' }
+        const newWrap = await rewrapDataKey(credKey, credWrap, newKey)
+
+        // …and one more checkpoint before the wrap reaches disk.
+        if (epoch !== gen) return { ok: false, reason: 'cancelled' }
+
         const written = await enqueueWrite(() =>
           replacePassphraseWrap(db, { salt, iv: newWrap.iv, wrappedDataKey: newWrap.ciphertext }),
         )
         if (!written.ok) {
-          status = priorStatus
-          const failure = mapWriteFailure(written)
-          return failure.reason === 'quota' ? { ok: false, reason: 'quota' } : failure
+          if (epoch === gen) status = priorStatus
+          return mapWriteFailure(written)
         }
-        credentialKey = newKey
-        credentialWrap = newWrap
-        passphraseWrapCurrent = true
-        status = 'unlocked'
+        // The wrap re-mint COMMITTED — report ok even if a lock landed during the
+        // write (the passphrase DID change); only the in-memory installs are gated.
+        if (epoch === gen) {
+          credentialKey = newKey
+          credentialWrap = newWrap
+          passphraseWrapCurrent = true
+          status = 'unlocked'
+        }
         return { ok: true }
       } catch (e) {
-        status = priorStatus
-        throw e
+        if (epoch === gen) status = priorStatus
+        return asWriteFailed(e)
       }
     },
 
     async save(scenario) {
       if (!writable()) return { ok: false, reason: 'not-writable' }
+      const gen = epoch
       const dk = dataKey!
-      const result = await enqueueWrite(async () => {
-        const box = await encrypt(dk, encodeScenario(scenario))
-        return rewriteModel(db, { iv: box.iv, ciphertext: box.ciphertext })
-      })
+      let result: VaultWrite
+      try {
+        result = await enqueueWrite(async () => {
+          const box = await encrypt(dk, encodeScenario(scenario))
+          return rewriteModel(db, { iv: box.iv, ciphertext: box.ciphertext })
+        })
+      } catch (e) {
+        return asWriteFailed(e)
+      }
       if (!result.ok) return mapWriteFailure(result)
-      model = scenario
+      // A lock queued behind this write owns the model field once it drains —
+      // never repopulate after the drop (the write itself committed pre-lock,
+      // which is the documented queue-then-drop semantics).
+      if (epoch === gen) model = scenario
       return { ok: true }
     },
 
     async lock() {
-      if (status === 'locked') return
-      // Queue behind any in-flight write: the commit lands, THEN the keys drop.
-      await enqueueWrite(async () => undefined)
-      dropSecrets()
-      releaseChannel()
+      if (status === 'locked' || locking) return
+      // SYNCHRONOUS AUTHORITY: bump the generation + raise the flag before any
+      // await, so new writes are refused and in-flight ops cancel at their next
+      // checkpoint. Then drain the write tail (a committed in-flight save lands,
+      // then the keys drop) — and the drop is in a FINALLY: even a rejecting
+      // Web Locks request cannot leave secrets resident or the machine wedged.
       epoch++
-      status = 'locked'
+      locking = true
+      try {
+        await enqueueWrite(async () => undefined)
+      } catch {
+        // the drain's own failure must never block the drop
+      } finally {
+        dropSecrets()
+        releaseChannel()
+        status = 'locked'
+        locking = false
+      }
     },
   }
 }

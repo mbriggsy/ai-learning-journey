@@ -781,3 +781,18 @@ export interface BackupFileV1 {
     readonly wrappedDataKey: string
   }
 }
+
+// Compile-time: the backup file's wrap carries EXACTLY the WrapRecord field set (as
+// base64 strings) and its model box exactly the ModelRecord set — a future field
+// added to a record cannot silently fail to ride exports (it fails to typecheck
+// here until BackupFileV1 + a format-version decision account for it).
+type _BackupWrapCovers = (typeof WRAP_RECORD_FIELDS)[number] extends keyof BackupFileV1['recoveryWrap']
+  ? true
+  : never
+type _BackupWrapCovered = keyof BackupFileV1['recoveryWrap'] extends (typeof WRAP_RECORD_FIELDS)[number]
+  ? true
+  : never
+type _BackupModelCovers = (typeof MODEL_RECORD_FIELDS)[number] extends keyof BackupBoxV1 ? true : never
+type _BackupModelCovered = keyof BackupBoxV1 extends (typeof MODEL_RECORD_FIELDS)[number] ? true : never
+const _backupShapesTracked: _BackupWrapCovers & _BackupWrapCovered & _BackupModelCovers & _BackupModelCovered = true
+void _backupShapesTracked

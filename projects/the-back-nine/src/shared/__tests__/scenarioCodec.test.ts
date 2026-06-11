@@ -195,6 +195,30 @@ describe('corruption (structural) — finiteness-first, paths named', () => {
     expect(decodeScenario(bytes).ok).toBe(false)
   })
 
+  it('v2: the string/integer top-level fields each have a live negative arm', () => {
+    const badVintage = mutated(V2, (o) => {
+      o.taxVintage = null
+    })
+    expect(decodeScenario(badVintage).ok).toBe(false)
+
+    const badYear = mutated(V2, (o) => {
+      o.startCalendarYear = 2026.5
+    })
+    expect(decodeScenario(badYear).ok).toBe(false)
+
+    const badAppVersion = mutated(V2, (o) => {
+      o.appDefaultVersion = 7
+    })
+    expect(decodeScenario(badAppVersion).ok).toBe(false)
+  })
+
+  it('v2: a contribution stream that is not an array is corruption (not just a bad entry inside one)', () => {
+    const bytes = mutated(V2, (o) => {
+      ;((o.accounts as Record<string, unknown>[])[0]!.contributions as Record<string, unknown>).pretax = 'lots'
+    })
+    expect(decodeScenario(bytes).ok).toBe(false)
+  })
+
   it('v2: accounts misaligned with people (extra entry) is corruption (the index-aligned contract)', () => {
     const bytes = mutated(V2, (o) => {
       const accounts = o.accounts as Record<string, unknown>[]

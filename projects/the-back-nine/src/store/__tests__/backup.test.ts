@@ -202,3 +202,48 @@ describe('export failure modes', () => {
     expect(result).toEqual({ ok: false, reason: 'no-vault' })
   })
 })
+
+describe('the U4 boundary-review folds', () => {
+  it('a backup whose MODEL was saved by a newer app is told so — never "file-damaged" (the survivor with intact data)', async () => {
+    // Build a vault whose plaintext claims schemaVersion 3 (the untyped boundary lets
+    // a future app write it; this build must classify it honestly through restore).
+    const db = await openVaultDb()
+    const session = createSession(db)
+    const futureScenario = { ...MODEL, schemaVersion: 3 } as unknown as Scenario
+    const saved = await session.firstSave(futureScenario, await floorPass(PASSPHRASE))
+    if (!saved.ok) throw new Error('firstSave failed')
+    const phrase = saved.recoveryPhrase.join(' ')
+    const exported = await exportVault(db)
+    if (!exported.ok) throw new Error('export failed')
+    await session.lock()
+    await clearVault(db)
+
+    const result = await restoreVault(db, exported.file, phrase, await floorPass(NEW_PASSPHRASE))
+    expect(result).toEqual({ ok: false, reason: 'newer-version', got: 3 })
+    expect(await loadVault(db)).toEqual({ kind: 'no-vault' }) // nothing landed
+  })
+
+  it('two concurrent restores from a wiped state: exactly one lands (the TOCTOU critical section)', async () => {
+    const { db, session, phrase } = await vaulted()
+    const exported = await exportVault(db)
+    if (!exported.ok) throw new Error('export failed')
+    await session.lock()
+    await clearVault(db)
+
+    const [r1, r2] = await Promise.all([
+      restoreVault(db, exported.file, phrase, await floorPass(NEW_PASSPHRASE)),
+      restoreVault(db, exported.file, phrase, await floorPass('zephyr quilt marble 33 onset')),
+    ])
+    const oks = [r1, r2].filter((r) => r.ok)
+    const refusals = [r1, r2].filter((r) => !r.ok)
+    expect(oks).toHaveLength(1)
+    expect(refusals).toEqual([{ ok: false, reason: 'vault-exists' }])
+
+    // The surviving vault is self-consistent: it opens with the winner's passphrase.
+    const winnerPassphrase = r1.ok ? NEW_PASSPHRASE : 'zephyr quilt marble 33 onset'
+    const probe = createSession(db)
+    expect((await probe.unlock(winnerPassphrase)).ok).toBe(true)
+    expect(probe.currentModel()).toEqual(MODEL)
+    await probe.lock()
+  })
+})

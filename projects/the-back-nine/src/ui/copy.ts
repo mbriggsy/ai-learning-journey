@@ -27,9 +27,43 @@ export const copy = {
   updateReady: 'A new version is ready — refresh whenever you’re done.',
   updateReload: 'Refresh now',
   updateLater: 'Later',
+  // --- the cold-start frame (R1 as the product's face; one calm entry) ---
+  coldStartQuestion: 'Can we retire — and how do we do it best?',
+  coldStartOrientation:
+    'A quiet co-pilot for a married couple’s next chapter. About five minutes of questions, answered as honestly as the math.',
+  coldStartPreflight:
+    'Handy to have nearby: recent account statements, and a marketplace health-insurance quote for your age and ZIP (healthcare.gov or the KFF calculator — the benchmark Silver figure and the premium of a plan you’d pick).',
+  coldStartBegin: 'Begin',
+  // --- flow chrome ---
+  flowBack: 'Back',
+  flowNext: 'Continue',
+  flowProgressLabel: 'Progress',
+  // SR-announced position (the quiet thread carries no visible counter — the
+  // flow is variable-length, so a visible "Step N of M" would be inaccurate).
+  flowSrPosition: 'New question',
+  // --- R19 calm error grammar (icon + adjacent text; color never alone) ---
+  errStopAgeInFuture:
+    'This stop age is later than their current age — for someone already retired, it’s the age work actually stopped. Did you mean still working?',
+  errSsClaimWindow:
+    'Social Security can be claimed between 62 and 70 — this age falls outside that window.',
+  errSurvivorRatio: 'Survivor spending can’t be more than 100% of household spending.',
+  errBirthYearFuture: 'That birth year hasn’t happened yet.',
+  errAgeBeyondModel: 'Ages past 119 are beyond what the projection can model.',
 } as const satisfies Record<string, string>
 
 export type CopyKey = keyof typeof copy
+
+/**
+ * Typed quantitative slots — the ONLY way a number enters user-facing copy
+ * (the certainty-hygiene slot discipline). Question counts are an allowlisted
+ * non-claim numeric; the `~$X` / `~N years` / "X of 10" slots land with the
+ * answer surface (their first consumer).
+ */
+export const slots = {
+  /** SR-announced flow position (the visible thread carries no counter — the
+   *  flow is variable-length). */
+  questionPosition: (n: number): string => `Question ${n}`,
+} as const
 
 /**
  * Static disclosures — OUTSIDE the copyGuard's input by design (phase-2

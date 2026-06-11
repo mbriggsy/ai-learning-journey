@@ -363,6 +363,21 @@ describe('R19 engine half + dire-but-honest edges', () => {
     const third: PersonInputs = { ...MALE_65, currentAge: 60 }
     expect(simulate(makeParams({ people: [MALE_65, FEMALE_65, third] }), 1).indeterminate).toBe(true)
   })
+
+  it('a non-integer seed → indeterminate (U4: the persisted seed carries the bit-identical reproduction contract)', () => {
+    // The date route (dateSearch.ts) has rejected non-integer seeds since C3; the headline
+    // route silently coerced via mulberry32(seed|0) — and NaN|0 === 0, so a corrupted
+    // persisted seed would QUIETLY reproduce a DIFFERENT plan than was saved (the
+    // calm-but-wrong vintage of determinism failure). U4 persistence makes the headline
+    // seed load-bearing, so the two routes are now aligned on the same reject.
+    for (const bad of [NaN, 1.5, Infinity, -Infinity]) {
+      const out = simulate(makeParams({}), bad)
+      expect(out.indeterminate).toBe(true)
+      if (out.indeterminate) expect(out.reason).toContain('seed')
+    }
+    // The negative arm: a plain integer seed still runs the spine untouched.
+    expect(simulate(makeParams({}), 7).indeterminate).toBe(false)
+  })
 })
 
 // ===========================================================================

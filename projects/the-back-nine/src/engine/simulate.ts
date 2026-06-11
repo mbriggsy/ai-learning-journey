@@ -699,6 +699,13 @@ export function validateParams(params: SimulationParams): string | null {
  * a byte-identical distribution on one JS engine.
  */
 export function simulate(params: SimulationParams, seed: number): SimOutput {
+  // The seed is part of the R19 surface (U4 persists it with a bit-identical
+  // reproduction contract, matching dateSearch's reject): mulberry32(seed|0) would
+  // silently coerce a NaN/fractional seed (NaN|0 === 0) and reproduce a DIFFERENT
+  // plan than was saved — indeterminate, never a quiet coercion.
+  if (!Number.isInteger(seed)) {
+    return { indeterminate: true, reason: `seed must be a finite integer (got ${seed})` }
+  }
   const invalid = validateParams(params)
   if (invalid !== null) return { indeterminate: true, reason: invalid }
 

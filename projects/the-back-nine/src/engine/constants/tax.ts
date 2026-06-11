@@ -43,7 +43,7 @@ export const ordinaryBracketsMFJ = sourced<readonly OrdinaryBracket[]>(
   ],
   {
     citation: 'findings §Strand 5 (Tax Foundation 2026 tables)',
-    directionalUntilPinned: true,
+    directionalUntilPinned: false,
     pinTo: 'IRS Revenue Procedure (2026 inflation adjustments)',
   },
 )
@@ -68,7 +68,7 @@ export const ordinaryBracketsSingle = sourced<readonly OrdinaryBracket[]>(
   {
     citation:
       'IRS Rev. Proc. 2025-32 Table 3 (§1(j)(2)(C)), grounded + adversarially verified against the parsed rp-25-32.pdf + Tax Foundation 2026',
-    directionalUntilPinned: true,
+    directionalUntilPinned: false,
     pinTo: 'IRS Revenue Procedure 2025-32 (2026 inflation adjustments) — Table 3, single filers',
     legalBasis: 'OBBBA P.L. 119-21 / H.R.1',
     note: '37% edge $640,600 is NOT ½ of MFJ $768,700 (edges 1–5 are ½); type literally, never halve MFJ.',
@@ -78,14 +78,14 @@ export const ordinaryBracketsSingle = sourced<readonly OrdinaryBracket[]>(
 /** Standard deduction (2026). */
 export const standardDeductionMFJ = sourced(32_200, {
   citation: 'findings §Strand 5 (2025 was $31,500, exactly 2× single)',
-  directionalUntilPinned: true,
+  directionalUntilPinned: false,
   pinTo: 'IRS Revenue Procedure (2026)',
 })
 
 export const standardDeductionSingle = sourced(16_100, {
   citation:
     'IRS Rev. Proc. 2025-32 §.16(1), grounded + adversarially verified against the parsed rp-25-32.pdf + Tax Foundation 2026',
-  directionalUntilPinned: true,
+  directionalUntilPinned: false,
   pinTo: 'IRS Revenue Procedure 2025-32 (2026) — §.16(1)',
   note: 'Confirmed exact $16,100 (= ½ MFJ $32,200; 2025 was $15,750). Basic deduction only — the age-65 addition and the senior bonus stack separately.',
 })
@@ -93,7 +93,7 @@ export const standardDeductionSingle = sourced(16_100, {
 /** Age-65+ additional standard deduction, per spouse, MFJ (2026). */
 export const age65AdditionMFJ = sourced(1_650, {
   citation: 'findings §Strand 5 ("≈ $1,650/spouse MFJ, pin exact")',
-  directionalUntilPinned: true,
+  directionalUntilPinned: false,
   pinTo: 'IRS Revenue Procedure (2026)',
 })
 
@@ -106,7 +106,7 @@ export const age65AdditionMFJ = sourced(1_650, {
 export const age65AdditionSingle = sourced(2_050, {
   citation:
     'IRS Rev. Proc. 2025-32 §.16(3) (IRC §63(f)), grounded + adversarially verified against the parsed rp-25-32.pdf + Tax Foundation 2026',
-  directionalUntilPinned: true,
+  directionalUntilPinned: false,
   pinTo: 'IRS Revenue Procedure 2025-32 (2026) — §.16(3) / IRC §63(f)',
   note: 'Distinct from the OBBBA $6,000 senior bonus (they stack). Single $2,050 > MFJ per-spouse $1,650. Inflation-indexed (2025 was $2,000).',
 })
@@ -127,7 +127,7 @@ export const seniorBonus = sourced(
   },
   {
     citation: 'findings §Strand 5; IRS FS-2025-03',
-    directionalUntilPinned: true,
+    directionalUntilPinned: false,
     pinTo: 'IRS FS-2025-03 / OBBBA H.R.1',
     legalBasis: 'OBBBA P.L. 119-21 / H.R.1',
     sunsetAfter: 2028,
@@ -223,7 +223,7 @@ export const uniformLifetimeTableDivisors = sourced<readonly UniformLifetimeDivi
   {
     citation:
       'IRS Pub 590-B Table III / Treas. Reg. §1.401(a)(9)-9(c), grounded + adversarially verified verbatim against the parsed eCFR 26 CFR 1.401(a)(9)-9(c)',
-    directionalUntilPinned: true,
+    directionalUntilPinned: false,
     pinTo: 'IRS Pub 590-B Appendix B Table III (Uniform Lifetime)',
     legalBasis: 'T.D. 9930 (effective 2022-01-01)',
     note: 'Post-2022 table, STABLE (not inflation-indexed). Clamp age ≥ 120 → 2.0. RMD is non-convertible.',
@@ -253,7 +253,7 @@ export const uniformLifetimeTableDivisors = sourced<readonly UniformLifetimeDivi
 export const jointLifeLastSurvivorTable = sourced<JointLifeLastSurvivorTable>(jointLifeLastSurvivorData, {
   citation:
     'eCFR 26 CFR 1.401(a)(9)-9(d) (authoritative reg, machine-readable GPO XML), cross-verified verbatim vs IRS Pub 590-B Table II',
-  directionalUntilPinned: true,
+  directionalUntilPinned: false,
   pinTo: 'IRS Pub 590-B Appendix B Table II (Joint Life & Last Survivor)',
   legalBasis: 'T.D. 9930 (effective 2022-01-01)',
   note: 'Post-2022 table, STABLE (not inflation-indexed). Owner×younger-spouse rectangle (gap ≥ 11). Clamp age ≥ 120. RMD is non-convertible.',
@@ -298,7 +298,7 @@ export const capitalGainsBreakpoints = sourced<CapitalGainsBreakpoints>(
   {
     citation:
       'IRS Rev. Proc. 2025-32 §4.03 (§1(h) maximum capital-gains rate), grounded + adversarially verified against the parsed rp-25-32.pdf + Tax Foundation 2026 Table 6',
-    directionalUntilPinned: true,
+    directionalUntilPinned: false,
     pinTo: 'IRS Revenue Procedure 2025-32 (2026) — §4.03 (§1(h))',
     note: 'Total-taxable-income thresholds; gain stacks on ordinary income. Single 15%-top is NOT ½ MFJ. Survivor MFJ→single drops the 0% ceiling $98,900→$49,450.',
   },

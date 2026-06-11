@@ -12,9 +12,9 @@
  *
  * Every figure read VERBATIM from its primary (IRS Notice 2025-67 / Rev. Proc.
  * 2025-19 / IRC §223(b)(3)(B)) and cross-verified against ≥2 independently-written
- * professional publishers (2026-06-10, the C1 research pass) — still
- * `directionalUntilPinned` until the deliberate P1-exit pin pass (don't flip
- * piecemeal). The spine reads NOTHING from here.
+ * professional publishers (2026-06-10, the C1 research pass) — PINNED 2026-06-11
+ * at the P1-exit pass (blind double-read vs the primaries; the 11,250 and 1,100
+ * traps held). The spine reads NOTHING from here.
  */
 import {
   sourced,
@@ -58,7 +58,7 @@ export const employerPlan2026 = sourced<EmployerPlanLimits>(
   {
     citation:
       'IRS Notice 2025-67 (n-25-67.pdf, read verbatim: deferral "increased from $23,500 to $24,500"; age-50 catch-up "increased from $7,500 to $8,000"; 60–63 catch-up "remains $11,250") + cross-verified vs Mercer / Milliman / Journal of Accountancy — zero disagreement',
-    directionalUntilPinned: true,
+    directionalUntilPinned: false,
     pinTo: 'IRS Notice 2025-67 (irs.gov/pub/irs-drop/n-25-67.pdf)',
     legalBasis: 'IRC §402(g)(1) / §414(v)(2)(B)(i) / §414(v)(2)(E) (SECURE 2.0 §109)',
     note: 'The same $24,500 applies to governmental 457(b) (§457(e)(15)). The $11,250 super amount is its OWN COLA-indexed figure — NEVER derive it as 150% × the current-year catch-up (150% × $8,000 = $12,000 is WRONG for 2026; the statutory base is 150% × the 2024 $7,500, indexed thereafter, and 2026 rounding left it flat). NOT MODELED (routing-only, captured at intake): SECURE 2.0 §603 — from 2026, prior-year FICA wages > $150,000 (the 2026 threshold, same notice) force ALL catch-up dollars to Roth; it changes WHICH bucket, which the user’s entered per-account amounts already reflect.',
@@ -78,7 +78,7 @@ export const ira2026 = sourced<IraLimits>(
   {
     citation:
       'IRS Notice 2025-67 (n-25-67.pdf, read verbatim: limit "increased from $7,000 to $7,500"; catch-up "increased from $1,000 to $1,100") + cross-verified vs Mercer / Milliman / Journal of Accountancy / Fidelity — zero disagreement',
-    directionalUntilPinned: true,
+    directionalUntilPinned: false,
     pinTo: 'IRS Notice 2025-67 (irs.gov/pub/irs-drop/n-25-67.pdf)',
     legalBasis: 'IRC §219(b)(5); SECURE 2.0 §108 (catch-up indexing, effective 2024)',
     note: 'Limit is traditional + Roth COMBINED, per person. 50+ total = $8,600.',
@@ -94,7 +94,7 @@ export const ira2026 = sourced<IraLimits>(
 export const annualAdditions415c2026 = sourced(72_000, {
   citation:
     'IRS Notice 2025-67 (n-25-67.pdf, read verbatim: "increased in 2026 from $70,000 to $72,000") + cross-verified vs Mercer / Milliman / Journal of Accountancy — zero disagreement',
-  directionalUntilPinned: true,
+  directionalUntilPinned: false,
   pinTo: 'IRS Notice 2025-67 (irs.gov/pub/irs-drop/n-25-67.pdf)',
   legalBasis: 'IRC §415(c)(1)(A)',
 })
@@ -117,7 +117,7 @@ export const hsa2026 = sourced(
   {
     citation:
       'IRS Rev. Proc. 2025-19 §2.01 (rp-25-19.pdf, read verbatim: $4,400 / $8,750 / $1,700 / $3,400 / $8,500 / $17,000) + IRC §223(b)(3)(B) statutory table for the fixed $1,000 catch-up (uscode.house.gov — the catch-up appears NOWHERE in the Rev. Proc.) + cross-verified vs SHRM / Mercer / Fidelity / Thomson Reuters — zero disagreement',
-    directionalUntilPinned: true,
+    directionalUntilPinned: false,
     pinTo: 'IRS Rev. Proc. 2025-19 (rp-25-19.pdf) + IRC §223(b)(3)(B)',
     note: 'Catch-up (55+) is +$1,000 in EACH spouse’s OWN HSA (cannot stack in one account — Pub 969 verbatim). The §223 HDHP out-of-pocket cap is DISTINCT from the (higher) ACA §1302 MOOP — never conflate. Medicare ENROLLMENT (not mere eligibility) zeroes contribution eligibility, prorated monthly; retroactive Part A (up to 6 months, claiming SS past 65) backdates the cutoff — the retro trap is disclosed at intake (D1), not modeled (plan §6/C2).',
   },

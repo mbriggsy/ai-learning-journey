@@ -57,7 +57,7 @@ describe('canonical constants — shape & provenance (contract #6)', () => {
       const entry = taxConstants[key]
       expect(isUnsourced(entry), `${key} is sourced (not a throw-on-read gap)`).toBe(false)
       expect(() => entry.value, `${key} reads without throwing`).not.toThrow()
-      expect(entry.directionalUntilPinned, `${key} stays directional until the IRS-primary pin gate`).toBe(true)
+      expect(entry.directionalUntilPinned, `${key} pinned at the 2026-06-11 P1-exit pass (blind double-read vs the IRS/eCFR primaries)`).toBe(false)
     }
   })
 
@@ -124,7 +124,7 @@ describe('canonical constants — shape & provenance (contract #6)', () => {
 
   it('the ACA applicable-% table is contiguous, monotone, and matches its Rev. Proc. 2025-25 anchors (U3·M1, DND/012)', () => {
     const entry = healthConstants.acaApplicablePercentage
-    expect(entry.directionalUntilPinned, 'directional until the P1-exit pin pass').toBe(true)
+    expect(entry.directionalUntilPinned, 'pinned at the 2026-06-11 P1-exit pass').toBe(false)
     expect(entry.reVerifyEveryBuild, 'legislatively gated (the cliff can flip)').toBe(true)
     const t = entry.value
     expect(t.cliffFplFraction, '400% cliff (2026 reverted regime)').toBe(4.0)
@@ -152,7 +152,7 @@ describe('canonical constants — shape & provenance (contract #6)', () => {
 
   it('the ENHANCED ACA applicable-% table (ARPA/IRA, the toggle regime) has NO cliff + a flat-8.5% open top band, verbatim from §36B(b)(3)(A)(iii) (U3·E, DND/012)', () => {
     const entry = healthConstants.acaApplicablePercentageEnhanced
-    expect(entry.directionalUntilPinned, 'directional until the enacted-statute pin').toBe(true)
+    expect(entry.directionalUntilPinned, 'pinned 2026-06-11 (verbatim §36B(b)(3)(A)(iii); reVerifyEveryBuild still gates the live regime)').toBe(false)
     expect(entry.reVerifyEveryBuild, 'legislatively gated (the 2026 extension is pending/retroactive)').toBe(true)
     const t = entry.value
     // The defining structural facts: NO cliff (null), and the 100%-FPL Medicaid floor still applies.
@@ -194,7 +194,7 @@ describe('canonical constants — shape & provenance (contract #6)', () => {
 
   it('the 2025 HHS FPL guidelines reconstruct household sizes + derive the 400% cliff exactly (U3·M1)', () => {
     const entry = healthConstants.federalPovertyGuidelines
-    expect(entry.directionalUntilPinned).toBe(true)
+    expect(entry.directionalUntilPinned).toBe(false)
     const t = entry.value
     expect(t.guidelineYear, '2025 guidelines drive 2026 coverage').toBe(2025)
     expect(t.base, 'household-of-1 base').toBe(15_650)
@@ -213,7 +213,7 @@ describe('canonical constants — shape & provenance (contract #6)', () => {
 
   it('the IRMAA schedule is monotone, MFJ=2×single for tiers 1–4 (frozen top breaks it), ties to partB2026 (U3·M1, DND/012)', () => {
     const entry = healthConstants.irmaa
-    expect(entry.directionalUntilPinned).toBe(true)
+    expect(entry.directionalUntilPinned).toBe(false)
     const t = entry.value
     expect(t.magiLookbackYears, '2026 IRMAA ← 2024 MAGI').toBe(2)
     expect(t.perPerson).toBe(true)
@@ -390,7 +390,7 @@ describe('canonical constants — shape & provenance (contract #6)', () => {
   describe('C1 — the federal default age-rating curve (45 CFR 147.102, CMS Appendix I)', () => {
     it('anchors, the 3:1 cap, monotone non-decreasing, contiguous 15..64 (externally-derived, DND/012)', () => {
       const entry = healthConstants.acaAgeRatingCurve
-      expect(entry.directionalUntilPinned, 'directional until the P1-exit pin pass').toBe(true)
+      expect(entry.directionalUntilPinned, 'pinned at the 2026-06-11 P1-exit pass').toBe(false)
       const t = entry.value
       expect(t.childFactorThrough14, 'the post-2018 child band').toBe(0.765)
       expect(t.factors, 'one row per single year of age, 15..64').toHaveLength(50)

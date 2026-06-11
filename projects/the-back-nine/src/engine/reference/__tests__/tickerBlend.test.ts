@@ -7,7 +7,7 @@ describe('ticker → blend reference table (C1, R37)', () => {
       const id = row.family[0] ?? '(empty)'
       expect(row.family.length, `${id} family non-empty`).toBeGreaterThan(0)
       expect(row.citation.length, `${id} citation non-empty`).toBeGreaterThan(0)
-      expect(row.directionalUntilPinned, `${id} directional until the EDGAR pin pass`).toBe(true)
+      expect(row.directionalUntilPinned, `${id} pinned at the 2026-06-11 EDGAR pass (a true row = an unpinned addition)`).toBe(false)
       for (const v of [row.stock, row.bond, row.cash]) {
         expect(Number.isFinite(v) && v >= 0, `${id} components finite ≥ 0 (DND/009)`).toBe(true)
       }

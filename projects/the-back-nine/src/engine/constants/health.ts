@@ -34,7 +34,7 @@ export const acaEnhancedSubsidyStatus = sourced(
   },
   {
     citation: 'pre65-healthcare doc',
-    directionalUntilPinned: true,
+    directionalUntilPinned: false,
     pinTo: 'enacted statute / IRS notice — re-verify at EVERY build',
     reVerifyEveryBuild: true,
     note: 'Model cliff-on/reverted as the 2026 base; expose enhanced as a scenario toggle; NEVER hard-code "no enhanced subsidies forever."',
@@ -64,7 +64,7 @@ export const acaApplicablePercentage = sourced<AcaApplicablePercentageTable>(
   {
     citation:
       'IRS Rev. Proc. 2025-25 §3.01 (rp-25-25.pdf, read verbatim cell-by-cell) + secondary cross-verified (currentfederaltaxdevelopments.com; healthinsurance.org) — zero disagreement',
-    directionalUntilPinned: true,
+    directionalUntilPinned: false,
     pinTo: 'IRS Rev. Proc. 2025-25 §3.01 (irs.gov/pub/irs-drop/rp-25-25.pdf)',
     reVerifyEveryBuild: true,
     note: '2026 REVERTED regime (vs 0–8.5% enhanced 2021–2025). Applicable % is LINEARLY interpolated within each FPL band; the 400% subsidy cliff is BACK (PTC = 0 strictly above 400% FPL). PTC eligibility floor = 100% FPL (below = Medicaid, OUT-but-disclosed, state-dependent). The FPL% denominator for 2026 coverage uses the 2025 HHS guidelines (prior-year).',
@@ -95,7 +95,7 @@ export const acaApplicablePercentageEnhanced = sourced<AcaApplicablePercentageTa
   {
     citation:
       'IRC §36B(b)(3)(A)(iii) (ARPA 2021 §9661, extended by IRA 2022 §12001), read verbatim from Cornell LII (law.cornell.edu/uscode/text/26/36B) + cross-verified vs KFF / healthinsurance.org / IRS (gemini-grounding) — zero disagreement; clause (ii) indexing does NOT apply (fixed statutory percentages)',
-    directionalUntilPinned: true,
+    directionalUntilPinned: false,
     pinTo: 'IRC §36B(b)(3)(A)(iii) — the enacted ARPA/IRA statute (+ any 2026 extension notice)',
     reVerifyEveryBuild: true,
     legalBasis: 'ARPA 2021 §9661; IRA 2022 §12001',
@@ -113,7 +113,7 @@ export const federalPovertyGuidelines = sourced<FederalPovertyGuidelines>(
   {
     citation:
       '2025 HHS Poverty Guidelines, 48 contiguous + DC (ASPE computations table + Federal Register, cross-verified); base + uniform $5,500 increment reconstruct all household sizes exactly',
-    directionalUntilPinned: true,
+    directionalUntilPinned: false,
     pinTo: 'HHS 2025 Poverty Guidelines (Federal Register, ~Jan 2025)',
     note: '2025 guidelines drive 2026 ACA coverage-year eligibility (prior-year FPL). household(N) = 15,650 + (N−1)×5,500; household-of-2 = 21,150; 400% = 84,600 (DERIVED, not stored). AK/HI separate higher tables OUT-but-disclosed.',
   },
@@ -128,7 +128,7 @@ export const acaPtc = sourced(
   },
   {
     citation: 'pre65-healthcare doc; IRC §36B',
-    directionalUntilPinned: true,
+    directionalUntilPinned: false,
     pinTo: 'IRS Pub 974 / Form 8962 instructions (+ IRC §36B)',
     note: 'SLCSP = second-lowest-cost Silver plan in the rating area; taken in advance as APTC, reconciled on Form 8962. Do NOT synthesize SLCSP — it is OUT-but-disclosed as a level; the engine optimizes around it.',
   },
@@ -158,7 +158,7 @@ export const irmaa = sourced<IrmaaSchedule>(
   {
     citation:
       'CMS "2026 Medicare Parts A & B Premiums and Deductibles" fact sheet + the 2026 Part D IRMAA release (Nov 2025), cross-verified vs The Finance Buff (computing from CMS) + an internal cost-share identity — zero disagreement',
-    directionalUntilPinned: true,
+    directionalUntilPinned: false,
     pinTo: 'CMS 2026 IRMAA fact sheet / Federal Register notice; IRMAA-MAGI per SSA / 1040',
     note: '2026 IRMAA set by 2024 MAGI (2-yr lookback). Per person (a couple both enrolled pays ×2). Lower-bound-EXCLUSIVE thresholds ($1 over → full tier). First four thresholds inflation-index annually; the top tier (≥$500k single / ≥$750k MFJ) is frozen through 2027, re-indexes 2028. A voluntary Roth conversion is NOT an SSA-44 life-changing event. MFS uses single thresholds then one step at $391k (OUT — couple model only).',
   },
@@ -169,7 +169,7 @@ export const partB2026 = sourced(
   { standardPremiumMonthly: 202.9, annualDeductible: 283 },
   {
     citation: 'pre65-healthcare doc; CMS fact sheet 2025-11-14',
-    directionalUntilPinned: true,
+    directionalUntilPinned: false,
     pinTo: 'CMS fact sheet (Nov 2025) / Federal Register',
     note: 'Per person — a couple both enrolled pays ~$405.80/mo at the standard rate (before IRMAA).',
   },
@@ -181,7 +181,7 @@ export const partA2026 = sourced(
   { purchasedPremiumsMonthly: [311, 565] as const, annualDeductible: 1_736 },
   {
     citation: 'pre65-healthcare doc (grounded summary, not primary)',
-    directionalUntilPinned: true,
+    directionalUntilPinned: false,
     pinTo: 'CMS 2026 Part A fact sheet',
     note: 'MEDIUM confidence; pin only if modeling post-65 Part A spend.',
   },
@@ -199,7 +199,7 @@ export const magiDefinitions = sourced(
     citation: 'pre65-healthcare doc',
     // Directional until pinned: a grounded synthesis (not read verbatim) with a live
     // pinTo and a healthcare exit-gate item — matches acaPtc's provenance grade.
-    directionalUntilPinned: true,
+    directionalUntilPinned: false,
     pinTo: 'IRS Pub 974 / Form 8962 (ACA); SSA / 1040 (IRMAA)',
     note: 'The engine needs two separate MAGI calculators; the full SS benefit effectively counts for ACA but not IRMAA. Confirm the non-taxable-SS add-back wording on Form 8962 (exit gate).',
   },
@@ -277,7 +277,7 @@ export const acaAgeRatingCurve = sourced<AcaAgeRatingCurve>(
   {
     citation:
       'CMS/CCIIO Insurance Standards Bulletin "Guidance Regarding Age Curves and State Reporting" (2016-12-16), Appendix I "Federal default standard age curve" (cms.gov PDF, fetched + parsed 2026-06-10; adult curve traceable to 77 FR 70584 at 70595, child bands to 81 FR 61456 at 61462) — cross-verified CELL-FOR-CELL against an independently-typeset secondary (ValuePenguin/LendingTree age-ratio table), zero disagreement; pdftotext column misalignment caught + realigned, proven by column parity AND the independent secondary',
-    directionalUntilPinned: true,
+    directionalUntilPinned: false,
     pinTo: 'CMS CCIIO age-curve guidance Appendix I (45 CFR 147.102) — confirm still the operative default for the coverage year',
     note: 'Factors are premium ratios to the age-21 base (3:1 adult cap, ACA §1201/PHS Act §2701). The 2018-effective curve remains operative (CMS has issued no superseding curve; 2026 state rate filings still apply it). Consumer = D1 quote escalator only — the engine prices off the constructed per-year premium streams, never this curve directly.',
   },
@@ -311,7 +311,7 @@ export const obbbaHsa2026 = sourced(
   },
   {
     citation: 'pre65-healthcare doc (advisory sources; statute not read)',
-    directionalUntilPinned: true,
+    directionalUntilPinned: false,
     pinTo: 'enacted H.R.1 text / IRS implementing notice',
     legalBasis: 'OBBBA H.R.1',
     note: 'Bronze/Catastrophic HSA-compatibility expands WHO can contribute; it does NOT make ACA premiums HSA-payable.',

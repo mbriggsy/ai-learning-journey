@@ -49,6 +49,59 @@
   transition: width var(--dur-step) var(--ease-out);
 }
 
+/* ----- the provisional answer strip (quiet — the question stays the hero) ----- */
+
+.answer-strip {
+  border-block-end: 1px solid var(--line-soft);
+  padding-block-end: var(--space-4);
+  margin-block-end: var(--space-6);
+  /* RESERVED HEIGHT (load-bearing): the strip's content changes on every
+   * question commit (the missing list shrinks, readings appear). Without a
+   * stable block size those swaps reflow the QUESTIONS below mid-interaction —
+   * a tap aimed at a control lands on whatever shifted into its place (caught
+   * live by the CSP e2e walk; the same misclick bites a real thumb). Reserve
+   * the tallest common state so content swaps inside a calm, fixed frame. */
+  min-block-size: 7.5rem;
+  /* The strip's content morphs on recompute — opacity-only, interruptible. */
+  transition: opacity var(--dur-fast) ease;
+}
+
+.strip-lead {
+  font-family: var(--font-display);
+  font-optical-sizing: auto;
+  font-weight: var(--weight-display);
+  font-size: var(--text-lg);
+  color: var(--brand);
+}
+
+.strip-muted {
+  color: var(--ink-muted);
+  font-family: var(--font-body);
+  font-weight: var(--weight-medium);
+  font-size: var(--text-base);
+}
+
+.strip-odds {
+  font-family: var(--font-body);
+  font-weight: var(--weight-medium);
+  font-size: var(--text-sm);
+  color: var(--ink-muted);
+}
+
+.strip-secondary {
+  font-size: var(--text-sm);
+  color: var(--ink-muted);
+  margin-block-start: var(--space-1);
+}
+
+.strip-tertiary {
+  font-size: var(--text-xs);
+  color: var(--ink-muted);
+  margin-block-start: var(--space-1);
+  letter-spacing: var(--tracking-overline);
+  text-transform: uppercase;
+}
+
 /* ----- step enter motion (enter-only: the outgoing step UNMOUNTS — focus-safe
  *        per ai-journey-stats/006; opacity is the only faded property on the
  *        focus-receiving element) ----- */

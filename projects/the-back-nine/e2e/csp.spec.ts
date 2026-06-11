@@ -152,16 +152,86 @@ test.describe('CSP — real browser enforcement', () => {
     expect((await violations(page)).some((x) => x.violatedDirective.startsWith('img-src'))).toBe(false)
   })
 
-  test("engine module Web Worker constructs + round-trips under worker-src 'self'", async ({ page }) => {
+  test("engine module Web Worker constructs + round-trips under worker-src 'self' — through the REAL intake", async ({ page }) => {
+    // RETARGETED at D1 (the U0 smoke readout is gone): drives the real product
+    // path — cold start → the guided intake → a live provisional engine reading
+    // — under the ENFORCED policy. Strictly stronger than the smoke arm: the
+    // worker constructs at module eval, the React surface renders under
+    // style-src 'self', and the 2000-path engine round-trips a transferred
+    // buffer into the answer strip.
     await installCollector(page)
     await page.goto('/')
 
-    // "…" → "N of 10 · <state>" only after the module worker constructs (worker-src 'self') AND the
-    // real Monte Carlo engine round-trips over the transferred buffer. paths:2000 → generous timeout.
-    await expect(page.getByTestId('engine-reading')).toHaveText(/^\d+ of 10 · /, { timeout: 30_000 })
+    await page.getByRole('button', { name: 'Begin' }).click()
 
-    // No worker-src/script-src violation slipped through while the app + worker loaded under the CSP.
+    // Names + birth years + sex (a complete all-retired 65/63 household).
+    // Person groups locate by the STABLE class — committing a name renames the
+    // group's accessible legend mid-flow (by design), which would stale a
+    // name-based locator.
+    const you = page.locator('.person-group').first()
+    const spouse = page.locator('.person-group').nth(1)
+    // Segment radios are sr-only inside their labels — check({force}) sets
+    // state deterministically regardless of any in-flight re-render (the strip
+    // also reserves a fixed height so commits never shift layout mid-tap).
+    const pick = (scope: ReturnType<typeof page.locator>, name: string) =>
+      scope.getByRole('radio', { name, exact: true }).check({ force: true })
+    await you.getByLabel('First name').fill('Pat')
+    await you.getByLabel('Birth year').fill('1961')
+    await pick(you, 'Male')
+    await spouse.getByLabel('First name').fill('Sam')
+    await spouse.getByLabel('Birth year').fill('1963')
+    await pick(spouse, 'Female')
+    const next = () => page.getByRole('button', { name: 'Continue' }).click()
+    await next()
+
+    // Work status: both already retired, stop ages entered.
+    await pick(you, 'Already retired')
+    await you.getByLabel('The age work stopped').fill('63')
+    await pick(spouse, 'Already retired')
+    await spouse.getByLabel('The age work stopped').fill('61')
+    await next()
+
+    // Social Security (amount + claim age per person).
+    const ssAmounts = page.getByLabel('Estimated yearly benefit')
+    await ssAmounts.first().fill('24000')
+    await ssAmounts.last().fill('18000')
+    const claims = page.getByLabel('Planned claim age (62–70)')
+    await claims.first().fill('67')
+    await claims.last().fill('67')
+    await next()
+
+    // Spend (+ the explicit period confirm — the figure is ambiguous-band).
+    await page.getByLabel('Household spending, all in').fill('7000')
+    await page.getByRole('radio', { name: 'Each month' }).check({ force: true })
+    await next()
+
+    // The ACA quote pair (63 < 65 ⇒ required).
+    await page.getByLabel('Monthly premium of a plan you’d pick').fill('950')
+    await page.getByLabel('Benchmark Silver plan, monthly').fill('880')
+    await next()
+
+    // Out-of-pocket (optional) — skip; IRMAA seed (65 ⇒ required).
+    await next()
+    await page.getByLabel('Income, two years back').fill('120000')
+    await page.getByLabel('Income, last year').fill('110000')
+    await next()
+
+    // One account (401k, recognized ticker), committed to the loop.
+    await page.getByRole('button', { name: 'Add an account' }).click()
+    await page.getByRole('radio', { name: '401(k)', exact: true }).check({ force: true })
+    await page.getByLabel('Balance today').fill('1000000')
+    await page.getByLabel('Main holding’s ticker').fill('VTI')
+    await page.getByRole('button', { name: 'Add this account' }).click()
+
+    // Continue commits the account set → the engine dispatches: the strip's
+    // reading appears only after the module worker constructed (worker-src
+    // 'self') AND the real Monte Carlo engine round-tripped. 2000 paths +
+    // tax/health overlays ⇒ generous timeout.
+    await next()
+    await expect(page.getByTestId('engine-reading')).toHaveText(/of 10/, { timeout: 60_000 })
+
+    // No worker-src/script-src/style-src violation anywhere along the real path.
     const v = await violations(page)
-    expect(v.some((x) => /worker-src|script-src/.test(x.violatedDirective))).toBe(false)
+    expect(v.some((x) => /worker-src|script-src|style-src/.test(x.violatedDirective))).toBe(false)
   })
 })

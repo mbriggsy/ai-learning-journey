@@ -48,6 +48,10 @@ export const copy = {
   nameLabel: 'First name',
   birthYearLabel: 'Birth year',
   birthYearPlaceholder: 'e.g. 1962',
+  sexLegend: 'Sex',
+  sexMale: 'Male',
+  sexFemale: 'Female',
+  sexHelp: 'Survival odds come from the Social Security life tables, which are split this way.',
   qWorkHeading: 'Where does work stand today?',
   workStatusLegend: 'Work status',
   workStatusWorking: 'Still working',
@@ -128,6 +132,24 @@ export const copy = {
   classifierBondPct: 'Bonds %',
   classifierCashPct: 'Cash %',
   errClassifierSum: 'Those percentages need to add up to 100.',
+  // --- the provisional answer strip (D1 — surfaces and sharpens during entry;
+  //     D2 builds the full state-adaptive surface over U6/U7) ---
+  answerIncomplete: 'Your answer takes shape as you go.',
+  answerStillNeeded: 'Still needed:',
+  answerNoSynthesis: 'The tool never guesses these — it prices only what you enter.',
+  answerPending: 'Working it out…',
+  answerProvisionalTag: 'Provisional — with what you’ve entered so far',
+  answerNotYet:
+    'Not there yet — with what’s entered so far. Accounts usually move this; the picture isn’t complete.',
+  dateFreeToday: 'Work-optional today, by this math',
+  dateWindowEdge: 'at the edge of what this window can confirm',
+  answerError: 'The math hit a snag.',
+  answerRetry: 'Try again',
+  outcomeOnTrack: 'On track',
+  outcomeBorderline: 'On the line',
+  outcomeOffTrack: 'Off track',
+  outcomeOverFunded: 'More than covered',
+  outcomeAlreadyFailing: 'Already short',
   // --- R19 calm error grammar (icon + adjacent text; color never alone) ---
   errContributionCeiling:
     'That’s more than this year’s legal contribution limit for this account type at this age — combined across accounts of the same kind.',
@@ -161,6 +183,20 @@ export const slots = {
   /** One committed account in the loop's quiet list. */
   accountSummary: (kindLabel: string, owner: string, valueFormatted: string): string =>
     `${kindLabel} · ${owner} · $${valueFormatted}`,
+  /** The pinned natural-frequency frame. Top-of-scale renders "more than 9 of
+   *  10" — "10 of 10" can NEVER appear (the over-funded near-ceiling clamp). */
+  xOfTen: (n: number): string => (n >= 10 ? 'more than 9 of 10' : `${n} of 10`),
+  /** The provisional date line (~N years — humane precision, R12 hedge). */
+  dateInYears: (n: number): string =>
+    n === 1 ? 'Work-optional in about a year' : `Work-optional in about ${n} years`,
+  /** The first-class no-date answer names its own window (§3c). */
+  noDateInWindow: (windowYears: number): string =>
+    `No work-optional date within the next ${windowYears} years — with what you’ve entered so far.`,
+  /** Odds rider for the date line. */
+  withOdds: (xOfTenText: string): string => `about ${xOfTenText} odds`,
+  /** The catch-up step-down disclosure names its year (D1). */
+  stepDownNote: (calendarYear: number): string =>
+    `From ${calendarYear}, contribution room narrows as a catch-up window closes — the plan assumes the lower limit from then on.`,
 } as const
 
 /**

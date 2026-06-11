@@ -1,0 +1,305 @@
+import { describe, expect, it } from 'vitest'
+import {
+  buildDateInput,
+  buildSpineParams,
+  escalateQuote,
+  firstStepDownYear,
+  householdStockWeight,
+  missingRequiredFacts,
+} from '../intakeMap'
+import { contributionCeilingFor } from '../sanity'
+import { validateParams } from '@engine/simulate'
+import { buildCandidateParams, DATE_OFFSET_WINDOW_TOP, DATE_SEARCH_PATHS } from '@engine/dateSearch'
+import { acaAgeRatingCurve } from '@engine/constants/health'
+import { employerPlan2026, catchUpForAge } from '@engine/constants/contributions'
+import type { ScenarioDraft, PersonDraft } from '@store/memoryModel'
+
+/**
+ * The intake→engine contract battery (D1 slice (e)).
+ *
+ * THE RENDER-ANCHOR COUPLING (the load-bearing test): the placeholder shows
+ * exactly while `missingRequiredFacts` is non-empty, so a draft with ZERO
+ * missing facts MUST build params `validateParams` ACCEPTS — on the spine
+ * route directly, and on the date route for EVERY candidate the sweep will
+ * test (all-or-nothing). If this drifts, the UI threshold and the engine
+ * threshold disagree — the exact hazard the anchor rule exists to prevent.
+ */
+
+const f = (age: number): number => {
+  if (age <= 14) return acaAgeRatingCurve.value.childFactorThrough14
+  return acaAgeRatingCurve.value.factors.find((r) => r.age === Math.min(age, 64))!.factor
+}
+
+const base = (over: Partial<ScenarioDraft> = {}): ScenarioDraft => ({
+  people: [{}, {}],
+  enteredAccounts: [],
+  tickerClassifications: {},
+  health: {},
+  annualSpendingReal: 84_000,
+  spendEntryPeriod: 'month',
+  survivorSpendingRatio: 0.75,
+  drawdownPolicy: 'proportional',
+  filing: 'mfj',
+  startCalendarYear: 2026,
+  taxVintage: 'OBBBA-2025',
+  appDefaultVersion: 'test',
+  ...over,
+})
+
+const retiredPerson = (over: Partial<PersonDraft> = {}): PersonDraft => ({
+  name: 'R',
+  sex: 'male',
+  birthYear: 1961,
+  currentAge: 65,
+  workStatus: 'retired',
+  retirementAge: 63,
+  earnedIncomeReal: 0,
+  socialSecurityReal: 24_000,
+  socialSecurityClaimAge: 67,
+  ...over,
+})
+
+const workingPerson = (over: Partial<PersonDraft> = {}): PersonDraft => ({
+  name: 'W',
+  sex: 'female',
+  birthYear: 1968,
+  currentAge: 58,
+  workStatus: 'working',
+  earnedIncomeReal: 150_000,
+  socialSecurityReal: 28_000,
+  socialSecurityClaimAge: 67,
+  ...over,
+})
+
+/** A COMPLETE all-retired draft (65/63 — ACA quote + IRMAA seed both required). */
+const completeSpineDraft = (): ScenarioDraft =>
+  base({
+    people: [
+      retiredPerson(),
+      retiredPerson({ name: 'S', sex: 'female', birthYear: 1963, currentAge: 63, socialSecurityReal: 18_000 }),
+    ],
+    enteredAccounts: [
+      { ownerIndex: 0, kind: '401k', ticker: 'VTI', valueToday: 600_000 },
+      { ownerIndex: 1, kind: 'brokerage', ticker: 'VTI', valueToday: 400_000, basis: 250_000 },
+    ],
+    health: {
+      enrolledPremiumMonthlyToday: 950,
+      slcspMonthlyToday: 880,
+      oopMedicalAnnual: 4_000,
+      irmaaMagiSeed: [120_000, 110_000],
+    },
+  })
+
+/** A COMPLETE mixed (date-route) draft (58 working / 60 retired). */
+const completeDateDraft = (): ScenarioDraft =>
+  base({
+    people: [workingPerson(), retiredPerson({ name: 'S', birthYear: 1966, currentAge: 60, retirementAge: 58 })],
+    enteredAccounts: [
+      { ownerIndex: 0, kind: '401k', ticker: 'VTI', valueToday: 900_000, annualContribution: 20_000, employerMatchAnnual: 8_000 },
+      { ownerIndex: 1, kind: 'roth-ira', ticker: 'VFIFX', valueToday: 200_000 },
+    ],
+    health: {
+      enrolledPremiumMonthlyToday: 1_100,
+      slcspMonthlyToday: 1_000,
+      workingYearIrmaaMagiByPerson: [180_000, 0],
+    },
+  })
+
+describe('the render-anchor coupling (missing-facts empty ⇒ validateParams accepts)', () => {
+  it('spine route: a complete draft builds ACCEPTED params', () => {
+    const d = completeSpineDraft()
+    expect(missingRequiredFacts(d)).toEqual([])
+    const params = buildSpineParams(d)
+    expect(params).not.toBeNull()
+    expect(validateParams(params!)).toBeNull() // accepted — no drift
+  })
+
+  it('date route: a complete draft builds input EVERY candidate accepts (the all-or-nothing sweep)', () => {
+    const d = completeDateDraft()
+    expect(missingRequiredFacts(d)).toEqual([])
+    const input = buildDateInput(d)
+    expect(input).not.toBeNull()
+    for (let y = 0; y <= DATE_OFFSET_WINDOW_TOP; y += 1) {
+      const candidate = buildCandidateParams(input!, y, DATE_SEARCH_PATHS.provisional)
+      expect(validateParams(candidate), `candidate Y=${y}`).toBeNull()
+    }
+  })
+
+  it('routes are exclusive: spine builder nulls on a date-route draft and vice versa', () => {
+    expect(buildSpineParams(completeDateDraft())).toBeNull()
+    expect(buildDateInput(completeSpineDraft())).toBeNull()
+  })
+})
+
+describe('missingRequiredFacts — the placeholder naming source', () => {
+  it('names the ACA quote pair for a pre-65 household and drops it for an all-65+ one', () => {
+    const d = completeSpineDraft()
+    const noQuote = { ...d, health: { ...d.health, enrolledPremiumMonthlyToday: undefined, slcspMonthlyToday: undefined } }
+    const keys = missingRequiredFacts(noQuote).map((m) => m.labelKey)
+    expect(keys).toContain('enrolledPremiumLabel')
+    expect(keys).toContain('slcspLabel')
+
+    const old = {
+      ...noQuote,
+      people: [
+        retiredPerson({ birthYear: 1959, currentAge: 67 }),
+        retiredPerson({ name: 'S', sex: 'female', birthYear: 1960, currentAge: 66 }),
+      ] as ScenarioDraft['people'],
+    }
+    const oldKeys = missingRequiredFacts(old).map((m) => m.labelKey)
+    expect(oldKeys).not.toContain('enrolledPremiumLabel')
+    expect(oldKeys).not.toContain('slcspLabel')
+  })
+
+  it('the date route requires at least one account; the spine does not ($0 flows to the honest 0-of-10)', () => {
+    const dDate = { ...completeDateDraft(), enteredAccounts: [] }
+    expect(missingRequiredFacts(dDate).map((m) => m.labelKey)).toContain('addAccount')
+    const dSpine = { ...completeSpineDraft(), enteredAccounts: [] }
+    expect(missingRequiredFacts(dSpine).map((m) => m.labelKey)).not.toContain('addAccount')
+  })
+
+  it('a working member without the working-year MAGI figure is named on the date route only', () => {
+    const d = completeDateDraft()
+    const noMagi = { ...d, health: { ...d.health, workingYearIrmaaMagiByPerson: undefined } }
+    expect(missingRequiredFacts(noMagi).map((m) => m.labelKey)).toContain('workIncomeLabel')
+  })
+
+  it('two spouses’ HSAs are an honest named limitation, never a silent owner pick', () => {
+    const d = completeSpineDraft()
+    const twoHsas = {
+      ...d,
+      enteredAccounts: [
+        ...d.enteredAccounts,
+        { ownerIndex: 0, kind: 'hsa', ticker: 'VTI', valueToday: 30_000 },
+        { ownerIndex: 1, kind: 'hsa', ticker: 'VTI', valueToday: 20_000 },
+      ] as ScenarioDraft['enteredAccounts'],
+    }
+    expect(missingRequiredFacts(twoHsas).map((m) => m.labelKey)).toContain('kindHsa')
+  })
+
+  it('an unclassified entered account is named (never a silent default blend)', () => {
+    const d = completeSpineDraft()
+    const unknown = {
+      ...d,
+      enteredAccounts: [
+        { ownerIndex: 0, kind: '401k', ticker: 'ZZZNOTREAL', valueToday: 100_000 },
+      ] as ScenarioDraft['enteredAccounts'],
+    }
+    expect(missingRequiredFacts(unknown).map((m) => m.labelKey)).toContain('classifierLegend')
+  })
+})
+
+describe('the ACA quote escalator (§3b — the staggered Medicare exit)', () => {
+  it('prices the years between the two 65th birthdays at the YOUNGER member’s SOLO value (a flat couple scalar fails)', () => {
+    const quote = 1_000 // $/mo household, ages 62 + 64
+    const schedule = escalateQuote(quote, [62, 64], 6)
+
+    const share62 = quote * (f(62) / (f(62) + f(64)))
+    const share64 = quote * (f(64) / (f(62) + f(64)))
+    // t=0: both pre-65.
+    expect(schedule[0]).toBeCloseTo((share62 + share64) * 12, 6)
+    // t=1: the 64-yo turns 65 — the YOUNGER one's solo, age-escalated value.
+    expect(schedule[1]).toBeCloseTo(share62 * (f(63) / f(62)) * 12, 6)
+    // t=2: solo at 64 (the most-understated year under a flat scalar).
+    expect(schedule[2]).toBeCloseTo(share62 * (f(64) / f(62)) * 12, 6)
+    // t=3: the younger turns 65 — zero from here.
+    expect(schedule[3]).toBe(0)
+    expect(schedule[5]).toBe(0)
+
+    // The planted flat-couple-scalar arm: a held-constant household value would
+    // keep t=1 at the t=0 level — the composition must DROP it to solo.
+    expect(schedule[1]).toBeLessThan(schedule[0]!)
+  })
+
+  it('escalates a solo member ALONG their own ages (3:1 curve rises toward 64)', () => {
+    const schedule = escalateQuote(500, [55], 11)
+    for (let t = 1; t <= 9; t += 1) {
+      expect(schedule[t]).toBeGreaterThan(schedule[t - 1]!) // 56..64 strictly rising
+    }
+    expect(schedule[10]).toBe(0) // 65
+  })
+
+  it('members 65+ contribute nothing anywhere; an all-65+ household prices zero', () => {
+    expect(escalateQuote(800, [67, 70], 4)).toEqual([0, 0, 0, 0])
+  })
+})
+
+describe('aggregations (derived, never stored)', () => {
+  it('value-weights the household stock weight across resolved blends', () => {
+    const d = base({
+      people: [retiredPerson(), retiredPerson({ name: 'S' })] as ScenarioDraft['people'],
+      enteredAccounts: [
+        { ownerIndex: 0, kind: '401k', ticker: 'VTI', valueToday: 730_000 }, // ~100% stock
+        { ownerIndex: 1, kind: 'brokerage', valueToday: 250_000, basis: 100_000, manualBlend: { kind: 'simple', choice: 'cash' } },
+      ],
+    })
+    // VTI ≈ 100% stock at ~.745 of value; cash → bond fold = 0% stock for the rest.
+    const w = householdStockWeight(d)!
+    expect(w).toBeGreaterThan(0.7)
+    expect(w).toBeLessThanOrEqual(0.76)
+  })
+
+  it('buckets, per-person pretax, basis, and the HSA owner aggregate correctly', () => {
+    const d = completeSpineDraft()
+    const withHsa = {
+      ...d,
+      enteredAccounts: [
+        ...d.enteredAccounts,
+        { ownerIndex: 1, kind: 'hsa', ticker: 'VTI', valueToday: 50_000 },
+      ] as ScenarioDraft['enteredAccounts'],
+    }
+    const params = buildSpineParams(withHsa)!
+    expect(params.initialPortfolio).toBe(1_050_000)
+    expect(params.overlay!.buckets).toEqual({ taxable: 400_000, pretax: 600_000, roth: 0, hsa: 50_000 })
+    expect(params.overlay!.pretaxByPerson).toEqual([600_000, 0])
+    expect(params.overlay!.initialTaxableBasis).toBe(250_000)
+    expect(params.overlay!.hsaOwnerIndex).toBe(1)
+    expect(validateParams(params)).toBeNull()
+  })
+
+  it('oopMedical fills the horizon FLAT (cap-only; never age-stepped, never stopped at 65)', () => {
+    const params = buildSpineParams(completeSpineDraft())!
+    const oop = params.overlay!.oopMedical!
+    expect(oop).toHaveLength(params.maxHorizonYears)
+    expect(new Set(oop)).toEqual(new Set([4_000]))
+  })
+})
+
+describe('contribution streams (R31 + the step-down)', () => {
+  it('a 61-yo super-band contribution steps DOWN at 64 (the flat projection fails); the disclosure names the year', () => {
+    const ceiling61 = contributionCeilingFor('401k', 61)!
+    const d = {
+      ...completeDateDraft(),
+      people: [
+        workingPerson({ birthYear: 1965, currentAge: 61 }),
+        retiredPerson({ name: 'S', birthYear: 1966, currentAge: 60, retirementAge: 58 }),
+      ] as ScenarioDraft['people'],
+      enteredAccounts: [
+        { ownerIndex: 0, kind: '401k', ticker: 'VTI', valueToday: 900_000, annualContribution: ceiling61 },
+      ] as ScenarioDraft['enteredAccounts'],
+    }
+    const input = buildDateInput(d)!
+    const stream = input.params.overlay!.accumulation!.contributionsByPerson[0]!.pretax!
+    // Ages 61–63 (t=0..2): the entered super-band max carries through.
+    expect(stream[0]).toBeCloseTo(ceiling61, 6)
+    expect(stream[2]).toBeCloseTo(ceiling61, 6)
+    // Age 64 (t=3): the super band expires — the stream steps down to the
+    // age-64 ceiling (deferral + the regular catch-up).
+    const ceiling64 = employerPlan2026.value.electiveDeferral + catchUpForAge(64, 'employerPlan')
+    expect(stream[3]).toBeCloseTo(ceiling64, 6)
+    expect(stream[3]).toBeLessThan(stream[2]!) // the planted flat arm fails
+    expect(firstStepDownYear(d, 10)).toBe(3)
+  })
+
+  it('the placeholder retirementAge is constructed strictly above currentAge and never stored', () => {
+    const d = completeDateDraft()
+    const input = buildDateInput(d)!
+    expect(input.params.people[0]!.retirementAge).toBe(59) // 58 + 1
+    expect(d.people[0].retirementAge).toBeUndefined() // the draft never holds it
+  })
+
+  it('a no-contribution household carries NO accumulation construct (presence-keyed §1)', () => {
+    const params = buildSpineParams(completeSpineDraft())!
+    expect(params.overlay!.accumulation).toBeUndefined()
+  })
+})

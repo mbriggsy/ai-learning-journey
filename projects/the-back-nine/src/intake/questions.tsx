@@ -122,6 +122,21 @@ const namesStep: StepDef = {
             }}
           />
           {errorsFor(api, personField(i, 'birthYear'))}
+          {/* Sex selects the SSA cohort curve per spouse (the joint-and-survivor
+              math is sex-specific) — collected, never implicit (U5 contract; an
+              implicit value would be a hidden R7 assumption AND a correctness bug
+              on the product's core survivor case). */}
+          <SegmentedControl<'male' | 'female'>
+            legendKey="sexLegend"
+            name={`sex-${i}`}
+            options={[
+              { value: 'male', labelKey: 'sexMale' },
+              { value: 'female', labelKey: 'sexFemale' },
+            ]}
+            value={p.sex}
+            onChange={(sex) => updatePerson(api, i, { sex })}
+          />
+          <p className="field-help">{copy.sexHelp}</p>
         </>
       )}
     />

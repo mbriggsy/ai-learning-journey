@@ -267,9 +267,9 @@ describe('paired screens', () => {
       ],
     }))
     render(<Harness model={m} />)
-    const groups = screen.getAllByRole('group')
-    expect(groups).toHaveLength(2)
-    expect(groups[0]).toHaveAccessibleName('Sam')
-    expect(groups[1]).toHaveAccessibleName('Alex')
+    // Exactly one PERSON group per spouse, named by the entered names (the sex
+    // segmented control nests its own fieldset inside each — query by name).
+    expect(screen.getByRole('group', { name: 'Sam' })).toBeInTheDocument()
+    expect(screen.getByRole('group', { name: 'Alex' })).toBeInTheDocument()
   })
 })

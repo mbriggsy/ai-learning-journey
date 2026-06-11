@@ -60,9 +60,12 @@ export interface IntakeFlowProps {
   /** Fired after the LAST step advances cleanly (slice (e): the account-set-
    *  complete boundary → the final-tier recompute). */
   readonly onComplete?: () => void
+  /** The provisional answer surface, rendered between the header and the step
+   *  (cross-cutting #6: the confidence surface CO-EXISTS with intake). */
+  readonly answerSlot?: ReactNode
 }
 
-export function IntakeFlow({ steps, model, onComplete }: IntakeFlowProps) {
+export function IntakeFlow({ steps, model, onComplete, answerSlot }: IntakeFlowProps) {
   const snapshot = useSyncExternalStore(model.subscribe, model.getSnapshot)
   const [index, setIndex] = useState(0)
   const [direction, setDirection] = useState<'forward' | 'back'>('forward')
@@ -155,6 +158,8 @@ export function IntakeFlow({ steps, model, onComplete }: IntakeFlowProps) {
           />
         </div>
       </header>
+
+      {answerSlot}
 
       {/* Keyed by step id: the outgoing step unmounts instantly; the incoming
           one enters via @starting-style (opacity-only when motion is reduced). */}

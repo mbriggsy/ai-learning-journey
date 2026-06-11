@@ -1,68 +1,41 @@
-import { useEffect, useState } from 'react'
-import { engine } from '@store/engineClient'
-import { fromWire } from '@engine/engineWire'
-import { productionMarket } from '@engine/reference/methodology'
-import type { SimulationParams } from '@shared/model'
+import { lazy, Suspense, useEffect, useState } from 'react'
+import { ColdStart } from '@intake/coldStart'
 import { UpdateToast } from './UpdateToast'
 import { Disclaimer } from './Disclaimer'
-import { copy } from './copy'
 
 /**
- * U0/U1 scaffold shell. Nothing user-facing ships in Phase 1 — this proves the
- * skeleton runs end-to-end: React mounts, the engine worker constructs and answers a
- * Comlink round-trip, the REAL Monte Carlo engine runs in the worker and returns a
- * first-answer reading over a transferred typed-array buffer, and the update toast +
- * R13 disclaimer render. Phase 2 replaces the body with the real first-answer surface.
+ * The P2 app body: cold start → the D1 account-level guided intake, with the
+ * provisional answer strip co-existing above the questions (cross-cutting #6).
+ * Replaces the U0/U1 smoke scaffold — the engine round-trip liveness the smoke
+ * readout proved now rides the REAL product path (the CSP e2e drives this
+ * intake to a live engine reading under the enforced policy).
+ *
+ * THE SPLIT: the intake subtree (and its engine tables) is a lazy chunk so the
+ * entry JS stays inside the 300 KiB budget; the chunk warms during the
+ * cold-start read so Begin never visibly waits (it is also precached for
+ * offline). The Suspense fallback is deliberately EMPTY — the warm chunk makes
+ * it a sub-frame flash at worst, and a flashed spinner would read as jank.
  */
-const SMOKE_PARAMS: SimulationParams = {
-  initialPortfolio: 1_000_000,
-  annualSpendingReal: 40_000,
-  stockWeight: 0.6,
-  people: [
-    { sex: 'male', currentAge: 65, retirementAge: 65, earnedIncomeReal: 0, socialSecurityReal: 24_000, socialSecurityClaimAge: 67 },
-    { sex: 'female', currentAge: 63, retirementAge: 65, earnedIncomeReal: 0, socialSecurityReal: 18_000, socialSecurityClaimAge: 67 },
-  ],
-  survivorSpendingRatio: 0.75,
-  drawdownPolicy: 'proportional',
-  market: productionMarket.value,
-  paths: 2000,
-  maxHorizonYears: 55,
-  longevityMode: 'sampled',
-}
+const IntakeApp = lazy(() => import('./IntakeApp'))
 
 export function App() {
-  const [reading, setReading] = useState('…')
+  const [began, setBegan] = useState(false)
 
   useEffect(() => {
-    let alive = true
-    engine
-      .run(SMOKE_PARAMS, 0x1234abcd)
-      .then((wire) => {
-        const r = fromWire(wire)
-        if (!alive) return
-        setReading(
-          r.ok
-            ? `${r.result.headline.xOfTen.value} of 10 · ${r.result.headline.outcomeState}`
-            : `calm error: ${r.reason}`,
-        )
-      })
-      .catch(() => {
-        if (alive) setReading('unavailable')
-      })
-    return () => {
-      alive = false
-    }
+    void import('./IntakeApp') // warm the chunk behind the cold-start frame
   }, [])
 
   return (
-    <main>
-      <h1>{copy.appTitle}</h1>
-      <p>{copy.scaffoldSubtitle}</p>
-      <p>
-        {copy.scaffoldEngineLabel} <strong data-testid="engine-reading">{reading}</strong>
-      </p>
+    <>
+      {began ? (
+        <Suspense fallback={null}>
+          <IntakeApp />
+        </Suspense>
+      ) : (
+        <ColdStart onBegin={() => setBegan(true)} />
+      )}
       <UpdateToast />
       <Disclaimer />
-    </main>
+    </>
   )
 }

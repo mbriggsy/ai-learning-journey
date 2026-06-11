@@ -14,7 +14,8 @@
  * into `taxOverlay.ts`/`simulate.ts`), the post-65 IRMAA 2-yr-lagged feed-forward, and M5's HSA 4th
  * bucket SPEND side (`hsaQualifiedSpend` below, wired into `taxOverlay.ts` — the 2026-06-08 reshape
  * moved HSA *contributions* to the accumulation track's C2). M6 (the final cross-overlay
- * integration) remains. Each cost-input stream + its reduce-to-spine wiring lands with its first
+ * integration battery + the solver output contract, 2026-06-10) COMPLETES the unit.
+ * Each cost-input stream + its reduce-to-spine wiring lands with its first
  * consumer, carrying a `Number.isFinite`-first R19 guard at BOTH `validateParams` and the overlay
  * backstop (insights 008/010 — the proven U2 as-we-go pattern). See
  * docs/plans/back-nine-mvp/phase-1-foundation.md (Unit 3) +

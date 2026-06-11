@@ -195,7 +195,7 @@ code-reviewed:
 
 ---
 
-- [ ] **Unit 3: Healthcare overlay** *(income-aware ACA / IRMAA / HSA — the hardest net-new unit)*
+- [x] **Unit 3: Healthcare overlay** *(income-aware ACA / IRMAA / HSA — the hardest net-new unit; COMPLETE 2026-06-10: M1–M5 per the as-we-go slices + M6 = the cross-overlay integration battery + the solver output contract [`totalTaxPaidReal`, the per-path death-year `Distribution.taxAware`, the typed `SimInfeasible` sentinel, the wire surfaces] + the `ENGINE_MAX_*` computable-domain bounds from the boundary-review fold — detail in TODO.md's M6 block + git log)*
 
 **Goal:** A CORE engine unit (`src/engine/healthOverlay.ts`) that makes healthcare cost **income-dependent and continuous across the Medicare line** — pre-65 ACA-PTC as a per-year fixed-point with explicit cliff branching, post-65 IRMAA as a 2-year-lagged feed-forward, and HSA as a fourth account bucket — as a **deterministic per-year cash-term transform that consumes ZERO draws, shares the one market draw, is CRN-safe, and reduces byte-identically to the validated spine when off**. ACA-MAGI and IRMAA-MAGI are **two distinct calculators**. Built and validated here because a disclosed omission of a cliff **inverts which strategy wins** (D6, R24) — the solver may not optimize over a healthcare effect it cannot see.
 

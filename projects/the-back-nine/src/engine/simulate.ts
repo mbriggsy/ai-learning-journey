@@ -111,12 +111,18 @@ export interface SimIndeterminate {
  *  fields are plain JSON-safe values (they cross the worker wire). Deterministic in
  *  (params, seed) like every other output — the same candidate fails at the same path.
  *
- *  REACHABILITY (M6, empirically pinned in the sentinel tests): currently UNREACHABLE
- *  through gate-valid input — every known overlay throw has a validateParams mirror
- *  (the two-layer R19 discipline), and the gross-up's 128-pass cap is closed by float
- *  SATURATION (the monotone contraction's iterates fixpoint within ~95–105 passes at
- *  any scale — they cannot 2-cycle). The arm is the typed contract for the
- *  unknown-unknown + future overlay couplings, decided before the P4 solver layers on. */
+ *  REACHABILITY (M6; the boundary review's claim-refuter CORRECTED the first draft of
+ *  this note): reachable ONLY through the FLOAT-OVERFLOW class. Every overlay SOLVER cap
+ *  is closed over the gated domain — each known overlay throw has a validateParams
+ *  mirror (the two-layer R19 discipline), and with the ENGINE_MAX_* domain bounds the
+ *  gross-up's worst case is ~113 passes < the 128 cap (the eps-bound now covers the
+ *  whole domain; the earlier "float saturation closes any scale" claim was REFUTED —
+ *  saturation assumes finite iterates, and an overflowed bucket yields Infinity −
+ *  Infinity = NaN, which never converges). What remains reachable: a path whose values
+ *  overflow despite the gate (the measure-zero stochastic tail, or any future cap
+ *  drift) — the per-path finiteness seam in the loop routes exactly that class here.
+ *  The arm is otherwise the typed contract for the unknown-unknown + future overlay
+ *  couplings, decided before the P4 solver layers on. */
 export interface SimInfeasible {
   readonly indeterminate: false
   readonly infeasible: true
@@ -291,6 +297,33 @@ export function contributionsForYear(
   }
 }
 
+// =========================================================================
+// The engine's computable-domain bounds (M6 boundary review — the float-overflow
+// class). Finiteness of the INPUTS does not bound the COMPUTATION: a gate-valid
+// 1e300 portfolio (or a 900%/yr mean over a 300-year horizon) compounds past
+// Number.MAX_VALUE mid-path, and the first Infinity either poisons the gross-up
+// into its 128-pass throw (Infinity − Infinity = NaN) or — worse — RESOLVES with
+// Infinity reported as a SURVIVING terminal (the calm-but-wrong-OPTIMISTIC sin,
+// violating the DND/009 finite contract every wire-crossing surface carries). So
+// the R19 gate bounds the domain itself. The caps are far beyond any real
+// household input (a personal tool: a $1T portfolio, a 100%/yr return assumption,
+// and a 120-year horizon are each absurd) so they can never falsely reject a real
+// user — while making the mean-path compounding provably finite (ln(1e12) +
+// 120·ln(2) ≈ 111 ≪ 709 = ln(MAX_VALUE)) AND closing the gross-up's convergence
+// story over the whole gated domain (max tax ≈ 0.31 × 0.85 × 1e12 ⇒ ~113 worst-case
+// passes < the 128 cap — the eps-bound now covers everything; no saturation
+// argument needed). The stochastic TAIL (a ~3.5σ draw every year for 120 years,
+// P ≈ 1e-437) and any future cap drift are caught by the per-path finiteness seam
+// in the path loop below — the two-layer rule applied to the engine's own float
+// domain (gate = the cause; seam = the consequence).
+// =========================================================================
+/** Max dollar magnitude for any entered dollar/ratio figure (real $). */
+export const ENGINE_MAX_DOLLAR = 1e12
+/** Max market moment (mean and stdDev each ≤ 100%/yr). */
+export const ENGINE_MAX_MOMENT = 1
+/** Max cohort horizon (the mortality table's own terminal age bounds any real run). */
+export const ENGINE_MAX_HORIZON_YEARS = 120
+
 /** Validate the engine's numeric domain (R19, engine half). Returns a reason string
  *  for an indeterminate input, or null when the params are computable. EXPORTED for the
  *  date-search's all-or-nothing up-front pass (C3 §3): every candidate is validated
@@ -298,7 +331,10 @@ export function contributionsForYear(
  *  named reason — never drop-and-continue (an unevaluated offset voids the "earliest"
  *  claim), never a wasted sweep. Cheap and draw-free by construction. */
 export function validateParams(params: SimulationParams): string | null {
-  const finiteNonNeg = (x: number) => Number.isFinite(x) && x >= 0
+  // Finite, ≥ 0, AND inside the engine's computable dollar domain (the upper bound is
+  // what keeps every downstream compounding finite — see ENGINE_MAX_DOLLAR above; it
+  // also bounds the ratio fields it guards, harmlessly).
+  const finiteNonNeg = (x: number) => Number.isFinite(x) && x >= 0 && x <= ENGINE_MAX_DOLLAR
   if (!finiteNonNeg(params.initialPortfolio)) return 'initialPortfolio invalid'
   if (!finiteNonNeg(params.annualSpendingReal)) return 'annualSpendingReal invalid'
   if (!Number.isFinite(params.stockWeight) || params.stockWeight < 0 || params.stockWeight > 1)
@@ -307,6 +343,8 @@ export function validateParams(params: SimulationParams): string | null {
   if (!Number.isInteger(params.paths) || params.paths <= 0) return 'paths must be a positive integer'
   if (!Number.isInteger(params.maxHorizonYears) || params.maxHorizonYears <= 0)
     return 'maxHorizonYears must be a positive integer'
+  if (params.maxHorizonYears > ENGINE_MAX_HORIZON_YEARS)
+    return 'maxHorizonYears exceeds the engine horizon domain'
   // Enum params cross the SAME untyped structured-clone worker boundary as the numbers; validate
   // membership HERE (R19) so an out-of-union value returns the defined indeterminate output. Without
   // this, a bad `drawdownPolicy` reaches allocateWithdrawal's switch (no default) → undefined → a
@@ -347,9 +385,12 @@ export function validateParams(params: SimulationParams): string | null {
   for (const m of [params.market.stock, params.market.bond]) {
     // mean must be > -1 so phi = 1 + mean > 0 stays in toLogMoments' domain; mean <= -1
     // yields ±Infinity / NaN log-moments that would escape as NaN percentiles (R19). A
-    // simple per-period return is bounded below by -1 anyway.
-    if (!Number.isFinite(m.mean) || m.mean <= -1 || !Number.isFinite(m.stdDev) || m.stdDev < 0)
-      return 'market moment invalid'
+    // simple per-period return is bounded below by -1 anyway. The UPPER bound (M6 review,
+    // ENGINE_MAX_MOMENT): an unbounded finite mean (e.g. 9 = 900%/yr) compounds a bucket
+    // past Number.MAX_VALUE within a gate-valid horizon — Infinity then reaches the wire
+    // on a path counted as SURVIVED (the reproduced calm-but-wrong-optimistic escape).
+    if (!Number.isFinite(m.mean) || m.mean <= -1 || m.mean > ENGINE_MAX_MOMENT) return 'market moment invalid'
+    if (!Number.isFinite(m.stdDev) || m.stdDev < 0 || m.stdDev > ENGINE_MAX_MOMENT) return 'market moment invalid'
   }
   const rho = params.market.stockBondCorrelation
   if (!Number.isFinite(rho) || rho < -1 || rho > 1) return 'stockBondCorrelation out of [-1, 1]'
@@ -894,6 +935,30 @@ export function simulate(params: SimulationParams, seed: number): SimOutput {
         }
       }
       res = taxRes
+      // The per-path FINITENESS SEAM (M6 review — the consequence half of the two-layer
+      // domain rule; the ENGINE_MAX_* gate is the cause half). The gate bounds every real
+      // input, but float overflow remains constructible in the measure-zero stochastic
+      // tail (~3.5σ every year for the whole horizon) and would re-open under any future
+      // cap drift — and an Infinity here otherwise RESOLVES as a surviving terminal and
+      // crosses the wire in surfaces that contract DND/009 finiteness. Throw-or-nothing
+      // (never perturbs a value — byte-identity safe); routed to the typed sentinel (the
+      // input is outside the engine's computable float domain for this seed).
+      if (
+        !Number.isFinite(taxRes.terminalReal) ||
+        !Number.isFinite(taxRes.totalTaxPaidReal) ||
+        !Number.isFinite(taxRes.finalTaxableBasis) ||
+        !Number.isFinite(taxRes.finalBuckets.taxable) ||
+        !Number.isFinite(taxRes.finalBuckets.pretax) ||
+        !Number.isFinite(taxRes.finalBuckets.roth) ||
+        !Number.isFinite(taxRes.finalBuckets.hsa ?? 0)
+      ) {
+        return {
+          indeterminate: false,
+          infeasible: true,
+          reason: 'non-finite portfolio value (float overflow) — the input magnitudes are outside the engine’s computable domain for this path',
+          pathIndex: p,
+        }
+      }
       if (taxAware) {
         // The path's OWN horizon just ended (sampled: the couple's last death, capped at the
         // window) — the overlay's horizon-end figures are this path's death-year snapshot.
@@ -910,6 +975,17 @@ export function simulate(params: SimulationParams, seed: number): SimOutput {
         bond: (1 - params.stockWeight) * params.initialPortfolio,
       }
       res = runDecumulation(initial, realStock, realBond, withdrawals, params.stockWeight)
+      // The spine arm of the finiteness seam (see the overlay arm above): a pre-existing
+      // gap the M6 review surfaced — the spine, too, could resolve an overflowed terminal
+      // as a surviving Infinity before the ENGINE_MAX_* gate bounded the domain.
+      if (!Number.isFinite(res.terminalReal)) {
+        return {
+          indeterminate: false,
+          infeasible: true,
+          reason: 'non-finite portfolio value (float overflow) — the input magnitudes are outside the engine’s computable domain for this path',
+          pathIndex: p,
+        }
+      }
     }
     terminalValuesReal[p] = res.terminalReal
     depletionYears[p] = res.depletionYear

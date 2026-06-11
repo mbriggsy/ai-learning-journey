@@ -5,6 +5,7 @@ import {
   netWithdrawalForYear,
   cashTermsForYear,
   contributionsForYear,
+  ENGINE_MAX_DOLLAR,
   type PersonOffsets,
   type SimOutput,
 } from '@engine/simulate'
@@ -1151,9 +1152,13 @@ describe('C2 — the R19 gates (NaN-first, alignment, the zero-balance start, §
   })
 
   it('two FINITE per-slot entries whose sum overflows to +Infinity are rejected (the wave-2 adversary’s catch)', () => {
-    // Each entry passes per-entry finiteness (1.5e308 < MAX_VALUE) but the assembled year total
+    // Each entry passes per-entry FINITENESS (1.5e308 < MAX_VALUE) but the assembled year total
     // is +Infinity — which would ride through stepYear to a non-finite terminal counted as
-    // SURVIVED (survivalFraction 1.0, the calm-but-wrong-optimistic escape). The Σ arm rejects it.
+    // SURVIVED (survivalFraction 1.0, the calm-but-wrong-optimistic escape). Since the M6
+    // domain bounds, the per-entry arm rejects these FIRST (1.5e308 > ENGINE_MAX_DOLLAR — the
+    // cap is exactly what makes cumulative compounding finite); the Σ arm behind it stays as
+    // the defense-in-depth backstop for the bound itself drifting. The overlay-side Σ backstop
+    // (a direct caller's surface, uncapped) keeps its own live test in taxOverlay.test.ts.
     const couple: PersonInputs[] = [workingPerson, { ...workingPerson, sex: 'female' }]
     const out = simulate(
       makeParams({
@@ -1170,7 +1175,7 @@ describe('C2 — the R19 gates (NaN-first, alignment, the zero-balance start, §
       1,
     )
     expect(out.indeterminate).toBe(true)
-    if (out.indeterminate) expect(out.reason).toContain('overflow')
+    if (out.indeterminate) expect(out.reason).toContain('contribution')
   })
 
   it('a contributionsByPerson length mismatch is rejected (never silently re-indexed)', () => {
@@ -1641,8 +1646,13 @@ describe('M6 — Distribution.taxAware: the per-path solver surfaces (presence-k
     space: 'simple',
     returnsAreReal: true,
   } as const
+  // A LIVE hsa bucket rides the fixture (the M6 review's mutation finding: with no hsa, the
+  // terminalHsaReal collection assertion is vacuous — both sides 0 — and a planted zeroing
+  // of simulate's hsa collection survived the whole suite). The 80yo owns it (65+ ⇒ the OOP
+  // stream drains it per year), so terminalHsaReal is genuinely NONZERO and horizon-varying.
+  const OOP = flatN(25, 3_000)
   const overlayParams: SimulationParams = makeParams({
-    initialPortfolio: P,
+    initialPortfolio: P + 60_000,
     annualSpendingReal: 90_000,
     people: [M80, F78],
     longevityMode: 'sampled',
@@ -1654,9 +1664,11 @@ describe('M6 — Distribution.taxAware: the per-path solver surfaces (presence-k
       taxEnabled: true,
       rmdEnabled: true, // both past their RMD start age — the forced distribution is live
       startCalendarYear: 2026,
-      buckets: { taxable: 400_000, pretax: 500_000, roth: 100_000 },
+      buckets: { taxable: 400_000, pretax: 500_000, roth: 100_000, hsa: 60_000 },
       filing: 'mfj',
       initialTaxableBasis: 250_000,
+      hsaOwnerIndex: 0,
+      oopMedical: OOP,
     },
   })
 
@@ -1721,14 +1733,22 @@ describe('M6 — Distribution.taxAware: the per-path solver surfaces (presence-k
         householdYears.push({ living: people.filter((_, i) => t < (path.deathYearOffsets[i] ?? 0)) })
       }
       const direct = runTaxAwareDecumulation(
-        { taxable: 400_000, pretax: 500_000, roth: 100_000 },
+        { taxable: 400_000, pretax: 500_000, roth: 100_000, hsa: 60_000 },
         flatN(horizon, rs),
         flatN(horizon, rb),
         withdrawals,
         overlayParams.stockWeight,
         'pre-tax-first',
         cfg,
-        { ssBenefits: ss, conversions: [], initialTaxableBasis: 250_000, householdYears, bracketFillCeilings: [] },
+        {
+          ssBenefits: ss,
+          conversions: [],
+          initialTaxableBasis: 250_000,
+          householdYears,
+          bracketFillCeilings: [],
+          hsaOwnerIndex: 0,
+          oopMedical: OOP,
+        },
       )
       expect(ta.lifetimeTaxPaidReal[p]).toBe(direct.totalTaxPaidReal)
       expect(ta.terminalTaxableReal[p]).toBe(direct.finalBuckets.taxable)
@@ -1752,29 +1772,29 @@ describe('M6 — Distribution.taxAware: the per-path solver surfaces (presence-k
       horizons.add(Math.min(path.lastDeathYear, overlayParams.maxHorizonYears))
     }
     expect(horizons.size).toBeGreaterThan(1)
+    // ...and the hsa surface is genuinely NONZERO on some path — the vacuous-0 mutant killer
+    // (the M6 review proved a planted zeroing of simulate's hsa collection survived the suite
+    // when every fixture's hsa was 0-valued; a depleted path's 0 stays legitimate).
+    expect(ta.terminalHsaReal.some((h) => h > 0)).toBe(true)
   })
 })
 
-describe('M6 — the typed per-candidate INFEASIBLE sentinel (the strategic review’s P1)', () => {
-  // REACHABILITY (the M6 finding, empirically pinned below): the sentinel arm is currently
-  // UNREACHABLE through `simulate` with gate-valid input — and that is the two-layer R19
-  // discipline doing its job, twice over. (1) Every known overlay throw has a validateParams
-  // mirror that pre-rejects the input as `indeterminate`. (2) The one cap a naive read
-  // expects to be trippable — the gross-up's 128-pass fail-loud — is closed by FLOAT
-  // SATURATION: the per-year map is a monotone-increasing contraction, so its iterates are
-  // monotone and CANNOT 2-cycle; once the gap to the fixed point falls below one ulp of the
-  // iterate (~95–105 passes at ANY scale — the relative gap hits 2⁻⁵² at a scale-independent
-  // pass count) the float sequence becomes exactly constant and the |Δ| < ε exit fires. The
-  // eps-bound (insight 006: ~91 passes at $500M, logarithmic in the tax) governs only
-  // mid-scale taxes and stays under 128 for the whole validated domain. So the sentinel is
-  // the typed contract for the UNKNOWN-unknown (a future overlay coupling, a regression, the
-  // P4 candidate generator's exotic corners) — decided and wired BEFORE the solver layers on
-  // (the strategic review's "cheaper now" P1); the end-to-end planted-fail case lands with
-  // the U14 oracle harness, which can mint one.
-  const giantSS: SimulationParams = makeParams({
+describe('M6 — the typed per-candidate INFEASIBLE sentinel + the engine domain bounds (the strategic review’s P1)', () => {
+  // REACHABILITY (corrected by the M6 boundary review's claim-refuter — the first draft of
+  // this block claimed a universal "float saturation closes any scale" and was REFUTED: the
+  // saturation argument assumes FINITE iterates, and a gate-valid 1e300 portfolio overflowed
+  // a bucket to Infinity, fed Infinity − Infinity = NaN into the gross-up, and tripped the
+  // 128-pass cap; an extreme market mean could even RESOLVE with Infinity counted as a
+  // surviving terminal — the calm-but-wrong-optimistic escape). The fold: the ENGINE_MAX_*
+  // domain bounds close the whole overflow class at the R19 gate, and the per-path
+  // finiteness seam routes the measure-zero stochastic tail (plus any future cap drift) to
+  // the typed sentinel. Inside the gated domain every solver cap is closed: max tax ≈
+  // 0.31 × 0.85 × ENGINE_MAX_DOLLAR ⇒ ~113 worst-case gross-up passes < 128 (the eps-bound,
+  // insight 006, now covers the entire domain — no saturation argument needed).
+  const maxSS: SimulationParams = makeParams({
     initialPortfolio: 1_000_000,
     annualSpendingReal: 40_000,
-    people: [{ ...MALE_65, socialSecurityReal: 1e200 }],
+    people: [{ ...MALE_65, socialSecurityReal: ENGINE_MAX_DOLLAR }],
     longevityMode: 'fixed-horizon',
     maxHorizonYears: 3,
     paths: 50,
@@ -1788,24 +1808,50 @@ describe('M6 — the typed per-candidate INFEASIBLE sentinel (the strategic revi
     },
   })
 
-  it('the saturation fact: a finite 1e200 SS benefit RESOLVES under the 128-pass cap (no input-side planted-fail exists)', () => {
-    // The strongest candidate trigger — an R19-passing astronomically-large SS benefit whose
-    // eps-convergence would need ~1,250 passes — still resolves: float saturation fixpoints
-    // the monotone iteration far below the cap. This pins WHY the sentinel has no reachable
-    // trigger today; if a future map change (a non-monotone tax term, a higher k) breaks the
-    // saturation argument, this test's premise — resolved, not infeasible — fails loudly and
-    // the reachability note above must be re-derived.
-    const out = simulate(giantSS, 2468)
+  it('the WORST in-domain SS benefit (the 1e12 cap itself) RESOLVES under the 128-pass cap — the eps-bound covers the whole gated domain', () => {
+    // The domain's worst convergence case: SS at ENGINE_MAX_DOLLAR needs ~ln(0.26e12/1e-7)/
+    // ln(1/0.685) ≈ 113 passes — under the cap WITH margin, finite all the way (no overflow:
+    // every intermediate ≤ ~0.85e12 ≪ MAX_VALUE). If a future map change (a higher k, a new
+    // stacked channel — insight 007's class) pushes the worst case past 128, this fails loud
+    // and the cap must be re-justified.
+    const out = simulate(maxSS, 2468)
     expect(out.indeterminate).toBe(false)
     expect(out.infeasible).toBeUndefined() // resolved — the cap was never hit
     const d = dist(out)
-    expect(d.terminalValuesReal.every(Number.isFinite)).toBe(true) // and nothing escaped as NaN/∞
+    expect(d.terminalValuesReal.every(Number.isFinite)).toBe(true)
   })
 
-  it('the sentinel arm is deterministic-by-construction and the resolved arms carry no stray flag', () => {
-    // The same (params, seed) reproduces byte-identically through the new collection +
-    // sentinel plumbing (a sentinel, if one ever fires, rides the same determinism: the
-    // first failing path is a pure function of params + seed).
-    expect(simulate(giantSS, 2468)).toEqual(simulate(giantSS, 2468))
+  it('the OVERFLOW class is rejected at the gate as indeterminate (the review’s reproduced escapes, both flavors)', () => {
+    // Flavor 1 (the claim-refuter's counterexample): a 1e300 portfolio — would overflow to
+    // Infinity mid-path and trip the gross-up cap via Infinity − Infinity = NaN.
+    const hugePortfolio = simulate(
+      makeParams({ initialPortfolio: 1e300, annualSpendingReal: 10_000, paths: 1, maxHorizonYears: 3 }),
+      1,
+    )
+    expect(hugePortfolio.indeterminate).toBe(true)
+    if (hugePortfolio.indeterminate) expect(hugePortfolio.reason).toContain('initialPortfolio')
+    // Flavor 2 (the adv-numerical adversary's): a 900%/yr mean over a long horizon — would
+    // RESOLVE with Infinity counted as a surviving terminal (the worse, silent flavor).
+    const hugeMean = simulate(
+      makeParams({
+        market: { ...validationMarket.value, stock: { mean: 9, stdDev: 0.1 } },
+        maxHorizonYears: 30,
+        paths: 1,
+      }),
+      1,
+    )
+    expect(hugeMean.indeterminate).toBe(true)
+    if (hugeMean.indeterminate) expect(hugeMean.reason).toContain('market moment')
+    // And the horizon bound: a 10,000-year window is out of the engine's domain.
+    const hugeHorizon = simulate(makeParams({ maxHorizonYears: 10_000 }), 1)
+    expect(hugeHorizon.indeterminate).toBe(true)
+    if (hugeHorizon.indeterminate) expect(hugeHorizon.reason).toContain('horizon domain')
+  })
+
+  it('the sentinel plumbing is deterministic and the resolved arms carry no stray flag', () => {
+    // The same (params, seed) reproduces byte-identically through the collection + sentinel
+    // plumbing (a sentinel, when it fires, rides the same determinism: the first failing
+    // path is a pure function of params + seed).
+    expect(simulate(maxSS, 2468)).toEqual(simulate(maxSS, 2468))
   })
 })

@@ -696,12 +696,196 @@ export interface ScenarioV2 {
   readonly appDefaultVersion: string
 }
 
+// ---------------------------------------------------------------------------
+// schemaVersion-3 scenario shape (P2 · D1 — the account-level intake). The v2
+// semantics + the ENTERED truth the guided setup captures: per-person identity +
+// work-status, the user's actual account list, the ticker-keyed manual
+// classifications, and the household health-cost entry.
+//
+// DEFINED HERE for the single-shape rule (phase-2 contract #1e: `memoryModel`
+// holds the same to-be-persisted MODEL shape, so an intake field can never be
+// captured on screen yet silently dropped at Save). First WRITTEN to disk by
+// P2·U8, which owns — IN the same change (the as-we-go rule) — the codec's
+// `checkV3Fields` + `version === 3` branch and the v2→v3 migration. Until then
+// `AnyScenario` stays v1|v2 and the codec's newer-version refuse keeps any
+// stray v3 blob calm (never a mis-parse, never healthcare silently OFF).
+//
+// FIDELITY OVER DUPLICATION (deliberate v2→v3 shape change): v2's
+// `initialPortfolio`, `stockWeight`, and per-person `accounts` aggregates are
+// NOT carried as stored fields — each is now a pure DERIVATION of
+// `enteredAccounts` (+ `tickerClassifications`), owned by `src/intake/intakeMap.ts`
+// (portfolio = Σ valueToday; stockWeight = the household blend collapse, §5
+// cash→bond; PersonAccounts = the per-person bucket fold). A stored copy beside
+// its own inputs is a stale-value hazard inside an encrypted vault — the
+// calm-but-wrong class. The U8 v2→v3 migration mints synthetic entered accounts
+// from the old aggregates (one per nonzero bucket per person, no ticker), so the
+// ladder stays total.
+// ---------------------------------------------------------------------------
+
+/** Work status is ASKED, never inferred (a salary-$0 still-working person must
+ *  still route date-first — D1). It is also what keeps the constructed
+ *  placeholder honest: for `'retired'`, `retirementAge` is the ENTERED stop age
+ *  (`≤ currentAge` is the legitimate entry — the status-conditional R19 rule);
+ *  for `'working'`, `retirementAge` is the intakeMap-CONSTRUCTED placeholder
+ *  (strictly > currentAge, never user-asked — the date IS the product's answer). */
+export const WORK_STATUSES = ['working', 'retired'] as const
+export type WorkStatus = (typeof WORK_STATUSES)[number]
+
+/** Per-person intake identity over the v1 spine person. `currentAge` (inherited)
+ *  is derived once at entry from DOB → `birthYear` against `startCalendarYear`
+ *  (whole-year convention — the same ±1yr birth-month approximation
+ *  `PersonAccounts.birthYear` documents); the intake sanity layer owns the
+ *  `currentAge === startCalendarYear − birthYear` invariant. `birthYear` also
+ *  feeds the per-person mortality-cohort keying (P1-exit forward item — the SSA
+ *  snapshot holds every cohort, no re-fetch). */
+export interface PersonInputsV3 extends PersonInputs {
+  /** Display name for the paired two-person screens (PII — encrypted at rest, R39). */
+  readonly name: string
+  readonly birthYear: number
+  readonly workStatus: WorkStatus
+}
+
+/** Account types the intake offers. The kind→bucket map is intakeMap's
+ *  (`401k`/`403b`/`traditional-ira` → pretax · `roth-401k`/`roth-ira` → roth ·
+ *  `brokerage` → taxable · `hsa` → hsa), as is the kind→catch-up-account-kind map
+ *  for the C1 ceiling checks (employer plans vs IRA vs HSA). */
+export const ACCOUNT_KINDS = [
+  '401k',
+  '403b',
+  'traditional-ira',
+  'roth-401k',
+  'roth-ira',
+  'brokerage',
+  'hsa',
+] as const
+export type AccountKind = (typeof ACCOUNT_KINDS)[number]
+
+/** One account as the user entered it (R35/R36 — user-entered values, no live
+ *  lookup). The model stores the ENTERED truth; every aggregate is derived. */
+export interface EnteredAccount {
+  /** Index into `people` — whose account this is (drives the per-person bucket
+   *  fold, HSA ownership, and the per-owner contribution streams). */
+  readonly ownerIndex: number
+  readonly kind: AccountKind
+  /** Primary holding's ticker. Absent or unrecognized ⇒ the manual classifier is
+   *  REQUIRED (burned/062 — an unknown ticker is never a silent default blend). */
+  readonly ticker?: string
+  /** Today's balance (real $). */
+  readonly valueToday: number
+  /** Cost basis (real $) — taxable kinds only; summed per person → `taxableBasis`
+   *  (per-account, not per-lot — accumulation plan §4). */
+  readonly basis?: number
+  /** Flat-real annual contribution while the owner works (R31). Ceiling-checked
+   *  against C1 at the current age; intakeMap applies the per-runway-year
+   *  step-down when an age-band expires mid-runway. */
+  readonly annualContribution?: number
+  /** Flat-real annual employer match while the owner works — always a PRETAX
+   *  inflow regardless of the account's own kind (R31). */
+  readonly employerMatchAnnual?: number
+}
+
+/** The manual ticker classification (R37 fallback): the calm 3-choice answer, or
+ *  the advanced exact-% split (intake enforces sum-to-100). Keyed by ticker in
+ *  `ScenarioV3.tickerClassifications` — answered once, reused across accounts
+ *  WITHIN the flow, persisted only at Save inside the encrypted record (R39). */
+export const TICKER_CLASSIFICATION_CHOICES = ['stocks', 'bonds', 'cash'] as const
+export type TickerClassificationChoice = (typeof TICKER_CLASSIFICATION_CHOICES)[number]
+export type TickerClassification =
+  | { readonly kind: 'simple'; readonly choice: TickerClassificationChoice }
+  | {
+      readonly kind: 'exact'
+      readonly stockPct: number
+      readonly bondPct: number
+      readonly cashPct: number
+    }
+
+/** Household health-cost entry (D1 §3b). The compact ENTERED form — the per-age
+ *  escalation (federal age curve, per-member split, staggered Medicare exit) and
+ *  the per-sim-year flattening are intakeMap's derivation, never stored.
+ *  Premiums are $/month as quoted (healthcare.gov / KFF artifacts are monthly);
+ *  intakeMap owns the ×12. `oopMedicalAnnual` neither age-escalates nor stops at
+ *  65 (B1 cap-only semantics). */
+export interface HealthIntakeV3 {
+  /** The plan-you'd-pick marketplace premium, today's quote ($/mo). REQUIRED for
+   *  any date-route household with a pre-65 retired window (absent coverage is
+   *  the optimistic direction — the cardinal sin); the sourcing-stall affordances
+   *  (pre-flight note + continue-past) own the UX of its absence. */
+  readonly enrolledPremiumMonthlyToday?: number
+  /** The SLCSP benchmark, today's quote ($/mo). Same requiredness as enrolled. */
+  readonly slcspMonthlyToday?: number
+  /** Out-of-pocket medical ($/yr) — OPTIONAL (absent only disables the HSA
+   *  qualified-spend cap, the pessimistic-safe direction). Its question copy must
+   *  carry the containment contrast (OOP already lives INSIDE the spend figure). */
+  readonly oopMedicalAnnual?: number
+  /** The `t < lookback` prior-year ACTUAL MAGIs (Y-invariant — pre-sim tax
+   *  returns no candidate can move). Collected only when a member is at/near 65. */
+  readonly irmaaMagiSeed?: readonly number[]
+  /** Per-person working-year MAGI for the conservatively-high IRMAA override —
+   *  aligned by index to `people`. NEVER a salary echo (C3 boundary item (a)): a
+   *  non-salary worker enters their honest figure (K-1/investment income, or an
+   *  explicit 0 for a live-on-cash household). */
+  readonly workingYearIrmaaMagiByPerson?: readonly number[]
+}
+
+/** The schemaVersion-3 plaintext scenario: the account-level intake truth.
+ *  See the section comment above for the define-now/write-at-U8 contract and the
+ *  deliberate fidelity-over-duplication shape change vs v2. */
+export interface ScenarioV3 {
+  /** Migration discriminant — read before any other field on decrypt (U4). */
+  readonly schemaVersion: 3
+  /** Exactly two (the married-couple precondition — the cold-start frame's one
+   *  orientation line). */
+  readonly people: readonly PersonInputsV3[]
+  readonly enteredAccounts: readonly EnteredAccount[]
+  /** Ticker → manual classification, for tickers the C1 table doesn't carry. */
+  readonly tickerClassifications: Readonly<Record<string, TickerClassification>>
+  readonly health: HealthIntakeV3
+  /** The household retirement-spend figure (the preamble question — the v1
+   *  degenerate budget; the P3 budget builder reconciles to it). */
+  readonly annualSpendingReal: number
+  readonly survivorSpendingRatio: number
+  readonly drawdownPolicy: DrawdownPolicy
+  readonly filing: FilingStatus
+  readonly startCalendarYear: number
+  readonly taxVintage: string
+  readonly appDefaultVersion: string
+  /** The injected 32-bit seed, minted EXACTLY once at the first engine run and
+   *  persisted unchanged (phase-2 contract #1b — the reloaded headline is
+   *  byte-identical to the screenshot). */
+  readonly seed: number
+}
+
+/** The exhaustive v3 field set — U8's `checkV3Fields` checklist (burned/063: the
+ *  codec arm iterates THIS list, so a field added to the interface cannot
+ *  silently skip validation — it fails the compile-time tie below first). */
+export const SCENARIO_V3_FIELDS = [
+  'schemaVersion',
+  'people',
+  'enteredAccounts',
+  'tickerClassifications',
+  'health',
+  'annualSpendingReal',
+  'survivorSpendingRatio',
+  'drawdownPolicy',
+  'filing',
+  'startCalendarYear',
+  'taxVintage',
+  'appDefaultVersion',
+  'seed',
+] as const
+
+// Compile-time: the field array exactly covers ScenarioV3 (both directions).
+type _V3FieldsCover = (typeof SCENARIO_V3_FIELDS)[number] extends keyof ScenarioV3 ? true : never
+type _V3KeysCovered = keyof ScenarioV3 extends (typeof SCENARIO_V3_FIELDS)[number] ? true : never
+const _v3FieldsExhaustive: _V3FieldsCover & _V3KeysCovered = true
+void _v3FieldsExhaustive
+
 /** The union of persistable plaintext scenario shapes (every version the decode
- *  ladder accepts today). ScenarioV3 (healthcare + accumulation persistence) lands
- *  WITH its first producer — P2 intake — per the as-we-go standing decision; the
- *  codec's unknown-version branch is what makes that deferral safe (a v3 blob read
- *  by this build surfaces the calm "saved by a newer version" state, never a
- *  mis-parse and never healthcare silently OFF). */
+ *  ladder accepts today). ScenarioV3 is DEFINED above but deliberately NOT a
+ *  member yet — it joins this union at P2·U8 with its codec arm + migration (its
+ *  first writer). The codec's unknown-version branch is what makes the deferral
+ *  safe (a v3 blob read by this build surfaces the calm "saved by a newer
+ *  version" state, never a mis-parse and never healthcare silently OFF). */
 export type AnyScenario = Scenario | ScenarioV2
 
 // ---------------------------------------------------------------------------

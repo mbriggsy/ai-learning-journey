@@ -1,4 +1,5 @@
 import { useRegisterSW } from 'virtual:pwa-register/react'
+import { copy } from './copy'
 
 /**
  * 'Update ready' toast — PWA prompt mode (registerType:'prompt').
@@ -32,12 +33,12 @@ export function UpdateToast() {
 
   return (
     <div role="status" aria-live="polite">
-      <span>An update is ready.</span>
+      <span>{copy.updateReady}</span>
       <button type="button" onClick={apply}>
-        Reload
+        {copy.updateReload}
       </button>
       <button type="button" onClick={() => setNeedRefresh(false)}>
-        Later
+        {copy.updateLater}
       </button>
     </div>
   )

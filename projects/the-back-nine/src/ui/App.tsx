@@ -5,6 +5,7 @@ import { productionMarket } from '@engine/reference/methodology'
 import type { SimulationParams } from '@shared/model'
 import { UpdateToast } from './UpdateToast'
 import { Disclaimer } from './Disclaimer'
+import { copy } from './copy'
 
 /**
  * U0/U1 scaffold shell. Nothing user-facing ships in Phase 1 — this proves the
@@ -55,10 +56,10 @@ export function App() {
 
   return (
     <main>
-      <h1>The Back Nine</h1>
-      <p>Foundation scaffold — Phase 1.</p>
+      <h1>{copy.appTitle}</h1>
+      <p>{copy.scaffoldSubtitle}</p>
       <p>
-        Engine (worker round-trip): <strong data-testid="engine-reading">{reading}</strong>
+        {copy.scaffoldEngineLabel} <strong data-testid="engine-reading">{reading}</strong>
       </p>
       <UpdateToast />
       <Disclaimer />

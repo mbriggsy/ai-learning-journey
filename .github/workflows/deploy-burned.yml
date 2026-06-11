@@ -12,11 +12,11 @@ jobs:
       run:
         working-directory: projects/burned
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v6
         with:
           version: 10
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: 22
           cache: pnpm
@@ -35,17 +35,20 @@ jobs:
       run:
         working-directory: projects/burned
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v6
         with:
           version: 10
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: 22
           cache: pnpm
           cache-dependency-path: projects/burned/pnpm-lock.yaml
       - run: pnpm install --frozen-lockfile
-      - uses: cloudflare/wrangler-action@v3
+      # v4 keeps the pre-installed-first resolution (verified in its dist): burned's own
+      # lockfile-pinned wrangler (devDependency ^4.80.0) is what deploys — the action major
+      # only moves the runner runtime node20 -> node24 (GitHub's 2026-06-16 forcing).
+      - uses: cloudflare/wrangler-action@v4
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
@@ -59,11 +62,11 @@ jobs:
       run:
         working-directory: projects/burned
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v6
         with:
           version: 10
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: 22
           cache: pnpm
@@ -78,7 +81,10 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: pnpm exec wrangler pages project create burnedgame --production-branch=main || echo "project already exists — continuing"
-      - uses: cloudflare/wrangler-action@v3
+      # v4 keeps the pre-installed-first resolution (verified in its dist): burned's own
+      # lockfile-pinned wrangler (devDependency ^4.80.0) is what deploys — the action major
+      # only moves the runner runtime node20 -> node24 (GitHub's 2026-06-16 forcing).
+      - uses: cloudflare/wrangler-action@v4
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

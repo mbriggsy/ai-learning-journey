@@ -25,16 +25,16 @@ jobs:
       run:
         working-directory: projects/the-back-nine
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       # `version` is REQUIRED here: action-setup runs at the repo ROOT (it ignores
       # defaults.run.working-directory), and this monorepo has no root package.json,
       # so it can't read the project's `packageManager` pin. `version: 10` is the
       # proven house pattern (matches deploy-burned.yml + verify-ai-journey-stats.yml);
       # the lockfile is the actual dependency-reproducibility guarantee.
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
         with:
           version: 10
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: 22
           cache: pnpm
@@ -57,7 +57,7 @@ jobs:
       - run: pnpm verify:csp
       # Surface the HTML report (+ traces) when the CSP e2e fails, so a CI-only failure is debuggable.
       - if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: playwright-report
           path: projects/the-back-nine/playwright-report/

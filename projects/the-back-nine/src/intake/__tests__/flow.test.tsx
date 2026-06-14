@@ -150,6 +150,27 @@ describe('IntakeFlow — attempt-to-advance validation (the calm grammar)', () =
     fireEvent.click(screen.getByRole('button', { name: copy.flowNext }))
     expect(screen.getByRole('heading', { level: 2 }).textContent).toBe(copy.flowBack) // s3 reached
   })
+
+  it('advance() validates the LIVE model draft, not the render closure (insight 036 guard)', () => {
+    const model = freshModel()
+    render(<IntakeFlow steps={STEPS} model={model} />)
+    fireEvent.click(screen.getByRole('button', { name: copy.flowNext })) // s1 → s2 (owns retirementAge)
+    // Set a blocking contradiction AND click Continue in the SAME act tick — React
+    // has not re-rendered between, so the render closure's draft is one commit
+    // stale. If advance reads model.getSnapshot() (the fix) it BLOCKS; if it read
+    // the closure it would sail past (the calm-but-wrong insight-036 regression).
+    act(() => {
+      model.update((d) => ({
+        ...d,
+        people: [
+          { ...d.people[0], workStatus: 'retired', retirementAge: 66, currentAge: 65 },
+          d.people[1],
+        ],
+      }))
+      fireEvent.click(screen.getByRole('button', { name: copy.flowNext }))
+    })
+    expect(screen.getByRole('heading', { level: 2 }).textContent).toBe(copy.flowNext) // still s2 — blocked
+  })
 })
 
 describe('IntakeFlow — the one polite live region (burned/045)', () => {
@@ -184,6 +205,6 @@ describe('IntakeFlow — completion + commit-triggered recompute', () => {
     expect(onComplete).not.toHaveBeenCalled()
     fireEvent.click(screen.getByRole('button', { name: copy.flowNext })) // s3 → complete
     expect(onComplete).toHaveBeenCalledTimes(1)
-    expect(recompute).toHaveBeenCalledTimes(3) // question-COMMIT cadence
+    expect(recompute).toHaveBeenCalledTimes(2) // 2 non-final advances refire; the final delegates solely to onComplete
   })
 })

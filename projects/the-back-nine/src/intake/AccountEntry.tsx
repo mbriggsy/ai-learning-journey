@@ -231,6 +231,7 @@ export function AccountEntry({ draft, initial, onSave, onCancel, onClassifyTicke
           field="account.annualContribution"
           value={form.annualContribution}
           invalid={ceilingError === 'errContributionCeiling'}
+          onEdit={() => setCeilingError(null)}
           onCommit={(annualContribution) => {
             setCeilingError(null)
             patch({ annualContribution })
@@ -244,6 +245,7 @@ export function AccountEntry({ draft, initial, onSave, onCancel, onClassifyTicke
           field="account.employerMatchAnnual"
           value={form.employerMatchAnnual}
           invalid={ceilingError === 'errAdditionsCeiling'}
+          onEdit={() => setCeilingError(null)}
           onCommit={(employerMatchAnnual) => {
             setCeilingError(null)
             patch({ employerMatchAnnual })

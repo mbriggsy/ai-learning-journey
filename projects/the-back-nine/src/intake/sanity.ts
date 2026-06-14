@@ -42,13 +42,16 @@ const MAX_MODEL_AGE = 119
 const SS_CLAIM_MIN = 62
 const SS_CLAIM_MAX = 70
 
-/** The ambiguous-magnitude band (R19 period defense, line one): an ENTERED
- *  spend figure inside this band is coherent as BOTH a monthly and an annual
- *  amount, so intake FORCES an explicit period answer rather than computing on
- *  the default — the engine can never run on 1/12× or 12× the real figure.
- *  Judgment band, deliberately wide-conservative. */
+/** The period-confirm floor (R19 period defense, line one): while the spend
+ *  unit is still the UNCONFIRMED default, an entered figure at or above this
+ *  MONTH-view amount forces an explicit $/month-vs-$/year answer — the engine
+ *  can never run on 1/12× or 12× the real figure. NO upper bound: a figure above
+ *  a plausible monthly spend, left under the 'month' default (e.g. 55000 → the
+ *  engine sees $660k/yr), is exactly the 12× silent misentry this line exists to
+ *  catch; an honest $55k/MONTH household taps the unit once and is never nagged
+ *  again (the explicit-declaration disarm). Below the floor a spend is
+ *  unambiguously monthly (an annual figure under $8k is implausibly low). */
 const SPEND_AMBIGUOUS_MIN = 8_000
-const SPEND_AMBIGUOUS_MAX = 50_000
 
 /** Field paths — the violation↔field association targets (aria-describedby ids
  *  derive from these). */
@@ -198,7 +201,11 @@ const RULES: readonly SanityRule[] = [
       if (touched.has('spendEntryPeriod')) return []
       const entered =
         d.spendEntryPeriod === 'month' ? d.annualSpendingReal / 12 : d.annualSpendingReal
-      return entered >= SPEND_AMBIGUOUS_MIN && entered <= SPEND_AMBIGUOUS_MAX
+      // No upper bound (the named second line of defense): a figure ABOVE a
+      // plausible monthly spend, left under the unconfirmed 'month' default, is
+      // the 12× misentry ($55k typed as monthly = $660k/yr) the old [MIN,MAX]
+      // band let sail straight through to a confident-but-wrong verdict.
+      return entered >= SPEND_AMBIGUOUS_MIN
         ? [
             {
               rule: 'spend-period-unconfirmed',

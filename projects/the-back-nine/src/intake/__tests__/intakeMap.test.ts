@@ -125,6 +125,48 @@ describe('the render-anchor coupling (missing-facts empty ⇒ validateParams acc
     }
   })
 
+  it('spine route: a STALE contribution on a RETIRED owner keeps the coupling (D1 review C1)', () => {
+    // An account added while working, then both flipped to retired (Back-nav):
+    // the stale contribution must NOT build an accumulation construct, or the
+    // engine §6 ACA-overlap reject fires while missingRequiredFacts stays empty —
+    // the calm empty-missing dead-end the coupling forbids.
+    const d = completeSpineDraft()
+    const stale: ScenarioDraft = {
+      ...d,
+      enteredAccounts: [
+        { ...d.enteredAccounts[0]!, annualContribution: 20_000 }, // owner 0 is RETIRED
+        d.enteredAccounts[1]!,
+      ],
+    }
+    expect(missingRequiredFacts(stale)).toEqual([])
+    const params = buildSpineParams(stale)
+    expect(params).not.toBeNull()
+    expect(validateParams(params!)).toBeNull() // accepted: the retired owner's stale stream is dropped
+  })
+
+  it('date route: a $0-balance portfolio is NAMED missing, not a silent dead-end (D1 review C2)', () => {
+    const d = completeDateDraft()
+    const zeroed: ScenarioDraft = {
+      ...d,
+      enteredAccounts: d.enteredAccounts.map((a) => ({ ...a, valueToday: 0 })),
+    }
+    // The engine rejects a $0 start with the construct present; the date route
+    // must NAME a positive portfolio rather than build input every candidate rejects.
+    expect(missingRequiredFacts(zeroed).some((m) => m.labelKey === 'addAccount')).toBe(true)
+    expect(buildDateInput(zeroed)).toBeNull()
+  })
+
+  it('a present birthYear with an absent currentAge is NAMED missing (the buildPeople invariant; D1 review TS1)', () => {
+    const d = completeSpineDraft()
+    const holed: ScenarioDraft = {
+      ...d,
+      people: [{ ...d.people[0], currentAge: undefined }, d.people[1]],
+    }
+    expect(
+      missingRequiredFacts(holed).some((m) => m.labelKey === 'birthYearLabel' && m.personIndex === 0),
+    ).toBe(true)
+  })
+
   it('routes are exclusive: spine builder nulls on a date-route draft and vice versa', () => {
     expect(buildSpineParams(completeDateDraft())).toBeNull()
     expect(buildDateInput(completeSpineDraft())).toBeNull()

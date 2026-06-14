@@ -25,9 +25,17 @@ const usd = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 })
 /** Parse a human money string → raw number (strip $ , spaces). Empty/garbage →
  *  undefined (an absent fact — burned/062 sentinel territory, never 0). */
 export function parseMoney(text: string): number | undefined {
-  const cleaned = text.replace(/[$,\s]/g, '')
+  // $ and whitespace are pure formatting noise — strip them. COMMAS are
+  // magnitude-bearing, so VALIDATE the grouping before stripping: plain digits
+  // OR correctly-grouped thousands, optional single decimal. This rejects the
+  // silent magnitude traps strip-then-Number admits — misgrouped commas
+  // ('100,00'→10000), exponent ('1e6'→1000000), hex ('0x186a0'→100000) — so a
+  // fat-fingered figure shows its absent-fact state, never a plausible-but-wrong
+  // number (the calm-but-wrong class on a financial field; D1 review AB2).
+  const cleaned = text.replace(/[$\s]/g, '')
   if (cleaned === '') return undefined
-  const n = Number(cleaned)
+  if (!/^(\d+|\d{1,3}(,\d{3})+)(\.\d+)?$/.test(cleaned)) return undefined
+  const n = Number(cleaned.replace(/,/g, ''))
   return Number.isFinite(n) && n >= 0 ? n : undefined
 }
 
@@ -43,6 +51,10 @@ interface CommonFieldProps {
   readonly invalid?: boolean
   readonly onCommit: (value: number | undefined) => void
   readonly value: number | undefined
+  /** Fired on the first keystroke while an error is showing — the parent clears
+   *  the field's touched state so the message drops on re-edit, not next blur
+   *  (back-nine-design "forgiven on return"; re-validated on blur/advance). */
+  readonly onEdit?: () => void
 }
 
 function FieldShell({
@@ -99,7 +111,10 @@ export function CurrencyField(props: CommonFieldProps) {
         value={editing ?? formatMoney(props.value)}
         aria-invalid={props.invalid === true ? true : undefined}
         aria-describedby={describedBy(props.helpKey, helpId, props.invalid === true, props.field)}
-        onChange={(e) => setEditing(e.target.value)} // no reformat mid-typing — caret stays put
+        onChange={(e) => {
+          setEditing(e.target.value) // no reformat mid-typing — caret stays put
+          if (props.invalid === true) props.onEdit?.() // forgiven on re-edit
+        }}
         onFocus={() => setEditing(props.value === undefined ? '' : String(props.value))}
         onBlur={() => {
           props.onCommit(parseMoney(editing ?? ''))
@@ -129,7 +144,10 @@ export function IntegerField(props: CommonFieldProps & { readonly placeholderKey
         value={editing ?? (props.value === undefined ? '' : String(props.value))}
         aria-invalid={props.invalid === true ? true : undefined}
         aria-describedby={describedBy(props.helpKey, helpId, props.invalid === true, props.field)}
-        onChange={(e) => setEditing(e.target.value)}
+        onChange={(e) => {
+          setEditing(e.target.value)
+          if (props.invalid === true) props.onEdit?.() // forgiven on re-edit
+        }}
         onFocus={() => setEditing(props.value === undefined ? '' : String(props.value))}
         onBlur={() => {
           const cleaned = (editing ?? '').trim()

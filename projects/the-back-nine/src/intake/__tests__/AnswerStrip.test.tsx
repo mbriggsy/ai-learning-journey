@@ -1,0 +1,86 @@
+// @vitest-environment jsdom
+import { afterEach, describe, expect, it } from 'vitest'
+import '@testing-library/jest-dom/vitest'
+import { cleanup, render, screen } from '@testing-library/react'
+import { AnswerStrip } from '../AnswerStrip'
+import { copy } from '@ui/copy'
+import type { MemoryModelSnapshot, ModelAnswer, ScenarioDraft } from '@store/memoryModel'
+import type { OutcomeState, SimulationResult } from '@shared/model'
+
+/**
+ * The provisional answer strip's honesty branches (D1 review T3 — these were
+ * entirely uncovered): the trust-hazard guard (a $0-portfolio negative reading
+ * never shows the verdict word), the indeterminate→incomplete surfacing, the
+ * cancelled hold-quiet, and the a11y region label/announcement (CLUSTER E).
+ */
+
+afterEach(cleanup)
+
+const draft = (over: Partial<ScenarioDraft> = {}): ScenarioDraft => ({
+  people: [{}, {}],
+  enteredAccounts: [],
+  tickerClassifications: {},
+  health: {},
+  spendEntryPeriod: 'month',
+  survivorSpendingRatio: 0.75,
+  drawdownPolicy: 'proportional',
+  filing: 'mfj',
+  startCalendarYear: 2026,
+  taxVintage: 'OBBBA-2025',
+  appDefaultVersion: 'test',
+  ...over,
+})
+
+const snap = (answer: ModelAnswer, over: Partial<ScenarioDraft> = {}): MemoryModelSnapshot => ({
+  draft: draft(over),
+  answer,
+  runningInWorker: true,
+})
+
+const headline = (outcomeState: OutcomeState, xOfTen: number): ModelAnswer => ({
+  kind: 'headline',
+  result: { headline: { outcomeState, xOfTen: { value: xOfTen } } } as unknown as SimulationResult,
+})
+
+const renderStrip = (answer: ModelAnswer, over?: Partial<ScenarioDraft>) =>
+  render(<AnswerStrip snapshot={snap(answer, over)} missing={[]} onRetry={() => {}} />)
+
+describe('AnswerStrip — the honesty branches (D1 review T3)', () => {
+  it('a negative verdict with ZERO accounts shows the trust-hazard copy, NOT the verdict word', () => {
+    renderStrip(headline('off-track', 0))
+    expect(screen.getByText(copy.answerNotYet)).toBeInTheDocument()
+    expect(screen.queryByTestId('engine-reading')).toBeNull()
+  })
+
+  it('the SAME negative verdict WITH an account shows the verdict word normally', () => {
+    renderStrip(headline('off-track', 3), {
+      enteredAccounts: [{ ownerIndex: 0, kind: '401k', valueToday: 500_000 }],
+    })
+    expect(screen.getByTestId('engine-reading').textContent).toContain(copy.outcomeOffTrack)
+  })
+
+  it('an indeterminate headline renders the input-incomplete placeholder + the named missing input', () => {
+    render(
+      <AnswerStrip
+        snapshot={snap(headline('indeterminate', 0))}
+        missing={[{ labelKey: 'spendLabel' }]}
+        onRetry={() => {}}
+      />,
+    )
+    expect(screen.getByText(copy.answerIncomplete)).toBeInTheDocument()
+    expect(screen.getByText(copy.spendLabel, { exact: false })).toBeInTheDocument()
+  })
+
+  it('a cancelled date outcome renders nothing (hold quiet — a newer sweep is in flight)', () => {
+    renderStrip({ kind: 'date', outcome: { kind: 'cancelled' } })
+    expect(screen.queryByTestId('engine-reading')).toBeNull()
+    expect(screen.queryByTestId('provisional-tag')).toBeNull()
+  })
+
+  it('the region carries a STABLE label and is announced to AT (CLUSTER E)', () => {
+    const { container } = renderStrip({ kind: 'pending' })
+    const aside = container.querySelector('aside.answer-strip')!
+    expect(aside.getAttribute('aria-label')).toBe(copy.answerRegionLabel)
+    expect(aside.getAttribute('aria-live')).toBe('polite')
+  })
+})

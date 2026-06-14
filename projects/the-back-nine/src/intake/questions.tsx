@@ -110,6 +110,7 @@ const namesStep: StepDef = {
             field={personField(i, 'birthYear')}
             value={p.birthYear}
             invalid={api.violationsFor(personField(i, 'birthYear')).length > 0}
+            onEdit={() => api.clearTouched(personField(i, 'birthYear'))}
             onCommit={(birthYear) => {
               // currentAge derives ONCE here (whole-year convention — the same
               // ±1yr birth-month approximation PersonAccounts.birthYear pins).
@@ -184,6 +185,7 @@ const workStep: StepDef = {
                 field={personField(i, 'retirementAge')}
                 value={p.retirementAge}
                 invalid={api.violationsFor(personField(i, 'retirementAge')).length > 0}
+                onEdit={() => api.clearTouched(personField(i, 'retirementAge'))}
                 onCommit={(retirementAge) => {
                   updatePerson(api, i, { retirementAge })
                   api.commitField(personField(i, 'retirementAge'))
@@ -240,6 +242,7 @@ const ssStep: StepDef = {
             field={personField(i, 'socialSecurityClaimAge')}
             value={p.socialSecurityClaimAge}
             invalid={api.violationsFor(personField(i, 'socialSecurityClaimAge')).length > 0}
+            onEdit={() => api.clearTouched(personField(i, 'socialSecurityClaimAge'))}
             onCommit={(socialSecurityClaimAge) => {
               updatePerson(api, i, { socialSecurityClaimAge })
               api.commitField(personField(i, 'socialSecurityClaimAge'))
@@ -268,6 +271,7 @@ const spendStep: StepDef = {
           field="annualSpendingReal"
           value={displayed}
           invalid={api.violationsFor('annualSpendingReal').length > 0}
+          onEdit={() => api.clearTouched('annualSpendingReal')}
           onCommit={(entered) => {
             // Canonical ANNUAL in the model; the entered unit rides
             // spendEntryPeriod (an explicit answer, persisted — fidelity rule).
@@ -437,6 +441,9 @@ const irmaaSeedStep: StepDef = {
 
 function AccountsStep({ api }: { api: StepApi }) {
   const [editing, setEditing] = useState<number | 'new' | null>(null)
+  // Remove is two-tap (no undo once gone): the first tap arms the row, the
+  // second removes it (D1 review DA4 — a destructive action needs a confirm).
+  const [confirmRemove, setConfirmRemove] = useState<number | null>(null)
 
   if (editing !== null) {
     const initial = editing === 'new' ? undefined : api.draft.enteredAccounts[editing]
@@ -482,20 +489,32 @@ function AccountsStep({ api }: { api: StepApi }) {
               )}
             </span>
             <span className="account-row-actions">
-              <button type="button" className="btn-quiet" onClick={() => setEditing(i)}>
+              <button
+                type="button"
+                className="btn-quiet"
+                onClick={() => {
+                  setConfirmRemove(null)
+                  setEditing(i)
+                }}
+              >
                 {copy.accountEdit}
               </button>
               <button
                 type="button"
                 className="btn-quiet"
-                onClick={() =>
-                  api.update((d) => ({
-                    ...d,
-                    enteredAccounts: d.enteredAccounts.filter((_, j) => j !== i),
-                  }))
-                }
+                onClick={() => {
+                  if (confirmRemove === i) {
+                    api.update((d) => ({
+                      ...d,
+                      enteredAccounts: d.enteredAccounts.filter((_, j) => j !== i),
+                    }))
+                    setConfirmRemove(null)
+                  } else {
+                    setConfirmRemove(i) // arm the confirm — no undo once removed
+                  }
+                }}
               >
-                {copy.accountRemove}
+                {confirmRemove === i ? copy.accountRemoveConfirm : copy.accountRemove}
               </button>
             </span>
             {api.violationsFor(accountField(i, 'annualContribution')).map((v) => (
@@ -507,7 +526,14 @@ function AccountsStep({ api }: { api: StepApi }) {
           </li>
         ))}
       </ul>
-      <button type="button" className="btn-secondary" onClick={() => setEditing('new')}>
+      <button
+        type="button"
+        className="btn-secondary"
+        onClick={() => {
+          setConfirmRemove(null)
+          setEditing('new')
+        }}
+      >
         {copy.addAccount}
       </button>
     </>

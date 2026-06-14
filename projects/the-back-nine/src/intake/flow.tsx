@@ -42,6 +42,9 @@ export interface StepApi {
   readonly update: MemoryModel['update']
   /** Blur-time per-field commit: marks the field touched so its rules may fire. */
   readonly commitField: (field: FieldPath) => void
+  /** Re-edit forgiveness: drop a field's touched state so its error clears the
+   *  instant the user starts fixing it (re-validated on blur/advance). */
+  readonly clearTouched: (field: FieldPath) => void
   /** Violations currently attached to a field (touched-aware). */
   readonly violationsFor: (field: FieldPath) => readonly SanityViolation[]
 }
@@ -96,6 +99,15 @@ export function IntakeFlow({ steps, model, onComplete, answerSlot }: IntakeFlowP
     setTouched((prev) => (prev.has(field) ? prev : new Set(prev).add(field)))
   }, [])
 
+  const clearTouched = useCallback((field: FieldPath) => {
+    setTouched((prev) => {
+      if (!prev.has(field)) return prev
+      const next = new Set(prev)
+      next.delete(field)
+      return next
+    })
+  }, [])
+
   const violationsFor = useCallback(
     (field: FieldPath) => violations.filter((v) => v.field === field),
     [violations],
@@ -122,10 +134,14 @@ export function IntakeFlow({ steps, model, onComplete, answerSlot }: IntakeFlowP
       setDirection('forward')
       setIndex(safeIndex + 1)
       announcerRef.current?.announce(slots.questionPosition(safeIndex + 2))
+      void model.recompute() // question-COMMIT refire, never per keystroke
     } else {
+      // The terminal advance delegates SOLELY to onComplete (the final-tier
+      // recompute). A trailing provisional recompute here would mint a HIGHER
+      // epoch and supersede the crowned final-tier date — the 2k provisional
+      // would win over the 16k final and render the uncrowned tier (D1 review).
       onComplete?.()
     }
-    void model.recompute() // question-COMMIT, never per keystroke
   }, [safeIndex, model, onComplete, step.fields, steps.length, touched])
 
   const back = useCallback(() => {
@@ -136,8 +152,8 @@ export function IntakeFlow({ steps, model, onComplete, answerSlot }: IntakeFlowP
   }, [safeIndex])
 
   const api: StepApi = useMemo(
-    () => ({ draft: snapshot.draft, update: model.update, commitField, violationsFor }),
-    [snapshot.draft, model.update, commitField, violationsFor],
+    () => ({ draft: snapshot.draft, update: model.update, commitField, clearTouched, violationsFor }),
+    [snapshot.draft, model.update, commitField, clearTouched, violationsFor],
   )
 
   return (

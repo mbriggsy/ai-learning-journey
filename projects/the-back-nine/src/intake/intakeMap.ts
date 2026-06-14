@@ -95,6 +95,11 @@ export function missingRequiredFacts(d: ScenarioDraft): readonly MissingFact[] {
     const i = idx as 0 | 1
     if (p.workStatus === undefined) out.push({ labelKey: 'workStatusLegend', personIndex: i })
     if (p.birthYear === undefined) out.push({ labelKey: 'birthYearLabel', personIndex: i })
+    // currentAge is derived from birthYear at entry (questions.tsx); a present
+    // birthYear with an absent currentAge would be a writer bug the gate must
+    // catch, so buildPeople's `currentAge!` stays honest — the render anchor is
+    // "no missing ⟹ validateParams accepts", which requires an integer currentAge.
+    else if (p.currentAge === undefined) out.push({ labelKey: 'birthYearLabel', personIndex: i })
     if (p.sex === undefined) out.push({ labelKey: 'sexLegend', personIndex: i })
     if (p.workStatus === 'working' && p.earnedIncomeReal === undefined)
       out.push({ labelKey: 'salaryLabel', personIndex: i })
@@ -113,10 +118,13 @@ export function missingRequiredFacts(d: ScenarioDraft): readonly MissingFact[] {
 
   if (d.annualSpendingReal === undefined) out.push({ labelKey: 'spendLabel' })
 
-  // The date needs a portfolio to test (the engine rejects a $0 start with the
-  // accumulation construct present — R19); the spine's $0 flows to an honest
-  // 0-of-10 instead.
-  if (dateRoute && d.enteredAccounts.length === 0) out.push({ labelKey: 'addAccount' })
+  // The date needs a POSITIVE portfolio to test (the engine rejects a $0 start
+  // with the accumulation construct present — simulate.ts §C2); a $0-balance
+  // account would pass a presence check yet every candidate would reject → an
+  // empty-missing dead-end. Require a positive total. The spine's $0 flows to an
+  // honest 0-of-10 instead (no construct ⇒ no reject).
+  if (dateRoute && d.enteredAccounts.reduce((s, a) => s + (a.valueToday || 0), 0) <= 0)
+    out.push({ labelKey: 'addAccount' })
 
   // Brokerage basis: required per entered taxable account (no safe default).
   d.enteredAccounts.forEach((a) => {
@@ -217,9 +225,14 @@ export function householdStockWeight(d: ScenarioDraft): number | null {
 // ---------------------------------------------------------------------------
 
 function ageFactor(age: number): number {
-  if (age <= 14) return acaAgeRatingCurve.value.childFactorThrough14
+  // Whole-year convention: currentAge is always integer, but escalateQuote is an
+  // exported test seam — floor a fractional age so the curve lookup resolves
+  // instead of throwing "no factor for 64.5". The throw stays for a genuinely
+  // out-of-domain input (e.g. a negative age).
+  const a = Math.trunc(age)
+  if (a <= 14) return acaAgeRatingCurve.value.childFactorThrough14
   const rows = acaAgeRatingCurve.value.factors
-  const row = rows.find((r) => r.age === Math.min(age, 64))
+  const row = rows.find((r) => r.age === Math.min(a, 64))
   if (row === undefined) throw new Error(`[intakeMap] no age-curve factor for age ${age}`)
   return row.factor
 }
@@ -267,12 +280,22 @@ const familyOf = (kind: AccountKind): OwnerFamilyKey['family'] | null =>
         ? 'hsa'
         : 'ira'
 
+/** A contribution is built ONLY for a working owner — a retired owner's stale
+ *  stream (an account added while working, then flipped to retired) is engine-
+ *  inert at runtime (t<retire truncation) yet trips the §6 raw-stream ACA-overlap
+ *  pre-check, breaking the render-anchor coupling (D1 review C1). */
+const isWorkingOwner = (d: ScenarioDraft, ownerIndex: number): boolean =>
+  d.people[ownerIndex]?.workStatus === 'working'
+
 /** Per-year scale for one (owner, family): 1 today (the R19 rule blocked
  *  over-ceiling entry), shrinking when an age band expires mid-runway (the
  *  60–63 super catch-up stepping down at 64). */
 function familyScaleAt(d: ScenarioDraft, ownerIndex: number, family: OwnerFamilyKey['family'], t: number): number {
   const owner = d.people[ownerIndex]
-  if (owner?.currentAge === undefined || !Number.isInteger(owner.currentAge)) return 1
+  // A non-working owner contributes nothing, so no scale (and no step-down) —
+  // mirrors the engine's t<retire truncation and keeps firstStepDownYear honest.
+  if (owner?.workStatus !== 'working') return 1
+  if (owner.currentAge === undefined || !Number.isInteger(owner.currentAge)) return 1
   const ageAtT = owner.currentAge + t
   if (ageAtT > 120) return 1
   const combined = d.enteredAccounts.reduce(
@@ -311,6 +334,10 @@ function contributionStreamsFor(
   ownerIndex: number,
   horizonYears: number,
 ): PersonContributionStreams {
+  // Only a WORKING owner contributes; a retired owner's stale stream is engine-
+  // inert at runtime but trips the §6 raw-stream ACA-overlap pre-check, so omit
+  // it here to keep no-missing ⟹ validateParams accepts (D1 review C1).
+  if (!isWorkingOwner(d, ownerIndex)) return {}
   const channels: Record<'taxable' | 'pretax' | 'roth' | 'hsa' | 'employerMatch', number[]> = {
     taxable: [],
     pretax: [],
@@ -422,7 +449,9 @@ function buildOverlay(d: ScenarioDraft, horizonYears: number): OverlayParams | u
   const healthcareOn = enrolled !== undefined && slcsp !== undefined && ages.some((a) => a < 65)
 
   const anyContributions = accounts.some(
-    (a) => (a.annualContribution ?? 0) > 0 || (a.employerMatchAnnual ?? 0) > 0,
+    (a) =>
+      isWorkingOwner(d, a.ownerIndex) &&
+      ((a.annualContribution ?? 0) > 0 || (a.employerMatchAnnual ?? 0) > 0),
   )
   const accumulation = anyContributions
     ? { contributionsByPerson: d.people.map((_, i) => contributionStreamsFor(d, i, horizonYears)) }

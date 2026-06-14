@@ -20,9 +20,6 @@
 /** The product voice catalog — copyGuard's enumeration surface (U7). */
 export const copy = {
   appTitle: 'The Back Nine',
-  // --- U0 scaffold strings (replaced by the real first-answer surface at U7) ---
-  scaffoldSubtitle: 'Foundation scaffold — Phase 1.',
-  scaffoldEngineLabel: 'Engine (worker round-trip):',
   // --- PWA update toast (prompt mode — the user chooses when) ---
   updateReady: 'A new version is ready — refresh whenever you’re done.',
   updateReload: 'Refresh now',
@@ -32,15 +29,12 @@ export const copy = {
   coldStartOrientation:
     'A quiet co-pilot for a married couple’s next chapter. About five minutes of questions, answered as honestly as the math.',
   coldStartPreflight:
-    'Handy to have nearby: recent account statements, and a marketplace health-insurance quote for your age and ZIP (healthcare.gov or the KFF calculator — the benchmark Silver figure and the premium of a plan you’d pick).',
+    'Handy to have nearby: recent account statements, and a marketplace health-insurance quote for everyone under 65 in the household, at your ages and ZIP (healthcare.gov or the KFF calculator — the benchmark Silver figure and the premium of a plan you’d pick).',
   coldStartBegin: 'Begin',
   // --- flow chrome ---
   flowBack: 'Back',
   flowNext: 'Continue',
   flowProgressLabel: 'Progress',
-  // SR-announced position (the quiet thread carries no visible counter — the
-  // flow is variable-length, so a visible "Step N of M" would be inaccurate).
-  flowSrPosition: 'New question',
   // --- the preamble questions (D1 — paired two-person screens) ---
   personYou: 'You',
   personSpouse: 'Your spouse',
@@ -75,10 +69,10 @@ export const copy = {
   periodConfirmPrompt:
     'Quick check — that figure reads either way. Each month, or each year?',
   qHealthHeading: 'Health coverage before Medicare',
-  enrolledPremiumLabel: 'Monthly premium of a plan you’d pick',
-  slcspLabel: 'Benchmark Silver plan, monthly',
+  enrolledPremiumLabel: 'Your household’s combined monthly premium',
+  slcspLabel: 'Benchmark Silver plan, monthly (whole household)',
   healthQuoteHelp:
-    'From a marketplace quote for your age and ZIP — healthcare.gov or the KFF calculator. The tool never guesses a premium; it prices only what you enter. Fine to continue without it — the answer simply waits on it.',
+    'From a marketplace quote covering everyone under 65 in the household, at your ages and ZIP — healthcare.gov or the KFF calculator. Enter the whole household’s combined monthly figures, not one person’s. The tool never guesses a premium; it prices only what you enter. Fine to continue without it — the answer simply waits on it.',
   qOopHeading: 'Out-of-pocket health costs',
   oopLabel: 'A typical year, out of pocket',
   oopHelp:
@@ -102,6 +96,7 @@ export const copy = {
   accountCancel: 'Never mind',
   accountEdit: 'Edit',
   accountRemove: 'Remove',
+  accountRemoveConfirm: 'Tap again to remove',
   accountOwnerLegend: 'Whose account is this?',
   accountKindLegend: 'What kind of account?',
   kind401k: '401(k)',
@@ -134,6 +129,10 @@ export const copy = {
   errClassifierSum: 'Those percentages need to add up to 100.',
   // --- the provisional answer strip (D1 — surfaces and sharpens during entry;
   //     D2 builds the full state-adaptive surface over U6/U7) ---
+  // A STABLE, state-agnostic region name: the strip's accessible label must not
+  // contradict its content once a real reading lands (D1 review — it was the
+  // incomplete-only string, wrong when the strip shows "On track — 7 of 10").
+  answerRegionLabel: 'Your provisional answer',
   answerIncomplete: 'Your answer takes shape as you go.',
   answerStillNeeded: 'Still needed:',
   answerNoSynthesis: 'The tool never guesses these — it prices only what you enter.',

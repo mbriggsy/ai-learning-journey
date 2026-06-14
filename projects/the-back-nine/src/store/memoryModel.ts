@@ -32,8 +32,9 @@
  * `engine.runDateSearch(..., epoch)` (same MessagePort ⇒ FIFO ⇒ the commit
  * lands first and cancels any older in-flight sweep between candidates), then
  * correlates by PROMISE IDENTITY on resolve (the outcome deliberately carries
- * no epoch). The headline route has no worker-side epoch — its discard is the
- * same main-thread commit-if-newer rule.
+ * no epoch). The headline route's OWN discard is the same main-thread commit-
+ * if-newer rule — but it too bumps the worker epoch up front (AT2), so a date→
+ * spine switch cancels any in-flight sweep instead of letting it run to the end.
  *
  * REQUIRED-FACT ABSENCE IS A SENTINEL, NEVER A DEFAULT (burned/062): a required
  * user-fact not yet collected stays `undefined` in the draft; the params
@@ -268,6 +269,13 @@ export function createMemoryModel(deps: MemoryModelDeps): MemoryModel {
       if (anyWorking ? input === null : params === null) return
 
       const epoch = ++dispatchedEpoch
+      // The cancel signal is route-INDEPENDENT (AT2, D1 review): bump the
+      // worker-side epoch before ANY dispatch so a spine recompute ALSO cancels
+      // an in-flight date sweep (FIFO on the same port), not only a date→date
+      // supersession. ORDER IS LOAD-BEARING (C3 item (b)): this commit must reach
+      // the worker before the next dispatch so an older sweep cancels between
+      // candidates. Harmless + idempotent for the spine route (run() ignores it).
+      void deps.client.engine.setLatestEpoch(epoch)
       if (answer.kind === 'idle') {
         // `pending` exists only in the pre-first-resolve window; once anything
         // has committed we hold the last answer visible (no re-blank).
@@ -278,12 +286,12 @@ export function createMemoryModel(deps: MemoryModelDeps): MemoryModel {
       try {
         if (anyWorking) {
           const seed = ensureSeed()
-          // ORDER IS LOAD-BEARING (C3 item (b)): the epoch commit must reach the
-          // worker before the sweep dispatch (FIFO on the same port) so an older
-          // in-flight sweep cancels between candidates.
-          void deps.client.engine.setLatestEpoch(epoch)
           const wire = await deps.client.engine.runDateSearch(input!, seed, tier, epoch)
           const res = dateSearchFromWire(wire)
+          // A superseded sweep resolves `cancelled` — HOLD the prior answer, never
+          // commit it: committing renders AnswerStrip's null arm → a blanked strip
+          // until the newer epoch lands (the no-re-blank contract, AC1/D1 review).
+          if (res.ok && res.outcome.kind === 'cancelled') return
           commit(
             epoch,
             res.ok

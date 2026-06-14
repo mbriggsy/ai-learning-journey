@@ -17,6 +17,14 @@ describe('parseMoney / formatMoney', () => {
     expect(parseMoney('abc')).toBeUndefined()
     expect(parseMoney('-500')).toBeUndefined()
   })
+  it('rejects silent magnitude traps: misgrouped commas, exponent, hex (D1 review AB2)', () => {
+    expect(parseMoney('100,00')).toBeUndefined() // misgrouped — strip-then-Number gave 10000
+    expect(parseMoney('1,00,000')).toBeUndefined()
+    expect(parseMoney('1e6')).toBeUndefined() // exponent — gave 1000000
+    expect(parseMoney('0x186a0')).toBeUndefined() // hex — gave 100000
+    expect(parseMoney('40,000')).toBe(40_000) // correctly grouped still parses
+    expect(parseMoney('1,250,000')).toBe(1_250_000)
+  })
   it('formats with grouping, no decimals', () => {
     expect(formatMoney(1_250_000)).toBe('1,250,000')
     expect(formatMoney(undefined)).toBe('')
@@ -88,6 +96,42 @@ describe('IntegerField', () => {
     fireEvent.change(input, { target: { value: '19.5' } })
     fireEvent.blur(input)
     expect(onCommit).toHaveBeenLastCalledWith(undefined)
+  })
+})
+
+describe('field error timing (D1 review DA1 — forgiven on re-edit)', () => {
+  it('calls onEdit on the first keystroke while an error is showing (clears on re-edit, not next blur)', () => {
+    const onEdit = vi.fn()
+    render(
+      <IntegerField
+        labelKey="birthYearLabel"
+        field="people.0.birthYear"
+        value={1800}
+        invalid
+        onEdit={onEdit}
+        onCommit={() => {}}
+      />,
+    )
+    const input = screen.getByLabelText(copy.birthYearLabel)
+    fireEvent.focus(input)
+    fireEvent.change(input, { target: { value: '196' } })
+    expect(onEdit).toHaveBeenCalled()
+  })
+
+  it('does NOT call onEdit while valid (no error to forgive)', () => {
+    const onEdit = vi.fn()
+    render(
+      <CurrencyField
+        labelKey="spendLabel"
+        field="annualSpendingReal"
+        value={undefined}
+        onEdit={onEdit}
+        onCommit={() => {}}
+      />,
+    )
+    fireEvent.focus(screen.getByLabelText(copy.spendLabel))
+    fireEvent.change(screen.getByLabelText(copy.spendLabel), { target: { value: '5' } })
+    expect(onEdit).not.toHaveBeenCalled()
   })
 })
 

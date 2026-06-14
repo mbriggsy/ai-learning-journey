@@ -127,3 +127,34 @@ describe('sanity — touched gating + directional re-validation', () => {
     ])
   })
 })
+
+describe('sanity — the spend period force-confirm (R19 line one; D1 review AB1)', () => {
+  const touchedSpend = new Set(['annualSpendingReal'])
+
+  it('forces a confirm ABOVE the old band ceiling under the unconfirmed month default (the 12× misentry)', () => {
+    // User typed 55000 under the default 'month' (means $55k/yr) → stored 660000;
+    // entered (month-view) = 55000, above the old $50k ceiling that let it sail
+    // through to a confident $660k/yr verdict. The floor now has no upper bound.
+    const d = draft({}, {}, { annualSpendingReal: 660_000, spendEntryPeriod: 'month' })
+    expect(validateDraft(d, touchedSpend)).toMatchObject([
+      { rule: 'spend-period-unconfirmed', messageKey: 'periodConfirmPrompt' },
+    ])
+  })
+
+  it('still forces a confirm for an in-band figure (the original case holds)', () => {
+    const d = draft({}, {}, { annualSpendingReal: 360_000, spendEntryPeriod: 'month' }) // entered = 30k
+    expect(validateDraft(d, touchedSpend)).toMatchObject([
+      { rule: 'spend-period-unconfirmed', messageKey: 'periodConfirmPrompt' },
+    ])
+  })
+
+  it('does NOT fire below the floor (an unambiguously-monthly small figure)', () => {
+    const d = draft({}, {}, { annualSpendingReal: 60_000, spendEntryPeriod: 'month' }) // entered = 5k < 8k
+    expect(validateDraft(d, touchedSpend)).toEqual([])
+  })
+
+  it('clears the instant the period is explicitly declared (the disarm)', () => {
+    const d = draft({}, {}, { annualSpendingReal: 660_000, spendEntryPeriod: 'month' })
+    expect(validateDraft(d, new Set(['annualSpendingReal', 'spendEntryPeriod']))).toEqual([])
+  })
+})

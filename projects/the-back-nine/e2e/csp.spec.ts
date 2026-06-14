@@ -206,8 +206,8 @@ test.describe('CSP — real browser enforcement', () => {
     await next()
 
     // The ACA quote pair (63 < 65 ⇒ required).
-    await page.getByLabel('Monthly premium of a plan you’d pick').fill('950')
-    await page.getByLabel('Benchmark Silver plan, monthly').fill('880')
+    await page.getByLabel('Your household’s combined monthly premium').fill('950')
+    await page.getByLabel('Benchmark Silver plan, monthly (whole household)').fill('880')
     await next()
 
     // Out-of-pocket (optional) — skip; IRMAA seed (65 ⇒ required).

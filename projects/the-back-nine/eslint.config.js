@@ -102,6 +102,25 @@ export default tseslint.config(
     },
   },
 
+  // src/store/** — the orchestrator layer: imports engine + crypto + shared, but
+  // NEVER the feature layers above it (intake/budget/viz/ui). The whole builder-
+  // injection seam (intakeMap's builders are INJECTED at appModel.ts, never
+  // imported here) rests on this inversion — without the gate it was author
+  // discipline only, though CLAUDE.md claimed the boundary ESLint-enforced (D1
+  // review A1). (intake→@ui/copy is a legit carve-out, so the intake/ui blocks
+  // need the nuanced @ui/copy exception — deferred; the store inversion is the
+  // load-bearing one D1's testability seam depends on.)
+  {
+    files: tsGlobs('src/store'),
+    ignores: TEST_IGNORES,
+    rules: {
+      ...importBan(
+        ['intake', 'budget', 'viz', 'ui'],
+        'src/store/ is the orchestrator: it must not import feature layers above it (intake/budget/viz/ui). The param builders are INJECTED at the ui composition point (appModel.ts), never imported into the store.',
+      ),
+    },
+  },
+
   // src/engine/** — PURE: imports nothing impure; reads no clock/entropy/env in any form.
   {
     files: tsGlobs('src/engine'),

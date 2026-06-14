@@ -83,7 +83,10 @@ export function AnswerStrip({
   const negativeStates: ReadonlySet<OutcomeState> = new Set(['off-track', 'already-failing'])
 
   return (
-    <aside className="answer-strip" aria-label={copy.answerIncomplete}>
+    // aria-live: the answer is the product's core output — announce its updates
+    // to AT users (the strip-lead text); a STABLE region label that never
+    // contradicts the content (D1 review — was the incomplete-only string).
+    <aside className="answer-strip" aria-label={copy.answerRegionLabel} aria-live="polite">
       {answer.kind === 'idle' && (
         <>
           <p className="strip-lead strip-muted">{copy.answerIncomplete}</p>

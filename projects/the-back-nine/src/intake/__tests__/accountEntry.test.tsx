@@ -255,7 +255,11 @@ describe('the accounts step — loop mechanics through the real flow', () => {
     })
     expect(screen.getByText(/Roth IRA · Sam · \$250,000/)).toBeInTheDocument()
 
+    // Remove is two-tap (D1 review DA4): first tap arms the confirm, second
+    // removes — no undo once gone.
     fireEvent.click(screen.getByRole('button', { name: copy.accountRemove }))
+    expect(m.getSnapshot().draft.enteredAccounts).toHaveLength(1) // armed, not yet removed
+    fireEvent.click(screen.getByRole('button', { name: copy.accountRemoveConfirm }))
     expect(m.getSnapshot().draft.enteredAccounts).toHaveLength(0)
     expect(screen.getByText(copy.accountsEmpty)).toBeInTheDocument()
   })

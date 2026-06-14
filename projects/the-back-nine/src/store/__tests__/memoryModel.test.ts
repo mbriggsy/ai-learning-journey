@@ -128,10 +128,10 @@ describe('memoryModel — seed identity (contract #1b)', () => {
     model.update(workingDraft)
 
     const r1 = model.recompute()
-    datePending[0]!(cancelledWire)
+    datePending[0]!(inputFailureWire('r1'))
     await r1
     const r2 = model.recompute()
-    datePending[1]!(cancelledWire)
+    datePending[1]!(inputFailureWire('r2'))
     await r2
 
     expect(seeds.count).toBe(1)
@@ -146,7 +146,7 @@ describe('memoryModel — seed identity (contract #1b)', () => {
     const model = createMemoryModel({ client, builders: dateBuilders })
     model.update(workingDraft)
     const r = model.recompute()
-    datePending[0]!(cancelledWire)
+    datePending[0]!(inputFailureWire('r'))
     await r
     const seed = model.getSnapshot().draft.seed
     expect(Number.isInteger(seed)).toBe(true)
@@ -242,9 +242,56 @@ describe('memoryModel — the request-epoch contract (#1f + C3(b))', () => {
     expect(model.getSnapshot().answer.kind).toBe('idle')
     const r = model.recompute()
     expect(model.getSnapshot().answer.kind).toBe('pending')
-    datePending[0]!(cancelledWire)
+    datePending[0]!(inputFailureWire('first'))
     await r
     expect(model.getSnapshot().answer.kind).toBe('date')
+  })
+
+  it('a superseded sweep resolving `cancelled` HOLDS the prior answer (never re-blanks)', async () => {
+    const { client, datePending } = fakeClient()
+    const model = createMemoryModel({ client, builders: dateBuilders, mintSeed: () => 7 })
+    model.update(workingDraft)
+
+    const rA = model.recompute() // commits a real answer first
+    datePending[0]!(inputFailureWire('A'))
+    await rA
+    expect(model.getSnapshot().answer).toMatchObject({ outcome: { reason: 'A' } })
+
+    // A newer dispatch's older sibling resolves `cancelled` — it must NOT commit
+    // (committing renders AnswerStrip's null arm → a blanked strip). HOLD (AC1).
+    const before = model.getSnapshot()
+    const rB = model.recompute()
+    datePending[1]!(cancelledWire)
+    await rB
+    expect(model.getSnapshot()).toBe(before) // unchanged — cancelled never committed
+  })
+
+  it('passes the requested tier through to runDateSearch (the final-tier crown; D1 review R3)', async () => {
+    const { client, calls, datePending } = fakeClient()
+    const model = createMemoryModel({ client, builders: dateBuilders, mintSeed: () => 7 })
+    model.update(workingDraft)
+    const r = model.recompute('final')
+    datePending[0]!(inputFailureWire('done'))
+    await r
+    const call = calls.find((c) => c.method === 'runDateSearch')
+    expect(call?.args[2]).toBe('final') // propagated, never silently defaulted to provisional
+  })
+
+  it('a date→spine route switch STILL bumps the worker epoch (cancels the in-flight sweep; D1 review AT2)', async () => {
+    const { client, calls, datePending } = fakeClient({ runWire: { kind: 'calm-error', reason: 'x' } })
+    const model = createMemoryModel({
+      client,
+      builders: { buildSpineParams: () => SPINE_PARAMS, buildDateInput: () => FAKE_DATE_INPUT },
+      mintSeed: () => 7,
+    })
+    model.update(workingDraft) // date route
+    const rDate = model.recompute() // epoch 1 — sweep dispatched, unresolved
+    model.update(retiredDraft) // flip to all-retired
+    await model.recompute() // epoch 2 — the SPINE route (run)
+    const epochs = calls.filter((c) => c.method === 'setLatestEpoch').map((c) => c.args[0])
+    expect(epochs).toContain(2) // route-independent: the spine dispatch advanced latestEpoch
+    datePending[0]!(cancelledWire) // settle the orphaned sweep (held, never committed)
+    await rDate
   })
 })
 

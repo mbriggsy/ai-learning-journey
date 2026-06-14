@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest'
-import { adjustOwnBenefitAnnual, householdBenefits, type BenefitPerson } from '../socialSecurityBenefit'
+import {
+  adjustOwnBenefitAnnual,
+  householdBenefits,
+  survivorBenefitAnnual,
+  type BenefitPerson,
+} from '../socialSecurityBenefit'
 
 // Annual = monthly × 12 (the model stores annual; SSA states monthly). Expected
 // values are HAND-DERIVED from the POMS rules / printed examples (DND/012) — never
@@ -91,5 +96,50 @@ describe('SS benefit sub-engine — Method C spousal excess (POMS RS 00615.020),
       { ownAnnual: 0, spousalExcessAnnual: 0 },
       { ownAnnual: 0, spousalExcessAnnual: 0 },
     ])
+  })
+})
+
+describe('SS benefit sub-engine — survivor §202 (POMS RS 00615.301/.320, RIB-LIM + lock-flat)', () => {
+  // Compare in cents (the engine is exact in cents; some monthly values × 12 aren't float-clean).
+  const cents = (annualDollars: number) => Math.round(annualDollars * 100)
+  const dec = (piaMonthly: number, claimAge: number): BenefitPerson => ({ piaAnnual: piaMonthly * 12, claimAge, birthYear: BY })
+
+  it('RIB-LIM floor BINDS when the deceased claimed deeply early: survivor at FRA gets 82.5% of PIA, not the deceased reduced $700', () => {
+    // deceased PIA $1,000/mo, claimed 62 → actual $700/mo; 82.5% floor = $825/mo > $700 ⇒ floor binds.
+    expect(cents(survivorBenefitAnnual(dec(1000, 62), BY, 67)), '$825/mo').toBe(cents(annual(825)))
+  })
+
+  it("RIB-LIM does NOT bind when the deceased claimed only moderately early: survivor gets the deceased's actual reduced benefit", () => {
+    // deceased claimed 65 → $866.60/mo (> the $825 floor) ⇒ the actual reduced benefit is the cap.
+    expect(cents(survivorBenefitAnnual(dec(1000, 65), BY, 67)), '$866.60/mo').toBe(86_660 * 12)
+  })
+
+  it("the deceased's DRCs FLOW THROUGH: a survivor of a delayed-to-70 worker gets 124% of PIA (no RIB-LIM — not claimed early)", () => {
+    expect(cents(survivorBenefitAnnual(dec(1000, 70), BY, 67)), '$1,240/mo').toBe(cents(annual(1240)))
+  })
+
+  it('a deceased who claimed at FRA passes 100% through; the survivor at FRA gets the full $1,000/mo', () => {
+    expect(cents(survivorBenefitAnnual(dec(1000, 67), BY, 67))).toBe(cents(annual(1000)))
+  })
+
+  it('the lock-flat age reduction: a survivor starting at 60 gets exactly 71.5% (28.5% max), at 67 gets 100%', () => {
+    expect(cents(survivorBenefitAnnual(dec(1000, 67), BY, 60)), '71.5% → $715/mo').toBe(cents(annual(715)))
+    expect(cents(survivorBenefitAnnual(dec(1000, 67), BY, 67)), '100% → $1,000/mo').toBe(cents(annual(1000)))
+    // The locked factor does NOT ramp: a start at 60 and a start at 63 are DIFFERENT flat amounts,
+    // each correct for its start age (the seam holds whichever flat — plan §6).
+    expect(survivorBenefitAnnual(dec(1000, 67), BY, 63)).toBeGreaterThan(survivorBenefitAnnual(dec(1000, 67), BY, 60))
+    expect(survivorBenefitAnnual(dec(1000, 67), BY, 63)).toBeLessThan(survivorBenefitAnnual(dec(1000, 67), BY, 67))
+  })
+
+  it('the combined early-widowhood junction (RIB-LIM × age-reduction) — the value the unit exists to get right', () => {
+    // deceased claimed 62 (RIB-LIM floor → $825/mo base) AND survivor claims at 61 (age factor 75.57%).
+    const v = survivorBenefitAnnual(dec(1000, 62), BY, 61)
+    expect(cents(v), 'cap-then-age-reduce → $623.40/mo').toBe(62_340 * 12)
+    // It DIFFERS from the old naive scalar (the deceased's reduced $700/mo) — the §202 path changed the value.
+    expect(v).not.toBe(annual(700))
+  })
+
+  it('reduce-to-spine: a deceased with PIA 0 yields a survivor benefit of 0', () => {
+    expect(survivorBenefitAnnual(dec(0, 62), BY, 60)).toBe(0)
   })
 })

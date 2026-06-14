@@ -19,6 +19,8 @@ import {
   spouseReduction,
   delayedRetirementCredit,
   spousalRate,
+  survivorReduction,
+  ribLim,
   fraMonthsForBirthYear,
   type PerMonthRate,
   type ReductionSchedule,
@@ -159,4 +161,48 @@ export const householdBenefits = (people: readonly BenefitPerson[]): readonly Pe
       p === higher || excessFull <= 0 ? 0 : applyFactorAnnual(excessFull, spousalExcessFactor(p.claimAge, p.birthYear))
     return { ownAnnual, spousalExcessAnnual }
   })
+}
+
+/**
+ * The §202 survivor (widow/er) ANNUAL benefit a survivor receives on the deceased's
+ * record, for a stream that STARTS at `survivorStartAge` (the seam passes the locked
+ * `max(60, age-at-first-death)` and holds the result FLAT — plan §6). Composition:
+ *
+ *  1. survivorFull = the deceased's adjusted benefit (DRCs flow through automatically,
+ *     since we feed the adjusted figure — RS 00615.301/.702). If the deceased claimed
+ *     reduced RIB BEFORE their FRA, RIB-LIM caps it at the GREATER of 82.5% of the
+ *     death PIA or that actual reduced benefit (RS 00615.320 — a "larger-of", 82.5% a
+ *     floor not a haircut).
+ *  2. age reduction — LOCK-FLAT: 100% at survivor-FRA grading to (1 − maxReductionPct)
+ *     at age 60, the factor fixed at `survivorStartAge` (NO post-claim ramp; a ramp
+ *     would optimistically overstate the early-widowhood floor — the calm-but-wrong sin).
+ *
+ * Both steps run through the exact integer-cents dime-round. Survivor-FRA is keyed
+ * SEPARATELY from retirement-FRA (coincides at 67 for the 1962+ cohorts). PIA 0 ⇒ 0.
+ */
+export const survivorBenefitAnnual = (
+  deceased: BenefitPerson,
+  survivorBirthYear: number,
+  survivorStartAge: number,
+): number => {
+  assertFinite(deceased.piaAnnual, 'deceased.piaAnnual')
+  assertFinite(survivorStartAge, 'survivorStartAge')
+  if (deceased.piaAnnual < 0) throw new Error(`[ssBenefit] deceased.piaAnnual must be ≥ 0 (got ${deceased.piaAnnual})`)
+
+  const deceasedAdjusted = adjustOwnBenefitAnnual(deceased.piaAnnual, deceased.claimAge, deceased.birthYear)
+  const claimedEarly = deceased.claimAge * 12 < fraMonthsForBirthYear(deceased.birthYear, 'retirement')
+  const floorMilli = Math.round(ribLim.value.floorPctOfDeathPia * 1000)
+  const survivorFull = claimedEarly
+    ? Math.max(applyFactorAnnual(deceased.piaAnnual, { num: floorMilli, denom: 1000 }), deceasedAdjusted)
+    : deceasedAdjusted
+
+  const survivorFra = fraMonthsForBirthYear(survivorBirthYear, 'survivor')
+  const earliestMonths = survivorReduction.value.earliestAge * 12
+  const startMonths = Math.max(survivorStartAge * 12, earliestMonths) // aged WIB from 60 (DWB-50 deferred)
+  if (startMonths >= survivorFra) return survivorFull // 100% at/after survivor-FRA, no reduction
+  const span = survivorFra - earliestMonths
+  const monthsEarly = survivorFra - startMonths
+  const reductionMilli = Math.round(survivorReduction.value.maxReductionPct * 1000)
+  // factor = 1 − maxReductionPct × monthsEarly/span, as an exact integer rational.
+  return applyFactorAnnual(survivorFull, { num: 1000 * span - reductionMilli * monthsEarly, denom: 1000 * span })
 }

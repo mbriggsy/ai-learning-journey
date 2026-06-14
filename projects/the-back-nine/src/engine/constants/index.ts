@@ -14,15 +14,18 @@
 import { taxConstants, TAX_YEAR } from './tax'
 import { healthConstants, COVERAGE_YEAR } from './health'
 import { contributionConstants, CONTRIBUTION_YEAR } from './contributions'
+import { socialSecurityConstants } from './socialSecurity'
 import type { ConstantEntry } from './types'
 
 // `export *` re-exports every named export of each module (including TAX_YEAR,
-// COVERAGE_YEAR, CONTRIBUTION_YEAR, and the three tables) — no explicit per-name
-// re-export needed.
+// COVERAGE_YEAR, CONTRIBUTION_YEAR, the tables, and the SS factor lookups) — no
+// explicit per-name re-export needed. (Social Security factors are STATUTE, not a
+// COLA year — the module carries no year key.)
 export * from './types'
 export * from './tax'
 export * from './health'
 export * from './contributions'
+export * from './socialSecurity'
 
 /** Flattened registry: dotted key → entry. Derived from the structured tables. */
 export const ALL_CONSTANTS: Readonly<Record<string, ConstantEntry>> = Object.freeze({
@@ -30,6 +33,9 @@ export const ALL_CONSTANTS: Readonly<Record<string, ConstantEntry>> = Object.fre
   ...Object.fromEntries(Object.entries(healthConstants).map(([k, v]) => [`health.${k}`, v])),
   ...Object.fromEntries(
     Object.entries(contributionConstants).map(([k, v]) => [`contributions.${k}`, v]),
+  ),
+  ...Object.fromEntries(
+    Object.entries(socialSecurityConstants).map(([k, v]) => [`socialSecurity.${k}`, v]),
   ),
 })
 

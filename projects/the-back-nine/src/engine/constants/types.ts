@@ -279,3 +279,73 @@ export interface IrmaaSchedule {
   /** A voluntary Roth conversion is NOT an SSA-44 life-changing event (cannot appeal it away). */
   readonly rothConversionIsSsa44LifeChangingEvent: boolean
 }
+
+// ---- Social Security value shapes (the PIA-driven benefit sub-engine) ---------
+
+/** A reduction/credit rate stated the SSA way: "numerator/denominator of 1% per
+ *  month" (e.g. 5/9 of 1%). The per-month fraction OF PIA is `numerator /
+ *  (denominator × 100)`; the sub-engine keeps the arithmetic INTEGER so the
+ *  published factors (exactly 0.7000 at 62/FRA67) fall out — never a stored decimal. */
+export interface PerMonthRate {
+  readonly numerator: number
+  readonly denominator: number
+}
+
+/** A two-segment actuarial-reduction schedule for claiming BEFORE FRA. The first
+ *  `firstMonths` months reduce at `firstRate`; each later month at `laterRate`. The
+ *  WORKER (POMS RS 00615.101) and SPOUSE (RS 00615.201) schedules DIFFER in the
+ *  first segment (5/9 vs 25/36 of 1%) and converge beyond it (both 5/12). */
+export interface ReductionSchedule {
+  readonly firstMonths: number
+  readonly firstRate: PerMonthRate
+  readonly laterRate: PerMonthRate
+}
+
+/** The delayed-retirement-credit schedule for claiming AFTER FRA (POMS RS
+ *  00615.690/.692). A flat `ratePerMonth` accrues from FRA through the month before
+ *  `throughAge`; the per-person month cap is DERIVED = `throughAge×12 − fraMonths`
+ *  (= 36 at FRA 67), never a literal. Sourced ONLY for the `bornFromYear`+ cohort —
+ *  an older birth year (step-down rates) must fail loud, never default to 8%. */
+export interface DelayedRetirementCredit {
+  readonly ratePerMonth: PerMonthRate
+  readonly throughAge: number
+  /** Earliest birth year this flat rate covers (1943 — the 8%/yr cohort). */
+  readonly bornFromYear: number
+}
+
+/** One full-retirement-age (or survivor-FRA) band: births through `bornThrough`
+ *  (inclusive; `null` = all later) attain FRA at `fraMonths` (age-in-MONTHS — the
+ *  graduated 1955–59 band is fractional, so a bare year silently breaks it). */
+export interface FraBand {
+  readonly bornThrough: number | null
+  readonly fraMonths: number
+}
+
+/** The survivor (widow/er) age-reduction rule (POMS RS 00615.301/.310). The
+ *  reduction grows from 0 at survivor-FRA to `maxReductionPct` at `earliestAge`; the
+ *  per-month fraction is DERIVED from the 60→survivor-FRA span (so it holds 28.5%
+ *  across cohorts — never hardcode 19/40). A disabled survivor (DWB) takes the flat
+ *  `maxReductionPct` from `disabledEarliestAge`. */
+export interface SurvivorReduction {
+  readonly earliestAge: number
+  readonly disabledEarliestAge: number
+  readonly maxReductionPct: number
+}
+
+/** The Retirement-Insurance-Benefit limit on a survivor benefit when the deceased
+ *  claimed reduced RIB before death (POMS RS 00615.320): the survivor benefit is
+ *  capped at the GREATER of `floorPctOfDeathPia` × the death PIA or the deceased's
+ *  actual reduced benefit — a "larger-of", with 82.5% a FLOOR within the cap, never
+ *  a flat haircut. */
+export interface RibLim {
+  readonly floorPctOfDeathPia: number
+}
+
+/** The deemed-filing DOB cutoff (POMS GN 00204.035; BBA-2015 §831): DOB on/after
+ *  this date ⇒ filing for own-retirement OR spousal deems BOTH (restricted
+ *  application gone). Survivor benefits are exempt. */
+export interface DeemedFilingCutoff {
+  readonly year: number
+  readonly month: number
+  readonly day: number
+}

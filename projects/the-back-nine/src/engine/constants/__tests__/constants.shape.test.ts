@@ -6,7 +6,9 @@ import {
   taxConstants,
   healthConstants,
   contributionConstants,
+  socialSecurityConstants,
   catchUpForAge,
+  fraMonthsForBirthYear,
 } from '../index'
 import { isUnsourced } from '../types'
 
@@ -267,7 +269,8 @@ describe('canonical constants — shape & provenance (contract #6)', () => {
     const expected =
       Object.keys(taxConstants).length +
       Object.keys(healthConstants).length +
-      Object.keys(contributionConstants).length
+      Object.keys(contributionConstants).length +
+      Object.keys(socialSecurityConstants).length
     expect(Object.keys(ALL_CONSTANTS).length).toBe(expected)
   })
 
@@ -426,6 +429,113 @@ describe('canonical constants — shape & provenance (contract #6)', () => {
         t.childFactorThrough14 < (t.factors[0]?.factor ?? 0),
         'the child factor sits below the age-15 factor',
       ).toBe(true)
+    })
+  })
+
+  describe('Social Security benefit constants — statutory factors (the PIA-driven sub-engine; verify sweep 2026-06-14, POMS primary-confirmed)', () => {
+    it('FRA-by-birth-year resolves in MONTHS for both schedules; both cohorts (1969/1972) → 804 (67y0m)', () => {
+      // retirement FRA
+      expect(fraMonthsForBirthYear(1969, 'retirement')).toBe(804)
+      expect(fraMonthsForBirthYear(1972, 'retirement')).toBe(804)
+      expect(fraMonthsForBirthYear(1960, 'retirement')).toBe(804)
+      expect(fraMonthsForBirthYear(1959, 'retirement'), '66y10m').toBe(802)
+      expect(fraMonthsForBirthYear(1955, 'retirement'), '66y2m').toBe(794)
+      expect(fraMonthsForBirthYear(1954, 'retirement'), '66y0m').toBe(792)
+      expect(fraMonthsForBirthYear(1937, 'retirement'), '65y0m').toBe(780)
+      // survivor FRA — a SEPARATE schedule, but coincides at 804 for our 1962+ cohorts
+      expect(fraMonthsForBirthYear(1969, 'survivor')).toBe(804)
+      expect(fraMonthsForBirthYear(1962, 'survivor')).toBe(804)
+      expect(fraMonthsForBirthYear(1961, 'survivor'), 'survivor 66y10m').toBe(802)
+      expect(fraMonthsForBirthYear(1957, 'survivor'), 'survivor 66y2m').toBe(794)
+      expect(fraMonthsForBirthYear(1956, 'survivor'), 'survivor 66y0m').toBe(792)
+      // the schedules genuinely DIFFER in the 1957–1961 band (the do-not-alias landmine)
+      expect(fraMonthsForBirthYear(1957, 'survivor')).not.toBe(fraMonthsForBirthYear(1957, 'retirement'))
+    })
+
+    it('the FRA lookup fails loud on a non-finite / fractional / out-of-range birth year (insights 008/010/020; burned/062)', () => {
+      expect(() => fraMonthsForBirthYear(Number.NaN, 'retirement')).toThrow(/finite/)
+      expect(() => fraMonthsForBirthYear(Number.POSITIVE_INFINITY, 'survivor')).toThrow(/finite/)
+      expect(() => fraMonthsForBirthYear(1969.5, 'retirement')).toThrow(/INTEGER/)
+      expect(() => fraMonthsForBirthYear(1800, 'retirement')).toThrow(/\[1900, 2200\]/)
+      expect(() => fraMonthsForBirthYear(69, 'retirement'), 'a two-digit age passed as a year').toThrow(/1900/)
+    })
+
+    it('worker + spouse reduction schedules carry the EXACT POMS fractions, differing in segment 1 (5/9 vs 25/36), converging at 5/12', () => {
+      const w = socialSecurityConstants.workerReduction.value
+      const s = socialSecurityConstants.spouseReduction.value
+      expect(w.firstMonths).toBe(36)
+      expect(w.firstRate).toEqual({ numerator: 5, denominator: 9 })
+      expect(w.laterRate).toEqual({ numerator: 5, denominator: 12 })
+      expect(s.firstMonths).toBe(36)
+      expect(s.firstRate).toEqual({ numerator: 25, denominator: 36 })
+      expect(s.laterRate).toEqual({ numerator: 5, denominator: 12 })
+      // DIFFER in segment 1, CONVERGE beyond it (the do-not-blend landmine).
+      expect(w.firstRate).not.toEqual(s.firstRate)
+      expect(w.laterRate).toEqual(s.laterRate)
+      // Internal cross-axis (insight 009): the 36-month first-segment total = the SSA-documented
+      // 20% (worker) / 25% (spouse) — a transcription swap fails here.
+      const total = (r: { numerator: number; denominator: number }, months: number) =>
+        (r.numerator / r.denominator / 100) * months
+      expect(total(w.firstRate, w.firstMonths), 'worker 36-mo total = 20%').toBeCloseTo(0.2, 10)
+      expect(total(s.firstRate, s.firstMonths), 'spouse 36-mo total = 25%').toBeCloseTo(0.25, 10)
+    })
+
+    it('the DRC schedule is 2/3 of 1%/mo (8%/yr), FRA→70, for births 1943+ (+24% at 70/FRA67)', () => {
+      const d = socialSecurityConstants.delayedRetirementCredit.value
+      expect(d.ratePerMonth).toEqual({ numerator: 2, denominator: 3 })
+      expect(d.throughAge).toBe(70)
+      expect(d.bornFromYear, 'the flat-8% cohort floor — pre-1943 must fail loud, never default').toBe(1943)
+      // the derived month cap = 70×12 − FRA-months = 36 at FRA 67.
+      expect(d.throughAge * 12 - fraMonthsForBirthYear(1969, 'retirement'), 'derived DRC month cap at FRA67').toBe(36)
+      expect((d.ratePerMonth.numerator / d.ratePerMonth.denominator / 100) * 36, '+24% at 70/FRA67').toBeCloseTo(0.24, 10)
+    })
+
+    it('the survivor reduction holds 28.5% (→ .715 floor) from age 60 (50 disabled)', () => {
+      const sr = socialSecurityConstants.survivorReduction.value
+      expect(sr.earliestAge).toBe(60)
+      expect(sr.disabledEarliestAge).toBe(50)
+      expect(sr.maxReductionPct, '28.5% max → 71.5% floor').toBe(0.285)
+      expect(1 - sr.maxReductionPct).toBeCloseTo(0.715, 10)
+    })
+
+    it('RIB-LIM is the 82.5%-of-death-PIA floor; the POMS example reproduces ($374.90 → $309.29 raw)', () => {
+      const r = socialSecurityConstants.ribLim.value
+      expect(r.floorPctOfDeathPia).toBe(0.825)
+      expect(r.floorPctOfDeathPia * 374.9, 'POMS RS 00615.320 example, pre-dime-round').toBeCloseTo(309.2925, 4)
+    })
+
+    it('the spousal rate is 50% of PIA and carries the reVerifyEveryBuild watch (the 50→33% proposal)', () => {
+      expect(socialSecurityConstants.spousalRate.value).toBe(0.5)
+      expect(
+        socialSecurityConstants.spousalRate.reVerifyEveryBuild,
+        'the unenacted 50→33% phase-down must be caught at build',
+      ).toBe(true)
+    })
+
+    it('the deemed-filing cutoff is DOB ≥ Jan 2, 1954 (both cohorts fully subject)', () => {
+      expect(socialSecurityConstants.deemedFilingDobCutoff.value).toEqual({ year: 1954, month: 1, day: 2 })
+    })
+
+    it('provenance split: POMS byte-pulled factors are PINNED; the grounding-confirmed FRA tables stay directional', () => {
+      for (const key of [
+        'workerReduction',
+        'spouseReduction',
+        'delayedRetirementCredit',
+        'survivorReduction',
+        'ribLim',
+        'spousalRate',
+        'deemedFilingDobCutoff',
+      ] as const) {
+        expect(socialSecurityConstants[key].directionalUntilPinned, `${key} POMS-pinned`).toBe(false)
+      }
+      expect(socialSecurityConstants.fullRetirementAge.directionalUntilPinned, 'FRA grounding-confirmed').toBe(true)
+      expect(socialSecurityConstants.survivorFullRetirementAge.directionalUntilPinned).toBe(true)
+    })
+
+    it('the citation LANDMINE corrections are baked in (RS .101 live + .102-is-dead flagged; deemed filing GN 00204.035)', () => {
+      expect(socialSecurityConstants.workerReduction.citation, 'cite the live .101').toMatch(/00615\.101/)
+      expect(socialSecurityConstants.workerReduction.citation, 'flag .102 as the dead 404').toMatch(/00615\.102 is a DEAD 404/)
+      expect(socialSecurityConstants.deemedFilingDobCutoff.citation, 'the RULE is GN 00204.035').toMatch(/GN 00204\.035/)
     })
   })
 

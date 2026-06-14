@@ -1,0 +1,23 @@
+/*
+ * App-shell surfaces that live OUTSIDE the intake column (src/ui). The intake owns its own
+ * layout (src/intake/intake.css); this is the quiet frame around it. Reads tokens.css var()s
+ * only (the canonical-source rule) — no raw values.
+ */
+
+/* R13 honest-limits disclaimer. Quiet fine print, aligned to the SAME centered content column
+ * as the intake, with a hairline to seat it as a footer. (Was an unstyled <footer><p> that
+ * inherited the body-size global p and sat flush to the viewport edge — hence the shouty,
+ * edge-hugging wrap the cold-read caught.) */
+.disclaimer {
+  width: min(100%, calc(var(--measure) + 2 * var(--gutter)));
+  margin-inline: auto;
+  margin-block-start: var(--space-8);
+  padding: var(--space-6) var(--gutter) var(--space-9);
+  border-top: 1px solid var(--line-soft);
+}
+
+.disclaimer p {
+  font-size: var(--text-xs);
+  line-height: var(--leading-body);
+  color: var(--ink-muted);
+}

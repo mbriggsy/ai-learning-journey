@@ -39,7 +39,14 @@ function MissingList({ missing }: { missing: readonly MissingFact[] }) {
   return (
     <>
       <p className="strip-secondary">
-        {copy.answerStillNeeded} {shown.join(' · ')}
+        {copy.answerStillNeeded}{' '}
+        {/* each fact is an ATOMIC unit (nowrap) so a range like "(62–70)" never splits at
+            the en-dash; the list wraps BETWEEN facts at the middot separator (CSS ::before). */}
+        {shown.map((name) => (
+          <span className="strip-fact" key={name}>
+            {name}
+          </span>
+        ))}
         {names.length > shown.length ? ` (+${names.length - shown.length})` : ''}
       </p>
       <p className="strip-tertiary">{copy.answerNoSynthesis}</p>

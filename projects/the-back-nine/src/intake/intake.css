@@ -94,6 +94,18 @@
   margin-block-start: var(--space-1);
 }
 
+/* Each "still needed" fact is an atomic unit: it never splits mid-token (the claim-age range
+ * "(62–70)" was breaking at the en-dash). The list wraps BETWEEN facts at the middot, which is
+ * a CSS-generated separator (keeps it out of the copy catalog) and a normal break opportunity. */
+.strip-fact {
+  white-space: nowrap;
+}
+
+.strip-fact + .strip-fact::before {
+  content: ' · ';
+  white-space: normal;
+}
+
 .strip-tertiary {
   font-size: var(--text-xs);
   color: var(--ink-muted);
@@ -524,6 +536,19 @@
 .cold-start-preflight p {
   font-size: var(--text-sm);
   color: var(--ink-muted);
+}
+
+/* External-resource links (the ACA quote, the SS statement) — quiet, beneath the copy/fields
+ * they support. The lead-in ("Get a quote:") is muted; the links inherit the brand link color
+ * from base.css. The ↗ is a decorative new-tab cue (the link text is the accessible name). */
+.resource-links {
+  margin-block-start: var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--ink-muted);
+}
+
+.external-link::after {
+  content: ' ↗';
 }
 
 .cold-start .btn-primary {

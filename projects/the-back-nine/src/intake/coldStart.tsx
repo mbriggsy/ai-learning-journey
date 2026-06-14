@@ -1,4 +1,6 @@
 import { copy } from '@ui/copy'
+import { ExternalLink } from './ExternalLink'
+import { EXTERNAL_LINKS } from './links'
 import './intake.css'
 
 /**
@@ -19,6 +21,12 @@ export function ColdStart({ onBegin }: { onBegin: () => void }) {
       <p className="cold-start-orientation">{copy.coldStartOrientation}</p>
       <aside className="cold-start-preflight">
         <p>{copy.coldStartPreflight}</p>
+        <p className="resource-links">
+          {copy.linkGetQuote}{' '}
+          <ExternalLink href={EXTERNAL_LINKS.healthcareGov}>{copy.linkHealthcareGov}</ExternalLink>
+          {' · '}
+          <ExternalLink href={EXTERNAL_LINKS.kffCalculator}>{copy.linkKffCalculator}</ExternalLink>
+        </p>
       </aside>
       <button type="button" className="btn-primary" onClick={onBegin}>
         {copy.coldStartBegin}

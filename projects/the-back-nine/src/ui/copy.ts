@@ -29,8 +29,14 @@ export const copy = {
   coldStartOrientation:
     'A quiet co-pilot for a married couple’s next chapter. About five minutes of questions, answered as honestly as the math.',
   coldStartPreflight:
-    'Handy to have nearby: recent account statements, and a marketplace health-insurance quote for everyone under 65 in the household, at your ages and ZIP (healthcare.gov or the KFF calculator — the benchmark Silver figure and the premium of a plan you’d pick).',
+    'Handy to have nearby: recent account statements, and a marketplace health-insurance quote for everyone under 65 in the household, at your ages and ZIP — the benchmark Silver figure and the premium of a plan you’d pick.',
   coldStartBegin: 'Begin',
+  // --- external resource links (R36: we never fetch these — the user reads the number off the
+  //     site and types it in; each opens in a NEW TAB so the unsaved in-progress intake survives) ---
+  linkGetQuote: 'Get a quote:',
+  linkHealthcareGov: 'healthcare.gov',
+  linkKffCalculator: 'KFF calculator',
+  linkFindSsStatement: 'Find your statement at ssa.gov',
   // --- flow chrome ---
   flowBack: 'Back',
   flowNext: 'Continue',
@@ -57,7 +63,7 @@ export const copy = {
   salaryHelp: 'A steady figure in today’s dollars is enough.',
   qSsHeading: 'Social Security',
   ssAmountLabel: 'Estimated yearly benefit',
-  ssAmountHelp: 'From the ssa.gov statement, in today’s dollars.',
+  ssAmountHelp: 'From your Social Security statement, in today’s dollars.',
   ssClaimLabel: 'Planned claim age (62–70)',
   qSpendHeading: 'What does your life cost?',
   spendLabel: 'Household spending, all in',

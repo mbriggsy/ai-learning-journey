@@ -6,6 +6,8 @@ import { CurrencyField, IntegerField, NameField, SegmentedControl, formatMoney }
 import { FieldError } from './FieldError'
 import { accountField, personField } from './sanity'
 import { AccountEntry, kindLabel } from './AccountEntry'
+import { ExternalLink } from './ExternalLink'
+import { EXTERNAL_LINKS } from './links'
 import type { StepApi, StepDef } from './flow'
 
 /**
@@ -226,32 +228,37 @@ const ssStep: StepDef = {
   headingKey: 'qSsHeading',
   fields: [personField(0, 'socialSecurityClaimAge'), personField(1, 'socialSecurityClaimAge')],
   render: (api) => (
-    <Paired
-      api={api}
-      render={(p, i) => (
-        <>
-          <CurrencyField
-            labelKey="ssAmountLabel"
-            helpKey="ssAmountHelp"
-            field={personField(i, 'socialSecurityReal')}
-            value={p.socialSecurityReal}
-            onCommit={(socialSecurityReal) => updatePerson(api, i, { socialSecurityReal })}
-          />
-          <IntegerField
-            labelKey="ssClaimLabel"
-            field={personField(i, 'socialSecurityClaimAge')}
-            value={p.socialSecurityClaimAge}
-            invalid={api.violationsFor(personField(i, 'socialSecurityClaimAge')).length > 0}
-            onEdit={() => api.clearTouched(personField(i, 'socialSecurityClaimAge'))}
-            onCommit={(socialSecurityClaimAge) => {
-              updatePerson(api, i, { socialSecurityClaimAge })
-              api.commitField(personField(i, 'socialSecurityClaimAge'))
-            }}
-          />
-          {errorsFor(api, personField(i, 'socialSecurityClaimAge'))}
-        </>
-      )}
-    />
+    <>
+      <Paired
+        api={api}
+        render={(p, i) => (
+          <>
+            <CurrencyField
+              labelKey="ssAmountLabel"
+              helpKey="ssAmountHelp"
+              field={personField(i, 'socialSecurityReal')}
+              value={p.socialSecurityReal}
+              onCommit={(socialSecurityReal) => updatePerson(api, i, { socialSecurityReal })}
+            />
+            <IntegerField
+              labelKey="ssClaimLabel"
+              field={personField(i, 'socialSecurityClaimAge')}
+              value={p.socialSecurityClaimAge}
+              invalid={api.violationsFor(personField(i, 'socialSecurityClaimAge')).length > 0}
+              onEdit={() => api.clearTouched(personField(i, 'socialSecurityClaimAge'))}
+              onCommit={(socialSecurityClaimAge) => {
+                updatePerson(api, i, { socialSecurityClaimAge })
+                api.commitField(personField(i, 'socialSecurityClaimAge'))
+              }}
+            />
+            {errorsFor(api, personField(i, 'socialSecurityClaimAge'))}
+          </>
+        )}
+      />
+      <p className="resource-links">
+        <ExternalLink href={EXTERNAL_LINKS.ssaMyAccount}>{copy.linkFindSsStatement}</ExternalLink>
+      </p>
+    </>
   ),
 }
 
@@ -344,6 +351,12 @@ const healthQuoteStep: StepDef = {
           api.update((d) => ({ ...d, health: { ...d.health, slcspMonthlyToday: v } }))
         }
       />
+      <p className="resource-links">
+        {copy.linkGetQuote}{' '}
+        <ExternalLink href={EXTERNAL_LINKS.healthcareGov}>{copy.linkHealthcareGov}</ExternalLink>
+        {' · '}
+        <ExternalLink href={EXTERNAL_LINKS.kffCalculator}>{copy.linkKffCalculator}</ExternalLink>
+      </p>
     </>
   ),
 }

@@ -10,7 +10,7 @@ import { staticDisclosures } from './copy'
  */
 export function Disclaimer() {
   return (
-    <footer>
+    <footer className="disclaimer">
       <p>{staticDisclosures.honestLimits}</p>
     </footer>
   )

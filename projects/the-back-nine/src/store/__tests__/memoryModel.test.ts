@@ -105,8 +105,8 @@ const SPINE_PARAMS: SimulationParams = {
   annualSpendingReal: 40_000,
   stockWeight: 0.6,
   people: [
-    { sex: 'male', currentAge: 65, retirementAge: 65, earnedIncomeReal: 0, socialSecurityReal: 24_000, socialSecurityClaimAge: 67 },
-    { sex: 'female', currentAge: 63, retirementAge: 65, earnedIncomeReal: 0, socialSecurityReal: 18_000, socialSecurityClaimAge: 67 },
+    { sex: 'male', currentAge: 65, birthYear: 1961, retirementAge: 65, earnedIncomeReal: 0, pia: 24_000, socialSecurityClaimAge: 67 },
+    { sex: 'female', currentAge: 63, birthYear: 1963, retirementAge: 65, earnedIncomeReal: 0, pia: 18_000, socialSecurityClaimAge: 67 },
   ],
   survivorSpendingRatio: 0.75,
   drawdownPolicy: 'proportional',

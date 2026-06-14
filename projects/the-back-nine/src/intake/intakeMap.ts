@@ -105,7 +105,7 @@ export function missingRequiredFacts(d: ScenarioDraft): readonly MissingFact[] {
       out.push({ labelKey: 'salaryLabel', personIndex: i })
     if (p.workStatus === 'retired' && p.retirementAge === undefined)
       out.push({ labelKey: 'stopAgeLabel', personIndex: i })
-    if (p.socialSecurityReal === undefined) out.push({ labelKey: 'ssAmountLabel', personIndex: i })
+    if (p.pia === undefined) out.push({ labelKey: 'ssAmountLabel', personIndex: i })
     if (p.socialSecurityClaimAge === undefined)
       out.push({ labelKey: 'ssClaimLabel', personIndex: i })
     if (
@@ -407,10 +407,11 @@ function buildPeople(d: ScenarioDraft): readonly PersonInputs[] {
   return d.people.map((p) => ({
     sex: p.sex!,
     currentAge: p.currentAge!,
+    birthYear: p.birthYear!,
     retirementAge:
       p.workStatus === 'working' ? p.currentAge! + PLACEHOLDER_YEARS_AHEAD : p.retirementAge!,
     earnedIncomeReal: p.earnedIncomeReal!,
-    socialSecurityReal: p.socialSecurityReal!,
+    pia: p.pia!,
     socialSecurityClaimAge: p.socialSecurityClaimAge!,
   }))
 }

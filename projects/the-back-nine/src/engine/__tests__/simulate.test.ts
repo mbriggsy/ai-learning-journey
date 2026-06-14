@@ -9,6 +9,7 @@ import {
   type PersonOffsets,
   type SimOutput,
 } from '@engine/simulate'
+import { householdBenefits } from '@engine/socialSecurityBenefit'
 import { validationMarket } from '@engine/reference/methodology'
 import { sampleCouplePath } from '@engine/longevity'
 import { toRealSeries, rollingSuccessRate } from '@engine/historical'
@@ -24,8 +25,8 @@ import {
 } from '@shared/model'
 
 const MALE_65: PersonInputs = {
-  sex: 'male', currentAge: 65, retirementAge: 65,
-  earnedIncomeReal: 0, socialSecurityReal: 0, socialSecurityClaimAge: 65,
+  sex: 'male', currentAge: 65, birthYear: 1961, retirementAge: 65,
+  earnedIncomeReal: 0, pia: 0, socialSecurityClaimAge: 65,
 }
 const FEMALE_65: PersonInputs = { ...MALE_65, sex: 'female' }
 
@@ -151,7 +152,7 @@ describe('CRN — the draw schedule is dimension-only (contract #1)', () => {
 })
 
 describe('the cash-term seam (bridge + SS step-down)', () => {
-  const retiredClaiming = (ss: number): PersonOffsets => ({ retire: 0, claim: 0, earnedIncomeReal: 0, socialSecurityReal: ss })
+  const retiredClaiming = (ss: number): PersonOffsets => ({ retire: 0, claim: 0, earnedIncomeReal: 0, socialSecurityReal: ss, spousalExcessAnnual: 0 })
   const seamParams = makeParams({ annualSpendingReal: 100, survivorSpendingRatio: 0.75 })
 
   it('both alive + both claiming: SS is the SUM, netted off spending', () => {
@@ -159,20 +160,36 @@ describe('the cash-term seam (bridge + SS step-down)', () => {
     expect(w).toBe(100 - (30 + 20)) // 50
   })
 
-  it('survivor step-down: spending drops to the ratio AND SS becomes the LARGER single benefit', () => {
-    // person 0 died at year 3; at t=5 only person 1 survives.
-    const w = netWithdrawalForYear(5, seamParams, [retiredClaiming(30), retiredClaiming(20)], [3, 50], 30)
-    // spending 100×0.75=75; household SS steps from 50 down to max(30,20)=30 (the survivor keeps the larger).
-    expect(w).toBe(75 - 30) // 45
+  it('survivor step-down: the §202 survivor benefit replaces the old max() — the early-widowhood gap is now FILLED (plan §6)', () => {
+    // The §6 rewrite target: the old assertion paid the survivor $0 until their OWN claim age. A real
+    // 2-person household — deceased (P0) PIA $24k claimed at FRA 67; survivor (P1) age 58, own claim 67.
+    // P0 dies at offset 3 (P1 then 61). At t=5 the survivor (age 63) has NOT reached their own claim
+    // (offset 9) → the OLD model paid $0; the §202 model pays the age-reduced survivor benefit on P0's
+    // record from age 60. survivorStartAge = max(60, 58+3) = 61 → factor 63480/84000 on the deceased's
+    // unreduced $24,000 → $18,136.80/yr (hand-derived from the POMS rules — the early-widowhood floor).
+    const deceased: PersonInputs = { sex: 'male', currentAge: 65, birthYear: 1961, retirementAge: 65, earnedIncomeReal: 0, pia: 24_000, socialSecurityClaimAge: 67 }
+    const survivor: PersonInputs = { sex: 'female', currentAge: 58, birthYear: 1968, retirementAge: 58, earnedIncomeReal: 0, pia: 0, socialSecurityClaimAge: 67 }
+    const p = makeParams({ people: [deceased, survivor], annualSpendingReal: 100_000, survivorSpendingRatio: 0.75 })
+    // offsets mirror simulate's pre-loop (own + excess from householdBenefits); higherClaimOffset = the higher PIA's claim.
+    const b = householdBenefits([deceased, survivor].map((x) => ({ piaAnnual: x.pia, claimAge: x.socialSecurityClaimAge, birthYear: x.birthYear })))
+    const offsets: PersonOffsets[] = [deceased, survivor].map((x, i) => ({
+      retire: x.retirementAge - x.currentAge,
+      claim: x.socialSecurityClaimAge - x.currentAge,
+      earnedIncomeReal: x.earnedIncomeReal,
+      socialSecurityReal: b[i]!.ownAnnual,
+      spousalExcessAnnual: b[i]!.spousalExcessAnnual,
+    }))
+    const cash = cashTermsForYear(5, p, offsets, [3, 50], offsets[0]!.claim)
+    expect(Math.round(cash.ss * 100), 'the §202 survivor benefit at start-age 61 → $18,136.80/yr (old max() paid $0 pre-own-claim)').toBe(1_813_680)
   })
 
   it('the earned-income bridge clamps at zero (income > spending never contributes back)', () => {
-    const working: PersonOffsets = { retire: 10, claim: 0, earnedIncomeReal: 200, socialSecurityReal: 0 }
+    const working: PersonOffsets = { retire: 10, claim: 0, earnedIncomeReal: 200, socialSecurityReal: 0, spousalExcessAnnual: 0 }
     expect(netWithdrawalForYear(2, seamParams, [working], [50], 0)).toBe(0) // max(0, 100−200)
   })
 
   it('never credits a dead earner: income stops at death even before retirement', () => {
-    const workingEarner: PersonOffsets = { retire: 10, claim: 99, earnedIncomeReal: 50, socialSecurityReal: 0 }
+    const workingEarner: PersonOffsets = { retire: 10, claim: 99, earnedIncomeReal: 50, socialSecurityReal: 0, spousalExcessAnnual: 0 }
     // alive at t=2 (death at 3) → income nets: 100−50=50
     expect(netWithdrawalForYear(2, seamParams, [workingEarner], [3], 0)).toBe(50)
     // dead at t=5 (>= death 3) → income gone; lone person dead so survivor-ratio spending, no SS
@@ -193,6 +210,28 @@ describe('the bridge reduces to the spine (income = 0)', () => {
     const a = dist(simulate(makeParams({ people: [working], maxHorizonYears: 35 }), 909))
     const b = dist(simulate(makeParams({ people: [{ ...working, earnedIncomeReal: 0 }], maxHorizonYears: 35 }), 909))
     expect(a.survivalFraction).not.toBe(b.survivalFraction)
+  })
+})
+
+describe('SS sub-engine integration — reduce-to-spine + the nonzero-PIA-at-FRA identity bridge (plan §12)', () => {
+  it('reduce-to-spine: pia=0 (all persons) yields {own:0, excess:0} ⇒ the cash seam adds nothing, the spine is byte-identical', () => {
+    // Two couples that differ ONLY in how "no Social Security" is expressed both reduce to the same
+    // distribution: the sub-engine returns ownAnnual:0 / spousalExcessAnnual:0 for pia=0 (the FRA lookup
+    // runs on the valid birthYear, then the zero short-circuits the cents math), so nothing is summed.
+    const a = dist(simulate(makeParams({ people: [MALE_65, { ...FEMALE_65, currentAge: 63, birthYear: 1963 }], longevityMode: 'sampled', maxHorizonYears: 40 }), 13579))
+    const b = dist(simulate(makeParams({ people: [{ ...MALE_65, pia: 0 }, { ...FEMALE_65, currentAge: 63, birthYear: 1963, pia: 0 }], longevityMode: 'sampled', maxHorizonYears: 40 }), 13579))
+    expect(a.terminalValuesReal).toEqual(b.terminalValuesReal)
+    expect(a.depletionYears).toEqual(b.depletionYears)
+    expect(a.survivalFraction).toBe(b.survivalFraction)
+  })
+
+  it('identity bridge: own benefit claimed AT FRA 67 = the PIA verbatim (factor 1.0, no excess) — the pre-swap socialSecurityReal=$X equivalence', () => {
+    // A nonzero PIA claimed at FRA is the cleanest non-spine identity: factor 1.0 ⇒ the resolved own
+    // benefit equals the entered PIA, so a pia=$30k@67 single earner is byte-identical to a legacy
+    // flat socialSecurityReal=$30k run (the reduction/credit/excess/survivor branches are all inert).
+    const [b] = householdBenefits([{ piaAnnual: 30_000, claimAge: 67, birthYear: 1966 }]) // 1966 → FRA 67
+    expect(b!.ownAnnual, 'own at FRA = PIA, no actuarial adjustment').toBe(30_000)
+    expect(b!.spousalExcessAnnual, 'a single earner is owed no spousal excess').toBe(0)
   })
 })
 
@@ -600,8 +639,8 @@ describe('U2 overlay wired into simulate (M6a)', () => {
       const P = 1_000_000
       const startCalendarYear = 2026
       const seed = 909
-      const MALE_75: PersonInputs = { sex: 'male', currentAge: 75, retirementAge: 75, earnedIncomeReal: 0, socialSecurityReal: 30_000, socialSecurityClaimAge: 75 }
-      const FEMALE_72: PersonInputs = { sex: 'female', currentAge: 72, retirementAge: 72, earnedIncomeReal: 0, socialSecurityReal: 20_000, socialSecurityClaimAge: 72 }
+      const MALE_75: PersonInputs = { sex: 'male', currentAge: 75, birthYear: 1951, retirementAge: 75, earnedIncomeReal: 0, pia: 30_000, socialSecurityClaimAge: 70 }
+      const FEMALE_72: PersonInputs = { sex: 'female', currentAge: 72, birthYear: 1954, retirementAge: 72, earnedIncomeReal: 0, pia: 20_000, socialSecurityClaimAge: 70 }
       const people = [MALE_75, FEMALE_72]
       const conversions = flatN(40, 25_000)
       const params = makeParams({
@@ -624,13 +663,17 @@ describe('U2 overlay wired into simulate (M6a)', () => {
       const horizon = Math.min(path.lastDeathYear, params.maxHorizonYears)
       expect(path.firstDeathYear).toBeLessThan(horizon) // non-vacuous: the flip actually happens
 
-      const offsets: PersonOffsets[] = people.map((p) => ({
+      const benefits = householdBenefits(people.map((p) => ({ piaAnnual: p.pia, claimAge: p.socialSecurityClaimAge, birthYear: p.birthYear })))
+      const offsets: PersonOffsets[] = people.map((p, i) => ({
         retire: p.retirementAge - p.currentAge,
         claim: p.socialSecurityClaimAge - p.currentAge,
         earnedIncomeReal: p.earnedIncomeReal,
-        socialSecurityReal: p.socialSecurityReal,
+        socialSecurityReal: benefits[i]!.ownAnnual,
+        spousalExcessAnnual: benefits[i]!.spousalExcessAnnual,
       }))
-      const maxBenefit = people.reduce((m, p) => Math.max(m, p.socialSecurityReal), 0)
+      let higherIdx = 0
+      for (let i = 1; i < people.length; i++) if (people[i]!.pia > people[higherIdx]!.pia) higherIdx = i
+      const higherClaimOffset = offsets[higherIdx]!.claim
       const logStock = toLogMoments(params.market.stock.mean, params.market.stock.stdDev)
       const logBond = toLogMoments(params.market.bond.mean, params.market.bond.stdDev)
       const rho = params.market.stockBondCorrelation
@@ -651,7 +694,7 @@ describe('U2 overlay wired into simulate (M6a)', () => {
         const zb = rho * zs + sqrt1mRho2 * zbRaw
         realStock.push(simpleReturnFromNormal(logStock, zs))
         realBond.push(simpleReturnFromNormal(logBond, zb))
-        const cash = cashTermsForYear(t, params, offsets, deathOffsets, maxBenefit)
+        const cash = cashTermsForYear(t, params, offsets, deathOffsets, higherClaimOffset)
         withdrawals.push(cash.net)
         ssBenefits.push(cash.ss)
         const living: OverlayPerson[] = []
@@ -986,7 +1029,7 @@ describe('C2 §7 — the working-year zero-withdrawal clamp (presence-gated, dea
       { contributionsByPerson: Array.from({ length: people }, () => ({})) },
     ),
   })
-  const working: PersonOffsets = { retire: 10, claim: 99, earnedIncomeReal: 50, socialSecurityReal: 0 }
+  const working: PersonOffsets = { retire: 10, claim: 99, earnedIncomeReal: 50, socialSecurityReal: 0, spousalExcessAnnual: 0 }
 
   it('a working year with a living worker draws ZERO — even when spending exceeds salary + SS', () => {
     // Construct ABSENT: spending 100 − earned 50 = 50. Construct PRESENT (zero-valued!): the
@@ -1005,8 +1048,8 @@ describe('C2 §7 — the working-year zero-withdrawal clamp (presence-gated, dea
   })
 
   it('a COUPLE stays clamped while ANY living worker remains (the surviving worker covers the household)', () => {
-    const earnerA: PersonOffsets = { retire: 10, claim: 99, earnedIncomeReal: 50, socialSecurityReal: 0 }
-    const earnerB: PersonOffsets = { retire: 8, claim: 99, earnedIncomeReal: 30, socialSecurityReal: 0 }
+    const earnerA: PersonOffsets = { retire: 10, claim: 99, earnedIncomeReal: 50, socialSecurityReal: 0, spousalExcessAnnual: 0 }
+    const earnerB: PersonOffsets = { retire: 8, claim: 99, earnedIncomeReal: 30, socialSecurityReal: 0, spousalExcessAnnual: 0 }
     // A dead at 3, B alive and working at t=5: survivor spending 75 − earned 30 = 45 unclamped;
     // the clamp (a living worker exists) takes it to 0.
     expect(netWithdrawalForYear(5, seamParams, [earnerA, earnerB], [3, 50], 0)).toBe(45)
@@ -1014,7 +1057,7 @@ describe('C2 §7 — the working-year zero-withdrawal clamp (presence-gated, dea
   })
 
   it('an already-retired person (offset ≤ 0) never trips the clamp', () => {
-    const retiredClaiming: PersonOffsets = { retire: 0, claim: 0, earnedIncomeReal: 0, socialSecurityReal: 30 }
+    const retiredClaiming: PersonOffsets = { retire: 0, claim: 0, earnedIncomeReal: 0, socialSecurityReal: 30, spousalExcessAnnual: 0 }
     // No working years exist — the construct is inert and the net is the plain retirement draw.
     expect(netWithdrawalForYear(5, constructed(), [retiredClaiming], [50], 30)).toBe(100 - 30)
   })
@@ -1022,7 +1065,7 @@ describe('C2 §7 — the working-year zero-withdrawal clamp (presence-gated, dea
 
 describe('C2 — the per-path contribution assembly seam (contributionsForYear)', () => {
   const P = (over: Partial<PersonInputs> = {}): PersonInputs => ({ ...MALE_65, currentAge: 55, retirementAge: 65, ...over })
-  const O = (retire: number): PersonOffsets => ({ retire, claim: 99, earnedIncomeReal: 0, socialSecurityReal: 0 })
+  const O = (retire: number): PersonOffsets => ({ retire, claim: 99, earnedIncomeReal: 0, socialSecurityReal: 0, spousalExcessAnnual: 0 })
 
   it('death-truncates PER PERSON: a dead spouse contributes nothing from the death year (two arms)', () => {
     const acc: AccumulationParams = {
@@ -1288,8 +1331,8 @@ describe('C3 — the R19 arms: onset re-key, override coverage, the wage-blind A
   // A still-working 66yo (currentAge 66, stops at 69 — offset 3) with earned income: the
   // latent-shipped-hole household (bridge years inside the IRMAA lookback of their own onset).
   const working66: PersonInputs = {
-    sex: 'male', currentAge: 66, retirementAge: 69,
-    earnedIncomeReal: 50, socialSecurityReal: 0, socialSecurityClaimAge: 70,
+    sex: 'male', currentAge: 66, birthYear: 1960, retirementAge: 69,
+    earnedIncomeReal: 50, pia: 0, socialSecurityClaimAge: 70,
   }
   const overlay66 = (extra: Partial<OverlayParams>): OverlayParams => ({
     taxEnabled: true,
@@ -1485,11 +1528,11 @@ describe('C3 — the R19 arms: onset re-key, override coverage, the wage-blind A
 })
 
 describe('C3 — the onset-threaded HSA contribution zeroing (contributionsForYear)', () => {
-  const offsets: PersonOffsets[] = [{ retire: 3, claim: 10, earnedIncomeReal: 50, socialSecurityReal: 0 }]
+  const offsets: PersonOffsets[] = [{ retire: 3, claim: 10, earnedIncomeReal: 50, socialSecurityReal: 0, spousalExcessAnnual: 0 }]
   const acc: AccumulationParams = { contributionsByPerson: [{ hsa: [100, 100, 100] }] }
   const person: PersonInputs = {
-    sex: 'male', currentAge: 66, retirementAge: 69,
-    earnedIncomeReal: 50, socialSecurityReal: 0, socialSecurityClaimAge: 70,
+    sex: 'male', currentAge: 66, birthYear: 1960, retirementAge: 69,
+    earnedIncomeReal: 50, pia: 0, socialSecurityClaimAge: 70,
   }
 
   it('HSA stays LIVE while working past 65 with a supplied onset (a planted age-keyed zeroing fails)', () => {
@@ -1520,8 +1563,8 @@ describe('C3 — the onset-threaded HSA contribution zeroing (contributionsForYe
       contributionsByPerson: [{ hsa: [10, 10, 10] }, { hsa: [20, 20, 20] }],
     }
     const offsets2: PersonOffsets[] = [
-      { retire: 10, claim: 99, earnedIncomeReal: 50, socialSecurityReal: 0 },
-      { retire: 10, claim: 99, earnedIncomeReal: 50, socialSecurityReal: 0 },
+      { retire: 10, claim: 99, earnedIncomeReal: 50, socialSecurityReal: 0, spousalExcessAnnual: 0 },
+      { retire: 10, claim: 99, earnedIncomeReal: 50, socialSecurityReal: 0, spousalExcessAnnual: 0 },
     ]
     const people2: PersonInputs[] = [person, { ...person, sex: 'female' }]
     // Onsets [3, 1]: at t = 2 person 0 (onset 3) still contributes; person 1 (onset 1) is
@@ -1549,10 +1592,10 @@ describe('M6 — full-stack CRN through simulate (ACA × IRMAA × HSA × survivo
   const P = 1_000_000
   const HSA = 30_000
   const M64: PersonInputs = {
-    sex: 'male', currentAge: 64, retirementAge: 64,
-    earnedIncomeReal: 0, socialSecurityReal: 0, socialSecurityClaimAge: 70,
+    sex: 'male', currentAge: 64, birthYear: 1962, retirementAge: 64,
+    earnedIncomeReal: 0, pia: 0, socialSecurityClaimAge: 70,
   }
-  const F63: PersonInputs = { ...M64, sex: 'female', currentAge: 63 }
+  const F63: PersonInputs = { ...M64, sex: 'female', currentAge: 63, birthYear: 1963 }
   const base = makeParams({
     initialPortfolio: P,
     annualSpendingReal: 60_000,
@@ -1646,10 +1689,10 @@ describe('M6 — full-stack CRN through simulate (ACA × IRMAA × HSA × survivo
 describe('M6 — Distribution.taxAware: the per-path solver surfaces (presence-keyed)', () => {
   const P = 1_000_000
   const M80: PersonInputs = {
-    sex: 'male', currentAge: 80, retirementAge: 80,
-    earnedIncomeReal: 0, socialSecurityReal: 24_000, socialSecurityClaimAge: 70,
+    sex: 'male', currentAge: 80, birthYear: 1946, retirementAge: 80,
+    earnedIncomeReal: 0, pia: 24_000, socialSecurityClaimAge: 70,
   }
-  const F78: PersonInputs = { ...M80, sex: 'female', currentAge: 78, socialSecurityReal: 18_000 }
+  const F78: PersonInputs = { ...M80, sex: 'female', currentAge: 78, birthYear: 1948, pia: 18_000 }
   // ZERO-volatility market: toLogMoments(mean, 0) ⇒ every year's return = mean exactly,
   // independent of the normal draw — so each path is a DETERMINISTIC function of its
   // sampled death years and the test can reconstruct it exactly.
@@ -1719,13 +1762,17 @@ describe('M6 — Distribution.taxAware: the per-path solver surfaces (presence-k
     // can differ from m by an ulp — derive through the same conversion, never the raw mean).
     const rs = simpleReturnFromNormal(toLogMoments(0.03, 0), 0)
     const rb = simpleReturnFromNormal(toLogMoments(0.01, 0), 0)
-    const offsets: PersonOffsets[] = overlayParams.people.map((pp) => ({
+    const benefits = householdBenefits(overlayParams.people.map((pp) => ({ piaAnnual: pp.pia, claimAge: pp.socialSecurityClaimAge, birthYear: pp.birthYear })))
+    const offsets: PersonOffsets[] = overlayParams.people.map((pp, i) => ({
       retire: pp.retirementAge - pp.currentAge,
       claim: pp.socialSecurityClaimAge - pp.currentAge,
       earnedIncomeReal: pp.earnedIncomeReal,
-      socialSecurityReal: pp.socialSecurityReal,
+      socialSecurityReal: benefits[i]!.ownAnnual,
+      spousalExcessAnnual: benefits[i]!.spousalExcessAnnual,
     }))
-    const maxBenefit = Math.max(...overlayParams.people.map((pp) => pp.socialSecurityReal))
+    let higherIdx = 0
+    for (let i = 1; i < overlayParams.people.length; i++) if (overlayParams.people[i]!.pia > overlayParams.people[higherIdx]!.pia) higherIdx = i
+    const higherClaimOffset = offsets[higherIdx]!.claim
     const people: OverlayPerson[] = overlayParams.people.map((pp) => ({ birthYear: 2026 - pp.currentAge }))
     const cfg = {
       taxEnabled: true,
@@ -1742,7 +1789,7 @@ describe('M6 — Distribution.taxAware: the per-path solver surfaces (presence-k
       const ss: number[] = []
       const householdYears: HouseholdYear[] = []
       for (let t = 0; t < horizon; t++) {
-        const cash = cashTermsForYear(t, overlayParams, offsets, [...path.deathYearOffsets], maxBenefit)
+        const cash = cashTermsForYear(t, overlayParams, offsets, [...path.deathYearOffsets], higherClaimOffset)
         withdrawals.push(cash.net)
         ss.push(cash.ss)
         householdYears.push({ living: people.filter((_, i) => t < (path.deathYearOffsets[i] ?? 0)) })
@@ -1809,7 +1856,7 @@ describe('M6 — the typed per-candidate INFEASIBLE sentinel + the engine domain
   const maxSS: SimulationParams = makeParams({
     initialPortfolio: 1_000_000,
     annualSpendingReal: 40_000,
-    people: [{ ...MALE_65, socialSecurityReal: ENGINE_MAX_DOLLAR }],
+    people: [{ ...MALE_65, pia: ENGINE_MAX_DOLLAR, socialSecurityClaimAge: 67 }],
     longevityMode: 'fixed-horizon',
     maxHorizonYears: 3,
     paths: 50,

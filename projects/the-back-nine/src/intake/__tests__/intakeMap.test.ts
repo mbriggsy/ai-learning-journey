@@ -54,7 +54,7 @@ const retiredPerson = (over: Partial<PersonDraft> = {}): PersonDraft => ({
   workStatus: 'retired',
   retirementAge: 63,
   earnedIncomeReal: 0,
-  socialSecurityReal: 24_000,
+  pia: 24_000,
   socialSecurityClaimAge: 67,
   ...over,
 })
@@ -66,7 +66,7 @@ const workingPerson = (over: Partial<PersonDraft> = {}): PersonDraft => ({
   currentAge: 58,
   workStatus: 'working',
   earnedIncomeReal: 150_000,
-  socialSecurityReal: 28_000,
+  pia: 28_000,
   socialSecurityClaimAge: 67,
   ...over,
 })
@@ -76,7 +76,7 @@ const completeSpineDraft = (): ScenarioDraft =>
   base({
     people: [
       retiredPerson(),
-      retiredPerson({ name: 'S', sex: 'female', birthYear: 1963, currentAge: 63, socialSecurityReal: 18_000 }),
+      retiredPerson({ name: 'S', sex: 'female', birthYear: 1963, currentAge: 63, pia: 18_000 }),
     ],
     enteredAccounts: [
       { ownerIndex: 0, kind: '401k', ticker: 'VTI', valueToday: 600_000 },

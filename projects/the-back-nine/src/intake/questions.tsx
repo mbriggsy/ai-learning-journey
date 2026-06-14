@@ -236,9 +236,9 @@ const ssStep: StepDef = {
             <CurrencyField
               labelKey="ssAmountLabel"
               helpKey="ssAmountHelp"
-              field={personField(i, 'socialSecurityReal')}
-              value={p.socialSecurityReal}
-              onCommit={(socialSecurityReal) => updatePerson(api, i, { socialSecurityReal })}
+              field={personField(i, 'pia')}
+              value={p.pia}
+              onCommit={(pia) => updatePerson(api, i, { pia })}
             />
             <IntegerField
               labelKey="ssClaimLabel"

@@ -6,8 +6,8 @@ import { validationMarket } from '@engine/reference/methodology'
 import { NEVER_DEPLETED, type SimulationParams, type PersonInputs } from '@shared/model'
 
 const PERSON: PersonInputs = {
-  sex: 'male', currentAge: 65, retirementAge: 65,
-  earnedIncomeReal: 0, socialSecurityReal: 0, socialSecurityClaimAge: 65,
+  sex: 'male', currentAge: 65, birthYear: 1961, retirementAge: 65,
+  earnedIncomeReal: 0, pia: 0, socialSecurityClaimAge: 65,
 }
 const params: SimulationParams = {
   initialPortfolio: 1000, annualSpendingReal: 45, stockWeight: 0.5, people: [PERSON],
@@ -149,8 +149,8 @@ import type { DateSearchInput } from '@engine/dateSearch'
 import type { OverlayParams } from '@shared/model'
 
 const working66: PersonInputs = {
-  sex: 'male', currentAge: 66, retirementAge: 69,
-  earnedIncomeReal: 90_000, socialSecurityReal: 0, socialSecurityClaimAge: 70,
+  sex: 'male', currentAge: 66, birthYear: 1960, retirementAge: 69,
+  earnedIncomeReal: 90_000, pia: 0, socialSecurityClaimAge: 70,
 }
 const sweepOverlay: OverlayParams = {
   taxEnabled: true,

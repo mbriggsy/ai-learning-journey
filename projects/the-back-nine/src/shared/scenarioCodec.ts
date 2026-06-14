@@ -87,6 +87,11 @@ function needObject(v: unknown, path: string): asserts v is Obj {
   if (!isObj(v)) throw new Corrupt(`${path}: expected an object`)
 }
 
+/** Validates a v1/v2 persisted person = the FROZEN {@link PersonInputsLegacy} shape (carries
+ *  `socialSecurityReal`, never the live `pia`/`birthYear`). KEEP `socialSecurityReal` here — a
+ *  v1/v2 blob never had `pia`; swapping it would mis-validate every legacy blob (plan §10).
+ *  U8 (the first v3 writer) adds a SEPARATE `checkPersonV3` that `needFinite(v,'pia')` +
+ *  `needInteger(v,'birthYear')` on each people[] entry — it does NOT mutate this legacy validator. */
 function checkPerson(v: unknown, path: string): void {
   needObject(v, path)
   needVocab(v, 'sex', SEXES, path)

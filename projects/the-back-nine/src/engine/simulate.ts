@@ -26,6 +26,7 @@ import {
   type YearContribution,
 } from '@engine/taxOverlay'
 import { totalAcrossBuckets } from '@engine/sequencing'
+import { householdBenefits, survivorBenefitAnnual, type BenefitPerson } from '@engine/socialSecurityBenefit'
 import { irmaa } from '@engine/constants'
 import {
   DRAWDOWN_POLICIES,
@@ -141,7 +142,15 @@ export interface PersonOffsets {
   readonly retire: number
   readonly claim: number
   readonly earnedIncomeReal: number
+  /** The claim-age-adjusted OWN Social Security benefit (annual real), resolved pre-loop by the SS
+   *  sub-engine (`householdBenefits().ownAnnual`). The slot name is retained from the pre-`pia`
+   *  scalar; it now holds the DERIVED own benefit, not the entered figure. */
   readonly socialSecurityReal: number
+  /** The Method-C spousal EXCESS (annual real), resolved pre-loop (`householdBenefits().spousalExcessAnnual`).
+   *  0 for the higher earner and for an earner whose own PIA ≥ 50% of the higher PIA. The seam gates its
+   *  START at max(this person's claim, the higher earner's claim) and its END at the first death (it lives
+   *  only in the all-alive branch — once a spouse dies the §202 survivor benefit replaces it; plan §7). */
+  readonly spousalExcessAnnual: number
 }
 
 /**
@@ -160,7 +169,7 @@ export function cashTermsForYear(
   params: SimulationParams,
   offsets: readonly PersonOffsets[],
   deathOffsets: readonly number[],
-  maxBenefit: number,
+  higherClaimOffset: number,
 ): { readonly net: number; readonly ss: number } {
   let aliveCount = 0
   for (let i = 0; i < deathOffsets.length; i++) if (t < (deathOffsets[i] ?? 0)) aliveCount++
@@ -172,7 +181,8 @@ export function cashTermsForYear(
 
   let earned = 0
   let ss = 0
-  let survivorClaimed = false
+  let survivorIdx = -1
+  let deceasedIdx = -1
   let livingWorker = false
   for (let i = 0; i < offsets.length; i++) {
     const o = offsets[i]
@@ -184,17 +194,42 @@ export function cashTermsForYear(
       livingWorker = true
     }
     if (allAlive) {
+      // Own benefit once claimed + the Method-C spousal EXCESS once BOTH the recipient and the higher
+      // earner have filed (start = max(this claim, the higher earner's claim) — RS 00202.001's worker-
+      // must-be-entitled gate). The excess is 0 for the higher earner and for a non-recipient, so adding
+      // it gated is safe. Its END gate is THIS branch: once a spouse dies, `allAlive` is false and the
+      // §202 survivor benefit (below) owns SS — the excess vanishes at the first death, never
+      // double-counting with the survivor stream (plan §7).
       if (alive && t >= o.claim) ss += o.socialSecurityReal
-    } else if (alive && t >= o.claim) {
-      survivorClaimed = true
+      if (alive && t >= Math.max(o.claim, higherClaimOffset)) ss += o.spousalExcessAnnual
+    } else if (alive) {
+      survivorIdx = i
+    } else {
+      deceasedIdx = i
     }
   }
-  // Survivor SS = the LARGER single benefit (the step-down), but ONLY once the survivor reaches their
-  // OWN claim age. MVP simplification: no early §202 survivor benefit on the deceased's record (which a
-  // real widow(er) could claim from age 60) — so the years between the first death and the survivor's
-  // own claim age carry $0 SS. This UNDERSTATES income → larger `net` → a harder horizon: the CONSERVATIVE
-  // direction for the survival floor. `net` and `ss` both use this same figure, so they never disagree.
-  if (!allAlive && aliveCount >= 1) ss = survivorClaimed ? maxBenefit : 0
+  // §202 survivor benefit (plan §6) — replaces the old `$0-until-own-claim` stub. Once one spouse has
+  // died, the survivor each year collects max(their OWN benefit, the survivor benefit on the deceased's
+  // record). The survivor benefit's age-reduction factor is LOCKED at the survivor's age when the stream
+  // starts (max(60, age at the first death)) and held FLAT — it does NOT ramp toward 100% as the survivor
+  // ages (a ramp would optimistically overstate the early-widowhood floor: the cardinal calm-but-wrong
+  // sin). The deceased's DRCs flow through and RIB-LIM caps a deceased who claimed reduced — all inside
+  // `survivorBenefitAnnual`. The spousal excess does NOT carry into widowhood (it ended at the death). The
+  // `aliveCount >= 1` + index guards skip the people-of-one all-dead case (ss stays 0). Computed per-year
+  // but constant once the death offset is fixed (CRN-safe: a pure function of the death timeline + inputs).
+  if (!allAlive && aliveCount >= 1 && survivorIdx >= 0 && deceasedIdx >= 0) {
+    const s = params.people[survivorIdx]
+    const d = params.people[deceasedIdx]
+    const sOff = offsets[survivorIdx]
+    if (s !== undefined && d !== undefined && sOff !== undefined) {
+      const deceased: BenefitPerson = { piaAnnual: d.pia, claimAge: d.socialSecurityClaimAge, birthYear: d.birthYear }
+      const survivorStartAge = Math.max(60, s.currentAge + (deathOffsets[deceasedIdx] ?? 0))
+      const survivorStream = survivorBenefitAnnual(deceased, s.birthYear, survivorStartAge)
+      const survivorEligible = s.currentAge + t >= 60 // the §202 widow(er) benefit is not payable before age 60
+      const ownStream = t >= sOff.claim ? sOff.socialSecurityReal : 0
+      ss = Math.max(ownStream, survivorEligible ? survivorStream : 0)
+    }
+  }
 
   // C2 §7 — the working-year zero-withdrawal clamp, PRESENCE-GATED on the accumulation construct
   // and DEATH-AWARE. While the construct is present AND at least one LIVING person is still working
@@ -233,9 +268,9 @@ export function netWithdrawalForYear(
   params: SimulationParams,
   offsets: readonly PersonOffsets[],
   deathOffsets: readonly number[],
-  maxBenefit: number,
+  higherClaimOffset: number,
 ): number {
-  return cashTermsForYear(t, params, offsets, deathOffsets, maxBenefit).net
+  return cashTermsForYear(t, params, offsets, deathOffsets, higherClaimOffset).net
 }
 
 /**
@@ -363,7 +398,13 @@ export function validateParams(params: SimulationParams): string | null {
   if (params.people.length > 2) return 'more than two people unsupported (the model is a couple)'
   for (const p of params.people) {
     if (!Number.isInteger(p.currentAge) || p.currentAge <= 0) return 'person age invalid (whole years)'
-    if (!finiteNonNeg(p.earnedIncomeReal) || !finiteNonNeg(p.socialSecurityReal)) return 'person income invalid'
+    if (!finiteNonNeg(p.earnedIncomeReal) || !finiteNonNeg(p.pia)) return 'person income invalid'
+    // birthYear keys the SS sub-engine's FRA lookup (`fraMonthsForBirthYear`), called pre-loop
+    // EVEN when pia=0 (the FRA factor is computed before the zero short-circuits) — so a non-finite
+    // / out-of-[1900,2200] / fractional birthYear would make the pre-loop `householdBenefits` THROW
+    // a bare Error (surfaced as a calm-error, misattributing the cause) rather than the contracted
+    // indeterminate output. Number.isInteger rejects NaN/Infinity/fractional FIRST (insight 010).
+    if (!Number.isInteger(p.birthYear) || p.birthYear < 1900 || p.birthYear > 2200) return 'person birthYear invalid (finite integer year)'
     // retirementAge / socialSecurityClaimAge drive the offsets (retire/claim = age − currentAge). A
     // NaN there makes `t < o.retire` / `t >= o.claim` silently FALSE (every comparison with NaN is
     // false, insight 010), so the earned-income bridge AND Social Security would be DROPPED → a larger
@@ -380,6 +421,11 @@ export function validateParams(params: SimulationParams): string | null {
     // integer-ness tightened by the C3 boundary review.)
     if (!Number.isInteger(p.retirementAge)) return 'person retirementAge invalid (whole years)'
     if (!Number.isInteger(p.socialSecurityClaimAge)) return 'person socialSecurityClaimAge invalid (whole years)'
+    // The RIB claim window [62, 70]: the SS sub-engine's `assertClaimAge` THROWS outside it (below 62
+    // the reduction schedule extrapolates to a negative benefit). Gate it HERE (R19 = the cause) so an
+    // out-of-window claim returns the named indeterminate, not a bare pre-loop throw (the sub-engine
+    // assert is the backstop). 62 = earliest RIB eligibility, 70 = the delayed-credit ceiling.
+    if (p.socialSecurityClaimAge < 62 || p.socialSecurityClaimAge > 70) return 'person socialSecurityClaimAge outside the [62, 70] claim window'
     if (p.sex !== 'male' && p.sex !== 'female') return 'person sex invalid'
   }
   for (const m of [params.market.stock, params.market.bond]) {
@@ -719,13 +765,33 @@ export function simulate(params: SimulationParams, seed: number): SimOutput {
   const rho = market.stockBondCorrelation
   const sqrt1mRho2 = Math.sqrt(Math.max(0, 1 - rho * rho))
 
-  const offsets: PersonOffsets[] = people.map((p) => ({
+  // The SS sub-engine resolves each person's actual benefit AMOUNTS from their PIA + claim age + birth
+  // year — own (claim-age-adjusted) + the Method-C spousal excess — ONCE, pre-loop. It depends on NONE
+  // of the date-search-swept fields (the sweep varies only retirementAge → the retire offset; claim
+  // offsets, pia, and birthYear are held verbatim), so it is candidate-invariant and consumes ZERO draws
+  // (CRN-safe). PIA=0 ⇒ {ownAnnual:0, spousalExcessAnnual:0} ⇒ byte-identical to the legacy
+  // socialSecurityReal=0 spine (validated birthYear keeps `fraMonthsForBirthYear` from throwing).
+  const benefitPeople: BenefitPerson[] = people.map((p) => ({
+    piaAnnual: p.pia,
+    claimAge: p.socialSecurityClaimAge,
+    birthYear: p.birthYear,
+  }))
+  const benefits = householdBenefits(benefitPeople)
+  const offsets: PersonOffsets[] = people.map((p, i) => ({
     retire: p.retirementAge - p.currentAge,
     claim: p.socialSecurityClaimAge - p.currentAge,
     earnedIncomeReal: p.earnedIncomeReal,
-    socialSecurityReal: p.socialSecurityReal,
+    socialSecurityReal: benefits[i]?.ownAnnual ?? 0,
+    spousalExcessAnnual: benefits[i]?.spousalExcessAnnual ?? 0,
   }))
-  const maxBenefit = people.reduce((m, p) => Math.max(m, p.socialSecurityReal), 0)
+  // The higher earner's claim offset — the START gate for the spousal excess (the worker must have filed,
+  // RS 00202.001). argmax pia, strict-`>` tie-to-first, mirroring householdBenefits' own `higher` rule (an
+  // equal-PIA tie carries a 0 excess either way, so the tie resolution is immaterial). Pre-loop, candidate-
+  // invariant (pia + claim are not swept). For people-of-one the lone person is its own "higher" and the
+  // excess is 0, so the gate has no effect.
+  let higherIdx = 0
+  for (let i = 1; i < people.length; i++) if ((people[i]?.pia ?? 0) > (people[higherIdx]?.pia ?? 0)) higherIdx = i
+  const higherClaimOffset = offsets[higherIdx]?.claim ?? 0
   const longevityPeople: LongevityPerson[] = people.map((p) => ({ sex: p.sex, currentAge: p.currentAge }))
 
   // Tax-and-accounts overlay (U2 · M6a) setup, computed once. `overlayPeople[i]` carries each
@@ -827,7 +893,7 @@ export function simulate(params: SimulationParams, seed: number): SimOutput {
       const zb = rho * zs + sqrt1mRho2 * zbRaw
       realStock.push(simpleReturnFromNormal(logStock, zs))
       realBond.push(simpleReturnFromNormal(logBond, zb))
-      const cash = cashTermsForYear(t, params, offsets, deathOffsets, maxBenefit)
+      const cash = cashTermsForYear(t, params, offsets, deathOffsets, higherClaimOffset)
       withdrawals.push(cash.net)
       if (overlay) {
         ssBenefits.push(cash.ss)

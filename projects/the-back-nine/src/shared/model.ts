@@ -91,15 +91,40 @@ export interface PersonInputs {
   readonly sex: Sex
   /** Whole-year age at simulation year 0. */
   readonly currentAge: number
+  /** Birth year — keys the Social Security FRA lookup the SS sub-engine needs EVEN when `pia`
+   *  is 0 (the FRA factor is computed before the zero short-circuits, so a spine run still needs
+   *  a valid year). Previously derived only from `overlay.startCalendarYear` (absent on a spine
+   *  run); now a first-class per-person input so the sub-engine is total. The intake sanity layer
+   *  owns the `currentAge === startCalendarYear − birthYear` invariant. */
+  readonly birthYear: number
   /** Whole-year age at which this person's earned income stops (retirement). */
   readonly retirementAge: number
   /** Flat real earned income per year while working ([year0, min(retirement, death))).
    *  0 disables the bridge for this person (part of the reduce-to-spine condition). */
   readonly earnedIncomeReal: number
-  /** Annual real Social Security benefit once claimed (joint→survivor keeps the
-   *  larger of the two on the first death). MVP-minimal: a flat real figure. */
+  /** Annual real Primary Insurance Amount — the benefit at full retirement age (67) off the SSA
+   *  statement, stored ×12 from the monthly entry. The SS sub-engine (`socialSecurityBenefit.ts`)
+   *  derives the actual claim-age-adjusted own + Method-C spousal + §202 survivor benefit from it.
+   *  0 disables SS for this person (the reduce-to-spine zero — plan §1/§7). */
+  readonly pia: number
+  /** Whole-year age at which this person's Social Security begins — the claim age the sub-engine
+   *  applies the actuarial reduction/credit against (bounded [62, 70] at the R19 gate). */
+  readonly socialSecurityClaimAge: number
+}
+
+/** The FROZEN v1/v2 persisted person shape — carries the pre-swap, already-claim-adjusted
+ *  `socialSecurityReal` scalar (NOT `pia`, NOT `birthYear`: a v1/v2 blob never had them). The live
+ *  {@link PersonInputs} now carries `pia` + `birthYear`; `Scenario`(v1) and {@link ScenarioV2}
+ *  reference THIS legacy shape so dropping `socialSecurityReal` from the base does not strip it from
+ *  the persisted v1/v2 type shapes (plan §10). No v1/v2 blobs exist in the wild yet (save/load is
+ *  unbuilt), so this is pure type/codec hygiene — do NOT extend `PersonInputs` (the SS field differs)
+ *  and do NOT add `pia`/`birthYear` here. */
+export interface PersonInputsLegacy {
+  readonly sex: Sex
+  readonly currentAge: number
+  readonly retirementAge: number
+  readonly earnedIncomeReal: number
   readonly socialSecurityReal: number
-  /** Whole-year age at which this person's Social Security begins. */
   readonly socialSecurityClaimAge: number
 }
 
@@ -509,7 +534,10 @@ export interface Scenario {
   readonly initialPortfolio: number
   readonly annualSpendingReal: number
   readonly stockWeight: number
-  readonly people: readonly PersonInputs[]
+  /** Frozen legacy person shape (carries `socialSecurityReal`, never the live `pia`) — see
+   *  {@link PersonInputsLegacy}. The live engine swap to `pia` does not retroactively reshape a
+   *  persisted v1 blob. */
+  readonly people: readonly PersonInputsLegacy[]
   readonly survivorSpendingRatio: number
   readonly drawdownPolicy: DrawdownPolicy
   /** The injected 32-bit seed, persisted as a first-class field so a reopened plan
@@ -679,7 +707,9 @@ export interface ScenarioV2 {
   readonly initialPortfolio: number
   readonly annualSpendingReal: number
   readonly stockWeight: number
-  readonly people: readonly PersonInputs[]
+  /** Frozen legacy person shape ({@link PersonInputsLegacy}) — v2 shares the v1 person; the live
+   *  swap to `pia` rides only the base `PersonInputs`/`PersonInputsV3`, never the persisted v1/v2. */
+  readonly people: readonly PersonInputsLegacy[]
   readonly survivorSpendingRatio: number
   readonly drawdownPolicy: DrawdownPolicy
   readonly seed: number
@@ -731,17 +761,15 @@ export interface ScenarioV2 {
 export const WORK_STATUSES = ['working', 'retired'] as const
 export type WorkStatus = (typeof WORK_STATUSES)[number]
 
-/** Per-person intake identity over the v1 spine person. `currentAge` (inherited)
- *  is derived once at entry from DOB → `birthYear` against `startCalendarYear`
- *  (whole-year convention — the same ±1yr birth-month approximation
- *  `PersonAccounts.birthYear` documents); the intake sanity layer owns the
- *  `currentAge === startCalendarYear − birthYear` invariant. `birthYear` also
- *  feeds the per-person mortality-cohort keying (P1-exit forward item — the SSA
- *  snapshot holds every cohort, no re-fetch). */
+/** Per-person intake identity over the spine person. `currentAge` is derived once at entry from
+ *  DOB → `birthYear` against `startCalendarYear` (whole-year convention — the same ±1yr birth-month
+ *  approximation `PersonAccounts.birthYear` documents); the intake sanity layer owns the
+ *  `currentAge === startCalendarYear − birthYear` invariant. `birthYear` is inherited from the base
+ *  {@link PersonInputs} now (it keys the SS FRA lookup + the per-person mortality cohort) — it is no
+ *  longer re-declared here (single-source on the base). */
 export interface PersonInputsV3 extends PersonInputs {
   /** Display name for the paired two-person screens (PII — encrypted at rest, R39). */
   readonly name: string
-  readonly birthYear: number
   readonly workStatus: WorkStatus
 }
 

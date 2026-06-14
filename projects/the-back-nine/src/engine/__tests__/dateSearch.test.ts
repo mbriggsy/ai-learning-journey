@@ -40,12 +40,12 @@ import type { OverlayParams, PersonInputs, SimulationParams } from '@shared/mode
  *  entered retirement ages (the per-person mapping must override the asymmetry for the
  *  projection, not silently retain it). */
 const A55: PersonInputs = {
-  sex: 'male', currentAge: 55, retirementAge: 60,
-  earnedIncomeReal: 90_000, socialSecurityReal: 0, socialSecurityClaimAge: 70,
+  sex: 'male', currentAge: 55, birthYear: 1971, retirementAge: 60,
+  earnedIncomeReal: 90_000, pia: 0, socialSecurityClaimAge: 70,
 }
 const B58: PersonInputs = {
-  sex: 'female', currentAge: 58, retirementAge: 63,
-  earnedIncomeReal: 70_000, socialSecurityReal: 0, socialSecurityClaimAge: 70,
+  sex: 'female', currentAge: 58, birthYear: 1968, retirementAge: 63,
+  earnedIncomeReal: 70_000, pia: 0, socialSecurityClaimAge: 70,
 }
 
 /** Age-anchored entered schedules covering the couple's pre-65 sim-years (A's window can

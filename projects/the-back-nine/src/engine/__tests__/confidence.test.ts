@@ -6,8 +6,8 @@ import { type Distribution, type SimulationParams, type PersonInputs } from '@sh
 import type { SimOutput } from '@engine/simulate'
 
 const PERSON: PersonInputs = {
-  sex: 'male', currentAge: 65, retirementAge: 65,
-  earnedIncomeReal: 0, socialSecurityReal: 0, socialSecurityClaimAge: 65,
+  sex: 'male', currentAge: 65, birthYear: 1961, retirementAge: 65,
+  earnedIncomeReal: 0, pia: 0, socialSecurityClaimAge: 65,
 }
 const params: SimulationParams = {
   initialPortfolio: 1000, annualSpendingReal: 48, stockWeight: 0.5, people: [PERSON],

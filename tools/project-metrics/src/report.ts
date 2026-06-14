@@ -139,7 +139,10 @@ export async function buildProjectReport(opts: BuildReportOptions): Promise<Proj
     const metricMatch = hookValue.match(/^metric:(\w+)$/);
     if (metricMatch) {
       const key = metricMatch[1]!;
-      if (key in metrics) hookValue = String(metrics[key]);
+      // Thousands-separated so a live metric hero number renders "86,561", not "86561".
+      // Only metric-resolved values are formatted; authored literals (e.g. "2-10", "ADF+UC")
+      // pass through untouched since they never reach this branch.
+      if (key in metrics) hookValue = metrics[key]!.toLocaleString('en-US');
       else warnings.push(`editorial.hookStat references unknown metric '${key}' — left as-is.`);
     }
     // Fresh literal so a cached config-load object is never mutated in place.

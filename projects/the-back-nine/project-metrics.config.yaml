@@ -1,0 +1,10 @@
+# project-metrics per-project config — editorial for the ai-journey-stats showcase site.
+editorial:
+  oneLiner: "The fuck-off date — computed."
+  hookStat:
+    label: "LINES AUTHORED"
+    value: "metric:authoredLines" # resolves live each refresh; comma-formatted hero number
+  liveUrl: null
+  repoUrl: "https://github.com/mbriggsy/ai-learning-journey/tree/main/projects/the-back-nine"
+  status: "active"
+  description: "A personal retirement co-pilot: models cohort mortality, income, and drawdown to find the earliest date the math says you can walk away. Over 85,000 lines of test-pinned model in its first eleven days, every input traced to a verified primary."

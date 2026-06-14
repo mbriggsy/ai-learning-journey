@@ -108,7 +108,10 @@ const spousalExcessFactor = (claimAge: number, birthYear: number): Factor => {
 
 /** Apply a benefit factor to an annual PIA and return the annual benefit, with the
  *  SSA MONTHLY dime-round (down to the next lower $0.10, POMS RS 00615.101) done in
- *  exact INTEGER CENTS, then ×12. Floors at 0; throws on a non-finite/negative input. */
+ *  exact INTEGER CENTS, then ×12. Throws on a non-finite/negative piaAnnual. The result
+ *  is never negative: every caller passes a NON-negative factor (claim ages are
+ *  domain-guarded to the [62, 70] RIB window, the spousal excess is pre-floored at 0, and
+ *  the survivor/RIB-LIM factors are ≥ 0). */
 const applyFactorAnnual = (piaAnnual: number, factor: Factor): number => {
   if (!Number.isFinite(piaAnnual) || piaAnnual < 0) {
     throw new Error(`[ssBenefit] piaAnnual must be a finite non-negative real dollar amount (got ${piaAnnual})`)
@@ -119,10 +122,31 @@ const applyFactorAnnual = (piaAnnual: number, factor: Factor): number => {
   return (monthlyDimeCents * 12) / 100
 }
 
+/** The statutory RIB claim window: earliest eligibility 62 (42 U.S.C. §402(a)) through the
+ *  delayed-credit ceiling (`delayedRetirementCredit.throughAge` = 70, single-sourced). A claim
+ *  age OUTSIDE it fails loud — below 62 the two-segment reduction extrapolates UNBOUNDED (a deep
+ *  pre-62 age drives the factor numerator negative → a NEGATIVE benefit dollar, the cardinal
+ *  calm-but-wrong direction), and no credit accrues past 70. Finite / INTEGER / range triad,
+ *  mirroring `fraMonthsForBirthYear` + `catchUpForAge` (insights 010/020; burned/062 — a NaN
+ *  passes every relational guard, so finiteness is checked FIRST). */
+const EARLIEST_CLAIM_AGE = 62 // 42 U.S.C. §402(a) — earliest RIB eligibility
+const assertClaimAge = (claimAge: number): void => {
+  const latest = delayedRetirementCredit.value.throughAge
+  if (!Number.isFinite(claimAge) || !Number.isInteger(claimAge) || claimAge < EARLIEST_CLAIM_AGE || claimAge > latest) {
+    throw new Error(
+      `[ssBenefit] claimAge must be a finite INTEGER in [${EARLIEST_CLAIM_AGE}, ${latest}] (the RIB claim window; got ${claimAge}) — outside it the reduction schedule extrapolates to a negative benefit (insights 010/020; burned/062)`,
+    )
+  }
+}
+
 /** A worker's own claim-age-adjusted ANNUAL benefit (no spousal). PIA=0 ⇒ 0 (the
- *  reduce-to-spine zero). */
-export const adjustOwnBenefitAnnual = (piaAnnual: number, claimAge: number, birthYear: number): number =>
-  applyFactorAnnual(piaAnnual, ownFactor(claimAge, birthYear))
+ *  reduce-to-spine zero). `adjustOwnBenefitAnnual` is the claim-age CHOKEPOINT — every own and
+ *  spousal claim age (household, single-person, and the survivor's deceased) routes through it,
+ *  so the one `assertClaimAge` here guards them all. */
+export const adjustOwnBenefitAnnual = (piaAnnual: number, claimAge: number, birthYear: number): number => {
+  assertClaimAge(claimAge)
+  return applyFactorAnnual(piaAnnual, ownFactor(claimAge, birthYear))
+}
 
 const assertFinite = (x: number, label: string): void => {
   if (!Number.isFinite(x)) throw new Error(`[ssBenefit] ${label} must be finite (got ${x}) — insight 010`)
@@ -143,9 +167,13 @@ const assertFinite = (x: number, label: string): void => {
  */
 export const householdBenefits = (people: readonly BenefitPerson[]): readonly PersonBenefit[] => {
   if (people.length === 0) return []
+  if (people.length > 2)
+    throw new Error(
+      `[ssBenefit] householdBenefits serves a couple (≤ 2 people); got ${people.length} — a 3+-person array would credit multiple simultaneous spousal excesses on the single highest record (physically impossible). Fail loud, never a silent multi-spousal household (burned/062).`,
+    )
   people.forEach((p, i) => {
     assertFinite(p.piaAnnual, `people[${i}].piaAnnual`)
-    assertFinite(p.claimAge, `people[${i}].claimAge`)
+    assertClaimAge(p.claimAge)
     if (p.piaAnnual < 0) throw new Error(`[ssBenefit] people[${i}].piaAnnual must be ≥ 0 (got ${p.piaAnnual})`)
   })
   // The higher earner (spousal is paid on THEIR record). Ties resolve to the first —
@@ -186,7 +214,9 @@ export const survivorBenefitAnnual = (
   survivorStartAge: number,
 ): number => {
   assertFinite(deceased.piaAnnual, 'deceased.piaAnnual')
-  assertFinite(survivorStartAge, 'survivorStartAge')
+  assertClaimAge(deceased.claimAge) // closes the silent-NaN leak: a NaN claimedEarly comparison (:193) would otherwise pass
+  if (!Number.isFinite(survivorStartAge) || !Number.isInteger(survivorStartAge))
+    throw new Error(`[ssBenefit] survivorStartAge must be a finite whole year (got ${survivorStartAge}) — insights 010/020`)
   if (deceased.piaAnnual < 0) throw new Error(`[ssBenefit] deceased.piaAnnual must be ≥ 0 (got ${deceased.piaAnnual})`)
 
   const deceasedAdjusted = adjustOwnBenefitAnnual(deceased.piaAnnual, deceased.claimAge, deceased.birthYear)

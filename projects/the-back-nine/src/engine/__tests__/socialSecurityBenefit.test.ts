@@ -142,4 +142,67 @@ describe('SS benefit sub-engine — survivor §202 (POMS RS 00615.301/.320, RIB-
   it('reduce-to-spine: a deceased with PIA 0 yields a survivor benefit of 0', () => {
     expect(survivorBenefitAnnual(dec(0, 62), BY, 60)).toBe(0)
   })
+
+  it("survivor-FRA is keyed to the SURVIVOR's birth year, never aliased to retirement-FRA (the separate-table anti-alias)", () => {
+    // Survivor born 1956: survivor-FRA = 792mo (66y0m), but retirement-FRA(1956) = 796mo (66y4m) — they DIVERGE.
+    // Deceased claimed at FRA 67 → full $1,000, no RIB-LIM. At start age 66 (792mo) the survivor is AT survivor-FRA
+    // → 100% → $1,000/mo. An alias to retirement-FRA (796) would make 792 < FRA → a ~1.5% age reduction (≈$985/mo).
+    // This golden fails if survivorBenefitAnnual ever reads the retirement table for the survivor's age.
+    expect(cents(survivorBenefitAnnual(dec(1000, 67), 1956, 66)), '100% at survivor-FRA 66y0m → $1,000/mo').toBe(cents(annual(1000)))
+  })
+})
+
+describe('SS benefit sub-engine — entry guards (fail loud; never a silent NaN or a negative benefit dollar)', () => {
+  it('a non-finite claim age THROWS at every entry — a NaN would otherwise pass every relational guard and leak a silent NaN benefit (insights 008/010)', () => {
+    expect(() => adjustOwnBenefitAnnual(annual(1000), NaN, BY)).toThrow(/claimAge/)
+    expect(() => adjustOwnBenefitAnnual(annual(1000), Infinity, BY)).toThrow(/claimAge/)
+    expect(() => householdBenefits([{ piaAnnual: annual(1000), claimAge: NaN, birthYear: BY }])).toThrow(/claimAge/)
+    // The survivor path is the subtle one: a NaN deceased.claimAge made `claimedEarly` false and, at/after
+    // survivor-FRA, returned survivorFull = NaN with NO throw. The entry guard now closes it.
+    expect(() => survivorBenefitAnnual({ piaAnnual: annual(1000), claimAge: NaN, birthYear: BY }, BY, 67)).toThrow(/claimAge/)
+  })
+
+  it('an out-of-window claim age THROWS — below 62 the reduction extrapolates UNBOUNDED to a NEGATIVE benefit (pre-fix: claim 47 → −$600/yr)', () => {
+    expect(() => adjustOwnBenefitAnnual(annual(1000), 47, BY)).toThrow(/\[62, 70\]/)
+    expect(() => adjustOwnBenefitAnnual(annual(1000), 61, BY)).toThrow(/\[62, 70\]/)
+    expect(() => adjustOwnBenefitAnnual(annual(1000), 71, BY)).toThrow(/\[62, 70\]/)
+  })
+
+  it('a non-integer claim age THROWS — claim ages are whole years (the EXACTNESS invariant needs an integer month count)', () => {
+    expect(() => adjustOwnBenefitAnnual(annual(1000), 62.5, BY)).toThrow(/INTEGER/)
+  })
+
+  it('a negative PIA THROWS — never a floored $0 that masks bad input (burned/062)', () => {
+    expect(() => adjustOwnBenefitAnnual(-1, 67, BY)).toThrow()
+    expect(() => householdBenefits([{ piaAnnual: -1, claimAge: 67, birthYear: BY }])).toThrow()
+  })
+
+  it('a 3+-person household THROWS — it would credit multiple simultaneous spousal excesses on one record; couple (2) and people-of-one (1) still serve', () => {
+    expect(() =>
+      householdBenefits([
+        { piaAnnual: annual(1000), claimAge: 64, birthYear: BY },
+        { piaAnnual: annual(3000), claimAge: 67, birthYear: BY },
+        { piaAnnual: annual(800), claimAge: 64, birthYear: BY },
+      ]),
+    ).toThrow(/≤ 2|couple/)
+    expect(householdBenefits([{ piaAnnual: annual(1500), claimAge: 62, birthYear: BY }])).toHaveLength(1)
+  })
+
+  it('a non-integer survivorStartAge THROWS (whole-year ages)', () => {
+    expect(() => survivorBenefitAnnual({ piaAnnual: annual(1000), claimAge: 67, birthYear: BY }, BY, 66.5)).toThrow(/whole year/)
+  })
+})
+
+describe('SS benefit sub-engine — non-FRA-67 cohorts (the graduated-FRA band + the DERIVED DRC month cap, NEVER a literal 36 — plan §3 landmine)', () => {
+  // 1958-born → retirement-FRA 66y8m = 800 months. Values HAND-DERIVED from the POMS month-count rules (DND/012),
+  // never from the engine. These two goldens are the only coverage of the graduated-FRA table + the derived cap.
+  const BY58 = 1958
+  it('delayed-to-70 at FRA 66y8m: the DRC cap is 40 months (840−800), NOT 36 → 1.26667× ; a literal-36 cap would under-credit to 1.24×', () => {
+    // 40 increment months × 2/3 of 1% = +26.667% → $1,266.66… → dime-floor DOWN → $1,266.60/mo.
+    expect(Math.round(adjustOwnBenefitAnnual(annual(1000), 70, BY58) * 100), '$1,266.60/mo × 12').toBe(126_660 * 12)
+    expect(adjustOwnBenefitAnnual(annual(1000), 70, BY58), 'NOT the literal-36 regression value $1,240/mo').not.toBe(annual(1240))
+  })
+  it('claim-62 at FRA 66y8m: 56 months early (36×5/9% + 20×5/12% = 28.333%) → 0.71667× → $716.60/mo', () => {
+    expect(Math.round(adjustOwnBenefitAnnual(annual(1000), 62, BY58) * 100), '$716.60/mo × 12').toBe(71_660 * 12)
+  })
 })

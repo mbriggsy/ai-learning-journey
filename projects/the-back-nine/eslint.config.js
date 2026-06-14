@@ -164,4 +164,20 @@ export default tseslint.config(
       ),
     },
   },
+
+  // src/viz/** — colorblind-safe palette + chart primitives: renders from PURE inputs. Imports
+  // only @shared (model / outcome-state types) and within @viz — never up the stack. CLAUDE.md
+  // lists viz among the ESLint-enforced layer boundaries, but no block existed (the same
+  // claimed-but-unenforced gap the D1 review found for store; U6-palette review finding B3).
+  // culori is a devDep imported only by the CVD probe (a test, exempt via TEST_IGNORES).
+  {
+    files: tsGlobs('src/viz'),
+    ignores: TEST_IGNORES,
+    rules: {
+      ...importBan(
+        ['ui', 'store', 'intake', 'budget', 'crypto', 'engine'],
+        'src/viz/ renders from pure inputs: import only @shared (model / outcome-state types) and within @viz; never ui/store/intake/budget/crypto/engine.',
+      ),
+    },
+  },
 )

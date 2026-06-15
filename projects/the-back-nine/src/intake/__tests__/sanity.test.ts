@@ -69,6 +69,21 @@ describe('sanity — SS claim window', () => {
   })
 })
 
+describe('sanity — PIA magnitude ceiling (the 12× monthly-vs-yearly misentry guard)', () => {
+  const touchedPia = new Set([personField(0, 'pia')])
+  const pia = (annual: number) => validateDraft(draft({ pia: annual }), touchedPia)
+  it('fires above the bound: a $2,500/mo benefit ($30k/yr) fat-fingered into the monthly box → stored ×12 = $360k', () => {
+    expect(pia(360_000)).toMatchObject([{ rule: 'pia-over-ceiling', messageKey: 'errPiaCeiling' }])
+  })
+  it('passes a real high earner: the SSA age-70 maximum (~$5,181/mo → ~$62,172/yr) is under the bound', () => {
+    expect(pia(62_172)).toEqual([])
+  })
+  it('boundary: exactly $100,000/yr passes, just above fires', () => {
+    expect(pia(100_000)).toEqual([])
+    expect(pia(100_001)).toMatchObject([{ rule: 'pia-over-ceiling' }])
+  })
+})
+
 describe('sanity — survivor ratio ceiling', () => {
   it('>100% fires / exactly 100% passes', () => {
     expect(

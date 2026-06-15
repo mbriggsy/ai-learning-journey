@@ -226,31 +226,65 @@ const incomeStep: StepDef = {
 const ssStep: StepDef = {
   id: 'social-security',
   headingKey: 'qSsHeading',
-  fields: [personField(0, 'socialSecurityClaimAge'), personField(1, 'socialSecurityClaimAge')],
+  // pia is listed so the PIA-ceiling rule (the 12× monthly-vs-yearly misentry
+  // guard) gates advance alongside the claim window.
+  fields: [
+    personField(0, 'pia'),
+    personField(1, 'pia'),
+    personField(0, 'socialSecurityClaimAge'),
+    personField(1, 'socialSecurityClaimAge'),
+  ],
   render: (api) => (
     <>
       <Paired
         api={api}
         render={(p, i) => (
           <>
+            {/* The statement states a MONTHLY figure; the model stores annual pia,
+                so display pia/12 and commit ×12 (the canonical-period discipline,
+                mirroring spendStep). The PIA-ceiling rule catches a yearly figure
+                fat-fingered into the monthly field. */}
             <CurrencyField
               labelKey="ssAmountLabel"
               helpKey="ssAmountHelp"
               field={personField(i, 'pia')}
-              value={p.pia}
-              onCommit={(pia) => updatePerson(api, i, { pia })}
+              value={p.pia === undefined ? undefined : p.pia / 12}
+              invalid={api.violationsFor(personField(i, 'pia')).length > 0}
+              onEdit={() => api.clearTouched(personField(i, 'pia'))}
+              onCommit={(monthly) => {
+                updatePerson(api, i, { pia: monthly === undefined ? undefined : monthly * 12 })
+                api.commitField(personField(i, 'pia'))
+              }}
             />
+            {errorsFor(api, personField(i, 'pia'))}
+            {/* Claiming is entered as the YEAR you start (concrete + plan-shaped);
+                the model stores the whole-year claim AGE the sub-engine needs, so
+                display birthYear+age and commit year−birthYear. birthYear is asked
+                first (namesStep) and required, so it is present here; if it were
+                somehow absent the field simply can't resolve a year (a named
+                missing fact, never a silent default). */}
             <IntegerField
               labelKey="ssClaimLabel"
+              placeholderKey="ssClaimYearPlaceholder"
               field={personField(i, 'socialSecurityClaimAge')}
-              value={p.socialSecurityClaimAge}
+              value={
+                p.birthYear === undefined || p.socialSecurityClaimAge === undefined
+                  ? undefined
+                  : p.birthYear + p.socialSecurityClaimAge
+              }
               invalid={api.violationsFor(personField(i, 'socialSecurityClaimAge')).length > 0}
               onEdit={() => api.clearTouched(personField(i, 'socialSecurityClaimAge'))}
-              onCommit={(socialSecurityClaimAge) => {
-                updatePerson(api, i, { socialSecurityClaimAge })
+              onCommit={(year) => {
+                updatePerson(api, i, {
+                  socialSecurityClaimAge:
+                    year === undefined || p.birthYear === undefined ? undefined : year - p.birthYear,
+                })
                 api.commitField(personField(i, 'socialSecurityClaimAge'))
               }}
             />
+            {p.birthYear !== undefined && p.socialSecurityClaimAge !== undefined && (
+              <p className="field-help">{slots.ssClaimAge(p.socialSecurityClaimAge)}</p>
+            )}
             {errorsFor(api, personField(i, 'socialSecurityClaimAge'))}
           </>
         )}

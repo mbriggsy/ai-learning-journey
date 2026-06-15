@@ -7,7 +7,7 @@ import { intakeSteps } from '../questions'
 import { IntakeFlow } from '../flow'
 import { createMemoryModel, type MemoryModel, type ScenarioDraft } from '@store/memoryModel'
 import type { EngineClient } from '@store/engineClient'
-import { copy } from '@ui/copy'
+import { copy, slots } from '@ui/copy'
 
 /**
  * The preamble integration battery (D1 slice (c)): conditional step gates, the
@@ -227,6 +227,88 @@ describe('the spend step — period discipline (R19)', () => {
     fireEvent.blur(spend)
     fireEvent.click(screen.getByRole('button', { name: copy.flowNext }))
     expect(heading()).not.toBe(copy.qSpendHeading)
+  })
+})
+
+describe('the Social Security step — monthly PIA + claim-YEAR (the integration-review reframe)', () => {
+  const retiredCouple = (m: MemoryModel, p0: Partial<ScenarioDraft['people'][0]> = {}) =>
+    m.update((d) => ({
+      ...d,
+      people: [
+        { ...d.people[0], workStatus: 'retired', currentAge: 65, birthYear: 1961, ...p0 },
+        { ...d.people[1], workStatus: 'retired', currentAge: 65, birthYear: 1961 },
+      ],
+    }))
+  function reachSs(m: MemoryModel) {
+    render(<Harness model={m} />)
+    fireEvent.click(screen.getByRole('button', { name: copy.flowNext })) // names → work
+    fireEvent.click(screen.getByRole('button', { name: copy.flowNext })) // work → social-security
+    expect(heading()).toBe(copy.qSsHeading)
+  }
+
+  it('PIA: a MONTHLY entry stores the canonical annual (×12) the engine reads', () => {
+    const m = freshModel()
+    retiredCouple(m)
+    reachSs(m)
+    const pia = screen.getAllByLabelText(copy.ssAmountLabel)[0]!
+    fireEvent.focus(pia)
+    fireEvent.change(pia, { target: { value: '2500' } })
+    fireEvent.blur(pia)
+    expect(draft(m).people[0].pia).toBe(30_000) // 2500 × 12
+  })
+
+  it('PIA: the field DISPLAYS the stored annual back as the monthly figure (/12, round-trip)', () => {
+    const m = freshModel()
+    retiredCouple(m, { pia: 36_000 })
+    reachSs(m)
+    const pia = screen.getAllByLabelText(copy.ssAmountLabel)[0] as HTMLInputElement
+    expect(pia.value).toBe('3,000') // 36,000 / 12
+  })
+
+  it('claim: a YEAR entry stores the derived whole-year claim age (year − birthYear)', () => {
+    const m = freshModel()
+    retiredCouple(m)
+    reachSs(m)
+    const claim = screen.getAllByLabelText(copy.ssClaimLabel)[0]!
+    fireEvent.focus(claim)
+    fireEvent.change(claim, { target: { value: '2028' } }) // 2028 − 1961 = 67
+    fireEvent.blur(claim)
+    expect(draft(m).people[0].socialSecurityClaimAge).toBe(67)
+  })
+
+  it('claim: the field DISPLAYS the year (birthYear + stored age) and echoes the derived age', () => {
+    const m = freshModel()
+    retiredCouple(m, { socialSecurityClaimAge: 70 })
+    reachSs(m)
+    const claim = screen.getAllByLabelText(copy.ssClaimLabel)[0] as HTMLInputElement
+    expect(claim.value).toBe('2031') // 1961 + 70 — no thousands separator on a year
+    expect(screen.getByText(slots.ssClaimAge(70))).toBeInTheDocument()
+  })
+
+  it('a YEARLY figure fat-fingered into the MONTHLY PIA box is blocked on advance (the ×12 ceiling)', () => {
+    const m = freshModel()
+    retiredCouple(m)
+    reachSs(m)
+    const pia = screen.getAllByLabelText(copy.ssAmountLabel)[0]!
+    fireEvent.focus(pia)
+    fireEvent.change(pia, { target: { value: '30000' } }) // a yearly total → 30,000 × 12 = 360,000 stored
+    fireEvent.blur(pia)
+    fireEvent.click(screen.getByRole('button', { name: copy.flowNext }))
+    expect(screen.getByRole('alert').textContent).toBe(copy.errPiaCeiling) // blocked at the field
+    expect(heading()).toBe(copy.qSsHeading) // did not advance
+  })
+
+  it('a claim YEAR that derives an out-of-window age fires the claim-window rule (the year→age→validation chain)', () => {
+    const m = freshModel()
+    retiredCouple(m)
+    reachSs(m)
+    const claim = screen.getAllByLabelText(copy.ssClaimLabel)[0]!
+    fireEvent.focus(claim)
+    fireEvent.change(claim, { target: { value: '2020' } }) // 2020 − 1961 = 59, below 62
+    fireEvent.blur(claim)
+    fireEvent.click(screen.getByRole('button', { name: copy.flowNext }))
+    expect(screen.getByRole('alert').textContent).toBe(copy.errSsClaimWindow)
+    expect(heading()).toBe(copy.qSsHeading)
   })
 })
 

@@ -42,6 +42,20 @@ const MAX_MODEL_AGE = 119
 const SS_CLAIM_MIN = 62
 const SS_CLAIM_MAX = 70
 
+/** The PIA magnitude ceiling (R19 period defense, the SS sibling of the spend
+ *  force-confirm): the model stores ANNUAL pia but the field enters the MONTHLY
+ *  statement figure (×12 on commit), so a yearly figure fat-fingered into the
+ *  monthly box stores 12× the real benefit. This is a deliberately GENEROUS
+ *  impossibility bound, NOT a tight COLA figure: the SSA maximum monthly benefit
+ *  is $4,152 at full retirement age and $5,181 at age 70 in 2026 (ssa.gov;
+ *  grounding-confirmed 2026-06-14) → ~$62,172/yr absolute max. $100,000/yr is
+ *  ~1.6× that ceiling, so it never false-rejects a real high earner (with ~17
+ *  years of COLA headroom — no annual re-verify burden) while it catches the
+ *  consequential 12× misentries (any benefit ≳ $700/mo entered as the yearly
+ *  total). A real benefit under the bound that is still wrong is the second-line
+ *  case the magnitude check is explicitly NOT the first defense for. */
+const PIA_CEILING_ANNUAL = 100_000
+
 /** The period-confirm floor (R19 period defense, line one): while the spend
  *  unit is still the UNCONFIRMED default, an entered figure at or above this
  *  MONTH-view amount forces an explicit $/month-vs-$/year answer — the engine
@@ -165,6 +179,20 @@ const RULES: readonly SanityRule[] = [
         Number.isFinite(p.socialSecurityClaimAge) &&
         (p.socialSecurityClaimAge < SS_CLAIM_MIN || p.socialSecurityClaimAge > SS_CLAIM_MAX)
           ? { rule: 'ss-claim-window', field: personField(i, 'socialSecurityClaimAge'), messageKey: 'errSsClaimWindow' }
+          : null,
+      ),
+  },
+  {
+    // The PIA magnitude ceiling: the MONTHLY statement figure is stored ×12, so a
+    // yearly total fat-fingered into the monthly box stores an impossible benefit
+    // (the 12× misentry the spend force-confirm guards on the spend side). Compare
+    // the stored ANNUAL pia against the generous impossibility bound.
+    id: 'pia-over-ceiling',
+    target: (d) => d.people.map((_, i) => personField(i, 'pia')),
+    check: (d) =>
+      perPerson(d, (p, i) =>
+        p.pia !== undefined && Number.isFinite(p.pia) && p.pia > PIA_CEILING_ANNUAL
+          ? { rule: 'pia-over-ceiling', field: personField(i, 'pia'), messageKey: 'errPiaCeiling' }
           : null,
       ),
   },

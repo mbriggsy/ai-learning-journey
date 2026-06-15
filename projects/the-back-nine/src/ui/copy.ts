@@ -62,9 +62,10 @@ export const copy = {
   salaryLabel: 'Yearly pay, before tax',
   salaryHelp: 'A steady figure in today’s dollars is enough.',
   qSsHeading: 'Social Security',
-  ssAmountLabel: 'Yearly benefit at full retirement age (67)',
-  ssAmountHelp: 'Your age-67 benefit from the Social Security statement (multiply the monthly figure by 12), in today’s dollars. We adjust it for your actual claim age.',
-  ssClaimLabel: 'Planned claim age (62–70)',
+  ssAmountLabel: 'Monthly benefit at full retirement age',
+  ssAmountHelp: 'The monthly figure on your Social Security statement at full retirement age (67 for births from 1960 on), in today’s dollars. Stopping work early? The mySSA Retirement Estimator with future earnings set to zero gives the closest number. The tool adjusts it for the year you start.',
+  ssClaimLabel: 'The year you’ll start Social Security',
+  ssClaimYearPlaceholder: 'e.g. 2032',
   qSpendHeading: 'What does your life cost?',
   spendLabel: 'Household spending, all in',
   spendHelp:
@@ -163,7 +164,9 @@ export const copy = {
   errStopAgeInFuture:
     'This stop age is later than their current age — for someone already retired, it’s the age work actually stopped. Did you mean still working?',
   errSsClaimWindow:
-    'Social Security can be claimed between 62 and 70 — this age falls outside that window.',
+    'Social Security can start between ages 62 and 70 — that’s outside the window.',
+  errPiaCeiling:
+    'That’s higher than any Social Security benefit can be — this asks for the monthly figure from your statement, not the yearly total.',
   errSurvivorRatio: 'Survivor spending can’t be more than 100% of household spending.',
   errBirthYearFuture: 'That birth year hasn’t happened yet.',
   errAgeBeyondModel: 'Ages past 119 are beyond what the projection can model.',
@@ -185,6 +188,10 @@ export const slots = {
    *  percentage is the issuer's own figure via C1 — a fact echo, not a claim. */
   blendResolved: (name: string, stockPct: number): string =>
     `${name} — about ${Math.round(stockPct)}% stocks`,
+  /** The derived-age echo under the SS claim-YEAR field — the year the user
+   *  enters maps to this whole-year age (a fact echo, so they can sanity-check
+   *  the year against the 62–70 window). */
+  ssClaimAge: (age: number): string => `That’s starting at age ${age}.`,
   /** One committed account in the loop's quiet list. */
   accountSummary: (kindLabel: string, owner: string, valueFormatted: string): string =>
     `${kindLabel} · ${owner} · $${valueFormatted}`,

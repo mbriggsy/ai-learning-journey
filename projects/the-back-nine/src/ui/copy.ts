@@ -51,7 +51,7 @@ export const copy = {
   sexLegend: 'Sex',
   sexMale: 'Male',
   sexFemale: 'Female',
-  sexHelp: 'Survival odds come from the Social Security life tables, which are split this way.',
+  sexHelp: 'The Social Security survival tables are split this way.',
   qWorkHeading: 'Where does work stand today?',
   workStatusLegend: 'Work status',
   workStatusWorking: 'Still working',
@@ -79,7 +79,7 @@ export const copy = {
   enrolledPremiumLabel: 'Your household’s combined monthly premium',
   slcspLabel: 'Benchmark Silver plan, monthly (whole household)',
   healthQuoteHelp:
-    'From a marketplace quote covering everyone under 65 in the household, at your ages and ZIP — healthcare.gov or the KFF calculator. Enter the whole household’s combined monthly figures, not one person’s. The tool never guesses a premium; it prices only what you enter. Fine to continue without it — the answer simply waits on it.',
+    'A marketplace quote for everyone under 65 in the household — combined monthly, not one person’s.',
   qOopHeading: 'Out-of-pocket health costs',
   oopLabel: 'A typical year, out of pocket',
   oopHelp:
@@ -87,12 +87,12 @@ export const copy = {
   qWorkIncomeHeading: 'Income while still working',
   workIncomeLabel: 'Taxable income on a recent return',
   workIncomeHelp:
-    'Used to price the first Medicare years, which look back two years. The income figure from a recent tax return — investment and other income counts, not just salary.',
+    'From a recent tax return — investment and other income too, not just salary.',
   qIrmaaSeedHeading: 'Your last two tax returns',
   irmaaSeedTwoBackLabel: 'Income, two years back',
   irmaaSeedOneBackLabel: 'Income, last year',
   irmaaSeedHelp:
-    'Medicare premiums key off income from two years before — these two figures anchor the first projected years.',
+    'Medicare premiums look back two years — these anchor the early years.',
   // --- the account loop (D1 — variable-length, single entry pass) ---
   qAccountsHeading: 'Now, the accounts themselves',
   accountsIntro:
@@ -116,7 +116,7 @@ export const copy = {
   accountValueLabel: 'Balance today',
   accountBasisLabel: 'Cost basis',
   accountBasisHelp:
-    'From the statement’s cost-basis line — what was paid in, before growth. The rest is treated as unrealized gain.',
+    'From the statement’s cost-basis line — what was paid in, before growth.',
   accountTickerLabel: 'Main holding’s ticker',
   accountTickerHelp:
     'The fund or ETF symbol — VTSAX, FXAIX, a target-date fund. Leave it blank if there isn’t one and classify the mix instead.',

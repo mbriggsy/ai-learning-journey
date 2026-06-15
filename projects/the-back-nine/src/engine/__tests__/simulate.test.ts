@@ -9,7 +9,7 @@ import {
   type PersonOffsets,
   type SimOutput,
 } from '@engine/simulate'
-import { householdBenefits } from '@engine/socialSecurityBenefit'
+import { householdBenefits, realizedClaimAgeAtDeath } from '@engine/socialSecurityBenefit'
 import { validationMarket } from '@engine/reference/methodology'
 import { sampleCouplePath } from '@engine/longevity'
 import { toRealSeries, rollingSuccessRate } from '@engine/historical'
@@ -194,6 +194,97 @@ describe('the cash-term seam (bridge + SS step-down)', () => {
     expect(netWithdrawalForYear(2, seamParams, [workingEarner], [3], 0)).toBe(50)
     // dead at t=5 (>= death 3) → income gone; lone person dead so survivor-ratio spending, no SS
     expect(netWithdrawalForYear(5, seamParams, [workingEarner], [3], 0)).toBe(75)
+  })
+})
+
+// ===========================================================================
+// SS seam — the integration-review goldens (commit 2ec80071 review, plan §6/§7). These pin the
+// timing/gating the SEAM owns (what the pure sub-engine cannot see): the deceased's REALIZED claim
+// age at an early death, the spousal-excess START/END gates with a NONZERO excess, and the survivor
+// max(own, survivor) selection in the OWN-WINS direction. Every expected dollar is HAND-DERIVED from
+// the POMS rules (DND/012) — never via householdBenefits/the engine's own formula. Each fixture was
+// a structural coverage hole before this review: no prior fixture drove a death-before-claim, a
+// nonzero excess through cashTermsForYear, or an own-wins survivor selection.
+// ===========================================================================
+describe('SS seam — realized-claim survivor base + spousal-excess gating + own-wins (integration-review goldens)', () => {
+  // The survivor branch reads `params.people[idx]` (pia/claimAge/birthYear/currentAge), NOT just the
+  // offsets — a mismatched `params.people` silently yields ss=0 (the index guard fails; the §202 landmine).
+  // So `mk` builds the params with the ALIGNED 2-person people AND the matching offsets/higherClaimOffset.
+  // Spend ≫ any SS so `net` is unclamped and `ss` is the only mover under test.
+  const mk = (people: readonly PersonInputs[]): { params: SimulationParams; offsets: PersonOffsets[]; higherClaimOffset: number } => {
+    const params = makeParams({ people: [...people], annualSpendingReal: 1_000_000, survivorSpendingRatio: 0.75 })
+    const b = householdBenefits(people.map((x) => ({ piaAnnual: x.pia, claimAge: x.socialSecurityClaimAge, birthYear: x.birthYear })))
+    const offsets: PersonOffsets[] = people.map((x, i) => ({
+      retire: x.retirementAge - x.currentAge,
+      claim: x.socialSecurityClaimAge - x.currentAge,
+      earnedIncomeReal: x.earnedIncomeReal,
+      socialSecurityReal: b[i]!.ownAnnual,
+      spousalExcessAnnual: b[i]!.spousalExcessAnnual,
+    }))
+    let hi = 0
+    for (let i = 1; i < people.length; i++) if (people[i]!.pia > people[hi]!.pia) hi = i
+    return { params, offsets, higherClaimOffset: offsets[hi]!.claim }
+  }
+
+  describe('realizedClaimAgeAtDeath — a deceased realizes ONLY the credits they lived to earn (20 CFR §404.313 / RS 00615.301)', () => {
+    // The unit's raison d'être is early widowhood; passing the PLANNED claim age verbatim credits DRCs a
+    // worker who died before claiming never earned — an OPTIMISTIC overstatement of the survivor floor (the
+    // cardinal sin). BY 1961 → retirement FRA 67 (804mo, a whole year ⇒ the floor is EXACT here).
+    it('died BEFORE FRA, unfiled → floored at FRA so the base is the FULL PIA (no phantom reduction, no phantom DRC)', () => {
+      expect(realizedClaimAgeAtDeath(70, 1961, 66), 'planned 70, died 66 (<FRA) → 67 (=FRA → factor 1.0 → PIA)').toBe(67)
+      expect(realizedClaimAgeAtDeath(67, 1961, 66), 'planned 67, died 66 (<FRA) → 67 (PIA, not an early-claim reduction)').toBe(67)
+    })
+    it('died AFTER FRA but before the planned claim, unfiled → DRCs only THROUGH the age at death, never the later planned age', () => {
+      expect(realizedClaimAgeAtDeath(70, 1961, 68), 'planned 70, died 68 → 68 (DRC to 68 = 1.08×, NOT 1.24×)').toBe(68)
+      expect(realizedClaimAgeAtDeath(70, 1961, 69), 'planned 70, died 69 → 69').toBe(69)
+    })
+    it('died AT/AFTER the planned claim → they FILED as planned, realized = planned (DRCs/early-reduction as entered)', () => {
+      expect(realizedClaimAgeAtDeath(70, 1961, 71), 'lived past the planned 70 → 70').toBe(70)
+      expect(realizedClaimAgeAtDeath(62, 1961, 66), 'claimed early at 62 then died at 66 → 62 (the existing early-claim/RIB-LIM path)').toBe(62)
+    })
+  })
+
+  it('the survivor base credits ONLY the DRCs the deceased lived to earn (planned-70 claimer dies at 68 → 1.08×PIA base, not 1.24×)', () => {
+    // Mirrors the §202 golden above (survivorStartAge 61) but with the deceased dying at 68 — BEFORE their
+    // planned claim of 70. Realized claim = 68 ⇒ survivor base = PIA × DRC(12mo) = 24000 × 1.08 = $25,920,
+    // age-reduced 63480/84000 → $19,587.60/yr. Passing the PLANNED 70 (the bug) would credit 1.24× → a
+    // base of $29,760 → $22,490.40/yr, overstating the early-widowhood floor by $2,902.80/yr (the optimistic sin).
+    const deceased: PersonInputs = { sex: 'male', currentAge: 65, birthYear: 1961, retirementAge: 65, earnedIncomeReal: 0, pia: 24_000, socialSecurityClaimAge: 70 }
+    const survivor: PersonInputs = { sex: 'female', currentAge: 58, birthYear: 1968, retirementAge: 58, earnedIncomeReal: 0, pia: 0, socialSecurityClaimAge: 67 }
+    const { params, offsets, higherClaimOffset } = mk([deceased, survivor])
+    const cash = cashTermsForYear(5, params, offsets, [3, 50], higherClaimOffset) // P0 dies at offset 3 (age 68)
+    expect(Math.round(cash.ss * 100), 'realized-claim survivor base → $19,587.60/yr (NOT the planned-70 $22,490.40)').toBe(1_958_760)
+  })
+
+  it('the Method-C spousal excess: START gate (higher earner must have filed), per-year add, END gate at first death (no double-count)', () => {
+    // A genuine dual-earner couple: higher pia $30k (claim 67), lower pia $6k (claim 62) — excess floors
+    // ABOVE 0 (6000 < 0.5×30000). Hand-derived (DND/012): lower own = 6000×0.70 = $4,200; lower excess =
+    // (0.5×30000 − 6000)=9000 × 0.65 (spouse 25/36 sched, 60mo early) = $5,850; higher own = $30,000.
+    const lower: PersonInputs = { sex: 'female', currentAge: 62, birthYear: 1964, retirementAge: 62, earnedIncomeReal: 0, pia: 6_000, socialSecurityClaimAge: 62 }
+    const higher: PersonInputs = { sex: 'male', currentAge: 64, birthYear: 1962, retirementAge: 64, earnedIncomeReal: 0, pia: 30_000, socialSecurityClaimAge: 67 }
+    const { params, offsets, higherClaimOffset } = mk([lower, higher]) // higherClaimOffset = 67−64 = 3
+    expect(higherClaimOffset, 'the excess START gate = the higher earner’s claim offset').toBe(3)
+    // START gate — t=1: lower has filed (claim offset 0) but the higher earner has NOT (offset 3) → the
+    // spousal excess is NOT yet payable (RS 00202.001 worker-must-be-entitled). ss = lower OWN only.
+    expect(Math.round(cashTermsForYear(1, params, offsets, [50, 50], higherClaimOffset).ss * 100), 'pre-higher-filing → own only, no excess').toBe(420_000)
+    // both filed, both alive — t=3: ss = lower own + lower excess + higher own = 4200 + 5850 + 30000.
+    expect(Math.round(cashTermsForYear(3, params, offsets, [50, 50], higherClaimOffset).ss * 100), 'both filed → own + excess + higher own').toBe(4_005_000)
+    // END gate — higher (P1) dies at offset 5; at t=6 the lower earner is the survivor. ss = max(own,
+    // survivor benefit on the deceased’s record) = max(4200, 30000) = $30,000 — the excess does NOT carry
+    // into widowhood (a double-count regression that added it back would read $35,850).
+    expect(Math.round(cashTermsForYear(6, params, offsets, [50, 5], higherClaimOffset).ss * 100), 'widowhood → §202 max, NO excess').toBe(3_000_000)
+  })
+
+  it('the survivor max(own, survivor) selects OWN when the survivor’s own benefit is the larger (a high earner outliving a low-PIA spouse)', () => {
+    // Survivor pia $30k (own at claim 62 = $21,000) outliving a deceased pia $6k (survivor benefit on that
+    // record = $6,000 at survivor-FRA) → the max must select the survivor’s OWN $21,000. A regression that
+    // returned the survivor stream unconditionally would understate ss to $6,000 (and understate the
+    // provisional income fed to the tax overlay — the optimistic-on-the-floor direction).
+    const survivor: PersonInputs = { sex: 'female', currentAge: 62, birthYear: 1964, retirementAge: 62, earnedIncomeReal: 0, pia: 30_000, socialSecurityClaimAge: 62 }
+    const deceased: PersonInputs = { sex: 'male', currentAge: 64, birthYear: 1962, retirementAge: 64, earnedIncomeReal: 0, pia: 6_000, socialSecurityClaimAge: 67 }
+    const { params, offsets, higherClaimOffset } = mk([survivor, deceased])
+    const cash = cashTermsForYear(6, params, offsets, [50, 5], higherClaimOffset) // P1 (deceased) dies at offset 5
+    expect(Math.round(cash.ss * 100), 'own $21,000 wins over the $6,000 survivor stream').toBe(2_100_000)
   })
 })
 

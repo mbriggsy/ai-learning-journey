@@ -236,3 +236,31 @@ export const survivorBenefitAnnual = (
   // factor = 1 − maxReductionPct × monthsEarly/span, as an exact integer rational.
   return applyFactorAnnual(survivorFull, { num: 1000 * span - reductionMilli * monthsEarly, denom: 1000 * span })
 }
+
+/**
+ * The deceased worker's REALIZED claim age, for computing the survivor base on a Monte-Carlo path
+ * where death can precede the household's PLANNED claim age. A worker cannot file after death, so a
+ * deceased who died before reaching their planned claim age realized ONLY the credits they lived to
+ * earn — never the full delayed-retirement credit of a claim they never made. The seam feeds the
+ * result as `BenefitPerson.claimAge` to {@link survivorBenefitAnnual}, so the existing claimed-early
+ * (RIB-LIM) / delayed-credit logic then applies to the REALIZED age, not the planned one.
+ *
+ * The SSA rule the survivor base must honor (20 CFR §404.313, POMS RS 00615.301/.690):
+ *  - died at/after the planned claim ⇒ they FILED as planned ⇒ realized = planned (DRCs/reduction as entered).
+ *  - died BEFORE the planned claim (never filed):
+ *      · before FRA ⇒ survivor base = the FULL PIA (NO early-claim reduction — death is not a filing);
+ *      · at/after FRA ⇒ PIA + DRCs accrued only THROUGH the month of death (never to the later planned age).
+ *
+ * Implemented as `max(min(planned, ageAtDeath), ⌊FRA⌋)`: capping at ageAtDeath strips the unearned
+ * credits, and the FRA floor keeps an unfiled pre-FRA death from picking up a spurious early-claim
+ * reduction (so it lands on the full PIA). For a WHOLE-YEAR FRA — both shipped cohorts are FRA 67 —
+ * this is EXACT; a fractional-FRA cohort floors to ⌊FRA⌋, a sub-one-year CONSERVATIVE (never
+ * optimistic — a small reduction in the safe direction) residual. The result is an integer in the
+ * [62, 70] RIB window by construction (planned∈[62,70], ageAtDeath≥66 on any sampled path,
+ * ⌊FRA⌋∈[65,67]), so `assertClaimAge` downstream is satisfied.
+ */
+export const realizedClaimAgeAtDeath = (plannedClaimAge: number, deceasedBirthYear: number, ageAtDeath: number): number => {
+  if (ageAtDeath >= plannedClaimAge) return plannedClaimAge // filed as planned (lived to claim)
+  const fraFloorYears = Math.floor(fraMonthsForBirthYear(deceasedBirthYear, 'retirement') / 12)
+  return Math.max(Math.min(plannedClaimAge, ageAtDeath), fraFloorYears)
+}

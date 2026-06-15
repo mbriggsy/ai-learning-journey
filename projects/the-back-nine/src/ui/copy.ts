@@ -63,7 +63,7 @@ export const copy = {
   salaryHelp: 'A steady figure in today’s dollars is enough.',
   qSsHeading: 'Social Security',
   ssAmountLabel: 'Monthly benefit at full retirement age',
-  ssAmountHelp: 'The monthly figure on your Social Security statement at full retirement age (67 for births from 1960 on), in today’s dollars. Stopping work early? The mySSA Retirement Estimator with future earnings set to zero gives the closest number. The tool adjusts it for the year you start.',
+  ssAmountHelp: 'The monthly figure from your Social Security statement.',
   ssClaimLabel: 'The year you’ll start Social Security',
   ssClaimYearPlaceholder: 'e.g. 2032',
   qSpendHeading: 'What does your life cost?',

@@ -39,8 +39,8 @@ import {
 
 /** Engine longevity-table ceiling (SSA snapshot support, P1-exit pin pass). */
 const MAX_MODEL_AGE = 119
-const SS_CLAIM_MIN = 62
-const SS_CLAIM_MAX = 70
+export const SS_CLAIM_MIN = 62
+export const SS_CLAIM_MAX = 70
 
 /** The PIA magnitude ceiling (R19 period defense, the SS sibling of the spend
  *  force-confirm): the model stores ANNUAL pia but the field enters the MONTHLY

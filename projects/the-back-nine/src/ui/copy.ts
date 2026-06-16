@@ -63,9 +63,12 @@ export const copy = {
   salaryHelp: 'A steady figure in today’s dollars is enough.',
   qSsHeading: 'Social Security',
   ssAmountLabel: 'Monthly benefit at full retirement age',
-  ssAmountHelp: 'The monthly figure from your Social Security statement.',
+  ssAmountHelp:
+    'The figure your statement shows at full retirement age — not the one for age 62 or 70. If you start earlier or later, the tool adjusts from there.',
   ssClaimLabel: 'The year you’ll start Social Security',
   ssClaimYearPlaceholder: 'e.g. 2032',
+  ssSpousalNote:
+    'Spousal and survivor benefits are worked out from both of these — there’s nothing extra to enter.',
   qSpendHeading: 'What does your life cost?',
   spendLabel: 'Household spending, all in',
   spendHelp:
@@ -192,6 +195,23 @@ export const slots = {
    *  enters maps to this whole-year age (a fact echo, so they can sanity-check
    *  the year against the 62–70 window). */
   ssClaimAge: (age: number): string => `That’s starting at age ${age}.`,
+  /** The valid claim-YEAR window hint — shown before a year is entered, so the
+   *  user is guided into the 62–70 window instead of being told they’re wrong
+   *  after. Years are birthYear + the canonical SS_CLAIM_MIN/MAX (sourced in the
+   *  render); the 62/70 ages mirror those bounds, as errSsClaimWindow already does. */
+  ssClaimWindow: (earliestYear: number, latestYear: number): string =>
+    `Anytime from ${earliestYear} (age 62) to ${latestYear} (age 70).`,
+  /** The derived full-retirement-age echo under the benefit field — FRA is a
+   *  fact of the user's birthYear (the SSA table), so they can confirm the
+   *  monthly figure they're copying is the at-FRA one. Months show only when
+   *  nonzero (most cohorts are a clean year; 1955–59 land on NNy, Mm). */
+  fraEcho: (fraMonths: number): string => {
+    const years = Math.floor(fraMonths / 12)
+    const months = fraMonths % 12
+    return months === 0
+      ? `Your full retirement age is ${years}.`
+      : `Your full retirement age is ${years} years, ${months} months.`
+  },
   /** One committed account in the loop's quiet list. */
   accountSummary: (kindLabel: string, owner: string, valueFormatted: string): string =>
     `${kindLabel} · ${owner} · $${valueFormatted}`,

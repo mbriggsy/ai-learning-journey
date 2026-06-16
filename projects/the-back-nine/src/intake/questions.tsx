@@ -2,9 +2,10 @@ import { useState, type ReactNode } from 'react'
 import { copy, slots } from '@ui/copy'
 import type { PersonDraft, ScenarioDraft } from '@store/memoryModel'
 import type { WorkStatus } from '@shared/model'
+import { fraMonthsForBirthYear } from '@engine/constants/socialSecurity'
 import { CurrencyField, IntegerField, NameField, SegmentedControl, formatMoney } from './fields'
 import { FieldError } from './FieldError'
-import { accountField, personField } from './sanity'
+import { accountField, personField, SS_CLAIM_MIN, SS_CLAIM_MAX } from './sanity'
 import { AccountEntry, kindLabel } from './AccountEntry'
 import { ExternalLink } from './ExternalLink'
 import { EXTERNAL_LINKS } from './links'
@@ -238,7 +239,20 @@ const ssStep: StepDef = {
     <>
       <Paired
         api={api}
-        render={(p, i) => (
+        render={(p, i) => {
+          // FRA is a fact of birthYear (the SSA table) — echo it so the user can
+          // confirm the monthly figure they're copying is the at-FRA one, and so
+          // "full retirement age" in the label is concrete. Guard the domain the
+          // engine fn requires (it throws out of range): a transient bad birthYear
+          // shows no echo rather than crashing the render.
+          const fraMonths =
+            p.birthYear !== undefined &&
+            Number.isInteger(p.birthYear) &&
+            p.birthYear >= 1900 &&
+            p.birthYear <= 2200
+              ? fraMonthsForBirthYear(p.birthYear, 'retirement')
+              : undefined
+          return (
           <>
             {/* The statement states a MONTHLY figure; the model stores annual pia,
                 so display pia/12 and commit ×12 (the canonical-period discipline,
@@ -256,6 +270,9 @@ const ssStep: StepDef = {
                 api.commitField(personField(i, 'pia'))
               }}
             />
+            {fraMonths !== undefined && (
+              <p className="field-help">{slots.fraEcho(fraMonths)}</p>
+            )}
             {errorsFor(api, personField(i, 'pia'))}
             {/* Claiming is entered as the YEAR you start (concrete + plan-shaped);
                 the model stores the whole-year claim AGE the sub-engine needs, so
@@ -282,13 +299,19 @@ const ssStep: StepDef = {
                 api.commitField(personField(i, 'socialSecurityClaimAge'))
               }}
             />
-            {p.birthYear !== undefined && p.socialSecurityClaimAge !== undefined && (
-              <p className="field-help">{slots.ssClaimAge(p.socialSecurityClaimAge)}</p>
+            {p.birthYear !== undefined && (
+              <p className="field-help">
+                {p.socialSecurityClaimAge === undefined
+                  ? slots.ssClaimWindow(p.birthYear + SS_CLAIM_MIN, p.birthYear + SS_CLAIM_MAX)
+                  : slots.ssClaimAge(p.socialSecurityClaimAge)}
+              </p>
             )}
             {errorsFor(api, personField(i, 'socialSecurityClaimAge'))}
           </>
-        )}
+          )
+        }}
       />
+      <p className="field-help">{copy.ssSpousalNote}</p>
       <p className="resource-links">
         <ExternalLink href={EXTERNAL_LINKS.ssaMyAccount}>{copy.linkFindSsStatement}</ExternalLink>
       </p>

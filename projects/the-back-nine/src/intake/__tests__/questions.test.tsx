@@ -310,6 +310,34 @@ describe('the Social Security step — monthly PIA + claim-YEAR (the integration
     expect(screen.getByRole('alert').textContent).toBe(copy.errSsClaimWindow)
     expect(heading()).toBe(copy.qSsHeading)
   })
+
+  it('states each person’s derived full retirement age (the cold-read FRA echo)', () => {
+    const m = freshModel()
+    retiredCouple(m) // both born 1961 → FRA 67 (804 months)
+    reachSs(m)
+    expect(screen.getAllByText(slots.fraEcho(804))).toHaveLength(2)
+  })
+
+  it('the FRA echo renders years AND months for an off-cohort birth year', () => {
+    const m = freshModel()
+    retiredCouple(m, { birthYear: 1959, currentAge: 67 }) // 1959 → FRA 66y10m (802 months)
+    reachSs(m)
+    expect(slots.fraEcho(802)).toBe('Your full retirement age is 66 years, 10 months.')
+    expect(screen.getByText(slots.fraEcho(802))).toBeInTheDocument() // person 0; spouse (1961) shows "67"
+  })
+
+  it('claim: hints the valid 62–70 window before entry, then echoes the age once a year lands', () => {
+    const m = freshModel()
+    retiredCouple(m) // both 1961 → window 2023 (age 62) – 2031 (age 70)
+    reachSs(m)
+    expect(screen.getAllByText(slots.ssClaimWindow(2023, 2031))).toHaveLength(2)
+    const claim = screen.getAllByLabelText(copy.ssClaimLabel)[0]!
+    fireEvent.focus(claim)
+    fireEvent.change(claim, { target: { value: '2028' } }) // 2028 − 1961 = 67
+    fireEvent.blur(claim)
+    expect(screen.getByText(slots.ssClaimAge(67))).toBeInTheDocument()
+    expect(screen.getAllByText(slots.ssClaimWindow(2023, 2031))).toHaveLength(1) // only the untouched spouse
+  })
 })
 
 describe('working-year income (the §3b override source — never a salary echo)', () => {

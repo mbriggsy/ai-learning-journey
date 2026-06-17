@@ -9,6 +9,7 @@ import { accountField, personField, SS_CLAIM_MIN, SS_CLAIM_MAX } from './sanity'
 import { AccountEntry, kindLabel } from './AccountEntry'
 import { ExternalLink } from './ExternalLink'
 import { EXTERNAL_LINKS } from './links'
+import { OOP_MEDICAL_TYPICAL_HOUSEHOLD } from './referenceData'
 import type { StepApi, StepDef } from './flow'
 
 /**
@@ -423,13 +424,23 @@ const oopStep: StepDef = {
   headingKey: 'qOopHeading',
   fields: [],
   render: (api) => (
-    <CurrencyField
-      labelKey="oopLabel"
-      helpKey="oopHelp"
-      field="health.oopMedicalAnnual"
-      value={api.draft.health.oopMedicalAnnual}
-      onCommit={(v) => api.update((d) => ({ ...d, health: { ...d.health, oopMedicalAnnual: v } }))}
-    />
+    <>
+      <CurrencyField
+        labelKey="oopLabel"
+        helpKey="oopHelp"
+        field="health.oopMedicalAnnual"
+        value={api.draft.health.oopMedicalAnnual}
+        onCommit={(v) => api.update((d) => ({ ...d, health: { ...d.health, oopMedicalAnnual: v } }))}
+      />
+      {/* The optional-field reference hint shows only while the field is empty:
+          a grounded, conservative anchor (referenceData.ts) so a user who doesn't
+          know the figure isn't guessing blind. It vanishes once they answer. */}
+      {api.draft.health.oopMedicalAnnual === undefined && (
+        <p className="field-help">
+          {slots.oopHint(formatMoney(OOP_MEDICAL_TYPICAL_HOUSEHOLD.annual))}
+        </p>
+      )}
+    </>
   ),
 }
 

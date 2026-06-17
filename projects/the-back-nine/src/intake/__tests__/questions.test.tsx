@@ -8,6 +8,8 @@ import { IntakeFlow } from '../flow'
 import { createMemoryModel, type MemoryModel, type ScenarioDraft } from '@store/memoryModel'
 import type { EngineClient } from '@store/engineClient'
 import { copy, slots } from '@ui/copy'
+import { formatMoney } from '../fields'
+import { OOP_MEDICAL_TYPICAL_HOUSEHOLD } from '../referenceData'
 
 /**
  * The preamble integration battery (D1 slice (c)): conditional step gates, the
@@ -363,6 +365,38 @@ describe('working-year income (the §3b override source — never a salary echo)
     fireEvent.change(field, { target: { value: '210000' } })
     fireEvent.blur(field)
     expect(draft(m).health.workingYearIrmaaMagiByPerson).toEqual([210_000, 0])
+  })
+})
+
+describe('the out-of-pocket step — the optional-field BLS reference hint (cold-read)', () => {
+  function reachOop(m: MemoryModel) {
+    render(<Harness model={m} />)
+    // retired + both under 65 → health-quote + oop appear, no income/working-income steps
+    for (let i = 0; i < 10 && heading() !== copy.qOopHeading; i += 1) {
+      fireEvent.click(screen.getByRole('button', { name: copy.flowNext }))
+    }
+    expect(heading()).toBe(copy.qOopHeading)
+  }
+
+  it('shows the grounded conservative hint while the field is empty, and hides it once a figure is entered', () => {
+    const m = freshModel()
+    m.update((d) => ({
+      ...d,
+      people: [
+        { ...d.people[0], workStatus: 'retired', currentAge: 60, birthYear: 1966 },
+        { ...d.people[1], workStatus: 'retired', currentAge: 60, birthYear: 1966 },
+      ],
+    }))
+    reachOop(m)
+    const hint = slots.oopHint(formatMoney(OOP_MEDICAL_TYPICAL_HOUSEHOLD.annual))
+    expect(screen.getByText(hint)).toBeInTheDocument()
+
+    const field = screen.getByLabelText(copy.oopLabel)
+    fireEvent.focus(field)
+    fireEvent.change(field, { target: { value: '5000' } })
+    fireEvent.blur(field)
+    expect(screen.queryByText(hint)).toBeNull()
+    expect(draft(m).health.oopMedicalAnnual).toBe(5_000)
   })
 })
 

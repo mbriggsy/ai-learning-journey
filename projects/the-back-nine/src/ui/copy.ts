@@ -82,11 +82,11 @@ export const copy = {
   enrolledPremiumLabel: 'Your household’s combined monthly premium',
   slcspLabel: 'Benchmark Silver plan, monthly (whole household)',
   healthQuoteHelp:
-    'A marketplace quote for everyone under 65 in the household — combined monthly, not one person’s.',
+    'A marketplace quote for everyone under 65 in the household — combined monthly, not one person’s. The tool splits it by age for each of you.',
   qOopHeading: 'Out-of-pocket health costs',
   oopLabel: 'A typical year, out of pocket',
   oopHelp:
-    'Premiums are added on top by the tool; out-of-pocket costs should already be inside your spending figure — this only sizes your HSA’s tax-free draw.',
+    'A rough yearly figure is plenty. Premiums are added on top by the tool, and out-of-pocket costs should already be inside your spending figure — this only sizes your HSA’s tax-free draw.',
   qWorkIncomeHeading: 'Income while still working',
   workIncomeLabel: 'Taxable income on a recent return',
   workIncomeHelp:
@@ -229,6 +229,15 @@ export const slots = {
   /** The catch-up step-down disclosure names its year (D1). */
   stepDownNote: (calendarYear: number): string =>
     `From ${calendarYear}, contribution room narrows as a catch-up window closes — the plan assumes the lower limit from then on.`,
+  /** The optional OOP-medical reference hint (shown only while the field is
+   *  empty). The amount is pre-formatted by the caller (the ui layer can't import
+   *  the intake money formatter); the figure + its BLS provenance live in
+   *  `src/intake/referenceData.ts`. */
+  oopHint: (amountFormatted: string): string =>
+    `Around $${amountFormatted} a year is a reasonable figure for a couple — a bit under the federal average (Bureau of Labor Statistics, 2023). Not sure? Leaving it blank is fine, too.`,
+  /** The "still needed" strip's overflow counter — a self-describing list item
+   *  (its own span), never a bare "(+N)" glyph fused onto the prior fact name. */
+  factsMore: (n: number): string => `${n} more`,
 } as const
 
 /**

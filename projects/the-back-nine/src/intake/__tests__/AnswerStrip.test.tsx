@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 import '@testing-library/jest-dom/vitest'
 import { cleanup, render, screen } from '@testing-library/react'
 import { AnswerStrip } from '../AnswerStrip'
-import { copy } from '@ui/copy'
+import { copy, slots } from '@ui/copy'
 import type { MemoryModelSnapshot, ModelAnswer, ScenarioDraft } from '@store/memoryModel'
 import type { OutcomeState, SimulationResult } from '@shared/model'
 
@@ -82,5 +82,24 @@ describe('AnswerStrip — the honesty branches (D1 review T3)', () => {
     const aside = container.querySelector('aside.answer-strip')!
     expect(aside.getAttribute('aria-label')).toBe(copy.answerRegionLabel)
     expect(aside.getAttribute('aria-live')).toBe('polite')
+  })
+
+  it('caps the "still needed" list at 3 names and renders the overflow as a self-describing "N more" span, never a fused "(+N)" glyph (cold-read)', () => {
+    render(
+      <AnswerStrip
+        snapshot={snap(headline('indeterminate', 0))}
+        missing={[
+          { labelKey: 'spendLabel' },
+          { labelKey: 'salaryLabel' },
+          { labelKey: 'ssAmountLabel' },
+          { labelKey: 'enrolledPremiumLabel' },
+          { labelKey: 'oopLabel' },
+        ]}
+        onRetry={() => {}}
+      />,
+    )
+    const more = screen.getByText(slots.factsMore(2)) // 5 distinct → 3 shown + "2 more"
+    expect(more.className).toContain('strip-fact') // its own list affordance, not fused text
+    expect(screen.queryByText(/\(\+\d+\)/)).toBeNull() // the bare legacy glyph is gone
   })
 })

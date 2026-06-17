@@ -47,7 +47,11 @@ function MissingList({ missing }: { missing: readonly MissingFact[] }) {
             {name}
           </span>
         ))}
-        {names.length > shown.length ? ` (+${names.length - shown.length})` : ''}
+        {names.length > shown.length && (
+          <span className="strip-fact" key="__more">
+            {slots.factsMore(names.length - shown.length)}
+          </span>
+        )}
       </p>
       <p className="strip-tertiary">{copy.answerNoSynthesis}</p>
     </>

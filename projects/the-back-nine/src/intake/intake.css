@@ -472,25 +472,20 @@
   outline-offset: 2px;
 }
 
-/* ----- ticker blend feedback + classifier ----- */
+/* ----- the allocation entry (exact stock/bond/cash %) ----- */
 
-.blend-resolved {
-  font-size: var(--text-sm);
-  color: var(--brand);
-  font-weight: var(--weight-medium);
-}
-
-.blend-tdf-note {
-  display: block;
-  margin-block-start: var(--space-1);
-  color: var(--ink-muted);
-  font-weight: var(--weight-body);
-}
-
+/* The allocation entry is a <fieldset> (the three % fields grouped under a
+ * legend) — reset the default fieldset chrome so it reads like every other
+ * borderless group on the form (mirrors .kind-list). min-inline-size:0 defeats
+ * the fieldset default min-content min-width that would overflow the flex row. */
 .classifier {
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
+  border: none;
+  padding: 0;
+  margin: 0;
+  min-inline-size: 0;
 }
 
 .classifier-exact {
@@ -500,10 +495,6 @@
 
 .classifier-pct {
   flex: 1;
-}
-
-.classifier-toggle {
-  align-self: flex-start;
 }
 
 /* ----- the cold-start frame ----- */

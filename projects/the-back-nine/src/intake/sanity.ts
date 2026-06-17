@@ -116,7 +116,10 @@ export function annualAdditionsCeilingFor(age: number): number {
   return annualAdditions415c2026.value + catchUpForAge(age, 'employerPlan')
 }
 
-/** Sums a person's entered contributions across accounts of one ceiling family. */
+/** Sums a person's entered contributions across accounts of one ceiling family.
+ *  For the HSA family the EMPLOYER contribution counts too (employer + employee
+ *  share one statutory HSA limit); `hsaEmployerAnnual` is set on HSA accounts only,
+ *  so it is 0 for the employerPlan/ira families and never perturbs them. */
 const combinedContribution = (
   d: ScenarioDraft,
   ownerIndex: number,
@@ -125,7 +128,11 @@ const combinedContribution = (
   d.enteredAccounts.reduce((sum, a) => {
     if (a.ownerIndex !== ownerIndex) return sum
     if (KIND_TO_CATCHUP[a.kind] !== family) return sum
-    return sum + (Number.isFinite(a.annualContribution ?? NaN) ? a.annualContribution! : 0)
+    return (
+      sum +
+      (Number.isFinite(a.annualContribution ?? NaN) ? a.annualContribution! : 0) +
+      (Number.isFinite(a.hsaEmployerAnnual ?? NaN) ? a.hsaEmployerAnnual! : 0)
+    )
   }, 0)
 
 export interface SanityViolation {

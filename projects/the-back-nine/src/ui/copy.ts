@@ -87,10 +87,10 @@ export const copy = {
   oopLabel: 'A typical year, out of pocket',
   oopHelp:
     'A rough yearly figure is plenty. Premiums are added on top by the tool, and out-of-pocket costs should already be inside your spending figure — this only sizes your HSA’s tax-free draw.',
-  qWorkIncomeHeading: 'Income while still working',
-  workIncomeLabel: 'Taxable income on a recent return',
+  qWorkIncomeHeading: 'Income Medicare looks at',
+  workIncomeLabel: 'Total income on a recent return',
   workIncomeHelp:
-    'From a recent tax return — investment and other income too, not just salary.',
+    'A recent return’s whole income — investments and the rest, not just what work pays. If you’re still working when Medicare begins, this is what can add a surcharge on top of the usual premium.',
   qIrmaaSeedHeading: 'Your last two tax returns',
   irmaaSeedTwoBackLabel: 'Income, two years back',
   irmaaSeedOneBackLabel: 'Income, last year',
@@ -119,20 +119,12 @@ export const copy = {
   accountValueLabel: 'Balance today',
   accountBasisLabel: 'Cost basis',
   accountBasisHelp:
-    'From the statement’s cost-basis line — what was paid in, before growth.',
-  accountTickerLabel: 'Main holding’s ticker',
-  accountTickerHelp:
-    'The fund or ETF symbol — VTSAX, FXAIX, a target-date fund. Leave it blank if there isn’t one and classify the mix instead.',
-  tdfDisclosure:
-    'A target-date fund — the projection holds today’s allocation constant rather than following the fund’s future glide.',
+    'From the statement’s cost-basis line — what was paid in, before growth. When this account is drawn down later, only the growth above what you paid is taxed — the rest was already taxed going in, so the tool needs the paid-in figure to avoid taxing the same dollars twice. Only a brokerage account needs this.',
   accountContributionLabel: 'Going in each year',
   accountMatchLabel: 'Employer match each year',
-  // --- the manual classifier (R37 fallback — never a silent default blend) ---
-  classifierLegend: 'What does it mostly hold?',
-  classifyStocks: 'Mostly stocks',
-  classifyBonds: 'Mostly bonds',
-  classifyCash: 'Cash',
-  classifierAdvanced: 'Set exact percentages',
+  accountHsaEmployerLabel: 'Employer contribution each year',
+  // --- the allocation entry (exact stock/bond/cash %; never a silent default blend) ---
+  classifierLegend: 'How is it invested?',
   classifierStockPct: 'Stocks %',
   classifierBondPct: 'Bonds %',
   classifierCashPct: 'Cash %',
@@ -187,10 +179,6 @@ export const slots = {
   /** SR-announced flow position (the visible thread carries no counter — the
    *  flow is variable-length). */
   questionPosition: (n: number): string => `Question ${n}`,
-  /** The resolved-blend feedback line under a recognized ticker (R37). The
-   *  percentage is the issuer's own figure via C1 — a fact echo, not a claim. */
-  blendResolved: (name: string, stockPct: number): string =>
-    `${name} — about ${Math.round(stockPct)}% stocks`,
   /** The derived-age echo under the SS claim-YEAR field — the year the user
    *  enters maps to this whole-year age (a fact echo, so they can sanity-check
    *  the year against the 62–70 window). */
@@ -248,6 +236,8 @@ export const slots = {
  * copyGuard enumerates `copy`, never this object.
  */
 export const staticDisclosures = {
-  honestLimits:
-    'Informational and educational — not legal, tax, or investment advice. Validate big, irreversible moves with a professional.',
+  honestLimitsScope:
+    'Informational and educational — not legal, tax, or investment advice.',
+  honestLimitsValidate:
+    'Validate big, irreversible moves with a professional.',
 } as const satisfies Record<string, string>

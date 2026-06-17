@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { personField, validateDraft, validateField } from '../sanity'
+import { accountField, contributionCeilingFor, personField, validateDraft, validateField } from '../sanity'
 import type { ScenarioDraft, PersonDraft } from '@store/memoryModel'
 
 /** R19 UI-half rules: per-rule fire AND boundary-pass pairs (the phase-2 U5
@@ -171,5 +171,49 @@ describe('sanity — the spend period force-confirm (R19 line one; D1 review AB1
   it('clears the instant the period is explicitly declared (the disarm)', () => {
     const d = draft({}, {}, { annualSpendingReal: 660_000, spendEntryPeriod: 'month' })
     expect(validateDraft(d, new Set(['annualSpendingReal', 'spendEntryPeriod']))).toEqual([])
+  })
+})
+
+describe('sanity — the combined HSA family ceiling (employer + employee share one limit)', () => {
+  // The advance-time backstop the form's single-account pre-check structurally CANNOT
+  // cover: a combined personal+employer total over the one HSA family limit — including
+  // across two same-owner HSAs (allowed by missingRequiredFacts, which only blocks HSAs
+  // owned by DIFFERENT people). Ceilings are source-bound (contributionCeilingFor), never
+  // re-typed here (DND 012).
+  const touchedContribution = new Set([accountField(0, 'annualContribution')])
+  const hsaDraft = (over: Partial<ScenarioDraft>): ScenarioDraft =>
+    draft({ workStatus: 'working', currentAge: 61, birthYear: 1965 }, {}, over)
+
+  it('fires when personal + employer COMBINED exceed the family ceiling (one account)', () => {
+    const ceiling = contributionCeilingFor('hsa', 61)!
+    const d = hsaDraft({
+      enteredAccounts: [
+        { ownerIndex: 0, kind: 'hsa', valueToday: 30_000, annualContribution: ceiling - 1000, hsaEmployerAnnual: 1001 },
+      ],
+    })
+    expect(validateDraft(d, touchedContribution)).toMatchObject([
+      { rule: 'contribution-over-ceiling', messageKey: 'errContributionCeiling' },
+    ])
+  })
+
+  it('boundary passes: personal + employer exactly at the family ceiling', () => {
+    const ceiling = contributionCeilingFor('hsa', 61)!
+    const d = hsaDraft({
+      enteredAccounts: [
+        { ownerIndex: 0, kind: 'hsa', valueToday: 30_000, annualContribution: ceiling - 1000, hsaEmployerAnnual: 1000 },
+      ],
+    })
+    expect(validateDraft(d, touchedContribution)).toEqual([])
+  })
+
+  it('catches two SAME-OWNER HSAs whose combined personal+employer exceeds the limit (the cross-account backstop)', () => {
+    const ceiling = contributionCeilingFor('hsa', 61)!
+    const d = hsaDraft({
+      enteredAccounts: [
+        { ownerIndex: 0, kind: 'hsa', valueToday: 10_000, annualContribution: ceiling - 1000 },
+        { ownerIndex: 0, kind: 'hsa', valueToday: 5_000, hsaEmployerAnnual: 1001 },
+      ],
+    })
+    expect(validateDraft(d, touchedContribution)).toMatchObject([{ rule: 'contribution-over-ceiling' }])
   })
 })

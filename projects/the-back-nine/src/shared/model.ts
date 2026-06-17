@@ -795,13 +795,16 @@ export interface EnteredAccount {
    *  fold, HSA ownership, and the per-owner contribution streams). */
   readonly ownerIndex: number
   readonly kind: AccountKind
-  /** Primary holding's ticker. Absent or unrecognized ⇒ the manual classifier is
-   *  REQUIRED (burned/062 — an unknown ticker is never a silent default blend). */
+  /** A holding's ticker for the C1 blend lookup. NOT collected by the current
+   *  single-account intake — the account's stock/bond/cash mix is entered directly
+   *  via `manualBlend`; this field is reserved for the U8 multi-holding entry
+   *  (decision 7). Absent or unrecognized ⇒ `manualBlend` is REQUIRED (burned/062
+   *  — a blend is never a silent default). */
   readonly ticker?: string
-  /** Manual blend for a TICKER-LESS account (stable value, company stock, "just
-   *  cash"). A ticker the table misses classifies into the household
-   *  `tickerClassifications` map instead (ticker-keyed — answered once, reused
-   *  across accounts); this field exists only for the no-ticker case. */
+  /** The account's stock/bond/cash mix, entered directly (exact %). REQUIRED
+   *  whenever no `ticker` resolves the blend (burned/062 — never a silent default
+   *  blend). The current intake always uses this; the household
+   *  `tickerClassifications` map is the U8 ticker-keyed reuse path. */
   readonly manualBlend?: TickerClassification
   /** Today's balance (real $). */
   readonly valueToday: number
@@ -813,8 +816,15 @@ export interface EnteredAccount {
    *  step-down when an age-band expires mid-runway. */
   readonly annualContribution?: number
   /** Flat-real annual employer match while the owner works — always a PRETAX
-   *  inflow regardless of the account's own kind (R31). */
+   *  inflow regardless of the account's own kind (R31). Employer-PLAN kinds only
+   *  (401k/403b/Roth-401(k)); an HSA's employer money is {@link hsaEmployerAnnual}. */
   readonly employerMatchAnnual?: number
+  /** Flat-real annual EMPLOYER contribution to an HSA while the owner works (HSA
+   *  kind only). Routes to the HSA bucket like the owner's own HSA contribution —
+   *  NOT the pretax employer-match channel — and counts WITH the personal
+   *  contribution against the single HSA family ceiling (employer + employee share
+   *  one statutory limit). */
+  readonly hsaEmployerAnnual?: number
 }
 
 /** The manual ticker classification (R37 fallback): the calm 3-choice answer, or

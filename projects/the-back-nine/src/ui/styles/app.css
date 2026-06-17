@@ -20,4 +20,5 @@
   font-size: var(--text-xs);
   line-height: var(--leading-body);
   color: var(--ink-muted);
+  text-align: center;
 }

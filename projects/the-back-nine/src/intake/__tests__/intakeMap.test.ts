@@ -333,6 +333,83 @@ describe('contribution streams (R31 + the step-down)', () => {
     expect(firstStepDownYear(d, 10)).toBe(3)
   })
 
+  it('an HSA employer contribution joins the OWNER’s hsa channel — never the pretax/match channels', () => {
+    const d = {
+      ...completeDateDraft(),
+      people: [
+        workingPerson({ birthYear: 1965, currentAge: 61 }),
+        retiredPerson({ name: 'S', birthYear: 1966, currentAge: 60, retirementAge: 58 }),
+      ] as ScenarioDraft['people'],
+      enteredAccounts: [
+        {
+          ownerIndex: 0,
+          kind: 'hsa',
+          valueToday: 30_000,
+          annualContribution: 3_000,
+          hsaEmployerAnnual: 1_000,
+          manualBlend: { kind: 'exact', stockPct: 80, bondPct: 20, cashPct: 0 },
+        },
+      ] as ScenarioDraft['enteredAccounts'],
+    }
+    const streams = buildDateInput(d)!.params.overlay!.accumulation!.contributionsByPerson[0]!
+    // Both dollars land in the ONE hsa channel (4,000 = 3,000 personal + 1,000
+    // employer, under the family ceiling so no step-down) — the employer figure is
+    // present (a personal-only stream would read 3,000), and it NEVER leaks to the
+    // pretax or employer-match channels (those are the 401(k) routing, not HSA).
+    expect(streams.hsa![0]).toBeCloseTo(4_000, 6)
+    expect(streams.pretax).toBeUndefined()
+    expect(streams.employerMatch).toBeUndefined()
+  })
+
+  it('an HSA with ONLY an employer contribution (no personal) still builds the accumulation construct', () => {
+    // An employer-seeded HSA the employee never personally funds is a real shape; the
+    // accumulation construct must be present-keyed off the EMPLOYER figure alone, or
+    // the inflow vanishes from the projection (the optimistic-direction sin).
+    const d = {
+      ...completeDateDraft(),
+      people: [
+        workingPerson({ birthYear: 1965, currentAge: 61 }),
+        retiredPerson({ name: 'S', birthYear: 1966, currentAge: 60, retirementAge: 58 }),
+      ] as ScenarioDraft['people'],
+      enteredAccounts: [
+        {
+          ownerIndex: 0,
+          kind: 'hsa',
+          valueToday: 30_000,
+          hsaEmployerAnnual: 1_500, // employer-only — no annualContribution
+          manualBlend: { kind: 'exact', stockPct: 80, bondPct: 20, cashPct: 0 },
+        },
+      ] as ScenarioDraft['enteredAccounts'],
+    }
+    const overlay = buildDateInput(d)!.params.overlay!
+    expect(overlay.accumulation).toBeDefined()
+    expect(overlay.accumulation!.contributionsByPerson[0]!.hsa![0]).toBeCloseTo(1_500, 6)
+  })
+
+  it('an HSA with NO employer field is a true no-op — the hsa channel carries the personal figure only', () => {
+    // The reduce-to-spine / byte-identity control for the absent field: the employer
+    // branch is presence-keyed (guarded on !== undefined), so an account WITHOUT it
+    // must read 3,000 (the personal figure), not 3,000+coerced-0 by a different path.
+    const d = {
+      ...completeDateDraft(),
+      people: [
+        workingPerson({ birthYear: 1965, currentAge: 61 }),
+        retiredPerson({ name: 'S', birthYear: 1966, currentAge: 60, retirementAge: 58 }),
+      ] as ScenarioDraft['people'],
+      enteredAccounts: [
+        {
+          ownerIndex: 0,
+          kind: 'hsa',
+          valueToday: 30_000,
+          annualContribution: 3_000, // hsaEmployerAnnual ABSENT
+          manualBlend: { kind: 'exact', stockPct: 80, bondPct: 20, cashPct: 0 },
+        },
+      ] as ScenarioDraft['enteredAccounts'],
+    }
+    const streams = buildDateInput(d)!.params.overlay!.accumulation!.contributionsByPerson[0]!
+    expect(streams.hsa![0]).toBeCloseTo(3_000, 6)
+  })
+
   it('the placeholder retirementAge is constructed strictly above currentAge and never stored', () => {
     const d = completeDateDraft()
     const input = buildDateInput(d)!

@@ -6,6 +6,7 @@ import { cleanup, render, screen, fireEvent } from '@testing-library/react'
 import { AccountEntry } from '../AccountEntry'
 import { IntakeFlow } from '../flow'
 import { intakeSteps } from '../questions'
+import { missingRequiredFacts } from '../intakeMap'
 import { contributionCeilingFor, annualAdditionsCeilingFor } from '../sanity'
 import {
   annualAdditions415c2026,
@@ -18,11 +19,11 @@ import type { EngineClient } from '@store/engineClient'
 import { copy } from '@ui/copy'
 
 /**
- * The account loop battery (D1 slice (d)): kind-conditional anatomy, the
- * ticker→blend resolution (share-class family equivalence; the TDF disclosure
- * — a planted unlabeled TDF render fails), the miss→classifier path with
- * ticker-keyed answered-once persistence, the C1 ceiling checks (fire AND
- * boundary-pass, including the 60–63 super band), and loop list mechanics.
+ * The account loop battery (D1 slice (d)): kind-conditional anatomy (basis →
+ * brokerage; employer match → employer plans; HSA employer contribution → HSA),
+ * the always-asked exact stock/bond/cash allocation (sum-to-100 enforced), the
+ * C1 ceiling checks (fire AND boundary-pass, including the 60–63 super band and
+ * the combined employer+employee HSA family ceiling), and loop list mechanics.
  */
 
 const nullClient: EngineClient = {
@@ -59,27 +60,23 @@ const setMoney = (label: string, value: string) => {
   fireEvent.blur(input)
 }
 
-function renderEntry(model: MemoryModel, onSave = vi.fn(), onClassify = vi.fn()) {
+function renderEntry(model: MemoryModel, onSave = vi.fn()) {
   render(
-    <AccountEntry
-      draft={model.getSnapshot().draft}
-      onSave={onSave}
-      onCancel={() => {}}
-      onClassifyTicker={onClassify}
-    />,
+    <AccountEntry draft={model.getSnapshot().draft} onSave={onSave} onCancel={() => {}} />,
   )
-  return { onSave, onClassify }
+  return { onSave }
 }
 
 afterEach(cleanup)
 
 describe('AccountEntry — kind-conditional anatomy', () => {
-  it('basis appears only for brokerage; match only for employer plans; contributions only for a working owner', () => {
+  it('basis → brokerage; match → employer plans; HSA-employer → HSA; contributions need a working owner', () => {
     const m = modelWith({})
     renderEntry(m)
-    // No kind picked: no basis, no match.
+    // No kind picked: no basis, no match, no HSA-employer.
     expect(screen.queryByLabelText(copy.accountBasisLabel)).toBeNull()
     expect(screen.queryByLabelText(copy.accountMatchLabel)).toBeNull()
+    expect(screen.queryByLabelText(copy.accountHsaEmployerLabel)).toBeNull()
     expect(screen.getByLabelText(copy.accountContributionLabel)).toBeInTheDocument() // owner works
 
     fireEvent.click(screen.getByLabelText(copy.kindBrokerage))
@@ -89,6 +86,12 @@ describe('AccountEntry — kind-conditional anatomy', () => {
     fireEvent.click(screen.getByLabelText(copy.kind401k))
     expect(screen.queryByLabelText(copy.accountBasisLabel)).toBeNull()
     expect(screen.getByLabelText(copy.accountMatchLabel)).toBeInTheDocument()
+    expect(screen.queryByLabelText(copy.accountHsaEmployerLabel)).toBeNull()
+
+    // HSA: the employer CONTRIBUTION field (→ hsa bucket), never the pretax match.
+    fireEvent.click(screen.getByLabelText(copy.kindHsa))
+    expect(screen.queryByLabelText(copy.accountMatchLabel)).toBeNull()
+    expect(screen.getByLabelText(copy.accountHsaEmployerLabel)).toBeInTheDocument()
   })
 
   it('a retired owner sees no contribution questions (the inapplicable class)', () => {
@@ -99,7 +102,6 @@ describe('AccountEntry — kind-conditional anatomy', () => {
         initial={{ ownerIndex: 1, kind: '401k', valueToday: 100_000 }}
         onSave={() => {}}
         onCancel={() => {}}
-        onClassifyTicker={() => {}}
       />,
     )
     expect(screen.queryByLabelText(copy.accountContributionLabel)).toBeNull()
@@ -107,52 +109,116 @@ describe('AccountEntry — kind-conditional anatomy', () => {
   })
 })
 
-describe('AccountEntry — ticker → blend (R37)', () => {
-  it('VTI and VTSAX resolve to the SAME family row (share-class equivalence)', () => {
+describe('AccountEntry — allocation entry (exact %)', () => {
+  it('the stock/bond/cash split is always asked (no ticker, no quick-pick) and enforces sum-to-100', () => {
     const m = modelWith({})
     renderEntry(m)
-    const ticker = screen.getByLabelText(copy.accountTickerLabel)
-
-    fireEvent.change(ticker, { target: { value: 'vtsax' } })
-    const lineA = screen.getByText(/about \d+% stocks/).textContent
-    fireEvent.change(ticker, { target: { value: 'VTI' } })
-    const lineB = screen.getByText(/about \d+% stocks/).textContent
-    expect(lineA).toBe(lineB)
-    expect(screen.queryByText(copy.tdfDisclosure)).toBeNull() // not a TDF — no label
-  })
-
-  it('a TDF hit renders the held-constant disclosure (the planted unlabeled render fails)', () => {
-    const m = modelWith({})
-    renderEntry(m)
-    fireEvent.change(screen.getByLabelText(copy.accountTickerLabel), { target: { value: 'VFIFX' } })
-    // VFIFX = Vanguard Target Retirement 2050 — a tdfTargetYear row in C1.
-    expect(screen.getByText(/about \d+% stocks/)).toBeInTheDocument()
-    expect(screen.getByText(copy.tdfDisclosure)).toBeInTheDocument()
-  })
-
-  it('an unrecognized ticker routes to the classifier and classifies TICKER-KEYED (answered once)', () => {
-    const m = modelWith({})
-    const { onClassify } = renderEntry(m)
-    fireEvent.change(screen.getByLabelText(copy.accountTickerLabel), { target: { value: 'ZZZUNKNOWN' } })
-    expect(screen.queryByText(/about \d+% stocks/)).toBeNull()
-    fireEvent.click(screen.getByLabelText(copy.classifyBonds))
-    expect(onClassify).toHaveBeenCalledWith('ZZZUNKNOWN', { kind: 'simple', choice: 'bonds' })
-  })
-
-  it('the advanced expander enforces sum-to-100', () => {
-    const m = modelWith({})
-    renderEntry(m)
-    // Blank ticker → the per-account manual classifier renders.
-    fireEvent.click(screen.getByRole('button', { name: copy.classifierAdvanced }))
+    // The three % fields render unconditionally — there is no ticker input and no
+    // "mostly stocks" quick-pick to expand from.
     fireEvent.change(screen.getByLabelText(copy.classifierStockPct), { target: { value: '60' } })
     fireEvent.change(screen.getByLabelText(copy.classifierBondPct), { target: { value: '30' } })
     fireEvent.change(screen.getByLabelText(copy.classifierCashPct), { target: { value: '20' } })
     fireEvent.blur(screen.getByLabelText(copy.classifierCashPct))
-    expect(screen.getByRole('alert').textContent).toBe(copy.errClassifierSum) // 110 ≠ 100
+    const alert = screen.getByRole('alert')
+    expect(alert.textContent).toBe(copy.errClassifierSum) // 110 ≠ 100
+    // Color-blind-safe a11y law: the sum error must be reachable as text ON the field —
+    // every % input carries aria-invalid AND aria-describedby pointing at the error node.
+    for (const labelKey of ['classifierStockPct', 'classifierBondPct', 'classifierCashPct'] as const) {
+      const field = screen.getByLabelText(copy[labelKey])
+      expect(field).toHaveAttribute('aria-invalid', 'true')
+      expect(field).toHaveAttribute('aria-describedby', alert.id)
+    }
 
+    // Forgive on re-edit (the alert + the field association clear the instant a field is touched).
     fireEvent.change(screen.getByLabelText(copy.classifierCashPct), { target: { value: '10' } })
+    expect(screen.queryByRole('alert')).toBeNull()
+    expect(screen.getByLabelText(copy.classifierCashPct)).not.toHaveAttribute('aria-describedby')
     fireEvent.blur(screen.getByLabelText(copy.classifierCashPct))
     expect(screen.queryByRole('alert')).toBeNull()
+  })
+
+  it('a committed account carries the entered exact blend', () => {
+    const m = modelWith({})
+    const { onSave } = renderEntry(m)
+    fireEvent.click(screen.getByLabelText(copy.kindRothIra))
+    setMoney(copy.accountValueLabel, '100000')
+    fireEvent.change(screen.getByLabelText(copy.classifierStockPct), { target: { value: '70' } })
+    fireEvent.change(screen.getByLabelText(copy.classifierBondPct), { target: { value: '25' } })
+    fireEvent.change(screen.getByLabelText(copy.classifierCashPct), { target: { value: '5' } })
+    fireEvent.blur(screen.getByLabelText(copy.classifierCashPct))
+    fireEvent.click(screen.getByRole('button', { name: copy.accountSave }))
+    expect(onSave).toHaveBeenCalledTimes(1)
+    expect(onSave.mock.calls[0]![0]).toMatchObject({
+      kind: 'roth-ira',
+      valueToday: 100_000,
+      manualBlend: { kind: 'exact', stockPct: 70, bondPct: 25, cashPct: 5 },
+    })
+  })
+
+  it('an invalid (non-100) split is NEVER silently committed as a default blend — the flow-gate names it (burned/062)', () => {
+    const m = modelWith({})
+    const { onSave } = renderEntry(m)
+    fireEvent.click(screen.getByLabelText(copy.kindRothIra))
+    setMoney(copy.accountValueLabel, '100000')
+    // 60 + 30 + 20 = 110 ≠ 100 — AllocationEntry refuses to emit it (no onClassify).
+    fireEvent.change(screen.getByLabelText(copy.classifierStockPct), { target: { value: '60' } })
+    fireEvent.change(screen.getByLabelText(copy.classifierBondPct), { target: { value: '30' } })
+    fireEvent.change(screen.getByLabelText(copy.classifierCashPct), { target: { value: '20' } })
+    fireEvent.blur(screen.getByLabelText(copy.classifierCashPct))
+    fireEvent.click(screen.getByRole('button', { name: copy.accountSave }))
+    // The account commits (kind + balance present) but carries NO blend — never a
+    // stale/partial default — so missingRequiredFacts NAMES it (the honest gate that
+    // keeps an unallocated account from reaching the engine with a guessed mix).
+    expect(onSave).toHaveBeenCalledTimes(1)
+    const account = onSave.mock.calls[0]![0]
+    expect(account.manualBlend).toBeUndefined()
+    const missing = missingRequiredFacts({
+      ...m.getSnapshot().draft,
+      enteredAccounts: [account],
+    }).map((f) => f.labelKey)
+    expect(missing).toContain('classifierLegend')
+  })
+})
+
+describe('AccountEntry — HSA employer contribution', () => {
+  it('a committed HSA carries BOTH the personal and the employer contribution', () => {
+    const m = modelWith({})
+    const { onSave } = renderEntry(m)
+    fireEvent.click(screen.getByLabelText(copy.kindHsa))
+    setMoney(copy.accountValueLabel, '20000')
+    setMoney(copy.accountContributionLabel, '2000')
+    setMoney(copy.accountHsaEmployerLabel, '1000')
+    fireEvent.click(screen.getByRole('button', { name: copy.accountSave }))
+    expect(onSave).toHaveBeenCalledTimes(1)
+    expect(onSave.mock.calls[0]![0]).toMatchObject({
+      kind: 'hsa',
+      annualContribution: 2000,
+      hsaEmployerAnnual: 1000,
+    })
+  })
+
+  it('employer + personal share the ONE HSA family ceiling — combined over fires, exactly at it passes', () => {
+    const ceiling = contributionCeilingFor('hsa', 61)!
+    // Personal one dollar under the ceiling + a matching-sized employer dollar →
+    // combined strictly over → the same calm contribution-ceiling message.
+    const { onSave } = renderEntry(modelWith({ currentAge: 61, birthYear: 1965 }))
+    fireEvent.click(screen.getByLabelText(copy.kindHsa))
+    setMoney(copy.accountValueLabel, '20000')
+    setMoney(copy.accountContributionLabel, String(ceiling - 1000))
+    setMoney(copy.accountHsaEmployerLabel, '1001')
+    fireEvent.click(screen.getByRole('button', { name: copy.accountSave }))
+    expect(onSave).not.toHaveBeenCalled()
+    expect(screen.getByRole('alert').textContent).toBe(copy.errContributionCeiling)
+
+    cleanup()
+    // Exactly at the combined ceiling passes (the boundary is legal).
+    const { onSave: onSave2 } = renderEntry(modelWith({ currentAge: 61, birthYear: 1965 }))
+    fireEvent.click(screen.getByLabelText(copy.kindHsa))
+    setMoney(copy.accountValueLabel, '20000')
+    setMoney(copy.accountContributionLabel, String(ceiling - 1000))
+    setMoney(copy.accountHsaEmployerLabel, '1000')
+    fireEvent.click(screen.getByRole('button', { name: copy.accountSave }))
+    expect(onSave2).toHaveBeenCalledTimes(1)
   })
 })
 

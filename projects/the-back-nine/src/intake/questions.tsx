@@ -533,12 +533,6 @@ function AccountsStep({ api }: { api: StepApi }) {
         draft={api.draft}
         initial={initial}
         onCancel={() => setEditing(null)}
-        onClassifyTicker={(ticker, c) =>
-          api.update((d) => ({
-            ...d,
-            tickerClassifications: { ...d.tickerClassifications, [ticker]: c },
-          }))
-        }
         onSave={(account) => {
           api.update((d) => {
             const next = [...d.enteredAccounts]

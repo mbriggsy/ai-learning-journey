@@ -298,10 +298,16 @@ function familyScaleAt(d: ScenarioDraft, ownerIndex: number, family: OwnerFamily
   if (owner.currentAge === undefined || !Number.isInteger(owner.currentAge)) return 1
   const ageAtT = owner.currentAge + t
   if (ageAtT > 120) return 1
+  // The HSA family ceiling is the COMBINED employer+employee limit (sanity.ts's
+  // combinedContribution + the entry gate both use it), and the stream scales BOTH
+  // the personal and the employer HSA dollar by this factor — so the denominator
+  // must include the employer dollar too, or a future HSA step-down would under-trim
+  // the combined inflow (the optimistic sin). hsaEmployerAnnual is 0 off the HSA
+  // family, so this is inert for employerPlan/ira.
   const combined = d.enteredAccounts.reduce(
     (s, a) =>
       a.ownerIndex === ownerIndex && familyOf(a.kind) === family
-        ? s + (a.annualContribution ?? 0)
+        ? s + (a.annualContribution ?? 0) + (a.hsaEmployerAnnual ?? 0)
         : s,
     0,
   )
@@ -352,6 +358,12 @@ function contributionStreamsFor(
       const family = familyOf(a.kind)
       const scale = family === null ? 1 : familyScaleAt(d, ownerIndex, family, t)
       sums[KIND_TO_BUCKET[a.kind]] += (a.annualContribution ?? 0) * scale
+      if (a.kind === 'hsa' && a.hsaEmployerAnnual !== undefined) {
+        // Employer HSA money joins the owner's OWN hsa inflow (same bucket, same
+        // family scale) — never the pretax employer-match channel. The combined
+        // employer+employee HSA ceiling is the sanity-layer guard, not a stream trim.
+        sums.hsa += a.hsaEmployerAnnual * scale
+      }
       if (a.employerMatchAnnual !== undefined && isEmployerPlanKind(a.kind)) {
         // §415(c) additions: cap contribution+match at the per-year additions
         // ceiling (the band on top), trimming the MATCH first (it is the
@@ -452,7 +464,9 @@ function buildOverlay(d: ScenarioDraft, horizonYears: number): OverlayParams | u
   const anyContributions = accounts.some(
     (a) =>
       isWorkingOwner(d, a.ownerIndex) &&
-      ((a.annualContribution ?? 0) > 0 || (a.employerMatchAnnual ?? 0) > 0),
+      ((a.annualContribution ?? 0) > 0 ||
+        (a.employerMatchAnnual ?? 0) > 0 ||
+        (a.hsaEmployerAnnual ?? 0) > 0),
   )
   const accumulation = anyContributions
     ? { contributionsByPerson: d.people.map((_, i) => contributionStreamsFor(d, i, horizonYears)) }

@@ -1,12 +1,11 @@
 import { useId, useState } from 'react'
-import { copy, slots, type CopyKey } from '@ui/copy'
+import { copy, type CopyKey } from '@ui/copy'
 import type { AccountKind, EnteredAccount, TickerClassification } from '@shared/model'
 import { ACCOUNT_KINDS } from '@shared/model'
-import { findBlendRow, stockWeightForBlend } from '@engine/reference/tickerBlend'
 import type { ScenarioDraft } from '@store/memoryModel'
 import { CurrencyField, SegmentedControl } from './fields'
 import { FieldError } from './FieldError'
-import { TickerClassifier } from './TickerClassifier'
+import { AllocationEntry } from './AllocationEntry'
 import {
   annualAdditionsCeilingFor,
   contributionCeilingFor,
@@ -16,13 +15,15 @@ import {
 /**
  * One account, one focused screen (R35/R36/R37/R31). Conditional anatomy:
  *  - basis: brokerage only (per-account, not per-lot — plan §4);
+ *  - allocation: the exact stock/bond/cash % split, always asked (the single
+ *    ticker + the "mostly stocks" quick-pick were both retired — one precise
+ *    allocation question; the multi-holding ticker entry rides U8);
  *  - contribution: only while the OWNER still works (a retired owner's inflow
  *    questions are inapplicable — the zeroed class);
- *  - employer match: working owner + employer-plan kinds only (→ pretax);
- *  - ticker: recognized → the resolved blend line (TDF rows wear the
- *    held-constant disclosure — a planted unlabeled TDF render fails);
- *    unrecognized → the household ticker-keyed classifier (answered once);
- *    blank → the per-account manual blend.
+ *  - employer match: working owner + employer-PLAN kinds only (→ pretax, §415(c));
+ *  - HSA employer contribution: working owner + HSA only (→ the HSA bucket, NOT
+ *    the pretax match channel; shares the one HSA family ceiling with the
+ *    personal contribution).
  *
  * The in-progress entry is component state, committed atomically by "Add this
  * account" — a half-entered account abandoned mid-form is like a half-typed
@@ -49,31 +50,29 @@ export interface AccountEntryProps {
   readonly initial?: EnteredAccount
   readonly onSave: (account: EnteredAccount) => void
   readonly onCancel: () => void
-  /** Household ticker classifications (answered once, reused). */
-  readonly onClassifyTicker: (ticker: string, c: TickerClassification) => void
 }
 
 interface FormState {
   ownerIndex: 0 | 1
   kind: AccountKind | undefined
-  ticker: string
   valueToday: number | undefined
   basis: number | undefined
   annualContribution: number | undefined
   employerMatchAnnual: number | undefined
+  hsaEmployerAnnual: number | undefined
   manualBlend: TickerClassification | undefined
 }
 
-export function AccountEntry({ draft, initial, onSave, onCancel, onClassifyTicker }: AccountEntryProps) {
+export function AccountEntry({ draft, initial, onSave, onCancel }: AccountEntryProps) {
   const id = useId()
   const [form, setForm] = useState<FormState>({
     ownerIndex: (initial?.ownerIndex as 0 | 1) ?? 0,
     kind: initial?.kind,
-    ticker: initial?.ticker ?? '',
     valueToday: initial?.valueToday,
     basis: initial?.basis,
     annualContribution: initial?.annualContribution,
     employerMatchAnnual: initial?.employerMatchAnnual,
+    hsaEmployerAnnual: initial?.hsaEmployerAnnual,
     manualBlend: initial?.manualBlend,
   })
   const [ceilingError, setCeilingError] = useState<CopyKey | null>(null)
@@ -82,12 +81,7 @@ export function AccountEntry({ draft, initial, onSave, onCancel, onClassifyTicke
 
   const owner = draft.people[form.ownerIndex]
   const ownerWorking = owner?.workStatus === 'working'
-  const normalizedTicker = form.ticker.trim().toUpperCase()
-  const blendRow = normalizedTicker === '' ? undefined : findBlendRow(normalizedTicker)
-  const tickerMiss = normalizedTicker !== '' && blendRow === undefined
-  const householdClassification = tickerMiss
-    ? draft.tickerClassifications[normalizedTicker]
-    : undefined
+  const isHsa = form.kind === 'hsa'
 
   const save = () => {
     if (form.kind === undefined || form.valueToday === undefined) return // incomplete — stays open
@@ -101,11 +95,11 @@ export function AccountEntry({ draft, initial, onSave, onCancel, onClassifyTicke
       owner.currentAge <= 120
     ) {
       const ceiling = contributionCeilingFor(form.kind, owner.currentAge)
-      if (
-        ceiling !== null &&
-        form.annualContribution !== undefined &&
-        form.annualContribution > ceiling
-      ) {
+      // HSA: employer + personal share ONE family ceiling. Every other capped kind:
+      // the personal elective ceiling (an employer-plan match is the §415(c) check).
+      const ownContribution =
+        (form.annualContribution ?? 0) + (isHsa ? (form.hsaEmployerAnnual ?? 0) : 0)
+      if (ceiling !== null && ownContribution > ceiling) {
         setCeilingError('errContributionCeiling')
         return
       }
@@ -122,7 +116,6 @@ export function AccountEntry({ draft, initial, onSave, onCancel, onClassifyTicke
     onSave({
       ownerIndex: form.ownerIndex,
       kind: form.kind,
-      ...(normalizedTicker !== '' ? { ticker: normalizedTicker } : {}),
       valueToday: form.valueToday,
       ...(form.kind === 'brokerage' && form.basis !== undefined ? { basis: form.basis } : {}),
       ...(ownerWorking && form.annualContribution !== undefined
@@ -131,9 +124,10 @@ export function AccountEntry({ draft, initial, onSave, onCancel, onClassifyTicke
       ...(ownerWorking && isEmployerPlanKind(form.kind) && form.employerMatchAnnual !== undefined
         ? { employerMatchAnnual: form.employerMatchAnnual }
         : {}),
-      ...(normalizedTicker === '' && form.manualBlend !== undefined
-        ? { manualBlend: form.manualBlend }
+      ...(ownerWorking && isHsa && form.hsaEmployerAnnual !== undefined
+        ? { hsaEmployerAnnual: form.hsaEmployerAnnual }
         : {}),
+      ...(form.manualBlend !== undefined ? { manualBlend: form.manualBlend } : {}),
     })
   }
 
@@ -183,47 +177,11 @@ export function AccountEntry({ draft, initial, onSave, onCancel, onClassifyTicke
         />
       )}
 
-      <div className="field">
-        <label className="field-label" htmlFor={`${id}-ticker`}>
-          {copy.accountTickerLabel}
-        </label>
-        <input
-          id={`${id}-ticker`}
-          className="field-input"
-          type="text"
-          autoComplete="off"
-          spellCheck={false}
-          enterKeyHint="next"
-          value={form.ticker}
-          onChange={(e) => patch({ ticker: e.target.value })}
-        />
-        <p className="field-help">{copy.accountTickerHelp}</p>
-      </div>
-
-      {blendRow !== undefined && (
-        <p className="blend-resolved">
-          {slots.blendResolved(blendRow.name, stockWeightForBlend(blendRow) * 100)}
-          {blendRow.tdfTargetYear !== undefined && (
-            <span className="blend-tdf-note"> {copy.tdfDisclosure}</span>
-          )}
-        </p>
-      )}
-
-      {tickerMiss && (
-        <TickerClassifier
-          idSuffix={normalizedTicker}
-          value={householdClassification}
-          onClassify={(c) => onClassifyTicker(normalizedTicker, c)}
-        />
-      )}
-
-      {normalizedTicker === '' && (
-        <TickerClassifier
-          idSuffix="manual"
-          value={form.manualBlend}
-          onClassify={(manualBlend) => patch({ manualBlend })}
-        />
-      )}
+      <AllocationEntry
+        idSuffix="alloc"
+        value={form.manualBlend}
+        onClassify={(manualBlend) => patch({ manualBlend })}
+      />
 
       {ownerWorking && (
         <CurrencyField
@@ -249,6 +207,20 @@ export function AccountEntry({ draft, initial, onSave, onCancel, onClassifyTicke
           onCommit={(employerMatchAnnual) => {
             setCeilingError(null)
             patch({ employerMatchAnnual })
+          }}
+        />
+      )}
+
+      {ownerWorking && isHsa && (
+        <CurrencyField
+          labelKey="accountHsaEmployerLabel"
+          field="account.hsaEmployerAnnual"
+          value={form.hsaEmployerAnnual}
+          invalid={ceilingError === 'errContributionCeiling'}
+          onEdit={() => setCeilingError(null)}
+          onCommit={(hsaEmployerAnnual) => {
+            setCeilingError(null)
+            patch({ hsaEmployerAnnual })
           }}
         />
       )}

@@ -1,5 +1,5 @@
 /**
- * 2026 income-aware healthcare constants (pre65-healthcare-aca-hsa doc). ACA-PTC
+ * 2026 income-aware healthcare constants (pre65-healthcare doc). ACA-PTC
  * (pre-65), IRMAA (post-65), HSA (the 4th bucket). Each figure is `Sourced` with
  * its citation + directional marker.
  *

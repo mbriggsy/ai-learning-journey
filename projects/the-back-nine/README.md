@@ -62,18 +62,18 @@ When the recommendation layer lands, it will be gated *structurally*: the solver
 
 ## Where the build is
 
-The MVP is four phases. Each is a real milestone with its own plan, gates, and verification.
+The MVP is four acts. Each is a real milestone with its own plan, gates, and verification.
 
-| Phase | What it is | State |
+| Act | What it is | State |
 |---|---|---|
-| **1 — Foundation** | The deterministic engine + tax & healthcare overlays + accumulation projection + the date-search + the encrypted store | ✅ **Complete, reviewed, pinned** |
+| **1 — Engine** | The deterministic engine + tax & healthcare overlays + accumulation projection + the date-search + the encrypted store | ✅ **Complete, reviewed, pinned** |
 | **2 — First Answer** | The guided account-level intake → the state-adaptive first answer → confidence viz → first Save | 🔨 **In progress** — the intake is built & reviewed; the confidence-band viz is next |
 | **3 — Controls** | The budget builder + manual sequencing & Roth controls + healthcare surfaces + re-entry | ⬜ Planned |
-| **4 — Solver & Recommendation** | The validation harness → the solver → the recommendation surface | ⬜ Planned |
+| **4 — Recommendation** | The validation harness → the solver → the recommendation surface | ⬜ Planned |
 
-Phase 1's engine is pinned against primary sources: 25 tax/health constants verified against IRS / CMS / HHS / eCFR / SEC filings, and cohort mortality re-derived from the SSA Trustees-Report survival tables for the household's actual birth cohorts. The guided intake delivers a **live, provisional Monte Carlo reading that sharpens as you type**, proven end-to-end in real Chromium under the enforced CSP.
+Act 1's engine is pinned against primary sources: 25 tax/health constants verified against IRS / CMS / HHS / eCFR / SEC filings, and cohort mortality re-derived from the SSA Trustees-Report survival tables for the household's actual birth cohorts. The guided intake delivers a **live, provisional Monte Carlo reading that sharpens as you type**, proven end-to-end in real Chromium under the enforced CSP.
 
-The engine and intake carry **852 tests across 39 files**, all green (at the Phase 2 / U5 milestone), alongside lint, bundle-budget, ACA-freshness, and browser-CSP gates.
+The engine and intake carry **942 tests across 44 files**, all green (at the Act 2 / U5 milestone), alongside lint, bundle-budget, ACA-freshness, and browser-CSP gates.
 
 ---
 
@@ -118,14 +118,14 @@ Your data is entered manually, encrypted locally, and never transmitted — ther
 
 ---
 
-## Map of the source of truth
+## Map of the documentation
 
-The project runs on a strict precedence of documents — when they disagree, the higher one wins:
+Start at [`docs/README.md`](docs/README.md) — the narrator. The set is story-first:
 
-1. **North-star (the *why*):** [`docs/plans/direction-reset-2026-06-04.md`](docs/plans/direction-reset-2026-06-04.md)
-2. **Requirements v2 (the locked *what / how*):** [`docs/brainstorms/the-back-nine-requirements.md`](docs/brainstorms/the-back-nine-requirements.md)
-3. **Live plan:** [`docs/plans/back-nine-mvp/`](docs/plans/back-nine-mvp/) — roadmap + four phase docs
-4. **Verified reference numbers:** [`docs/research/`](docs/research/) — every constant traced to its primary source
+1. **Product — the *why* + *what*** (thesis, cardinal rule, locked decisions, the R1–R40 requirements ledger): [`docs/product.md`](docs/product.md)
+2. **Roadmap — *where we are* + *what's next*** (the four acts + the maintained You-Are-Here per-unit status table + the requirement→unit trace): [`docs/roadmap.md`](docs/roadmap.md)
+3. **Architecture — *what you must never break*** (the load-bearing engine invariants, one canonical home): [`docs/architecture.md`](docs/architecture.md)
+4. **Act plans** [`docs/plans/`](docs/plans/) · **decision records** [`docs/decisions/`](docs/decisions/) · **research** [`docs/research/`](docs/research/) · **glossary** [`docs/glossary.md`](docs/glossary.md)
 5. **Project conventions & landmines:** [`CLAUDE.md`](CLAUDE.md) · **work queue:** [`TODO.md`](TODO.md) · **hard-won lessons:** [`docs/insights/`](docs/insights/)
 </content>
 </invoke>

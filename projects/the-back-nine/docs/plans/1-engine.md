@@ -1,0 +1,238 @@
+---
+title: "Act 1 — The Engine"
+doc-type: plan
+status: shipped
+created: 2026-06-17
+updated: 2026-06-17
+derives-from: [docs/product.md, docs/roadmap.md]
+lifecycle:
+  coded: 2026-06-11
+  code-reviewed: 2026-06-11
+---
+
+# Act 1 — The Engine
+
+This is the as-built plan for Act 1: the deterministic Monte Carlo engine, the two zero-draw overlays both controls will stand on, the encrypted-at-rest store, and the accumulation fold that produces the fuck-off date. It is the single home for the U0–U4 and C1–C3 unit bodies.
+
+**Status: shipped, reviewed, and pinned. Act 1 closed 2026-06-11.** Nothing user-facing ships in this act — the engine's number must be *right*, the overlays must reduce byte-identically to the validated spine when off, and the store's guarantee must be *proven* before any surface consumes them. Every validation gate is green (typecheck · the full vitest suite · lint · `verify:aca` · the bundle budget · `verify:csp`); the live counts live once in [roadmap.md](../roadmap.md#validation-gates), not restated here.
+
+Why this is Act 1: the two hardest, highest-risk surfaces — *correctness* (a calm-but-wrong number, and later a calm-but-wrong recommendation, fail the bar worse than no tool — R25) and *trust* (R16: provable before spoken) — are the foundations everything else stands on. The substrate the solver will later search (the pluggable sequencing policy, the tax overlay, the healthcare overlay) is built and validated here, *before* any control surface or solver exists. Act 3 controls and the Act 4 solver *drive* this substrate; they never re-implement decumulation.
+
+## How to read this doc
+
+The **load-bearing engine invariants live once, in [docs/architecture.md](../architecture.md)** — CRN and the single shared market draw, stateless Box-Muller, the reduce-to-spine byte-identity, the `validateParams`/R19 gate, the constants discipline, and the per-overlay contracts. This plan does **not** restate them; it links to them and records what each unit *delivered*, the key as-built notes, and which requirements landed where. When this doc and architecture.md disagree about an invariant, architecture.md wins.
+
+Requirement numbers (R1–R40) are the locked contract in [docs/product.md](../product.md); the requirement→unit trace is in [docs/roadmap.md](../roadmap.md).
+
+## The units at a glance
+
+| Unit | What it delivers | Requirements |
+|---|---|---|
+| **U0** | Scaffold, conventions, PWA shell, CI, engine-purity lint, strict CSP, the canonical constants module | Enabler; R13, R15, R16 |
+| **U1** | MC engine core: determinism + CRN, joint-survivor longevity retaining survivor identity, Trinity/Bengen externally-derived fixtures, the earned-income bridge, pluggable withdrawal-sequencing | R3, R9, R14, R19 (engine half) |
+| **U2** | Tax-and-accounts overlay: buckets, ordinary tax/gross-up, RMD birth-year, SS provisional-income fixed-point, MFJ→single | R9, R24-adjacent, R19 (engine half) |
+| **U3** | Healthcare overlay: ACA-MAGI + IRMAA-MAGI, ACA fixed-point + cliff branch, IRMAA 2-yr lag, HSA 4th bucket; + the M6 solver output contract | R24, R9, R19 (engine half) |
+| **U4** | Encrypted store + key lifecycle + recovery/export/restore | R15, R16, R17, R18, R19 (store half) |
+| **C1** | Contribution/HSA-limit constants + the ticker→asset-class blend table | R31, R37, R19, R36 |
+| **C2** | Accumulation projection: the signed per-bucket contribution inflow on the one continuous CRN timeline | R30, R31, R33, R34, R38, R19 |
+| **C3** | The date-search: the non-monotone-robust sweep over the work-stop offset — the fuck-off date | R26, R27, R28, R32, R33, R34, R25 |
+
+The C-units are the 2026-06-08 accumulation fold. They land at engine altitude, extend the U-numbering without renumbering it, and **extend, never reopen** the shipped U0–U3 contracts. The construct-absent / `Y == 0` byte-identity goldens are the proof the spine and every shipped fixture stay unperturbed.
+
+---
+
+## U0 — Scaffold, conventions, PWA shell, CI
+
+**Goal.** A buildable, deployable React 19 + TS + Vite 8 PWA skeleton with the monorepo's conventions, the engine-purity lint, a strict CSP, a CI that gates on tests, the canonical constants module, and the full directory map — so every later unit lands in a place that already exists.
+
+**Requirements.** Enabler for all; R13 (static honest-limits disclaimer surface); R15/R16 (the CSP that guards the in-memory model).
+
+**As built.**
+
+- **Toolchain mirrors `burned`.** React 19.2.4, TS `~5.9.3` (tilde, patch-only — a TS minor can't silently change type-checking under a correctness-critical engine) with the strict-plus tsconfig (`noUncheckedIndexedAccess`, `noFallthroughCasesInSwitch`, `noImplicitOverride`), Vite 8 (`rolldownOptions`, `resolve.tsconfigPaths`, `import.meta.dirname`), Vitest 4 (`globals:false`), `pnpm@10.30.3`, flat ESLint 10, no Prettier, `motion` v12. Runtime deps added for the engine/store: `comlink` (the worker boundary), `idb` (IndexedDB), `zxcvbn-ts` (the passphrase-strength estimator, seated in Act 2 · U8 but pinned here).
+- **PWA in `prompt` mode, not `autoUpdate`.** `skipWaiting`+`clientsClaim` can reload a tab mid-encrypt-write and tear an IndexedDB write. `useRegisterSW` surfaces an "Update ready" toast. `globPatterns` precaches all shell assets including the hashed engine-worker chunk. The update-acceptance handler defers `skipWaiting`+reload until any in-flight write commits — the store exposes a "no write in flight" signal (its interface declared here; produced by U4; integration-tested in Act 2 where the real save flow exists).
+- **The canonical constants module is born here** (`src/engine/constants/`). One year-keyed table; every figure carries `{ value, citation, directionalUntilPinned, legalBasis? }`. The ACA legislative item additionally carries `reVerifyEveryBuild` — and the flag is CI-enforced, not advisory: a checked-in `aca-last-verified.json` records the date + verified status, and the build fails if that record is stale or unconfirmed. The spine reads **nothing** from this module (the spine is tax-free); only the overlays do, so a constants change can never perturb a golden case. A shape test asserts each entry carries a citation + the directional marker and that no overlay number is inlined elsewhere. See [architecture.md §8](../architecture.md#8-constants-discipline-srcengineconstants).
+- **ESLint rewritten, not cloned.** `burned`'s flat config is the structural template; the rules are rewritten for this project's layers (`engine · crypto · store · intake · budget · viz · ui · shared`): layer import boundaries plus the engine-purity ban (no `Math`-RNG, `crypto.getRandomValues`, `Date`, `performance`, `process` inside `src/engine/**`; the weak-RNG ban extends to `src/crypto/**`). See [architecture.md §1](../architecture.md#1-the-layer-architecture).
+- **Strict CSP via HTTP response headers** (`vercel.json`), not a `<meta>` tag: `script-src 'self'` (no inline/eval), `connect-src 'self'`, `worker-src 'self'`, the rest `'none'`. The dependency surface is kept deliberately narrow — every runtime dep is same-origin code with reach into the in-memory model. Real-browser enforcement is CI-gated by `verify:csp`. The full boundary, what `connect-src 'self'` does and does not buy, and the forward landmines (Trusted Types breaks `new Worker(new URL(…))`; WASM will need `'wasm-unsafe-eval'`; motion's injected `<style>`) live in [architecture.md §10](../architecture.md#10-security--csp-boundary).
+- **CI runs the suite, not just the build.** Unlike the `ai-journey-stats` build-only template, `verify-the-back-nine.yml` runs typecheck + vitest + the bundle sentinel — the engine and crypto *are* the product, so "tests pass on CI" must be true by construction.
+- **Clean-clone discipline.** `rng.ts` is vendored (copied, not cross-imported); reference fixtures are committed (never gitignored/generated-at-build). The clean-clone path is proven by hiding any sibling artifact and re-typechecking, not by trusting local green.
+- **Static honest-limits disclaimer** ("informational and educational — not legal, tax, or investment advice; validate big, irreversible moves with a professional") ships in the app shell. It is a Unit-0 constant outside the copyGuard's input (R13, kept on honesty grounds, not a Terms requirement).
+
+---
+
+## U1 — Monte Carlo engine core, validation contract, sequencing substrate *(the correctness unit)*
+
+**Goal.** A pure, deterministic TypeScript Monte Carlo engine that models a married couple's joint-and-survivor longevity, decumulates through a pluggable per-year drawdown policy (the sequencing control's substrate), and emits a distribution the UI reads as "X of 10" + a dollar adjustment — validated two ways: a deterministic historical-sequence backtest (a self-consistent oracle + a directional check against published Trinity/Bengen figures) and the Monte Carlo path (asserted as a band strictly below the historical anchor). U1 owns the CRN seam, the shared cash-term transform seam, longevity-with-survivor-identity, the earned-income bridge, and the pluggable-policy substrate U2/U3 hang on and the solver later searches.
+
+**Requirements.** R3 (distribution of futures), R9 (sequencing-as-a-control substrate), R14 (plain-language reading), R19 (engine's numeric-domain half), the correctness success criterion.
+
+**As built.**
+
+- **The engine is a pure function of `(params, seed)`.** The seed is injected by the caller (the Act 2 `memoryModel` layer calls `crypto.getRandomValues`); `src/engine` reads no entropy, clock, or environment. The CRN seam, the single shared market draw, and stateless Box-Muller are the load-bearing determinism contracts — see [architecture.md §2–§3](../architecture.md#2-determinism-and-common-random-numbers-crn).
+- **Lognormal sim with log-drift μ = arithmetic_mean − σ²/2** (the #1 MC bug is naïve arithmetic compounding). The σ in the σ²/2 correction is the *log-return* σ, not the simple-return σ; the engine seam declares whether moments arrive in simple- or log-space and converts consistently. Conservative real-return + inflation defaults (Pfau/Kitces ~3–3.5% real in high-CAPE), all user-overridable, read from the methodology-default layer (not the tax constants module).
+- **Joint-and-survivor longevity from COHORT tables, retaining survivor identity.** `P(last survivor alive) = pₓ + pᵧ − pₓ·pᵧ`. The hard requirement: sample per-path, per-spouse death years AND retain which spouse dies first per path — the closed-form mixture alone does not retain survivor identity, and the death-order conditional filter (Act 3 / Act 4) is unbuildable without it. Two-regime horizon (joint → survivor): survivor-SS step-down (keep the larger benefit) + survivor-spending ratio.
+  - **The survivor-spending ratio is grounded, not guessed.** Because it scales the survivor's spending and so rides the Tier-1 survival floor (the solver's hero metric), it is grounded to a citable research range (Blanchett "two-thirds-to-three-quarters"), source-stamped with a `directionalUntilPinned` marker, ships a defensible default near ~75%, stays editable, and carries a calm note on its dangerous direction (too *low* understates the survivor's need — the unsafe direction for a survivor product).
+  - **The couple survival figure is derived from the two sex-specific cohort curves through the formula — never a hardcoded couple number.** The longevity test asserts internal consistency, not a constant. Independence is assumed (real spousal mortality is positively correlated), which mildly overstates last-survivor probability — acceptable because it errs *safe* for a survival floor, documented so it isn't mistaken for precision.
+- **The pluggable drawdown policy — sequencing as a first-class engine parameter (R9).** `simulate` takes a per-year drawdown policy deciding which bucket funds each year's net withdrawal. The named set is `{proportional, taxable-first, pre-tax-first, bracket-fill}`. The policy is the substrate both the manual control (Act 3 · U10) and the solver (Act 4 · U15) drive — neither re-implements decumulation. The policy is a function of per-year bucket state + overlay context, consuming **zero** draws — it decides *which bucket*, not *what return*. With buckets collapsed to one pool and the overlay off, every policy reduces to the single-pool decumulation. `bracket-fill` is the tax-aware policy (its tax behavior is validated in U2).
+- **Earned-income bridge regime.** `simulate` accepts a per-person flat-real earned-income stream. Each earning window is `[year 0, min(retirementYear, sampledDeathYear))`, evaluated per path — income truncates at death (never credit a dead earner — the survivor scenario the product exists to model honestly). The bridge is a pre-withdrawal adjustment fed into the same per-year update function: `netWithdrawal = max(0, spending − earnedIncome)`, clamped at zero, no surplus contributed back. Reduce-to-spine condition: `earnedIncome = 0` for both spouses in every simulated year. See [architecture.md §4–§5](../architecture.md#4-the-shared-per-year-cash-term-transform-seam).
+- **Outputs and the headline reading.** The full terminal-value distribution + percentiles + depth-of-failure (not a binary pass/fail) → `confidence.ts` maps it to "X of N" (display denominator pinned at 10), the dollar adjustment, and the **outcome state**. Never "probability of failure" (Kitces framing). `confidence.ts` is pure; it quantizes the headline-determining statistic to a coarse grid before the band-edge decision so the displayed `X of 10` is robust to last-ULP transcendental differences across browser JS engines (the screenshot-reproduction guard — [architecture.md §9](../architecture.md#9-cross-engine-headline-robustness)). It emits margin metadata for both rounded outputs (the X-of-N headline and the dollar figure) so a stateful Act-2/Act-3 caller can layer sticky rounding; it does not itself implement cross-edit hysteresis.
+- **The outcome-state set (engine-owned, single-sourced in `src/shared/model.ts`):** `on-track / borderline / off-track / indeterminate / over-funded / already-failing`. The engine is the sole authority over the state, all band edges, the indeterminate selection, and the **10/10-honesty clamp** (an all-paths-survive distribution renders as the over-funded near-ceiling, never a bald "10 of 10").
+- **Two validation modes (the correctness contract):**
+  - **(A) Historical-sequence backtest** (`historical.ts`) — the anchor, asserted two ways: *self-consistency* (reproduces our own committed golden fixture byte-for-byte, so a regression fails loud) and *directional* against published Trinity/Bengen (lands in the right band, not exact equality). Externally-derived fixtures — see [architecture.md §5](../architecture.md#externally-derived-fixtures-dnd-012).
+  - **(B) Monte Carlo** (`simulate.ts`) — validated against a band only: an i.i.d. MC runs more pessimistic than the historical backtest, so the MC result must land inside the band and strictly below the historical anchor. The Mode-B band runs on historically-calibrated return/vol moments (not the conservative production defaults), and "strictly below" holds only in the stress region the band defines.
+- **The fixture arms, as pinned (2026-06-11).** The published Trinity/Bengen numbers were directional until their source series were pinned; at the P1-exit pin pass:
+  - **Trinity corporate arm landed** — `damodaranSeries.ts` (Moody's Aaa constant-maturity total return, 1928–1995), count-pinned at **37/39 ≈ 94.9%** vs the published 95.1%, same failing cohorts (1965/66), beside the untouched Shiller goldens.
+  - **Bengen bit-exactness retired** — no canonical dataset exists (Bengen's 1994–95 tail was estimated, SBBI revises across editions). The committed proxy is the Damodaran 10-yr-Treasury total-return arm: duration-conservative (SAFEMAX-analogue ~3.67% vs the published 4.15% — never reports a higher safe rate than the 5-yr truth), worst-cohort structure reproduced (1966/65/64), counts pinned to an independent derivation.
+  - **The SSA cohort gate cleared, with a naming correction.** `table4c7.html` was a phantom (404; "4.C7" is Trustees-Report table numbering, not a filename). The real cohort tables (`CohLifeTables_{M,F}_Alt2_TR2024.csv`, TR2024/Alt2) are fetched, committed sha256-pinned at `src/engine/reference/ssa-snapshot/`, and `mortality.ts` is re-derived 1:1 from l(x)/l(65) for the household's **1969/1972 cohorts** (ratified): S(90|65) male 0.3209 / female 0.4348 / couple 0.6162. The earlier Gompertz fit (0.2799/0.3800/0.554) was **optimistic** — the pin moves headlines the honest direction. `SURVIVAL_MAX_AGE` extended 115→119 (full SSA support; CRN-safe — inverse-CDF, one uniform per person).
+- **Worker boundary contract.** Runs in `engine.worker.ts` behind Comlink, a single long-lived reused instance. Result shape, error propagation (the tri-state `pending | resolved-distribution | calm-error`), and the no-worker main-thread fallback live in [architecture.md §11](../architecture.md#11-the-worker-boundary).
+- **Engine's R19 half.** `validateParams` rejects/clamps at the worker boundary and returns the defined indeterminate state for invalid input — no `NaN`/`Infinity` escapes a percentile or headline. See [architecture.md §6](../architecture.md#6-the-r19-numeric-gate-validateparams).
+
+---
+
+## U2 — Tax-and-accounts overlay *(the first control's tax substrate)*
+
+**Goal.** A core engine unit (`src/engine/taxOverlay.ts`) that turns the tax-blind spine into a tax-aware one — per-person account buckets, ordinary-income tax on withdrawals + RMDs + conversions, SS provisional-income taxation as a per-year fixed-point, and the MFJ→single filing switch at the first death — as a deterministic per-year cash-term transform that consumes **zero** draws and reduces byte-identically to the validated spine when off. This is the substrate the manual Roth/sequencing controls (Act 3 · U10) and the solver (Act 4 · U15) move; it is built and validated here, before any control surface exists.
+
+**Requirements.** R9 (conversion + tax-aware sequencing substrate), R24-adjacent (the tax half of the income picture healthcare couples into), R19 (engine numeric half), the correctness success criterion.
+
+**As built.**
+
+- **The structural sibling of the earned-income bridge.** A per-year deterministic transform of the cash-flow term, indexed by absolute year, fed into the same per-year update function, consuming zero draws. The bridge nets down; the overlay grosses up (tax increases the cash needed; a conversion adds a tax bill paid from the taxable bucket). The detailed contracts — per-person buckets, the gross-up fixed-point (k ≈ 0.74, `GROSS_UP_MAX_PASSES = 128`), the SS provisional-income fixed-point, RMD birth-year derivation (72/73/75, non-convertible), the MFJ→single switch, and §1014 basis step-up being IN — all live in [architecture.md §7.1](../architecture.md#71-tax-and-accounts-overlay-taxoverlayts).
+- **Reduce-to-spine with an exhaustive OFF condition.** Byte-identical to the spine when, and only when, **buckets collapsed to one pool AND conversion = 0 AND ordinary-tax off AND RMD-inert**. RMD-inert is a clean-fixture clause, not a total-perturbation one: under the single-shared-draw rule a tax-off forced pre-tax→taxable relocation moves money between two identically-growing buckets and is provably total-neutral; it is asserted separately at the ledger level. See the reduce-to-spine table in [architecture.md §5](../architecture.md#5-the-reduce-to-spine-invariant-byte-identity).
+- **Both candidate arms run at identical tax fidelity** — there is no tax-blind arm. A tax-blind delta is sign-inverted (it sees only the cash drain of paying conversion tax, so every conversion looks worse). This unit exists to prevent that.
+- **`bracket-fill` validated here.** The tax-aware policy (fill ordinary income to a target bracket edge before drawing tax-free) is wired to the U1 seam; its tax behavior — lower lifetime tax than `pre-tax-first` on a constructed case — is validated in this unit.
+- **Constants discipline.** Every tax figure routes through `src/engine/constants/`, marked directional; none inlined in `taxOverlay.ts`. The fixture carries its OBBBA-2025 legal basis as provenance metadata (a statutory bracket change reads as a vintage bump, not silent inflation drift). The senior-bonus carries its MAGI phase-out and 2028 sunset.
+
+**Schema note.** The schemaVersion-2 field shape (per-person pre-tax/Roth/taxable buckets, per-person birth year, filing-status / bracket-vintage / app-default-version stamps) is defined here and first written to disk by Act 2's first Save (the first answer is account-aware per R35).
+
+---
+
+## U3 — Healthcare overlay *(income-aware ACA / IRMAA / HSA — the hardest net-new unit)*
+
+**Goal.** A core engine unit (`src/engine/healthOverlay.ts`) that makes healthcare cost income-dependent and continuous across the Medicare line — pre-65 ACA-PTC as a per-year fixed-point with explicit cliff branching, post-65 IRMAA as a 2-year-lagged feed-forward, and HSA as a fourth account bucket — as a deterministic per-year cash-term transform that consumes **zero** draws, shares the one market draw, is CRN-safe, and reduces byte-identically to the validated spine when off. ACA-MAGI and IRMAA-MAGI are two distinct calculators. Built and validated here because a disclosed omission of a cliff **inverts which strategy wins** (D6, R24) — the solver may not optimize over a healthcare effect it cannot see.
+
+**Requirements.** R24 (income-dependent healthcare across the Medicare line), R9 (the health half of the income picture the controls/solver move), R19 (engine numeric half), the correctness success criterion.
+
+**As built (COMPLETE 2026-06-10: M1–M5 + M6).**
+
+- The full overlay contract — the two distinct MAGI calculators, the ACA-PTC fixed-point with the explicit 400%-FPL cliff branch, the 2026 base case (cliff ON; enhanced subsidies a scenario toggle, build-gated by `verify:aca`), the SLCSP-benchmark-as-user-input rule, the IRMAA 2-year-lagged feed-forward with per-person hard cliffs and the seeded MAGI history, the two enrolled-count clocks, the HSA fourth bucket (the ACA-premium trap, Medicare-zeroes-contribution, the post-65 non-qualified laundering negative test), and the couple/death-order two-clock interaction — all live in [architecture.md §7.2](../architecture.md#72-healthcare-overlay-healthoverlayts).
+- **Reduce-to-spine.** Byte-identical to the spine when healthcare modeling is off (no ACA premium, no IRMAA surcharge, no HSA bucket). Composes **after** the tax overlay on the shared cash-term seam (ACA premium / IRMAA surcharge are spending the tax gross-up does not include).
+- **The load-bearing cliff-inversion test (the case that justifies D6).** A conversion that looks beneficial under a tax-only model becomes net-negative once it knocks the household over the 400%-FPL cliff — proving the omission *inverts which strategy wins*, not just blunts a delta. This is why healthcare is built and validated in the engine, not bolted on at a surface.
+- **The M6 fold added the solver output contract** (the surfaces a future solver and the wire layer consume): `totalTaxPaidReal` (the *pay-less-tax* objective input), the per-path death-year `Distribution.taxAware` surface, and the typed `SimInfeasible` sentinel (the candidate is infeasible as a whole — never a silently dropped path, never an uncaught throw; a solver ranks it worst, the headline route surfaces a calm error, the date route fails all-or-nothing). M6 also added the `ENGINE_MAX_*` computable-domain bounds from the boundary-review fold. See [architecture.md §7.5](../architecture.md#75-the-solver-output-contract-m6).
+
+**Note.** HSA *spend* (the resumed U3·M5, "B1") is decumulation-side and is tracked separately from this engine unit; HSA *contributions* land in accumulation (C2, per R38).
+
+---
+
+## U4 — Encrypted local store, key lifecycle, recovery/export/restore *(the trust unit)*
+
+**Goal.** The trust layer — derive an AES key from a passphrase, encrypt the model at rest in IndexedDB, lock/unlock, and provide the recovery-phrase + encrypted-export/restore mechanism. This unit makes R16's promise *provable* and hands the passphrase-strength enforcement reason forward to Act 2 · U8.
+
+**Requirements.** R15, R16, R17, R18; R19 (store's no-falsely-confident-restore half). Independent of U1–U3 — parallelizable.
+
+**As built.**
+
+- The full key-lifecycle contract — PBKDF2-600k → AES-GCM-256, the data-key (DK) indirection (one copy of the model, so the recovery path can never restore a stale copy), the three record types each with its own fresh salt + IV, the `schemaVersion`-first-field migration ladder, the HKDF-SHA-256 recovery-key derivation from a BIP-39 12-word phrase, the numeric never-depleted sentinel (`-1`, never `Infinity`/`NaN`/`null`), the honest-lock reference-drop posture, the synchronous write-gate conjunction (a derived session key AND a current `passphraseWrap`), and the atomicity/durability rules — all live in [architecture.md §7.3](../architecture.md#73-encrypted-local-store--key-lifecycle-srccrypto-srcstore).
+- **The write-gate conjunction is the survivor-stranding guard, stated once.** A writable store handle requires both a derived session key and a current `passphraseWrap`, bound into the same seam. The recovery-unlock path is exactly why both clauses are needed: it derives a key and decrypts the model, yet writes must stay blocked until the new `passphraseWrap` is re-minted — otherwise the survivor could silently degrade the vault to recovery-phrase-only access. There is no reachable cleartext / unkeyed / stale-credential write path.
+- **In-place recovery unlock is the survivor's primary door.** When the vault is intact but the passphrase is unknown, the surviving spouse unlocks in place (recovery key → unwrap DK → decrypt → mandatory blocking new-passphrase gate). File-restore is only for the device-wiped case. Recovery + export + restore are one mechanism; **mandatory export at first save** (no "remind me later" — that path is where users get burned).
+- **The passphrase-strength floor is the real at-rest boundary** and is pinned at plan level: `zxcvbn-ts` score ≥ 3 AND length ≥ 12. `deriveKey` is unreachable below the floor. The meaningful attacker is offline (holds the blob, brute-forces PBKDF2 on their own hardware), so no UI-layer lockout defends against them — only KDF hardness does. Act 2 · U8 owns only the UI estimator and calm inline feedback, not the threshold or library choice.
+- **The store produces the `isWriteInFlight()` signal** U0's PWA update handler and Act 2 · U8 consume (defer `skipWaiting`+reload until a write commits). A `BroadcastChannel` single-active-session detection keeps a second tab read-only so it cannot clobber the first tab's unsaved edits.
+
+**The migration ladder, as built, covers the v2-with-accounts shape** — the schemaVersion-2 fields U2/U3 defined and C2/C3/D1 extended are written by Act 2's first Save and read through this unit's decrypt-branch ladder (v1→v2→v3).
+
+---
+
+## C1 — Contribution + HSA-limit constants + the ticker→asset-class blend table
+
+**Goal.** Two new directional-until-pinned reference tables: the 2026 contribution/HSA limits (for intake R19 sanity ceilings) and the bundled ticker→`{stock,bond,cash}` blend table (for R37 auto-derivation of the household stock weight).
+
+**Requirements.** R31 (contribution + match + limits), R37 (ticker→blend table + manual classification), R19 (intake sanity ceilings), R36 (no live lookup — bundled/offline).
+
+**As built.**
+
+- **`src/engine/constants/contributions.ts`** — year-keyed: 401(k)/403(b) deferral + age-50 / age-55 / 60–63 catch-up tiers; IRA limit + indexed catch-up; HSA self-only/family + the fixed $1,000 age-55 catch-up; §415(c); HDHP min-deductible/max-OOP. Each `{value, citation, directionalUntilPinned, legalBasis?}`. Sources: Notice 2025-67 (401k/IRA/§415c), Rev. Proc. 2025-19 (HSA + HDHP), SECURE 2.0 §109 as `legalBasis` on the catch-up tiers. The age-55 HSA catch-up is statutorily fixed ($1,000), hard-coded — not a COLA figure.
+- **Contribution limits are INPUT SANITY CEILINGS + the intake per-runway-year expansion rule, not engine math.** The user enters per-account contribution amounts; the engine adds the employer match. The R19 ceiling at entry validates against the *current age's* applicable tier. But flat-real is only the entry shape — the model carries per-year streams (C2), and an age-band ceiling can expire mid-runway (SECURE 2.0 §109's 60–63 super catch-up ends at 64), so the intake expansion applies the age-band ceiling **per runway year** (the super amount carried for 60–63, stepped down to the age-50 tier at 64). A flat projection of a today-legal super amount would compound legally-impossible contributions through 64+ → overstated balance → falsely-early date (the calm-but-wrong-optimistic sin). The conservative mirror (a 58-yo gaining 60–63 eligibility mid-runway) stays unmodeled — errs later/safe.
+- **`src/engine/reference/tickerBlend.ts`** — the bundled category-keyed table → `{stock, bond, cash}` blend per issuer share-class family (VTI == VTSAX → one row). The blend collapses to the engine's `stockWeight = stock / (stock + bond + cash)` with cash folded into the bond sleeve (v1 engine is 2-asset). TDFs ship a static "today's allocation" snapshot per fund. Citation = the issuer product-page allocation panel, with SEC EDGAR N-PORT as the independent backstop. Unrecognized tickers are handled at intake (D1's manual classifier) — the table is the lookup, not the fallback.
+- **Pin status.** Shapes were decided here; every figure shipped `directionalUntilPinned: true` and the exact values were transcribed from the named primaries at the P1-exit pin pass.
+
+---
+
+## C2 — Accumulation projection: the signed per-bucket contribution-inflow term
+
+**Goal.** Extend the engine with the pre-retirement saving phase: a per-bucket contribution inflow (+ employer match → pre-tax; + HSA contributions per R38) in the working years on the **existing** draw stream, producing the retirement-onset balance + basis the existing decumulation consumes — reducing **byte-identically** to today when the construct is absent or the phase is empty.
+
+**Requirements.** R30 (project the accumulation phase), R31 (per-account flat-real contributions + match, stop at the tested date), R33 (healthcare off during accumulation), R34 (inherit the engine invariants — one continuous timeline, one per-path future, empty-phase byte-identity), R38 (HSA contributions), R19 (engine numeric half), the correctness success criterion.
+
+**As built.**
+
+- **One continuous timeline — no new draw stream.** The contribution inflow occupies the existing working-year slots `[0, Y)`; `buildDraws`/`maxHorizon` are unchanged, so CRN across candidate offsets and the empty-phase byte-identity hold for free. The full contract — end-of-year-at-face-value crediting (`stepYear` the one owner), the AFTER-the-bucket-scale overlay fold, the death-aware presence-gated working-year clamp, no accumulation-phase income-tax engine — lives in [architecture.md §7.4](../architecture.md#74-accumulation-projection-decumulationts-taxoverlayts) and the [§0–§7 decision record](../decisions/accumulation-fuck-off-date.md).
+- **Byte-identity is PRESENCE-keyed, not value-keyed.** The accumulation construct *absent* from params ⇒ byte-identical to the spine — asserted on **both** the MC `simulate` path AND the historical/Trinity backtest path. A zero-valued-but-constructed run is deliberately **not** byte-identical: the working-year withdrawal clamp is live whenever the construct is present. The negative companion (a zero-valued-but-constructed still-working drawing household *differs* from the spine) is what proves the presence gate owns byte-identity.
+  - The signature change (appending the contribution stream AFTER `stockWeight`, never inserting it before — which would silently re-bind every existing call's `stockWeight` arg) had to keep `historical.ts`'s Trinity backtest call site byte-identical. The first draft omitted the historical call site; **review caught it.**
+- **The crediting convention is the conservative one.** A contributed dollar earns no growth in its arrival year (end-of-year crediting) — full-year crediting would overstate the retirement-onset balance → a falsely-early date. Employer match → pre-tax even on a Roth 401k. A taxable contribution raises basis at full (unscaled) value. The contribution never enters the draw pool, the RMD forced-excess base, or the basis denominator.
+- **HSA contributions → the `hsa` bucket, zeroed owner-ENROLLMENT-keyed** (`t ≥ onset_i`, keyed to the owner never the spouse; absent-signal default = the owner's 65th sim-year, so C2 ships before C3 supplies the onset signal). The 6-month Part A retro trap is disclosed, not modeled in v1 (the intake caveat string is owned by D1).
+- **Healthcare OFF during accumulation is delivered by the date-search's stream construction (C3), NOT an engine gate** (corrected). C2's responsibility is only the contribution inflow + the working-year clamp; C2 does not assume the overlay's age-gate is inert in working years (for a mid-50s couple `pre65 > 0` every working year — healthcare stays off only because the streams are zero there).
+- **The new goldens, as shipped:** construct-absent byte-identity on both the MC and Trinity paths (+ the zero-valued-but-constructed negative companion); `Σbuckets == runningTotal` after every contribution year (the total now grows); the destination-bucket golden on the overlay path (the named bucket += exactly the contribution; a proportional smear passes the Σ golden but fails this); the direction golden (end-of-year crediting yields a retirement-onset balance ≤ the start-of-year-credited balance); the empty phase (`Y == 0`) consumes zero extra draws and is byte-identical at the same dimensions.
+- **R19.** NaN-first guards on every new stream at both `validateParams` and the overlay backstop; an accumulation construct with `initialPortfolio == 0` is rejected as indeterminate (never a silent depleted-at-t=0 run that swallows every contribution).
+
+---
+
+## C3 — The date-search: the non-monotone-robust sweep → two confidence-graded dates *(the fuck-off date)*
+
+**Goal.** The new outer search: for each candidate household date-offset `Y`, build the Y-dependent parameters (per-person `retirementAge` overrides — still-working → `currentAge_i + Y`, already-retired kept verbatim; contributions truncated to `[0, Y)`; healthcare cost streams zero in `[0, Y)` and real from `Y`, with per-person Medicare onset + the working-year IRMAA-MAGI override), run the existing engine accumulate-then-decumulate at each candidate on one seed at the pinned 16k paths, and report the **floor** and **lifestyle** dates (`today + Y`) — each the earliest offset whose quantized conservative lower confidence bound clears the bar **and keeps clearing** — with the window-edge and no-date-in-window outcomes first-class, disclosing any non-monotone region. Floor and lifestyle terminate independently. **This is the fuck-off date.**
+
+**Requirements.** R26 (the search; non-monotone-robust, exhaustive, never bisection), R27 (two dates), R28 (confidence-graded; re-grade on override), R32 (the date-search is not the solver), R33 (healthcare on at the tested date), R34 (one per-path future end-to-end), R25 (no false-earliest date — and no undesigned pessimistic miss).
+
+**As built.**
+
+- **`buildCandidateParams(Y)` is the single owner of Y-dependent construction** (a pure transform of the *original* entered params, never progressively mutated). "Set the tested date" is not one knob — from one `Y` it derives: the per-person `retirementAge` overrides (every still-working person's retire offset equals `Y` by construction; an already-retired person keeps their entered age verbatim, never un-retired into phantom income); the contribution/match streams truncated to `[0, Y)`; and the healthcare cost streams + onset + override. SS claim ages are held as entered (claim is not searched). A test asserts all three boundaries coincide at `t = Y` **for a different-`currentAge` couple** — a same-age fixture passes vacuously and is banned.
+- **Healthcare-on at the tested date = stream construction, not an engine gate** (`healthcareStreams.ts`). The per-person Medicare/IRMAA onset is `onset_i = max(65 − currentAge_i, retireOffset_i)` (employer coverage past 65 delays Medicare; an already-retired spouse's onset collapses to their 65th sim-year, so a retired 66-yo IS priced from t=0 — the household `max(65, A)` form wrongly zeroed them). The working-year IRMAA-MAGI additive override is built conservatively-high from entered income → surcharge ≥ reality → date later/safe; **review extended it to bridge years inside a lookback window for the plain-decumulation caller — closing a latent shipped hole** where a near-65 bridge year could be priced off a falsely-$0 working year.
+- **Bounded exhaustive sweep, with an ALL-OR-NOTHING rejection policy.** `runDateSearch` validates all in-window candidates up-front before dispatching any 16k-path run; any candidate rejection ⇒ the run-level input-failure variant (naming the offending input + the uncovered sim-years), **never drop-and-continue** (an unevaluated offset voids the "earliest" claim and would crown a false "confirmed earliest" from the survivors). Then each candidate runs `simulate(buildCandidateParams(Y), seed)` on the same seed at the pinned 16k paths.
+- **Non-monotone-robust earliest-date rule, read off a QUANTIZED LOWER confidence bound with a designed tolerance.** The floor date = the earliest `Y` where the essentials track's conservative lower bound (`p̂ − z·SE`, `z = 1.645` one-sided), quantized to `SURVIVAL_GRID` before the compare (the cross-engine idiom), clears the bar = `BANDS.onTrack` (read from `confidence.ts`, never re-typed) **and keeps clearing for every later in-window `Y`** — disclosing any non-monotone region. Paths are pinned at 16,000 so `z·SE ≤ ½·SURVIVAL_GRID` at the bar (the haircut moves the quantized reading at most one grid cell — a designed bounded effect, undesigned at 2000 paths). Reading off the lower bound is what stops a lucky-noise offset from being crowned a false-earliest date (R25); the "keeps holding" rule alone does not (shared-CRN correlated noise would rubber-stamp it). **Never a bisection.** The lifestyle date is the same rule on the full track, terminating independently. The full rationale is in [architecture.md §9](../architecture.md#9-cross-engine-headline-robustness) and the [§0–§7 decision record](../decisions/accumulation-fuck-off-date.md).
+- **Three first-class outcomes per track:** (1) **confirmed date** — the candidate exists below the window top (≥1 later offset of evidence by construction); (2) **window-edge date** — the candidate IS the window top (zero later offsets of evidence), reported WITH the unconfirmed-tail disclosure, never silently crowned, never folded into "no date" (that would be pessimistic-false); (3) **no-date-in-window** — the top offset fails: a first-class result ("no work-optional date within the ~N-yr window" — never "never free," never the window-top offset, never a crash), surfacing the per-offset curve. The window-floor confirmed case (`Y == 0`) reads "work-optional AT today" — one-sided, fully evidenced. `indeterminate` stays reserved for input failure; the `OutcomeState` enum stays closed; persisted sentinels are finite numerics.
+- **Two dates, coincident in the degenerate case.** With a single-total-spend budget the two tracks are byte-identical ⇒ the two dates coincide ⇒ one date. The budget split (Act 3 · U9) separates them — C3 ships the engine + the single-track date now; the mixed outcome ({floor: date, lifestyle: no-date}) shape lands now, the behavioral test rides U9. `floor ≤ lifestyle` is an *expected* property on discontinuity-free fixtures, **never an engine assertion** — the 100%-FPL eligibility floor can legitimately invert it.
+- **One per-path future end-to-end.** Each candidate is graded on one per-path future (runway draws *then* decumulation draws on the same CRN path — no averaged-balance handoff), so final-working-year sequence-of-returns risk (a crash on the largest-ever balance) is honestly priced into the date.
+- **Confidence-graded, re-grades on override.** Each date carries the date↔confidence tradeoff (the lower-bound margin made explicit); the date is graded under the recommended (or user-selected) draw-down strategy and re-grades on a sequencing/conversion override (symmetric with R10). When Act 4 · U14's held-out seed-B machinery lands, the *displayed* grade routes through it; the date-search itself needs only the per-offset SE margin + the two-seed stability test.
+- **The worker seam (added by review).** The sweep runs behind the existing structural Comlink boundary via `engineApi.runDateSearch(params, seed)` — calm-error-total like `runEngine`, the worker never dies mid-sweep. The per-offset curve (≤~11 points per track) crosses by structured clone, not the transferable machinery (which serves the 2000+-element headline buffers). Mid-sweep cooperative cancellation ships: `runDateSearch` awaits a real macrotask yield between candidate runs (so a cancel signal can land) and `dateSearch.ts` stays pure by taking an injected async `shouldContinue()` parameter (the same injected-dependency shape as the seed — see [architecture.md §1](../architecture.md#srcengine-is-pure)). SharedArrayBuffer/Atomics polling was rejected (it needs cross-origin-isolation headers, a `vercel.json` posture change out of scope).
+- **The already-retired short-circuit.** A household where `people.every(p => p.retirementAge <= p.currentAge)` never enters the sweep (D2 routes it to the spine-first answer; a `Y > 0` candidate would zero a retiree's real ACA premiums). The engine-layer mirror is an enforced contract: driving `dateSearch.ts` directly with an all-retired household returns the input-failure rejection with **zero candidate runs dispatched** — not caller discipline.
+- **The intuitive-direction sanity oracle is scoped, not universal.** More saved / higher contributions / lower spend move the date earlier — but only with healthcare OFF, or with MAGI pinned far from **all three** modeled discontinuities (the 400%-FPL cliff, every IRMAA tier boundary, AND the 100%-FPL eligibility floor) at every candidate `Y`. A cliff-straddling more-saved → equal-or-later date is **correct engine output**, never "fixed" by forcing monotonicity.
+
+---
+
+## Verbatim-preserved load-bearing facts
+
+These are quoted facts from the source plan, preserved exactly because the numbers/values are load-bearing and not to be paraphrased:
+
+- Trinity corporate arm: **37/39 ≈ 94.9% vs the published 95.1%**, same failing cohorts (1965/66) — `damodaranSeries.ts`.
+- Bengen proxy: Damodaran 10-yr-Treasury arm, **SAFEMAX-analogue ~3.67% vs the published 4.15%**, worst-cohort structure 1966/65/64.
+- SSA cohort pin (1969/1972 cohorts, TR2024/Alt2): **S(90|65) male 0.3209 / female 0.4348 / couple 0.6162**; retired Gompertz fit 0.2799/0.3800/0.554 (was optimistic). `SURVIVAL_MAX_AGE` 115→119.
+- Survivor-spending ratio default **~75%**, grounded to the Blanchett literature, directional-until-pinned.
+- Gross-up worst-case contraction factor **k ≈ 0.74**; `GROSS_UP_MAX_PASSES = 128` (worst case ~113 passes).
+- RMD ages: **72 (≤1950) / 73 (1951–1959) / 75 (1960+)**.
+- PBKDF2 **600,000** iterations → AES-GCM-256; recovery phrase **BIP-39 English, 2048 words, 12 words = 128 bits**, HKDF-SHA-256 wrap with `info = utf8('the-back-nine/recovery-wrap/v1')`.
+- Passphrase floor: **`zxcvbn-ts` score ≥ 3 AND length ≥ 12**.
+- Never-depleted sentinel **`NEVER_DEPLETED = -1`**.
+- Date-search: **`z = 1.645` one-sided**, paths pinned at **16,000** so `z·SE ≤ ½·SURVIVAL_GRID` at the bar; bar = `BANDS.onTrack`.
+
+(Live build metrics — the test count and bundle size — are not immutable facts; they live once in [roadmap.md](../roadmap.md#validation-gates).)
+
+(2026 contribution/HSA/HDHP limits and tax/health constants are deliberately *not* reproduced here — they live, year-keyed and cited, in `src/engine/constants/`. See [architecture.md §8](../architecture.md#8-constants-discipline-srcengineconstants).)
+
+---
+
+## Pointers
+
+- **The Social Security sub-engine** — own + spousal (Method C) + survivor (§202 / RIB-LIM), driven by per-person PIA + claim age. Also shipped and reviewed (the review caught and fixed a cardinal-sin optimistic survivor-floor bug). It feeds the same cash seam this act's overlays use. Plan: [docs/plans/features/social-security.md](features/social-security.md).
+- **The accumulation / fuck-off-date engine decision record** — the permanent §0–§7 record of *why* C1–C3 are built the way they are (the one continuous timeline, the signed inflow + its golden, the date-search-is-not-the-solver stance, the per-candidate stream construction). The C-unit bodies above cite "§3b", "§7", etc. into it. Record: [docs/decisions/accumulation-fuck-off-date.md](../decisions/accumulation-fuck-off-date.md).
+
+---
+
+## Changelog
+
+Live text above reads current. Superseded facts, recorded once:
+
+- **"Phases" → "Acts."** This act was "Phase 1 — Foundation" in the source plan (`docs/plans/back-nine-mvp/phase-1-foundation.md`). The structure and the U-numbering are unchanged; only the prose framing was renamed.
+- **`table4c7.html` was a phantom file.** The P1 exit gate originally named `table4c7.html` as the SSA cohort source to fetch and snapshot. It returns 404 — "4.C7" is Trustees-Report *table* numbering, not a filename. The real cohort tables are `CohLifeTables_{M,F}_Alt2_TR2024.csv` (TR2024/Alt2), now committed sha256-pinned. The mortality fit was re-derived from them 1:1, and the pin moved headlines the honest (more conservative) direction.
+- **Bengen bit-exactness retired.** The plan originally gated Bengen on pinning "the exact Ibbotson intermediate-government dataset." That target was retired at the pin pass — no canonical bit-exact dataset exists (Bengen's 1994–95 tail was estimated; SBBI revises across editions). The committed Damodaran 10-yr-Treasury proxy arm is duration-conservative and count-pinned instead.
+- **The schemaVersion-2 fields were first written by Phase 3 in the original plan;** the 2026-06-08 accumulation amendment moved the first write to Act 2's first Save (the first answer is account-aware per R35).
+- **Healthcare-OFF-during-accumulation was first conceived as an engine gate;** corrected at the accumulation fold to be delivered by the date-search's per-candidate stream construction (C3) — there is no retirement boundary anywhere in the healthcare overlay.
+- **The C2 overlay fold "before the scale" text was a round-2 regression;** the shipped (and tested) convention is the contribution credited AFTER the bucket-scale, at face value.

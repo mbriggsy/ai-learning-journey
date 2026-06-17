@@ -5,7 +5,7 @@
  * consumes: the claim-age-adjusted OWN benefit + the Method C SPOUSAL EXCESS.
  * Survivor §202 (RIB-LIM, lock-flat reduction) is a sibling function added next.
  *
- * See `docs/plans/2026-06-14-001-feat-ss-spousal-survivor-subengine-plan.md` §3/§4.
+ * See `docs/plans/features/social-security.md` §3/§4.
  *
  * EXACTNESS (the load-bearing implementation choice): every factor is an INTEGER
  * rational `{num, denom}` (derived from the POMS per-month fractions in

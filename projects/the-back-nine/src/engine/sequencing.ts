@@ -14,7 +14,7 @@
  * `bracket-fill` (U2 · M6a) is the MECHANISM — fill discretionary pre-tax (cheap ordinary
  * income) up to an INJECTED per-year ceiling, then draw tax-free (taxable, then Roth) — with
  * the ceiling VALUE supplied by the caller, NOT decided here: a tax-bracket edge today, the
- * binding ACA-subsidy MAGI ceiling once U3's cliffs exist (`pre65-healthcare-aca-hsa-2026-06-04`
+ * binding ACA-subsidy MAGI ceiling once U3's cliffs exist (`docs/research/pre65-healthcare.md`
  * §line 74: during ACA years the subsidy ceiling, not the tax bracket, is the binding constraint).
  * With NO ceiling (`+Infinity`) it degrades to `pre-tax-first` — the prior behaviour, so a single
  * pool stays inert (reduce-to-spine).

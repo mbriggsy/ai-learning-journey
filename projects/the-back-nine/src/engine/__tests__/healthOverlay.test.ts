@@ -19,7 +19,7 @@ import { acaApplicablePercentage, acaApplicablePercentageEnhanced, irmaa, partB2
 //
 // Externally-derived (DND/012): every expected figure below is hand-computed from the
 // PUBLISHED definitions, never by re-running the calculator under test.
-//   - research §4a (docs/research/pre65-healthcare-aca-hsa-2026-06-04.md, lines 38/43):
+//   - research §4a (docs/research/pre65-healthcare.md):
 //       ACA-MAGI   = AGI + NON-taxable SS  (+ muni interest + excluded foreign income, 0 in MVP)
 //                    → the FULL SS benefit effectively counts
 //       IRMAA-MAGI = AGI                   (+ muni interest, 0 in MVP) → NO SS add-back

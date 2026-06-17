@@ -1096,7 +1096,7 @@ describe('U3 · M5 — the hsaOwnerIndex wire pass-through is answer-bearing', (
 // ===========================================================================
 // C2 — the accumulation construct: the §7 working-year clamp (presence-gated,
 // death-aware), the per-path contribution assembly seam, byte-identity, CRN,
-// and the R19 gates. Plan: 2026-06-08-001 §1/§2/§7.
+// and the R19 gates. Decision record: docs/decisions/accumulation-fuck-off-date.md §1/§2/§7.
 // ===========================================================================
 
 /** An EXHAUSTIVE-OFF overlay (single taxable pool, tax/RMD off) carrying an optional

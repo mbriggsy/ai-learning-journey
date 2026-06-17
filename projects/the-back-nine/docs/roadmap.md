@@ -1,0 +1,170 @@
+---
+title: The Back Nine — Roadmap (where we are, what is next)
+doc-type: roadmap
+status: living
+created: 2026-06-17
+updated: 2026-06-17
+derives-from: [docs/product.md]
+---
+
+# The Back Nine — Roadmap
+
+This is the single maintained source of build-truth for the repo. The four acts below trace the work from the deterministic engine to the recommendation surface; the **You-Are-Here table** is the honest per-unit status the rest of the docs point to. When a doc and this table disagree about what is built, this table wins.
+
+The *why* and the *what* live in [docs/product.md](product.md). How the engine holds the cardinal rule — and the load-bearing invariants — live once in [docs/architecture.md](architecture.md). This doc is the map between them: which requirement landed in which unit, what is shipped, and what is next.
+
+> The volatile next-action queue lives in `TODO.md`, not here. This doc moves at the speed of *units shipping*; `TODO.md` moves at the speed of *sessions*.
+
+## The four acts
+
+The product grows in four acts. The first two answer the question; the last two are the differentiator.
+
+**Act 1 — Engine** (`docs/plans/1-engine.md`). The two hardest surfaces — correctness and trust — plus the overlays both controls stand on. A deterministic Monte Carlo spine validated against Trinity/Bengen, joint-and-survivor longevity, the zero-draw tax and healthcare overlays, the encrypted-at-rest store, and the accumulation fold (the fuck-off-date search). Nothing user-facing ships in this act. **Done and pinned.**
+
+**Act 2 — First Answer** (`docs/plans/2-first-answer.md`). The magic moment end-to-end: the ~5-minute account-level guided setup, the colorblind-safe visualization, the plain-language confidence statement, the state-adaptive first answer (the fuck-off date for a still-working household; the spine statement for an already-retired one), and the first encrypted Save. **In progress.**
+
+**Act 3 — Controls** (`docs/plans/3-controls.md`). The itemized, time-boxed budget builder plus both manual controls — withdrawal sequencing and Roth conversion — driving the Act-1 overlays, with the healthcare surfaces and the sharpen/re-entry loop. A shippable cold-read milestone in its own right, *before* the solver exists. **Not started** (`src/budget` is `.gitkeep`-only).
+
+**Act 4 — Recommendation** (`docs/plans/4-recommendation.md`). The new layer and the actual differentiator: the solver validation harness, then the solver that ranks candidate strategies on identical futures, then the recommend-second surface, then stale-recommendation handling. **Validation is built and passing before the solver is allowed to recommend.** **Not started** (`src/engine/solver` and `src/engine/validation` are `.gitkeep`-only).
+
+The act-to-act dependency is strict — each act stands on the one before — but the Act-1 overlays feed Act 3 directly, and the validated spine feeds Act 4 directly.
+
+## The You-Are-Here table
+
+The single source of build-truth. Status is honest, not aspirational: `shipped` means coded **and** reviewed; `in-progress` means partially landed; `planned` means scoped and build-ready with zero code; `not-started` means the directory is `.gitkeep`-only.
+
+The C-units and D-units are the 2026-06-08 accumulation fold — tracks that extend the U-numbering without renumbering it (the U0–U17 references are load-bearing across the codebase and insights). C-units land at Act-1 engine altitude; D-units reshape Act-2 intake and the answer surface.
+
+### Act 1 — Engine (shipped + pinned; P1 closed 2026-06-11)
+
+| Unit | What it delivers | Status | Note |
+|---|---|---|---|
+| **U0** | Scaffold, conventions, PWA shell, CI; engine-purity lint; strict CSP | shipped | The burned toolchain; strict CSP ships via HTTP headers, not a meta tag |
+| **U1** | MC engine core: determinism, CRN single shared draw, joint-survivor longevity retaining survivor identity, Trinity/Bengen externally-derived fixtures, sequencing as a pluggable policy | shipped | The validated spine; the survivor-spending ratio is grounded + dangerous-direction-documented |
+| **U2** | Tax-and-accounts overlay: buckets, ordinary tax/gross-up, RMD birth-year, SS provisional-income fixed-point, MFJ→single; reduces-to-spine when off | shipped | Zero-draw deterministic transform |
+| **U3** | Healthcare overlay: ACA-MAGI + IRMAA-MAGI calculators, ACA pre-65 fixed-point + cliff/enhanced toggle, IRMAA 2-yr lag, HSA 4th bucket; reduces-to-spine when off | shipped | Zero-draw; `verify:aca` gates the legislative status. HSA *spend* (the resumed U3·M5, "B1") is decumulation-side and not yet built |
+| **U4** | Encrypted store + key lifecycle + recovery/export: PBKDF2-600k, AES-GCM, recovery phrase, mandatory export/restore, schemaVersion | shipped | The migration ladder covers the v2-with-accounts shape |
+| **SS sub-engine** | Social Security spousal/survivor benefit math | shipped | Reviewed; the review caught + fixed a cardinal-sin optimistic survivor-floor bug |
+| **C1** | Contribution-limit + ticker-blend constants (Notice 2025-67 / Rev. Proc. 2025-19 / issuer-or-EDGAR; directional-until-pinned) | shipped | Feeds the accumulation projection and the household stock/bond/cash blend |
+| **C2** | Accumulation projection: signed contribution inflow on the one continuous absolute-year CRN timeline; presence-keyed reduce-to-spine | shipped | Empty phase (`Y == 0` / construct-absent) reduces byte-identically to plain decumulation |
+| **C3** | The date-search (`dateSearch.ts`): exhaustive, non-monotone-robust sweep over the household work-stop offset; quantized-lower-bound selection — **the fuck-off date** | shipped | Three first-class outcomes per track: confirmed date / window-edge-unconfirmed / no-date-in-window |
+
+### Act 2 — First Answer (in progress)
+
+| Unit | What it delivers | Status | Note |
+|---|---|---|---|
+| **U5 / D1** | Account-level guided setup (the U5 reshape): surface-early, single entry pass; the in-memory orchestrator + R19 sanity | shipped | Cleared the N=1 laptop cold-read on every screen |
+| **U6** (foundation) | Colorblind-safe viz primitives: palette / scale / CVD probe | shipped | The CVD-safe foundation, not the band render |
+| **U6** (render) | The confidence-band / projection-fan RENDER | not-started | Built on the U6 foundation |
+| **U7** | Confidence statement surface + outcome-state system + survivor readout; copyGuard born here | not-started | The plain-language verdict |
+| **U8** | First-Save flow + recovery-phrase display + mandatory export + passphrase-strength gate (`zxcvbn-ts` ≥ 3 ∧ length ≥ 12) | not-started | |
+| **D2** | The state-adaptive first answer surface: date-first for not-yet-retired, spine-first for already-retired; the two-pane laptop layout | not-started | Same calm voice, one intake flow; only the lead answer changes |
+| **R40** | Other income in retirement (pension / rental / annuity / alimony / other) — engine + intake | planned | Build-ready, zero code; the immediate next build. Plan: [docs/plans/features/other-income.md](plans/features/other-income.md) |
+
+### Act 3 — Controls (not started; `src/budget` is `.gitkeep`-only)
+
+| Unit | What it delivers | Status | Note |
+|---|---|---|---|
+| **U9** | Budget builder: itemized, time-boxed, essentials/discretionary; the two-tier lexicographic headline reading | not-started | The two-date split rides U9's degenerate-collapse |
+| **U10** | Manual withdrawal-sequencing control + Roth-conversion lever (both drive the U2 overlay); require-the-hedge lint introduced | not-started | |
+| **U11** | Healthcare surfaces (ACA cliff + enhanced toggle + re-verify gate; IRMAA cliffs; HSA entry) over the U3 overlay | not-started | |
+| **U12** | Sharpen loop + assumption editing + power-user escape hatch | not-started | |
+| **U13** | Returning-user re-entry + per-surface staleness (tax/healthcare vintages, budget line items, the date answer's fixture clocks) | not-started | The date answer joins the per-surface staleness map |
+
+### Act 4 — Recommendation (not started; `src/engine/solver` + `src/engine/validation` are `.gitkeep`-only)
+
+| Unit | What it delivers | Status | Note |
+|---|---|---|---|
+| **U14** | Solver validation harness: optimality/ranking oracle, ranking-stability-under-CRN, grade calibration, held-out-seed reporting — **gates U15** | not-started | The "oracle-cleared" token is the structural gate |
+| **U15** | Solver core: named-policies × conversion-grid search on identical CRN draws; lexicographic objective; byte-identical selection; the WASM measurement gate | not-started | |
+| **U16** | Recommendation surface: recommend-second, confidence-grading, comparative transparency with the runner-up retained, objective ≡ headline, the 10/10→surplus pivot, hedge-on-headline lint | not-started | The actual differentiator |
+| **U17** | Stale-saved-recommendation handling: a saved rec is an executed action → re-solve under current fixtures; staleness reads "the action we recommended may no longer be advised" | not-started | |
+
+### Cross-cutting features
+
+| Feature | What it delivers | Status | Note |
+|---|---|---|---|
+| **Social Security** | Spousal/survivor benefit sub-engine (shipped above) + the claim-age intake | shipped (engine) | Claim-age as a *solver-optimized control* is chapter two. Plan: [docs/plans/features/social-security.md](plans/features/social-security.md) |
+| **Other income (R40)** | Generic per-person non-earned income stream (pension/rental/annuity/alimony/other) | planned | Build-ready, zero code; the immediate next build. Plan: [docs/plans/features/other-income.md](plans/features/other-income.md) |
+| **Portfolio holdings** | Per-account exact stock/bond/cash %; ticker → blend; the household blend the engine consumes | scoping | Single-ticker was removed; accounts now take an exact stock/bond/cash %. Plan: [docs/plans/features/portfolio-holdings.md](plans/features/portfolio-holdings.md) |
+| **"Just me" single-user mode** | A single-person (non-couple) household path | planned/deferred | Named, deferred |
+
+## Requirements → unit trace
+
+Every requirement maps to an act/unit. Numbers are immutable (R1–R40); the prose is re-framed for clarity, the mapping is not. `SC` = the success-criteria list in [docs/product.md](product.md). The C/D-unit detail lives in [docs/decisions/accumulation-fuck-off-date.md](decisions/accumulation-fuck-off-date.md).
+
+| Req | Where |
+|---|---|
+| **R1** primary question is the face | Act 2 · U7 |
+| **R2** plain-language confidence statement, survival-vs-lifestyle separation, no color-alone | Act 2 · U7 (single metric), Act 3 · U9 (the two-tier essentials/lifestyle reading) |
+| **R3** distribution of futures | Act 1 · U1 |
+| **R4** detail on demand, never unsolicited | Act 2 · U7, Act 3 · U10–U12, Act 4 · U16 |
+| **R5** guided one-question intake *(the single-total-spend on-ramp superseded 2026-06-08 by R35's account-level setup — one flow, both user states)* | Act 2 · U5 → D1 (the U5 reshape) |
+| **R6** power-user escape hatch | Act 3 · U12 |
+| **R7** every assumption (and every recommendation input/reasoning) visible+editable | Act 3 · U12, Act 4 · U16 |
+| **R8** input mirrors output; refinement *sharpens* (narrows on precision, shifts on a correction) | Act 2 · U5, Act 3 · U12 |
+| **R9** propose a strategy over two coupled solver-optimized controls (sequencing + conversion) | substrate Act 1 · U1–U2; manual Act 3 · U10; solver Act 4 · U15 |
+| **R10** recommend-*second* flow (spine first, then strategy, comparative reasoning on demand, user tunes/overrides) | Act 4 · U16 |
+| **R11** calm, invited; never a nagging alert | Act 3 · U10, Act 4 · U16 |
+| **R12** recommends, but every recommendation probabilistically framed; certainty banned; hedge required | copyGuard Act 2 · U7, extended Act 3 · U10 + Act 4 · U16 |
+| **R13** optional honest-limits note (honesty grounds, not a Terms requirement) | Act 1 · U0 (static), Act 4 · U16 |
+| **R14** plain not dumbed-down | Act 2 · U7, Act 4 · U16 |
+| **R15** no marketing privacy claim; honesty-about-architecture survives | Act 1 · U4 |
+| **R16** encrypted at rest + local access guarded (PBKDF2-600k acceptable) | Act 1 · U4 |
+| **R17** survivor recovery load-bearing (phrase + mandatory export, two-person posture) | Act 1 · U4, Act 2 · U8, Act 3 · U13 |
+| **R18** export/back-up for durability | Act 1 · U4, Act 2 · U8 |
+| **R19** manual inputs sanity-checked, never falsely confident | engine half Act 1 · U1; intake half Act 2 · U5; control surfaces Act 3 · U10; budget Act 3 · U9 |
+| **R20** itemized, time-boxed budget (essentials=floor / discretionary=surplus) | Act 3 · U9 |
+| **R21** lexicographic objective (survival floor → user-chosen surplus goal; objective metric ≡ headline metric) | Act 4 · U15 (objective), Act 4 · U16 (headline pivot) |
+| **R22** every recommendation grades its own confidence; hedge rides the headline | Act 4 · U14 (calibration), Act 4 · U16 (render) |
+| **R23** comparative depth (why this beat the runner-up; retain the runner-up) | Act 4 · U15–U16 |
+| **R24** income-dependent healthcare across the Medicare line (ACA-PTC / IRMAA / HSA) | overlay Act 1 · U3; surfaces Act 3 · U11 |
+| **R25** cardinal honesty: calm-but-wrong is the sin; the bar rises for a recommender; "just for friends" never softens validation | validation Act 4 · U14; copyGuard everywhere; N=1 cold-reads |
+| **SC** correctness two-tier (engine number right + recommendation right vs an optimality/ranking oracle, ranking-stability, grade calibration) | Act 1 · U1 (number), Act 4 · U14 (recommendation) |
+| **R26** the fuck-off date = the existing engine swept over the household work-stop **date-offset `Y`** (never a household "age"); **non-monotone-robust** exhaustive sweep, never a bisection | C3 (`dateSearch.ts`) |
+| **R27** the answer is **two dates** (floor + lifestyle) from the lexicographic objective; one-sided window-floor semantic | C3 (engine) + D2 (surface); the two-track split rides Act 3 · U9's degenerate-collapse |
+| **R28** both dates **confidence-graded**, never hard lines; re-grade on strategy override | C3 + D2 |
+| **R29** framing **adapts to user state** (date for not-yet-retired; spine confidence for already-retired) | D2 (state-adaptive first answer) |
+| **R30** model the pre-retirement accumulation phase (contributions + growth → retirement-onset balance + basis) | C2 (accumulation projection) |
+| **R31** contributions **per-account, flat-real, stop at the tested date**; employer **match** captured (pre-tax even on a Roth 401k) | C2 (engine) + D1 (intake) + C1 (limit constants) |
+| **R32** v1 **projects**, does not optimize accumulation; solver stays decumulation-only | Scope Boundaries (product); C3 (date-search ≠ solver) |
+| **R33** healthcare **OFF during accumulation, ON at the tested date** — per-candidate cost-stream construction (the engine has no retirement gate) | C3 (`buildCandidateParams(Y)`) + C2 |
+| **R34** accumulation **inherits the engine invariants** — ONE continuous absolute-year draw timeline (CRN); one per-path future end-to-end; empty phase reduces byte-identically | C2 (the load-bearing engine contract) |
+| **R35** the first answer from a **~5-min account-level guided setup**, surface-early, single entry pass, both user states | D1 (intake reshape) + the master Success-Criterion edit (done 2026-06-10) |
+| **R36** account **values user-entered; no live price lookup** | D1 + Scope Boundaries |
+| **R37** per-ticker holdings **collapse to one household blend**; bundled ticker→asset-class table + manual classification; basis per account, not per lot | C1 (`tickerBlend.ts`) + D1 (entry + manual fallback) |
+| **R38** HSA **contributions → accumulation**; HSA **spend → decumulation** (the resumed U3·M5) | C2 (contributions) + B1 (U3·M5 spend) |
+| **R39** new PII inherits encryption + the schema ladder (additive `schemaVersion` bump) | C2/D1 schema fields; consumed by Act 1 · U4's migration ladder |
+| **R40** generic per-person ongoing non-earned income stream (pension/rental/annuity/alimony/other); reduces-to-spine byte-identically; opt-in off the guided path | Act 2 (engine + intake); plan [docs/plans/features/other-income.md](plans/features/other-income.md) |
+
+## Validation gates
+
+These are the gates a fixture or recommendation must clear before any downstream surface treats it as golden. The full engine-validation detail (golden derivations, the SSA cohort pin, the dataset pins) lives in [docs/architecture.md](architecture.md) and [docs/research/engine-validation-and-tax.md](research/engine-validation-and-tax.md); the per-command surface is below.
+
+| Gate | What it checks | Command |
+|---|---|---|
+| **Typecheck** | `tsc --noEmit` — must pass before any browser touch | `pnpm typecheck` |
+| **Tests** | 942 vitest across 44 files (Vitest 4, `globals:false`); externally-derived goldens, absence-tests paired with presence companions | `pnpm test` |
+| **Lint** | Layer-boundary + engine-purity rules (no clock/entropy/env inside `src/engine/**`) | `pnpm lint` |
+| **ACA re-verify** | Fails the build if the enhanced-subsidy legislative entry is stale/unconfirmed — live, possibly-retroactive policy | `pnpm verify:aca` |
+| **Bundle budget** | Initial-JS byte sentinel ≤ 300 KiB entry JS; **currently 197.8 KiB** | `pnpm verify:bundle` |
+| **CSP enforcement** | A real Chromium blocks an injected inline script + a cross-origin fetch, while the engine worker still constructs — each with a no-CSP control arm | `pnpm verify:csp` |
+
+Solver-blocking gates (Act 4, not yet live): the **optimality oracle** (hand-computable known-best cases, including the after-tax leave-more inversion and the no-change case) must exist and pass **before the solver is allowed to recommend** — enforced structurally as a harness-minted "oracle-cleared" token, taken as a required parameter, withheld until every check passes **and** every rec-relevant primary is pinned (`directionalUntilPinned === false`) **and** ε is calibrated. Skipping validation or recommending on directional fixtures is a *compile* error, not a discipline check. The date-search carries the non-monotone-robust contract and the empty-phase byte-identity gate (both shipped with C2/C3). The N=1 cold-read judges *tone*; the automated oracle judges *correctness* — never the reverse.
+
+## What is next
+
+The immediate next build is **R40 — other income in retirement** (planned, build-ready, zero code) — the engine has no concept of ongoing non-earned income today, and for a household with a pension or rental that gap is the difference between a defensibly-conservative answer and a confidently-wrong-optimistic one. See [docs/plans/features/other-income.md](plans/features/other-income.md).
+
+After R40, the Act-2 answer surface still owes: **U8** (the first encrypted Save + recovery-phrase + export), the **U6 confidence-band render**, **U7** (the confidence statement), and **D2** (the state-adaptive surface + two-pane laptop layout). Act 3 (Controls) and Act 4 (Recommendation) follow in order; Act 4 is the actual differentiator and is still entirely ahead.
+
+The live, session-level next-action queue is in `TODO.md`.
+
+## Superseded / changelog
+
+Live text above reads current. The superseded structure, recorded once:
+
+- **The old "charter > requirements > roadmap" precedence chain is retired.** It was a scar from the commercial→personal pivot, with the roadmap pointing upward to a separate north-star and a separate v2 requirements brainstorm as sources of truth. That chain is gone: [docs/product.md](product.md) carries the why + the requirements ledger, and this roadmap carries the acts + status. The old `docs/plans/back-nine-mvp/roadmap.md` + four phase docs and the `docs/plans/2026-06-08-001-feat-fuck-off-date-accumulation-plan.md` accumulation plan were the quarry for this rebuild and have been retired to git history (this reconcile, harvest-verified).
+- **"Phases" → "Acts."** The four phases (Foundation → First Answer → Controls → Solver & Recommendation) are renamed to four acts (Engine → First Answer → Controls → Recommendation) — the same structure, clearer prose. The U-numbering is unchanged.
+- **The single-total-spend on-ramp (struck).** The v2 ~3-minute single-spend on-ramp was replaced by R35's ~5-minute account-level guided setup (the one master edit folded 2026-06-10). The household spend figure survives as a collected input; the flow *shape* is what changed.
+- **Single-ticker holdings → exact per-account stock/bond/cash %.** Portfolio-holdings was re-scoped: single-ticker entry was removed; accounts now take an exact stock/bond/cash percentage that collapses to the one household blend.

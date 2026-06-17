@@ -18,9 +18,9 @@
  * Each cost-input stream + its reduce-to-spine wiring lands with its first
  * consumer, carrying a `Number.isFinite`-first R19 guard at BOTH `validateParams` and the overlay
  * backstop (insights 008/010 — the proven U2 as-we-go pattern). See
- * docs/plans/back-nine-mvp/phase-1-foundation.md (Unit 3) +
- * docs/plans/2026-06-08-001-feat-fuck-off-date-accumulation-plan.md (B1) +
- * docs/research/pre65-healthcare-aca-hsa-2026-06-04.md.
+ * docs/plans/1-engine.md (U3) +
+ * docs/decisions/accumulation-fuck-off-date.md (B1 / HSA spend) +
+ * docs/research/pre65-healthcare.md.
  *
  * LOAD-BEARING CONTRACTS (do not regress; each is documented + tested at its implementation site):
  *   1. MAGI is read ONLY off the tax overlay's converged FLOORED components. `taxOverlay.ts`'s

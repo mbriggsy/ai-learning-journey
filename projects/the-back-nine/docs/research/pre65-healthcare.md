@@ -1,17 +1,22 @@
 ---
-title: "Pre-65 Healthcare / ACA-PTC / HSA / IRMAA — grounding note"
-type: research
-date: 2026-06-04
-status: directional-until-pinned
-parent: docs/research/foundation-findings-2026-06-03.md   # destined to become the healthcare half of the grown §Strand 5
-provenance: "gemini-grounding + IRS/CMS primaries, workflow wf_0e97dfc3 (5 research agents + synthesis)"
-exit-gate: "pin every number to its primary (IRS Pub 969 HSA; §36B / Pub 974 ACA-PTC; CMS IRMAA brackets + 2026 Part B; Rev. Proc. HSA limits) AND re-verify the enhanced-ACA-subsidy legislative status at every build — it is live, possibly-retroactive policy."
+title: Pre-65 Healthcare — ACA-PTC / HSA / IRMAA reference + re-verify gate
+doc-type: research
+status: shipped
+created: 2026-06-17
+updated: 2026-06-17
+derives-from: [docs/product.md]
+sources: [docs/research/engine-validation-and-tax.md]
 ---
 
-> Auto-captured from the 2026-06-04 research workflow so the citations don't rot in a temp file. Folds into §Strand 5 during the foundation-findings rewrite. The 5 raw per-agent briefs live in the workflow task output (wl9iik0bc).
-# Pre-65 Healthcare, ACA, HSA & IRMAA — Grounding Note for §Strand 5 Extension
+# Pre-65 Healthcare — ACA-PTC, HSA & IRMAA
 
-**Synthesis date: 2026-06-04.** Models CURRENT (2026) law. This note extends the existing tax-reference doc's §Strand 5 from a single-control conversion problem ("fill the survivor's bracket") into a **multi-control, healthcare-aware sequencing objective** in which income-dependent healthcare cost is continuous across age 65 (ACA-PTC pre-65 → IRMAA post-65), with two different MAGI definitions, two different cliff shapes, and a 2-year timing lag on the post-65 side.
+This is the verified-reference home for the **income-dependent healthcare model**: the ACA premium-tax-credit regime before age 65, IRMAA after it, and the HSA rules that sit across both. It is a **co-equal sibling** of [engine-validation-and-tax.md](engine-validation-and-tax.md) — that doc holds the Trinity/Bengen + tax/SS numbers; this one holds the healthcare numbers. Together they are the evidence layer the engine's overlays read from.
+
+**Status: CONSUMED and load-bearing.** This is not a draft. The U3 healthcare overlay (`src/engine/healthOverlay.ts`) and the canonical constants table (`src/engine/constants/health.ts`) read these facts, and the legislative exit-gate (§6, row 1) is enforced on every build by `pnpm verify:aca`. The numbers below still carry per-figure confidence and a `directionalUntilPinned` marker — do not misread that as "unfinished." It is the standard precision discipline: a figure is *directional* until pinned to its named PRIMARY source, *golden* after. The healthcare model ships today on the 2026 reverted/cliff base case; the directional markers track which individual numbers still need a PDF-level pin, and the re-verify gate tracks the one legislative fact that can flip the whole regime.
+
+For **how the engine uses all of this** — the two MAGI calculators, the ACA same-year fixed point, the IRMAA two-year lagged feed-forward, the HSA fourth bucket, the survivor MFJ→single flip, and the reduce-to-spine invariant — see [architecture.md §7.2 (Healthcare overlay)](../architecture.md). Those mechanics live there **once**; this doc is the facts they rest on. The R40 / portfolio scoping that builds on top is in [plans/features/other-income.md](../plans/features/other-income.md) and [plans/features/portfolio-holdings.md](../plans/features/portfolio-holdings.md).
+
+**Synthesis date: 2026-06-04.** Models CURRENT (2026) law. Provenance: gemini-grounding + IRS/CMS primaries (workflow wf_0e97dfc3, 5 research agents + synthesis). This extends the tax-reference doc's conversion problem from a single-control "fill the survivor's bracket" objective into a **multi-control, healthcare-aware sequencing objective** in which income-dependent healthcare cost is continuous across age 65 (ACA-PTC pre-65 → IRMAA post-65), with two different MAGI definitions, two different cliff shapes, and a 2-year timing lag on the post-65 side.
 
 ---
 
@@ -83,6 +88,8 @@ Healthcare cost in retirement is **income-sensitive continuously across age 65.*
 
 ## 4. MODELING RECOMMENDATION
 
+> **Where this lives in code:** the recommendations below were implemented in U3 — `src/engine/healthOverlay.ts` (the two MAGI calculators, the ACA fixed point with explicit cliff branching, IRMAA as a 2-year lag carried in state, the HSA fourth bucket) reading `src/engine/constants/health.ts`. See [architecture.md §7.2](../architecture.md) for the as-built mechanics and the reduce-to-spine invariant. This section is preserved as the design rationale the build rests on.
+
 **Minimal honest model = one continuous "income-sensitive healthcare cost" curve, implemented as two regimes with two MAGI variants.**
 
 **4a. Two MAGI calculators (do NOT reuse one number):**
@@ -143,7 +150,7 @@ This extends the existing §Strand-5 line — *"a tax/health effect is IN iff it
 
 ## 6. EXIT GATE — pin to PRIMARY source before any fixture is "golden"
 
-Mirroring how §Strand 5 gates its tax numbers as **"directional until pinned"**: every number below is currently **directional** (secondary/grounded synthesis or single-source) and MUST be confirmed against the named PRIMARY source before any fixture using it is labeled golden. The **legislative item gates the entire pre-65 module** — no ACA fixture is golden until it is re-verified against current law at build time.
+This is the **living re-verify gate** — the same discipline [engine-validation-and-tax.md](engine-validation-and-tax.md) applies to its tax numbers: every number below is **directional** (secondary/grounded synthesis or single-source) until it is confirmed against the named PRIMARY source, after which a fixture using it may be labeled golden. The **legislative item (row 1) gates the entire pre-65 module** — no ACA fixture is golden until it is re-verified against current law at build time, and that re-verification is **enforced in CI by `pnpm verify:aca`** against `aca-last-verified.json` (the constants entry carries `reVerifyEveryBuild: true`).
 
 | # | Number / rule | Current confidence | PRIMARY source to pin against | Gate |
 |---|---|---|---|---|
@@ -158,4 +165,11 @@ Mirroring how §Strand 5 gates its tax numbers as **"directional until pinned"**
 | 9 | **Part A purchased premiums ($311/$565) + deductible ($1,736)** | MEDIUM (grounded summary, not primary) | **CMS 2026 Part A fact sheet** | Pin if the tool models post-65 Part A spend. |
 | 10 | **OBBBA HSA provisions** (Bronze/Catastrophic compat, telehealth, DPC) | MEDIUM-HIGH (advisory sources; statute not read) | **Enacted H.R.1 text / IRS implementing notice** | Pin before any OBBBA-dependent logic; implementation guidance may still be pending. |
 
-**One-line gate summary:** Pin #1 (legislative status) at every build — it can flip the whole pre-65 model and gates all ACA fixtures. Pin #2/#4 to IRS Pub 969 / Pub 974 (HSA + ACA mechanics, the most stable). Pin #3/#5 to the two 2025 Rev. Procs (HSA limits, applicable-%). Pin #6 to HHS guidelines (cliff dollars). Pin #7/#8/#9 to CMS/Federal Register (Medicare premiums, IRMAA brackets, Part A). Pin #10 to enacted H.R.1. Until each is confirmed against its PRIMARY source, the number is **directional, not golden** — exactly the §Strand 5 standard.
+**One-line gate summary:** Pin #1 (legislative status) at every build — it can flip the whole pre-65 model and gates all ACA fixtures. Pin #2/#4 to IRS Pub 969 / Pub 974 (HSA + ACA mechanics, the most stable). Pin #3/#5 to the two 2025 Rev. Procs (HSA limits, applicable-%). Pin #6 to HHS guidelines (cliff dollars). Pin #7/#8/#9 to CMS/Federal Register (Medicare premiums, IRMAA brackets, Part A). Pin #10 to enacted H.R.1. Until each is confirmed against its PRIMARY source, the number is **directional, not golden** — exactly the [engine-validation-and-tax.md](engine-validation-and-tax.md) standard.
+
+---
+
+## Superseded / changelog
+
+- **2026-06-04** — Captured from the 2026-06-04 research workflow (wf_0e97dfc3) as a grounding note, originally framed as material that would "fold into the §Strand 5 healthcare half" of the foundation-findings doc. **That framing is retired.** This is now a **co-equal sibling** of [engine-validation-and-tax.md](engine-validation-and-tax.md), not a future sub-section of it.
+- **2026-06-17** — Rehomed into the rebuilt docs tree as `docs/research/pre65-healthcare.md`; status updated from `directional-until-pinned` to **`shipped` / CONSUMED**, reflecting that U3 (`healthOverlay.ts` + `constants/health.ts`) is built and reviewed and the exit-gate is live in CI (`pnpm verify:aca`). The per-figure `directionalUntilPinned` markers in §6 remain accurate at the *individual-number* level and are unchanged.

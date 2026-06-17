@@ -1,31 +1,48 @@
 ---
-title: "feat: R40 other income in retirement (pension · rental · alimony · annuity · other)"
-type: feat
-status: active
-date: 2026-06-17
-deepened: 2026-06-17
-origin: docs/plans/2026-06-17-001-other-income-in-retirement-scoping.md
+title: "Other income in retirement (R40 — pension · rental · alimony · annuity · other)"
+doc-type: feature
+status: planned
+created: 2026-06-17
+updated: 2026-06-17
+derives-from: [docs/product.md]
+sources: [docs/research/engine-validation-and-tax.md, docs/research/pre65-healthcare.md]
+amends: [docs/product.md]
 ---
 
-# feat: R40 — Other income in retirement
+# Other income in retirement (R40)
+
+> **Status: planned — build-ready, ZERO code.** Grounded against the current tree, hardened by three
+> review passes, and decision-ready. This plan amends the requirements ledger with **R40** (see
+> [docs/product.md](../../product.md) §7). Nothing here is built yet; the lifecycle block above is
+> empty on purpose.
 
 ## Overview
 
 The engine models exactly **two** income concepts today: `earnedIncomeReal` (which *stops at
 retirement*) and Social Security. It has **no concept of ongoing non-earned income** — a pension, a
-rental, an annuity, or alimony that keeps paying after work stops. For a household that has one,
-that gap is the difference between **a defensibly-conservative answer and a confidently-wrong-
-optimistic one**. This plan adds R40: a generic per-person income stream, entered opt-in off the
-5-minute path, compiled in `intakeMap` to pre-deflated real-$ **gross + taxable** vectors (in two
-death-state variants — KTD-4), and integrated into the engine at the cash-netting and ordinary-income
-seams (with the SS-§86 / ACA-MAGI / IRMAA-MAGI sites riding through), with **survivor continuation**
-realized at the owner's sampled death in the path loop.
+rental, an annuity, or alimony that keeps paying after work stops. For a household that has one, that
+gap is the difference between **a defensibly-conservative answer and a confidently-wrong-optimistic
+one**.
+
+This plan adds R40: a generic per-person income stream, entered opt-in off the 5-minute path, compiled
+in `intakeMap` to pre-deflated real-$ **gross + taxable** vectors (in two death-state variants —
+KTD-4), and integrated into the engine at the cash-netting and ordinary-income seams (with the SS-§86 /
+ACA-MAGI / IRMAA-MAGI sites riding through), with **survivor continuation** realized at the owner's
+sampled death in the path loop.
 
 **Test-drivers (Briggsy's friends):** one with rental income; one whose wife draws a **teacher's
 pension**. The pension is the single most dangerous number in the app — whether it *survives* her
 death (and at what %) and whether it *keeps up with inflation* is the whole widow's picture. Getting
 either wrong is exactly the **calm-but-wrong-optimistic** sin the product exists to avoid — so v1
 either rounds conservative or **discloses its direction** for every simplification.
+
+## Why this amends the locked contract (R1–R39 → R40)
+
+This is **new scope.** There is zero mention of pension/rental/other-income anywhere in the locked
+requirements or the prior framing — so building it amends the contract and earns a first-class **R40
+requirements entry** (Unit 5). It fits the north-star: an honest answer for a real couple, *not* a
+FIRE calculator — these are real income streams a household already receives, not early-retirement
+engineering. The identity bound (Scope Boundaries) keeps it there.
 
 > **Grounding + three review passes (2026-06-17).** Built against the current tree (HEAD `dc674dff`)
 > by a 4-agent code-grounding pass, then hardened by: (1) a manual 4-lens adversarial panel
@@ -37,8 +54,9 @@ either rounds conservative or **discloses its direction** for every simplificati
 > specified the **Unit 4 interaction states** the design lens found under-designed, and added the
 > rental-cliff + rental-survivor disclosures the adversarial lens surfaced on a named driver. One
 > CRITICAL finding (a claimed ACA-MAGI "wage-blind" hazard on non-taxable income) was **adversarially
-> rejected** as a false alarm — see Open Questions. Do not revert where this plan corrects the scoping
-> doc.
+> rejected** as a false alarm — see Open Questions. The scoping pass behind this build adversarially
+> verified 49 load-bearing claims refute-by-default (45 confirmed against IRS primaries, 4
+> provenance-corrected — see the Provenance corrections section).
 
 ## Problem Frame
 
@@ -48,20 +66,19 @@ draw) or, if a user fakes it as a lower spend, silently mis-taxes everything dow
 ACA subsidies, IRMAA tiers all key off MAGI). The fix must honor the cardinal rule: the taxable
 portion of a stream has to move **every** income/MAGI site *consistently and atomically*, and every
 survivor/COLA/basis simplification must either round conservative or be **disclosed with its direction
-named** — an opt-in optimistic simplification that isn't disclosed is still the sin. (see origin:
-`docs/plans/2026-06-17-001-other-income-in-retirement-scoping.md`)
+named** — an opt-in optimistic simplification that isn't disclosed is still the sin.
 
 ## Requirements Trace
 
 - **R40.1** — Model a generic per-person ongoing income stream with type ∈ {pension, rental, alimony,
-  annuity, other}; the type seeds defaults only (scoping §2).
+  annuity, other}; the type seeds defaults only.
 - **R40.2** — Each stream carries: gross `annualRealToday`, `startAge`, optional `endAge`, a COLA mode
   ∈ {real-flat, nominal-flat, fixed-pct} (+ `colaPct`), a `taxableFraction` ∈ [0,1] (default 1), and a
-  `survivorPct` ∈ [0,1] (scoping §2).
+  `survivorPct` ∈ [0,1].
 - **R40.3** — Compile each stream to pre-deflated real-$ per-year vectors; the engine is a dumb
   consumer; survivor-% is pre-applied as a second variant at compile time (KTD-4).
 - **R40.4** — The taxable portion enters ordinary income such that SS-§86 provisional, ACA-MAGI, and
-  IRMAA-MAGI all move **consistently in one atomic change** (scoping §4), including the
+  IRMAA-MAGI all move **consistently in one atomic change**, including the
   already-receiving × working-year IRMAA reconciliation (KTD-9).
 - **R40.5** — Survivor continuation is realized at the owner's **sampled death** in the path loop,
   selecting the pre-weighted survivor variant, locked at the death offset, never ramped (KTD-4).
@@ -77,6 +94,23 @@ named** — an opt-in optimistic simplification that isn't disclosed is still th
   is **finiteness-first** then range; engine-consumed figures obey the constants discipline; user-facing
   display-hint figures live in `referenceData.ts`, never `@engine/constants`.
 
+## Per-type defaults (the type label seeds these; intake surfaces them for confirm)
+
+| Type | COLA default | Taxable default | Survivor default | The MUST-ASK field | Provenance of the default |
+|---|---|---|---|---|---|
+| **Pension** | nominal-flat | fully taxable | **prompt (no safe default)** | survivor % (QJSA election) | tax: IRS Pub 575 (✓). Survivor: IRC 401(a)(11)/417, QJSA floor 50%, J&S 50/75/100 (✓). COLA norm: public/teacher COLAs commonly none/2–3%/capped, *below* inflation — **plan-design fact, not IRS** |
+| **Rental** | real-flat | fully taxable | ~100% | (none forced) | tax: net rental ordinary, Schedule E → AGI/MAGI, passive, continues past retirement (✓ Pub 527/925). Survivor ~100% is **STATE property law** (JTWROS/community property), *not* IRS. COLA real-flat is practitioner/BLS-attested, *not* IRS |
+| **Alimony** | nominal-flat | **derived from agreement date** | **0%** (terminates at death) | **agreement executed before/after 12/31/2018** | TCJA fork (✓ IRS Pub 504 / Topic 452). 0%-survivor (✓ §71(b)(1)(D)). Flat-nominal COLA practitioner-attested |
+| **Annuity** | nominal-flat | fully taxable (qualified) / exclusion-ratio (non-qual) | prompt | qualified vs non-qualified | qualified fully taxable; non-qual exclusion ratio = basis/expected-return (✓ Pub 575/939); fixed annuity flat-nominal, COLA = optional rider (✓ FINRA/SEC) |
+| **Other** | nominal-flat | fully taxable | prompt | — | catch-all; same machinery |
+
+**The alimony date is the highest-leverage field in the whole feature** (✓ verified): an instrument
+executed *after* 2018-12-31 (or a pre-2019 one expressly modified to adopt TCJA) is **not taxable to
+the recipient and invisible to MAGI**; an instrument *on/before* 2018-12-31 **is** taxable and **does**
+lift MAGI. Never default it — ask it, with the date threshold in plain language. (A pre-2019 agreement
+merely *modified* after 2018 stays taxable **unless** the modification expressly adopts the new rules —
+so we ask "did the modification expressly adopt the post-2018 tax rules?", default = no.)
+
 ## Scope Boundaries
 
 - **Not a FIRE lever, and not a general income ledger.** This models the ongoing non-earned income a
@@ -85,7 +119,8 @@ named** — an opt-in optimistic simplification that isn't disclosed is still th
   it" or it doesn't ship — the "other" catch-all inherits that fence, it is not an invitation to model
   every yield (dividends/1099/crypto are out unless a driver has one). This keeps R40 inside the
   north-star (honest answer for a couple), not toward a comprehensive planner.
-- **No live price/market fetch** — CSP `connect-src 'self'` forbids it; everything is user-entered.
+- **No live price/market fetch** — CSP `connect-src 'self'` forbids it; everything is user-entered (see
+  [docs/architecture.md](../../architecture.md) §10).
 - **Survivor-specific term/end gate is OUT (v1 forward landmine).** KTD-4's two-variant linear
   pre-weighting holds **because v1 streams share one end gate across both variants**. A stream whose
   *survivor* benefit has a different term than the *owner* benefit (period-certain J&S, survivor
@@ -93,29 +128,32 @@ named** — an opt-in optimistic simplification that isn't disclosed is still th
 
 ### Deferred to Separate Tasks (each with its direction NAMED)
 
-- **Rental sale events** (depreciation recapture §1250, cap-gains-on-sale, step-up): OUT — ongoing
-  income only. Direction: slightly **optimistic**; disclosed (scoping §8).
+- **Rental sale events** (depreciation recapture §1250 25%, cap-gains-on-sale, step-up-at-death): OUT —
+  ongoing income only. Direction: slightly **optimistic** (ignores the depreciation shield eroding →
+  real taxable rent rises; and ignores recapture tax on a future sale); disclosed.
 - **Net-rental real-rise → OPTIMISTIC, and it COMPOUNDS at the ACA cliff (disclosed with magnitude).**
   Gross rent tracks inflation but the fixed-nominal depreciation shield erodes, so *taxable net rent
-  rises in real terms* (scoping §9). v1 holds net rent **real-flat** (and models rental `taxableFraction
-  = 1` — conservative on the *fraction*, but the flat *trajectory* understates late-horizon MAGI). The
-  danger is **not a smooth slope error**: the omitted real-rent-rise is exactly the dollars that can
-  push a pre-65 household *over the 400% FPL subsidy cliff* (a discontinuity), where the miss is the
-  **entire unsubsidized premium for the bridge years**, not a few points of subsidy. v1 discloses *this
+  rises in real terms*. v1 holds net rent **real-flat** (and models rental `taxableFraction = 1` —
+  conservative on the *fraction*, but the flat *trajectory* understates late-horizon MAGI). The danger
+  is **not a smooth slope error**: the omitted real-rent-rise is exactly the dollars that can push a
+  pre-65 household *over the 400% FPL subsidy cliff* (a discontinuity), where the miss is the **entire
+  unsubsidized premium for the bridge years**, not a few points of subsidy. v1 discloses *this
   magnitude* in the rental copy (not "slightly optimistic") + a Unit 3 cliff-compound fixture; the
   upgrade (model a modest real-rise; needs the BLS rent-CAGR figure verified first) is noted, not built.
 - **Annuity/pension basis-recovery dynamics → OPTIMISTIC, opt-in, disclosed.** The true exclusion-ratio
-  tax-free portion shrinks then **stops when basis is recovered** (then 100% taxable). v1 uses a
-  **constant** `taxableFraction`, modeling the exclusion as **never exhausting** → understates late-life
-  MAGI → optimistic. The fully-taxable **default** is conservative; an opt-in user who enters an
-  exclusion fraction accepts an **optimistic** simplification — disclosed in copy.
+  / Simplified-Method tax-free portion is a *fixed nominal $ that shrinks in real terms then stops when
+  basis is recovered* (then 100% taxable). v1 uses a **constant** `taxableFraction`, modeling the
+  exclusion as **never exhausting** → understates late-life MAGI → optimistic. The fully-taxable
+  **default** is conservative; an opt-in user who enters an exclusion fraction accepts an **optimistic**
+  simplification — disclosed in copy.
 - **Alimony payer-death termination → OPTIMISTIC, disclosed (Briggsy: disclose for v1).** Alimony ends
   at the recipient's death (`survivorPct = 0` at the owner=recipient's death) **AND at the payer's
   death** — the payer has no presence/sampled death in the household model. v1 pays alimony for the
   recipient's full modeled life, **overstating safety if the payer dies first.** Disclosed, not modeled.
 - **Compounding-only COLA → the optimistic side of the fork, disclosed.** Simple (non-compounding) COLA
   erodes faster in real terms; v1 models **compounding** (the common case, but the optimistic side).
-- **NIIT (3.8% > $250k MFJ MAGI), state-level alimony decoupling, annuity LIFO**: OUT, disclosed.
+- **NIIT** (3.8% > $250k MFJ MAGI), **state-level alimony decoupling**, **annuity LIFO** for
+  non-annuitized partial withdrawals (v1 models annuitized streams): OUT, disclosed.
 - **U8 persistence of `incomeStreams`.** R40 adds the field to `ScenarioV3`; the codec v3 arm is
   **U8's**. The shape rides existing `ScenarioV3` (no schemaVersion bump, no v3→v4 migration) — **but
   U8 inherits a real validation contract, not "free" persistence** (KTD-3 + the U8 obligation in Risks).
@@ -209,9 +247,14 @@ note `:94`) are the precedent U8 extends.
 ### External References
 
 None. Tax facts are locked by the scoping doc's verified research run (45 IRS-primary-confirmed claims;
-provenance corrections in scoping §9). No re-research.
+provenance corrections below). No re-research.
 
 ## Key Technical Decisions
+
+> The nine KTDs are the load-bearing engineering record. Where they correct the earlier scoping pass —
+> KTD-9 (the IRMAA override is a structural decouple, not a copy control), KTD-4 (the engine
+> `validateParams` does **not** range-check the multiplied-away scalars), and the rejected ACA-MAGI
+> "wage-blind" alarm — this corrected version is authoritative.
 
 - **KTD-1 (the seam count; seam 2 is a coordinated 3-touch).** `MagiComponents` has **one producer**
   (`taxOverlay.ts:952`) fed by **one** `nonSSordinary` (`:939`); seams 3/4/5 read it. The taxable vector
@@ -292,10 +335,11 @@ provenance corrections in scoping §9). No re-research.
 
 ### Resolved During Planning
 
-- ATC #1/#2/#3 (keep advanced tier; ship "other"; add R40 entry) — YES. (Note: "other"/alimony/annuity
-  are shipped because the engine supports them, but their guided-path questions + optimistic disclosures
-  are **type-gated** so a rental/pension-only user never pays for them — see Unit 4. The "it's free"
-  rationale is an engine truth, not a product one; the identity fence in Scope Boundaries is the bound.)
+- **ATC #1/#2/#3** (keep advanced tier; ship "other"; add R40 entry) — **YES.** (Note: "other"/alimony/
+  annuity are shipped because the engine supports them, but their guided-path questions + optimistic
+  disclosures are **type-gated** so a rental/pension-only user never pays for them — see Unit 4. The
+  "it's free" rationale is an engine truth, not a product one; the identity fence in Scope Boundaries is
+  the bound.)
 - The seam count (KTD-1), deflation math (KTD-2), persisted-vs-compiled shapes (KTD-3 + the
   never-persisted-leaf invariant), the discriminated union (KTD-6), survivor architecture + the
   entity-boundary range gate (KTD-4), survivor/spending independence (KTD-7), the date-sweep +
@@ -352,7 +396,28 @@ validateParams: VECTOR finiteness + ≤MAX only                  − INCOME − 
                                                                NOT gross-up; override = wages-only (KTD-9)
 ```
 
+The five seams, restated as a map (the taxable portion enters **every** income/MAGI site in a single
+change, or we get the calm-but-wrong-optimistic sign-inversion):
+
+| # | Seam | File:line | Change |
+|---|---|---|---|
+| 1 | Cash-flow netting | `simulate.ts:167–262` (`cashTermsForYear`) | add `grossVector[t]` to income — **death-aware, NOT retire-truncated** (unlike earned income); `net = max(0, spending − earned − ongoing − ss)` |
+| 2 | Ordinary income | `taxOverlay.ts:939` (`nonSSordinary`) | `+ taxableVector[t]` |
+| 3 | SS §86 provisional | `taxOverlay.ts:943` (`taxableSocialSecurity` call) | include the same `taxableVector[t]` in the provisional base (the "SS torpedo") — **rides seam 2's `nonSSordinary`, not a separate edit (KTD-1)** |
+| 4 | ACA-MAGI | `healthOverlay.ts:94` (`acaMagi`) | **no change** — reads `nonSSordinary` via the shared `MagiComponents` (rides seam 2) |
+| 5 | IRMAA-MAGI | `healthOverlay.ts:104` (`irmaaMagi`) | **no change** — same shared `MagiComponents` (rides seam 2) |
+
+Because ACA-MAGI and IRMAA-MAGI both read the shared `MagiComponents.nonSSordinary`, the *only* explicit
+edits are seam 1 (cash netting) and seam 2 (ordinary income, the 3-touch); seams 3–5 flow through.
+**Non-taxable portions** (post-2018 alimony, pension/annuity basis) net the draw (seam 1) but touch
+**none** of seams 2–5 — they are MAGI-invisible (and the ACA subsidy correctly rises, per the rejected
+false alarm). See the per-overlay engine contracts in [docs/architecture.md](../../architecture.md) §7
+for the two-distinct-MAGI-calculators rule the taxable add rides on.
+
 ## Implementation Units
+
+> Five units, dependency-ordered. Units 1→4 build the shape, the compile, the engine integration, and
+> the intake UX; Unit 5 amends the requirements ledger. The numbered checkboxes are the build order.
 
 - [ ] **Unit 1: Income-stream types — discriminated-union entity, two-variant leaf, draft + scenario shape**
 
@@ -556,6 +621,12 @@ optimistic-direction disclosures and a "not saved yet" affordance.
   violation/error strings).
 - Test: `src/intake/__tests__/incomeIntake.test.ts`; extend `copyFence.test.ts`.
 
+> **UI law:** any user-facing surface here is governed by the project's design loadout — load
+> `back-nine-design` (color is never the only signal — Briggsy is color-blind; the not-saved-yet
+> treatment is neutral text + icon, never a red badge), `compound-engineering:frontend-design`
+> (direction), `emil-design-eng` (motion), and `web-design-guidelines` (review) before touching the
+> `.tsx`. The disclosure copy is an N=1 cold-read deliverable.
+
 **Approach (interaction states — the design-lens spec):**
 - **Opt-in expander** (mirror `AccountsStep`'s empty→"Add"→form flow), not auto-inserted on the guided
   path. The section label is "other income (in retirement)", distinct from the earned-income steps.
@@ -565,10 +636,10 @@ optimistic-direction disclosures and a "not saved yet" affordance.
   other → the survivor-% prompt** ("what happens to it if {spouse} passes first?", default empty, never
   100%); **alimony → the post-2018 agreement-date** (flips taxability). `missingRequiredFacts` is the
   **backstop** for a restored/edited row, not the primary surface.
-- **The advanced-tier rule (resolves scoping §6 vs R40.7):** required-to-be-correct fields (survivor-%,
-  alimony date) are **never** in the collapsed tier — they sit in the always-visible part, revealed by
-  type. The collapsed tier holds only genuinely-optional refinements (end age, explicit COLA rate,
-  exclusion fraction) with safe type-seeded defaults. `colaPct` is **form-required when
+- **The advanced-tier rule (resolves scoping intake-depth vs R40.7):** required-to-be-correct fields
+  (survivor-%, alimony date) are **never** in the collapsed tier — they sit in the always-visible part,
+  revealed by type. The collapsed tier holds only genuinely-optional refinements (end age, explicit COLA
+  rate, exclusion fraction) with safe type-seeded defaults. `colaPct` is **form-required when
   `colaMode='fixed-pct'`** (a conditional reveal within the tier).
 - **"Already receiving" is an explicit toggle** that owns the start-age field's state (on → the field
   shows "receiving now", not a clamped number; off is the default). The row summary reads "receiving now"
@@ -613,7 +684,7 @@ render; `pnpm lint` green; `pnpm test` green; `pnpm verify:bundle` within budget
 
 - [ ] **Unit 5: The R40 requirements entry — the contract amendment**
 
-**Goal:** Amend the locked R1–R39 contract with an R40 entry, additively, recording the OUT-but-disclosed
+**Goal:** Amend the requirements ledger with an R40 entry, additively, recording the OUT-but-disclosed
 residuals (with directions), the provenance corrections, and the U8 validation obligation.
 
 **Requirements:** R40.9.
@@ -621,7 +692,7 @@ residuals (with directions), the provenance corrections, and the U8 validation o
 **Dependencies:** Units 1–4 (soft — the entry reflects shipped behavior; sequence last).
 
 **Files:**
-- Modify: `docs/brainstorms/the-back-nine-requirements.md`.
+- Modify: the requirements ledger ([docs/product.md](../../product.md) §7 — R40 lands there).
 
 **Approach:**
 - Additive amendment (insight 018 — zero-removals): grep the superseded premise ("two income streams",
@@ -640,15 +711,20 @@ residuals (with directions), the provenance corrections, and the U8 validation o
 
 **Verification:** the R40 entry reads consistent with the north-star; no unrelated requirement removed.
 
+> *Status note: the R40 entry already lives in [docs/product.md](../../product.md) §7 (the doc-rebuild
+> carried it forward). Unit 5's remaining work is to reconcile any superseded-premise lines the
+> zero-removals grep surfaces, and to confirm the OUT-list / provenance / U8-obligation are all present.*
+
 ## System-Wide Impact
 
 - **Interaction graph:** the taxable enters `nonSSordinary` (seam 2) → propagates to §86 / `acaMagi` /
   `irmaaMagi` through the single producer. The gross enters `cashTermsForYear` netting (seam 1, now
   returning `incomeTaxable` too). The zero-alloc per-owner select runs in the path loop.
 - **Forward landmines (two).** (1) **Bracket-fill / Roth-conversion sizing** — income's `taxable[t]`
-  consumes bracket-fill headroom; P3/P4 must net it before sizing conversions or it over-converts. (2)
-  **The working-year IRMAA channel** is re-specified by KTD-9 (wages/non-modeled only) — a future feed
-  must respect that the engine owns modeled streams' IRMAA contribution.
+  consumes bracket-fill headroom; the Controls / Recommendation acts (sequencing + conversion) must net
+  it before sizing conversions or it over-converts. (2) **The working-year IRMAA channel** is
+  re-specified by KTD-9 (wages/non-modeled only) — a future feed must respect that the engine owns
+  modeled streams' IRMAA contribution.
 - **Performance.** (a) The select helper is **zero-alloc** (two scalars; integer-comparison death
   branch). (b) The 4 income vectors are **Y-invariant** → `compileIncomeStreams` runs **once in
   `buildParams`**. (c) **Gross-up is a non-issue:** income's taxable is an additive constant — it does
@@ -671,11 +747,12 @@ residuals (with directions), the provenance corrections, and the U8 validation o
 - **API surface parity:** the select helper, `validateParams` block, and tax backstop mirror the
   contribution-stream guards (insight 020). `cashTermsForYear` has **two callers** (the path loop +
   `netWithdrawalForYear`) — the return-shape change updates both + the test sites.
-- **Unchanged invariants:** single shared market draw / CRN; reduce-to-spine byte-identity; the double
-  `allocateWithdrawal`; `truncateStreams` (income NOT added); the `PersonContributionStreams` path;
-  `checkPerson`/the frozen legacy shape; `scenarioCodec` (untouched — U8's). **`PersonIncomeStream`/
-  `IncomeParams` are engine-facing derivations, NEVER persisted** (fidelity-over-duplication); only the
-  `IncomeStream` entity reaches `ScenarioV3`.
+- **Unchanged invariants** (the canonical statements live in [docs/architecture.md](../../architecture.md)):
+  single shared market draw / CRN; reduce-to-spine byte-identity; the double `allocateWithdrawal`;
+  `truncateStreams` (income NOT added); the `PersonContributionStreams` path; `checkPerson`/the frozen
+  legacy shape; `scenarioCodec` (untouched — U8's). **`PersonIncomeStream`/`IncomeParams` are
+  engine-facing derivations, NEVER persisted** (fidelity-over-duplication); only the `IncomeStream`
+  entity reaches `ScenarioV3`.
 
 ## Risks & Dependencies
 
@@ -699,22 +776,43 @@ residuals (with directions), the provenance corrections, and the U8 validation o
 | **U8 inherits an under-specified validation contract** (NOT "free") | R40 single-sources `INCOME_TYPES`/`COLA_MODES` `as const` + names U8's `checkIncomeStreamV3`: finiteness-first; enum membership (`needVocab`); `ownerIndex ∈ {0,1}`; **`survivorPct`/`taxableFraction` range (the sole restore-path gate)**; **`colaPct` REQUIRED-and-finite when `colaMode='fixed-pct'`** (absent/null = corruption, never coerced to 0 — the optimistic-erosion direction); the full fork/type arm; `endAge` absent ≡ lifetime (DND-009, no numeric sentinel) |
 | **Session-only data loss** (income entered, not persisted until U8) | Sequencing option a: keep the order (U8 next), the not-saved-yet affordance; consistent with accounts |
 
+## Provenance corrections (do NOT mis-cite at build)
+
+The verify pass corrected four claims the scoping pass had attributed to the wrong primary. Cite them
+correctly when the build writes copy or fixtures:
+
+- **Rental ~100% survivor** rests on **state property law** (JTWROS / community property), *not* IRS Pub
+  559/551. Cite it to state law; only true if jointly owned / willed to the spouse.
+- **Net rental ≠ real-flat**: gross rent tracks inflation, but the fixed-nominal depreciation shield
+  erodes, so *taxable net* rent rises in real terms. v1 models net as real-flat as a **disclosed
+  simplification**; verify the rent-CAGR figure against the BLS series before it goes load-bearing.
+- **Pension QJSA consent** can be witnessed by a **plan representative OR a notary** — not strictly
+  notarized (IRC 417(a)(2)). Copy must say so.
+- **Alimony/pension/annuity COLA norms** are **practitioner/economic** facts, not IRS — label them as
+  such (no IRS section governs whether a decree or annuity has a COLA).
+
 ## Documentation / Operational Notes
 
-- The R40 requirements entry (Unit 5) is the contract record; the scoping doc stays as research
-  provenance.
+- The R40 requirements entry (Unit 5) is the contract record (now in [docs/product.md](../../product.md)
+  §7); this plan + the verified research run stay as the engineering + research provenance.
 - After Unit 4, re-run `pnpm verify:bundle` (income intake rides the lazy intake chunk).
-- No federal-data constant is added to `@engine/constants`; user-facing default-rate hints are
-  `referenceData.ts` figures with the `directionalUntilPinned` discipline.
 - **U8 hand-off:** `checkIncomeStreamV3` per the Risks U8 row (importing the single-sourced vocab),
   honoring the `endAge`-absent-≡-lifetime / DND-009 discipline and the conditional `colaPct` presence.
-  The viz work (U6/D2) treats a nominal-flat stream as a deterministic floor (KTD-2 viz corollary).
+  The viz work (the confidence-band render in the First-Answer act) treats a nominal-flat stream as a
+  deterministic floor (KTD-2 viz corollary).
 - **Tone:** the disclosure copy is an N=1 cold-read deliverable (Briggsy judges it) — conservative
   modeling choices framed as grounding, never confessions of error.
 
 ## Sources & References
 
-- **Origin document:** [docs/plans/2026-06-17-001-other-income-in-retirement-scoping.md](docs/plans/2026-06-17-001-other-income-in-retirement-scoping.md)
+- Engine architecture + the load-bearing invariants this feature rides:
+  [docs/architecture.md](../../architecture.md) (§2 CRN, §3 single shared draw, §4 the cash-term seam,
+  §5 reduce-to-spine byte-identity + externally-derived fixtures, §6 the R19 numeric gate, §7 the
+  per-overlay contracts incl. the two-distinct-MAGI rule, §8 constants discipline).
+- Product thesis + the R40 ledger entry: [docs/product.md](../../product.md) §7 (R40.1–R40.10) +
+  Scope Boundaries (the R40 income-side line).
+- Verified tax facts: the scoping research run (45 IRS-primary-confirmed claims) — condensed in the
+  Appendix below.
 - Mirror pattern: `src/shared/model.ts` (`TickerClassification`, the vocab `as const`, fidelity-over-
   duplication), `src/intake/intakeMap.ts` (`contributionStreamsFor`, `nonZero`, `escalateQuote`,
   `missingRequiredFacts`, the working-year IRMAA override), `src/engine/simulate.ts`
@@ -726,8 +824,53 @@ residuals (with directions), the provenance corrections, and the U8 validation o
 - Intake precedent: `src/intake/AccountEntry.tsx`, `AllocationEntry.tsx`, `questions.tsx` (`AccountsStep`,
   the `incomeStep`/`workIncomeStep` naming collision), `AnswerStrip.tsx`, `sanity.ts`, `src/ui/copy.ts`,
   `eslint.config.js`. Restore path: `src/shared/scenarioCodec.ts`, `src/store/session.ts`.
-- Institutional learnings: `docs/insights/` 006, 007, 008, 010, 011, 012, 013, 014, 018, 020, 023, 024,
-  025, 027, 028, 029, 039, 040; DND-009.
-- Review provenance: the 4-agent grounding pass; the manual 4-lens panel; the deepen pass's 4 specialist
-  lenses; the mandatory document-review handoff (coherence/feasibility/product/design/security/scope/
-  adversarial), 2026-06-17.
+- Institutional learnings: [docs/insights/](../../insights/) 006, 007, 008, 010, 011, 012, 013, 014, 018,
+  020, 023, 024, 025, 027, 028, 029, 039, 040; DND-009.
+- Review provenance: the 55-agent scoping research pass; the 4-agent grounding pass; the manual 4-lens
+  panel; the deepen pass's 4 specialist lenses; the mandatory document-review handoff (coherence/
+  feasibility/product/design/security/scope/adversarial), 2026-06-17.
+
+### Appendix — verified tax facts (condensed; full evidence in the research run)
+
+**Alimony** — post-2018 agreements: not taxable to recipient / not deductible by payer (TCJA; Pub 504,
+Topic 452). Pre-2019: taxable/deductible unless expressly modified. Reported Sch 1 line 2a → AGI.
+Terminates at recipient death (§71(b)(1)(D)) → 0% survivor.
+**Pension** — fully ordinary taxable (1040 5b); Simplified Method gives a fixed-nominal tax-free basis
+portion that shrinks then stops (Pub 575). QJSA 50% federal floor; election single-life/50/75/100 (IRC
+401(a)(11)/417). Into AGI/MAGI → affects ACA/SS-taxation/IRMAA/Roth headroom.
+**Rental** — net (gross − expenses − **depreciation**, 27.5yr SL) ordinary on Sch E → AGI/MAGI; passive,
+no SE tax, continues past retirement until sold (Pub 527/925). Recapture/cap-gains/step-up fire only on
+sale (OUT v1).
+**Annuity** — qualified = fully taxable; non-qualified = exclusion ratio (basis/expected-return, Pub
+939; 26 CFR 1.72-4), tax-free until basis recovered then 100% taxable; fixed = flat nominal, COLA =
+optional rider that lowers initial payout; J&S survivor %; taxable portion → MAGI.
+
+## Superseded / changelog
+
+Live text above reads current. The superseded facts, recorded once, here:
+
+- **The leaf interface in the scoping doc carried a `label` field and `taxableFraction` directly on the
+  leaf.** The build supersedes this: tax-treatment fields are a **discriminated union on `type`** at the
+  **entity** layer (KTD-6), `taxableFraction`/`survivorPct` are entity scalars multiplied away at
+  compile (KTD-4) — they do **not** exist on the compiled `PersonIncomeStream` leaf, which carries only
+  the four per-year variant vectors. The leaf is **never persisted** (KTD-3); only the `IncomeStream`
+  entity reaches `ScenarioV3`.
+- **Survivor-% application location.** The scoping doc left "apply survivor% at compile vs in the path
+  loop" as an open decision and leaned toward the path loop. The build resolves it as **both, split
+  cleanly**: survivor-% is **pre-applied per-stream at compile time** into the SURVIVOR variant (KTD-4),
+  and the path loop only **selects** FULL vs SURVIVOR vs 0 by the owner's sampled death (zero-alloc).
+- **The IRMAA reconciliation was a copy control in the scoping frame.** The first design leaned on a
+  copy instruction ("enter MAGI inclusive of all income"). Three review agents found that mechanically
+  unsound; KTD-9 supersedes it with a **structural decouple** (override = wages/non-modeled only, copy
+  inverted, the engine owns each modeled stream's IRMAA contribution).
+- **The scoping `validateParams` R19 list claimed `survivorPct ∈ [0,1]` / `taxableFraction ∈ [0,1]` are
+  engine-gated.** The security-lens correction (KTD-4 / KTD-3): those scalars are multiplied away before
+  the engine sees the leaf, so the engine **cannot** range-check them — the range gate lives at the
+  **entity** boundary (Unit 4 sanity on intake; the U8 codec on restore). Engine `validateParams` checks
+  the compiled **vectors** (finiteness + `≤ ENGINE_MAX_DOLLAR`) only.
+- **A CRITICAL "non-taxable income is ACA-MAGI wage-blind" review finding was raised, then rejected** as
+  a false alarm — lower MAGI → higher subsidy is the *true* answer; no income source should-raise-MAGI-
+  but-doesn't. Recorded so it is not re-raised at build.
+- **The origin scoping doc** (`docs/plans/2026-06-17-001-other-income-in-retirement-scoping.md`) and the
+  dated build plan (`docs/plans/2026-06-17-002-feat-other-income-retirement-plan.md`) are retired to git
+  history as research/engineering provenance; this feature plan is their live home.

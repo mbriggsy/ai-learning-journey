@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "license": "UNLICENSED",
-  "description": "A personal retirement / tax-strategy co-pilot — never sold. See docs/brainstorms/the-back-nine-requirements.md.",
+  "description": "A personal retirement / tax-strategy co-pilot — never sold. See docs/README.md.",
   "packageManager": "pnpm@10.30.3",
   "scripts": {
     "dev": "vite",

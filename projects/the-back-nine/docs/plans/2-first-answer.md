@@ -1,0 +1,326 @@
+---
+title: "Act 2 — The First Visible Answer (the magic moment)"
+doc-type: plan
+status: in-progress
+created: 2026-06-17
+updated: 2026-06-17
+derives-from: [docs/product.md, docs/roadmap.md]
+sources: [docs/architecture.md, docs/research/engine-validation-and-tax.md, docs/research/pre65-healthcare.md]
+---
+
+# Act 2 — The First Visible Answer
+
+This is the act where a friend first *sees* the answer. The engine (Act 1) is done and pinned; this act is the human face it speaks through.
+
+Act 2 delivers the magic moment end-to-end: a calm, one-question-at-a-time account-level intake whose first plain-language confidence statement **resolves live** — from *indeterminate* toward a verdict as the user answers — rendered through colorblind-safe viz, honest across all six outcome states *and* the survivor case, with **nothing persisted until the user explicitly saves** (and, when they do, a trust-grade Save flow that shows the recovery phrase, forces an encrypted export, and gates a weak passphrase).
+
+The first answer is **state-adaptive** (see [docs/product.md](../product.md) R29/R35): one intake flow, two leads.
+
+- A household with **at least one person still working** leads with **the fuck-off date** — two confidence-graded dates (floor + lifestyle).
+- An **already-retired** household keeps the calm **spine confidence statement** as its lead.
+
+The first answer is the *spine* answer — the first beat. The strategy recommendation is the second beat and lands in Act 4; the itemized budget that splits essentials from lifestyle is the Act 3 deepening.
+
+> The `lifecycle` block above reads `coded: ""` / `code-reviewed: ""` because Act 2 as a whole is **not** finished. Per-unit status is honest below: U5/D1 is shipped + reviewed; U6 is a foundation only; U6-render / U7 / U8 / D2 / the two-pane laptop layout are planned. Do not read the empty act-level lifecycle as "nothing built" — read the per-unit table.
+
+---
+
+## Where this act sits
+
+| | |
+|---|---|
+| **Consumes (Act 1, done + pinned)** | the Monte Carlo core (U1), the tax + accounts overlay (U2), the income-dependent healthcare overlay (U3), the encrypted store (U4), the accumulation fold + date-search (C1–C3), the SS spousal/survivor sub-engine. It does **not** re-open them. |
+| **Why this is the act** | Act 1 proved the engine is *right* and the store is *safe*. Act 2 is where a financially-literate friend meets the product and decides whether to trust it with real retirement money. |
+| **The gate** | the **N=1 cold-read across all six outcome states plus the survivor readout** (and, when the surfaces land, the fuck-off-date framing). The cardinal rule governs the gate: the bar *rises* for a personal tool, "just for friends" never softens validation. |
+| **Hands off to** | Act 3 (Controls — manual sequencing + Roth, the itemized budget) and Act 4 (Solver & Recommendation — the actual differentiator). |
+
+The load-bearing engine invariants (CRN / single shared draw / reduce-to-spine / the worker boundary / the constants discipline) live once in [docs/architecture.md](../architecture.md). This doc links to them; it does not restate them.
+
+---
+
+## Per-unit status (You-Are-Here)
+
+| Unit | What it is | Status |
+|---|---|---|
+| **U5 / D1** | Account-level guided intake (~5-min) + the in-memory orchestrator + R19 sanity | **Shipped + reviewed.** Cleared the N=1 laptop cold-read on every screen. |
+| **U6 (foundation)** | Colorblind-safe viz primitives — palette / luminance scale / CVD probe | **Shipped.** `palette.ts` + `scale.ts` + the colorblind dev gate. |
+| **U6 (render)** | The `ConfidenceBand` SVG render itself | **Planned.** Not built. |
+| **U7** | Confidence-statement surface + outcome-state system + survivor readout + `copyGuard` | **Planned.** Not built. |
+| **U8** | First-Save flow + passphrase-strength gate (in-memory → keyed persistence) | **Planned.** Not built. |
+| **D2** | The fuck-off-date surface — state-adaptive lead, two confidence-graded dates | **Planned.** Not built. |
+| **Two-pane laptop layout** | The state-adaptive primary surface composition (laptop is the showcase) | **Planned.** Not built. |
+
+> A note on the naming. **D1 *is* the U5 reshape** — U5 was planned around a single-total-spend on-ramp; the 2026-06-08 accumulation expansion (R26–R39) replaced the on-ramp shape with an account-level flow and split the surface into D1 (intake) + D2 (the state-adaptive lead). U5's planned primitives — the progressive/engine-gated/commit-triggered architecture, the `memoryModel` orchestrator, the R19 grammar, the a11y primitives, the no-write-until-Save seam — were **built by D1** to U5's design. There is no separate "U5 shipped then D1 reshaped it" history; D1 built U5's substrate and the account-level flow in one pass. The household retirement-spend figure **survives** the on-ramp supersession as a collected input; what was replaced is the flow *shape*, not the spend input.
+
+R40 (other income — pension / rental / annuity / alimony) is the **immediate next build** and threads into the D1 intake + the engine's stream consumer. Its plan lives at [docs/plans/features/other-income.md](features/other-income.md).
+
+---
+
+## The cross-cutting contracts
+
+These six contracts span the units. They are named once, then enforced in the unit that owns each. They are the seams of the act.
+
+### 1. The `memoryModel` orchestrator (owned by U5; `src/store/memoryModel.ts` — built by D1, shipped)
+
+`memoryModel.ts` is not passive data — it is the named in-memory **session/engine-client** for the magic moment, owning six obligations:
+
+- **(a)** it holds the **single long-lived Comlink worker handle**, created once *outside React's render path* (a module-level singleton / root holder — never in a component render, a re-running `useState`/`useMemo` initializer, or per intake step; must survive StrictMode's dev double-mount) and reused across every recompute — the React-tree *enforcement* of the engine's "single long-lived instance … reused" worker guarantee (the `use(promise)` Suspense pattern does **not** apply — there is no fetch).
+- **(b)** It **mints the per-scenario 32-bit seed exactly once** via `crypto.getRandomValues` at the first engine run (a crypto-allowed layer — the engine-purity lint bans `getRandomValues` only inside `src/engine/**`), stores it as a first-class model field, reuses it for every recompute, and persists it **unchanged** at Save (no re-mint), so the reloaded headline is byte-identical to the number the user saw and screenshotted. This is the **same seed** the Act 3 controls and the Act 4 solver reuse so all candidates run on the single shared market draw (CRN — see [docs/architecture.md](../architecture.md)). *(Act 4 reads this existing field as `seedA` and adds a second, held-out scenario seed `seedB`; this field is never re-minted.)*
+- **(c)** It exposes a **worker-vs-main-thread capability flag**, set at worker construction (in this orchestration layer, never inside `src/engine`), falling back to a main-thread run so the first answer still renders; the flag's downstream consumers (disable live recompute) are the Act 3 control surfaces.
+- **(d)** It is the **recompute home** and the **named future owner** of the rounding-hysteresis seam — but **Act 2 builds NO sticky rounding**: during intake (back-nav edits and progressive resolve) the headline / dollar / copy-state move **freely**, so sharpening is visible. The `lastDisplayed*` fields, the resolve→verdict sticky baseline, and the margin-gating rule are seated in **Act 3** (the first edit-of-a-complete-answer recompute); the sticky baseline is captured at the resolve→verdict transition, `lastDisplayed*` are **session-only / NOT persisted to the vault**, and on re-entry they are re-seated from Act 3's deterministic recompute of the saved model — so a genuinely-moved answer (staleness) is never held to a stale screenshot value. `confidence.ts` stays pure and owns the *stateless* first-answer rounding (`priorHeadline = null`).
+- **(e)** It is the **one plaintext shape** — the same to-be-persisted MODEL `shared/model.ts` defines, with **no parallel intake shape** and no field-mapping layer (U5 owns the detail; U8's field-fidelity guard rests on this single-shape rule, so an intake field can never be captured on screen yet silently dropped at Save).
+- **(f)** It stamps each dispatched engine run with a **monotonic request epoch** and **discards any resolved result older than the latest committed epoch**, so racing in-flight runs on a slow device never render a stale intermediate (the no-jitter guarantee on rapid commits). *(This is one elevation of an existing module — not a new module. `src/store/session.ts` remains the crypto/key session from U4, a different concern.)*
+
+### 2. The outcome-state set (engine-owned; consumed by U7)
+
+The set is the **six** states `on-track / borderline / off-track / indeterminate / over-funded / already-failing`, a single-sourced enum in `src/shared/model.ts`. The **engine** (`confidence.ts`, U1) is the *sole* authority that selects the state and owns **all band edges, the indeterminate selection, and the over-funded near-ceiling clamp** — the distribution arrives at the UI **already tagged** with its state. `src/ui/outcomeStates.ts` is a **pure presentation lookup** keyed by that enum (`state → {copy, nextAction, verdictSignal}`) with **zero** threshold/banding/clamp logic, exhaustive over the enum so an unhandled state is a TypeScript compile error (`burned/042` fail-loud-on-contract-drift). The Act 3 budget split applies a **two-tier lexicographic reading** (an essentials-floor verdict + a lifestyle-surplus verdict) to these **same** six states — it is **not** a hardcoded 7th state. The clamp's *correctness* test stays in U1; U7 asserts only presentation-per-state.
+
+### 3. The non-color signal vocabulary (primitives owned by U6 `src/viz/palette.ts`; two consumers; lives in the a11y tree)
+
+> The user is **color blind, not blind** — color is never the only signal. See the [back-nine-design](../../.claude/skills/) project law.
+
+One module owns the colorblind-safe **primitives**: the luminance ramp, the named shape/marker set, the line-style set, and the rule "separate by luminance, not hue" (`burned/051`, `010`). **Two distinct consumers** map those primitives to two *different* semantic axes — never forced to render identically: **verdict-state** (U7 `verdictSignal`: six states → word + shape + magnitude) and **series-identity** (U6 two-series encoding → solid/dashed + marker + end-label). "Parity" means *both draw from the same primitive set*, not identical rendering. The `culori`/`oklab` probe widens to cover **every** color either consumer renders (including `verdictSignal`'s redundant colors), so no UI-layer color escapes CVD validation. Because the user is color blind, the signal must also be **programmatically available in the accessibility tree** (verdict word as text; shape/icon carries an `aria-label` = state name; band/series exposed via a text alternative), not merely grayscale-visible (`burned/045`). The six verdict icons must be **pairwise-distinct** on the non-hue channel (silhouette + luminance), not merely individually identifiable.
+
+### 4. The copy catalog + copyGuard (catalog created in U5 — shipped; copyGuard born in U7 — planned; both in `src/ui`)
+
+Every user-facing string in `src/ui` and `src/intake` lives in **one typed copy catalog** (`src/ui/copy.ts`), **created in U5** (the first copy-authoring unit) and **extended by U7** — so intake copy routes through it from the start, not as a retrofit. An **ESLint `no-restricted` rule, added in U5 and scoped to `src/ui` + `src/intake`**, bans inline user-facing strings — both **JSXText** *and* user-facing JSX attributes (`aria-label`, `aria-description`, `placeholder`, `alt`, `title`) — so a directive can't leak through an attribute. This is the `burned/063` "single-source the gate" pattern applied to copy. The copyGuard test **enumerates the catalog and asserts every entry passes**, so a new string is forced through the gate by construction — making R12 / the Success-Criteria honesty test true *by construction*.
+
+The guard is **categories, not five literals**:
+- imperative-mood advice verbs ("you should / we recommend / advise / must / need to / make sure / consider / the smartest|best move");
+- advice-implying superlatives;
+- false-certainty verbs ("guaranteed / ensures / locks in / you will save").
+
+The **certainty-hygiene** rule is made *decidable* by **slot discipline**: quantitative content appears ONLY through typed template slots (`~$X`, `~N years`, the `X of 10` natural-frequency frame), so the guard validates **slot presence/framing** rather than scanning free numerals — with a small allowlist for non-claim numerics (ages, SS claim ages 62–70, question counts, the pinned denominator 10). **RMD age is never a copy literal** — it is engine-owned and birth-year-derived (72 / 73 / 75), supplied by the model through a slot, so it is not in the allowlist; `src/viz` stays string-free (every label arrives as a prop from `copy.ts`). The **catastrophe-lexicon** check on user-facing survivor copy is a **tone-lint that AIDS the N=1 cold-read** (the human gate is the real tone judge), explicitly *not* a regulatory shield. **Surface-scoped:** the static R13 honest-limits note ("validate big, irreversible moves with a pro") is a U0 constant **outside** the guard's input, so the disclosure-shaped note stays legal while imperative mood is forbidden in verdicts.
+
+*(Handed forward — NOT built in Act 2: the **require-the-hedge** positive lint — a require/assert that every control readout and the recommendation headline wears its probabilistic hedge — is added in **Act 3·U10** and extended in **Act 4·U16**; the Roth-conversion copy slots are registered in **Act 3·U10**. Act 2 ships only the ban-list + certainty-hygiene + catastrophe-lexicon + the catalog-enumeration gate.)*
+
+### 5. The display contract (consumed by U6/U7 and the Act 3 controls)
+
+The **display denominator is pinned at 10**: the engine runs 1000+ paths (`confidence.ts` owns the raw→display rounding), but every user-facing natural-frequency renders as "**X of 10**" — verdict, survivor readout, and the Act 3 "buys you ~N years" delta all use the **same** denominator so the user never re-bases between surfaces. The **top-of-scale render is coupled to U1's over-funded near-ceiling clamp**: the scale tops out at "**more than 9 of 10**" so "10 of 10" can never appear — the denominator *is* 10. **Framing direction is a copy rule** the N=1 cold-read evaluates: outcome-first for positive states ("in 9 of 10 … the money lasts"), action-first for negative states ("in 4 of 10 … you'd trim ~$X/month", the count subordinate to the dollar move — Kitces probability-of-adjustment, R2). The "more than 9 of 10" top-of-scale render is owned by the **headline render** (not a per-state copy-row clause) and can attach to **both** on-track and over-funded — so over-funded shows the near-ceiling frequency *and* its underspending-mirror copy.
+
+### 6. The magic-moment surface contract (owned by U5 + U7)
+
+The intake architecture is **progressive, engine-gated, commit-triggered**: the confidence surface co-exists with intake and resolves from *indeterminate* toward a verdict as questions are answered (recompute fires on each question-**commit**, not live-as-you-type). The **first frame is verdict-text-first in ALL modes** (word + dollar magnitude + non-color shape) — the **ConfidenceBand is never on the first frame**; it is the on-demand "range" of R4, revealed by an explicit affordance (R2/R4 forbid a dashboard on the primary surface; a calm band is still "the range").
+
+**Render levels (reconciled so the same set isn't described twice):** the engine RESULT transport is a **tri-state** (`pending` | `resolved-distribution` | `calm-error`); the **four render modes** are *pending*, *compute-error*, and — *within* resolved-distribution — *indeterminate* vs *resolved-verdict* (distinguished by the engine's outcome-state tag). **Pending governs ONLY the pre-first-verdict window** (cold-start → first resolved distribution, including the first indeterminate) and shows no verdict-shaped placeholder; **once any distribution has resolved, subsequent recomputes HOLD the last verdict + band visible and crossfade/morph to the new result — they never re-enter pending** (no per-commit blank/flicker). The indeterminate **wide no-median placeholder band** is what the range-reveal shows *when the answer is indeterminate* — behind the same on-demand affordance, **NOT on the first frame**. *compute-error* is a non-verdict system state whose next-action is **retry**, never "sharpen".
+
+Motion: the band **draws once** (on its first reveal) then **morphs** on every recompute (interruptible transition/spring, never a draw-from-zero replay); the headline number renders **static** (no odometer/count-up); verdict→verdict crossfades are margin-gated (the gating is *exercised* in Act 3 — Act 2 intake numbers move freely). **No-worker fallback:** a main-thread run blocks the event loop, so a per-commit run would contend with the step-transition slide — on the fallback flag each commit's recompute is **deferred until after the step transition paints** (yield post-paint); if profiling still shows jank, the fallback **downgrades to one compute at the minimum-viable-input point + one at completion** (instrument first, per the eye-in-loop motion lesson). All of it respects `prefers-reduced-motion`.
+
+---
+
+## U5 / D1 — Account-level guided intake (~5-min) + in-memory orchestrator + R19 sanity
+
+**Status: shipped + reviewed.** Cleared the N=1 laptop cold-read on every screen.
+
+**Goal.** The ~5-min account-level guided setup (R35), **one intake flow for both user states**: per person — name, DOB, **work-status (still working / already retired; if retired, the stop age)**, salary, SS estimate + claim age; the household preamble collects the **retirement-spend figure** (the v1 degenerate budget — it survives the on-ramp supersession; what is replaced is the flow *shape*) **BEFORE the account loop**; then each account — type (→ bucket), holdings (ticker → blend), value, basis, annual contribution + employer match — surfacing the answer during the flow, single entry pass.
+
+**Requirements.** R35 (the ~5-min account-level setup, surface-early, single entry pass), R36 (user-entered values, no live lookup), R37 (ticker→blend + manual classification), R31 (per-account contribution + match entry), R19 (sanity ceilings via C1), R39 (PII inherits encryption + the schema ladder). Plus the U5 substrate: R5 (guided intake), R6 (escape-hatch entry), R8 (caveated answer fast, refinement *sharpens*).
+
+**Shipped files** (`src/intake/`, `src/store/`, `src/ui/`): `coldStart.tsx`, `flow.tsx`, `questions.tsx`, `sanity.ts`, `intakeMap.ts`, `AccountEntry.tsx`, `AllocationEntry.tsx`, `AnswerStrip.tsx`, `fields.tsx`, `a11y.ts`, `referenceData.ts`, `links.ts`, `ExternalLink.tsx`, `FieldError.tsx`, `intake.css`; `src/store/memoryModel.ts`; `src/ui/copy.ts` + the `no-restricted` copy-fence ESLint rule.
+
+### How the flow works
+
+- **Account-level, single entry pass (R35)** — the household preamble (the retirement-spend figure + per person: name, DOB → birthYear, work-status, salary, SS + claim age), then per account (type → {pretax, roth, taxable, hsa}; holdings → ticker→blend→`stockWeight`; value; basis [per-account, not per-lot]; annual contribution + employer match). The spend figure lands **before the account loop** so `validateParams` acceptance — and the first provisional answer — is reachable as soon as the first account lands. The answer **surfaces and sharpens during** the flow, never gated behind a final calculate, never coarse-then-detailed re-entry.
+
+- **The work-status question drives three load-bearing predicates** (the §0 classification, the D2 routing, the accumulation clamp):
+  - *Retired branch:* collect the stop age → entered `retirementAge ≤ currentAge` (the §0 verbatim anchor; the R19 boundary rule is **status-conditional** — for a retired person the stop age must be ≤ currentAge, superseding the old unconditional "retirement age before current age" error path; `validateParams` has no ≥currentAge floor by design); the now-inapplicable questions are skipped/zeroed (salary, per-account contributions/match, the working-year income figure — a retired person's `earnedIncomeReal` is engine-inert).
+  - *Still-working branch:* D1 **constructs** the model `retirementAge` as a placeholder strictly > currentAge (a named convention, e.g. `currentAge + 1`, owned by `intakeMap.ts` — never user-asked, never user-visible): **the tool never asks a still-working user to guess their own retirement date — the date IS the product's answer**. No `src/shared/model.ts` change (`PersonInputs.retirementAge` exists); the change lands in `questions`/`flow`/`intakeMap` + the memoryModel param mapping.
+
+- **Ticker → blend (R37)** — autocomplete against C1's bundled table (issuer share-class family); on a hit, show the resolved blend — **for a TDF row, WITH the "today's allocation, held constant" disclosure label** (C1 carries only the snapshot data; the user-facing label is D1's); on a miss, the **manual 3-choice classifier** (mostly stocks / bonds / cash) + an advanced exact-% expander (sum-to-100). The household blend collapses to one `stockWeight` (cash→bond). The per-ticker manual classification lives as a **ticker-keyed map inside the single in-memory plaintext shape** and persists **ONLY at Save inside U4's encrypted record** per the R39 rule — "answered once" means reused across accounts WITHIN the flow (ticker-keyed, never account-entry-keyed), never an independent write outside the no-write-until-Save seam; editable override.
+
+- **Contributions + match (R31)** — per-account flat-real amounts the user enters (capturing any catch-up routing implicitly); employer match captured (→ pretax). R19 ceiling checks against C1's limits at the CURRENT age ("you can't contribute more than today's limit"), calm inline, reusing the R19 grammar — and `intakeMap` applies C1's **per-runway-year step-down** when an age-band ceiling expires mid-runway (the 60–63 super catch-up → the age-50 tier at 64), with a calm disclosure naming the step-down year ("at 64 the catch-up limit drops to $X; your plan assumes that from then on").
+
+- **The deferred-bucket-split decision is inverted.** The old U5 plan deferred account buckets to Act 3 to protect a 3-min on-ramp; R35 brings them up-front. The first Save now serializes the v2-with-accounts shape directly (the schema boundary shifts; U4's migration ladder owns the additive bump — R39).
+
+- **PII safety (R39).** Every new field lives only inside **U4's encrypted record** (additive schemaVersion bump), never a separate or plaintext holdings store. The R35 field list is **not the closed PII set**; any later-added intake field (e.g. R40's streams) joins this posture by default.
+
+### Tested contracts (D1 — preserved verbatim)
+
+These are the load-bearing intake contracts the shipped + reviewed D1 holds. Each has a dedicated, **non-vacuous** test (a planted-fail control arm so a silently-broken guard fails loud, never green-by-accident).
+
+**The copy fence — proven non-vacuous** (`src/intake/__tests__/copyFence.test.ts`). The `no-restricted` ESLint rule must FAIL on a planted inline user-facing string — visible JSXText AND an `aria-label` literal — and PASS the catalog-routed form. A regex selector silently stops matching after a parser/selector change; this control arm is what keeps "every string routes through `copy.ts`" from being a vacuously-green guarantee (mirrors the no-write seam's planted-write control).
+
+**No-write-until-Save seam** (`src/intake/__tests__/noWriteSeam.test.tsx`). The no-IndexedDB-write assertion holds across the **full intake flow** — the household preamble (per-person DOB/salary/work-status, the spend figure, the ACA/OOP/working-year-income inputs) AND the account loop — until an explicit Save, including an explicit **preamble-only checkpoint** (per-person fields entered, zero accounts ⇒ zero writes), an R19-error branch, back-navigation, and a mid-intake abandon (unmount). Asserted against **U4's REAL store layer** (`fake-indexeddb` under vitest), never a stub — against a stub it is vacuously green, the same vacuity failure the CSP e2e control arms exist to prevent. Today these branches write nothing because no unkeyed write path exists (U4 enforces it structurally); the test is a tripwire so a future local draft/resume path fails LOUD rather than silently shipping cleartext intake to disk. The planted arm proves the probe detects a real write through `db.ts`.
+
+**The provisional answer-strip honesty branches** (`src/intake/__tests__/AnswerStrip.test.tsx`). The trust-hazard guard: a **$0-portfolio negative reading never shows the verdict word** (a half-entered portfolio reads falsely off-track — the pessimistic mirror of the date route's trust hazard). The indeterminate→incomplete surfacing, the cancelled hold-quiet, and the a11y region label/announcement.
+
+**The spend-period force-confirm (the monthly-vs-annual trap, R19).** Every per-period money field carries an explicit **`$/month` vs `$/year`** segmented control (active segment by shape/weight, not hue), so the period is unambiguous by construction; the model stores one canonical period (defaults: spend = /month, income + SS = /year, editable). The implausible-magnitude check is the **second** line of defense; for a value coherent as **both** monthly and annual, intake **forces** an explicit per-period confirmation rather than silently computing on the default — so the engine can never run on 1/12 (or 12×) the real figure.
+
+**The ACA-quote escalator + sourcing-stall affordances** (the second design landmine). Because the date is computed with healthcare ON from the tested date, intake collects the **pre-65 ACA inputs** (the SLCSP benchmark + enrolled-plan premium — user-entered, no synthesis, the single biggest honesty lever), the **per-year out-of-pocket-medical figure**, the **working-year income figure** the conservatively-high IRMAA-MAGI override is built from, and, when a member is at/near 65, the **two prior years' actual IRMAA-MAGI seed**. The ACA/OOP inputs are entered as a **today's-quote scalar PLUS a pinned age-rating escalator** that auto-fills the per-age schedule (the federal default age curve lives in `src/engine/constants/` under the citation discipline; an advanced expander allows per-age edits) — preserving the ~5-min entry while keeping values age-anchored. A flat held-constant scalar errs OPTIMISTIC under 3:1 age rating (the late-window 63–64 years are the most understated — the cardinal-sin direction, so it cannot ride a one-directional disclosure) and survives only as an explicit Briggsy-accepted residual with its own copyGuard-cataloged string.
+
+The escalator's **household-composition rule** (the staggered Medicare exit): the auto-fill splits the household today's-quote scalar per member by the federal age-curve ratio at today's ages, escalates each member's schedule along their OWN ages, and the flattened household per-year value at sim-year `t` **sums only the members ACA-ENROLLED at `t`** (enrolled ⇔ retired AND pre-65) — distinct from the IRMAA onset predicate. For a 62/64 couple the sim-years between the two 65th birthdays price the younger's SOLO value. The step-down applies to `enrolledPremium` AND `slcsp` ONLY; **`oopMedical` does NOT step down** (a 65+ member's out-of-pocket continues and stays HSA-qualified). The composition lives at D1's escalator/`intakeMap` flattening, NOT `healthcareStreams.ts` (whose contract is WINDOW-GATE, never reshape values).
+
+The **sourcing-stall** affordances (the common still-working employer-covered household does not KNOW its SLCSP, and the tool will not fetch or guess it — R36): (a) a **calm pre-flight note at flow start** ("have a recent marketplace quote handy — healthcare.gov or the KFF calculator, your age + ZIP"), the PRIMARY affordance; (b) a **continue-past path** — the unanswered ACA question never hard-blocks the preamble or the account loop; the answer surface holds the input-incomplete placeholder, which **names exactly which input is missing and why the tool won't synthesize it**. Park-and-resume is honestly **in-session only** (the no-write-until-Save seam means a closed tab loses the partial entry).
+
+**Requiredness is decided (a silently healthcare-blind date is never an open path).** For any date-route household, `buildCandidateParams` sets `healthcareEnabled = true` **unconditionally** — but forcing the toggle is NOT sufficient (an absent stream would pass with the coverage loop running zero iterations), so C3's `validateParams` extension gains a **date-route coverage rule**: any person pre-65 during the retired window of any in-window candidate ⇒ the age-anchored `enrolledPremium`/`slcsp` schedule must have finite coverage of those sim-years — missing ⇒ the defined indeterminate ⇒ D1's input-incomplete placeholder, **never a silent healthcare-off date, provisional OR final**. The **ACA schedule is REQUIRED** (absent coverage is optimistic — the cardinal direction); the **OOP stream MAY stay optional** (absent OOP only disables the HSA qualified-spend cap — pessimistic-safe, resting on the recorded containment premise that the spend figure INCLUDES out-of-pocket medical; the OOP question's copy carries the contrast explicitly).
+
+**The money-input discipline (mobile must shine).** The model stores each input as a **raw number**; the field **displays** a formatted string. Open-ended dollar fields use a text field summoning the numeric keypad — **not** a native number-spinner (rejects grouped digits, shows steppers) and **not** a slider (can't hit an exact figure; violates R6's "set any assumption precisely"). Sliders are reserved for **bounded** ranges (ages, percentages). **Reformat on blur**, not per keystroke (avoids caret-jump). Full-width, finger-sized fields. Typing a large figure stores the raw number and never reorders the caret.
+
+**R19 sanity, decomposed per rule + directional re-validation.** Each rule is a discrete testable rule that blocks only **true impossibilities** (the status-conditional retire-vs-current rule; SS claim outside 62–70; survivor-spending ratio > 100%) and lets coherent-but-dire inputs ($0 portfolio + positive spend) flow to an honest "0 of 10". **Directional half:** cross-gated inputs re-fire their check when an **upstream** answer they depend on is edited via Back — an upstream edit **keeps** downstream answers (never silently wipes) but marks dependents for re-validation; if it makes a downstream answer impossible, the same calm inline message fires at the point of edit. Rules evaluate on **field blur and attempt-to-advance, never per keystroke**; an in-progress value invalid-as-prefix but valid-when-complete ("6" → "62") is never flagged mid-entry; an existing error clears the instant the field is re-edited.
+
+**The a11y contract (the stranger-trust bar; the N=1 reader is color blind).** On each step advance, move focus to the new step **heading** (`tabindex=-1`), **not** the input (auto-focus pops the keyboard before the user reads the question) — the heading-as-focus-target *is* the announcement. One visually-hidden polite live region carries only transient status, with `burned/045` clear-after-announce discipline. R19 errors associate to their field (`role="alert"` + `aria-invalid` + `aria-describedby`), clear on valid, and carry the non-color signal (word + shape + text). The focus-move/`announce()` helper is a shared a11y primitive U7 reuses to move focus to the verdict.
+
+### Surface-early is PROVISIONAL until the account set is complete (the trust hazard)
+
+This is the design landmine D1 resolved, and it is symmetric across both leads.
+
+The first-render threshold is **anchored to the engine contract, not a UI-side account list**: the answer first renders at exactly `validateParams` acceptance — below it (no spend figure yet, the zero-balance start) the surface shows a calm **input-incomplete placeholder** (a `validateParams` rejection IS input failure; no separate UI threshold that can drift from the engine). Between acceptance and the user marking the account set complete, ALL outcome classes render in **provisional** form.
+
+The design distinguishes **three movements**, which map (not transliterate) across the date route and the spine route:
+
+| Movement | Date route (not-yet-retired) | Spine route (already-retired) | Read |
+|---|---|---|---|
+| Band narrowing | same date, tighter grade | grade sharpens | a virtue — sharpening |
+| Value moving "better" | the date moving **earlier** | grade moving **off-track → on-track** | a hazard — feels like bargaining; **label provisional, never a delight tick / alarm** |
+| Outcome-CLASS transition | no-date → window-edge → confirmed | off-track → on-track class flip | expected provisional updates, **never alarms** |
+
+A provisional negative reading is tied to incompleteness ("not yet — with what you've entered so far" / the mid-entry off-track copy class), a **distinct copyGuard-cataloged string class, never the final copy**. The final answer (date or grade) is presented only against the complete set.
+
+---
+
+## U6 — Colorblind-safe viz primitives
+
+**Status: foundation shipped (palette / scale / CVD probe). The `ConfidenceBand` render itself is planned, not built.**
+
+**Goal.** Hand-rolled SVG + `motion` viz primitives — a single-distribution **confidence band** and the reusable, colorblind-safe **two-series encoding** — legible on mobile, never chart-heavy, never color-dependent. (The `TwoFutures` *component* lands in Act 3 with its only real consumer — the Roth-conversion control's two-futures emission; this unit ships the band + the encoding tokens it will reuse.)
+
+**Requirements.** R2 (no color-alone), R4 (range on demand), R23-substrate (two futures legible without chart-soup — the *encoding*).
+
+**Shipped (foundation):** `src/viz/palette.ts` (the single source for the non-color signal **primitives** — luminance ramp, named shape/marker set, line-style set), `src/viz/scale.ts`, and the colorblind dev gate (`src/viz/__tests__/colorblind.test.tsx`, `scale.test.ts`, `scale.pbt.test.ts`).
+
+**Planned (render):** `src/viz/ConfidenceBand.tsx`. *(Act 3 creates `src/viz/TwoFutures.tsx` against the Roth control's real emission, reusing this unit's encoding tokens.)*
+
+### What ships in the foundation (built)
+
+- **Two-series encoding tokens, single-sourced.** Distinguish the two futures by **line style** (solid/dashed) + **direct end-of-line labels** + **distinct marker shapes** + **luminance** — never red/green. These encoding tokens live in `palette.ts` and are the reusable contract U6 ships. The de-collision / delta-as-hero *rendering* is owned by Act 3 (built with `TwoFutures` against the Roth control's real emission, per `burned/042` — not specified a phase ahead of its only consumer).
+- **CVD probe (the pinned metric; hardened mechanics).** `palette.ts` is on `burned/051`+`010`'s **oklab Euclidean, 0.10 floor** across deuter/protan/trit — that *is* the pinned contract (do **not** introduce `differenceCiede2000`). Two source-true refinements: probe the **effective composited color** where the band uses an alpha fill (an alpha fill's on-screen color ≠ its token), and a **planted too-close pair** fixture so the probe proves it can fail (`burned/070`). It is a **dev gate**, not a CI unit test.
+- **Verdict-icon shapes are palette primitives; pairwise-distinct + a11y-tree.** The **six verdict-state icon SHAPES are part of `palette.ts`'s named shape set** (a U6-owned primitive set); U7's `verdictSignal` is only the *state→shape binding* — so U6 owns and tests the shapes with **no U7 dependency** (it can build alongside Act 1). The six shapes must be **pairwise-distinct** on the non-hue channel (silhouette + luminance) — all C(6,2)=15 pairs distinguishable, with a **planted near-identical pair** that **fails** the gate loud.
+
+### What the render must do (planned)
+
+- **Hand-rolled SVG, zero charting-lib** (`motion` already in stack). `motion` animates the band.
+- **The ConfidenceBand spatial contract** (inherited by U7 and the Act 3 `TwoFutures`). The band plots the **portfolio-value percentile fan over the household horizon**. **y-axis = LINEAR portfolio value in today's (real) dollars — reject a log scale explicitly:** log's domain is strictly positive so it **cannot draw the depletion-to-$0 (ruin) case**, the single most important honest signal for off-track / already-failing (R2, R14). **x-axis = a household clock in years-from-now**, with **non-color** (text/shape, never hue) annotations at the load-bearing moments U1 defines: each spouse's retirement, the survivor two-regime boundary (joint→survivor, which doubles as the MFJ→single switch), and horizon end — annotated with **both** spouses' ages, never a calendar or a single age.
+- **Indeterminate "no band yet" is a named viz state.** Indeterminate is the *expected first answer*, but like every band it lives **behind the on-demand range-reveal — never on the verdict's first frame**. When opened on an indeterminate answer, the band renders as a deliberately **wide, low-emphasis placeholder envelope** with **no central median line** and a distinct non-color texture (sparse/dashed boundary or faint hatch), visually distinct from the real-band hatch. **Forbid** any thin/precise band or single-value flat line in this mode. The tell is the absence of the median + the wide low-emphasis texture — **never hue**.
+- **Draw once, then MORPH.** The `pathLength` band-draw plays **once** on the band's first reveal; every subsequent recompute **morphs** the existing band via an **interruptible, retargetable** transition (transition/spring, never `@keyframes`). The morph **rides on** the determinism contract (recompute reuses the scenario seed) so the shape change is pure signal, never RNG jitter. **Fixed x-lattice:** the band is sampled on a **constant** number of points across the **fixed max-horizon `viewBox`** so the path's point count never changes as ages / retirement years move the horizon. The **median line is an opacity-fade overlay**, not part of the morphed envelope path. **The morph is shape-agnostic — it must support a band that WIDENS or SHIFTS, not only narrows** (an Act 3 override edit shifts/widens; a confirm/narrow edit tightens — R8).
+- **`prefers-reduced-motion`.** Replace movement with the final state rendered instantly plus a short comprehension-aiding opacity fade. **Hard invariant:** the final rendered state is identical with motion on or off — no information lives only in the animation, so the reduced-motion path inherits the non-color/grayscale guarantees for free.
+- **Responsive-SVG contract.** One fixed `viewBox`; container `width:100% / height:auto`, `preserveAspectRatio='xMidYMid meet'`. `vector-effect='non-scaling-stroke'` on **all** stroked paths/markers so line weight + dash geometry stay constant in screen px across viewports (protecting the colorblind-substitute encoding, not merely "scaling nicely"). A hard minimum text px below which we **drop** ticks/labels rather than shrink past legibility.
+- **Pending and compute-error are non-band modes** owned by U7 (the `ConfidenceBand` is simply **not mounted**). **Portal** any overlay/tooltip to `document.body` (transform-ancestor trap, `burned/013`).
+
+---
+
+## U7 — Confidence-statement surface + outcome-state system + survivor readout
+
+**Status: planned. Not built.**
+
+**Goal.** The product's **face** — one plain-language answer, leading with the verdict, handling all six outcome states (plus a distinct compute-error and pending mode) with honest copy + a non-color signal + a next-action, including a survivor-specific readout — composed and animated to feel calm and trustworthy. **copyGuard is born here.** The lead position is **state-adaptive** (`ConfidenceStatement.tsx` routes date-first via D2 for a household with ≥1 still-working person, spine-first for an already-retired household — the per-person predicate `people.every(p => p.retirementAge <= p.currentAge)`, never a `max()` form). The provisional/incomplete treatment from D1 applies to the spine lead too (it surfaces mid-entry against a partially-entered, hence understated, portfolio).
+
+**Requirements.** R1, R2, R4 (depth on demand), R12 (probabilistically-framed copy; certainty banned), R14 (plain not dumbed-down); gates R25 (the cardinal honesty bar) via the N=1 cold-read.
+
+**Planned files.** Create `src/ui/ConfidenceStatement.tsx`, `src/ui/outcomeStates.ts`, `src/ui/SurvivorReadout.tsx`, `src/ui/verdictSignal.tsx`, `src/ui/copyGuard.ts`; extend `src/ui/copy.ts`.
+
+### The design
+
+- **One answer, verdict text-first; the band is on-demand.** The first frame shows the verdict **word + dollar magnitude + non-color shape/icon** as text-first; the **ConfidenceBand is the on-demand "range" of R4**, revealed by an explicit affordance ("show me the range") — *not* on the first frame. **Disclosure pattern:** one progressive-disclosure affordance (an origin-aware bottom-sheet on mobile) used for **both** the range reveal **and** the "and the survivor?" readout, so the depth gesture is consistent; both surfaces **portal to `document.body`** (`burned/013`).
+- **Six states, single-sourced from the engine.** The distribution arrives **already tagged**. `outcomeStates.ts` is a pure presentation lookup keyed by that enum, exhaustive (unmapped state = compile error), and **re-derives no thresholds/clamp**.
+- **Per-state copy grammar (decided framing; exact strings deferred to the N=1 cold-read).** A six-row table, each row = {verdict clause + magnitude clause + next-action clause + non-color signal}, with typed slots (`[N]`, `[the second of you]`, `~$X`, `~N years`). Organize the dollar-bearing states on one signed **over/under axis** (Kitces, bidirectional):
+  - **on-track** = outcome-first relief, no adjustment ("in [N] of 10 versions of your future, the money lasts to [the second of you]");
+  - **over-funded** = symmetric *underspending* mirror ("on track to leave ~$X unspent — room to spend ~$Y/month more, or retire ~N years sooner");
+  - **off-track/borderline** = action-first trim grammar ("in 4 of 10 futures you'd trim ~$X/month"), never "failure";
+  - **already-failing** = gap-to-sustainable-today from depth-of-failure ("at today's spending the money runs short in ~N years; trimming ~$X/month closes most of the gap"), never "failure".
+  - The two non-dollar rows: **indeterminate** = a range + a targeted next-action naming the specific missing/unconfirmed input(s) the intake already tracks (by intake order — **not** a computed sensitivity ranking), replacing the generic "sharpen"; **compute-error** = the retry system state below.
+- **Survivor readout = a second confidence statement in the same vocabulary (the emotional core; a success criterion).** `SurvivorReadout` reuses the **same** `outcomeStates` map + `verdictSignal` + copy catalog applied to the **engine's survivor distribution**, deriving **no** financial figures of its own; it may render a **different** one of the six states than the joint headline (household-on-track-but-survivor-off-track is the product's reason to exist). The two survivor shocks render in plain words: SS step-down as a dollar drop ("household Social Security drops by ~$X/month to the larger of your two benefits"); the single-filer effect with **no "widow's penalty" jargon**.
+- **copyGuard, born here (R12; R25).** All UI/intake copy in the typed catalog; the copyGuard test **enumerates the catalog and asserts every entry passes** (universal compliance by construction; keep the forbidden-string fixture too). Guard = **categories** + a **certainty-hygiene** rule made decidable by **slot discipline** + a **catastrophe-lexicon tone-lint** on survivor copy (die/death/widow/penalty/broke/destitute → sanctioned: "if one of you outlives the other" / "the surviving partner"; internal identifiers like the engine's "second death" are exempt) — framed as a **cold-read aid, not a regulatory shield**. **Next-action grammar:** a next-action may offer only an **in-tool capability** ("sharpen this", "see the range", and — in Act 4 — "see what we'd do about it") and must **not** prescribe a real-world money move; the dollar adjustment stays **descriptive/conditional**, never imperative. *(Handed forward to Act 3·U10: the require-the-hedge positive lint and the Roth-conversion copy slots.)*
+- **Compute-error and pending are distinct render modes.** The engine's **calm-error** result (the tri-state `pending | resolved-distribution | calm-error`) gets a dedicated non-verdict system state: no band/range/X-of-10, next-action = **retry**, never "sharpen"; copy reassures the in-memory data is intact. The **pending** state renders **no** headline, X-of-10, band geometry, or outcome signal — it must never resemble a verdict; pending governs ONLY the pre-first-verdict window; once any distribution has resolved, subsequent recomputes HOLD the last verdict + band and crossfade/morph (no flicker).
+- **Magic-moment motion.** Entrance: opacity + a small translate, custom ease-out — a brief, calm settle; never `scale(0)`, no spring bounce. Render the headline dollar figure and the X-of-10 **static** — **no count-up/odometer** (an animated financial figure reads as a gambling/dashboard tell). State→state: **crossfade** with interruptible transitions + a brief subtle blur, never a pop; the crossfade morphs the **word + shape + magnitude** (not a hue swap). Margin-gating is an Act 3 addition. `prefers-reduced-motion` → keep the opacity/color crossfade, drop the translate.
+- **Visual direction contract (the product's face; consumed by U6 labels + the Act 3 controls).** Commit one intentional aesthetic — **refined minimalism executed with precision** (calm/trust-first/literate) — explicitly **not** generic AI defaults (no Inter/Roboto/system-stack as the brand face). A distinctive **display** face for the verdict line + a refined, highly-legible **body** face, both **self-hosted** (the CSP `connect-src 'self'` forbids a third-party font CDN; counts against the bundle budget). Type/scale live in **shared design tokens built before components**. Visual ranking: verdict line is the hero, dollar magnitude second, X-of-10 + supporting line tertiary — so the non-color signal rides on **weight/scale** too.
+
+### The gate
+
+**Passing the N=1 cold-read with Briggsy across all six outcome states plus the survivor readout is an Act 2 exit condition — non-negotiable, and Act 3 must not begin until this gate clears.** Each of the six states *and* the survivor readout is a first-class pass subject, landing honest and calm, "neither sugarcoated nor catastrophized," such that a friend would trust it with real numbers. Because this is the personal-tool reset, the cold-read bar **rises** (R25). Non-negotiable subjects: **indeterminate** (the first state a stranger sees — calm-and-honest, not evasive); **over-funded** (honest, not smug; the near-ceiling clamp reads as integrity, not hedging); **already-failing** ("starting now", never catastrophizing); the **survivor readout**. Because the reader is color blind, the cold-read also confirms each state's non-color signal is fast-scan legible without hue.
+
+---
+
+## U8 — First-Save flow + passphrase-strength gate (the trust handoff)
+
+**Status: planned. Not built.**
+
+**Goal.** The user-facing moment the in-memory model first reaches disk — the Save CTA, passphrase-set **gated by a min-entropy strength check**, recovery-phrase display, and mandatory export — wired to U4's mechanism. This is the surface that makes R16/R17/R18's promise real to the user, and the strength gate is what makes PBKDF2-600k's brute-force defense actually load-bearing.
+
+**Why a dedicated unit.** U4 built the save/recovery/export *mechanism* and deferred the *display*. It can't live in U5 (whose goal is **zero** persistence) or U7 (no save deliverable). It is the Act 2 owner of the **end-to-end** no-unkeyed-write proof (U4 proves the seam at its own layer; this unit proves it end-to-end at the real Save) and the home of the **net-new passphrase-strength gate**.
+
+**Requirements.** R16 (encrypted at rest + guarded local access — the strength gate is the front door), R17 (survivor recovery), R18 (export/back-up durability).
+
+**Planned files.** Create `src/ui/SaveFlow.tsx`, `src/ui/RecoveryPhraseDisplay.tsx`, `src/ui/ExportConfirm.tsx`, `src/ui/passphraseStrength.ts`.
+
+### The design
+
+- **Save CTA on the confidence surface (U7), reachable only after a first answer exists** — Save is a deliberate post-answer act, not an intake step.
+- **Passphrase-strength gate (net-new).** A **hard min-entropy gate at passphrase-set** using the `zxcvbn-ts` strength estimator, with **calm inline feedback** (the non-color signal grammar; no scary red meter). **No weak-passphrase bypass.** The rationale is structural: **PBKDF2-600k is the *only* brute-force defense** (`extractable:false` stops only script exfiltration — see [docs/architecture.md](../architecture.md) §7.3), so a weak passphrase voids the entire at-rest story for real financial PII. The hard threshold is **zxcvbn-ts score ≥ 3 AND an independent minimum length ≥ 12 characters** — both must clear. The dual floor is load-bearing because PBKDF2-600k is **not memory-hard**: a GPU brute-forcing an extracted blob runs ~10⁸–10⁹ guesses/sec, so the score and a raw-length floor are complementary, not redundant. The gate runs **before** any wrap is minted; the estimator must be bundled (CSP `connect-src 'self'`), never a CDN call. **The estimator's dictionary/language packs are mandatory** — `zxcvbn-ts` core ships with no dictionaries, so a pack-less estimator over-rates common/leaked passphrases and silently passes a weak one. A CI test asserts a **known-weak common password is rejected only with the packs loaded** — a pack-less run that passes it is a false green the test catches loud. Co-locate the score-threshold and length-floor constants with U4's KDF params via the `burned/063` single-source.
+- **Recovery-phrase display honoring the threat model.** The phrase is a full credential with a screenshot/phishing threat model — present **non-selectable**, **print/PDF-preferred**, with an explicit "store offline, don't screenshot" instruction; **not** a screenshot-friendly copy box. **A mandatory phrase-CAPTURE gate blocks "saved" — display alone is not enough:** the user must re-enter a verifying subset of the words (or at minimum complete an explicit blocking "I have stored this offline" acknowledgment) before the flow can reach "saved." The mandatory export is **not** a substitute — the export blob is cryptographically inert without the phrase, and both survivor doors (in-place unlock and file-restore) require it, so a click-through-then-export-but-never-transcribe user is unrecoverable in every survivor scenario (the exact R17 failure the product exists to prevent). The non-selectable phrase must still expose accessible text in the a11y tree. Non-selectability is honestly scoped as a **UX defense** (against casual shoulder-surfing and accidental clipboard copy), **not** a DOM-isolation or cryptographic control. The real mitigation is to **minimize the phrase's exposure**: a view-then-dismiss display, and **not persisting the phrase in the JS heap** once the display step is done.
+- **Mandatory encrypted-export confirm** as part of reaching a "saved" state — **no remind-me-later bypass**. **The atomic IndexedDB commit is the FINAL step that flips state to "saved"** — strength-gate → mint DK+wraps → display + capture phrase → produce + confirm export all precede it — so the quota-fail "use your export" fallback is truthful and the PWA defer-until-commit window correctly spans the whole ceremony; an implementer must not reorder export after the commit.
+- **Hand the in-memory model — including its seed — to U4's keyed write path**, so the save→reload→unlock round-trip reproduces the **identical** headline.
+- **Field-fidelity guard, schemaVersion-agnostic.** The decrypted plaintext model must be field-identical to the in-memory model at Save (no field that produced the on-screen answer is dropped — the single-shape contract makes this structural, the test proves it). The guard adapts to the session's shape (a spine-only v1 Save vs a controls-opened v2 Save), **excludes** the orchestrator's session-only fields (worker handle, capability flag, request epoch, `lastDisplayed*`), and is paired with a `burned/027` **planted-drop companion** so it is not a tautological decrypt round-trip.
+- **Owns the PWA update-mid-write integration test.** A service-worker "update ready" accepted during an in-flight first-save → the handler reads the store's no-write-in-flight signal and **defers** `skipWaiting`+reload until the write commits, with **no false "saved" before commit**. *Rescoped rationale:* U4's single-IndexedDB-transaction atomicity is *already* the partial-vault backstop; this handler exists only to avoid a needless failed/false-"saved" first save on a user-accepted update — a UX/honesty refinement, not a second owner of atomicity.
+- **A11y.** Reuse U5's focus-to-heading + single polite live-region primitive across passphrase-set → phrase-display → export-confirm. The strength verdict **and the gate-block** ("stronger passphrase needed, no path to saved") associate to the passphrase field and announce politely — an AT user must never hit an invisible blocking wall on the load-bearing security control.
+
+---
+
+## D2 — The fuck-off-date surface (state-adaptive first answer, two confidence-graded dates)
+
+**Status: planned. Not built.**
+
+**Goal.** The not-yet-retired magic moment: lead with the date (two confidence-graded dates, coincident until the budget splits them), expressing the date↔confidence tradeoff in the calm advisor voice; for an already-retired user, the existing spine confidence statement stays the lead (R29).
+
+**Requirements.** R26 (the product framing), R27 (two dates), R28 (confidence-graded; the date↔confidence tradeoff; re-grade on override), R29 (state-adaptive framing; same calm voice), R11 (calm, never a nagging alert), R12 (probabilistic framing; the hedge on the headline).
+
+**Dependencies.** C3 (the date-search, shipped), D1 (the account-level setup, shipped — which transitively gates D2 behind U4), and **U6-render / U7** (planned — D2 consumes them in the build order, never as pre-existing code). The build order is: U4 (done) → D1 (done) → U6-render + U7 → D2.
+
+**Planned files.** Create `src/ui/FuckOffDate.tsx` (the working name; the in-product label is a design-time decision), `src/ui/DateConfidenceReadout.tsx`; modify `src/ui/ConfidenceStatement.tsx`, `src/ui/copy.ts`, `src/store/memoryModel.ts`.
+
+### The design
+
+- **State-adaptive framing (R29) — the routing predicate is PER-PERSON: already-retired ⇔ `people.every(p => p.retirementAge <= p.currentAge)`.** Each person's `retirementAge` pairs with their OWN `currentAge` — there is no household-level `currentAge` anywhere in the model, so any `max(retirementAge) ≤ currentAge` form is undefined (and wrong: retirementAge 70/currentAge 72 + retirementAge 60/currentAge 58 satisfies the `max()` form yet one earner is still working). The per-person form is exactly the engine's semantics (every retire offset ≤ 0 ⇔ the bridge never credits income). A knife-edge `==` equality also mis-routes a genuinely-retired household who stopped in the *past* (`retirementAge < currentAge` is a legitimate negative offset). An already-retired household leads with the **existing spine confidence statement** (unchanged in content and recommend-second position — its entry-time rendering rides D1's provisional treatment) **and never enters the Y-sweep** (a `Y > 0` candidate would zero a retiree's real ACA premiums). Otherwise (≥1 person still working) → lead with the **date** ("you're ~N years out / free today"). Same calm advisor voice (R11); the in-product label for "fuck-off date" is confirmed at design time.
+- **The window-edge and no-date outcomes render first-class.** "No work-optional date within the ~N-yr window" is a designed answer in the calm voice (never "never free," never a blank, never the window-top date presented as confirmed), with the per-offset confidence curve as the on-demand detail (the U7 band-on-demand pattern); the window-edge date renders WITH its **unconfirmed-tail disclosure** — **and any result whose non-monotone-region flags are set (confirmed OR window-edge) additionally renders the non-monotone-region disclosure** (the C3 result carries the flags; D2 owns the string, never recomputed UI-side). Distinguish the **three** trust-shaped movements during entry (D1's provisional design): band-narrowing → sharpening; a date-value shift → a provisional update, never a bargaining tick; an outcome-CLASS transition (no-date → window-edge → confirmed) → an expected provisional update, never an alarm.
+- **Two confidence-graded dates (R27/R28).** Render the floor + lifestyle dates; **coincident → one date** in the degenerate single-total-spend case, separating as the budget splits (Act 3). Express the **date↔confidence tradeoff** ("lifestyle-free in ~3 years at 8/10, or year 5 for 9/10") — never a single deterministic date (banned, R25/R28). The window-floor confirmed case (`Y == 0`, the over-funded household) renders **"free today / you're already there"** — never "already past" (the sweep produces no evidence about the past). **The drill-down grade IS the crowning grade (one run / one statistic / one grade):** the not-yet-retired drill-down spine statement at the crowned `Y*` renders the date-search's own quantized-lower-bound result — never an independent recompute at the headline config or on raw entered params.
+- **The hedge on the headline (R12).** The date wears its probabilistic hedge by construction (the require-the-hedge lint when it lands in Act 3·U10; in the interim the copyGuard ban-list + slot discipline apply). The date is a distribution, not a line.
+- **Re-grade on override (R28).** A sequencing/conversion override re-runs the date-search and re-grades both dates (symmetric with R10's both-futures-update).
+- **Reuse, don't reinvent.** The X-of-10 display contract, the non-color signal grammar, the outcome-state vocabulary, and the disclosure affordance are inherited from U6/U7 (the date readout is a new *composition* of existing primitives, not a new viz language).
+
+The N=1 cold-read of the date framing (calm, earned, honest about the tradeoff) is an Act 2 exit condition when the UI lands.
+
+---
+
+## The two-pane laptop layout (planned)
+
+**Status: planned. Not built.**
+
+The laptop is the **primary screen** (the showcase); the phone must work but isn't the showcase. The state-adaptive primary surface composes the lead answer (date or spine), the on-demand range/survivor disclosure, and the Save CTA into a calm two-pane laptop layout that does not read as a dashboard (R2). This is the composition over U6-render / U7 / D2, designed under the four UI skills (back-nine-design > emil-design-eng > frontend-design > web-design-guidelines). It lands once U7 + D2 exist.
+
+---
+
+## R40 — Other income in retirement (the immediate next build)
+
+R40 (a generic per-person ongoing non-earned income stream — pension / rental / alimony / annuity / other) threads into this act's D1 intake and the engine's stream consumer. It is **build-ready with zero code**. The intake is opt-in off the 5-minute guided path; the **no-safe-default fields** surface on the guided path regardless of the collapsed advanced tier (the survivor-% prompt for any continuing stream; the alimony post-2018 agreement-date). The full plan, sub-requirements R40.1–R40.10, and the conservative-direction discipline live at [docs/plans/features/other-income.md](features/other-income.md). The teacher's-pension survivor figure is the single most dangerous number in the app — its survivor-% and COLA treatment are the whole widow's picture.
+
+---
+
+## Exit conditions for Act 2
+
+- A user reaches their **first answer in one short sitting** from the complete ~5-minute account-level setup, the answer **surfacing and sharpening during the flow** rather than gating behind a final "calculate."
+- A not-yet-retired user reaches their **two confidence-graded fuck-off dates** in that same sitting; the dates honestly express the **date↔confidence tradeoff**.
+- The primary surface shows **one answer, then one recommendation** — not a dashboard (the calm test).
+- **N=1 cold-read (Briggsy):** across the six outcome states + the survivor readout (and the date framing), an on-track answer lands as relief and a borderline answer as honest-and-calm. The cold-read bar **rises** under the personal-tool reset. **Act 3 must not begin until this gate clears.**
+- A first-time user, after seeing their answer, sets a passphrase that clears a real strength gate (no weak-passphrase bypass), is shown and stores a recovery phrase, is forced to export, and lands at a saved vault whose reload reproduces the exact number they saw; an accepted PWA update mid-write never tears the vault.
+
+---
+
+## Superseded / changelog
+
+Live text above reads current. The superseded facts, recorded once:
+
+- **The single-total-spend on-ramp (struck).** U5 was originally ratified around a "fast first answer on a single total spend figure" (the old R5, with a ~3-minute success bar). The 2026-06-08 accumulation expansion (R26–R39) replaced this with **R35's ~5-minute account-level guided setup** — one intake flow for both user states, the answer surfacing and sharpening during entry. The household spend figure **survives** as a collected input; what was replaced is the flow *shape*. (Old plan: `docs/plans/back-nine-mvp/phase-2-first-answer.md`.)
+- **U5 vs D1 naming.** The old plan tracked "U5 (planned)" and a separate "D1 reshape." There is no two-step history — **D1 built U5's planned substrate and the account-level flow in one pass**, and it is shipped + reviewed. This doc treats them as one unit (U5 / D1).
+- **The "retirement age before current age" R19 error path → the status-conditional rule.** The old U5 had an unconditional "retirement age before current age" error. The accumulation fold superseded it: work-status is asked, and for a retired person `retirementAge ≤ currentAge` is the *legitimate* entry (the stop age); the contradiction to catch is a status-vs-age *disagreement*. A still-working person is never asked to guess a retirement date — the date IS the product's answer (D1 constructs a placeholder `retirementAge` internally, never user-visible).
+- **The deferred account-bucket split (inverted).** The old U5 deferred account buckets to Act 3 to protect a 3-minute on-ramp. R35 inverted this — buckets are collected up-front, and the first Save serializes the v2-with-accounts shape directly.
+- **`memoryModel.ts` ownership (corrected at fold time).** The fold clarified that D1 *creates* `memoryModel.ts` (the in-memory orchestrator, cross-cutting #1); U4's scope stays the persisted record + db/session/backup, never the in-memory orchestrator.
+- **Where these used to live.** Before this rebuild, U5–U8 lived in `docs/plans/back-nine-mvp/phase-2-first-answer.md` and the D1/D2 bodies lived (verbatim) in `docs/plans/2026-06-08-001-feat-fuck-off-date-accumulation-plan.md` (Track D). This doc is now their single home. The old docs have been retired to git history (this reconcile, harvest-verified).

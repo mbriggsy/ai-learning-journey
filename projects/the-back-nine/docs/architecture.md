@@ -3,7 +3,7 @@ title: The Back Nine — Architecture (how the engine works + the load-bearing i
 doc-type: architecture
 status: living
 created: 2026-06-17
-updated: 2026-06-17
+updated: 2026-06-18
 derives-from: [docs/product.md]
 sources: [docs/research/engine-validation-and-tax.md, docs/research/pre65-healthcare.md]
 ---
@@ -32,6 +32,8 @@ The one-screen version of *what you must never break*. Each links to its full co
 | **One canonical constants table** — every dated figure is read from one year-keyed table, never re-typed | [§8](#8-constants-discipline-srcengineconstants) | A re-typed figure drifts out of sync with its source, silently |
 | **Cross-engine headline robustness** — quantize the headline statistic to a coarse grid before the band-edge decision | [§9](#9-cross-engine-headline-robustness) | The same scenario shows a different headline across browsers; the screenshot promise breaks |
 | **The encrypted-store write-gate** — one model copy; a write needs a session key AND a current passphrase-wrap; never persist `Infinity`/`NaN` | [§7.3](#73-encrypted-local-store--key-lifecycle-srccrypto-srcstore) | A survivor restores a *stale* vault, or a never-depleted sentinel nulls into corruption |
+| **Joint-survivor from cohort tables** — `P = pₓ + pᵧ − pₓpᵧ` from sex-specific cohort curves, never one rate for both; retain survivor identity | [§7.6](#76-longevity--joint-survivor-sampling) | Survivor SS / spending / tax-cliff attach to the wrong spouse; a hardcoded couple rate or to-age-90 horizon misprices the floor |
+| **SS survivor lock-flat** — the survivor reduction factor locks at claim-age and holds flat; never ramps toward 100% | [§7.7](#77-social-security-sub-engine) | Guaranteed income is optimistically overstated on early-widowhood paths — calm-but-wrong |
 | **Strict CSP via response headers** — `script-src`/`connect-src 'self'`, no inline/eval | [§10](#10-security--csp-boundary) | An XSS foothold gains a programmatic exfil channel for the decrypted model |
 
 ---
@@ -157,7 +159,7 @@ Where an overlay has its own internal throw (a fail-loud backstop), it has a **`
 
 ## 7. Per-overlay engine contracts
 
-These are the load-bearing details inside each overlay. They live here so a future engineer touching one overlay does not rediscover its traps at runtime.
+These are the load-bearing details inside each overlay. They live here so a future engineer touching one overlay does not rediscover its traps at runtime. The tax (§7.1), healthcare (§7.2), store (§7.3), accumulation (§7.4), and solver-output (§7.5) contracts sit alongside two pure engine components computed *pre-loop* — the longevity / joint-survivor model (§7.6) and the Social Security sub-engine (§7.7) — whose output the per-year transforms then consume.
 
 ### 7.1 Tax-and-accounts overlay (`taxOverlay.ts`)
 
@@ -165,7 +167,8 @@ The structural sibling of the earned-income bridge: a per-year deterministic tra
 
 - **Per-person buckets: pre-tax / Roth / taxable.** Ordinary-income tax on pre-tax withdrawals + RMDs + the conversion; tax-free Roth growth; capital-gains / qualified-dividend stacking from taxable withdrawals. All buckets share the **one** market draw — tax/RMD/conversion are post-draw arithmetic. The per-person pre-tax ledger sums to `buckets.pretax` (the no-parallel-ledger-drift contract).
 - **The gross-up fixed-point.** Spending → tax → the gross-up withdrawal needed to cover spending + tax → which moves the tax: a circularity resolved as a bounded fixed-point. The worst-case contraction factor is **k ≈ 0.74** (raised from ~0.685 by cap-gains stacking; insights 006/007), and `GROSS_UP_MAX_PASSES = 128` covers the validated tail (with the `ENGINE_MAX_*` bounds, the worst case is ~113 passes < the cap). No in-range default ever stands in for an unconverged value — it fails loud (burned/062).
-- **SS provisional-income taxation** is its own per-year bounded fixed-point (iterate provisional-income → taxable-SS → tax → gross-up → re-converge), deterministic, reading zero draws. The MFJ/single thresholds are **frozen, not inflation-indexed** — constants with no staleness clock.
+- **The deduction stack carries dated, sunsetting provisions.** Standard deduction + the age-65 additions (§63(f), keyed off the biological `count65`) + the **OBBBA-2025 senior bonus** with its MAGI phase-out. The senior bonus is available **tax years 2025–2028 and sunsets after 2028** unless extended — so its constants entry carries a sunset marker (§8): an answer computed under it shows a calm note when viewed in or after the sunset year, never a silent stale deduction.
+- **SS provisional-income taxation** (IRS §86 / Pub 915 Worksheet 1) is its own per-year bounded fixed-point (iterate provisional-income → taxable-SS → tax → gross-up → re-converge), deterministic, reading zero draws. It **consumes the per-year benefit dollar surfaced by the SS sub-engine (§7.7) and never re-derives the benefit from PIA** (a test asserts this, so provisional income stays correct by construction; a future muni-bond bucket is the single §86 change site). The MFJ/single thresholds are **frozen, not inflation-indexed** — $32k (1983) / $44k (1993) constants with no staleness clock; a frozen constant cannot go stale, which is *why* more retirees are caught each year (modeled honestly, not a bug).
 - **RMD age is birth-year-derived, never a flat 73** (SECURE 2.0): 72 (≤1950) / 73 (1951–1959) / 75 (1960+). RMD = the IRS Uniform Lifetime Table divisor on the prior-year-end pre-tax balance. RMD is a **forced-distribution mechanic, not a tax** — "taxes off" alone does not silence it. The RMD is **non-convertible** (it must be distributed first, cannot be reduced by a conversion) — a hard legality constraint the manual control and solver consume.
 - **MFJ→single switch at the sampled first death = the joint→survivor two-regime boundary** (NO new boundary). No QSS grace — files single the year after the first death. The survivor's same real dollars fall into ~half-width single brackets with ~half the standard deduction: the "tax cliff" that is the recommendation's emotional headline.
 - **§1014 basis step-up is IN, not omitted** — it moves with the lever (which account is preserved into the estate), and a disclosed omission can *invert* the after-tax ranking. A first-order §1014/IRD adjustment is modeled into the future *leave-more* objective at a disclosed assumed heir bracket. The overlay's job is to expose the per-bucket basis/character (taxable basis, pre-tax IRD, Roth tax-free); the full estate model is chapter-two.
@@ -211,11 +214,33 @@ The trust layer. Makes the at-rest promise provable.
 
 ### 7.5 The solver output contract (M6)
 
-The healthcare-overlay integration fold (U3·M6) added the surfaces a future solver and the wire layer consume:
+The engine exposes the surfaces a future solver and the wire layer consume:
 
+- **The distribution itself, not a pass/fail bit.** The engine emits the **full terminal-value distribution + percentile series + per-path depth-of-failure** — a `$1`-remaining "success" binary hides magnitude. `confidence.ts` reads this into the humanized `X of 10` (R2's "probability of adjustment" dollar-grammar feeds off the distribution, R3) — never "probability of failure."
 - `totalTaxPaidReal` — lifetime tax paid, the *pay-less-tax* objective input.
 - The per-path death-year `Distribution.taxAware` surface.
 - The typed `SimInfeasible` sentinel — the input passed R19 but a path's overlay computation failed mid-run (gross-up cap, ACA bisection, a fail-loud backstop). The **candidate** is infeasible as a whole — **never** a silently dropped path (the dropped class would be exactly the aggressive near-cliff candidates) and **never** an uncaught throw (which would abort a future K-candidate batch). A solver ranks it WORST; the headline route surfaces a calm error; the date route fails the run all-or-nothing. All fields are JSON-safe (they cross the worker wire); deterministic in `(params, seed)`.
+
+### 7.6 Longevity & joint-survivor sampling
+
+> The horizon is a sampled distribution, not a fixed age. Survivor identity is retained because the survivor's SS, spending ratio, and tax cliff all depend on *which* spouse lives.
+
+- **Cohort tables, sex-specific, never one rate for both.** Joint-and-survivor longevity is derived from the two **sex-specific cohort** (not period) life-table curves: `P(last alive) = pₓ + pᵧ − pₓ·pᵧ`. The couple survival figure is **derived through the formula, never hardcoded** — a test asserts internal consistency against the two shipped curves. Independence is assumed, which *mildly overstates* last-survivor probability — it **errs SAFE for a survival floor** and is documented. **Never a fixed to-age-90 horizon.**
+- **Sample per-path per-spouse death years AND retain which spouse dies first.** The two-regime horizon (joint → survivor) is the boundary the MFJ→single switch (§7.1), the survivor SS step-down (§7.7), and the death-order conditional filter all key off — **no new boundary** is ever introduced for these; they share this one. The survivor keeps the larger benefit (`maxBenefit`) and the survivor-spending ratio applies.
+
+### 7.7 Social Security sub-engine
+
+> A **pure** `(PIAs, claim ages, birth years) → per-person annual-benefit-stream` function, computed **once pre-loop** into `PersonOffsets.socialSecurityReal`. It consumes **zero draws** and is **CRN-invariant across date-search candidates** (the sweep shifts a claim *offset*, never a claim *age*). The decision rationale + the deferred branches are recorded in `docs/decisions/ss-computation.md`; the load-bearing mechanics are here.
+
+- **The orchestrator `householdBenefitStreams(people)` runs once pre-loop** with three components by time-shape: (1) **own** → a resolved per-person scalar that *replaces* `socialSecurityReal` (a value reinterpret — `cashTermsForYear` and the ~10 literals are unchanged); (2) **spousal excess** → a time-gated term; (3) **survivor** → a per-path selection.
+- **Own benefit:** early-reduction + delayed-retirement credits as **exact integer fractions** off the month-count from claim age.
+- **Method C spousal excess (POMS RS 00615.020):** `total = reduce_own(own_PIA) + max(0, reduce_spouse(0.50 · worker_PIA − own_PIA))` — **own + reduced-excess, NOT `max()`**. Own and excess use **two SEPARATE reduction schedules off the SAME month-count**: `reduceSpouseExcess` factor = `n ≤ 36 ? (144−n)/144 : (180−(n−36))/240` → at 62 vs FRA 67 that is `156/240 = 0.65`. The excess is **floored at 0**; the spousal base is the worker's **UNREDUCED** PIA; there is **one spousal direction per household** (the lower earner claims on the higher earner `H = argmax(pia)`); and the excess is **$0 until the worker has FILED** (worker-must-be-entitled START gate, POMS RS 00202.001 — a temporal gate in the path loop, not a static scalar) and returns to **$0 at the worker's death** (END gate — omitting it double-counts guaranteed income).
+- **Deemed filing:** a **single `claimAge` per person drives BOTH own and spousal** (no restricted application — both modeled cohorts are post-1954, fully subject); a test asserts no separate spousal claim age. The **survivor branch is the lone independent-timing exception**.
+- **Survivor §202:** when the first death occurs, the survivor's SS each year = `max(ownStream, survivorStream)` — a **legitimate larger-of** (alternative entitlements), unlike the additive `own + excess` spousal (using `max()` there would be wrong). `survivorBenefitFull` = the deceased's **ADJUSTED** benefit including **DRC flow-through** (RS 00615.301/.702), capped by **RIB-LIM** at `max(0.825 · deceasedPIA, deceasedActualReducedBenefit)`.
+- **Survivor LOCK-FLAT (cardinal-rule-load-bearing).** The survivor stream starts at `max(age 60, first-death year)`; its reduction factor is **LOCKED at the survivor's age at that start and held FLAT** for the rest of the horizon — it **does NOT ramp** toward 100% as the survivor ages. The `71.5%@60 → 100%@survivor-FRA` schedule is over the **claim age**, not a post-claim ramp. A per-year ramp would optimistically overstate guaranteed income on early-widowhood paths — the calm-but-wrong sin.
+- **`realizedClaimAgeAtDeath` seam guard.** `realizedClaimAgeAtDeath(plannedClaimAge, birthYear, ageAtDeath) = max(min(planned, ageAtDeath), ⌊FRA⌋)`, applied in the seam to realize the deceased's claim age before constructing the survivor benefit: capping at age-at-death **strips unearned DRCs**, while the FRA floor keeps an **unfiled pre-FRA death on full PIA** (no spurious early reduction). Exact for a whole-year FRA (both cohorts = 67), sub-one-year conservative for a fractional-FRA cohort. Pinned by externally-derived goldens (the integration dollar is `$19,587.60`, vs the pre-fix buggy `$22,490.40`).
+- **The cash seam is untouched.** `cashTermsForYear` (`simulate.ts`) sums `o.socialSecurityReal` per claimed-alive person and the survivor takes `maxBenefit`; the sub-engine **changes only the dollar landing in `socialSecurityReal`** (plus the excess/survivor streams), never the seam — so the §86 provisional-income layer (§7.1) is correct by construction.
+- **Reduce-to-spine.** All-PIA-zero ⇒ own 0, excess 0, survivor `max(0,0)=0` ⇒ **byte-identical** to the prior `socialSecurityReal = 0` Trinity/Bengen spine. A companion **identity bridge**: a nonzero PIA claimed at FRA 67, single earner, no spouse (factor 1.0, no excess) must be byte-identical to a pre-sub-engine `socialSecurityReal = that-same-$` run — because the zero-maps-to-zero test exercises *none* of the reduction/excess/survivor branches.
 
 ---
 
@@ -227,6 +252,7 @@ The healthcare-overlay integration fold (U3·M6) added the surfaces a future sol
 - **Every figure carries `{ value, citation, directionalUntilPinned }`.** A figure is "pinned" (`directionalUntilPinned: false`) only after confirming against the named primary at the exit-gate pin pass.
 - **No in-range default fallbacks** (burned/062): a figure the research names but doesn't value is an `Unsourced` sentinel whose `.value` **throws** — never a plausible default. A `?? 22%` default that overlaps a plausible bracket makes a missing input indistinguishable from a measurement, which is fatal inside the SS-tax / ACA fixed-points.
 - **The ACA legislative entry carries `reVerifyEveryBuild`** and is gated in CI by `verify:aca` (see §9) — it can flip the whole pre-65 model and invert which strategy wins.
+- **Dated, sunsetting provisions carry a sunset marker.** A figure scheduled to expire (e.g. the OBBBA-2025 **Senior Bonus Deduction**, tax years 2025–2028) is year-keyed with its legal basis **and** an explicit sunset year, so a bracket/provision change reads as a vintage bump rather than silent drift, and an answer computed under the provision can surface a calm note when viewed in or after the sunset year (the honesty obligation of R14/R22). The RMD age is the same shape — a per-person function of birth year (72 / 73 / 75, with the legislated 2033 step), never a hardcoded literal.
 - **Persisted "never-depleted" sentinels must be a numeric value** (e.g. `-1` / a max-horizon year), **never `Infinity`/`NaN`** — `JSON.stringify` / IndexedDB silently null them (DND 009). (Stated here and in §7.3 because it spans both the constants and store layers.)
 - **Display-hint figures vs engine figures.** User-facing display-hint figures live in `referenceData.ts`, never `@engine/constants` (the constants module is engine-consumed only).
 
@@ -277,11 +303,5 @@ The engine runs in `engine.worker.ts` behind **Comlink** — a **single long-liv
 
 - **Result shape.** Large numeric arrays (terminal-value distribution, percentile series, per-path depth-of-failure) return as typed-array buffers via `Comlink.transfer`; the small derived fields (X-of-N integers, dollar adjustment, outcome-state enum) travel by ordinary structured clone. Transferred buffers are **detached** on the worker side — the worker retains none for reuse and allocates fresh per run. (The date-search per-offset curve is ≤~11 points per track — small enough to cross by structured clone; the transferable machinery serves the 2000+-element headline buffers, not an 11-point curve.)
 - **Error propagation.** A thrown engine error surfaces as a defined **calm** result (the tri-state `pending | resolved-distribution | calm-error`), never a hung promise / unhandled rejection / dead worker; the worker stays alive and reusable. The date-search method (`runDateSearch`) is calm-error-total the same way — the worker never dies mid-sweep.
+- **Cooperative cancellation, no SharedArrayBuffer.** Mid-sweep cancellation is cooperative — a real macrotask yield between candidates so a cancel can land, driven by the injected async `shouldContinue()` that keeps `dateSearch.ts` pure (§1). `SharedArrayBuffer` / `Atomics` was **rejected**: it needs cross-origin-isolation (COOP/COEP) headers, a `vercel.json` posture change out of scope for the single-device model.
 - **No-worker posture.** Because the engine is pure TS, a worker-construction failure falls back to a **main-thread run** returning the **same distribution**.
-
----
-
-## Summary / changelog
-
-- **Where these used to live.** Before this rebuild, the invariants were smeared across `phase-1-foundation.md` (the seven "Phase-1 cross-cutting contracts"), the project `CLAUDE.md` ("Load-bearing engine contracts", "Constants discipline", "Security / CSP boundary"), and the per-unit plan bodies. This doc is now their single canonical home; the others link here.
-- **CLAUDE.md carries a tight SUMMARY of these contracts and points here as the canonical source.** (The project's main reconcile pass will update `CLAUDE.md` to reference this doc rather than restate the rules.)

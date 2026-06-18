@@ -7,10 +7,12 @@
 > This is scaffolding (the recipe, not the dish) — **delete it when the restructure lands.**
 >
 > **Status (2026-06-18):** GREEN-LIT for the full ground-up rewrite. The target structure +
-> the four radical moves are locked (see *Q6* below). The foundation (CP1 + CP1.5) is committed, and
-> **M1 (the migration ledger) is DONE** — `.recovery/migration-ledger.md`: all 1,081 quarry facts routed,
-> zero-loss, adversarially verified + fixed (74 findings applied), dual-canonical class resolved.
-> **The next session resumes at M2** (rewrite the hubs from the ledger) — see *RESUME HERE*.
+> the four radical moves are locked (see *Q6* below). The foundation (CP1 + CP1.5) is committed,
+> **M1 (the migration ledger) is DONE**, and **M2 (the four hubs) is DONE** — `product` / `roadmap` /
+> `architecture` / `glossary` re-authored present-tense from the ledger (SS sub-engine folded into
+> architecture §7.7; accumulation as first-class engine content; R40 de-special-cased; all four
+> changelog/Summary sections killed; zero dead links; 942 tests still green).
+> **The next session resumes at M3** (create the `decisions/` records) — see *RESUME HERE*.
 > Rationale: `.recovery/doc-restructure-judge-output.md` (judge fan-out — note its "preserve"
 > spine was overridden by Q6). Must-survive net: `.recovery/docs-quarry-inventory.json` (16 docs)
 > + `.recovery/quarry-roadmap.json`.
@@ -19,18 +21,32 @@
 
 ## ▶ RESUME HERE (fresh session)
 
-Foundation (CP1 + CP1.5) **and M1 (the migration ledger)** are done and committed. To continue cold:
+Foundation (CP1 + CP1.5), **M1 (the migration ledger)**, and **M2 (the four hubs)** are done and
+committed. To continue cold:
 1. **This file** — the locked decisions (Q1–Q6), the target tree, the M1–M6 sequence.
 2. **The ledger** — `.recovery/migration-ledger.md`: the rewrite SPEC. Every must-survive fact, routed
    to its new-tree home by section, with disposition (canonical/pointer/reframe/no-move/drop), dedup
    notes, present-tense reframe instructions, and a **Review Queue appendix** (the 74 verify findings +
-   the 14 cross-home relocations). This is what M2–M5 author FROM and what M6 greps against.
+   the 14 cross-home relocations). This is what M3–M5 author FROM and what M6 greps against.
    (The quarry — `docs-quarry-inventory.json` + `quarry-roadmap.json`, the 1,078-fact anti-amnesia
    net — is the ledger's source; consult it only to expand a `sig`/digest back to its full claim.)
 
-Start at **M2** (rewrite `product`/`roadmap`/`architecture`/`glossary` present-tense, each home-section
-of the ledger in hand). **Do NOT delete anything under `docs/plans/features/` or strip any history
-until M6's zero-loss gate.** The working tree is clean at the M1 commit.
+Start at **M3** — create the three NEW `decisions/` records from the ledger's `decisions/` home-sections
+(`ss-computation` lines 3769–3861 · `other-income-r40` 3862–3992 · `portfolio-holdings` 3993–4048) and
+reframe the existing `accumulation-fuck-off-date` record present-tense (3610–3768). **The M2 hubs already
+reference these three records by name in inline code (not links) — M3 must linkify those once the files
+exist** (`product.md` → `decisions/other-income-r40.md`; `architecture.md §7.7` → `decisions/ss-computation.md`;
+`glossary.md` KTD → `decisions/other-income-r40.md`). **Do NOT delete anything under `docs/plans/features/`
+or strip any history until M6's zero-loss gate.** The working tree is clean at the M2 commit.
+
+> **M2 carry-forward notes (for M6's double-check):**
+> - Ledger row `glossary.md#67` (the BenefitPerson/H/L SS terms) carried a stale verify-pass note that
+>   "architecture §7 has no SS section." M2's radical-move #1 **creates** that section (architecture §7.7),
+>   so SS terms route to architecture §7.7 as the dominant routing intends; that note is **resolved by M2**.
+> - The ledger routes the **crypto-stack rationale** (Jazz-vs-Evolu downgrade, skip-SAB reasoning) to a
+>   `decisions/crypto-stack.md` record that is **NOT in the M3 plan list**. The crypto *invariants* are
+>   already home (architecture §7.3/§10); only the comparative *rationale* is unhomed. **Decide in M3/M5**
+>   whether to add a `crypto-stack` decision record or leave the rationale in research.
 
 ---
 
@@ -199,9 +215,15 @@ must-survive fact is the **migration ledger** (M1) — nothing is dropped withou
   four locked decisions hold; 1,081 blocks intact. The 74 findings + 14 cross-home relocations ride along
   as the ledger's **Review Queue appendix** (M2–M5 watch-list, M6 double-check). Build trail in `.recovery/`
   (`m1-ledger-parts/`, `build-ledger.sh`, `verify-result.json`, `fix-rehomes.json`).
-- **M2 — the hubs.** Rewrite `product`, `roadmap`, `architecture`, `glossary` present-tense from the
-  ledger. Fold SS mechanics into architecture §7 (overlay-peer); fold the accumulation contracts into
-  architecture (no "fold" framing); de-dupe R40 in product; repoint glossary SS terms → architecture.
+- **M2 — the hubs. ✅ DONE (this commit).** Rewrote `product`, `roadmap`, `architecture`, `glossary`
+  present-tense from the ledger. SS sub-engine folded into architecture **§7.7** (overlay-peer) + a new
+  longevity **§7.6**; accumulation kept as first-class engine content (no "fold" framing); senior-bonus
+  sunset marker + engine-output (terminal-value percentiles + depth-of-failure) contracts added; R40
+  de-special-cased from a "live, build-ready" appendix into a normal R-ledger group; the consumability/
+  incumbent thesis + present-tense regulatory (Prong-A) rationale folded into product. All four
+  `Superseded/changelog` sections deleted; every supersession parenthetical stripped. Glossary SS terms
+  repointed → architecture §7.7. Verified: zero forward-only fossils, zero dead links (decisions/* homes
+  named in inline code pending M3 linkify), 942 tests still green.
 - **M3 — `decisions/`.** Create `ss-computation`, `other-income-r40` (9 KTDs), `portfolio-holdings`
   (3 open ATC calls) from the dissolving feature docs; reframe the accumulation record present-tense.
 - **M4 — the plans.** Rewrite plans 1–4 present-tense; integrate C1–C3 as first-class engine content

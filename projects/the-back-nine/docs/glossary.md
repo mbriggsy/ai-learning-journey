@@ -3,7 +3,7 @@ title: The Back Nine — Glossary
 doc-type: reference
 status: living
 created: 2026-06-17
-updated: 2026-06-17
+updated: 2026-06-18
 derives-from: [docs/product.md, docs/architecture.md]
 ---
 
@@ -43,7 +43,7 @@ Sorted alphabetically; `§` and number-prefixed statutory terms are grouped at t
 
 **Damodaran arm** — the committed Treasury / corporate total-return series used as the independent Bengen/Trinity validation proxy (no canonical bit-exact dataset exists). → [research/engine-validation-and-tax.md](research/engine-validation-and-tax.md)
 
-**Date-search** — the bounded, **exhaustive, non-monotone-robust** sweep over the household work-stop offset `Y` that produces the fuck-off date; reads off a quantized conservative lower confidence bound, never a bisection. → [plans/1-engine.md](plans/1-engine.md) (C3), [decisions/accumulation-fuck-off-date.md](decisions/accumulation-fuck-off-date.md) §3
+**Date-search** — the bounded, **exhaustive, non-monotone-robust** sweep over the household work-stop offset `Y` that produces the fuck-off date; reads off a quantized conservative lower confidence bound, never a bisection. Each track yields one of **three first-class outcomes**: a **confirmed** date (a candidate below the window top with later-offset evidence), a **window-edge** date (the window top, reported with the unconfirmed-tail disclosure, never silently crowned), or **no-date-in-window** (a first-class result, never "never free," never a crash); `Y == 0` reads *"work-optional at today."* → [plans/1-engine.md](plans/1-engine.md) (C3), [decisions/accumulation-fuck-off-date.md](decisions/accumulation-fuck-off-date.md) §3
 
 **Decumulation** — the retirement draw-down phase; the engine's center of gravity (accumulation exists to solve for the date that hands off to it). → [plans/1-engine.md](plans/1-engine.md)
 
@@ -53,11 +53,11 @@ Sorted alphabetically; `§` and number-prefixed statutory terms are grouped at t
 
 **DND/012 (externally-derived fixtures)** — golden expected values must be derived by an **independent** path (hand-math, a published figure), never via the engine's own formula (which would prove typing, not correctness). → [architecture.md §5](architecture.md)
 
-**DRC (delayed retirement credits)** — Social Security increases for claiming after FRA. For a survivor base they are **realized at the deceased's death**, never credited for years the worker did not live to earn. → [plans/features/social-security.md](plans/features/social-security.md)
+**DRC (delayed retirement credits)** — Social Security increases for claiming after FRA. For a survivor base they are **realized at the deceased's death**, never credited for years the worker did not live to earn. → [architecture.md §7.7](architecture.md)
 
 **Externally-derived fixtures** — see **DND/012**.
 
-**FRA (full retirement age)** — the Social Security age at which the unreduced PIA is paid. → [plans/features/social-security.md](plans/features/social-security.md)
+**FRA (full retirement age)** — the Social Security age at which the unreduced PIA is paid. → [architecture.md §7.7](architecture.md)
 
 **Fuck-off date** — the working/product name for the not-yet-retired household's first answer: *"when is work optional?"*, delivered as **two confidence-graded dates** (floor + lifestyle). The user-facing label holds the calm advisor voice. → [product.md §3](product.md), [decisions/accumulation-fuck-off-date.md](decisions/accumulation-fuck-off-date.md)
 
@@ -69,19 +69,21 @@ Sorted alphabetically; `§` and number-prefixed statutory terms are grouped at t
 
 **ID scheme (R / U / C / D / M / §)** — the compact, stable internal join-keys (Requirement / Unit / unit-tracks / Milestone / Section) the docs and code share; defined once, never shown to the user, never renumbered. Canonical legend: [roadmap.md → The ID scheme](roadmap.md#the-id-scheme).
 
+**INCOME_TYPES / COLA_MODES** — the R40 other-income vocabulary, single-sourced as `const` arrays (in `src/shared/model.ts`) that the intake and the restore codec both import: `INCOME_TYPES` = pension / rental / alimony / annuity / other; `COLA_MODES` = real-flat / nominal-flat / fixed-pct. → [product.md](product.md) (R40.1–R40.2)
+
 **Insight & cross-repo citation IDs** — a numbered, hard-won engineering lesson, cited by **full relative path** (`docs/insights/NNN-…` for this project; sibling-project lessons carry their full path too). The full-path rule + the `burned`/`DND`/`AJS` shorthand decoder: [insights/README.md](insights/README.md).
 
 **IRMAA** — the post-65 Medicare premium **surcharge**, set on a **2-year-lagged** MAGI lookback, with hard per-person step-cliffs. → [architecture.md §7.2](architecture.md)
 
 **IRMAA-MAGI** — IRMAA's income measure: AGI + tax-exempt interest, with **no** Social Security add-back. A *different* number from ACA-MAGI. → [architecture.md §7.2](architecture.md)
 
-**KTD (Known Technical Decision)** — a load-bearing build landmine recorded in a feature plan, numbered so the implementation can cite it (e.g. R40's nine KTDs). → [plans/features/other-income.md](plans/features/other-income.md)
+**KTD (Known Technical Decision)** — a load-bearing build decision, numbered so the implementation can cite it (e.g. R40's nine KTDs), recorded in its decision record (`docs/decisions/other-income-r40.md`).
 
 **Lexicographic objective** — the definition of "best": **Tier 1** never drop below the survival floor (essentials), then **Tier 2** a user-chosen surplus goal (*leave more · pay less tax · live bigger now*). The objective metric **equals** the headline metric, so a recommendation can never contradict the magic moment. → [product.md](product.md) (D1 / R21)
 
 **MAGI** — modified adjusted gross income. The Back Nine computes **two distinct** MAGIs — see **ACA-MAGI** and **IRMAA-MAGI** — never one shared number.
 
-**Method C (POMS)** — the Social Security spousal computation: the spouse's **own benefit in full plus a reduced excess**, *not* `max(own, spousal)`. → [plans/features/social-security.md](plans/features/social-security.md)
+**Method C (POMS)** — the Social Security spousal computation: the spouse's **own benefit in full plus a reduced excess**, *not* `max(own, spousal)`. (`H` = the higher earner, `argmax(pia)`; `L` = the lower earner who can claim a spousal excess on `H`'s record; `BenefitPerson` is the per-person record the sub-engine consumes.) → [architecture.md §7.7](architecture.md)
 
 **MFJ→single** — the surviving spouse's filing-status switch the year after the first death: the same real dollars fall into ~half-width single brackets — the "tax cliff" that is the recommendation's emotional headline. → [architecture.md §7.1](architecture.md)
 
@@ -89,7 +91,7 @@ Sorted alphabetically; `§` and number-prefixed statutory terms are grouped at t
 
 **Overlay** — a **zero-draw** deterministic transform of the cash-flow term (tax, healthcare, accumulation inflow) fed into the same per-year update function as the spine; each reduces to the spine when off. → [architecture.md §4–§5](architecture.md)
 
-**PIA (Primary Insurance Amount)** — the Social Security benefit at FRA; the per-person SS input (entered monthly, stored annually). → [plans/features/social-security.md](plans/features/social-security.md)
+**PIA (Primary Insurance Amount)** — the Social Security benefit at FRA; the per-person SS input (entered monthly, stored annually). → [architecture.md §7.7](architecture.md)
 
 **Presence-keyed** — byte-identity keyed on a construct's **absence** from params, not its zero value: a zero-valued-but-constructed accumulation run is deliberately *not* byte-identical (its working-year clamp is live). → [architecture.md §5](architecture.md), [decisions/accumulation-fuck-off-date.md](decisions/accumulation-fuck-off-date.md) §1
 
@@ -97,7 +99,7 @@ Sorted alphabetically; `§` and number-prefixed statutory terms are grouped at t
 
 **Recovery phrase** — the client-generated BIP-39 12-word phrase that wraps the DK independently of the passphrase; the surviving spouse's primary door back into the vault. Mandatory export at first save. → [architecture.md §7.3](architecture.md)
 
-**RIB-LIM** — the Retirement-Insurance-Benefit limit that caps a Social Security survivor benefit. → [plans/features/social-security.md](plans/features/social-security.md)
+**RIB-LIM** — the Retirement-Insurance-Benefit limit that caps a Social Security survivor benefit. → [architecture.md §7.7](architecture.md)
 
 **RMD (required minimum distribution)** — the forced annual pre-tax distribution; the age is **birth-year-derived (72 / 73 / 75)**, never a flat 73, and is **non-convertible** (must be taken before any conversion). → [architecture.md §7.1](architecture.md)
 
@@ -127,7 +129,7 @@ Sorted alphabetically; `§` and number-prefixed statutory terms are grouped at t
 
 **§86 (provisional income)** — the rule taxing Social Security benefits; modeled as its own per-year bounded fixed-point. → [architecture.md §7.1](architecture.md)
 
-**§202 (survivor benefit)** — the Social Security survivor benefit (payable from age 60); its base realizes the deceased's claim age at death (lock-flat, RIB-LIM, DRC flow-through). → [plans/features/social-security.md](plans/features/social-security.md)
+**§202 (survivor benefit)** — the Social Security survivor benefit (payable from age 60); its base realizes the deceased's claim age at death (lock-flat, RIB-LIM, DRC flow-through). → [architecture.md §7.7](architecture.md)
 
 **§1014 (basis step-up)** — the cost-basis reset at death; modeled into the *leave-more* objective because a disclosed omission can invert the after-tax ranking. → [architecture.md §7.1](architecture.md)
 

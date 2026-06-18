@@ -3,7 +3,7 @@ title: The Back Nine — Roadmap (where we are, what is next)
 doc-type: roadmap
 status: living
 created: 2026-06-17
-updated: 2026-06-17
+updated: 2026-06-18
 derives-from: [docs/product.md]
 ---
 
@@ -17,9 +17,9 @@ The *why* and the *what* live in [docs/product.md](product.md). How the engine h
 
 ## The four acts
 
-The product grows in four acts. The first two answer the question; the last two are the differentiator.
+The product grows in four strictly-dependent acts. The first two answer the question; the last two are the differentiator.
 
-**Act 1 — The Engine** (`docs/plans/1-engine.md`). The two hardest surfaces — correctness and trust — plus the overlays both controls stand on. A deterministic Monte Carlo spine validated against Trinity/Bengen, joint-and-survivor longevity, the zero-draw tax and healthcare overlays, the encrypted-at-rest store, and the accumulation fold (the fuck-off-date search). Nothing user-facing ships in this act. **Done and pinned.**
+**Act 1 — The Engine** (`docs/plans/1-engine.md`). The two hardest surfaces — correctness and trust — plus the overlays both controls stand on. A deterministic Monte Carlo spine validated against Trinity/Bengen, joint-and-survivor longevity, the zero-draw tax and healthcare overlays, the encrypted-at-rest store, and the accumulation date-search (the fuck-off-date search). Nothing user-facing ships in this act. **Done and pinned.**
 
 **Act 2 — Where You Stand** (`docs/plans/2-first-answer.md`). The magic moment end-to-end: the ~5-minute account-level guided setup, the colorblind-safe visualization, the plain-language confidence statement, the state-adaptive first answer (the fuck-off date for a still-working household; the spine statement for an already-retired one), and the first encrypted Save. **In progress.**
 
@@ -52,7 +52,7 @@ The single source of build-truth. Status is honest, not aspirational — the clo
 
 The C-units and D-units are the accumulation tracks — they extend the U-numbering without renumbering it (see [The ID scheme](#the-id-scheme)). C-units land at Act-1 engine altitude; D-units reshape Act-2 intake and the answer surface.
 
-### Act 1 — The Engine (shipped + pinned; P1 closed 2026-06-11)
+### Act 1 — The Engine (shipped + pinned; closed 2026-06-11)
 
 | Unit | What it delivers | Status | Note |
 |---|---|---|---|
@@ -62,7 +62,7 @@ The C-units and D-units are the accumulation tracks — they extend the U-number
 | **U3** | Healthcare overlay: ACA-MAGI + IRMAA-MAGI calculators, ACA pre-65 fixed-point + cliff/enhanced toggle, IRMAA 2-yr lag, HSA 4th bucket; reduces-to-spine when off | shipped | Zero-draw; `verify:aca` gates the legislative status. HSA *spend* (the resumed U3·M5, "B1") is decumulation-side and not yet built |
 | **U4** | Encrypted store + key lifecycle + recovery/export: PBKDF2-600k, AES-GCM, recovery phrase, mandatory export/restore, schemaVersion | shipped | The migration ladder covers the v2-with-accounts shape |
 | **SS sub-engine** | Social Security spousal/survivor benefit math | shipped | Reviewed; the review caught + fixed a cardinal-sin optimistic survivor-floor bug |
-| **C1** | Contribution-limit + ticker-blend constants (Notice 2025-67 / Rev. Proc. 2025-19 / issuer-or-EDGAR; directional-until-pinned) | shipped | Feeds the accumulation projection and the household stock/bond/cash blend |
+| **C1** | Contribution-limit + ticker-blend constants (Notice 2025-67 / Rev. Proc. 2025-19 / issuer-or-EDGAR; pinned to primaries) | shipped | Feeds the accumulation projection and the household stock/bond/cash blend |
 | **C2** | Accumulation projection: signed contribution inflow on the one continuous absolute-year CRN timeline; presence-keyed reduce-to-spine | shipped | Empty phase (`Y == 0` / construct-absent) reduces byte-identically to plain decumulation |
 | **C3** | The date-search (`dateSearch.ts`): exhaustive, non-monotone-robust sweep over the household work-stop offset; quantized-lower-bound selection — **the fuck-off date** | shipped | Three first-class outcomes per track: confirmed date / window-edge-unconfirmed / no-date-in-window |
 
@@ -70,13 +70,13 @@ The C-units and D-units are the accumulation tracks — they extend the U-number
 
 | Unit | What it delivers | Status | Note |
 |---|---|---|---|
-| **U5 / D1** | Account-level guided setup (the U5 reshape): surface-early, single entry pass; the in-memory orchestrator + R19 sanity | shipped | Cleared the N=1 laptop cold-read on every screen |
+| **U5 / D1** | Account-level guided setup (the U5 reshape): surface-early, single entry pass; the in-memory orchestrator + R19 sanity | shipped | Cleared the N=1 laptop cold-read on every screen. The broader D1 date/answer surface is still ahead |
 | **U6** (foundation) | Colorblind-safe viz primitives: palette / scale / CVD probe | shipped | The CVD-safe foundation, not the band render |
 | **U6** (render) | The confidence-band / projection-fan RENDER | not-started | Built on the U6 foundation |
 | **U7** | Confidence statement surface + outcome-state system + survivor readout; copyGuard born here | not-started | The plain-language verdict |
 | **U8** | First-Save flow + recovery-phrase display + mandatory export + passphrase-strength gate (`zxcvbn-ts` ≥ 3 ∧ length ≥ 12) | not-started | |
 | **D2** | The state-adaptive first answer surface: date-first for not-yet-retired, spine-first for already-retired; the two-pane laptop layout | not-started | Same calm voice, one intake flow; only the lead answer changes |
-| **R40** | Other income in retirement (pension / rental / annuity / alimony / other) — engine + intake | planned | Build-ready, zero code; the immediate next build. Plan: [docs/plans/features/other-income.md](plans/features/other-income.md) |
+| **R40** | Other income in retirement (pension / rental / annuity / alimony / other) — engine + intake | planned | Build-ready, zero code; the immediate next build. Build steps: [docs/plans/2-first-answer.md](plans/2-first-answer.md) |
 
 ### Act 3 — The Levers You Hold (not started; `src/budget` is `.gitkeep`-only)
 
@@ -101,9 +101,9 @@ The C-units and D-units are the accumulation tracks — they extend the U-number
 
 | Feature | What it delivers | Status | Note |
 |---|---|---|---|
-| **Social Security** | Spousal/survivor benefit sub-engine (shipped above) + the claim-age intake | shipped (engine) | Claim-age as a *solver-optimized control* is chapter two. Plan: [docs/plans/features/social-security.md](plans/features/social-security.md) |
-| **Other income (R40)** | Generic per-person non-earned income stream (pension/rental/annuity/alimony/other) | planned | Build-ready, zero code; the immediate next build. Plan: [docs/plans/features/other-income.md](plans/features/other-income.md) |
-| **Portfolio holdings** | Per-account exact stock/bond/cash %; ticker → blend; the household blend the engine consumes | scoping | Single-ticker was removed; accounts now take an exact stock/bond/cash %. Plan: [docs/plans/features/portfolio-holdings.md](plans/features/portfolio-holdings.md) |
+| **Social Security** | Spousal/survivor benefit sub-engine (shipped above) + the claim-age intake | shipped (engine) | Claim-age as a *solver-optimized control* is chapter two. Mechanics: [docs/architecture.md](architecture.md) §7; build: [docs/plans/1-engine.md](plans/1-engine.md) |
+| **Other income (R40)** | Generic per-person non-earned income stream (pension/rental/annuity/alimony/other) | planned | Build-ready, zero code; the immediate next build. Build steps: [docs/plans/2-first-answer.md](plans/2-first-answer.md) |
+| **Portfolio holdings** | Per-account exact stock/bond/cash %; ticker → blend; the household blend the engine consumes | scoping | Accounts take an exact stock/bond/cash % that collapses to the one household blend the engine consumes. Folds into U8. Requirement: [product.md](product.md) R37 |
 | **"Just me" single-user mode** | A single-person (non-couple) household path | planned/deferred | Named, deferred |
 
 ## Requirements → unit trace
@@ -116,7 +116,7 @@ Every requirement maps to an act/unit. Numbers are immutable (R1–R40); the pro
 | **R2** plain-language confidence statement, survival-vs-lifestyle separation, no color-alone | Act 2 · U7 (single metric), Act 3 · U9 (the two-tier essentials/lifestyle reading) |
 | **R3** distribution of futures | Act 1 · U1 |
 | **R4** detail on demand, never unsolicited | Act 2 · U7, Act 3 · U10–U12, Act 4 · U16 |
-| **R5** guided one-question intake *(the single-total-spend on-ramp superseded 2026-06-08 by R35's account-level setup — one flow, both user states)* | Act 2 · U5 → D1 (the U5 reshape) |
+| **R5** guided one-question intake — the guided intake is the account-level setup of R35, one flow for both user states | Act 2 · U5 → D1 (the U5 reshape) |
 | **R6** power-user escape hatch | Act 3 · U12 |
 | **R7** every assumption (and every recommendation input/reasoning) visible+editable | Act 3 · U12, Act 4 · U16 |
 | **R8** input mirrors output; refinement *sharpens* (narrows on precision, shifts on a correction) | Act 2 · U5, Act 3 · U12 |
@@ -146,13 +146,13 @@ Every requirement maps to an act/unit. Numbers are immutable (R1–R40); the pro
 | **R31** contributions **per-account, flat-real, stop at the tested date**; employer **match** captured (pre-tax even on a Roth 401k) | C2 (engine) + D1 (intake) + C1 (limit constants) |
 | **R32** v1 **projects**, does not optimize accumulation; solver stays decumulation-only | Scope Boundaries (product); C3 (date-search ≠ solver) |
 | **R33** healthcare **OFF during accumulation, ON at the tested date** — per-candidate cost-stream construction (the engine has no retirement gate) | C3 (`buildCandidateParams(Y)`) + C2 |
-| **R34** accumulation **inherits the engine invariants** — ONE continuous absolute-year draw timeline (CRN); one per-path future end-to-end; empty phase reduces byte-identically | C2 (the load-bearing engine contract) |
-| **R35** the first answer from a **~5-min account-level guided setup**, surface-early, single entry pass, both user states | D1 (intake reshape) + the master Success-Criterion edit (done 2026-06-10) |
+| **R34** accumulation **inherits the engine invariants** — ONE continuous absolute-year draw timeline (CRN); one per-path future end-to-end; empty phase reduces byte-identically | C2 (the load-bearing engine contract; the CRN + reduce-to-spine invariants are canonical in [architecture.md](architecture.md)) |
+| **R35** the first answer from a **~5-min account-level guided setup**, surface-early, single entry pass, both user states | D1 (intake reshape) |
 | **R36** account **values user-entered; no live price lookup** | D1 + Scope Boundaries |
 | **R37** per-ticker holdings **collapse to one household blend**; bundled ticker→asset-class table + manual classification; basis per account, not per lot | C1 (`tickerBlend.ts`) + D1 (entry + manual fallback) |
 | **R38** HSA **contributions → accumulation**; HSA **spend → decumulation** (the resumed U3·M5) | C2 (contributions) + B1 (U3·M5 spend) |
 | **R39** new PII inherits encryption + the schema ladder (additive `schemaVersion` bump) | C2/D1 schema fields; consumed by Act 1 · U4's migration ladder |
-| **R40** generic per-person ongoing non-earned income stream (pension/rental/annuity/alimony/other); reduces-to-spine byte-identically; opt-in off the guided path | Act 2 (engine + intake); plan [docs/plans/features/other-income.md](plans/features/other-income.md) |
+| **R40** generic per-person ongoing non-earned income stream (pension/rental/annuity/alimony/other); reduces-to-spine byte-identically; opt-in off the guided path | Act 2 (engine + intake); build steps [docs/plans/2-first-answer.md](plans/2-first-answer.md) |
 
 ## Validation gates
 
@@ -171,17 +171,8 @@ Solver-blocking gates (Act 4, not yet live): the **optimality oracle** (hand-com
 
 ## What is next
 
-The immediate next build is **R40 — other income in retirement** (planned, build-ready, zero code) — the engine has no concept of ongoing non-earned income today, and for a household with a pension or rental that gap is the difference between a defensibly-conservative answer and a confidently-wrong-optimistic one. See [docs/plans/features/other-income.md](plans/features/other-income.md).
+The immediate next build is **R40 — other income in retirement** (planned, build-ready, zero code) — the engine has no concept of ongoing non-earned income today, and for a household with a pension or rental that gap is the difference between a defensibly-conservative answer and a confidently-wrong-optimistic one. Build steps: [docs/plans/2-first-answer.md](plans/2-first-answer.md).
 
 After R40, the Act-2 answer surface still owes: **U8** (the first encrypted Save + recovery-phrase + export), the **U6 confidence-band render**, **U7** (the confidence statement), and **D2** (the state-adaptive surface + two-pane laptop layout). Act 3 (Controls) and Act 4 (Recommendation) follow in order; Act 4 is the actual differentiator and is still entirely ahead.
 
 The live, session-level next-action queue is in `TODO.md`.
-
-## Superseded / changelog
-
-Live text above reads current. The superseded structure, recorded once:
-
-- **The old "charter > requirements > roadmap" precedence chain is retired.** It was a scar from the commercial→personal pivot, with the roadmap pointing upward to a separate north-star and a separate v2 requirements brainstorm as sources of truth. That chain is gone: [docs/product.md](product.md) carries the why + the requirements ledger, and this roadmap carries the acts + status. The old `docs/plans/back-nine-mvp/roadmap.md` + four phase docs and the `docs/plans/2026-06-08-001-feat-fuck-off-date-accumulation-plan.md` accumulation plan were the quarry for this rebuild and have been retired to git history (this reconcile, harvest-verified).
-- **"Phases" → "Acts."** The four phases (Foundation → First Answer → Controls → Solver & Recommendation) are renamed to four acts (Engine → First Answer → Controls → Recommendation) — the same structure, clearer prose. The U-numbering is unchanged.
-- **The single-total-spend on-ramp (struck).** The v2 ~3-minute single-spend on-ramp was replaced by R35's ~5-minute account-level guided setup (the one master edit folded 2026-06-10). The household spend figure survives as a collected input; the flow *shape* is what changed.
-- **Single-ticker holdings → exact per-account stock/bond/cash %.** Portfolio-holdings was re-scoped: single-ticker entry was removed; accounts now take an exact stock/bond/cash percentage that collapses to the one household blend.

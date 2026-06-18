@@ -112,7 +112,7 @@ So `P1·U2` reads "Phase 1, Unit 2" → becomes "Act 1, Unit 2."
 
 ```
 docs/
-├── README.md          # front door + router, Craig's page, number-free, single voice
+├── README.md          # docs INDEX / router (the repo-root README is the front door — see CP1.5)
 ├── product.md         # the WHY+WHAT, sole R1–R40 ledger; capabilities named as verbs the product DOES
 ├── roadmap.md         # build-status table + capability×act MATRIX + the ID-scheme LEGEND
 ├── architecture.md    # invariants INDEX on top, then depth; the citation legend
@@ -142,7 +142,14 @@ place, 3 moved-and-rewritten into `capabilities/`, the `features/` folder delete
 - **CP1** — ✅ **DONE** (`d02af8b1`). The legends + the front door: roadmap ID-scheme legend +
   the four locked act names + `scoping` status; architecture invariants index; glossary Act
   entry + two pointer meta-entries; `insights/README` shorthand decoder; single-voice README.
-  Adversarially verified (4 lenses); all anchors resolve. **← resume from here: start CP2.**
+  Adversarially verified (4 lenses); all anchors resolve.
+- **CP1.5** — ✅ **DONE** (`<this commit>`). Scope addition (approved 2026-06-18): the **repo-root
+  `README.md`** was never in the plan's 18-doc inventory, yet it's the real front door and it
+  duplicated `docs/README` (thesis, cardinal rule, build-state act table). Division of labor now:
+  **root `README.md` = the single Craig-facing front door + portfolio page** (owns the thesis, the
+  plain cardinal rule, how-it-works, build state, stack, running); **`docs/README.md` = a thin
+  docs index** (the router only — no second thesis, no second cardinal rule, no second build-state).
+  Fixed the act-name drift CP1 introduced in the root README. **← resume from here: start CP2.**
 - **CP2** — dissolve `features/` → `capabilities/` (move, re-template, de-orphan, kill the R40
   triple-duplication). *May split — right-sizing the 876-line doc is heavy.*
 - **CP3** — forward-only `product.md` + the crown-jewel decision record (the §3b wall → named

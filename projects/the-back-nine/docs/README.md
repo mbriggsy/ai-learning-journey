@@ -1,5 +1,5 @@
 ---
-title: The Back Nine — Docs (start here)
+title: The Back Nine — Docs (index)
 doc-type: readme
 status: living
 created: 2026-06-17
@@ -8,21 +8,7 @@ updated: 2026-06-18
 
 # The Back Nine — Docs
 
-The Back Nine is a **personal** retirement / tax-strategy co-pilot for one married couple and a few friends. Never sold. It answers one question — *"Can we retire, and how do we do it best?"* — with a calm, plain-language confidence statement, then proposes a confidence-graded strategy (withdrawal sequencing + Roth conversion) to fund a real budget toward a goal you pick. For a household still working, the first answer adapts: it leads with **the fuck-off date** — the two confidence-graded dates when work becomes optional.
-
-**The cardinal rule: calm-but-wrong is the sin.** Friends bet real retirement money on this answer with *less* protection than a commercial tool — so the honesty and engine-validation bar *rises*, it never softens. "It's just for friends" never excuses a confidently-wrong recommendation.
-
-## You are here
-
-- **The engine is done and pinned.** The Monte Carlo core, joint-and-survivor longevity, the tax + accounts overlay, the income-dependent healthcare overlay, the encrypted-at-rest store, the accumulation fold (the fuck-off-date search), and the Social Security spousal/survivor sub-engine are all shipped, reviewed, and validated against golden cases.
-- **The first visible answer is being built.** Account-level intake ships; the colorblind-safe viz foundation ships. Still ahead: the confidence-band render, the confidence statement, the state-adaptive surface. Other income (pension/rental/annuity/alimony) is the immediate next build.
-- **The recommendation engine is still entirely ahead.** The solver, its optimality oracle, and the recommendation surface — the actual differentiator — are not started yet.
-
-The maintained per-unit status table lives in [roadmap.md](roadmap.md).
-
-## Where to read next
-
-New here? Start with **[product.md](product.md)** — the why and the what — then jump to anything specific below.
+This folder is the project's documentation. For the overview — what The Back Nine is, how it works, and where the build stands — start at the [repo README](../README.md). This page is the map to everything below.
 
 | To understand… | Read |
 |---|---|

@@ -66,10 +66,10 @@ The MVP is four acts. Each is a real milestone with its own plan, gates, and ver
 
 | Act | What it is | State |
 |---|---|---|
-| **1 — Engine** | The deterministic engine + tax & healthcare overlays + accumulation projection + the date-search + the encrypted store | ✅ **Complete, reviewed, pinned** |
-| **2 — First Answer** | The guided account-level intake → the state-adaptive first answer → confidence viz → first Save | 🔨 **In progress** — the intake is built & reviewed; the confidence-band viz is next |
-| **3 — Controls** | The budget builder + manual sequencing & Roth controls + healthcare surfaces + re-entry | ⬜ Planned |
-| **4 — Recommendation** | The validation harness → the solver → the recommendation surface | ⬜ Planned |
+| **1 — The Engine** | The deterministic engine + tax & healthcare overlays + accumulation projection + the date-search + the encrypted store | ✅ **Complete, reviewed, pinned** |
+| **2 — Where You Stand** | The guided account-level intake → the state-adaptive first answer → confidence viz → first Save | 🔨 **In progress** — the intake is built & reviewed; the confidence-band viz is next |
+| **3 — The Levers You Hold** | The budget builder + manual sequencing & Roth controls + healthcare surfaces + re-entry | ⬜ Planned |
+| **4 — The Recommended Route** | The validation harness → the solver → the recommendation surface | ⬜ Planned |
 
 Act 1's engine is pinned against primary sources: 25 tax/health constants verified against IRS / CMS / HHS / eCFR / SEC filings, and cohort mortality re-derived from the SSA Trustees-Report survival tables for the household's actual birth cohorts. The guided intake delivers a **live, provisional Monte Carlo reading that sharpens as you type**, proven end-to-end in real Chromium under the enforced CSP.
 
@@ -118,14 +118,14 @@ Your data is entered manually, encrypted locally, and never transmitted — ther
 
 ---
 
-## Map of the documentation
+## Documentation
 
-Start at [`docs/README.md`](docs/README.md) — the narrator. The set is story-first:
+The full index and reading map is [`docs/README.md`](docs/README.md). The three essentials:
 
-1. **Product — the *why* + *what*** (thesis, cardinal rule, locked decisions, the R1–R40 requirements ledger): [`docs/product.md`](docs/product.md)
-2. **Roadmap — *where we are* + *what's next*** (the four acts + the maintained You-Are-Here per-unit status table + the requirement→unit trace): [`docs/roadmap.md`](docs/roadmap.md)
-3. **Architecture — *what you must never break*** (the load-bearing engine invariants, one canonical home): [`docs/architecture.md`](docs/architecture.md)
-4. **Act plans** [`docs/plans/`](docs/plans/) · **decision records** [`docs/decisions/`](docs/decisions/) · **research** [`docs/research/`](docs/research/) · **glossary** [`docs/glossary.md`](docs/glossary.md)
-5. **Project conventions & landmines:** [`CLAUDE.md`](CLAUDE.md) · **work queue:** [`TODO.md`](TODO.md) · **hard-won lessons:** [`docs/insights/`](docs/insights/)
+- **[`docs/product.md`](docs/product.md)** — the *why* + *what*: the thesis, the cardinal rule, the requirements ledger.
+- **[`docs/roadmap.md`](docs/roadmap.md)** — *where we are* + *what's next*: the four acts and the You-Are-Here status table.
+- **[`docs/architecture.md`](docs/architecture.md)** — *what you must never break*: the load-bearing engine invariants.
+
+Build conventions + landmines live in [`CLAUDE.md`](CLAUDE.md); the live work queue is [`TODO.md`](TODO.md).
 </content>
 </invoke>

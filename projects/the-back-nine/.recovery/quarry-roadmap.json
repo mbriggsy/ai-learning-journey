@@ -1,0 +1,819 @@
+{
+  "summary": "Re-mine the roadmap doc (its reader dropped mid-response) into the must-survive inventory",
+  "agentCount": 1,
+  "logs": [],
+  "result": {
+    "doc": "docs/roadmap.md",
+    "oneLineRole": "The single maintained source of build-truth: the four acts, the per-unit You-Are-Here status table, the ID scheme, the requirement→unit trace, and the validation gates — the map between product.md (why/what) and architecture.md (invariants), winning over all other docs on build status.",
+    "items": [
+      {
+        "kind": "scope-boundary",
+        "claim": "This roadmap is the single maintained source of build-truth for the repo. When a doc and the You-Are-Here table disagree about what is built, this table wins. The why and what live in docs/product.md; the load-bearing invariants live once in docs/architecture.md; this doc is the map between them (which requirement landed in which unit, what is shipped, what is next).",
+        "sourceSection": "Intro / preamble",
+        "mustSurvive": true,
+        "duplicatedIn": "CLAUDE.md (precedence: roadmap You-Are-Here wins on build status; architecture wins on an invariant; product wins on the why/what)",
+        "fossilNote": ""
+      },
+      {
+        "kind": "scope-boundary",
+        "claim": "The volatile next-action queue lives in TODO.md, not in the roadmap. This doc moves at the speed of units shipping; TODO.md moves at the speed of sessions.",
+        "sourceSection": "Intro blockquote / What is next",
+        "mustSurvive": true,
+        "duplicatedIn": "CLAUDE.md (TODO.md is the volatile work queue)",
+        "fossilNote": ""
+      },
+      {
+        "kind": "definition-term",
+        "claim": "The product grows in four acts. The first two acts answer the question; the last two are the differentiator. The act-to-act dependency is strict — each act stands on the one before — but the Act-1 overlays feed Act 3 directly, and the validated spine feeds Act 4 directly.",
+        "sourceSection": "The four acts",
+        "mustSurvive": true,
+        "duplicatedIn": "docs/plans/ (1-engine … 4-recommendation)",
+        "fossilNote": ""
+      },
+      {
+        "kind": "status-as-built",
+        "claim": "Act 1 — The Engine (docs/plans/1-engine.md): the two hardest surfaces (correctness and trust) plus the overlays both controls stand on. A deterministic Monte Carlo spine validated against Trinity/Bengen, joint-and-survivor longevity, the zero-draw tax and healthcare overlays, the encrypted-at-rest store, and the accumulation fold (the fuck-off-date search). Nothing user-facing ships in this act. Status: Done and pinned.",
+        "sourceSection": "The four acts — Act 1",
+        "mustSurvive": true,
+        "duplicatedIn": "docs/plans/1-engine.md; You-Are-Here Act 1 table",
+        "fossilNote": ""
+      },
+      {
+        "kind": "status-as-built",
+        "claim": "Act 2 — Where You Stand (docs/plans/2-first-answer.md): the magic moment end-to-end — the ~5-minute account-level guided setup, the colorblind-safe visualization, the plain-language confidence statement, the state-adaptive first answer (the fuck-off date for a still-working household; the spine statement for an already-retired one), and the first encrypted Save. Status: In progress.",
+        "sourceSection": "The four acts — Act 2",
+        "mustSurvive": true,
+        "duplicatedIn": "docs/plans/2-first-answer.md; You-Are-Here Act 2 table",
+        "fossilNote": ""
+      },
+      {
+        "kind": "status-as-built",
+        "claim": "Act 3 — The Levers You Hold (docs/plans/3-controls.md): the itemized, time-boxed budget builder plus both manual controls — withdrawal sequencing and Roth conversion — driving the Act-1 overlays, with the healthcare surfaces and the sharpen/re-entry loop. A shippable cold-read milestone in its own right, before the solver exists. Status: Not started (src/budget is .gitkeep-only).",
+        "sourceSection": "The four acts — Act 3",
+        "mustSurvive": true,
+        "duplicatedIn": "docs/plans/3-controls.md; You-Are-Here Act 3 table",
+        "fossilNote": ""
+      },
+      {
+        "kind": "status-as-built",
+        "claim": "Act 4 — The Recommended Route (docs/plans/4-recommendation.md): the new layer and the actual differentiator — the solver validation harness, then the solver that ranks candidate strategies on identical futures, then the recommend-second surface, then stale-recommendation handling. Validation is built and passing before the solver is allowed to recommend. Status: Not started (src/engine/solver and src/engine/validation are .gitkeep-only).",
+        "sourceSection": "The four acts — Act 4",
+        "mustSurvive": true,
+        "duplicatedIn": "docs/plans/4-recommendation.md; You-Are-Here Act 4 table; validation gates (solver-blocking oracle)",
+        "fossilNote": ""
+      },
+      {
+        "kind": "invariant",
+        "claim": "The shared IDs (R/U/C/D/Act/M/§) are internal join-keys tying a requirement → the unit that builds it → the test that proves it → the insight that hardened it. They are NEVER shown to the user and NEVER renumbered: the numbers are wired into source comments, test names, insight files, and git history, so a renumber would silently rot every reference with no gate to catch the drift. Cosmetic labels (an act's name) change freely; these keys do not.",
+        "sourceSection": "The ID scheme",
+        "mustSurvive": true,
+        "duplicatedIn": "",
+        "fossilNote": ""
+      },
+      {
+        "kind": "definition-term",
+        "claim": "ID legend: Rn = Requirement, a product contract (R1–R40), the what-must-be-true; ledger in product.md. Un = Unit, a build unit (U0–U17, globally unique across all acts), the how-it-gets-built. Cn/Dn = Unit tracks, the accumulation tracks: C at engine altitude (C1–C3), D at intake/answer altitude (D1–D2); they extend the U-numbering without renumbering it. Actn = one of the four build chapters (Act 1–4); code comments say Pn (Phase) for the same chapter, and the globally-unique unit key is the unambiguous join. Mn = Milestone, a sub-step inside a unit (e.g. U3·M5); lives in code comments, not the build tables. §n = a numbered section inside a plan or doc (e.g. architecture §7.2).",
+        "sourceSection": "The ID scheme (table)",
+        "mustSurvive": true,
+        "duplicatedIn": "",
+        "fossilNote": ""
+      },
+      {
+        "kind": "definition-term",
+        "claim": "Compound refs read left-to-right: Act 2 · U7 is Act 2, Unit 7; U3·M6 is Unit 3, Milestone 6. Because the unit key is globally unique, a doc that says Act 2 · U7 and code that says P2·U7 join unambiguously on U7.",
+        "sourceSection": "The ID scheme",
+        "mustSurvive": true,
+        "duplicatedIn": "",
+        "fossilNote": ""
+      },
+      {
+        "kind": "invariant",
+        "claim": "LANDMINE: the unit-track C is not the code variable C_dest. C2 is an engine-altitude accumulation unit; C/C_dest in taxOverlay.ts is the per-bucket contribution amount. Same letter, unrelated.",
+        "sourceSection": "The ID scheme (blockquote)",
+        "mustSurvive": true,
+        "duplicatedIn": "",
+        "fossilNote": ""
+      },
+      {
+        "kind": "definition-term",
+        "claim": "Status enum (the closed set, honest not aspirational): shipped = coded AND reviewed; in-progress = partially landed; planned = scoped and build-ready with zero code; scoping = the shape is still being worked out, not yet build-ready; not-started = the directory is .gitkeep-only.",
+        "sourceSection": "The You-Are-Here table (preamble)",
+        "mustSurvive": true,
+        "duplicatedIn": "",
+        "fossilNote": ""
+      },
+      {
+        "kind": "definition-term",
+        "claim": "The C-units and D-units are the accumulation tracks — they extend the U-numbering without renumbering it. C-units land at Act-1 engine altitude; D-units reshape Act-2 intake and the answer surface.",
+        "sourceSection": "The You-Are-Here table (preamble)",
+        "mustSurvive": true,
+        "duplicatedIn": "ID scheme section (same definition)",
+        "fossilNote": ""
+      },
+      {
+        "kind": "status-as-built",
+        "claim": "Act 1 header: The Engine — shipped + pinned; P1 closed 2026-06-11.",
+        "sourceSection": "You-Are-Here — Act 1 header",
+        "mustSurvive": true,
+        "duplicatedIn": "MEMORY project-the-back-nine.md (P1 CLOSED 2026-06-11)",
+        "fossilNote": ""
+      },
+      {
+        "kind": "status-as-built",
+        "claim": "U0 — Scaffold, conventions, PWA shell, CI; engine-purity lint; strict CSP. Status: shipped. Note: the burned toolchain; strict CSP ships via HTTP headers, not a meta tag.",
+        "sourceSection": "You-Are-Here — Act 1 (U0)",
+        "mustSurvive": true,
+        "duplicatedIn": "CLAUDE.md (CSP via vercel.json HTTP headers, not meta tag)",
+        "fossilNote": ""
+      },
+      {
+        "kind": "status-as-built",
+        "claim": "U1 — MC engine core: determinism, CRN single shared draw, joint-survivor longevity retaining survivor identity, Trinity/Bengen externally-derived fixtures, sequencing as a pluggable policy. Status: shipped. Note: the validated spine; the survivor-spending ratio is grounded + dangerous-direction-documented.",
+        "sourceSection": "You-Are-Here — Act 1 (U1)",
+        "mustSurvive": true,
+        "duplicatedIn": "docs/architecture.md (engine invariants); requirements trace R3, SC (number)",
+        "fossilNote": ""
+      },
+      {
+        "kind": "status-as-built",
+        "claim": "U2 — Tax-and-accounts overlay: buckets, ordinary tax/gross-up, RMD birth-year, SS provisional-income fixed-point, MFJ→single; reduces-to-spine when off. Status: shipped. Note: zero-draw deterministic transform.",
+        "sourceSection": "You-Are-Here — Act 1 (U2)",
+        "mustSurvive": true,
+        "duplicatedIn": "docs/architecture.md (reduce-to-spine invariant)",
+        "fossilNote": ""
+      },
+      {
+        "kind": "status-as-built",
+        "claim": "U3 — Healthcare overlay: ACA-MAGI + IRMAA-MAGI calculators, ACA pre-65 fixed-point + cliff/enhanced toggle, IRMAA 2-yr lag, HSA 4th bucket; reduces-to-spine when off. Status: shipped. Note: zero-draw; verify:aca gates the legislative status. HSA spend (the resumed U3·M5, 'B1') is decumulation-side and not yet built.",
+        "sourceSection": "You-Are-Here — Act 1 (U3)",
+        "mustSurvive": true,
+        "duplicatedIn": "CLAUDE.md (ACA reVerifyEveryBuild gated by verify:aca); requirements trace R24, R38",
+        "fossilNote": ""
+      },
+      {
+        "kind": "status-as-built",
+        "claim": "U4 — Encrypted store + key lifecycle + recovery/export: PBKDF2-600k, AES-GCM, recovery phrase, mandatory export/restore, schemaVersion. Status: shipped. Note: the migration ladder covers the v2-with-accounts shape.",
+        "sourceSection": "You-Are-Here — Act 1 (U4)",
+        "mustSurvive": true,
+        "duplicatedIn": "requirements trace R15, R16, R17, R18, R39",
+        "fossilNote": ""
+      },
+      {
+        "kind": "status-as-built",
+        "claim": "SS sub-engine — Social Security spousal/survivor benefit math. Status: shipped. Note: reviewed; the review caught + fixed a cardinal-sin optimistic survivor-floor bug.",
+        "sourceSection": "You-Are-Here — Act 1 (SS sub-engine)",
+        "mustSurvive": true,
+        "duplicatedIn": "Cross-cutting features (Social Security); plan docs/plans/features/social-security.md",
+        "fossilNote": ""
+      },
+      {
+        "kind": "status-as-built",
+        "claim": "C1 — Contribution-limit + ticker-blend constants (Notice 2025-67 / Rev. Proc. 2025-19 / issuer-or-EDGAR; directional-until-pinned). Status: shipped. Note: feeds the accumulation projection and the household stock/bond/cash blend.",
+        "sourceSection": "You-Are-Here — Act 1 (C1)",
+        "mustSurvive": true,
+        "duplicatedIn": "requirements trace R31, R37; docs/decisions/accumulation-fuck-off-date.md",
+        "fossilNote": "C/D-unit tracks were added with the 2026-06-08 accumulation expansion (R26–R39); they sit in Act 1 table by altitude, not by chronology"
+      },
+      {
+        "kind": "status-as-built",
+        "claim": "C2 — Accumulation projection: signed contribution inflow on the one continuous absolute-year CRN timeline; presence-keyed reduce-to-spine. Status: shipped. Note: empty phase (Y == 0 / construct-absent) reduces byte-identically to plain decumulation.",
+        "sourceSection": "You-Are-Here — Act 1 (C2)",
+        "mustSurvive": true,
+        "duplicatedIn": "requirements trace R30, R31, R33, R34, R38, R39; docs/decisions/accumulation-fuck-off-date.md; docs/architecture.md",
+        "fossilNote": "C/D-unit tracks added with the 2026-06-08 accumulation expansion"
+      },
+      {
+        "kind": "status-as-built",
+        "claim": "C3 — The date-search (dateSearch.ts): exhaustive, non-monotone-robust sweep over the household work-stop offset; quantized-lower-bound selection — the fuck-off date. Status: shipped. Note: three first-class outcomes per track: confirmed date / window-edge-unconfirmed / no-date-in-window.",
+        "sourceSection": "You-Are-Here — Act 1 (C3)",
+        "mustSurvive": true,
+        "duplicatedIn": "requirements trace R26, R27, R28, R32, R33; docs/decisions/accumulation-fuck-off-date.md; validation gates (non-monotone-robust contract + empty-phase byte-identity)",
+        "fossilNote": "C/D-unit tracks added with the 2026-06-08 accumulation expansion"
+      },
+      {
+        "kind": "status-as-built",
+        "claim": "U5 / D1 — Account-level guided setup (the U5 reshape): surface-early, single entry pass; the in-memory orchestrator + R19 sanity. Status: shipped. Note: cleared the N=1 laptop cold-read on every screen.",
+        "sourceSection": "You-Are-Here — Act 2 (U5 / D1)",
+        "mustSurvive": true,
+        "duplicatedIn": "requirements trace R5, R8, R19, R31, R35, R36, R37; docs/plans/2-first-answer.md",
+        "fossilNote": ""
+      },
+      {
+        "kind": "status-as-built",
+        "claim": "U6 (foundation) — Colorblind-safe viz primitives: palette / scale / CVD probe. Status: shipped. Note: the CVD-safe foundation, not the band render.",
+        "sourceSection": "You-Are-Here — Act 2 (U6 foundation)",
+        "mustSurvive": true,
+        "duplicatedIn": "back-nine-design skill (colorblind-safe encoding)",
+        "fossilNote": ""
+      },
+      {
+        "kind": "status-as-built",
+        "claim": "U6 (render) — The confidence-band / projection-fan RENDER. Status: not-started. Note: built on the U6 foundation.",
+        "sourceSection": "You-Are-Here — Act 2 (U6 render)",
+        "mustSurvive": true,
+        "duplicatedIn": "What is next (U6 confidence-band render still owed); back-nine-design skill",
+        "fossilNote": ""
+      },
+      {
+        "kind": "status-as-built",
+        "claim": "U7 — Confidence statement surface + outcome-state system + survivor readout; copyGuard born here. Status: not-started. Note: the plain-language verdict.",
+        "sourceSection": "You-Are-Here — Act 2 (U7)",
+        "mustSurvive": true,
+        "duplicatedIn": "requirements trace R1, R2, R4, R12 (copyGuard born), R14; What is next",
+        "fossilNote": ""
+      },
+      {
+        "kind": "status-as-built",
+        "claim": "U8 — First-Save flow + recovery-phrase display + mandatory export + passphrase-strength gate (zxcvbn-ts ≥ 3 ∧ length ≥ 12). Status: not-started.",
+        "sourceSection": "You-Are-Here — Act 2 (U8)",
+        "mustSurvive": true,
+        "duplicatedIn": "requirements trace R17, R18; What is next",
+        "fossilNote": ""
+      },
+      {
+        "kind": "status-as-built",
+        "claim": "D2 — The state-adaptive first answer surface: date-first for not-yet-retired, spine-first for already-retired; the two-pane laptop layout. Status: not-started. Note: same calm voice, one intake flow; only the lead answer changes.",
+        "sourceSection": "You-Are-Here — Act 2 (D2)",
+        "mustSurvive": true,
+        "duplicatedIn": "requirements trace R27, R28, R29; What is next; project-back-nine-laptop-primary.md (laptop is primary)",
+        "fossilNote": "D-unit track added with the 2026-06-08 accumulation expansion"
+      },
+      {
+        "kind": "status-as-built",
+        "claim": "R40 (in the Act 2 table) — Other income in retirement (pension / rental / annuity / alimony / other) — engine + intake. Status: planned. Note: build-ready, zero code; the immediate next build. Plan: docs/plans/features/other-income.md.",
+        "sourceSection": "You-Are-Here — Act 2 (R40 row)",
+        "mustSurvive": true,
+        "duplicatedIn": "Cross-cutting features (Other income R40); requirements trace R40; What is next; docs/plans/features/other-income.md",
+        "fossilNote": "R40 appears both as a row in the Act 2 status table and again in the cross-cutting features table — same status, two surfaces"
+      },
+      {
+        "kind": "status-as-built",
+        "claim": "Act 3 header: The Levers You Hold — not started; src/budget is .gitkeep-only.",
+        "sourceSection": "You-Are-Here — Act 3 header",
+        "mustSurvive": true,
+        "duplicatedIn": "The four acts — Act 3",
+        "fossilNote": ""
+      },
+      {
+        "kind": "status-as-built",
+        "claim": "U9 — Budget builder: itemized, time-boxed, essentials/discretionary; the two-tier lexicographic headline reading. Status: not-started. Note: the two-date split rides U9's degenerate-collapse.",
+        "sourceSection": "You-Are-Here — Act 3 (U9)",
+        "mustSurvive": true,
+        "duplicatedIn": "requirements trace R2 (two-tier), R19, R20, R27 (two-track split rides U9 degenerate-collapse)",
+        "fossilNote": ""
+      },
+      {
+        "kind": "status-as-built",
+        "claim": "U10 — Manual withdrawal-sequencing control + Roth-conversion lever (both drive the U2 overlay); require-the-hedge lint introduced. Status: not-started.",
+        "sourceSection": "You-Are-Here — Act 3 (U10)",
+        "mustSurvive": true,
+        "duplicatedIn": "requirements trace R4, R9 (manual), R11, R12 (extended), R19",
+        "fossilNote": ""
+      },
+      {
+        "kind": "status-as-built",
+        "claim": "U11 — Healthcare surfaces (ACA cliff + enhanced toggle + re-verify gate; IRMAA cliffs; HSA entry) over the U3 overlay. Status: not-started.",
+        "sourceSection": "You-Are-Here — Act 3 (U11)",
+        "mustSurvive": true,
+        "duplicatedIn": "requirements trace R4, R24",
+        "fossilNote": ""
+      },
+      {
+        "kind": "status-as-built",
+        "claim": "U12 — Sharpen loop + assumption editing + power-user escape hatch. Status: not-started.",
+        "sourceSection": "You-Are-Here — Act 3 (U12)",
+        "mustSurvive": true,
+        "duplicatedIn": "requirements trace R4, R6, R7, R8",
+        "fossilNote": ""
+      },
+      {
+        "kind": "status-as-built",
+        "claim": "U13 — Returning-user re-entry + per-surface staleness (tax/healthcare vintages, budget line items, the date answer's fixture clocks). Status: not-started. Note: the date answer joins the per-surface staleness map.",
+        "sourceSection": "You-Are-Here — Act 3 (U13)",
+        "mustSurvive": true,
+        "duplicatedIn": "requirements trace R17",
+        "fossilNote": ""
+      },
+      {
+        "kind": "status-as-built",
+        "claim": "Act 4 header: The Recommended Route — not started; src/engine/solver + src/engine/validation are .gitkeep-only.",
+        "sourceSection": "You-Are-Here — Act 4 header",
+        "mustSurvive": true,
+        "duplicatedIn": "The four acts — Act 4",
+        "fossilNote": ""
+      },
+      {
+        "kind": "status-as-built",
+        "claim": "U14 — Solver validation harness: optimality/ranking oracle, ranking-stability-under-CRN, grade calibration, held-out-seed reporting — gates U15. Status: not-started. Note: the 'oracle-cleared' token is the structural gate.",
+        "sourceSection": "You-Are-Here — Act 4 (U14)",
+        "mustSurvive": true,
+        "duplicatedIn": "requirements trace R22 (calibration), R25 (validation), SC (recommendation); validation gates (solver-blocking oracle / oracle-cleared token)",
+        "fossilNote": ""
+      },
+      {
+        "kind": "status-as-built",
+        "claim": "U15 — Solver core: named-policies × conversion-grid search on identical CRN draws; lexicographic objective; byte-identical selection; the WASM measurement gate. Status: not-started.",
+        "sourceSection": "You-Are-Here — Act 4 (U15)",
+        "mustSurvive": true,
+        "duplicatedIn": "requirements trace R9 (solver), R21 (objective), R23",
+        "fossilNote": ""
+      },
+      {
+        "kind": "status-as-built",
+        "claim": "U16 — Recommendation surface: recommend-second, confidence-grading, comparative transparency with the runner-up retained, objective ≡ headline, the 10/10→surplus pivot, hedge-on-headline lint. Status: not-started. Note: the actual differentiator.",
+        "sourceSection": "You-Are-Here — Act 4 (U16)",
+        "mustSurvive": true,
+        "duplicatedIn": "requirements trace R4, R7, R10, R11, R12 (extended), R13, R14, R16 wait—R16 is U4; R21 (headline pivot), R22 (render), R23",
+        "fossilNote": ""
+      },
+      {
+        "kind": "status-as-built",
+        "claim": "U17 — Stale-saved-recommendation handling: a saved rec is an executed action → re-solve under current fixtures; staleness reads 'the action we recommended may no longer be advised'. Status: not-started.",
+        "sourceSection": "You-Are-Here — Act 4 (U17)",
+        "mustSurvive": true,
+        "duplicatedIn": "",
+        "fossilNote": ""
+      },
+      {
+        "kind": "status-as-built",
+        "claim": "Cross-cutting feature — Social Security: spousal/survivor benefit sub-engine (shipped above) + the claim-age intake. Status: shipped (engine). Note: claim-age as a solver-optimized control is chapter two. Plan: docs/plans/features/social-security.md.",
+        "sourceSection": "Cross-cutting features",
+        "mustSurvive": true,
+        "duplicatedIn": "You-Are-Here Act 1 (SS sub-engine row)",
+        "fossilNote": ""
+      },
+      {
+        "kind": "status-as-built",
+        "claim": "Cross-cutting feature — Other income (R40): generic per-person non-earned income stream (pension/rental/annuity/alimony/other). Status: planned. Note: build-ready, zero code; the immediate next build. Plan: docs/plans/features/other-income.md.",
+        "sourceSection": "Cross-cutting features",
+        "mustSurvive": true,
+        "duplicatedIn": "You-Are-Here Act 2 (R40 row); requirements trace R40; What is next",
+        "fossilNote": ""
+      },
+      {
+        "kind": "status-as-built",
+        "claim": "Cross-cutting feature — Portfolio holdings: per-account exact stock/bond/cash %; ticker → blend; the household blend the engine consumes. Status: scoping. Note: single-ticker was removed; accounts now take an exact stock/bond/cash %. Plan: docs/plans/features/portfolio-holdings.md.",
+        "sourceSection": "Cross-cutting features",
+        "mustSurvive": true,
+        "duplicatedIn": "requirements trace R37; Superseded/changelog (single-ticker → exact %)",
+        "fossilNote": ""
+      },
+      {
+        "kind": "status-as-built",
+        "claim": "Cross-cutting feature — 'Just me' single-user mode: a single-person (non-couple) household path. Status: planned/deferred. Note: named, deferred.",
+        "sourceSection": "Cross-cutting features",
+        "mustSurvive": true,
+        "duplicatedIn": "",
+        "fossilNote": ""
+      },
+      {
+        "kind": "invariant",
+        "claim": "Requirements→unit trace ground rules: every requirement maps to an act/unit; numbers are immutable (R1–R40); the prose is re-framed for clarity, the mapping is not. SC = the success-criteria list in product.md. The C/D-unit detail lives in docs/decisions/accumulation-fuck-off-date.md.",
+        "sourceSection": "Requirements → unit trace (preamble)",
+        "mustSurvive": true,
+        "duplicatedIn": "docs/product.md (R1–R40 ledger); docs/decisions/accumulation-fuck-off-date.md",
+        "fossilNote": ""
+      },
+      {
+        "kind": "requirement",
+        "claim": "R1 primary question is the face → Act 2 · U7.",
+        "sourceSection": "Requirements → unit trace",
+        "mustSurvive": true,
+        "duplicatedIn": "docs/product.md (R1 ledger entry)",
+        "fossilNote": ""
+      },
+      {
+        "kind": "requirement",
+        "claim": "R2 plain-language confidence statement, survival-vs-lifestyle separation, no color-alone → Act 2 · U7 (single metric), Act 3 · U9 (the two-tier essentials/lifestyle reading).",
+        "sourceSection": "Requirements → unit trace",
+        "mustSurvive": true,
+        "duplicatedIn": "docs/product.md; back-nine-design skill (no color-alone)",
+        "fossilNote": ""
+      },
+      {
+        "kind": "requirement",
+        "claim": "R3 distribution of futures → Act 1 · U1.",
+        "sourceSection": "Requirements → unit trace",
+        "mustSurvive": true,
+        "duplicatedIn": "docs/product.md",
+        "fossilNote": ""
+      },
+      {
+        "kind": "requirement",
+        "claim": "R4 detail on demand, never unsolicited → Act 2 · U7, Act 3 · U10–U12, Act 4 · U16.",
+        "sourceSection": "Requirements → unit trace",
+        "mustSurvive": true,
+        "duplicatedIn": "docs/product.md",
+        "fossilNote": ""
+      },
+      {
+        "kind": "requirement",
+        "claim": "R5 guided one-question intake (the single-total-spend on-ramp superseded 2026-06-08 by R35's account-level setup — one flow, both user states) → Act 2 · U5 → D1 (the U5 reshape).",
+        "sourceSection": "Requirements → unit trace",
+        "mustSurvive": true,
+        "duplicatedIn": "docs/product.md; Superseded/changelog (single-total-spend struck); R35 entry",
+        "fossilNote": "The parenthetical carries the as-built supersession truth (R5's on-ramp replaced by R35's account-level setup, 2026-06-08) — not pure changelog, it explains why R5 maps to D1"
+      },
+      {
+        "kind": "requirement",
+        "claim": "R6 power-user escape hatch → Act 3 · U12.",
+        "sourceSection": "Requirements → unit trace",
+        "mustSurvive": true,
+        "duplicatedIn": "docs/product.md",
+        "fossilNote": ""
+      },
+      {
+        "kind": "requirement",
+        "claim": "R7 every assumption (and every recommendation input/reasoning) visible+editable → Act 3 · U12, Act 4 · U16.",
+        "sourceSection": "Requirements → unit trace",
+        "mustSurvive": true,
+        "duplicatedIn": "docs/product.md",
+        "fossilNote": ""
+      },
+      {
+        "kind": "requirement",
+        "claim": "R8 input mirrors output; refinement sharpens (narrows on precision, shifts on a correction) → Act 2 · U5, Act 3 · U12.",
+        "sourceSection": "Requirements → unit trace",
+        "mustSurvive": true,
+        "duplicatedIn": "docs/product.md",
+        "fossilNote": ""
+      },
+      {
+        "kind": "requirement",
+        "claim": "R9 propose a strategy over two coupled solver-optimized controls (sequencing + conversion) → substrate Act 1 · U1–U2; manual Act 3 · U10; solver Act 4 · U15.",
+        "sourceSection": "Requirements → unit trace",
+        "mustSurvive": true,
+        "duplicatedIn": "docs/product.md",
+        "fossilNote": ""
+      },
+      {
+        "kind": "requirement",
+        "claim": "R10 recommend-second flow (spine first, then strategy, comparative reasoning on demand, user tunes/overrides) → Act 4 · U16.",
+        "sourceSection": "Requirements → unit trace",
+        "mustSurvive": true,
+        "duplicatedIn": "docs/product.md",
+        "fossilNote": ""
+      },
+      {
+        "kind": "requirement",
+        "claim": "R11 calm, invited; never a nagging alert → Act 3 · U10, Act 4 · U16.",
+        "sourceSection": "Requirements → unit trace",
+        "mustSurvive": true,
+        "duplicatedIn": "docs/product.md",
+        "fossilNote": ""
+      },
+      {
+        "kind": "requirement",
+        "claim": "R12 recommends, but every recommendation probabilistically framed; certainty banned; hedge required → copyGuard Act 2 · U7, extended Act 3 · U10 + Act 4 · U16.",
+        "sourceSection": "Requirements → unit trace",
+        "mustSurvive": true,
+        "duplicatedIn": "docs/product.md; U7 note (copyGuard born here)",
+        "fossilNote": ""
+      },
+      {
+        "kind": "requirement",
+        "claim": "R13 optional honest-limits note (honesty grounds, not a Terms requirement) → Act 1 · U0 (static), Act 4 · U16.",
+        "sourceSection": "Requirements → unit trace",
+        "mustSurvive": true,
+        "duplicatedIn": "docs/product.md",
+        "fossilNote": ""
+      },
+      {
+        "kind": "requirement",
+        "claim": "R14 plain not dumbed-down → Act 2 · U7, Act 4 · U16.",
+        "sourceSection": "Requirements → unit trace",
+        "mustSurvive": true,
+        "duplicatedIn": "docs/product.md",
+        "fossilNote": ""
+      },
+      {
+        "kind": "requirement",
+        "claim": "R15 no marketing privacy claim; honesty-about-architecture survives → Act 1 · U4.",
+        "sourceSection": "Requirements → unit trace",
+        "mustSurvive": true,
+        "duplicatedIn": "docs/product.md",
+        "fossilNote": ""
+      },
+      {
+        "kind": "requirement",
+        "claim": "R16 encrypted at rest + local access guarded (PBKDF2-600k acceptable) → Act 1 · U4.",
+        "sourceSection": "Requirements → unit trace",
+        "mustSurvive": true,
+        "duplicatedIn": "docs/product.md; U4 note (PBKDF2-600k, AES-GCM)",
+        "fossilNote": ""
+      },
+      {
+        "kind": "requirement",
+        "claim": "R17 survivor recovery load-bearing (phrase + mandatory export, two-person posture) → Act 1 · U4, Act 2 · U8, Act 3 · U13.",
+        "sourceSection": "Requirements → unit trace",
+        "mustSurvive": true,
+        "duplicatedIn": "docs/product.md",
+        "fossilNote": ""
+      },
+      {
+        "kind": "requirement",
+        "claim": "R18 export/back-up for durability → Act 1 · U4, Act 2 · U8.",
+        "sourceSection": "Requirements → unit trace",
+        "mustSurvive": true,
+        "duplicatedIn": "docs/product.md",
+        "fossilNote": ""
+      },
+      {
+        "kind": "requirement",
+        "claim": "R19 manual inputs sanity-checked, never falsely confident → engine half Act 1 · U1; intake half Act 2 · U5; control surfaces Act 3 · U10; budget Act 3 · U9.",
+        "sourceSection": "Requirements → unit trace",
+        "mustSurvive": true,
+        "duplicatedIn": "docs/product.md",
+        "fossilNote": ""
+      },
+      {
+        "kind": "requirement",
+        "claim": "R20 itemized, time-boxed budget (essentials=floor / discretionary=surplus) → Act 3 · U9.",
+        "sourceSection": "Requirements → unit trace",
+        "mustSurvive": true,
+        "duplicatedIn": "docs/product.md",
+        "fossilNote": ""
+      },
+      {
+        "kind": "requirement",
+        "claim": "R21 lexicographic objective (survival floor → user-chosen surplus goal; objective metric ≡ headline metric) → Act 4 · U15 (objective), Act 4 · U16 (headline pivot).",
+        "sourceSection": "Requirements → unit trace",
+        "mustSurvive": true,
+        "duplicatedIn": "docs/product.md",
+        "fossilNote": ""
+      },
+      {
+        "kind": "requirement",
+        "claim": "R22 every recommendation grades its own confidence; hedge rides the headline → Act 4 · U14 (calibration), Act 4 · U16 (render).",
+        "sourceSection": "Requirements → unit trace",
+        "mustSurvive": true,
+        "duplicatedIn": "docs/product.md",
+        "fossilNote": ""
+      },
+      {
+        "kind": "requirement",
+        "claim": "R23 comparative depth (why this beat the runner-up; retain the runner-up) → Act 4 · U15–U16.",
+        "sourceSection": "Requirements → unit trace",
+        "mustSurvive": true,
+        "duplicatedIn": "docs/product.md",
+        "fossilNote": ""
+      },
+      {
+        "kind": "requirement",
+        "claim": "R24 income-dependent healthcare across the Medicare line (ACA-PTC / IRMAA / HSA) → overlay Act 1 · U3; surfaces Act 3 · U11.",
+        "sourceSection": "Requirements → unit trace",
+        "mustSurvive": true,
+        "duplicatedIn": "docs/product.md",
+        "fossilNote": ""
+      },
+      {
+        "kind": "requirement",
+        "claim": "R25 cardinal honesty: calm-but-wrong is the sin; the bar rises for a recommender; 'just for friends' never softens validation → validation Act 4 · U14; copyGuard everywhere; N=1 cold-reads.",
+        "sourceSection": "Requirements → unit trace",
+        "mustSurvive": true,
+        "duplicatedIn": "docs/product.md (cardinal rule); CLAUDE.md (calm-but-wrong is the sin)",
+        "fossilNote": ""
+      },
+      {
+        "kind": "requirement",
+        "claim": "SC correctness two-tier (engine number right + recommendation right vs an optimality/ranking oracle, ranking-stability, grade calibration) → Act 1 · U1 (number), Act 4 · U14 (recommendation).",
+        "sourceSection": "Requirements → unit trace",
+        "mustSurvive": true,
+        "duplicatedIn": "docs/product.md (success criteria); validation gates (solver-blocking oracle)",
+        "fossilNote": ""
+      },
+      {
+        "kind": "requirement",
+        "claim": "R26 the fuck-off date = the existing engine swept over the household work-stop date-offset Y (never a household 'age'); non-monotone-robust exhaustive sweep, never a bisection → C3 (dateSearch.ts).",
+        "sourceSection": "Requirements → unit trace",
+        "mustSurvive": true,
+        "duplicatedIn": "docs/product.md; docs/decisions/accumulation-fuck-off-date.md; validation gates (non-monotone-robust contract)",
+        "fossilNote": "R26–R39 are the 2026-06-08 full-projection accumulation expansion"
+      },
+      {
+        "kind": "requirement",
+        "claim": "R27 the answer is two dates (floor + lifestyle) from the lexicographic objective; one-sided window-floor semantic → C3 (engine) + D2 (surface); the two-track split rides Act 3 · U9's degenerate-collapse.",
+        "sourceSection": "Requirements → unit trace",
+        "mustSurvive": true,
+        "duplicatedIn": "docs/product.md; docs/decisions/accumulation-fuck-off-date.md",
+        "fossilNote": "R26–R39 are the 2026-06-08 accumulation expansion"
+      },
+      {
+        "kind": "requirement",
+        "claim": "R28 both dates confidence-graded, never hard lines; re-grade on strategy override → C3 + D2.",
+        "sourceSection": "Requirements → unit trace",
+        "mustSurvive": true,
+        "duplicatedIn": "docs/product.md; docs/decisions/accumulation-fuck-off-date.md",
+        "fossilNote": "R26–R39 are the 2026-06-08 accumulation expansion"
+      },
+      {
+        "kind": "requirement",
+        "claim": "R29 framing adapts to user state (date for not-yet-retired; spine confidence for already-retired) → D2 (state-adaptive first answer).",
+        "sourceSection": "Requirements → unit trace",
+        "mustSurvive": true,
+        "duplicatedIn": "docs/product.md; CLAUDE.md (state-adaptive first magic moment)",
+        "fossilNote": "R26–R39 are the 2026-06-08 accumulation expansion"
+      },
+      {
+        "kind": "requirement",
+        "claim": "R30 model the pre-retirement accumulation phase (contributions + growth → retirement-onset balance + basis) → C2 (accumulation projection).",
+        "sourceSection": "Requirements → unit trace",
+        "mustSurvive": true,
+        "duplicatedIn": "docs/product.md; docs/decisions/accumulation-fuck-off-date.md",
+        "fossilNote": "R26–R39 are the 2026-06-08 accumulation expansion"
+      },
+      {
+        "kind": "requirement",
+        "claim": "R31 contributions per-account, flat-real, stop at the tested date; employer match captured (pre-tax even on a Roth 401k) → C2 (engine) + D1 (intake) + C1 (limit constants).",
+        "sourceSection": "Requirements → unit trace",
+        "mustSurvive": true,
+        "duplicatedIn": "docs/product.md; docs/decisions/accumulation-fuck-off-date.md",
+        "fossilNote": "R26–R39 are the 2026-06-08 accumulation expansion"
+      },
+      {
+        "kind": "requirement",
+        "claim": "R32 v1 projects, does not optimize accumulation; solver stays decumulation-only → Scope Boundaries (product); C3 (date-search ≠ solver).",
+        "sourceSection": "Requirements → unit trace",
+        "mustSurvive": true,
+        "duplicatedIn": "docs/product.md (Scope Boundaries); R32-as-built (date-search ≠ solver)",
+        "fossilNote": "R26–R39 are the 2026-06-08 accumulation expansion"
+      },
+      {
+        "kind": "requirement",
+        "claim": "R33 healthcare OFF during accumulation, ON at the tested date — per-candidate cost-stream construction (the engine has no retirement gate) → C3 (buildCandidateParams(Y)) + C2.",
+        "sourceSection": "Requirements → unit trace",
+        "mustSurvive": true,
+        "duplicatedIn": "docs/product.md; docs/decisions/accumulation-fuck-off-date.md",
+        "fossilNote": "R26–R39 are the 2026-06-08 accumulation expansion"
+      },
+      {
+        "kind": "requirement",
+        "claim": "R34 accumulation inherits the engine invariants — ONE continuous absolute-year draw timeline (CRN); one per-path future end-to-end; empty phase reduces byte-identically → C2 (the load-bearing engine contract).",
+        "sourceSection": "Requirements → unit trace",
+        "mustSurvive": true,
+        "duplicatedIn": "docs/product.md; docs/architecture.md (CRN single shared draw, reduce-to-spine)",
+        "fossilNote": "R26–R39 are the 2026-06-08 accumulation expansion"
+      },
+      {
+        "kind": "requirement",
+        "claim": "R35 the first answer from a ~5-min account-level guided setup, surface-early, single entry pass, both user states → D1 (intake reshape) + the master Success-Criterion edit (done 2026-06-10).",
+        "sourceSection": "Requirements → unit trace",
+        "mustSurvive": true,
+        "duplicatedIn": "docs/product.md; Superseded/changelog (single-spend on-ramp replaced by R35, master edit 2026-06-10); R5 entry",
+        "fossilNote": "R26–R39 are the 2026-06-08 accumulation expansion; the master Success-Criterion edit was folded 2026-06-10"
+      },
+      {
+        "kind": "requirement",
+        "claim": "R36 account values user-entered; no live price lookup → D1 + Scope Boundaries.",
+        "sourceSection": "Requirements → unit trace",
+        "mustSurvive": true,
+        "duplicatedIn": "docs/product.md (Scope Boundaries)",
+        "fossilNote": "R26–R39 are the 2026-06-08 accumulation expansion"
+      },
+      {
+        "kind": "requirement",
+        "claim": "R37 per-ticker holdings collapse to one household blend; bundled ticker→asset-class table + manual classification; basis per account, not per lot → C1 (tickerBlend.ts) + D1 (entry + manual fallback).",
+        "sourceSection": "Requirements → unit trace",
+        "mustSurvive": true,
+        "duplicatedIn": "docs/product.md; docs/plans/features/portfolio-holdings.md; Cross-cutting features (Portfolio holdings)",
+        "fossilNote": "R26–R39 are the 2026-06-08 accumulation expansion"
+      },
+      {
+        "kind": "requirement",
+        "claim": "R38 HSA contributions → accumulation; HSA spend → decumulation (the resumed U3·M5) → C2 (contributions) + B1 (U3·M5 spend).",
+        "sourceSection": "Requirements → unit trace",
+        "mustSurvive": true,
+        "duplicatedIn": "docs/product.md; U3 note (HSA spend = resumed U3·M5 'B1', not yet built)",
+        "fossilNote": "R26–R39 are the 2026-06-08 accumulation expansion; 'B1' is the as-built label for the deferred U3·M5 HSA-spend work"
+      },
+      {
+        "kind": "requirement",
+        "claim": "R39 new PII inherits encryption + the schema ladder (additive schemaVersion bump) → C2/D1 schema fields; consumed by Act 1 · U4's migration ladder.",
+        "sourceSection": "Requirements → unit trace",
+        "mustSurvive": true,
+        "duplicatedIn": "docs/product.md; U4 note (migration ladder, schemaVersion)",
+        "fossilNote": "R26–R39 are the 2026-06-08 accumulation expansion"
+      },
+      {
+        "kind": "requirement",
+        "claim": "R40 generic per-person ongoing non-earned income stream (pension/rental/annuity/alimony/other); reduces-to-spine byte-identically; opt-in off the guided path → Act 2 (engine + intake); plan docs/plans/features/other-income.md.",
+        "sourceSection": "Requirements → unit trace",
+        "mustSurvive": true,
+        "duplicatedIn": "docs/product.md; You-Are-Here Act 2 (R40 row); Cross-cutting features; What is next; docs/plans/features/other-income.md",
+        "fossilNote": "R40 is the most recent requirement, scoped after the R26–R39 accumulation expansion"
+      },
+      {
+        "kind": "scope-boundary",
+        "claim": "Validation gates preamble: these are the gates a fixture or recommendation must clear before any downstream surface treats it as golden. The full engine-validation detail (golden derivations, the SSA cohort pin, the dataset pins) lives in docs/architecture.md and docs/research/engine-validation-and-tax.md; the per-command surface is in the gates table.",
+        "sourceSection": "Validation gates (preamble)",
+        "mustSurvive": true,
+        "duplicatedIn": "docs/architecture.md; docs/research/engine-validation-and-tax.md",
+        "fossilNote": ""
+      },
+      {
+        "kind": "build-detail-or-KTD",
+        "claim": "Gate — Typecheck: tsc --noEmit, must pass before any browser touch. Command: pnpm typecheck.",
+        "sourceSection": "Validation gates (table)",
+        "mustSurvive": true,
+        "duplicatedIn": "CLAUDE.md commands table",
+        "fossilNote": ""
+      },
+      {
+        "kind": "number-or-figure",
+        "claim": "Gate — Tests: 942 vitest across 44 files (Vitest 4, globals:false); externally-derived goldens, absence-tests paired with presence companions. Command: pnpm test.",
+        "sourceSection": "Validation gates (table)",
+        "mustSurvive": true,
+        "duplicatedIn": "CLAUDE.md commands (pnpm test); MEMORY (721 tests — STALE, this doc's 942/44 is current); README likely carries a test count",
+        "fossilNote": ""
+      },
+      {
+        "kind": "build-detail-or-KTD",
+        "claim": "Gate — Lint: layer-boundary + engine-purity rules (no clock/entropy/env inside src/engine/**). Command: pnpm lint.",
+        "sourceSection": "Validation gates (table)",
+        "mustSurvive": true,
+        "duplicatedIn": "CLAUDE.md (layers & import boundaries; engine purity bans Math.random/crypto.getRandomValues/Date/performance/process)",
+        "fossilNote": ""
+      },
+      {
+        "kind": "build-detail-or-KTD",
+        "claim": "Gate — ACA re-verify: fails the build if the enhanced-subsidy legislative entry is stale/unconfirmed — live, possibly-retroactive policy. Command: pnpm verify:aca.",
+        "sourceSection": "Validation gates (table)",
+        "mustSurvive": true,
+        "duplicatedIn": "CLAUDE.md (verify:aca gate; aca-last-verified.json; reVerifyEveryBuild)",
+        "fossilNote": ""
+      },
+      {
+        "kind": "number-or-figure",
+        "claim": "Gate — Bundle budget: initial-JS byte sentinel ≤ 300 KiB entry JS; currently 197.8 KiB. Command: pnpm verify:bundle.",
+        "sourceSection": "Validation gates (table)",
+        "mustSurvive": true,
+        "duplicatedIn": "CLAUDE.md (verify:bundle ≤ 300 KiB entry JS)",
+        "fossilNote": ""
+      },
+      {
+        "kind": "build-detail-or-KTD",
+        "claim": "Gate — CSP enforcement: a real Chromium blocks an injected inline script + a cross-origin fetch, while the engine worker still constructs — each with a no-CSP control arm. Command: pnpm verify:csp.",
+        "sourceSection": "Validation gates (table)",
+        "mustSurvive": true,
+        "duplicatedIn": "CLAUDE.md (verify:csp; e2e/csp.spec.ts; serve-dist-with-headers.ts; no-CSP control arm)",
+        "fossilNote": ""
+      },
+      {
+        "kind": "invariant",
+        "claim": "Solver-blocking gate (Act 4, not yet live): the optimality oracle (hand-computable known-best cases, including the after-tax leave-more inversion and the no-change case) must exist and pass BEFORE the solver is allowed to recommend — enforced structurally as a harness-minted 'oracle-cleared' token, taken as a required parameter, withheld until every check passes AND every rec-relevant primary is pinned (directionalUntilPinned === false) AND ε is calibrated. Skipping validation or recommending on directional fixtures is a compile error, not a discipline check. The date-search carries the non-monotone-robust contract and the empty-phase byte-identity gate (both shipped with C2/C3). The N=1 cold-read judges tone; the automated oracle judges correctness — never the reverse.",
+        "sourceSection": "Validation gates (solver-blocking)",
+        "mustSurvive": true,
+        "duplicatedIn": "CLAUDE.md (constants discipline: directionalUntilPinned, Unsourced sentinel; the bar: oracle judges correctness, cold-read judges tone); U14 note (oracle-cleared token); docs/product.md / docs/architecture.md",
+        "fossilNote": ""
+      },
+      {
+        "kind": "status-as-built",
+        "claim": "What is next: the immediate next build is R40 — other income in retirement (planned, build-ready, zero code) — the engine has no concept of ongoing non-earned income today, and for a household with a pension or rental that gap is the difference between a defensibly-conservative answer and a confidently-wrong-optimistic one. Plan: docs/plans/features/other-income.md.",
+        "sourceSection": "What is next",
+        "mustSurvive": true,
+        "duplicatedIn": "You-Are-Here Act 2 (R40 row); Cross-cutting features; requirements trace R40; TODO.md",
+        "fossilNote": ""
+      },
+      {
+        "kind": "status-as-built",
+        "claim": "After R40, the Act-2 answer surface still owes: U8 (the first encrypted Save + recovery-phrase + export), the U6 confidence-band render, U7 (the confidence statement), and D2 (the state-adaptive surface + two-pane laptop layout). Act 3 (Controls) and Act 4 (Recommendation) follow in order; Act 4 is the actual differentiator and is still entirely ahead.",
+        "sourceSection": "What is next",
+        "mustSurvive": true,
+        "duplicatedIn": "You-Are-Here Act 2 + Act 3 + Act 4 tables",
+        "fossilNote": ""
+      },
+      {
+        "kind": "decision-rationale",
+        "claim": "Single-ticker holdings were re-scoped to exact per-account stock/bond/cash %: single-ticker entry was removed; accounts now take an exact stock/bond/cash percentage that collapses to the one household blend.",
+        "sourceSection": "Superseded / changelog",
+        "mustSurvive": true,
+        "duplicatedIn": "Cross-cutting features (Portfolio holdings, scoping); docs/plans/features/portfolio-holdings.md; requirements trace R37",
+        "fossilNote": "Filed under changelog, but this is an as-built scope truth (the current holdings model), not pure history — must survive"
+      },
+      {
+        "kind": "decision-rationale",
+        "claim": "The single-total-spend on-ramp was struck: the v2 ~3-minute single-spend on-ramp was replaced by R35's ~5-minute account-level guided setup (the one master edit folded 2026-06-10). The household spend figure survives as a collected input; the flow shape is what changed.",
+        "sourceSection": "Superseded / changelog",
+        "mustSurvive": true,
+        "duplicatedIn": "requirements trace R5 + R35; docs/product.md",
+        "fossilNote": "Filed under changelog, but the as-built truth (household spend still collected; flow is now ~5-min account-level) must survive; the ~3-min v2 framing itself is droppable history"
+      },
+      {
+        "kind": "definition-term",
+        "claim": "'Phases' → 'Acts' rename: the four phases (Foundation → First Answer → Controls → Solver & Recommendation) are renamed to four acts (Engine → First Answer → Controls → Recommendation) — the same structure, clearer prose. The U-numbering is unchanged. Code comments still say Pn (Phase) for the same chapter.",
+        "sourceSection": "Superseded / changelog",
+        "mustSurvive": true,
+        "duplicatedIn": "ID scheme (Actn ↔ Pn join)",
+        "fossilNote": "Filed under changelog; the as-built truth that survives is the Act↔Phase(Pn) equivalence (code still uses Pn), not the rename event itself"
+      }
+    ],
+    "historyToDrop": [
+      "The old 'charter > requirements > roadmap' precedence chain is retired — it was a scar from the commercial→personal pivot, with the roadmap pointing upward to a separate north-star and a separate v2 requirements brainstorm as sources of truth. That chain is gone (product.md now carries the why + requirements ledger, this roadmap carries acts + status). PURE retired-structure history.",
+      "The old docs/plans/back-nine-mvp/roadmap.md + four phase docs and the docs/plans/2026-06-08-001-feat-fuck-off-date-accumulation-plan.md accumulation plan were the quarry for this rebuild and have been retired to git history (this reconcile, harvest-verified). PURE provenance/retired-file history.",
+      "The 'Superseded / changelog' section's framing line ('Live text above reads current. The superseded structure, recorded once:') — pure changelog scaffolding.",
+      "The doc's own front-matter changelog fields (status: living, created/updated: 2026-06-17, derives-from) — metadata, not content to re-author.",
+      "The ~3-minute framing of the old v2 single-spend on-ramp (the magnitude of the OLD flow) — the as-built truth that survives is the current ~5-min account-level setup; the old duration itself is droppable.",
+      "The 'Phases' literal names as a renamed-FROM list (Foundation/First Answer/Controls/Solver & Recommendation) — the rename event is history; only the surviving Act↔Pn equivalence matters."
+    ]
+  }
+}

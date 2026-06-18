@@ -12,7 +12,7 @@
 > `architecture` / `glossary` re-authored present-tense from the ledger (SS sub-engine folded into
 > architecture §7.7; accumulation as first-class engine content; R40 de-special-cased; all four
 > changelog/Summary sections killed; zero dead links; 942 tests still green).
-> **The next session resumes at M3** (create the `decisions/` records) — see *RESUME HERE*.
+> **The next session resumes at M4** (rewrite the plans present-tense) — see *RESUME HERE*.
 > Rationale: `.recovery/doc-restructure-judge-output.md` (judge fan-out — note its "preserve"
 > spine was overridden by Q6). Must-survive net: `.recovery/docs-quarry-inventory.json` (16 docs)
 > + `.recovery/quarry-roadmap.json`.
@@ -21,32 +21,44 @@
 
 ## ▶ RESUME HERE (fresh session)
 
-Foundation (CP1 + CP1.5), **M1 (the migration ledger)**, and **M2 (the four hubs)** are done and
-committed. To continue cold:
+Foundation (CP1 + CP1.5), **M1 (the migration ledger)**, **M2 (the four hubs)**, and **M3 (the
+`decisions/` records)** are done and committed. To continue cold:
 1. **This file** — the locked decisions (Q1–Q6), the target tree, the M1–M6 sequence.
 2. **The ledger** — `.recovery/migration-ledger.md`: the rewrite SPEC. Every must-survive fact, routed
    to its new-tree home by section, with disposition (canonical/pointer/reframe/no-move/drop), dedup
    notes, present-tense reframe instructions, and a **Review Queue appendix** (the 74 verify findings +
-   the 14 cross-home relocations). This is what M3–M5 author FROM and what M6 greps against.
+   the 14 cross-home relocations). This is what M4–M5 author FROM and what M6 greps against.
    (The quarry — `docs-quarry-inventory.json` + `quarry-roadmap.json`, the 1,078-fact anti-amnesia
    net — is the ledger's source; consult it only to expand a `sig`/digest back to its full claim.)
 
-Start at **M3** — create the three NEW `decisions/` records from the ledger's `decisions/` home-sections
-(`ss-computation` lines 3769–3861 · `other-income-r40` 3862–3992 · `portfolio-holdings` 3993–4048) and
-reframe the existing `accumulation-fuck-off-date` record present-tense (3610–3768). **The M2 hubs already
-reference these three records by name in inline code (not links) — M3 must linkify those once the files
-exist** (`product.md` → `decisions/other-income-r40.md`; `architecture.md §7.7` → `decisions/ss-computation.md`;
-`glossary.md` KTD → `decisions/other-income-r40.md`). **Do NOT delete anything under `docs/plans/features/`
-or strip any history until M6's zero-loss gate.** The working tree is clean at the M2 commit.
+Start at **M4 — the plans.** Rewrite `plans/1-engine` … `plans/4-recommendation` present-tense from the
+ledger's `## docs/plans/*` home-sections: integrate C1–C3 as first-class engine content in plan-1 (no
+"fold" framing), fold the R40 + portfolio build narrative into plan-2, and **right-size plan-3 + plan-4**
+(they are forward-looking acts, not as-built records). The plans now **point into** the four `decisions/`
+records M3 created (`accumulation-fuck-off-date`, `ss-computation`, `other-income-r40`,
+`portfolio-holdings`) for the WHY — keep the plans build-narrative-only and cite the §-anchors rather than
+restating the rationale. **Do NOT delete anything under `docs/plans/features/` or strip any history until
+M6's zero-loss gate.** The working tree is clean at the M3 commit.
 
-> **M2 carry-forward notes (for M6's double-check):**
+> **M3 carry-forward notes (for M4 + M6's double-check):**
+> - The four `decisions/` records are committed and present-tense; `decisions/README.md`'s records table +
+>   "live elsewhere" section are repointed (SS §1–§12 and the R40 KTDs graduated out of the dissolving
+>   feature docs; the solver-oracle cases (i–v) point to `plans/4-recommendation`). The three inline-code
+>   refs the M2 hubs left are now real links. All 312 relative links in `docs/` resolve.
+> - **`features/social-security.md` + `features/other-income.md` now duplicate their graduated decision
+>   records** (by design — M6 dissolves the feature docs at the zero-loss gate). M4 must make `plans/1` and
+>   `plans/2` point at the `decisions/` records (not the feature docs) so M6's demolition leaves no dangling
+>   build-narrative reference.
+> - **Crypto-stack rationale — DECIDED M3: leave it in research, do NOT mint `decisions/crypto-stack.md`.**
+>   The crypto *invariants* are already home (architecture §7.3/§10); only the comparative *rationale*
+>   (Jazz-vs-Evolu downgrade, skip-SAB) is unhomed, and it does not meet `decisions/README`'s graduation
+>   bar (cited by §-number from multiple subsystems). It stays research-grade provenance; M5 confirms it
+>   reads present-tense there. Revisit only if a subsystem starts citing it.
+
+> **M2 carry-forward note (for M6's double-check):**
 > - Ledger row `glossary.md#67` (the BenefitPerson/H/L SS terms) carried a stale verify-pass note that
 >   "architecture §7 has no SS section." M2's radical-move #1 **creates** that section (architecture §7.7),
 >   so SS terms route to architecture §7.7 as the dominant routing intends; that note is **resolved by M2**.
-> - The ledger routes the **crypto-stack rationale** (Jazz-vs-Evolu downgrade, skip-SAB reasoning) to a
->   `decisions/crypto-stack.md` record that is **NOT in the M3 plan list**. The crypto *invariants* are
->   already home (architecture §7.3/§10); only the comparative *rationale* is unhomed. **Decide in M3/M5**
->   whether to add a `crypto-stack` decision record or leave the rationale in research.
 
 ---
 
@@ -224,8 +236,14 @@ must-survive fact is the **migration ledger** (M1) — nothing is dropped withou
   `Superseded/changelog` sections deleted; every supersession parenthetical stripped. Glossary SS terms
   repointed → architecture §7.7. Verified: zero forward-only fossils, zero dead links (decisions/* homes
   named in inline code pending M3 linkify), 942 tests still green.
-- **M3 — `decisions/`.** Create `ss-computation`, `other-income-r40` (9 KTDs), `portfolio-holdings`
-  (3 open ATC calls) from the dissolving feature docs; reframe the accumulation record present-tense.
+- **M3 — `decisions/`. ✅ DONE.** Created `ss-computation` (§1–§12 + the SSA rule-set + the
+  `realizedClaimAgeAtDeath` survivor-floor bug as institutional record + the ~75% survivor-spending
+  co-location + the MFJ→single switch), `other-income-r40` (9 KTDs + the OUT-list-with-directions +
+  provenance corrections + the five-seam frame), `portfolio-holdings` (the household-blend model + the
+  pending multi-holding recommendation + the §1014 basis decision) from the (still-present) feature docs;
+  reframed `accumulation-fuck-off-date` present-tense (stripped its `Superseded/changelog` section + the
+  v2-thesis Problem-frame story); linkified the three M2 inline-code refs; repointed `decisions/README`.
+  §1014 + no-tax-blind-arm rehomed per the ledger; crypto-stack left in research. 312/312 links resolve.
 - **M4 — the plans.** Rewrite plans 1–4 present-tense; integrate C1–C3 as first-class engine content
   in plan-1 (fold-framing gone); fold R40 + portfolio build into plan-2; **right-size plan-3 + plan-4**.
 - **M5 — research.** Both research docs present-tense; strip the history appendix, KEEP the live

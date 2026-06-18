@@ -3,7 +3,7 @@ title: The accumulation / fuck-off-date engine — the permanent §0–§7 decis
 doc-type: decision
 status: decided
 created: 2026-06-17
-updated: 2026-06-17
+updated: 2026-06-18
 derives-from: [docs/product.md, docs/architecture.md]
 sources: [docs/research/engine-validation-and-tax.md, docs/research/pre65-healthcare.md]
 ---
@@ -29,11 +29,11 @@ The product framing (the *why* — the fuck-off date as the not-yet-retired hous
 
 ## Problem frame (the decision context)
 
-The master thesis (v2) was **decumulation-only**: the engine starts at a given `initialPortfolio` and draws down. While scoping the HSA bucket we found — and **verified against source** — that the engine models **zero contributions to any bucket** (`cashTermsForYear` returns `net: Math.max(0, spending − earned − ss)`, comment *"never a contribution back"*; `stepYear` computes `afterWithdrawal = totalValue(state) − netWithdrawal` — subtraction only, no inflow path).
+The base decumulation engine starts at a given `initialPortfolio` and draws down — it models **zero contributions to any bucket** (`cashTermsForYear` returns `net: Math.max(0, spending − earned − ss)`, comment *"never a contribution back"*; `stepYear` computes `afterWithdrawal = totalValue(state) − netWithdrawal` — subtraction only, no inflow path). A decumulation-only model therefore **understates a not-yet-retired household's nest egg** — calm-but-wrong in the **pessimistic** direction (R25) — because it never models the earning-and-saving years.
 
-The product is **not a new engine** — it is the existing confidence engine run *backwards*: sweep the household work-stop **date-offset `Y`** over the existing decumulation engine, project the savings runway forward to each candidate offset, decumulate from there, and read the confidence; the earliest offset the floor holds (and keeps holding) is the answer, `today + Y`. The locked lexicographic objective makes it **two** confidence-graded dates.
+The fuck-off date is **not a new engine** — it is that same confidence engine run *backwards*: sweep the household work-stop **date-offset `Y`** over the existing decumulation engine, project the savings runway forward to each candidate offset, decumulate from there, and read the confidence; the earliest offset the floor holds (and keeps holding) is the answer, `today + Y`. The locked lexicographic objective makes it **two** confidence-graded dates.
 
-The Back Nine's real users (mid-50s, **working by choice not necessity**) ask a sharper question first: **"When can I fuck off — am I 5 years out, 7, or there now?"** The old tool could not answer that, because it never modeled the earning-and-saving years, so it would understate a not-yet-retired user's nest egg — **calm-but-wrong in the pessimistic direction** (R25). This is **not** a generic "are you on track" savings calculator — it is a **bounded on-ramp** for a near-retirement household in service of the same novel thing, the recommend-second decumulation strategist. Accumulation is the runway that lets us *solve for the date*; the draw-down strategy stays the center of gravity.
+The Back Nine's real users (mid-50s, **working by choice not necessity**) ask a sharper question first: **"When can I fuck off — am I 5 years out, 7, or there now?"** Answering it is a **bounded near-retirement on-ramp** — never a generic "are you on track" savings calculator, never a FIRE engine. Accumulation is the runway that lets us *solve for the date*, in service of the same novel thing, the recommend-second decumulation strategist, which stays the center of gravity.
 
 ---
 
@@ -174,12 +174,3 @@ These are the deliberate, recorded deviations between the §-record / unit plan 
 - **C2:** `YearContribution` carries **per-person arrays on ALL FOUR channels** (not the planned collapsed scalars) so the overlay can death-vet every credit — an unattributable aggregate can neither be vetted nor safely rejected (the insight-024 attribution fix). The dead-slot guard was lifted to a property; the Σ-overflow arm landed at both layers; the roth-destination golden was added. 40 new tests, every golden externally derived + 2-deriver panel-triangulated.
 - **C3:** the §3b mask predicate was **re-keyed construct-gated income-blind** ([AMENDED 2026-06-10, the §3b in-line annotation above]); the 9-agent adversarial verification **overturned 2 of the main loop's own dispositions**; the 462/463 premise and the 473 mutant were retired in place (the adversarial annotations above). 545 tests.
 - **B1:** the "post-65 non-qualified income-inclusion path" is encoded as the tested laundering CONTRACT (the forward landmine at the `nonSSordinary` producer + the structural type exclusion + the discriminating battery), **not** a routed dead branch — the as-we-go discipline governs; any future consumer (the P4 last-resort draw) adds the income inclusion in the SAME change.
-
----
-
-## Superseded / changelog
-
-- **Where this record used to live.** The §0–§7 decision record originated in `docs/plans/2026-06-08-001-feat-fuck-off-date-accumulation-plan.md` (the live home of the C1–C3/D1–D2/B1 unit detail + the §0–§7 record). That plan also held the full unit bodies (Goal/Files/Approach/Test-scenarios/Verification). In this rebuild, the **decisions** moved here (referenced by §-number across the repo) and the **unit bodies** moved to the readable per-act plans ([docs/plans/1-engine.md](../plans/1-engine.md), [docs/plans/2-first-answer.md](../plans/2-first-answer.md)). The old plan has been retired to git history (this reconcile, harvest-verified).
-- **The candidate-axis correction.** Earlier drafts wrote the sweep as a household "age." §0 retired that: the engine has no household age; the axis is the date-offset `Y`. (This correction also flows into the master requirements' R27 "may already be in the past" → the one-sided window-floor semantic.)
-- **The healthcare-gate correction.** The first draft claimed "healthcare ON at the tested date sets the M3/M4 age-gate boundary — not a new mechanism." That was **false against source** (caught by 4 review lenses): there is no retirement boundary in the engine; healthcare-on is **stream construction** (§3b). R33's master wording was corrected accordingly.
-- **The §2c fold correction.** Round 2 placed the overlay contribution fold *before* the bucket-scale; that was itself the regression (it earns phantom arrival-year growth or smears C across buckets). §2c fixes the fold to **after the bucket-scale, at face value**.

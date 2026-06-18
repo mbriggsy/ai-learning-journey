@@ -230,7 +230,7 @@ The engine exposes the surfaces a future solver and the wire layer consume:
 
 ### 7.7 Social Security sub-engine
 
-> A **pure** `(PIAs, claim ages, birth years) → per-person annual-benefit-stream` function, computed **once pre-loop** into `PersonOffsets.socialSecurityReal`. It consumes **zero draws** and is **CRN-invariant across date-search candidates** (the sweep shifts a claim *offset*, never a claim *age*). The decision rationale + the deferred branches are recorded in `docs/decisions/ss-computation.md`; the load-bearing mechanics are here.
+> A **pure** `(PIAs, claim ages, birth years) → per-person annual-benefit-stream` function, computed **once pre-loop** into `PersonOffsets.socialSecurityReal`. It consumes **zero draws** and is **CRN-invariant across date-search candidates** (the sweep shifts a claim *offset*, never a claim *age*). The decision rationale + the deferred branches are recorded in [docs/decisions/ss-computation.md](decisions/ss-computation.md); the load-bearing mechanics are here.
 
 - **The orchestrator `householdBenefitStreams(people)` runs once pre-loop** with three components by time-shape: (1) **own** → a resolved per-person scalar that *replaces* `socialSecurityReal` (a value reinterpret — `cashTermsForYear` and the ~10 literals are unchanged); (2) **spousal excess** → a time-gated term; (3) **survivor** → a per-path selection.
 - **Own benefit:** early-reduction + delayed-retirement credits as **exact integer fractions** off the month-count from claim age.

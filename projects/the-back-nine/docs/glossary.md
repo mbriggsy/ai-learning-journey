@@ -77,7 +77,7 @@ Sorted alphabetically; `§` and number-prefixed statutory terms are grouped at t
 
 **IRMAA-MAGI** — IRMAA's income measure: AGI + tax-exempt interest, with **no** Social Security add-back. A *different* number from ACA-MAGI. → [architecture.md §7.2](architecture.md)
 
-**KTD (Known Technical Decision)** — a load-bearing build decision, numbered so the implementation can cite it (e.g. R40's nine KTDs), recorded in its decision record (`docs/decisions/other-income-r40.md`).
+**KTD (Known Technical Decision)** — a load-bearing build decision, numbered so the implementation can cite it (e.g. R40's nine KTDs), recorded in its decision record ([docs/decisions/other-income-r40.md](decisions/other-income-r40.md)).
 
 **Lexicographic objective** — the definition of "best": **Tier 1** never drop below the survival floor (essentials), then **Tier 2** a user-chosen surplus goal (*leave more · pay less tax · live bigger now*). The objective metric **equals** the headline metric, so a recommendation can never contradict the magic moment. → [product.md](product.md) (D1 / R21)
 

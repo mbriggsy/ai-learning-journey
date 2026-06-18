@@ -3,7 +3,7 @@ title: "Act 1 — The Engine"
 doc-type: plan
 status: shipped
 created: 2026-06-17
-updated: 2026-06-17
+updated: 2026-06-18
 derives-from: [docs/product.md, docs/roadmap.md]
 lifecycle:
   coded: 2026-06-11
@@ -12,7 +12,7 @@ lifecycle:
 
 # Act 1 — The Engine
 
-This is the as-built plan for Act 1: the deterministic Monte Carlo engine, the two zero-draw overlays both controls will stand on, the encrypted-at-rest store, and the accumulation fold that produces the fuck-off date. It is the single home for the U0–U4 and C1–C3 unit bodies.
+This is the as-built plan for Act 1: the deterministic Monte Carlo engine, the two zero-draw overlays both controls will stand on, the encrypted-at-rest store, and the accumulation projection + date-search that produce the fuck-off date. It is the single home for the U0–U4 and C1–C3 unit bodies.
 
 **Status: shipped, reviewed, and pinned. Act 1 closed 2026-06-11.** Nothing user-facing ships in this act — the engine's number must be *right*, the overlays must reduce byte-identically to the validated spine when off, and the store's guarantee must be *proven* before any surface consumes them. Every validation gate is green (typecheck · the full vitest suite · lint · `verify:aca` · the bundle budget · `verify:csp`); the live counts live once in [roadmap.md](../roadmap.md#validation-gates), not restated here.
 
@@ -36,8 +36,9 @@ Requirement numbers (R1–R40) are the locked contract in [docs/product.md](../p
 | **C1** | Contribution/HSA-limit constants + the ticker→asset-class blend table | R31, R37, R19, R36 |
 | **C2** | Accumulation projection: the signed per-bucket contribution inflow on the one continuous CRN timeline | R30, R31, R33, R34, R38, R19 |
 | **C3** | The date-search: the non-monotone-robust sweep over the work-stop offset — the fuck-off date | R26, R27, R28, R32, R33, R34, R25 |
+| **SS** | The Social Security sub-engine: own + spousal (Method C) + survivor (§202 / RIB-LIM), driven by per-person PIA + claim age | R9-adjacent, R19 |
 
-The C-units are the 2026-06-08 accumulation fold. They land at engine altitude, extend the U-numbering without renumbering it, and **extend, never reopen** the shipped U0–U3 contracts. The construct-absent / `Y == 0` byte-identity goldens are the proof the spine and every shipped fixture stay unperturbed.
+The C-units are first-class engine content — they land at engine altitude, extend the U-numbering without renumbering it, and **extend, never reopen** the shipped U0–U3 contracts. The construct-absent / `Y == 0` byte-identity goldens are the proof the spine and every shipped fixture stay unperturbed. The SS sub-engine is a later pure pre-loop build that feeds the same cash seam; its *decisions* live in [docs/decisions/ss-computation.md](../decisions/ss-computation.md) and this plan records only what it shipped.
 
 ---
 
@@ -198,9 +199,30 @@ The C-units are the 2026-06-08 accumulation fold. They land at engine altitude, 
 
 ---
 
-## Verbatim-preserved load-bearing facts
+## SS — Social Security sub-engine *(own + spousal + survivor, from PIA + claim age)*
 
-These are quoted facts from the source plan, preserved exactly because the numbers/values are load-bearing and not to be paraphrased:
+**Goal.** A pure sub-engine that computes each person's actual annual SS benefit — own early-reduction / delayed-credit, the Method C spousal **excess**, and the §202 **survivor** benefit with RIB-LIM — from a per-person **PIA + claim age**, computed once pre-loop and feeding the existing cash seam. It replaces the old user-supplied flat `socialSecurityReal` figure.
+
+**Requirements.** R9-adjacent (the tax/income picture the controls and solver move), R19 (finiteness-first on the new per-person inputs), the correctness success criterion.
+
+**Why it's computed, not asked** — the *decisions* (the three correctness gaps that force in-engine computation, Method C vs `max()`, the survivor §202 lock-flat, RIB-LIM, the constants-module shape, the stop-early intake routing, the P4 deferrals) live in the [§1–§12 decision record](../decisions/ss-computation.md). The **mechanics** (the pure pre-loop function, zero draws, CRN-invariance across date-search candidates) live in [architecture.md §7.7](../architecture.md). This section records only what shipped.
+
+**As built.**
+
+- **A pure sub-engine, computed pre-loop.** `src/engine/socialSecurityBenefit.ts` holds `adjustOwnBenefit`, `reduceSpouseExcess`, `householdBenefitStreams`, `survivorBenefitAnnual`, and `realizedClaimAgeAtDeath`. It populates the existing per-person benefit slot; `cashTermsForYear`, the §86 provisional-income overlay, and the date-search sweep are downstream and structurally unchanged. The statutory constants live in `src/engine/constants/socialSecurity.ts` (a `Sourced` table with `legalBasis`); the `FullRetirementAge` / `ReductionSchedule` / `RIB_LIM` shapes in `constants/types.ts`.
+- **The input swap was a semantic migration, not a rename.** `PersonInputs` carries `pia` + `socialSecurityClaimAge` (`PersonInputsV3 extends PersonInputs`, so `ScenarioV3` persists it transitively). The swap touched **84 occurrences across 16 files** — semantic, because the old value was the *already-adjusted* benefit and the new `pia` is the *FRA* benefit, so every non-FRA-claim fixture was reinterpreted (`$X@62 → 0.70·X`), and the two heaviest `simulate.test.ts` fixtures (which hand-reimplemented the seam and asserted byte-exactness) were structural **rewrites** with their impossible claim ages (75/72) dropped to ≤70.
+- **`adjustOwnBenefit(pia, claimAgeMonths, fraMonths)`** — `n = fraMonths − claimAgeMonths`; early (`n > 0`) `factor = n ≤ 36 ? (180−n)/180 : (192−(n−36))/240`; delayed (`n < 0`) `factor = 1 + min(−n, drcMonthsCap)·(2/3)/100` (2/3 of 1% per month) with `drcMonthsCap = 840 − fraMonths`; `factor = 1` at FRA; `benefit = floorToDime(pia · factor)`. The verified anchors — `0.7000 @62/FRA67`, `1.24 @70/FRA67` — are cited to [research](../research/engine-validation-and-tax.md).
+- **The survivor per-path plumbing is the real new work.** The seam recovers the **deceased's index**, the survivor's **age at `t`** (`currentAge + t`), and the deceased's **RIB-LIM-capped survivor base** — precomputing **two** `survivorBenefitFull` values pre-loop and **selecting per path** at the death offset, with the survivor branch computing `max(ownStream, survivorStream)` (a legitimate larger-of, unlike the §4 spousal `max()`).
+- **Type hygiene for the legacy codec arms.** Because `Scenario` (v1) and `ScenarioV2` reference the same base `PersonInputs`, dropping `socialSecurityReal` would strip it from the v1/v2 type shapes (the mapped-type guards surface this at compile). A frozen **`PersonInputsLegacy`** carrying `socialSecurityReal` backs the v1/v2 interfaces + codec arms, while the live `PersonInputs` carries `pia` — pure type hygiene (no v1/v2 blobs exist; save/load is unbuilt).
+- **The shipped test matrix.** The single-earner/homemaker reduction; the excess **end-gate** (L's excess → $0 at H's death, no excess+survivor double-count); the survivor **flat-lock** (the reduction factor constant from start to horizon); the survivor **`max()`-relapse** golden (the §202 value ≠ a naive `max(deceasedScalar, survivorScalar)`); **survivor-off** byte-identity (no death ⇒ the survivor branch never fires); and the property tests (household total monotone non-decreasing in each PIA, dual-earner strictly ≥ naive `max()`, claim ∈[62,70] finite, excess ≥ 0). The POMS oracle goldens are externally derived (DND/012 — the values are in the decision record §11).
+- **The cardinal-rule bug the integration review caught.** A holistic review found an **optimistic survivor-floor overstatement** — building the deceased's survivor base from the household's *planned* claim age credited a delayed-retirement credit the deceased never lived to file. The fix, `realizedClaimAgeAtDeath = max(min(planned, ageAtDeath), ⌊FRA⌋)`, realizes the planned claim against the path in the seam. The bug, the fix, and the lasting lesson are institutional record in [ss-computation.md](../decisions/ss-computation.md) and [insight 040](../insights/040-an-integration-seam-must-realize-a-planned-input-the-stochastic-timeline-can-preempt.md).
+- **Reduce-to-spine.** PIA=0 (all persons) ⇒ own/excess/survivor all zero ⇒ `max(0,0)=0` ⇒ byte-identical to the prior `socialSecurityReal=0` Trinity/Bengen spine.
+
+---
+
+## Load-bearing pinned facts
+
+These figures are load-bearing — the exact values matter and must not be paraphrased. (Dated tax/health/contribution constants live canonically, year-keyed and cited, in `src/engine/constants/`; the values below are the engine pins the unit bodies above depend on.)
 
 - Trinity corporate arm: **37/39 ≈ 94.9% vs the published 95.1%**, same failing cohorts (1965/66) — `damodaranSeries.ts`.
 - Bengen proxy: Damodaran 10-yr-Treasury arm, **SAFEMAX-analogue ~3.67% vs the published 4.15%**, worst-cohort structure 1966/65/64.
@@ -219,20 +241,7 @@ These are quoted facts from the source plan, preserved exactly because the numbe
 
 ---
 
-## Pointers
+## Pointers — the decision records
 
-- **The Social Security sub-engine** — own + spousal (Method C) + survivor (§202 / RIB-LIM), driven by per-person PIA + claim age. Also shipped and reviewed (the review caught and fixed a cardinal-sin optimistic survivor-floor bug). It feeds the same cash seam this act's overlays use. Plan: [docs/plans/features/social-security.md](features/social-security.md).
 - **The accumulation / fuck-off-date engine decision record** — the permanent §0–§7 record of *why* C1–C3 are built the way they are (the one continuous timeline, the signed inflow + its golden, the date-search-is-not-the-solver stance, the per-candidate stream construction). The C-unit bodies above cite "§3b", "§7", etc. into it. Record: [docs/decisions/accumulation-fuck-off-date.md](../decisions/accumulation-fuck-off-date.md).
-
----
-
-## Changelog
-
-Live text above reads current. Superseded facts, recorded once:
-
-- **"Phases" → "Acts."** This act was "Phase 1 — Foundation" in the source plan (`docs/plans/back-nine-mvp/phase-1-foundation.md`). The structure and the U-numbering are unchanged; only the prose framing was renamed.
-- **`table4c7.html` was a phantom file.** The P1 exit gate originally named `table4c7.html` as the SSA cohort source to fetch and snapshot. It returns 404 — "4.C7" is Trustees-Report *table* numbering, not a filename. The real cohort tables are `CohLifeTables_{M,F}_Alt2_TR2024.csv` (TR2024/Alt2), now committed sha256-pinned. The mortality fit was re-derived from them 1:1, and the pin moved headlines the honest (more conservative) direction.
-- **Bengen bit-exactness retired.** The plan originally gated Bengen on pinning "the exact Ibbotson intermediate-government dataset." That target was retired at the pin pass — no canonical bit-exact dataset exists (Bengen's 1994–95 tail was estimated; SBBI revises across editions). The committed Damodaran 10-yr-Treasury proxy arm is duration-conservative and count-pinned instead.
-- **The schemaVersion-2 fields were first written by Phase 3 in the original plan;** the 2026-06-08 accumulation amendment moved the first write to Act 2's first Save (the first answer is account-aware per R35).
-- **Healthcare-OFF-during-accumulation was first conceived as an engine gate;** corrected at the accumulation fold to be delivered by the date-search's per-candidate stream construction (C3) — there is no retirement boundary anywhere in the healthcare overlay.
-- **The C2 overlay fold "before the scale" text was a round-2 regression;** the shipped (and tested) convention is the contribution credited AFTER the bucket-scale, at face value.
+- **The Social Security computation decision record** — the §1–§12 record of *why* the SS sub-engine is built the way it is (Method C vs `max()`, the §202 survivor lock-flat + RIB-LIM, the constants-module shape, the P4 deferrals) + the `realizedClaimAgeAtDeath` survivor-floor bug. The SS build section above cites into it. Record: [docs/decisions/ss-computation.md](../decisions/ss-computation.md).

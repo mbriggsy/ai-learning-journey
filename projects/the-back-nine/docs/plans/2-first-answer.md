@@ -3,7 +3,7 @@ title: "Act 2 — The First Visible Answer (the magic moment)"
 doc-type: plan
 status: in-progress
 created: 2026-06-17
-updated: 2026-06-17
+updated: 2026-06-18
 derives-from: [docs/product.md, docs/roadmap.md]
 sources: [docs/architecture.md, docs/research/engine-validation-and-tax.md, docs/research/pre65-healthcare.md]
 ---
@@ -29,7 +29,7 @@ The first answer is the *spine* answer — the first beat. The strategy recommen
 
 | | |
 |---|---|
-| **Consumes (Act 1, done + pinned)** | the Monte Carlo core (U1), the tax + accounts overlay (U2), the income-dependent healthcare overlay (U3), the encrypted store (U4), the accumulation fold + date-search (C1–C3), the SS spousal/survivor sub-engine. It does **not** re-open them. |
+| **Consumes (Act 1, done + pinned)** | the Monte Carlo core (U1), the tax + accounts overlay (U2), the income-dependent healthcare overlay (U3), the encrypted store (U4), the accumulation projection + date-search (C1–C3), the SS spousal/survivor sub-engine. It does **not** re-open them. |
 | **Why this is the act** | Act 1 proved the engine is *right* and the store is *safe*. Act 2 is where a financially-literate friend meets the product and decides whether to trust it with real retirement money. |
 | **The gate** | the **N=1 cold-read across all six outcome states plus the survivor readout** (and, when the surfaces land, the fuck-off-date framing). The cardinal rule governs the gate: the bar *rises* for a personal tool, "just for friends" never softens validation. |
 | **Hands off to** | Act 3 (Controls — manual sequencing + Roth, the itemized budget) and Act 4 (Solver & Recommendation — the actual differentiator). |
@@ -50,9 +50,9 @@ The load-bearing engine invariants (CRN / single shared draw / reduce-to-spine /
 | **D2** | The fuck-off-date surface — state-adaptive lead, two confidence-graded dates | **Planned.** Not built. |
 | **Two-pane laptop layout** | The state-adaptive primary surface composition (laptop is the showcase) | **Planned.** Not built. |
 
-> A note on the naming. **D1 *is* the U5 reshape** — U5 was planned around a single-total-spend on-ramp; the 2026-06-08 accumulation expansion (R26–R39) replaced the on-ramp shape with an account-level flow and split the surface into D1 (intake) + D2 (the state-adaptive lead). U5's planned primitives — the progressive/engine-gated/commit-triggered architecture, the `memoryModel` orchestrator, the R19 grammar, the a11y primitives, the no-write-until-Save seam — were **built by D1** to U5's design. There is no separate "U5 shipped then D1 reshaped it" history; D1 built U5's substrate and the account-level flow in one pass. The household retirement-spend figure **survives** the on-ramp supersession as a collected input; what was replaced is the flow *shape*, not the spend input.
+> A note on the naming. **U5 / D1 is one unit** — the account-level guided intake. It builds U5's substrate (the progressive / engine-gated / commit-triggered architecture, the `memoryModel` orchestrator, the R19 grammar, the a11y primitives, the no-write-until-Save seam) *and* the account-level flow in a single pass, shipped + reviewed; D2 is the state-adaptive lead that composes over it. The household retirement-spend figure is a collected input (the v1 degenerate budget that the Act 3 budget split later separates into essentials + lifestyle).
 
-R40 (other income — pension / rental / annuity / alimony) is the **immediate next build** and threads into the D1 intake + the engine's stream consumer. Its plan lives at [docs/plans/features/other-income.md](features/other-income.md).
+R40 (other income — pension / rental / annuity / alimony) is the **immediate next build** and threads into the D1 intake + the engine's stream consumer; its build narrative is the [R40 section below](#r40--other-income-in-retirement-the-immediate-next-build), and its nine KTDs + the conservative-or-disclose discipline are the decision record [docs/decisions/other-income-r40.md](../decisions/other-income-r40.md).
 
 ---
 
@@ -130,7 +130,7 @@ Motion: the band **draws once** (on its first reveal) then **morphs** on every r
 
 - **Contributions + match (R31)** — per-account flat-real amounts the user enters (capturing any catch-up routing implicitly); employer match captured (→ pretax). R19 ceiling checks against C1's limits at the CURRENT age ("you can't contribute more than today's limit"), calm inline, reusing the R19 grammar — and `intakeMap` applies C1's **per-runway-year step-down** when an age-band ceiling expires mid-runway (the 60–63 super catch-up → the age-50 tier at 64), with a calm disclosure naming the step-down year ("at 64 the catch-up limit drops to $X; your plan assumes that from then on").
 
-- **The deferred-bucket-split decision is inverted.** The old U5 plan deferred account buckets to Act 3 to protect a 3-min on-ramp; R35 brings them up-front. The first Save now serializes the v2-with-accounts shape directly (the schema boundary shifts; U4's migration ladder owns the additive bump — R39).
+- **Account buckets are collected up-front (R35).** The first Save serializes the v2-with-accounts shape directly; U4's migration ladder owns the additive schema bump (R39). (Collecting buckets up-front is what makes the first answer account-aware — neither a coarse single-spend on-ramp nor a coarse-then-detailed re-entry.)
 
 - **PII safety (R39).** Every new field lives only inside **U4's encrypted record** (additive schemaVersion bump), never a separate or plaintext holdings store. The R35 field list is **not the closed PII set**; any later-added intake field (e.g. R40's streams) joins this posture by default.
 
@@ -300,7 +300,33 @@ The laptop is the **primary screen** (the showcase); the phone must work but isn
 
 ## R40 — Other income in retirement (the immediate next build)
 
-R40 (a generic per-person ongoing non-earned income stream — pension / rental / alimony / annuity / other) threads into this act's D1 intake and the engine's stream consumer. It is **build-ready with zero code**. The intake is opt-in off the 5-minute guided path; the **no-safe-default fields** surface on the guided path regardless of the collapsed advanced tier (the survivor-% prompt for any continuing stream; the alimony post-2018 agreement-date). The full plan, sub-requirements R40.1–R40.10, and the conservative-direction discipline live at [docs/plans/features/other-income.md](features/other-income.md). The teacher's-pension survivor figure is the single most dangerous number in the app — its survivor-% and COLA treatment are the whole widow's picture.
+**Status: build-ready, zero code.** R40 adds a generic per-person ongoing non-earned income stream (pension / rental / alimony / annuity / other) that keeps paying after work stops — threading into this act's D1 intake and the engine's stream consumer, entered opt-in off the 5-minute path. The teacher's-pension survivor figure is the single most dangerous number in the app: its survivor-% and COLA treatment are the whole widow's picture.
+
+**The *decisions* — the nine KTDs, the per-type defaults, the five-seam MAGI-atomicity frame, the OUT-list with each omission's direction named, the provenance corrections, and the conservative-or-disclose discipline — live in [docs/decisions/other-income-r40.md](../decisions/other-income-r40.md).** The requirements R40.1–R40.10 are in [docs/product.md §7](../product.md). This section records the build.
+
+**Five dependency-ordered units:**
+
+- **Unit 1 — types.** The persisted `IncomeStream` entity (a **discriminated-union** tax-treatment shape keyed on `type`, so a pension can't carry annuity-exclusion fields — KTD-6) with single-sourced `INCOME_TYPES`/`COLA_MODES` `as const` vocab; the compiled two-variant leaf `PersonIncomeStream` (`{grossFull?, taxableFull?, grossSurvivor?, taxableSurvivor?}`) wrapped in `IncomeParams` on `OverlayParams.income?` (presence is the reduce-to-spine key); `incomeStreams` on `ScenarioV3` + the ties + init `[]` (always present, never `undefined`). `endAge` **absent ≡ lifetime** — never a numeric/`Infinity` sentinel (DND-009).
+- **Unit 2 — `compileIncomeStreams` + the goldens.** Per stream, per year: `gross[t]` per the KTD-2 COLA math (`real[t] = annualRealToday·(1+colaPct)^t/(1+inflation)^t`, written fresh — not on `escalateQuote`), start clamped to `max(0, startAge−currentAge)` with `annualRealToday` anchored at `t=0` (KTD-8b), `taxable[t] = gross[t]·effectiveFraction` (KTD-6); summed into the **FULL** and **per-stream SURVIVOR** variants, all-zero vectors dropped via `nonZero`. Goldens are externally derived (DND/012).
+- **Unit 3 — the atomic engine integration.** A **zero-alloc** `ongoingIncomeForYear` select (a structural **sibling** of `contributionsForYear`, not a refactor-share — gate domains differ, insight 027); **seam 1** nets the gross (`net = max(0, spending − earned − ongoingIncomeGross − ss)`, never collapsing the double `allocateWithdrawal`); **seam 2** adds the taxable to `nonSSordinary` once (seams 3/4/5 ride it — KTD-1); the **KTD-9 IRMAA decouple** (a clamped working year's income feeds IRMAA-MAGI but not the gross-up netting; `workingYearIrmaaMagiByPerson` re-specified as the wages/non-modeled component); the `validateParams` income block is **vector finiteness + `≤ ENGINE_MAX_DOLLAR` only** (the scalar ranges are entity-side), `startAge < currentAge` **allowed**, income passes `...overlayBase` **un-truncated** (KTD-8a). **Start with the reduce-to-spine byte-identity test (absent income) as a characterization pin**; do **not** copy the §6 ACA empty-overlap guard. The discriminating tests: a swap-mutant on reduce-to-spine, MAGI atomicity (§86 rose **once**), the IRMAA decouple (no phantom withdrawal), survivor (both-dead ⇒ $0), and the cross-owner-death-order swap-mutant (a single household death gate **fails** — KTD-7).
+- **Unit 4 — intake UX.** Create `OtherIncomeEntry.tsx` (named to avoid the `incomeStep`/`workIncomeStep` earned-income collision); the **opt-in expander** (mirror `AccountsStep`), section label "other income (in retirement)"; the **no-safe-default fields in-form, required-to-save, above the collapsed advanced tier** (pension/annuity/rental/other → the survivor-% prompt, default empty never 100%; alimony → the post-2018 agreement-date), `missingRequiredFacts` only the restore backstop; an explicit **"already receiving" toggle** (the detectable state KTD-9's copy depends on); a **plain-language row summary** that surfaces the widow's numbers ("keeps half if Jane passes"), never a raw `survivorPct`; and a **reserved-slot, neutral text+icon "not saved yet" affordance** (color-blind-safe, `role=note`, never a red badge — insight 035). Sanity owns the entity-scalar ranges (`survivorPct`/`taxableFraction ∈ [0,1]`; **no** `startAge < currentAge` rule). All violation/disclosure copy is copy-fenced and amount-free; the disclosure lines are an **N=1 cold-read tone deliverable** (conservative modeling choices, never confessions of error). Load the four-skill UI loadout before the `.tsx` (back-nine-design > frontend-design > emil-design-eng > web-design-guidelines).
+- **Unit 5 — the requirements amendment.** The additive R40 entry in [product.md §7](../product.md) (zero-removals, insight 018) recording the OUT-list-with-directions, the provenance corrections, and the U8 obligation. *(Already carried forward in product §7 by the doc rebuild; Unit 5 reconciles any superseded-premise lines.)*
+
+**Lifecycle & performance.** The income intake is **session-only until U8** (no IndexedDB write; CSP `connect-src 'self'`), with the not-saved-yet affordance. The select is zero-alloc; the four income vectors are **Y-invariant** so `compileIncomeStreams` runs **once in `buildParams`**; income's taxable is an additive constant that does not raise the gross-up `k` (`k_sup ≈ 0.74`). After Unit 4, **re-run `pnpm verify:bundle`** (income intake rides the lazy intake chunk). **U8 inherits a real codec contract** — `checkIncomeStreamV3` (the sole restore-path range gate; `colaPct` required-and-finite when `colaMode='fixed-pct'`; the full type/fork arm) per [other-income-r40.md](../decisions/other-income-r40.md).
+
+---
+
+## Portfolio holdings — multi-holding entry (rides U8)
+
+The as-built holdings model is **exact-allocation per account** (one stock/bond/cash % per account → one household `stockWeight`), shipped in U5/D1. The **multi-holding entry** enhancement — letting a household enter the *securities it actually owns* per account — is decision-ready and rides **U8** as an opt-in, with **no v3→v4 migration** (U8 defines the persisted shape + its codec). The *decisions* — why it's safe (an intake/aggregation upgrade, not an engine change), the two slices, the honest framing (not a position-level analyzer), and the three open ATC sub-decisions still pending ratification — live in [docs/decisions/portfolio-holdings.md](../decisions/portfolio-holdings.md).
+
+**Five build steps:**
+
+1. **Model** — add `holdings?: ReadonlyArray<{ ticker?; manualBlend?: TickerClassification; value }>` to `EnteredAccount`, folded into the U8 persisted shape; the direct `manualBlend` (exact-%) entry stays the simple default (back-compat), `holdings` the richer alternative.
+2. **Blend resolution** — when `holdings` is present, the account blend = `Σ(h.value · stockWeightOf(h)) / Σ(h.value)` via the existing classifier; the household-weight code is untouched (still value-weighted across accounts).
+3. **Intake** — a holdings add/remove sub-list (ticker + value, each row resolving its blend) behind an **opt-in "enter individual holdings" expander**; exact-allocation stays the default ~5-minute path (back-nine-design progressive disclosure). Holdings are **(ticker, dollar value)** — never shares × live price (CSP / R36).
+4. **Validation** — the account value reconciles to the holdings sum with a calm *"$N left to assign"* note, never a hard block (coherent-but-dire flows through, R19).
+5. **Tests** — holdings→blend aggregation (externally-derived fixtures, DND/012), the value reconcile, and proof the opt-in default path stays **byte-identical** to today's exact-allocation accounts.
 
 ---
 
@@ -311,16 +337,3 @@ R40 (a generic per-person ongoing non-earned income stream — pension / rental 
 - The primary surface shows **one answer, then one recommendation** — not a dashboard (the calm test).
 - **N=1 cold-read (Briggsy):** across the six outcome states + the survivor readout (and the date framing), an on-track answer lands as relief and a borderline answer as honest-and-calm. The cold-read bar **rises** under the personal-tool reset. **Act 3 must not begin until this gate clears.**
 - A first-time user, after seeing their answer, sets a passphrase that clears a real strength gate (no weak-passphrase bypass), is shown and stores a recovery phrase, is forced to export, and lands at a saved vault whose reload reproduces the exact number they saw; an accepted PWA update mid-write never tears the vault.
-
----
-
-## Superseded / changelog
-
-Live text above reads current. The superseded facts, recorded once:
-
-- **The single-total-spend on-ramp (struck).** U5 was originally ratified around a "fast first answer on a single total spend figure" (the old R5, with a ~3-minute success bar). The 2026-06-08 accumulation expansion (R26–R39) replaced this with **R35's ~5-minute account-level guided setup** — one intake flow for both user states, the answer surfacing and sharpening during entry. The household spend figure **survives** as a collected input; what was replaced is the flow *shape*. (Old plan: `docs/plans/back-nine-mvp/phase-2-first-answer.md`.)
-- **U5 vs D1 naming.** The old plan tracked "U5 (planned)" and a separate "D1 reshape." There is no two-step history — **D1 built U5's planned substrate and the account-level flow in one pass**, and it is shipped + reviewed. This doc treats them as one unit (U5 / D1).
-- **The "retirement age before current age" R19 error path → the status-conditional rule.** The old U5 had an unconditional "retirement age before current age" error. The accumulation fold superseded it: work-status is asked, and for a retired person `retirementAge ≤ currentAge` is the *legitimate* entry (the stop age); the contradiction to catch is a status-vs-age *disagreement*. A still-working person is never asked to guess a retirement date — the date IS the product's answer (D1 constructs a placeholder `retirementAge` internally, never user-visible).
-- **The deferred account-bucket split (inverted).** The old U5 deferred account buckets to Act 3 to protect a 3-minute on-ramp. R35 inverted this — buckets are collected up-front, and the first Save serializes the v2-with-accounts shape directly.
-- **`memoryModel.ts` ownership (corrected at fold time).** The fold clarified that D1 *creates* `memoryModel.ts` (the in-memory orchestrator, cross-cutting #1); U4's scope stays the persisted record + db/session/backup, never the in-memory orchestrator.
-- **Where these used to live.** Before this rebuild, U5–U8 lived in `docs/plans/back-nine-mvp/phase-2-first-answer.md` and the D1/D2 bodies lived (verbatim) in `docs/plans/2026-06-08-001-feat-fuck-off-date-accumulation-plan.md` (Track D). This doc is now their single home. The old docs have been retired to git history (this reconcile, harvest-verified).

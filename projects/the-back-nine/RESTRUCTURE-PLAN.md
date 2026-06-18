@@ -138,9 +138,11 @@ place, 3 moved-and-rewritten into `capabilities/`, the `features/` folder delete
 
 ## The checkpoints (each = one commit = one resume point)
 
-- **CP0** — commit *this plan* as the resumable artifact (+ a TODO pointer). ← **this file.**
-- **CP1** — the legends + the front door (ID-scheme legend, invariants index, glossary
-  meta-entries, single-voice README). *Unblocks everything that links to them.*
+- **CP0** — ✅ **DONE** (`d74f6045`). Committed this plan as the resumable artifact + TODO pointer.
+- **CP1** — ✅ **DONE** (`d02af8b1`). The legends + the front door: roadmap ID-scheme legend +
+  the four locked act names + `scoping` status; architecture invariants index; glossary Act
+  entry + two pointer meta-entries; `insights/README` shorthand decoder; single-voice README.
+  Adversarially verified (4 lenses); all anchors resolve. **← resume from here: start CP2.**
 - **CP2** — dissolve `features/` → `capabilities/` (move, re-template, de-orphan, kill the R40
   triple-duplication). *May split — right-sizing the 876-line doc is heavy.*
 - **CP3** — forward-only `product.md` + the crown-jewel decision record (the §3b wall → named

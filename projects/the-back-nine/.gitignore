@@ -22,3 +22,6 @@ playwright-report/
 .DS_Store
 .vite/
 .playwright-mcp/
+
+# Crash-recovery scratch (raw workflow/agent outputs pulled out of temp; see RESTRUCTURE-PLAN.md)
+.recovery/

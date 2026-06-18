@@ -1,0 +1,168 @@
+- **`docs/plans/2-first-answer.md#2`** · `status-as-built` · → You-Are-Here per-unit status table · _pointer_
+  - sig: U5/D1 Shipped, U6-render/U7/U8/D2 Planned
+  - Per-unit status: U5 account-intake shipped+reviewed (D1's broader date/answer surface still ahead — see canonical D1 cell); U6 foundation shipped (palette.ts+scale.ts+colorblind gate); U6 render, U7, U8, D2, and two-pane layout all Planned not built.
+  - [dedup] The combined U5/D1 You-Are-Here cell is canonical at decisions/accumulation-fuck-off-date.md#86 (resolved token: U5 account-intake shipped/reviewed, D1 surface in progress); this row defers to it for the D1 status token and is canonical only for the U6/U7/U8/D2 Planned tokens.
+  - [fixed:warn] Flipped to pointer; deferred D1 token to #86 to kill the Shipped-vs-IN-PROGRESS clash.
+- **`docs/plans/2-first-answer.md#4`** · `status-as-built` · → You-Are-Here — next build (R40) · _canonical_
+  - sig: R40 other income is the immediate next build
+  - R40 (other income — pension/rental/annuity/alimony) is the immediate next build, build-ready with zero code, threading into D1 intake + the engine stream consumer.
+  - [dedup] Roadmap canonical for as-built/next-build status; the full R40 plan content moves into product (R40) + decisions/other-income-r40 + plans/2-first-answer build thread — NOT a features/ doc.
+  - [reframe] Fossil names features/other-income.md as the home; that doc dissolves — point instead to product R40, decisions/other-income-r40, and the plans/2-first-answer build thread.
+- **`docs/plans/2-first-answer.md#27`** · `requirement` · → requirement→unit trace (U5/D1) · _canonical_
+  - sig: U5/D1 requirements R35 R36 R37 R31 R19 R39 R5 R6 R8
+  - U5/D1 requirements: R35 (account-level setup), R36 (user-entered values, no live lookup), R37 (ticker→blend + manual classification), R31 (per-account contribution+match), R19 (sanity ceilings via C1), R39 (PII encryption + schema ladder), plus substrate R5 (guided intake), R6 (escape-hatch entry), R8 (caveated-fast-then-sharpen).
+  - [dedup] Roadmap canonical for the requirement→unit trace; product holds each R-ledger entry (pointer).
+- **`docs/plans/2-first-answer.md#58`** · `requirement` · → U7 unit goal (You-Are-Here) · _canonical_
+  - sig: U7 goal, product's FACE, state-adaptive lead per-person predicate
+  - U7 goal: the product's face — one plain-language answer leading with the verdict, handling all six states (plus distinct compute-error and pending), honest copy + non-color signal + next-action + a survivor-specific readout, calm and trustworthy; copyGuard is born here; the lead is state-adaptive (ConfidenceStatement.tsx routes date-first via D2 for ≥1 still-working person, spine-first for retired — the per-person predicate people.every(p => p.retirementAge <= p.currentAge), NEVER a max() form); D1's provisional treatment applies to the spine lead.
+  - [dedup] Roadmap canonical for the U7 unit goal/status; the per-person routing predicate is canonical in architecture §0 (item 79) — D2 + U7 reference it as a pointer.
+- **`docs/plans/2-first-answer.md#67`** · `scope-boundary` · → validation gates — Act 2 exit (cold-read) · _canonical_
+  - sig: U7 GATE: N=1 cold-read is Act 2 exit, Act 3 must not begin
+  - U7 gate: passing the N=1 cold-read with Briggsy across all six states PLUS the survivor readout is an Act 2 exit condition — non-negotiable, and Act 3 must not begin until it clears; each state + survivor is a first-class pass subject landing 'neither sugarcoated nor catastrophized'; the cold-read bar rises (R25 personal-tool reset); non-negotiable subjects include indeterminate, over-funded (integrity not hedging), already-failing ('starting now'), survivor; because the reader is color blind the cold-read also confirms each non-color signal is fast-scan legible without hue.
+  - [dedup] Roadmap canonical for the validation gate; product R25 + the plans/2 exit-conditions section carry pointers.
+- **`docs/plans/2-first-answer.md#85`** · `scope-boundary` · → validation gates — Act 2 exit conditions · _canonical_
+  - sig: Act 2 EXIT CONDITIONS, five gates, Act 3 must not begin
+  - Act 2 exit conditions: (1) a user reaches their first answer in one short sitting from the ~5-min account-level setup, surfacing+sharpening during the flow not gated behind a final 'calculate'; (2) a not-yet-retired user reaches their two confidence-graded fuck-off dates in that sitting, honestly expressing the date↔confidence tradeoff; (3) the primary surface shows one answer then one recommendation, not a dashboard (the calm test); (4) the N=1 cold-read (Briggsy) across the six states + survivor + date framing, bar rising under the personal-tool reset, Act 3 must not begin until it clears; (5) a first-time user clears a real strength gate, stores a recovery phrase, is forced to export, and lands at a saved vault whose reload reproduces the exact number — an accepted PWA update mid-write never tears the vault.
+  - [dedup] Roadmap canonical for the Act 2 exit/validation gates; U7 The Gate (item 67) + U8 design carry pointers within the plan.
+- **`docs/plans/2-first-answer.md#86`** · `definition-term` · → the four acts — where Act 2 sits · _canonical_
+  - sig: where Act 2 sits, consumes Act 1, hands off to Acts 3-4
+  - Where Act 2 sits — consumes Act 1 (done+pinned): the Monte Carlo core (U1), tax+accounts overlay (U2), income-dependent healthcare overlay (U3), encrypted store (U4), the accumulation+date-search (C1-C3), the SS spousal/survivor sub-engine — and does not re-open them; hands off to Act 3 (controls — manual sequencing + Roth, the itemized budget) and Act 4 (solver & recommendation, the differentiator); the gate is the N=1 cold-read across the six states + survivor (and the fuck-off-date framing when the surfaces land).
+  - [dedup] Roadmap canonical for the act-positioning/consumes-hands-off map; plans/1-engine (U1-U4/C1-C3) carries the upstream-unit pointer.
+  - [reframe] Forward-only: although kind=definition-term, this is the act's position map (consumes/hands-off), not a glossary vocabulary entry — it belongs in roadmap's four-acts overview, not glossary.
+- **`docs/plans/3-controls.md#0`** · `status-as-built` · → You-Are-Here (Act 3 units U9-U13 status) · _canonical_
+  - sig: Act 3 PLANNED, zero code, src/budget gitkeep-only
+  - Act 3 is scoped and build-ready but unstarted (src/budget is .gitkeep-only, no lifecycle frontmatter), and is not the next build.
+  - [dedup] Canonical build-status lives in roadmap You-Are-Here table (this is the act-level PLANNED status home, symmetric with docs/plans/4-recommendation.md#0 _canonical_); TODO.md and the plan-frontmatter keep volatile pointers.
+  - [fixed:nit] Re-tagged pointer→canonical to match the Act-4 PLANNED sibling.
+- **`docs/plans/3-controls.md#1`** · `scope-boundary` · → The four acts (Act 3 scope) · _canonical_
+  - sig: pull-it-toward-you half, shippable manual milestone
+  - Act 3 ships the manual 'pull it toward you' tool (real budget, hand-tuned sequencing+Roth, honest stale re-entry) as a usable milestone before any solver exists.
+  - [dedup] Roadmap owns the act scope; product.md keeps the product-scope framing as a pointer.
+- **`docs/plans/3-controls.md#13`** · `status-as-built` · → You-Are-Here (schema-boundary as-built) · _reframe_
+  - sig: account buckets land at Act-2 D1, first Save is accounts shape
+  - As-built: account-bucket+birth-year (plus contribution/healthcare) fields now land at Act-2 D1 intake and the first Save serializes the accounts shape; U10's mini-intake survives only for legacy-vault upgrade and U13 drifted-split paths.
+  - [dedup] As-built status → roadmap; the D1 intake detail points to plans/2-first-answer, the R35 inversion to product.
+  - [reframe] Surviving fact (present-tense): buckets are collected at D1 and the first Save writes the accounts shape; drop the '2026-06-08 accumulation-fold / shifted-forward' amendment framing.
+- **`docs/plans/3-controls.md#77`** · `status-as-built` · → You-Are-Here / build ordering · _reframe_
+  - sig: next build is R40, then U8/U6-render/U7/D2, then Act 3, then Act 4
+  - Live ordering: Act 3 is not next; the immediate next build is R40 (other income, Act 2), then U8/the U6 confidence-band render/U7/D2, then Act 3, then Act 4; the volatile queue is in TODO.md and the per-unit table in roadmap.
+  - [dedup] As-built ordering -> roadmap You-Are-Here; the session-level queue stays in TODO.md as the volatile pointer.
+  - [reframe] Surviving fact (present-tense): the current build order is R40 -> U8/U6-render/U7/D2 -> Act 3 -> Act 4; drop the 'What is next' volatile-narration framing and let roadmap/TODO own live sequencing.
+- **`docs/plans/4-recommendation.md#0`** · `status-as-built` · → You-Are-Here U14-U17 (planned) · _canonical_
+  - sig: Act 4 PLANNED, zero code
+  - Act 4 (solver + recommendation) is not started: src/engine/solver/ and src/engine/validation/ are .gitkeep-only; this is the differentiator and is entirely ahead.
+  - [dedup] Roadmap You-Are-Here table is canonical for build status; plan front-matter status is a pointer.
+- **`docs/plans/4-recommendation.md#4`** · `definition-term` · → requirement->unit trace (U14-U17) · _canonical_
+  - sig: oracle -> solver -> surface -> staleness
+  - The Act-4 chain: U14 builds the validation harness whose oracle-cleared token gates U15; U15 ranks policies x conversion grid on CRN under the lexicographic objective and emits a byte-identical winner + retained runner-up; U16 surfaces the confidence-graded recommend-second beat; U17 re-solves a stale saved recommendation under current fixtures.
+  - [dedup] Roadmap requirement->unit trace is canonical for the chain ordering; this plan restates it.
+- **`docs/plans/4-recommendation.md#14`** · `requirement` · → You-Are-Here U14 · _canonical_
+  - sig: Unit 14 solver validation harness GATES U15
+  - U14 builds the recommendation-correctness harness before the solver speaks: hand-computable known-best oracle, K-candidate ranking-stability under CRN, calibrated confidence grades, held-out-seed defense against the optimizer's curse — so a confidently-wrong recommendation fails loud (R22, R25, recommendation half of two-tier SC).
+  - [dedup] Roadmap You-Are-Here is canonical for unit identity/status; this is the build-plan unit goal restating it.
+- **`docs/plans/4-recommendation.md#37`** · `requirement` · → You-Are-Here U15 · _canonical_
+  - sig: Unit 15 solver core — ranks, never re-implements
+  - U15 searches the bounded strategy space (named drawdown policies x conversion grid) on identical CRN futures, scores each candidate on the lexicographic objective whose metric is the headline metric, selects a byte-identical winner + retained runner-up within the on-demand compute budget (or triggers WASM promotion), ranking candidates never re-implementing decumulation (R9, R21, R23, R24); gated by U14.
+  - [dedup] Roadmap You-Are-Here canonical for unit status; product R9/R21/R23/R24 canonical for the requirements; this is the build-plan unit goal.
+- **`docs/plans/4-recommendation.md#57`** · `requirement` · → You-Are-Here U16 · _canonical_
+  - sig: Unit 16 recommendation surface — calm second beat
+  - U16 surfaces the solver's output as the calm second beat: a confidence-graded recommendation that never contradicts the spine, hedge on the headline, runner-up retained + comparison one tap down, modeled omissions disclosed adjacent to the delta, every input + reasoning visible/editable, and an honest 10/10->surplus pivot — landing earned never overconfident (R10, R4, R11, R12, R13, R14, R7, R21, R22, R23, R24).
+  - [dedup] Roadmap You-Are-Here canonical for unit status; product R-ledger canonical for the requirements; this is the build-plan unit goal.
+- **`docs/plans/4-recommendation.md#72`** · `requirement` · → validation gates — Act-4 exit conditions · _canonical_
+  - sig: U16 exit: N=1 cold-read + visibly-move-the-spine
+  - U16 exit condition: passing the N=1 cold-read on the recommendation — EARNED not overconfident, the 'coin-flip' grade honest (not wishy-washy or alarming), the comparison reading as transparency not bait-and-switch — is an Act-4 exit condition (R25; cold-read judges tone, U14 judges correctness); also a recommendation must visibly move the spine answer ('6 of 10 -> 8 of 10') AND be correctly confidence-graded (the differentiation success criterion).
+  - [dedup] Roadmap validation-gates is canonical for the exit gate; product R25 holds the cardinal-rule requirement (pointer).
+- **`docs/plans/4-recommendation.md#73`** · `requirement` · → You-Are-Here U17 · _canonical_
+  - sig: Unit 17 stale saved-recommendation handling
+  - U17 treats a saved recommendation as the real executed action it is: on re-entry, re-solve it under current fixtures (never re-present a stale strategy as still-advised), say 'the action we recommended may no longer be advised' (not 'your number drifted'), and re-verify the ACA legislative status that can flip the whole pre-65 model (R7, R10, R24, R25).
+  - [dedup] Roadmap You-Are-Here canonical for unit status; product R-ledger canonical for the requirements; this is the build-plan unit goal.
+- **`docs/plans/4-recommendation.md#86`** · `requirement` · → validation gates — Act-4 exit conditions (U17) · _canonical_
+  - sig: U17 exit: cardinal sin across time, cold-read
+  - U17 exit condition: a stale strategy silently presented as current is the cardinal sin extended across time (R25) and this unit is the structural guard; passing the N=1 cold-read on U17's staleness copy is an Act-4 exit condition (cold-read judges tone, U14 judges correctness) — the 'may no longer be advised' copy (honest not alarmist), the same-strategy-degraded case (must read as honest recalibration never 'still fine'), the retroactive-ACA past-cost note (informational not catastrophizing), and the gate-red reasons (honest about why, never blaming the law when a primary is merely un-pinned) are each first-class subjects.
+  - [dedup] Roadmap validation-gates canonical for the exit gate; product R25 holds the cardinal-rule requirement (pointer).
+- **`docs/plans/features/social-security.md#0`** · `status-as-built` · → You-Are-Here SS unit status · _reframe_
+  - sig: SS sub-engine shipped, pinned 2026-06-14
+  - The Social Security sub-engine (own reduction/credit, Method C spousal excess, §202 survivor) is shipped, reviewed, and pinned; it feeds the existing cash seam from per-person PIA + claim age.
+  - [dedup] Roadmap You-Are-Here is canonical for build status; project-memory copy is a pointer/echo, not a doc home.
+  - [reframe] Surviving fact: the SS sub-engine is shipped and pinned. Present-tense in the roadmap status table (SHIPPED), stripped of the 'feature doc keyed to when SS was added' framing.
+- **`docs/plans/features/social-security.md#9`** · `scope-boundary` · → P4 scope (SS deferrals) · _reframe_
+  - sig: deferred to P4: survivor optimizer, PIA recompute, divorced/child branches, family-max
+  - Deferred to P4: the survivor two-stage claim optimizer (survivors are deemed-filing-exempt; no lever pulls it yet); accumulation-state PIA / year-of-death AIME recompute (entered PIA carried as real); divorced-spouse/child-in-care/DIB branches (out of the married front door — do NOT generalize the worker-filed prerequisite); the family-maximum (named, not modeled).
+  - [dedup] Roadmap P4 scope is canonical for what's deferred; same fact.
+  - [reframe] Surviving fact: the explicit SS deferrals to P4. Present-tense as the roadmap's P4 scope list (including the carried landmine: never generalize worker-filed prerequisite to a divorced spouse). 'PRESERVED VERBATIM' tag dropped.
+- **`docs/plans/features/social-security.md#59`** · `status-as-built` · → You-Are-Here SS unit (review history) · _reframe_
+  - sig: two reviewed passes, three load-bearing guards
+  - The unit shipped in two reviewed passes — a pure-core review (insight 039 locked the pure survivorBenefitAnnual contract) and a holistic integration review of the wiring commit; three guards are load-bearing for the cardinal rule, one of which was a BUG the integration review found (not a plan item).
+  - [dedup] Roadmap is canonical for unit review status; insights 039/040 hold the lessons (no-move there).
+  - [reframe] Surviving fact: the SS unit passed a pure-core review (insight 039) and a holistic integration review that caught a load-bearing bug. Present-tense as the roadmap unit's review note; the lessons live in insights 039/040.
+- **`docs/plans/features/other-income.md#0`** · `status-as-built` · → You-Are-Here (R40 units) · _reframe_
+  - sig: R40 PLANNED build-ready zero code
+  - R40 (other ongoing non-earned income) is PLANNED, build-ready, zero code shipped; amends product §7.
+  - [dedup] The R40-next-build You-Are-Here entry is canonical at docs/plans/2-first-answer.md#4 (the immediate-next-build flag); this row and docs/plans/3-controls.md#77 (the build-order row) defer to it as pointers for the shared R40-next-build status. The R40 ledger entry itself lives in product §7; TODO is volatile.
+  - [reframe] Surviving fact: R40 is planned with no code yet. Drop the 'grounded against HEAD dc674dff / reviewed in N passes' narration — state present-tense 'R40 is planned and build-ready, nothing built.'
+  - [fixed:nit] Added dedup pointer deferring R40-next-build to #4 as the single canonical cell.
+- **`docs/plans/features/other-income.md#26`** · `scope-boundary` · → You-Are-Here U8 (R40 persistence scope) · _reframe_
+  - sig: incomeStreams on ScenarioV3, no schemaVersion bump, U8 codec
+  - U8 persistence: R40 adds incomeStreams to ScenarioV3; the codec v3 arm is U8's; the shape rides existing ScenarioV3 (no schemaVersion bump, no v3→v4 migration) but U8 inherits a real validation contract, not free persistence (KTD-3 + the U8 obligation).
+  - [dedup] U8 scope status canonical in roadmap; the codec contract details home in decisions/other-income-r40 (KTD-3) and the U8 hand-off row.
+  - [reframe] Surviving fact: persistence of incomeStreams is U8's; no schema bump, but the v3 codec arm is a load-bearing validation contract. Present-tense unit scope.
+- **`docs/plans/features/other-income.md#71`** · `status-as-built` · → You-Are-Here Unit 5 (R40 entry status) · _reframe_
+  - sig: R40 entry already lives in product §7, reconcile superseded premise
+  - Status note: the R40 entry ALREADY LIVES in docs/product.md §7 (the doc-rebuild carried it forward); Unit 5's remaining work is to reconcile any superseded-premise lines the zero-removals grep surfaces and confirm the OUT-list / provenance / U8-obligation are present.
+  - [dedup] As-built status canonical in roadmap; product §7 holds the entry itself (pointer).
+  - [reframe] Surviving fact: the R40 product §7 entry exists; the remaining Unit 5 work is to reconcile superseded-premise lines and confirm the OUT-list/provenance/U8-obligation are present. Present-tense status; drop the 'doc-rebuild carried it forward' history.
+- **`docs/plans/features/other-income.md#78`** · `requirement` · → You-Are-Here U8 (R40 codec obligation) · _reframe_
+  - sig: U8 checkIncomeStreamV3 codec validator, colaPct required when fixed-pct
+  - U8 hand-off obligation (the checkIncomeStreamV3 codec validator, importing single-sourced vocab): finiteness-first; enum membership (needVocab); ownerIndex∈{0,1}; survivorPct/taxableFraction range (the SOLE restore-path gate); colaPct REQUIRED-and-finite when colaMode='fixed-pct' (absent/null=corruption, NEVER coerced to 0 — the optimistic-erosion direction); the full fork/type arm (each type's required fields present, contradictory absent — JSON.parse+as erases the union); endAge absent≡lifetime (DND-009, no numeric sentinel); R40 single-sources INCOME_TYPES/COLA_MODES as const.
+  - [dedup] U8 unit obligation tracked in roadmap; the codec contract details restate KTD-3/KTD-6 + the validation-boundary invariant (architecture §6) (pointers).
+  - [reframe] Surviving fact (thin status): U8 must build the checkIncomeStreamV3 codec validator — gated, not free persistence. The field-level contract is NOT roadmap status: it routes to architecture §6 (the R19/validateParams validation-boundary invariant), decisions/other-income-r40 (KTD-3/KTD-6 — incl. colaPct REQUIRED-and-finite when fixed-pct, NEVER coerced to 0 = the optimistic-erosion landmine; and endAge absent≡lifetime = DND-009), and plans/2-first-answer (the U8 build step). Roadmap keeps only the pointer.
+  - [fixed:warn] Trimmed reframe to thin U8 status; routed field contract to arch §6/decisions/plans/2.
+- **`docs/plans/features/portfolio-holdings.md#0`** · `status-as-built` · → You-Are-Here U8 (save/load) — planned: holdings entry folds in · _reframe_
+  - sig: portfolio holdings entry scoped, not built
+  - Multi-holding portfolio entry is scoped/decision-ready with zero code, sequenced into U8.
+  - [reframe] Strip the 'created 2026-06-17 / features-doc' framing. Surviving fact: multi-holding portfolio entry is a planned, decision-ready feature with zero code, sequenced into U8.
+- **`docs/plans/features/portfolio-holdings.md#3`** · `status-as-built` · → You-Are-Here — intake as-built (exact-allocation entry) · _reframe_
+  - sig: exact-allocation per account, manualBlend
+  - Current intake is exact-allocation per account via manualBlend (stockPct/bondPct/cashPct, sum-to-100); single-ticker-per-account is gone; EnteredAccount carries ticker?/manualBlend?/valueToday/basis etc.
+  - [dedup] The EnteredAccount / TickerClassification shapes are canonical in model.ts (and architecture where referenced); roadmap states the as-built status and points there.
+  - [reframe] Strip 'verified in code 2026-06-17' and 'is GONE' change-story. Surviving fact: intake is exact-allocation per account — manualBlend (stockPct/bondPct/cashPct, intake-enforced sum-to-100); EnteredAccount holds ownerIndex, kind, ticker?, manualBlend?, valueToday, basis?, annualContribution?, employerMatchAnnual?, hsaEmployerAnnual?.
+- **`docs/plans/features/portfolio-holdings.md#5`** · `status-as-built` · → You-Are-Here — intake as-built (AllocationEntry) · _reframe_
+  - sig: one precise allocation question per account
+  - AllocationEntry.tsx asks one precise stock/bond/cash question per account (sum-to-100 enforced in-component); the 'mostly stocks' quick-pick and single-ticker lookup were retired; stored shape stays TickerClassification, the simple arm kept for U8 reuse but no longer produced by intake.
+  - [dedup] The AllocationEntry.tsx contract is canonical in source; roadmap records the as-built status.
+  - [reframe] Strip 'were BOTH retired' change-story. Surviving fact: AllocationEntry asks one precise stock/bond/cash % question per account with sum-to-100 enforced in-component; stored shape is TickerClassification, whose simple arm is retained in the model for U8 reuse but not produced by current intake.
+- **`docs/decisions/accumulation-fuck-off-date.md#85`** · `status-as-built` · → You-Are-Here (C1/C2/C3, B1 complete; P1 closed) · _reframe_
+  - sig: C1/C2/C3/B1 COMPLETE, P1 closed 2026-06-11
+  - Build status: C1 (constants + ticker→blend), C2 (accumulation projection inflow), C3 (exhaustive non-monotone-robust date-search), B1 (U3·M5 HSA 4th bucket spend) all COMPLETE 2026-06-10 (ultramode reviews + 9-agent adversarial verification on C3); the engine track is shipped, reviewed, and pinned (P1 closed 2026-06-11). All ship in docs/plans/1-engine.md.
+  - [dedup] Build status canonical in roadmap You-Are-Here table; this record's status note becomes a pointer.
+  - [reframe] Present-tense: the accumulation engine track (C1/C2/C3, B1) is shipped and pinned; P1 is closed.
+- **`docs/decisions/accumulation-fuck-off-date.md#86`** · `status-as-built` · → You-Are-Here (D1 in progress, D2 not built) · _reframe_
+  - sig: D1 IN PROGRESS, D2 NOT BUILT
+  - Build status: D1 (account-level guided intake, ~5-min) IN PROGRESS — U5/D1 account intake shipped + reviewed, remaining surface work ahead; D2 (state-adaptive date surface) NOT BUILT. Both ship in docs/plans/2-first-answer.md.
+  - [dedup] Build status canonical in roadmap You-Are-Here table; this record's status note becomes a pointer.
+  - [reframe] Present-tense: D1 account intake is in progress (account entry shipped), D2 state-adaptive surface not yet built.
+- **`docs/decisions/accumulation-fuck-off-date.md#91`** · `status-as-built` · → You-Are-Here / validation gates (test counts) · _reframe_
+  - sig: 721 tests P1-exit; C2 +40, C3 545
+  - Test counts as-built: C2 added 40 new tests; C3 has 545 tests; P1-exit total = 721 tests, gates green (cross-reference project memory).
+  - [dedup] Test counts canonical in roadmap (and TODO.md volatile mirror); this record's count note becomes a pointer.
+  - [reframe] Present-tense: P1-exit ships 721 tests, gates green (C3 = 545, C2 added 40).
+- **`docs/research/engine-validation-and-tax.md#5`** · `requirement` · → Validation gates / Act 4 solver contract · _canonical_
+  - sig: solver validation contract three more case classes
+  - Because the product recommends a strategy, the solver validation contract (Act 4) grows beyond 'the number is right' and adds three gating case classes before the solver may speak (a wrong recommendation costs real dollars).
+  - [dedup] roadmap.md (validation gates) is canonical for the gate; plans/4-recommendation carries the build-side detail as a pointer.
+- **`docs/research/engine-validation-and-tax.md#23`** · `status-as-built` · → You-Are-Here / SSA cohort tables pinned · _reframe_
+  - sig: CohLifeTables_M/F_Alt2_TR2024.csv sha256-pinned
+  - SSA table4c7.html does not exist (404 — '4.C7' is Trustees-Report numbering, not a filename); the real cohort tables are SSA HistEst CohLifeTables_M_Alt2_TR2024.csv and CohLifeTables_F_Alt2_TR2024.csv, committed sha256-pinned at src/engine/reference/ssa-snapshot/ with SHA256SUMS.
+  - [dedup] Same-doc pin-pass status table is the local copy; roadmap You-Are-Here owns as-built status going forward.
+  - [reframe] Surviving fact (present-tense, thin status): cohort mortality reads from the sha256-pinned SSA HistEst CSVs — pinned. The CSV filenames (CohLifeTables_M/F_Alt2_TR2024), the SHA-pinning detail, and the table4c7.html 404 caution ('4.C7' is Trustees-Report numbering, not a filename/URL — a standing re-fetch landmine) route to research (docs/research/engine-validation-and-tax.md) per number→research, so the landmine survives. Drop the '[CORRECTED 2026-06-11]' dated-amendment framing.
+  - [fixed:warn] Roadmap keeps thin pinned status; CSV names/SHA/4.C7 landmine routed to research.
+- **`docs/research/engine-validation-and-tax.md#45`** · `status-as-built` · → You-Are-Here / P1 exit (pin pass) · _reframe_
+  - sig: P1-exit pin pass 2026-06-11 closed exit gates
+  - The P1-exit pin pass (2026-06-11) closed the formerly-open exit gates: grounded-search figures are now parsed-and-pinned against primaries, sha256-snapshotted under src/engine/reference/ and read by the canonical year-keyed constants table.
+  - [dedup] roadmap You-Are-Here owns as-built status; TODO.md history and project memory are volatile pointers.
+  - [reframe] Surviving fact (present-tense): reference figures are parsed-and-pinned against primaries, sha256-snapshotted under src/engine/reference/, and read by the canonical year-keyed constants table — P1 is closed. Reframe the dated pin-pass narrative as the standing as-built state.
+- **`docs/research/pre65-healthcare.md#1`** · `status-as-built` · → You-Are-Here U3 healthcare overlay (as-built) · _reframe_
+  - sig: healthOverlay.ts and constants/health.ts read these
+  - healthOverlay.ts and constants/health.ts read these facts; the legislative exit-gate is enforced every build by verify:aca; numbers carry directionalUntilPinned precision discipline; ships today on the 2026 reverted/cliff base case.
+  - [dedup] As-built status canonical in roadmap You-Are-Here; verify:aca/reVerifyEveryBuild discipline canonical in architecture §7.2 / project CLAUDE.md — research doc keeps the number-precision note only.
+  - [reframe] Surviving fact: U3 healthOverlay.ts + constants/health.ts consume these facts; verify:aca gates the legislative entry every build; precision is directional-until-pinned, not unfinished; the model ships on the 2026 reverted/cliff base case (present tense).

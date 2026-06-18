@@ -1,0 +1,12 @@
+- **`README.md#22`** · `other` · → n/a — front-door navigation framing · _drop_ · [NOT-must-survive]
+  - sig: where truth lives
+  - Documentation map: full index is docs/README.md; the three essentials are product.md (why+what), roadmap.md (where we are + what's next), architecture.md (what you must never break); conventions/landmines in CLAUDE.md, live queue in TODO.md.
+  - [dedup] Pure navigation framing already owned by docs/README.md (the thin index) and CLAUDE.md (the map); no surviving fact to re-home in the new tree.
+  - [reframe] Surviving fact: none load-bearing — this is front-door routing prose. The new README/docs index re-states the map natively, so the old copy is dropped rather than migrated.
+  - [fixed:nit] Sig retitled to distinctive 'where truth lives' for M6 grep.
+- **`docs/README.md#1`** · `other` · → n/a — regenerated index · _drop_
+  - sig: to understand X read Y
+  - The docs/README routing map: 'to understand X, read Y' across product, roadmap, architecture, the four act plans, decisions, the two research files, glossary, and insights.
+  - [dedup] The map duplicates CLAUDE.md 'The map (where truth lives)'; the canonical routing lives in the regenerated docs/README index + CLAUDE.md, so this captured copy carries no surviving fact of its own.
+  - [reframe] Pure index framing: the new docs/README is re-authored forward-only and will list the same canonical homes; the individual destinations it names survive via items #2-#7. No standalone fact to home.
+  - [fixed:nit] Kind retagged definition-term → other (index, not a term).

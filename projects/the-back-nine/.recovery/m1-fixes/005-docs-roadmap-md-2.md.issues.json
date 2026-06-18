@@ -1,0 +1,32 @@
+[
+  {
+    "ref": "docs/plans/features/other-income.md#78",
+    "severity": "warn",
+    "problem": "OVER-RETENTION (partial mis-route). The [reframe] surviving-fact reproduces the FULL checkIncomeStreamV3 field-by-field validation contract in roadmap: finiteness-first, enum membership, ownerIndex∈{0,1}, the sole survivorPct/taxableFraction range gate, colaPct REQUIRED-and-finite when colaMode='fixed-pct' (never coerced to 0 — the optimistic-erosion direction), the full discriminated-type arm, endAge absent≡lifetime (DND-009). That is a validation-boundary invariant + a decision + a build-step, not roadmap status — and the row's OWN [dedup] says exactly that (architecture §6, KTD-3/KTD-6, U8 hand-off). Roadmap is volatile status; load-bearing rules like 'colaPct never coerced to 0' and DND-009 risk dying when the status line is later trimmed.",
+    "fix": "Trim the roadmap surviving-fact to the thin U8 obligation/status only ('U8 must build the checkIncomeStreamV3 codec validator — gated, not free persistence'). Route the field-level contract to its real homes: architecture §6 (the R19/validateParams validation-boundary invariant — verified to exist), decisions/other-income-r40 (KTD-3/KTD-6 incl. the colaPct-never-0 and DND-009 rules), and plans/2-first-answer (the U8 build step). Roadmap keeps only the pointer."
+  },
+  {
+    "ref": "docs/research/engine-validation-and-tax.md#23",
+    "severity": "warn",
+    "problem": "OVER-RETENTION of research provenance in a status home. kind=status-as-built, but the surviving-fact carries number/provenance facts that route to research, not roadmap: the exact CSV filenames (CohLifeTables_M/F_Alt2_TR2024), the sha256-pinning, and the 'table4c7.html 404 — 4.C7 is Trustees-Report numbering, not a filename/URL' caution. That 404 caution is a standing re-fetch landmine; if it lives only in a roadmap status line it dies when the status is trimmed.",
+    "fix": "Roadmap keeps only the pinned-as-built status ('cohort mortality reads from the sha256-pinned SSA HistEst CSVs — pinned'). Route the table4c7.html/'4.C7' caution + the CSV filenames + SHA detail to research (docs/research/engine-validation-and-tax.md or its successor) per number->research, so the landmine survives."
+  },
+  {
+    "ref": "docs/plans/2-first-answer.md#2",
+    "severity": "warn",
+    "problem": "STATUS CONTRADICTION across two rows into the same You-Are-Here D1 cell. This row routes 'U5/D1 Shipped'; decisions/accumulation-fuck-off-date.md#86 (Row, _reframe_) routes 'D1 IN PROGRESS — account intake shipped, remaining surface work ahead.' Verified against the live roadmap (line 73): the table renders one combined 'U5 / D1 ... shipped' cell. Two rows assigning different status tokens (Shipped vs IN PROGRESS) to one cell will fight at M6 (contradictions-mean-STOP).",
+    "fix": "Reconcile in the ledger before M6: designate one row canonical for the D1 You-Are-Here cell and reduce the other to a pointer that defers to it. Resolve the token to the true state — U5 account-intake shipped/reviewed, D1's broader date/answer surface still ahead — so M6 produces a single unambiguous cell."
+  },
+  {
+    "ref": "docs/plans/3-controls.md#0",
+    "severity": "nit",
+    "problem": "DISPOSITION INCONSISTENCY. This 'Act 3 PLANNED, zero code' build-status row is marked _pointer_, but its own [dedup] says 'Canonical build-status lives in roadmap You-Are-Here table' — i.e. roadmap (this row's home) IS the canonical home. The parallel 'Act 4 PLANNED' row (docs/plans/4-recommendation.md#0) is correctly marked _canonical_. A roadmap-homed canonical-status fact tagged _pointer_ is self-contradictory and asymmetric with the Act-4 sibling.",
+    "fix": "Re-tag this row _canonical_ to match docs/plans/4-recommendation.md#0 (both are act-level PLANNED build-status, canonical in the You-Are-Here table). The TODO.md / plan-frontmatter copies remain the volatile pointers."
+  },
+  {
+    "ref": "docs/plans/features/other-income.md#0",
+    "severity": "nit",
+    "problem": "DEDUP — R40 next-build status landed by three independent rows into roadmap with no single canonical designation: this row ('R40 PLANNED build-ready zero code', _reframe_), docs/plans/2-first-answer.md#4 ('R40 immediate next build', _canonical_), and docs/plans/3-controls.md#77 ('build order R40 -> U8/U6-render/U7/D2 -> Act 3 -> Act 4', _reframe_). They overlap (not contradict) but none points to another as canonical for the shared R40-next-build cell, risking drift across three landings.",
+    "fix": "Designate one row canonical for the R40-next-build You-Are-Here entry (docs/plans/2-first-answer.md#4's next-build flag, or docs/plans/3-controls.md#77's ordering) and mark the other two as pointers that defer to it for the R40 status fact."
+  }
+]

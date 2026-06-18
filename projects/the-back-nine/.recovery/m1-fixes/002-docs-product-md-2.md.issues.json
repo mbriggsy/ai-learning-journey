@@ -1,0 +1,44 @@
+[
+  {
+    "ref": "docs/research/engine-validation-and-tax.md#18",
+    "severity": "warn",
+    "problem": "disp=canonical but the row has NO R-anchor (target is only 'R-ledger / probability-of-adjustment dollar-grammar') and dedup is empty. Verified NOT currently in product.md. 'Report terminal-value percentiles + depth-of-failure, not just pass/fail' is a two-part fact: a product refinement of R2/R3 AND an engine-output-shape contract. As written it lands as orphaned, anchorless product prose that M6 cannot place.",
+    "fix": "Anchor it to R2/R3 in product (the terminal-value/depth-of-failure distribution feeds the humanized 'probability of adjustment' dollar-grammar) and route the engine-output-contract half to docs/architecture.md (§7, engine output shape). Populate dedup naming the chosen canonical home."
+  },
+  {
+    "ref": "docs/research/engine-validation-and-tax.md#26",
+    "severity": "warn",
+    "problem": "disp/dedup contradiction. Row is disp=canonical for the falsifiable tax IN/OUT line ('IN iff sequencing or a conversion can move it'), yet its own dedup says product.md (R40 scope) is canonical and this research doc is a pointer. Verified: product.md line 196 (§7 scope) AND D6 (line 75) already carry the IN/OUT line with the identical IN/OUT list. Two rows (#26 and #39) cannot both be canonical for this fact, and #26 self-demotes in its dedup text.",
+    "fix": "Set #26 disp=pointer with canonical = product.md §7 IN/OUT line (the same home #39 points to). Keep #26's NIIT 3.8% numeric detail as a research-pointer fact."
+  },
+  {
+    "ref": "docs/research/engine-validation-and-tax.md#38",
+    "severity": "warn",
+    "problem": "Mis-route + empty dedup on a disp=canonical row. 'Senior Bonus Deduction 2025-2028, sunsets after 2028 -> tax overlay must carry an explicit sunset marker' is a constants-discipline / tax-overlay mechanic on a dated figure, not a product requirement. Verified NOT in product.md. Routing law: invariant/constants-contract -> architecture; a dated number -> research. Only the calm 'viewed in/after 2029' honesty note is product-level.",
+    "fix": "Route the sunset-marker constant mechanic to docs/architecture.md §8 (year-keyed constants + reVerify-style markers) / §7.1 (tax overlay); keep at most an honesty-note requirement in product tied to R14/R22 as a pointer. Populate dedup naming the architecture canonical home."
+  },
+  {
+    "ref": "docs/decisions/accumulation-fuck-off-date.md#21",
+    "severity": "warn",
+    "problem": "DEDUP missing-canonical. Row lists five deferred items (contribution optimization, 3-asset cash sleeve, TDF glide curves, Roth employer match SECURE 2.0 §604, per-person asymmetric date) and its dedup claims 'Deferred ledger canonical in product.md.' Verified: product.md §5 chapter-two only carries contribution-strategy optimization; the cash sleeve, TDF glide, SECURE 2.0 §604 Roth-match (the only §604 trace is inside R31, not the deferred ledger), and per-person asymmetric date have NO canonical home in product. The pointer points at facts the named canonical does not hold.",
+    "fix": "Either expand product.md §5 'Chapter two (named, deferred)' to absorb the cash sleeve / TDF glide / Roth-match §604 / per-person asymmetric date, or mark #21 disp=canonical for those four and keep only contribution-optimization as the product pointer. Correct the dedup to reflect which items product actually owns."
+  },
+  {
+    "ref": "docs/research/engine-validation-and-tax.md#27 / docs/research/pre65-healthcare.md#36",
+    "severity": "warn",
+    "problem": "Within-file near-duplicate canonical routing. Both rows route the SAME requirement ('two distinct MAGI calculators, ACA-MAGI ≠ IRMAA-MAGI') to product (#27 disp=canonical → R40; #36 disp=reframe → R40 cluster) without cross-referencing each other. Risks double-writing the two-MAGI requirement into product in M6.",
+    "fix": "Designate one row canonical for the two-MAGI requirement (prefer #36 — it carries the fuller composition and the funding-source-order consequence) and make the other its pointer, or note they merge into a single R24/R40.4 entry. Add a cross-reference between the two rows' dedup notes."
+  },
+  {
+    "ref": "docs/research/engine-validation-and-tax.md#56",
+    "severity": "warn",
+    "problem": "Hollow reframe. Digest backs the positioning with named incumbents (ProjectionLab, Boldin, Monarch, Empower, Fidelity/Vanguard) and an honesty caveat ('corpus is FIRE-skewed, pain likely understated'). The [reframe] surviving statement drops BOTH — the named-incumbent evidence base and the FIRE-skew caveat — leaving the positioning claim thinner than the digest implies and stripping its falsifiable grounding.",
+    "fix": "Retain the named-incumbent evidence basis and the FIRE-skewed/pain-understated caveat in the surviving fact, OR explicitly affirm in dedup that they survive in the research pointer (research appendix) so the positioning keeps a citable basis."
+  },
+  {
+    "ref": "docs/research/engine-validation-and-tax.md#53",
+    "severity": "nit",
+    "problem": "Reframe drops a confidence qualifier. The digest states the legal defense (a Roth what-if naming no securities likely isn't 'advice about securities', IAA §202(a)(11) Prong A vs Reg BI/IA-5249) is 'defensible, not airtight.' The [reframe] preserves the named statutes but drops the 'defensible, not airtight' qualifier — meaningful for a rationale retained for 'deliberate re-instatement on re-commercialization,' where over-trusting the defense is the risk.",
+    "fix": "Keep the 'defensible, not airtight' confidence qualifier in the surviving decision-rationale so any future re-commercialization does not over-rely on the Prong-A defense."
+  }
+]

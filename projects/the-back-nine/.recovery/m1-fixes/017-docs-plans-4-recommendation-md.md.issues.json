@@ -1,0 +1,8 @@
+[
+  {
+    "ref": "docs/plans/4-recommendation.md#5",
+    "severity": "nit",
+    "problem": "Sig 'invariants LINKED not restated' leans on a generic head-word ('invariants' recurs throughout this corpus, so a grep returns noise) plus a framing phrase, with no number, named rule, file, or proper-noun anchor. It is the weakest sig in the file for M6 location.",
+    "fix": "Re-anchor the sig to a concrete token this pointer-block actually carries, e.g. 'Act-4 pointers block -> architecture invariants + product §4-§5' or name one of the five inherited invariants (CRN/reduce-to-spine) so it greps uniquely."
+  }
+]

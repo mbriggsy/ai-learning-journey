@@ -1,0 +1,14 @@
+[
+  {
+    "ref": "docs/README.md#1",
+    "severity": "nit",
+    "problem": "Kind is tagged `definition-term`, but the content is a navigation/index table (\"to understand X, read Y\") — not a term definition. Taken at face value, the `definition-term` kind routes to glossary (definition->glossary), which would be the wrong home; the content correctly drops as a regenerated index. The disposition (DROP) is right and verified — the live docs/README.md IS this regenerated table and its named destinations survive as their own rows (#2–#7) — so this is a mis-label, not a true mis-route. But the wrong kind tag plants a false glossary signal for an M6 scanner.",
+    "fix": "Change kind to `other` (navigation/index framing), matching the sibling README.md#22 row. Disposition stays DROP; canonical homes (regenerated docs/README index + CLAUDE.md) are correctly named."
+  },
+  {
+    "ref": "README.md#22",
+    "severity": "nit",
+    "problem": "Signature `documentation reading map` is a generic descriptive phrase — no proper noun, number, or rule name — so it is weak to grep in M6. Low stakes here because the row is a confirmed DROP (nothing to re-home), but it does not pin the fossil distinctively.",
+    "fix": "Use a distinctive phrase that actually appears in the fossil/canonical home, e.g. `where truth lives` (the CLAUDE.md section title) or the literal essentials list `product.md (why+what), roadmap.md`."
+  }
+]

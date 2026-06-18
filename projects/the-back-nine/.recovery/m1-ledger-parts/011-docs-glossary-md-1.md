@@ -1,0 +1,38 @@
+- **`docs/plans/1-engine.md#68`** · `definition-term` · → date-search outcomes (confirmed / window-edge / no-date) · _reframe_
+  - sig: confirmed window-edge no-date-in-window three outcomes
+  - C3 three first-class outcomes per track: (1) CONFIRMED date (candidate below the window top, ≥1 later offset of evidence); (2) WINDOW-EDGE date (the window top, zero later offsets, reported WITH the unconfirmed-tail disclosure, never silently crowned, never folded into 'no date'); (3) NO-DATE-IN-WINDOW (top offset fails — a first-class result, never 'never free,' never a crash, surfacing the per-offset curve); Y==0 reads 'work-optional AT today'; indeterminate stays reserved for input failure; the OutcomeState enum stays closed; persisted sentinels are finite numerics.
+  - [dedup] R27 canonical in product; the three-outcome vocabulary is defined-once in glossary (pointing to architecture/decisions for behavior); recorded in decisions/accumulation-fuck-off-date.md.
+  - [reframe] Surviving fact: the date-search has three first-class per-track outcomes (confirmed / window-edge-with-disclosure / no-date-in-window), Y==0 = 'work-optional today'. Present-tense framing: standing definitions; drop the 'fold' framing, keep C3 ID.
+- **`docs/plans/features/social-security.md#67`** · `definition-term` · → SS terms (BenefitPerson, H/L, streams) · _reframe_
+  - sig: BenefitPerson, H = argmax(pia), L recipient
+  - Sub-engine type contracts: BenefitPerson (constructed in the seam, consumed by survivorBenefitAnnual); the per-person 'streams' are own (scalar), spousal excess (time-gated term), survivor (per-path selection); H = argmax(pia) is the higher earner, L is the potential spousal recipient on H's record.
+  - [reframe] Surviving fact: define BenefitPerson, H (= argmax(pia), higher earner), L (potential spousal recipient), and the three stream shapes. Present-tense glossary entries pointing to docs/plans/features/social-security.md (§3/§4/§6, the as-built mechanics home) for mechanics — NOT architecture §7, which has no SS section.
+  - [fixed:warn] Repointed SS-term pointer from architecture §7 to plans/features/social-security.md
+- **`docs/plans/features/other-income.md#82`** · `definition-term` · → INCOME_TYPES / COLA_MODES (R40 vocab) · _reframe_
+  - sig: INCOME_TYPES and COLA_MODES single-sourced const arrays
+  - Vocab constants single-sourced for the codec to import: INCOME_TYPES (pension/rental/alimony/annuity/other) and COLA_MODES (real-flat/nominal-flat/fixed-pct) as const arrays in src/shared/model.ts.
+  - [dedup] Define-once in glossary; Unit 1 build + U8 codec obligation cite the single-sourced const (pointers).
+  - [reframe] Surviving fact: INCOME_TYPES (pension/rental/alimony/annuity/other) and COLA_MODES (real-flat/nominal-flat/fixed-pct) are single-sourced as const arrays the codec imports. Present-tense definition.
+- **`docs/decisions/README.md#0`** · `definition-term` · → term: decision record · _reframe_
+  - sig: decision record outlives the plan
+  - A decision record is a permanent record of the WHY behind the hardest engineering calls; unlike a plan (active->done->archived) it persists because code, plans, and tests cite it by §-number long after the work ships.
+  - [reframe] A decision record is a permanent record of the WHY behind a hard engineering call, written to outlive the plan that produced it: plans flip active->done and get archived, decision records do not, because the codebase, plans, and tests cite them by §-number long after the work ships.
+- **`docs/decisions/README.md#1`** · `scope-boundary` · → term: decision record (admission criterion) · _pointer_
+  - sig: expensive to reconstruct AND referenced across repo
+  - A record belongs in decisions/ only when its reasoning is expensive to reconstruct AND referenced across the repo; routine choices stay in their plan, product-level decisions live in docs/product.md, engine invariants in docs/architecture.md.
+  - [dedup] Canonical precedence-on-conflict map lives in CLAUDE.md (roadmap You-Are-Here wins on status; architecture wins on an invariant; product wins on why/what). The glossary entry states the decisions/ admission criterion and points to that map rather than re-stating precedence.
+- **`docs/decisions/README.md#6`** · `decision-rationale` · → [REHOME → docs/decisions/README.md] term: decision record (graduation rule) · _reframe_
+  - sig: graduate into its own record when cited by §-number
+  - Graduation rule: a decision living elsewhere graduates into its own record in decisions/ once it gains enough cross-repo reach to be cited by §-number from MULTIPLE subsystems.
+  - [reframe] A decision living in a plan/feature doc graduates into its own record in decisions/ once it is cited by §-number from multiple subsystems; stated as a forward-going policy, not as a record of a past move. Today the SS computation decisions and the R40 KTDs deliberately remain in plans/features/social-security.md and plans/features/other-income.md (ungraduated) — those decisions/ records do NOT yet exist. Canonical home for the rule is docs/decisions/README.md; the glossary at most carries a pointer-entry under 'decision record' referencing the README's graduation rule.
+  - [fixed:blocker] Struck false ss-computation.md/other-income-r40.md claim; rehomed rule to decisions/README.md
+- **`docs/research/pre65-healthcare.md#14`** · `definition-term` · → ACA-PTC / SLCSP (points to research pre-65 §1 + architecture §7.2) · _reframe_
+  - sig: ACA-PTC = benchmark SLCSP minus applicable% × MAGI
+  - ACA-PTC (IRC §36B) = benchmark SLCSP premium − (applicable% × MAGI); SLCSP = second-lowest-cost Silver plan in the rating area; taken as advance APTC, reconciled on Form 8962; eligibility uses prior-year FPL (2026 coverage → 2025 FPL).
+  - [dedup] Glossary defines the term once and points to the formula in research §1/§4b and the as-built fixed point in architecture §7.2; the formula block in §4b stays canonical in this research doc.
+  - [reframe] Surviving fact: glossary defines ACA-PTC and SLCSP, pointing to the formula in research pre-65 §1/§4b and the as-built computation in architecture §7.2. Present tense — define-once, no duplicate formula in glossary.
+- **`docs/research/pre65-healthcare.md#17`** · `definition-term` · → IRMAA (points to research pre-65 §1 + architecture §7.2 IRMAA feed-forward) · _reframe_
+  - sig: IRMAA surcharge set by MAGI two years prior
+  - IRMAA is an income-based surcharge on Medicare Part B AND Part D; year-N surcharge is set by MAGI from year N−2 (2026 IRMAA set by 2024 MAGI) (CMS/SSA, Finance Buff).
+  - [dedup] Glossary defines IRMAA once and points to the 2-year-lag mechanics in architecture §7.2; the number/regime detail stays canonical in research §1; §3/§4c are pointers.
+  - [reframe] Surviving fact: IRMAA = income-based Part B + Part D surcharge set by MAGI from two years prior. Glossary defines it; architecture §7.2 owns the lagged feed-forward mechanics; research §1 owns the verified facts.

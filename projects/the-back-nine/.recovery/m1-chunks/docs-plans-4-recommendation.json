@@ -1,0 +1,719 @@
+{
+  "doc": "docs/plans/4-recommendation.md",
+  "oneLineRole": "The Act-4 build plan for the solver + recommendation differentiator (Units 14-17): the validation-gated, held-out-seed, lexicographic-objective recommender that names a confidence-graded strategy over withdrawal-sequencing + Roth-conversion, plus its surface and stale-saved-recommendation handling.",
+  "source": "main-inventory",
+  "items": [
+    {
+      "kind": "status-as-built",
+      "claim": "Act 4 is PLANNED, zero code: src/engine/solver/ and src/engine/validation/ are .gitkeep-only. This act is not started. The lifecycle front-matter (status: planned, created 2026-06-17) asserts this truthfully. This is the actual differentiator and is still entirely ahead.",
+      "sourceSection": "Front-matter + intro status block (lines 1-13)",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/roadmap.md (You-Are-Here per-unit status table)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "requirement",
+      "claim": "The goal of Act 4: deliver the recommend-SECOND beat. After the spine's confidence statement (Act 2) and the user's budget + two manual controls (Act 3), the product recommends a confidence-graded strategy over two coupled controls — withdrawal SEQUENCING + Roth CONVERSION — that funds the user's budget toward the user's chosen goal. The solver ranks named drawdown policies x a conversion grid on identical Monte Carlo futures (CRN), selects a winner under a lexicographic objective whose metric IS the headline metric, reports confidence on a held-out seed-set, and surfaces the recommendation with its hedge on the headline, the runner-up retained, and the modeled omissions disclosed.",
+      "sourceSection": "The goal (line 15)",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/product.md (R9, R21, R23), docs/roadmap.md",
+      "fossilNote": ""
+    },
+    {
+      "kind": "invariant",
+      "claim": "The validation harness that proves the recommendation is RIGHT is built and passing BEFORE the solver is allowed to recommend. The cardinal sin is calm-but-wrong on real money: a confidently-stated wrong recommendation costs real dollars and is worse than no tool. The recommender cannot speak until its correctness backstop (optimality oracle, ranking-stability under CRN, grade calibration, held-out-seed defense) exists and passes. \"It's just for friends\" must never soften this — friends risk identical real money with less protection and trust the tool more, so the validation bar RISES for a recommender.",
+      "sourceSection": "The goal + Why this act lands last (lines 15, 17)",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/product.md §2 (cardinal rule), CLAUDE.md",
+      "fossilNote": ""
+    },
+    {
+      "kind": "decision-rationale",
+      "claim": "Why Act 4 lands last: everything here CONSUMES the validated spine + the two deterministic overlays (Act 1) and the budget + manual controls (Act 3). The solver does not re-implement decumulation — it ranks candidate strategies through the exact same per-year cash-term transform seam the spine and manual controls already drive (docs/architecture.md §4).",
+      "sourceSection": "Why this act lands last (line 17)",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/architecture.md §4",
+      "fossilNote": ""
+    },
+    {
+      "kind": "definition-term",
+      "claim": "The chain in one line: oracle -> solver -> surface -> staleness. U14 builds the validation harness whose compile-time oracle-cleared token gates U15; U15 runs named drawdown policies x a conversion grid on CRN under the lexicographic objective and emits a byte-identical winner + retained runner-up; U16 surfaces it as the recommend-second, confidence-graded comparative beat (objective ≡ headline, hedge-on-headline); U17 treats a stale saved recommendation as a real executed action and re-solves under current fixtures.",
+      "sourceSection": "The chain in one line (line 19)",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/roadmap.md (requirement->unit trace)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "scope-boundary",
+      "claim": "Pointers to canonical homes: the load-bearing invariants this act inherits (CRN/single shared market draw, reduce-to-spine byte-identity, externally-derived-fixture discipline, cross-engine headline-robustness quantization, worker boundary) live once in docs/architecture.md and are LINKED, not restated. The accumulation/fuck-off-date decision record is docs/decisions/accumulation-fuck-off-date.md. The lexicographic objective and lever set are locked in docs/product.md §4-§5.",
+      "sourceSection": "Engine context note (line 21)",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/architecture.md, docs/product.md §4-§5, docs/decisions/accumulation-fuck-off-date.md",
+      "fossilNote": ""
+    },
+    {
+      "kind": "invariant",
+      "claim": "CONTRACT #1 — Validation gates the solver (owned cross-cutting Units 14->15). Success criteria are two-tier: the engine's NUMBER is right (Trinity/Bengen golden cases, Act 1) AND the solver's RECOMMENDATION is right (Solver validation strand of docs/research/engine-validation-and-tax.md). Unit 14 is the second tier and GATES Unit 15: optimality/ranking oracle (hand-computable known-best cases), ranking-stability under CRN, and grade calibration must each exist and pass before the solver may emit a recommendation. Until the oracle passes, any solver output is DIRECTIONAL (marked so in code) and no Unit-16 surface may render it as a recommendation. The order is STRUCTURAL and TYPE-LEVEL not boolean: the 'oracle-cleared' result is an OPAQUE NOMINAL TOKEN constructable ONLY by the validation harness on a clean pass, and Unit 15's solve-as-recommendation entry point takes that token as a REQUIRED PARAMETER — so shipping a recommendation without a passing oracle is a TypeScript COMPILE error (mirroring Act 1's no-unkeyed-write seam). The gate's own test plants a wrong-best case the oracle must reject (burned/070). 'fixtures-pinned' is a CHECKED CLAUSE of the token: the harness mints the cleared token ONLY when every rec-relevant §Strand-5 + healthcare primary the near-ties depend on is pinned (directionalUntilPinned === false) AND ε is calibrated — a test plants a single still-directional rec-relevant constant (or uncalibrated-ε sentinel) and asserts the token is REFUSED.",
+      "sourceSection": "Eight cross-cutting contracts #1 (line 29)",
+      "mustSurvive": true,
+      "duplicatedIn": "Unit 14 Approach (line 74), docs/research/engine-validation-and-tax.md",
+      "fossilNote": ""
+    },
+    {
+      "kind": "invariant",
+      "claim": "CONTRACT #2 — Held-out-seed discipline: select on A, grade on B (owned by Unit 14; consumed by 15+16). Argmax over many candidates on a single seed overfits that seed's noise (the optimizer's curse); the in-sample winner's score is optimistically biased. Defense: SELECT the winning strategy on seed-set A, REPORT its graded confidence on independent held-out seed-set B. Both seed-sets are CRN-correct internally. A and B must be STATISTICALLY INDEPENDENT not merely distinct: seedA is the existing Act-2-minted scenario seed (so the spine headline still reproduces under it); seedB is derived by a HASH/SplitMix expansion of seedA into a well-separated stream — NEVER seedA+1 or a near-integer (whose mulberry32 streams correlate and silently make B optimistic). This is seed-INPUT decorrelation only; it does NOT replace mulberry32 as the path PRNG. Both seeds are first-class persisted model fields surviving encrypt->decrypt round-trip bit-identically (persist seedA + expanded seedB; no third master stored). The survival-equivalent ε has TWO DISTINCT ROLES that must not be conflated: the DISPLAY BAND (rendered uncertainty interval) measured on B; the SELECTION TIE-TOLERANCE that declares two candidates survival-equivalent is a selection decision and must NEVER be a B-measured level band. The selection tolerance is a pre-specified/theoretical standard error (or computed A-side), keyed to the variance of the pairwise DIFFERENCE between candidates under CRN (which CRN shrinks far below the variance of the level — a level-keyed band over-declares ties and can drop a survival-relevant gap into Tier-2). Pinning the §Strand-5 + healthcare primaries is a HARD solver PREREQUISITE, not a residual gate.",
+      "sourceSection": "Eight cross-cutting contracts #2 (line 31)",
+      "mustSurvive": true,
+      "duplicatedIn": "Unit 14 Approach (line 73), Unit 15 Approach (lines 122-125)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "invariant",
+      "claim": "CONTRACT #3 — Deterministic, byte-identical recommendation selection (owned by Unit 15). The selected strategy + its grade + its runner-up must be byte-identical across reproductions and re-entry. Selection = a QUANTIZED objective (lexicographic score rounded to a stable display/decision granularity so float noise can't reorder near-ties) + a DETERMINISTIC LEXICOGRAPHIC TIE-BREAK (fixed candidate ordering: policy enum order, then conversion amount, then years) + a SEEDED SUB-STREAM ORTHOGONAL to the simulation draws (a THIRD stream, never one of seed-sets A/B, used only where a tie-break needs a deterministic coin — never for simulation). No Math.random, no clock, no getRandomValues inside the solver (engine-purity lint of Act 1 forbids them in src/engine/**). The selection is reproducible from (model, seedA, seedB, goal) alone. Byte-identical is a SAME-JS-ENGINE guarantee: the selection run and the held-out-B grade for one recommendation must execute on the SAME ENGINE INSTANCE, never a precomputed cross-engine baseline, or a single ULP delta in one Math.exp could reorder a near-tie and silently bias the grade.",
+      "sourceSection": "Eight cross-cutting contracts #3 (line 33)",
+      "mustSurvive": true,
+      "duplicatedIn": "Unit 15 Approach (line 124), docs/architecture.md (quantized-headline guard)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "invariant",
+      "claim": "CONTRACT #4 — Objective ≡ headline metric, lexicographic (owned by Unit 15 for objective; Unit 16 for render). The objective is LEXICOGRAPHIC (R21): Tier 1 (the floor) = the survival-floor statistic (essentials covered every year across futures) expressed in the spine's 'X of 10' natural-frequency metric; Tier 2 (the user picks) = a surplus goal, each a concrete distributional statistic the headline renders directly: PAY LESS TAX = lifetime tax paid (real dollars); LEAVE MORE = the bequest measured AFTER-TAX TO HEIRS — gross estate adjusted by a FIRST-ORDER §1014/IRD treatment (taxable basis stepped up at death, inherited pre-tax taxed as ordinary income-in-respect-of-a-decedent at a DISCLOSED ASSUMED HEIR BRACKET, Roth tax-free), NEVER gross/pre-heir-tax (a gross objective can crown the strategy that leaves LESS after-tax); LIVE BIGGER NOW = the held-out 'X of 10' confidence that the user's chosen front-loaded (go-go-years) discretionary spending shape holds across futures — a confidence-over-FIXED-spending statistic, NEVER a spend-amount the solver raises (budget stays read-only; telling the user how much MORE they could sustainably spend is a continuous-spending/die-with-zero solver, explicitly chapter-two). The quantity the solver maximizes IS the quantity the headline shows. When survival is a given the headline pivots (contract #6) to the SAME Tier-2 quantity the solver optimized. Candidates within the SELECTION tie-tolerance (CRN-difference-keyed, computed at selection, never B-measured display band) are survival-equivalent; among them the winner is the best Tier-2 score. Seed-set B carries the displayed number + grade, NEVER the choice of which candidates are survival-equivalent. Spending shape is never an objective term (contract #8) — the solver optimizes FUNDING, not how you live.",
+      "sourceSection": "Eight cross-cutting contracts #4 (line 35)",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/product.md §4-§5 (R21 lexicographic objective + lever set), Unit 15 Approach (line 123), Unit 16 Approach (line 178)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "invariant",
+      "claim": "CONTRACT #5 — Single shared market draw per year, now MORE load-bearing (owned by Unit 15). All account buckets (pre-tax/Roth/taxable/HSA) share ONE market-return draw per year; buckets differ only in tax treatment, never in return assumption. This lets the solver rank K candidate strategies on identical futures (signal, not luck) and structurally forecloses asset-location. Act 3 proved this for a 2-arm Roth what-if; Unit 15 GENERALIZES the CRN test to K candidates — every policy x conversion-grid candidate, within a seed-set, consumes the normals identical path-for-path across the survivor MFJ->single transition. Per-bucket draws are FORBIDDEN (they break CRN and re-open asset-location). The death-order conditional filter carries through unchanged: same seed, same draws, no re-draw.",
+      "sourceSection": "Eight cross-cutting contracts #5 (line 37)",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/architecture.md (CRN/single shared market draw), Unit 15 Approach (line 122)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "invariant",
+      "claim": "CONTRACT #6 — Recommend-second flow + the 10/10->surplus headline pivot (owned by Unit 16). The spine confidence answer is the FIRST beat (the magic moment, unchanged, never overwritten). The recommendation is the immediate SECOND beat — 'and here's what we'd do about it' — with comparative reasoning (why this beat the runner-up) ONE TAP DOWN (depth-on-demand, R4). The user tunes/overrides/re-picks the goal, both futures updating. It is CALM and INVITED, never a nagging alert/badge/engagement bait (R11). The 10/10 clamp pivot: when survival is a given (over-funded household / Tier-1 already maxed across futures), the headline honestly SWITCHES to the chosen surplus metric — 'you're safe either way; this keeps more from the IRS' — so the solver's signal is never eaten by the survival clamp. The active metric is always rendered explicitly so the user never silently re-bases between the spine beat and the recommendation beat.",
+      "sourceSection": "Eight cross-cutting contracts #6 (line 39)",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/product.md (R4, R10, R11, R21), Unit 16 Approach (lines 175, 178)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "invariant",
+      "claim": "CONTRACT #7 — Hedge-on-headline lint + disclosed-omission rule (owned by Unit 16). Every recommendation grades its own confidence and the hedge rides the headline — depth-on-demand must never invert into certainty-on-top/caveats-hidden-below (R22). copyGuard's require-the-hedge lint (a positive/require assertion introduced in Act 3, NOT the legacy ban-list) is extended to assert the recommendation headline + grade copy each wear their probabilistic hedge by construction; certainty verbs stay banned (R12). All recommendation strings route through src/ui/copy.ts catalog (recommendation viz in src/viz stays string-free, receiving text as props — burned/063). Disclosed-omission rule: because a disclosed omission can INVERT a ranking (not just blunt a delta), ACA-PTC + IRMAA are already IN the model (Act 1); the remaining out-but-disclosed effects (NIIT, state tax) are disclosed in plain language ADJACENT to the delta, never silently dropped. One further effect is LEVER-SENSITIVE: when the chosen Tier-2 goal is 'leave more', a death-time §1014 basis step-up (taxable stepped up at death, inherited pre-tax fully taxable to heirs as IRD, Roth tax-free) MOVES WITH the sequencing/conversion lever and can invert which strategy leaves more after-tax. By the IN/OUT line's own falsifiable test (the lever moves which account is preserved into the estate AND the effect can invert the ranking) it belongs IN, not disclosed-and-omitted. So 'leave more' objective is the after-tax-to-heirs bequest (contract #4): a first-order §1014/IRD adjustment modeled into the bequest statistic, with the assumed heir tax bracket carried as a disclosed, R7-editable assumption surfaced adjacent to the leave-more delta. The lever-INERT NIIT + state tax remain the ONLY OUT-but-disclosed effects. The full-fidelity estate model (multiple heirs, state estate tax, trusts, precise IRD timing) stays chapter-two.",
+      "sourceSection": "Eight cross-cutting contracts #7 (line 41)",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/product.md (R12, R22, R24), Unit 16 Approach (lines 177, 181, 184)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "invariant",
+      "claim": "CONTRACT #8 — Spending is never solver-recommended (owned by Unit 15) + the stale-rec inversion (owned by Unit 17). (a) The solver's controls are ONLY the two funding levers — named drawdown policies x the conversion grid; the budget/spending shape is user-set input (floor essentials + discretionary surplus), never a control the solver moves. A tool must never recommend a LIFESTYLE; it shows honest consequences. (b) A saved recommendation is a real, executed action, so its staleness rule INVERTS the spine's Act-3 rule. The spine re-PRESENTS a saved verdict under its SAVED fixture vintage (so the number matches the screenshot) and only re-RUNS under current fixtures on demand. A recommendation cannot: a stale saved rec ALWAYS re-solves under CURRENT fixtures, and the staleness copy reads 'the action we recommended may no longer be advised,' NOT 'your number drifted.' Re-verifying the ACA legislative status is part of this (it can flip the whole pre-65 model and thus which strategy wins). A saved manual-control result (an Act-3 what-if, not an executed action) keeps the spine's re-present-under-saved-vintage rule; only a saved RECOMMENDATION inverts — the boundary the reset turns on (a saved control what-if ≠ a saved executed action).",
+      "sourceSection": "Eight cross-cutting contracts #8 (line 43)",
+      "mustSurvive": true,
+      "duplicatedIn": "Unit 15 Approach (line 126), Unit 17 Approach (line 228)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "requirement",
+      "claim": "Unit 14 — Solver validation harness (GATES Unit 15). Goal: make the recommendation's CORRECTNESS testable before the solver speaks — a hand-computable known-best oracle, K-candidate ranking-stability under CRN, calibrated confidence grades, and the held-out-seed defense against the optimizer's curse — so a confidently-wrong recommendation FAILS LOUD. Requirements: R22 (grade calibration), R25 (cardinal honesty bar), SC (recommendation half of two-tier correctness criterion).",
+      "sourceSection": "Unit 14 Goal + Requirements (lines 47-53)",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/roadmap.md (You-Are-Here unit table)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "build-detail-or-KTD",
+      "claim": "Unit 14 Dependencies: Act 1's validated spine + CRN draw schedule, the tax-and-accounts overlay, the healthcare overlay (ACA fixed-point + IRMAA lag) the near-ties depend on, and src/engine/constants/ (the year-keyed table; the §Strand-5 + healthcare primaries PINNED is a hard prerequisite, contract #2). Has NO dependency on Unit 15 — it is built first by construction.",
+      "sourceSection": "Unit 14 Dependencies (line 55)",
+      "mustSurvive": true,
+      "duplicatedIn": "",
+      "fossilNote": ""
+    },
+    {
+      "kind": "build-detail-or-KTD",
+      "claim": "The candidate enumerator is SHARED, not duplicated: the policy x cliff-anchored-conversion-grid candidate generation (with the RMD-first legality filter) lives in src/engine/solver/candidates.ts, CREATED in Unit 14 (because rankingStability.ts must run the CRN check over the SAME candidate set Unit 15 later scores) and IMPORTED by both U14's harness and U15's search.ts — so 'built before any solver code' is honest and the two can never drift to different candidate sets.",
+      "sourceSection": "Unit 14 Dependencies + Files (lines 55, 58)",
+      "mustSurvive": true,
+      "duplicatedIn": "Unit 15 Files/Approach (lines 114, 119)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "build-detail-or-KTD",
+      "claim": "Unit 14 Files to CREATE: src/engine/solver/candidates.ts (shared policy x cliff-anchored-grid candidate enumerator + RMD-first legality filter); src/engine/validation/optimalityOracle.ts (the known-best drawdown/conversion cases — the five cases i-v); src/engine/validation/rankingStability.ts (K-candidate CRN ranking check, run over candidates.ts); src/engine/validation/gradeCalibration.ts (robust-vs-fragile calibration + shrinkage calibration case + named-driver sensitivity probe); src/engine/validation/heldOutSeed.ts (seed-set A/B harness + deterministic B-family + ε-band measurement); src/engine/reference/solver-cases/ (COMMITTED, hand-derived oracle fixtures, NEVER generated, marked directional-until-pinned to §Strand-5/healthcare primaries — same discipline as Trinity/Bengen; EACH FIXTURE STORES ITS PRECONDITIONS — constant-rate; RMD/SS/cap-gains/cliff/bequest each on or off — and the harness refuses to apply a fixture's known-best outside its declared preconditions).",
+      "sourceSection": "Unit 14 Files (line 58)",
+      "mustSurvive": true,
+      "duplicatedIn": "",
+      "fossilNote": ""
+    },
+    {
+      "kind": "build-detail-or-KTD",
+      "claim": "Unit 14 Files to MODIFY: src/engine/constants/ (the survival-equivalent ε constant is OUTPUT by this unit's calibration and stored here as an out-of-range-sentinel-guarded value); src/shared/model.ts (the second scenario seed seedB field — NET-NEW — alongside the spine's EXISTING seed: the field Act 2 already mints, now READ AS seedA, NOT a new field — so the spine headline still reproduces under 'the' seed; only seedB is added, under the Act-4 schemaVersion-3 bump — contract #2 / Unit 17). Tests: optimalityOracle.test.ts, rankingStability.test.ts, gradeCalibration.test.ts, heldOutSeed.test.ts.",
+      "sourceSection": "Unit 14 Files (lines 59-60)",
+      "mustSurvive": true,
+      "duplicatedIn": "Unit 15 Files (model.ts chosen-goal), Unit 17 Files (model.ts saved-rec record + schemaVersion-3)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "decision-rationale",
+      "claim": "Unit 14 optimality oracle case (i): the conventional TAXABLE -> TAX-DEFERRED -> ROTH drawdown ordering is optimal ONLY in a constant-marginal-rate world — a flat rate, or income high enough that every year sits in one bracket, with NO RMD, NO SS taxation, NO cap-gains stacking, NO ACA/IRMAA cliff, and NO bequest motive — stated as the fixture's gating preconditions. A LOW-other-income world is explicitly NOT this case: it is the bracket-filling regime where (ii), not conventional ordering, is the hand-derived best — so the oracle must never be hardcoded to conventional ordering there.",
+      "sourceSection": "Unit 14 Approach, oracle case (i) (line 65)",
+      "mustSurvive": true,
+      "duplicatedIn": "",
+      "fossilNote": ""
+    },
+    {
+      "kind": "decision-rationale",
+      "claim": "Unit 14 optimality oracle case (ii): a BRACKET-FILLING Roth conversion optimum — fill to the top of a target bracket and no further — in a STRIPPED case where SS taxation, cap-gains/QD stacking, and ALL cliffs are OFF, so the in-bracket marginal rate is genuinely flat and 'bracket top' actually equals 'today's marginal = future marginal'. The REAL rule is marginal-rate equalization; 'bracket top' is a coincidence of the simplified world, never the rule the solver should learn.",
+      "sourceSection": "Unit 14 Approach, oracle case (ii) (line 66)",
+      "mustSurvive": true,
+      "duplicatedIn": "",
+      "fossilNote": ""
+    },
+    {
+      "kind": "decision-rationale",
+      "claim": "Unit 14 optimality oracle case (iii): a CLIFF-AWARE case where filling past an ACA 400%-FPL ceiling or an IRMAA step LOSES, so the healthcare-blind ranking is sign-inverted (the tax-blind delta makes aggressive conversion look better than it is). Here the binding ceiling is the subsidy-aware MAGI/IRMAA-step line, NOT the bracket top — so (ii) and (iii) are SEPARATE WORLDS (healthcare off vs on) and a fixture's known-best is never applied across that boundary.",
+      "sourceSection": "Unit 14 Approach, oracle case (iii) (line 67)",
+      "mustSurvive": true,
+      "duplicatedIn": "",
+      "fossilNote": ""
+    },
+    {
+      "kind": "decision-rationale",
+      "claim": "Unit 14 optimality oracle case (iv): a LEAVE-MORE AFTER-TAX case where the GROSS-bequest-best strategy is NOT the AFTER-TAX-best — the §1014 step-up/IRD treatment (contract #4/#7) inverts the ranking (e.g. preserving a taxable bucket that steps up at death beats converting a pre-tax bucket the heirs would owe IRD on at the assumed heir bracket) — so the oracle's known-best is the after-tax-to-heirs winner and a solver that argmaxes the gross bequest FAILS LOUD. This is the hand-derived guard that the after-tax objective is the one actually optimized.",
+      "sourceSection": "Unit 14 Approach, oracle case (iv) (line 68)",
+      "mustSurvive": true,
+      "duplicatedIn": "",
+      "fossilNote": ""
+    },
+    {
+      "kind": "decision-rationale",
+      "claim": "Unit 14 optimality oracle case (v): a NO-CHANGE case where the conventional drawdown + zero conversion IS the known-best for the (model, goal): the oracle asserts the solver routes to the NO-CHANGE state (Unit 16) and does NOT crown a fabricated active move — which requires the search space to ALWAYS contain the conventional-order/conversion-0 candidate as a labeled baseline (Unit 15).",
+      "sourceSection": "Unit 14 Approach, oracle case (v) (line 69)",
+      "mustSurvive": true,
+      "duplicatedIn": "Unit 15 Approach (line 120), Unit 16 Approach (line 176)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "build-detail-or-KTD",
+      "claim": "Unit 14: the oracle asserts the solver's RANKING puts the known-best candidate first; a PLANTED WRONG-BEST fixture must make the oracle FAIL LOUD (burned/070 — planted-fail self-test, the oracle must be able to fail).",
+      "sourceSection": "Unit 14 Approach (line 70)",
+      "mustSurvive": true,
+      "duplicatedIn": "",
+      "fossilNote": ""
+    },
+    {
+      "kind": "build-detail-or-KTD",
+      "claim": "Unit 14: Ranking-stability under CRN, generalized to K candidates (extends Act-3's 2-arm test). The RANKING — not just each pairwise delta — must be stable on the shared draw matrix. Assert all K policy x conversion-grid candidates, within one seed-set, consume the normals identical path-for-path across the survivor MFJ->single transition; perturbing only a candidate's conversion amount must not perturb any other candidate's draw consumption. PAIR EVERY CRN ABSENCE-ASSERTION WITH A PRESENCE COMPANION (burned/027): assert 'the harness ran N paths and at least one path crossed the survivor transition / an ACA cliff / an IRMAA step' so a vacuous zero-path pass cannot masquerade as stability.",
+      "sourceSection": "Unit 14 Approach, ranking-stability (line 71)",
+      "mustSurvive": true,
+      "duplicatedIn": "Unit 15 Approach (line 122)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "build-detail-or-KTD",
+      "claim": "Unit 14 grade calibration: the grades are ROBUST-across-futures ('just do it') vs FRAGILE ('coin-flip — here's what it hinges on'). Calibration asserts: a 'just do it' grade is emitted ONLY when the winner's lexicographic advantage over the runner-up holds on the held-out seed-set B with margin BEYOND the ε-band; 'coin-flip' when the held-out advantage falls WITHIN noise. The oracle hand-supplies one KNOWN-ROBUST case (a dominant strategy that wins on any futures) and one KNOWN-FRAGILE case (two near-tied strategies) and asserts the grade matches. The N=1 cold-read judges the grade's TONE; this oracle is the only judge of its CORRECTNESS (R25) — different gates, neither substitutes for the other.",
+      "sourceSection": "Unit 14 Approach, grade calibration (line 72)",
+      "mustSurvive": true,
+      "duplicatedIn": "Unit 16 Approach (line 177)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "build-detail-or-KTD",
+      "claim": "Unit 14: because a SINGLE held-out B is unbiased but HIGH-VARIANCE, the grade is computed over a specified MINIMUM B PATH FLOOR (enough paths that the margin-vs-tolerance decision is not itself noise) and a GRADE-STABILITY CHECK asserts the grade for a fixed (model, goal) does not flip across independent held-out-B draws — a known-borderline case is forced to the conservative ('coin-flip') reading rather than allowed to luck-flip. The 'independent held-out-B draws' are a DETERMINISTIC B-FAMILY, not plural persisted seeds: the one persisted seedB indexes a fixed, well-separated SplitMix/hash family seedB[0..m-1] of m independent hold-out streams (m = the minimum-B-path-floor count), all RE-DERIVABLE from the single seedB — so the grade is both stability-checked AND byte-reproducible on re-entry (Unit 17 re-solves on the saved seedB and regenerates the identical family -> the identical grade). The per-solve compute profile (Unit 15) must budget the m-draw family, not one B.",
+      "sourceSection": "Unit 14 Approach, grade calibration (line 72)",
+      "mustSurvive": true,
+      "duplicatedIn": "Unit 15 Approach (line 131 profile budgets m-draw family), Unit 17 Approach (line 235)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "build-detail-or-KTD",
+      "claim": "Unit 14: the grade also emits its 'what it hinges on' NAMED DRIVER (consumed by Unit 16, contract #7): gradeCalibration.ts runs a small SENSITIVITY PROBE — re-rank the top candidates under the ACA-enhanced-subsidy toggle and a fixture-vintage perturbation — and reports the single input whose flip moves the grade (e.g. 'depends on whether enhanced ACA subsidies return'); a pure seed-B near-tie with no identifiable input driver carries a sampling-noise-near-tie SENTINEL, never a fabricated input cause.",
+      "sourceSection": "Unit 14 Approach, grade calibration (line 72)",
+      "mustSurvive": true,
+      "duplicatedIn": "Unit 16 Approach (line 177)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "build-detail-or-KTD",
+      "claim": "Unit 14: Grade vs display resolution reconciled — a graded-significant advantage that rounds BELOW one display tenth of the 'X of 10' headline must not render an UNCHANGED 'X of 10' under a 'just do it' (indistinguishable from no-change): the surface either shows the finer figure (surplus $ delta / a percentile-shift line) OR the grade requires the advantage to clear BOTH the seed-B ε-band AND one display tenth before 'just do it' (the sub-tenth win otherwise collapses into the no-change state).",
+      "sourceSection": "Unit 14 Approach, grade calibration (line 72)",
+      "mustSurvive": true,
+      "duplicatedIn": "",
+      "fossilNote": ""
+    },
+    {
+      "kind": "build-detail-or-KTD",
+      "claim": "Unit 14: Seed-set B and the grade thresholds are drawn under a FRESH-DRAW, USED-ONCE-PER-RELEASE, RE-DRAWN-ON-ANY-CHANGE-TO-CANDIDATES-OR-THRESHOLDS protocol; the N=1 cold-read may revise tone/copy but its feedback NEVER re-tunes the candidate set, thresholds, or the survival-equivalence tolerance against B-derived outputs (adaptive reuse silently re-optimisms B — the garden-of-forking-paths failure).",
+      "sourceSection": "Unit 14 Approach, grade calibration (line 72)",
+      "mustSurvive": true,
+      "duplicatedIn": "",
+      "fossilNote": ""
+    },
+    {
+      "kind": "build-detail-or-KTD",
+      "claim": "Unit 14 held-out-seed defense + ε-band measurement: heldOutSeed.ts runs candidate evaluation on seed-set A (selection) and seed-set B (reporting), each CRN-correct internally. SEED-SET B CARRIES THE DISPLAYED NUMBERS, NOT ONLY THE GRADE: the recommended figure and the no-action baseline Unit 16 renders both come from B (the seedA selection score is NEVER displayed — else the hero number is the curse-biased one). The K-candidate ranking-stability/CRN check runs on BOTH A and B. The survival-equivalent ε is CALIBRATED HERE against the optimality oracle (the constant is this unit's deliverable). Store ε with an OUT-OF-RANGE SENTINEL DEFAULT, never an in-range fallback (burned/062): an unset/uncalibrated ε must be DETECTABLY unset, never a plausible-looking 0.0x. The exact pinned ε value is DEFERRED to the §Strand-5/healthcare primary-pinning (contract #2) — directional-until-pinned because the directional fixtures decide the very near-ties it governs.",
+      "sourceSection": "Unit 14 Approach, held-out-seed defense (line 73)",
+      "mustSurvive": true,
+      "duplicatedIn": "Unit 16 Approach (line 178), Unit 15 Approach (line 123)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "build-detail-or-KTD",
+      "claim": "Unit 14: the ε resolves into TWO calibrated quantities (contract #2): a DISPLAY BAND measured on B (the rendered interval) and a SELECTION TIE-TOLERANCE keyed to the variance of the pairwise DIFFERENCE under CRN (a pre-specified/theoretical SE, or computed A-side) that ALONE decides survival-equivalence — the latter is NEVER a B-measured level band reused to rank. BOTH are sentinel-guarded.",
+      "sourceSection": "Unit 14 Approach, held-out-seed defense (line 73)",
+      "mustSurvive": true,
+      "duplicatedIn": "",
+      "fossilNote": ""
+    },
+    {
+      "kind": "build-detail-or-KTD",
+      "claim": "Unit 14 mints the OPAQUE 'oracle-cleared' TOKEN (contract #1) — constructable ONLY by this harness on a clean pass — that Unit 15's solve-as-recommendation entry point takes as a REQUIRED PARAMETER (so a recommendation that skips validation is a COMPILE error). The token is withheld until EVERY check passes on the pinned fixtures: the optimality oracle (all FIVE cases, including the no-change and after-tax-leave-more guards), K-candidate ranking-stability, grade calibration (with named-driver probe + deterministic B-family), the held-out-seed defense, AND the structural pinning clause — every rec-relevant §Strand-5 + healthcare primary pinned (directionalUntilPinned === false) and ε calibrated (a still-directional rec-relevant constant or an uncalibrated-ε sentinel withholds the token). This mirrors Act 1's no-unkeyed-write structural seam.",
+      "sourceSection": "Unit 14 Approach, the gate (line 74)",
+      "mustSurvive": true,
+      "duplicatedIn": "contract #1 (line 29), Unit 17 Approach gate-red fallback (line 232)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "lesson",
+      "claim": "Unit 14 patterns to follow: Act 1 seeding/CRN + the externally-derived-golden discipline; burned/070 (planted-fail self-test — the oracle must be able to fail); burned/027 (absence-tests need presence companions); burned/062 (no in-range default fallbacks — the ε sentinel); the 'Solver validation' strand of docs/research/engine-validation-and-tax.md.",
+      "sourceSection": "Unit 14 Patterns to follow (line 76)",
+      "mustSurvive": true,
+      "duplicatedIn": "CLAUDE.md (constants discipline burned/062), docs/architecture.md",
+      "fossilNote": ""
+    },
+    {
+      "kind": "build-detail-or-KTD",
+      "claim": "Unit 14 PICK-QUALITY defense is IN scope, not deferred. An honest grade alone does NOT make a stochastic near-tie PICK optimal — a 'coin-flip'-graded recommendation can still crown a seed-A-overfit winner over an equally-good or better candidate. So Unit 15's select.ts applies SELECTION-STAGE SKEPTICAL/BAYESIAN SHRINKAGE of the seed-A candidate scores TOWARD THE CONVENTIONAL-ORDERING PRIOR before the argmax, and Unit 14 carries the CALIBRATION CASE that proves it — a planted near-tie between two NON-CONVENTIONAL candidates must default to the conventional (shrunk) pick UNLESS a candidate's advantage survives the shrinkage, and a known-dominant strategy must survive it unchanged. This closes the gap a no-change-vs-conventional safety net alone leaves: the curse bites hardest among two AGGRESSIVE near-tied candidates, neither near the conventional baseline.",
+      "sourceSection": "Unit 14 Verification (line 97)",
+      "mustSurvive": true,
+      "duplicatedIn": "Unit 15 Approach (line 124 pick-quality shrinkage)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "build-detail-or-KTD",
+      "claim": "Unit 14 Execution note: test-first and FIRST IN THE ACT — the oracle + ranking-stability + calibration fixtures are authored and passing BEFORE any src/engine/solver/ code exists. This is the literal expression of 'validation gates the solver.'",
+      "sourceSection": "Unit 14 Execution note (line 99)",
+      "mustSurvive": true,
+      "duplicatedIn": "",
+      "fossilNote": ""
+    },
+    {
+      "kind": "requirement",
+      "claim": "Unit 15 — Solver core. Goal: search the bounded strategy space (named drawdown policies x a conversion grid) on identical CRN futures, score each candidate on the lexicographic objective whose metric IS the headline metric, select a byte-identical winner + retained runner-up, within the on-demand compute budget (or trigger the WASM promotion) — RANKING candidates, never RE-IMPLEMENTING decumulation. Requirements: R9 (a strategy over two coupled controls), R21 (lexicographic objective; objective ≡ headline metric), R23 (retain the runner-up), R24 (healthcare couples into the objective). GATED by Unit 14 (contract #1).",
+      "sourceSection": "Unit 15 Goal + Requirements (lines 103-109)",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/product.md (R9, R21, R23, R24), docs/roadmap.md",
+      "fossilNote": ""
+    },
+    {
+      "kind": "build-detail-or-KTD",
+      "claim": "Unit 15 Dependencies: Unit 14 (the validation gate); Act 1 (the spine + per-year update function + CRN draw schedule + the sequencing POLICY substrate; the tax-and-accounts overlay; the healthcare overlay — ACA fixed-point, IRMAA 2-yr lag, HSA bucket, the two MAGI calculators); Act 3 (the budget — essentials = Tier-1 floor, discretionary = Tier-2 surplus; the manual-control roth.ts per-year update shape); Act 2 (memoryModel — the solver run is dispatched through the same orchestrator + request-epoch as the spine).",
+      "sourceSection": "Unit 15 Dependencies (line 111)",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/architecture.md (overlays), docs/plans/3 (roth.ts, budget)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "build-detail-or-KTD",
+      "claim": "Unit 15 Files to CREATE: src/engine/solver/search.ts (the policy x conversion-grid cross-product evaluator on identical CRN draws — REUSES the spine's per-year update function, does not re-implement decumulation); src/engine/solver/objective.ts (the lexicographic Tier-1/Tier-2 score); src/engine/solver/select.ts (deterministic byte-identical selection + retained runner-up — contract #3); src/engine/solver/cancel.ts (request-epoch cooperative cancellation); src/engine/solver/profile.ts (the WASM measurement harness — the compute-profile gate). Tests: search.test.ts, objective.test.ts, select.test.ts, cancel.test.ts, profile.test.ts.",
+      "sourceSection": "Unit 15 Files (lines 114, 116)",
+      "mustSurvive": true,
+      "duplicatedIn": "",
+      "fossilNote": ""
+    },
+    {
+      "kind": "build-detail-or-KTD",
+      "claim": "Unit 15 Files to MODIFY: src/shared/model.ts (the CHOSEN-GOAL field — the Tier-2 pick — under the Act-4 schemaVersion-3 bump; the saved-recommendation record is Unit 17's); src/store/memoryModel.ts (dispatch the on-demand solve + carry its request-epoch, extending the Act-2 worker handle); src/engine/engine.worker.ts (expose the solve entry behind the Unit-14 oracle-cleared gate).",
+      "sourceSection": "Unit 15 Files (line 115)",
+      "mustSurvive": true,
+      "duplicatedIn": "Unit 14 Files (model.ts seedB), Unit 17 Files (model.ts saved-rec)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "decision-rationale",
+      "claim": "Unit 15 search space is BOUNDED and NAMED (R-locked, docs/product.md §4 D4): named drawdown policies {proportional, taxable-first, pre-tax-first, bracket-fill} (the Act-1 sequencing substrate) x a conversion grid {amount x years}. The solver evaluates the CROSS-PRODUCT of candidates; the grid resolution (amount step, max years) is a bounded set — exact resolution DEFERRED to implementation. This is NOT a continuous optimizer (a full continuous optimizer + a 'die-with-zero' solver + SS-claiming-age are explicitly chapter-two, deferred).",
+      "sourceSection": "Unit 15 Approach, search space (line 119)",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/product.md §4 D4 (lever set lock)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "decision-rationale",
+      "claim": "Unit 15: the grid is CLIFF-ANCHORED, not uniform — a CORRECTNESS requirement, not a resolution-tuning knob. The ACA 400%-FPL cliff and the IRMAA steps are discontinuities whose optimum sits exactly at the just-under-threshold dollar, so each candidate year includes grid points PINNED JUST UNDER EVERY ACTIVE ACA/IRMAA THRESHOLD plus a LOCAL BISECTION REFINEMENT around them; a uniform grid generically steps over that point and can neither find the just-under-cliff optimum nor avoid recommending a cliff-tripping amount. Relatedly, bracket-fill fills to the BINDING EFFECTIVE CEILING for the year — the subsidy-aware MAGI line in ACA years, the next IRMAA step post-65, a marginal-rate-aware bracket edge otherwise — NEVER the nominal tax-bracket top (which overshoots the cliff the instant healthcare is on). The candidate generation is the shared candidates.ts (authored in Unit 14).",
+      "sourceSection": "Unit 15 Approach, search space (line 119)",
+      "mustSurvive": true,
+      "duplicatedIn": "Unit 14 candidates.ts",
+      "fossilNote": ""
+    },
+    {
+      "kind": "decision-rationale",
+      "claim": "Unit 15: the 'no-action baseline' is a LABELED, SCORED candidate — the user's CURRENT strategy, not a notional default (contract #6 anchor). Every Unit-16 comparison (no-change decision, rendered delta, tax-aware reframe) is 'current strategy -> recommended,' so the baseline must be a real candidate scored on the IDENTICAL seed-A and seed-B draws as every other. The search FORCES the user's current configured strategy into the candidate set as a labeled baseline: their current sequencing policy + current conversion, defaulting to proportional/conversion-0 if none is set. A returning Act-3 user who set a CUSTOM per-bucket drawdown order (not one of the four named policies) is handled explicitly — that custom order is evaluated as its own labeled baseline point OUTSIDE the named-policy x grid cross-product (scored on the same draws), so the delta is never silently anchored against the conventional default the user does not actually hold. The conventional-order/conversion-0 candidate is ALSO always present (Unit-14 no-change oracle case (v) and the shrinkage prior both require it).",
+      "sourceSection": "Unit 15 Approach, no-action baseline (line 120)",
+      "mustSurvive": true,
+      "duplicatedIn": "Unit 16 Approach (line 179 tax-aware reframe)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "invariant",
+      "claim": "Unit 15 RANKS, does not re-decumulate (the solver-on-top principle). Each candidate is evaluated by running the EXISTING spine + overlays through the SAME per-year update function the manual controls drive (Act-3's roth.ts shape) with that candidate's policy + conversion event — so order-of-operations can never drift between the spine, the manual controls, and the solver. The reduce-to-spine golden invariant is INHERITED, not re-proven: with conversion = 0 and the conventional drawdown, a candidate's distribution is byte-identical (same seed) to the validated Trinity/Bengen spine — the golden cases are never perturbed by the solver layer (docs/architecture.md §5).",
+      "sourceSection": "Unit 15 Approach, ranks-not-re-decumulate (line 121)",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/architecture.md §5 (reduce-to-spine invariant)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "decision-rationale",
+      "claim": "Unit 15 deterministic byte-identical selection (contract #3), with pick-quality shrinkage: select.ts FIRST applies a deterministic skeptical/Bayesian SHRINKAGE of the seed-A candidate scores toward the conventional-ordering prior (the Unit-14-calibrated lever for PICK quality, not just grade honesty) — a candidate only displaces the conventional pick if its advantage SURVIVES the shrinkage; a known-dominant strategy survives it unchanged. Selection then = quantized lexicographic objective over the SHRUNK scores + a fixed lexicographic tie-break (policy enum order -> conversion amount -> years) + a seeded sub-stream ORTHOGONAL to seed-sets A/B (used only for a residual deterministic tie-break, never for simulation). The winner + the RETAINED RUNNER-UP (R23 — the runner-up is kept, not discarded, so Unit 16 can show 'why this beat it') are reproducible from (model, seedA, seedB, goal) alone. No clock/entropy/Math.random.",
+      "sourceSection": "Unit 15 Approach, deterministic selection (line 124)",
+      "mustSurvive": true,
+      "duplicatedIn": "contract #3 (line 33), Unit 14 pick-quality (line 97)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "decision-rationale",
+      "claim": "Unit 15 the 10/10-clamp/surplus regime (feeds contract #6): when Tier-1 is maxed across futures (survival a given), the objective's active discriminator is Tier-2 — the solver emits the surplus winner and flags the regime so Unit 16 can pivot the headline. The clamp is on the DISPLAY of Tier-1; the SELECTION still uses the raw pre-clamp Tier-1 to decide survival-equivalence (mirroring Act-3's raw-pre-clamp monotonicity rule). The surplus-regime flag requires A and B to AGREE within an over-funded ε — and 'over-funded' is an ε-TOLERANCE, not an exact 10/10: the flag trips when the B-rendered Tier-1 is within the display-band ε of the ceiling, so a genuinely over-funded household whose B happens to miss one path by a rounding step is not permanently denied the pivot. Both disagreement directions pinned: (a) Tier-1 maxed on A but a real survival gap on B (beyond over-funded ε) -> the flag does NOT trip (no false 'safe either way' the displayed B number would contradict); (b) B safe-either-way but the winner was SELECTED on A's Tier-1 discriminator (candidates not Tier-1-equivalent on A) -> the flag does NOT trip either, because pivoting while the pick was made on a survival edge would diverge objective from headline (contract #4). The pivot fires ONLY when both A and B agree the floor is non-binding.",
+      "sourceSection": "Unit 15 Approach, surplus regime (line 125)",
+      "mustSurvive": true,
+      "duplicatedIn": "contract #6 (line 39), Unit 16 surplus pivot (line 178)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "invariant",
+      "claim": "Unit 15: Spending is never a control (contract #8a). The budget + spending shape (go-go-years front-loading vs level) are READ-ONLY input to every candidate; the solver moves only sequencing + conversion. No candidate alters a budget line.",
+      "sourceSection": "Unit 15 Approach, spending immutable (line 126)",
+      "mustSurvive": true,
+      "duplicatedIn": "contract #8 (line 43), contract #4 (line 35)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "build-detail-or-KTD",
+      "claim": "Unit 15 candidate-legality filter before scoring (validate-before-mutate, burned/021). Before a {policy, amount, years} candidate is scored, each year is checked for legality: past RMD age the year's RMD is a FORCED ordinary-income floor TAKEN FIRST and is NON-CONVERTIBLE, so the conversion is CLAMPED to the pre-tax balance remaining AFTER the RMD, and a grid amount that exceeds post-RMD convertible headroom (or that would convert in lieu of the RMD) is REJECTED AS INFEASIBLE (an out-of-range sentinel, never silently scored). The search-space generation owns this — Act 1 enforces the RMD when RUNNING a candidate, but an infeasible candidate must never reach scoring in the first place.",
+      "sourceSection": "Unit 15 Approach, candidate-legality (line 127)",
+      "mustSurvive": true,
+      "duplicatedIn": "Unit 14 candidates.ts (RMD-first legality filter)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "build-detail-or-KTD",
+      "claim": "Unit 15: per-account buckets are a HARD PRECONDITION of the recommendation (the budget-only-path guard). The solver searches sequencing x conversion, which require per-person pre-tax/Roth/taxable/HSA buckets — the second beat CANNOT be emitted without them. Buckets always arrive from the account-level intake (Act 2 / R35), so the absent-buckets case is a DEFENSIVE EDGE — a legacy v1 vault or a direct path. The recommendation-invite TRIGGERS the RothAccounts mini-intake when buckets are absent (reusing the Act-3 component), and the solver NEVER runs on a defaulted bucket split (burned/062: a defaulted split is a silent measurement, the calm-but-wrong shape).",
+      "sourceSection": "Unit 15 Approach, bucket precondition (line 128)",
+      "mustSurvive": true,
+      "duplicatedIn": "Unit 16 Approach (line 199 bucket precondition), docs/product.md R35",
+      "fossilNote": ""
+    },
+    {
+      "kind": "build-detail-or-KTD",
+      "claim": "Unit 15: a chosen Tier-2 goal is an equally hard precondition (the no-discriminator guard). The lexicographic objective needs a Tier-2 goal to break survival-equivalent ties, so the solve is NEVER dispatched while goal === unset-sentinel, mirroring the bucket guard. The second beat presents the GoalPicker FIRST (Unit 16) — 'what matters most to you above safety?' — and only dispatches the solve once a goal is set; it never runs a Tier-1-only solve and crowns the deterministic tie-break (policy enum order) as if it were advice. This also closes the over-funded-with-no-goal case: for a Tier-1-maxed household an unset goal would leave the solver with no discriminator and nothing to pivot the headline to, so the surplus pivot is likewise unreachable until a goal exists.",
+      "sourceSection": "Unit 15 Approach, goal precondition (line 129)",
+      "mustSurvive": true,
+      "duplicatedIn": "Unit 16 Approach (line 175 GoalPicker first, line 182)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "build-detail-or-KTD",
+      "claim": "Unit 15 solve-once-on-demand + cooperative cancellation (request-epoch). The interaction is SOLVE-ONCE-ON-DEMAND, not live-drag: a recommendation is computed when invited (the second beat) or re-invited (a goal re-pick/tune). cancel.ts extends the Act-2 request-epoch + Act-3 generation-counter discipline to the SOLVE: each solve carries the epoch it was dispatched for and cooperatively cancels if a newer request supersedes it (checked between candidates / between seed-sets), so a fast goal re-pick never commits a stale recommendation. The solve has an explicit CALM PENDING STATE: while a solve runs, the second-beat surface shows a quiet 'working on it…' state, the prior recommendation (if any) is held VISIBLY-STALE-BUT-LABELED rather than blanked, and NO partial or fabricated recommendation paints before the solve commits; the committed result replaces pending atomically (notify-once). A multi-second solve on a mid-tier phone must read as 'the tool is working,' never 'the tool broke' — the pending copy is an Act-4 cold-read subject.",
+      "sourceSection": "Unit 15 Approach, solve-once + cancellation (line 130)",
+      "mustSurvive": true,
+      "duplicatedIn": "burned/005 (request-epoch), Unit 16 GoalPicker re-pick (line 182)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "decision-rationale",
+      "claim": "Unit 15 the WASM measurement gate (the decided trigger, the port deferred). profile.ts measures the real on-demand solve cost: named-policies x conversion-grid x 1k paths x (SS fixed-point + ACA fixed-point + IRMAA lag), across BOTH seed-sets A and B, on a MID-TIER PHONE. If the on-demand solve EXCEEDS the budget, WASM moves from fast-follow to LOAD-BEARING — the trigger is MEASURED, not guessed; the WASM port itself is DEFERRED (the TS baseline ships, the measurement decides the promotion; see WASM CSP landmine in docs/architecture.md §9-§10). The budget threshold value + the mid-tier reference device are DEFERRED to implementation (instrument first, per eye-in-loop discipline). select-on-A + grade-on-B roughly DOUBLES the per-candidate evaluation vs a single-seed solve — the profile must measure both, not extrapolate from one.",
+      "sourceSection": "Unit 15 Approach, WASM gate (line 131)",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/architecture.md §9-§10 (WASM CSP landmine), docs/roadmap.md (validation gates)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "build-detail-or-KTD",
+      "claim": "Unit 15: the profile must run a deliberately COMPUTE-WORST-CASE scenario — longest horizon, largest cliff-anchored grid (the most active ACA/IRMAA thresholds -> most pinned points + bisection refinements), BOTH the pre-65 ACA and post-65 IRMAA regimes exercised — not a median one, or the WASM promotion is decided on a cost a real near-cliff, long-horizon, large-pre-tax household will blow past (the SS/ACA fixed-points converge in 2-3 bounded passes, so the worst case is driven by HORIZON + CLIFF-COUNT/GRID-SIZE, not iteration depth). The profile budgets BOTH seed-sets AND the m-draw held-out B-family (Unit 14), not a single B.",
+      "sourceSection": "Unit 15 Approach, WASM gate (line 131)",
+      "mustSurvive": true,
+      "duplicatedIn": "Unit 14 (m-draw B-family, line 72)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "decision-rationale",
+      "claim": "Unit 15: a BOUNDED IN-MVP FALLBACK LADDER exists that does NOT depend on the deferred WASM port (since both solver axes ship co-equal, the worst case is real): (a) a COARSE-THEN-REFINE two-stage search — a cheap coarse grid prunes the field, and the cliff-anchored just-under-threshold points + bisection are spent ONLY around the surviving candidates (cliff anchoring stays a correctness requirement but applied to survivors, not the full cross-product, so the un-cuttable points don't multiply across every coarse candidate); (b) a stated CANDIDATE-COUNT CEILING for the interactive solve; (c) if the measured budget is still blown AND WASM is not yet built, the recommendation DEGRADES HONESTLY rather than blocking — the calm pending state with cooperative-cancel runs the full-fidelity solve, or a reduced interactive-path solve is shown explicitly labeled with a 'full-precision' confirm — it never silently down-samples below the path floor the held-out grade needs. The MVP SHIPS (degraded-but-honest), it does NOT block on the WASM port.",
+      "sourceSection": "Unit 15 Approach, WASM gate fallback ladder (line 131)",
+      "mustSurvive": true,
+      "duplicatedIn": "",
+      "fossilNote": ""
+    },
+    {
+      "kind": "build-detail-or-KTD",
+      "claim": "Unit 15 the K-candidate solve-result WIRE-SHAPE (extends Act 1's worker transfer contract). Act 1 pins the single-run worker result (typed-array buffers via Comlink.transfer, detached on the worker side, fresh per run — docs/architecture.md §11); the solve returns K candidates, so the wire shape is made explicit: the solve returns ONE structured payload carrying the FULL seed-B distributions for the figures Unit 16 renders — the WINNER, the RETAINED RUNNER-UP, and the NO-ACTION BASELINE — plus the grade + named-driver + surplus-regime flag, with ONLY those distributions' buffers in the transfer-list; the pruned/losing candidates return SCALAR lexicographic scores only (structured-clone, no buffers), never their full distributions. The per-solve allocation is sized for this bounded set (THREE distributions + scalars), not K full distributions — keeping Act 1's 'fresh per run, retains none' discipline at K-candidate scale.",
+      "sourceSection": "Unit 15 Approach, wire-shape (line 132)",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/architecture.md §11 (worker transfer contract)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "lesson",
+      "claim": "Unit 15 patterns to follow: Act 1 CRN + the reduce-to-spine invariant; Act-3 roth.ts (reuse the per-year update function, never re-implement decumulation; raw-pre-clamp selection); the Act-2 request-epoch / Act-3 generation counters for cooperative cancellation (burned/005); burned/062 (no in-range default — the goal field has an explicit 'unset' sentinel, never a silent default goal); burned/021 (validate-before-mutate — the candidate-legality/RMD-first filter); the §Strand 4/5 + healthcare research.",
+      "sourceSection": "Unit 15 Patterns to follow (line 134)",
+      "mustSurvive": true,
+      "duplicatedIn": "",
+      "fossilNote": ""
+    },
+    {
+      "kind": "requirement",
+      "claim": "Unit 16 — Recommendation surface. Goal: surface the solver's output as the calm SECOND beat — a confidence-graded recommendation that never contradicts the spine, with the hedge on the headline, the runner-up retained and the comparison one tap down, the modeled omissions disclosed adjacent to the delta, every input + reasoning visible/editable, and an honest 10/10->surplus pivot — landing as EARNED, never overconfident. Requirements: R10, R4, R11, R12, R13, R14, R7, R21, R22, R23, R24.",
+      "sourceSection": "Unit 16 Goal + Requirements (lines 159-165)",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/product.md (R4,R7,R10-R14,R21-R24), docs/roadmap.md",
+      "fossilNote": ""
+    },
+    {
+      "kind": "build-detail-or-KTD",
+      "claim": "Unit 16 Dependencies: Unit 15 (solver output — winner, grade, retained runner-up, surplus-regime flag); Act 2 (the spine confidence statement the second beat follows + the copyGuard catalog + the outcome-state set; the colorblind-safe viz primitives + the 'X of 10' display contract — built under the project's back-nine-design law: color is never the only signal); Act 3 (the budget two-tier essentials/lifestyle reading; the require-the-hedge lint + the manual-control surfaces the goal re-pick reuses; the sharpen loop the recommendation inputs become editable through).",
+      "sourceSection": "Unit 16 Dependencies (line 167)",
+      "mustSurvive": true,
+      "duplicatedIn": "back-nine-design skill, docs/plans/2, docs/plans/3",
+      "fossilNote": ""
+    },
+    {
+      "kind": "build-detail-or-KTD",
+      "claim": "Unit 16 Files to CREATE: src/ui/Recommendation.tsx (the second-beat surface); src/ui/ConfidenceGrade.tsx ('just do it' vs 'coin-flip — here's what it hinges on'); src/ui/RunnerUp.tsx (the retained runner-up + 'why this beat it'); src/ui/GoalPicker.tsx (the Tier-2 pick — leave more / pay less tax / live bigger now); src/viz/RecommendationViz.tsx (the recommended-vs-current two-series, STRING-FREE — text via props from copy.ts, reusing Act-2's encoding tokens). Files to MODIFY: src/ui/copy.ts (recommendation strings + grade copy + omission-disclosure copy); src/ui/copyGuard.ts (recommendation slot allowlist + extended require-the-hedge assertion); src/store/memoryModel.ts (hold the chosen goal + the un-saved recommendation hypothetical). Tests: recommendation.test.tsx, confidenceGrade.test.tsx, runnerUp.test.tsx, goalPicker.test.tsx.",
+      "sourceSection": "Unit 16 Files (lines 170-172)",
+      "mustSurvive": true,
+      "duplicatedIn": "",
+      "fossilNote": ""
+    },
+    {
+      "kind": "decision-rationale",
+      "claim": "Unit 16 recommend-second, never recommend-first (contract #6; R10). The invited affordance is a REAL, NAMED control (its existence and shape decided here, exact pixels/copy a cold-read deliverable): a single calm affordance rendered just below the spine confidence statement that the user activates to open the second beat — NEVER an auto-trigger on scroll/load (violates R11's 'invited') and NEVER a directive 'Get our recommendation' CTA (violates R12's banned certainty/imperative voice). Activating it opens the GoalPicker as the FIRST interaction (goal precedes the solve, Unit 15), so the second beat BEGINS with 'what matters most to you above safety?' rather than a fabricated ranked answer.",
+      "sourceSection": "Unit 16 Approach, recommend-second (line 175)",
+      "mustSurvive": true,
+      "duplicatedIn": "Unit 15 goal precondition (line 129)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "decision-rationale",
+      "claim": "Unit 16 the NO-CHANGE recommendation state (R25 — the recommender's calm-but-wrong shape). When the winner is WITHIN the A-side selection tolerance of the no-action baseline — the conventional order is FREQUENTLY already optimal (literally Unit-14 oracle case (i)/(v)) — the second beat does NOT manufacture an active move: it renders a NO-CHANGE state (reusing Act-2's outcome-state vocabulary) — 'you're already on the best path we found; here's the close runner-up if you're curious' — wearing its hedge, the runner-up still one tap down. No-change is a SELECTION decision (it picks WHAT to recommend), so it is decided on the CRN-difference SELECTION tolerance computed at selection (contract #2), NEVER on a seed-B level band — using B to decide no-change-vs-active re-contaminates the held-out; seed-B then supplies only the displayed numbers and the grade for the no-change verdict. The no-change state CARRIES ITS OWN CALIBRATED GRADE (Unit 14) and its headline WEARS THE HEDGE by construction (require-the-hedge covers the no-change copy). Fabricating an active recommendation when no change beats the status quo is the recommender's cardinal-sin shape. Precedence with the surplus pivot: when the surplus regime is active AND the winner is within the selection tolerance of the baseline on Tier-2, the two states COMPOSE — render 'you're safe either way, and you're already on the best surplus path we found', NEVER the active 'keeps ~$X more' surplus claim (which would fabricate a surplus gain that does not exist).",
+      "sourceSection": "Unit 16 Approach, no-change state (line 176)",
+      "mustSurvive": true,
+      "duplicatedIn": "Unit 14 oracle case (v), Unit 15 surplus regime (line 125)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "decision-rationale",
+      "claim": "Unit 16 confidence grading on the headline (contract #7; R22). The grade ('just do it' / 'coin-flip — here's what it hinges on') rides the HEADLINE, never buried in tapped-away math. The grade is the CALIBRATED grade from Unit 14's held-out-seed reporting — the surface RENDERS it, it does NOT recompute robustness. The 'coin-flip' render names WHAT IT HINGES ON (the near-tie's sensitive input — e.g. 'this depends on whether the enhanced ACA subsidies return'). The 'what it hinges on' line requires a SENSITIVE-INPUT ATTRIBUTION distinct from the seed-B margin grade — a seed-B dispersion cannot name WHICH input a ranking hinges on, and a legislative/scenario sensitivity (the ACA-enhanced toggle) is invisible to it — so Unit 14's gradeCalibration sensitivity probe EMITS the named driver (re-ranking the top candidates under the ACA-enhanced toggle + a fixture-vintage perturbation, reporting the single input whose flip moves the grade) alongside the grade; the surface only renders it, and a pure seed-B near-tie carries the sampling-noise-near-tie sentinel — a sampling-framed hinge, never a fabricated input cause.",
+      "sourceSection": "Unit 16 Approach, confidence grading (line 177)",
+      "mustSurvive": true,
+      "duplicatedIn": "Unit 14 grade calibration named-driver (line 72)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "invariant",
+      "claim": "Unit 16 objective ≡ headline, rendered explicitly (contract #4). The recommendation's headline metric IS the metric the solver optimized — rendered in the spine's 'X of 10' voice ('this pushes the survivor's essentials from 7 of 10 to 9 of 10') so it can never contradict the spine answer. EVERY displayed figure — the recommended-strategy figure, the no-action baseline it is compared against, AND the retained runner-up's figure — is rendered from the held-out seed-set B (contract #2): the shown shift is therefore unbiased (never the seedA SELECTION score, the optimizer's-curse-inflated figure the whole Unit-14 machinery exists to defeat) and internally CRN-consistent (every number on the one seedB draw matrix -> both the recommended-vs-baseline and the recommended-vs-runner-up deltas are pure strategy signal, not an A-vs-B sampling artifact). The seedA score SELECTS the winner (and retains the runner-up) only; it is NEVER rendered — for either the winner or the runner-up. The 10/10->surplus pivot (contract #6; R21): when Unit 15 flags the surplus regime (survival a given), the headline honestly SWITCHES to the chosen surplus metric — 'you're safe either way; this keeps ~$X more from the IRS / funds ~N more years of travel' — with the active metric NAMED so the user never silently re-bases between beats. The pivot reuses the spine's over-funded outcome-state vocabulary.",
+      "sourceSection": "Unit 16 Approach, objective ≡ headline (line 178)",
+      "mustSurvive": true,
+      "duplicatedIn": "contract #4 (line 35), Unit 14 held-out (line 73), Unit 15 (line 123)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "decision-rationale",
+      "claim": "Unit 16 tax-blind->tax-aware reframe, inherited from Act 3 (contract #6; R8/R10). The Act-2 spine headline (the first beat) runs the tax + healthcare overlays OFF — it is TAX-BLIND, on seedA — and is NEVER overwritten (Act-1 seed/headline identity). The recommendation's baseline + recommended numbers are the TAX-AWARE picture (overlays ON, on seedB), so the no-action baseline can legitimately read DIFFERENT FROM the tax-blind spine number the user anchored on. Inherit Act-3's DELTA-LED reframe — 'now that we know your account types, this is the tax-aware picture' — so the shift reads as a SHARPENING to a truer picture, NEVER a silent downgrade of the magic-moment number; the active baseline is NAMED so the differentiation 'move' (the delta — both numbers tax-aware, both on seedB) reads against a consistent anchor, not against the tax-blind spine figure. The magnitude the copy attributes to taxes is ONLY the seedB overlays-off->on delta (the strategy/tax signal on one draw matrix); the baseline-vs-spine difference is framed QUALITATIVELY as 'a sharper picture now that account types are known,' NEVER quantified as a tax-caused drop — the residual seedA<->seedB difference is SAMPLING, not taxes, and is never shown as a number the user could misread as a downgrade.",
+      "sourceSection": "Unit 16 Approach, tax-blind->tax-aware reframe (line 179)",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/plans/3 (delta-led reframe), Superseded/changelog (line 264, the standing rules)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "decision-rationale",
+      "claim": "Unit 16 comparative transparency, runner-up retained (R23). RunnerUp.tsx keeps and surfaces the runner-up (Unit 15 retained it) — 'why this beat the runner-up,' not a formula dump. Rendered via RecommendationViz as a two-series recommended-vs-runner-up (or recommended-vs-current) using Act-2's colorblind-safe encoding tokens + the delta-as-hero treatment (Act-3's TwoFutures lineage); the N=1 reader is color blind, so the delta carries a NON-COLOR hero signal (the project's back-nine-design law — color is never the only signal).",
+      "sourceSection": "Unit 16 Approach, comparative transparency (line 180)",
+      "mustSurvive": true,
+      "duplicatedIn": "back-nine-design skill, docs/plans/3 (TwoFutures)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "decision-rationale",
+      "claim": "Unit 16 disclosed omissions adjacent to the delta (contract #7; R24). ACA-PTC + IRMAA are already IN the model (Act 1) because a disclosed omission can INVERT a ranking. The remaining OUT-but-disclosed effects — NIIT, state tax — are disclosed in plain language NEXT TO the delta, never silently dropped; when the chosen goal is 'leave more', the bequest is the AFTER-TAX-TO-HEIRS figure (a first-order §1014/IRD adjustment modeled INTO the objective — never the gross figure), and the ASSUMED HEIR TAX BRACKET is the disclosed, R7-editable assumption surfaced adjacent to the leave-more delta; a conversion that trips an ACA cliff or an IRMAA step is SHOWN, not silently optimized over. The held-fixed SS CLAIM AGE is disclosed adjacent to the delta — it is NOT a solver-optimized control in MVP (chapter-two), yet changing it would move provisional-income taxation / ACA-MAGI / IRMAA-MAGI and could invert the ranking, so a calm note ('this assumes your current claim ages') rides the delta. For 'live bigger now'/'leave more' goals, the delta funds the user's CURRENT chosen spending shape (a user-set input, contract #8a) — a one-line honesty note says the recommendation optimizes the FUNDING of the shape you set, it does not endorse or propose a lifestyle. When a recommended strategy's delta leans on the ACA effect, the SLCSP-benchmark-level and CSR caveats (Act 3 — the SLCSP is the user-input the entire ACA fixed-point keys on) are surfaced adjacent to the rec delta too (at least by reference to the Act-3 healthcare surface), so an ACA-affected recommendation is never presented more certain than its inputs — especially when a FALLBACK (non-real) SLCSP is in use.",
+      "sourceSection": "Unit 16 Approach, disclosed omissions (line 181)",
+      "mustSurvive": true,
+      "duplicatedIn": "contract #7 (line 41), docs/plans/3 (SLCSP/CSR caveats), docs/research/pre65-healthcare.md",
+      "fossilNote": ""
+    },
+    {
+      "kind": "requirement",
+      "claim": "Unit 16 every input + reasoning visible/editable; the user stays pilot (R7, R10d). R7 gains weight under recommend-second: the recommendation exposes its inputs AND its reasoning for the user to trust and approve. The user tunes/overrides/re-picks the goal via GoalPicker (reusing the Act-3 sharpen loop + manual-control surfaces); on a re-pick, the solve re-runs (Unit 15, request-epoch) and BOTH futures update. A GoalPicker with no goal yet selected uses an EXPLICIT UNSET SENTINEL (burned/062), never a silent default goal.",
+      "sourceSection": "Unit 16 Approach, every input editable (line 182)",
+      "mustSurvive": true,
+      "duplicatedIn": "Unit 15 goal precondition (line 129)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "decision-rationale",
+      "claim": "Unit 16: saving a recommendation is an EXPLICIT COMMITTED gesture, never inferred (the bridge to Unit 17's 'executed action'). A solved recommendation lives in memoryModel as an UN-SAVED HYPOTHETICAL (Unit 15) until the user DELIBERATELY commits it — an explicit, calm 'save this recommendation' gesture (pixels deferred to cold-read; its existence decided here). The tool NEVER auto-saves on solve, on close, or on a goal re-pick — because Unit 17 treats a saved recommendation as a REAL, EXECUTED ACTION with serious staleness consequences ('the action we recommended may no longer be advised'), and that severity is only honest if the user consciously committed. The un-saved hypothetical can be tuned, re-picked, abandoned freely with no staleness obligation; only the explicit commit mints the saved-recommendation record (Unit 17's schemaVersion-3 write).",
+      "sourceSection": "Unit 16 Approach, explicit save (line 183)",
+      "mustSurvive": true,
+      "duplicatedIn": "Unit 17 (line 234 first-save-mints-v3)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "build-detail-or-KTD",
+      "claim": "Unit 16 the require-the-hedge lint extended to the recommendation (contract #7; R12). All recommendation strings route through the copy.ts catalog; RecommendationViz (in src/viz) stays STRING-FREE, receiving text as props (burned/063). copyGuard's require-the-hedge lint (the positive/require assertion from Act 3) is extended to assert the RECOMMENDATION HEADLINE + the GRADE COPY each carry a probabilistic hedge; certainty verbs ('guaranteed / optimal / locks in / you will save') stay banned. The 'just do it' COLLISION is resolved explicitly: require-the-hedge applies to the rendered grade SENTENCE/COPY (which must wear its hedge — e.g. 'across the futures we tested, this holds up — just do it'), and EXEMPTS the bare fixed enum label ('just do it' / 'coin-flip') as an internal identifier — so the punchy robust label survives while the user-visible grade copy still hedges by construction. NEW recommendation slots added to the allowlist: the recommended-strategy descriptor (policy name + conversion amount/years as user-echo, not a product claim), the grade label, the ~$X surplus delta, and the X of 10 shift — added to the catalog-enumeration test so they pass by construction.",
+      "sourceSection": "Unit 16 Approach, require-the-hedge lint (line 184)",
+      "mustSurvive": true,
+      "duplicatedIn": "contract #7 (line 41), docs/plans/3 (require-the-hedge lint origin), burned/063",
+      "fossilNote": ""
+    },
+    {
+      "kind": "requirement",
+      "claim": "Unit 16 the optional honest-limits note (R13). The 'this is a model — validate big, irreversible moves with a pro' note is available adjacent to the recommendation on HONESTY grounds (not a Terms requirement) — calm and invited, not a nagging gate; it lives OUTSIDE the require-the-hedge input the same way the static disclaimer is surface-scoped.",
+      "sourceSection": "Unit 16 Approach, honest-limits note (line 185)",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/product.md R13",
+      "fossilNote": ""
+    },
+    {
+      "kind": "lesson",
+      "claim": "Unit 16 patterns to follow: Act-2 copyGuard + the outcome-state set + the X of 10 display contract; Act-3 TwoFutures delta-as-hero + the props-from-copy.ts string-free viz rule; Act-3 require-the-hedge lint; emil-design-eng (calm second-beat entrance, NO count-up on the surplus dollar); compound-engineering:frontend-design (the recommendation reads as a calm co-pilot, not a dashboard); back-nine-design (project design law — color is never the only signal).",
+      "sourceSection": "Unit 16 Patterns to follow (line 187)",
+      "mustSurvive": true,
+      "duplicatedIn": "CLAUDE.md UI skills section, back-nine-design",
+      "fossilNote": ""
+    },
+    {
+      "kind": "requirement",
+      "claim": "Unit 16 exit condition: passing the N=1 cold-read on the recommendation — EARNED (not overconfident), the 'coin-flip' grade HONEST (not wishy-washy or alarming), the comparison reading as TRANSPARENCY (not a bait-and-switch) — is an Act-4 exit condition (R25; the cold-read judges TONE, Unit 14 judges CORRECTNESS). Also: a recommendation must VISIBLY MOVE the spine answer ('6 of 10 -> 8 of 10') AND be correctly confidence-graded (the differentiation success criterion).",
+      "sourceSection": "Unit 16 Verification + Test scenarios (lines 206, 208)",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/roadmap.md (validation gates), docs/product.md R25",
+      "fossilNote": ""
+    },
+    {
+      "kind": "requirement",
+      "claim": "Unit 17 — Stale saved-recommendation handling. Goal: treat a saved recommendation as the real, executed action it is — on re-entry, RE-SOLVE it under current fixtures (never re-present a stale strategy as still-advised), say 'the action we recommended may no longer be advised' (not 'your number drifted'), and re-verify the ACA legislative status that can flip the whole pre-65 model. Requirements: R7, R10, R24 (ACA legislative volatility re-verified), R25.",
+      "sourceSection": "Unit 17 Goal + Requirements (lines 212-218)",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/product.md (R7,R10,R24,R25), docs/roadmap.md",
+      "fossilNote": ""
+    },
+    {
+      "kind": "build-detail-or-KTD",
+      "claim": "Unit 17 Dependencies: Unit 15 (the re-solve path); Unit 16 (the re-presented recommendation surface + grade render); Act 3 (the per-surface staleness map + the returning-user re-entry this INVERTS for a recommendation); Act 1 (the encrypted store + the saved-recommendation record's persistence — docs/architecture.md §7.3); src/engine/constants/ (the year-keyed fixtures whose vintage drives staleness).",
+      "sourceSection": "Unit 17 Dependencies (line 220)",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/architecture.md §7.3, docs/plans/3 (staleness map)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "build-detail-or-KTD",
+      "claim": "Unit 17 Files to CREATE: src/store/recStaleness.ts (the INVERTED recommendation-staleness rule + the ACA-status re-verify gate). Files to MODIFY: src/shared/model.ts (the SAVED-RECOMMENDATION RECORD — the recommended strategy + its as-recommended fixture-vintage stamps + a SOLVER/ENGINE-CODE VERSION STAMP + seedA/seedB/goal — under the single Act-4 schemaVersion-3 bump; the 'never-depleted' surplus / serialization sentinels decided here, NOT Infinity/NaN — archive/do-not-disturb/009. Execution status is NOT tracked — the sentinel denotes a non-depleting surplus value, never an execution state; the inversion below is precautionary, not a claim the action was taken); src/store/staleness.ts (Act 3 — register the recommendation as a surface whose staleness rule INVERTS); src/ui/ReEntry.tsx (Act 3 — surface the re-solved recommendation + the 'may no longer be advised' copy). Tests: recStaleness.test.ts, reentry-recommendation.test.tsx.",
+      "sourceSection": "Unit 17 Files (lines 223-225)",
+      "mustSurvive": true,
+      "duplicatedIn": "Unit 14/15 model.ts (seedB, goal), docs/architecture.md §7.3/§8",
+      "fossilNote": ""
+    },
+    {
+      "kind": "invariant",
+      "claim": "Unit 17 the staleness rule INVERTS for a recommendation (contract #8b). Act-3's spine rule: RE-PRESENT a saved verdict under its SAVED fixture vintage (so the number matches the screenshot), and only RE-RUN under current fixtures on demand. A recommendation CANNOT do that — it is a real action a user may execute with real dollars — so the rule inverts: a stale saved recommendation ALWAYS re-solves under CURRENT fixtures before it is shown, and is NEVER re-presented under its saved vintage as if still advised. The saved record's as-recommended vintage is kept FOR PROVENANCE + STALENESS DETECTION, never for re-presentation-as-current.",
+      "sourceSection": "Unit 17 Approach, staleness rule inverts (line 228)",
+      "mustSurvive": true,
+      "duplicatedIn": "contract #8 (line 43), docs/plans/3 (spine staleness rule)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "decision-rationale",
+      "claim": "Unit 17 the staleness copy reads as an ACTION WARNING, not a number drift. When the saved recommendation's fixture vintage (tax-table / RMD-age rule / senior-bonus sunset / ACA-PTC regime / IRMAA brackets) has moved since save, the copy reads 'the action we recommended may no longer be advised' and the re-solved current recommendation is shown alongside — NOT 'your number drifted' (true for the spine verdict but dangerously wrong for an action). The QUIETEST stale shape is the SAME strategy whose outcome DEGRADED — the re-solve returns the same recommended strategy but its grade fell from 'just do it' to 'coin-flip,' or its delta turned NEGATIVE (the once-helpful action now hurts) under current law. That reads 'still fine' to a user who recognizes their familiar strategy, so it carries its OWN copy distinct from both 'may no longer be advised' and silent re-presentation — 'this is still the best of the options, but it's now a coin-flip / no longer ahead — here's what changed,' surfacing the degraded grade or sign flip prominently.",
+      "sourceSection": "Unit 17 Approach, staleness copy (line 229)",
+      "mustSurvive": true,
+      "duplicatedIn": "",
+      "fossilNote": ""
+    },
+    {
+      "kind": "build-detail-or-KTD",
+      "claim": "Unit 17 a recommendation is stale when ANY rec-relevant fixture moves. The recommendation depends on more fixtures than the spine verdict (the spine is tax-blind): a saved rec is flagged stale when the TAX-TABLE vintage, the RMD-AGE rule, the SENIOR-BONUS-DEDUCTION sunset, the ACA-PTC legislative regime, OR the IRMAA brackets have moved (findings §Strand 5 + healthcare). Each routes through the canonical src/engine/constants/ vintage stamps — no fixture vintage is re-typed here. A saved rec is ALSO stale on MODEL-INPUT DRIFT, not only fixture drift: a confirmed per-bucket BALANCE/SPLIT change (a conversion sized to a specific pre-tax pool is far more balance-sensitive than the tax-blind spine — a drifted pool can trip an ACA cliff or make the saved amount infeasible) AND a BUDGET-WINDOW ADVANCE (a time-boxed line past its endYear) both flag it — reusing Act-3's existing per-bucket balance-drift confirm, not a new mechanism. And because the selected number is reproducible from (model, seedA, seedB, goal) ONLY given fixed solver code, a SOLVER/ENGINE-CODE VERSION CHANGE is itself a staleness trigger (grid resolution, ε, objective quantization, or tie-break order all move the winner/grade for identical fixtures): it forces a re-solve and surfaces the delta as a recommendation change, never hidden behind byte-identity.",
+      "sourceSection": "Unit 17 Approach, stale-when-any-fixture-moves (line 230)",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/research/engine-validation-and-tax.md §Strand 5, docs/plans/3 (balance-drift confirm)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "build-detail-or-KTD",
+      "claim": "Unit 17 re-verify the ACA legislative status — it can flip the whole model (contract #8b; R24; healthcare §2). The enhanced-ACA-subsidy status is LIVE, possibly-retroactive policy; if the enhanced regime is restored (possibly retroactively), the 400% FPL cliff DISAPPEARS and the pre-65 conversion calculus FLIPS — which can INVERT which strategy wins. recStaleness.ts carries the ACA-status as a first-class staleness driver: a saved recommendation computed under the 2026 cliff-on base case is ALWAYS flagged for re-solve if the legislative status has changed since save. (The build-time re-verify of the legislative status itself is a roadmap validation gate, verify:aca; this unit CONSUMES its result.) Distinguish a FORWARD regime change (re-solve forward) from a RETROACTIVE one: the enhanced regime could be restored possibly retroactively to 2026 (healthcare §2), so a past action's cost can change after the fact — which forward-re-solve does not address. For the retroactive case surface a distinct, generic note — 'a recent law change may apply to a past year, so an action you may already have taken could now carry a different cost — worth revisiting with a pro' — phrased generically because execution and tax-year are not tracked.",
+      "sourceSection": "Unit 17 Approach, re-verify ACA (line 231)",
+      "mustSurvive": true,
+      "duplicatedIn": "CLAUDE.md (verify:aca gate, reVerifyEveryBuild), docs/research/pre65-healthcare.md §2, docs/architecture.md",
+      "fossilNote": ""
+    },
+    {
+      "kind": "status-as-built",
+      "claim": "As-built ACA legislative status: the recommendation base case is the 2026 CLIFF-ON case (the enhanced-ACA-subsidy 400% FPL cliff is currently in effect). The enhanced regime is LIVE, possibly-retroactive policy — could be restored possibly retroactively to 2026, which would make the 400% FPL cliff disappear and flip the pre-65 conversion calculus. Re-verified every build via verify:aca.",
+      "sourceSection": "Unit 17 Approach, re-verify ACA (line 231)",
+      "mustSurvive": true,
+      "duplicatedIn": "CLAUDE.md (ACA reVerifyEveryBuild), docs/research/pre65-healthcare.md, docs/architecture.md (constants discipline)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "decision-rationale",
+      "claim": "Unit 17 GATE-RED-AT-RE-ENTRY fallback (the undefined-state guard). The re-solve calls Unit 15, which refuses to emit a recommendation while the oracle-cleared token is absent (contract #1). The token is withheld for MORE THAN ONE REASON, and the fallback BRANCHES ON WHY rather than always blaming the law: (a) the ACA legislative status is UNVERIFIED (re-verified every build, so it can be unverified exactly when the law is in flux — the case this unit most cares about) -> 'we can no longer stand behind this and cannot currently re-verify the law — do not act on it until the status is confirmed'; (b) a rec-relevant primary is still DIRECTIONAL or ε is uncalibrated (the pre-launch/un-pinned-build state, which contract #2 makes the DEFAULT until pinning completes) -> 'this recommendation isn't validated on this version yet — don't act on it until it is'. In every case NEITHER path is legal — the inversion forbids re-presenting the stale rec as advised, and the gate forbids a re-solve — so the saved strategy is shown CLEARLY MARKED with the matching reason, never re-presented as still-advised and never silently suppressed. (recStaleness.ts reads the token's withheld-reason; it does NOT assume the law is the cause.)",
+      "sourceSection": "Unit 17 Approach, gate-red fallback (line 232)",
+      "mustSurvive": true,
+      "duplicatedIn": "contract #1 (line 29), Unit 14 token (line 74)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "lesson",
+      "claim": "Unit 17 the saved-recommendation record's 'never-depleted' surplus / serialization sentinels (archive/do-not-disturb/009 [DND 009]). Decide the saved record's sentinel shape BEFORE the schema locks: a recommendation the user saved but a field like 'expected surplus = never depleted' must serialize WITHOUT Infinity/NaN silently becoming null through JSON.stringify/IndexedDB. Use an explicit OUT-OF-RANGE SENTINEL, the same discipline the spine model uses (docs/architecture.md §7.3 / §8). Execution status is not tracked — the sentinel is a surplus value, not an execution flag.",
+      "sourceSection": "Unit 17 Approach, sentinels (line 233)",
+      "mustSurvive": true,
+      "duplicatedIn": "CLAUDE.md (persisted never-depleted sentinels, DND 009), docs/architecture.md §7.3/§8",
+      "fossilNote": ""
+    },
+    {
+      "kind": "build-detail-or-KTD",
+      "claim": "Unit 17 the v2->v3 vault upgrade — its trigger, and the first-save-mints-v3 path (inherits Act-1 atomicity). The v3 bump fires on EXACTLY ONE EVENT: the first EXPLICIT SAVE of a recommendation (Unit 16's deliberate commit gesture) — never on a goal-pick, never on a solve, never on an un-saved hypothetical (so seedB is always derived and the goal always set before a v3 record exists; a v3 blob with a null seedB is unreachable). Persisting the saved-recommendation record + seedB/goal is the first v3 disk write; on an EXISTING on-disk vault it goes through Act-1's MODEL-ONLY RE-ENCRYPT (same DK, fresh IV, wraps untouched) — the same atomic path Act 3 uses for v1->v2 — so an ABORTED v2->v3 upgrade still decrypts the intact v2 (a half-written vault is the same catastrophic class as Act-1's first-save-atomicity landmine). A brand-new user whose first-ever Save IS a saved recommendation (intake -> budget -> recommendation-invite -> buckets -> goal -> commit, with no prior v1/v2 on disk) mints a v3 blob DIRECTLY through Act-1's keyed first-save path — the first Save writes whatever schemaVersion the in-memory shape implies (v1, v2, or v3); the model-only re-encrypt UPGRADE path is only for an existing on-disk vault advancing versions, never a precondition for reaching v3.",
+      "sourceSection": "Unit 17 Approach, v2->v3 upgrade (line 234)",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/architecture.md §7.3 (model-only re-encrypt, first-save atomicity), docs/plans/3 (v1->v2 path)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "build-detail-or-KTD",
+      "claim": "Unit 17 re-solve reuses the saved seeds for continuity, current fixtures for honesty. The re-solve runs Unit 15 on the SAVED seedA/seedB/goal (so the futures are continuous with what the user saw — not a fresh random scenario) but under the CURRENT fixtures AND the current confirmed balances/budget (so the strategy is current) — never the saved PRE-CONFIRM balances; a drifted per-bucket split re-confirms through Act-3's gate BEFORE the re-solve. Reusing the saved seedB under changed fixtures does NOT contaminate the held-out, even when the candidate set's size/shape changes (a moved grid resolution, RMD age, or feasibility): the hold-out's validity comes from seedB ⊥ seedA (the seed-input decorrelation, contract #2), NOT from any binding to a particular candidate set — seedB is an independent SCENARIO set, not a per-candidate object, so a winner selected on A and graded on the saved seedB-family over the CURRENT candidates is unbiased regardless of how the candidate set changed. The one invariant: the re-solve RECOMPUTES the grade on the seedB-family over the CURRENT candidates (never re-presents the saved grade), and it still SELECTS ON A, GRADES ON B — never selecting on B. (Resolution of the apparent 'stale seedB vector' concern: continuity-of-futures = same seeds; hold-out validity = B ⊥ A; the two do not conflict.)",
+      "sourceSection": "Unit 17 Approach, re-solve reuses seeds (line 235)",
+      "mustSurvive": true,
+      "duplicatedIn": "contract #2 (line 31), Unit 14 (line 73)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "lesson",
+      "claim": "Unit 17 patterns to follow: Act-3 staleness map + re-entry (invert the spine rule for the recommendation surface); archive/do-not-disturb/009 (JSON-persisted sentinels — decide before the schema locks); burned/062 (no in-range default for the saved-goal/vintage fields); findings §Strand 5 + healthcare §2 (the ACA legislative landmine).",
+      "sourceSection": "Unit 17 Patterns to follow (line 237)",
+      "mustSurvive": true,
+      "duplicatedIn": "",
+      "fossilNote": ""
+    },
+    {
+      "kind": "requirement",
+      "claim": "Unit 17 exit condition: a stale strategy silently presented as current is the cardinal sin extended across time (R25); this unit is the structural guard against it. Passing the N=1 cold-read on Unit 17's staleness copy is an Act-4 exit condition (cold-read judges TONE, Unit 14 judges CORRECTNESS): the 'may no longer be advised' copy (honest, not alarmist), the same-strategy-degraded case (a familiar strategy whose grade fell or delta turned negative must read as honest recalibration, never 'still fine / no change'), the retroactive-ACA past-cost note (informational, not catastrophizing), and the gate-red reasons (each honest about why, never blaming the law when a primary is merely un-pinned) are each first-class subjects.",
+      "sourceSection": "Unit 17 Verification (line 254)",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/roadmap.md (validation gates), docs/product.md R25",
+      "fossilNote": ""
+    },
+    {
+      "kind": "build-detail-or-KTD",
+      "claim": "Unit 17 Execution note: test-first on the INVERSION (a moved fixture must re-solve, never re-present) and the SENTINEL ROUND-TRIP (decide the saved-record serialization before the schema locks) — both are correctness anchors, not UI polish.",
+      "sourceSection": "Unit 17 Execution note (line 256)",
+      "mustSurvive": true,
+      "duplicatedIn": "",
+      "fossilNote": ""
+    },
+    {
+      "kind": "status-as-built",
+      "claim": "STANDING as-built fact carried in the changelog: per-account buckets, contributions, and healthcare inputs arrive UP-FRONT from the account-level intake (the 2026-06-08 accumulation fold, master R26-R39, the account-level R35 setup), so the first answer is account-aware from the start and the overlays are active wherever the entered streams support them. Consequently U15's absent-buckets case is a DEFENSIVE EDGE (legacy v1 vault or direct path), and U16's reframe story re-derives from the account-aware baseline at build time. The three honesty rules STAND UNCHANGED: the delta-led honesty rule, the never-overwrite-the-saved-headline rule, and the never-quantify-the-seedA<->seedB-residual rule. Everything else in this act (oracle-before-solver, held-out seed-B machinery, objective ≡ headline, U17's inverted stale-rec rule) stood unchanged through the fold.",
+      "sourceSection": "Superseded/changelog, tax-blind on-ramp item (line 264)",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/product.md (R26-R39, R35), docs/decisions/accumulation-fuck-off-date.md, Unit 15 (line 128), Unit 16 (line 179)",
+      "fossilNote": "The standing rules + the as-built account-aware-from-start fact are stated inside a Superseded/changelog block; in a forward-only rewrite the TRUTHS (account-aware-from-start, the three standing rules, U15 absent-buckets = defensive edge) belong in the unit bodies, while the narration of WHAT-it-superseded is droppable history."
+    }
+  ]
+}

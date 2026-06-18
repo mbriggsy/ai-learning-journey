@@ -7,8 +7,10 @@
 > This is scaffolding (the recipe, not the dish) — **delete it when the restructure lands.**
 >
 > **Status (2026-06-18):** GREEN-LIT for the full ground-up rewrite. The target structure +
-> the four radical moves are locked (see *Q6* below). The foundation (CP1 + CP1.5) is committed.
-> **The next session resumes at M1** — see *RESUME HERE*.
+> the four radical moves are locked (see *Q6* below). The foundation (CP1 + CP1.5) is committed, and
+> **M1 (the migration ledger) is DONE** — `.recovery/migration-ledger.md`: all 1,081 quarry facts routed,
+> zero-loss, adversarially verified + fixed (74 findings applied), dual-canonical class resolved.
+> **The next session resumes at M2** (rewrite the hubs from the ledger) — see *RESUME HERE*.
 > Rationale: `.recovery/doc-restructure-judge-output.md` (judge fan-out — note its "preserve"
 > spine was overridden by Q6). Must-survive net: `.recovery/docs-quarry-inventory.json` (16 docs)
 > + `.recovery/quarry-roadmap.json`.
@@ -17,15 +19,18 @@
 
 ## ▶ RESUME HERE (fresh session)
 
-The recovery + foundation are done and committed. To continue the rewrite cold you need only:
+Foundation (CP1 + CP1.5) **and M1 (the migration ledger)** are done and committed. To continue cold:
 1. **This file** — the locked decisions (Q1–Q6), the target tree, the M1–M6 sequence.
-2. **The quarry** — `.recovery/docs-quarry-inventory.json` + `.recovery/quarry-roadmap.json`:
-   **978 must-survive facts**, each tagged (kind / mustSurvive / duplicatedIn / fossilNote). The
-   anti-amnesia net — the rewrite is authored FROM this, not from memory.
+2. **The ledger** — `.recovery/migration-ledger.md`: the rewrite SPEC. Every must-survive fact, routed
+   to its new-tree home by section, with disposition (canonical/pointer/reframe/no-move/drop), dedup
+   notes, present-tense reframe instructions, and a **Review Queue appendix** (the 74 verify findings +
+   the 14 cross-home relocations). This is what M2–M5 author FROM and what M6 greps against.
+   (The quarry — `docs-quarry-inventory.json` + `quarry-roadmap.json`, the 1,078-fact anti-amnesia
+   net — is the ledger's source; consult it only to expand a `sig`/digest back to its full claim.)
 
-Start at **M1** (build the migration ledger). **Do NOT delete anything under
-`docs/plans/features/` or strip any history until M6's gate proves every must-survive fact has a
-new home.** CP1 + CP1.5 already landed (front door + legends); the tree is clean at the latest commit.
+Start at **M2** (rewrite `product`/`roadmap`/`architecture`/`glossary` present-tense, each home-section
+of the ledger in hand). **Do NOT delete anything under `docs/plans/features/` or strip any history
+until M6's zero-loss gate.** The working tree is clean at the M1 commit.
 
 ---
 
@@ -184,11 +189,16 @@ must-survive fact is the **migration ledger** (M1) — nothing is dropped withou
   act-name drift in the root README fixed.
 
 **The rewrite — M1–M6 (start here next session):**
-- **M1 — the migration ledger.** From the quarry, map EVERY must-survive fact → its target home in
-  the new tree (by kind: invariant→architecture, requirement→product, decision/KTD→decisions,
-  number→research, definition→glossary, status→roadmap, build-step→plans, lesson→insights-already).
-  Write it to `.recovery/migration-ledger.md`. This is BOTH the rewrite spec and the M6 checklist.
-  *(Best built by a workflow over the quarry chunks so it doesn't eat the driver's context.)* Commit.
+- **M1 — the migration ledger. ✅ DONE (this commit).** All 1,081 quarry facts routed to their new-tree
+  home (by kind: invariant→architecture, requirement→product, decision/KTD→decisions, number→research,
+  definition→glossary, status→roadmap, build-step→plans, lesson→insights-already) in
+  `.recovery/migration-ledger.md`. Built by a 17-agent extract workflow (zero-loss: every chunk returned
+  its exact count), then an adversarial verify pass (27 per-home critics + a global consistency gate, 74
+  findings), then a 24-agent fix pass (79 corrections applied verbatim) + a deterministic README
+  dual-canonical sweep (21 flips). Acceptance tests pass: no signature is canonical more than once; the
+  four locked decisions hold; 1,081 blocks intact. The 74 findings + 14 cross-home relocations ride along
+  as the ledger's **Review Queue appendix** (M2–M5 watch-list, M6 double-check). Build trail in `.recovery/`
+  (`m1-ledger-parts/`, `build-ledger.sh`, `verify-result.json`, `fix-rehomes.json`).
 - **M2 — the hubs.** Rewrite `product`, `roadmap`, `architecture`, `glossary` present-tense from the
   ledger. Fold SS mechanics into architecture §7 (overlay-peer); fold the accumulation contracts into
   architecture (no "fold" framing); de-dupe R40 in product; repoint glossary SS terms → architecture.

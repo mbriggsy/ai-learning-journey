@@ -1,0 +1,20 @@
+[
+  {
+    "ref": "docs/plans/4-recommendation.md#19, #20, #21, #22, #23 (oracle cases i–v, ledger lines 66–86)",
+    "severity": "warn",
+    "problem": "MIS-ROUTE (topic). All five rows are decision-rationale, but their subject is the Act-4 recommendation SOLVER's optimality oracle (conventional drawdown ordering, bracket-fill Roth-conversion equalization, ACA-400%-FPL/IRMAA cliff inversion, §1014/IRD after-tax-to-heirs bequest, the no-change/Unit-15-16 baseline). I confirmed against docs/plans/4-recommendation.md lines 65–69: these are the recommend-second tax-strategy subsystem, with no connection to the accumulation on-ramp, contributions, or the fuck-off-date sweep (C1–C3). The product thesis itself separates 'the fuck-off date' (first magic moment) from the 'recommend-second strategy.' Filing solver-oracle decisions under the accumulation/fuck-off-date record routes a different topic into the wrong decisions/<topic> home. The file author self-flagged this on every row ('solver-validation KTD, not an accumulation decision … home is arguable').",
+    "fix": "Re-home all five to the recommendation-solver decision topic — a docs/decisions/<recommendation-oracle>.md record (or keep them as build-detail in docs/plans/4-recommendation.md, where the oracle fixtures are the source artifact). The kind (decision-rationale) is correct; only the topic-home is wrong."
+  },
+  {
+    "ref": "docs/plans/1-engine.md#51 (ledger lines 21–25)",
+    "severity": "nit",
+    "problem": "HOLLOW REFRAME (thin). The digest names the statute 'SECURE 2.0 §109' as the provenance for the 60–63 super-catch-up sunset at 64, but the [reframe] surviving-fact instruction drops the citation ('the 60–63 super catch-up steps down at 64'). No sibling row in this home carries §109 (rows #33/#34 cover §604/§603 only), so if M6 follows the reframe instruction the statutory landmine is lost. Recoverable from the digest, hence nit.",
+    "fix": "Retain 'SECURE 2.0 §109' in the present-tense surviving fact so the WHY (which statute sunsets the 60–63 super catch-up) is not thinned away."
+  },
+  {
+    "ref": "docs/product.md#7 (lines 1–5) vs docs/decisions/accumulation-fuck-off-date.md#4 (lines 103–107)",
+    "severity": "nit",
+    "problem": "DEDUP (in-home near-duplicate). Both rows carry essentially the same 'bounded near-retirement on-ramp, not FIRE / decumulation-only understated the not-yet-retired household (R25, calm-but-wrong pessimistic)' rationale into this same home. #103 (accumulation#4) is the record's own canonical statement; #1 (product.md#7) is the product fossil being routed here and should collapse into it rather than restate the FIRE rationale a second time.",
+    "fix": "In M6, merge #1 into #103 as one canonical rationale paragraph (#103 is the canonical; #1 is a pointer/contributor), not two parallel statements of the same fact."
+  }
+]

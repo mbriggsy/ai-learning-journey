@@ -1,0 +1,245 @@
+- **`docs/plans/2-first-answer.md#5`** · `invariant` · → Cross-cutting Contract 1 — memoryModel orchestrator · _canonical_
+  - sig: memoryModel orchestrator, six obligations (a)-(f)
+  - The memoryModel orchestrator (src/store/memoryModel.ts) is the named in-memory session/engine-client for the magic moment with six obligations (a)-(f); load-bearing engine invariants live once in architecture and this surface links, never restates.
+  - [dedup] The orchestrator build contract is canonical here in the Act 2 plan; the engine invariants it links live in architecture (pointer).
+- **`docs/plans/2-first-answer.md#8`** · `invariant` · → Contract 1(c) — capability flag · _canonical_
+  - sig: worker-vs-main-thread capability flag, main-thread fallback
+  - memoryModel(c): exposes a worker-vs-main-thread capability flag set at worker construction (in the orchestration layer, never inside src/engine), falling back to a main-thread run so the first answer still renders; downstream consumers (disable live recompute) are the Act 3 controls.
+- **`docs/plans/2-first-answer.md#9`** · `decision-rationale` · → Contract 1(d) — recompute home, no sticky rounding in Act 2 · _canonical_
+  - sig: Act 2 builds NO sticky rounding; lastDisplayed seated in Act 3
+  - memoryModel(d) is the recompute home and named future owner of rounding-hysteresis, but Act 2 builds no sticky rounding: during intake the headline/dollar/copy move freely; lastDisplayed* + sticky baseline + margin-gating seat in Act 3, are session-only/not persisted, and confidence.ts owns the stateless first-answer rounding (priorHeadline=null).
+  - [dedup] Act 2 plan canonical for the 'no sticky rounding here' build boundary; plans/3-controls is canonical for the sticky-rounding owner itself.
+- **`docs/plans/2-first-answer.md#11`** · `invariant` · → Contract 1(f) — request epoch · _canonical_
+  - sig: monotonic request epoch discards stale results
+  - memoryModel(f): stamps each dispatched run with a monotonic request epoch and discards any result older than the latest committed epoch (no stale intermediate on slow devices); it is an elevation of one module, and src/store/session.ts stays the separate U4 crypto/key session.
+- **`docs/plans/2-first-answer.md#20`** · `scope-boundary` · → Contract 4 — handed forward (build scope boundary) · _canonical_
+  - sig: require-the-hedge lint handed forward to Act 3·U10
+  - Handed forward, NOT built in Act 2: the require-the-hedge positive lint (Act 3·U10, extended Act 4·U16) and the Roth-conversion copy slots (registered Act 3·U10); Act 2 ships only the ban-list + certainty-hygiene + catastrophe-lexicon + catalog-enumeration gate.
+  - [dedup] Act 2 plan canonical for its own build-scope boundary; plans/3-controls (U10) and plans/4-recommendation (U16) own the forward work as pointers.
+- **`docs/plans/2-first-answer.md#23`** · `invariant` · → Contract 6 — magic-moment surface contract · _canonical_
+  - sig: progressive engine-gated commit-triggered; verdict-text-first
+  - Contract 6: the intake architecture is progressive/engine-gated/commit-triggered — the confidence surface co-exists with intake, resolving from indeterminate toward a verdict on each question-commit (not live-as-you-type); the first frame is verdict-text-first in all modes (word + dollar magnitude + non-color shape); the ConfidenceBand is never on the first frame (R2/R4 forbid a dashboard).
+  - [dedup] Act 2 plan canonical for the surface build contract; product R2/R4 carry the no-dashboard/range-on-demand requirement pointers.
+- **`docs/plans/2-first-answer.md#25`** · `requirement` · → Contract 6 — motion spec · _canonical_
+  - sig: band draws once then morphs; headline static, no odometer
+  - Contract 6 motion: the band draws once then morphs on every recompute (interruptible spring, never draw-from-zero); the headline number is static (no odometer); verdict crossfades are margin-gated (gating in Act 3); no-worker fallback defers each commit's recompute post-paint, downgrading to two computes if jank persists; all respects prefers-reduced-motion.
+  - [dedup] Act 2 plan canonical for the motion build spec; emil-design-eng + back-nine-design skills carry the reduced-motion craft pointers.
+- **`docs/plans/2-first-answer.md#28`** · `build-detail-or-KTD` · → U5/D1 — shipped files · _canonical_
+  - sig: U5/D1 shipped files list (intake + memoryModel + copy.ts)
+  - U5/D1 shipped files: src/intake/ (coldStart, flow, questions, sanity, intakeMap, AccountEntry, AllocationEntry, AnswerStrip, fields, a11y, referenceData, links, ExternalLink, FieldError, intake.css); src/store/memoryModel.ts; src/ui/copy.ts + the no-restricted copy-fence ESLint rule.
+- **`docs/plans/2-first-answer.md#29`** · `invariant` · → U5/D1 — how the flow works · _canonical_
+  - sig: spend figure lands before account loop; bucket enum
+  - The flow: account-level single entry pass — household preamble (spend figure + per person) then per account (type→{pretax,roth,taxable,hsa}; holdings→ticker→blend→stockWeight; value; basis per-account not per-lot; contribution + match); the spend figure lands before the account loop so validateParams acceptance and the first provisional answer are reachable as soon as the first account lands; the answer surfaces and sharpens during the flow.
+  - [dedup] Act 2 plan canonical for the flow build sequence; the bucket enum {pretax,roth,taxable,hsa} points to architecture.
+- **`docs/plans/2-first-answer.md#31`** · `build-detail-or-KTD` · → U5/D1 — ticker→blend build · _canonical_
+  - sig: ticker→blend autocomplete, TDF held-constant disclosure
+  - Ticker→blend (R37): autocomplete against C1's bundled table; on hit show the resolved blend (TDF rows get the 'today's allocation held constant' disclosure label — D1's label, C1 carries only snapshot data); on miss the manual 3-choice classifier + advanced exact-% expander; household blend collapses to one stockWeight; the ticker-keyed manual classification persists only at Save in U4's encrypted record (R39), 'answered once' = reused across accounts within the flow.
+  - [dedup] Act 2 plan canonical for the build step; product R37 carries the requirement pointer.
+- **`docs/plans/2-first-answer.md#32`** · `build-detail-or-KTD` · → U5/D1 — contributions + match build · _canonical_
+  - sig: contributions + match R31, per-runway-year step-down at 64
+  - Contributions + match (R31): per-account flat-real amounts (implicit catch-up routing), employer match → pretax; R19 ceiling checks against C1's limits at current age, calm inline; intakeMap applies C1's per-runway-year step-down when an age-band ceiling expires mid-runway (60-63 super catch-up → age-50 tier at 64) with a calm disclosure naming the step-down year.
+  - [dedup] Act 2 plan canonical for the build step; product R31 + architecture contribution-limit constants carry pointers.
+- **`docs/plans/2-first-answer.md#35`** · `build-detail-or-KTD` · → U5/D1 — tested contracts (copy fence) · _canonical_
+  - sig: copy-fence test non-vacuous, planted inline string
+  - Tested contract — the copy fence proven non-vacuous (copyFence.test.ts): the ESLint rule must FAIL on a planted inline user-facing string (JSXText AND an aria-label literal) and PASS the catalog-routed form, so 'every string routes through copy.ts' is never vacuously green.
+- **`docs/plans/2-first-answer.md#36`** · `build-detail-or-KTD` · → U5/D1 — tested contracts (no-write seam) · _canonical_
+  - sig: no-write-until-Save seam test against real store
+  - Tested contract — the no-write-until-Save seam (noWriteSeam.test.tsx): no-IndexedDB-write holds across the full intake flow (preamble + account loop) until explicit Save, with planted-write control, asserted against U4's real store (fake-indexeddb, never a stub); a tripwire so a future draft/resume path fails loud rather than silently shipping cleartext intake to disk.
+  - [dedup] Act 2 plan canonical for the test; architecture (no-write seam) + plans/1-engine (U4) carry pointers.
+- **`docs/plans/2-first-answer.md#37`** · `build-detail-or-KTD` · → U5/D1 — tested contracts (AnswerStrip honesty) · _canonical_
+  - sig: $0-portfolio negative reading never shows verdict word
+  - Tested contract — the provisional AnswerStrip honesty branches (AnswerStrip.test.tsx): a $0-portfolio negative reading never shows the verdict word (a half-entered portfolio reads falsely off-track — the pessimistic mirror of the date route's trust hazard); plus indeterminate→incomplete surfacing, cancelled hold-quiet, and the a11y region label/announcement.
+- **`docs/plans/2-first-answer.md#38`** · `invariant` · → U5/D1 — tested contracts (spend-period force-confirm) · _canonical_
+  - sig: spend-period force-confirm, monthly-vs-annual trap (R19)
+  - Tested contract — the spend-period force-confirm (R19): every per-period money field carries an explicit $/month vs $/year segmented control (active segment by shape/weight not hue); the model stores one canonical period (spend=/month, income+SS=/year, editable); for a value coherent as both, intake forces explicit per-period confirmation so the engine can never run on 1/12 or 12× the real figure.
+  - [dedup] Act 2 plan canonical for the build/test contract; back-nine-design skill (financial-input discipline) carries the practitioner pointer.
+- **`docs/plans/2-first-answer.md#41`** · `build-detail-or-KTD` · → U5/D1 — sourcing-stall affordances build · _canonical_
+  - sig: sourcing-stall affordances, pre-flight note + continue-past path
+  - The sourcing-stall affordances (still-working employer-covered household doesn't know its SLCSP, the tool won't fetch/guess it — R36): (a) a calm pre-flight note at flow start ('have a recent marketplace quote handy — healthcare.gov or KFF, age + ZIP'), the primary affordance; (b) a continue-past path — the ACA question never hard-blocks the preamble/account loop; the surface holds an input-incomplete placeholder naming the missing input and why it won't synthesize; park-and-resume is honestly in-session only.
+  - [dedup] Act 2 plan canonical for the affordance build steps; product R36 carries the no-live-lookup requirement pointer.
+- **`docs/plans/2-first-answer.md#43`** · `invariant` · → U5/D1 — money-input discipline build · _canonical_
+  - sig: money-input discipline, raw number + formatted string, reformat on blur
+  - The money-input discipline (mobile must shine): the model stores each input as a raw number, the field displays a formatted string; open-ended dollar fields use a text field summoning the numeric keypad (not a number-spinner, not a slider — violates R6's 'set any assumption precisely'); sliders reserved for bounded ranges (ages, percentages); reformat on blur not per keystroke; full-width finger-sized fields.
+  - [dedup] Act 2 plan canonical for the build discipline; back-nine-design (financial-input discipline) + product R6 carry pointers.
+- **`docs/plans/2-first-answer.md#44`** · `invariant` · → U5/D1 — R19 sanity build · _canonical_
+  - sig: R19 sanity decomposed per rule + directional re-validation
+  - R19 sanity decomposed: each discrete testable rule blocks only true impossibilities (status-conditional retire-vs-current; SS claim outside 62-70; survivor-spending ratio >100%) and lets coherent-but-dire inputs ($0 portfolio + positive spend) flow to an honest '0 of 10'; directional half — cross-gated inputs re-fire on upstream Back-edit (keeps downstream answers, marks dependents); rules evaluate on field blur + attempt-to-advance not per keystroke; '6'→'62' never flagged mid-entry; an error clears the instant the field is re-edited.
+  - [dedup] Act 2 plan canonical for the decomposed-rule build/test; product R19 carries the requirement pointer.
+- **`docs/plans/2-first-answer.md#45`** · `invariant` · → U5/D1 — a11y contract build · _canonical_
+  - sig: a11y contract, focus-to-heading + one polite live region
+  - The a11y contract (stranger-trust bar; reader is color blind): on each step advance move focus to the new step heading (tabindex=-1) not the input (heading-as-focus-target is the announcement); one visually-hidden polite live region for transient status with burned/045 clear-after-announce; R19 errors associate to their field (role=alert + aria-invalid + aria-describedby) and carry the non-color signal; the focus-move/announce() helper is a shared primitive U7 reuses.
+  - [dedup] Act 2 plan canonical for the a11y build primitive; back-nine-design + web-design-guidelines skills carry pointers.
+- **`docs/plans/2-first-answer.md#46`** · `invariant` · → U5/D1 — surface-early is provisional · _canonical_
+  - sig: surface-early PROVISIONAL, anchored to validateParams acceptance
+  - Surface-early is provisional until the account set is complete (the trust hazard, symmetric across both leads); the first-render threshold is anchored to the engine contract — the answer first renders at exactly validateParams acceptance (a rejection IS input failure, no separate UI threshold that can drift); below it the surface shows a calm input-incomplete placeholder; between acceptance and account-set-complete all outcome classes render in provisional form.
+- **`docs/plans/2-first-answer.md#47`** · `decision-rationale` · → U5/D1 — three movements (shared with D2) · _canonical_
+  - sig: three movements: narrowing, value-moving, class-transition
+  - The design distinguishes three movements mapping across date and spine routes: (1) band narrowing = sharpening (a virtue); (2) value moving 'better' (date earlier / grade off→on-track) = a hazard that feels like bargaining — labeled provisional, never a delight tick or alarm; (3) outcome-class transition = an expected provisional update, never an alarm; a provisional negative reading is tied to incompleteness via a distinct copyGuard-cataloged string class, never the final copy.
+  - [dedup] Act 2 plan canonical for the three-movements design; the D2 section references the same three trust-shaped movements as a pointer.
+- **`docs/plans/2-first-answer.md#49`** · `build-detail-or-KTD` · → U6 — shipped / planned files · _canonical_
+  - sig: U6 shipped foundation: palette.ts, scale.ts, colorblind gate
+  - U6 shipped (foundation): src/viz/palette.ts (single source for non-color signal primitives — luminance ramp, shape/marker set, line-style set), src/viz/scale.ts, the colorblind dev gate (colorblind.test.tsx, scale.test.ts, scale.pbt.test.ts); planned (render): src/viz/ConfidenceBand.tsx; Act 3 creates TwoFutures.tsx reusing this unit's encoding tokens.
+  - [dedup] Act 2 plan canonical for U6 file inventory; plans/3-controls (TwoFutures) carries the forward pointer.
+- **`docs/plans/2-first-answer.md#50`** · `invariant` · → U6 — two-series encoding tokens · _canonical_
+  - sig: two-series encoding tokens, line-style + end-label + marker + luminance
+  - U6 two-series encoding tokens (single-sourced in palette.ts): distinguish the two futures by line style (solid/dashed) + direct end-of-line labels + distinct marker shapes + luminance, never red/green; these tokens are the reusable contract U6 ships; the de-collision / delta-as-hero rendering is owned by Act 3 (built with TwoFutures against the Roth control's real emission, per burned/042).
+  - [dedup] Act 2 plan canonical for the encoding-token contract; plans/3-controls carries the de-collision/delta rendering pointer.
+- **`docs/plans/2-first-answer.md#52`** · `invariant` · → U6 — verdict-icon shape primitives · _canonical_
+  - sig: six verdict-icon shapes pairwise-distinct, planted near-identical pair
+  - U6 verdict-icon shapes are palette primitives, pairwise-distinct + a11y-tree: the six verdict-state icon shapes are in palette.ts's named shape set (U6-owned, no U7 dependency — can build alongside Act 1); U7's verdictSignal is only the state→shape binding; all C(6,2)=15 pairs must be distinguishable on the non-hue channel (silhouette + luminance) with a planted near-identical pair that fails the gate loud.
+  - [dedup] Act 2 plan canonical for the U6 shape-primitive build/test; back-nine-design skill carries the practitioner pointer.
+- **`docs/plans/2-first-answer.md#54`** · `invariant` · → U6 — indeterminate viz state · _canonical_
+  - sig: indeterminate 'no band yet' named viz state, no median line
+  - U6 indeterminate 'no band yet' is a named viz state: behind the on-demand range-reveal (never on the verdict's first frame), it renders as a deliberately wide low-emphasis placeholder envelope with NO central median line and a distinct non-color texture (sparse/dashed boundary or faint hatch); forbid any thin/precise band or single-value flat line; the tell is the absent median + wide texture, never hue.
+- **`docs/plans/2-first-answer.md#55`** · `invariant` · → U6 — draw-once-then-morph render · _canonical_
+  - sig: draw once then morph, fixed x-lattice, rides determinism
+  - U6 draw-once-then-morph: the pathLength draw plays once on first reveal, every recompute morphs via an interruptible retargetable transition (never @keyframes); the morph rides the determinism contract (reused scenario seed) so shape change is pure signal not RNG jitter; fixed x-lattice (constant point count across the fixed max-horizon viewBox); the median line is an opacity-fade overlay not part of the morphed path; the morph is shape-agnostic — must widen/shift, not only narrow (R8).
+  - [dedup] Act 2 plan canonical for the morph render build; emil-design-eng skill carries the motion-craft pointer.
+- **`docs/plans/2-first-answer.md#56`** · `invariant` · → U6 — reduced-motion render · _canonical_
+  - sig: reduced-motion final state identical, no info only in animation
+  - U6 prefers-reduced-motion: replace movement with the final state rendered instantly plus a short comprehension-aiding opacity fade; hard invariant — the final rendered state is identical with motion on or off (no information lives only in the animation), so the reduced-motion path inherits the non-color/grayscale guarantees for free.
+  - [dedup] Act 2 plan canonical for the reduced-motion render rule; back-nine-design + emil-design-eng skills carry pointers.
+- **`docs/plans/2-first-answer.md#57`** · `invariant` · → U6 — responsive-SVG contract · _canonical_
+  - sig: responsive-SVG contract, non-scaling-stroke, portal overlays
+  - U6 responsive-SVG contract: one fixed viewBox, container width:100%/height:auto, preserveAspectRatio xMidYMid meet, vector-effect non-scaling-stroke on all stroked paths so line weight/dash geometry stay constant in screen px (protecting the colorblind-substitute encoding); a hard minimum text px below which ticks/labels drop rather than shrink; pending + compute-error are non-band modes owned by U7 (band simply not mounted); portal any overlay/tooltip to document.body (transform-ancestor trap, burned/013).
+  - [dedup] Act 2 plan canonical for the responsive-SVG build contract; back-nine-design skill (burned/013 portal trap) carries the pointer.
+- **`docs/plans/2-first-answer.md#59`** · `requirement` · → U7 — requirements / planned files · _canonical_
+  - sig: U7 requirements R1 R2 R4 R12 R14 R25; planned files
+  - U7 requirements: R1, R2, R4 (depth on demand), R12 (probabilistically-framed copy, certainty banned), R14 (plain not dumbed-down); gates R25 (cardinal honesty bar) via the N=1 cold-read; planned files: create ConfidenceStatement.tsx, outcomeStates.ts, SurvivorReadout.tsx, verdictSignal.tsx, copyGuard.ts; extend copy.ts.
+  - [dedup] Act 2 plan canonical for the U7 file plan; product (R1/R2/R4/R12/R14/R25) holds the R-ledger entries (pointer).
+- **`docs/plans/2-first-answer.md#60`** · `requirement` · → U7 — verdict-first / disclosure pattern · _canonical_
+  - sig: U7 verdict text-first, band on-demand, one disclosure pattern
+  - U7 design: one answer, verdict text-first — first frame = verdict word + dollar magnitude + non-color shape; the ConfidenceBand is the on-demand 'range' of R4 revealed by an explicit affordance ('show me the range'), not on the first frame; one progressive-disclosure affordance (origin-aware bottom-sheet on mobile) serves both the range reveal AND the 'and the survivor?' readout, both portaling to document.body (burned/013).
+  - [dedup] Act 2 plan canonical for the U7 disclosure-pattern build; back-nine-design skill (burned/013) carries the pointer.
+- **`docs/plans/2-first-answer.md#61`** · `requirement` · → U7 — per-state copy grammar · _canonical_
+  - sig: U7 per-state copy grammar, six-row table, typed slots
+  - U7 per-state copy grammar (decided framing, exact strings deferred to cold-read): a six-row table, each row = {verdict + magnitude + next-action + non-color signal} with typed slots; dollar-bearing states on one signed over/under axis (Kitces) — on-track outcome-first relief, over-funded symmetric underspending mirror, off-track/borderline action-first trim (never 'failure'), already-failing gap-to-sustainable-today (never 'failure'); indeterminate = range + a next-action naming the specific missing input (by intake order, not a sensitivity ranking); compute-error = retry.
+  - [dedup] Act 2 plan canonical for the per-state grammar build; Contract 5 (framing direction) + product R2 Kitces carry pointers.
+- **`docs/plans/2-first-answer.md#62`** · `requirement` · → U7 — survivor readout · _canonical_
+  - sig: survivor readout = second confidence statement, may differ
+  - U7 survivor readout = a second confidence statement in the same vocabulary (the emotional core, a success criterion): SurvivorReadout reuses the same outcomeStates map + verdictSignal + copy catalog on the engine's survivor distribution, deriving no figures of its own, and may render a different one of the six states than the joint headline (household-on-track-but-survivor-off-track is the product's reason to exist); the two survivor shocks render in plain words (SS step-down as a dollar drop; the single-filer effect with no 'widow's penalty' jargon).
+  - [dedup] Act 2 plan canonical for the SurvivorReadout build; product (survivor success criterion) + architecture (survivor distribution) carry pointers.
+- **`docs/plans/2-first-answer.md#64`** · `invariant` · → U7 — compute-error + pending render modes · _canonical_
+  - sig: compute-error and pending DISTINCT render modes
+  - U7 compute-error and pending are distinct render modes: the engine's calm-error result gets a dedicated non-verdict system state (no band/range/X-of-10, next-action = RETRY never 'sharpen', copy reassures the in-memory data is intact); pending renders no headline/X-of-10/band/outcome signal (must never resemble a verdict) and governs only the pre-first-verdict window — once any distribution resolves, recomputes hold the last verdict + band and crossfade/morph (no flicker).
+  - [dedup] Act 2 plan canonical for the U7 render-mode build; Contract 6 (item 24, render levels) carries the transport pointer.
+- **`docs/plans/2-first-answer.md#65`** · `requirement` · → U7 — magic-moment motion · _canonical_
+  - sig: magic-moment motion, static figure no count-up, crossfade
+  - U7 magic-moment motion: entrance = opacity + a small translate, custom ease-out (a calm settle, never scale(0)/spring bounce); render the headline dollar figure and X-of-10 static — no count-up/odometer (an animated financial figure reads as a gambling tell); state→state = crossfade with interruptible transitions + a brief subtle blur morphing word+shape+magnitude (not a hue swap); margin-gating is an Act 3 addition; prefers-reduced-motion keeps the opacity/color crossfade, drops the translate.
+  - [dedup] Act 2 plan canonical for the U7 motion build; emil-design-eng + back-nine-design skills carry pointers.
+- **`docs/plans/2-first-answer.md#66`** · `decision-rationale` · → U7 — visual direction contract · _canonical_
+  - sig: visual direction = refined minimalism, self-hosted fonts
+  - U7 visual direction contract (the product's face, consumed by U6 labels + Act 3 controls): commit one intentional aesthetic — refined minimalism executed with precision (calm/trust-first/literate), explicitly not generic AI defaults (no Inter/Roboto/system-stack as the brand face); a distinctive display face + a refined legible body face, both self-hosted (CSP connect-src 'self' forbids a font CDN, counts against the bundle budget); type/scale in shared design tokens built before components; visual ranking verdict>dollar>X-of-10 so the non-color signal rides on weight/scale.
+  - [dedup] Act 2 plan canonical for the visual-direction design contract; frontend-design + back-nine-design skills, architecture §10 (CSP/self-hosted fonts), and CLAUDE.md (CSS-tokens-before-components) carry pointers.
+- **`docs/plans/2-first-answer.md#68`** · `requirement` · → U8 — goal / why a dedicated unit · _canonical_
+  - sig: U8 goal, Save CTA + passphrase-strength gate + recovery + export
+  - U8 goal: the moment the in-memory model first reaches disk — the Save CTA, passphrase-set gated by a min-entropy strength check, recovery-phrase display, mandatory export, wired to U4's mechanism (making R16/R17/R18 real; the strength gate makes PBKDF2-600k's brute-force defense load-bearing); dedicated unit because U4 built the mechanism and deferred the display; U8 is the Act 2 owner of the end-to-end no-unkeyed-write proof + the net-new strength gate.
+  - [dedup] Act 2 plan canonical for the U8 unit goal/build rationale; product R16/R17/R18 + architecture (PBKDF2) carry pointers.
+- **`docs/plans/2-first-answer.md#69`** · `requirement` · → U8 — requirements / planned files · _canonical_
+  - sig: U8 requirements R16 R17 R18; planned save-flow files
+  - U8 requirements: R16 (encrypted at rest + guarded local access, the strength gate is the front door), R17 (survivor recovery), R18 (export/back-up durability); planned files: create SaveFlow.tsx, RecoveryPhraseDisplay.tsx, ExportConfirm.tsx, passphraseStrength.ts.
+  - [dedup] Act 2 plan canonical for the U8 file plan; product (R16/R17/R18) holds the R-ledger entries (pointer).
+- **`docs/plans/2-first-answer.md#71`** · `build-detail-or-KTD` · → U8 — zxcvbn-ts packs build/test · _canonical_
+  - sig: zxcvbn-ts dictionary packs MANDATORY, CI known-weak test
+  - U8: the zxcvbn-ts dictionary/language packs are mandatory — core ships with no dictionaries, so a pack-less estimator over-rates leaked passphrases and silently passes a weak one; a CI test asserts a known-weak common password is rejected only with packs loaded (a pack-less pass is a false green the test catches); co-locate the score-threshold + length-floor constants with U4's KDF params via burned/063 single-source.
+  - [dedup] Act 2 plan canonical for the packs build/test step; architecture §8 (constants discipline / burned/063 single-source) carries the constants pointer.
+- **`docs/plans/2-first-answer.md#72`** · `invariant` · → U8 — recovery-phrase display · _canonical_
+  - sig: recovery-phrase display, non-selectable + mandatory capture gate
+  - U8 recovery-phrase display honors the threat model: the phrase is a full credential with a screenshot/phishing threat model — non-selectable, print/PDF-preferred, 'store offline, don't screenshot', not a copy box; a mandatory phrase-capture gate blocks 'saved' (re-enter a verifying subset, or at minimum an explicit 'I have stored this offline' acknowledgment); the export is not a substitute (the blob is inert without the phrase, both survivor doors require it — the exact R17 failure the product prevents); the phrase exposes accessible a11y text; non-selectability is honestly scoped as a UX defense, the real mitigation is minimizing heap exposure (view-then-dismiss).
+  - [dedup] Act 2 plan canonical for the recovery-phrase display build; product R17 + architecture (recovery phrase) carry pointers.
+- **`docs/plans/2-first-answer.md#73`** · `invariant` · → U8 — export confirm + commit ordering · _canonical_
+  - sig: atomic IndexedDB commit is the FINAL step, no reorder
+  - U8 mandatory encrypted-export confirm is part of reaching 'saved' (no remind-me-later bypass): the atomic IndexedDB commit is the final step that flips state to 'saved' — strength-gate → mint DK+wraps → display+capture phrase → produce+confirm export ALL precede it — so the quota-fail 'use your export' fallback is truthful and the PWA defer-until-commit window spans the whole ceremony; an implementer must not reorder export after the commit.
+  - [dedup] Act 2 plan canonical for the commit-ordering build invariant; product R18 + architecture (atomic commit) carry pointers.
+- **`docs/plans/2-first-answer.md#74`** · `invariant` · → U8 — field-fidelity guard · _canonical_
+  - sig: field-fidelity guard, seed included, planted-drop companion
+  - U8 hands the in-memory model — including its seed — to U4's keyed write path so save→reload→unlock reproduces the identical headline; the field-fidelity guard (schemaVersion-agnostic) asserts the decrypted plaintext is field-identical to the in-memory model at Save (single-shape contract makes it structural, the test proves it), adapts to the session's shape (spine-only v1 vs controls-opened v2), excludes the orchestrator's session-only fields (worker handle, capability flag, request epoch, lastDisplayed*), and is paired with a burned/027 planted-drop companion so it is not a tautological round-trip.
+  - [dedup] Act 2 plan canonical for the field-fidelity guard build/test; Contract 1(b) (seed persisted unchanged) + Contract 1(e) (single shape) carry the invariant pointers.
+- **`docs/plans/2-first-answer.md#75`** · `decision-rationale` · → U8 — PWA update-mid-write test · _canonical_
+  - sig: U8 owns PWA update-mid-write integration test
+  - U8 owns the PWA update-mid-write integration test: a service-worker 'update ready' accepted during an in-flight first-save → the handler reads the store's no-write-in-flight signal and defers skipWaiting+reload until the write commits, with no false 'saved' before commit; rescoped rationale — U4's single-transaction atomicity is already the partial-vault backstop, this handler only avoids a needless failed/false-'saved' first save on a user-accepted update (a UX/honesty refinement, not a second owner of atomicity).
+  - [dedup] Act 2 plan canonical for the U8 integration-test ownership; architecture (PWA/atomicity) + the plans/2 exit-conditions carry pointers.
+- **`docs/plans/2-first-answer.md#76`** · `requirement` · → U8 — a11y · _canonical_
+  - sig: U8 a11y, gate-block announced, never an invisible wall
+  - U8 a11y: reuse U5's focus-to-heading + single polite live-region across passphrase-set → phrase-display → export-confirm; the strength verdict AND the gate-block ('stronger passphrase needed, no path to saved') associate to the passphrase field and announce politely — an AT user must never hit an invisible blocking wall on the load-bearing security control.
+  - [dedup] Act 2 plan canonical for the U8 a11y build; back-nine-design + web-design-guidelines skills carry pointers.
+- **`docs/plans/2-first-answer.md#78`** · `decision-rationale` · → D2 — dependencies / build order / planned files · _canonical_
+  - sig: D2 dependencies + build order U4->D1->U6/U7->D2
+  - D2 dependencies: C3 (date-search, shipped), D1 (account-level setup, shipped — transitively gates D2 behind U4), and U6-render/U7 (planned, consumed in build order never as pre-existing code); build order = U4(done)→D1(done)→U6-render+U7→D2; planned files: create FuckOffDate.tsx (working name; in-product label is design-time), DateConfidenceReadout.tsx; modify ConfidenceStatement.tsx, copy.ts, memoryModel.ts.
+  - [dedup] Act 2 plan canonical for the D2 build order + file plan; roadmap (build order) + plans/1-engine (C3) carry pointers.
+- **`docs/plans/2-first-answer.md#80`** · `invariant` · → D2 — window-edge / no-date rendering · _canonical_
+  - sig: D2 window-edge + no-date first-class, non-monotone disclosure
+  - D2 window-edge and no-date outcomes render first-class: 'no work-optional date within the ~N-yr window' is a designed calm-voice answer (never 'never free', never blank, never the window-top date presented as confirmed), with the per-offset confidence curve as on-demand detail; the window-edge date renders with its unconfirmed-tail disclosure, and any result whose non-monotone-region flags are set (confirmed OR window-edge) additionally renders the non-monotone-region disclosure (C3 carries the flags, D2 owns the string never recomputed UI-side); distinguish the three trust-shaped movements during entry.
+  - [dedup] Act 2 plan canonical for the D2 rendering build; plans/1-engine (C3 non-monotone flags) + the U5/D1 three-movements section carry pointers.
+- **`docs/plans/2-first-answer.md#81`** · `invariant` · → D2 — two graded dates / crowning grade · _canonical_
+  - sig: two graded dates, drill-down grade is the CROWNING grade
+  - D2 two confidence-graded dates (R27/R28): render floor + lifestyle dates, coincident → one date in the degenerate single-total-spend case, separating as the budget splits (Act 3); express the date↔confidence tradeoff ('lifestyle-free in ~3 years at 8/10, or year 5 for 9/10'), never a single deterministic date (banned R25/R28); the Y==0 over-funded household renders 'free today / you're already there' (never 'already past' — the sweep produces no evidence about the past); the drill-down grade is the crowning grade (one run / one statistic / one grade) — the not-yet-retired drill-down spine statement at crowned Y* renders the date-search's own quantized-lower-bound result, never an independent recompute.
+  - [dedup] Act 2 plan canonical for the two-dates render build; plans/1-engine (date-search/quantized-lower-bound) + product R27/R28 carry pointers.
+- **`docs/plans/2-first-answer.md#82`** · `requirement` · → D2 — hedge / re-grade / reuse · _canonical_
+  - sig: D2 hedge on the headline, re-grade on override, reuse not reinvent
+  - D2 hedge on the headline (R12): the date wears its probabilistic hedge by construction (the require-the-hedge lint lands in Act 3·U10; interim the copyGuard ban-list + slot discipline apply) — the date is a distribution not a line; re-grade on override (R28): a sequencing/conversion override re-runs the date-search and re-grades both dates (symmetric with R10's both-futures-update); reuse don't reinvent — the X-of-10 display contract, non-color signal grammar, outcome-state vocabulary, and disclosure affordance are inherited from U6/U7; the N=1 cold-read of the date framing is an Act 2 exit condition when the UI lands.
+  - [dedup] Act 2 plan canonical for the D2 hedge/re-grade build; product R10/R12/R28 + plans/3-controls (U10 hedge lint) carry pointers.
+- **`docs/plans/2-first-answer.md#83`** · `requirement` · → two-pane laptop layout · _canonical_
+  - sig: two-pane laptop layout, primary screen, not a dashboard
+  - The two-pane laptop layout (planned, not built): the laptop is the primary screen (the showcase), the phone works but isn't the showcase; the state-adaptive primary surface composes the lead answer (date or spine), the on-demand range/survivor disclosure, and the Save CTA into a calm two-pane layout that does not read as a dashboard (R2); designed under the four UI skills (precedence back-nine-design > emil-design-eng > frontend-design > web-design-guidelines); it lands once U7 + D2 exist.
+  - [dedup] Act 2 plan canonical for the layout composition build; roadmap (unit status), CLAUDE.md (UI skill precedence), and the MEMORY laptop-primary note carry pointers.
+- **`docs/plans/features/other-income.md#27`** · `build-detail-or-KTD` · → R40 build — Unit 1 (mirror contributions pattern) · _reframe_
+  - sig: mirror PersonContributionStreams entity→compile→params→engine
+  - Mirror the contributions pattern: a leaf vector type (PersonContributionStreams) → wrapper (AccumulationParams) → OverlayParams; a persisted list entity (EnteredAccount on ScenarioV3.enteredAccounts) with SCENARIO_V3_FIELDS + exhaustiveness tie + draft tie + init; discriminated-union precedent TickerClassification (kind simple|exact); fidelity-over-duplication law; vocab-as-const precedent.
+  - [reframe] Surviving fact: build R40 by mirroring the contributions entity→compile→params→engine→validate pattern, the TickerClassification discriminated-union precedent, and fidelity-over-duplication. Keep the PATTERN, not the drifting code-line numbers (HEAD dc674dff).
+- **`docs/plans/features/other-income.md#28`** · `build-detail-or-KTD` · → R40 build — Unit 2 (compile site, inflation 0.03) · _reframe_
+  - sig: compile site contributionStreamsFor, inflation 0.03, escalateQuote not a template
+  - Compile site: contributionStreamsFor holds the nonZero vector-drop helper; inflation point estimate productionMarket.inflation.mean = 0.03; escalateQuote (the ACA age-rating escalator) is NOT a structural template for the COLA decay (KTD-2).
+  - [dedup] Build step here; the KTD-2 'write COLA math fresh, not via escalateQuote' decision homes in decisions/other-income-r40 (pointer).
+  - [reframe] Surviving fact: compile in the contributions-compile site reusing nonZero; use inflation mean 0.03; don't borrow escalateQuote's structure for COLA decay. Code-lines drift — keep the facts.
+- **`docs/plans/features/other-income.md#29`** · `build-detail-or-KTD` · → R40 build — Unit 3 (per-path assembly, zero-alloc model) · _reframe_
+  - sig: contributionsForYear allocates four arrays, zero-alloc sibling
+  - Per-path assembly: contributionsForYear allocates four per-person arrays per call (gated call; presence-keyed tax-input spread mirror); the zero-alloc sibling cashTermsForYear returns one small {net,ss} literal with no per-call alloc — the model for ongoingIncomeForYear (KTD-4).
+  - [dedup] Build step here; the zero-alloc select decision homes in decisions/other-income-r40 (KTD-4) (pointer).
+  - [reframe] Surviving fact: model ongoingIncomeForYear on cashTermsForYear's zero-alloc shape, not contributionsForYear's 4-array alloc. Keep the contrast, drop the line numbers.
+- **`docs/plans/features/other-income.md#30`** · `build-detail-or-KTD` · → R40 build — Unit 3 (tax boundary seams) · _reframe_
+  - sig: tax boundary nonSSordinary §86 single MagiComponents producer
+  - Tax boundary: taxOverlay YearContribution; GrossUpContext build (solveGrossWithdrawal receives only GrossUpContext, not full TaxYearInputs); the nonSSordinary site; the §86 call; the single MagiComponents producer; finiteness backstop; the §6 ACA empty-overlap throw.
+  - [dedup] Build step here; the seam decisions (KTD-1) home in decisions/other-income-r40 and the five-seams table; architecture §7 owns the single-MagiComponents-producer rule (pointer).
+  - [reframe] Surviving fact: the tax-boundary touch points (GrossUpContext, nonSSordinary, §86, single MagiComponents producer, finiteness backstop, and the §6 ACA empty-overlap throw — which R40 income must NOT inherit: death-gated, not retire-gated; insight 027/020) where R40's taxable enters. Keep the touch-point set; line numbers drift.
+  - [fixed:warn] Restored §6 ACA empty-overlap touch point + do-not-inherit landmine to reframe.
+- **`docs/plans/features/other-income.md#31`** · `build-detail-or-KTD` · → R40 build — Unit 3 (IRMAA channel, KTD-9) · _reframe_
+  - sig: working-year IRMAA override additive irmaaMagi formula
+  - IRMAA channel: working-year override workingYearIrmaaMagiByPerson (required on the date route, built per-person, recorded additively: irmaaMagiHistory[t] = (override[t] ?? 0) + irmaaMagi(components)); irmaaMagi(c) = nonSSordinary + realizedGain + ssBenefitTaxable; current override copy is 'whole income, not just what work pays' (KTD-9).
+  - [dedup] Build step here; the IRMAA structural-decouple decision + inverted copy home in decisions/other-income-r40 (KTD-9) (pointer). irmaaMagi formula is also an architecture §7 mechanic.
+  - [reframe] Surviving fact: the additive working-year IRMAA override and irmaaMagi = nonSSordinary + realizedGain + ssBenefitTaxable; this is where KTD-9 decouples. Keep the formula; line numbers drift.
+- **`docs/plans/features/other-income.md#32`** · `build-detail-or-KTD` · → R40 build — Unit 3 (§7 clamp, bridgeYearMask) · _reframe_
+  - sig: §7 clamp net=0 accumulating working, k_sup 0.74 113-pass
+  - The §7 clamp: net = accumulating && livingWorker ? 0; the per-path bridgeYearMask marks clamped working years; gross-up contraction proof k_sup ≈ 0.74, ~113-pass bound to ENGINE_MAX_DOLLAR.
+  - [dedup] Build step here; k_sup figure homes in research/engine-validation-and-tax; KTD-9 (clamped-year handling) homes in decisions/other-income-r40 (pointers).
+  - [reframe] Surviving fact: net is clamped to 0 in accumulating living-worker years (bridgeYearMask marks them); gross-up contracts at k_sup≈0.74 within ~113 passes. Keep the rule + figure; line numbers drift.
+- **`docs/plans/features/other-income.md#34`** · `build-detail-or-KTD` · → R40 build — Unit 3 (validateParams vector gate) · _reframe_
+  - sig: R19 gate validateParams validates compiled vectors not scalars
+  - R19 gate: the validateParams accumulation block validates the COMPILED vectors (names the field, never the value); cashTermsForYear callers are the path loop AND the test-export netWithdrawalForYear (+ ~12 simulate.test.ts sites).
+  - [dedup] Build step here; KTD-4 (two-variant) + the validation-boundary invariant home in decisions/other-income-r40 + architecture (pointers).
+  - [reframe] Surviving fact: validateParams gates the compiled vectors (field not value); both cashTermsForYear callers (path loop + netWithdrawalForYear test export, ~12 test sites) update on a return-shape change. Keep the facts; line numbers drift.
+- **`docs/plans/features/other-income.md#35`** · `build-detail-or-KTD` · → R40 build — Unit 3 (date-sweep, restore path) · _reframe_
+  - sig: date-sweep truncateStreams overlayBase income un-truncated, restore bypasses form
+  - Date-sweep: truncateStreams handles contributions only; buildCandidateParams' ...overlayBase pass-through does NOT list income; survivorSpendingRatio 0.75 applies on first death of either spouse; bracket-fill/conversion sizing is P3/P4 (not built); the restore path bypasses the intake form (model = decoded.scenario; codec casts parsed as unknown as ScenarioV3; needVocab is the SHAPE gate).
+  - [dedup] Build step here; KTD-7 (0.75), KTD-8a (income un-truncated), KTD-6 (codec) home in decisions/other-income-r40 (pointers).
+  - [reframe] Surviving fact: income is Y-invariant so it passes ...overlayBase un-truncated (not in truncateStreams); restore bypasses the form so the codec is the sole gate. Keep the facts; line numbers drift.
+- **`docs/plans/features/other-income.md#37`** · `build-detail-or-KTD` · → R40 build — Unit 4 (intake-entity pattern, files) · _reframe_
+  - sig: intake-entity pattern AccountEntry atomic-commit, naming-collision incomeStep
+  - Intake-entity pattern: ScenarioDraft.enteredAccounts mutated via update; AccountEntry.tsx atomic-commit FormState with conditional fields and save() early-return on incomplete; AccountsStep row summary (3 facts) + two-tap remove + empty-state; the EXISTING incomeStep/workIncomeStep earned-income naming-collision hazard; missingRequiredFacts per-entity pushes; buildParams null-coupling; AnswerStrip 'still needed' surface (insight 035 layout-shift); SanityRule + contribution-over-ceiling template; FieldError; the copy fence (copyFence.test.ts); codec per-entity validators checkAccounts/checkContributionStreams are the U8 precedent.
+  - [reframe] Surviving fact: build the income intake mirroring AccountEntry's atomic-commit/early-return/row-summary/two-tap-remove pattern, avoid the incomeStep/workIncomeStep naming collision, and extend checkAccounts/checkContributionStreams as the U8 codec precedent. Keep the pattern; commit/line numbers drift.
+- **`docs/plans/features/other-income.md#56`** · `decision-rationale` · → R40 build — Unit 3 (cashTermsForYear return-shape) · _reframe_
+  - sig: cashTermsForYear returns {net, ss, incomeTaxable} two-scalar routing
+  - Deferred to implementation: the two-scalar routing — cashTermsForYear returns {net,ss,incomeTaxable} (one helper call; gross consumed internally for netting, taxable surfaced to the loop and pushed into a per-year incomeTaxableYears array spread into taxInputs); the return-shape change ripples to netWithdrawalForYear + ~12 simulate.test.ts sites — name it in Unit 3, settle the exact shape at wire time without perturbing the two-pass allocateWithdrawal.
+  - [dedup] Build-detail step here; KTD-4/Unit 3 + System-Wide (API surface parity) carry pointers.
+  - [reframe] Surviving fact: cashTermsForYear returns {net,ss,incomeTaxable}; taxable feeds a per-year incomeTaxableYears array spread into taxInputs; the return-shape change touches netWithdrawalForYear + ~12 test sites without perturbing the two-pass allocateWithdrawal. Present-tense build decision; drop 'deferred to implementation' framing.
+- **`docs/plans/features/other-income.md#58`** · `requirement` · → R40 build — Unit 1 (types, files) · _reframe_
+  - sig: Unit 1 income-stream types, model.ts entity + leaf + ScenarioV3
+  - Unit 1 — income-stream types: discriminated-union entity, two-variant leaf, draft+scenario shape (R40.1/.2/.3/.6, KTD-3/4/6/8b). Files: model.ts (IncomeStream entity union keyed on type; single-sourced INCOME_TYPES/COLA_MODES as const; two-variant PersonIncomeStream leaf; IncomeParams; OverlayParams.income?; incomeStreams on ScenarioV3 + SCENARIO_V3_FIELDS + exhaustiveness tie); memoryModel.ts (draft↔V3 tie; init []; always present never undefined — a restored v3 blob missing the field defaults to [] under tolerant-reader); test model.income-shape.test.ts.
+  - [dedup] Unit 1 build step here; roadmap You-Are-Here tracks its status (pointer).
+  - [reframe] Surviving fact: Unit 1 builds the IncomeStream entity + PersonIncomeStream leaf + ScenarioV3 field + draft tie (always-present default []), with single-sourced vocab and a shape test. Present-tense build step.
+- **`docs/plans/features/other-income.md#59`** · `build-detail-or-KTD` · → R40 build — Unit 1 (concrete shapes) · _reframe_
+  - sig: Unit 1 shape IncomeStream {type, ownerIndex 0|1, annualRealToday...}
+  - Unit 1 shape: IncomeStream = {type∈INCOME_TYPES, ownerIndex:0|1, annualRealToday, startAge, endAge? (absent≡lifetime, never numeric/Infinity), colaMode∈COLA_MODES, colaPct?, survivorPct, + discriminated-union tax-treatment keyed on type}; PersonIncomeStream (compiled leaf)={grossFull?,taxableFull?,grossSurvivor?,taxableSurvivor?} optional per-year readonly number[]; IncomeParams={readonly incomeByPerson: readonly PersonIncomeStream[]} index-aligned to people; OverlayParams.income? optional — presence is the reduce-to-spine key.
+  - [dedup] Build-shape detail here; KTD-3/KTD-4 (decisions/other-income-r40) carry the rationale pointers.
+  - [reframe] Surviving fact: the concrete IncomeStream entity + PersonIncomeStream leaf + IncomeParams shapes (presence of OverlayParams.income is the reduce-to-spine key; endAge absent≡lifetime, never a numeric/Infinity sentinel (DND-009)). Present-tense build shape.
+  - [fixed:nit] Restored 'never numeric/Infinity sentinel (DND-009)' qualifier to reframe.

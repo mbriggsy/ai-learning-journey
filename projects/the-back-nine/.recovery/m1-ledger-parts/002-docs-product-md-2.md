@@ -1,0 +1,112 @@
+- **`docs/decisions/accumulation-fuck-off-date.md#6`** · `requirement` · → R-ledger R27 · _pointer_
+  - sig: R27 two dates floor + lifestyle
+  - R27: the answer is TWO dates (floor + lifestyle) from the lexicographic objective; C3 (engine) + D2 (surface); two-track split rides U9's degenerate-collapse; may already be in the past → one-sided window-floor semantic.
+  - [dedup] R27 canonical in product.md R-ledger; this record carries a pointer.
+  - [reframe] Strip 'Superseded changelog' framing: R27 present-tense carries the floor+lifestyle pair and the may-be-in-the-past one-sided window-floor semantic.
+- **`docs/decisions/accumulation-fuck-off-date.md#7`** · `requirement` · → R-ledger R28 · _pointer_
+  - sig: R28 both dates confidence-graded
+  - R28: both dates are confidence-graded, never hard lines; re-grade on strategy override. C3 + D2.
+  - [dedup] R28 canonical in product.md R-ledger; this record carries a pointer.
+- **`docs/decisions/accumulation-fuck-off-date.md#8`** · `requirement` · → R-ledger R29 · _pointer_
+  - sig: R29 framing adapts to user state
+  - R29: framing ADAPTS to user state — a date for not-yet-retired, spine confidence for already-retired. D2 (state-adaptive first answer).
+  - [dedup] R29 canonical in product.md R-ledger; this record carries a pointer.
+- **`docs/decisions/accumulation-fuck-off-date.md#9`** · `requirement` · → R-ledger R30 · _pointer_
+  - sig: R30 model pre-retirement accumulation phase
+  - R30: model the pre-retirement accumulation phase (contributions + growth → retirement-onset balance + basis). C2 (accumulation projection).
+  - [dedup] R30 canonical in product.md R-ledger; this record carries a pointer.
+- **`docs/decisions/accumulation-fuck-off-date.md#10`** · `requirement` · → R-ledger R31 · _pointer_
+  - sig: R31 contributions per-account flat-real, employer match
+  - R31: contributions per-account, flat-real, stop at the tested date; employer match captured. C2 + D1 (intake) + C1 (limit constants).
+  - [dedup] R31 canonical in product.md R-ledger; this record carries a pointer.
+- **`docs/decisions/accumulation-fuck-off-date.md#11`** · `requirement` · → R-ledger R32 · _pointer_
+  - sig: R32 v1 projects, not optimizes accumulation
+  - R32: v1 PROJECTS, does not optimize accumulation; the solver stays decumulation-only. C3 (date-search ≠ solver).
+  - [dedup] R32 canonical in product.md R-ledger; this record carries a pointer.
+- **`docs/decisions/accumulation-fuck-off-date.md#12`** · `requirement` · → R-ledger R33 · _pointer_
+  - sig: R33 healthcare OFF accumulation, ON at tested date
+  - R33: healthcare OFF during accumulation, ON at the tested date — via C3 buildCandidateParams(Y) per-candidate cost streams (engine has no retirement gate §3b) + C2; household reading = employer family coverage while anyone works.
+  - [dedup] R33 canonical in product.md R-ledger; this record carries a pointer.
+- **`docs/decisions/accumulation-fuck-off-date.md#13`** · `requirement` · → R-ledger R34 · _pointer_
+  - sig: R34 accumulation inherits engine invariants
+  - R34: accumulation INHERITS the engine invariants — one continuous absolute-year draw timeline (CRN), one per-path future end-to-end, empty phase reduces byte-identically. C2 (load-bearing contract).
+  - [dedup] R34 requirement canonical in product.md R-ledger; the inherited invariants are canonical in architecture.md; this record points.
+- **`docs/decisions/accumulation-fuck-off-date.md#14`** · `requirement` · → R-ledger R35 · _pointer_
+  - sig: R35 ~5-min account-level guided setup
+  - R35: the first answer comes from a ~5-min account-level guided setup, surface-early, single entry pass. D1 (intake reshape); the Success-Criterion edit was ~3-min→~5-min.
+  - [dedup] R35 canonical in product.md R-ledger; plans/2-first-answer.md carries the D1 build step as pointer.
+  - [reframe] Strip 'was ~3-min' framing: present-tense the setup target is ~5-min.
+- **`docs/decisions/accumulation-fuck-off-date.md#15`** · `requirement` · → R-ledger R36 · _pointer_
+  - sig: R36 account values user-entered, no live price
+  - R36: account values are user-entered; no live price lookup. D1 + Scope Boundaries.
+  - [dedup] R36 canonical in product.md R-ledger; this record carries a pointer.
+- **`docs/decisions/accumulation-fuck-off-date.md#16`** · `requirement` · → R-ledger R37 · _pointer_
+  - sig: R37 per-ticker collapse to household blend
+  - R37: per-ticker holdings collapse to one household stock/bond/cash blend; bundled ticker→asset-class table + manual classification. C1 (tickerBlend.ts) + D1 (entry + manual fallback).
+  - [dedup] R37 canonical in product.md R-ledger; this record carries a pointer.
+- **`docs/decisions/accumulation-fuck-off-date.md#17`** · `requirement` · → R-ledger R38 · _pointer_
+  - sig: R38 HSA contributions accumulation, spend decumulation
+  - R38: HSA contributions → accumulation; HSA spend → decumulation (the paused U3·M5). C2 (contributions) + B1 (U3·M5 spend).
+  - [dedup] R38 canonical in product.md R-ledger; this record carries a pointer.
+- **`docs/decisions/accumulation-fuck-off-date.md#18`** · `requirement` · → R-ledger R39 · _pointer_
+  - sig: R39 new PII inherits encryption + schema ladder
+  - R39: new PII inherits encryption + the additive schemaVersion-bump schema ladder. C2/D1 schema fields; consumed by P1·U4's migration ladder.
+  - [dedup] R39 canonical in product.md R-ledger; this record carries a pointer.
+- **`docs/decisions/accumulation-fuck-off-date.md#19`** · `scope-boundary` · → Product scope / accumulation boundaries · _pointer_
+  - sig: not a FIRE calculator; solver stays decumulation-only
+  - Scope: not a decades-out FIRE/'on track' calculator (bounded on-ramp); v1 does not optimize accumulation (controls stay sequencing+conversion); no live market data; no accumulation income-tax engine or working-years budget; no raise/career modeling (flat-real R31).
+  - [dedup] Product scope canonical in product.md; plans/1-engine.md carries the build-scope facets as pointers.
+- **`docs/decisions/accumulation-fuck-off-date.md#21`** · `scope-boundary` · → Deferred ledger · _canonical_
+  - sig: deferred: contribution optimization, cash sleeve, TDF glide, Roth match, per-person date
+  - Deferred (named, not MVP): (1) optimizing traditional-vs-Roth contributions (R32); (2) a 3-asset cash sleeve (engine is 2-asset, breaks CRN); (3) TDF years-to-target glide curves (v1 static snapshot); (4) Roth employer match (SECURE 2.0 §604, all match→pre-tax); (5) per-person asymmetric retirement-date search.
+  - [dedup] Contribution-optimization (R32) is canonical in product.md §5 'Chapter two (named, deferred)' and this record points there for it; the other four deferred items — (2) 3-asset cash sleeve, (3) TDF glide curves, (4) Roth employer match (SECURE 2.0 §604), (5) per-person asymmetric retirement-date search — have no product home and are canonical HERE.
+  - [fixed:warn] Marked canonical for 4 deferred items product lacks; R32 stays product pointer.
+- **`docs/research/engine-validation-and-tax.md#18`** · `requirement` · → R-ledger R2/R3 — probability-of-adjustment dollar-grammar · _canonical_
+  - sig: report terminal-value percentiles depth-of-failure not pass/fail
+  - 'Success'=$1 remaining hides magnitude; also report terminal-value percentiles + depth-of-failure (not just pass/fail) to feed the 'probability of adjustment' dollar-grammar — need the distribution, not a binary.
+  - [!warn] Free-floating canonical with empty dedup and no R-anchor. "report terminal-value percentiles + depth-of-failure, not just pass/fail" is disp=canonical, dedup="", section says only "R-ledger / probability-of-adjustment dollar-grammar" — no R-number. Verified NOT currently in product.md. It is an engine-output-shape refinement of R3 (engine models a distribution) feeding R2's dollar-grammar; without an anchor it lands as orphaned product prose, and the engine-output-contract half arguably belongs in architecture §7. — fix: Anchor to R2/R3 in product (the distribution feeds the humanized 'probability of adjustment' reading) and/or route the engine-output-contract half to architecture §7; populate dedup naming the canonical pointer.
+  - [dedup] product.md R2/R3 is canonical for the refinement that the terminal-value-percentile + depth-of-failure distribution feeds the humanized 'probability of adjustment' dollar-grammar; architecture.md §7 (engine output shape) holds the engine-output-contract half (terminal-value percentiles + depth-of-failure as engine output) as a pointer.
+  - [fixed:warn] Anchored to R2/R3; dedup splits engine-output-contract half to arch §7.
+- **`docs/research/engine-validation-and-tax.md#26`** · `scope-boundary` · → R-ledger R40 scope (IN/OUT line) · _pointer_
+  - sig: falsifiable IN/OUT line sequencing or conversion can move it
+  - The falsifiable IN/OUT line: an effect is IN iff sequencing or a conversion can move it — IN: ordinary brackets, std deduction, RMDs, SS-taxation, MFJ→single, ACA-PTC, IRMAA, cap-gains/qualified-dividend stacking; OUT-but-disclosed: NIIT (3.8%), state income tax; an omitted cliff inverts which strategy wins.
+  - [dedup] product.md §7 (R40 scope) IN/OUT line is canonical (same home #39 points to); this research doc and pre65-healthcare.md are pointers — #26 retains the NIIT 3.8% numeric detail as a research-pointer fact.
+  - [!warn] disp/dedup mismatch. Row is disp=canonical for the falsifiable tax IN/OUT line, but its own dedup says "product.md (R40 scope) is canonical for the IN/OUT scope line; this research doc ... [is a] pointer." product.md#82 already carries the canonical IN/OUT line (verified, product.md line 196) with the identical IN/OUT list. Two rows both disp=canonical for one fact, and #26 self-demotes to pointer in its dedup text. — fix: Set research#26 disp=pointer with canonical = product.md#82 (the §7 scope-boundaries IN/OUT line). research#26's NIIT-3.8% numeric detail can stay as the research-pointer.
+  - [fixed:warn] Flipped to pointer; canonical = product.md §7 IN/OUT line.
+- **`docs/research/engine-validation-and-tax.md#27`** · `requirement` · → R-ledger R40 (two MAGI calculators) · _pointer_
+  - sig: two distinct MAGI calculators ACA-MAGI vs IRMAA-MAGI
+  - Two distinct MAGI calculators are required (ACA-MAGI ≠ IRMAA-MAGI); a sequencing/conversion change shifts ACA-MAGI or IRMAA-MAGI across their cliffs.
+  - [dedup] pre65-healthcare.md#36 is canonical for the two-MAGI requirement (it carries the fuller composition + the funding-source-order consequence); this row (#27) is its pointer. product.md (R40) holds the requirement; pre65-healthcare.md holds the per-MAGI numeric detail.
+  - [fixed:warn] Demoted to pointer; #36 canonical for two-MAGI requirement; cross-referenced.
+- **`docs/research/engine-validation-and-tax.md#38`** · `requirement` · → [REHOME → docs/architecture.md] architecture §8 (year-keyed constants + reVerify-style markers) / §7.1 (tax overlay) · _pointer_
+  - sig: Senior Bonus Deduction 2025–2028 sunset marker
+  - Senior Bonus Deduction is available tax years 2025–2028 only and sunsets after 2028 unless extended → the tax overlay must carry an explicit sunset marker (a calm note when a pre-2029 answer is viewed in/after 2029).
+  - [!warn] Mis-route + empty dedup. "Senior Bonus Deduction 2025–2028, sunsets after 2028 → tax overlay must carry an explicit sunset marker" is routed disp=canonical to product with dedup="". The sunset-marker mechanic on a dated constant is a constants-discipline / tax-overlay concern (architecture §8 constants — every figure year-keyed with citation + reVerify-style markers; §7.1 taxOverlay). Verified NOT currently in product.md. Only the calm "viewed in/after 2029" honesty note is product-level. — fix: Route the sunset-marker constant mechanic to architecture §8 (constants discipline) / §7.1 (tax overlay); keep at most an honesty-note requirement in product tied to R14/R22 as a pointer. Populate the dedup naming the architecture canonical home.
+  - [dedup] architecture.md §8 (year-keyed constants + reVerify-style markers) / §7.1 (tax overlay) is canonical for the sunset-marker constant mechanic; product keeps only the calm 'viewed in/after 2029' honesty note tied to R14/R22 as a pointer.
+  - [fixed:warn] Rehomed sunset-marker mechanic to arch §8/§7.1; product keeps R14/R22 honesty-note pointer.
+- **`docs/research/engine-validation-and-tax.md#39`** · `scope-boundary` · → R-ledger R40 (engine tax+health scope) · _canonical_
+  - sig: engine tax + health scope most complete picture
+  - Engine tax+health scope ('the most complete picture'): IN the two-control solver — federal MFJ+single brackets, std deduction (+age-65 additions + senior-bonus w/ phase-out & sunset), birth-year RMDs, withdrawal/conversion taxed as stacked ordinary income, SS provisional-income taxation, cap-gains/QD stacking, pre-65 ACA-PTC (400% FPL base, enhanced toggle) and post-65 IRMAA (2-yr lookback, distinct MAGI, hard cliffs); OUT-but-disclosed: NIIT and state income tax.
+  - [dedup] product.md (R40) canonical for the scope decision; this research doc and pre65-healthcare.md hold the supporting numbers as pointers.
+- **`docs/research/engine-validation-and-tax.md#51`** · `requirement` · → Cardinal rule / honesty hygiene gate · _canonical_
+  - sig: honesty hygiene copyGuard require-the-hedge no false precision
+  - What survives as a real gate is honesty hygiene on the recommendation copy across both controls: the headline must wear its probabilistic hedge (copyGuard require-the-hedge lint), no false precision, and a wrong tax/health fact behind the verdict is the cardinal sin — honesty + engine validation get stricter for a recommender.
+  - [dedup] product.md (cardinal rule) is canonical for the honesty requirement; architecture.md (copyGuard) holds the lint mechanism as a pointer.
+- **`docs/research/engine-validation-and-tax.md#53`** · `decision-rationale` · → Locked decisions / personal-tool regulatory basis · _reframe_
+  - sig: Strand 3 regulatory personal non-commercial IAA Prong A
+  - Regulatory rationale (archive-as-rationale): The Back Nine is a personal, non-commercial tool meeting neither the relationship nor compensation prong of Reg BI / the Investment Advisers Act, so the strand is no longer a live constraint; retained as the why behind early no-verdict/no-optimizer/attorney-gate guardrails for deliberate re-instatement on re-commercialization; load-bearing defense was that a Roth what-if naming no securities is likely not 'advice about securities' (IAA §202(a)(11) Prong A), countered by SEC Reg BI / IA-5249; confidence defensible not airtight.
+  - [dedup] product.md owns the personal-tool why and the regulatory rationale as a locked decision; the research doc's appendix copy becomes a pointer.
+  - [reframe] Surviving fact (present-tense): the tool is personal/non-commercial and meets neither the relationship nor the compensation prong of Reg BI / the IAA, so no advice-regulation constraint binds; the no-verdict/no-optimizer/attorney-gate guardrails and the §202(a)(11) Prong A vs Reg BI/IA-5249 reasoning (the Prong-A defense is defensible, not airtight) are recorded so re-commercialization can re-instate them deliberately without over-relying on that defense. Lift out of the 'Historical changelog appendix' framing per fossilNote — keep as live decision-rationale, not history.
+  - [fixed:nit] Restored 'defensible, not airtight' qualifier to Prong-A rationale.
+- **`docs/research/engine-validation-and-tax.md#56`** · `decision-rationale` · → Thesis / product positioning · _reframe_
+  - sig: consumability failures not capability gaps wildly different answers distrust
+  - Voice-of-user thesis supported: across ProjectionLab, Boldin, Monarch, Empower, Fidelity/Vanguard the dominant complaints are consumability failures not capability gaps; the wedge is 'wildly different answers → distrust of any single number'; users want permission and confidence not another opaque number; hardest incumbent failure is data plumbing, so manual-first/local-first sidesteps it — thesis became 'consumability AND trustworthy data handling' (corpus is FIRE-skewed, pain likely understated).
+  - [dedup] product.md (thesis) is canonical for the product positioning; this research doc's appendix copy becomes a pointer.
+  - [reframe] Surviving fact (present-tense): the thesis is supported — across ProjectionLab, Boldin, Monarch, Empower, and Fidelity/Vanguard, incumbents fail on consumability and data plumbing, not capability; the wedge is that wildly-different answers across tools breed distrust of any single number, so The Back Nine delivers permission+confidence with manual-first/local-first trustworthy data handling. Caveat (keeps the claim falsifiable): the corpus is FIRE-skewed, so the pain is likely understated. Lift out of the changelog appendix per fossilNote — this is live product positioning.
+  - [fixed:warn] Restored named incumbents + FIRE-skew/pain-understated caveat to reframe.
+- **`docs/research/pre65-healthcare.md#36`** · `requirement` · → R-ledger — healthcare-aware sequencing requirement (R40 cluster) · _reframe_
+  - sig: two MAGI calculators, funding-source order changes loop
+  - Two MAGI calculators (do not reuse one): ACA-MAGI = AGI+tax-exempt+non-taxable SS+excluded foreign; IRMAA-MAGI = AGI+tax-exempt (no SS add-back); qualified Roth / return of basis / cash / HSA spend count toward neither, so the engine's funding-source order materially changes loop strength.
+  - [dedup] Requirement canonical in product R-ledger; the two-calculator mechanics are canonical in architecture §7.2; research §1/§4a hold the verified composition. Product holds the 'engine must do this' requirement; §7.2 the contract. This row (#36) is canonical for the two-MAGI requirement; engine-validation-and-tax.md#27 is its pointer.
+  - [reframe] Surviving fact: the engine maintains two distinct MAGI calculators (ACA-MAGI with SS add-back; IRMAA-MAGI without) and funding from Roth/basis/cash/HSA touches neither, so funding-source order materially changes the feedback-loop strength. This is a product requirement; mechanics live in architecture §7.2.
+  - [fixed:warn] Designated canonical for two-MAGI requirement; cross-referenced #27 pointer.

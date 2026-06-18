@@ -1,0 +1,125 @@
+- **`docs/README.md#6`** · `build-detail-or-KTD` · → insights/ operational link (/brief + /distill) · _no-move_
+  - sig: insights wired to /brief and /distill
+  - The insights/ folder is operationally wired to the /brief skill (surfaces gotchas before work) and /distill skill (captures lessons after).
+  - [dedup] The /brief and /distill wiring is canonically defined by the skill definitions / global CLAUDE.md; insights/ already hosts the lessons, so this is a no-move pointer to that existing operational link.
+- **`docs/plans/1-engine.md#40`** · `lesson` · → cliff-inversion / D6 lesson · _no-move_
+  - sig: cliff-inversion test 400%-FPL justifies D6
+  - U3 cliff-inversion test (justifies D6): a conversion that looks beneficial under a tax-only model becomes net-negative once it knocks the household over the 400%-FPL cliff — proving the omission INVERTS which strategy wins, not just blunts a delta; this is why healthcare is built and validated in the engine, not bolted on at a surface.
+  - [dedup] D6 canonical in product; the lesson is already homed in an insight file (no-move); architecture §7.2 references it.
+- **`docs/plans/1-engine.md#57`** · `lesson` · → append-not-insert signature lesson · _no-move_
+  - sig: append contribution stream after stockWeight historical.ts call site
+  - C2 signature change lesson: append the contribution stream AFTER stockWeight (never insert before, which would silently re-bind every existing call's stockWeight arg) to keep historical.ts's Trinity backtest call site byte-identical; the first draft omitted that call site and review caught it.
+  - [dedup] Lesson belongs in docs/insights/ (no-move per kind=lesson); the decision record (accumulation-fuck-off-date.md) may reference it. fossilNote flags both insights + decisions — insights wins for a lesson.
+  - [reframe] Surviving fact: appending the contribution arg after stockWeight (not inserting) preserved the historical.ts byte-identity; review caught the omitted call site. Present-tense framing: standing lesson; drop the 'fold' framing.
+- **`docs/plans/1-engine.md#74`** · `lesson` · → scoped-monotonicity oracle lesson · _no-move_
+  - sig: intuitive-direction sanity oracle scoped not universal
+  - C3 intuitive-direction sanity oracle is SCOPED, not universal: more saved / higher contributions / lower spend move the date earlier ONLY with healthcare OFF, or with MAGI pinned far from all three modeled discontinuities (400%-FPL cliff, every IRMAA tier boundary, 100%-FPL eligibility floor) at every candidate Y; a cliff-straddling more-saved → equal-or-later date is CORRECT engine output, never 'fixed' by forcing monotonicity.
+  - [dedup] Lesson belongs in docs/insights/ (no-move per kind=lesson); the decision record (accumulation-fuck-off-date.md) references it.
+  - [reframe] Surviving fact: the more-saved-earlier-date oracle only holds with healthcare off or MAGI far from all three discontinuities; a cliff-straddling later date is correct, not a bug. Present-tense framing: standing lesson; drop the 'fold' framing.
+- **`docs/plans/4-recommendation.md#34`** · `lesson` · → burned/070, burned/027, burned/062 (already homed) · _no-move_
+  - sig: U14 patterns: burned/070, 027, 062
+  - U14 patterns to follow: Act-1 seeding/CRN + externally-derived-golden discipline; burned/070 (planted-fail self-test); burned/027 (absence-tests need presence companions); burned/062 (no in-range default fallbacks — the ε sentinel); the Solver-validation strand of the engine-validation research.
+  - [dedup] The lessons already live in docs/insights/ files; CLAUDE.md and architecture restate burned/062 — pointers.
+- **`docs/plans/4-recommendation.md#56`** · `lesson` · → burned/005, burned/062, burned/021 (already homed) · _no-move_
+  - sig: U15 patterns: roth.ts reuse, burned/005, 062, 021
+  - U15 patterns to follow: Act-1 CRN + reduce-to-spine; Act-3 roth.ts (reuse the per-year update, never re-implement; raw-pre-clamp selection); the Act-2 request-epoch / Act-3 generation counters (burned/005); burned/062 (no in-range default — the goal field has an explicit unset sentinel); burned/021 (validate-before-mutate — the RMD-first filter); the Strand 4/5 + healthcare research.
+  - [dedup] These lessons already live in docs/insights/ files.
+- **`docs/plans/4-recommendation.md#71`** · `lesson` · → UI-skill patterns (already homed in CLAUDE.md + skills) · _no-move_
+  - sig: U16 patterns: copyGuard, TwoFutures, emil/frontend/back-nine-design
+  - U16 patterns to follow: Act-2 copyGuard + outcome-state set + X-of-10 display contract; Act-3 TwoFutures delta-as-hero + props-from-copy.ts string-free viz; Act-3 require-the-hedge lint; emil-design-eng (calm second-beat entrance, no count-up on the surplus dollar); compound-engineering:frontend-design (reads as a calm co-pilot not a dashboard); back-nine-design (color is never the only signal).
+  - [dedup] CLAUDE.md UI-skills section + back-nine-design skill are the canonical homes; this is a pattern-pointer list.
+- **`docs/plans/4-recommendation.md#82`** · `lesson` · → DND 009 (archive/do-not-disturb/009, already homed) · _no-move_
+  - sig: DND 009 saved-rec serialization sentinels
+  - U17 the saved-recommendation record's never-depleted surplus/serialization sentinels (DND 009): decide the saved record's sentinel shape before the schema locks — a field like 'expected surplus = never depleted' must serialize without Infinity/NaN silently becoming null through JSON.stringify/IndexedDB; use an explicit out-of-range sentinel, the same discipline the spine model uses (architecture §7.3/§8); execution status is not tracked — the sentinel is a surplus value not an execution flag.
+  - [dedup] DND 009 lives in docs/insights/; CLAUDE.md + architecture §7.3/§8 restate the persisted-sentinel discipline (pointers).
+- **`docs/plans/4-recommendation.md#85`** · `lesson` · → DND 009, burned/062 + staleness-map patterns (already homed) · _no-move_
+  - sig: U17 patterns: staleness map, DND 009, burned/062, ACA landmine
+  - U17 patterns to follow: Act-3 staleness map + re-entry (invert the spine rule for the recommendation surface); archive/do-not-disturb/009 (JSON-persisted sentinels — decide before the schema locks); burned/062 (no in-range default for the saved-goal/vintage fields); findings §Strand 5 + healthcare §2 (the ACA legislative landmine).
+  - [dedup] These lessons already live in docs/insights/ and plans/3 (staleness map).
+- **`docs/plans/features/social-security.md#27`** · `lesson` · → DND 012 (externally-derived fixtures) · _no-move_
+  - sig: DND/012 POMS-printed goldens never engine-derived
+  - DND/012 externally-derived fixtures: SS goldens come from the POMS PRINTED examples (Method C $1000/$400→$920; RIB-LIM $350/$374.90→$350) as independent oracles, never a value re-derived from the engine's own formula.
+  - [dedup] Lesson is already homed in the insights file (and DND 012 in architecture §); the SS-specific instances (item #51,#53) point at it.
+- **`docs/plans/features/social-security.md#28`** · `lesson` · → burned/062 constants discipline · _no-move_
+  - sig: no in-range defaults, Unsourced sentinel throws
+  - Constants discipline (burned/062): any factor the research names but can't value is an Unsourced sentinel whose .value throws — no in-range defaults; for SS none occurred (every factor primary-confirmed).
+  - [dedup] Lesson is homed in insights and architecture §8 constants discipline; this SS application is a no-move.
+- **`docs/plans/features/social-security.md#29`** · `lesson` · → insights 008/010 (finiteness-first R19) · _no-move_
+  - sig: isFinite-first guard on every new input
+  - insights 008/010 (finiteness-first R19): every new input (per-person PIA, claim age) carries a Number.isFinite-first guard at validateParams AND the sub-engine entry.
+  - [dedup] Lesson homed in insights 008/010 and the R19 numeric gate in architecture; this SS application is a no-move.
+- **`docs/plans/features/social-security.md#60`** · `lesson` · → insight 040 (realizedClaimAgeAtDeath bug) · _no-move_
+  - sig: realizedClaimAgeAtDeath survivor-floor overstatement bug (insight 040)
+  - The realizedClaimAgeAtDeath survivor-floor optimistic-overstatement bug (insight 040): §7 originally built the deceased's survivor base from the PLANNED claim age, so on any path where death preceded the claim offset the deceased never lived to file yet got the full DRC — a plan-70 breadwinner dying at 68 got 1.24× instead of 1.08×, dying at 66 got 1.24× instead of full PIA; reachable (longevity sampler min death age 66, claim-70 default), not measure-zero — the cardinal sin on the exact early-widowhood paths the unit exists to harden.
+  - [dedup] Lesson is homed in docs/insights/040; the Superseded/changelog post-plan-correction copy collapses to a pointer.
+- **`docs/plans/features/social-security.md#61`** · `decision-rationale` · → insight 040 (seam vs pure-core boundary) · _no-move_
+  - sig: pure core trusts realized claim age, bug in the seam
+  - Why the pure core wasn't wrong: survivorBenefitAnnual correctly trusts deceased.claimAge as the REALIZED claim age (its input contract, locked by insight 039); the bug lived entirely in the INTEGRATION SEAM — the only layer that knows the stochastic timeline — which fed the pure core a PLANNED value as if realized.
+  - [dedup] This rationale is part of the insight-040 lesson (and 039 contract); homed in insights, no-move.
+- **`docs/plans/features/social-security.md#63`** · `lesson` · → insight 040 (coverage gap) · _no-move_
+  - sig: coverage gap: death-before-claim path untested, 915/915 survived
+  - The coverage gap that hid the bug: every survivor-branch fixture used an already-claimed deceased (negative claim offset ⇒ death after filing), so the death-before-claim path was structurally untested — a mutation stripping the START gate and leaking the excess survived 915/915 tests; two sibling gaps rode along (no nonzero spousal excess through cashTermsForYear; survivor max() tested only survivor-wins, never own-wins); all three now covered.
+  - [dedup] Part of the insight-040 lesson; homed in insights, no-move.
+- **`docs/plans/features/social-security.md#64`** · `lesson` · → insight 040 (the lasting lesson) · _no-move_
+  - sig: seam must realize a planned input the stochastic timeline preempts
+  - The lasting lesson (insight 040): a pure unit's input contract assumes its inputs are already realized; realizing a PLANNED input that a stochastic process can preempt is the SEAM's job, never the pure core's, and a discriminating test must drive the PREEMPTION, not just the plan-equals-outcome case.
+  - [dedup] This IS insight 040's headline; homed in docs/insights/040-an-integration-seam-must-realize-a-planned-input..., no-move.
+- **`docs/plans/features/other-income.md#38`** · `lesson` · → insights 011, 023, 024, 025, 029 · _no-move_
+  - sig: insights 011/023/025/029/024 externally-derived fixtures, swap-mutant
+  - Load-bearing insights: 011/023/025 (externally-derived fixtures DND/012 — a panel validates arithmetic not rule selection; walk each fixture through its fork, name the pinned boundary; prove the mechanism exists first); 029 (drive a nonzero owner-distinct pairwise-distinct vector + a swap-mutant; equality on a structurally-zero surface discriminates nothing); 024 (keep per-entity shape through the wire — streams collapse per person only after survivor-% is pre-applied; all of a person's streams share that person's death gate).
+  - [dedup] Lessons already homed in docs/insights/ 011,023,024,025,029 — no-move; R40 build steps cite them.
+- **`docs/plans/features/other-income.md#39`** · `lesson` · → insights 006, 007, 012, 013, 014, 039, 040 · _no-move_
+  - sig: insights 013/012/014/040/039/006/007 MAGI cliff crossing, additive gross-up
+  - Load-bearing insights: 013/012/014 (a taxable stream moves ACA-MAGI across the 133% kink / 400% cliff + IRMAA steps; test the crossing year when the survivor cliff relocates $84,600→$62,600); 040/039 (the seam realizes a planned input a stochastic timeline can preempt; range-guard at the boundary; survivor test drives death-before-stream-start); 006/007 (a new income channel feeds the gross-up; income is an additive constant shifting the operating point not k; the convergence re-probe doubles as the perf check).
+  - [dedup] Lessons already homed in docs/insights/ — no-move; Unit 3 test scenarios cite them.
+- **`docs/plans/features/other-income.md#41`** · `lesson` · → insights 008, 010, 018, 020, 027, 028, 035, 036, 037 · _no-move_
+  - sig: insights 008/010/028/027/020/035/036/037/018 finiteness-first, gate-on-invariant
+  - Load-bearing insights: 008/010/028 (finiteness-FIRST — a NaN passes every relational/?? guard; declare computable-domain bounds ENGINE_MAX_DOLLAR); 027/020 (match a guard's trigger to the hazard's domain — income is death-gated not retire-gated, does NOT inherit the §6 ACA empty-overlap guard; gate on the invariant not the first consumer); 035/036/037 (reserve a live region's box; force-confirm reads the live store; an orchestrator finding is a hypothesis); 018 (an additive amendment has a zero-removals invariant; grep the superseded premise).
+  - [dedup] Lessons already homed in docs/insights/ — no-move; R40 build cites them.
+- **`docs/plans/features/other-income.md#42`** · `lesson` · → DND-009 (never-ends sentinel) · _no-move_
+  - sig: DND-009 endAge absent ≡ lifetime, no Infinity sentinel
+  - DND-009 — persisted 'never-ends' sentinels must never be Infinity/NaN/numeric-magic (JSON.stringify(Infinity)==='null'); for R40, endAge absent ≡ lifetime, by presence/absence, never a numeric/Infinity sentinel.
+  - [dedup] DND-009 lesson already homed in insights; CLAUDE.md carries the summary; Unit 1 / U8 codec apply it (pointers).
+- **`docs/decisions/accumulation-fuck-off-date.md#23`** · `lesson` · → DND/012 externally-derived fixtures · _no-move_
+  - sig: DND/012 accumulation goldens hand-derived
+  - DND/012: accumulation goldens (projected balance at age A) must be derived by independent hand-math (compound flat-real contribution + fixed return sequence), never via the engine's own formula — same discipline as Trinity/Bengen/§36B.
+  - [dedup] Lesson homed in insights; architecture.md §5 holds the invariant cross-reference.
+- **`docs/decisions/accumulation-fuck-off-date.md#24`** · `lesson` · → insights 008/010 NaN-first guards · _no-move_
+  - sig: insights 008/010 Number.isFinite-FIRST R19 guard
+  - insights 008/010: every new input stream (per-bucket contributions, employer match, ticker blend, tested-age list) carries a Number.isFinite-FIRST R19 guard at BOTH validateParams AND the overlay/date-search backstop — a NaN sails through every relational guard.
+  - [dedup] Lesson homed in insights 008/010; architecture.md §6 holds the R19-gate invariant.
+- **`docs/decisions/accumulation-fuck-off-date.md#25`** · `lesson` · → insight 013 discontinuity breaks monotonicity · _no-move_
+  - sig: insight 013 ACA cliff breaks monotonicity
+  - insight 013: a discontinuity breaks a root-finder's monotonicity — the ACA 400%-FPL cliff means a later work-stop date is NOT guaranteed safer; the date-search must be exhaustive across the bounded window, never a monotonicity-assuming bisection.
+  - [dedup] Lesson homed in insight 013; this record cites it as R26's direct precedent.
+- **`docs/decisions/accumulation-fuck-off-date.md#26`** · `lesson` · → insight 014 test the crossing year · _no-move_
+  - sig: insight 014 test the crossing year
+  - insight 014: a mid-sim state change moves a threshold — test the crossing year; the HSA generalDrawableTotal vs hsa-inclusive total split is dark at hsa=0, so test the crossing, not just static positions.
+  - [dedup] Lesson homed in insight 014.
+- **`docs/decisions/accumulation-fuck-off-date.md#27`** · `lesson` · → burned/057,061,063 one canonical constants table · _no-move_
+  - sig: burned/057,061,063 one canonical constants table
+  - burned/057,061,063: the new contribution-limit + ticker-blend figures live in ONE year-keyed module each, read by engine/intake/tests, never re-typed; a shape test asserts every figure carries {value, citation, directionalUntilPinned}.
+  - [dedup] Lesson homed in insights; architecture.md §8 holds the constants-discipline invariant.
+- **`docs/decisions/accumulation-fuck-off-date.md#83`** · `lesson` · → insight 025 (derive the mechanism before the fixture) · _no-move_
+  - sig: insight 025 cliff-straddle PREMISE-FALSE; taxable enters at full basis
+  - PREMISE-FALSE (insight 025): the planned cliff-straddling fixture is FALSE in this engine — a taxable contribution enters at FULL basis so added contributions always lower-or-equal the realized-gain fraction; the named cliff-straddle mechanism does not exist (no forced fixture, DND/012); reachable channels documented instead (larger pretax→larger RMD→IRMAA crossing; lower spend→below 100%-FPL→PTC=0); the general non-monotonicity truth STANDS.
+  - [dedup] Lesson homed in insight 025; the in-record adversarial annotation reframes present-tense (item below).
+  - [reframe] Strip 'RETIRED 2026-06-10' framing: present-tense a taxable contribution enters at full basis, so the cliff-straddle fixture is unconstructible; document the reachable RMD-IRMAA and 100%-FPL channels instead.
+- **`docs/decisions/accumulation-fuck-off-date.md#84`** · `lesson` · → insights 023/025 (a test scenario is a hypothesis) · _no-move_
+  - sig: insights 023/025 MUTANT-UNCONSTRUCTIBLE averaged-balance handoff
+  - MUTANT-UNCONSTRUCTIBLE (insights 023/025): the planned averaged-balance-handoff mutant has NO code home — there is no accumulation→decumulation phase boundary (one continuous per-path stream, §1); the residual property (a working-year crash carried forward per-path, never smoothed) is held by the per-path fold + §2d direction golden + CRN tests; REACTIVATION TRIGGER: any future real onset phase-boundary voids §1 and makes this a real owed fixture.
+  - [dedup] Lesson homed in insights 023/025; the in-record adversarial annotation reframes present-tense.
+  - [reframe] Strip 'RECORDED 2026-06-10' framing: present-tense there is no onset phase-boundary to plant the averaged-balance mutant in; a future onset-balance precompute reactivates it as a real owed fixture.
+- **`docs/research/pre65-healthcare.md#30`** · `lesson` · [REHOME → docs/research/pre65-healthcare.md] → ACA shadow-rate / cliff effective-rate finding · _no-move_
+  - sig: >100% effective rate at the ACA cliff
+  - Planners frame this as a shadow marginal rate (federal+state tax+lost ACA subsidy), ~38%+ when phase-out stacks on a 12%/22% bracket, catastrophic at the cliff: a couple at ~$80k MAGI getting ~$10k/yr subsidy who converts $10k over the ~$84,600 cliff loses the whole ~$10k subsidy plus ~$1,200 tax → >100% effective rate.
+  - [dedup] Quantitative research finding; canonically lives in its source docs/research/pre65-healthcare.md — no insight file holds it.
+  - [fixed:warn] Rehomed to research; finding (a number), not an insights lesson.
+- **`docs/research/pre65-healthcare.md#33`** · `lesson` · [REHOME → docs/research/pre65-healthcare.md] → sign-inverted tax-blind-delta (healthcare extension of the landmine) · _no-move_
+  - sig: tax-blind delta sign-inverted across 63→65
+  - Unifying crux: both regimes have cliffs, so 'fill to a subsidy-aware ceiling, not a tax-bracket ceiling' applies in both phases — only the ceiling's definition changes at 65; consistent with the project landmine, the tax-blind delta is sign-inverted: ignoring ACA/IRMAA makes aggressive early conversions look BETTER than they are, both pre-65 and across the 63→65 boundary.
+  - [dedup] No insight file holds the 63→65 sign-inversion extension; it canonically lives in its source docs/research/pre65-healthcare.md, and the parent tax-blind-delta landmine lives in docs/research/engine-validation-and-tax.md (lines 87/125).
+  - [fixed:warn] Rehomed to research; no insight file holds this extension.
+- **`docs/research/pre65-healthcare.md#42`** · `lesson` · → ACA one-pass-vs-iterate bias lesson · _no-move_
+  - sig: one-pass v0 biases marginal premium-funding withdrawal
+  - A one-pass/sequential v0 (estimate MAGI → compute PTC → don't re-fund) is acceptable but biases the marginal premium-funding withdrawal (understates MAGI); iterating removes the bias for ~10 lines — recommended.

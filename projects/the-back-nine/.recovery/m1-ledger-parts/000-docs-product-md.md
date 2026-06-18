@@ -1,0 +1,251 @@
+- **`README.md#1`** · `scope-boundary` · → Product scope / thesis (never-sold, raised bar) · _pointer_
+  - sig: never sold raises the bar
+  - Never sold; runs on Briggsy's laptop for financially-literate friends betting real money — no regulatory net or 'consult a professional' escape hatch, so the entire load transfers onto honesty + engine validation, which get STRICTER not looser.
+  - [dedup] Canonical product-scope home is product.md; CLAUDE.md project role line becomes a pointer.
+- **`README.md#2`** · `invariant` · → §2 cardinal rule · _pointer_
+  - sig: calm-but-wrong is the sin
+  - THE CARDINAL RULE: calm-but-wrong is the sin — a confidently-stated wrong recommendation is worse than no tool at all; 'it's just for friends' never excuses it.
+  - [dedup] Full canonical statement is docs/product.md#3 / §2 (mirroring R25 #45); README keeps its own plain-language version for a first-time-reader surface, but this routed-into-product row is a pointer so §2 has exactly one canonical row (#3); CLAUDE.md copy is a pointer.
+  - [fixed:warn] Flipped canonical→pointer; §2 canonical is #3.
+- **`README.md#3`** · `requirement` · → Thesis / R-ledger (three beats) · _pointer_
+  - sig: thesis in three beats
+  - Thesis in three beats: (1) where you stand as a DISTRIBUTION of futures rendered as a feelable number, not false-precision dollars; (2) a recommended confidence-graded strategy over two coupled tax controls (sequencing + Roth conversion) funding your budget, reasoning always one tap down; (3) you stay the pilot — safety is the floor, you pick the goal, every recommendation wears its hedge on the headline.
+  - [dedup] Canonical home product.md; no other live home — README front-door restatement points here.
+- **`README.md#4`** · `requirement` · → R-ledger (state-adaptive first answer / fuck-off date) · _pointer_
+  - sig: state-adaptive first answer
+  - The first answer is STATE-ADAPTIVE: not-yet-retired gets THE FUCK-OFF DATE (two confidence-graded work-optional dates — essentials vs full lifestyle — by sweeping the household work-stop date across the same engine; a bounded near-retirement on-ramp, NOT a FIRE calculator; v1 projects the stated savings plan honestly, doesn't optimize it); already-retired gets the calm CONFIDENCE STATEMENT. One product, one engine, two voices.
+  - [dedup] Canonical home product.md; CLAUDE.md project intro restates the same — becomes a pointer.
+- **`README.md#21`** · `scope-boundary` · → Product scope (privacy & license / not-for-sale) · _pointer_
+  - sig: not for sale not licensed not advice
+  - Privacy & license: data is entered manually, encrypted locally, never transmitted (no server to transmit to); a personal tool, NOT for sale and NOT licensed for use; published as part of an AI-assisted engineering portfolio, not as a product or financial advice.
+  - [dedup] Canonical product-scope home product.md; CLAUDE.md project framing is a pointer.
+- **`docs/README.md#0`** · `other` · → [REHOME → DROP] Front-door convention (intro / doc-map note) · _pointer_
+  - sig: root README single front door
+  - The repo-root README (../README.md) is the project overview / single front door; docs/README.md is purely the thin index/map into docs/.
+  - [dedup] Not a product why/what fact — a doc-tree navigation convention fully homed in the root README.md (single front door, README line 11) with docs/README.md as the thin index (line 11); product.md's intro does NOT and should not carry it. No home in product.md.
+  - [reframe] Surviving fact: the root README is the single project front door (overview + how-it-works + status); docs/README is a thin index. Present-tense: 'Start at the root README for the overview; docs/README only routes you into docs/.'
+  - [fixed:warn] Rehomed out of product → DROP (navigation fact homed in README/docs-README); reframe→pointer.
+- **`docs/README.md#4`** · `scope-boundary` · → Lever set / capability scope (SS, R40 other-income, portfolio holdings) · _reframe_
+  - sig: social-security other-income portfolio-holdings
+  - The three capabilities once planned under plans/features/ — social-security, other-income, portfolio-holdings — dissolve into their kind-homes; the capabilities survive but features/ is no longer a home.
+  - [dedup] CLAUDE.md references plans/features/; under the radical move features/ DISSOLVES — mechanics→architecture§7, decisions→decisions/{ss-computation,other-income-r40,portfolio-holdings}, requirements→product, build steps→plans/1-engine & 2-first-answer.
+  - [reframe] Surviving fact: the three capabilities (Social Security, other-income/R40, portfolio holdings) are first-class product capabilities. Present-tense: 'features/ has no home of its own — each capability lives in its kind-home (product for requirements, architecture for mechanics, decisions for the calls, plans for build steps).'
+- **`docs/product.md#0`** · `definition-term` · → Header / intro (what this is) · _canonical_
+  - sig: PERSONAL retirement / tax-strategy co-pilot, NEVER sold
+  - The Back Nine is a personal, never-sold retirement/tax co-pilot for one married couple and a few friends; product.md is the single home for thesis, model, locked decisions, lever set, landmines, and the R1-R40 ledger.
+  - [dedup] Canonical product self-definition lives here in product.md intro; CLAUDE.md, docs/README.md, docs/roadmap.md each keep their own framing/pointer.
+- **`docs/product.md#1`** · `decision-rationale` · → §4 Locked decisions / regulatory frame (load transfer) · _reframe_
+  - sig: charter > requirements > roadmap precedence RETIRED
+  - The old charter-precedence chain is retired; product.md and roadmap.md carry the truth, and on the personal pivot the regulatory load transferred to honesty + engine validation, which got stricter.
+  - [dedup] Surviving fact (precedence = product + roadmap; load transfers to honesty/validation) is canonical in product; roadmap and CLAUDE.md hold pointers.
+  - [reframe] Strip the 'charter scar retired / we changed precedence' history. Present-tense: precedence runs product.md (why/what) and roadmap.md (status); because the tool is personal, regulatory guardrails relax to wording and the honesty + engine-validation bar is the binding constraint.
+- **`docs/product.md#2`** · `invariant` · → §1 What this is (thesis) · _canonical_
+  - sig: essentials safe in 10 of 10; lifestyle holds in 7
+  - Three-sentence thesis: tell me where I stand (the spine confidence statement), then recommend a confidence-graded sequencing+conversion strategy with reasoning one tap down, and you stay the pilot picking the goal above the safety floor.
+  - [dedup] Thesis canonical in product §1; CLAUDE.md and roadmap.md hold condensed pointers.
+- **`docs/product.md#3`** · `invariant` · → §2 The cardinal rule · _canonical_
+  - sig: calm-but-wrong is the cardinal sin
+  - The cardinal rule: calm-but-wrong is the cardinal sin; the recommender bar rises, 'it's just for friends' never softens validation, and the removed regulatory net is a load transfer onto correctness + confidence-grading.
+  - [dedup] Q5: canonical FULL statement lives in product §2; README keeps its own plain-language version (canonical, distinct audience); R25, CLAUDE.md, roadmap copies become pointers.
+- **`docs/product.md#4`** · `invariant` · → §3 The product model · _canonical_
+  - sig: answer first, recommendation second, reasoning on demand
+  - Product model: spine answers one question, a recommend-second beat proposes what to do, complexity discloses progressively; causal chain face←engine←recommendation, and the recommendation never contradicts the spine (R21, same metric).
+  - [dedup] Canonical product model in product §3; R10, R21, roadmap hold pointers / express the requirement form.
+- **`docs/product.md#5`** · `requirement` · → §3 Product-model flow diagram · _canonical_
+  - sig: Can we retire, and how do we do it best?
+  - Mermaid product-model flow: the one question → plain-language confidence answer → recommend-second strategy, with one-tap-down D1 (comparative reasoning) and D2 (tune/pick goal); the diagram's equivalence edges (A===E / R===S / S===E) read: the Answer is engine-backed (a distribution of futures), the Recommendation is solver-backed (sequencing×conversion), and the Solver shares the engine's SAME CRN futures.
+  - [fixed:nit] Replaced invented node tokens with real A===E/R===S/S===E labels.
+- **`docs/product.md#6`** · `invariant` · → §3 The state-adaptive first answer (R29) · _canonical_
+  - sig: state-adaptive first answer (R29), one intake flow
+  - The magic moment is state-adaptive: one intake flow, only the lead answer changes — not-yet-retired leads with the two confidence-graded fuck-off dates (R27/R28) from sweeping the work-stop date-offset over the same engine; already-retired keeps the spine confidence statement; same voice (R11), one flow (R35).
+  - [dedup] State-adaptive framing canonical in product §3 / R29; CLAUDE.md, R35, roadmap hold pointers.
+- **`docs/product.md#8`** · `decision-rationale` · → §4 Locked decisions, D1 · _canonical_
+  - sig: D1 — 'best' is LEXICOGRAPHIC, two tiers
+  - D1: 'best' is lexicographic — Tier 1 never drops below the survival floor (honors R2/Kitces), Tier 2 is a user-chosen surplus goal (leave more / pay less tax / live bigger now); the objective metric equals the headline so a recommendation can't contradict the magic moment.
+  - [dedup] D1 canonical in product §4; R21 expresses the requirement form, carried landmines and architecture (objective≡headline) hold pointers.
+- **`docs/product.md#9`** · `decision-rationale` · → §4 Locked decisions, D2 · _canonical_
+  - sig: D2 — RECOMMEND-SECOND, math one tap down
+  - D2: recommend-second — the spine answer stays the first magic moment, the recommendation is the immediate next beat with math one tap down; protects the calm on-ramp and keeps Phase 2 reusable.
+  - [dedup] D2 canonical in product §4; R10 and roadmap hold the requirement-form / pointer.
+- **`docs/product.md#10`** · `decision-rationale` · → §4 Locked decisions, D3 · _canonical_
+  - sig: D3 — four phases: Foundation → First Answer → Controls → Solver
+  - D3: the build grows to four phases — Foundation → First Answer → Controls (manual sequencing + Roth, a shippable cold-read milestone) → Solver & Recommendation.
+  - [dedup] Decision canonical in product §4; roadmap owns the four-acts status expression (pointer).
+- **`docs/product.md#11`** · `decision-rationale` · → §4 Locked decisions, D4 · _canonical_
+  - sig: D4 — named drawdown policies × conversion grid, not continuous
+  - D4: the MVP solver search is named drawdown policies × a conversion grid (proportional / taxable-first / pre-tax-first / bracket-fill), not full continuous optimization — bounds compute (TS viable, WASM a fast-follow), keeps the comparative story legible, shrinks optimizer's-curse exposure.
+  - [dedup] D4 canonical in product §4; scope boundaries and roadmap hold pointers.
+- **`docs/product.md#12`** · `decision-rationale` · → §4 Locked decisions, D5 · _canonical_
+  - sig: D5 — held-out seed + optimality oracle before the solver
+  - D5: confidence/curse defense is a held-out reporting seed (select on seed-set A, grade on B) plus an optimality oracle built BEFORE the solver — non-negotiable, the raised honesty bar made concrete.
+  - [dedup] Decision canonical in product §4; carried landmines, success criteria (Correctness), roadmap, and architecture hold pointers / mechanics.
+- **`docs/product.md#13`** · `decision-rationale` · → §4 Locked decisions, D6 · _canonical_
+  - sig: D6 — ACA-PTC and IRMAA come IN; NIIT/state OUT
+  - D6: ACA-PTC (pre-65) and IRMAA (post-65) come IN because they are income-dependent and an omitted cliff inverts which strategy wins; NIIT/state stay OUT-but-disclosed. Falsifiable line: IN iff sequencing or conversion can move it.
+  - [dedup] D6 canonical in product §4; R24 and the tax IN/OUT scope boundary express it; architecture holds the overlay mechanics pointer.
+- **`docs/product.md#14`** · `decision-rationale` · → §4 Locked decisions, regulatory frame · _reframe_
+  - sig: regulatory frame RELAXES TO WORDING, load transfers
+  - Regulatory frame relaxes to wording: no-verdict / no-optimizer / categorical-triggers / attorney-gate / 'we can't see your money' guardrails drop or relax, and the load transfers to honesty + validation which get stricter — 'it's just for friends' never softens validation.
+  - [dedup] Regulatory-frame decision canonical in product §4; R12-R18, R25, roadmap hold the requirement-level pointers; §8 changelog framing is dropped.
+  - [reframe] Strip the '§8 changelog / these guardrails drop' supersession framing. Present-tense: because the tool is personal, regulatory guardrails are relaxed to wording (no formal no-verdict/no-optimizer/attorney-gate constraint); the binding load sits on honesty + engine validation, and being 'just for friends' never relaxes that.
+- **`docs/product.md#15`** · `scope-boundary` · → §5 The lever set (solver-optimized) · _canonical_
+  - sig: MVP solver-optimized levers: sequencing + Roth conversion
+  - The two MVP solver-optimized levers (objectively right once the goal is fixed): withdrawal sequencing (which bucket funds each year's net withdrawal) and Roth conversion (amount + years).
+  - [dedup] Lever set canonical in product §5; R9 and roadmap hold pointers.
+- **`docs/product.md#16`** · `scope-boundary` · → §5 The lever set (user-set) · _canonical_
+  - sig: MVP user-set levers: the budget + the goal
+  - The two MVP user-set levers (no 'right' answer — a tool never recommends a lifestyle): the itemized budget with time-boxed line items (essentials vs discretionary) and the Tier-2 goal pick including a go-go-years spending shape.
+  - [dedup] Lever set canonical in product §5; R20, R21, roadmap hold pointers.
+- **`docs/product.md#17`** · `scope-boundary` · → §5 Chapter two (deferred levers) · _canonical_
+  - sig: chapter two deferred levers: SS-age, continuous optimizer, asset-location
+  - Chapter-two deferred levers: SS-claiming-age, a full continuous optimizer, a die-with-zero spend-down solver, asset-location (modelable later as a deterministic per-bucket tilt on the one shared draw without breaking CRN), and contribution-strategy optimization (deferred-for-sequencing, not off-thesis; R32).
+  - [dedup] Chapter-two scope canonical in product §5; R32, scope boundaries, roadmap hold pointers.
+- **`docs/product.md#18`** · `lesson` · → §6 Carried landmines · _canonical_
+  - sig: objective ≡ headline metric or it worsens its hero number
+  - Carried landmine: the objective must equal the headline metric or the product recommends a move that worsens its own hero number; D1 lexicographic resolves it, and floor-first framing reconciles the R2/Kitces 'never maximize' tension.
+  - [dedup] This is a carried PRODUCT landmine (not an insight file) — canonical in product §6; D1, R21, roadmap, architecture hold pointers.
+- **`docs/product.md#19`** · `lesson` · → §6 Carried landmines · _canonical_
+  - sig: optimizer's curse rendered as confidence
+  - Carried landmine: argmax over many candidates on one seed overfits that seed's noise (optimizer's curse rendered as confidence); defense is held-out seed + optimality oracle before the solver, compounded by directional-until-pinned fixtures deciding near-ties.
+  - [dedup] Carried product landmine canonical in product §6; D5, architecture, roadmap hold pointers.
+- **`docs/product.md#20`** · `lesson` · → §6 Carried landmines · _canonical_
+  - sig: a disclosed omission INVERTS a ranking
+  - Carried landmine: a disclosed omission can invert a ranking (not just blunt a delta) — the reason ACA/IRMAA come IN (D6).
+  - [dedup] Carried product landmine canonical in product §6; D6 and R24 hold pointers.
+- **`docs/product.md#21`** · `lesson` · → §6 Carried landmines · _canonical_
+  - sig: stale saved recommendation is a real executed action
+  - Carried landmine: a stale saved recommendation is a real executed action — the Unit 9 're-present under saved vintage' rule may need to invert to re-solve under current fixtures, and staleness must read 'the action we recommended may no longer be advised,' not 'your number drifted.'
+  - [dedup] Carried product landmine canonical in product §6; roadmap (Unit 9) and architecture hold the build/invariant pointers.
+- **`docs/product.md#23`** · `lesson` · → §6 Carried landmines · _canonical_
+  - sig: 10/10 clamp eats the solver's signal
+  - Carried landmine: for over-funded households the 10/10 clamp eats the solver's signal, so the headline must honestly switch to the tax/wealth/lifestyle metric ('you're safe either way; this keeps more from the IRS') — the lexicographic Tier-2 IS this pivot.
+  - [dedup] Carried product landmine canonical in product §6; D1, R21, roadmap hold pointers.
+- **`docs/product.md#24`** · `scope-boundary` · → §6 Carried landmines / §5 lever set · _canonical_
+  - sig: spending/lifestyle NEVER solver-recommended
+  - Carried landmine / scope: spending and lifestyle are never solver-recommended — only user-set with honest consequences; the solver optimizes funding, not how you live.
+  - [dedup] Canonical in product (carried landmine / lever set); R20, R21, scope boundaries hold pointers.
+- **`docs/product.md#25`** · `requirement` · → R-ledger R1 (Confidence Spine) · _canonical_
+  - sig: R1 — answers ONE primary question, first-class surface
+  - R1: the product answers one primary question — 'Can we retire, and how do we do it best?' — as its central first-class surface; everything else is subordinate.
+  - [dedup] R1 canonical in product R-ledger; roadmap holds a pointer.
+- **`docs/product.md#26`** · `requirement` · → R-ledger R2 (Confidence Spine) · _canonical_
+  - sig: R2 — plain-language confidence statement, never color alone
+  - R2: the answer is a plain-language confidence statement leading with the human verdict, separating survival from lifestyle where the budget supports it, using Kitces 'probability of adjustment' framing (never 'failure'), no histograms/bare-percentages/dashboard on the primary surface, and meaning never depending on color alone.
+  - [dedup] R2 canonical in product R-ledger; back-nine-design (color-blind) and roadmap (U7) hold pointers to the requirement.
+- **`docs/product.md#27`** · `requirement` · → R-ledger R3 (Confidence Spine) · _canonical_
+  - sig: R3 — engine models a DISTRIBUTION of futures
+  - R3: the engine models a distribution of possible futures (uncertainty is a primary input, not bolted on), not a single deterministic projection; the confidence statement is the humanized reading of that distribution.
+  - [dedup] R3 requirement canonical in product R-ledger; architecture (engine distribution) and roadmap hold pointers.
+- **`docs/product.md#28`** · `requirement` · → R-ledger R4 (Confidence Spine) · _canonical_
+  - sig: R4 — supporting detail ON DEMAND, never unsolicited
+  - R4: after the verdict, all supporting detail — range, assumptions, math, recommendation reasoning — is reachable on demand but never shown unsolicited on the first surface.
+  - [dedup] R4 canonical in product R-ledger; R7, R10, R23, roadmap hold pointers.
+- **`docs/product.md#29`** · `requirement` · → R-ledger R5 (On-Ramp) · _canonical_
+  - sig: R5 — guided ONE-QUESTION-AT-A-TIME intake
+  - R5: first contact is a guided, one-question-at-a-time advisor-style intake; the account-level guided setup (R35) is the on-ramp for both states with the answer surfacing during the flow, while the itemized budget (R20) is the deepening, not the on-ramp — never a wall of forms.
+  - [dedup] R5 canonical in product R-ledger; R35, R20, success criteria, roadmap (U5) hold pointers.
+- **`docs/product.md#30`** · `requirement` · → R-ledger R6 (On-Ramp) · _canonical_
+  - sig: R6 — power-user escape hatch sets any assumption
+  - R6: a power-user escape hatch lets a user set any assumption precisely at any point without walking the guided path.
+  - [dedup] R6 canonical in product R-ledger; roadmap holds a pointer.
+- **`docs/product.md#31`** · `requirement` · → R-ledger R7 (On-Ramp) · _canonical_
+  - sig: R7 — every assumption visible and editable on demand
+  - R7: every assumption the flow makes on the user's behalf is visible and editable on demand, gaining weight under recommend-second — a recommended strategy must expose its inputs AND its reasoning to be trusted and approved.
+  - [dedup] R7 canonical in product R-ledger; R4, R23, roadmap hold pointers.
+- **`docs/product.md#32`** · `requirement` · → R-ledger R8 (On-Ramp) · _canonical_
+  - sig: R8 — input mirrors output; band narrows AND shifts honestly
+  - R8: input mirrors output — the user reaches a caveated answer quickly then sharpens; each added precision narrows the confidence band and shifts honestly on a corrected value (not only ever narrows); refinement is rewarding, never punished for honesty.
+  - [dedup] R8 canonical in product R-ledger; back-nine-design (band honesty) and roadmap hold pointers.
+- **`docs/product.md#33`** · `requirement` · → R-ledger R9 (Strategy Engine) · _canonical_
+  - sig: R9 — TWO coupled solver-optimized controls
+  - R9: the product proposes a recommended strategy over two coupled solver-optimized controls — withdrawal sequencing and Roth conversion (amount + years) — to fund the budget the tax-smartest way; sequencing is the more universal control and the survivor's tax cliff is the emotional headline.
+  - [dedup] R9 canonical in product R-ledger; §5 lever set and roadmap hold pointers. (Supersedes-v1 framing dropped.)
+  - [reframe] Strip the '(Supersedes v1 exactly-one-Roth-lever)' changelog parenthetical. Present-tense: the product proposes a strategy over two coupled controls — sequencing + Roth conversion.
+- **`docs/product.md#34`** · `requirement` · → R-ledger R10 (Strategy Engine) · _canonical_
+  - sig: R10 — RECOMMEND-SECOND flow (a)(b)(c)(d)
+  - R10: recommend-second flow — (a) spine confidence answer first, (b) then 'here's what we'd do about it' confidence-graded strategy, (c) comparative reasoning one tap down, (d) user tunes/overrides/re-picks the goal with both futures updating.
+  - [dedup] R10 canonical in product R-ledger; D2, R28, roadmap hold pointers. Supersedes-v1 framing dropped.
+  - [reframe] Strip the '(Supersedes v1 surface→two-futures→tune; agency flips)' changelog parenthetical. Present-tense: the flow is answer-first, then system proposes / user approves and tunes with both futures updating.
+- **`docs/product.md#35`** · `requirement` · → R-ledger R11 (Strategy Engine) · _canonical_
+  - sig: R11 — recommendation is CALM, never nagging/engagement bait
+  - R11: the recommendation is calm and invited into the second beat — never a nagging alert, badge, or engagement bait; calm is never traded for engagement.
+  - [dedup] R11 canonical in product R-ledger; R29 and roadmap hold pointers.
+- **`docs/product.md#36`** · `requirement` · → R-ledger R20 (The Budget) · _canonical_
+  - sig: R20 — itemized budget, time-boxed, essentials=floor
+  - R20: spending is an itemized categorized budget the user builds (essentials vs discretionary) with time-boxed line items; essentials are the safety floor and discretionary is the surplus the strategy optimizes funding of (R21); spending shape (go-go-years vs level) is user-set, never solver-recommended.
+  - [dedup] R20 canonical in product R-ledger; §5 lever set, R21, scope boundaries, roadmap hold pointers.
+- **`docs/product.md#37`** · `requirement` · → R-ledger R21 (objective & confidence grading) · _canonical_
+  - sig: R21 — objective is LEXICOGRAPHIC, metric == headline
+  - R21: the objective is lexicographic — Tier 1 never drops below the survival floor (essentials covered, spine's voice), Tier 2 is the user's surplus pick; the objective metric equals the headline metric so a recommendation can't worsen the hero number, and for over-funded households the headline honestly pivots to the chosen surplus metric.
+  - [dedup] R21 canonical in product R-ledger; D1, carried landmines (10/10 clamp), §5, architecture, roadmap hold pointers.
+- **`docs/product.md#38`** · `requirement` · → R-ledger R22 (objective & confidence grading) · _canonical_
+  - sig: R22 — the hedge RIDES ON THE HEADLINE
+  - R22: every recommendation grades its own confidence (robust 'just do it' vs coin-flip 'here's what it hinges on') and the hedge rides on the headline, never buried in tapped-away math; depth-on-demand must not invert into certainty-on-top / caveats-hidden-below.
+  - [dedup] R22 canonical in product R-ledger; R12 (copyGuard hedge lint), carried landmines, success criteria (Honesty), roadmap hold pointers; architecture owns the lint mechanic.
+- **`docs/product.md#39`** · `requirement` · → R-ledger R23 (objective & confidence grading) · _canonical_
+  - sig: R23 — depth is COMPARATIVE, retains the runner-up
+  - R23: the recommendation's depth is comparative — 'why this strategy beat the runner-up,' retaining and surfacing the runner-up — not a formula dump.
+  - [dedup] R23 canonical in product R-ledger; R10, R7, roadmap hold pointers.
+- **`docs/product.md#40`** · `requirement` · → R-ledger R24 (Healthcare) · _canonical_
+  - sig: R24 — income-dependent healthcare: ACA pre-65, IRMAA post-65, HSA bucket
+  - R24: the model accounts for income-dependent healthcare across the Medicare line — pre-65 ACA PTC scaling with MAGI (2026 base = 400% FPL cliff back, enhanced subsidies expired 12/31/2025, toggle + re-verify), post-65 IRMAA (2-year MAGI lookback, different MAGI def, per-person cliffs), and HSA as a fourth bucket; healthcare couples into the strategy objective and must be seen, not silently optimized over. Numbers live in research docs.
+  - [dedup] R24 requirement canonical in product R-ledger; D6, R33, R38 cite it; architecture owns the overlay mechanics, research docs own the numbers, CLAUDE.md/verify:aca the gate — all pointers.
+- **`docs/product.md#42`** · `requirement` · → R-ledger R12 (Voice & Honesty) · _canonical_
+  - sig: R12 — recommendations probabilistically framed, certainty banned
+  - R12: the product makes recommendations now, but every one is probabilistically framed and confidence-graded; certainty language stays banned ('guaranteed/optimal/locks in/you will save') and string enforcement flips from 'ban the imperative' to 'require the hedge on the headline.'
+  - [dedup] R12 requirement canonical in product R-ledger; R22, carried landmines hold pointers; architecture (copyGuard) owns the lint mechanic. Supersedes-v1 framing dropped.
+  - [reframe] Strip the '(Supersedes v1 never-issues-individualized-directives)' parenthetical. Present-tense: the product makes confidence-graded, probabilistically-framed recommendations; certainty language is banned and the copyGuard requires the hedge on the headline.
+- **`docs/product.md#43`** · `requirement` · → R-ledger R13 (Voice & Honesty) · _reframe_
+  - sig: R13 — optional honest-limits note, no Terms/RIA
+  - R13: an optional in-product honest-limits note ('this is a model — validate big irreversible moves with a pro') is kept on honesty grounds for friend-users, no longer a regulatory Terms requirement; no Terms/License, no RIA entity (commercial artifacts removed).
+  - [dedup] R13 requirement canonical in product R-ledger; regulatory frame row holds pointer; §8 changelog framing dropped.
+  - [reframe] Strip the 'no longer a regulatory Terms requirement / commercial artifacts removed' supersession framing. Present-tense: an optional in-product honest-limits note is kept on honesty grounds for friend-users; there is no Terms/License or RIA entity.
+- **`docs/product.md#44`** · `requirement` · → R-ledger R14 (Voice & Honesty) · _canonical_
+  - sig: R14 — scary truths in PLAIN HUMAN LANGUAGE, not dumbed down
+  - R14: scary, complex truths are stated in plain human language without being dumbed down ('9 of 10 versions of your future,' not '85% Monte Carlo success').
+  - [dedup] R14 canonical in product R-ledger; R2, back-nine-design, roadmap hold pointers.
+- **`docs/product.md#45`** · `requirement` · → R-ledger R25 (Voice & Honesty) · _pointer_
+  - sig: R25 — cardinal honesty requirement, bar RISES for recommender
+  - R25 (the cardinal honesty requirement): calm-but-wrong is the cardinal sin and the bar rises for a recommender; 'it's just for friends' never softens validation (friends risk identical money with less protection and trust the tool more), and removing the regulatory net is a load transfer onto correctness + confidence-grading.
+  - [dedup] Q5: the FULL cardinal-rule statement is canonical in product §2 (item #3); R25 in the R-ledger restates it — keep R25 as the ledger entry but point to §2 as the canonical statement. R26/R27/R28 cite R25.
+- **`docs/product.md#46`** · `requirement` · → R-ledger R15 (Trust & Data Safety) · _reframe_
+  - sig: R15 — no marketing privacy claim, honesty survives
+  - R15: no user-facing marketing privacy claim is required or made (personal tool, no audience); the underlying honesty — don't misrepresent what the architecture does — survives.
+  - [dedup] R15 canonical in product R-ledger; regulatory frame row holds pointer; §8 changelog framing dropped.
+  - [reframe] Strip the changelog framing. Present-tense: no marketing privacy claim is made; the honesty obligation not to misrepresent the architecture still holds.
+- **`docs/product.md#47`** · `requirement` · → R-ledger R16 (Trust & Data Safety) · _canonical_
+  - sig: R16 — encrypted at rest, guarded local access, PBKDF2-600k OK
+  - R16: the financial picture is encrypted at rest and local access is guarded (a lock for a shared laptop) as basic hygiene for real PII; the crypto bar may be reasonable rather than maximalist — PBKDF2-600k is acceptable, the Argon2id maximalist justification is no longer load-bearing.
+  - [dedup] R16 requirement canonical in product R-ledger; R17, R39, architecture (crypto layer) hold pointers.
+- **`docs/product.md#48`** · `requirement` · → R-ledger R17 (Trust & Data Safety) · _canonical_
+  - sig: R17 — SURVIVOR RECOVERY is load-bearing
+  - R17: survivor recovery is load-bearing — the product exists for the survivor case; a client-generated recovery phrase + mandatory export and the two-person/shared-household recovery posture stay; only the 'trust-building ceremony' framing relaxes.
+  - [dedup] R17 requirement canonical in product R-ledger; R18, R39, architecture (crypto/recovery) hold pointers.
+- **`docs/product.md#49`** · `requirement` · → R-ledger R18 (Trust & Data Safety) · _canonical_
+  - sig: R18 — user can EXPORT/back up for durability
+  - R18: the user can export and back up their own data for durability (no single point of total loss); the anti-vendor-lock-in framing is moot for a personal tool.
+  - [dedup] R18 canonical in product R-ledger; R17, R39 hold pointers.
+- **`docs/product.md#50`** · `requirement` · → R-ledger R19 (Trust & Data Safety) · _canonical_
+  - sig: R19 — manual inputs SANITY-CHECKED inline, calmly
+  - R19: manual-entry inputs are sanity-checked — impossible/incoherent inputs are caught calmly inline, never producing a silently broken or falsely confident answer.
+  - [dedup] R19 canonical in product R-ledger; R40.10 (finiteness-first then range), back-nine-design (intake UX), roadmap hold pointers.
+- **`docs/product.md#51`** · `requirement` · → R-ledger R26 (Accumulation/Fuck-Off Date) · _canonical_
+  - sig: R26 — 'when is work optional?' fuck-off date, exhaustive non-monotone sweep
+  - R26: answers 'when is work optional?' as the fuck-off date (the two R27 dates, never a single number), computed by sweeping the household work-stop date-offset Y over the existing confidence engine (per-person retirementAge = currentAge_i + Y; already-retired members verbatim; all-retired short-circuits to spine-first); the search is non-monotone-robust — exhaustively evaluates every offset (≤~11) and reports the earliest offset whose condition holds AND keeps holding for every later in-window offset, never a monotonicity-assuming bisection.
+  - [dedup] R26 requirement canonical in product R-ledger; R27/R33/R34 cite it; CLAUDE.md, architecture (engine invariant / sweep), roadmap hold pointers.
+- **`docs/product.md#52`** · `requirement` · → R-ledger R27 (Accumulation/Fuck-Off Date) · _canonical_
+  - sig: R27 — TWO dates: floor date + lifestyle date, Y≥0 only
+  - R27: the answer is two dates from the lexicographic objective (R21) at the same confidence bar — floor date (earliest offset essentials hold) and lifestyle date (earliest offset full budget holds); the sweep evaluates Y≥0 only (a floor-confirmed Y==0 means 'work-optional at today,' never a claim about the past); in a single-total-spend budget the dates coincide; floor≤lifestyle is expected NOT asserted — the 100%-FPL PTC floor can legitimately invert it.
+  - [dedup] R27 requirement canonical in product R-ledger; R21, R26, success criteria, architecture, roadmap hold pointers.
+- **`docs/product.md#53`** · `requirement` · → R-ledger R28 (Accumulation/Fuck-Off Date) · _canonical_
+  - sig: R28 — both dates CONFIDENCE-GRADED, never hard lines
+  - R28: both dates are confidence-graded (never hard lines), incorporate accumulation-phase market uncertainty, express the date↔confidence tradeoff ('lifestyle-free in ~3 years at 8/10, or year 5 for 9/10'); a single deterministic date is a banned calm-but-wrong simplification, and the date re-grades whenever the user overrides sequencing/conversion.
+  - [dedup] R28 canonical in product R-ledger; R10, R25, R27, success criteria, roadmap hold pointers.
+- **`docs/product.md#54`** · `requirement` · → R-ledger R29 (Accumulation/Fuck-Off Date) · _canonical_
+  - sig: R29 — framing ADAPTS magic moment to user state
+  - R29: the framing adapts the magic moment to user state — not-yet-retired leads with the date ('you're ~N years out / free today'), already-retired keeps the spine confidence statement (R2, in its R10 recommend-second position) as the lead; same calm voice (R11); 'fuck-off date' is the working name, the user-facing label confirmed at design time.
+  - [dedup] R29 requirement canonical in product R-ledger; §3 state-adaptive, R2/R10/R11/R35, CLAUDE.md, roadmap hold pointers.
+- **`docs/product.md#55`** · `requirement` · → R-ledger R29 / no-date outcome (Accumulation/Fuck-Off Date) · _canonical_
+  - sig: no work-optional date within the window outcome + unconfirmed-tail
+  - The no-date outcome: when every in-window offset fails the bar, the master records a first-class 'no work-optional date within the ~N-yr window' outcome (never 'never free,' never silently the window-top offset, never a crash), surfaced in the calm voice; its sibling — a date confirmed only at the window edge — is reported with an explicit unconfirmed-tail disclosure; honesty in both directions, the pessimistic direction designed not accidental.
+  - [dedup] Outcome requirement canonical in product R-ledger; R25/R26/R27 cite it; architecture (outcome enum) and roadmap hold pointers.

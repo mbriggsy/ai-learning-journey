@@ -1,0 +1,4962 @@
+# M1 — Migration Ledger (doc restructure)
+
+> **What this is.** Every load-bearing fact mined from the OLD doc tree (the "quarry"), routed to its home in the
+> NEW tree. This is the rewrite SPEC for M2–M5 (author each new doc *from* its section here) **and** the zero-loss
+> CHECKLIST for M6 (grep the new tree for every `sig:` phrase; nothing ships until all are accounted for).
+> Scaffolding — deleted with `RESTRUCTURE-PLAN.md` + `.recovery/` when the restructure lands.
+
+> **Forward-only.** Facts are present-tense truth ("we do X because Y"), never a story of what changed. The journey
+> lives in `git log`. Where a `reframe` row carries a `[reframe]` note, that note is the present-tense instruction:
+> the framing dies, the fact survives.
+
+## How to read a row
+
+```
+- **`<sourceDoc>#<idx>`** · `<kind>` · → <target section in the home> · _<disposition>_ [· [NOT-must-survive]]
+  - sig: <distinctive greppable phrase — M6 proves survival by finding this in the new tree>
+  - <one-line present-tense digest of the fact>
+  - [dedup] <when duplicated: which home is canonical, which copies become pointers>
+  - [reframe] <when a fossil: the surviving fact + how to state it present-tense>
+  - [!<severity>] <problem> — fix: <fix>   ← review-queue flag from the Verify phase (if any)
+```
+
+**Disposition legend** — `canonical` = the one true home for this fact · `pointer` = canonical home is elsewhere,
+here it becomes a reference · `reframe` = fossil framing dies, fact survives present-tense · `no-move` = a lesson
+already homed in `docs/insights/` · `drop` = pure dead framing with no surviving fact (justified in its note).
+
+---
+
+## docs/product.md
+
+- **`README.md#1`** · `scope-boundary` · → Product scope / thesis (never-sold, raised bar) · _pointer_
+  - sig: never sold raises the bar
+  - Never sold; runs on Briggsy's laptop for financially-literate friends betting real money — no regulatory net or 'consult a professional' escape hatch, so the entire load transfers onto honesty + engine validation, which get STRICTER not looser.
+  - [dedup] Canonical product-scope home is product.md; CLAUDE.md project role line becomes a pointer.
+- **`README.md#2`** · `invariant` · → §2 cardinal rule · _pointer_
+  - sig: calm-but-wrong is the sin
+  - THE CARDINAL RULE: calm-but-wrong is the sin — a confidently-stated wrong recommendation is worse than no tool at all; 'it's just for friends' never excuses it.
+  - [dedup] Full canonical statement is docs/product.md#3 / §2 (mirroring R25 #45); README keeps its own plain-language version for a first-time-reader surface, but this routed-into-product row is a pointer so §2 has exactly one canonical row (#3); CLAUDE.md copy is a pointer.
+  - [fixed:warn] Flipped canonical→pointer; §2 canonical is #3.
+- **`README.md#3`** · `requirement` · → Thesis / R-ledger (three beats) · _pointer_
+  - sig: thesis in three beats
+  - Thesis in three beats: (1) where you stand as a DISTRIBUTION of futures rendered as a feelable number, not false-precision dollars; (2) a recommended confidence-graded strategy over two coupled tax controls (sequencing + Roth conversion) funding your budget, reasoning always one tap down; (3) you stay the pilot — safety is the floor, you pick the goal, every recommendation wears its hedge on the headline.
+  - [dedup] Canonical home product.md; no other live home — README front-door restatement points here.
+- **`README.md#4`** · `requirement` · → R-ledger (state-adaptive first answer / fuck-off date) · _pointer_
+  - sig: state-adaptive first answer
+  - The first answer is STATE-ADAPTIVE: not-yet-retired gets THE FUCK-OFF DATE (two confidence-graded work-optional dates — essentials vs full lifestyle — by sweeping the household work-stop date across the same engine; a bounded near-retirement on-ramp, NOT a FIRE calculator; v1 projects the stated savings plan honestly, doesn't optimize it); already-retired gets the calm CONFIDENCE STATEMENT. One product, one engine, two voices.
+  - [dedup] Canonical home product.md; CLAUDE.md project intro restates the same — becomes a pointer.
+- **`README.md#21`** · `scope-boundary` · → Product scope (privacy & license / not-for-sale) · _pointer_
+  - sig: not for sale not licensed not advice
+  - Privacy & license: data is entered manually, encrypted locally, never transmitted (no server to transmit to); a personal tool, NOT for sale and NOT licensed for use; published as part of an AI-assisted engineering portfolio, not as a product or financial advice.
+  - [dedup] Canonical product-scope home product.md; CLAUDE.md project framing is a pointer.
+- **`docs/README.md#0`** · `other` · → [REHOME → DROP] Front-door convention (intro / doc-map note) · _pointer_
+  - sig: root README single front door
+  - The repo-root README (../README.md) is the project overview / single front door; docs/README.md is purely the thin index/map into docs/.
+  - [dedup] Not a product why/what fact — a doc-tree navigation convention fully homed in the root README.md (single front door, README line 11) with docs/README.md as the thin index (line 11); product.md's intro does NOT and should not carry it. No home in product.md.
+  - [reframe] Surviving fact: the root README is the single project front door (overview + how-it-works + status); docs/README is a thin index. Present-tense: 'Start at the root README for the overview; docs/README only routes you into docs/.'
+  - [fixed:warn] Rehomed out of product → DROP (navigation fact homed in README/docs-README); reframe→pointer.
+- **`docs/README.md#4`** · `scope-boundary` · → Lever set / capability scope (SS, R40 other-income, portfolio holdings) · _reframe_
+  - sig: social-security other-income portfolio-holdings
+  - The three capabilities once planned under plans/features/ — social-security, other-income, portfolio-holdings — dissolve into their kind-homes; the capabilities survive but features/ is no longer a home.
+  - [dedup] CLAUDE.md references plans/features/; under the radical move features/ DISSOLVES — mechanics→architecture§7, decisions→decisions/{ss-computation,other-income-r40,portfolio-holdings}, requirements→product, build steps→plans/1-engine & 2-first-answer.
+  - [reframe] Surviving fact: the three capabilities (Social Security, other-income/R40, portfolio holdings) are first-class product capabilities. Present-tense: 'features/ has no home of its own — each capability lives in its kind-home (product for requirements, architecture for mechanics, decisions for the calls, plans for build steps).'
+- **`docs/product.md#0`** · `definition-term` · → Header / intro (what this is) · _canonical_
+  - sig: PERSONAL retirement / tax-strategy co-pilot, NEVER sold
+  - The Back Nine is a personal, never-sold retirement/tax co-pilot for one married couple and a few friends; product.md is the single home for thesis, model, locked decisions, lever set, landmines, and the R1-R40 ledger.
+  - [dedup] Canonical product self-definition lives here in product.md intro; CLAUDE.md, docs/README.md, docs/roadmap.md each keep their own framing/pointer.
+- **`docs/product.md#1`** · `decision-rationale` · → §4 Locked decisions / regulatory frame (load transfer) · _reframe_
+  - sig: charter > requirements > roadmap precedence RETIRED
+  - The old charter-precedence chain is retired; product.md and roadmap.md carry the truth, and on the personal pivot the regulatory load transferred to honesty + engine validation, which got stricter.
+  - [dedup] Surviving fact (precedence = product + roadmap; load transfers to honesty/validation) is canonical in product; roadmap and CLAUDE.md hold pointers.
+  - [reframe] Strip the 'charter scar retired / we changed precedence' history. Present-tense: precedence runs product.md (why/what) and roadmap.md (status); because the tool is personal, regulatory guardrails relax to wording and the honesty + engine-validation bar is the binding constraint.
+- **`docs/product.md#2`** · `invariant` · → §1 What this is (thesis) · _canonical_
+  - sig: essentials safe in 10 of 10; lifestyle holds in 7
+  - Three-sentence thesis: tell me where I stand (the spine confidence statement), then recommend a confidence-graded sequencing+conversion strategy with reasoning one tap down, and you stay the pilot picking the goal above the safety floor.
+  - [dedup] Thesis canonical in product §1; CLAUDE.md and roadmap.md hold condensed pointers.
+- **`docs/product.md#3`** · `invariant` · → §2 The cardinal rule · _canonical_
+  - sig: calm-but-wrong is the cardinal sin
+  - The cardinal rule: calm-but-wrong is the cardinal sin; the recommender bar rises, 'it's just for friends' never softens validation, and the removed regulatory net is a load transfer onto correctness + confidence-grading.
+  - [dedup] Q5: canonical FULL statement lives in product §2; README keeps its own plain-language version (canonical, distinct audience); R25, CLAUDE.md, roadmap copies become pointers.
+- **`docs/product.md#4`** · `invariant` · → §3 The product model · _canonical_
+  - sig: answer first, recommendation second, reasoning on demand
+  - Product model: spine answers one question, a recommend-second beat proposes what to do, complexity discloses progressively; causal chain face←engine←recommendation, and the recommendation never contradicts the spine (R21, same metric).
+  - [dedup] Canonical product model in product §3; R10, R21, roadmap hold pointers / express the requirement form.
+- **`docs/product.md#5`** · `requirement` · → §3 Product-model flow diagram · _canonical_
+  - sig: Can we retire, and how do we do it best?
+  - Mermaid product-model flow: the one question → plain-language confidence answer → recommend-second strategy, with one-tap-down D1 (comparative reasoning) and D2 (tune/pick goal); the diagram's equivalence edges (A===E / R===S / S===E) read: the Answer is engine-backed (a distribution of futures), the Recommendation is solver-backed (sequencing×conversion), and the Solver shares the engine's SAME CRN futures.
+  - [fixed:nit] Replaced invented node tokens with real A===E/R===S/S===E labels.
+- **`docs/product.md#6`** · `invariant` · → §3 The state-adaptive first answer (R29) · _canonical_
+  - sig: state-adaptive first answer (R29), one intake flow
+  - The magic moment is state-adaptive: one intake flow, only the lead answer changes — not-yet-retired leads with the two confidence-graded fuck-off dates (R27/R28) from sweeping the work-stop date-offset over the same engine; already-retired keeps the spine confidence statement; same voice (R11), one flow (R35).
+  - [dedup] State-adaptive framing canonical in product §3 / R29; CLAUDE.md, R35, roadmap hold pointers.
+- **`docs/product.md#8`** · `decision-rationale` · → §4 Locked decisions, D1 · _canonical_
+  - sig: D1 — 'best' is LEXICOGRAPHIC, two tiers
+  - D1: 'best' is lexicographic — Tier 1 never drops below the survival floor (honors R2/Kitces), Tier 2 is a user-chosen surplus goal (leave more / pay less tax / live bigger now); the objective metric equals the headline so a recommendation can't contradict the magic moment.
+  - [dedup] D1 canonical in product §4; R21 expresses the requirement form, carried landmines and architecture (objective≡headline) hold pointers.
+- **`docs/product.md#9`** · `decision-rationale` · → §4 Locked decisions, D2 · _canonical_
+  - sig: D2 — RECOMMEND-SECOND, math one tap down
+  - D2: recommend-second — the spine answer stays the first magic moment, the recommendation is the immediate next beat with math one tap down; protects the calm on-ramp and keeps Phase 2 reusable.
+  - [dedup] D2 canonical in product §4; R10 and roadmap hold the requirement-form / pointer.
+- **`docs/product.md#10`** · `decision-rationale` · → §4 Locked decisions, D3 · _canonical_
+  - sig: D3 — four phases: Foundation → First Answer → Controls → Solver
+  - D3: the build grows to four phases — Foundation → First Answer → Controls (manual sequencing + Roth, a shippable cold-read milestone) → Solver & Recommendation.
+  - [dedup] Decision canonical in product §4; roadmap owns the four-acts status expression (pointer).
+- **`docs/product.md#11`** · `decision-rationale` · → §4 Locked decisions, D4 · _canonical_
+  - sig: D4 — named drawdown policies × conversion grid, not continuous
+  - D4: the MVP solver search is named drawdown policies × a conversion grid (proportional / taxable-first / pre-tax-first / bracket-fill), not full continuous optimization — bounds compute (TS viable, WASM a fast-follow), keeps the comparative story legible, shrinks optimizer's-curse exposure.
+  - [dedup] D4 canonical in product §4; scope boundaries and roadmap hold pointers.
+- **`docs/product.md#12`** · `decision-rationale` · → §4 Locked decisions, D5 · _canonical_
+  - sig: D5 — held-out seed + optimality oracle before the solver
+  - D5: confidence/curse defense is a held-out reporting seed (select on seed-set A, grade on B) plus an optimality oracle built BEFORE the solver — non-negotiable, the raised honesty bar made concrete.
+  - [dedup] Decision canonical in product §4; carried landmines, success criteria (Correctness), roadmap, and architecture hold pointers / mechanics.
+- **`docs/product.md#13`** · `decision-rationale` · → §4 Locked decisions, D6 · _canonical_
+  - sig: D6 — ACA-PTC and IRMAA come IN; NIIT/state OUT
+  - D6: ACA-PTC (pre-65) and IRMAA (post-65) come IN because they are income-dependent and an omitted cliff inverts which strategy wins; NIIT/state stay OUT-but-disclosed. Falsifiable line: IN iff sequencing or conversion can move it.
+  - [dedup] D6 canonical in product §4; R24 and the tax IN/OUT scope boundary express it; architecture holds the overlay mechanics pointer.
+- **`docs/product.md#14`** · `decision-rationale` · → §4 Locked decisions, regulatory frame · _reframe_
+  - sig: regulatory frame RELAXES TO WORDING, load transfers
+  - Regulatory frame relaxes to wording: no-verdict / no-optimizer / categorical-triggers / attorney-gate / 'we can't see your money' guardrails drop or relax, and the load transfers to honesty + validation which get stricter — 'it's just for friends' never softens validation.
+  - [dedup] Regulatory-frame decision canonical in product §4; R12-R18, R25, roadmap hold the requirement-level pointers; §8 changelog framing is dropped.
+  - [reframe] Strip the '§8 changelog / these guardrails drop' supersession framing. Present-tense: because the tool is personal, regulatory guardrails are relaxed to wording (no formal no-verdict/no-optimizer/attorney-gate constraint); the binding load sits on honesty + engine validation, and being 'just for friends' never relaxes that.
+- **`docs/product.md#15`** · `scope-boundary` · → §5 The lever set (solver-optimized) · _canonical_
+  - sig: MVP solver-optimized levers: sequencing + Roth conversion
+  - The two MVP solver-optimized levers (objectively right once the goal is fixed): withdrawal sequencing (which bucket funds each year's net withdrawal) and Roth conversion (amount + years).
+  - [dedup] Lever set canonical in product §5; R9 and roadmap hold pointers.
+- **`docs/product.md#16`** · `scope-boundary` · → §5 The lever set (user-set) · _canonical_
+  - sig: MVP user-set levers: the budget + the goal
+  - The two MVP user-set levers (no 'right' answer — a tool never recommends a lifestyle): the itemized budget with time-boxed line items (essentials vs discretionary) and the Tier-2 goal pick including a go-go-years spending shape.
+  - [dedup] Lever set canonical in product §5; R20, R21, roadmap hold pointers.
+- **`docs/product.md#17`** · `scope-boundary` · → §5 Chapter two (deferred levers) · _canonical_
+  - sig: chapter two deferred levers: SS-age, continuous optimizer, asset-location
+  - Chapter-two deferred levers: SS-claiming-age, a full continuous optimizer, a die-with-zero spend-down solver, asset-location (modelable later as a deterministic per-bucket tilt on the one shared draw without breaking CRN), and contribution-strategy optimization (deferred-for-sequencing, not off-thesis; R32).
+  - [dedup] Chapter-two scope canonical in product §5; R32, scope boundaries, roadmap hold pointers.
+- **`docs/product.md#18`** · `lesson` · → §6 Carried landmines · _canonical_
+  - sig: objective ≡ headline metric or it worsens its hero number
+  - Carried landmine: the objective must equal the headline metric or the product recommends a move that worsens its own hero number; D1 lexicographic resolves it, and floor-first framing reconciles the R2/Kitces 'never maximize' tension.
+  - [dedup] This is a carried PRODUCT landmine (not an insight file) — canonical in product §6; D1, R21, roadmap, architecture hold pointers.
+- **`docs/product.md#19`** · `lesson` · → §6 Carried landmines · _canonical_
+  - sig: optimizer's curse rendered as confidence
+  - Carried landmine: argmax over many candidates on one seed overfits that seed's noise (optimizer's curse rendered as confidence); defense is held-out seed + optimality oracle before the solver, compounded by directional-until-pinned fixtures deciding near-ties.
+  - [dedup] Carried product landmine canonical in product §6; D5, architecture, roadmap hold pointers.
+- **`docs/product.md#20`** · `lesson` · → §6 Carried landmines · _canonical_
+  - sig: a disclosed omission INVERTS a ranking
+  - Carried landmine: a disclosed omission can invert a ranking (not just blunt a delta) — the reason ACA/IRMAA come IN (D6).
+  - [dedup] Carried product landmine canonical in product §6; D6 and R24 hold pointers.
+- **`docs/product.md#21`** · `lesson` · → §6 Carried landmines · _canonical_
+  - sig: stale saved recommendation is a real executed action
+  - Carried landmine: a stale saved recommendation is a real executed action — the Unit 9 're-present under saved vintage' rule may need to invert to re-solve under current fixtures, and staleness must read 'the action we recommended may no longer be advised,' not 'your number drifted.'
+  - [dedup] Carried product landmine canonical in product §6; roadmap (Unit 9) and architecture hold the build/invariant pointers.
+- **`docs/product.md#23`** · `lesson` · → §6 Carried landmines · _canonical_
+  - sig: 10/10 clamp eats the solver's signal
+  - Carried landmine: for over-funded households the 10/10 clamp eats the solver's signal, so the headline must honestly switch to the tax/wealth/lifestyle metric ('you're safe either way; this keeps more from the IRS') — the lexicographic Tier-2 IS this pivot.
+  - [dedup] Carried product landmine canonical in product §6; D1, R21, roadmap hold pointers.
+- **`docs/product.md#24`** · `scope-boundary` · → §6 Carried landmines / §5 lever set · _canonical_
+  - sig: spending/lifestyle NEVER solver-recommended
+  - Carried landmine / scope: spending and lifestyle are never solver-recommended — only user-set with honest consequences; the solver optimizes funding, not how you live.
+  - [dedup] Canonical in product (carried landmine / lever set); R20, R21, scope boundaries hold pointers.
+- **`docs/product.md#25`** · `requirement` · → R-ledger R1 (Confidence Spine) · _canonical_
+  - sig: R1 — answers ONE primary question, first-class surface
+  - R1: the product answers one primary question — 'Can we retire, and how do we do it best?' — as its central first-class surface; everything else is subordinate.
+  - [dedup] R1 canonical in product R-ledger; roadmap holds a pointer.
+- **`docs/product.md#26`** · `requirement` · → R-ledger R2 (Confidence Spine) · _canonical_
+  - sig: R2 — plain-language confidence statement, never color alone
+  - R2: the answer is a plain-language confidence statement leading with the human verdict, separating survival from lifestyle where the budget supports it, using Kitces 'probability of adjustment' framing (never 'failure'), no histograms/bare-percentages/dashboard on the primary surface, and meaning never depending on color alone.
+  - [dedup] R2 canonical in product R-ledger; back-nine-design (color-blind) and roadmap (U7) hold pointers to the requirement.
+- **`docs/product.md#27`** · `requirement` · → R-ledger R3 (Confidence Spine) · _canonical_
+  - sig: R3 — engine models a DISTRIBUTION of futures
+  - R3: the engine models a distribution of possible futures (uncertainty is a primary input, not bolted on), not a single deterministic projection; the confidence statement is the humanized reading of that distribution.
+  - [dedup] R3 requirement canonical in product R-ledger; architecture (engine distribution) and roadmap hold pointers.
+- **`docs/product.md#28`** · `requirement` · → R-ledger R4 (Confidence Spine) · _canonical_
+  - sig: R4 — supporting detail ON DEMAND, never unsolicited
+  - R4: after the verdict, all supporting detail — range, assumptions, math, recommendation reasoning — is reachable on demand but never shown unsolicited on the first surface.
+  - [dedup] R4 canonical in product R-ledger; R7, R10, R23, roadmap hold pointers.
+- **`docs/product.md#29`** · `requirement` · → R-ledger R5 (On-Ramp) · _canonical_
+  - sig: R5 — guided ONE-QUESTION-AT-A-TIME intake
+  - R5: first contact is a guided, one-question-at-a-time advisor-style intake; the account-level guided setup (R35) is the on-ramp for both states with the answer surfacing during the flow, while the itemized budget (R20) is the deepening, not the on-ramp — never a wall of forms.
+  - [dedup] R5 canonical in product R-ledger; R35, R20, success criteria, roadmap (U5) hold pointers.
+- **`docs/product.md#30`** · `requirement` · → R-ledger R6 (On-Ramp) · _canonical_
+  - sig: R6 — power-user escape hatch sets any assumption
+  - R6: a power-user escape hatch lets a user set any assumption precisely at any point without walking the guided path.
+  - [dedup] R6 canonical in product R-ledger; roadmap holds a pointer.
+- **`docs/product.md#31`** · `requirement` · → R-ledger R7 (On-Ramp) · _canonical_
+  - sig: R7 — every assumption visible and editable on demand
+  - R7: every assumption the flow makes on the user's behalf is visible and editable on demand, gaining weight under recommend-second — a recommended strategy must expose its inputs AND its reasoning to be trusted and approved.
+  - [dedup] R7 canonical in product R-ledger; R4, R23, roadmap hold pointers.
+- **`docs/product.md#32`** · `requirement` · → R-ledger R8 (On-Ramp) · _canonical_
+  - sig: R8 — input mirrors output; band narrows AND shifts honestly
+  - R8: input mirrors output — the user reaches a caveated answer quickly then sharpens; each added precision narrows the confidence band and shifts honestly on a corrected value (not only ever narrows); refinement is rewarding, never punished for honesty.
+  - [dedup] R8 canonical in product R-ledger; back-nine-design (band honesty) and roadmap hold pointers.
+- **`docs/product.md#33`** · `requirement` · → R-ledger R9 (Strategy Engine) · _canonical_
+  - sig: R9 — TWO coupled solver-optimized controls
+  - R9: the product proposes a recommended strategy over two coupled solver-optimized controls — withdrawal sequencing and Roth conversion (amount + years) — to fund the budget the tax-smartest way; sequencing is the more universal control and the survivor's tax cliff is the emotional headline.
+  - [dedup] R9 canonical in product R-ledger; §5 lever set and roadmap hold pointers. (Supersedes-v1 framing dropped.)
+  - [reframe] Strip the '(Supersedes v1 exactly-one-Roth-lever)' changelog parenthetical. Present-tense: the product proposes a strategy over two coupled controls — sequencing + Roth conversion.
+- **`docs/product.md#34`** · `requirement` · → R-ledger R10 (Strategy Engine) · _canonical_
+  - sig: R10 — RECOMMEND-SECOND flow (a)(b)(c)(d)
+  - R10: recommend-second flow — (a) spine confidence answer first, (b) then 'here's what we'd do about it' confidence-graded strategy, (c) comparative reasoning one tap down, (d) user tunes/overrides/re-picks the goal with both futures updating.
+  - [dedup] R10 canonical in product R-ledger; D2, R28, roadmap hold pointers. Supersedes-v1 framing dropped.
+  - [reframe] Strip the '(Supersedes v1 surface→two-futures→tune; agency flips)' changelog parenthetical. Present-tense: the flow is answer-first, then system proposes / user approves and tunes with both futures updating.
+- **`docs/product.md#35`** · `requirement` · → R-ledger R11 (Strategy Engine) · _canonical_
+  - sig: R11 — recommendation is CALM, never nagging/engagement bait
+  - R11: the recommendation is calm and invited into the second beat — never a nagging alert, badge, or engagement bait; calm is never traded for engagement.
+  - [dedup] R11 canonical in product R-ledger; R29 and roadmap hold pointers.
+- **`docs/product.md#36`** · `requirement` · → R-ledger R20 (The Budget) · _canonical_
+  - sig: R20 — itemized budget, time-boxed, essentials=floor
+  - R20: spending is an itemized categorized budget the user builds (essentials vs discretionary) with time-boxed line items; essentials are the safety floor and discretionary is the surplus the strategy optimizes funding of (R21); spending shape (go-go-years vs level) is user-set, never solver-recommended.
+  - [dedup] R20 canonical in product R-ledger; §5 lever set, R21, scope boundaries, roadmap hold pointers.
+- **`docs/product.md#37`** · `requirement` · → R-ledger R21 (objective & confidence grading) · _canonical_
+  - sig: R21 — objective is LEXICOGRAPHIC, metric == headline
+  - R21: the objective is lexicographic — Tier 1 never drops below the survival floor (essentials covered, spine's voice), Tier 2 is the user's surplus pick; the objective metric equals the headline metric so a recommendation can't worsen the hero number, and for over-funded households the headline honestly pivots to the chosen surplus metric.
+  - [dedup] R21 canonical in product R-ledger; D1, carried landmines (10/10 clamp), §5, architecture, roadmap hold pointers.
+- **`docs/product.md#38`** · `requirement` · → R-ledger R22 (objective & confidence grading) · _canonical_
+  - sig: R22 — the hedge RIDES ON THE HEADLINE
+  - R22: every recommendation grades its own confidence (robust 'just do it' vs coin-flip 'here's what it hinges on') and the hedge rides on the headline, never buried in tapped-away math; depth-on-demand must not invert into certainty-on-top / caveats-hidden-below.
+  - [dedup] R22 canonical in product R-ledger; R12 (copyGuard hedge lint), carried landmines, success criteria (Honesty), roadmap hold pointers; architecture owns the lint mechanic.
+- **`docs/product.md#39`** · `requirement` · → R-ledger R23 (objective & confidence grading) · _canonical_
+  - sig: R23 — depth is COMPARATIVE, retains the runner-up
+  - R23: the recommendation's depth is comparative — 'why this strategy beat the runner-up,' retaining and surfacing the runner-up — not a formula dump.
+  - [dedup] R23 canonical in product R-ledger; R10, R7, roadmap hold pointers.
+- **`docs/product.md#40`** · `requirement` · → R-ledger R24 (Healthcare) · _canonical_
+  - sig: R24 — income-dependent healthcare: ACA pre-65, IRMAA post-65, HSA bucket
+  - R24: the model accounts for income-dependent healthcare across the Medicare line — pre-65 ACA PTC scaling with MAGI (2026 base = 400% FPL cliff back, enhanced subsidies expired 12/31/2025, toggle + re-verify), post-65 IRMAA (2-year MAGI lookback, different MAGI def, per-person cliffs), and HSA as a fourth bucket; healthcare couples into the strategy objective and must be seen, not silently optimized over. Numbers live in research docs.
+  - [dedup] R24 requirement canonical in product R-ledger; D6, R33, R38 cite it; architecture owns the overlay mechanics, research docs own the numbers, CLAUDE.md/verify:aca the gate — all pointers.
+- **`docs/product.md#42`** · `requirement` · → R-ledger R12 (Voice & Honesty) · _canonical_
+  - sig: R12 — recommendations probabilistically framed, certainty banned
+  - R12: the product makes recommendations now, but every one is probabilistically framed and confidence-graded; certainty language stays banned ('guaranteed/optimal/locks in/you will save') and string enforcement flips from 'ban the imperative' to 'require the hedge on the headline.'
+  - [dedup] R12 requirement canonical in product R-ledger; R22, carried landmines hold pointers; architecture (copyGuard) owns the lint mechanic. Supersedes-v1 framing dropped.
+  - [reframe] Strip the '(Supersedes v1 never-issues-individualized-directives)' parenthetical. Present-tense: the product makes confidence-graded, probabilistically-framed recommendations; certainty language is banned and the copyGuard requires the hedge on the headline.
+- **`docs/product.md#43`** · `requirement` · → R-ledger R13 (Voice & Honesty) · _reframe_
+  - sig: R13 — optional honest-limits note, no Terms/RIA
+  - R13: an optional in-product honest-limits note ('this is a model — validate big irreversible moves with a pro') is kept on honesty grounds for friend-users, no longer a regulatory Terms requirement; no Terms/License, no RIA entity (commercial artifacts removed).
+  - [dedup] R13 requirement canonical in product R-ledger; regulatory frame row holds pointer; §8 changelog framing dropped.
+  - [reframe] Strip the 'no longer a regulatory Terms requirement / commercial artifacts removed' supersession framing. Present-tense: an optional in-product honest-limits note is kept on honesty grounds for friend-users; there is no Terms/License or RIA entity.
+- **`docs/product.md#44`** · `requirement` · → R-ledger R14 (Voice & Honesty) · _canonical_
+  - sig: R14 — scary truths in PLAIN HUMAN LANGUAGE, not dumbed down
+  - R14: scary, complex truths are stated in plain human language without being dumbed down ('9 of 10 versions of your future,' not '85% Monte Carlo success').
+  - [dedup] R14 canonical in product R-ledger; R2, back-nine-design, roadmap hold pointers.
+- **`docs/product.md#45`** · `requirement` · → R-ledger R25 (Voice & Honesty) · _pointer_
+  - sig: R25 — cardinal honesty requirement, bar RISES for recommender
+  - R25 (the cardinal honesty requirement): calm-but-wrong is the cardinal sin and the bar rises for a recommender; 'it's just for friends' never softens validation (friends risk identical money with less protection and trust the tool more), and removing the regulatory net is a load transfer onto correctness + confidence-grading.
+  - [dedup] Q5: the FULL cardinal-rule statement is canonical in product §2 (item #3); R25 in the R-ledger restates it — keep R25 as the ledger entry but point to §2 as the canonical statement. R26/R27/R28 cite R25.
+- **`docs/product.md#46`** · `requirement` · → R-ledger R15 (Trust & Data Safety) · _reframe_
+  - sig: R15 — no marketing privacy claim, honesty survives
+  - R15: no user-facing marketing privacy claim is required or made (personal tool, no audience); the underlying honesty — don't misrepresent what the architecture does — survives.
+  - [dedup] R15 canonical in product R-ledger; regulatory frame row holds pointer; §8 changelog framing dropped.
+  - [reframe] Strip the changelog framing. Present-tense: no marketing privacy claim is made; the honesty obligation not to misrepresent the architecture still holds.
+- **`docs/product.md#47`** · `requirement` · → R-ledger R16 (Trust & Data Safety) · _canonical_
+  - sig: R16 — encrypted at rest, guarded local access, PBKDF2-600k OK
+  - R16: the financial picture is encrypted at rest and local access is guarded (a lock for a shared laptop) as basic hygiene for real PII; the crypto bar may be reasonable rather than maximalist — PBKDF2-600k is acceptable, the Argon2id maximalist justification is no longer load-bearing.
+  - [dedup] R16 requirement canonical in product R-ledger; R17, R39, architecture (crypto layer) hold pointers.
+- **`docs/product.md#48`** · `requirement` · → R-ledger R17 (Trust & Data Safety) · _canonical_
+  - sig: R17 — SURVIVOR RECOVERY is load-bearing
+  - R17: survivor recovery is load-bearing — the product exists for the survivor case; a client-generated recovery phrase + mandatory export and the two-person/shared-household recovery posture stay; only the 'trust-building ceremony' framing relaxes.
+  - [dedup] R17 requirement canonical in product R-ledger; R18, R39, architecture (crypto/recovery) hold pointers.
+- **`docs/product.md#49`** · `requirement` · → R-ledger R18 (Trust & Data Safety) · _canonical_
+  - sig: R18 — user can EXPORT/back up for durability
+  - R18: the user can export and back up their own data for durability (no single point of total loss); the anti-vendor-lock-in framing is moot for a personal tool.
+  - [dedup] R18 canonical in product R-ledger; R17, R39 hold pointers.
+- **`docs/product.md#50`** · `requirement` · → R-ledger R19 (Trust & Data Safety) · _canonical_
+  - sig: R19 — manual inputs SANITY-CHECKED inline, calmly
+  - R19: manual-entry inputs are sanity-checked — impossible/incoherent inputs are caught calmly inline, never producing a silently broken or falsely confident answer.
+  - [dedup] R19 canonical in product R-ledger; R40.10 (finiteness-first then range), back-nine-design (intake UX), roadmap hold pointers.
+- **`docs/product.md#51`** · `requirement` · → R-ledger R26 (Accumulation/Fuck-Off Date) · _canonical_
+  - sig: R26 — 'when is work optional?' fuck-off date, exhaustive non-monotone sweep
+  - R26: answers 'when is work optional?' as the fuck-off date (the two R27 dates, never a single number), computed by sweeping the household work-stop date-offset Y over the existing confidence engine (per-person retirementAge = currentAge_i + Y; already-retired members verbatim; all-retired short-circuits to spine-first); the search is non-monotone-robust — exhaustively evaluates every offset (≤~11) and reports the earliest offset whose condition holds AND keeps holding for every later in-window offset, never a monotonicity-assuming bisection.
+  - [dedup] R26 requirement canonical in product R-ledger; R27/R33/R34 cite it; CLAUDE.md, architecture (engine invariant / sweep), roadmap hold pointers.
+- **`docs/product.md#52`** · `requirement` · → R-ledger R27 (Accumulation/Fuck-Off Date) · _canonical_
+  - sig: R27 — TWO dates: floor date + lifestyle date, Y≥0 only
+  - R27: the answer is two dates from the lexicographic objective (R21) at the same confidence bar — floor date (earliest offset essentials hold) and lifestyle date (earliest offset full budget holds); the sweep evaluates Y≥0 only (a floor-confirmed Y==0 means 'work-optional at today,' never a claim about the past); in a single-total-spend budget the dates coincide; floor≤lifestyle is expected NOT asserted — the 100%-FPL PTC floor can legitimately invert it.
+  - [dedup] R27 requirement canonical in product R-ledger; R21, R26, success criteria, architecture, roadmap hold pointers.
+- **`docs/product.md#53`** · `requirement` · → R-ledger R28 (Accumulation/Fuck-Off Date) · _canonical_
+  - sig: R28 — both dates CONFIDENCE-GRADED, never hard lines
+  - R28: both dates are confidence-graded (never hard lines), incorporate accumulation-phase market uncertainty, express the date↔confidence tradeoff ('lifestyle-free in ~3 years at 8/10, or year 5 for 9/10'); a single deterministic date is a banned calm-but-wrong simplification, and the date re-grades whenever the user overrides sequencing/conversion.
+  - [dedup] R28 canonical in product R-ledger; R10, R25, R27, success criteria, roadmap hold pointers.
+- **`docs/product.md#54`** · `requirement` · → R-ledger R29 (Accumulation/Fuck-Off Date) · _canonical_
+  - sig: R29 — framing ADAPTS magic moment to user state
+  - R29: the framing adapts the magic moment to user state — not-yet-retired leads with the date ('you're ~N years out / free today'), already-retired keeps the spine confidence statement (R2, in its R10 recommend-second position) as the lead; same calm voice (R11); 'fuck-off date' is the working name, the user-facing label confirmed at design time.
+  - [dedup] R29 requirement canonical in product R-ledger; §3 state-adaptive, R2/R10/R11/R35, CLAUDE.md, roadmap hold pointers.
+- **`docs/product.md#55`** · `requirement` · → R-ledger R29 / no-date outcome (Accumulation/Fuck-Off Date) · _canonical_
+  - sig: no work-optional date within the window outcome + unconfirmed-tail
+  - The no-date outcome: when every in-window offset fails the bar, the master records a first-class 'no work-optional date within the ~N-yr window' outcome (never 'never free,' never silently the window-top offset, never a crash), surfaced in the calm voice; its sibling — a date confirmed only at the window edge — is reported with an explicit unconfirmed-tail disclosure; honesty in both directions, the pessimistic direction designed not accidental.
+  - [dedup] Outcome requirement canonical in product R-ledger; R25/R26/R27 cite it; architecture (outcome enum) and roadmap hold pointers.
+
+- **`docs/product.md#56`** · `requirement` · → R-ledger R30 (Accumulation/Fuck-Off Date) · _canonical_
+  - sig: R30 — models the PRE-RETIREMENT ACCUMULATION PHASE
+  - R30: the tool models the pre-retirement accumulation phase — from current balances it projects each account forward through continued contributions + market growth to the work-stop date under test, producing the retirement-onset balance + basis per bucket the decumulation engine consumes.
+  - [dedup] R30 requirement canonical in product R-ledger; §3 thesis evolution, R31/R34/R35, architecture, roadmap hold pointers; decision rationale lives in decisions/accumulation-fuck-off-date.
+- **`docs/product.md#57`** · `requirement` · → R-ledger R31 (Accumulation/Fuck-Off Date) · _canonical_
+  - sig: R31 — per-account flat-real contributions, employer match pre-tax
+  - R31: contributions are per-account, flat in real terms, and stop at the work-stop date under test; employer match on workplace accounts is captured (match is pre-tax even on a Roth 401k — default rule; Roth match deferred); no raise/promotion curve in v1.
+  - [dedup] R31 requirement canonical in product R-ledger; R32/R35, scope boundaries, architecture, roadmap hold pointers.
+- **`docs/product.md#58`** · `requirement` · → R-ledger R32 (Accumulation/Fuck-Off Date) · _canonical_
+  - sig: R32 — v1 PROJECTS savings plan, solver decumulation-only
+  - R32: v1 projects the user's stated savings plan and does not optimize accumulation; solver controls stay decumulation-only (sequencing + conversion); contribution-strategy optimization (traditional-vs-Roth allocation) is deferred-for-sequencing (a genuine tax optimization, not off-thesis) — the amount/shape you save stays yours, the tax-bucketing is solver-eligible later.
+  - [dedup] R32 requirement canonical in product R-ledger; §3 thesis evolution, §5 chapter two, scope boundaries, roadmap hold pointers; rationale in decisions/accumulation-fuck-off-date.
+- **`docs/product.md#59`** · `requirement` · → R-ledger R33 (Accumulation/Fuck-Off Date) · _canonical_
+  - sig: R33 — healthcare OFF in accumulation, ON at work-stop; streams ARE the gate
+  - R33: healthcare modeling is off during accumulation (employer plan) and switches on at the work-stop date under test; the engine's gate is the biological-65 split + a per-year premium stream with NO retirement boundary in the overlay — the date-search constructs per-candidate cost streams (zeros for working years [0,Y), entered age-anchored values from Y; Medicare/IRMAA onset per-person = max(65th sim-year, work-stop); plus a conservatively-high working-year IRMAA-MAGI additive override). The streams ARE the gate — caller-side work, not an engine knob.
+  - [dedup] R33 requirement canonical in product R-ledger; R24/R26/R40.4 cite it; architecture (healthcare overlay) holds the mechanics pointer; roadmap holds status pointer.
+- **`docs/product.md#61`** · `requirement` · → R-ledger R35 (Accumulation/Fuck-Off Date) · _canonical_
+  - sig: R35 — complete ~5-minute guided account-level setup, ONE intake flow
+  - R35: the first answer comes from a complete ~5-minute guided account-level setup (honest axis is data availability) — per-person name/DOB/salary/SS estimate+claim age, then each account's type/holdings/value/cost-basis/annual-contribution+employer-match; this is ONE intake flow for both states (the account data IS the already-retired user's product), only the lead answer is state-adaptive (R29); the retirement-spend figure survives as a collected input (v1 degenerate budget); single entry pass that surfaces-and-sharpens; provisional/final distinction applies to both lead answers (a half-entered portfolio reads falsely off-track).
+  - [dedup] R35 requirement canonical in product R-ledger; R5/R20/R29/R37, success criteria, roadmap (U5) hold pointers. Supersedes-v2 framing dropped.
+  - [reframe] Strip the 'SUPERSEDES the v2 single-total-spend on-ramp / what is replaced' supersession framing. Present-tense: the first answer comes from one ~5-minute guided account-level setup serving both user states; the retirement-spend figure is a collected input (the v1 degenerate budget the two R27 dates coincide on); the itemized budget arrives at the Controls act.
+- **`docs/product.md#62`** · `requirement` · → R-ledger R36 (Accumulation/Fuck-Off Date) · _canonical_
+  - sig: R36 — NO LIVE PRICE LOOKUP, ticker is a label
+  - R36: account values are user-entered with no live price lookup (consistent with the no-runtime-external-fetch architecture — strict CSP connect-src 'self', offline-first PWA, deterministic replay); a holding's ticker/CUSIP is a label + asset-class hint, never a live-price key.
+  - [dedup] R36 requirement canonical in product R-ledger; R37, scope boundaries, CLAUDE.md (CSP), architecture (CSP/no-fetch) hold pointers.
+- **`docs/product.md#63`** · `requirement` · → R-ledger R37 (Accumulation/Fuck-Off Date) · _canonical_
+  - sig: R37 — per-ticker holdings collapse to household blend, no asset-location
+  - R37: because the engine does no asset-location (one shared draw), per-ticker holdings collapse to a single household stock/bond/cash blend; ticker entry auto-derives that blend (no 'guess your allocation' question) and is the 'it sees my real portfolio' trust moment; taxable cost basis is captured per taxable account not per lot (engine consumes one aggregate initialTaxableBasis); tickers map to asset class via a bundled common-instrument table with manual classification for unrecognized (offline-safe).
+  - [dedup] R37 requirement canonical in product R-ledger; R35/R36, CLAUDE.md (no asset-location/shared draw), architecture hold pointers; the open portfolio ATC calls route to decisions/portfolio-holdings.
+- **`docs/product.md#64`** · `requirement` · → R-ledger R38 (Accumulation/Fuck-Off Date) · _canonical_
+  - sig: R38 — HSA contributions=accumulation, HSA spend=decumulation
+  - R38 (HSA phase boundary): HSA contributions belong to the accumulation phase (R30-R34); HSA spend — the MAGI-invisible qualified-spend lever and the post-65 non-qualified laundering rule — stays in decumulation; each lands in its own phase.
+  - [dedup] R38 requirement canonical in product R-ledger; R24 (HSA bucket), R30-R34, architecture (HSA overlay), roadmap hold pointers.
+- **`docs/product.md#65`** · `requirement` · → R-ledger R39 (Accumulation/Fuck-Off Date) · _canonical_
+  - sig: R39 — all R35 + healthcare fields are PII, inherit master posture
+  - R39 (data safety): every R35 field plus pre-65 ACA inputs (SLCSP + enrolled-plan premium), the IRMAA-MAGI seed, the working-year income figure, the per-person work-status/retirement-stop-age field, and the per-year out-of-pocket-medical stream is financial PII that inherits the master posture unchanged (encrypted-at-rest + guarded access R16, survivor recovery R17, export/backup R18); new fields extend the persisted Scenario schema additively (schemaVersion bump on the migration ladder), live only inside the encrypted record, and the field list is not the closed PII set.
+  - [dedup] R39 requirement canonical in product R-ledger; R16/R17/R18/R35/R40.10, architecture (store/migration ladder) hold pointers.
+- **`docs/product.md#66`** · `requirement` · → R-ledger R40 (Other income) · _reframe_
+  - sig: R40 — per-person ongoing non-earned income stream
+  - R40: model a generic per-person ongoing non-earned income stream (type ∈ {pension, rental, alimony, annuity, other}) that keeps paying after work stops; the engine today knows only earnedIncomeReal (stops at retirement) and Social Security and has no concept of ongoing non-earned income — for a household that has one, the gap is the difference between defensibly-conservative and confidently-wrong-optimistic.
+  - [dedup] R40 requirement canonical in product R-ledger (folded into the kind-organized ledger, not a trailing block); features/other-income.md dissolves — build steps go to plans/2-first-answer, the 9 KTDs to decisions/other-income-r40; roadmap holds status pointer.
+  - [reframe] Honor fossilNote: R40 no longer sits as a separate trailing 'other income' block appended after R39 because it was added later — in the kind-organized rewrite its sub-requirements live with the rest of the R-ledger. The fact (model a per-person ongoing non-earned income stream) survives present-tense as a first-class ledger requirement.
+- **`docs/product.md#67`** · `requirement` · → R-ledger R40.1-R40.3 (Other income) · _reframe_
+  - sig: R40.1-R40.3 stream fields + pre-deflated real-$ vectors
+  - R40.1-R40.3: generic per-person stream (type seeds defaults only); each stream carries gross annualRealToday, startAge, optional endAge, a COLA mode ∈ {real-flat, nominal-flat, fixed-pct}(+colaPct), a taxableFraction ∈ [0,1] (default 1), and a survivorPct ∈ [0,1]; each stream compiles to pre-deflated real-$ per-year vectors (engine is a dumb consumer; survivor-% pre-applied as a second variant at compile time).
+  - [dedup] Requirement-form fields canonical in product R-ledger (R40.1-R40.3); the compile-to-vectors mechanics also belong in architecture as the stream contract; features/other-income.md dissolves (build steps → plans/2-first-answer).
+  - [reframe] Honor fossilNote (late-added block): fold these sub-requirements into the main kind-organized R-ledger rather than a trailing R40 block. Fact survives present-tense as the stream's field schema and pre-deflated-vector contract.
+- **`docs/product.md#68`** · `requirement` · → R-ledger R40.4-R40.6 (Other income) · _reframe_
+  - sig: R40.4-R40.6 SS-§86/ACA-MAGI/IRMAA move atomically; reduce-to-spine byte-identity
+  - R40.4-R40.6: the taxable portion enters ordinary income so SS-§86 provisional, ACA-MAGI, and IRMAA-MAGI all move consistently in one atomic change (including the already-receiving × working-year IRMAA reconciliation); survivor continuation is realized at the owner's sampled death in the path loop, selecting the pre-weighted survivor variant, locked at the death offset, never ramped; a household with no streams is byte-identical (same seed) to the current Trinity/Bengen spine.
+  - [dedup] Requirement-form canonical in product R-ledger; the atomic-MAGI-move and reduce-to-spine byte-identity are engine invariants that also belong in architecture (R33 IRMAA override, R34 reduce-to-spine pointers); features/other-income.md dissolves.
+  - [reframe] Honor fossilNote (late-added block): fold into the main R-ledger. Fact survives present-tense — taxable other-income moves SS/ACA/IRMAA atomically; survivor continuation locks at sampled death; no-stream households reduce byte-identically to the Trinity/Bengen spine.
+- **`docs/product.md#69`** · `requirement` · → R-ledger R40.7-R40.9 (Other income) · _reframe_
+  - sig: R40.7-R40.9 opt-in intake, no-safe-default survivor-% + alimony date prompts
+  - R40.7-R40.9: intake is opt-in off the 5-minute guided path, but the no-safe-default fields surface on the guided path regardless — the survivor-% prompt for any continuing stream (alimony is survivorPct=0 by law) and the alimony post-2018 agreement-date; ship the 'other' catch-all alongside the four named types; add an R40 requirements entry amending the locked R1-R39 contract.
+  - [dedup] Requirement-form canonical in product R-ledger; the intake build steps go to plans/2-first-answer (features/other-income.md dissolves); R35 (guided path) holds a pointer.
+  - [reframe] Honor fossilNote (late-added block): fold into the main R-ledger; drop the 'add an R40 entry amending the locked R1-R39 contract' as changelog framing — present-tense the R-ledger simply includes R40. Surviving fact: opt-in intake with the survivor-% and alimony-date no-safe-default prompts always on the guided path, and the 'other' catch-all ships.
+- **`docs/product.md#70`** · `requirement` · → R-ledger R40.10 (Other income) · _reframe_
+  - sig: R40.10 externally-derived goldens, finiteness-first, referenceData.ts display hints
+  - R40.10: all correctness goldens are externally derived; intake/restore validation is finiteness-first then range; engine-consumed figures obey the constants discipline; user-facing display-hint figures live in referenceData.ts, never @engine/constants.
+  - [dedup] Requirement-form canonical in product R-ledger; the constants/externally-derived-fixtures discipline is an architecture invariant (pointer); R19 (finiteness-first), CLAUDE.md (DND 012) hold pointers; features/other-income.md dissolves.
+  - [reframe] Honor fossilNote (late-added block): fold into the main R-ledger. Fact survives present-tense — goldens are externally derived, validation is finiteness-first then range, engine figures obey constants discipline, display hints live in referenceData.ts not @engine/constants.
+- **`docs/product.md#80`** · `scope-boundary` · → §7 Scope boundaries · _canonical_
+  - sig: scope: NO account aggregation / Plaid in MVP
+  - Scope boundary: no account aggregation / Plaid in MVP — manual-first, revisit only when 'crazily hardened.'
+  - [dedup] Product scope boundary canonical in product; R36 and roadmap hold pointers.
+- **`docs/product.md#81`** · `scope-boundary` · → §7 Scope boundaries · _canonical_
+  - sig: scope: NO budgeting / transaction tracking; budget is forward-looking
+  - Scope boundary: no budgeting / transaction tracking / spend categorization as a tracker — the budget builder (R20) is forward-looking planning input, not back-looking expense tracking.
+  - [dedup] Product scope boundary canonical in product; R20 holds a pointer.
+- **`docs/product.md#82`** · `scope-boundary` · → §7 Scope boundaries (tax IN/OUT line) · _canonical_
+  - sig: the tax IN/OUT line — IN iff sequencing/conversion can move it
+  - The tax IN/OUT line: a tax/health effect is IN iff withdrawal sequencing or a Roth conversion can move it — IN: ordinary brackets, standard deduction, RMDs, SS-taxation, survivor MFJ→single switch, ACA-PTC (pre-65), IRMAA (post-65), cap-gains/qualified-dividend stacking; OUT-but-disclosed: NIIT, state tax, ACA beyond the premium-credit; later (chapter two): SS-claiming-age, continuous optimizer, die-with-zero, asset-location.
+  - [dedup] The tax IN/OUT scope line is canonical in product scope boundaries; D6, R24, §5 chapter two, architecture, roadmap hold pointers.
+- **`docs/product.md#83`** · `scope-boundary` · → §7 Scope boundaries · _canonical_
+  - sig: scope: spending shape user-set, bounded solver search, no aggregation surface
+  - Scope boundary: spending shape is user-set not solver-optimized (R20) — the solver optimizes funding not how you live; the MVP solver search is bounded (a handful of named drawdown policies × a conversion grid, not a full continuous optimizer); no live net-worth / portfolio aggregation surface in MVP.
+  - [dedup] Product scope boundary canonical in product; D4, R20, R21, carried landmines hold pointers.
+- **`docs/product.md#84`** · `scope-boundary` · → §7 Scope boundaries (accumulation-side) · _canonical_
+  - sig: accumulation scope: NOT a decades-out FIRE calculator, working-year withdrawals clamped to zero
+  - Accumulation-side scope boundaries: not a decades-out FIRE / 'are you on track' calculator (bounded to a near-retirement on-ramp); v1 does not optimize accumulation; no live market data; no accumulation-phase income-tax engine — during the runway the household lives on salary and working-year portfolio withdrawals are clamped to zero while a living worker remains (no save-and-draw double-counting); no raise/promotion/career modeling (flat-real, R31); the retired-but-still-contributing HSA-MAGI edge is bounded + disclosed not modeled (empty-overlap invariant is the guard).
+  - [dedup] Product accumulation scope boundary canonical in product; §3 thesis evolution, R31/R32/R34/R36/R38, architecture, roadmap hold pointers; rationale in decisions/accumulation-fuck-off-date.
+- **`docs/product.md#85`** · `scope-boundary` · → §7 Scope boundaries (R40 income-side) · _reframe_
+  - sig: R40 income scope: IDENTITY FENCE, not a FIRE lever or general ledger
+  - R40 income-side scope boundaries: not a FIRE lever and not a general income ledger — the 'other' catch-all inherits the identity fence ('a real driver receives it and the answer depends on it' or it doesn't ship; dividends/1099/crypto out unless a driver has one); OUT-but-disclosed with directions named: rental sale events (optimistic), net-rental real-rise (optimistic, compounds at the ACA cliff), annuity/pension basis-recovery (optimistic-opt-in), alimony payer-death termination (optimistic), compounding-only COLA (optimistic side), survivor-specific end gate (forward landmine), NIIT, state-level alimony decoupling, annuity LIFO.
+  - [dedup] The R40 income-side scope boundary stays a product scope boundary (canonical in product); R40 holds a pointer and the deeper KTD rationale lives in decisions/other-income-r40 (features/other-income.md dissolves).
+  - [reframe] Honor fossilNote (tied to the late-added R40 block): fold the R40 income-side scope boundary into the product §7 scope-boundaries section alongside the other scope lines rather than a trailing R40 appendix. Fact survives present-tense — the identity fence + the named OUT-but-disclosed simplifications with their directions.
+- **`docs/architecture.md#32`** · `requirement` · → R-ledger R19 (numeric gate requirement) · _canonical_
+  - sig: degenerate inputs honest extreme not crash
+  - Degenerate-but-coherent inputs return an honest extreme or the defined indeterminate state, never a crash (a $0 portfolio with positive spending is the honest '0 of N'; an accumulation construct with initialPortfolio==0 is rejected as indeterminate); each overlay throw has a validateParams mirror (two-layer R19).
+  - [dedup] Kind is requirement → product R-ledger. The numeric-mechanics half is canonical in architecture §6; this is the product-level requirement statement (R19) that the gate satisfies — product owns the R, architecture owns the contract.
+- **`docs/plans/1-engine.md#13`** · `requirement` · → R-ledger R13 · _pointer_
+  - sig: static honest-limits disclaimer R13
+  - R13: a static honest-limits disclaimer ('informational and educational — not legal/tax/investment advice') ships in the app shell as a U0 constant OUTSIDE the copyGuard's input, kept on honesty grounds.
+  - [dedup] R13 canonical in product R-ledger; the U0 build delivery (where the disclaimer ships) stays as a build note in the plan.
+- **`docs/plans/1-engine.md#32`** · `decision-rationale` · → locked decision — tax fidelity · _canonical_
+  - sig: no tax-blind arm sign-inverted delta
+  - U2: both candidate arms run at identical tax fidelity — there is NO tax-blind arm; a tax-blind delta is sign-inverted (it sees only the cash drain of conversion tax, so every conversion looks worse); this unit exists to prevent that.
+  - [dedup] The both-arms-tax-aware decision is canonical in product (locked decision); architecture carries the mechanical why.
+- **`docs/plans/2-first-answer.md#1`** · `decision-rationale` · → R29 / R35 product model · _canonical_
+  - sig: first answer is STATE-ADAPTIVE (R29/R35)
+  - The first answer is state-adaptive: one intake flow, two leads — still-working households lead with the fuck-off date (floor + lifestyle), already-retired lead with the spine confidence statement; spine is beat one, strategy recommendation beat two (Act 4), itemized budget is the Act 3 deepening.
+  - [dedup] Product canonical (R29/R35 product model); roadmap keeps the act sequencing as a pointer.
+- **`docs/plans/2-first-answer.md#17`** · `requirement` · → R12 — copyGuard categories · _canonical_
+  - sig: copyGuard CATEGORIES not five literals
+  - copyGuard is categories not literals: (1) imperative-mood advice verbs (should/recommend/advise/must/need to/consider/smartest|best move); (2) advice-implying superlatives; (3) false-certainty verbs (guaranteed/ensures/locks in/you will save).
+  - [dedup] Product R12 is canonical for the requirement (no-advice copy); the copyGuard category/verb-list MECHANISM is canonical in architecture §copyGuard (or the plans/2 copyGuard build section) — matching the #18/#19 requirement-vs-mechanism split.
+  - [fixed:warn] Added [dedup] splitting R12 requirement from copyGuard mechanism.
+- **`docs/plans/2-first-answer.md#18`** · `requirement` · → R12 — slot discipline / certainty hygiene · _canonical_
+  - sig: certainty-hygiene decidable by SLOT DISCIPLINE
+  - copyGuard certainty-hygiene is made decidable by slot discipline: quantitative content appears only through typed slots (~$X, ~N years, 'X of 10'), with an allowlist for non-claim numerics (ages, SS claim ages 62-70, question counts, denominator 10); RMD age is never a copy literal — engine-owned/birth-year-derived (72/73/75) via a slot; src/viz stays string-free.
+  - [dedup] Product canonical for the requirement; the RMD-age constant detail points to architecture §8 constants.
+- **`docs/plans/2-first-answer.md#19`** · `decision-rationale` · → R13 — honest-limits note / tone-lint · _canonical_
+  - sig: catastrophe-lexicon TONE-LINT, not a regulatory shield
+  - The catastrophe-lexicon check on survivor copy is a tone-lint that aids the N=1 cold-read (the human gate is the real judge), explicitly not a regulatory shield; surface-scoped — the static R13 honest-limits note ('validate big irreversible moves with a pro') is a U0 constant outside the guard's input.
+  - [dedup] Product canonical (R13); copyGuard mechanics point to architecture §copyGuard.
+- **`docs/plans/2-first-answer.md#22`** · `decision-rationale` · → R2 — Kitces framing direction · _canonical_
+  - sig: outcome-first positive, action-first negative (Kitces R2)
+  - Framing direction is a copy rule the cold-read evaluates: outcome-first for positive states, action-first for negative (count subordinate to the dollar move — Kitces probability-of-adjustment, R2); the 'more than 9 of 10' top-of-scale render is owned by the headline render and attaches to both on-track and over-funded.
+  - [dedup] Product canonical (R2/Kitces); U7 per-state grammar (item 61) and Contract 5 are pointers.
+- **`docs/plans/2-first-answer.md#26`** · `requirement` · → R35 — account-level guided setup · _canonical_
+  - sig: ~5-min account-level guided setup (R35)
+  - U5/D1 goal: the ~5-min account-level guided setup (R35), one flow for both states — per person (name, DOB, work-status + stop age if retired, salary, SS estimate + claim age); household preamble collects the retirement-spend figure before the account loop; then each account (type→bucket, holdings ticker→blend, value, basis, annual contribution + employer match), surfacing the answer during the flow, single entry pass.
+  - [dedup] Product canonical (R35 requirement); roadmap requirement→unit trace and the U5/D1 build steps (plans/2) carry pointers.
+- **`docs/plans/2-first-answer.md#48`** · `requirement` · → R2 / R4 / R23 — viz requirements · _canonical_
+  - sig: U6 goal, SVG band + colorblind-safe two-series encoding
+  - U6 goal: hand-rolled SVG + motion viz primitives — a single-distribution confidence band and the reusable colorblind-safe two-series encoding, legible on mobile, never chart-heavy, never color-dependent; the TwoFutures component lands in Act 3 with its real consumer (the Roth control), this unit ships the band + encoding tokens; requirements R2 (no color-alone), R4 (range on demand), R23-substrate (two futures legible).
+  - [dedup] Product canonical for the R2/R4/R23 requirements; roadmap (U6 unit) and the plans/2 U6 build section carry pointers.
+- **`docs/plans/2-first-answer.md#77`** · `requirement` · → R26/R27/R28/R29/R11/R12 — the date model · _canonical_
+  - sig: D2 goal, lead with the date, two confidence-graded dates
+  - D2 goal: the not-yet-retired magic moment — lead with the date (two confidence-graded dates, coincident until the budget splits them), expressing the date↔confidence tradeoff in the calm advisor voice; for an already-retired user the spine confidence statement stays the lead (R29); requirements R26 (product framing), R27 (two dates), R28 (confidence-graded; tradeoff; re-grade on override), R29 (state-adaptive framing, same calm voice), R11 (calm never nagging), R12 (probabilistic framing, hedge on the headline).
+  - [dedup] Product canonical for the R26-R29/R11/R12 requirements; roadmap (D2 unit) + the plans/2 D2 build section carry pointers.
+- **`docs/plans/2-first-answer.md#84`** · `requirement` · → R40 — other income in retirement · _canonical_
+  - sig: R40 other income, teacher's-pension survivor is most dangerous number
+  - R40 — other income in retirement (a generic per-person ongoing non-earned stream: pension/rental/alimony/annuity/other) threads into D1 intake + the engine's stream consumer, build-ready zero code; the intake is opt-in off the 5-minute path, but the no-safe-default fields surface regardless of the collapsed advanced tier (the survivor-% prompt for any continuing stream; the alimony post-2018 agreement-date); the teacher's-pension survivor figure is the single most dangerous number in the app — its survivor-% and COLA treatment are the whole widow's picture.
+  - [dedup] features/other-income.md DISSOLVES: the R40 requirement is canonical in product; the sub-requirements R40.1-R40.10 + conservative-direction discipline become the 9 KTDs in decisions/other-income-r40; the D1 build thread lives in plans/2; roadmap holds next-build status. No row targets features/.
+  - [reframe] Fossil names features/other-income.md as the home for full content; that doc dissolves — route the requirement to product R40, the 9 KTDs to decisions/other-income-r40, and the D1 intake thread to plans/2-first-answer.
+- **`docs/plans/3-controls.md#3`** · `invariant` · → §2 cardinal rule / R25 · _pointer_
+  - sig: calm-but-wrong is the sin; hedge required, R25
+  - The cardinal honesty rule rises in Act 3: every money-moving readout wears its hedge; 'just for friends' never excuses confidently-wrong (R25).
+  - [dedup] Q5: canonical full cardinal-rule statement is product §2; README keeps its plain-language version (canonical for its audience); the plan and CLAUDE.md copies become pointers.
+- **`docs/plans/3-controls.md#11`** · `status-as-built` · → Locked decisions / R25 · _canonical_
+  - sig: securities/IA attorney-gate lapsed, hedge still required
+  - The securities/IA attorney-gate has lapsed (personal-tool reset); the Roth categorical framing is now an honesty/calm choice, not a legal shield — the hedge is required because the readout moves real money (R25).
+  - [dedup] Product owns locked decisions/R25; the plan's contract-#4 mention becomes a pointer.
+  - [reframe] Forward-only: state present-tense that the attorney-gate is not a live gate and nothing is blocked on it, not as a story of the reset.
+- **`docs/plans/4-recommendation.md#1`** · `requirement` · → R-ledger R9, R21, R23 · _canonical_
+  - sig: recommend-SECOND beat
+  - Act 4 delivers the recommend-second beat: a confidence-graded strategy over two coupled controls (withdrawal sequencing + Roth conversion) funding the user's budget toward a chosen goal, selected by a CRN solver under a lexicographic objective, confidence on a held-out seed-set, surfaced with hedge + retained runner-up + disclosed omissions.
+  - [dedup] Product R-ledger (R9/R21/R23) is canonical for the requirement; roadmap holds the requirement->unit trace as a pointer; this plan goal restates it.
+- **`docs/plans/4-recommendation.md#9`** · `invariant` · → §4-§5 R21 lexicographic objective + lever set · _canonical_
+  - sig: objective IS the headline metric, lexicographic
+  - Objective is lexicographic (R21): Tier 1 = survival-floor 'X of 10'; Tier 2 = user-picked surplus statistic the headline shows directly — PAY LESS TAX = lifetime tax paid; LEAVE MORE = after-tax-to-heirs bequest (first-order §1014/IRD, disclosed heir bracket), never gross; LIVE BIGGER NOW = held-out confidence the fixed front-loaded spending shape holds, never a spend-amount the solver raises; the quantity maximized is the quantity shown; selection ties use the CRN-difference tolerance, B carries only the displayed number + grade; spending shape is never an objective term.
+  - [dedup] Product §4-§5 (R21) is canonical for the objective + lever set; architecture holds the engine-contract face; U15/U16 Approach copies are pointers.
+- **`docs/plans/4-recommendation.md#11`** · `invariant` · → R4, R10, R11, R21 (recommend-second flow + pivot) · _canonical_
+  - sig: 10/10 -> surplus headline pivot
+  - Recommend-second flow + the survival-given pivot: the spine confidence answer is the first beat (never overwritten); the recommendation is the immediate second beat with comparative reasoning one tap down (R4), calm and invited never nagging (R11); when survival is a given (Tier-1 maxed across futures) the headline honestly switches to the chosen surplus metric with the active metric always rendered explicitly so the user never silently re-bases.
+  - [dedup] Product R4/R10/R11/R21 is canonical for the product behavior; U16 Approach is the build-side pointer.
+- **`docs/plans/4-recommendation.md#12`** · `invariant` · → R12, R22, R24 (hedge + disclosed-omission rules) · _canonical_
+  - sig: hedge-on-headline lint + disclosed omissions
+  - Every recommendation grades its own confidence and the hedge rides the headline (R22, never certainty-on-top/caveats-below); copyGuard's require-the-hedge lint extends to the recommendation headline + grade, certainty verbs stay banned (R12), all strings route through copy.ts; ACA-PTC + IRMAA are IN the model, NIIT + state tax are OUT-but-disclosed adjacent to the delta; the §1014/IRD step-up is lever-sensitive so 'leave more' uses the after-tax-to-heirs bequest with the heir bracket as a disclosed R7-editable assumption; full-fidelity estate stays chapter-two.
+  - [dedup] Product R12/R22/R24 is canonical for the honesty requirements; U16 Approach is the build-side pointer.
+- **`docs/plans/4-recommendation.md#13`** · `invariant` · → locked decisions — spending-not-a-lever + stale-rec inversion · _canonical_
+  - sig: spending never solver-recommended; stale-rec inverts
+  - (a) The solver's only controls are the two funding levers (drawdown policies x conversion grid); budget/spending shape is user-set input never moved — a tool never recommends a lifestyle. (b) A saved recommendation is a real executed action so its staleness rule INVERTS the spine's: a stale saved rec always re-solves under current fixtures, copy reads 'the action we recommended may no longer be advised' not 'your number drifted', re-verifying ACA status is part of it; a saved manual-control what-if keeps the spine's re-present-under-saved-vintage rule.
+  - [dedup] Product holds the locked-decision face; U15/U17 Approach are same-doc build pointers.
+- **`docs/plans/4-recommendation.md#41`** · `decision-rationale` · → §4 D4 — lever set lock · _pointer_
+  - sig: bounded named search space, not continuous
+  - U15 search space is bounded and named (R-locked, product §4 D4): named drawdown policies {proportional, taxable-first, pre-tax-first, bracket-fill} x a conversion grid {amount x years}, evaluated as the cross-product; grid resolution is a bounded set, exact resolution deferred to implementation; this is NOT a continuous optimizer (continuous optimizer + die-with-zero solver + SS-claiming-age are explicitly chapter-two).
+  - [dedup] Product §4 D4 is canonical for the lever-set lock; this U15 build detail points to it (grid-resolution-deferred is a build note that stays in the plan).
+- **`docs/plans/4-recommendation.md#67`** · `requirement` · → R-ledger R7, R10d · _canonical_
+  - sig: every input + reasoning visible/editable, user stays pilot
+  - U16: every input + reasoning visible/editable; the user stays pilot (R7, R10d) — the recommendation exposes inputs AND reasoning for trust/approval; the user tunes/overrides/re-picks the goal via GoalPicker (reusing the Act-3 sharpen loop + manual-control surfaces); on a re-pick the solve re-runs (request-epoch) and both futures update; a GoalPicker with no goal yet uses an explicit unset sentinel (burned/062), never a silent default goal.
+  - [dedup] Product R7/R10d canonical for the requirement; U15 goal precondition is the build-side pointer (same-doc).
+- **`docs/plans/4-recommendation.md#70`** · `requirement` · → R-ledger R13 · _canonical_
+  - sig: optional honest-limits note (validate with a pro)
+  - U16 optional honest-limits note (R13): the 'this is a model — validate big, irreversible moves with a pro' note is available adjacent to the recommendation on honesty grounds (not a Terms requirement), calm and invited not a nagging gate, and lives outside the require-the-hedge input the same way the static disclaimer is surface-scoped.
+  - [dedup] Product R13 canonical for the requirement; this is the U16 build face (the note's placement is a build detail that stays in the plan).
+- **`docs/plans/features/social-security.md#48`** · `requirement` · → R-ledger (SS intake requirement) · _reframe_
+  - sig: D1 intake: 'monthly benefit at FRA (67)', never 'PIA'
+  - §9 D1 intake: the paired SS question swaps the amount CurrencyField for a PIA CurrencyField labelled 'estimated monthly benefit at full retirement age (67)' (never the word 'PIA'); claim-age IntegerField stays (62–70); help copy gains the stop-early instruction — open the mySSA estimator, set future earnings to $0 at your stop age, read the age-67 figure, because the default statement number assumes continued earnings and overstates for an early-stopper.
+  - [dedup] Product R-ledger is canonical for the intake requirement; the build (questions.tsx/copy.ts) lives in plans/2-first-answer; the verified statement-input row points to research.
+  - [reframe] Surviving fact: the SS intake asks 'estimated monthly benefit at FRA (67)' (never 'PIA') + claim age 62–70, with stop-early estimator routing. Present-tense as a product requirement; the §9 anchor and copy-fence build land in plans/2.
+- **`docs/plans/features/other-income.md#1`** · `scope-boundary` · → R-ledger R40 (Overview / scope) · _reframe_
+  - sig: earnedIncomeReal stops at retirement, no ongoing non-earned
+  - Engine models only earnedIncomeReal (stops at retirement) + Social Security; R40 adds a generic per-person ongoing income stream.
+  - [dedup] Canonical in product R40 entry; supersedes the 'two income streams' premise that must be grepped/edited (insight 018 zero-removals).
+  - [reframe] Surviving fact: before R40 the engine had only earned income + SS; R40 adds ongoing non-earned income. Frame present-tense as the R40 scope, not as 'we changed the two-stream premise.'
+- **`docs/plans/features/other-income.md#2`** · `requirement` · → R-ledger R40 · _canonical_
+  - sig: generic per-person income stream opt-in
+  - R40 adds a generic per-person income stream, opt-in off the 5-min path, compiled to real-$ gross+taxable vectors in two death-state variants, integrated at seams 1 & 2, survivor continuation at owner's sampled death.
+  - [dedup] Canonical R40 statement in product §7; plan build steps point here.
+- **`docs/plans/features/other-income.md#4`** · `scope-boundary` · → Scope Boundaries (R40 income-side) · _reframe_
+  - sig: R40 not a FIRE calculator, identity bound
+  - R40 is new scope absent from R1-R39; it fits the north-star (honest answer for a real couple, not a FIRE calculator) because these are income streams a household already receives; the identity bound keeps it there.
+  - [dedup] Canonical in product Scope Boundaries; identity-bound rationale also in decisions/other-income-r40.
+  - [reframe] Surviving fact: R40 models already-received income, not early-retirement engineering; the identity bound is the fence. Drop 'amends the locked contract' framing — state it as the product scope.
+- **`docs/plans/features/other-income.md#6`** · `requirement` · → R-ledger R40.1 · _canonical_
+  - sig: R40.1 type pension rental alimony annuity other
+  - R40.1 — model a generic per-person ongoing income stream with type in {pension,rental,alimony,annuity,other}; the type seeds defaults only.
+  - [dedup] Canonical in product §7; plan units reference it.
+- **`docs/plans/features/other-income.md#7`** · `requirement` · → R-ledger R40.2 · _canonical_
+  - sig: R40.2 annualRealToday startAge colaMode survivorPct
+  - R40.2 — each stream carries gross annualRealToday, startAge, optional endAge, colaMode in {real-flat,nominal-flat,fixed-pct} (+colaPct), taxableFraction in [0,1] (default 1), survivorPct in [0,1].
+  - [dedup] Canonical in product §7.
+- **`docs/plans/features/other-income.md#8`** · `requirement` · → R-ledger R40.3 · _canonical_
+  - sig: R40.3 compile pre-deflated real-$ vectors, engine dumb consumer
+  - R40.3 — compile each stream to pre-deflated real-$ per-year vectors; engine is a dumb consumer; survivor-% pre-applied as a second variant at compile time (KTD-4).
+  - [dedup] Canonical in product §7.
+- **`docs/plans/features/other-income.md#9`** · `requirement` · → R-ledger R40.4 · _canonical_
+  - sig: R40.4 SS-§86 ACA-MAGI IRMAA-MAGI one atomic change
+  - R40.4 — the taxable portion enters ordinary income so SS-§86 provisional, ACA-MAGI, IRMAA-MAGI all move consistently in one atomic change, including the already-receiving × working-year IRMAA reconciliation (KTD-9).
+  - [dedup] Canonical in product §7; mechanics detail homes in architecture §7 + decisions/other-income-r40 KTD-9.
+- **`docs/plans/features/other-income.md#10`** · `requirement` · → R-ledger R40.5 · _canonical_
+  - sig: R40.5 survivor realized at sampled death, locked never ramped
+  - R40.5 — survivor continuation realized at owner's sampled death in the path loop, selecting the pre-weighted survivor variant, locked at the death offset, never ramped (KTD-4).
+  - [dedup] Canonical in product §7.
+- **`docs/plans/features/other-income.md#12`** · `requirement` · → R-ledger R40.7 · _canonical_
+  - sig: R40.7 opt-in survivor-% and alimony-date no-safe-default
+  - R40.7 — intake opt-in off the 5-min path; no-safe-default fields surface on the guided path regardless of collapsed tier: survivor-% for any continuing stream (alimony=0 by law) and the post-2018 alimony agreement-date.
+  - [dedup] Canonical in product §7; Unit 4 build steps in plans/2-first-answer reference it.
+- **`docs/plans/features/other-income.md#13`** · `requirement` · → R-ledger R40.8 / R40.9 · _canonical_
+  - sig: R40.8 ship 'other' catch-all; R40.9 add R40 entry
+  - R40.8 — ship the 'other' catch-all alongside the four named types; R40.9 — add an R40 requirements entry amending the locked contract.
+  - [dedup] Canonical in product §7.
+  - [reframe] Mirror product.md#69 and features#70: present-tense it — the product §7 R-ledger simply includes R40.8 (the 'other' catch-all ships) and R40.9 (the R40 entry); drop the 'amending the locked contract' changelog framing. Surviving fact is the entry's existence and the catch-all, not the act of amending.
+  - [fixed:warn] Added [reframe] stripping 'amending locked contract' changelog framing.
+- **`docs/plans/features/other-income.md#14`** · `requirement` · → R-ledger R40.10 · _canonical_
+  - sig: R40.10 externally-derived goldens, referenceData not constants
+  - R40.10 — correctness goldens externally derived (DND/012); intake/restore validation finiteness-first then range; engine-consumed figures obey constants discipline; user-facing display-hint figures live in referenceData.ts, never @engine/constants.
+  - [dedup] One R40.x = one canonical row: the product.md#67–70 rows are the existing R-ledger entry being amended (canonical author); this features/other-income.md#6–14 content is the dissolving-doc source folded INTO that entry — MERGE into the product.md R40 entry, not a second write. Constants discipline canonical in architecture §8 + CLAUDE.md (pointers).
+  - [fixed:warn] Demoted to merge-source; product.md#67–70 is canonical author.
+- **`docs/plans/features/other-income.md#17`** · `scope-boundary` · → Scope Boundaries (R40 identity bound) · _canonical_
+  - sig: identity bound: not FIRE, not general income ledger
+  - Identity bound: R40 is not a FIRE lever nor a general income ledger; a new type must clear 'a real driver receives it and the answer depends on it'; the 'other' catch-all inherits that fence; dividends/1099/crypto are OUT unless a driver has one.
+  - [dedup] Canonical in product Scope Boundaries.
+- **`docs/plans/features/other-income.md#70`** · `requirement` · → R-ledger R40.9 (the entry's required contents) · _reframe_
+  - sig: Unit 5 R40 entry contract amendment, zero-removals grep
+  - Unit 5 — the R40 requirements entry (the contract amendment, R40.9; deps Units 1-4 soft, sequence last). Files: docs/product.md §7. Approach: ADDITIVE amendment (insight 018 zero-removals) — grep the superseded premise ('two income streams', 'no ongoing non-earned income', 'income stops at retirement'), edit only where genuinely superseded; the entry states the generic per-person stream, the five types, the two-variant compilation, the two-explicit-edit MAGI integration (KTD-1) + the IRMAA structural decouple (KTD-9), survivor continuation at death (KTD-4), the OUT list WITH DIRECTIONS NAMED, the provenance corrections, the U8 obligation (a checkIncomeStreamV3 codec validator).
+  - [dedup] The R40 entry contents are canonical in product §7; the build task of authoring it is a roadmap unit; insight 018 (no-move) carries the zero-removals lesson.
+  - [reframe] Surviving fact: the product §7 R40 entry must state the generic per-person stream, five types, two-variant compilation, KTD-1 MAGI integration + KTD-9 IRMAA decouple, KTD-4 survivor continuation, the OUT list with directions, provenance corrections, and the U8 checkIncomeStreamV3 obligation — added by additive zero-removals amendment. Present-tense required contents.
+- **`docs/plans/features/other-income.md#72`** · `build-detail-or-KTD` · → Carried landmines (R40 forward into P3/P4) · _reframe_
+  - sig: forward landmines: bracket-fill must net income; IRMAA channel owned by engine
+  - Forward landmines (two): (1) bracket-fill/Roth-conversion sizing — income's taxable[t] consumes bracket-fill headroom, so the Controls/Recommendation acts (sequencing + conversion) must NET it before sizing conversions or it over-converts; (2) the working-year IRMAA channel is re-specified by KTD-9 (wages/non-modeled only) — a future feed must respect that the engine owns modeled streams' IRMAA contribution.
+  - [dedup] Carried landmines canonical in product; KTD-9 (decisions/other-income-r40) + roadmap P3/P4 plans + sequencing.ts carry pointers.
+  - [reframe] Surviving fact: two forward landmines — sequencing/conversion sizing must net income's taxable before sizing (else over-converts); future IRMAA feeds must respect that the engine owns modeled-stream IRMAA contributions. Present-tense carried landmines.
+- **`docs/plans/features/portfolio-holdings.md#2`** · `requirement` · → R-ledger (portfolio holdings requirement) · _reframe_
+  - sig: enter what securities you own
+  - Product goal: let a household enter the actual positions each account holds (matching what brokerage apps show) without faking precision the honest engine lacks.
+  - [reframe] Strip the 'the remark that started it' origin narration. Surviving requirement: a household can enter the actual securities each account holds (matching brokerage-app holdings lists) without faking precision the engine doesn't have.
+- **`docs/decisions/README.md#3`** · `scope-boundary` · → §4 locked decisions D1–D6 · _pointer_
+  - sig: locked decisions D1–D6 live in product §4
+  - Product-level locked decisions D1–D6 (what "best" means lexicographically, recommend-second, the four-act shape, the solver search space, the curse defense, the tax scope) live in docs/product.md §4, not in decisions/, because they govern the PRODUCT not a single engine subsystem.
+  - [dedup] Canonical home for D1–D6 is docs/product.md §4. This README scope-boundary becomes a pointer; the locked-decision content itself is already homed in product.
+- **`docs/decisions/accumulation-fuck-off-date.md#5`** · `requirement` · → R-ledger R26 · _pointer_
+  - sig: R26 exhaustive sweep over offset Y
+  - R26: the fuck-off date = the existing engine swept over household work-stop offset Y (years-from-now, never a household age); non-monotone-robust EXHAUSTIVE sweep, never bisection. Implemented in C3 (dateSearch.ts).
+  - [dedup] R26 canonical in product.md R-ledger; roadmap req→unit trace and this record carry pointers.
+
+- **`docs/decisions/accumulation-fuck-off-date.md#6`** · `requirement` · → R-ledger R27 · _pointer_
+  - sig: R27 two dates floor + lifestyle
+  - R27: the answer is TWO dates (floor + lifestyle) from the lexicographic objective; C3 (engine) + D2 (surface); two-track split rides U9's degenerate-collapse; may already be in the past → one-sided window-floor semantic.
+  - [dedup] R27 canonical in product.md R-ledger; this record carries a pointer.
+  - [reframe] Strip 'Superseded changelog' framing: R27 present-tense carries the floor+lifestyle pair and the may-be-in-the-past one-sided window-floor semantic.
+- **`docs/decisions/accumulation-fuck-off-date.md#7`** · `requirement` · → R-ledger R28 · _pointer_
+  - sig: R28 both dates confidence-graded
+  - R28: both dates are confidence-graded, never hard lines; re-grade on strategy override. C3 + D2.
+  - [dedup] R28 canonical in product.md R-ledger; this record carries a pointer.
+- **`docs/decisions/accumulation-fuck-off-date.md#8`** · `requirement` · → R-ledger R29 · _pointer_
+  - sig: R29 framing adapts to user state
+  - R29: framing ADAPTS to user state — a date for not-yet-retired, spine confidence for already-retired. D2 (state-adaptive first answer).
+  - [dedup] R29 canonical in product.md R-ledger; this record carries a pointer.
+- **`docs/decisions/accumulation-fuck-off-date.md#9`** · `requirement` · → R-ledger R30 · _pointer_
+  - sig: R30 model pre-retirement accumulation phase
+  - R30: model the pre-retirement accumulation phase (contributions + growth → retirement-onset balance + basis). C2 (accumulation projection).
+  - [dedup] R30 canonical in product.md R-ledger; this record carries a pointer.
+- **`docs/decisions/accumulation-fuck-off-date.md#10`** · `requirement` · → R-ledger R31 · _pointer_
+  - sig: R31 contributions per-account flat-real, employer match
+  - R31: contributions per-account, flat-real, stop at the tested date; employer match captured. C2 + D1 (intake) + C1 (limit constants).
+  - [dedup] R31 canonical in product.md R-ledger; this record carries a pointer.
+- **`docs/decisions/accumulation-fuck-off-date.md#11`** · `requirement` · → R-ledger R32 · _pointer_
+  - sig: R32 v1 projects, not optimizes accumulation
+  - R32: v1 PROJECTS, does not optimize accumulation; the solver stays decumulation-only. C3 (date-search ≠ solver).
+  - [dedup] R32 canonical in product.md R-ledger; this record carries a pointer.
+- **`docs/decisions/accumulation-fuck-off-date.md#12`** · `requirement` · → R-ledger R33 · _pointer_
+  - sig: R33 healthcare OFF accumulation, ON at tested date
+  - R33: healthcare OFF during accumulation, ON at the tested date — via C3 buildCandidateParams(Y) per-candidate cost streams (engine has no retirement gate §3b) + C2; household reading = employer family coverage while anyone works.
+  - [dedup] R33 canonical in product.md R-ledger; this record carries a pointer.
+- **`docs/decisions/accumulation-fuck-off-date.md#13`** · `requirement` · → R-ledger R34 · _pointer_
+  - sig: R34 accumulation inherits engine invariants
+  - R34: accumulation INHERITS the engine invariants — one continuous absolute-year draw timeline (CRN), one per-path future end-to-end, empty phase reduces byte-identically. C2 (load-bearing contract).
+  - [dedup] R34 requirement canonical in product.md R-ledger; the inherited invariants are canonical in architecture.md; this record points.
+- **`docs/decisions/accumulation-fuck-off-date.md#14`** · `requirement` · → R-ledger R35 · _pointer_
+  - sig: R35 ~5-min account-level guided setup
+  - R35: the first answer comes from a ~5-min account-level guided setup, surface-early, single entry pass. D1 (intake reshape); the Success-Criterion edit was ~3-min→~5-min.
+  - [dedup] R35 canonical in product.md R-ledger; plans/2-first-answer.md carries the D1 build step as pointer.
+  - [reframe] Strip 'was ~3-min' framing: present-tense the setup target is ~5-min.
+- **`docs/decisions/accumulation-fuck-off-date.md#15`** · `requirement` · → R-ledger R36 · _pointer_
+  - sig: R36 account values user-entered, no live price
+  - R36: account values are user-entered; no live price lookup. D1 + Scope Boundaries.
+  - [dedup] R36 canonical in product.md R-ledger; this record carries a pointer.
+- **`docs/decisions/accumulation-fuck-off-date.md#16`** · `requirement` · → R-ledger R37 · _pointer_
+  - sig: R37 per-ticker collapse to household blend
+  - R37: per-ticker holdings collapse to one household stock/bond/cash blend; bundled ticker→asset-class table + manual classification. C1 (tickerBlend.ts) + D1 (entry + manual fallback).
+  - [dedup] R37 canonical in product.md R-ledger; this record carries a pointer.
+- **`docs/decisions/accumulation-fuck-off-date.md#17`** · `requirement` · → R-ledger R38 · _pointer_
+  - sig: R38 HSA contributions accumulation, spend decumulation
+  - R38: HSA contributions → accumulation; HSA spend → decumulation (the paused U3·M5). C2 (contributions) + B1 (U3·M5 spend).
+  - [dedup] R38 canonical in product.md R-ledger; this record carries a pointer.
+- **`docs/decisions/accumulation-fuck-off-date.md#18`** · `requirement` · → R-ledger R39 · _pointer_
+  - sig: R39 new PII inherits encryption + schema ladder
+  - R39: new PII inherits encryption + the additive schemaVersion-bump schema ladder. C2/D1 schema fields; consumed by P1·U4's migration ladder.
+  - [dedup] R39 canonical in product.md R-ledger; this record carries a pointer.
+- **`docs/decisions/accumulation-fuck-off-date.md#19`** · `scope-boundary` · → Product scope / accumulation boundaries · _pointer_
+  - sig: not a FIRE calculator; solver stays decumulation-only
+  - Scope: not a decades-out FIRE/'on track' calculator (bounded on-ramp); v1 does not optimize accumulation (controls stay sequencing+conversion); no live market data; no accumulation income-tax engine or working-years budget; no raise/career modeling (flat-real R31).
+  - [dedup] Product scope canonical in product.md; plans/1-engine.md carries the build-scope facets as pointers.
+- **`docs/decisions/accumulation-fuck-off-date.md#21`** · `scope-boundary` · → Deferred ledger · _canonical_
+  - sig: deferred: contribution optimization, cash sleeve, TDF glide, Roth match, per-person date
+  - Deferred (named, not MVP): (1) optimizing traditional-vs-Roth contributions (R32); (2) a 3-asset cash sleeve (engine is 2-asset, breaks CRN); (3) TDF years-to-target glide curves (v1 static snapshot); (4) Roth employer match (SECURE 2.0 §604, all match→pre-tax); (5) per-person asymmetric retirement-date search.
+  - [dedup] Contribution-optimization (R32) is canonical in product.md §5 'Chapter two (named, deferred)' and this record points there for it; the other four deferred items — (2) 3-asset cash sleeve, (3) TDF glide curves, (4) Roth employer match (SECURE 2.0 §604), (5) per-person asymmetric retirement-date search — have no product home and are canonical HERE.
+  - [fixed:warn] Marked canonical for 4 deferred items product lacks; R32 stays product pointer.
+- **`docs/research/engine-validation-and-tax.md#18`** · `requirement` · → R-ledger R2/R3 — probability-of-adjustment dollar-grammar · _canonical_
+  - sig: report terminal-value percentiles depth-of-failure not pass/fail
+  - 'Success'=$1 remaining hides magnitude; also report terminal-value percentiles + depth-of-failure (not just pass/fail) to feed the 'probability of adjustment' dollar-grammar — need the distribution, not a binary.
+  - [!warn] Free-floating canonical with empty dedup and no R-anchor. "report terminal-value percentiles + depth-of-failure, not just pass/fail" is disp=canonical, dedup="", section says only "R-ledger / probability-of-adjustment dollar-grammar" — no R-number. Verified NOT currently in product.md. It is an engine-output-shape refinement of R3 (engine models a distribution) feeding R2's dollar-grammar; without an anchor it lands as orphaned product prose, and the engine-output-contract half arguably belongs in architecture §7. — fix: Anchor to R2/R3 in product (the distribution feeds the humanized 'probability of adjustment' reading) and/or route the engine-output-contract half to architecture §7; populate dedup naming the canonical pointer.
+  - [dedup] product.md R2/R3 is canonical for the refinement that the terminal-value-percentile + depth-of-failure distribution feeds the humanized 'probability of adjustment' dollar-grammar; architecture.md §7 (engine output shape) holds the engine-output-contract half (terminal-value percentiles + depth-of-failure as engine output) as a pointer.
+  - [fixed:warn] Anchored to R2/R3; dedup splits engine-output-contract half to arch §7.
+- **`docs/research/engine-validation-and-tax.md#26`** · `scope-boundary` · → R-ledger R40 scope (IN/OUT line) · _pointer_
+  - sig: falsifiable IN/OUT line sequencing or conversion can move it
+  - The falsifiable IN/OUT line: an effect is IN iff sequencing or a conversion can move it — IN: ordinary brackets, std deduction, RMDs, SS-taxation, MFJ→single, ACA-PTC, IRMAA, cap-gains/qualified-dividend stacking; OUT-but-disclosed: NIIT (3.8%), state income tax; an omitted cliff inverts which strategy wins.
+  - [dedup] product.md §7 (R40 scope) IN/OUT line is canonical (same home #39 points to); this research doc and pre65-healthcare.md are pointers — #26 retains the NIIT 3.8% numeric detail as a research-pointer fact.
+  - [!warn] disp/dedup mismatch. Row is disp=canonical for the falsifiable tax IN/OUT line, but its own dedup says "product.md (R40 scope) is canonical for the IN/OUT scope line; this research doc ... [is a] pointer." product.md#82 already carries the canonical IN/OUT line (verified, product.md line 196) with the identical IN/OUT list. Two rows both disp=canonical for one fact, and #26 self-demotes to pointer in its dedup text. — fix: Set research#26 disp=pointer with canonical = product.md#82 (the §7 scope-boundaries IN/OUT line). research#26's NIIT-3.8% numeric detail can stay as the research-pointer.
+  - [fixed:warn] Flipped to pointer; canonical = product.md §7 IN/OUT line.
+- **`docs/research/engine-validation-and-tax.md#27`** · `requirement` · → R-ledger R40 (two MAGI calculators) · _pointer_
+  - sig: two distinct MAGI calculators ACA-MAGI vs IRMAA-MAGI
+  - Two distinct MAGI calculators are required (ACA-MAGI ≠ IRMAA-MAGI); a sequencing/conversion change shifts ACA-MAGI or IRMAA-MAGI across their cliffs.
+  - [dedup] pre65-healthcare.md#36 is canonical for the two-MAGI requirement (it carries the fuller composition + the funding-source-order consequence); this row (#27) is its pointer. product.md (R40) holds the requirement; pre65-healthcare.md holds the per-MAGI numeric detail.
+  - [fixed:warn] Demoted to pointer; #36 canonical for two-MAGI requirement; cross-referenced.
+- **`docs/research/engine-validation-and-tax.md#38`** · `requirement` · → [REHOME → docs/architecture.md] architecture §8 (year-keyed constants + reVerify-style markers) / §7.1 (tax overlay) · _pointer_
+  - sig: Senior Bonus Deduction 2025–2028 sunset marker
+  - Senior Bonus Deduction is available tax years 2025–2028 only and sunsets after 2028 unless extended → the tax overlay must carry an explicit sunset marker (a calm note when a pre-2029 answer is viewed in/after 2029).
+  - [!warn] Mis-route + empty dedup. "Senior Bonus Deduction 2025–2028, sunsets after 2028 → tax overlay must carry an explicit sunset marker" is routed disp=canonical to product with dedup="". The sunset-marker mechanic on a dated constant is a constants-discipline / tax-overlay concern (architecture §8 constants — every figure year-keyed with citation + reVerify-style markers; §7.1 taxOverlay). Verified NOT currently in product.md. Only the calm "viewed in/after 2029" honesty note is product-level. — fix: Route the sunset-marker constant mechanic to architecture §8 (constants discipline) / §7.1 (tax overlay); keep at most an honesty-note requirement in product tied to R14/R22 as a pointer. Populate the dedup naming the architecture canonical home.
+  - [dedup] architecture.md §8 (year-keyed constants + reVerify-style markers) / §7.1 (tax overlay) is canonical for the sunset-marker constant mechanic; product keeps only the calm 'viewed in/after 2029' honesty note tied to R14/R22 as a pointer.
+  - [fixed:warn] Rehomed sunset-marker mechanic to arch §8/§7.1; product keeps R14/R22 honesty-note pointer.
+- **`docs/research/engine-validation-and-tax.md#39`** · `scope-boundary` · → R-ledger R40 (engine tax+health scope) · _canonical_
+  - sig: engine tax + health scope most complete picture
+  - Engine tax+health scope ('the most complete picture'): IN the two-control solver — federal MFJ+single brackets, std deduction (+age-65 additions + senior-bonus w/ phase-out & sunset), birth-year RMDs, withdrawal/conversion taxed as stacked ordinary income, SS provisional-income taxation, cap-gains/QD stacking, pre-65 ACA-PTC (400% FPL base, enhanced toggle) and post-65 IRMAA (2-yr lookback, distinct MAGI, hard cliffs); OUT-but-disclosed: NIIT and state income tax.
+  - [dedup] product.md (R40) canonical for the scope decision; this research doc and pre65-healthcare.md hold the supporting numbers as pointers.
+- **`docs/research/engine-validation-and-tax.md#51`** · `requirement` · → Cardinal rule / honesty hygiene gate · _canonical_
+  - sig: honesty hygiene copyGuard require-the-hedge no false precision
+  - What survives as a real gate is honesty hygiene on the recommendation copy across both controls: the headline must wear its probabilistic hedge (copyGuard require-the-hedge lint), no false precision, and a wrong tax/health fact behind the verdict is the cardinal sin — honesty + engine validation get stricter for a recommender.
+  - [dedup] product.md (cardinal rule) is canonical for the honesty requirement; architecture.md (copyGuard) holds the lint mechanism as a pointer.
+- **`docs/research/engine-validation-and-tax.md#53`** · `decision-rationale` · → Locked decisions / personal-tool regulatory basis · _reframe_
+  - sig: Strand 3 regulatory personal non-commercial IAA Prong A
+  - Regulatory rationale (archive-as-rationale): The Back Nine is a personal, non-commercial tool meeting neither the relationship nor compensation prong of Reg BI / the Investment Advisers Act, so the strand is no longer a live constraint; retained as the why behind early no-verdict/no-optimizer/attorney-gate guardrails for deliberate re-instatement on re-commercialization; load-bearing defense was that a Roth what-if naming no securities is likely not 'advice about securities' (IAA §202(a)(11) Prong A), countered by SEC Reg BI / IA-5249; confidence defensible not airtight.
+  - [dedup] product.md owns the personal-tool why and the regulatory rationale as a locked decision; the research doc's appendix copy becomes a pointer.
+  - [reframe] Surviving fact (present-tense): the tool is personal/non-commercial and meets neither the relationship nor the compensation prong of Reg BI / the IAA, so no advice-regulation constraint binds; the no-verdict/no-optimizer/attorney-gate guardrails and the §202(a)(11) Prong A vs Reg BI/IA-5249 reasoning (the Prong-A defense is defensible, not airtight) are recorded so re-commercialization can re-instate them deliberately without over-relying on that defense. Lift out of the 'Historical changelog appendix' framing per fossilNote — keep as live decision-rationale, not history.
+  - [fixed:nit] Restored 'defensible, not airtight' qualifier to Prong-A rationale.
+- **`docs/research/engine-validation-and-tax.md#56`** · `decision-rationale` · → Thesis / product positioning · _reframe_
+  - sig: consumability failures not capability gaps wildly different answers distrust
+  - Voice-of-user thesis supported: across ProjectionLab, Boldin, Monarch, Empower, Fidelity/Vanguard the dominant complaints are consumability failures not capability gaps; the wedge is 'wildly different answers → distrust of any single number'; users want permission and confidence not another opaque number; hardest incumbent failure is data plumbing, so manual-first/local-first sidesteps it — thesis became 'consumability AND trustworthy data handling' (corpus is FIRE-skewed, pain likely understated).
+  - [dedup] product.md (thesis) is canonical for the product positioning; this research doc's appendix copy becomes a pointer.
+  - [reframe] Surviving fact (present-tense): the thesis is supported — across ProjectionLab, Boldin, Monarch, Empower, and Fidelity/Vanguard, incumbents fail on consumability and data plumbing, not capability; the wedge is that wildly-different answers across tools breed distrust of any single number, so The Back Nine delivers permission+confidence with manual-first/local-first trustworthy data handling. Caveat (keeps the claim falsifiable): the corpus is FIRE-skewed, so the pain is likely understated. Lift out of the changelog appendix per fossilNote — this is live product positioning.
+  - [fixed:warn] Restored named incumbents + FIRE-skew/pain-understated caveat to reframe.
+- **`docs/research/pre65-healthcare.md#36`** · `requirement` · → R-ledger — healthcare-aware sequencing requirement (R40 cluster) · _reframe_
+  - sig: two MAGI calculators, funding-source order changes loop
+  - Two MAGI calculators (do not reuse one): ACA-MAGI = AGI+tax-exempt+non-taxable SS+excluded foreign; IRMAA-MAGI = AGI+tax-exempt (no SS add-back); qualified Roth / return of basis / cash / HSA spend count toward neither, so the engine's funding-source order materially changes loop strength.
+  - [dedup] Requirement canonical in product R-ledger; the two-calculator mechanics are canonical in architecture §7.2; research §1/§4a hold the verified composition. Product holds the 'engine must do this' requirement; §7.2 the contract. This row (#36) is canonical for the two-MAGI requirement; engine-validation-and-tax.md#27 is its pointer.
+  - [reframe] Surviving fact: the engine maintains two distinct MAGI calculators (ACA-MAGI with SS add-back; IRMAA-MAGI without) and funding from Roth/basis/cash/HSA touches neither, so funding-source order materially changes the feedback-loop strength. This is a product requirement; mechanics live in architecture §7.2.
+  - [fixed:warn] Designated canonical for two-MAGI requirement; cross-referenced #27 pointer.
+
+
+## docs/roadmap.md
+
+- **`README.md#13`** · `status-as-built` · → You-Are-Here table / the four acts · _pointer_
+  - sig: four acts Engine in-progress Where You Stand
+  - MVP is FOUR ACTS: Act 1 The Engine (deterministic engine + tax/healthcare overlays + accumulation projection + date-search + encrypted store) COMPLETE/reviewed/pinned; Act 2 Where You Stand (intake → state-adaptive first answer → confidence viz → first Save) IN PROGRESS (intake built/reviewed, confidence-band viz next); Act 3 The Levers You Hold PLANNED; Act 4 The Recommended Route PLANNED.
+  - [dedup] Roadmap You-Are-Here table is authoritative on build status; README + TODO copies become pointers / volatile mirrors of it.
+- **`README.md#15`** · `status-as-built` · → You-Are-Here U5 (Act 2 intake) · _pointer_
+  - sig: live provisional Monte Carlo as you type
+  - The guided intake delivers a LIVE, PROVISIONAL Monte Carlo reading that sharpens as you type, proven end-to-end in real Chromium under the enforced CSP.
+  - [dedup] Roadmap Act 2 / U5 is the authoritative as-built home; README restates it.
+- **`README.md#16`** · `number-or-figure` · → You-Are-Here (test count + gate status) · _pointer_
+  - sig: 942 tests across 44 files
+  - Engine + intake carry 942 tests across 44 files, all green at the Act 2 / U5 milestone, alongside lint, bundle-budget, ACA-freshness, and browser-CSP gates (volatile stat — lives in 9+ surfaces, update all on change).
+  - [dedup] Roadmap is the authoritative status mirror for this volatile count; TODO.md and README copies must be updated in the same pass per stats-single-source.
+- **`README.md#19`** · `build-detail-or-KTD` · → Validation gates (commands) · _pointer_
+  - sig: verify:bundle verify:aca verify:csp gates
+  - Running it: pnpm install; pnpm dev (the app IS the intake flow); CI quality gates: pnpm typecheck (tsc --noEmit), pnpm test (vitest run), pnpm lint (layer boundaries + engine purity), pnpm build (typecheck + prod build), pnpm verify:bundle (≤300 KiB entry JS), pnpm verify:aca (fails if ACA status stale), pnpm verify:csp (real-Chromium CSP walk via Playwright).
+  - [dedup] Gate commands canonical alongside the roadmap validation gates; CLAUDE.md commands table + package.json scripts are the operative mirrors.
+- **`README.md#20`** · `number-or-figure` · → Validation gates (bundle budget) · _pointer_
+  - sig: ≤ 300 KiB entry JS budget
+  - Bundle-budget sentinel: initial/entry JS must be ≤ 300 KiB, enforced by pnpm verify:bundle.
+  - [dedup] Threshold canonical with the roadmap validation gates; CLAUDE.md verify:bundle entry is the pointer.
+- **`docs/README.md#2`** · `scope-boundary` · → [REHOME → docs/README.md] Doc-organization doctrine (front-door index) · _reframe_
+  - sig: split by KIND into named homes
+  - Docs are deliberately split by KIND, each home with one job: product=why/what/requirements, roadmap=status, architecture=how-it-works+invariants, plans=build steps, decisions=rationale, research=numbers, glossary=terms, insights=lessons.
+  - [dedup] Doc-organization doctrine canonical in docs/README.md (the front-door index); CLAUDE.md 'The map (where truth lives)' is the always-in-context copy. Roadmap carries build-status only, never the kind-split.
+  - [reframe] Surviving doctrine: documentation is organized by KIND, one canonical home per kind (the define-once / single-home rule). Present-tense: 'Each kind of truth has exactly one home — a fact is never re-typed across docs.'
+  - [fixed:warn] Rehomed kind-split doctrine to docs/README.md; roadmap is status-only
+- **`docs/README.md#3`** · `decision-rationale` · → The four acts · _canonical_
+  - sig: 1-engine 2-first-answer 3-controls 4-recommendation
+  - The four act plans are named by product role: Act 1 = the engine, Act 2 = the first answer, Act 3 = the (tax) controls, Act 4 = the recommendation.
+  - [dedup] Canonical home for the four-acts structure is roadmap.md; CLAUDE.md (plans/1-engine … 4-recommendation) and the plan filenames are pointers.
+- **`docs/product.md#72`** · `requirement` · → Validation gates / success criteria · _canonical_
+  - sig: success: FIRST ANSWER in one short sitting, surfaces-and-sharpens
+  - Success criterion: a user reaches their first answer in one short sitting from the complete ~5-minute account-level setup, the answer surfacing and sharpening during the flow rather than gating behind a final 'calculate' — never a wall of forms.
+  - [dedup] Success criteria are validation gates — canonical home is roadmap; R5/R35 (product) hold the requirement-form pointers.
+- **`docs/product.md#73`** · `requirement` · → Validation gates / success criteria · _canonical_
+  - sig: success: TWO confidence-graded fuck-off dates, date↔confidence tradeoff
+  - Success criterion: a not-yet-retired user reaches their two confidence-graded fuck-off dates in that same sitting; the dates honestly express the date↔confidence tradeoff (never a single hard date) — verifiable against the R25 honesty bar.
+  - [dedup] Success/validation gate canonical in roadmap; R27, R28 (product) hold requirement-form pointers.
+- **`docs/product.md#74`** · `requirement` · → Validation gates / success criteria · _canonical_
+  - sig: success: NO RUNWAY (Y==0) reproduces decumulation BYTE-IDENTICALLY
+  - Success criterion: with no runway (Y==0) the tool reproduces today's decumulation answer byte-identically — the reduce-to-spine analog for the new accumulation phase.
+  - [dedup] The reduce-to-spine / byte-identity invariant is canonical in docs/architecture.md; roadmap holds only the gate-status pointer (we test Y==0 reduces byte-identically); R34, R40.6 (product) and CLAUDE.md (reduce-to-spine) hold pointers.
+  - [fixed:warn] Flipped dedup — architecture canonical for the invariant; roadmap is gate pointer
+- **`docs/product.md#75`** · `requirement` · → Validation gates / success criteria (monotonicity oracle) · _canonical_
+  - sig: success: monotonicity oracle SCOPED, holds only healthcare-off/MAGI-pinned
+  - Success criterion (the monotonicity oracle, scoped): the fuck-off date moves in the intuitively-correct direction (more saved / higher contributions / lower spend → earlier date) — but it is a discontinuity-free sanity oracle NOT a universal, holding only with healthcare off or MAGI pinned away from all three modeled discontinuities (400%-FPL cliff, every IRMAA boundary, the 100%-FPL floor); a cliff-straddling more-saved → equal-or-later date is correct engine output, never to be 'fixed.'
+  - [dedup] Success/validation gate canonical in roadmap; R26 (non-monotone-robust), R27, architecture hold pointers.
+- **`docs/product.md#76`** · `requirement` · → Validation gates / success criteria (Calm/Trust/Differentiation) · _canonical_
+  - sig: success: Calm / Trust / Differentiation tests
+  - Success criteria (calm/trust/differentiation): the primary surface shows one answer then one recommendation, not a dashboard (Calm); every assumption AND the recommendation's reasoning is reachable within one interaction from the answer (Trust); a user watches a recommended strategy visibly move the answer ('6 of 10 → 8 of 10') and sees it correctly confidence-graded (Differentiation).
+  - [dedup] Success/validation gates canonical in roadmap; R2/R4/R7/R22/R23 (product) hold requirement-form pointers.
+- **`docs/product.md#77`** · `requirement` · → Validation gates / success criteria (Correctness two-tier) · _canonical_
+  - sig: success: Correctness two-tier — number right AND recommendation right
+  - Success criterion (Correctness, two-tier, R25): the engine's number is right (validated vs Trinity/Bengen golden cases) AND the solver's recommendation is right (validated against an optimality/ranking oracle, ranking-stability under CRN, and grade calibration); a calm-but-wrong recommendation fails the bar worse than no tool.
+  - [dedup] Success/validation gate canonical in roadmap; D5, R25 (product), CLAUDE.md (engine validation), architecture hold pointers; the Trinity/Bengen numbers live in research.
+- **`docs/product.md#78`** · `requirement` · → Validation gates / success criteria (N=1 cold-read) · _canonical_
+  - sig: success: N=1 cold-read (Briggsy) — THE BAR
+  - Success criterion (N=1 cold-read, Briggsy — THE BAR): across the survivor outcome states + the survivor readout, an on-track answer lands as relief and a borderline answer as honest-and-calm, AND the recommendation feels earned (not overconfident), the 'coin-flip' grade feels honest, and the comparative reasoning lands as transparency not bait-and-switch.
+  - [dedup] Success/validation gate canonical in roadmap; CLAUDE.md (N=1 cold-read judges tone) holds a pointer.
+- **`docs/product.md#79`** · `requirement` · → Validation gates / success criteria (Honesty test) · _canonical_
+  - sig: success: Honesty test — hedge ON THE HEADLINE
+  - Success criterion (Honesty test): every recommendation carries its probabilistic hedge on the headline.
+  - [dedup] Success/validation gate canonical in roadmap; R12, R22, carried landmines (product), architecture (copyGuard) hold pointers.
+- **`docs/roadmap.md#0`** · `scope-boundary` · → Intro / precedence · _canonical_
+  - sig: You-Are-Here table wins on build status
+  - The roadmap is the single source of build-truth; its You-Are-Here table wins on what is built, product.md owns why/what, architecture.md owns invariants.
+  - [dedup] Precedence rule canonical here (roadmap); CLAUDE.md keeps its own always-in-context summary copy as a pointer.
+- **`docs/roadmap.md#1`** · `scope-boundary` · → Intro / scope · _canonical_
+  - sig: TODO.md is the volatile next-action queue
+  - The volatile next-action queue lives in TODO.md; the roadmap moves at the speed of units shipping, TODO at the speed of sessions.
+  - [dedup] Canonical in roadmap; CLAUDE.md's 'TODO.md is the volatile work queue' is the pointer copy.
+- **`docs/roadmap.md#2`** · `definition-term` · → The four acts · _canonical_
+  - sig: product grows in four acts
+  - The product is built in four strictly-dependent acts; first two answer the question, last two differentiate; Act-1 overlays feed Act 3 and the validated spine feeds Act 4.
+  - [dedup] Four-acts framing canonical in roadmap; the per-act plans/1-4 are the detailed pointers.
+- **`docs/roadmap.md#3`** · `status-as-built` · → The four acts — Act 1 · _reframe_
+  - sig: Act 1 The Engine done and pinned
+  - Act 1 (The Engine) is Done and pinned: deterministic Monte Carlo spine validated against Trinity/Bengen, joint-survivor longevity, zero-draw tax+healthcare overlays, encrypted store, and the accumulation date-search; nothing user-facing ships in this act.
+  - [dedup] Status canonical in roadmap You-Are-Here Act 1; plans/1-engine.md carries the build detail.
+  - [reframe] Reframe 'accumulation fold' as the accumulation date-search (the fuck-off-date search); drop the 'fold' framing — present-tense: Act 1 ships the engine plus the accumulation date-search.
+- **`docs/roadmap.md#4`** · `status-as-built` · → The four acts — Act 2 · _canonical_
+  - sig: Act 2 Where You Stand in progress
+  - Act 2 (Where You Stand) is In progress: the ~5-min account-level guided setup, colorblind-safe viz, plain-language confidence statement, state-adaptive first answer (date vs spine), and first encrypted Save.
+  - [dedup] Status canonical in roadmap You-Are-Here Act 2; plans/2-first-answer.md carries build detail.
+- **`docs/roadmap.md#5`** · `status-as-built` · → The four acts — Act 3 · _canonical_
+  - sig: Act 3 The Levers You Hold not started
+  - Act 3 (The Levers You Hold) is Not started (src/budget .gitkeep-only): time-boxed budget builder plus withdrawal-sequencing and Roth-conversion controls over the Act-1 overlays, with healthcare surfaces and the sharpen/re-entry loop.
+  - [dedup] Status canonical in roadmap You-Are-Here Act 3; plans/3-controls.md carries build detail.
+- **`docs/roadmap.md#6`** · `status-as-built` · → The four acts — Act 4 · _canonical_
+  - sig: Act 4 The Recommended Route not started
+  - Act 4 (The Recommended Route) is Not started (solver+validation .gitkeep-only): validation harness, then the solver ranking strategies on identical futures, then recommend-second, then stale-rec handling; validation passes before the solver may recommend.
+  - [dedup] Status canonical in roadmap You-Are-Here Act 4; plans/4-recommendation.md + validation gates carry the detail.
+- **`docs/roadmap.md#7`** · `invariant` · → The ID scheme · _canonical_
+  - sig: shared IDs never shown never renumbered
+  - The R/U/C/D/Act/M/§ IDs are internal join-keys (requirement→unit→test→insight); never shown to the user and never renumbered, because numbers are wired into source, tests, insights and git with no gate to catch drift.
+- **`docs/roadmap.md#8`** · `definition-term` · → The ID scheme (legend table) · _canonical_
+  - sig: ID legend Rn Un Cn Dn Actn Mn
+  - ID legend: Rn=Requirement (R1-R40), Un=Unit (U0-U17, globally unique), Cn/Dn=accumulation tracks (C engine-altitude C1-C3, D intake/answer D1-D2), Actn=build chapter (code says Pn), Mn=milestone, §n=numbered section.
+- **`docs/roadmap.md#9`** · `definition-term` · → The ID scheme · _canonical_
+  - sig: compound refs read left-to-right
+  - Compound refs read left-to-right (Act 2 · U7 = Act 2, Unit 7; U3·M6 = Unit 3, Milestone 6); the globally-unique unit key lets a doc's Act 2 · U7 and code's P2·U7 join on U7.
+- **`docs/roadmap.md#10`** · `invariant` · → The ID scheme (landmine) · _canonical_
+  - sig: unit-track C not code variable C_dest
+  - LANDMINE: the unit-track C (C2 = engine-altitude accumulation unit) is unrelated to the code variable C/C_dest in taxOverlay.ts (the per-bucket contribution amount) — same letter, different things.
+- **`docs/roadmap.md#11`** · `definition-term` · → You-Are-Here (status enum) · _canonical_
+  - sig: status enum shipped in-progress planned scoping not-started
+  - The closed honest status enum: shipped=coded AND reviewed; in-progress=partially landed; planned=scoped/build-ready with zero code; scoping=shape not yet build-ready; not-started=directory is .gitkeep-only.
+- **`docs/roadmap.md#12`** · `definition-term` · → You-Are-Here (C/D-track preamble) · _canonical_
+  - sig: C-units D-units accumulation tracks extend U-numbering
+  - The C-units and D-units are accumulation tracks extending the U-numbering without renumbering it: C lands at Act-1 engine altitude, D reshapes Act-2 intake and the answer surface.
+  - [dedup] Defined twice in roadmap (ID scheme + You-Are-Here preamble); define-once here, the other is the same-doc echo.
+- **`docs/roadmap.md#13`** · `status-as-built` · → You-Are-Here — Act 1 header · _canonical_
+  - sig: P1 closed 2026-06-11 Engine shipped pinned
+  - Act 1 (The Engine) is shipped + pinned; P1 closed 2026-06-11.
+  - [dedup] Canonical in roadmap Act 1 header; MEMORY project file's 'P1 CLOSED 2026-06-11' is the external echo, not a doc home.
+- **`docs/roadmap.md#14`** · `status-as-built` · → You-Are-Here — Act 1 (U0) · _canonical_
+  - sig: U0 scaffold PWA shell CI engine-purity lint
+  - U0 shipped: scaffold, conventions, PWA shell, CI, engine-purity lint, strict CSP via HTTP headers (not a meta tag); the burned toolchain.
+  - [dedup] Status canonical in roadmap U0; CSP-via-headers detail's canonical home is architecture §10 / CLAUDE.md — roadmap keeps the status, points for the invariant.
+- **`docs/roadmap.md#15`** · `status-as-built` · → You-Are-Here — Act 1 (U1) · _canonical_
+  - sig: U1 MC engine core determinism CRN single shared draw
+  - U1 shipped: MC engine core — determinism, CRN single shared draw, joint-survivor longevity retaining survivor identity, Trinity/Bengen externally-derived fixtures, sequencing as a pluggable policy; survivor-spending ratio grounded + dangerous-direction-documented.
+  - [dedup] Status canonical in roadmap U1; the engine invariants are canonical in architecture.md; the trace links R3/SC.
+- **`docs/roadmap.md#16`** · `status-as-built` · → You-Are-Here — Act 1 (U2) · _canonical_
+  - sig: U2 tax-and-accounts overlay SS provisional-income fixed-point
+  - U2 shipped: tax-and-accounts overlay — buckets, ordinary tax/gross-up, RMD birth-year, SS provisional-income fixed-point, MFJ→single; reduces-to-spine when off (zero-draw deterministic transform).
+  - [dedup] Status canonical in roadmap U2; reduce-to-spine invariant canonical in architecture.md.
+- **`docs/roadmap.md#17`** · `status-as-built` · → You-Are-Here — Act 1 (U3) · _canonical_
+  - sig: U3 healthcare overlay ACA-MAGI IRMAA HSA fourth bucket
+  - U3 shipped: healthcare overlay — ACA-MAGI + IRMAA-MAGI calculators, ACA pre-65 fixed-point + cliff/enhanced toggle, IRMAA 2-yr lag, HSA 4th bucket; reduces-to-spine when off; verify:aca gates the legislative status; HSA spend (U3·M5 'B1') is decumulation-side, not yet built.
+  - [dedup] Status canonical in roadmap U3; verify:aca/reVerifyEveryBuild detail canonical in CLAUDE.md/architecture; trace links R24,R38.
+- **`docs/roadmap.md#18`** · `status-as-built` · → You-Are-Here — Act 1 (U4) · _canonical_
+  - sig: U4 encrypted store PBKDF2-600k AES-GCM recovery phrase
+  - U4 shipped: encrypted store + key lifecycle + recovery/export — PBKDF2-600k, AES-GCM, recovery phrase, mandatory export/restore, schemaVersion; the migration ladder covers the v2-with-accounts shape.
+  - [dedup] Status canonical in roadmap U4; trace links R15-R18,R39.
+- **`docs/roadmap.md#19`** · `status-as-built` · → You-Are-Here — Act 1 (SS sub-engine) · _reframe_
+  - sig: SS sub-engine spousal survivor fixed survivor-floor bug
+  - SS sub-engine shipped + reviewed: Social Security spousal/survivor benefit math; the review caught and fixed a cardinal-sin optimistic survivor-floor bug.
+  - [dedup] Status canonical in roadmap Act 1 SS row; SS mechanics move to architecture §7 (overlay-peer); SS build steps to plans/1-engine; features/social-security.md DISSOLVES — no row may target it.
+  - [reframe] features/social-security.md plan reference is dissolved: the SS as-built status lives in roadmap; the survivor-floor-bug lesson is an insight; the math is architecture §7. Present-tense: the SS sub-engine is shipped and reviewed.
+- **`docs/roadmap.md#20`** · `status-as-built` · → You-Are-Here — Act 1 (C1) · _reframe_
+  - sig: C1 contribution-limit ticker-blend constants Notice 2025-67
+  - C1 shipped: contribution-limit + ticker-blend constants (Notice 2025-67 / Rev. Proc. 2025-19 / issuer-or-EDGAR, directional-until-pinned); feeds accumulation projection and the household stock/bond/cash blend.
+  - [dedup] Status canonical in roadmap C1; the constant figures live in research/engine-validation-and-tax.md; the C1 rationale in decisions/accumulation-fuck-off-date.md; trace links R31,R37.
+  - [reframe] Drop the '2026-06-08 accumulation expansion was added' chronology framing per fossilNote; present-tense: C-units sit in the Act 1 table by altitude, not chronology. C1 is shipped.
+- **`docs/roadmap.md#21`** · `status-as-built` · → You-Are-Here — Act 1 (C2) · _reframe_
+  - sig: C2 accumulation projection signed contribution inflow CRN timeline
+  - C2 shipped: accumulation projection — signed contribution inflow on the one continuous absolute-year CRN timeline; presence-keyed reduce-to-spine (empty phase Y==0 reduces byte-identically to plain decumulation).
+  - [dedup] Status canonical in roadmap C2; the engine contract canonical in architecture.md; rationale in decisions/accumulation-fuck-off-date.md; trace links R30,R31,R33,R34,R38,R39.
+  - [reframe] Drop '2026-06-08 expansion added' framing; present-tense: C2 is a shipped first-class accumulation engine unit at Act-1 altitude.
+- **`docs/roadmap.md#22`** · `status-as-built` · → You-Are-Here — Act 1 (C3) · _reframe_
+  - sig: C3 dateSearch.ts non-monotone-robust sweep fuck-off date
+  - C3 shipped: the date-search (dateSearch.ts) — exhaustive, non-monotone-robust sweep over the household work-stop offset, quantized-lower-bound selection (the fuck-off date); three first-class outcomes per track: confirmed date / window-edge-unconfirmed / no-date-in-window.
+  - [dedup] Status canonical in roadmap C3; non-monotone-robust + empty-phase byte-identity are validation gates; rationale in decisions/accumulation-fuck-off-date.md; trace links R26,R27,R28,R32,R33.
+  - [reframe] Drop '2026-06-08 expansion added' framing; present-tense: C3 (dateSearch.ts) is shipped and carries the date-search contract.
+- **`docs/roadmap.md#23`** · `status-as-built` · → You-Are-Here — Act 2 (U5 / D1) · _canonical_
+  - sig: U5 D1 account-level guided setup R19 sanity
+  - U5/D1 shipped: account-level guided setup (the U5 reshape) — surface-early, single entry pass, in-memory orchestrator + R19 sanity; cleared the N=1 laptop cold-read on every screen.
+  - [dedup] Status canonical in roadmap U5/D1; build detail in plans/2-first-answer.md; trace links R5,R8,R19,R31,R35,R36,R37.
+- **`docs/roadmap.md#24`** · `status-as-built` · → You-Are-Here — Act 2 (U6 foundation) · _canonical_
+  - sig: U6 foundation colorblind-safe viz primitives CVD probe
+  - U6 (foundation) shipped: colorblind-safe viz primitives — palette/scale/CVD probe — the CVD-safe foundation, not the band render.
+  - [dedup] Status canonical in roadmap U6 foundation; colorblind-safe encoding law lives in back-nine-design skill (external).
+- **`docs/roadmap.md#25`** · `status-as-built` · → You-Are-Here — Act 2 (U6 render) · _canonical_
+  - sig: U6 render confidence-band projection-fan not-started
+  - U6 (render) not-started: the confidence-band / projection-fan render, built on the U6 foundation.
+  - [dedup] Status canonical in roadmap U6 render; What-is-next echoes it (same doc); back-nine-design skill is external.
+- **`docs/roadmap.md#26`** · `status-as-built` · → You-Are-Here — Act 2 (U7) · _canonical_
+  - sig: U7 confidence statement copyGuard born here
+  - U7 not-started: confidence statement surface + outcome-state system + survivor readout — the plain-language verdict; copyGuard is born here.
+  - [dedup] Status canonical in roadmap U7; trace links R1,R2,R4,R12 (copyGuard),R14.
+- **`docs/roadmap.md#27`** · `status-as-built` · → You-Are-Here — Act 2 (U8) · _canonical_
+  - sig: U8 First-Save zxcvbn-ts ≥3 length ≥12
+  - U8 not-started: First-Save flow + recovery-phrase display + mandatory export + passphrase-strength gate (zxcvbn-ts ≥ 3 ∧ length ≥ 12).
+  - [dedup] Status canonical in roadmap U8; trace links R17,R18.
+- **`docs/roadmap.md#28`** · `status-as-built` · → You-Are-Here — Act 2 (D2) · _reframe_
+  - sig: D2 state-adaptive first answer two-pane laptop
+  - D2 not-started: the state-adaptive first answer surface — date-first for not-yet-retired, spine-first for already-retired; the two-pane laptop layout; same calm voice, one intake flow, only the lead answer changes.
+  - [dedup] Status canonical in roadmap D2; trace links R27,R28,R29; laptop-primary echo is the MEMORY file (external).
+  - [reframe] Drop 'D-unit track added with the 2026-06-08 expansion' chronology; present-tense: D2 is a not-started Act-2 unit reshaping the answer surface.
+- **`docs/roadmap.md#29`** · `status-as-built` · → You-Are-Here — Act 2 (R40 row) · _reframe_
+  - sig: R40 other income planned immediate next build
+  - R40 (Act 2 table) planned, build-ready with zero code — other income in retirement (pension/rental/annuity/alimony/other), engine + intake; the immediate next build.
+  - [dedup] Status canonical in roadmap Act 2 R40 row (and the cross-cutting features table is the same doc's other surface); requirement R40 in product.md; KTDs in decisions/other-income-r40.md; features/other-income.md DISSOLVES.
+  - [reframe] features/other-income.md plan reference dissolves: build steps go to plans/2-first-answer.md, the 9 KTDs to decisions/other-income-r40.md. Present-tense: R40 is planned, the immediate next build.
+- **`docs/roadmap.md#30`** · `status-as-built` · → You-Are-Here — Act 3 header · _canonical_
+  - sig: Act 3 header not started src/budget .gitkeep-only
+  - Act 3 (The Levers You Hold) header: not started; src/budget is .gitkeep-only.
+  - [dedup] Same-doc echo of the four-acts Act 3 entry; status canonical in the You-Are-Here Act 3 header.
+- **`docs/roadmap.md#31`** · `status-as-built` · → You-Are-Here — Act 3 (U9) · _canonical_
+  - sig: U9 budget builder two-tier lexicographic headline
+  - U9 not-started: budget builder — itemized, time-boxed, essentials/discretionary; the two-tier lexicographic headline reading; the two-date split rides U9's degenerate-collapse.
+  - [dedup] Status canonical in roadmap U9; trace links R2 (two-tier),R19,R20,R27.
+- **`docs/roadmap.md#32`** · `status-as-built` · → You-Are-Here — Act 3 (U10) · _canonical_
+  - sig: U10 sequencing Roth-conversion require-the-hedge lint
+  - U10 not-started: manual withdrawal-sequencing control + Roth-conversion lever (both drive the U2 overlay); the require-the-hedge lint is introduced here.
+  - [dedup] Status canonical in roadmap U10; trace links R4,R9 (manual),R11,R12 (extended),R19.
+- **`docs/roadmap.md#33`** · `status-as-built` · → You-Are-Here — Act 3 (U11) · _canonical_
+  - sig: U11 healthcare surfaces ACA cliff IRMAA HSA entry
+  - U11 not-started: healthcare surfaces (ACA cliff + enhanced toggle + re-verify gate; IRMAA cliffs; HSA entry) over the U3 overlay.
+  - [dedup] Status canonical in roadmap U11; trace links R4,R24.
+- **`docs/roadmap.md#34`** · `status-as-built` · → You-Are-Here — Act 3 (U12) · _canonical_
+  - sig: U12 sharpen loop power-user escape hatch
+  - U12 not-started: sharpen loop + assumption editing + power-user escape hatch.
+  - [dedup] Status canonical in roadmap U12; trace links R4,R6,R7,R8.
+- **`docs/roadmap.md#35`** · `status-as-built` · → You-Are-Here — Act 3 (U13) · _canonical_
+  - sig: U13 returning-user re-entry per-surface staleness
+  - U13 not-started: returning-user re-entry + per-surface staleness (tax/healthcare vintages, budget line items, the date answer's fixture clocks); the date answer joins the per-surface staleness map.
+  - [dedup] Status canonical in roadmap U13; trace links R17.
+- **`docs/roadmap.md#36`** · `status-as-built` · → You-Are-Here — Act 4 header · _canonical_
+  - sig: Act 4 header solver validation .gitkeep-only
+  - Act 4 (The Recommended Route) header: not started; src/engine/solver + src/engine/validation are .gitkeep-only.
+  - [dedup] Same-doc echo of the four-acts Act 4 entry; status canonical in the You-Are-Here Act 4 header.
+- **`docs/roadmap.md#37`** · `status-as-built` · → You-Are-Here — Act 4 (U14) · _canonical_
+  - sig: U14 solver validation harness oracle-cleared gates U15
+  - U14 not-started: solver validation harness — optimality/ranking oracle, ranking-stability-under-CRN, grade calibration, held-out-seed reporting; gates U15; the 'oracle-cleared' token is the structural gate.
+  - [dedup] Status canonical in roadmap U14; trace links R22 (calibration),R25 (validation),SC; solver-blocking gate detail in validation gates.
+- **`docs/roadmap.md#38`** · `status-as-built` · → You-Are-Here — Act 4 (U15) · _canonical_
+  - sig: U15 solver core named-policies conversion-grid WASM gate
+  - U15 not-started: solver core — named-policies × conversion-grid search on identical CRN draws; lexicographic objective; byte-identical selection; the WASM measurement gate.
+  - [dedup] Status canonical in roadmap U15; trace links R9 (solver),R21 (objective),R23.
+- **`docs/roadmap.md#39`** · `status-as-built` · → You-Are-Here — Act 4 (U16) · _canonical_
+  - sig: U16 recommend-second 10/10 surplus pivot hedge-on-headline
+  - U16 not-started: recommendation surface — recommend-second, confidence-grading, comparative transparency with the runner-up retained, objective ≡ headline, the 10/10→surplus pivot, hedge-on-headline lint; the actual differentiator.
+  - [dedup] Status canonical in roadmap U16; trace links R4,R7,R10,R11,R12 (extended),R13,R14,R21 (headline pivot),R22 (render),R23 (the quarry's stray 'R16 is U4' note is corrected — R16 maps to U4, not U16).
+- **`docs/roadmap.md#40`** · `status-as-built` · → You-Are-Here — Act 4 (U17) · _canonical_
+  - sig: U17 stale-saved-recommendation re-solve under current fixtures
+  - U17 not-started: stale-saved-recommendation handling — a saved rec is an executed action → re-solve under current fixtures; staleness reads 'the action we recommended may no longer be advised'.
+- **`docs/roadmap.md#41`** · `status-as-built` · → You-Are-Here — cross-cutting (Social Security) · _reframe_
+  - sig: cross-cutting Social Security claim-age intake chapter two
+  - Cross-cutting Social Security: spousal/survivor benefit sub-engine shipped + the claim-age intake; claim-age as a solver-optimized control is chapter two.
+  - [dedup] Status canonical in roadmap; this is the same doc's Act-1 SS sub-engine row restated cross-cutting; features/social-security.md plan reference DISSOLVES.
+  - [reframe] features/social-security.md dissolves: SS mechanics → architecture §7 overlay-peer, SS build steps → plans/1-engine.md, status → roadmap. Present-tense: SS engine shipped; claim-age-as-solver-control is future.
+- **`docs/roadmap.md#42`** · `status-as-built` · → You-Are-Here — cross-cutting (Other income R40) · _reframe_
+  - sig: cross-cutting Other income R40 generic non-earned stream
+  - Cross-cutting Other income (R40): generic per-person non-earned income stream (pension/rental/annuity/alimony/other); planned, build-ready zero code; the immediate next build.
+  - [dedup] Same-doc duplicate of the Act 2 R40 row + What-is-next; status canonical in roadmap; requirement in product.md; KTDs in decisions/other-income-r40.md; features/other-income.md DISSOLVES.
+  - [reframe] features/other-income.md dissolves: build steps → plans/2-first-answer.md, the 9 KTDs → decisions/other-income-r40.md. Present-tense: R40 is the planned immediate next build.
+- **`docs/roadmap.md#43`** · `status-as-built` · → You-Are-Here — cross-cutting (Portfolio holdings) · _reframe_
+  - sig: cross-cutting Portfolio holdings scoping exact stock/bond/cash %
+  - Cross-cutting Portfolio holdings: per-account exact stock/bond/cash %, ticker → blend, the one household blend the engine consumes; status scoping; single-ticker entry was removed in favor of exact %.
+  - [dedup] Status canonical in roadmap; requirement R37 in product.md; the 3 open ATC calls → decisions/portfolio-holdings.md; features/portfolio-holdings.md DISSOLVES.
+  - [reframe] Strip 'single-ticker was removed' changelog framing → present-tense: accounts take an exact stock/bond/cash % that collapses to one household blend; status scoping. features/portfolio-holdings.md dissolves into product + decisions/portfolio-holdings + plans/2-first-answer.
+- **`docs/roadmap.md#44`** · `status-as-built` · → You-Are-Here — cross-cutting ('Just me' single-user) · _canonical_
+  - sig: 'Just me' single-user mode planned deferred
+  - Cross-cutting 'Just me' single-user mode: a single-person (non-couple) household path; named and deferred (planned/deferred).
+
+- **`docs/roadmap.md#45`** · `definition-term` · → Requirements → unit trace (preamble) · _canonical_
+  - sig: requirement numbers immutable prose re-framed mapping not
+  - Requirements→unit trace ground rules: every requirement maps to an act/unit; the numbers R1-R40 are immutable; the prose is re-framed for clarity but the mapping is not; SC = the success-criteria list in product.md; C/D-unit detail lives in decisions/accumulation-fuck-off-date.md.
+  - [dedup] Trace ground rules canonical in roadmap; R1-R40 ledger canonical in product.md; C/D detail in decisions/accumulation-fuck-off-date.md.
+  - [fixed:nit] re-tagged kind invariant→definition-term (trace preamble; home unchanged).
+- **`docs/roadmap.md#46`** · `requirement` · → Requirements → unit trace (R1) · _pointer_
+  - sig: R1 primary question is the face U7
+  - R1 (primary question is the face) → Act 2 · U7.
+  - [dedup] R1 contract canonical in product.md R-ledger; roadmap holds only the R1→U7 trace mapping (pointer).
+- **`docs/roadmap.md#47`** · `requirement` · → Requirements → unit trace (R2) · _pointer_
+  - sig: R2 plain-language confidence no color-alone U7 U9
+  - R2 (plain-language confidence statement, survival-vs-lifestyle separation, no color-alone) → Act 2 · U7 (single metric), Act 3 · U9 (two-tier essentials/lifestyle reading).
+  - [dedup] R2 contract canonical in product.md; roadmap holds the R2→U7/U9 mapping; no-color-alone law lives in back-nine-design skill.
+- **`docs/roadmap.md#48`** · `requirement` · → Requirements → unit trace (R3) · _pointer_
+  - sig: R3 distribution of futures U1
+  - R3 (distribution of futures) → Act 1 · U1.
+  - [dedup] R3 contract canonical in product.md; roadmap holds the R3→U1 mapping.
+- **`docs/roadmap.md#49`** · `requirement` · → Requirements → unit trace (R4) · _pointer_
+  - sig: R4 detail on demand never unsolicited
+  - R4 (detail on demand, never unsolicited) → Act 2 · U7, Act 3 · U10–U12, Act 4 · U16.
+  - [dedup] R4 contract canonical in product.md; roadmap holds the R4→U7/U10-U12/U16 mapping.
+- **`docs/roadmap.md#50`** · `requirement` · → Requirements → unit trace (R5) · _reframe_
+  - sig: R5 guided one-question intake superseded by R35 D1
+  - R5 (guided intake) → Act 2 · U5 → D1 (the U5 reshape); the v2 single-total-spend on-ramp is now R35's account-level setup — one flow, both user states.
+  - [dedup] R5 contract canonical in product.md; roadmap holds the R5→D1 mapping; supersession truth shared with R35.
+  - [reframe] Strip 'superseded 2026-06-08 / struck' changelog framing per fossilNote; keep the as-built reason R5 maps to D1: the guided intake is the account-level setup of R35 (one flow, both user states). Present-tense, not a story of change.
+- **`docs/roadmap.md#51`** · `requirement` · → Requirements → unit trace (R6) · _pointer_
+  - sig: R6 power-user escape hatch U12
+  - R6 (power-user escape hatch) → Act 3 · U12.
+  - [dedup] R6 contract canonical in product.md; roadmap holds the R6→U12 mapping.
+- **`docs/roadmap.md#52`** · `requirement` · → Requirements → unit trace (R7) · _pointer_
+  - sig: R7 every assumption visible editable U12 U16
+  - R7 (every assumption and every recommendation input/reasoning visible+editable) → Act 3 · U12, Act 4 · U16.
+  - [dedup] R7 contract canonical in product.md; roadmap holds the R7→U12/U16 mapping.
+- **`docs/roadmap.md#53`** · `requirement` · → Requirements → unit trace (R8) · _pointer_
+  - sig: R8 input mirrors output refinement sharpens U5 U12
+  - R8 (input mirrors output; refinement sharpens — narrows on precision, shifts on a correction) → Act 2 · U5, Act 3 · U12.
+  - [dedup] R8 contract canonical in product.md; roadmap holds the R8→U5/U12 mapping.
+- **`docs/roadmap.md#54`** · `requirement` · → Requirements → unit trace (R9) · _pointer_
+  - sig: R9 two coupled controls sequencing conversion U1-U2 U10 U15
+  - R9 (propose a strategy over two coupled solver-optimized controls — sequencing + conversion) → substrate Act 1 · U1–U2; manual Act 3 · U10; solver Act 4 · U15.
+  - [dedup] R9 contract canonical in product.md; roadmap holds the R9→U1-U2/U10/U15 mapping.
+- **`docs/roadmap.md#55`** · `requirement` · → Requirements → unit trace (R10) · _pointer_
+  - sig: R10 recommend-second spine first then strategy U16
+  - R10 (recommend-second flow: spine first, then strategy, comparative reasoning on demand, user tunes/overrides) → Act 4 · U16.
+  - [dedup] R10 contract canonical in product.md; roadmap holds the R10→U16 mapping.
+- **`docs/roadmap.md#56`** · `requirement` · → Requirements → unit trace (R11) · _pointer_
+  - sig: R11 calm invited never nagging U10 U16
+  - R11 (calm, invited; never a nagging alert) → Act 3 · U10, Act 4 · U16.
+  - [dedup] R11 contract canonical in product.md; roadmap holds the R11→U10/U16 mapping.
+- **`docs/roadmap.md#57`** · `requirement` · → Requirements → unit trace (R12) · _pointer_
+  - sig: R12 probabilistically framed certainty banned hedge copyGuard
+  - R12 (every recommendation probabilistically framed; certainty banned; hedge required) → copyGuard Act 2 · U7, extended Act 3 · U10 + Act 4 · U16.
+  - [dedup] R12 contract canonical in product.md; roadmap holds the R12→U7(copyGuard born)/U10/U16 mapping.
+- **`docs/roadmap.md#58`** · `requirement` · → Requirements → unit trace (R13) · _pointer_
+  - sig: R13 optional honest-limits note U0 U16
+  - R13 (optional honest-limits note, honesty grounds not a Terms requirement) → Act 1 · U0 (static), Act 4 · U16.
+  - [dedup] R13 contract canonical in product.md; roadmap holds the R13→U0/U16 mapping.
+- **`docs/roadmap.md#59`** · `requirement` · → Requirements → unit trace (R14) · _pointer_
+  - sig: R14 plain not dumbed-down U7 U16
+  - R14 (plain not dumbed-down) → Act 2 · U7, Act 4 · U16.
+  - [dedup] R14 contract canonical in product.md; roadmap holds the R14→U7/U16 mapping.
+- **`docs/roadmap.md#60`** · `requirement` · → Requirements → unit trace (R15) · _pointer_
+  - sig: R15 no marketing privacy claim honesty-about-architecture U4
+  - R15 (no marketing privacy claim; honesty-about-architecture survives) → Act 1 · U4.
+  - [dedup] R15 contract canonical in product.md; roadmap holds the R15→U4 mapping.
+- **`docs/roadmap.md#61`** · `requirement` · → Requirements → unit trace (R16) · _pointer_
+  - sig: R16 encrypted at rest PBKDF2-600k U4
+  - R16 (encrypted at rest + local access guarded, PBKDF2-600k acceptable) → Act 1 · U4.
+  - [dedup] R16 contract canonical in product.md; roadmap holds the R16→U4 mapping (note: R16 maps to U4, not U16 — corrects the quarry's stray U16 note at #39).
+- **`docs/roadmap.md#62`** · `requirement` · → Requirements → unit trace (R17) · _pointer_
+  - sig: R17 survivor recovery phrase mandatory export U4 U8 U13
+  - R17 (survivor recovery load-bearing — phrase + mandatory export, two-person posture) → Act 1 · U4, Act 2 · U8, Act 3 · U13.
+  - [dedup] R17 contract canonical in product.md; roadmap holds the R17→U4/U8/U13 mapping.
+- **`docs/roadmap.md#63`** · `requirement` · → Requirements → unit trace (R18) · _pointer_
+  - sig: R18 export back-up for durability U4 U8
+  - R18 (export/back-up for durability) → Act 1 · U4, Act 2 · U8.
+  - [dedup] R18 contract canonical in product.md; roadmap holds the R18→U4/U8 mapping.
+- **`docs/roadmap.md#64`** · `requirement` · → Requirements → unit trace (R19) · _pointer_
+  - sig: R19 manual inputs sanity-checked never falsely confident
+  - R19 (manual inputs sanity-checked, never falsely confident) → engine half Act 1 · U1; intake half Act 2 · U5; control surfaces Act 3 · U10; budget Act 3 · U9.
+  - [dedup] R19 contract canonical in product.md; roadmap holds the R19→U1/U5/U10/U9 mapping.
+- **`docs/roadmap.md#65`** · `requirement` · → Requirements → unit trace (R20) · _pointer_
+  - sig: R20 itemized time-boxed budget essentials floor discretionary surplus U9
+  - R20 (itemized, time-boxed budget — essentials=floor / discretionary=surplus) → Act 3 · U9.
+  - [dedup] R20 contract canonical in product.md; roadmap holds the R20→U9 mapping.
+- **`docs/roadmap.md#66`** · `requirement` · → Requirements → unit trace (R21) · _pointer_
+  - sig: R21 lexicographic objective survival floor surplus goal U15 U16
+  - R21 (lexicographic objective: survival floor → user-chosen surplus goal; objective metric ≡ headline metric) → Act 4 · U15 (objective), Act 4 · U16 (headline pivot).
+  - [dedup] R21 contract canonical in product.md; roadmap holds the R21→U15/U16 mapping.
+- **`docs/roadmap.md#67`** · `requirement` · → Requirements → unit trace (R22) · _pointer_
+  - sig: R22 every recommendation grades own confidence hedge rides headline U14 U16
+  - R22 (every recommendation grades its own confidence; hedge rides the headline) → Act 4 · U14 (calibration), Act 4 · U16 (render).
+  - [dedup] R22 contract canonical in product.md; roadmap holds the R22→U14/U16 mapping.
+- **`docs/roadmap.md#68`** · `requirement` · → Requirements → unit trace (R23) · _pointer_
+  - sig: R23 comparative depth retain the runner-up U15 U16
+  - R23 (comparative depth — why this beat the runner-up; retain the runner-up) → Act 4 · U15–U16.
+  - [dedup] R23 contract canonical in product.md; roadmap holds the R23→U15-U16 mapping.
+- **`docs/roadmap.md#69`** · `requirement` · → Requirements → unit trace (R24) · _pointer_
+  - sig: R24 income-dependent healthcare ACA-PTC IRMAA HSA U3 U11
+  - R24 (income-dependent healthcare across the Medicare line — ACA-PTC / IRMAA / HSA) → overlay Act 1 · U3; surfaces Act 3 · U11.
+  - [dedup] R24 contract canonical in product.md; roadmap holds the R24→U3/U11 mapping.
+- **`docs/roadmap.md#70`** · `requirement` · → Requirements → unit trace (R25) · _pointer_
+  - sig: R25 cardinal honesty calm-but-wrong is the sin U14
+  - R25 (cardinal honesty: calm-but-wrong is the sin; the bar rises for a recommender; 'just for friends' never softens validation) → validation Act 4 · U14; copyGuard everywhere; N=1 cold-reads.
+  - [dedup] Full cardinal-rule statement canonical in product.md §2; CLAUDE.md keeps its own plain-language copy; roadmap holds only the R25→U14 trace as a pointer.
+- **`docs/roadmap.md#71`** · `requirement` · → Requirements → unit trace (SC) · _pointer_
+  - sig: SC correctness two-tier engine number recommendation oracle U1 U14
+  - SC (correctness two-tier: engine number right + recommendation right vs an optimality/ranking oracle, ranking-stability, grade calibration) → Act 1 · U1 (number), Act 4 · U14 (recommendation).
+  - [dedup] SC success-criteria list canonical in product.md; roadmap holds the SC→U1/U14 mapping; solver-blocking oracle in validation gates.
+- **`docs/roadmap.md#72`** · `requirement` · → Requirements → unit trace (R26) · _reframe_
+  - sig: R26 fuck-off date swept over date-offset Y never bisection C3
+  - R26 (the fuck-off date = the existing engine swept over the household work-stop date-offset Y, never a household 'age'; non-monotone-robust exhaustive sweep, never a bisection) → C3 (dateSearch.ts).
+  - [dedup] R26 contract canonical in product.md; roadmap holds the R26→C3 mapping; rationale in decisions/accumulation-fuck-off-date.md; non-monotone contract in validation gates.
+  - [reframe] Drop 'R26-R39 are the 2026-06-08 expansion' chronology per fossilNote; present-tense: R26 is a current requirement mapping to C3.
+- **`docs/roadmap.md#73`** · `requirement` · → Requirements → unit trace (R27) · _reframe_
+  - sig: R27 two dates floor lifestyle one-sided window-floor C3 D2
+  - R27 (the answer is two dates — floor + lifestyle — from the lexicographic objective; one-sided window-floor semantic) → C3 (engine) + D2 (surface); the two-track split rides Act 3 · U9's degenerate-collapse.
+  - [dedup] R27 contract canonical in product.md; roadmap holds the R27→C3/D2 mapping; rationale in decisions/accumulation-fuck-off-date.md.
+  - [reframe] Drop '2026-06-08 expansion' chronology; present-tense: R27 maps to C3+D2.
+- **`docs/roadmap.md#74`** · `requirement` · → Requirements → unit trace (R28) · _reframe_
+  - sig: R28 both dates confidence-graded re-grade on override C3 D2
+  - R28 (both dates confidence-graded, never hard lines; re-grade on strategy override) → C3 + D2.
+  - [dedup] R28 contract canonical in product.md; roadmap holds the R28→C3/D2 mapping; rationale in decisions/accumulation-fuck-off-date.md.
+  - [reframe] Drop '2026-06-08 expansion' chronology; present-tense: R28 maps to C3+D2.
+- **`docs/roadmap.md#75`** · `requirement` · → Requirements → unit trace (R29) · _reframe_
+  - sig: R29 framing adapts to user state date vs spine D2
+  - R29 (framing adapts to user state — date for not-yet-retired; spine confidence for already-retired) → D2 (state-adaptive first answer).
+  - [dedup] R29 contract canonical in product.md; roadmap holds the R29→D2 mapping; the state-adaptive first-magic-moment is also summarized in CLAUDE.md.
+  - [reframe] Drop '2026-06-08 expansion' chronology; present-tense: R29 maps to D2.
+- **`docs/roadmap.md#76`** · `requirement` · → Requirements → unit trace (R30) · _reframe_
+  - sig: R30 model pre-retirement accumulation phase C2
+  - R30 (model the pre-retirement accumulation phase — contributions + growth → retirement-onset balance + basis) → C2 (accumulation projection).
+  - [dedup] R30 contract canonical in product.md; roadmap holds the R30→C2 mapping; rationale in decisions/accumulation-fuck-off-date.md.
+  - [reframe] Drop '2026-06-08 expansion' chronology; present-tense: R30 maps to C2.
+- **`docs/roadmap.md#77`** · `requirement` · → Requirements → unit trace (R31) · _reframe_
+  - sig: R31 contributions per-account flat-real employer match C2 D1 C1
+  - R31 (contributions per-account, flat-real, stop at the tested date; employer match captured — pre-tax even on a Roth 401k) → C2 (engine) + D1 (intake) + C1 (limit constants).
+  - [dedup] R31 contract canonical in product.md; roadmap holds the R31→C2/D1/C1 mapping; rationale in decisions/accumulation-fuck-off-date.md.
+  - [reframe] Drop '2026-06-08 expansion' chronology; present-tense: R31 maps to C2+D1+C1.
+- **`docs/roadmap.md#78`** · `requirement` · → Requirements → unit trace (R32) · _reframe_
+  - sig: R32 v1 projects not optimizes accumulation solver decumulation-only
+  - R32 (v1 projects, does not optimize accumulation; solver stays decumulation-only) → Scope Boundaries (product); C3 (date-search ≠ solver).
+  - [dedup] R32 scope boundary canonical in product.md Scope Boundaries; roadmap holds the R32→C3 as-built mapping (date-search ≠ solver).
+  - [reframe] Drop '2026-06-08 expansion' chronology; present-tense: R32 is a scope boundary, mapped to C3.
+- **`docs/roadmap.md#79`** · `requirement` · → Requirements → unit trace (R33) · _reframe_
+  - sig: R33 healthcare OFF during accumulation ON at tested date buildCandidateParams
+  - R33 (healthcare OFF during accumulation, ON at the tested date — per-candidate cost-stream construction; the engine has no retirement gate) → C3 (buildCandidateParams(Y)) + C2.
+  - [dedup] R33 contract canonical in product.md; roadmap holds the R33→C3/C2 mapping; rationale in decisions/accumulation-fuck-off-date.md.
+  - [reframe] Drop '2026-06-08 expansion' chronology; present-tense: R33 maps to C3+C2.
+- **`docs/roadmap.md#80`** · `requirement` · → Requirements → unit trace (R34) · _reframe_
+  - sig: R34 accumulation inherits invariants ONE continuous CRN timeline byte-identically C2
+  - R34 (accumulation inherits engine invariants — ONE continuous absolute-year draw timeline (CRN); one per-path future end-to-end; empty phase reduces byte-identically) → C2 (the load-bearing engine contract).
+  - [dedup] R34 contract canonical in product.md; the CRN single-shared-draw + reduce-to-spine invariants are canonical in architecture.md; roadmap holds the R34→C2 mapping.
+  - [reframe] Drop '2026-06-08 expansion' chronology; present-tense: R34 maps to C2 and inherits the architecture CRN/reduce-to-spine invariants.
+- **`docs/roadmap.md#81`** · `requirement` · → Requirements → unit trace (R35) · _reframe_
+  - sig: R35 ~5-min account-level setup surface-early both states D1
+  - R35 (the first answer from a ~5-min account-level guided setup, surface-early, single entry pass, both user states) → D1 (intake reshape) + the master Success-Criterion edit.
+  - [dedup] R35 contract canonical in product.md; roadmap holds the R35→D1 mapping; supersession truth shared with R5.
+  - [reframe] Strip 'single-spend on-ramp replaced by R35, master edit 2026-06-10' changelog framing; keep the as-built truth: the first answer comes from a ~5-min account-level guided setup, surface-early, single pass, both user states, mapping to D1. Present-tense.
+- **`docs/roadmap.md#82`** · `requirement` · → Requirements → unit trace (R36) · _reframe_
+  - sig: R36 account values user-entered no live price lookup D1
+  - R36 (account values user-entered; no live price lookup) → D1 + Scope Boundaries.
+  - [dedup] R36 scope boundary canonical in product.md Scope Boundaries; roadmap holds the R36→D1 mapping.
+  - [reframe] Drop '2026-06-08 expansion' chronology; present-tense: R36 maps to D1, a scope boundary (no live price lookup).
+- **`docs/roadmap.md#83`** · `requirement` · → Requirements → unit trace (R37) · _reframe_
+  - sig: R37 per-ticker holdings collapse to one household blend C1 D1
+  - R37 (per-ticker holdings collapse to one household blend; bundled ticker→asset-class table + manual classification; basis per account, not per lot) → C1 (tickerBlend.ts) + D1 (entry + manual fallback).
+  - [dedup] R37 contract canonical in product.md; roadmap holds the R37→C1/D1 mapping; the 3 open ATC calls → decisions/portfolio-holdings.md; features/portfolio-holdings.md DISSOLVES.
+  - [reframe] Drop '2026-06-08 expansion' chronology; present-tense: R37 maps to C1 (tickerBlend.ts)+D1; the holdings decisions live in decisions/portfolio-holdings.md, not in a features/ doc.
+- **`docs/roadmap.md#84`** · `requirement` · → Requirements → unit trace (R38) · _reframe_
+  - sig: R38 HSA contributions accumulation HSA spend decumulation U3·M5 B1 C2
+  - R38 (HSA contributions → accumulation; HSA spend → decumulation, the resumed U3·M5) → C2 (contributions) + B1 (U3·M5 spend).
+  - [dedup] R38 contract canonical in product.md; roadmap holds the R38→C2/B1 mapping; U3 note carries the 'B1'=deferred U3·M5 HSA-spend label.
+  - [reframe] Drop '2026-06-08 expansion' chronology; present-tense: R38 splits HSA across C2 (contributions) and B1/U3·M5 (the not-yet-built decumulation spend).
+- **`docs/roadmap.md#85`** · `requirement` · → Requirements → unit trace (R39) · _reframe_
+  - sig: R39 new PII inherits encryption additive schemaVersion bump U4
+  - R39 (new PII inherits encryption + the schema ladder — additive schemaVersion bump) → C2/D1 schema fields, consumed by Act 1 · U4's migration ladder.
+  - [dedup] R39 contract canonical in product.md; roadmap holds the R39→C2/D1/U4 mapping; U4 note carries migration-ladder/schemaVersion detail.
+  - [reframe] Drop '2026-06-08 expansion' chronology; present-tense: R39 maps to C2/D1 schema fields consumed by U4's migration ladder.
+- **`docs/roadmap.md#86`** · `requirement` · → Requirements → unit trace (R40) · _reframe_
+  - sig: R40 generic non-earned income reduces-to-spine opt-in off guided path
+  - R40 (generic per-person ongoing non-earned income stream — pension/rental/annuity/alimony/other; reduces-to-spine byte-identically; opt-in off the guided path) → Act 2 (engine + intake).
+  - [dedup] R40 contract canonical in product.md; roadmap holds the R40→Act 2 mapping; the 9 KTDs → decisions/other-income-r40.md; build steps → plans/2-first-answer.md; features/other-income.md DISSOLVES.
+  - [reframe] Strip the features/other-income.md plan reference (dissolves); keep the requirement as present-tense. R40 maps to Act 2 engine+intake; its decisions live in decisions/other-income-r40.md.
+- **`docs/roadmap.md#87`** · `scope-boundary` · → Validation gates (preamble) · _canonical_
+  - sig: validation gates preamble golden before downstream golden
+  - Validation gates preamble: a fixture or recommendation must clear these gates before any downstream surface treats it as golden; the full engine-validation detail lives in architecture.md and research/engine-validation-and-tax.md, the per-command surface in the gates table.
+  - [dedup] Gates table canonical in roadmap; golden derivations/SSA cohort/dataset pins canonical in architecture.md + research/engine-validation-and-tax.md (pointers).
+- **`docs/roadmap.md#88`** · `build-detail-or-KTD` · → Validation gates (table — Typecheck) · _canonical_
+  - sig: Gate Typecheck tsc --noEmit pnpm typecheck
+  - Gate — Typecheck: tsc --noEmit, must pass before any browser touch; command pnpm typecheck.
+  - [dedup] Gate canonical in roadmap gates table; CLAUDE.md commands table is the always-in-context pointer copy.
+- **`docs/roadmap.md#89`** · `number-or-figure` · → Validation gates (table — Tests) · _canonical_
+  - sig: 942 vitest across 44 files
+  - Gate — Tests: 942 vitest across 44 files (Vitest 4, globals:false); externally-derived goldens, absence-tests paired with presence companions; command pnpm test.
+  - [dedup] 942/44 is the current count, canonical in roadmap gates table; MEMORY's 721 is STALE; README's test count must be reconciled to 942; CLAUDE.md commands is a pointer.
+- **`docs/roadmap.md#90`** · `build-detail-or-KTD` · → Validation gates (table — Lint) · _canonical_
+  - sig: Gate Lint layer-boundary engine-purity no clock entropy env
+  - Gate — Lint: layer-boundary + engine-purity rules (no clock/entropy/env inside src/engine/**); command pnpm lint.
+  - [dedup] Gate canonical in roadmap gates table; the engine-purity ban list (Math.random/getRandomValues/Date/performance/process) is canonical in CLAUDE.md/architecture — pointer.
+- **`docs/roadmap.md#91`** · `build-detail-or-KTD` · → Validation gates (table — ACA re-verify) · _canonical_
+  - sig: Gate ACA re-verify enhanced-subsidy stale pnpm verify:aca
+  - Gate — ACA re-verify: fails the build if the enhanced-subsidy legislative entry is stale/unconfirmed (live, possibly-retroactive policy); command pnpm verify:aca.
+  - [dedup] Gate canonical in roadmap gates table; aca-last-verified.json/reVerifyEveryBuild detail canonical in CLAUDE.md/architecture; ACA figures in research/pre65-healthcare.md — pointers.
+- **`docs/roadmap.md#92`** · `number-or-figure` · → Validation gates (table — Bundle budget) · _canonical_
+  - sig: Bundle budget ≤ 300 KiB currently 197.8 KiB
+  - Gate — Bundle budget: initial-JS byte sentinel ≤ 300 KiB entry JS; currently 197.8 KiB; command pnpm verify:bundle.
+  - [dedup] Current 197.8 KiB measurement canonical in roadmap gates table; CLAUDE.md's ≤300 KiB threshold is the always-in-context pointer.
+- **`docs/roadmap.md#93`** · `build-detail-or-KTD` · → Validation gates (table — CSP enforcement) · _canonical_
+  - sig: Gate CSP enforcement Chromium blocks inline script cross-origin fetch
+  - Gate — CSP enforcement: a real Chromium blocks an injected inline script + a cross-origin fetch while the engine worker still constructs, each with a no-CSP control arm; command pnpm verify:csp.
+  - [dedup] Gate canonical in roadmap gates table; the e2e/csp.spec.ts/serve-dist-with-headers.ts/no-CSP-control-arm detail canonical in CLAUDE.md/architecture §10 — pointer.
+- **`docs/roadmap.md#94`** · `invariant` · → Validation gates (solver-blocking) · _canonical_
+  - sig: oracle-cleared token withheld until primaries pinned ε calibrated
+  - Solver-blocking gate (Act 4): the optimality oracle (hand-computable known-best cases incl. the after-tax leave-more inversion and the no-change case) must exist and pass BEFORE the solver may recommend — enforced as a harness-minted 'oracle-cleared' token, required as a parameter, withheld until every check passes AND every rec-relevant primary is pinned (directionalUntilPinned===false) AND ε is calibrated; skipping validation or recommending on directional fixtures is a compile error; the date-search carries the non-monotone-robust contract + empty-phase byte-identity gate; the automated oracle judges correctness, the N=1 cold-read judges tone, never the reverse.
+  - [dedup] Solver-blocking gate canonical in roadmap validation gates; directionalUntilPinned/Unsourced-sentinel + oracle-vs-cold-read bar are summarized in CLAUDE.md/product/architecture (pointers); U14 note links it.
+- **`docs/roadmap.md#95`** · `status-as-built` · → What is next · _reframe_
+  - sig: What is next R40 other income confidently-wrong-optimistic gap
+  - What is next: the immediate next build is R40 — other income in retirement (planned, build-ready, zero code); the engine has no concept of ongoing non-earned income today, and for a household with a pension or rental that gap is the difference between a defensibly-conservative and a confidently-wrong-optimistic answer.
+  - [dedup] What-is-next canonical in roadmap; same doc's R40 row/cross-cutting/trace echo it; TODO.md is the volatile copy; features/other-income.md DISSOLVES.
+  - [reframe] Strip the features/other-income.md plan reference (dissolves into plans/2-first-answer.md + decisions/other-income-r40.md). Present-tense: R40 is the immediate next build because the engine has no concept of ongoing non-earned income yet.
+- **`docs/roadmap.md#96`** · `status-as-built` · → What is next · _canonical_
+  - sig: after R40 Act-2 owes U8 U6 render U7 D2
+  - What is next: after R40, the Act-2 answer surface still owes U8 (first encrypted Save + recovery-phrase + export), the U6 confidence-band render, U7 (the confidence statement), and D2 (state-adaptive surface + two-pane laptop layout); Act 3 and Act 4 follow in order; Act 4 is the differentiator and entirely ahead.
+  - [dedup] Same-doc summary of the You-Are-Here Act 2/3/4 unit statuses; canonical in What-is-next as the forward ordering.
+- **`docs/roadmap.md#99`** · `definition-term` · → The ID scheme (Actn ↔ Pn join) · _reframe_
+  - sig: Acts ↔ Pn equivalence code comments still say Phase
+  - The four build chapters are named Acts (Engine → First Answer → Controls → Recommendation); code comments still say Pn (Phase) for the same chapter, and the globally-unique U-numbering is unchanged — the Act↔Pn equivalence is the join.
+  - [dedup] Same-doc: the surviving Act↔Pn equivalence belongs with the ID-scheme Actn definition; not a standalone changelog entry.
+  - [reframe] Strip the 'Phases → Acts rename event' framing per fossilNote (the rename and the renamed-FROM Foundation/First Answer/Controls/Solver names are history); keep the present-tense equivalence: docs say Actn, code comments say Pn for the same chapter, U-numbering unchanged.
+- **`docs/architecture.md#67`** · `status-as-built` · → Validation gates — verify:aca · _canonical_
+  - sig: ACA reVerifyEveryBuild verify:aca gate
+  - The ACA legislative entry carries reVerifyEveryBuild and is CI-gated by verify:aca — it can flip the whole pre-65 model and invert which strategy wins.
+  - [dedup] Kind=status-as-built / a validation gate → roadmap (gates). CLAUDE.md (Constants discipline + Commands verify:aca) and the constants discipline of architecture §8 are pointers. The dated ACA figure itself lives in research/pre65-healthcare (#45).
+- **`docs/plans/1-engine.md#1`** · `status-as-built` · → You-Are-Here / validation-gates · _pointer_
+  - sig: Act 1 closed 2026-06-11
+  - Act 1 is shipped, reviewed, and pinned (closed 2026-06-11); every validation gate is green; live test/bundle counts live once in roadmap validation-gates.
+  - [dedup] Status is canonical in roadmap.md You-Are-Here + validation-gates; the plan keeps a one-line pointer, not the live counts.
+- **`docs/plans/1-engine.md#4`** · `definition-term` · → requirement→unit trace · _canonical_
+  - sig: units at a glance U0-U4 C1-C3
+  - The units-at-a-glance map: U0 scaffold/CSP/constants; U1 MC engine core; U2 tax overlay; U3 healthcare overlay; U4 encrypted store; C1 contribution/blend constants; C2 accumulation projection; C3 the date-search — each with the requirements it lands.
+  - [dedup] The unit↔requirement trace is canonical in roadmap.md requirement→unit trace; this plan's per-unit bodies elaborate the build, the at-a-glance table belongs to roadmap.
+- **`docs/plans/1-engine.md#11`** · `build-detail-or-KTD` · → validation gates · _reframe_
+  - sig: verify-the-back-nine.yml runs typecheck vitest bundle-sentinel
+  - verify-the-back-nine.yml runs typecheck + vitest + the bundle sentinel (not build-only like the ai-journey-stats template) because the engine and crypto ARE the product, so 'tests pass on CI' is true by construction.
+  - [dedup] Validation gates are canonical in roadmap.md; the CI-runs-the-suite fact lands there, the plan need not restate it.
+  - [reframe] Surviving fact: verify-the-back-nine.yml runs typecheck + full vitest + bundle sentinel, not build-only. Present-tense framing: state as the standing CI gate posture, dropping the 'unlike the build-only template' comparison.
+  - [fixed:nit] sig + reframe surviving-fact now carry verify-the-back-nine.yml filename.
+- **`docs/plans/1-engine.md#37`** · `status-as-built` · → You-Are-Here U3 · _pointer_
+  - sig: U3 complete 2026-06-10 M1-M6
+  - U3 is complete (M1–M5 + M6).
+  - [dedup] Per-unit status canonical in roadmap You-Are-Here; plan defers to it.
+  - [reframe] Surviving fact: U3 is complete including the M6 fold. Present-tense framing: reflect U3=done in the You-Are-Here table; drop the 'as built COMPLETE 2026-06-10' dated phrasing.
+- **`docs/plans/1-engine.md#53`** · `status-as-built` · → You-Are-Here C1 / pin status · _reframe_
+  - sig: C1 shapes decided figures pinned at P1-exit
+  - C1 shapes were decided in C1; every figure shipped directionalUntilPinned:true and the exact values were transcribed from the named primaries at the P1-exit pin pass.
+  - [reframe] Surviving fact: C1 figures are pinned (transcribed from named primaries), no longer directional-only. Present-tense framing: reflect the pinned state in roadmap; drop the 'at the P1-exit pin pass 2026-06-11 / 2026-06-08 fold' dated framing.
+- **`docs/plans/2-first-answer.md#0`** · `scope-boundary` · → Act 2 scope / the four acts · _canonical_
+  - sig: magic moment end-to-end, nothing persisted until Save
+  - Act 2 delivers the magic moment end-to-end: calm one-question account-level intake, live-resolving plain-language confidence statement, colorblind-safe viz, honest across six states + survivor, nothing persisted until explicit Save (then recovery-phrase + forced encrypted export + weak-passphrase gate).
+  - [dedup] Roadmap canonical for the act's scope statement; product.md keeps the thesis-level why as a pointer.
+
+- **`docs/plans/2-first-answer.md#2`** · `status-as-built` · → You-Are-Here per-unit status table · _pointer_
+  - sig: U5/D1 Shipped, U6-render/U7/U8/D2 Planned
+  - Per-unit status: U5 account-intake shipped+reviewed (D1's broader date/answer surface still ahead — see canonical D1 cell); U6 foundation shipped (palette.ts+scale.ts+colorblind gate); U6 render, U7, U8, D2, and two-pane layout all Planned not built.
+  - [dedup] The combined U5/D1 You-Are-Here cell is canonical at decisions/accumulation-fuck-off-date.md#86 (resolved token: U5 account-intake shipped/reviewed, D1 surface in progress); this row defers to it for the D1 status token and is canonical only for the U6/U7/U8/D2 Planned tokens.
+  - [fixed:warn] Flipped to pointer; deferred D1 token to #86 to kill the Shipped-vs-IN-PROGRESS clash.
+- **`docs/plans/2-first-answer.md#4`** · `status-as-built` · → You-Are-Here — next build (R40) · _canonical_
+  - sig: R40 other income is the immediate next build
+  - R40 (other income — pension/rental/annuity/alimony) is the immediate next build, build-ready with zero code, threading into D1 intake + the engine stream consumer.
+  - [dedup] Roadmap canonical for as-built/next-build status; the full R40 plan content moves into product (R40) + decisions/other-income-r40 + plans/2-first-answer build thread — NOT a features/ doc.
+  - [reframe] Fossil names features/other-income.md as the home; that doc dissolves — point instead to product R40, decisions/other-income-r40, and the plans/2-first-answer build thread.
+- **`docs/plans/2-first-answer.md#27`** · `requirement` · → requirement→unit trace (U5/D1) · _canonical_
+  - sig: U5/D1 requirements R35 R36 R37 R31 R19 R39 R5 R6 R8
+  - U5/D1 requirements: R35 (account-level setup), R36 (user-entered values, no live lookup), R37 (ticker→blend + manual classification), R31 (per-account contribution+match), R19 (sanity ceilings via C1), R39 (PII encryption + schema ladder), plus substrate R5 (guided intake), R6 (escape-hatch entry), R8 (caveated-fast-then-sharpen).
+  - [dedup] Roadmap canonical for the requirement→unit trace; product holds each R-ledger entry (pointer).
+- **`docs/plans/2-first-answer.md#58`** · `requirement` · → U7 unit goal (You-Are-Here) · _canonical_
+  - sig: U7 goal, product's FACE, state-adaptive lead per-person predicate
+  - U7 goal: the product's face — one plain-language answer leading with the verdict, handling all six states (plus distinct compute-error and pending), honest copy + non-color signal + next-action + a survivor-specific readout, calm and trustworthy; copyGuard is born here; the lead is state-adaptive (ConfidenceStatement.tsx routes date-first via D2 for ≥1 still-working person, spine-first for retired — the per-person predicate people.every(p => p.retirementAge <= p.currentAge), NEVER a max() form); D1's provisional treatment applies to the spine lead.
+  - [dedup] Roadmap canonical for the U7 unit goal/status; the per-person routing predicate is canonical in architecture §0 (item 79) — D2 + U7 reference it as a pointer.
+- **`docs/plans/2-first-answer.md#67`** · `scope-boundary` · → validation gates — Act 2 exit (cold-read) · _canonical_
+  - sig: U7 GATE: N=1 cold-read is Act 2 exit, Act 3 must not begin
+  - U7 gate: passing the N=1 cold-read with Briggsy across all six states PLUS the survivor readout is an Act 2 exit condition — non-negotiable, and Act 3 must not begin until it clears; each state + survivor is a first-class pass subject landing 'neither sugarcoated nor catastrophized'; the cold-read bar rises (R25 personal-tool reset); non-negotiable subjects include indeterminate, over-funded (integrity not hedging), already-failing ('starting now'), survivor; because the reader is color blind the cold-read also confirms each non-color signal is fast-scan legible without hue.
+  - [dedup] Roadmap canonical for the validation gate; product R25 + the plans/2 exit-conditions section carry pointers.
+- **`docs/plans/2-first-answer.md#85`** · `scope-boundary` · → validation gates — Act 2 exit conditions · _canonical_
+  - sig: Act 2 EXIT CONDITIONS, five gates, Act 3 must not begin
+  - Act 2 exit conditions: (1) a user reaches their first answer in one short sitting from the ~5-min account-level setup, surfacing+sharpening during the flow not gated behind a final 'calculate'; (2) a not-yet-retired user reaches their two confidence-graded fuck-off dates in that sitting, honestly expressing the date↔confidence tradeoff; (3) the primary surface shows one answer then one recommendation, not a dashboard (the calm test); (4) the N=1 cold-read (Briggsy) across the six states + survivor + date framing, bar rising under the personal-tool reset, Act 3 must not begin until it clears; (5) a first-time user clears a real strength gate, stores a recovery phrase, is forced to export, and lands at a saved vault whose reload reproduces the exact number — an accepted PWA update mid-write never tears the vault.
+  - [dedup] Roadmap canonical for the Act 2 exit/validation gates; U7 The Gate (item 67) + U8 design carry pointers within the plan.
+- **`docs/plans/2-first-answer.md#86`** · `definition-term` · → the four acts — where Act 2 sits · _canonical_
+  - sig: where Act 2 sits, consumes Act 1, hands off to Acts 3-4
+  - Where Act 2 sits — consumes Act 1 (done+pinned): the Monte Carlo core (U1), tax+accounts overlay (U2), income-dependent healthcare overlay (U3), encrypted store (U4), the accumulation+date-search (C1-C3), the SS spousal/survivor sub-engine — and does not re-open them; hands off to Act 3 (controls — manual sequencing + Roth, the itemized budget) and Act 4 (solver & recommendation, the differentiator); the gate is the N=1 cold-read across the six states + survivor (and the fuck-off-date framing when the surfaces land).
+  - [dedup] Roadmap canonical for the act-positioning/consumes-hands-off map; plans/1-engine (U1-U4/C1-C3) carries the upstream-unit pointer.
+  - [reframe] Forward-only: although kind=definition-term, this is the act's position map (consumes/hands-off), not a glossary vocabulary entry — it belongs in roadmap's four-acts overview, not glossary.
+- **`docs/plans/3-controls.md#0`** · `status-as-built` · → You-Are-Here (Act 3 units U9-U13 status) · _canonical_
+  - sig: Act 3 PLANNED, zero code, src/budget gitkeep-only
+  - Act 3 is scoped and build-ready but unstarted (src/budget is .gitkeep-only, no lifecycle frontmatter), and is not the next build.
+  - [dedup] Canonical build-status lives in roadmap You-Are-Here table (this is the act-level PLANNED status home, symmetric with docs/plans/4-recommendation.md#0 _canonical_); TODO.md and the plan-frontmatter keep volatile pointers.
+  - [fixed:nit] Re-tagged pointer→canonical to match the Act-4 PLANNED sibling.
+- **`docs/plans/3-controls.md#1`** · `scope-boundary` · → The four acts (Act 3 scope) · _canonical_
+  - sig: pull-it-toward-you half, shippable manual milestone
+  - Act 3 ships the manual 'pull it toward you' tool (real budget, hand-tuned sequencing+Roth, honest stale re-entry) as a usable milestone before any solver exists.
+  - [dedup] Roadmap owns the act scope; product.md keeps the product-scope framing as a pointer.
+- **`docs/plans/3-controls.md#13`** · `status-as-built` · → You-Are-Here (schema-boundary as-built) · _reframe_
+  - sig: account buckets land at Act-2 D1, first Save is accounts shape
+  - As-built: account-bucket+birth-year (plus contribution/healthcare) fields now land at Act-2 D1 intake and the first Save serializes the accounts shape; U10's mini-intake survives only for legacy-vault upgrade and U13 drifted-split paths.
+  - [dedup] As-built status → roadmap; the D1 intake detail points to plans/2-first-answer, the R35 inversion to product.
+  - [reframe] Surviving fact (present-tense): buckets are collected at D1 and the first Save writes the accounts shape; drop the '2026-06-08 accumulation-fold / shifted-forward' amendment framing.
+- **`docs/plans/3-controls.md#77`** · `status-as-built` · → You-Are-Here / build ordering · _reframe_
+  - sig: next build is R40, then U8/U6-render/U7/D2, then Act 3, then Act 4
+  - Live ordering: Act 3 is not next; the immediate next build is R40 (other income, Act 2), then U8/the U6 confidence-band render/U7/D2, then Act 3, then Act 4; the volatile queue is in TODO.md and the per-unit table in roadmap.
+  - [dedup] As-built ordering -> roadmap You-Are-Here; the session-level queue stays in TODO.md as the volatile pointer.
+  - [reframe] Surviving fact (present-tense): the current build order is R40 -> U8/U6-render/U7/D2 -> Act 3 -> Act 4; drop the 'What is next' volatile-narration framing and let roadmap/TODO own live sequencing.
+- **`docs/plans/4-recommendation.md#0`** · `status-as-built` · → You-Are-Here U14-U17 (planned) · _canonical_
+  - sig: Act 4 PLANNED, zero code
+  - Act 4 (solver + recommendation) is not started: src/engine/solver/ and src/engine/validation/ are .gitkeep-only; this is the differentiator and is entirely ahead.
+  - [dedup] Roadmap You-Are-Here table is canonical for build status; plan front-matter status is a pointer.
+- **`docs/plans/4-recommendation.md#4`** · `definition-term` · → requirement->unit trace (U14-U17) · _canonical_
+  - sig: oracle -> solver -> surface -> staleness
+  - The Act-4 chain: U14 builds the validation harness whose oracle-cleared token gates U15; U15 ranks policies x conversion grid on CRN under the lexicographic objective and emits a byte-identical winner + retained runner-up; U16 surfaces the confidence-graded recommend-second beat; U17 re-solves a stale saved recommendation under current fixtures.
+  - [dedup] Roadmap requirement->unit trace is canonical for the chain ordering; this plan restates it.
+- **`docs/plans/4-recommendation.md#14`** · `requirement` · → You-Are-Here U14 · _canonical_
+  - sig: Unit 14 solver validation harness GATES U15
+  - U14 builds the recommendation-correctness harness before the solver speaks: hand-computable known-best oracle, K-candidate ranking-stability under CRN, calibrated confidence grades, held-out-seed defense against the optimizer's curse — so a confidently-wrong recommendation fails loud (R22, R25, recommendation half of two-tier SC).
+  - [dedup] Roadmap You-Are-Here is canonical for unit identity/status; this is the build-plan unit goal restating it.
+- **`docs/plans/4-recommendation.md#37`** · `requirement` · → You-Are-Here U15 · _canonical_
+  - sig: Unit 15 solver core — ranks, never re-implements
+  - U15 searches the bounded strategy space (named drawdown policies x conversion grid) on identical CRN futures, scores each candidate on the lexicographic objective whose metric is the headline metric, selects a byte-identical winner + retained runner-up within the on-demand compute budget (or triggers WASM promotion), ranking candidates never re-implementing decumulation (R9, R21, R23, R24); gated by U14.
+  - [dedup] Roadmap You-Are-Here canonical for unit status; product R9/R21/R23/R24 canonical for the requirements; this is the build-plan unit goal.
+- **`docs/plans/4-recommendation.md#57`** · `requirement` · → You-Are-Here U16 · _canonical_
+  - sig: Unit 16 recommendation surface — calm second beat
+  - U16 surfaces the solver's output as the calm second beat: a confidence-graded recommendation that never contradicts the spine, hedge on the headline, runner-up retained + comparison one tap down, modeled omissions disclosed adjacent to the delta, every input + reasoning visible/editable, and an honest 10/10->surplus pivot — landing earned never overconfident (R10, R4, R11, R12, R13, R14, R7, R21, R22, R23, R24).
+  - [dedup] Roadmap You-Are-Here canonical for unit status; product R-ledger canonical for the requirements; this is the build-plan unit goal.
+- **`docs/plans/4-recommendation.md#72`** · `requirement` · → validation gates — Act-4 exit conditions · _canonical_
+  - sig: U16 exit: N=1 cold-read + visibly-move-the-spine
+  - U16 exit condition: passing the N=1 cold-read on the recommendation — EARNED not overconfident, the 'coin-flip' grade honest (not wishy-washy or alarming), the comparison reading as transparency not bait-and-switch — is an Act-4 exit condition (R25; cold-read judges tone, U14 judges correctness); also a recommendation must visibly move the spine answer ('6 of 10 -> 8 of 10') AND be correctly confidence-graded (the differentiation success criterion).
+  - [dedup] Roadmap validation-gates is canonical for the exit gate; product R25 holds the cardinal-rule requirement (pointer).
+- **`docs/plans/4-recommendation.md#73`** · `requirement` · → You-Are-Here U17 · _canonical_
+  - sig: Unit 17 stale saved-recommendation handling
+  - U17 treats a saved recommendation as the real executed action it is: on re-entry, re-solve it under current fixtures (never re-present a stale strategy as still-advised), say 'the action we recommended may no longer be advised' (not 'your number drifted'), and re-verify the ACA legislative status that can flip the whole pre-65 model (R7, R10, R24, R25).
+  - [dedup] Roadmap You-Are-Here canonical for unit status; product R-ledger canonical for the requirements; this is the build-plan unit goal.
+- **`docs/plans/4-recommendation.md#86`** · `requirement` · → validation gates — Act-4 exit conditions (U17) · _canonical_
+  - sig: U17 exit: cardinal sin across time, cold-read
+  - U17 exit condition: a stale strategy silently presented as current is the cardinal sin extended across time (R25) and this unit is the structural guard; passing the N=1 cold-read on U17's staleness copy is an Act-4 exit condition (cold-read judges tone, U14 judges correctness) — the 'may no longer be advised' copy (honest not alarmist), the same-strategy-degraded case (must read as honest recalibration never 'still fine'), the retroactive-ACA past-cost note (informational not catastrophizing), and the gate-red reasons (honest about why, never blaming the law when a primary is merely un-pinned) are each first-class subjects.
+  - [dedup] Roadmap validation-gates canonical for the exit gate; product R25 holds the cardinal-rule requirement (pointer).
+- **`docs/plans/features/social-security.md#0`** · `status-as-built` · → You-Are-Here SS unit status · _reframe_
+  - sig: SS sub-engine shipped, pinned 2026-06-14
+  - The Social Security sub-engine (own reduction/credit, Method C spousal excess, §202 survivor) is shipped, reviewed, and pinned; it feeds the existing cash seam from per-person PIA + claim age.
+  - [dedup] Roadmap You-Are-Here is canonical for build status; project-memory copy is a pointer/echo, not a doc home.
+  - [reframe] Surviving fact: the SS sub-engine is shipped and pinned. Present-tense in the roadmap status table (SHIPPED), stripped of the 'feature doc keyed to when SS was added' framing.
+- **`docs/plans/features/social-security.md#9`** · `scope-boundary` · → P4 scope (SS deferrals) · _reframe_
+  - sig: deferred to P4: survivor optimizer, PIA recompute, divorced/child branches, family-max
+  - Deferred to P4: the survivor two-stage claim optimizer (survivors are deemed-filing-exempt; no lever pulls it yet); accumulation-state PIA / year-of-death AIME recompute (entered PIA carried as real); divorced-spouse/child-in-care/DIB branches (out of the married front door — do NOT generalize the worker-filed prerequisite); the family-maximum (named, not modeled).
+  - [dedup] Roadmap P4 scope is canonical for what's deferred; same fact.
+  - [reframe] Surviving fact: the explicit SS deferrals to P4. Present-tense as the roadmap's P4 scope list (including the carried landmine: never generalize worker-filed prerequisite to a divorced spouse). 'PRESERVED VERBATIM' tag dropped.
+- **`docs/plans/features/social-security.md#59`** · `status-as-built` · → You-Are-Here SS unit (review history) · _reframe_
+  - sig: two reviewed passes, three load-bearing guards
+  - The unit shipped in two reviewed passes — a pure-core review (insight 039 locked the pure survivorBenefitAnnual contract) and a holistic integration review of the wiring commit; three guards are load-bearing for the cardinal rule, one of which was a BUG the integration review found (not a plan item).
+  - [dedup] Roadmap is canonical for unit review status; insights 039/040 hold the lessons (no-move there).
+  - [reframe] Surviving fact: the SS unit passed a pure-core review (insight 039) and a holistic integration review that caught a load-bearing bug. Present-tense as the roadmap unit's review note; the lessons live in insights 039/040.
+- **`docs/plans/features/other-income.md#0`** · `status-as-built` · → You-Are-Here (R40 units) · _reframe_
+  - sig: R40 PLANNED build-ready zero code
+  - R40 (other ongoing non-earned income) is PLANNED, build-ready, zero code shipped; amends product §7.
+  - [dedup] The R40-next-build You-Are-Here entry is canonical at docs/plans/2-first-answer.md#4 (the immediate-next-build flag); this row and docs/plans/3-controls.md#77 (the build-order row) defer to it as pointers for the shared R40-next-build status. The R40 ledger entry itself lives in product §7; TODO is volatile.
+  - [reframe] Surviving fact: R40 is planned with no code yet. Drop the 'grounded against HEAD dc674dff / reviewed in N passes' narration — state present-tense 'R40 is planned and build-ready, nothing built.'
+  - [fixed:nit] Added dedup pointer deferring R40-next-build to #4 as the single canonical cell.
+- **`docs/plans/features/other-income.md#26`** · `scope-boundary` · → You-Are-Here U8 (R40 persistence scope) · _reframe_
+  - sig: incomeStreams on ScenarioV3, no schemaVersion bump, U8 codec
+  - U8 persistence: R40 adds incomeStreams to ScenarioV3; the codec v3 arm is U8's; the shape rides existing ScenarioV3 (no schemaVersion bump, no v3→v4 migration) but U8 inherits a real validation contract, not free persistence (KTD-3 + the U8 obligation).
+  - [dedup] U8 scope status canonical in roadmap; the codec contract details home in decisions/other-income-r40 (KTD-3) and the U8 hand-off row.
+  - [reframe] Surviving fact: persistence of incomeStreams is U8's; no schema bump, but the v3 codec arm is a load-bearing validation contract. Present-tense unit scope.
+- **`docs/plans/features/other-income.md#71`** · `status-as-built` · → You-Are-Here Unit 5 (R40 entry status) · _reframe_
+  - sig: R40 entry already lives in product §7, reconcile superseded premise
+  - Status note: the R40 entry ALREADY LIVES in docs/product.md §7 (the doc-rebuild carried it forward); Unit 5's remaining work is to reconcile any superseded-premise lines the zero-removals grep surfaces and confirm the OUT-list / provenance / U8-obligation are present.
+  - [dedup] As-built status canonical in roadmap; product §7 holds the entry itself (pointer).
+  - [reframe] Surviving fact: the R40 product §7 entry exists; the remaining Unit 5 work is to reconcile superseded-premise lines and confirm the OUT-list/provenance/U8-obligation are present. Present-tense status; drop the 'doc-rebuild carried it forward' history.
+- **`docs/plans/features/other-income.md#78`** · `requirement` · → You-Are-Here U8 (R40 codec obligation) · _reframe_
+  - sig: U8 checkIncomeStreamV3 codec validator, colaPct required when fixed-pct
+  - U8 hand-off obligation (the checkIncomeStreamV3 codec validator, importing single-sourced vocab): finiteness-first; enum membership (needVocab); ownerIndex∈{0,1}; survivorPct/taxableFraction range (the SOLE restore-path gate); colaPct REQUIRED-and-finite when colaMode='fixed-pct' (absent/null=corruption, NEVER coerced to 0 — the optimistic-erosion direction); the full fork/type arm (each type's required fields present, contradictory absent — JSON.parse+as erases the union); endAge absent≡lifetime (DND-009, no numeric sentinel); R40 single-sources INCOME_TYPES/COLA_MODES as const.
+  - [dedup] U8 unit obligation tracked in roadmap; the codec contract details restate KTD-3/KTD-6 + the validation-boundary invariant (architecture §6) (pointers).
+  - [reframe] Surviving fact (thin status): U8 must build the checkIncomeStreamV3 codec validator — gated, not free persistence. The field-level contract is NOT roadmap status: it routes to architecture §6 (the R19/validateParams validation-boundary invariant), decisions/other-income-r40 (KTD-3/KTD-6 — incl. colaPct REQUIRED-and-finite when fixed-pct, NEVER coerced to 0 = the optimistic-erosion landmine; and endAge absent≡lifetime = DND-009), and plans/2-first-answer (the U8 build step). Roadmap keeps only the pointer.
+  - [fixed:warn] Trimmed reframe to thin U8 status; routed field contract to arch §6/decisions/plans/2.
+- **`docs/plans/features/portfolio-holdings.md#0`** · `status-as-built` · → You-Are-Here U8 (save/load) — planned: holdings entry folds in · _reframe_
+  - sig: portfolio holdings entry scoped, not built
+  - Multi-holding portfolio entry is scoped/decision-ready with zero code, sequenced into U8.
+  - [reframe] Strip the 'created 2026-06-17 / features-doc' framing. Surviving fact: multi-holding portfolio entry is a planned, decision-ready feature with zero code, sequenced into U8.
+- **`docs/plans/features/portfolio-holdings.md#3`** · `status-as-built` · → You-Are-Here — intake as-built (exact-allocation entry) · _reframe_
+  - sig: exact-allocation per account, manualBlend
+  - Current intake is exact-allocation per account via manualBlend (stockPct/bondPct/cashPct, sum-to-100); single-ticker-per-account is gone; EnteredAccount carries ticker?/manualBlend?/valueToday/basis etc.
+  - [dedup] The EnteredAccount / TickerClassification shapes are canonical in model.ts (and architecture where referenced); roadmap states the as-built status and points there.
+  - [reframe] Strip 'verified in code 2026-06-17' and 'is GONE' change-story. Surviving fact: intake is exact-allocation per account — manualBlend (stockPct/bondPct/cashPct, intake-enforced sum-to-100); EnteredAccount holds ownerIndex, kind, ticker?, manualBlend?, valueToday, basis?, annualContribution?, employerMatchAnnual?, hsaEmployerAnnual?.
+- **`docs/plans/features/portfolio-holdings.md#5`** · `status-as-built` · → You-Are-Here — intake as-built (AllocationEntry) · _reframe_
+  - sig: one precise allocation question per account
+  - AllocationEntry.tsx asks one precise stock/bond/cash question per account (sum-to-100 enforced in-component); the 'mostly stocks' quick-pick and single-ticker lookup were retired; stored shape stays TickerClassification, the simple arm kept for U8 reuse but no longer produced by intake.
+  - [dedup] The AllocationEntry.tsx contract is canonical in source; roadmap records the as-built status.
+  - [reframe] Strip 'were BOTH retired' change-story. Surviving fact: AllocationEntry asks one precise stock/bond/cash % question per account with sum-to-100 enforced in-component; stored shape is TickerClassification, whose simple arm is retained in the model for U8 reuse but not produced by current intake.
+- **`docs/decisions/accumulation-fuck-off-date.md#85`** · `status-as-built` · → You-Are-Here (C1/C2/C3, B1 complete; P1 closed) · _reframe_
+  - sig: C1/C2/C3/B1 COMPLETE, P1 closed 2026-06-11
+  - Build status: C1 (constants + ticker→blend), C2 (accumulation projection inflow), C3 (exhaustive non-monotone-robust date-search), B1 (U3·M5 HSA 4th bucket spend) all COMPLETE 2026-06-10 (ultramode reviews + 9-agent adversarial verification on C3); the engine track is shipped, reviewed, and pinned (P1 closed 2026-06-11). All ship in docs/plans/1-engine.md.
+  - [dedup] Build status canonical in roadmap You-Are-Here table; this record's status note becomes a pointer.
+  - [reframe] Present-tense: the accumulation engine track (C1/C2/C3, B1) is shipped and pinned; P1 is closed.
+- **`docs/decisions/accumulation-fuck-off-date.md#86`** · `status-as-built` · → You-Are-Here (D1 in progress, D2 not built) · _reframe_
+  - sig: D1 IN PROGRESS, D2 NOT BUILT
+  - Build status: D1 (account-level guided intake, ~5-min) IN PROGRESS — U5/D1 account intake shipped + reviewed, remaining surface work ahead; D2 (state-adaptive date surface) NOT BUILT. Both ship in docs/plans/2-first-answer.md.
+  - [dedup] Build status canonical in roadmap You-Are-Here table; this record's status note becomes a pointer.
+  - [reframe] Present-tense: D1 account intake is in progress (account entry shipped), D2 state-adaptive surface not yet built.
+- **`docs/decisions/accumulation-fuck-off-date.md#91`** · `status-as-built` · → You-Are-Here / validation gates (test counts) · _reframe_
+  - sig: 721 tests P1-exit; C2 +40, C3 545
+  - Test counts as-built: C2 added 40 new tests; C3 has 545 tests; P1-exit total = 721 tests, gates green (cross-reference project memory).
+  - [dedup] Test counts canonical in roadmap (and TODO.md volatile mirror); this record's count note becomes a pointer.
+  - [reframe] Present-tense: P1-exit ships 721 tests, gates green (C3 = 545, C2 added 40).
+- **`docs/research/engine-validation-and-tax.md#5`** · `requirement` · → Validation gates / Act 4 solver contract · _canonical_
+  - sig: solver validation contract three more case classes
+  - Because the product recommends a strategy, the solver validation contract (Act 4) grows beyond 'the number is right' and adds three gating case classes before the solver may speak (a wrong recommendation costs real dollars).
+  - [dedup] roadmap.md (validation gates) is canonical for the gate; plans/4-recommendation carries the build-side detail as a pointer.
+- **`docs/research/engine-validation-and-tax.md#23`** · `status-as-built` · → You-Are-Here / SSA cohort tables pinned · _reframe_
+  - sig: CohLifeTables_M/F_Alt2_TR2024.csv sha256-pinned
+  - SSA table4c7.html does not exist (404 — '4.C7' is Trustees-Report numbering, not a filename); the real cohort tables are SSA HistEst CohLifeTables_M_Alt2_TR2024.csv and CohLifeTables_F_Alt2_TR2024.csv, committed sha256-pinned at src/engine/reference/ssa-snapshot/ with SHA256SUMS.
+  - [dedup] Same-doc pin-pass status table is the local copy; roadmap You-Are-Here owns as-built status going forward.
+  - [reframe] Surviving fact (present-tense, thin status): cohort mortality reads from the sha256-pinned SSA HistEst CSVs — pinned. The CSV filenames (CohLifeTables_M/F_Alt2_TR2024), the SHA-pinning detail, and the table4c7.html 404 caution ('4.C7' is Trustees-Report numbering, not a filename/URL — a standing re-fetch landmine) route to research (docs/research/engine-validation-and-tax.md) per number→research, so the landmine survives. Drop the '[CORRECTED 2026-06-11]' dated-amendment framing.
+  - [fixed:warn] Roadmap keeps thin pinned status; CSV names/SHA/4.C7 landmine routed to research.
+- **`docs/research/engine-validation-and-tax.md#45`** · `status-as-built` · → You-Are-Here / P1 exit (pin pass) · _reframe_
+  - sig: P1-exit pin pass 2026-06-11 closed exit gates
+  - The P1-exit pin pass (2026-06-11) closed the formerly-open exit gates: grounded-search figures are now parsed-and-pinned against primaries, sha256-snapshotted under src/engine/reference/ and read by the canonical year-keyed constants table.
+  - [dedup] roadmap You-Are-Here owns as-built status; TODO.md history and project memory are volatile pointers.
+  - [reframe] Surviving fact (present-tense): reference figures are parsed-and-pinned against primaries, sha256-snapshotted under src/engine/reference/, and read by the canonical year-keyed constants table — P1 is closed. Reframe the dated pin-pass narrative as the standing as-built state.
+- **`docs/research/pre65-healthcare.md#1`** · `status-as-built` · → You-Are-Here U3 healthcare overlay (as-built) · _reframe_
+  - sig: healthOverlay.ts and constants/health.ts read these
+  - healthOverlay.ts and constants/health.ts read these facts; the legislative exit-gate is enforced every build by verify:aca; numbers carry directionalUntilPinned precision discipline; ships today on the 2026 reverted/cliff base case.
+  - [dedup] As-built status canonical in roadmap You-Are-Here; verify:aca/reVerifyEveryBuild discipline canonical in architecture §7.2 / project CLAUDE.md — research doc keeps the number-precision note only.
+  - [reframe] Surviving fact: U3 healthOverlay.ts + constants/health.ts consume these facts; verify:aca gates the legislative entry every build; precision is directional-until-pinned, not unfinished; the model ships on the 2026 reverted/cliff base case (present tense).
+
+
+## docs/architecture.md
+
+- **`README.md#5`** · `invariant` · → Crypto / storage boundary (local-first, AES-GCM, recovery) · _pointer_
+  - sig: AES-GCM PBKDF2 local-first PWA
+  - Local-first PWA: no backend, no account, no cloud; financial picture entered by hand, encrypted at rest in the browser (AES-GCM under a PBKDF2-hardened key), never leaves the device; a two-person recovery-phrase + mandatory encrypted export is the survivor's backstop.
+  - [dedup] Canonical home architecture (load-bearing crypto/storage); product.md keeps the why and points to architecture for mechanics.
+  - [fixed:nit] Relabeled kind decision-rationale->invariant (load-bearing contract); home unchanged.
+- **`README.md#6`** · `invariant` · → CRN / single-shared-draw invariant · _pointer_
+  - sig: ONE shared market draw CRN
+  - ONE shared market draw per year, common across every bucket (pre-tax/Roth/taxable/HSA) — buckets differ only in TAX TREATMENT, never luck; this CRN rule lets the solver rank candidates on identical futures; the draw is a pure function of path × horizon dimensions.
+  - [dedup] Canonical home architecture; CLAUDE.md load-bearing-contracts summary is the always-in-context pointer.
+- **`README.md#7`** · `invariant` · → Reduce-to-spine invariant · _pointer_
+  - sig: reduce-to-spine byte-identical
+  - Reduce-to-spine: every overlay (tax, healthcare, earned-income bridge) reduces BYTE-IDENTICALLY (same seed) to the validated Monte Carlo spine + drawdown policy (vs Trinity/Bengen) when OFF — golden cases reproduce bit-for-bit; the trustworthy core is never silently perturbed.
+  - [dedup] Canonical home architecture; CLAUDE.md summary is the pointer.
+- **`README.md#8`** · `invariant` · → Externally-derived fixtures (DND 012) · _pointer_
+  - sig: externally-derived fixtures DND 012
+  - Externally-derived fixtures (DND 012): golden numbers are derived INDEPENDENTLY (hand/spreadsheet/published calc), never by the engine's own formula — a self-computed fixture proves the code runs, not that it's right; applies to Trinity, Bengen, tax math, and ACA/IRMAA expected values.
+  - [dedup] Canonical home architecture; CLAUDE.md DND 012 entry is the pointer.
+- **`README.md#9`** · `invariant` · → §8 constants discipline (no in-range fallbacks / Unsourced sentinel) · _pointer_
+  - sig: NO in-range default fallbacks
+  - NO in-range default fallbacks (burned/062): a missing input is a loud Unsourced sentinel whose .value throws — never a plausible '?? 0.04' that makes 'we don't know' indistinguishable from 'we measured'; inside a tax/ACA fixed-point that ambiguity inverts answers.
+  - [dedup] Canonical home architecture §8; CLAUDE.md constants-discipline / burned/062 is the pointer.
+- **`README.md#10`** · `invariant` · → §8 constants discipline (single year-keyed table / ACA reVerifyEveryBuild) · _pointer_
+  - sig: ONE canonical year-keyed table reVerifyEveryBuild
+  - Every dated tax/health figure lives in ONE canonical year-keyed table that engine, plan, tests, and copy-guard all READ — a number is never re-typed; the ACA legislative entry carries reVerifyEveryBuild (gated by verify:aca) because it can flip the entire pre-65 model and a stale figure there is a quiet catastrophe.
+  - [dedup] Canonical home architecture §8; CLAUDE.md constants-discipline summary is the pointer.
+- **`README.md#11`** · `invariant` · → §10 security / CSP boundary · _pointer_
+  - sig: strict CSP HTTP headers script-src self
+  - A strict CSP ships via HTTP response headers (script-src 'self', no inline, no eval, connect-src 'self'), enforcement-tested in real Chromium — guarding the in-session decrypted model against injected page scripts.
+  - [dedup] Canonical home architecture §10; CLAUDE.md security/CSP-boundary summary is the pointer.
+- **`README.md#12`** · `invariant` · → Recommendation gate (validation-token contract) · _pointer_
+  - sig: solver cannot speak until token minted
+  - The recommendation layer is gated STRUCTURALLY: the solver cannot run until a validation harness (optimality oracle + ranking-stability checks + held-out-seed grade calibration) mints a token it requires; recommending on unverified fixtures is a compile error, not a matter of discipline.
+  - [dedup] Canonical contract home architecture; roadmap Act 4 references it as a validation gate and product.md states the why — both point here.
+  - [fixed:nit] Relabeled kind decision-rationale->invariant (structural contract); home unchanged.
+- **`README.md#17`** · `build-detail-or-KTD` · → Toolchain / stack · _pointer_
+  - sig: React 19 Vite 8 Vitest 4 motion@12 idb comlink
+  - Stack: React 19, TypeScript 5.9 strict-plus, Vite 8, Vitest 4, fast-check property tests, motion@12, idb + comlink for the encrypted IndexedDB worker boundary, zxcvbn-ts passphrase-strength floor, self-hosted Fraunces + Source Sans 3, pnpm, no Prettier (ESLint enforces layer boundaries + engine purity).
+  - [dedup] Canonical stack home architecture (toolchain); CLAUDE.md conventions + package.json are the operative mirrors / pointers.
+- **`README.md#18`** · `invariant` · → Layers & import boundaries / engine purity invariant · _pointer_
+  - sig: engine is PURE no clock no entropy
+  - Hard lint-enforced import boundaries: engine·crypto·store·intake·budget·viz·ui·shared; src/engine/ is PURE — a deterministic function of (params, seed), reading no clock/entropy/environment (Math.random, Date, crypto.getRandomValues, performance all lint-banned inside it); the seed is injected by the caller.
+  - [dedup] Canonical home architecture; CLAUDE.md layers-&-boundaries summary is the pointer.
+- **`docs/product.md#22`** · `build-detail-or-KTD` · → copyGuard (require-hedge lint shape) · _canonical_
+  - sig: 'require the hedge on the headline' copyGuard lint shape
+  - 'Require the hedge on the headline' is a new copyGuard lint shape — a positive/REQUIRE assertion, not the current ban-list — and must be built mechanically or hedge-burial drifts in silently.
+  - [dedup] The copyGuard lint mechanics are canonical in architecture (copyGuard); product carries it as a landmine and R12/R22 cite it — those become pointers.
+- **`docs/product.md#60`** · `invariant` · → Accumulation engine contract / CRN single shared draw · _canonical_
+  - sig: R34 — ONE continuous absolute-year market-draw timeline (CRN)
+  - R34: accumulation inherits the engine invariants — accumulation and decumulation share one continuous absolute-year market-draw timeline (a single buildDraws stream from currentAge, never a separate pre-phase stream) so candidate offsets see byte-identical year-t returns and rank on identical futures (CRN); the date's confidence is read off one per-path future end-to-end so final-working-year sequence-of-returns risk is honestly priced; no accumulation-phase income-tax engine (the destination bucket carries tax character); an empty phase (Y==0) consumes zero extra draws and reduces byte-identically to today's decumulation-from-initialPortfolio.
+  - [dedup] This is a load-bearing engine invariant — canonical in architecture (single shared draw / CRN, accumulation contract); product R34 ledger entry, CLAUDE.md, R26, success criteria (byte-identical), roadmap hold pointers.
+- **`docs/architecture.md#0`** · `decision-rationale` · → Header / intro — canonical-home + precedence · _canonical_
+  - sig: calm-but-wrong is the sin
+  - architecture.md is the single canonical home for engine mechanics + load-bearing invariants; it wins on any invariant conflict; the cardinal rule is enforced by structural contracts, not tone.
+  - [dedup] Cardinal-rule FULL statement is canonical in docs/product.md §2; README keeps a plain-language copy; the precedence-on-conflict rule is canonical in CLAUDE.md. Architecture's intro states the invariant-wins-here scope (canonical here) and POINTS to product for the cardinal rule.
+  - [reframe] Surviving fact: architecture.md is the one place engine invariants live and wins on conflict; the cardinal rule 'calm-but-wrong is the sin' is structural. Present-tense, no changelog framing.
+- **`docs/architecture.md#1`** · `invariant` · → §1 Engine purity / Invariants index · _canonical_
+  - sig: engine reads no clock, entropy, environment
+  - src/engine is a deterministic function of (params, seed) and reads no clock, entropy, or environment — break it and determinism + CRN die.
+  - [dedup] Canonical here; CLAUDE.md (Layers & import boundaries) keeps the always-in-context summary as a pointer.
+- **`docs/architecture.md#2`** · `invariant` · → §2/§3 CRN — single shared draw · _canonical_
+  - sig: one shared market draw per year
+  - All buckets share ONE market-return draw per year; the draw schedule is a pure function of path/horizon dimensions only; per-bucket draws are forbidden (they break CRN and re-enable asset-location).
+  - [dedup] Canonical here — THE canonical CRN row; merge README#6, docs/product.md#60, and arch#21 into this single row (all are the same single-shared-draw/CRN invariant); CLAUDE.md (Load-bearing engine contracts) becomes a pointer.
+  - [fixed:nit] Sharpened merge instruction — names README#6, product#60, arch#21 to collapse into arch#2.
+- **`docs/architecture.md#3`** · `invariant` · → §2 CRN — stateless Box-Muller · _canonical_
+  - sig: stateless Box-Muller, no cached spare
+  - The normal transform consumes two uniforms per draw and never caches the spare across calls — a cached spare desyncs CRN candidates that interleave normals differently.
+  - [dedup] Canonical here; CLAUDE.md copy is a pointer.
+- **`docs/architecture.md#4`** · `invariant` · → §5 Reduce-to-spine invariant · _canonical_
+  - sig: reduce-to-spine byte-identical when OFF
+  - Every overlay OFF reduces byte-identically (same seed) to the Trinity/Bengen-validated decumulation; golden cases are never perturbed; each unit owns its exhaustive OFF condition + byte-identical test.
+  - [dedup] Canonical here; CLAUDE.md copy is a pointer.
+- **`docs/architecture.md#5`** · `invariant` · → §5 Externally-derived fixtures (DND 012) · _canonical_
+  - sig: externally-derived fixtures DND 012
+  - Golden values must be derived by an independent path (hand-compounded spreadsheet / published figure), never via the engine's own arithmetic — own-formula goldens prove typing, not correctness.
+  - [dedup] Canonical here; CLAUDE.md copy (cites DND 012) is a pointer.
+- **`docs/architecture.md#6`** · `invariant` · → §6 The R19 numeric gate · _canonical_
+  - sig: R19 numeric gate finiteness first
+  - validateParams checks finiteness FIRST and rejects every incomputable input before any path runs, so no NaN rides past ??/> guards into a percentile or headline.
+- **`docs/architecture.md#7`** · `invariant` · → §8 Constants discipline — no in-range defaults · _canonical_
+  - sig: no in-range default fallbacks throws
+  - A figure the research names but doesn't value THROWS — never a plausible default, so a missing input is never indistinguishable from a real measurement.
+  - [dedup] Canonical here; CLAUDE.md Constants discipline (cites burned/062) is a pointer. Note overlap with item #66 (the Unsourced-sentinel detail) — both live in §8.
+- **`docs/architecture.md#8`** · `invariant` · → §8 Constants discipline — one canonical table · _canonical_
+  - sig: one canonical year-keyed constants table
+  - Every dated figure is read from one year-keyed table and never re-typed; a re-typed figure would drift out of sync with its source silently.
+  - [dedup] Canonical here; CLAUDE.md Constants discipline copy is a pointer. Overlaps item #63 (same invariant, more detail).
+- **`docs/architecture.md#9`** · `invariant` · → §9 Cross-engine headline robustness · _canonical_
+  - sig: quantize headline before band-edge
+  - The headline-determining statistic is quantized to a coarse grid BEFORE the band-edge decision so the same scenario shows the same headline across browsers (the screenshot promise).
+  - [dedup] Canonical here; CLAUDE.md copy is a pointer. Overlaps item #70 (the SURVIVAL_GRID=0.01 numeric detail).
+- **`docs/architecture.md#10`** · `invariant` · → §7.3 Encrypted-store write-gate · _canonical_
+  - sig: encrypted-store write-gate session key
+  - One model copy; a write needs a session key AND a current passphrase-wrap; never persist Infinity/NaN — else a survivor restores a stale vault or a sentinel nulls into corruption.
+  - [dedup] Canonical here; CLAUDE.md (Constants discipline sentinel; Security) copies are pointers. Overlaps items #55 (write-gate conjunction) and #57 (sentinel).
+- **`docs/architecture.md#11`** · `invariant` · → §10 Security / CSP boundary · _canonical_
+  - sig: strict CSP script-src connect-src self
+  - Strict CSP ships via response headers with script-src/connect-src 'self' and no inline/eval, so an XSS foothold gains no programmatic exfil channel for the decrypted model.
+  - [dedup] Canonical here; CLAUDE.md Security/CSP boundary is a pointer. Overlaps item #71 (the full directive list).
+- **`docs/architecture.md#12`** · `definition-term` · → §1 The layer architecture · _canonical_
+  - sig: eight layers engine crypto store shared
+  - The architecture is 8 layers (engine·crypto·store·intake·budget·viz·ui·shared) with one-directional import boundaries ESLint-enforced via pnpm lint; path aliases @engine/* … @shared/* name each layer.
+  - [dedup] Canonical here (it is a structural contract, not just vocabulary); CLAUDE.md Layers & import boundaries is the pointer; glossary may cross-link the layer names but should not redefine.
+- **`docs/architecture.md#13`** · `invariant` · → §1 src/engine/ is PURE · _canonical_
+  - sig: engine bans Date Math.random crypto.getRandomValues
+  - src/engine is pure: imports only @shared, and Math.random/crypto.getRandomValues/Date/performance/process are all lint-banned (broader than weak-RNG); the seed is injected, never generated inside; engine tests are exempt.
+  - [dedup] Canonical here; CLAUDE.md engine-purity summary is a pointer.
+- **`docs/architecture.md#14`** · `build-detail-or-KTD` · → §1 Injected-dependency discipline · _canonical_
+  - sig: dateSearch.ts injected shouldContinue()
+  - dateSearch.ts stays pure by taking an injected async shouldContinue() (same shape as the injected seed), so cooperative cancellation never makes the engine read the environment.
+  - [dedup] Routed to architecture (not plans) because it is the injected-dependency contract that keeps engine purity — an invariant-supporting rule, not a build step.
+- **`docs/architecture.md#15`** · `invariant` · → §1 src/crypto/ · _canonical_
+  - sig: crypto layer CSPRNG required
+  - src/crypto is the primitive layer: CSPRNG (crypto.getRandomValues) is required for the recovery phrase and Math.random is banned (the U0 weak-RNG lint extends to src/crypto/**).
+  - [dedup] Canonical here; CLAUDE.md crypto-layer summary is a pointer.
+- **`docs/architecture.md#16`** · `invariant` · → §1 src/shared/ · _canonical_
+  - sig: shared is the leaf imports nothing
+  - src/shared is the leaf — the plaintext model (model.ts) plus the outcome-state enum — and imports nothing from feature layers.
+  - [dedup] Canonical here; CLAUDE.md shared-layer summary is a pointer.
+- **`docs/architecture.md#17`** · `invariant` · → §2 Determinism and CRN · _canonical_
+  - sig: seed mulberry32 signed-32-bit round-trip
+  - The seed is one integer in mulberry32's signed-32-bit domain, injected by the caller, stored as a first-class model field, and must survive encrypt→persist→decrypt bit-identically.
+- **`docs/architecture.md#18`** · `invariant` · → §2 Draw schedule = dimensions only · _canonical_
+  - sig: normals matrix indexed by absolute year
+  - The draw schedule is a pure function of path/horizon dimensions only; normals are allocated to the max cohort horizon up front, indexed by absolute year; inputs select WHICH draws are consumed, never how many or their order.
+  - [dedup] Canonical here; CLAUDE.md draw-schedule line is a pointer.
+- **`docs/architecture.md#19`** · `build-detail-or-KTD` · → §2 buildDraws ordering · _canonical_
+  - sig: buildDraws path-major stock-then-bond order
+  - buildDraws uses one mulberry32 stream in a fixed dimension-only order: all market normals first (path-major, year, stock-then-bond), then all longevity uniforms (path-major, person); order/counts depend only on (seed, paths, maxHorizon, peopleCount).
+  - [dedup] Routed to architecture: this is the concrete realization of the draw-schedule invariant (#18), a contract the spine and overlays depend on. Build steps for it live in plans/1-engine but the ordering rule is load-bearing.
+- **`docs/architecture.md#20`** · `scope-boundary` · → §2 The CRN-safe regime-shifters · _canonical_
+  - sig: enumerated CRN-safe regime-shifters
+  - The CRN-safe regime-shifters are an exhaustive set (joint→survivor boundary, earned-income bridge, tax-and-accounts overlay, healthcare overlay, death-order filter); each earns CRN tests in its owning unit; the accumulation contribution-inflow joins the set (lands in existing slots, changes no dimension).
+- **`docs/architecture.md#21`** · `invariant` · → §3 The single shared market draw · _canonical_
+  - sig: buckets differ only in tax treatment
+  - All buckets (pre-tax/Roth/taxable/HSA) share one market draw per year (the spine normals stream); they differ only in tax treatment; one (stock,bond) pair per path-year drives the whole portfolio; tax/RMD/conversion/healthcare are deterministic post-draw arithmetic.
+  - [dedup] Canonical here; CLAUDE.md single-shared-market-draw line is a pointer. Reinforces #2.
+- **`docs/architecture.md#22`** · `invariant` · → §3 Per-bucket draws forbidden · _canonical_
+  - sig: per-bucket draws forbidden
+  - Per-bucket draws are forbidden — they multiply draws-per-year and change the schedule dimension, breaking CRN; any future asset-location must be a deterministic per-bucket tilt on the one shared draw, never a separate draw.
+  - [dedup] Canonical here; CLAUDE.md per-bucket-draws-forbidden line is a pointer.
+- **`docs/architecture.md#23`** · `invariant` · → §4 Shared per-year cash-term seam · _canonical_
+  - sig: one per-year update stepYear shared oracle
+  - There is one per-year update function (runDecumulation/stepYear); the historical backtest oracle runs the SAME function, so within-year order-of-operations can never drift between spine and overlay; everything else is a deterministic transform of the cash-flow term consuming zero draws.
+- **`docs/architecture.md#24`** · `definition-term` · → §4 The four cash-term transforms · _canonical_
+  - sig: four cash-term transforms net gross inflow
+  - Four cash-term transforms compose along the cash-flow term: earned-income bridge nets down (max(0, spending−earnedIncome)); tax-and-accounts grosses up; healthcare grosses up further; accumulation contribution-inflow is a signed inflow credited end-of-year at face value.
+- **`docs/architecture.md#25`** · `invariant` · → §5 Reduce-to-spine — earned-income OFF · _canonical_
+  - sig: earned-income OFF iff earnedIncome zero
+  - The earned-income bridge is byte-identical when and only when earnedIncome=0 for both spouses in every simulated year; retirement-year income equality is NOT the golden condition — earned-income-zero is.
+- **`docs/architecture.md#26`** · `invariant` · → §5 Reduce-to-spine — tax OFF · _canonical_
+  - sig: tax OFF buckets collapsed conversion zero
+  - The tax-and-accounts overlay is byte-identical OFF iff buckets collapse to one pool AND conversion=0 AND ordinary-tax off AND RMD-inert (no forced distributions).
+- **`docs/architecture.md#27`** · `invariant` · → §5 Reduce-to-spine — healthcare OFF · _canonical_
+  - sig: healthcare OFF no ACA IRMAA HSA
+  - The healthcare overlay is byte-identical OFF iff healthcare modeling is off — no ACA premium, no IRMAA surcharge, no HSA bucket.
+- **`docs/architecture.md#28`** · `invariant` · → §5 Reduce-to-spine — accumulation OFF (presence-keyed) · _canonical_
+  - sig: accumulation OFF is presence-keyed not value
+  - Accumulation byte-identity is PRESENCE-keyed: construct absent ⇒ byte-identical on both MC and Trinity backtest paths; a zero-valued-but-constructed run is deliberately NOT byte-identical (the working-year clamp is live on presence); the empty phase (Y==0) consumes zero extra draws.
+  - [dedup] Contract is canonical in architecture; the rationale for presence-vs-value lives in docs/decisions/accumulation-fuck-off-date.md as a pointer back to this contract. The duplicatedIn names the decision record, not a competing copy.
+  - [reframe] The C1-C3 accumulation byte-identity is present-tense law in §5; the dated-amendment framing is dropped — the IDs C1/C2/C3 are kept where the decision record references them.
+- **`docs/architecture.md#29`** · `invariant` · → §5 Presence companion (burned/027) · _canonical_
+  - sig: presence companion burned/027
+  - Every reduce-to-spine absence-assertion is paired with a presence companion proving the overlay did its work in the ON case (paid RMD-forced tax / a net premium / a surcharge / a grown total); an absence-test alone can pass vacuously.
+- **`docs/architecture.md#30`** · `invariant` · → §6 The R19 numeric gate · _canonical_
+  - sig: R19 finiteness before relational ?? guards
+  - The worker boundary is untyped (structured clone), so validateParams rejects every incomputable input before any path runs; finiteness is checked before any relational or ?? guard (a NaN passes them — insights 008/010), so no NaN/Infinity escapes a percentile or headline.
+  - [dedup] Overlaps item #6 (same gate, summary form); both live in §6.
+- **`docs/architecture.md#31`** · `number-or-figure` · → §6 The R19 numeric gate — ENGINE_MAX_* bounds · _canonical_
+  - sig: ENGINE_MAX_DOLLAR 1e12 horizon 120
+  - ENGINE_MAX_* domain bounds close the float-overflow tail (insight 028): dollars ≤ 1e12, return/vol moments ≤ 1.0, horizon ≤ 120; a non-integer seed is rejected as indeterminate.
+  - [dedup] Routed to architecture (not research/) because these are engine domain-gate constants that are part of the R19 contract, not externally-verified tax/Trinity figures. They belong beside the gate they enforce.
+- **`docs/architecture.md#33`** · `scope-boundary` · → §6 The R19 numeric gate (responsibility split callout) · _canonical_
+  - sig: R19 numeric vs semantic split
+  - R19 split: the engine guards its own NUMERIC domain (finiteness/bounds); SEMANTIC plausibility (status-vs-age, spend-beyond-portfolio) is the intake/control-layer half owned upstream; neither layer assumes the other validated.
+  - [dedup] Scope-boundary routed to architecture because it bounds the ENGINE's responsibility (build scope of the gate), continuous with §6.
+- **`docs/architecture.md#34`** · `build-detail-or-KTD` · → §7.1 Tax-and-accounts overlay · _canonical_
+  - sig: taxOverlay.ts grosses up zero draws
+  - taxOverlay.ts is a structural sibling of the earned-income bridge — a per-year deterministic transform of the cash-flow term, indexed by absolute year, fed into the same per-year update function, consuming zero random draws; the bridge nets down, the overlay grosses up.
+  - [dedup] Overlay mechanics → architecture §7 (overlay-peer), per the radical-move routing.
+- **`docs/architecture.md#35`** · `build-detail-or-KTD` · → §7.1 Tax-and-accounts overlay — bucket mechanics · _canonical_
+  - sig: per-person pre-tax ledger sums to buckets.pretax
+  - Tax-overlay buckets are per-person (pre-tax/Roth/taxable); ordinary-income tax on pre-tax withdrawals + RMDs + conversion, tax-free Roth growth, cap-gains/QD stacking from taxable; all share the one market draw; the per-person pre-tax ledger SUMS to buckets.pretax (no-parallel-ledger-drift).
+- **`docs/architecture.md#36`** · `number-or-figure` · → §7.1 The gross-up fixed-point · _canonical_
+  - sig: gross-up k≈0.74 GROSS_UP_MAX_PASSES 128
+  - The gross-up is a bounded fixed-point: worst-case contraction k≈0.74 (raised from ~0.685 by cap-gains stacking, insights 006/007), GROSS_UP_MAX_PASSES=128 covers the validated tail (~113 worst case under ENGINE_MAX_*); no in-range default stands in for an unconverged value — it fails loud (burned/062).
+  - [dedup] Engine algorithm constants (contraction factor, pass cap) are part of the overlay contract — architecture §7.1, not research/, since they describe the engine's own solver, not an externally-verified tax figure.
+- **`docs/architecture.md#37`** · `build-detail-or-KTD` · → §7 SS overlay (provisional-income taxation) · _canonical_
+  - sig: SS provisional-income fixed-point frozen thresholds
+  - SS provisional-income taxation is its own per-year bounded fixed-point (provisional-income→taxable-SS→tax→gross-up→re-converge), deterministic, zero draws; the MFJ/single thresholds are FROZEN, not inflation-indexed (constants with no staleness clock).
+  - [dedup] SS mechanics → architecture §7 overlay-peer per the features/social-security dissolution. The frozen-thresholds DECISION rationale is mirrored in docs/decisions/ss-computation.md; the mechanic is canonical here.
+  - [reframe] features/social-security mechanics survive in architecture §7 as an overlay-peer; no features/ home.
+- **`docs/architecture.md#42`** · `build-detail-or-KTD` · → §7.2 Healthcare overlay · _canonical_
+  - sig: healthOverlay.ts composes after tax
+  - healthOverlay.ts is income-dependent and continuous across the Medicare line; it composes AFTER the tax overlay on the shared cash-term seam (ACA premium / IRMAA surcharge are spending the tax gross-up does not include); built/validated in the engine because a disclosed cliff omission inverts which strategy wins.
+- **`docs/architecture.md#43`** · `build-detail-or-KTD` · → §7.2 Two distinct MAGI calculators · _canonical_
+  - sig: two MAGI calculators ACA vs IRMAA
+  - Two distinct MAGI calculators: ACA-MAGI = AGI + tax-exempt interest + non-taxable SS + excluded foreign earned income (full SS effectively counts); IRMAA-MAGI = AGI + tax-exempt interest, no SS add-back; qualified Roth/return-of-basis/cash/HSA-qualified count toward neither — which is why funding-source order is a control.
+- **`docs/architecture.md#44`** · `build-detail-or-KTD` · → §7.2 Pre-65 ACA-PTC fixed-point · _canonical_
+  - sig: ACA-PTC bisection 400% FPL cliff branch
+  - Pre-65 ACA-PTC is a per-year fixed-point with explicit cliff branch (PTC=max(0,SLCSP−applicable_pct×MAGI), allowed=min(PTC,enrolled), net=max(0,enrolled−allowed)); enrolled premium and SLCSP are two separate inputs; primary solver is bisection on a monotone funding-gap residual; the 400% FPL cliff is branched explicitly (compute just-under + just-over, pick cheaper) with CEIL-quantized MAGI before the relational branch.
+- **`docs/architecture.md#46`** · `build-detail-or-KTD` · → §7.2 SLCSP benchmark · _canonical_
+  - sig: SLCSP benchmark is user input
+  - The SLCSP benchmark premium is a user input (ZIP/age-specific), never synthesized, and covers only the marketplace-enrolled member(s).
+- **`docs/architecture.md#47`** · `build-detail-or-KTD` · → §7.2 IRMAA feed-forward · _canonical_
+  - sig: IRMAA 2-year-lagged feed-forward
+  - IRMAA is a 2-year-lagged feed-forward (not a fixed point): store per-filing-unit MAGI history, in year t use bracket from IRMAA-MAGI[t−2] and add surcharge (Part B + Part D) × count of Medicare-enrolled spouses (never hardcoded ×2); hard per-person step-cliffs; MAGI[t−2] seeded from real inputs near age 65 (never default zero, burned/062); age-gap years run ACA and IRMAA per spouse independently and sum.
+- **`docs/architecture.md#48`** · `build-detail-or-KTD` · → §7.2 Two enrolled-count clocks · _canonical_
+  - sig: two enrolled-count clocks resolveYear count65
+  - resolveYear tracks two clocks: a per-person Medicare-ENROLLED count beside the biological count65; only the IRMAA gate and pricing switch to the enrolled count, while count65 stays biological for the deduction stack and the ACA pre65 check; the enrolled count intersects the LIVING set (a dead spouse is never billed).
+- **`docs/architecture.md#49`** · `build-detail-or-KTD` · → §7.2 HSA (4th bucket) · _canonical_
+  - sig: HSA 4th bucket MAGI-invisible
+  - HSA is a 4th account bucket (triple-advantaged, earmarked medical): covers out-of-pocket + owner-65+ Medicare premiums tax-free (NOT ACA marketplace premiums — the trap); Medicare enrollment zeroes HSA contributions (owner-age-keyed, 6-month Part A retro trap); qualified spending is MAGI-invisible to both calculators; a post-65 non-qualified withdrawal raises both MAGIs (income-laundering negative test); shares the one market draw.
+- **`docs/architecture.md#50`** · `build-detail-or-KTD` · → §7.2 Couple / death-order interaction · _canonical_
+  - sig: ACA-FPL and IRMAA flip on different clocks
+  - On first death the survivor flips MFJ→single (~half), but on different clocks: the ACA-FPL basis flips single in the year filing status changes (current-year), while IRMAA uses the threshold table matching the MAGI[t−2] return's filing status, so the single IRMAA table first bites ~2 years after the first death; wired into the death-order conditional filter (no new boundary).
+- **`docs/architecture.md#51`** · `number-or-figure` · → §7.3 Encrypted local store — key derivation · _canonical_
+  - sig: PBKDF2-600k AES-GCM-256
+  - Encrypted store key derivation: PBKDF2-600k (SHA-256, salt) → AES-GCM-256, deriveKey extractable:false; keys live in memory only, never persisted unwrapped (passphrase-each-session); each 600k derivation renders an explicit calm 'unlocking…/securing…' pending state.
+  - [dedup] Crypto parameters are part of the store contract → architecture §7.3, not research/ (they are engine/store design choices, not externally-verified tax/healthcare figures).
+- **`docs/architecture.md#52`** · `build-detail-or-KTD` · → §7.3 Data-key indirection · _canonical_
+  - sig: data-key DK indirection one write predicate
+  - Data-key (DK) indirection: a stable random DK encrypts the model exactly once; passphrase-derived and recovery-derived keys each wrap DK independently; one model copy (recovery can never restore a stale copy); 'wrapping' = AES-GCM encrypt() of raw DK bytes, NOT WebCrypto wrapKey() (which needs extractable:true); DK imported extractable:false.
+- **`docs/architecture.md#53`** · `invariant` · → §7.3 Synchronous lock authority · _canonical_
+  - sig: write-gate conjunction session key AND passphraseWrap
+  - A writable store handle requires a derived session key AND a current passphraseWrap bound into the same seam (one predicate, both clauses); the recovery-unlock path is exactly why — it decrypts but writes stay blocked until the new passphraseWrap is re-minted; no reachable cleartext/unkeyed/stale-credential write path.
+  - [dedup] Reinforces #10 (write-gate); this is the full invariant statement, #10 is the summary.
+
+- **`docs/architecture.md#54`** · `build-detail-or-KTD` · → §7.3 Three record types · _canonical_
+  - sig: three record types schemaVersion migration ladder
+  - Three record types, each wrap carrying its own fresh salt+IV: model {iv(12B),ciphertext}; passphraseWrap {salt(16B),iv(12B),wrappedDataKey}; recoveryWrap {salt(16B),iv(12B),wrappedDataKey}; plaintext begins with an integer schemaVersion (=1 from v1) read first; decrypt branches/refuses on an unknown version (migration-ladder enabler v1→v2→v3).
+- **`docs/architecture.md#55`** · `invariant` · → §7.3 Recovery key derivation · _pointer_
+  - sig: BIP-39 12 words 128 bits HKDF-SHA-256
+  - Recovery key derivation: entropy = crypto.getRandomValues only; wordlist = BIP-39 English 2048 words; 12 words = 128 bits; the recovery-wrap key uses HKDF-SHA-256 (key-expansion, the correct primitive for high-entropy input) with a mandatory pinned info string for domain separation.
+  - [dedup] Architecture keeps the recovery-key-derivation CONTRACT + inline citation; the figure's canonical home is the research/by-number entry named by 1-engine.md#44 (PBKDF2 600k / BIP-39 / sentinel -1). This row is a pointer, not a 2nd canonical for the number.
+  - [fixed:warn] Retagged contract; figure ceded canonical to research/by-number.
+- **`docs/architecture.md#56`** · `invariant` · → §7.3 / §8 Numeric never-depleted sentinel · _canonical_
+  - sig: NEVER_DEPLETED = -1 never Infinity null
+  - The never-depleted sentinel is never Infinity/NaN/null (DND 009) — JSON.stringify/IndexedDB silently turn Infinity/NaN into null; it persists as an explicit out-of-domain integer (NEVER_DEPLETED=-1) or a tagged-union discriminant; a bare null is corruption.
+  - [dedup] Canonical here; CLAUDE.md (Constants discipline, cites DND 009) is a pointer. Reinforces the sentinel clause of #10.
+- **`docs/architecture.md#57`** · `lesson` · → §7.3 Honest lock · _canonical_
+  - sig: honest lock no zeroization overclaim
+  - On lock the session drops its only CryptoKey references and forces a fresh re-derive — reference-drop + mandatory re-derive, NOT cryptographic zeroization (JS/WebCrypto cannot byte-scrub a CryptoKey or string); no downstream copy may overstate it.
+  - [dedup] Kind=lesson, but it is a load-bearing honesty CONTRACT about lock semantics that downstream copy must not overclaim — it belongs with the store contract in architecture §7.3, not as an insight no-move (it has no existing insight-file home named).
+- **`docs/architecture.md#58`** · `number-or-figure` · → §7.3 Atomicity + durability · _canonical_
+  - sig: zxcvbn-ts score ≥3 length ≥12 one IndexedDB transaction
+  - Atomicity + durability: every multi-record mutation commits as one IndexedDB transaction (all-or-nothing); the encrypted write commits before navigator.storage.persist() (advisory, never rolls back); the passphrase floor — zxcvbn-ts score ≥3 AND length ≥12 — is the real at-rest boundary (the attacker is offline, brute-forcing PBKDF2, no UI lockout helps).
+  - [dedup] The atomicity/durability + write-gate ordering contract is canonical here (architecture §7.3); the zxcvbn-ts ≥3 / length ≥12 FIGURE is NOT canonical here — it is a citation pointing at the research/by-number canonical named by 1-engine.md#47.
+  - [fixed:warn] Demoted zxcvbn floor figure to citation; contract stays canonical.
+- **`docs/architecture.md#59`** · `build-detail-or-KTD` · → §7.4 Accumulation projection (C1–C3 contract) · _reframe_
+  - sig: contribution inflow occupies working-year slots
+  - Accumulation projection (decumulation.ts, taxOverlay.ts): one continuous timeline, no new draw stream — the contribution inflow occupies existing working-year slots [0,Y) on the same buildDraws stream; buildDraws/maxHorizon unchanged, so CRN across candidate offsets and empty-phase byte-identity hold for free.
+  - [dedup] Contract canonical in architecture §7.4; the rationale lives in docs/decisions/accumulation-fuck-off-date.md (pointer, not competing copy). duplicatedIn names that decision record.
+  - [reframe] The accumulation 'no new draw stream' fact survives present-tense as an architecture §7.4 contract; the 2026-06-08 dated-amendment framing dies. IDs C1/C2/C3 kept in the decision record's cross-references.
+- **`docs/architecture.md#61`** · `invariant` · → §7.4 Working-year clamp (death-aware) · _reframe_
+  - sig: working-year clamp death-aware presence-gated
+  - The working-year clamp is death-aware and presence-gated: cashTermsForYear clamps household net to 0 iff the accumulation construct is present AND at least one LIVING person is still working (a death-blind clamp would flip survivor paths optimistic); each person's contribution stream is death-truncated per-path.
+  - [dedup] Contract canonical in architecture §7.4; rationale mirrored in decisions/accumulation-fuck-off-date. duplicatedIn names that decision record (pointer).
+  - [reframe] The death-aware, presence-gated working-year clamp survives as a present-tense architecture invariant; the dated-amendment framing dies.
+- **`docs/architecture.md#62`** · `scope-boundary` · → §7.4 Accumulation scope boundary · _reframe_
+  - sig: no accumulation-phase income-tax engine
+  - No accumulation-phase income-tax engine (the destination bucket carries the tax character); healthcare is OFF during accumulation — delivered by the date-search's per-candidate stream construction (premiums zero in [0,Y)), NOT an engine gate.
+  - [dedup] Build-scope boundary of the accumulation engine → architecture §7.4; rationale mirrored in decisions/accumulation-fuck-off-date (duplicatedIn).
+  - [reframe] Present-tense scope: accumulation has no income-tax engine (destination bucket carries tax character) and healthcare-off comes from per-candidate stream construction, not an engine gate. Dated-amendment framing dropped.
+- **`docs/architecture.md#63`** · `build-detail-or-KTD` · → §7.5 The solver output contract (M6) · _canonical_
+  - sig: totalTaxPaidReal SimInfeasible solver output contract
+  - The M6 solver output contract surfaces totalTaxPaidReal (lifetime tax, the pay-less-tax objective input), the per-path death-year Distribution.taxAware surface, and a typed SimInfeasible sentinel (input passed R19 but a path's overlay failed mid-run — candidate infeasible as a whole, never a silently dropped path nor an uncaught throw); a solver ranks it worst, the headline surfaces a calm error, the date route fails all-or-nothing; all fields JSON-safe + deterministic in (params,seed).
+- **`docs/architecture.md#64`** · `invariant` · → §8 Constants discipline · _canonical_
+  - sig: spine reads nothing from constants
+  - Constants discipline: one canonical year-keyed table (burned/057,061,063); plan, overlays, tests, and the copyGuard allowlist all READ it (a dated figure is never re-typed; a shape test greps for inlined values); the spine reads NOTHING from this module (tax-free), so a constants change can never perturb a golden case.
+  - [dedup] Canonical here; CLAUDE.md Constants discipline is a pointer. Reinforces #8 with the spine-reads-nothing clause.
+- **`docs/architecture.md#65`** · `build-detail-or-KTD` · → §8 Constants discipline — figure shape · _canonical_
+  - sig: value citation directionalUntilPinned
+  - Every constants figure carries { value, citation, directionalUntilPinned }; a figure is pinned (directionalUntilPinned:false) only after confirming against its named primary at the exit-gate pin pass.
+  - [dedup] Canonical here; CLAUDE.md Constants discipline is a pointer.
+- **`docs/architecture.md#66`** · `invariant` · → §8 Constants discipline — Unsourced sentinel · _canonical_
+  - sig: Unsourced sentinel .value throws burned/062
+  - No in-range default fallbacks (burned/062): a figure the research names but doesn't value is an Unsourced sentinel whose .value THROWS — never a plausible default; a ?? 22% default that overlaps a plausible bracket would make a missing input indistinguishable from a measurement, fatal inside the SS-tax/ACA fixed-points.
+  - [dedup] Canonical here; CLAUDE.md (cites burned/062) is a pointer. This is the detailed form of #7; both live in §8.
+- **`docs/architecture.md#68`** · `build-detail-or-KTD` · → §8 Constants discipline — display-hint figures · _canonical_
+  - sig: referenceData.ts display-hint figures
+  - Display-hint vs engine figures: user-facing display-hint figures live in referenceData.ts, never @engine/constants (the constants module is engine-consumed only).
+- **`docs/architecture.md#69`** · `number-or-figure` · → §9 Cross-engine headline robustness · _canonical_
+  - sig: SURVIVAL_GRID 0.01 quantizeSurvival
+  - Cross-engine headline robustness: plain-TS transcendentals are not bit-identical across JS engines (byte-identical normals are a same-engine guarantee only); confidence.ts quantizes the headline statistic to SURVIVAL_GRID=0.01 (well outside last-ULP noise) before the band compare — quantizeSurvival(s)=round(s/GRID)*GRID — and that quantization, not bit-identical floats, keeps the screenshot promise honest.
+  - [dedup] Canonical here; CLAUDE.md cross-engine line is a pointer. Detailed form of #9; both live in §9.
+- **`docs/architecture.md#70`** · `invariant` · → §9 Date-search quantization idiom · _canonical_
+  - sig: paths pinned 16,000 z=1.645 BANDS.onTrack
+  - The date-search reuses the idiom: the conservative lower bound (p̂ − z·SE, z=1.645 one-sided) is quantizeSurvival-ed before the bar compare (bar = BANDS.onTrack, read never re-typed); paths are pinned at 16,000 so z·SE ≤ ½·SURVIVAL_GRID at the bar (the haircut moves the quantized reading at most one grid cell); a true bit-identical requirement would promote WASM from fast-follow to load-bearing (§10).
+  - [dedup] The quantize-before-compare IDIOM/rule is canonical here (architecture §9); the FIGURES (16,000 paths / z=1.645 / BANDS.onTrack) are NOT canonical here — their by-number canonical lives in research as routed by 1-engine.md#67. This row cites them, never re-types them as canonical.
+  - [fixed:warn] Retagged as rule/invariant; figures ceded canonical to research.
+- **`docs/architecture.md#71`** · `build-detail-or-KTD` · → §9 Note on rounding hysteresis · _canonical_
+  - sig: rounding hysteresis in memoryModel.ts not confidence.ts
+  - Rounding hysteresis (sticky cross-edit rounding) is a stateful property needing the prior displayed value, and lives in the P2 recompute orchestration (memoryModel.ts), NOT in pure confidence.ts; confidence.ts is pure (single run → reading) and emits margin metadata so a stateful caller can layer stickiness.
+- **`docs/architecture.md#72`** · `invariant` · → §10 Security / CSP boundary — directives · _canonical_
+  - sig: CSP via response headers not meta tag
+  - Strict CSP ships via HTTP response headers (vercel.json), not a meta tag: script-src 'self' (no inline/eval — modulepreload polyfill disabled, injectRegister:false); connect-src 'self'; worker-src 'self'; object/frame/child/media-src 'none'; base-uri/frame-ancestors 'none'.
+  - [dedup] Canonical here; CLAUDE.md Security/CSP boundary is a pointer. Detailed form of #11; both live in §10.
+- **`docs/architecture.md#73`** · `build-detail-or-KTD` · → §10 Security / CSP boundary — verification · _canonical_
+  - sig: verify:csp Chromium blocks inline script exfil
+  - CSP verification: a vitest guard asserts the directives (csp-headers.test.ts); real-browser enforcement is CI-gated by verify:csp — e2e/csp.spec.ts serves dist/ through serve-dist-with-headers.ts with vercel.json's exact headers (vite preview does NOT apply them) and asserts real Chromium blocks an injected inline <script> AND a cross-origin fetch exfil while the engine worker still constructs under worker-src 'self', each with a no-CSP control arm.
+  - [dedup] Canonical here; CLAUDE.md Security/CSP boundary is a pointer. The verify:csp gate is also referenced by roadmap's gates.
+- **`docs/architecture.md#74`** · `scope-boundary` · → §10 What connect-src 'self' buys · _canonical_
+  - sig: connect-src self blocks programmatic exfil not navigation
+  - connect-src 'self' blocks programmatic network exfil (fetch/XHR/WebSocket/EventSource/beacon) and img-src/form-action close the image/form channels, but it does NOT block top-level navigation exfil (location.href, window.open) — CSP cannot; an accepted residual for the personal single-device model (XSS already heavily constrained by script-src 'self' + no-eval + react/no-danger + a narrow dep surface).
+  - [dedup] Canonical here; CLAUDE.md Security/CSP boundary is a pointer.
+- **`docs/architecture.md#75`** · `scope-boundary` · → §10 Scope and caveats · _canonical_
+  - sig: extensions out of scope Same-Origin-Policy DNS-rebinding
+  - CSP scope/caveats: extensions are out of scope (the CSP guards the in-session model against XSS page scripts, not privileged extensions — accepted risk); the self-hosting correction — what protects the model + IndexedDB from a DNS-rebinding attacker is the Same-Origin Policy, NOT connect-src; if ever self-hosted, the real controls are Host-header validation and correctly answering the browser's Private-Network-Access preflight.
+  - [dedup] Canonical here; CLAUDE.md Security/CSP boundary is a pointer.
+- **`docs/architecture.md#76`** · `build-detail-or-KTD` · → §10 CSP forward landmines · _canonical_
+  - sig: Trusted Types breaks new Worker WASM wasm-unsafe-eval
+  - CSP forward landmines: (1) Trusted Types is planned hardening, not drop-in — require-trusted-types-for 'script' breaks new Worker(new URL()) (needs a TrustedScriptURL policy; adopt via trustedTypes.createPolicy().createScriptURL(), allowlist it, roll out Report-Only first); (2) WASM will need 'wasm-unsafe-eval' if the engine is promoted to WASM; (3) motion's injected <style> may hit style-src 'self' (motion@12 layout-animation features inject a <style>, hence <MotionConfig nonce> — supply a per-response nonce or avoid the feature).
+  - [dedup] Canonical here; CLAUDE.md Security/CSP boundary (forward landmines) is a pointer.
+- **`docs/architecture.md#77`** · `build-detail-or-KTD` · → §11 The worker boundary · _canonical_
+  - sig: engine.worker.ts Comlink single long-lived instance
+  - The worker boundary: the engine runs in engine.worker.ts behind Comlink — a single long-lived instance created/wrapped once and reused across recomputes (the future solve budget is measured against reuse, not per-run spawn); verify:bundle guards that the engine never reaches the main bundle.
+  - [dedup] Canonical here; CLAUDE.md (Commands — verify:bundle) is a pointer for the gate.
+- **`docs/architecture.md#78`** · `build-detail-or-KTD` · → §11 The worker boundary — result shape · _canonical_
+  - sig: Comlink.transfer typed-array buffers detached
+  - Worker result shape: large numeric arrays (terminal-value distribution, percentile series, per-path depth-of-failure) return as typed-array buffers via Comlink.transfer; small derived fields (X-of-N integers, dollar adjustment, outcome-state enum) travel by structured clone; transferred buffers are detached worker-side (worker retains none, allocates fresh per run); the ≤~11-point date-search per-offset curve crosses by structured clone.
+- **`docs/architecture.md#79`** · `invariant` · → §11 The worker boundary — error propagation · _canonical_
+  - sig: worker error tri-state calm result never hung
+  - Worker error propagation: a thrown engine error surfaces as a defined calm result (tri-state pending | resolved-distribution | calm-error), never a hung promise / unhandled rejection / dead worker; the worker stays alive and reusable; runDateSearch is calm-error-total the same way (the worker never dies mid-sweep).
+- **`docs/architecture.md#80`** · `build-detail-or-KTD` · → §11 The worker boundary — no-worker fallback · _canonical_
+  - sig: no-worker main-thread fallback same distribution
+  - No-worker posture: because the engine is pure TS, a worker-construction failure falls back to a main-thread run returning the SAME distribution.
+- **`docs/plans/1-engine.md#3`** · `invariant` · → invariants index / precedence · _pointer_
+  - sig: engine invariants live once in architecture.md
+  - The load-bearing engine invariants (CRN + single shared market draw, stateless Box-Muller, reduce-to-spine byte-identity, validateParams/R19 gate, constants discipline, per-overlay contracts) live once in architecture.md; on conflict architecture wins.
+  - [dedup] Canonical home is architecture.md (and CLAUDE.md summary); the plan keeps a does-not-restate pointer.
+- **`docs/plans/1-engine.md#8`** · `invariant` · → §8 constants discipline · _pointer_
+  - sig: canonical constants module reVerifyEveryBuild
+  - The canonical year-keyed constants module is born in U0; every figure carries {value, citation, directionalUntilPinned, legalBasis?}; the ACA item carries reVerifyEveryBuild (CI-enforced via aca-last-verified.json); the spine reads nothing from it so constants changes never perturb a golden.
+  - [dedup] Constants-discipline invariant canonical in architecture §8 (and CLAUDE.md summary); the U0 plan keeps a born-here build note pointing to §8.
+- **`docs/plans/1-engine.md#10`** · `invariant` · → §10 CSP boundary · _pointer_
+  - sig: strict CSP via vercel.json headers
+  - Strict CSP ships via HTTP response headers (vercel.json), not a meta tag: script-src/connect-src/worker-src 'self', the rest 'none'; real-browser enforcement is CI-gated by verify:csp; full boundary + forward landmines live in architecture §10.
+  - [dedup] CSP boundary canonical in architecture §10 (and CLAUDE.md summary); the U0 plan keeps a ships-here build note pointing to §10.
+- **`docs/plans/1-engine.md#12`** · `invariant` · → clean-clone discipline (AJS 008) · _pointer_
+  - sig: clean-clone discipline AJS 008
+  - Clean-clone discipline (AJS 008): rng.ts is vendored (copied, not cross-imported) and reference fixtures are committed (never gitignored/generated-at-build); the clean-clone path is proven by hiding any sibling artifact and re-typechecking.
+  - [dedup] AJS 008 canonical in CLAUDE.md / architecture; the U0 plan keeps a build note pointing there.
+- **`docs/plans/1-engine.md#14`** · `invariant` · → §2–§3 determinism / CRN · _pointer_
+  - sig: engine is a pure function of params seed
+  - U1: the engine is a pure function of (params, seed); the seed is injected by the caller (Act 2 memoryModel calls getRandomValues); src/engine reads no entropy/clock/environment; CRN, single shared market draw, and stateless Box-Muller are the determinism contracts.
+  - [dedup] Determinism contracts canonical in architecture §2–§3 (and CLAUDE.md engine purity); U1 plan body keeps a build note pointing there.
+- **`docs/plans/1-engine.md#16`** · `invariant` · → §7 longevity / survivor identity · _canonical_
+  - sig: joint-and-survivor retain survivor identity
+  - U1 joint-and-survivor longevity from cohort tables retains survivor identity: P(last alive)=pₓ+pᵧ−pₓpᵧ; sample per-path per-spouse death years AND retain which spouse dies first; two-regime horizon with survivor-SS step-down (keep larger benefit) + survivor-spending ratio.
+  - [dedup] Canonical in architecture; the features/social-security copy DISSOLVES — survivor-SS step-down mechanics fold into architecture §7 (overlay-peer). No features/ home.
+- **`docs/plans/1-engine.md#18`** · `invariant` · → §7 longevity / couple survival · _canonical_
+  - sig: couple survival derived never hardcoded
+  - U1 the couple survival figure is DERIVED from the two sex-specific cohort curves through the formula, never hardcoded; the test asserts internal consistency; independence is assumed (mildly overstates last-survivor, errs SAFE for a survival floor, documented).
+- **`docs/plans/1-engine.md#19`** · `invariant` · → pluggable drawdown policy / CRN · _canonical_
+  - sig: pluggable drawdown policy zero draws R9
+  - U1 sequencing is a first-class engine parameter (R9): simulate takes a per-year drawdown policy {proportional, taxable-first, pre-tax-first, bracket-fill} that decides WHICH bucket funds each net withdrawal, consuming ZERO draws; controls (U10) and solver (U15) drive it, neither re-implements decumulation; collapses to single-pool when buckets collapsed + overlay off.
+  - [dedup] R9 canonical in product R-ledger; the zero-draw pluggable-policy invariant is canonical in architecture.
+- **`docs/plans/1-engine.md#20`** · `invariant` · → §4–§5 earned-income bridge · _pointer_
+  - sig: earned-income bridge truncates at death
+  - U1 earned-income bridge: simulate accepts a per-person flat-real earned-income stream over [year0, min(retirementYear, sampledDeathYear)) evaluated per path (income truncates at death); netWithdrawal=max(0, spending−earnedIncome), no surplus contributed back; reduces to spine when earnedIncome=0 for both spouses every year.
+  - [dedup] Canonical in architecture §4–§5; the U1 plan keeps a build note pointing there.
+- **`docs/plans/1-engine.md#21`** · `invariant` · → §9 confidence headline / cross-engine robustness · _canonical_
+  - sig: confidence.ts X of 10 never probability of failure
+  - U1 outputs: full terminal-value distribution + percentiles + depth-of-failure → confidence.ts maps to 'X of N' (denominator pinned at 10), never 'probability of failure'; confidence.ts is pure and quantizes the headline statistic to a coarse grid BEFORE the band-edge decision; emits margin metadata but does not implement cross-edit hysteresis.
+  - [dedup] R14 (no probability-of-failure framing) canonical in product; the confidence.ts quantize-before-band-edge mechanics canonical in architecture §9.
+- **`docs/plans/1-engine.md#23`** · `invariant` · → §5 validation / DND 012 · _canonical_
+  - sig: two validation modes historical and MC band
+  - U1 two validation modes: (A) historical backtest is the anchor, asserted via self-consistency (byte-for-byte own golden) AND directionally against Trinity/Bengen (externally-derived per DND 012); (B) MC validated against a band only — must land inside it AND strictly below the historical anchor, on historically-calibrated moments (not production defaults), in the stress region.
+  - [dedup] DND 012 externally-derived-fixtures rule canonical in architecture §5 / CLAUDE.md; the two-mode correctness contract is canonical in architecture.
+- **`docs/plans/1-engine.md#27`** · `invariant` · → §11 worker boundary · _pointer_
+  - sig: worker boundary Comlink tri-state
+  - U1 worker boundary: engine runs in engine.worker.ts behind Comlink as a single long-lived reused instance; result shape, tri-state error propagation (pending | resolved-distribution | calm-error), and the no-worker main-thread fallback live in architecture §11.
+  - [dedup] Canonical in architecture §11; U1 plan keeps a build note pointing there.
+- **`docs/plans/1-engine.md#28`** · `invariant` · → §6 validateParams / R19 gate · _pointer_
+  - sig: validateParams engine R19 half
+  - U1 engine's R19 half: validateParams rejects/clamps at the worker boundary and returns the defined indeterminate state for invalid input — no NaN/Infinity escapes a percentile or headline.
+  - [dedup] R19 canonical in product; the engine-half validateParams gate canonical in architecture §6; plan keeps a build note.
+- **`docs/plans/1-engine.md#29`** · `invariant` · → §7.1 tax overlay · _pointer_
+  - sig: tax overlay zero draws reduces to spine
+  - U2 tax overlay (taxOverlay.ts) turns the tax-blind spine tax-aware — per-person buckets, ordinary tax on withdrawals/RMDs/conversions, SS provisional-income fixed-point, MFJ→single at first death — a per-year cash-term transform consuming ZERO draws that reduces byte-identically to the spine when off; controls (U10) and solver (U15) move it.
+  - [dedup] Canonical in architecture §7.1; U2 plan keeps a goal/build note pointing there.
+- **`docs/plans/1-engine.md#30`** · `invariant` · → §7.1 tax overlay contracts · _pointer_
+  - sig: gross-up k≈0.74 GROSS_UP_MAX_PASSES 128 RMD 72/73/75
+  - U2 is the structural sibling of the earned-income bridge — per-year deterministic cash-flow transform, zero draws; the bridge nets DOWN, the overlay grosses UP; detailed contracts (per-person buckets, gross-up fixed-point k≈0.74 / GROSS_UP_MAX_PASSES=128, SS provisional fixed-point, RMD birth-year 72/73/75 non-convertible, MFJ→single, §1014 step-up IN) live in architecture §7.1.
+  - [dedup] Numbers (k≈0.74, 128, RMD 72/73/75) are duplicated in Verbatim-preserved facts (items 75,76) → research; the overlay-contract invariant is canonical in architecture §7.1; plan keeps a build note.
+- **`docs/plans/1-engine.md#31`** · `invariant` · → §5 reduce-to-spine table · _pointer_
+  - sig: reduce-to-spine exhaustive OFF condition RMD-inert
+  - U2 reduce-to-spine has an exhaustive OFF condition: byte-identical iff buckets collapsed AND conversion=0 AND ordinary-tax off AND RMD-inert; RMD-inert is a clean-fixture clause (a tax-off forced pre-tax→taxable relocation moves money between identically-growing buckets and is provably total-neutral, asserted separately at the ledger level).
+  - [dedup] Canonical in architecture §5 reduce-to-spine table; plan keeps a build note.
+- **`docs/plans/1-engine.md#34`** · `invariant` · → §8 constants discipline · _pointer_
+  - sig: tax constants OBBBA-2025 senior-bonus 2028 sunset
+  - U2 constants discipline: every tax figure routes through src/engine/constants/ marked directional, none inlined in taxOverlay.ts; the fixture carries its OBBBA-2025 legal basis (a bracket change reads as a vintage bump, not silent drift); the senior-bonus carries its MAGI phase-out and 2028 sunset.
+  - [dedup] Constants-discipline invariant canonical in architecture §8; the OBBBA-2025 / senior-bonus 2028-sunset figures live year-keyed in src/engine/constants and by-number in research; plan keeps a build note.
+- **`docs/plans/1-engine.md#36`** · `invariant` · → §7.2 healthcare overlay · _pointer_
+  - sig: healthcare overlay ACA-MAGI IRMAA-MAGI two calculators
+  - U3 healthcare overlay (healthOverlay.ts) makes healthcare cost income-dependent and continuous across the Medicare line — pre-65 ACA-PTC fixed-point with explicit cliff branching, post-65 IRMAA 2-year-lagged feed-forward, HSA fourth bucket — zero draws, shares the one market draw, CRN-safe, reduces to spine when off; ACA-MAGI and IRMAA-MAGI are TWO DISTINCT calculators; built here because a disclosed cliff omission INVERTS which strategy wins (D6, R24).
+  - [dedup] R24/D6 canonical in product; the overlay invariant canonical in architecture §7.2; plan keeps a goal/build note.
+- **`docs/plans/1-engine.md#38`** · `invariant` · → §7.2 healthcare overlay contract · _pointer_
+  - sig: U3 full overlay contract §7.2 SLCSP IRMAA 2-year lag
+  - U3 full overlay contract lives in architecture §7.2: two distinct MAGI calculators, ACA-PTC fixed-point with explicit 400%-FPL cliff branch, 2026 base case (cliff ON; enhanced subsidies a verify:aca-gated scenario toggle), SLCSP-benchmark-as-user-input, IRMAA 2-year-lagged feed-forward with per-person hard cliffs + seeded MAGI history, two enrolled-count clocks, HSA fourth bucket traps, couple/death-order two-clock interaction.
+  - [dedup] Canonical in architecture §7.2; the verified ACA/IRMAA figures land in research/pre65-healthcare; plan keeps a build note.
+- **`docs/plans/1-engine.md#39`** · `invariant` · → §5, §7.2 reduce-to-spine / compose order · _pointer_
+  - sig: U3 reduce-to-spine composes after tax overlay
+  - U3 reduce-to-spine: byte-identical to spine when healthcare modeling is off (no ACA premium, no IRMAA surcharge, no HSA bucket); composes AFTER the tax overlay on the shared cash-term seam (ACA premium / IRMAA surcharge are spending the tax gross-up does not include).
+  - [dedup] Canonical in architecture §5 and §7.2; plan keeps a build note.
+- **`docs/plans/1-engine.md#41`** · `invariant` · → §7.5 solver output contract · _reframe_
+  - sig: M6 solver output contract SimInfeasible totalTaxPaidReal
+  - U3 M6 fold added the solver output contract (totalTaxPaidReal as the pay-less-tax objective input, per-path death-year Distribution.taxAware surface, typed SimInfeasible sentinel — never a silently dropped path/uncaught throw: solver ranks worst, headline surfaces calm error, date route fails all-or-nothing) and the ENGINE_MAX_* computable-domain bounds.
+  - [dedup] Canonical in architecture §7.5; plan keeps a build note.
+  - [reframe] Surviving fact: the engine exposes totalTaxPaidReal, the per-path death-year taxAware surface, the typed SimInfeasible sentinel, and ENGINE_MAX_* domain bounds for the future solver/wire layer. Present-tense framing: state as the standing solver-output contract; drop the 'M6 fold added' dated framing.
+- **`docs/plans/1-engine.md#43`** · `invariant` · → §7.3 encrypted store · _pointer_
+  - sig: U4 encrypted store makes R16 provable
+  - U4 encrypted local store (trust unit): derive an AES key from a passphrase, encrypt the model at rest in IndexedDB, lock/unlock, provide recovery-phrase + encrypted-export/restore; makes R16's promise PROVABLE; hands passphrase-strength enforcement forward to Act 2·U8; independent of U1–U3 (parallelizable); requirements R15–R18 + R19 store half.
+  - [dedup] R15–R18 canonical in product; the store contract canonical in architecture §7.3; plan keeps a goal/build note.
+- **`docs/plans/1-engine.md#44`** · `invariant` · → §7.3 key-lifecycle contract · _pointer_
+  - sig: key-lifecycle PBKDF2-600k AES-GCM-256 DK indirection
+  - U4 full key-lifecycle contract lives in architecture §7.3: PBKDF2-600k → AES-GCM-256, data-key (DK) indirection (one copy of model so recovery can't restore a stale copy), three record types each with fresh salt+IV, schemaVersion-first migration ladder, HKDF-SHA-256 recovery-key from a BIP-39 12-word phrase, numeric never-depleted sentinel (-1), honest-lock reference-drop, the synchronous write-gate conjunction, atomicity/durability rules.
+  - [dedup] Numbers (PBKDF2 600k, BIP-39, sentinel -1) duplicated in Verbatim-preserved facts (items 77,78) → research/by-number; the lifecycle invariant canonical in architecture §7.3; plan keeps a build note.
+- **`docs/plans/1-engine.md#45`** · `invariant` · → §7.3 write-gate conjunction · _pointer_
+  - sig: write-gate conjunction survivor-stranding guard
+  - U4 write-gate conjunction (survivor-stranding guard): a writable store handle requires BOTH a derived session key AND a current passphraseWrap bound into the same seam; the recovery-unlock path is why both are needed — it derives a key and decrypts but writes stay blocked until the new passphraseWrap is re-minted; there is NO reachable cleartext/unkeyed/stale-credential write path.
+  - [dedup] Canonical in architecture §7.3; plan keeps a build note.
+- **`docs/plans/1-engine.md#46`** · `decision-rationale` · → §7.3 recovery posture · _canonical_
+  - sig: in-place recovery unlock survivor's primary door mandatory export
+  - U4 in-place recovery unlock is the survivor's PRIMARY door: when the vault is intact but the passphrase is unknown, the surviving spouse unlocks in place (recovery key → unwrap DK → decrypt → mandatory new-passphrase gate); file-restore is only for the device-wiped case; recovery+export+restore are one mechanism with MANDATORY export at first save (no 'remind me later').
+  - [dedup] R17/R18 canonical in product; the in-place-recovery-is-primary decision rationale is canonical in architecture §7.3 (store-contract reasoning). EXCEPTION (noted): routing law would send decision-rationale → decisions/<topic>, but the project deliberately has NO store decisions topic (decisions/ holds only accumulation-fuck-off-date.md), so this store-posture rationale stays folded into architecture §7.3 alongside the mechanical write-gate contract (#45) by design.
+  - [fixed:nit] Noted no-store-decisions-topic exception; kept canonical in architecture §7.3.
+- **`docs/plans/1-engine.md#47`** · `number-or-figure` · → §7.3 passphrase-strength floor · _pointer_
+  - sig: passphrase floor zxcvbn-ts ≥3 AND length ≥12
+  - U4 passphrase-strength floor (the real at-rest boundary, pinned at plan level): zxcvbn-ts score ≥3 AND length ≥12; deriveKey is unreachable below the floor; the meaningful attacker is offline so only KDF hardness defends; Act 2·U8 owns only the UI estimator/feedback, NOT the threshold or library choice.
+  - [dedup] The zxcvbn-ts ≥3 / length ≥12 figure is duplicated in Verbatim-preserved facts → research by-number; the floor-is-the-real-boundary invariant canonical in architecture §7.3; plan keeps a build note.
+- **`docs/plans/1-engine.md#48`** · `invariant` · → §7.3 isWriteInFlight / multi-tab · _pointer_
+  - sig: isWriteInFlight signal BroadcastChannel single-active-session
+  - U4 produces the isWriteInFlight() signal U0's PWA update handler and Act 2·U8 consume (defer skipWaiting+reload until a write commits); a BroadcastChannel single-active-session detection keeps a second tab read-only so it cannot clobber the first tab's unsaved edits.
+  - [dedup] isWriteInFlight is consumed by the U0 PWA handler (same plan); the store-side signal/single-session invariant canonical in architecture §7.3; plan keeps a build note.
+- **`docs/plans/1-engine.md#54`** · `invariant` · → §7.4 accumulation projection · _reframe_
+  - sig: C2 accumulation projection per-bucket inflow byte-identical when absent
+  - C2 accumulation projection extends the engine with the pre-retirement saving phase — per-bucket contribution inflow (+employer match→pre-tax; +HSA per R38) in working years on the EXISTING draw stream, producing the retirement-onset balance+basis the existing decumulation consumes — reducing byte-identically to today when the construct is absent or the phase is empty (R30,R31,R33,R34,R38,R19).
+  - [dedup] The accumulation-engine contract is canonical in architecture §7.4; the build step lands in plans/1-engine; the rationale in decisions/accumulation-fuck-off-date.
+  - [reframe] Surviving fact: C2 adds the pre-retirement saving phase as a per-bucket inflow on the existing draw stream, reducing byte-identically to spine when absent/empty. Present-tense framing: state as a standing engine contract (no 'fold' framing); keep the C2 ID.
+- **`docs/plans/1-engine.md#55`** · `invariant` · → §7.4 one continuous timeline · _reframe_
+  - sig: C2 one continuous timeline no new draw stream
+  - C2 uses ONE continuous timeline — NO new draw stream: the inflow occupies existing working-year slots [0,Y); buildDraws/maxHorizon unchanged so CRN across offsets and empty-phase byte-identity hold for free; full contract (end-of-year crediting owned by stepYear, the after-the-bucket-scale overlay fold, the death-aware presence-gated working-year clamp, no accumulation-phase income-tax engine) lives in architecture §7.4.
+  - [dedup] Canonical in architecture §7.4 + the §0–§7 decision record (decisions/accumulation-fuck-off-date.md).
+  - [reframe] Surviving fact: the contribution inflow rides the existing single draw stream (no new draws), so CRN and empty-phase byte-identity hold for free. Present-tense framing: state as standing contract; drop the 'accumulation fold' framing, keep the C2 ID.
+- **`docs/plans/1-engine.md#56`** · `invariant` · → §5, §7.4 presence-keyed byte-identity · _reframe_
+  - sig: C2 byte-identity presence-keyed not value-keyed
+  - C2 byte-identity is PRESENCE-keyed, not value-keyed: construct ABSENT ⇒ byte-identical to spine (asserted on BOTH MC simulate and historical/Trinity paths); a zero-valued-but-constructed run is deliberately NOT byte-identical (the working-year withdrawal clamp is live whenever the construct is present); the negative companion proves the presence gate owns byte-identity.
+  - [dedup] Canonical in architecture §5/§7.4 + decisions/accumulation-fuck-off-date.md.
+  - [reframe] Surviving fact: byte-identity is keyed on construct presence, not value; zero-valued-but-constructed is intentionally non-identical (clamp live). Present-tense framing: standing invariant; drop the 'fold' framing, keep C2 ID.
+- **`docs/plans/1-engine.md#62`** · `invariant` · → §6 R19 guards · _reframe_
+  - sig: C2 R19 initialPortfolio==0 rejected indeterminate
+  - C2 R19: NaN-first guards on every new stream at BOTH validateParams and the overlay backstop; an accumulation construct with initialPortfolio==0 is rejected as indeterminate (never a silent depleted-at-t=0 run that swallows every contribution).
+  - [dedup] R19 canonical in product; the engine-guard invariant canonical in architecture §6.
+  - [reframe] Surviving fact: C2 adds NaN-first guards at validateParams + overlay backstop and rejects initialPortfolio==0 as indeterminate. Present-tense framing: standing invariant; drop the 'fold' framing, keep C2 ID.
+- **`docs/plans/1-engine.md#65`** · `invariant` · → §7.2 onset / IRMAA stream construction · _reframe_
+  - sig: onset_i = max(65−currentAge_i, retireOffset_i) IRMAA bridge override
+  - C3 healthcare-on at the tested date is stream construction (healthcareStreams.ts), not an engine gate: per-person Medicare/IRMAA onset_i = max(65−currentAge_i, retireOffset_i) (employer coverage past 65 delays Medicare; an already-retired spouse collapses to their 65th sim-year so a retired 66-yo is priced from t=0 — the household max(65,A) form wrongly zeroed them); the working-year IRMAA-MAGI additive override is built conservatively-high (surcharge ≥ reality → date later/safe) and extends to bridge years inside a lookback window for the plain-decumulation caller.
+  - [dedup] Canonical in architecture §7.2; the per-candidate construction also recorded in decisions/accumulation-fuck-off-date.md.
+  - [reframe] Surviving fact: per-person onset_i = max(65−currentAge_i, retireOffset_i) — per-person onset (not household max(65,A), which zeroed an already-retired spouse) — a retired 66-yo is priced from t=0; the IRMAA-MAGI working-year override (extended to bridge years in a lookback window) is built conservatively-high. Present-tense framing: standing invariant; drop the 'review extended / closing a latent shipped hole / fold' narrative — keep the named landmine as a verification anchor and that bridge years inside the lookback window are covered.
+  - [fixed:warn] Restored household-max(65,A)-zeroed-retired-spouse landmine to surviving fact.
+- **`docs/plans/1-engine.md#66`** · `invariant` · → §7.4 date-search sweep contract · _reframe_
+  - sig: bounded exhaustive sweep all-or-nothing rejection
+  - C3 bounded exhaustive sweep with ALL-OR-NOTHING rejection: runDateSearch validates ALL in-window candidates up-front before dispatching any 16k-path run; any candidate rejection ⇒ the run-level input-failure variant (naming the offending input + uncovered sim-years), NEVER drop-and-continue (an unevaluated offset voids the 'earliest' claim and would crown a false 'confirmed earliest'); then each candidate runs simulate(buildCandidateParams(Y), seed) on the SAME seed at 16k paths.
+  - [dedup] R26 canonical in product; the all-or-nothing sweep contract is engine-altitude (architecture) and recorded in decisions/accumulation-fuck-off-date.md.
+  - [reframe] Surviving fact: the sweep validates all candidates up-front and rejects all-or-nothing; never drop-and-continue; each candidate runs on the same seed at 16k paths. Present-tense framing: standing contract; drop the 'fold' framing, keep C3 ID.
+- **`docs/plans/1-engine.md#67`** · `number-or-figure` · → §9 quantized-lower-bound earliest-date rule · _reframe_
+  - sig: z=1.645 16,000 paths BANDS.onTrack SURVIVAL_GRID
+  - C3 non-monotone-robust earliest-date rule reads off a quantized LOWER confidence bound: floor date = earliest Y where the essentials-track lower bound (p̂−z·SE, z=1.645 one-sided) quantized to SURVIVAL_GRID clears the bar = BANDS.onTrack (read from confidence.ts, never re-typed) AND keeps clearing; paths pinned at 16,000 so z·SE ≤ ½·SURVIVAL_GRID at the bar; reading off the lower bound stops a lucky-noise false-earliest date (R25); NEVER a bisection; lifestyle is the same rule on the full track, terminating independently.
+  - [dedup] The numbers (z=1.645, 16,000 paths, BANDS.onTrack) are duplicated in Verbatim-preserved facts (same doc) → research; the cross-engine quantize-before-compare rule is canonical in architecture §9; recorded in decisions/accumulation-fuck-off-date.md.
+  - [reframe] Surviving fact: the earliest-date rule uses p̂−1.645·SE quantized to SURVIVAL_GRID against BANDS.onTrack, at 16,000 paths (z·SE ≤ ½ grid), never a bisection. Present-tense framing: standing rule; drop the '2000-paths-undesigned / fold' framing, keep C3 ID.
+- **`docs/plans/1-engine.md#70`** · `invariant` · → §2 one per-path future / CRN · _reframe_
+  - sig: one per-path future runway then decumulation same CRN
+  - C3 one per-path future end-to-end: each candidate is graded on one per-path future (runway draws THEN decumulation draws on the SAME CRN path — no averaged-balance handoff), so final-working-year sequence-of-returns risk (a crash on the largest-ever balance) is honestly priced into the date (R34).
+  - [dedup] R34 canonical in product; the runway-then-decumulation-on-one-CRN-path invariant canonical in architecture §2.
+  - [reframe] Surviving fact: each candidate is graded on one per-path future (runway then decumulation on the same CRN path) so final-working-year sequence risk is priced in. Present-tense framing: standing invariant; drop the 'fold' framing, keep C3 ID.
+
+- **`docs/plans/1-engine.md#71`** · `invariant` · → date confidence-grading seam · _reframe_
+  - sig: date confidence-graded re-grades on override seed-B
+  - C3 each date is confidence-graded and re-grades on override: it carries the date↔confidence tradeoff (lower-bound margin explicit), is graded under the recommended/user-selected drawdown strategy, and re-grades on a sequencing/conversion override (symmetric with R10); when Act 4·U14's held-out seed-B machinery lands the DISPLAYED grade routes through it, but the date-search itself needs only the per-offset SE margin + the two-seed stability test.
+  - [dedup] R28/R10 canonical in product; the grade-and-re-grade engine seam is engine-altitude (architecture); recorded in decisions/accumulation-fuck-off-date.md.
+  - [reframe] Surviving fact: each date is confidence-graded, re-grades on a sequencing/conversion override, and routes its displayed grade through U14's seed-B machinery once it lands. Present-tense framing: standing seam; drop the 'fold' framing, keep C3 ID.
+- **`docs/plans/1-engine.md#72`** · `invariant` · → §1, §11 worker seam / cancellation · _reframe_
+  - sig: runDateSearch worker seam structured clone cooperative cancellation
+  - C3 worker seam: the sweep runs behind the existing Comlink boundary via engineApi.runDateSearch(params, seed), calm-error-total like runEngine (worker never dies mid-sweep); the per-offset curve (≤~11 points/track) crosses by structured clone, NOT the transferable machinery; mid-sweep cooperative cancellation ships (a real macrotask yield between candidates so a cancel can land; dateSearch.ts stays pure via an injected async shouldContinue()); SharedArrayBuffer/Atomics was REJECTED (needs cross-origin-isolation headers, a vercel.json posture change out of scope).
+  - [dedup] Canonical in architecture §1/§11 (worker boundary + layer purity via injected dependency).
+  - [reframe] Surviving fact: runDateSearch runs behind the Comlink boundary (structured-clone curve, injected shouldContinue() cooperative cancellation); SharedArrayBuffer/Atomics rejected (cross-origin-isolation out of scope). Present-tense framing: standing seam; drop the 'added by review / fold' framing, keep C3 ID.
+- **`docs/plans/1-engine.md#73`** · `invariant` · → §7.4 already-retired short-circuit · _reframe_
+  - sig: already-retired short-circuit enforced contract zero candidate runs
+  - C3 already-retired short-circuit: a household where people.every(p => p.retirementAge <= p.currentAge) never enters the sweep (D2 routes it to the spine-first answer; a Y>0 candidate would zero a retiree's real ACA premiums); the engine-layer mirror is ENFORCED — driving dateSearch.ts directly with an all-retired household returns the input-failure rejection with ZERO candidate runs dispatched, not caller discipline.
+  - [dedup] D2 canonical in product; the enforced engine-layer short-circuit is engine-altitude (architecture); recorded in decisions/accumulation-fuck-off-date.md.
+  - [reframe] Surviving fact: an all-retired household never enters the sweep (D2 routes to the spine answer) and dateSearch.ts enforces this with zero candidate runs. Present-tense framing: standing contract; drop the 'fold' framing, keep C3 ID.
+- **`docs/plans/1-engine.md#77`** · `number-or-figure` · → §7.3 crypto parameters · _canonical_
+  - sig: PBKDF2 600,000 BIP-39 12 words 128 bits HKDF-SHA-256
+  - PBKDF2 600,000 iterations → AES-GCM-256; recovery phrase BIP-39 English, 2048 words, 12 words = 128 bits, HKDF-SHA-256 wrap with info = utf8('the-back-nine/recovery-wrap/v1').
+  - [dedup] Duplicated in U4 As built (item 44, same doc); these are crypto-contract parameters whose canonical home is architecture §7.3 (not research — they are construction constants, not verified external numbers).
+- **`docs/plans/1-engine.md#78`** · `number-or-figure` · → §7.3 numeric sentinel (DND 009) · _canonical_
+  - sig: NEVER_DEPLETED = -1 DND 009
+  - Never-depleted sentinel NEVER_DEPLETED = -1 (never Infinity/NaN/null — JSON.stringify/IndexedDB silently null those; DND 009).
+  - [dedup] Duplicated in U4 As built (item 44) and CLAUDE.md (DND 009); canonical home is architecture §7.3 (the persisted-sentinel invariant).
+- **`docs/plans/2-first-answer.md#6`** · `invariant` · → § worker boundary (single long-lived instance) · _canonical_
+  - sig: single long-lived Comlink worker handle, module-level singleton
+  - memoryModel(a): holds the single long-lived Comlink worker handle created once outside React render (module-level singleton, survives StrictMode double-mount), reused across recomputes; the use(promise) Suspense pattern does not apply.
+  - [dedup] Architecture canonical for the worker-boundary invariant; the React-tree enforcement detail stays as a pointer in the Act 2 plan Contract 1(a).
+- **`docs/plans/2-first-answer.md#7`** · `invariant` · → § CRN / seed lifecycle · _canonical_
+  - sig: per-scenario 32-bit seed minted once, persisted unchanged
+  - memoryModel(b): mints the per-scenario 32-bit seed exactly once via crypto.getRandomValues at first run, reuses it for every recompute, persists it unchanged at Save (no re-mint) so the reloaded headline is byte-identical; Act 4 reads it as seedA and adds held-out seedB.
+  - [dedup] Architecture canonical for the CRN/seed invariant; plans/3-controls + 4-recommendation reference seedA/seedB as pointers.
+- **`docs/plans/2-first-answer.md#10`** · `invariant` · → § single plaintext model (no parallel shape) · _canonical_
+  - sig: ONE plaintext shape, no parallel intake shape
+  - memoryModel(e): it is the one plaintext shape — the same to-be-persisted model shared/model.ts defines, no parallel intake shape and no field-mapping layer; U8's field-fidelity guard rests on this single-shape rule.
+  - [dedup] Architecture canonical for the single-plaintext-model invariant; src/shared/model.ts is the code home; Act 2 plan references it.
+- **`docs/plans/2-first-answer.md#12`** · `invariant` · → § outcome-state enum / six states · _canonical_
+  - sig: exactly SIX outcome states, engine sole authority
+  - The outcome-state set is exactly six (on-track/borderline/off-track/indeterminate/over-funded/already-failing), single-sourced in shared/model.ts; confidence.ts is sole authority over state selection, band edges, indeterminate selection, and over-funded clamp; ui/outcomeStates.ts is a pure exhaustive presentation lookup (unhandled state = compile error).
+  - [dedup] Architecture canonical for the enum + engine-authority invariant; shared/model.ts is the code home; glossary defines the six terms (pointer to architecture).
+- **`docs/plans/2-first-answer.md#14`** · `invariant` · → § non-color signal primitives (palette.ts) · _canonical_
+  - sig: non-color signal vocabulary, separate by luminance not hue
+  - Non-color signal contract: color is never the only signal; palette.ts owns the colorblind-safe primitives (luminance ramp, shape/marker set, line-style set, 'separate by luminance not hue'); two consumers map them to two axes — verdict-state (U7) and series-identity (U6) — 'parity' = same primitive set, not identical rendering.
+  - [dedup] Architecture canonical for the non-color-signal invariant; back-nine-design skill + product R2 carry pointers.
+- **`docs/plans/2-first-answer.md#15`** · `invariant` · → § CVD probe / a11y-tree signal availability · _canonical_
+  - sig: oklab probe covers every rendered color, programmatically available
+  - The culori/oklab probe widens to every color either consumer renders (incl. verdictSignal redundant colors); the signal must be programmatically available in the a11y tree (verdict word as text, shape aria-label = state name), not merely grayscale-visible; the six verdict icons must be pairwise-distinct on the non-hue channel.
+  - [dedup] Architecture canonical for the CVD-probe coverage invariant; back-nine-design skill carries the practitioner pointer.
+- **`docs/plans/2-first-answer.md#16`** · `invariant` · → § copyGuard / copy catalog single-source · _canonical_
+  - sig: copy catalog + copyGuard, single typed copy.ts
+  - Contract 4: every user-facing string in src/ui+src/intake lives in one typed catalog (copy.ts) created in U5 and extended by U7; an ESLint no-restricted rule (scoped to ui+intake) bans inline strings in JSXText AND user-facing attributes; copyGuard enumerates the catalog so a new string is forced through the gate (making R12 true by construction).
+  - [dedup] Architecture canonical for the copyGuard-enumeration / inline-string-ban mechanic (#16 owns it); product R12 carries the requirement pointer; item #63 holds ONLY its additive facts (catastrophe-lexicon tone-lint, in-tool-only next-action grammar) and points its enumeration clause back here, never a 2nd canonical for the bare enumeration mechanic.
+  - [fixed:nit] #16 owns canonical enumeration mechanic; #63 reduced to additive-facts pointer.
+- **`docs/plans/2-first-answer.md#21`** · `invariant` · → § display denominator pinned at 10 · _canonical_
+  - sig: display denominator PINNED AT 10, 'X of 10'
+  - Contract 5: the display denominator is pinned at 10 — engine runs 1000+ paths but every natural-frequency renders as 'X of 10' (verdict, survivor, Act 3 'buys ~N years' all share the denominator); top-of-scale coupled to U1's over-funded clamp so it tops out at 'more than 9 of 10' — '10 of 10' can never appear.
+  - [dedup] Architecture canonical for the display contract invariant; product + plans/3-controls carry pointers.
+- **`docs/plans/2-first-answer.md#24`** · `invariant` · → § tri-state result transport / render modes · _canonical_
+  - sig: tri-state result transport; four render modes
+  - The engine result transport is tri-state (pending | resolved-distribution | calm-error); four render modes (pending, compute-error, and within resolved: indeterminate vs resolved-verdict); pending governs only the pre-first-verdict window and shows no verdict placeholder; once resolved, recomputes hold the last verdict+band and crossfade/morph, never re-enter pending; compute-error's next-action is RETRY never 'sharpen'.
+  - [dedup] Architecture canonical for the tri-state transport invariant; U7 (item 64) references render modes as a pointer.
+- **`docs/plans/2-first-answer.md#30`** · `invariant` · → §0 classification / status-conditional R19 boundary · _canonical_
+  - sig: work-status drives three predicates; retirementAge>currentAge placeholder
+  - Work-status drives three predicates (§0 classification, D2 routing, accumulation clamp): retired branch collects stop age → retirementAge ≤ currentAge (R19 boundary is status-conditional; validateParams has no ≥currentAge floor), inapplicable questions zeroed; still-working branch makes intakeMap construct retirementAge as a placeholder strictly > currentAge (never user-asked — the date is the product's answer); no shared/model.ts change.
+  - [dedup] Architecture canonical for the §0 classification + validateParams boundary invariant; plans/1-engine and the D2 routing section carry pointers; the intakeMap placeholder convention is a build detail noted in plans/2.
+- **`docs/plans/2-first-answer.md#34`** · `invariant` · → § PII / encrypted-record posture · _canonical_
+  - sig: PII safety R39, only inside U4 encrypted record
+  - PII safety (R39): every new field lives only inside U4's encrypted record (additive schemaVersion bump), never a separate or plaintext holdings store; the R35 field list is not the closed PII set — any later field (e.g. R40 streams) inherits this posture by default.
+  - [dedup] Architecture canonical for the encrypted-record invariant; product R39 carries the requirement pointer.
+- **`docs/plans/2-first-answer.md#39`** · `invariant` · → § healthcare overlay — ACA escalator · _canonical_
+  - sig: ACA-quote escalator, today's-quote scalar + age-rating escalator
+  - Tested contract — the ACA-quote escalator + sourcing-stall: intake collects pre-65 ACA inputs (SLCSP benchmark + enrolled-plan premium, user-entered no synthesis), per-year OOP-medical, the working-year income for the conservatively-high IRMAA-MAGI override, and near-65 the two prior years' IRMAA-MAGI seed; ACA/OOP entered as a today's-quote scalar plus a pinned age-rating escalator auto-filling the per-age schedule (federal age curve in engine/constants under citation discipline); a flat scalar errs optimistic under 3:1 age rating (cardinal-sin direction) so it survives only as an explicit Briggsy-accepted residual with its own copyGuard-cataloged string.
+  - [dedup] Architecture canonical for the escalator/IRMAA overlay invariant; research/pre65-healthcare carries verified numbers (age curve), product carries the honesty-lever requirement; the intake-collection build step is noted in plans/2.
+- **`docs/plans/2-first-answer.md#40`** · `invariant` · → § healthcareStreams.ts contract / composition · _canonical_
+  - sig: escalator household-composition rule, staggered Medicare exit
+  - The escalator's household-composition rule (staggered Medicare exit): auto-fill splits the household today's-quote scalar per member by federal age-curve ratio, escalates each along their own ages; the flattened per-year value at sim-year t sums only members ACA-enrolled at t (enrolled ⇔ retired AND pre-65, distinct from the IRMAA onset predicate); step-down applies to enrolledPremium + slcsp only, oopMedical does not step down (65+ OOP continues, stays HSA-qualified); the composition lives at D1's escalator/intakeMap flattening, NOT healthcareStreams.ts (whose contract is window-gate, never reshape values).
+  - [dedup] Architecture canonical for the healthcareStreams.ts contract + composition rule; research/pre65-healthcare carries verified numbers; the D1 flattening locus is noted in plans/2.
+- **`docs/plans/2-first-answer.md#42`** · `invariant` · → § validateParams date-route coverage rule · _canonical_
+  - sig: date-route coverage rule, healthcareEnabled unconditional, ACA required
+  - Requiredness is decided (a silently healthcare-blind date is never an open path): for any date-route household buildCandidateParams sets healthcareEnabled=true unconditionally, and C3's validateParams gains a date-route coverage rule — any person pre-65 during a candidate's retired window requires finite ACA enrolledPremium/slcsp coverage of those sim-years, missing ⇒ defined indeterminate ⇒ input-incomplete placeholder, never a silent healthcare-off date; ACA schedule required (absent = optimistic = cardinal direction), OOP may stay optional (absent only disables the HSA qualified-spend cap, pessimistic-safe).
+  - [dedup] Architecture canonical for the validateParams coverage-rule invariant; plans/1-engine (C3) carries the engine-build pointer.
+- **`docs/plans/2-first-answer.md#51`** · `invariant` · → § CVD probe / OKLAB 0.10 floor · _canonical_
+  - sig: CVD probe OKLAB euclidean 0.10 floor, planted too-close pair
+  - U6 CVD probe (pinned metric): palette.ts on OKLAB euclidean, 0.10 floor across deuter/protan/trit — the pinned contract (do not introduce differenceCiede2000); two refinements — probe the effective composited color where the band uses an alpha fill, and a planted too-close pair fixture so the probe can fail (burned/070); it is a dev gate, not a CI unit test.
+  - [dedup] Architecture canonical for the CVD-probe metric invariant; back-nine-design skill carries the practitioner pointer; the dev-gate file lives in the plans/2 U6 inventory.
+- **`docs/plans/2-first-answer.md#53`** · `invariant` · → § engine moments / band spatial contract · _canonical_
+  - sig: ConfidenceBand spatial contract, linear y-axis, REJECT log scale
+  - U6 render (planned): hand-rolled SVG, zero charting-lib; the ConfidenceBand spatial contract — plots the portfolio-value percentile fan over the household horizon; y-axis = linear portfolio value in today's real dollars, log scale explicitly rejected (its strictly-positive domain can't draw depletion-to-$0, the most important honest signal for off-track/already-failing — R2, R14); x-axis = years-from-now with non-color annotations at U1's load-bearing moments (each spouse's retirement, the survivor/MFJ→single boundary, horizon end), annotated with both spouses' ages never a calendar.
+  - [dedup] Architecture canonical for the load-bearing engine moments + log-scale rejection; product R14 carries the plain-honest pointer; the SVG render build lives in plans/2 U6.
+- **`docs/plans/2-first-answer.md#63`** · `invariant` · → § copyGuard (born U7) · _canonical_
+  - sig: copyGuard born here, next-action grammar in-tool only
+  - U7 copyGuard born here (R12; R25): all UI/intake copy in the typed catalog, copyGuard enumerates and asserts every entry passes (universal compliance by construction); guard = categories + slot-discipline certainty hygiene + a catastrophe-lexicon tone-lint on survivor copy (die/death/widow/penalty/broke → 'if one of you outlives the other'/'the surviving partner'; engine's 'second death' identifier exempt) framed as a cold-read aid; next-action grammar offers only in-tool capability ('sharpen this','see the range'), never prescribing a real-world money move.
+  - [dedup] Architecture canonical for the copyGuard invariant (shared with Contract 4 item 16); product R12/R25 carry requirement pointers; the U7 build locus noted in plans/2.
+- **`docs/plans/2-first-answer.md#79`** · `invariant` · → §0 classification / routing predicate / Y-sweep · _canonical_
+  - sig: D2 routing predicate PER-PERSON, never max() form
+  - D2 state-adaptive framing (R29): the routing predicate is per-person — already-retired ⇔ people.every(p => p.retirementAge <= p.currentAge), each retirementAge paired with its own currentAge (there is no household-level currentAge, so any max(retirementAge)≤currentAge form is undefined AND wrong; a == knife-edge also mis-routes a household that stopped in the past); the per-person form is exactly the engine's semantics; an already-retired household leads with the spine statement and NEVER enters the Y-sweep (a Y>0 candidate would zero a retiree's real ACA premiums); otherwise lead with the date.
+  - [dedup] Architecture §0 canonical for the per-person routing predicate + Y-sweep invariant; U7 goal (item 58) + product R29 reference it as a pointer.
+- **`docs/plans/3-controls.md#6`** · `invariant` · → §8 constants discipline · _pointer_
+  - sig: reference numbers never inlined, year-keyed constants module
+  - No dated tax/health constant (brackets, RMD ages, ACA/IRMAA/HSA dollars, Part B, validation %) is inlined in the plan; all read the canonical year-keyed src/engine/constants/ module.
+  - [dedup] Canonical in architecture §8 (and CLAUDE.md constants discipline); the plan keeps a pointer.
+- **`docs/plans/3-controls.md#8`** · `invariant` · → §3 single shared market draw / CRN · _pointer_
+  - sig: all buckets share one market draw per year, CRN
+  - Contract #2: pre-tax/Roth/taxable/HSA share one annual market draw (buckets differ only in tax treatment); tax/RMD/conversion/ACA/IRMAA are deterministic post-draw arithmetic; per-bucket draws forbidden.
+  - [dedup] Canonical in architecture §3 (and CLAUDE.md load-bearing contracts); the plan keeps a pointer.
+- **`docs/plans/3-controls.md#9`** · `invariant` · → longevity sampling / conditional-view filter · _pointer_
+  - sig: death-order conditional view filters paths, never re-draws
+  - Contract #3: selecting 'if one outlives the other' conditions on the sub-population where that spouse dies first (same seed, zero re-index, CRN-safe); default is the full mixture; thin-subpopulation widens the hedge.
+  - [dedup] The CRN-safe conditional-filter invariant is canonical in architecture (longevity sampling, built on plans/1 U1); U10+U12 own its surfacing, so the plan keeps a pointer.
+- **`docs/plans/3-controls.md#12`** · `invariant` · → §7.3 migration ladder · _pointer_
+  - sig: one coordinated schemaVersion bump, model-only re-encrypt
+  - Contract #5: U9/U10/U11 extend persisted model.ts under ONE coordinated schemaVersion bump (buckets, birth year, budget, sequencing field, vintage stamps); a what-if never mutates the vault — the only disk route is an explicit Save.
+  - [dedup] Canonical migration ladder/re-encrypt in architecture §7.3 (targets plans/1 U4); the plan keeps a pointer to the coordinated bump.
+  - [fixed:nit] Re-tagged kind requirement->invariant to match schema-migration contract; §7.3 home unchanged.
+- **`docs/plans/3-controls.md#23`** · `invariant` · → §5 reduce-to-spine · _pointer_
+  - sig: single lifelong essentials line is byte-identical to first answer
+  - U9 budget golden anchor: a single lifelong essentials line equal to the first-answer total compiles to the exact same per-year vector and yields a byte-identical seed/headline — itemization is the deepening, never the on-ramp (R5/R8).
+  - [dedup] Reduce-to-spine is canonical in architecture §5; the budget instance asserts it (the plan keeps a pointer); R5/R8 in product.
+- **`docs/plans/4-recommendation.md#2`** · `invariant` · → Validation-gates-the-solver invariant · _canonical_
+  - sig: validation harness passes BEFORE solver recommends
+  - The correctness backstop (optimality oracle, ranking-stability under CRN, grade calibration, held-out-seed defense) is built and passing before the solver may recommend; calm-but-wrong on real money is the cardinal sin and the for-friends framing raises the bar, never softens it.
+  - [dedup] Architecture is canonical for the validation-gate invariant; product §2 cardinal rule and CLAUDE.md keep their own statements; cardinal-rule copies elsewhere become pointers (Q5).
+- **`docs/plans/4-recommendation.md#3`** · `decision-rationale` · → §4 per-year cash-term transform seam · _pointer_
+  - sig: solver CONSUMES the validated spine
+  - Act 4 lands last because the solver ranks candidate strategies through the same per-year cash-term transform seam the spine and manual controls already drive (architecture §4) — it never re-implements decumulation.
+  - [dedup] Architecture §4 is canonical for the transform-seam contract; this build-sequencing rationale points to it.
+- **`docs/plans/4-recommendation.md#6`** · `invariant` · → Contract #1 — validation gates the solver (oracle-cleared token seam) · _canonical_
+  - sig: oracle-cleared token required parameter
+  - Validation gates the solver structurally and type-level: the opaque oracle-cleared token is constructable only by the harness on a clean pass and is a required parameter of U15's solve-as-recommendation entry, so shipping a recommendation without a passing oracle is a TypeScript compile error; the token's fixtures-pinned clause requires every rec-relevant Strand-5 + healthcare primary pinned and ε calibrated, and a planted wrong-best case must be rejected (burned/070).
+  - [dedup] Architecture is canonical for the token-gate invariant; U14 Approach and research engine-validation strand are pointers.
+- **`docs/plans/4-recommendation.md#7`** · `invariant` · → Contract #2 — held-out-seed discipline · _canonical_
+  - sig: select on A, grade on B
+  - Held-out-seed discipline: select the winner on seed-set A, report graded confidence on independent held-out seed-set B; A and B must be statistically independent (seedB = hash/SplitMix expansion of seedA, never seedA+1); both persist bit-identically; the DISPLAY BAND (B-measured) and the SELECTION TIE-TOLERANCE (CRN-difference-keyed, never a B level band) are distinct roles; pinning Strand-5 + healthcare primaries is a hard prerequisite.
+  - [dedup] Architecture is canonical for the held-out-seed invariant; U14/U15 Approach copies are pointers (same-doc plan sections).
+- **`docs/plans/4-recommendation.md#8`** · `invariant` · → Contract #3 — deterministic byte-identical selection · _canonical_
+  - sig: byte-identical recommendation selection
+  - Deterministic byte-identical selection: quantized lexicographic objective + deterministic lexicographic tie-break (policy enum order, then conversion amount, then years) + a seeded sub-stream orthogonal to seed-sets A/B; no Math.random/clock/getRandomValues in the solver; reproducible from (model, seedA, seedB, goal); byte-identity is a same-JS-engine guarantee (selection + held-out-B grade run on the same engine instance).
+  - [dedup] Architecture is canonical (ties to the quantized-headline guard); U15 Approach is a pointer.
+- **`docs/plans/4-recommendation.md#10`** · `invariant` · → CRN / single shared market draw invariant (K-candidate generalization) · _canonical_
+  - sig: single shared market draw, K candidates
+  - All buckets (pre-tax/Roth/taxable/HSA) share ONE market-return draw per year; U15 generalizes the Act-3 2-arm CRN test to K candidates — every policy x conversion candidate within a seed-set consumes the normals identical path-for-path across the survivor MFJ->single transition; per-bucket draws are forbidden (break CRN, re-open asset-location); the death-order conditional filter carries through unchanged.
+  - [dedup] Architecture is canonical for the single-shared-draw/CRN invariant; U15 Approach is a pointer.
+- **`docs/plans/4-recommendation.md#44`** · `invariant` · → §5 reduce-to-spine invariant · _pointer_
+  - sig: reduce-to-spine inherited, not re-proven
+  - U15 ranks, does not re-decumulate: each candidate runs the existing spine + overlays through the same per-year update function the manual controls drive (Act-3 roth.ts shape) with that candidate's policy + conversion, so order-of-operations never drifts; the reduce-to-spine golden invariant is inherited — with conversion=0 and conventional drawdown a candidate's distribution is byte-identical (same seed) to the validated Trinity/Bengen spine (architecture §5), the golden cases never perturbed.
+  - [dedup] Architecture §5 is canonical for the reduce-to-spine invariant; this U15 step inherits and points to it.
+- **`docs/plans/4-recommendation.md#47`** · `invariant` · → Contract #8a — spending-never-a-control · _pointer_
+  - sig: spending is read-only input, never a control
+  - U15: spending is never a control (contract #8a) — the budget + spending shape (go-go-years front-loading vs level) are read-only input to every candidate; the solver moves only sequencing + conversion; no candidate alters a budget line.
+  - [dedup] Architecture contract #8 (and product locked decision) is canonical; U15 step points to it; contract #4 also references it.
+- **`docs/plans/4-recommendation.md#63`** · `invariant` · → Contract #4 — objective ≡ headline (render face) · _pointer_
+  - sig: objective ≡ headline, every figure from seed-B
+  - U16 objective ≡ headline rendered explicitly (contract #4): the recommendation headline metric is the metric the solver optimized, rendered in the spine's 'X of 10' voice so it can't contradict the spine; every displayed figure (recommended, no-action baseline, retained runner-up) is rendered from held-out seed-B — never the seedA selection score (the curse-inflated figure the whole U14 machinery defeats) — and internally CRN-consistent (all on one seedB matrix); the seedA score only selects/retains, never renders; the 10/10->surplus pivot switches the headline to the named surplus metric, reusing the over-funded outcome-state vocabulary.
+  - [dedup] Contract #4 (architecture) + product §4-§5 are canonical; U14 held-out and U15 also referenced; this is the U16 render-side pointer.
+- **`docs/plans/4-recommendation.md#76`** · `invariant` · → Contract #8b — stale-rec inversion · _pointer_
+  - sig: staleness rule INVERTS for a recommendation
+  - U17 the staleness rule inverts for a recommendation (contract #8b): the spine rule re-presents a saved verdict under its saved fixture vintage (number matches the screenshot) and only re-runs on demand, but a recommendation is a real action a user may execute with real dollars, so the rule inverts — a stale saved rec always re-solves under current fixtures before it is shown and is never re-presented under its saved vintage as if still advised; the saved record's as-recommended vintage is kept for provenance + staleness detection, never for re-presentation-as-current.
+  - [dedup] Architecture contract #8 is canonical for the inversion invariant; plans/3 holds the spine staleness rule; this is the U17 build face.
+- **`docs/plans/features/social-security.md#1`** · `scope-boundary` · → §7 SS overlay (engine seam) · _canonical_
+  - sig: pure pre-loop populates socialSecurityReal slot
+  - The SS sub-engine is a pure (PIAs, claim ages, birth years)→per-person annual-benefit-stream function computed pre-loop into PersonOffsets.socialSecurityReal; cashTermsForYear, maxBenefit, the §86 overlay, and the date sweep are downstream and unchanged.
+  - [dedup] Architecture engine-seam description is canonical; this is the same fact.
+- **`docs/plans/features/social-security.md#8`** · `scope-boundary` · → §7 SS overlay (in-scope mechanics) · _reframe_
+  - sig: in scope: own reduction, Method C excess, §202 survivor
+  - In scope: own-benefit early reduction + delayed credits (exact integer fractions); Method C spousal excess (two reduction schedules, worker-entitled gate, excess floor); deemed-filing collapse to one claim age per person; survivor §202 (71.5%@60→100%@survivor-FRA, deceased's DRC flow-through, RIB-LIM cap).
+  - [reframe] Surviving fact: the modeled SS mechanics (own reduction/credit, Method C excess, deemed-filing single claim age, §202 survivor with RIB-LIM). Present-tense as the architecture §7 mechanics list; the 'PRESERVED VERBATIM from source plan' fossil tag dropped.
+- **`docs/plans/features/social-security.md#10`** · `invariant` · → §7 SS overlay (cash seam invariant) · _canonical_
+  - sig: cashTermsForYear untouched by sub-engine
+  - cashTermsForYear (simulate.ts) sums o.socialSecurityReal per claimed-alive person and the survivor takes maxBenefit; the sub-engine does not touch this function — it changes only the dollar landing in PersonOffsets.socialSecurityReal and adds the excess/survivor streams.
+  - [dedup] Architecture cash-seam description is canonical; this duplicate collapses into it.
+- **`docs/plans/features/social-security.md#11`** · `invariant` · → CRN invariant (SS pre-loop) · _canonical_
+  - sig: pre-loop, zero draws, CRN-invariant claim offset
+  - offsets + maxBenefit are computed once pre-loop as a pure function of inputs; the sub-engine slots in here, consumes ZERO draws, and is CRN-invariant across date-search candidates (the date sweep shifts a claim OFFSET, never a claim AGE).
+  - [dedup] Architecture CRN invariant is the canonical home; this collapses into it (also cross-refs §7).
+- **`docs/plans/features/social-security.md#12`** · `invariant` · → §7 SS overlay / tax-overlay seam · _canonical_
+  - sig: §86 overlay consumes benefit dollar, never re-derives
+  - taxableSocialSecurity (taxOverlay.ts, IRS §86 / Pub 915 Wksht 1) consumes the benefit DOLLAR and is agnostic to its derivation; computing the benefit upstream is seamless to the provisional-income layer with no double-count — the overlay never re-derives the benefit.
+  - [dedup] Architecture tax-overlay description is canonical; this collapses into it (cross-refs §8).
+- **`docs/plans/features/social-security.md#20`** · `number-or-figure` · → §7 SS overlay (Method C formula) · _canonical_
+  - sig: Method C total = reduce_own + reduced excess
+  - Method C: total = reduce_own(own_PIA) + max(0, reduce_spouse(0.50·worker_PIA − own_PIA)) — own + reduced-excess, NOT max(); own and excess use DIFFERENT reduction schedules off the SAME month-count. Primary POMS RS 00615.020.
+  - [dedup] The Method C RULE/formula is canonical in architecture §7; the §4 formula block and verified Method C row collapse here. The divergence NUMBER lives in research (item #4).
+  - [reframe] Surviving fact: the Method C formula (own-in-full + reduced excess off the same month-count, different schedules). Present-tense in architecture §7; 'PRESERVED VERBATIM' tag dropped.
+- **`docs/plans/features/social-security.md#21`** · `invariant` · → §7 SS overlay (worker-entitled START gate) · _canonical_
+  - sig: worker-must-be-entitled excess $0 until filed
+  - Spousal excess is $0 until the higher earner has FILED (worker-must-be-entitled, POMS RS 00202.001) — a temporal gate in the path-year loop, not a static scalar.
+  - [dedup] Architecture §7 is canonical for the gate invariant; §7 START gate and §12 excess end-gate references collapse here.
+  - [reframe] Surviving fact: the worker-must-be-entitled temporal START gate (excess $0 until higher earner files). 'PRESERVED VERBATIM' tag dropped.
+- **`docs/plans/features/social-security.md#38`** · `number-or-figure` · → §7 SS overlay (Method C excess algorithm) · _reframe_
+  - sig: reduceSpouseExcess 156/240 = 0.65 at 62
+  - §4 Method C for person L on H's record (H=argmax(pia)): excessFull=max(0,SPOUSAL_RATE·H.pia−L.pia); ownAdjusted via worker schedule; excessAdj=reduceSpouseExcess (spouse schedule, NO DRCs); L.benefit=ownAdjusted+excessAdj. reduceSpouseExcess: factor = n≤36 ? (144−n)/144 : (180−(n−36))/240 → 62/FRA67 = 156/240 = 0.65; two SEPARATE schedules off the SAME month-count; excess floored at 0; spousal base is H.pia UNREDUCED; one spousal direction per household.
+  - [dedup] The Method C rule is canonical in architecture §7 (item #20); this is the full algorithm/factor detail (156/240=0.65); §11 divergence fixture (item #51) points here. The build step lives in plans/1.
+  - [reframe] Surviving fact: the full Method C excess algorithm — excessFull, dual reduction schedules off the same month-count, 156/240=0.65 spouse-excess factor at 62, excess floored at 0, unreduced H.pia base, one direction per household. Present-tense in architecture §7.
+- **`docs/plans/features/social-security.md#39`** · `decision-rationale` · → §7 SS overlay (deemed-filing single claim age) · _reframe_
+  - sig: single claimAge drives own + spousal, survivor exempt
+  - §5 deemed filing: both cohorts (1969/1972, turn 62 in 2031/2034) are post-1954 ⇒ fully subject; a single claimAge per person drives BOTH own benefit and spousal excess (no separate spousal claim age, no restricted application); a test asserts no spousal claim age ≠ own; the SURVIVOR branch is the lone independent-timing exception (§6).
+  - [dedup] The deemed-filing rule/cutoff is verified in research (item #22); this mechanics consequence (single claim age drives both, survivor exempt) is the architecture invariant.
+  - [reframe] Surviving fact: one claimAge per person drives own + spousal (no restricted application); survivor is the lone independent-timing exception. Present-tense in architecture §7.
+- **`docs/plans/features/social-security.md#40`** · `invariant` · → §7 SS overlay (survivor selection invariant) · _reframe_
+  - sig: survivor max(ownStream, survivorStream) is legitimate larger-of
+  - §6 survivor §202: when first death occurs, survivor's SS each year = max(ownStream, survivorStream) — a LEGITIMATE larger-of (alternative entitlements), unlike the §4 spousal max() which is wrong (spousal is additive own+excess); survivorBenefitFull = the deceased's ADJUSTED benefit incl. DRC flow-through (RS 00615.301/.702); RIB-LIM caps it at max(0.825·deceasedPIA, deceasedActualReducedBenefit).
+  - [dedup] Architecture §7 is canonical for the survivor-selection invariant; the verified rule-set rows and §12 survivor max-relapse point here; the 'Superseded/changelog' framing is dropped.
+  - [reframe] Surviving fact: survivor = max(ownStream, survivorStream) is a legitimate alternative-entitlement larger-of (distinct from the wrong additive §4 spousal); survivorBenefitFull = deceased's adjusted benefit (DRC flow-through) capped by RIB-LIM. Present-tense in architecture §7; changelog framing dropped.
+- **`docs/plans/features/social-security.md#41`** · `invariant` · → §7 SS overlay (survivor lock-flat guard) · _reframe_
+  - sig: survivor reduction LOCK-FLAT, no upward age ramp
+  - §6 LOCK-FLAT (cardinal-rule-load-bearing): the survivor stream starts at max(age 60, first-death year), its reduction factor is LOCKED at the survivor's age at that start and held FLAT for the rest of the horizon — it does NOT ramp toward 100% as the survivor ages; the 71.5%@60→100%@survivor-FRA schedule is over the CLAIM AGE, not a post-claim ramp. A per-year ramp would optimistically overstate guaranteed income on early-widowhood paths — the calm-but-wrong sin.
+  - [dedup] Architecture §7 is canonical for this load-bearing invariant; §12 flat-lock test and 'What the review caught' references point here.
+  - [reframe] Surviving fact: the survivor reduction factor is locked at claim-age and held flat for the horizon (no upward age-ramp) because a ramp would optimistically overstate guaranteed income on early-widowhood paths. Present-tense in architecture §7; the 'review caught' framing dropped.
+- **`docs/plans/features/social-security.md#43`** · `invariant` · → §7 SS overlay (orchestrator + three time-shapes) · _reframe_
+  - sig: householdBenefitStreams once pre-loop, three time-shapes
+  - §7 orchestrator householdBenefitStreams(people) runs ONCE PRE-LOOP and is the entry point; three components by time-shape: (1) own → a resolved per-person SCALAR replacing socialSecurityReal (PersonOffsets stays scalar; the ~10 literals + cashTermsForYear signature are a VALUE REINTERPRET); (2) spousal excess → a time-gated term ($0 until max(L,H claim offset) START gate per RS 00202.001, returns to $0 at H's death offset END gate — omitting it DOUBLE-COUNTS guaranteed income); (3) survivor → a per-PATH selection.
+  - [dedup] Architecture §7 is canonical; the §12 excess end-gate, 'review caught' END-gate guard, and verified worker-entitled rows point here.
+  - [reframe] Surviving fact: householdBenefitStreams runs once pre-loop with three time-shapes — own scalar (value reinterpret), excess time-gated term with START/END gates (END gate prevents excess+survivor double-count), survivor per-path selection. Present-tense in architecture §7.
+- **`docs/plans/features/social-security.md#45`** · `invariant` · → CRN invariant (SS claim-offset invariance) · _canonical_
+  - sig: date-search varies only retirementAge, claim offset invariant
+  - §7 CRN invariant: dateSearch.ts varies ONLY retirementAge; currentAge, socialSecurityClaimAge, pia, birthYear are held VERBATIM, so every claim OFFSET (claimAge−currentAge) is INVARIANT across candidates; own, the gated excess, and the survivor selection are therefore candidate-invariant — computed once, ZERO draws. (Accumulation-state PIA recompute deferred to P4, so moving retirementAge can't perturb a PIA.)
+  - [dedup] Architecture CRN invariant is canonical; the offset-build reference (item #11) collapses here.
+- **`docs/plans/features/social-security.md#46`** · `invariant` · → reduce-to-spine invariant (SS off) · _canonical_
+  - sig: all-PIA-zero ⇒ byte-identical Trinity/Bengen spine
+  - §7 reduce-to-spine: all-PIA-zero ⇒ own 0, excess 0, survivor 0 ⇒ max(0,0)=0 ⇒ byte-identical to the prior socialSecurityReal=0 Trinity/Bengen spine (golden cases untouched).
+  - [dedup] Architecture reduce-to-spine invariant is canonical; the §12 spine-invariant duplicate (item #56) collapses here.
+- **`docs/plans/features/social-security.md#47`** · `invariant` · → §7 SS overlay / tax-overlay non-double-count · _canonical_
+  - sig: §86 overlay reads computed stream, no double-count
+  - §8 tax overlay unchanged: taxableSocialSecurity (§86) consumes the per-year benefit dollar already surfaced by cashTermsForYear; the sub-engine changes the VALUE of that dollar, not the seam; a test confirms the overlay never re-derives from PIA so provisional income stays correct by construction (a future muni bucket is the single §86 change site, unchanged here).
+  - [dedup] Shares the tax-overlay seam with item #12 (architecture canonical), BUT NOT a pure duplicate — the collapse into #12 must PRESERVE #47's two unique facts: (a) the TEST asserting the §86 overlay never re-derives the benefit from PIA, and (b) the landmine that a future muni bucket is the SINGLE §86 change site. Merge both into #12 or keep #47 canonical for them.
+  - [fixed:warn] Re-noted dedup to preserve §86-no-PIA-rederive test + muni single-change-site landmine.
+- **`docs/plans/features/social-security.md#56`** · `invariant` · → reduce-to-spine invariant (SS identity bridge) · _reframe_
+  - sig: identity bridge: nonzero PIA @FRA67 byte-identical to socialSecurityReal
+  - §12 spine invariant: PIA=0 (all) ⇒ all streams zero ⇒ Trinity/Bengen suite byte-identical (same seed) to HEAD; companion identity bridge — a nonzero PIA claimed at FRA 67, single earner, no spouse (factor 1.0, no excess) must be byte-identical to a pre-change socialSecurityReal=that-same-$ run, because the zero-maps-to-zero test exercises NONE of the reduction/excess/survivor branches.
+  - [dedup] Architecture reduce-to-spine invariant is canonical (item #46 collapses there too); this adds the nonzero-PIA identity-bridge companion as a present-tense invariant.
+  - [reframe] Surviving fact: two reduce-to-spine guards — PIA=0 byte-identical to HEAD AND a nonzero PIA@FRA67 single-earner byte-identical to a pre-change socialSecurityReal run (the zero test alone exercises no reduction branch). Present-tense in architecture; pre-change/HEAD framing kept only as the comparison baseline.
+- **`docs/plans/features/social-security.md#62`** · `number-or-figure` · → §7 SS overlay (realizedClaimAgeAtDeath seam guard) · _reframe_
+  - sig: realizedClaimAgeAtDeath = max(min(planned,ageAtDeath), ⌊FRA⌋)
+  - The fix: realizedClaimAgeAtDeath(plannedClaimAge,birthYear,ageAtDeath) = max(min(planned,ageAtDeath), ⌊FRA⌋), called in the seam to realize the deceased's claim age before constructing BenefitPerson — capping at age-at-death strips unearned credits, the FRA floor keeps an unfiled pre-FRA death on full PIA (no spurious early reduction); EXACT for whole-year FRA (both cohorts 67), sub-one-year conservative for a fractional-FRA cohort; six DND/012 goldens pin it incl. the integration dollar $19,587.60 vs the buggy $22,490.40.
+  - [dedup] The realizedClaimAgeAtDeath formula is a load-bearing seam contract → architecture §7; the lesson is in insight 040; the verified goldens ($19,587.60 vs $22,490.40) also belong in research.
+  - [reframe] Surviving fact: realizedClaimAgeAtDeath = max(min(planned,ageAtDeath),⌊FRA⌋), applied in the seam to strip unearned DRCs (FRA floor keeps a pre-FRA death on full PIA); six DND/012 goldens incl. $19,587.60 vs buggy $22,490.40. Present-tense in architecture §7; 'the fix (shipped)' framing dropped.
+- **`docs/plans/features/other-income.md#5`** · `invariant` · → §7 income/MAGI overlay (atomic-move rule) · _reframe_
+  - sig: taxable portion moves every MAGI site atomically
+  - Cardinal-rule constraint: a stream's taxable portion must move every income/MAGI site (SS §86, ACA, IRMAA) consistently and atomically; every survivor/COLA/basis simplification rounds conservative or is disclosed with its direction — an undisclosed opt-in optimistic simplification is still the sin.
+  - [dedup] Atomic-MAGI invariant canonical in architecture §7; the cardinal-rule full statement is canonical in product §2 (this is an application of it → pointer to product cardinal rule).
+  - [reframe] Surviving fact: the taxable portion must move all MAGI consumers atomically; simplifications conservative-or-disclosed. Frame as a present-tense engine contract.
+- **`docs/plans/features/other-income.md#11`** · `invariant` · → §5 reduce-to-spine byte-identity (R40 overlay) · _canonical_
+  - sig: R40.6 no streams byte-identical to spine
+  - R40.6 — reduce-to-spine byte-identity: a household with no streams is byte-identical (same seed) to the current Trinity/Bengen spine.
+  - [dedup] Reduce-to-spine invariant canonical in architecture §5; product §7 + CLAUDE.md carry pointers.
+- **`docs/plans/features/other-income.md#18`** · `scope-boundary` · → §10 CSP boundary (no live fetch) · _canonical_
+  - sig: no live price/market fetch, CSP connect-src 'self'
+  - No live price/market fetch — CSP connect-src 'self' forbids it; all income is user-entered.
+  - [dedup] CSP boundary canonical in architecture §10; CLAUDE.md carries the summary pointer.
+- **`docs/plans/features/other-income.md#47`** · `invariant` · → §6 validation boundary (entity-scalar gate location) · _reframe_
+  - sig: survivorPct/taxableFraction unreachable from leaf, entity-boundary gate
+  - KTD-4 corollary: survivorPct/taxableFraction are entity scalars applied at compile and multiplied away — they do NOT exist on the compiled leaf so the engine CANNOT range-check them; that range gate lives at the entity boundary (KTD-3 / Unit 4 sanity / restore codec); this CORRECTS the scoping doc's over-claim that engine validateParams range-checks them.
+  - [dedup] Validation-boundary invariant canonical in architecture §6; decisions/other-income-r40 (KTD-3/4) + Risks carry pointers. Drop the 'corrects the scoping doc over-claim' supersedes framing.
+  - [reframe] Surviving fact: entity scalars (survivorPct, taxableFraction) are multiplied away before the leaf, so range-checks live only at the entity boundary (Unit 4 sanity + U8 codec), never in engine validateParams. Present-tense invariant; strip the 'this corrects an earlier over-claim' story.
+- **`docs/plans/features/other-income.md#57`** · `build-detail-or-KTD` · → §7 income overlay — the five seams (two-distinct-MAGI-calculators) · _reframe_
+  - sig: five seams: cash-netting, ordinary, §86, ACA, IRMAA
+  - The five seams (taxable enters every income/MAGI site in one change): seam 1 cash-flow netting (cashTermsForYear) add grossVector[t], death-aware not retire-truncated, net=max(0,spending−earned−ongoing−ss); seam 2 ordinary income (nonSSordinary) +taxableVector[t]; seam 3 SS §86 provisional includes same taxableVector[t] (the SS torpedo), RIDES seam 2 (no separate edit, KTD-1); seam 4 ACA-MAGI — NO change (reads nonSSordinary via shared MagiComponents); seam 5 IRMAA-MAGI — NO change (same shared MagiComponents); only explicit edits are seam 1 + seam 2 (the 3-touch), seams 3-5 flow through; non-taxable portions net the draw (seam 1) but touch none of seams 2-5 (MAGI-invisible, ACA subsidy correctly rises).
+  - [dedup] The seam mechanics + two-distinct-MAGI rule canonical in architecture §7; KTD-1 (decisions/other-income-r40) carries the seam-2-only edit decision (pointer); Unit 3 build step references it.
+  - [reframe] Surviving fact: the five income/MAGI seams — explicit edits at seam 1 (cash netting) + seam 2 (ordinary), seams 3-5 (SS §86, ACA-MAGI, IRMAA-MAGI) flow through the single shared MagiComponents; non-taxable portions net the draw but are MAGI-invisible. Present-tense engine contract.
+
+- **`docs/plans/features/other-income.md#74`** · `invariant` · → §6 validation boundary (R40 vector vs entity-scalar gates) · _reframe_
+  - sig: validation boundary: compiled vectors engine-side, entity scalars entity-side + U8 codec
+  - Validation boundary: engine validateParams validates the COMPILED VECTORS (finiteness + ≤ENGINE_MAX_DOLLAR); the ENTITY SCALAR RANGES (survivorPct∈[0,1], taxableFraction∈[0,1]) are structurally unreachable from the multiplied-away leaf, so they live ONLY at the entity boundary — Unit 4 sanity on the intake path AND the U8 checkIncomeStreamV3 codec validator on the restore path (a restored blob bypasses the form and validateParams can't see the scalars, so the codec arm is LOAD-BEARING not redundant).
+  - [dedup] Validation-boundary invariant canonical in architecture §6; KTD-3/KTD-4 (decisions) + Risks + U8 obligation carry pointers; dedupes with item 47.
+  - [reframe] Surviving fact: engine validateParams gates compiled vectors only; entity-scalar ranges live solely at the entity boundary (Unit 4 sanity + the load-bearing U8 restore-codec arm). Present-tense invariant; strip the 'security-lens correction' framing.
+- **`docs/plans/features/other-income.md#75`** · `invariant` · → Engine invariants (unchanged by R40) · _canonical_
+  - sig: unchanged invariants: shared draw/CRN, reduce-to-spine, income never persisted
+  - Unchanged invariants (canonical in architecture): single shared market draw / CRN; reduce-to-spine byte-identity; the double allocateWithdrawal; truncateStreams (income NOT added); the PersonContributionStreams path; checkPerson/the frozen legacy shape; scenarioCodec (untouched — U8's); PersonIncomeStream/IncomeParams are engine-facing derivations NEVER persisted (fidelity-over-duplication), only the IncomeStream entity reaches ScenarioV3.
+  - [dedup] These invariants are canonical in architecture + CLAUDE.md summary; the R40-specific 'income never persisted' restates KTD-3 (pointer).
+- **`docs/plans/features/portfolio-holdings.md#4`** · `invariant` · → §8 constants discipline — burned/062 no-default-fallbacks · _canonical_
+  - sig: ticker absent ⇒ manualBlend required
+  - EnteredAccount.ticker is reserved for U8 multi-holding entry and not yet collected; an absent/unrecognized ticker requires manualBlend — a blend is never a silent default (burned/062).
+  - [dedup] burned/062 no-default-fallbacks rule is canonical in docs/architecture.md §8; this restates the rule for the holdings/ticker case and is homed there.
+- **`docs/plans/features/portfolio-holdings.md#6`** · `invariant` · → CRN / single shared market draw — no asset-location · _canonical_
+  - sig: value-weighted single stockWeight, asset-location forbidden
+  - Accounts collapse to one value-weighted household stockWeight ∈ [0,1] consumed by the engine under single shared market draw / CRN; asset-location (which assets sit in which account) is forbidden.
+  - [dedup] CRN / no-asset-location is canonical in docs/architecture.md; this is its home, other copies become pointers.
+- **`docs/plans/features/portfolio-holdings.md#7`** · `invariant` · → Persisted shape — define-now / write-at-U8 contract · _canonical_
+  - sig: ScenarioV3 define-now write-at-U8
+  - The persisted shape is ScenarioV3, defined in model.ts now and written at U8 per the define-now / write-at-U8 contract.
+  - [dedup] define-now/write-at-U8 contract is canonical in architecture; the U8 plan references it. Homed in architecture, roadmap/U8 plan point to it.
+- **`docs/plans/features/portfolio-holdings.md#9`** · `invariant` · → §10 CSP boundary — connect-src 'self' (no runtime price fetch) · _canonical_
+  - sig: no runtime price fetch, ticker+dollars
+  - connect-src 'self' + R36 forbid any runtime price fetch, so holdings are entered as (ticker, dollar value) — never shares × live price; ticker drives the blend, entered dollars drive the weight; account value may be derived from the holdings sum with a reconcile/override path.
+  - [dedup] CSP/connect-src 'self' canonical in architecture §10; R36 canonical in product. The price-fetch-prohibition design rule is homed in architecture §10; product R36 is its requirement anchor (pointer). M6: this row is the single canonical §10 statement of the no-runtime-price-fetch holdings rule — entry as (ticker, dollar value); ticker drives the blend, entered dollars drive the weight; ticker is never a live-price key; account value derived-from-holdings-sum with a reconcile/override path — and item #10 collapses INTO it as a pointer (do not ship two §10 rows for one fact).
+  - [fixed:nit] Designated #9 the single merged §10 statement; #10 collapses in as pointer.
+- **`docs/plans/features/portfolio-holdings.md#10`** · `invariant` · → §10 CSP boundary — offline-first, deterministic replay · _canonical_
+  - sig: ticker is a label, never a live-price key
+  - The product rides no-runtime-external-fetch (strict CSP, offline-first PWA, deterministic replay); a ticker/CUSIP is a label + asset-class hint, never a live-price key (R36).
+  - [dedup] CSP/no-external-fetch canonical in architecture §10; R36 canonical in product (pointer). Overlaps item #9 within architecture §10 — collapse the two into one statement there.
+- **`docs/decisions/accumulation-fuck-off-date.md#28`** · `invariant` · → §7.4 accumulation overlay contract / reduce-to-spine · _pointer_
+  - sig: accumulation OFF condition = construct ABSENT
+  - Reduce-to-spine: every overlay reduces byte-identically to the spine when OFF; the accumulation inflow's OWN OFF condition is the construct ABSENT from params (not 'all contributions 0' — §7's clamp changes nets whenever present), with its own byte-identical test; empty phase (Y==0) consumes ZERO extra draws.
+  - [dedup] Reduce-to-spine invariant canonical in architecture.md §5/§7.4; this record points.
+- **`docs/decisions/accumulation-fuck-off-date.md#36`** · `invariant` · → §7 accumulation / offset-axis model · _pointer_
+  - sig: §0 candidate axis is offset Y, no household age
+  - §0: the candidate axis is a household DATE-OFFSET Y (years-from-now), never a household 'age' — the engine has no household age (every offset is per-person, PersonInputs.currentAge is the only currentAge); a scalar household age is undefined for a different-age couple; the answer is the date today+Y; empty phase ⇔ Y==0.
+  - [dedup] Offset-model invariant canonical in architecture.md; plans/1-engine.md C3 carries the impl pointer.
+- **`docs/decisions/accumulation-fuck-off-date.md#37`** · `invariant` · → §7 accumulation / buildCandidateParams contract · _pointer_
+  - sig: §0 buildCandidateParams(Y) pure per-candidate transform
+  - §0: buildCandidateParams(Y) is a PURE per-candidate transform of the ORIGINAL params (never progressively mutated); each still-working person gets retirementAge=currentAge_i+Y (offsets coincide by construction); an already-retired person keeps entered retirementAge verbatim (never un-retired into phantom income); all household boundaries key off the single sim-year Y.
+  - [dedup] Contract canonical in architecture.md §7; plans/1-engine.md C3 (buildCandidateParams) carries the build pointer; §3a (item 41) is the in-record cross-ref.
+- **`docs/decisions/accumulation-fuck-off-date.md#38`** · `invariant` · → §7 accumulation / all-retired exclusion · _pointer_
+  - sig: §0 all-retired household never enters the sweep
+  - §0: an all-retired household NEVER enters the sweep (D2 route predicate short-circuits to spine-first); load-bearing for correctness (a Y>0 candidate would un-price a retiree's real ACA stream); enforced at the engine layer — dateSearch.ts rejects people.every(retirementAge<=currentAge) as an indeterminate-class input failure, not in shared validateParams.
+  - [dedup] Invariant canonical in architecture.md §7; plans/1-engine.md C3 + plans/2-first-answer.md D2 route predicate carry pointers.
+- **`docs/decisions/accumulation-fuck-off-date.md#40`** · `invariant` · → §7 accumulation / single-timeline CRN (§2,§3 cross-ref) · _pointer_
+  - sig: §1 ONE continuous absolute-year draw timeline
+  - §1: ONE continuous absolute-year draw timeline (R34) — accumulation adds a per-bucket contribution INFLOW into existing working-year slots, not a draw stream, not changing maxHorizon/draw dims; empty phase consumes ZERO extra draws; CRN across candidates holds (a tested Y moves WHICH draws are consumed, never how many/their order); no separate pre-phase draw-stream handoff exists.
+  - [dedup] CRN + single-draw invariants canonical in architecture.md §2/§3; this record points.
+- **`docs/decisions/accumulation-fuck-off-date.md#41`** · `invariant` · → §7 accumulation / presence-keyed byte-identity · _pointer_
+  - sig: §1 byte-identity is PRESENCE-keyed not value-keyed
+  - §1: byte-identity is PRESENCE-keyed — the OFF condition is 'accumulation construct ABSENT', not 'all contributions 0'; with the construct present the §7 clamp changes nets even at zero contributions (so a zero-valued constructed run is deliberately NOT byte-identical), but Y==0 with the construct present has no working years and IS byte-identical.
+  - [dedup] Invariant canonical in architecture.md §7; §7 (item 55) and the reduce-to-spine learning carry in-record cross-refs.
+- **`docs/decisions/accumulation-fuck-off-date.md#42`** · `invariant` · → §7.4 accumulation overlay contract / within-year pipeline · _pointer_
+  - sig: §2 contribution credited END-OF-YEAR at face value
+  - §2: signed cash-flow term with a pinned within-year pipeline (contract #3) — withdraw→rebalance→grow→CREDIT contribution end-of-year at face value (no arrival-year growth); CONSERVATIVE direction (full-year growth would overstate onset balance → earlier date → R25 sin); pin with a stepYear comment mirroring cashTermsForYear:129-133.
+  - [dedup] Within-year-pipeline contract canonical in architecture.md §7.4; plans/1-engine.md C2 carries the build pointer.
+- **`docs/decisions/accumulation-fuck-off-date.md#43`** · `invariant` · → §7.4 accumulation overlay contract / signature + per-bucket routing · _pointer_
+  - sig: §2 contribution APPENDED after stockWeight; per-bucket stream
+  - §2: the spine signature APPENDS the contribution AFTER stockWeight (never before — would re-bind every call); StepResult exposes the PRE-CREDIT growth-only total for the overlay's bucket-scale; the overlay takes a per-bucket stream — taxable raises value AND basis, pretax/roth raise value only, employer match→pretax even on Roth 401k.
+  - [dedup] Contract canonical in architecture.md §7.4; plans/1-engine.md C2 carries the build pointer.
+- **`docs/decisions/accumulation-fuck-off-date.md#44`** · `invariant` · → §7.4 accumulation overlay contract / disjointness + forced-flow overlap · _pointer_
+  - sig: §2 working-year withdrawals clamped; contributions/draws disjoint
+  - §2: working-year withdrawals are clamped to zero (presence-gated, §7), so contributions and SPENDING-driven draws are temporally disjoint; but overlay-FORCED flows (73/75+ RMD relocation, tax gross-up on RMD/claimed-while-working SS/scheduled conversion) can still produce a working-year outflow — the §2c fold is pinned safe for that overlap (never depends on disjointness).
+  - [dedup] Invariant canonical in architecture.md §7.4; §3b and §7 carry in-record cross-refs.
+- **`docs/decisions/accumulation-fuck-off-date.md#45`** · `invariant` · → §7.4 accumulation overlay contract / fold placement · _pointer_
+  - sig: §2c overlay fold AFTER the bucket-scale
+  - §2c: the OVERLAY fold is AFTER the bucket-scale at face value (fold-before-scale was the regression); the scale = totalValue/afterWithdrawal IS the year's blended growth multiply; folding before the scale either earns phantom arrival-year growth (breaks golden d) or smears C proportionally across buckets (breaks asset-location golden c).
+  - [dedup] Fold-placement contract canonical in architecture.md §7.4; plans/1-engine.md C2 carries the build pointer; strip the 'Superseded changelog' fold-correction framing.
+  - [reframe] Strip 'round-2 regression / superseded' framing: present-tense the overlay fold runs AFTER the bucket-scale at face value.
+- **`docs/decisions/accumulation-fuck-off-date.md#46`** · `invariant` · → §7.4 accumulation overlay contract / correct fold (Σ-proof) · _pointer_
+  - sig: §2c correct fold: growth-only scale, per-person pretax ledger credit
+  - §2c correct fold: scale on the contribution-EXCLUDED portfolio (StepResult growth-only total); after the bucket reassignment buckets[dest]+=C at face value; under perRmd also credit pretaxLedger[ownerIdx] (living owners); basis+=C_taxable unscaled after the pro-rata reduction; C never enters drawPool/allocateWithdrawal/RMD base/basis denominator; C=0 ⇒ IEEE no-op ⇒ byte-identical.
+  - [dedup] Fold contract canonical in architecture.md §7.4; plans/1-engine.md C2 carries the build pointer.
+- **`docs/decisions/accumulation-fuck-off-date.md#47`** · `invariant` · → §7.4 accumulation overlay contract / zero-start rejection + mid-runway depletion · _pointer_
+  - sig: §2c zero-balance start REJECTED; mid-runway depletion DEFINED
+  - §2c: a zero-balance start is REJECTED (validateParams returns indeterminate for an accumulation construct with initialPortfolio==0, removing the t=0 instance without touching the spine's depletion predicate); a small-nonzero start can deplete mid-runway via working-year forced flows — a DEFINED conservative per-path outcome (forfeits later contributions, pessimistic-only).
+  - [dedup] Contract canonical in architecture.md §7.4; plans/1-engine.md C2 carries the build pointer + test.
+- **`docs/decisions/accumulation-fuck-off-date.md#49`** · `invariant` · → §7 accumulation / exhaustive date-search contract · _pointer_
+  - sig: §3 date-search exhaustive sweep, not a bisection
+  - §3: the date-search is an outer EXHAUSTIVE sweep over a bounded window (Y=0..~10, ≤~11 candidates, R26), each candidate running simulate on the SAME seed; the earliest-Y decision is non-monotone-robust (insight 013) — report the earliest offset that holds AND keeps holding, disclose non-monotone regions, NEVER a bisection.
+  - [dedup] Contract canonical in architecture.md §7; plans/1-engine.md C3 carries the build pointer.
+- **`docs/decisions/accumulation-fuck-off-date.md#51`** · `invariant` · → §7 accumulation / healthcare stream construction · _pointer_
+  - sig: §3b healthcare-on is STREAM CONSTRUCTION not an age-gate
+  - §3b: 'healthcare ON at the tested date' is STREAM CONSTRUCTION, not an existing age-gate (the engine has no retirement boundary; the ACA gate keys off pre65 + finite-positive enrolledPremium[t], IRMAA off biological 65); healthcareStreams.ts builds enrolledPremium/slcsp/oopMedical = 0/absent in [0,Y) and entered values from Y to each member's 65th sim-year.
+  - [dedup] Contract canonical in architecture.md §7; plans/1-engine.md C3 carries the build pointer; strip the 'plan's original was FALSE / Superseded changelog' framing.
+  - [reframe] Strip 'was FALSE against source' framing: present-tense healthcare-on is per-candidate stream construction in healthcareStreams.ts, not an age-gate.
+- **`docs/decisions/accumulation-fuck-off-date.md#52`** · `invariant` · → §7 accumulation / age-anchored window-gating · _pointer_
+  - sig: §3b inputs AGE-ANCHORED, window-gated never time-shifted
+  - §3b: entered ACA+OOP inputs are AGE-ANCHORED per-sim-year values ('what coverage would cost at each age, were you retired then'); healthcareStreams.ts only WINDOW-GATES them per candidate (zero outside the retired window, never time-shifted — two windows price the same absolute sim-year identically; the IRMAA-MAGI seed is Y-invariant).
+  - [dedup] Anchoring decision canonical in architecture.md §7; plans/1-engine.md C3 carries the build pointer.
+- **`docs/decisions/accumulation-fuck-off-date.md#53`** · `invariant` · → §7 accumulation / per-person Medicare-IRMAA onset · _pointer_
+  - sig: §3b Medicare/IRMAA onset PER-PERSON, not household scalar
+  - §3b: Medicare/IRMAA onset is PER-PERSON — onset_i=max(65−currentAge_i, retireOffset_i) (still-working delays Medicare past 65, the correct model); a household max(65,A) would zero a retired 66-yo spouse's entire Medicare cost → falsely-early date; enrolled count intersects the LIVING set (medicareEnrolledCount), a count over all entered persons would bill a dead spouse's Part B forever.
+  - [dedup] Per-person onset invariant canonical in architecture.md §7 (SS/healthcare mechanics); plans/1-engine.md C3 carries the build pointer.
+- **`docs/decisions/accumulation-fuck-off-date.md#54`** · `invariant` · → §7 accumulation / count65 invariance · _pointer_
+  - sig: §3b count65 NEVER redefined; biological for §63(f)/OBBBA/ACA
+  - §3b: count65 is NEVER redefined — it stays biological for the §63(f) age-65 deduction + OBBBA senior bonus + the ACA pre65 denominator; ONLY the IRMAA gate and IRMAA pricing count switch to the enrolled count; with no onset signal, onset_i defaults to the 65th sim-year (today's predicate verbatim), so the existing decumulation case is byte-identical by construction.
+  - [dedup] Invariant canonical in architecture.md §7; plans/1-engine.md C3 carries the build pointer.
+- **`docs/decisions/accumulation-fuck-off-date.md#55`** · `invariant` · → §7 accumulation / additive IRMAA-MAGI override · _pointer_
+  - sig: §3b working-year IRMAA-MAGI ADDITIVE override into history
+  - §3b: the working-year IRMAA-MAGI is an ADDITIVE OVERRIDE into history, not a seed (the seed covers only t<lookback); for a member crossing onset at t≥lookback the lagged read would find a clamped ≈$0 working year → understated surcharge → falsely-early date (silent); healthcareStreams.ts supplies a conservatively-high override and the overlay records irmaaMagiHistory[t]=override[t]+irmaaMagi(components), additive never replacement.
+  - [dedup] Invariant canonical in architecture.md §7; plans/1-engine.md C3 carries the build pointer + falsifiable test.
+- **`docs/decisions/accumulation-fuck-off-date.md#56`** · `invariant` · → §7 accumulation / seed-coverage re-keying · _pointer_
+  - sig: §3b seed covers t<lookback; validateParams re-keys onset
+  - §3b: the seed keeps covering t<lookback (real pre-sim MAGI); validateParams' seed-coverage loop re-keys off the SAME per-person onset — else a candidate with a member 65+ but still working inside the first lookback years spuriously forces the whole date-search indeterminate (a loud false rejection under the all-or-nothing rejection policy).
+  - [dedup] Invariant canonical in architecture.md §7; plans/1-engine.md C3 carries the build pointer.
+- **`docs/decisions/accumulation-fuck-off-date.md#58`** · `invariant` · → §7 accumulation / bridge-year mask · _pointer_
+  - sig: §3b bridge-year MASK keyed to the hazard's creators
+  - §3b: the overlay-backstop arm uses a per-year bridge-year MASK threaded into taxInputs, assembled per-path; bridge[t]=∃i: t<retireOffset_i && t<deathOffset_i && (earnedIncomeReal_i>0 || accumulation present) — keyed to the HAZARD'S CREATORS (invisible wages AND the income-blind §7 clamp, insight 020); validateParams carries the identical construct-gated widening; absent ⇒ byte-identical; the lagged read THROWS when mask[lag] and the override lacks finite coverage.
+  - [dedup] Invariant canonical in architecture.md §7; plans/1-engine.md C3 + the C3 deviation record (mask re-keyed, item 89) carry pointers; strip the 'AMENDED 2026-06-10' framing.
+  - [reframe] Strip 'AMENDED 2026-06-10' framing: present-tense the bridge mask keys to the hazard's creators (wages OR accumulation-present clamp), construct-gated and income-blind.
+- **`docs/decisions/accumulation-fuck-off-date.md#60`** · `invariant` · → §7 accumulation / ACA-MAGI wage-blind sibling guard · _pointer_
+  - sig: §3b ACA SIBLING hole: wage-blind ACA-MAGI rejected
+  - §3b: the hole has an ACA SIBLING — a priced ACA year overlapping a bridge year computes ACA-MAGI WAGE-BLIND (optimistic in the subsidy band → phantom near-max PTC), so the year is UNPRICEABLE and rejection beats disclosure; validateParams gains the sibling arm and the overlay reuses the same bridgeMask to throw; unreachable in both v1 routes, the guard protects direct callers + the deferred per-person-asymmetry feature.
+  - [dedup] Invariant canonical in architecture.md §7; plans/1-engine.md C3 carries the build pointer.
+- **`docs/decisions/accumulation-fuck-off-date.md#68`** · `invariant` · → §7 accumulation / floor-lifestyle independence (§6 carve-out) · _pointer_
+  - sig: §3c floor + lifestyle terminate INDEPENDENTLY
+  - §3c: floor + lifestyle TERMINATE INDEPENDENTLY, and floor≤lifestyle is an EXPECTED property never an engine assertion (asserted only on fixtures pinned away from the 100%-FPL floor, 400%-FPL cliff, every IRMAA step); on real input floor>lifestyle is constructible (essentials-only spend → MAGI below 100%-FPL → PTC=0 → full premium) — the floor>lifestyle signature, surprising-but-honest output that rides a disclosure, never a crash.
+  - [dedup] Invariant canonical in architecture.md §7; plans/1-engine.md C3 + §6 carve-out (item 71) carry pointers.
+- **`docs/decisions/accumulation-fuck-off-date.md#70`** · `invariant` · → §7 accumulation / no-date representation (OutcomeState closed, DND/009) · _pointer_
+  - sig: §3c no-date is a discriminated variant, NEVER_DEPLETED=-1 sentinel
+  - §3c: representation — a no-date is a discriminated variant on the NEW date-search result type, never indeterminate (reserved for input failure), never a 7th OutcomeState (the enum is documented closed), persisted as a finite numeric sentinel (the NEVER_DEPLETED=-1 precedent, DND/009).
+  - [dedup] OutcomeState-closed + DND/009 sentinel invariants canonical in architecture.md; plans/1-engine.md C3 carries the build pointer.
+- **`docs/decisions/accumulation-fuck-off-date.md#75`** · `invariant` · → §7 accumulation / HSA-MAGI empty-overlap invariant · _pointer_
+  - sig: §6 retired-but-contributing HSA-MAGI: disclose + empty-overlap invariant
+  - §6: the 'retired-but-contributing' HSA-MAGI edge → DISCLOSE + a falsifiable empty-overlap invariant; by R31+R33 the overlap (retired + on ACA + funding an HSA) is structurally EMPTY in v1; omitting the deduction only pushes the modeled date LATER (conservative) except the 100%-FPL floor carve-out where lowering MAGI drops PTC to zero (the D2 disclosure carries it); disclosure copy owned by D2 (copy.ts + copyGuard).
+  - [dedup] Invariant canonical in architecture.md §7; plans/2-first-answer.md D2 carries the disclosure-copy pointer.
+- **`docs/decisions/accumulation-fuck-off-date.md#76`** · `invariant` · → §7 accumulation / no-priced-ACA-year-with-contribution invariant · _pointer_
+  - sig: §6 no priced ACA year carries a nonzero contribution stream (contribution-stop == healthcare-on Y)
+  - §6: why not a test — the empty overlap makes 'date with deduction vs without' compare a nonexistent path (vacuously true); REPLACE with a falsifiable structural invariant: across the date-search NO priced ACA year ever carries a nonzero contribution stream (contribution-stop and healthcare-on are the SAME Y for every candidate, §3a); a planted overlapping candidate FAILS — making 'conservative direction' an architectural property the engine enforces.
+  - [dedup] Invariant canonical in architecture.md §7; plans/1-engine.md C3 tests carry the falsifiable-assertion pointer.
+  - [fixed:nit] Sig anchored on the greppable contribution-stop==healthcare-on rule.
+- **`docs/decisions/accumulation-fuck-off-date.md#77`** · `invariant` · → §7.4 accumulation overlay contract / working-year clamp · _pointer_
+  - sig: §7 working-year withdrawals clamped, PRESENCE-GATED
+  - §7: working-year portfolio withdrawals are clamped to zero, PRESENCE-GATED on the accumulation construct (cash-flow-coherence fix) — cashTermsForYear computes net=max(0, spending−earned−ss) every year, so without the clamp the portfolio is silently drawn down during accumulation while a contribution is added (incoherent double-counting); fix: when AND ONLY WHEN the construct is present, clamp household net to 0 IFF ∃i: t<deathOffset_i && t<retire_i.
+  - [dedup] Clamp contract canonical in architecture.md §7.4; plans/1-engine.md C2 carries the build pointer.
+- **`docs/decisions/accumulation-fuck-off-date.md#78`** · `invariant` · → §7.4 accumulation overlay contract / death-aware clamp · _pointer_
+  - sig: §7 clamp is DEATH-AWARE inside cashTermsForYear
+  - §7: the clamp is DEATH-AWARE, inside cashTermsForYear (which already takes per-path deathOffsets — per-path, CRN-safe, never in buildCandidateParams); once the last living worker dies the clamp stops and existing survivor cash semantics draw normally; a death-blind t<Y clamp would zero the surviving retiree's real draws → maximally optimistic on top-of-window candidates (the cardinal calm-but-wrong direction).
+  - [dedup] Invariant canonical in architecture.md §7.4; plans/1-engine.md C2 carries the build pointer.
+- **`docs/decisions/accumulation-fuck-off-date.md#79`** · `invariant` · → §7.4 accumulation overlay contract / presence-keyed gate · _pointer_
+  - sig: §7 gate PRESENCE-KEYED; ungated breaks two shipped tests
+  - §7: the gate is PRESENCE-KEYED never value-derived (a 1¢→0 change must not flip the working-year draw regime; candidates stay comparable; absent ⇒ byte-identical spine, burned/062); UNGATED it breaks two shipped tests (the still-working-bridge distribution test simulate.test.ts:182 and the dead-earner seam test :165-171) and violates reduce-to-spine for every still-working plain-decumulation household.
+  - [dedup] Invariant canonical in architecture.md §7.4; plans/1-engine.md C2 carries the build pointer.
+- **`docs/decisions/accumulation-fuck-off-date.md#80`** · `invariant` · → §7.4 accumulation overlay contract / per-person death truncation · _pointer_
+  - sig: §7 per-person death truncation contributes iff t<death && t<retire
+  - §7: per-person death truncation — person i contributes iff t<deathOffset_i && t<retire (same predicate as the bridge's dead-earner guard), evaluated PER-PATH (assembled in the :411-429 per-year loop, never in buildCandidateParams) else a dead spouse's phantom contributions overstate the nest egg; the overlay's per-bucket amounts are assembled per-path (alive∧working filter → bucket aggregation) and fed to §2c's after-the-scale fold (folding separately would resurrect the dead-spouse contribution).
+  - [dedup] Invariant canonical in architecture.md §7.4; plans/1-engine.md C2 + §2c carry pointers.
+- **`docs/decisions/accumulation-fuck-off-date.md#81`** · `invariant` · → §7.4 accumulation overlay contract / clamp direction disclosure · _pointer_
+  - sig: §7 direction disclosure: clamp only removes withdrawals
+  - §7: direction disclosure — the clamp only ever REMOVES withdrawals → balance weakly higher → date weakly earlier (exact on the cash side for a salary-living household, OPTIMISTIC iff the real household draws from the portfolio while working, the §0 mixed-household example); the death-path residual (per-candidate healthcare streams leave a survivor's pre-Y ACA unpriced in [d,Y)) is disclosed via the §0 channel; carry a §6-style one-directional disclosure (D2-owned) + source comments.
+  - [dedup] Invariant + disclosure-direction canonical in architecture.md §7.4; plans/2-first-answer.md D2 carries the disclosure-copy pointer.
+- **`docs/research/engine-validation-and-tax.md#19`** · `invariant` · → Engine invariants / longevity · _canonical_
+  - sig: cohort life tables sex-specific p_x+p_y-p_x*p_y
+  - Longevity: use cohort (not period) life tables; derive joint-and-survivor as P=p_x+p_y−p_x·p_y from sex-specific per-spouse curves (never one rate for both); the test asserts the couple figure equals the formula on the two shipped curves; independence errs safe; never model a fixed to-age-90 horizon.
+  - [dedup] architecture.md (engine invariants) is canonical for the longevity invariant; this research doc supplies the numbers it's tested against.
+- **`docs/research/engine-validation-and-tax.md#35`** · `invariant` · → Constants discipline §8 (year-keyed RMD age) · _canonical_
+  - sig: RMD age birth-year-keyed never hardcoded literal
+  - The RMD age is a per-person function of birth year and is legislatively scheduled to change (the 2033 step), so it is a vintage-stamped / birth-year-keyed input, never a hardcoded literal.
+  - [dedup] architecture.md (constants discipline) is canonical for the year-keyed invariant; this research doc supplies the RMD-age numbers.
+- **`docs/research/engine-validation-and-tax.md#41`** · `invariant` · → §7 SS overlay (frozen thresholds / no staleness clock) · _canonical_
+  - sig: SS thresholds frozen 1983/1993 no staleness clock
+  - The SS provisional-income thresholds are NOT inflation-indexed — frozen since 1983 ($32k)/1993 ($44k); they carry no vintage/staleness clock (unlike inflation-indexed brackets) because a frozen constant cannot go stale; this is why more retirees are caught each year — model honestly, not a bug.
+  - [dedup] architecture.md §7 SS overlay is canonical for the frozen-constant invariant; same-doc pin-pass table is a pointer.
+- **`docs/research/engine-validation-and-tax.md#42`** · `build-detail-or-KTD` · → §7 SS overlay (gross-up fixed-point) · _canonical_
+  - sig: SS-tax circularity per-year bounded fixed-point CRN-safe
+  - SS-tax circularity is a per-year bounded fixed-point, not a one-pass transform: taxable SS depends on provisional income which depends on the gross-up withdrawal which depends on the tax; the overlay iterates provisional→taxable-SS→tax→gross-up to convergence (deterministic, reads zero random draws, CRN-safe); the engine seam pins the convergence rule.
+  - [dedup] architecture.md (overlay contracts / gross-up) is canonical for the fixed-point contract.
+- **`docs/research/engine-validation-and-tax.md#52`** · `build-detail-or-KTD` · → Constants discipline §8 · _pointer_
+  - sig: value citation directionalUntilPinned Unsourced sentinel throws
+  - Constants discipline: every figure is year-keyed in the single canonical table and carries { value, citation, directionalUntilPinned }; a figure the research names but doesn't value is an Unsourced sentinel whose .value throws — never a plausible default; full rules in architecture.md, this doc supplies the numbers.
+  - [dedup] architecture.md §8 is canonical for the constants discipline; this research doc and CLAUDE.md are pointers (this doc supplies the numbers, that doc the discipline).
+- **`docs/research/engine-validation-and-tax.md#54`** · `decision-rationale` · → §10 crypto / security boundary (KDF, worker, recovery) · _reframe_
+  - sig: PBKDF2 600,000 iterations Argon2id non-extractable CryptoKey
+  - Strand 2 architecture decisions (live): WASM + single Web Worker clears 1,000-path MC sub-second (value is determinism+headroom); non-extractable CryptoKey in IndexedDB is the browser-E2E pattern; recovery-phrase + mandatory-export, no provider password-reset for data; skip SharedArrayBuffer+COOP/COEP; KDF PBKDF2-HMAC-SHA256 @600,000 iters baseline, Argon2id-WASM only if WASM ships (salt 16 bytes, AES-GCM-256, extractable:false); Jazz downgraded; separate login recovery from data-decryption recovery.
+  - [dedup] SPLIT by kind: architecture.md §10 (crypto/security boundary) is canonical for the present-tense crypto INVARIANTS (KDF params, non-extractable CryptoKey, AES-GCM-256/salt, the single-worker WASM model); the comparative RATIONALE (Jazz-vs-Evolu downgrade, skip-SAB reasoning, determinism+headroom justification) is decision-record content homed in decisions/crypto-stack, which architecture §10 points to; CLAUDE.md (crypto layer) holds the summary as a pointer.
+  - [reframe] Split the row by kind. INVARIANTS (architecture §10, present-tense boundary facts): KDF PBKDF2-HMAC-SHA256 @600,000 iters baseline (Argon2id-WASM only if WASM ships), AES-GCM-256, salt 16 bytes, extractable:false; non-extractable CryptoKey in IndexedDB; single Web Worker WASM MC (1,000-path sub-second); recovery-phrase + mandatory export (no provider data password-reset); skip SharedArrayBuffer+COOP/COEP; separate login recovery from data-decryption recovery (phrase recovers both, email/SMS login-only). RATIONALE (decisions/crypto-stack record, architecture §10 holds a pointer): why determinism+headroom is the value, why Jazz was downgraded vs Evolu, why SAB+COOP/COEP is skipped, why non-extractable CryptoKey is the browser-E2E pattern. Lift out of the changelog appendix per fossilNote — these are live crypto/architecture decisions.
+  - [fixed:warn] Split invariants (arch §10) from rationale (decisions/crypto-stack pointer) to match kind.
+- **`docs/research/engine-validation-and-tax.md#55`** · `build-detail-or-KTD` · → §10 security boundary / forward landmines (desktop port) · _reframe_
+  - sig: avoid Tauri Stronghold use keyring crate SQLCipher
+  - Future desktop-port landmine (Phase-2, not MVP): if ever ported to Tauri, avoid Tauri Stronghold (upstream IOTA stronghold.rs unmaintained since 2025-04-23); use the Rust keyring crate (e.g. tauri-plugin-keyring) + SQLCipher-encrypted SQLite, and spot-check the crate's maintenance before adopting.
+  - [reframe] Surviving fact (present-tense): a future Tauri desktop port must avoid Tauri Stronghold (upstream unmaintained) and instead use the Rust keyring crate + SQLCipher-encrypted SQLite, with a maintenance spot-check before adopting. Lift out of the changelog appendix per fossilNote — it is a forward landmine.
+- **`docs/research/pre65-healthcare.md#15`** · `definition-term` · → §7.2 Healthcare overlay — ACA-MAGI calculator · _reframe_
+  - sig: ACA-MAGI adds back non-taxable SS
+  - ACA-MAGI = AGI + tax-exempt (muni) interest + non-taxable portion of Social Security + excluded foreign earned income — so the FULL SS benefit effectively counts.
+  - [dedup] ACA-MAGI composition canonical in architecture §7.2 (the calculator); glossary gets a pointer; research §1/§4a/exit-gate-row-4 keep the fact as a verified source-row. SS add-back ties to SS mechanics (architecture §7).
+  - [reframe] Surviving fact: ACA-MAGI = AGI + tax-exempt interest + non-taxable SS + excluded foreign income (full SS effectively counts). Canonical home is the architecture §7.2 ACA-MAGI calculator; glossary points to it.
+- **`docs/research/pre65-healthcare.md#16`** · `invariant` · → §7.2 Healthcare overlay — what moves MAGI (the conversion lever) · _reframe_
+  - sig: qualified Roth distributions are MAGI-invisible
+  - Roth conversion income, traditional withdrawals, cap gains, taxable interest/dividends raise ACA-MAGI dollar-for-dollar; qualified Roth distributions are MAGI-invisible (the lever); brokerage return-of-basis counts only the gain.
+  - [dedup] The MAGI-sensitivity invariant is canonical in architecture §7.2; research §3/§4a/§5 restate it as design context — those become pointers to §7.2.
+  - [reframe] Surviving fact: traditional/conversion income raises ACA-MAGI dollar-for-dollar; qualified Roth distributions are MAGI-invisible and are the engine's lever; return of basis counts only the gain. Canonical in architecture §7.2.
+- **`docs/research/pre65-healthcare.md#18`** · `definition-term` · → §7.2 Healthcare overlay — IRMAA-MAGI calculator (two MAGI calculators) · _reframe_
+  - sig: IRMAA-MAGI ≠ ACA-MAGI, two calculators
+  - IRMAA-MAGI = AGI + tax-exempt interest (no non-taxable-SS add-back); IRMAA-MAGI ≠ ACA-MAGI, so the engine needs TWO separate MAGI calculators.
+  - [dedup] IRMAA-MAGI composition + the two-calculator requirement canonical in architecture §7.2; glossary points to it; research §4a/exit-gate-row-8 keep the verified-fact row.
+  - [reframe] Surviving fact: IRMAA-MAGI = AGI + tax-exempt interest (no SS add-back) and differs from ACA-MAGI, so the engine maintains two separate MAGI calculators. Canonical in architecture §7.2.
+
+
+## docs/glossary.md
+
+- **`README.md#0`** · `definition-term` · → The Back Nine (product name + tagline) · _pointer_
+  - sig: The fuck-off date — computed
+  - The Back Nine is a PERSONAL retirement/tax-strategy co-pilot for a married couple answering 'can we walk away, and how best?'; tagline 'the fuck-off date — computed'; name = golf back-nine metaphor (second half, every shot counts).
+  - [dedup] Define-once home is glossary; product.md carries the thesis framing and CLAUDE.md the one-line role — those become pointers to the glossary definition.
+- **`docs/README.md#7`** · `definition-term` · → Term entries: CRN, reduce-to-spine, MAGI, the fuck-off date · _canonical_
+  - sig: CRN reduce-to-spine MAGI fuck-off date
+  - glossary.md is the home for unfamiliar terms; the called-out vocabulary set is CRN, reduce-to-spine, MAGI, and 'the fuck-off date'.
+  - [dedup] glossary.md is the define-once canonical home for these terms; CLAUDE.md merely uses them. SS-related terms within glossary point to architecture §7 per the define-once rule.
+- **`docs/glossary.md#0`** · `definition-term` · → ACA-MAGI (points to architecture.md §7.2) · _pointer_
+  - sig: ACA-MAGI full Social Security benefit
+  - ACA-MAGI = AGI + tax-exempt interest + FULL Social Security benefit + excluded foreign earned income; distinct from IRMAA-MAGI, never reused for each other.
+  - [dedup] Canonical mechanics home is architecture.md §7.2; glossary keeps the define-once entry as a pointer.
+- **`docs/glossary.md#1`** · `definition-term` · → ACA-PTC (points to architecture.md §7.2 + research/pre65-healthcare.md) · _pointer_
+  - sig: ACA-PTC 400%-FPL cliff branch
+  - ACA-PTC is the pre-65 subsidy that falls as ACA-MAGI rises; modeled per-year as a fixed-point with an explicit 400%-FPL cliff branch.
+  - [dedup] Canonical mechanics in architecture.md §7.2 and verified numbers in research/pre65-healthcare.md; glossary entry is a pointer.
+- **`docs/glossary.md#2`** · `definition-term` · → Accumulation (points to plans/1-engine.md C2 + decisions/accumulation-fuck-off-date.md) · _pointer_
+  - sig: bounded near-retirement on-ramp not FIRE
+  - Accumulation = the pre-retirement saving phase (contributions + growth) projected to a candidate work-stop date; a bounded near-retirement on-ramp, never a FIRE calculator.
+  - [dedup] Canonical build home is plans/1-engine.md (C2); rationale in decisions/accumulation-fuck-off-date.md; glossary entry is a pointer.
+- **`docs/glossary.md#3`** · `definition-term` · → Act (points to roadmap.md → The ID scheme) · _pointer_
+  - sig: four Acts; code says Pn Phase
+  - An Act = one of four build chapters (1 Engine, 2 Where You Stand, 3 Levers, 4 Recommended Route); code comments say Pn (Phase), joined by the globally-unique unit key.
+  - [dedup] Canonical legend is roadmap.md → The ID scheme; glossary entry is a pointer.
+- **`docs/glossary.md#4`** · `definition-term` · → Outcome states (canonical-for-the-terms; points to plans/1-engine.md U1 + src/shared/model.ts for the enum, architecture for mechanics) · _canonical_
+  - sig: closed set six outcome states
+  - Outcome states are a closed set the engine owns (already-failing / over-funded / on-track / borderline / off-track / indeterminate); headline reading is selected from these, never a 7th ad-hoc state.
+  - [dedup] Glossary is the define-once canonical home for the SIX TERM NAMES (per #56 discipline) and POINTS to plans/1-engine.md U1 + src/shared/model.ts for the enum, and to architecture for the authority/clamp invariant: the engine is sole authority over the state, band edges, indeterminate selection, and the 10/10-honesty clamp (all-paths-survive renders over-funded near-ceiling, never a bald '10 of 10').
+  - [fixed:warn] Merged dual disposition; glossary canonical-for-terms, points-for-mechanics.
+- **`docs/glossary.md#5`** · `number-or-figure` · → Bengen / SAFEMAX (points to plans/1-engine.md U1 + research/engine-validation-and-tax.md) · _pointer_
+  - sig: SAFEMAX-analogue ~3.67% Damodaran proxy
+  - Bengen/SAFEMAX is the safe-withdrawal-rate anchor; the engine validates a duration-conservative SAFEMAX-analogue (~3.67%) against a committed Damodaran Treasury proxy arm, not a bit-exact dataset.
+  - [dedup] Canonical verified number lives in research/engine-validation-and-tax.md; build context in plans/1-engine.md (U1); glossary entry is a pointer.
+- **`docs/glossary.md#6`** · `invariant` · → Box-Muller (points to architecture.md §2) · _pointer_
+  - sig: stateless Box-Muller no cached spare
+  - Box-Muller is kept stateless (no cached spare across calls) so two CRN candidates drawing in different interleavings never silently desync.
+  - [dedup] Canonical invariant home is architecture.md §2 (also summarized in project CLAUDE.md); glossary entry is a pointer.
+- **`docs/glossary.md#7`** · `invariant` · → Bridge (points to architecture.md §4) · _pointer_
+  - sig: netWithdrawal max(0, spending − earnedIncome)
+  - The earned-income bridge nets withdrawal down by salary: netWithdrawal = max(0, spending − earnedIncome); never credits a dead earner, never contributes surplus back.
+  - [dedup] Canonical invariant home is architecture.md §4; glossary entry is a pointer.
+- **`docs/glossary.md#8`** · `definition-term` · → byte-identity (see reduce-to-spine) · _pointer_ · [NOT-must-survive]
+  - sig: byte-identity see reduce-to-spine
+  - byte-identity is a synonym cross-reference for reduce-to-spine.
+  - [dedup] Intra-glossary cross-reference to the reduce-to-spine entry; kept as a see-also pointer.
+- **`docs/glossary.md#9`** · `invariant` · → Cardinal rule (points to product.md §2) · _pointer_
+  - sig: calm-but-wrong is the sin
+  - The cardinal rule — 'calm-but-wrong is the sin' — governs every engine decision, disclosure and the voice; the bar rises for a recommender.
+  - [dedup] Q5: canonical FULL statement is product.md §2; README keeps its own plain-language version (canonical for that audience); glossary copy is a pointer.
+- **`docs/glossary.md#10`** · `decision-rationale` · → Cohort tables (points to plans/1-engine.md U1) · _pointer_
+  - sig: SSA TR2024/Alt2 1969/1972 cohort tables
+  - Cohort tables = SSA TR2024/Alt2 per-birth-year survival tables; the household's 1969/1972 cohorts drive joint-and-survivor longevity (not a period table, not a Gompertz fit).
+  - [dedup] Canonical build home plans/1-engine.md (U1); glossary entry is a pointer.
+- **`docs/glossary.md#11`** · `invariant` · → copyGuard (points to product.md §6 + plans/3-controls.md U10) · _pointer_
+  - sig: copyGuard ban-list plus require-the-hedge
+  - copyGuard is the lint enforcing calm honest language: a ban-list (certainty verbs, catastrophe lexicon) plus a require-the-hedge positive lint, both reading one single-sourced token catalog.
+  - [dedup] Canonical policy home product.md §6; build home plans/3-controls.md (U10); glossary entry is a pointer.
+- **`docs/glossary.md#12`** · `invariant` · → CRN (points to architecture.md §2–§3) · _pointer_
+  - sig: CRN identical market draws every candidate
+  - CRN: every candidate strategy, date-offset and arm sees identical market draws, so a difference is signal not RNG luck — the determinism contract that lets the solver rank honestly.
+  - [dedup] Canonical invariant home architecture.md §2–§3 (also in project CLAUDE.md); glossary entry is a pointer.
+- **`docs/glossary.md#13`** · `definition-term` · → Damodaran arm (points to research/engine-validation-and-tax.md) · _pointer_
+  - sig: Damodaran independent Bengen/Trinity proxy
+  - The Damodaran arm = the committed Treasury/corporate total-return series used as the independent Bengen/Trinity validation proxy (no canonical bit-exact dataset exists).
+  - [dedup] Canonical verified-numbers home research/engine-validation-and-tax.md; glossary entry is a pointer.
+- **`docs/glossary.md#14`** · `decision-rationale` · → Date-search (points to plans/1-engine.md C3 + decisions/accumulation-fuck-off-date.md §3) · _pointer_
+  - sig: exhaustive non-monotone-robust date sweep
+  - Date-search = the bounded, exhaustive, non-monotone-robust sweep over household work-stop offset Y producing the fuck-off date; reads off a quantized conservative lower confidence bound, never a bisection.
+  - [dedup] Canonical build home plans/1-engine.md (C3); rationale decisions/accumulation-fuck-off-date.md §3; glossary entry is a pointer.
+- **`docs/glossary.md#15`** · `definition-term` · → Decumulation (points to plans/1-engine.md) · _pointer_
+  - sig: decumulation engine center of gravity
+  - Decumulation = the retirement draw-down phase; the engine's center of gravity (accumulation exists to solve for the date that hands off to it).
+  - [dedup] Canonical build home plans/1-engine.md; glossary entry is a pointer.
+- **`docs/glossary.md#16`** · `definition-term` · → directional-until-pinned (points to architecture.md §8) · _pointer_
+  - sig: directionalUntilPinned provisional figure marker
+  - directional-until-pinned = a constants-table marker flagging a figure as provisional until confirmed against its named primary at a pin pass (then directionalUntilPinned: false).
+  - [dedup] Canonical constants-discipline home architecture.md §8; glossary entry is a pointer.
+- **`docs/glossary.md#17`** · `invariant` · → DK (points to architecture.md §7.3) · _pointer_
+  - sig: data key encrypted once, two independent wraps
+  - DK (data key) encrypts the model exactly once; the passphrase-derived and recovery-derived keys each wrap it independently, so recovery can never restore a stale copy.
+  - [dedup] Canonical crypto-vault home architecture.md §7.3; glossary entry is a pointer.
+- **`docs/glossary.md#18`** · `invariant` · → DND/012 (points to architecture.md §5) · _pointer_
+  - sig: DND/012 externally-derived golden fixtures
+  - DND/012: golden expected values must be derived by an independent path (hand-math, a published figure), never via the engine's own formula (which proves typing, not correctness).
+  - [dedup] Canonical invariant home architecture.md §5 (cited DND 012 in project CLAUDE.md); glossary entry is a pointer.
+- **`docs/glossary.md#19`** · `definition-term` · → DRC (points to architecture.md §7 SS overlay) · _reframe_
+  - sig: DRC realized at deceased's death
+  - DRC (delayed retirement credits) = SS increases for claiming after FRA; for a survivor base they are realized at the deceased's death, never credited for unlived years.
+  - [dedup] Old canonical was features/social-security.md (dissolved); SS mechanics now canonical in architecture.md §7; glossary entry becomes a pointer there, SS computation decision recorded in decisions/ss-computation.md.
+  - [reframe] Surviving fact: DRC are realized at the deceased's death, never credited for years the worker did not live to earn. Present-tense framing: the glossary defines DRC once and points to the SS overlay in architecture.md §7 (the features/ SS plan no longer exists).
+- **`docs/glossary.md#20`** · `definition-term` · → FRA (points to architecture.md §7 SS overlay) · _reframe_
+  - sig: FRA unreduced PIA age
+  - FRA (full retirement age) = the Social Security age at which the unreduced PIA is paid.
+  - [dedup] Old canonical features/social-security.md (dissolved); SS mechanics now canonical architecture.md §7; glossary entry points there.
+  - [reframe] Surviving fact: FRA is the SS age at which the unreduced PIA is paid. Present-tense framing: glossary defines FRA once and points to the SS overlay in architecture.md §7 (features/ SS plan dissolved).
+- **`docs/glossary.md#21`** · `definition-term` · → Fuck-off date (points to product.md §3 + decisions/accumulation-fuck-off-date.md) · _pointer_
+  - sig: fuck-off date two confidence-graded dates
+  - Fuck-off date = the not-yet-retired household's first answer ('when is work optional?'), delivered as two confidence-graded dates (floor + lifestyle); the user-facing label holds the calm advisor voice.
+  - [dedup] Canonical product home product.md §3; rationale decisions/accumulation-fuck-off-date.md (also in project CLAUDE.md); glossary entry is a pointer.
+- **`docs/glossary.md#22`** · `number-or-figure` · → Gross-up (points to architecture.md §7.1) · _pointer_
+  - sig: gross-up k≈0.74 GROSS_UP_MAX_PASSES 128
+  - Gross-up = the tax overlay's bounded fixed-point raising the withdrawal to cover spending plus the tax on that withdrawal; worst-case contraction k≈0.74, GROSS_UP_MAX_PASSES=128.
+  - [dedup] Canonical tax-overlay home architecture.md §7.1; glossary entry is a pointer.
+- **`docs/glossary.md#23`** · `requirement` · → Hedge (points to product.md §6) · _pointer_
+  - sig: hedge on the primary surface
+  - The hedge: every recommendation/control readout must carry its probabilistic qualifier on the primary surface, never buried in tapped-away math; enforced by the require-the-hedge lint.
+  - [dedup] Canonical requirement home product.md §6; glossary entry is a pointer.
+- **`docs/glossary.md#24`** · `definition-term` · → HSA (points to architecture.md §7.2) · _pointer_
+  - sig: HSA medical-earmarked fourth bucket
+  - HSA = the triple-advantaged medical-earmarked fourth bucket; covers out-of-pocket + (owner 65+) Medicare premiums tax-free, NOT ACA marketplace premiums; never a general drawdown source.
+  - [dedup] Canonical mechanics home architecture.md §7.2; glossary entry is a pointer.
+- **`docs/glossary.md#25`** · `definition-term` · → ID scheme (points to roadmap.md → The ID scheme) · _pointer_
+  - sig: ID scheme R/U/C/D/M never renumbered
+  - ID scheme (R/U/C/D/M/§) = the compact stable internal join-keys docs and code share; defined once, never shown to the user, never renumbered.
+  - [dedup] Canonical legend roadmap.md → The ID scheme; glossary entry is a pointer.
+- **`docs/glossary.md#26`** · `definition-term` · → Insight & cross-repo citation IDs (points to insights/README.md) · _pointer_
+  - sig: insight cited by full relative path
+  - Insight & cross-repo citation IDs = numbered engineering lessons cited by full relative path (docs/insights/NNN-…; sibling projects carry their full path too); full-path rule + burned/DND/AJS decoder lives at insights/README.md.
+  - [dedup] Canonical decoder home insights/README.md (also project CLAUDE.md cross-repo citation rule); glossary entry is a pointer.
+- **`docs/glossary.md#27`** · `definition-term` · → IRMAA (points to architecture.md §7.2) · _pointer_
+  - sig: IRMAA 2-year-lagged MAGI step-cliffs
+  - IRMAA = the post-65 Medicare premium surcharge, set on a 2-year-lagged MAGI lookback with hard per-person step-cliffs.
+  - [dedup] Canonical mechanics home architecture.md §7.2; glossary entry is a pointer.
+- **`docs/glossary.md#28`** · `definition-term` · → IRMAA-MAGI (points to architecture.md §7.2) · _pointer_
+  - sig: IRMAA-MAGI no Social Security add-back
+  - IRMAA-MAGI = AGI + tax-exempt interest with NO Social Security add-back; a different number from ACA-MAGI.
+  - [dedup] Canonical mechanics home architecture.md §7.2; glossary entry is a pointer.
+- **`docs/glossary.md#29`** · `definition-term` · → KTD (points to decisions/other-income-r40.md) · _reframe_
+  - sig: KTD Known Technical Decision R40 nine
+  - KTD (Known Technical Decision) = a load-bearing build landmine recorded in a plan, numbered so the implementation can cite it (e.g. R40's nine KTDs).
+  - [dedup] Old canonical features/other-income.md (dissolved); R40's nine KTDs now live in decisions/other-income-r40.md; glossary entry points there.
+  - [reframe] Surviving fact: a KTD is a numbered load-bearing build decision cited by the implementation (R40 has nine). Present-tense framing: glossary defines KTD once and points to decisions/other-income-r40.md, where R40's nine KTDs now live (features/other-income plan dissolved).
+- **`docs/glossary.md#30`** · `decision-rationale` · → Lexicographic objective (points to product.md D1 / R21) · _pointer_
+  - sig: lexicographic Tier 1 floor then Tier 2 goal
+  - Lexicographic objective defines 'best': Tier 1 never drop below the essentials survival floor, then Tier 2 a user-chosen surplus goal; the objective metric equals the headline metric so a recommendation can never contradict the magic moment.
+  - [dedup] Canonical decision home product.md (D1 / R21); glossary entry is a pointer.
+- **`docs/glossary.md#31`** · `definition-term` · → MAGI (points to architecture.md §7.2 via ACA-MAGI / IRMAA-MAGI) · _pointer_
+  - sig: two distinct MAGIs never one shared
+  - MAGI = modified adjusted gross income; The Back Nine computes two distinct MAGIs (ACA-MAGI and IRMAA-MAGI), never one shared number.
+  - [dedup] Canonical mechanics home architecture.md §7.2; glossary entry is a pointer.
+- **`docs/glossary.md#32`** · `definition-term` · → Method C (points to decisions/ss-computation.md; mechanics architecture.md §7) · _reframe_
+  - sig: Method C own benefit plus reduced excess
+  - Method C (POMS) = the SS spousal computation — the spouse's own benefit in full plus a reduced excess, NOT max(own, spousal).
+  - [dedup] Old canonical features/social-security.md (dissolved); the Method-C computation choice is a decision now recorded in decisions/ss-computation.md, mechanics in architecture.md §7; glossary entry points there.
+  - [reframe] Surviving fact: SS spousal benefit uses Method C (POMS) — own benefit in full plus a reduced excess, not max(own, spousal). Present-tense framing: glossary defines Method C once and points to decisions/ss-computation.md (the SS computation decision) and architecture.md §7 (mechanics); the features/ SS plan dissolved.
+- **`docs/glossary.md#33`** · `decision-rationale` · → MFJ→single (points to architecture.md §7.1) · _pointer_
+  - sig: MFJ→single half-width brackets tax cliff
+  - MFJ→single = the surviving spouse's filing-status switch the year after the first death; the same real dollars fall into ~half-width single brackets — the tax cliff that is the recommendation's emotional headline.
+  - [dedup] Canonical tax-overlay home architecture.md §7.1; glossary entry is a pointer.
+- **`docs/glossary.md#34`** · `invariant` · → Overlay (points to architecture.md §4–§5) · _pointer_
+  - sig: overlay zero-draw deterministic transform
+  - An overlay = a zero-draw deterministic transform of the cash-flow term (tax, healthcare, accumulation inflow) fed into the same per-year update as the spine; each reduces to the spine when off.
+  - [dedup] Canonical invariant home architecture.md §4–§5; glossary entry is a pointer.
+- **`docs/glossary.md#35`** · `definition-term` · → PIA (points to architecture.md §7 SS overlay) · _reframe_
+  - sig: PIA benefit at FRA entered monthly stored annually
+  - PIA (Primary Insurance Amount) = the SS benefit at FRA; the per-person SS input (entered monthly, stored annually).
+  - [dedup] Old canonical features/social-security.md (dissolved); SS mechanics now architecture.md §7; glossary entry points there.
+  - [reframe] Surviving fact: PIA is the SS benefit at FRA, entered monthly and stored annually. Present-tense framing: glossary defines PIA once and points to the SS overlay in architecture.md §7 (features/ SS plan dissolved).
+- **`docs/glossary.md#36`** · `invariant` · → Presence-keyed (points to architecture.md §5 + decisions/accumulation-fuck-off-date.md §1) · _pointer_
+  - sig: presence-keyed byte-identity on absence
+  - Presence-keyed = byte-identity keyed on a construct's absence from params, not its zero value; a zero-valued-but-constructed accumulation run is deliberately NOT byte-identical (its working-year clamp is live).
+  - [dedup] Canonical invariant home architecture.md §5; accumulation rationale decisions/accumulation-fuck-off-date.md §1; glossary entry is a pointer.
+- **`docs/glossary.md#37`** · `invariant` · → reduce-to-spine (points to architecture.md §5) · _pointer_
+  - sig: reduce-to-spine byte-identical same seed
+  - reduce-to-spine = the core correctness invariant: every overlay, when off, reproduces the Trinity/Bengen-validated decumulation distribution byte-identically (same seed); golden cases never perturbed.
+  - [dedup] Canonical invariant home architecture.md §5 (also project CLAUDE.md); glossary entry is a pointer.
+- **`docs/glossary.md#38`** · `invariant` · → Recovery phrase (points to architecture.md §7.3) · _pointer_
+  - sig: BIP-39 12-word recovery phrase wraps DK
+  - Recovery phrase = the client-generated BIP-39 12-word phrase that wraps the DK independently of the passphrase; the surviving spouse's primary door back into the vault, mandatory export at first save.
+  - [dedup] Canonical crypto-vault home architecture.md §7.3; glossary entry is a pointer.
+- **`docs/glossary.md#39`** · `definition-term` · → RIB-LIM (points to architecture.md §7 SS overlay) · _reframe_
+  - sig: RIB-LIM caps survivor benefit
+  - RIB-LIM = the Retirement-Insurance-Benefit limit that caps a SS survivor benefit.
+  - [dedup] Old canonical features/social-security.md (dissolved); SS mechanics now architecture.md §7; glossary entry points there.
+  - [reframe] Surviving fact: RIB-LIM is the Retirement-Insurance-Benefit limit that caps a SS survivor benefit. Present-tense framing: glossary defines RIB-LIM once and points to the SS overlay in architecture.md §7 (features/ SS plan dissolved).
+- **`docs/glossary.md#40`** · `number-or-figure` · → RMD (points to architecture.md §7.1) · _pointer_
+  - sig: RMD birth-year-derived 72/73/75 non-convertible
+  - RMD = the forced annual pre-tax distribution; the age is birth-year-derived (72/73/75), never a flat 73, and is non-convertible (must be taken before any conversion).
+  - [dedup] Canonical tax-overlay home architecture.md §7.1; glossary entry is a pointer.
+- **`docs/glossary.md#41`** · `invariant` · → Seed (points to architecture.md §2) · _pointer_
+  - sig: seed injected by caller, persisted bit-identically
+  - Seed = the single injected integer making the engine a deterministic function of (params, seed); generated by the caller (never inside the pure engine) and persisted bit-identically through encrypt → store → decrypt.
+  - [dedup] Canonical invariant home architecture.md §2 (also project CLAUDE.md engine purity); glossary entry is a pointer.
+- **`docs/glossary.md#42`** · `invariant` · → Single shared market draw (points to architecture.md §3) · _pointer_
+  - sig: single shared market draw per-bucket forbidden
+  - Single shared market draw: all buckets (pre-tax/Roth/taxable/HSA) share ONE market-return draw per year; per-bucket draws are forbidden, making 'no asset-location' a structural guarantee.
+  - [dedup] Canonical invariant home architecture.md §3 (also project CLAUDE.md); glossary entry is a pointer.
+- **`docs/glossary.md#43`** · `definition-term` · → SLCSP (points to architecture.md §7.2) · _pointer_
+  - sig: SLCSP required user input never synthesized
+  - SLCSP = the Second-Lowest-Cost Silver Plan benchmark premium; a required user input (ZIP/age-specific) that drives the ACA credit, never synthesized.
+  - [dedup] Canonical mechanics home architecture.md §7.2; glossary entry is a pointer.
+- **`docs/glossary.md#44`** · `definition-term` · → Spine (points to architecture.md §5) · _pointer_
+  - sig: spine Trinity/Bengen-validated decumulation core
+  - Spine = the Trinity/Bengen-validated deterministic decumulation core that every overlay reduces to.
+  - [dedup] Canonical invariant home architecture.md §5; glossary entry is a pointer.
+- **`docs/glossary.md#45`** · `number-or-figure` · → Survivor-spending ratio (points to plans/1-engine.md U1) · _pointer_
+  - sig: survivor-spending ratio ~75% Blanchett
+  - Survivor-spending ratio = the factor scaling a survivor's spending after the first death (~75%, grounded to the Blanchett literature, directional-until-pinned); rides the Tier-1 floor so its dangerous direction (too low) is documented.
+  - [dedup] Canonical build home plans/1-engine.md (U1); the verified figure also belongs to research/engine-validation-and-tax.md; glossary entry is a pointer.
+- **`docs/glossary.md#46`** · `definition-term` · → The two dates (points to product.md R27) · _pointer_
+  - sig: floor date and lifestyle date split
+  - The two dates = the FLOOR date (earliest offset essentials hold) and the LIFESTYLE date (earliest offset the full budget holds at the same confidence); they coincide for a single-total-spend budget and split when itemized.
+  - [dedup] Canonical requirement home product.md (R27); glossary entry is a pointer.
+- **`docs/glossary.md#47`** · `number-or-figure` · → Trinity study (points to plans/1-engine.md U1 + research/engine-validation-and-tax.md) · _pointer_
+  - sig: Trinity reproduces 37/39 cohorts ≈94.9%
+  - Trinity study = the safe-withdrawal validation anchor; the engine reproduces 37/39 cohorts (≈94.9% vs published 95.1%, SAME failing cohorts).
+  - [dedup] Canonical verified-numbers home research/engine-validation-and-tax.md; build context plans/1-engine.md (U1); glossary entry is a pointer.
+- **`docs/glossary.md#48`** · `decision-rationale` · → Two-pane (points to plans/2-first-answer.md D2) · _pointer_
+  - sig: two-pane live answer beside questions
+  - Two-pane = the laptop composition promoting the live answer to a persistent panel beside the questions (stacks on phone); the home for the U6 band / D2 surface.
+  - [dedup] Canonical build home plans/2-first-answer.md (D2); glossary entry is a pointer.
+- **`docs/glossary.md#49`** · `number-or-figure` · → Vault (points to architecture.md §7.3) · _pointer_
+  - sig: vault IndexedDB AES-GCM PBKDF2-600k
+  - Vault = the encrypted-at-rest local store (IndexedDB + AES-GCM under a PBKDF2-600k passphrase key); the trust layer making the at-rest promise provable. Key constant: PBKDF2-600k.
+  - [dedup] Canonical crypto-vault home architecture.md §7.3 (the PBKDF2-600k constant lives there); glossary entry is a pointer.
+- **`docs/glossary.md#50`** · `invariant` · → validateParams (points to architecture.md §6) · _pointer_
+  - sig: validateParams R19 gate rejects incomputable
+  - validateParams (the R19 gate) = the worker-boundary gate that rejects every incomputable input before any path runs: finiteness first, domain bounds, integer seed.
+  - [dedup] Canonical invariant home architecture.md §6; glossary entry is a pointer.
+- **`docs/glossary.md#51`** · `definition-term` · → §86 (points to architecture.md §7.1) · _pointer_
+  - sig: §86 provisional income taxes SS benefits
+  - §86 (provisional income) = the rule taxing Social Security benefits; modeled as its own per-year bounded fixed-point.
+  - [dedup] Canonical tax-overlay home architecture.md §7.1; glossary entry is a pointer.
+- **`docs/glossary.md#52`** · `definition-term` · → §202 (points to architecture.md §7 SS overlay) · _reframe_
+  - sig: §202 survivor benefit payable from age 60
+  - §202 (survivor benefit) = the SS survivor benefit (payable from age 60); its base realizes the deceased's claim age at death (lock-flat, RIB-LIM, DRC flow-through).
+  - [dedup] Old canonical features/social-security.md (dissolved); SS mechanics now architecture.md §7, computation decisions in decisions/ss-computation.md; glossary entry points there.
+  - [reframe] Surviving fact: §202 survivor benefit is payable from age 60 and its base realizes the deceased's claim age at death (lock-flat, RIB-LIM, DRC flow-through). Present-tense framing: glossary defines §202 once and points to the SS overlay in architecture.md §7 (features/ SS plan dissolved).
+- **`docs/glossary.md#53`** · `decision-rationale` · → §1014 (points to architecture.md §7.1) · _pointer_
+  - sig: §1014 basis step-up in leave-more objective
+  - §1014 (basis step-up) = the cost-basis reset at death; modeled into the leave-more objective because a disclosed omission can invert the after-tax ranking.
+  - [dedup] Canonical tax-overlay home architecture.md §7.1; glossary entry is a pointer.
+- **`docs/glossary.md#54`** · `status-as-built` · → 400% FPL cliff (points to architecture.md §7.2 + research/pre65-healthcare.md) · _pointer_
+  - sig: 400% FPL cliff restored for 2026
+  - 400% FPL cliff = the income threshold above which the ACA credit drops to zero; the enhanced-subsidy expiry restored it for 2026 (live legislative status) — a documented engine discontinuity the date-search and solver must branch on.
+  - [dedup] Canonical mechanics architecture.md §7.2; verified/legislative status research/pre65-healthcare.md (the reVerifyEveryBuild ACA gate); glossary entry is a pointer.
+- **`docs/glossary.md#55`** · `decision-rationale` · → 100% FPL floor (points to decisions/accumulation-fuck-off-date.md §3) · _pointer_
+  - sig: 100% FPL floor floor>lifestyle inversion
+  - 100% FPL floor = the lower ACA eligibility threshold; below it the credit is zero, so LESS spending can mean a HIGHER net premium — the source of the legitimate floor > lifestyle date inversion.
+  - [dedup] Canonical rationale home decisions/accumulation-fuck-off-date.md §3; glossary entry is a pointer.
+- **`docs/glossary.md#56`** · `scope-boundary` · → intro paragraph + sort note · _canonical_
+  - sig: define-once, statutory terms sorted at end
+  - Glossary discipline: a term is defined here once if load-bearing across more than one doc, with a pointer to its canonical home; every other doc references rather than re-defines. Sort: alphabetical, with § and number-prefixed statutory terms grouped at the end.
+- **`docs/plans/1-engine.md#22`** · `definition-term` · → outcome-state set · _canonical_
+  - sig: outcome-state set on-track borderline off-track
+  - U1 outcome-state set (single-sourced in src/shared/model.ts): on-track / borderline / off-track / indeterminate / over-funded / already-failing; the engine is sole authority over the state, band edges, indeterminate selection, and the 10/10-honesty clamp (all-paths-survive renders over-funded near-ceiling, never a bald '10 of 10').
+  - [dedup] Glossary defines the terms once; architecture and src/shared/model.ts (code home) hold the authority/clamp invariant; glossary points to architecture for mechanics.
+
+- **`docs/plans/1-engine.md#68`** · `definition-term` · → date-search outcomes (confirmed / window-edge / no-date) · _reframe_
+  - sig: confirmed window-edge no-date-in-window three outcomes
+  - C3 three first-class outcomes per track: (1) CONFIRMED date (candidate below the window top, ≥1 later offset of evidence); (2) WINDOW-EDGE date (the window top, zero later offsets, reported WITH the unconfirmed-tail disclosure, never silently crowned, never folded into 'no date'); (3) NO-DATE-IN-WINDOW (top offset fails — a first-class result, never 'never free,' never a crash, surfacing the per-offset curve); Y==0 reads 'work-optional AT today'; indeterminate stays reserved for input failure; the OutcomeState enum stays closed; persisted sentinels are finite numerics.
+  - [dedup] R27 canonical in product; the three-outcome vocabulary is defined-once in glossary (pointing to architecture/decisions for behavior); recorded in decisions/accumulation-fuck-off-date.md.
+  - [reframe] Surviving fact: the date-search has three first-class per-track outcomes (confirmed / window-edge-with-disclosure / no-date-in-window), Y==0 = 'work-optional today'. Present-tense framing: standing definitions; drop the 'fold' framing, keep C3 ID.
+- **`docs/plans/features/social-security.md#67`** · `definition-term` · → SS terms (BenefitPerson, H/L, streams) · _reframe_
+  - sig: BenefitPerson, H = argmax(pia), L recipient
+  - Sub-engine type contracts: BenefitPerson (constructed in the seam, consumed by survivorBenefitAnnual); the per-person 'streams' are own (scalar), spousal excess (time-gated term), survivor (per-path selection); H = argmax(pia) is the higher earner, L is the potential spousal recipient on H's record.
+  - [reframe] Surviving fact: define BenefitPerson, H (= argmax(pia), higher earner), L (potential spousal recipient), and the three stream shapes. Present-tense glossary entries pointing to docs/plans/features/social-security.md (§3/§4/§6, the as-built mechanics home) for mechanics — NOT architecture §7, which has no SS section.
+  - [fixed:warn] Repointed SS-term pointer from architecture §7 to plans/features/social-security.md
+- **`docs/plans/features/other-income.md#82`** · `definition-term` · → INCOME_TYPES / COLA_MODES (R40 vocab) · _reframe_
+  - sig: INCOME_TYPES and COLA_MODES single-sourced const arrays
+  - Vocab constants single-sourced for the codec to import: INCOME_TYPES (pension/rental/alimony/annuity/other) and COLA_MODES (real-flat/nominal-flat/fixed-pct) as const arrays in src/shared/model.ts.
+  - [dedup] Define-once in glossary; Unit 1 build + U8 codec obligation cite the single-sourced const (pointers).
+  - [reframe] Surviving fact: INCOME_TYPES (pension/rental/alimony/annuity/other) and COLA_MODES (real-flat/nominal-flat/fixed-pct) are single-sourced as const arrays the codec imports. Present-tense definition.
+- **`docs/decisions/README.md#0`** · `definition-term` · → term: decision record · _reframe_
+  - sig: decision record outlives the plan
+  - A decision record is a permanent record of the WHY behind the hardest engineering calls; unlike a plan (active->done->archived) it persists because code, plans, and tests cite it by §-number long after the work ships.
+  - [reframe] A decision record is a permanent record of the WHY behind a hard engineering call, written to outlive the plan that produced it: plans flip active->done and get archived, decision records do not, because the codebase, plans, and tests cite them by §-number long after the work ships.
+- **`docs/decisions/README.md#1`** · `scope-boundary` · → term: decision record (admission criterion) · _pointer_
+  - sig: expensive to reconstruct AND referenced across repo
+  - A record belongs in decisions/ only when its reasoning is expensive to reconstruct AND referenced across the repo; routine choices stay in their plan, product-level decisions live in docs/product.md, engine invariants in docs/architecture.md.
+  - [dedup] Canonical precedence-on-conflict map lives in CLAUDE.md (roadmap You-Are-Here wins on status; architecture wins on an invariant; product wins on why/what). The glossary entry states the decisions/ admission criterion and points to that map rather than re-stating precedence.
+- **`docs/decisions/README.md#6`** · `decision-rationale` · → [REHOME → docs/decisions/README.md] term: decision record (graduation rule) · _reframe_
+  - sig: graduate into its own record when cited by §-number
+  - Graduation rule: a decision living elsewhere graduates into its own record in decisions/ once it gains enough cross-repo reach to be cited by §-number from MULTIPLE subsystems.
+  - [reframe] A decision living in a plan/feature doc graduates into its own record in decisions/ once it is cited by §-number from multiple subsystems; stated as a forward-going policy, not as a record of a past move. Today the SS computation decisions and the R40 KTDs deliberately remain in plans/features/social-security.md and plans/features/other-income.md (ungraduated) — those decisions/ records do NOT yet exist. Canonical home for the rule is docs/decisions/README.md; the glossary at most carries a pointer-entry under 'decision record' referencing the README's graduation rule.
+  - [fixed:blocker] Struck false ss-computation.md/other-income-r40.md claim; rehomed rule to decisions/README.md
+- **`docs/research/pre65-healthcare.md#14`** · `definition-term` · → ACA-PTC / SLCSP (points to research pre-65 §1 + architecture §7.2) · _reframe_
+  - sig: ACA-PTC = benchmark SLCSP minus applicable% × MAGI
+  - ACA-PTC (IRC §36B) = benchmark SLCSP premium − (applicable% × MAGI); SLCSP = second-lowest-cost Silver plan in the rating area; taken as advance APTC, reconciled on Form 8962; eligibility uses prior-year FPL (2026 coverage → 2025 FPL).
+  - [dedup] Glossary defines the term once and points to the formula in research §1/§4b and the as-built fixed point in architecture §7.2; the formula block in §4b stays canonical in this research doc.
+  - [reframe] Surviving fact: glossary defines ACA-PTC and SLCSP, pointing to the formula in research pre-65 §1/§4b and the as-built computation in architecture §7.2. Present tense — define-once, no duplicate formula in glossary.
+- **`docs/research/pre65-healthcare.md#17`** · `definition-term` · → IRMAA (points to research pre-65 §1 + architecture §7.2 IRMAA feed-forward) · _reframe_
+  - sig: IRMAA surcharge set by MAGI two years prior
+  - IRMAA is an income-based surcharge on Medicare Part B AND Part D; year-N surcharge is set by MAGI from year N−2 (2026 IRMAA set by 2024 MAGI) (CMS/SSA, Finance Buff).
+  - [dedup] Glossary defines IRMAA once and points to the 2-year-lag mechanics in architecture §7.2; the number/regime detail stays canonical in research §1; §3/§4c are pointers.
+  - [reframe] Surviving fact: IRMAA = income-based Part B + Part D surcharge set by MAGI from two years prior. Glossary defines it; architecture §7.2 owns the lagged feed-forward mechanics; research §1 owns the verified facts.
+
+
+## docs/plans/1-engine.md
+
+- **`docs/plans/1-engine.md#0`** · `scope-boundary` · → intro / How to read this doc · _canonical_
+  - sig: Act 1 is the engine act
+  - Act 1 builds the deterministic MC engine, two zero-draw overlays, the encrypted store, and the accumulation fold producing the fuck-off date; nothing user-facing ships; 1-engine.md is the single home for U0-U4 and C1-C3 bodies.
+  - [dedup] Act framing is canonical in roadmap.md (the four acts) and product.md; this plan's own scope-of-build statement stays here as the plan's intro.
+- **`docs/plans/1-engine.md#2`** · `decision-rationale` · → intro (Why this is Act 1) · _canonical_
+  - sig: correctness and trust are the foundations
+  - The engine is Act 1 because the two highest-risk surfaces — correctness (calm-but-wrong fails worse than no tool, R25) and trust (R16 provable before spoken) — are foundations; controls (Act 3) and the solver (Act 4) drive this substrate and never re-implement decumulation.
+  - [dedup] R25 lives in product; the substrate-not-reimplemented invariant lives in architecture; the why-this-is-first sequencing rationale is the plan's own and stays here.
+- **`docs/plans/1-engine.md#6`** · `build-detail-or-KTD` · → U0 build (Toolchain) · _canonical_
+  - sig: toolchain mirrors burned React 19.2.4 TS ~5.9.3
+  - U0 toolchain mirrors burned: React 19.2.4, TS ~5.9.3 (tilde, patch-only) with strict-plus tsconfig, Vite 8, Vitest 4 (globals:false), pnpm@10.30.3, flat ESLint 10, no Prettier, motion v12; engine/store deps comlink, idb, zxcvbn-ts.
+  - [dedup] CLAUDE.md Conventions and architecture carry the always-in-context toolchain summary; the full as-built toolchain build detail stays in the U0 plan body.
+- **`docs/plans/1-engine.md#7`** · `decision-rationale` · → U0 build (PWA) · _canonical_
+  - sig: PWA prompt mode not autoUpdate
+  - PWA ships in prompt mode (NOT autoUpdate) so skipWaiting can't tear an in-flight encrypt-write; the update handler defers skipWaiting+reload until any write commits via the store's isWriteInFlight signal (declared U0, produced U4).
+  - [dedup] isWriteInFlight signal is produced in U4 (same plan); back-nine-design carries PWA/offline UX; the prompt-not-autoUpdate build decision stays in U0 body.
+- **`docs/plans/1-engine.md#9`** · `build-detail-or-KTD` · → U0 build (ESLint) · _canonical_
+  - sig: ESLint rewritten engine-purity ban
+  - U0 ESLint was rewritten (not cloned) from burned's flat config: layer import boundaries plus the engine-purity ban (no Math-RNG/getRandomValues/Date/performance/process in src/engine/**, weak-RNG ban extending to src/crypto/**).
+  - [dedup] The layer-boundary + engine-purity invariant is canonical in architecture §1 / CLAUDE.md; the as-built rewrite build note stays in U0 body.
+- **`docs/plans/1-engine.md#33`** · `build-detail-or-KTD` · → U2 build (bracket-fill) · _canonical_
+  - sig: bracket-fill validated lower lifetime tax
+  - U2 bracket-fill validated here: the tax-aware policy (fill ordinary income to a target bracket edge before drawing tax-free), wired to the U1 seam, is validated to yield lower lifetime tax than pre-tax-first on a constructed case.
+  - [dedup] bracket-fill is named in the U1 policy set (same plan); the validate-here build step stays in U2 body.
+- **`docs/plans/1-engine.md#35`** · `decision-rationale` · → U2 schema note · _canonical_
+  - sig: schemaVersion-2 field shape account-aware R35
+  - U2 schema note: the schemaVersion-2 field shape (per-person pre-tax/Roth/taxable buckets, per-person birth year, filing-status / bracket-vintage / app-default-version stamps) is DEFINED here and first written to disk by Act 2's first Save (the first answer is account-aware per R35).
+  - [dedup] R35 canonical in product; the v2 migration-ladder shape is consumed in U4 (same plan); the define-here-first-written-Act-2 build note stays in U2 body.
+- **`docs/plans/1-engine.md#42`** · `scope-boundary` · → U3 note / scope boundary · _canonical_
+  - sig: HSA spend decumulation HSA contributions accumulation C2
+  - U3 note: HSA SPEND (the resumed U3·M5, 'B1') is decumulation-side and tracked separately from this engine unit; HSA CONTRIBUTIONS land in accumulation (C2, per R38).
+  - [dedup] HSA-contributions scope is owned by C2 (same plan); the spend-vs-contribute split note stays as a plan scope boundary.
+- **`docs/plans/1-engine.md#49`** · `build-detail-or-KTD` · → U4 build (migration ladder) · _canonical_
+  - sig: migration ladder v1→v2→v3 v2-with-accounts
+  - U4 migration ladder as built covers the v2-with-accounts shape: the schemaVersion-2 fields U2/U3 defined and C2/C3/D1 extended are written by Act 2's first Save and read through this unit's decrypt-branch ladder (v1→v2→v3).
+  - [dedup] v2 shape defined in U2 schema note (same plan); architecture §7.3 holds the migration-ladder contract; the as-built ladder build note stays in U4 body.
+- **`docs/plans/1-engine.md#50`** · `build-detail-or-KTD` · → C1 build (contributions.ts) · _reframe_
+  - sig: contributions.ts 401k IRA HSA catch-up tiers
+  - C1 contributions.ts is year-keyed: 401(k)/403(b) deferral + age-50/55/60–63 catch-up tiers, IRA limit + indexed catch-up, HSA self-only/family + fixed $1,000 age-55 catch-up, §415(c), HDHP min-deductible/max-OOP; each {value, citation, directionalUntilPinned, legalBasis?}; sources Notice 2025-67, Rev. Proc. 2025-19, SECURE 2.0 §109; the $1,000 age-55 HSA catch-up is statutorily fixed (hard-coded, not COLA).
+  - [dedup] Architecture §8 holds constants discipline; the actual year-keyed limit numbers live in research; the build-the-table step stays in the C1 plan body.
+  - [reframe] Surviving fact: C1 builds the year-keyed contributions.ts table (deferral + all catch-up tiers, IRA, HSA + fixed $1,000 age-55 catch-up, §415(c), HDHP bounds) cited to Notice 2025-67 / Rev. Proc. 2025-19 / SECURE 2.0 §109. Present-tense framing: state as standing engine content; drop the '2026-06-08 accumulation fold' dated framing, keep the C1 ID.
+- **`docs/plans/1-engine.md#52`** · `build-detail-or-KTD` · → C1 build (tickerBlend.ts) · _reframe_
+  - sig: tickerBlend.ts category table VTI==VTSAX R37 R36
+  - C1 tickerBlend.ts is a bundled category-keyed {stock,bond,cash} blend per issuer share-class family (VTI==VTSAX→one row) collapsing to stockWeight=stock/(stock+bond+cash) with cash folded into bond (v1 is 2-asset); TDFs ship a static snapshot; cited to issuer allocation panel with SEC EDGAR N-PORT backstop; unrecognized tickers handled at intake (D1); no live lookup (R37, R36 — bundled/offline).
+  - [dedup] R37/R36 canonical in product; the build-the-blend-table step stays in the C1 plan body (code home src/engine/reference/).
+  - [reframe] Surviving fact: C1 ships tickerBlend.ts, a bundled category-keyed blend table (issuer-family-keyed; cash folded into bond, stockWeight=stock/(stock+bond+cash), v1 2-asset; static TDF snapshot, EDGAR N-PORT backstop), with no live lookup. Present-tense framing: state as standing engine reference content; drop the '2026-06-08 accumulation fold' framing, keep the C1 ID.
+  - [fixed:nit] Restored cash-folded-into-bond + stockWeight formula over bare '2-asset collapse'.
+- **`docs/plans/1-engine.md#59`** · `build-detail-or-KTD` · → C2 build (HSA contributions) · _reframe_
+  - sig: HSA contributions owner-enrollment-keyed Part A retro trap
+  - C2 HSA contributions feed the hsa bucket, zeroed owner-ENROLLMENT-keyed (t≥onset_i, keyed to the owner not the spouse; absent-signal default = owner's 65th sim-year so C2 ships before C3 supplies the onset); the 6-month Part A retro trap is disclosed not modeled in v1 (intake caveat owned by D1).
+  - [dedup] R38 canonical in product; architecture §7.4 carries the bucket contract; the build step stays in C2 plan body.
+  - [reframe] Surviving fact: HSA contributions zero owner-enrollment-keyed (default = owner's 65th sim-year); the 6-month Part A retro trap is disclosed, not modeled in v1. Present-tense framing: standing build content; drop the 'fold' framing, keep C2 ID.
+- **`docs/plans/1-engine.md#63`** · `invariant` · → C3 build (date-search) / SS build steps · _reframe_
+  - sig: C3 date-search floor and lifestyle dates 16k paths fuck-off date
+  - C3 date-search: for each candidate offset Y build the Y-dependent params (still-working retire→currentAge+Y, already-retired verbatim; contributions truncated to [0,Y); healthcare streams zero in [0,Y) and real from Y with per-person Medicare onset + working-year IRMAA-MAGI override), run accumulate-then-decumulate at each candidate on one seed at 16k paths, report the FLOOR and LIFESTYLE dates (today+Y) — each the earliest offset whose quantized conservative lower bound clears the bar AND KEEPS CLEARING — with window-edge and no-date outcomes first-class; floor and lifestyle terminate INDEPENDENTLY; this is the fuck-off date (R26–R28,R32–R34,R25).
+  - [dedup] Requirements canonical in product; the engine contract pieces land in architecture; the build-the-date-search step (the fuck-off date) is the C3 plan body. CLAUDE.md keeps the fuck-off-date thesis line.
+  - [reframe] Surviving fact: C3 sweeps the work-stop offset and reports independent FLOOR + LIFESTYLE dates (the fuck-off date), each the earliest offset whose quantized lower bound clears and keeps clearing. Present-tense framing: standing build/engine content; drop the 'fold' framing, keep C3 ID.
+- **`docs/plans/1-engine.md#79`** · `scope-boundary` · → single-source discipline note · _canonical_
+  - sig: live metrics once in roadmap constants not reproduced here
+  - Live build metrics (test count, bundle size) are NOT immutable facts — they live ONCE in roadmap.md#validation-gates; the 2026 contribution/HSA/HDHP limits and tax/health constants are deliberately NOT reproduced in this doc — they live year-keyed and cited in src/engine/constants/ (architecture §8).
+  - [dedup] Roadmap owns the live metrics, src/engine/constants + architecture §8 own the figures; the don't-reproduce-them-here single-source note stays as a plan discipline boundary.
+- **`docs/plans/1-engine.md#80`** · `build-detail-or-KTD` · → SS build steps (folded from features/social-security) · _reframe_
+  - sig: SS sub-engine Method C RIB-LIM survivor-floor bug
+  - The Social Security sub-engine — own + spousal (Method C) + survivor (§202 / RIB-LIM), driven by per-person PIA + claim age — is shipped and reviewed (review caught and fixed a cardinal-sin optimistic survivor-floor bug); it feeds the same cash seam this act's overlays use.
+  - [dedup] features/social-security.md DISSOLVES: mechanics (Method C / RIB-LIM) → architecture §7 overlay-peer; the SS decisions → decisions/ss-computation; the build steps → plans/1-engine; the survivor-floor bug LESSON → insights. This row keeps the SS build-step content here; survivor-SS step-down mechanics also in U1 (item 16).
+  - [reframe] Surviving fact: the SS sub-engine (own + spousal Method C + survivor §202/RIB-LIM, driven by PIA + claim age) is built into the engine and feeds the shared cash seam; review caught and fixed a cardinal-sin optimistic survivor-floor bug. Present-tense framing: state as an engine build step in 1-engine; NO features/ home — mechanics live in architecture §7, the bug lesson survives in insights.
+- **`docs/plans/4-recommendation.md#15`** · `build-detail-or-KTD` · → [REHOME → docs/plans/4-recommendation.md] U14 build section (build dependencies) · _reframe_
+  - sig: U14 depends on spine, overlays, pinned constants
+  - U14 depends on Act 1's validated spine + CRN draw schedule, the tax-and-accounts overlay, the healthcare overlay (ACA fixed-point + IRMAA lag) the near-ties depend on, and the year-keyed constants table (Strand-5 + healthcare primaries pinned is a hard prerequisite); it has no dependency on U15 — built first by construction.
+  - [reframe] Surviving fact: the U14 validation harness build depends on the validated spine, both overlays, and the pinned year-keyed constants; it has no U15 dependency. Present-tense framing: a build-step dependency note in U14's build section (Act 4 plan).
+  - [fixed:warn] Rehomed to 4-recommendation.md U14 build; row's subject is U14's build.
+- **`docs/plans/features/social-security.md#13`** · `build-detail-or-KTD` · → SS build: input model · _reframe_
+  - sig: PersonInputs.pia + socialSecurityClaimAge persists via V3
+  - PersonInputs (model.ts) carries pia + socialSecurityClaimAge; PersonInputsV3 extends PersonInputs, so ScenarioV3 transitively persists the swapped field.
+  - [reframe] Surviving fact: PersonInputs carries pia + socialSecurityClaimAge and ScenarioV3 inherits it transitively. Present-tense as an engine build step.
+- **`docs/plans/features/social-security.md#14`** · `build-detail-or-KTD` · → SS build: migration blast radius · _reframe_
+  - sig: 84 occurrences across 16 files, semantic migration
+  - The swap touched 84 occurrences of socialSecurityReal/socialSecurityClaimAge across 16 files and was a SEMANTIC migration (old value was already-adjusted; new pia is the FRA benefit), so every non-FRA-claim fixture was reinterpreted ($X@62 → 0.70·X) and two simulate.test.ts fixtures that hand-reimplemented the seam were rewrites; the '74-occurrences' count was refuted, 84 stands.
+  - [reframe] Surviving fact: the SS swap was a semantic (not rename) migration over 84 sites/16 files requiring fixture reinterpretation, count 84 verified. Present-tense as an engine build note; the adversarial-refutation story compressed to the verified count.
+- **`docs/plans/features/social-security.md#37`** · `number-or-figure` · → SS build: adjustOwnBenefit · _reframe_
+  - sig: adjustOwnBenefit factor, floorToDime, 0.7000/1.24 goldens
+  - §3 adjustOwnBenefit(pia,claimAgeMonths,fraMonths): n=fraMonths−claimAgeMonths; early (n>0) factor = n≤36 ? (180−n)/180 : (192−(n−36))/240; delayed (n<0) factor = 1+min(−n,drcMonthsCap)·(2/3)/100 with drcMonthsCap=840−fraMonths; at FRA factor=1; benefit=floorToDime(pia·factor); goldens assert factor 0.7000@62/FRA67 and 1.24@70/FRA67.
+  - [dedup] The verified factor anchors (0.7000, 1.24) live in research (items #16,#17); the function build/signature is the engine build step here; §11 own-factor goldens point at research.
+  - [reframe] Surviving fact: the adjustOwnBenefit algorithm (n=fraMonths−claimMonths; early (n>0) factor = n≤36 ? (180−n)/180 : (192−(n−36))/240; delayed (n<0) DRC = 1+min(−n,drcMonthsCap)·(2/3)/100 — 2/3 of 1% per month — with drcMonthsCap=840−fraMonths; factor=1 at FRA; benefit=floorToDime(pia·factor)). Present-tense as the engine build step; only the verified factor ANCHORS (0.7000, 1.24) cited to research.
+  - [fixed:warn] Restored explicit early/delayed reduction-schedule formulas; ceded only anchors.
+- **`docs/plans/features/social-security.md#44`** · `build-detail-or-KTD` · → SS build: survivor per-path selection plumbing · _reframe_
+  - sig: recover decedent index, survivor age, two survivorBenefitFull
+  - §7 survivor per-PATH plumbing: the old cashTermsForYear kept only a boolean survivorClaimed + scalar maxBenefit (discarded which spouse died, no age); §6 needs the deceased's INDEX (recover it), the survivor's AGE at t (currentAge+t), and the RIB-LIM-capped survivor base — so precompute TWO survivorBenefitFull values pre-loop and SELECT per path at the death offset; the survivor branch is rewritten to max(ownStream, survivorStream).
+  - [dedup] The survivor selection invariant is in architecture §7 (item #40); this is the build-level plumbing (recover index, two precomputed bases) — an engine build step. §12 survivor max-relapse points here.
+  - [reframe] Surviving fact: the seam recovers the decedent index + survivor age and precomputes two RIB-LIM-capped survivorBenefitFull values, selecting per path. Present-tense as the engine build step; 'old code discarded which spouse died' kept only as motivation.
+- **`docs/plans/features/social-security.md#51`** · `build-detail-or-KTD` · → SS build: PersonInputsLegacy type-hygiene fix · _reframe_
+  - sig: PersonInputsLegacy frozen for v1/v2 codec arms
+  - §10 landmine: Scenario (v1) and ScenarioV2 reference the SAME base PersonInputs, so dropping socialSecurityReal strips it from the v1/v2 TYPE shapes (surfaced by compile-time mapped-type guards — not silent; the original 'v1/v2 unaffected' claim was wrong); FIX: a frozen PersonInputsLegacy carrying socialSecurityReal that the v1/v2 interfaces + codec arms reference, while live PersonInputs carries pia (pure type hygiene — no v1/v2 blobs exist since save/load is unbuilt).
+  - [dedup] As-built file-map (item #65) references PersonInputsLegacy in model.ts; this is the build-step explanation, those collapse to the engine build.
+  - [reframe] Surviving fact: a frozen PersonInputsLegacy (carrying socialSecurityReal) backs the v1/v2 codec arms while live PersonInputs carries pia — pure type hygiene. Present-tense as the engine build step; the 'review caught / original claim wrong' framing dropped.
+- **`docs/plans/features/social-security.md#57`** · `build-detail-or-KTD` · → SS build: test plan · _reframe_
+  - sig: SS test plan: homemaker, end-gate, flat-lock, max-relapse, off, pbt
+  - §12 test plan: single-earner reduction (homemaker zero-PIA spouse gets 0.50·H.pia reduced); excess end-gate (L's excess → $0 at H's death, no excess+survivor double-count); survivor flat-lock (factor constant start→horizon); survivor max()-relapse (§202 value ≠ old max(deceasedScalar,survivorScalar), replaced the now-wrong assertion); survivor-off (no death ⇒ §6 never fires, byte-identical); property tests — household total monotone non-decreasing in each PIA, dual-earner strictly ≥ naive max(), claim∈[62,70] finite, excess ≥0.
+  - [dedup] As-built file-map (item #65) references .pbt.test.ts; §11 fixtures point at research; this test-plan list is the engine build step.
+  - [reframe] Surviving fact: the SS test matrix (homemaker, excess end-gate, survivor flat-lock, survivor max-relapse, survivor-off byte-identical, and the four property tests). Present-tense as the engine build/test step.
+- **`docs/plans/features/social-security.md#58`** · `build-detail-or-KTD` · → SS build: migration suite (test rewrites) · _reframe_
+  - sig: simulate.test.ts rewrites, impossible 75/72 → ≤70
+  - §12 migration suite: the two heaviest simulate.test.ts fixtures hand-reimplemented the SS seam (socialSecurityReal passthrough + maxBenefit=Math.max) and asserted byte-exactness, so §7's stream/survivor rewrite broke them STRUCTURALLY — they were re-cut to call the new sub-engine and their IMPOSSIBLE claim ages (75/72) dropped to ≤70; the 84-site audit budgeted simulate.test.ts as the heavy lift.
+  - [dedup] The migration blast-radius (item #14) is the same theme; this is the test-rewrite detail — an engine build note.
+  - [reframe] Surviving fact: the two heaviest simulate.test.ts fixtures were structural rewrites (not value edits) and their impossible 75/72 claim ages dropped to ≤70. Present-tense as the engine build note.
+- **`docs/plans/features/social-security.md#65`** · `build-detail-or-KTD` · → SS build: as-built file map · _reframe_
+  - sig: as-built file map: socialSecurityBenefit.ts, socialSecurity.ts
+  - As-built file map: constants/socialSecurity.ts (statutory table §2); constants/types.ts (FullRetirementAge/ReductionSchedule/RIB_LIM shapes); socialSecurityBenefit.ts (pure sub-engine: adjustOwnBenefit, reduceSpouseExcess, householdBenefitStreams, survivorBenefitAnnual, realizedClaimAgeAtDeath); simulate.ts (the seam §7); taxOverlay.ts (§86 unchanged §8); model.ts (PersonInputs.pia + PersonInputsLegacy); intake questions.tsx/copy.ts/intakeMap.ts/sanity.ts (D1 question + stop-early + PIA-ceiling §9); the two __tests__ files (POMS oracles §11, property tests §12).
+  - [dedup] This consolidates the scattered §-level file references; the engine plan is the canonical build home, those references collapse here.
+  - [reframe] Surviving fact: the SS as-built file map (which symbol lives in which file). Present-tense as the engine plan's build map; the intake files (questions/copy/sanity) cross-ref plans/2.
+- **`docs/decisions/accumulation-fuck-off-date.md#3`** · `build-detail-or-KTD` · → C2 accumulation projection (pre-existing engine baseline) · _reframe_
+  - sig: never a contribution back; afterWithdrawal subtraction-only
+  - Verified: the decumulation-only engine models zero contributions — cashTermsForYear returns net=max(0, spending−earned−ss) ('never a contribution back'), stepYear computes afterWithdrawal=totalValue−netWithdrawal (subtraction only, no inflow path).
+  - [reframe] Present-tense: the baseline decumulation engine has no inflow path (cashTermsForYear / afterWithdrawal are subtraction-only); accumulation's C2 inflow is the additive layer on top.
+- **`docs/decisions/accumulation-fuck-off-date.md#20`** · `number-or-figure` · → C3 date-search (window-width pin) · _reframe_
+  - sig: offset window Y = 0..~10, ≤~11 candidates
+  - The bounded offset-window width Y=0..~10 (≤~11 candidates) is ANSWER-BEARING, pinned as a named constant ('pinned, not vibed', like the 16k path pin); any width change must re-run the full §3c honesty battery, never tuned to profile budget or N=1 cold-read.
+  - [dedup] Window-width pin canonical as a C3 build pin in plans/1-engine.md; this record carries the rationale.
+  - [reframe] Present-tense: the offset window Y=0..~10 is a pinned answer-bearing constant; changing it forces a full re-run of the §3c honesty battery.
+- **`docs/decisions/accumulation-fuck-off-date.md#22`** · `scope-boundary` · → C3 date-search (deferred belowFloor threading) · _reframe_
+  - sig: belowFloor threading deferred to U9 surface
+  - Deferred: threading solveAcaFundedGross's belowFloor flag up to the date-search result for the per-track 100%-FPL-floor disclosure (floor>lifestyle explanation); first consumer is the U9-era cross-track surface; v1 owes only the §3c assertion removal + result-shape mirrors + fixture scoping.
+  - [reframe] Present-tense: belowFloor is surfaced by the overlay but not yet threaded to the date-search result; the U9 cross-track surface is its first consumer; v1 scope is the §3c assertion removal + result-shape mirrors + fixture scoping.
+- **`docs/decisions/accumulation-fuck-off-date.md#48`** · `invariant` · → C2 tests (goldens a–d) · _reframe_
+  - sig: §2 goldens a-d (absent, Σ, destination-bucket, direction)
+  - §2 goldens: (a) construct absent ⇒ byte-identical to spine (presence-keyed); (b) Σbuckets==runningTotal after every contribution year; (c) a destination-bucket golden on the OVERLAY path (named bucket up by exactly C, others by shared growth only — catches a smear); (d) a DIRECTION golden on the overlay path (onset balance ≤ start-of-year-credited balance, proving the conservative convention).
+  - [dedup] Test build steps canonical in plans/1-engine.md C2; the invariants they assert are canonical in architecture.md §7.4.
+  - [reframe] Present-tense: C2 ships four goldens (absent-byte-identical, per-year Σ, overlay destination-bucket, overlay direction).
+- **`docs/decisions/accumulation-fuck-off-date.md#50`** · `invariant` · → C3 tests (buildCandidateParams, 55/58 boundary fixture) · _reframe_
+  - sig: §3a per-candidate construction is new work; 55/58 fixture
+  - §3a: per-candidate construction is NEW work — each Y needs buildCandidateParams(Y) (per-person retirementAge overrides, truncated contribution streams to [0,Y), healthcare streams); SS claim ages held as entered; the boundary-coincidence test MUST use a different-currentAge couple (e.g. 55/58 — a same-age fixture passes vacuously).
+  - [dedup] Build/test step canonical in plans/1-engine.md C3; the buildCandidateParams contract is canonical in architecture.md §7 (item 37).
+  - [reframe] Present-tense: C3's boundary-coincidence test uses a different-age (55/58) couple so the household-age break is catchable.
+- **`docs/decisions/accumulation-fuck-off-date.md#57`** · `build-detail-or-KTD` · → C3 (validateParams latent-hole closure) · _reframe_
+  - sig: §3b mechanism closes a LATENT SHIPPED hole at validateParams
+  - §3b: this override mechanism closes a LATENT SHIPPED hole (the existing earned-income bridge + healthcare-on + a member reaching Medicare within lookback hits the same ≈$0 lagged read in today's engine, untested); enforced at validateParams — the override is REQUIRED of any caller whose params carry bridge years inside a lookback window (else the defined indeterminate).
+  - [dedup] Build/KTD canonical in plans/1-engine.md C3; the validateParams contract is referenced in architecture.md §7.
+  - [reframe] Present-tense: validateParams requires an IRMAA-MAGI override whenever params carry bridge years inside a lookback window, closing a latent shipped hole.
+- **`docs/decisions/accumulation-fuck-off-date.md#59`** · `build-detail-or-KTD` · → C3 (mask-conditional backstop limitation) · _reframe_
+  - sig: §3b backstop is MASK-CONDITIONAL for direct callers
+  - §3b: honest limitation — this backstop is necessarily MASK-CONDITIONAL for direct callers (an omitted mask is byte-identity-indistinguishable from a no-bridge run, so the silent-≈$0 config is unreachable for every simulate-path caller plus any direct caller supplying the mask, never 'every caller'); healthcareStreams.ts is the builder; cannot break a shipped test; preserves absent-default byte-identity.
+  - [reframe] Present-tense: the IRMAA-MAGI backstop is mask-conditional for direct callers (unreachable for simulate-path callers and any caller supplying the mask via healthcareStreams.ts), preserving absent-default byte-identity.
+- **`docs/decisions/accumulation-fuck-off-date.md#62`** · `number-or-figure` · → C3 (lower-bound defense pins: z, paths=16k, bar) · _reframe_
+  - sig: §3c lower-bound z=1.645, paths=16,000, BANDS.onTrack=0.85
+  - §3c defense: select the earliest offset whose conservative LOWER bound (p̂−z·SE) clears the bar; bar=BANDS.onTrack=0.85 read from confidence.ts (objective≡headline); z=1.645 (one-sided 95%); lower bound quantized to SURVIVAL_GRID=0.01 before comparison; paths pinned so z·SE≤½·grid ⇒ ≥~13,800 → date-search paths=16,000, CRN-uniform across candidates.
+  - [dedup] Pinned build figures canonical in plans/1-engine.md C3; confidence.ts holds BANDS.onTrack + SURVIVAL_GRID; this record carries the rationale.
+  - [reframe] Strip 'today's 2000-path config was undesigned' framing: present-tense the date-search runs 16,000 CRN-uniform paths with a z=1.645 lower-bound haircut against the 0.85 bar, quantized to the 0.01 grid.
+- **`docs/decisions/accumulation-fuck-off-date.md#63`** · `invariant` · → C3 tests (two-seed stability) · _reframe_
+  - sig: §3c TWO-INDEPENDENT-SEEDS stability test, date-equality
+  - §3c: assert a TWO-INDEPENDENT-SEEDS stability test as plain date-equality on a knife-edge-free fixture (true quantized lower bound at every offset sits comfortably inside a grid cell), with the companion assertion that both seeds produce the identical per-offset clear/fail vector; NO production component compares seeds (the only seed-B production behavior is U14's conservative-reading rule).
+  - [reframe] Present-tense: C3's two-seed stability test asserts date-equality + identical per-offset clear/fail vectors on a knife-edge-free fixture; no production code reconciles two seeds (that's U14's grade-side rule).
+- **`docs/decisions/accumulation-fuck-off-date.md#65`** · `invariant` · → C3 tests (empty-window same-dimensions golden) · _reframe_
+  - sig: §3c empty-window golden is SAME-DIMENSIONS at 16k
+  - §3c: the empty-window golden is a SAME-DIMENSIONS comparison — since buildDraws is dimensions-only and 16k≠2000, the Y==0 byte-identity golden compares against a plain decumulation run at the SAME 16k paths, never across dims; the user-facing already-retired answer never enters the sweep (D2 short-circuits to the existing headline run).
+  - [reframe] Present-tense: C3's Y==0 byte-identity golden compares against a plain decumulation run at the same 16k paths (dimensions-only buildDraws).
+- **`docs/decisions/accumulation-fuck-off-date.md#69`** · `decision-rationale` · → C3 (result shape lands now; behavioral test rides U9) · _reframe_
+  - sig: §3c result SHAPE admits mirror cases; behavioral test rides U9
+  - §3c: the result SHAPE (model.ts) admits all mirror cases now ({floor:no-date, lifestyle:date}; floor>lifestyle); in v1's single-track degenerate budget the two are byte-identical so the behavioral cases are dark until P3·U9 splits the budget — the SHAPE lands now, the behavioral test rides U9 (insight 014).
+  - [reframe] Present-tense: the date-search result shape admits the floor/lifestyle mirror cases now; the behavioral test rides P3·U9's budget split (insight 014).
+- **`docs/decisions/accumulation-fuck-off-date.md#71`** · `number-or-figure` · → C3 (two-tier compute posture) · _reframe_
+  - sig: §3c compute ≤~11× 16k simulate; two-tier 2000/16k
+  - §3c: compute = ≤~11× a single 16k-path simulate (≈88× today's 2000-path run); TWO-TIER — during-entry refires run at the headline 2000 paths (coarser haircut errs later/conservative, under D1's provisional string class), the FINAL crowned date + every re-grade run at the pinned 16k (designed-tolerance assertion scopes to the final-crown path only); provisional→final transition rides D1's three-movement taxonomy.
+  - [dedup] Two-tier compute build posture canonical in plans/1-engine.md C3; plans/2-first-answer.md D1 carries the provisional-tier surfacing pointer.
+  - [reframe] Present-tense: the date-search runs ≤~11 candidates per sweep — 2000 paths during-entry (provisional), 16k for the final crown and re-grades.
+- **`docs/decisions/accumulation-fuck-off-date.md#82`** · `invariant` · → C2 tests (no-draw-with-worker + survivor-draw arms) · _reframe_
+  - sig: §7 C2 test: no draw with living worker + survivor-draw arm
+  - §7: a C2 test asserts NO portfolio withdrawal in any constructed-accumulation working year WITH a living worker even when spending>earned+ss; the DEATH-MID-RUNWAY golden carries TWO arms — the contribution-truncation arm AND the SURVIVOR-DRAW arm (the sole living worker dies at d<Y ⇒ years [d,Y) carry net=max(0,survivorSpending−survivorSS)>0 on the spine path; a planted death-blind clamp fails).
+  - [dedup] Test build steps canonical in plans/1-engine.md C2; the asserted invariants are canonical in architecture.md §7.4.
+  - [reframe] Present-tense: C2 ships a no-draw-with-living-worker test plus a death-mid-runway golden with contribution-truncation and survivor-draw arms.
+- **`docs/decisions/accumulation-fuck-off-date.md#90`** · `build-detail-or-KTD` · → B1 (post-65 non-qualified inclusion contract) · _reframe_
+  - sig: Deviation B1: post-65 non-qualified inclusion as tested contract
+  - Deviation B1: the 'post-65 non-qualified income-inclusion path' is encoded as the tested laundering CONTRACT (forward landmine at the nonSSordinary producer + structural type exclusion + discriminating battery), NOT a routed dead branch (as-we-go discipline); any future consumer (the P4 last-resort draw) adds the income inclusion in the SAME change.
+  - [dedup] B1 build detail canonical in plans/1-engine.md B1; this deviation note becomes a pointer.
+  - [reframe] Present-tense: B1 encodes the post-65 non-qualified inclusion as a tested contract (not a dead branch); the P4 last-resort draw must add the inclusion in the same change.
+- **`docs/research/pre65-healthcare.md#34`** · `build-detail-or-KTD` · → U3 healthcare overlay build (healthOverlay.ts) · _reframe_
+  - sig: §4 recommendations implemented in U3 healthOverlay.ts
+  - The §4 recommendations were built in U3: healthOverlay.ts (two MAGI calculators, ACA fixed point with explicit cliff branching, IRMAA 2-year lag in state, HSA fourth bucket) reading constants/health.ts; architecture §7.2 holds as-built mechanics + reduce-to-spine; §4 is preserved as the design rationale the build rests on.
+  - [dedup] Build step canonical in plans/1-engine; as-built mechanics canonical in architecture §7.2; the research doc keeps the 'where it lives in code' pointer + the design-rationale note.
+  - [reframe] Surviving fact: the U3 healthcare overlay (healthOverlay.ts reading constants/health.ts) implements the two MAGI calculators, ACA fixed point with explicit cliff branching, IRMAA 2-year lag in state, and the HSA fourth bucket. Present tense — this is the engine build step; §7.2 holds the contract, §4 holds the rationale.
+- **`docs/research/pre65-healthcare.md#37`** · `build-detail-or-KTD` · → U3 healthcare overlay build — ACA fixed point · _reframe_
+  - sig: ACA same-year MAGI fixed point, MAGI on both sides
+  - Pre-65 ACA same-year MAGI feedback loop is a true fixed point: this year's MAGI sets PTC → net premium → gross withdrawal → MAGI (circular). Code shape: PTC=max(0, SLCSP−applicable_pct(FPL%)×MAGI) [0 if MAGI>400% FPL]; net_premium=full−PTC; gross_wd=spending+taxes+net_premium; MAGI=f(gross_wd, other_income).
+  - [dedup] Build step (code shape) canonical in plans/1-engine; the as-built fixed point is canonical in architecture §7.2; research §4b keeps the design code block.
+  - [reframe] Surviving fact: the pre-65 ACA overlay solves a same-year MAGI fixed point (MAGI on both sides of PTC→net-premium→gross-withdrawal→MAGI), per the §4b code shape. Present tense — this is the U3 build step; the as-built fixed point is in architecture §7.2.
+- **`docs/research/pre65-healthcare.md#40`** · `build-detail-or-KTD` · → U3 healthcare overlay build — explicit cliff branching · _reframe_
+  - sig: detect-and-branch the 400% FPL cliff explicitly
+  - Handle the 400% FPL cliff explicitly: a naive iterator can oscillate across it — detect the crossing and branch, computing the 'just-under' and 'just-over' funding solutions and picking the cheaper, rather than relying on smooth convergence.
+  - [dedup] Build step canonical in plans/1-engine; the explicit-cliff-branching contract is canonical in architecture §7.2; research §4b keeps the design note.
+  - [reframe] Surviving fact: the overlay handles the 400% FPL cliff by explicit detect-and-branch (compute just-under vs just-over funding solutions, pick the cheaper), not smooth iteration. Present tense — U3 build step; contract in architecture §7.2.
+- **`docs/research/pre65-healthcare.md#43`** · `build-detail-or-KTD` · → U3 healthcare overlay build — IRMAA feed-forward · _reframe_
+  - sig: IRMAA 2-year lagged feed-forward, MAGI history in state
+  - Post-65 IRMAA is a 2-year lagged feed-forward, not a fixed point: store a per-filing-unit MAGI history; in year t look up the bracket from MAGI[t−2] and add the surcharge (×2 for a couple) to year-t healthcare cost — no within-year circularity, a deterministic delay carried in state.
+  - [dedup] Build step canonical in plans/1-engine; the IRMAA-2-year-lagged-feed-forward-carried-in-state contract is canonical in architecture §7.2; research §4c keeps the design note.
+  - [reframe] Surviving fact: the overlay carries a per-filing-unit MAGI history and applies the year-t IRMAA surcharge from MAGI[t−2] (×2 for a couple) — a deterministic delay in state, no within-year fixed point. Present tense — U3 build step; contract in architecture §7.2.
+- **`docs/research/pre65-healthcare.md#46`** · `build-detail-or-KTD` · → U3 healthcare overlay build — survivor MFJ→single flip · _reframe_
+  - sig: survivor MFJ→single flip for IRMAA and ACA-FPL
+  - On a spouse's death the survivor flips MFJ→single thresholds (~half) for BOTH IRMAA and the ACA FPL basis — can be hit with a surcharge on the same income; wire this into the existing death-order conditional-filter logic.
+  - [dedup] Build step canonical in plans/1-engine; the survivor MFJ→single flip contract is canonical in architecture §7.2; research §5 IN line references it.
+  - [reframe] Surviving fact: on a spouse's death the survivor's IRMAA and ACA-FPL thresholds flip MFJ→single (~half), wired into the death-order conditional-filter logic. Present tense — U3 build step; contract in architecture §7.2.
+- **`docs/research/pre65-healthcare.md#47`** · `build-detail-or-KTD` · → U3 healthcare overlay build — threshold inflation-indexing · _reframe_
+  - sig: inflation-index thresholds, top tier frozen through 2027
+  - Inflation-index thresholds when projecting forward (ACA applicable-% and the first four IRMAA brackets adjust annually; IRMAA top tier frozen through 2027) — static thresholds silently catch more people each year.
+  - [dedup] Build step canonical in plans/1-engine; the 'top tier frozen through 2027' fact is also in §1 (the IRMAA bracket number row, canonical there) — this row is the build instruction to inflation-index.
+  - [reframe] Surviving fact: the projection inflation-indexes ACA applicable-% and the first four IRMAA brackets annually (top tier frozen through 2027), because static thresholds silently catch more people each year. Present tense — U3 build step.
+- **`docs/research/pre65-healthcare.md#48`** · `build-detail-or-KTD` · → U3 healthcare overlay build — cliff-aware conversion-ceiling search · _reframe_
+  - sig: IRMAA cliffs hostile to gradient, use grid/bisection
+  - IRMAA cliffs are discontinuous — fine for forward simulation but hostile to gradient optimizers; the conversion-ceiling search must be cliff-aware (grid/bisection, not gradient).
+  - [reframe] Surviving fact: because IRMAA cliffs are discontinuous, the conversion-ceiling search is cliff-aware (grid/bisection, not gradient). Present tense — U3/optimizer build constraint.
+
+
+## docs/plans/2-first-answer.md
+
+- **`docs/plans/2-first-answer.md#5`** · `invariant` · → Cross-cutting Contract 1 — memoryModel orchestrator · _canonical_
+  - sig: memoryModel orchestrator, six obligations (a)-(f)
+  - The memoryModel orchestrator (src/store/memoryModel.ts) is the named in-memory session/engine-client for the magic moment with six obligations (a)-(f); load-bearing engine invariants live once in architecture and this surface links, never restates.
+  - [dedup] The orchestrator build contract is canonical here in the Act 2 plan; the engine invariants it links live in architecture (pointer).
+- **`docs/plans/2-first-answer.md#8`** · `invariant` · → Contract 1(c) — capability flag · _canonical_
+  - sig: worker-vs-main-thread capability flag, main-thread fallback
+  - memoryModel(c): exposes a worker-vs-main-thread capability flag set at worker construction (in the orchestration layer, never inside src/engine), falling back to a main-thread run so the first answer still renders; downstream consumers (disable live recompute) are the Act 3 controls.
+- **`docs/plans/2-first-answer.md#9`** · `decision-rationale` · → Contract 1(d) — recompute home, no sticky rounding in Act 2 · _canonical_
+  - sig: Act 2 builds NO sticky rounding; lastDisplayed seated in Act 3
+  - memoryModel(d) is the recompute home and named future owner of rounding-hysteresis, but Act 2 builds no sticky rounding: during intake the headline/dollar/copy move freely; lastDisplayed* + sticky baseline + margin-gating seat in Act 3, are session-only/not persisted, and confidence.ts owns the stateless first-answer rounding (priorHeadline=null).
+  - [dedup] Act 2 plan canonical for the 'no sticky rounding here' build boundary; plans/3-controls is canonical for the sticky-rounding owner itself.
+- **`docs/plans/2-first-answer.md#11`** · `invariant` · → Contract 1(f) — request epoch · _canonical_
+  - sig: monotonic request epoch discards stale results
+  - memoryModel(f): stamps each dispatched run with a monotonic request epoch and discards any result older than the latest committed epoch (no stale intermediate on slow devices); it is an elevation of one module, and src/store/session.ts stays the separate U4 crypto/key session.
+- **`docs/plans/2-first-answer.md#20`** · `scope-boundary` · → Contract 4 — handed forward (build scope boundary) · _canonical_
+  - sig: require-the-hedge lint handed forward to Act 3·U10
+  - Handed forward, NOT built in Act 2: the require-the-hedge positive lint (Act 3·U10, extended Act 4·U16) and the Roth-conversion copy slots (registered Act 3·U10); Act 2 ships only the ban-list + certainty-hygiene + catastrophe-lexicon + catalog-enumeration gate.
+  - [dedup] Act 2 plan canonical for its own build-scope boundary; plans/3-controls (U10) and plans/4-recommendation (U16) own the forward work as pointers.
+- **`docs/plans/2-first-answer.md#23`** · `invariant` · → Contract 6 — magic-moment surface contract · _canonical_
+  - sig: progressive engine-gated commit-triggered; verdict-text-first
+  - Contract 6: the intake architecture is progressive/engine-gated/commit-triggered — the confidence surface co-exists with intake, resolving from indeterminate toward a verdict on each question-commit (not live-as-you-type); the first frame is verdict-text-first in all modes (word + dollar magnitude + non-color shape); the ConfidenceBand is never on the first frame (R2/R4 forbid a dashboard).
+  - [dedup] Act 2 plan canonical for the surface build contract; product R2/R4 carry the no-dashboard/range-on-demand requirement pointers.
+- **`docs/plans/2-first-answer.md#25`** · `requirement` · → Contract 6 — motion spec · _canonical_
+  - sig: band draws once then morphs; headline static, no odometer
+  - Contract 6 motion: the band draws once then morphs on every recompute (interruptible spring, never draw-from-zero); the headline number is static (no odometer); verdict crossfades are margin-gated (gating in Act 3); no-worker fallback defers each commit's recompute post-paint, downgrading to two computes if jank persists; all respects prefers-reduced-motion.
+  - [dedup] Act 2 plan canonical for the motion build spec; emil-design-eng + back-nine-design skills carry the reduced-motion craft pointers.
+- **`docs/plans/2-first-answer.md#28`** · `build-detail-or-KTD` · → U5/D1 — shipped files · _canonical_
+  - sig: U5/D1 shipped files list (intake + memoryModel + copy.ts)
+  - U5/D1 shipped files: src/intake/ (coldStart, flow, questions, sanity, intakeMap, AccountEntry, AllocationEntry, AnswerStrip, fields, a11y, referenceData, links, ExternalLink, FieldError, intake.css); src/store/memoryModel.ts; src/ui/copy.ts + the no-restricted copy-fence ESLint rule.
+- **`docs/plans/2-first-answer.md#29`** · `invariant` · → U5/D1 — how the flow works · _canonical_
+  - sig: spend figure lands before account loop; bucket enum
+  - The flow: account-level single entry pass — household preamble (spend figure + per person) then per account (type→{pretax,roth,taxable,hsa}; holdings→ticker→blend→stockWeight; value; basis per-account not per-lot; contribution + match); the spend figure lands before the account loop so validateParams acceptance and the first provisional answer are reachable as soon as the first account lands; the answer surfaces and sharpens during the flow.
+  - [dedup] Act 2 plan canonical for the flow build sequence; the bucket enum {pretax,roth,taxable,hsa} points to architecture.
+- **`docs/plans/2-first-answer.md#31`** · `build-detail-or-KTD` · → U5/D1 — ticker→blend build · _canonical_
+  - sig: ticker→blend autocomplete, TDF held-constant disclosure
+  - Ticker→blend (R37): autocomplete against C1's bundled table; on hit show the resolved blend (TDF rows get the 'today's allocation held constant' disclosure label — D1's label, C1 carries only snapshot data); on miss the manual 3-choice classifier + advanced exact-% expander; household blend collapses to one stockWeight; the ticker-keyed manual classification persists only at Save in U4's encrypted record (R39), 'answered once' = reused across accounts within the flow.
+  - [dedup] Act 2 plan canonical for the build step; product R37 carries the requirement pointer.
+- **`docs/plans/2-first-answer.md#32`** · `build-detail-or-KTD` · → U5/D1 — contributions + match build · _canonical_
+  - sig: contributions + match R31, per-runway-year step-down at 64
+  - Contributions + match (R31): per-account flat-real amounts (implicit catch-up routing), employer match → pretax; R19 ceiling checks against C1's limits at current age, calm inline; intakeMap applies C1's per-runway-year step-down when an age-band ceiling expires mid-runway (60-63 super catch-up → age-50 tier at 64) with a calm disclosure naming the step-down year.
+  - [dedup] Act 2 plan canonical for the build step; product R31 + architecture contribution-limit constants carry pointers.
+- **`docs/plans/2-first-answer.md#35`** · `build-detail-or-KTD` · → U5/D1 — tested contracts (copy fence) · _canonical_
+  - sig: copy-fence test non-vacuous, planted inline string
+  - Tested contract — the copy fence proven non-vacuous (copyFence.test.ts): the ESLint rule must FAIL on a planted inline user-facing string (JSXText AND an aria-label literal) and PASS the catalog-routed form, so 'every string routes through copy.ts' is never vacuously green.
+- **`docs/plans/2-first-answer.md#36`** · `build-detail-or-KTD` · → U5/D1 — tested contracts (no-write seam) · _canonical_
+  - sig: no-write-until-Save seam test against real store
+  - Tested contract — the no-write-until-Save seam (noWriteSeam.test.tsx): no-IndexedDB-write holds across the full intake flow (preamble + account loop) until explicit Save, with planted-write control, asserted against U4's real store (fake-indexeddb, never a stub); a tripwire so a future draft/resume path fails loud rather than silently shipping cleartext intake to disk.
+  - [dedup] Act 2 plan canonical for the test; architecture (no-write seam) + plans/1-engine (U4) carry pointers.
+- **`docs/plans/2-first-answer.md#37`** · `build-detail-or-KTD` · → U5/D1 — tested contracts (AnswerStrip honesty) · _canonical_
+  - sig: $0-portfolio negative reading never shows verdict word
+  - Tested contract — the provisional AnswerStrip honesty branches (AnswerStrip.test.tsx): a $0-portfolio negative reading never shows the verdict word (a half-entered portfolio reads falsely off-track — the pessimistic mirror of the date route's trust hazard); plus indeterminate→incomplete surfacing, cancelled hold-quiet, and the a11y region label/announcement.
+- **`docs/plans/2-first-answer.md#38`** · `invariant` · → U5/D1 — tested contracts (spend-period force-confirm) · _canonical_
+  - sig: spend-period force-confirm, monthly-vs-annual trap (R19)
+  - Tested contract — the spend-period force-confirm (R19): every per-period money field carries an explicit $/month vs $/year segmented control (active segment by shape/weight not hue); the model stores one canonical period (spend=/month, income+SS=/year, editable); for a value coherent as both, intake forces explicit per-period confirmation so the engine can never run on 1/12 or 12× the real figure.
+  - [dedup] Act 2 plan canonical for the build/test contract; back-nine-design skill (financial-input discipline) carries the practitioner pointer.
+- **`docs/plans/2-first-answer.md#41`** · `build-detail-or-KTD` · → U5/D1 — sourcing-stall affordances build · _canonical_
+  - sig: sourcing-stall affordances, pre-flight note + continue-past path
+  - The sourcing-stall affordances (still-working employer-covered household doesn't know its SLCSP, the tool won't fetch/guess it — R36): (a) a calm pre-flight note at flow start ('have a recent marketplace quote handy — healthcare.gov or KFF, age + ZIP'), the primary affordance; (b) a continue-past path — the ACA question never hard-blocks the preamble/account loop; the surface holds an input-incomplete placeholder naming the missing input and why it won't synthesize; park-and-resume is honestly in-session only.
+  - [dedup] Act 2 plan canonical for the affordance build steps; product R36 carries the no-live-lookup requirement pointer.
+- **`docs/plans/2-first-answer.md#43`** · `invariant` · → U5/D1 — money-input discipline build · _canonical_
+  - sig: money-input discipline, raw number + formatted string, reformat on blur
+  - The money-input discipline (mobile must shine): the model stores each input as a raw number, the field displays a formatted string; open-ended dollar fields use a text field summoning the numeric keypad (not a number-spinner, not a slider — violates R6's 'set any assumption precisely'); sliders reserved for bounded ranges (ages, percentages); reformat on blur not per keystroke; full-width finger-sized fields.
+  - [dedup] Act 2 plan canonical for the build discipline; back-nine-design (financial-input discipline) + product R6 carry pointers.
+- **`docs/plans/2-first-answer.md#44`** · `invariant` · → U5/D1 — R19 sanity build · _canonical_
+  - sig: R19 sanity decomposed per rule + directional re-validation
+  - R19 sanity decomposed: each discrete testable rule blocks only true impossibilities (status-conditional retire-vs-current; SS claim outside 62-70; survivor-spending ratio >100%) and lets coherent-but-dire inputs ($0 portfolio + positive spend) flow to an honest '0 of 10'; directional half — cross-gated inputs re-fire on upstream Back-edit (keeps downstream answers, marks dependents); rules evaluate on field blur + attempt-to-advance not per keystroke; '6'→'62' never flagged mid-entry; an error clears the instant the field is re-edited.
+  - [dedup] Act 2 plan canonical for the decomposed-rule build/test; product R19 carries the requirement pointer.
+- **`docs/plans/2-first-answer.md#45`** · `invariant` · → U5/D1 — a11y contract build · _canonical_
+  - sig: a11y contract, focus-to-heading + one polite live region
+  - The a11y contract (stranger-trust bar; reader is color blind): on each step advance move focus to the new step heading (tabindex=-1) not the input (heading-as-focus-target is the announcement); one visually-hidden polite live region for transient status with burned/045 clear-after-announce; R19 errors associate to their field (role=alert + aria-invalid + aria-describedby) and carry the non-color signal; the focus-move/announce() helper is a shared primitive U7 reuses.
+  - [dedup] Act 2 plan canonical for the a11y build primitive; back-nine-design + web-design-guidelines skills carry pointers.
+- **`docs/plans/2-first-answer.md#46`** · `invariant` · → U5/D1 — surface-early is provisional · _canonical_
+  - sig: surface-early PROVISIONAL, anchored to validateParams acceptance
+  - Surface-early is provisional until the account set is complete (the trust hazard, symmetric across both leads); the first-render threshold is anchored to the engine contract — the answer first renders at exactly validateParams acceptance (a rejection IS input failure, no separate UI threshold that can drift); below it the surface shows a calm input-incomplete placeholder; between acceptance and account-set-complete all outcome classes render in provisional form.
+- **`docs/plans/2-first-answer.md#47`** · `decision-rationale` · → U5/D1 — three movements (shared with D2) · _canonical_
+  - sig: three movements: narrowing, value-moving, class-transition
+  - The design distinguishes three movements mapping across date and spine routes: (1) band narrowing = sharpening (a virtue); (2) value moving 'better' (date earlier / grade off→on-track) = a hazard that feels like bargaining — labeled provisional, never a delight tick or alarm; (3) outcome-class transition = an expected provisional update, never an alarm; a provisional negative reading is tied to incompleteness via a distinct copyGuard-cataloged string class, never the final copy.
+  - [dedup] Act 2 plan canonical for the three-movements design; the D2 section references the same three trust-shaped movements as a pointer.
+- **`docs/plans/2-first-answer.md#49`** · `build-detail-or-KTD` · → U6 — shipped / planned files · _canonical_
+  - sig: U6 shipped foundation: palette.ts, scale.ts, colorblind gate
+  - U6 shipped (foundation): src/viz/palette.ts (single source for non-color signal primitives — luminance ramp, shape/marker set, line-style set), src/viz/scale.ts, the colorblind dev gate (colorblind.test.tsx, scale.test.ts, scale.pbt.test.ts); planned (render): src/viz/ConfidenceBand.tsx; Act 3 creates TwoFutures.tsx reusing this unit's encoding tokens.
+  - [dedup] Act 2 plan canonical for U6 file inventory; plans/3-controls (TwoFutures) carries the forward pointer.
+- **`docs/plans/2-first-answer.md#50`** · `invariant` · → U6 — two-series encoding tokens · _canonical_
+  - sig: two-series encoding tokens, line-style + end-label + marker + luminance
+  - U6 two-series encoding tokens (single-sourced in palette.ts): distinguish the two futures by line style (solid/dashed) + direct end-of-line labels + distinct marker shapes + luminance, never red/green; these tokens are the reusable contract U6 ships; the de-collision / delta-as-hero rendering is owned by Act 3 (built with TwoFutures against the Roth control's real emission, per burned/042).
+  - [dedup] Act 2 plan canonical for the encoding-token contract; plans/3-controls carries the de-collision/delta rendering pointer.
+- **`docs/plans/2-first-answer.md#52`** · `invariant` · → U6 — verdict-icon shape primitives · _canonical_
+  - sig: six verdict-icon shapes pairwise-distinct, planted near-identical pair
+  - U6 verdict-icon shapes are palette primitives, pairwise-distinct + a11y-tree: the six verdict-state icon shapes are in palette.ts's named shape set (U6-owned, no U7 dependency — can build alongside Act 1); U7's verdictSignal is only the state→shape binding; all C(6,2)=15 pairs must be distinguishable on the non-hue channel (silhouette + luminance) with a planted near-identical pair that fails the gate loud.
+  - [dedup] Act 2 plan canonical for the U6 shape-primitive build/test; back-nine-design skill carries the practitioner pointer.
+- **`docs/plans/2-first-answer.md#54`** · `invariant` · → U6 — indeterminate viz state · _canonical_
+  - sig: indeterminate 'no band yet' named viz state, no median line
+  - U6 indeterminate 'no band yet' is a named viz state: behind the on-demand range-reveal (never on the verdict's first frame), it renders as a deliberately wide low-emphasis placeholder envelope with NO central median line and a distinct non-color texture (sparse/dashed boundary or faint hatch); forbid any thin/precise band or single-value flat line; the tell is the absent median + wide texture, never hue.
+- **`docs/plans/2-first-answer.md#55`** · `invariant` · → U6 — draw-once-then-morph render · _canonical_
+  - sig: draw once then morph, fixed x-lattice, rides determinism
+  - U6 draw-once-then-morph: the pathLength draw plays once on first reveal, every recompute morphs via an interruptible retargetable transition (never @keyframes); the morph rides the determinism contract (reused scenario seed) so shape change is pure signal not RNG jitter; fixed x-lattice (constant point count across the fixed max-horizon viewBox); the median line is an opacity-fade overlay not part of the morphed path; the morph is shape-agnostic — must widen/shift, not only narrow (R8).
+  - [dedup] Act 2 plan canonical for the morph render build; emil-design-eng skill carries the motion-craft pointer.
+- **`docs/plans/2-first-answer.md#56`** · `invariant` · → U6 — reduced-motion render · _canonical_
+  - sig: reduced-motion final state identical, no info only in animation
+  - U6 prefers-reduced-motion: replace movement with the final state rendered instantly plus a short comprehension-aiding opacity fade; hard invariant — the final rendered state is identical with motion on or off (no information lives only in the animation), so the reduced-motion path inherits the non-color/grayscale guarantees for free.
+  - [dedup] Act 2 plan canonical for the reduced-motion render rule; back-nine-design + emil-design-eng skills carry pointers.
+- **`docs/plans/2-first-answer.md#57`** · `invariant` · → U6 — responsive-SVG contract · _canonical_
+  - sig: responsive-SVG contract, non-scaling-stroke, portal overlays
+  - U6 responsive-SVG contract: one fixed viewBox, container width:100%/height:auto, preserveAspectRatio xMidYMid meet, vector-effect non-scaling-stroke on all stroked paths so line weight/dash geometry stay constant in screen px (protecting the colorblind-substitute encoding); a hard minimum text px below which ticks/labels drop rather than shrink; pending + compute-error are non-band modes owned by U7 (band simply not mounted); portal any overlay/tooltip to document.body (transform-ancestor trap, burned/013).
+  - [dedup] Act 2 plan canonical for the responsive-SVG build contract; back-nine-design skill (burned/013 portal trap) carries the pointer.
+- **`docs/plans/2-first-answer.md#59`** · `requirement` · → U7 — requirements / planned files · _canonical_
+  - sig: U7 requirements R1 R2 R4 R12 R14 R25; planned files
+  - U7 requirements: R1, R2, R4 (depth on demand), R12 (probabilistically-framed copy, certainty banned), R14 (plain not dumbed-down); gates R25 (cardinal honesty bar) via the N=1 cold-read; planned files: create ConfidenceStatement.tsx, outcomeStates.ts, SurvivorReadout.tsx, verdictSignal.tsx, copyGuard.ts; extend copy.ts.
+  - [dedup] Act 2 plan canonical for the U7 file plan; product (R1/R2/R4/R12/R14/R25) holds the R-ledger entries (pointer).
+- **`docs/plans/2-first-answer.md#60`** · `requirement` · → U7 — verdict-first / disclosure pattern · _canonical_
+  - sig: U7 verdict text-first, band on-demand, one disclosure pattern
+  - U7 design: one answer, verdict text-first — first frame = verdict word + dollar magnitude + non-color shape; the ConfidenceBand is the on-demand 'range' of R4 revealed by an explicit affordance ('show me the range'), not on the first frame; one progressive-disclosure affordance (origin-aware bottom-sheet on mobile) serves both the range reveal AND the 'and the survivor?' readout, both portaling to document.body (burned/013).
+  - [dedup] Act 2 plan canonical for the U7 disclosure-pattern build; back-nine-design skill (burned/013) carries the pointer.
+- **`docs/plans/2-first-answer.md#61`** · `requirement` · → U7 — per-state copy grammar · _canonical_
+  - sig: U7 per-state copy grammar, six-row table, typed slots
+  - U7 per-state copy grammar (decided framing, exact strings deferred to cold-read): a six-row table, each row = {verdict + magnitude + next-action + non-color signal} with typed slots; dollar-bearing states on one signed over/under axis (Kitces) — on-track outcome-first relief, over-funded symmetric underspending mirror, off-track/borderline action-first trim (never 'failure'), already-failing gap-to-sustainable-today (never 'failure'); indeterminate = range + a next-action naming the specific missing input (by intake order, not a sensitivity ranking); compute-error = retry.
+  - [dedup] Act 2 plan canonical for the per-state grammar build; Contract 5 (framing direction) + product R2 Kitces carry pointers.
+- **`docs/plans/2-first-answer.md#62`** · `requirement` · → U7 — survivor readout · _canonical_
+  - sig: survivor readout = second confidence statement, may differ
+  - U7 survivor readout = a second confidence statement in the same vocabulary (the emotional core, a success criterion): SurvivorReadout reuses the same outcomeStates map + verdictSignal + copy catalog on the engine's survivor distribution, deriving no figures of its own, and may render a different one of the six states than the joint headline (household-on-track-but-survivor-off-track is the product's reason to exist); the two survivor shocks render in plain words (SS step-down as a dollar drop; the single-filer effect with no 'widow's penalty' jargon).
+  - [dedup] Act 2 plan canonical for the SurvivorReadout build; product (survivor success criterion) + architecture (survivor distribution) carry pointers.
+- **`docs/plans/2-first-answer.md#64`** · `invariant` · → U7 — compute-error + pending render modes · _canonical_
+  - sig: compute-error and pending DISTINCT render modes
+  - U7 compute-error and pending are distinct render modes: the engine's calm-error result gets a dedicated non-verdict system state (no band/range/X-of-10, next-action = RETRY never 'sharpen', copy reassures the in-memory data is intact); pending renders no headline/X-of-10/band/outcome signal (must never resemble a verdict) and governs only the pre-first-verdict window — once any distribution resolves, recomputes hold the last verdict + band and crossfade/morph (no flicker).
+  - [dedup] Act 2 plan canonical for the U7 render-mode build; Contract 6 (item 24, render levels) carries the transport pointer.
+- **`docs/plans/2-first-answer.md#65`** · `requirement` · → U7 — magic-moment motion · _canonical_
+  - sig: magic-moment motion, static figure no count-up, crossfade
+  - U7 magic-moment motion: entrance = opacity + a small translate, custom ease-out (a calm settle, never scale(0)/spring bounce); render the headline dollar figure and X-of-10 static — no count-up/odometer (an animated financial figure reads as a gambling tell); state→state = crossfade with interruptible transitions + a brief subtle blur morphing word+shape+magnitude (not a hue swap); margin-gating is an Act 3 addition; prefers-reduced-motion keeps the opacity/color crossfade, drops the translate.
+  - [dedup] Act 2 plan canonical for the U7 motion build; emil-design-eng + back-nine-design skills carry pointers.
+- **`docs/plans/2-first-answer.md#66`** · `decision-rationale` · → U7 — visual direction contract · _canonical_
+  - sig: visual direction = refined minimalism, self-hosted fonts
+  - U7 visual direction contract (the product's face, consumed by U6 labels + Act 3 controls): commit one intentional aesthetic — refined minimalism executed with precision (calm/trust-first/literate), explicitly not generic AI defaults (no Inter/Roboto/system-stack as the brand face); a distinctive display face + a refined legible body face, both self-hosted (CSP connect-src 'self' forbids a font CDN, counts against the bundle budget); type/scale in shared design tokens built before components; visual ranking verdict>dollar>X-of-10 so the non-color signal rides on weight/scale.
+  - [dedup] Act 2 plan canonical for the visual-direction design contract; frontend-design + back-nine-design skills, architecture §10 (CSP/self-hosted fonts), and CLAUDE.md (CSS-tokens-before-components) carry pointers.
+- **`docs/plans/2-first-answer.md#68`** · `requirement` · → U8 — goal / why a dedicated unit · _canonical_
+  - sig: U8 goal, Save CTA + passphrase-strength gate + recovery + export
+  - U8 goal: the moment the in-memory model first reaches disk — the Save CTA, passphrase-set gated by a min-entropy strength check, recovery-phrase display, mandatory export, wired to U4's mechanism (making R16/R17/R18 real; the strength gate makes PBKDF2-600k's brute-force defense load-bearing); dedicated unit because U4 built the mechanism and deferred the display; U8 is the Act 2 owner of the end-to-end no-unkeyed-write proof + the net-new strength gate.
+  - [dedup] Act 2 plan canonical for the U8 unit goal/build rationale; product R16/R17/R18 + architecture (PBKDF2) carry pointers.
+- **`docs/plans/2-first-answer.md#69`** · `requirement` · → U8 — requirements / planned files · _canonical_
+  - sig: U8 requirements R16 R17 R18; planned save-flow files
+  - U8 requirements: R16 (encrypted at rest + guarded local access, the strength gate is the front door), R17 (survivor recovery), R18 (export/back-up durability); planned files: create SaveFlow.tsx, RecoveryPhraseDisplay.tsx, ExportConfirm.tsx, passphraseStrength.ts.
+  - [dedup] Act 2 plan canonical for the U8 file plan; product (R16/R17/R18) holds the R-ledger entries (pointer).
+- **`docs/plans/2-first-answer.md#71`** · `build-detail-or-KTD` · → U8 — zxcvbn-ts packs build/test · _canonical_
+  - sig: zxcvbn-ts dictionary packs MANDATORY, CI known-weak test
+  - U8: the zxcvbn-ts dictionary/language packs are mandatory — core ships with no dictionaries, so a pack-less estimator over-rates leaked passphrases and silently passes a weak one; a CI test asserts a known-weak common password is rejected only with packs loaded (a pack-less pass is a false green the test catches); co-locate the score-threshold + length-floor constants with U4's KDF params via burned/063 single-source.
+  - [dedup] Act 2 plan canonical for the packs build/test step; architecture §8 (constants discipline / burned/063 single-source) carries the constants pointer.
+- **`docs/plans/2-first-answer.md#72`** · `invariant` · → U8 — recovery-phrase display · _canonical_
+  - sig: recovery-phrase display, non-selectable + mandatory capture gate
+  - U8 recovery-phrase display honors the threat model: the phrase is a full credential with a screenshot/phishing threat model — non-selectable, print/PDF-preferred, 'store offline, don't screenshot', not a copy box; a mandatory phrase-capture gate blocks 'saved' (re-enter a verifying subset, or at minimum an explicit 'I have stored this offline' acknowledgment); the export is not a substitute (the blob is inert without the phrase, both survivor doors require it — the exact R17 failure the product prevents); the phrase exposes accessible a11y text; non-selectability is honestly scoped as a UX defense, the real mitigation is minimizing heap exposure (view-then-dismiss).
+  - [dedup] Act 2 plan canonical for the recovery-phrase display build; product R17 + architecture (recovery phrase) carry pointers.
+- **`docs/plans/2-first-answer.md#73`** · `invariant` · → U8 — export confirm + commit ordering · _canonical_
+  - sig: atomic IndexedDB commit is the FINAL step, no reorder
+  - U8 mandatory encrypted-export confirm is part of reaching 'saved' (no remind-me-later bypass): the atomic IndexedDB commit is the final step that flips state to 'saved' — strength-gate → mint DK+wraps → display+capture phrase → produce+confirm export ALL precede it — so the quota-fail 'use your export' fallback is truthful and the PWA defer-until-commit window spans the whole ceremony; an implementer must not reorder export after the commit.
+  - [dedup] Act 2 plan canonical for the commit-ordering build invariant; product R18 + architecture (atomic commit) carry pointers.
+- **`docs/plans/2-first-answer.md#74`** · `invariant` · → U8 — field-fidelity guard · _canonical_
+  - sig: field-fidelity guard, seed included, planted-drop companion
+  - U8 hands the in-memory model — including its seed — to U4's keyed write path so save→reload→unlock reproduces the identical headline; the field-fidelity guard (schemaVersion-agnostic) asserts the decrypted plaintext is field-identical to the in-memory model at Save (single-shape contract makes it structural, the test proves it), adapts to the session's shape (spine-only v1 vs controls-opened v2), excludes the orchestrator's session-only fields (worker handle, capability flag, request epoch, lastDisplayed*), and is paired with a burned/027 planted-drop companion so it is not a tautological round-trip.
+  - [dedup] Act 2 plan canonical for the field-fidelity guard build/test; Contract 1(b) (seed persisted unchanged) + Contract 1(e) (single shape) carry the invariant pointers.
+- **`docs/plans/2-first-answer.md#75`** · `decision-rationale` · → U8 — PWA update-mid-write test · _canonical_
+  - sig: U8 owns PWA update-mid-write integration test
+  - U8 owns the PWA update-mid-write integration test: a service-worker 'update ready' accepted during an in-flight first-save → the handler reads the store's no-write-in-flight signal and defers skipWaiting+reload until the write commits, with no false 'saved' before commit; rescoped rationale — U4's single-transaction atomicity is already the partial-vault backstop, this handler only avoids a needless failed/false-'saved' first save on a user-accepted update (a UX/honesty refinement, not a second owner of atomicity).
+  - [dedup] Act 2 plan canonical for the U8 integration-test ownership; architecture (PWA/atomicity) + the plans/2 exit-conditions carry pointers.
+- **`docs/plans/2-first-answer.md#76`** · `requirement` · → U8 — a11y · _canonical_
+  - sig: U8 a11y, gate-block announced, never an invisible wall
+  - U8 a11y: reuse U5's focus-to-heading + single polite live-region across passphrase-set → phrase-display → export-confirm; the strength verdict AND the gate-block ('stronger passphrase needed, no path to saved') associate to the passphrase field and announce politely — an AT user must never hit an invisible blocking wall on the load-bearing security control.
+  - [dedup] Act 2 plan canonical for the U8 a11y build; back-nine-design + web-design-guidelines skills carry pointers.
+- **`docs/plans/2-first-answer.md#78`** · `decision-rationale` · → D2 — dependencies / build order / planned files · _canonical_
+  - sig: D2 dependencies + build order U4->D1->U6/U7->D2
+  - D2 dependencies: C3 (date-search, shipped), D1 (account-level setup, shipped — transitively gates D2 behind U4), and U6-render/U7 (planned, consumed in build order never as pre-existing code); build order = U4(done)→D1(done)→U6-render+U7→D2; planned files: create FuckOffDate.tsx (working name; in-product label is design-time), DateConfidenceReadout.tsx; modify ConfidenceStatement.tsx, copy.ts, memoryModel.ts.
+  - [dedup] Act 2 plan canonical for the D2 build order + file plan; roadmap (build order) + plans/1-engine (C3) carry pointers.
+- **`docs/plans/2-first-answer.md#80`** · `invariant` · → D2 — window-edge / no-date rendering · _canonical_
+  - sig: D2 window-edge + no-date first-class, non-monotone disclosure
+  - D2 window-edge and no-date outcomes render first-class: 'no work-optional date within the ~N-yr window' is a designed calm-voice answer (never 'never free', never blank, never the window-top date presented as confirmed), with the per-offset confidence curve as on-demand detail; the window-edge date renders with its unconfirmed-tail disclosure, and any result whose non-monotone-region flags are set (confirmed OR window-edge) additionally renders the non-monotone-region disclosure (C3 carries the flags, D2 owns the string never recomputed UI-side); distinguish the three trust-shaped movements during entry.
+  - [dedup] Act 2 plan canonical for the D2 rendering build; plans/1-engine (C3 non-monotone flags) + the U5/D1 three-movements section carry pointers.
+- **`docs/plans/2-first-answer.md#81`** · `invariant` · → D2 — two graded dates / crowning grade · _canonical_
+  - sig: two graded dates, drill-down grade is the CROWNING grade
+  - D2 two confidence-graded dates (R27/R28): render floor + lifestyle dates, coincident → one date in the degenerate single-total-spend case, separating as the budget splits (Act 3); express the date↔confidence tradeoff ('lifestyle-free in ~3 years at 8/10, or year 5 for 9/10'), never a single deterministic date (banned R25/R28); the Y==0 over-funded household renders 'free today / you're already there' (never 'already past' — the sweep produces no evidence about the past); the drill-down grade is the crowning grade (one run / one statistic / one grade) — the not-yet-retired drill-down spine statement at crowned Y* renders the date-search's own quantized-lower-bound result, never an independent recompute.
+  - [dedup] Act 2 plan canonical for the two-dates render build; plans/1-engine (date-search/quantized-lower-bound) + product R27/R28 carry pointers.
+- **`docs/plans/2-first-answer.md#82`** · `requirement` · → D2 — hedge / re-grade / reuse · _canonical_
+  - sig: D2 hedge on the headline, re-grade on override, reuse not reinvent
+  - D2 hedge on the headline (R12): the date wears its probabilistic hedge by construction (the require-the-hedge lint lands in Act 3·U10; interim the copyGuard ban-list + slot discipline apply) — the date is a distribution not a line; re-grade on override (R28): a sequencing/conversion override re-runs the date-search and re-grades both dates (symmetric with R10's both-futures-update); reuse don't reinvent — the X-of-10 display contract, non-color signal grammar, outcome-state vocabulary, and disclosure affordance are inherited from U6/U7; the N=1 cold-read of the date framing is an Act 2 exit condition when the UI lands.
+  - [dedup] Act 2 plan canonical for the D2 hedge/re-grade build; product R10/R12/R28 + plans/3-controls (U10 hedge lint) carry pointers.
+- **`docs/plans/2-first-answer.md#83`** · `requirement` · → two-pane laptop layout · _canonical_
+  - sig: two-pane laptop layout, primary screen, not a dashboard
+  - The two-pane laptop layout (planned, not built): the laptop is the primary screen (the showcase), the phone works but isn't the showcase; the state-adaptive primary surface composes the lead answer (date or spine), the on-demand range/survivor disclosure, and the Save CTA into a calm two-pane layout that does not read as a dashboard (R2); designed under the four UI skills (precedence back-nine-design > emil-design-eng > frontend-design > web-design-guidelines); it lands once U7 + D2 exist.
+  - [dedup] Act 2 plan canonical for the layout composition build; roadmap (unit status), CLAUDE.md (UI skill precedence), and the MEMORY laptop-primary note carry pointers.
+- **`docs/plans/features/other-income.md#27`** · `build-detail-or-KTD` · → R40 build — Unit 1 (mirror contributions pattern) · _reframe_
+  - sig: mirror PersonContributionStreams entity→compile→params→engine
+  - Mirror the contributions pattern: a leaf vector type (PersonContributionStreams) → wrapper (AccumulationParams) → OverlayParams; a persisted list entity (EnteredAccount on ScenarioV3.enteredAccounts) with SCENARIO_V3_FIELDS + exhaustiveness tie + draft tie + init; discriminated-union precedent TickerClassification (kind simple|exact); fidelity-over-duplication law; vocab-as-const precedent.
+  - [reframe] Surviving fact: build R40 by mirroring the contributions entity→compile→params→engine→validate pattern, the TickerClassification discriminated-union precedent, and fidelity-over-duplication. Keep the PATTERN, not the drifting code-line numbers (HEAD dc674dff).
+- **`docs/plans/features/other-income.md#28`** · `build-detail-or-KTD` · → R40 build — Unit 2 (compile site, inflation 0.03) · _reframe_
+  - sig: compile site contributionStreamsFor, inflation 0.03, escalateQuote not a template
+  - Compile site: contributionStreamsFor holds the nonZero vector-drop helper; inflation point estimate productionMarket.inflation.mean = 0.03; escalateQuote (the ACA age-rating escalator) is NOT a structural template for the COLA decay (KTD-2).
+  - [dedup] Build step here; the KTD-2 'write COLA math fresh, not via escalateQuote' decision homes in decisions/other-income-r40 (pointer).
+  - [reframe] Surviving fact: compile in the contributions-compile site reusing nonZero; use inflation mean 0.03; don't borrow escalateQuote's structure for COLA decay. Code-lines drift — keep the facts.
+- **`docs/plans/features/other-income.md#29`** · `build-detail-or-KTD` · → R40 build — Unit 3 (per-path assembly, zero-alloc model) · _reframe_
+  - sig: contributionsForYear allocates four arrays, zero-alloc sibling
+  - Per-path assembly: contributionsForYear allocates four per-person arrays per call (gated call; presence-keyed tax-input spread mirror); the zero-alloc sibling cashTermsForYear returns one small {net,ss} literal with no per-call alloc — the model for ongoingIncomeForYear (KTD-4).
+  - [dedup] Build step here; the zero-alloc select decision homes in decisions/other-income-r40 (KTD-4) (pointer).
+  - [reframe] Surviving fact: model ongoingIncomeForYear on cashTermsForYear's zero-alloc shape, not contributionsForYear's 4-array alloc. Keep the contrast, drop the line numbers.
+- **`docs/plans/features/other-income.md#30`** · `build-detail-or-KTD` · → R40 build — Unit 3 (tax boundary seams) · _reframe_
+  - sig: tax boundary nonSSordinary §86 single MagiComponents producer
+  - Tax boundary: taxOverlay YearContribution; GrossUpContext build (solveGrossWithdrawal receives only GrossUpContext, not full TaxYearInputs); the nonSSordinary site; the §86 call; the single MagiComponents producer; finiteness backstop; the §6 ACA empty-overlap throw.
+  - [dedup] Build step here; the seam decisions (KTD-1) home in decisions/other-income-r40 and the five-seams table; architecture §7 owns the single-MagiComponents-producer rule (pointer).
+  - [reframe] Surviving fact: the tax-boundary touch points (GrossUpContext, nonSSordinary, §86, single MagiComponents producer, finiteness backstop, and the §6 ACA empty-overlap throw — which R40 income must NOT inherit: death-gated, not retire-gated; insight 027/020) where R40's taxable enters. Keep the touch-point set; line numbers drift.
+  - [fixed:warn] Restored §6 ACA empty-overlap touch point + do-not-inherit landmine to reframe.
+- **`docs/plans/features/other-income.md#31`** · `build-detail-or-KTD` · → R40 build — Unit 3 (IRMAA channel, KTD-9) · _reframe_
+  - sig: working-year IRMAA override additive irmaaMagi formula
+  - IRMAA channel: working-year override workingYearIrmaaMagiByPerson (required on the date route, built per-person, recorded additively: irmaaMagiHistory[t] = (override[t] ?? 0) + irmaaMagi(components)); irmaaMagi(c) = nonSSordinary + realizedGain + ssBenefitTaxable; current override copy is 'whole income, not just what work pays' (KTD-9).
+  - [dedup] Build step here; the IRMAA structural-decouple decision + inverted copy home in decisions/other-income-r40 (KTD-9) (pointer). irmaaMagi formula is also an architecture §7 mechanic.
+  - [reframe] Surviving fact: the additive working-year IRMAA override and irmaaMagi = nonSSordinary + realizedGain + ssBenefitTaxable; this is where KTD-9 decouples. Keep the formula; line numbers drift.
+- **`docs/plans/features/other-income.md#32`** · `build-detail-or-KTD` · → R40 build — Unit 3 (§7 clamp, bridgeYearMask) · _reframe_
+  - sig: §7 clamp net=0 accumulating working, k_sup 0.74 113-pass
+  - The §7 clamp: net = accumulating && livingWorker ? 0; the per-path bridgeYearMask marks clamped working years; gross-up contraction proof k_sup ≈ 0.74, ~113-pass bound to ENGINE_MAX_DOLLAR.
+  - [dedup] Build step here; k_sup figure homes in research/engine-validation-and-tax; KTD-9 (clamped-year handling) homes in decisions/other-income-r40 (pointers).
+  - [reframe] Surviving fact: net is clamped to 0 in accumulating living-worker years (bridgeYearMask marks them); gross-up contracts at k_sup≈0.74 within ~113 passes. Keep the rule + figure; line numbers drift.
+- **`docs/plans/features/other-income.md#34`** · `build-detail-or-KTD` · → R40 build — Unit 3 (validateParams vector gate) · _reframe_
+  - sig: R19 gate validateParams validates compiled vectors not scalars
+  - R19 gate: the validateParams accumulation block validates the COMPILED vectors (names the field, never the value); cashTermsForYear callers are the path loop AND the test-export netWithdrawalForYear (+ ~12 simulate.test.ts sites).
+  - [dedup] Build step here; KTD-4 (two-variant) + the validation-boundary invariant home in decisions/other-income-r40 + architecture (pointers).
+  - [reframe] Surviving fact: validateParams gates the compiled vectors (field not value); both cashTermsForYear callers (path loop + netWithdrawalForYear test export, ~12 test sites) update on a return-shape change. Keep the facts; line numbers drift.
+- **`docs/plans/features/other-income.md#35`** · `build-detail-or-KTD` · → R40 build — Unit 3 (date-sweep, restore path) · _reframe_
+  - sig: date-sweep truncateStreams overlayBase income un-truncated, restore bypasses form
+  - Date-sweep: truncateStreams handles contributions only; buildCandidateParams' ...overlayBase pass-through does NOT list income; survivorSpendingRatio 0.75 applies on first death of either spouse; bracket-fill/conversion sizing is P3/P4 (not built); the restore path bypasses the intake form (model = decoded.scenario; codec casts parsed as unknown as ScenarioV3; needVocab is the SHAPE gate).
+  - [dedup] Build step here; KTD-7 (0.75), KTD-8a (income un-truncated), KTD-6 (codec) home in decisions/other-income-r40 (pointers).
+  - [reframe] Surviving fact: income is Y-invariant so it passes ...overlayBase un-truncated (not in truncateStreams); restore bypasses the form so the codec is the sole gate. Keep the facts; line numbers drift.
+- **`docs/plans/features/other-income.md#37`** · `build-detail-or-KTD` · → R40 build — Unit 4 (intake-entity pattern, files) · _reframe_
+  - sig: intake-entity pattern AccountEntry atomic-commit, naming-collision incomeStep
+  - Intake-entity pattern: ScenarioDraft.enteredAccounts mutated via update; AccountEntry.tsx atomic-commit FormState with conditional fields and save() early-return on incomplete; AccountsStep row summary (3 facts) + two-tap remove + empty-state; the EXISTING incomeStep/workIncomeStep earned-income naming-collision hazard; missingRequiredFacts per-entity pushes; buildParams null-coupling; AnswerStrip 'still needed' surface (insight 035 layout-shift); SanityRule + contribution-over-ceiling template; FieldError; the copy fence (copyFence.test.ts); codec per-entity validators checkAccounts/checkContributionStreams are the U8 precedent.
+  - [reframe] Surviving fact: build the income intake mirroring AccountEntry's atomic-commit/early-return/row-summary/two-tap-remove pattern, avoid the incomeStep/workIncomeStep naming collision, and extend checkAccounts/checkContributionStreams as the U8 codec precedent. Keep the pattern; commit/line numbers drift.
+- **`docs/plans/features/other-income.md#56`** · `decision-rationale` · → R40 build — Unit 3 (cashTermsForYear return-shape) · _reframe_
+  - sig: cashTermsForYear returns {net, ss, incomeTaxable} two-scalar routing
+  - Deferred to implementation: the two-scalar routing — cashTermsForYear returns {net,ss,incomeTaxable} (one helper call; gross consumed internally for netting, taxable surfaced to the loop and pushed into a per-year incomeTaxableYears array spread into taxInputs); the return-shape change ripples to netWithdrawalForYear + ~12 simulate.test.ts sites — name it in Unit 3, settle the exact shape at wire time without perturbing the two-pass allocateWithdrawal.
+  - [dedup] Build-detail step here; KTD-4/Unit 3 + System-Wide (API surface parity) carry pointers.
+  - [reframe] Surviving fact: cashTermsForYear returns {net,ss,incomeTaxable}; taxable feeds a per-year incomeTaxableYears array spread into taxInputs; the return-shape change touches netWithdrawalForYear + ~12 test sites without perturbing the two-pass allocateWithdrawal. Present-tense build decision; drop 'deferred to implementation' framing.
+- **`docs/plans/features/other-income.md#58`** · `requirement` · → R40 build — Unit 1 (types, files) · _reframe_
+  - sig: Unit 1 income-stream types, model.ts entity + leaf + ScenarioV3
+  - Unit 1 — income-stream types: discriminated-union entity, two-variant leaf, draft+scenario shape (R40.1/.2/.3/.6, KTD-3/4/6/8b). Files: model.ts (IncomeStream entity union keyed on type; single-sourced INCOME_TYPES/COLA_MODES as const; two-variant PersonIncomeStream leaf; IncomeParams; OverlayParams.income?; incomeStreams on ScenarioV3 + SCENARIO_V3_FIELDS + exhaustiveness tie); memoryModel.ts (draft↔V3 tie; init []; always present never undefined — a restored v3 blob missing the field defaults to [] under tolerant-reader); test model.income-shape.test.ts.
+  - [dedup] Unit 1 build step here; roadmap You-Are-Here tracks its status (pointer).
+  - [reframe] Surviving fact: Unit 1 builds the IncomeStream entity + PersonIncomeStream leaf + ScenarioV3 field + draft tie (always-present default []), with single-sourced vocab and a shape test. Present-tense build step.
+- **`docs/plans/features/other-income.md#59`** · `build-detail-or-KTD` · → R40 build — Unit 1 (concrete shapes) · _reframe_
+  - sig: Unit 1 shape IncomeStream {type, ownerIndex 0|1, annualRealToday...}
+  - Unit 1 shape: IncomeStream = {type∈INCOME_TYPES, ownerIndex:0|1, annualRealToday, startAge, endAge? (absent≡lifetime, never numeric/Infinity), colaMode∈COLA_MODES, colaPct?, survivorPct, + discriminated-union tax-treatment keyed on type}; PersonIncomeStream (compiled leaf)={grossFull?,taxableFull?,grossSurvivor?,taxableSurvivor?} optional per-year readonly number[]; IncomeParams={readonly incomeByPerson: readonly PersonIncomeStream[]} index-aligned to people; OverlayParams.income? optional — presence is the reduce-to-spine key.
+  - [dedup] Build-shape detail here; KTD-3/KTD-4 (decisions/other-income-r40) carry the rationale pointers.
+  - [reframe] Surviving fact: the concrete IncomeStream entity + PersonIncomeStream leaf + IncomeParams shapes (presence of OverlayParams.income is the reduce-to-spine key; endAge absent≡lifetime, never a numeric/Infinity sentinel (DND-009)). Present-tense build shape.
+  - [fixed:nit] Restored 'never numeric/Infinity sentinel (DND-009)' qualifier to reframe.
+
+- **`docs/plans/features/other-income.md#60`** · `requirement` · → R40 build — Unit 2 (compileIncomeStreams) · _reframe_
+  - sig: Unit 2 intakeMap compileIncomeStreams, per-type defaults, goldens
+  - Unit 2 — intakeMap compilation: the two variants, the net-new COLA math, the goldens (R40.3/.10, KTD-2/4/5/6/8). Files: intakeMap.ts (compileIncomeStreams(d,ownerIndex,horizonYears)→one person's PersonIncomeStream; the per-type default table); referenceData.ts entry only if a default COLA-rate hint is shown; test incomeCompile.test.ts. Per stream per year t: gross[t] per KTD-2 gated by startAge/endAge, start clamped to max(0,startAge−currentAge) with annualRealToday anchored at t=0 (KTD-8b); taxable[t]=gross[t]·effectiveFraction (KTD-6); sum into FULL (Σgross,Σtaxable) and SURVIVOR (Σgross·survivorPct,Σtaxable·survivorPct) PER-STREAM; drop all-zero vectors via nonZero.
+  - [dedup] Unit 2 build step here; KTD-2/4/5/6/8 (decisions/other-income-r40) carry the decision pointers.
+  - [reframe] Surviving fact: Unit 2 builds compileIncomeStreams (per-type defaults, KTD-2 COLA math, KTD-8b anchor, KTD-6 fraction, per-stream FULL/SURVIVOR sums, nonZero drop) with externally-derived goldens. Present-tense build step.
+- **`docs/plans/features/other-income.md#62`** · `requirement` · → R40 build — Unit 3 (engine integration, files) · _reframe_
+  - sig: Unit 3 atomic engine integration, seam 1+2, IRMAA decouple, reduce-to-spine
+  - Unit 3 — the atomic engine integration: wire, validate, zero-alloc select, seam 1 + seam 2, the IRMAA decouple, reduce-to-spine (R40.4/.5/.6/.10, KTD-1/4/7/8/9). Files: intakeMap.ts (per-household assembly once in buildParams; presence-keyed spread; re-specify workingYearIrmaaMagiByPerson as wages/non-modeled per KTD-9); simulate.ts (zero-alloc ongoingIncomeForYear; cashTermsForYear→{net,ss,incomeTaxable} updating both callers + ~12 test sites; push incomeTaxableYears spread into taxInputs; validateParams income block — VECTOR finiteness + ≤ENGINE_MAX_DOLLAR only, NOT survivorPct/taxableFraction range; income passes ...overlayBase un-truncated); taxOverlay.ts (TaxInputs.income; thread per-year taxable into GrossUpContext; +taxable at nonSSordinary seam 2 only; KTD-9 clamped-year IRMAA-but-not-gross-up; update muni-landmine comment; do NOT copy the §6 ACA empty-overlap guard). Tests: reduceToSpine, magi, survivor, dateSearch, irmaa, validateParams.
+  - [dedup] Unit 3 build step here; the five-seams table (architecture §7) + KTDs (decisions/other-income-r40) carry pointers.
+  - [reframe] Surviving fact: Unit 3 wires the engine (zero-alloc select, seam 1+2, IRMAA decouple, vector-only validateParams, un-truncated date sweep) with the named test set; re-specify workingYearIrmaaMagiByPerson as wages/non-modeled per KTD-9; do NOT copy the §6 ACA empty-overlap guard into taxOverlay.ts. Present-tense build step.
+  - [fixed:warn] Refattened reframe: KTD-9 workingYearIrmaaMagiByPerson re-spec + §6-ACA-guard no-copy landmine.
+- **`docs/plans/features/other-income.md#63`** · `build-detail-or-KTD` · → R40 build — Unit 3 (execution order) · _reframe_
+  - sig: start with reduce-to-spine characterization pin, sibling not refactor-share
+  - Unit 3 execution note: START with the reduce-to-spine byte-identity test (absent income) as a CHARACTERIZATION PIN before touching the seams; ongoingIncomeForYear mirrors contributionsForYear's death-gate STRUCTURE (not its 4-array alloc) — two household scalars, integer-comparison death branch, per-owner gating; a SIBLING not a refactor-share (gate domains differ, insight 027); fold into the deferred hot-loop pass alongside the two survivor-recompute sites; seam 1 net=max(0,spending−earned−ongoingIncomeGross−ss), do not collapse the double allocateWithdrawal; validateParams income block — length-tie, finiteness-first per entry, per-year assembled-sum finiteness, ≤ENGINE_MAX_DOLLAR, startAge<currentAge ALLOWED.
+  - [dedup] Build-execution step here; KTD-4 + insight 027 (no-move) carry pointers.
+  - [reframe] Surviving fact: pin reduce-to-spine first; build ongoingIncomeForYear as a structural sibling of contributionsForYear (not a refactor-share, per insight 027); seam 1 net=max(0,spending−earned−ongoingIncomeGross−ss), do not collapse the double allocateWithdrawal; the validateParams income block is vector finiteness + bound + startAge<currentAge allowed. Present-tense execution guidance.
+  - [fixed:nit] Refattened reframe: seam-1 net formula + no-collapse double allocateWithdrawal.
+- **`docs/plans/features/other-income.md#64`** · `requirement` · → R40 build — Unit 3 (discriminating test scenarios) · _reframe_
+  - sig: Unit 3 discriminating tests: swap-mutant, MAGI atomicity, IRMAA decouple, cross-owner death order
+  - Unit 3 discriminating test scenarios: reduce-to-spine (029) absent⇒byte-identical, nonzero owner-distinct pairwise-distinct two-person income⇒terminal moves + swap-mutant fails; MAGI atomicity (KTD-1) fully-taxable lifts SS-taxable+acaMagi+irmaaMagi consistently, §86 provisional rose ONCE (realizedGain≠0), non-taxable nets draw but moves no MAGI AND ACA subsidy correctly RISES (A1); IRMAA decouple (KTD-9) already-receiving pension + working spouse + Medicare lookback + wages-only override → IRMAA-MAGI=wages+pension once, NO phantom withdrawal; survivor (KTD-4,040) owner dies, survivorPct>0 continues / =0 stops / deferred-pension owner dies before start→benefit from start year / both-dead⇒$0 / single-person⇒0; cross-owner death order (KTD-7) two streams one per spouse, non-owner-of-X dies first→deceased's stream drops to survivorPct, survivor's own stays FULL, 0.75 step-down fired once, single-household-death-gate swap-mutant FAILS; ACA boundary inside bridge (014) + rental cliff-compound disclosed direction holds; date-search invariance (KTD-8a); validateParams NaN/Infinity rejected finiteness-first, length≠people rejected, per-year sum over bound rejected, startAge<currentAge ACCEPTED; gross-up re-probe (006/007) converges within GROSS_UP_MAX_PASSES.
+  - [dedup] Test-scenario build step here; Risks + KTDs carry pointers; insights 029/014/040/006/007 (no-move) referenced.
+  - [reframe] Surviving fact: the full discriminating Unit 3 test matrix (swap-mutant on reduce-to-spine, MAGI atomicity with §86-once, IRMAA decouple no-phantom-withdrawal, survivor + cross-owner-death-order with single-household-gate swap-mutant failing, ACA-bridge boundary, date invariance, finiteness-first validateParams, gross-up convergence). Present-tense test plan.
+- **`docs/plans/features/other-income.md#65`** · `requirement` · → R40 build — Unit 4 (intake UX, files) · _reframe_
+  - sig: Unit 4 intake UX OtherIncomeEntry.tsx, sanity, copy fence
+  - Unit 4 — intake UX: the opt-in expander, the income row form, surfaced fields, interaction states, sanity, copy (R40.7/.8/.1/.2/.10, KTD-6/8b/9). Files: CREATE OtherIncomeEntry.tsx (named to avoid the incomeStep/workIncomeStep collision); modify questions.tsx (OtherIncomeStep/expander; gate; StepDef.fields; 'not saved yet' affordance; label 'other income (in retirement)'); intakeMap.ts (missingRequiredFacts pushes); sanity.ts (incomeStreamField helper + survivorPct/taxableFraction∈[0,1] range rules; NO startAge<currentAge rule); copy.ts (plain-language keys; slots.incomeSummary; disclosure lines; the INVERTED KTD-9 working-MAGI instruction; not-saved-yet line — all amount-free in violation/error strings); tests incomeIntake.test.ts + extend copyFence.test.ts.
+  - [dedup] Unit 4 build step here; KTD-9 (inverted copy) carries the pointer.
+  - [reframe] Surviving fact: Unit 4 builds OtherIncomeEntry.tsx (collision-safe name) + the questions.tsx expander/affordance/label + sanity entity-scalar range rules + copy keys (inverted KTD-9 instruction, amount-free violation strings) with intake + copy-fence tests. Present-tense build step.
+- **`docs/plans/features/other-income.md#66`** · `requirement` · → R40 build — Unit 4 (UI design-skill loadout) · _reframe_
+  - sig: Unit 4 UI law back-nine-design color never the only signal
+  - Unit 4 UI law: any user-facing surface is governed by back-nine-design (color is NEVER the only signal — Briggsy is color-blind; the not-saved-yet treatment is neutral text + icon, never a red badge), compound-engineering:frontend-design (direction), emil-design-eng (motion), web-design-guidelines (review) before touching .tsx; the disclosure copy is an N=1 cold-read deliverable.
+  - [dedup] Build-law step here; CLAUDE.md (UI design skills loadout) + MEMORY (color_blind) are the canonical project-law homes (pointers).
+  - [reframe] Surviving fact: Unit 4 UI surfaces load the four design skills (back-nine-design > frontend-design > emil-design-eng > web-design-guidelines), color is never the only signal, the not-saved-yet state is neutral text+icon, and disclosure copy is an N=1 cold-read deliverable. Present-tense build law.
+- **`docs/plans/features/other-income.md#67`** · `requirement` · → R40 build — Unit 4 (interaction states) · _reframe_
+  - sig: Unit 4 interaction states opt-in expander, no-safe-default in-form required
+  - Unit 4 interaction states: opt-in expander (mirror AccountsStep empty→Add→form), NOT auto-inserted; section label 'other income (in retirement)'; the no-safe-default fields are IN-FORM required-to-save (NOT a deferred push) — picking a type chip reveals its required field immediately, ABOVE the collapsed advanced tier, the Add button gated until answered (mirror AccountEntry.save() early-return): pension/annuity/rental/other→survivor-% prompt ('what happens if {spouse} passes first?', default empty never 100%); alimony→post-2018 agreement-date; missingRequiredFacts is the BACKSTOP for a restored/edited row not the primary surface; advanced-tier rule — required-to-be-correct fields (survivor-%, alimony date) NEVER in the collapsed tier; the collapsed tier holds only genuinely-optional refinements (end age, explicit COLA rate, exclusion fraction) with safe type-seeded defaults; colaPct form-required when colaMode='fixed-pct' (conditional reveal).
+  - [dedup] Build-spec step here; R40.7 (product) + KTD-6 (decisions/other-income-r40) carry pointers.
+  - [reframe] Surviving fact: opt-in expander, no-safe-default fields in-form required-to-save above the collapsed tier (Add gated), missingRequiredFacts as the restore backstop, required-to-be-correct fields never collapsed, colaPct required when fixed-pct. Present-tense interaction spec.
+- **`docs/plans/features/other-income.md#68`** · `requirement` · → R40 build — Unit 4 (already-receiving toggle, row summary) · _reframe_
+  - sig: Unit 4 'Already receiving' toggle, plain-language row summary widow's numbers
+  - Unit 4: 'Already receiving' is an EXPLICIT TOGGLE owning the start-age field's state (on→'receiving now' not a clamped number; off is default); the row summary reads 'receiving now'; this detectable state is what KTD-9's wages-only override copy depends on; row summary (slots.incomeSummary) surfaces facts in PLAIN LANGUAGE — type·owner·amount·(start/'receiving now')·COLA-keeps-up-or-not·survivor ('keeps half if Jane passes'/'stops if she passes'/'no inflation increases') — never survivorPct:0.5 or a 3-fact account shortcut that hides the widow's numbers; 'not saved yet' affordance is a RESERVED STATIC SLOT (not injected on first add — insight 035), NEUTRAL TEXT+ICON (explicitly NOT a red badge — color-blind-safe, role=note not alert), routed through copy.ts, present whenever the section has ≥1 stream.
+  - [dedup] Build-spec step here; KTD-9 + insight 035 (no-move) carry pointers.
+  - [reframe] Surviving fact: an explicit 'already receiving' toggle (the state KTD-9 copy depends on), a plain-language row summary that surfaces the widow's numbers (never raw survivorPct), and a reserved-slot neutral text+icon not-saved-yet affordance (color-blind-safe, role=note). Present-tense build spec.
+- **`docs/plans/features/other-income.md#69`** · `requirement` · → R40 build — Unit 4 (disclosure copy classification) · _reframe_
+  - sig: Unit 4 disclosure copy: inline help vs on-demand depth, conservative not confession
+  - Unit 4 disclosure copy classification: (a) INLINE HELP (aria-describedby) for entry-affecting lines (the alimony date threshold; the inverted working-MAGI instruction); (b) ON-DEMAND DEPTH (a quiet 'how we model this') for optimistic-direction residuals (net-rent cliff-magnitude, exclusion-never-exhausts, alimony payer-death) + provenance lines (rental survivor=state property law, QJSA=plan-rep-or-notary, COLA norms=practitioner); these are an N=1 cold-read TONE deliverable — they must read as CONSERVATIVE MODELING CHOICES not confessions of error; two-tap remove; empty-state inherits the accounts pattern.
+  - [dedup] Build-copy step here; Provenance corrections (item 79) + Operational Notes (tone) carry pointers.
+  - [reframe] Surviving fact: classify disclosure copy as inline help (entry-affecting) vs on-demand depth (optimistic residuals + provenance), written as conservative modeling choices (N=1 cold-read tone), never confessions of error. Present-tense build spec.
+- **`docs/plans/features/other-income.md#73`** · `build-detail-or-KTD` · → R40 build — performance notes · _reframe_
+  - sig: Performance: zero-alloc select, Y-invariant compile once, income doesn't raise k
+  - Performance: (a) the select helper is ZERO-ALLOC (two scalars, integer-comparison death branch); (b) the 4 income vectors are Y-invariant → compileIncomeStreams runs ONCE in buildParams; (c) gross-up is a non-issue — income's taxable is an additive constant, does not raise k (k_sup≈0.74), stays inside ENGINE_MAX_DOLLAR (~113-pass bound proven); (d) the death-state branch joins the deferred hot-loop pass alongside the two survivor-recompute sites.
+  - [dedup] Build performance notes here; KTD-4/KTD-8 (decisions) + the k_sup figure (research) carry pointers.
+  - [reframe] Surviving fact: zero-alloc select, compile-once Y-invariant vectors, income's additive taxable doesn't raise k (k_sup≈0.74, ~113-pass bound), death-state branch folds into the deferred hot-loop pass. Present-tense performance characterization.
+- **`docs/plans/features/other-income.md#76`** · `build-detail-or-KTD` · → R40 build — state lifecycle / error propagation · _reframe_
+  - sig: state lifecycle: session-only until U8, no IndexedDB write, names field not value
+  - State lifecycle: incomeStreams joins ScenarioV3 now but is NOT persisted until U8 — the income intake (like accounts) is SESSION-ONLY with a 'not saved yet' affordance; NO IndexedDB write is added by R40; no net-new at-rest or network exposure (income never leaves the device; CSP connect-src 'self'); error propagation — intake missingRequiredFacts stops a half-entered stream, sanity range-gates entity scalars, engine validateParams finiteness-first on vectors, restore codec is the sole semantic gate; all violation/rejection copy NAMES THE FIELD not the value.
+  - [dedup] Build lifecycle note here; Risks (session-only) + CLAUDE.md (CSP) carry pointers; roadmap U8 owns persistence status.
+  - [reframe] Surviving fact: income intake is session-only until U8 (no IndexedDB write, no net-new exposure, CSP connect-src 'self'); the four error-gate layers (missingRequiredFacts, sanity, vector validateParams, restore codec) each name the field not the value. Present-tense build lifecycle.
+- **`docs/plans/features/other-income.md#83`** · `build-detail-or-KTD` · → R40 build — sources & operational notes · _reframe_
+  - sig: sources: architecture §2-§8, 18 insights, DND-009, re-run verify:bundle
+  - Sources/References: architecture §2 CRN, §3 single shared draw, §4 the cash-term seam, §5 reduce-to-spine + externally-derived fixtures, §6 the R19 numeric gate, §7 per-overlay contracts incl. two-distinct-MAGI rule, §8 constants discipline; product §7 (R40.1-.10) + Scope Boundaries; the scoping research run (45 IRS-primary-confirmed claims); insights 006,007,008,010,011,012,013,014,018,020,023,024,025,027,028,029,039,040; DND-009; after Unit 4 re-run pnpm verify:bundle (income intake rides the lazy intake chunk).
+  - [dedup] Pointer-bundle to the canonical homes (architecture, product, insights); the only net-new build instruction is re-run verify:bundle after Unit 4.
+  - [reframe] Surviving fact: R40 draws on architecture §2-§8, product §7, the scoping research (45 IRS-primary-confirmed claims), 18 insights + DND-009, and after Unit 4 you must re-run pnpm verify:bundle (income intake rides the lazy intake chunk). Present-tense source map + operational note.
+- **`docs/plans/features/portfolio-holdings.md#12`** · `requirement` · → Build steps — portfolio holdings (model) · _reframe_
+  - sig: add holdings? array to EnteredAccount
+  - Build step 1 (Model): add holdings?: ReadonlyArray<{ticker?; manualBlend?: TickerClassification; value}> to EnteredAccount folded into the U8 persisted shape; direct manualBlend stays the simple default (back-compat), holdings is the richer alternative; per-holding ticker drives blend lookup, per-holding manualBlend is the classify-the-miss fallback.
+  - [reframe] Present-tense build step: add a holdings? array to EnteredAccount, folded into the U8 persisted shape; manualBlend remains the simple default path, holdings the richer alternative.
+- **`docs/plans/features/portfolio-holdings.md#13`** · `requirement` · → Build steps — portfolio holdings (blend resolution) · _reframe_
+  - sig: account blend Σ(value·stockWeight)/Σ(value)
+  - Build step 2 (Blend resolution): when holdings present, account blend = Σ(h.value·stockWeightOf(h))/Σ(h.value) reusing the existing classifier machinery; household-weight code untouched (still value-weighted across accounts).
+  - [reframe] Present-tense build step: when holdings is present, the account blend is the value-weighted average of per-holding stock fractions via the existing classifier; the household-weight code is unchanged.
+- **`docs/plans/features/portfolio-holdings.md#14`** · `requirement` · → Build steps — portfolio holdings (intake / progressive disclosure) · _reframe_
+  - sig: holdings sub-list, opt-in expander default
+  - Build step 3 (Intake): a holdings add/remove sub-list (ticker + value, each row resolving its blend via the classifier) lives behind an opt-in 'enter individual holdings' expander; exact-allocation entry stays the default (~5-minute path), per back-nine-design progressive disclosure.
+  - [dedup] back-nine-design progressive-disclosure rule lives in the skill (pointer); the build step is homed in the plan.
+  - [reframe] Present-tense build step: add a holdings sub-list (ticker+value rows resolving via the classifier) behind an opt-in expander, keeping exact-allocation as the default ~5-minute path per back-nine-design progressive disclosure.
+- **`docs/plans/features/portfolio-holdings.md#15`** · `requirement` · → Build steps — portfolio holdings (validation / reconcile) · _reframe_
+  - sig: value reconcile, calm $N left to assign
+  - Build step 4 (Validation): account value reconciles to the holdings sum with a calm 'these don't add up — $N left to assign' note, never a hard block; coherent-but-dire flows through (R19).
+  - [dedup] R19 (coherent-but-dire flows through) canonical in product (pointer); the reconcile build step is homed in the plan.
+  - [reframe] Present-tense build step: reconcile account value to the holdings sum via a calm '$N left to assign' note (never a hard block), letting coherent-but-dire flow through per R19.
+- **`docs/plans/features/portfolio-holdings.md#16`** · `requirement` · → Build steps — portfolio holdings (tests) · _reframe_
+  - sig: externally-derived blend tests, byte-identical default
+  - Build step 5 (Tests): holdings→blend aggregation tested with externally-derived fixtures (DND 012), the value reconcile, and proof the opt-in default path stays byte-identical to today's exact-allocation accounts (reduce-to-spine).
+  - [dedup] externally-derived-fixtures DND 012 and reduce-to-spine byte-identical invariant are canonical in architecture (pointer); the test build step is homed in the plan.
+  - [reframe] Present-tense build step: test holdings→blend aggregation with externally-derived fixtures (DND 012), test the value reconcile, and assert the default path stays byte-identical to today's exact-allocation accounts.
+- **`docs/decisions/accumulation-fuck-off-date.md#64`** · `invariant` · → D2 drill-down (objective≡headline) · _pointer_
+  - sig: §3c one run, one statistic, one grade; objective ≡ headline
+  - §3c: one run, one statistic, one grade — for a not-yet-retired household the drill-down spine statement at the crowned Y* reads the date-search's OWN result (same seed, same 16k paths, params=buildCandidateParams(Y*)), rendering the SAME quantized-lower-bound grade that crowned the date; never an independent recompute at headline config or on raw entered params; a drill-down worse than the crowned date is impossible by construction.
+  - [dedup] CANONICAL: the objective≡headline invariant rationale ('one run, one statistic, one grade — never an independent recompute') lives in decisions/accumulation-fuck-off-date.md §3c; this plan row is the POINTER carrying only the D2 build instruction.
+  - [reframe] Build step only (scoped, invariant rationale stripped — see decisions/accumulation §3c): render the D2 drill-down for a not-yet-retired household from the date-search's own crowned-grade result (same seed/16k/buildCandidateParams(Y*)).
+  - [fixed:warn] Flipped reframe→pointer; canonical invariant ceded to decisions/accumulation §3c.
+
+
+## docs/plans/3-controls.md
+
+- **`docs/plans/2-first-answer.md#13`** · `decision-rationale` · → budget split — two-tier lexicographic reading · _pointer_
+  - sig: two-tier lexicographic budget split, NOT a 7th state
+  - The Act 3 budget split applies a two-tier lexicographic reading (essentials-floor verdict + lifestyle-surplus verdict) to the same six states — not a hardcoded 7th state; the clamp's correctness test stays in U1, U7 asserts only presentation-per-state.
+  - [dedup] plans/3-controls canonical (it owns the budget split); Act 2 plan keeps a pointer noting U7 asserts presentation only.
+- **`docs/plans/3-controls.md#2`** · `decision-rationale` · → Why this is Act 3 · _canonical_
+  - sig: Act-3 surfaces are the solver's input and reasoning substrate
+  - Act-3 surfaces are grouped here because they consume Act-1/Act-2 and are exactly the budget two-tiers, control axes, and cliff the Act-4 solver searches over.
+  - [dedup] Plan owns the act rationale; plans/4 and roadmap reference it.
+- **`docs/plans/3-controls.md#4`** · `definition-term` · → Act overview (the chain) · _canonical_
+  - sig: budget to controls to healthcare to sharpen to re-entry
+  - Act 3's chain: U9 budget two-tier reading, U10 sequencing+Roth controls with require-the-hedge lint, U11 healthcare cliffs, U12 sharpen loop, U13 re-entry staleness.
+  - [dedup] Plan owns the act's internal chain; roadmap requirement-unit trace references the U9-U13 mapping.
+- **`docs/plans/3-controls.md#5`** · `invariant` · → Engine context (pointer block) · _pointer_
+  - sig: inherited engine invariants linked not restated
+  - Act 3 inherits CRN, reduce-to-spine, the tax/healthcare/longevity overlays, the key lifecycle, and externally-derived fixtures — all canonical in architecture.md and linked, never re-stated.
+  - [dedup] Canonical invariants live in architecture.md; the plan's engine-context block is a pointer list (and points to decisions/accumulation-fuck-off-date.md + product.md for the objective/ledger).
+- **`docs/plans/3-controls.md#7`** · `requirement` · → Cross-cutting contract #1 · _canonical_
+  - sig: roth.ts orchestrates two arms, never re-implements decumulation
+  - Contract #1: U10 drives the Act-1 tax overlay and sequencing substrate, U11 reads the healthcare overlay; roth.ts orchestrates arms+conversion reusing the same per-year update so order-of-ops never drifts.
+  - [dedup] Plan owns the Act-3 orchestration contract; reduce-to-spine byte-identity points to architecture §5, overlays to plans/1-engine U1/U2/U3.
+- **`docs/plans/3-controls.md#10`** · `requirement` · → Cross-cutting contract #4 · _canonical_
+  - sig: require-the-hedge copyGuard reads single-sourced hedge tokens
+  - Contract #4: U10 adds a positive REQUIRE lint — every control readout and recommendation headline must contain a hedge token from the single-sourced copy.ts catalog (never a hand-copied list); ban-list checks stay; viz stays string-free.
+  - [dedup] The require-the-hedge lint is introduced here (plan-canonical); plans/2 U7 owns the prior ban-list, plans/4 #7 extends it, product §6 references it.
+- **`docs/plans/3-controls.md#14`** · `requirement` · → Cross-cutting contract #6 · _canonical_
+  - sig: a staleness clock exists IFF a year-stamped parameter is consumed
+  - Contract #6: each staleness clock exists only when the engine consumes a matching year-stamped parameter and gates only its surface (spine vs controls vs healthcare vs budget); frozen SS thresholds get no clock; absent stamp = not-applicable.
+  - [dedup] duplicatedIn names U13 deliverables in the same doc; contract and U13 are co-located here.
+- **`docs/plans/3-controls.md#15`** · `requirement` · → Cross-cutting contract #7 · _canonical_
+  - sig: controls and budget are the next R19 surfaces, validate-before-mutate
+  - Contract #7: U10 clamps the conversion to [0, remaining pre-tax pool] and validates sequencing legality before mutating; U9 sanity-checks budget lines; U11 checks SLCSP+HSA — all reuse Act-2 U5's R19 message grammar.
+  - [dedup] Plan owns the Act-3 R19 contract; the engine numeric gate is canonical in architecture §6, the message grammar in plans/2 U5.
+- **`docs/plans/3-controls.md#16`** · `requirement` · → Cross-cutting contract #8 · _canonical_
+  - sig: N=1 colorblind cold-read gate, five surfaces judged as one flow
+  - Contract #8: Act-3's five emotionally-loaded surfaces are exit conditions cold-read in one end-to-end sequence (Briggsy judges tone, never correctness); all surfaces reuse Act-2's disclosure affordance, tokens, and non-color signal grammar.
+  - [dedup] Plan owns the Act-3 cold-read/affordance contract; the non-color grammar + affordance inherit from plans/2 U6/U7 and back-nine-design skill.
+- **`docs/plans/3-controls.md#17`** · `requirement` · → Unit 9 — Goal · _canonical_
+  - sig: budget structure IS the lexicographic floor/surplus split
+  - U9 goal: build a real itemized/categorized/time-boxed budget whose structure is the floor/surplus split, read as a two-tier verdict (essentials safe X/10; full lifestyle Y/10) over the same six-state set (R20,R2,R19,R8).
+  - [dedup] Unit goal is plan-canonical; R20/R2/R19/R8 definitions live in product §7, the trace in roadmap.
+- **`docs/plans/3-controls.md#18`** · `decision-rationale` · → Unit 9 — line-item shape · _canonical_
+  - sig: line-item shape: category, tier, window offsets, today's-dollar
+  - U9 line-item = {category,label,annualAmount,tier,window:{startYear,endYear|null}}; windows are offsets from each owner's retirement year clamped to [0,horizon]; all amounts are real (today's-dollar); the expense-tracker lane is out.
+  - [dedup] Plan owns the line-item shape decision; product R20 scope boundary (tracker out) references it.
+- **`docs/plans/3-controls.md#19`** · `decision-rationale` · → Unit 9 — pre-65 healthcare-gap line · _canonical_
+  - sig: pre-65 healthcare-gap line cost computed by U3 overlay, per-track
+  - U9 reserves a time-boxed pre-65 healthcare-gap slot (retirement to age 65 per spouse, tier essentials) but its net cost is computed MAGI-dependently by the U3 overlay via U11 — never a user-typed flat amount — so it resolves to a per-track value.
+  - [dedup] duplicatedIn names Unit 11 in the same doc (the gap line's cost lands at U11).
+- **`docs/plans/3-controls.md#20`** · `invariant` · → Unit 9 — two-track compilation · _canonical_
+  - sig: budgetToSpending emits two tracks on one shared draw set
+  - U9: budgetToSpending emits two per-year vectors (essentials-only and full) from one budget; both evaluate against the same path population on the same draw set as two distinct decumulation+overlay passes — the engine half of R21's lexicographic structure.
+  - [dedup] Plan/budget-layer build owns the two-track compilation; plans/4 R21 lexicographic objective references it.
+- **`docs/plans/3-controls.md#21`** · `decision-rationale` · → Unit 9 — two-tier headline reading · _canonical_
+  - sig: two-tier headline composes over the six-state enum, not a 7th state
+  - U9: the two-tier headline composes two outcome-state-tagged readings over the existing six-state enum (state-selection stays in confidence.ts); degenerate collapse renders the single-metric statement verbatim when no discretionary exists.
+  - [dedup] Plan owns the headline composition; the six-state enum and confidence.ts are canonical in plans/2 U7.
+- **`docs/plans/3-controls.md#22`** · `decision-rationale` · → Unit 9 — spending shape · _canonical_
+  - sig: spending shape user-set, never solver-recommended
+  - U9: a go-go-years front-load is a user-set per-year multiplier on the discretionary track only; U9 surfaces its consequence on the surplus tier but never proposes a shape (the solver optimizes funding, not how you live).
+  - [dedup] Plan owns this boundary; plans/4 (solver optimizes funding not shape) references it.
+- **`docs/plans/3-controls.md#24`** · `decision-rationale` · → Unit 9 — survivor-spending composition · _canonical_
+  - sig: survivor-spending ratio scales discretionary, sticky essentials don't
+  - U9: the survivor-spending ratio is applied per-path at first death — scaling the discretionary track and only the discretionary portion of essentials; sticky survival essentials (healthcare-gap, housing, property tax) don't scale (R17); lives in budgetToSpending, R7-editable.
+  - [dedup] Plan owns the composition mechanics; R17 in product, the ratio default in plans/1 U1.
+- **`docs/plans/3-controls.md#25`** · `build-detail-or-KTD` · → Unit 9 — Files · _canonical_
+  - sig: create budgetModel.ts, budgetToSpending.ts, TwoTierHeadline.tsx
+  - U9 files: create budgetModel.ts, budgetToSpending.ts, BudgetBuilder/BudgetLineItem/TwoTierHeadline.tsx; modify model.ts (budget field under the single bump), memoryModel.ts, copy.ts; add budget + budgetBuilder tests.
+- **`docs/plans/3-controls.md#26`** · `build-detail-or-KTD` · → Unit 9 — tier-ordering monotonicity test · _canonical_
+  - sig: tier-ordering monotonicity, three-link proof chain
+  - U9 golden invariant: Tier-1 X/10 >= Tier-2 X/10 asserted path-for-path on shared draws via a three-link chain (essentials<=full spend; CRN depletion monotone in spend; gap dollar monotone in spend); narrowed+documented where a cliff/CSR branch could break it.
+- **`docs/plans/3-controls.md#27`** · `build-detail-or-KTD` · → Unit 9 — Test scenarios · _canonical_
+  - sig: U9 tests: reduce-to-spine, two-tier split, real-convention, R19
+  - U9 test scenarios: reduce-to-spine byte-identity (composition inert, single-metric render), two-tier split off one draw set (identical normals), real-convention vector, income-dependent gap line from overlay, zero-essentials warned-not-errored, R19 inline errors.
+- **`docs/plans/3-controls.md#28`** · `requirement` · → Unit 9 — Verification + Feeds forward · _canonical_
+  - sig: U9 exit: two-tier headline passes N=1 cold-read, budget read-only to solver
+  - U9 exit conditions: real two-tier budget reads as two honest tiers, single-total reproduces the first answer byte-identically, shape user-set; passing the N=1 cold-read on the two-tier headline gates Act 3; budget is read-only solver input.
+  - [dedup] Plan owns U9 exit/feeds-forward; plans/4 contracts #4/#8a are the downstream consumer.
+- **`docs/plans/3-controls.md#29`** · `requirement` · → Unit 9 — two-date split · _reframe_
+  - sig: two-date split rides U9's degenerate-collapse, no new mechanism
+  - The fuck-off-date floor-vs-lifestyle dates (R27) are U9's two-track compilation consumed by the C3 date-search: the dates coincide in the degenerate case and separate when the budget splits tracks; mixed outcomes ({floor,no-date}, floor>lifestyle) are dark until U9 lands.
+  - [dedup] Build fact (the two-date split rides U9) is plan-canonical; R27/C3 rationale in decisions/accumulation-fuck-off-date, the date-search in plans/1 C3.
+  - [reframe] Surviving fact (present-tense): the two date answers reuse U9's two-track compilation/degenerate-collapse and C3 consumes whatever tracks budgetToSpending emits; drop the '2026-06-08 accumulation-fold' origin framing.
+- **`docs/plans/3-controls.md#30`** · `build-detail-or-KTD` · → Unit 9 — follow-on (medical-line reconcile) · _reframe_
+  - sig: budget medical line and oopMedical must reconcile to one source
+  - Build landmine: the budget's medical line and the date-route per-year oopMedical[t] stream must reconcile to one source — never double-count (an itemized medical line plus oopMedical) nor zero the HSA qualified-spend cap.
+  - [dedup] duplicatedIn names Unit 11 (HSA cap) in the same doc.
+  - [reframe] Surviving fact (present-tense): the budget medical line and oopMedical[t] reconcile to one source so the HSA cap-only containment premise holds; drop the accumulation-fold origin framing.
+- **`docs/plans/3-controls.md#31`** · `requirement` · → Unit 10 — Goal · _canonical_
+  - sig: two hand-tunable controls, delta as hero, never a verdict
+  - U10 goal: two manual controls over Act-1 overlays — a named drawdown policy (or custom order) and a Roth conversion (amount+years) — rendered as two futures with the delta as hero, headlined by the survivor's tax cliff, every readout hedged, never a verdict (R9-R12,R4,R19).
+  - [dedup] Unit goal is plan-canonical; R9-R12/R4/R19 in product §7, the trace in roadmap.
+- **`docs/plans/3-controls.md#32`** · `decision-rationale` · → Unit 10 — manual sequencing control · _canonical_
+  - sig: drawdown policy set: proportional, taxable-first, pre-tax-first, bracket-fill
+  - U10 sequencing control: user picks a named policy {proportional(baseline), taxable-first, pre-tax-first, bracket-fill} or custom order; bracket-fill carries a cliff-aware fill ceiling; HSA excluded from general drawdown; past RMD age full RMD comes from pre-tax first then the policy applies to the residual.
+  - [dedup] Plan owns the control design; sequencing.ts substrate is in plans/1, the solver search axes in plans/4.
+- **`docs/plans/3-controls.md#33`** · `decision-rationale` · → Unit 10 — the Roth lever · _canonical_
+  - sig: RMD age birth-year-derived 72/73/75, conversion stacks on RMD
+  - U10 Roth lever: roth.ts runs WITH/WITHOUT arms differing only by the conversion event; RMD age is birth-year-derived (72/73/75 per SECURE 2.0, never flat 73); tax paid from taxable (R7-editable); the conversion stacks on top of the RMD and the clamp is computed after RMD removal.
+  - [dedup] Plan owns the lever design; RMD-non-convertible legality is canonical in architecture §7.1, U2 in plans/1.
+- **`docs/plans/3-controls.md#34`** · `decision-rationale` · → Unit 10 — account buckets on lever-open · _reframe_
+  - sig: lever-open mini-intake: legacy upgrade plus drifted-split only
+  - U10 buckets are collected on lever-open in two cases — unsaved in-memory (now the degenerate already-collected D1 path) and returning legacy vault (decrypt, add, model-only re-encrypt); opening a what-if never mutates the vault (enforced structurally).
+  - [dedup] Plan owns the case structure; model-only re-encrypt is canonical in architecture §7.3, coordinated bump in contract #5.
+  - [reframe] Surviving fact (present-tense): the lever-open mini-intake handles the unsaved in-memory and legacy-vault cases and never writes to disk outside an explicit Save; drop the 'accumulation-fold shift (buckets at D1)' origin framing.
+- **`docs/plans/3-controls.md#35`** · `decision-rationale` · → Unit 10 — two futures + delta as hero · _canonical_
+  - sig: two futures CRN both arms, no-worker fallback recompute on release
+  - U10 two-futures: both arms share CRN so the delta is stable as the slider drags; on the no-worker capability flag the controls disable live recompute and recompute on release (honestly non-live); the delta callout is the grayscale hero with non-color treatment.
+  - [dedup] Plan owns the control render; the worker-vs-main-thread capability flag and U6 tokens are from plans/2.
+- **`docs/plans/3-controls.md#36`** · `decision-rationale` · → Unit 10 — reframe at lever-open · _reframe_
+  - sig: delta-led reframe at lever-open, saved spine headline never overwritten
+  - U10 reframe: because the tax-aware lever can read below the anchored number, the delta leads ('could help last in 8 of 10 instead of 6') and the tax-aware baseline is shown secondary as 'a truer picture' — the saved spine headline is never overwritten.
+  - [dedup] Plan owns the reframe rule; seed/headline identity is canonical in architecture.
+  - [reframe] Surviving fact (present-tense): the lever-open reframe is delta-led and re-derives from the account-aware D1-era baseline at build time; the delta-led honesty rule is unchanged — drop the 'post-accumulation-fold' framing.
+- **`docs/plans/3-controls.md#37`** · `decision-rationale` · → Unit 10 — the delta itself made honest · _canonical_
+  - sig: natural-frequency X-of-10 first, hedged ~N years secondary
+  - U10 delta honesty: primary render is a natural-frequency 'X of 10' shift (the survivor's number, probabilistic over first-death timing), '~N years' is a hedged secondary tied to a percentile; net cost-now vs benefit-later; omissions disclosed; N<=0 has a calm state; 10/10 clamp becomes a verdict-state transition.
+  - [dedup] Plan owns the delta-honesty rules; the 10/10 surplus-metric pivot seeds R21 in plans/4.
+- **`docs/plans/3-controls.md#38`** · `decision-rationale` · → Unit 10 — quiet categorical surface · _canonical_
+  - sig: categorical teaser on a general MFJ fact, no personalized dollar
+  - U10 quiet categorical surface: the teaser fires on a general MFJ pre-RMD-window fact with no personalized dollar or hardcoded age; the trigger is categorical (true for the product class), not gated on a per-user computation; tested that the visibility predicate reads no personalized field.
+  - [dedup] duplicatedIn names contract #4 (attorney-gate lapsed) in the same doc.
+- **`docs/plans/3-controls.md#39`** · `decision-rationale` · → Unit 10 — death-order, $0-pre-tax · _canonical_
+  - sig: death-order 'if one outlives the other', $0-pre-tax closes calmly
+  - U10 death-order: an editable hypothetical framed 'if one of you outlives the other' (never 'predeceases'), default mixture, a selected order = conditional same-seed view, survivor MFJ->single flip for tax+health; $0 total pre-tax closes the lever calmly with no fabricated arms.
+  - [dedup] duplicatedIn names contract #3 in the same doc.
+- **`docs/plans/3-controls.md#40`** · `build-detail-or-KTD` · → Unit 10 — R19 · _canonical_
+  - sig: clamp conversion to [0, remaining pre-tax pool] net of RMD
+  - U10 R19: clamp the conversion to [0, remaining pre-tax pool] accounting for cumulative multi-year conversions and net of the RMD already taken; validate residual sequencing legality before mutating state; reject degenerate amounts; surface boundaries calmly inline.
+  - [dedup] duplicatedIn names contract #7 in the same doc.
+- **`docs/plans/3-controls.md#41`** · `requirement` · → Unit 10 — require-the-hedge lint · _canonical_
+  - sig: positive REQUIRE lint reads the same single-sourced hedge tokens
+  - U10 introduces the require-the-hedge lint: every control readout and recommendation headline must contain a hedge token from the single-sourced copy.ts catalog the lint reads; ban-list stays; viz string-free; catalog-enumeration test fails a hedge-less readout by construction.
+  - [dedup] Lint introduced here (plan-canonical); plans/4 contract #7 extends it to the recommendation headline.
+- **`docs/plans/3-controls.md#42`** · `build-detail-or-KTD` · → Unit 10 — Files · _canonical_
+  - sig: create SequencingControl, RothLever, TwoFutures, engine/roth.ts
+  - U10 files: create SequencingControl/RothLever/RothSurface/RothTuner/RothAccounts.tsx, viz/TwoFutures.tsx (string-free), engine/roth.ts; modify model.ts (bucket+birth-year+sequencing+three tax-vintage stamps), copy.ts (hedge-token catalog), copyGuard.ts (hedge lint+Roth slots); add roth/control/copyGuard tests.
+- **`docs/plans/3-controls.md#43`** · `build-detail-or-KTD` · → Unit 10 — golden invariant + tests · _canonical_
+  - sig: golden anchor: 'without' arm byte-identical to spine when off
+  - U10 golden test: buckets collapsed + conversion 0 + taxes/RMD/healthcare off -> the 'without' arm is byte-identical to the spine (no spurious delta); plus CRN monotone raw-delta, single-shared-draw, per-policy depletion-order, sequencing determinism, HSA-not-a-bucket, RMD-non-convertible, RMD-age birth-year-derived.
+- **`docs/plans/3-controls.md#44`** · `build-detail-or-KTD` · → Unit 10 — Test scenarios · _canonical_
+  - sig: U10 tests: two-series convergence, CVD oklab probe, legacy->accounts
+  - U10 further tests: two-series convergence (leadered stack, collapse-to-callout, burned/037), CVD oklab probe over composited geometry (burned/070), delta honesty, N<=0/10-10 clamp, death-order+$0-pre-tax, require-the-hedge enumeration, legacy->accounts shape integration, control visibly moves the answer.
+- **`docs/plans/3-controls.md#45`** · `requirement` · → Unit 10 — Verification + Feeds forward · _canonical_
+  - sig: U10 exit: both arms+delta legible in grayscale, controls are solver axes
+  - U10 exit conditions: user hand-tunes both controls, every readout hedged and no directive, delta is the survivor's frequency-first, 'without' reduces byte-identically, CRN-stable, RMD-age birth-year-derived; passing the N=1 cold-read on the two-futures gates Act 3; the controls are the solver's two search axes.
+  - [dedup] Plan owns U10 exit; plans/4 Unit 15 + contracts #5/#7 are downstream.
+- **`docs/plans/3-controls.md#46`** · `requirement` · → Unit 11 — Goal · _canonical_
+  - sig: surface ACA cliff, IRMAA, HSA so a conversion's cost is seen
+  - U11 goal: surface income-dependent healthcare calmly — pre-65 ACA subsidy cliff (legislative status shown), post-65 IRMAA cliffs + 2-yr-lag, the HSA not-ACA-payable trap — so a subsidy-torching conversion is seen, not silently optimized over (R24,R12,R4,R19); reads the U3 overlay.
+  - [dedup] Unit goal is plan-canonical; R24/R12/R4/R19 in product §7, the trace in roadmap.
+- **`docs/plans/3-controls.md#47`** · `decision-rationale` · → Unit 11 — SLCSP benchmark · _canonical_
+  - sig: SLCSP benchmark is a user input, never synthesized
+  - U11: the SLCSP benchmark is a user input (the biggest honesty lever) with an honest age-banded fallback; it steps to single-enrollee when the older spouse hits Medicare; near-65 starts also collect the two prior years' MAGI to seed IRMAA[t-2] — an unseeded near-65 start fails loud.
+  - [dedup] Plan owns the input-design decision; the U3 ACA fixed-point is canonical in plans/1.
+- **`docs/plans/3-controls.md#49`** · `decision-rationale` · → Unit 11 — shadow-rate framing · _canonical_
+  - sig: shadow rate = federal + state + lost ACA subsidy, >100% at cliff
+  - U11 shadow/effective-marginal-rate readout shows what the next conversion dollar really costs (federal + disclosed state + lost ACA subsidy), catastrophic >100% at the cliff; the subsidy-aware MAGI ceiling is the binding constraint in ACA years; age-gap years sum lost ACA subsidy and the forward IRMAA surcharge.
+  - [dedup] duplicatedIn names contract #4 (shadow-rate slot) in the same doc.
+- **`docs/plans/3-controls.md#50`** · `decision-rationale` · → Unit 11 — IRMAA cliffs + 2-year-lag · _canonical_
+  - sig: IRMAA 2-yr lag, danger years start before Medicare, ×enrolled-spouses
+  - U11 IRMAA: surface per-person step-cliffs times the count of Medicare-enrolled spouses (×1 in age-gap years, ×2 once both enrolled, never flat ×2) and the headline 'a conversion at 63-64 hits your IRMAA at 65-66; the danger years start before Medicare'; rendered as discrete cliffs.
+  - [dedup] Plan owns the surfacing decision; the U3 IRMAA 2-yr-lag mechanics are canonical in plans/1.
+- **`docs/plans/3-controls.md#51`** · `decision-rationale` · → Unit 11 — HSA fourth bucket + trap · _canonical_
+  - sig: HSA can't pay ACA premiums; non-qualified post-65 raises both MAGIs
+  - U11 HSA: surface that HSA covers out-of-pocket + (owner 65+) Medicare premiums tax-free but NOT ACA marketplace premiums; Medicare zeroes contributions; HSA spending is MAGI-invisible only for qualified medical, so HSA is a MAGI-control lever against medical spend, not a general MAGI-free source.
+  - [dedup] Plan owns the surfacing decision; the U3 HSA bucket mechanics are canonical in plans/1.
+- **`docs/plans/3-controls.md#52`** · `decision-rationale` · → Unit 11 — disclose modeled omissions · _canonical_
+  - sig: disclose omissions: NIIT, state, CSR, IRMAA self-funding, SSA-44
+  - U11 disclose modeled omissions adjacent to the readout (NIIT, state tax, CSR, SLCSP level, IRMAA second-order self-funding loop, state subsidy wraps, SSA-44 death-of-spouse appeals) — each named, never silently dropped — the honesty backstop for the R24 scope cut.
+  - [dedup] Plan owns the disclosure rule; the R24 scope cut is in product.
+- **`docs/plans/3-controls.md#53`** · `decision-rationale` · → Unit 11 — survivor flip + R19 · _canonical_
+  - sig: survivor MFJ->single drops IRMAA and ACA-FPL thresholds
+  - U11 survivor flip: when the death-order conditional view is active the survivor's IRMAA and ACA-FPL thresholds drop to ~single ('the same income can trip a surcharge after one of you is gone'), wired into the existing death-order filter; R19 checks SLCSP/HSA non-negative and the toggle binary.
+  - [dedup] duplicatedIn names contract #3 in the same doc.
+- **`docs/plans/3-controls.md#54`** · `build-detail-or-KTD` · → Unit 11 — Files + Dependencies · _canonical_
+  - sig: create HealthcareSurface, ShadowRateReadout, EnhancedSubsidyToggle
+  - U11 files: create HealthcareSurface/HealthcareInputs/EnhancedSubsidyToggle/ShadowRateReadout.tsx; modify model.ts (HSA bucket+SLCSP+toggle+healthcare vintage stamps under the single bump), copy.ts, copyGuard.ts (ACA/IRMAA + shadow-rate slots); tests; depends on Act-1 U2 tax overlay.
+- **`docs/plans/3-controls.md#55`** · `build-detail-or-KTD` · → Unit 11 — Test scenarios · _canonical_
+  - sig: U11 tests: cliff calm, IRMAA lag, HSA trap, missing-SLCSP loud sentinel
+  - U11 tests: happy SLCSP net-cost + toggle, the 400%-FPL cliff shown calmly (non-color shape/word, omissions adjacent), IRMAA 2-yr lag per-person ×2, HSA trap, survivor flip to single, dated legislative status not hard-coded, a missing SLCSP is a loud sentinel (burned/062, no in-range default), U9-gap and U10-conversion integration.
+  - [dedup] Plan owns the test list; burned/062 (no in-range default) is referenced from CLAUDE.md.
+- **`docs/plans/3-controls.md#56`** · `requirement` · → Unit 11 — Verification + Feeds forward · _canonical_
+  - sig: U11 exit: cliff/shadow-rate cold-read, the cliff the solver mustn't ignore
+  - U11 exit conditions: honest income-dependent healthcare (ACA cliff dated, IRMAA danger-years, HSA trap), every cost hedged and omission disclosed, HSA coverage never overstated; passing the N=1 cold-read on cliff/shadow-rate copy gates Act 3; the cliff is what the solver must not silently optimize over.
+  - [dedup] Plan owns U11 exit; plans/4 Unit 14 case (iii) + Unit 15 cliff-aware grid are downstream.
+- **`docs/plans/3-controls.md#57`** · `requirement` · → Unit 12 — Goal · _canonical_
+  - sig: every assumption visible+editable, each precision sharpens the answer
+  - U12 goal: make every assumption (methodology and required user-facts, now including budget, both controls, healthcare inputs) visible and editable so added precision visibly/stably sharpens the answer, and a power user can set any assumption directly (R6,R4,R7,R8).
+  - [dedup] Unit goal is plan-canonical; R6/R4/R7/R8 in product §7, the trace in roadmap.
+- **`docs/plans/3-controls.md#58`** · `decision-rationale` · → Unit 12 — every assumption editable, two classes · _canonical_
+  - sig: two classes: methodology assumptions and required user-facts
+  - U12 lists two editable classes: (a) on-behalf methodology assumptions (returns, inflation, longevity, survivor-SS step-down, survivor-spending ratio, death-order, Roth tax-payment-source) and (b) required user-facts (ages, savings, budget, buckets, SLCSP+HSA, retirement years); editing a required fact can legitimately return indeterminate.
+  - [dedup] Plan owns the U12 classification; indeterminate copy is reused from plans/2 U5.
+- **`docs/plans/3-controls.md#59`** · `invariant` · → Unit 12 — each edit re-runs · _canonical_
+  - sig: draw-once-then-morph, same seed, margin-gated crossfade
+  - U12: each edit re-runs through the Act-2 U5 memoryModel orchestrator (it extends, never re-owns it) with the same seed so the answer morphs (never re-draws) and exercises the margin-gated crossfade Act 2 defined.
+  - [dedup] Plan states U12's reuse; the memoryModel orchestrator and margin-gated crossfade are canonical in plans/2 U5.
+- **`docs/plans/3-controls.md#60`** · `decision-rationale` · → Unit 12 — R8 honestly · _canonical_
+  - sig: sharpens not unconditionally tightens; confirm narrows, override shifts
+  - U12 R8 honestly: only confirming/narrowing an epistemic default narrows the band; overriding a value shifts (may widen) and the verdict can worsen, framed as 'a truer picture'; 'monotonic, no jitter' is the seed-stability guarantee, not a promise every edit narrows.
+  - [dedup] Plan owns the R8 nuance; R8 definition is in product.
+- **`docs/plans/3-controls.md#61`** · `build-detail-or-KTD` · → Unit 12 — stateful sticky-rounding · _canonical_
+  - sig: U12 seats stateful sticky-rounding, two distinct margins
+  - U12 seats the sticky-rounding: adds lastDisplayedHeadline/Dollar/State to memoryModel with two distinct margins (band-edge for headline/state, display-rounding-step for dollar), notify-once write ordering (burned/017), baseline captured at resolve->verdict, session-only and re-seated on re-entry.
+  - [dedup] Plan owns where the stickiness is seated; architecture §9 owns why it lives in the store (not pure confidence.ts), with the handed-forward seam in plans/1 U1 + plans/2 U5.
+- **`docs/plans/3-controls.md#62`** · `decision-rationale` · → Unit 12 — epistemic vs aleatory floor · _canonical_
+  - sig: epistemic vs aleatory floor, Unit-12-local heuristic
+  - U12 honest about the floor: sharpening can't narrow market randomness; floor copy ('more precision won't narrow it') and bad-news copy carry the non-color signal grammar; floor detection is a Unit-12-local band-width-threshold heuristic, deliberately not a confidence.ts decomposition for the MVP.
+  - [dedup] duplicatedIn names contract #8 in the same doc.
+- **`docs/plans/3-controls.md#63`** · `decision-rationale` · → Unit 12 — escape hatch + Files · _canonical_
+  - sig: escape hatch reachable even while indeterminate (R6)
+  - U12 escape hatch: jump to any assumption without the guided path (R6), reachable even while indeterminate (sticky seam applies only to a complete answer); create SharpenLoop/AssumptionPanel/EscapeHatch.tsx, modify memoryModel.ts, add sharpen/assumptions tests.
+  - [dedup] Plan owns the U12 escape-hatch design+files; R6 definition is in product.
+- **`docs/plans/3-controls.md#64`** · `build-detail-or-KTD` · → Unit 12 — Test scenarios · _canonical_
+  - sig: U12 tests: narrow, override, aleatory floor, two-margin sticky split
+  - U12 tests: confirm narrows / override shifts-may-widen (two classes distinguished), aleatory-floor copy on below-threshold change, sticky two-margin split (dollar vs headline/verb wired separately), notify-once (no mixed frame, burned/017), every new assumption present+editable (R7), required-fact->indeterminate, escape-hatch non-sticky, shared-assumption single-source recompute.
+- **`docs/plans/3-controls.md#65`** · `requirement` · → Unit 12 — Verification + Feeds forward · _canonical_
+  - sig: U12 exit: dollar and headline never flicker against each other
+  - U12 exit conditions: every assumption reachable/changeable in one interaction, edits move the answer seed-stably (narrowing on precision, shifting honestly on a correction), dollar and headline never flicker against each other; passing the N=1 cold-read on the bad-news sharpen transition gates Act 3; the panel+escape-hatch are reused by the recommendation surface.
+  - [dedup] Plan owns U12 exit; plans/4 Unit 16 (R7 under recommend-second) is downstream.
+- **`docs/plans/3-controls.md#66`** · `requirement` · → Unit 13 — Goal · _canonical_
+  - sig: calm re-entry, saved answer re-derived, surviving spouse routed in
+  - U13 goal: a calm re-entry showing the saved answer (re-derived, not a replayed string) with honest per-surface staleness across the tax/healthcare/budget clocks, and routing the surviving spouse back in (R4,R8,R15/R16/R17).
+  - [dedup] Unit goal is plan-canonical; R4/R8/R15/R16/R17 in product §7, the trace in roadmap.
+- **`docs/plans/3-controls.md#67`** · `decision-rationale` · → Unit 13 — unlock surfaces all U4 outcomes · _canonical_
+  - sig: recovery-phrase unlock is the surviving spouse's primary door, mandatory new-passphrase gate
+  - U13 unlock surfaces all four Act-1 U4 outcomes (wrong-passphrase calm retry, data-damaged restore, no-vault/post-eviction restore, in-place recovery-phrase unlock); the recovery door is the survivor's primary way back in, with a mandatory blocking new-passphrase gate (re-mint passphraseWrap) and a masked phrase field.
+  - [dedup] Plan owns the U13 unlock flow; the lock-authority/write-gate conjunction is canonical in architecture §7.3, U4 in plans/1.
+- **`docs/plans/3-controls.md#68`** · `decision-rationale` · → Unit 13 — re-deriving at unlock · _canonical_
+  - sig: re-derive under persisted seed, re-present at saved vintage, re-run at current
+  - U13: show the saved statement by re-deriving under its persisted seed (byte-identical, re-seats U12's sticky baseline); re-presentation uses the saved fixture vintage with a staleness flag, any re-run uses the current fixture and says so; only a saved recommendation (Act-4 U17) inverts to re-solve, a saved control what-if stays re-presented.
+  - [dedup] Plan owns the U13 re-derive rule; plans/4 Unit 17 + contract #8b inherit and invert it.
+- **`docs/plans/3-controls.md#69`** · `requirement` · → Unit 13 — staleness clocks 1-2 · _canonical_
+  - sig: tax-table/RMD-age/senior-bonus clocks gate the controls, spine is tax-blind
+  - U13 clocks 1-2: wall-time + app-methodology-default vintage gate the spine verdict (user-overridden assumptions immune); tax-table vintage (OBBBA-2025 provenance) + RMD-age rule + senior-bonus-deduction sunset gate the controls/lever only; SS thresholds frozen = no clock; staleness.ts exposes a tax-table-stale flag.
+  - [dedup] Plan/U13 own the clock spec; the mapping is contract #6 (same doc), constants/vintage canonical in architecture §8.
+
+- **`docs/plans/3-controls.md#70`** · `requirement` · → Unit 13 — staleness clocks 3-5 · _canonical_
+  - sig: ACA-status is the load-bearing clock; changed split->U10, changed total->U12
+  - U13 clocks 3-5: healthcare vintages (ACA legislative status the load-bearing one, applicable-%, IRMAA brackets, Part B) gate the healthcare surfaces; the balance-drift confirm checks the per-bucket split (changed split->U10 mini-intake, changed total->U12 sharpen); budget time-boxed windows that advanced get a calm re-confirm.
+  - [dedup] duplicatedIn names contract #6 and Unit 11 in the same doc.
+- **`docs/plans/3-controls.md#71`** · `requirement` · → Unit 13 — date answer joins staleness · _reframe_
+  - sig: date answer joins staleness: contribution-limit + ticker-blend vintages
+  - U13: the date answer joins the staleness machinery — contribution-limit-table and ticker-blend/TDF snapshot vintages gate the date surface; user-entered values (balances, ACA quote) ride the balance-drift confirm; re-presentation renders the wall-time-stable calendar label and re-derives '~N years out' from current wall-time, routing old saves to recompute.
+  - [dedup] Clock specs are plan/U13-canonical (contract #6 in same doc); the date-answer rationale ties to decisions/accumulation-fuck-off-date.
+  - [reframe] Surviving fact (present-tense): the date surface has fixture-vintage clocks (contribution-limit, ticker-blend) and user-entered re-confirms, and renders a stable calendar label with current-wall-time relative framing; drop the '2026-06-08 accumulation-fold U13 extension' origin framing.
+- **`docs/plans/3-controls.md#72`** · `invariant` · → Unit 13 — absent-stamp default · _canonical_
+  - sig: absent stamp = not-applicable, never infinitely stale
+  - U13: a spine-only vault with no tax/health stamp is treated by staleness.ts as 'not applicable' (no false stale), never 'infinitely stale'; stamps live on the model so staleness is computable offline.
+  - [dedup] duplicatedIn names contract #6 in the same doc.
+- **`docs/plans/3-controls.md#73`** · `build-detail-or-KTD` · → Unit 13 — Files · _canonical_
+  - sig: create ReEntry.tsx and store/staleness.ts
+  - U13 files: create ReEntry.tsx, store/staleness.ts; modify model.ts (the vintage stamps, read here, written by U10/U11, under the single bump); add reentry + staleness tests.
+- **`docs/plans/3-controls.md#74`** · `build-detail-or-KTD` · → Unit 13 — Test scenarios · _canonical_
+  - sig: U13 tests: survivor door, tax staleness control-scoped, absent stamp
+  - U13 tests: re-derived saved verdict byte-identical, survivor recovery-phrase door + mandatory new-passphrase gate, U4 error paths, tax staleness on the control not the spine, healthcare staleness, budget time-box re-confirm, re-present-vs-re-run, per-bucket balance-confirm routing, date staleness, absent-stamp not-applicable, app-default vintage note.
+- **`docs/plans/3-controls.md#75`** · `requirement` · → Unit 13 — Verification + Feeds forward · _canonical_
+  - sig: U13 exit: survivor has a specified door, saved-what-if vs saved-action boundary
+  - U13 exit conditions: returning user sees their re-derived saved answer with honest per-surface staleness (tax/healthcare/budget/date), is nudged to confirm the per-bucket balance, and the surviving spouse has a specified in-place recovery door; the per-surface map is what Act-4 U17 inherits and inverts for a saved executed action.
+  - [dedup] Plan owns U13 exit; plans/4 Unit 17 + contract #8b are downstream.
+- **`docs/plans/3-controls.md#76`** · `build-detail-or-KTD` · → Implementation-craft references · _canonical_
+  - sig: craft refs: burned/005 request-epoch, ai-journey-stats sparkline
+  - Act-3 build-time craft references: burned/005 request-epoch/generation-counter on stale sliders, timers, and onAnimationComplete; ai-journey-stats/007 useCallback-memoized handlers (U12); ai-journey-stats/sparkline path-builder geometry (U10); burned/015 :active feedback on motion-control children (U12).
+  - [dedup] Plan owns the Act-3 craft-ref list; plans/4 extends burned/005 for solve cancellation.
+
+
+## docs/plans/4-recommendation.md
+
+- **`docs/plans/4-recommendation.md#5`** · `scope-boundary` · → Engine context note (pointers block) · _reframe_
+  - sig: Act-4 pointers block -> architecture CRN/reduce-to-spine invariants + product §4-§5
+  - The load-bearing invariants Act 4 inherits (CRN/single shared draw, reduce-to-spine byte-identity, externally-derived fixtures, cross-engine headline quantization, worker boundary) live once in architecture; the accumulation/fuck-off-date decision is its own record; the lexicographic objective + lever set are locked in product §4-§5 — all linked, not restated.
+  - [dedup] Architecture, product §4-§5, and decisions/accumulation-fuck-off-date.md are the canonical homes; the plan keeps a pointers block to them.
+  - [reframe] Surviving fact: Act 4's build plan links to canonical invariant/decision/objective homes rather than restating them. Present-tense framing: 'inherited invariants and locks live in architecture / product §4-§5 / the accumulation decision record; this plan references them.'
+  - [fixed:nit] Re-anchored sig to concrete tokens (Act-4 pointers block, CRN/reduce-to-spine, product §4-§5).
+- **`docs/plans/4-recommendation.md#16`** · `build-detail-or-KTD` · → U14 Files — candidates.ts (shared enumerator) · _canonical_
+  - sig: shared candidates.ts enumerator
+  - The policy x cliff-anchored-conversion-grid candidate generation (with the RMD-first legality filter) lives in src/engine/solver/candidates.ts, created in U14 (rankingStability.ts must run the CRN check over the same candidate set U15 scores) and imported by both U14's harness and U15's search.ts so the two can never drift to different candidate sets.
+  - [dedup] U14 owns candidates.ts; U15 Files/Approach reference it (same-doc pointer).
+- **`docs/plans/4-recommendation.md#17`** · `build-detail-or-KTD` · → U14 Files to CREATE · _canonical_
+  - sig: U14 files: optimalityOracle, rankingStability, gradeCalibration, heldOutSeed
+  - U14 creates candidates.ts (enumerator + RMD-first filter), validation/optimalityOracle.ts (the five known-best cases i-v), rankingStability.ts (K-candidate CRN check), gradeCalibration.ts (robust-vs-fragile + shrinkage + named-driver probe), heldOutSeed.ts (A/B harness + deterministic B-family + ε-band), and reference/solver-cases/ (committed hand-derived oracle fixtures, never generated, directional-until-pinned, each storing its preconditions so the harness refuses to apply a known-best outside them).
+- **`docs/plans/4-recommendation.md#18`** · `build-detail-or-KTD` · → U14 Files to MODIFY · _canonical_
+  - sig: U14 modifies constants (ε) + model.ts seedB
+  - U14 modifies src/engine/constants/ (the calibrated survival-equivalent ε stored as an out-of-range-sentinel-guarded value) and src/shared/model.ts (the net-new seedB field alongside the spine's existing seed now read as seedA, under the Act-4 schemaVersion-3 bump); tests are optimalityOracle/rankingStability/gradeCalibration/heldOutSeed .test.ts.
+  - [dedup] model.ts schemaVersion-3 fields are split across U14 (seedB), U15 (chosen-goal), U17 (saved-rec record) — same-doc cross-section, reconcile into one schemaVersion-3 modify list.
+- **`docs/plans/4-recommendation.md#24`** · `build-detail-or-KTD` · → U14 Approach — planted-fail self-test · _canonical_
+  - sig: planted wrong-best must FAIL LOUD
+  - U14: the oracle asserts the solver's ranking puts the known-best candidate first; a planted wrong-best fixture must make the oracle fail loud (burned/070 — the oracle must be able to fail).
+- **`docs/plans/4-recommendation.md#25`** · `build-detail-or-KTD` · → U14 Approach — ranking-stability · _canonical_
+  - sig: K-candidate ranking-stability + presence companion
+  - U14: ranking-stability under CRN generalized to K candidates — the ranking (not just each pairwise delta) is stable on the shared draw matrix; assert all K candidates within a seed-set consume normals identical path-for-path across the survivor transition, and perturbing one candidate's conversion never perturbs another's draw consumption; pair every CRN absence-assertion with a presence companion (burned/027) so a vacuous zero-path pass can't masquerade as stability.
+  - [dedup] U15 Approach references the K-candidate CRN check — same-doc pointer.
+- **`docs/plans/4-recommendation.md#26`** · `build-detail-or-KTD` · → U14 Approach — grade calibration · _canonical_
+  - sig: grade calibration: just-do-it vs coin-flip
+  - U14 grade calibration: grades are robust-across-futures ('just do it') vs fragile ('coin-flip — here's what it hinges on'); 'just do it' is emitted only when the winner's lexicographic advantage over the runner-up holds on held-out B with margin beyond the ε-band, 'coin-flip' when within noise; the oracle hand-supplies one known-robust and one known-fragile case; the N=1 cold-read judges tone, this oracle is the only judge of correctness (R25) — neither substitutes for the other.
+  - [dedup] U16 Approach references the calibrated grade render — same-doc pointer.
+- **`docs/plans/4-recommendation.md#27`** · `build-detail-or-KTD` · → U14 Approach — deterministic B-family / minimum path floor · _canonical_
+  - sig: minimum B path floor + grade-stability + deterministic B-family
+  - U14: because a single held-out B is unbiased but high-variance, the grade is computed over a specified minimum-B-path-floor and a grade-stability check asserts the grade doesn't flip across independent held-out-B draws (a known-borderline case forced conservative); those 'independent draws' are a deterministic SplitMix/hash B-family seedB[0..m-1] re-derivable from the single persisted seedB, so the grade is both stability-checked and byte-reproducible on re-entry; the U15 compute profile must budget the m-draw family.
+  - [dedup] U15 profile (m-draw budget) and U17 re-solve reference this — same-doc pointers.
+- **`docs/plans/4-recommendation.md#28`** · `build-detail-or-KTD` · → U14 Approach — named-driver probe · _canonical_
+  - sig: named-driver sensitivity probe
+  - U14: the grade emits its 'what it hinges on' named driver — gradeCalibration.ts runs a sensitivity probe (re-rank top candidates under the ACA-enhanced-subsidy toggle + a fixture-vintage perturbation) and reports the single input whose flip moves the grade; a pure seed-B near-tie with no identifiable input driver carries a sampling-noise-near-tie sentinel, never a fabricated input cause.
+  - [dedup] U16 Approach renders the named driver — same-doc pointer.
+- **`docs/plans/4-recommendation.md#29`** · `build-detail-or-KTD` · → U14 Approach — grade vs display resolution · _canonical_
+  - sig: grade vs display resolution reconciled
+  - U14: a graded-significant advantage that rounds below one display tenth of the 'X of 10' headline must not render an unchanged 'X of 10' under 'just do it'; the surface either shows the finer figure (surplus $ delta / percentile-shift line) OR the grade requires the advantage to clear BOTH the seed-B ε-band AND one display tenth before 'just do it' (else the sub-tenth win collapses into no-change).
+- **`docs/plans/4-recommendation.md#30`** · `build-detail-or-KTD` · → U14 Approach — seed-B reuse protocol · _canonical_
+  - sig: used-once-per-release seed-B protocol
+  - U14: seed-set B and grade thresholds are drawn under a fresh-draw, used-once-per-release, re-drawn-on-any-change-to-candidates-or-thresholds protocol; the N=1 cold-read may revise tone/copy but never re-tunes the candidate set, thresholds, or survival-equivalence tolerance against B-derived outputs (adaptive reuse re-optimisms B — the garden-of-forking-paths failure).
+- **`docs/plans/4-recommendation.md#31`** · `build-detail-or-KTD` · → U14 Approach — held-out-seed defense / ε calibration · _canonical_
+  - sig: seed-B carries displayed numbers + ε calibration
+  - U14 held-out-seed defense: heldOutSeed.ts runs candidates on A (selection) and B (reporting), each CRN-correct internally; seed-set B carries the displayed numbers (recommended figure + no-action baseline U16 renders), never the seedA selection score; the K-candidate CRN check runs on both A and B; the survival-equivalent ε is calibrated here against the oracle and stored with an out-of-range sentinel (burned/062), its exact pinned value deferred to the Strand-5/healthcare primary-pinning.
+  - [dedup] U15/U16 Approach reference B-displayed numbers — same-doc pointers.
+- **`docs/plans/4-recommendation.md#32`** · `build-detail-or-KTD` · → U14 Approach — two ε quantities · _canonical_
+  - sig: ε resolves into two quantities: display band + selection tolerance
+  - U14: ε resolves into two calibrated quantities — a DISPLAY BAND measured on B (the rendered interval) and a SELECTION TIE-TOLERANCE keyed to the variance of the pairwise difference under CRN (a pre-specified/theoretical SE or computed A-side) that alone decides survival-equivalence; the latter is never a B-measured level band reused to rank; both are sentinel-guarded.
+- **`docs/plans/4-recommendation.md#33`** · `build-detail-or-KTD` · → U14 Approach — the gate (token minting) · _canonical_
+  - sig: U14 mints the oracle-cleared token
+  - U14 mints the opaque oracle-cleared token (constructable only by this harness on a clean pass) that U15's solve-as-recommendation entry takes as a required parameter, so skipping validation is a compile error; the token is withheld until every check passes on pinned fixtures — all five oracle cases, K-candidate ranking-stability, grade calibration (named-driver + deterministic B-family), held-out-seed defense, and the structural pinning clause (every rec-relevant primary pinned + ε calibrated); mirrors Act 1's no-unkeyed-write seam.
+  - [dedup] Contract #1 (architecture) is canonical for the invariant; this is the U14 build step that mints it; U17 gate-red references it — same-doc pointer.
+- **`docs/plans/4-recommendation.md#35`** · `build-detail-or-KTD` · → U14 Verification — pick-quality shrinkage calibration · _canonical_
+  - sig: pick-quality skeptical/Bayesian shrinkage
+  - U14 pick-quality defense is in scope: an honest grade alone doesn't make a near-tie pick optimal, so U15's select.ts applies selection-stage skeptical/Bayesian shrinkage of seed-A scores toward the conventional-ordering prior before argmax, and U14 carries the calibration case — a planted near-tie between two non-conventional candidates must default to the shrunk conventional pick unless a candidate's advantage survives shrinkage, and a known-dominant strategy survives it unchanged; this closes the gap the no-change-vs-conventional net leaves (the curse bites hardest among two aggressive near-ties).
+  - [dedup] U15 Approach implements the shrinkage in select.ts — same-doc pointer.
+- **`docs/plans/4-recommendation.md#36`** · `build-detail-or-KTD` · → U14 Execution note · _canonical_
+  - sig: U14 test-first, first in the act
+  - U14 execution note: test-first and first in the act — the oracle + ranking-stability + calibration fixtures are authored and passing before any src/engine/solver/ code exists; this is the literal expression of 'validation gates the solver.'
+- **`docs/plans/4-recommendation.md#38`** · `build-detail-or-KTD` · → U15 Dependencies · _canonical_
+  - sig: U15 depends on spine, overlays, budget, memoryModel
+  - U15 depends on U14 (the gate); Act 1 (spine + per-year update + CRN draw schedule + sequencing policy substrate; tax-and-accounts overlay; healthcare overlay — ACA fixed-point, IRMAA 2-yr lag, HSA bucket, two MAGI calculators); Act 3 (budget: essentials=Tier-1 floor, discretionary=Tier-2 surplus; roth.ts per-year update shape); Act 2 (memoryModel — solver dispatched through the same orchestrator + request-epoch as the spine).
+  - [dedup] Architecture (overlays) and plans/3 (roth.ts, budget) are canonical for those substrates; this dependency list points to them.
+- **`docs/plans/4-recommendation.md#39`** · `build-detail-or-KTD` · → U15 Files to CREATE · _canonical_
+  - sig: U15 files: search.ts, objective.ts, select.ts, cancel.ts, profile.ts
+  - U15 creates src/engine/solver/search.ts (policy x conversion-grid evaluator on identical CRN draws, reuses the spine's per-year update), objective.ts (lexicographic Tier-1/Tier-2 score), select.ts (deterministic byte-identical selection + retained runner-up), cancel.ts (request-epoch cooperative cancellation), profile.ts (WASM measurement harness / compute-profile gate); tests search/objective/select/cancel/profile .test.ts.
+- **`docs/plans/4-recommendation.md#40`** · `build-detail-or-KTD` · → U15 Files to MODIFY · _canonical_
+  - sig: U15 modifies model.ts chosen-goal + worker gate
+  - U15 modifies src/shared/model.ts (the chosen-goal / Tier-2 pick field under the Act-4 schemaVersion-3 bump; the saved-rec record is U17's), src/store/memoryModel.ts (dispatch the on-demand solve + carry its request-epoch, extending the Act-2 worker handle), and src/engine/engine.worker.ts (expose the solve entry behind the U14 oracle-cleared gate).
+  - [dedup] model.ts schemaVersion-3 fields split across U14 (seedB), U15 (chosen-goal), U17 (saved-rec) — reconcile into one modify list (same-doc).
+- **`docs/plans/4-recommendation.md#42`** · `decision-rationale` · → U15 Approach — cliff-anchored grid · _canonical_
+  - sig: cliff-anchored grid, not uniform
+  - U15: the conversion grid is cliff-anchored not uniform — a correctness requirement: each candidate year includes grid points pinned just under every active ACA 400%-FPL / IRMAA threshold plus a local bisection refinement (a uniform grid steps over the just-under-cliff optimum); bracket-fill fills to the binding effective ceiling (subsidy-aware MAGI in ACA years, next IRMAA step post-65, marginal-rate-aware bracket edge otherwise), never the nominal bracket top; candidate generation is the shared candidates.ts.
+  - [dedup] References U14 candidates.ts — same-doc pointer.
+- **`docs/plans/4-recommendation.md#43`** · `decision-rationale` · → U15 Approach — no-action baseline · _canonical_
+  - sig: no-action baseline is a labeled scored candidate
+  - U15: the no-action baseline is a labeled, scored candidate (the user's current strategy, not a notional default) so every U16 comparison is 'current -> recommended' on identical seed-A/seed-B draws; the search forces the user's current configured strategy in as a labeled baseline (default proportional/conversion-0 if unset); a returning Act-3 user's custom per-bucket order is evaluated as its own labeled baseline outside the named-policy x grid cross-product; the conventional-order/conversion-0 candidate is also always present (oracle case v + shrinkage prior).
+  - [dedup] U16 tax-aware reframe references this baseline — same-doc pointer.
+- **`docs/plans/4-recommendation.md#45`** · `decision-rationale` · → U15 Approach — deterministic selection · _canonical_
+  - sig: deterministic selection + pick-quality shrinkage
+  - U15 deterministic byte-identical selection: select.ts first applies deterministic skeptical/Bayesian shrinkage of seed-A scores toward the conventional-ordering prior (a candidate displaces the conventional pick only if its advantage survives shrinkage; a known-dominant strategy survives unchanged), then selection = quantized lexicographic objective over shrunk scores + fixed lexicographic tie-break (policy enum order -> conversion amount -> years) + a seeded sub-stream orthogonal to A/B; winner + retained runner-up (R23) reproducible from (model, seedA, seedB, goal) alone; no clock/entropy/Math.random.
+  - [dedup] Contract #3 (architecture) is canonical for the byte-identity invariant; U14 pick-quality (same-doc) is the calibration; this is the U15 build face.
+- **`docs/plans/4-recommendation.md#46`** · `decision-rationale` · → U15 Approach — surplus regime · _canonical_
+  - sig: 10/10-clamp surplus regime selection on raw Tier-1
+  - U15 surplus regime: when Tier-1 is maxed across futures the active discriminator is Tier-2 — the solver emits the surplus winner and flags the regime so U16 pivots the headline; the clamp is on the DISPLAY of Tier-1, selection still uses raw pre-clamp Tier-1 to decide survival-equivalence; the flag trips only when B-rendered Tier-1 is within the display-band ε of the ceiling AND both A and B agree the floor is non-binding (both disagreement directions pinned so a survival-edge pick never gets a false 'safe either way').
+  - [dedup] Contract #6 (architecture/product) is canonical for the pivot behavior; U16 surplus pivot is the render side; this is the U15 selection logic.
+- **`docs/plans/4-recommendation.md#48`** · `build-detail-or-KTD` · → U15 Approach — candidate-legality · _canonical_
+  - sig: RMD-first candidate-legality filter
+  - U15 candidate-legality filter before scoring (validate-before-mutate, burned/021): before a {policy, amount, years} candidate is scored, each year past RMD age takes the RMD as a forced non-convertible ordinary-income floor first, the conversion is clamped to the pre-tax balance after the RMD, and a grid amount exceeding post-RMD convertible headroom (or converting in lieu of the RMD) is rejected as infeasible (out-of-range sentinel, never silently scored); the search-space generation owns this so an infeasible candidate never reaches scoring.
+  - [dedup] U14 candidates.ts holds the RMD-first filter — same-doc pointer.
+- **`docs/plans/4-recommendation.md#49`** · `build-detail-or-KTD` · → U15 Approach — bucket precondition · _canonical_
+  - sig: per-account buckets hard precondition
+  - U15: per-account buckets are a hard precondition of the recommendation — the solver searches sequencing x conversion which require per-person pre-tax/Roth/taxable/HSA buckets, so the second beat cannot emit without them; buckets always arrive from account-level intake (R35) so absent-buckets is a defensive edge (legacy v1 vault / direct path); the recommendation-invite triggers the RothAccounts mini-intake when buckets are absent and the solver never runs on a defaulted bucket split (burned/062: a defaulted split is the calm-but-wrong shape).
+  - [dedup] Product R35 canonical for the intake requirement; U16 references the bucket precondition — same-doc pointer.
+- **`docs/plans/4-recommendation.md#50`** · `build-detail-or-KTD` · → U15 Approach — goal precondition · _canonical_
+  - sig: chosen Tier-2 goal hard precondition
+  - U15: a chosen Tier-2 goal is an equally hard precondition (no-discriminator guard) — the lexicographic objective needs a Tier-2 goal to break survival-equivalent ties, so the solve is never dispatched while goal === unset-sentinel; the second beat presents the GoalPicker first ('what matters most to you above safety?') and only dispatches once a goal is set, never running a Tier-1-only solve and crowning the deterministic tie-break as advice; also closes the over-funded-with-no-goal case (the surplus pivot is unreachable until a goal exists).
+  - [dedup] U16 GoalPicker-first references this — same-doc pointer.
+- **`docs/plans/4-recommendation.md#51`** · `build-detail-or-KTD` · → U15 Approach — solve-once + cancellation · _canonical_
+  - sig: solve-once-on-demand + request-epoch cancel
+  - U15 solve-once-on-demand + cooperative cancellation: a recommendation is computed when invited or re-invited (goal re-pick/tune), not live-drag; cancel.ts extends the Act-2 request-epoch + Act-3 generation-counter discipline so each solve carries its dispatch epoch and cancels if superseded (checked between candidates/seed-sets); a calm pending state shows 'working on it…', holds the prior rec visibly-stale-but-labeled (never blanked), paints no partial/fabricated rec, and replaces pending atomically — a multi-second mid-tier-phone solve must read as 'working', never 'broke' (a cold-read subject).
+  - [dedup] burned/005 (request-epoch) lives in insights; U16 GoalPicker re-pick references this — same-doc pointer.
+- **`docs/plans/4-recommendation.md#52`** · `decision-rationale` · → U15 Approach — WASM gate · _canonical_
+  - sig: WASM measurement gate — measured not guessed
+  - U15 WASM gate: profile.ts measures the real on-demand solve cost (named-policies x conversion-grid x 1k paths x SS+ACA fixed-points + IRMAA lag, across both seed-sets A and B, on a mid-tier phone); if it exceeds budget WASM moves from fast-follow to load-bearing — the trigger is measured, the WASM port itself deferred (TS baseline ships, measurement decides promotion; WASM CSP landmine in architecture §9-§10); budget threshold + reference device deferred to implementation; select-on-A + grade-on-B roughly doubles per-candidate cost so the profile measures both, never extrapolates.
+  - [dedup] Architecture §9-§10 canonical for the WASM CSP landmine; roadmap holds the validation-gate listing; this is the U15 build decision.
+- **`docs/plans/4-recommendation.md#53`** · `build-detail-or-KTD` · → U15 Approach — WASM gate worst-case profile · _canonical_
+  - sig: profile compute-worst-case scenario
+  - U15: the profile must run a deliberately compute-worst-case scenario — longest horizon, largest cliff-anchored grid (most active ACA/IRMAA thresholds -> most pinned points + bisection), both pre-65 ACA and post-65 IRMAA regimes exercised — not a median one (the SS/ACA fixed-points converge in 2-3 bounded passes, so worst case is driven by horizon + cliff-count/grid-size, not iteration depth); the profile budgets both seed-sets AND the m-draw held-out B-family, not a single B.
+  - [dedup] References U14 m-draw B-family — same-doc pointer.
+- **`docs/plans/4-recommendation.md#54`** · `decision-rationale` · → U15 Approach — fallback ladder · _canonical_
+  - sig: bounded in-MVP fallback ladder, no WASM dependency
+  - U15: a bounded in-MVP fallback ladder exists that does not depend on the deferred WASM port — (a) coarse-then-refine two-stage search (cheap coarse grid prunes, cliff-anchored just-under-threshold points + bisection spent only around survivors, anchoring stays a correctness requirement applied to survivors); (b) a stated candidate-count ceiling for the interactive solve; (c) if budget is still blown and WASM not built, the recommendation degrades honestly (calm pending full-fidelity solve, or a reduced interactive-path solve explicitly labeled with a full-precision confirm), never silently down-sampling below the path floor the grade needs; the MVP ships degraded-but-honest, never blocks on WASM.
+- **`docs/plans/4-recommendation.md#55`** · `build-detail-or-KTD` · → U15 Approach — wire-shape · _canonical_
+  - sig: K-candidate solve-result wire-shape
+  - U15 solve-result wire-shape (extends Act-1's worker transfer contract, architecture §11): the solve returns one structured payload carrying the full seed-B distributions for the three figures U16 renders — winner, retained runner-up, no-action baseline — plus grade + named-driver + surplus-regime flag, with only those three distributions' buffers in the transfer-list (via Comlink.transfer); pruned/losing candidates return scalar lexicographic scores only (structured-clone, no buffers); per-solve allocation is sized for three distributions + scalars, keeping Act-1's fresh-per-run/retains-none discipline at K-candidate scale.
+  - [dedup] Architecture §11 canonical for the worker transfer contract; this extends it for K candidates.
+- **`docs/plans/4-recommendation.md#58`** · `build-detail-or-KTD` · → U16 Dependencies · _canonical_
+  - sig: U16 depends on spine, copyGuard, viz, budget
+  - U16 depends on U15 (winner, grade, retained runner-up, surplus-regime flag); Act 2 (the spine confidence statement the second beat follows + copyGuard catalog + outcome-state set; colorblind-safe viz primitives + the 'X of 10' display contract, built under back-nine-design law — color is never the only signal); Act 3 (budget two-tier essentials/lifestyle reading + the require-the-hedge lint + the manual-control surfaces the goal re-pick reuses + the sharpen loop the inputs become editable through).
+  - [dedup] back-nine-design skill, plans/2, plans/3 are canonical for those substrates; this dependency list points to them.
+- **`docs/plans/4-recommendation.md#59`** · `build-detail-or-KTD` · → U16 Files · _canonical_
+  - sig: U16 files: Recommendation, ConfidenceGrade, RunnerUp, GoalPicker, RecommendationViz
+  - U16 creates src/ui/Recommendation.tsx, ConfidenceGrade.tsx ('just do it' vs 'coin-flip'), RunnerUp.tsx (retained runner-up + 'why this beat it'), GoalPicker.tsx (leave more / pay less tax / live bigger now), src/viz/RecommendationViz.tsx (string-free two-series, text via props from copy.ts, reusing Act-2 encoding tokens); modifies copy.ts (recommendation/grade/omission-disclosure strings), copyGuard.ts (recommendation slot allowlist + extended require-the-hedge), memoryModel.ts (chosen goal + un-saved recommendation hypothetical); tests recommendation/confidenceGrade/runnerUp/goalPicker.
+- **`docs/plans/4-recommendation.md#60`** · `decision-rationale` · → U16 Approach — recommend-second affordance · _canonical_
+  - sig: recommend-second, invited real control, never auto-trigger
+  - U16 recommend-second never recommend-first (R10): a single calm affordance rendered just below the spine confidence statement that the user activates to open the second beat — never an auto-trigger on scroll/load (R11) and never a directive 'Get our recommendation' CTA (R12 banned imperative/certainty voice); activating it opens the GoalPicker as the first interaction so the second beat begins with 'what matters most to you above safety?' not a fabricated ranked answer.
+  - [dedup] References U15 goal precondition — same-doc pointer.
+- **`docs/plans/4-recommendation.md#61`** · `decision-rationale` · → U16 Approach — no-change state · _canonical_
+  - sig: NO-CHANGE recommendation state
+  - U16 no-change state (R25): when the winner is within the A-side selection tolerance of the no-action baseline (conventional order frequently already optimal — oracle case i/v), the second beat renders a no-change state (reusing Act-2 outcome-state vocabulary) — 'you're already on the best path we found; here's the close runner-up' — wearing its own calibrated hedge, runner-up one tap down; no-change is a SELECTION decision so it's decided on the CRN-difference selection tolerance never a seed-B level band (B supplies only the displayed numbers + grade); fabricating an active move when no-change wins is the cardinal-sin shape; composes with the surplus pivot as 'safe either way, and already on the best surplus path.'
+  - [dedup] References U14 oracle case (v) and U15 surplus regime — same-doc pointers.
+- **`docs/plans/4-recommendation.md#62`** · `decision-rationale` · → U16 Approach — confidence grading render · _canonical_
+  - sig: grade rides the headline, renders not recomputes
+  - U16 confidence grading on the headline (R22): the grade ('just do it' / 'coin-flip — here's what it hinges on') rides the headline never buried; it's the calibrated grade from U14's held-out reporting — the surface renders it, never recomputes robustness; the 'coin-flip' render names what it hinges on (the sensitive input, e.g. 'depends on whether enhanced ACA subsidies return') using U14's gradeCalibration sensitivity-probe named driver (seed-B dispersion can't name which input), and a pure seed-B near-tie carries the sampling-noise-near-tie sentinel — never a fabricated input cause.
+  - [dedup] References U14 grade-calibration named-driver — same-doc pointer.
+- **`docs/plans/4-recommendation.md#64`** · `decision-rationale` · → U16 Approach — tax-blind->tax-aware reframe · _canonical_
+  - sig: tax-blind -> tax-aware delta-led reframe
+  - U16 tax-blind->tax-aware reframe (R8/R10): the Act-2 spine headline runs overlays OFF (tax-blind, on seedA, never overwritten); the recommendation's baseline + recommended numbers are tax-aware (overlays ON, on seedB), so the no-action baseline can read different from the tax-blind spine number; inherit Act-3's delta-led reframe ('now that we know your account types, this is the tax-aware picture') so the shift reads as a sharpening never a silent downgrade; the magnitude attributed to taxes is ONLY the seedB overlays-off->on delta — the baseline-vs-spine difference is framed qualitatively as a sharper picture, never quantified (the residual seedA<->seedB difference is sampling not taxes).
+  - [dedup] plans/3 delta-led reframe is the origin; the standing rules also stated in the changelog block (item 88) — reconcile the three standing honesty rules into the unit bodies.
+- **`docs/plans/4-recommendation.md#65`** · `decision-rationale` · → U16 Approach — comparative transparency · _canonical_
+  - sig: runner-up retained, delta as non-color hero
+  - U16 comparative transparency (R23): RunnerUp.tsx keeps and surfaces the runner-up (U15 retained it) — 'why this beat the runner-up,' not a formula dump — rendered via RecommendationViz as a two-series recommended-vs-runner-up (or recommended-vs-current) using Act-2's colorblind-safe encoding tokens + the delta-as-hero treatment (Act-3 TwoFutures lineage); the N=1 reader is color blind so the delta carries a non-color hero signal (back-nine-design law).
+  - [dedup] back-nine-design skill + plans/3 TwoFutures are canonical for those substrates; this points to them.
+- **`docs/plans/4-recommendation.md#66`** · `decision-rationale` · → U16 Approach — disclosed omissions · _canonical_
+  - sig: disclosed omissions adjacent to the delta
+  - U16 disclosed omissions adjacent to the delta (R24): ACA-PTC + IRMAA are IN the model (a disclosed omission can invert a ranking); NIIT + state tax are disclosed in plain language next to the delta never silently dropped; for 'leave more' the bequest is the after-tax-to-heirs figure (first-order §1014/IRD modeled into the objective) with the assumed heir tax bracket a disclosed R7-editable assumption adjacent to the leave-more delta; the held-fixed SS claim age is disclosed ('this assumes your current claim ages') as it could invert the ranking but isn't a solver control in MVP (chapter-two); the funding-not-lifestyle honesty note rides 'live bigger'/'leave more'; SLCSP/CSR caveats are surfaced when the delta leans on ACA, especially under a fallback SLCSP.
+  - [dedup] Contract #7 (architecture/product) is canonical for the disclosed-omission rule; plans/3 (SLCSP/CSR) + research/pre65-healthcare.md hold those caveats; this is the U16 render face.
+- **`docs/plans/4-recommendation.md#68`** · `decision-rationale` · → U16 Approach — explicit save gesture · _canonical_
+  - sig: saving is explicit committed gesture, never inferred
+  - U16: saving a recommendation is an explicit committed gesture never inferred — a solved recommendation lives in memoryModel as an un-saved hypothetical until the user deliberately commits via a calm 'save this recommendation' gesture; the tool never auto-saves on solve/close/goal-re-pick because U17 treats a saved rec as a real executed action with serious staleness consequences, and that severity is only honest if the user consciously committed; the un-saved hypothetical can be tuned/re-picked/abandoned freely with no staleness obligation; only the explicit commit mints the saved-rec record (U17 schemaVersion-3 write).
+  - [dedup] U17 first-save-mints-v3 references this — same-doc pointer.
+- **`docs/plans/4-recommendation.md#69`** · `build-detail-or-KTD` · → U16 Approach — require-the-hedge lint · _canonical_
+  - sig: require-the-hedge lint extended to recommendation
+  - U16 require-the-hedge lint extended to the recommendation (R12): all recommendation strings route through copy.ts, RecommendationViz stays string-free (text via props, burned/063); copyGuard's require-the-hedge (the positive/require assertion from Act 3) asserts the recommendation headline + grade copy each carry a probabilistic hedge, certainty verbs ('guaranteed/optimal/locks in/you will save') stay banned; the 'just do it' collision is resolved — the lint applies to the rendered grade sentence (which must hedge, e.g. 'across the futures we tested, this holds up — just do it') and exempts the bare enum label as an internal identifier; new allowlist slots: strategy descriptor, grade label, ~$X surplus delta, X-of-10 shift (added to the catalog-enumeration test).
+  - [dedup] Contract #7 (architecture/product R12) is canonical for the hedge rule; plans/3 holds the lint origin; burned/063 is the string-free-viz lesson; this is the U16 extension.
+- **`docs/plans/4-recommendation.md#74`** · `build-detail-or-KTD` · → U17 Dependencies · _canonical_
+  - sig: U17 depends on re-solve path, staleness map, encrypted store
+  - U17 depends on U15 (the re-solve path); U16 (the re-presented recommendation surface + grade render); Act 3 (the per-surface staleness map + the returning-user re-entry this inverts for a recommendation); Act 1 (the encrypted store + the saved-recommendation record's persistence — architecture §7.3); src/engine/constants/ (the year-keyed fixtures whose vintage drives staleness).
+  - [dedup] Architecture §7.3 + plans/3 (staleness map) are canonical for those substrates; this dependency list points to them.
+- **`docs/plans/4-recommendation.md#75`** · `build-detail-or-KTD` · → U17 Files · _canonical_
+  - sig: U17 files: recStaleness.ts + saved-rec record
+  - U17 creates src/store/recStaleness.ts (the inverted recommendation-staleness rule + ACA-status re-verify gate); modifies src/shared/model.ts (the saved-recommendation record — strategy + as-recommended fixture-vintage stamps + a solver/engine-code version stamp + seedA/seedB/goal — under the single Act-4 schemaVersion-3 bump; never-depleted surplus/serialization sentinels are out-of-range values not Infinity/NaN per DND 009, and execution status is NOT tracked — the sentinel is a surplus value not an execution flag, the inversion is precautionary), staleness.ts (register the recommendation as a surface whose rule inverts), ReEntry.tsx (surface the re-solved rec + 'may no longer be advised' copy); tests recStaleness/reentry-recommendation.
+  - [dedup] model.ts schemaVersion-3 fields split across U14/U15/U17 — reconcile into one modify list; architecture §7.3/§8 canonical for the sentinel + persistence discipline.
+- **`docs/plans/4-recommendation.md#77`** · `decision-rationale` · → U17 Approach — staleness copy · _canonical_
+  - sig: staleness copy = action warning, not number drift
+  - U17 staleness copy reads as an action warning not a number drift: when the saved rec's fixture vintage (tax-table / RMD-age / senior-bonus sunset / ACA-PTC regime / IRMAA brackets) moved since save, copy reads 'the action we recommended may no longer be advised' with the re-solved current rec alongside — not 'your number drifted'; the quietest stale shape is the SAME strategy whose outcome degraded (same strategy returned but grade fell 'just do it'->'coin-flip', or delta turned negative under current law), which reads 'still fine' to a user who recognizes it, so it carries its own copy — 'still the best of the options, but it's now a coin-flip / no longer ahead — here's what changed' — surfacing the degraded grade or sign flip prominently.
+- **`docs/plans/4-recommendation.md#78`** · `build-detail-or-KTD` · → U17 Approach — stale-when-any-fixture-moves · _canonical_
+  - sig: stale when ANY rec-relevant fixture moves
+  - U17: a recommendation is stale when any rec-relevant fixture moves (more than the tax-blind spine): tax-table vintage, RMD-age rule, senior-bonus-deduction sunset, ACA-PTC regime, OR IRMAA brackets (Strand 5 + healthcare), each routed through the canonical constants vintage stamps (no fixture re-typed here); also stale on model-input drift — a confirmed per-bucket balance/split change (a conversion sized to a specific pre-tax pool is far more balance-sensitive than the spine; a drifted pool can trip an ACA cliff or make the saved amount infeasible) AND a budget-window advance (a time-boxed line past its endYear), reusing Act-3's per-bucket balance-drift confirm; and a solver/engine-code version change (grid resolution, ε, objective quantization, tie-break order) is itself a staleness trigger forcing a re-solve, never hidden behind byte-identity.
+  - [dedup] research/engine-validation-and-tax.md §Strand 5 + plans/3 (balance-drift confirm) are canonical for those substrates; this is the U17 staleness-trigger build detail.
+- **`docs/plans/4-recommendation.md#79`** · `build-detail-or-KTD` · → U17 Approach — re-verify ACA · _canonical_
+  - sig: re-verify ACA status — can flip the whole model
+  - U17: re-verify the ACA legislative status — it can flip the whole model (R24, healthcare §2): the enhanced-ACA-subsidy status is live, possibly-retroactive policy; if restored the 400% FPL cliff disappears and the pre-65 conversion calculus flips (can invert which strategy wins); recStaleness.ts carries ACA-status as a first-class staleness driver (a saved rec under the 2026 cliff-on base case is always flagged for re-solve if the status changed since save); the build-time re-verify is the roadmap verify:aca gate, this unit consumes its result; distinguish a forward regime change (re-solve forward) from a retroactive one (a past action's cost can change after the fact — surface a distinct generic note, phrased generically because execution and tax-year aren't tracked).
+  - [dedup] CLAUDE.md (verify:aca gate, reVerifyEveryBuild) + research/pre65-healthcare.md §2 + architecture (constants discipline) are canonical; this is the U17 consumer build detail.
+- **`docs/plans/4-recommendation.md#81`** · `decision-rationale` · → U17 Approach — gate-red fallback · _canonical_
+  - sig: GATE-RED-AT-RE-ENTRY fallback branches on why
+  - U17 gate-red-at-re-entry fallback (undefined-state guard): the re-solve calls U15 which refuses to emit while the oracle-cleared token is absent; the token is withheld for more than one reason and the fallback branches on WHY — (a) ACA status unverified (the in-flux case this unit most cares about) -> 'we can no longer stand behind this and cannot currently re-verify the law — do not act on it until confirmed'; (b) a rec-relevant primary still directional or ε uncalibrated (the un-pinned-build default) -> 'this recommendation isn't validated on this version yet — don't act on it until it is'; in every case neither re-present-stale nor re-solve is legal, so the saved strategy is shown clearly marked with the matching reason, never re-presented as advised and never silently suppressed (recStaleness.ts reads the token's withheld-reason, never assumes the law is the cause).
+  - [dedup] Contract #1 (architecture) + U14 token are canonical for the token gate; this is the U17 consumer fallback.
+- **`docs/plans/4-recommendation.md#83`** · `build-detail-or-KTD` · → U17 Approach — v2->v3 upgrade · _canonical_
+  - sig: v2->v3 vault upgrade, first-save-mints-v3
+  - U17 v2->v3 vault upgrade: the v3 bump fires on exactly one event — the first explicit save of a recommendation (U16's deliberate commit) — never on a goal-pick/solve/un-saved hypothetical (so seedB is always derived and the goal always set before a v3 record exists; a v3 blob with a null seedB is unreachable); on an existing on-disk vault it goes through Act-1's model-only re-encrypt (same DK, fresh IV, wraps untouched — the atomic path Act 3 uses for v1->v2, so an aborted upgrade still decrypts the intact v2); a brand-new user whose first-ever Save IS a saved recommendation mints a v3 blob directly through Act-1's keyed first-save path (the re-encrypt upgrade path is only for an existing vault advancing versions, never a precondition for reaching v3).
+  - [dedup] Architecture §7.3 (model-only re-encrypt, first-save atomicity) canonical; plans/3 holds the v1->v2 path; references U16 explicit save (same-doc).
+- **`docs/plans/4-recommendation.md#84`** · `build-detail-or-KTD` · → U17 Approach — re-solve reuses seeds · _canonical_
+  - sig: re-solve: saved seeds, current fixtures
+  - U17 re-solve reuses the saved seeds for continuity, current fixtures for honesty: it runs U15 on the saved seedA/seedB/goal (futures continuous with what the user saw) but under the current fixtures AND current confirmed balances/budget (never the saved pre-confirm balances; a drifted split re-confirms through Act-3's gate before re-solve); reusing the saved seedB under changed fixtures does not contaminate the held-out even when the candidate set's size/shape changes — hold-out validity comes from seedB ⊥ seedA (seed-input decorrelation), not from any binding to a candidate set; the re-solve recomputes the grade on the seedB-family over the CURRENT candidates (never re-presents the saved grade) and still selects on A grades on B, never selecting on B.
+  - [dedup] Contract #2 (architecture) + U14 held-out are canonical for the seedB ⊥ seedA discipline; this is the U17 re-solve application.
+- **`docs/plans/4-recommendation.md#87`** · `build-detail-or-KTD` · → U17 Execution note · _canonical_
+  - sig: U17 test-first on inversion + sentinel round-trip
+  - U17 execution note: test-first on the inversion (a moved fixture must re-solve, never re-present) and the sentinel round-trip (decide the saved-record serialization before the schema locks) — both are correctness anchors, not UI polish.
+- **`docs/plans/4-recommendation.md#88`** · `status-as-built` · → U15 absent-buckets edge + U16 reframe (three standing honesty rules) · _reframe_
+  - sig: account-aware-from-start + three standing honesty rules
+  - Standing as-built fact (post-accumulation-fold): per-account buckets, contributions, and healthcare inputs arrive up-front from the account-level intake (the R26-R39 / R35 setup) so the first answer is account-aware from the start and the overlays are active wherever entered streams support them; consequently U15's absent-buckets case is a defensive edge (legacy v1 vault / direct path) and U16's reframe re-derives from the account-aware baseline; the three honesty rules stand unchanged — the delta-led honesty rule, the never-overwrite-the-saved-headline rule, and the never-quantify-the-seedA<->seedB-residual rule; everything else in this act (oracle-before-solver, held-out seed-B machinery, objective ≡ headline, U17's inverted stale-rec rule) stood unchanged through the fold.
+  - [dedup] Product R26-R39/R35 + decisions/accumulation-fuck-off-date.md are canonical for the account-aware-from-start fact; the three standing honesty rules belong in the U15/U16 unit bodies; U15 item 49 + U16 item 64 already carry them.
+  - [reframe] Surviving fact: per-account buckets/contributions/healthcare arrive up-front (account-aware from the first answer), so U15's absent-buckets is a defensive edge and U16's reframe re-derives from the account-aware baseline; the three honesty rules (delta-led, never-overwrite-the-saved-headline, never-quantify-the-seedA<->seedB-residual) hold. Present-tense framing: state these as standing facts inside the U15/U16 unit bodies; drop the 'what-it-superseded' changelog narration (per fossilNote).
+- **`docs/decisions/accumulation-fuck-off-date.md#72`** · `number-or-figure` · → U15 profile.ts (date-search two-budget gate) · _reframe_
+  - sig: §3c profile gate two budgets: 2000 + 16k
+  - §3c: the profile gate (mirroring P4·U15's profile.ts) carries TWO budgets — the provisional-refire interactive budget at 2000 paths and the final-crown on-demand budget at 16k (the WASM threshold keys off the latter) — measured on a mid-tier device, threshold deferred to measurement.
+  - [dedup] Profile-gate build detail homed with P4·U15's profile.ts; the date-search budgets cross-ref C3.
+  - [reframe] Present-tense: profile.ts carries two date-search budgets (2000 provisional, 16k final-crown / WASM-threshold), measured on a mid-tier device.
+- **`docs/research/engine-validation-and-tax.md#6`** · `requirement` · → Solver validation case class (a) · _canonical_
+  - sig: optimality ranking oracle hand-computable cases
+  - Solver case class (a): optimality/ranking oracle — hand-computable cases where the best drawdown/conversion order is known (taxable→tax-deferred→Roth; textbook bracket-filling Roth optimum) so a confidently-wrong recommendation fails loud.
+  - [dedup] plans/4-recommendation is canonical for the build-side case class; roadmap holds the gate.
+- **`docs/research/engine-validation-and-tax.md#7`** · `requirement` · → Solver validation case class (b) · _canonical_
+  - sig: ranking-stability under CRN K candidate strategies
+  - Solver case class (b): ranking-stability under CRN — the full ranking (not just pairwise deltas) must be stable on the shared draw matrix; generalize the 2-arm CRN test to K strategies with identical normals path-for-path across the MFJ→single transition.
+  - [dedup] plans/4-recommendation canonical for the case class; architecture.md is canonical for the underlying CRN invariant it generalizes (pointer).
+- **`docs/research/engine-validation-and-tax.md#8`** · `requirement` · → Solver validation case class (c) · _canonical_
+  - sig: grade calibration just do it actually robust
+  - Solver case class (c): grade calibration — 'just do it' must actually be robust across futures and 'coin-flip' actually a coin-flip; the N=1 cold-read judges tone but cannot judge correctness, so this automated oracle is the only correctness backstop.
+  - [dedup] plans/4-recommendation canonical for the case class; CLAUDE.md (oracle judges correctness, cold-read judges tone) is the summary pointer.
+- **`docs/research/engine-validation-and-tax.md#9`** · `requirement` · → Solver validation / optimizer's-curse · _canonical_
+  - sig: optimizer's-curse held-out seed-set
+  - Optimizer's-curse correction: argmax over many candidates on one seed overfits that seed's noise, so report graded confidence on an independent held-out seed-set (or paired top-K dispersion); pinning the tax-reference primaries is a hard solver prerequisite, not a residual gate.
+  - [dedup] plans/4-recommendation canonical for the build-side correction.
+
+
+## docs/decisions/accumulation-fuck-off-date.md
+
+- **`docs/product.md#7`** · `decision-rationale` · → Decision: accumulation as a bounded on-ramp, fuck-off-date framing · _reframe_
+  - sig: accumulation is a bounded near-retirement on-ramp, never FIRE
+  - Accumulation is a bounded near-retirement on-ramp serving the decumulation strategist (never a FIRE calculator); v1 projects the stated savings plan but does not optimize it, and the decumulation strategist remains the center of gravity. (The 2026-06-08 R26-R39 expansion added the accumulation phase and the fuck-off-date framing — not a new engine, the same confidence engine swept over the work-stop date-offset.)
+  - [dedup] The bounded-on-ramp-not-FIRE rationale is canonical in decisions/accumulation-fuck-off-date.md#4 — this row collapses into it as a pointer/contributor (do NOT restate the FIRE/R25 rationale a second time); the surviving scope facts also echo R30/R32 and product scope boundaries (pointers).
+  - [reframe] Strip the 'v2 thesis was decumulation-only / while scoping HSA we discovered zero-contribution / the 2026-06-08 expansion added' story. This row is a pointer into accumulation#4's canonical bounded-on-ramp rationale; its surviving contribution is only the present-tense scope facts — accumulation reuses the existing confidence engine swept over the work-stop date-offset, projects (not optimizes) the stated savings plan, and serves the decumulation strategist that stays the center of gravity.
+  - [fixed:nit] product#7 ceded to accumulation#4 as pointer; FIRE rationale not restated.
+- **`docs/roadmap.md#98`** · `decision-rationale` · → Intake-flow decision (account-level setup vs single-spend on-ramp) · _reframe_
+  - sig: first answer from ~5-min account-level setup spend still collected
+  - Intake-flow decision: the first answer comes from a ~5-min account-level guided setup (R35); the household spend figure is still collected as an input — only the flow shape is account-level, not single-total-spend.
+  - [dedup] Intake-flow decision rationale homed in decisions/accumulation-fuck-off-date.md (the R35 reshape); R5/R35 trace mappings in roadmap; product.md carries the requirements; the ~3-min v2 framing is droppable history.
+  - [reframe] Strip 'the v2 ~3-minute single-spend on-ramp was replaced / struck / master edit folded 2026-06-10' changelog framing; the ~3-min v2 magnitude is droppable. Present-tense surviving fact: the first answer comes from a ~5-min account-level guided setup; the household spend figure is still a collected input.
+- **`docs/architecture.md#60`** · `decision-rationale` · → End-of-year face-value crediting decision · _reframe_
+  - sig: stepYear one crediting owner end-of-year face value
+  - stepYear is the one crediting owner: the contribution is credited end-of-year at face value (a contributed dollar earns no growth in its arrival year — conservative; full-year crediting would overstate the onset balance → a falsely-early date, the calm-but-wrong-optimistic sin); the overlay fold is after the bucket-scale; a taxable contribution raises basis at full value; contribution never enters draw pool / RMD base / basis denominator; employer match → pre-tax even on a Roth 401k.
+  - [dedup] decision-rationale → decisions/accumulation-fuck-off-date (canonical for the WHY). The stepYear crediting mechanic also surfaces in architecture §7.4. duplicatedIn names this same decision record.
+  - [reframe] Present-tense: we credit accumulation contributions end-of-year at face value because full-year crediting would overstate the onset balance and yield a falsely-early fuck-off date — the calm-but-wrong-optimistic sin. The dated-amendment framing dies; the rationale survives.
+- **`docs/plans/1-engine.md#5`** · `decision-rationale` · → extend-never-reopen rationale · _reframe_
+  - sig: C1-C3 extend never reopen U0-U3
+  - C1-C3 land at engine altitude and EXTEND, NEVER REOPEN the shipped U0-U3 contracts; the construct-absent / Y==0 byte-identity goldens prove the spine and every shipped fixture stay unperturbed; the C1/C2/C3 IDs are kept.
+  - [dedup] Decision rationale canonical in decisions/accumulation-fuck-off-date.md; the extend-never-reopen contract is also asserted in architecture.
+  - [reframe] Surviving fact: C1-C3 are first-class engine units that extend U-numbering and never reopen U0-U3 contracts, proven by construct-absent / Y==0 byte-identity goldens. Present-tense framing: drop the '2026-06-08 amendment / accumulation fold block' dated framing; state it as standing engine-altitude policy.
+- **`docs/plans/1-engine.md#51`** · `decision-rationale` · → contribution-ceiling per-runway-year decision · _reframe_
+  - sig: contribution limits are input sanity ceilings per-runway-year
+  - C1: contribution limits are INPUT SANITY CEILINGS + the intake per-runway-year expansion rule, NOT engine math; the R19 ceiling validates against the current age's tier; because an age-band ceiling can expire mid-runway (SECURE 2.0 §109's 60–63 super catch-up ends at 64), intake applies the ceiling PER RUNWAY YEAR (super for 60–63, stepped to age-50 tier at 64) to avoid compounding legally-impossible contributions (the calm-but-wrong-optimistic sin); the conservative mirror stays unmodeled.
+  - [dedup] R31/R19 canonical in product; the choose-input-ceiling-with-per-runway-year-expansion rationale is canonical in decisions/accumulation-fuck-off-date.md.
+  - [reframe] Surviving fact: contribution limits act as per-runway-year input ceilings (not engine math); the SECURE 2.0 §109 60–63 super catch-up steps down to the age-50 tier at 64 so a flat projection cannot compound impossible contributions. Present-tense framing: state as standing decision rationale; drop the '2026-06-08 accumulation fold' framing, keep the C1 ID.
+  - [fixed:nit] Retained SECURE 2.0 §109 citation in surviving fact.
+- **`docs/plans/1-engine.md#58`** · `decision-rationale` · → crediting-convention decision · _reframe_
+  - sig: end-of-year crediting conservative no arrival-year growth
+  - C2 crediting convention is the conservative one: a contributed dollar earns NO growth in its arrival year (end-of-year crediting; full-year would overstate onset balance → falsely-early date); employer match→pre-tax even on a Roth 401k; a taxable contribution raises basis at full unscaled value; the contribution never enters the draw pool, the RMD forced-excess base, or the basis denominator.
+  - [dedup] The choose-end-of-year-because-conservative rationale is canonical in decisions/accumulation-fuck-off-date.md; architecture §7.4 carries the mechanical placement.
+  - [reframe] Surviving fact: end-of-year crediting is chosen because full-year crediting would overstate the onset balance and yield a falsely-early date. Present-tense framing: standing decision; drop the 'fold' framing, keep C2 ID.
+- **`docs/plans/1-engine.md#60`** · `decision-rationale` · → healthcare-off-by-stream-construction decision · _reframe_
+  - sig: healthcare off during accumulation is stream construction not engine gate
+  - C2: healthcare-OFF during accumulation is delivered by the date-search's stream construction (C3), NOT an engine gate; C2 owns only the contribution inflow + working-year clamp and does NOT assume the overlay age-gate is inert in working years (a mid-50s couple has pre65>0 every working year — healthcare stays off only because the streams are zero there).
+  - [dedup] R33 canonical in product; C3 owns the stream construction (same plan); the why-not-an-engine-gate rationale is canonical in decisions/accumulation-fuck-off-date.md.
+  - [reframe] Surviving fact: healthcare-off in working years comes from zero-valued streams (C3 construction), not an engine age-gate; C2 owns only inflow + clamp. Present-tense framing: standing decision; drop the 'CORRECTED / fold' framing, keep C2 ID.
+- **`docs/plans/1-engine.md#61`** · `invariant` · → C2 golden-set record · _reframe_
+  - sig: C2 goldens Σbuckets==runningTotal destination-bucket direction
+  - C2 goldens as shipped: construct-absent byte-identity on BOTH MC and Trinity paths (+ the zero-valued-but-constructed negative companion); Σbuckets==runningTotal after every contribution year; the destination-bucket golden (named bucket += exactly the contribution; a proportional smear fails it); the direction golden (end-of-year crediting yields onset balance ≤ start-of-year-credited); the empty phase (Y==0) consumes zero extra draws and is byte-identical at the same dimensions.
+  - [dedup] The golden-set is recorded in decisions/accumulation-fuck-off-date.md (the §0–§7 record); architecture §5/§7.4 carries the underlying byte-identity invariant.
+  - [reframe] Surviving fact: C2's golden set (construct-absent byte-identity on both paths + negative companion, Σ==total, destination-bucket, direction, Y==0 zero-extra-draws). Present-tense framing: standing golden record; drop the 'as shipped / fold' framing, keep C2 ID.
+- **`docs/plans/1-engine.md#64`** · `invariant` · → buildCandidateParams single-owner record · _reframe_
+  - sig: buildCandidateParams(Y) single owner pure transform
+  - C3 buildCandidateParams(Y) is the SINGLE OWNER of Y-dependent construction (a pure transform of the ORIGINAL entered params, never progressively mutated): from one Y it derives per-person retirementAge overrides (still-working retire offset = Y; already-retired kept verbatim, never un-retired into phantom income), contribution/match streams truncated to [0,Y), and healthcare streams+onset+override; SS claim ages held as entered (claim NOT searched); a test asserts all three boundaries coincide at t=Y for a DIFFERENT-currentAge couple (same-age fixture banned as vacuous).
+  - [dedup] Recorded in the §0–§7 decision record (per-candidate stream construction); architecture carries the pure-transform engine seam.
+  - [reframe] Surviving fact: buildCandidateParams(Y) is the single pure owner of all Y-dependent construction; SS claim age is not searched; the boundary-coincidence test uses a different-age couple. Present-tense framing: standing contract; drop the 'fold' framing, keep C3 ID.
+- **`docs/plans/1-engine.md#69`** · `decision-rationale` · → two-dates-degenerate decision · _reframe_
+  - sig: two dates coincident degenerate single-total-spend budget
+  - C3 two dates are coincident in the degenerate case: with a single-total-spend budget the two tracks are byte-identical ⇒ the dates coincide ⇒ one date; the budget split (Act 3·U9) separates them (C3 ships the engine + single-track date now, the mixed-outcome shape lands now, the behavioral test rides U9); floor ≤ lifestyle is an EXPECTED property on discontinuity-free fixtures, NEVER an engine assertion (the 100%-FPL eligibility floor can legitimately invert it).
+  - [dedup] R27 canonical in product; the floor-and-lifestyle-coincide-without-a-budget-split rationale is canonical in decisions/accumulation-fuck-off-date.md.
+  - [reframe] Surviving fact: floor and lifestyle dates coincide under a single-total-spend budget; the U9 budget split separates them; floor ≤ lifestyle is expected (discontinuity-free) but never asserted (the 100%-FPL floor can invert it). Present-tense framing: standing decision; drop the 'ships now / fold' framing, keep C3 ID.
+- **`docs/plans/1-engine.md#81`** · `build-detail-or-KTD` · → §0–§7 record (self/identity) · _pointer_
+  - sig: accumulation decision record §0–§7 date-search-is-not-the-solver
+  - The accumulation / fuck-off-date engine decision record is the permanent §0–§7 record of WHY C1–C3 are built as they are (one continuous timeline, the signed inflow + its golden, the date-search-is-not-the-solver stance, per-candidate stream construction); the C-unit bodies cite '§3b', '§7', etc. into it.
+  - [dedup] Canonical home is decisions/accumulation-fuck-off-date.md itself; the C-unit plan bodies keep citation pointers into its §-anchors.
+  - [reframe] Surviving fact: the §0–§7 accumulation decision record holds the WHY for C1–C3 (continuous timeline, signed inflow + golden, date-search-is-not-the-solver, per-candidate stream construction) and the C-unit bodies cite into it. Present-tense framing: state as the standing decision record; this row is the pointer to its canonical home.
+- **`docs/plans/2-first-answer.md#3`** · `decision-rationale` · → D1/U5 reshape rationale · _reframe_
+  - sig: D1 IS the U5 reshape, spend figure survives
+  - D1 is the U5 reshape (not a separate post-ship reshape): the account-level flow built U5's planned primitives in one pass; the household retirement-spend figure survives as a collected input — only the flow shape was replaced, not the spend input.
+  - [dedup] Decision record canonical for the reshape rationale; roadmap keeps the U5/D1 status mapping as a pointer.
+  - [reframe] Forward-only: state present-tense that D1 builds U5's progressive/engine-gated/commit-triggered architecture AND the account-level flow, and the retirement-spend figure is a collected input — drop the 'U5 planned then expansion replaced it' history.
+- **`docs/plans/2-first-answer.md#33`** · `decision-rationale` · → bucket-split inversion rationale · _reframe_
+  - sig: deferred-bucket-split INVERTED; v2-with-accounts shape
+  - The deferred-bucket-split decision is inverted: R35 brings account buckets up-front (the old U5 plan deferred them to Act 3 to protect a 3-min on-ramp); the first Save now serializes the v2-with-accounts shape directly and U4's additive migration ladder owns the schema bump (R39).
+  - [dedup] Decision record canonical for the inversion rationale; plans/1-engine (U4 migration ladder) carries the schema-bump pointer.
+  - [reframe] Forward-only: state present-tense that account buckets are collected up-front under R35 and the first Save serializes the v2-with-accounts shape — drop the 'old U5 plan deferred them' framing, keep only that this protects neither a 3-min on-ramp nor a coarse-then-detailed re-entry.
+- **`docs/plans/4-recommendation.md#19`** · `decision-rationale` · → [REHOME → docs/plans/4-recommendation.md] oracle case (i) — conventional-order preconditions · _reframe_
+  - sig: oracle case (i) conventional ordering constant-rate only
+  - Oracle case (i): conventional taxable->tax-deferred->Roth ordering is optimal ONLY in a constant-marginal-rate world (no RMD/SS-tax/cap-gains-stacking/cliff/bequest), stated as the fixture's gating preconditions; a low-other-income world is explicitly the bracket-filling regime (case ii), so the oracle must never be hardcoded to conventional ordering there.
+  - [reframe] Surviving fact: conventional drawdown ordering is the known-best only under constant marginal rate; otherwise the oracle uses the regime-appropriate case. Present-tense framing: a documented solver-correctness decision (why each oracle fixture is gated by preconditions). NOTE: this is a solver-validation KTD, not an accumulation decision — see confidence flag.
+  - [fixed:warn] Rehomed to plans/4-recommendation.md (recommendation-solver oracle topic).
+- **`docs/plans/4-recommendation.md#20`** · `decision-rationale` · → [REHOME → docs/plans/4-recommendation.md] oracle case (ii) — marginal-rate equalization · _reframe_
+  - sig: oracle case (ii) bracket-fill marginal-rate equalization
+  - Oracle case (ii): bracket-filling Roth conversion optimum (fill to top of a target bracket, no further) holds only in a stripped case (SS-tax, cap-gains/QD stacking, all cliffs OFF) where in-bracket marginal rate is flat; the real rule is marginal-rate equalization — 'bracket top' is a coincidence of the simplified world, never the rule the solver learns.
+  - [reframe] Surviving fact: the conversion optimum is marginal-rate equalization, not literal bracket-top; the bracket-top fixture is only valid in the stripped flat-rate world. Present-tense framing: a solver-correctness decision documenting the real rule behind the oracle fixture. NOTE: solver-validation KTD; home is arguable (see flag).
+  - [fixed:warn] Rehomed to plans/4-recommendation.md (recommendation-solver oracle topic).
+- **`docs/plans/4-recommendation.md#21`** · `decision-rationale` · → [REHOME → docs/plans/4-recommendation.md] oracle case (iii) — cliff-aware ceiling · _reframe_
+  - sig: oracle case (iii) cliff-aware sign inversion
+  - Oracle case (iii): a cliff-aware case where filling past an ACA 400%-FPL ceiling or an IRMAA step LOSES, so the healthcare-blind ranking is sign-inverted; the binding ceiling is the subsidy-aware MAGI/IRMAA-step line not the bracket top — cases (ii) and (iii) are separate worlds (healthcare off vs on) and a fixture's known-best is never applied across that boundary.
+  - [reframe] Surviving fact: past an ACA/IRMAA cliff the conversion ranking inverts; the binding ceiling is the subsidy-aware MAGI line, and healthcare-off vs healthcare-on are separate oracle worlds. Present-tense framing: a solver-correctness decision documenting the cliff-aware fixture boundary. NOTE: solver-validation KTD (flagged).
+  - [fixed:warn] Rehomed to plans/4-recommendation.md (recommendation-solver oracle topic).
+- **`docs/plans/4-recommendation.md#22`** · `decision-rationale` · → [REHOME → docs/plans/4-recommendation.md] oracle case (iv) — after-tax-to-heirs known-best · _reframe_
+  - sig: oracle case (iv) after-tax-leave-more inversion
+  - Oracle case (iv): a leave-more case where the gross-bequest-best strategy is NOT the after-tax-best — the §1014 step-up/IRD treatment inverts the ranking (preserving a taxable bucket that steps up at death beats converting pre-tax the heirs owe IRD on at the assumed bracket), so the oracle's known-best is the after-tax-to-heirs winner and a solver that argmaxes gross bequest fails loud.
+  - [reframe] Surviving fact: for 'leave more', the after-tax-to-heirs winner can differ from the gross-bequest winner because of §1014/IRD; the oracle's known-best is the after-tax one. Present-tense framing: a solver-correctness decision (the hand-derived guard that the after-tax objective is the one optimized). NOTE: solver-validation KTD (flagged).
+  - [fixed:warn] Rehomed to plans/4-recommendation.md (recommendation-solver oracle topic).
+- **`docs/plans/4-recommendation.md#23`** · `decision-rationale` · → [REHOME → docs/plans/4-recommendation.md] oracle case (v) — no-change known-best · _reframe_
+  - sig: oracle case (v) no-change known-best
+  - Oracle case (v): a no-change case where conventional drawdown + zero conversion is the known-best for the (model, goal); the oracle asserts the solver routes to the no-change state (U16) and crowns no fabricated active move — which requires the search space to always contain the conventional-order/conversion-0 candidate as a labeled baseline (U15).
+  - [dedup] U15 Approach (baseline candidate) and U16 Approach (no-change state) reference this same case — same-doc pointers.
+  - [reframe] Surviving fact: when conventional + zero-conversion is best, the oracle requires the solver to route to no-change and never fabricate an active move; the search space always holds the conventional/conversion-0 baseline. Present-tense framing: a solver-correctness decision. NOTE: solver-validation KTD (flagged).
+  - [fixed:warn] Rehomed to plans/4-recommendation.md (recommendation-solver oracle topic).
+- **`docs/decisions/README.md#2`** · `decision-rationale` · → §0–§7 (full record) · _canonical_
+  - sig: accumulation-fuck-off-date §0–§7 record
+  - The accumulation/fuck-off-date decision record (§0 candidate-axis, §1 one-continuous-timeline contract, §2 signed-inflow term + overlay fold, §3 date-search bias defense + three first-class outcomes, §4–§5 basis/ticker-blend/TDF, §6 retired-but-contributing edge, §7 death-aware working-year clamp) carries the verbatim §0–§7 record, deviation records, and PREMISE-FALSE / MUTANT-UNCONSTRUCTIBLE adversarial annotations.
+  - [dedup] Canonical home is docs/decisions/accumulation-fuck-off-date.md itself (the record). This README row is only the pointer/index entry to it.
+- **`docs/decisions/accumulation-fuck-off-date.md#0`** · `definition-term` · → Problem frame / what this record is · _canonical_
+  - sig: decumulation engine run BACKWARDS
+  - The fuck-off-date design is the existing decumulation engine run backwards: sweep household work-stop offset Y, decumulate from each candidate, read confidence; earliest offset the floor holds = today+Y. Not a new engine.
+  - [dedup] Canonical definition lives here (the decision record); product.md keeps the why as pointer, plans/1-engine.md keeps the C3 sweep impl as pointer.
+- **`docs/decisions/accumulation-fuck-off-date.md#1`** · `decision-rationale` · → What this record is / record meta · _reframe_
+  - sig: §-number cited across repo; verbatim §0–§7
+  - This record's §0–§7 are its OWN internal section numbers, cited by §-number across the repo; reproduced verbatim and amended only via dated in-line [AMENDED]/[CORRECTED]/[PREMISE-FALSE]/[MUTANT-UNCONSTRUCTIBLE] annotations.
+  - [reframe] Forward-only: this record's §0–§7 numbering is its own internal cross-reference scheme (distinct from architecture.md's sections); we keep the §-number addressing convention going forward.
+- **`docs/decisions/accumulation-fuck-off-date.md#2`** · `scope-boundary` · → What this record is / scope of this record · _pointer_
+  - sig: invariants live ONCE in architecture.md
+  - Load-bearing engine invariants (single-shared-draw, CRN, reduce-to-spine, R19 gate, §7.4 accumulation overlay contracts) live once in architecture.md; this record links rather than restates; product framing lives in product.md.
+  - [dedup] Invariants canonical in architecture.md; product framing canonical in product.md; this record holds only pointers.
+- **`docs/decisions/accumulation-fuck-off-date.md#4`** · `decision-rationale` · → Problem frame / why · _reframe_
+  - sig: bounded near-retirement on-ramp, not FIRE
+  - Decumulation-only understated a not-yet-retired nest egg (calm-but-wrong pessimistic, R25); the fix is a BOUNDED near-retirement on-ramp, not an 'are you on track' or FIRE calculator — the draw-down strategy stays the center of gravity.
+  - [dedup] Rationale canonical here; product.md carries the why as pointer.
+  - [reframe] Forward-only: we model a bounded near-retirement on-ramp (not FIRE, not a savings tracker) because decumulation-only understates a not-yet-retired household in the pessimistic direction (R25).
+- **`docs/decisions/accumulation-fuck-off-date.md#33`** · `decision-rationale` · → §2 / employer-match bucket routing · _reframe_
+  - sig: employer match PRE-TAX even on Roth 401k
+  - Employer match is PRE-TAX (traditional) by default regardless of Roth deferral; Roth employer match (SECURE 2.0 §604) is optional + taxable-in-year-made and DEFERRED. Validates R31's 'match is pre-tax even on a Roth 401k'.
+  - [reframe] Present-tense: we route all employer match to pre-tax (traditional) because match is pre-tax even on a Roth 401k; Roth match (§604) is deferred.
+- **`docs/decisions/accumulation-fuck-off-date.md#34`** · `decision-rationale` · → §2 / §603 not modeled · _reframe_
+  - sig: SECURE 2.0 §603 Roth-mandatory catch-up not modeled
+  - SECURE 2.0 §603 (Roth-mandatory catch-up for high earners, 2026) is NOT modeled in v1: the user enters actual per-account contribution amounts which already reflect the bucket their catch-up lands in, so routing is captured at intake without an engine rule.
+  - [reframe] Present-tense: we don't model §603 in the engine because per-account entered amounts already encode the catch-up bucket.
+- **`docs/decisions/accumulation-fuck-off-date.md#39`** · `decision-rationale` · → §0 / mixed-household direction statement · _reframe_
+  - sig: §0 mixed household neutral for salary-funded, optimistic via §7
+  - §0: a MIXED household at Y>0 leaves the retired pre-65 spouse's ACA unpriced in [0,Y) (household R33 reading); NEUTRAL for a salary-funded household (no working-year expense touches the portfolio under §7, contributions are actuals), optimistic ONLY via §7's disclosed channel (a household drawing from the portfolio while working); the retired 65+ spouse's Medicare is per-person and IS priced (§3b).
+  - [dedup] Direction rationale canonical here; §7 (item 60) carries the cross-ref to the disclosed optimistic channel.
+  - [reframe] Present-tense: a mixed household's unpriced [0,Y) ACA is neutral when salary-funded, optimistic only through §7's disclosed portfolio-draw channel.
+- **`docs/decisions/accumulation-fuck-off-date.md#61`** · `decision-rationale` · → §3c / selection-bias rationale · _reframe_
+  - sig: §3c selection-bias = optimizer's-curse-LITE
+  - §3c: selection-bias defense — survivalFraction(Y) is an MC point estimate (SE≈√(p̂(1−p̂)/paths)); selecting the earliest noisy estimate clearing the bar is a threshold-crossing argmin biasing the date EARLIER (calm-but-wrong-optimistic); shared-CRN errors are positively correlated so 'keeps holding' rubber-stamps rather than catches the false-early offset.
+  - [dedup] Selection-bias rationale canonical here; plans/1-engine.md C3 carries the defense impl as pointer (item 62).
+  - [reframe] Strip 'the original plan wrongly dismissed' framing: present-tense the earliest-clearing argmin biases the date earlier, so we apply a conservative lower-bound defense.
+- **`docs/decisions/accumulation-fuck-off-date.md#66`** · `decision-rationale` · → §3c / outcome shape · _canonical_
+  - sig: §3c THREE first-class outcomes: confirmed/window-edge/no-date
+  - §3c: THREE first-class outcomes per track keyed off the CANDIDATE (earliest Y whose quantized lower bound clears AND keeps clearing through the window top): (1) CONFIRMED (candidate below the top, ≥1 later offset of evidence); (2) WINDOW-EDGE (candidate IS the top, vacuous keeps-holding) reported WITH an unconfirmed-tail disclosure; (3) NO-DATE-IN-WINDOW (top fails) — a first-class 'no work-optional date in the ~N-yr window', never 'never free', never a crash.
+  - [dedup] Outcome-shape rationale canonical here; plans/1-engine.md C3 (representation) + plans/2-first-answer.md D2 (surfacing) carry pointers.
+- **`docs/decisions/accumulation-fuck-off-date.md#67`** · `decision-rationale` · → §3c / window-floor semantic · _canonical_
+  - sig: §3c window-FLOOR semantic (over-funded, Y==0)
+  - §3c: the window-FLOOR semantic (over-funded) — a confirmed date whose candidate is the floor (Y==0) means 'work-optional AT today' as a one-sided boundary-truncated reading (negative offsets never evaluated; claims about the past are out of evidence by design); NOT the epistemic mirror of the window edge — at Y==0 keeps-holding evidence is MAXIMAL, so no unconfirmed-tail disclosure attaches and no new flag is needed.
+  - [dedup] Window-floor rationale canonical here; plans/1-engine.md C3 carries the impl pointer.
+- **`docs/decisions/accumulation-fuck-off-date.md#87`** · `build-detail-or-KTD` · → Deviation records (C1) · _reframe_
+  - sig: Deviation C1: 161 families; hsa2026 moved health→contributions; §223(b)(3)(B)
+  - Deviation C1: the ticker table shipped at 161 families (not the planned ~60–80, verified data kept); hsa2026 was MOVED health→contributions (one-canonical-home rule); its catch-up provenance corrected to IRC §223(b)(3)(B); pin-pass trap (insight 022): 11,250 and 1,100 are correct, their 'obvious corrections' are wrong.
+  - [dedup] As-shipped C1 deviation stays in this record; insight 022 (pin-pass trap) homed in insights; the 161-family count cross-refs item 35 (research) + src/engine/constants.
+  - [reframe] Present-tense: the ticker table ships 161 families; hsa2026 lives in contributions.ts with §223(b)(3)(B) catch-up provenance; 11,250 and 1,100 are correct (don't 'correct' them).
+- **`docs/decisions/accumulation-fuck-off-date.md#88`** · `build-detail-or-KTD` · → Deviation records (C2) · _reframe_
+  - sig: Deviation C2: YearContribution per-person arrays all four channels
+  - Deviation C2: YearContribution carries per-person arrays on ALL FOUR channels (not collapsed scalars) so the overlay can death-vet every credit (insight-024 attribution fix); the dead-slot guard was lifted to a property, the Σ-overflow arm landed at both layers, the roth-destination golden was added; 40 new tests, every golden externally derived + 2-deriver panel-triangulated.
+  - [dedup] As-shipped C2 deviation stays in this record; insight 024 (attribution fix) homed in insights.
+  - [reframe] Present-tense: YearContribution carries per-person arrays on all four channels so the overlay death-vets every credit (insight 024); 40 externally-derived, panel-triangulated tests.
+- **`docs/decisions/accumulation-fuck-off-date.md#89`** · `build-detail-or-KTD` · → Deviation records (C3) · _reframe_
+  - sig: Deviation C3: mask re-keyed construct-gated income-blind; 545 tests
+  - Deviation C3: the §3b mask predicate was re-keyed construct-gated income-blind (the in-line AMENDED annotation); the 9-agent adversarial verification overturned 2 of the main loop's dispositions; the 462/463 premise and the 473 mutant were retired in place; 545 tests.
+  - [dedup] As-shipped C3 deviation stays in this record; the adversarial annotations (items 83/84) are the in-record cross-ref; the test count cross-refs roadmap/item 91.
+  - [reframe] Present-tense: the C3 bridge mask is construct-gated income-blind; adversarial verification retired the cliff-straddle premise and averaged-balance mutant; 545 tests.
+
+
+## docs/decisions/ss-computation.md (NEW)
+
+- **`docs/architecture.md#39`** · `decision-rationale` · → MFJ→single filing-status switch decision · _reframe_
+  - sig: MFJ→single survivor tax cliff
+  - The MFJ→single switch at the sampled first death IS the joint→survivor two-regime boundary (no new boundary); no QSS grace (files single the year after first death); the survivor's same real dollars fall into ~half-width single brackets with ~half the standard deduction — the recommendation's emotional headline.
+  - [dedup] Recommendation-headline framing is canonical in docs/product.md; the filing-status computation decision (no QSS grace, switch year) lives in docs/decisions/ss-computation.md; architecture §7.1 carries the mechanic. Product copy stays canonical for the headline narrative, decision record is canonical for the computation choice.
+  - [reframe] Surviving fact (present-tense): the survivor files single the year after the first death (no QSS grace) and same real dollars hit ~half-width brackets — modeled as the existing joint→survivor boundary, not a new one. This is a decision rationale, routed to ss-computation; the headline impact stays in product.
+- **`docs/architecture.md#40`** · `decision-rationale` · → [REHOME → docs/decisions/portfolio-holdings.md] §1014 basis step-up / estate-character decision · _canonical_
+  - sig: §1014 basis step-up is IN
+  - §1014 basis step-up is IN (a disclosed omission can invert the after-tax ranking); a first-order §1014/IRD adjustment is modeled into the leave-more objective at a disclosed assumed heir bracket; the overlay exposes per-bucket basis/character (taxable basis, pre-tax IRD, Roth tax-free); full estate model is chapter-two.
+  - [dedup] This is an estate/basis tax decision (§1014 step-up, IRD, heir bracket, per-bucket basis/character), not an SS-computation decision — rehomed to the portfolio-holdings/basis decision record. The exposed per-bucket basis/character mechanic also appears in architecture §7.1 (pointer kept).
+  - [fixed:warn] Rehomed §1014 estate/basis decision out of ss-computation; kept §7.1 pointer.
+- **`docs/architecture.md#41`** · `decision-rationale` · → [REHOME → docs/product.md] Identical-tax-fidelity (no tax-blind arm) decision · _canonical_
+  - sig: no tax-blind arm identical fidelity
+  - Both candidate arms run at identical tax fidelity — there is no tax-blind arm; a tax-blind delta is sign-inverted (it sees only the cash drain of conversion tax, so every conversion looks worse).
+  - [dedup] This is a recommendation/optimizer-evaluation decision (how the candidate arms are scored), not an SS-computation decision — rehomed to the product §4 D-locked decisions alongside 'recommend-second / what best means'. The recommendation-build consumer plans/4-recommendation references this decision (pointer kept).
+  - [fixed:warn] Rehomed recommendation-arm-fidelity decision to product §4; kept plans/4 pointer.
+- **`docs/plans/1-engine.md#17`** · `decision-rationale` · → survivor-spending ratio decision · _canonical_
+  - sig: survivor-spending ratio ~75% Blanchett
+  - U1 survivor-spending ratio is grounded to a citable range (Blanchett two-thirds-to-three-quarters), source-stamped directionalUntilPinned, ships ~75% default, stays editable, and carries a calm note that too-LOW is the unsafe direction (understates the survivor's need).
+  - [dedup] The ~75% Blanchett number also lives in research (verified figure); the choose-~75%-because rationale is the canonical decision record. Deliberate co-location: survivor-spending decisions and the §202 survivor-benefit decisions share this record because both turn on the same modeled widowhood transition — no separate decumulation/spending decisions home exists, and splitting the survivor regime across two records would fragment the one boundary.
+  - [fixed:nit] Made survivor-spending/survivor-benefit co-location explicit; dropped thin 'SS-adjacent' glue.
+- **`docs/plans/features/social-security.md#2`** · `decision-rationale` · → Why we compute the benefit (the three gaps) · _reframe_
+  - sig: three correctness gaps recommender cannot tolerate
+  - The old model made the user do the actuarial math (a flat already-adjusted socialSecurityReal); a recommender-grade tool cannot tolerate the three gaps it created — spousal underivable, max(own,spousal) calm-but-wrong, survivor stub coarse — so the honesty bar rises and the benefit is computed.
+  - [dedup] Cardinal rule full statement is canonical in product §2; this invocation of it becomes a pointer to product.
+  - [reframe] Surviving fact: we compute SS benefits in-engine because the old user-supplied flat figure left three recommender-fatal gaps. Present-tense rationale in the SS computation decision record.
+- **`docs/plans/features/social-security.md#3`** · `decision-rationale` · → Decision: compute spousal automatically · _reframe_
+  - sig: spousal underivable from ssa.gov
+  - Spousal benefit cannot be read off ssa.gov (it depends on the OTHER spouse's PIA), so asking the user for it guaranteed a wrong/blank input — the ATC decision that opened the unit: compute spousal automatically.
+  - [reframe] Surviving fact: we auto-compute spousal because a layperson cannot derive it. Present-tense decision, ATC-dated provenance dropped from the body.
+- **`docs/plans/features/social-security.md#5`** · `decision-rationale` · → Decision: fold in survivor §202 computation · _reframe_
+  - sig: survivor stub zeroed early widowhood
+  - The old '$0 until own claim age' survivor stub was never optimistic but zeroed out 1–5+ years of a substantial survivor benefit when a spouse dies at survivor age 60–65 — the high-stress scenario the co-pilot must get right.
+  - [reframe] Surviving fact: we model §202 survivor because the old stub shortchanged early widowhood. Present-tense rationale; the '$0-until-own-claim stub' framed as the superseded baseline only enough to justify the choice.
+- **`docs/plans/features/social-security.md#6`** · `decision-rationale` · → Decision: survivor computation in P-now, optimizer in P4 · _reframe_
+  - sig: survivor computation not optimizer
+  - Survivor §202 is the correct survivor COMPUTATION, not the P4 claim OPTIMIZER — folded in because the old $0-until-own-claim stub materially shortchanged early widowhood.
+  - [reframe] Surviving fact: the engine computes the survivor benefit but does not optimize the survivor claim (P4). Present-tense; the '2026-06-14 ATC ruling' provenance dropped from the body.
+- **`docs/plans/features/social-security.md#7`** · `decision-rationale` · → Decision trace (consolidated) · _reframe_
+  - sig: PIA + claim age input, Method C excess not max
+  - Decision trace: compute spousal automatically (input = PIA + claim age per person); spousal is Method C EXCESS not max(); survivor §202 computation folded in (optimizer deferred to P4); intake routes to the mySSA $0-future-earnings figure; sub-engine is PURE/pre-loop (PIA=0 ⇒ byte-identical spine); constants are a Sourced statutory table with POMS-printed goldens.
+  - [dedup] Requirements echo to product R-ledger and invariants to architecture; the consolidated decision trace is canonical here, those become pointers.
+  - [reframe] Surviving fact: the bundle of SS computation decisions (auto-spousal, Method C excess, survivor computation, stop-early routing, pure pre-loop, statutory constants). Present-tense as the decision-record's trace; ATC#/POMS/'supersedes the stated rule' framing dropped.
+- **`docs/plans/features/social-security.md#26`** · `decision-rationale` · → Decision: stop-early honesty intake routing · _reframe_
+  - sig: ask benefit-at-FRA, default assumes continued earnings
+  - Statement input: ask 'benefit at FRA (67)' never 'PIA'; the figure is today's-dollars (real); the default statement figure ASSUMES CONTINUED EARNINGS and overstates for an early-stopper. Primary POMS RM 01310.005.
+  - [dedup] Decision record is canonical for the intake-routing rationale; the §9 build step (item #45) implements it. The verified citation RM 01310.005 also belongs in research.
+  - [reframe] Surviving fact: ask for benefit-at-FRA (today's dollars), never 'PIA'; the default statement number overstates for an early-stopper so intake routes to the $0-future-earnings estimator figure. 'PRESERVED VERBATIM' tag dropped.
+- **`docs/plans/features/social-security.md#31`** · `decision-rationale` · → Decision: input swap (socialSecurityReal → pia) · _reframe_
+  - sig: drop socialSecurityReal, gain pia (real FRA benefit)
+  - §1 input swap: PersonInputs DROPS socialSecurityReal and GAINS pia (the real today's-dollar benefit-at-FRA); socialSecurityClaimAge STAYS (now consumed by the sub-engine); both per-person; a non-working person enters pia:0 (the reduce-to-spine zero).
+  - [reframe] Surviving fact: the input is per-person pia (real FRA benefit) + socialSecurityClaimAge; pia:0 is the spine zero. Present-tense decision; the 'dropped socialSecurityReal' framing kept only as the rationale for the swap.
+- **`docs/plans/features/social-security.md#32`** · `decision-rationale` · → Decision: PIA entry period + sanity rules · _reframe_
+  - sig: ask monthly, store annual ×12, PIA-ceiling sanity rule
+  - §1 PIA entry: ask MONTHLY, store ANNUAL (×12), validate the ceiling in monthly terms at the field (mirrors spendEntryPeriod); the PIA ceiling is a NET-NEW sanity rule (new id+CopyKey+test); the claim-age ∈[62,70] bound already exists (SS_CLAIM_MIN/MAX) — a re-confirm of the deemed-filing single-decision window.
+  - [reframe] Surviving fact: PIA asked monthly / stored annual (×12) with a net-new PIA-ceiling sanity rule; claim-age [62,70] bound reconfirmed. Present-tense; the §9/file-map cross-refs become the build implementation in plans/2.
+- **`docs/plans/features/social-security.md#33`** · `decision-rationale` · → Decision: statutory constants module shape · _reframe_
+  - sig: socialSecurity.ts Sourced statutory table, legalBasis
+  - §2 canonical constants module src/engine/constants/socialSecurity.ts: one year-keyed module, every figure a Sourced<T> with directionalUntilPinned:false (the verify sweep IS the pin) and legalBasis set (STATUTORY — 42 U.S.C. §402, 20 CFR 404, the POMS section — stable, not annually re-indexed like tax brackets).
+  - [dedup] Architecture §8 constants discipline is canonical for the Sourced<T>/legalBasis pattern; this SS-specific module-shape decision points there.
+  - [reframe] Surviving fact: the SS constants live in one year-keyed socialSecurity.ts, each a Sourced<T> with legalBasis (statutory, not directionalUntilPinned). Present-tense decision; defers the pattern to architecture §8.
+- **`docs/plans/features/social-security.md#36`** · `decision-rationale` · → Decision: SPOUSAL_RATE reVerifyEveryBuild monitoring · _reframe_
+  - sig: SPOUSAL_RATE reVerifyEveryBuild (50%→33% by 2042 proposal)
+  - §2 SPOUSAL_RATE carries reVerifyEveryBuild-class monitoring (like the ACA entry): a scored-but-unenacted proposal to phase 50%→33% by 2042 exists, so the constant must catch enactment at build time, not drift silently.
+  - [dedup] Architecture documents the reVerifyEveryBuild constant pattern; this SS-specific monitoring decision points there.
+  - [reframe] Surviving fact: SPOUSAL_RATE (0.50) is reVerifyEveryBuild-monitored because a 50%→33%-by-2042 proposal is scored-but-unenacted. Present-tense decision; defers the mechanism to architecture.
+- **`docs/plans/features/social-security.md#42`** · `decision-rationale` · → Decision: survivor claim-timing default · _reframe_
+  - sig: survivor claims as soon as eligible, lock reduced factor
+  - §6 ratified survivor claim-timing default: the survivor claims AS SOON AS ELIGIBLE (max(60, death)), locks the reduced factor, and receives max(own, survivor) each year; the adversarial review confirmed this is one-signed conservative ONLY under the lock-flat reading — it closes the early-widowhood gap while leaving the optimal two-stage upside on the table for P4's optimizer; reduce-to-spine still holds (no death ⇒ never runs ⇒ byte-identical).
+  - [dedup] Decision record is canonical for the timing-default rationale; the P4 deferral (item #9) is in roadmap; 'Superseded/changelog' framing dropped.
+  - [reframe] Surviving fact: the survivor claims at first eligibility and locks the reduced factor; this is conservative under lock-flat and leaves the two-stage optimization to P4. Present-tense decision; ATC-date and changelog framing dropped.
+- **`docs/plans/features/social-security.md#49`** · `decision-rationale` · → Decision: ratio cross-check deferred · _reframe_
+  - sig: ≈0.70/≈1.24 ratio cross-check DEFERRED
+  - §9 a non-blocking cross-check (if the user enters their 62 and 70 figures, validate the ≈0.70/≈1.24 ratios) was DEFERRED — a nice-to-have wrong-bar-entry guard, not a correctness gate, deferred to keep the single-pass intake clean.
+  - [dedup] Decision record is canonical; the 'Resolved open questions' duplicate collapses here.
+  - [reframe] Surviving fact: the 0.70/1.24 intake ratio cross-check is deferred (non-blocking nice-to-have, keeps intake single-pass). Present-tense decision.
+- **`docs/plans/features/social-security.md#50`** · `decision-rationale` · → Decision: persistence on base PersonInputs (SS-before-U8 ordering) · _reframe_
+  - sig: swap on base PersonInputs, no migration debt (SS-before-U8)
+  - §10 persistence: the swap is on BASE PersonInputs (PersonInputsV3 inherits it; SCENARIO_V3_FIELDS unchanged, the SS field nests in people[]); because ScenarioV3 is defined-but-not-yet-written (U8 owns its codec arm), there is NO migration debt now — confirming the SS-before-U8 ordering (U8 must persist the post-swap shape or eat a needless v3→v4 migration).
+  - [dedup] Decision record is canonical for the ordering rationale; the roadmap U8 ordering and the input-model seam reference are pointers.
+  - [reframe] Surviving fact: the pia swap lives on base PersonInputs so ScenarioV3 inherits it with no migration debt, which fixes SS-before-U8 ordering. Present-tense decision; the U8-ordering consequence echoed to roadmap.
+- **`docs/plans/features/social-security.md#66`** · `decision-rationale` · → Decision: annual benefit granularity · _reframe_
+  - sig: annual granularity resolved, DRC January-lag self-correcting
+  - Resolved: monthly vs annual granularity → RESOLVED annual; the engine is annual-real, the DRC 'January-after-the-year-earned' lag (RS 00615.690 §B) and dime-rounding are MONTHLY rules, but at annual granularity the lag is a self-correcting sub-12-month slice at the only anchor that matters (age 70, where it's zero) — documented as an intentional abstraction in the constants comment.
+  - [reframe] Surviving fact: SS benefits are computed at annual granularity; the monthly DRC January-lag is a self-correcting sub-12-month slice (zero at age 70). Present-tense decision; 'Resolved open question' framing dropped.
+- **`docs/decisions/README.md#4`** · `scope-boundary` · → §1–§12 SS computation decisions · _reframe_
+  - sig: Method-C spousal, §202 survivor base, RIB-LIM
+  - The Social Security computation decisions §1–§12 (Method-C spousal, the §202 survivor base, RIB-LIM, the survivor lock-flat guard, the excess-end-gate guard) are now their own record, shipped with the SSA rule table and goldens.
+  - [dedup] Source housed these in features/social-security.md (now dissolved). New canonical home is docs/decisions/ss-computation.md; this README scope-boundary row becomes a pointer to that record.
+  - [reframe] The SS computation decisions (Method-C spousal, §202 survivor base, RIB-LIM, survivor lock-flat guard, excess-end-gate guard) live in their own record docs/decisions/ss-computation.md — the graduate-if-cross-repo-reach-grows flag is now realized, not pending.
+
+
+## docs/decisions/other-income-r40.md (NEW)
+
+- **`docs/product.md#71`** · `decision-rationale` · → R40 KTDs — test-drivers + conservative-or-disclosed simplification rule · _reframe_
+  - sig: R40 drivers: rental friend + wife's teacher's pension
+  - R40 test-drivers are real friends — one with rental income, one whose wife draws a teacher's pension (the single most dangerous number in the app: whether it survives her death and at what %, and whether it keeps up with inflation, is the whole widow's picture); every survivor/COLA/basis simplification rounds conservative or discloses its direction.
+  - [dedup] The R40 KTDs (decision rationale) are canonical in the new decisions/other-income-r40.md (features/other-income.md dissolves); product scope boundaries (R40 income-side) holds a pointer.
+  - [reframe] Honor fossilNote (late-added block) + features dissolution: the R40 decision rationale moves out of the trailing product block into decisions/other-income-r40.md. Present-tense: the R40 drivers are a rental-income friend and a friend whose wife draws a teacher's pension (the most dangerous number — survivorship %, COLA), and every survivor/COLA/basis simplification rounds conservative or discloses its direction; an undisclosed optimistic simplification is the sin.
+- **`docs/plans/features/other-income.md#3`** · `decision-rationale` · → Motivation / why R40 (test-driver pension is the dangerous number) · _reframe_
+  - sig: teacher's pension single most dangerous number
+  - Real drivers: one with rental income, one with a wife's teacher's pension; the pension's survivorship + inflation behavior is the whole widow's picture — getting it wrong is the calm-but-wrong-optimistic sin; v1 rounds conservative or discloses direction.
+  - [reframe] Surviving fact: the pension's survivor-% and inflation treatment is the highest-stakes number; every simplification must round conservative or disclose its direction. Frame as the standing rationale for the conservative-or-disclose rule.
+- **`docs/plans/features/other-income.md#15`** · `decision-rationale` · → Per-type defaults table · _reframe_
+  - sig: per-type defaults table pension rental alimony annuity other
+  - Per-type default table: PENSION nominal-flat/fully-taxable/survivor=prompt (MUST-ASK QJSA %); RENTAL real-flat/taxable/survivor~100%; ALIMONY nominal-flat/taxable-by-date/survivor 0% (MUST-ASK pre/post-2018 date); ANNUITY nominal-flat/qualified-taxable-or-exclusion/survivor=prompt (MUST-ASK qual vs non-qual); OTHER nominal-flat/taxable/survivor=prompt. Type label seeds; intake confirms.
+  - [reframe] Surviving fact: the per-type seeded defaults + MUST-ASK fields. Frame present-tense as the decided default table.
+- **`docs/plans/features/other-income.md#16`** · `decision-rationale` · → KTD — alimony agreement-date treatment · _reframe_
+  - sig: alimony agreement date 2018-12-31 highest-leverage
+  - Alimony agreement date is the highest-leverage field: instrument executed after 2018-12-31 (or pre-2019 expressly modified to adopt TCJA) is NOT taxable to recipient and MAGI-invisible; on/before 2018-12-31 IS taxable and lifts MAGI; never default it; a modified pre-2019 agreement stays taxable unless the modification expressly adopts new rules — ask that, default no.
+  - [dedup] Canonical decision in decisions/other-income-r40; the verified tax fact homes in research/engine-validation-and-tax (alimony TCJA) — provenance copy points there.
+  - [reframe] Surviving fact: the post-2018 vs pre-2019 alimony tax treatment and the never-default rule. Present-tense as the decided control.
+- **`docs/plans/features/other-income.md#19`** · `scope-boundary` · → OUT list / forward landmine (single end gate) · _reframe_
+  - sig: survivor-specific term/end gate OUT, one end gate
+  - Survivor-specific term/end gate is OUT (v1 forward landmine): KTD-4's two-variant pre-weighting holds only because v1 streams share one end gate across both variants; a survivor benefit with a different term (period-certain J&S, terminate-on-remarriage) would break the elementwise survivor = Σ streams·survivorPct relation.
+  - [reframe] Surviving fact: v1 assumes one shared end gate; a divergent survivor term would break the two-variant model — out by design, carry as a forward landmine.
+- **`docs/plans/features/other-income.md#20`** · `scope-boundary` · → OUT list — rental sale events (direction disclosed) · _reframe_
+  - sig: rental sale events §1250 recapture OUT
+  - DEFERRED: rental sale events (depreciation recapture §1250 25%, cap-gains-on-sale, step-up-at-death) OUT — ongoing income only; direction slightly OPTIMISTIC (ignores eroding depreciation shield raising real taxable rent; ignores future-sale recapture tax); disclosed.
+  - [dedup] OUT decision canonical here; the recapture/cap-gains/step-up tax facts home in research/engine-validation-and-tax (point there).
+  - [reframe] Surviving fact: rental sale events are out, ongoing income only; the omission is slightly optimistic and disclosed. Present-tense decided OUT-with-direction.
+- **`docs/plans/features/other-income.md#21`** · `decision-rationale` · → OUT list — net-rental real-rise (cliff magnitude) · _reframe_
+  - sig: net-rental real-rise compounds at 400% FPL cliff
+  - DEFERRED net-rental real-rise is OPTIMISTIC and compounds at the ACA 400% FPL cliff (disclosed with MAGNITUDE): gross rent tracks inflation but the fixed-nominal depreciation shield erodes so taxable net rent rises in real; v1 holds net rent real-flat with taxableFraction=1; the omitted rise is exactly the dollars that push a pre-65 household over the cliff (discontinuity) where the miss is the entire unsubsidized premium; v1 discloses the magnitude in rental copy + a Unit 3 cliff-compound fixture; the real-rise upgrade needs a verified BLS rent-CAGR figure first.
+  - [dedup] Decision canonical here; the BLS rent-CAGR figure homes in research/engine-validation-and-tax once verified; Unit 3 fixture is a build step in plans/2-first-answer.
+  - [reframe] Surviving fact: v1 models net rent real-flat (disclosed-optimistic) and the miss compounds at the 400% FPL cliff; a Unit 3 cliff-compound fixture pins the disclosed direction; the modest-real-rise upgrade waits on a verified BLS rent-CAGR. Present-tense.
+- **`docs/plans/features/other-income.md#22`** · `decision-rationale` · → OUT list — exclusion-never-exhausts (direction disclosed) · _reframe_
+  - sig: annuity/pension basis-recovery exclusion never exhausts
+  - DEFERRED annuity/pension basis-recovery is OPTIMISTIC, opt-in, disclosed: the true exclusion-ratio/Simplified-Method tax-free portion is a fixed nominal $ that shrinks in real then stops (then 100% taxable); v1 uses a constant taxableFraction modeling the exclusion as never exhausting → understates late-life MAGI; the fully-taxable default is conservative but an opt-in user entering an exclusion fraction accepts a disclosed optimistic simplification.
+  - [dedup] Decision canonical here; Pub 575/939 Simplified-Method tax facts home in research/engine-validation-and-tax (point there).
+  - [reframe] Surviving fact: v1 holds a constant exclusion taxableFraction (never exhausting), a disclosed optimistic opt-in; fully-taxable default is conservative. Present-tense.
+- **`docs/plans/features/other-income.md#23`** · `decision-rationale` · → OUT list — alimony payer-death (disclosed) · _reframe_
+  - sig: alimony payer-death termination disclosed not modeled
+  - DEFERRED alimony payer-death termination is OPTIMISTIC, disclosed (Briggsy decided disclose for v1): alimony ends at recipient death (survivorPct=0) and at payer death, but the payer has no sampled death in the household model; v1 pays alimony for the recipient's full modeled life, overstating safety if the payer dies first; disclosed not modeled.
+  - [dedup] Decision canonical here; resolved-open-question framing collapses into this decision.
+  - [reframe] Surviving fact: v1 does not model payer death (no payer in the household model); alimony pays to the recipient's modeled life-end, disclosed-optimistic. Present-tense; drop 'resolved during planning' framing.
+- **`docs/plans/features/other-income.md#24`** · `decision-rationale` · → OUT list — compounding-only COLA (disclosed) · _reframe_
+  - sig: compounding COLA modeled, simple-COLA deferred
+  - DEFERRED compounding-only COLA is the optimistic side, disclosed: simple (non-compounding) COLA erodes faster in real; v1 models compounding (common case but optimistic side); fixed-pct compounding convention is golden-pinned, simple-COLA deferred.
+  - [dedup] Decision canonical here; deferred-to-implementation framing collapses into this decision.
+  - [reframe] Surviving fact: v1 models compounding COLA (golden-pinned convention); simple-COLA deferred; choice is disclosed-optimistic. Present-tense.
+- **`docs/plans/features/other-income.md#25`** · `scope-boundary` · → OUT list — NIIT / state alimony / annuity LIFO · _reframe_
+  - sig: NIIT 3.8% state-alimony-decoupling annuity-LIFO OUT
+  - DEFERRED OUT, disclosed: NIIT (3.8% above $250k MFJ MAGI); state-level alimony decoupling; annuity LIFO for non-annuitized partial withdrawals (v1 models annuitized streams).
+  - [dedup] OUT decision canonical here; Unit 5 OUT list in product §7 carries the summary (pointer).
+  - [reframe] Surviving fact: NIIT, state alimony decoupling, and non-annuitized annuity LIFO are OUT; v1 models annuitized streams. Present-tense decided OUT.
+- **`docs/plans/features/other-income.md#43`** · `build-detail-or-KTD` · → KTD-1 (two-seam edit, seam-2 three-touch) · _reframe_
+  - sig: KTD-1 seam count, seam 2 three-touch, edit seam 3 double-counts
+  - KTD-1 (seam count; seam 2 is a coordinated 3-touch): MagiComponents has ONE producer fed by ONE nonSSordinary (seams 3/4/5 read it), so the taxable vector is added at SEAM 2 ONLY (editing seam 3 separately double-counts the §86 base); the explicit edits are seam 1 (cash netting) + seam 2 (ordinary income), where seam 2 = a new TaxInputs.income field + threading per-year taxable into GrossUpContext + the +taxable at nonSSordinary; a test proves §86 provisional moved by the single non-doubled amount, realizedGain≠0.
+  - [dedup] KTD-1 decision canonical in decisions/other-income-r40; the five-seams table + architecture §7 single-MagiComponents-producer rule carry pointers; Unit 3 build step + Risks reference it.
+  - [reframe] Surviving fact: add the taxable vector at seam 2 only (single MagiComponents producer; seams 3-5 read it; editing seam 3 double-counts); seam 2 is a 3-touch coordinated change. Present-tense decided.
+- **`docs/plans/features/other-income.md#44`** · `build-detail-or-KTD` · → KTD-2 (COLA/deflation math) · _reframe_
+  - sig: KTD-2 deflation math real[t]=annualRealToday(1+colaPct)^t/(1+infl)^t
+  - KTD-2 (deflation math is net-new): real-flat → emit the flat real value; nominal-flat/fixed-pct → real[t] = annualRealToday·(1+colaPct)^t/(1+inflation)^t using the deterministic inflation point estimate 0.03; the vector builder shares no structure with escalateQuote (write fresh, borrow only nonZero); correctness golden-gated (KTD-5); viz corollary — a nominal-flat stream is a deterministic real curve (zero variance), a DETERMINISTIC FLOOR in the confidence band, flag for U6/D2.
+  - [dedup] KTD-2 decision canonical here; Unit 2 build step in plans/2-first-answer; the deterministic-floor viz corollary flags roadmap U6/D2 (pointer).
+  - [reframe] Surviving fact: the COLA/deflation formula real[t]=annualRealToday·(1+colaPct)^t/(1+inflation)^t (inflation 0.03), written fresh; a nominal-flat stream renders as a deterministic floor in the U6 confidence band. Present-tense decided math.
+- **`docs/plans/features/other-income.md#45`** · `build-detail-or-KTD` · → KTD-3 (entity vs compiled leaf) · _reframe_
+  - sig: KTD-3 persisted IncomeStream entity vs compiled PersonIncomeStream leaf
+  - KTD-3 (two shapes): the PERSISTED IncomeStream entity is a new list incomeStreams on ScenarioV3 + SCENARIO_V3_FIELDS + ties + init []; the COMPILED leaf PersonIncomeStream (two death-state variants) wraps in IncomeParams on OverlayParams.income and is NEVER persisted (fidelity-over-duplication); R40 does not touch scenarioCodec.ts — U8 owns the v3 arm and a real validation contract.
+  - [dedup] KTD-3 decision canonical here; Unit 1 build step; the never-persisted invariant restates in architecture (Unchanged invariants) + Risks U8 row (pointers).
+  - [reframe] Surviving fact: persisted IncomeStream entity vs compiled-not-persisted PersonIncomeStream leaf (fidelity-over-duplication); the v3 codec validation contract is U8's. Present-tense decided.
+- **`docs/plans/features/other-income.md#46`** · `build-detail-or-KTD` · → KTD-4 (two-variant per-owner death-gated select) · _reframe_
+  - sig: KTD-4 two pre-weighted variants, per-owner death-gated zero-alloc select
+  - KTD-4 (two pre-weighted variants, per-OWNER death-gated, zero-alloc select): precompute {grossFull,taxableFull}=Σ streams and {grossSurvivor,taxableSurvivor}=Σ streams·survivorPct per person (survivor derived PER-STREAM, COLA/deflation+start/end gating baked in); the only path-loop work is a death-dependent select in helper ongoingIncomeForYear mirroring contributionsForYear's death-gate STRUCTURE (not its alloc) — two household scalars, no Array/wrapper/some()/find(), integer comparison vs locked deathOffsets; per owner select=(t<deathOffsets[owner])?FULL:(survivorAlive?SURVIVOR:0); locked at death offset never ramped, death gate only; death-before-start is free; each person independently gated on their OWN death (a single household-level death gate is the swap-mutant bug).
+  - [dedup] KTD-4 decision canonical here; Unit 1/Unit 3 build steps + Performance + Risks carry pointers.
+  - [reframe] Surviving fact: two per-person variants (FULL and per-stream survivor-weighted), selected per-owner-death by a zero-alloc helper; per-owner (not household-level) gating is the correctness crux a swap-mutant guards. Present-tense decided.
+- **`docs/plans/features/other-income.md#48`** · `build-detail-or-KTD` · → KTD-5 (externally-derived goldens) · _reframe_
+  - sig: KTD-5 golden-gated, hand-derived walked through the fork
+  - KTD-5 (golden-gated correctness): every numeric claim is pinned by a hand-derived externally-computed golden, walked through its conditional fork with the pinned boundary named.
+  - [dedup] KTD-5 decision canonical here; restates R40.10 (product) + architecture §5 externally-derived fixtures DND/012 (pointers); Unit 2 build step references it.
+  - [reframe] Surviving fact: every R40 numeric claim is pinned by an externally-derived golden walked through its fork with the boundary named. Present-tense decided.
+- **`docs/plans/features/other-income.md#49`** · `build-detail-or-KTD` · → KTD-6 (discriminated-union tax treatment) · _reframe_
+  - sig: KTD-6 tax-treatment discriminated union keyed on type, codec re-validates
+  - KTD-6 (taxableFraction selection via a discriminated union keyed on type): model the tax-treatment fields as a discriminated union on type (mirror TickerClassification) so a pension entity can't carry annuity-exclusion fields and alimony can't carry a contradictory direct taxableFraction (the contradiction is unrepresentable in authored code); at restore it IS representable (JSON.parse+as erases the union) so the codec must re-validate the full arm; compileIncomeStreams derives the effective fraction (post-2018 alimony→0; pre-2019→1; non-qual annuity→entered exclusion; qualified/pension/rental/other→entered/default); no redundant derived fraction is persisted.
+  - [dedup] KTD-6 decision canonical here; Unit 1/Unit 2 build steps + Risks carry pointers.
+  - [reframe] Surviving fact: tax-treatment fields are a discriminated union keyed on type (contradiction unrepresentable in authored code, re-validated at restore); compileIncomeStreams derives the effective fraction per the fork. Present-tense decided.
+- **`docs/plans/features/other-income.md#50`** · `build-detail-or-KTD` · → KTD-7 (needs vs receipts independence) · _reframe_
+  - sig: KTD-7 survivor income-% and spending-ratio modeled independently
+  - KTD-7 (survivor income-% and survivor spending-ratio modeled independently): survivorSpendingRatio (0.75, a needs figure, fires on first death of either spouse) and survivorPct (a receipts figure, keyed to the owner's death) model different things and compose correctly at seam 1; the compound-widow test + cross-owner-death-order test prove no double-application and that per-owner gating holds on asymmetric death order.
+  - [dedup] KTD-7 decision canonical here; the 0.75 figure homes in research; Unit 3 test scenarios + Risks reference it.
+  - [reframe] Surviving fact: needs-side survivorSpendingRatio (0.75, first death) and receipts-side survivorPct (owner death) are independent and compose at seam 1. Present-tense decided.
+- **`docs/plans/features/other-income.md#51`** · `build-detail-or-KTD` · → KTD-8 (date-sweep invariance + already-receiving anchor) · _reframe_
+  - sig: KTD-8 income Y-invariant un-truncated; already-receiving clamp t=0
+  - KTD-8 (date-sweep + already-receiving): (a) income is Y-invariant → passes through ...overlayBase un-truncated (do NOT add to truncateStreams); compileIncomeStreams runs ONCE in buildParams, never in buildCandidateParams; (b) startAge ≤ currentAge ⇒ already-receiving, CLAMP to t=0 never reject (start clamped to max(0,startAge−currentAge)); THE ANCHOR — for an already-receiving stream annualRealToday is the real value at sim-year 0 and the decay exponent is the clamped t never the stream's elapsed age; a golden pins gross[0]===annualRealToday.
+  - [dedup] KTD-8 decision canonical here; Unit 2/Unit 3 build steps + Risks + Performance carry pointers.
+  - [reframe] Surviving fact: income is Y-invariant (compiled once, un-truncated through the date sweep); an already-receiving stream clamps start to t=0 with annualRealToday anchored at sim-year 0 (decay uses clamped t, not elapsed age); gross[0]===annualRealToday. Present-tense decided.
+- **`docs/plans/features/other-income.md#52`** · `build-detail-or-KTD` · → KTD-9 (IRMAA structural decouple + inverted copy) · _reframe_
+  - sig: KTD-9 IRMAA structural decouple, invert working-MAGI copy
+  - KTD-9 (already-receiving × working-year IRMAA — structural decouple, not a copy control): a copy instruction ('enter MAGI inclusive of all income') is unsound (a wages-only user would drop the pension from IRMAA — the optimistic sin); decision — (1) re-specify the working-year override as the WAGES/non-modeled-MAGI component only and invert the copy to 'enter your working-year income EXCLUDING anything entered as a retirement income stream'; (2) the engine owns each modeled stream's IRMAA-MAGI contribution in ALL years (clamped and unclamped) so IRMAA-MAGI = wages-override + the stream's own taxable, each counted once; (3) in a clamped working year the stream's taxable feeds IRMAA-MAGI but NOT the gross-up netting (no phantom withdrawal); tests pin IRMAA=wages+pension once on the wages-only path and no phantom withdrawal.
+  - [dedup] KTD-9 decision canonical here; Unit 3 (engine) + Unit 4 (inverted copy) build steps + Risks + the forward-landmine (System-Wide) carry pointers.
+  - [reframe] Surviving fact: decouple the working-year IRMAA feeds structurally — override = wages/non-modeled only with inverted copy; the engine owns each modeled stream's IRMAA-MAGI in all years (counted once); a clamped working year feeds IRMAA but not gross-up netting. Present-tense decided.
+- **`docs/plans/features/other-income.md#53`** · `decision-rationale` · → Resolved ATC calls (keep tier / ship other / type-gated) · _reframe_
+  - sig: ATC keep advanced tier, ship 'other', add R40 entry; type-gated
+  - Open ATC questions resolved YES: keep the advanced tier, ship 'other', add the R40 entry; note — 'other'/alimony/annuity ship because the engine supports them but their guided-path questions + optimistic disclosures are TYPE-GATED so a rental/pension-only user never pays for them; the 'it's free' rationale is an engine truth not a product one — the identity fence is the bound.
+  - [dedup] Resolved decisions canonical in decisions/other-income-r40; Unit 4 build step references the type-gating.
+  - [reframe] Surviving fact: the advanced tier stays, 'other' ships, the R40 entry is added; non-rental/pension type questions + disclosures are type-gated so they cost nothing for users who don't have them. Present-tense; drop 'open question resolved during planning' framing.
+- **`docs/plans/features/other-income.md#54`** · `decision-rationale` · → Resolved ATC calls (sequencing / cliff disclosure / survivor-% surfacing) · _reframe_
+  - sig: sequencing session-only until U8, cliff-magnitude disclose, survivor-% broadened
+  - Resolved: keep the build order — R40's Unit 4 intake is session-only until U8 (consistent with accounts), with a 'nothing's saved yet' affordance (option a); net-rental cliff-compound — disclose the magnitude + a fixture (option A), the modest-real-rise upgrade deferred behind BLS rent-CAGR verification; rental survivor-% — broaden the no-safe-default survivor-% surfacing to pension/annuity/rental/other (alimony stays 0 by law).
+  - [dedup] Resolved decisions canonical here; the scope-deferred net-rental (item 21) + Unit 4 build + Risks carry pointers.
+  - [reframe] Surviving fact: Unit 4 intake is session-only until U8 (not-saved-yet affordance); the net-rental cliff is disclosed by magnitude + a fixture; survivor-% surfacing is broadened to all continuing types (alimony 0 by law). Present-tense; drop 'resolved during planning' framing.
+- **`docs/plans/features/other-income.md#55`** · `decision-rationale` · → Resolved — non-taxable income is correctly MAGI-blind · _reframe_
+  - sig: non-taxable income ACA-MAGI-blind is correct, not a false alarm
+  - The 'non-taxable income is ACA-MAGI wage-blind' finding is REJECTED as a false alarm: R40 non-taxable income (post-2018 alimony, annuity return-of-basis) genuinely is not federal MAGI and genuinely reduces withdrawal need — a lower MAGI → higher subsidy is the TRUE answer (real ACA planning leans on non-taxable income to stay under the cliff); the taxable portion DOES hit MAGI via seam 2; no source 'should raise MAGI but doesn't'; the Unit 3 'non-taxable moves none of the MAGIs' test also asserts the ACA subsidy correctly RISES (the A1 confirmation).
+  - [dedup] Decision canonical here; Unit 3 test scenarios + the five-seams table (non-taxable portions) carry pointers.
+  - [reframe] Surviving fact: non-taxable income (post-2018 alimony, annuity basis) is correctly MAGI-invisible and rightly raises the ACA subsidy; the Unit 3 test asserts the subsidy rises (A1). Present-tense decided; drop the 'rejected as a false alarm' supersedes framing — state it as the confirmed behavior.
+- **`docs/plans/features/other-income.md#77`** · `build-detail-or-KTD` · → Risk→mitigation map (KTD cross-reference) · _reframe_
+  - sig: Risks table mitigations: IRMAA decouple, per-owner gating, seam-2-only, entity-side range
+  - Risks-table mitigations (each maps a hazard to its KTD): IRMAA double/under-count→KTD-9 decouple; per-stream survivor lost by collapsing→KTD-4 two variants (golden derives grossSurvivor per-stream); cross-owner death miscredit→KTD-7/Unit 3 per-owner gating + swap-mutant; seam-3 double-count→KTD-1 seam-2-only + §86-once test; engine can't range-check scalars→entity-side (Unit 4 sanity + U8 codec); date-sweep zeroes a pension→KTD-8a un-truncated; already-retired false-reject/mis-anchor→KTD-8b clamp to t=0; optimistic survivor floor→KTD-4 locked-at-death + both-dead⇒$0; net-rental real-flat at cliff→disclosed magnitude + Unit 3 fixture; rental ~100% survivor silent default→survivor-% surfacing broadened; hot-loop alloc regression→zero-alloc helper; gross-up non-convergence→re-probe (perf non-issue); reduce-to-spine drift→characterization pin first; contradictory persisted entity→KTD-6 union + U8 codec; session-only data loss→sequencing option a + not-saved-yet affordance.
+  - [dedup] This is a digest of the KTD set (canonical in decisions/other-income-r40); each row points to its KTD; Unit test scenarios carry pointers.
+  - [reframe] Surviving fact: the hazard→mitigation map binding each R40 risk to its KTD (IRMAA→9, survivor-collapse→4, cross-owner→7, seam-3→1, scalar-range→entity-side, date-sweep→8a, already-retired→8b, survivor-floor→4, net-rental→disclosed+fixture, alloc→zero-alloc, gross-up→re-probe, drift→characterization pin, contradiction→6, session-loss→affordance). Present-tense mitigation map.
+- **`docs/plans/features/other-income.md#79`** · `decision-rationale` · → Provenance corrections (cite to the right primary) · _reframe_
+  - sig: provenance corrections: rental survivor=state law, QJSA plan-rep-or-notary, COLA=practitioner
+  - Provenance corrections (four claims the scoping pass mis-attributed): (1) rental ~100% survivor rests on STATE PROPERTY LAW (JTWROS / community property), NOT IRS Pub 559/551 — cite state law, only true if jointly owned/willed to spouse; (2) net rental ≠ real-flat (gross rent tracks inflation but the fixed-nominal depreciation shield erodes so taxable net rent rises in real) — v1 models real-flat as a disclosed simplification, verify the rent-CAGR figure against the BLS series before load-bearing; (3) pension QJSA consent can be witnessed by a PLAN REPRESENTATIVE OR a NOTARY, not strictly notarized (IRC 417(a)(2)) — copy must say so; (4) alimony/pension/annuity COLA norms are PRACTITIONER/ECONOMIC facts NOT IRS — label as such.
+  - [dedup] Provenance decisions canonical here; per-type defaults + Unit 4 disclosure copy + Unit 5 OUT/provenance carry pointers; the BLS rent-CAGR + tax facts home in research (pointer).
+  - [reframe] Surviving fact: cite rental survivor to state property law (not IRS), net rent's real-rise to a BLS rent-CAGR (verify before load-bearing), QJSA consent to plan-rep-or-notary (IRC 417(a)(2)), and COLA norms to practitioner/economic sources (not IRS). Present-tense provenance rules; drop the 'scoping pass mis-attributed' framing.
+- **`docs/decisions/README.md#5`** · `scope-boundary` · → KTD-1 .. KTD-9 · _reframe_
+  - sig: R40 KTDs 1–9 other-income landmines
+  - The R40 KTDs (1–9) — the other-income build landmines cited in the implementation as KTD-N — are now their own record.
+  - [dedup] Source housed these in features/other-income.md (now dissolved). New canonical home is docs/decisions/other-income-r40.md; this README scope-boundary row becomes a pointer to that record.
+  - [reframe] The nine R40 other-income KTDs (cited in code as KTD-N) live in their own record docs/decisions/other-income-r40.md — the graduate-if-cross-repo-reach-grows flag is now realized, not pending.
+
+
+## docs/decisions/portfolio-holdings.md (NEW)
+
+- **`docs/roadmap.md#97`** · `decision-rationale` · → Holdings-model decision (exact % vs single-ticker) [anchor: roadmap status row L106 + single-ticker re-scope changelog L187, not U16/L97] · _reframe_
+  - sig: single-ticker re-scoped exact per-account stock/bond/cash %
+  - Holdings model: accounts take an exact per-account stock/bond/cash % that collapses to the one household blend (single-ticker entry is not used).
+  - [dedup] As-built holdings model canonical in decisions/portfolio-holdings.md; R37 in product.md; cross-cutting status (scoping) in roadmap; features/portfolio-holdings.md DISSOLVES.
+  - [reframe] Strip the 'Superseded/changelog — single-ticker was removed' framing per fossilNote; present-tense as-built truth: accounts take an exact stock/bond/cash % collapsing to one household blend. This is a decision rationale, homed in decisions/portfolio-holdings.md.
+  - [!nit] Ref anchor is not independently resolvable. roadmap.md line 97 is U16 (Recommendation surface), not the holdings model; the matching text is at roadmap.md line 106 (You-Are-Here status row) and line 187 (the single-ticker re-scope changelog). The accumulation refs are similarly opaque (#73/#74 map to §4/§5 which are actually at lines 126/128), so the ref scheme appears to be inventory row-IDs, not file lines. Findability currently rests on the signature/§-marker, not the numeric anchor. — fix: Before the fossils are deleted at M6, confirm each ref resolves to a real anchor (or convert to section markers like §4/§5 / 'roadmap status row + changelog'). The #97 sig 'single-ticker re-scoped exact per-account stock/bond/cash %' does match roadmap 106/187, so the fact is recoverable — but verify the anchor scheme is documented so a reviewer doesn't land on U16.
+  - [fixed:nit] documented anchor scheme (maps to roadmap L106/L187, not U16/L97)
+- **`docs/plans/features/portfolio-holdings.md#1`** · `decision-rationale` · → Why safe to build (engine contracts unchanged) · _canonical_
+  - sig: intake+aggregation upgrade, not engine change
+  - Entering actual securities per account is an intake/aggregation upgrade, not an engine change; CRN and no-asset-location contracts do not move.
+  - [dedup] CRN / no-asset-location invariants are canonical in docs/architecture.md; this decision record links to them as a pointer, owning only the 'why this is safe' rationale.
+- **`docs/plans/features/portfolio-holdings.md#8`** · `decision-rationale` · → Load-bearing insight — why safe + higher fidelity · _canonical_
+  - sig: holdings aggregate to same stockWeight
+  - Many holdings per account aggregate to the same single household stockWeight the engine already consumes (each holding→stock fraction; account blend = value-weighted avg; household = value-weighted across accounts) — engine contract unmoved, and a real per-account blend beats a one-allocation proxy.
+- **`docs/plans/features/portfolio-holdings.md#11`** · `decision-rationale` · → Sequencing — fold into U8, no separate migration · _canonical_
+  - sig: rides U8, no v3→v4 migration
+  - Multi-holding entry rides U8 (save/load) as an opt-in behind an expander; it is a new field on the U8 persisted shape with no v3→v4 migration, since U8 defines the shape and its codec.
+  - [dedup] U8 save/load unit status lives in roadmap (pointer). #11 is the SOLE canonical owner of the fold-into-U8 / no-v3→v4-migration sequencing rationale; #17 and #20(3) reference it, do not restate.
+  - [!warn] The 'fold into U8 / no v3→v4 migration' sequencing fact is carried by THREE rows in this one home: #11 (canonical), #17 (the two-slices scope row), and #20 sub-decision (3). The ledger names the #11<->#17 collapse in dedup but #20.3 is a third statement, and all are mustSurvive. Three rows asserting the identical sequencing rationale is the accidental-duplicate hazard, only partially mitigated. — fix: Make exactly ONE row own the 'fold into U8, no v3→v4 migration' rationale canonically (recommend #11); #17 and #20.3 should reference it rather than restate it. Collapse per the dedup note that already exists on #11 ('overlaps item #17/#20(3) — same decision').
+  - [fixed:warn] declared #11 sole canonical owner; #17/#20(3) reference it
+- **`docs/plans/features/portfolio-holdings.md#17`** · `decision-rationale` · → Recommendation pending ATC ratification — build it, opt-in, value-based, two slices · _pointer_
+  - sig: build it opt-in value-based two slices
+  - Recommendation (pending ATC ratification): build it — opt-in, value-based, in two slices. The sequencing rationale (fold into U8, no v3→v4 migration) is owned canonically by #11; ratification status is the open ATC call at #20(3).
+  - [dedup] Sequencing rationale is canonical at #11; #17 references it, does not restate. Ratification status (open ATC call) owned by #20(3); source header is 'Recommendation (for the ATC call)', not a ratified scope decision.
+  - [!warn] Row #17 frames the fold-into-U8 / two-slices sequencing as a ratified 'Scope decision' (disp=canonical, section 'Scope decision — build it...'), but the SOURCE heads this exact text '## Recommendation (for the ATC call)' and the front-matter status is 'scoping — decision-ready, not yet built.' Row #20 correctly preserves the SAME sequencing (sub-decision 3) as an OPEN/pending-ratification ATC call. The home would therefore present fold-into-U8 as BOTH decided (#17) and pending (#20.3) — a decided-vs-open contradiction, and #17 has drifted in the honesty-critical direction (un-ratified recommendation shown as a decision). — fix: Re-label #17 as 'Recommendation pending ATC ratification' to match source + #20, or reconcile #17 and #20 so the sequencing is stated once with a single ratification status. The source header is the binding framing: 'Recommendation (for the ATC call)', not 'Scope decision'.
+  - [fixed:warn] re-labeled recommendation-pending; flipped to pointer; references #11/#20(3)
+- **`docs/plans/features/portfolio-holdings.md#18`** · `scope-boundary` · → Two slices — scope boundary · _canonical_
+  - sig: Slice 1 portfolio win, Slice 2 asset-mix readout
+  - Two slices: Slice 1 (the win) = multi-holding entry behind an opt-in expander aggregating to the account blend with derive/reconcile value; Slice 2 (optional polish) = a holdings summary row plus a household asset-mix readout ('about 68% stocks') so the user sees the blend their holdings produced.
+- **`docs/plans/features/portfolio-holdings.md#19`** · `scope-boundary` · → Honest framing — scope boundary · _canonical_
+  - sig: not a position-level portfolio analyzer
+  - Honest framing: this is not a position-level portfolio analyzer (no per-holding growth — one blended stockWeight is the deliberate engine design, asset-location forbidden); it makes intake match how people see their accounts and derives the mix more accurately without faking precision.
+  - [dedup] CRN / asset-location-forbidden canonical in architecture; cardinal rule (don't fake precision) canonical in product §2 — both pointers. The honest-framing scope statement is homed in this decision record.
+- **`docs/plans/features/portfolio-holdings.md#20`** · `decision-rationale` · → Open ATC sub-decisions (pending ratification) · _canonical_
+  - sig: three open ATC sub-decisions, recommendations
+  - Three open ATC calls (with recs): (1) opt-in expander vs holdings-first → rec opt-in (protects ~5-min path); (2) value-derived balance vs balance+cross-check → rec derive balance from holdings sum with manual override; (3) fold model field into U8 vs standalone-now → rec fold into U8 (no v3→v4 migration).
+  - [reframe] Surviving fact: three open ATC calls remain pending ratification — (1) opt-in vs holdings-first (rec: opt-in), (2) value-derived vs cross-checked balance (rec: derive with manual override), (3) U8-folded vs standalone (rec: fold into U8). Keep present-tense as live pending decisions, not a changelog.
+- **`docs/decisions/accumulation-fuck-off-date.md#73`** · `decision-rationale` · → Per-account vs per-lot basis · _reframe_
+  - sig: §4 per-account NOT per-lot basis
+  - §4: per-account, NOT per-lot, basis — the engine consumes a single aggregate initialTaxableBasis; collect basis per taxable account (summed to PersonAccounts.taxableBasis, then aggregate); per-lot basis is collectible-but-unused precision, don't collect it (scope-guardian).
+  - [dedup] Per-account-not-per-lot basis FACT is canonical in product.md R37 (the requirement); this decision record is the rationale and POINTS to R37, not a 2nd canonical; plans/2-first-answer.md D1 carries the intake build pointer.
+  - [reframe] Present-tense: we collect basis per taxable account (not per-lot) and aggregate to the engine's single initialTaxableBasis.
+  - [!warn] Dedup integrity gap (applies to #73 and #74). product.md R37 (line 160) ALREADY states verbatim in substance the per-account-not-per-lot basis fact ('Taxable cost basis is captured per taxable account, not per lot — the engine consumes one aggregate initialTaxableBasis; per-lot is collectible-but-unused precision, deliberately not collected') AND the ticker→blend collapse + manual-classification (row #74's fact). Both #73 and #74 dedup name only architecture/D1/C1 pointers and miss R37 as a co-located statement of the SAME fact — a silent dual-canonical that violates single-source discipline. — fix: Add product.md R37 to the dedup of #73 and #74 as the requirement-side statement of the same per-account-basis and ticker→blend facts, and decide which side is canonical (recommend: R37 = the requirement; the decision record = the rationale, and the rationale must POINT to R37 for the fact rather than independently restate the per-lot rule).
+  - [fixed:warn] added R37 as canonical fact; this record points to it
+- **`docs/decisions/accumulation-fuck-off-date.md#74`** · `decision-rationale` · → Ticker→blend / cash→bond / TDF static-snapshot · _reframe_
+  - sig: §5 ticker→one household blend; cash→bond; TDFs static
+  - §5: per-ticker holdings collapse to a single household stock-vs-(bond+cash) blend feeding the engine's one stockWeight (R37; engine is 2-asset, cash sleeve deferred); TDFs ship a static-snapshot blend ('today's allocation, held constant'), the years-to-target glide is the named correctness upgrade; unrecognized ticker → manual 3-choice classifier (+ advanced exact-% expander); all blends carry issuer/EDGAR citation; the TDF disclosure copy is D1-owned, C1 carries only the snapshot data.
+  - [dedup] Blend-collapse decision homed in portfolio-holdings; the ticker→household-blend + manual-classification FACT is canonical in product.md R37 (the requirement) — this record is the rationale and POINTS to R37, not a 2nd canonical; plans/1-engine.md C1 (snapshot data) + plans/2-first-answer.md D1 (disclosure copy) carry build pointers.
+  - [reframe] Present-tense: holdings collapse to one household 2-asset blend; cash folds into bonds; TDFs ship a static snapshot with a 'held constant' disclosure; an unrecognized ticker routes to a manual 3-choice classifier (+ advanced exact-% expander); and all blends carry an issuer/EDGAR citation, directional-until-pinned.
+  - [!warn] Hollow reframe. Source §5 carries two facts the REFRAME drops while the digest keeps them: (a) the RULE 'unrecognized ticker → manual 3-choice classifier' and (b) the CONSTRAINT 'all blends carry an issuer/EDGAR citation, directional-until-pinned.' The reframe ('holdings collapse to one household 2-asset blend; cash folds into bonds, TDFs ship a static snapshot with a held-constant disclosure') is a strict subset that loses both the manual-classification rule and the citation requirement. — fix: Extend the #74 reframe (or render from the digest) so the present-tense as-built text retains the unrecognized-ticker manual-classification rule AND the issuer/EDGAR-citation + directional-until-pinned constraint. A reframe must not drop a rule or a constraint.
+  - [!nit] Digest precision drop: source §5 says the unrecognized-ticker path routes to a 'manual 3-choice classifier (+ an advanced exact-% expander)'. The #74 digest keeps the 3-choice classifier but drops the '(+ advanced exact-% expander)' precision path. — fix: Restore '+ advanced exact-% expander' to the #74 digest so the manual-fallback precision path survives.
+  - [fixed:warn] fattened reframe (rule+citation); restored exact-% expander; added R37 dedup
+
+
+## docs/research/engine-validation-and-tax.md
+
+- **`README.md#14`** · `number-or-figure` · → Verified constants (25) + cohort mortality derivation · _pointer_
+  - sig: 25 constants + 1969/1972 cohort mortality
+  - Act 1 engine pinned to primaries: 25 tax/health constants verified vs IRS/CMS/HHS/eCFR/SEC filings, and cohort mortality re-derived from SSA Trustees-Report survival tables for the household's actual birth cohorts (the 1969/1972 cohorts).
+  - [dedup] Verified numbers canonical in research/engine-validation-and-tax; architecture, product R-ledger, and roadmap reference the count — those become pointers.
+- **`docs/README.md#5`** · `scope-boundary` · → Research scope note (the two verified-numbers files) · _canonical_
+  - sig: engine-validation-and-tax pre65-healthcare
+  - Verified reference numbers live in two research files: research/engine-validation-and-tax.md (Trinity/Bengen + tax) and research/pre65-healthcare.md (ACA/IRMAA / pre-65 healthcare).
+  - [dedup] CLAUDE.md references docs/research/; the two research files are themselves the canonical homes for the numbers, this is a scope note pointing at them.
+  - [reframe] Surviving fact: verified reference numbers split into exactly two research homes — engine-validation-and-tax (Trinity/Bengen + tax) and pre65-healthcare (ACA/IRMAA). Present-tense scope boundary for the research/ folder.
+- **`docs/product.md#86`** · `status-as-built` · → Sources / directional-until-pinned status · _pointer_
+  - sig: Numbers live in research docs, DIRECTIONAL UNTIL PINNED
+  - Dated figures live in docs/research/engine-validation-and-tax.md and docs/research/pre65-healthcare.md, marked directional until pinned; product.md's Sources front-matter points to both research docs.
+  - [dedup] The numbers themselves are canonical in the two research docs (engine-validation-and-tax + pre65-healthcare); this is a pointer-to-research statement — product keeps the Sources front-matter reference, CLAUDE.md (constants discipline) and architecture hold pointers.
+- **`docs/architecture.md#38`** · `number-or-figure` · → Tax constants — RMD (SECURE 2.0 ages, Uniform Lifetime Table) · _pointer_
+  - sig: RMD age 72/73/75 SECURE 2.0 non-convertible
+  - RMD age is birth-year-derived (72 ≤1950 / 73 1951–1959 / 75 1960+), = IRS Uniform Lifetime Table divisor on prior-year-end pre-tax balance; it is a forced-distribution mechanic not a tax ('taxes off' doesn't silence it) and is NON-CONVERTIBLE (must distribute first).
+  - [dedup] The RMD-age figure (SECURE 2.0 ages, ULT) collapses to the native canonical anchor research/engine-validation-and-tax#34 — the figure is written once there. The non-convertible LEGALITY constraint and forced-distribution mechanic remain canonical in architecture §7.1; architecture references the dated numbers.
+  - [fixed:warn] Flipped to pointer; dedup now collapses RMD figure to research#34 anchor.
+- **`docs/plans/1-engine.md#15`** · `number-or-figure` · → return-model moments / defaults · _canonical_
+  - sig: log-drift mu = arithmetic_mean − sigma²/2
+  - U1 lognormal sim uses log-drift μ = arithmetic_mean − σ²/2 (σ is the LOG-return σ; the seam declares simple- vs log-space and converts consistently); conservative real-return + inflation defaults (~3–3.5% real high-CAPE, Pfau/Kitces), user-overridable, from the methodology-default layer.
+  - [dedup] Architecture carries the lognormal/Box-Muller contract; the verified default numbers (Pfau/Kitces ~3–3.5%) and the drift formula are research-homed numbers.
+- **`docs/plans/1-engine.md#24`** · `number-or-figure` · → Trinity validation numbers · _canonical_
+  - sig: Trinity 37/39 94.9% vs 95.1%
+  - Trinity corporate arm: damodaranSeries.ts (Moody's Aaa total return 1928–1995) count-pinned at 37/39 ≈ 94.9% vs published 95.1%, same failing cohorts (1965/66), beside the untouched Shiller goldens.
+  - [dedup] Verbatim-preserved-facts copy in same doc collapses; canonical home is research/engine-validation-and-tax.md.
+  - [reframe] Surviving fact: Trinity corporate arm pins 37/39≈94.9% vs published 95.1%, same 1965/66 failing cohorts. Present-tense framing: state as the committed validation result, dropping the 'P1-exit pin 2026-06-11 / landed' dated framing.
+- **`docs/plans/1-engine.md#25`** · `number-or-figure` · → Bengen proxy validation numbers · _reframe_
+  - sig: Bengen Damodaran SAFEMAX ~3.67% vs 4.15%
+  - Bengen bit-exactness is retired (no canonical dataset); the committed proxy is the Damodaran 10-yr-Treasury total-return arm — duration-conservative SAFEMAX-analogue ~3.67% vs published 4.15% (never higher than the 5-yr truth), worst-cohort structure 1966/65/64 reproduced, counts pinned to an independent derivation.
+  - [dedup] Verbatim-preserved-facts + Changelog copies in same doc collapse; canonical home is research/engine-validation-and-tax.md.
+  - [reframe] Surviving fact: the Bengen proxy is the Damodaran 10-yr-Treasury arm, SAFEMAX-analogue ~3.67% vs published 4.15%, worst cohorts 1966/65/64, duration-conservative (never higher than the 5-yr-Treasury truth) with counts pinned via an INDEPENDENT derivation (DND/012). Present-tense framing: state as the standing validation choice; drop the changelog 'bit-exactness retired' narrative, keep the WHY (no canonical Bengen dataset; SBBI revises) as present-tense rationale.
+  - [fixed:nit] Reframe re-adds duration-conservative bound + DND/012 independent-derivation rule.
+- **`docs/plans/1-engine.md#26`** · `number-or-figure` · → SSA cohort mortality numbers · _reframe_
+  - sig: S(90|65) 0.3209/0.4348/0.6162 1969/1972 cohorts
+  - SSA cohort gate: real cohort tables (CohLifeTables_{M,F}_Alt2_TR2024, TR2024/Alt2) committed sha256-pinned; mortality.ts re-derived 1:1 from l(x)/l(65) for the 1969/1972 cohorts: S(90|65) male 0.3209 / female 0.4348 / couple 0.6162; SURVIVAL_MAX_AGE 119 (CRN-safe inverse-CDF).
+  - [dedup] Verbatim-preserved-facts copy in same doc + memory note collapse; canonical home is research/engine-validation-and-tax.md. The 1969/1972 cohort identity also lives in product/glossary by reference.
+  - [reframe] Surviving fact: mortality is re-derived from SSA TR2024/Alt2 cohort tables for 1969/1972 cohorts, S(90|65)=0.3209/0.4348/0.6162, SURVIVAL_MAX_AGE 119. Present-tense framing: state as the pinned mortality basis; drop the 'table4c7 phantom / earlier Gompertz fit was optimistic / pin moves headlines honest' supersedes narrative (keep only that the cohort tables are the source).
+- **`docs/plans/1-engine.md#75`** · `number-or-figure` · → gross-up fixed-point constants · _pointer_
+  - sig: k≈0.74 GROSS_UP_MAX_PASSES=128 ~113 passes
+  - Gross-up worst-case contraction factor k≈0.74; GROSS_UP_MAX_PASSES=128 (worst case ~113 passes).
+  - [dedup] On merge, create ONE native canonical statement of the gross-up bounds (k≈0.74, GROSS_UP_MAX_PASSES=128, ~113 passes, ENGINE_MAX_DOLLAR=1e12) in research/engine-validation-and-tax.md; this row and other-income#33 both point at it; architecture §7.1 contract + Performance section reference it.
+  - [fixed:warn] Flipped to pointer; dedup names the new native research gross-up anchor.
+- **`docs/plans/1-engine.md#76`** · `number-or-figure` · → RMD birth-year ages · _canonical_
+  - sig: RMD ages 72/73/75 by birth year
+  - RMD ages: 72 (≤1950) / 73 (1951–1959) / 75 (1960+).
+  - [dedup] Duplicated in U2 As built (item 30) and architecture §7.1; canonical numeric home is research/engine-validation-and-tax.md (also year-keyed in src/engine/constants).
+- **`docs/plans/2-first-answer.md#70`** · `number-or-figure` · → passphrase-strength gate thresholds · _canonical_
+  - sig: passphrase gate zxcvbn-ts score>=3 AND length>=12
+  - U8 passphrase-strength gate (net-new): a hard min-entropy gate at passphrase-set using zxcvbn-ts, calm inline feedback (no scary red meter), no weak-passphrase bypass; the hard threshold is zxcvbn-ts score ≥ 3 AND an independent length ≥ 12 chars — both must clear (a dual floor because PBKDF2-600k is not memory-hard: a GPU runs ~10^8–10^9 guesses/sec, so score and raw-length are complementary); the gate runs before any wrap is minted; the estimator is bundled (CSP connect-src 'self'), never a CDN.
+  - [dedup] Research (verified numbers) canonical for the score≥3/length≥12 thresholds + the GPU guess-rate figure; architecture §7.3 (PBKDF2-600k/extractable:false) carries the security-boundary pointer; the build wiring lives in plans/2 U8.
+- **`docs/plans/features/social-security.md#4`** · `number-or-figure` · → SS Method C verified divergence · _canonical_
+  - sig: Method C $1,025 vs naive-max $975
+  - SSA pays the gently-reduced own benefit in full plus a separately-reduced spousal EXCESS (Method C, POMS RS 00615.020), so the true total exceeds max(); verified own PIA $1,000/spouse $3,000 both at 62 → $1,025/mo vs naive-max $975/mo ($600/yr understatement).
+  - [dedup] The verified divergence NUMBER is canonical in research; the Method C RULE itself is canonical in architecture §7 (item #19); §11 fixture (item #51) becomes a pointer to this research figure.
+- **`docs/plans/features/social-security.md#15`** · `number-or-figure` · → SS verified constants: FRA by birth year · _canonical_
+  - sig: FRA 1960+ = 67y0m (804 months)
+  - FRA by birth year: 1960+ → 67y0m (804 months); 1955–59 graduated (66y2m…66y10m). Store FRA as MONTHS; 'born Jan 1 → treated as prior year'. Primary: SSA NRA chart oact/ProgData/nra.html.
+  - [dedup] Research is canonical for the verified figure; the §2 FullRetirementAge shape (item #33) points here.
+  - [reframe] Surviving fact: FRA-by-birth-year table (804 months @1960+, graduated band, store-as-months, Jan-1 prior-year rule). 'PRESERVED VERBATIM' tag dropped.
+- **`docs/plans/features/social-security.md#16`** · `number-or-figure` · → SS verified constants: own early-reduction factors · _canonical_
+  - sig: own early reduction 62/FRA67 = exactly 0.7000
+  - Own early reduction: 5/9%/mo first 36 then 5/12%/mo → (180−n)/180, (192−(n−36))/240; 62/FRA67 = exactly 0.7000. Primary POMS RS 00615.101 (RS 00615.102 is a dead 404). Dime-round DOWN as a final benefit-$ step, never on the factor.
+  - [dedup] Research is canonical for the verified factor; §2/§3 WORKER_REDUCTION (items #33,#36) and the citation-landmine list point here.
+  - [reframe] Surviving fact: own early-reduction formula + the 0.7000 anchor + the RS 00615.101 citation and .102-is-404 landmine + dime-floor rule. 'PRESERVED VERBATIM' tag dropped.
+- **`docs/plans/features/social-security.md#17`** · `number-or-figure` · → SS verified constants: delayed-retirement credits · _canonical_
+  - sig: DRC 8%/yr → 1.24× at 70
+  - Delayed credits: 2/3%/mo = 8%/yr (born 1943+), FRA→70, max 36 mo → 1.24× at 70. Primary POMS RS 00615.690 §B (window) + .692 (rate). DRC applies to PIA at the no-early-claim anchor; never generalize 8% to pre-1943.
+  - [dedup] Research is canonical for the verified DRC figure; §2/§3 DRC and the §11 1.24 golden (items #33,#36,#54) point here.
+  - [reframe] Surviving fact: DRC 8%/yr → 1.24× @70, FRA→70 window, RS 00615.690/.692 citations, pre-1943 landmine. 'PRESERVED VERBATIM' tag dropped.
+- **`docs/plans/features/social-security.md#18`** · `number-or-figure` · → SS verified constants: spousal base rate · _canonical_
+  - sig: spousal base 50% of higher earner's unreduced PIA
+  - Spousal base = 50% of the higher earner's UNREDUCED PIA; NO DRCs on spousal. Primary POMS RS 00202.020, RS 00615.201. Feed it PIA, never the worker's adjusted benefit.
+  - [dedup] Research is canonical for the verified rate; §2/§4 SPOUSAL_RATE=0.50 (items #18 dup,#19) point here.
+  - [reframe] Surviving fact: spousal base = 50% of higher earner's unreduced PIA, no DRCs, feed PIA not adjusted benefit. 'PRESERVED VERBATIM' tag dropped.
+- **`docs/plans/features/social-security.md#19`** · `number-or-figure` · → SS verified constants: spousal early-reduction schedule · _canonical_
+  - sig: spousal early reduction 25/36 %/mo, 0.325 at 62
+  - Spousal early reduction: 25/36%/mo first 36 (=1/144) then 5/12%/mo → 0.325 of worker PIA at 62/FRA67; a DIFFERENT schedule from the worker's 5/9 — do not blend. Primary POMS RS 00615.201.
+  - [dedup] Research is canonical for the verified schedule; §2/§4 SPOUSE_REDUCTION (items #33,#37) point here. Note 0.325 is the reduced spousal-base-half; §4 derives the excess factor 156/240=0.65 separately.
+  - [reframe] Surviving fact: spousal early-reduction schedule (25/36 then 5/12) distinct from worker's, 0.325-of-PIA anchor at 62, RS 00615.201. 'PRESERVED VERBATIM' tag dropped.
+- **`docs/plans/features/social-security.md#22`** · `number-or-figure` · → SS verified constants: deemed-filing cutoff · _canonical_
+  - sig: deemed filing cutoff 1954-01-02
+  - Deemed filing: DOB ≥ Jan 2, 1954 ⇒ one filing = both; both cohorts fully subject. One claim-age per person, no restricted application, SURVIVOR exempt. Primary POMS GN 00204.035 (NOT RS 00615.020).
+  - [dedup] Research is canonical for the verified cutoff date/citation; §2 DEEMED_FILING_DOB_CUTOFF and the citation-landmine list point here; the §5 deemed-filing rule (item #38) is the mechanics home in architecture.
+  - [reframe] Surviving fact: deemed-filing cutoff 1954-01-02, one claim per person, survivor exempt, GN 00204.035 citation (not RS 00615.020). 'PRESERVED VERBATIM' tag dropped.
+- **`docs/plans/features/social-security.md#23`** · `number-or-figure` · → SS verified constants: survivor reduction · _canonical_
+  - sig: survivor 71.5%@60, max reduction 28.5%
+  - Survivor §202: start 60 (50 disabled); 71.5%@60 → 100%@survivor-FRA, factor LOCKED at claim age (no post-claim ramp); deceased's DRCs flow through; max reduction held at 28.5% by varying the per-mo fraction (19/56 @FRA67, 19/40 @FRA65) — derive from the 60→survivor-FRA span, never hardcode. Primary POMS RS 00615.301/.702/.310.
+  - [dedup] Research is canonical for the verified survivor factor; §2/§6 SURVIVOR_REDUCTION point here; the lock-flat behavior is an invariant in architecture (item #40).
+  - [reframe] Surviving fact: survivor §202 reduction (71.5%@60, 28.5% max held by per-mo fraction, derive from span, DRC flow-through, RS 00615.301/.702/.310). 'PRESERVED VERBATIM' tag dropped.
+- **`docs/plans/features/social-security.md#24`** · `number-or-figure` · → SS verified constants: RIB-LIM cap · _canonical_
+  - sig: RIB-LIM greater-of 82.5% floor
+  - RIB-LIM: cap = GREATER OF {82.5% of death PIA, deceased's actual reduced RIB if alive} — a 'larger-of' pair, NOT a flat 82.5% haircut; 82.5% is a FLOOR within the cap. Primary POMS RS 00615.320.
+  - [dedup] Research is canonical for the verified RIB-LIM rule; §2 RIB_LIM floorPctOfDeathPia 0.825 and the §11 RIB-LIM oracle (item #53) point here; the cap logic lives in architecture §7.
+  - [reframe] Surviving fact: RIB-LIM = greater-of{0.825·death PIA, deceased's actual reduced RIB}, 82.5% is a floor not a haircut, RS 00615.320. 'PRESERVED VERBATIM' tag dropped.
+- **`docs/plans/features/social-security.md#25`** · `number-or-figure` · → SS verified constants: survivor-FRA · _canonical_
+  - sig: survivor-FRA = 67, keyed separately
+  - survivor-FRA is a separate schedule = 67 for both cohorts (coincides with retirement FRA — don't alias); key it SEPARATELY or a cohort change silently breaks. Primary POMS RS 00615.301B.2.
+  - [dedup] Research is canonical for the verified figure; §6 survivor-FRA references point here.
+  - [reframe] Surviving fact: survivor-FRA = 67 for both cohorts but keyed on a separate schedule (don't alias to retirement FRA), RS 00615.301B.2. 'PRESERVED VERBATIM' tag dropped.
+- **`docs/plans/features/social-security.md#30`** · `lesson` · → SS citation landmines · _reframe_
+  - sig: citation landmines: .102 is 404, GN 00204.035, .301/.702
+  - Three SS citation landmines: RS 00615.102 is a dead 404 (use .101); deemed filing is GN 00204.035 (RS 00615.020 is the AMOUNT math); the survivor general DRC flow-through is RS 00615.301/.702 (RS 00615.320's DRC clause is RIB-LIM-internal).
+  - [dedup] The verified citation corrections belong with the SS research numbers; the per-factor landmines (items #16,#22,#23) also carry them. BY DESIGN this stays in research as citation-hygiene provenance beside the verified SS constants, NOT routed to insights despite the `lesson` kind; the generalizable 'verify a POMS citation resolves before it goes load-bearing' lesson is the only insights-eligible part.
+  - [reframe] Surviving fact: the three SS citation corrections (.101 not .102; GN 00204.035 for deemed filing; .301/.702 for survivor DRC flow-through). Present-tense as landmine notes beside the verified SS constants.
+  - [fixed:nit] Dedup notes lesson-kind stays in research by design; lesson part is insights-eligible.
+- **`docs/plans/features/social-security.md#34`** · `number-or-figure` · → SS constants module: shapes & integer-fraction storage · _reframe_
+  - sig: reduction schedules as integer fractions, drcMonthsCap = 840 − fraMonths
+  - §2 shapes: FullRetirementAge birth-year→MONTHS (804 @1960+, graduated band, Jan-1 prior-year rule in the lookup); ReductionSchedule {firstMonths:36, firstRatePerMonth, beyondRatePerMonth} as INTEGER FRACTIONS (1/180,1/240,1/144,1/150) so 62/FRA67 = 168/240 = 0.7000; WORKER_REDUCTION, SPOUSE_REDUCTION, DRC instances; drcMonthsCap derived = 840 − fraMonths (36 @FRA67, 46 @FRA66y2m — never a literal 36).
+  - [dedup] The verified factors are canonical in research (items #15-17); this records the storage SHAPE (integer fractions, drcMonthsCap formula) alongside them. §3 drcMonthsCap formula (item #36) points here.
+  - [reframe] Surviving fact: reduction schedules stored as integer fractions (1/180,1/240,1/144,1/150) yielding exact 0.7000; drcMonthsCap = 840 − fraMonths, never a literal 36. Present-tense as the constants-module shape note.
+- **`docs/plans/features/social-security.md#35`** · `number-or-figure` · → SS constants: survivor/RIB-LIM/spousal/deemed-filing values · _reframe_
+  - sig: SURVIVOR_REDUCTION spans 28.5%, RIB_LIM 0.825, SPOUSAL_RATE 0.50
+  - §2: SURVIVOR_REDUCTION keyed to span exactly 28.5% age 60→survivor-FRA (compute per-month fraction from the span, don't hardcode 19/40) + DWB flat-28.5% floor; RIB_LIM {floorPctOfDeathPia:0.825} (larger-of logic in code); SPOUSAL_RATE = 0.50; DEEMED_FILING_DOB_CUTOFF = 1954-01-02.
+  - [dedup] These verified values duplicate §6 and the verified rule-set table (items #23,#24,#18,#22); research is canonical, those rows point here.
+  - [reframe] Surviving fact: the named SS constants (SURVIVOR_REDUCTION 28.5% span + DWB floor, RIB_LIM 0.825, SPOUSAL_RATE 0.50, DEEMED_FILING_DOB_CUTOFF 1954-01-02). Present-tense as the constants-value list.
+- **`docs/plans/features/social-security.md#52`** · `number-or-figure` · → SS Method C POMS oracle ($2,000→$920) · _canonical_
+  - sig: Method C oracle $2,000 worker PIA → $920
+  - §11 Method C oracle: the POMS RS 00615.020 PRINTED example — worker PIA $2,000 (spouse base 0.50·$2,000 = $1,000), own RIB $400 → excess $600 → $540, RIB → $380, total $920; the example's '$1,000' is the SPOUSAL BASE not the worker PIA the §4 formula consumes (feed H.pia=$2,000 or it can't reproduce $920); reductions are illustrative so it pins the STRUCTURE not a single claim age.
+  - [dedup] Research is canonical for the verified oracle number; DND/012 (item #27) and the file-map test reference point here.
+- **`docs/plans/features/social-security.md#53`** · `number-or-figure` · → SS divergence fixture ($1,025 / excessAdj 325) · _canonical_
+  - sig: divergence fixture $1,025, excessAdj === 325
+  - §11 divergence fixture (max()-relapse AND schedule-swap guard): own PIA $1000 / worker PIA $3000 at 62/FRA67 → own $700, excessAdj $325, total $1,025; assert (a) it beats max(700,975)=975 by $50/mo AND (b) excessAdj===325 independently — a 5/9-for-excess schedule swap yields $350/total $1,050, so pinning the component keeps the swap-discriminator alive.
+  - [dedup] Research is canonical for the verified fixture; the Gap 2 figure (item #4) and the §12 dual-earner property test point here.
+- **`docs/plans/features/social-security.md#54`** · `number-or-figure` · → SS RIB-LIM POMS oracle ($350) · _canonical_
+  - sig: RIB-LIM oracle $350/$374.90 → $350
+  - §11 RIB-LIM oracle: POMS RS 00615.320 — reduced RIB $350, PIA $374.90, 0.825·$374.90 = $309.29 (dime-floored $309.20) → WIB = max($350, $309.29) = $350.
+  - [dedup] Research is canonical for the verified oracle; the verified-rule-set RIB-LIM row and Institutional learnings point here.
+- **`docs/plans/features/social-security.md#55`** · `number-or-figure` · → SS early-widowhood junction fixture · _canonical_
+  - sig: early-widowhood junction, cap-then-age-reduce order
+  - §11 combined early-widowhood junction (the unit's raison d'être): a death in survivor age 60–65 where the §202 age-reduced (lock-flat) + RIB-LIM-capped survivor benefit differs from the old max(deceasedScalar, survivorScalar) — pins the cap-then-age-reduce order AND the survivor max()-relapse; hand-derived from POMS (no standalone oracle); own factors 0.7000@62, 1.0000@67, 1.24@70 anchored to SSA's published percent-of-PIA table; every expected value hand-derived from POMS, never from socialSecurity.ts.
+  - [dedup] Research is canonical for the verified hand-derived junction fixture; §3 own-factor goldens and §12 survivor max-relapse point here.
+- **`docs/plans/features/other-income.md#33`** · `number-or-figure` · → Engine bounds (k_sup, ENGINE_MAX_DOLLAR, gross-up passes) · _reframe_
+  - sig: k_sup 0.74, ENGINE_MAX_DOLLAR 1e12, income additive constant
+  - Gross-up contraction factor k_sup ≈ 0.74; ~113-pass bound; ENGINE_MAX_DOLLAR = 1e12; finiteNonNeg backstop; income's taxable is an additive constant that does NOT raise k and stays inside ENGINE_MAX_DOLLAR — the convergence re-probe doubles as the perf check (GROSS_UP_MAX_PASSES).
+  - [dedup] Verified bound figures canonical in research; architecture (engine bounds) + Performance carry pointers.
+  - [reframe] Surviving fact: k_sup≈0.74, ~113-pass bound, ENGINE_MAX_DOLLAR=1e12, income's taxable is an additive constant that doesn't raise k. Present-tense verified bounds.
+- **`docs/plans/features/other-income.md#36`** · `number-or-figure` · → Engine figures (survivorSpendingRatio 0.75) · _reframe_
+  - sig: survivorSpendingRatio 0.75 first death, distinct from survivorPct
+  - survivorSpendingRatio = 0.75, applied on the FIRST death of either spouse (a NEEDS figure); distinct from survivorPct (a RECEIPTS figure keyed to the OWNER's death) — KTD-7.
+  - [dedup] The 0.75 figure homes in research; KTD-7 (needs-vs-receipts independence) homes in decisions/other-income-r40 (pointer); Unit 3 test references it.
+  - [reframe] Surviving fact: survivorSpendingRatio=0.75 fires on the first spousal death (needs), distinct from survivorPct (receipts, owner-death-keyed). Present-tense figure.
+- **`docs/plans/features/other-income.md#61`** · `number-or-figure` · → R40 compile goldens (hand-derived) · _reframe_
+  - sig: golden $45k at 3% halves by ~year 23; gross[0]===annualRealToday
+  - Unit 2 golden examples (DND/012, hand-derived): real-flat→flat; nominal-flat→geometric real-decay ($45k at 3% ≈ halves by ~year 23); fixed-pct→net-real-rate decay; already-receiving anchor (KTD-8b): nominal-flat with startAge≤currentAge → gross[0]===annualRealToday AND gross[1]===annualRealToday/(1+infl); survivor variant per-stream: two streams one owner, survivorPct 0.5 and 0 → grossSurvivor=0.5·streamA+0·streamB (asserts Σ streams·survivorPct, NOT 0.5·grossFull); fork: post-2018 alimony→0, pre-2019→gross, qualified annuity→1, non-qual→entered exclusion.
+  - [reframe] Surviving fact: the hand-derived R40 compile goldens — $45k at 3% halves by ~year 23, the gross[0]/gross[1] already-receiving anchor, the per-stream survivor-variant golden, and the four tax-fork values. Present-tense verified goldens.
+- **`docs/plans/features/other-income.md#80`** · `number-or-figure` · → Verified tax facts — alimony (TCJA) · _reframe_
+  - sig: alimony TCJA post-2018 not taxable, §71(b)(1)(D) 0% survivor
+  - Verified tax facts — ALIMONY: post-2018 agreements not taxable to recipient / not deductible by payer (TCJA; Pub 504, Topic 452); pre-2019 taxable/deductible unless expressly modified; reported Sch 1 line 2a → AGI; terminates at recipient death (§71(b)(1)(D)) → 0% survivor.
+  - [dedup] Verified tax numbers canonical in research; per-type defaults + KTD-6 (decisions) cite them (pointers).
+  - [reframe] Surviving fact: post-2018 alimony is not taxable/deductible (TCJA, Pub 504, Topic 452); pre-2019 is taxable unless expressly modified; Sch 1 line 2a → AGI; terminates at recipient death (§71(b)(1)(D)) → 0% survivor. Present-tense verified tax facts.
+- **`docs/plans/features/other-income.md#81`** · `number-or-figure` · → Verified tax facts — pension / rental / annuity · _reframe_
+  - sig: pension Pub 575 Simplified Method, rental 27.5yr SL, annuity exclusion-ratio Pub 939
+  - Verified tax facts — PENSION: fully ordinary taxable (1040 5b); Simplified Method gives a fixed-nominal tax-free basis portion that shrinks then stops (Pub 575); QJSA 50% federal floor; election single-life/50/75/100 (IRC 401(a)(11)/417); into AGI/MAGI. RENTAL: net (gross−expenses−depreciation, 27.5yr SL) ordinary on Sch E → AGI/MAGI; passive, no SE tax, continues past retirement until sold (Pub 527/925); recapture/cap-gains/step-up fire only on sale (OUT v1). ANNUITY: qualified=fully taxable; non-qualified=exclusion ratio (basis/expected-return, Pub 939; 26 CFR 1.72-4), tax-free until basis recovered then 100% taxable; fixed=flat nominal, COLA=optional rider lowering initial payout; J&S survivor %; taxable portion → MAGI.
+  - [dedup] Verified tax numbers canonical in research; per-type defaults + provenance + KTD-6/Scope-deferred (decisions) cite them (pointers).
+  - [reframe] Surviving fact: pension (Pub 575 Simplified Method, QJSA 50% floor, IRC 401(a)(11)/417), rental (27.5yr SL depreciation, Sch E, no SE tax, sale events OUT v1, Pub 527/925), annuity (qualified fully taxable / non-qual exclusion ratio, Pub 939 / 26 CFR 1.72-4, tax-free until basis recovered). Present-tense verified tax facts.
+- **`docs/decisions/accumulation-fuck-off-date.md#29`** · `number-or-figure` · → Accumulation constants tables (provenance) · _pointer_
+  - sig: contributions.ts / tickerBlend.ts canonical tables
+  - Sourced figures are not inlined in plan/tests; they live in canonical constants tables src/engine/constants/contributions.ts and src/engine/reference/tickerBlend.ts with citations, directional-until-pinned.
+  - [dedup] Constants-home rule canonical in architecture.md §8; the verified figures live in research; this record points.
+- **`docs/decisions/accumulation-fuck-off-date.md#30`** · `number-or-figure` · → 2026 contribution limits (Notice 2025-67) · _canonical_
+  - sig: IRS Notice 2025-67 2026 401(k)/IRA/§415(c) limits
+  - 2026 contribution/annual-additions limits — IRS Notice 2025-67 (2025-11-13): 401(k)/403(b) elective deferral + age-50 catch-up, IRA limit + indexed IRA catch-up (SECURE 2.0 §108), §415(c) annual-additions ceiling. One notice covers four figures.
+  - [dedup] Verified numbers canonical in research; contributions.ts holds the citation; this record points.
+- **`docs/decisions/accumulation-fuck-off-date.md#31`** · `number-or-figure` · → 2026 HSA/HDHP limits (Rev. Proc. 2025-19) · _canonical_
+  - sig: Rev. Proc. 2025-19 2026 HSA limits, $1,000 catch-up fixed
+  - 2026 HSA limits + HDHP definitions — IRS Rev. Proc. 2025-19 (2025-05-01): HSA self-only/family limits, age-55 catch-up $1,000 (statutorily fixed, NOT indexed — hard-code), HDHP min-deductible + max-OOP; catch-up is per-person per-account (matters for the couple).
+  - [dedup] Verified numbers canonical in research; src/engine/constants (hsa2026) holds the citation; this record points.
+- **`docs/decisions/accumulation-fuck-off-date.md#32`** · `number-or-figure` · → SECURE 2.0 catch-up provenance · _canonical_
+  - sig: SECURE 2.0 §109 60–63 super catch-up
+  - SECURE 2.0 §109: the 60–63 'super catch-up' (greater of $10k or 150% of the regular catch-up; the $10k floor indexed; an OPTIONAL plan feature); carried as legalBasis provenance on the catch-up constant.
+  - [dedup] Verified figure canonical in research; contributions.ts holds the legalBasis provenance; this record points.
+- **`docs/decisions/accumulation-fuck-off-date.md#35`** · `number-or-figure` · → Ticker→asset-class blend table (provenance + as-shipped 161 families) · _canonical_
+  - sig: 161 families / ~244 tickers two-source verified
+  - Ticker→asset-class: bundled table keyed on issuer share-class family (VTI==VTSAX); citation = issuer allocation panel with SEC EDGAR N-PORT as DND/012 backstop; cash folds into bonds; TDFs static snapshot; manual 3-choice fallback + exact-% expander. As-shipped C1: 161 families (~244 tickers) two-source verified; P1-exit EDGAR pin pass sized ~161 rows.
+  - [dedup] Verified figures canonical in research; tickerBlend.ts holds the data; the C1 as-shipped 161-family count is duplicated in the C1 deviation record (item 87).
+  - [reframe] Strip 'AMENDED 2026-06-10' framing: present-tense the table ships 161 share-class families (~244 tickers), two-source verified; pin pass is ~161 rows.
+- **`docs/research/engine-validation-and-tax.md#0`** · `scope-boundary` · → Intro / single-source rule · _canonical_
+  - sig: single-source home of verified reference numbers
+  - This doc is the single canonical home for verified reference numbers (Trinity/Bengen, MC calibration band, longevity formula, full tax surface); a number lives here and is never re-typed into a plan or component.
+  - [dedup] This doc is canonical for the numbers themselves; architecture.md (constants discipline) and CLAUDE.md hold the discipline/summary as pointers.
+- **`docs/research/engine-validation-and-tax.md#1`** · `scope-boundary` · → Intro / scope split · _canonical_
+  - sig: healthcare half lives in pre65-healthcare.md
+  - The healthcare half of the tax surface (ACA-PTC pre-65, IRMAA post-65, HSA) lives in its own note pre65-healthcare.md; together the two are the engine's tax+health reference.
+  - [dedup] This doc owns the boundary statement; pre65-healthcare.md is the sibling note it points to (a cross-reference, not duplication).
+- **`docs/research/engine-validation-and-tax.md#2`** · `invariant` · → Intro / pointer to invariants · _pointer_
+  - sig: engine invariants live once in architecture.md
+  - The load-bearing engine invariants (single shared market draw/CRN, stateless Box-Muller, reduce-to-spine, externally-derived fixtures) live once in architecture.md; this doc points to them, does not duplicate.
+  - [dedup] architecture.md is canonical for the invariants; this research doc and CLAUDE.md are pointers.
+- **`docs/research/engine-validation-and-tax.md#3`** · `lesson` · → How this evidence was produced · _no-move_
+  - sig: do not flatten defensible or directional into verified
+  - Preserve confidence tags on purpose: never flatten 'defensible'/'directional' into 'verified'; directional fixtures are marked directional in code and the exit-gate pass pinned the ones needing pinning.
+- **`docs/research/engine-validation-and-tax.md#4`** · `build-detail-or-KTD` · → Validation contract intro · _reframe_
+  - sig: wrong Trinity bond number designated golden oracle
+  - The raw research designated a wrong Trinity bond number as a golden oracle; encoding it would have made a correct engine fail its own tests — the verifier caught it and every golden number here is the corrected one.
+  - [reframe] Surviving fact: every golden number in this doc is the verifier-corrected value, because a wrong Trinity bond oracle would fail a correct engine. Framed present-tense as a standing caution on fixture provenance, not as a past incident.
+- **`docs/research/engine-validation-and-tax.md#10`** · `number-or-figure` · → Golden / exact (Trinity) · _canonical_
+  - sig: Trinity 50/50 95% 100% bond ~70%
+  - Trinity (Cooley/Hubbard/Walz 1998) vintage-lock 1926–1995, S&P500+long-term corporate bonds, infl-adj withdrawals, success=balance>$0; golden 4%/30yr: 50/50=95%, 75/25=100% (verifier fix from 98%), 100% stock=98%, 100% bond≈70% (corrected from wrong '20–35%'); 100%-bond row 3/4/5/6%=94/70/51/44%.
+- **`docs/research/engine-validation-and-tax.md#11`** · `build-detail-or-KTD` · → Golden / exact (Trinity diagnostic) · _canonical_
+  - sig: 100%-bond ~70% diagnostic case bonds poorly
+  - The 100%-bond≈70% row is the diagnostic case: a correct engine with inflation-adjusted withdrawals must show bonds doing poorly; if it shows bonds safe, the inflation adjustment or volatility handling is wrong.
+- **`docs/research/engine-validation-and-tax.md#12`** · `number-or-figure` · → Deterministic golden (Bengen) · _canonical_
+  - sig: Bengen SAFEMAX 4.15% 1966 cohort
+  - Bengen SAFEMAX=4.15% corresponds to the 1966 retiree cohort (verifier fix from mis-paired 1968); allocation 50% S&P500 / 50% intermediate-term government bonds, 30yr, annual rebalance.
+- **`docs/research/engine-validation-and-tax.md#13`** · `build-detail-or-KTD` · → Deterministic golden / Pin-pass status (Bengen) · _canonical_
+  - sig: Bengen bit-exact only against Ibbotson dataset
+  - Bengen SAFEMAX is bit-exact only against Bengen's exact Ibbotson intermediate-government dataset; without it, treat as a directional survive/fail test, not a golden number — pin the dataset before calling it deterministic.
+- **`docs/research/engine-validation-and-tax.md#14`** · `build-detail-or-KTD` · → Deterministic golden (bond-index mismatch) · _canonical_
+  - sig: never cross-validate Trinity corporate vs Bengen government
+  - Bond-index mismatch: Trinity used corporate bonds, Bengen used government bonds, so their numbers legitimately differ (Bengen 50/50≈100% vs Trinity 50/50=95% at 4%/30yr); never cross-validate one against the other's exact figure.
+- **`docs/research/engine-validation-and-tax.md#15`** · `number-or-figure` · → Monte Carlo calibration band · _canonical_
+  - sig: Monte Carlo calibration band high-80s to ~90%
+  - Monte Carlo calibration is a band, not an equality: i.i.d. MC scores a withdrawal rate more pessimistically than a historical backtest; 4%/30yr lands high-80s to ~90%, below the 95% historical — assert only a range for MC, use the historical cases as the exact oracle.
+- **`docs/research/engine-validation-and-tax.md#16`** · `decision-rationale` · → Monte Carlo calibration / conservative-returns rationale · _canonical_
+  - sig: Pfau/Kitces high-CAPE 3–3.5% safe rate
+  - Pfau/Kitces: high-CAPE environments imply a 3–3.5% safe rate rather than 4%, corroborating the deliberately-conservative-real-returns decision.
+- **`docs/research/engine-validation-and-tax.md#17`** · `build-detail-or-KTD` · → Methodology landmines / volatility drag · _canonical_
+  - sig: volatility drag log-drift mean minus sigma squared over two
+  - Volatility drag (#1 MC bug): geometric≈arithmetic−σ²/2; for a lognormal sim use log-drift μ=arithmetic_mean−σ²/2 or you overstate compounding; unit test +50% then −50% → two-year cumulative −25%, annualized geometric −13.4% (don't conflate cumulative with annualized).
+- **`docs/research/engine-validation-and-tax.md#20`** · `number-or-figure` · → Methodology landmines / longevity (superseded population figures) · _reframe_ · [NOT-must-survive]
+  - sig: ~25% of 65-year-olds past 90; ~53% couple
+  - Grounded-search-era population longevity figures (now superseded by pinned cohorts): ~25% of 65-yos live past 90; ~53% chance at least one of a 65-yo couple reaches 90, reflecting sex-differentiated survival (not the symmetric 43.75% the formula gives on a single rate).
+  - [reframe] Surviving fact: the asymmetry of the couple figure (women materially higher) is why ~53% ≠ the symmetric 43.75%. Kept present-tense only to explain the formula's asymmetry; the live anchors are the pinned 0.3209/0.4348/0.6162 cohort numbers (item #24), not these population figures.
+- **`docs/research/engine-validation-and-tax.md#21`** · `requirement` · → Methodology landmines / rebalancing · _canonical_
+  - sig: annual rebalance to target match Trinity/Bengen/FIRECalc
+  - Rebalancing: Trinity/Bengen/FIRECalc all assume annual rebalance to target — the engine must match it or results drift.
+- **`docs/research/engine-validation-and-tax.md#22`** · `build-detail-or-KTD` · → Methodology landmines / local oracle · _canonical_
+  - sig: cFIREsim-open Shiller 1871 local oracle
+  - Local oracle for generating golden historical outputs on our own input sets: github.com/boknows/cFIREsim-open (Shiller data from 1871, rolling one-year-shifted windows).
+- **`docs/research/engine-validation-and-tax.md#24`** · `number-or-figure` · → SSA cohort tables — pinned household cohorts · _canonical_
+  - sig: 0.3209 0.4348 0.6162 male 1969 female 1972
+  - Pinned household mortality cohorts: male 1969 / female 1972; S(90|65)=0.3209 (male)/0.4348 (female) → couple at-least-one-to-90=0.6162; per-spouse curves and couple anchor encoded in src/engine/reference/mortality.ts; a Trustees-Report-vintage bump is a deliberate re-pin, never a silent refresh.
+  - [dedup] This research doc is canonical for the numbers; same-doc pin-pass table and project memory are pointers.
+- **`docs/research/engine-validation-and-tax.md#25`** · `scope-boundary` · → Tax reference for the strategy solver (scope) · _reframe_
+  - sig: Strand 5 multi-control solver tax surface bigger
+  - The tax surface serves a multi-control solver (withdrawal sequencing + Roth conversion) with income-dependent healthcare, and is composed of two sources — this doc's bracket/RMD/SS-tax reference plus the dedicated healthcare note.
+  - [dedup] pre65-healthcare.md is the sibling note this points to; no duplication.
+  - [reframe] Surviving fact (present-tense): the tax surface serves a multi-control solver (withdrawal sequencing + Roth conversion) with income-dependent healthcare, composed of two sources — this doc (brackets/RMD/SS-tax) plus pre65-healthcare.md (ACA-PTC, IRMAA, HSA). Drop the 'began as a single Roth lever' history.
+- **`docs/research/engine-validation-and-tax.md#29`** · `build-detail-or-KTD` · → Tax reference provenance · _canonical_
+  - sig: tax-reference verified gemini-grounding 2026-06-04
+  - Tax-reference verification provenance: verified via gemini-grounding 2026-06-04 (Tax Foundation 2026 bracket tables, IRS RMD FAQ, SECURE 2.0, OBBBA, plus the healthcare note's IRS/CMS primaries); 2026 figures since pinned against IRS primaries.
+- **`docs/research/engine-validation-and-tax.md#30`** · `status-as-built` · → The legal basis (OBBBA-2025) · _canonical_
+  - sig: OBBBA 2025 made TCJA rate structure permanent
+  - OBBBA (signed 2025-07-04) made the TCJA individual rate structure (10/12/22/24/32/35/37) and elevated standard deduction permanent, so 2026 is NOT a TCJA-sunset reversion; the tax-vintage staleness clock tracks inflation indexing, the senior-bonus sunset, the RMD-age step, and future law — stamp the legal basis (OBBBA-2025), not just the year.
+- **`docs/research/engine-validation-and-tax.md#31`** · `number-or-figure` · → 2026 federal MFJ ordinary-income brackets · _canonical_
+  - sig: 2026 MFJ brackets 10% ≤ $24,800 37% > $768,700
+  - 2026 federal MFJ ordinary-income brackets (taxable income): 10% ≤$24,800; 12% $24,801–$100,800; 22% $100,801–$211,400; 24% $211,401–$403,550; 32% $403,551–$512,450; 35% $512,451–$768,700; 37% >$768,700.
+- **`docs/research/engine-validation-and-tax.md#32`** · `number-or-figure` · → Standard deduction / widow(er)'s-penalty drivers · _canonical_
+  - sig: 2026 MFJ standard deduction $32,200; age-65 +$1,650
+  - 2026 MFJ standard deduction=$32,200; single≈half (≈$16,100, pin exact; 2025 was MFJ $31,500/single $15,750 exactly 2×); additional age-65+ standard deduction≈$1,650/spouse MFJ (2026), pin exact.
+
+- **`docs/research/engine-validation-and-tax.md#33`** · `build-detail-or-KTD` · → Widow(er)'s-penalty drivers · _canonical_
+  - sig: widow(er)'s penalty single brackets no QSS grace
+  - Widow(er)'s-penalty mechanics: survivor files single the year after first death (year of death still MFJ; QSS MFJ-equivalent rates need a dependent child the target couple lacks, so no grace — Pub 501); same real dollars fall into ~half-width single brackets with ~half the std deduction; the joint→survivor two-regime boundary doubles as the MFJ→single switch (no new boundary).
+- **`docs/research/engine-validation-and-tax.md#34`** · `number-or-figure` · → RMD start age · _canonical_
+  - sig: RMD start age 72/73/75 birth-year-derived SECURE 2.0
+  - RMD start age is birth-year-derived not flat 73 (SECURE 2.0): born ≤1950→72; 1951–1959→73; 1960+→75 (75 step effective 2033); 1959 glitch resolves to 73; RMD=Uniform Lifetime divisor on prior-year-end pre-tax balance; first RMD due April 1 of the year after reaching RMD age.
+- **`docs/research/engine-validation-and-tax.md#36`** · `number-or-figure` · → Temporary Senior Bonus Deduction · _canonical_
+  - sig: Senior Bonus Deduction $6,000 per person 65+ both up to $350k
+  - Temporary Senior Bonus Deduction (OBBBA): $6,000/person 65+ ($12,000 MFJ) on top of std deduction, itemizing or not; MAGI phase-out begins single >$75k / MFJ >$150k, reduced 6% per dollar; fully gone single >$175k, MFJ >$250k (one spouse 65+) or >$350k (both 65+); AVAILABLE TAX YEARS 2025-2028 ONLY, sunsets after 2028 unless extended -> overlay carries an explicit sunset marker; source IRS FS-2025-03, OBBBA P.L.119-21/H.R.1.
+  - [fixed:warn] Added 2025-2028 sunset constraint + explicit sunset marker.
+- **`docs/research/engine-validation-and-tax.md#37`** · `build-detail-or-KTD` · → Temporary Senior Bonus Deduction (KTD) · _canonical_
+  - sig: flat MFJ > $250k phase-out is one-spouse case only
+  - Senior-bonus KTD: a flat 'MFJ >$250k' phase-out is the one-spouse case only and would overstate tax / understate conversion+IRMAA headroom in the $250–350k band — exactly where a conversion solver decides; the both-65+ couple keeps the deduction up to $350k MAGI.
+- **`docs/research/engine-validation-and-tax.md#40`** · `number-or-figure` · → Social-Security benefit taxation · _canonical_
+  - sig: SS tax torpedo provisional income $32,000 $44,000 85%
+  - SS benefit taxation (tax torpedo): provisional income=AGI excluding SS + tax-exempt interest + 50% of SS benefits; MFJ tiers <$32,000→0%, $32,000–$44,000→up to 50%, >$44,000→up to 85% (single $25,000/$34,000); exact inclusion follows IRS Pub. 915 worksheet.
+- **`docs/research/engine-validation-and-tax.md#43`** · `scope-boundary` · → Social-Security benefit taxation (not modeled) · _canonical_
+  - sig: You Earned It You Keep It Act not law do not model
+  - Not modeled (pending legislation): the proposed 'You Earned It, You Keep It Act' (would eliminate SS taxation) is not law as of 2026 — do not model speculative legislation; if enacted it becomes a Strand-5 update + tax-vintage bump.
+- **`docs/research/engine-validation-and-tax.md#44`** · `scope-boundary` · → Strand 5 closing note · _reframe_
+  - sig: tax+health reference supports two-control solver survivor cliff one driver
+  - The tax+health reference supports the two-control solver (withdrawal sequencing + Roth conversion) plus income-dependent healthcare; the survivor cliff is one driver among several, not the sole lever; the falsifiable IN/OUT line bounds the scope.
+  - [reframe] Surviving fact (present-tense): the tax+health reference supports the two-control solver plus income-dependent healthcare; the survivor cliff is one driver among several, bounded by the IN/OUT line. Strip the 'Strand 5' narrative scaffolding to a plain scope statement.
+- **`docs/research/engine-validation-and-tax.md#46`** · `status-as-built` · → Pin-pass status table (brackets/deduction) · _canonical_
+  - sig: 2026 brackets pinned against IRS Revenue Procedure tax.ts
+  - Pin status: 2026 bracket edges + standard deduction + age-65 addition + senior-bonus figures = resolved/pinned against the IRS Revenue Procedure (2026 inflation adjustments) + Pub. 501 (filing status/QSS); read from src/engine/constants/tax.ts.
+- **`docs/research/engine-validation-and-tax.md#47`** · `status-as-built` · → Pin-pass status table (RMD divisors) · _canonical_
+  - sig: RMD divisors pinned IRS Pub. 590-B
+  - Pin status: RMD divisors (Uniform Lifetime Table) = resolved/pinned against IRS Pub. 590-B; year-keyed in the canonical constants table.
+- **`docs/research/engine-validation-and-tax.md#48`** · `status-as-built` · → Pin-pass status table (SS-tax thresholds) · _canonical_
+  - sig: SS-tax thresholds pinned IRS Pub. 915 frozen
+  - Pin status: SS-tax thresholds / inclusion worksheet = resolved/pinned against IRS Pub. 915; the $32k/$44k constants carry 'frozen, no staleness clock.'
+- **`docs/research/engine-validation-and-tax.md#49`** · `status-as-built` · → Pin-pass status table (Bengen directional) · _canonical_
+  - sig: Bengen 1966 bit-exactness directional by design Ibbotson
+  - Pin status: Bengen 1966 bit-exactness = directional by design (depends on the exact Ibbotson intermediate-government dataset); treated as a directional survive/fail test, not a golden number — do not assert a bit-exact SAFEMAX without the Ibbotson series.
+- **`docs/research/engine-validation-and-tax.md#50`** · `status-as-built` · → Pin-pass status table (reg gate lapsed) · _reframe_
+  - sig: reg / attorney-gate Strand 3 LAPSED personal tool
+  - There is no reg/attorney-gate exit requirement because the tool is personal/non-commercial; the regulatory rationale is archived (item #53).
+  - [dedup] product.md (cardinal rule / personal-tool) is canonical for WHY the tool is personal; Strand 3 appendix in same doc is the lapsed-gate record this points to.
+  - [reframe] Surviving fact (present-tense): there is no reg/attorney-gate exit requirement because the tool is personal/non-commercial; the regulatory rationale is archived (item #53). State as the standing 'no reg gate' fact, not a status change.
+
+
+## docs/research/pre65-healthcare.md
+
+- **`docs/product.md#41`** · `status-as-built` · → ACA legislative status (verified numbers) · _pointer_
+  - sig: 400% FPL cliff back; enhanced subsidies expired 12/31/2025
+  - ACA legislative live status: 2026 base case = the 400% FPL cliff is back; enhanced subsidies expired 12/31/2025 and are unre-enacted as of 2026-06-04; expose 'enhanced' as a scenario toggle and re-verify every build (verify:aca / reVerifyEveryBuild / aca-last-verified.json).
+  - [dedup] The dated legislative figure is canonical in research/pre65-healthcare.md (native #21); R24 (product) references it, architecture and CLAUDE.md hold the gate pointers.
+  - [fixed:warn] Flipped to pointer; native #21 is sole canonical.
+- **`docs/architecture.md#45`** · `status-as-built` · → ACA legislative status — 2026 base case (enhanced-subsidy expiry) · _pointer_
+  - sig: 400% FPL cliff ON 2026 base case
+  - 2026 base case = the 400% FPL cliff is ON (enhanced subsidies expired 12/31/2025, unre-enacted); 'enhanced subsidies' is a scenario toggle (model field), never hard-coded; the legislative status gates all ACA fixtures and is re-verified every build (verify:aca).
+  - [dedup] The dated/legislative verified figure → research/pre65-healthcare (canonical, native #21). CLAUDE.md (reVerifyEveryBuild) and roadmap's verify:aca gate are pointers. The scenario-toggle build fact is referenced from architecture §7.2.
+  - [fixed:warn] Flipped to pointer; native #21 is sole canonical.
+- **`docs/plans/3-controls.md#48`** · `status-as-built` · → ACA legislative status (2026 reverted rules) · _pointer_
+  - sig: 400% FPL cliff is back, enhanced subsidies expired 12/31/2025
+  - As-built: the 2026 base case is the 400% FPL cliff back (enhanced subsidies expired 12/31/2025, unre-enacted as of build); 'enhanced' is a scenario toggle; the surface states the dated legislative status; re-verify gated by pnpm verify:aca.
+  - [dedup] Research owns the dated ACA legislative status (canonical, native #21); the verify:aca gate is canonical in architecture §9, also in CLAUDE.md and aca-last-verified.json.
+  - [fixed:warn] Flipped to pointer; native #21 is sole canonical.
+  - [reframe] Live legislative status, not changelog: state present-tense that 2026 computes under reverted rules (cliff back) and the toggle flips if Congress restores enhanced subsidies, possibly retroactively.
+- **`docs/plans/4-recommendation.md#80`** · `status-as-built` · → §2 ACA enhanced-subsidy status (2026 cliff-on) · _pointer_
+  - sig: as-built: 2026 cliff-on ACA base case
+  - As-built ACA legislative status: the recommendation base case is the 2026 cliff-on case (the enhanced-ACA-subsidy 400% FPL cliff is currently in effect); the enhanced regime is live, possibly-retroactive policy that could be restored (possibly retroactively to 2026), which would make the 400% FPL cliff disappear and flip the pre-65 conversion calculus; re-verified every build via verify:aca.
+  - [dedup] research/pre65-healthcare.md is canonical for the verified ACA status number/fact (native #21); CLAUDE.md + architecture (reVerifyEveryBuild) hold the discipline pointers.
+  - [fixed:warn] Flipped to pointer; native #21 is sole canonical.
+- **`docs/plans/features/other-income.md#40`** · `number-or-figure` · → ACA cliff thresholds (joint→single relocation) · _reframe_
+  - sig: survivor ACA cliff relocation $84,600 → $62,600
+  - Survivor ACA cliff relocation tested at the crossing year: $84,600 → $62,600 (the cliff moves from the joint to the single threshold); test the crossing year.
+  - [dedup] The verified ACA threshold figures home in research/pre65-healthcare; insight 014 carries the test-the-crossing lesson (no-move there).
+  - [reframe] Surviving fact: the ACA subsidy cliff relocates from ~$84,600 (joint) to ~$62,600 (single) when a spouse dies — a tested crossing year. Present-tense verified thresholds.
+- **`docs/research/engine-validation-and-tax.md#28`** · `status-as-built` · → ACA-PTC legislative status · _pointer_
+  - sig: enhanced ACA subsidies expired 12/31/2025 verify:aca
+  - Enhanced ACA subsidies expired 12/31/2025, unre-enacted as of 2026-06-04 → model the 400% FPL cliff as the 2026 base case, expose 'enhanced' as a scenario toggle, re-verify every build (CI-gated by pnpm verify:aca).
+  - [dedup] pre65-healthcare.md is canonical for the ACA numbers/status (native #21); architecture.md (reVerifyEveryBuild) and CLAUDE.md (verify:aca gate) hold the discipline as pointers; this research doc points to the healthcare note.
+  - [fixed:warn] Flipped to pointer; native #21 is sole canonical.
+- **`docs/research/pre65-healthcare.md#0`** · `status-as-built` · → Intro / role statement · _canonical_
+  - sig: verified-reference home for income-dependent healthcare
+  - This doc is the verified-reference evidence home for the income-dependent healthcare model (ACA-PTC pre-65, IRMAA post-65, HSA across both), co-equal sibling of engine-validation-and-tax.md; consumed and load-bearing.
+  - [dedup] This doc owns its own role statement (canonical); the sibling relationship is mirrored from engine-validation-and-tax.md and architecture.md §7.2 — those keep pointers, not the full role text.
+  - [reframe] Surviving fact: pre-65-healthcare.md is the canonical verified-number home for ACA/IRMAA/HSA, sibling to engine-validation-and-tax.md; present-tense framing — 'this is the healthcare evidence layer the overlays read from.'
+- **`docs/research/pre65-healthcare.md#2`** · `scope-boundary` · → Intro / where mechanics vs facts live · _pointer_
+  - sig: HOW the engine uses this lives in architecture §7.2
+  - The engine mechanics (two MAGI calculators, ACA same-year fixed point, IRMAA 2-year lagged feed-forward, HSA fourth bucket, survivor MFJ→single flip, reduce-to-spine) live ONCE in architecture §7.2; this doc holds the facts they rest on.
+  - [dedup] Mechanics are canonical in architecture §7.2; this research doc keeps a pointer that says 'mechanics live in §7.2, facts live here.' The R40/portfolio scoping moves to product + decisions/other-income-r40 + decisions/portfolio-holdings (features/ dissolves).
+  - [reframe] Surviving fact: healthcare mechanics live once in architecture §7.2; this doc is the facts layer. Present tense — drop any reference to features/ docs as homes; that scoping now lives in product + decisions records.
+- **`docs/research/pre65-healthcare.md#3`** · `definition-term` · → Intro / synthesis scope · _canonical_
+  - sig: multi-control healthcare-aware sequencing objective
+  - The conversion problem extends from single-control 'fill the survivor's bracket' into a multi-control, healthcare-aware sequencing objective where income-dependent healthcare cost is continuous across age 65 (ACA-PTC→IRMAA), two MAGI definitions, two cliff shapes, a 2-year post-65 lag; models current 2026 law.
+  - [reframe] Surviving fact (present tense): the engine optimizes a multi-control, healthcare-aware sequencing objective in which healthcare cost is continuous across 65 with two MAGI definitions, two cliff shapes, and a 2-year post-65 (IRMAA) lag; models current 2026 law. Drop 'extends the tax doc's single-control problem' as-changed framing — state it as the current objective.
+  - [fixed:nit] Restored 2-year post-65 IRMAA lag in surviving-fact sentence.
+- **`docs/research/pre65-healthcare.md#4`** · `number-or-figure` · → §1 Settled facts — Medicare endpoint · _no-move_
+  - sig: Medicare at 65, 7-month enrollment, individual
+  - Medicare eligibility begins at exactly age 65; 7-month Initial Enrollment Period (3 before / birthday month / 3 after); Medicare is individual not household, so the younger spouse in an age-gapped couple needs bridge coverage longer (CMS/Medicare.gov).
+- **`docs/research/pre65-healthcare.md#5`** · `number-or-figure` · → §1 Settled facts — Medicare endpoint (exit-gate row 7) · _no-move_
+  - sig: 2026 Part B premium $202.90/mo, $283 deductible
+  - 2026 Part B standard premium $202.90/mo/person, deductible $283/yr; per-person (couple ~$405.80/mo); Original Medicare is not free. Confidence HIGH (CMS-cited multi-source); exit-gate row 7.
+  - [dedup] Number canonical here; constants/health.ts holds the machine-readable copy that reads from this doc.
+- **`docs/research/pre65-healthcare.md#6`** · `invariant` · → §1 Settled facts — HSA eligibility · _no-move_
+  - sig: any Medicare enrollment ends HSA contributions
+  - Enrolling in ANY part of Medicare ends HSA contribution eligibility permanently; 65+ spending privileges do not restore the ability to contribute (IRS Pub 969).
+- **`docs/research/pre65-healthcare.md#7`** · `requirement` · → §1 Settled facts — HSA eligibility · _no-move_
+  - sig: HSA four eligibility tests first-of-month
+  - HSA contribution eligibility = four tests, all true on the first of the month: (1) qualifying HDHP; (2) no other non-HDHP coverage; (3) not enrolled in Medicare; (4) not a dependent (IRS Pub 969 / IRC §223).
+- **`docs/research/pre65-healthcare.md#8`** · `invariant` · → §1 Settled facts — HSA eligibility · _no-move_
+  - sig: Medicare zeroes HSA limit, 6-month retroactive lookback
+  - Medicare zeroes the HSA contribution limit verbatim ('your contribution limit is zero...applies to retroactive coverage'); the 6-month Part A retroactive lookback traps 65+ who delay Medicare while still contributing (Pub 969 verbatim + SSA rule).
+- **`docs/research/pre65-healthcare.md#9`** · `invariant` · → §1 Settled facts — HSA eligibility · _no-move_
+  - sig: only four HSA-payable premium exceptions
+  - HSA funds can pay only four premium types: (1) long-term care insurance; (2) COBRA/continuation; (3) coverage while receiving unemployment; (4) Medicare and other coverage if 65+ — EXCEPT Medigap/supplemental (excluded) (Pub 969 verbatim).
+- **`docs/research/pre65-healthcare.md#10`** · `invariant` · → §1 Settled facts — HSA eligibility · _no-move_
+  - sig: ACA Marketplace premiums NOT HSA-qualified
+  - THE TRAP: ACA Marketplace premiums are not HSA-qualified in the normal case (only if on unemployment comp or COBRA); for a pre-65 early retiree HSA covers out-of-pocket tax-free but NOT the monthly premium — model must not overstate 'HSA covers healthcare.'
+  - [dedup] Canonical here; §2 OBBBA note and §5 OUT line restate it — those become internal pointers within this doc.
+- **`docs/research/pre65-healthcare.md#11`** · `invariant` · → §1 Settled facts — HSA eligibility · _no-move_
+  - sig: Medicare-premium HSA privilege keyed to owner's age
+  - The 65+ Medicare-premium HSA privilege is keyed to the HSA owner's age, not the spouse's (Pub 969 verbatim); COBRA/unemployment exceptions can cover a spouse, the Medicare exception cannot until the owner is 65+. Matters for the couple age-gap/death-order logic.
+- **`docs/research/pre65-healthcare.md#12`** · `invariant` · → §1 Settled facts — HSA eligibility · _no-move_
+  - sig: 20% HSA penalty waived at 65
+  - At 65 the 20% HSA penalty is waived — a non-qualified withdrawal is taxed as ordinary income only (HSA behaves like a Traditional IRA for non-medical spend); qualified medical withdrawals stay fully tax-free.
+- **`docs/research/pre65-healthcare.md#13`** · `number-or-figure` · → §1 Settled facts — HSA 2026 limits (exit-gate row 3) · _no-move_
+  - sig: 2026 HSA limits $4,400/$8,750, +$1,000 catch-up
+  - 2026 HSA limits (Rev. Proc. 2025-19): contribution $4,400 self-only / $8,750 family; HDHP min deductible $1,700/$3,400; max OOP $8,500/$17,000; 55+ catch-up +$1,000 each spouse in their OWN HSA (no stacking). Confidence MEDIUM-HIGH; exit-gate row 3.
+  - [dedup] Number canonical here; constants/health.ts holds the machine-readable copy reading from this doc.
+- **`docs/research/pre65-healthcare.md#19`** · `number-or-figure` · → §1 Settled facts — IRMAA brackets (exit-gate row 8) · _no-move_
+  - sig: 2026 IRMAA tier-1 >$109k single / >$218k MFJ
+  - IRMAA = per-person step-function brackets with hard cliffs ($1 over = full surcharge, ×2 for a couple); 2026 tier-1 single >$109,000 / MFJ >$218,000; Part B totals $284.10→$689.90/mo, Part D $14.50→$91.00; first four brackets inflation-indexed, top tier (≥$500k/$750k) frozen through 2027.
+  - [dedup] Numbers canonical here; constants/health.ts holds the machine-readable copy; §4e inflation-indexing references the same brackets internally.
+- **`docs/research/pre65-healthcare.md#20`** · `invariant` · → §1 Settled facts — IRMAA 2-year lookback · _no-move_
+  - sig: Roth conversion not an SSA-44 life-changing event
+  - A voluntary Roth conversion is NOT an SSA-44 life-changing event — you cannot appeal away IRMAA you caused by your own conversion; retirement/work-stoppage IS a qualifying event.
+  - [dedup] Canonical here; §4e (SSA-44) and §5 OUT line restate it — internal pointers within this doc.
+- **`docs/research/pre65-healthcare.md#21`** · `status-as-built` · → §2 Time-sensitive — enhanced subsidies (exit-gate row 1) · _no-move_
+  - sig: enhanced ACA subsidies expired 12/31/2025, cliff back
+  - Enhanced ACA subsidies (ARPA-2021, IRA-2022-extended through 2025) expired 12/31/2025, not extended as of 2026-06-04, legislatively fluid; for 2026 the law reverted to pre-ARPA — the 400% FPL cliff is back and required-contribution % are higher (2.10%→9.96% vs 0%→8.5%); 2026 plans already reflect reverted rules.
+  - [dedup] Load-bearing legislative fact canonical here in §2/exit-gate-row-1; architecture §7.2 + project CLAUDE.md carry the reVerifyEveryBuild/base-case consequence as pointers.
+- **`docs/research/pre65-healthcare.md#22`** · `status-as-built` · → §2 Time-sensitive — pending legislation (exit-gate row 1) · _no-move_
+  - sig: House passed 3-year extension, stalled in Senate
+  - As of 2026-06-04: House passed a 3-year enhanced-PTC extension Jan 8 2026 (230–196), but it stalled in the Senate (needs 60; reported dead on arrival); no extension enacted (grounded synthesis, not an enacted statute).
+  - [dedup] Pending-status detail canonical here; exit-gate row 1 references it. This is a dated snapshot that the verify:aca gate forces re-verification of each build (not a forward-only fossil — it's the live status the gate watches).
+- **`docs/research/pre65-healthcare.md#23`** · `decision-rationale` · → §2 Time-sensitive — why load-bearing · _no-move_
+  - sig: cliff-on is 2026 base case, enhanced is scenario toggle
+  - Because restoring the enhanced regime (possibly retroactively to 2026) would erase the 400% FPL cliff and flip the entire pre-65 conversion calculus, the engine treats reverted/cliff-on as the 2026 base case but exposes the enhanced regime as a scenario toggle — never hard-coding 'no enhanced subsidies forever'; re-verify every build.
+  - [dedup] Rationale canonical here; architecture §7.2 carries the base-case/scenario-toggle contract; exit-gate row 1 carries the re-verify enforcement. Those are pointers.
+- **`docs/research/pre65-healthcare.md#24`** · `number-or-figure` · → §2 Time-sensitive — documented 2026 impact · _no-move_
+  - sig: WV couple $2→$1,527/mo Bronze cliff severity
+  - Documented 2026 impact (calibration/messaging, not fixtures): KFF benchmark net premium ~doubles, realized net up ~58% as enrollees downshift to Bronze; enrollment ~22.3M→~17.5M; CBO +2.2M uninsured; severity anchor — 63-yr-old WV couple at ~$85k (402% FPL) saw cheapest Bronze go from <$2/mo to $1,527/mo from the cliff's return.
+- **`docs/research/pre65-healthcare.md#25`** · `number-or-figure` · → §2 Time-sensitive — OBBBA (exit-gate row 10) · _no-move_
+  - sig: OBBBA Bronze/Catastrophic HSA-compatible 2026
+  - OBBBA (H.R.1, enacted July 2025, effective 2026): ACA Bronze & Catastrophic plans deemed HSA-compatible from Jan 1 2026 (expands who can contribute; does NOT make ACA premiums HSA-payable); permanent telehealth pre-deductible safe harbor; DPC fees (≤$150/$300) HSA-eligible. Confidence MEDIUM-HIGH; exit-gate row 10.
+  - [dedup] Canonical here; §5 OUT line restates OBBBA edge features as out-of-scope — internal pointer.
+- **`docs/research/pre65-healthcare.md#26`** · `number-or-figure` · → §2 Time-sensitive — FPL thresholds (exit-gate row 6) · _no-move_
+  - sig: 400% FPL cliff ≈ $84,600 household-of-2
+  - 2026 coverage uses 2025 HHS poverty guidelines; the couple's 400% FPL cliff ≈ $84,600 (household-of-2) is the binding number but is a rounded approximation, not pulled from the HHS primary table; AK/HI higher. Confidence MEDIUM; exit-gate row 6.
+  - [dedup] Number canonical here; constants/health.ts holds the machine-readable copy; §3 (~$84,600 cliff) references it internally.
+- **`docs/research/pre65-healthcare.md#27`** · `number-or-figure` · → §2 Time-sensitive — applicable-% endpoints (exit-gate row 5) · _no-move_
+  - sig: 2026 applicable-% endpoints 2.10%/4.19%/6.60%/8.44%/9.96%
+  - 2026 applicable-% interior endpoints = 2.10% / 4.19% / 6.60% / 8.44% / 9.96% (single-source to Rev. Proc. 2025-25 via summary; confirm decimals against the PDF). Exit-gate row 5.
+  - [dedup] Number canonical here; constants/health.ts holds the machine-readable copy.
+- **`docs/research/pre65-healthcare.md#28`** · `decision-rationale` · → §3 Conversion↔healthcare interaction · _no-move_
+  - sig: healthcare income-sensitive continuously across 65
+  - Healthcare cost is income-sensitive continuously across age 65; the same lever the engine optimizes for tax/RMD posture (how much traditional balance to convert/withdraw each year) also moves healthcare cost through two regimes glued at 65 — which is what couples healthcare into the solver objective.
+  - [dedup] The crux rationale canonical here; architecture §7.2 carries the as-built consequence (healthcare in the solver objective) as a pointer.
+- **`docs/research/pre65-healthcare.md#29`** · `decision-rationale` · → §3 Pre-65 · _no-move_
+  - sig: convert-aggressively fights keep-MAGI-low pre-65
+  - Pre-65 (ACA-PTC): a Roth conversion/traditional withdrawal raises current-year ACA-MAGI dollar-for-dollar → shrinks PTC → in 2026's cliff regime can knock the household over the 400% FPL cliff and zero the subsidy; the 'convert aggressively while income is low' instinct directly fights 'keep MAGI low to maximize the subsidy.'
+- **`docs/research/pre65-healthcare.md#31`** · `decision-rationale` · → §3 Pre-65 heuristic · _no-move_
+  - sig: fill to subsidy-aware ceiling not tax bracket
+  - The governing heuristic shifts: don't 'fill to the top of a tax bracket' — fill only to an ACA-subsidy-aware MAGI ceiling (just under 400% FPL to dodge the cliff, or 150/200/250% FPL to capture CSR Silver benefits); during ACA years the subsidy ceiling, not the tax bracket, is the binding constraint.
+  - [dedup] Canonical here; §3 unifying crux restates it — internal pointer within this doc.
+- **`docs/research/pre65-healthcare.md#32`** · `decision-rationale` · → §3 65+ · _no-move_
+  - sig: at 65 ACA off, IRMAA on, 2-year lag danger years
+  - At 65 the person enrolls in Medicare and (if premium-free Part A) loses ACA PTC — ACA income-sensitivity switches off, replaced by IRMAA; same shadow-rate logic on IRMAA step-brackets (×2 for a couple) with two differences: (1) a 2-year lag means a conversion at 63–64 hits the IRMAA bill at 65–66 (danger years start before Medicare); (2) pure step-function cliffs, no smooth phase-out.
+  - [dedup] Canonical here; §4c and §5 IN line (2-year lag) reference it. The 2-year-lag mechanics are canonical in architecture §7.2 — those are pointers.
+- **`docs/research/pre65-healthcare.md#35`** · `decision-rationale` · → §4 Modeling recommendation · _no-move_
+  - sig: one continuous income-sensitive healthcare curve
+  - Minimal honest model = ONE continuous 'income-sensitive healthcare cost' curve, implemented as two regimes (ACA pre-65 / IRMAA post-65) with two MAGI variants.
+- **`docs/research/pre65-healthcare.md#38`** · `decision-rationale` · → §4b — IRS-precedented iteration · _no-move_
+  - sig: fixed-point iteration IRS-precedented SEHI↔PTC
+  - The ACA same-year loop is the same shape as the IRS's own SEHI↔PTC circular reference, which the IRS resolves iteratively (Pub 974 / Rev. Proc. 2014-41) — iterating to a fixed point is IRS-precedented, not a hack.
+- **`docs/research/pre65-healthcare.md#39`** · `number-or-figure` · → §4b — convergence · _no-move_
+  - sig: contraction factor ≤0.10, 2–3 iterations converge
+  - Convergence is fast and safe: each extra MAGI dollar claws back at most the applicable % of PTC (≤9.96% in 2026), so the contraction factor is ≤~0.10 → 2–3 fixed-point iterations (or a bisection on MAGI) converges.
+- **`docs/research/pre65-healthcare.md#41`** · `decision-rationale` · → §4b — SLCSP as input · _no-move_
+  - sig: SLCSP benchmark is user input, biggest honesty lever
+  - Treat the SLCSP benchmark premium as a user input (or age-banded assumption) — it is ZIP/age-specific, every serious tool punts it to input; this is the single biggest honesty lever — do not synthesize it.
+  - [dedup] Canonical here; §4d and §5 OUT line (SLCSP premium level) restate it — internal pointers within this doc.
+- **`docs/research/pre65-healthcare.md#44`** · `scope-boundary` · → §4c / §5 OUT — IRMAA second-order loop (disclosed omission) · _no-move_
+  - sig: IRMAA second-order self-funding loop ignored in MVP
+  - The IRMAA surcharge is itself spending that may be funded by a withdrawal bumping MAGI[t], feeding t+2 — a second-order lagged loop; the MVP may ignore it and document the omission (it's tiny).
+  - [dedup] Canonical here; §5 OUT line (IRMAA second-order self-funding loop) restates it — internal pointer within this doc.
+- **`docs/research/pre65-healthcare.md#45`** · `decision-rationale` · → §4d — MVP cut · _no-move_
+  - sig: defensible MVP cut beats Boldin, honest
+  - Defensible MVP cut: ACA fixed-point + explicit cliff branching + SLCSP as input + two MAGI variants + IRMAA as a pure 2-year lag in state; beats Boldin (which doesn't auto-model the loop) and is honest; PL/Pralana sit above with joint optimization — the MVP need only be directionally correct and disclose what it omits.
+- **`docs/research/pre65-healthcare.md#49`** · `scope-boundary` · → §4e / §5 OUT — SSA-44 (disclosed omission) · _no-move_
+  - sig: SSA-44 appeal out of MVP, 63/64 spike not assumed unavoidable
+  - SSA-44: retirement/work-stoppage is a qualifying life-changing event that can reduce IRMAA in the transition year, a voluntary conversion is not; the MVP may ignore the appeal but should not assume the 63/64 spike is unavoidable.
+  - [dedup] Canonical here; §1 (SSA-44 not for voluntary conversion) and §5 OUT line restate it — internal pointers within this doc.
+- **`docs/research/pre65-healthcare.md#50`** · `definition-term` · → §5 Falsifiable IN/OUT line · _no-move_
+  - sig: per-year controls conversion amount and withdrawal order
+  - The falsifiable IN/OUT line extends the §Strand-5 'IN iff it moves the survivor's bracket' from a single tax control to a multi-control, healthcare-aware objective; controls are per-year {conversion amount, withdrawal source order}; objective is lifetime survivor-weighted after-tax-and-after-healthcare wealth.
+  - [dedup] Canonical here as the healthcare extension of the IN/OUT line; the original §Strand-5 line lives in engine-validation-and-tax.md — this points back to it.
+- **`docs/research/pre65-healthcare.md#51`** · `scope-boundary` · → §5 IN scope · _no-move_
+  - sig: §5 IN scope five channels
+  - §5 IN scope (effect is IN iff it changes a conversion/withdrawal dollar's marginal cost through a control-movable channel): (1) federal tax incl. survivor-bracket stacking; (2) pre-65 ACA PTC vs current-year ACA-MAGI incl. 400% FPL cliff; (3) 65+ IRMAA (Part B+D, ×2) vs MAGI[t−2] incl. the 2-year lag; (4) MAGI-reducing funding (Roth/basis/cash/HSA; HSA contrib pre-Medicare); (5) survivor MFJ→single flip for IRMAA + ACA-FPL.
+- **`docs/research/pre65-healthcare.md#52`** · `scope-boundary` · → §5 OUT but DISCLOSED · _no-move_
+  - sig: §5 OUT but DISCLOSED six items
+  - §5 OUT but disclosed (real but not control-movable / below MVP fidelity, must be named never silently dropped): (1) SLCSP benchmark level (user input); (2) OBBBA edge features; (3) CSR OOP richness <250% FPL; (4) state subsidy wraps; (5) IRMAA second-order self-funding loop; (6) SSA-44 appeals, MFS IRMAA thresholds, Medicaid ≤138% FPL, COBRA/retiree-vs-active Part-B-delay distinctions.
+  - [dedup] Canonical list here; individual items also live in §4b/§4c/§4e and §2 (OBBBA) — those are internal cross-references within this doc.
+- **`docs/research/pre65-healthcare.md#53`** · `invariant` · → §5 the crisp rule · _no-move_
+  - sig: IN iff dollar moves ACA-MAGI or IRMAA-MAGI[t−2]
+  - The crisp rule: an effect is IN iff a per-year conversion/withdrawal dollar changes it through ACA-MAGI (current year) or IRMAA-MAGI (two years forward), evaluated under the survivor-weighted filter; everything else is a read-in assumption or a disclosed out-of-scope item — never a silent omission.
+- **`docs/research/pre65-healthcare.md#54`** · `invariant` · → §6 Exit gate — intro · _no-move_
+  - sig: living re-verify exit gate, directional until golden
+  - §6 exit gate: every number is directional (secondary/grounded/single-source) until confirmed against its named PRIMARY source, then a fixture using it may be GOLDEN; the legislative item (row 1) gates the ENTIRE pre-65 module — no ACA fixture is golden until re-verified against current law at build time, enforced in CI by verify:aca against aca-last-verified.json (reVerifyEveryBuild:true).
+  - [dedup] Exit-gate discipline canonical here; the same directional/golden standard is shared with engine-validation-and-tax.md; the verify:aca/reVerifyEveryBuild CI enforcement is canonical in architecture §8 + project CLAUDE.md — those are pointers.
+- **`docs/research/pre65-healthcare.md#55`** · `invariant` · → §6 Exit gate — row 1 · _no-move_
+  - sig: row 1 blocks ALL pre-65 ACA fixtures
+  - Exit-gate row 1: enhanced-PTC legislative status (cliff on/off for 2026, retroactive risk) — HIGH confidence it expired 12/31/25 & not extended as of 2026-06-04, FLUID; PRIMARY = enacted statute / IRS notice, re-verify at every build; gate BLOCKS ALL pre-65 ACA fixtures (none golden until reconfirmed as current law).
+  - [dedup] Canonical here; §2 carries the same status fact; project CLAUDE.md carries the verify:aca enforcement — pointers.
+- **`docs/research/pre65-healthcare.md#56`** · `requirement` · → §6 Exit gate — row 2 · _no-move_
+  - sig: exit-gate row 2 pin Pub 969 HSA rules
+  - Exit-gate row 2: HSA contribution-eligibility + qualified-premium list (ACA-not-qualified, Medigap excluded, owner-age keying, Medicare-zeroes-contribution); HIGH (read verbatim); PRIMARY = IRS Pub 969 (confirm vs 2026 edition; statutory IRC §223); gate = pin to 2026 Pub 969 text.
+  - [dedup] Pin-row canonical here in the exit-gate table; the underlying HSA rules live in §1 — internal pointer within this doc.
+- **`docs/research/pre65-healthcare.md#57`** · `requirement` · → §6 Exit gate — row 4 · _no-move_
+  - sig: exit-gate row 4 pin Pub 974 ACA formula
+  - Exit-gate row 4: ACA PTC formula + ACA-MAGI composition (benchmark−contribution; non-taxable-SS add-back); HIGH; PRIMARY = IRS Pub 974 / Form 8962 instructions (+ IRC §36B); gate = pin formula & MAGI add-backs, confirm the non-taxable-SS add-back wording on Form 8962.
+  - [dedup] Pin-row canonical here; the underlying ACA formula + MAGI composition live in §1/§4a — internal pointer within this doc.
+- **`docs/research/pre65-healthcare.md#58`** · `number-or-figure` · → §6 Exit gate — row 9 · _no-move_
+  - sig: Part A purchased premiums $311/$565, deductible $1,736
+  - Exit-gate row 9: Part A purchased premiums ($311/$565) + deductible ($1,736); confidence MEDIUM (grounded summary, not primary); PRIMARY = CMS 2026 Part A fact sheet; gate = pin if the tool models post-65 Part A spend.
+- **`docs/research/pre65-healthcare.md#59`** · `invariant` · → §6 Exit gate — one-line summary · _no-move_
+  - sig: one-line gate summary, ten primary-source pins
+  - §6 one-line gate summary: pin #1 (legislative status) every build (flips the whole pre-65 model, gates all ACA fixtures); pins #2/#4 to Pub 969/974; #3/#5 to the two 2025 Rev. Procs; #6 to HHS guidelines; #7/#8/#9 to CMS/Federal Register; #10 to enacted H.R.1 — until each is confirmed against its PRIMARY source the number is directional not golden (the engine-validation-and-tax.md standard).
+  - [dedup] Summary canonical here; the directional/golden standard is shared with engine-validation-and-tax.md — pointer.
+
+
+## docs/insights/ — already homed (no-move)
+
+- **`docs/README.md#6`** · `build-detail-or-KTD` · → insights/ operational link (/brief + /distill) · _no-move_
+  - sig: insights wired to /brief and /distill
+  - The insights/ folder is operationally wired to the /brief skill (surfaces gotchas before work) and /distill skill (captures lessons after).
+  - [dedup] The /brief and /distill wiring is canonically defined by the skill definitions / global CLAUDE.md; insights/ already hosts the lessons, so this is a no-move pointer to that existing operational link.
+- **`docs/plans/1-engine.md#40`** · `lesson` · → cliff-inversion / D6 lesson · _no-move_
+  - sig: cliff-inversion test 400%-FPL justifies D6
+  - U3 cliff-inversion test (justifies D6): a conversion that looks beneficial under a tax-only model becomes net-negative once it knocks the household over the 400%-FPL cliff — proving the omission INVERTS which strategy wins, not just blunts a delta; this is why healthcare is built and validated in the engine, not bolted on at a surface.
+  - [dedup] D6 canonical in product; the lesson is already homed in an insight file (no-move); architecture §7.2 references it.
+- **`docs/plans/1-engine.md#57`** · `lesson` · → append-not-insert signature lesson · _no-move_
+  - sig: append contribution stream after stockWeight historical.ts call site
+  - C2 signature change lesson: append the contribution stream AFTER stockWeight (never insert before, which would silently re-bind every existing call's stockWeight arg) to keep historical.ts's Trinity backtest call site byte-identical; the first draft omitted that call site and review caught it.
+  - [dedup] Lesson belongs in docs/insights/ (no-move per kind=lesson); the decision record (accumulation-fuck-off-date.md) may reference it. fossilNote flags both insights + decisions — insights wins for a lesson.
+  - [reframe] Surviving fact: appending the contribution arg after stockWeight (not inserting) preserved the historical.ts byte-identity; review caught the omitted call site. Present-tense framing: standing lesson; drop the 'fold' framing.
+- **`docs/plans/1-engine.md#74`** · `lesson` · → scoped-monotonicity oracle lesson · _no-move_
+  - sig: intuitive-direction sanity oracle scoped not universal
+  - C3 intuitive-direction sanity oracle is SCOPED, not universal: more saved / higher contributions / lower spend move the date earlier ONLY with healthcare OFF, or with MAGI pinned far from all three modeled discontinuities (400%-FPL cliff, every IRMAA tier boundary, 100%-FPL eligibility floor) at every candidate Y; a cliff-straddling more-saved → equal-or-later date is CORRECT engine output, never 'fixed' by forcing monotonicity.
+  - [dedup] Lesson belongs in docs/insights/ (no-move per kind=lesson); the decision record (accumulation-fuck-off-date.md) references it.
+  - [reframe] Surviving fact: the more-saved-earlier-date oracle only holds with healthcare off or MAGI far from all three discontinuities; a cliff-straddling later date is correct, not a bug. Present-tense framing: standing lesson; drop the 'fold' framing.
+- **`docs/plans/4-recommendation.md#34`** · `lesson` · → burned/070, burned/027, burned/062 (already homed) · _no-move_
+  - sig: U14 patterns: burned/070, 027, 062
+  - U14 patterns to follow: Act-1 seeding/CRN + externally-derived-golden discipline; burned/070 (planted-fail self-test); burned/027 (absence-tests need presence companions); burned/062 (no in-range default fallbacks — the ε sentinel); the Solver-validation strand of the engine-validation research.
+  - [dedup] The lessons already live in docs/insights/ files; CLAUDE.md and architecture restate burned/062 — pointers.
+- **`docs/plans/4-recommendation.md#56`** · `lesson` · → burned/005, burned/062, burned/021 (already homed) · _no-move_
+  - sig: U15 patterns: roth.ts reuse, burned/005, 062, 021
+  - U15 patterns to follow: Act-1 CRN + reduce-to-spine; Act-3 roth.ts (reuse the per-year update, never re-implement; raw-pre-clamp selection); the Act-2 request-epoch / Act-3 generation counters (burned/005); burned/062 (no in-range default — the goal field has an explicit unset sentinel); burned/021 (validate-before-mutate — the RMD-first filter); the Strand 4/5 + healthcare research.
+  - [dedup] These lessons already live in docs/insights/ files.
+- **`docs/plans/4-recommendation.md#71`** · `lesson` · → UI-skill patterns (already homed in CLAUDE.md + skills) · _no-move_
+  - sig: U16 patterns: copyGuard, TwoFutures, emil/frontend/back-nine-design
+  - U16 patterns to follow: Act-2 copyGuard + outcome-state set + X-of-10 display contract; Act-3 TwoFutures delta-as-hero + props-from-copy.ts string-free viz; Act-3 require-the-hedge lint; emil-design-eng (calm second-beat entrance, no count-up on the surplus dollar); compound-engineering:frontend-design (reads as a calm co-pilot not a dashboard); back-nine-design (color is never the only signal).
+  - [dedup] CLAUDE.md UI-skills section + back-nine-design skill are the canonical homes; this is a pattern-pointer list.
+- **`docs/plans/4-recommendation.md#82`** · `lesson` · → DND 009 (archive/do-not-disturb/009, already homed) · _no-move_
+  - sig: DND 009 saved-rec serialization sentinels
+  - U17 the saved-recommendation record's never-depleted surplus/serialization sentinels (DND 009): decide the saved record's sentinel shape before the schema locks — a field like 'expected surplus = never depleted' must serialize without Infinity/NaN silently becoming null through JSON.stringify/IndexedDB; use an explicit out-of-range sentinel, the same discipline the spine model uses (architecture §7.3/§8); execution status is not tracked — the sentinel is a surplus value not an execution flag.
+  - [dedup] DND 009 lives in docs/insights/; CLAUDE.md + architecture §7.3/§8 restate the persisted-sentinel discipline (pointers).
+- **`docs/plans/4-recommendation.md#85`** · `lesson` · → DND 009, burned/062 + staleness-map patterns (already homed) · _no-move_
+  - sig: U17 patterns: staleness map, DND 009, burned/062, ACA landmine
+  - U17 patterns to follow: Act-3 staleness map + re-entry (invert the spine rule for the recommendation surface); archive/do-not-disturb/009 (JSON-persisted sentinels — decide before the schema locks); burned/062 (no in-range default for the saved-goal/vintage fields); findings §Strand 5 + healthcare §2 (the ACA legislative landmine).
+  - [dedup] These lessons already live in docs/insights/ and plans/3 (staleness map).
+- **`docs/plans/features/social-security.md#27`** · `lesson` · → DND 012 (externally-derived fixtures) · _no-move_
+  - sig: DND/012 POMS-printed goldens never engine-derived
+  - DND/012 externally-derived fixtures: SS goldens come from the POMS PRINTED examples (Method C $1000/$400→$920; RIB-LIM $350/$374.90→$350) as independent oracles, never a value re-derived from the engine's own formula.
+  - [dedup] Lesson is already homed in the insights file (and DND 012 in architecture §); the SS-specific instances (item #51,#53) point at it.
+- **`docs/plans/features/social-security.md#28`** · `lesson` · → burned/062 constants discipline · _no-move_
+  - sig: no in-range defaults, Unsourced sentinel throws
+  - Constants discipline (burned/062): any factor the research names but can't value is an Unsourced sentinel whose .value throws — no in-range defaults; for SS none occurred (every factor primary-confirmed).
+  - [dedup] Lesson is homed in insights and architecture §8 constants discipline; this SS application is a no-move.
+- **`docs/plans/features/social-security.md#29`** · `lesson` · → insights 008/010 (finiteness-first R19) · _no-move_
+  - sig: isFinite-first guard on every new input
+  - insights 008/010 (finiteness-first R19): every new input (per-person PIA, claim age) carries a Number.isFinite-first guard at validateParams AND the sub-engine entry.
+  - [dedup] Lesson homed in insights 008/010 and the R19 numeric gate in architecture; this SS application is a no-move.
+- **`docs/plans/features/social-security.md#60`** · `lesson` · → insight 040 (realizedClaimAgeAtDeath bug) · _no-move_
+  - sig: realizedClaimAgeAtDeath survivor-floor overstatement bug (insight 040)
+  - The realizedClaimAgeAtDeath survivor-floor optimistic-overstatement bug (insight 040): §7 originally built the deceased's survivor base from the PLANNED claim age, so on any path where death preceded the claim offset the deceased never lived to file yet got the full DRC — a plan-70 breadwinner dying at 68 got 1.24× instead of 1.08×, dying at 66 got 1.24× instead of full PIA; reachable (longevity sampler min death age 66, claim-70 default), not measure-zero — the cardinal sin on the exact early-widowhood paths the unit exists to harden.
+  - [dedup] Lesson is homed in docs/insights/040; the Superseded/changelog post-plan-correction copy collapses to a pointer.
+- **`docs/plans/features/social-security.md#61`** · `decision-rationale` · → insight 040 (seam vs pure-core boundary) · _no-move_
+  - sig: pure core trusts realized claim age, bug in the seam
+  - Why the pure core wasn't wrong: survivorBenefitAnnual correctly trusts deceased.claimAge as the REALIZED claim age (its input contract, locked by insight 039); the bug lived entirely in the INTEGRATION SEAM — the only layer that knows the stochastic timeline — which fed the pure core a PLANNED value as if realized.
+  - [dedup] This rationale is part of the insight-040 lesson (and 039 contract); homed in insights, no-move.
+- **`docs/plans/features/social-security.md#63`** · `lesson` · → insight 040 (coverage gap) · _no-move_
+  - sig: coverage gap: death-before-claim path untested, 915/915 survived
+  - The coverage gap that hid the bug: every survivor-branch fixture used an already-claimed deceased (negative claim offset ⇒ death after filing), so the death-before-claim path was structurally untested — a mutation stripping the START gate and leaking the excess survived 915/915 tests; two sibling gaps rode along (no nonzero spousal excess through cashTermsForYear; survivor max() tested only survivor-wins, never own-wins); all three now covered.
+  - [dedup] Part of the insight-040 lesson; homed in insights, no-move.
+- **`docs/plans/features/social-security.md#64`** · `lesson` · → insight 040 (the lasting lesson) · _no-move_
+  - sig: seam must realize a planned input the stochastic timeline preempts
+  - The lasting lesson (insight 040): a pure unit's input contract assumes its inputs are already realized; realizing a PLANNED input that a stochastic process can preempt is the SEAM's job, never the pure core's, and a discriminating test must drive the PREEMPTION, not just the plan-equals-outcome case.
+  - [dedup] This IS insight 040's headline; homed in docs/insights/040-an-integration-seam-must-realize-a-planned-input..., no-move.
+- **`docs/plans/features/other-income.md#38`** · `lesson` · → insights 011, 023, 024, 025, 029 · _no-move_
+  - sig: insights 011/023/025/029/024 externally-derived fixtures, swap-mutant
+  - Load-bearing insights: 011/023/025 (externally-derived fixtures DND/012 — a panel validates arithmetic not rule selection; walk each fixture through its fork, name the pinned boundary; prove the mechanism exists first); 029 (drive a nonzero owner-distinct pairwise-distinct vector + a swap-mutant; equality on a structurally-zero surface discriminates nothing); 024 (keep per-entity shape through the wire — streams collapse per person only after survivor-% is pre-applied; all of a person's streams share that person's death gate).
+  - [dedup] Lessons already homed in docs/insights/ 011,023,024,025,029 — no-move; R40 build steps cite them.
+- **`docs/plans/features/other-income.md#39`** · `lesson` · → insights 006, 007, 012, 013, 014, 039, 040 · _no-move_
+  - sig: insights 013/012/014/040/039/006/007 MAGI cliff crossing, additive gross-up
+  - Load-bearing insights: 013/012/014 (a taxable stream moves ACA-MAGI across the 133% kink / 400% cliff + IRMAA steps; test the crossing year when the survivor cliff relocates $84,600→$62,600); 040/039 (the seam realizes a planned input a stochastic timeline can preempt; range-guard at the boundary; survivor test drives death-before-stream-start); 006/007 (a new income channel feeds the gross-up; income is an additive constant shifting the operating point not k; the convergence re-probe doubles as the perf check).
+  - [dedup] Lessons already homed in docs/insights/ — no-move; Unit 3 test scenarios cite them.
+- **`docs/plans/features/other-income.md#41`** · `lesson` · → insights 008, 010, 018, 020, 027, 028, 035, 036, 037 · _no-move_
+  - sig: insights 008/010/028/027/020/035/036/037/018 finiteness-first, gate-on-invariant
+  - Load-bearing insights: 008/010/028 (finiteness-FIRST — a NaN passes every relational/?? guard; declare computable-domain bounds ENGINE_MAX_DOLLAR); 027/020 (match a guard's trigger to the hazard's domain — income is death-gated not retire-gated, does NOT inherit the §6 ACA empty-overlap guard; gate on the invariant not the first consumer); 035/036/037 (reserve a live region's box; force-confirm reads the live store; an orchestrator finding is a hypothesis); 018 (an additive amendment has a zero-removals invariant; grep the superseded premise).
+  - [dedup] Lessons already homed in docs/insights/ — no-move; R40 build cites them.
+- **`docs/plans/features/other-income.md#42`** · `lesson` · → DND-009 (never-ends sentinel) · _no-move_
+  - sig: DND-009 endAge absent ≡ lifetime, no Infinity sentinel
+  - DND-009 — persisted 'never-ends' sentinels must never be Infinity/NaN/numeric-magic (JSON.stringify(Infinity)==='null'); for R40, endAge absent ≡ lifetime, by presence/absence, never a numeric/Infinity sentinel.
+  - [dedup] DND-009 lesson already homed in insights; CLAUDE.md carries the summary; Unit 1 / U8 codec apply it (pointers).
+- **`docs/decisions/accumulation-fuck-off-date.md#23`** · `lesson` · → DND/012 externally-derived fixtures · _no-move_
+  - sig: DND/012 accumulation goldens hand-derived
+  - DND/012: accumulation goldens (projected balance at age A) must be derived by independent hand-math (compound flat-real contribution + fixed return sequence), never via the engine's own formula — same discipline as Trinity/Bengen/§36B.
+  - [dedup] Lesson homed in insights; architecture.md §5 holds the invariant cross-reference.
+- **`docs/decisions/accumulation-fuck-off-date.md#24`** · `lesson` · → insights 008/010 NaN-first guards · _no-move_
+  - sig: insights 008/010 Number.isFinite-FIRST R19 guard
+  - insights 008/010: every new input stream (per-bucket contributions, employer match, ticker blend, tested-age list) carries a Number.isFinite-FIRST R19 guard at BOTH validateParams AND the overlay/date-search backstop — a NaN sails through every relational guard.
+  - [dedup] Lesson homed in insights 008/010; architecture.md §6 holds the R19-gate invariant.
+- **`docs/decisions/accumulation-fuck-off-date.md#25`** · `lesson` · → insight 013 discontinuity breaks monotonicity · _no-move_
+  - sig: insight 013 ACA cliff breaks monotonicity
+  - insight 013: a discontinuity breaks a root-finder's monotonicity — the ACA 400%-FPL cliff means a later work-stop date is NOT guaranteed safer; the date-search must be exhaustive across the bounded window, never a monotonicity-assuming bisection.
+  - [dedup] Lesson homed in insight 013; this record cites it as R26's direct precedent.
+- **`docs/decisions/accumulation-fuck-off-date.md#26`** · `lesson` · → insight 014 test the crossing year · _no-move_
+  - sig: insight 014 test the crossing year
+  - insight 014: a mid-sim state change moves a threshold — test the crossing year; the HSA generalDrawableTotal vs hsa-inclusive total split is dark at hsa=0, so test the crossing, not just static positions.
+  - [dedup] Lesson homed in insight 014.
+- **`docs/decisions/accumulation-fuck-off-date.md#27`** · `lesson` · → burned/057,061,063 one canonical constants table · _no-move_
+  - sig: burned/057,061,063 one canonical constants table
+  - burned/057,061,063: the new contribution-limit + ticker-blend figures live in ONE year-keyed module each, read by engine/intake/tests, never re-typed; a shape test asserts every figure carries {value, citation, directionalUntilPinned}.
+  - [dedup] Lesson homed in insights; architecture.md §8 holds the constants-discipline invariant.
+- **`docs/decisions/accumulation-fuck-off-date.md#83`** · `lesson` · → insight 025 (derive the mechanism before the fixture) · _no-move_
+  - sig: insight 025 cliff-straddle PREMISE-FALSE; taxable enters at full basis
+  - PREMISE-FALSE (insight 025): the planned cliff-straddling fixture is FALSE in this engine — a taxable contribution enters at FULL basis so added contributions always lower-or-equal the realized-gain fraction; the named cliff-straddle mechanism does not exist (no forced fixture, DND/012); reachable channels documented instead (larger pretax→larger RMD→IRMAA crossing; lower spend→below 100%-FPL→PTC=0); the general non-monotonicity truth STANDS.
+  - [dedup] Lesson homed in insight 025; the in-record adversarial annotation reframes present-tense (item below).
+  - [reframe] Strip 'RETIRED 2026-06-10' framing: present-tense a taxable contribution enters at full basis, so the cliff-straddle fixture is unconstructible; document the reachable RMD-IRMAA and 100%-FPL channels instead.
+- **`docs/decisions/accumulation-fuck-off-date.md#84`** · `lesson` · → insights 023/025 (a test scenario is a hypothesis) · _no-move_
+  - sig: insights 023/025 MUTANT-UNCONSTRUCTIBLE averaged-balance handoff
+  - MUTANT-UNCONSTRUCTIBLE (insights 023/025): the planned averaged-balance-handoff mutant has NO code home — there is no accumulation→decumulation phase boundary (one continuous per-path stream, §1); the residual property (a working-year crash carried forward per-path, never smoothed) is held by the per-path fold + §2d direction golden + CRN tests; REACTIVATION TRIGGER: any future real onset phase-boundary voids §1 and makes this a real owed fixture.
+  - [dedup] Lesson homed in insights 023/025; the in-record adversarial annotation reframes present-tense.
+  - [reframe] Strip 'RECORDED 2026-06-10' framing: present-tense there is no onset phase-boundary to plant the averaged-balance mutant in; a future onset-balance precompute reactivates it as a real owed fixture.
+- **`docs/research/pre65-healthcare.md#30`** · `lesson` · [REHOME → docs/research/pre65-healthcare.md] → ACA shadow-rate / cliff effective-rate finding · _no-move_
+  - sig: >100% effective rate at the ACA cliff
+  - Planners frame this as a shadow marginal rate (federal+state tax+lost ACA subsidy), ~38%+ when phase-out stacks on a 12%/22% bracket, catastrophic at the cliff: a couple at ~$80k MAGI getting ~$10k/yr subsidy who converts $10k over the ~$84,600 cliff loses the whole ~$10k subsidy plus ~$1,200 tax → >100% effective rate.
+  - [dedup] Quantitative research finding; canonically lives in its source docs/research/pre65-healthcare.md — no insight file holds it.
+  - [fixed:warn] Rehomed to research; finding (a number), not an insights lesson.
+- **`docs/research/pre65-healthcare.md#33`** · `lesson` · [REHOME → docs/research/pre65-healthcare.md] → sign-inverted tax-blind-delta (healthcare extension of the landmine) · _no-move_
+  - sig: tax-blind delta sign-inverted across 63→65
+  - Unifying crux: both regimes have cliffs, so 'fill to a subsidy-aware ceiling, not a tax-bracket ceiling' applies in both phases — only the ceiling's definition changes at 65; consistent with the project landmine, the tax-blind delta is sign-inverted: ignoring ACA/IRMAA makes aggressive early conversions look BETTER than they are, both pre-65 and across the 63→65 boundary.
+  - [dedup] No insight file holds the 63→65 sign-inversion extension; it canonically lives in its source docs/research/pre65-healthcare.md, and the parent tax-blind-delta landmine lives in docs/research/engine-validation-and-tax.md (lines 87/125).
+  - [fixed:warn] Rehomed to research; no insight file holds this extension.
+- **`docs/research/pre65-healthcare.md#42`** · `lesson` · → ACA one-pass-vs-iterate bias lesson · _no-move_
+  - sig: one-pass v0 biases marginal premium-funding withdrawal
+  - A one-pass/sequential v0 (estimate MAGI → compute PTC → don't re-fund) is acceptable but biases the marginal premium-funding withdrawal (understates MAGI); iterating removes the bias for ~10 lines — recommended.
+
+
+## DROP — no surviving fact
+
+- **`README.md#22`** · `other` · → n/a — front-door navigation framing · _drop_ · [NOT-must-survive]
+  - sig: where truth lives
+  - Documentation map: full index is docs/README.md; the three essentials are product.md (why+what), roadmap.md (where we are + what's next), architecture.md (what you must never break); conventions/landmines in CLAUDE.md, live queue in TODO.md.
+  - [dedup] Pure navigation framing already owned by docs/README.md (the thin index) and CLAUDE.md (the map); no surviving fact to re-home in the new tree.
+  - [reframe] Surviving fact: none load-bearing — this is front-door routing prose. The new README/docs index re-states the map natively, so the old copy is dropped rather than migrated.
+  - [fixed:nit] Sig retitled to distinctive 'where truth lives' for M6 grep.
+- **`docs/README.md#1`** · `other` · → n/a — regenerated index · _drop_
+  - sig: to understand X read Y
+  - The docs/README routing map: 'to understand X, read Y' across product, roadmap, architecture, the four act plans, decisions, the two research files, glossary, and insights.
+  - [dedup] The map duplicates CLAUDE.md 'The map (where truth lives)'; the canonical routing lives in the regenerated docs/README index + CLAUDE.md, so this captured copy carries no surviving fact of its own.
+  - [reframe] Pure index framing: the new docs/README is re-authored forward-only and will list the same canonical homes; the individual destinations it names survive via items #2-#7. No standalone fact to home.
+  - [fixed:nit] Kind retagged definition-term → other (index, not a term).
+
+
+## Review Queue — Verify-pass findings (M1)
+
+> 74 findings from the per-home adversarial critics + the global consistency gate over the assembled ledger.
+> The M1 fix pass applies the in-part corrections the critics specified (disposition flips, reframe fattening,
+> dedup pointers); rows whose HOME should change are marked `[REHOME → target]` in place. M6 re-checks this list.
+
+### Global consistency gate — verdict: concerns
+
+Locked-decision re-checks (independently verified by the gate, not trusted from the summary):
+- **[PASS]** features/ fully dissolved as a HOME
+  - Independently confirmed: the assembled ledger has 17 home '##' section headers (product, roadmap, architecture, glossary, 4 plans, accumulation + 3 NEW decisions, 2 research, insights, DROP) — none is a features/ path. Zero row-header arrow targets begin with features/ or plans/features/. The 5 'features/' string hits are all inside dissolution-instruction notes naming the dissolving SOURCE doc (e.g. 'features/portfolio-holdings.md DISSOLVES', 'folded from features/social-security'), exactly as expected. features/-sourced facts are re-homed into the 3 NEW decision records + product/plans.
+- **[PASS]** Cardinal rule has exactly 2 canonical (product full + README plain), rest pointer
+  - Independently re-verified, not trusted from summary: only README.md#2 (canonical, '§2 cardinal rule', plain-language) and product.md#3 (canonical, '§2 The cardinal rule', full statement) are canonical rows whose TARGET section is the cardinal rule itself. plans/3-controls.md#3 is a _pointer_. R25 (product) and the many other 'calm-but-wrong' mentions are APPLICATIONS of the rule embedded in other facts whose own canonical home is elsewhere; their dedup notes (lines 1364,1900,2017,3960) consistently name product §2 canonical + everything else pointer. No third canonical for the cardinal rule itself exists.
+- **[PASS]** Accumulation fold (C1-C3) reframed present-tense not dropped, IDs kept
+  - Confirmed in the accumulation decision part (018) and across the ledger: C1/C2/C3 rows are _reframe_ with [reframe] instructions that explicitly 'drop the 2026-06-08 amendment / fold dated framing' while stating the surviving fact present-tense, and each says 'keep the C1 ID' / 'keep C2 ID' / 'keep C3 ID'. Zero drop dispositions touch C1-C3. Summary's '27 reframe + 2 pointer, ZERO drop' for the fold reconciles with the part (26 reframe + 2 pointer + 4 canonical in-part, plus the C-unit reframes filed under plans/1-engine, e.g. plans/1-engine#61 -> C2 golden record reframe).
+- **[PASS]** 3 NEW decisions records each actually received facts
+  - Confirmed by counting fact blocks per part: ss-computation 19 rows (3 canonical/16 reframe), other-income-r40 26 rows (all reframe — expected, as its source features/other-income.md is a dissolving fossil so every fact arrives present-tense), portfolio-holdings 10 rows (7 canonical/3 reframe). Exactly matches the summary's 19/26/10. None is an empty shell; sources include the dissolving docs/plans/features/* docs, confirming the dissolution feeds these records.
+
+Systemic findings:
+- **(warn)** Systemic README disposition contradiction: 22 of 23 surviving README.md-sourced rows are tagged _canonical_, yet 18 of them carry a [dedup] note that explicitly cedes canonicity to another home and says the README copy 'becomes a pointer' / 'is the pointer' (architecture, product, roadmap, research, glossary). The disposition column and the dedup note are in direct contradiction. Proven concrete: DND-012 (sig 'externally-derived fixtures DND 012') is _canonical_ in BOTH README.md#8 AND architecture.md#5 — two canonical rows, identical sig, README#8's own note says architecture is canonical. Same shape for README#6/#7 (CRN, reduce-to-spine) which sit in the architecture part alongside the genuine architecture-sourced canonical (architecture#21, and the reduce-to-spine home row). The DISPOSITION x HOME matrix shows ZERO 'pointer @ README' — every README dedup-cede row was counted as canonical, masking the contradiction. The cardinal-rule carve-out (README#2 plain-language copy = 2nd canonical, Q5-correct) is the ONLY legitimately-canonical README invariant; the rest violate the locked 'root README = single front door / thin index' decision and the one-canonical-home rule the restructure exists to enforce. Impact: as a rewrite SPEC this instructs the M2-M5 author to write ~18 facts as the one true canonical copy IN the README, re-creating the dual-canonical drift; M6 grep-survival still passes (sig present) so it won't be caught downstream.
+  - **Fix:** Re-disposition the README.md rows whose [dedup] note cedes canonicity elsewhere from _canonical_ to _pointer_ (or _reframe_ to an explicit 'README keeps a plain-language front-door copy' where a copy is intended, mirroring the cardinal-rule README#2 carve-out). Keep canonical only where the README is genuinely the sole live home (README#3/#4 thesis front-door restatement note 'no other live home'). Then the DISPOSITION x HOME matrix will gain ~18 'pointer @ README' and the canonical counts at architecture/product/roadmap/research/glossary stay correct without phantom README duplicates. Verify the DND-012 pair (README#8 -> pointer, architecture#5 stays canonical) as the acceptance test.
+- **(nit)** Five sig phrases are duplicated across rows; four are correctly resolved (one canonical + pointers: 'engine invariants live once in architecture.md' = 2 pointers; 'gross-up k≈0.74...' = architecture canonical + 2 pointers; 'survivor-spending ratio ~75% Blanchett' = plans/1-engine canonical + glossary pointer). Only 'externally-derived fixtures DND 012' is a true two-canonical conflict, already captured above. The CRN invariant also appears canonical in plans/4-recommendation#10 and (dissolving) features/portfolio-holdings#6, but each has a DISTINCT sig and is a legitimate own-extension (K-candidate CRN generalization; value-weighted-blend specialization) with a dedup note ceding the base invariant to architecture — NOT a conflict. Flagging the dedup-integrity scan as a systemic-health note so the fix above is verified to be the ONLY duplicate-canonical, not one of several.
+  - **Fix:** After re-dispositioning README rows, re-run the duplicate-sig scan (sort sig lines | uniq -d) and confirm each remaining duplicate has exactly one _canonical_; expect zero two-canonical pairs once DND-012 README#8 flips to pointer.
+
+### Blocker (1)
+
+- **docs/decisions/README.md#6**  _(home: docs/glossary.md)_
+  - **Problem:** HOLLOW/FALSE REFRAME. The [reframe] note asserts the graduation rule is 'the rule that produced today's ss-computation.md and other-income-r40.md records.' Those records do NOT exist. docs/decisions/ contains only README.md and accumulation-fuck-off-date.md. The source README (lines 25-28) explicitly states the SS computation decisions and R40 KTDs DELIBERATELY live in their feature plans (plans/features/social-security.md, plans/features/other-income.md) and have NOT yet graduated ('When one of those grows enough cross-repo reach... graduate it'). The reframe bakes a false claim about repo state into the surviving fact.
+  - **Fix:** Strike the fabricated 'produced today's ss-computation.md and other-income-r40.md records' clause. State the rule as the forward-going policy the README actually carries: a decision living in a plan/feature doc graduates into its own record in decisions/ once cited by §-number from multiple subsystems; today the SS decisions and R40 KTDs deliberately remain in plans/features/social-security.md and plans/features/other-income.md (ungraduated).
+
+### Warnings (44)
+
+- **docs/README.md#0**  _(home: docs/product.md)_
+  - **Problem:** A doc-navigation convention ('the repo-root README is the single front door; docs/README.md is purely a thin index/map') is routed INTO docs/product.md as a reframe. This is not product why/what content - it is a documentation-tree convention. The row's own [dedup] note concedes the canonical home: 'the root-README-as-overview convention is canonical in the project README itself.' Verified that product.md's intro does NOT carry (and should not carry) a front-door/doc-map note - the convention lives in README.md line 11 and docs/README.md line 11. Landing it in product.md mis-files a navigation fact under why/what.
+  - **Fix:** Re-route this row out of docs/product.md. Its canonical home is the root README.md (the single front door) with docs/README.md as the thin index - both already carry it. Either drop the row from the product home (the fact is fully homed in README/docs/README) or convert it to a pointer that lives in those doc-index surfaces, not in product.md's product-thesis section.
+- **README.md#2**  _(home: docs/product.md)_
+  - **Problem:** Disposition is marked _canonical_, but the row's own [dedup] note says 'Full canonical statement lives in product §2' - i.e. the full cardinal-rule statement is canonical in row docs/product.md#3 (which routes to '§2 The cardinal rule' also marked _canonical_), not in this README fossil. Two rows thus both land in product §2 marked canonical for the same fact. This contradicts how the parallel R25 row (docs/product.md#45) was correctly handled - R25 restates the cardinal rule and is marked _pointer_ to §2. README#2 is the same shape (a restatement whose full canonical is §2) but is mislabeled canonical.
+  - **Fix:** Change README.md#2 disposition from _canonical_ to _pointer_, naming docs/product.md#3 / §2 as the canonical full statement (mirroring R25 #45). Keep the note that README retains its own plain-language phrasing for the first-time-reader surface, but the routed-into-product disposition should read pointer, not canonical, so §2 has exactly one canonical row (#3).
+- **docs/plans/features/other-income.md#13**  _(home: docs/product.md)_
+  - **Problem:** This row carries the stale changelog framing 'R40.9 — add an R40 requirements entry amending the locked contract' as _canonical_ with NO reframe note to strip it. That directly contradicts the sibling product.md#69 reframe directive ('drop the add-an-R40-entry-amending-the-locked-R1-R39-contract as changelog framing — present-tense the R-ledger simply includes R40') and features/other-income.md#70's present-tense handling. As written, M6 would carry the superseded 'amends the locked contract' meta-framing into the canonical product doc, violating the insight-018 zero-removals / present-tense rule the rest of the R40 cluster honors.
+  - **Fix:** Add a [reframe] note to #13 mirroring product.md#69 and features#70: present-tense it as 'the product §7 R-ledger simply includes R40.8 (the other catch-all ships) and R40.9 (the R40 entry)', dropping the 'amending the locked contract' changelog framing. The surviving fact is the entry's existence and the catch-all, not the act of amending.
+- **docs/plans/features/other-income.md#14 (vs docs/product.md#70)**  _(home: docs/product.md)_
+  - **Problem:** Canonical collision: the R40.1–R40.10 sub-requirements are double-homed as _canonical_ within this same file — once grouped from product.md#67–70 (R40.1-3, R40.4-6, R40.7-9, R40.10, mostly disposition _reframe_) and again granularly from features/other-income.md#6–14 (R40.1, R40.2, R40.3, R40.4, R40.5, R40.7, R40.8/9, R40.10, disposition _canonical_), both targeting product §7. R40.10 (product.md#70) and R40.10 (features#14) are the clearest pair: identical content, both pointed at product §7 as authoritative. M6 has two competing canonical authors for the same R-number and would risk writing each sub-requirement twice.
+  - **Fix:** Designate ONE source as the canonical author and demote the other to a merge-source: treat the product.md#67–70 rows as the existing R-ledger entry being amended, and the features/other-income.md#6–14 rows as the dissolving-doc content folded INTO it (mark them 'merge into the product.md R40 entry, not a second write'). One R40.x = one canonical row.
+- **docs/plans/2-first-answer.md#17**  _(home: docs/product.md)_
+  - **Problem:** This row routes the full copyGuard category taxonomy (3 categories with verb lists — imperative-mood advice verbs, advice-implying superlatives, false-certainty verbs) wholesale to product as a bare requirement, and is the ONLY requirement row in the file with no [dedup] line. Its siblings consistently name the copyGuard mechanism's canonical home elsewhere: #19 routes copyGuard mechanics to 'architecture §copyGuard', #18 routes the RMD-age constant detail to 'architecture §8'. The category taxonomy is mechanism-level (the design of the guard), not just the R12 product requirement, so leaving it home-only-in-product with no pointer is a dedup-completeness gap.
+  - **Fix:** Add a [dedup] line to #17: product R12 is canonical for the requirement (no-advice copy), and the copyGuard category/verb-list MECHANISM is canonical in architecture §copyGuard (or the plans/2 copyGuard build section) — matching how #18/#19 split requirement vs mechanism.
+- **docs/research/engine-validation-and-tax.md#18**  _(home: docs/product.md)_
+  - **Problem:** disp=canonical but the row has NO R-anchor (target is only 'R-ledger / probability-of-adjustment dollar-grammar') and dedup is empty. Verified NOT currently in product.md. 'Report terminal-value percentiles + depth-of-failure, not just pass/fail' is a two-part fact: a product refinement of R2/R3 AND an engine-output-shape contract. As written it lands as orphaned, anchorless product prose that M6 cannot place.
+  - **Fix:** Anchor it to R2/R3 in product (the terminal-value/depth-of-failure distribution feeds the humanized 'probability of adjustment' dollar-grammar) and route the engine-output-contract half to docs/architecture.md (§7, engine output shape). Populate dedup naming the chosen canonical home.
+- **docs/research/engine-validation-and-tax.md#26**  _(home: docs/product.md)_
+  - **Problem:** disp/dedup contradiction. Row is disp=canonical for the falsifiable tax IN/OUT line ('IN iff sequencing or a conversion can move it'), yet its own dedup says product.md (R40 scope) is canonical and this research doc is a pointer. Verified: product.md line 196 (§7 scope) AND D6 (line 75) already carry the IN/OUT line with the identical IN/OUT list. Two rows (#26 and #39) cannot both be canonical for this fact, and #26 self-demotes in its dedup text.
+  - **Fix:** Set #26 disp=pointer with canonical = product.md §7 IN/OUT line (the same home #39 points to). Keep #26's NIIT 3.8% numeric detail as a research-pointer fact.
+- **docs/research/engine-validation-and-tax.md#38**  _(home: docs/product.md)_
+  - **Problem:** Mis-route + empty dedup on a disp=canonical row. 'Senior Bonus Deduction 2025-2028, sunsets after 2028 -> tax overlay must carry an explicit sunset marker' is a constants-discipline / tax-overlay mechanic on a dated figure, not a product requirement. Verified NOT in product.md. Routing law: invariant/constants-contract -> architecture; a dated number -> research. Only the calm 'viewed in/after 2029' honesty note is product-level.
+  - **Fix:** Route the sunset-marker constant mechanic to docs/architecture.md §8 (year-keyed constants + reVerify-style markers) / §7.1 (tax overlay); keep at most an honesty-note requirement in product tied to R14/R22 as a pointer. Populate dedup naming the architecture canonical home.
+- **docs/decisions/accumulation-fuck-off-date.md#21**  _(home: docs/product.md)_
+  - **Problem:** DEDUP missing-canonical. Row lists five deferred items (contribution optimization, 3-asset cash sleeve, TDF glide curves, Roth employer match SECURE 2.0 §604, per-person asymmetric date) and its dedup claims 'Deferred ledger canonical in product.md.' Verified: product.md §5 chapter-two only carries contribution-strategy optimization; the cash sleeve, TDF glide, SECURE 2.0 §604 Roth-match (the only §604 trace is inside R31, not the deferred ledger), and per-person asymmetric date have NO canonical home in product. The pointer points at facts the named canonical does not hold.
+  - **Fix:** Either expand product.md §5 'Chapter two (named, deferred)' to absorb the cash sleeve / TDF glide / Roth-match §604 / per-person asymmetric date, or mark #21 disp=canonical for those four and keep only contribution-optimization as the product pointer. Correct the dedup to reflect which items product actually owns.
+- **docs/research/engine-validation-and-tax.md#27 / docs/research/pre65-healthcare.md#36**  _(home: docs/product.md)_
+  - **Problem:** Within-file near-duplicate canonical routing. Both rows route the SAME requirement ('two distinct MAGI calculators, ACA-MAGI ≠ IRMAA-MAGI') to product (#27 disp=canonical → R40; #36 disp=reframe → R40 cluster) without cross-referencing each other. Risks double-writing the two-MAGI requirement into product in M6.
+  - **Fix:** Designate one row canonical for the two-MAGI requirement (prefer #36 — it carries the fuller composition and the funding-source-order consequence) and make the other its pointer, or note they merge into a single R24/R40.4 entry. Add a cross-reference between the two rows' dedup notes.
+- **docs/research/engine-validation-and-tax.md#56**  _(home: docs/product.md)_
+  - **Problem:** Hollow reframe. Digest backs the positioning with named incumbents (ProjectionLab, Boldin, Monarch, Empower, Fidelity/Vanguard) and an honesty caveat ('corpus is FIRE-skewed, pain likely understated'). The [reframe] surviving statement drops BOTH — the named-incumbent evidence base and the FIRE-skew caveat — leaving the positioning claim thinner than the digest implies and stripping its falsifiable grounding.
+  - **Fix:** Retain the named-incumbent evidence basis and the FIRE-skewed/pain-understated caveat in the surviving fact, OR explicitly affirm in dedup that they survive in the research pointer (research appendix) so the positioning keeps a citable basis.
+- **docs/README.md#2**  _(home: docs/roadmap.md)_
+  - **Problem:** MIS-ROUTE. kind=scope-boundary, content = the doc-organization-by-KIND doctrine (product=why/what, roadmap=status, architecture=invariants, glossary=terms, insights=lessons). That is documentation-meta doctrine describing where each kind lives — it is NOT build-status, so it does not belong in the status home (roadmap). The roadmap is one of the homes the doctrine describes; it cannot host the doctrine. The row's own [dedup] note even states 'CLAUDE.md is the canonical statement of doc-organization, docs surface becomes a pointer' — which directly contradicts filing it under home=roadmap. Canonically this doctrine lives in docs/README.md (the single front-door index, per commit 2f227e0a) with CLAUDE.md's 'where truth lives' map as the always-in-context copy.
+  - **Fix:** Re-home this row to docs/README.md (the index/front-door) as the doc-organization doctrine, with CLAUDE.md as the canonical always-in-context copy; do not host the kind-split in roadmap. Roadmap should carry build-status only.
+- **docs/product.md#74**  _(home: docs/roadmap.md)_
+  - **Problem:** CANONICAL/POINTER INVERSION (mis-route of an invariant's canonical anchor). The surviving fact 'with no runway (Y==0) the tool reproduces decumulation byte-identically' IS the reduce-to-spine engine invariant, whose canonical home per CLAUDE.md/architecture is docs/architecture.md ('Reduce-to-spine invariant ... canonical home docs/architecture.md'). This row is marked _canonical_ in roadmap and its [dedup] note demotes architecture to merely 'hold[ing] pointers' — inverting the routing law (invariant canonical = architecture). The validation-GATE form (we test Y==0 reduces byte-identically) legitimately lives in roadmap's validation gates, but the invariant STATEMENT must be canonically anchored in architecture, or M6 will reconstruct the load-bearing invariant from the status doc. Contrast roadmap.md#21 (C2), which correctly states 'engine contract canonical in architecture.md.'
+  - **Fix:** Keep the gate/success-criterion as a roadmap validation-gate row, but flip the dedup: make docs/architecture.md the named CANONICAL home for the reduce-to-spine / byte-identity invariant and roadmap the gate-status pointer to it — not the reverse.
+- **docs/roadmap.md#83 / #84**  _(home: docs/roadmap.md)_
+  - **Problem:** DEDUP forward-reference: both rows name canonical homes that do not yet exist — `decisions/portfolio-holdings.md` (#83) and `decisions/other-income-r40.md` (#84) — while the live roadmap (lines 105-106, 155, 174) still points to `plans/features/*.md`. Legitimate for an M1 migration map (these are M1 *targets*, and the rows correctly mark the features/ docs as DISSOLVES), but the canonical home is a promise, not yet a file; if those decision docs are not created in the restructure the pointer dangles.
+  - **Fix:** Confirm the M-sequence creates `docs/decisions/portfolio-holdings.md` and `docs/decisions/other-income-r40.md` (and rewrites roadmap lines 105-106/155/174 off the features/ paths) before M6; otherwise downgrade the canonical-home claim to the surviving plan home.
+- **docs/plans/features/other-income.md#78**  _(home: docs/roadmap.md)_
+  - **Problem:** OVER-RETENTION (partial mis-route). The [reframe] surviving-fact reproduces the FULL checkIncomeStreamV3 field-by-field validation contract in roadmap: finiteness-first, enum membership, ownerIndex∈{0,1}, the sole survivorPct/taxableFraction range gate, colaPct REQUIRED-and-finite when colaMode='fixed-pct' (never coerced to 0 — the optimistic-erosion direction), the full discriminated-type arm, endAge absent≡lifetime (DND-009). That is a validation-boundary invariant + a decision + a build-step, not roadmap status — and the row's OWN [dedup] says exactly that (architecture §6, KTD-3/KTD-6, U8 hand-off). Roadmap is volatile status; load-bearing rules like 'colaPct never coerced to 0' and DND-009 risk dying when the status line is later trimmed.
+  - **Fix:** Trim the roadmap surviving-fact to the thin U8 obligation/status only ('U8 must build the checkIncomeStreamV3 codec validator — gated, not free persistence'). Route the field-level contract to its real homes: architecture §6 (the R19/validateParams validation-boundary invariant — verified to exist), decisions/other-income-r40 (KTD-3/KTD-6 incl. the colaPct-never-0 and DND-009 rules), and plans/2-first-answer (the U8 build step). Roadmap keeps only the pointer.
+- **docs/research/engine-validation-and-tax.md#23**  _(home: docs/roadmap.md)_
+  - **Problem:** OVER-RETENTION of research provenance in a status home. kind=status-as-built, but the surviving-fact carries number/provenance facts that route to research, not roadmap: the exact CSV filenames (CohLifeTables_M/F_Alt2_TR2024), the sha256-pinning, and the 'table4c7.html 404 — 4.C7 is Trustees-Report numbering, not a filename/URL' caution. That 404 caution is a standing re-fetch landmine; if it lives only in a roadmap status line it dies when the status is trimmed.
+  - **Fix:** Roadmap keeps only the pinned-as-built status ('cohort mortality reads from the sha256-pinned SSA HistEst CSVs — pinned'). Route the table4c7.html/'4.C7' caution + the CSV filenames + SHA detail to research (docs/research/engine-validation-and-tax.md or its successor) per number->research, so the landmine survives.
+- **docs/plans/2-first-answer.md#2**  _(home: docs/roadmap.md)_
+  - **Problem:** STATUS CONTRADICTION across two rows into the same You-Are-Here D1 cell. This row routes 'U5/D1 Shipped'; decisions/accumulation-fuck-off-date.md#86 (Row, _reframe_) routes 'D1 IN PROGRESS — account intake shipped, remaining surface work ahead.' Verified against the live roadmap (line 73): the table renders one combined 'U5 / D1 ... shipped' cell. Two rows assigning different status tokens (Shipped vs IN PROGRESS) to one cell will fight at M6 (contradictions-mean-STOP).
+  - **Fix:** Reconcile in the ledger before M6: designate one row canonical for the D1 You-Are-Here cell and reduce the other to a pointer that defers to it. Resolve the token to the true state — U5 account-intake shipped/reviewed, D1's broader date/answer surface still ahead — so M6 produces a single unambiguous cell.
+- **docs/architecture.md#55**  _(home: docs/architecture.md)_
+  - **Problem:** Kind=number-or-figure marked _canonical_ in architecture (BIP-39 12 words / 128 bits / HKDF-SHA-256). But the sibling pointer 1-engine.md#44 explicitly routes the same numbers (PBKDF2 600k, BIP-39, sentinel -1) canonical to research/by-number. Two rows now claim DIFFERENT canonical homes for the same figure — an M6 grep-and-place pass would re-type the BIP-39/128-bit values as canonical in BOTH architecture and research, violating the never-re-type-a-dated-figure discipline.
+  - **Fix:** Retag #55 as the recovery-key-derivation CONTRACT (kind=invariant/build-detail) that CITES the figure, and let the figure's canonical home be the research/by-number entry named in #44. Architecture keeps the contract + inline citation; research keeps the canonical number.
+- **docs/architecture.md#58**  _(home: docs/architecture.md)_
+  - **Problem:** Kind=number-or-figure marked _canonical_ in architecture for the passphrase floor (zxcvbn-ts ≥3 AND length ≥12), bundled with the atomicity/durability contract. But sibling pointer 1-engine.md#47 explicitly routes the zxcvbn ≥3 / length ≥12 figure canonical to research/by-number (architecture holds only the floor-is-the-real-boundary invariant). Same double-canonical conflict as #55: the figure is claimed canonical in two homes.
+  - **Fix:** Split #58: keep the atomicity/durability + write-gate ordering as the canonical architecture contract; demote the zxcvbn ≥3 / length ≥12 number to a citation pointing at the research/by-number canonical that #47 names. Do not mark the figure canonical here.
+- **docs/architecture.md#70**  _(home: docs/architecture.md)_
+  - **Problem:** Kind=number-or-figure marked _canonical_ in architecture (paths pinned 16,000; z=1.645; BANDS.onTrack). But sibling 1-engine.md#67 explicitly states those numbers (z=1.645, 16,000 paths, BANDS.onTrack) are duplicated to research and only the quantize-before-compare RULE is canonical in architecture §9. So the date-search numbers are claimed canonical in both architecture (#70) and research (#67's route) — double-canonical figure.
+  - **Fix:** Retag #70 as the date-search quantization IDIOM/rule (kind=invariant) that cites the figures; let 16,000/z=1.645's canonical by-number entry live in research as #67 routes it. Keep only the rule canonical in §9.
+- **docs/plans/1-engine.md#65**  _(home: docs/architecture.md)_
+  - **Problem:** HOLLOW REFRAME risk: the reframe keep-list preserves onset_i = max(65−currentAge_i, retireOffset_i) and 'bridge years inside the lookback window are covered,' but drops the named correctness landmine in the digest — that the household max(65,A) form WRONGLY ZEROED an already-retired spouse, so a retired 66-yo must be priced from t=0. The surviving-fact sentence is thinner than the digest: it loses the per-person-vs-household-onset bug that motivates the per-person formula.
+  - **Fix:** Add the dropped landmine to the surviving fact: 'per-person onset (not household max(65,A), which zeroed an already-retired spouse) — a retired 66-yo is priced from t=0.' Keep it as a named verification anchor so M6 doesn't lose the bug behind the formula.
+- **docs/plans/features/social-security.md#47**  _(home: docs/architecture.md)_
+  - **Problem:** Marked _canonical_ but its [dedup] note labels it a pure duplicate of #12 ("Same fact as item #12... this duplicate collapses there"). It is NOT a pure duplicate: #47's digest carries two facts absent from #12 — (a) a TEST that confirms the §86 overlay never re-derives the benefit from PIA, and (b) the forward landmine that a future muni bucket is the SINGLE §86 change site. Treating #47 as a redundant collapse risks dropping both when M6 merges it into #12 — the muni single-change-site note in particular is a load-bearing engine-discipline landmine.
+  - **Fix:** Keep #47 routed to §7 but re-note the dedup so the collapse PRESERVES its two unique facts: the 'overlay never re-derives from PIA (tested)' assertion AND the 'future muni bucket = the single §86 change site' landmine. Do not let 'duplicate of #12' erase them; either merge those two facts into #12's canonical text or keep #47 as the canonical for them with #12 as the base.
+- **docs/research/engine-validation-and-tax.md#54**  _(home: docs/architecture.md)_
+  - **Problem:** Kind is `decision-rationale` (law routes that to decisions/<topic>), yet it's homed in architecture §10. The digest is rationale-laden: 'value is determinism+headroom', 'Jazz downgraded vs Evolu', 'non-extractable CryptoKey ... is the browser-E2E pattern' — comparative WHY, not a present-tense boundary. The pure crypto invariants (PBKDF2-HMAC-SHA256 @600k iters, AES-GCM-256, salt 16 bytes, extractable:false, skip SAB+COOP/COEP) are genuine architecture §10 material, but the alternative-weighing rationale (why Jazz was downgraded, why SAB is skipped, the determinism+headroom justification) is decision-record content.
+  - **Fix:** Split the row: lift the resulting crypto invariants (KDF params, non-extractable CryptoKey in IndexedDB, AES-GCM-256/salt, the worker model) into architecture §10 as present-tense boundary facts; route the comparative rationale (Jazz-vs-Evolu downgrade, skip-SAB reasoning, determinism+headroom justification) to a decisions/crypto-stack record, with architecture §10 holding a pointer to it. The reframe note already reclassifies these as 'live decisions' — make the kind field and home agree by separating invariant from rationale.
+- **docs/glossary.md#4 ⨯ docs/plans/1-engine.md#22**  _(home: docs/glossary.md)_
+  - **Problem:** Two source fossils both land the outcome-state-set definition in docs/glossary.md but disagree on disposition. glossary.md#4 marks the glossary entry as _pointer_ with canonical home plans/1-engine.md (U1); plans/1-engine.md#22 marks the glossary entry as _canonical_ for the six-term set (already-failing / over-funded / on-track / borderline / off-track / indeterminate). Both also enumerate the full six-state list. Left unreconciled, M6 risks building two overlapping definitions or a duplicated state list, and the builder has no single answer for whether glossary owns the term definition or merely points out.
+  - **Fix:** Merge into ONE glossary entry: glossary is the define-once canonical home for the SIX TERM NAMES (per #56 discipline), and POINTS to plans/1-engine.md U1 + src/shared/model.ts for the enum, and to architecture for the authority/clamp invariant (engine sole authority over state/band-edges/indeterminate-selection, and the 10/10-honesty clamp: all-paths-survive renders over-funded near-ceiling, never a bald '10 of 10'). Set the glossary disposition to canonical-for-the-terms / pointer-for-mechanics and drop the second list so the six states appear once.
+- **docs/decisions/README.md#6**  _(home: docs/glossary.md)_
+  - **Problem:** MIS-ROUTE. kind is 'decision-rationale' and the content is a policy/rationale about how records form (the graduation rule), not a term definition. Routing law sends decision-rationale -> decisions/<topic>. Its actual canonical home is docs/decisions/README.md (where the source rule lives). Routing the rationale itself into the glossary fights the home.
+  - **Fix:** Keep the canonical graduation-rule statement in docs/decisions/README.md (its current home). At most, leave a glossary pointer-entry under the 'decision record' term that references the README's graduation rule rather than restating the rationale as a definition.
+- **docs/plans/features/social-security.md#67**  _(home: docs/glossary.md)_
+  - **Problem:** DEDUP / BAD POINTER. The [reframe] routes the glossary term-definitions (BenefitPerson, H = argmax(pia), L, the three stream shapes) to point 'to architecture §7 for mechanics.' Architecture §7 has no Social Security section (§7.1 tax, §7.2 healthcare, §7.3 store, §7.4 accumulation, §7.5 solver). The SS sub-engine mechanics (survivorBenefitAnnual, reduceSpouseExcess, H=argmax(pia), the streams) live exclusively in plans/features/social-security.md. The named canonical home does not hold the fact, so the M6 pointer would dangle.
+  - **Fix:** Repoint the glossary SS-term entries to the canonical mechanics home: docs/plans/features/social-security.md (the as-built record, e.g. its §3/§4/§6), not architecture §7.
+- **docs/plans/4-recommendation.md#15**  _(home: docs/plans/1-engine.md)_
+  - **Problem:** MIS-ROUTE. This row documents U14's build dependencies ("U14 depends on Act 1's validated spine + CRN draw schedule, both overlays, the pinned year-keyed constants; no U15 dependency"). U14 is an Act 4 unit (solver-validation harness), sourced from 4-recommendation.md. A build-step / dependency note for a U14 build belongs with U14's build, i.e. plans/4-recommendation.md. Listing Act-1 prerequisites does not make Act 1 the home of the row — the row's subject is U14's build, not Act 1's deliverables. Routing it into plans/1-engine.md fights the build-step->plans/<own act> law.
+  - **Fix:** Route to docs/plans/4-recommendation.md (U14 build section) as a dependency note. If the intent is instead to document what Act 1 must HAND OFF to U14, reframe the row to be Act-1-subject ("Act 1 delivers the validated spine/overlays/pinned constants that U14 consumes") and say so explicitly; otherwise it belongs in the Act 4 plan.
+- **docs/plans/features/social-security.md#37**  _(home: docs/plans/1-engine.md)_
+  - **Problem:** HOLLOW REFRAME. The digest carries the full SSA reduction-schedule arithmetic: early factor n<=36 ? (180-n)/180 : (192-(n-36))/240, delayed factor 1+min(-n,drcMonthsCap)*(2/3)/100. The [reframe] surviving-fact compresses these to a bare "early/delayed branches," keeping only n=fraMonths-claimMonths, floorToDime, and drcMonthsCap=840-fraMonths. The [dedup] cedes ONLY the numeric anchors (0.7000@62, 1.24@70) to research — NOT the reduction-schedule formulas. So the per-month reduction/DRC arithmetic (the core, correctness-critical content of adjustOwnBenefit) is left thinner than the digest and is not ceded anywhere. For a correctness-critical engine function this is a load-bearing rule, not framing.
+  - **Fix:** Retain the explicit reduction-schedule formulas in the surviving fact: early (180-n)/180 and (192-(n-36))/240 split at n=36, delayed DRC of 2/3 of 1% per month capped at drcMonthsCap=840-fraMonths, factor=1 at FRA, benefit=floorToDime(pia*factor). Cede only the verified factor ANCHORS (0.7000, 1.24) to research as the dedup already states.
+- **docs/plans/features/other-income.md#30**  _(home: docs/plans/2-first-answer.md)_
+  - **Problem:** The [reframe] surviving-fact list ('the tax-boundary touch points: GrossUpContext, nonSSordinary, §86, single MagiComponents producer, finiteness backstop') DROPS the '§6 ACA empty-overlap throw' touch point that the row's own digest enumerates. In the source (other-income.md L238-239, L536-537) this is a load-bearing landmine, not a passing detail: insight 027/020 says R40 income is death-gated (pays past retirement) and must NOT inherit the §6 ACA empty-overlap guard — a sign-error/refactor-share trap with an explicit 'Do NOT copy the §6 ACA empty-overlap guard' instruction. No other GROUP B row in this file carries that landmine, so the reframe makes the surviving fact thinner than the digest and silently loses a named hazard.
+  - **Fix:** Add the §6-ACA-empty-overlap touch point back into the surviving-fact note WITH its rule, e.g. '...single MagiComponents producer, finiteness backstop, and the §6 ACA empty-overlap throw — which R40 income must NOT inherit (death-gated, not retire-gated; insight 027/020)'. Or add a [dedup] pointing the 'do-not-copy §6 guard' lesson to insights/027 + decisions/other-income-r40 so the landmine isn't lost.
+- **docs/decisions/accumulation-fuck-off-date.md#64**  _(home: docs/plans/2-first-answer.md)_
+  - **Problem:** Disposition/dedup tension. This row carries the full 'objective ≡ headline' INVARIANT (kind=invariant) as a reframe INTO the plan, yet its own [dedup] note states 'the objective≡headline invariant rationale stays in this record [decisions/accumulation]'. The accumulation fold keeps invariant/decision-rationale rows canonical in decisions/accumulation (summary: 24 decision-rationale + 2 invariant @ decisions/accumulation). So the canonical statement of this invariant should live in the decisions record; landing a full reframe of it in the plan risks two canonical statements of 'one run, one statistic, one grade / never an independent recompute' rather than one canonical + one pointer.
+  - **Fix:** Make the plan row a POINTER, not a reframe: the canonical 'objective≡headline' invariant stays in decisions/accumulation-fuck-off-date.md §3c; the plan row records only the D2 build instruction ('render the date-search's own crowned-grade result — see decisions/accumulation §3c'). If a reframe is kept here, scope it explicitly to the build step and strip the invariant rationale.
+- **docs/plans/features/other-income.md#62**  _(home: docs/plans/2-first-answer.md)_
+  - **Problem:** Hollow reframe: the [reframe] note (billed by the header as 'the present-tense instruction') is thinner than the digest on two bug-preventing items the digest carries — (a) the named landmine 'do NOT copy the §6 ACA empty-overlap guard' into taxOverlay.ts, and (b) the KTD-9 re-specification of workingYearIrmaaMagiByPerson as wages/non-modeled. Both survive in the digest but vanish from the surviving present-tense instruction, so an author treating the [reframe] line as the spec could drop them.
+  - **Fix:** Add the §6-ACA-guard 'do not copy' landmine and the KTD-9 workingYearIrmaaMagiByPerson wages/non-modeled re-spec back into the reframe note so the surviving instruction is as complete as the digest.
+- **docs/plans/4-recommendation.md#19, #20, #21, #22, #23 (oracle cases i–v, ledger lines 66–86)**  _(home: docs/decisions/accumulation-fuck-off-date.md)_
+  - **Problem:** MIS-ROUTE (topic). All five rows are decision-rationale, but their subject is the Act-4 recommendation SOLVER's optimality oracle (conventional drawdown ordering, bracket-fill Roth-conversion equalization, ACA-400%-FPL/IRMAA cliff inversion, §1014/IRD after-tax-to-heirs bequest, the no-change/Unit-15-16 baseline). I confirmed against docs/plans/4-recommendation.md lines 65–69: these are the recommend-second tax-strategy subsystem, with no connection to the accumulation on-ramp, contributions, or the fuck-off-date sweep (C1–C3). The product thesis itself separates 'the fuck-off date' (first magic moment) from the 'recommend-second strategy.' Filing solver-oracle decisions under the accumulation/fuck-off-date record routes a different topic into the wrong decisions/<topic> home. The file author self-flagged this on every row ('solver-validation KTD, not an accumulation decision … home is arguable').
+  - **Fix:** Re-home all five to the recommendation-solver decision topic — a docs/decisions/<recommendation-oracle>.md record (or keep them as build-detail in docs/plans/4-recommendation.md, where the oracle fixtures are the source artifact). The kind (decision-rationale) is correct; only the topic-home is wrong.
+- **docs/architecture.md#40**  _(home: docs/decisions/ss-computation.md (NEW))_
+  - **Problem:** MIS-ROUTE. This is a §1014 basis step-up / IRD / estate-character decision (heir bracket, leave-more objective, per-bucket basis/character). It has nothing to do with Social Security computation. The dedup note itself confesses the tell: 'Routed to ss-computation as the closest tax-computation decision home (no dedicated estate record exists).' Filing an estate/basis tax decision into a file titled ss-computation.md is a content-fights-home placement — 'closest available' is not 'correct'.
+  - **Fix:** Route to a tax/estate decision record, e.g. docs/decisions/tax-treatment.md (or a new docs/decisions/estate-basis.md). If no estate decisions home exists yet, M1 should create one rather than overloading ss-computation. The per-bucket basis/character mechanic correctly also points to architecture §7.1 — keep that pointer.
+- **docs/architecture.md#41**  _(home: docs/decisions/ss-computation.md (NEW))_
+  - **Problem:** MIS-ROUTE. This decision is about how the RECOMMENDATION candidate arms are evaluated (both arms run at identical tax fidelity; a tax-blind delta is sign-inverted). It is a recommendation/optimizer-evaluation decision, not an SS-benefit-computation decision. The dedup note's own statement — 'the recommendation-build consumer is plans/4-recommendation, which references this decision' — confirms the decision belongs to the recommendation domain, not SS.
+  - **Fix:** Route to a recommendation decisions record (e.g. docs/decisions/recommendation-engine.md) or fold into the product D-locked decisions in product.md §4, alongside the 'recommend-second / what best means' decisions. Leave the plans/4-recommendation pointer intact.
+- **docs/decisions/accumulation-fuck-off-date.md#74**  _(home: docs/decisions/portfolio-holdings.md (NEW))_
+  - **Problem:** HOLLOW REFRAME. Source §5 (accumulation-fuck-off-date.md line 128) carries two load-bearing items the [reframe] note drops while the digest keeps them: (a) the RULE 'unrecognized ticker -> manual 3-choice classifier', and (b) the CONSTRAINT 'all blends carry an issuer/EDGAR citation, directional-until-pinned'. The reframe text ('holdings collapse to one household 2-asset blend; cash folds into bonds, TDFs ship a static snapshot with a held-constant disclosure') is a strict subset of the digest — if M6 renders the as-built text from the reframe note, the manual-classification rule and the citation/directional-until-pinned constraint die. A reframe may kill framing but must not drop a rule or constraint.
+  - **Fix:** Extend the #74 [reframe] note (or pin M6 to render from the digest) so the present-tense as-built text retains BOTH the unrecognized-ticker manual-classification rule AND the issuer/EDGAR-citation + directional-until-pinned constraint.
+- **docs/decisions/accumulation-fuck-off-date.md#73 and #74**  _(home: docs/decisions/portfolio-holdings.md (NEW))_
+  - **Problem:** MISSING CANONICAL / silent dual-canonical. product.md R37 (verified at line 160) states verbatim in substance the SAME facts these two rows home here: the per-account-not-per-lot basis ('Taxable cost basis is captured per taxable account, not per lot — the engine consumes one aggregate initialTaxableBasis; per-lot is collectible-but-unused precision, deliberately not collected') and the ticker->household-blend collapse + manual classification. The #73/#74 [dedup] notes name only architecture / D1 / C1 pointers and omit R37 — so the same fact is canonically stated in two homes with no pointer between them, violating single-source discipline. (Note: #97's own dedup DOES name R37, so the R37-awareness is inconsistent across rows in this very file.)
+  - **Fix:** Add product.md R37 to the dedup of #73 and #74 as the requirement-side statement, and decide ownership: R37 = the requirement (the fact), the decision record = the rationale that POINTS to R37 rather than independently restating the per-lot rule and the blend collapse.
+- **docs/plans/features/portfolio-holdings.md#17 vs #20**  _(home: docs/decisions/portfolio-holdings.md (NEW))_
+  - **Problem:** DECIDED-vs-OPEN contradiction, drifting in the honesty-critical direction. #17 frames the fold-into-U8 / two-slices sequencing as a ratified 'Scope decision' (disposition canonical, section 'Scope decision — build it...'), but the SOURCE heads this exact text '## Recommendation (for the ATC call)' (feature plan lines 116-129) and the front-matter status is 'scoping — decision-ready, not yet built' (line 13). #20 sub-decision (3) correctly preserves the SAME sequencing as an OPEN/pending-ratification ATC call (lines 137-146). The home would therefore present fold-into-U8 as BOTH decided (#17) and pending (#20.3) — and #17 has promoted an un-ratified recommendation into a decision (calm-but-wrong-as-decided is exactly the sin this product guards).
+  - **Fix:** Re-label #17 as 'Recommendation pending ATC ratification' to match the source header and #20, or reconcile #17 and #20 so the sequencing appears once with a single ratification status. The binding source framing is 'Recommendation (for the ATC call)', not 'Scope decision'.
+- **docs/plans/features/portfolio-holdings.md#11, #17, #20(3)**  _(home: docs/decisions/portfolio-holdings.md (NEW))_
+  - **Problem:** ACCIDENTAL DUPLICATE within this home. The 'fold into U8, no v3->v4 migration' sequencing rationale is asserted by three rows — #11 (canonical), #17 (the two-slices scope row), #20.3 (the open ATC sub-decision) — all marked mustSurvive. The dedup notes name the #11<->#17 overlap but #20.3 is a third independent statement; three rows asserting the identical rationale is the duplicate hazard, only partially mitigated.
+  - **Fix:** Make exactly ONE row own the 'fold into U8 / no v3->v4 migration' rationale canonically (recommend #11); have #17 and #20.3 reference it rather than restate it. Execute the collapse the #11 dedup note already prescribes ('overlaps item #17/#20(3) — same decision').
+- **docs/architecture.md#38, docs/plans/1-engine.md#76 (+ sibling part 023: research#34)**  _(home: docs/research/engine-validation-and-tax.md)_
+  - **Problem:** The RMD-age figure (72/73/75, SECURE 2.0, birth-year-derived) is routed to this home as `canonical` THREE times: architecture#38, plans/1-engine#76, and the doc's own native row research#34 (sibling part). Three co-equal `canonical` rows for one identical figure into one home invites M6 to write it three times. The research doc's native section (research#34) is THE canonical anchor; the other two are inbound fossils.
+  - **Fix:** Designate research#34 as THE RMD-age canonical anchor in this home; downgrade architecture#38 and plans/1-engine#76 to collapse-to-research#34 (their dedup notes already say 'research owns the dated numbers / canonical numeric home is research' — make that point at the specific #34 anchor so the figure is written once). architecture keeps the NON-CONVERTIBLE legality invariant (§7.1) as already noted.
+- **docs/plans/1-engine.md#75, docs/plans/features/other-income.md#33**  _(home: docs/research/engine-validation-and-tax.md)_
+  - **Problem:** The gross-up contraction figure (k≈0.74 / GROSS_UP_MAX_PASSES=128 / ~113 passes / ENGINE_MAX_DOLLAR=1e12) is routed here as `canonical` by TWO fossil rows, but the current research doc has NO native section carrying it (verified: grep for 0.74/GROSS_UP/k_sup/ENGINE_MAX_DOLLAR in engine-validation-and-tax.md returns nothing). Two inbound canonicals, zero native anchor — risk of a double-write with no single owning sentence.
+  - **Fix:** On merge, create ONE native canonical statement of the gross-up bounds in the research doc (k≈0.74, GROSS_UP_MAX_PASSES, ENGINE_MAX_DOLLAR=1e12) and point both plans/1#75 and other-income#33 at it; keep the architecture §7.1 contract / Performance section as pointers (as their dedup notes already say).
+- **docs/research/engine-validation-and-tax.md#36**  _(home: docs/research/engine-validation-and-tax.md)_
+  - **Problem:** This is the CANONICAL capture of the Temporary Senior Bonus Deduction figure, but the digest drops the provision's temporal-validity constraint: source line 119 states it is 'Available tax years 2025-2028 only; SUNSETS after 2028' and explicitly mandates 'The tax overlay must carry an explicit sunset marker.' The sunset window is load-bearing for any pre-2029 conversion answer and is not carried by any other row in this part (grep for sunset/2028/2029 returns nothing). The surviving fact is thinner than a canonical senior-bonus row should be.
+  - **Fix:** Add the sunset constraint to the #36 digest: '...both 65+; AVAILABLE TAX YEARS 2025-2028 ONLY, sunsets after 2028 unless extended -> overlay carries an explicit sunset marker; source IRS FS-2025-03, OBBBA P.L.119-21/H.R.1.' Keep the home (research).
+- **docs/product.md#41, docs/architecture.md#45, docs/plans/3-controls.md#48, docs/plans/4-recommendation.md#80, docs/research/engine-validation-and-tax.md#28**  _(home: docs/research/pre65-healthcare.md)_
+  - **Problem:** Over-canonicalization / intra-home duplication of one fact. All five foreign-sourced rows are dispositioned _canonical_ for the SAME dated legislative fact (enhanced ACA subsidies expired 12/31/2025 -> 400% FPL cliff is the 2026 base case), routed into a home whose NATIVE row pre65-healthcare.md#21 (_no-move_) already holds that exact dated fact, with #55 holding the gate and #23(line91) the rationale. Each foreign row's own [dedup] note even declares research canonical and says the source doc holds a POINTER -- which directly contradicts the _canonical_ disposition on the same row. Taken literally, M6 would author the project's most load-bearing, verify:aca-gated dated figure six times into one file.
+  - **Fix:** Treat native #21 as the single canonical ACA-expiry/cliff-on block (with #23 rationale + #55 gate). Re-disposition the five foreign rows from _canonical_ to _pointer_ (their source docs keep a pointer to research; research is the one canonical), matching what their own [dedup] notes already say.
+- **docs/research/pre65-healthcare.md#30**  _(home: docs/insights/)_
+  - **Problem:** Routed no-move to docs/insights/ as kind=lesson, but the content is a quantitative research FINDING/number (a worked shadow-marginal-rate example: ~$80k MAGI, ~$10k subsidy, $84,600 cliff, ~$1,200 tax, >100% effective rate), not a process lesson. It is the only research-sourced row with NO [dedup] note and NO canonical insight named, yet this exact fact already lives in its own source, docs/research/pre65-healthcare.md. There is no insight file (scanned 001-040) that holds a 'shadow marginal rate / >100% effective rate' lesson, so the claimed insights home has no canonical row.
+  - **Fix:** Either re-home to docs/research/ (number->research; the fact already lives in pre65-healthcare.md as its source, so this is a true no-move to research, not insights), OR if it is genuinely an insights lesson, name the canonical insight file it lives in. As written the insights home is unsupported.
+- **docs/research/pre65-healthcare.md#33**  _(home: docs/insights/)_
+  - **Problem:** Routed no-move to docs/insights/ as a 'healthcare extension' lesson, and the [dedup] note says the canonical sign-inverted tax-blind-delta landmine 'lives in engine-validation-and-tax.md' (which is RESEARCH, and the landmine is indeed there as 'an omitted cliff inverts which strategy wins', lines 87/125). But the note also asserts this extension is 'homed in insights' without naming any insight file; no insight (001-040) is a 'sign-inverted across 63->65' lesson. The only concrete canonical cited is in research, so the insights home for this extension is unsupported.
+  - **Fix:** Name the specific insight file that holds the 63->65 sign-inversion extension; if none exists, re-home to docs/research/pre65-healthcare.md (its source) as the canonical, since the parent landmine canonically lives in research (engine-validation-and-tax.md).
+
+### Nits (29)
+
+- **docs/product.md#5**  _(home: docs/product.md)_
+  - **Problem:** The digest quotes specific Mermaid node phrasings - 'Answer===Engine', 'Recommendation===Solver', 'Solver===Engine' - but the actual product.md diagram (lines 43-45) uses 'A === E', 'R === S', 'S === E' with descriptive node labels, never those literal compound tokens. A grep for the quoted phrasings returns nothing. The sig itself ('Can we retire, and how do we do it best?') IS greppable, so M6 survival is not at risk, but the digest's quoted node names overstate verbatim fidelity to the diagram.
+  - **Fix:** Soften the digest to describe the relationships without inventing literal node tokens (e.g. 'Answer is engine-backed; Recommendation is solver-backed; Solver shares the engine's CRN futures'), or quote the real labels (A===E / R===S / S===E). Low risk since the sig grep still hits lines 36 and 107.
+- **docs/research/engine-validation-and-tax.md#53**  _(home: docs/product.md)_
+  - **Problem:** Reframe drops a confidence qualifier. The digest states the legal defense (a Roth what-if naming no securities likely isn't 'advice about securities', IAA §202(a)(11) Prong A vs Reg BI/IA-5249) is 'defensible, not airtight.' The [reframe] preserves the named statutes but drops the 'defensible, not airtight' qualifier — meaningful for a rationale retained for 'deliberate re-instatement on re-commercialization,' where over-trusting the defense is the risk.
+  - **Fix:** Keep the 'defensible, not airtight' confidence qualifier in the surviving decision-rationale so any future re-commercialization does not over-rely on the Prong-A defense.
+- **docs/plans/1-engine.md#11**  _(home: docs/roadmap.md)_
+  - **Problem:** WEAK SIGNATURE + thin reframe. The reframe digest's greppable anchor is the workflow filename `verify-the-back-nine.yml`, but the sig 'CI runs the suite not just the build' carries no proper noun or number, and the [reframe] note's surviving-fact restatement ('CI runs typecheck + full vitest + bundle sentinel, not build-only') drops the filename. In M6 this row is grep-fragile and the load-bearing identifier (the workflow file) is no longer in the surviving fact.
+  - **Fix:** Put the proper noun in the sig: e.g. 'verify-the-back-nine.yml runs typecheck vitest bundle-sentinel'. Carry `verify-the-back-nine.yml` into the [reframe] surviving fact so the workflow filename survives, not just the abstract posture.
+- **docs/roadmap.md#45**  _(home: docs/roadmap.md)_
+  - **Problem:** MIS-LABELED KIND (home is correct). Row is tagged `kind: invariant`, but its content is the Requirements→unit-trace ground rules (numbers R1-R40 immutable, prose re-framed but mapping not, SC = success-criteria list) — a trace/status convention, not an engine invariant. Under the routing law `invariant->architecture` this label would argue for the wrong home; only the content's true nature (status/trace) keeps it correctly in roadmap (matches roadmap.md line 111).
+  - **Fix:** Re-tag kind as `status` (or `definition-term` for the trace preamble); leave the home as roadmap. No content change — this is a label that fights its own (correct) routing.
+- **docs/plans/3-controls.md#0**  _(home: docs/roadmap.md)_
+  - **Problem:** DISPOSITION INCONSISTENCY. This 'Act 3 PLANNED, zero code' build-status row is marked _pointer_, but its own [dedup] says 'Canonical build-status lives in roadmap You-Are-Here table' — i.e. roadmap (this row's home) IS the canonical home. The parallel 'Act 4 PLANNED' row (docs/plans/4-recommendation.md#0) is correctly marked _canonical_. A roadmap-homed canonical-status fact tagged _pointer_ is self-contradictory and asymmetric with the Act-4 sibling.
+  - **Fix:** Re-tag this row _canonical_ to match docs/plans/4-recommendation.md#0 (both are act-level PLANNED build-status, canonical in the You-Are-Here table). The TODO.md / plan-frontmatter copies remain the volatile pointers.
+- **docs/plans/features/other-income.md#0**  _(home: docs/roadmap.md)_
+  - **Problem:** DEDUP — R40 next-build status landed by three independent rows into roadmap with no single canonical designation: this row ('R40 PLANNED build-ready zero code', _reframe_), docs/plans/2-first-answer.md#4 ('R40 immediate next build', _canonical_), and docs/plans/3-controls.md#77 ('build order R40 -> U8/U6-render/U7/D2 -> Act 3 -> Act 4', _reframe_). They overlap (not contradict) but none points to another as canonical for the shared R40-next-build cell, risking drift across three landings.
+  - **Fix:** Designate one row canonical for the R40-next-build You-Are-Here entry (docs/plans/2-first-answer.md#4's next-build flag, or docs/plans/3-controls.md#77's ordering) and mark the other two as pointers that defer to it for the R40 status fact.
+- **README.md#5**  _(home: docs/architecture.md)_
+  - **Problem:** Kind label is `decision-rationale` (routing law: decision-rationale->decisions/<topic>), but the content is the load-bearing crypto/storage CONTRACT (AES-GCM, PBKDF2, recovery mechanics). The HOME (architecture §7.3) is correct per the load-bearing-contract exception — only the kind label fights it. Pure label hygiene, not a mis-route.
+  - **Fix:** Relabel kind to `invariant` (or `contract`) to match the dedup split already stated (architecture=mechanics, product=why). Keep the architecture home.
+- **README.md#12**  _(home: docs/architecture.md)_
+  - **Problem:** Kind label is `decision-rationale` but the content is a structural enforcement CONTRACT (solver cannot run until the validation harness mints a token; 'compile error, not discipline'). Home (architecture) is correct as a load-bearing invariant; only the kind label is off.
+  - **Fix:** Relabel kind to `invariant`/`contract`. Home stays architecture; the roadmap-Act-4-gate and product-why pointers in the dedup note are right.
+- **docs/architecture.md#2**  _(home: docs/architecture.md)_
+  - **Problem:** The single-shared-draw / CRN invariant fans into this home as FOUR rows all marked _canonical_ (README#6, product#60, arch#2, arch#21). arch#21 carries 'Reinforces #2' but README#6 and product#60 only say 'canonical home architecture' without naming arch#2 as the row to merge into. M6 must merge, not emit four canonical copies.
+  - **Fix:** Add an explicit merge cross-link on README#6 and product#60 (e.g. 'merge into arch#2 — the canonical CRN row') so M6 collapses all four to one. The invariant itself is unambiguous and cannot be lost; this only sharpens the merge instruction.
+- **docs/plans/1-engine.md#46**  _(home: docs/architecture.md)_
+  - **Problem:** Kind=decision-rationale marked _canonical_ in architecture §7.3 (recovery posture: in-place unlock is the survivor's PRIMARY door; file-restore only for device-wipe; MANDATORY export at first save). Routing law sends decision-rationale → decisions/<topic>. The accumulation rationale rows consistently route to decisions/accumulation-fuck-off-date.md, but this store-posture rationale is folded into architecture with no decisions/ store-topic named. The mechanical write-gate contract is already canonical at #45; #46's distinct payload is posture rationale, which fights the architecture home.
+  - **Fix:** Confirm whether a decisions/ store topic exists/should exist. If so, route the in-place-is-primary + mandatory-export posture RATIONALE there as canonical, and leave only the mechanical contract canonical in architecture §7.3 (with a pointer). If the project deliberately has no store decisions topic, keep here but note the exception explicitly.
+- **docs/plans/2-first-answer.md#16 and #63**  _(home: docs/architecture.md)_
+  - **Problem:** Both rows are marked _canonical_ for the same named 'copyGuard invariant' in the same home. #63 acknowledges the overlap ('shared with Contract 4 item 16') and does carry genuinely additive content (the catastrophe-lexicon tone-lint and the in-tool-only next-action grammar), so it is not a pure duplicate, but two rows claiming canonical for one invariant gives M6 two authoritative sources for the bare copyGuard-enumeration mechanic.
+  - **Fix:** Let #16 own the canonical copyGuard-enumeration/inline-string-ban mechanic; reframe #63 to own ONLY its additive facts (the die/death/widow tone-lint lexicon and the 'sharpen this'/'see the range' in-tool next-action grammar) and point its enumeration clause to #16.
+- **docs/plans/3-controls.md#12**  _(home: docs/architecture.md)_
+  - **Problem:** Kind is tagged `requirement` (routing law: requirement->product), but the content and home are an architectural migration-ladder contract (ONE coordinated schemaVersion bump for U9/U10/U11, model-only re-encrypt, no vault mutation outside an explicit Save). The home (architecture §7.3) is correct for a schema-migration contract, but the kind tag fights the row's actual nature.
+  - **Fix:** Re-tag the kind as `invariant` (or contract) to match the content; the §7.3 home is correct and needs no change. Product carries only the user-facing requirement pointer.
+- **docs/decisions/accumulation-fuck-off-date.md#76**  _(home: docs/architecture.md)_
+  - **Problem:** Signature 'falsifiable structural invariant replaces vacuous test' has no proper noun, number, or rule name — it is too generic to grep cleanly in M6 (the phrase 'falsifiable structural invariant' recurs across the §3/§6 accumulation cluster). The discriminating fact lives only in the body.
+  - **Fix:** Anchor the sig on the load-bearing rule: e.g. '§6 no priced ACA year carries a nonzero contribution stream (contribution-stop == healthcare-on Y)' — a greppable, candidate-specific phrase.
+- **docs/plans/features/portfolio-holdings.md#9 / #10**  _(home: docs/architecture.md)_
+  - **Problem:** Two rows in the same §10 CSP-boundary home cover the same fact (no runtime price fetch; ticker is a label/asset-class hint, never a live-price key, R36). The ledger self-acknowledges this — #10's dedup note says 'Overlaps item #9 within architecture §10 — collapse the two into one statement there' — but both still ship as separate rows.
+  - **Fix:** Confirm the collapse actually happens in M6: merge #9 and #10 into a single §10 statement (entry as (ticker, dollar value); ticker drives blend, dollars drive weight; no live-price key; account value derived-with-override), or demote one to a pointer so the home carries one canonical line.
+- **docs/plans/features/social-security.md#52**  _(home: docs/plans/1-engine.md)_
+  - **Problem:** HOLLOW REFRAME (minor). The digest specifies the blend-collapse mechanic: stockWeight=stock/(stock+bond+cash) with cash folded into bond (v1 is 2-asset). The [reframe] surviving-fact says only "2-asset collapse," dropping the explicit cash-folded-into-bond rule and the stockWeight formula. "2-asset collapse" implies but does not state the cash->bond folding, which is a specific engine constraint (it determines where cash allocation lands).
+  - **Fix:** In the surviving fact, retain "cash folded into bond (stockWeight=stock/(stock+bond+cash), v1 2-asset)" rather than the bare phrase "2-asset collapse".
+- **docs/plans/features/other-income.md#59**  _(home: docs/plans/2-first-answer.md)_
+  - **Problem:** The [reframe] preserves 'endAge absent≡lifetime' but drops the digest's qualifier 'never numeric/Infinity' — the DND-009 sentinel rule (JSON.stringify(Infinity)==='null' silently nulls a persisted Infinity). The operative encoding (presence/absence) survives, but the explicit no-numeric/Infinity-sentinel rule that is the whole reason for the absent≡lifetime convention is thinned out.
+  - **Fix:** Restore the qualifier in the surviving fact: 'endAge absent≡lifetime, never a numeric/Infinity sentinel (DND-009)'. Low priority — DND-009 is independently homed in architecture/glossary — so a pointer to it would also suffice.
+- **docs/plans/features/other-income.md#63**  _(home: docs/plans/2-first-answer.md)_
+  - **Problem:** Hollow reframe (minor): the [reframe] note drops two load-bearing build specifics the digest carries — the seam-1 net formula 'net=max(0,spending−earned−ongoingIncomeGross−ss)' and the 'do not collapse the double allocateWithdrawal' instruction. Digest retains both, so it is digest-mitigated, but the present-tense instruction is thinner than the fact.
+  - **Fix:** Carry the seam-1 net formula and the 'do not collapse the double allocateWithdrawal' constraint into the reframe note alongside the reduce-to-spine pin and the insight-027 sibling guidance.
+- **docs/plans/4-recommendation.md#5**  _(home: docs/plans/4-recommendation.md)_
+  - **Problem:** Sig 'invariants LINKED not restated' leans on a generic head-word ('invariants' recurs throughout this corpus, so a grep returns noise) plus a framing phrase, with no number, named rule, file, or proper-noun anchor. It is the weakest sig in the file for M6 location.
+  - **Fix:** Re-anchor the sig to a concrete token this pointer-block actually carries, e.g. 'Act-4 pointers block -> architecture invariants + product §4-§5' or name one of the five inherited invariants (CRN/reduce-to-spine) so it greps uniquely.
+- **docs/plans/1-engine.md#51 (ledger lines 21–25)**  _(home: docs/decisions/accumulation-fuck-off-date.md)_
+  - **Problem:** HOLLOW REFRAME (thin). The digest names the statute 'SECURE 2.0 §109' as the provenance for the 60–63 super-catch-up sunset at 64, but the [reframe] surviving-fact instruction drops the citation ('the 60–63 super catch-up steps down at 64'). No sibling row in this home carries §109 (rows #33/#34 cover §604/§603 only), so if M6 follows the reframe instruction the statutory landmine is lost. Recoverable from the digest, hence nit.
+  - **Fix:** Retain 'SECURE 2.0 §109' in the present-tense surviving fact so the WHY (which statute sunsets the 60–63 super catch-up) is not thinned away.
+- **docs/product.md#7 (lines 1–5) vs docs/decisions/accumulation-fuck-off-date.md#4 (lines 103–107)**  _(home: docs/decisions/accumulation-fuck-off-date.md)_
+  - **Problem:** DEDUP (in-home near-duplicate). Both rows carry essentially the same 'bounded near-retirement on-ramp, not FIRE / decumulation-only understated the not-yet-retired household (R25, calm-but-wrong pessimistic)' rationale into this same home. #103 (accumulation#4) is the record's own canonical statement; #1 (product.md#7) is the product fossil being routed here and should collapse into it rather than restate the FIRE rationale a second time.
+  - **Fix:** In M6, merge #1 into #103 as one canonical rationale paragraph (#103 is the canonical; #1 is a pointer/contributor), not two parallel statements of the same fact.
+- **docs/plans/1-engine.md#17**  _(home: docs/decisions/ss-computation.md (NEW))_
+  - **Problem:** WEAK ROUTING GLUE. The survivor-SPENDING ratio (~75% Blanchett) is a decumulation/spending decision, not an SS-computation decision; the only justification offered is the thin 'SS-adjacent survivor decision → ss-computation.' Co-location with the §202 survivor-benefit decisions is defensible, but the routing rests on adjacency, not subject match. The ~75% number is preserved, so this is a placement-precision nit, not a fact loss.
+  - **Fix:** Either accept the co-location explicitly (state that survivor-benefit and survivor-spending decisions deliberately share this record) or route the spending ratio to the decumulation/spending decisions home if one exists. Strengthen the note beyond 'SS-adjacent'.
+- **docs/decisions/accumulation-fuck-off-date.md#74**  _(home: docs/decisions/portfolio-holdings.md (NEW))_
+  - **Problem:** DIGEST precision drop. Source §5 (line 128) routes the unrecognized ticker to a 'manual 3-choice classifier (+ an advanced exact-% expander)'. The #74 digest keeps the 3-choice classifier but drops the '(+ advanced exact-% expander)' precision path.
+  - **Fix:** Restore '+ advanced exact-% expander' to the #74 digest so the manual-fallback precision path survives into the new home.
+- **docs/roadmap.md#97**  _(home: docs/decisions/portfolio-holdings.md (NEW))_
+  - **Problem:** WEAK ANCHOR / findability. The ref 'roadmap.md#97' resolves to line 97 = U16 'Recommendation surface' (verified), NOT the holdings model; the matching text is at roadmap line 106 (the You-Are-Here status row) and line 187 (the single-ticker re-scope changelog). The numeric anchors are inventory row-IDs, not file lines (confirmed: #73/#74's §4/§5 land at lines 126/128, not 73/74). Findability currently rests on the signature, not the anchor — an M6 reviewer following #97 lands on U16.
+  - **Fix:** Before fossils are deleted at M6, confirm each ref resolves to a real anchor or convert to section markers (e.g. 'roadmap status row + changelog', '§4/§5'). The #97 sig 'single-ticker re-scoped exact per-account stock/bond/cash %' does match roadmap 106/187, so the fact is recoverable — but document the anchor scheme so it isn't read as a line number.
+- **docs/plans/features/social-security.md#25 → plans/1-engine.md#25 (Bengen reframe)**  _(home: docs/research/engine-validation-and-tax.md)_
+  - **Problem:** The #25 Bengen reframe's surviving-fact sentence keeps SAFEMAX ~3.67% vs 4.15% and cohorts 1966/65/64 but thins two load-bearing methodology constraints from the digest: 'never higher than the 5-yr truth' (duration-conservative bound) and 'counts pinned to an independent derivation' (the DND/012 externally-derived-fixture discipline). The sig+digest retain the numbers, but the surviving framing risks losing the independence-of-derivation rule that makes the proxy trustworthy.
+  - **Fix:** Keep in the surviving research text that the Damodaran 10-yr-Treasury SAFEMAX-analogue is duration-conservative (never exceeds the 5-yr-Treasury truth) AND that its counts are pinned via an INDEPENDENT derivation (DND/012), not just the bare 3.67/4.15 numbers.
+- **docs/plans/features/social-security.md#30**  _(home: docs/research/engine-validation-and-tax.md)_
+  - **Problem:** Row kind is `lesson` but disposition keeps it in the research home; routing law sends lesson->insights. The content (RS 00615.102 is a 404 use .101; deemed filing = GN 00204.035; survivor DRC flow-through = .301/.702) is citation-hygiene metadata bound to the verified SS citations, so research is defensible — but the row mixes a generalizable lesson ('always verify a POMS citation resolves before it goes load-bearing') with the specific correction values.
+  - **Fix:** Keep the specific citation corrections as research provenance beside the verified SS constants (correct), but route the generalizable 'verify-the-citation-resolves' lesson to docs/insights, or add a one-line note on the row stating it stays in research as provenance (not insights) by design.
+- **docs/research/engine-validation-and-tax.md#33**  _(home: docs/research/engine-validation-and-tax.md)_
+  - **Problem:** The widow(er)'s-penalty source section (lines 107-111) carries three concrete pinned numbers - 2026 MFJ standard deduction = $32,200, single ~$16,100, age-65+ addition ~$1,650/spouse - but the #33 digest reduces them to the qualitative '~half the std deduction.' #46 only says the deduction is 'pinned' without the value. In a research doc whose stated job is 'where a number lives, it lives here,' the $32,200 base figure has no value-carrying row visible in this part. It may live in a sibling part near the bracket table (idx <33), so this is a verification flag, not a confirmed missing-canonical.
+  - **Fix:** Confirm a sibling 'number-or-figure' row in the same home carries the 2026 standard-deduction values ($32,200 MFJ / ~$16,100 single / ~$1,650 age-65 addition). If none exists, add one; if it does, no change needed.
+- **docs/research/pre65-healthcare.md#3**  _(home: docs/research/pre65-healthcare.md)_
+  - **Problem:** Thin reframe: the digest enumerates 'two MAGI definitions, two cliff shapes, a 2-year post-65 lag,' but the [reframe] surviving-fact sentence keeps only 'two MAGI definitions and two cliff shapes' and silently drops the 2-year post-65 lag constraint from the synthesis-scope framing.
+  - **Fix:** Restore the 2-year post-65 (IRMAA) lag in the surviving-fact sentence so the synthesis scope stays complete. Low risk because the lag is canonical elsewhere (#19/#32/#51/#53), hence nit -- but the framing should not lose it.
+- **docs/README.md#1**  _(home: DROP)_
+  - **Problem:** Kind is tagged `definition-term`, but the content is a navigation/index table ("to understand X, read Y") — not a term definition. Taken at face value, the `definition-term` kind routes to glossary (definition->glossary), which would be the wrong home; the content correctly drops as a regenerated index. The disposition (DROP) is right and verified — the live docs/README.md IS this regenerated table and its named destinations survive as their own rows (#2–#7) — so this is a mis-label, not a true mis-route. But the wrong kind tag plants a false glossary signal for an M6 scanner.
+  - **Fix:** Change kind to `other` (navigation/index framing), matching the sibling README.md#22 row. Disposition stays DROP; canonical homes (regenerated docs/README index + CLAUDE.md) are correctly named.
+- **README.md#22**  _(home: DROP)_
+  - **Problem:** Signature `documentation reading map` is a generic descriptive phrase — no proper noun, number, or rule name — so it is weak to grep in M6. Low stakes here because the row is a confirmed DROP (nothing to re-home), but it does not pin the fossil distinctively.
+  - **Fix:** Use a distinctive phrase that actually appears in the fossil/canonical home, e.g. `where truth lives` (the CLAUDE.md section title) or the literal essentials list `product.md (why+what), roadmap.md`.
+
+### Cross-home relocations (14) — rows marked `[REHOME → target]` in place; pull them into the TARGET home when authoring it
+
+**→ DROP**
+- `docs/README.md#0` — Front-door convention (intro / doc-map note) — fully homed in root README.md (single front door) + docs/README.md (thin index)  _(currently filed in part 000-docs-product-md.md)_
+**→ docs/README.md**
+- `docs/README.md#2` — Doc-organization doctrine (front-door index)  _(currently filed in part 003-docs-roadmap-md.md)_
+**→ docs/architecture.md**
+- `docs/research/engine-validation-and-tax.md#38` — §8 (year-keyed constants + reVerify-style markers) / §7.1 (tax overlay)  _(currently filed in part 002-docs-product-md-2.md)_
+**→ docs/decisions/README.md**
+- `docs/decisions/README.md#6` — term: decision record (graduation rule)  _(currently filed in part 011-docs-glossary-md-1.md)_
+**→ docs/decisions/portfolio-holdings.md**
+- `docs/architecture.md#40` — §1014 basis step-up / estate-character decision  _(currently filed in part 019-docs-decisions-ss-computation-md.md)_
+**→ docs/plans/4-recommendation.md**
+- `docs/plans/4-recommendation.md#15` — U14 build section (build dependencies)  _(currently filed in part 012-docs-plans-1-engine-md.md)_
+- `docs/plans/4-recommendation.md#19` — oracle case (i) — conventional-order preconditions  _(currently filed in part 018-docs-decisions-accumulation-fuck-off-date-md.md)_
+- `docs/plans/4-recommendation.md#20` — oracle case (ii) — marginal-rate equalization  _(currently filed in part 018-docs-decisions-accumulation-fuck-off-date-md.md)_
+- `docs/plans/4-recommendation.md#21` — oracle case (iii) — cliff-aware ceiling  _(currently filed in part 018-docs-decisions-accumulation-fuck-off-date-md.md)_
+- `docs/plans/4-recommendation.md#22` — oracle case (iv) — after-tax-to-heirs known-best  _(currently filed in part 018-docs-decisions-accumulation-fuck-off-date-md.md)_
+- `docs/plans/4-recommendation.md#23` — oracle case (v) — no-change known-best  _(currently filed in part 018-docs-decisions-accumulation-fuck-off-date-md.md)_
+**→ docs/product.md**
+- `docs/architecture.md#41` — §4 D-locked decisions — Identical-tax-fidelity (no tax-blind arm)  _(currently filed in part 019-docs-decisions-ss-computation-md.md)_
+**→ docs/research/pre65-healthcare.md**
+- `docs/research/pre65-healthcare.md#30` — ACA shadow-rate / cliff effective-rate finding  _(currently filed in part 025-docs-insights.md)_
+- `docs/research/pre65-healthcare.md#33` — sign-inverted tax-blind-delta (healthcare extension of the landmine)  _(currently filed in part 025-docs-insights.md)_

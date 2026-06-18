@@ -1,0 +1,155 @@
+- **`docs/product.md#7`** · `decision-rationale` · → Decision: accumulation as a bounded on-ramp, fuck-off-date framing · _reframe_
+  - sig: accumulation is a bounded near-retirement on-ramp, never FIRE
+  - Accumulation is a bounded near-retirement on-ramp serving the decumulation strategist (never a FIRE calculator); v1 projects the stated savings plan but does not optimize it, and the decumulation strategist remains the center of gravity. (The 2026-06-08 R26-R39 expansion added the accumulation phase and the fuck-off-date framing — not a new engine, the same confidence engine swept over the work-stop date-offset.)
+  - [dedup] The bounded-on-ramp-not-FIRE rationale is canonical in decisions/accumulation-fuck-off-date.md#4 — this row collapses into it as a pointer/contributor (do NOT restate the FIRE/R25 rationale a second time); the surviving scope facts also echo R30/R32 and product scope boundaries (pointers).
+  - [reframe] Strip the 'v2 thesis was decumulation-only / while scoping HSA we discovered zero-contribution / the 2026-06-08 expansion added' story. This row is a pointer into accumulation#4's canonical bounded-on-ramp rationale; its surviving contribution is only the present-tense scope facts — accumulation reuses the existing confidence engine swept over the work-stop date-offset, projects (not optimizes) the stated savings plan, and serves the decumulation strategist that stays the center of gravity.
+  - [fixed:nit] product#7 ceded to accumulation#4 as pointer; FIRE rationale not restated.
+- **`docs/roadmap.md#98`** · `decision-rationale` · → Intake-flow decision (account-level setup vs single-spend on-ramp) · _reframe_
+  - sig: first answer from ~5-min account-level setup spend still collected
+  - Intake-flow decision: the first answer comes from a ~5-min account-level guided setup (R35); the household spend figure is still collected as an input — only the flow shape is account-level, not single-total-spend.
+  - [dedup] Intake-flow decision rationale homed in decisions/accumulation-fuck-off-date.md (the R35 reshape); R5/R35 trace mappings in roadmap; product.md carries the requirements; the ~3-min v2 framing is droppable history.
+  - [reframe] Strip 'the v2 ~3-minute single-spend on-ramp was replaced / struck / master edit folded 2026-06-10' changelog framing; the ~3-min v2 magnitude is droppable. Present-tense surviving fact: the first answer comes from a ~5-min account-level guided setup; the household spend figure is still a collected input.
+- **`docs/architecture.md#60`** · `decision-rationale` · → End-of-year face-value crediting decision · _reframe_
+  - sig: stepYear one crediting owner end-of-year face value
+  - stepYear is the one crediting owner: the contribution is credited end-of-year at face value (a contributed dollar earns no growth in its arrival year — conservative; full-year crediting would overstate the onset balance → a falsely-early date, the calm-but-wrong-optimistic sin); the overlay fold is after the bucket-scale; a taxable contribution raises basis at full value; contribution never enters draw pool / RMD base / basis denominator; employer match → pre-tax even on a Roth 401k.
+  - [dedup] decision-rationale → decisions/accumulation-fuck-off-date (canonical for the WHY). The stepYear crediting mechanic also surfaces in architecture §7.4. duplicatedIn names this same decision record.
+  - [reframe] Present-tense: we credit accumulation contributions end-of-year at face value because full-year crediting would overstate the onset balance and yield a falsely-early fuck-off date — the calm-but-wrong-optimistic sin. The dated-amendment framing dies; the rationale survives.
+- **`docs/plans/1-engine.md#5`** · `decision-rationale` · → extend-never-reopen rationale · _reframe_
+  - sig: C1-C3 extend never reopen U0-U3
+  - C1-C3 land at engine altitude and EXTEND, NEVER REOPEN the shipped U0-U3 contracts; the construct-absent / Y==0 byte-identity goldens prove the spine and every shipped fixture stay unperturbed; the C1/C2/C3 IDs are kept.
+  - [dedup] Decision rationale canonical in decisions/accumulation-fuck-off-date.md; the extend-never-reopen contract is also asserted in architecture.
+  - [reframe] Surviving fact: C1-C3 are first-class engine units that extend U-numbering and never reopen U0-U3 contracts, proven by construct-absent / Y==0 byte-identity goldens. Present-tense framing: drop the '2026-06-08 amendment / accumulation fold block' dated framing; state it as standing engine-altitude policy.
+- **`docs/plans/1-engine.md#51`** · `decision-rationale` · → contribution-ceiling per-runway-year decision · _reframe_
+  - sig: contribution limits are input sanity ceilings per-runway-year
+  - C1: contribution limits are INPUT SANITY CEILINGS + the intake per-runway-year expansion rule, NOT engine math; the R19 ceiling validates against the current age's tier; because an age-band ceiling can expire mid-runway (SECURE 2.0 §109's 60–63 super catch-up ends at 64), intake applies the ceiling PER RUNWAY YEAR (super for 60–63, stepped to age-50 tier at 64) to avoid compounding legally-impossible contributions (the calm-but-wrong-optimistic sin); the conservative mirror stays unmodeled.
+  - [dedup] R31/R19 canonical in product; the choose-input-ceiling-with-per-runway-year-expansion rationale is canonical in decisions/accumulation-fuck-off-date.md.
+  - [reframe] Surviving fact: contribution limits act as per-runway-year input ceilings (not engine math); the SECURE 2.0 §109 60–63 super catch-up steps down to the age-50 tier at 64 so a flat projection cannot compound impossible contributions. Present-tense framing: state as standing decision rationale; drop the '2026-06-08 accumulation fold' framing, keep the C1 ID.
+  - [fixed:nit] Retained SECURE 2.0 §109 citation in surviving fact.
+- **`docs/plans/1-engine.md#58`** · `decision-rationale` · → crediting-convention decision · _reframe_
+  - sig: end-of-year crediting conservative no arrival-year growth
+  - C2 crediting convention is the conservative one: a contributed dollar earns NO growth in its arrival year (end-of-year crediting; full-year would overstate onset balance → falsely-early date); employer match→pre-tax even on a Roth 401k; a taxable contribution raises basis at full unscaled value; the contribution never enters the draw pool, the RMD forced-excess base, or the basis denominator.
+  - [dedup] The choose-end-of-year-because-conservative rationale is canonical in decisions/accumulation-fuck-off-date.md; architecture §7.4 carries the mechanical placement.
+  - [reframe] Surviving fact: end-of-year crediting is chosen because full-year crediting would overstate the onset balance and yield a falsely-early date. Present-tense framing: standing decision; drop the 'fold' framing, keep C2 ID.
+- **`docs/plans/1-engine.md#60`** · `decision-rationale` · → healthcare-off-by-stream-construction decision · _reframe_
+  - sig: healthcare off during accumulation is stream construction not engine gate
+  - C2: healthcare-OFF during accumulation is delivered by the date-search's stream construction (C3), NOT an engine gate; C2 owns only the contribution inflow + working-year clamp and does NOT assume the overlay age-gate is inert in working years (a mid-50s couple has pre65>0 every working year — healthcare stays off only because the streams are zero there).
+  - [dedup] R33 canonical in product; C3 owns the stream construction (same plan); the why-not-an-engine-gate rationale is canonical in decisions/accumulation-fuck-off-date.md.
+  - [reframe] Surviving fact: healthcare-off in working years comes from zero-valued streams (C3 construction), not an engine age-gate; C2 owns only inflow + clamp. Present-tense framing: standing decision; drop the 'CORRECTED / fold' framing, keep C2 ID.
+- **`docs/plans/1-engine.md#61`** · `invariant` · → C2 golden-set record · _reframe_
+  - sig: C2 goldens Σbuckets==runningTotal destination-bucket direction
+  - C2 goldens as shipped: construct-absent byte-identity on BOTH MC and Trinity paths (+ the zero-valued-but-constructed negative companion); Σbuckets==runningTotal after every contribution year; the destination-bucket golden (named bucket += exactly the contribution; a proportional smear fails it); the direction golden (end-of-year crediting yields onset balance ≤ start-of-year-credited); the empty phase (Y==0) consumes zero extra draws and is byte-identical at the same dimensions.
+  - [dedup] The golden-set is recorded in decisions/accumulation-fuck-off-date.md (the §0–§7 record); architecture §5/§7.4 carries the underlying byte-identity invariant.
+  - [reframe] Surviving fact: C2's golden set (construct-absent byte-identity on both paths + negative companion, Σ==total, destination-bucket, direction, Y==0 zero-extra-draws). Present-tense framing: standing golden record; drop the 'as shipped / fold' framing, keep C2 ID.
+- **`docs/plans/1-engine.md#64`** · `invariant` · → buildCandidateParams single-owner record · _reframe_
+  - sig: buildCandidateParams(Y) single owner pure transform
+  - C3 buildCandidateParams(Y) is the SINGLE OWNER of Y-dependent construction (a pure transform of the ORIGINAL entered params, never progressively mutated): from one Y it derives per-person retirementAge overrides (still-working retire offset = Y; already-retired kept verbatim, never un-retired into phantom income), contribution/match streams truncated to [0,Y), and healthcare streams+onset+override; SS claim ages held as entered (claim NOT searched); a test asserts all three boundaries coincide at t=Y for a DIFFERENT-currentAge couple (same-age fixture banned as vacuous).
+  - [dedup] Recorded in the §0–§7 decision record (per-candidate stream construction); architecture carries the pure-transform engine seam.
+  - [reframe] Surviving fact: buildCandidateParams(Y) is the single pure owner of all Y-dependent construction; SS claim age is not searched; the boundary-coincidence test uses a different-age couple. Present-tense framing: standing contract; drop the 'fold' framing, keep C3 ID.
+- **`docs/plans/1-engine.md#69`** · `decision-rationale` · → two-dates-degenerate decision · _reframe_
+  - sig: two dates coincident degenerate single-total-spend budget
+  - C3 two dates are coincident in the degenerate case: with a single-total-spend budget the two tracks are byte-identical ⇒ the dates coincide ⇒ one date; the budget split (Act 3·U9) separates them (C3 ships the engine + single-track date now, the mixed-outcome shape lands now, the behavioral test rides U9); floor ≤ lifestyle is an EXPECTED property on discontinuity-free fixtures, NEVER an engine assertion (the 100%-FPL eligibility floor can legitimately invert it).
+  - [dedup] R27 canonical in product; the floor-and-lifestyle-coincide-without-a-budget-split rationale is canonical in decisions/accumulation-fuck-off-date.md.
+  - [reframe] Surviving fact: floor and lifestyle dates coincide under a single-total-spend budget; the U9 budget split separates them; floor ≤ lifestyle is expected (discontinuity-free) but never asserted (the 100%-FPL floor can invert it). Present-tense framing: standing decision; drop the 'ships now / fold' framing, keep C3 ID.
+- **`docs/plans/1-engine.md#81`** · `build-detail-or-KTD` · → §0–§7 record (self/identity) · _pointer_
+  - sig: accumulation decision record §0–§7 date-search-is-not-the-solver
+  - The accumulation / fuck-off-date engine decision record is the permanent §0–§7 record of WHY C1–C3 are built as they are (one continuous timeline, the signed inflow + its golden, the date-search-is-not-the-solver stance, per-candidate stream construction); the C-unit bodies cite '§3b', '§7', etc. into it.
+  - [dedup] Canonical home is decisions/accumulation-fuck-off-date.md itself; the C-unit plan bodies keep citation pointers into its §-anchors.
+  - [reframe] Surviving fact: the §0–§7 accumulation decision record holds the WHY for C1–C3 (continuous timeline, signed inflow + golden, date-search-is-not-the-solver, per-candidate stream construction) and the C-unit bodies cite into it. Present-tense framing: state as the standing decision record; this row is the pointer to its canonical home.
+- **`docs/plans/2-first-answer.md#3`** · `decision-rationale` · → D1/U5 reshape rationale · _reframe_
+  - sig: D1 IS the U5 reshape, spend figure survives
+  - D1 is the U5 reshape (not a separate post-ship reshape): the account-level flow built U5's planned primitives in one pass; the household retirement-spend figure survives as a collected input — only the flow shape was replaced, not the spend input.
+  - [dedup] Decision record canonical for the reshape rationale; roadmap keeps the U5/D1 status mapping as a pointer.
+  - [reframe] Forward-only: state present-tense that D1 builds U5's progressive/engine-gated/commit-triggered architecture AND the account-level flow, and the retirement-spend figure is a collected input — drop the 'U5 planned then expansion replaced it' history.
+- **`docs/plans/2-first-answer.md#33`** · `decision-rationale` · → bucket-split inversion rationale · _reframe_
+  - sig: deferred-bucket-split INVERTED; v2-with-accounts shape
+  - The deferred-bucket-split decision is inverted: R35 brings account buckets up-front (the old U5 plan deferred them to Act 3 to protect a 3-min on-ramp); the first Save now serializes the v2-with-accounts shape directly and U4's additive migration ladder owns the schema bump (R39).
+  - [dedup] Decision record canonical for the inversion rationale; plans/1-engine (U4 migration ladder) carries the schema-bump pointer.
+  - [reframe] Forward-only: state present-tense that account buckets are collected up-front under R35 and the first Save serializes the v2-with-accounts shape — drop the 'old U5 plan deferred them' framing, keep only that this protects neither a 3-min on-ramp nor a coarse-then-detailed re-entry.
+- **`docs/plans/4-recommendation.md#19`** · `decision-rationale` · → [REHOME → docs/plans/4-recommendation.md] oracle case (i) — conventional-order preconditions · _reframe_
+  - sig: oracle case (i) conventional ordering constant-rate only
+  - Oracle case (i): conventional taxable->tax-deferred->Roth ordering is optimal ONLY in a constant-marginal-rate world (no RMD/SS-tax/cap-gains-stacking/cliff/bequest), stated as the fixture's gating preconditions; a low-other-income world is explicitly the bracket-filling regime (case ii), so the oracle must never be hardcoded to conventional ordering there.
+  - [reframe] Surviving fact: conventional drawdown ordering is the known-best only under constant marginal rate; otherwise the oracle uses the regime-appropriate case. Present-tense framing: a documented solver-correctness decision (why each oracle fixture is gated by preconditions). NOTE: this is a solver-validation KTD, not an accumulation decision — see confidence flag.
+  - [fixed:warn] Rehomed to plans/4-recommendation.md (recommendation-solver oracle topic).
+- **`docs/plans/4-recommendation.md#20`** · `decision-rationale` · → [REHOME → docs/plans/4-recommendation.md] oracle case (ii) — marginal-rate equalization · _reframe_
+  - sig: oracle case (ii) bracket-fill marginal-rate equalization
+  - Oracle case (ii): bracket-filling Roth conversion optimum (fill to top of a target bracket, no further) holds only in a stripped case (SS-tax, cap-gains/QD stacking, all cliffs OFF) where in-bracket marginal rate is flat; the real rule is marginal-rate equalization — 'bracket top' is a coincidence of the simplified world, never the rule the solver learns.
+  - [reframe] Surviving fact: the conversion optimum is marginal-rate equalization, not literal bracket-top; the bracket-top fixture is only valid in the stripped flat-rate world. Present-tense framing: a solver-correctness decision documenting the real rule behind the oracle fixture. NOTE: solver-validation KTD; home is arguable (see flag).
+  - [fixed:warn] Rehomed to plans/4-recommendation.md (recommendation-solver oracle topic).
+- **`docs/plans/4-recommendation.md#21`** · `decision-rationale` · → [REHOME → docs/plans/4-recommendation.md] oracle case (iii) — cliff-aware ceiling · _reframe_
+  - sig: oracle case (iii) cliff-aware sign inversion
+  - Oracle case (iii): a cliff-aware case where filling past an ACA 400%-FPL ceiling or an IRMAA step LOSES, so the healthcare-blind ranking is sign-inverted; the binding ceiling is the subsidy-aware MAGI/IRMAA-step line not the bracket top — cases (ii) and (iii) are separate worlds (healthcare off vs on) and a fixture's known-best is never applied across that boundary.
+  - [reframe] Surviving fact: past an ACA/IRMAA cliff the conversion ranking inverts; the binding ceiling is the subsidy-aware MAGI line, and healthcare-off vs healthcare-on are separate oracle worlds. Present-tense framing: a solver-correctness decision documenting the cliff-aware fixture boundary. NOTE: solver-validation KTD (flagged).
+  - [fixed:warn] Rehomed to plans/4-recommendation.md (recommendation-solver oracle topic).
+- **`docs/plans/4-recommendation.md#22`** · `decision-rationale` · → [REHOME → docs/plans/4-recommendation.md] oracle case (iv) — after-tax-to-heirs known-best · _reframe_
+  - sig: oracle case (iv) after-tax-leave-more inversion
+  - Oracle case (iv): a leave-more case where the gross-bequest-best strategy is NOT the after-tax-best — the §1014 step-up/IRD treatment inverts the ranking (preserving a taxable bucket that steps up at death beats converting pre-tax the heirs owe IRD on at the assumed bracket), so the oracle's known-best is the after-tax-to-heirs winner and a solver that argmaxes gross bequest fails loud.
+  - [reframe] Surviving fact: for 'leave more', the after-tax-to-heirs winner can differ from the gross-bequest winner because of §1014/IRD; the oracle's known-best is the after-tax one. Present-tense framing: a solver-correctness decision (the hand-derived guard that the after-tax objective is the one optimized). NOTE: solver-validation KTD (flagged).
+  - [fixed:warn] Rehomed to plans/4-recommendation.md (recommendation-solver oracle topic).
+- **`docs/plans/4-recommendation.md#23`** · `decision-rationale` · → [REHOME → docs/plans/4-recommendation.md] oracle case (v) — no-change known-best · _reframe_
+  - sig: oracle case (v) no-change known-best
+  - Oracle case (v): a no-change case where conventional drawdown + zero conversion is the known-best for the (model, goal); the oracle asserts the solver routes to the no-change state (U16) and crowns no fabricated active move — which requires the search space to always contain the conventional-order/conversion-0 candidate as a labeled baseline (U15).
+  - [dedup] U15 Approach (baseline candidate) and U16 Approach (no-change state) reference this same case — same-doc pointers.
+  - [reframe] Surviving fact: when conventional + zero-conversion is best, the oracle requires the solver to route to no-change and never fabricate an active move; the search space always holds the conventional/conversion-0 baseline. Present-tense framing: a solver-correctness decision. NOTE: solver-validation KTD (flagged).
+  - [fixed:warn] Rehomed to plans/4-recommendation.md (recommendation-solver oracle topic).
+- **`docs/decisions/README.md#2`** · `decision-rationale` · → §0–§7 (full record) · _canonical_
+  - sig: accumulation-fuck-off-date §0–§7 record
+  - The accumulation/fuck-off-date decision record (§0 candidate-axis, §1 one-continuous-timeline contract, §2 signed-inflow term + overlay fold, §3 date-search bias defense + three first-class outcomes, §4–§5 basis/ticker-blend/TDF, §6 retired-but-contributing edge, §7 death-aware working-year clamp) carries the verbatim §0–§7 record, deviation records, and PREMISE-FALSE / MUTANT-UNCONSTRUCTIBLE adversarial annotations.
+  - [dedup] Canonical home is docs/decisions/accumulation-fuck-off-date.md itself (the record). This README row is only the pointer/index entry to it.
+- **`docs/decisions/accumulation-fuck-off-date.md#0`** · `definition-term` · → Problem frame / what this record is · _canonical_
+  - sig: decumulation engine run BACKWARDS
+  - The fuck-off-date design is the existing decumulation engine run backwards: sweep household work-stop offset Y, decumulate from each candidate, read confidence; earliest offset the floor holds = today+Y. Not a new engine.
+  - [dedup] Canonical definition lives here (the decision record); product.md keeps the why as pointer, plans/1-engine.md keeps the C3 sweep impl as pointer.
+- **`docs/decisions/accumulation-fuck-off-date.md#1`** · `decision-rationale` · → What this record is / record meta · _reframe_
+  - sig: §-number cited across repo; verbatim §0–§7
+  - This record's §0–§7 are its OWN internal section numbers, cited by §-number across the repo; reproduced verbatim and amended only via dated in-line [AMENDED]/[CORRECTED]/[PREMISE-FALSE]/[MUTANT-UNCONSTRUCTIBLE] annotations.
+  - [reframe] Forward-only: this record's §0–§7 numbering is its own internal cross-reference scheme (distinct from architecture.md's sections); we keep the §-number addressing convention going forward.
+- **`docs/decisions/accumulation-fuck-off-date.md#2`** · `scope-boundary` · → What this record is / scope of this record · _pointer_
+  - sig: invariants live ONCE in architecture.md
+  - Load-bearing engine invariants (single-shared-draw, CRN, reduce-to-spine, R19 gate, §7.4 accumulation overlay contracts) live once in architecture.md; this record links rather than restates; product framing lives in product.md.
+  - [dedup] Invariants canonical in architecture.md; product framing canonical in product.md; this record holds only pointers.
+- **`docs/decisions/accumulation-fuck-off-date.md#4`** · `decision-rationale` · → Problem frame / why · _reframe_
+  - sig: bounded near-retirement on-ramp, not FIRE
+  - Decumulation-only understated a not-yet-retired nest egg (calm-but-wrong pessimistic, R25); the fix is a BOUNDED near-retirement on-ramp, not an 'are you on track' or FIRE calculator — the draw-down strategy stays the center of gravity.
+  - [dedup] Rationale canonical here; product.md carries the why as pointer.
+  - [reframe] Forward-only: we model a bounded near-retirement on-ramp (not FIRE, not a savings tracker) because decumulation-only understates a not-yet-retired household in the pessimistic direction (R25).
+- **`docs/decisions/accumulation-fuck-off-date.md#33`** · `decision-rationale` · → §2 / employer-match bucket routing · _reframe_
+  - sig: employer match PRE-TAX even on Roth 401k
+  - Employer match is PRE-TAX (traditional) by default regardless of Roth deferral; Roth employer match (SECURE 2.0 §604) is optional + taxable-in-year-made and DEFERRED. Validates R31's 'match is pre-tax even on a Roth 401k'.
+  - [reframe] Present-tense: we route all employer match to pre-tax (traditional) because match is pre-tax even on a Roth 401k; Roth match (§604) is deferred.
+- **`docs/decisions/accumulation-fuck-off-date.md#34`** · `decision-rationale` · → §2 / §603 not modeled · _reframe_
+  - sig: SECURE 2.0 §603 Roth-mandatory catch-up not modeled
+  - SECURE 2.0 §603 (Roth-mandatory catch-up for high earners, 2026) is NOT modeled in v1: the user enters actual per-account contribution amounts which already reflect the bucket their catch-up lands in, so routing is captured at intake without an engine rule.
+  - [reframe] Present-tense: we don't model §603 in the engine because per-account entered amounts already encode the catch-up bucket.
+- **`docs/decisions/accumulation-fuck-off-date.md#39`** · `decision-rationale` · → §0 / mixed-household direction statement · _reframe_
+  - sig: §0 mixed household neutral for salary-funded, optimistic via §7
+  - §0: a MIXED household at Y>0 leaves the retired pre-65 spouse's ACA unpriced in [0,Y) (household R33 reading); NEUTRAL for a salary-funded household (no working-year expense touches the portfolio under §7, contributions are actuals), optimistic ONLY via §7's disclosed channel (a household drawing from the portfolio while working); the retired 65+ spouse's Medicare is per-person and IS priced (§3b).
+  - [dedup] Direction rationale canonical here; §7 (item 60) carries the cross-ref to the disclosed optimistic channel.
+  - [reframe] Present-tense: a mixed household's unpriced [0,Y) ACA is neutral when salary-funded, optimistic only through §7's disclosed portfolio-draw channel.
+- **`docs/decisions/accumulation-fuck-off-date.md#61`** · `decision-rationale` · → §3c / selection-bias rationale · _reframe_
+  - sig: §3c selection-bias = optimizer's-curse-LITE
+  - §3c: selection-bias defense — survivalFraction(Y) is an MC point estimate (SE≈√(p̂(1−p̂)/paths)); selecting the earliest noisy estimate clearing the bar is a threshold-crossing argmin biasing the date EARLIER (calm-but-wrong-optimistic); shared-CRN errors are positively correlated so 'keeps holding' rubber-stamps rather than catches the false-early offset.
+  - [dedup] Selection-bias rationale canonical here; plans/1-engine.md C3 carries the defense impl as pointer (item 62).
+  - [reframe] Strip 'the original plan wrongly dismissed' framing: present-tense the earliest-clearing argmin biases the date earlier, so we apply a conservative lower-bound defense.
+- **`docs/decisions/accumulation-fuck-off-date.md#66`** · `decision-rationale` · → §3c / outcome shape · _canonical_
+  - sig: §3c THREE first-class outcomes: confirmed/window-edge/no-date
+  - §3c: THREE first-class outcomes per track keyed off the CANDIDATE (earliest Y whose quantized lower bound clears AND keeps clearing through the window top): (1) CONFIRMED (candidate below the top, ≥1 later offset of evidence); (2) WINDOW-EDGE (candidate IS the top, vacuous keeps-holding) reported WITH an unconfirmed-tail disclosure; (3) NO-DATE-IN-WINDOW (top fails) — a first-class 'no work-optional date in the ~N-yr window', never 'never free', never a crash.
+  - [dedup] Outcome-shape rationale canonical here; plans/1-engine.md C3 (representation) + plans/2-first-answer.md D2 (surfacing) carry pointers.
+- **`docs/decisions/accumulation-fuck-off-date.md#67`** · `decision-rationale` · → §3c / window-floor semantic · _canonical_
+  - sig: §3c window-FLOOR semantic (over-funded, Y==0)
+  - §3c: the window-FLOOR semantic (over-funded) — a confirmed date whose candidate is the floor (Y==0) means 'work-optional AT today' as a one-sided boundary-truncated reading (negative offsets never evaluated; claims about the past are out of evidence by design); NOT the epistemic mirror of the window edge — at Y==0 keeps-holding evidence is MAXIMAL, so no unconfirmed-tail disclosure attaches and no new flag is needed.
+  - [dedup] Window-floor rationale canonical here; plans/1-engine.md C3 carries the impl pointer.
+- **`docs/decisions/accumulation-fuck-off-date.md#87`** · `build-detail-or-KTD` · → Deviation records (C1) · _reframe_
+  - sig: Deviation C1: 161 families; hsa2026 moved health→contributions; §223(b)(3)(B)
+  - Deviation C1: the ticker table shipped at 161 families (not the planned ~60–80, verified data kept); hsa2026 was MOVED health→contributions (one-canonical-home rule); its catch-up provenance corrected to IRC §223(b)(3)(B); pin-pass trap (insight 022): 11,250 and 1,100 are correct, their 'obvious corrections' are wrong.
+  - [dedup] As-shipped C1 deviation stays in this record; insight 022 (pin-pass trap) homed in insights; the 161-family count cross-refs item 35 (research) + src/engine/constants.
+  - [reframe] Present-tense: the ticker table ships 161 families; hsa2026 lives in contributions.ts with §223(b)(3)(B) catch-up provenance; 11,250 and 1,100 are correct (don't 'correct' them).
+- **`docs/decisions/accumulation-fuck-off-date.md#88`** · `build-detail-or-KTD` · → Deviation records (C2) · _reframe_
+  - sig: Deviation C2: YearContribution per-person arrays all four channels
+  - Deviation C2: YearContribution carries per-person arrays on ALL FOUR channels (not collapsed scalars) so the overlay can death-vet every credit (insight-024 attribution fix); the dead-slot guard was lifted to a property, the Σ-overflow arm landed at both layers, the roth-destination golden was added; 40 new tests, every golden externally derived + 2-deriver panel-triangulated.
+  - [dedup] As-shipped C2 deviation stays in this record; insight 024 (attribution fix) homed in insights.
+  - [reframe] Present-tense: YearContribution carries per-person arrays on all four channels so the overlay death-vets every credit (insight 024); 40 externally-derived, panel-triangulated tests.
+- **`docs/decisions/accumulation-fuck-off-date.md#89`** · `build-detail-or-KTD` · → Deviation records (C3) · _reframe_
+  - sig: Deviation C3: mask re-keyed construct-gated income-blind; 545 tests
+  - Deviation C3: the §3b mask predicate was re-keyed construct-gated income-blind (the in-line AMENDED annotation); the 9-agent adversarial verification overturned 2 of the main loop's dispositions; the 462/463 premise and the 473 mutant were retired in place; 545 tests.
+  - [dedup] As-shipped C3 deviation stays in this record; the adversarial annotations (items 83/84) are the in-record cross-ref; the test count cross-refs roadmap/item 91.
+  - [reframe] Present-tense: the C3 bridge mask is construct-gated income-blind; adversarial verification retired the cliff-straddle premise and averaged-balance mutant; 545 tests.

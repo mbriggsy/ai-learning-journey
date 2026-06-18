@@ -1,0 +1,236 @@
+- **`docs/plans/2-first-answer.md#13`** · `decision-rationale` · → budget split — two-tier lexicographic reading · _pointer_
+  - sig: two-tier lexicographic budget split, NOT a 7th state
+  - The Act 3 budget split applies a two-tier lexicographic reading (essentials-floor verdict + lifestyle-surplus verdict) to the same six states — not a hardcoded 7th state; the clamp's correctness test stays in U1, U7 asserts only presentation-per-state.
+  - [dedup] plans/3-controls canonical (it owns the budget split); Act 2 plan keeps a pointer noting U7 asserts presentation only.
+- **`docs/plans/3-controls.md#2`** · `decision-rationale` · → Why this is Act 3 · _canonical_
+  - sig: Act-3 surfaces are the solver's input and reasoning substrate
+  - Act-3 surfaces are grouped here because they consume Act-1/Act-2 and are exactly the budget two-tiers, control axes, and cliff the Act-4 solver searches over.
+  - [dedup] Plan owns the act rationale; plans/4 and roadmap reference it.
+- **`docs/plans/3-controls.md#4`** · `definition-term` · → Act overview (the chain) · _canonical_
+  - sig: budget to controls to healthcare to sharpen to re-entry
+  - Act 3's chain: U9 budget two-tier reading, U10 sequencing+Roth controls with require-the-hedge lint, U11 healthcare cliffs, U12 sharpen loop, U13 re-entry staleness.
+  - [dedup] Plan owns the act's internal chain; roadmap requirement-unit trace references the U9-U13 mapping.
+- **`docs/plans/3-controls.md#5`** · `invariant` · → Engine context (pointer block) · _pointer_
+  - sig: inherited engine invariants linked not restated
+  - Act 3 inherits CRN, reduce-to-spine, the tax/healthcare/longevity overlays, the key lifecycle, and externally-derived fixtures — all canonical in architecture.md and linked, never re-stated.
+  - [dedup] Canonical invariants live in architecture.md; the plan's engine-context block is a pointer list (and points to decisions/accumulation-fuck-off-date.md + product.md for the objective/ledger).
+- **`docs/plans/3-controls.md#7`** · `requirement` · → Cross-cutting contract #1 · _canonical_
+  - sig: roth.ts orchestrates two arms, never re-implements decumulation
+  - Contract #1: U10 drives the Act-1 tax overlay and sequencing substrate, U11 reads the healthcare overlay; roth.ts orchestrates arms+conversion reusing the same per-year update so order-of-ops never drifts.
+  - [dedup] Plan owns the Act-3 orchestration contract; reduce-to-spine byte-identity points to architecture §5, overlays to plans/1-engine U1/U2/U3.
+- **`docs/plans/3-controls.md#10`** · `requirement` · → Cross-cutting contract #4 · _canonical_
+  - sig: require-the-hedge copyGuard reads single-sourced hedge tokens
+  - Contract #4: U10 adds a positive REQUIRE lint — every control readout and recommendation headline must contain a hedge token from the single-sourced copy.ts catalog (never a hand-copied list); ban-list checks stay; viz stays string-free.
+  - [dedup] The require-the-hedge lint is introduced here (plan-canonical); plans/2 U7 owns the prior ban-list, plans/4 #7 extends it, product §6 references it.
+- **`docs/plans/3-controls.md#14`** · `requirement` · → Cross-cutting contract #6 · _canonical_
+  - sig: a staleness clock exists IFF a year-stamped parameter is consumed
+  - Contract #6: each staleness clock exists only when the engine consumes a matching year-stamped parameter and gates only its surface (spine vs controls vs healthcare vs budget); frozen SS thresholds get no clock; absent stamp = not-applicable.
+  - [dedup] duplicatedIn names U13 deliverables in the same doc; contract and U13 are co-located here.
+- **`docs/plans/3-controls.md#15`** · `requirement` · → Cross-cutting contract #7 · _canonical_
+  - sig: controls and budget are the next R19 surfaces, validate-before-mutate
+  - Contract #7: U10 clamps the conversion to [0, remaining pre-tax pool] and validates sequencing legality before mutating; U9 sanity-checks budget lines; U11 checks SLCSP+HSA — all reuse Act-2 U5's R19 message grammar.
+  - [dedup] Plan owns the Act-3 R19 contract; the engine numeric gate is canonical in architecture §6, the message grammar in plans/2 U5.
+- **`docs/plans/3-controls.md#16`** · `requirement` · → Cross-cutting contract #8 · _canonical_
+  - sig: N=1 colorblind cold-read gate, five surfaces judged as one flow
+  - Contract #8: Act-3's five emotionally-loaded surfaces are exit conditions cold-read in one end-to-end sequence (Briggsy judges tone, never correctness); all surfaces reuse Act-2's disclosure affordance, tokens, and non-color signal grammar.
+  - [dedup] Plan owns the Act-3 cold-read/affordance contract; the non-color grammar + affordance inherit from plans/2 U6/U7 and back-nine-design skill.
+- **`docs/plans/3-controls.md#17`** · `requirement` · → Unit 9 — Goal · _canonical_
+  - sig: budget structure IS the lexicographic floor/surplus split
+  - U9 goal: build a real itemized/categorized/time-boxed budget whose structure is the floor/surplus split, read as a two-tier verdict (essentials safe X/10; full lifestyle Y/10) over the same six-state set (R20,R2,R19,R8).
+  - [dedup] Unit goal is plan-canonical; R20/R2/R19/R8 definitions live in product §7, the trace in roadmap.
+- **`docs/plans/3-controls.md#18`** · `decision-rationale` · → Unit 9 — line-item shape · _canonical_
+  - sig: line-item shape: category, tier, window offsets, today's-dollar
+  - U9 line-item = {category,label,annualAmount,tier,window:{startYear,endYear|null}}; windows are offsets from each owner's retirement year clamped to [0,horizon]; all amounts are real (today's-dollar); the expense-tracker lane is out.
+  - [dedup] Plan owns the line-item shape decision; product R20 scope boundary (tracker out) references it.
+- **`docs/plans/3-controls.md#19`** · `decision-rationale` · → Unit 9 — pre-65 healthcare-gap line · _canonical_
+  - sig: pre-65 healthcare-gap line cost computed by U3 overlay, per-track
+  - U9 reserves a time-boxed pre-65 healthcare-gap slot (retirement to age 65 per spouse, tier essentials) but its net cost is computed MAGI-dependently by the U3 overlay via U11 — never a user-typed flat amount — so it resolves to a per-track value.
+  - [dedup] duplicatedIn names Unit 11 in the same doc (the gap line's cost lands at U11).
+- **`docs/plans/3-controls.md#20`** · `invariant` · → Unit 9 — two-track compilation · _canonical_
+  - sig: budgetToSpending emits two tracks on one shared draw set
+  - U9: budgetToSpending emits two per-year vectors (essentials-only and full) from one budget; both evaluate against the same path population on the same draw set as two distinct decumulation+overlay passes — the engine half of R21's lexicographic structure.
+  - [dedup] Plan/budget-layer build owns the two-track compilation; plans/4 R21 lexicographic objective references it.
+- **`docs/plans/3-controls.md#21`** · `decision-rationale` · → Unit 9 — two-tier headline reading · _canonical_
+  - sig: two-tier headline composes over the six-state enum, not a 7th state
+  - U9: the two-tier headline composes two outcome-state-tagged readings over the existing six-state enum (state-selection stays in confidence.ts); degenerate collapse renders the single-metric statement verbatim when no discretionary exists.
+  - [dedup] Plan owns the headline composition; the six-state enum and confidence.ts are canonical in plans/2 U7.
+- **`docs/plans/3-controls.md#22`** · `decision-rationale` · → Unit 9 — spending shape · _canonical_
+  - sig: spending shape user-set, never solver-recommended
+  - U9: a go-go-years front-load is a user-set per-year multiplier on the discretionary track only; U9 surfaces its consequence on the surplus tier but never proposes a shape (the solver optimizes funding, not how you live).
+  - [dedup] Plan owns this boundary; plans/4 (solver optimizes funding not shape) references it.
+- **`docs/plans/3-controls.md#24`** · `decision-rationale` · → Unit 9 — survivor-spending composition · _canonical_
+  - sig: survivor-spending ratio scales discretionary, sticky essentials don't
+  - U9: the survivor-spending ratio is applied per-path at first death — scaling the discretionary track and only the discretionary portion of essentials; sticky survival essentials (healthcare-gap, housing, property tax) don't scale (R17); lives in budgetToSpending, R7-editable.
+  - [dedup] Plan owns the composition mechanics; R17 in product, the ratio default in plans/1 U1.
+- **`docs/plans/3-controls.md#25`** · `build-detail-or-KTD` · → Unit 9 — Files · _canonical_
+  - sig: create budgetModel.ts, budgetToSpending.ts, TwoTierHeadline.tsx
+  - U9 files: create budgetModel.ts, budgetToSpending.ts, BudgetBuilder/BudgetLineItem/TwoTierHeadline.tsx; modify model.ts (budget field under the single bump), memoryModel.ts, copy.ts; add budget + budgetBuilder tests.
+- **`docs/plans/3-controls.md#26`** · `build-detail-or-KTD` · → Unit 9 — tier-ordering monotonicity test · _canonical_
+  - sig: tier-ordering monotonicity, three-link proof chain
+  - U9 golden invariant: Tier-1 X/10 >= Tier-2 X/10 asserted path-for-path on shared draws via a three-link chain (essentials<=full spend; CRN depletion monotone in spend; gap dollar monotone in spend); narrowed+documented where a cliff/CSR branch could break it.
+- **`docs/plans/3-controls.md#27`** · `build-detail-or-KTD` · → Unit 9 — Test scenarios · _canonical_
+  - sig: U9 tests: reduce-to-spine, two-tier split, real-convention, R19
+  - U9 test scenarios: reduce-to-spine byte-identity (composition inert, single-metric render), two-tier split off one draw set (identical normals), real-convention vector, income-dependent gap line from overlay, zero-essentials warned-not-errored, R19 inline errors.
+- **`docs/plans/3-controls.md#28`** · `requirement` · → Unit 9 — Verification + Feeds forward · _canonical_
+  - sig: U9 exit: two-tier headline passes N=1 cold-read, budget read-only to solver
+  - U9 exit conditions: real two-tier budget reads as two honest tiers, single-total reproduces the first answer byte-identically, shape user-set; passing the N=1 cold-read on the two-tier headline gates Act 3; budget is read-only solver input.
+  - [dedup] Plan owns U9 exit/feeds-forward; plans/4 contracts #4/#8a are the downstream consumer.
+- **`docs/plans/3-controls.md#29`** · `requirement` · → Unit 9 — two-date split · _reframe_
+  - sig: two-date split rides U9's degenerate-collapse, no new mechanism
+  - The fuck-off-date floor-vs-lifestyle dates (R27) are U9's two-track compilation consumed by the C3 date-search: the dates coincide in the degenerate case and separate when the budget splits tracks; mixed outcomes ({floor,no-date}, floor>lifestyle) are dark until U9 lands.
+  - [dedup] Build fact (the two-date split rides U9) is plan-canonical; R27/C3 rationale in decisions/accumulation-fuck-off-date, the date-search in plans/1 C3.
+  - [reframe] Surviving fact (present-tense): the two date answers reuse U9's two-track compilation/degenerate-collapse and C3 consumes whatever tracks budgetToSpending emits; drop the '2026-06-08 accumulation-fold' origin framing.
+- **`docs/plans/3-controls.md#30`** · `build-detail-or-KTD` · → Unit 9 — follow-on (medical-line reconcile) · _reframe_
+  - sig: budget medical line and oopMedical must reconcile to one source
+  - Build landmine: the budget's medical line and the date-route per-year oopMedical[t] stream must reconcile to one source — never double-count (an itemized medical line plus oopMedical) nor zero the HSA qualified-spend cap.
+  - [dedup] duplicatedIn names Unit 11 (HSA cap) in the same doc.
+  - [reframe] Surviving fact (present-tense): the budget medical line and oopMedical[t] reconcile to one source so the HSA cap-only containment premise holds; drop the accumulation-fold origin framing.
+- **`docs/plans/3-controls.md#31`** · `requirement` · → Unit 10 — Goal · _canonical_
+  - sig: two hand-tunable controls, delta as hero, never a verdict
+  - U10 goal: two manual controls over Act-1 overlays — a named drawdown policy (or custom order) and a Roth conversion (amount+years) — rendered as two futures with the delta as hero, headlined by the survivor's tax cliff, every readout hedged, never a verdict (R9-R12,R4,R19).
+  - [dedup] Unit goal is plan-canonical; R9-R12/R4/R19 in product §7, the trace in roadmap.
+- **`docs/plans/3-controls.md#32`** · `decision-rationale` · → Unit 10 — manual sequencing control · _canonical_
+  - sig: drawdown policy set: proportional, taxable-first, pre-tax-first, bracket-fill
+  - U10 sequencing control: user picks a named policy {proportional(baseline), taxable-first, pre-tax-first, bracket-fill} or custom order; bracket-fill carries a cliff-aware fill ceiling; HSA excluded from general drawdown; past RMD age full RMD comes from pre-tax first then the policy applies to the residual.
+  - [dedup] Plan owns the control design; sequencing.ts substrate is in plans/1, the solver search axes in plans/4.
+- **`docs/plans/3-controls.md#33`** · `decision-rationale` · → Unit 10 — the Roth lever · _canonical_
+  - sig: RMD age birth-year-derived 72/73/75, conversion stacks on RMD
+  - U10 Roth lever: roth.ts runs WITH/WITHOUT arms differing only by the conversion event; RMD age is birth-year-derived (72/73/75 per SECURE 2.0, never flat 73); tax paid from taxable (R7-editable); the conversion stacks on top of the RMD and the clamp is computed after RMD removal.
+  - [dedup] Plan owns the lever design; RMD-non-convertible legality is canonical in architecture §7.1, U2 in plans/1.
+- **`docs/plans/3-controls.md#34`** · `decision-rationale` · → Unit 10 — account buckets on lever-open · _reframe_
+  - sig: lever-open mini-intake: legacy upgrade plus drifted-split only
+  - U10 buckets are collected on lever-open in two cases — unsaved in-memory (now the degenerate already-collected D1 path) and returning legacy vault (decrypt, add, model-only re-encrypt); opening a what-if never mutates the vault (enforced structurally).
+  - [dedup] Plan owns the case structure; model-only re-encrypt is canonical in architecture §7.3, coordinated bump in contract #5.
+  - [reframe] Surviving fact (present-tense): the lever-open mini-intake handles the unsaved in-memory and legacy-vault cases and never writes to disk outside an explicit Save; drop the 'accumulation-fold shift (buckets at D1)' origin framing.
+- **`docs/plans/3-controls.md#35`** · `decision-rationale` · → Unit 10 — two futures + delta as hero · _canonical_
+  - sig: two futures CRN both arms, no-worker fallback recompute on release
+  - U10 two-futures: both arms share CRN so the delta is stable as the slider drags; on the no-worker capability flag the controls disable live recompute and recompute on release (honestly non-live); the delta callout is the grayscale hero with non-color treatment.
+  - [dedup] Plan owns the control render; the worker-vs-main-thread capability flag and U6 tokens are from plans/2.
+- **`docs/plans/3-controls.md#36`** · `decision-rationale` · → Unit 10 — reframe at lever-open · _reframe_
+  - sig: delta-led reframe at lever-open, saved spine headline never overwritten
+  - U10 reframe: because the tax-aware lever can read below the anchored number, the delta leads ('could help last in 8 of 10 instead of 6') and the tax-aware baseline is shown secondary as 'a truer picture' — the saved spine headline is never overwritten.
+  - [dedup] Plan owns the reframe rule; seed/headline identity is canonical in architecture.
+  - [reframe] Surviving fact (present-tense): the lever-open reframe is delta-led and re-derives from the account-aware D1-era baseline at build time; the delta-led honesty rule is unchanged — drop the 'post-accumulation-fold' framing.
+- **`docs/plans/3-controls.md#37`** · `decision-rationale` · → Unit 10 — the delta itself made honest · _canonical_
+  - sig: natural-frequency X-of-10 first, hedged ~N years secondary
+  - U10 delta honesty: primary render is a natural-frequency 'X of 10' shift (the survivor's number, probabilistic over first-death timing), '~N years' is a hedged secondary tied to a percentile; net cost-now vs benefit-later; omissions disclosed; N<=0 has a calm state; 10/10 clamp becomes a verdict-state transition.
+  - [dedup] Plan owns the delta-honesty rules; the 10/10 surplus-metric pivot seeds R21 in plans/4.
+- **`docs/plans/3-controls.md#38`** · `decision-rationale` · → Unit 10 — quiet categorical surface · _canonical_
+  - sig: categorical teaser on a general MFJ fact, no personalized dollar
+  - U10 quiet categorical surface: the teaser fires on a general MFJ pre-RMD-window fact with no personalized dollar or hardcoded age; the trigger is categorical (true for the product class), not gated on a per-user computation; tested that the visibility predicate reads no personalized field.
+  - [dedup] duplicatedIn names contract #4 (attorney-gate lapsed) in the same doc.
+- **`docs/plans/3-controls.md#39`** · `decision-rationale` · → Unit 10 — death-order, $0-pre-tax · _canonical_
+  - sig: death-order 'if one outlives the other', $0-pre-tax closes calmly
+  - U10 death-order: an editable hypothetical framed 'if one of you outlives the other' (never 'predeceases'), default mixture, a selected order = conditional same-seed view, survivor MFJ->single flip for tax+health; $0 total pre-tax closes the lever calmly with no fabricated arms.
+  - [dedup] duplicatedIn names contract #3 in the same doc.
+- **`docs/plans/3-controls.md#40`** · `build-detail-or-KTD` · → Unit 10 — R19 · _canonical_
+  - sig: clamp conversion to [0, remaining pre-tax pool] net of RMD
+  - U10 R19: clamp the conversion to [0, remaining pre-tax pool] accounting for cumulative multi-year conversions and net of the RMD already taken; validate residual sequencing legality before mutating state; reject degenerate amounts; surface boundaries calmly inline.
+  - [dedup] duplicatedIn names contract #7 in the same doc.
+- **`docs/plans/3-controls.md#41`** · `requirement` · → Unit 10 — require-the-hedge lint · _canonical_
+  - sig: positive REQUIRE lint reads the same single-sourced hedge tokens
+  - U10 introduces the require-the-hedge lint: every control readout and recommendation headline must contain a hedge token from the single-sourced copy.ts catalog the lint reads; ban-list stays; viz string-free; catalog-enumeration test fails a hedge-less readout by construction.
+  - [dedup] Lint introduced here (plan-canonical); plans/4 contract #7 extends it to the recommendation headline.
+- **`docs/plans/3-controls.md#42`** · `build-detail-or-KTD` · → Unit 10 — Files · _canonical_
+  - sig: create SequencingControl, RothLever, TwoFutures, engine/roth.ts
+  - U10 files: create SequencingControl/RothLever/RothSurface/RothTuner/RothAccounts.tsx, viz/TwoFutures.tsx (string-free), engine/roth.ts; modify model.ts (bucket+birth-year+sequencing+three tax-vintage stamps), copy.ts (hedge-token catalog), copyGuard.ts (hedge lint+Roth slots); add roth/control/copyGuard tests.
+- **`docs/plans/3-controls.md#43`** · `build-detail-or-KTD` · → Unit 10 — golden invariant + tests · _canonical_
+  - sig: golden anchor: 'without' arm byte-identical to spine when off
+  - U10 golden test: buckets collapsed + conversion 0 + taxes/RMD/healthcare off -> the 'without' arm is byte-identical to the spine (no spurious delta); plus CRN monotone raw-delta, single-shared-draw, per-policy depletion-order, sequencing determinism, HSA-not-a-bucket, RMD-non-convertible, RMD-age birth-year-derived.
+- **`docs/plans/3-controls.md#44`** · `build-detail-or-KTD` · → Unit 10 — Test scenarios · _canonical_
+  - sig: U10 tests: two-series convergence, CVD oklab probe, legacy->accounts
+  - U10 further tests: two-series convergence (leadered stack, collapse-to-callout, burned/037), CVD oklab probe over composited geometry (burned/070), delta honesty, N<=0/10-10 clamp, death-order+$0-pre-tax, require-the-hedge enumeration, legacy->accounts shape integration, control visibly moves the answer.
+- **`docs/plans/3-controls.md#45`** · `requirement` · → Unit 10 — Verification + Feeds forward · _canonical_
+  - sig: U10 exit: both arms+delta legible in grayscale, controls are solver axes
+  - U10 exit conditions: user hand-tunes both controls, every readout hedged and no directive, delta is the survivor's frequency-first, 'without' reduces byte-identically, CRN-stable, RMD-age birth-year-derived; passing the N=1 cold-read on the two-futures gates Act 3; the controls are the solver's two search axes.
+  - [dedup] Plan owns U10 exit; plans/4 Unit 15 + contracts #5/#7 are downstream.
+- **`docs/plans/3-controls.md#46`** · `requirement` · → Unit 11 — Goal · _canonical_
+  - sig: surface ACA cliff, IRMAA, HSA so a conversion's cost is seen
+  - U11 goal: surface income-dependent healthcare calmly — pre-65 ACA subsidy cliff (legislative status shown), post-65 IRMAA cliffs + 2-yr-lag, the HSA not-ACA-payable trap — so a subsidy-torching conversion is seen, not silently optimized over (R24,R12,R4,R19); reads the U3 overlay.
+  - [dedup] Unit goal is plan-canonical; R24/R12/R4/R19 in product §7, the trace in roadmap.
+- **`docs/plans/3-controls.md#47`** · `decision-rationale` · → Unit 11 — SLCSP benchmark · _canonical_
+  - sig: SLCSP benchmark is a user input, never synthesized
+  - U11: the SLCSP benchmark is a user input (the biggest honesty lever) with an honest age-banded fallback; it steps to single-enrollee when the older spouse hits Medicare; near-65 starts also collect the two prior years' MAGI to seed IRMAA[t-2] — an unseeded near-65 start fails loud.
+  - [dedup] Plan owns the input-design decision; the U3 ACA fixed-point is canonical in plans/1.
+- **`docs/plans/3-controls.md#49`** · `decision-rationale` · → Unit 11 — shadow-rate framing · _canonical_
+  - sig: shadow rate = federal + state + lost ACA subsidy, >100% at cliff
+  - U11 shadow/effective-marginal-rate readout shows what the next conversion dollar really costs (federal + disclosed state + lost ACA subsidy), catastrophic >100% at the cliff; the subsidy-aware MAGI ceiling is the binding constraint in ACA years; age-gap years sum lost ACA subsidy and the forward IRMAA surcharge.
+  - [dedup] duplicatedIn names contract #4 (shadow-rate slot) in the same doc.
+- **`docs/plans/3-controls.md#50`** · `decision-rationale` · → Unit 11 — IRMAA cliffs + 2-year-lag · _canonical_
+  - sig: IRMAA 2-yr lag, danger years start before Medicare, ×enrolled-spouses
+  - U11 IRMAA: surface per-person step-cliffs times the count of Medicare-enrolled spouses (×1 in age-gap years, ×2 once both enrolled, never flat ×2) and the headline 'a conversion at 63-64 hits your IRMAA at 65-66; the danger years start before Medicare'; rendered as discrete cliffs.
+  - [dedup] Plan owns the surfacing decision; the U3 IRMAA 2-yr-lag mechanics are canonical in plans/1.
+- **`docs/plans/3-controls.md#51`** · `decision-rationale` · → Unit 11 — HSA fourth bucket + trap · _canonical_
+  - sig: HSA can't pay ACA premiums; non-qualified post-65 raises both MAGIs
+  - U11 HSA: surface that HSA covers out-of-pocket + (owner 65+) Medicare premiums tax-free but NOT ACA marketplace premiums; Medicare zeroes contributions; HSA spending is MAGI-invisible only for qualified medical, so HSA is a MAGI-control lever against medical spend, not a general MAGI-free source.
+  - [dedup] Plan owns the surfacing decision; the U3 HSA bucket mechanics are canonical in plans/1.
+- **`docs/plans/3-controls.md#52`** · `decision-rationale` · → Unit 11 — disclose modeled omissions · _canonical_
+  - sig: disclose omissions: NIIT, state, CSR, IRMAA self-funding, SSA-44
+  - U11 disclose modeled omissions adjacent to the readout (NIIT, state tax, CSR, SLCSP level, IRMAA second-order self-funding loop, state subsidy wraps, SSA-44 death-of-spouse appeals) — each named, never silently dropped — the honesty backstop for the R24 scope cut.
+  - [dedup] Plan owns the disclosure rule; the R24 scope cut is in product.
+- **`docs/plans/3-controls.md#53`** · `decision-rationale` · → Unit 11 — survivor flip + R19 · _canonical_
+  - sig: survivor MFJ->single drops IRMAA and ACA-FPL thresholds
+  - U11 survivor flip: when the death-order conditional view is active the survivor's IRMAA and ACA-FPL thresholds drop to ~single ('the same income can trip a surcharge after one of you is gone'), wired into the existing death-order filter; R19 checks SLCSP/HSA non-negative and the toggle binary.
+  - [dedup] duplicatedIn names contract #3 in the same doc.
+- **`docs/plans/3-controls.md#54`** · `build-detail-or-KTD` · → Unit 11 — Files + Dependencies · _canonical_
+  - sig: create HealthcareSurface, ShadowRateReadout, EnhancedSubsidyToggle
+  - U11 files: create HealthcareSurface/HealthcareInputs/EnhancedSubsidyToggle/ShadowRateReadout.tsx; modify model.ts (HSA bucket+SLCSP+toggle+healthcare vintage stamps under the single bump), copy.ts, copyGuard.ts (ACA/IRMAA + shadow-rate slots); tests; depends on Act-1 U2 tax overlay.
+- **`docs/plans/3-controls.md#55`** · `build-detail-or-KTD` · → Unit 11 — Test scenarios · _canonical_
+  - sig: U11 tests: cliff calm, IRMAA lag, HSA trap, missing-SLCSP loud sentinel
+  - U11 tests: happy SLCSP net-cost + toggle, the 400%-FPL cliff shown calmly (non-color shape/word, omissions adjacent), IRMAA 2-yr lag per-person ×2, HSA trap, survivor flip to single, dated legislative status not hard-coded, a missing SLCSP is a loud sentinel (burned/062, no in-range default), U9-gap and U10-conversion integration.
+  - [dedup] Plan owns the test list; burned/062 (no in-range default) is referenced from CLAUDE.md.
+- **`docs/plans/3-controls.md#56`** · `requirement` · → Unit 11 — Verification + Feeds forward · _canonical_
+  - sig: U11 exit: cliff/shadow-rate cold-read, the cliff the solver mustn't ignore
+  - U11 exit conditions: honest income-dependent healthcare (ACA cliff dated, IRMAA danger-years, HSA trap), every cost hedged and omission disclosed, HSA coverage never overstated; passing the N=1 cold-read on cliff/shadow-rate copy gates Act 3; the cliff is what the solver must not silently optimize over.
+  - [dedup] Plan owns U11 exit; plans/4 Unit 14 case (iii) + Unit 15 cliff-aware grid are downstream.
+- **`docs/plans/3-controls.md#57`** · `requirement` · → Unit 12 — Goal · _canonical_
+  - sig: every assumption visible+editable, each precision sharpens the answer
+  - U12 goal: make every assumption (methodology and required user-facts, now including budget, both controls, healthcare inputs) visible and editable so added precision visibly/stably sharpens the answer, and a power user can set any assumption directly (R6,R4,R7,R8).
+  - [dedup] Unit goal is plan-canonical; R6/R4/R7/R8 in product §7, the trace in roadmap.
+- **`docs/plans/3-controls.md#58`** · `decision-rationale` · → Unit 12 — every assumption editable, two classes · _canonical_
+  - sig: two classes: methodology assumptions and required user-facts
+  - U12 lists two editable classes: (a) on-behalf methodology assumptions (returns, inflation, longevity, survivor-SS step-down, survivor-spending ratio, death-order, Roth tax-payment-source) and (b) required user-facts (ages, savings, budget, buckets, SLCSP+HSA, retirement years); editing a required fact can legitimately return indeterminate.
+  - [dedup] Plan owns the U12 classification; indeterminate copy is reused from plans/2 U5.
+- **`docs/plans/3-controls.md#59`** · `invariant` · → Unit 12 — each edit re-runs · _canonical_
+  - sig: draw-once-then-morph, same seed, margin-gated crossfade
+  - U12: each edit re-runs through the Act-2 U5 memoryModel orchestrator (it extends, never re-owns it) with the same seed so the answer morphs (never re-draws) and exercises the margin-gated crossfade Act 2 defined.
+  - [dedup] Plan states U12's reuse; the memoryModel orchestrator and margin-gated crossfade are canonical in plans/2 U5.
+- **`docs/plans/3-controls.md#60`** · `decision-rationale` · → Unit 12 — R8 honestly · _canonical_
+  - sig: sharpens not unconditionally tightens; confirm narrows, override shifts
+  - U12 R8 honestly: only confirming/narrowing an epistemic default narrows the band; overriding a value shifts (may widen) and the verdict can worsen, framed as 'a truer picture'; 'monotonic, no jitter' is the seed-stability guarantee, not a promise every edit narrows.
+  - [dedup] Plan owns the R8 nuance; R8 definition is in product.
+- **`docs/plans/3-controls.md#61`** · `build-detail-or-KTD` · → Unit 12 — stateful sticky-rounding · _canonical_
+  - sig: U12 seats stateful sticky-rounding, two distinct margins
+  - U12 seats the sticky-rounding: adds lastDisplayedHeadline/Dollar/State to memoryModel with two distinct margins (band-edge for headline/state, display-rounding-step for dollar), notify-once write ordering (burned/017), baseline captured at resolve->verdict, session-only and re-seated on re-entry.
+  - [dedup] Plan owns where the stickiness is seated; architecture §9 owns why it lives in the store (not pure confidence.ts), with the handed-forward seam in plans/1 U1 + plans/2 U5.
+- **`docs/plans/3-controls.md#62`** · `decision-rationale` · → Unit 12 — epistemic vs aleatory floor · _canonical_
+  - sig: epistemic vs aleatory floor, Unit-12-local heuristic
+  - U12 honest about the floor: sharpening can't narrow market randomness; floor copy ('more precision won't narrow it') and bad-news copy carry the non-color signal grammar; floor detection is a Unit-12-local band-width-threshold heuristic, deliberately not a confidence.ts decomposition for the MVP.
+  - [dedup] duplicatedIn names contract #8 in the same doc.
+- **`docs/plans/3-controls.md#63`** · `decision-rationale` · → Unit 12 — escape hatch + Files · _canonical_
+  - sig: escape hatch reachable even while indeterminate (R6)
+  - U12 escape hatch: jump to any assumption without the guided path (R6), reachable even while indeterminate (sticky seam applies only to a complete answer); create SharpenLoop/AssumptionPanel/EscapeHatch.tsx, modify memoryModel.ts, add sharpen/assumptions tests.
+  - [dedup] Plan owns the U12 escape-hatch design+files; R6 definition is in product.
+- **`docs/plans/3-controls.md#64`** · `build-detail-or-KTD` · → Unit 12 — Test scenarios · _canonical_
+  - sig: U12 tests: narrow, override, aleatory floor, two-margin sticky split
+  - U12 tests: confirm narrows / override shifts-may-widen (two classes distinguished), aleatory-floor copy on below-threshold change, sticky two-margin split (dollar vs headline/verb wired separately), notify-once (no mixed frame, burned/017), every new assumption present+editable (R7), required-fact->indeterminate, escape-hatch non-sticky, shared-assumption single-source recompute.
+- **`docs/plans/3-controls.md#65`** · `requirement` · → Unit 12 — Verification + Feeds forward · _canonical_
+  - sig: U12 exit: dollar and headline never flicker against each other
+  - U12 exit conditions: every assumption reachable/changeable in one interaction, edits move the answer seed-stably (narrowing on precision, shifting honestly on a correction), dollar and headline never flicker against each other; passing the N=1 cold-read on the bad-news sharpen transition gates Act 3; the panel+escape-hatch are reused by the recommendation surface.
+  - [dedup] Plan owns U12 exit; plans/4 Unit 16 (R7 under recommend-second) is downstream.
+- **`docs/plans/3-controls.md#66`** · `requirement` · → Unit 13 — Goal · _canonical_
+  - sig: calm re-entry, saved answer re-derived, surviving spouse routed in
+  - U13 goal: a calm re-entry showing the saved answer (re-derived, not a replayed string) with honest per-surface staleness across the tax/healthcare/budget clocks, and routing the surviving spouse back in (R4,R8,R15/R16/R17).
+  - [dedup] Unit goal is plan-canonical; R4/R8/R15/R16/R17 in product §7, the trace in roadmap.
+- **`docs/plans/3-controls.md#67`** · `decision-rationale` · → Unit 13 — unlock surfaces all U4 outcomes · _canonical_
+  - sig: recovery-phrase unlock is the surviving spouse's primary door, mandatory new-passphrase gate
+  - U13 unlock surfaces all four Act-1 U4 outcomes (wrong-passphrase calm retry, data-damaged restore, no-vault/post-eviction restore, in-place recovery-phrase unlock); the recovery door is the survivor's primary way back in, with a mandatory blocking new-passphrase gate (re-mint passphraseWrap) and a masked phrase field.
+  - [dedup] Plan owns the U13 unlock flow; the lock-authority/write-gate conjunction is canonical in architecture §7.3, U4 in plans/1.
+- **`docs/plans/3-controls.md#68`** · `decision-rationale` · → Unit 13 — re-deriving at unlock · _canonical_
+  - sig: re-derive under persisted seed, re-present at saved vintage, re-run at current
+  - U13: show the saved statement by re-deriving under its persisted seed (byte-identical, re-seats U12's sticky baseline); re-presentation uses the saved fixture vintage with a staleness flag, any re-run uses the current fixture and says so; only a saved recommendation (Act-4 U17) inverts to re-solve, a saved control what-if stays re-presented.
+  - [dedup] Plan owns the U13 re-derive rule; plans/4 Unit 17 + contract #8b inherit and invert it.
+- **`docs/plans/3-controls.md#69`** · `requirement` · → Unit 13 — staleness clocks 1-2 · _canonical_
+  - sig: tax-table/RMD-age/senior-bonus clocks gate the controls, spine is tax-blind
+  - U13 clocks 1-2: wall-time + app-methodology-default vintage gate the spine verdict (user-overridden assumptions immune); tax-table vintage (OBBBA-2025 provenance) + RMD-age rule + senior-bonus-deduction sunset gate the controls/lever only; SS thresholds frozen = no clock; staleness.ts exposes a tax-table-stale flag.
+  - [dedup] Plan/U13 own the clock spec; the mapping is contract #6 (same doc), constants/vintage canonical in architecture §8.

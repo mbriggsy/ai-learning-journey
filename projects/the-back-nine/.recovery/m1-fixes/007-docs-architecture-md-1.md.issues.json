@@ -1,0 +1,32 @@
+[
+  {
+    "ref": "docs/architecture.md#55",
+    "severity": "warn",
+    "problem": "Kind=number-or-figure marked _canonical_ in architecture (BIP-39 12 words / 128 bits / HKDF-SHA-256). But the sibling pointer 1-engine.md#44 explicitly routes the same numbers (PBKDF2 600k, BIP-39, sentinel -1) canonical to research/by-number. Two rows now claim DIFFERENT canonical homes for the same figure — an M6 grep-and-place pass would re-type the BIP-39/128-bit values as canonical in BOTH architecture and research, violating the never-re-type-a-dated-figure discipline.",
+    "fix": "Retag #55 as the recovery-key-derivation CONTRACT (kind=invariant/build-detail) that CITES the figure, and let the figure's canonical home be the research/by-number entry named in #44. Architecture keeps the contract + inline citation; research keeps the canonical number."
+  },
+  {
+    "ref": "docs/architecture.md#58",
+    "severity": "warn",
+    "problem": "Kind=number-or-figure marked _canonical_ in architecture for the passphrase floor (zxcvbn-ts ≥3 AND length ≥12), bundled with the atomicity/durability contract. But sibling pointer 1-engine.md#47 explicitly routes the zxcvbn ≥3 / length ≥12 figure canonical to research/by-number (architecture holds only the floor-is-the-real-boundary invariant). Same double-canonical conflict as #55: the figure is claimed canonical in two homes.",
+    "fix": "Split #58: keep the atomicity/durability + write-gate ordering as the canonical architecture contract; demote the zxcvbn ≥3 / length ≥12 number to a citation pointing at the research/by-number canonical that #47 names. Do not mark the figure canonical here."
+  },
+  {
+    "ref": "docs/architecture.md#70",
+    "severity": "warn",
+    "problem": "Kind=number-or-figure marked _canonical_ in architecture (paths pinned 16,000; z=1.645; BANDS.onTrack). But sibling 1-engine.md#67 explicitly states those numbers (z=1.645, 16,000 paths, BANDS.onTrack) are duplicated to research and only the quantize-before-compare RULE is canonical in architecture §9. So the date-search numbers are claimed canonical in both architecture (#70) and research (#67's route) — double-canonical figure.",
+    "fix": "Retag #70 as the date-search quantization IDIOM/rule (kind=invariant) that cites the figures; let 16,000/z=1.645's canonical by-number entry live in research as #67 routes it. Keep only the rule canonical in §9."
+  },
+  {
+    "ref": "docs/plans/1-engine.md#65",
+    "severity": "warn",
+    "problem": "HOLLOW REFRAME risk: the reframe keep-list preserves onset_i = max(65−currentAge_i, retireOffset_i) and 'bridge years inside the lookback window are covered,' but drops the named correctness landmine in the digest — that the household max(65,A) form WRONGLY ZEROED an already-retired spouse, so a retired 66-yo must be priced from t=0. The surviving-fact sentence is thinner than the digest: it loses the per-person-vs-household-onset bug that motivates the per-person formula.",
+    "fix": "Add the dropped landmine to the surviving fact: 'per-person onset (not household max(65,A), which zeroed an already-retired spouse) — a retired 66-yo is priced from t=0.' Keep it as a named verification anchor so M6 doesn't lose the bug behind the formula."
+  },
+  {
+    "ref": "docs/plans/1-engine.md#46",
+    "severity": "nit",
+    "problem": "Kind=decision-rationale marked _canonical_ in architecture §7.3 (recovery posture: in-place unlock is the survivor's PRIMARY door; file-restore only for device-wipe; MANDATORY export at first save). Routing law sends decision-rationale → decisions/<topic>. The accumulation rationale rows consistently route to decisions/accumulation-fuck-off-date.md, but this store-posture rationale is folded into architecture with no decisions/ store-topic named. The mechanical write-gate contract is already canonical at #45; #46's distinct payload is posture rationale, which fights the architecture home.",
+    "fix": "Confirm whether a decisions/ store topic exists/should exist. If so, route the in-place-is-primary + mandatory-export posture RATIONALE there as canonical, and leave only the mechanical contract canonical in architecture §7.3 (with a pointer). If the project deliberately has no store decisions topic, keep here but note the exception explicitly."
+  }
+]

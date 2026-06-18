@@ -1,0 +1,199 @@
+- **`docs/plans/features/other-income.md#74`** · `invariant` · → §6 validation boundary (R40 vector vs entity-scalar gates) · _reframe_
+  - sig: validation boundary: compiled vectors engine-side, entity scalars entity-side + U8 codec
+  - Validation boundary: engine validateParams validates the COMPILED VECTORS (finiteness + ≤ENGINE_MAX_DOLLAR); the ENTITY SCALAR RANGES (survivorPct∈[0,1], taxableFraction∈[0,1]) are structurally unreachable from the multiplied-away leaf, so they live ONLY at the entity boundary — Unit 4 sanity on the intake path AND the U8 checkIncomeStreamV3 codec validator on the restore path (a restored blob bypasses the form and validateParams can't see the scalars, so the codec arm is LOAD-BEARING not redundant).
+  - [dedup] Validation-boundary invariant canonical in architecture §6; KTD-3/KTD-4 (decisions) + Risks + U8 obligation carry pointers; dedupes with item 47.
+  - [reframe] Surviving fact: engine validateParams gates compiled vectors only; entity-scalar ranges live solely at the entity boundary (Unit 4 sanity + the load-bearing U8 restore-codec arm). Present-tense invariant; strip the 'security-lens correction' framing.
+- **`docs/plans/features/other-income.md#75`** · `invariant` · → Engine invariants (unchanged by R40) · _canonical_
+  - sig: unchanged invariants: shared draw/CRN, reduce-to-spine, income never persisted
+  - Unchanged invariants (canonical in architecture): single shared market draw / CRN; reduce-to-spine byte-identity; the double allocateWithdrawal; truncateStreams (income NOT added); the PersonContributionStreams path; checkPerson/the frozen legacy shape; scenarioCodec (untouched — U8's); PersonIncomeStream/IncomeParams are engine-facing derivations NEVER persisted (fidelity-over-duplication), only the IncomeStream entity reaches ScenarioV3.
+  - [dedup] These invariants are canonical in architecture + CLAUDE.md summary; the R40-specific 'income never persisted' restates KTD-3 (pointer).
+- **`docs/plans/features/portfolio-holdings.md#4`** · `invariant` · → §8 constants discipline — burned/062 no-default-fallbacks · _canonical_
+  - sig: ticker absent ⇒ manualBlend required
+  - EnteredAccount.ticker is reserved for U8 multi-holding entry and not yet collected; an absent/unrecognized ticker requires manualBlend — a blend is never a silent default (burned/062).
+  - [dedup] burned/062 no-default-fallbacks rule is canonical in docs/architecture.md §8; this restates the rule for the holdings/ticker case and is homed there.
+- **`docs/plans/features/portfolio-holdings.md#6`** · `invariant` · → CRN / single shared market draw — no asset-location · _canonical_
+  - sig: value-weighted single stockWeight, asset-location forbidden
+  - Accounts collapse to one value-weighted household stockWeight ∈ [0,1] consumed by the engine under single shared market draw / CRN; asset-location (which assets sit in which account) is forbidden.
+  - [dedup] CRN / no-asset-location is canonical in docs/architecture.md; this is its home, other copies become pointers.
+- **`docs/plans/features/portfolio-holdings.md#7`** · `invariant` · → Persisted shape — define-now / write-at-U8 contract · _canonical_
+  - sig: ScenarioV3 define-now write-at-U8
+  - The persisted shape is ScenarioV3, defined in model.ts now and written at U8 per the define-now / write-at-U8 contract.
+  - [dedup] define-now/write-at-U8 contract is canonical in architecture; the U8 plan references it. Homed in architecture, roadmap/U8 plan point to it.
+- **`docs/plans/features/portfolio-holdings.md#9`** · `invariant` · → §10 CSP boundary — connect-src 'self' (no runtime price fetch) · _canonical_
+  - sig: no runtime price fetch, ticker+dollars
+  - connect-src 'self' + R36 forbid any runtime price fetch, so holdings are entered as (ticker, dollar value) — never shares × live price; ticker drives the blend, entered dollars drive the weight; account value may be derived from the holdings sum with a reconcile/override path.
+  - [dedup] CSP/connect-src 'self' canonical in architecture §10; R36 canonical in product. The price-fetch-prohibition design rule is homed in architecture §10; product R36 is its requirement anchor (pointer). M6: this row is the single canonical §10 statement of the no-runtime-price-fetch holdings rule — entry as (ticker, dollar value); ticker drives the blend, entered dollars drive the weight; ticker is never a live-price key; account value derived-from-holdings-sum with a reconcile/override path — and item #10 collapses INTO it as a pointer (do not ship two §10 rows for one fact).
+  - [fixed:nit] Designated #9 the single merged §10 statement; #10 collapses in as pointer.
+- **`docs/plans/features/portfolio-holdings.md#10`** · `invariant` · → §10 CSP boundary — offline-first, deterministic replay · _canonical_
+  - sig: ticker is a label, never a live-price key
+  - The product rides no-runtime-external-fetch (strict CSP, offline-first PWA, deterministic replay); a ticker/CUSIP is a label + asset-class hint, never a live-price key (R36).
+  - [dedup] CSP/no-external-fetch canonical in architecture §10; R36 canonical in product (pointer). Overlaps item #9 within architecture §10 — collapse the two into one statement there.
+- **`docs/decisions/accumulation-fuck-off-date.md#28`** · `invariant` · → §7.4 accumulation overlay contract / reduce-to-spine · _pointer_
+  - sig: accumulation OFF condition = construct ABSENT
+  - Reduce-to-spine: every overlay reduces byte-identically to the spine when OFF; the accumulation inflow's OWN OFF condition is the construct ABSENT from params (not 'all contributions 0' — §7's clamp changes nets whenever present), with its own byte-identical test; empty phase (Y==0) consumes ZERO extra draws.
+  - [dedup] Reduce-to-spine invariant canonical in architecture.md §5/§7.4; this record points.
+- **`docs/decisions/accumulation-fuck-off-date.md#36`** · `invariant` · → §7 accumulation / offset-axis model · _pointer_
+  - sig: §0 candidate axis is offset Y, no household age
+  - §0: the candidate axis is a household DATE-OFFSET Y (years-from-now), never a household 'age' — the engine has no household age (every offset is per-person, PersonInputs.currentAge is the only currentAge); a scalar household age is undefined for a different-age couple; the answer is the date today+Y; empty phase ⇔ Y==0.
+  - [dedup] Offset-model invariant canonical in architecture.md; plans/1-engine.md C3 carries the impl pointer.
+- **`docs/decisions/accumulation-fuck-off-date.md#37`** · `invariant` · → §7 accumulation / buildCandidateParams contract · _pointer_
+  - sig: §0 buildCandidateParams(Y) pure per-candidate transform
+  - §0: buildCandidateParams(Y) is a PURE per-candidate transform of the ORIGINAL params (never progressively mutated); each still-working person gets retirementAge=currentAge_i+Y (offsets coincide by construction); an already-retired person keeps entered retirementAge verbatim (never un-retired into phantom income); all household boundaries key off the single sim-year Y.
+  - [dedup] Contract canonical in architecture.md §7; plans/1-engine.md C3 (buildCandidateParams) carries the build pointer; §3a (item 41) is the in-record cross-ref.
+- **`docs/decisions/accumulation-fuck-off-date.md#38`** · `invariant` · → §7 accumulation / all-retired exclusion · _pointer_
+  - sig: §0 all-retired household never enters the sweep
+  - §0: an all-retired household NEVER enters the sweep (D2 route predicate short-circuits to spine-first); load-bearing for correctness (a Y>0 candidate would un-price a retiree's real ACA stream); enforced at the engine layer — dateSearch.ts rejects people.every(retirementAge<=currentAge) as an indeterminate-class input failure, not in shared validateParams.
+  - [dedup] Invariant canonical in architecture.md §7; plans/1-engine.md C3 + plans/2-first-answer.md D2 route predicate carry pointers.
+- **`docs/decisions/accumulation-fuck-off-date.md#40`** · `invariant` · → §7 accumulation / single-timeline CRN (§2,§3 cross-ref) · _pointer_
+  - sig: §1 ONE continuous absolute-year draw timeline
+  - §1: ONE continuous absolute-year draw timeline (R34) — accumulation adds a per-bucket contribution INFLOW into existing working-year slots, not a draw stream, not changing maxHorizon/draw dims; empty phase consumes ZERO extra draws; CRN across candidates holds (a tested Y moves WHICH draws are consumed, never how many/their order); no separate pre-phase draw-stream handoff exists.
+  - [dedup] CRN + single-draw invariants canonical in architecture.md §2/§3; this record points.
+- **`docs/decisions/accumulation-fuck-off-date.md#41`** · `invariant` · → §7 accumulation / presence-keyed byte-identity · _pointer_
+  - sig: §1 byte-identity is PRESENCE-keyed not value-keyed
+  - §1: byte-identity is PRESENCE-keyed — the OFF condition is 'accumulation construct ABSENT', not 'all contributions 0'; with the construct present the §7 clamp changes nets even at zero contributions (so a zero-valued constructed run is deliberately NOT byte-identical), but Y==0 with the construct present has no working years and IS byte-identical.
+  - [dedup] Invariant canonical in architecture.md §7; §7 (item 55) and the reduce-to-spine learning carry in-record cross-refs.
+- **`docs/decisions/accumulation-fuck-off-date.md#42`** · `invariant` · → §7.4 accumulation overlay contract / within-year pipeline · _pointer_
+  - sig: §2 contribution credited END-OF-YEAR at face value
+  - §2: signed cash-flow term with a pinned within-year pipeline (contract #3) — withdraw→rebalance→grow→CREDIT contribution end-of-year at face value (no arrival-year growth); CONSERVATIVE direction (full-year growth would overstate onset balance → earlier date → R25 sin); pin with a stepYear comment mirroring cashTermsForYear:129-133.
+  - [dedup] Within-year-pipeline contract canonical in architecture.md §7.4; plans/1-engine.md C2 carries the build pointer.
+- **`docs/decisions/accumulation-fuck-off-date.md#43`** · `invariant` · → §7.4 accumulation overlay contract / signature + per-bucket routing · _pointer_
+  - sig: §2 contribution APPENDED after stockWeight; per-bucket stream
+  - §2: the spine signature APPENDS the contribution AFTER stockWeight (never before — would re-bind every call); StepResult exposes the PRE-CREDIT growth-only total for the overlay's bucket-scale; the overlay takes a per-bucket stream — taxable raises value AND basis, pretax/roth raise value only, employer match→pretax even on Roth 401k.
+  - [dedup] Contract canonical in architecture.md §7.4; plans/1-engine.md C2 carries the build pointer.
+- **`docs/decisions/accumulation-fuck-off-date.md#44`** · `invariant` · → §7.4 accumulation overlay contract / disjointness + forced-flow overlap · _pointer_
+  - sig: §2 working-year withdrawals clamped; contributions/draws disjoint
+  - §2: working-year withdrawals are clamped to zero (presence-gated, §7), so contributions and SPENDING-driven draws are temporally disjoint; but overlay-FORCED flows (73/75+ RMD relocation, tax gross-up on RMD/claimed-while-working SS/scheduled conversion) can still produce a working-year outflow — the §2c fold is pinned safe for that overlap (never depends on disjointness).
+  - [dedup] Invariant canonical in architecture.md §7.4; §3b and §7 carry in-record cross-refs.
+- **`docs/decisions/accumulation-fuck-off-date.md#45`** · `invariant` · → §7.4 accumulation overlay contract / fold placement · _pointer_
+  - sig: §2c overlay fold AFTER the bucket-scale
+  - §2c: the OVERLAY fold is AFTER the bucket-scale at face value (fold-before-scale was the regression); the scale = totalValue/afterWithdrawal IS the year's blended growth multiply; folding before the scale either earns phantom arrival-year growth (breaks golden d) or smears C proportionally across buckets (breaks asset-location golden c).
+  - [dedup] Fold-placement contract canonical in architecture.md §7.4; plans/1-engine.md C2 carries the build pointer; strip the 'Superseded changelog' fold-correction framing.
+  - [reframe] Strip 'round-2 regression / superseded' framing: present-tense the overlay fold runs AFTER the bucket-scale at face value.
+- **`docs/decisions/accumulation-fuck-off-date.md#46`** · `invariant` · → §7.4 accumulation overlay contract / correct fold (Σ-proof) · _pointer_
+  - sig: §2c correct fold: growth-only scale, per-person pretax ledger credit
+  - §2c correct fold: scale on the contribution-EXCLUDED portfolio (StepResult growth-only total); after the bucket reassignment buckets[dest]+=C at face value; under perRmd also credit pretaxLedger[ownerIdx] (living owners); basis+=C_taxable unscaled after the pro-rata reduction; C never enters drawPool/allocateWithdrawal/RMD base/basis denominator; C=0 ⇒ IEEE no-op ⇒ byte-identical.
+  - [dedup] Fold contract canonical in architecture.md §7.4; plans/1-engine.md C2 carries the build pointer.
+- **`docs/decisions/accumulation-fuck-off-date.md#47`** · `invariant` · → §7.4 accumulation overlay contract / zero-start rejection + mid-runway depletion · _pointer_
+  - sig: §2c zero-balance start REJECTED; mid-runway depletion DEFINED
+  - §2c: a zero-balance start is REJECTED (validateParams returns indeterminate for an accumulation construct with initialPortfolio==0, removing the t=0 instance without touching the spine's depletion predicate); a small-nonzero start can deplete mid-runway via working-year forced flows — a DEFINED conservative per-path outcome (forfeits later contributions, pessimistic-only).
+  - [dedup] Contract canonical in architecture.md §7.4; plans/1-engine.md C2 carries the build pointer + test.
+- **`docs/decisions/accumulation-fuck-off-date.md#49`** · `invariant` · → §7 accumulation / exhaustive date-search contract · _pointer_
+  - sig: §3 date-search exhaustive sweep, not a bisection
+  - §3: the date-search is an outer EXHAUSTIVE sweep over a bounded window (Y=0..~10, ≤~11 candidates, R26), each candidate running simulate on the SAME seed; the earliest-Y decision is non-monotone-robust (insight 013) — report the earliest offset that holds AND keeps holding, disclose non-monotone regions, NEVER a bisection.
+  - [dedup] Contract canonical in architecture.md §7; plans/1-engine.md C3 carries the build pointer.
+- **`docs/decisions/accumulation-fuck-off-date.md#51`** · `invariant` · → §7 accumulation / healthcare stream construction · _pointer_
+  - sig: §3b healthcare-on is STREAM CONSTRUCTION not an age-gate
+  - §3b: 'healthcare ON at the tested date' is STREAM CONSTRUCTION, not an existing age-gate (the engine has no retirement boundary; the ACA gate keys off pre65 + finite-positive enrolledPremium[t], IRMAA off biological 65); healthcareStreams.ts builds enrolledPremium/slcsp/oopMedical = 0/absent in [0,Y) and entered values from Y to each member's 65th sim-year.
+  - [dedup] Contract canonical in architecture.md §7; plans/1-engine.md C3 carries the build pointer; strip the 'plan's original was FALSE / Superseded changelog' framing.
+  - [reframe] Strip 'was FALSE against source' framing: present-tense healthcare-on is per-candidate stream construction in healthcareStreams.ts, not an age-gate.
+- **`docs/decisions/accumulation-fuck-off-date.md#52`** · `invariant` · → §7 accumulation / age-anchored window-gating · _pointer_
+  - sig: §3b inputs AGE-ANCHORED, window-gated never time-shifted
+  - §3b: entered ACA+OOP inputs are AGE-ANCHORED per-sim-year values ('what coverage would cost at each age, were you retired then'); healthcareStreams.ts only WINDOW-GATES them per candidate (zero outside the retired window, never time-shifted — two windows price the same absolute sim-year identically; the IRMAA-MAGI seed is Y-invariant).
+  - [dedup] Anchoring decision canonical in architecture.md §7; plans/1-engine.md C3 carries the build pointer.
+- **`docs/decisions/accumulation-fuck-off-date.md#53`** · `invariant` · → §7 accumulation / per-person Medicare-IRMAA onset · _pointer_
+  - sig: §3b Medicare/IRMAA onset PER-PERSON, not household scalar
+  - §3b: Medicare/IRMAA onset is PER-PERSON — onset_i=max(65−currentAge_i, retireOffset_i) (still-working delays Medicare past 65, the correct model); a household max(65,A) would zero a retired 66-yo spouse's entire Medicare cost → falsely-early date; enrolled count intersects the LIVING set (medicareEnrolledCount), a count over all entered persons would bill a dead spouse's Part B forever.
+  - [dedup] Per-person onset invariant canonical in architecture.md §7 (SS/healthcare mechanics); plans/1-engine.md C3 carries the build pointer.
+- **`docs/decisions/accumulation-fuck-off-date.md#54`** · `invariant` · → §7 accumulation / count65 invariance · _pointer_
+  - sig: §3b count65 NEVER redefined; biological for §63(f)/OBBBA/ACA
+  - §3b: count65 is NEVER redefined — it stays biological for the §63(f) age-65 deduction + OBBBA senior bonus + the ACA pre65 denominator; ONLY the IRMAA gate and IRMAA pricing count switch to the enrolled count; with no onset signal, onset_i defaults to the 65th sim-year (today's predicate verbatim), so the existing decumulation case is byte-identical by construction.
+  - [dedup] Invariant canonical in architecture.md §7; plans/1-engine.md C3 carries the build pointer.
+- **`docs/decisions/accumulation-fuck-off-date.md#55`** · `invariant` · → §7 accumulation / additive IRMAA-MAGI override · _pointer_
+  - sig: §3b working-year IRMAA-MAGI ADDITIVE override into history
+  - §3b: the working-year IRMAA-MAGI is an ADDITIVE OVERRIDE into history, not a seed (the seed covers only t<lookback); for a member crossing onset at t≥lookback the lagged read would find a clamped ≈$0 working year → understated surcharge → falsely-early date (silent); healthcareStreams.ts supplies a conservatively-high override and the overlay records irmaaMagiHistory[t]=override[t]+irmaaMagi(components), additive never replacement.
+  - [dedup] Invariant canonical in architecture.md §7; plans/1-engine.md C3 carries the build pointer + falsifiable test.
+- **`docs/decisions/accumulation-fuck-off-date.md#56`** · `invariant` · → §7 accumulation / seed-coverage re-keying · _pointer_
+  - sig: §3b seed covers t<lookback; validateParams re-keys onset
+  - §3b: the seed keeps covering t<lookback (real pre-sim MAGI); validateParams' seed-coverage loop re-keys off the SAME per-person onset — else a candidate with a member 65+ but still working inside the first lookback years spuriously forces the whole date-search indeterminate (a loud false rejection under the all-or-nothing rejection policy).
+  - [dedup] Invariant canonical in architecture.md §7; plans/1-engine.md C3 carries the build pointer.
+- **`docs/decisions/accumulation-fuck-off-date.md#58`** · `invariant` · → §7 accumulation / bridge-year mask · _pointer_
+  - sig: §3b bridge-year MASK keyed to the hazard's creators
+  - §3b: the overlay-backstop arm uses a per-year bridge-year MASK threaded into taxInputs, assembled per-path; bridge[t]=∃i: t<retireOffset_i && t<deathOffset_i && (earnedIncomeReal_i>0 || accumulation present) — keyed to the HAZARD'S CREATORS (invisible wages AND the income-blind §7 clamp, insight 020); validateParams carries the identical construct-gated widening; absent ⇒ byte-identical; the lagged read THROWS when mask[lag] and the override lacks finite coverage.
+  - [dedup] Invariant canonical in architecture.md §7; plans/1-engine.md C3 + the C3 deviation record (mask re-keyed, item 89) carry pointers; strip the 'AMENDED 2026-06-10' framing.
+  - [reframe] Strip 'AMENDED 2026-06-10' framing: present-tense the bridge mask keys to the hazard's creators (wages OR accumulation-present clamp), construct-gated and income-blind.
+- **`docs/decisions/accumulation-fuck-off-date.md#60`** · `invariant` · → §7 accumulation / ACA-MAGI wage-blind sibling guard · _pointer_
+  - sig: §3b ACA SIBLING hole: wage-blind ACA-MAGI rejected
+  - §3b: the hole has an ACA SIBLING — a priced ACA year overlapping a bridge year computes ACA-MAGI WAGE-BLIND (optimistic in the subsidy band → phantom near-max PTC), so the year is UNPRICEABLE and rejection beats disclosure; validateParams gains the sibling arm and the overlay reuses the same bridgeMask to throw; unreachable in both v1 routes, the guard protects direct callers + the deferred per-person-asymmetry feature.
+  - [dedup] Invariant canonical in architecture.md §7; plans/1-engine.md C3 carries the build pointer.
+- **`docs/decisions/accumulation-fuck-off-date.md#68`** · `invariant` · → §7 accumulation / floor-lifestyle independence (§6 carve-out) · _pointer_
+  - sig: §3c floor + lifestyle terminate INDEPENDENTLY
+  - §3c: floor + lifestyle TERMINATE INDEPENDENTLY, and floor≤lifestyle is an EXPECTED property never an engine assertion (asserted only on fixtures pinned away from the 100%-FPL floor, 400%-FPL cliff, every IRMAA step); on real input floor>lifestyle is constructible (essentials-only spend → MAGI below 100%-FPL → PTC=0 → full premium) — the floor>lifestyle signature, surprising-but-honest output that rides a disclosure, never a crash.
+  - [dedup] Invariant canonical in architecture.md §7; plans/1-engine.md C3 + §6 carve-out (item 71) carry pointers.
+- **`docs/decisions/accumulation-fuck-off-date.md#70`** · `invariant` · → §7 accumulation / no-date representation (OutcomeState closed, DND/009) · _pointer_
+  - sig: §3c no-date is a discriminated variant, NEVER_DEPLETED=-1 sentinel
+  - §3c: representation — a no-date is a discriminated variant on the NEW date-search result type, never indeterminate (reserved for input failure), never a 7th OutcomeState (the enum is documented closed), persisted as a finite numeric sentinel (the NEVER_DEPLETED=-1 precedent, DND/009).
+  - [dedup] OutcomeState-closed + DND/009 sentinel invariants canonical in architecture.md; plans/1-engine.md C3 carries the build pointer.
+- **`docs/decisions/accumulation-fuck-off-date.md#75`** · `invariant` · → §7 accumulation / HSA-MAGI empty-overlap invariant · _pointer_
+  - sig: §6 retired-but-contributing HSA-MAGI: disclose + empty-overlap invariant
+  - §6: the 'retired-but-contributing' HSA-MAGI edge → DISCLOSE + a falsifiable empty-overlap invariant; by R31+R33 the overlap (retired + on ACA + funding an HSA) is structurally EMPTY in v1; omitting the deduction only pushes the modeled date LATER (conservative) except the 100%-FPL floor carve-out where lowering MAGI drops PTC to zero (the D2 disclosure carries it); disclosure copy owned by D2 (copy.ts + copyGuard).
+  - [dedup] Invariant canonical in architecture.md §7; plans/2-first-answer.md D2 carries the disclosure-copy pointer.
+- **`docs/decisions/accumulation-fuck-off-date.md#76`** · `invariant` · → §7 accumulation / no-priced-ACA-year-with-contribution invariant · _pointer_
+  - sig: §6 no priced ACA year carries a nonzero contribution stream (contribution-stop == healthcare-on Y)
+  - §6: why not a test — the empty overlap makes 'date with deduction vs without' compare a nonexistent path (vacuously true); REPLACE with a falsifiable structural invariant: across the date-search NO priced ACA year ever carries a nonzero contribution stream (contribution-stop and healthcare-on are the SAME Y for every candidate, §3a); a planted overlapping candidate FAILS — making 'conservative direction' an architectural property the engine enforces.
+  - [dedup] Invariant canonical in architecture.md §7; plans/1-engine.md C3 tests carry the falsifiable-assertion pointer.
+  - [fixed:nit] Sig anchored on the greppable contribution-stop==healthcare-on rule.
+- **`docs/decisions/accumulation-fuck-off-date.md#77`** · `invariant` · → §7.4 accumulation overlay contract / working-year clamp · _pointer_
+  - sig: §7 working-year withdrawals clamped, PRESENCE-GATED
+  - §7: working-year portfolio withdrawals are clamped to zero, PRESENCE-GATED on the accumulation construct (cash-flow-coherence fix) — cashTermsForYear computes net=max(0, spending−earned−ss) every year, so without the clamp the portfolio is silently drawn down during accumulation while a contribution is added (incoherent double-counting); fix: when AND ONLY WHEN the construct is present, clamp household net to 0 IFF ∃i: t<deathOffset_i && t<retire_i.
+  - [dedup] Clamp contract canonical in architecture.md §7.4; plans/1-engine.md C2 carries the build pointer.
+- **`docs/decisions/accumulation-fuck-off-date.md#78`** · `invariant` · → §7.4 accumulation overlay contract / death-aware clamp · _pointer_
+  - sig: §7 clamp is DEATH-AWARE inside cashTermsForYear
+  - §7: the clamp is DEATH-AWARE, inside cashTermsForYear (which already takes per-path deathOffsets — per-path, CRN-safe, never in buildCandidateParams); once the last living worker dies the clamp stops and existing survivor cash semantics draw normally; a death-blind t<Y clamp would zero the surviving retiree's real draws → maximally optimistic on top-of-window candidates (the cardinal calm-but-wrong direction).
+  - [dedup] Invariant canonical in architecture.md §7.4; plans/1-engine.md C2 carries the build pointer.
+- **`docs/decisions/accumulation-fuck-off-date.md#79`** · `invariant` · → §7.4 accumulation overlay contract / presence-keyed gate · _pointer_
+  - sig: §7 gate PRESENCE-KEYED; ungated breaks two shipped tests
+  - §7: the gate is PRESENCE-KEYED never value-derived (a 1¢→0 change must not flip the working-year draw regime; candidates stay comparable; absent ⇒ byte-identical spine, burned/062); UNGATED it breaks two shipped tests (the still-working-bridge distribution test simulate.test.ts:182 and the dead-earner seam test :165-171) and violates reduce-to-spine for every still-working plain-decumulation household.
+  - [dedup] Invariant canonical in architecture.md §7.4; plans/1-engine.md C2 carries the build pointer.
+- **`docs/decisions/accumulation-fuck-off-date.md#80`** · `invariant` · → §7.4 accumulation overlay contract / per-person death truncation · _pointer_
+  - sig: §7 per-person death truncation contributes iff t<death && t<retire
+  - §7: per-person death truncation — person i contributes iff t<deathOffset_i && t<retire (same predicate as the bridge's dead-earner guard), evaluated PER-PATH (assembled in the :411-429 per-year loop, never in buildCandidateParams) else a dead spouse's phantom contributions overstate the nest egg; the overlay's per-bucket amounts are assembled per-path (alive∧working filter → bucket aggregation) and fed to §2c's after-the-scale fold (folding separately would resurrect the dead-spouse contribution).
+  - [dedup] Invariant canonical in architecture.md §7.4; plans/1-engine.md C2 + §2c carry pointers.
+- **`docs/decisions/accumulation-fuck-off-date.md#81`** · `invariant` · → §7.4 accumulation overlay contract / clamp direction disclosure · _pointer_
+  - sig: §7 direction disclosure: clamp only removes withdrawals
+  - §7: direction disclosure — the clamp only ever REMOVES withdrawals → balance weakly higher → date weakly earlier (exact on the cash side for a salary-living household, OPTIMISTIC iff the real household draws from the portfolio while working, the §0 mixed-household example); the death-path residual (per-candidate healthcare streams leave a survivor's pre-Y ACA unpriced in [d,Y)) is disclosed via the §0 channel; carry a §6-style one-directional disclosure (D2-owned) + source comments.
+  - [dedup] Invariant + disclosure-direction canonical in architecture.md §7.4; plans/2-first-answer.md D2 carries the disclosure-copy pointer.
+- **`docs/research/engine-validation-and-tax.md#19`** · `invariant` · → Engine invariants / longevity · _canonical_
+  - sig: cohort life tables sex-specific p_x+p_y-p_x*p_y
+  - Longevity: use cohort (not period) life tables; derive joint-and-survivor as P=p_x+p_y−p_x·p_y from sex-specific per-spouse curves (never one rate for both); the test asserts the couple figure equals the formula on the two shipped curves; independence errs safe; never model a fixed to-age-90 horizon.
+  - [dedup] architecture.md (engine invariants) is canonical for the longevity invariant; this research doc supplies the numbers it's tested against.
+- **`docs/research/engine-validation-and-tax.md#35`** · `invariant` · → Constants discipline §8 (year-keyed RMD age) · _canonical_
+  - sig: RMD age birth-year-keyed never hardcoded literal
+  - The RMD age is a per-person function of birth year and is legislatively scheduled to change (the 2033 step), so it is a vintage-stamped / birth-year-keyed input, never a hardcoded literal.
+  - [dedup] architecture.md (constants discipline) is canonical for the year-keyed invariant; this research doc supplies the RMD-age numbers.
+- **`docs/research/engine-validation-and-tax.md#41`** · `invariant` · → §7 SS overlay (frozen thresholds / no staleness clock) · _canonical_
+  - sig: SS thresholds frozen 1983/1993 no staleness clock
+  - The SS provisional-income thresholds are NOT inflation-indexed — frozen since 1983 ($32k)/1993 ($44k); they carry no vintage/staleness clock (unlike inflation-indexed brackets) because a frozen constant cannot go stale; this is why more retirees are caught each year — model honestly, not a bug.
+  - [dedup] architecture.md §7 SS overlay is canonical for the frozen-constant invariant; same-doc pin-pass table is a pointer.
+- **`docs/research/engine-validation-and-tax.md#42`** · `build-detail-or-KTD` · → §7 SS overlay (gross-up fixed-point) · _canonical_
+  - sig: SS-tax circularity per-year bounded fixed-point CRN-safe
+  - SS-tax circularity is a per-year bounded fixed-point, not a one-pass transform: taxable SS depends on provisional income which depends on the gross-up withdrawal which depends on the tax; the overlay iterates provisional→taxable-SS→tax→gross-up to convergence (deterministic, reads zero random draws, CRN-safe); the engine seam pins the convergence rule.
+  - [dedup] architecture.md (overlay contracts / gross-up) is canonical for the fixed-point contract.
+- **`docs/research/engine-validation-and-tax.md#52`** · `build-detail-or-KTD` · → Constants discipline §8 · _pointer_
+  - sig: value citation directionalUntilPinned Unsourced sentinel throws
+  - Constants discipline: every figure is year-keyed in the single canonical table and carries { value, citation, directionalUntilPinned }; a figure the research names but doesn't value is an Unsourced sentinel whose .value throws — never a plausible default; full rules in architecture.md, this doc supplies the numbers.
+  - [dedup] architecture.md §8 is canonical for the constants discipline; this research doc and CLAUDE.md are pointers (this doc supplies the numbers, that doc the discipline).
+- **`docs/research/engine-validation-and-tax.md#54`** · `decision-rationale` · → §10 crypto / security boundary (KDF, worker, recovery) · _reframe_
+  - sig: PBKDF2 600,000 iterations Argon2id non-extractable CryptoKey
+  - Strand 2 architecture decisions (live): WASM + single Web Worker clears 1,000-path MC sub-second (value is determinism+headroom); non-extractable CryptoKey in IndexedDB is the browser-E2E pattern; recovery-phrase + mandatory-export, no provider password-reset for data; skip SharedArrayBuffer+COOP/COEP; KDF PBKDF2-HMAC-SHA256 @600,000 iters baseline, Argon2id-WASM only if WASM ships (salt 16 bytes, AES-GCM-256, extractable:false); Jazz downgraded; separate login recovery from data-decryption recovery.
+  - [dedup] SPLIT by kind: architecture.md §10 (crypto/security boundary) is canonical for the present-tense crypto INVARIANTS (KDF params, non-extractable CryptoKey, AES-GCM-256/salt, the single-worker WASM model); the comparative RATIONALE (Jazz-vs-Evolu downgrade, skip-SAB reasoning, determinism+headroom justification) is decision-record content homed in decisions/crypto-stack, which architecture §10 points to; CLAUDE.md (crypto layer) holds the summary as a pointer.
+  - [reframe] Split the row by kind. INVARIANTS (architecture §10, present-tense boundary facts): KDF PBKDF2-HMAC-SHA256 @600,000 iters baseline (Argon2id-WASM only if WASM ships), AES-GCM-256, salt 16 bytes, extractable:false; non-extractable CryptoKey in IndexedDB; single Web Worker WASM MC (1,000-path sub-second); recovery-phrase + mandatory export (no provider data password-reset); skip SharedArrayBuffer+COOP/COEP; separate login recovery from data-decryption recovery (phrase recovers both, email/SMS login-only). RATIONALE (decisions/crypto-stack record, architecture §10 holds a pointer): why determinism+headroom is the value, why Jazz was downgraded vs Evolu, why SAB+COOP/COEP is skipped, why non-extractable CryptoKey is the browser-E2E pattern. Lift out of the changelog appendix per fossilNote — these are live crypto/architecture decisions.
+  - [fixed:warn] Split invariants (arch §10) from rationale (decisions/crypto-stack pointer) to match kind.
+- **`docs/research/engine-validation-and-tax.md#55`** · `build-detail-or-KTD` · → §10 security boundary / forward landmines (desktop port) · _reframe_
+  - sig: avoid Tauri Stronghold use keyring crate SQLCipher
+  - Future desktop-port landmine (Phase-2, not MVP): if ever ported to Tauri, avoid Tauri Stronghold (upstream IOTA stronghold.rs unmaintained since 2025-04-23); use the Rust keyring crate (e.g. tauri-plugin-keyring) + SQLCipher-encrypted SQLite, and spot-check the crate's maintenance before adopting.
+  - [reframe] Surviving fact (present-tense): a future Tauri desktop port must avoid Tauri Stronghold (upstream unmaintained) and instead use the Rust keyring crate + SQLCipher-encrypted SQLite, with a maintenance spot-check before adopting. Lift out of the changelog appendix per fossilNote — it is a forward landmine.
+- **`docs/research/pre65-healthcare.md#15`** · `definition-term` · → §7.2 Healthcare overlay — ACA-MAGI calculator · _reframe_
+  - sig: ACA-MAGI adds back non-taxable SS
+  - ACA-MAGI = AGI + tax-exempt (muni) interest + non-taxable portion of Social Security + excluded foreign earned income — so the FULL SS benefit effectively counts.
+  - [dedup] ACA-MAGI composition canonical in architecture §7.2 (the calculator); glossary gets a pointer; research §1/§4a/exit-gate-row-4 keep the fact as a verified source-row. SS add-back ties to SS mechanics (architecture §7).
+  - [reframe] Surviving fact: ACA-MAGI = AGI + tax-exempt interest + non-taxable SS + excluded foreign income (full SS effectively counts). Canonical home is the architecture §7.2 ACA-MAGI calculator; glossary points to it.
+- **`docs/research/pre65-healthcare.md#16`** · `invariant` · → §7.2 Healthcare overlay — what moves MAGI (the conversion lever) · _reframe_
+  - sig: qualified Roth distributions are MAGI-invisible
+  - Roth conversion income, traditional withdrawals, cap gains, taxable interest/dividends raise ACA-MAGI dollar-for-dollar; qualified Roth distributions are MAGI-invisible (the lever); brokerage return-of-basis counts only the gain.
+  - [dedup] The MAGI-sensitivity invariant is canonical in architecture §7.2; research §3/§4a/§5 restate it as design context — those become pointers to §7.2.
+  - [reframe] Surviving fact: traditional/conversion income raises ACA-MAGI dollar-for-dollar; qualified Roth distributions are MAGI-invisible and are the engine's lever; return of basis counts only the gain. Canonical in architecture §7.2.
+- **`docs/research/pre65-healthcare.md#18`** · `definition-term` · → §7.2 Healthcare overlay — IRMAA-MAGI calculator (two MAGI calculators) · _reframe_
+  - sig: IRMAA-MAGI ≠ ACA-MAGI, two calculators
+  - IRMAA-MAGI = AGI + tax-exempt interest (no non-taxable-SS add-back); IRMAA-MAGI ≠ ACA-MAGI, so the engine needs TWO separate MAGI calculators.
+  - [dedup] IRMAA-MAGI composition + the two-calculator requirement canonical in architecture §7.2; glossary points to it; research §4a/exit-gate-row-8 keep the verified-fact row.
+  - [reframe] Surviving fact: IRMAA-MAGI = AGI + tax-exempt interest (no SS add-back) and differs from ACA-MAGI, so the engine maintains two separate MAGI calculators. Canonical in architecture §7.2.

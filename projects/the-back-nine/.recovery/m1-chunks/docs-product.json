@@ -1,0 +1,703 @@
+{
+  "doc": "docs/product.md",
+  "oneLineRole": "The single home for the product's why and what: thesis, cardinal rule, product model, locked decisions, lever set, carried landmines, and the full immutable R1–R40 requirements ledger.",
+  "source": "main-inventory",
+  "items": [
+    {
+      "kind": "definition-term",
+      "claim": "The Back Nine is a PERSONAL retirement / tax-strategy co-pilot for one married couple and a handful of friends. NEVER sold. This product.md is the single home for the why and the what: thesis, product model, locked decisions, lever set, carried landmines, and the full R1–R40 requirements ledger.",
+      "sourceSection": "Header / intro (lines 10-12)",
+      "mustSurvive": true,
+      "duplicatedIn": "CLAUDE.md (project), docs/README.md, docs/roadmap.md",
+      "fossilNote": ""
+    },
+    {
+      "kind": "decision-rationale",
+      "claim": "Precedence/charter scar retired: the old 'charter > requirements > roadmap' precedence chain (a scar from the commercial-to-personal pivot) has been RETIRED. product.md and docs/roadmap.md carry the truth now. When personal, regulatory guardrails relaxed to wording and the load transferred to honesty + engine validation, which got STRICTER.",
+      "sourceSection": "A note on history (line 14)",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/roadmap.md, CLAUDE.md",
+      "fossilNote": ""
+    },
+    {
+      "kind": "invariant",
+      "claim": "Thesis (3 sentences): (1) Tell me where I stand — 'your essentials are safe in 10 of 10 futures; your full lifestyle holds in 7' (the spine, the first magic moment). (2) Then 'and here's what we'd do about it' — a recommended, confidence-graded strategy (sequence withdrawals + convert) that funds your budget the tax-smartest way, full reasoning one tap down. (3) You stay the pilot: safety is the default floor, but you pick the goal above it (leave more · pay less tax · live bigger now), and every recommendation wears its own hedge on the headline.",
+      "sourceSection": "§1 What this is (lines 18-22)",
+      "mustSurvive": true,
+      "duplicatedIn": "CLAUDE.md, docs/roadmap.md",
+      "fossilNote": ""
+    },
+    {
+      "kind": "invariant",
+      "claim": "THE CARDINAL RULE: Calm-but-wrong is the cardinal sin, and the bar RISES for a recommender — a wrong recommended strategy costs real dollars. 'It's just for friends' must NEVER soften validation: friends risk identical real money with LESS protection and trust the tool MORE. The removal of the regulatory net is a LOAD TRANSFER onto correctness + confidence-grading, never a loosening. Not a tone preference — it is the governing constraint on every engine decision, every disclosure, and the voice itself. A confidently-stated wrong strategy is worse than no tool at all.",
+      "sourceSection": "§2 The cardinal rule (lines 26-28); also R25 (line 138)",
+      "mustSurvive": true,
+      "duplicatedIn": "CLAUDE.md (project), R25, docs/roadmap.md",
+      "fossilNote": ""
+    },
+    {
+      "kind": "invariant",
+      "claim": "Product model: spine answers ONE question, then SECOND BEAT proposes what to do about it, full reasoning one tap down. Safety is the default floor; above it, you pick the goal. Complexity is disclosed progressively; that restraint IS the experience. Causal chain: face (#1) ← engine (#2) ← recommendation (#3) — the question is the face; the longevity+tax engine is the only thing that can answer it; the solver proposes the strategy that improves the answer. Same principle for input and output: answer first, recommendation second, precision/reasoning on demand. The recommendation NEVER contradicts the spine answer — they speak the same metric (R21).",
+      "sourceSection": "§3 The product model (lines 32, 55)",
+      "mustSurvive": true,
+      "duplicatedIn": "R10, R21, docs/roadmap.md",
+      "fossilNote": ""
+    },
+    {
+      "kind": "requirement",
+      "claim": "Mermaid product-model flow: Question(#1) 'Can we retire, and how do we do it best?' → Answer (plain-language confidence statement 'Your essentials are safe in 10 of 10 futures; your full lifestyle holds in 7') → Recommendation(#3) second beat 'and here's what we'd do about it' confidence-graded strategy. One-tap-down branches: D1 'Why this beat the runner-up (comparative reasoning + every assumption)'; D2 'Tune/override · pick your goal (leave more · pay less tax · live bigger now)'. Answer === Engine(#2) 'a distribution of futures, uncertainty is first-class'; Recommendation === Solver 'searches sequencing × conversion over the SAME futures (CRN)'; Solver === Engine.",
+      "sourceSection": "§3 Mermaid diagram (lines 34-53)",
+      "mustSurvive": true,
+      "duplicatedIn": "",
+      "fossilNote": ""
+    },
+    {
+      "kind": "invariant",
+      "claim": "The state-adaptive first answer (R29): the magic moment ADAPTS to user state — ONE intake flow, only the LEAD answer changes. A NOT-YET-RETIRED household leads with the fuck-off date ('when is work optional?') as TWO confidence-graded dates (floor + lifestyle, R27/R28), computed by sweeping the household work-stop date-offset over the SAME confidence engine. An ALREADY-RETIRED household keeps the calm spine confidence statement as its lead, unchanged. Same calm voice (R11), one intake flow for both states (R35) — never a second intake.",
+      "sourceSection": "§3 The state-adaptive first answer (lines 57-62)",
+      "mustSurvive": true,
+      "duplicatedIn": "CLAUDE.md, R29, R35, docs/roadmap.md",
+      "fossilNote": ""
+    },
+    {
+      "kind": "decision-rationale",
+      "claim": "How the thesis evolved (carries an as-built TRUTH): v2 thesis was decumulation-only (started at a given retirement-onset balance and drew down). While scoping the HSA bucket, verified against source that the engine modeled ZERO contributions to any bucket — which would understate a still-working household's nest egg (calm-but-wrong in the PESSIMISTIC direction). The 2026-06-08 expansion (R26–R39) added the pre-retirement accumulation phase and reframed the accumulation-side magic moment as the fuck-off date — NOT a new engine, the existing confidence engine swept over the household work-stop date-offset. Accumulation is a BOUNDED near-retirement on-ramp serving the decumulation strategist, NEVER a FIRE calculator; v1 PROJECTS the user's stated savings plan, does not optimize it. The decumulation strategist remains the center of gravity.",
+      "sourceSection": "§3 How the thesis evolved (line 64)",
+      "mustSurvive": true,
+      "duplicatedIn": "R30, R32, scope boundaries, docs/roadmap.md",
+      "fossilNote": ""
+    },
+    {
+      "kind": "decision-rationale",
+      "claim": "D1 — What does 'best' mean? LEXICOGRAPHIC. Tier 1 = never drop below the survival floor (essentials always covered — the spine's voice, honors R2/Kitces). Tier 2 = a USER-CHOSEN goal among the surplus: leave more · pay less tax · live bigger now. The objective metric is the SAME quantity as the headline so a recommendation can never contradict the magic moment.",
+      "sourceSection": "§4 Locked decisions, D1 (line 70)",
+      "mustSurvive": true,
+      "duplicatedIn": "R21, carried landmines, docs/roadmap.md",
+      "fossilNote": ""
+    },
+    {
+      "kind": "decision-rationale",
+      "claim": "D2 — Recommend-first or -second? RECOMMEND-SECOND. Spine answer stays the first magic moment; the recommendation is the immediate next beat, math one tap down (depth-on-demand). Protects the calm on-ramp + keeps Phase 2 reusable. A deliberate re-reading of 'recommend-first', ratified here.",
+      "sourceSection": "§4 Locked decisions, D2 (line 71)",
+      "mustSurvive": true,
+      "duplicatedIn": "R10, docs/roadmap.md",
+      "fossilNote": ""
+    },
+    {
+      "kind": "decision-rationale",
+      "claim": "D3 — Phase shape? GROW TO 4 PHASES: Foundation → First Answer → Controls (manual sequencing + Roth, a shippable cold-read milestone) → Solver & Recommendation.",
+      "sourceSection": "§4 Locked decisions, D3 (line 72)",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/roadmap.md (the four acts)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "decision-rationale",
+      "claim": "D4 — Solver search space (MVP)? NAMED DRAWDOWN POLICIES × A CONVERSION GRID (proportional / taxable-first / pre-tax-first / bracket-fill), NOT full continuous optimization. Bounds compute (TS stays viable, WASM stays a fast-follow), keeps the comparative story legible, shrinks optimizer's-curse exposure.",
+      "sourceSection": "§4 Locked decisions, D4 (line 73)",
+      "mustSurvive": true,
+      "duplicatedIn": "scope boundaries, docs/roadmap.md",
+      "fossilNote": ""
+    },
+    {
+      "kind": "decision-rationale",
+      "claim": "D5 — Confidence + curse defense? HELD-OUT REPORTING SEED (select on seed-set A, grade on B) + an OPTIMALITY ORACLE BUILT *BEFORE* THE SOLVER. Non-negotiable — this is the raised honesty bar made concrete.",
+      "sourceSection": "§4 Locked decisions, D5 (line 74)",
+      "mustSurvive": true,
+      "duplicatedIn": "carried landmines, success criteria (Correctness test), docs/roadmap.md, docs/architecture.md",
+      "fossilNote": ""
+    },
+    {
+      "kind": "decision-rationale",
+      "claim": "D6 — Tax scope? ACA-PTC (pre-65) and IRMAA (post-65) come IN — they are income-dependent, so a sequencing/conversion change moves them, and an omitted cliff INVERTS which strategy wins (not just its size). NIIT / state stay OUT-but-disclosed. Falsifiable line: IN iff sequencing or conversion can move it.",
+      "sourceSection": "§4 Locked decisions, D6 (line 75)",
+      "mustSurvive": true,
+      "duplicatedIn": "R24, scope boundaries (tax IN/OUT line), docs/architecture.md",
+      "fossilNote": ""
+    },
+    {
+      "kind": "decision-rationale",
+      "claim": "Regulatory frame (locked decision row): RELAXES TO WORDING. The reg guardrails (no-verdict, no-optimizer, categorical-only triggers, attorney-gate, 'we can't see your money' CLAIM) drop or relax. The load transfers to honesty + validation, which get STRICTER. 'It's just for friends' must NEVER soften validation.",
+      "sourceSection": "§4 Locked decisions, Regulatory frame row (line 76)",
+      "mustSurvive": true,
+      "duplicatedIn": "R12-R18, R25, §8 changelog, docs/roadmap.md",
+      "fossilNote": ""
+    },
+    {
+      "kind": "scope-boundary",
+      "claim": "Lever set — MVP solver-optimized (objectively right answer once goal fixed): (1) Withdrawal sequencing — which bucket funds each year's net withdrawal; (2) Roth conversion — amount + years.",
+      "sourceSection": "§5 The lever set (lines 80-82)",
+      "mustSurvive": true,
+      "duplicatedIn": "R9, docs/roadmap.md",
+      "fossilNote": ""
+    },
+    {
+      "kind": "scope-boundary",
+      "claim": "Lever set — MVP user-set (no 'right' answer; a tool must never RECOMMEND a lifestyle — it shows honest consequences): (1) The budget — itemized, with TIME-BOXED line items (travel runs yrs 1–20 then stops; healthcare gap runs retirement→65). Essentials vs discretionary. (2) The goal — the Tier-2 pick (leave more / pay less tax / live bigger now), including a GO-GO-YEARS spending shape.",
+      "sourceSection": "§5 The lever set (lines 84-86)",
+      "mustSurvive": true,
+      "duplicatedIn": "R20, R21, docs/roadmap.md",
+      "fossilNote": ""
+    },
+    {
+      "kind": "scope-boundary",
+      "claim": "Chapter two (named, deferred levers): SS-claiming-age (heavy, solver-optimizable, big for survivor benefit); a full CONTINUOUS optimizer; a 'die with zero' spend-down solver (needs a disclosed life-value model); ASSET-LOCATION (modelable later as a DETERMINISTIC per-bucket tilt on the one shared draw — capability without breaking CRN); CONTRIBUTION-STRATEGY OPTIMIZATION (traditional-vs-Roth allocation to pull the date in — deferred-for-sequencing, not off-thesis; R32).",
+      "sourceSection": "§5 Chapter two (line 88)",
+      "mustSurvive": true,
+      "duplicatedIn": "R32, scope boundaries, docs/roadmap.md",
+      "fossilNote": ""
+    },
+    {
+      "kind": "lesson",
+      "claim": "Carried landmine: Objective ≡ headline metric, or the product recommends a move that worsens its own hero number. (D1 lexicographic resolves it.) Watch the R2/Kitces 'never maximize' tension — the floor-first framing is the reconciliation.",
+      "sourceSection": "§6 Carried landmines (line 94)",
+      "mustSurvive": true,
+      "duplicatedIn": "D1, R21, docs/roadmap.md, docs/architecture.md",
+      "fossilNote": ""
+    },
+    {
+      "kind": "lesson",
+      "claim": "Carried landmine: Optimizer's curse rendered as confidence — argmax over many candidates on one seed overfits that seed's noise. Defense: held-out seed + optimality oracle before the solver. Compounded by directional-until-pinned fixtures deciding the near-ties.",
+      "sourceSection": "§6 Carried landmines (line 95)",
+      "mustSurvive": true,
+      "duplicatedIn": "D5, docs/architecture.md, docs/roadmap.md",
+      "fossilNote": ""
+    },
+    {
+      "kind": "lesson",
+      "claim": "Carried landmine: A disclosed omission INVERTS a ranking (not just blunts a delta) → why ACA/IRMAA come IN (D6).",
+      "sourceSection": "§6 Carried landmines (line 96)",
+      "mustSurvive": true,
+      "duplicatedIn": "D6, R24",
+      "fossilNote": ""
+    },
+    {
+      "kind": "lesson",
+      "claim": "Carried landmine: A stale saved recommendation is a real, executed action — Unit 9's 're-present under saved vintage' rule may need to INVERT to re-solve under current fixtures for a recommendation; staleness must read 'the action we recommended may no longer be advised,' NOT 'your number drifted.'",
+      "sourceSection": "§6 Carried landmines (line 97)",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/roadmap.md (Unit 9), docs/architecture.md",
+      "fossilNote": ""
+    },
+    {
+      "kind": "build-detail-or-KTD",
+      "claim": "Carried landmine: 'Require the hedge on the headline' is a NEW copyGuard lint shape (a positive/REQUIRE assertion, not the current ban-list) — build it mechanically or hedge-burial drifts in silently.",
+      "sourceSection": "§6 Carried landmines (line 98); also R12, R22",
+      "mustSurvive": true,
+      "duplicatedIn": "R12, R22, docs/architecture.md (copyGuard)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "lesson",
+      "claim": "Carried landmine: The 10/10 clamp eats the solver's signal for over-funded households — when survival is a given, honestly SWITCH the headline to the tax/wealth/lifestyle metric ('you're safe either way; this keeps more from the IRS'). The lexicographic Tier-2 IS this pivot.",
+      "sourceSection": "§6 Carried landmines (line 99)",
+      "mustSurvive": true,
+      "duplicatedIn": "D1, R21, docs/roadmap.md",
+      "fossilNote": ""
+    },
+    {
+      "kind": "scope-boundary",
+      "claim": "Carried landmine: Spending/lifestyle is NEVER solver-recommended — only user-set with honest consequences. The solver optimizes FUNDING, not how you live.",
+      "sourceSection": "§6 Carried landmines (line 100)",
+      "mustSurvive": true,
+      "duplicatedIn": "R20, R21, scope boundaries",
+      "fossilNote": ""
+    },
+    {
+      "kind": "requirement",
+      "claim": "R1. The product answers ONE primary question — 'Can we retire, and how do we do it best?' — as its central, first-class surface. Everything else is subordinate to it.",
+      "sourceSection": "§7 Ledger — Confidence Spine (line 107)",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/roadmap.md",
+      "fossilNote": ""
+    },
+    {
+      "kind": "requirement",
+      "claim": "R2. The answer is a PLAIN-LANGUAGE confidence statement that leads with the verdict in human terms, framed for the household and honest about the survivor case. It SEPARATES survival from lifestyle where the budget supports it ('essentials safe in 10 of 10; full lifestyle holds in 7 — in the other 3 you'd trim discretionary, not go hungry'). Borderline/off-track answers use Kitces's 'probability of adjustment' framing — NEVER 'failure' — expressed as the dollar move that keeps the plan safe. No histograms, no bare percentages-as-jargon, no dashboard on the primary surface. Meaning must NEVER depend on color alone.",
+      "sourceSection": "§7 Ledger — Confidence Spine (line 108)",
+      "mustSurvive": true,
+      "duplicatedIn": "back-nine-design skill (color-blind), docs/roadmap.md (U7)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "requirement",
+      "claim": "R3. The engine models a DISTRIBUTION of possible futures (uncertainty is a primary input, not bolted on), not a single deterministic projection. The confidence statement is the humanized reading of that distribution.",
+      "sourceSection": "§7 Ledger — Confidence Spine (line 109)",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/architecture.md, docs/roadmap.md",
+      "fossilNote": ""
+    },
+    {
+      "kind": "requirement",
+      "claim": "R4. After the verdict, all supporting detail — the range, the assumptions, the math, and the recommendation's reasoning — is reachable ON DEMAND but NEVER shown unsolicited on the first surface.",
+      "sourceSection": "§7 Ledger — Confidence Spine (line 110)",
+      "mustSurvive": true,
+      "duplicatedIn": "R7, R10, R23, docs/roadmap.md",
+      "fossilNote": ""
+    },
+    {
+      "kind": "requirement",
+      "claim": "R5. First contact is a GUIDED, ONE-QUESTION-AT-A-TIME intake (calm, advisor-style). The account-level guided setup (R35) is the on-ramp for both user states, the answer surfacing and sharpening during the flow; the itemized budget (R20) is the DEEPENING, not the on-ramp — the calm first answer is never gated behind a full budget. Never a wall of forms.",
+      "sourceSection": "§7 Ledger — On-Ramp (line 113)",
+      "mustSurvive": true,
+      "duplicatedIn": "R35, R20, success criteria, docs/roadmap.md (U5)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "requirement",
+      "claim": "R6. A POWER-USER ESCAPE HATCH lets a user set any assumption precisely at any point, without walking the guided path.",
+      "sourceSection": "§7 Ledger — On-Ramp (line 114)",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/roadmap.md",
+      "fossilNote": ""
+    },
+    {
+      "kind": "requirement",
+      "claim": "R7. EVERY assumption the flow makes on the user's behalf is visible and editable on demand — and this gains weight under recommend-second: a recommended strategy must expose its inputs AND its reasoning for the user to trust and approve it.",
+      "sourceSection": "§7 Ledger — On-Ramp (line 115)",
+      "mustSurvive": true,
+      "duplicatedIn": "R4, R23, docs/roadmap.md",
+      "fossilNote": ""
+    },
+    {
+      "kind": "requirement",
+      "claim": "R8. INPUT MIRRORS OUTPUT: the user reaches a caveated answer quickly, then SHARPENS. Each piece of added precision SHARPENS the confidence band — it NARROWS on added precision and SHIFTS HONESTLY on a corrected value (it does not only ever narrow). Refinement is rewarding, never punished for honesty.",
+      "sourceSection": "§7 Ledger — On-Ramp (line 116)",
+      "mustSurvive": true,
+      "duplicatedIn": "back-nine-design (confidence band honesty), docs/roadmap.md",
+      "fossilNote": ""
+    },
+    {
+      "kind": "requirement",
+      "claim": "R9. The product PROPOSES a recommended strategy over TWO coupled, solver-optimized controls — withdrawal sequencing (which account funds each year's spending) and Roth conversion (amount + years) — to fund the budget the tax-smartest way. (Supersedes v1 'exactly one Roth lever.' Sequencing is the more universal control; the survivor's tax cliff remains the emotional headline story.)",
+      "sourceSection": "§7 Ledger — Strategy Engine (line 119)",
+      "mustSurvive": true,
+      "duplicatedIn": "§5 lever set, §8 changelog, docs/roadmap.md",
+      "fossilNote": ""
+    },
+    {
+      "kind": "requirement",
+      "claim": "R10. RECOMMEND-SECOND flow: (a) the spine confidence answer FIRST (the magic moment, unchanged); (b) THEN 'here's what we'd do about it' — a proposed, confidence-graded strategy; (c) the COMPARATIVE reasoning one tap down; (d) the user TUNES / overrides / re-picks the goal, BOTH futures updating. (Supersedes v1's 'surface → two futures → tune'; agency flips from user-pulls-blind to system-proposes / user-approves.)",
+      "sourceSection": "§7 Ledger — Strategy Engine (line 120)",
+      "mustSurvive": true,
+      "duplicatedIn": "D2, §8 changelog, R28, docs/roadmap.md",
+      "fossilNote": ""
+    },
+    {
+      "kind": "requirement",
+      "claim": "R11. The recommendation is CALM and invited into the second beat — NEVER a nagging alert, badge, or engagement bait. Calm is never traded for engagement (the consumability wedge survives the posture change).",
+      "sourceSection": "§7 Ledger — Strategy Engine (line 121)",
+      "mustSurvive": true,
+      "duplicatedIn": "R29, docs/roadmap.md",
+      "fossilNote": ""
+    },
+    {
+      "kind": "requirement",
+      "claim": "R20. Spending is an ITEMIZED, categorized budget the user builds: essentials vs discretionary, with TIME-BOXED line items (e.g. travel for the first N years then stops; the pre-65 healthcare gap from retirement age to 65). Structurally, essentials ARE the safety floor; discretionary IS the surplus the strategy optimizes the funding of (R21). The user expresses what they want; the solver finds the tax-smart way to FUND it. Spending shape (front-loaded 'go-go years' vs level) is USER-SET, never solver-recommended — the tool shows honest consequences, it does not tell you how to live.",
+      "sourceSection": "§7 Ledger — The Budget (line 124)",
+      "mustSurvive": true,
+      "duplicatedIn": "§5 lever set, R21, scope boundaries, docs/roadmap.md",
+      "fossilNote": ""
+    },
+    {
+      "kind": "requirement",
+      "claim": "R21. The objective is LEXICOGRAPHIC. Tier 1 (always, the floor): never drop below the survival floor — essentials covered across the futures, spoken in the spine's voice. Tier 2 (the user chooses): what to do with the surplus — leave more · pay less tax · live bigger now. The objective metric is the SAME quantity as the headline metric, so a recommendation can never worsen the hero number it just showed. When survival is a given (over-funded household), the headline honestly PIVOTS to the chosen surplus metric.",
+      "sourceSection": "§7 Ledger — objective & confidence grading (line 127)",
+      "mustSurvive": true,
+      "duplicatedIn": "D1, carried landmines (10/10 clamp), §5, docs/architecture.md, docs/roadmap.md",
+      "fossilNote": ""
+    },
+    {
+      "kind": "requirement",
+      "claim": "R22. Every recommendation GRADES its own confidence — robust-across-all-futures ('just do it') vs coin-flip ('here's what it hinges on') — and THE HEDGE RIDES ON THE HEADLINE, never buried in tapped-away math. Depth-on-demand must not invert into certainty-on-top / caveats-hidden-below.",
+      "sourceSection": "§7 Ledger — objective & confidence grading (line 128)",
+      "mustSurvive": true,
+      "duplicatedIn": "R12 (copyGuard hedge lint), carried landmines, success criteria (Honesty test), docs/roadmap.md",
+      "fossilNote": ""
+    },
+    {
+      "kind": "requirement",
+      "claim": "R23. The recommendation's depth is COMPARATIVE — 'why this strategy beat the runner-up,' retaining and surfacing the runner-up — NOT a formula dump.",
+      "sourceSection": "§7 Ledger — objective & confidence grading (line 129)",
+      "mustSurvive": true,
+      "duplicatedIn": "R10, R7, docs/roadmap.md",
+      "fossilNote": ""
+    },
+    {
+      "kind": "requirement",
+      "claim": "R24. The model accounts for INCOME-DEPENDENT healthcare across the Medicare line: PRE-65 ACA marketplace cost (a Premium Tax Credit that scales with MAGI — 2026 base case = the 400% FPL cliff is BACK; enhanced subsidies expired 12/31/2025 and are unre-enacted as of 2026-06-04; expose 'enhanced' as a scenario toggle and RE-VERIFY at every build); POST-65 IRMAA (a Medicare surcharge on a 2-year MAGI lookback, a DIFFERENT MAGI definition, hard per-person cliffs); and HSA as a fourth account bucket (covers out-of-pocket + 65+ Medicare premiums tax-free, NOT ACA premiums; Medicare enrollment ends HSA contributions). Healthcare COUPLES into the strategy objective — a conversion that torches an ACA subsidy or trips an IRMAA cliff must be SEEN, not silently optimized over. Numbers live in docs/research/engine-validation-and-tax.md + docs/research/pre65-healthcare.md (directional until pinned).",
+      "sourceSection": "§7 Ledger — Healthcare (line 132)",
+      "mustSurvive": true,
+      "duplicatedIn": "D6, R33, R38, CLAUDE.md (verify:aca gate), docs/architecture.md",
+      "fossilNote": ""
+    },
+    {
+      "kind": "status-as-built",
+      "claim": "ACA legislative live status: 2026 base case = the 400% FPL cliff is BACK; enhanced subsidies EXPIRED 12/31/2025 and are UNRE-ENACTED as of 2026-06-04. Expose 'enhanced' as a scenario toggle and re-verify at every build (verify:aca gate / reVerifyEveryBuild / aca-last-verified.json).",
+      "sourceSection": "§7 Ledger — R24 (line 132)",
+      "mustSurvive": true,
+      "duplicatedIn": "CLAUDE.md, docs/architecture.md, docs/research/pre65-healthcare.md",
+      "fossilNote": ""
+    },
+    {
+      "kind": "requirement",
+      "claim": "R12. The product DOES make recommendations now — but EVERY recommendation is probabilistically framed and confidence-graded. Certainty language stays banned ('guaranteed / optimal / locks in / you will save'). String-level enforcement FLIPS from 'ban the imperative' to 'require the hedge on the headline' (a positive/require lint, not a ban-list — see the copyGuard note in docs/architecture.md). (Supersedes v1's 'never issues individualized directives.')",
+      "sourceSection": "§7 Ledger — Voice & Honesty (line 135)",
+      "mustSurvive": true,
+      "duplicatedIn": "R22, carried landmines, §8 changelog, docs/architecture.md (copyGuard)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "requirement",
+      "claim": "R13. An OPTIONAL in-product honest-limits note ('this is a model — validate big, irreversible moves with a pro') — kept on HONESTY grounds for friend-users, NO LONGER a regulatory Terms requirement. No Terms/License, no RIA entity (commercial artifacts, removed).",
+      "sourceSection": "§7 Ledger — Voice & Honesty (line 136)",
+      "mustSurvive": true,
+      "duplicatedIn": "§8 changelog, regulatory frame row",
+      "fossilNote": ""
+    },
+    {
+      "kind": "requirement",
+      "claim": "R14. Scary, complex truths are stated in PLAIN HUMAN LANGUAGE without being dumbed down ('9 of 10 versions of your future,' not '85% Monte Carlo success').",
+      "sourceSection": "§7 Ledger — Voice & Honesty (line 137)",
+      "mustSurvive": true,
+      "duplicatedIn": "R2, back-nine-design, docs/roadmap.md",
+      "fossilNote": ""
+    },
+    {
+      "kind": "requirement",
+      "claim": "R25 (the cardinal honesty requirement). Calm-but-wrong is the cardinal sin, and the bar RISES for a recommender — a wrong recommended strategy costs real dollars. 'It's just for friends' must NEVER soften validation: friends risk identical real money with LESS protection and trust the tool MORE. The removal of the regulatory net is a LOAD TRANSFER onto correctness + confidence-grading, never a loosening.",
+      "sourceSection": "§7 Ledger — Voice & Honesty (line 138)",
+      "mustSurvive": true,
+      "duplicatedIn": "§2 cardinal rule, CLAUDE.md, R26/R27/R28 (cite R25)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "requirement",
+      "claim": "R15. No user-facing MARKETING privacy claim is required or made (personal tool, no audience to make it to). The underlying honesty — don't misrepresent what the architecture does — survives.",
+      "sourceSection": "§7 Ledger — Trust & Data Safety (line 141)",
+      "mustSurvive": true,
+      "duplicatedIn": "regulatory frame row, §8 changelog",
+      "fossilNote": ""
+    },
+    {
+      "kind": "requirement",
+      "claim": "R16. The financial picture is ENCRYPTED AT REST and LOCAL ACCESS IS GUARDED (a lock for a shared laptop) — basic hygiene for real financial PII, independent of any marketing claim. The crypto bar may be REASONABLE rather than maximalist: PBKDF2-600k is ACCEPTABLE; the maximalist Argon2id justification is no longer load-bearing.",
+      "sourceSection": "§7 Ledger — Trust & Data Safety (line 142)",
+      "mustSurvive": true,
+      "duplicatedIn": "R17, R39, docs/architecture.md (crypto layer)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "requirement",
+      "claim": "R17. SURVIVOR RECOVERY is load-bearing — the product exists for the survivor case. A client-generated RECOVERY PHRASE + MANDATORY EXPORT and the TWO-PERSON / shared-household recovery posture stay; only the 'trust-building ceremony' framing relaxes.",
+      "sourceSection": "§7 Ledger — Trust & Data Safety (line 143)",
+      "mustSurvive": true,
+      "duplicatedIn": "R18, R39, docs/architecture.md (crypto/recovery)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "requirement",
+      "claim": "R18. The user can EXPORT and back up their own data — for DURABILITY (no single point of total loss); the anti-vendor-lock-in framing is moot for a personal tool.",
+      "sourceSection": "§7 Ledger — Trust & Data Safety (line 144)",
+      "mustSurvive": true,
+      "duplicatedIn": "R17, R39",
+      "fossilNote": ""
+    },
+    {
+      "kind": "requirement",
+      "claim": "R19. Manual-entry inputs are SANITY-CHECKED: impossible/incoherent inputs are caught calmly inline, never producing a silently broken or falsely confident answer.",
+      "sourceSection": "§7 Ledger — Trust & Data Safety (line 145)",
+      "mustSurvive": true,
+      "duplicatedIn": "R40.10 (finiteness-first then range), back-nine-design (intake UX), docs/roadmap.md",
+      "fossilNote": ""
+    },
+    {
+      "kind": "requirement",
+      "claim": "R26. The tool answers 'when is work optional?' — the FUCK-OFF DATE is the product framing, delivered as the two dates of R27 (never a single number). Computed by SWEEPING the household work-stop date-offset Y (years from now) over the existing confidence engine — project accumulation to each candidate offset, decumulate from there, read the confidence — NOT a new engine. The axis is the household date-offset Y because the engine's per-person model cannot express a household age: each STILL-WORKING person's retirementAge becomes currentAge_i + Y; an ALREADY-RETIRED member keeps their entered retirement age VERBATIM (never un-retired into phantom income); an ALL-RETIRED household never enters the sweep — short-circuits to spine-first. The search is NON-MONOTONE-ROBUST: because healthcare turns on at the tested date (R33) and the ACA 400%-FPL cliff is a documented engine discontinuity, a LATER work-stop date is NOT guaranteed safer. So the search EXHAUSTIVELY evaluates every candidate offset across the bounded on-ramp window (≤~11 offsets — cheap) and reports the EARLIEST offset at which a date's condition holds AND KEEPS HOLDING for every later in-window offset, disclosing any non-monotone region — never a monotonicity-assuming bisection that could return a FALSE-EARLIEST date (the calm-but-wrong sin, R25).",
+      "sourceSection": "§7 Ledger — Accumulation/Fuck-Off Date (line 148)",
+      "mustSurvive": true,
+      "duplicatedIn": "R27, R33, R34, CLAUDE.md, docs/architecture.md, docs/roadmap.md",
+      "fossilNote": ""
+    },
+    {
+      "kind": "requirement",
+      "claim": "R27. The answer is TWO dates, from the locked lexicographic objective (R21), both judged at the SAME confidence bar — differing only in WHICH budget: (a) FLOOR date — earliest offset essentials hold across the futures (the literal 'don't HAVE to work' line); (b) LIFESTYLE date — earliest offset the FULL (essentials + discretionary) budget holds at that same confidence bar. The sweep evaluates Y ≥ 0 ONLY, so the engine produces NO evidence about the past: for an over-funded household a floor-confirmed Y == 0 date means 'work-optional AT today' (fully evidenced, every later in-window offset evaluated) — never a claim about when freedom BEGAN. In the degenerate single-total-spend budget the two dates COINCIDE; the itemized budget splits them. floor ≤ lifestyle is an EXPECTED property, NOT an engine assertion — the 100%-FPL PTC eligibility floor can legitimately INVERT it (less spending → lower MAGI → below the floor → PTC = 0 → discontinuously worse cost), which is correct, surprising-but-honest engine output that rides a disclosure.",
+      "sourceSection": "§7 Ledger — Accumulation/Fuck-Off Date (line 149)",
+      "mustSurvive": true,
+      "duplicatedIn": "R21, R26, success criteria, docs/architecture.md, docs/roadmap.md",
+      "fossilNote": ""
+    },
+    {
+      "kind": "requirement",
+      "claim": "R28. Both dates are CONFIDENCE-GRADED, never hard lines. They incorporate accumulation-phase (runway) market uncertainty, so output expresses the date↔confidence tradeoff ('lifestyle-free in ~3 years at 8/10, or year 5 for 9/10'). A single deterministic date is a banned calm-but-wrong simplification (R25). The date is graded under the RECOMMENDED (or user-selected) draw-down strategy and RE-GRADES whenever the user overrides sequencing/conversion (symmetric with R10's both-futures-update) — a date silently assuming a draw-down the user won't follow would itself be calm-but-wrong.",
+      "sourceSection": "§7 Ledger — Accumulation/Fuck-Off Date (line 150)",
+      "mustSurvive": true,
+      "duplicatedIn": "R10, R25, R27, success criteria, docs/roadmap.md",
+      "fossilNote": ""
+    },
+    {
+      "kind": "requirement",
+      "claim": "R29. The framing ADAPTS the magic moment to user state: a not-yet-retired user leads with the date ('you're ~N years out / free today'); the existing spine confidence statement (R2, in its R10 recommend-second position) stays the lead for an already-retired user. Same calm voice (R11), pointed at the date. ('Fuck-off date' is the working/product name; the user-facing readout holds the calm advisor voice — confirm the in-product label at design time.)",
+      "sourceSection": "§7 Ledger — Accumulation/Fuck-Off Date (line 151)",
+      "mustSurvive": true,
+      "duplicatedIn": "§3 state-adaptive, R2, R10, R11, R35, CLAUDE.md, docs/roadmap.md",
+      "fossilNote": ""
+    },
+    {
+      "kind": "requirement",
+      "claim": "The no-date outcome (R25's honesty surface, extended): For a borderline household, every in-window offset can fail the bar. The master records the first-class 'no work-optional date within the ~N-yr window' outcome — never 'never free,' never silently the window-top offset, never a crash — surfaced as a defined answer in the calm voice with the per-offset picture available. Its sibling: a date confirmed only AT THE WINDOW EDGE (zero later offsets of keeps-holding evidence) is reported WITH AN EXPLICIT UNCONFIRMED-TAIL DISCLOSURE — folding it into 'no date' would be pessimistic-false; crowning it silently would be unconfirmed-optimistic. Honesty in both directions; the pessimistic direction is DESIGNED, not accidental.",
+      "sourceSection": "§7 Ledger — Accumulation/Fuck-Off Date (line 152)",
+      "mustSurvive": true,
+      "duplicatedIn": "R25, R26, R27, docs/architecture.md (outcome enum), docs/roadmap.md",
+      "fossilNote": ""
+    },
+    {
+      "kind": "requirement",
+      "claim": "R30. The tool models the PRE-RETIREMENT ACCUMULATION PHASE: from current balances, it projects each account forward through continued contributions + market growth to the work-stop date under test, producing the retirement-onset balance + basis per bucket the existing decumulation engine consumes.",
+      "sourceSection": "§7 Ledger — Accumulation/Fuck-Off Date (line 153)",
+      "mustSurvive": true,
+      "duplicatedIn": "§3 thesis evolution, R31, R34, R35, docs/architecture.md, docs/roadmap.md",
+      "fossilNote": ""
+    },
+    {
+      "kind": "requirement",
+      "claim": "R31. Contributions are PER-ACCOUNT, FLAT IN REAL TERMS, and STOP at the work-stop date under test (stop working → stop contributing). EMPLOYER MATCH on workplace accounts is captured (free money that materially moves the date; match is PRE-TAX EVEN ON A ROTH 401k — the default rule; a Roth employer match is an optional plan feature, deferred). No raise/promotion curve in v1.",
+      "sourceSection": "§7 Ledger — Accumulation/Fuck-Off Date (line 154)",
+      "mustSurvive": true,
+      "duplicatedIn": "R32, R35, scope boundaries, docs/architecture.md, docs/roadmap.md",
+      "fossilNote": ""
+    },
+    {
+      "kind": "requirement",
+      "claim": "R32. v1 PROJECTS the user's stated savings plan; it does NOT optimize accumulation. Solver controls stay DECUMULATION-ONLY (sequencing + conversion). Contribution-strategy optimization (e.g. traditional-vs-Roth allocation to pull the date in) is a FUTURE version. Rationale: a SEQUENCING call — v1 ships the decumulation solver first; the accumulation lever waits its turn. Traditional-vs-Roth contribution allocation is genuinely a TAX optimization the solver could own — so the promotion is deferred-for-sequencing, NOT an off-thesis exclusion. The amount/shape you save stays yours (R20-style); the tax-bucketing of it is solver-eligible.",
+      "sourceSection": "§7 Ledger — Accumulation/Fuck-Off Date (line 155)",
+      "mustSurvive": true,
+      "duplicatedIn": "§3 thesis evolution, §5 chapter two, scope boundaries, docs/roadmap.md",
+      "fossilNote": ""
+    },
+    {
+      "kind": "requirement",
+      "claim": "R33. HEALTHCARE MODELING IS OFF DURING ACCUMULATION (working years = employer plan) and switches ON at the work-stop date under test — each candidate is 'stop earned income here → ACA (pre-65) / IRMAA (post-65) costs begin here.' The engine's healthcare gate is the BIOLOGICAL-65 SPLIT + a per-year premium stream — THERE IS NO RETIREMENT BOUNDARY ANYWHERE IN THE OVERLAY. Healthcare-on-at-the-tested-date is therefore the date-search CONSTRUCTING per-candidate cost streams: premium/SLCSP/out-of-pocket-medical streams zero for working years [0, Y) and the entered age-anchored values from Y; Medicare/IRMAA onset PER-PERSON = max(65th sim-year, work-stop) over the living set; plus a conservatively-high WORKING-YEAR IRMAA-MAGI ADDITIVE OVERRIDE so the 2-year lagged read never finds a falsely-$0 working year. The streams ARE the gate — caller-side work, not an engine knob.",
+      "sourceSection": "§7 Ledger — Accumulation/Fuck-Off Date (line 156)",
+      "mustSurvive": true,
+      "duplicatedIn": "R24, R26, R40.4, docs/architecture.md (healthcare overlay), docs/roadmap.md",
+      "fossilNote": ""
+    },
+    {
+      "kind": "invariant",
+      "claim": "R34. Accumulation INHERITS the engine invariants: accumulation and decumulation SHARE ONE CONTINUOUS ABSOLUTE-YEAR MARKET-DRAW TIMELINE (a single buildDraws stream indexed from currentAge — NEVER a separate pre-phase draw stream), so candidate offsets see BYTE-IDENTICAL year-t returns in overlapping years and the date-search ranks them on IDENTICAL futures (CRN). A separate-stream handoff would silently turn the ranking from signal into luck — the same hazard as the forbidden per-bucket draw. The date's confidence is read off ONE per-path future end-to-end (runway draws THEN decumulation draws on the same path — no averaged-balance handoff), so SEQUENCE-OF-RETURNS RISK in the final working years (a crash on the largest-ever balance) is honestly priced into the date, never smoothed away. NO accumulation-phase income-tax engine (the destination BUCKET carries the tax character — pre-tax / Roth / taxable+basis). An EMPTY accumulation phase (Y == 0) consumes ZERO extra draws and reduces BYTE-IDENTICALLY to today's decumulation-from-initialPortfolio behavior.",
+      "sourceSection": "§7 Ledger — Accumulation/Fuck-Off Date (line 157)",
+      "mustSurvive": true,
+      "duplicatedIn": "CLAUDE.md (single shared draw / CRN), docs/architecture.md (engine invariants), R26, success criteria (byte-identical), docs/roadmap.md",
+      "fossilNote": ""
+    },
+    {
+      "kind": "requirement",
+      "claim": "R35. The first answer comes from a COMPLETE ~5-MINUTE GUIDED, ACCOUNT-LEVEL SETUP — ~5 minutes with account statements and a recent marketplace quote on hand (the honest axis is data AVAILABILITY, not keystrokes): name, DOB, salary, SS estimate + claim age per person; then each ACCOUNT (type: IRA / 401k / brokerage / HSA), its HOLDINGS, current VALUE, cost BASIS (taxable, per account — R37), and ANNUAL CONTRIBUTION + EMPLOYER MATCH. The same data feeds the withdrawal-sequencing strategy, so it is not accumulation-only overhead. This SUPERSEDES the v2 single-total-spend on-ramp for BOTH user states — ONE intake flow (the account data feeds the withdrawal-sequencing strategy that IS the already-retired user's product); only the LEAD answer is state-adaptive (R29), never a second intake. The household retirement-spend figure SURVIVES the supersession as a collected input — what is replaced is the flow SHAPE, not the spend input (it remains the v1 degenerate budget on which R27's two dates coincide, replaced by the itemized budget only at the Controls act). The setup is a SINGLE entry pass — never coarse-then-detailed re-entry; the first answer SURFACES AND SHARPENS during the flow rather than gating behind a final 'calculate.' The PROVISIONAL/FINAL distinction applies to BOTH lead answers: the already-retired route's spine confidence statement renders in the same provisional form between input acceptance and account-set completion (a half-entered portfolio reads falsely off-track — the pessimistic mirror of the date route's trust hazard).",
+      "sourceSection": "§7 Ledger — Accumulation/Fuck-Off Date (line 158)",
+      "mustSurvive": true,
+      "duplicatedIn": "R5, R20, R29, R37, success criteria, §8 changelog, docs/roadmap.md (U5)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "requirement",
+      "claim": "R36. Account VALUES are user-entered; NO LIVE PRICE LOOKUP — consistent with the load-bearing no-runtime-external-fetch architecture (strict CSP connect-src 'self', offline-first PWA, deterministic replay). A holding's ticker/CUSIP is a LABEL + asset-class hint, never a live-price key.",
+      "sourceSection": "§7 Ledger — Accumulation/Fuck-Off Date (line 159)",
+      "mustSurvive": true,
+      "duplicatedIn": "R37, scope boundaries, CLAUDE.md (CSP), docs/architecture.md (CSP/no-fetch)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "requirement",
+      "claim": "R37. Because the engine does NO ASSET-LOCATION (one shared market draw), per-ticker holdings COLLAPSE to a single household stock/bond/cash blend for the math. Ticker entry still earns its keep: auto-derives that blend (no 'guess your allocation' question) and is the 'it sees my real portfolio' trust moment. Taxable cost basis is captured PER TAXABLE ACCOUNT, NOT PER LOT — the engine consumes one aggregate initialTaxableBasis; per-lot is collectible-but-unused precision, deliberately not collected. Tickers map to an asset class via a BUNDLED COMMON-INSTRUMENT TABLE with MANUAL CLASSIFICATION for anything unrecognized (offline-safe).",
+      "sourceSection": "§7 Ledger — Accumulation/Fuck-Off Date (line 160)",
+      "mustSurvive": true,
+      "duplicatedIn": "R35, R36, CLAUDE.md (no asset-location/shared draw), docs/architecture.md, §8 changelog",
+      "fossilNote": ""
+    },
+    {
+      "kind": "requirement",
+      "claim": "R38. (HSA phase boundary.) HSA CONTRIBUTIONS belong to the accumulation phase (R30–R34); HSA SPEND — the MAGI-invisible qualified-spend lever and the post-65 non-qualified laundering rule — stays in DECUMULATION. Each lands in its own phase.",
+      "sourceSection": "§7 Ledger — Accumulation/Fuck-Off Date (line 161)",
+      "mustSurvive": true,
+      "duplicatedIn": "R24 (HSA bucket), R30-R34, docs/architecture.md (HSA overlay), docs/roadmap.md",
+      "fossilNote": ""
+    },
+    {
+      "kind": "requirement",
+      "claim": "R39. (Data safety — inherits the master.) Every R35 field — account/holding/value/basis, salary, DOB, SS estimate + claim age — PLUS the pre-65 ACA cost inputs (SLCSP benchmark + enrolled-plan premium), the IRMAA-MAGI seed, the working-year income figure the conservative IRMAA-MAGI override is built from, the per-person work-status/retirement-stop-age field, and the per-year out-of-pocket-medical stream — is financial PII (health-plan, employment, income disclosures riding the same record) that INHERITS the master's posture unchanged: encrypted-at-rest + guarded local access (R16), survivor recovery (R17), export/backup (R18). The new fields extend the persisted Scenario schema ADDITIVELY (a schemaVersion bump owned by the store's migration ladder) and live ONLY inside the existing encrypted record — never a separate or plaintext holdings store. The R35 field list is NOT the closed PII set; any later-added intake field joins this posture by default.",
+      "sourceSection": "§7 Ledger — Accumulation/Fuck-Off Date (line 162)",
+      "mustSurvive": true,
+      "duplicatedIn": "R16, R17, R18, R35, R40.10, docs/architecture.md (store/migration ladder)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "requirement",
+      "claim": "R40. Model a generic PER-PERSON ONGOING NON-EARNED INCOME STREAM — type ∈ {pension, rental, alimony, annuity, other} — that keeps paying after work stops. The engine today knows only earnedIncomeReal (which STOPS at retirement) and Social Security; it has NO concept of ongoing non-earned income. For a household that has one, that gap is the difference between a defensibly-conservative answer and a confidently-wrong-optimistic one.",
+      "sourceSection": "§7 Ledger — Other income (R40, line 165)",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/plans/features/other-income.md, docs/roadmap.md",
+      "fossilNote": "R40 sits as a separate 'other income' block appended after R39 because it was added later (the most recent expansion). In a kind-organized rewrite its sub-requirements belong with the rest of the ledger."
+    },
+    {
+      "kind": "requirement",
+      "claim": "R40.1 Generic per-person stream; the type seeds defaults only. R40.2 Each stream carries: gross annualRealToday, startAge, optional endAge, a COLA mode ∈ {real-flat, nominal-flat, fixed-pct} (+ colaPct), a taxableFraction ∈ [0,1] (default 1), and a survivorPct ∈ [0,1]. R40.3 Compile each stream to PRE-DEFLATED real-$ per-year vectors; the engine is a dumb consumer; survivor-% is pre-applied as a second variant at compile time.",
+      "sourceSection": "§7 Ledger — R40 sub-requirements (lines 166-168)",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/plans/features/other-income.md, docs/architecture.md",
+      "fossilNote": "Same fossil note as R40 — late-added block."
+    },
+    {
+      "kind": "requirement",
+      "claim": "R40.4 The taxable portion enters ordinary income such that SS-§86 provisional, ACA-MAGI, and IRMAA-MAGI all move CONSISTENTLY in ONE ATOMIC CHANGE, including the already-receiving × working-year IRMAA reconciliation. R40.5 Survivor continuation is realized at the owner's SAMPLED DEATH in the path loop, selecting the pre-weighted survivor variant, LOCKED at the death offset, never ramped. R40.6 Reduce-to-spine BYTE-IDENTITY: a household with no streams is byte-identical (same seed) to the current Trinity/Bengen spine.",
+      "sourceSection": "§7 Ledger — R40 sub-requirements (lines 169-171)",
+      "mustSurvive": true,
+      "duplicatedIn": "R33 (IRMAA override), R34 (reduce-to-spine), docs/plans/features/other-income.md, docs/architecture.md",
+      "fossilNote": "Same fossil note as R40 — late-added block."
+    },
+    {
+      "kind": "requirement",
+      "claim": "R40.7 Intake is OPT-IN off the 5-minute guided path; the NO-SAFE-DEFAULT FIELDS surface on the guided path regardless of the collapsed advanced tier: the SURVIVOR-% PROMPT for any continuing stream (pension/annuity/rental/other — alimony is survivorPct = 0 BY LAW) and the ALIMONY POST-2018 AGREEMENT-DATE. R40.8 Ship the 'other' catch-all stream alongside the four named types. R40.9 Add an R40 requirements entry amending the locked R1–R39 contract.",
+      "sourceSection": "§7 Ledger — R40 sub-requirements (lines 172-174)",
+      "mustSurvive": true,
+      "duplicatedIn": "R35 (guided path), docs/plans/features/other-income.md",
+      "fossilNote": "Same fossil note as R40 — late-added block."
+    },
+    {
+      "kind": "requirement",
+      "claim": "R40.10 All correctness goldens are EXTERNALLY DERIVED; intake/restore validation is FINITENESS-FIRST then range; engine-consumed figures obey the constants discipline; user-facing DISPLAY-HINT figures live in referenceData.ts, NEVER @engine/constants.",
+      "sourceSection": "§7 Ledger — R40 sub-requirements (line 175)",
+      "mustSurvive": true,
+      "duplicatedIn": "R19, CLAUDE.md (constants discipline, externally-derived fixtures DND 012), docs/architecture.md",
+      "fossilNote": "Same fossil note as R40 — late-added block."
+    },
+    {
+      "kind": "decision-rationale",
+      "claim": "R40 test-drivers are real friends: one with RENTAL income; one whose wife draws a TEACHER'S PENSION — the single most dangerous number in the app (whether it SURVIVES her death and at what %, and whether it KEEPS UP WITH INFLATION, is the whole widow's picture). Every survivor / COLA / basis simplification ROUNDS CONSERVATIVE OR DISCLOSES ITS DIRECTION — an undisclosed optimistic simplification is still the sin. Plan: docs/plans/features/other-income.md.",
+      "sourceSection": "§7 Ledger — R40 (line 177)",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/plans/features/other-income.md, scope boundaries (R40 income-side)",
+      "fossilNote": "Same fossil note as R40 — late-added block."
+    },
+    {
+      "kind": "requirement",
+      "claim": "Success criterion: a user reaches their FIRST ANSWER in one short sitting from the complete ~5-minute account-level setup, the answer SURFACING AND SHARPENING during the flow rather than gating behind a final 'calculate' — never a wall of forms.",
+      "sourceSection": "§7 Success criteria (line 181)",
+      "mustSurvive": true,
+      "duplicatedIn": "R5, R35, docs/roadmap.md (validation gates)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "requirement",
+      "claim": "Success criterion: a not-yet-retired user reaches their TWO confidence-graded fuck-off dates in that same sitting; the dates honestly express the DATE↔CONFIDENCE tradeoff (never a single hard date) — verifiable against the R25 honesty bar.",
+      "sourceSection": "§7 Success criteria (line 182)",
+      "mustSurvive": true,
+      "duplicatedIn": "R27, R28, docs/roadmap.md",
+      "fossilNote": ""
+    },
+    {
+      "kind": "requirement",
+      "claim": "Success criterion: with NO RUNWAY (Y == 0), the tool reproduces today's decumulation answer BYTE-IDENTICALLY — the reduce-to-spine analog for the new phase.",
+      "sourceSection": "§7 Success criteria (line 183)",
+      "mustSurvive": true,
+      "duplicatedIn": "R34, R40.6, CLAUDE.md (reduce-to-spine), docs/architecture.md",
+      "fossilNote": ""
+    },
+    {
+      "kind": "requirement",
+      "claim": "Success criterion (the monotonicity oracle, SCOPED): the fuck-off date moves in the INTUITIVELY-CORRECT direction as inputs change (more saved / higher contributions / lower spend → earlier date) — SCOPED: a discontinuity-free sanity oracle, NOT a universal. It holds ONLY with healthcare OFF, or with MAGI pinned away from ALL THREE modeled discontinuities at every candidate offset (the 400%-FPL cliff, every IRMAA tier boundary, AND the 100%-FPL eligibility floor). A cliff-straddling more-saved → equal-or-later date is CORRECT engine output — NEVER to be 'fixed' by forcing monotonicity.",
+      "sourceSection": "§7 Success criteria (line 184)",
+      "mustSurvive": true,
+      "duplicatedIn": "R26 (non-monotone-robust), R27, docs/architecture.md, docs/roadmap.md",
+      "fossilNote": ""
+    },
+    {
+      "kind": "requirement",
+      "claim": "Success criteria (calm/trust/differentiation tests): The primary surface shows ONE answer, then ONE recommendation — not a dashboard (Calm test). Every assumption AND the recommendation's reasoning can be reached within ONE interaction from the answer (Trust test). A user watches a recommended strategy VISIBLY MOVE the answer ('6 of 10 → 8 of 10') AND sees it correctly confidence-graded (Differentiation test).",
+      "sourceSection": "§7 Success criteria (lines 185-187)",
+      "mustSurvive": true,
+      "duplicatedIn": "R2, R4, R7, R22, R23, docs/roadmap.md",
+      "fossilNote": ""
+    },
+    {
+      "kind": "requirement",
+      "claim": "Success criterion (Correctness — two-tier, R25): the engine's NUMBER is right (validated vs Trinity/Bengen golden cases) AND the solver's RECOMMENDATION is right — validated against an OPTIMALITY/RANKING ORACLE, RANKING-STABILITY UNDER CRN, and GRADE CALIBRATION. A calm-but-wrong recommendation fails the bar worse than no tool.",
+      "sourceSection": "§7 Success criteria (line 188)",
+      "mustSurvive": true,
+      "duplicatedIn": "D5, R25, CLAUDE.md (engine validation), docs/architecture.md, docs/roadmap.md",
+      "fossilNote": ""
+    },
+    {
+      "kind": "requirement",
+      "claim": "Success criterion (N=1 cold-read, Briggsy — THE BAR): across the survivor outcome states + the survivor readout, an on-track answer lands as relief and a borderline answer as honest-and-calm; AND the recommendation feels EARNED (not overconfident), the 'coin-flip' grade feels honest, and the comparative reasoning lands as transparency, not a bait-and-switch.",
+      "sourceSection": "§7 Success criteria (line 189)",
+      "mustSurvive": true,
+      "duplicatedIn": "CLAUDE.md (N=1 cold-read judges tone), docs/roadmap.md",
+      "fossilNote": ""
+    },
+    {
+      "kind": "requirement",
+      "claim": "Success criterion (Honesty test): EVERY recommendation carries its probabilistic hedge ON THE HEADLINE.",
+      "sourceSection": "§7 Success criteria (line 190)",
+      "mustSurvive": true,
+      "duplicatedIn": "R12, R22, carried landmines, docs/architecture.md (copyGuard)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "scope-boundary",
+      "claim": "Scope boundary: NO account aggregation / Plaid in MVP. Manual-first; revisit only when 'crazily hardened.'",
+      "sourceSection": "§7 Scope boundaries (line 194)",
+      "mustSurvive": true,
+      "duplicatedIn": "R36, docs/roadmap.md",
+      "fossilNote": ""
+    },
+    {
+      "kind": "scope-boundary",
+      "claim": "Scope boundary: NO budgeting / transaction tracking / spend categorization as a tracker. The budget builder (R20) is forward-looking PLANNING input, not back-looking expense tracking.",
+      "sourceSection": "§7 Scope boundaries (line 195)",
+      "mustSurvive": true,
+      "duplicatedIn": "R20",
+      "fossilNote": ""
+    },
+    {
+      "kind": "scope-boundary",
+      "claim": "The tax IN/OUT line: a tax/health effect is IN iff withdrawal sequencing or a Roth conversion can move it. IN: ordinary brackets, standard deduction, RMDs, SS-taxation, the survivor MFJ→single switch, ACA-PTC (pre-65), IRMAA (post-65), cap-gains/qualified-dividend stacking from taxable withdrawals. OUT-but-disclosed: NIIT, state tax, ACA beyond the premium-credit. Later (chapter two): SS-claiming-age, a full continuous optimizer, a 'die-with-zero' spend-down solver, asset-location.",
+      "sourceSection": "§7 Scope boundaries (line 196)",
+      "mustSurvive": true,
+      "duplicatedIn": "D6, R24, §5 chapter two, docs/architecture.md, docs/roadmap.md",
+      "fossilNote": ""
+    },
+    {
+      "kind": "scope-boundary",
+      "claim": "Scope boundary: spending shape is USER-SET, not solver-optimized (R20) — the solver optimizes FUNDING, not how you live. MVP solver search is BOUNDED — a handful of named drawdown policies × a conversion grid, not a full continuous optimizer. NO live net-worth / portfolio aggregation surface in MVP.",
+      "sourceSection": "§7 Scope boundaries (lines 197-199)",
+      "mustSurvive": true,
+      "duplicatedIn": "D4, R20, R21, carried landmines",
+      "fossilNote": ""
+    },
+    {
+      "kind": "scope-boundary",
+      "claim": "Accumulation-side scope boundaries: NOT a decades-out FIRE / 'are you on track' calculator — bounded to a near-retirement on-ramp. v1 does NOT optimize accumulation. NO live market data / price feeds (R36). NO accumulation-phase income-tax engine — during the runway the household lives on salary; working-year portfolio withdrawals are CLAMPED TO ZERO while a living worker remains (never simultaneous save-and-draw double-counting). NO raise / promotion / career modeling — flat-real contributions (R31). The 'retired-but-still-contributing' HSA-MAGI edge is BOUNDED + DISCLOSED, not modeled (a conservative one-directional simplification, the empty-overlap invariant is the engine guard).",
+      "sourceSection": "§7 Scope boundaries (line 200)",
+      "mustSurvive": true,
+      "duplicatedIn": "§3 thesis evolution, R31, R32, R34, R36, R38, docs/architecture.md, docs/roadmap.md",
+      "fossilNote": ""
+    },
+    {
+      "kind": "scope-boundary",
+      "claim": "R40 income-side scope boundaries: NOT a FIRE lever, and NOT a general income ledger — the 'other' catch-all inherits the IDENTITY FENCE ('a real driver receives it and the answer depends on it' or it doesn't ship); dividends/1099/crypto are out unless a driver has one. OUT-but-disclosed (each with its direction named): rental sale events (optimistic), net-rental real-rise (optimistic, and it COMPOUNDS at the ACA cliff), annuity/pension basis-recovery (optimistic-opt-in), alimony payer-death termination (optimistic), compounding-only COLA (optimistic side), survivor-specific end gate (forward landmine), NIIT, state-level alimony decoupling, annuity LIFO.",
+      "sourceSection": "§7 Scope boundaries (line 201)",
+      "mustSurvive": true,
+      "duplicatedIn": "R40, docs/plans/features/other-income.md",
+      "fossilNote": "Tied to the late-added R40 block."
+    },
+    {
+      "kind": "status-as-built",
+      "claim": "Numbers (dated figures) live in docs/research/engine-validation-and-tax.md and docs/research/pre65-healthcare.md, marked DIRECTIONAL UNTIL PINNED. Sources front-matter of product.md: [docs/research/engine-validation-and-tax.md, docs/research/pre65-healthcare.md].",
+      "sourceSection": "Front matter (line 7) + R24 (line 132)",
+      "mustSurvive": true,
+      "duplicatedIn": "CLAUDE.md (constants discipline), docs/architecture.md",
+      "fossilNote": ""
+    }
+  ]
+}

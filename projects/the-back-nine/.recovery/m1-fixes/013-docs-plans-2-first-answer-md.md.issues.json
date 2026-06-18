@@ -1,0 +1,14 @@
+[
+  {
+    "ref": "docs/plans/features/other-income.md#30",
+    "severity": "warn",
+    "problem": "The [reframe] surviving-fact list ('the tax-boundary touch points: GrossUpContext, nonSSordinary, §86, single MagiComponents producer, finiteness backstop') DROPS the '§6 ACA empty-overlap throw' touch point that the row's own digest enumerates. In the source (other-income.md L238-239, L536-537) this is a load-bearing landmine, not a passing detail: insight 027/020 says R40 income is death-gated (pays past retirement) and must NOT inherit the §6 ACA empty-overlap guard — a sign-error/refactor-share trap with an explicit 'Do NOT copy the §6 ACA empty-overlap guard' instruction. No other GROUP B row in this file carries that landmine, so the reframe makes the surviving fact thinner than the digest and silently loses a named hazard.",
+    "fix": "Add the §6-ACA-empty-overlap touch point back into the surviving-fact note WITH its rule, e.g. '...single MagiComponents producer, finiteness backstop, and the §6 ACA empty-overlap throw — which R40 income must NOT inherit (death-gated, not retire-gated; insight 027/020)'. Or add a [dedup] pointing the 'do-not-copy §6 guard' lesson to insights/027 + decisions/other-income-r40 so the landmine isn't lost."
+  },
+  {
+    "ref": "docs/plans/features/other-income.md#59",
+    "severity": "nit",
+    "problem": "The [reframe] preserves 'endAge absent≡lifetime' but drops the digest's qualifier 'never numeric/Infinity' — the DND-009 sentinel rule (JSON.stringify(Infinity)==='null' silently nulls a persisted Infinity). The operative encoding (presence/absence) survives, but the explicit no-numeric/Infinity-sentinel rule that is the whole reason for the absent≡lifetime convention is thinned out.",
+    "fix": "Restore the qualifier in the surviving fact: 'endAge absent≡lifetime, never a numeric/Infinity sentinel (DND-009)'. Low priority — DND-009 is independently homed in architecture/glossary — so a pointer to it would also suffice."
+  }
+]

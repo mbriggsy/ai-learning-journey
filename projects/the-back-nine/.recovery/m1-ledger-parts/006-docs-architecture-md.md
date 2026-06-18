@@ -1,0 +1,227 @@
+- **`README.md#5`** · `invariant` · → Crypto / storage boundary (local-first, AES-GCM, recovery) · _pointer_
+  - sig: AES-GCM PBKDF2 local-first PWA
+  - Local-first PWA: no backend, no account, no cloud; financial picture entered by hand, encrypted at rest in the browser (AES-GCM under a PBKDF2-hardened key), never leaves the device; a two-person recovery-phrase + mandatory encrypted export is the survivor's backstop.
+  - [dedup] Canonical home architecture (load-bearing crypto/storage); product.md keeps the why and points to architecture for mechanics.
+  - [fixed:nit] Relabeled kind decision-rationale->invariant (load-bearing contract); home unchanged.
+- **`README.md#6`** · `invariant` · → CRN / single-shared-draw invariant · _pointer_
+  - sig: ONE shared market draw CRN
+  - ONE shared market draw per year, common across every bucket (pre-tax/Roth/taxable/HSA) — buckets differ only in TAX TREATMENT, never luck; this CRN rule lets the solver rank candidates on identical futures; the draw is a pure function of path × horizon dimensions.
+  - [dedup] Canonical home architecture; CLAUDE.md load-bearing-contracts summary is the always-in-context pointer.
+- **`README.md#7`** · `invariant` · → Reduce-to-spine invariant · _pointer_
+  - sig: reduce-to-spine byte-identical
+  - Reduce-to-spine: every overlay (tax, healthcare, earned-income bridge) reduces BYTE-IDENTICALLY (same seed) to the validated Monte Carlo spine + drawdown policy (vs Trinity/Bengen) when OFF — golden cases reproduce bit-for-bit; the trustworthy core is never silently perturbed.
+  - [dedup] Canonical home architecture; CLAUDE.md summary is the pointer.
+- **`README.md#8`** · `invariant` · → Externally-derived fixtures (DND 012) · _pointer_
+  - sig: externally-derived fixtures DND 012
+  - Externally-derived fixtures (DND 012): golden numbers are derived INDEPENDENTLY (hand/spreadsheet/published calc), never by the engine's own formula — a self-computed fixture proves the code runs, not that it's right; applies to Trinity, Bengen, tax math, and ACA/IRMAA expected values.
+  - [dedup] Canonical home architecture; CLAUDE.md DND 012 entry is the pointer.
+- **`README.md#9`** · `invariant` · → §8 constants discipline (no in-range fallbacks / Unsourced sentinel) · _pointer_
+  - sig: NO in-range default fallbacks
+  - NO in-range default fallbacks (burned/062): a missing input is a loud Unsourced sentinel whose .value throws — never a plausible '?? 0.04' that makes 'we don't know' indistinguishable from 'we measured'; inside a tax/ACA fixed-point that ambiguity inverts answers.
+  - [dedup] Canonical home architecture §8; CLAUDE.md constants-discipline / burned/062 is the pointer.
+- **`README.md#10`** · `invariant` · → §8 constants discipline (single year-keyed table / ACA reVerifyEveryBuild) · _pointer_
+  - sig: ONE canonical year-keyed table reVerifyEveryBuild
+  - Every dated tax/health figure lives in ONE canonical year-keyed table that engine, plan, tests, and copy-guard all READ — a number is never re-typed; the ACA legislative entry carries reVerifyEveryBuild (gated by verify:aca) because it can flip the entire pre-65 model and a stale figure there is a quiet catastrophe.
+  - [dedup] Canonical home architecture §8; CLAUDE.md constants-discipline summary is the pointer.
+- **`README.md#11`** · `invariant` · → §10 security / CSP boundary · _pointer_
+  - sig: strict CSP HTTP headers script-src self
+  - A strict CSP ships via HTTP response headers (script-src 'self', no inline, no eval, connect-src 'self'), enforcement-tested in real Chromium — guarding the in-session decrypted model against injected page scripts.
+  - [dedup] Canonical home architecture §10; CLAUDE.md security/CSP-boundary summary is the pointer.
+- **`README.md#12`** · `invariant` · → Recommendation gate (validation-token contract) · _pointer_
+  - sig: solver cannot speak until token minted
+  - The recommendation layer is gated STRUCTURALLY: the solver cannot run until a validation harness (optimality oracle + ranking-stability checks + held-out-seed grade calibration) mints a token it requires; recommending on unverified fixtures is a compile error, not a matter of discipline.
+  - [dedup] Canonical contract home architecture; roadmap Act 4 references it as a validation gate and product.md states the why — both point here.
+  - [fixed:nit] Relabeled kind decision-rationale->invariant (structural contract); home unchanged.
+- **`README.md#17`** · `build-detail-or-KTD` · → Toolchain / stack · _pointer_
+  - sig: React 19 Vite 8 Vitest 4 motion@12 idb comlink
+  - Stack: React 19, TypeScript 5.9 strict-plus, Vite 8, Vitest 4, fast-check property tests, motion@12, idb + comlink for the encrypted IndexedDB worker boundary, zxcvbn-ts passphrase-strength floor, self-hosted Fraunces + Source Sans 3, pnpm, no Prettier (ESLint enforces layer boundaries + engine purity).
+  - [dedup] Canonical stack home architecture (toolchain); CLAUDE.md conventions + package.json are the operative mirrors / pointers.
+- **`README.md#18`** · `invariant` · → Layers & import boundaries / engine purity invariant · _pointer_
+  - sig: engine is PURE no clock no entropy
+  - Hard lint-enforced import boundaries: engine·crypto·store·intake·budget·viz·ui·shared; src/engine/ is PURE — a deterministic function of (params, seed), reading no clock/entropy/environment (Math.random, Date, crypto.getRandomValues, performance all lint-banned inside it); the seed is injected by the caller.
+  - [dedup] Canonical home architecture; CLAUDE.md layers-&-boundaries summary is the pointer.
+- **`docs/product.md#22`** · `build-detail-or-KTD` · → copyGuard (require-hedge lint shape) · _canonical_
+  - sig: 'require the hedge on the headline' copyGuard lint shape
+  - 'Require the hedge on the headline' is a new copyGuard lint shape — a positive/REQUIRE assertion, not the current ban-list — and must be built mechanically or hedge-burial drifts in silently.
+  - [dedup] The copyGuard lint mechanics are canonical in architecture (copyGuard); product carries it as a landmine and R12/R22 cite it — those become pointers.
+- **`docs/product.md#60`** · `invariant` · → Accumulation engine contract / CRN single shared draw · _canonical_
+  - sig: R34 — ONE continuous absolute-year market-draw timeline (CRN)
+  - R34: accumulation inherits the engine invariants — accumulation and decumulation share one continuous absolute-year market-draw timeline (a single buildDraws stream from currentAge, never a separate pre-phase stream) so candidate offsets see byte-identical year-t returns and rank on identical futures (CRN); the date's confidence is read off one per-path future end-to-end so final-working-year sequence-of-returns risk is honestly priced; no accumulation-phase income-tax engine (the destination bucket carries tax character); an empty phase (Y==0) consumes zero extra draws and reduces byte-identically to today's decumulation-from-initialPortfolio.
+  - [dedup] This is a load-bearing engine invariant — canonical in architecture (single shared draw / CRN, accumulation contract); product R34 ledger entry, CLAUDE.md, R26, success criteria (byte-identical), roadmap hold pointers.
+- **`docs/architecture.md#0`** · `decision-rationale` · → Header / intro — canonical-home + precedence · _canonical_
+  - sig: calm-but-wrong is the sin
+  - architecture.md is the single canonical home for engine mechanics + load-bearing invariants; it wins on any invariant conflict; the cardinal rule is enforced by structural contracts, not tone.
+  - [dedup] Cardinal-rule FULL statement is canonical in docs/product.md §2; README keeps a plain-language copy; the precedence-on-conflict rule is canonical in CLAUDE.md. Architecture's intro states the invariant-wins-here scope (canonical here) and POINTS to product for the cardinal rule.
+  - [reframe] Surviving fact: architecture.md is the one place engine invariants live and wins on conflict; the cardinal rule 'calm-but-wrong is the sin' is structural. Present-tense, no changelog framing.
+- **`docs/architecture.md#1`** · `invariant` · → §1 Engine purity / Invariants index · _canonical_
+  - sig: engine reads no clock, entropy, environment
+  - src/engine is a deterministic function of (params, seed) and reads no clock, entropy, or environment — break it and determinism + CRN die.
+  - [dedup] Canonical here; CLAUDE.md (Layers & import boundaries) keeps the always-in-context summary as a pointer.
+- **`docs/architecture.md#2`** · `invariant` · → §2/§3 CRN — single shared draw · _canonical_
+  - sig: one shared market draw per year
+  - All buckets share ONE market-return draw per year; the draw schedule is a pure function of path/horizon dimensions only; per-bucket draws are forbidden (they break CRN and re-enable asset-location).
+  - [dedup] Canonical here — THE canonical CRN row; merge README#6, docs/product.md#60, and arch#21 into this single row (all are the same single-shared-draw/CRN invariant); CLAUDE.md (Load-bearing engine contracts) becomes a pointer.
+  - [fixed:nit] Sharpened merge instruction — names README#6, product#60, arch#21 to collapse into arch#2.
+- **`docs/architecture.md#3`** · `invariant` · → §2 CRN — stateless Box-Muller · _canonical_
+  - sig: stateless Box-Muller, no cached spare
+  - The normal transform consumes two uniforms per draw and never caches the spare across calls — a cached spare desyncs CRN candidates that interleave normals differently.
+  - [dedup] Canonical here; CLAUDE.md copy is a pointer.
+- **`docs/architecture.md#4`** · `invariant` · → §5 Reduce-to-spine invariant · _canonical_
+  - sig: reduce-to-spine byte-identical when OFF
+  - Every overlay OFF reduces byte-identically (same seed) to the Trinity/Bengen-validated decumulation; golden cases are never perturbed; each unit owns its exhaustive OFF condition + byte-identical test.
+  - [dedup] Canonical here; CLAUDE.md copy is a pointer.
+- **`docs/architecture.md#5`** · `invariant` · → §5 Externally-derived fixtures (DND 012) · _canonical_
+  - sig: externally-derived fixtures DND 012
+  - Golden values must be derived by an independent path (hand-compounded spreadsheet / published figure), never via the engine's own arithmetic — own-formula goldens prove typing, not correctness.
+  - [dedup] Canonical here; CLAUDE.md copy (cites DND 012) is a pointer.
+- **`docs/architecture.md#6`** · `invariant` · → §6 The R19 numeric gate · _canonical_
+  - sig: R19 numeric gate finiteness first
+  - validateParams checks finiteness FIRST and rejects every incomputable input before any path runs, so no NaN rides past ??/> guards into a percentile or headline.
+- **`docs/architecture.md#7`** · `invariant` · → §8 Constants discipline — no in-range defaults · _canonical_
+  - sig: no in-range default fallbacks throws
+  - A figure the research names but doesn't value THROWS — never a plausible default, so a missing input is never indistinguishable from a real measurement.
+  - [dedup] Canonical here; CLAUDE.md Constants discipline (cites burned/062) is a pointer. Note overlap with item #66 (the Unsourced-sentinel detail) — both live in §8.
+- **`docs/architecture.md#8`** · `invariant` · → §8 Constants discipline — one canonical table · _canonical_
+  - sig: one canonical year-keyed constants table
+  - Every dated figure is read from one year-keyed table and never re-typed; a re-typed figure would drift out of sync with its source silently.
+  - [dedup] Canonical here; CLAUDE.md Constants discipline copy is a pointer. Overlaps item #63 (same invariant, more detail).
+- **`docs/architecture.md#9`** · `invariant` · → §9 Cross-engine headline robustness · _canonical_
+  - sig: quantize headline before band-edge
+  - The headline-determining statistic is quantized to a coarse grid BEFORE the band-edge decision so the same scenario shows the same headline across browsers (the screenshot promise).
+  - [dedup] Canonical here; CLAUDE.md copy is a pointer. Overlaps item #70 (the SURVIVAL_GRID=0.01 numeric detail).
+- **`docs/architecture.md#10`** · `invariant` · → §7.3 Encrypted-store write-gate · _canonical_
+  - sig: encrypted-store write-gate session key
+  - One model copy; a write needs a session key AND a current passphrase-wrap; never persist Infinity/NaN — else a survivor restores a stale vault or a sentinel nulls into corruption.
+  - [dedup] Canonical here; CLAUDE.md (Constants discipline sentinel; Security) copies are pointers. Overlaps items #55 (write-gate conjunction) and #57 (sentinel).
+- **`docs/architecture.md#11`** · `invariant` · → §10 Security / CSP boundary · _canonical_
+  - sig: strict CSP script-src connect-src self
+  - Strict CSP ships via response headers with script-src/connect-src 'self' and no inline/eval, so an XSS foothold gains no programmatic exfil channel for the decrypted model.
+  - [dedup] Canonical here; CLAUDE.md Security/CSP boundary is a pointer. Overlaps item #71 (the full directive list).
+- **`docs/architecture.md#12`** · `definition-term` · → §1 The layer architecture · _canonical_
+  - sig: eight layers engine crypto store shared
+  - The architecture is 8 layers (engine·crypto·store·intake·budget·viz·ui·shared) with one-directional import boundaries ESLint-enforced via pnpm lint; path aliases @engine/* … @shared/* name each layer.
+  - [dedup] Canonical here (it is a structural contract, not just vocabulary); CLAUDE.md Layers & import boundaries is the pointer; glossary may cross-link the layer names but should not redefine.
+- **`docs/architecture.md#13`** · `invariant` · → §1 src/engine/ is PURE · _canonical_
+  - sig: engine bans Date Math.random crypto.getRandomValues
+  - src/engine is pure: imports only @shared, and Math.random/crypto.getRandomValues/Date/performance/process are all lint-banned (broader than weak-RNG); the seed is injected, never generated inside; engine tests are exempt.
+  - [dedup] Canonical here; CLAUDE.md engine-purity summary is a pointer.
+- **`docs/architecture.md#14`** · `build-detail-or-KTD` · → §1 Injected-dependency discipline · _canonical_
+  - sig: dateSearch.ts injected shouldContinue()
+  - dateSearch.ts stays pure by taking an injected async shouldContinue() (same shape as the injected seed), so cooperative cancellation never makes the engine read the environment.
+  - [dedup] Routed to architecture (not plans) because it is the injected-dependency contract that keeps engine purity — an invariant-supporting rule, not a build step.
+- **`docs/architecture.md#15`** · `invariant` · → §1 src/crypto/ · _canonical_
+  - sig: crypto layer CSPRNG required
+  - src/crypto is the primitive layer: CSPRNG (crypto.getRandomValues) is required for the recovery phrase and Math.random is banned (the U0 weak-RNG lint extends to src/crypto/**).
+  - [dedup] Canonical here; CLAUDE.md crypto-layer summary is a pointer.
+- **`docs/architecture.md#16`** · `invariant` · → §1 src/shared/ · _canonical_
+  - sig: shared is the leaf imports nothing
+  - src/shared is the leaf — the plaintext model (model.ts) plus the outcome-state enum — and imports nothing from feature layers.
+  - [dedup] Canonical here; CLAUDE.md shared-layer summary is a pointer.
+- **`docs/architecture.md#17`** · `invariant` · → §2 Determinism and CRN · _canonical_
+  - sig: seed mulberry32 signed-32-bit round-trip
+  - The seed is one integer in mulberry32's signed-32-bit domain, injected by the caller, stored as a first-class model field, and must survive encrypt→persist→decrypt bit-identically.
+- **`docs/architecture.md#18`** · `invariant` · → §2 Draw schedule = dimensions only · _canonical_
+  - sig: normals matrix indexed by absolute year
+  - The draw schedule is a pure function of path/horizon dimensions only; normals are allocated to the max cohort horizon up front, indexed by absolute year; inputs select WHICH draws are consumed, never how many or their order.
+  - [dedup] Canonical here; CLAUDE.md draw-schedule line is a pointer.
+- **`docs/architecture.md#19`** · `build-detail-or-KTD` · → §2 buildDraws ordering · _canonical_
+  - sig: buildDraws path-major stock-then-bond order
+  - buildDraws uses one mulberry32 stream in a fixed dimension-only order: all market normals first (path-major, year, stock-then-bond), then all longevity uniforms (path-major, person); order/counts depend only on (seed, paths, maxHorizon, peopleCount).
+  - [dedup] Routed to architecture: this is the concrete realization of the draw-schedule invariant (#18), a contract the spine and overlays depend on. Build steps for it live in plans/1-engine but the ordering rule is load-bearing.
+- **`docs/architecture.md#20`** · `scope-boundary` · → §2 The CRN-safe regime-shifters · _canonical_
+  - sig: enumerated CRN-safe regime-shifters
+  - The CRN-safe regime-shifters are an exhaustive set (joint→survivor boundary, earned-income bridge, tax-and-accounts overlay, healthcare overlay, death-order filter); each earns CRN tests in its owning unit; the accumulation contribution-inflow joins the set (lands in existing slots, changes no dimension).
+- **`docs/architecture.md#21`** · `invariant` · → §3 The single shared market draw · _canonical_
+  - sig: buckets differ only in tax treatment
+  - All buckets (pre-tax/Roth/taxable/HSA) share one market draw per year (the spine normals stream); they differ only in tax treatment; one (stock,bond) pair per path-year drives the whole portfolio; tax/RMD/conversion/healthcare are deterministic post-draw arithmetic.
+  - [dedup] Canonical here; CLAUDE.md single-shared-market-draw line is a pointer. Reinforces #2.
+- **`docs/architecture.md#22`** · `invariant` · → §3 Per-bucket draws forbidden · _canonical_
+  - sig: per-bucket draws forbidden
+  - Per-bucket draws are forbidden — they multiply draws-per-year and change the schedule dimension, breaking CRN; any future asset-location must be a deterministic per-bucket tilt on the one shared draw, never a separate draw.
+  - [dedup] Canonical here; CLAUDE.md per-bucket-draws-forbidden line is a pointer.
+- **`docs/architecture.md#23`** · `invariant` · → §4 Shared per-year cash-term seam · _canonical_
+  - sig: one per-year update stepYear shared oracle
+  - There is one per-year update function (runDecumulation/stepYear); the historical backtest oracle runs the SAME function, so within-year order-of-operations can never drift between spine and overlay; everything else is a deterministic transform of the cash-flow term consuming zero draws.
+- **`docs/architecture.md#24`** · `definition-term` · → §4 The four cash-term transforms · _canonical_
+  - sig: four cash-term transforms net gross inflow
+  - Four cash-term transforms compose along the cash-flow term: earned-income bridge nets down (max(0, spending−earnedIncome)); tax-and-accounts grosses up; healthcare grosses up further; accumulation contribution-inflow is a signed inflow credited end-of-year at face value.
+- **`docs/architecture.md#25`** · `invariant` · → §5 Reduce-to-spine — earned-income OFF · _canonical_
+  - sig: earned-income OFF iff earnedIncome zero
+  - The earned-income bridge is byte-identical when and only when earnedIncome=0 for both spouses in every simulated year; retirement-year income equality is NOT the golden condition — earned-income-zero is.
+- **`docs/architecture.md#26`** · `invariant` · → §5 Reduce-to-spine — tax OFF · _canonical_
+  - sig: tax OFF buckets collapsed conversion zero
+  - The tax-and-accounts overlay is byte-identical OFF iff buckets collapse to one pool AND conversion=0 AND ordinary-tax off AND RMD-inert (no forced distributions).
+- **`docs/architecture.md#27`** · `invariant` · → §5 Reduce-to-spine — healthcare OFF · _canonical_
+  - sig: healthcare OFF no ACA IRMAA HSA
+  - The healthcare overlay is byte-identical OFF iff healthcare modeling is off — no ACA premium, no IRMAA surcharge, no HSA bucket.
+- **`docs/architecture.md#28`** · `invariant` · → §5 Reduce-to-spine — accumulation OFF (presence-keyed) · _canonical_
+  - sig: accumulation OFF is presence-keyed not value
+  - Accumulation byte-identity is PRESENCE-keyed: construct absent ⇒ byte-identical on both MC and Trinity backtest paths; a zero-valued-but-constructed run is deliberately NOT byte-identical (the working-year clamp is live on presence); the empty phase (Y==0) consumes zero extra draws.
+  - [dedup] Contract is canonical in architecture; the rationale for presence-vs-value lives in docs/decisions/accumulation-fuck-off-date.md as a pointer back to this contract. The duplicatedIn names the decision record, not a competing copy.
+  - [reframe] The C1-C3 accumulation byte-identity is present-tense law in §5; the dated-amendment framing is dropped — the IDs C1/C2/C3 are kept where the decision record references them.
+- **`docs/architecture.md#29`** · `invariant` · → §5 Presence companion (burned/027) · _canonical_
+  - sig: presence companion burned/027
+  - Every reduce-to-spine absence-assertion is paired with a presence companion proving the overlay did its work in the ON case (paid RMD-forced tax / a net premium / a surcharge / a grown total); an absence-test alone can pass vacuously.
+- **`docs/architecture.md#30`** · `invariant` · → §6 The R19 numeric gate · _canonical_
+  - sig: R19 finiteness before relational ?? guards
+  - The worker boundary is untyped (structured clone), so validateParams rejects every incomputable input before any path runs; finiteness is checked before any relational or ?? guard (a NaN passes them — insights 008/010), so no NaN/Infinity escapes a percentile or headline.
+  - [dedup] Overlaps item #6 (same gate, summary form); both live in §6.
+- **`docs/architecture.md#31`** · `number-or-figure` · → §6 The R19 numeric gate — ENGINE_MAX_* bounds · _canonical_
+  - sig: ENGINE_MAX_DOLLAR 1e12 horizon 120
+  - ENGINE_MAX_* domain bounds close the float-overflow tail (insight 028): dollars ≤ 1e12, return/vol moments ≤ 1.0, horizon ≤ 120; a non-integer seed is rejected as indeterminate.
+  - [dedup] Routed to architecture (not research/) because these are engine domain-gate constants that are part of the R19 contract, not externally-verified tax/Trinity figures. They belong beside the gate they enforce.
+- **`docs/architecture.md#33`** · `scope-boundary` · → §6 The R19 numeric gate (responsibility split callout) · _canonical_
+  - sig: R19 numeric vs semantic split
+  - R19 split: the engine guards its own NUMERIC domain (finiteness/bounds); SEMANTIC plausibility (status-vs-age, spend-beyond-portfolio) is the intake/control-layer half owned upstream; neither layer assumes the other validated.
+  - [dedup] Scope-boundary routed to architecture because it bounds the ENGINE's responsibility (build scope of the gate), continuous with §6.
+- **`docs/architecture.md#34`** · `build-detail-or-KTD` · → §7.1 Tax-and-accounts overlay · _canonical_
+  - sig: taxOverlay.ts grosses up zero draws
+  - taxOverlay.ts is a structural sibling of the earned-income bridge — a per-year deterministic transform of the cash-flow term, indexed by absolute year, fed into the same per-year update function, consuming zero random draws; the bridge nets down, the overlay grosses up.
+  - [dedup] Overlay mechanics → architecture §7 (overlay-peer), per the radical-move routing.
+- **`docs/architecture.md#35`** · `build-detail-or-KTD` · → §7.1 Tax-and-accounts overlay — bucket mechanics · _canonical_
+  - sig: per-person pre-tax ledger sums to buckets.pretax
+  - Tax-overlay buckets are per-person (pre-tax/Roth/taxable); ordinary-income tax on pre-tax withdrawals + RMDs + conversion, tax-free Roth growth, cap-gains/QD stacking from taxable; all share the one market draw; the per-person pre-tax ledger SUMS to buckets.pretax (no-parallel-ledger-drift).
+- **`docs/architecture.md#36`** · `number-or-figure` · → §7.1 The gross-up fixed-point · _canonical_
+  - sig: gross-up k≈0.74 GROSS_UP_MAX_PASSES 128
+  - The gross-up is a bounded fixed-point: worst-case contraction k≈0.74 (raised from ~0.685 by cap-gains stacking, insights 006/007), GROSS_UP_MAX_PASSES=128 covers the validated tail (~113 worst case under ENGINE_MAX_*); no in-range default stands in for an unconverged value — it fails loud (burned/062).
+  - [dedup] Engine algorithm constants (contraction factor, pass cap) are part of the overlay contract — architecture §7.1, not research/, since they describe the engine's own solver, not an externally-verified tax figure.
+- **`docs/architecture.md#37`** · `build-detail-or-KTD` · → §7 SS overlay (provisional-income taxation) · _canonical_
+  - sig: SS provisional-income fixed-point frozen thresholds
+  - SS provisional-income taxation is its own per-year bounded fixed-point (provisional-income→taxable-SS→tax→gross-up→re-converge), deterministic, zero draws; the MFJ/single thresholds are FROZEN, not inflation-indexed (constants with no staleness clock).
+  - [dedup] SS mechanics → architecture §7 overlay-peer per the features/social-security dissolution. The frozen-thresholds DECISION rationale is mirrored in docs/decisions/ss-computation.md; the mechanic is canonical here.
+  - [reframe] features/social-security mechanics survive in architecture §7 as an overlay-peer; no features/ home.
+- **`docs/architecture.md#42`** · `build-detail-or-KTD` · → §7.2 Healthcare overlay · _canonical_
+  - sig: healthOverlay.ts composes after tax
+  - healthOverlay.ts is income-dependent and continuous across the Medicare line; it composes AFTER the tax overlay on the shared cash-term seam (ACA premium / IRMAA surcharge are spending the tax gross-up does not include); built/validated in the engine because a disclosed cliff omission inverts which strategy wins.
+- **`docs/architecture.md#43`** · `build-detail-or-KTD` · → §7.2 Two distinct MAGI calculators · _canonical_
+  - sig: two MAGI calculators ACA vs IRMAA
+  - Two distinct MAGI calculators: ACA-MAGI = AGI + tax-exempt interest + non-taxable SS + excluded foreign earned income (full SS effectively counts); IRMAA-MAGI = AGI + tax-exempt interest, no SS add-back; qualified Roth/return-of-basis/cash/HSA-qualified count toward neither — which is why funding-source order is a control.
+- **`docs/architecture.md#44`** · `build-detail-or-KTD` · → §7.2 Pre-65 ACA-PTC fixed-point · _canonical_
+  - sig: ACA-PTC bisection 400% FPL cliff branch
+  - Pre-65 ACA-PTC is a per-year fixed-point with explicit cliff branch (PTC=max(0,SLCSP−applicable_pct×MAGI), allowed=min(PTC,enrolled), net=max(0,enrolled−allowed)); enrolled premium and SLCSP are two separate inputs; primary solver is bisection on a monotone funding-gap residual; the 400% FPL cliff is branched explicitly (compute just-under + just-over, pick cheaper) with CEIL-quantized MAGI before the relational branch.
+- **`docs/architecture.md#46`** · `build-detail-or-KTD` · → §7.2 SLCSP benchmark · _canonical_
+  - sig: SLCSP benchmark is user input
+  - The SLCSP benchmark premium is a user input (ZIP/age-specific), never synthesized, and covers only the marketplace-enrolled member(s).
+- **`docs/architecture.md#47`** · `build-detail-or-KTD` · → §7.2 IRMAA feed-forward · _canonical_
+  - sig: IRMAA 2-year-lagged feed-forward
+  - IRMAA is a 2-year-lagged feed-forward (not a fixed point): store per-filing-unit MAGI history, in year t use bracket from IRMAA-MAGI[t−2] and add surcharge (Part B + Part D) × count of Medicare-enrolled spouses (never hardcoded ×2); hard per-person step-cliffs; MAGI[t−2] seeded from real inputs near age 65 (never default zero, burned/062); age-gap years run ACA and IRMAA per spouse independently and sum.
+- **`docs/architecture.md#48`** · `build-detail-or-KTD` · → §7.2 Two enrolled-count clocks · _canonical_
+  - sig: two enrolled-count clocks resolveYear count65
+  - resolveYear tracks two clocks: a per-person Medicare-ENROLLED count beside the biological count65; only the IRMAA gate and pricing switch to the enrolled count, while count65 stays biological for the deduction stack and the ACA pre65 check; the enrolled count intersects the LIVING set (a dead spouse is never billed).
+- **`docs/architecture.md#49`** · `build-detail-or-KTD` · → §7.2 HSA (4th bucket) · _canonical_
+  - sig: HSA 4th bucket MAGI-invisible
+  - HSA is a 4th account bucket (triple-advantaged, earmarked medical): covers out-of-pocket + owner-65+ Medicare premiums tax-free (NOT ACA marketplace premiums — the trap); Medicare enrollment zeroes HSA contributions (owner-age-keyed, 6-month Part A retro trap); qualified spending is MAGI-invisible to both calculators; a post-65 non-qualified withdrawal raises both MAGIs (income-laundering negative test); shares the one market draw.
+- **`docs/architecture.md#50`** · `build-detail-or-KTD` · → §7.2 Couple / death-order interaction · _canonical_
+  - sig: ACA-FPL and IRMAA flip on different clocks
+  - On first death the survivor flips MFJ→single (~half), but on different clocks: the ACA-FPL basis flips single in the year filing status changes (current-year), while IRMAA uses the threshold table matching the MAGI[t−2] return's filing status, so the single IRMAA table first bites ~2 years after the first death; wired into the death-order conditional filter (no new boundary).
+- **`docs/architecture.md#51`** · `number-or-figure` · → §7.3 Encrypted local store — key derivation · _canonical_
+  - sig: PBKDF2-600k AES-GCM-256
+  - Encrypted store key derivation: PBKDF2-600k (SHA-256, salt) → AES-GCM-256, deriveKey extractable:false; keys live in memory only, never persisted unwrapped (passphrase-each-session); each 600k derivation renders an explicit calm 'unlocking…/securing…' pending state.
+  - [dedup] Crypto parameters are part of the store contract → architecture §7.3, not research/ (they are engine/store design choices, not externally-verified tax/healthcare figures).
+- **`docs/architecture.md#52`** · `build-detail-or-KTD` · → §7.3 Data-key indirection · _canonical_
+  - sig: data-key DK indirection one write predicate
+  - Data-key (DK) indirection: a stable random DK encrypts the model exactly once; passphrase-derived and recovery-derived keys each wrap DK independently; one model copy (recovery can never restore a stale copy); 'wrapping' = AES-GCM encrypt() of raw DK bytes, NOT WebCrypto wrapKey() (which needs extractable:true); DK imported extractable:false.
+- **`docs/architecture.md#53`** · `invariant` · → §7.3 Synchronous lock authority · _canonical_
+  - sig: write-gate conjunction session key AND passphraseWrap
+  - A writable store handle requires a derived session key AND a current passphraseWrap bound into the same seam (one predicate, both clauses); the recovery-unlock path is exactly why — it decrypts but writes stay blocked until the new passphraseWrap is re-minted; no reachable cleartext/unkeyed/stale-credential write path.
+  - [dedup] Reinforces #10 (write-gate); this is the full invariant statement, #10 is the summary.

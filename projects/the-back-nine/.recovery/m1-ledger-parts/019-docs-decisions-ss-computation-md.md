@@ -1,0 +1,89 @@
+- **`docs/architecture.md#39`** · `decision-rationale` · → MFJ→single filing-status switch decision · _reframe_
+  - sig: MFJ→single survivor tax cliff
+  - The MFJ→single switch at the sampled first death IS the joint→survivor two-regime boundary (no new boundary); no QSS grace (files single the year after first death); the survivor's same real dollars fall into ~half-width single brackets with ~half the standard deduction — the recommendation's emotional headline.
+  - [dedup] Recommendation-headline framing is canonical in docs/product.md; the filing-status computation decision (no QSS grace, switch year) lives in docs/decisions/ss-computation.md; architecture §7.1 carries the mechanic. Product copy stays canonical for the headline narrative, decision record is canonical for the computation choice.
+  - [reframe] Surviving fact (present-tense): the survivor files single the year after the first death (no QSS grace) and same real dollars hit ~half-width brackets — modeled as the existing joint→survivor boundary, not a new one. This is a decision rationale, routed to ss-computation; the headline impact stays in product.
+- **`docs/architecture.md#40`** · `decision-rationale` · → [REHOME → docs/decisions/portfolio-holdings.md] §1014 basis step-up / estate-character decision · _canonical_
+  - sig: §1014 basis step-up is IN
+  - §1014 basis step-up is IN (a disclosed omission can invert the after-tax ranking); a first-order §1014/IRD adjustment is modeled into the leave-more objective at a disclosed assumed heir bracket; the overlay exposes per-bucket basis/character (taxable basis, pre-tax IRD, Roth tax-free); full estate model is chapter-two.
+  - [dedup] This is an estate/basis tax decision (§1014 step-up, IRD, heir bracket, per-bucket basis/character), not an SS-computation decision — rehomed to the portfolio-holdings/basis decision record. The exposed per-bucket basis/character mechanic also appears in architecture §7.1 (pointer kept).
+  - [fixed:warn] Rehomed §1014 estate/basis decision out of ss-computation; kept §7.1 pointer.
+- **`docs/architecture.md#41`** · `decision-rationale` · → [REHOME → docs/product.md] Identical-tax-fidelity (no tax-blind arm) decision · _canonical_
+  - sig: no tax-blind arm identical fidelity
+  - Both candidate arms run at identical tax fidelity — there is no tax-blind arm; a tax-blind delta is sign-inverted (it sees only the cash drain of conversion tax, so every conversion looks worse).
+  - [dedup] This is a recommendation/optimizer-evaluation decision (how the candidate arms are scored), not an SS-computation decision — rehomed to the product §4 D-locked decisions alongside 'recommend-second / what best means'. The recommendation-build consumer plans/4-recommendation references this decision (pointer kept).
+  - [fixed:warn] Rehomed recommendation-arm-fidelity decision to product §4; kept plans/4 pointer.
+- **`docs/plans/1-engine.md#17`** · `decision-rationale` · → survivor-spending ratio decision · _canonical_
+  - sig: survivor-spending ratio ~75% Blanchett
+  - U1 survivor-spending ratio is grounded to a citable range (Blanchett two-thirds-to-three-quarters), source-stamped directionalUntilPinned, ships ~75% default, stays editable, and carries a calm note that too-LOW is the unsafe direction (understates the survivor's need).
+  - [dedup] The ~75% Blanchett number also lives in research (verified figure); the choose-~75%-because rationale is the canonical decision record. Deliberate co-location: survivor-spending decisions and the §202 survivor-benefit decisions share this record because both turn on the same modeled widowhood transition — no separate decumulation/spending decisions home exists, and splitting the survivor regime across two records would fragment the one boundary.
+  - [fixed:nit] Made survivor-spending/survivor-benefit co-location explicit; dropped thin 'SS-adjacent' glue.
+- **`docs/plans/features/social-security.md#2`** · `decision-rationale` · → Why we compute the benefit (the three gaps) · _reframe_
+  - sig: three correctness gaps recommender cannot tolerate
+  - The old model made the user do the actuarial math (a flat already-adjusted socialSecurityReal); a recommender-grade tool cannot tolerate the three gaps it created — spousal underivable, max(own,spousal) calm-but-wrong, survivor stub coarse — so the honesty bar rises and the benefit is computed.
+  - [dedup] Cardinal rule full statement is canonical in product §2; this invocation of it becomes a pointer to product.
+  - [reframe] Surviving fact: we compute SS benefits in-engine because the old user-supplied flat figure left three recommender-fatal gaps. Present-tense rationale in the SS computation decision record.
+- **`docs/plans/features/social-security.md#3`** · `decision-rationale` · → Decision: compute spousal automatically · _reframe_
+  - sig: spousal underivable from ssa.gov
+  - Spousal benefit cannot be read off ssa.gov (it depends on the OTHER spouse's PIA), so asking the user for it guaranteed a wrong/blank input — the ATC decision that opened the unit: compute spousal automatically.
+  - [reframe] Surviving fact: we auto-compute spousal because a layperson cannot derive it. Present-tense decision, ATC-dated provenance dropped from the body.
+- **`docs/plans/features/social-security.md#5`** · `decision-rationale` · → Decision: fold in survivor §202 computation · _reframe_
+  - sig: survivor stub zeroed early widowhood
+  - The old '$0 until own claim age' survivor stub was never optimistic but zeroed out 1–5+ years of a substantial survivor benefit when a spouse dies at survivor age 60–65 — the high-stress scenario the co-pilot must get right.
+  - [reframe] Surviving fact: we model §202 survivor because the old stub shortchanged early widowhood. Present-tense rationale; the '$0-until-own-claim stub' framed as the superseded baseline only enough to justify the choice.
+- **`docs/plans/features/social-security.md#6`** · `decision-rationale` · → Decision: survivor computation in P-now, optimizer in P4 · _reframe_
+  - sig: survivor computation not optimizer
+  - Survivor §202 is the correct survivor COMPUTATION, not the P4 claim OPTIMIZER — folded in because the old $0-until-own-claim stub materially shortchanged early widowhood.
+  - [reframe] Surviving fact: the engine computes the survivor benefit but does not optimize the survivor claim (P4). Present-tense; the '2026-06-14 ATC ruling' provenance dropped from the body.
+- **`docs/plans/features/social-security.md#7`** · `decision-rationale` · → Decision trace (consolidated) · _reframe_
+  - sig: PIA + claim age input, Method C excess not max
+  - Decision trace: compute spousal automatically (input = PIA + claim age per person); spousal is Method C EXCESS not max(); survivor §202 computation folded in (optimizer deferred to P4); intake routes to the mySSA $0-future-earnings figure; sub-engine is PURE/pre-loop (PIA=0 ⇒ byte-identical spine); constants are a Sourced statutory table with POMS-printed goldens.
+  - [dedup] Requirements echo to product R-ledger and invariants to architecture; the consolidated decision trace is canonical here, those become pointers.
+  - [reframe] Surviving fact: the bundle of SS computation decisions (auto-spousal, Method C excess, survivor computation, stop-early routing, pure pre-loop, statutory constants). Present-tense as the decision-record's trace; ATC#/POMS/'supersedes the stated rule' framing dropped.
+- **`docs/plans/features/social-security.md#26`** · `decision-rationale` · → Decision: stop-early honesty intake routing · _reframe_
+  - sig: ask benefit-at-FRA, default assumes continued earnings
+  - Statement input: ask 'benefit at FRA (67)' never 'PIA'; the figure is today's-dollars (real); the default statement figure ASSUMES CONTINUED EARNINGS and overstates for an early-stopper. Primary POMS RM 01310.005.
+  - [dedup] Decision record is canonical for the intake-routing rationale; the §9 build step (item #45) implements it. The verified citation RM 01310.005 also belongs in research.
+  - [reframe] Surviving fact: ask for benefit-at-FRA (today's dollars), never 'PIA'; the default statement number overstates for an early-stopper so intake routes to the $0-future-earnings estimator figure. 'PRESERVED VERBATIM' tag dropped.
+- **`docs/plans/features/social-security.md#31`** · `decision-rationale` · → Decision: input swap (socialSecurityReal → pia) · _reframe_
+  - sig: drop socialSecurityReal, gain pia (real FRA benefit)
+  - §1 input swap: PersonInputs DROPS socialSecurityReal and GAINS pia (the real today's-dollar benefit-at-FRA); socialSecurityClaimAge STAYS (now consumed by the sub-engine); both per-person; a non-working person enters pia:0 (the reduce-to-spine zero).
+  - [reframe] Surviving fact: the input is per-person pia (real FRA benefit) + socialSecurityClaimAge; pia:0 is the spine zero. Present-tense decision; the 'dropped socialSecurityReal' framing kept only as the rationale for the swap.
+- **`docs/plans/features/social-security.md#32`** · `decision-rationale` · → Decision: PIA entry period + sanity rules · _reframe_
+  - sig: ask monthly, store annual ×12, PIA-ceiling sanity rule
+  - §1 PIA entry: ask MONTHLY, store ANNUAL (×12), validate the ceiling in monthly terms at the field (mirrors spendEntryPeriod); the PIA ceiling is a NET-NEW sanity rule (new id+CopyKey+test); the claim-age ∈[62,70] bound already exists (SS_CLAIM_MIN/MAX) — a re-confirm of the deemed-filing single-decision window.
+  - [reframe] Surviving fact: PIA asked monthly / stored annual (×12) with a net-new PIA-ceiling sanity rule; claim-age [62,70] bound reconfirmed. Present-tense; the §9/file-map cross-refs become the build implementation in plans/2.
+- **`docs/plans/features/social-security.md#33`** · `decision-rationale` · → Decision: statutory constants module shape · _reframe_
+  - sig: socialSecurity.ts Sourced statutory table, legalBasis
+  - §2 canonical constants module src/engine/constants/socialSecurity.ts: one year-keyed module, every figure a Sourced<T> with directionalUntilPinned:false (the verify sweep IS the pin) and legalBasis set (STATUTORY — 42 U.S.C. §402, 20 CFR 404, the POMS section — stable, not annually re-indexed like tax brackets).
+  - [dedup] Architecture §8 constants discipline is canonical for the Sourced<T>/legalBasis pattern; this SS-specific module-shape decision points there.
+  - [reframe] Surviving fact: the SS constants live in one year-keyed socialSecurity.ts, each a Sourced<T> with legalBasis (statutory, not directionalUntilPinned). Present-tense decision; defers the pattern to architecture §8.
+- **`docs/plans/features/social-security.md#36`** · `decision-rationale` · → Decision: SPOUSAL_RATE reVerifyEveryBuild monitoring · _reframe_
+  - sig: SPOUSAL_RATE reVerifyEveryBuild (50%→33% by 2042 proposal)
+  - §2 SPOUSAL_RATE carries reVerifyEveryBuild-class monitoring (like the ACA entry): a scored-but-unenacted proposal to phase 50%→33% by 2042 exists, so the constant must catch enactment at build time, not drift silently.
+  - [dedup] Architecture documents the reVerifyEveryBuild constant pattern; this SS-specific monitoring decision points there.
+  - [reframe] Surviving fact: SPOUSAL_RATE (0.50) is reVerifyEveryBuild-monitored because a 50%→33%-by-2042 proposal is scored-but-unenacted. Present-tense decision; defers the mechanism to architecture.
+- **`docs/plans/features/social-security.md#42`** · `decision-rationale` · → Decision: survivor claim-timing default · _reframe_
+  - sig: survivor claims as soon as eligible, lock reduced factor
+  - §6 ratified survivor claim-timing default: the survivor claims AS SOON AS ELIGIBLE (max(60, death)), locks the reduced factor, and receives max(own, survivor) each year; the adversarial review confirmed this is one-signed conservative ONLY under the lock-flat reading — it closes the early-widowhood gap while leaving the optimal two-stage upside on the table for P4's optimizer; reduce-to-spine still holds (no death ⇒ never runs ⇒ byte-identical).
+  - [dedup] Decision record is canonical for the timing-default rationale; the P4 deferral (item #9) is in roadmap; 'Superseded/changelog' framing dropped.
+  - [reframe] Surviving fact: the survivor claims at first eligibility and locks the reduced factor; this is conservative under lock-flat and leaves the two-stage optimization to P4. Present-tense decision; ATC-date and changelog framing dropped.
+- **`docs/plans/features/social-security.md#49`** · `decision-rationale` · → Decision: ratio cross-check deferred · _reframe_
+  - sig: ≈0.70/≈1.24 ratio cross-check DEFERRED
+  - §9 a non-blocking cross-check (if the user enters their 62 and 70 figures, validate the ≈0.70/≈1.24 ratios) was DEFERRED — a nice-to-have wrong-bar-entry guard, not a correctness gate, deferred to keep the single-pass intake clean.
+  - [dedup] Decision record is canonical; the 'Resolved open questions' duplicate collapses here.
+  - [reframe] Surviving fact: the 0.70/1.24 intake ratio cross-check is deferred (non-blocking nice-to-have, keeps intake single-pass). Present-tense decision.
+- **`docs/plans/features/social-security.md#50`** · `decision-rationale` · → Decision: persistence on base PersonInputs (SS-before-U8 ordering) · _reframe_
+  - sig: swap on base PersonInputs, no migration debt (SS-before-U8)
+  - §10 persistence: the swap is on BASE PersonInputs (PersonInputsV3 inherits it; SCENARIO_V3_FIELDS unchanged, the SS field nests in people[]); because ScenarioV3 is defined-but-not-yet-written (U8 owns its codec arm), there is NO migration debt now — confirming the SS-before-U8 ordering (U8 must persist the post-swap shape or eat a needless v3→v4 migration).
+  - [dedup] Decision record is canonical for the ordering rationale; the roadmap U8 ordering and the input-model seam reference are pointers.
+  - [reframe] Surviving fact: the pia swap lives on base PersonInputs so ScenarioV3 inherits it with no migration debt, which fixes SS-before-U8 ordering. Present-tense decision; the U8-ordering consequence echoed to roadmap.
+- **`docs/plans/features/social-security.md#66`** · `decision-rationale` · → Decision: annual benefit granularity · _reframe_
+  - sig: annual granularity resolved, DRC January-lag self-correcting
+  - Resolved: monthly vs annual granularity → RESOLVED annual; the engine is annual-real, the DRC 'January-after-the-year-earned' lag (RS 00615.690 §B) and dime-rounding are MONTHLY rules, but at annual granularity the lag is a self-correcting sub-12-month slice at the only anchor that matters (age 70, where it's zero) — documented as an intentional abstraction in the constants comment.
+  - [reframe] Surviving fact: SS benefits are computed at annual granularity; the monthly DRC January-lag is a self-correcting sub-12-month slice (zero at age 70). Present-tense decision; 'Resolved open question' framing dropped.
+- **`docs/decisions/README.md#4`** · `scope-boundary` · → §1–§12 SS computation decisions · _reframe_
+  - sig: Method-C spousal, §202 survivor base, RIB-LIM
+  - The Social Security computation decisions §1–§12 (Method-C spousal, the §202 survivor base, RIB-LIM, the survivor lock-flat guard, the excess-end-gate guard) are now their own record, shipped with the SSA rule table and goldens.
+  - [dedup] Source housed these in features/social-security.md (now dissolved). New canonical home is docs/decisions/ss-computation.md; this README scope-boundary row becomes a pointer to that record.
+  - [reframe] The SS computation decisions (Method-C spousal, §202 survivor base, RIB-LIM, survivor lock-flat guard, excess-end-gate guard) live in their own record docs/decisions/ss-computation.md — the graduate-if-cross-repo-reach-grows flag is now realized, not pending.

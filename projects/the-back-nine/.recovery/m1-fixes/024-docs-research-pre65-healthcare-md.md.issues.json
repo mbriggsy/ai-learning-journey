@@ -1,0 +1,14 @@
+[
+  {
+    "ref": "docs/product.md#41, docs/architecture.md#45, docs/plans/3-controls.md#48, docs/plans/4-recommendation.md#80, docs/research/engine-validation-and-tax.md#28",
+    "severity": "warn",
+    "problem": "Over-canonicalization / intra-home duplication of one fact. All five foreign-sourced rows are dispositioned _canonical_ for the SAME dated legislative fact (enhanced ACA subsidies expired 12/31/2025 -> 400% FPL cliff is the 2026 base case), routed into a home whose NATIVE row pre65-healthcare.md#21 (_no-move_) already holds that exact dated fact, with #55 holding the gate and #23(line91) the rationale. Each foreign row's own [dedup] note even declares research canonical and says the source doc holds a POINTER -- which directly contradicts the _canonical_ disposition on the same row. Taken literally, M6 would author the project's most load-bearing, verify:aca-gated dated figure six times into one file.",
+    "fix": "Treat native #21 as the single canonical ACA-expiry/cliff-on block (with #23 rationale + #55 gate). Re-disposition the five foreign rows from _canonical_ to _pointer_ (their source docs keep a pointer to research; research is the one canonical), matching what their own [dedup] notes already say."
+  },
+  {
+    "ref": "docs/research/pre65-healthcare.md#3",
+    "severity": "nit",
+    "problem": "Thin reframe: the digest enumerates 'two MAGI definitions, two cliff shapes, a 2-year post-65 lag,' but the [reframe] surviving-fact sentence keeps only 'two MAGI definitions and two cliff shapes' and silently drops the 2-year post-65 lag constraint from the synthesis-scope framing.",
+    "fix": "Restore the 2-year post-65 (IRMAA) lag in the surviving-fact sentence so the synthesis scope stays complete. Low risk because the lag is canonical elsewhere (#19/#32/#51/#53), hence nit -- but the framing should not lose it."
+  }
+]

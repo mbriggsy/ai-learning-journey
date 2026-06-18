@@ -1,0 +1,20 @@
+[
+  {
+    "ref": "docs/README.md#0",
+    "severity": "warn",
+    "problem": "A doc-navigation convention ('the repo-root README is the single front door; docs/README.md is purely a thin index/map') is routed INTO docs/product.md as a reframe. This is not product why/what content - it is a documentation-tree convention. The row's own [dedup] note concedes the canonical home: 'the root-README-as-overview convention is canonical in the project README itself.' Verified that product.md's intro does NOT carry (and should not carry) a front-door/doc-map note - the convention lives in README.md line 11 and docs/README.md line 11. Landing it in product.md mis-files a navigation fact under why/what.",
+    "fix": "Re-route this row out of docs/product.md. Its canonical home is the root README.md (the single front door) with docs/README.md as the thin index - both already carry it. Either drop the row from the product home (the fact is fully homed in README/docs/README) or convert it to a pointer that lives in those doc-index surfaces, not in product.md's product-thesis section."
+  },
+  {
+    "ref": "README.md#2",
+    "severity": "warn",
+    "problem": "Disposition is marked _canonical_, but the row's own [dedup] note says 'Full canonical statement lives in product §2' - i.e. the full cardinal-rule statement is canonical in row docs/product.md#3 (which routes to '§2 The cardinal rule' also marked _canonical_), not in this README fossil. Two rows thus both land in product §2 marked canonical for the same fact. This contradicts how the parallel R25 row (docs/product.md#45) was correctly handled - R25 restates the cardinal rule and is marked _pointer_ to §2. README#2 is the same shape (a restatement whose full canonical is §2) but is mislabeled canonical.",
+    "fix": "Change README.md#2 disposition from _canonical_ to _pointer_, naming docs/product.md#3 / §2 as the canonical full statement (mirroring R25 #45). Keep the note that README retains its own plain-language phrasing for the first-time-reader surface, but the routed-into-product disposition should read pointer, not canonical, so §2 has exactly one canonical row (#3)."
+  },
+  {
+    "ref": "docs/product.md#5",
+    "severity": "nit",
+    "problem": "The digest quotes specific Mermaid node phrasings - 'Answer===Engine', 'Recommendation===Solver', 'Solver===Engine' - but the actual product.md diagram (lines 43-45) uses 'A === E', 'R === S', 'S === E' with descriptive node labels, never those literal compound tokens. A grep for the quoted phrasings returns nothing. The sig itself ('Can we retire, and how do we do it best?') IS greppable, so M6 survival is not at risk, but the digest's quoted node names overstate verbatim fidelity to the diagram.",
+    "fix": "Soften the digest to describe the relationships without inventing literal node tokens (e.g. 'Answer is engine-backed; Recommendation is solver-backed; Solver shares the engine's CRN futures'), or quote the real labels (A===E / R===S / S===E). Low risk since the sig grep still hits lines 36 and 107."
+  }
+]

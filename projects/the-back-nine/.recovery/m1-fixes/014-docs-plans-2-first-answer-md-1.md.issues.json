@@ -1,0 +1,20 @@
+[
+  {
+    "ref": "docs/decisions/accumulation-fuck-off-date.md#64",
+    "severity": "warn",
+    "problem": "Disposition/dedup tension. This row carries the full 'objective ≡ headline' INVARIANT (kind=invariant) as a reframe INTO the plan, yet its own [dedup] note states 'the objective≡headline invariant rationale stays in this record [decisions/accumulation]'. The accumulation fold keeps invariant/decision-rationale rows canonical in decisions/accumulation (summary: 24 decision-rationale + 2 invariant @ decisions/accumulation). So the canonical statement of this invariant should live in the decisions record; landing a full reframe of it in the plan risks two canonical statements of 'one run, one statistic, one grade / never an independent recompute' rather than one canonical + one pointer.",
+    "fix": "Make the plan row a POINTER, not a reframe: the canonical 'objective≡headline' invariant stays in decisions/accumulation-fuck-off-date.md §3c; the plan row records only the D2 build instruction ('render the date-search's own crowned-grade result — see decisions/accumulation §3c'). If a reframe is kept here, scope it explicitly to the build step and strip the invariant rationale."
+  },
+  {
+    "ref": "docs/plans/features/other-income.md#62",
+    "severity": "warn",
+    "problem": "Hollow reframe: the [reframe] note (billed by the header as 'the present-tense instruction') is thinner than the digest on two bug-preventing items the digest carries — (a) the named landmine 'do NOT copy the §6 ACA empty-overlap guard' into taxOverlay.ts, and (b) the KTD-9 re-specification of workingYearIrmaaMagiByPerson as wages/non-modeled. Both survive in the digest but vanish from the surviving present-tense instruction, so an author treating the [reframe] line as the spec could drop them.",
+    "fix": "Add the §6-ACA-guard 'do not copy' landmine and the KTD-9 workingYearIrmaaMagiByPerson wages/non-modeled re-spec back into the reframe note so the surviving instruction is as complete as the digest."
+  },
+  {
+    "ref": "docs/plans/features/other-income.md#63",
+    "severity": "nit",
+    "problem": "Hollow reframe (minor): the [reframe] note drops two load-bearing build specifics the digest carries — the seam-1 net formula 'net=max(0,spending−earned−ongoingIncomeGross−ss)' and the 'do not collapse the double allocateWithdrawal' instruction. Digest retains both, so it is digest-mitigated, but the present-tense instruction is thinner than the fact.",
+    "fix": "Carry the seam-1 net formula and the 'do not collapse the double allocateWithdrawal' constraint into the reframe note alongside the reduce-to-spine pin and the insight-027 sibling guidance."
+  }
+]

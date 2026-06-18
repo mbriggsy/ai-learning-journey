@@ -1,0 +1,463 @@
+{
+  "doc": "docs/research/engine-validation-and-tax.md",
+  "oneLineRole": "The cited evidence + single canonical home for the engine's verified reference numbers (Trinity/Bengen golden cases, MC calibration band, longevity formula, full tax surface) and the validation contract the engine is built and pinned against.",
+  "source": "main-inventory",
+  "items": [
+    {
+      "kind": "scope-boundary",
+      "claim": "This doc is the single-source home of the verified reference numbers: Trinity/Bengen golden cases, the Monte Carlo calibration band, the longevity formula, and the full tax surface (brackets, RMDs, senior-bonus deduction, Social-Security provisional-income taxation). The engine is built and pinned against these numbers and fully consumes this doc. Where a number lives, it lives HERE — never re-typed into a plan or component (single-source rule that prevents stat drift).",
+      "sourceSection": "Intro",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/architecture.md (constants discipline); CLAUDE.md (constants discipline summary)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "scope-boundary",
+      "claim": "The healthcare half of the tax surface — ACA-PTC (pre-65), IRMAA (post-65), HSA — lives in its OWN note: docs/research/pre65-healthcare.md. Together the two are the engine's tax + health reference.",
+      "sourceSection": "Intro",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/research/pre65-healthcare.md",
+      "fossilNote": ""
+    },
+    {
+      "kind": "invariant",
+      "claim": "The load-bearing engine invariants (single shared market draw / CRN, stateless Box-Muller, reduce-to-spine, externally-derived fixtures) live ONCE in docs/architecture.md — this doc points to them, does not duplicate them.",
+      "sourceSection": "Intro",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/architecture.md; CLAUDE.md",
+      "fossilNote": ""
+    },
+    {
+      "kind": "lesson",
+      "claim": "Confidence tags must be preserved on purpose: do NOT flatten 'defensible' or 'directional' into 'verified.' A directional fixture is marked directional in code; the §0 exit-gate work pinned the ones that needed pinning.",
+      "sourceSection": "How this evidence was produced",
+      "mustSurvive": true,
+      "duplicatedIn": "",
+      "fossilNote": ""
+    },
+    {
+      "kind": "build-detail-or-KTD",
+      "claim": "THE LANDMINE THIS STRAND DEFUSED: the raw research designated a WRONG Trinity bond number as a golden oracle. Encoding it would have made a CORRECT engine fail its own tests. The verifier caught it; every golden number in this doc is the corrected one.",
+      "sourceSection": "Validation contract intro / blockquote",
+      "mustSurvive": true,
+      "duplicatedIn": "",
+      "fossilNote": ""
+    },
+    {
+      "kind": "requirement",
+      "claim": "SOLVER VALIDATION CONTRACT (Act 4, still ahead, recorded so it cannot be rediscovered): because the product RECOMMENDS a strategy, the contract GROWS beyond 'the number is right' and needs three more case classes, all GATING before the solver is allowed to speak (a wrong recommended strategy costs real dollars).",
+      "sourceSection": "Solver validation",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/roadmap.md (validation gates); docs/plans/4-recommendation",
+      "fossilNote": ""
+    },
+    {
+      "kind": "requirement",
+      "claim": "Solver case class (a) Optimality / ranking oracle — hand-computable cases where the best drawdown/conversion order is KNOWN (conventional taxable→tax-deferred→Roth ordering; a textbook bracket-filling Roth optimum), so a confidently-wrong recommendation fails loud — the way Trinity/Bengen make 'the number is right' testable.",
+      "sourceSection": "Solver validation",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/plans/4-recommendation",
+      "fossilNote": ""
+    },
+    {
+      "kind": "requirement",
+      "claim": "Solver case class (b) Ranking-stability under CRN — the RANKING (not just each pairwise delta) must be stable on the shared draw matrix or the recommendation jitters. Generalize the 2-arm CRN test to K candidate strategies → identical normals path-for-path across the survivor MFJ→single transition.",
+      "sourceSection": "Solver validation",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/architecture.md (CRN); docs/plans/4-recommendation",
+      "fossilNote": ""
+    },
+    {
+      "kind": "requirement",
+      "claim": "Solver case class (c) Grade calibration — 'just do it' must ACTUALLY be robust across the futures and 'coin-flip' ACTUALLY a coin-flip. The sole human gate (N=1 cold-read) judges a grade's TONE but is structurally unable to judge its CORRECTNESS, so this automated oracle is the only backstop on a tool moving real money.",
+      "sourceSection": "Solver validation",
+      "mustSurvive": true,
+      "duplicatedIn": "CLAUDE.md (optimality oracle judges correctness; cold-read judges tone)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "requirement",
+      "claim": "Optimizer's-curse correction (part of the contract): argmax over many candidates on ONE seed overfits that seed's noise → the in-sample winner's score is optimistically biased. Report graded confidence on an INDEPENDENT held-out seed-set (or paired top-K dispersion). Because directional-until-pinned fixtures decide the exact near-ties the optimizer overfits, PINNING THE TAX-REFERENCE PRIMARIES IS A HARD SOLVER PREREQUISITE, not a residual gate.",
+      "sourceSection": "Solver validation",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/plans/4-recommendation",
+      "fossilNote": ""
+    },
+    {
+      "kind": "number-or-figure",
+      "claim": "Trinity Study (Cooley/Hubbard/Walz 1998) vintage-lock: 1926–1995, S&P 500 + LONG-TERM CORPORATE bonds, inflation-adjusted withdrawals, success = balance > $0 at horizon end, annual rebalance. Golden success rates at 4% infl-adj / 30 yr: 50/50 = 95% (exact anchor); 75/25 = 100% (verifier fix — raw research said 98%); 100% stock = 98%; 100% bond = ~70% (CORRECTED — raw research said '20–35%' which is WRONG and was flagged a golden oracle). Full 100%-bond row at 3/4/5/6% = 94/70/51/44%.",
+      "sourceSection": "Golden / exact",
+      "mustSurvive": true,
+      "duplicatedIn": "",
+      "fossilNote": ""
+    },
+    {
+      "kind": "build-detail-or-KTD",
+      "claim": "The 100%-bond = ~70% row is the DIAGNOSTIC case: a correct engine with inflation-adjusted withdrawals must show bonds doing POORLY, not 'safe.' If the engine shows bonds safe, the inflation adjustment or volatility handling is wrong.",
+      "sourceSection": "Golden / exact",
+      "mustSurvive": true,
+      "duplicatedIn": "",
+      "fossilNote": ""
+    },
+    {
+      "kind": "number-or-figure",
+      "claim": "Bengen SAFEMAX = 4.15% corresponds to the 1966 retiree cohort (verifier fix — raw research mis-paired it with 1968). Allocation 50% S&P 500 / 50% INTERMEDIATE-TERM GOVERNMENT bonds, 30 yr, annual rebalance.",
+      "sourceSection": "Deterministic golden",
+      "mustSurvive": true,
+      "duplicatedIn": "",
+      "fossilNote": ""
+    },
+    {
+      "kind": "build-detail-or-KTD",
+      "claim": "Bengen SAFEMAX is only bit-exact against Bengen's exact dataset (Ibbotson intermediate-government series). Without that dataset, treat as a DIRECTIONAL survive/fail test, not a golden number. Pin the dataset before calling it deterministic.",
+      "sourceSection": "Deterministic golden / Pin-pass status",
+      "mustSurvive": true,
+      "duplicatedIn": "",
+      "fossilNote": ""
+    },
+    {
+      "kind": "build-detail-or-KTD",
+      "claim": "Bond-index mismatch: Trinity used CORPORATE bonds; Bengen used GOVERNMENT bonds → their numbers legitimately differ (Bengen 50/50 ≈ 100% vs Trinity 50/50 = 95% for the same 4%/30yr). NEVER cross-validate one against the other's exact figure.",
+      "sourceSection": "Deterministic golden",
+      "mustSurvive": true,
+      "duplicatedIn": "",
+      "fossilNote": ""
+    },
+    {
+      "kind": "number-or-figure",
+      "claim": "Monte Carlo calibration is a BAND, not an equality: a pure i.i.d. Monte Carlo scores a given withdrawal rate MORE PESSIMISTICALLY than a historical backtest (i.i.d. draws ignore mean-reversion and can string arbitrarily bad runs). 4%/30yr lands high-80s to ~90%, BELOW the 95% historical. This is by design — assert only a RANGE for MC, use the historical cases as the exact oracle.",
+      "sourceSection": "Monte Carlo calibration",
+      "mustSurvive": true,
+      "duplicatedIn": "",
+      "fossilNote": ""
+    },
+    {
+      "kind": "decision-rationale",
+      "claim": "Pfau/Kitces: high-CAPE environments imply a 3–3.5% safe rate, not 4% — corroborates the 'deliberately conservative real returns' decision.",
+      "sourceSection": "Monte Carlo calibration",
+      "mustSurvive": true,
+      "duplicatedIn": "",
+      "fossilNote": ""
+    },
+    {
+      "kind": "build-detail-or-KTD",
+      "claim": "Volatility drag (the #1 MC bug): Geometric ≈ Arithmetic − σ²/2. For a lognormal sim use log-drift μ = arithmetic_mean − σ²/2, else you OVERSTATE compounding. Precise statement: feed the arithmetic mean but subtract σ²/2 as drift ('arithmetic-average growth, not compound' is the headline, σ²/2 is the mechanism). Unit test: +50% then −50% → two-year cumulative −25%, annualized geometric −13.4% (verifier relabel — don't conflate cumulative with annualized).",
+      "sourceSection": "Methodology landmines",
+      "mustSurvive": true,
+      "duplicatedIn": "",
+      "fossilNote": ""
+    },
+    {
+      "kind": "requirement",
+      "claim": "'Success' = $1 remaining HIDES magnitude. Also report terminal-value percentiles + depth-of-failure, not just pass/fail — this feeds the 'probability of adjustment' dollar-grammar (need the distribution, not a binary).",
+      "sourceSection": "Methodology landmines",
+      "mustSurvive": true,
+      "duplicatedIn": "",
+      "fossilNote": ""
+    },
+    {
+      "kind": "invariant",
+      "claim": "Longevity: use COHORT, not period life tables (period understates longevity). Joint-and-survivor must be DERIVED from single-sex curves: P(last survivor alive) = p_x + p_y − p_x·p_y. The engine must use SEX-SPECIFIC curves per spouse, never one rate for both; the longevity test asserts the couple figure = the formula on the two shipped curves, not a hardcoded constant. Independence is assumed — real spousal mortality is positively correlated, mildly overstating last-survivor probability, which errs safe for a survival floor. Do NOT model a fixed 'to-age-90' horizon — it systematically misstates ruin probability for a couple.",
+      "sourceSection": "Methodology landmines",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/architecture.md (engine invariants)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "number-or-figure",
+      "claim": "Grounded-search-era POPULATION longevity figures (since superseded by pinned cohorts): ~25% of 65-year-olds live past 90; ~53% chance at least one of a 65-yo couple reaches 90. The ~53% is NOT the symmetric ~25% applied to both (which yields 43.75% under p_x+p_y−p_x·p_y) — it reflects sex-differentiated cohort survival (women materially higher).",
+      "sourceSection": "Methodology landmines",
+      "mustSurvive": false,
+      "duplicatedIn": "",
+      "fossilNote": "These are the grounded-search-era population figures, superseded by the PINNED household cohorts (male 1969 / female 1972) — kept only to explain the formula's asymmetry; the live anchors are the pinned 0.3209/0.4348/0.6162 numbers."
+    },
+    {
+      "kind": "requirement",
+      "claim": "Rebalancing: Trinity/Bengen/FIRECalc all assume annual rebalance to target — match it or results drift.",
+      "sourceSection": "Methodology landmines",
+      "mustSurvive": true,
+      "duplicatedIn": "",
+      "fossilNote": ""
+    },
+    {
+      "kind": "build-detail-or-KTD",
+      "claim": "Local oracle for generating golden historical outputs on our own input sets: github.com/boknows/cFIREsim-open (Shiller data from 1871, rolling one-year-shifted windows).",
+      "sourceSection": "Methodology landmines",
+      "mustSurvive": true,
+      "duplicatedIn": "",
+      "fossilNote": ""
+    },
+    {
+      "kind": "status-as-built",
+      "claim": "[CORRECTED 2026-06-11 at the pin pass] SSA `table4c7.html` does NOT exist (404) — '4.C7' is Trustees-Report table NUMBERING, not a filename; only the period-table URL was ever real. The actual cohort tables are SSA's HistEst downloadables CohLifeTables_M_Alt2_TR2024.csv and CohLifeTables_F_Alt2_TR2024.csv, now committed sha256-pinned at src/engine/reference/ssa-snapshot/ (the two CSVs + SHA256SUMS).",
+      "sourceSection": "SSA cohort tables — RESOLVED / PINNED",
+      "mustSurvive": true,
+      "duplicatedIn": "Pin-pass status table (same doc)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "number-or-figure",
+      "claim": "PINNED household mortality cohorts: male 1969 / female 1972. S(90|65) = 0.3209 (male) / 0.4348 (female) → couple at-least-one-to-90 = 0.6162. Younger cohorts survive materially longer than the population figures. Per-spouse curves and the couple anchor are encoded in src/engine/reference/mortality.ts. A Trustees-Report-vintage bump is a deliberate re-pin, never a silent refresh.",
+      "sourceSection": "SSA cohort tables — RESOLVED / PINNED",
+      "mustSurvive": true,
+      "duplicatedIn": "Pin-pass status table (same doc); project-the-back-nine memory (mortality = 1969/1972 cohorts)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "scope-boundary",
+      "claim": "Strand 5 scope: began as numbers for a SINGLE Roth lever; the product is now a MULTI-CONTROL solver (withdrawal sequencing + conversion) with income-dependent healthcare, so the tax surface is bigger. Strand 5 is TWO sources together: the bracket/RMD/SS-tax reference in this doc PLUS the dedicated healthcare note (pre65-healthcare.md — ACA-PTC, IRMAA, HSA).",
+      "sourceSection": "Tax reference for the strategy solver (Strand 5)",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/research/pre65-healthcare.md",
+      "fossilNote": ""
+    },
+    {
+      "kind": "scope-boundary",
+      "claim": "THE FALSIFIABLE IN/OUT LINE: a tax/health effect is IN iff withdrawal sequencing or a conversion can MOVE it. IN: ordinary brackets, standard deduction, RMDs, SS-taxation, MFJ→single, ACA-PTC (pre-65), IRMAA (post-65), cap-gains / qualified-dividend stacking. OUT-but-disclosed: NIIT (3.8% surtax), state income tax. An omitted cliff INVERTS which strategy wins, not just its size — which is exactly why ACA-PTC and IRMAA come IN.",
+      "sourceSection": "Tax reference intro / Engine tax+health scope",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/product.md (R40 scope); docs/research/pre65-healthcare.md",
+      "fossilNote": ""
+    },
+    {
+      "kind": "requirement",
+      "claim": "TWO DISTINCT MAGI CALCULATORS are required (ACA-MAGI ≠ IRMAA-MAGI). A sequencing/conversion change shifts ACA-MAGI or IRMAA-MAGI across their cliffs.",
+      "sourceSection": "Tax reference intro / Engine tax+health scope",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/research/pre65-healthcare.md",
+      "fossilNote": ""
+    },
+    {
+      "kind": "status-as-built",
+      "claim": "LEGISLATIVE LANDMINE: the enhanced ACA subsidies EXPIRED 12/31/2025, unre-enacted as of 2026-06-04 → model the 400% FPL cliff as the 2026 BASE CASE, expose 'enhanced' as a scenario toggle, re-verify EVERY BUILD (CI-gated by `pnpm verify:aca`).",
+      "sourceSection": "Tax reference intro / Engine tax+health scope",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/research/pre65-healthcare.md; docs/architecture.md (ACA reVerifyEveryBuild); CLAUDE.md (verify:aca gate)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "build-detail-or-KTD",
+      "claim": "Tax-reference verification provenance: verified via gemini-grounding 2026-06-04 (Tax Foundation 2026 bracket tables; IRS RMD FAQ; SECURE 2.0; OBBBA; + the healthcare note's IRS/CMS primaries). The 2026 figures were grounded-search-verified and have since been pinned against the IRS primaries (see Pin-pass status).",
+      "sourceSection": "Tax reference (Strand 5) provenance line",
+      "mustSurvive": true,
+      "duplicatedIn": "",
+      "fossilNote": ""
+    },
+    {
+      "kind": "status-as-built",
+      "claim": "LEGAL BASIS (itself a staleness-stamp fact): The One Big Beautiful Bill Act (OBBBA), signed 2025-07-04, made the TCJA individual rate structure (10/12/22/24/32/35/37) and the elevated standard deduction PERMANENT — so 2026 is NOT a TCJA-sunset reversion to pre-2018 brackets (TCJA individual provisions were set to expire 12/31/2025). Therefore the 'tax-table vintage' staleness clock does NOT track a one-time 2026 reversion; it tracks (a) annual inflation indexing of a permanent bracket structure, (b) the senior-bonus-deduction sunset, (c) the RMD-age step, and (d) any future law change. STAMP THE LEGAL BASIS (OBBBA-2025), not just the year, so a future statutory change is falsifiable rather than mistaken for inflation drift.",
+      "sourceSection": "The legal basis",
+      "mustSurvive": true,
+      "duplicatedIn": "",
+      "fossilNote": ""
+    },
+    {
+      "kind": "number-or-figure",
+      "claim": "2026 federal MFJ ordinary-income brackets (taxable income): 10% ≤ $24,800; 12% $24,801–$100,800; 22% $100,801–$211,400; 24% $211,401–$403,550; 32% $403,551–$512,450; 35% $512,451–$768,700; 37% > $768,700.",
+      "sourceSection": "2026 federal MFJ ordinary-income brackets",
+      "mustSurvive": true,
+      "duplicatedIn": "",
+      "fossilNote": ""
+    },
+    {
+      "kind": "number-or-figure",
+      "claim": "2026 MFJ standard deduction = $32,200. Single ≈ half (≈ $16,100 — pin exact against the IRS Rev. Proc.; 2025 was MFJ $31,500 / single $15,750, exactly 2×). Additional age-65+ standard deduction ≈ $1,650/spouse MFJ (2026) — supporting, pin exact.",
+      "sourceSection": "Widow(er)'s-penalty drivers",
+      "mustSurvive": true,
+      "duplicatedIn": "",
+      "fossilNote": ""
+    },
+    {
+      "kind": "build-detail-or-KTD",
+      "claim": "Widow(er)'s-penalty mechanics: after the first death, an empty-nest retired couple files SINGLE the year AFTER (year of death = still MFJ; Qualifying-Surviving-Spouse MFJ-equivalent rates apply up to two following years ONLY with a dependent child in the home — which the target couple almost never has, so NO QSS grace — IRS Pub 501). The survivor's same real dollars then fall into ~half-width single brackets with ~half the standard deduction → the tax cliff converting-while-both-file-MFJ defuses. The joint→survivor two-regime boundary DOUBLES AS the MFJ→single filing-status switch — no new boundary.",
+      "sourceSection": "Widow(er)'s-penalty drivers",
+      "mustSurvive": true,
+      "duplicatedIn": "",
+      "fossilNote": ""
+    },
+    {
+      "kind": "number-or-figure",
+      "claim": "RMD start age is birth-year-derived, NOT a flat 73 (SECURE 2.0): born ≤ 1950 → 72; born 1951–1959 → 73; born 1960 or later → 75 (the 75 step is effective 2033). The 1959 statutory drafting glitch resolves to 73 (current standard interpretation). RMD = IRS Uniform Lifetime Table divisor applied to the prior-year-end pre-tax balance; first RMD due by April 1 of the year after reaching RMD age.",
+      "sourceSection": "RMD start age",
+      "mustSurvive": true,
+      "duplicatedIn": "",
+      "fossilNote": ""
+    },
+    {
+      "kind": "invariant",
+      "claim": "The RMD age is a per-person function of birth year and is legislatively scheduled to change (the 2033 step) — so it is a vintage-stamped / birth-year-keyed input, never a hardcoded literal.",
+      "sourceSection": "RMD start age",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/architecture.md (constants discipline — year-keyed)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "number-or-figure",
+      "claim": "Temporary Senior Bonus Deduction (OBBBA): $6,000 per person age 65+ ($12,000 MFJ), on top of the standard deduction, claimable whether itemizing or not. MAGI phase-out begins single > $75k / MFJ > $150k, reduced 6% per dollar over. Deduction = $6,000 × (# spouses 65+) reduced by 6% of (MAGI − $150k) on a joint return. Fully gone: single > $175k; MFJ > $250k when ONE spouse is 65+ ($6k), but MFJ > $350k when BOTH are 65+ ($12k) — the both-65+ couple keeps it up to $350k MAGI. Source: IRS FS-2025-03; OBBBA P.L. 119-21 / H.R.1.",
+      "sourceSection": "Temporary Senior Bonus Deduction",
+      "mustSurvive": true,
+      "duplicatedIn": "",
+      "fossilNote": ""
+    },
+    {
+      "kind": "build-detail-or-KTD",
+      "claim": "Senior-bonus KTD: a flat 'MFJ > $250k' phase-out is the one-spouse case ONLY and would overstate tax / understate conversion+IRMAA headroom in the $250–350k band — exactly where a conversion solver decides. Both-65+ couple (the central post-65 conversion scenario) keeps the deduction up to $350k.",
+      "sourceSection": "Temporary Senior Bonus Deduction",
+      "mustSurvive": true,
+      "duplicatedIn": "",
+      "fossilNote": ""
+    },
+    {
+      "kind": "requirement",
+      "claim": "Senior Bonus Deduction is available tax years 2025–2028 ONLY; SUNSETS after 2028 unless extended → the tax overlay must carry an explicit SUNSET MARKER (a calm note when an answer computed pre-2029 is viewed in/after 2029).",
+      "sourceSection": "Temporary Senior Bonus Deduction",
+      "mustSurvive": true,
+      "duplicatedIn": "",
+      "fossilNote": ""
+    },
+    {
+      "kind": "scope-boundary",
+      "claim": "Engine tax + health scope decided 2026-06-04 ('the most complete picture'). IN the two-control solver's tax+health model: federal MFJ + single ordinary-income brackets; standard deduction (+ age-65 additions + senior-bonus deduction with phase-out & sunset); birth-year-derived RMDs (Uniform Lifetime); each year's withdrawal/conversion taxed as ordinary income stacked on that year's other ordinary income; Social-Security provisional-income taxation (the 'tax torpedo'); capital-gains / qualified-dividend stacking from taxable-account withdrawals; income-dependent healthcare — pre-65 ACA-PTC (400% FPL cliff is the 2026 base case, 'enhanced' = scenario toggle) and post-65 IRMAA (2-year MAGI lookback, distinct MAGI definition, hard cliffs). OUT-but-disclosed (candidate future levers next to the delta): NIIT (3.8% surtax) and state income tax — neither moves with sequencing or conversion.",
+      "sourceSection": "Engine tax + health scope",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/product.md (R40); docs/research/pre65-healthcare.md",
+      "fossilNote": ""
+    },
+    {
+      "kind": "number-or-figure",
+      "claim": "Social-Security benefit taxation ('tax torpedo'): Provisional ('combined') income = AGI excluding SS + tax-exempt interest + 50% of SS benefits. MFJ tiers (fraction of benefits entering ordinary taxable income): provisional < $32,000 → 0%; $32,000–$44,000 → up to 50%; > $44,000 → up to 85% (single: $25,000 / $34,000). Exact inclusion follows the IRS Pub. 915 worksheet.",
+      "sourceSection": "Social-Security benefit taxation",
+      "mustSurvive": true,
+      "duplicatedIn": "",
+      "fossilNote": ""
+    },
+    {
+      "kind": "invariant",
+      "claim": "The SS provisional-income thresholds are NOT inflation-indexed — frozen since 1983 ($32k) / 1993 ($44k). They have NO vintage/staleness clock (unlike the brackets, which inflation-index annually): they are constants, not a dated fixture, and a frozen constant cannot go 'stale.' This is WHY more retirees are caught each year — a feature to model honestly, not a bug.",
+      "sourceSection": "Social-Security benefit taxation",
+      "mustSurvive": true,
+      "duplicatedIn": "Pin-pass status table (same doc)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "build-detail-or-KTD",
+      "claim": "Computational landmine — the SS-tax circularity (a per-year FIXED-POINT, NOT a one-pass transform): taxable SS depends on provisional income, which depends on the year's other ordinary income — including the GROSS-UP withdrawal needed to cover spending + tax, which depends on the tax. The overlay resolves this per simulated year as a BOUNDED fixed-point (iterate provisional-income → taxable-SS → tax → gross-up to convergence, a few passes; deterministic, reads ZERO random draws — so still CRN-safe). The engine seam pins the convergence rule (iterate-to-stable or a fixed small pass count).",
+      "sourceSection": "Social-Security benefit taxation",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/architecture.md (overlay contracts / gross-up)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "scope-boundary",
+      "claim": "Not modeled (pending legislation): the proposed 'You Earned It, You Keep It Act' (would eliminate SS taxation) is NOT law as of 2026 — do not model speculative legislation; if enacted it becomes a Strand-5 update + a tax-vintage bump.",
+      "sourceSection": "Social-Security benefit taxation",
+      "mustSurvive": true,
+      "duplicatedIn": "",
+      "fossilNote": ""
+    },
+    {
+      "kind": "scope-boundary",
+      "claim": "All of Strand 5 supports the two-control solver (withdrawal sequencing + Roth conversion) plus income-dependent healthcare. The survivor cliff is one driver among several, not the sole lever; the falsifiable IN/OUT line bounds the scope.",
+      "sourceSection": "Strand 5 closing note",
+      "mustSurvive": true,
+      "duplicatedIn": "",
+      "fossilNote": ""
+    },
+    {
+      "kind": "status-as-built",
+      "claim": "PIN-PASS STATUS: the P1-exit pin pass (2026-06-11) closed the formerly-open exit gates. What was a grounded-search figure is now parsed-and-pinned against a primary, sha256-snapshotted under src/engine/reference/ and read by the canonical year-keyed constants table (src/engine/constants/).",
+      "sourceSection": "Pin-pass status",
+      "mustSurvive": true,
+      "duplicatedIn": "TODO.md history; project-the-back-nine memory (P1 closed 2026-06-11)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "status-as-built",
+      "claim": "Pin status: 2026 bracket edges + standard deduction + age-65 addition + senior-bonus figures = RESOLVED / PINNED against the IRS Revenue Procedure (2026 inflation adjustments) + Pub. 501 (filing status / QSS); read from src/engine/constants/tax.ts.",
+      "sourceSection": "Pin-pass status table",
+      "mustSurvive": true,
+      "duplicatedIn": "",
+      "fossilNote": ""
+    },
+    {
+      "kind": "status-as-built",
+      "claim": "Pin status: RMD divisors (Uniform Lifetime Table) = RESOLVED / PINNED against IRS Pub. 590-B; year-keyed in the canonical constants table.",
+      "sourceSection": "Pin-pass status table",
+      "mustSurvive": true,
+      "duplicatedIn": "",
+      "fossilNote": ""
+    },
+    {
+      "kind": "status-as-built",
+      "claim": "Pin status: SS-tax thresholds / inclusion worksheet = RESOLVED / PINNED against IRS Pub. 915; the $32k / $44k constants carry 'frozen, no staleness clock.'",
+      "sourceSection": "Pin-pass status table",
+      "mustSurvive": true,
+      "duplicatedIn": "",
+      "fossilNote": ""
+    },
+    {
+      "kind": "status-as-built",
+      "claim": "Pin status: Bengen 1966 bit-exactness = DIRECTIONAL by design (depends on the exact Ibbotson intermediate-government dataset). Treated as a directional survive/fail test, not a golden number; do not assert a bit-exact SAFEMAX without the Ibbotson series.",
+      "sourceSection": "Pin-pass status table",
+      "mustSurvive": true,
+      "duplicatedIn": "",
+      "fossilNote": ""
+    },
+    {
+      "kind": "status-as-built",
+      "claim": "Pin status: the reg / attorney-gate (Strand 3) = LAPSED — personal / non-commercial tool; not a fixture exit gate.",
+      "sourceSection": "Pin-pass status table",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/product.md (cardinal rule / personal-tool); Strand 3 appendix (same doc)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "requirement",
+      "claim": "What survives as a real gate is HONESTY HYGIENE on the recommendation copy across both controls: the headline must wear its probabilistic hedge (copyGuard's require-the-hedge lint), no false precision, and a wrong tax/health fact behind the verdict is the cardinal sin — the reset transferred the load onto honesty + engine validation, which get STRICTER for a recommender.",
+      "sourceSection": "Pin-pass status",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/product.md (cardinal rule); docs/architecture.md (copyGuard)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "build-detail-or-KTD",
+      "claim": "Constants discipline: every figure is keyed by year in the SINGLE canonical table and carries { value, citation, directionalUntilPinned }. A figure the research names but doesn't value is an Unsourced sentinel whose .value THROWS — never a plausible default. Full constants rules live in architecture.md; this doc supplies the numbers, that doc supplies the discipline.",
+      "sourceSection": "Pin-pass status",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/architecture.md (constants discipline §8); CLAUDE.md (constants discipline)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "decision-rationale",
+      "claim": "Strand 3 (Regulatory) — ARCHIVE-AS-RATIONALE: The Back Nine is now a PERSONAL, non-commercial tool. Reg BI / the Investment Advisers Act govern compensated advice to clients; this product meets neither the relationship nor the compensation prong, so the whole strand is no longer a live constraint. Retained only as the documented WHY behind early v1 guardrails (no-verdict, no-optimizer, categorical-only triggers, the attorney-gate) so a future re-commercialization can re-instate them deliberately. Core finding preserved: the load-bearing defense was never the disclaimer — it was that a Roth-conversion what-if that names no securities is probably not 'advice about securities' at all (IAA §202(a)(11) Prong A threshold likely never closes); the counter-authority that made the no-verdict/calculator framing load-bearing is the SEC's Reg BI / 2019 RIA Interpretation (IA-5249) treating a Traditional-vs-Roth recommendation as an 'investment strategy involving securities.' Confidence was always defensible, not airtight (no on-point SEC no-action letter); the gate closed on securities drift (naming securities, asset-location advice, growth-rate-as-recommendation). Honesty descendants (certainty-hygiene, no-false-precision) survive on their own merits; nothing in this strand binds the current build.",
+      "sourceSection": "Historical changelog appendix — Strand 3",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/decisions/ (regulatory rationale); docs/product.md",
+      "fossilNote": "Sits in the Historical changelog appendix because of WHEN it was added (early research, pre-personal-pivot), but carries a still-true scope decision + the rationale to re-instate guardrails on re-commercialization — keep as decision-rationale, not history."
+    },
+    {
+      "kind": "decision-rationale",
+      "claim": "Strand 2 architecture decisions (build-shaping, still live): WASM + a single Web Worker clears a 1,000-path Monte Carlo sub-second (value is determinism + headroom, not raw speed). Non-extractable CryptoKey in IndexedDB is the canonical browser-E2E pattern. Recovery-phrase + mandatory-export with no provider password-reset for data is the zero-knowledge standard. Skip SharedArrayBuffer + COOP/COEP (single-threaded WASM in one worker is plenty, SAB is PWA-hostile). A non-extractable key is convenience, NOT the at-rest boundary (real protection is the encrypted blob + KDF). KDF: PBKDF2-HMAC-SHA256 @ 600,000 iterations is the WebCrypto-native baseline; Argon2id-WASM (m=19456, t=2, p=1 or m=47104, t=1, p=1) only if the engine ever ships WASM (OWASP true fallback order Argon2id → scrypt → bcrypt → PBKDF2; salt = 16 random bytes, AES-GCM-256, extractable:false). Jazz DOWNGRADED (mid-rewrite to a 2.0 alpha API — foundation risk; Evolu less in-flux if sync is ever added). Recovery sharpened: SEPARATE login recovery from data-decryption recovery (raw research inverted this — the recovery phrase recovers BOTH; email/SMS reset is login-only and strands encrypted data); mandatory export at onboarding; treat IndexedDB eviction (WebKit ITP ~7-day clear) as best-effort so the exported phrase is the real durability backstop.",
+      "sourceSection": "Historical changelog appendix — Strand 2",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/architecture.md (crypto/security boundary); CLAUDE.md (crypto layer)",
+      "fossilNote": "In the Historical changelog appendix by WHEN-added, but these are live build-shaping architecture decisions (KDF params, SAB skip, Jazz downgrade, recovery model) — belong with architecture/crypto, not dropped as history."
+    },
+    {
+      "kind": "build-detail-or-KTD",
+      "claim": "Future desktop-port landmine (Phase-2, not MVP): if ever ported to Tauri, AVOID Tauri Stronghold (the upstream IOTA stronghold.rs has been unmaintained since 2025-04-23 — a sunset signal); use the Rust keyring crate (e.g. tauri-plugin-keyring) + SQLCipher-encrypted SQLite instead, and spot-check the crate's maintenance before adopting.",
+      "sourceSection": "Historical changelog appendix — Strand 2",
+      "mustSurvive": true,
+      "duplicatedIn": "",
+      "fossilNote": "In the changelog appendix by WHEN-added; it is a forward landmine for a future port — keep."
+    },
+    {
+      "kind": "decision-rationale",
+      "claim": "Strand 1 (Voice-of-user UX pain) → thesis SUPPORTED. Across ProjectionLab, Boldin, Monarch, Empower, and Fidelity/Vanguard, dominant complaints are consumability failures, not capability gaps. The wedge: 'wildly different answers → distrust of any single number' (users run multiple tools, get results from 'good to retire' to 'much grimmer,' and stop trusting all of them; tools perceived as opaque black boxes). Users want 'permission and confidence,' not another precise-but-opaque number (synthesized insight, not a verbatim quote). Refinement: the hardest incumbent failure is DATA PLUMBING (account-sync breakage, aggregator duplicate cleanup) — a manual-first, local-first design sidesteps the whole class, so the thesis became 'consumability AND trustworthy data handling.' Honest caveat: the corpus is power-user / FIRE-skewed, so consumability pain for mainstream users is more likely understated than overstated.",
+      "sourceSection": "Historical changelog appendix — Strand 1",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/product.md (thesis)",
+      "fossilNote": "In the changelog appendix by WHEN-added; the thesis + the 'manual-first sidesteps data-plumbing' rationale is live product positioning — belongs with product, not dropped."
+    }
+  ]
+}

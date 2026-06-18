@@ -1,0 +1,71 @@
+{
+  "doc": "docs/README.md",
+  "oneLineRole": "The docs-folder index: a one-page map routing the reader to every other doc by what they want to understand (why/what, build status, invariants, per-act plans, decisions, research numbers, glossary, insights).",
+  "source": "main-inventory",
+  "items": [
+    {
+      "kind": "other",
+      "claim": "This folder (docs/) is the project's documentation. For the project overview — what The Back Nine is, how it works, and where the build stands — the reader starts at the repo-root README at ../README.md. The docs/README.md page itself is purely the map/index to everything below in docs/.",
+      "sourceSection": "Intro paragraph (lines 9-11)",
+      "mustSurvive": true,
+      "duplicatedIn": "CLAUDE.md (project) names docs/README.md as the entry point to the doc map",
+      "fossilNote": ""
+    },
+    {
+      "kind": "definition-term",
+      "claim": "Routing map (the doc's whole substance) — 'To understand X, read Y': (1) The why, the what, and the full requirements ledger → product.md; (2) Where the build stands — the four acts and the per-unit status table → roadmap.md; (3) How the engine works, and the invariants nobody may break → architecture.md; (4) The per-act build plans → plans/1-engine.md, plans/2-first-answer.md, plans/3-controls.md, plans/4-recommendation.md; (5) A specific capability's plan → plans/features/social-security.md, plans/features/other-income.md, plans/features/portfolio-holdings.md; (6) The reasoning behind the hard engineering calls → decisions/; (7) The verified reference numbers (Trinity/Bengen, tax, ACA/IRMAA) → research/engine-validation-and-tax.md, research/pre65-healthcare.md; (8) Any unfamiliar term (CRN, reduce-to-spine, MAGI, the fuck-off date) → glossary.md; (9) Hard-won gotchas + lessons (wired to /brief and /distill) → insights/.",
+      "sourceSection": "Map table (lines 13-23)",
+      "mustSurvive": true,
+      "duplicatedIn": "CLAUDE.md 'The map (where truth lives)' section lists the same doc set and precedence",
+      "fossilNote": ""
+    },
+    {
+      "kind": "scope-boundary",
+      "claim": "The documentation is deliberately split by KIND into named homes, each with a single job: product.md = why + what + requirements ledger; roadmap.md = build status (four acts + per-unit status table); architecture.md = how-the-engine-works + the invariants nobody may break; plans/ = per-act build plans (4 acts) plus plans/features/ for specific-capability plans; decisions/ = reasoning behind hard engineering calls; research/ = verified reference numbers; glossary.md = term definitions; insights/ = hard-won gotchas + lessons.",
+      "sourceSection": "Map table (lines 13-23)",
+      "mustSurvive": true,
+      "duplicatedIn": "CLAUDE.md 'The map (where truth lives)'",
+      "fossilNote": ""
+    },
+    {
+      "kind": "decision-rationale",
+      "claim": "The four per-act build plan files are named by their product role, not by number alone: 1-engine, 2-first-answer, 3-controls, 4-recommendation — i.e. Act 1 = the engine, Act 2 = the first answer, Act 3 = the (tax) controls, Act 4 = the recommendation. This is the 'four acts' structure referenced throughout.",
+      "sourceSection": "Map table row 4 (line 18)",
+      "mustSurvive": true,
+      "duplicatedIn": "roadmap.md (the four acts), CLAUDE.md (plans/1-engine … 4-recommendation)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "scope-boundary",
+      "claim": "The three named feature plans under plans/features/ are: social-security.md, other-income.md, portfolio-holdings.md. These are 'a specific capability's plan' (distinct from the four per-act plans).",
+      "sourceSection": "Map table row 5 (line 19)",
+      "mustSurvive": true,
+      "duplicatedIn": "CLAUDE.md references plans/features/",
+      "fossilNote": "The features/ docs are the most likely fossils-by-timing per the rewrite brief; this index lists them as a separate row only because they are capability plans added alongside the act plans."
+    },
+    {
+      "kind": "scope-boundary",
+      "claim": "The two named research files holding the verified reference numbers are: research/engine-validation-and-tax.md (Trinity/Bengen + tax) and research/pre65-healthcare.md (ACA/IRMAA / pre-65 healthcare).",
+      "sourceSection": "Map table row 7 (line 21)",
+      "mustSurvive": true,
+      "duplicatedIn": "CLAUDE.md references docs/research/",
+      "fossilNote": ""
+    },
+    {
+      "kind": "build-detail-or-KTD",
+      "claim": "The insights/ folder is wired to the /brief and /distill skills — hard-won gotchas + lessons are surfaced via /brief before work and captured via /distill. (Load-bearing operational link between the docs and the skill tooling.)",
+      "sourceSection": "Map table row 9 (line 23)",
+      "mustSurvive": true,
+      "duplicatedIn": "Global CLAUDE.md / skill definitions for /brief and /distill",
+      "fossilNote": ""
+    },
+    {
+      "kind": "definition-term",
+      "claim": "glossary.md is the home for unfamiliar terms, with the example set called out verbatim: CRN, reduce-to-spine, MAGI, 'the fuck-off date'. These terms are signposted as central project vocabulary.",
+      "sourceSection": "Map table row 8 (line 22)",
+      "mustSurvive": true,
+      "duplicatedIn": "glossary.md (definitions live there), CLAUDE.md (uses these terms)",
+      "fossilNote": ""
+    }
+  ]
+}

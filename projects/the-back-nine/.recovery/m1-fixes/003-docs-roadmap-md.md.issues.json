@@ -1,0 +1,14 @@
+[
+  {
+    "ref": "docs/README.md#2",
+    "severity": "warn",
+    "problem": "MIS-ROUTE. kind=scope-boundary, content = the doc-organization-by-KIND doctrine (product=why/what, roadmap=status, architecture=invariants, glossary=terms, insights=lessons). That is documentation-meta doctrine describing where each kind lives — it is NOT build-status, so it does not belong in the status home (roadmap). The roadmap is one of the homes the doctrine describes; it cannot host the doctrine. The row's own [dedup] note even states 'CLAUDE.md is the canonical statement of doc-organization, docs surface becomes a pointer' — which directly contradicts filing it under home=roadmap. Canonically this doctrine lives in docs/README.md (the single front-door index, per commit 2f227e0a) with CLAUDE.md's 'where truth lives' map as the always-in-context copy.",
+    "fix": "Re-home this row to docs/README.md (the index/front-door) as the doc-organization doctrine, with CLAUDE.md as the canonical always-in-context copy; do not host the kind-split in roadmap. Roadmap should carry build-status only."
+  },
+  {
+    "ref": "docs/product.md#74",
+    "severity": "warn",
+    "problem": "CANONICAL/POINTER INVERSION (mis-route of an invariant's canonical anchor). The surviving fact 'with no runway (Y==0) the tool reproduces decumulation byte-identically' IS the reduce-to-spine engine invariant, whose canonical home per CLAUDE.md/architecture is docs/architecture.md ('Reduce-to-spine invariant ... canonical home docs/architecture.md'). This row is marked _canonical_ in roadmap and its [dedup] note demotes architecture to merely 'hold[ing] pointers' — inverting the routing law (invariant canonical = architecture). The validation-GATE form (we test Y==0 reduces byte-identically) legitimately lives in roadmap's validation gates, but the invariant STATEMENT must be canonically anchored in architecture, or M6 will reconstruct the load-bearing invariant from the status doc. Contrast roadmap.md#21 (C2), which correctly states 'engine contract canonical in architecture.md.'",
+    "fix": "Keep the gate/success-criterion as a roadmap validation-gate row, but flip the dedup: make docs/architecture.md the named CANONICAL home for the reduce-to-spine / byte-identity invariant and roadmap the gate-status pointer to it — not the reverse."
+  }
+]

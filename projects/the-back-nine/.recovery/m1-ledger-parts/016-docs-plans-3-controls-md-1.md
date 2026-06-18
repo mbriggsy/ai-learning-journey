@@ -1,0 +1,27 @@
+- **`docs/plans/3-controls.md#70`** · `requirement` · → Unit 13 — staleness clocks 3-5 · _canonical_
+  - sig: ACA-status is the load-bearing clock; changed split->U10, changed total->U12
+  - U13 clocks 3-5: healthcare vintages (ACA legislative status the load-bearing one, applicable-%, IRMAA brackets, Part B) gate the healthcare surfaces; the balance-drift confirm checks the per-bucket split (changed split->U10 mini-intake, changed total->U12 sharpen); budget time-boxed windows that advanced get a calm re-confirm.
+  - [dedup] duplicatedIn names contract #6 and Unit 11 in the same doc.
+- **`docs/plans/3-controls.md#71`** · `requirement` · → Unit 13 — date answer joins staleness · _reframe_
+  - sig: date answer joins staleness: contribution-limit + ticker-blend vintages
+  - U13: the date answer joins the staleness machinery — contribution-limit-table and ticker-blend/TDF snapshot vintages gate the date surface; user-entered values (balances, ACA quote) ride the balance-drift confirm; re-presentation renders the wall-time-stable calendar label and re-derives '~N years out' from current wall-time, routing old saves to recompute.
+  - [dedup] Clock specs are plan/U13-canonical (contract #6 in same doc); the date-answer rationale ties to decisions/accumulation-fuck-off-date.
+  - [reframe] Surviving fact (present-tense): the date surface has fixture-vintage clocks (contribution-limit, ticker-blend) and user-entered re-confirms, and renders a stable calendar label with current-wall-time relative framing; drop the '2026-06-08 accumulation-fold U13 extension' origin framing.
+- **`docs/plans/3-controls.md#72`** · `invariant` · → Unit 13 — absent-stamp default · _canonical_
+  - sig: absent stamp = not-applicable, never infinitely stale
+  - U13: a spine-only vault with no tax/health stamp is treated by staleness.ts as 'not applicable' (no false stale), never 'infinitely stale'; stamps live on the model so staleness is computable offline.
+  - [dedup] duplicatedIn names contract #6 in the same doc.
+- **`docs/plans/3-controls.md#73`** · `build-detail-or-KTD` · → Unit 13 — Files · _canonical_
+  - sig: create ReEntry.tsx and store/staleness.ts
+  - U13 files: create ReEntry.tsx, store/staleness.ts; modify model.ts (the vintage stamps, read here, written by U10/U11, under the single bump); add reentry + staleness tests.
+- **`docs/plans/3-controls.md#74`** · `build-detail-or-KTD` · → Unit 13 — Test scenarios · _canonical_
+  - sig: U13 tests: survivor door, tax staleness control-scoped, absent stamp
+  - U13 tests: re-derived saved verdict byte-identical, survivor recovery-phrase door + mandatory new-passphrase gate, U4 error paths, tax staleness on the control not the spine, healthcare staleness, budget time-box re-confirm, re-present-vs-re-run, per-bucket balance-confirm routing, date staleness, absent-stamp not-applicable, app-default vintage note.
+- **`docs/plans/3-controls.md#75`** · `requirement` · → Unit 13 — Verification + Feeds forward · _canonical_
+  - sig: U13 exit: survivor has a specified door, saved-what-if vs saved-action boundary
+  - U13 exit conditions: returning user sees their re-derived saved answer with honest per-surface staleness (tax/healthcare/budget/date), is nudged to confirm the per-bucket balance, and the surviving spouse has a specified in-place recovery door; the per-surface map is what Act-4 U17 inherits and inverts for a saved executed action.
+  - [dedup] Plan owns U13 exit; plans/4 Unit 17 + contract #8b are downstream.
+- **`docs/plans/3-controls.md#76`** · `build-detail-or-KTD` · → Implementation-craft references · _canonical_
+  - sig: craft refs: burned/005 request-epoch, ai-journey-stats sparkline
+  - Act-3 build-time craft references: burned/005 request-epoch/generation-counter on stale sliders, timers, and onAnimationComplete; ai-journey-stats/007 useCallback-memoized handlers (U12); ai-journey-stats/sparkline path-builder geometry (U10); burned/015 :active feedback on motion-control children (U12).
+  - [dedup] Plan owns the Act-3 craft-ref list; plans/4 extends burned/005 for solve cancellation.

@@ -1,0 +1,631 @@
+{
+  "doc": "docs/plans/3-controls.md",
+  "oneLineRole": "The build-ready (zero-code) act plan for Act 3 \"Controls\" — the budget builder, the two manual tax controls (sequencing + Roth conversion), healthcare surfaces, the sharpen loop, and returning-user re-entry — specifying the eight cross-cutting contracts and the per-unit (U9–U13) deliverables/tests/exit-conditions that the future Act-4 solver inherits.",
+  "source": "main-inventory",
+  "items": [
+    {
+      "kind": "status-as-built",
+      "claim": "Act 3 is PLANNED, ZERO CODE, NOT STARTED. `src/budget/` is `.gitkeep`-only with zero implementation. It is scoped and build-ready. There is deliberately NO lifecycle block in the frontmatter — an absent lifecycle is the honest signal that no code exists yet. Act 3 is also NOT the next build.",
+      "sourceSection": "Status banner (line 12) + What is next",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/roadmap.md (You-Are-Here per-unit status table), TODO.md",
+      "fossilNote": ""
+    },
+    {
+      "kind": "scope-boundary",
+      "claim": "Act 3 ships the 'pull it toward you' half of the product as a shippable cold-read milestone BEFORE the solver exists. After Act 3 a friend can build a real budget, hand-tune both controls (sequencing + Roth conversion), watch the survivor's tax cliff move, and return tomorrow to a calm, honestly-stale saved answer — all WITHOUT a recommendation yet. The manual milestone is itself a real, usable tool.",
+      "sourceSection": "The goal (line 14)",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/product.md, docs/roadmap.md",
+      "fossilNote": ""
+    },
+    {
+      "kind": "decision-rationale",
+      "claim": "Why these are Act 3: they all CONSUME the first answer (Act 2) and the validated spine+overlays (Act 1), making sense only once the confidence statement exists and the engine is deterministic. They are also the entire input+reasoning substrate the Act-4 solver searches: the budget's two-tier essentials/surplus split IS the lexicographic objective's two tiers; the two manual controls ARE the solver's search axes; the healthcare overlay is the cliff the solver must not silently optimize over. Building+cold-reading them by hand first means the Act-4 solver inherits proven, honest control surfaces instead of inventing them.",
+      "sourceSection": "Why this is Act 3 (line 16)",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/plans/4-recommendation.md, docs/roadmap.md",
+      "fossilNote": ""
+    },
+    {
+      "kind": "invariant",
+      "claim": "The cardinal honesty rule rises here, not later: every control readout that moves real money must wear its hedge. \"It's just for friends\" never excuses a confidently-wrong recommendation (R25).",
+      "sourceSection": "Why this is Act 3 (line 16) + contract #4",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/product.md §2 (cardinal rule), CLAUDE.md",
+      "fossilNote": ""
+    },
+    {
+      "kind": "definition-term",
+      "claim": "The chain in one line: `budget → controls → healthcare → sharpen → re-entry`. U9 compiles an itemized, time-boxed budget into the two-tier (essentials-floor / lifestyle-surplus) reading; U10 lets the user hand-tune sequencing + Roth conversion over the Act-1 overlays and introduces the `require-the-hedge` copyGuard lint; U11 surfaces the income-dependent healthcare reality (ACA cliff, IRMAA, HSA) over the Act-1 overlay; U12 makes every assumption editable so each edit *sharpens* the answer; U13 brings the returning user (and surviving spouse) back to a re-derived saved answer with honest per-surface staleness.",
+      "sourceSection": "The chain in one line (line 18)",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/roadmap.md (requirement→unit trace)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "invariant",
+      "claim": "Engine invariants this act INHERITS live once in docs/architecture.md and are LINKED not restated: CRN / single shared market draw; reduce-to-spine byte-identity; the tax-and-accounts overlay; the healthcare overlay (ACA fixed-point + cliff branching, IRMAA 2-yr lag, the two MAGI calculators, the HSA bucket); the encrypted-store key lifecycle + migration ladder; the externally-derived-fixture discipline. The accumulation / fuck-off-date decision record is docs/decisions/accumulation-fuck-off-date.md. The lexicographic objective, lever set, and requirements ledger are in docs/product.md.",
+      "sourceSection": "Engine context (line 20)",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/architecture.md (canonical), docs/product.md, docs/decisions/accumulation-fuck-off-date.md",
+      "fossilNote": ""
+    },
+    {
+      "kind": "invariant",
+      "claim": "Reference-number discipline: reference numbers (brackets, RMD ages, ACA/IRMAA/HSA dollars, applicable-%, Part B premium, validation %) are NEVER inlined in this plan. Every dated tax/health constant lives in the canonical year-keyed `src/engine/constants/` module (cited to research, marked directional-until-pinned); this plan points to it. See docs/architecture.md §8.",
+      "sourceSection": "Reference-number discipline (line 22)",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/architecture.md §8, CLAUDE.md (constants discipline)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "requirement",
+      "claim": "Contract #1 — The tax + healthcare overlays are CONSUMED as Act-1 dependencies, NEVER re-specified here. Roth/sequencing controls (U10) DRIVE the Act-1 U2 tax-and-accounts overlay (per-person pre-tax/Roth/taxable buckets, ordinary-income tax on pre-tax withdrawals + RMDs + the conversion, Social-Security provisional-income taxation as a per-year bounded fixed-point, the MFJ→single switch at sampled first death) and the Act-1 U1 sequencing substrate (`sequencing.ts` named drawdown policies). Healthcare surfaces (U11) READ the Act-1 U3 healthcare overlay (two distinct MAGI calculators — ACA-MAGI ≠ IRMAA-MAGI — pre-65 ACA cost as a per-year fixed-point with explicit 400%-FPL-cliff branching, IRMAA 2-year-lagged surcharge, the HSA fourth bucket). `roth.ts` ORCHESTRATES the two arms + the conversion event over those overlays; it does NOT re-implement decumulation, taxes, RMDs, the SS fixed-point, or the ACA fixed-point — it reuses the same per-year update function so order-of-operations can never drift between spine and control. Reduce-to-spine byte-identity is inherited from architecture.md §5, re-asserted by each control's OFF arm, never re-derived. All tax/health numbers live in src/engine/constants/.",
+      "sourceSection": "Cross-cutting contract #1 (line 30)",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/architecture.md §3/§5, docs/plans/1-engine.md (U1/U2/U3)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "invariant",
+      "claim": "Contract #2 — Single-shared-market-draw / CRN (inherited from Act-1's CRN contract). ALL account buckets — pre-tax / Roth / taxable / HSA — share ONE market-return draw per year (the same normals stream as the spine); buckets differ ONLY in tax treatment, never in return assumption. Tax / RMD / conversion / ACA / IRMAA are deterministic post-draw arithmetic consuming ZERO random draws. This lets the two control arms (U10) and the budget's two-track evaluation (U9) read off IDENTICAL futures (signal not luck) and structurally forecloses asset-location. Per-bucket draws are forbidden. Full contract in architecture.md §3.",
+      "sourceSection": "Cross-cutting contract #2 (line 32)",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/architecture.md §3 (canonical), CLAUDE.md (load-bearing contracts)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "invariant",
+      "claim": "Contract #3 — Death-order conditional-FILTER contract (owned cross-cutting by U10 + U12; consumes Act-1 longevity). Death-order is an editable hypothetical in BOTH the control surface (U10) and the sharpen loop (U12), committed to ONE reading: a CONDITIONAL view that FILTERS the existing path population — NEVER a re-draw, never a re-index of which spouse is the survivor. Selecting 'if one of you outlives the other' conditions on the sub-population of paths where the chosen spouse dies first — same seed, same draws, zero re-index — CRN-safe by construction. Buildable only because Act-1 longevity samples per-path, per-spouse death years and retains which spouse died first per path. Semantics: DEFAULT readout is the engine's full probability-weighted MIXTURE ('whoever outlives the other' — the honest number); the conditional view is clearly labelled a hypothetical, NEVER a prediction (R12), never a deterministic to-age horizon. Thin-subpopulation guard: below a minimum path count the conditional view WIDENS its hedge / declines a precise frequency rather than show a noisy number. Death-order, survivor-spending ratio, and per-person retirement years are SINGLE model fields — an edit from either surface recomputes BOTH the spine and any open control under the unchanged seed. The survivor's MFJ→single threshold flip for BOTH IRMAA and the ACA-FPL basis rides this same filter.",
+      "sourceSection": "Cross-cutting contract #3 (line 34)",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/architecture.md (longevity sampling), docs/plans/1-engine.md (U1 longevity)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "requirement",
+      "claim": "Contract #4 — The `require-the-hedge` copyGuard lint (owned by U10; extends Act-2 U7's copyGuard, introduced HERE). The Act-2 copyGuard was a ban-list (certainty-hygiene, catastrophe-lexicon, catalog-enumeration). U10 ADDS a positive/REQUIRE assertion: every control readout AND every recommendation-class headline CONTAINS a probabilistic hedge drawn from the typed hedge-token catalog. It must NOT hand-duplicate the phrase list it checks — it reads the same single-sourced hedge-token set `copy.ts` uses to author the strings (`burned/063` single-source-the-gate). Built mechanically or hedge-burial drifts in silently. Surviving ban-list checks (certainty verbs, catastrophe lexicon) stay. `src/viz` stays string-free (`TwoFutures` receives all text as props from `copy.ts` at the `src/ui` layer); all control + healthcare surfaces route through the catalog; the slot-discipline allowlist gains new numeric slots (tax-bracket %, user-echoed conversion amount/years, survivor tax-cliff `~$X`, ACA/IRMAA cost `~$X`, shadow-marginal-rate `~X%`).",
+      "sourceSection": "Cross-cutting contract #4 (line 36)",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/plans/2-first-answer.md (U7 copyGuard), docs/plans/4-recommendation.md (contract #7), docs/product.md §6",
+      "fossilNote": ""
+    },
+    {
+      "kind": "status-as-built",
+      "claim": "The securities/IA attorney-gate has LAPSED (personal-tool reset). The categorical framing of the Roth surface (U10) is now an honesty/calm choice, NOT a legal shield — it is NOT carried as a live gate, and no fixture or copy is blocked on it. \"It's just for friends\" never softens the hedge requirement — the hedge is required because the readout moves real money (R25, docs/product.md §2).",
+      "sourceSection": "Cross-cutting contract #4 (line 36) + U10 quiet categorical surface",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/product.md (R25, locked decisions)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "requirement",
+      "claim": "Contract #5 — The single schemaVersion ladder (owned cross-cutting by U9 + U10 + U11; targets Act-1 U4's migration). Three units extend the persisted `model.ts` shape; there is ONE coordinated bump, NOT three parallel versions: account buckets (pre-tax/Roth/taxable/HSA) + per-person birth year + the itemized budget + the sequencing-policy field + the vintage-stamp fields (tax-table, RMD-age-rule, senior-bonus-sunset, ACA-legislative-status, applicable-%, IRMAA-brackets, Part-B-premium, app-methodology-default). Producers/consumers: U10 WRITES bucket + birth-year + sequencing + tax-vintage stamps; U11 WRITES HSA bucket + healthcare-vintage stamps; U9 WRITES the budget; U13 READS all stamps for staleness. Act-1 U4's decrypt-branch-on-version migration targets ONE coherent shape. `schemaVersion` describes the persisted blob only; the in-memory model carries no version. A model-only re-encrypt under the existing in-memory data key (fresh IV, wraps untouched) is the gated write path Act-1 U4 exposes — opening a what-if NEVER mutates the vault on disk (the only route to disk is an explicit user Save).",
+      "sourceSection": "Cross-cutting contract #5 (line 38)",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/architecture.md §7.3 (migration ladder, canonical), docs/plans/1-engine.md (U4)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "status-as-built",
+      "claim": "Already-shifted-forward note (contract #5): the account-bucket + birth-year fields — plus the contribution/match + healthcare-input fields the accumulation fold added — now land at Act-2 D1's account-level intake, and the FIRST Save serializes the accounts shape directly, so the schema boundary shifted forward. U10's lever-open mini-intake survives ONLY for the returning-legacy-vault upgrade and U13's drifted-split paths; the vintage-stamp/budget writes here are unchanged.",
+      "sourceSection": "Cross-cutting contract #5 (line 38) + U10 note block (line 97)",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/plans/2-first-answer.md (D1 intake), docs/product.md (R35)",
+      "fossilNote": "This reflects the accumulation fold (2026-06-08, R26–R39 / R35 inversion) integrated into clean current text — the as-built TRUTH (buckets at D1, first Save = accounts shape) must survive even though it originated as an amendment."
+    },
+    {
+      "kind": "requirement",
+      "claim": "Contract #6 — Per-surface staleness mapping (owned by U13). A staleness clock exists IFF the engine consumes a corresponding year-stamped parameter, and each clock gates ONLY the surface it affects: (a) wall-time-since-edit + app-methodology-default vintage gate the SPINE verdict; (b) tax-table vintage + RMD-age rule + senior-bonus-sunset gate the CONTROLS/LEVER only (the spine is tax-blind — a tax-vintage warning there cries wolf); (c) healthcare vintages (ACA legislative status, applicable-% table, IRMAA brackets, Part B premium) gate the HEALTHCARE surfaces; (d) the balance-drift confirm gates BOTH (per-bucket for an accounts vault, incl. the HSA bucket); (e) budget time-boxed line items whose windows have advanced (a travel item past its end year; the pre-65 healthcare-gap item once a spouse reaches 65) get a calm re-confirm. The tax fixture carries its OBBBA-2025 legal basis as provenance metadata (a statutory change reads as a vintage bump, not silent inflation drift). SS provisional-income thresholds are FROZEN/NOT-INDEXED → NO clock. Absent-stamp = not-applicable (a spine-only vault is never 'infinitely stale'). The fuck-off-date answer joins this map (the U13 extension): the contribution-limit-table and ticker-blend/TDF snapshot vintages gate the date surface; user-entered facts (balances, the ACA quote) ride the balance-drift confirm class, never a vintage clock.",
+      "sourceSection": "Cross-cutting contract #6 (line 40)",
+      "mustSurvive": true,
+      "duplicatedIn": "U13 deliverables (lines 258-268)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "requirement",
+      "claim": "Contract #7 — The controls and the budget are the next R19 surfaces (owned by U9 + U10; extends Act-1's numeric-domain gate + Act-2 U5's semantic-plausibility half). U10 clamps the conversion to `[0, remaining pre-tax pool]` accounting for cumulative multi-year conversions, validates a sequencing policy's per-year legality (RMD met before discretionary ordering; bracket headroom real) BEFORE mutating plan state (`burned/021` validate-before-mutate), and rejects degenerate amounts. U9 sanity-checks budget line items (non-negative amounts; endYear ≥ startYear; a coherent zero-essentials 'all discretionary' case warned but allowed). U11 sanity-checks the SLCSP benchmark + HSA balances. All surface calmly inline, REUSING Act-2 U5's R19 message grammar — never a silently broken or falsely-confident answer. Engine's own numeric gate is architecture.md §6.",
+      "sourceSection": "Cross-cutting contract #7 (line 42)",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/architecture.md §6, docs/plans/2-first-answer.md (U5 R19 grammar)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "requirement",
+      "claim": "Contract #8 — The N=1 colorblind cold-read gate + the affordance/copyGuard inheritance. (a) Cold-read gate covers Act 3's NEW emotionally-loaded surfaces, each an EXIT CONDITION: (i) the control two-futures in grayscale — both arms + the delta legible without hue, the delta-led reframe landing as honesty not bait-and-switch; (ii) the two-tier essentials/lifestyle headline — 'safe / trim travel, not go hungry' landing as relief-with-honesty, never two competing verdicts; (iii) the bad-news sharpen transition — a worsening verdict lands as honest recalibration, not a gut-punch; (iv) the healthcare cliff / shadow-rate copy — honest about a >100%-effective-rate conversion, never alarmist; (v) the re-entry staleness + balance-confirm + survivor-recovery copy — honest, not alarming. The five are judged as a FLOW, not five isolated reviews: ONE end-to-end cold-read session covering all five IN SEQUENCE (two-tier headline → controls/two-futures → healthcare cliff → bad-news sharpen → re-entry staleness) because inter-surface tone continuity can only be judged by walking them in order. The N=1 cold-read (Briggsy) judges TONE, never correctness (correctness is the automated oracle's job, gating in Act 4). (b) Affordance + copyGuard inheritance (plan-level IA decision; pixels deferred): all Act-3 surfaces reuse Act-2 U7's single progressive-disclosure affordance (origin-aware bottom-sheet on mobile, portal to document.body), the shared design tokens, the Act-2 U6 non-color signal grammar (word + shape + magnitude, never a hue shift — the reader is color blind), and the copyGuard catalog.",
+      "sourceSection": "Cross-cutting contract #8 (line 44)",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/plans/2-first-answer.md (U6/U7 affordance/non-color grammar), back-nine-design skill",
+      "fossilNote": ""
+    },
+    {
+      "kind": "requirement",
+      "claim": "U9 — Budget builder goal: let the user build their real spending as an itemized, categorized, time-boxed budget whose structure IS the lexicographic floor/surplus split, and read the answer as a two-tier verdict (essentials safe in X of 10; full lifestyle holds in Y of 10) over the SAME outcome-state set, never a new state. Requirements: R20 (itemized, categorized, time-boxed; essentials=floor, discretionary=surplus); R2 (survival-vs-lifestyle separation, Kitces 'trim, not go hungry,' no color-alone); R19 (budget sanity); R8 (the budget is the *deepening* of the single-total-spend answer, reached via the sharpen loop, never the on-ramp).",
+      "sourceSection": "Unit 9 — Goal + Requirements (lines 54-56)",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/product.md §7 (R20, R2, R19, R8), docs/roadmap.md",
+      "fossilNote": ""
+    },
+    {
+      "kind": "decision-rationale",
+      "claim": "U9 Line-item shape (DECIDED): `{ category, label, annualAmount, tier: 'essentials' | 'discretionary', window: { startYear, endYear | null } }` — `endYear: null` = lifelong. Time-boxed is first-class. Forward-looking PLANNING input, not back-looking expense tracking (the tracker lane is explicitly OUT). `startYear`/`endYear` are OFFSETS from each owner's retirement year; a window clamps to `[0, horizon]` and truncates at a per-path death per the survivor-spending composition rule. ALL `annualAmount`s are TODAY'S-DOLLAR (real) figures — `budgetToSpending` emits real per-year vectors and the engine applies the methodology inflation default, matching the spine's inflation-adjusted convention so reduce-to-spine holds for itemized budgets too.",
+      "sourceSection": "Unit 9 — What it delivers, line-item shape (line 66)",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/product.md §7 (R20 scope boundary, tracker out)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "decision-rationale",
+      "claim": "U9 pre-65 healthcare-gap line is a special, income-dependent slot (the seam to U11): the budget RESERVES the time-boxed slot (retirement→65 per spouse, Medicare being individual) but its NET COST is computed by the Act-1 U3 overlay (ACA premium − PTC, MAGI-dependent), surfaced through U11 — NOT a user-typed flat amount, or the model would silently miss the conversion↔subsidy interaction. The gap line is `tier: 'essentials'` (you cannot go uninsured pre-65 — part of the survival floor, counted in Tier-1), one window per spouse ending at that spouse's age 65. Because the dollar is MAGI-dependent and the two tracks spend differently, it resolves to a PER-TRACK value — the essentials-only track's lower spend yields lower MAGI, more PTC, and a lower net premium than the full track; U3 computes its dollar inside each track's own MAGI fixed point.",
+      "sourceSection": "Unit 9 — pre-65 healthcare-gap line (line 67)",
+      "mustSurvive": true,
+      "duplicatedIn": "Unit 11 (the gap line's cost lands here)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "invariant",
+      "claim": "U9 Two-track compilation (the structural realization of the two-tier reading): `budgetToSpending` emits TWO per-year spending vectors from one budget — an essentials-only track (Tier-1 floor) and a full track (essentials + discretionary). The engine evaluates BOTH thresholds against the SAME path population on the SAME single shared draw set (contract #2): 'essentials covered every year' (Tier-1) and 'full lifestyle covered every year' (Tier-2). ONE shared draw set but TWO decumulation + overlay passes — essentials-only and full are DISTINCT portfolio trajectories, never the full-spend run read twice. This is the engine half of R21's lexicographic structure the Act-4 solver later optimizes (objective ≡ headline metric); U9 builds the *reading*, Act 4 builds the *objective over it*.",
+      "sourceSection": "Unit 9 — Two-track compilation (line 68)",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/plans/4-recommendation.md (R21 lexicographic objective)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "decision-rationale",
+      "claim": "U9 Two-tier headline reading is NOT a 7th state: the headline composes TWO outcome-state-tagged readings over the SAME engine-owned SIX-state enum (Act-2 U7) — an essentials-floor verdict + a lifestyle-surplus verdict ('your essentials are safe in 10 of 10 futures; your full lifestyle holds in 7'). Negative-tier copy is action-first / Kitces ('in the other 3 you'd trim discretionary, not go hungry'); non-color signal grammar carries each tier's state independently. State-SELECTION stays engine-owned in `confidence.ts`; `TwoTierHeadline.tsx` is a pure presentation composition of two already-tagged states. DEGENERATE COLLAPSE: when the full track is byte-identical to the essentials track (no discretionary present), `TwoTierHeadline` renders the SINGLE-metric statement verbatim, not two identical tier verdicts — this is precisely what keeps the reduce-to-spine headline byte-identical.",
+      "sourceSection": "Unit 9 — Two-tier headline reading (line 69)",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/plans/2-first-answer.md (U7 six-state enum, confidence.ts)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "decision-rationale",
+      "claim": "U9 Spending shape is user-set, NEVER solver-recommended: a go-go-years front-load is a user-set per-year multiplier on the DISCRETIONARY track only (the solver optimizes *funding*, not how you live). U9 owns the shape control and surfaces its honest consequence on the surplus tier; it never proposes a shape.",
+      "sourceSection": "Unit 9 — Spending shape (line 70)",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/plans/4-recommendation.md (solver optimizes funding not shape)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "invariant",
+      "claim": "U9 Reduce-to-spine invariant (the budget's golden anchor): a budget that is a SINGLE LIFELONG ESSENTIALS LINE equal to the first-answer total-spend figure must compile to the EXACT single per-year spending vector the first answer fed the engine → the saved seed/headline is BYTE-IDENTICAL to the single-total-spend answer. The single-total-spend answer IS the degenerate budget; itemization is the deepening, never the on-ramp (R5/R8). Migrating single-total → itemized preserves the seed.",
+      "sourceSection": "Unit 9 — Reduce-to-spine invariant (line 71)",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/architecture.md §5 (reduce-to-spine, canonical), docs/product.md (R5/R8)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "decision-rationale",
+      "claim": "U9 Survivor-spending composition (the seam to the survivor floor — R17, the product's emotional core): the survivor-spending ratio (the Act-1 U1 default) is applied PER-PATH at the sampled first death to the compiled tracks: it scales the DISCRETIONARY track and the DISCRETIONARY PORTION OF ESSENTIALS ONLY — STICKY SURVIVAL ESSENTIALS (the survivor's healthcare-gap / single-enrollee Medicare premium, housing, property tax) do NOT scale by the couple ratio, so the Tier-1 survivor floor is never silently understated. DEGENERATE-INERT: in the degenerate single-essentials-line budget the composition is inert (the ratio falls back to flat-on-total) so survivor-year vectors stay byte-identical. The composition lives in `budgetToSpending`, NOT `simulate`, and is surfaced as an R7-editable assumption (U12). A simpler ratio-on-total reading is the DOCUMENTED FALLBACK if the cold-read finds the split too fiddly.",
+      "sourceSection": "Unit 9 — Survivor-spending composition (line 72)",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/product.md (R17), docs/plans/1-engine.md (U1 survivor-spending ratio default)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "build-detail-or-KTD",
+      "claim": "U9 Files — Create: `src/budget/budgetModel.ts` (line-item shape + tier + time-box window), `src/budget/budgetToSpending.ts` (compiles itemized budget → the TWO per-year spending vectors the engine reads), `src/ui/BudgetBuilder.tsx`, `src/ui/BudgetLineItem.tsx`, `src/ui/TwoTierHeadline.tsx`. Modify: `src/shared/model.ts` (the `budget` field, under the single schemaVersion bump — contract #5), `src/store/memoryModel.ts` (budget edit → recompute), `src/ui/copy.ts` (two-tier headline + line-item strings). Test: `src/budget/__tests__/budgetModel.test.ts`, `budgetToSpending.test.ts`, `src/ui/__tests__/budgetBuilder.test.tsx`.",
+      "sourceSection": "Unit 9 — Files (lines 60-63)",
+      "mustSurvive": true,
+      "duplicatedIn": "",
+      "fossilNote": ""
+    },
+    {
+      "kind": "build-detail-or-KTD",
+      "claim": "U9 Tier-ordering monotonicity (golden invariant): for any budget, Tier-1 (essentials) X-of-10 ≥ Tier-2 (full) X-of-10, asserted PATH-FOR-PATH on the shared draw set (every full-success path is an essentials-success path). The two tracks are distinct trajectories with different MAGI, so this is NOT assumed — it rests on a three-link proof chain: (1) essentials-only spend ≤ full spend every year; (2) on identical CRN draws, depletion is monotone in spend (less spent ⇒ never-lower balances); (3) the per-track healthcare-gap dollar is itself monotone in spend (lower spend → lower MAGI → ≥ PTC → ≤ net premium → ≤ cash need). The three links compose. HONEST CAVEAT: if any link can break (a cliff/CSR branch where a lower MAGI crosses into a regime that RAISES a different cost), the invariant is NARROWED to the region where it provably holds and the exception is documented, never asserted universally and left to block a correct engine. Pair the subset-assert with a presence companion that ≥1 path stressed the discretionary gap (`burned/027`); a planted budget whose two passes diverge inside the proven region fails loud.",
+      "sourceSection": "Unit 9 — Test scenarios, tier-ordering monotonicity (line 78)",
+      "mustSurvive": true,
+      "duplicatedIn": "",
+      "fossilNote": ""
+    },
+    {
+      "kind": "build-detail-or-KTD",
+      "claim": "U9 key test scenarios: (a) reduce-to-spine edge — a single lifelong essentials line = first-answer total → compiled vector byte-identical under same seed, survivor-spending composition INERT (flat-on-total), rendered headline is SINGLE-metric form not a doubled tier pair; (b) two-tier split over one draw — essentials safe 10/10 while full holds 7/10, both read off the SAME path population/draw set (assert IDENTICAL normals consumed), not two sims; (c) real-convention — a constant-real multi-year line compiles to the engine's expected REAL per-year vector not nominally-flat; (d) income-dependent gap line — the gap dollar comes from the overlay (U11) not a typed amount, removing the gap line does not zero a typed value; (e) zero-essentials coherent-but-warned — all-discretionary yields a trivially-safe floor with calm warning, never error/indeterminate; (f) R19 errors — negative amount and endYear<startYear caught calmly inline.",
+      "sourceSection": "Unit 9 — Test scenarios (lines 76-85)",
+      "mustSurvive": true,
+      "duplicatedIn": "",
+      "fossilNote": ""
+    },
+    {
+      "kind": "requirement",
+      "claim": "U9 Verification + exit condition: a user builds a real itemized time-boxed budget; the answer reads as two honest tiers over the same state set; a single-total budget reproduces the first answer byte-identically; spending shape is user-set with honest consequences never recommended. PASSING THE N=1 COLD-READ ON THE TWO-TIER HEADLINE (relief-with-honesty, not two competing verdicts) is an Act-3 EXIT CONDITION (contract #8). Feeds forward: the two-tier essentials/surplus split IS the lexicographic objective's two tiers; the budget is READ-ONLY input to the solver (it never moves a budget line). See docs/plans/4-recommendation.md contracts #4 and #8a.",
+      "sourceSection": "Unit 9 — Verification + Feeds forward (lines 87-89)",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/plans/4-recommendation.md (contracts #4, #8a)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "requirement",
+      "claim": "U9 The two-date split rides this unit — NO new budget mechanism. The fuck-off date's floor vs lifestyle dates (R27) are this unit's two-track compilation consumed by the date-search (C3, shipped in Act 1): the two dates COINCIDE in the degenerate single-total-spend case via this unit's existing degenerate-collapse, and SEPARATE when the budget splits the tracks — C3 consumes whatever two tracks `budgetToSpending` emits; nothing in the date-search is rebuilt. The mixed date outcomes — `{floor: date, lifestyle: no-date}` and the `floor > lifestyle` 100%-FPL-floor signature — are DARK until this unit lands; the result *shape* already admits them from C3, the behavioral tests ride here.",
+      "sourceSection": "Unit 9 — two-date split note block (line 52)",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/decisions/accumulation-fuck-off-date.md (R27, C3), docs/plans/1-engine.md (C3 date-search)",
+      "fossilNote": "Originated in the accumulation fold (2026-06-08, R26–R39); flattened into U9's note block. Carries as-built truth (the two-date split rides U9's degenerate-collapse) that must survive."
+    },
+    {
+      "kind": "build-detail-or-KTD",
+      "claim": "U9 follow-on (owed when the itemized budget lands): the budget's MEDICAL LINE and the date-route's per-year `oopMedical[t]` stream MUST RECONCILE TO ONE SOURCE — the HSA qualified-spend cap rests on the cap-only containment premise (the household spend figure already INCLUDES out-of-pocket medical), so an itemized medical line that ALSO feeds `oopMedical[t]` would double-count medical, and one that silently replaces it would zero the HSA cap — never silently double- or zero-count.",
+      "sourceSection": "Unit 9 — two-date split note block, follow-on (line 52)",
+      "mustSurvive": true,
+      "duplicatedIn": "Unit 11 (HSA qualified-spend cap)",
+      "fossilNote": "Originated in the accumulation fold; flattened into U9's note block. A live build landmine (double/zero-count) that must survive."
+    },
+    {
+      "kind": "requirement",
+      "claim": "U10 — Manual sequencing control + Roth-conversion lever goal: two hand-tunable controls over the Act-1 overlays — the user picks a NAMED DRAWDOWN POLICY (or a custom order) and a Roth conversion (amount + years) — rendered as two futures with the delta as the hero, headlined by the survivor's tax cliff, as a co-pilot surface that STATES EVERY READOUT WITH ITS HEDGE and never issues a verdict. Built by CONSUMING the Act-1 tax overlay + sequencing substrate, not re-implementing them. Requirements: R9 (two coupled controls — manual here, solver-optimized in Act 4), R10 (user tunes/overrides; comparative on demand), R11 (calm, invited, never a nagging alert), R12 (probabilistically framed; the hedge required), R4 (detail on demand), R19 (clamp on the new input surfaces).",
+      "sourceSection": "Unit 10 — Goal + Requirements (lines 99-101)",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/product.md §7 (R9-R12, R4, R19), docs/roadmap.md",
+      "fossilNote": ""
+    },
+    {
+      "kind": "decision-rationale",
+      "claim": "U10 The manual sequencing control (net-new): user picks a named drawdown POLICY from the DECIDED SET {proportional, taxable-first, pre-tax-first, bracket-fill} or a CUSTOM PER-BUCKET ORDER, which `SequencingControl.tsx` passes to `sequencing.ts` (Act-1 U1 substrate) to decide which bucket funds each year's net withdrawal — driving the Act-1 U2 tax overlay. The control PICKS a policy; it does NOT rank or recommend one (that is the Act-4 solver). Both arms run at identical tax+health fidelity. The tax-aware baseline's sequencing policy is named explicitly — `proportional` (the neutral, tax-agnostic default) — and the sequencing control's two arms are the SELECTED-POLICY arm vs the BASELINE-POLICY arm on shared CRN draws (conversion held fixed). `bracket-fill` carries an explicit TARGET-BRACKET PARAMETER and a CLIFF-AWARE FILL CEILING (the subsidy-aware MAGI line pre-65 / the next IRMAA step post-65, per Act-1 U3), so contract #7's 'bracket headroom real' check is measured against that ceiling, never the nominal bracket top. HSA is EXCLUDED from the general drawdown order — the custom-order editor offers only pre-tax/Roth/taxable; HSA outflow stays qualified-medical-only (owned by U11), never a MAGI-free general source. Each named policy specifies its COMPLETE bucket ordering (where Roth falls, not only the first bucket). Past RMD age the engine takes each person's FULL RMD from pre-tax FIRST under EVERY policy, then applies the chosen policy/order to the RESIDUAL net need — a Roth-first or custom order expresses a preference for the residual, never a skipped RMD.",
+      "sourceSection": "Unit 10 — The manual sequencing control (line 113)",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/plans/1-engine.md (sequencing.ts substrate), docs/plans/4-recommendation.md (solver search axes)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "decision-rationale",
+      "claim": "U10 The Roth lever (ported): `roth.ts` orchestrates a WITH arm and a WITHOUT arm + the conversion event, both decumulating THROUGH the consumed overlays — the sole difference between arms is the conversion event. RMD AGE IS BIRTH-YEAR-DERIVED (72/73/75 per SECURE 2.0), NEVER a flat 73 — the convertible low-bracket window before RMDs and the RMD base depend on it per person (a born-1960+ spouse, common in the 2026 target couple, has RMD age 75). CONVERSION-TAX PAYMENT SOURCE = a FIXED rule (paid from the TAXABLE bucket), surfaced as an R7-editable assumption (it lives in U12's assumption panel) and disclosed next to the delta, with an honest degradation note when no taxable bucket was entered. In any post-RMD-age year the RMD is distributed from pre-tax as ordinary income FIRST and the conversion STACKS ON TOP — the conversion never reduces or satisfies the RMD, and the conversion clamp `[0, remaining pre-tax pool]` is computed AFTER the RMD is removed from the pool. (RMD-non-convertible legality is the Act-1 U2 contract, architecture.md §7.1.)",
+      "sourceSection": "Unit 10 — The Roth lever (line 114)",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/architecture.md §7.1 (RMD-non-convertible, canonical), docs/plans/1-engine.md (U2)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "decision-rationale",
+      "claim": "U10 Account buckets collected on lever-open, in two cases via `RothAccounts.tsx` lever-open mini-intake (per-person pre-tax required; existing Roth; taxable optional + the HSA bucket from U11). Case (1) unsaved in-memory (NOW the degenerate already-collected path): writes bucket facts into `memoryModel`'s single plaintext shape; the first-ever Save serializes the accounts shape directly. Case (2) returning legacy vault: decrypt, add buckets, re-encrypt via Act-1 U4's MODEL-ONLY RE-ENCRYPT (same data key, fresh IV, wraps untouched). In BOTH cases opening a what-if NEVER mutates the vault — enforced STRUCTURALLY (the lever exposes no write path; the only route to disk is an explicit user Save).",
+      "sourceSection": "Unit 10 — Account buckets on lever-open (line 115)",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/architecture.md §7.3 (model-only re-encrypt, canonical), contract #5",
+      "fossilNote": "The 'now the degenerate already-collected path' reflects the accumulation-fold shift (buckets at D1); the as-built case structure must survive."
+    },
+    {
+      "kind": "decision-rationale",
+      "claim": "U10 Two futures + delta as hero: with vs without, both arms through the overlays, COMMON RANDOM NUMBERS (same seed/paths both arms — contract #2) so the delta is stable as the slider drags; rendered via `TwoFutures` (Act-2 U6 tokens). NO-WORKER FALLBACK (the named downstream consumer of Act-2's worker-vs-main-thread capability flag — 'disable live recompute on fallback'): the live CRN delta is what makes these controls work. When the capability flag reports NO WORKER available, the controls DISABLE LIVE (per-drag) recompute and recompute ON RELEASE / EXPLICIT TAP, never running the expensive blocking both-arms pass on every drag event on the main thread. The degraded state is HONEST and clearly non-live (the surface says the answer updates when you let go) — never silently broken and never janky. De-collision / delta-as-hero is owned here (`burned/042`): the small-delta 'buys you ~N years' case is exactly where end-labels collide, so the DELTA CALLOUT is the hero (value-ordered leadered stack with a minimum vertical separation; the narrowest breakpoint collapses to the delta callout + a one-tap reveal). Non-color hero treatment (weight/scale/position + a leader-line style distinct from the series strokes) so in grayscale it reads as the hero, not a third series. Keep the reveal-target node mounted and crossfade content (`burned/037`).",
+      "sourceSection": "Unit 10 — Two futures + delta as hero (line 118)",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/plans/2-first-answer.md (worker-vs-main-thread capability flag, U6 tokens)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "decision-rationale",
+      "claim": "U10 Reframe at lever-open, DELTA-LED: because the tax-aware lever can read BELOW the number the user anchored on, the first interaction risks reading as a downgrade. The DELTA is the hero and LEADS ('converting could help the survivor's money last in 8 of 10 futures instead of 6'); the tax-aware baseline is shown honestly but secondary ('now that we know your account types, this is the tax-aware picture') — a 'sharpening revealed a truer picture' moment, NEVER a silent swap of the spine number. The SAVED SPINE HEADLINE IS NEVER OVERWRITTEN (Act-1 seed/headline identity; U13 governs saved-vs-tax-aware on re-entry). Whether this lands as honesty rather than bait-and-switch is what the N=1 cold-read gate (contract #8) judges. NOTE: post-accumulation-fold, the post-fold first answer is account-aware with overlays active wherever entered streams support them, so the lever-open reframe re-derives from the D1-era baseline at build time — the delta-led honesty rule itself is unchanged.",
+      "sourceSection": "Unit 10 — Reframe at lever-open (line 119) + note block (line 97)",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/architecture.md (seed/headline identity)",
+      "fossilNote": "The 're-derives from the D1-era baseline' clause reflects the accumulation fold integrated into clean text."
+    },
+    {
+      "kind": "decision-rationale",
+      "claim": "U10 The delta itself — made honest (R10/R12): PRIMARY render is a NATURAL-FREQUENCY shift in the SAME 'X of 10' the spine uses ('the survivor's money lasts in 8 of 10 futures instead of 6'); '~N years' is a HEDGED SECONDARY tied to a stated percentile ('around the median, ~N years longer'), NEVER a bald deterministic 'buys you 3 years.' The delta is the SURVIVOR'S number and PROBABILISTIC over first-death timing. NET COST-NOW vs BENEFIT-LATER (counting only one side is fiction), and DISCLOSE THE MODELED OMISSIONS (NIIT, state — and via U11, ACA/IRMAA second-order, CSR, SLCSP-level) in plain language adjacent to the delta. N ≤ 0 has a CALM STATE (a probabilistic loss in-frame, never a literal '0 years' or a suppressed delta). 10/10-CLAMP INTERACTION: when the with-arm hits the all-paths-survive ceiling, the headline delta drops to a VERDICT-STATE TRANSITION ('moves the survivor from off-track to over-funded'); the MONOTONICITY the CRN test asserts is on the RAW PRE-CLAMP delta, not the clamped string. (This 10/10 pivot is the seed of R21's surplus-metric pivot the Act-4 solver will own.)",
+      "sourceSection": "Unit 10 — The delta itself made honest (line 122)",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/plans/4-recommendation.md (R21 surplus-metric pivot)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "decision-rationale",
+      "claim": "U10 Quiet categorical surface + categorical trigger (now an honesty/calm choice — contract #4): the teaser surfaces on a GENERAL FACT about couples filing jointly ('couples who file jointly often have a low-bracket window before required withdrawals begin…'), naming NO personalized dollar figure and NO hardcoded age. The TRIGGER is categorical too — the card appears on a condition true for the married-couple product as a CLASS (MFJ + the universal pre-RMD-window fact), NEVER gated on a per-user bracket-window or opportunity-size computation. This keeps the surface calm and honest; it is NOT a legal shield (the attorney-gate has lapsed) and NOTHING is blocked on it. Tested: the visibility predicate reads NO personalized financial field.",
+      "sourceSection": "Unit 10 — Quiet categorical surface (line 125)",
+      "mustSurvive": true,
+      "duplicatedIn": "contract #4 (attorney-gate lapsed)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "decision-rationale",
+      "claim": "U10 Death-order (contract #3): an editable hypothetical framed 'if one of you outlives the other' (NEVER the clinical 'predeceases'; that stays an internal identifier), never a prediction; default = the MIXTURE, a selected order = a CONDITIONAL sub-population view, same seed/CRN; the survivor MFJ→single flip rides this filter for taxes AND healthcare. $0 PRE-TAX TERMINAL STATE: when total pre-tax across both spouses is $0, the lever closes calmly to 'there's nothing in a pre-tax account to convert, so this what-if doesn't apply to you' — no fabricated arms, no slider. (Sequencing still applies if other buckets exist.)",
+      "sourceSection": "Unit 10 — Death-order, $0-pre-tax (lines 128-129)",
+      "mustSurvive": true,
+      "duplicatedIn": "contract #3",
+      "fossilNote": ""
+    },
+    {
+      "kind": "build-detail-or-KTD",
+      "claim": "U10 R19 (contract #7): clamp the conversion to `[0, remaining pre-tax pool]` accounting for cumulative conversions across the modeled years (the pool is NET OF THE RMD already taken); validate the RESIDUAL sequencing-policy legality BEFORE mutating state (`burned/021`); reject degenerate amounts; surface boundaries calmly inline.",
+      "sourceSection": "Unit 10 — R19 (line 130)",
+      "mustSurvive": true,
+      "duplicatedIn": "contract #7",
+      "fossilNote": ""
+    },
+    {
+      "kind": "requirement",
+      "claim": "U10 The require-the-hedge lint (contract #4 — the new copyGuard shape, INTRODUCED HERE): add a POSITIVE/REQUIRE lint: every control readout + every recommendation-class headline MUST CONTAIN a hedge token from the SINGLE-SOURCED hedge-token catalog in `copy.ts` (the lint reads that same set — never a hand-copied phrase list). Certainty verbs + catastrophe lexicon stay banned. `src/viz` stays STRING-FREE (`TwoFutures` text is props from `copy.ts`); all control strings route through the catalog; the slot-discipline allowlist gains the tax-bracket %, the user-echoed conversion amount/years, and the survivor tax-cliff `~$X`. The catalog-enumeration test asserts every control string both PASSES the ban-list AND WEARS a hedge, so a hedge-less readout is a build failure by construction. This is the lint Act 4 EXTENDS to the recommendation headline + grade copy (docs/plans/4-recommendation.md contract #7).",
+      "sourceSection": "Unit 10 — The require-the-hedge lint (line 133)",
+      "mustSurvive": true,
+      "duplicatedIn": "contract #4, docs/plans/4-recommendation.md (contract #7)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "build-detail-or-KTD",
+      "claim": "U10 Files — Create: `src/ui/SequencingControl.tsx` (named-policy picker + custom-order editor), `src/ui/RothLever.tsx`, `src/ui/RothSurface.tsx` (the quiet categorical teaser), `src/ui/RothTuner.tsx`, `src/ui/RothAccounts.tsx` (lever-open bucket mini-intake), `src/viz/TwoFutures.tsx` (the two-series component — built here against `roth.ts`'s real emission, reusing Act-2 U6 tokens; STRING-FREE, all text via props), `src/engine/roth.ts` (orchestrates the two arms + conversion event over the Act-1 U2/U3 overlays; does NOT re-implement decumulation/taxes/RMDs/fixed-points). Modify: `src/shared/model.ts` (per-person pre-tax/Roth/taxable bucket fields + per-person birth year + sequencing-policy field + the tax-vintage stamps — tax-table/bracket + RMD-age-rule + senior-bonus-sunset, the THREE control-gating tax clocks U13 checks, NOT a single bracket stamp — under the single schemaVersion bump), `src/ui/copy.ts` (control surfaces' strings + the single-sourced hedge-token catalog), `src/ui/copyGuard.ts` (the require-the-hedge lint + new Roth/control numeric slots). Test: `src/engine/__tests__/roth.test.ts`, `src/ui/__tests__/sequencingControl.test.tsx`, `rothLever.test.tsx`, `src/ui/__tests__/copyGuard.test.ts` (the hedge lint).",
+      "sourceSection": "Unit 10 — Files (lines 105-108)",
+      "mustSurvive": true,
+      "duplicatedIn": "",
+      "fossilNote": ""
+    },
+    {
+      "kind": "build-detail-or-KTD",
+      "claim": "U10 Golden invariant (the anchor) test: buckets collapsed + conversion = 0 + taxes off + RMD inert + healthcare off → the 'without' arm is BYTE-IDENTICAL (same seed) to the spine distribution (proves the controls introduce no spurious delta, no engine drift). Other key tests: CRN (two arms differing only in conversion amount, one shared seed → consume normals IDENTICAL path-for-path across the MFJ→single transition; delta changes MONOTONICALLY on the RAW PRE-CLAMP value, no jitter); single-shared-draw (with/without different bucket splits consume the SAME per-year market draws); sequencing drives the overlay PER-POLICY (assert bucket-DEPLETION ORDER — taxable-first drains taxable before pre-tax, pre-tax-first the reverse, proportional in balance ratio — not merely that trajectories differ; a custom order honored; past RMD age every policy takes full RMD from pre-tax first then applies the order to residual); sequencing CRN+determinism (switching policy consumes IDENTICAL normals path-for-path; re-selecting yields byte-identical trajectory); HSA not a drawdown bucket; RMD non-convertible (post-RMD-year conversion shows RMD as ordinary income PLUS conversion, clamp excludes RMD); RMD age birth-year-derived (born-1960+ → age 75, born-1955 → 73, never flat 73).",
+      "sourceSection": "Unit 10 — Test scenarios (lines 136-143)",
+      "mustSurvive": true,
+      "duplicatedIn": "",
+      "fossilNote": ""
+    },
+    {
+      "kind": "build-detail-or-KTD",
+      "claim": "U10 further test scenarios: two-series convergence (near-converging arms → both identities legible, labels non-overlapping leadered stack, delta callout correct, breakpoint collapses to callout + one-tap reveal, reveal works while collapse transition in flight — `burned/037`); CVD over composited geometry (re-run Act-2 U6's pinned oklab probe over `TwoFutures`' real composited overlap colors + a planted too-close pair that must fail loud — `burned/070` — a dev gate before the convergence functional test is accepted); delta honesty (the figure is the SURVIVOR'S, X-of-10 frequency first + hedged secondary '~N years', omissions disclosed adjacent); N≤0 / 10/10 clamp (worsening conversion → calm probabilistic loss never suppressed; with-arm at ceiling → verdict-state transition; raw-delta monotonicity test still passes); death-order + $0 pre-tax (conditioning changes survivor math, default=mixture, both-spouses-$0-pre-tax closes lever calmly); require-the-hedge errors (hedge-less readout FAILS lint, certainty verb fails, every catalog control string passes both checks by enumeration, categorical teaser has no personalized dollar/no hardcoded age and its visibility predicate reads no personalized financial field); legacy→accounts shape integration (never-saved → first Save is accounts shape with no intermediate legacy write; saved-legacy → explicit Save upgrades model-record-only same data key fresh IV wraps untouched via Act-1 U4's atomic path; aborted upgrade still decrypts intact legacy vault); a control change visibly moves the confidence answer anchored to the reframed tax-aware baseline not a hidden model switch.",
+      "sourceSection": "Unit 10 — Test scenarios (lines 144-151)",
+      "mustSurvive": true,
+      "duplicatedIn": "",
+      "fossilNote": ""
+    },
+    {
+      "kind": "requirement",
+      "claim": "U10 Verification + exit condition: user hand-tunes both controls and watches the answer move; surface (and trigger) stays categorical until opened (calm choice, not a gate); every readout wears its hedge by construction and no string issues a directive; delta is the survivor's, probabilistic, frequency-first, with omissions disclosed; the 'without' arm reduces byte-identically to the spine when off; both controls are CRN-stable; the lever degrades honestly with no taxable bucket and closes calmly with no pre-tax pool; RMD age is birth-year-derived. PASSING THE N=1 COLD-READ ON THE TWO-FUTURES (both arms + delta legible in grayscale; the reframe lands as honesty) is an Act-3 EXIT CONDITION. Feeds forward: the two manual controls ARE the solver's two search axes — named drawdown policies × the conversion grid; `roth.ts`'s per-year update shape is the shape the solver reuses (it ranks candidates through this same path, never re-implementing decumulation); the require-the-hedge lint is the lint Act 4 extends to the recommendation headline. See 4-recommendation.md Unit 15 + contracts #5 and #7.",
+      "sourceSection": "Unit 10 — Verification + Feeds forward (lines 153-155)",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/plans/4-recommendation.md (Unit 15, contracts #5/#7)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "requirement",
+      "claim": "U11 — Healthcare surfaces goal: surface the income-dependent healthcare reality calmly and honestly — the pre-65 ACA subsidy cliff (with legislative status shown), the post-65 IRMAA cliffs and their 2-year-lag 'danger years start before Medicare' story, the HSA fourth bucket and its not-ACA-payable trap — so a conversion that torches a subsidy or trips a cliff is SEEN, not silently optimized over. Reads the Act-1 U3 overlay; does not re-implement it. Requirements: R24 (income-dependent healthcare across the Medicare line — ACA-PTC pre-65, IRMAA post-65, HSA fourth bucket; re-verify-at-build; couples into the objective), R12 (hedged framing of every cost readout), R4 (detail on demand), R19 (SLCSP + HSA input sanity).",
+      "sourceSection": "Unit 11 — Goal + Requirements (lines 163-165)",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/product.md §7 (R24, R12, R4, R19), docs/roadmap.md",
+      "fossilNote": ""
+    },
+    {
+      "kind": "decision-rationale",
+      "claim": "U11 SLCSP benchmark = a USER INPUT (the single biggest honesty lever — do NOT synthesize): `HealthcareInputs.tsx` collects the second-lowest-cost Silver plan benchmark, with an honest age-banded fallback labelled 'an estimate — enter your real benchmark for an honest number.' The engine optimizes AROUND it; it never predicts it. The benchmark tracks the COVERAGE FAMILY — it steps down to a single-enrollee SLCSP in the year the older spouse enrolls in Medicare (household MAGI unchanged). Net cost FLOORS at 0 and PTC CAPS at the ENROLLED-PLAN premium — the benchmark drives the credit, the enrolled plan drives the bill (the fixed point is owned by Act-1 U3). When the sim starts at/near 65, `HealthcareInputs` ALSO collects the TWO PRIOR YEARS' ACTUAL MAGI to seed the IRMAA[t-2] lag — an unseeded near-65 start FAILS LOUD, never a silent $0 first-year surcharge.",
+      "sourceSection": "Unit 11 — SLCSP benchmark (line 175)",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/plans/1-engine.md (U3 ACA fixed-point)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "status-as-built",
+      "claim": "U11 The ACA cliff + enhanced-subsidy toggle + status surfaced honestly: 2026 base case = the 400% FPL CLIFF IS BACK (enhanced subsidies EXPIRED 12/31/2025, UNRE-ENACTED AS OF BUILD); 'enhanced' is a SCENARIO TOGGLE, never hard-coded 'no enhanced forever.' The surface states the LEGISLATIVE STATUS as a first-class, dated note ('computed under 2026 reverted rules — the 400% FPL cliff is back; if Congress restores enhanced subsidies, possibly retroactively, this flips'). This status is a VINTAGE STAMP (contract #5) that U13 gates on, and the RE-VERIFY-AT-EVERY-BUILD gate (`pnpm verify:aca`, architecture.md §9) is surfaced as the honest reason the note carries a date.",
+      "sourceSection": "Unit 11 — ACA cliff + toggle + status (line 176)",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/architecture.md §9 (verify:aca gate, canonical), CLAUDE.md (ACA legislative entry, verify:aca), src/engine/constants/ aca-last-verified.json",
+      "fossilNote": "This is LIVE legislative status (cliff back, enhanced expired 12/31/2025), an as-built TRUTH — must survive; not changelog."
+    },
+    {
+      "kind": "decision-rationale",
+      "claim": "U11 The shadow/effective-marginal-rate framing (calm): `ShadowRateReadout.tsx` shows 'what the next conversion dollar really costs' = federal + state (disclosed-but-not-modeled) + LOST ACA SUBSIDY — commonly elevated when the subsidy phase-out stacks, CATASTROPHIC (>100% effective) at the cliff. Framed as honest information, NEVER alarmist; it wears its hedge. This reframes the governing heuristic the controls obey: during ACA years the SUBSIDY-AWARE MAGI CEILING, not the tax bracket, is the binding constraint. In the AGE-GAP OVERLAP YEARS (older spouse 65+ on IRMAA, younger still pre-65 on ACA) the readout SUMS BOTH the younger spouse's lost ACA subsidy (current year) AND the IRMAA surcharge the same dollar triggers two years forward for the older spouse — the two regimes are CO-ACTIVE on one household MAGI, not sequential.",
+      "sourceSection": "Unit 11 — Shadow-rate framing (line 177)",
+      "mustSurvive": true,
+      "duplicatedIn": "contract #4 (shadow-marginal-rate ~X% slot)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "decision-rationale",
+      "claim": "U11 IRMAA cliffs + the 2-year-lag story: surface the per-person step-cliffs × the count of MEDICARE-ENROLLED SPOUSES (×1 in age-gap years, ×2 once both are enrolled — NEVER a flat ×2) and the headline insight — 'a conversion at 63–64 hits your IRMAA bill at 65–66; the danger years start before Medicare.' Pure step-functions; surfaced as DISCRETE CLIFFS, not a smooth phase-out.",
+      "sourceSection": "Unit 11 — IRMAA cliffs + 2-year-lag (line 178)",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/plans/1-engine.md (U3 IRMAA 2-yr lag)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "decision-rationale",
+      "claim": "U11 HSA fourth bucket + the not-ACA-payable trap (surfaced honestly): the HSA covers out-of-pocket + (owner 65+) Medicare premiums tax-free BUT NOT ACA MARKETPLACE PREMIUMS in the normal early-retiree case — surfaced so the model never overstates 'HSA covers healthcare.' Surface the Medicare-zeroes-contribution rule and the owner-age keying. HSA contributions reduce AGI pre-Medicare (a MAGI-reducing funding choice the controls can use). HSA SPENDING IS MAGI-INVISIBLE ONLY FOR QUALIFIED MEDICAL COSTS — a post-65 NON-QUALIFIED HSA withdrawal is ordinary income that raises BOTH ACA-MAGI and IRMAA-MAGI, so HSA is a MAGI-control lever against medical spend, not a general MAGI-free withdrawal source.",
+      "sourceSection": "Unit 11 — HSA fourth bucket + trap (line 179)",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/plans/1-engine.md (U3 HSA bucket)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "decision-rationale",
+      "claim": "U11 Disclose the modeled omissions adjacent to the readout (the disclosed-omission-inverts-a-ranking landmine): NIIT, state tax, CSR out-of-pocket richness, the SLCSP-level itself, the IRMAA SECOND-ORDER SELF-FUNDING LOOP, STATE-LEVEL SUBSIDY WRAPS (CA/NY/etc. blunt the federal cliff — state-configurable, so a wrapped user isn't over-alarmed by the '>100% effective rate' copy), and SSA-44 DEATH-OF-SPOUSE APPEALS (the modeled survivor surcharge is an upper bound an appeal may reduce) — each NAMED next to the cost, never silently dropped. This is the honesty backstop for the R24 scope cut.",
+      "sourceSection": "Unit 11 — Disclose modeled omissions (line 180)",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/product.md (R24 scope cut)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "decision-rationale",
+      "claim": "U11 Survivor MFJ→single flip for healthcare (contract #3): when the death-order conditional view is active, the survivor's IRMAA and ACA-FPL thresholds drop to ~single — surfaced as 'the same income can trip a surcharge after one of you is gone.' Wired into the existing death-order filter, not a new boundary. R19 (contract #7): SLCSP non-negative/plausible; HSA balance non-negative; the enhanced toggle is binary.",
+      "sourceSection": "Unit 11 — Survivor flip + R19 (lines 181-182)",
+      "mustSurvive": true,
+      "duplicatedIn": "contract #3",
+      "fossilNote": ""
+    },
+    {
+      "kind": "build-detail-or-KTD",
+      "claim": "U11 Files — Create: `src/ui/HealthcareSurface.tsx`, `src/ui/HealthcareInputs.tsx` (SLCSP benchmark input; HSA balance/contribution entry), `src/ui/EnhancedSubsidyToggle.tsx`, `src/ui/ShadowRateReadout.tsx` (the effective-marginal-rate framing). Modify: `src/shared/model.ts` (HSA bucket + SLCSP input + enhanced-toggle state + healthcare vintage-stamp fields, under the single schemaVersion bump), `src/ui/copy.ts` (healthcare strings + omission-disclosure copy), `src/ui/copyGuard.ts` (the new healthcare slots: ACA/IRMAA cost `~$X`, shadow-rate `~X%`). Test: `src/ui/__tests__/healthcareSurface.test.tsx`, `shadowRate.test.tsx`. Dependencies include Act-1 U2 (tax overlay — the shadow rate sums federal + lost-subsidy).",
+      "sourceSection": "Unit 11 — Files + Dependencies (lines 167-172)",
+      "mustSurvive": true,
+      "duplicatedIn": "",
+      "fossilNote": ""
+    },
+    {
+      "kind": "build-detail-or-KTD",
+      "claim": "U11 key test scenarios: happy (SLCSP entered → surface shows pre-65 ACA net cost premium−PTC per year; toggle flips between cliff-on 2026 base and enhanced regimes, cost changes); the cliff (a conversion crossing 400% FPL zeroes the subsidy → shadow-rate shows catastrophic effective rate CALMLY, cliff rendered as a non-color shape/word change, disclosed omissions adjacent); IRMAA 2-yr lag (conversion at 63–64 surfaces cost at 65–66, per-person ×2 couple surcharge shown, cliff is a step not smooth); HSA trap (surface states HSA cannot pay ACA marketplace premiums normal case + Medicare enrollment zeroes contributions; an HSA balance honored as MAGI-reducing); survivor flip (under death-order conditional view survivor IRMAA/ACA thresholds drop to ~single and surface says so); legislative status (ACA surface carries a dated status note, flipping build's verified status cliff-on↔enhanced is reflected never hard-coded permanently); R19 error (a MISSING SLCSP is a LOUD SENTINEL — no in-range default, `burned/062` — negative HSA balance caught calmly); integration (the pre-65 healthcare-gap budget line U9 draws its dollar from this surface not a typed amount; a conversion in U10 moves the ACA cost here on the same recompute).",
+      "sourceSection": "Unit 11 — Test scenarios (lines 185-192)",
+      "mustSurvive": true,
+      "duplicatedIn": "CLAUDE.md (burned/062 no in-range default)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "requirement",
+      "claim": "U11 Verification + exit condition: user sees the honest income-dependent healthcare picture — the ACA cliff (legislative status dated), the IRMAA danger-years-before-Medicare story, the HSA trap — with every cost hedged and every omission disclosed; no number overstates HSA coverage; the controls' MAGI moves are reflected. PASSING THE N=1 COLD-READ ON THE CLIFF / SHADOW-RATE COPY (honest, never alarmist) is an Act-3 EXIT CONDITION. Feeds forward: the healthcare overlay is the cliff the solver must not silently optimize over — a disclosed omission of a cliff inverts which strategy wins, so the solver's cliff-aware conversion grid and cliff-aware oracle case build directly on what U11 surfaces. See 4-recommendation.md Unit 14 case (iii) + Unit 15's cliff-anchored grid.",
+      "sourceSection": "Unit 11 — Verification + Feeds forward (lines 194-196)",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/plans/4-recommendation.md (Unit 14 case iii, Unit 15)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "requirement",
+      "claim": "U12 — Sharpen loop + assumption editing + escape hatch goal: make every assumption — methodology AND required user-facts, now including the budget, both controls, and the healthcare inputs — visible and editable, so each added precision visibly and stably SHARPENS the answer (narrows on precision, shifts honestly on a correction), and a power user can set any assumption directly. Requirements: R6 (escape hatch), R4 (detail on demand — assumptions reached on demand, never unsolicited), R7 (every assumption — and every control input/reasoning — visible+editable), R8 (refinement SHARPENS: narrows on added precision, shifts honestly on a corrected value — not unconditionally 'tightens').",
+      "sourceSection": "Unit 12 — Goal + Requirements (lines 204-206)",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/product.md §7 (R6, R4, R7, R8), docs/roadmap.md",
+      "fossilNote": ""
+    },
+    {
+      "kind": "decision-rationale",
+      "claim": "U12 Every assumption listed and editable, across TWO classes: (a) ON-BEHALF METHODOLOGY ASSUMPTIONS — returns, inflation, longevity, survivor-SS step-down, survivor-spending ratio, the death-order hypothetical, and the Roth TAX-PAYMENT-SOURCE assumption (U10); (b) REQUIRED USER-FACTS — ages, savings, the itemized budget (U9), the account buckets, the SLCSP + HSA inputs (U11), per-person retirement years. The second class is REQUIRED because U13 routes a confirmed-changed balance (or split) INTO this sharpen loop, so U12 must edit required facts, not only methodology defaults. Editing a required fact can legitimately return the answer to INDETERMINATE (e.g., clearing savings) — handled by reusing Act-2 U5's indeterminate copy.",
+      "sourceSection": "Unit 12 — Every assumption editable, two classes (line 216)",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/plans/2-first-answer.md (U5 indeterminate copy)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "invariant",
+      "claim": "U12 Each edit re-runs through the Act-2 U5 `memoryModel` orchestrator (it EXTENDS, never re-owns, the recompute home) with the SAME seed → the answer MORPHS (draw-once-then-morph, never a re-draw) and the margin-gated crossfade Act 2 defined is EXERCISED here (Act 2 tested it only with synthetic recomputes).",
+      "sourceSection": "Unit 12 — Each edit re-runs (line 217)",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/plans/2-first-answer.md (U5 memoryModel, margin-gated crossfade)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "decision-rationale",
+      "claim": "U12 R8 honestly — 'sharpens,' not unconditionally 'tightens' (band-narrowing is mechanically true for only ONE edit class): (a) CONFIRM/NARROW an epistemic default (replace a wide conservative assumption with a more confident one) → the band genuinely NARROWS (R8's rewarding case); (b) OVERRIDE a value (real higher spending, a longer longevity table, a higher σ) → the band SHIFTS and may WIDEN, and the verdict can worsen — framed calmly as 'a truer picture,' never a failure. 'Monotonic, no jitter' is the SEED-STABILITY guarantee (same seed → no sampling noise), NOT a promise every edit narrows.",
+      "sourceSection": "Unit 12 — R8 honestly (line 218)",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/product.md (R8)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "build-detail-or-KTD",
+      "claim": "U12 This unit SEATS the stateful sticky-rounding (the seam Act-1 U1 + Act-2 U5 handed forward). It adds `lastDisplayedHeadline` / `lastDisplayedDollar` / `lastState` to `memoryModel` and the sticky rule, applied to edits of an ALREADY-COMPLETE answer: (a) TWO DISTINCT MARGINS — headline + `lastState` (copy-state / verb-tense) gate on the BAND-EDGE margin; `lastDisplayedDollar` gates on the INDEPENDENT DISPLAY-ROUNDING-STEP margin (conflating them is the 'one sticky while the other flickers in one sentence' failure); (b) NOTIFY-ONCE write ordering (`burned/017`) — one recompute writes all displayed slices + the `lastDisplayed*` stickiness BEFORE the single notify; (c) LIFECYCLE — the baseline is captured at the RESOLVE→VERDICT transition (free-moving while indeterminate); `lastDisplayed*` are SESSION-ONLY, NOT PERSISTED, re-seated on re-entry from U13's deterministic recompute, so the first post-unlock edit is sticky against the exact number the user last saw and a genuinely-moved answer (staleness) is never held to a stale screenshot value. (Why the stateful stickiness lives here, not in pure `confidence.ts`: architecture.md §9.)",
+      "sourceSection": "Unit 12 — Stateful sticky-rounding (line 219)",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/architecture.md §9 (why stateful stickiness lives in store), docs/plans/1-engine.md (U1) + docs/plans/2-first-answer.md (U5)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "decision-rationale",
+      "claim": "U12 Honest about the epistemic vs aleatory floor: sharpening narrows input uncertainty but cannot narrow market randomness — copy for 'you've hit the floor, more precision won't narrow it' and for 'sharpening revealed bad news' (real higher spending worsens the verdict — handled calmly). The worsening transition carries the non-color signal grammar (word + shape + dollar magnitude, never a hue shift — the reader is color blind) and is a cold-read subject (contract #8). FLOOR DETECTION (decided, MVP-minimal): a UNIT-12-LOCAL HEURISTIC — when an edit collapses an input's uncertainty toward a point and the band-width change is below a defined threshold, surface the floor copy. The alternative (a `confidence.ts` inputs-vs-returns decomposition emission) would re-open Act 1 and is DELIBERATELY NOT chosen for the MVP; escalate only if the cold-read finds the heuristic too coarse.",
+      "sourceSection": "Unit 12 — Epistemic vs aleatory floor (line 220)",
+      "mustSurvive": true,
+      "duplicatedIn": "contract #8",
+      "fossilNote": ""
+    },
+    {
+      "kind": "decision-rationale",
+      "claim": "U12 Escape hatch: jump straight to any assumption without walking the guided path (R6), reachable EVEN WHILE the answer is INDETERMINATE — the sticky seam applies ONLY to a complete answer, so an escape-hatch edit on an indeterminate answer has defined (non-sticky) behavior (Act-2 U5's indeterminate render). Files — Create: `src/ui/SharpenLoop.tsx`, `src/ui/AssumptionPanel.tsx`, `src/ui/EscapeHatch.tsx`. Modify: `src/store/memoryModel.ts` (edit → recompute; seat the sticky-rounding fields). Test: `src/ui/__tests__/sharpen.test.tsx`, `assumptions.test.tsx`.",
+      "sourceSection": "Unit 12 — Escape hatch + Files (lines 210-213, 221)",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/product.md (R6)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "build-detail-or-KTD",
+      "claim": "U12 key test scenarios: happy/narrow (confirm a wide conservative default with a more confident value → band NARROWS; same seed → no jitter); override (enter higher real spending → band SHIFTS/may widen and verdict can worsen → calm 'a truer picture' copy not a cheerful tightening, proves the two edit classes distinguished); aleatory floor (an edit whose band-width change is below the floor threshold → floor copy appears; a normal edit does not falsely trip it); sticky two-margin split (an edit crossing the DOLLAR step WITHOUT crossing a BAND EDGE updates only the dollar — headline+verb-tense hold; the mirror case holds the dollar while the headline crosses — margins wired separately); notify-once (a near-margin edit yields either both-stable or both-changed in one frame, never a one-frame mixed pair — `burned/017`); every new assumption present+editable (budget lines, sequencing policy, conversion, tax-payment-source, SLCSP, enhanced toggle, HSA, survivor-SS step-down, survivor-spending ratio, death-order all reachable/editable — R7 completeness); required-fact edit (clearing savings returns indeterminate with Act-2 U5's copy); escape hatch on indeterminate is defined (non-sticky); shared-assumption single-source (editing death-order/survivor-spending recomputes BOTH spine and any open control under unchanged seed — contract #3).",
+      "sourceSection": "Unit 12 — Test scenarios (lines 224-232)",
+      "mustSurvive": true,
+      "duplicatedIn": "",
+      "fossilNote": ""
+    },
+    {
+      "kind": "requirement",
+      "claim": "U12 Verification + exit condition: every assumption behind the answer — including budget, both controls, and healthcare inputs — is reachable and changeable within one interaction; edits move the answer stably (seed-stable, no jitter), narrowing on precision and shifting honestly on a correction; the dollar and headline never flicker against each other. PASSING THE N=1 COLD-READ ON THE BAD-NEWS SHARPEN TRANSITION (honest recalibration, not a gut-punch) is an Act-3 EXIT CONDITION. Feeds forward: R7 gains weight under recommend-second — a recommended strategy must expose its inputs AND its reasoning for the user to approve it; the assumption panel + escape hatch are the substrate the recommendation surface reuses to make every recommendation input editable. See 4-recommendation.md Unit 16.",
+      "sourceSection": "Unit 12 — Verification + Feeds forward (lines 234-236)",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/plans/4-recommendation.md (Unit 16, R7)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "requirement",
+      "claim": "U13 — Returning-user re-entry + per-surface staleness goal: a calm re-entry that shows the saved answer (re-derived, not a replayed string) with honest, per-surface staleness awareness across the tax, healthcare, and budget clocks — and routes the surviving spouse back in. Requirements: R4 (the saved answer surface), R8 (re-entry, not re-intake), R15/R16/R17 (unlock + the survivor recovery door + the two-person posture).",
+      "sourceSection": "Unit 13 — Goal + Requirements (lines 244-246)",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/product.md §7 (R4, R8, R15/R16/R17), docs/roadmap.md",
+      "fossilNote": ""
+    },
+    {
+      "kind": "decision-rationale",
+      "claim": "U13 Unlock surfaces ALL of Act-1 U4's outcomes — including the survivor's primary door. ReEntry is the explicit consumer of Act-1 U4's FOUR outcomes: WRONG-PASSPHRASE → calm retry, no lockout; DATA-DAMAGED → 'use your export' restore; NO-VAULT / POST-EVICTION (Safari ~7-day) → restore as a first-class entry; and the IN-PLACE RECOVERY-PHRASE UNLOCK — forgotten passphrase + intact vault → unlock via the recovery phrase → set a new passphrase. The recovery door is the SURVIVING SPOUSE'S PRIMARY WAY BACK IN — the flow the product exists to serve. TWO SECURITY OBLIGATIONS (both MUST hold): (a) setting a new passphrase is a MANDATORY BLOCKING GATE — NO WRITE PATH IS REACHABLE until the new passphrase is set and the `passphraseWrap` re-minted (fresh salt+IV), or the survivor could save while the on-disk wrap still encodes the forgotten passphrase, silently degrading the vault to recovery-phrase-only access (the worst survivor outcome); (b) the recovery-phrase ENTRY FIELD is MASKED BY DEFAULT (reveal-on-hold), and any step that displays the phrase carries the same 'store offline, don't screenshot' instruction first-save uses. (The synchronous lock authority / write-gate conjunction is owned by architecture.md §7.3.)",
+      "sourceSection": "Unit 13 — Unlock surfaces all U4 outcomes (line 256)",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/architecture.md §7.3 (lock authority/write-gate, canonical), docs/plans/1-engine.md (U4)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "decision-rationale",
+      "claim": "U13 Show the saved confidence statement by RE-DERIVING it at unlock (not replaying a stored string): `memoryModel` recomputes the saved model under its PERSISTED SEED → byte-identical to the saved displayed value → and this RE-SEATS U12's session-only sticky baseline so the first post-unlock edit is sticky against the exact number the user last saw. RE-PRESENTATION uses the SAVED FIXTURE VINTAGE (so the number matches what the user screenshotted) with the staleness flag as the honest signal; any RE-RUN (entering the sharpen loop or re-opening a control) recomputes under the CURRENT fixture and explicitly states the assumptions were updated — never silently stale, never silently changed. FORWARD HAND TO ACT-4 U17: once a *recommendation* can be saved, a stale saved recommendation is a real EXECUTED ACTION and its staleness must INVERT to re-solve under current fixtures — 'the action we recommended may no longer be advised,' not 'your number drifted.' In Act 3 only the spine + the manual-control results are saved, so the re-present-under-saved-vintage rule holds — a saved MANUAL-CONTROL result stays a what-if (re-presented under its saved vintage), and ONLY a saved RECOMMENDATION inverts to re-solve-under-current (the boundary the reset turns on: a saved control what-if ≠ a saved executed action); U13 lays the per-surface clock groundwork U17 inherits.",
+      "sourceSection": "Unit 13 — Re-deriving at unlock (line 257)",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/plans/4-recommendation.md (Unit 17, contract #8b)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "requirement",
+      "claim": "U13 Per-surface multi-clock staleness (contract #6 — a clock exists IFF the engine consumes a year-stamped parameter, gates only its surface): (1) WALL-TIME SINCE LAST EDIT + APP METHODOLOGY-DEFAULT VINTAGE (new conservative-return/longevity defaults shipped since save AND never user-overridden → a calm 'we've updated our default assumptions' note; user-overridden assumptions immune) → gate the SPINE VERDICT. (2) TAX-TABLE VINTAGE (the bracket/standard-deduction fixture, carrying its OBBBA-2025 legal-basis as provenance) + RMD-AGE RULE (birth-year-derived; the legislated 73→75 step in 2033) + SENIOR-BONUS-DEDUCTION SUNSET (a calm note when a pre-2029 answer is viewed in/after 2029) → gate the CONTROLS/LEVER ONLY (the spine is tax-blind). SS provisional-income thresholds are frozen/not-indexed → NO clock. A saved control result is flagged stale when ANY of {bracket vintage, RMD-age rule, senior-bonus-deduction sunset} has moved; when stale and opened, the surface shows the vintage at the control ('computed with [year] tax brackets') and does not present the survivor-cliff figure as current — `staleness.ts` exposes a queryable 'tax-table stale' flag.",
+      "sourceSection": "Unit 13 — Per-surface multi-clock staleness, clocks 1-2 (lines 258-260)",
+      "mustSurvive": true,
+      "duplicatedIn": "contract #6, docs/architecture.md §8 (constants/vintage)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "requirement",
+      "claim": "U13 Per-surface staleness clocks (continued): (3) HEALTHCARE VINTAGES (net-new) → gate the HEALTHCARE SURFACES: the ACA LEGISLATIVE STATUS (the load-bearing clock — cliff-on vs enhanced; the re-verify-at-build status), the APPLICABLE-% TABLE, the IRMAA BRACKETS, the PART B PREMIUM. A saved healthcare cost is flagged stale when any has moved; the ACA-status clock is the most consequential (it can flip the whole pre-65 calculus). (4) The UNDETECTABLE BALANCE-DRIFT CLOCK (real portfolio drifted; no aggregation): a calm 'is this still your balance?' confirm before presenting the saved verdict as current. FOR AN ACCOUNTS VAULT it confirms the PER-BUCKET SPLIT (pre-tax/Roth/taxable/HSA), not just the total — the pre-tax pool's drift relative to Roth changes the control calculus more than the total does; a CHANGED SPLIT routes into the U10 MINI-INTAKE, a CHANGED TOTAL into the U12 SHARPEN LOOP. SS staleness folded in as 'are these still your benefit amounts?' (SS benefits are user-entered, not a year-stamped fixture — no separate clock). (5) BUDGET TIME-BOXED CLOCKS (net-new) → gate the BUDGET SURFACE: a budget line whose WINDOW HAS ADVANCED since save (a travel item past its `endYear`; the pre-65 healthcare-gap item once a spouse reached 65) gets a calm RE-CONFIRM rather than silently spending past its window.",
+      "sourceSection": "Unit 13 — Per-surface staleness clocks 3-5 (lines 261-263)",
+      "mustSurvive": true,
+      "duplicatedIn": "contract #6, Unit 11 (ACA legislative status)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "requirement",
+      "claim": "U13 The DATE ANSWER joins the per-surface staleness/re-entry machinery (the most time-denominated answer in the product would otherwise have no clock): (1) FIXTURE-VINTAGE CLOCKS gating the DATE surface: the CONTRIBUTION-LIMIT TABLE VINTAGE (answer-relevant not intake-only: the per-runway-year catch-up step-down shapes the projected stream, so a vintage move shifts the date) and the TICKER-BLEND / TDF STATIC-SNAPSHOT VINTAGE (a stale snapshot silently misstates the household stock weight). (2) USER-ENTERED RE-CONFIRMS ride the existing balance-drift confirm class, NEVER vintage clocks (the SS precedent): account values / contributions / salary join the 'is this still your balance?' confirm; the entered ACA QUOTE gets an 'is this still your marketplace quote?' PLAN-YEAR re-confirm (marketplace premiums reprice annually — user-entered, so a confirm not a fixture clock). (3) The DATE RE-PRESENTATION RULE: re-presentation renders the WALL-TIME-STABLE CALENDAR LABEL (`startCalendarYear + Y` — byte-identical under the saved vintage) and RE-DERIVES the relative '~N years out' framing from CURRENT WALL-TIME — never a replayed relative string (the date answer decays with pure time passage — ages advance against the saved t=0 anchor — so a sufficiently old save routes to RECOMPUTE via this unit's existing re-run rule, never re-presents as current). Act-4 U17's inverted stale-rec rule is unchanged (a saved recommendation still re-solves under current fixtures; the date is an answer, not an executed action).",
+      "sourceSection": "Unit 13 — The date answer joins staleness (lines 264-267)",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/decisions/accumulation-fuck-off-date.md, contract #6",
+      "fossilNote": "Originated as the accumulation-fold U13 date-staleness extension (2026-06-08); flattened into U13's date-clock bullet as clean current text. The clock specifications are as-built design truth and must survive."
+    },
+    {
+      "kind": "invariant",
+      "claim": "U13 Absent-stamp default: a SPINE-ONLY VAULT (saved before the stamps existed, or by a user who never opened a control) has no tax/health stamp → `staleness.ts` treats an ABSENT stamp as 'NOT APPLICABLE' (no false stale), never 'infinitely stale.' Stamps live on the model so staleness is COMPUTABLE OFFLINE.",
+      "sourceSection": "Unit 13 — Absent-stamp default (line 268)",
+      "mustSurvive": true,
+      "duplicatedIn": "contract #6",
+      "fossilNote": ""
+    },
+    {
+      "kind": "build-detail-or-KTD",
+      "claim": "U13 Files — Create: `src/ui/ReEntry.tsx`, `src/store/staleness.ts`. Modify: `src/shared/model.ts` (the vintage stamps — READ here, written by Units 10/11 — under the single schemaVersion bump). Test: `src/ui/__tests__/reentry.test.tsx`, `src/store/__tests__/staleness.test.ts`.",
+      "sourceSection": "Unit 13 — Files (lines 250-253)",
+      "mustSurvive": true,
+      "duplicatedIn": "",
+      "fossilNote": ""
+    },
+    {
+      "kind": "build-detail-or-KTD",
+      "claim": "U13 key test scenarios: happy (unlock → saved verdict RE-DERIVED under the saved seed byte-identical, shown immediately no intake re-run; sticky baseline re-seated from it); survivor door (forgotten passphrase + intact vault → in-place recovery-phrase unlock → set new passphrase mandatory blocking gate `passphraseWrap` re-minted → current model recovered; phrase field masked by default); error paths consume Act-1 U4 (wrong passphrase → calm retry no lockout no leak; data-damaged → 'use your export'; no-vault/post-eviction → restore first-class); tax staleness control-scoped (tax-table vintage older → calm note on the CONTROL not the tax-blind spine verdict; flagged stale when any of {bracket vintage, RMD-age rule (the 2033 step), senior-bonus-deduction sunset} moved); healthcare staleness (saved ACA cost flagged when legislative status/applicable-%/IRMAA brackets/Part B premium moved; ACA-status note dated; gate on healthcare surface only); budget time-box (a travel line past endYear or healthcare-gap line once a spouse hit 65 → calm re-confirm not silent over-window spending); re-presentation vs re-run; accounts balance-confirm (per-bucket incl HSA; changed split → U10 mini-intake, changed total → U12 sharpen loop); date staleness (contribution-limit-table or ticker-blend-snapshot vintage move flags the DATE surface; account values/ACA quote ride balance-drift confirm; old save routes date to recompute); absent stamp (treats every absent stamp as not-applicable, no false stale); app-default vintage (new default σ since save never overridden → calm note on spine; a user who overrode is immune).",
+      "sourceSection": "Unit 13 — Test scenarios (lines 271-281)",
+      "mustSurvive": true,
+      "duplicatedIn": "",
+      "fossilNote": ""
+    },
+    {
+      "kind": "requirement",
+      "claim": "U13 Verification + exit condition: a returning user sees their saved answer (re-derived, byte-identical, behind an unlock) with honest per-surface staleness across the tax, healthcare, budget, and date clocks, is nudged to confirm the balance (per-bucket, incl. HSA, for an accounts vault) before trusting a stale verdict, and — critically — the SURVIVING SPOUSE has a specified door back in (in-place recovery with a mandatory new-passphrase gate). PASSING THE N=1 COLD-READ ON THE RE-ENTRY STALENESS + BALANCE-CONFIRM + SURVIVOR-RECOVERY COPY (honest, not alarming) is an Act-3 EXIT CONDITION. Feeds forward: the per-surface staleness map is the groundwork Act-4 U17 inherits and INVERTS for a saved recommendation — a saved recommendation is a real executed action so it re-solves under current fixtures and reads 'the action we recommended may no longer be advised.' The boundary the reset turns on is a saved control what-if (re-presented under its saved vintage, U13's rule) vs a saved executed action (re-solved, U17's rule). See 4-recommendation.md Unit 17 + contract #8b.",
+      "sourceSection": "Unit 13 — Verification + Feeds forward (lines 283-285)",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/plans/4-recommendation.md (Unit 17, contract #8b)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "build-detail-or-KTD",
+      "claim": "Implementation-craft references governing Act-3 surfaces at build time: `burned/005` — the generation-counter / request-epoch discipline (every stale slider/cooldown timer and the morph's `onAnimationComplete` carries the request-epoch and no-ops if superseded — extends Act-2 U5's epoch discipline to timers and animation callbacks; the Act-3-originated pattern that 4-recommendation.md extends for solve cancellation). `ai-journey-stats/007` — memoize the slider/panel handlers (`useCallback`) so the live-recompute path does not re-subscribe on every drag (U12). `ai-journey-stats/sparkline` — a pure path-builder + a thin component, with `preserveAspectRatio=\"xMidYMid meet\"` + `vector-effect: non-scaling-stroke` (U10's two-futures geometry). `burned/015` — press / `:active` feedback on a child of any motion-animated control (U12).",
+      "sourceSection": "Implementation-craft references (lines 291-296)",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/plans/4-recommendation.md (extends burned/005 for solve cancellation)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "status-as-built",
+      "claim": "What is next (live ordering): Act 3 is NOT started and NOT the next build. The immediate next build is R40 — other income in retirement (Act 2, planned, build-ready, zero code), followed by the rest of the Act-2 answer surface (U8, the U6 confidence-band render, U7, D2). Act 3 (Controls) follows the first answer landing; Act 4 (Recommendation) follows Act 3. The live session-level next-action queue is in TODO.md; the maintained per-unit status table is in docs/roadmap.md.",
+      "sourceSection": "What is next (line 300)",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/roadmap.md (You-Are-Here table), TODO.md",
+      "fossilNote": "Volatile sequencing pointer — partly belongs in TODO.md/roadmap.md rather than the plan, but the as-built scope-ordering (R40 next, then U8/U6-render/U7/D2, then Act3, then Act4) is currently true."
+    }
+  ]
+}

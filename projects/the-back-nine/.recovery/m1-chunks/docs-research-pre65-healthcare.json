@@ -1,0 +1,487 @@
+{
+  "doc": "docs/research/pre65-healthcare.md",
+  "oneLineRole": "The verified-reference evidence home for the income-dependent healthcare model (ACA-PTC pre-65, IRMAA post-65, HSA across both), holding every healthcare number, the conversion↔healthcare modeling crux, the falsifiable in/out scope line, and the living re-verify exit gate that the U3 healthOverlay + constants/health.ts read from.",
+  "source": "main-inventory",
+  "items": [
+    {
+      "kind": "status-as-built",
+      "claim": "This doc is the verified-reference home for the income-dependent healthcare model (ACA premium-tax-credit before 65, IRMAA after 65, HSA across both). It is a CO-EQUAL SIBLING of docs/research/engine-validation-and-tax.md — that doc holds Trinity/Bengen + tax/SS numbers; this one holds the healthcare numbers. Together they are the evidence layer the engine's overlays read from. Status: CONSUMED and load-bearing — not a draft.",
+      "sourceSection": "Frontmatter + intro + Status paragraph",
+      "mustSurvive": true,
+      "duplicatedIn": "docs/research/engine-validation-and-tax.md (the sibling relationship); architecture.md §7.2",
+      "fossilNote": ""
+    },
+    {
+      "kind": "status-as-built",
+      "claim": "The U3 healthcare overlay src/engine/healthOverlay.ts and the canonical constants table src/engine/constants/health.ts READ these facts. The legislative exit-gate (§6, row 1) is enforced on every build by `pnpm verify:aca`. Numbers carry per-figure confidence and a `directionalUntilPinned` marker — this is the standard precision discipline (directional until pinned to named PRIMARY source, golden after), NOT 'unfinished.' The healthcare model ships today on the 2026 reverted/cliff base case.",
+      "sourceSection": "Status paragraph",
+      "mustSurvive": true,
+      "duplicatedIn": "architecture.md §7.2; project CLAUDE.md (verify:aca, reVerifyEveryBuild)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "scope-boundary",
+      "claim": "HOW the engine uses all of this — the two MAGI calculators, the ACA same-year fixed point, the IRMAA two-year lagged feed-forward, the HSA fourth bucket, the survivor MFJ→single flip, the reduce-to-spine invariant — lives in architecture.md §7.2 (Healthcare overlay), ONCE. This doc is the facts they rest on. The R40/portfolio scoping that builds on top is in plans/features/other-income.md and plans/features/portfolio-holdings.md.",
+      "sourceSection": "Intro (where mechanics vs facts live)",
+      "mustSurvive": true,
+      "duplicatedIn": "architecture.md §7.2",
+      "fossilNote": ""
+    },
+    {
+      "kind": "definition-term",
+      "claim": "Synthesis models CURRENT (2026) law. The doc extends the tax-reference doc's conversion problem from a single-control 'fill the survivor's bracket' objective into a MULTI-CONTROL, healthcare-aware sequencing objective in which income-dependent healthcare cost is CONTINUOUS across age 65 (ACA-PTC pre-65 → IRMAA post-65), with two different MAGI definitions, two different cliff shapes, and a 2-year timing lag on the post-65 side.",
+      "sourceSection": "Synthesis date paragraph",
+      "mustSurvive": true,
+      "duplicatedIn": "",
+      "fossilNote": ""
+    },
+    {
+      "kind": "number-or-figure",
+      "claim": "Medicare eligibility begins at exactly age 65 (general population). 7-month Initial Enrollment Period: 3 months before the birthday month, the birthday month, 3 months after. Medicare is INDIVIDUAL, not household — in an age-gapped couple the younger spouse needs bridge coverage longer. (Source: CMS / Medicare.gov.)",
+      "sourceSection": "§1 SETTLED FACTS — Medicare endpoint",
+      "mustSurvive": true,
+      "duplicatedIn": "",
+      "fossilNote": ""
+    },
+    {
+      "kind": "number-or-figure",
+      "claim": "2026 Part B standard premium = $202.90/mo/person; Part B deductible = $283/yr. Part B is PER PERSON — a couple both enrolled pays ~$405.80/mo at the standard rate. Original Medicare is NOT free. (Source: CMS fact sheet, Nov 14 2025 — verified across multiple grounded sources incl. The Finance Buff computing from the CMS announcement.) Confidence HIGH (CMS-cited, multi-source; NOT read off the PDF — exit-gate row 7).",
+      "sourceSection": "§1 SETTLED FACTS — Medicare endpoint; §6 row 7",
+      "mustSurvive": true,
+      "duplicatedIn": "src/engine/constants/health.ts",
+      "fossilNote": ""
+    },
+    {
+      "kind": "invariant",
+      "claim": "Enrolling in ANY part of Medicare ends HSA CONTRIBUTION eligibility — full stop. Spending privileges at 65+ do not restore the ability to contribute. (Source: IRS Pub 969, verbatim.)",
+      "sourceSection": "§1 SETTLED FACTS — Medicare endpoint",
+      "mustSurvive": true,
+      "duplicatedIn": "",
+      "fossilNote": ""
+    },
+    {
+      "kind": "requirement",
+      "claim": "HSA contribution-eligibility = four tests, ALL true on the first of the month: (1) covered by a qualifying HDHP; (2) no other non-HDHP coverage (limited exceptions); (3) NOT enrolled in Medicare; (4) not a dependent. (Source: IRS Pub 969 — read verbatim 2026-06-04; rules are statutory IRC §223, stable for 2026.)",
+      "sourceSection": "§1 SETTLED FACTS — HSA eligibility",
+      "mustSurvive": true,
+      "duplicatedIn": "",
+      "fossilNote": ""
+    },
+    {
+      "kind": "invariant",
+      "claim": "Medicare ZEROES the HSA contribution limit, verbatim: 'Beginning with the first month you are enrolled in Medicare, your contribution limit is zero. This rule applies to periods of retroactive Medicare coverage.' This is the 6-MONTH PART A RETROACTIVE LOOKBACK trap for 65+ who delay Medicare while still contributing (the '6 months' duration is well-established SSA/Medicare rule, secondary-sourced; the retroactivity-creates-excess principle is verbatim Pub 969).",
+      "sourceSection": "§1 SETTLED FACTS — HSA eligibility",
+      "mustSurvive": true,
+      "duplicatedIn": "",
+      "fossilNote": ""
+    },
+    {
+      "kind": "invariant",
+      "claim": "Which premiums HSA funds CAN pay (the ONLY four exceptions), verbatim: (1) long-term care insurance; (2) health care continuation coverage such as COBRA; (3) coverage while receiving unemployment compensation; (4) Medicare and other health coverage if you were 65 or older — EXCEPT Medigap/Medicare supplemental (explicitly excluded).",
+      "sourceSection": "§1 SETTLED FACTS — HSA eligibility",
+      "mustSurvive": true,
+      "duplicatedIn": "",
+      "fossilNote": ""
+    },
+    {
+      "kind": "invariant",
+      "claim": "THE TRAP — ACA Marketplace premiums are NOT HSA-qualified in the normal case. They qualify tax-free ONLY if (a) the person is receiving unemployment compensation, or (b) it's COBRA. For a pre-65 early retiree on the Marketplace (a core Back-Nine scenario), HSA dollars cover out-of-pocket costs tax-free but NOT the monthly premium. Do not let the model overstate 'HSA covers healthcare.'",
+      "sourceSection": "§1 SETTLED FACTS — HSA eligibility",
+      "mustSurvive": true,
+      "duplicatedIn": "§2 (OBBBA note reiterates ACA premiums remain non-HSA-payable); §5 OUT line",
+      "fossilNote": ""
+    },
+    {
+      "kind": "invariant",
+      "claim": "The 65+ Medicare-premium HSA privilege is keyed to the HSA OWNER's age, not the spouse's, verbatim: if the account beneficiary isn't 65+, Medicare premiums for a 65+ spouse/dependent aren't qualified. Matters for the couple model's age-gap/death-order logic (COBRA and unemployment exceptions CAN cover a spouse; the Medicare exception cannot until the owner is 65+).",
+      "sourceSection": "§1 SETTLED FACTS — HSA eligibility",
+      "mustSurvive": true,
+      "duplicatedIn": "",
+      "fossilNote": ""
+    },
+    {
+      "kind": "invariant",
+      "claim": "20% HSA penalty waived at 65 — a non-qualified withdrawal after 65 is taxed as ordinary income only (HSA behaves like a Traditional IRA for non-medical spend); qualified medical withdrawals stay fully tax-free.",
+      "sourceSection": "§1 SETTLED FACTS — HSA eligibility",
+      "mustSurvive": true,
+      "duplicatedIn": "",
+      "fossilNote": ""
+    },
+    {
+      "kind": "number-or-figure",
+      "claim": "2026 HSA limits (Rev. Proc. 2025-19, secondary-sourced, 4+ sources agree): contribution $4,400 self-only / $8,750 family; HDHP min deductible $1,700 / $3,400; max OOP $8,500 / $17,000; catch-up (55+) +$1,000 each spouse IN THEIR OWN HSA (cannot stack in one account). Confidence MEDIUM-HIGH — not read from the Rev. Proc. PDF. Primary to pin: IRS Rev. Proc. 2025-19 (irs.gov/pub/irs-drop/rp-25-19.pdf) — exit-gate row 3.",
+      "sourceSection": "§1 SETTLED FACTS — HSA 2026 limits; §6 row 3",
+      "mustSurvive": true,
+      "duplicatedIn": "src/engine/constants/health.ts",
+      "fossilNote": ""
+    },
+    {
+      "kind": "definition-term",
+      "claim": "ACA-PTC (IRC §36B) = benchmark SLCSP premium − (applicable % × MAGI), where SLCSP = second-lowest-cost Silver plan in the rating area. Taken in advance as APTC, reconciled on Form 8962. Coverage-year eligibility uses the PRIOR YEAR's FPL (2026 coverage → 2025 FPL). (Source: IRS Pub 974; UC Berkeley Labor Center 'MAGI under the ACA'; HealthCare.gov.)",
+      "sourceSection": "§1 SETTLED FACTS — ACA-PTC MAGI basis",
+      "mustSurvive": true,
+      "duplicatedIn": "§4b (formula block)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "definition-term",
+      "claim": "ACA-MAGI = AGI + tax-exempt (muni) interest + the non-taxable portion of Social Security + excluded foreign earned income. (So the FULL SS benefit effectively counts.)",
+      "sourceSection": "§1 SETTLED FACTS — ACA-PTC MAGI basis",
+      "mustSurvive": true,
+      "duplicatedIn": "§4a (ACA-MAGI calculator); §6 row 4",
+      "fossilNote": ""
+    },
+    {
+      "kind": "invariant",
+      "claim": "Roth CONVERSION income, traditional IRA/401(k) withdrawals, capital gains, taxable interest/dividends all raise ACA-MAGI dollar-for-dollar. Qualified Roth distributions are MAGI-INVISIBLE (tax-free, never touch AGI) — this is the lever. Return of basis from a brokerage account counts only the gain.",
+      "sourceSection": "§1 SETTLED FACTS — ACA-PTC MAGI basis",
+      "mustSurvive": true,
+      "duplicatedIn": "§3 (conversion interaction); §4a; §5 IN/OUT line",
+      "fossilNote": ""
+    },
+    {
+      "kind": "definition-term",
+      "claim": "IRMAA is an income-based surcharge on Medicare Part B AND Part D. Year-N surcharge is set by MAGI from year N−2 → 2026 IRMAA is set by 2024 MAGI. (Source: CMS/SSA; The Finance Buff (Harry Sit) computing from CMS announcement, cross-checked Kiplinger/Humana — all agree.)",
+      "sourceSection": "§1 SETTLED FACTS — IRMAA 2-year lookback",
+      "mustSurvive": true,
+      "duplicatedIn": "§3 65+ regime; §4c; §5 IN line",
+      "fossilNote": ""
+    },
+    {
+      "kind": "definition-term",
+      "claim": "IRMAA-MAGI = AGI + tax-exempt interest. It does NOT add back the non-taxable SS portion. IRMAA-MAGI ≠ ACA-MAGI — the engine needs TWO SEPARATE MAGI calculators.",
+      "sourceSection": "§1 SETTLED FACTS — IRMAA 2-year lookback",
+      "mustSurvive": true,
+      "duplicatedIn": "§4a (IRMAA-MAGI calculator); §6 row 8",
+      "fossilNote": ""
+    },
+    {
+      "kind": "number-or-figure",
+      "claim": "IRMAA = step-function brackets with hard cliffs, PER PERSON. $1 over a threshold → the full surcharge for that bracket; a couple pays it TWICE. 2026 first tier: single > $109,000 / MFJ > $218,000. 2026 Part B totals climb $284.10 → $689.90/mo across tiers; Part D IRMAA $14.50 → $91.00. First four brackets are inflation-indexed annually; top tier (≥$500k single / ≥$750k MFJ) is FROZEN through 2027, adjusts 2028. Confidence HIGH thresholds (Finance Buff from CMS), MEDIUM middle-tier dollars — exit-gate row 8.",
+      "sourceSection": "§1 SETTLED FACTS — IRMAA 2-year lookback; §6 row 8",
+      "mustSurvive": true,
+      "duplicatedIn": "src/engine/constants/health.ts; §4e (inflation-indexing)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "invariant",
+      "claim": "A voluntary Roth conversion is NOT an SSA-44 life-changing event — you cannot appeal away IRMAA you caused by your own conversion. (Retirement/work-stoppage IS a qualifying event.)",
+      "sourceSection": "§1 SETTLED FACTS — IRMAA 2-year lookback",
+      "mustSurvive": true,
+      "duplicatedIn": "§4e (SSA-44); §5 OUT line",
+      "fossilNote": ""
+    },
+    {
+      "kind": "status-as-built",
+      "claim": "THE load-bearing fact (do NOT smooth over): Enhanced ACA subsidies expired 12/31/2025; NOT extended as of 2026-06-04; status is legislatively fluid. SETTLED as current law (HIGH): the ARPA-2021 enhanced premium tax credits, extended by IRA-2022 through plan year 2025, EXPIRED December 31, 2025. For 2026 the law REVERTED to the pre-ARPA structure: the 400% FPL 'subsidy cliff' is BACK (one dollar of MAGI over 400% FPL → loss of ALL premium tax credits), and required-contribution percentages are HIGHER at every tier (2026 sliding scale 2.10% → 9.96% of income, vs. 0% → 8.5% in 2021–2025). 2026 plans, premiums, APTC already reflect reverted rules. (Sources: KFF; HealthCare.gov states pandemic-era help 'ended December 31, 2025'; IRS Rev. Proc. 2025-25 for the applicable-% table.)",
+      "sourceSection": "§2 TIME-SENSITIVE — enhanced subsidies expired",
+      "mustSurvive": true,
+      "duplicatedIn": "§6 row 1; project CLAUDE.md (ACA reVerifyEveryBuild); architecture.md §7.2",
+      "fossilNote": ""
+    },
+    {
+      "kind": "status-as-built",
+      "claim": "PENDING / NOT LAW (as of 2026-06-04): On Jan 8, 2026 the House PASSED a 3-year extension (230–196, 17 Republicans joining). It STALLED in the Senate (needs 60 votes; reported 'dead on arrival'; a shorter/income-capped compromise reportedly live but inconclusive). NO extension has been enacted. (Sources: Thomson Reuters, AJMC, KFF, Ballotpedia — grounded synthesis, NOT confirmed against an enacted statute.)",
+      "sourceSection": "§2 TIME-SENSITIVE — enhanced subsidies pending",
+      "mustSurvive": true,
+      "duplicatedIn": "§6 row 1",
+      "fossilNote": ""
+    },
+    {
+      "kind": "decision-rationale",
+      "claim": "Why the legislative status is load-bearing: if Congress restores the enhanced regime — POSSIBLY RETROACTIVELY to 2026 — the 400% FPL cliff DISAPPEARS and the entire pre-65 conversion calculus FLIPS. The engine must treat 'cliff-on / reverted rules' as the 2026 BASE CASE but expose the enhanced regime as a SCENARIO TOGGLE, never hard-code 'no enhanced subsidies forever.' Re-verify against current law at every build/release.",
+      "sourceSection": "§2 TIME-SENSITIVE — why load-bearing",
+      "mustSurvive": true,
+      "duplicatedIn": "§6 row 1; architecture.md §7.2",
+      "fossilNote": ""
+    },
+    {
+      "kind": "number-or-figure",
+      "claim": "Documented 2026 impact (for calibration/messaging, NOT as fixtures): KFF — average subsidized benchmark out-of-pocket premium projected to roughly DOUBLE; realized net monthly payment up ~58% as enrollees downshifted to Bronze; projected enrollment ~22.3M → ~17.5M; CBO +2.2M uninsured in 2026. Severity anchor: a 63-yr-old WV couple at ~$85k (402% FPL) saw the cheapest Bronze plan go from <$2/mo to $1,527/mo purely from the cliff's return.",
+      "sourceSection": "§2 TIME-SENSITIVE — documented 2026 impact",
+      "mustSurvive": true,
+      "duplicatedIn": "",
+      "fossilNote": ""
+    },
+    {
+      "kind": "number-or-figure",
+      "claim": "OBBBA (H.R.1, enacted July 2025, effective 2026): ACA Bronze & Catastrophic Exchange plans DEEMED HSA-COMPATIBLE from Jan 1 2026 (expands WHO can contribute; does NOT make ACA premiums HSA-payable — the premium list in §1 is unchanged); permanent telehealth pre-deductible safe harbor; Direct Primary Care fees (≤$150/$300) HSA-eligible. Confidence MEDIUM-HIGH — multiple advisory sources agree; statute/IRS implementing notice not read verbatim. Primary to pin: enacted H.R.1 text / IRS implementing notice — exit-gate row 10.",
+      "sourceSection": "§2 TIME-SENSITIVE — OBBBA; §6 row 10",
+      "mustSurvive": true,
+      "duplicatedIn": "§5 OUT line (OBBBA edge features)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "number-or-figure",
+      "claim": "FPL dollar thresholds: 2026 coverage uses 2025 HHS poverty guidelines; the couple's 400% FPL cliff ≈ $84,600 (household-of-2) is the binding number but was reported as a rounded approximation, NOT pulled from the HHS primary table. Confidence MEDIUM (rounded approximations). Primary to pin: HHS 2025 Poverty Guidelines (Federal Register); note AK/HI higher — exit-gate row 6.",
+      "sourceSection": "§2 TIME-SENSITIVE — FPL thresholds; §6 row 6",
+      "mustSurvive": true,
+      "duplicatedIn": "§3 (~$84,600 cliff); src/engine/constants/health.ts",
+      "fossilNote": ""
+    },
+    {
+      "kind": "number-or-figure",
+      "claim": "2026 applicable-% interior endpoints = 2.10% / 4.19% / 6.60% / 8.44% / 9.96% — single-source to Rev. Proc. 2025-25 via summary; confirm decimals against the PDF. Primary to pin: IRS Rev. Proc. 2025-25 (irs.gov/pub/irs-drop/rp-25-25.pdf) — confirm every bracket-edge decimal — exit-gate row 5.",
+      "sourceSection": "§2 TIME-SENSITIVE — applicable-% endpoints; §6 row 5",
+      "mustSurvive": true,
+      "duplicatedIn": "src/engine/constants/health.ts",
+      "fossilNote": ""
+    },
+    {
+      "kind": "decision-rationale",
+      "claim": "Healthcare cost in retirement is income-sensitive CONTINUOUSLY across age 65. The same lever the engine optimizes for tax/RMD posture — how much traditional balance to convert/withdraw each year — ALSO moves healthcare cost, through two regimes glued at 65. This is what couples healthcare into the solver objective.",
+      "sourceSection": "§3 CONVERSION ↔ HEALTHCARE INTERACTION",
+      "mustSurvive": true,
+      "duplicatedIn": "architecture.md §7.2",
+      "fossilNote": ""
+    },
+    {
+      "kind": "decision-rationale",
+      "claim": "Pre-65 (ACA-PTC regime): a Roth conversion (or any traditional withdrawal) raises current-year ACA-MAGI dollar-for-dollar → shrinks the PTC → in 2026's reverted/cliff regime can knock the household over the 400% FPL cliff and zero out the entire subsidy. The early-retiree instinct 'convert aggressively while ordinary income is low' DIRECTLY FIGHTS 'keep MAGI low to maximize the subsidy.'",
+      "sourceSection": "§3 Pre-65",
+      "mustSurvive": true,
+      "duplicatedIn": "",
+      "fossilNote": ""
+    },
+    {
+      "kind": "lesson",
+      "claim": "Planners frame this as an effective ('shadow') marginal rate = federal + state tax + lost ACA subsidy, commonly ~38%+ when the subsidy phase-out stacks on a 12%/22% bracket, and catastrophic at the cliff. Worked illustration: a couple at ~$80k MAGI (just under the ~$84,600 cliff) getting ~$10k/yr subsidy who converts $10k → over the cliff → loses the whole ~$10k subsidy plus owes ~$1,200 tax → >100% effective rate on that conversion.",
+      "sourceSection": "§3 Pre-65 shadow rate",
+      "mustSurvive": true,
+      "duplicatedIn": "",
+      "fossilNote": ""
+    },
+    {
+      "kind": "decision-rationale",
+      "claim": "The governing heuristic shifts: DON'T 'fill to the top of a tax bracket' — fill only up to an ACA-subsidy-aware MAGI ceiling (commonly just under 400% FPL to dodge the cliff, or lower — 150/200/250% FPL — to also capture Cost-Sharing-Reduction Silver benefits). During ACA years the SUBSIDY ceiling, not the tax bracket, is the binding constraint.",
+      "sourceSection": "§3 Pre-65 heuristic",
+      "mustSurvive": true,
+      "duplicatedIn": "§3 unifying crux",
+      "fossilNote": ""
+    },
+    {
+      "kind": "decision-rationale",
+      "claim": "65+ (IRMAA analog): at 65 the person enrolls in Medicare and (if premium-free Part A) LOSES ACA PTC — ACA income-sensitivity switches OFF, REPLACED by IRMAA. Same shadow-rate logic on IRMAA step-brackets (×2 for a couple), with two structural differences from ACA: (1) 2-YEAR LAG — a conversion at age 63–64 hits the IRMAA bill at 65–66, so the 'danger years' for IRMAA START BEFORE Medicare; (2) PURE STEP-FUNCTION CLIFFS (no smooth phase-out): $1 over a bracket = full surcharge, repeated every year MAGI stays above the line.",
+      "sourceSection": "§3 65+",
+      "mustSurvive": true,
+      "duplicatedIn": "§4c; §5 IN line (2-year lag)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "lesson",
+      "claim": "The unifying crux: both regimes have cliffs, so the rule 'fill to a subsidy-aware ceiling, not a tax-bracket ceiling' applies in BOTH phases — only the ceiling's DEFINITION changes at 65 (current-year ACA-MAGI vs. 400% FPL pre-65; MAGI[t−2] vs. IRMAA brackets post-65). Consistent with the project's known landmine, the tax-blind delta is SIGN-INVERTED: ignoring ACA/IRMAA makes aggressive early conversions look BETTER than they are, both pre-65 and across the 63→65 boundary.",
+      "sourceSection": "§3 unifying crux",
+      "mustSurvive": true,
+      "duplicatedIn": "engine-validation-and-tax.md (the sign-inverted tax-blind-delta landmine)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "build-detail-or-KTD",
+      "claim": "Where this lives in code: the §4 recommendations were implemented in U3 — src/engine/healthOverlay.ts (the two MAGI calculators, the ACA fixed point with explicit cliff branching, IRMAA as a 2-year lag carried in state, the HSA fourth bucket) reading src/engine/constants/health.ts. See architecture.md §7.2 for as-built mechanics + reduce-to-spine invariant. §4 is preserved as the design rationale the build rests on.",
+      "sourceSection": "§4 MODELING RECOMMENDATION — blockquote",
+      "mustSurvive": true,
+      "duplicatedIn": "architecture.md §7.2; Status paragraph",
+      "fossilNote": ""
+    },
+    {
+      "kind": "decision-rationale",
+      "claim": "Minimal honest model = ONE continuous 'income-sensitive healthcare cost' curve, implemented as two regimes with two MAGI variants.",
+      "sourceSection": "§4 MODELING RECOMMENDATION",
+      "mustSurvive": true,
+      "duplicatedIn": "",
+      "fossilNote": ""
+    },
+    {
+      "kind": "requirement",
+      "claim": "4a. Two MAGI calculators (do NOT reuse one number): ACA-MAGI = AGI + tax-exempt interest + non-taxable SS + excluded foreign income. IRMAA-MAGI = AGI + tax-exempt interest (no SS add-back). Qualified Roth distributions, return of basis, cash, and HSA spending count toward NEITHER — funding healthcare from these breaks the loop, so the engine's FUNDING-SOURCE ORDER materially changes loop strength.",
+      "sourceSection": "§4a Two MAGI calculators",
+      "mustSurvive": true,
+      "duplicatedIn": "§1 (both MAGI defs); §4a feeds healthOverlay.ts",
+      "fossilNote": ""
+    },
+    {
+      "kind": "build-detail-or-KTD",
+      "claim": "4b. Pre-65 ACA same-year MAGI feedback loop is a TRUE FIXED POINT. This year's MAGI sets this year's PTC → changes net premium → changes gross withdrawal needed to fund spending → changes MAGI (circular). Code shape: PTC = max(0, SLCSP_benchmark − applicable_pct(FPL%) × MAGI) [0 if MAGI > 400% FPL cliff, 2026]; net_premium = full_premium − PTC; gross_wd = spending_need + taxes + net_premium; MAGI = f(gross_wd, other_income) [MAGI on both sides].",
+      "sourceSection": "§4b — fixed point + code block",
+      "mustSurvive": true,
+      "duplicatedIn": "architecture.md §7.2 (as-built fixed point)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "decision-rationale",
+      "claim": "The ACA same-year loop is the SAME SHAPE as the IRS's own SEHI↔PTC circular reference, which the IRS resolves with an iterative method (Pub 974 / Rev. Proc. 2014-41). Iterating to a fixed point is IRS-PRECEDENTED, not a hack.",
+      "sourceSection": "§4b",
+      "mustSurvive": true,
+      "duplicatedIn": "",
+      "fossilNote": ""
+    },
+    {
+      "kind": "number-or-figure",
+      "claim": "Convergence is fast and safe: each extra MAGI dollar claws back at most the applicable % of PTC (≤9.96% in 2026), so the contraction factor is ≤~0.10 → 2–3 fixed-point iterations (or a bisection on MAGI) converges.",
+      "sourceSection": "§4b convergence",
+      "mustSurvive": true,
+      "duplicatedIn": "",
+      "fossilNote": ""
+    },
+    {
+      "kind": "build-detail-or-KTD",
+      "claim": "Handle the 400% FPL cliff EXPLICITLY: a naive iterator can oscillate across it. DETECT THE CROSSING AND BRANCH — compute the 'just-under' and 'just-over' funding solutions and pick the cheaper — rather than relying on smooth convergence.",
+      "sourceSection": "§4b cliff handling",
+      "mustSurvive": true,
+      "duplicatedIn": "architecture.md §7.2 (explicit cliff branching)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "decision-rationale",
+      "claim": "Treat the SLCSP benchmark premium as a USER INPUT (or an age-banded assumption). It is ZIP/age-specific; every serious tool punts it to input. This is the SINGLE BIGGEST HONESTY LEVER — do not synthesize it.",
+      "sourceSection": "§4b SLCSP as input",
+      "mustSurvive": true,
+      "duplicatedIn": "§4d; §5 OUT line (SLCSP benchmark premium level)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "lesson",
+      "claim": "A one-pass/sequential v0 (estimate MAGI → compute PTC → don't re-fund) is acceptable but BIASES the marginal premium-funding withdrawal (understates MAGI). Iterating removes the bias for ~10 lines — recommended.",
+      "sourceSection": "§4b v0 caveat",
+      "mustSurvive": true,
+      "duplicatedIn": "",
+      "fossilNote": ""
+    },
+    {
+      "kind": "build-detail-or-KTD",
+      "claim": "4c. Post-65 IRMAA is a 2-year LAGGED FEED-FORWARD, NOT a fixed point. Store a per-filing-unit MAGI HISTORY. In year t, look up the bracket from MAGI[t−2] and add the surcharge (×2 for a couple) to year-t healthcare cost. NO within-year circularity to solve — it's a deterministic delay carried in state.",
+      "sourceSection": "§4c — IRMAA lag",
+      "mustSurvive": true,
+      "duplicatedIn": "architecture.md §7.2 (IRMAA 2-year lagged feed-forward carried in state)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "scope-boundary",
+      "claim": "The IRMAA surcharge is itself spending that may be funded by a withdrawal bumping MAGI[t], feeding t+2 — a SECOND-ORDER LAGGED LOOP. MVP may IGNORE it and document the omission; it's tiny.",
+      "sourceSection": "§4c second-order loop",
+      "mustSurvive": true,
+      "duplicatedIn": "§5 OUT line (IRMAA second-order self-funding loop)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "decision-rationale",
+      "claim": "4d. Defensible MVP cut: ACA fixed-point with explicit cliff branching + SLCSP as input + two MAGI variants + IRMAA as a pure 2-year lag carried in state. This BEATS Boldin (which does NOT auto-model the loop — it tells users to enter the unsubsidized premium manually and self-cap conversions) and is HONEST. PL/Pralana sit above this with joint optimization; the MVP need not match them, only be directionally correct and disclose what it omits.",
+      "sourceSection": "§4d MVP cut",
+      "mustSurvive": true,
+      "duplicatedIn": "",
+      "fossilNote": ""
+    },
+    {
+      "kind": "build-detail-or-KTD",
+      "claim": "4e. Couple / death-order interaction: on a spouse's death the survivor flips MFJ → single thresholds (~half) for BOTH IRMAA and the ACA FPL basis — the survivor can be hit with a surcharge on the SAME income. Wire this into the existing death-order conditional-filter logic.",
+      "sourceSection": "§4e subtleties",
+      "mustSurvive": true,
+      "duplicatedIn": "§5 IN line (survivor MFJ→single flip); architecture.md §7.2 (survivor MFJ→single flip)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "build-detail-or-KTD",
+      "claim": "4e. Inflation-index the thresholds when projecting forward (ACA applicable-% and the first four IRMAA brackets adjust annually; IRMAA top tier frozen through 2027). Static thresholds silently catch more people each year.",
+      "sourceSection": "§4e subtleties",
+      "mustSurvive": true,
+      "duplicatedIn": "§1 (IRMAA top tier frozen through 2027); §4e",
+      "fossilNote": ""
+    },
+    {
+      "kind": "build-detail-or-KTD",
+      "claim": "4e. IRMAA cliffs are discontinuous — fine for forward simulation, HOSTILE to gradient optimizers; the conversion-ceiling search must be cliff-aware (grid/bisection, NOT gradient).",
+      "sourceSection": "§4e subtleties",
+      "mustSurvive": true,
+      "duplicatedIn": "",
+      "fossilNote": ""
+    },
+    {
+      "kind": "scope-boundary",
+      "claim": "4e. SSA-44: retirement/work-stoppage is a qualifying life-changing event that can reduce IRMAA in the retirement-transition year; a voluntary conversion is NOT. MVP may ignore the appeal but should NOT assume the 63/64 spike is unavoidable.",
+      "sourceSection": "§4e subtleties",
+      "mustSurvive": true,
+      "duplicatedIn": "§1 (SSA-44 not for voluntary conversion); §5 OUT line",
+      "fossilNote": ""
+    },
+    {
+      "kind": "definition-term",
+      "claim": "§5 extends the existing §Strand-5 line — 'a tax/health effect is IN iff it moves the survivor's bracket the conversion stacks into' — from a single tax control to a MULTI-CONTROL, healthcare-aware objective. The optimizer's controls are PER-YEAR {conversion amount, withdrawal source order}; the objective is lifetime after-tax-and-after-healthcare wealth (survivor-weighted).",
+      "sourceSection": "§5 FALSIFIABLE IN/OUT LINE",
+      "mustSurvive": true,
+      "duplicatedIn": "engine-validation-and-tax.md (§Strand-5 original line)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "scope-boundary",
+      "claim": "§5 IN scope (a tax/health effect is IN iff it changes the marginal cost of a conversion/withdrawal dollar through a channel the engine's controls can move): (1) Federal income tax on conversion/withdrawal incl. survivor-bracket stacking from §Strand 5; (2) Pre-65 ACA PTC change as function of current-year ACA-MAGI, incl. the 400% FPL cliff under 2026 reverted rules; (3) 65+ IRMAA surcharge (Part B + Part D, ×2 for a couple) as function of MAGI[t−2], incl. the 2-year lag coupling age-63/64 income to age-65/66 cost; (4) MAGI-reducing funding choices (spend from Roth/basis/cash/HSA; HSA contributions reducing AGI pre-Medicare); (5) the survivor MFJ→single threshold flip for both IRMAA and ACA-FPL under the existing death-order filter.",
+      "sourceSection": "§5 IN scope",
+      "mustSurvive": true,
+      "duplicatedIn": "",
+      "fossilNote": ""
+    },
+    {
+      "kind": "scope-boundary",
+      "claim": "§5 OUT but DISCLOSED (real, but not moved by the engine's controls or below the MVP fidelity line — must be NAMED in the output, never silently dropped): (1) the SLCSP benchmark premium LEVEL itself — user input/assumption, not solved (ZIP/age-specific); engine optimizes AROUND it, does not predict it; (2) OBBBA edge features (Bronze/Catastrophic HSA-compatibility, telehealth, DPC) beyond noting ACA premiums remain non-HSA-payable; (3) Cost-Sharing-Reduction (CSR) out-of-pocket richness below 250% FPL — affects OOP not premium/subsidy, out unless tool models OOP; (4) state-level subsidy wraps (CA/NY/etc.) that blunt the federal cliff — federal model can't see them, flag as state-configurable; (5) the IRMAA second-order self-funding loop — tiny, documented omission; (6) SSA-44 appeals, MFS-separate IRMAA thresholds, Medicaid (≤138% FPL), COBRA/retiree-medical-vs-active-coverage Part-B-delay distinctions — relevant context, out of the conversion-optimizer core unless explicitly modeled.",
+      "sourceSection": "§5 OUT but DISCLOSED",
+      "mustSurvive": true,
+      "duplicatedIn": "§4b/§4c/§4e (individual items); §2 (OBBBA)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "invariant",
+      "claim": "The crisp rule: an effect is IN iff a per-year conversion/withdrawal dollar changes it through ACA-MAGI (current year) or IRMAA-MAGI (two years forward), evaluated under the survivor-weighted filter. Everything else is an assumption the engine reads in or a disclosed out-of-scope item — NEVER a silent omission.",
+      "sourceSection": "§5 the crisp rule",
+      "mustSurvive": true,
+      "duplicatedIn": "",
+      "fossilNote": ""
+    },
+    {
+      "kind": "invariant",
+      "claim": "§6 EXIT GATE — the living re-verify gate: every number is DIRECTIONAL (secondary/grounded synthesis or single-source) until confirmed against its named PRIMARY source, after which a fixture using it may be labeled GOLDEN. The legislative item (row 1) GATES THE ENTIRE PRE-65 MODULE — no ACA fixture is golden until re-verified against current law at build time, and that re-verification is ENFORCED IN CI by `pnpm verify:aca` against aca-last-verified.json (the constants entry carries reVerifyEveryBuild: true).",
+      "sourceSection": "§6 EXIT GATE — intro",
+      "mustSurvive": true,
+      "duplicatedIn": "project CLAUDE.md (verify:aca, reVerifyEveryBuild); engine-validation-and-tax.md (same directional/golden discipline); architecture.md §8",
+      "fossilNote": ""
+    },
+    {
+      "kind": "invariant",
+      "claim": "§6 row 1: Enhanced-PTC legislative status (cliff on/off for 2026; retroactive risk). Confidence HIGH it expired 12/31/25 & not extended as of 2026-06-04; FLUID. PRIMARY: enacted statute / IRS notice — RE-VERIFY AT EVERY BUILD. Gate: BLOCKS ALL PRE-65 ACA FIXTURES. No ACA fixture golden until status reconfirmed as current law at build time.",
+      "sourceSection": "§6 row 1",
+      "mustSurvive": true,
+      "duplicatedIn": "§2; project CLAUDE.md",
+      "fossilNote": ""
+    },
+    {
+      "kind": "requirement",
+      "claim": "§6 row 2: HSA contribution-eligibility + qualified-premium list (incl. ACA-not-qualified, Medigap excluded, owner-age keying, Medicare-zeroes-contribution). Confidence HIGH (read verbatim). PRIMARY: IRS Pub 969 (confirm against 2026 edition when posted; rules are statutory IRC §223). Gate: pin to 2026 Pub 969 text.",
+      "sourceSection": "§6 row 2",
+      "mustSurvive": true,
+      "duplicatedIn": "§1 (HSA rules)",
+      "fossilNote": ""
+    },
+    {
+      "kind": "requirement",
+      "claim": "§6 row 4: ACA PTC formula + ACA-MAGI composition (benchmark−contribution; SS add-back of non-taxable portion). Confidence HIGH. PRIMARY: IRS Pub 974 / Form 8962 instructions (+ IRC §36B); confirm the non-taxable-SS add-back wording on Form 8962. Gate: pin formula & MAGI add-backs.",
+      "sourceSection": "§6 row 4",
+      "mustSurvive": true,
+      "duplicatedIn": "§1; §4a",
+      "fossilNote": ""
+    },
+    {
+      "kind": "number-or-figure",
+      "claim": "§6 row 9: Part A purchased premiums ($311/$565) + deductible ($1,736). Confidence MEDIUM (grounded summary, not primary). PRIMARY: CMS 2026 Part A fact sheet. Gate: pin if the tool models post-65 Part A spend.",
+      "sourceSection": "§6 row 9",
+      "mustSurvive": true,
+      "duplicatedIn": "",
+      "fossilNote": ""
+    },
+    {
+      "kind": "invariant",
+      "claim": "§6 one-line gate summary: Pin #1 (legislative status) at every build — it can flip the whole pre-65 model and gates all ACA fixtures. Pin #2/#4 to IRS Pub 969 / Pub 974 (HSA + ACA mechanics, most stable). Pin #3/#5 to the two 2025 Rev. Procs (HSA limits, applicable-%). Pin #6 to HHS guidelines (cliff dollars). Pin #7/#8/#9 to CMS/Federal Register (Medicare premiums, IRMAA brackets, Part A). Pin #10 to enacted H.R.1. Until each is confirmed against its PRIMARY source, the number is directional, not golden — the engine-validation-and-tax.md standard.",
+      "sourceSection": "§6 one-line gate summary",
+      "mustSurvive": true,
+      "duplicatedIn": "engine-validation-and-tax.md (the directional/golden standard)",
+      "fossilNote": ""
+    }
+  ]
+}

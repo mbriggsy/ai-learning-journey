@@ -6,8 +6,26 @@
 > disk. So **nothing was lost to git**; this file is the volatile-transcript plan made permanent.
 > This is scaffolding (the recipe, not the dish) — **delete it when the restructure lands.**
 >
-> **Status:** plan LOCKED through Q1–Q4 + the sweep. **One decision still open** (see bottom).
-> Deep panel rationale: `.recovery/doc-restructure-judge-output.md` (the 153 KB judge fan-out).
+> **Status (2026-06-18):** GREEN-LIT for the full ground-up rewrite. The target structure +
+> the four radical moves are locked (see *Q6* below). The foundation (CP1 + CP1.5) is committed.
+> **The next session resumes at M1** — see *RESUME HERE*.
+> Rationale: `.recovery/doc-restructure-judge-output.md` (judge fan-out — note its "preserve"
+> spine was overridden by Q6). Must-survive net: `.recovery/docs-quarry-inventory.json` (16 docs)
+> + `.recovery/quarry-roadmap.json`.
+
+---
+
+## ▶ RESUME HERE (fresh session)
+
+The recovery + foundation are done and committed. To continue the rewrite cold you need only:
+1. **This file** — the locked decisions (Q1–Q6), the target tree, the M1–M6 sequence.
+2. **The quarry** — `.recovery/docs-quarry-inventory.json` + `.recovery/quarry-roadmap.json`:
+   **978 must-survive facts**, each tagged (kind / mustSurvive / duplicatedIn / fossilNote). The
+   anti-amnesia net — the rewrite is authored FROM this, not from memory.
+
+Start at **M1** (build the migration ledger). **Do NOT delete anything under
+`docs/plans/features/` or strip any history until M6's gate proves every must-survive fact has a
+new home.** CP1 + CP1.5 already landed (front door + legends); the tree is clean at the latest commit.
 
 ---
 
@@ -80,20 +98,35 @@ cohesion-everywhere bar. Guardrails: **scope to the phase word only** (`P{n}` �
 `U`/`C`/`D`/`M`/`§` IDs stay untouched; **verify each `P` is really "Phase" per-hit** before
 replacing; land it as its **own atomic commit**. ~18 stale source files.
 
-### Q4 — `features/` is dissolved into first-class **capabilities**.
-`features/` is a parking lot — the same bolt-on bias as history-clinging. SS / other-income /
-portfolio-holdings are all the **same shape**: an engine capability **+** an intake surface,
-threaded across Act 1 & Act 2 (SS reaches into Act 4). They're **vertical slices through the
-acts**, not a fifth peer. Fix:
-- `git mv docs/plans/features/` → **`docs/capabilities/`**, a **sibling of `plans/`**.
-- **Woven into the product narrative** — "what it does" explicitly includes modeling your Social
-  Security, your other income, your real portfolio. Craig meets them as product features, never
-  as a folder.
-- **A capability×act matrix** in the roadmap: **plans = columns** (build order), **capabilities
-  = rows** (threads woven across acts). Two-axis navigation.
-- **Same-shape template + status banners** to kill the size-vs-status inversion (today the
-  876-line `other-income` is PLANNED/zero-code while the 259-line `social-security` is SHIPPED —
-  you'd reach for the big one thinking it's the most-built).
+### Q4 → Q6 — `features/` is DISSOLVED ENTIRELY (this supersedes the old `capabilities/` idea).
+**Green-lit 2026-06-18.** The earlier plan moved `features/` → a prettier `capabilities/` folder.
+Rejected — that still preserves the fossil. SS / other-income / portfolio-holdings have their own
+docs **only because of when they were added.** Tax, healthcare, the date-search, the store — every
+bit as much "capabilities" — live inline *by kind* (architecture §7 + the act plans), and nobody
+ever wrote a `tax.md`. The brave move is symmetry: **delete `features/`; fold each by kind.**
+
+(Two alternative trees were stress-tested and rejected: *by-capability* shards the invariants +
+the R-ledger across silos and recreates the bolt-on at the top level; *by-reader* duplicates every
+fact and breaks the README-is-Craig's-page lock. The by-kind spine wins on merit — the reader's
+nine questions are invariant — so the tree shape mostly stays; the radical work is the content.)
+
+### Q6 — the four radical moves (the whole rewrite)
+1. **DELETE `features/`.** SS mechanics → architecture (an overlay-peer §7 entry); SS / R40 /
+   portfolio **decisions** → `decisions/` records; R40 / portfolio **requirements** → product;
+   their **build steps** → the Act-2 plan. No `capabilities/` folder is created.
+2. **DISSOLVE the "accumulation fold."** The biggest fossil — **37 flags** framing C1–C3 as "the
+   2026-06-08 amendment" across three plans. The IDs stay (Q1-locked); the dated-amendment FRAMING
+   dies; accumulation becomes first-class engine content in `plans/1-engine` + architecture.
+3. **PROMOTE `decisions/`** from one near-empty record to the real rationale home:
+   `accumulation-fuck-off-date` (exists) + `ss-computation` + `other-income-r40` (the 9 KTDs) +
+   `portfolio-holdings` (the 3 open ATC calls).
+4. **RIGHT-SIZE the inverted plans.** plan-3 (80 KB) + plan-4 (104 KB) are huge specs for
+   *unbuilt* acts vs the 48 KB *shipped* engine plan. Keep every contract/decision; cut the
+   over-specification.
+
+Dropped from the old plan: the `capabilities/` folder and the capability×act matrix — unnecessary
+scaffolding; the roadmap's **requirement→unit trace already is the cross-cutting index** (the
+"show me everything SS touches" view) and works exactly like tax/healthcare do today.
 
 ### The ID-scheme decoder (belongs in the glossary — defined nowhere today)
 - **R** = **Requirement** — the product contract (R1–R40). *What* must be true.
@@ -111,58 +144,69 @@ So `P1·U2` reads "Phase 1, Unit 2" → becomes "Act 1, Unit 2."
 ## The target tree
 
 ```
+README.md                        # ✅ world-facing front door (done CP1.5) — repoint dead feature rows
 docs/
-├── README.md          # docs INDEX / router (the repo-root README is the front door — see CP1.5)
-├── product.md         # the WHY+WHAT, sole R1–R40 ledger; capabilities named as verbs the product DOES
-├── roadmap.md         # build-status table + capability×act MATRIX + the ID-scheme LEGEND
-├── architecture.md    # invariants INDEX on top, then depth; the citation legend
-├── glossary.md        # define-once; finally defines the ID scheme + citation prefixes
-├── plans/             # THE COLUMNS — one per act, same template + status banner
-│   ├── 1-engine.md          (The Engine — shipped)
-│   ├── 2-first-answer.md    (Where You Stand — in progress)
-│   ├── 3-controls.md        (The Levers You Hold — not started)
-│   └── 4-recommendation.md  (The Recommended Route — not started)
-├── capabilities/      # THE ROWS — woven across acts (features/ DISSOLVED into here)
-│   ├── social-security.md   (shipped)
-│   ├── other-income.md      (planned — right-sized from 876 lines)
-│   └── portfolio-holdings.md(scoping — de-orphaned)
-├── decisions/         # §-cited rationale cited across >1 subsystem, present-tense
-├── research/          # the verified numbers + the live ACA re-verify gate
-└── insights/          # the /brief + /distill gotcha ledger — untouched
+├── README.md          # ✅ thin index (done CP1.5) — repoint the dead feature rows at M6
+├── product.md         # why + what + the R1–R40 ledger (R40 de-duped, present-tense)
+├── roadmap.md         # status + the four acts + You-Are-Here + R→unit trace (the cross-cutting index)
+├── architecture.md    # how it works + invariants index (done CP1) + SS overlay §7 + accumulation contracts
+├── glossary.md        # vocabulary, define-once (SS terms repoint to architecture)
+├── plans/             # build guidance, one per act, present-tense, right-sized
+│   ├── 1-engine.md          (The Engine — shipped; C1–C3 integrated, fold-framing GONE)
+│   ├── 2-first-answer.md    (Where You Stand — in progress; R40 + portfolio build folded in)
+│   ├── 3-controls.md        (The Levers You Hold — not started; HALVED)
+│   └── 4-recommendation.md  (The Recommended Route — not started; HALVED)
+├── decisions/         # the rationale home (GROWS from 1 → 4 records)
+│   ├── accumulation-fuck-off-date.md   (exists — reframe present-tense)
+│   ├── ss-computation.md               (NEW — from features/social-security)
+│   ├── other-income-r40.md             (NEW — the 9 KTDs, from features/other-income)
+│   └── portfolio-holdings.md           (NEW — the 3 open ATC calls)
+├── research/          # verified numbers, present-tense (history appendix stripped, live strands kept)
+└── insights/          # the /brief + /distill gotcha ledger — UNTOUCHED (40 one-fact files)
+
+DELETED:  docs/plans/features/   (3 docs dissolved by kind)
 ```
 
-Every one of the 18 current docs has a disposition (nothing silently dropped): 13 rewritten in
-place, 3 moved-and-rewritten into `capabilities/`, the `features/` folder deleted, insights kept.
+Net: ~17 rewrite-candidate docs → ~14. `features/` (3) deleted; `decisions/` born +3; the two
+biggest plans halved; every surviving doc rewritten present-tense. Disposition for every
+must-survive fact is the **migration ledger** (M1) — nothing is dropped without a logged home.
 
 ---
 
-## The checkpoints (each = one commit = one resume point)
+## Foundation (done) + the rewrite sequence (M1–M6; each = one commit = one resume point)
 
-- **CP0** — ✅ **DONE** (`d74f6045`). Committed this plan as the resumable artifact + TODO pointer.
-- **CP1** — ✅ **DONE** (`d02af8b1`). The legends + the front door: roadmap ID-scheme legend +
-  the four locked act names + `scoping` status; architecture invariants index; glossary Act
-  entry + two pointer meta-entries; `insights/README` shorthand decoder; single-voice README.
-  Adversarially verified (4 lenses); all anchors resolve.
-- **CP1.5** — ✅ **DONE** (`<this commit>`). Scope addition (approved 2026-06-18): the **repo-root
-  `README.md`** was never in the plan's 18-doc inventory, yet it's the real front door and it
-  duplicated `docs/README` (thesis, cardinal rule, build-state act table). Division of labor now:
-  **root `README.md` = the single Craig-facing front door + portfolio page** (owns the thesis, the
-  plain cardinal rule, how-it-works, build state, stack, running); **`docs/README.md` = a thin
-  docs index** (the router only — no second thesis, no second cardinal rule, no second build-state).
-  Fixed the act-name drift CP1 introduced in the root README. **← resume from here: start CP2.**
-- **CP2** — dissolve `features/` → `capabilities/` (move, re-template, de-orphan, kill the R40
-  triple-duplication). *May split — right-sizing the 876-line doc is heavy.*
-- **CP3** — forward-only `product.md` + the crown-jewel decision record (the §3b wall → named
-  sub-claims, **zero words cut**). *Its own session — precision-heavy.*
-- **CP4** — forward-only act plans + capability backlinks (incl. the landmine: rewrite
-  `4-recommendation`'s body *before* cutting the changelog it currently points at).
-- **CP5** — forward-only research + final tree-wide history sweep.
-- **+ the P→Act code-comment sweep** (the ~18 files from Q3b) — its own atomic commit, code
-  comments only. *Caught as missing from the workflow's plan; not getting dropped.*
+**Foundation — committed:**
+- **CP0** — ✅ (`d74f6045`). Recovered this plan from the crashed session.
+- **CP1** — ✅ (`d02af8b1`). Legends + front door: roadmap ID-scheme legend + the four locked
+  act names + `scoping` status; architecture invariants index; glossary Act entry + two pointer
+  meta-entries; `insights/README` shorthand decoder; single-voice `docs/README`. Verified (4 lenses).
+- **CP1.5** — ✅ (`2f227e0a`). Root `README` = single front door; `docs/README` = thin index; the
+  act-name drift in the root README fixed.
+
+**The rewrite — M1–M6 (start here next session):**
+- **M1 — the migration ledger.** From the quarry, map EVERY must-survive fact → its target home in
+  the new tree (by kind: invariant→architecture, requirement→product, decision/KTD→decisions,
+  number→research, definition→glossary, status→roadmap, build-step→plans, lesson→insights-already).
+  Write it to `.recovery/migration-ledger.md`. This is BOTH the rewrite spec and the M6 checklist.
+  *(Best built by a workflow over the quarry chunks so it doesn't eat the driver's context.)* Commit.
+- **M2 — the hubs.** Rewrite `product`, `roadmap`, `architecture`, `glossary` present-tense from the
+  ledger. Fold SS mechanics into architecture §7 (overlay-peer); fold the accumulation contracts into
+  architecture (no "fold" framing); de-dupe R40 in product; repoint glossary SS terms → architecture.
+- **M3 — `decisions/`.** Create `ss-computation`, `other-income-r40` (9 KTDs), `portfolio-holdings`
+  (3 open ATC calls) from the dissolving feature docs; reframe the accumulation record present-tense.
+- **M4 — the plans.** Rewrite plans 1–4 present-tense; integrate C1–C3 as first-class engine content
+  in plan-1 (fold-framing gone); fold R40 + portfolio build into plan-2; **right-size plan-3 + plan-4**.
+- **M5 — research.** Both research docs present-tense; strip the history appendix, KEEP the live
+  strands + the `verify:aca` gate + the `[CORRECTED]` markers.
+- **M6 — the zero-loss gate + demolition.** Grep the new tree for every ledger item's signature; every
+  must-survive fact accounted-for? THEN delete `docs/plans/features/`, repoint `docs/README`'s feature
+  rows, run the final tree-wide forward-only sweep (insight-018 blast-radius grep). The **P→Act
+  code-comment sweep** (Q3b, ~18 source files) lands here as its own atomic commit. Finally delete this
+  `RESTRUCTURE-PLAN.md` + `.recovery/` (the scaffolding is the recipe, not the dish).
 
 **Cross-cutting truth gate** (the cardinal rule made mechanical): every strip pass runs the
-**insight-018 blast-radius grep** on the phrases it removes; all as-built facts are kept as
-present truth, never cut.
+**insight-018 blast-radius grep** on the phrases it removes; all as-built facts are kept as present
+truth, never cut. The M6 gate is the hard backstop — no demolition until the ledger is 100% homed.
 
 ---
 

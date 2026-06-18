@@ -4,7 +4,7 @@
 
 ## Next, in priority order
 
-0. **Doc restructure (in flight).** Forward-only re-authoring of the doc tree — plan recovered + locked through Q1–Q4 in [`RESTRUCTURE-PLAN.md`](RESTRUCTURE-PLAN.md). **One decision open** (cardinal-rule-stated-4×); on the ruling, CP1 starts. Delete `RESTRUCTURE-PLAN.md` when the restructure lands.
+0. **Doc restructure — GREEN-LIT, mid-flight.** Full ground-up rewrite. Foundation done (CP1 front door + legends, CP1.5 README split, both committed). The structure + the four radical moves (delete `features/`; dissolve the accumulation "fold"; promote `decisions/` to 4 records; halve plans 3+4) are locked. **Resume in a fresh session at M1** (the migration ledger) — read [`RESTRUCTURE-PLAN.md`](RESTRUCTURE-PLAN.md) §"RESUME HERE" + the quarry (`.recovery/docs-quarry-inventory.json` + `quarry-roadmap.json`, 978 must-survive facts). Do NOT delete `features/` or strip history until M6's zero-loss gate. Delete `RESTRUCTURE-PLAN.md` + `.recovery/` when it lands.
 
 1. **Build R40 — other income in retirement.** The immediate next build; plan is committed + build-ready: [`docs/plans/features/other-income.md`](docs/plans/features/other-income.md). Five dependency-ordered units (U1 types → U2 `intakeMap` + externally-derived goldens → U3 the atomic engine integration → U4 intake UX → U5 the requirements-doc amendment). The nine KTDs are in that plan — do not regress them. Run `/ultramode-code-review` at each unit boundary; load the four-skill UI loadout before U4 (the intake UX).
 

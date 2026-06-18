@@ -19,23 +19,40 @@ The *why* and the *what* live in [docs/product.md](product.md). How the engine h
 
 The product grows in four acts. The first two answer the question; the last two are the differentiator.
 
-**Act 1 — Engine** (`docs/plans/1-engine.md`). The two hardest surfaces — correctness and trust — plus the overlays both controls stand on. A deterministic Monte Carlo spine validated against Trinity/Bengen, joint-and-survivor longevity, the zero-draw tax and healthcare overlays, the encrypted-at-rest store, and the accumulation fold (the fuck-off-date search). Nothing user-facing ships in this act. **Done and pinned.**
+**Act 1 — The Engine** (`docs/plans/1-engine.md`). The two hardest surfaces — correctness and trust — plus the overlays both controls stand on. A deterministic Monte Carlo spine validated against Trinity/Bengen, joint-and-survivor longevity, the zero-draw tax and healthcare overlays, the encrypted-at-rest store, and the accumulation fold (the fuck-off-date search). Nothing user-facing ships in this act. **Done and pinned.**
 
-**Act 2 — First Answer** (`docs/plans/2-first-answer.md`). The magic moment end-to-end: the ~5-minute account-level guided setup, the colorblind-safe visualization, the plain-language confidence statement, the state-adaptive first answer (the fuck-off date for a still-working household; the spine statement for an already-retired one), and the first encrypted Save. **In progress.**
+**Act 2 — Where You Stand** (`docs/plans/2-first-answer.md`). The magic moment end-to-end: the ~5-minute account-level guided setup, the colorblind-safe visualization, the plain-language confidence statement, the state-adaptive first answer (the fuck-off date for a still-working household; the spine statement for an already-retired one), and the first encrypted Save. **In progress.**
 
-**Act 3 — Controls** (`docs/plans/3-controls.md`). The itemized, time-boxed budget builder plus both manual controls — withdrawal sequencing and Roth conversion — driving the Act-1 overlays, with the healthcare surfaces and the sharpen/re-entry loop. A shippable cold-read milestone in its own right, *before* the solver exists. **Not started** (`src/budget` is `.gitkeep`-only).
+**Act 3 — The Levers You Hold** (`docs/plans/3-controls.md`). The itemized, time-boxed budget builder plus both manual controls — withdrawal sequencing and Roth conversion — driving the Act-1 overlays, with the healthcare surfaces and the sharpen/re-entry loop. A shippable cold-read milestone in its own right, *before* the solver exists. **Not started** (`src/budget` is `.gitkeep`-only).
 
-**Act 4 — Recommendation** (`docs/plans/4-recommendation.md`). The new layer and the actual differentiator: the solver validation harness, then the solver that ranks candidate strategies on identical futures, then the recommend-second surface, then stale-recommendation handling. **Validation is built and passing before the solver is allowed to recommend.** **Not started** (`src/engine/solver` and `src/engine/validation` are `.gitkeep`-only).
+**Act 4 — The Recommended Route** (`docs/plans/4-recommendation.md`). The new layer and the actual differentiator: the solver validation harness, then the solver that ranks candidate strategies on identical futures, then the recommend-second surface, then stale-recommendation handling. **Validation is built and passing before the solver is allowed to recommend.** **Not started** (`src/engine/solver` and `src/engine/validation` are `.gitkeep`-only).
 
 The act-to-act dependency is strict — each act stands on the one before — but the Act-1 overlays feed Act 3 directly, and the validated spine feeds Act 4 directly.
 
+## The ID scheme
+
+The docs and the code share a small set of stable IDs. They are **internal join-keys** — the thread that ties a requirement to the unit that builds it to the test that proves it to the insight that hardened it. They are **never shown to the user**, and they are **never renumbered**: the numbers are wired into the source comments, the test names, the insight files, and the git history, so a renumber would silently rot every one of those references with no gate to catch the drift. Cosmetic labels (an act's name) change freely; these keys do not.
+
+| Key | Name | What it identifies |
+|---|---|---|
+| **R**`n` | Requirement | A product contract (R1–R40) — *what* must be true. The ledger is in [product.md](product.md). |
+| **U**`n` | Unit | A build unit (U0–U17, globally unique across all acts) — *how* it gets built. |
+| **C**`n` / **D**`n` | Unit tracks | The accumulation tracks: **C** at engine altitude (C1–C3), **D** at intake/answer altitude (D1–D2). They extend the U-numbering without renumbering it. |
+| **Act**`n` | Act | One of the four build chapters (Act 1–4). The code comments say `P`n (Phase) for the same chapter — the globally-unique unit key is the unambiguous join. |
+| **M**`n` | Milestone | A sub-step inside a unit (e.g. `U3·M5`); lives in code comments, not the build tables. |
+| **§**`n` | Section | A numbered section inside a plan or doc (e.g. `architecture §7.2`). |
+
+Compound refs read left-to-right: `Act 2 · U7` is Act 2, Unit 7; `U3·M6` is Unit 3, Milestone 6. Because the unit key is globally unique, a doc that says `Act 2 · U7` and code that says `P2·U7` join unambiguously on `U7`.
+
+> **The unit-track `C` is not the code variable `C_dest`.** `C2` is an engine-altitude accumulation *unit*; `C`/`C_dest` in `taxOverlay.ts` is the per-bucket *contribution* amount. Same letter, unrelated.
+
 ## The You-Are-Here table
 
-The single source of build-truth. Status is honest, not aspirational: `shipped` means coded **and** reviewed; `in-progress` means partially landed; `planned` means scoped and build-ready with zero code; `not-started` means the directory is `.gitkeep`-only.
+The single source of build-truth. Status is honest, not aspirational — the closed set: `shipped` means coded **and** reviewed; `in-progress` means partially landed; `planned` means scoped and build-ready with zero code; `scoping` means the shape is still being worked out, not yet build-ready; `not-started` means the directory is `.gitkeep`-only.
 
-The C-units and D-units are the 2026-06-08 accumulation fold — tracks that extend the U-numbering without renumbering it (the U0–U17 references are load-bearing across the codebase and insights). C-units land at Act-1 engine altitude; D-units reshape Act-2 intake and the answer surface.
+The C-units and D-units are the accumulation tracks — they extend the U-numbering without renumbering it (see [The ID scheme](#the-id-scheme)). C-units land at Act-1 engine altitude; D-units reshape Act-2 intake and the answer surface.
 
-### Act 1 — Engine (shipped + pinned; P1 closed 2026-06-11)
+### Act 1 — The Engine (shipped + pinned; P1 closed 2026-06-11)
 
 | Unit | What it delivers | Status | Note |
 |---|---|---|---|
@@ -49,7 +66,7 @@ The C-units and D-units are the 2026-06-08 accumulation fold — tracks that ext
 | **C2** | Accumulation projection: signed contribution inflow on the one continuous absolute-year CRN timeline; presence-keyed reduce-to-spine | shipped | Empty phase (`Y == 0` / construct-absent) reduces byte-identically to plain decumulation |
 | **C3** | The date-search (`dateSearch.ts`): exhaustive, non-monotone-robust sweep over the household work-stop offset; quantized-lower-bound selection — **the fuck-off date** | shipped | Three first-class outcomes per track: confirmed date / window-edge-unconfirmed / no-date-in-window |
 
-### Act 2 — First Answer (in progress)
+### Act 2 — Where You Stand (in progress)
 
 | Unit | What it delivers | Status | Note |
 |---|---|---|---|
@@ -61,7 +78,7 @@ The C-units and D-units are the 2026-06-08 accumulation fold — tracks that ext
 | **D2** | The state-adaptive first answer surface: date-first for not-yet-retired, spine-first for already-retired; the two-pane laptop layout | not-started | Same calm voice, one intake flow; only the lead answer changes |
 | **R40** | Other income in retirement (pension / rental / annuity / alimony / other) — engine + intake | planned | Build-ready, zero code; the immediate next build. Plan: [docs/plans/features/other-income.md](plans/features/other-income.md) |
 
-### Act 3 — Controls (not started; `src/budget` is `.gitkeep`-only)
+### Act 3 — The Levers You Hold (not started; `src/budget` is `.gitkeep`-only)
 
 | Unit | What it delivers | Status | Note |
 |---|---|---|---|
@@ -71,7 +88,7 @@ The C-units and D-units are the 2026-06-08 accumulation fold — tracks that ext
 | **U12** | Sharpen loop + assumption editing + power-user escape hatch | not-started | |
 | **U13** | Returning-user re-entry + per-surface staleness (tax/healthcare vintages, budget line items, the date answer's fixture clocks) | not-started | The date answer joins the per-surface staleness map |
 
-### Act 4 — Recommendation (not started; `src/engine/solver` + `src/engine/validation` are `.gitkeep`-only)
+### Act 4 — The Recommended Route (not started; `src/engine/solver` + `src/engine/validation` are `.gitkeep`-only)
 
 | Unit | What it delivers | Status | Note |
 |---|---|---|---|

@@ -16,6 +16,26 @@ Why this matters: the product bets real retirement money on the engine's number,
 
 ---
 
+## The load-bearing invariants (index)
+
+The one-screen version of *what you must never break*. Each links to its full contract below — if you are about to touch the engine, read the linked section first.
+
+| Invariant | Where | What breaks if you break it |
+|---|---|---|
+| **Engine purity** — a deterministic function of `(params, seed)`; reads no clock, entropy, or environment | [§1](#1-the-layer-architecture) | Determinism dies; the same inputs stop giving the same answer, and CRN with it |
+| **One shared market draw / CRN** — all buckets share one draw per year; the draw schedule is a function of path/horizon dimensions only | [§2](#2-determinism-and-common-random-numbers-crn), [§3](#3-the-single-shared-market-draw) | Candidates get ranked on *different* futures (luck, not signal); per-bucket draws re-enable asset-location |
+| **Stateless Box-Muller** — no spare normal cached across calls | [§2](#2-determinism-and-common-random-numbers-crn) | Two CRN candidates that draw in different interleavings silently desync |
+| **Reduce-to-spine (byte-identity)** — every overlay, when OFF, reproduces the validated decumulation byte-identically | [§5](#5-the-reduce-to-spine-invariant-byte-identity) | The golden cases perturb; you can no longer prove an overlay adds *only* what it should |
+| **Externally-derived fixtures** — goldens derived by an independent path, never the engine's own formula | [§5](#5-the-reduce-to-spine-invariant-byte-identity) | A passing test proves typing, not correctness |
+| **The R19 numeric gate** — finiteness first; reject every incomputable input before any path runs | [§6](#6-the-r19-numeric-gate-validateparams) | A `NaN` rides past `??`/`>` guards into a percentile or the headline — calm-but-wrong |
+| **No in-range default fallbacks** — a figure the research names but doesn't value throws; never a plausible default | [§8](#8-constants-discipline-srcengineconstants) | A missing input becomes indistinguishable from a measurement inside a fixed-point |
+| **One canonical constants table** — every dated figure is read from one year-keyed table, never re-typed | [§8](#8-constants-discipline-srcengineconstants) | A re-typed figure drifts out of sync with its source, silently |
+| **Cross-engine headline robustness** — quantize the headline statistic to a coarse grid before the band-edge decision | [§9](#9-cross-engine-headline-robustness) | The same scenario shows a different headline across browsers; the screenshot promise breaks |
+| **The encrypted-store write-gate** — one model copy; a write needs a session key AND a current passphrase-wrap; never persist `Infinity`/`NaN` | [§7.3](#73-encrypted-local-store--key-lifecycle-srccrypto-srcstore) | A survivor restores a *stale* vault, or a never-depleted sentinel nulls into corruption |
+| **Strict CSP via response headers** — `script-src`/`connect-src 'self'`, no inline/eval | [§10](#10-security--csp-boundary) | An XSS foothold gains a programmatic exfil channel for the decrypted model |
+
+---
+
 ## 1. The layer architecture
 
 The code is split into layers with one-directional import boundaries, **enforced by ESLint** (`pnpm lint`):

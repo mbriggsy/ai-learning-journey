@@ -21,7 +21,7 @@ Sorted alphabetically; `§` and number-prefixed statutory terms are grouped at t
 
 **Accumulation** — the pre-retirement saving phase (contributions + market growth) the engine projects forward to a candidate work-stop date. The mirror of decumulation; a **bounded near-retirement on-ramp**, never a FIRE calculator. → [plans/1-engine.md](plans/1-engine.md) (C2), [decisions/accumulation-fuck-off-date.md](decisions/accumulation-fuck-off-date.md)
 
-**Act** — one of the four build chapters: **1 Engine · 2 First Answer · 3 Controls · 4 Recommendation** (renamed from "Phase"; the U-numbering is unchanged). → [roadmap.md](roadmap.md)
+**Act** — one of the four build chapters: **1 The Engine · 2 Where You Stand · 3 The Levers You Hold · 4 The Recommended Route**. The code comments say `P`n (Phase) for the same chapter; the globally-unique unit key is the join. → [roadmap.md → The ID scheme](roadmap.md#the-id-scheme)
 
 **already-failing / over-funded / on-track / borderline / off-track / indeterminate** — the closed set of **outcome states** the engine owns; the headline reading and copy are selected from these, never from a 7th ad-hoc state. → [plans/1-engine.md](plans/1-engine.md) (U1)
 
@@ -66,6 +66,10 @@ Sorted alphabetically; `§` and number-prefixed statutory terms are grouped at t
 **Hedge (the hedge on the headline)** — every recommendation/control readout must carry its probabilistic qualifier **on the primary surface**, never buried in tapped-away math. Enforced by the require-the-hedge lint. → [product.md §6](product.md)
 
 **HSA** — the triple-advantaged, **medical-earmarked** fourth account bucket. Covers out-of-pocket + (owner 65+) Medicare premiums tax-free — **not** ACA marketplace premiums. Never a general drawdown source. → [architecture.md §7.2](architecture.md)
+
+**ID scheme (R / U / C / D / M / §)** — the compact, stable internal join-keys (Requirement / Unit / unit-tracks / Milestone / Section) the docs and code share; defined once, never shown to the user, never renumbered. Canonical legend: [roadmap.md → The ID scheme](roadmap.md#the-id-scheme).
+
+**Insight & cross-repo citation IDs** — a numbered, hard-won engineering lesson, cited by **full relative path** (`docs/insights/NNN-…` for this project; sibling-project lessons carry their full path too). The full-path rule + the `burned`/`DND`/`AJS` shorthand decoder: [insights/README.md](insights/README.md).
 
 **IRMAA** — the post-65 Medicare premium **surcharge**, set on a **2-year-lagged** MAGI lookback, with hard per-person step-cliffs. → [architecture.md §7.2](architecture.md)
 

@@ -157,14 +157,10 @@ present truth, never cut.
 
 ---
 
-## ⚠ The one decision still open (crash hit before you ruled)
+## Q5 — Cardinal-rule duplication: **LOCKED — one home, pointers everywhere.**
 
-**The cardinal rule is currently stated 4×** (README + product banner + §2 + R25).
-
-**My rec:** collapse the copies, keep the presence — one canonical full statement in
-`product §2`, the plain-language version on README (different audience, legitimately its own
-wording), and everywhere else **references** it ("per the cardinal rule →") instead of
-restating. Same move as the numbering lock: one home, pointers everywhere else — drumbeat
-without four copies to drift.
-
-**Your call** — it's the product's spine principle. On your ruling: CP1 starts.
+The cardinal rule was stated 4× (README + product banner + §2 + R25). Ruling (2026-06-18):
+**collapse the copies, keep the presence.** One canonical full statement in `product §2`; the
+plain-language version on README (different audience, legitimately its own wording); everywhere
+else **references** it — "per the cardinal rule →" — instead of restating. Same one-home-
+pointers-everywhere move as the numbering lock: drumbeat without four copies to drift.

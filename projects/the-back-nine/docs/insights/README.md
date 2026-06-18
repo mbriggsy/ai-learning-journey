@@ -7,7 +7,10 @@ root cause wasn't obvious; surfaced via `/brief` before related work.
 **Citation format:** reference an insight by its **full relative path + title slug**
 (e.g. `docs/insights/001-some-lesson.md`), not a bare number — and cross-repo
 citations carry the full path too (e.g. `projects/burned/docs/insights/072-...`),
-never just `burned/072`.
+never just `burned/072`. These sibling-project lessons are sometimes cited in
+shorthand; decode each by its full path: `burned/NNN` → `projects/burned/docs/insights/NNN`;
+`DND NNN` → `projects/archive/do-not-disturb/docs/insights/NNN`;
+`AJS NNN` → `projects/ai-journey-stats/docs/insights/NNN`.
 
 ## Transferable discipline carried in from sibling projects
 

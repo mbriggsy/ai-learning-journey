@@ -52,6 +52,7 @@ import type {
   DateSearchOutcome,
   EnteredAccount,
   HealthIntakeV3,
+  IncomeStream,
   PersonInputsV3,
   ScenarioV3,
   SimulationParams,
@@ -100,6 +101,7 @@ export interface ScenarioDraft
     > {
   readonly people: readonly [PersonDraft, PersonDraft]
   readonly enteredAccounts: readonly EnteredAccount[]
+  readonly incomeStreams: readonly IncomeStream[]
   readonly tickerClassifications: Readonly<Record<string, TickerClassification>>
   readonly health: HealthDraft
 }
@@ -187,6 +189,7 @@ export function createMemoryModel(deps: MemoryModelDeps): MemoryModel {
   let draft: ScenarioDraft = {
     people: [{}, {}],
     enteredAccounts: [],
+    incomeStreams: [],
     tickerClassifications: {},
     health: {},
     // Methodology defaults — pre-applied and SURFACED (R7; editable in P3),

@@ -19,6 +19,7 @@ afterEach(cleanup)
 const draft = (over: Partial<ScenarioDraft> = {}): ScenarioDraft => ({
   people: [{}, {}],
   enteredAccounts: [],
+  incomeStreams: [],
   tickerClassifications: {},
   health: {},
   spendEntryPeriod: 'month',

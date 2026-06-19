@@ -263,6 +263,34 @@ export interface AccumulationParams {
   readonly contributionsByPerson: readonly PersonContributionStreams[]
 }
 
+/** One person's COMPILED other-income leaf (R40 · KTD-4) — the per-year real-$ vectors
+ *  `compileIncomeStreams` pre-weights at build time, indexed by ABSOLUTE sim-year, AUXILIARY (a
+ *  missing/short entry ⇒ $0 that year, never the end of data). TWO death-state variants are pre-summed
+ *  across this person's streams so the path loop does ZERO allocation — it only SELECTS (KTD-4): FULL
+ *  while the owner lives, SURVIVOR (`Σ streams·survivorPct`, derived PER-STREAM) once the owner has died
+ *  with the spouse alive, $0 once both are dead. `gross` nets the household withdrawal (seam 1);
+ *  `taxable` enters `nonSSordinary` (seam 2 — SS-§86 / ACA-MAGI / IRMAA-MAGI ride it, KTD-1). Each vector
+ *  is DROPPED when all-zero (`nonZero`), so absence is the reduce-to-spine signal — never a zero-fill. */
+export interface PersonIncomeStream {
+  /** FULL gross (owner alive): Σ this person's streams' per-year real $. */
+  readonly grossFull?: readonly number[]
+  /** FULL taxable: Σ streams' `gross·effectiveTaxableFraction`. */
+  readonly taxableFull?: readonly number[]
+  /** SURVIVOR gross (owner dead, spouse alive): Σ streams' `gross·survivorPct` — derived PER-STREAM,
+   *  never a scalar reweight of FULL (KTD-4 — a single household survivor scalar is the swap-mutant bug). */
+  readonly grossSurvivor?: readonly number[]
+  /** SURVIVOR taxable: Σ streams' `gross·survivorPct·effectiveTaxableFraction`. */
+  readonly taxableSurvivor?: readonly number[]
+}
+
+/** The other-income construct (R40 · KTD-3). Its PRESENCE on `OverlayParams.income` — not its values —
+ *  is the reduce-to-spine key (R40.6): ABSENT ⇒ the byte-identical no-income engine. Compiled ONCE in
+ *  `buildParams` (income is Y-invariant — KTD-8a), never per date-search candidate. */
+export interface IncomeParams {
+  /** Per-person compiled leaves, aligned by index to `people`; the OWNER's own death gates each (KTD-7). */
+  readonly incomeByPerson: readonly PersonIncomeStream[]
+}
+
 /** The engine-side tax/accounts overlay input (U2). `taxEnabled` and `rmdEnabled` are INDEPENDENT
  *  switches (RMD is a forced-distribution mechanic, not a tax). `buckets` must sum to
  *  `initialPortfolio` (validated, R19); the >10yr-younger-spouse JLLS divisor (M6b·A) and the
@@ -366,6 +394,13 @@ export interface OverlayParams {
    *  rejects `initialPortfolio === 0` with the construct present (a $0 start would read depleted
    *  at t=0 and silently swallow every contribution — R19). */
   readonly accumulation?: AccumulationParams
+  // --- R40: the other-income construct (ongoing non-earned income — pension/rental/annuity/alimony/
+  //     other). ABSENT ⇒ the byte-identical no-income engine (presence-keyed, R40.6). ---
+  /** Compiled per-person other-income leaves (R40). PRESENT ⇒ each year's gross nets the household
+   *  withdrawal (seam 1) and the taxable portion enters `nonSSordinary` ONCE (seam 2 — SS-§86 / ACA-MAGI /
+   *  IRMAA-MAGI all ride the single producer, KTD-1); the per-owner SURVIVOR variant is selected at the
+   *  owner's sampled death (KTD-4/KTD-7). Income passes the date-sweep UN-truncated (Y-invariant, KTD-8a). */
+  readonly income?: IncomeParams
 }
 
 // ---------------------------------------------------------------------------
@@ -885,6 +920,86 @@ export interface HealthIntakeV3 {
 export const SPEND_ENTRY_PERIODS = ['month', 'year'] as const
 export type SpendEntryPeriod = (typeof SPEND_ENTRY_PERIODS)[number]
 
+// ---------------------------------------------------------------------------
+// Other income in retirement (R40) — the persisted per-person stream entity. A
+// generic ongoing non-earned stream (pension/rental/alimony/annuity/other) that keeps
+// paying after work stops. The `type` label SEEDS intake defaults only; the engine
+// consumes the COMPILED `PersonIncomeStream` leaf (above), never this entity (KTD-3 —
+// the compiled leaf is never persisted, fidelity-over-duplication). Tax treatment is a
+// discriminated union keyed on `type` (KTD-6, mirroring `TickerClassification`) so the
+// contradictions "a pension carries an annuity exclusion" / "alimony carries a direct
+// taxable fraction" are UNREPRESENTABLE in authored code; `compileIncomeStreams` derives
+// the effective taxable fraction. At restore the union is erased (`JSON.parse + as`), so
+// U8's `checkIncomeStreamV3` re-validates the full arm. Decisions: docs/decisions/
+// other-income-r40.md. Requirements: product §7 (R40.1–R40.10).
+// ---------------------------------------------------------------------------
+
+export const INCOME_TYPES = ['pension', 'rental', 'alimony', 'annuity', 'other'] as const
+export type IncomeType = (typeof INCOME_TYPES)[number]
+
+/** COLA handling for a stream's gross (R40.2 · KTD-2). `real-flat` ⇒ the real value holds (zero
+ *  variance — a DETERMINISTIC floor in the confidence band, the U6/D2 render flag); `nominal-flat` ⇒
+ *  deflated by inflation only (erodes in real terms); `fixed-pct` ⇒ grows at `colaPct` nominal then
+ *  deflated (`colaPct` REQUIRED-and-finite). */
+export const COLA_MODES = ['real-flat', 'nominal-flat', 'fixed-pct'] as const
+export type ColaMode = (typeof COLA_MODES)[number]
+
+/** The per-`type` tax-treatment arm (KTD-6 — the discriminated union). `compileIncomeStreams` reads it
+ *  to the effective taxable fraction: pension/rental/other ⇒ `taxableFraction` (default 1, the
+ *  conservative fully-taxable; an entered `< 1` is the DISCLOSED-optimistic basis-recovery opt-in);
+ *  alimony ⇒ DERIVED from the agreement date (post-2018 ⇒ 0, not taxable & MAGI-invisible; pre-2019 ⇒ 1;
+ *  a pre-2019 instrument expressly modified to adopt the post-2018 rules ⇒ 0); annuity ⇒ qualified ⇒ 1,
+ *  non-qualified ⇒ `1 − exclusionFraction`. No redundant derived fraction is persisted (KTD-6). */
+export type IncomeTaxTreatment =
+  | { readonly type: 'pension'; readonly taxableFraction?: number }
+  | { readonly type: 'rental'; readonly taxableFraction?: number }
+  | { readonly type: 'other'; readonly taxableFraction?: number }
+  | {
+      readonly type: 'alimony'
+      /** The instrument was EXECUTED after 2018-12-31 (TCJA ⇒ not taxable to the recipient, MAGI-
+       *  invisible). The highest-leverage field in the feature — NEVER defaulted (intake asks it). */
+      readonly executedAfter2018: boolean
+      /** A pre-2019 instrument EXPRESSLY modified after 2018 to adopt the post-2018 tax rules ⇒ also
+       *  not taxable. Consulted only when `executedAfter2018 === false`; intake default is no. */
+      readonly modifiedAdoptsPost2018Rules?: boolean
+    }
+  | { readonly type: 'annuity'; readonly qualified: true }
+  | {
+      readonly type: 'annuity'
+      readonly qualified: false
+      /** The exclusion ratio (basis / expected return) — the TAX-FREE fraction; effective taxable =
+       *  `1 − exclusionFraction`. v1 holds it CONSTANT (the exclusion never exhausts) — disclosed-
+       *  optimistic, understates late-life MAGI (the KTD OUT-list). ∈ [0,1], gated entity-side. */
+      readonly exclusionFraction: number
+    }
+
+/** One persisted other-income stream (R40 · KTD-3, on `ScenarioV3.incomeStreams`) — the common fields +
+ *  the `type`-keyed tax-treatment union. Entity scalars (`survivorPct` / `taxableFraction` /
+ *  `exclusionFraction` ∈ [0,1]) are range-gated ENTITY-side (intake sanity + U8's codec): they are
+ *  multiplied away at compile, so the engine never sees them to range-check (KTD-4). */
+export type IncomeStream = {
+  /** Whose stream this is — the `people` index (0 = owner, 1 = spouse). Its OWNER's sampled death gates
+   *  the SURVIVOR variant, independently per person (KTD-7). */
+  readonly ownerIndex: 0 | 1
+  /** Gross real $/yr at SIM-YEAR 0 — the already-receiving anchor (KTD-8b); for a not-yet-started stream
+   *  it is the real value the stream will pay when it begins. */
+  readonly annualRealToday: number
+  /** The OWNER's age the stream STARTS paying. `≤ currentAge` ⇒ already-receiving, clamped to t=0
+   *  (KTD-8b), never rejected. */
+  readonly startAge: number
+  /** The OWNER's age the stream STOPS (its last paying year). ABSENT ≡ lifetime (DND-009 — never an
+   *  `Infinity` / `NaN` / numeric-magic sentinel; `JSON.stringify` silently nulls those). */
+  readonly endAge?: number
+  readonly colaMode: ColaMode
+  /** The fixed NOMINAL growth rate, REQUIRED-and-finite when `colaMode === 'fixed-pct'` (absent/null is
+   *  corruption — never coerced to 0, the optimistic-erosion direction; U8's codec enforces). */
+  readonly colaPct?: number
+  /** The fraction of the stream the SURVIVOR keeps once the owner dies (∈ [0,1]; KTD-7 RECEIPTS figure,
+   *  distinct from the household `survivorSpendingRatio` NEEDS figure — they compose at seam 1). No-safe-
+   *  default for any continuing stream (R40.7); alimony is 0 by law (§71(b)(1)(D)). */
+  readonly survivorPct: number
+} & IncomeTaxTreatment
+
 /** The schemaVersion-3 plaintext scenario: the account-level intake truth.
  *  See the section comment above for the define-now/write-at-U8 contract and the
  *  deliberate fidelity-over-duplication shape change vs v2. */
@@ -912,6 +1027,10 @@ export interface ScenarioV3 {
    *  persisted unchanged (phase-2 contract #1b — the reloaded headline is
    *  byte-identical to the screenshot). */
   readonly seed: number
+  /** R40 — the persisted per-person other-income streams (pension/rental/alimony/annuity/other).
+   *  ALWAYS present, `[]` when none (never `undefined`): the empty list IS the absence, so reduce-to-
+   *  spine reads structurally and `compileIncomeStreams` maps `[]`/all-empty → no `OverlayParams.income`. */
+  readonly incomeStreams: readonly IncomeStream[]
 }
 
 /** The exhaustive v3 field set — U8's `checkV3Fields` checklist (burned/063: the
@@ -932,6 +1051,7 @@ export const SCENARIO_V3_FIELDS = [
   'taxVintage',
   'appDefaultVersion',
   'seed',
+  'incomeStreams',
 ] as const
 
 // Compile-time: the field array exactly covers ScenarioV3 (both directions).

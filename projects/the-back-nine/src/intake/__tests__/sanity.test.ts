@@ -13,6 +13,7 @@ const draft = (
 ): ScenarioDraft => ({
   people: [p0, p1],
   enteredAccounts: [],
+  incomeStreams: [],
   tickerClassifications: {},
   health: {},
   survivorSpendingRatio: 0.75,

@@ -33,6 +33,7 @@ const f = (age: number): number => {
 const base = (over: Partial<ScenarioDraft> = {}): ScenarioDraft => ({
   people: [{}, {}],
   enteredAccounts: [],
+  incomeStreams: [],
   tickerClassifications: {},
   health: {},
   annualSpendingReal: 84_000,

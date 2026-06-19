@@ -981,8 +981,10 @@ export type IncomeStream = {
   /** Whose stream this is — the `people` index (0 = owner, 1 = spouse). Its OWNER's sampled death gates
    *  the SURVIVOR variant, independently per person (KTD-7). */
   readonly ownerIndex: 0 | 1
-  /** Gross real $/yr at SIM-YEAR 0 — the already-receiving anchor (KTD-8b); for a not-yet-started stream
-   *  it is the real value the stream will pay when it begins. */
+  /** Gross real $/yr at SIM-YEAR 0 — the anchor (KTD-8b: an already-receiving stream reads exactly this
+   *  at t=0). A not-yet-started stream is anchored here too: its value WHEN it begins is this evolved by
+   *  COLA/deflation to the start offset (the exponent is the ABSOLUTE sim-year, never re-anchored at the
+   *  start) — so a future nominal stream reads conservatively LOWER than `annualRealToday` at its start. */
   readonly annualRealToday: number
   /** The OWNER's age the stream STARTS paying. `≤ currentAge` ⇒ already-receiving, clamped to t=0
    *  (KTD-8b), never rejected. */

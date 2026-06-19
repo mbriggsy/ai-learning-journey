@@ -308,6 +308,69 @@ describe('aggregations (derived, never stored)', () => {
   })
 })
 
+describe('R40 — the other-income construct wires into the overlay (the early-return guard fix + compile passthrough)', () => {
+  // An all-retired household whose WHOLE picture is a pension + a spend figure: NO accounts, NO
+  // marketplace premium. Pre-R40 the overlay early-returned undefined here (a tax-blind run); R40
+  // must build a tax-aware overlay carrying the compiled income (income hits SS-§86 / ACA-MAGI /
+  // IRMAA-MAGI, so a tax-blind run would be calm-but-wrong).
+  // Both spouses are 68 (born 1958) and already retired (retirementAge < currentAge ⇒ the spine
+  // route, no pre-65 ACA quote). They ARE Medicare-enrolled, so the IRMAA seed is genuinely required
+  // (anyNear65) — supplied here. This isolates the income-only OVERLAY path: no accounts, no
+  // marketplace premium, yet the pension must still open a tax-aware overlay (the guard fix).
+  const incomeOnlyDraft = (): ScenarioDraft =>
+    base({
+      people: [
+        retiredPerson({ birthYear: 1958, currentAge: 68, retirementAge: 64, pia: 0 }),
+        retiredPerson({ name: 'S', sex: 'female', birthYear: 1958, currentAge: 68, retirementAge: 64, pia: 0 }),
+      ],
+      enteredAccounts: [],
+      incomeStreams: [
+        { ownerIndex: 0, type: 'pension', annualRealToday: 30_000, startAge: 62, colaMode: 'real-flat', survivorPct: 0.5 },
+      ],
+      health: { irmaaMagiSeed: [80_000, 80_000] },
+    })
+
+  it('an INCOME-ONLY household (no accounts, no health premium) STILL builds a tax-aware overlay (the guard fix)', () => {
+    const params = buildSpineParams(incomeOnlyDraft())
+    expect(params).not.toBeNull()
+    expect(params!.overlay).toBeDefined()
+    expect(params!.overlay!.taxEnabled).toBe(true)
+    expect(params!.overlay!.income).toBeDefined()
+    expect(params!.overlay!.income!.incomeByPerson).toHaveLength(2)
+    // owner 0's pension is present (FULL gross), owner 1 has no stream (empty leaf).
+    expect(params!.overlay!.income!.incomeByPerson[0]!.grossFull![0]).toBe(30_000)
+    expect(params!.overlay!.income!.incomeByPerson[1]).toEqual({})
+    expect(validateParams(params!)).toBeNull() // accepted — the render-anchor coupling holds
+  })
+
+  it('the compiled income vector length matches the engine horizon (compiled ONCE in buildParams; Y-invariant)', () => {
+    const params = buildSpineParams(incomeOnlyDraft())!
+    expect(params.overlay!.income!.incomeByPerson[0]!.grossFull).toHaveLength(params.maxHorizonYears)
+  })
+
+  it('an empty incomeStreams list leaves income ABSENT (reduce-to-spine — never an empty construct)', () => {
+    const params = buildSpineParams(completeSpineDraft())! // has accounts, no income streams
+    expect(params.overlay!.income).toBeUndefined()
+  })
+
+  it('a household with NOTHING (no accounts, no health, no income) still early-returns no overlay', () => {
+    const params = buildSpineParams(
+      base({
+        people: [
+          retiredPerson({ birthYear: 1958, currentAge: 68, retirementAge: 64, pia: 0 }),
+          retiredPerson({ name: 'S', sex: 'female', birthYear: 1958, currentAge: 68, retirementAge: 64, pia: 0 }),
+        ],
+        health: { irmaaMagiSeed: [80_000, 80_000] },
+      }),
+    )
+    // No overlay is built — the spine route with a $0 portfolio + spend (coherent-but-dire flows).
+    // (The seed is collected but with no overlay there is nothing for it to ride — the early return
+    // fires before the overlay assembly; missingRequiredFacts is empty so buildParams is non-null.)
+    expect(params).not.toBeNull()
+    expect(params!.overlay).toBeUndefined()
+  })
+})
+
 describe('contribution streams (R31 + the step-down)', () => {
   it('a 61-yo super-band contribution steps DOWN at 64 (the flat projection fails); the disclosure names the year', () => {
     const ceiling61 = contributionCeilingFor('401k', 61)!

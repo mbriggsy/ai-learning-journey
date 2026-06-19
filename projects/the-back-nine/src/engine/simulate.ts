@@ -34,6 +34,7 @@ import {
   type AccumulationParams,
   type DepletionYear,
   type Distribution,
+  type IncomeParams,
   type PersonInputs,
   type SimulationParams,
 } from '@shared/model'
@@ -154,15 +155,67 @@ export interface PersonOffsets {
 }
 
 /**
+ * One year's per-OWNER-death-gated ongoing other-income SELECT (R40 · KTD-4/KTD-7) — the
+ * structural sibling of {@link contributionsForYear}, NOT a refactor-share (the gate domains
+ * differ: contributions gate on alive∧WORKING `t < retire`; ongoing income gates on the owner's
+ * DEATH alone — it keeps paying after work stops, never `t < retire`; insight 027). Per OWNER `i`:
+ * `select = (t < deathOffset_i) ? FULL : (anySpouseAlive ? SURVIVOR : 0)` — locked at the death
+ * offset, NEVER ramped. Each person's bundle is gated on THAT person's OWN death (a single
+ * household-level death gate is the cross-owner-death-order swap-mutant bug — KTD-7). Returns the
+ * summed household `{gross, taxable}`: `gross` nets the withdrawal (seam 1), `taxable` enters
+ * `nonSSordinary` (seam 2; SS-§86 / ACA-MAGI / IRMAA-MAGI all ride it — KTD-1). Zero `new Array`,
+ * two household scalars, integer death-offset comparisons only (the hot-loop zero-alloc contract).
+ * Consumes ZERO draws (CRN-safe — a pure function of the death timeline + the compiled vectors).
+ * Exported for direct unit testing of the seam (the per-owner death gate, the survivor select).
+ */
+export function ongoingIncomeForYear(
+  t: number,
+  income: IncomeParams,
+  deathOffsets: readonly number[],
+): { readonly gross: number; readonly taxable: number } {
+  const leaves = income.incomeByPerson
+  // Is ANY person other than a given dead owner still alive? (The SURVIVOR-continuation gate: a
+  // dead owner's stream pays its survivor variant only while a spouse remains — KTD-4.) Computed
+  // once per year, not per owner — a household scalar, but the OWNER's own death (below) is what
+  // selects FULL vs SURVIVOR/0, so the per-owner gate is preserved (KTD-7).
+  let aliveCount = 0
+  for (let i = 0; i < deathOffsets.length; i++) if (t < (deathOffsets[i] ?? 0)) aliveCount++
+  let gross = 0
+  let taxable = 0
+  for (let i = 0; i < leaves.length; i++) {
+    const leaf = leaves[i]
+    if (leaf === undefined) continue
+    const ownerAlive = t < (deathOffsets[i] ?? 0)
+    if (ownerAlive) {
+      // FULL — the owner is alive and collecting their own stream.
+      gross += leaf.grossFull?.[t] ?? 0
+      taxable += leaf.taxableFull?.[t] ?? 0
+    } else if (aliveCount >= 1) {
+      // The owner has died but ≥1 spouse remains: the per-stream SURVIVOR variant (KTD-4). Both
+      // dead ⇒ this branch is skipped ⇒ $0 (the survivor both-dead floor).
+      gross += leaf.grossSurvivor?.[t] ?? 0
+      taxable += leaf.taxableSurvivor?.[t] ?? 0
+    }
+  }
+  return { gross, taxable }
+}
+
+/**
  * The full cash decomposition for one year: the survivor-adjusted spending, the earned-income
- * bridge (alive AND still working), the Social-Security benefit (summed while both claim; the
- * larger single benefit once a survivor remains — the step-down), and the clamped `net`
- * withdrawal the portfolio must fund (`max(0, spending − earned − ss)`).
+ * bridge (alive AND still working), the ongoing other-income gross (R40 · death-gated, NOT
+ * retire-truncated — it keeps paying after work stops), the Social-Security benefit (summed while
+ * both claim; the larger single benefit once a survivor remains — the step-down), and the clamped
+ * `net` withdrawal the portfolio must fund (`max(0, spending − earned − ongoing − ss)`).
  *
- * `net` and `ss` play DISTINCT roles downstream: `net` is the cash the portfolio funds (SS has
- * already reduced it); `ss` is the SAME benefit the U2 tax overlay taxes as provisional income.
- * The overlay needs both, so the seam exposes the decomposition rather than only the net.
- * Consumes ZERO draws (CRN-safe — a pure function of the death timeline + the financial inputs).
+ * `net` and `ss` play DISTINCT roles downstream: `net` is the cash the portfolio funds (SS + the
+ * ongoing-income gross have already reduced it); `ss` is the SAME benefit the U2 tax overlay taxes
+ * as provisional income. The R40 taxable portion rides the same KTD-9 split the overlay applies:
+ * `ongoingTaxableGrossUp` is the taxable the overlay grosses up for + nets (seam 2), and
+ * `ongoingTaxableIrmaaOnly` is the working-year-clamped taxable that feeds IRMAA-MAGI but NOT the
+ * gross-up netting (the wages fund its tax outside the portfolio — no phantom withdrawal, KTD-9).
+ * The clamp (`accumulating && livingWorker`) is single-sourced HERE so the two seams can never
+ * disagree about which years are clamped. Consumes ZERO draws (CRN-safe — a pure function of the
+ * death timeline + the financial inputs).
  */
 export function cashTermsForYear(
   t: number,
@@ -170,7 +223,12 @@ export function cashTermsForYear(
   offsets: readonly PersonOffsets[],
   deathOffsets: readonly number[],
   higherClaimOffset: number,
-): { readonly net: number; readonly ss: number } {
+): {
+  readonly net: number
+  readonly ss: number
+  readonly ongoingTaxableGrossUp: number
+  readonly ongoingTaxableIrmaaOnly: number
+} {
   let aliveCount = 0
   for (let i = 0; i < deathOffsets.length; i++) if (t < (deathOffsets[i] ?? 0)) aliveCount++
   const allAlive = aliveCount === offsets.length
@@ -256,9 +314,30 @@ export function cashTermsForYear(
   // household that really draws from the portfolio while working (disclosed — D2 owns the copy).
   // `ss` is NOT clamped: a claimed-while-working benefit still flows to the tax overlay as
   // provisional income (an overlay-forced working-year outflow is legal — §2's overlap-safe fold).
+  // R40 seam 1 — the ongoing other-income SELECT (per-owner death-gated, KTD-4/KTD-7), netted into
+  // the cash need exactly like SS. It is NOT retire-truncated: a pension/rental keeps paying after
+  // work stops. The select runs only when the income construct is present (presence-keyed — an
+  // income-absent run never calls it, so reduce-to-spine is byte-identical by construction).
+  const income = params.overlay?.income
+  const sel = income !== undefined ? ongoingIncomeForYear(t, income, deathOffsets) : { gross: 0, taxable: 0 }
+
   const accumulating = params.overlay?.accumulation !== undefined
-  const net = accumulating && livingWorker ? 0 : Math.max(0, spending - earned - ss)
-  return { net, ss }
+  // The clamp single-sources the working-year regime (C2 §7): a living worker on the accumulation
+  // construct lives on salary → net 0. The R40 taxable portion splits on the SAME clamp (KTD-9):
+  //  - UNCLAMPED ⇒ `ongoingTaxableGrossUp` (the overlay grosses it up for tax AND nets it into the
+  //    withdrawal — the income is what funds the spend, the tax is funded by the portfolio).
+  //  - CLAMPED working year ⇒ `ongoingTaxableIrmaaOnly` (the wages fund the income's tax OUTSIDE
+  //    the portfolio, so it must NOT mint a phantom gross-up withdrawal — but it STILL lifts
+  //    IRMAA-MAGI, where the wages alone do not reach; the engine owns each modeled stream's
+  //    IRMAA-MAGI contribution in all years — KTD-9).
+  const clamped = accumulating && livingWorker
+  const net = clamped ? 0 : Math.max(0, spending - earned - sel.gross - ss)
+  return {
+    net,
+    ss,
+    ongoingTaxableGrossUp: clamped ? 0 : sel.taxable,
+    ongoingTaxableIrmaaOnly: clamped ? sel.taxable : 0,
+  }
 }
 
 /**
@@ -619,6 +698,27 @@ export function validateParams(params: SimulationParams): string | null {
         }
       }
     }
+    // R40 — the other-income construct (mirror the accumulation block above): the engine validates
+    // VECTORS ONLY — finiteness-FIRST + ≤ ENGINE_MAX_DOLLAR (insights 008/010; a NaN in a gross
+    // vector would silently DROP real income → understate the draw-offset → overstate the gap, or a
+    // NaN taxable would poison `nonSSordinary`'s gross-up into non-convergence). The entity SCALARS
+    // (`survivorPct` / `taxableFraction` / `exclusionFraction` ∈ [0,1]) are multiplied away at compile
+    // (`compileIncomeStreams`) and do NOT exist on the leaf, so the engine CANNOT range-check them —
+    // that gate lives ENTITY-side (intake sanity + the U8 codec; KTD-4 / KTD-3). Per-person alignment
+    // mirrors the accumulation length check (a short/long array silently mis-maps a spouse's income).
+    // `startAge < currentAge` is ALLOWED here by design (already-receiving clamps to t=0 at compile,
+    // KTD-8b — there is no age field on the leaf to reject). Income is Y-invariant (KTD-8a).
+    const inc = o.income
+    if (inc !== undefined) {
+      if (inc.incomeByPerson.length !== params.people.length)
+        return 'overlay income incomeByPerson length must match people'
+      for (const leaf of inc.incomeByPerson) {
+        for (const v of [leaf.grossFull, leaf.taxableFull, leaf.grossSurvivor, leaf.taxableSurvivor]) {
+          if (v === undefined) continue
+          if (!v.every(finiteNonNeg)) return 'overlay income vector invalid'
+        }
+      }
+    }
     // The hsa-owner requirement keys off the C2-re-derived LIVENESS property (insight 020 — gate on
     // the property, not its first consumer): an initial balance OR a positive hsa contribution
     // inflow makes the run hsa-live, and the 65+ Medicare-premium privilege then needs the owner.
@@ -894,6 +994,13 @@ export function simulate(params: SimulationParams, seed: number): SimOutput {
     const householdYears: HouseholdYear[] = []
     const contributionYears: YearContribution[] = []
     const bridgeMask: boolean[] = []
+    // R40 — the two KTD-9 taxable feeds, assembled per-path beside `ssBenefits` (the income SELECT
+    // is per-OWNER-death-gated, and deaths are per-path). `ongoingTaxableGrossUp` enters
+    // `nonSSordinary` (seam 2 — grossed up + nets); `ongoingTaxableIrmaaOnly` feeds IRMAA-MAGI ONLY
+    // (the clamped working-year taxable — no phantom gross-up withdrawal, KTD-9). Both empty unless
+    // the income construct is present (presence-keyed spread below ⇒ byte-identical reduce-to-spine).
+    const ongoingTaxableGrossUp: number[] = []
+    const ongoingTaxableIrmaaOnly: number[] = []
     for (let t = 0; t < horizon; t++) {
       const zs = sRow?.[t]
       const zbRaw = bRow?.[t]
@@ -905,6 +1012,14 @@ export function simulate(params: SimulationParams, seed: number): SimOutput {
       withdrawals.push(cash.net)
       if (overlay) {
         ssBenefits.push(cash.ss)
+        // R40 — record this year's KTD-9 taxable split for the overlay (presence-keyed on
+        // `overlay.income` below; pushed unconditionally here because `cashTermsForYear` returns 0/0
+        // for both when income is absent, so an income-absent run carries all-zero arrays that the
+        // presence-keyed spread never forwards — byte-identical reduce-to-spine).
+        if (overlay.income) {
+          ongoingTaxableGrossUp.push(cash.ongoingTaxableGrossUp)
+          ongoingTaxableIrmaaOnly.push(cash.ongoingTaxableIrmaaOnly)
+        }
         const living: OverlayPerson[] = []
         for (let i = 0; i < overlayPeople.length; i++) {
           const op = overlayPeople[i]
@@ -974,6 +1089,16 @@ export function simulate(params: SimulationParams, seed: number): SimOutput {
           // C2: the per-path assembled contribution inflows — spread ONLY when the accumulation
           // construct is present (absent ⇒ the byte-identical pre-C2 taxInputs, presence-keyed §1).
           ...(overlay.accumulation ? { contributions: contributionYears } : {}),
+          // R40: the two KTD-9 taxable feeds — spread ONLY when the income construct is present
+          // (absent ⇒ the byte-identical no-income taxInputs, presence-keyed R40.6). `…GrossUp`
+          // enters `nonSSordinary` (seam 2); `…IrmaaOnly` lifts IRMAA-MAGI alone (the clamped
+          // working-year taxable — no phantom gross-up withdrawal, KTD-9).
+          ...(overlay.income
+            ? {
+                ongoingTaxableGrossUp,
+                ongoingTaxableIrmaaOnly,
+              }
+            : {}),
           // U3 · M3 Slice 4 healthcare streams: spread ONLY when the overlay is enabled, so a
           // healthcare-off run passes the byte-identical pre-Slice-4 taxInputs (reduce-to-spine).
           // validateParams has already rejected healthcareEnabled with tax off (indeterminate).

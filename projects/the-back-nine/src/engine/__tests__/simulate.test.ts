@@ -5,6 +5,7 @@ import {
   netWithdrawalForYear,
   cashTermsForYear,
   contributionsForYear,
+  ongoingIncomeForYear,
   ENGINE_MAX_DOLLAR,
   type PersonOffsets,
   type SimOutput,
@@ -19,6 +20,7 @@ import { toLogMoments, simpleReturnFromNormal } from '@engine/rng'
 import {
   NEVER_DEPLETED,
   type AccumulationParams,
+  type IncomeParams,
   type SimulationParams,
   type PersonInputs,
   type OverlayParams,
@@ -2006,5 +2008,240 @@ describe('M6 — the typed per-candidate INFEASIBLE sentinel + the engine domain
     // plumbing (a sentinel, when it fires, rides the same determinism: the first failing
     // path is a pure function of params + seed).
     expect(simulate(maxSS, 2468)).toEqual(simulate(maxSS, 2468))
+  })
+})
+
+// ===========================================================================
+// R40 · U3 — the atomic other-income engine integration. The COMPILE math is golden at the
+// intake level (otherIncome.test.ts); the MAGI math is golden at the overlay level
+// (taxOverlay.test.ts). These anchor the WIRING: the per-owner death-gated SELECT, seam 1's
+// death-aware netting + the KTD-9 taxable split, reduce-to-spine byte-identity (the swap-mutant),
+// the survivor both-dead floor, and the cross-owner-death-order swap-mutant (KTD-7).
+// ===========================================================================
+describe('R40 · ongoingIncomeForYear — the per-owner death-gated SELECT (KTD-4/KTD-7)', () => {
+  // A two-person household: owner 0 has a pension (FULL 30k, SURVIVOR 15k = 0.5), owner 1 has a
+  // rental (FULL 20k, SURVIVOR 20k = 1.0). Vectors flat for clarity; taxable === gross here.
+  const income: IncomeParams = {
+    incomeByPerson: [
+      { grossFull: flatN(10, 30_000), taxableFull: flatN(10, 30_000), grossSurvivor: flatN(10, 15_000), taxableSurvivor: flatN(10, 15_000) },
+      { grossFull: flatN(10, 20_000), taxableFull: flatN(10, 20_000), grossSurvivor: flatN(10, 20_000), taxableSurvivor: flatN(10, 20_000) },
+    ],
+  }
+
+  it('both alive: FULL for both (30k + 20k = 50k)', () => {
+    expect(ongoingIncomeForYear(2, income, [50, 50])).toEqual({ gross: 50_000, taxable: 50_000 })
+  })
+
+  it('owner 0 dead, spouse 1 alive: owner 0 SURVIVOR (15k) + owner 1 FULL (20k) = 35k (the per-owner gate)', () => {
+    expect(ongoingIncomeForYear(5, income, [3, 50])).toEqual({ gross: 35_000, taxable: 35_000 })
+  })
+
+  it('owner 1 dead, spouse 0 alive: owner 1 SURVIVOR (20k) + owner 0 FULL (30k) = 50k (the ASYMMETRIC order)', () => {
+    // The cross-owner-death-order discriminator: a single household gate keyed off the first death
+    // would credit owner 0 its SURVIVOR (15k) here instead of its FULL (30k). The per-owner gate
+    // gives 50k. (Mirror of the prior case with the death order flipped.)
+    expect(ongoingIncomeForYear(5, income, [50, 3])).toEqual({ gross: 50_000, taxable: 50_000 })
+  })
+
+  it('BOTH dead: 0 (the survivor both-dead floor)', () => {
+    expect(ongoingIncomeForYear(5, income, [3, 4])).toEqual({ gross: 0, taxable: 0 })
+  })
+
+  it('the cross-owner-death-order SWAP-MUTANT: a single household death gate FAILS the asymmetric case (KTD-7)', () => {
+    // A household-level gate selects FULL for EVERY owner while ANY owner lives, else SURVIVOR for
+    // every owner. Construct that mutant inline and prove it disagrees with the per-owner truth on
+    // an asymmetric death order — the precise mutant the per-owner gate must survive.
+    const householdGate = (t: number, inc: IncomeParams, deaths: readonly number[]): number => {
+      const anyAlive = deaths.some((d) => t < d)
+      const allAlive = deaths.every((d) => t < d)
+      let gross = 0
+      for (let i = 0; i < inc.incomeByPerson.length; i++) {
+        const leaf = inc.incomeByPerson[i]!
+        if (allAlive) gross += leaf.grossFull?.[t] ?? 0
+        else if (anyAlive) gross += leaf.grossSurvivor?.[t] ?? 0
+      }
+      return gross
+    }
+    const truth = ongoingIncomeForYear(5, income, [50, 3]).gross
+    const mutant = householdGate(5, income, [50, 3])
+    expect(truth).toBe(50_000)
+    expect(mutant).toBe(35_000) // 15k + 20k — the wrong credit
+    expect(mutant).not.toBe(truth)
+  })
+
+  it('a leaf with no SURVIVOR variant (alimony, survivorPct 0) pays 0 once the owner dies', () => {
+    const alimony: IncomeParams = { incomeByPerson: [{ grossFull: flatN(10, 12_000), taxableFull: flatN(10, 12_000) }, {}] }
+    expect(ongoingIncomeForYear(2, alimony, [3, 50])).toEqual({ gross: 12_000, taxable: 12_000 })
+    expect(ongoingIncomeForYear(5, alimony, [3, 50])).toEqual({ gross: 0, taxable: 0 })
+  })
+})
+
+describe('R40 · seam 1 — cashTermsForYear nets the ongoing gross + splits the taxable on the §7 clamp (KTD-9)', () => {
+  const seamParams = (income?: IncomeParams, accumulation?: AccumulationParams): SimulationParams =>
+    makeParams({
+      annualSpendingReal: 100_000,
+      survivorSpendingRatio: 0.75,
+      people: [{ ...MALE_65, currentAge: 60, retirementAge: 65 }],
+      overlay: {
+        taxEnabled: true,
+        rmdEnabled: false,
+        startCalendarYear: 2026,
+        buckets: { taxable: 1000, pretax: 0, roth: 0 },
+        filing: 'mfj',
+        ...(income ? { income } : {}),
+        ...(accumulation ? { accumulation } : {}),
+      },
+    })
+  const incomeOnly0 = (gross: number, taxable: number): IncomeParams => ({
+    incomeByPerson: [{ grossFull: flatN(40, gross), taxableFull: flatN(40, taxable) }],
+  })
+  const working: PersonOffsets = { retire: 5, claim: 99, earnedIncomeReal: 0, socialSecurityReal: 0, spousalExcessAnnual: 0 }
+
+  it('a RETIRED year nets the ongoing gross AND routes the taxable to the gross-up feed', () => {
+    const cash = cashTermsForYear(6, seamParams(incomeOnly0(30_000, 30_000)), [working], [50], 0)
+    expect(cash.net).toBe(70_000) // spending 100k − gross 30k (seam 1)
+    expect(cash.ongoingTaxableGrossUp).toBe(30_000)
+    expect(cash.ongoingTaxableIrmaaOnly).toBe(0)
+  })
+
+  it('the KTD-9 split: under the §7 clamp the taxable rides IRMAA-ONLY, never the gross-up (no phantom withdrawal)', () => {
+    const params = seamParams(incomeOnly0(30_000, 30_000), { contributionsByPerson: [{}] })
+    const clamped = cashTermsForYear(2, params, [working], [50], 0) // t=2 < retire 5 ⇒ clamped
+    expect(clamped.net).toBe(0)
+    expect(clamped.ongoingTaxableGrossUp).toBe(0)
+    expect(clamped.ongoingTaxableIrmaaOnly).toBe(30_000)
+    const unclamped = cashTermsForYear(6, params, [working], [50], 0) // t=6 ≥ retire 5 ⇒ unclamped
+    expect(unclamped.net).toBe(70_000)
+    expect(unclamped.ongoingTaxableGrossUp).toBe(30_000)
+    expect(unclamped.ongoingTaxableIrmaaOnly).toBe(0)
+  })
+
+  it('income absent: both taxable feeds are 0 (the reduce-to-spine cash shape)', () => {
+    const cash = cashTermsForYear(6, seamParams(), [working], [50], 0)
+    expect(cash.ongoingTaxableGrossUp).toBe(0)
+    expect(cash.ongoingTaxableIrmaaOnly).toBe(0)
+  })
+
+  it('the KTD-7 × KTD-9 COMPOSITION: a clamped working year with a DEAD spouse routes the FULL+SURVIVOR SELECT sum entirely to IRMAA-ONLY (net 0, no gross-up)', () => {
+    // The single-person seam tests above never COMPOSE the per-owner death-gated SELECT (KTD-7)
+    // with the §7 working-year clamp (KTD-9): one person is either alive-and-working or not. Here a
+    // TWO-person accumulation household carries the cross: owner 0 is a living clamped worker (alive
+    // AND t < retire ⇒ `livingWorker`), owner 1 is DEAD (t ≥ deathOffset) but a spouse survives, so
+    // the SELECT credits owner 0 its FULL and owner 1 its SURVIVOR. The clamp (accumulating &&
+    // livingWorker) then fires on that summed taxable: net=0 and ongoingTaxableGrossUp=0 (the wages
+    // fund the tax outside the portfolio — no phantom withdrawal), while the whole death-gated sum
+    // rides ongoingTaxableIrmaaOnly into IRMAA-MAGI. FULL≠SURVIVOR for BOTH owners (30k/15k and
+    // 20k/12k) so the assertion discriminates a mutant that credited owner 1 its FULL (20k) — the
+    // sum would read 50k, not 42k. This is the precise interaction the single-person seam can't reach.
+    const twoOwnerIncome: IncomeParams = {
+      incomeByPerson: [
+        { grossFull: flatN(40, 30_000), taxableFull: flatN(40, 30_000), grossSurvivor: flatN(40, 15_000), taxableSurvivor: flatN(40, 15_000) },
+        { grossFull: flatN(40, 20_000), taxableFull: flatN(40, 20_000), grossSurvivor: flatN(40, 12_000), taxableSurvivor: flatN(40, 12_000) },
+      ],
+    }
+    const params = makeParams({
+      annualSpendingReal: 100_000,
+      survivorSpendingRatio: 0.75,
+      people: [
+        { ...MALE_65, currentAge: 60, retirementAge: 65 },
+        { ...FEMALE_65, currentAge: 60, retirementAge: 65 },
+      ],
+      overlay: {
+        taxEnabled: true,
+        rmdEnabled: false,
+        startCalendarYear: 2026,
+        buckets: { taxable: 1000, pretax: 0, roth: 0 },
+        filing: 'mfj',
+        income: twoOwnerIncome,
+        accumulation: { contributionsByPerson: [{}, {}] }, // present ⇒ `accumulating` is true
+      },
+    })
+    const offsets: PersonOffsets[] = [
+      { retire: 5, claim: 99, earnedIncomeReal: 0, socialSecurityReal: 0, spousalExcessAnnual: 0 },
+      { retire: 5, claim: 99, earnedIncomeReal: 0, socialSecurityReal: 0, spousalExcessAnnual: 0 },
+    ]
+    // t=4: < retire 5 ⇒ clamped working year; owner 1 dead at t=3 (4 ≥ 3), owner 0 alive (4 < 50).
+    const cash = cashTermsForYear(4, params, offsets, [50, 3], 99)
+    expect(cash.net).toBe(0) // clamped: the portfolio funds nothing this year
+    expect(cash.ongoingTaxableGrossUp).toBe(0) // clamped routes NOTHING to the gross-up feed
+    expect(cash.ongoingTaxableIrmaaOnly).toBe(42_000) // owner 0 FULL 30k + owner 1 SURVIVOR 12k
+  })
+})
+
+describe('R40 · reduce-to-spine THROUGH simulate (R40.6 — presence is the key; the swap-mutant)', () => {
+  const COUPLE = makeParams({
+    people: [{ ...MALE_65, currentAge: 65 }, { ...FEMALE_65, currentAge: 65 }],
+    longevityMode: 'sampled',
+    maxHorizonYears: 50,
+    annualSpendingReal: 60_000,
+    initialPortfolio: 1_500_000,
+    paths: 1500,
+  })
+  const baseOverlay: OverlayParams = {
+    taxEnabled: true,
+    rmdEnabled: true,
+    startCalendarYear: 2026,
+    buckets: { taxable: 0, pretax: 1_500_000, roth: 0 },
+    initialTaxableBasis: 0,
+    pretaxByPerson: [1_500_000, 0],
+    filing: 'mfj',
+  }
+
+  it('the SWAP-MUTANT: a $0 income stream is byte-identical to NO income — absence is the only reduce-to-spine key', () => {
+    // A zero-valued income leaf present on the overlay: the SELECT runs every year but adds 0/0, so
+    // it must be byte-identical to the no-income run. A mutant that defaulted a missing survivor
+    // variant to the FULL value, or netted gross without checking the leaf, would perturb this.
+    const zeroIncome: IncomeParams = { incomeByPerson: [{ grossFull: flatN(50, 0), taxableFull: flatN(50, 0) }, {}] }
+    const without = dist(simulate({ ...COUPLE, overlay: baseOverlay }, 9090))
+    const withZero = dist(simulate({ ...COUPLE, overlay: { ...baseOverlay, income: zeroIncome } }, 9090))
+    expect(withZero.terminalValuesReal).toEqual(without.terminalValuesReal)
+    expect(withZero.depletionYears).toEqual(without.depletionYears)
+    expect(withZero.survivalFraction).toBe(without.survivalFraction)
+  })
+
+  it('a REAL pension lifts terminal balances (the income offsets the draw) — the directional pin that the wire is live', () => {
+    const pension: IncomeParams = {
+      incomeByPerson: [{ grossFull: flatN(50, 40_000), taxableFull: flatN(50, 40_000), grossSurvivor: flatN(50, 20_000), taxableSurvivor: flatN(50, 20_000) }, {}],
+    }
+    const without = dist(simulate({ ...COUPLE, overlay: baseOverlay }, 9090))
+    const withPension = dist(simulate({ ...COUPLE, overlay: { ...baseOverlay, income: pension } }, 9090))
+    const median = (xs: readonly number[]): number => [...xs].sort((a, b) => a - b)[Math.floor(xs.length / 2)]!
+    expect(median(withPension.terminalValuesReal)).toBeGreaterThan(median(without.terminalValuesReal))
+    expect(withPension.survivalFraction).toBeGreaterThanOrEqual(without.survivalFraction)
+  })
+})
+
+describe('R40 · validateParams income block (vectors only; scalars are entity-side)', () => {
+  const withIncome = (income: IncomeParams): SimulationParams =>
+    makeParams({
+      people: [{ ...MALE_65, currentAge: 65 }, { ...FEMALE_65, currentAge: 65 }],
+      initialPortfolio: 1_000_000,
+      annualSpendingReal: 40_000,
+      overlay: {
+        taxEnabled: true, rmdEnabled: false, startCalendarYear: 2026,
+        buckets: { taxable: 0, pretax: 1_000_000, roth: 0 }, pretaxByPerson: [1_000_000, 0],
+        initialTaxableBasis: 0, filing: 'mfj', income,
+      },
+    })
+
+  it('a NaN in a gross vector is rejected as indeterminate (never a silent dropped pension)', () => {
+    const bad: IncomeParams = { incomeByPerson: [{ grossFull: [30_000, NaN, 30_000], taxableFull: [30_000, 30_000, 30_000] }, {}] }
+    const out = simulate(withIncome(bad), 1)
+    expect(out.indeterminate).toBe(true)
+    if (out.indeterminate) expect(out.reason).toContain('income vector invalid')
+  })
+
+  it('a leaf-count ≠ people-count mis-maps a spouse — rejected', () => {
+    const short: IncomeParams = { incomeByPerson: [{ grossFull: flatN(5, 30_000), taxableFull: flatN(5, 30_000) }] }
+    const out = simulate(withIncome(short), 1)
+    expect(out.indeterminate).toBe(true)
+    if (out.indeterminate) expect(out.reason).toContain('income incomeByPerson length must match people')
+  })
+
+  it('a > ENGINE_MAX_DOLLAR income figure is rejected (the computable-domain bound)', () => {
+    const huge: IncomeParams = { incomeByPerson: [{ grossFull: [ENGINE_MAX_DOLLAR * 2], taxableFull: [0] }, {}] }
+    const out = simulate(withIncome(huge), 1)
+    expect(out.indeterminate).toBe(true)
+    if (out.indeterminate) expect(out.reason).toContain('income vector invalid')
   })
 })

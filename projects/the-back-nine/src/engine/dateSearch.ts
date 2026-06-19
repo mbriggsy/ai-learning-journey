@@ -200,6 +200,13 @@ export function buildCandidateParams(
   // The transform AUTHORITATIVELY owns every Y-dependent overlay field: the gated streams,
   // the onset, and the override replace any entered values (the entered schedules are the
   // age-anchored INPUTS the builder gates — they never reach the engine ungated).
+  //
+  // R40 · KTD-8a — `income` is DELIBERATELY NOT destructured out: it is Y-INVARIANT (a pension is
+  // received the same in real terms whatever date the household stops working), so it flows through
+  // `...overlayBase` UN-truncated, compiled ONCE in `buildOverlay`/`buildParams`, never per candidate.
+  // (Truncating it the way contributions are truncated would zero a retiree's pension over [0, Y),
+  // un-modeling income they actually receive — the calm-but-wrong direction. The income-invariance
+  // CRN test pins that two candidates differing only in Y carry the identical income vectors.)
   const {
     enrolledPremium: _e,
     slcsp: _s,

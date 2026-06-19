@@ -30,7 +30,7 @@ import {
 import { simulate } from '@engine/simulate'
 import { BANDS, SURVIVAL_GRID, quantizeSurvival } from '@engine/confidence'
 import { validationMarket } from '@engine/reference/methodology'
-import type { OverlayParams, PersonInputs, SimulationParams } from '@shared/model'
+import type { IncomeParams, OverlayParams, PersonInputs, SimulationParams } from '@shared/model'
 
 // ---------------------------------------------------------------------------
 // Fixtures
@@ -331,6 +331,27 @@ describe('buildCandidateParams(Y) — the single owner of per-candidate construc
     }
     for (const y of [0, 5, 10]) {
       expect(buildCandidateParams(withSeed, y, DATE_SEARCH_PATHS.final).overlay?.irmaaMagiSeed).toEqual([61_000, 62_000])
+    }
+  })
+
+  it('R40 · KTD-8a — the ONGOING INCOME is Y-INVARIANT: it passes through UN-truncated, identical for every Y (a pension is received the same whatever date you stop)', () => {
+    // The discriminating pin: contributions are truncated to [0, Y) (tested above), but income must
+    // NOT be — it flows through `...overlayBase` un-truncated. A mutant that truncated income the
+    // way contributions are truncated would zero a retiree's pension over [0, Y), un-modeling income
+    // they actually receive (the calm-but-wrong direction). Distinct per-year values so a truncation
+    // (zeros in [0, Y)) is distinguishable from the identical passthrough.
+    const incomeVec = Array.from({ length: 12 }, (_, t) => 30_000 + 100 * t)
+    const income: IncomeParams = { incomeByPerson: [{ grossFull: incomeVec, taxableFull: incomeVec }, {}] }
+    const withIncome: DateSearchInput = {
+      params: { ...coupleParams, overlay: { ...coupleOverlay, income } },
+      workingYearIrmaaMagiByPerson: [90_000, 70_000],
+    }
+    for (const y of [0, 4, 10]) {
+      const c = buildCandidateParams(withIncome, y, DATE_SEARCH_PATHS.final)
+      // Byte-identical vector at every Y — no window-gate, no time-shift.
+      expect(c.overlay?.income?.incomeByPerson[0]?.grossFull).toEqual(incomeVec)
+      expect(c.overlay?.income?.incomeByPerson[0]?.taxableFull).toEqual(incomeVec)
+      expect(c.overlay?.income?.incomeByPerson[1]).toEqual({}) // owner 1's empty leaf passes through too
     }
   })
 })

@@ -47,6 +47,7 @@ import { findBlendRow, stockWeightForBlend } from '@engine/reference/tickerBlend
 import { acaAgeRatingCurve } from '@engine/constants/health'
 import type { ScenarioDraft } from '@store/memoryModel'
 import { annualAdditionsCeilingFor, contributionCeilingFor, isEmployerPlanKind } from './sanity'
+import { compileIncomeStreams } from './otherIncome'
 import type { CopyKey } from '@ui/copy'
 
 // ---------------------------------------------------------------------------
@@ -437,7 +438,26 @@ function horizonFor(d: ScenarioDraft): number {
 
 function buildOverlay(d: ScenarioDraft, horizonYears: number): OverlayParams | undefined {
   const accounts = d.enteredAccounts
-  if (accounts.length === 0 && d.health.enrolledPremiumMonthlyToday === undefined) return undefined
+  // R40 — compile the ongoing other-income streams ONCE here (income is Y-invariant, KTD-8a: the
+  // date-search never recompiles it; it passes through `buildCandidateParams`'s `...overlayBase`
+  // un-truncated). Returns undefined for no/empty/$0 streams (reduce-to-spine, R40.6). The
+  // deterministic inflation point estimate is the methodology constant (KTD-2), never re-typed.
+  const income = compileIncomeStreams(
+    d.incomeStreams,
+    d.people.map((p) => p.currentAge!),
+    horizonYears,
+    productionMarket.value.inflation.mean,
+  )
+  // The early-return guard now admits an INCOME-ONLY household: a friend whose whole picture is a
+  // pension/rental and a spend figure (no entered accounts, no marketplace premium) must still get
+  // a tax-aware overlay — income hits SS-§86 / ACA-MAGI / IRMAA-MAGI, so a tax-blind run would be
+  // calm-but-wrong. (Pre-R40 only accounts or a health premium opened the overlay.)
+  if (
+    accounts.length === 0 &&
+    d.health.enrolledPremiumMonthlyToday === undefined &&
+    income === undefined
+  )
+    return undefined
 
   const bucketSum = (bucket: Bucket) =>
     accounts.reduce((s, a) => (KIND_TO_BUCKET[a.kind] === bucket ? s + a.valueToday : s), 0)
@@ -503,6 +523,7 @@ function buildOverlay(d: ScenarioDraft, horizonYears: number): OverlayParams | u
       : {}),
     ...(hsaOwnerIndex !== undefined ? { hsaOwnerIndex } : {}),
     ...(accumulation !== undefined ? { accumulation } : {}),
+    ...(income !== undefined ? { income } : {}),
   }
 }
 

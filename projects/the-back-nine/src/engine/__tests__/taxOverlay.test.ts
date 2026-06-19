@@ -3771,3 +3771,232 @@ describe('taxOverlay — M6: the cross-overlay integration battery (ACA × IRMAA
     })
   })
 })
+
+// ===========================================================================
+// R40 · U3 — seam 2 (the ongoing-income taxable enters nonSSordinary ONCE — KTD-1) and the
+// KTD-9 IRMAA decouple, at the overlay level. The MAGI math is golden (taxableSocialSecurity,
+// irmaaMagi, the M4 feed-forward above); these pin the WIRING: §86 rose ONCE (not doubled), the
+// gross-up nets the unclamped taxable, and the clamped working-year taxable lifts IRMAA-MAGI
+// WITHOUT minting a phantom withdrawal. Externally-derived where a magnitude is asserted (DND/012).
+// ===========================================================================
+describe('taxOverlay — R40 seam 2: the ongoing-income taxable enters ordinary income ONCE (KTD-1)', () => {
+  const P = 1_000_000
+  const POOL: AccountBuckets = { taxable: 0, pretax: P, roth: 0 }
+  const bothBorn1959MFJ: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: false, household: mkHousehold(2026, 1959, 1959) }
+
+  /** Re-solve one year's gross with SS + the ongoing-income taxable folded in, using ONLY the
+   *  golden pure fns. `nonSSfromGross(g)` = the pre-tax distribution; `ongoingTaxable` is the new
+   *  R40 ordinary term. The §86 provisional reads (nonSS-ordinary), so the ongoing taxable enters
+   *  the §86 base too — but EXACTLY ONCE (it is one addend in nonSSordinary). A WIRING bug that
+   *  added it to both the ordinary base AND the §86 base separately would double the §86 effect and
+   *  diverge from this reference. */
+  const solveGross = (
+    net: number,
+    nonSSfromGross: (g: number) => number,
+    ss: number,
+    ongoingTaxable: number,
+    count65: number,
+  ): number => {
+    let gross = net
+    for (let i = 0; i < 300; i++) {
+      const nonSS = nonSSfromGross(gross) + ongoingTaxable
+      gross = net + ordinaryIncomeTax(nonSS + taxableSocialSecurity(nonSS, ss, 'mfj'), 'mfj', count65)
+    }
+    return gross
+  }
+
+  it('a fully-taxable ongoing stream matches the SS-aware re-solve with ONE ongoing addend (not doubled)', () => {
+    // pre-tax-only, pre-tax-first ⇒ nonSS = max(gross, 0) = gross. $40k net + $30k SS + $25k ongoing
+    // taxable. The ongoing taxable enters nonSSordinary once; the §86 provisional reads that same
+    // single value. The engine's gross must equal solveGross with ongoingTaxable counted ONCE.
+    const net = 40_000
+    const ss = 30_000
+    const ongoing = 25_000
+    const r = runTaxAwareDecumulation(POOL, realStock, realBond, [net], STOCK_W, 'pre-tax-first', bothBorn1959MFJ, {
+      ssBenefits: [ss],
+      ongoingTaxableGrossUp: [ongoing],
+    })
+    const sp = spine(P, [net])
+    const expectedGross = solveGross(net, (g) => g, ss, ongoing, 2)
+    // year-0 gross = P − terminalReal/(spine growth ratio): match the gross via the terminal ratio.
+    expect(r.terminalReal / sp.terminalReal).toBeCloseTo((P - expectedGross) / (P - net), 7)
+  })
+
+  it('§86 rose ONCE: the taxable-SS lift from the ongoing income equals a SINGLE application, never double', () => {
+    // Externally-derived (DND/012). MFJ. A pre-tax draw such that without the ongoing income the SS
+    // is in the (32k, 44k] middle band, and with it the same band — so the §86 marginal is a clean
+    // 0.5 on the ongoing dollars (no band crossing). nonSS-without = 20k; SS = 20k (½ = 10k):
+    // provisional = 30k < 32k ⇒ 0 taxable. Add ongoing 6k ⇒ nonSS 26k, provisional 36k ∈ (32k,44k]
+    // ⇒ taxable = 0.5 × (36k − 32k) = 2,000. The §86 helper IS the oracle; this asserts the ongoing
+    // taxable enters its base exactly once (a double-count would give 0.5 × (42k − 32k) = 5,000).
+    const ss = 20_000
+    const without = taxableSocialSecurity(20_000, ss, 'mfj')
+    const withOngoing = taxableSocialSecurity(20_000 + 6_000, ss, 'mfj')
+    expect(without).toBe(0)
+    expect(withOngoing).toBeCloseTo(2_000, 6) // single application of the ongoing 6k into the §86 base
+    // The double-count shape (ongoing added to nonSS AND separately to the §86 other-income term):
+    const doubled = taxableSocialSecurity(20_000 + 6_000 + 6_000, ss, 'mfj')
+    expect(doubled).toBeCloseTo(5_000, 6) // what a seam-3 double-edit would have produced — refuted
+    expect(withOngoing).not.toBeCloseTo(doubled, 1)
+  })
+
+  it('reduce-to-spine: an ongoing-taxable stream with tax OFF is ignored (the OFF anchor is unperturbed)', () => {
+    const got = runTaxAwareDecumulation(POOL, realStock, realBond, [60_000], STOCK_W, 'pre-tax-first', OFF, {
+      ongoingTaxableGrossUp: flat(25_000),
+      ongoingTaxableIrmaaOnly: flat(25_000),
+    })
+    const sp = spine(P, [60_000])
+    expect(got.terminalReal).toBe(sp.terminalReal)
+    expect(got.depletionYear).toBe(sp.depletionYear)
+  })
+
+  it('a NaN ongoing-taxable entry fails loud (the overlay backstop; insights 008/010)', () => {
+    expect(() =>
+      runTaxAwareDecumulation(POOL, realStock, realBond, [40_000], STOCK_W, 'pre-tax-first', bothBorn1959MFJ, {
+        ongoingTaxableGrossUp: [Number.NaN],
+      }),
+    ).toThrow(/ongoingTaxableGrossUp/)
+    expect(() =>
+      runTaxAwareDecumulation(POOL, realStock, realBond, [40_000], STOCK_W, 'pre-tax-first', bothBorn1959MFJ, {
+        ongoingTaxableIrmaaOnly: [-1],
+      }),
+    ).toThrow(/ongoingTaxableIrmaaOnly/)
+  })
+})
+
+describe('taxOverlay — R40 · KTD-9: the IRMAA decouple (clamped working-year taxable lifts IRMAA-MAGI, never the gross-up)', () => {
+  // Reuse the M4 post-65 IRMAA fixture geometry. Both born 1959 (age 67, Medicare every year, no RMD
+  // < 73). A big pretax pool that never depletes. The IRMAA surcharge for year t reads IRMAA-MAGI[t−2].
+  const PP = 2_000_000
+  const POOL: AccountBuckets = { taxable: 0, pretax: PP, roth: 0 }
+  const POST65: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: false, household: mkHousehold(2026, 1959, 1959) }
+  const IRMAA_SCHED = irmaa.value
+  const BASE = partB2026.value.standardPremiumMonthly
+  const lowSeed = [60_000, 60_000]
+  const surchargeMonthly = (tierIdx: number) =>
+    IRMAA_SCHED.tiers[tierIdx]!.partBSurchargeMonthly + IRMAA_SCHED.tiers[tierIdx]!.partDSurchargeMonthly
+  const medicareAnnual = (count: number, tierIdx: number | null) =>
+    count * (BASE + (tierIdx === null ? 0 : surchargeMonthly(tierIdx))) * 12
+  const run = (net: readonly number[], inputs: TaxYearInputs) =>
+    runTaxAwareDecumulation(POOL, realStock, realBond, net, STOCK_W, 'pre-tax-first', POST65, inputs)
+
+  it('the gross-up feed lifts IRMAA-MAGI through the +2 lag (an unclamped ongoing stream surcharges year 2)', () => {
+    // A year-0 ongoing taxable above the MFJ tier-1 threshold via the gross-up feed lands in
+    // IRMAA-MAGI[0] (it rode nonSSordinary), so year 2 (reading MAGI[0]) is surcharged. Years 0,1
+    // read the low seed ⇒ base only. The directional pin that the gross-up feed reaches IRMAA-MAGI.
+    const big = IRMAA_SCHED.tiers[1]!.mfjMagiThreshold
+    const withOngoing = run([20_000, 20_000, 20_000], { healthcareEnabled: true, irmaaMagiSeed: lowSeed, ongoingTaxableGrossUp: [big, 0, 0] })
+    const noOngoing = run([20_000, 20_000, 20_000], { healthcareEnabled: true, irmaaMagiSeed: lowSeed })
+    expect(withOngoing.totalMedicareCostReal).toBeGreaterThan(noOngoing.totalMedicareCostReal)
+  })
+
+  it('the KTD-9 decouple: the IRMAA-ONLY feed lifts IRMAA-MAGI[0] WITHOUT minting a withdrawal — year-2 surcharge rises, year-0 terminal is UNCHANGED', () => {
+    // The wages-only clamped path: the ongoing taxable rides ongoingTaxableIrmaaOnly (NOT the
+    // gross-up). It must (a) NOT mint any extra withdrawal — the year-0/1 cash trajectory is
+    // identical to no-ongoing (the wages funded its tax outside the portfolio), AND (b) still lift
+    // IRMAA-MAGI[0] over a tier so year 2's surcharge fires. A naive "add to the gross-up" wire
+    // would drain the portfolio in year 0 (failing a); a "drop it from IRMAA" wire would leave the
+    // surcharge flat (failing b — the optimistic sin KTD-9 exists to prevent).
+    const big = IRMAA_SCHED.tiers[1]!.mfjMagiThreshold
+    const irmaaOnly = run([20_000, 20_000, 20_000], { healthcareEnabled: true, irmaaMagiSeed: lowSeed, ongoingTaxableIrmaaOnly: [big, 0, 0] })
+    const noOngoing = run([20_000, 20_000, 20_000], { healthcareEnabled: true, irmaaMagiSeed: lowSeed })
+    // (b) the surcharge fires at year 2 — the IRMAA-only feed DID reach IRMAA-MAGI.
+    expect(irmaaOnly.totalMedicareCostReal).toBeGreaterThan(noOngoing.totalMedicareCostReal)
+    // (a) NO phantom withdrawal: run a 2-year horizon (years 0,1 — before the lagged surcharge bites)
+    // and confirm the terminal is byte-identical to no-ongoing. The IRMAA-only feed touched neither
+    // the gross-up nor the netting in years 0,1, so the cash trajectory is unperturbed there.
+    const irmaaOnly2 = run([20_000, 20_000], { healthcareEnabled: true, irmaaMagiSeed: lowSeed, ongoingTaxableIrmaaOnly: [big, 0] })
+    const noOngoing2 = run([20_000, 20_000], { healthcareEnabled: true, irmaaMagiSeed: lowSeed })
+    expect(irmaaOnly2.terminalReal).toBe(noOngoing2.terminalReal) // no phantom withdrawal minted
+    expect(irmaaOnly2.totalTaxPaidReal).toBe(noOngoing2.totalTaxPaidReal) // the IRMAA-only feed paid no tax through the portfolio
+  })
+
+  it('counted ONCE: the IRMAA-only feed adds EXACTLY its dollars to IRMAA-MAGI (the surcharge tier matches the wages+pension sum)', () => {
+    // Externally-derived (DND/012). Seed a wages-only working-year IRMAA-MAGI override JUST below the
+    // tier-1 threshold; the pension's IRMAA-only taxable pushes the sum over. The year-2 surcharge
+    // must be tier-1 (sum > threshold), proving wages + pension are counted once each — not the
+    // pension dropped (sum below ⇒ no surcharge) nor double-counted (sum over a higher tier).
+    const T1 = IRMAA_SCHED.tiers[0]!.mfjMagiThreshold
+    const T2 = IRMAA_SCHED.tiers[1]!.mfjMagiThreshold
+    const wages = T1 - 10_000 // just under tier 1 alone
+    // STRADDLE the tier boundary so the exact tier-1 total kills BOTH mutants at once (literals stay
+    // SYMBOLIC — T1/T2 are read from the constant, never re-typed; the copyGuard greps src for inlined
+    // dated figures, so no raw threshold appears here):
+    //  • counted-once: wages + pension ⇒ tier 1 (T1 < wages+pension < T2).
+    //  • double-count: wages + 2×pension ⇒ tier 2 (≥ T2) — a DIFFERENT, higher cost.
+    // (wages = T1 − 10k and pension = 40k straddle given the shipped T1/T2 gap; the asserts below
+    //  prove the straddle off the constant, not off a typed number.)
+    const pension = 40_000
+    expect(wages + pension).toBeGreaterThan(T1)
+    expect(wages + pension).toBeLessThan(T2)
+    expect(wages + 2 * pension).toBeGreaterThanOrEqual(T2) // double-count would cross into tier 2
+    // irmaaMagiOverride is the wages-only component (KTD-9 re-spec); ongoingTaxableIrmaaOnly is the
+    // pension. Both land at the SAME history site, additively, each once. The draws are 0 so the
+    // computed gross-up MAGI is ≈$0 — IRMAA-MAGI[0] = wages + pension exactly.
+    const r = run([0, 0, 0], {
+      healthcareEnabled: true,
+      irmaaMagiSeed: lowSeed,
+      irmaaMagiOverride: [wages, 0, 0],
+      ongoingTaxableIrmaaOnly: [pension, 0, 0],
+      // bridgeYearMask absent (post-65, no bridge) so the override coverage gate is inert here.
+    })
+    // year 2 reads IRMAA-MAGI[0] = wages + pension ⇒ tier 1 (count 2). Years 0,1 base only (low seed).
+    const expected = medicareAnnual(2, null) * 2 + medicareAnnual(2, 0)
+    expect(r.totalMedicareCostReal).toBeCloseTo(expected, 4)
+    // The fixture STRADDLES the tier boundary, so the exact tier-1 total refutes BOTH mutants:
+    //  • DROPPED-pension (IRMAA-MAGI[0] = wages alone < T1 ⇒ all base, strictly less).
+    //  • DOUBLE-count (wages + 2×pension ≥ T2 ⇒ tier-2 cost, strictly greater than tier-1).
+    // Only counting wages + pension exactly once lands in (T1, T2) ⇒ the tier-1 `expected` above.
+    const droppedPension = medicareAnnual(2, null) * 3
+    expect(r.totalMedicareCostReal).toBeGreaterThan(droppedPension)
+  })
+
+  // ── KTD-9 TRIPWIRE — the deferred copy half (intentionally SKIPPED) ──────────────────────────
+  // WHAT this captures: the KTD-9 IRMAA-MAGI DOUBLE-COUNT for an already-receiving taxable stream
+  //   (a pension/rental paying during a §7-clamped WORKING year). KTD-9 is a coupled 2-part change:
+  //   (1) the engine owns each modeled stream's IRMAA-MAGI in all years — DONE in U3 (the
+  //       `ongoingTaxableIrmaaOnly` feed at the history site, asserted by the tests above); and
+  //   (2) re-spec the working-year override as WAGES / non-modeled-MAGI ONLY and INVERT the intake
+  //       copy to "enter your working-year income EXCLUDING anything you entered as a retirement
+  //       income stream" — NOT done; deferred to U4.
+  // WHY skipped: U3 shipped half (1) only. Today the intake copy (src/ui/copy.ts `workIncomeLabel`/
+  //   `workIncomeHelp`) still asks for the recent return's WHOLE income, so a still-working driver
+  //   with an already-receiving pension types the pension INTO `workingYearIrmaaMagiByPerson` — which
+  //   compiles to `irmaaMagiOverride` (healthcareStreams.ts ~163). The engine then adds the same
+  //   pension AGAIN via `ongoingTaxableIrmaaOnly` (taxOverlay.ts ~1652). IRMAA-MAGI = wages + 2×pension.
+  //   That OVER-states MAGI → over-states IRMAA/cost — the CONSERVATIVE direction, never the
+  //   optimistic sin, which is exactly why U3 ships with the copy half deferred.
+  // EXACT U4 FIX before un-skipping: (a) re-spec `irmaaMagiOverride` as the wages / non-modeled-MAGI
+  //   component only (the modeled stream's taxable already rides `ongoingTaxableIrmaaOnly`); and
+  //   (b) INVERT the intake copy so the user enters working-year income EXCLUDING any entered income
+  //   stream. After both, the user types WAGES into the override → it carries wages alone → the
+  //   pension is counted exactly once and the tier-1 assertion below passes. Drop the `.skip`.
+  // Ref: KTD-9 in docs/decisions/other-income-r40.md (~line 89) + the risk→mitigation row.
+  // Constants discipline: T1/T2 are read symbolically off the `irmaa` constant — NO dated dollar
+  //   threshold is inlined here or in this comment (the copyGuard/constants-shape gate greps for it).
+  it.skip('KTD-9 tripwire (copy half deferred to U4): the WHOLE-income override double-counts an already-receiving pension in IRMAA-MAGI', () => {
+    const T1 = IRMAA_SCHED.tiers[0]!.mfjMagiThreshold
+    const T2 = IRMAA_SCHED.tiers[1]!.mfjMagiThreshold
+    const wages = T1 - 10_000
+    const pension = 40_000
+    // Same straddle the post-U4 "counted ONCE" test uses: wages + pension ∈ (T1, T2) ⇒ tier 1;
+    // wages + 2×pension ≥ T2 ⇒ tier 2 — a DIFFERENT, higher cost (the double-count signature).
+    expect(wages + pension).toBeGreaterThan(T1)
+    expect(wages + pension).toBeLessThan(T2)
+    expect(wages + 2 * pension).toBeGreaterThanOrEqual(T2)
+    // TODAY's intake: the whole-income copy makes the user enter wages+pension into the override
+    // (it includes the already-receiving pension), AND the engine adds the pension via the IRMAA-only
+    // feed — so the override carries the WHOLE figure here, mirroring what the live intake produces.
+    const r = run([0, 0, 0], {
+      healthcareEnabled: true,
+      irmaaMagiSeed: lowSeed,
+      irmaaMagiOverride: [wages + pension, 0, 0], // U4 re-specs this to `wages` (override = wages-only)
+      ongoingTaxableIrmaaOnly: [pension, 0, 0],
+    })
+    // The CONTRACT (what passes post-U4): the pension is counted ONCE ⇒ year-2 tier-1 cost.
+    const expectedCountedOnce = medicareAnnual(2, null) * 2 + medicareAnnual(2, 0)
+    expect(r.totalMedicareCostReal).toBeCloseTo(expectedCountedOnce, 4)
+    // TODAY this FAILS: IRMAA-MAGI[0] = (wages+pension) + pension = wages + 2×pension ≥ T2 ⇒ tier-2
+    // cost, strictly greater than the tier-1 `expectedCountedOnce` — the double-count, conservative.
+  })
+})

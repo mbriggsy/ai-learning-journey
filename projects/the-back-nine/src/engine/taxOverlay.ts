@@ -332,6 +332,22 @@ export interface TaxYearInputs {
    *  allocation, the RMD forced-excess base, or the basis pro-rata denominator (an end-of-year
    *  arrival is not drawable, convertible, or RMD-base in its arrival year). */
   readonly contributions?: readonly YearContribution[]
+  // --- R40: the ongoing other-income TAXABLE feeds (KTD-9's structural split). ABSENT ⇒ the
+  //     byte-identical no-income overlay (every read is `?? 0` and every fold is `x + 0`). ---
+  /** Per-year ongoing other-income taxable that enters the GROSS-UP (seam 2; ABSOLUTE-year-indexed,
+   *  AUXILIARY — a missing/short entry ⇒ a $0 year). Added to `nonSSordinary` at the single producer
+   *  (`solveGrossWithdrawal`), so SS-§86 / ACA-MAGI / IRMAA-MAGI all rise by it ONCE (KTD-1); it ALSO
+   *  nets the withdrawal upstream (seam 1, in `simulate`). The UNCLAMPED-year taxable: the income funds
+   *  the spend, the portfolio funds its tax. (The clamped working-year taxable rides the IRMAA-only
+   *  feed below, never this one — KTD-9.) */
+  readonly ongoingTaxableGrossUp?: readonly number[]
+  /** Per-year ongoing other-income taxable that lifts IRMAA-MAGI ONLY (KTD-9; ABSOLUTE-year-indexed,
+   *  AUXILIARY). The §7-CLAMPED working-year taxable: the wages fund its tax OUTSIDE the portfolio, so
+   *  it must NOT mint a phantom gross-up withdrawal — but it STILL belongs in IRMAA-MAGI, where the
+   *  wages-only override does not reach (the engine owns each modeled stream's IRMAA-MAGI in ALL years,
+   *  clamped and unclamped). Recorded ADDITIVELY at the IRMAA-MAGI history site, counted exactly once;
+   *  it never touches the gross-up, the §86 base, or ACA-MAGI (a clamped working year prices no ACA). */
+  readonly ongoingTaxableIrmaaOnly?: readonly number[]
 }
 
 /** One year's per-person, per-bucket contribution inflow (C2). All real $, finite ≥ 0
@@ -919,10 +935,17 @@ interface GrossUpContext {
   readonly count65: number
   readonly ssBenefit: number
   readonly bracketFillCeiling: number
+  /** R40 — this year's ongoing other-income TAXABLE that enters ordinary income (seam 2; KTD-1):
+   *  a pension/rental/annuity/pre-2019-alimony's taxable portion. Folded into `nonSSordinary` at the
+   *  SINGLE producer below, so the §86 SS provisional, ACA-MAGI, and IRMAA-MAGI all rise by it ONCE
+   *  (seams 3/4/5 ride the one `nonSSordinary` term). 0 in a no-income run (the `?? 0` default keeps
+   *  every fold an exact IEEE no-op — reduce-to-spine byte-identical). This is the gross-up feed; the
+   *  KTD-9 clamped-working-year IRMAA-only taxable is recorded separately at the history site. */
+  readonly ongoingTaxable: number
 }
 
 function solveGrossWithdrawal(net: number, ctx: GrossUpContext): GrossUpSolution {
-  const { drawPool, policy, rmd, conversion, taxableBasis, filing, count65, ssBenefit, bracketFillCeiling } = ctx
+  const { drawPool, policy, rmd, conversion, taxableBasis, filing, count65, ssBenefit, bracketFillCeiling, ongoingTaxable } = ctx
   const taxableValue = drawPool.taxable
   let gross = net
   for (let pass = 0; pass < GROSS_UP_MAX_PASSES; pass++) {
@@ -933,10 +956,11 @@ function solveGrossWithdrawal(net: number, ctx: GrossUpContext): GrossUpSolution
     const realizedGain =
       taxableValue > 0 ? Math.max(0, alloc.taxable * (1 - taxableBasis / taxableValue)) : 0
     // Ordinary income = pre-tax distributed (spending-or-RMD, whichever binds) + the conversion
-    // (ordinary income, non-RMD-satisfying) + the taxable portion of SS. The realized gain joins
-    // provisional's "other income" (lifting taxable SS) but is taxed at preferential rates inside
-    // ordinaryPlusCapitalGainsTax — never folded into the ordinary base.
-    const nonSSordinary = Math.max(alloc.pretax, rmd) + conversion
+    // (ordinary income, non-RMD-satisfying) + the ongoing other-income taxable (R40 seam 2 — the
+    // ONE producer SS-§86 / ACA-MAGI / IRMAA-MAGI all ride, KTD-1) + the taxable portion of SS. The
+    // realized gain joins provisional's "other income" (lifting taxable SS) but is taxed at
+    // preferential rates inside ordinaryPlusCapitalGainsTax — never folded into the ordinary base.
+    const nonSSordinary = Math.max(alloc.pretax, rmd) + conversion + ongoingTaxable
     // Surface the taxable-SS local (M3): the identical value + call as before, so `nextGross` stays
     // byte-identical — now also fed to the returned MagiComponents so acaMagi reads the FLOORED
     // converged locals (never recomputed off a raw-gain ledger; the named sign-inversion).
@@ -1011,6 +1035,8 @@ export function runTaxAwareDecumulation(
     oopMedical = [],
     hsaOwnerIndex,
     contributions = [],
+    ongoingTaxableGrossUp = [],
+    ongoingTaxableIrmaaOnly = [],
   } = taxInputs
 
   // Healthcare requires tax (U3 · M3 Slice 4): the ACA PTC keys off ACA-MAGI, which this engine
@@ -1070,6 +1096,19 @@ export function runTaxAwareDecumulation(
   }
   if (!bridgeYearMask.every((x) => typeof x === 'boolean')) {
     throw new Error('[taxOverlay] bridgeYearMask entries must be booleans (a truthy non-boolean is a mis-built mask)')
+  }
+  // R40 — the two ongoing-income taxable feeds, guarded like their siblings (the "BOTH validateParams
+  // AND the overlay backstop" discipline; insights 008/010 finiteness-FIRST). Both are real-dollar
+  // taxable amounts: finite ≥ 0, NO +Infinity sentinel; holes legal (`.every` skips them — a $0 year).
+  // A PRESENT NaN/Infinity/negative is a misconfiguration → throw: a NaN in the gross-up feed would
+  // poison `nonSSordinary` and never converge (an uncaught throw), and a NaN in the IRMAA-only feed
+  // would poison the surcharge tier compare (a relational guard a NaN sails through silently).
+  // validateParams shields `simulate`; this protects a direct caller (a future P3 control / P4 solver).
+  if (!ongoingTaxableGrossUp.every((x) => Number.isFinite(x) && x >= 0)) {
+    throw new Error('[taxOverlay] ongoingTaxableGrossUp entries must be finite and ≥ 0 (insights 008/010; burned/062)')
+  }
+  if (!ongoingTaxableIrmaaOnly.every((x) => Number.isFinite(x) && x >= 0)) {
+    throw new Error('[taxOverlay] ongoingTaxableIrmaaOnly entries must be finite and ≥ 0 (insights 008/010; burned/062)')
   }
 
   // The ACA applicable-% table is year-invariant; select it ONCE per run. `enhanced` = the ARPA/IRA
@@ -1520,6 +1559,10 @@ export function runTaxAwareDecumulation(
         count65: regime.count65,
         ssBenefit: ssBenefits[t] ?? 0,
         bracketFillCeiling,
+        // R40 seam 2 (KTD-1): the UNCLAMPED-year ongoing taxable enters `nonSSordinary` ONCE — the
+        // clamped working-year taxable rides `ongoingTaxableIrmaaOnly` and lands at the history site
+        // below, never here (no phantom gross-up withdrawal, KTD-9). Absent ⇒ `?? 0`, an IEEE no-op.
+        ongoingTaxable: ongoingTaxableGrossUp[t] ?? 0,
       }
       const fundNet = (netTotal: number): GrossUpSolution => solveGrossWithdrawal(netTotal, grossUpCtx)
       // AGE GATE (red-team blocker): ACA prices ONLY when ≥1 living member is pre-65. With every living
@@ -1595,7 +1638,18 @@ export function runTaxAwareDecumulation(
       // the $1 INTEGER IRMAA grid (insight 012 — no ceil helps on a `> N` branch), so a
       // lag-induced tier flip is measure-zero (the same residual the ACA cliff already accepts).
       if (acaTable !== undefined) {
-        irmaaMagiHistory[t] = (irmaaMagiOverride[t] ?? 0) + irmaaMagi(magiComponentsThisYear)
+        // R40 · KTD-9 — the IRMAA decouple. Three feeds, each counted EXACTLY ONCE:
+        //  (1) `irmaaMagiOverride[t]` — the wages / non-modeled-MAGI working-year component;
+        //  (2) `irmaaMagi(components)` — the computed gross-up MAGI, which ALREADY includes the
+        //      UNCLAMPED ongoing taxable (it rode `nonSSordinary` via `ongoingTaxableGrossUp`);
+        //  (3) `ongoingTaxableIrmaaOnly[t]` — the §7-CLAMPED working-year ongoing taxable, which was
+        //      kept OUT of the gross-up (the wages fund its tax — no phantom withdrawal) but STILL
+        //      belongs in IRMAA-MAGI (the engine owns each modeled stream's IRMAA-MAGI in ALL years).
+        // In a clamped working year feed (2)'s ongoing component is 0 and feed (3) carries it; in an
+        // unclamped year feed (3) is 0 and feed (2) carries it — never both, so the stream's taxable
+        // hits IRMAA-MAGI exactly once. Absent income ⇒ both `?? 0` ⇒ byte-identical to pre-R40.
+        irmaaMagiHistory[t] =
+          (irmaaMagiOverride[t] ?? 0) + irmaaMagi(magiComponentsThisYear) + (ongoingTaxableIrmaaOnly[t] ?? 0)
       }
       // The year's federal tax, read off the converged identities (U3 · M6 — the lifetime-tax
       // surface): the gross funds EXACTLY fundingNet + netAcaPremium + tax in both branches

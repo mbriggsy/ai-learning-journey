@@ -12,7 +12,10 @@
 > `architecture` / `glossary` re-authored present-tense from the ledger (SS sub-engine folded into
 > architecture §7.7; accumulation as first-class engine content; R40 de-special-cased; all four
 > changelog/Summary sections killed; zero dead links; 942 tests still green).
-> **The next session resumes at M6** (the zero-loss gate + demolition) — see *RESUME HERE*.
+> **M6 steps 1–3 are DONE** (zero-loss gate passed; `features/` demolished; sweep clean — commit `0d5ccf48`).
+> **The open fork is M6 step 4** (the P→Act code-comment sweep — revealed NON-mechanical: Q1-tangled scope +
+> stale pre-fold content like `model.ts:551`). **`TODO.md` item 0 is the live handoff** — read it first; this
+> file is held only because it records the step-4 obligation, and step 5 deletes it once step 4 is decided.
 > Rationale: `.recovery/doc-restructure-judge-output.md` (judge fan-out — note its "preserve"
 > spine was overridden by Q6). Must-survive net: `.recovery/docs-quarry-inventory.json` (16 docs)
 > + `.recovery/quarry-roadmap.json`.

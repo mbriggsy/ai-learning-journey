@@ -134,7 +134,7 @@ Motion: the band **draws once** (on its first reveal) then **morphs** on every r
 
 - **PII safety (R39).** Every new field lives only inside **U4's encrypted record** (additive schemaVersion bump), never a separate or plaintext holdings store. The R35 field list is **not the closed PII set**; any later-added intake field (e.g. R40's streams) joins this posture by default.
 
-### Tested contracts (D1 — preserved verbatim)
+### Tested contracts (D1)
 
 These are the load-bearing intake contracts the shipped + reviewed D1 holds. Each has a dedicated, **non-vacuous** test (a planted-fail control arm so a silently-broken guard fails loud, never green-by-accident).
 

@@ -16,7 +16,8 @@
     "lint": "eslint .",
     "verify:bundle": "tsx scripts/verify-prod-bundle.ts",
     "verify:aca": "tsx scripts/verify-aca-status.ts",
-    "verify:csp": "playwright test"
+    "verify:csp": "playwright test",
+    "verify:doc-stats": "tsx scripts/verify-doc-stats.ts"
   },
   "dependencies": {
     "@fontsource-variable/fraunces": "^5.2.9",

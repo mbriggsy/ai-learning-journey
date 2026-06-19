@@ -28,6 +28,7 @@ Precedence on conflict: the **roadmap's You-Are-Here table** wins on build statu
 | `pnpm lint` | ESLint (layer boundaries + engine purity) |
 | `pnpm verify:bundle` | Initial-JS **byte budget** sentinel (≤ 300 KiB entry JS) |
 | `pnpm verify:aca` | ACA enhanced-subsidy **re-verify** gate (fails if `aca-last-verified.json` is stale/unconfirmed) |
+| `pnpm verify:doc-stats` | Doc test-count **drift** gate (README + roadmap must match the live `vitest` suite) |
 
 ## Layers & import boundaries (ESLint-enforced)
 

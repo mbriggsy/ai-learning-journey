@@ -12,7 +12,7 @@
 > `architecture` / `glossary` re-authored present-tense from the ledger (SS sub-engine folded into
 > architecture §7.7; accumulation as first-class engine content; R40 de-special-cased; all four
 > changelog/Summary sections killed; zero dead links; 942 tests still green).
-> **The next session resumes at M5** (rewrite the two research docs present-tense) — see *RESUME HERE*.
+> **The next session resumes at M6** (the zero-loss gate + demolition) — see *RESUME HERE*.
 > Rationale: `.recovery/doc-restructure-judge-output.md` (judge fan-out — note its "preserve"
 > spine was overridden by Q6). Must-survive net: `.recovery/docs-quarry-inventory.json` (16 docs)
 > + `.recovery/quarry-roadmap.json`.
@@ -22,39 +22,43 @@
 ## ▶ RESUME HERE (fresh session)
 
 Foundation (CP1 + CP1.5), **M1 (the migration ledger)**, **M2 (the four hubs)**, **M3 (the
-`decisions/` records)**, and **M4 (the four plans)** are done and committed. To continue cold:
+`decisions/` records)**, **M4 (the four plans)**, and **M5 (the two research docs)** are done and
+committed. The **entire new tree is now authored present-tense.** To continue cold:
 1. **This file** — the locked decisions (Q1–Q6), the target tree, the M1–M6 sequence.
-2. **The ledger** — `.recovery/migration-ledger.md`: the rewrite SPEC. Every must-survive fact, routed
-   to its new-tree home by section, with disposition (canonical/pointer/reframe/no-move/drop), dedup
-   notes, present-tense reframe instructions, and a **Review Queue appendix** (the 74 verify findings +
-   the 14 cross-home relocations). This is what M5 authors FROM and what M6 greps against.
-   (The quarry — `docs-quarry-inventory.json` + `quarry-roadmap.json`, the 1,078-fact anti-amnesia
-   net — is the ledger's source; consult it only to expand a `sig`/digest back to its full claim.)
+2. **The ledger** — `.recovery/migration-ledger.md`: the rewrite SPEC + the must-survive net M6 greps
+   against. Every fact is routed to its new-tree home by section, with disposition + a **Review Queue
+   appendix** (the 74 verify findings + the 14 cross-home relocations). The quarry
+   (`docs-quarry-inventory.json` + `quarry-roadmap.json`, 1,078 facts) is its source — expand a
+   `sig`/digest back to its full claim only when a gate check is ambiguous.
 
-Start at **M5 — the research docs.** Rewrite `research/engine-validation-and-tax.md` +
-`research/pre65-healthcare.md` present-tense from the ledger's `## docs/research/*` home-sections: **strip
-the history/changelog appendix, KEEP the live strands + the `verify:aca` gate + the `[CORRECTED]`
-markers** (those are present truth, not history). The verified numbers stay canonical here (the plans +
-architecture point to them). **Also confirm the crypto-stack comparative rationale reads present-tense in
-research** (the M3-decided home — see the carry-forward note). **Do NOT delete anything under
-`docs/plans/features/` or strip any history until M6's zero-loss gate.** The working tree is clean at the
-M4 commit.
+Start at **M6 — the zero-loss gate + demolition (the hard backstop; nothing is deleted before it
+passes).**
+1. **The zero-loss grep.** For every ledger item's signature, confirm the fact is accounted-for in the
+   new tree (canonical at its home, or a live pointer). Walk the **Review Queue appendix** (74 findings +
+   14 relocations) — each `[fixed:*]` must hold in the authored docs. ONLY when 100% homed:
+2. **Demolish `docs/plans/features/`** (`social-security.md`, `other-income.md`, `portfolio-holdings.md` —
+   now fully duplicated into `decisions/` + `plans/`) and **repoint `docs/README.md`'s feature-plan row**
+   (the last referrer — it currently lists the three `plans/features/*` docs; repoint to the `decisions/`
+   records + `plans/2-first-answer`).
+3. **Final tree-wide forward-only sweep** — the insight-018 blast-radius grep on every superseded phrase,
+   across ALL of `docs/` (not just the plans), confirming zero `## Superseded`/`## Changelog` headings and
+   zero dated-supersession framing survive.
+4. **The P→Act code-comment sweep (Q3b, ~18 source files)** — its own atomic commit (the source comments
+   that say "Phase 1/2/3/4" → "Act 1/2/3/4"; IDs unchanged, comments-only, stays green under typecheck).
+5. **Delete `RESTRUCTURE-PLAN.md` + `.recovery/`** — the scaffolding is the recipe, not the dish.
 
-> **M4 carry-forward notes (for M5 + M6's double-check):**
-> - All four plans are present-tense and committed: plan-1 now carries the **SS sub-engine as first-class
->   build content** (folded from the dissolving `features/social-security.md`) + the C-units with no "fold"
->   framing; plan-2 carries the **R40 5-unit build + the portfolio multi-holding 5-step build** (folded from
->   the dissolving feature docs), both pointing into the `decisions/` records for the WHY; plan-3 + plan-4
->   are unchanged forward specs with their changelogs stripped. The oracle cases (i–v) + the §1014 after-tax
->   objective + the U14-built-first note were already in plan-4. 318/318 relative links resolve.
-> - **`features/social-security.md`, `features/other-income.md`, `features/portfolio-holdings.md` now fully
->   duplicate their graduated content** (decisions/ + plans/). M6 dissolves all three at the zero-loss gate;
->   no plan or hub points at them any more — `docs/README.md`'s "feature plan" row is the last referrer and
->   M6 repoints it.
-> - **Crypto-stack rationale — DECIDED M3: leave it in research, do NOT mint `decisions/crypto-stack.md`.**
->   The crypto *invariants* are already home (architecture §7.3/§10); only the comparative *rationale*
->   (Jazz-vs-Evolu downgrade, skip-SAB) is unhomed, and it does not meet `decisions/README`'s graduation
->   bar. It stays research-grade provenance; **M5 confirms it reads present-tense there.**
+> **M5 carry-forward notes (for M6):**
+> - Both research docs are present-tense: the `verify:aca` gate + the `[CORRECTED]` markers + the
+>   per-figure `directionalUntilPinned` discipline are **kept** (present truth); the Strands-1/3 history
+>   appendix (consumability + regulatory) was **stripped** (canonical in product.md — the research keeps
+>   pointers); the dated requirements-changelog + provenance were dropped (git log keeps them).
+> - **Crypto-stack rationale — DONE.** Strand 2's comparative storage/crypto decisions (skip-SAB, the
+>   PBKDF2-vs-Argon2id KDF fallback, Jazz-rejected/Evolu-in-reserve, login-vs-data recovery, the
+>   Tauri/keyring desktop-port landmine) now live present-tense as the **"Local-first / E2E architecture
+>   rationale"** section of `research/engine-validation-and-tax.md`, pointing to architecture §7.3/§10 for
+>   the invariants. No `decisions/crypto-stack.md` was minted (M3 decision). It is NOT a ledger row, so the
+>   M6 grep won't look for it — it is a deliberate keep, not a routed fact.
+> - 320/320 relative links in `docs/` resolve. The working tree is clean at the M5 commit.
 
 > **M2 carry-forward note (for M6's double-check):**
 > - Ledger row `glossary.md#67` (the BenefitPerson/H/L SS terms) carried a stale verify-pass note that
@@ -250,8 +254,12 @@ must-survive fact is the **migration ledger** (M1) — nothing is dropped withou
   multi-holding builds, pointing into the `decisions/` records; plan-3 + plan-4 changelogs stripped (the
   oracle cases (i–v) + §1014 after-tax objective + U14-built-first note were already present). All four
   present-tense; 318/318 links resolve.
-- **M5 — research.** Both research docs present-tense; strip the history appendix, KEEP the live
-  strands + the `verify:aca` gate + the `[CORRECTED]` markers.
+- **M5 — research. ✅ DONE.** Both research docs present-tense: kept the live Strand-4 (validation) +
+  Strand-5 (tax) numbers, the `verify:aca` gate, the `[CORRECTED]` markers + `directionalUntilPinned`
+  discipline; stripped the Strands-1/3 history appendix (consumability + regulatory → canonical in
+  product.md, research keeps pointers) + the dated requirements-changelog/provenance; reframed the
+  crypto-stack comparative rationale present-tense as the "Local-first / E2E architecture rationale"
+  section (no `decisions/crypto-stack.md` minted). 320/320 links resolve.
 - **M6 — the zero-loss gate + demolition.** Grep the new tree for every ledger item's signature; every
   must-survive fact accounted-for? THEN delete `docs/plans/features/`, repoint `docs/README`'s feature
   rows, run the final tree-wide forward-only sweep (insight-018 blast-radius grep). The **P→Act

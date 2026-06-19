@@ -9,8 +9,9 @@
  * passphrase wrap but not the recovery wrap would strand the survivor, discovered
  * only at recovery time). A save reports success ONLY after `tx.done` resolves.
  * `rewriteModel` is the single-record degenerate case — the model re-written under
- * the EXISTING in-memory DK with a fresh IV, wraps untouched — so the P3 v1→v2 and
- * P4 v2→v3 vault upgrades inherit this atomicity instead of re-implementing it.
+ * the EXISTING in-memory DK with a fresh IV, wraps untouched — so the U8 v2→v3 vault
+ * upgrade (and any later model-only schema upgrade) inherits this atomicity instead of
+ * re-implementing it.
  *
  * DURABILITY is best-effort + backstopped: the write COMMITS before
  * `navigator.storage.persist()` is attempted; its boolean is advisory only and never

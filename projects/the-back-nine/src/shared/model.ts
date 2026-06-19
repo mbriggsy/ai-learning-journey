@@ -197,8 +197,10 @@ export const DRAWDOWN_POLICIES = [
 // ---------------------------------------------------------------------------
 // Tax-and-accounts overlay input (U2). Federal filing status is shared vocabulary
 // (the engine's tax overlay + the persisted scenario both speak it). The overlay is
-// OPTIONAL on the engine input: absent ⇒ the tax-blind spine (every existing first-
-// answer path); present ⇒ `simulate` runs the tax-aware decumulation.
+// OPTIONAL on the engine input: absent ⇒ the tax-blind spine (the reduce-to-spine
+// validation/golden mode — Trinity/Bengen, NOT a product first-answer path); present
+// ⇒ `simulate` runs the tax-aware decumulation (what the date first-answer requires —
+// dateSearch rejects a tax-blind date as the superseded on-ramp).
 // ---------------------------------------------------------------------------
 
 /** Federal income-tax filing status. MFJ for the couple; flips to single the year after the
@@ -405,8 +407,10 @@ export interface SimulationParams {
    *     spending (no mortality) — the Trinity-comparable validation mode the Mode-B
    *     MC band asserts against the 30-year historical anchor. */
   readonly longevityMode: 'sampled' | 'fixed-horizon'
-  /** The tax-and-accounts overlay (U2). ABSENT ⇒ the tax-blind spine (the only mode the P2
-   *  first-answer runs); PRESENT ⇒ `simulate` runs the tax-aware decumulation, feeding the
+  /** The tax-and-accounts overlay (U2). ABSENT ⇒ the tax-blind spine (the reduce-to-spine
+   *  validation mode, NOT the product first-answer — the date first-answer REQUIRES the overlay;
+   *  dateSearch rejects a tax-blind date as the superseded on-ramp). PRESENT ⇒ `simulate` runs
+   *  the tax-aware decumulation, feeding the
    *  per-year survivor regime + SS + conversion streams it derives from the death timeline.
    *  Under the EXHAUSTIVE OFF condition (single pool, tax off, RMD-inert, conversion 0) the
    *  tax-aware run is byte-identical to the spine (the reduce-to-spine golden, contract #3). */
@@ -548,11 +552,14 @@ export interface Scenario {
 // ---------------------------------------------------------------------------
 // schemaVersion-2 scenario shape (U2 · M6a). The v1 spine inputs + the tax-overlay
 // fields: PER-PERSON account buckets + birth year, the household filing status, and
-// provenance stamps. DEFINED HERE for the contract; first WRITTEN to disk by Phase 3
-// (the P2 first-answer runs with the overlay OFF, so a v1 scenario is still valid),
-// and the schemaVersion 1→2 migration ladder is owned by U4. NOT YET CONSUMED: the
-// engine reads the AGGREGATED `OverlayParams` (P2 intake maps these per-person fields
-// down to it); per-person pre-tax RMD splitting is M6b.
+// provenance stamps. DEFINED HERE for the contract + the decode/migration ladder — it
+// is NOT the forward-written persist shape: the guided intake first-writes ScenarioV3
+// at P2·U8 (see the schemaVersion-3 block below), and v2 survives only as a decode-
+// ladder member (`AnyScenario`) for migrating any legacy save. The schemaVersion 1→2
+// migration ladder is owned by U4. CONSUMED VIA `OverlayParams`: P2 intake maps these
+// per-person fields down to the engine's `OverlayParams` — the aggregated `buckets`
+// PLUS the optional per-person pre-tax split (`pretaxByPerson`, U2·M6b·B — shipped:
+// present ⇒ each spouse forces its own RMD; absent ⇒ the byte-identical aggregate pool).
 // ---------------------------------------------------------------------------
 
 /** One spouse's account split + birth year (schemaVersion-2). Aligned by index to a v2

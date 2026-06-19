@@ -1,8 +1,0 @@
-[
-  {
-    "ref": "docs/glossary.md#4 ⨯ docs/plans/1-engine.md#22",
-    "severity": "warn",
-    "problem": "Two source fossils both land the outcome-state-set definition in docs/glossary.md but disagree on disposition. glossary.md#4 marks the glossary entry as _pointer_ with canonical home plans/1-engine.md (U1); plans/1-engine.md#22 marks the glossary entry as _canonical_ for the six-term set (already-failing / over-funded / on-track / borderline / off-track / indeterminate). Both also enumerate the full six-state list. Left unreconciled, M6 risks building two overlapping definitions or a duplicated state list, and the builder has no single answer for whether glossary owns the term definition or merely points out.",
-    "fix": "Merge into ONE glossary entry: glossary is the define-once canonical home for the SIX TERM NAMES (per #56 discipline), and POINTS to plans/1-engine.md U1 + src/shared/model.ts for the enum, and to architecture for the authority/clamp invariant (engine sole authority over state/band-edges/indeterminate-selection, and the 10/10-honesty clamp: all-paths-survive renders over-funded near-ceiling, never a bald '10 of 10'). Set the glossary disposition to canonical-for-the-terms / pointer-for-mechanics and drop the second list so the six states appear once."
-  }
-]

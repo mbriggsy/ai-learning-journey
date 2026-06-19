@@ -108,7 +108,7 @@ Every deferral names its direction (the conservative-or-disclose rule):
 
 ## Provenance corrections (cite to the right primary)
 
-The verify pass corrected four claims an earlier pass had attributed to the wrong primary. Cite them correctly when the build writes copy or fixtures:
+The **verified IRS treatment of each income type** (the alimony TCJA fork, the pension Simplified Method, rental Sch E / 27.5-yr SL depreciation, the annuity exclusion ratio) is registered once in [research/engine-validation-and-tax.md → *R40 income tax facts*](../research/engine-validation-and-tax.md); the per-type defaults above read it. Below are the four provenance corrections an earlier pass got wrong — cite them correctly when the build writes copy or fixtures:
 
 1. **Rental ~100% survivor** rests on **state property law** (JTWROS / community property), *not* IRS Pub 559/551 — cite state law; only true if jointly owned / willed to the spouse.
 2. **Net rental ≠ real-flat** — gross rent tracks inflation but the fixed-nominal depreciation shield erodes, so taxable net rent rises in real terms; v1 models real-flat as a disclosed simplification, and the **rent-CAGR figure must be verified against the BLS series before it goes load-bearing.**

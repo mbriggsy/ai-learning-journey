@@ -52,13 +52,24 @@ passes).**
 >   per-figure `directionalUntilPinned` discipline are **kept** (present truth); the Strands-1/3 history
 >   appendix (consumability + regulatory) was **stripped** (canonical in product.md — the research keeps
 >   pointers); the dated requirements-changelog + provenance were dropped (git log keeps them).
+> - **`engine-validation-and-tax.md` is now the COMPLETE verified-figure register** (the second M5 pass —
+>   a verification against the ledger found research was missing ~6 categories of number-rows the ledger
+>   routes to it as canonical, with `ss-computation.md`'s "canonical in research" pointer dangling). Added,
+>   each with citation + a pin-pass row: the **SS benefit-computation constants** (the full POMS rule-set +
+>   the $920/$1,025/$350 oracle dollars), the **R40 income tax facts** (alimony/pension/rental/annuity),
+>   the **engine numeric bounds** (gross-up k≈0.74 / `GROSS_UP_MAX_PASSES` / `ENGINE_MAX_DOLLAR`) + the
+>   **survivor-spending ratio** (0.75 Blanchett), the **passphrase-strength floor** (zxcvbn ≥3 / len ≥12 +
+>   the GPU guess-rate), and the **accumulation reference figures** (Notice 2025-67 / Rev. Proc. 2025-19 /
+>   the 161-family ticker table). `ss-computation.md`'s standalone rule-set table was replaced by a pointer
+>   (its §-sections keep the factors their formulas cite); `other-income-r40.md` + `decisions/README.md`
+>   repointed. So M6's grep for every SS/R40/bounds signature now resolves in research, the ledger-routed
+>   home.
 > - **Crypto-stack rationale — DONE.** Strand 2's comparative storage/crypto decisions (skip-SAB, the
 >   PBKDF2-vs-Argon2id KDF fallback, Jazz-rejected/Evolu-in-reserve, login-vs-data recovery, the
->   Tauri/keyring desktop-port landmine) now live present-tense as the **"Local-first / E2E architecture
->   rationale"** section of `research/engine-validation-and-tax.md`, pointing to architecture §7.3/§10 for
->   the invariants. No `decisions/crypto-stack.md` was minted (M3 decision). It is NOT a ledger row, so the
->   M6 grep won't look for it — it is a deliberate keep, not a routed fact.
-> - 320/320 relative links in `docs/` resolve. The working tree is clean at the M5 commit.
+>   Tauri/keyring desktop-port landmine) live present-tense as the **"Local-first / E2E architecture
+>   rationale"** section, pointing to architecture §7.3/§10 for the invariants. No `decisions/crypto-stack.md`
+>   was minted (M3 decision). It is NOT a ledger row, so the M6 grep won't look for it — a deliberate keep.
+> - 326/326 relative links in `docs/` resolve. The working tree is clean at the M5 commit.
 
 > **M2 carry-forward note (for M6's double-check):**
 > - Ledger row `glossary.md#67` (the BenefitPerson/H/L SS terms) carried a stale verify-pass note that
@@ -254,12 +265,15 @@ must-survive fact is the **migration ledger** (M1) — nothing is dropped withou
   multi-holding builds, pointing into the `decisions/` records; plan-3 + plan-4 changelogs stripped (the
   oracle cases (i–v) + §1014 after-tax objective + U14-built-first note were already present). All four
   present-tense; 318/318 links resolve.
-- **M5 — research. ✅ DONE.** Both research docs present-tense: kept the live Strand-4 (validation) +
-  Strand-5 (tax) numbers, the `verify:aca` gate, the `[CORRECTED]` markers + `directionalUntilPinned`
-  discipline; stripped the Strands-1/3 history appendix (consumability + regulatory → canonical in
-  product.md, research keeps pointers) + the dated requirements-changelog/provenance; reframed the
-  crypto-stack comparative rationale present-tense as the "Local-first / E2E architecture rationale"
-  section (no `decisions/crypto-stack.md` minted). 320/320 links resolve.
+- **M5 — research. ✅ DONE (two passes).** Pass 1: both research docs present-tense — kept the live
+  Strand-4/5 numbers + the `verify:aca` gate + the `[CORRECTED]` markers + `directionalUntilPinned`
+  discipline; stripped the Strands-1/3 history appendix (→ product.md) + the dated changelog/provenance;
+  reframed the crypto-stack rationale present-tense (the "Local-first / E2E architecture rationale"
+  section). **Pass 2 (the verification catch): `engine-validation-and-tax.md` is now the COMPLETE
+  verified-figure register** — grew it to hold the SS benefit-computation constants, the R40 income tax
+  facts, the engine numeric bounds + survivor-spending ratio, the passphrase floor, and the accumulation
+  reference figures (each with citation + a pin-pass row), and replaced `ss-computation.md`'s standalone
+  rule-set table with a pointer (de-dangling its "canonical in research" claim). 326/326 links resolve.
 - **M6 — the zero-loss gate + demolition.** Grep the new tree for every ledger item's signature; every
   must-survive fact accounted-for? THEN delete `docs/plans/features/`, repoint `docs/README`'s feature
   rows, run the final tree-wide forward-only sweep (insight-018 blast-radius grep). The **P→Act

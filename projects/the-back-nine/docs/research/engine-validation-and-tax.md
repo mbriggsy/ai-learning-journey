@@ -10,7 +10,7 @@ sources: [docs/research/pre65-healthcare.md]
 
 # Engine validation and tax reference
 
-This is the cited evidence behind the engine's correctness. It is the home of the **verified reference numbers** — Trinity/Bengen golden cases, the Monte Carlo calibration band, the longevity formula, and the full tax surface (brackets, RMDs, the senior-bonus deduction, Social-Security provisional-income taxation). The engine is built and pinned against these numbers; this doc is fully **consumed** by it. Where a number lives, it lives here — never re-typed into a plan or a component (the single-source rule that keeps stats from drifting).
+This is the cited evidence behind the engine's correctness — the **single doc-home for every verified reference number** the engine bets on, each with its primary citation and pin-status (the runtime register is the year-keyed `src/engine/constants/` tables; this is the human-auditable verification layer over them). It holds the Trinity/Bengen golden cases, the Monte Carlo calibration band, the longevity formula, the full tax surface (brackets, RMDs, the senior-bonus deduction, SS provisional-income taxation), the **Social Security benefit-computation constants** (the SS sub-engine's statutory factors), the **R40 income tax facts** (pension / rental / alimony / annuity), the **engine numeric bounds + survivor-spending ratio**, the **accumulation reference figures** (contribution/HSA limits, the ticker→blend table), and the **passphrase-strength floor**. The plans and decision records **cite** these values and point here; a dated figure is never the canonical truth in a plan or component (the single-source rule that keeps stats from drifting).
 
 The healthcare half of the tax surface — ACA-PTC (pre-65), IRMAA (post-65), HSA — lives in its own note: [pre65-healthcare.md](pre65-healthcare.md). Together the two are the engine's tax + health reference. The load-bearing engine invariants (the single shared market draw / CRN, stateless Box-Muller, reduce-to-spine, externally-derived fixtures) live once in [architecture.md](../architecture.md).
 
@@ -135,6 +135,64 @@ The pinned snapshot lives at `src/engine/reference/ssa-snapshot/` (the two CSVs 
 
 ---
 
+## Social Security benefit-computation constants (the SS sub-engine)
+
+> These are the statutory factors the SS sub-engine computes each person's benefit from — **distinct** from the SS *taxation* torpedo above (this is the benefit *amount*, that is how much of it is taxed). They are the verified register; the **decisions** that rest on them (Method C vs `max()`, the §202 survivor lock-flat, RIB-LIM) live in [decisions/ss-computation.md](../decisions/ss-computation.md), which cites these values and points here. All are primary-confirmed against POMS (fetched HTTP 200; re-derived from scratch by an adversarial checker, zero refutations); they are **statutory** (`legalBasis` set), not annually re-indexed, and live year-keyed in `src/engine/constants/socialSecurity.ts`.
+
+| Rule | Exact factor | Primary | Landmine |
+|---|---|---|---|
+| FRA by birth year | 1960+ → **67y0m (804 mo)**; 1955–59 graduated (66y2m…66y10m) | SSA NRA chart `oact/ProgData/nra.html` | store FRA as **months**; "born Jan 1 → treated as prior year" |
+| Own early reduction | 5/9 %/mo first 36, then 5/12 %/mo → `(180−n)/180`, `(192−(n−36))/240`; **62/FRA67 = exactly 0.7000** | **POMS RS 00615.101** | RS 00615.**102 is a 404** — cite .101; dime-round DOWN as a final benefit-$ step, never on the factor |
+| Delayed credits (DRC) | **2/3 %/mo = 8%/yr** (born 1943+), FRA→70, cap `= 840 − fraMonths` → **1.24× at 70/FRA67** | POMS RS 00615.690 §B + .692 | applies to **PIA**; never a literal `36`-month cap (46 at FRA 66y2m); never generalize 8% to pre-1943 |
+| Spousal base | **50% of the higher earner's UNREDUCED PIA**; **no DRCs** | POMS RS 00202.020, RS 00615.201 | feed it **PIA**, never the worker's adjusted benefit |
+| Spousal early reduction | **25/36 %/mo** first 36 (=1/144), then 5/12 %/mo → 0.325 of worker PIA at 62/FRA67 | POMS RS 00615.201 | a **different** schedule from the worker's 5/9 — do not blend |
+| **Method C excess** | `reduce_own(own_PIA) + max(0, reduce_spouse(0.50·worker_PIA − own_PIA))` | **POMS RS 00615.020** | own + reduced-excess, NOT `max()`; own & excess reduce on **different** schedules off the **same** month-count |
+| Worker-must-be-entitled | spousal excess is $0 until the higher earner has **filed** | POMS RS 00202.001 | a temporal path-year gate, not a static scalar |
+| Deemed filing | DOB ≥ **Jan 2, 1954** ⇒ one filing = both (both cohorts subject) | **POMS GN 00204.035** (NOT RS 00615.020) | one claim-age per person; no restricted application; **survivor exempt** |
+| Survivor §202 | start **60**; **71.5% @60 → 100% @ survivor-FRA**, factor **locked at claim age**; deceased's **DRCs flow through**; max reduction **28.5%** (19/56 @FRA67) | POMS RS 00615.301/.702/.310 | derive the per-mo fraction from the 60→survivor-FRA span, never hardcode `19/40` |
+| RIB-LIM | cap = **greater of** {82.5% of death PIA, deceased's actual reduced RIB if alive} | **POMS RS 00615.320** | a "larger-of" pair, NOT a flat 82.5% haircut; 82.5% is a **floor** within the cap |
+| survivor-FRA | separate schedule; **= 67** for both cohorts (coincides — don't alias) | POMS RS 00615.301B.2 | key it **separately** or a cohort change silently breaks |
+| Statement input | ask "benefit at **FRA (67)**", never "PIA"; figure is **today's-dollars (real)** | POMS RM 01310.005 | the default figure **assumes continued earnings** → overstates for an early-stopper |
+
+**Constants-module shape:** reduction schedules are stored as **integer fractions** (`1/180`, `1/240`, `1/144`, `1/150`) so 62/FRA67 falls out as exactly `168/240 = 0.7000`; `drcMonthsCap = 840 − fraMonths` (36 @FRA67, 46 @FRA66y2m — never a literal 36); `SURVIVOR_REDUCTION` spans exactly 28.5% (compute the per-mo fraction from the span) + the DWB flat-28.5% floor; `RIB_LIM.floorPctOfDeathPia = 0.825`; `SPOUSAL_RATE = 0.50`; `DEEMED_FILING_DOB_CUTOFF = 1954-01-02`.
+
+**Citation-hygiene landmines** (baked into each `citation` string): RS 00615.**102** is a dead 404 — use **.101**; deemed filing is **GN 00204.035** (RS 00615.020 is the *amount* math); the survivor general DRC flow-through is **RS 00615.301/.702** (RS 00615.320's DRC clause is RIB-LIM-internal).
+
+**Externally-derived oracle fixtures (DND/012 — hand-derived from the POMS *printed* examples, never the engine's own formula):**
+- **Method C oracle:** worker PIA **$2,000** (spouse base = `0.50·$2,000 = $1,000`), own RIB $400 → excess $600 → $540, RIB → $380, **total $920** (POMS RS 00615.020). The example's "$1,000" is the *spousal base*, not the worker PIA the formula consumes.
+- **Divergence fixture (the `max()`-relapse + schedule-swap guard):** own PIA $1,000 / worker PIA $3,000 at 62/FRA67 → own $700, **excessAdj $325**, total **$1,025** — beats `max(700, 975) = 975` by $50/mo, and `excessAdj === 325` independently (a 5/9-for-excess schedule swap yields $350 / total $1,050). The **headline divergence:** own PIA $1,000 / spouse $3,000, both at 62 → **true $1,025/mo vs. naive-max $975/mo**, a $600/yr understatement.
+- **RIB-LIM oracle:** reduced RIB $350, PIA $374.90, `0.825·$374.90 = $309.29` → WIB = `max($350, $309.29) = $350` (POMS RS 00615.320).
+- **Own factors:** 0.7000 @62, 1.0000 @67, 1.24 @70 (pre-dime-round), anchored to SSA's published percent-of-PIA table.
+
+## R40 income tax facts (pension · rental · alimony · annuity)
+
+> The verified IRS treatment of each R40 income type — the register the R40 **decisions** (the per-type defaults, the conservative-or-disclose discipline) in [decisions/other-income-r40.md](../decisions/other-income-r40.md) rest on and cite. (45 IRS-primary-confirmed claims; 4 provenance-corrected — the corrections are recorded in the decision record.)
+
+- **Alimony** — post-2018 agreements: **not taxable to recipient / not deductible by payer** (TCJA; Pub 504, Topic 452); pre-2019: taxable/deductible **unless expressly modified**. Reported Sch 1 line 2a → AGI. **Terminates at recipient death (§71(b)(1)(D)) → 0% survivor.** (A pre-2019 agreement merely *modified* after 2018 stays taxable unless the modification expressly adopts the new rules.)
+- **Pension** — fully ordinary taxable (1040 line 5b); the **Simplified Method** gives a fixed-nominal tax-free basis portion that shrinks in real terms then stops (Pub 575). **QJSA 50% federal floor**; election single-life / 50 / 75 / 100 (IRC 401(a)(11)/417 — consent witnessed by a **plan representative OR a notary**, not strictly notarized, IRC 417(a)(2)). Into AGI/MAGI.
+- **Rental** — net (gross − expenses − **depreciation, 27.5-yr SL**) ordinary on Sch E → AGI/MAGI; **passive, no SE tax, continues past retirement** until sold (Pub 527/925). Recapture (§1250 25%) / cap-gains / step-up fire only **on sale** (OUT v1). Survivor ~100% rests on **state property law** (JTWROS / community property), *not* IRS — only true if jointly owned / willed to the spouse.
+- **Annuity** — **qualified = fully taxable**; **non-qualified = exclusion ratio** (basis / expected-return, Pub 939; 26 CFR 1.72-4), tax-free until basis is recovered then 100% taxable; fixed = flat nominal, a COLA is an optional rider that lowers the initial payout; J&S survivor %; the taxable portion → MAGI.
+- **COLA norms** for alimony / pension / annuity are **practitioner / economic** facts, *not* IRS (no IRS section governs whether a decree or annuity carries a COLA).
+
+## Engine numeric bounds + the survivor-spending ratio
+
+> The native canonical home for the engine's computable-domain bounds + the survivor-spending figure. The plans + decision records cite these and point here; the values are enforced in code (`taxOverlay.ts`, `simulate.ts`).
+
+- **Gross-up fixed-point:** worst-case contraction factor **k ≈ 0.74**; `GROSS_UP_MAX_PASSES = 128` (worst case ~113 passes). An additive income stream (R40) is a constant — it shifts the operating point but **does not raise k** and stays inside the bound, so the convergence re-probe doubles as the perf check.
+- **`ENGINE_MAX_DOLLAR = 1e12`** — the computable-domain ceiling; a per-year assembled sum over it is rejected (finiteness-first R19).
+- **Survivor-spending ratio = ~0.75**, grounded to the **Blanchett** two-thirds-to-three-quarters range (`directionalUntilPinned`), editable, fires on the **first death of either spouse**. **Too-low is the unsafe direction** (it understates the survivor's need — the calm-but-wrong direction for a widow's projection). Distinct from R40's receipts-side `survivorPct` (owner-death-keyed) — see [decisions/other-income-r40.md §KTD-7](../decisions/other-income-r40.md).
+
+## Accumulation reference figures (contribution / HSA limits · ticker→blend)
+
+> The 2026 contribution/HSA limits and the ticker→asset-class blend table are **dated figures** read by the accumulation engine. Their **values** are year-keyed in `src/engine/constants/contributions.ts` + `src/engine/reference/tickerBlend.ts` (the runtime register); the **sources + pin-status** are tracked here and in the pin-pass table below. The accumulation **decisions** are in [decisions/accumulation-fuck-off-date.md](../decisions/accumulation-fuck-off-date.md).
+
+- **2026 contribution / annual-additions limits** — IRS **Notice 2025-67** (2025-11-13): 401(k)/403(b) elective deferral + age-50 catch-up; IRA limit + indexed IRA catch-up (SECURE 2.0 §108); the §415(c) annual-additions ceiling (one notice, four figures).
+- **2026 HSA limits + HDHP definitions** — IRS **Rev. Proc. 2025-19** (2025-05-01): HSA self-only/family, the age-55 catch-up **$1,000 (statutorily fixed, NOT indexed — hard-code it)**, HDHP min-deductible + max-OOP. Per-person, per-account catch-up.
+- **SECURE 2.0 §109** — the 60–63 "super catch-up" (greater of $10k or 150% of the regular catch-up; the $10k floor indexed; an optional plan feature) — carried as `legalBasis` provenance.
+- **Ticker → asset-class blend** — a bundled table keyed on the issuer share-class family (VTI == VTSAX → one row); citation = the issuer allocation panel, with **SEC EDGAR N-PORT** as the DND/012 backstop. Ships **161 families (~244 tickers)**, two-source-verified; cash folds into the bond sleeve (the engine is 2-asset); TDFs ship a static snapshot. The P1-exit EDGAR pin pass is sized at ~161 rows.
+
+---
+
 ## Pin-pass status (the exit-gates that were still open)
 
 The strands above marked several items "still unverified — pin before the fixture is golden." **The P1-exit pin pass (2026-06-11) closed them.** What was a grounded-search figure is now parsed-and-pinned against a primary, sha256-snapshotted under `src/engine/reference/` and read by the canonical year-keyed constants table (`src/engine/constants/`). Status of each formerly-open gate:
@@ -146,6 +204,11 @@ The strands above marked several items "still unverified — pin before the fixt
 | RMD divisors (Uniform Lifetime Table) | **RESOLVED / PINNED** | Pinned against IRS Pub. 590-B; year-keyed in the canonical constants table |
 | SS-tax thresholds / inclusion worksheet | **RESOLVED / PINNED** | Pinned against IRS Pub. 915; the $32k / $44k constants carry "frozen, no staleness clock" |
 | Bengen 1966 bit-exactness (depends on the exact Ibbotson intermediate-government dataset) | **DIRECTIONAL by design** | Treated as a directional survive/fail test, not a golden number — the dataset gate is recorded above; do not assert a bit-exact SAFEMAX without the Ibbotson series |
+| SS benefit-computation constants (FRA, reduction schedules, DRC, Method C, RIB-LIM, survivor §202) | **RESOLVED / PINNED** | All POMS-primary-confirmed (fetched 200, adversarially re-derived); statutory `legalBasis`, year-keyed in `src/engine/constants/socialSecurity.ts`; the POMS oracle dollars ($920 / $1,025 / $350) hand-derived (DND/012) |
+| R40 income tax facts (alimony TCJA, pension Pub 575, rental Sch E, annuity exclusion-ratio) | **RESOLVED / PINNED** | 45 IRS-primary-confirmed claims (4 provenance-corrected); the verified treatment per type is registered above, the per-type defaults read it from `decisions/other-income-r40.md` |
+| 2026 contribution / HSA limits + the ticker→blend table | **RESOLVED / PINNED** | Pinned against IRS Notice 2025-67 (401k/IRA/§415c) + Rev. Proc. 2025-19 (HSA/HDHP); ticker table 161 families (~244 tickers) two-source-verified w/ EDGAR N-PORT backstop; read from `src/engine/constants/contributions.ts` + `reference/tickerBlend.ts` |
+| Engine numeric bounds (gross-up k≈0.74 / `GROSS_UP_MAX_PASSES`=128 / `ENGINE_MAX_DOLLAR`=1e12) + survivor-spending ratio (~0.75, Blanchett) | **PINNED (ratio `directionalUntilPinned`)** | Bounds proven in `taxOverlay.ts`/`simulate.ts`; the survivor-spending ratio is grounded to the Blanchett range, ships ~0.75 editable, too-low is the unsafe direction |
+| Passphrase-strength floor (`zxcvbn-ts` score ≥ 3 AND length ≥ 12; GPU ~10⁸–10⁹ guesses/sec) | **PINNED** | The dual floor is load-bearing because PBKDF2-600k is not memory-hard — see the Local-first / E2E architecture rationale below |
 | The reg / attorney-gate (Strand 3) | **LAPSED** | Personal / non-commercial tool (the regulatory rationale is canonical in [product.md](../product.md)); not a fixture exit gate |
 
 What survives as a real gate is **honesty hygiene on the recommendation copy across both controls**: the headline must wear its probabilistic hedge (copyGuard's *require-the-hedge* lint), no false precision, and a wrong tax/health fact behind the verdict is the cardinal sin — the reset transferred the load onto honesty + engine validation, which get *stricter* for a recommender.
@@ -160,6 +223,7 @@ The storage + crypto layer is **local-first and zero-knowledge**: the financial 
 
 - **Single Web Worker; skip `SharedArrayBuffer` + COOP/COEP.** One worker (with a future WASM port if the compute profile ever demands it) clears a 1,000-path Monte Carlo sub-second — the value is **determinism + headroom, not raw speed**. SAB buys a multi-threading we don't need and is PWA-hostile (it forces cross-origin-isolation headers), so it stays out.
 - **The KDF is PBKDF2-HMAC-SHA256 @ 600,000 iterations** — the WebCrypto-native baseline (salt = 16 random bytes, AES-GCM-256, `extractable:false`). Argon2id-WASM (`m=19456,t=2,p=1` or `m=47104,t=1,p=1`) is the upgrade **only if** the engine ever ships WASM (OWASP's fallback order is Argon2id → scrypt → bcrypt → PBKDF2). The non-extractable key is **convenience, not the at-rest boundary** — it blocks script exfiltration, not an offline brute-force of an extracted blob; the real protection is the encrypted blob + the KDF's hardness. (For a personal friends-tool, PBKDF2-600k is the reasonable bar — the maximalist Argon2id justification is not load-bearing.)
+- **The passphrase-strength floor is the real at-rest boundary** (the front door that makes PBKDF2-600k load-bearing): a hard gate at passphrase-set of **`zxcvbn-ts` score ≥ 3 AND length ≥ 12 characters** — both must clear, no weak-passphrase bypass, the gate runs before any wrap is minted. The **dual** floor is load-bearing because PBKDF2-600k is **not memory-hard**: a GPU brute-forcing an extracted blob runs **~10⁸–10⁹ guesses/sec**, so the score and a raw-length floor are complementary, not redundant. (The build wiring is U8; the thresholds are pinned here.)
 - **No sync engine (Jazz rejected; Evolu held in reserve).** A single-device encrypted PWA needs no sync engine at all. Jazz is rejected as a foundation risk — a mid-rewrite 2.0-alpha API, too in-flux to build on; **if** device-to-device sync is ever added, Evolu (less in-flux) is the candidate to re-evaluate then.
 - **Login recovery is separate from data-decryption recovery.** The recovery phrase recovers the **data** (it derives the key that unwraps the vault); an email/SMS-style reset is **login-only** and would strand the encrypted data. So the survivor's door is the recovery phrase + the mandatory encrypted export at onboarding, and IndexedDB eviction (WebKit ITP's ~7-day clear) is treated as best-effort — the exported phrase is the real durability backstop.
 - **Future desktop-port landmine (Tauri — Phase-2, not MVP).** If ever ported to Tauri, **avoid Tauri Stronghold**: the upstream IOTA `stronghold.rs` has been unmaintained since 2025-04-23 (a sunset signal). Use the Rust `keyring` crate (e.g. `tauri-plugin-keyring`) + SQLCipher-encrypted SQLite instead, and spot-check the crate's maintenance before adopting.

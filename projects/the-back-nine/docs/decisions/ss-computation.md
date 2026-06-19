@@ -51,28 +51,9 @@ The survivor **computation** is in scope; the survivor **claim optimizer** is no
 
 ---
 
-## The verified SSA rule-set (the statutory basis)
+## The statutory basis
 
-These factors are the statutory foundation the §1–§12 decisions rest on. They are **not inlined** in the sub-engine or tests — they live in the canonical year-keyed constants table (`src/engine/constants/socialSecurity.ts`), each a `Sourced<T>` with `legalBasis` set (§2). All are primary-confirmed against POMS (fetched HTTP 200; re-derived from scratch by an adversarial checker, zero refutations).
-
-| Rule | Exact factor | Primary | Landmine |
-|---|---|---|---|
-| FRA by birth year | 1960+ → **67y0m (804 mo)**; 1955–59 graduated (66y2m…66y10m) | SSA NRA chart `oact/ProgData/nra.html` | Store FRA as **months**; "born Jan 1 → treated as prior year" |
-| Own early reduction | 5/9 %/mo first 36, then 5/12 %/mo → `(180−n)/180`, `(192−(n−36))/240`; **62/FRA67 = exactly 0.7000** | **POMS RS 00615.101** | RS 00615.**102 is a 404** — cite .101; dime-round DOWN as a final benefit-$ step, never on the factor |
-| Delayed credits (DRC) | **2/3 %/mo = 8%/yr** (born 1943+), FRA→70, cap derived `= 840 − fraMonths` → **1.24× at 70/FRA67** | POMS RS 00615.690 (window/§B) + .692 (rate) | DRC applies to **PIA**; never a literal `36`-month cap (46 at FRA 66y2m); never generalize 8% to pre-1943 |
-| Spousal base | **50% of the higher earner's UNREDUCED PIA**; **no DRCs** on spousal | POMS RS 00202.020, RS 00615.201 | Feed it **PIA**, never the worker's adjusted benefit |
-| Spousal early reduction | **25/36 %/mo** first 36 (=1/144), then 5/12 %/mo → 0.325 of worker PIA at 62/FRA67 | POMS RS 00615.201 | **Different** schedule from the worker's 5/9 — do not blend |
-| **Method C excess** | `total = reduce_own(own_PIA) + max(0, reduce_spouse(0.50·worker_PIA − own_PIA))` | **POMS RS 00615.020** | Own + reduced-excess, NOT `max()`; own & excess use **different** reduction schedules off the **same** month-count |
-| Worker-must-be-entitled | Spousal excess is $0 until the higher earner has **filed** | POMS RS 00202.001 | A temporal gate in the path-year loop, not a static scalar (§7) |
-| Deemed filing | DOB ≥ **Jan 2, 1954** ⇒ one filing = both; both cohorts fully subject | **POMS GN 00204.035** (NOT RS 00615.020) | One claim-age per person; no restricted application; **survivor exempt** |
-| Survivor §202 | Start **60** (50 disabled); **71.5% @60 → 100% @ survivor-FRA**, factor **locked at claim age** (no post-claim ramp — §6); deceased's **DRCs flow through** | POMS RS 00615.301/.702 (DRC flow), .310 (DWB) | Max reduction held at **28.5%** by varying the per-mo fraction (**19/56 @FRA67**); derive from the 60→survivor-FRA span, never hardcode |
-| RIB-LIM | Cap = **greater of** {82.5% of death PIA, deceased's actual reduced RIB if alive} | **POMS RS 00615.320** | A "larger-of" pair, NOT a flat 82.5% haircut; 82.5% is a **floor** within the cap |
-| survivor-FRA | Separate schedule; **= 67** for both cohorts (coincides, don't alias) | POMS RS 00615.301B.2 | Key it **separately** in the table or a cohort change silently breaks |
-| Statement input | Ask "benefit at **FRA (67)**", never "PIA"; figure is **today's-dollars (real)** | POMS RM 01310.005 | Default figure **assumes continued earnings** → overstates for an early-stopper (§9) |
-
-**Citation-hygiene landmines** (baked into each `citation` string): RS 00615.**102** is a dead 404 — use **.101**; deemed filing is **GN 00204.035** (RS 00615.020 is the *amount* math); the survivor general DRC flow-through is **RS 00615.301/.702** (RS 00615.320's DRC clause is RIB-LIM-internal).
-
-The numbers themselves are canonical in [docs/research/engine-validation-and-tax.md](../research/engine-validation-and-tax.md); the constants-discipline shape (`Sourced<T>`, `legalBasis`, the no-in-range-defaults rule) is canonical in [docs/architecture.md §8](../architecture.md).
+The §1–§12 decisions below rest on the verified SSA rule-set — FRA-by-birth-year, the worker/spouse reduction schedules, the DRC, the Method C excess, deemed filing, the §202 survivor reduction, RIB-LIM, survivor-FRA, and the citation-hygiene landmines (RS 00615.**102** is a 404 — use **.101**; deemed filing is **GN 00204.035**; survivor DRC flow-through is **RS 00615.301/.702**). The **full verified register** — every factor, its exact value, its POMS primary, and the externally-derived oracle dollars ($920 Method C / $1,025 divergence / $350 RIB-LIM) — lives once in [docs/research/engine-validation-and-tax.md → *Social Security benefit-computation constants*](../research/engine-validation-and-tax.md); the **runtime** values are year-keyed in `src/engine/constants/socialSecurity.ts` (each a `Sourced<T>` with `legalBasis`, the constants-discipline shape canonical in [docs/architecture.md §8](../architecture.md)). The §-sections below cite the specific factors each decision turns on; they do not re-register the table.
 
 ---
 

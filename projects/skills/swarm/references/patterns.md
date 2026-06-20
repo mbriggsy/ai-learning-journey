@@ -92,7 +92,7 @@ if (punch.length) await agent(kit(`In ${WT}, close: ${JSON.stringify(punch)}. Fo
 ```
 For a first/risky run, **stage it** (checkpoint between implement · review · fix — see the worker fail the hard part before spending on review). Once a pipeline is proven, collapse it into one fire-and-forget workflow.
 
-**Always close with a war diary.** After the loop returns, write the after-action report to `<repo-root>/.swarm-runs/<date>-<unit>.md` — the coordinator writes it from the synthesized results (or, in a single fire-and-forget workflow, a final scribe agent does, since the script has no filesystem access). It's the durable record of what was built, where the review drew blood, and the verdict. Template + path/gitignore convention: `war-diary.md`.
+**Always close with a war diary.** After the loop returns, write the after-action report to `<sub-project>/.swarm-runs/<date>-<unit>.md` (under the project being swarmed, e.g. `projects/the-back-nine/.swarm-runs/`) — the coordinator writes it from the synthesized results (or, in a single fire-and-forget workflow, a final scribe agent does, since the script has no filesystem access). It's the durable record of what was built, where the review drew blood, and the verdict. Template + path/gitignore convention: `war-diary.md`.
 
 ## Rules of thumb
 - **The loop is the unit of trust, not the implement step.** Never call a swarm-built unit done on the implementer's "green" — a lone implementer lands ~90% correct but under-tests and ships subtle divergences. Implement → independent review → fix.

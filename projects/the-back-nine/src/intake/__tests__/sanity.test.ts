@@ -281,6 +281,35 @@ describe('sanity — R40 income entity-scalar ranges (fail-loud, the KTD-4 entit
     expect(validateField(incomeDraft([s]), incomeField(0, 'colaPct'))).toEqual([])
   })
 
+  it('colaMode=fixed-pct with a NON-FINITE colaPct (NaN / null) fires LOUD — not just the absent-key case', () => {
+    // The rule guards `!Number.isFinite` as well as absent, because JSON.parse on a
+    // restored blob yields colaPct:null (Number.isFinite(null)===false) or a NaN.
+    // Reducing the guard to `=== undefined` would silently pass these corrupt rates.
+    const sNaN = { ownerIndex: 0, type: 'pension', annualRealToday: 40_000, startAge: 60, colaMode: 'fixed-pct', colaPct: NaN, survivorPct: 1 } as unknown as IncomeStream
+    expect(validateField(incomeDraft([sNaN]), incomeField(0, 'colaPct'))).toMatchObject([
+      { rule: 'income-cola-pct-required', messageKey: 'errIncomeColaPct' },
+    ])
+    const sNull = { ownerIndex: 0, type: 'pension', annualRealToday: 40_000, startAge: 60, colaMode: 'fixed-pct', colaPct: null, survivorPct: 1 } as unknown as IncomeStream
+    expect(validateField(incomeDraft([sNull]), incomeField(0, 'colaPct'))).toMatchObject([
+      { rule: 'income-cola-pct-required', messageKey: 'errIncomeColaPct' },
+    ])
+  })
+
+  it('the taxable/exclusion range rules DISCRIMINATE by type — a cross-arm scalar on the wrong arm is IGNORED (no false fire)', () => {
+    // A restored blob (JSON.parse + as) erases the discriminated union, so a corrupt
+    // scalar on the wrong arm IS representable. The rule's `type ∈ {...}` guard is the
+    // only thing scoping it; dropping that guard would fire on the wrong arm. Prove
+    // the discrimination: an annuity bearing a (cast) taxableFraction:1.5 raises NO
+    // income-taxable-range, and a pension bearing an exclusionFraction:1.5 raises NO
+    // income-exclusion-range. (taxableFraction lives on pension/rental/other only;
+    // exclusionFraction on the non-qual annuity only — KTD-6.)
+    const annuityWithTaxable = { ownerIndex: 0, type: 'annuity', qualified: true, taxableFraction: 1.5, annualRealToday: 20_000, startAge: 66, colaMode: 'nominal-flat', survivorPct: 0.5 } as unknown as IncomeStream
+    expect(validateField(incomeDraft([annuityWithTaxable]), incomeField(0, 'taxableFraction'))).toEqual([])
+
+    const pensionWithExclusion = { ownerIndex: 0, type: 'pension', exclusionFraction: 1.5, annualRealToday: 30_000, startAge: 65, colaMode: 'real-flat', survivorPct: 0.5 } as unknown as IncomeStream
+    expect(validateField(incomeDraft([pensionWithExclusion]), incomeField(0, 'exclusionFraction'))).toEqual([])
+  })
+
   it('a clean in-range stream raises NO income violations across every income field', () => {
     const s: IncomeStream = { ownerIndex: 0, type: 'pension', annualRealToday: 30_000, startAge: 65, colaMode: 'real-flat', survivorPct: 0.5, taxableFraction: 0.9 }
     const d = incomeDraft([s])

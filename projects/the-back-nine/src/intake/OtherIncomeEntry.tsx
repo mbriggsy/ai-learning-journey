@@ -1,6 +1,6 @@
 import { useId, useState } from 'react'
 import { copy, slots, type CopyKey } from '@ui/copy'
-import type { ColaMode, IncomeStream, IncomeType } from '@shared/model'
+import type { ColaMode, IncomeStream, IncomeTaxTreatment, IncomeType } from '@shared/model'
 import { INCOME_TYPES } from '@shared/model'
 import type { ScenarioDraft } from '@store/memoryModel'
 import { CurrencyField, IntegerField, PercentField, SegmentedControl } from './fields'
@@ -148,39 +148,55 @@ export function OtherIncomeEntry({ draft, initial, onSave, onCancel }: OtherInco
   const directTaxableType =
     form.type === 'pension' || form.type === 'rental' || form.type === 'other'
 
-  /** Build the persisted entity, or null when a no-safe-default fact is missing
-   *  (the atomic-commit gate — the form stays open with a calm message). */
-  const buildStream = (): IncomeStream | null => {
-    if (
-      form.type === undefined ||
-      form.annualRealToday === undefined ||
-      form.colaMode === undefined ||
-      form.receivingNow === undefined
-    ) {
-      return null
-    }
+  // A share fraction is in range iff present AND ∈ [0,1]. An out-of-range scalar
+  // (parsePercent has NO upper clamp — "150" → 1.5) is a TRUE impossibility (a
+  // survivor can't keep 120% of a benefit; an exclusion > 1 drives effective
+  // taxable NEGATIVE — the optimistic-MAGI sin). It must NEVER commit, and it is
+  // NEVER silently coerced (clamping 1.5→1 is the calm-but-wrong coercion the form
+  // exists to refuse; burned/062). The form is the in-flow gate — sanity's
+  // income-*-range rules + U8's codec are the restore backstops, not this path.
+  const shareInRange = (v: number): boolean => v >= 0 && v <= 1
+
+  /** Build the persisted entity, OR the specific reason a no-safe-default fact is
+   *  missing / out of range. A discriminated result (not bare null) so the gate
+   *  and the calm message share ONE decision tree — a blocked Save always names
+   *  WHAT is missing (WCAG 3.3.1), never a silent dead button. */
+  const buildStream = (): { ok: true; stream: IncomeStream } | { ok: false; error: CopyKey } => {
+    if (form.type === undefined) return { ok: false, error: 'errIncomeTypeRequired' }
+    if (form.annualRealToday === undefined) return { ok: false, error: 'errIncomeAmountRequired' }
+    if (form.receivingNow === undefined) return { ok: false, error: 'errIncomeTimingRequired' }
+    if (form.colaMode === undefined) return { ok: false, error: 'errIncomeColaModeRequired' }
     // The start age: already-receiving anchors at the owner's CURRENT age (KTD-8b
     // clamps it to t=0); a future stream needs an explicit start age.
     let startAge: number
     if (form.receivingNow) {
-      if (currentAge === undefined) return null // can't anchor without the age
+      if (currentAge === undefined) return { ok: false, error: 'errIncomeStartAgeRequired' } // can't anchor
       startAge = currentAge
     } else {
-      if (form.startAge === undefined) return null
+      if (form.startAge === undefined) return { ok: false, error: 'errIncomeStartAgeRequired' }
       startAge = form.startAge
     }
     // fixed-pct requires a finite COLA rate (KTD-2 — never coerced to 0).
     if (form.colaMode === 'fixed-pct' && (form.colaPct === undefined || !Number.isFinite(form.colaPct))) {
-      return null
+      return { ok: false, error: 'errIncomeColaPct' }
+    }
+    // The optional advanced taxableFraction (pension/rental/other) — when entered,
+    // it MUST be in range (out-of-range understates/over-states MAGI; never commits).
+    if (form.taxableFraction !== undefined && !shareInRange(form.taxableFraction)) {
+      return { ok: false, error: 'errIncomeTaxableRange' }
     }
     // The tax-treatment union arm (KTD-6) — each type's MUST-ASK field gates here.
-    let treatment: Pick<IncomeStream, never> & Record<string, unknown>
+    // Typed as the real union so an arm's literal is checked against its member at
+    // authoring time (a `{ type:'pension', exclusionFraction }` contradiction won't
+    // compile — KTD-6's "unrepresentable" promise, locally enforced).
+    let treatment: IncomeTaxTreatment
     let survivorPct: number
     switch (form.type) {
       case 'pension':
       case 'rental':
       case 'other': {
-        if (form.survivorPct === undefined) return null // no safe default
+        if (form.survivorPct === undefined) return { ok: false, error: 'errIncomeSurvivorRequired' }
+        if (!shareInRange(form.survivorPct)) return { ok: false, error: 'errIncomeSurvivorRange' }
         survivorPct = form.survivorPct
         treatment = {
           type: form.type,
@@ -189,31 +205,34 @@ export function OtherIncomeEntry({ draft, initial, onSave, onCancel }: OtherInco
         break
       }
       case 'alimony': {
-        if (form.executedAfter2018 === undefined) return null // the highest-leverage field
+        if (form.executedAfter2018 === undefined) return { ok: false, error: 'errIncomeAlimonyDateRequired' }
         survivorPct = 0 // terminates at death by law (§71(b)(1)(D))
-        treatment = {
-          type: 'alimony',
-          executedAfter2018: form.executedAfter2018,
-          ...(form.executedAfter2018 === false
-            ? { modifiedAdoptsPost2018Rules: form.modifiedAdoptsPost2018Rules }
-            : {}),
-        }
+        treatment =
+          form.executedAfter2018 === false
+            ? {
+                type: 'alimony',
+                executedAfter2018: false,
+                modifiedAdoptsPost2018Rules: form.modifiedAdoptsPost2018Rules,
+              }
+            : { type: 'alimony', executedAfter2018: true }
         break
       }
       case 'annuity': {
-        if (form.annuityQualified === undefined) return null
-        if (form.survivorPct === undefined) return null
+        if (form.annuityQualified === undefined) return { ok: false, error: 'errIncomeAnnuityKindRequired' }
+        if (form.survivorPct === undefined) return { ok: false, error: 'errIncomeSurvivorRequired' }
+        if (!shareInRange(form.survivorPct)) return { ok: false, error: 'errIncomeSurvivorRange' }
         survivorPct = form.survivorPct
         if (form.annuityQualified) {
           treatment = { type: 'annuity', qualified: true }
         } else {
-          if (form.exclusionFraction === undefined) return null
+          if (form.exclusionFraction === undefined) return { ok: false, error: 'errIncomeExclusionRequired' }
+          if (!shareInRange(form.exclusionFraction)) return { ok: false, error: 'errIncomeExclusionRange' }
           treatment = { type: 'annuity', qualified: false, exclusionFraction: form.exclusionFraction }
         }
         break
       }
     }
-    return {
+    const stream = {
       ownerIndex: form.ownerIndex,
       annualRealToday: form.annualRealToday,
       startAge,
@@ -222,25 +241,22 @@ export function OtherIncomeEntry({ draft, initial, onSave, onCancel }: OtherInco
       ...(form.colaMode === 'fixed-pct' && form.colaPct !== undefined ? { colaPct: form.colaPct } : {}),
       survivorPct,
       ...treatment,
+      // TS collapses a union under object spread, so the final cast can't be fully
+      // eliminated — but `treatment` is the real union, so each ARM is checked above.
     } as IncomeStream
+    return { ok: true, stream }
   }
 
   const save = () => {
-    const stream = buildStream()
-    if (stream === null) {
-      // Name the most likely missing no-safe-default fact so the message is
-      // specific (the field controls themselves are present; this is the
-      // calm "still need X" line, not a scary block).
-      setSaveError(
-        form.colaMode === 'fixed-pct' &&
-          (form.colaPct === undefined || !Number.isFinite(form.colaPct))
-          ? 'errIncomeColaPct'
-          : null,
-      )
+    const result = buildStream()
+    if (!result.ok) {
+      // Always name the blocking fact (the calm "still need X" / "that's out of
+      // range" line) so the Save never refuses in silence.
+      setSaveError(result.error)
       return
     }
     setSaveError(null)
-    onSave(stream)
+    onSave(result.stream)
   }
 
   return (
@@ -287,6 +303,7 @@ export function OtherIncomeEntry({ draft, initial, onSave, onCancel }: OtherInco
       <SegmentedControl<'now' | 'later'>
         legendKey="incomeTimingLegend"
         name="income-timing"
+        required
         options={[
           { value: 'now', labelKey: 'incomeTimingNow' },
           { value: 'later', labelKey: 'incomeTimingLater' },
@@ -308,6 +325,7 @@ export function OtherIncomeEntry({ draft, initial, onSave, onCancel }: OtherInco
       <SegmentedControl<ColaMode>
         legendKey="incomeColaLegend"
         name="income-cola"
+        required
         options={[
           { value: 'real-flat', labelKey: 'incomeColaReal' },
           { value: 'nominal-flat', labelKey: 'incomeColaNominal' },
@@ -334,14 +352,21 @@ export function OtherIncomeEntry({ draft, initial, onSave, onCancel }: OtherInco
         />
       )}
 
-      {/* The survivor-% — no safe default, surfaced for any CONTINUING type. */}
+      {/* The survivor-% — no safe default, surfaced for any CONTINUING type.
+          An out-of-range entry (parsePercent has no upper clamp) is refused at the
+          gate and flagged here in three channels (border + icon + text). */}
       {isContinuingType(form.type) && (
         <PercentField
           labelKey="incomeSurvivorLabel"
           helpKey="incomeSurvivorHelp"
           field="income.survivorPct"
           value={form.survivorPct}
-          onCommit={(survivorPct) => patch({ survivorPct })}
+          invalid={saveError === 'errIncomeSurvivorRange'}
+          onEdit={() => setSaveError(null)}
+          onCommit={(survivorPct) => {
+            setSaveError(null)
+            patch({ survivorPct })
+          }}
         />
       )}
 
@@ -352,6 +377,7 @@ export function OtherIncomeEntry({ draft, initial, onSave, onCancel }: OtherInco
           <SegmentedControl<'pre' | 'post'>
             legendKey="incomeAlimonyDateLegend"
             name="income-alimony-date"
+            required
             options={[
               { value: 'pre', labelKey: 'incomeAlimonyPre2019' },
               { value: 'post', labelKey: 'incomeAlimonyPost2018' },
@@ -386,6 +412,7 @@ export function OtherIncomeEntry({ draft, initial, onSave, onCancel }: OtherInco
           <SegmentedControl<'qualified' | 'nonqual'>
             legendKey="incomeAnnuityKindLegend"
             name="income-annuity-kind"
+            required
             options={[
               { value: 'qualified', labelKey: 'incomeAnnuityQualified' },
               { value: 'nonqual', labelKey: 'incomeAnnuityNonQualified' },
@@ -402,7 +429,12 @@ export function OtherIncomeEntry({ draft, initial, onSave, onCancel }: OtherInco
               helpKey="incomeExclusionHelp"
               field="income.exclusionFraction"
               value={form.exclusionFraction}
-              onCommit={(exclusionFraction) => patch({ exclusionFraction })}
+              invalid={saveError === 'errIncomeExclusionRange'}
+              onEdit={() => setSaveError(null)}
+              onCommit={(exclusionFraction) => {
+                setSaveError(null)
+                patch({ exclusionFraction })
+              }}
             />
           )}
         </>
@@ -433,7 +465,12 @@ export function OtherIncomeEntry({ draft, initial, onSave, onCancel }: OtherInco
                 helpKey="incomeTaxableHelp"
                 field="income.taxableFraction"
                 value={form.taxableFraction}
-                onCommit={(taxableFraction) => patch({ taxableFraction })}
+                invalid={saveError === 'errIncomeTaxableRange'}
+                onEdit={() => setSaveError(null)}
+                onCommit={(taxableFraction) => {
+                  setSaveError(null)
+                  patch({ taxableFraction })
+                }}
               />
             )}
           </div>

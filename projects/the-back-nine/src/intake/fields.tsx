@@ -278,17 +278,32 @@ export function SegmentedControl<V extends string>({
   value,
   onChange,
   name,
+  required = false,
 }: {
   readonly legendKey: CopyKey
   readonly options: ReadonlyArray<SegmentOption<V>>
   readonly value: V | undefined
   readonly onChange: (value: V) => void
   readonly name: string
+  /** A required group with nothing checked carries no native "unanswered" signal,
+   *  so advertise requiredness programmatically (aria-required on each radio — the
+   *  group's affordance for an AT user) AND visibly under the legend (text, never
+   *  color — the reader is color blind). The Save gate names the specific missing
+   *  fact on block; this is the up-front cue. */
+  readonly required?: boolean
 }) {
   const id = useId()
   return (
     <fieldset className="segmented">
-      <legend className="field-label">{copy[legendKey]}</legend>
+      <legend className="field-label">
+        {copy[legendKey]}
+        {required && (
+          <>
+            {' '}
+            <span className="field-required">{copy.fieldRequiredMarker}</span>
+          </>
+        )}
+      </legend>
       <div className="segmented-track">
         {options.map((opt) => (
           <label
@@ -300,6 +315,7 @@ export function SegmentedControl<V extends string>({
               className="sr-only"
               name={`${id}-${name}`}
               checked={value === opt.value}
+              aria-required={required ? true : undefined}
               onChange={() => onChange(opt.value)}
               // A click on the ALREADY-checked segment fires no change event —
               // but tapping the current segment must still count as an explicit

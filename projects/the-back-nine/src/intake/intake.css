@@ -234,6 +234,13 @@
   color: var(--ink);
 }
 
+/* A quiet requiredness cue on a segmented legend — plain muted text (the "(required)"
+   word), never a red asterisk or color-only glyph (the reader is color blind). */
+.field-required {
+  font-weight: var(--weight-body);
+  color: var(--ink-muted);
+}
+
 .field-input {
   min-height: var(--field-h);
   width: 100%;

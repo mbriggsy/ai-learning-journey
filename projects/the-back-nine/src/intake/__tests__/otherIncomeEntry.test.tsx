@@ -55,6 +55,10 @@ const setMoney = (label: string, value: string) => {
   fireEvent.blur(input)
 }
 
+// IntegerField shares CurrencyField's focus→change→blur commit discipline (ages,
+// years) — the same driver works for both.
+const setInteger = setMoney
+
 function renderEntry(model: MemoryModel, onSave = vi.fn(), initial?: IncomeStream) {
   render(
     <OtherIncomeEntry
@@ -179,6 +183,48 @@ describe('OtherIncomeEntry — the no-safe-default atomic-commit gate (R40.7)', 
     })
   })
 
+  it('a PRE-2019 alimony commits executedAfter2018:FALSE (the negative arm — a taxable, MAGI-VISIBLE instrument)', () => {
+    // The discriminating commit the post-2018 case can't make: a hardcoded
+    // `executedAfter2018: true` would persist a genuinely-taxable pre-2019 alimony
+    // as MAGI-invisible + tax-free (the calm-but-wrong-OPTIMISTIC sin). Default
+    // modify follow-up is NO ⇒ modifiedAdoptsPost2018Rules:false.
+    const { onSave } = renderEntry(modelWithPeople())
+    fireEvent.click(screen.getByLabelText(copy.incomeTypeAlimony))
+    setMoney(copy.incomeAmountLabel, '18000')
+    fireEvent.click(screen.getByLabelText(copy.incomeTimingNow))
+    fireEvent.click(screen.getByLabelText(copy.incomeColaNominal))
+    fireEvent.click(screen.getByLabelText(copy.incomeAlimonyPre2019))
+    fireEvent.click(screen.getByRole('button', { name: copy.otherIncomeSave }))
+    expect(onSave).toHaveBeenCalledTimes(1)
+    expect(onSave.mock.calls[0]![0]).toMatchObject({
+      type: 'alimony',
+      executedAfter2018: false,
+      modifiedAdoptsPost2018Rules: false,
+      survivorPct: 0,
+    })
+  })
+
+  it('a pre-2019 alimony EXPRESSLY MODIFIED commits modifiedAdoptsPost2018Rules:TRUE (the second tax fork)', () => {
+    // The modify=yes answer must passthrough — dropping it (→false) keeps a now-
+    // tax-free instrument taxable (pessimistic), and optimistically flipping the
+    // default modify=no (→true) makes a taxable one MAGI-invisible. Pin TRUE here;
+    // the case above pins the FALSE default. Both forks proven from the FORM.
+    const { onSave } = renderEntry(modelWithPeople())
+    fireEvent.click(screen.getByLabelText(copy.incomeTypeAlimony))
+    setMoney(copy.incomeAmountLabel, '18000')
+    fireEvent.click(screen.getByLabelText(copy.incomeTimingNow))
+    fireEvent.click(screen.getByLabelText(copy.incomeColaNominal))
+    fireEvent.click(screen.getByLabelText(copy.incomeAlimonyPre2019))
+    fireEvent.click(screen.getByLabelText(copy.incomeAlimonyModifiedYes))
+    fireEvent.click(screen.getByRole('button', { name: copy.otherIncomeSave }))
+    expect(onSave).toHaveBeenCalledTimes(1)
+    expect(onSave.mock.calls[0]![0]).toMatchObject({
+      type: 'alimony',
+      executedAfter2018: false,
+      modifiedAdoptsPost2018Rules: true,
+    })
+  })
+
   it('a non-qual annuity needs the exclusion fraction to commit; a qualified one needs only the kind', () => {
     // non-qual: missing exclusion ⇒ no commit
     const { onSave } = renderEntry(modelWithPeople())
@@ -200,6 +246,75 @@ describe('OtherIncomeEntry — the no-safe-default atomic-commit gate (R40.7)', 
     })
   })
 
+  it('a QUALIFIED annuity commits { qualified:true } with NO exclusionFraction (fully taxable, MAGI-visible)', () => {
+    // The entity-level commit the existing test never makes: a qualified annuity is
+    // fully taxable. Rewriting the qualified arm to a 99%-excluded non-qual would
+    // turn a MAGI-visible stream nearly MAGI-INVISIBLE (the optimistic sin). Pin
+    // qualified:true AND the ABSENCE of an exclusionFraction key.
+    const { onSave } = renderEntry(modelWithPeople())
+    fireEvent.click(screen.getByLabelText(copy.incomeTypeAnnuity))
+    setMoney(copy.incomeAmountLabel, '20000')
+    fireEvent.click(screen.getByLabelText(copy.incomeTimingNow))
+    fireEvent.click(screen.getByLabelText(copy.incomeColaNominal))
+    setMoney(copy.incomeSurvivorLabel, '50')
+    fireEvent.click(screen.getByLabelText(copy.incomeAnnuityQualified))
+    fireEvent.click(screen.getByRole('button', { name: copy.otherIncomeSave }))
+    expect(onSave).toHaveBeenCalledTimes(1)
+    const committed = onSave.mock.calls[0]![0]
+    expect(committed).toMatchObject({ type: 'annuity', qualified: true })
+    expect(committed).not.toHaveProperty('exclusionFraction')
+  })
+
+  it('an annuity with the QUALIFIED-vs-NONQUAL choice UNANSWERED never commits (the no-safe-default gate is reached)', () => {
+    // Every other required field filled, only the qualified/non-qual fork left
+    // open — the gate must hold the form (deleting it lets an undefined fall
+    // through to the falsy non-qual branch). Reaches the dead-untested branch.
+    const { onSave } = renderEntry(modelWithPeople())
+    fireEvent.click(screen.getByLabelText(copy.incomeTypeAnnuity))
+    setMoney(copy.incomeAmountLabel, '20000')
+    fireEvent.click(screen.getByLabelText(copy.incomeTimingNow))
+    fireEvent.click(screen.getByLabelText(copy.incomeColaNominal))
+    setMoney(copy.incomeSurvivorLabel, '50')
+    // qualified vs non-qual LEFT UNANSWERED.
+    fireEvent.click(screen.getByRole('button', { name: copy.otherIncomeSave }))
+    expect(onSave).not.toHaveBeenCalled()
+    expect(screen.getByRole('alert').textContent).toBe(copy.errIncomeAnnuityKindRequired)
+  })
+
+  it('a "starts later" stream commits the ENTERED future start age, NOT the owner age (the KTD-8b complement)', () => {
+    // The already-receiving anchor (startAge=currentAge) is pinned elsewhere; this
+    // pins its complement. Corrupting startAge (e.g. +5) shifts every future
+    // stream's onset — a load-bearing field. Jim is 66; future start 70.
+    const { onSave } = renderEntry(modelWithPeople())
+    fireEvent.click(screen.getByLabelText(copy.incomeTypePension))
+    setMoney(copy.incomeAmountLabel, '30000')
+    fireEvent.click(screen.getByLabelText(copy.incomeTimingLater))
+    setInteger(copy.incomeStartAgeLabel, '70')
+    fireEvent.click(screen.getByLabelText(copy.incomeColaReal))
+    setMoney(copy.incomeSurvivorLabel, '50')
+    fireEvent.click(screen.getByRole('button', { name: copy.otherIncomeSave }))
+    expect(onSave).toHaveBeenCalledTimes(1)
+    expect(onSave.mock.calls[0]![0]).toMatchObject({ startAge: 70 }) // NOT 66
+  })
+
+  it('the advanced tier commits the entered endAge AND taxableFraction (the form→engine seam for both opt-in fields)', () => {
+    // VISIBILITY is tested above; this pins the COMMITTED values. Dropping endAge
+    // propagation makes a stream that should STOP run for life (DND-009, optimistic);
+    // dropping taxableFraction silently restores full-taxable. Pin both.
+    const { onSave } = renderEntry(modelWithPeople())
+    fireEvent.click(screen.getByLabelText(copy.incomeTypePension))
+    setMoney(copy.incomeAmountLabel, '30000')
+    fireEvent.click(screen.getByLabelText(copy.incomeTimingNow))
+    fireEvent.click(screen.getByLabelText(copy.incomeColaReal))
+    setMoney(copy.incomeSurvivorLabel, '50')
+    fireEvent.click(screen.getByRole('button', { name: copy.incomeAdvancedToggle }))
+    setInteger(copy.incomeEndAgeLabel, '82')
+    setMoney(copy.incomeTaxableLabel, '80') // → 0.8
+    fireEvent.click(screen.getByRole('button', { name: copy.otherIncomeSave }))
+    expect(onSave).toHaveBeenCalledTimes(1)
+    expect(onSave.mock.calls[0]![0]).toMatchObject({ endAge: 82, taxableFraction: 0.8 })
+  })
+
   it('the advanced tier (end age + basis-recovery taxable) is collapsed by default; opening it reveals the optional fields', () => {
     renderEntry(modelWithPeople())
     fireEvent.click(screen.getByLabelText(copy.incomeTypePension))
@@ -211,6 +326,92 @@ describe('OtherIncomeEntry — the no-safe-default atomic-commit gate (R40.7)', 
     expect(toggle).toHaveAttribute('aria-expanded', 'true')
     expect(screen.getByLabelText(copy.incomeEndAgeLabel)).toBeInTheDocument()
     expect(screen.getByLabelText(copy.incomeTaxableLabel)).toBeInTheDocument()
+  })
+})
+
+describe('OtherIncomeEntry — the in-form RANGE gate + the always-announce-on-block contract', () => {
+  it('an OUT-OF-RANGE survivor-% (150) never commits — the cardinal optimistic-widow sin is refused at the gate', () => {
+    // parsePercent has no upper clamp ("150" → 1.5). A >100% survivor share silently
+    // INFLATES the widow's picture (the product's core protected case). The form is
+    // the only practical gate (the scalar is multiplied away before validateParams).
+    // It must REFUSE (never silently coerce 1.5→1) and flag in THREE channels.
+    const { onSave } = renderEntry(modelWithPeople())
+    fireEvent.click(screen.getByLabelText(copy.incomeTypePension))
+    setMoney(copy.incomeAmountLabel, '30000')
+    fireEvent.click(screen.getByLabelText(copy.incomeTimingNow))
+    fireEvent.click(screen.getByLabelText(copy.incomeColaReal))
+    setMoney(copy.incomeSurvivorLabel, '150') // → 1.5, impossible
+    fireEvent.click(screen.getByRole('button', { name: copy.otherIncomeSave }))
+    expect(onSave).not.toHaveBeenCalled()
+    expect(screen.getByRole('alert').textContent).toBe(copy.errIncomeSurvivorRange)
+    expect(screen.getByLabelText(copy.incomeSurvivorLabel)).toHaveAttribute('aria-invalid', 'true')
+  })
+
+  it('an in-range survivor-% at the 100% boundary commits (1.0 is legal — the full-continuation widow)', () => {
+    const { onSave } = renderEntry(modelWithPeople())
+    fireEvent.click(screen.getByLabelText(copy.incomeTypePension))
+    setMoney(copy.incomeAmountLabel, '30000')
+    fireEvent.click(screen.getByLabelText(copy.incomeTimingNow))
+    fireEvent.click(screen.getByLabelText(copy.incomeColaReal))
+    setMoney(copy.incomeSurvivorLabel, '100') // → 1.0, the boundary
+    fireEvent.click(screen.getByRole('button', { name: copy.otherIncomeSave }))
+    expect(onSave).toHaveBeenCalledTimes(1)
+    expect(onSave.mock.calls[0]![0]).toMatchObject({ survivorPct: 1 })
+  })
+
+  it('an OUT-OF-RANGE non-qual exclusion (120) never commits — a >1 exclusion drives effective taxable NEGATIVE (optimistic MAGI)', () => {
+    const { onSave } = renderEntry(modelWithPeople())
+    fireEvent.click(screen.getByLabelText(copy.incomeTypeAnnuity))
+    setMoney(copy.incomeAmountLabel, '20000')
+    fireEvent.click(screen.getByLabelText(copy.incomeTimingNow))
+    fireEvent.click(screen.getByLabelText(copy.incomeColaNominal))
+    setMoney(copy.incomeSurvivorLabel, '50')
+    fireEvent.click(screen.getByLabelText(copy.incomeAnnuityNonQualified))
+    setMoney(copy.incomeExclusionLabel, '120') // → 1.2, impossible
+    fireEvent.click(screen.getByRole('button', { name: copy.otherIncomeSave }))
+    expect(onSave).not.toHaveBeenCalled()
+    expect(screen.getByRole('alert').textContent).toBe(copy.errIncomeExclusionRange)
+    expect(screen.getByLabelText(copy.incomeExclusionLabel)).toHaveAttribute('aria-invalid', 'true')
+  })
+
+  it('an OUT-OF-RANGE advanced taxableFraction (150) never commits and flags the field', () => {
+    const { onSave } = renderEntry(modelWithPeople())
+    fireEvent.click(screen.getByLabelText(copy.incomeTypePension))
+    setMoney(copy.incomeAmountLabel, '30000')
+    fireEvent.click(screen.getByLabelText(copy.incomeTimingNow))
+    fireEvent.click(screen.getByLabelText(copy.incomeColaReal))
+    setMoney(copy.incomeSurvivorLabel, '50')
+    fireEvent.click(screen.getByRole('button', { name: copy.incomeAdvancedToggle }))
+    setMoney(copy.incomeTaxableLabel, '150') // → 1.5, impossible
+    fireEvent.click(screen.getByRole('button', { name: copy.otherIncomeSave }))
+    expect(onSave).not.toHaveBeenCalled()
+    expect(screen.getByRole('alert').textContent).toBe(copy.errIncomeTaxableRange)
+    expect(screen.getByLabelText(copy.incomeTaxableLabel)).toHaveAttribute('aria-invalid', 'true')
+  })
+
+  it('a blocked Save ALWAYS names the missing fact (WCAG 3.3.1) — never a silent dead button on the survivor-% miss', () => {
+    // The widow's-% is the most sensitive field; a user who fills everything else
+    // and leaves it blank must hear WHAT is needed, not tap a dead button. (The old
+    // save() set the error key only for the cola case and null for all others.)
+    const { onSave } = renderEntry(modelWithPeople())
+    fireEvent.click(screen.getByLabelText(copy.incomeTypePension))
+    setMoney(copy.incomeAmountLabel, '30000')
+    fireEvent.click(screen.getByLabelText(copy.incomeTimingNow))
+    fireEvent.click(screen.getByLabelText(copy.incomeColaReal))
+    // survivor-% left EMPTY.
+    fireEvent.click(screen.getByRole('button', { name: copy.otherIncomeSave }))
+    expect(onSave).not.toHaveBeenCalled()
+    expect(screen.getByRole('alert').textContent).toBe(copy.errIncomeSurvivorRequired)
+  })
+
+  it('the required segmented groups advertise requiredness (aria-required) for an AT user', () => {
+    renderEntry(modelWithPeople())
+    fireEvent.click(screen.getByLabelText(copy.incomeTypePension))
+    // The timing + COLA groups are required-and-unanswered; their radios carry aria-required.
+    expect(screen.getByLabelText(copy.incomeTimingNow)).toHaveAttribute('aria-required', 'true')
+    expect(screen.getByLabelText(copy.incomeColaReal)).toHaveAttribute('aria-required', 'true')
+    // The visible color-free cue is present (text, not a red asterisk).
+    expect(screen.getAllByText(copy.fieldRequiredMarker).length).toBeGreaterThan(0)
   })
 })
 
@@ -320,6 +521,15 @@ describe('survivorNoteFor — the widow’s-picture wording (golden-pinned, amou
   it('a partial share → "would keep N%" (the rounded percent, never a raw fraction)', () => {
     const s: IncomeStream = { ownerIndex: 1, type: 'pension', annualRealToday: 30_000, startAge: 65, colaMode: 'real-flat', survivorPct: 0.5 }
     expect(survivorNoteFor(draft(), s)).toBe('Jim would keep 50% of this if Jane passes.')
+  })
+
+  it('an OUT-OF-RANGE input (>1) renders the documented clamp — the DISPLAY backstop behaves intentionally, not by accident', () => {
+    // The form gate (the in-form RANGE gate above) is the PRIMARY defense — a >1
+    // survivorPct can never commit. This pins the slot's defense-in-depth behavior
+    // for a value that could only arrive via a corrupt restore: it collapses to the
+    // calm "all of this" note (the >=100% branch), NOT a nonsensical "150%" string.
+    // Pinning it makes the chosen behavior a DECISION, not an oversight.
+    expect(slots.incomeSurvivorNote('Jim', 'Jane', 1.5)).toBe('Jim would keep all of this if Jane passes.')
   })
 })
 

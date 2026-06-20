@@ -93,14 +93,20 @@ export const copy = {
   // stream — the engine adds each entered stream's own IRMAA-MAGI in every year
   // (ongoingTaxableIrmaaOnly), so a stream counted here too would be double-counted.
   // Inverting this copy is the user-facing half of the KTD-9 structural decouple.
-  workIncomeLabel: 'Working-year income, excluding any retirement income you entered',
+  // FORWARD-phrased (KTD-9 copy-guard fix): this question is answered BEFORE the
+  // other-income loop, so the copy must NOT reference streams as already entered —
+  // a pension/rental/annuity is added "separately, later," not "below" or "entered."
+  workIncomeLabel: 'Income from working — just what work pays',
   workIncomeHelp:
-    'Just the income that comes from working — salary, and anything else not already entered below as a retirement income stream like a pension or rental. The tool already counts those streams on their own, so leave them out here. If you’re still working when Medicare begins, this is what can add a surcharge on top of the usual premium.',
+    'Just what work pays — salary and bonuses. If you also receive a pension, rental, annuity, or alimony, you’ll add those separately, later — the tool counts each on its own, so don’t include them here. If you’re still working when Medicare begins, this is what can add a surcharge on top of the usual premium.',
   qIrmaaSeedHeading: 'Your last two tax returns',
   irmaaSeedTwoBackLabel: 'Income, two years back',
   irmaaSeedOneBackLabel: 'Income, last year',
   irmaaSeedHelp:
     'Medicare premiums look back two years — these anchor the early years.',
+  // A quiet, color-free requiredness cue for a segmented group with no native
+  // "unanswered" signal (the reader is color blind — text, never a red asterisk).
+  fieldRequiredMarker: '(required)',
   // --- the account loop (D1 — variable-length, single entry pass) ---
   qAccountsHeading: 'Now, the accounts themselves',
   accountsIntro:
@@ -204,6 +210,18 @@ export const copy = {
   errIncomeTaxableRange: 'The taxable part is a number from 0 to 100 percent.',
   errIncomeExclusionRange: 'The tax-free part is a number from 0 to 100 percent.',
   errIncomeColaPct: 'A yearly raise needs a number when “rises a set percent” is chosen.',
+  // The specific "still needed to save" lines — one per no-safe-default fact, so a
+  // blocked Save always names what's missing in plain text (WCAG 3.3.1, never a
+  // silent dead button). Declarative, calm — the form asks, it never scolds.
+  errIncomeTypeRequired: 'Still need the kind of income.',
+  errIncomeAmountRequired: 'Still need the yearly amount.',
+  errIncomeTimingRequired: 'Still need whether it’s paying now or starts later.',
+  errIncomeStartAgeRequired: 'Still need the age it starts.',
+  errIncomeColaModeRequired: 'Still need how it keeps up with inflation.',
+  errIncomeSurvivorRequired: 'Still need the survivor share.',
+  errIncomeAlimonyDateRequired: 'Still need when the agreement was signed.',
+  errIncomeAnnuityKindRequired: 'Still need the kind of annuity.',
+  errIncomeExclusionRequired: 'Still need the tax-free part of the annuity.',
   // --- the provisional answer strip (D1 — surfaces and sharpens during entry;
   //     D2 builds the full state-adaptive surface over U6/U7) ---
   // A STABLE, state-agnostic region name: the strip's accessible label must not

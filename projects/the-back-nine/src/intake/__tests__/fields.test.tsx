@@ -1,10 +1,57 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, render, screen, fireEvent } from '@testing-library/react'
-import { CurrencyField, IntegerField, SegmentedControl, parseMoney, formatMoney } from '../fields'
+import {
+  CurrencyField,
+  IntegerField,
+  PercentField,
+  SegmentedControl,
+  parseMoney,
+  formatMoney,
+  parsePercent,
+  formatPercent,
+} from '../fields'
 import { copy } from '@ui/copy'
 
 afterEach(cleanup)
+
+describe('parsePercent / formatPercent (R40 — enter a percent, store a FRACTION)', () => {
+  it('parses a percent to its fraction (humane entry, fraction model)', () => {
+    expect(parsePercent('50')).toBe(0.5)
+    expect(parsePercent('2.5')).toBe(0.025)
+    expect(parsePercent('100')).toBe(1)
+    expect(parsePercent('0')).toBe(0)
+    expect(parsePercent(' 60 %')).toBe(0.6)
+  })
+  it('empty/garbage → undefined (an absent fact, never 0 — burned/062); rejects exponent/hex traps', () => {
+    expect(parsePercent('')).toBeUndefined()
+    expect(parsePercent('abc')).toBeUndefined()
+    expect(parsePercent('-10')).toBeUndefined()
+    expect(parsePercent('1e2')).toBeUndefined()
+    expect(parsePercent('0x40')).toBeUndefined()
+  })
+  it('formats a fraction back to a percent string', () => {
+    expect(formatPercent(0.5)).toBe('50')
+    expect(formatPercent(0.025)).toBe('2.5')
+    expect(formatPercent(undefined)).toBe('')
+  })
+  it('PercentField commits the FRACTION on blur (the survivor/taxable/COLA discipline)', () => {
+    const onCommit = vi.fn()
+    render(
+      <PercentField
+        labelKey="incomeSurvivorLabel"
+        field="income.survivorPct"
+        value={undefined}
+        onCommit={onCommit}
+      />,
+    )
+    const input = screen.getByLabelText(copy.incomeSurvivorLabel)
+    fireEvent.focus(input)
+    fireEvent.change(input, { target: { value: '75' } })
+    fireEvent.blur(input)
+    expect(onCommit).toHaveBeenCalledWith(0.75) // 75% → fraction 0.75
+  })
+})
 
 describe('parseMoney / formatMoney', () => {
   it('strips $/commas/spaces and parses the raw number', () => {

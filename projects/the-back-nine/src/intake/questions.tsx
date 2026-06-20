@@ -7,6 +7,7 @@ import { CurrencyField, IntegerField, NameField, SegmentedControl, formatMoney }
 import { FieldError } from './FieldError'
 import { accountField, personField, SS_CLAIM_MIN, SS_CLAIM_MAX } from './sanity'
 import { AccountEntry, kindLabel } from './AccountEntry'
+import { OtherIncomeEntry, incomeTypeLabel, survivorNoteFor } from './OtherIncomeEntry'
 import { ExternalLink } from './ExternalLink'
 import { EXTERNAL_LINKS } from './links'
 import { OOP_MEDICAL_TYPICAL_HOUSEHOLD } from './referenceData'
@@ -627,6 +628,134 @@ const accountsStep = (draft: ScenarioDraft): StepDef => ({
 })
 
 // ---------------------------------------------------------------------------
+// the other-income loop (R40 — opt-in; mirrors the account loop's list/form
+// view state). A stream commits ATOMICALLY through OtherIncomeEntry (complete +
+// in-range or nothing), so the list never holds a half-entered stream and the
+// step is genuinely optional — zero streams reduces byte-identically to the
+// spine (R40.6). Session-only until U8; the "nothing saved yet" affordance is
+// the calm, reserved-slot note that color is never the only signal (insight 035).
+// ---------------------------------------------------------------------------
+
+function OtherIncomeStep({ api }: { api: StepApi }) {
+  const [editing, setEditing] = useState<number | 'new' | null>(null)
+  const [confirmRemove, setConfirmRemove] = useState<number | null>(null)
+
+  if (editing !== null) {
+    const initial = editing === 'new' ? undefined : api.draft.incomeStreams[editing]
+    return (
+      <OtherIncomeEntry
+        draft={api.draft}
+        initial={initial}
+        onCancel={() => setEditing(null)}
+        onSave={(stream) => {
+          api.update((d) => {
+            const next = [...d.incomeStreams]
+            if (editing === 'new') next.push(stream)
+            else next[editing] = stream
+            return { ...d, incomeStreams: next }
+          })
+          setEditing(null)
+        }}
+      />
+    )
+  }
+
+  return (
+    <>
+      <p className="field-help">{copy.otherIncomeIntro}</p>
+      {api.draft.incomeStreams.length === 0 && (
+        <p className="accounts-empty">{copy.otherIncomeEmpty}</p>
+      )}
+      <ul className="account-list">
+        {api.draft.incomeStreams.map((s, i) => (
+          <li key={i} className="income-row">
+            <div className="income-row-main">
+              <span className="account-summary">
+                {slots.incomeSummary(
+                  incomeTypeLabel(s.type),
+                  api.draft.people[s.ownerIndex]?.name ??
+                    (s.ownerIndex === 0 ? copy.personYou : copy.personSpouse),
+                  formatMoney(s.annualRealToday),
+                )}
+              </span>
+              {/* The widow's NUMBERS in plain language — never a raw survivorPct. */}
+              <span className="income-survivor-note">{survivorNoteFor(api.draft, s)}</span>
+            </div>
+            <span className="account-row-actions">
+              <button
+                type="button"
+                className="btn-quiet"
+                onClick={() => {
+                  setConfirmRemove(null)
+                  setEditing(i)
+                }}
+              >
+                {copy.otherIncomeEdit}
+              </button>
+              <button
+                type="button"
+                className="btn-quiet"
+                onClick={() => {
+                  if (confirmRemove === i) {
+                    api.update((d) => ({
+                      ...d,
+                      incomeStreams: d.incomeStreams.filter((_, j) => j !== i),
+                    }))
+                    setConfirmRemove(null)
+                  } else {
+                    setConfirmRemove(i)
+                  }
+                }}
+              >
+                {confirmRemove === i ? copy.otherIncomeRemoveConfirm : copy.otherIncomeRemove}
+              </button>
+            </span>
+          </li>
+        ))}
+      </ul>
+      <button
+        type="button"
+        className="btn-secondary"
+        onClick={() => {
+          setConfirmRemove(null)
+          setEditing('new')
+        }}
+      >
+        {copy.addOtherIncome}
+      </button>
+      {/* The reserved-slot "not saved yet" affordance — neutral text + icon, role
+          note, NEVER a red badge (color is never the only signal). Reserved height
+          (insight 035) so the note appearing never shifts the Add button under a
+          tapping thumb. */}
+      <p className="not-saved-note" role="note">
+        <svg
+          className="not-saved-icon"
+          aria-hidden="true"
+          viewBox="0 0 16 16"
+          width="16"
+          height="16"
+        >
+          <circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" strokeWidth="1.5" />
+          <path d="M8 7v4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+          <circle cx="8" cy="4.5" r="0.9" fill="currentColor" />
+        </svg>
+        <span>{copy.notSavedYet}</span>
+      </p>
+    </>
+  )
+}
+
+/** The other-income step (R40) — opt-in, no advance-gate fields (the form gates
+ *  every stream atomically; the entity-scalar ranges live in sanity's income
+ *  rules, exercised on a directly-mutated draft / the U8 restore path). */
+const otherIncomeStep: StepDef = {
+  id: 'other-income',
+  headingKey: 'qOtherIncomeHeading',
+  fields: [],
+  render: (api) => <OtherIncomeStep api={api} />,
+}
+
+// ---------------------------------------------------------------------------
 // the conditional sequence
 // ---------------------------------------------------------------------------
 
@@ -651,5 +780,8 @@ export function intakeSteps(draft: ScenarioDraft): readonly StepDef[] {
   if (anyWorking(draft)) steps.push(workIncomeStep)
   if (anyNearMedicare(draft)) steps.push(irmaaSeedStep)
   steps.push(accountsStep(draft))
+  // R40 — the opt-in other-income loop, last (off the 5-minute guided path; a
+  // household with no pension/rental/annuity/alimony simply advances past it).
+  steps.push(otherIncomeStep)
   return steps
 }

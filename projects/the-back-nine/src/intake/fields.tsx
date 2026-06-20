@@ -160,6 +160,67 @@ export function IntegerField(props: CommonFieldProps & { readonly placeholderKey
   )
 }
 
+/** Parse a human percent string → raw FRACTION (e.g. "50" → 0.5, "2.5" → 0.025).
+ *  Empty/garbage → undefined (an absent fact — never 0; burned/062). Accepts a
+ *  bounded magnitude only (a plain number, optional single decimal); rejects the
+ *  same exponent/hex/misgroup traps `parseMoney` does. */
+export function parsePercent(text: string): number | undefined {
+  const cleaned = text.replace(/[%\s]/g, '')
+  if (cleaned === '') return undefined
+  if (!/^\d+(\.\d+)?$/.test(cleaned)) return undefined
+  const n = Number(cleaned)
+  return Number.isFinite(n) ? n / 100 : undefined
+}
+
+const pctFmt = new Intl.NumberFormat('en-US', { maximumFractionDigits: 2 })
+
+export function formatPercent(fraction: number | undefined): string {
+  return fraction === undefined ? '' : pctFmt.format(fraction * 100)
+}
+
+/** Percent field — the user enters a humane percent; the MODEL stores a FRACTION
+ *  (∈[0,1] for shares, the nominal rate for a COLA). Mirrors CurrencyField's
+ *  blur-commit / re-edit-forgiveness / error-association discipline. Used for the
+ *  R40 survivor / taxable / exclusion shares and the fixed-pct COLA rate. */
+export function PercentField(props: CommonFieldProps & { readonly placeholderKey?: CopyKey }) {
+  const id = useId()
+  const helpId = `${id}-help`
+  const [editing, setEditing] = useState<string | null>(null)
+  return (
+    <FieldShell id={id} labelKey={props.labelKey} helpKey={props.helpKey} helpId={helpId}>
+      {/* The "%" unit is a decorative CSS-generated affix (.percent-field::after) —
+          NOT copy and not in the a11y tree (mirrors the strip-fact middot separators),
+          so it never routes through the copy catalog or reads to a screen reader. */}
+      <div className="percent-field">
+        <input
+          id={id}
+          className="field-input"
+          type="text"
+          inputMode="decimal"
+          autoComplete="off"
+          enterKeyHint="next"
+          spellCheck={false}
+          placeholder={props.placeholderKey === undefined ? undefined : copy[props.placeholderKey]}
+          value={editing ?? formatPercent(props.value)}
+          aria-invalid={props.invalid === true ? true : undefined}
+          aria-describedby={describedBy(props.helpKey, helpId, props.invalid === true, props.field)}
+          onChange={(e) => {
+            setEditing(e.target.value)
+            if (props.invalid === true) props.onEdit?.()
+          }}
+          onFocus={() =>
+            setEditing(props.value === undefined ? '' : String(formatPercent(props.value)))
+          }
+          onBlur={() => {
+            props.onCommit(parsePercent(editing ?? ''))
+            setEditing(null)
+          }}
+        />
+      </div>
+    </FieldShell>
+  )
+}
+
 /** Short text field (names). Identity-shaped, not financial — autocomplete
  *  carries its real token (WCAG 1.3.5). */
 export function NameField({

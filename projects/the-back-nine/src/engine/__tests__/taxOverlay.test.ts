@@ -3951,52 +3951,63 @@ describe('taxOverlay — R40 · KTD-9: the IRMAA decouple (clamped working-year 
     expect(r.totalMedicareCostReal).toBeGreaterThan(droppedPension)
   })
 
-  // ── KTD-9 TRIPWIRE — the deferred copy half (intentionally SKIPPED) ──────────────────────────
-  // WHAT this captures: the KTD-9 IRMAA-MAGI DOUBLE-COUNT for an already-receiving taxable stream
-  //   (a pension/rental paying during a §7-clamped WORKING year). KTD-9 is a coupled 2-part change:
-  //   (1) the engine owns each modeled stream's IRMAA-MAGI in all years — DONE in U3 (the
+  // ── KTD-9 TRIPWIRE — the copy half, NOW LANDED (R40 U4) ─────────────────────────────────────
+  // WHAT this closes: the KTD-9 IRMAA-MAGI DOUBLE-COUNT for an already-receiving taxable stream
+  //   (a pension/rental paying during a §7-clamped WORKING year). KTD-9 was a coupled 2-part change:
+  //   (1) the engine owns each modeled stream's IRMAA-MAGI in all years — shipped in U3 (the
   //       `ongoingTaxableIrmaaOnly` feed at the history site, asserted by the tests above); and
   //   (2) re-spec the working-year override as WAGES / non-modeled-MAGI ONLY and INVERT the intake
-  //       copy to "enter your working-year income EXCLUDING anything you entered as a retirement
-  //       income stream" — NOT done; deferred to U4.
-  // WHY skipped: U3 shipped half (1) only. Today the intake copy (src/ui/copy.ts `workIncomeLabel`/
-  //   `workIncomeHelp`) still asks for the recent return's WHOLE income, so a still-working driver
-  //   with an already-receiving pension types the pension INTO `workingYearIrmaaMagiByPerson` — which
-  //   compiles to `irmaaMagiOverride` (healthcareStreams.ts ~163). The engine then adds the same
-  //   pension AGAIN via `ongoingTaxableIrmaaOnly` (taxOverlay.ts ~1652). IRMAA-MAGI = wages + 2×pension.
-  //   That OVER-states MAGI → over-states IRMAA/cost — the CONSERVATIVE direction, never the
-  //   optimistic sin, which is exactly why U3 ships with the copy half deferred.
-  // EXACT U4 FIX before un-skipping: (a) re-spec `irmaaMagiOverride` as the wages / non-modeled-MAGI
-  //   component only (the modeled stream's taxable already rides `ongoingTaxableIrmaaOnly`); and
-  //   (b) INVERT the intake copy so the user enters working-year income EXCLUDING any entered income
-  //   stream. After both, the user types WAGES into the override → it carries wages alone → the
-  //   pension is counted exactly once and the tier-1 assertion below passes. Drop the `.skip`.
+  //       copy to "working-year income EXCLUDING anything you entered as a retirement income stream"
+  //       — LANDED in U4 (src/ui/copy.ts `workIncomeLabel`/`workIncomeHelp` now ask for wages-only).
+  // U4 RECIPE EXECUTED: with the inverted copy, a still-working driver types WAGES ALONE into
+  //   `workingYearIrmaaMagiByPerson` → it compiles to `irmaaMagiOverride` (healthcareStreams.ts ~163)
+  //   carrying wages only, and the engine adds the pension ONCE via `ongoingTaxableIrmaaOnly`
+  //   (taxOverlay.ts ~1652) → IRMAA-MAGI = wages + pension, counted exactly once. The `.skip` is
+  //   dropped; the tier-1 assertion now PASSES because the MECHANIC is correct (the override is
+  //   wages-only), not because the assertion was weakened — it is the same `expectedCountedOnce`
+  //   contract the deferred tripwire always documented.
+  // This test BOTH arms (the closed-landmine control): the wages-only override lands tier-1 (counted
+  //   once), AND the OLD whole-income override (`wages + pension`, what the pre-U4 copy produced) is
+  //   re-run as a NEGATIVE control and shown to land tier-2 (the double-count) — so the test proves
+  //   the copy inversion is what moved the cost, never a vacuous re-assert. Once the wages-only path
+  //   is the live one, a regression of the copy back to whole-income would re-mint the double-count
+  //   and flip the wages-only arm — caught loud here.
   // Ref: KTD-9 in docs/decisions/other-income-r40.md (~line 89) + the risk→mitigation row.
   // Constants discipline: T1/T2 are read symbolically off the `irmaa` constant — NO dated dollar
   //   threshold is inlined here or in this comment (the copyGuard/constants-shape gate greps for it).
-  it.skip('KTD-9 tripwire (copy half deferred to U4): the WHOLE-income override double-counts an already-receiving pension in IRMAA-MAGI', () => {
+  it('KTD-9 tripwire (copy half LANDED in U4): the wages-only override counts an already-receiving pension ONCE in IRMAA-MAGI (and the old whole-income override would double-count)', () => {
     const T1 = IRMAA_SCHED.tiers[0]!.mfjMagiThreshold
     const T2 = IRMAA_SCHED.tiers[1]!.mfjMagiThreshold
     const wages = T1 - 10_000
     const pension = 40_000
-    // Same straddle the post-U4 "counted ONCE" test uses: wages + pension ∈ (T1, T2) ⇒ tier 1;
+    // The straddle: wages + pension ∈ (T1, T2) ⇒ tier 1 (counted once);
     // wages + 2×pension ≥ T2 ⇒ tier 2 — a DIFFERENT, higher cost (the double-count signature).
     expect(wages + pension).toBeGreaterThan(T1)
     expect(wages + pension).toBeLessThan(T2)
     expect(wages + 2 * pension).toBeGreaterThanOrEqual(T2)
-    // TODAY's intake: the whole-income copy makes the user enter wages+pension into the override
-    // (it includes the already-receiving pension), AND the engine adds the pension via the IRMAA-only
-    // feed — so the override carries the WHOLE figure here, mirroring what the live intake produces.
-    const r = run([0, 0, 0], {
+
+    // POST-U4 live path: the inverted copy makes the user enter WAGES ALONE into the override; the
+    // engine adds the already-receiving pension once via the IRMAA-only feed. IRMAA-MAGI[0] =
+    // wages + pension exactly ⇒ year-2 tier-1 cost (the contract).
+    const wagesOnly = run([0, 0, 0], {
       healthcareEnabled: true,
       irmaaMagiSeed: lowSeed,
-      irmaaMagiOverride: [wages + pension, 0, 0], // U4 re-specs this to `wages` (override = wages-only)
+      irmaaMagiOverride: [wages, 0, 0], // U4: override = wages-only (the copy now says so)
       ongoingTaxableIrmaaOnly: [pension, 0, 0],
     })
-    // The CONTRACT (what passes post-U4): the pension is counted ONCE ⇒ year-2 tier-1 cost.
     const expectedCountedOnce = medicareAnnual(2, null) * 2 + medicareAnnual(2, 0)
-    expect(r.totalMedicareCostReal).toBeCloseTo(expectedCountedOnce, 4)
-    // TODAY this FAILS: IRMAA-MAGI[0] = (wages+pension) + pension = wages + 2×pension ≥ T2 ⇒ tier-2
-    // cost, strictly greater than the tier-1 `expectedCountedOnce` — the double-count, conservative.
+    expect(wagesOnly.totalMedicareCostReal).toBeCloseTo(expectedCountedOnce, 4)
+
+    // NEGATIVE CONTROL (the closed landmine): the PRE-U4 whole-income override (wages + pension)
+    // would double-count the pension (the engine adds it again) → wages + 2×pension ≥ T2 ⇒ tier-2,
+    // a STRICTLY HIGHER cost. This proves the copy inversion is what moved the cost — and that a
+    // copy regression to whole-income would be caught here, not silently shipped.
+    const wholeIncome = run([0, 0, 0], {
+      healthcareEnabled: true,
+      irmaaMagiSeed: lowSeed,
+      irmaaMagiOverride: [wages + pension, 0, 0],
+      ongoingTaxableIrmaaOnly: [pension, 0, 0],
+    })
+    expect(wholeIncome.totalMedicareCostReal).toBeGreaterThan(wagesOnly.totalMedicareCostReal)
   })
 })

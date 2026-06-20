@@ -145,6 +145,21 @@ describe('the no-write-until-Save seam (against the REAL store layer)', () => {
     expect(model.getSnapshot().draft.enteredAccounts).toHaveLength(1)
     expect(await databaseNames()).toEqual([]) // the account loop wrote nothing
 
+    // --- the R40 other-income loop (committing a real stream against the REAL store) ---
+    fireEvent.click(screen.getByRole('button', { name: copy.flowNext })) // accounts → other-income
+    expect(screen.getByRole('heading', { level: 2 }).textContent).toBe(copy.qOtherIncomeHeading)
+    fireEvent.click(screen.getByRole('button', { name: copy.addOtherIncome }))
+    // A pension the household already receives, with a real survivor share — a
+    // genuine commit, the most sensitive number in the app (the widow's picture).
+    fireEvent.click(screen.getByLabelText(copy.incomeTypePension))
+    setMoney(copy.incomeAmountLabel, '30000')
+    fireEvent.click(screen.getByLabelText(copy.incomeTimingNow))
+    fireEvent.click(screen.getByLabelText(copy.incomeColaReal))
+    setMoney(copy.incomeSurvivorLabel, '50')
+    fireEvent.click(screen.getByRole('button', { name: copy.otherIncomeSave }))
+    expect(model.getSnapshot().draft.incomeStreams).toHaveLength(1)
+    expect(await databaseNames()).toEqual([]) // the income loop wrote nothing either
+
     // --- mid-intake abandon: unmount with a half-entered household ---
     unmount()
     expect(await databaseNames()).toEqual([]) // park-and-resume is in-session only

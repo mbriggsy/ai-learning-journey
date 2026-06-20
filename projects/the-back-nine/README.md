@@ -75,7 +75,7 @@ The MVP is four acts. Each is a real milestone with its own plan, gates, and ver
 
 Act 1's engine is pinned against primary sources: every dated tax and healthcare figure carries an IRS / CMS / HHS / SSA / eCFR citation (and a directional-until-pinned flag where one isn't yet locked), and cohort mortality re-derived from the SSA Trustees-Report survival tables for the household's actual birth cohorts. The guided intake delivers a **live, provisional Monte Carlo reading that sharpens as you answer each question**, proven end-to-end in real Chromium under the enforced CSP.
 
-The engine and intake carry **1001 tests across 46 files**, all green (at the current Act 2 milestone — the guided intake), alongside lint, bundle-budget, ACA-freshness, and browser-CSP gates.
+The engine and intake carry **1032 tests across 47 files**, all green (at the current Act 2 milestone — the guided intake), alongside lint, bundle-budget, ACA-freshness, and browser-CSP gates.
 
 ---
 

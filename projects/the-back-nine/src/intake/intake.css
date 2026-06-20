@@ -497,6 +497,101 @@
   flex: 1;
 }
 
+/* ----- the percent field (survivor / taxable / exclusion / COLA rate) ----- */
+
+/* The % affix sits inside the well, right-aligned, so the digits read as a
+ * percent without the unit being copy. The input keeps its own padding; the
+ * affix is decorative + aria-hidden. */
+.percent-field {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.percent-field .field-input {
+  padding-inline-end: var(--space-7);
+}
+
+/* The "%" unit: a decorative CSS-generated affix (keeps it out of the copy
+ * catalog and the a11y tree, like the strip-fact middot separator). */
+.percent-field::after {
+  content: '%';
+  position: absolute;
+  inset-inline-end: var(--space-4);
+  color: var(--ink-muted);
+  font-size: var(--text-base);
+  pointer-events: none;
+}
+
+/* ----- the other-income loop (R40) ----- */
+
+.income-entry {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+/* A stream row carries TWO lines: the type · owner · ~$X identity, and the
+ * widow's-number survivor note beneath it. */
+.income-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding-block: var(--space-3);
+  border-block-end: 1px solid var(--line-soft);
+}
+
+.income-row-main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-inline-size: 0;
+}
+
+.income-survivor-note {
+  font-size: var(--text-sm);
+  color: var(--ink-muted);
+}
+
+/* The advanced tier — a quiet expander; the toggle reads as a calm text button. */
+.income-advanced {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.income-advanced-toggle {
+  align-self: flex-start;
+  min-height: var(--tap-min);
+}
+
+.income-advanced-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+/* The session-only "nothing saved yet" affordance: neutral text + icon, NEVER a
+ * red badge (color is never the only signal — the reader is color-blind). The
+ * reserved min-height keeps the note's appearance from shifting the Add button
+ * under a tapping thumb (insight 035). */
+.not-saved-note {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  min-block-size: var(--space-7);
+  margin-block-start: var(--space-4);
+  color: var(--ink-muted);
+  font-size: var(--text-sm);
+}
+
+.not-saved-icon {
+  flex: none;
+  margin-block-start: 0.15em;
+}
+
 /* ----- the cold-start frame ----- */
 
 .cold-start {

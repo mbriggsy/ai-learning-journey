@@ -88,9 +88,14 @@ export const copy = {
   oopHelp:
     'A rough yearly figure is plenty. Premiums are added on top by the tool, and out-of-pocket costs should already be inside your spending figure — this only sizes your HSA’s tax-free draw.',
   qWorkIncomeHeading: 'Income Medicare looks at',
-  workIncomeLabel: 'Total income on a recent return',
+  // KTD-9 copy half (R40 U4): wages-only / non-modeled-MAGI. The override carries
+  // ONLY working-year income the tool isn't already modeling as a retirement income
+  // stream — the engine adds each entered stream's own IRMAA-MAGI in every year
+  // (ongoingTaxableIrmaaOnly), so a stream counted here too would be double-counted.
+  // Inverting this copy is the user-facing half of the KTD-9 structural decouple.
+  workIncomeLabel: 'Working-year income, excluding any retirement income you entered',
   workIncomeHelp:
-    'A recent return’s whole income — investments and the rest, not just what work pays. If you’re still working when Medicare begins, this is what can add a surcharge on top of the usual premium.',
+    'Just the income that comes from working — salary, and anything else not already entered below as a retirement income stream like a pension or rental. The tool already counts those streams on their own, so leave them out here. If you’re still working when Medicare begins, this is what can add a surcharge on top of the usual premium.',
   qIrmaaSeedHeading: 'Your last two tax returns',
   irmaaSeedTwoBackLabel: 'Income, two years back',
   irmaaSeedOneBackLabel: 'Income, last year',
@@ -129,6 +134,76 @@ export const copy = {
   classifierBondPct: 'Bonds %',
   classifierCashPct: 'Cash %',
   errClassifierSum: 'Those percentages need to add up to 100.',
+  // --- other income in retirement (R40 — pension/rental/alimony/annuity/other;
+  //     opt-in off the 5-minute path; session-only until the vault is saved) ---
+  qOtherIncomeHeading: 'Other income (in retirement)',
+  otherIncomeIntro:
+    'Money that keeps coming in after work stops — a pension, a rental, an annuity, alimony. Skip this if none applies.',
+  otherIncomeEmpty: 'No other income added.',
+  addOtherIncome: 'Add other income',
+  otherIncomeSave: 'Add this income',
+  otherIncomeCancel: 'Never mind',
+  otherIncomeEdit: 'Edit',
+  otherIncomeRemove: 'Remove',
+  otherIncomeRemoveConfirm: 'Tap again to remove',
+  incomeOwnerLegend: 'Whose income is this?',
+  incomeTypeLegend: 'What kind of income?',
+  incomeTypePension: 'Pension',
+  incomeTypeRental: 'Rental',
+  incomeTypeAlimony: 'Alimony',
+  incomeTypeAnnuity: 'Annuity',
+  incomeTypeOther: 'Other',
+  incomeAmountLabel: 'Amount each year, in today’s dollars',
+  incomeAmountHelp:
+    'Before tax, in today’s money — a steady yearly figure is enough.',
+  incomeTimingLegend: 'When does it pay?',
+  incomeTimingNow: 'Receiving it now',
+  incomeTimingLater: 'Starts later',
+  incomeStartAgeLabel: 'The age it starts',
+  incomeStartAgeHelp:
+    'The age this person starts receiving it — the tool grows today’s figure forward to then.',
+  incomeColaLegend: 'Does it keep up with inflation?',
+  incomeColaReal: 'Holds its value',
+  incomeColaNominal: 'Stays flat (loses ground to inflation)',
+  incomeColaFixed: 'Rises a set percent each year',
+  incomeColaPctLabel: 'How much it rises each year',
+  incomeColaPctHelp:
+    'The yearly raise written into the plan — a teacher’s pension often lands near 2 to 3 percent, below inflation.',
+  incomeSurvivorLabel: 'How much continues to the survivor',
+  incomeSurvivorHelp:
+    'If the person receiving it passes first, how much of it keeps paying their spouse. A pension’s survivor share is set by the election made at retirement — there’s no safe guess, so the tool asks.',
+  incomeAlimonyDateLegend: 'When was the agreement signed?',
+  incomeAlimonyPre2019: 'On or before Dec 31, 2018',
+  incomeAlimonyPost2018: 'In 2019 or later',
+  incomeAlimonyDateHelp:
+    'The date matters for tax: an agreement from 2019 on isn’t taxed to the person receiving it, and an older one is. There’s no safe guess, so the tool asks.',
+  incomeAlimonyModifiedLegend: 'Was it changed to follow the newer tax rules?',
+  incomeAlimonyModifiedYes: 'Yes, expressly',
+  incomeAlimonyModifiedNo: 'No',
+  incomeAlimonyModifiedHelp:
+    'A pre-2019 agreement changed after 2018 follows the newer rules only if the change expressly says so.',
+  incomeAnnuityKindLegend: 'What kind of annuity?',
+  incomeAnnuityQualified: 'Qualified (from a retirement account)',
+  incomeAnnuityNonQualified: 'Non-qualified (bought with after-tax money)',
+  incomeAnnuityKindHelp:
+    'A qualified annuity is fully taxed; a non-qualified one returns part of what was paid in tax-free.',
+  incomeExclusionLabel: 'The tax-free part each year',
+  incomeExclusionHelp:
+    'For a non-qualified annuity, the share that’s a tax-free return of what was paid in. From the issuer’s exclusion-ratio figure.',
+  incomeAdvancedToggle: 'Fine-tuning (optional)',
+  incomeEndAgeLabel: 'The age it stops (leave blank if for life)',
+  incomeEndAgeHelp:
+    'Blank means it pays for life. Set an age only if it ends earlier — a term-certain annuity, say.',
+  incomeTaxableLabel: 'The taxable part each year',
+  incomeTaxableHelp:
+    'Leave blank to treat it as fully taxable (the safe default). Lower it only if part is a tax-free return of basis — a conservative simplification the tool holds steady.',
+  // The session-only "nothing saved yet" affordance — reserved slot, neutral
+  // text + icon, never a red badge (color is never the only signal — insight 035).
+  notSavedYet: 'Nothing’s saved to this device yet — that happens when you save your plan.',
+  errIncomeSurvivorRange: 'The survivor share is a number from 0 to 100 percent.',
+  errIncomeTaxableRange: 'The taxable part is a number from 0 to 100 percent.',
+  errIncomeExclusionRange: 'The tax-free part is a number from 0 to 100 percent.',
+  errIncomeColaPct: 'A yearly raise needs a number when “rises a set percent” is chosen.',
   // --- the provisional answer strip (D1 — surfaces and sharpens during entry;
   //     D2 builds the full state-adaptive surface over U6/U7) ---
   // A STABLE, state-agnostic region name: the strip's accessible label must not
@@ -203,6 +278,22 @@ export const slots = {
   /** One committed account in the loop's quiet list. */
   accountSummary: (kindLabel: string, owner: string, valueFormatted: string): string =>
     `${kindLabel} · ${owner} · $${valueFormatted}`,
+  /** One committed other-income stream's quiet row (R40 — type · owner · ~$X/yr).
+   *  The `~` is the humane-precision hedge; the amount is pre-formatted by the
+   *  caller (the ui layer can't import the intake money formatter). */
+  incomeSummary: (typeLabel: string, owner: string, amountFormatted: string): string =>
+    `${typeLabel} · ${owner} · ~$${amountFormatted}/yr`,
+  /** The widow's-number row note (R40 — surfaces what the SURVIVOR keeps in plain
+   *  language, NEVER a raw survivorPct). `survivorPct ∈ [0,1]`; `keeper` is the
+   *  OTHER spouse's name/pronoun, `owner` is the stream owner's. "would keep"
+   *  reads for both "You would keep" and "Your spouse would keep" (no agreement
+   *  trap). 0 ⇒ it ends; 1 ⇒ all of it; else the rounded percent. */
+  incomeSurvivorNote: (keeper: string, owner: string, survivorPct: number): string => {
+    if (survivorPct <= 0) return `This ends if ${owner} passes.`
+    const pct = Math.round(survivorPct * 100)
+    if (pct >= 100) return `${keeper} would keep all of this if ${owner} passes.`
+    return `${keeper} would keep ${pct}% of this if ${owner} passes.`
+  },
   /** The pinned natural-frequency frame. Top-of-scale renders "more than 9 of
    *  10" — "10 of 10" can NEVER appear (the over-funded near-ceiling clamp). */
   xOfTen: (n: number): string => (n >= 10 ? 'more than 9 of 10' : `${n} of 10`),

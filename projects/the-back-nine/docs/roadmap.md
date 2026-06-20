@@ -76,7 +76,7 @@ The C-units and D-units are the accumulation tracks — they extend the U-number
 | **U7** | Confidence statement surface + outcome-state system + survivor readout; copyGuard born here | not-started | The plain-language verdict |
 | **U8** | First-Save flow + recovery-phrase display + mandatory export + passphrase-strength gate (`zxcvbn-ts` ≥ 3 ∧ length ≥ 12) | not-started | |
 | **D2** | The state-adaptive first answer surface: date-first for not-yet-retired, spine-first for already-retired; the two-pane laptop layout | not-started | Same calm voice, one intake flow; only the lead answer changes |
-| **R40** | Other income in retirement (pension / rental / annuity / alimony / other) — engine + intake | planned | Build-ready, zero code; the immediate next build. Build steps: [docs/plans/2-first-answer.md](plans/2-first-answer.md) |
+| **R40** | Other income in retirement (pension / rental / annuity / alimony / other) — engine + intake | mostly shipped | U1–U4 shipped (types · compile + goldens · the atomic engine integration · the **intake UX + the KTD-9 copy half**); U5 is the doc-reconcile tail. Build steps: [docs/plans/2-first-answer.md](plans/2-first-answer.md) |
 
 ### Act 3 — The Levers You Hold (not started; `src/budget` is `.gitkeep`-only)
 
@@ -102,7 +102,7 @@ The C-units and D-units are the accumulation tracks — they extend the U-number
 | Feature | What it delivers | Status | Note |
 |---|---|---|---|
 | **Social Security** | Spousal/survivor benefit sub-engine (shipped above) + the claim-age intake | shipped (engine) | Claim-age as a *solver-optimized control* is chapter two. Mechanics: [docs/architecture.md](architecture.md) §7; build: [docs/plans/1-engine.md](plans/1-engine.md) |
-| **Other income (R40)** | Generic per-person non-earned income stream (pension/rental/annuity/alimony/other) | planned | Build-ready, zero code; the immediate next build. Build steps: [docs/plans/2-first-answer.md](plans/2-first-answer.md) |
+| **Other income (R40)** | Generic per-person non-earned income stream (pension/rental/annuity/alimony/other) | mostly shipped | U1–U4 shipped (types · compile + goldens · engine integration · intake UX + the KTD-9 copy half); U5 is the doc-reconcile tail. Build steps: [docs/plans/2-first-answer.md](plans/2-first-answer.md) |
 | **Portfolio holdings** | Per-account exact stock/bond/cash %; ticker → blend; the household blend the engine consumes | scoping | Accounts take an exact stock/bond/cash % that collapses to the one household blend the engine consumes. Folds into U8. Requirement: [product.md](product.md) R37 |
 | **"Just me" single-user mode** | A single-person (non-couple) household path | planned/deferred | Named, deferred |
 
@@ -161,7 +161,7 @@ These are the gates a fixture or recommendation must clear before any downstream
 | Gate | What it checks | Command |
 |---|---|---|
 | **Typecheck** | `tsc --noEmit` — must pass before any browser touch | `pnpm typecheck` |
-| **Tests** | 1001 vitest across 46 files (Vitest 4, `globals:false`); externally-derived goldens, absence-tests paired with presence companions | `pnpm test` |
+| **Tests** | 1032 vitest across 47 files (Vitest 4, `globals:false`); externally-derived goldens, absence-tests paired with presence companions | `pnpm test` |
 | **Lint** | Layer-boundary + engine-purity rules (no clock/entropy/env inside `src/engine/**`) | `pnpm lint` |
 | **ACA re-verify** | Fails the build if the enhanced-subsidy legislative entry is stale/unconfirmed — live, possibly-retroactive policy | `pnpm verify:aca` |
 | **Bundle budget** | Initial-JS byte sentinel ≤ 300 KiB entry JS; **currently 197.8 KiB** | `pnpm verify:bundle` |

@@ -74,6 +74,8 @@ export const personField = (index: number, field: string): FieldPath =>
   `people.${index}.${field}`
 export const accountField = (index: number, field: string): FieldPath =>
   `enteredAccounts.${index}.${field}`
+export const incomeField = (index: number, field: string): FieldPath =>
+  `incomeStreams.${index}.${field}`
 
 // ---------------------------------------------------------------------------
 // Contribution ceilings (R19 via C1) — ONE source for both the AccountEntry
@@ -318,6 +320,83 @@ const RULES: readonly SanityRule[] = [
           ? { rule: 'age-beyond-model', field: personField(i, 'birthYear'), messageKey: 'errAgeBeyondModel' }
           : null,
       ),
+  },
+  // ── R40 other-income ENTITY-SCALAR ranges (the entity-side gate KTD-4 names) ──
+  // `survivorPct` / `taxableFraction` / `exclusionFraction` are multiplied away at
+  // compile, so the engine's `validateParams` never sees them to range-check — the
+  // ONLY guards are the intake form's own controls AND these rules (the U8 restore
+  // codec is the third). Each must land in [0,1]; an out-of-range scalar is a true
+  // impossibility (a survivor can't keep 120% of a benefit). The OtherIncomeEntry
+  // form is the in-flow gate (it commits atomically); these fire on a directly
+  // mutated draft / a restored blob — the same calm grammar, amount-free.
+  {
+    id: 'income-survivor-range',
+    target: (d) => d.incomeStreams.map((_, i) => incomeField(i, 'survivorPct')),
+    check: (d) => {
+      const out: SanityViolation[] = []
+      d.incomeStreams.forEach((s, i) => {
+        if (Number.isFinite(s.survivorPct) && (s.survivorPct < 0 || s.survivorPct > 1)) {
+          out.push({ rule: 'income-survivor-range', field: incomeField(i, 'survivorPct'), messageKey: 'errIncomeSurvivorRange' })
+        }
+      })
+      return out
+    },
+  },
+  {
+    id: 'income-taxable-range',
+    target: (d) => d.incomeStreams.map((_, i) => incomeField(i, 'taxableFraction')),
+    check: (d) => {
+      const out: SanityViolation[] = []
+      d.incomeStreams.forEach((s, i) => {
+        // The direct `taxableFraction` exists only on the pension/rental/other arm
+        // (KTD-6 union); the annuity non-qual arm carries `exclusionFraction`, checked
+        // by its own rule. A present-but-out-of-range fraction is the impossibility.
+        if (
+          (s.type === 'pension' || s.type === 'rental' || s.type === 'other') &&
+          s.taxableFraction !== undefined &&
+          Number.isFinite(s.taxableFraction) &&
+          (s.taxableFraction < 0 || s.taxableFraction > 1)
+        ) {
+          out.push({ rule: 'income-taxable-range', field: incomeField(i, 'taxableFraction'), messageKey: 'errIncomeTaxableRange' })
+        }
+      })
+      return out
+    },
+  },
+  {
+    id: 'income-exclusion-range',
+    target: (d) => d.incomeStreams.map((_, i) => incomeField(i, 'exclusionFraction')),
+    check: (d) => {
+      const out: SanityViolation[] = []
+      d.incomeStreams.forEach((s, i) => {
+        if (
+          s.type === 'annuity' &&
+          s.qualified === false &&
+          Number.isFinite(s.exclusionFraction) &&
+          (s.exclusionFraction < 0 || s.exclusionFraction > 1)
+        ) {
+          out.push({ rule: 'income-exclusion-range', field: incomeField(i, 'exclusionFraction'), messageKey: 'errIncomeExclusionRange' })
+        }
+      })
+      return out
+    },
+  },
+  {
+    // `colaPct` is REQUIRED-and-finite when colaMode is 'fixed-pct' (absent/null is
+    // corruption — never coerced to 0, the optimistic-erosion direction; KTD-2 / the
+    // U8 codec mirrors this). The compile already fails LOUD as NaN at every year, but
+    // the calm form/restore message lands here at the field.
+    id: 'income-cola-pct-required',
+    target: (d) => d.incomeStreams.map((_, i) => incomeField(i, 'colaPct')),
+    check: (d) => {
+      const out: SanityViolation[] = []
+      d.incomeStreams.forEach((s, i) => {
+        if (s.colaMode === 'fixed-pct' && (s.colaPct === undefined || !Number.isFinite(s.colaPct))) {
+          out.push({ rule: 'income-cola-pct-required', field: incomeField(i, 'colaPct'), messageKey: 'errIncomeColaPct' })
+        }
+      })
+      return out
+    },
   },
 ]
 

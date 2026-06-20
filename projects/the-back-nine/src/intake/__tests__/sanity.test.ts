@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { accountField, contributionCeilingFor, personField, validateDraft, validateField } from '../sanity'
+import { accountField, contributionCeilingFor, incomeField, personField, validateDraft, validateField } from '../sanity'
 import type { ScenarioDraft, PersonDraft } from '@store/memoryModel'
+import type { IncomeStream } from '@shared/model'
 
 /** R19 UI-half rules: per-rule fire AND boundary-pass pairs (the phase-2 U5
  *  test contract), the status-conditional supersession, touched gating, and
@@ -216,5 +217,75 @@ describe('sanity — the combined HSA family ceiling (employer + employee share 
       ],
     })
     expect(validateDraft(d, touchedContribution)).toMatchObject([{ rule: 'contribution-over-ceiling' }])
+  })
+})
+
+// ---------------------------------------------------------------------------
+// R40 other-income ENTITY-SCALAR ranges (the entity-side gate KTD-4 names — the
+// engine multiplies these scalars away, so its validateParams never sees them;
+// the ONLY guards are the form's controls AND these rules AND the U8 codec).
+// These fire on a directly-mutated draft / a restored blob (no touched state),
+// so they are exercised via validateField (touched-independent). The fixtures
+// are the SHAPE the U8 restore path produces (`JSON.parse + as` erases the
+// discriminated union, so a corrupt scalar IS representable post-restore).
+// ---------------------------------------------------------------------------
+
+const incomeDraft = (streams: readonly IncomeStream[]): ScenarioDraft => draft({}, {}, { incomeStreams: streams })
+
+describe('sanity — R40 income entity-scalar ranges (fail-loud, the KTD-4 entity gate)', () => {
+  it('survivorPct > 1 fires LOUD (a survivor cannot keep more than 100% of a benefit)', () => {
+    const s: IncomeStream = { ownerIndex: 0, type: 'pension', annualRealToday: 30_000, startAge: 65, colaMode: 'real-flat', survivorPct: 1.2 }
+    expect(validateField(incomeDraft([s]), incomeField(0, 'survivorPct'))).toMatchObject([
+      { rule: 'income-survivor-range', messageKey: 'errIncomeSurvivorRange' },
+    ])
+  })
+
+  it('survivorPct < 0 fires LOUD (never coerced to 0)', () => {
+    const s: IncomeStream = { ownerIndex: 1, type: 'rental', annualRealToday: 12_000, startAge: 60, colaMode: 'real-flat', survivorPct: -0.1 }
+    expect(validateField(incomeDraft([s]), incomeField(0, 'survivorPct'))).toMatchObject([
+      { rule: 'income-survivor-range' },
+    ])
+  })
+
+  it('survivorPct at the [0,1] boundaries PASSES (0 and 1 are legal)', () => {
+    const s0: IncomeStream = { ownerIndex: 0, type: 'pension', annualRealToday: 30_000, startAge: 65, colaMode: 'real-flat', survivorPct: 0 }
+    const s1: IncomeStream = { ownerIndex: 0, type: 'pension', annualRealToday: 30_000, startAge: 65, colaMode: 'real-flat', survivorPct: 1 }
+    expect(validateField(incomeDraft([s0]), incomeField(0, 'survivorPct'))).toEqual([])
+    expect(validateField(incomeDraft([s1]), incomeField(0, 'survivorPct'))).toEqual([])
+  })
+
+  it('taxableFraction > 1 on a pension/rental/other fires LOUD', () => {
+    const s: IncomeStream = { ownerIndex: 0, type: 'other', annualRealToday: 5_000, startAge: 70, colaMode: 'nominal-flat', survivorPct: 0.5, taxableFraction: 1.5 }
+    expect(validateField(incomeDraft([s]), incomeField(0, 'taxableFraction'))).toMatchObject([
+      { rule: 'income-taxable-range', messageKey: 'errIncomeTaxableRange' },
+    ])
+  })
+
+  it('exclusionFraction > 1 on a NON-QUALIFIED annuity fires LOUD (the annuity analog)', () => {
+    const s: IncomeStream = { ownerIndex: 0, type: 'annuity', qualified: false, exclusionFraction: 1.4, annualRealToday: 20_000, startAge: 66, colaMode: 'nominal-flat', survivorPct: 0.5 }
+    expect(validateField(incomeDraft([s]), incomeField(0, 'exclusionFraction'))).toMatchObject([
+      { rule: 'income-exclusion-range', messageKey: 'errIncomeExclusionRange' },
+    ])
+  })
+
+  it('colaMode=fixed-pct with an ABSENT colaPct fires LOUD (never coerced to 0 — the optimistic-erosion sin)', () => {
+    // The restore-corruption shape: a fixed-pct stream whose REQUIRED colaPct is gone.
+    const s = { ownerIndex: 0, type: 'pension', annualRealToday: 40_000, startAge: 60, colaMode: 'fixed-pct', survivorPct: 1 } as unknown as IncomeStream
+    expect(validateField(incomeDraft([s]), incomeField(0, 'colaPct'))).toMatchObject([
+      { rule: 'income-cola-pct-required', messageKey: 'errIncomeColaPct' },
+    ])
+  })
+
+  it('colaMode=fixed-pct WITH a finite colaPct passes (the legal in-form shape)', () => {
+    const s: IncomeStream = { ownerIndex: 0, type: 'pension', annualRealToday: 40_000, startAge: 60, colaMode: 'fixed-pct', colaPct: 0.02, survivorPct: 1 }
+    expect(validateField(incomeDraft([s]), incomeField(0, 'colaPct'))).toEqual([])
+  })
+
+  it('a clean in-range stream raises NO income violations across every income field', () => {
+    const s: IncomeStream = { ownerIndex: 0, type: 'pension', annualRealToday: 30_000, startAge: 65, colaMode: 'real-flat', survivorPct: 0.5, taxableFraction: 0.9 }
+    const d = incomeDraft([s])
+    for (const f of ['survivorPct', 'taxableFraction', 'exclusionFraction', 'colaPct'] as const) {
+      expect(validateField(d, incomeField(0, f))).toEqual([])
+    }
   })
 })

@@ -29,3 +29,6 @@ Thumbs.db
 .obsidian/workspace-mobile.json
 .secrets/
 __pycache__/
+
+# swarm war diaries — after-action reports (process logs, not project docs)
+.swarm-runs/

@@ -59,8 +59,8 @@ Only the final answers land here. **Synthesize with Sequential Thinking** (stand
 ### 5 · Verify what's load-bearing
 If the swarm didn't already self-verify, adversarially check the claims that matter against source before calling anything done — runtime truth over a worker's say-so.
 
-### 6 · Relay + distill
-Report the synthesized result to the user. Run `/distill` on anything the swarm taught about the harness — each swarm should make the next one tighter.
+### 6 · War diary + relay + distill
+Write the after-action report — the durable battle log — to `<repo-root>/.swarm-runs/<date>-<unit>.md` (`references/war-diary.md`): what was built, where the review drew blood, what the fixer closed, the verdict. Then relay the synthesized result to the user and point them at the diary. Run `/distill` on anything the swarm taught about the harness — each swarm should make the next one tighter.
 
 ## Defaults
 - `model: 'opus'`, `effort: 'xhigh'` on every worker (Briggsy's bar). Per-stage downshift to `low` only for rote mechanical work.

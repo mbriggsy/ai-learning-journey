@@ -1,6 +1,8 @@
 # loop-engineer — TODO
 
-`SKILL.md` + `references/` authored 2026-06-19 (R40 U3 loop run); mechanics verified against CLI 2.1.183 + live docs the same day. **Committed (`0ef5fa70`); still un-dogfooded as a skill.** Priority order.
+> **BENCHED 2026-06-20.** `swarm` is the daily driver for delegated build work; loop-engineer is the live-steer specialist (see the SKILL.md banner). Kept (not deleted) for the rare live-coordination case; the items below are paused, not active.
+
+`SKILL.md` + `references/` authored 2026-06-19 (R40 U3 loop run); mechanics verified against CLI 2.1.183 + live docs the same day. **Committed (`0ef5fa70`); never dogfooded as a skill.** Priority order (paused).
 
 ## Refine the draft
 - [ ] **Cold-test the `description` triggers** — confirm it fires on "run the loop / loop-engineer X / spawn a team to build+verify / keep this window dark" and does NOT over-trigger (e.g. a plain inline edit, or a fire-and-forget fan-out that should be the Workflow tool). Use the distill/brief output-eval loop (the trigger optimizer is billing-blocked + unvalidated).

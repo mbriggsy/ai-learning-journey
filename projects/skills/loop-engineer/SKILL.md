@@ -1,11 +1,13 @@
 ---
 name: loop-engineer
-description: The institutionalized loop-engineering cadence — a fully-delegated build loop where THIS window is only the coordinator (the "team-lead") and does no work itself: it spawns Agent-Teams teammates to implement → gate → INDEPENDENTLY verify → commit, reads their relays, and stays context-light. Use when the user wants to "run the loop", "loop-engineer X", "delegate this build to a team", "spawn a team to build/verify X", run an "autonomous delegated build loop", or keep the main window dark / coordination-only while teammates do the work. NOT for work you'll do inline yourself, and NOT for a deterministic fire-and-forget fan-out with no live coordinator (that's the Workflow tool — see references/mechanism-and-caveats.md).
+description: "[BENCHED — superseded by the `swarm` skill for the default case.] loop-engineer is the LIVE-coordination sibling of `swarm`: a delegated build loop on Agent Teams where THIS window is a live team-lead that can steer teammates mid-run and field a teammate's question live. Reach for it ONLY when you explicitly want live mid-run coordination — to watch/redirect teammates as they work, or let a teammate ask you a question without killing the run — or when the user literally says \"loop-engineer\". For fire-and-forget mass delegation, a deepened build unit, or just keeping this window light, use `swarm` instead (the proven daily driver). NOT for work you'll do inline yourself."
 argument-hint: "[the decided unit to delegate, e.g. 'R40 U4' or a plan/doc ref]"
 user-invocable: true
 ---
 
 # Loop Engineer
+
+> ⚠️ **BENCHED — not the current tool (2026-06-20).** For delegated build work, use **`swarm`** — the fire-and-forget mass-delegation skill that's now the proven daily driver (it rebuilt R40 U3 to parity-plus, autonomously). `loop-engineer` is `swarm`'s **live-coordination sibling**: reach for it *only* when you need to steer teammates **mid-run**, or let a teammate ask you a question live — the one thing `swarm` structurally can't do (it's fire-and-forget, no mid-run human input). The cadence below is verified and correct; it's just rarely the right pick. If you opened this confused about how it differs from `swarm`: **`swarm` = hand off and review the result; `loop-engineer` = stay in the room and steer.**
 
 A delegated build loop that keeps the coordinator empty. THIS window (the **team-lead**) executes **nothing** — it spawns teammates (Claude Code **Agent Teams**), each working in its own context window, to **implement → run the gates → independently verify → commit/push**, and the team-lead only **reads relays, forwards milestones, and tracks the shared task list.** The heavy weight — file reads, diffs, test output, review reasoning — never lands here, so one coordinator can drive far more work before its context saturates.
 

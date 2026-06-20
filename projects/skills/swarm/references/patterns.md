@@ -68,7 +68,34 @@ while (budget.total && budget.remaining() > 80_000) {
 return acc
 ```
 
+## 5. The build-swarm — implement → review → fix (shipping a decided unit)
+The shape for building real code from a deepened plan. **The unit of trust is the LOOP, not the implement step** — proven on the R40 U3 re-run (2026-06-19): a lone implementer produced *correct* routing but under-tested (skipped the fail-loud battery, left a branch unreached) and shipped one subtly-wrong guard; the independent panel caught all of it, the fix-loop closed it, and the result re-gated to **parity-plus** (1003 tests vs the human's 1001). The implementer's confident "complete" is a map.
+
+```js
+// One implementer for an ATOMIC unit; fan out across INDEPENDENT units only (a half-done atomic unit is WRONG, not partial).
+const WT = '<path outside the repo>'   // implementer runs: git worktree add <WT> <base-commit>   (isolate every parallel implementer)
+
+// 1 · IMPLEMENT — hand it the COVERAGE CHECKLIST (a lone worker skips these unless told):
+const COVERAGE = `Tests MUST include: a fail-loud test for EVERY guard you write; a fixture that reaches EVERY branch (incl. the rarely-hit one); >=1 externally-derived magnitude oracle (not all-relative ==/>); a path test that actually RUNS the code (not one that drops at compile).`
+const impl = await agent(kit(`In a worktree off <base>, implement <unit> per <plan paths> + <contract brief>. ${COVERAGE} Gate: typecheck && lint && test GREEN — a run you saw.`),
+  { label: 'implement', phase: 'Build', model: 'opus', effort: 'xhigh', schema: IMPL })
+
+// 2 · REVIEW — parallel ultramode lenses, READ-ONLY against the worktree (+ a divergence lens if an answer key exists):
+const reviews = await parallel(LENSES.map(L => () =>
+  agent(kit(`${L.prompt} Read the WHOLE changed files in ${WT}. ${SCOPE_GUARDS}`),
+    { label: `review:${L.key}`, phase: 'Review', model: 'opus', effort: 'xhigh', schema: REVIEW })))
+const punch = reviews.flatMap(r => r.findings).filter(f => ['P0','P1','P2'].includes(f.severity))
+
+// 3 · FIX-LOOP — close the punch-list; MUTATION-PROVE every new test (mutate → watch it fail → revert); re-gate:
+if (punch.length) await agent(kit(`In ${WT}, close: ${JSON.stringify(punch)}. For each test you add, mutate the code, see it fail, REVERT — prove it bites. Re-gate GREEN.`),
+  { label: 'fix', phase: 'Fix', model: 'opus', effort: 'xhigh', schema: FIX })
+```
+For a first/risky run, **stage it** (checkpoint between implement · review · fix — see the worker fail the hard part before spending on review). Once a pipeline is proven, collapse it into one fire-and-forget workflow.
+
 ## Rules of thumb
+- **The loop is the unit of trust, not the implement step.** Never call a swarm-built unit done on the implementer's "green" — a lone implementer lands ~90% correct but under-tests and ships subtle divergences. Implement → independent review → fix.
+- **Hand every implementer a coverage checklist** (the `COVERAGE` block above) — a cheap prompt change that closes the biggest gap class (the proven misses were a whole fail-loud battery and an unreached branch).
+- **Isolate parallel implementers in git worktrees** (`git worktree add <wt> <base>`); review and diff read-only against them. A reference answer (if one exists) powers a divergence lens; without one, the testing lens's "is every branch reached / is the fail-loud battery present" check carries that weight.
 - **Decompose inline first** (in the main window, cheap) to discover the work-list, THEN swarm over it. You don't need the shape before the *task*, only before the *fan-out*.
 - **Pin exact file paths in every worker prompt** — list the absolute paths, never "the four files" / "the skill's references". A worker handed no explicit paths *will wander* (proven: in the first live swarm, the one review worker whose prompt omitted the paths reviewed the *sibling* skill by mistake). Interpolate a `DIR` constant into every prompt.
 - **`pipeline` by default**, `parallel` only when a stage genuinely needs ALL prior results at once (dedup/merge, early-exit on zero, cross-item comparison). A barrier you don't need is wasted wall-clock.

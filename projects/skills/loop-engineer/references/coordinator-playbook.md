@@ -2,7 +2,7 @@
 
 The team-lead is a *relay and a ledger*, nothing else. Concrete moves, in order.
 
-There is **one implicit team per session** — no team to create or name. `Agent`'s `name:` names the *teammate*; the `team_name` arg is ignored (CLI ≥ v2.1.178). Spawn with:
+There is **one implicit team per session** — no team to create or name. `Agent`'s `name:` names the *teammate*; the `team_name` arg is ignored. Spawn with:
 - `name:` — makes the teammate addressable via `SendMessage({to: name})`. ALWAYS name them.
 - `model: 'opus'` — correctness work; never inherit-silently or drop to a mid-tier.
 - `run_in_background: true` for a long doer so the coordinator stays free; foreground only for a quick child whose result you want returned inline.

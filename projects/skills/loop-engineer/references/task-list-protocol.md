@@ -19,4 +19,4 @@ Discipline (mirrors compound-engineering `ce-optimize`'s persistence rule):
 
 **Resume reality (this is the recovery path):**
 - A same-session `/resume` re-attaches to the **same** `session-<id8>/` dir — the tasks are all still on disk. What's gone is the live, in-process teammates (docs: "/resume and /rewind do not restore in-process teammates; the lead may attempt to message teammates that no longer exist"). The lead recovers by **reading the task list**, not by pinging dead peers.
-- A **new** session gets a **new, empty** `session-<newid8>/` dir — it does *not* inherit a prior run's list. There is no "rejoin team X by name" anymore (named teams were removed in v2.1.178 — one implicit team per session). To pick up a prior run from a fresh session, read its `session-<oldid8>/` dir by path.
+- A **new** session gets a **new, empty** `session-<newid8>/` dir — it does *not* inherit a prior run's list. There is no "rejoin team X by name" (named teams are gone — see `mechanism-and-caveats.md`). To pick up a prior run from a fresh session, read its `session-<oldid8>/` dir by path.

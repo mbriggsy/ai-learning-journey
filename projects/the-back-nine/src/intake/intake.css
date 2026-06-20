@@ -314,6 +314,22 @@
   gap: var(--space-1);
 }
 
+/* Vertical variant — full-width stacked rows for long, meaning-bearing labels
+ * (the COLA choice). Mirrors the income-type radio list (.kind-list): each
+ * option is its own calm row, left-aligned so a label that wraps reads as
+ * prose rather than a cramped centered chip. Selection still reads by weight +
+ * fill + inset ring (.segment-active), never hue. */
+.segmented-track-vertical {
+  flex-direction: column;
+}
+
+.segmented-track-vertical .segment {
+  flex: none;
+  justify-content: flex-start;
+  text-align: start;
+  padding: var(--space-2) var(--space-3);
+}
+
 .segment {
   flex: 1;
   display: flex;

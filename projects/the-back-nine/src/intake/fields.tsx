@@ -271,6 +271,12 @@ export type SegmentOption<V extends string> = { readonly value: V } & (
  * Segmented control — real radios under segment labels (form-native a11y).
  * The active segment reads by WEIGHT + FILL, never hue alone (the law).
  * Used for the $/month-vs-$/year period choice and the work-status branch.
+ *
+ * Defaults to a HORIZONTAL track (short 2-option choices). Pass `vertical` to
+ * stack the segments as full-width rows — for a control whose option labels
+ * carry a parenthetical meaning too long to read side-by-side (the COLA choice),
+ * mirroring the income-type radio list. Selection still reads by weight + fill,
+ * never hue (the color-blind law holds in either orientation).
  */
 export function SegmentedControl<V extends string>({
   legendKey,
@@ -279,6 +285,7 @@ export function SegmentedControl<V extends string>({
   onChange,
   name,
   required = false,
+  vertical = false,
 }: {
   readonly legendKey: CopyKey
   readonly options: ReadonlyArray<SegmentOption<V>>
@@ -291,6 +298,9 @@ export function SegmentedControl<V extends string>({
    *  color — the reader is color blind). The Save gate names the specific missing
    *  fact on block; this is the up-front cue. */
   readonly required?: boolean
+  /** Stack the segments as full-width rows instead of a side-by-side track —
+   *  for long option labels that cram when squeezed into equal-width segments. */
+  readonly vertical?: boolean
 }) {
   const id = useId()
   return (
@@ -304,7 +314,7 @@ export function SegmentedControl<V extends string>({
           </>
         )}
       </legend>
-      <div className="segmented-track">
+      <div className={`segmented-track${vertical ? ' segmented-track-vertical' : ''}`}>
         {options.map((opt) => (
           <label
             key={opt.value}

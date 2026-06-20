@@ -321,11 +321,14 @@ export function OtherIncomeEntry({ draft, initial, onSave, onCancel }: OtherInco
         />
       )}
 
-      {/* COLA mode — three shapes; the fixed-pct rate is REQUIRED when chosen. */}
+      {/* COLA mode — three options; the fixed-pct rate is REQUIRED when chosen.
+          Stacked vertical (full-width rows): each label carries a parenthetical
+          meaning that crams when squeezed into a side-by-side track. */}
       <SegmentedControl<ColaMode>
         legendKey="incomeColaLegend"
         name="income-cola"
         required
+        vertical
         options={[
           { value: 'real-flat', labelKey: 'incomeColaReal' },
           { value: 'nominal-flat', labelKey: 'incomeColaNominal' },

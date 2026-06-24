@@ -1,6 +1,6 @@
 # loop-engineer — TODO
 
-> **BENCHED 2026-06-20.** `swarm` is the daily driver for delegated build work; loop-engineer is the live-steer specialist (see the SKILL.md banner). Kept (not deleted) for the rare live-coordination case; the items below are paused, not active.
+> **BENCHED 2026-06-20 · DOGFOOD-PROVEN 2026-06-24.** `swarm` is the daily driver for delegated build work; loop-engineer is the live-steer / eye-oracle specialist. The **first live dogfood is DONE** — the full cadence flew end-to-end on The Back Nine U6-render `ConfidenceBand` (the independent-verify loop caught a real cardinal-sin bug the green gates missed; coordinator stayed context-light throughout). Findings → `references/mechanism-and-caveats.md` (*First-dogfood field notes*). Refinement items are now in the **Refine from the first dogfood** section below.
 
 `SKILL.md` + `references/` authored 2026-06-19 (R40 U3 loop run); mechanics verified against CLI 2.1.183 + live docs the same day. **Committed (`0ef5fa70`); never dogfooded as a skill.** Priority order (paused).
 
@@ -17,9 +17,17 @@ On 2026-06-20 the **first real build-swarm** landed The Back Nine's R40 U4 (`d58
 ## Refine the draft
 - [ ] **Cold-test the `description` triggers** — confirm it fires on "run the loop / loop-engineer X / spawn a team to build+verify / keep this window dark" and does NOT over-trigger (e.g. a plain inline edit, or a fire-and-forget fan-out that should be the Workflow tool). Use the distill/brief output-eval loop (the trigger optimizer is billing-blocked + unvalidated).
 
-## Activate
-- [ ] **Junction-install** when ready to test: `~/.claude/skills/loop-engineer` → this dir (PowerShell junction, no elevation — same as distill/brief/window; edits propagate live).
-- [ ] **First live dogfood run** on a real, decided unit — **→ target: The Back Nine U6-render / U7 (see *Next experiment* at top).** This is the only mechanism still unproven end-to-end as a skill: the SendMessage relay, idle≠done pull, and the independent-verify handoff. Capture what breaks → `/distill` back into the skill (the distill commits its own findings).
+## Activate — DONE (2026-06-24)
+- [x] **Junction-install** — `~/.claude/skills/loop-engineer` → repo dir (PowerShell junction).
+- [x] **First live dogfood run** — The Back Nine U6-render `ConfidenceBand` (direction B + click-to-enlarge). The SendMessage relay, idle≠done pull, independent-verify handoff, fix-loop (×2), and live-steer **all proven end-to-end**. Findings distilled into `references/mechanism-and-caveats.md`.
+
+## Refine from the first dogfood
+- [ ] **Bake "coordinator restraint" into the cadence** — once a teammate is confirmed idle/done, stop pinging; read the task list before pulling; only pull if a verdict isn't plausibly already in-flight; don't narrate stale idle-echoes to the user. (Over-pulling caused a chatter loop.)
+- [ ] **State the mutator-serialization rule explicitly** — teammates share ONE working tree; never run two committing teammates concurrently (serialize, or `git worktree`-isolate). Add to the cadence + the security/boundary section.
+- [ ] **`temp/` is not durable scratch** — instruct teammates to use isolated dirs / heredoc-persisted files; project `temp/` is async-swept. (Open: trace the sweeper — possibly a hook.)
+- [ ] **"Coordinator reconciles task status"** — a teammate relays a verdict but may not flip its task; the lead closes it off the relay. Encode as part of "pull the verdict".
+- [ ] **Promote "the task list is canonical, chat is lossy" to a first-class law** — teammates verify state before acting; treat echoes/backlog flushes as no-ops. This is what made the run robust.
+- [ ] **"Test a verifier's 'can't trigger' note before locking"** — a forward-looking note is an unverified claim; the dogfood's real bug hid behind exactly such a note.
 
 ## Later
 - [ ] Promote to a sibling `projects/` project ONLY if it accretes real standalone scripts (launcher `.ps1`, task-list templates, gate scripts) beyond `SKILL.md` + `references/`.

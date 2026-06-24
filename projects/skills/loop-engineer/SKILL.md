@@ -8,6 +8,8 @@ user-invocable: true
 # Loop Engineer
 
 > ⚠️ **BENCHED — not the current tool (2026-06-20).** For delegated build work, use **`swarm`** — the fire-and-forget mass-delegation skill that's now the proven daily driver (it rebuilt R40 U3 to parity-plus, autonomously). `loop-engineer` is `swarm`'s **live-coordination sibling**: reach for it *only* when you need to steer teammates **mid-run**, or let a teammate ask you a question live — the one thing `swarm` structurally can't do (it's fire-and-forget, no mid-run human input). The cadence below is verified and correct; it's just rarely the right pick. If you opened this confused about how it differs from `swarm`: **`swarm` = hand off and review the result; `loop-engineer` = stay in the room and steer.**
+>
+> **✅ Dogfood-proven 2026-06-24** — first live run flew the full cadence end-to-end on The Back Nine U6-render `ConfidenceBand` (an eye-oracle unit; **the independent-verify loop caught a real cardinal-sin bug the green gates missed**, fixed across two fix-loops, locked by a live cold-read). Field notes + harness rough edges (messaging is lossy, teammates share one tree + a swept `temp/`, coordinator restraint): `references/mechanism-and-caveats.md` → *First-dogfood field notes*.
 
 A delegated build loop that keeps the coordinator empty. THIS window (the **team-lead**) executes **nothing** — it spawns teammates (Claude Code **Agent Teams**), each working in its own context window, to **implement → run the gates → independently verify → commit/push**, and the team-lead only **reads relays, forwards milestones, and tracks the shared task list.** The heavy weight — file reads, diffs, test output, review reasoning — never lands here, so one coordinator can drive far more work before its context saturates.
 

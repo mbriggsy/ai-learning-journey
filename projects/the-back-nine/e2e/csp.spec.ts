@@ -191,13 +191,18 @@ test.describe('CSP — real browser enforcement', () => {
     await spouse.getByLabel('The age work stopped').fill('61')
     await next()
 
-    // Social Security (amount + claim age per person).
-    const ssAmounts = page.getByLabel('Estimated yearly benefit')
-    await ssAmounts.first().fill('24000')
-    await ssAmounts.last().fill('18000')
-    const claims = page.getByLabel('Planned claim age (62–70)')
-    await claims.first().fill('67')
-    await claims.last().fill('67')
+    // Social Security per person. Labels + value semantics follow the SS cold-read
+    // rename (commit 3c04391c): the benefit field is now the MONTHLY at-FRA figure
+    // (committed ×12 to the annual pia), and claiming is entered as the YEAR you
+    // start (committed as year − birthYear → the whole-year claim age the engine
+    // stores). Pat (b.1961) 2028 → age 67; Sam (b.1963) 2030 → age 67 — both inside
+    // the 62–70 window; $2,000/$1,500 monthly is well under the magnitude ceiling.
+    const ssAmounts = page.getByLabel('Monthly benefit at full retirement age')
+    await ssAmounts.first().fill('2000')
+    await ssAmounts.last().fill('1500')
+    const claims = page.getByLabel('The year you’ll start Social Security')
+    await claims.first().fill('2028')
+    await claims.last().fill('2030')
     await next()
 
     // Spend (+ the explicit period confirm — the figure is ambiguous-band).
@@ -216,11 +221,16 @@ test.describe('CSP — real browser enforcement', () => {
     await page.getByLabel('Income, last year').fill('110000')
     await next()
 
-    // One account (401k, recognized ticker), committed to the loop.
+    // One account (401k), committed to the loop. The single-ticker lookup was
+    // retired in the account-form redesign — the blend is now one precise
+    // stock/bond/cash split (sum-to-100, committed on blur). 100/0/0 = an
+    // all-stock account (what the old "VTI" stood in for).
     await page.getByRole('button', { name: 'Add an account' }).click()
     await page.getByRole('radio', { name: '401(k)', exact: true }).check({ force: true })
     await page.getByLabel('Balance today').fill('1000000')
-    await page.getByLabel('Main holding’s ticker').fill('VTI')
+    await page.getByLabel('Stocks %').fill('100')
+    await page.getByLabel('Bonds %').fill('0')
+    await page.getByLabel('Cash %').fill('0')
     await page.getByRole('button', { name: 'Add this account' }).click()
 
     // Continue commits the account set → the engine dispatches: the strip's

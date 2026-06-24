@@ -2,6 +2,9 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import '@testing-library/jest-dom/vitest'
 import { cleanup, render, waitFor } from '@testing-library/react'
+import { readFileSync } from 'node:fs'
+import { dirname, join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { ConfidenceBand } from '../ConfidenceBand'
 import { PLOT, areaPath, linePath } from '../bandGeometry'
 
@@ -134,11 +137,19 @@ describe('ConfidenceBand — resolved fan', () => {
     expect(getByText('the low futures')).toBeInTheDocument()
   })
 
-  it('applies non-scaling-stroke to the median + area paths (line weight constant across viewports)', () => {
-    const { container } = render(<ConfidenceBand data={resolved()} labels={labels} />)
-    const median = container.querySelector('.band-median')!
-    // class carries vector-effect via band.css; assert the class hook is present (the css is the proof).
-    expect(median).toHaveClass('band-median')
+  it('declares non-scaling-stroke on every stroked band class (source-bound to band.css)', () => {
+    // non-scaling-stroke is load-bearing: it keeps the colorblind line-WEIGHT encoding constant in
+    // screen px across viewports (not merely "scales nicely"). jsdom computes no stylesheet, so the
+    // honest proof is the CSS source itself (mirrors colorblind.test's token source-bind). A
+    // refactor that drops the declaration on any stroked class must FAIL HERE, never ship green.
+    const css = readFileSync(join(dirname(fileURLToPath(import.meta.url)), '..', 'band.css'), 'utf8')
+    const ruleHas = (selector: string, decl: string): boolean => {
+      const block = css.match(new RegExp(`\\.${selector}\\s*\\{([^}]*)\\}`))
+      return block !== null && block[1]!.includes(decl)
+    }
+    for (const cls of ['band-median', 'band-area', 'band-placeholder-edge']) {
+      expect(ruleHas(cls, 'vector-effect: non-scaling-stroke')).toBe(true)
+    }
   })
 })
 
@@ -220,5 +231,63 @@ describe('ConfidenceBand — prefers-reduced-motion: identical FINAL rendered st
     expect(animated.counts).toBe(reduced.counts) // same element set
     expect(animated.medianD).toBe(reduced.medianD) // final geometry identical
     expect(animated.outerD).toBe(reduced.outerD)
+  })
+})
+
+describe('ConfidenceBand — MORPH on a mounted instance (widen / shift, not only first-draw)', () => {
+  // The draw-once-then-morph contract: a recompute on a MOUNTED band must RE-TARGET the path `d`
+  // to the new fan (widen OR shift) and keep the element set stable — never remount or replay the
+  // draw. Every OTHER test mounts fresh (firstDraw=true), so this is the ONLY exercise of the morph
+  // branch (hasDrawn=true → firstDraw=false) the contract names load-bearing.
+  const base = resolved()
+  const widen = resolved({
+    samples: samples((y) => {
+      const mid = 900_000 - y * 8_000
+      const half = 260_000 // a far wider spread than base's 120k (an Act-3 widen, not only narrow)
+      return { p10: mid - 2 * half, p25: mid - half, p50: mid, p75: mid + half, p90: mid + 2 * half }
+    }),
+  })
+  const shift = resolved({
+    samples: samples((y) => {
+      const mid = 520_000 - y * 8_000 // shifted DOWN (a worse market), still ≥ 0 across the lattice
+      const half = 120_000
+      return { p10: mid - 2 * half, p25: mid - half, p50: mid, p75: mid + half, p90: mid + 2 * half }
+    }),
+  })
+
+  it('re-targets the rendered `d` to a widened then shifted fan on the SAME instance; element set stable', async () => {
+    const { container, rerender } = render(<ConfidenceBand data={base} labels={labels} />)
+    const medianD = () => container.querySelector<SVGPathElement>('.band-median')?.getAttribute('d') ?? ''
+    const outerD = () => container.querySelectorAll<SVGPathElement>('.band-area')[0]?.getAttribute('d') ?? ''
+
+    // settle on the base fan (the first draw)
+    await waitFor(() =>
+      expect(medianD()).toBe(linePath(base.samples, 'p50', base.horizonYears, base.dollarMax)),
+    )
+
+    // WIDEN — the mounted instance morphs `d` to the new geometry (never a redraw-from-zero)
+    rerender(<ConfidenceBand data={widen} labels={labels} />)
+    await waitFor(() => {
+      expect(medianD()).toBe(linePath(widen.samples, 'p50', widen.horizonYears, widen.dollarMax))
+      expect(outerD()).toBe(areaPath(widen.samples, 'p10', 'p90', widen.horizonYears, widen.dollarMax))
+    })
+
+    // SHIFT — morphs again to a down-shifted fan
+    rerender(<ConfidenceBand data={shift} labels={labels} />)
+    await waitFor(() =>
+      expect(medianD()).toBe(linePath(shift.samples, 'p50', shift.horizonYears, shift.dollarMax)),
+    )
+
+    // PLANTED: the morph actually MOVED the geometry — a WIDEN changes the EDGES (the area path),
+    // a SHIFT changes the median; neither morph target is a vacuous no-op …
+    expect(areaPath(widen.samples, 'p10', 'p90', widen.horizonYears, widen.dollarMax)).not.toBe(
+      areaPath(base.samples, 'p10', 'p90', base.horizonYears, base.dollarMax),
+    )
+    expect(linePath(shift.samples, 'p50', shift.horizonYears, shift.dollarMax)).not.toBe(
+      linePath(base.samples, 'p50', base.horizonYears, base.dollarMax),
+    )
+    // … and the element set never remounted across the morphs (still 1 median / 2 areas).
+    expect(container.querySelectorAll('.band-median')).toHaveLength(1)
+    expect(container.querySelectorAll('.band-area')).toHaveLength(2)
   })
 })

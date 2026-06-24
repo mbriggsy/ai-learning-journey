@@ -141,12 +141,31 @@ export interface IndeterminateBandData {
 export type BandViewData = ResolvedBandData | IndeterminateBandData
 
 /** True iff `samples` is a well-formed fixed lattice: the exact contracted length, monotonic
- *  non-decreasing in `yearsFromNow`. A malformed fan is a caller bug — fail loud, never draw a
- *  silently-wrong band (the calm-but-wrong sin). */
+ *  non-decreasing in `yearsFromNow`, and — per sample — FINITE, NON-NEGATIVE, ORDERED percentiles
+ *  (0 ≤ p10 ≤ p25 ≤ p50 ≤ p75 ≤ p90, the {@link BandSample} contract). A malformed fan is a
+ *  CALLER bug: the producer (U7's distribution→fan step) MUST call this and fail loud BEFORE
+ *  handing the band a fan — never draw a silently-wrong band (the calm-but-wrong sin: a
+ *  wrong-length fan breaks the morph's constant point-count; an inverted fan, p90 < p10, draws the
+ *  low-futures edge ABOVE the high-futures edge as a confident shape). The band itself is a PURE
+ *  renderer and does not re-validate (back-nine-design §3 — it draws what it is GIVEN); this guard
+ *  lives at the producer seam. (Wired by U7; proven now by `bandData.test.ts` so it can't rot.) */
 export function isFixedLattice(samples: readonly BandSample[]): boolean {
   if (samples.length !== LATTICE_POINTS) return false
-  for (let i = 1; i < samples.length; i++) {
-    if (!(samples[i]!.yearsFromNow >= samples[i - 1]!.yearsFromNow)) return false
+  for (let i = 0; i < samples.length; i++) {
+    const s = samples[i]!
+    if (i > 0 && !(s.yearsFromNow >= samples[i - 1]!.yearsFromNow)) return false
+    if (
+      !Number.isFinite(s.p10) ||
+      !Number.isFinite(s.p25) ||
+      !Number.isFinite(s.p50) ||
+      !Number.isFinite(s.p75) ||
+      !Number.isFinite(s.p90)
+    ) {
+      return false
+    }
+    if (!(s.p10 >= 0 && s.p10 <= s.p25 && s.p25 <= s.p50 && s.p50 <= s.p75 && s.p75 <= s.p90)) {
+      return false
+    }
   }
   return true
 }

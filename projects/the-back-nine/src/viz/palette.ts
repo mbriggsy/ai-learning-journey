@@ -54,8 +54,6 @@ export const OKABE_ITO = {
   yellow: '#f0e442',
 } as const
 
-export type OkabeItoName = keyof typeof OKABE_ITO
-
 // ── The CVD self-test contract ───────────────────────────────────────────────────────────
 /**
  * oklab Euclidean-distance floor for CATEGORICAL distinctness, measured under each of

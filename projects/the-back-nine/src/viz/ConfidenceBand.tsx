@@ -54,8 +54,10 @@ export interface ConfidenceBandProps {
   /** Click handler for the click-to-enlarge affordance (mouse convenience). When present the
    *  band shows the zoom-in cursor; the keyboard/AT path is the caller's explicit button. */
   readonly onEnlarge?: () => void
-  /** Larger geometry hint for the enlarged view — purely cosmetic (the viewBox is fixed; this
-   *  only relaxes the @container label-drop by widening the rendered band). Unused by the math. */
+  /** Identifies the render context — drawer vs the enlarged modal — emitted only as the
+   *  `data-variant` render hook (used by tests, reserved for future per-variant CSS). It does NOT
+   *  alter geometry or widen the band: the viewBox is fixed and the rendered size is owned
+   *  entirely by the layout container (the modal dialog's width feeding the @container label-drop). */
   readonly variant?: 'drawer' | 'enlarged'
 }
 

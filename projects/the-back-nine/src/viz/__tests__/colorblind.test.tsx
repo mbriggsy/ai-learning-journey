@@ -14,6 +14,7 @@ import { describe, expect, it } from 'vitest'
 import {
   BAND_FILL_INNER_P,
   BAND_FILL_OUTER_P,
+  CVD_METRIC,
   CVD_MIN_OKLAB,
   OKABE_ITO,
   SERIES,
@@ -43,8 +44,10 @@ import { bandStopCss } from '../scale'
  * line-over-band / label-over-band COMPOSITE arms (with ConfidenceBand) — see the LANDMINE below.
  */
 
-const toOklab = converter('oklab')
-const distOklab = differenceEuclidean('oklab')
+// Source-bound to palette.ts's canonical CVD_METRIC (never a re-typed 'oklab' literal — the
+// canonical-source rule the file header states applies to the metric too).
+const toOklab = converter(CVD_METRIC)
+const distOklab = differenceEuclidean(CVD_METRIC)
 const SIMS = [
   ['deuteranopia', filterDeficiencyDeuter()],
   ['protanopia', filterDeficiencyProt()],

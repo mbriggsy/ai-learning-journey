@@ -46,12 +46,15 @@ const roundCoord = (n: number): number => {
 }
 
 /** Map a household-clock year to an svg x. Linear on the FIXED domain [0, horizonYears].
- *  A non-positive horizon collapses to the left edge (defensive — never divide by zero). */
+ *  A non-positive horizon is a caller bug — fail loud (mirrors the non-finite guard), never
+ *  divide by zero and never silently collapse the x-lattice onto the left edge. */
 export function xForYear(yearsFromNow: number, horizonYears: number): number {
   if (!Number.isFinite(yearsFromNow) || !Number.isFinite(horizonYears)) {
     throw new RangeError('xForYear: inputs must be finite')
   }
-  if (horizonYears <= 0) return PLOT.left
+  if (horizonYears <= 0) {
+    throw new RangeError('xForYear: horizonYears must be positive (a non-positive horizon is a caller bug, never a drawable state)')
+  }
   const t = clamp01(yearsFromNow / horizonYears)
   return roundCoord(PLOT.left + t * PLOT_W)
 }
@@ -59,12 +62,17 @@ export function xForYear(yearsFromNow: number, horizonYears: number): number {
 /** Map a real-dollar value to an svg y. LINEAR, $0 anchored at the plot floor, `dollarMax` at
  *  the plot top. Dollars are clamped to [0, dollarMax]: a depleted ($0) path lands EXACTLY on
  *  the floor (the ruin signal), never below the axis; a value above the ceiling clamps to the
- *  top rather than escaping the plot. */
+ *  top rather than escaping the plot. A non-positive `dollarMax` is a caller bug — fail loud,
+ *  exactly like a non-finite one: a degenerate ceiling has no honest household state behind it,
+ *  and silently returning the floor would paint a HEALTHY fan flat on the $0 ruin baseline
+ *  (byte-identical to total ruin) — the calm-but-wrong sin in its most literal form. */
 export function yForDollars(dollars: number, dollarMax: number): number {
   if (!Number.isFinite(dollars) || !Number.isFinite(dollarMax)) {
     throw new RangeError('yForDollars: inputs must be finite')
   }
-  if (dollarMax <= 0) return PLOT.bottom
+  if (dollarMax <= 0) {
+    throw new RangeError('yForDollars: dollarMax must be positive (a non-positive ceiling never paints a healthy fan as ruin)')
+  }
   const v = dollars < 0 ? 0 : dollars > dollarMax ? dollarMax : dollars
   const t = v / dollarMax // 0 at $0, 1 at ceiling
   return roundCoord(PLOT.bottom - t * PLOT_H)

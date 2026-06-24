@@ -84,6 +84,16 @@ describe('bandGeometry — the honest, $0-anchored linear axes', () => {
     expect(() => yForDollars(Number.NaN, 1_000_000)).toThrow(RangeError)
     expect(() => xForYear(Number.POSITIVE_INFINITY, 30)).toThrow(RangeError)
   })
+
+  it('throws on a non-POSITIVE ceiling / horizon (a degenerate scale is a caller bug — never paint ruin)', () => {
+    // The asymmetry this closes: a non-finite scale already threw, but a non-positive one used to
+    // fail CALM — yForDollars collapsed EVERY value onto the $0 floor, painting a HEALTHY fan as
+    // total ruin (the literal calm-but-wrong sin); xForYear collapsed the x-lattice to the left.
+    expect(() => yForDollars(900_000, 0)).toThrow(RangeError)
+    expect(() => yForDollars(900_000, -1)).toThrow(RangeError)
+    expect(() => xForYear(5, 0)).toThrow(RangeError)
+    expect(() => xForYear(5, -1)).toThrow(RangeError)
+  })
 })
 
 describe('bandGeometry — the morph rides a CONSTANT-point-count lattice (widen/shift/narrow)', () => {

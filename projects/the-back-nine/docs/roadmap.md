@@ -72,7 +72,7 @@ The C-units and D-units are the accumulation tracks — they extend the U-number
 |---|---|---|---|
 | **U5 / D1** | Account-level guided setup (the U5 reshape): surface-early, single entry pass; the in-memory orchestrator + R19 sanity | shipped | Cleared the N=1 laptop cold-read on every screen. The broader D1 date/answer surface is still ahead |
 | **U6** (foundation) | Colorblind-safe viz primitives: palette / scale / CVD probe | shipped | The CVD-safe foundation, not the band render |
-| **U6** (render) | The confidence-band / projection-fan RENDER | in-progress | Built (direction B: Lead + Drawer + click-to-enlarge) + tested + green; **review + app-integration + N=1 cold-read pending** — built, not closed |
+| **U6** (render) | The confidence-band / projection-fan RENDER | in-progress | Built (direction B: Lead + Drawer + click-to-enlarge) + tested + green; **review DONE** (`/ultramode-code-review`, 11 lenses, findings adversarially verified, fold landed — insight 043); **app-integration + N=1 laptop cold-read pending** — built, not closed |
 | **U7** | Confidence statement surface + outcome-state system + survivor readout; copyGuard born here | not-started | The plain-language verdict |
 | **U8** | First-Save flow + recovery-phrase display + mandatory export + passphrase-strength gate (`zxcvbn-ts` ≥ 3 ∧ length ≥ 12) | not-started | |
 | **D2** | The state-adaptive first answer surface: date-first for not-yet-retired, spine-first for already-retired; the two-pane laptop layout | not-started | Same calm voice, one intake flow; only the lead answer changes |
@@ -172,7 +172,7 @@ Solver-blocking gates (Act 4, not yet live): the **optimality oracle** (hand-com
 
 ## What is next
 
-R40 (other income in retirement) and the **U6 confidence-band render** are **built** — R40 shipped end-to-end (U1–U4 + the U5 doc reconcile), and the render landed as the loop-engineer dogfood (direction B: Lead + Drawer + click-to-enlarge), tested and green. The immediate next build is **closing out the U6-render** — `/ultramode-code-review` → wire it into a live surface → the N=1 laptop cold-read (the colorblind-safe band honesty is the whole point) — because it is built but not yet integrated, reviewed, or cold-read. Build steps: [docs/plans/2-first-answer.md](plans/2-first-answer.md).
+R40 (other income in retirement) and the **U6 confidence-band render** are **built** — R40 shipped end-to-end (U1–U4 + the U5 doc reconcile), and the render landed as the loop-engineer dogfood (direction B: Lead + Drawer + click-to-enlarge), tested and green. The immediate next build is **closing out the U6-render** — the `/ultramode-code-review` is DONE (insight 043; the fail-loud scale guard + hardened lattice guard landed), leaving: wire it into a live surface → the N=1 laptop cold-read (the colorblind-safe band honesty is the whole point) — because it is built and reviewed but not yet integrated or cold-read. Build steps: [docs/plans/2-first-answer.md](plans/2-first-answer.md).
 
 After the U6-render closeout, the Act-2 answer surface still owes: **U7** (the confidence statement + copyGuard), **D2** (the state-adaptive surface + two-pane laptop layout), and **U8** (the first encrypted Save + recovery-phrase + export). Act 3 (Controls) and Act 4 (Recommendation) follow in order; Act 4 is the actual differentiator and is still entirely ahead.
 

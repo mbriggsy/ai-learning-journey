@@ -233,13 +233,34 @@ function Placeholder({ data }: { data: Extract<BandViewData, { kind: 'indetermin
 }
 
 /* ── the household-clock annotations (non-hue: vertical rule + text + both ages) ──────────── */
-/** Minimum horizontal gap (viewBox px) between two annotation labels before the later one is
- *  staggered to a lower row, so close moments (e.g. two retirements a few years apart) never
- *  overprint. The rules still sit at their true x. */
-const LABEL_MIN_GAP = 70
 const ROW_1 = PLOT.bottom + 28
 const ROW_2 = PLOT.bottom + 44
 const ROW_STAGGER = 34 // pushes a crowded label's two lines below the un-staggered pair
+/** Comfortable clear-space (viewBox px) between two same-row label boxes. The de-collision is
+ *  WIDTH-AWARE, not center-gap: two labels can sit 77px apart yet still read tight when both are
+ *  wide and the right one is end-anchored at the plot edge (its text grows left into its neighbor)
+ *  — the very Survivor↔Horizon case. We estimate each label's box from its character count + its
+ *  anchor and drop the later one to a second row when the boxes would come within LABEL_PAD. All
+ *  geometry is in the FIXED viewBox, so the decision is viewport-independent (phone scales the same
+ *  band uniformly — it never regresses; only the @container query drops labels on the narrowest). */
+const LABEL_PAD = 12
+/** Approx advance width (viewBox px) of one glyph at the 12.5px Source Sans 3 label — generous so
+ *  the placement errs toward breathing room rather than overlap. */
+const LABEL_CHAR_PX = 6.6
+
+/** Anchor for a label at viewBox x: end-anchored near the right edge (so it never spills past the
+ *  plot), start-anchored near the left, middle otherwise. */
+function labelAnchor(x: number): 'start' | 'middle' | 'end' {
+  return x > PLOT.right - 28 ? 'end' : x < PLOT.left + 28 ? 'start' : 'middle'
+}
+
+/** The horizontal box [left, right] a two-line label occupies, given its anchor + widest line. */
+function labelExtent(x: number, anchor: 'start' | 'middle' | 'end', chars: number): [number, number] {
+  const w = chars * LABEL_CHAR_PX
+  if (anchor === 'end') return [x - w, x]
+  if (anchor === 'start') return [x, x + w]
+  return [x - w / 2, x + w / 2]
+}
 
 function Annotations({
   annotations,
@@ -248,22 +269,22 @@ function Annotations({
   annotations: readonly XAnnotation[]
   horizonYears: number
 }) {
-  // Pre-compute x + a stagger level so a crowded label drops to a lower row (alternating) instead
-  // of overprinting its neighbor.
-  let lastX = Number.NEGATIVE_INFINITY
-  let lastLevel = 0
+  // Greedy 2-row placement: keep a label on row 0 if its box clears the last row-0 box by
+  // LABEL_PAD; otherwise drop it to row 1 (which keeps its own running edge). Annotations arrive
+  // left→right, so a single running right-edge per row suffices.
+  const rowRight = [Number.NEGATIVE_INFINITY, Number.NEGATIVE_INFINITY]
   const placed = annotations.map((a) => {
     const x = clampX(xForYear(a.yearsFromNow, horizonYears))
-    const level = x - lastX < LABEL_MIN_GAP ? (lastLevel === 0 ? 1 : 0) : 0
-    lastX = x
-    lastLevel = level
-    return { a, x, level }
+    const anchor = labelAnchor(x)
+    const [left, right] = labelExtent(x, anchor, Math.max(a.label.length, a.ages.length))
+    const level = left >= rowRight[0]! + LABEL_PAD ? 0 : 1
+    rowRight[level] = right
+    return { a, x, anchor, level }
   })
 
   return (
     <g className="band-frame-text" textAnchor="middle">
-      {placed.map(({ a, x, level }) => {
-        const anchor = x > PLOT.right - 28 ? 'end' : x < PLOT.left + 28 ? 'start' : 'middle'
+      {placed.map(({ a, x, anchor, level }) => {
         const dy = level * ROW_STAGGER
         return (
           <g key={a.id} role="img" aria-label={a.description}>

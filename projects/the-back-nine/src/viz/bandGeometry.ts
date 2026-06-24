@@ -20,8 +20,11 @@ import type { BandSample } from './bandData'
 
 /** The single fixed viewBox. ALL band variants (drawer + enlarged) share it; the container
  *  scales it via width:100%/height:auto + preserveAspectRatio, and `non-scaling-stroke` keeps
- *  line weight + dash geometry constant in screen px across viewports. */
-export const VIEWBOX = { width: 560, height: 460 } as const
+ *  line weight + dash geometry constant in screen px across viewports. The height reserves a
+ *  label gutter BELOW the $0 baseline (PLOT.bottom) deep enough for the de-collision's stacked
+ *  rows — the normal retirement-couple case (Today + two close retirements within a few years)
+ *  needs THREE rows, whose deepest line lands at PLOT.bottom + 112 = 484 (< 500). */
+export const VIEWBOX = { width: 560, height: 500 } as const
 
 /** The plot rectangle inside the viewBox (room left for the y labels and the x annotations). */
 export const PLOT = {
@@ -138,6 +141,82 @@ export function placeholderPath(horizonYears: number): string {
     `Q${midX},${roundCoord(bottom + PLOT_H * 0.06)} ${x0},${bottom}` +
     `Z`
   )
+}
+
+/** Clamp an svg x to the plot's horizontal span (a label rule never escapes the plot). */
+export function clampX(x: number): number {
+  return x < PLOT.left ? PLOT.left : x > PLOT.right ? PLOT.right : x
+}
+
+// ── annotation label placement (pure, testable) ──────────────────────────────────────────────
+// The household-clock annotations (Today / each retirement / survivor boundary / horizon) render
+// as a vertical rule + a two-line text label (name + both spouses' ages). When two moments sit
+// close on the x-axis their labels would overprint, so the placer stacks a colliding label onto a
+// lower ROW. The placement is WIDTH-AWARE (a wide, edge-anchored label collides even at a generous
+// center-gap) and lives HERE as pure math so it is unit-testable without rendering.
+
+export type LabelAnchor = 'start' | 'middle' | 'end'
+
+/** Comfortable clear-space (viewBox px) required between two same-row label boxes. */
+export const LABEL_PAD = 12
+/** Approx advance width (viewBox px) of one glyph at the 12.5px Source Sans 3 label — generous so
+ *  placement errs toward breathing room rather than overlap. */
+export const LABEL_CHAR_PX = 6.6
+/** Rows the placer may stack into. THREE — the normal retirement-couple case clusters THREE close
+ *  moments at the left (Today, pinned at the edge, plus two retirements a few years out and a few
+ *  years apart), so two rows cannot separate them (Today pushes the first retirement to row 1, and
+ *  the second retirement then collides with it there). The viewBox height reserves room for all
+ *  three rows below the $0 baseline (deepest line at PLOT.bottom + 112 < VIEWBOX.height). */
+export const LABEL_ROWS = 3
+
+/** Anchor for a label at viewBox x: end-anchored near the right edge (so its text never spills past
+ *  the plot), start-anchored near the left, middle otherwise. */
+export function labelAnchor(x: number): LabelAnchor {
+  return x > PLOT.right - 28 ? 'end' : x < PLOT.left + 28 ? 'start' : 'middle'
+}
+
+/** The horizontal box [left, right] a label occupies, given its anchor + its widest line's length. */
+export function labelExtent(x: number, anchor: LabelAnchor, chars: number): [number, number] {
+  const w = chars * LABEL_CHAR_PX
+  if (anchor === 'end') return [x - w, x]
+  if (anchor === 'start') return [x, x + w]
+  return [x - w / 2, x + w / 2]
+}
+
+export interface PlacedLabel {
+  /** The annotation's clamped svg x (where the rule sits). */
+  readonly x: number
+  readonly anchor: LabelAnchor
+  /** The row this label stacks onto (0 = top row, 1 = staggered below). */
+  readonly level: number
+  /** The label's occupied [left, right] box, for overlap assertions. */
+  readonly extent: readonly [number, number]
+}
+
+/**
+ * Greedy multi-row label placement. For each annotation (LEFT→RIGHT by `yearsFromNow`), drop its
+ * label onto the FIRST row whose running right-edge it clears by {@link LABEL_PAD} — consulting
+ * THAT row's edge, not always row 0 (the row-1 collision bug: two close labels both fell to row 1
+ * and overlapped because row 1's own running edge was written but never read). If no row clears
+ * (extreme density) it lands on the last row — a rare graceful degrade, never a crash.
+ *
+ * Each input carries the moment's x-year and its widest text line's char count (max of the name
+ * line and the ages line). Returns one {@link PlacedLabel} per input, in the same order.
+ */
+export function placeAnnotationLabels(
+  items: readonly { readonly yearsFromNow: number; readonly chars: number }[],
+  horizonYears: number,
+): PlacedLabel[] {
+  const rowRight = new Array<number>(LABEL_ROWS).fill(Number.NEGATIVE_INFINITY)
+  return items.map((it) => {
+    const x = clampX(xForYear(it.yearsFromNow, horizonYears))
+    const anchor = labelAnchor(x)
+    const extent = labelExtent(x, anchor, it.chars)
+    let level = rowRight.findIndex((edge) => extent[0] >= edge + LABEL_PAD)
+    if (level === -1) level = LABEL_ROWS - 1
+    rowRight[level] = extent[1]
+    return { x, anchor, level, extent }
+  })
 }
 
 function clamp01(t: number): number {

@@ -1,10 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import {
+  LABEL_PAD,
+  LABEL_ROWS,
   PLOT,
   PLOT_H,
   VIEWBOX,
   areaPath,
   linePath,
+  placeAnnotationLabels,
   placeholderPath,
   xForYear,
   yForDollars,
@@ -159,5 +162,104 @@ describe('bandGeometry — the indeterminate placeholder is wide + un-data-like'
     const xs = [...d.matchAll(/[ML Q]\s*(-?\d+(?:\.\d+)?),/g)].map((m) => Number(m[1]))
     expect(Math.min(...xs)).toBeGreaterThanOrEqual(0)
     expect(Math.max(...xs)).toBeLessThanOrEqual(VIEWBOX.width)
+  })
+})
+
+describe('bandGeometry — annotation label de-collision (no same-row overlap)', () => {
+  // The coverage gap that let the row-1 collision ship: the original fixtures used 3 well-spaced
+  // annotations, never exercising the multi-row path. These assert the placer's load-bearing
+  // invariant — TWO labels on the SAME row must clear each other by LABEL_PAD — on the dense
+  // household-clock set. Char counts mirror what the component passes: max(label, ages) length.
+  type Item = { name: string; yearsFromNow: number; chars: number }
+  const item = (name: string, yearsFromNow: number, ages: string): Item => ({
+    name,
+    yearsFromNow,
+    chars: Math.max(name.length, ages.length),
+  })
+
+  /** The worst (smallest) horizontal clearance between any two labels sharing a row. A value < 0
+   *  is a real overlap (the cardinal sin); the placer must keep it ≥ 0 (ideally ≥ LABEL_PAD). */
+  function worstSameRowClearance(items: readonly Item[], horizonYears: number): number {
+    const placed = placeAnnotationLabels(items, horizonYears)
+    let worst = Number.POSITIVE_INFINITY
+    for (let i = 0; i < placed.length; i++) {
+      for (let j = i + 1; j < placed.length; j++) {
+        if (placed[i]!.level !== placed[j]!.level) continue
+        // items are left→right, so j is the right neighbour: clearance = j.left − i.right.
+        const clearance = placed[j]!.extent[0] - placed[i]!.extent[1]
+        if (clearance < worst) worst = clearance
+      }
+    }
+    return worst
+  }
+
+  // The NORMAL retirement-couple case the verifier measured: Today (pinned far-left) + two close
+  // retirements + survivor + horizon. Pre-fix, "You retire" and "Sam retires" BOTH fell to row 1
+  // and overlapped by ~61px.
+  const DENSE: Item[] = [
+    item('Today', 0, '61 / 59'),
+    item('You retire', 4, '65 / 63'),
+    item('Sam retires', 6, '67 / 65'),
+    item('Survivor years', 28, '~86 / 84'),
+    item('Horizon', 33, '94 / 92'),
+  ]
+
+  it('the dense two-retirements set has NO overlapping labels on any shared row (the bug, fixed)', () => {
+    // The load-bearing assertion: it FAILS against the pre-fix placer (which piled both retirements
+    // onto row 1 → a large negative clearance) and PASSES now (each gets its own row).
+    expect(worstSameRowClearance(DENSE, 33)).toBeGreaterThanOrEqual(0)
+  })
+
+  it('the two close retirements land on DIFFERENT rows', () => {
+    const placed = placeAnnotationLabels(DENSE, 33)
+    const you = placed[1]!
+    const sam = placed[2]!
+    expect(you.level).not.toBe(sam.level)
+  })
+
+  it('every annotation lands within the allowed rows', () => {
+    for (const p of placeAnnotationLabels(DENSE, 33)) {
+      expect(p.level).toBeGreaterThanOrEqual(0)
+      expect(p.level).toBeLessThan(LABEL_ROWS)
+    }
+  })
+
+  it('the Survivor↔Horizon right-edge pair still de-collides (the original fix holds)', () => {
+    const placed = placeAnnotationLabels(DENSE, 33)
+    const survivor = placed[3]!
+    const horizon = placed[4]!
+    expect(survivor.level).not.toBe(horizon.level)
+  })
+
+  it('PLANTED control: two labels at the SAME x DO collide on row 0, forcing a stagger', () => {
+    // Proves the overlap math is real — two identical-x wide labels cannot share row 0; the second
+    // must move to a different row, and the result still has no same-row overlap.
+    const same: Item[] = [item('Work A', 10, '70 / 68'), item('Work B', 10, '70 / 68')]
+    const placed = placeAnnotationLabels(same, 33)
+    expect(placed[0]!.level).not.toBe(placed[1]!.level)
+    expect(worstSameRowClearance(same, 33)).toBeGreaterThanOrEqual(0)
+  })
+
+  it('deep-stacks gracefully: three labels at the same x take three distinct rows', () => {
+    const triple: Item[] = [
+      item('A', 12, '70 / 70'),
+      item('B', 12, '70 / 70'),
+      item('C', 12, '70 / 70'),
+    ]
+    const levels = placeAnnotationLabels(triple, 33).map((p) => p.level)
+    expect(new Set(levels).size).toBe(3)
+  })
+
+  it('a well-spaced set keeps everything on row 0 (no needless stagger)', () => {
+    const spaced: Item[] = [item('Today', 0, '61 / 59'), item('Mid', 16, '77 / 75'), item('Horizon', 33, '94 / 92')]
+    // ensure the de-collision doesn't over-trigger and push well-separated labels down.
+    const onRow0 = placeAnnotationLabels(spaced, 33).filter((p) => p.level === 0).length
+    expect(onRow0).toBeGreaterThanOrEqual(2)
+  })
+
+  it('LABEL_PAD breathing room: a same-row pair clears by at least LABEL_PAD when it fits', () => {
+    // For the spaced set, the same-row neighbours must clear by the comfortable pad, not merely 0.
+    const spaced: Item[] = [item('Today', 0, '61 / 59'), item('Mid', 16, '77 / 75'), item('Horizon', 33, '94 / 92')]
+    expect(worstSameRowClearance(spaced, 33)).toBeGreaterThanOrEqual(LABEL_PAD)
   })
 })

@@ -69,13 +69,13 @@ The MVP is four acts. Each is a real milestone with its own plan, gates, and ver
 | Act | What it is | State |
 |---|---|---|
 | **1 — The Engine** | The deterministic engine + tax & healthcare overlays + accumulation projection + the date-search + the encrypted store | ✅ **Complete, reviewed, pinned** |
-| **2 — Where You Stand** | The guided account-level intake → the headline that adapts to where you stand (the date, or the confidence statement) → confidence viz → first Save | 🔨 **In progress** — the intake is built & reviewed; other income in retirement is the next build, then the confidence-band viz |
+| **2 — Where You Stand** | The guided account-level intake → the headline that adapts to where you stand (the date, or the confidence statement) → confidence viz → first Save | 🔨 **In progress** — the guided intake is built & reviewed and other income in retirement has shipped; the confidence-band render is built (review + wire-in pending); the confidence statement, state-adaptive lead, and first Save are next |
 | **3 — The Levers You Hold** | The budget builder + manual sequencing & Roth controls + healthcare-cost screens + returning-user re-entry (your saved plan, re-derived not replayed) | ⬜ Planned |
 | **4 — The Recommended Route** | The validation harness → the solver → the recommendation surface | ⬜ Planned |
 
 Act 1's engine is pinned against primary sources: every dated tax and healthcare figure carries an IRS / CMS / HHS / SSA / eCFR citation (and a directional-until-pinned flag where one isn't yet locked), and cohort mortality re-derived from the SSA Trustees-Report survival tables for the household's actual birth cohorts. The guided intake delivers a **live, provisional Monte Carlo reading that sharpens as you answer each question**, proven end-to-end in real Chromium under the enforced CSP.
 
-The engine and intake carry **1047 tests across 47 files**, all green (at the current Act 2 milestone — the guided intake), alongside lint, bundle-budget, ACA-freshness, and browser-CSP gates.
+The engine and intake carry **1094 tests across 50 files**, all green (at the current Act 2 milestone — the guided intake, other income in retirement, and the confidence-band render), alongside lint, bundle-budget, ACA-freshness, and browser-CSP gates.
 
 ---
 

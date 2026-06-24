@@ -3,7 +3,7 @@ title: The Back Nine — Roadmap (where we are, what is next)
 doc-type: roadmap
 status: living
 created: 2026-06-17
-updated: 2026-06-18
+updated: 2026-06-24
 derives-from: [docs/product.md]
 ---
 
@@ -72,11 +72,11 @@ The C-units and D-units are the accumulation tracks — they extend the U-number
 |---|---|---|---|
 | **U5 / D1** | Account-level guided setup (the U5 reshape): surface-early, single entry pass; the in-memory orchestrator + R19 sanity | shipped | Cleared the N=1 laptop cold-read on every screen. The broader D1 date/answer surface is still ahead |
 | **U6** (foundation) | Colorblind-safe viz primitives: palette / scale / CVD probe | shipped | The CVD-safe foundation, not the band render |
-| **U6** (render) | The confidence-band / projection-fan RENDER | not-started | Built on the U6 foundation |
+| **U6** (render) | The confidence-band / projection-fan RENDER | in-progress | Built (direction B: Lead + Drawer + click-to-enlarge) + tested + green; **review + app-integration + N=1 cold-read pending** — built, not closed |
 | **U7** | Confidence statement surface + outcome-state system + survivor readout; copyGuard born here | not-started | The plain-language verdict |
 | **U8** | First-Save flow + recovery-phrase display + mandatory export + passphrase-strength gate (`zxcvbn-ts` ≥ 3 ∧ length ≥ 12) | not-started | |
 | **D2** | The state-adaptive first answer surface: date-first for not-yet-retired, spine-first for already-retired; the two-pane laptop layout | not-started | Same calm voice, one intake flow; only the lead answer changes |
-| **R40** | Other income in retirement (pension / rental / annuity / alimony / other) — engine + intake | mostly shipped | U1–U4 shipped (types · compile + goldens · the atomic engine integration · the **intake UX + the KTD-9 copy half**); U5 is the doc-reconcile tail. Build steps: [docs/plans/2-first-answer.md](plans/2-first-answer.md) |
+| **R40** | Other income in retirement (pension / rental / annuity / alimony / other) — engine + intake | shipped | U1–U4 shipped (types · compile + goldens · the atomic engine integration · the **intake UX + the KTD-9 copy half**); U5 doc-reconcile done — R40 complete. Build steps: [docs/plans/2-first-answer.md](plans/2-first-answer.md) |
 
 ### Act 3 — The Levers You Hold (not started; `src/budget` is `.gitkeep`-only)
 
@@ -102,7 +102,7 @@ The C-units and D-units are the accumulation tracks — they extend the U-number
 | Feature | What it delivers | Status | Note |
 |---|---|---|---|
 | **Social Security** | Spousal/survivor benefit sub-engine (shipped above) + the claim-age intake | shipped (engine) | Claim-age as a *solver-optimized control* is chapter two. Mechanics: [docs/architecture.md](architecture.md) §7; build: [docs/plans/1-engine.md](plans/1-engine.md) |
-| **Other income (R40)** | Generic per-person non-earned income stream (pension/rental/annuity/alimony/other) | mostly shipped | U1–U4 shipped (types · compile + goldens · engine integration · intake UX + the KTD-9 copy half); U5 is the doc-reconcile tail. Build steps: [docs/plans/2-first-answer.md](plans/2-first-answer.md) |
+| **Other income (R40)** | Generic per-person non-earned income stream (pension/rental/annuity/alimony/other) | shipped | U1–U4 + the U5 doc-reconcile (done) — R40 complete. Build steps: [docs/plans/2-first-answer.md](plans/2-first-answer.md) |
 | **Portfolio holdings** | Per-account exact stock/bond/cash %; ticker → blend; the household blend the engine consumes | scoping | Accounts take an exact stock/bond/cash % that collapses to the one household blend the engine consumes. Folds into U8. Requirement: [product.md](product.md) R37 |
 | **"Just me" single-user mode** | A single-person (non-couple) household path | planned/deferred | Named, deferred |
 
@@ -161,7 +161,7 @@ These are the gates a fixture or recommendation must clear before any downstream
 | Gate | What it checks | Command |
 |---|---|---|
 | **Typecheck** | `tsc --noEmit` — must pass before any browser touch | `pnpm typecheck` |
-| **Tests** | 1047 vitest across 47 files (Vitest 4, `globals:false`); externally-derived goldens, absence-tests paired with presence companions | `pnpm test` |
+| **Tests** | 1094 vitest across 50 files (Vitest 4, `globals:false`); externally-derived goldens, absence-tests paired with presence companions | `pnpm test` |
 | **Lint** | Layer-boundary + engine-purity rules (no clock/entropy/env inside `src/engine/**`) | `pnpm lint` |
 | **ACA re-verify** | Fails the build if the enhanced-subsidy legislative entry is stale/unconfirmed — live, possibly-retroactive policy | `pnpm verify:aca` |
 | **Bundle budget** | Initial-JS byte sentinel ≤ 300 KiB entry JS; **currently 197.8 KiB** | `pnpm verify:bundle` |
@@ -172,8 +172,8 @@ Solver-blocking gates (Act 4, not yet live): the **optimality oracle** (hand-com
 
 ## What is next
 
-The immediate next build is **R40 — other income in retirement** (planned, build-ready, zero code) — the engine has no concept of ongoing non-earned income today, and for a household with a pension or rental that gap is the difference between a defensibly-conservative answer and a confidently-wrong-optimistic one. Build steps: [docs/plans/2-first-answer.md](plans/2-first-answer.md).
+R40 (other income in retirement) and the **U6 confidence-band render** are **built** — R40 shipped end-to-end (U1–U4 + the U5 doc reconcile), and the render landed as the loop-engineer dogfood (direction B: Lead + Drawer + click-to-enlarge), tested and green. The immediate next build is **closing out the U6-render** — `/ultramode-code-review` → wire it into a live surface → the N=1 laptop cold-read (the colorblind-safe band honesty is the whole point) — because it is built but not yet integrated, reviewed, or cold-read. Build steps: [docs/plans/2-first-answer.md](plans/2-first-answer.md).
 
-After R40, the Act-2 answer surface still owes: **U8** (the first encrypted Save + recovery-phrase + export), the **U6 confidence-band render**, **U7** (the confidence statement), and **D2** (the state-adaptive surface + two-pane laptop layout). Act 3 (Controls) and Act 4 (Recommendation) follow in order; Act 4 is the actual differentiator and is still entirely ahead.
+After the U6-render closeout, the Act-2 answer surface still owes: **U7** (the confidence statement + copyGuard), **D2** (the state-adaptive surface + two-pane laptop layout), and **U8** (the first encrypted Save + recovery-phrase + export). Act 3 (Controls) and Act 4 (Recommendation) follow in order; Act 4 is the actual differentiator and is still entirely ahead.
 
 The live, session-level next-action queue is in `TODO.md`.

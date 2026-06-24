@@ -16,7 +16,7 @@ This is the **permanent decision record** for **R40** — a generic per-person o
 
 The **requirements** (R40.1–R40.10) and the cardinal rule are canonical in [docs/product.md §7](../product.md); the **load-bearing engine contracts** R40 rides (the single shared draw / CRN, reduce-to-spine byte-identity, the two-distinct-MAGI-calculators rule, the R19 numeric gate, externally-derived fixtures) live once in [docs/architecture.md](../architecture.md); the **build narrative** (the five dependency-ordered units) lives in [docs/plans/2-first-answer.md](../plans/2-first-answer.md). This record holds the *decisions* and links to those.
 
-R40 is **decision-ready, build-pending** — it is the immediate next build. The decisions below are locked; the units are not yet coded.
+R40 is **shipped** — U1–U4 (types · `compileIncomeStreams` + goldens · the atomic engine integration · the intake UX + the KTD-9 copy half) landed, and the U5 requirements reconcile is done. The decisions below are locked; this record is the permanent rationale.
 
 ---
 
@@ -153,6 +153,6 @@ The **verified IRS treatment of each income type** (the alimony TCJA fork, the p
 
 ## Build status & the U8 obligation
 
-R40 is **decision-ready, zero code** — the immediate next build, five dependency-ordered units (types → compile + goldens → the atomic engine integration → intake UX → the requirements-doc amendment) in [docs/plans/2-first-answer.md](../plans/2-first-answer.md).
+R40 is **shipped** — five dependency-ordered units (types → compile + goldens → the atomic engine integration → intake UX → the requirements reconcile) all landed; the build narrative is in [docs/plans/2-first-answer.md](../plans/2-first-answer.md).
 
 **U8 inherits a real validation contract, not "free" persistence.** R40 single-sources `INCOME_TYPES`/`COLA_MODES` `as const` and names U8's `checkIncomeStreamV3` codec validator: finiteness-first; enum membership; `ownerIndex ∈ {0,1}`; the **`survivorPct`/`taxableFraction` range** (the sole restore-path gate — a restored blob bypasses the form, so the engine can't see the scalars); **`colaPct` required-and-finite when `colaMode='fixed-pct'`** (absent/null = corruption, never coerced to 0 — the optimistic-erosion direction); the full type/fork arm; and `endAge` **absent ≡ lifetime** (DND-009 — never an `Infinity`/`NaN`/numeric-magic sentinel, which `JSON.stringify` silently nulls).

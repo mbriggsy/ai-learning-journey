@@ -112,3 +112,16 @@ export const BAND_CHROMA = 0.095
 export const BAND_L_MEDIAN = 0.42
 /** L at the outer tail edge (p = 1, least likely, lowest emphasis). */
 export const BAND_L_OUTER = 0.82
+
+// ── The two band-FILL stop positions (U6 ConfidenceBand render) ───────────────────────────
+// The fan draws two stacked OPAQUE fills whose ink DENSITY tracks likelihood: the inner
+// (p25–p75, more-likely) region is the darker stop, the outer (p10–p90, less-likely) region the
+// lighter. Both are positions on the SAME single-hue lightness ramp above — fetched via
+// scale.ts `bandStopCss(p)`, never a re-typed hex (the canonical-source rule). The median p50 is
+// NOT a ramp stop: it is the --ink overlay LINE (the blue-on-blue landmine in colorblind.test.tsx
+// — a series-blue line is lost in the dark half of the band under deuteranopia; the on-band line
+// MUST be --ink). Emphasis order, darkest→lightest: median ink line > inner fill > outer fill.
+/** Ramp position for the inner p25–p75 fill (darker / higher-emphasis). */
+export const BAND_FILL_INNER_P = 0.46
+/** Ramp position for the outer p10–p90 fill (lighter / lower-emphasis). */
+export const BAND_FILL_OUTER_P = 0.84

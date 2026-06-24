@@ -1,0 +1,290 @@
+/*
+ * src/viz/band.css — layout + STATIC token colors for the ConfidenceBand, its drawer, and the
+ * enlarge modal. Loaded by the components.
+ *
+ * CSP DISCIPLINE (style-src 'self', no 'unsafe-inline'): all styling lives in THIS stylesheet
+ * (classes), never in per-element `style={{…}}` attributes. The only colors set as SVG
+ * presentation ATTRIBUTES (fill=) are the two DYNAMIC band fills, whose values come from
+ * palette.ts via scale.ts `bandStopCss()` — presentation attributes are NOT governed by
+ * style-src (palette.ts CSP NOTE). Every STATIC color here is a token var() (the median ink
+ * line, axis lines, text), never a re-typed hex (the canonical-source rule; tokens.css owns the
+ * values, the CVD test source-binds to them).
+ *
+ * The motion library animates the path `d`, opacity, and transforms via the CSSOM (el.style set
+ * by JS) — that is NOT a style ATTRIBUTE and is CSP-safe. We use NO motion layout-animation
+ * feature (those inject a <style> element — the <MotionConfig nonce> landmine); only attribute /
+ * transform / opacity tweens.
+ */
+
+/* ── the band figure ──────────────────────────────────────────────────────────────────────── */
+.band-figure {
+  margin: 0;
+  /* a container so the label-drop @container query measures the BAND's width, not the
+     viewport's — the band can sit in a narrow drawer on a wide screen. */
+  container-type: inline-size;
+}
+
+.band-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  /* prevents the double-tap zoom delay when the band itself is the click target. */
+  touch-action: manipulation;
+}
+
+/* the click-anywhere affordance on the band (mouse convenience; the keyboard/AT path is the
+   explicit "Study the range" button below it, so the band carries no extra tabstop). */
+.band-svg.is-enlargeable {
+  cursor: zoom-in;
+}
+
+/* axis + grid — token colors, never hue. */
+.band-axis {
+  stroke: var(--line-control);
+}
+.band-grid {
+  stroke: var(--line-soft);
+}
+.band-frame-text {
+  fill: var(--ink-muted);
+  font-family: var(--font-body);
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+}
+.band-frame-text.is-strong {
+  fill: var(--ink);
+  font-weight: var(--weight-semibold);
+}
+.band-annotation-rule {
+  stroke: var(--line-control);
+}
+.band-callout {
+  fill: var(--ink);
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: var(--weight-semibold);
+}
+
+/* the median p50 overlay LINE — MUST be ink, never series-blue (the blue-on-blue CVD landmine,
+   colorblind.test.tsx). non-scaling-stroke holds its weight constant in screen px. */
+.band-median {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+/* the indeterminate placeholder: a wide, low-emphasis envelope with a DASHED boundary (the
+   non-color texture) and a faint fill. NO median line is rendered in this mode. */
+.band-placeholder-fill {
+  fill: var(--brand-tint);
+  opacity: 0.45;
+}
+.band-placeholder-edge {
+  fill: none;
+  stroke: var(--line-control);
+  stroke-width: 1.6;
+  stroke-dasharray: 3 6;
+  vector-effect: non-scaling-stroke;
+}
+.band-placeholder-note {
+  fill: var(--ink-muted);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-style: italic;
+}
+
+/* all stroked band geometry keeps its weight in screen px across viewports. */
+.band-area {
+  vector-effect: non-scaling-stroke;
+}
+
+/* responsive label drop (back-nine-design §3 / phase-2 responsive-SVG contract): below a
+   legible band width, DROP the tick + annotation labels rather than shrink them past legibility.
+   ~260 CSS px of band width is the floor where the 12.5px@560-viewBox glyphs fall under ~6px on
+   screen — drop them; the band shape + non-scaling strokes still carry the signal. */
+@container (max-width: 260px) {
+  .band-droppable-label {
+    display: none;
+  }
+}
+
+/* ── the drawer (direction B — the on-demand range, pulled open) ──────────────────────────── */
+.band-drawer {
+  position: relative;
+  background: var(--paper-raised);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5) var(--space-6) var(--space-6);
+  box-shadow: var(--shadow-raised);
+}
+.band-drawer__tab {
+  position: absolute;
+  left: -1px;
+  top: 24px;
+  width: 5px;
+  height: 64px;
+  border-radius: 0 4px 4px 0;
+  background: var(--brand);
+  opacity: 0.85;
+}
+.band-drawer__pull {
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-overline);
+  color: var(--ink-muted);
+  margin: 0 0 var(--space-3);
+}
+
+.band-legend {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+  font-size: var(--text-sm);
+  color: var(--ink-muted);
+}
+.band-legend__row {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+/* the legend swatch is paired with a distinct OUTLINE-STYLE per row (solid / hairline / dashed)
+   so the three tiers separate without depending on the fill hue — the legend reinforces the
+   in-place callouts, it is never the sole non-color signal. */
+.band-legend__sw {
+  width: 22px;
+  height: 11px;
+  border-radius: 2px;
+  flex: none;
+}
+.band-legend__sw--inner {
+  outline: 2px solid var(--ink);
+  outline-offset: -2px;
+}
+.band-legend__sw--outer {
+  outline: 1px dashed var(--line-control);
+  outline-offset: -1px;
+}
+.band-legend__sw--median {
+  height: 3px;
+  border-radius: 999px;
+}
+.band-legend__line {
+  stroke: var(--ink);
+  stroke-width: 3;
+}
+
+/* the enlarge trigger — text + a glyph, never a hue cue. */
+.band-enlarge-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--ink);
+  background: transparent;
+  border: 1px solid var(--line-control);
+  border-radius: var(--radius-pill);
+  padding: var(--space-2) var(--space-4);
+  min-height: var(--tap-min);
+  cursor: pointer;
+  transition: transform var(--dur-press) var(--ease-out);
+}
+@media (hover: hover) and (pointer: fine) {
+  .band-enlarge-trigger:hover {
+    background: var(--brand-tint);
+  }
+}
+.band-enlarge-trigger:active {
+  transform: scale(0.97);
+}
+.band-enlarge-trigger:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+.band-enlarge-trigger__glyph {
+  font-size: 1.1em;
+  line-height: 1;
+}
+
+/* ── the enlarge modal (portaled to <body>) ───────────────────────────────────────────────── */
+.band-modal__backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-overlay);
+  display: grid;
+  place-items: center;
+  padding: clamp(1rem, 4vw, 2.5rem);
+  padding-top: max(clamp(1rem, 4vw, 2.5rem), env(safe-area-inset-top));
+  padding-bottom: max(clamp(1rem, 4vw, 2.5rem), env(safe-area-inset-bottom));
+  background: rgb(11 24 19 / 0.42);
+  overscroll-behavior: contain;
+}
+.band-modal__dialog {
+  position: relative;
+  width: min(960px, 100%);
+  max-height: 100%;
+  overflow: auto;
+  overscroll-behavior: contain;
+  background: var(--paper);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-raised);
+  padding: var(--space-6) var(--space-6) var(--space-7);
+}
+.band-modal__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+.band-modal__title {
+  font-family: var(--font-display);
+  font-weight: var(--weight-display);
+  font-size: var(--text-xl);
+  color: var(--brand);
+  margin: 0;
+}
+.band-modal__close {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--tap-min);
+  height: var(--tap-min);
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--line-control);
+  background: var(--paper-raised);
+  color: var(--ink);
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: transform var(--dur-press) var(--ease-out);
+}
+.band-modal__close:active {
+  transform: scale(0.97);
+}
+.band-modal__close:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+/* body scroll lock while the modal is open (toggled by a class on <html>). */
+.band-modal-open {
+  overflow: hidden;
+}
+
+/* ── reduced motion: drop movement, keep nothing that carried information (the final state is
+      identical with motion on or off — no info lives only in animation). ──────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .band-enlarge-trigger,
+  .band-modal__close {
+    transition: none;
+  }
+}

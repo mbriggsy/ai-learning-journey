@@ -11,7 +11,13 @@ import {
   differenceEuclidean,
 } from 'culori'
 import { describe, expect, it } from 'vitest'
-import { CVD_MIN_OKLAB, OKABE_ITO, SERIES } from '../palette'
+import {
+  BAND_FILL_INNER_P,
+  BAND_FILL_OUTER_P,
+  CVD_MIN_OKLAB,
+  OKABE_ITO,
+  SERIES,
+} from '../palette'
 import { bandStopCss } from '../scale'
 
 /**
@@ -85,28 +91,34 @@ function oklabL(color: string): number {
 // The cream page these primitives render on. SOURCE-BOUND to the canonical --paper token
 // (read from tokens.css, never re-typed — insight 032, mirroring src/ui/__tests__/tokens.test.ts).
 // If --paper drifts, the composite + visibility checks track the REAL surface, not a stale copy.
-const PAPER = (() => {
+function readToken(name: string): string {
   const here = dirname(fileURLToPath(import.meta.url))
   const css = readFileSync(join(here, '..', '..', 'ui', 'styles', 'tokens.css'), 'utf8')
-  const m = css.match(/--paper:\s*(#[0-9a-fA-F]{6})\b/)
-  if (m === null) throw new Error('--paper not found in tokens.css — the CVD probe cannot run')
+  const m = css.match(new RegExp(`${name}:\\s*(#[0-9a-fA-F]{6})\\b`))
+  if (m === null) throw new Error(`${name} not found in tokens.css — the CVD probe cannot run`)
   return m[1]!
-})()
+}
 
-// ─── DEFERRED COMPOSITE COVERAGE + THE BLUE-ON-BLUE LANDMINE (U6 ConfidenceBand, held) ───────────
-// back-nine-design §4 + phase-2-first-answer.md name two composites a FULL probe must cover: a
-// series/median LINE drawn over the band fill, and a text LABEL over the band (an alpha fill's
-// on-screen color ≠ its token). Those land WITH the ConfidenceBand / two-series RENDER components
-// (held for the cold-read) — because the line's treatment (color / halo / weight) IS the held
-// design decision. This probe covers what renders TODAY: opaque series strokes + the band fill.
+const PAPER = readToken('--paper')
+// The on-band MEDIAN line color, source-bound to the canonical --ink token (band.css applies it
+// via the .band-median class — var(--ink), never a re-typed hex). The median is the opacity
+// overlay that MUST stay legible over every band stop (the blue-on-blue landmine below).
+const INK = readToken('--ink')
+
+// ─── COMPOSITE COVERAGE + THE BLUE-ON-BLUE LANDMINE (U6 ConfidenceBand — LANDED) ─────────────────
+// back-nine-design §4 + phase-2-first-answer.md name a composite the FULL probe must cover: the
+// median/overlay LINE drawn over the band fill (an on-band line's legibility ≠ its standalone
+// contrast). The ConfidenceBand renders this line OPAQUE in --ink (band.css .band-median →
+// var(--ink)), so its composite over the band IS the ink itself (no alpha to flatten). The arm
+// below asserts the ink line clears the 0.10 floor over EVERY band stop it crosses, AND keeps the
+// planted blue-on-blue control: series-1 blue over the same band stops FAILS (the very mistake the
+// landmine warns against), so the gate is proven able to catch a wrong on-band line color.
 //
-// LANDMINE for that held work (MEASURED, culori 2026-06-14): series-1 BLUE (#0072b2) drawn over the
-// single-hue BLUE band drops BELOW the 0.10 CVD floor for band positions p ≲ 0.58 — min 0.024 at
-// p≈0.30 — so a blue median/overlay line is perceptually LOST in the dark half of the band under
-// deuteranopia. The on-band line MUST be ink (--ink #1d2b24, min ≥0.16 over the whole band) or
-// series-2 vermilion (min ≥0.19) — NEVER series-blue. When that line lands, add a composite arm
-// here asserting minCvdDistance(line-over-bandStop, bandStop) ≥ CVD_MIN_OKLAB across the band
-// p-grid (it WILL fail for series-blue — that is the point of keeping it).
+// LANDMINE (MEASURED, culori 2026-06-14): series-1 BLUE (#0072b2) over the single-hue BLUE band
+// drops BELOW the 0.10 floor for band positions p ≲ 0.58 (min ≈0.024 at p≈0.30) — a blue line is
+// perceptually LOST in the dark half of the band under deuteranopia. The on-band line MUST be
+// --ink (#1d2b24) — never series-blue. The band FILLS are OPAQUE oklch stops (no alpha), so the
+// inner-over-outer composite is just the inner stop — covered by the luminance-ordering arm.
 
 describe('CVD self-test — categorical series pair (the two-series encoding)', () => {
   const one = SERIES.one.color
@@ -198,5 +210,48 @@ describe('CVD self-test — the gate is NON-VACUOUS (planted matched-luminance r
 
   it('…while the real series pair PASSES it (both arms asserted together)', () => {
     expect(minCvdDistance(SERIES.one.color, SERIES.two.color)).toBeGreaterThanOrEqual(CVD_MIN_OKLAB)
+  })
+})
+
+describe('CVD self-test — the ON-BAND MEDIAN LINE composite (the blue-on-blue landmine)', () => {
+  // The median line crosses the WHOLE band — from the darkest stop near the median region out to
+  // the lightest tail. Sample the ramp densely (the line can sit over any stop as the fan moves)
+  // and require the --ink line to clear the 0.10 floor over every one, under all three CVD sims.
+  const P_GRID = Array.from({ length: 21 }, (_, i) => i / 20) // 0 … 1
+  const bandStops = P_GRID.map((p) => bandStopCss(p))
+
+  it('the --ink median line clears the 0.10 floor over EVERY band stop (it is never lost in the dark half)', () => {
+    for (const stop of bandStops) {
+      expect(minCvdDistance(INK, stop)).toBeGreaterThanOrEqual(CVD_MIN_OKLAB)
+    }
+  })
+
+  it('PLANTED: a series-BLUE line over the same band FAILS the floor somewhere (the gate catches it)', () => {
+    // The exact mistake the landmine warns against — a blue line lost in the blue band's dark
+    // half. At least one stop must drop below the floor, proving the composite probe is not
+    // vacuously green for the on-band line.
+    const worst = Math.min(...bandStops.map((stop) => minCvdDistance(SERIES.one.color, stop)))
+    expect(worst).toBeLessThan(CVD_MIN_OKLAB)
+  })
+})
+
+describe('CVD self-test — the two band FILL stops (inner vs outer) read as ordered ink density', () => {
+  // The two opaque fills are positions on the ordered ramp (not a categorical pair), so they are
+  // held to LUMINANCE ORDERING — inner (more-likely) darker than outer (less-likely) — never the
+  // 0.10 categorical floor (adjacent ordered steps are meant to be close).
+  const inner = bandStopCss(BAND_FILL_INNER_P)
+  const outer = bandStopCss(BAND_FILL_OUTER_P)
+
+  it('the inner fill is DARKER than the outer fill (density tracks likelihood, legible in grayscale)', () => {
+    expect(wcagY(inner)).toBeLessThan(wcagY(outer))
+  })
+
+  it('both fills stay clearly distinguishable from the cream paper under every CVD sim', () => {
+    expect(minCvdDistance(inner, PAPER)).toBeGreaterThanOrEqual(CVD_MIN_OKLAB)
+    expect(minCvdDistance(outer, PAPER)).toBeGreaterThanOrEqual(CVD_MIN_OKLAB)
+  })
+
+  it('PLANTED: inner and outer are INTENTIONALLY close (ordered, sub-floor) — proving why this is luminance, not 0.10', () => {
+    expect(minCvdDistance(inner, outer)).toBeLessThan(CVD_MIN_OKLAB * 2)
   })
 })

@@ -20,7 +20,7 @@
  * narrow alike) instead of redrawing from zero (the draw-once-then-morph rule).
  */
 
-import type { OutcomeState } from '@shared/model'
+import type { BandFan, OutcomeState } from '@shared/model'
 
 /** The number of x-lattice sample points a resolved fan is sampled on. Constant by contract:
  *  the path point-count is lattice-derived, never horizon-derived, so a morph is well-defined
@@ -45,6 +45,13 @@ export interface BandSample {
   readonly p75: number
   /** 90th percentile (the high-futures edge), real $, ≥ 0. */
   readonly p90: number
+  /** The fraction of the household cohort still alive at this lattice point (the engine's
+   *  {@link BandFanYear.cohortFraction}, resampled). OPTIONAL: {@link resolveBandData} ALWAYS sets
+   *  it; a hand-built fixture may omit it (a consumer reads absent as 1 — a full cohort). Carried so
+   *  the render can de-emphasize a thin late-year band — a band narrowing because couples have died
+   *  must never read as rising certainty (back-nine-design §3). NOT a band EDGE (the percentile
+   *  ordering above stands alone), so {@link isFixedLattice} does not gate on it. */
+  readonly cohortFraction?: number
 }
 
 /** A y-axis dollar gridline. The band decides the PIXEL position from `dollars`; the caller
@@ -168,4 +175,114 @@ export function isFixedLattice(samples: readonly BandSample[]): boolean {
     }
   }
   return true
+}
+
+/** Round a positive value UP to a humane axis ceiling (1 / 2 / 2.5 / 5 / 10 × 10^k) so the band's
+ *  top gridline is a clean figure ≥ the value. The fan's today anchor (initialPortfolio > 0) is
+ *  always in the lattice, so the input is always > 0 ⇒ the result is always > 0 — the `dollarMax > 0`
+ *  the asymmetric scale guard (`yForDollars`) requires can never be violated by a real fan. */
+function niceCeil(x: number): number {
+  if (!(x > 0)) return 0
+  const mag = 10 ** Math.floor(Math.log10(x))
+  const norm = x / mag // [1, 10)
+  const niceNorm = [1, 1.5, 2, 3, 4, 5, 6, 8, 10].find((s) => s >= norm) ?? 10
+  return niceNorm * mag
+}
+
+/** Build a renderable {@link ResolvedBandData} from the engine's per-year {@link BandFan}.
+ *
+ * THE PRODUCER SEAM (back-nine-design §3; the deferred U6-review obligation, now wired). The band
+ * is a PURE renderer — it draws what it is GIVEN and never re-validates. THIS is the one place the
+ * raw per-year fan becomes drawable geometry, and the one place the honesty guards fire:
+ *
+ *  - **Resample** the fan's integer-year grid (`yearsFromNow` 0, 1, …, horizon) onto the FIXED
+ *    {@link LATTICE_POINTS}-point x-lattice by linear interpolation. A convex combination of two
+ *    ordered, non-negative percentile tuples stays ordered + non-negative, so the lattice is
+ *    well-formed by construction — and the guard below proves it rather than trusting it.
+ *  - **Horizon = the fan's LAST living-cohort year** (the household horizon — the band ends where
+ *    the last couple does, never a fabricated tail past the cohort). It is STABLE across recomputes
+ *    under one seed (mortality is CRN-invariant), so a same-seed recompute MORPHS; a seed/horizon
+ *    change is a RE-DRAW (the morph contract — `ConfidenceBand` owns that branch).
+ *  - **`dollarMax` ≥ max(p90)** across the lattice (a humane ceiling) — the asymmetric scale guard,
+ *    so the top edge never escapes the plot (the deferred U6-review seam; pairs with `yForDollars`'
+ *    fail-loud on a non-positive ceiling).
+ *  - **`isFixedLattice` THROW** before returning — a malformed fan is a PRODUCER bug, never a
+ *    silently-wrong band (the calm-but-wrong sin). The planted-fail tests prove the throw can fire.
+ *  - **`cohortFraction`** rides on each sample (resampled from the fan) so the render can
+ *    de-emphasize a thin late-year band — the cohort thinning is honest signal, never hidden.
+ *
+ * STRING-FREE (the `src/viz` layer boundary): y-tick LABELS arrive through `formatDollar` (the
+ * caller's `copy.ts` currency formatter — a function, never a literal); the household-clock
+ * `annotations`/`callouts` are caller-supplied decorations passed through verbatim. */
+export function resolveBandData(
+  fan: BandFan,
+  outcomeState: OutcomeState,
+  opts: {
+    readonly formatDollar: (dollars: number) => string
+    readonly annotations?: readonly XAnnotation[]
+    readonly callouts?: readonly BandCallout[]
+  },
+): ResolvedBandData {
+  const grid = fan.byYear
+  if (grid.length < 2) {
+    throw new RangeError('resolveBandData: a fan needs at least the today anchor + one year')
+  }
+  // The grid is contiguous integer years (anchor 0, then 1, 2, … — buildBandFan's contract), so
+  // grid[k] IS the yearsFromNow=k entry and floor(x)/ceil(x) index it directly.
+  const horizonYears = grid[grid.length - 1]!.yearsFromNow
+
+  const samples: BandSample[] = []
+  let maxP90 = 0
+  for (let i = 0; i < LATTICE_POINTS; i++) {
+    const x = (i / (LATTICE_POINTS - 1)) * horizonYears
+    const lo = Math.min(Math.floor(x), grid.length - 1)
+    const hi = Math.min(lo + 1, grid.length - 1)
+    const frac = x - lo
+    const a = grid[lo]!
+    const b = grid[hi]!
+    const lerp = (pa: number, pb: number) => pa + frac * (pb - pa)
+    const p90 = lerp(a.p90, b.p90)
+    if (p90 > maxP90) maxP90 = p90
+    samples.push({
+      yearsFromNow: x,
+      p10: lerp(a.p10, b.p10),
+      p25: lerp(a.p25, b.p25),
+      p50: lerp(a.p50, b.p50),
+      p75: lerp(a.p75, b.p75),
+      p90,
+      cohortFraction: lerp(a.cohortFraction, b.cohortFraction),
+    })
+  }
+
+  // dollarMax ≥ max(p90) — the asymmetric scale guard. niceCeil already returns ≥ its input; the
+  // Math.max is a float-dust backstop so the `≥` is unconditional (the top edge never escapes).
+  const dollarMax = Math.max(niceCeil(maxP90), maxP90)
+
+  // y-ticks: 5 evenly-spaced gridlines INCLUDING $0 (the ruin-floor anchor — back-nine-design §3,
+  // the linear $0-anchored axis whose whole point is drawing the depletion-to-$0 case).
+  const TICK_INTERVALS = 4
+  const yTicks: YTick[] = []
+  for (let k = 0; k <= TICK_INTERVALS; k++) {
+    const dollars = (k / TICK_INTERVALS) * dollarMax
+    yTicks.push({ dollars, label: opts.formatDollar(dollars) })
+  }
+
+  // THE PRODUCER SEAM GUARD (deferred U6-review): fail loud on a malformed fan BEFORE the band ever
+  // draws it — never a silently-wrong band (back-nine-design §3; the calm-but-wrong sin).
+  if (!isFixedLattice(samples)) {
+    throw new RangeError(
+      'resolveBandData: produced a malformed lattice (length / monotonic year / ordered-percentile contract) — a producer bug, never drawn',
+    )
+  }
+
+  return {
+    kind: 'resolved',
+    outcomeState,
+    samples,
+    dollarMax,
+    horizonYears,
+    yTicks,
+    annotations: opts.annotations ?? [],
+    callouts: opts.callouts ?? [],
+  }
 }

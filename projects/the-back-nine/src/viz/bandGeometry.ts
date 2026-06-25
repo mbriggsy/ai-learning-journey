@@ -93,7 +93,7 @@ export function areaPath(
   dollarMax: number,
 ): string {
   if (samples.length === 0) return ''
-  const pt = (s: BandSample, key: keyof BandSample): [number, number] => [
+  const pt = (s: BandSample, key: 'p10' | 'p25' | 'p75' | 'p90'): [number, number] => [
     xForYear(s.yearsFromNow, horizonYears),
     yForDollars(s[key], dollarMax),
   ]

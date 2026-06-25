@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { LATTICE_POINTS, isFixedLattice, type BandSample } from '../bandData'
+import { LATTICE_POINTS, isFixedLattice, resolveBandData, type BandSample } from '../bandData'
+import type { BandFan } from '@shared/model'
 
 /**
  * The fixed-lattice guard (bandData.isFixedLattice) — the fail-loud contract the U7 producer MUST
@@ -58,5 +59,90 @@ describe('isFixedLattice — the fail-loud fixed-lattice guard (the U7 producer 
     const nan = goodLattice()
     nan[5] = { ...nan[5]!, p50: Number.NaN }
     expect(isFixedLattice(nan)).toBe(false)
+  })
+})
+
+/**
+ * resolveBandData — the producer seam (the deferred U6-review obligation, now wired). Resamples the
+ * engine's per-year fan onto the fixed lattice, computes the dollarMax ≥ max(p90) scale guard, and
+ * THROWS on a malformed fan before the band can draw it. A LINEAR fan makes every resampled lattice
+ * value hand-verifiable (linear interpolation of a linear function is exact at every point).
+ */
+
+// A linear fan over yearsFromNow 0..4: p50 = 1000 − 100·y; edges ±25/±50; cohort thins 1.0 → 0.6.
+function linearFan(): BandFan {
+  const byYear = [0, 1, 2, 3, 4].map((y) => {
+    const p50 = 1000 - 100 * y
+    return { yearsFromNow: y, p10: p50 - 50, p25: p50 - 25, p50, p75: p50 + 25, p90: p50 + 50, cohortFraction: 1 - 0.1 * y }
+  })
+  return { byYear }
+}
+
+const fmt = (d: number) => `$${Math.round(d)}`
+
+describe('resolveBandData — the producer seam (resample + dollarMax guard + fail-loud)', () => {
+  it('produces a well-formed fixed lattice over the fan horizon (the anchor + last year preserved)', () => {
+    const r = resolveBandData(linearFan(), 'borderline', { formatDollar: fmt })
+    expect(r.kind).toBe('resolved')
+    expect(r.outcomeState).toBe('borderline')
+    expect(r.samples).toHaveLength(LATTICE_POINTS)
+    expect(isFixedLattice(r.samples)).toBe(true)
+    expect(r.horizonYears).toBe(4) // the fan's last living-cohort year
+
+    // The anchor (today) and the last lattice point reproduce the fan's endpoints exactly.
+    expect(r.samples[0]).toMatchObject({ yearsFromNow: 0, p10: 950, p25: 975, p50: 1000, p75: 1025, p90: 1050 })
+    const last = r.samples[LATTICE_POINTS - 1]!
+    expect(last.yearsFromNow).toBeCloseTo(4, 10)
+    expect(last.p50).toBeCloseTo(600, 8)
+    expect(last.p90).toBeCloseTo(650, 8)
+  })
+
+  it('resamples by EXACT linear interpolation at every lattice point (p50 = 1000 − 100·yearsFromNow)', () => {
+    const r = resolveBandData(linearFan(), 'on-track', { formatDollar: fmt })
+    for (const s of r.samples) {
+      expect(s.p50).toBeCloseTo(1000 - 100 * s.yearsFromNow, 8)
+      // The cohort fraction rides the same linear interpolation (1 − 0.1·y).
+      expect(s.cohortFraction).toBeCloseTo(1 - 0.1 * s.yearsFromNow, 8)
+    }
+    // Spot points that land on exact household-clock years.
+    expect(r.samples[12]!.p50).toBeCloseTo(900, 8) // x = 1
+    expect(r.samples[24]!.p50).toBeCloseTo(800, 8) // x = 2
+  })
+
+  it('dollarMax is a humane ceiling ≥ max(p90) (the asymmetric scale guard) with sane headroom', () => {
+    const r = resolveBandData(linearFan(), 'on-track', { formatDollar: fmt })
+    const maxP90 = Math.max(...r.samples.map((s) => s.p90)) // 1050 (at the anchor)
+    expect(r.dollarMax).toBeGreaterThanOrEqual(maxP90)
+    expect(r.dollarMax).toBeLessThanOrEqual(maxP90 * 2) // not absurd headroom
+    expect(r.dollarMax).toBeGreaterThan(0) // yForDollars' fail-loud floor can never trip on a real fan
+  })
+
+  it('y-ticks anchor at $0 (the ruin floor) and top out at dollarMax, labelled via the caller formatter', () => {
+    const r = resolveBandData(linearFan(), 'on-track', { formatDollar: fmt })
+    expect(r.yTicks[0]).toEqual({ dollars: 0, label: '$0' })
+    expect(r.yTicks[r.yTicks.length - 1]!.dollars).toBe(r.dollarMax)
+    expect(r.yTicks.every((t) => t.label === `$${Math.round(t.dollars)}`)).toBe(true)
+  })
+
+  it('passes household-clock annotations + callouts through verbatim', () => {
+    const annotations = [{ id: 'death', yearsFromNow: 3, label: 'Survivor years', ages: '~88 / 86', description: 'one outlives the other' }]
+    const callouts = [{ id: 'likely', yearsFromNow: 2, dollars: 800, text: 'most likely' }]
+    const r = resolveBandData(linearFan(), 'on-track', { formatDollar: fmt, annotations, callouts })
+    expect(r.annotations).toEqual(annotations)
+    expect(r.callouts).toEqual(callouts)
+  })
+
+  it('PLANTED FAIL: an inverted fan (p10 > p90) makes the producer THROW — never a silently-wrong band', () => {
+    // Transpose one year's edges: the low edge would draw ABOVE the high edge (a confident lie).
+    const base = linearFan()
+    const bad: BandFan = {
+      byYear: base.byYear.map((y, i) => (i === 2 ? { ...y, p10: 900, p90: 100 } : y)),
+    }
+    expect(() => resolveBandData(bad, 'off-track', { formatDollar: fmt })).toThrow(/malformed lattice/)
+  })
+
+  it('THROWS on a degenerate fan with no year beyond the anchor (nothing to draw)', () => {
+    const anchorOnly: BandFan = { byYear: [{ yearsFromNow: 0, p10: 1000, p25: 1000, p50: 1000, p75: 1000, p90: 1000, cohortFraction: 1 }] }
+    expect(() => resolveBandData(anchorOnly, 'indeterminate', { formatDollar: fmt })).toThrow(/today anchor \+ one year/)
   })
 })

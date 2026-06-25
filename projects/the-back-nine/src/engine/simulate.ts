@@ -32,6 +32,8 @@ import {
   DRAWDOWN_POLICIES,
   NEVER_DEPLETED,
   type AccumulationParams,
+  type BandFan,
+  type BandFanYear,
   type DepletionYear,
   type Distribution,
   type IncomeParams,
@@ -848,11 +850,81 @@ export function validateParams(params: SimulationParams): string | null {
   return null
 }
 
+// =========================================================================
+// The U6/U7 band fan (a presence-keyed PRESENTATION accounting surface). A pure post-loop
+// reduction of the per-year living-cohort balances `simulate` observes through the
+// decumulation sink — see {@link BandFan}. It reads state already computed; it never
+// perturbs the distribution (the reduce-to-spine band-fan byte-identity guard).
+// =========================================================================
+
+/** Percentile of an ASCENDING-sorted, non-empty array — the R-7 / Excel PERCENTILE.INC method
+ *  (linear interpolation between the two closest ranks), the standard quantile a reader expects.
+ *  `n === 1` returns the lone value (a single surviving household IS its own every-percentile —
+ *  the honest reading of a one-couple late-year cohort). */
+export function bandPercentile(sortedAsc: readonly number[], p: number): number {
+  const n = sortedAsc.length
+  if (n === 1) return sortedAsc[0]!
+  const h = (n - 1) * p
+  const lo = Math.floor(h)
+  const hi = Math.ceil(h)
+  return sortedAsc[lo]! + (h - lo) * (sortedAsc[hi]! - sortedAsc[lo]!)
+}
+
+/** Reduce the year-major living-cohort balances into the {@link BandFan} the band renders.
+ *  Index t of `valuesByYear` holds the END-of-sim-year-t portfolio value of every household
+ *  that still EXISTS that year ($0 for an alive-but-broke path; a both-dead path is simply
+ *  absent — the living-cohort + ruin-floor rule). The today anchor (yearsFromNow 0 = every path
+ *  at `initialPortfolio`) is prepended. The fan STOPS at the first year no household survives —
+ *  an empty cohort has no honest percentile, so an empty late year is never drawn. */
+export function buildBandFan(
+  valuesByYear: readonly number[][],
+  cohortByYear: readonly number[],
+  initialPortfolio: number,
+  paths: number,
+): BandFan {
+  const byYear: BandFanYear[] = [
+    {
+      yearsFromNow: 0,
+      p10: initialPortfolio,
+      p25: initialPortfolio,
+      p50: initialPortfolio,
+      p75: initialPortfolio,
+      p90: initialPortfolio,
+      cohortFraction: 1,
+    },
+  ]
+  for (let t = 0; t < valuesByYear.length; t++) {
+    const count = cohortByYear[t] ?? 0
+    if (count === 0) break // no household survives to year t+1 — the fan ends here (honest)
+    const sorted = [...(valuesByYear[t] ?? [])].sort((a, b) => a - b)
+    byYear.push({
+      yearsFromNow: t + 1,
+      p10: bandPercentile(sorted, 0.1),
+      p25: bandPercentile(sorted, 0.25),
+      p50: bandPercentile(sorted, 0.5),
+      p75: bandPercentile(sorted, 0.75),
+      p90: bandPercentile(sorted, 0.9),
+      cohortFraction: count / paths,
+    })
+  }
+  return { byYear }
+}
+
 /**
  * Run the Monte Carlo spine. Deterministic in (params, seed): a fixed seed reproduces
  * a byte-identical distribution on one JS engine.
+ *
+ * `options.bandFan` (opt-in) additionally emits the per-year living-cohort percentile fan
+ * (`distribution.bandFan`) for the U6/U7 confidence band — a PARALLEL presentation surface
+ * observed from per-year state already computed, byte-identical to a fan-off run on
+ * `terminalValuesReal` / `survivalFraction` / `depletionYears` (the reduce-to-spine guard).
+ * The single headline run sets it; the date-search's many candidates never do (perf + wire).
  */
-export function simulate(params: SimulationParams, seed: number): SimOutput {
+export function simulate(
+  params: SimulationParams,
+  seed: number,
+  options?: { readonly bandFan?: boolean },
+): SimOutput {
   // The seed is part of the R19 surface (U4 persists it with a bit-identical
   // reproduction contract, matching dateSearch's reject): mulberry32(seed|0) would
   // silently coerce a NaN/fractional seed (NaN|0 === 0) and reproduce a DIFFERENT
@@ -931,6 +1003,18 @@ export function simulate(params: SimulationParams, seed: number): SimOutput {
   const terminalValuesReal: number[] = new Array(paths)
   const depletionYears: DepletionYear[] = new Array(paths)
   let survivors = 0
+
+  // U6/U7 band fan (opt-in): year-major living-cohort balance bins + per-year household-existence
+  // count, allocated ONLY when requested (the single headline run). Index t = END of sim-year t
+  // (yearsFromNow t+1); the today anchor is added at reduction. A run WITHOUT the option allocates
+  // nothing, passes no sink, and is byte-identical (presence-keyed — the reduce-to-spine guard).
+  const wantFan = options?.bandFan === true
+  const fanValuesByYear: number[][] | undefined = wantFan
+    ? Array.from({ length: maxHorizon }, () => [])
+    : undefined
+  const fanCohortByYear: number[] | undefined = wantFan
+    ? new Array<number>(maxHorizon).fill(0)
+    : undefined
 
   // The per-path tax-aware solver surfaces (U3·M6 — the solver output contract), collected
   // iff the run carries the overlay (presence-keyed: a spine run has no tax data, and
@@ -1057,6 +1141,9 @@ export function simulate(params: SimulationParams, seed: number): SimOutput {
       }
     }
 
+    // U6/U7 band fan: this path's per-year balance sink (the decumulation pushes each year's
+    // post-step total into it). Undefined unless the run opted in ⇒ no sink ⇒ byte-identical.
+    const pathBalances: number[] | undefined = wantFan ? [] : undefined
     let res: DecumulationResult
     if (overlay) {
       // Tax-aware decumulation. `overlay.buckets` (sum === initialPortfolio, validated) IS the
@@ -1078,6 +1165,9 @@ export function simulate(params: SimulationParams, seed: number): SimOutput {
           initialTaxableBasis: overlay.initialTaxableBasis,
           householdYears,
           bracketFillCeilings: overlay.bracketFillCeilings ?? [],
+          // U6/U7 band fan: spread the sink ONLY when the run opted in (absent ⇒ the
+          // byte-identical pre-fan taxInputs — presence-keyed, reduce-to-spine).
+          ...(pathBalances ? { balancesOut: pathBalances } : {}),
           // Per-person pre-tax split (M6b·B): aligned to `people` (= the overlay's canonical
           // owner→spouse order). Absent ⇒ the aggregate pool (byte-identical M6a path).
           ...(overlay.pretaxByPerson ? { initialPretaxByPerson: overlay.pretaxByPerson } : {}),
@@ -1180,7 +1270,7 @@ export function simulate(params: SimulationParams, seed: number): SimOutput {
         stock: params.stockWeight * params.initialPortfolio,
         bond: (1 - params.stockWeight) * params.initialPortfolio,
       }
-      res = runDecumulation(initial, realStock, realBond, withdrawals, params.stockWeight)
+      res = runDecumulation(initial, realStock, realBond, withdrawals, params.stockWeight, undefined, pathBalances)
       // The spine arm of the finiteness seam (see the overlay arm above): a pre-existing
       // gap the M6 review surfaced — the spine, too, could resolve an overflowed terminal
       // as a surviving Infinity before the ENGINE_MAX_* gate bounded the domain.
@@ -1196,6 +1286,19 @@ export function simulate(params: SimulationParams, seed: number): SimOutput {
     terminalValuesReal[p] = res.terminalReal
     depletionYears[p] = res.depletionYear
     if (res.depletionYear === NEVER_DEPLETED) survivors++
+
+    // U6/U7 band fan fold: this path's household EXISTS for years [0, horizon) (horizon =
+    // min(sampled last death, maxHorizon)). Each such year takes the recorded END-of-year value,
+    // or $0 for an alive-but-broke year after depletion (the decumulation stops recording at
+    // depletion; the household lives on, broke — the ruin floor that MUST stay in the cohort). A
+    // both-dead year (t ≥ horizon) is absent (no household to hold a portfolio). The horizon ≤ 0
+    // continue above never reaches here, so a couple already dead at year 0 joins no year's cohort.
+    if (wantFan && fanValuesByYear && fanCohortByYear && pathBalances) {
+      for (let t = 0; t < horizon; t++) {
+        fanCohortByYear[t]!++
+        fanValuesByYear[t]!.push(t < pathBalances.length ? pathBalances[t]! : 0)
+      }
+    }
   }
 
   return {
@@ -1206,6 +1309,11 @@ export function simulate(params: SimulationParams, seed: number): SimOutput {
       survivalFraction: paths > 0 ? survivors / paths : 0,
       // The per-path solver surfaces ride iff the overlay ran (presence-keyed, M6).
       ...(taxAware ? { taxAware } : {}),
+      // The per-year band fan rides iff the caller opted in (presence-keyed; observed from
+      // state already computed, so byte-identical to a fan-off run on the fields above).
+      ...(wantFan && fanValuesByYear && fanCohortByYear
+        ? { bandFan: buildBandFan(fanValuesByYear, fanCohortByYear, params.initialPortfolio, paths) }
+        : {}),
     },
   }
 }

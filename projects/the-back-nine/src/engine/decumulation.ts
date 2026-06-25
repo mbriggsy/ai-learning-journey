@@ -117,6 +117,16 @@ export interface DecumulationResult {
  * returns/withdrawals arrays alone govern the horizon (the same auxiliary-stream
  * convention as the overlay's `ssBenefits`/`conversions`). ABSENT ⇒ zero inflow every
  * year ⇒ byte-identical to the pre-C2 path (the reduce-to-spine condition).
+ *
+ * `balancesOut` (U6/U7 band fan — appended LAST for the same arg-stability reason) is an
+ * optional sink the caller passes to OBSERVE the per-year portfolio total: each iterated
+ * year pushes `totalValue(state)` AFTER that year's `stepYear` (so index t = the value at
+ * the END of sim-year t; the depletion year pushes exactly $0 — the ruin floor records
+ * itself). It is a PURE OBSERVATION — writing to an injected array changes no computation,
+ * so a run WITH the sink is byte-identical to one without it (the reduce-to-spine fan guard).
+ * Years AFTER depletion are not iterated (the loop breaks); the caller fills those alive-but-
+ * broke years as $0 from the path's own horizon (it knows the couple's death year; this
+ * function does not). ABSENT ⇒ no observation, the pre-fan path verbatim.
  */
 export function runDecumulation(
   initial: PortfolioState,
@@ -125,6 +135,7 @@ export function runDecumulation(
   netWithdrawals: readonly number[],
   stockWeight: number,
   contributions?: readonly number[],
+  balancesOut?: number[],
 ): DecumulationResult {
   let state = initial
   let depletionYear: DepletionYear = NEVER_DEPLETED
@@ -139,6 +150,9 @@ export function runDecumulation(
 
     const step = stepYear(state, rs, rb, w, stockWeight, contributions?.[t] ?? 0)
     state = step.state
+    // Band fan (U6/U7): observe the post-step total — $0 exactly on the depletion year. Pure
+    // observation; never perturbs the result (the reduce-to-spine fan byte-identity guard).
+    balancesOut?.push(totalValue(state))
     if (step.depleted) {
       depletionYear = t
       break

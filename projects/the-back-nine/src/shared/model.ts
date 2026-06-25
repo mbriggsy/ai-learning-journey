@@ -519,6 +519,53 @@ export interface TaxAwareDistribution {
   readonly terminalTaxableBasisReal: readonly number[]
 }
 
+/** One x-grid sample of the per-year portfolio-value percentile fan (the U6/U7 confidence
+ *  band's INPUT — the "living-cohort" fan). Real (today's) dollars; the five percentiles are
+ *  the band edges the renderer draws (it never invents intermediate percentiles). Computed
+ *  ONLY among paths whose household still EXISTS at this year — ≥1 spouse alive AND within the
+ *  window. The honesty rule (decided product-side): a path that has DEPLETED but whose couple
+ *  is still alive reads $0 here (the ruin floor — the single most important honest signal, so
+ *  it MUST stay in the cohort); a path whose couple has BOTH died drops out (it is no longer a
+ *  household to hold a portfolio — counting its death-terminal forward would overstate later-
+ *  year wealth, the calm-but-wrong-optimistic direction). The fan therefore THINS at later
+ *  years as couples die — {@link BandFanYear.cohortFraction} carries that so a band narrowing
+ *  because few couples remain can never misread as rising certainty. */
+export interface BandFanYear {
+  /** Whole years from today (the household clock). 0 = today (the degenerate anchor — every
+   *  path starts at `initialPortfolio`); k = the END of sim-year k−1. Monotonic increasing. */
+  readonly yearsFromNow: number
+  /** 10th percentile portfolio value (the low-futures edge), real $, ≥ 0. */
+  readonly p10: number
+  /** 25th percentile, real $, ≥ 0. */
+  readonly p25: number
+  /** 50th percentile (the median path), real $, ≥ 0. */
+  readonly p50: number
+  /** 75th percentile, real $, ≥ 0. */
+  readonly p75: number
+  /** 90th percentile (the high-futures edge), real $, ≥ 0. */
+  readonly p90: number
+  /** Fraction of ALL paths whose household still exists at this year (1 at today, monotone
+   *  non-increasing). The honest "how much of the cohort backs this slice" signal — the UI
+   *  de-emphasizes a thin late-year band rather than drawing false confidence. */
+  readonly cohortFraction: number
+}
+
+/** The per-year living-cohort portfolio-value percentile fan — the U6/U7 band's INPUT.
+ *
+ *  A PARALLEL ACCOUNTING surface (the {@link TaxAwareDistribution} precedent): a pure
+ *  observation of per-year portfolio state ALREADY computed inside the decumulation loop. It
+ *  perturbs NO draw, path result, or golden — a fan-emitting run's `terminalValuesReal` /
+ *  `survivalFraction` / `depletionYears` are byte-identical to the same run without it (the
+ *  reduce-to-spine guard proves this). It is OPT-IN per call (`simulate`'s `bandFan` option):
+ *  the single headline run requests it; the date-search's many candidates never do (perf +
+ *  wire payload). The engine emits compact per-year percentiles — never the raw paths×years
+ *  matrix — so the wire payload stays ~years×6, not paths×years. */
+export interface BandFan {
+  /** One entry per x-grid point, today (index 0) through the run's max horizon, in
+   *  `yearsFromNow` order. */
+  readonly byYear: readonly BandFanYear[]
+}
+
 /** The raw, continuous distribution the headline rounds FROM — emitted alongside the
  *  rounded outputs so callers can re-round under their own (stateful) rules. */
 export interface Distribution {
@@ -537,6 +584,11 @@ export interface Distribution {
   /** Per-path tax-aware solver surfaces (U3·M6). PRESENT iff the run carried the tax
    *  overlay — see {@link TaxAwareDistribution} for the presence contract. */
   readonly taxAware?: TaxAwareDistribution
+  /** The per-year living-cohort portfolio-value percentile fan (U6/U7 band INPUT). PRESENT iff
+   *  the caller opted in via `simulate`'s `bandFan` option — see {@link BandFan} for the
+   *  presence + byte-identity contract. A parallel presentation surface; the headline never
+   *  rounds from it. */
+  readonly bandFan?: BandFan
 }
 
 /** The resolved engine output. */

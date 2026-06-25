@@ -348,6 +348,17 @@ export interface TaxYearInputs {
    *  clamped and unclamped). Recorded ADDITIVELY at the IRMAA-MAGI history site, counted exactly once;
    *  it never touches the gross-up, the §86 base, or ACA-MAGI (a clamped working year prices no ACA). */
   readonly ongoingTaxableIrmaaOnly?: readonly number[]
+  // --- U6/U7 band fan: an OPTIONAL output sink (not an input). ABSENT ⇒ no observation, the
+  //     pre-fan path verbatim. ---
+  /** An optional sink the caller passes to OBSERVE the per-year portfolio total: each iterated
+   *  year pushes `totalValue(state)` AFTER that year's `stepYear` (index t = the value at the END
+   *  of sim-year t; the depletion year pushes exactly $0 — the ruin floor records itself). A PURE
+   *  OBSERVATION — writing to an injected array changes no computation, so a run WITH the sink is
+   *  byte-identical to one without it (the reduce-to-spine band-fan guard). Years after depletion
+   *  are not iterated (the loop breaks); the CALLER fills those alive-but-broke years as $0 from
+   *  the path's own horizon (the overlay does not know the couple's death year). Mutable by
+   *  contract (the overlay pushes into it), unlike the readonly input streams above. */
+  balancesOut?: number[]
 }
 
 /** One year's per-person, per-bucket contribution inflow (C2). All real $, finite ≥ 0
@@ -1037,6 +1048,7 @@ export function runTaxAwareDecumulation(
     contributions = [],
     ongoingTaxableGrossUp = [],
     ongoingTaxableIrmaaOnly = [],
+    balancesOut,
   } = taxInputs
 
   // Healthcare requires tax (U3 · M3 Slice 4): the ACA PTC keys off ACA-MAGI, which this engine
@@ -1697,6 +1709,9 @@ export function runTaxAwareDecumulation(
     // #3): credited end-of-year, after the return step, `+ 0` exactly when nothing is contributed.
     const step = stepYear(state, rs, rb, grossWithdrawal + hsaSpendThisYear, stockWeight, contributionTotal)
     state = step.state
+    // Band fan (U6/U7): observe the post-step total — $0 exactly on the depletion year. Pure
+    // observation; never perturbs the result (the reduce-to-spine fan byte-identity guard).
+    balancesOut?.push(totalValue(state))
 
     if (step.depleted) {
       buckets = EMPTY_BUCKETS

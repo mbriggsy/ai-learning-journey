@@ -335,6 +335,29 @@ export const slots = {
   /** The "still needed" strip's overflow counter — a self-describing list item
    *  (its own span), never a bare "(+N)" glyph fused onto the prior fact name. */
   factsMore: (n: number): string => `${n} more`,
+  // --- U7 verdict grammar (the confidence statement's magnitude clause) -----------------
+  // The second line of the verdict, keyed off the engine's dollar DIRECTION
+  // (DollarAdjustment.direction — NEVER re-derived UI-side) + the humane-rounded $/month figure
+  // (pre-formatted by the caller; the ui layer can't import the money formatter). Voice is
+  // permissive/probabilistic (R12) — a possibility, never an imperative ("there looks to be
+  // room" / "would …", never "trim" / "you should"). The amount enters through the slot, so the
+  // copyGuard's free-numeral scan never sees a hardcoded quantitative claim. First-draft strings
+  // — exact wording is the N=1 cold-read's call (the surface that consumes these is U7 item d).
+  /** direction 'room' — even the conservative future leaves a surplus (over-funded / on-track). */
+  verdictRoomClause: (perMonthFormatted: string): string =>
+    `There looks to be room for about $${perMonthFormatted} more a month.`,
+  /** direction 'trim' — a shortfall the magnitude sizes (off-track / already-failing). */
+  verdictTrimClause: (perMonthFormatted: string): string =>
+    `About $${perMonthFormatted} a month less would bring it onto steadier ground.`,
+  /** direction 'on-the-line' — borderline (or on-track with a rough downside); no figure. */
+  verdictHoldClause: (): string => `It sits close to the line — small changes tip it either way.`,
+  /** The survivor step-down, told as a plain $ drop (R17/R40). Consumed by SurvivorReadout, which
+   *  is ENGINE-BLOCKED: no survivor-specific distribution emits yet — that additive presence-keyed
+   *  output is U7 item (e), not built. NO "widow's penalty" jargon (copyGuard catastrophe-lexicon,
+   *  survivor-scoped): the calm framing is "on your own", one Social Security benefit ends, and the
+   *  brackets become a single filer's. */
+  verdictSurvivorStepDown: (perMonthDropFormatted: string): string =>
+    `If one of you is on your own later, the household’s monthly income steps down about $${perMonthDropFormatted} — one Social Security benefit ends, and taxes move to a single filer’s brackets.`,
 } as const
 
 /**

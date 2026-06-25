@@ -12,6 +12,11 @@ import { ESLint } from 'eslint'
 
 const eslint = new ESLint()
 
+// Cold-loading ESLint + resolving the flat config is legitimately slow (~1.5s solo, but 5–6s under
+// full-suite parallel CPU contention), which trips vitest's 5s default. Give these spawn-ESLint
+// probes explicit headroom so the copy-fence guard never flakes the suite under load.
+const ESLINT_TIMEOUT_MS = 30_000
+
 const fenceMessages = async (code: string) => {
   // A src/intake/*.tsx path (NOT under __tests__, which the rule ignores) so the
   // copy-fence config applies; the file need not exist (no type-aware linting).
@@ -24,17 +29,17 @@ describe('the copy fence is not vacuous (D1 review T2)', () => {
     const msgs = await fenceMessages('export const X = () => <p>Guaranteed to retire</p>')
     expect(msgs.length).toBeGreaterThan(0)
     expect(msgs.some((m) => /copy\.ts/.test(m.message))).toBe(true)
-  })
+  }, ESLINT_TIMEOUT_MS)
 
   it('FAILS on an inline aria-label literal (the a11y directive channel)', async () => {
     const msgs = await fenceMessages('export const X = () => <button aria-label="Remove">x</button>')
     expect(msgs.length).toBeGreaterThan(0)
-  })
+  }, ESLINT_TIMEOUT_MS)
 
   it('PASSES the catalog-routed form ({copy.key} text + aria-label)', async () => {
     const msgs = await fenceMessages(
       "import { copy } from '@ui/copy'\nexport const X = () => <p aria-label={copy.appTitle}>{copy.appTitle}</p>",
     )
     expect(msgs).toHaveLength(0)
-  })
+  }, ESLINT_TIMEOUT_MS)
 })

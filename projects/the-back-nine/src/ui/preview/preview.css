@@ -1,0 +1,66 @@
+/*
+ * src/ui/preview/preview.css — DEV-ONLY layout for the U7 preview harness (never ships; the
+ * ?preview route is dead-code-eliminated from production). Reads tokens.css var()s only. The cases
+ * sit in plain bordered wells so the ConfidenceStatement surface — not the chrome — is what reads.
+ */
+
+.preview {
+  width: min(100%, 82rem);
+  margin-inline: auto;
+  padding: var(--space-8) var(--gutter) var(--space-12);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-9);
+}
+
+.preview__head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.preview__title {
+  font-size: var(--text-xl);
+}
+
+.preview__note {
+  font-size: var(--text-sm);
+  color: var(--ink-muted);
+  max-width: var(--measure);
+}
+
+.preview__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(23rem, 1fr));
+  gap: var(--space-7);
+  align-items: start;
+}
+
+.preview__case {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-6);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-lg);
+  background: var(--paper-raised);
+}
+
+.preview__case-label {
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-overline);
+  color: var(--ink-muted);
+}
+
+.preview__block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.preview__block-title {
+  font-size: var(--text-lg);
+}

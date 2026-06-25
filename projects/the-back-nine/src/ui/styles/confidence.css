@@ -1,0 +1,205 @@
+/*
+ * src/ui/styles/confidence.css — the U7 confidence-statement surface (the Clubhouse Ledger applied
+ * to the product's face). Reads ONLY tokens.css var()s (the canonical-source rule). CSP-clean:
+ * every style is class-driven here, never an inline style attribute.
+ *
+ * COLOR carries no verdict signal (back-nine-design §2): the verdict word + glyph render in --ink
+ * uniformly across all six states, so a sighted reader gets no green=good / red=bad cue and the
+ * color-blind reader loses nothing. The WORD, the count, the magnitude, and the SILHOUETTE are the
+ * signal. MOTION is an occasional first-reveal fade only (no count-up — figures are static); it
+ * drops to an opacity-only comprehension fade under prefers-reduced-motion, final state identical.
+ */
+
+.confidence {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  width: 100%;
+  max-width: var(--measure);
+}
+
+/* The first-reveal: a calm rise+fade (the magic moment is an occasional, first-time moment, so the
+   slightly longer --dur-reveal is right). transform + opacity only (GPU); numbers never animate. */
+.confidence-reveal {
+  opacity: 1;
+  transform: translateY(0);
+  transition:
+    opacity var(--dur-reveal) var(--ease-out),
+    transform var(--dur-reveal) var(--ease-out);
+}
+
+@starting-style {
+  .confidence-reveal {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+/* ----- the verdict lockup: glyph + word ----- */
+
+.cs-verdict {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+/* The silhouette glyph — pure --ink (currentColor), sized to sit beside the verdict word. CSS
+   width/height override the SVG's presentation-attribute size. Decorative (aria-hidden) beside the
+   visible word — no double-announce. */
+.cs-glyph {
+  flex: none;
+  width: 2.25rem;
+  height: 2.25rem;
+  color: var(--ink);
+}
+
+/* The verdict WORD — the plain-language answer. Editorial serif, large, in --ink (NOT brand): hue
+   must not encode good/bad. tabIndex=-1 makes it the focus-to-verdict target (announce on landing). */
+.cs-word {
+  font-family: var(--font-display);
+  font-optical-sizing: auto;
+  font-weight: var(--weight-display);
+  font-size: var(--text-2xl);
+  line-height: var(--leading-display);
+  letter-spacing: var(--tracking-display);
+  color: var(--ink);
+}
+
+.cs-word:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 4px;
+  border-radius: var(--radius-sm);
+}
+
+/* ----- the "X of 10" coverage reading ----- */
+
+.cs-reading {
+  font-family: var(--font-body);
+  font-size: var(--text-lg);
+  line-height: var(--leading-tight);
+  color: var(--ink);
+  max-width: var(--measure);
+}
+
+.cs-reading__count {
+  font-weight: var(--weight-semibold);
+}
+
+.cs-reading__frame {
+  color: var(--ink-muted);
+}
+
+/* ----- the dollar-grammar magnitude clause ----- */
+
+.cs-magnitude {
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  color: var(--ink-muted);
+  max-width: var(--measure);
+}
+
+/* For the action-first states (borderline / off-track / already-failing) the magnitude line IS the
+   constructive lead — what would steady the plan — so it reads a touch stronger (full ink), never
+   alarmed. The verdict word stays calm; this is emphasis, not alarm (R11). */
+.confidence-reveal[data-framing='action-first'] .cs-magnitude {
+  color: var(--ink);
+  font-weight: var(--weight-medium);
+}
+
+/* ----- the provisional eyebrow (a reading taken before the account set is complete) ----- */
+
+.cs-provisional {
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-overline);
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  margin-block-end: var(--space-1);
+}
+
+/* ----- the band drawer spacing (the on-demand range) ----- */
+
+.cs-band {
+  margin-block-start: var(--space-2);
+}
+
+/* ----- the range / indeterminate mode (no verdict — the answer is incomplete, not bad) ----- */
+
+.cs-range {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.cs-range__lead {
+  font-family: var(--font-display);
+  font-optical-sizing: auto;
+  font-weight: var(--weight-display);
+  font-size: var(--text-lg);
+  line-height: var(--leading-tight);
+  color: var(--ink-muted);
+}
+
+.cs-range__lead:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 4px;
+  border-radius: var(--radius-sm);
+}
+
+/* ----- the pending mode (pre-first-resolve) ----- */
+
+.cs-pending {
+  font-family: var(--font-display);
+  font-optical-sizing: auto;
+  font-weight: var(--weight-display);
+  font-size: var(--text-lg);
+  color: var(--ink-muted);
+}
+
+/* ----- the compute-error mode (a defined calm result, never a hung promise) ----- */
+
+.cs-error {
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  color: var(--ink);
+}
+
+.cs-retry {
+  min-height: var(--tap-min);
+  border: none;
+  background: none;
+  color: var(--ink-muted);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+  transition: color var(--dur-fast) ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .cs-retry:hover {
+    color: var(--ink);
+  }
+}
+
+.cs-retry:active {
+  transform: scale(0.97);
+}
+
+/* ----- reduced motion: drop the movement, keep a short comprehension fade (final state identical;
+        no information lives only in the animation) ----- */
+
+@media (prefers-reduced-motion: reduce) {
+  .confidence-reveal {
+    transition: opacity var(--dur-fast) ease;
+  }
+  @starting-style {
+    .confidence-reveal {
+      opacity: 0;
+      transform: none;
+    }
+  }
+  .cs-retry {
+    transition: none;
+  }
+}

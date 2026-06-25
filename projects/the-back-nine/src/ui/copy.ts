@@ -244,6 +244,29 @@ export const copy = {
   outcomeOffTrack: 'Off track',
   outcomeOverFunded: 'More than covered',
   outcomeAlreadyFailing: 'Already short',
+  // --- U7 confidence statement surface (the verdict-first face — spine-lead; D2 adds the
+  //     date-first lead). VERDICT-SCOPED keys (start "confidence") run the strict copyGuard
+  //     gates (free-numeral + superlative). The "X of 10" count enters via slots.xOfTen, so the
+  //     caption itself carries no numeral. ---
+  confidenceRegionLabel: 'Where you stand',
+  // The natural-frequency frame's tail — composed with slots.xOfTen ("7 of 10" + this), e.g.
+  // "7 of 10 futures your plan covers". Kitces survival/coverage framing, never "failure".
+  confidenceCoverageCaption: 'futures your plan covers',
+  // --- U7 confidence band chrome (the on-demand "show me the range" drawer — BandLabels +
+  //     BandPanelChrome for ConfidenceBandPanel). BAND-SCOPED keys: chart chrome describing the
+  //     fan's geometry, not a verdict claim, so the universal gates apply (as for factual intake
+  //     copy). Percentile counts are spelled out, never digits. ---
+  bandCaption:
+    'How your savings could grow or thin across the years ahead — the spread of futures, not a single line.',
+  bandYAxis: 'Savings, in today’s dollars',
+  bandXAxis: 'Years from now',
+  bandLegendMedian: 'The most likely path',
+  bandLegendInner: 'The middle half of futures',
+  bandLegendOuter: 'Eight in ten futures fall inside the band',
+  bandPull: 'The range',
+  bandStudyRange: 'Study the range',
+  bandModalTitle: 'The range of futures',
+  bandClose: 'Close',
   // --- R19 calm error grammar (icon + adjacent text; color never alone) ---
   errContributionCeiling:
     'That’s more than this year’s legal contribution limit for this account type at this age — combined across accounts of the same kind.',

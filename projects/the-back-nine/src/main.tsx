@@ -6,15 +6,28 @@ import '@fontsource-variable/source-sans-3/index.css'
 import './ui/styles/tokens.css'
 import './ui/styles/base.css'
 import './ui/styles/app.css'
-import { StrictMode } from 'react'
+import { lazy, StrictMode, Suspense } from 'react'
 import { createRoot } from 'react-dom/client'
 import { App } from '@ui/App'
 
 const rootEl = document.getElementById('root')
 if (!rootEl) throw new Error('Root element #root not found')
 
+// DEV-only U7 confidence-statement preview harness, reached at `?preview`. `import.meta.env.DEV` is
+// a static `false` in the production build, so this whole branch — and the dynamic import it gates —
+// is dead-code-eliminated: the harness never ships and never counts against the entry-JS budget.
+const U7Preview = import.meta.env.DEV ? lazy(() => import('@ui/preview/U7Preview')) : null
+const previewing =
+  import.meta.env.DEV && new URLSearchParams(window.location.search).has('preview')
+
 createRoot(rootEl).render(
   <StrictMode>
-    <App />
+    {previewing && U7Preview ? (
+      <Suspense fallback={null}>
+        <U7Preview />
+      </Suspense>
+    ) : (
+      <App />
+    )}
   </StrictMode>,
 )

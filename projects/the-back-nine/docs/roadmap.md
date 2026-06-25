@@ -73,7 +73,7 @@ The C-units and D-units are the accumulation tracks — they extend the U-number
 | **U5 / D1** | Account-level guided setup (the U5 reshape): surface-early, single entry pass; the in-memory orchestrator + R19 sanity | shipped | Cleared the N=1 laptop cold-read on every screen. The broader D1 date/answer surface is still ahead |
 | **U6** (foundation) | Colorblind-safe viz primitives: palette / scale / CVD probe | shipped | The CVD-safe foundation, not the band render |
 | **U6** (render) | The confidence-band / projection-fan RENDER | in-progress | Built (direction B: Lead + Drawer + click-to-enlarge) + tested + green; **review DONE** (`/ultramode-code-review`, 11 lenses, findings adversarially verified, fold landed — insight 043); **app-integration + N=1 laptop cold-read pending** — built, not closed |
-| **U7** | Confidence statement surface + outcome-state system + survivor readout; copyGuard born here | in-progress | Path B: the engine per-year band fan + the `resolveBandData` producer + the non-color verdict signals are built; the surface (`outcomeStates` / copy / `copyGuard` / `ConfidenceStatement` / `SurvivorReadout`) + the N=1 cold-read are ahead |
+| **U7** | Confidence statement surface + outcome-state system + survivor readout; copyGuard born here | in-progress | Path B. Built + tested: the engine per-year band fan, the `resolveBandData` producer, the non-color verdict signals, the `outcomeStates` lookup, the `copy` verdict-grammar, and `copyGuard`. Ahead: `ConfidenceStatement` (the verdict-first surface — wires the band live), the survivor **engine output** + `SurvivorReadout` (engine-blocked: no survivor-conditioned distribution emits yet), the dev preview harness, the N=1 laptop cold-read |
 | **U8** | First-Save flow + recovery-phrase display + mandatory export + passphrase-strength gate (`zxcvbn-ts` ≥ 3 ∧ length ≥ 12) | not-started | |
 | **D2** | The state-adaptive first answer surface: date-first for not-yet-retired, spine-first for already-retired; the two-pane laptop layout | not-started | Same calm voice, one intake flow; only the lead answer changes |
 | **R40** | Other income in retirement (pension / rental / annuity / alimony / other) — engine + intake | shipped | U1–U4 shipped (types · compile + goldens · the atomic engine integration · the **intake UX + the KTD-9 copy half**); U5 doc-reconcile done — R40 complete. Build steps: [docs/plans/2-first-answer.md](plans/2-first-answer.md) |
@@ -161,7 +161,7 @@ These are the gates a fixture or recommendation must clear before any downstream
 | Gate | What it checks | Command |
 |---|---|---|
 | **Typecheck** | `tsc --noEmit` — must pass before any browser touch | `pnpm typecheck` |
-| **Tests** | 1152 vitest across 56 files (Vitest 4, `globals:false`); externally-derived goldens, absence-tests paired with presence companions | `pnpm test` |
+| **Tests** | 1161 vitest across 57 files (Vitest 4, `globals:false`); externally-derived goldens, absence-tests paired with presence companions | `pnpm test` |
 | **Lint** | Layer-boundary + engine-purity rules (no clock/entropy/env inside `src/engine/**`) | `pnpm lint` |
 | **ACA re-verify** | Fails the build if the enhanced-subsidy legislative entry is stale/unconfirmed — live, possibly-retroactive policy | `pnpm verify:aca` |
 | **Bundle budget** | Initial-JS byte sentinel ≤ 300 KiB entry JS; **currently 197.8 KiB** | `pnpm verify:bundle` |

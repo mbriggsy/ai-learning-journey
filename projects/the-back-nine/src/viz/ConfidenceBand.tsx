@@ -5,10 +5,11 @@
  *
  * THE CONTRACTS THIS COMPONENT HOLDS (phase-2 U6 + back-nine-design §3):
  *   - LINEAR y anchored at $0 → the ruin case draws the band touching the floor (bandGeometry).
- *   - DRAW ONCE, THEN MORPH: the first resolved reveal fades the fills in + draws the median
- *     line (pathLength 0→1); every later fan MORPHS the path `d` (widen / shift / narrow) on the
- *     constant x-lattice — never a draw-from-zero replay. The median is an OPACITY overlay, not
- *     part of a morphed envelope.
+ *   - DRAW ONCE, THEN MORPH: the first resolved reveal FADES the fills + median in (opacity only —
+ *     the median is NOT pathLength-traced: a stroke-dash trace fights `non-scaling-stroke` and
+ *     under-covers the line at the enlarged scale, leaving it visibly truncated); every later fan
+ *     MORPHS the path `d` (widen / shift / narrow) on the constant x-lattice — never a draw-from-
+ *     zero replay. The median is an OPACITY overlay, not part of a morphed envelope.
  *   - prefers-reduced-motion: the FINAL rendered DOM is byte-identical with motion on or off —
  *     reduced motion only sets transition duration to 0 and skips the draw/translate. No signal
  *     lives only in the animation (it inherits the non-color guarantees for free).
@@ -51,9 +52,13 @@ const MORPH_S = 0.26 // --dur-step: a recompute morph
 export interface ConfidenceBandProps {
   readonly data: BandViewData
   readonly labels: BandLabels
-  /** Click handler for the click-to-enlarge affordance (mouse convenience). When present the
-   *  band shows the zoom-in cursor; the keyboard/AT path is the caller's explicit button. */
+  /** Enlarge handler. When present, the band ITSELF becomes a focusable `<button>` — one affordance
+   *  for mouse AND keyboard/AT (a native button gives Enter/Space for free), so no separate text
+   *  button is needed (it was redundant with clicking the graph). */
   readonly onEnlarge?: () => void
+  /** Accessible name for the band-as-button (the enlarge action) — supplied by the caller (copy.ts)
+   *  whenever `onEnlarge` is set, so the button is never unnamed. Ignored when not enlargeable. */
+  readonly enlargeLabel?: string
   /** Identifies the render context — drawer vs the enlarged modal — emitted only as the
    *  `data-variant` render hook (used by tests, reserved for future per-variant CSS). It does NOT
    *  alter geometry or widen the band: the viewBox is fixed and the rendered size is owned
@@ -66,7 +71,7 @@ export interface ConfidenceBandProps {
  * is the first resolved reveal (draw) vs a subsequent fan (morph), tracked by a ref so a
  * recompute never replays the draw.
  */
-export function ConfidenceBand({ data, labels, onEnlarge, variant = 'drawer' }: ConfidenceBandProps) {
+export function ConfidenceBand({ data, labels, onEnlarge, enlargeLabel, variant = 'drawer' }: ConfidenceBandProps) {
   const reduce = useReducedMotion() ?? false
   // Has a RESOLVED fan ever been drawn? First resolved render → draw; later ones → morph.
   const hasDrawn = useRef(false)
@@ -76,26 +81,38 @@ export function ConfidenceBand({ data, labels, onEnlarge, variant = 'drawer' }: 
 
   const isEnlargeable = onEnlarge !== undefined
 
+  const svg = (
+    <svg
+      className={`band-svg${isEnlargeable ? ' is-enlargeable' : ''}`}
+      viewBox={`0 0 ${VIEWBOX.width} ${VIEWBOX.height}`}
+      preserveAspectRatio="xMidYMid meet"
+      role="img"
+      aria-label={labels.caption}
+      data-variant={variant}
+      data-band-kind={data.kind}
+    >
+      <Frame data={data} labels={labels} />
+      {data.kind === 'resolved' ? (
+        <ResolvedFan data={data} reduce={reduce} firstDraw={!hasDrawn.current} />
+      ) : (
+        <Placeholder data={data} />
+      )}
+      <Annotations annotations={data.annotations} horizonYears={data.horizonYears} />
+    </svg>
+  )
+
   return (
     <figure className="band-figure">
-      <svg
-        className={`band-svg${isEnlargeable ? ' is-enlargeable' : ''}`}
-        viewBox={`0 0 ${VIEWBOX.width} ${VIEWBOX.height}`}
-        preserveAspectRatio="xMidYMid meet"
-        role="img"
-        aria-label={labels.caption}
-        data-variant={variant}
-        data-band-kind={data.kind}
-        onClick={onEnlarge}
-      >
-        <Frame data={data} labels={labels} />
-        {data.kind === 'resolved' ? (
-          <ResolvedFan data={data} reduce={reduce} firstDraw={!hasDrawn.current} />
-        ) : (
-          <Placeholder data={data} />
-        )}
-        <Annotations annotations={data.annotations} horizonYears={data.horizonYears} />
-      </svg>
+      {isEnlargeable ? (
+        // The graph IS the enlarge trigger: one focusable affordance for mouse AND keyboard/AT.
+        // The wrapping <button> carries the click + native Enter/Space; the inner svg keeps its
+        // role="img" + caption so the chart's text alternative still reaches the a11y tree.
+        <button type="button" className="band-enlarge-surface" aria-label={enlargeLabel} onClick={onEnlarge}>
+          {svg}
+        </button>
+      ) : (
+        svg
+      )}
     </figure>
   )
 }
@@ -185,12 +202,13 @@ function ResolvedFan({
         animate={{ opacity: 1, d: innerD }}
         transition={fillTransition}
       />
-      {/* MEDIAN p50 — the OPACITY overlay line (ink, never series-blue). On first draw it traces
-          (pathLength 0→1); on recompute it morphs `d` and never replays the trace. */}
+      {/* MEDIAN p50 — the OPACITY overlay line (ink, never series-blue). FADES in on first draw
+          (NOT pathLength-traced — a stroke-dash trace fights non-scaling-stroke and under-covers
+          the line at the enlarged scale); on recompute it morphs `d`. */}
       <motion.path
         className="band-median"
-        initial={doDraw ? { opacity: 0, pathLength: 0, d: medianD } : false}
-        animate={{ opacity: 1, pathLength: 1, d: medianD }}
+        initial={doDraw ? { opacity: 0, d: medianD } : false}
+        animate={{ opacity: 1, d: medianD }}
         transition={doDraw ? { ...fillTransition } : morphTransition}
       />
       <Callouts data={data} />

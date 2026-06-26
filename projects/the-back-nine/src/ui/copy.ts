@@ -267,6 +267,9 @@ export const copy = {
   bandStudyRange: 'Study the range',
   bandModalTitle: 'The range of futures',
   bandClose: 'Close',
+  // The indeterminate-band placeholder note — shown on the wide low-emphasis envelope when there
+  // is no resolved range yet (the answer is incomplete, not bad).
+  bandPlaceholderNote: 'The range fills in as you answer.',
   // --- R19 calm error grammar (icon + adjacent text; color never alone) ---
   errContributionCeiling:
     'That’s more than this year’s legal contribution limit for this account type at this age — combined across accounts of the same kind.',

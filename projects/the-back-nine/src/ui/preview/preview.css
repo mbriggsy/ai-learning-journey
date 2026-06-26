@@ -33,7 +33,9 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(23rem, 1fr));
   gap: var(--space-7);
-  align-items: start;
+  /* stretch so every card in a row is the same height (each now carries a band — the indeterminate
+     one its placeholder — so the rows read as a uniform set, not ragged). */
+  align-items: stretch;
 }
 
 .preview__case {

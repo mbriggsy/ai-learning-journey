@@ -32,7 +32,13 @@ import { VerdictIcon } from './verdictSignal'
 import { formatAxisDollar, formatPerMonth } from './money'
 import { focusHeading } from '@intake/a11y'
 import { ConfidenceBandPanel, type BandPanelChrome } from '@viz/ConfidenceBandPanel'
-import { resolveBandData, type BandLabels } from '@viz/bandData'
+import {
+  resolveBandData,
+  type BandLabels,
+  type IndeterminateBandData,
+  type XAnnotation,
+  type YTick,
+} from '@viz/bandData'
 import type { BandFan, DollarAdjustment, Headline } from '@shared/model'
 import './styles/confidence.css'
 
@@ -46,6 +52,9 @@ export type ConfidenceStatementView =
       /** The engine's per-year fan, opt-in. When present (and the state is a real verdict), the
        *  "show me the range" drawer mounts. Absent ⇒ no drawer (the verdict still stands). */
       readonly band?: BandFan
+      /** Household-clock x-axis markers (Today / retirement / horizon) for the band; without them
+       *  the band's x-axis reads bare. Applied to the resolved band AND the indeterminate placeholder. */
+      readonly bandAnnotations?: readonly XAnnotation[]
       /** Renders the PROVISIONAL eyebrow — a reading taken before the account set is complete is a
        *  labeled provisional update, never a final answer (back-nine-design intake §progressive). */
       readonly provisional?: boolean
@@ -76,6 +85,28 @@ const BAND_CHROME: BandPanelChrome = {
   closeLabel: copy.bandClose,
 }
 
+/** The indeterminate placeholder band — a wide low-emphasis envelope (no median, no precise band)
+ *  so the "range not determined yet" card still reads as a band and sits at the SAME size as the
+ *  resolved panels, without implying a confident answer. The $ ceiling + horizon are representative
+ *  (the range is genuinely undetermined); the note names the state. */
+const PLACEHOLDER_HORIZON_YEARS = 30
+const PLACEHOLDER_DOLLAR_MAX = 2_000_000
+function buildPlaceholderBand(annotations: readonly XAnnotation[]): IndeterminateBandData {
+  const yTicks: YTick[] = []
+  for (let k = 0; k <= 4; k++) {
+    const dollars = (k / 4) * PLACEHOLDER_DOLLAR_MAX
+    yTicks.push({ dollars, label: formatAxisDollar(dollars) })
+  }
+  return {
+    kind: 'indeterminate',
+    horizonYears: PLACEHOLDER_HORIZON_YEARS,
+    dollarMax: PLACEHOLDER_DOLLAR_MAX,
+    yTicks,
+    annotations,
+    placeholderNote: copy.bandPlaceholderNote,
+  }
+}
+
 /** The verdict's second line — the dollar grammar, keyed off the engine DIRECTION (never re-derived
  *  here). The $/month enters through the slot pre-formatted, so the rendered clause carries no
  *  hardcoded numeral (copyGuard slot-discipline). */
@@ -101,7 +132,10 @@ export function ConfidenceStatement({ view, focusSignal }: ConfidenceStatementPr
   // worded reading with a fan carries a band; indeterminate / pending / error never do.
   const resolved = useMemo(() => {
     if (view.kind !== 'reading' || !view.band) return null
-    return resolveBandData(view.band, view.headline.outcomeState, { formatDollar: formatAxisDollar })
+    return resolveBandData(view.band, view.headline.outcomeState, {
+      formatDollar: formatAxisDollar,
+      annotations: view.bandAnnotations,
+    })
   }, [view])
 
   let body: ReactNode
@@ -117,14 +151,25 @@ export function ConfidenceStatement({ view, focusSignal }: ConfidenceStatementPr
       </p>
     )
   } else if (view.headline.outcomeState === 'indeterminate') {
-    // Range / no-verdict: the answer is incomplete, not bad — the ellipsis glyph + the calm
-    // "takes shape as you go" line, never an outcome word (outcomeStates: framing 'range').
+    // Range / no-verdict: the answer is incomplete, not bad — the ellipsis glyph + the calm "takes
+    // shape as you go" line (never an outcome word — outcomeStates framing 'range') + the wide
+    // PLACEHOLDER band (no median, no precise edge), so the card reads as a band and matches the
+    // resolved panels' size without implying a confident answer.
     body = (
-      <div className="confidence-reveal cs-range">
-        <VerdictIcon state="indeterminate" className="cs-glyph" />
-        <h2 className="cs-range__lead" tabIndex={-1} ref={headingRef}>
-          {copy.answerIncomplete}
-        </h2>
+      <div className="confidence-reveal" data-framing="range">
+        <div className="cs-range">
+          <VerdictIcon state="indeterminate" className="cs-glyph" />
+          <h2 className="cs-range__lead" tabIndex={-1} ref={headingRef}>
+            {copy.answerIncomplete}
+          </h2>
+        </div>
+        <div className="cs-band">
+          <ConfidenceBandPanel
+            data={buildPlaceholderBand(view.bandAnnotations ?? [])}
+            labels={BAND_LABELS}
+            chrome={BAND_CHROME}
+          />
+        </div>
       </div>
     )
   } else {

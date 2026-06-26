@@ -12,7 +12,7 @@
  * copy catalog + the copyGuard with state names.
  */
 import { ConfidenceStatement } from '../ConfidenceStatement'
-import { PREVIEW_ORDER, READING_FIXTURES } from './fixtures'
+import { HOUSEHOLD_ANNOTATIONS, PREVIEW_ORDER, READING_FIXTURES } from './fixtures'
 import type { OutcomeState } from '@shared/model'
 import './preview.css'
 
@@ -22,8 +22,9 @@ const T = {
     'Dev-only preview (?preview). Every outcome state + the non-verdict modes, driven by representative fixtures. The “Study the range” drawer is the on-demand band. The N=1 laptop cold-read is the Act-2 exit gate — the silhouette-legibility call is the reviewer’s.',
   modesTitle: 'Non-verdict modes',
   survivorTitle: 'Survivor readout',
+  survivorDeferredLabel: 'deferred — engine-blocked',
   survivorNote:
-    'Engine-blocked, deferred (U7 item e): the engine emits no survivor-conditioned distribution yet. That additive, presence-keyed output is its own unit before this second statement can render.',
+    'The engine emits no survivor-conditioned distribution yet (U7 item e). That additive, presence-keyed output is its own unit before this second statement can render.',
   pendingLabel: 'pending',
   errorLabel: 'compute-error',
   stateLabels: {
@@ -51,7 +52,12 @@ export default function U7Preview() {
           <article key={state} className="preview__case" data-state={state}>
             <p className="preview__case-label">{T.stateLabels[state]}</p>
             <ConfidenceStatement
-              view={{ kind: 'reading', ...READING_FIXTURES[state], provisional: false }}
+              view={{
+                kind: 'reading',
+                ...READING_FIXTURES[state],
+                bandAnnotations: HOUSEHOLD_ANNOTATIONS,
+                provisional: false,
+              }}
             />
           </article>
         ))}
@@ -73,7 +79,12 @@ export default function U7Preview() {
 
       <section className="preview__block">
         <h2 className="preview__block-title">{T.survivorTitle}</h2>
-        <p className="preview__note">{T.survivorNote}</p>
+        <div className="preview__grid">
+          <article className="preview__case">
+            <p className="preview__case-label">{T.survivorDeferredLabel}</p>
+            <p className="preview__note">{T.survivorNote}</p>
+          </article>
+        </div>
       </section>
     </main>
   )

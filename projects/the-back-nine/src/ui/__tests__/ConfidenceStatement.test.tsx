@@ -92,11 +92,13 @@ describe('ConfidenceStatement — the U7 verdict-first surface', () => {
     expect(hold.container.textContent).toContain(slots.verdictHoldClause())
   })
 
-  it('indeterminate is range-framed: the incompleteness line, no outcome word', () => {
+  it('indeterminate is range-framed: the incompleteness line + the placeholder band, no outcome word', () => {
     const { container } = render(
       <ConfidenceStatement view={{ kind: 'reading', ...READING_FIXTURES.indeterminate }} />,
     )
     expect(container.textContent).toContain(copy.answerIncomplete)
+    // the wide placeholder band stands in for the resolved fan (no median, no confident answer)
+    expect(container.textContent).toContain(copy.bandPlaceholderNote)
     for (const w of [
       copy.outcomeOnTrack,
       copy.outcomeBorderline,
@@ -125,16 +127,18 @@ describe('ConfidenceStatement — the U7 verdict-first surface', () => {
     expect(onRetry).toHaveBeenCalledTimes(1)
   })
 
-  it('mounts the band drawer only when a fan is provided (R4 — the range is on demand)', () => {
+  it('mounts the band drawer only when a fan is provided; the graph itself is the enlarge button', () => {
     const withBand = render(
       <ConfidenceStatement view={{ kind: 'reading', ...READING_FIXTURES['on-track'] }} />,
     )
-    expect(withBand.getByText(copy.bandStudyRange)).toBeInTheDocument()
+    // the enlarge affordance is the GRAPH as a focusable button (one path, mouse + keyboard/AT) —
+    // no separate text button; its accessible name is the enlarge label.
+    expect(withBand.getByRole('button', { name: copy.bandStudyRange })).toBeInTheDocument()
     withBand.unmount()
 
     const { headline, dollar } = READING_FIXTURES['on-track']
     const noBand = render(<ConfidenceStatement view={{ kind: 'reading', headline, dollar }} />)
-    expect(noBand.queryByText(copy.bandStudyRange)).toBeNull()
+    expect(noBand.queryByRole('button', { name: copy.bandStudyRange })).toBeNull()
   })
 
   it('labels the region and exposes the verdict heading (the colorblind-law a11y requirement)', () => {

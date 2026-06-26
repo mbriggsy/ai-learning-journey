@@ -177,39 +177,22 @@
   stroke-width: 3;
 }
 
-/* the enlarge trigger — text + a glyph, never a hue cue. */
-.band-enlarge-trigger {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  margin-top: var(--space-4);
-  font-family: var(--font-body);
-  font-size: var(--text-sm);
-  font-weight: var(--weight-semibold);
-  color: var(--ink);
-  background: transparent;
-  border: 1px solid var(--line-control);
-  border-radius: var(--radius-pill);
-  padding: var(--space-2) var(--space-4);
-  min-height: var(--tap-min);
-  cursor: pointer;
-  transition: transform var(--dur-press) var(--ease-out);
+/* the graph IS the enlarge button — a chromeless focusable surface (no border / background /
+   padding); the band fills it edge-to-edge. The zoom-in cursor + the focus ring live here, so one
+   affordance serves mouse AND keyboard/AT; the band's own non-color signal is untouched. */
+.band-enlarge-surface {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: zoom-in;
+  border-radius: var(--radius-md);
 }
-@media (hover: hover) and (pointer: fine) {
-  .band-enlarge-trigger:hover {
-    background: var(--brand-tint);
-  }
-}
-.band-enlarge-trigger:active {
-  transform: scale(0.97);
-}
-.band-enlarge-trigger:focus-visible {
+.band-enlarge-surface:focus-visible {
   outline: 2px solid var(--brand);
-  outline-offset: 2px;
-}
-.band-enlarge-trigger__glyph {
-  font-size: 1.1em;
-  line-height: 1;
+  outline-offset: 3px;
 }
 
 /* ── the enlarge modal (portaled to <body>) ───────────────────────────────────────────────── */
@@ -237,6 +220,15 @@
   box-shadow: var(--shadow-raised);
   padding: var(--space-6) var(--space-6) var(--space-7);
 }
+
+/* The enlarged band fits the viewport: cap its WIDTH by viewport height (the band is ~560:500, so
+   width 82vh → height ~73vh), leaving room for the title + padding. Without this the band runs
+   taller than the dialog and the modal grows a scrollbar that reveals nothing already off-screen. */
+.band-modal__dialog .band-figure {
+  max-inline-size: min(100%, 82vh);
+  margin-inline: auto;
+}
+
 .band-modal__head {
   display: flex;
   align-items: baseline;
@@ -283,7 +275,6 @@
 /* ── reduced motion: drop movement, keep nothing that carried information (the final state is
       identical with motion on or off — no info lives only in animation). ──────────────────── */
 @media (prefers-reduced-motion: reduce) {
-  .band-enlarge-trigger,
   .band-modal__close {
     transition: none;
   }

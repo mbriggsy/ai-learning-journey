@@ -5,8 +5,9 @@
  *
  * A thin wrapper around <ConfidenceBand>: it owns the drawer chrome + the enlarge state, and
  * hands the SAME band data to both the inline band and the enlarge modal. The enlarge trigger is
- * TWO-PATH (never a hue cue): the band itself is clickable (mouse convenience), AND an explicit
- * text button "Study the range" is the keyboard / assistive-tech path.
+ * the GRAPH ITSELF — a focusable <button> serving mouse AND keyboard/AT in one affordance (no
+ * separate text button; it was redundant with clicking the graph). `chrome.enlargeLabel` is the
+ * graph-button's accessible name.
  *
  * STRING-FREE: every label arrives via the `labels` / `chrome` props (src/ui fills from copy.ts).
  */
@@ -53,7 +54,13 @@ export function ConfidenceBandPanel({ data, labels, chrome }: ConfidenceBandPane
       <span className="band-drawer__tab" aria-hidden="true" />
       <p className="band-drawer__pull">{chrome.pull}</p>
 
-      <ConfidenceBand data={data} labels={labels} onEnlarge={open} variant="drawer" />
+      <ConfidenceBand
+        data={data}
+        labels={labels}
+        onEnlarge={open}
+        enlargeLabel={chrome.enlargeLabel}
+        variant="drawer"
+      />
 
       <div className="band-legend" aria-hidden="true">
         <span className="band-legend__row">
@@ -69,14 +76,6 @@ export function ConfidenceBandPanel({ data, labels, chrome }: ConfidenceBandPane
           {labels.legendOuter}
         </span>
       </div>
-
-      {/* the explicit, keyboard/AT enlarge path — text + glyph, never a hue cue. */}
-      <button type="button" className="band-enlarge-trigger" onClick={open}>
-        <span className="band-enlarge-trigger__glyph" aria-hidden="true">
-          &#9974;
-        </span>
-        {chrome.enlargeLabel}
-      </button>
 
       <BandEnlargeModal
         open={enlarged}

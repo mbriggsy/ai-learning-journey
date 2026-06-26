@@ -10,6 +10,7 @@
  * so resolveBandData's producer-seam guard accepts it.
  */
 import type { BandFan, BandFanYear, DollarAdjustment, Headline, OutcomeState } from '@shared/model'
+import type { XAnnotation } from '@viz/bandData'
 
 interface FanShape {
   /** Whole-year horizon (the fan runs 0..years). */
@@ -55,6 +56,15 @@ const dollar = (value: number, direction: DollarAdjustment['direction']): Dollar
   perMonthReal: { value, marginToEdge: 0 },
   direction,
 })
+
+/** One representative couple's household-clock markers — the x-axis the band reads against (Today /
+ *  work stops / plan horizon). Shared across every fixture; passed to the band so its x-axis isn't
+ *  bare. In the real product these are derived from the scenario (the retirement ages, the horizon). */
+export const HOUSEHOLD_ANNOTATIONS: readonly XAnnotation[] = [
+  { id: 'today', yearsFromNow: 0, label: 'Today', ages: '63 / 61', description: 'Today — ages 63 and 61' },
+  { id: 'retire', yearsFromNow: 2, label: 'Work stops', ages: '65 / 63', description: 'Work stops — around ages 65 and 63' },
+  { id: 'horizon', yearsFromNow: 30, label: 'Plan horizon', ages: '93 / 91', description: 'The plan horizon — ages 93 and 91' },
+]
 
 export interface ReadingFixture {
   readonly headline: Headline

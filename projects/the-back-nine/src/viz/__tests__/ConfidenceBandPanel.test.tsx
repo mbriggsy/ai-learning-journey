@@ -62,20 +62,23 @@ function resolved(): ResolvedBandData {
   }
 }
 
-// The keyboard/assistive-tech enlarge path is the one a color-blind keyboard user depends on, and
-// (before this) the panel's own wiring — its real button, the inline-band click, the SAME data to
-// both inline band and modal — had zero coverage (the modal test drives its OWN host harness).
-describe('ConfidenceBandPanel — the two-path enlarge (the keyboard/AT path is the explicit button)', () => {
+// The enlarge affordance is the GRAPH ITSELF — a focusable <button> serving mouse AND keyboard/AT in
+// one path (a color-blind keyboard user can reach it; no separate text button). The panel's wiring —
+// the band-as-button, the SAME data to both inline band and modal — is covered here (the modal test
+// drives its OWN host harness).
+describe('ConfidenceBandPanel — the enlarge affordance (the graph itself is the focusable button)', () => {
   it('PLANTED control: closed at rest — no dialog before any interaction', () => {
     const { queryByRole } = render(<ConfidenceBandPanel data={resolved()} labels={labels} chrome={chrome} />)
     expect(queryByRole('dialog')).toBeNull()
   })
 
-  it('the enlarge trigger is a real, focusable <button> (the keyboard/AT path, never a hue cue)', () => {
+  it('the enlarge trigger is the GRAPH as a real, focusable <button> (mouse + keyboard/AT, one path)', () => {
     const { getByRole } = render(<ConfidenceBandPanel data={resolved()} labels={labels} chrome={chrome} />)
     const btn = getByRole('button', { name: /study the range/i })
     expect(btn.tagName).toBe('BUTTON')
     expect(btn).toHaveAttribute('type', 'button')
+    // the band's text alternative still reaches the a11y tree (the img lives inside the button)
+    expect(btn.querySelector('svg[role="img"]')).not.toBeNull()
   })
 
   it('clicking the button opens the enlarged modal with the SAME band — the non-color median survives', async () => {
@@ -88,7 +91,7 @@ describe('ConfidenceBandPanel — the two-path enlarge (the keyboard/AT path is 
     expect(dialog.querySelector('.band-median')).not.toBeNull()
   })
 
-  it('clicking the inline band ALSO opens the modal (the mouse path feeds the same open() as the button)', async () => {
+  it('clicking the graph surface opens the modal (the band IS the button — the click bubbles to it)', async () => {
     const { container, getByRole, queryByRole } = render(
       <ConfidenceBandPanel data={resolved()} labels={labels} chrome={chrome} />,
     )

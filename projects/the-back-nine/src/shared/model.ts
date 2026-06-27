@@ -566,6 +566,31 @@ export interface BandFan {
   readonly byYear: readonly BandFanYear[]
 }
 
+/** The survivor-conditioned outcome (U7 e1 — the "as the survivor" reading). An OBSERVED surface,
+ *  never re-simulated: each path already simulates the full couple→survivor→both-dead timeline (the
+ *  survivor spending step-down + the §202 benefit are baked into the cash terms), so this READS the
+ *  sampled deaths + the resolved depletion and conditions on widowhood. A PARALLEL accounting surface
+ *  (the {@link BandFan} / {@link TaxAwareDistribution} precedent): a survivor-emitting run's joint
+ *  `terminalValuesReal` / `survivalFraction` / `depletionYears` are byte-identical to one without it.
+ *
+ *  A SURVIVOR PHASE exists on a path iff one spouse outlives the other WITHIN the window — the
+ *  earliest death is strictly before the latest AND falls inside `maxHorizonYears`. The survivor
+ *  inherits the plan, so ANY depletion on such a path — even one that struck while BOTH were alive —
+ *  is a survivor FAILURE (the equal-weight definition; blessed 2026-06-27). The fraction conditions on
+ *  widowhood, so on a fragile plan it is typically ≤ the joint `survivalFraction` — the honest signal
+ *  that the survivor faces more risk than the calm joint headline shows. (NOT a guaranteed inequality:
+ *  paths where both die together / both outlive the window are excluded from the denominator.) */
+export interface SurvivorConditioned {
+  /** Paths with an observed survivor phase (one spouse outliving the other within the window) — the
+   *  denominator. The "X of 10 futures where one of you is on your own" the reading conditions on. */
+  readonly survivorPhasePaths: number
+  /** Of those, the count whose portfolio never depleted ({@link NEVER_DEPLETED}) — the numerator. */
+  readonly survivorSurvivors: number
+  /** `survivorSurvivors / survivorPhasePaths` — the survivor-conditioned survival fraction (the
+   *  "X of 10 as the survivor" reading). In [0, 1]; presence guarantees the denominator is > 0. */
+  readonly survivalFraction: number
+}
+
 /** The raw, continuous distribution the headline rounds FROM — emitted alongside the
  *  rounded outputs so callers can re-round under their own (stateful) rules. */
 export interface Distribution {
@@ -589,6 +614,11 @@ export interface Distribution {
    *  presence + byte-identity contract. A parallel presentation surface; the headline never
    *  rounds from it. */
   readonly bandFan?: BandFan
+  /** The survivor-conditioned outcome (U7 e1). PRESENT iff the caller opted in via `simulate`'s
+   *  `survivorConditioned` option AND ≥ 1 path had a survivor phase — see {@link SurvivorConditioned}
+   *  for the presence + byte-identity contract. A parallel observed surface; the joint
+   *  `survivalFraction` is never derived from it. */
+  readonly survivorConditioned?: SurvivorConditioned
 }
 
 /** The resolved engine output. */

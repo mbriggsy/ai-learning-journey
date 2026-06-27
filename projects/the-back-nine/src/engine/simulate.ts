@@ -39,6 +39,7 @@ import {
   type IncomeParams,
   type PersonInputs,
   type SimulationParams,
+  type SurvivorConditioned,
 } from '@shared/model'
 
 /** The CRN draw matrices — pure in (seed, dimensions). */
@@ -910,6 +911,51 @@ export function buildBandFan(
   return { byYear }
 }
 
+/** True iff a path has an observed SURVIVOR PHASE (U7 e1): one spouse outlives the other WITHIN the
+ *  window — the earliest death is strictly before the latest AND falls inside `maxHorizonYears`. The
+ *  `firstDeath < maxHorizonYears` bound matches the engine's own simulated window exactly (a path runs
+ *  to `min(lastDeath, maxHorizon)`, so a first death AT/after the window end is never widowed in-sim).
+ *  A people-of-one household (and a both-die-same-year path) has none. PURE — observed from the
+ *  sampled death offsets only. */
+export function isSurvivorPhasePath(deathOffsets: readonly number[], maxHorizonYears: number): boolean {
+  if (deathOffsets.length < 2) return false
+  let firstDeath = deathOffsets[0]!
+  let lastDeath = deathOffsets[0]!
+  for (let i = 1; i < deathOffsets.length; i++) {
+    const off = deathOffsets[i]!
+    if (off < firstDeath) firstDeath = off
+    if (off > lastDeath) lastDeath = off
+  }
+  return firstDeath < lastDeath && firstDeath < maxHorizonYears
+}
+
+/** Reduce per-path observations into the {@link SurvivorConditioned} surface (U7 e1) — PURE, the
+ *  observed-not-perturbed reduction (the {@link buildBandFan} precedent). `deathOffsetsByPath` and
+ *  `depletionYears` are paths-aligned. A path joins the DENOMINATOR iff it has a survivor phase
+ *  ({@link isSurvivorPhasePath}); the NUMERATOR iff it ALSO never depleted — the survivor inherits the
+ *  plan, so ANY depletion (even pre-first-death, while both were alive) is a survivor failure (the
+ *  equal-weight definition). Returns null when no path had a survivor phase (presence-keyed — the
+ *  surface is then absent, so a fixed-horizon / people-of-one run emits nothing: reduce-to-spine). */
+export function buildSurvivorConditioned(
+  deathOffsetsByPath: readonly (readonly number[])[],
+  depletionYears: readonly DepletionYear[],
+  maxHorizonYears: number,
+): SurvivorConditioned | null {
+  let survivorPhasePaths = 0
+  let survivorSurvivors = 0
+  for (let p = 0; p < deathOffsetsByPath.length; p++) {
+    if (!isSurvivorPhasePath(deathOffsetsByPath[p]!, maxHorizonYears)) continue
+    survivorPhasePaths++
+    if ((depletionYears[p] ?? NEVER_DEPLETED) === NEVER_DEPLETED) survivorSurvivors++
+  }
+  if (survivorPhasePaths === 0) return null
+  return {
+    survivorPhasePaths,
+    survivorSurvivors,
+    survivalFraction: survivorSurvivors / survivorPhasePaths,
+  }
+}
+
 /**
  * Run the Monte Carlo spine. Deterministic in (params, seed): a fixed seed reproduces
  * a byte-identical distribution on one JS engine.
@@ -918,12 +964,15 @@ export function buildBandFan(
  * (`distribution.bandFan`) for the U6/U7 confidence band — a PARALLEL presentation surface
  * observed from per-year state already computed, byte-identical to a fan-off run on
  * `terminalValuesReal` / `survivalFraction` / `depletionYears` (the reduce-to-spine guard).
- * The single headline run sets it; the date-search's many candidates never do (perf + wire).
+ * `options.survivorConditioned` (opt-in) likewise emits `distribution.survivorConditioned` — the
+ * survivor-conditioned survival statistic (U7 e1), observed from the sampled deaths + the resolved
+ * depletion, equally byte-identical to an opt-out run. The single headline run sets these; the
+ * date-search's many candidates never do (perf + wire).
  */
 export function simulate(
   params: SimulationParams,
   seed: number,
-  options?: { readonly bandFan?: boolean },
+  options?: { readonly bandFan?: boolean; readonly survivorConditioned?: boolean },
 ): SimOutput {
   // The seed is part of the R19 surface (U4 persists it with a bit-identical
   // reproduction contract, matching dateSearch's reject): mulberry32(seed|0) would
@@ -1016,6 +1065,12 @@ export function simulate(
     ? new Array<number>(maxHorizon).fill(0)
     : undefined
 
+  // U7 e1 survivor-conditioned surface (opt-in): collect each path's sampled death offsets (paths-
+  // aligned with depletionYears below), reduced after the loop. Nothing allocated / pushed when opted
+  // out ⇒ byte-identical (presence-keyed). Observed-not-perturbed (the bandFan precedent).
+  const wantSurvivor = options?.survivorConditioned === true
+  const survivorDeathOffsets: number[][] | undefined = wantSurvivor ? [] : undefined
+
   // The per-path tax-aware solver surfaces (U3·M6 — the solver output contract), collected
   // iff the run carries the overlay (presence-keyed: a spine run has no tax data, and
   // zero-fill would contradict terminalValuesReal — absence is the honest shape). Each
@@ -1046,6 +1101,9 @@ export function simulate(
       deathOffsets = [...path.deathYearOffsets]
       horizon = Math.min(path.lastDeathYear, maxHorizon)
     }
+    // Paths-aligned with depletionYears (pushed for EVERY path, BEFORE the horizon≤0 continue, so the
+    // reduction can index both by p). The reference is safe to retain — deathOffsets is never mutated.
+    if (survivorDeathOffsets) survivorDeathOffsets.push(deathOffsets)
     if (horizon <= 0) {
       terminalValuesReal[p] = params.initialPortfolio
       depletionYears[p] = NEVER_DEPLETED
@@ -1301,6 +1359,14 @@ export function simulate(
     }
   }
 
+  // U7 e1: reduce the collected death offsets into the survivor-conditioned surface (null ⇒ no path
+  // had a survivor phase ⇒ absent, presence-keyed). Reads state already computed, so byte-identical
+  // to an opt-out run on the joint fields below.
+  const survivorConditioned =
+    wantSurvivor && survivorDeathOffsets
+      ? buildSurvivorConditioned(survivorDeathOffsets, depletionYears, maxHorizon)
+      : null
+
   return {
     indeterminate: false,
     distribution: {
@@ -1314,6 +1380,8 @@ export function simulate(
       ...(wantFan && fanValuesByYear && fanCohortByYear
         ? { bandFan: buildBandFan(fanValuesByYear, fanCohortByYear, params.initialPortfolio, paths) }
         : {}),
+      // The survivor-conditioned surface rides iff opted in AND ≥1 survivor phase occurred (U7 e1).
+      ...(survivorConditioned ? { survivorConditioned } : {}),
     },
   }
 }

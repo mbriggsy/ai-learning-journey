@@ -1,15 +1,18 @@
 ---
 title: U7 item (e1) — the survivor-conditioned engine distribution (design, PENDING BLESSING)
 date: 2026-06-27
-status: proposed — the headline-statistic decision is Briggsy's (product + cardinal-danger); engine mechanics designed
+status: statistic (A) BLESSED 2026-06-27 · e1 engine distribution BUILT · e1b/e1c/e2 remaining
 phase: Act 2 · U7
 modules: [src/engine/simulate.ts, src/engine/confidence.ts, src/shared/model.ts]
 ---
 
-> **This is a design awaiting the one decision in §3.** It is NOT yet a build recipe. The engine
-> mechanics, the fixtures strategy, and the danger analysis are settled; the survivor *statistic's
-> definition* has a product dimension and is cardinal-sin-dangerous, so it is Briggsy's to bless before
-> any code lands. e2 (the `SurvivorReadout` component) is eye-oracle and stays deferred to a cold-read.
+> **UPDATE 2026-06-27:** Briggsy blessed statistic **(A)** (§3). **e1 — the engine distribution — is
+> BUILT**: `simulate`'s opt-in `survivorConditioned` surface emits the equal-weight survivor-conditioned
+> survival fraction (`SurvivorConditioned` in `model.ts`; `isSurvivorPhasePath`/`buildSurvivorConditioned`
+> in `simulate.ts`), externally-derived + reduce-to-spine + byte-identity tested
+> (`survivorConditioned.test.ts`). **Remaining:** e1b (the income step-down magnitude for
+> `verdictSurvivorStepDown`), e1c (`confidence.ts` survivor reading), e2 (`SurvivorReadout` — eye-oracle,
+> deferred to a cold-read). The §3–§5 below are the as-blessed recipe.
 
 ## 1 · The gap (confirmed 2026-06-24, re-confirmed first-hand 2026-06-27)
 

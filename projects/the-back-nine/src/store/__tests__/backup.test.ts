@@ -205,11 +205,12 @@ describe('export failure modes', () => {
 
 describe('the U4 boundary-review folds', () => {
   it('a backup whose MODEL was saved by a newer app is told so — never "file-damaged" (the survivor with intact data)', async () => {
-    // Build a vault whose plaintext claims schemaVersion 3 (the untyped boundary lets
-    // a future app write it; this build must classify it honestly through restore).
+    // Build a vault whose plaintext claims schemaVersion 4 (one past the v3 ladder this
+    // build writes — the untyped boundary lets a future app write it; this build must
+    // classify it honestly through restore).
     const db = await openVaultDb()
     const session = createSession(db)
-    const futureScenario = { ...MODEL, schemaVersion: 3 } as unknown as Scenario
+    const futureScenario = { ...MODEL, schemaVersion: 4 } as unknown as Scenario
     const saved = await session.firstSave(futureScenario, await floorPass(PASSPHRASE))
     if (!saved.ok) throw new Error('firstSave failed')
     const phrase = saved.recoveryPhrase.join(' ')
@@ -219,7 +220,7 @@ describe('the U4 boundary-review folds', () => {
     await clearVault(db)
 
     const result = await restoreVault(db, exported.file, phrase, await floorPass(NEW_PASSPHRASE))
-    expect(result).toEqual({ ok: false, reason: 'newer-version', got: 3 })
+    expect(result).toEqual({ ok: false, reason: 'newer-version', got: 4 })
     expect(await loadVault(db)).toEqual({ kind: 'no-vault' }) // nothing landed
   })
 

@@ -1185,12 +1185,11 @@ const _v3FieldsExhaustive: _V3FieldsCover & _V3KeysCovered = true
 void _v3FieldsExhaustive
 
 /** The union of persistable plaintext scenario shapes (every version the decode
- *  ladder accepts today). ScenarioV3 is DEFINED above but deliberately NOT a
- *  member yet — it joins this union at P2·U8 with its codec arm + migration (its
- *  first writer). The codec's unknown-version branch is what makes the deferral
- *  safe (a v3 blob read by this build surfaces the calm "saved by a newer
- *  version" state, never a mis-parse and never healthcare silently OFF). */
-export type AnyScenario = Scenario | ScenarioV2
+ *  ladder accepts today). ScenarioV3 JOINED at P2·U8 (its codec arm + first writer);
+ *  v1/v2 remain only as legacy decode-ladder members for migrating any older save.
+ *  The codec's unknown-version branch (now `> 3`) keeps a still-newer blob surfacing
+ *  the calm "saved by a newer version" state, never a mis-parse. */
+export type AnyScenario = Scenario | ScenarioV2 | ScenarioV3
 
 // ---------------------------------------------------------------------------
 // The at-rest vault record shapes (P1·U4) — the SINGLE-SOURCED definition the

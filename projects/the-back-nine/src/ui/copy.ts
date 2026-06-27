@@ -338,9 +338,11 @@ export const slots = {
     if (pct >= 100) return `${keeper} would keep all of this if ${owner} passes.`
     return `${keeper} would keep ${pct}% of this if ${owner} passes.`
   },
-  /** The pinned natural-frequency frame. Top-of-scale renders "more than 9 of
-   *  10" — "10 of 10" can NEVER appear (the over-funded near-ceiling clamp). */
-  xOfTen: (n: number): string => (n >= 10 ? 'more than 9 of 10' : `${n} of 10`),
+  /** The pinned natural-frequency frame. Top-of-scale renders "better than 9 in
+   *  10" — a PROPORTION ("9 in 10"), not a count ("9 of 10"), to dodge the
+   *  integer snap-to-10 a near-ceiling count provokes; "10 of 10" can NEVER
+   *  appear (the over-funded near-ceiling clamp). */
+  xOfTen: (n: number): string => (n >= 10 ? 'better than 9 in 10' : `${n} of 10`),
   /** The provisional date line (~N years — humane precision, R12 hedge). */
   dateInYears: (n: number): string =>
     n === 1 ? 'Work-optional in about a year' : `Work-optional in about ${n} years`,

@@ -176,7 +176,7 @@ export function ConfidenceStatement({ view, focusSignal }: ConfidenceStatementPr
     const state = view.headline.outcomeState
     const pres = OUTCOME_PRESENTATION[state]
     const word = pres.verdictWordKey ? copy[pres.verdictWordKey] : ''
-    // The over-funded near-ceiling reads "more than 9 of 10" (the 10-of-10 honesty clamp); every
+    // The over-funded near-ceiling reads "better than 9 in 10" (the 10-of-10 honesty clamp); every
     // other worded state reads its engine count. The number enters through the slot.
     const reading =
       state === 'over-funded' ? slots.xOfTen(10) : slots.xOfTen(view.headline.xOfTen.value)

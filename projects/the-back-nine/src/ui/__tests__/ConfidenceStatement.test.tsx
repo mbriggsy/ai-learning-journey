@@ -58,11 +58,11 @@ describe('ConfidenceStatement — the U7 verdict-first surface', () => {
     }
   })
 
-  it('over-funded reads the near-ceiling "more than 9 of 10" (the 10-of-10 honesty clamp)', () => {
+  it('over-funded reads the near-ceiling "better than 9 in 10" (the 10-of-10 honesty clamp)', () => {
     const { container } = render(
       <ConfidenceStatement view={{ kind: 'reading', ...READING_FIXTURES['over-funded'] }} />,
     )
-    expect(container.textContent).toContain(slots.xOfTen(10)) // "more than 9 of 10"
+    expect(container.textContent).toContain(slots.xOfTen(10)) // "better than 9 in 10"
     expect(container.textContent).not.toContain('10 of 10')
   })
 

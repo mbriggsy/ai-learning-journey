@@ -235,7 +235,7 @@ export const copy = {
   answerProvisionalTag: 'Provisional — with what you’ve entered so far',
   answerNotYet:
     'Not there yet — with what’s entered so far. Accounts usually move this; the picture isn’t complete.',
-  dateFreeToday: 'Work-optional today, by this math',
+  dateFreeToday: 'Your fuck-off date is today, by this math',
   dateWindowEdge: 'at the edge of what this window can confirm',
   answerError: 'The math hit a snag.',
   answerRetry: 'Try again',
@@ -367,10 +367,10 @@ export const slots = {
   xOfTenAtCeiling: (): string => XOFTEN_CEILING,
   /** The provisional date line (~N years — humane precision, R12 hedge). */
   dateInYears: (n: number): string =>
-    n === 1 ? 'Work-optional in about a year' : `Work-optional in about ${n} years`,
+    n === 1 ? 'Your fuck-off date is about a year out' : `Your fuck-off date is about ${n} years out`,
   /** The first-class no-date answer names its own window (§3c). */
   noDateInWindow: (windowYears: number): string =>
-    `No work-optional date within the next ${windowYears} years — with what you’ve entered so far.`,
+    `No fuck-off date within the next ${windowYears} years — with what you’ve entered so far.`,
   /** Odds rider for the date line. */
   withOdds: (xOfTenText: string): string => `about ${xOfTenText} odds`,
   /** The catch-up step-down disclosure names its year (D1). */

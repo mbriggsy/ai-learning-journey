@@ -51,9 +51,6 @@ export const VERDICT_GLYPH: Record<OutcomeState, VerdictGlyph> = {
   indeterminate: { paths: [], dots: [[6, 12], [12, 12], [18, 12]] },
 } as const
 
-/** The exhaustive state list (re-exported convenience for the probe + cold-read iteration). */
-export const VERDICT_STATES = Object.keys(VERDICT_GLYPH) as readonly OutcomeState[]
-
 export interface VerdictIconProps {
   readonly state: OutcomeState
   /** When set, the glyph is a standalone `role="img"` with this accessible name (caller copy).

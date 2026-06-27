@@ -62,7 +62,10 @@ describe('ConfidenceStatement — the U7 verdict-first surface', () => {
     const { container } = render(
       <ConfidenceStatement view={{ kind: 'reading', ...READING_FIXTURES['over-funded'] }} />,
     )
-    expect(container.textContent).toContain(slots.xOfTen(10)) // "better than 9 in 10"
+    // pin the LITERAL — the component renders this via slots.xOfTenAtCeiling(), so asserting the slot
+    // output back would be tautological (both sides call the same helper). A phrasing regression
+    // (e.g. back to a count "9 of 10") must fail loud here, not survive the suite.
+    expect(container.textContent).toContain('better than 9 in 10')
     expect(container.textContent).not.toContain('10 of 10')
   })
 
@@ -71,6 +74,18 @@ describe('ConfidenceStatement — the U7 verdict-first surface', () => {
       <ConfidenceStatement view={{ kind: 'reading', ...READING_FIXTURES['on-track'] }} />,
     )
     expect(container.textContent).toContain(slots.xOfTen(8)) // "8 of 10"
+  })
+
+  it('already-failing reads its grim count + a TRIM clause, never a hopeful "room" reading', () => {
+    // the most alarming honest reading — pin it so a component-side regression can't render it hopeful
+    // (a 0-of-10 plan must never show a surplus/"room" framing).
+    const { container } = render(
+      <ConfidenceStatement view={{ kind: 'reading', ...READING_FIXTURES['already-failing'] }} />,
+    )
+    expect(screen.getByRole('heading', { name: copy.outcomeAlreadyFailing })).toBeInTheDocument()
+    expect(container.textContent).toContain('0 of 10')
+    expect(container.textContent).toContain(slots.verdictTrimClause('1,180')) // the trim direction
+    expect(container.textContent).not.toContain(slots.verdictRoomClause('1,180')) // never "room"
   })
 
   it('the dollar-grammar clause is keyed off the engine direction (room / trim / hold)', () => {
@@ -145,5 +160,22 @@ describe('ConfidenceStatement — the U7 verdict-first surface', () => {
     render(<ConfidenceStatement view={{ kind: 'reading', ...READING_FIXTURES['off-track'] }} />)
     expect(screen.getByRole('region', { name: copy.confidenceRegionLabel })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: copy.outcomeOffTrack })).toBeInTheDocument()
+  })
+
+  it('focusSignal lands focus on the verdict heading (the magic-moment announce); a changed signal re-lands it', () => {
+    const view = { kind: 'reading' as const, ...READING_FIXTURES['on-track'] }
+    const { rerender } = render(<ConfidenceStatement view={view} focusSignal={1} />)
+    const heading = screen.getByRole('heading', { name: copy.outcomeOnTrack })
+    expect(document.activeElement).toBe(heading)
+
+    heading.blur()
+    expect(document.activeElement).not.toBe(heading)
+    rerender(<ConfidenceStatement view={view} focusSignal={2} />)
+    expect(document.activeElement).toBe(screen.getByRole('heading', { name: copy.outcomeOnTrack }))
+  })
+
+  it('without focusSignal, focus is never stolen (provisional ticks / the dev preview leave it alone)', () => {
+    render(<ConfidenceStatement view={{ kind: 'reading', ...READING_FIXTURES['on-track'] }} />)
+    expect(document.activeElement).toBe(document.body)
   })
 })

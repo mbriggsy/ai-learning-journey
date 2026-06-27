@@ -59,6 +59,7 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     incomeSummary: slots.incomeSummary('Pension', 'You', '30,000'),
     incomeSurvivorNote: slots.incomeSurvivorNote('Your spouse', 'you', 0.5),
     xOfTen: slots.xOfTen(7),
+    xOfTenAtCeiling: slots.xOfTenAtCeiling(),
     dateInYears: slots.dateInYears(8),
     noDateInWindow: slots.noDateInWindow(30),
     withOdds: slots.withOdds('7 of 10'),

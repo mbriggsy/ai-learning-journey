@@ -288,6 +288,12 @@ export const copy = {
 
 export type CopyKey = keyof typeof copy
 
+/** The over-funded near-ceiling reading, SINGLE-SOURCED (the verdict surface calls it by name via
+ *  {@link slots.xOfTenAtCeiling}, and {@link slots.xOfTen}'s defensive clamp falls back to it). A
+ *  PROPORTION ("9 in 10") — never a count ("9 of 10", which snaps to "10 of 10"), never a bald
+ *  "10 of 10" (the honesty clamp). */
+const XOFTEN_CEILING = 'better than 9 in 10'
+
 /**
  * Typed quantitative slots — the ONLY way a number enters user-facing copy
  * (the certainty-hygiene slot discipline). Question counts are an allowlisted
@@ -338,11 +344,15 @@ export const slots = {
     if (pct >= 100) return `${keeper} would keep all of this if ${owner} passes.`
     return `${keeper} would keep ${pct}% of this if ${owner} passes.`
   },
-  /** The pinned natural-frequency frame. Top-of-scale renders "better than 9 in
-   *  10" — a PROPORTION ("9 in 10"), not a count ("9 of 10"), to dodge the
-   *  integer snap-to-10 a near-ceiling count provokes; "10 of 10" can NEVER
-   *  appear (the over-funded near-ceiling clamp). */
-  xOfTen: (n: number): string => (n >= 10 ? 'better than 9 in 10' : `${n} of 10`),
+  /** The pinned natural-frequency frame. A count below the ceiling renders "N of 10"; the over-funded
+   *  near-ceiling is the PROPORTION {@link slots.xOfTenAtCeiling} ("better than 9 in 10"). The `n >= 10`
+   *  branch keeps the honesty clamp as a DEFENSIVE backstop so a stray xOfTen(10) anywhere can never
+   *  print "10 of 10" — but the verdict surface routes the ceiling through xOfTenAtCeiling BY NAME, never
+   *  this magic sentinel (the engine separately clamps its emitted count to ≤ 9). */
+  xOfTen: (n: number): string => (n >= 10 ? XOFTEN_CEILING : `${n} of 10`),
+  /** The over-funded near-ceiling reading — a PROPORTION, not a count, so it dodges the integer
+   *  snap-to-10. The single named source the verdict surface calls (not the magic xOfTen(10)). */
+  xOfTenAtCeiling: (): string => XOFTEN_CEILING,
   /** The provisional date line (~N years — humane precision, R12 hedge). */
   dateInYears: (n: number): string =>
     n === 1 ? 'Work-optional in about a year' : `Work-optional in about ${n} years`,

@@ -114,7 +114,7 @@ describe('resolveBandData — the producer seam (resample + dollarMax guard + fa
     const maxP90 = Math.max(...r.samples.map((s) => s.p90)) // 1050 (at the anchor)
     expect(r.dollarMax).toBeGreaterThanOrEqual(maxP90)
     expect(r.dollarMax).toBeLessThanOrEqual(maxP90 * 2) // not absurd headroom
-    expect(r.dollarMax).toBeGreaterThan(0) // yForDollars' fail-loud floor can never trip on a real fan
+    expect(r.dollarMax).toBeGreaterThan(0) // a non-degenerate fan ⇒ a positive ceiling (the all-$0 fan is its own throw-test below)
   })
 
   it('y-ticks anchor at $0 (the ruin floor) and top out at dollarMax, labelled via the caller formatter', () => {
@@ -144,5 +144,23 @@ describe('resolveBandData — the producer seam (resample + dollarMax guard + fa
   it('THROWS on a degenerate fan with no year beyond the anchor (nothing to draw)', () => {
     const anchorOnly: BandFan = { byYear: [{ yearsFromNow: 0, p10: 1000, p25: 1000, p50: 1000, p75: 1000, p90: 1000, cohortFraction: 1 }] }
     expect(() => resolveBandData(anchorOnly, 'indeterminate', { formatDollar: fmt })).toThrow(/today anchor \+ one year/)
+  })
+
+  it('THROWS at the seam on an all-$0 fan ($0-portfolio household) — no honest dollar scale, NOT "malformed"', () => {
+    // initialPortfolio === 0 is a VALID decumulation run (an income-funded $0-portfolio household); its
+    // fan is all-$0 → maxP90 = 0 → dollarMax = 0. The lattice is well-formed (0 ≤ 0 ≤ … is ordered), so
+    // this is caught by the dollarMax seam guard, NOT the malformed-lattice guard — and at the SEAM, not
+    // deferred to yForDollars mid-render (which would throw a generic geometry error on a real household).
+    const zero = (y: number) => ({ yearsFromNow: y, p10: 0, p25: 0, p50: 0, p75: 0, p90: 0, cohortFraction: 1 })
+    const allZero: BandFan = { byYear: [0, 1, 2, 3, 4].map(zero) }
+    expect(() => resolveBandData(allZero, 'over-funded', { formatDollar: fmt })).toThrow(/no positive dollar scale/)
+  })
+
+  it('THROWS at the seam on an out-of-[0,1] cohortFraction (the honesty signal would draw false certainty)', () => {
+    const base = linearFan()
+    const nan: BandFan = { byYear: base.byYear.map((y, i) => (i === 2 ? { ...y, cohortFraction: Number.NaN } : y)) }
+    expect(() => resolveBandData(nan, 'on-track', { formatDollar: fmt })).toThrow(/cohortFraction/)
+    const tooBig: BandFan = { byYear: base.byYear.map((y, i) => (i === 2 ? { ...y, cohortFraction: 1.5 } : y)) }
+    expect(() => resolveBandData(tooBig, 'on-track', { formatDollar: fmt })).toThrow(/cohortFraction/)
   })
 })

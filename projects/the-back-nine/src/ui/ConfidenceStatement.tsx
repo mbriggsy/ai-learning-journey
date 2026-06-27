@@ -34,10 +34,10 @@ import { focusHeading } from '@intake/a11y'
 import { ConfidenceBandPanel, type BandPanelChrome } from '@viz/ConfidenceBandPanel'
 import {
   resolveBandData,
+  buildYTicks,
   type BandLabels,
   type IndeterminateBandData,
   type XAnnotation,
-  type YTick,
 } from '@viz/bandData'
 import type { BandFan, DollarAdjustment, Headline } from '@shared/model'
 import './styles/confidence.css'
@@ -92,16 +92,11 @@ const BAND_CHROME: BandPanelChrome = {
 const PLACEHOLDER_HORIZON_YEARS = 30
 const PLACEHOLDER_DOLLAR_MAX = 2_000_000
 function buildPlaceholderBand(annotations: readonly XAnnotation[]): IndeterminateBandData {
-  const yTicks: YTick[] = []
-  for (let k = 0; k <= 4; k++) {
-    const dollars = (k / 4) * PLACEHOLDER_DOLLAR_MAX
-    yTicks.push({ dollars, label: formatAxisDollar(dollars) })
-  }
   return {
     kind: 'indeterminate',
     horizonYears: PLACEHOLDER_HORIZON_YEARS,
     dollarMax: PLACEHOLDER_DOLLAR_MAX,
-    yTicks,
+    yTicks: buildYTicks(PLACEHOLDER_DOLLAR_MAX, formatAxisDollar),
     annotations,
     placeholderNote: copy.bandPlaceholderNote,
   }
@@ -131,7 +126,13 @@ export function ConfidenceStatement({ view, focusSignal }: ConfidenceStatementPr
   // owns the fail-loud honesty guards (malformed fan ⇒ throw — never a silently-wrong band). Only a
   // worded reading with a fan carries a band; indeterminate / pending / error never do.
   const resolved = useMemo(() => {
-    if (view.kind !== 'reading' || !view.band) return null
+    // Align the resolve guard with the RENDER guard: only a WORDED reading with a fan draws a band.
+    // An indeterminate reading renders the placeholder (never `resolved`), so resolving — and possibly
+    // throwing on — a fan it would never draw is both wasted and a latent render-throw on a never-shown
+    // band (the engine emits no fan for indeterminate today; this keeps the guards from drifting apart).
+    if (view.kind !== 'reading' || !view.band || view.headline.outcomeState === 'indeterminate') {
+      return null
+    }
     return resolveBandData(view.band, view.headline.outcomeState, {
       formatDollar: formatAxisDollar,
       annotations: view.bandAnnotations,
@@ -176,10 +177,11 @@ export function ConfidenceStatement({ view, focusSignal }: ConfidenceStatementPr
     const state = view.headline.outcomeState
     const pres = OUTCOME_PRESENTATION[state]
     const word = pres.verdictWordKey ? copy[pres.verdictWordKey] : ''
-    // The over-funded near-ceiling reads "better than 9 in 10" (the 10-of-10 honesty clamp); every
-    // other worded state reads its engine count. The number enters through the slot.
+    // The over-funded near-ceiling reads the proportion "better than 9 in 10" via xOfTenAtCeiling (the
+    // 10-of-10 honesty clamp, called BY NAME — never the magic xOfTen(10)); every other worded state
+    // reads its engine count through the slot.
     const reading =
-      state === 'over-funded' ? slots.xOfTen(10) : slots.xOfTen(view.headline.xOfTen.value)
+      state === 'over-funded' ? slots.xOfTenAtCeiling() : slots.xOfTen(view.headline.xOfTen.value)
     body = (
       <div className="confidence-reveal" data-framing={pres.framing}>
         {view.provisional && <p className="cs-provisional">{copy.answerProvisionalTag}</p>}

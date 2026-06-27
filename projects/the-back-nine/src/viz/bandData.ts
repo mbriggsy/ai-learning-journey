@@ -111,8 +111,11 @@ export interface BandLabels {
 /** A RESOLVED fan — a real distribution to draw. */
 export interface ResolvedBandData {
   readonly kind: 'resolved'
-  /** The outcome state the engine tagged this distribution with (carried for the a11y text +
-   *  so a consumer can vary surrounding copy; the band's geometry is state-agnostic). */
+  /** The outcome state the engine tagged this distribution with. FORWARD-CARRY: no renderer reads it
+   *  yet (the band's geometry is state-agnostic). It is threaded here — rather than re-derived — so a
+   *  future a11y-caption / surrounding-copy consumer reads the engine's authority tag instead of
+   *  recomputing it (the "UI re-derives nothing" law). Wire it into the a11y caption or drop it when
+   *  that consumer lands (roadmap U7/D2). */
   readonly outcomeState: OutcomeState
   /** The percentile fan on the fixed x-lattice (length === {@link LATTICE_POINTS}). */
   readonly samples: readonly BandSample[]
@@ -177,16 +180,35 @@ export function isFixedLattice(samples: readonly BandSample[]): boolean {
   return true
 }
 
-/** Round a positive value UP to a humane axis ceiling (1 / 2 / 2.5 / 5 / 10 × 10^k) so the band's
- *  top gridline is a clean figure ≥ the value. The fan's today anchor (initialPortfolio > 0) is
- *  always in the lattice, so the input is always > 0 ⇒ the result is always > 0 — the `dollarMax > 0`
- *  the asymmetric scale guard (`yForDollars`) requires can never be violated by a real fan. */
+/** Round a positive value UP to a humane axis ceiling (1 / 1.5 / 2 / 3 / 4 / 5 / 6 / 8 / 10 × 10^k)
+ *  so the band's top gridline is a clean figure ≥ the value. Returns 0 for a non-positive input
+ *  (NaN-safe via `!(x > 0)`). NOTE: the input is NOT guaranteed positive — `initialPortfolio === 0`
+ *  is a VALID decumulation run (validateParams' `finiteNonNeg` accepts 0; only the accumulation
+ *  construct rejects it, simulate.ts §683), so an all-$0 fan (a $0-portfolio, income-funded
+ *  household) yields maxP90 = 0 ⇒ this returns 0. resolveBandData fails loud on that AT THE SEAM
+ *  (below) — the `dollarMax > 0` yForDollars requires is enforced there, never left to the renderer. */
 function niceCeil(x: number): number {
   if (!(x > 0)) return 0
   const mag = 10 ** Math.floor(Math.log10(x))
   const norm = x / mag // [1, 10)
   const niceNorm = [1, 1.5, 2, 3, 4, 5, 6, 8, 10].find((s) => s >= norm) ?? 10
   return niceNorm * mag
+}
+
+/** The y-axis gridlines: `TICK_INTERVALS + 1` evenly-spaced lines INCLUDING $0 (the ruin-floor anchor
+ *  — back-nine-design §3, the linear $0-anchored axis whose whole point is drawing the depletion-to-$0
+ *  case). SINGLE-SOURCED so the indeterminate PLACEHOLDER band (which must sit at the same size as a
+ *  resolved card) and a resolved band cannot drift apart — the match is a guarantee, not a coincidence
+ *  of two copies of the loop. `formatDollar` is the caller's currency formatter (the string-free layer
+ *  — Intl lives in ui, never here). */
+export function buildYTicks(dollarMax: number, formatDollar: (dollars: number) => string): YTick[] {
+  const TICK_INTERVALS = 4
+  const yTicks: YTick[] = []
+  for (let k = 0; k <= TICK_INTERVALS; k++) {
+    const dollars = (k / TICK_INTERVALS) * dollarMax
+    yTicks.push({ dollars, label: formatDollar(dollars) })
+  }
+  return yTicks
 }
 
 /** Build a renderable {@link ResolvedBandData} from the engine's per-year {@link BandFan}.
@@ -243,6 +265,15 @@ export function resolveBandData(
     const lerp = (pa: number, pb: number) => pa + frac * (pb - pa)
     const p90 = lerp(a.p90, b.p90)
     if (p90 > maxP90) maxP90 = p90
+    // cohortFraction is the honesty signal — a band narrowing because COUPLES DIED must never read as
+    // rising certainty (model.ts §BandFanYear). isFixedLattice gates the band EDGES only, so guard the
+    // cohort signal HERE, finiteness-FIRST (insight 008/010 — a NaN passes every relational compare).
+    const cohortFraction = lerp(a.cohortFraction, b.cohortFraction)
+    if (!Number.isFinite(cohortFraction) || cohortFraction < 0 || cohortFraction > 1) {
+      throw new RangeError(
+        'resolveBandData: cohortFraction outside its [0,1] contract (NaN / <0 / >1) — the cohort-thinning honesty signal would draw a false certainty',
+      )
+    }
     samples.push({
       yearsFromNow: x,
       p10: lerp(a.p10, b.p10),
@@ -250,7 +281,7 @@ export function resolveBandData(
       p50: lerp(a.p50, b.p50),
       p75: lerp(a.p75, b.p75),
       p90,
-      cohortFraction: lerp(a.cohortFraction, b.cohortFraction),
+      cohortFraction,
     })
   }
 
@@ -258,13 +289,17 @@ export function resolveBandData(
   // Math.max is a float-dust backstop so the `≥` is unconditional (the top edge never escapes).
   const dollarMax = Math.max(niceCeil(maxP90), maxP90)
 
-  // y-ticks: 5 evenly-spaced gridlines INCLUDING $0 (the ruin-floor anchor — back-nine-design §3,
-  // the linear $0-anchored axis whose whole point is drawing the depletion-to-$0 case).
-  const TICK_INTERVALS = 4
-  const yTicks: YTick[] = []
-  for (let k = 0; k <= TICK_INTERVALS; k++) {
-    const dollars = (k / TICK_INTERVALS) * dollarMax
-    yTicks.push({ dollars, label: opts.formatDollar(dollars) })
+  // FAIL LOUD AT THE SEAM on a non-positive ceiling (the `dollarMax > 0` yForDollars requires). An
+  // all-$0 fan is VALID — a $0-portfolio, income-funded decumulation household (validateParams accepts
+  // initialPortfolio === 0; only the accumulation construct rejects it, simulate.ts §683) — so it is
+  // ordered + finite and isFixedLattice rightly accepts it, yet it has NO honest dollar scale
+  // (maxP90 = 0 ⇒ dollarMax = 0). Throw HERE, the documented producer seam, rather than let yForDollars
+  // throw mid-render: the $0-portfolio household renders its verdict WITHOUT a portfolio band (the
+  // caller — D2 — screens this case; there is nothing to plot but the $0 floor).
+  if (!(dollarMax > 0)) {
+    throw new RangeError(
+      'resolveBandData: an all-$0 fan ($0-portfolio household) has no positive dollar scale — render the verdict without a portfolio band',
+    )
   }
 
   // THE PRODUCER SEAM GUARD (deferred U6-review): fail loud on a malformed fan BEFORE the band ever
@@ -274,6 +309,10 @@ export function resolveBandData(
       'resolveBandData: produced a malformed lattice (length / monotonic year / ordered-percentile contract) — a producer bug, never drawn',
     )
   }
+
+  // y-ticks INCLUDING the $0 ruin-floor anchor — single-sourced via buildYTicks so the indeterminate
+  // placeholder band matches a resolved card's gridlines by construction, not by a duplicated loop.
+  const yTicks = buildYTicks(dollarMax, opts.formatDollar)
 
   return {
     kind: 'resolved',

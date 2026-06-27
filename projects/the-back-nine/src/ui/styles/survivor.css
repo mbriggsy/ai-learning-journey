@@ -1,0 +1,116 @@
+/*
+ * src/ui/styles/survivor.css — the U7 survivor readout (the quieter SECOND statement, Clubhouse
+ * Ledger). Reads ONLY tokens.css var()s (the canonical-source rule). CSP-clean: class-driven, never
+ * an inline style attribute.
+ *
+ * VISUAL HIERARCHY: this is subordinate to the joint confidence statement — a hairline rule sets it
+ * off, the verdict word is one step smaller (--text-xl vs the joint --text-2xl), so it reads as
+ * "and here's the survivor's view," never a competing headline.
+ *
+ * COLOR carries no verdict signal (back-nine-design §2): the word + glyph are --ink uniformly across
+ * states; the WORD, count, magnitude, and SILHOUETTE are the signal. MOTION is an opacity-only
+ * first-reveal (subtler than the joint's rise+fade, so the two settle together, not in competition);
+ * figures are static, and the final rendered state is identical with motion on or off.
+ */
+
+.survivor {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: var(--measure);
+  padding-top: var(--space-6);
+  border-top: 1px solid var(--line-soft);
+}
+
+/* The first-reveal: an opacity-only settle (no transform — the joint statement carries the
+   magic-moment rise; this one just resolves in beside it). Numbers never animate. */
+.survivor-reveal {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  opacity: 1;
+  transition: opacity var(--dur-reveal) var(--ease-out);
+}
+
+@starting-style {
+  .survivor-reveal {
+    opacity: 0;
+  }
+}
+
+/* The scope eyebrow — names whose future this reads, in a calm sentence-case label (not a shouty
+   overline; the phrase is a sentence, so uppercase would read as alarm). Also the region's
+   accessible name (aria-labelledby), so the scope reaches the a11y tree as text. */
+.survivor__eyebrow {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--ink-muted);
+}
+
+/* The verdict lockup: glyph + word. */
+.survivor__verdict {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+/* The silhouette glyph — pure --ink (currentColor), one step smaller than the joint glyph.
+   Decorative (aria-hidden) beside the visible word — no double-announce. */
+.survivor__glyph {
+  flex: none;
+  width: 1.75rem;
+  height: 1.75rem;
+  color: var(--ink);
+}
+
+/* The survivor verdict WORD — editorial serif in --ink (hue must not encode good/bad), sized one
+   step under the joint headline so this reads as the second, quieter statement. */
+.survivor__word {
+  margin: 0;
+  font-family: var(--font-display);
+  font-optical-sizing: auto;
+  font-weight: var(--weight-display);
+  font-size: var(--text-xl);
+  line-height: var(--leading-display);
+  letter-spacing: var(--tracking-display);
+  color: var(--ink);
+}
+
+/* The "X of 10 … on your own" coverage reading. */
+.survivor__reading {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  line-height: var(--leading-tight);
+  color: var(--ink);
+  max-width: var(--measure);
+}
+
+.survivor__count {
+  font-weight: var(--weight-semibold);
+}
+
+.survivor__frame {
+  color: var(--ink-muted);
+}
+
+/* The income-cliff clause — context, not a call to act, so it sits in muted ink (never the alarmed
+   full-ink emphasis the joint surface gives its action-first magnitude line). */
+.survivor__stepdown {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  line-height: var(--leading-body);
+  color: var(--ink-muted);
+  max-width: var(--measure);
+}
+
+/* Reduced motion: the reveal is already movement-free (opacity only); shorten it to the quick
+   comprehension fade. Final state identical — no information lives only in the animation. */
+@media (prefers-reduced-motion: reduce) {
+  .survivor-reveal {
+    transition: opacity var(--dur-fast) ease;
+  }
+}

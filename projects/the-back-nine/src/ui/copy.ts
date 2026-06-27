@@ -252,6 +252,18 @@ export const copy = {
   // The natural-frequency frame's tail — composed with slots.xOfTen ("7 of 10" + this), e.g.
   // "7 of 10 futures your plan covers". Kitces survival/coverage framing, never "failure".
   confidenceCoverageCaption: 'futures your plan covers',
+  // --- U7 survivor readout (the parallel "as the survivor" statement — e2). The survivor phase is
+  //     the fragile one, where a calm joint number can hide elevated risk (the exact calm-but-wrong
+  //     sin this readout exists to prevent). These keys are BOTH survivor-scoped (isSurvivorKey →
+  //     the catastrophe-lexicon gate: no "widow"/"death"/"penalty") AND verdict-scoped ("Readout" →
+  //     free-numeral + superlative: no bare numeral — the count rides slots.xOfTen — and no
+  //     superlative). Calm framing only: "on your own", never alarm. FIRST-DRAFT WORDING — the
+  //     eyebrow + the income-cliff clause are the N=1 cold-read's call. ---
+  survivorReadoutEyebrow: 'And if you’re on your own',
+  // The "X of 10" tail (composed with slots.xOfTen, e.g. "4 of 10" + this). Parallels the joint
+  // confidenceCoverageCaption ("futures your plan covers"); "still covers you" scopes it to the one
+  // who's left without restating the condition (the eyebrow + the income-cliff clause carry that).
+  survivorReadoutCoverage: 'futures your plan still covers you',
   // --- U7 confidence band chrome (the on-demand "show me the range" drawer — BandLabels +
   //     BandPanelChrome for ConfidenceBandPanel). BAND-SCOPED keys: chart chrome describing the
   //     fan's geometry, not a verdict claim, so the universal gates apply (as for factual intake
@@ -389,13 +401,21 @@ export const slots = {
     `About $${perMonthFormatted} a month less would bring it onto steadier ground.`,
   /** direction 'on-the-line' — borderline (or on-track with a rough downside); no figure. */
   verdictHoldClause: (): string => `It sits close to the line — small changes tip it either way.`,
-  /** The survivor step-down, told as a plain $ drop (R17/R40). Consumed by SurvivorReadout, which
-   *  is ENGINE-BLOCKED: no survivor-specific distribution emits yet — that additive presence-keyed
-   *  output is U7 item (e), not built. NO "widow's penalty" jargon (copyGuard catastrophe-lexicon,
-   *  survivor-scoped): the calm framing is "on your own", one Social Security benefit ends, and the
-   *  brackets become a single filer's. */
+  /** The survivor income step-down, told as a plain $ drop (R17/R40) — the PRE-TAX monthly
+   *  non-portfolio income that ends at the first death (one Social Security benefit + any of the
+   *  deceased's ongoing/earned income). The MFJ→single bracket shift is flagged SEPARATELY (its
+   *  after-tax sign is household-dependent, so it is never an ambiguous tax delta folded into $X —
+   *  see model.ts §SurvivorConditioned). Consumed by SurvivorReadout (U7 e2); the engine surface
+   *  (e1/e1b/e1c) is BUILT + adversarially verified (2026-06-27) and $X enters pre-formatted. NO
+   *  "widow's penalty" jargon (copyGuard catastrophe-lexicon, survivor-scoped): the calm framing is
+   *  "on your own", one Social Security benefit ends, and the brackets become a single filer's.
+   *  COLD-READ RESOLVED (2026-06-27): the tax shift is its OWN sentence (not appositive to $X), so $X
+   *  reads cleanly as the pre-tax income drop — the em-dash now binds only to the SS income cause, not
+   *  the (excluded) tax effect. The "one Social Security benefit ends" attribution is kept
+   *  median-scoped for v1 (the representative retired household; $X also covers any lost
+   *  pension/earned income, the minority case) — revisit when D2 wires real households. */
   verdictSurvivorStepDown: (perMonthDropFormatted: string): string =>
-    `If one of you is on your own later, the household’s monthly income steps down about $${perMonthDropFormatted} — one Social Security benefit ends, and taxes move to a single filer’s brackets.`,
+    `If one of you is on your own later, the household’s monthly income steps down about $${perMonthDropFormatted} — one Social Security benefit ends. Taxes also move to a single filer’s brackets.`,
 } as const
 
 /**

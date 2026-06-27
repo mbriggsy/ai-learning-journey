@@ -12,7 +12,15 @@
  * copy catalog + the copyGuard with state names.
  */
 import { ConfidenceStatement } from '../ConfidenceStatement'
-import { HOUSEHOLD_ANNOTATIONS, PREVIEW_ORDER, READING_FIXTURES } from './fixtures'
+import { SurvivorReadout } from '../SurvivorReadout'
+import {
+  HOUSEHOLD_ANNOTATIONS,
+  PREVIEW_ORDER,
+  READING_FIXTURES,
+  SURVIVOR_FIXTURES,
+  SURVIVOR_NO_STEPDOWN,
+  SURVIVOR_PREVIEW_ORDER,
+} from './fixtures'
 import type { OutcomeState } from '@shared/model'
 import './preview.css'
 
@@ -22,9 +30,9 @@ const T = {
     'Dev-only preview (?preview). Every outcome state + the non-verdict modes, driven by representative fixtures. The “Study the range” drawer is the on-demand band. The N=1 laptop cold-read is the Act-2 exit gate — the silhouette-legibility call is the reviewer’s.',
   modesTitle: 'Non-verdict modes',
   survivorTitle: 'Survivor readout',
-  survivorDeferredLabel: 'deferred — engine-blocked',
   survivorNote:
-    'The engine emits no survivor-conditioned distribution yet (U7 item e). That additive, presence-keyed output is its own unit before this second statement can render.',
+    'The “as the survivor” reading (U7 item e2) — the parallel, quieter second statement. Each worded state’s glyph + verdict word + the “X of 10 … on your own” coverage + the pre-tax income step-down. The engine never tags a survivor reading indeterminate, so there are five states. The last case checks the $0-cliff suppression (the step-down clause must not render). Wording cold-read cleared 2026-06-27 — the tax shift is its own sentence (so $X reads as pre-tax income), and the eyebrow no longer echoes the income clause.',
+  survivorNoStepDownLabel: 'income cliff ≈ $0 (clause suppressed)',
   pendingLabel: 'pending',
   errorLabel: 'compute-error',
   stateLabels: {
@@ -79,10 +87,17 @@ export default function U7Preview() {
 
       <section className="preview__block">
         <h2 className="preview__block-title">{T.survivorTitle}</h2>
+        <p className="preview__note">{T.survivorNote}</p>
         <div className="preview__grid">
+          {SURVIVOR_PREVIEW_ORDER.map((state) => (
+            <article key={state} className="preview__case" data-state={state}>
+              <p className="preview__case-label">{T.stateLabels[state]}</p>
+              <SurvivorReadout reading={SURVIVOR_FIXTURES[state]} />
+            </article>
+          ))}
           <article className="preview__case">
-            <p className="preview__case-label">{T.survivorDeferredLabel}</p>
-            <p className="preview__note">{T.survivorNote}</p>
+            <p className="preview__case-label">{T.survivorNoStepDownLabel}</p>
+            <SurvivorReadout reading={SURVIVOR_NO_STEPDOWN} />
           </article>
         </div>
       </section>

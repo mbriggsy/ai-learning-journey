@@ -1,7 +1,7 @@
 ---
 title: U7 item (e1) — the survivor-conditioned engine distribution (design, PENDING BLESSING)
 date: 2026-06-27
-status: e1 + e1b + e1c BUILT & adversarially verified 2026-06-27 · e2 (UI) remaining — eye-oracle, deferred to a cold-read
+status: e1 + e1b + e1c + e2 (UI) ALL BUILT — e2 cold-read cleared 2026-06-27; U7 survivor readout COMPLETE
 phase: Act 2 · U7
 modules: [src/engine/simulate.ts, src/engine/confidence.ts, src/shared/model.ts]
 ---
@@ -132,15 +132,38 @@ honesty clamp → `selectOutcomeState` bands as the joint headline (so a calm jo
 4-of-10 survivor outlook). `already-failing` keys to the JOINT early-death signal by design (a survivor can't
 be a calm survivor of a year-0-unfundable plan). Tests are externally-derived; survivor band edges pinned.
 
-**OPEN cold-read questions for e2 (do NOT resolve these without Briggsy's eye — wording is his domain):**
-1. **The tax clause em-dash (P2, conf 0.4).** `verdictSurvivorStepDown` reads "...the household's monthly
-   income steps down about $X — one Social Security benefit ends, and taxes move to a single filer's
-   brackets." `$X` is the PRE-TAX income drop; the em-dash can let a reader fold the (excluded) tax effect
-   INTO $X → understatement. Decide at cold-read whether to split the tax shift into its own sentence /
-   label $X as before-tax. (The number's semantics are honest in the `model.ts` contract; only the typographic
-   binding is at issue.)
-2. **The SS-only attribution (P3, conf 0.3).** $X also includes lost earned + ongoing other income, but the
-   copy explains it solely as "one Social Security benefit ends." Honest for the SS-dominated MEDIAN (the
-   representative retired late-widowhood path) but incomplete for a working-age or pension-reliant household.
-   Decide whether to keep the median scoped (so the SS clause stays representative) or generalize the clause.
-3. **The whole survivor sentence + glyph** — the eye-oracle call e2 was always reserved for.
+## 7 · e2 — BUILT & cold-read cleared (2026-06-27)
+
+`src/ui/SurvivorReadout.tsx` + `src/ui/styles/survivor.css` (+ `__tests__/SurvivorReadout.test.tsx`, 8
+tests). The quieter SECOND statement — same verdict grammar as the joint surface (glyph + word + "X of 10"
++ magnitude) at one step down in scale (`--text-xl` vs the joint `--text-2xl`), set off by a `--line-soft`
+hairline, so it reads as "and here's the survivor's view," never a competing headline. Consumes
+`SurvivorReading` directly. Two new copy keys (`survivorReadoutEyebrow`, `survivorReadoutCoverage`), both
+survivor- AND verdict-scoped through copyGuard. Wired into the `?preview` harness (five worded states + a
+$0-cliff suppression case). Built with the four-skill UI loadout, Chromium-screenshot-verified at laptop
+width before the N=1 cold-read.
+
+**Load-bearing correctness pins (in `SurvivorReadout.test.tsx`):**
+- The over-funded near-ceiling reads the PROPORTION "better than 9 in 10" via `xOfTenAtCeiling` (the
+  10-of-10 honesty clamp), exactly as the joint surface — never a bare "9 of 10" / "10 of 10".
+- The income-cliff clause **SUPPRESSES** when the step-down rounds to ~$0 (the residual edge where the
+  survivor dies before the steady-state anchor) — never "steps down about $0". The check rides the SAME
+  formatter the slot renders, so "shown" and "non-zero" cannot disagree.
+- `indeterminate` → renders **nothing** (defensive absent, not a wordless verdict). The engine never tags a
+  survivor reading indeterminate (`selectOutcomeState` reserves it for the degenerate-input early-return,
+  which fires before any survivor reading is built), but the type allows it — insight 044: fail to absent,
+  never bake "can't happen" into the render.
+
+**The three open cold-read questions — RESOLVED (2026-06-27, Briggsy's calls; my rec taken on each):**
+1. **The tax clause em-dash → SPLIT.** `verdictSurvivorStepDown` now reads "...steps down about $X — one
+   Social Security benefit ends. **Taxes also move to a single filer's brackets.**" The tax shift is its OWN
+   sentence (not appositive to $X), so the em-dash binds only to the SS income cause and $X reads cleanly as
+   the pre-tax income drop. (The $X semantics were already honest in `model.ts`; this fixes the typographic
+   fold-risk.)
+2. **The SS-only attribution → KEPT median-scoped for v1.** "one Social Security benefit ends" stays (the
+   representative retired household; $X also covers any lost pension/earned income, the minority case).
+   Revisit when D2 wires real households.
+3. **The eyebrow echo → DE-ECHOED.** The eyebrow was a near-verbatim prefix of the income clause; it now
+   reads "And if you're on your own" (frames the survivor statement as the follow-on to the joint answer;
+   the "on your own" motif recurs intentionally, the verbatim repeat is gone). The glyphs + the whole
+   sentence read calm-but-honest (the already-failing drop-to-floor glyph is not alarmist).

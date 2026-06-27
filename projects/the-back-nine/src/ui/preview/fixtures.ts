@@ -9,7 +9,14 @@
  * per year FINITE, NON-NEGATIVE, ORDERED p10 ≤ p25 ≤ p50 ≤ p75 ≤ p90; cohortFraction thinning late)
  * so resolveBandData's producer-seam guard accepts it.
  */
-import type { BandFan, BandFanYear, DollarAdjustment, Headline, OutcomeState } from '@shared/model'
+import type {
+  BandFan,
+  BandFanYear,
+  DollarAdjustment,
+  Headline,
+  OutcomeState,
+  SurvivorReading,
+} from '@shared/model'
 import type { XAnnotation } from '@viz/bandData'
 
 interface FanShape {
@@ -115,4 +122,51 @@ export const PREVIEW_ORDER: readonly OutcomeState[] = [
   'off-track',
   'already-failing',
   'indeterminate',
+]
+
+// --- survivor readout fixtures (U7 e2) -------------------------------------------------------------
+// The "as the survivor" reading the engine NEVER tags 'indeterminate' (selectOutcomeState reserves
+// that for the degenerate-input early-return, which fires before any survivor reading is built), so
+// the survivor states are the five WORDED ones. Each carries a representative pre-tax income cliff;
+// the survivor reading typically lands BELOW the joint headline (the honest fragility signal).
+
+/** The five states a survivor reading can carry — the worded outcomes (no indeterminate). */
+export type WordedOutcomeState = Exclude<OutcomeState, 'indeterminate'>
+
+const survivorReading = (
+  xOfTen: number,
+  outcomeState: WordedOutcomeState,
+  incomeStepDownMonthlyReal: number,
+): SurvivorReading => ({ xOfTen: { value: xOfTen, marginToEdge: 0 }, outcomeState, incomeStepDownMonthlyReal })
+
+/** One representative survivor reading per worded state — the harness + the test both drive off
+ *  this. The X-of-10 and the income cliff are illustrative, not engine-validated. */
+export const SURVIVOR_FIXTURES: Record<WordedOutcomeState, SurvivorReading> = {
+  'over-funded': survivorReading(9, 'over-funded', 880),
+  'on-track': survivorReading(8, 'on-track', 1090),
+  borderline: survivorReading(7, 'borderline', 1280),
+  'off-track': survivorReading(4, 'off-track', 1520),
+  'already-failing': survivorReading(0, 'already-failing', 1840),
+}
+
+/** The residual where the income cliff rounds to ~$0 — the step-down clause must SUPPRESS (never
+ *  render "steps down about $0"). The value is a sub-$5 residual (formatPerMonth rounds |x| < $5 to
+ *  "0"), deliberately NOT a literal 0: it sits in the (0, $5) interval where the formatter-based
+ *  guard `formatPerMonth(x) !== '0'` and a naive `x !== 0` check DISAGREE. A raw-`!== 0` regression
+ *  would render "$0" here, so this fixture's test fails loud (burned/070 — pin the property on a
+ *  value that exercises it, never one where both checks happen to agree). */
+export const SURVIVOR_NO_STEPDOWN: SurvivorReading = survivorReading(6, 'borderline', 3)
+
+/** The companion just ABOVE the rounding boundary: formatPerMonth(6) = "10", so the clause MUST show
+ *  ("steps down about $10"). Together with SURVIVOR_NO_STEPDOWN it straddles the formatter boundary
+ *  the guard rides — pinning that suppression never over-fires on a small-but-real income drop. */
+export const SURVIVOR_TINY_STEPDOWN: SurvivorReading = survivorReading(7, 'borderline', 6)
+
+/** Display order for the survivor harness — same covered-first order as the joint grid. */
+export const SURVIVOR_PREVIEW_ORDER: readonly WordedOutcomeState[] = [
+  'over-funded',
+  'on-track',
+  'borderline',
+  'off-track',
+  'already-failing',
 ]

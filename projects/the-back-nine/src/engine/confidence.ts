@@ -28,6 +28,7 @@ import {
   type OutcomeState,
   type SimulationParams,
   type SimulationResult,
+  type SurvivorReading,
 } from '@shared/model'
 import type { SimOutput } from '@engine/simulate'
 
@@ -111,6 +112,27 @@ function buildHeadline(distribution: Distribution): Headline {
   }
 }
 
+/** The "as the survivor" reading (U7 e1c) — the joint {@link buildHeadline} grammar applied to the
+ *  survivor-conditioned fraction, so the survivor sentence speaks the SAME vocabulary (the "X of 10"
+ *  count, the outcome word) as the joint one. Returns undefined when the run carries no survivor
+ *  surface (presence-keyed — the caller opted out, or no path had a survivor phase). The xOfTen runs
+ *  the identical quantize → 9-cap honesty clamp the joint headline uses; the outcome state is selected
+ *  on the SURVIVOR fraction, but `already-failing` still keys to the JOINT early-death signal (a
+ *  survivor cannot be a calm survivor of a plan that was unfundable from year 0 — that DOA reservation
+ *  is a whole-plan property, never re-derived from the survivor fraction alone). */
+function buildSurvivorReading(distribution: Distribution): SurvivorReading | undefined {
+  const sc = distribution.survivorConditioned
+  if (!sc) return undefined
+  const quantized = quantizeSurvival(sc.survivalFraction)
+  const state = selectOutcomeState(quantized, distribution)
+  const xOfTen = Math.max(0, Math.min(9, Math.round(quantized * 10)))
+  return {
+    xOfTen: { value: xOfTen, marginToEdge: marginToXOfTenEdge(quantized) },
+    outcomeState: state,
+    incomeStepDownMonthlyReal: sc.incomeStepDownMonthlyReal,
+  }
+}
+
 function buildDollar(distribution: Distribution, params: SimulationParams, state: OutcomeState): DollarAdjustment {
   const sortedTerminal = [...distribution.terminalValuesReal].sort((a, b) => a - b)
   const p10 = percentile(sortedTerminal, 0.1) // conservative (bad-futures) terminal
@@ -168,5 +190,8 @@ export function summarize(
   const distribution = output.distribution
   const headline = buildHeadline(distribution)
   const dollar = buildDollar(distribution, params, headline.outcomeState)
-  return { distribution, headline, dollar, seed }
+  // The survivor reading rides iff the run emitted a survivor surface (presence-keyed — absent, not
+  // `undefined`, when there is none, mirroring the distribution's taxAware/bandFan convention).
+  const survivorReading = buildSurvivorReading(distribution)
+  return { distribution, headline, dollar, ...(survivorReading ? { survivorReading } : {}), seed }
 }

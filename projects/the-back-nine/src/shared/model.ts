@@ -477,6 +477,24 @@ export interface Headline {
   readonly outcomeState: OutcomeState
 }
 
+/** The "as the survivor" reading (U7 e1c) — the joint {@link Headline}'s grammar applied to the
+ *  survivor-conditioned distribution, so the survivor sentence speaks the SAME vocabulary ("X of 10",
+ *  the outcome word) as the joint one. PRESENT on a {@link SimulationResult} iff the run emitted a
+ *  {@link SurvivorConditioned} surface (≥ 1 survivor phase). The `xOfTen` rounds the SURVIVOR fraction
+ *  through the identical quantize→clamp the joint headline uses (incl. the 9-cap honesty clamp); the
+ *  `outcomeState` is selected on the survivor fraction but reserves `already-failing` for the
+ *  whole-plan-DOA case (the joint early-death signal), since a survivor cannot be a calm survivor of a
+ *  plan that was unfundable from year 0. Carries the {@link SurvivorConditioned} income step-down so a
+ *  consumer renders the whole survivor statement from one reading. */
+export interface SurvivorReading {
+  /** Integer 0..9 — the "X of 10 as the survivor" reading (the joint 9-cap honesty clamp applies). */
+  readonly xOfTen: WithMargin<number>
+  /** The outcome word the engine selected for the SURVIVOR fraction (same enum as the joint reading). */
+  readonly outcomeState: OutcomeState
+  /** Pass-through of {@link SurvivorConditioned.incomeStepDownMonthlyReal} — the $/month income cliff. */
+  readonly incomeStepDownMonthlyReal: number
+}
+
 /** The dollar-grammar adjustment ("trim ~$Y/month" / "you have ~$Y/month of room"). */
 export interface DollarAdjustment {
   /** Signed real dollars per month: negative = trim, positive = room, 0 = on the line. */
@@ -589,6 +607,24 @@ export interface SurvivorConditioned {
   /** `survivorSurvivors / survivorPhasePaths` — the survivor-conditioned survival fraction (the
    *  "X of 10 as the survivor" reading). In [0, 1]; presence guarantees the denominator is > 0. */
   readonly survivalFraction: number
+  /** The median drop in monthly NON-PORTFOLIO household income at widowhood (U7 e1b), real $/month,
+   *  ≥ 0. Non-portfolio income = Social Security + ongoing other income (R40, survivor-gated) + earned
+   *  income — every dollar that funds spending BEFORE a portfolio withdrawal; the portfolio draw and
+   *  the survivor SPENDING step-down are deliberately excluded (this is the INCOME cliff, not the net
+   *  cash-need change). Observed by a COUNTERFACTUAL at each survivor-phase path's STEADY-STATE year
+   *  (the later of the first-death year and both spouses' SS-claim years, held inside the survivor's
+   *  living window): the household income if both were alive that year MINUS the income the survivor
+   *  actually has. Anchoring at the steady-state year — NOT the raw first-death year — keeps a death
+   *  that lands after retirement but before claiming (where the §202 widow benefit at 60 would
+   *  front-run an as-yet-unclaimed retirement benefit and read as income RISING) from UNDERSTATING the
+   *  true permanent cliff; each per-path drop is also floored at 0, so the figure is ≥ 0. Median across
+   *  survivor-phase paths. PRE-TAX: it does NOT fold in the MFJ→single bracket flip. That flip's sign
+   *  on the AFTER-tax cliff is household-dependent — the survivor pays a higher rate PER DOLLAR (narrower
+   *  brackets, half the standard deduction, lower SS-taxation thresholds) but on LESS income, so the
+   *  after-tax drop can be either shallower or deeper than this pre-tax figure. We therefore report the
+   *  UNAMBIGUOUS pre-tax income cliff and let `verdictSurvivorStepDown` flag the bracket shift as a
+   *  SEPARATE qualitative consequence — never an ambiguous tax delta baked into $X. The copy's $X reads this. */
+  readonly incomeStepDownMonthlyReal: number
 }
 
 /** The raw, continuous distribution the headline rounds FROM — emitted alongside the
@@ -626,6 +662,10 @@ export interface SimulationResult {
   readonly distribution: Distribution
   readonly headline: Headline
   readonly dollar: DollarAdjustment
+  /** The "as the survivor" reading (U7 e1c). PRESENT iff `distribution.survivorConditioned` is —
+   *  i.e. the run opted into the survivor surface AND ≥ 1 path had a survivor phase. A PARALLEL
+   *  reading (the joint headline never rounds from it). */
+  readonly survivorReading?: SurvivorReading
   /** The seed this result was produced under (round-trips through U4 persistence
    *  bit-identically, so a reopened plan reproduces the identical headline). */
   readonly seed: number

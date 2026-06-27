@@ -231,6 +231,11 @@ export function cashTermsForYear(
   readonly ss: number
   readonly ongoingTaxableGrossUp: number
   readonly ongoingTaxableIrmaaOnly: number
+  /** The year's NON-PORTFOLIO household income (U7 e1b) = earned + ongoing other income + SS — every
+   *  dollar that funds spending BEFORE any portfolio withdrawal. UNCLAMPED by the §7 working-year
+   *  draw clamp (the clamp zeroes the WITHDRAWAL, never the income). Pure observation; consumed by the
+   *  survivor income step-down's counterfactual, never by the decumulation. */
+  readonly nonPortfolioIncomeReal: number
 } {
   let aliveCount = 0
   for (let i = 0; i < deathOffsets.length; i++) if (t < (deathOffsets[i] ?? 0)) aliveCount++
@@ -340,6 +345,8 @@ export function cashTermsForYear(
     ss,
     ongoingTaxableGrossUp: clamped ? 0 : sel.taxable,
     ongoingTaxableIrmaaOnly: clamped ? sel.taxable : 0,
+    // The raw non-portfolio income (U7 e1b) — earned + ongoing + SS, independent of the draw clamp.
+    nonPortfolioIncomeReal: earned + sel.gross + ss,
   }
 }
 
@@ -940,7 +947,7 @@ export function buildSurvivorConditioned(
   deathOffsetsByPath: readonly (readonly number[])[],
   depletionYears: readonly DepletionYear[],
   maxHorizonYears: number,
-): SurvivorConditioned | null {
+): Pick<SurvivorConditioned, 'survivorPhasePaths' | 'survivorSurvivors' | 'survivalFraction'> | null {
   let survivorPhasePaths = 0
   let survivorSurvivors = 0
   for (let p = 0; p < deathOffsetsByPath.length; p++) {
@@ -954,6 +961,68 @@ export function buildSurvivorConditioned(
     survivorSurvivors,
     survivalFraction: survivorSurvivors / survivorPhasePaths,
   }
+}
+
+/** The survivor income step-down magnitude (U7 e1b) — the MEDIAN drop in monthly non-portfolio
+ *  household income at widowhood, real $/month, across the survivor-phase paths. PURE: it re-runs the
+ *  draw-free {@link cashTermsForYear}, so it consumes no entropy and cannot perturb the spine
+ *  (byte-identity to a survivor-off run holds — the helper is called only in the post-loop reduction).
+ *
+ *  Per survivor-phase path, the drop is a COUNTERFACTUAL: the household's non-portfolio income if BOTH
+ *  were alive at the measurement year (every death offset pushed past it, so the all-alive cash branch
+ *  runs) MINUS the income the survivor actually has there. The measurement year is the STEADY-STATE year
+ *  `tStar` — the later of the first death `fd` and both spouses' SS-claim offsets (`claimYear`), held
+ *  inside the survivor's living window `[fd, survivorDeath − 1]` and the horizon. The steady-state anchor
+ *  is load-bearing for honesty: at the RAW first-death year a death that lands AFTER retirement but
+ *  BEFORE claiming would read the all-alive leg with $0 SS (neither spouse claimed yet) while the
+ *  survivor already draws a §202 widow(er) benefit at 60 — so the raw diff goes NEGATIVE (income
+ *  "rising" at widowhood) and UNDERSTATES the true permanent cliff (the household really steps from two
+ *  retirement benefits to one once both would have claimed). Anchoring at `tStar` lets both would-be
+ *  benefits be in pay status before differencing, capturing exactly what the survivor permanently loses.
+ *  Each per-path drop is then FLOORED at 0 — the anchor already yields ≥ 0 in every both-claimed case;
+ *  the floor covers the residual edge where the survivor dies before the steady state is reached
+ *  (`tStar` clamped pre-claim), so a transient §202-ahead-of-an-unclaimed-benefit year can never read as
+ *  a negative step-down (the cardinal understating direction). Median (not mean) so a handful of
+ *  early-widowhood outliers cannot drag the representative figure. Returns 0 only on the unreachable
+ *  no-survivor-phase input (the caller computes it solely when a survivor surface exists). */
+export function survivorIncomeStepDownMonthlyReal(
+  deathOffsetsByPath: readonly (readonly number[])[],
+  maxHorizonYears: number,
+  params: SimulationParams,
+  offsets: readonly PersonOffsets[],
+  higherClaimOffset: number,
+): number {
+  // `claimYear` = the later of the two SS-claim offsets — the first year BOTH would-be retirement
+  // benefits are in pay status (negative for an already-claiming spouse; the per-path max(fd, …) below
+  // floors it at fd, so an already-claiming household measures at the death itself).
+  let claimYear = offsets.length > 0 ? offsets[0]!.claim : 0
+  for (let i = 1; i < offsets.length; i++) if (offsets[i]!.claim > claimYear) claimYear = offsets[i]!.claim
+  const annualDrops: number[] = []
+  for (let p = 0; p < deathOffsetsByPath.length; p++) {
+    const deaths = deathOffsetsByPath[p]!
+    if (!isSurvivorPhasePath(deaths, maxHorizonYears)) continue
+    let fd = deaths[0]!
+    let survivorDeath = deaths[0]!
+    for (let i = 1; i < deaths.length; i++) {
+      if (deaths[i]! < fd) fd = deaths[i]!
+      if (deaths[i]! > survivorDeath) survivorDeath = deaths[i]!
+    }
+    // The steady-state measurement year — as early as both-claimed, kept within the survivor's living
+    // window and the horizon. survivorDeath > fd for a survivor phase, so tStar ≥ fd ≥ 0.
+    const tStar = Math.min(maxHorizonYears - 1, survivorDeath - 1, Math.max(fd, claimYear))
+    // "Both alive at tStar": every offset that died at/before tStar (the first-dier) pushed one year
+    // past it; the survivor (death > tStar) is untouched.
+    const bothAlive = deaths.map((d) => (d <= tStar ? tStar + 1 : d))
+    const incomeBothAlive = cashTermsForYear(tStar, params, offsets, bothAlive, higherClaimOffset).nonPortfolioIncomeReal
+    const incomeSurvivor = cashTermsForYear(tStar, params, offsets, deaths, higherClaimOffset).nonPortfolioIncomeReal
+    annualDrops.push(Math.max(0, incomeBothAlive - incomeSurvivor))
+  }
+  if (annualDrops.length === 0) return 0
+  annualDrops.sort((a, b) => a - b)
+  const mid = Math.floor(annualDrops.length / 2)
+  const medianAnnual =
+    annualDrops.length % 2 === 1 ? annualDrops[mid]! : (annualDrops[mid - 1]! + annualDrops[mid]!) / 2
+  return medianAnnual / 12
 }
 
 /**
@@ -1362,9 +1431,26 @@ export function simulate(
   // U7 e1: reduce the collected death offsets into the survivor-conditioned surface (null ⇒ no path
   // had a survivor phase ⇒ absent, presence-keyed). Reads state already computed, so byte-identical
   // to an opt-out run on the joint fields below.
-  const survivorConditioned =
+  const survivorTrio =
     wantSurvivor && survivorDeathOffsets
       ? buildSurvivorConditioned(survivorDeathOffsets, depletionYears, maxHorizon)
+      : null
+  // U7 e1b: the income step-down rides alongside the fraction trio — computed ONLY when a survivor
+  // surface exists (≥1 survivor phase ⇒ ≥1 counterfactual drop). The helper re-runs the PURE cash
+  // function at each path's first-death year (zero draws), so byte-identity to a survivor-off run still
+  // holds on every joint field below.
+  const survivorConditioned: SurvivorConditioned | null =
+    survivorTrio && survivorDeathOffsets
+      ? {
+          ...survivorTrio,
+          incomeStepDownMonthlyReal: survivorIncomeStepDownMonthlyReal(
+            survivorDeathOffsets,
+            maxHorizon,
+            params,
+            offsets,
+            higherClaimOffset,
+          ),
+        }
       : null
 
   return {

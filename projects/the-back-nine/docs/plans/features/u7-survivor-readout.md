@@ -1,7 +1,7 @@
 ---
 title: U7 item (e1) — the survivor-conditioned engine distribution (design, PENDING BLESSING)
 date: 2026-06-27
-status: statistic (A) BLESSED 2026-06-27 · e1 engine distribution BUILT · e1b/e1c/e2 remaining
+status: e1 + e1b + e1c BUILT & adversarially verified 2026-06-27 · e2 (UI) remaining — eye-oracle, deferred to a cold-read
 phase: Act 2 · U7
 modules: [src/engine/simulate.ts, src/engine/confidence.ts, src/shared/model.ts]
 ---
@@ -10,9 +10,9 @@ modules: [src/engine/simulate.ts, src/engine/confidence.ts, src/shared/model.ts]
 > BUILT**: `simulate`'s opt-in `survivorConditioned` surface emits the equal-weight survivor-conditioned
 > survival fraction (`SurvivorConditioned` in `model.ts`; `isSurvivorPhasePath`/`buildSurvivorConditioned`
 > in `simulate.ts`), externally-derived + reduce-to-spine + byte-identity tested
-> (`survivorConditioned.test.ts`). **Remaining:** e1b (the income step-down magnitude for
-> `verdictSurvivorStepDown`), e1c (`confidence.ts` survivor reading), e2 (`SurvivorReadout` — eye-oracle,
-> deferred to a cold-read). The §3–§5 below are the as-blessed recipe.
+> (`survivorConditioned.test.ts`). **e1b + e1c are now also BUILT & adversarially verified (see §6).
+> Remaining: e2 only** (`SurvivorReadout` — eye-oracle, deferred to a cold-read). The §3–§5 below are the
+> as-blessed recipe; §6 records what shipped and the open cold-read questions.
 
 ## 1 · The gap (confirmed 2026-06-24, re-confirmed first-hand 2026-06-27)
 
@@ -96,3 +96,51 @@ reduce-to-spine byte-identity test (a fixed-horizon / no-death run emits nothing
 3. Externally-derived fixtures + the reduce-to-spine/byte-identity tests + the ≤-joint danger assertion.
 4. `confidence.ts`: derive the survivor reading (the same vocabulary as the joint reading — "X of 10").
 5. THEN e2: `SurvivorReadout.tsx` (eye-oracle) — DEFERRED to a Briggsy cold-read.
+
+## 6 · e1b + e1c — BUILT & adversarially verified (2026-06-27)
+
+**e1b — the income step-down magnitude.** `SurvivorConditioned.incomeStepDownMonthlyReal` (real $/month,
+≥ 0), computed by `survivorIncomeStepDownMonthlyReal()` in `simulate.ts`. `cashTermsForYear` gained an
+additive, draw-free return field `nonPortfolioIncomeReal = earned + ongoing + ss`. The helper re-runs the
+pure cash function in the POST-LOOP reduction (zero draws → reduce-to-spine byte-identity preserved).
+
+**Locked decisions (all mine under full delegation; flagged for the e2 cold-read):**
+- **$X = gross PRE-TAX non-portfolio income drop** (SS + ongoing other income + earned), **not** "net of the
+  spending step-down" — the copy says *income*, and netting the spending relief would understate it (the
+  cardinal direction) and contradict the words.
+- **Pre-tax**, MFJ→single bracket flip left as a SEPARATE qualitative clause. Its sign on the after-tax cliff
+  is genuinely household-dependent (higher rate, less income), so folding an ambiguous tax delta into $X
+  would be dishonest precision.
+- **Median, not mean** (outlier-robust).
+- **Counterfactual at the STEADY-STATE year** `tStar = clamp(max(fd, claimYear), fd, min(maxHorizon−1,
+  survivorDeath−1))`, both legs floored at 0.
+
+**The landmine the adversarial pass caught (and fixed) — keep it caught.** The first draft anchored the
+counterfactual at the RAW first-death year `fd`. For a death that lands **after retirement but before
+claiming** (e.g. delay-SS-to-70), the all-alive leg at `fd` has $0 SS (neither spouse claimed yet) while the
+survivor already draws a §202 widow(er) benefit at 60 → the per-path "drop" goes **negative** (income
+"rising" at widowhood), dragging the median **down** = the cardinal **understatement**. A 4-lens adversarial
+workflow empirically reproduced **−$2,753/mo** on a real household. Fix: the steady-state anchor (measure once
+both would-be benefits are in pay status, capturing the deceased's delayed benefit the household would have
+received) + a `max(0, …)` floor (covers the residual edge where the survivor dies before the steady state).
+Regression guard: `survivorConditioned.test.ts` pins a pre-claim-death golden of **$1,000/mo** — a raw fd
+anchor yields negative, a floor-only fix yields 0; **only the steady-state anchor yields 1,000**.
+
+**e1c — the survivor reading.** `SurvivorReading` + `SimulationResult.survivorReading?` (presence-keyed).
+`buildSurvivorReading()` in `confidence.ts` runs the survivor fraction through the SAME quantize → 9-cap
+honesty clamp → `selectOutcomeState` bands as the joint headline (so a calm joint 9-of-10 surfaces a fragile
+4-of-10 survivor outlook). `already-failing` keys to the JOINT early-death signal by design (a survivor can't
+be a calm survivor of a year-0-unfundable plan). Tests are externally-derived; survivor band edges pinned.
+
+**OPEN cold-read questions for e2 (do NOT resolve these without Briggsy's eye — wording is his domain):**
+1. **The tax clause em-dash (P2, conf 0.4).** `verdictSurvivorStepDown` reads "...the household's monthly
+   income steps down about $X — one Social Security benefit ends, and taxes move to a single filer's
+   brackets." `$X` is the PRE-TAX income drop; the em-dash can let a reader fold the (excluded) tax effect
+   INTO $X → understatement. Decide at cold-read whether to split the tax shift into its own sentence /
+   label $X as before-tax. (The number's semantics are honest in the `model.ts` contract; only the typographic
+   binding is at issue.)
+2. **The SS-only attribution (P3, conf 0.3).** $X also includes lost earned + ongoing other income, but the
+   copy explains it solely as "one Social Security benefit ends." Honest for the SS-dominated MEDIAN (the
+   representative retired late-widowhood path) but incomplete for a working-age or pension-reliant household.
+   Decide whether to keep the median scoped (so the SS clause stays representative) or generalize the clause.
+3. **The whole survivor sentence + glyph** — the eye-oracle call e2 was always reserved for.

@@ -27,6 +27,28 @@ function out(
   return { indeterminate: false, distribution: dist }
 }
 
+/** Build a SimOutput that ALSO carries a survivor-conditioned surface (U7 e1c) with a chosen survivor
+ *  fraction + income step-down, so the survivor reading can be exercised independently of the joint. */
+function outWithSurvivor(
+  jointSurvival: number,
+  survivorFraction: number,
+  incomeStepDownMonthlyReal: number,
+  depletionYears: number[] = [],
+): Exclude<SimOutput, { infeasible: true }> {
+  const dist: Distribution = {
+    terminalValuesReal: [],
+    depletionYears,
+    survivalFraction: jointSurvival,
+    survivorConditioned: {
+      survivorPhasePaths: 100,
+      survivorSurvivors: Math.round(survivorFraction * 100),
+      survivalFraction: survivorFraction,
+      incomeStepDownMonthlyReal,
+    },
+  }
+  return { indeterminate: false, distribution: dist }
+}
+
 describe('cross-engine headline robustness — quantize BEFORE the band-edge decision', () => {
   it('a last-ULP perturbation of the survival statistic does NOT flip X of 10', () => {
     const base = 0.9
@@ -115,6 +137,59 @@ describe('the displayed $/month MAGNITUDE is pinned, not just its direction', ()
     const r = summarize(out(0.88, [], [0, 0, 100, 200, 300]), params, 1).dollar
     expect(r.direction).toBe('on-the-line')
     expect(r.perMonthReal.value).toBe(0)
+  })
+})
+
+describe('the survivor reading (U7 e1c — the "as the survivor" grammar)', () => {
+  it('is ABSENT when the run carries no survivor surface (presence-keyed)', () => {
+    expect(summarize(out(0.9), params, 1).survivorReading).toBeUndefined()
+  })
+
+  it('is PRESENT when the distribution carries a survivor surface, speaking the joint vocabulary', () => {
+    const r = summarize(outWithSurvivor(0.9, 0.72, 1250), params, 1)
+    expect(r.survivorReading).toBeDefined()
+    expect(r.survivorReading!.xOfTen.value).toBe(7) // round(0.72 × 10) = 7
+    expect(r.survivorReading!.outcomeState).toBe('borderline') // 0.72 ∈ [0.65, 0.85)
+    expect(r.survivorReading!.incomeStepDownMonthlyReal).toBe(1250) // passed straight through
+  })
+
+  it('rounds the SURVIVOR fraction, NOT the joint one — the two readings diverge honestly', () => {
+    // The whole point: a calm joint 9-of-10 can hide a fragile 4-of-10 survivor outlook.
+    const r = summarize(outWithSurvivor(0.9, 0.4, 800), params, 1)
+    expect(r.headline.xOfTen.value).toBe(9)
+    expect(r.headline.outcomeState).toBe('on-track')
+    expect(r.survivorReading!.xOfTen.value).toBe(4)
+    expect(r.survivorReading!.outcomeState).toBe('off-track')
+  })
+
+  it('applies the SAME 9-cap honesty clamp — an all-survive survivor fraction never reads 10 of 10', () => {
+    const r = summarize(outWithSurvivor(1.0, 1.0, 0, []), params, 1)
+    expect(r.survivorReading!.xOfTen.value).toBe(9) // capped, never 10
+    expect(r.survivorReading!.outcomeState).toBe('over-funded')
+  })
+
+  it('reserves already-failing for the JOINT early-death signal, not the survivor fraction alone', () => {
+    // Survivor fraction ~0 in both, but already-failing fires only when the JOINT plan was DOA (early
+    // depletion) — a survivor cannot be a calm survivor of a year-0-unfundable plan.
+    const doa = summarize(outWithSurvivor(0.0, 0.0, 500, [0, 0, 0]), params, 1)
+    expect(doa.survivorReading!.outcomeState).toBe('already-failing')
+    const late = summarize(outWithSurvivor(0.0, 0.0, 500, [24, 25, 26]), params, 1)
+    expect(late.survivorReading!.outcomeState).toBe('off-track')
+  })
+
+  it('survives the cross-engine quantize too — a sub-grid perturbation does not flip the survivor count', () => {
+    const lo = summarize(outWithSurvivor(0.9, 0.85 - 1e-14, 0), params, 1).survivorReading!
+    const hi = summarize(outWithSurvivor(0.9, 0.85 + 1e-14, 0), params, 1).survivorReading!
+    expect(lo.xOfTen.value).toBe(hi.xOfTen.value)
+    expect(lo.outcomeState).toBe(hi.outcomeState)
+  })
+
+  it('pins the survivor band EDGES directionally — its own guard, not only the shared selectOutcomeState', () => {
+    const stateAt = (sf: number) => summarize(outWithSurvivor(0.9, sf, 0), params, 1).survivorReading!.outcomeState
+    expect(stateAt(0.85)).toBe('on-track') // ≥ onTrack edge
+    expect(stateAt(0.84)).toBe('borderline') // just below
+    expect(stateAt(0.65)).toBe('borderline') // ≥ borderline edge
+    expect(stateAt(0.64)).toBe('off-track') // just below
   })
 })
 

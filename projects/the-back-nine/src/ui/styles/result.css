@@ -1,0 +1,34 @@
+/*
+ * src/ui/styles/result.css — D2 the landed magic-moment frame.
+ *
+ * A calm, centered stage for the elevated lead surface (FuckOffDate / ConfidenceStatement) once
+ * intake completes. No theatrics: the surfaces own their @starting-style reveal and their static
+ * figures (back-nine-design calm-rendering); this sheet only centers the hero in the viewport, holds
+ * it to the reading measure, and seats the quiet "review" return below it. All chrome reads from the
+ * Clubhouse Ledger tokens (tokens.css) — never a re-typed value.
+ */
+
+.result {
+  box-sizing: border-box;
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-8);
+  padding: var(--space-10) var(--gutter) var(--space-9);
+}
+
+/* The hero column: the elevated surface sits at the reading measure, centered on the page so the
+ * answer lands as the one thing in view (the magic moment), not buried in a layout. The surface's own
+ * stylesheet owns its internal type + alignment + reveal — this only frames it. */
+.result-hero {
+  width: 100%;
+  max-width: var(--measure);
+}
+
+/* The quiet return — one low-emphasis action, never competing with the answer. */
+.result-actions {
+  display: flex;
+  justify-content: center;
+}

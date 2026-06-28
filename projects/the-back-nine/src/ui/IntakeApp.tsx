@@ -1,9 +1,10 @@
-import { useCallback, useMemo, useSyncExternalStore } from 'react'
+import { useCallback, useMemo, useState, useSyncExternalStore } from 'react'
 import { IntakeFlow } from '@intake/flow'
 import { intakeSteps } from '@intake/questions'
 import { AnswerStrip } from '@intake/AnswerStrip'
 import { missingRequiredFacts } from '@intake/intakeMap'
 import { appModel } from './appModel'
+import { Result } from './Result'
 
 /**
  * The intake subtree — the LAZY half of the App split (default export for
@@ -16,13 +17,28 @@ import { appModel } from './appModel'
  * `appModel` (the ONE memoryModel) is created at THIS module's evaluation —
  * still module-level, still outside any render path, still StrictMode-proof
  * (contract #1a); it simply lives in the lazy chunk because its builders do.
+ *
+ * THE TWO PHASES (D2). During `intake` the quiet provisional AnswerStrip
+ * co-exists above the questions (the question stays the hero). The terminal
+ * advance fires the FINAL-tier recompute AND flips to `result` — the elevated
+ * state-adaptive magic moment (FuckOffDate / ConfidenceStatement). `review`
+ * returns to intake with every answer preserved (the draft lives in `appModel`;
+ * nothing is persisted — U8 owns Save). Re-entering intake restarts the step
+ * sequence at the first question; the data is intact, only the cursor resets.
  */
 export default function IntakeApp() {
+  const [phase, setPhase] = useState<'intake' | 'result'>('intake')
   const snapshot = useSyncExternalStore(appModel.subscribe, appModel.getSnapshot)
   const steps = useMemo(() => intakeSteps(snapshot.draft), [snapshot.draft])
   const missing = useMemo(() => missingRequiredFacts(snapshot.draft), [snapshot.draft])
   const retry = useCallback(() => void appModel.recompute(), [])
-  const complete = useCallback(() => void appModel.recompute('final'), [])
+  const complete = useCallback(() => {
+    void appModel.recompute('final')
+    setPhase('result')
+  }, [])
+  const review = useCallback(() => setPhase('intake'), [])
+
+  if (phase === 'result') return <Result onReview={review} />
 
   return (
     <IntakeFlow

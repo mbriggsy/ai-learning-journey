@@ -253,6 +253,10 @@ export const copy = {
     'An earlier year or two can clear, then dip back below the line before it holds — health costs before Medicare are the usual reason.',
   answerError: 'The math hit a snag.',
   answerRetry: 'Try again',
+  // --- D2 result screen chrome (the landed magic moment's frame). The quiet return to intake; the
+  //     draft is preserved (every answer kept), so this is "look again", never "start over". 'review'
+  //     is not a directive verb and carries no numeral/superlative — copyGuard-clean. ---
+  resultReview: 'Review my answers',
   outcomeOnTrack: 'On track',
   outcomeBorderline: 'On the line',
   outcomeOffTrack: 'Off track',

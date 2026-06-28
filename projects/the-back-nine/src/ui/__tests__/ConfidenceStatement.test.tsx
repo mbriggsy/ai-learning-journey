@@ -5,7 +5,11 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { ConfidenceStatement } from '../ConfidenceStatement'
 import { copy, slots } from '../copy'
 import { READING_FIXTURES } from '../preview/fixtures'
-import type { OutcomeState } from '@shared/model'
+import { deriveSpineBandAnnotations } from '../bandAnnotations'
+import { simulate } from '@engine/simulate'
+import { summarize } from '@engine/confidence'
+import { productionMarket } from '@engine/reference/methodology'
+import type { OutcomeState, SimulationParams } from '@shared/model'
 
 /*
  * The U7 verdict-first surface. The colorblind law is the spine of these assertions: the verdict
@@ -154,6 +158,46 @@ describe('ConfidenceStatement — the U7 verdict-first surface', () => {
     const { headline, dollar } = READING_FIXTURES['on-track']
     const noBand = render(<ConfidenceStatement view={{ kind: 'reading', headline, dollar }} />)
     expect(noBand.queryByRole('button', { name: copy.bandStudyRange })).toBeNull()
+  })
+
+  it('renders a REAL engine fan end-to-end (the formerly-dormant live path): resolveBandData accepts it and the band draws', () => {
+    // Before this slice the engine fan never reached the renderer — only hand-built fixtures did. This
+    // drives a REAL simulate() fan (sampled longevity ⇒ late-year truncation + cohort thinning, the
+    // shapes resolveBandData's fail-loud guards face) all the way through the live component. A guard
+    // tripping (malformed lattice / cohortFraction out of [0,1] / $0 scale) would THROW in render —
+    // the fail-loud honesty design — so a CLEAN mount with the band drawer present IS the proof.
+    const REAL_SPINE: SimulationParams = {
+      initialPortfolio: 1_000_000,
+      annualSpendingReal: 40_000,
+      stockWeight: 0.6,
+      people: [
+        { sex: 'male', currentAge: 66, birthYear: 1960, retirementAge: 66, earnedIncomeReal: 0, pia: 24_000, socialSecurityClaimAge: 67 },
+        { sex: 'female', currentAge: 64, birthYear: 1962, retirementAge: 64, earnedIncomeReal: 0, pia: 18_000, socialSecurityClaimAge: 67 },
+      ],
+      survivorSpendingRatio: 0.75,
+      drawdownPolicy: 'proportional',
+      market: productionMarket.value,
+      paths: 500,
+      maxHorizonYears: 35,
+      longevityMode: 'sampled',
+    }
+    const out = simulate(REAL_SPINE, 0x5eed, { bandFan: true })
+    if (out.indeterminate || out.infeasible) throw new Error('expected a resolved run')
+    const result = summarize(out, REAL_SPINE, 0x5eed)
+    const fan = result.distribution.bandFan
+    if (!fan) throw new Error('the run opted into the fan')
+    const last = fan.byYear[fan.byYear.length - 1]
+    if (!last) throw new Error('the fan is non-empty')
+    expect(result.headline.outcomeState).not.toBe('indeterminate') // a worded reading draws the band
+    const annotations = deriveSpineBandAnnotations(66, 64, last.yearsFromNow)
+    const { container, getByRole } = render(
+      <ConfidenceStatement
+        view={{ kind: 'reading', headline: result.headline, dollar: result.dollar, band: fan, bandAnnotations: annotations }}
+      />,
+    )
+    // the band drawer mounted (the graph-as-enlarge-button) — resolveBandData did NOT throw on real data
+    expect(getByRole('button', { name: copy.bandStudyRange })).toBeInTheDocument()
+    expect(container.querySelector('svg')).not.toBeNull()
   })
 
   it('labels the region and exposes the verdict heading (the colorblind-law a11y requirement)', () => {

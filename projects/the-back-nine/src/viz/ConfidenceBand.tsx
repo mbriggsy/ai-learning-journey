@@ -23,7 +23,7 @@
  * STRING-FREE: every label arrives via the `labels` / data props (src/viz imports only @shared).
  */
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useId, useRef } from 'react'
 import { motion, useReducedMotion } from 'motion/react'
 import { bandStopCss } from './scale'
 import { BAND_FILL_INNER_P, BAND_FILL_OUTER_P } from './palette'
@@ -31,6 +31,7 @@ import {
   PLOT,
   VIEWBOX,
   areaPath,
+  cohortFadeStops,
   linePath,
   placeAnnotationLabels,
   placeholderPath,
@@ -181,36 +182,63 @@ function ResolvedFan({
   const fillTransition = { duration: reduce ? 0 : firstDraw ? DRAW_S : MORPH_S, ease: EASE_OUT }
   const morphTransition = { duration: reduce ? 0 : MORPH_S, ease: EASE_OUT }
 
+  // DEAD-COHORT DE-EMPHASIS (back-nine-design §3): a horizontal opacity mask that fades the fan
+  // where the surviving-couple cohort thins, so a late-year slice backed by a handful of paths
+  // draws QUIET (small-sample noise never reads as signal) yet stays present (we DO model those
+  // years). Pure SVG (gradient + mask attributes — CSP-clean, no inline style), and STATIC: it is
+  // part of the final rendered state, so motion-on and motion-off paint the same fade (no signal
+  // lives only in animation). The id is render-unique (a drawer + the enlarged modal coexist).
+  const uid = useId().replace(/:/g, '')
+  const fadeGradId = `cohort-fade-grad-${uid}`
+  const fadeMaskId = `cohort-fade-mask-${uid}`
+  const fadeStops = cohortFadeStops(data.samples)
+
   return (
     <>
-      {/* OUTER p10–p90 (lightest, lowest emphasis). Fill is a DYNAMIC presentation attribute from
-          the palette ramp (CSP-safe). The `d` is carried in BOTH initial + animate so the path is
-          NEVER rendered with an undefined `d` — on first draw only opacity fades in (no `d`
-          interpolation); on a recompute motion keeps its prior `d` and morphs to the new one. */}
-      <motion.path
-        className="band-area"
-        fill={OUTER_FILL}
-        initial={doDraw ? { opacity: 0, d: outerD } : false}
-        animate={{ opacity: 1, d: outerD }}
-        transition={fillTransition}
-      />
-      {/* INNER p25–p75 (darker, higher emphasis). */}
-      <motion.path
-        className="band-area"
-        fill={INNER_FILL}
-        initial={doDraw ? { opacity: 0, d: innerD } : false}
-        animate={{ opacity: 1, d: innerD }}
-        transition={fillTransition}
-      />
-      {/* MEDIAN p50 — the OPACITY overlay line (ink, never series-blue). FADES in on first draw
-          (NOT pathLength-traced — a stroke-dash trace fights non-scaling-stroke and under-covers
-          the line at the enlarged scale); on recompute it morphs `d`. */}
-      <motion.path
-        className="band-median"
-        initial={doDraw ? { opacity: 0, d: medianD } : false}
-        animate={{ opacity: 1, d: medianD }}
-        transition={doDraw ? { ...fillTransition } : morphTransition}
-      />
+      <defs>
+        <linearGradient id={fadeGradId} gradientUnits="userSpaceOnUse" x1={PLOT.left} y1={0} x2={PLOT.right} y2={0}>
+          {fadeStops.map((s, i) => (
+            <stop key={i} offset={s.offset} stopColor="#fff" stopOpacity={s.opacity} />
+          ))}
+        </linearGradient>
+        {/* Luminance mask: white×stop-opacity → the fan draws at that opacity. The rect spans the
+            whole viewBox; the gradient pads (full opacity left of the plot, floor to the right). */}
+        <mask id={fadeMaskId} maskUnits="userSpaceOnUse" x="0" y="0" width={VIEWBOX.width} height={VIEWBOX.height}>
+          <rect x="0" y="0" width={VIEWBOX.width} height={VIEWBOX.height} fill={`url(#${fadeGradId})`} />
+        </mask>
+      </defs>
+      {/* The fan (fills + median) rides the cohort-fade mask; the callouts (labels) do NOT — text
+          stays full-strength. */}
+      <g mask={`url(#${fadeMaskId})`}>
+        {/* OUTER p10–p90 (lightest, lowest emphasis). Fill is a DYNAMIC presentation attribute from
+            the palette ramp (CSP-safe). The `d` is carried in BOTH initial + animate so the path is
+            NEVER rendered with an undefined `d` — on first draw only opacity fades in (no `d`
+            interpolation); on a recompute motion keeps its prior `d` and morphs to the new one. */}
+        <motion.path
+          className="band-area"
+          fill={OUTER_FILL}
+          initial={doDraw ? { opacity: 0, d: outerD } : false}
+          animate={{ opacity: 1, d: outerD }}
+          transition={fillTransition}
+        />
+        {/* INNER p25–p75 (darker, higher emphasis). */}
+        <motion.path
+          className="band-area"
+          fill={INNER_FILL}
+          initial={doDraw ? { opacity: 0, d: innerD } : false}
+          animate={{ opacity: 1, d: innerD }}
+          transition={fillTransition}
+        />
+        {/* MEDIAN p50 — the OPACITY overlay line (ink, never series-blue). FADES in on first draw
+            (NOT pathLength-traced — a stroke-dash trace fights non-scaling-stroke and under-covers
+            the line at the enlarged scale); on recompute it morphs `d`. */}
+        <motion.path
+          className="band-median"
+          initial={doDraw ? { opacity: 0, d: medianD } : false}
+          animate={{ opacity: 1, d: medianD }}
+          transition={doDraw ? { ...fillTransition } : morphTransition}
+        />
+      </g>
       <Callouts data={data} />
     </>
   )

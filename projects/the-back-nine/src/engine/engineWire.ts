@@ -6,7 +6,7 @@
  * chunk). Keeping the boundary structural — not reliant on bundler tree-shaking — means
  * a future main-thread import can never silently drag the engine across the worker line.
  */
-import type { DateSearchOutcome, DollarAdjustment, Headline, SimulationResult } from '@shared/model'
+import type { BandFan, DateSearchOutcome, DollarAdjustment, Headline, SimulationResult } from '@shared/model'
 
 /** The per-path tax-aware solver surfaces in WIRE form (U3·M6 — `Distribution.taxAware`
  *  as six transferable Float64 buffers). PRESENT iff the run carried the tax overlay
@@ -33,6 +33,12 @@ export interface ResolvedWire {
   readonly seed: number
   /** The M6 solver surfaces — present iff the run carried the tax overlay. */
   readonly taxAware?: TaxAwareWire
+  /** The U6/U7 per-year percentile fan — present iff the run opted in (`run`'s `bandFan`
+   *  option; the single spine headline run only). Crosses by structured clone (compact
+   *  years×6 plain numbers), NOT a transferable buffer — so it is absent from the worker's
+   *  `Comlink.transfer` list. DND/009-clean: every field is a finite number (no Infinity/NaN
+   *  — the never-depleted $0 ruin floor reads as a real 0 in the fan, not a sentinel). */
+  readonly bandFan?: BandFan
 }
 
 /** The worker's return contract — a resolved reading, the typed per-candidate INFEASIBLE
@@ -75,6 +81,11 @@ export function fromWire(wire: EngineWire): EngineResult {
               },
             }
           : {}),
+        // The per-year fan is already plain immutable data (years×6 numbers) — structured
+        // clone delivered a fresh copy across the worker boundary (and the main-thread
+        // fallback hands back the engine's own immutable object), so it carries through
+        // directly; nothing to widen, mirroring the date-search's clone-only unpack.
+        ...(wire.bandFan ? { bandFan: wire.bandFan } : {}),
       },
       headline: wire.headline,
       dollar: wire.dollar,

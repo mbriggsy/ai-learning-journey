@@ -27,9 +27,13 @@ export { fromWire, dateSearchFromWire } from '@engine/engineWire'
  * sentinel (M6) is dispatched BEFORE summarize — it has no distribution to read and is
  * not the indeterminate input-failure (summarize's parameter type excludes it).
  */
-export function runEngine(params: SimulationParams, seed: number): EngineWire {
+export function runEngine(
+  params: SimulationParams,
+  seed: number,
+  options?: { readonly bandFan?: boolean },
+): EngineWire {
   try {
-    const out = simulate(params, seed)
+    const out = simulate(params, seed, options)
     if (out.infeasible) return { kind: 'infeasible', reason: out.reason, pathIndex: out.pathIndex }
     const result = summarize(out, params, seed)
     const taxAware = result.distribution.taxAware
@@ -55,6 +59,11 @@ export function runEngine(params: SimulationParams, seed: number): EngineWire {
             },
           }
         : {}),
+      // The U6/U7 per-year percentile fan — present iff the run opted in (the `bandFan`
+      // option, requested only by the single spine headline run, never the date sweep).
+      // A compact years×6 STRUCTURED-CLONE payload: it must NEVER join the `run` transfer
+      // list below (that list is for detachable buffers only). Mirrors taxAware's presence key.
+      ...(result.distribution.bandFan ? { bandFan: result.distribution.bandFan } : {}),
     }
   } catch (e) {
     return { kind: 'calm-error', reason: e instanceof Error ? e.message : 'engine error' }
@@ -125,9 +134,11 @@ export const engineApi = {
   ping(): 'pong' {
     return 'pong'
   },
-  /** Run a simulation and return the reading, transferring the big buffers. */
-  run(params: SimulationParams, seed: number): EngineWire {
-    const wire = runEngine(params, seed)
+  /** Run a simulation and return the reading, transferring the big buffers. `options.bandFan`
+   *  opts the single spine headline run into the per-year percentile fan (U6/U7 band INPUT) —
+   *  it rides the resolved wire by structured clone (not a transferable). */
+  run(params: SimulationParams, seed: number, options?: { readonly bandFan?: boolean }): EngineWire {
+    const wire = runEngine(params, seed, options)
     if (wire.kind === 'resolved') {
       // Transfer (detach) the big buffers — the worker keeps none for reuse and allocates
       // fresh per run (protects the CRN path + the future K-candidate batch). The M6

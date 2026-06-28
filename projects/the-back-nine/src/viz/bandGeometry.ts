@@ -156,6 +156,40 @@ export function clampX(x: number): number {
   return x < PLOT.left ? PLOT.left : x > PLOT.right ? PLOT.right : x
 }
 
+// ── dead-cohort de-emphasis (back-nine-design §3) ─────────────────────────────────────────────
+// A band slice backed by FEW surviving couples is small-sample noise (the late-year jitter — a $0
+// floor or a fortune from a handful of paths). It must draw QUIET: present (we DO model those years,
+// so it is never erased — that would read as a confident early end) but never shouting a small-cohort
+// spike as if it were signal. The render fades the fan's opacity along x by cohortFraction; this is
+// the pure tuning math (unit-tested), consumed as SVG-mask gradient stops by ConfidenceBand.
+
+/** The fade curve (cold-read-TUNABLE): opacity is FULL at/above `full`, ramps linearly to a faint
+ *  `floor` at/below `floorAt`. `floor` is > 0 by design — the thin tail is DE-EMPHASIZED, never
+ *  hidden (hiding it would fabricate a confident earlier horizon). */
+export const COHORT_FADE = { full: 0.5, floorAt: 0.04, floor: 0.12 } as const
+
+/** Map a sample's cohortFraction (∈ [0,1]) to its band opacity. A non-finite cohort draws at the
+ *  floor (defensive — a thin/garbled slice is quiet, never confidently full). */
+export function cohortFadeOpacity(cohortFraction: number): number {
+  const { full, floorAt, floor } = COHORT_FADE
+  if (!Number.isFinite(cohortFraction)) return floor
+  const t = clamp01((cohortFraction - floorAt) / (full - floorAt))
+  return roundCoord(floor + (1 - floor) * t)
+}
+
+/** Gradient stops for the cohort-fade mask: one per sample, `offset` = its position on the fixed
+ *  x-lattice (i/(n-1) — the lattice is evenly spaced, so this maps to its svg x), `opacity` from the
+ *  fade curve. An absent cohortFraction (a hand-built fixture) reads as a full cohort. */
+export function cohortFadeStops(
+  samples: readonly { readonly cohortFraction?: number }[],
+): { readonly offset: number; readonly opacity: number }[] {
+  const n = samples.length
+  return samples.map((s, i) => ({
+    offset: n <= 1 ? 1 : roundCoord(i / (n - 1)),
+    opacity: cohortFadeOpacity(s.cohortFraction ?? 1),
+  }))
+}
+
 // ── annotation label placement (pure, testable) ──────────────────────────────────────────────
 // The household-clock annotations (Today / each retirement / survivor boundary / horizon) render
 // as a vertical rule + a two-line text label (name + both spouses' ages). When two moments sit

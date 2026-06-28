@@ -398,7 +398,7 @@ describe('memoryModel — real-engine spine dispatch', () => {
       runningInWorker: false,
       engine: {
         ping: async () => engineApi.ping(),
-        run: async (p, s) => engineApi.run(p, s),
+        run: async (p, s, o) => engineApi.run(p, s, o), // forward the bandFan option the spine now requests
         setLatestEpoch: async (e) => engineApi.setLatestEpoch(e),
         runDateSearch: async (i, s, t, e) => engineApi.runDateSearch(i, s, t, e),
       },
@@ -416,5 +416,22 @@ describe('memoryModel — real-engine spine dispatch', () => {
     expect(answer.result.headline.xOfTen.value).toBeGreaterThanOrEqual(0)
     expect(answer.result.headline.xOfTen.value).toBeLessThanOrEqual(10)
     expect(answer.result.headline.outcomeState).toBeTruthy()
+    // END-TO-END BAND EVIDENCE: the spine run opts into the per-year fan, and it survives the real
+    // engineApi.run + fromWire round-trip onto the committed answer (the U6/U7 band's INPUT). This is
+    // the path that was dormant before this slice — proven live here, not just in the wire unit test.
+    const fan = answer.result.distribution.bandFan
+    expect(fan).toBeDefined()
+    if (!fan) throw new Error('the spine dispatch must carry the per-year fan')
+    expect(fan.byYear.length).toBeGreaterThan(1)
+    expect(fan.byYear[0]?.yearsFromNow).toBe(0) // the today anchor
+    // a real $1M-portfolio household has a positive dollar scale, so the band would render (not the
+    // $0-portfolio screen) — and the fan stays DND/009-clean (every field finite, sampled-longevity
+    // truncation and cohort thinning included).
+    expect(fan.byYear.some((y) => y.p90 > 0)).toBe(true)
+    for (const y of fan.byYear) {
+      for (const v of [y.yearsFromNow, y.p10, y.p25, y.p50, y.p75, y.p90, y.cohortFraction]) {
+        expect(Number.isFinite(v)).toBe(true)
+      }
+    }
   })
 })

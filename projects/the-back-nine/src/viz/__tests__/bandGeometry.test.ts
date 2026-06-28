@@ -1,11 +1,14 @@
 import { describe, expect, it } from 'vitest'
 import {
+  COHORT_FADE,
   LABEL_PAD,
   LABEL_ROWS,
   PLOT,
   PLOT_H,
   VIEWBOX,
   areaPath,
+  cohortFadeOpacity,
+  cohortFadeStops,
   linePath,
   placeAnnotationLabels,
   placeholderPath,
@@ -271,5 +274,59 @@ describe('bandGeometry — annotation label de-collision (no same-row overlap)',
     // For the spaced set, the same-row neighbours must clear by the comfortable pad, not merely 0.
     const spaced: Item[] = [item('Today', 0, '61 / 59'), item('Mid', 16, '77 / 75'), item('Horizon', 33, '94 / 92')]
     expect(worstSameRowClearance(spaced, 33)).toBeGreaterThanOrEqual(LABEL_PAD)
+  })
+})
+
+// ── dead-cohort de-emphasis (back-nine-design §3) ─────────────────────────────────────────────
+describe('cohortFadeOpacity — fade the small-cohort tail without erasing it', () => {
+  it('a full cohort draws at full opacity, a near-dead cohort at the faint floor', () => {
+    expect(cohortFadeOpacity(1)).toBe(1)
+    expect(cohortFadeOpacity(COHORT_FADE.full)).toBe(1) // at/above `full` → full
+    expect(cohortFadeOpacity(COHORT_FADE.floorAt)).toBeCloseTo(COHORT_FADE.floor, 6)
+    expect(cohortFadeOpacity(0)).toBeCloseTo(COHORT_FADE.floor, 6)
+  })
+
+  it('the floor is > 0 — the tail is DE-EMPHASIZED, never hidden (hiding fabricates an earlier horizon)', () => {
+    expect(COHORT_FADE.floor).toBeGreaterThan(0)
+    expect(cohortFadeOpacity(0.01)).toBeGreaterThan(0)
+  })
+
+  it('is monotonic non-decreasing in cohortFraction (more survivors ⇒ never fainter)', () => {
+    let prev = -1
+    for (let c = 0; c <= 1.0001; c += 0.05) {
+      const o = cohortFadeOpacity(c)
+      expect(o).toBeGreaterThanOrEqual(prev)
+      prev = o
+    }
+  })
+
+  it('a non-finite cohort is drawn faint, never confidently full (defensive)', () => {
+    expect(cohortFadeOpacity(Number.NaN)).toBeCloseTo(COHORT_FADE.floor, 6)
+    expect(cohortFadeOpacity(Number.POSITIVE_INFINITY)).toBeCloseTo(COHORT_FADE.floor, 6)
+  })
+})
+
+describe('cohortFadeStops — the mask gradient stops along the lattice', () => {
+  it('emits one stop per sample, offsets spanning 0→1, opacity tracking cohortFraction', () => {
+    // a thinning cohort: full at today, near-dead at the horizon
+    const samples = Array.from({ length: LATTICE_POINTS }, (_, i) => ({
+      cohortFraction: 1 - i / (LATTICE_POINTS - 1),
+    }))
+    const stops = cohortFadeStops(samples)
+    expect(stops).toHaveLength(LATTICE_POINTS)
+    expect(stops[0]!.offset).toBe(0)
+    expect(stops[stops.length - 1]!.offset).toBe(1)
+    // today (full cohort) is fully opaque; the horizon (cohort 0) is the faint floor
+    expect(stops[0]!.opacity).toBe(1)
+    expect(stops[stops.length - 1]!.opacity).toBeCloseTo(COHORT_FADE.floor, 6)
+    // opacity is monotone non-increasing as the cohort thins left→right
+    for (let i = 1; i < stops.length; i++) {
+      expect(stops[i]!.opacity).toBeLessThanOrEqual(stops[i - 1]!.opacity)
+    }
+  })
+
+  it('an absent cohortFraction (a hand-built fixture) reads as a full cohort — full opacity', () => {
+    const stops = cohortFadeStops([{}, {}, {}])
+    for (const s of stops) expect(s.opacity).toBe(1)
   })
 })

@@ -303,7 +303,11 @@ export function createMemoryModel(deps: MemoryModelDeps): MemoryModel {
           )
         } else {
           const seed = ensureSeed()
-          const wire = await deps.client.engine.run(params!, seed)
+          // The spine headline run opts into the per-year percentile fan (the U6/U7 band
+          // INPUT). Byte-identical to a fan-off run on the headline statistics (the
+          // reduce-to-spine guard) — the fan only observes. The date route deliberately
+          // never requests it (its many sweep candidates would blow the wire payload).
+          const wire = await deps.client.engine.run(params!, seed, { bandFan: true })
           const res = fromWire(wire)
           commit(
             epoch,

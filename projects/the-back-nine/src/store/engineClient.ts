@@ -60,7 +60,7 @@ function mainThreadHandle(): EngineHandle {
   const api = () => (apiPromise ??= import('@engine/engineProtocol').then((m) => m.engineApi))
   return {
     ping: async () => (await api()).ping(),
-    run: async (params, seed) => (await api()).run(params, seed),
+    run: async (params, seed, options) => (await api()).run(params, seed, options),
     setLatestEpoch: async (epoch) => (await api()).setLatestEpoch(epoch),
     runDateSearch: async (input, seed, tier, requestEpoch) =>
       (await api()).runDateSearch(input, seed, tier, requestEpoch),

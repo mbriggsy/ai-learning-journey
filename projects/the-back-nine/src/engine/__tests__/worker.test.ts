@@ -137,6 +137,65 @@ describe('M6 — taxAware across the wire (presence-keyed Float64 buffers) + the
 })
 
 // ===========================================================================
+// U6/U7 — the per-year percentile fan (bandFan) ACROSS THE WIRE. Presence-keyed
+// like taxAware, but a STRUCTURED-CLONE payload (years×6 plain numbers): it must
+// reach the main thread intact and must NEVER join the run() transfer list. The
+// fan is the band's INPUT; before this slice it was produced + unit-tested but
+// never crossed the worker boundary (there was no round-trip to test).
+// ===========================================================================
+describe('U6/U7 — bandFan across the wire (presence-keyed structured-clone payload)', () => {
+  it('an opted-in run packs the fan and reconstructs it byte-identically in-thread', () => {
+    const seed = 24680
+    const wire = runEngine(params, seed, { bandFan: true })
+    expect(wire.kind).toBe('resolved')
+    if (wire.kind !== 'resolved') return
+    const fan = wire.bandFan
+    expect(fan).toBeDefined()
+    if (!fan) return
+    expect(fan.byYear.length).toBeGreaterThan(1)
+    // Every field is a finite number (DND/009 — the $0 ruin floor reads as a real 0, never
+    // an Infinity/NaN sentinel that JSON/structured-clone would null).
+    for (const y of fan.byYear) {
+      for (const v of [y.yearsFromNow, y.p10, y.p25, y.p50, y.p75, y.p90, y.cohortFraction]) {
+        expect(Number.isFinite(v)).toBe(true)
+      }
+    }
+    // The wire neither rounds nor reshapes the fan: it round-trips byte-identical to the
+    // in-thread fan from the same (params, seed, {bandFan:true}).
+    const inThread = simulate(params, seed, { bandFan: true })
+    if (inThread.indeterminate || inThread.infeasible) throw new Error('expected resolved')
+    const r = fromWire(wire)
+    expect(r.ok).toBe(true)
+    if (!r.ok) return
+    expect(r.result.distribution.bandFan).toEqual(inThread.distribution.bandFan)
+  })
+
+  it('a run that does NOT opt in carries NO fan (presence-keyed absence — the date route never asks)', () => {
+    const wire = runEngine(params, 24680) // no options object
+    expect(wire.kind).toBe('resolved')
+    if (wire.kind !== 'resolved') return
+    expect(wire.bandFan).toBeUndefined()
+    const r = fromWire(wire)
+    if (!r.ok) throw new Error('expected ok')
+    expect(r.result.distribution.bandFan).toBeUndefined()
+  })
+
+  it('the fan rides by STRUCTURED CLONE — engineApi.run leaves it intact (it never joins the transfer list)', () => {
+    // engineApi.run tags the detachable typed-array buffers for transfer; the fan is plain
+    // numbers, so it must be delivered by clone and stay readable on the returned wire. A fan
+    // mistakenly added to the transfer list would be detached/neutered — this guards the
+    // enumerated-buffer-list contract (a non-buffer field must never silently join a transfer).
+    const wire = engineApi.run(params, 24680, { bandFan: true })
+    expect(wire.kind).toBe('resolved')
+    if (wire.kind !== 'resolved') return
+    const fan = wire.bandFan
+    expect(fan).toBeDefined()
+    if (!fan) return
+    expect(fan.byYear[0]?.yearsFromNow).toBe(0) // the today anchor survived intact
+  })
+})
+
+// ===========================================================================
 // C3 — the date-search worker seam: the epoch-gated cooperative cancellation
 // (engineApi.setLatestEpoch + runDateSearch), the thin structured-clone wire,
 // and the compute-profile gate. All drivable in this PLAIN (non-worker)

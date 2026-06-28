@@ -16,6 +16,7 @@ import { useCallback, useEffect, useId, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { ConfidenceBand } from './ConfidenceBand'
+import { BandLegend } from './BandLegend'
 import type { BandViewData, BandLabels } from './bandData'
 import './band.css'
 
@@ -156,6 +157,9 @@ export function BandEnlargeModal({
             </div>
             {/* the SAME band, enlarged — non-color encoding preserved verbatim. */}
             <ConfidenceBand data={data} labels={labels} variant="enlarged" />
+            {/* the legend rides the lightbox too — horizontal here (the modal has the width to
+                span the three tiers across one line, vs the drawer's vertical stack). */}
+            <BandLegend labels={labels} layout="row" />
           </motion.div>
         </motion.div>
       )}

@@ -151,6 +151,16 @@
   align-items: center;
   gap: var(--space-2);
 }
+/* ROW layout (the enlarge modal): the lightbox has the width to span the three tiers across one
+   line. Wraps gracefully on a narrow modal rather than overflowing. */
+.band-legend--row {
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+  column-gap: var(--space-6);
+  row-gap: var(--space-2);
+  margin-top: var(--space-5);
+}
 /* the legend swatch is paired with a distinct OUTLINE-STYLE per row (solid / hairline / dashed)
    so the three tiers separate without depending on the fill hue — the legend reinforces the
    in-place callouts, it is never the sole non-color signal. */
@@ -222,10 +232,11 @@
 }
 
 /* The enlarged band fits the viewport: cap its WIDTH by viewport height (the band is ~560:500, so
-   width 82vh → height ~73vh), leaving room for the title + padding. Without this the band runs
-   taller than the dialog and the modal grows a scrollbar that reveals nothing already off-screen. */
+   width 68vh → height ~61vh), leaving room for the title, the legend BELOW the band, and the dialog
+   padding — all within the dialog's max-height so the modal never grows a scrollbar that reveals
+   nothing already off-screen. (68vh, not 82vh: the horizontal legend shares the height budget.) */
 .band-modal__dialog .band-figure {
-  max-inline-size: min(100%, 82vh);
+  max-inline-size: min(100%, 68vh);
   margin-inline: auto;
 }
 

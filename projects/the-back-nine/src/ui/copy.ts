@@ -303,6 +303,12 @@ export const copy = {
   // The indeterminate-band placeholder note — shown on the wide low-emphasis envelope when there
   // is no resolved range yet (the answer is incomplete, not bad).
   bandPlaceholderNote: 'The range fills in as you answer.',
+  // Household-clock x-axis MARKER labels (the moment's name; the ages + a11y sentence ride through
+  // slots — numerals never inline). Band-scoped chrome, not a verdict claim. On the already-retired
+  // SPINE route only these two show: a "work stops" marker would point into the past (back-nine-design
+  // honest-axis law). The plan-horizon marker sits at the fan's ACTUAL last year, never a nominal max.
+  bandClockTodayLabel: 'Today',
+  bandClockHorizonLabel: 'Plan horizon',
   // --- R19 calm error grammar (icon + adjacent text; color never alone) ---
   errContributionCeiling:
     'That’s more than this year’s legal contribution limit for this account type at this age — combined across accounts of the same kind.',
@@ -380,6 +386,18 @@ export const slots = {
     if (pct >= 100) return `${keeper} would keep all of this if ${owner} passes.`
     return `${keeper} would keep ${pct}% of this if ${owner} passes.`
   },
+  /** The band household-clock ages at a marker — both spouses, " / " separated (rendered
+   *  tabular-nums). A factual age echo, not a claim. */
+  bandClockAges: (ageA: number, ageB: number): string => `${ageA} / ${ageB}`,
+  /** The "Today" marker's accessible sentence (the reader is color-blind — the marker's meaning
+   *  must reach the a11y tree as text, not as a vertical rule alone). */
+  bandClockTodayDesc: (ageA: number, ageB: number): string => `Today — ages ${ageA} and ${ageB}`,
+  /** The plan-horizon marker's accessible sentence — anchored at the fan's actual last year. */
+  bandClockHorizonDesc: (ageA: number, ageB: number): string =>
+    `The plan horizon — ages ${ageA} and ${ageB}`,
+  /** An intermediate decade-age tick's accessible sentence (the reference marks between Today and
+   *  the horizon — just the ages, no named moment). */
+  bandClockAgesDesc: (ageA: number, ageB: number): string => `Ages ${ageA} and ${ageB}`,
   /** The pinned natural-frequency frame. A count below the ceiling renders "N of 10"; the over-funded
    *  near-ceiling is the PROPORTION {@link slots.xOfTenAtCeiling} ("better than 9 in 10"). The `n >= 10`
    *  branch keeps the honesty clamp as a DEFENSIVE backstop so a stray xOfTen(10) anywhere can never

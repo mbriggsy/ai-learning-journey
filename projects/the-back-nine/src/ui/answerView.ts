@@ -20,6 +20,9 @@
  */
 import type { MemoryModelSnapshot } from '@store/memoryModel'
 import { isDateRoute } from '@intake/intakeMap'
+import type { BandFan, SimulationResult } from '@shared/model'
+import type { XAnnotation } from '@viz/bandData'
+import { deriveSpineBandAnnotations } from './bandAnnotations'
 import type { FuckOffDateView } from './FuckOffDate'
 import type { ConfidenceStatementView } from './ConfidenceStatement'
 
@@ -37,6 +40,33 @@ export type ElevatedAnswer =
  * elevated hero shows only the FINAL answer (the provisional reading lives in the quiet strip during
  * intake), so the `provisional` eyebrow is never set here.
  */
+/**
+ * The spine band + its household-clock annotations, SCREENED for the $0-portfolio household.
+ * `resolveBandData` FAILS LOUD on an all-$0 fan — a VALID Social-Security-funded $0-portfolio
+ * household (insight 044) — because there is no honest dollar scale to plot. So the band is handed on
+ * ONLY when the fan carries a positive dollar somewhere; the $0-portfolio household renders its verdict
+ * with NO band (nothing to plot but the $0 floor — the verdict still stands). The screen tests the
+ * EXACT condition `resolveBandData` throws on (every p90 === 0 ⇒ dollarMax === 0), not a proxy. A
+ * malformed fan (a producer bug, never a valid household) is deliberately NOT screened here — it is
+ * left to fail loud at the producer seam (the fail-loud honesty design; back-nine-design §3).
+ */
+function spineBand(
+  result: SimulationResult,
+  draft: MemoryModelSnapshot['draft'],
+): { readonly band?: BandFan; readonly bandAnnotations?: readonly XAnnotation[] } {
+  const fan = result.distribution.bandFan
+  if (!fan || fan.byYear.length < 2) return {}
+  const last = fan.byYear[fan.byYear.length - 1]
+  if (!last || !fan.byYear.some((y) => y.p90 > 0)) return {}
+  const ageA = draft.people[0].currentAge
+  const ageB = draft.people[1].currentAge
+  const bandAnnotations =
+    ageA !== undefined && ageB !== undefined
+      ? deriveSpineBandAnnotations(ageA, ageB, last.yearsFromNow)
+      : undefined
+  return { band: fan, bandAnnotations }
+}
+
 export function selectElevatedAnswer(
   snapshot: MemoryModelSnapshot,
   onRetry: () => void,
@@ -76,7 +106,10 @@ export function selectElevatedAnswer(
       // Indeterminate is "incomplete, not a verdict" — name what's missing rather than crown a hero
       // reading on undetermined data (calm-but-wrong is the sin). The quiet strip carries that copy.
       if (headline.outcomeState === 'indeterminate') return { kind: 'fallback' }
-      return { kind: 'spine', view: { kind: 'reading', headline, dollar } }
+      // The "show me the range" band rides the worded spine reading (the engine's per-year fan, now
+      // carried across the worker wire). spineBand screens the $0-portfolio household (no honest scale)
+      // and derives the household-clock annotations from the draft + the fan's actual last year.
+      return { kind: 'spine', view: { kind: 'reading', headline, dollar, ...spineBand(answer.result, draft) } }
     }
   }
 }

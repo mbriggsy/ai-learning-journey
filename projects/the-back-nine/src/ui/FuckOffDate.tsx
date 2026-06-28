@@ -28,6 +28,7 @@
 import { useEffect, useRef, type ReactNode } from 'react'
 import { copy, slots } from './copy'
 import { dateOddsText } from './dateOdds'
+import { dateTradeoffPoint } from './dateTradeoff'
 import { focusHeading } from '@intake/a11y'
 import type { DateTrackOutcome } from '@shared/model'
 import './styles/fuckOffDate.css'
@@ -85,9 +86,11 @@ export function FuckOffDate({ view, focusSignal }: FuckOffDateProps) {
       </div>
     )
   } else {
-    // confirmed-date | window-edge-unconfirmed — the date headline + the conservative odds.
+    // confirmed-date | window-edge-unconfirmed — the date headline + the conservative odds, plus the
+    // date↔confidence tradeoff (R28) for a clean confirmed date (the helper returns null otherwise).
     const track = view.track
     const lead = track.offsetYears === 0 ? copy.dateFreeToday : slots.dateInYears(track.offsetYears)
+    const tradeoff = dateTradeoffPoint(track)
     body = (
       <div className="fod-reveal" data-framing="date">
         {view.provisional && <p className="fod-provisional">{copy.answerProvisionalTag}</p>}
@@ -95,6 +98,9 @@ export function FuckOffDate({ view, focusSignal }: FuckOffDateProps) {
           {lead}
         </h2>
         <p className="fod-odds">{dateOddsText(track.grade.quantizedLowerBound)}</p>
+        {tradeoff && (
+          <p className="fod-tradeoff">{slots.dateTradeoff(tradeoff.yearsSooner, tradeoff.oddsText)}</p>
+        )}
         {track.kind === 'window-edge-unconfirmed' && (
           <p className="fod-note">{copy.dateWindowEdgeNote}</p>
         )}

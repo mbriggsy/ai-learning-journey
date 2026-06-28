@@ -14,7 +14,7 @@ import './preview.css'
 const T = {
   pageTitle: 'D2 — The fuck-off date',
   pageNote:
-    'Dev-only preview (?preview=date). The elevated, landed date surface for a not-yet-retired household — the three first-class outcomes (confirmed / window-edge / no-date) + free-today + the non-monotone (ACA-cliff) disclosure + the non-answer modes. The date↔confidence tradeoff line and the on-demand confidence-curve are a deliberate follow-up. FIRST-DRAFT disclosure wording — the cold-read’s call.',
+    'Dev-only preview (?preview=date). The elevated, landed date surface for a not-yet-retired household — the three first-class outcomes (confirmed / window-edge / no-date) + free-today + the non-monotone (ACA-cliff) disclosure + the date↔confidence tradeoff (clean confirmed only) + the non-answer modes. The on-demand confidence-curve drawer is a deliberate follow-up. FIRST-DRAFT disclosure + tradeoff wording — the cold-read’s call.',
   cases: [
     { key: 'freeToday', label: 'confirmed — free today (Y=0)' },
     { key: 'confirmed', label: 'confirmed — N years out' },

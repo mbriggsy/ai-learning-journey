@@ -75,6 +75,18 @@
   max-width: var(--measure);
 }
 
+/* The date↔confidence tradeoff line — an earlier, lower-odds option. Quiet supporting text (a
+   flexibility, never a nudge); tabular figures so the "X of 10" doesn't jitter. */
+.fod-tradeoff {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  line-height: var(--leading-body);
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+  max-width: var(--measure);
+}
+
 /* Disclosure notes (window-edge, non-monotone) — quiet, honest context, never alarm. */
 .fod-note {
   margin: 0;

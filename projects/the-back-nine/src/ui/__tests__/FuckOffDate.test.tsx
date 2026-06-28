@@ -25,6 +25,23 @@ describe('FuckOffDate — the D2 landed date surface', () => {
     expect(container.textContent).toContain(dateOddsText(f.grade.quantizedLowerBound))
   })
 
+  it('a clean confirmed date carries the date↔confidence tradeoff line (R28)', () => {
+    // the confirmed fixture's curve crowns at 4 (9 of 10) with an earlier 8-of-10 point at offset 3
+    const { container } = render(<FuckOffDate view={dates(DATE_FIXTURES.confirmed)} />)
+    expect(container.textContent).toContain(slots.dateTradeoff(1, slots.xOfTen(8)))
+  })
+
+  it('the window-edge and non-monotone cases SUPPRESS the tradeoff (their disclosure is the priority)', () => {
+    const edge = render(<FuckOffDate view={dates(DATE_FIXTURES.windowEdge)} />)
+    expect(edge.container.textContent).not.toContain('sooner')
+    expect(edge.container.textContent).toContain(copy.dateWindowEdgeNote)
+    edge.unmount()
+
+    const nm = render(<FuckOffDate view={dates(DATE_FIXTURES.confirmedNonMonotone)} />)
+    expect(nm.container.textContent).not.toContain('sooner')
+    expect(nm.container.textContent).toContain(copy.dateNonMonotoneNote)
+  })
+
   it('free-today (Y=0) leads with the "today" headline, not an N-years line', () => {
     const { container } = render(<FuckOffDate view={dates(DATE_FIXTURES.freeToday)} />)
     expect(screen.getByRole('heading', { name: copy.dateFreeToday })).toBeInTheDocument()

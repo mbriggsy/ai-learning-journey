@@ -387,6 +387,15 @@ export const slots = {
     `No fuck-off date within the next ${windowYears} years — with what you’ve entered so far.`,
   /** Odds rider for the date line. */
   withOdds: (xOfTenText: string): string => `about ${xOfTenText} odds`,
+  /** The date↔confidence tradeoff (R28) — an EARLIER, lower-odds point than the crowned date, so
+   *  the date is never a single deterministic line. `yearsSooner` is whole sim-years before the
+   *  crowned offset; `oddsText` is the earlier point's "X of 10" reading (the SAME register as the
+   *  headline odds — Briggsy's call). Informational, never an imperative ("you could", never "go
+   *  sooner"). FIRST-DRAFT wording — the cold-read's call. */
+  dateTradeoff: (yearsSooner: number, oddsText: string): string =>
+    yearsSooner === 1
+      ? `Or about a year sooner, the odds are nearer ${oddsText}.`
+      : `Or about ${yearsSooner} years sooner, the odds are nearer ${oddsText}.`,
   /** The catch-up step-down disclosure names its year (D1). */
   stepDownNote: (calendarYear: number): string =>
     `From ${calendarYear}, contribution room narrows as a catch-up window closes — the plan assumes the lower limit from then on.`,

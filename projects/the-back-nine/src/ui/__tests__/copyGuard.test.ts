@@ -63,6 +63,7 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     dateInYears: slots.dateInYears(8),
     noDateInWindow: slots.noDateInWindow(30),
     withOdds: slots.withOdds('7 of 10'),
+    dateTradeoff: slots.dateTradeoff(2, slots.xOfTen(8)),
     stepDownNote: slots.stepDownNote(2030),
     oopHint: slots.oopHint('19,000'),
     factsMore: slots.factsMore(3),

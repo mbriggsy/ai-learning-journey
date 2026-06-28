@@ -63,11 +63,11 @@ When in doubt, let the **clerk's triage** decide — it short-circuits to "oracl
 
 ## What to do with the verdict (maximum-autonomy execution rule)
 
-Briggsy granted **maximum autonomy**: confidence-gated execution, he reviews the digest after the fact. Apply this gate in order:
+Briggsy granted **maximum autonomy** (2026-06-28): execute everything reversible at high confidence and let him review the digest after the fact — **stop only for spending real money or publishing something public** (and even those are waived by prior all-clear). Apply this gate in order:
 
 1. **Honesty Hawk veto fired** → never ship the calm-but-wrong option. Do not execute. Surface to Briggsy with the hawk's stated false-belief, or take the honest alternative the council endorsed.
 
-2. **Hard-stop action** (real-money spend · outward/public/irreversible · force-push · destructive data loss) → **always** surface to Briggsy as a 5-second framed confirm, *regardless of confidence*. ("Review after the fact" is meaningless when it can't be undone.)
+2. **Confirm-first action** — the *only* things I stop for, because they can't be clawed back: **(a) spending real money** (paid image/voice/API), **(b) publishing something outward/public** beyond the repo, **(c)** a force-push to main or destructive data-loss. Surface as a 5-second framed confirm *regardless of confidence* — **UNLESS Briggsy gave up-front all-clear for this work** (e.g. "we're doing voice today"), in which case prior clearance counts and I proceed. Everything else — code, copy, layout, scale, scope-within-the-app, even taste/direction calls — is **not** confirm-first and executes per step 3.
 
 3. **Confidence HIGH (≥7/10), not a hard-stop** → **execute now.** Any tier — including `yours-to-close` taste/direction calls — gets acted on, because that's what maximum autonomy means. Log it.
 
@@ -99,7 +99,7 @@ Each elder is a **pole of a real project value-tension**, so the debate is genui
 
 ## Non-negotiables
 
-- **Grounding first.** The clerk builds a cited dossier; elders cite the dossier, not memory. No source → "unsourced", never invented. (Same discipline as the engine's externally-derived fixtures.)
+- **Grounding first.** The clerk builds a cited dossier; elders cite the dossier, not memory. No source → "unsourced", never invented. (Same discipline as the engine's externally-derived fixtures.) The clerk also **attests grounding** (provenance-based, *not* array-length): if it can't ground a real issue, the council **refuses to convene** rather than debate over nothing — the no-issue precondition gate plus this attestation gate cover both the empty-prompt corner and its sibling, a real issue paired with an ungroundable dossier.
 - **Independent openings.** Openers are blind to each other (no anchoring); the debate comes after.
 - **The veto outranks the vote.** A majority cannot ship calm-but-wrong.
 - **Dissent is preserved**, never erased — with "what would flip it."

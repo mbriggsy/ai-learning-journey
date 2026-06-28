@@ -33,6 +33,7 @@ const CHARTERS = {
     '3. relevantInsights — prior lessons / landmines (docs/insights/NNN) that bear on this issue.',
     '4. tension — which of the six value tensions this sits on: Honesty-vs-Calm, Purity-vs-Richness, Precision-vs-Simplicity, Conservative-vs-Disclosed, Craft-vs-Empathy, Oracle-vs-Principle. (It may sit on two.)',
     '5. oracleSettled — the triage. Is there already a test, lint rule, locked decision, or insight that SETTLES this without debate? If yes: settled=true with answer + basis (cite it). If no: settled=false. Do NOT manufacture a debate the project already closed, and do NOT claim settled when it is a genuine judgment call.',
+    '6. grounding — ATTEST whether this dossier is genuinely grounded. Set grounded=true if you read real artifacts and the facts are actually cited. Set grounded=true ALSO for a legitimately novel/sparse issue with little prior art — but explain in note (e.g. "legitimately sparse: novel, no prior art; proceeding on first principles, marked unsourced"). Set grounded=false ONLY if you could not ground this at all AND it is not a characterizable novel case (the issue is empty, contradictory, or unintelligible). This is PROVENANCE-based, never array-length-based: empty fact lists can be perfectly legitimate for a novel issue, so never fail an issue merely because a list is short.',
     '',
     'DISCIPLINE: Cite everything. If you cannot find a source, label it "unsourced" — never invent a plausible value. Be complete but tight. If the dossier is wrong, the whole council is wrong. You are not the decider; you are why the decision will be grounded.',
   ].join('\n'),
@@ -151,7 +152,7 @@ const CHARTERS = {
     '- yours-to-close — TASTE (final eye is Briggsy) / real-money spend / product-direction or scope expansion / irreversible or outward-facing. Frame as a 5-second decision WITH the rec, never a naked question.',
     'A verdict may SPLIT: e.g. council-decided on the wording, yours-to-close on the tone sign-off. Say so in "split" and give the action for each part.',
     '',
-    'FLAG HARD-STOPS: set hardStop.is=true (+ reason) if the action spends real money, is outward/public/irreversible, or is destructive. These always go to Briggsy regardless of confidence — "review after the fact" is meaningless when it cannot be undone.',
+    'FLAG HARD-STOPS: set hardStop.is=true (+ reason) ONLY if the action (a) spends real money, (b) publishes something outward/public beyond the repo, or (c) is destructive data-loss / a force-push to main. These go to Briggsy regardless of confidence — review-after-the-fact is meaningless when it cannot be undone. EXCEPTION: money/outward are WAIVED when the caller notes Briggsy gave up-front all-clear for this work (prior clearance counts). Everything else — code, copy, layout, scale, scope-within-the-app, even taste/direction calls — is NOT a hard-stop and executes at high confidence.',
     '',
     'RECOMMEND THE ACTION: set action=execute when confidence >= 7/10, not a hard-stop, no live veto (maximum-autonomy: even yours-to-close taste/direction calls execute at high confidence; Briggsy reviews the digest). Set action=surface when confidence < 7/10, OR a live veto, OR hardStop.is=true.',
     '',
@@ -200,7 +201,7 @@ if (seat && seat.length) {
 // ---- schemas -----------------------------------------------------------------
 const DOSSIER_SCHEMA = {
   type: 'object', additionalProperties: false,
-  required: ['facts', 'bindingConstraints', 'relevantInsights', 'tension', 'oracleSettled'],
+  required: ['facts', 'bindingConstraints', 'relevantInsights', 'tension', 'oracleSettled', 'grounding'],
   properties: {
     facts: { type: 'array', items: {
       type: 'object', additionalProperties: false, required: ['claim', 'citation'],
@@ -213,6 +214,9 @@ const DOSSIER_SCHEMA = {
     oracleSettled: {
       type: 'object', additionalProperties: false, required: ['settled'],
       properties: { settled: { type: 'boolean' }, answer: { type: 'string' }, basis: { type: 'string' } } },
+    grounding: {
+      type: 'object', additionalProperties: false, required: ['grounded', 'note'],
+      properties: { grounded: { type: 'boolean' }, note: { type: 'string' } } },
   },
 }
 
@@ -301,6 +305,28 @@ if (dossier && dossier.oracleSettled && dossier.oracleSettled.settled) {
     hardStop: { is: false },
     action: 'execute',
     digestLine: '[oracle-settled] ' + issue + ' -> ' + (dossier.oracleSettled.answer || 'follow existing gate/decision'),
+    dossier,
+  }
+}
+
+// ATTESTATION-BY-PROVENANCE GATE (the council's own self-hardening recommendation):
+// if the clerk cannot attest the dossier is grounded — and it is not a legitimately
+// novel/sparse case — refuse rather than debate over ungrounded ground. Gates on the
+// clerk's PROVENANCE attestation, never on array lengths (an empty fact list can be
+// legitimate for a novel issue), so it does not reincarnate the proxy-guard trap.
+if (dossier && dossier.grounding && dossier.grounding.grounded === false) {
+  log('Clerk could not ground the dossier — refusing to convene. ' + (dossier.grounding.note || ''))
+  return {
+    issue,
+    recommendation: 'BLOCKER: the clerk could not ground this issue (' + (dossier.grounding.note || 'no provenance') + '). Re-dispatch with a concrete, intelligible issue plus any context that lets the clerk read real artifacts — do not debate over ungrounded ground.',
+    rationale: 'Attestation-by-provenance gate fired: the clerk attested grounded=false. A confidence-graded verdict over an ungrounded dossier is the calm-but-wrong artifact this council exists to prevent.',
+    confidence: { level: 'high', score: 9, reason: 'The clerk, which reads the real artifacts, attested it could not ground the issue.' },
+    tier: 'yours-to-close',
+    dissent: { position: 'none', who: 'none', whatWouldFlipIt: 'a grounded re-dispatch' },
+    honestyHawkVeto: { fired: true, falseBelief: 'That the council deliberated a grounded decision when the clerk attested it could not be grounded.' },
+    hardStop: { is: false },
+    action: 'surface',
+    digestLine: '[blocked: ungrounded] ' + issue + ' -> ' + (dossier.grounding.note || 'clerk could not ground'),
     dossier,
   }
 }

@@ -28,6 +28,7 @@ import {
   type DateSearchInput,
 } from '@engine/dateSearch'
 import { simulate } from '@engine/simulate'
+import { dateSearchFromWire } from '@engine/engineWire'
 import { BANDS, SURVIVAL_GRID, quantizeSurvival } from '@engine/confidence'
 import { validationMarket } from '@engine/reference/methodology'
 import type { IncomeParams, OverlayParams, PersonInputs, SimulationParams } from '@shared/model'
@@ -559,5 +560,87 @@ describe('runDateSearch — integration (the pinned-tier engine runs)', () => {
     const a = simulate(sampled, 4242)
     expect(a.indeterminate).toBe(false)
     expect(a).toEqual(simulate(twin, 4242))
+  })
+})
+
+// ---------------------------------------------------------------------------
+// The D2 crowned band fan (slice 2): the crowned candidate's projection fan, emitted
+// ONCE at the decided offset and riding the 'dates' outcome to the band.
+// ---------------------------------------------------------------------------
+
+describe('runDateSearch — the D2 crowned band fan', () => {
+  // Reuse the integration fixture's still-working 66yo single that crowns a date in-window
+  // (the sanity oracle proves sweepInput(55k, 30k) crowns at the provisional tier).
+  const working66: PersonInputs = { ...A55, currentAge: 66, retirementAge: 69, earnedIncomeReal: 90_000 }
+  const sweepInput = (spend: number, contributions: number): DateSearchInput => ({
+    params: {
+      ...coupleParams,
+      initialPortfolio: 600_000,
+      annualSpendingReal: spend,
+      maxHorizonYears: 16,
+      people: [working66],
+      overlay: {
+        ...coupleOverlay,
+        buckets: { taxable: 0, pretax: 600_000, roth: 0 },
+        enrolledPremium: undefined,
+        slcsp: undefined,
+        oopMedical: undefined,
+        irmaaMagiSeed: [60_000, 60_000],
+        accumulation: { contributionsByPerson: [{ pretax: Array.from({ length: 12 }, () => contributions) }] },
+      },
+    },
+    workingYearIrmaaMagiByPerson: [120_000],
+  })
+
+  it('CRN-IDENTITY (the load-bearing test): a crowned date emits the crowned candidate\'s OWN fan — never a second, drifting picture', { timeout: 60_000 }, async () => {
+    const input = sweepInput(55_000, 30_000)
+    const seed = 12345
+    const out = await runDateSearch(input, seed, { tier: 'provisional' })
+    expect(out.kind).toBe('dates')
+    if (out.kind !== 'dates') return
+    expect(out.floor.kind).not.toBe('no-date-in-window')
+    if (out.floor.kind === 'no-date-in-window') return
+
+    // The band is present and well-formed (the today anchor + ≥ 1 year).
+    expect(out.band).toBeDefined()
+    const fan = out.band!.fan
+    expect(fan.byYear.length).toBeGreaterThan(1)
+    expect(fan.byYear[0]!.yearsFromNow).toBe(0)
+    // The engine's tag for the band: a crowned date is on-track-or-better by construction (its
+    // quantized lower bound cleared the bar), so the band never carries a fail state.
+    expect(['on-track', 'over-funded']).toContain(out.band!.outcomeState)
+
+    // DND/009: every fan value is a FINITE number (the $0 ruin floor reads as a real 0, never an
+    // Infinity/NaN that JSON.stringify/IndexedDB would silently null at the U8 persist seam).
+    for (const yr of fan.byYear) {
+      for (const v of [yr.p10, yr.p25, yr.p50, yr.p75, yr.p90, yr.cohortFraction]) {
+        expect(Number.isFinite(v)).toBe(true)
+      }
+    }
+
+    // THE CLAIM: the emitted fan is byte-identical to a STANDALONE fan-on re-run of the crowned
+    // candidate at the same seed/tier — the band observes the very distribution that crowned the
+    // date (CRN), proving the RIGHT candidate (out.floor.offsetYears) was projected.
+    const crowned = buildCandidateParams(input, out.floor.offsetYears, DATE_SEARCH_PATHS.provisional)
+    const standalone = simulate(crowned, seed, { bandFan: true })
+    expect(standalone.indeterminate).toBe(false)
+    if (standalone.indeterminate || standalone.infeasible) return
+    expect(out.band!.fan).toEqual(standalone.distribution.bandFan)
+
+    // It rides the date wire unchanged (structured clone — the whole outcome, no field mapping).
+    const round = dateSearchFromWire({ kind: 'date-search', outcome: out })
+    expect(round.ok).toBe(true)
+    if (!round.ok || round.outcome.kind !== 'dates') return
+    expect(round.outcome.band).toEqual(out.band)
+  })
+
+  it('a NO-DATE run carries NO fan (no offset to project — the no-date surface shows no band)', { timeout: 60_000 }, async () => {
+    // Spend ≫ portfolio: the household depletes even while working (90k income vs 500k spend on a
+    // 600k portfolio), so every offset fails ⇒ no-date-in-window ⇒ no crowned candidate to project.
+    const out = await runDateSearch(sweepInput(500_000, 0), 12345, { tier: 'provisional' })
+    expect(out.kind).toBe('dates')
+    if (out.kind !== 'dates') return
+    expect(out.floor.kind).toBe('no-date-in-window')
+    expect(out.band).toBeUndefined()
   })
 })

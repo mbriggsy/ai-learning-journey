@@ -62,6 +62,7 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     bandClockAges: slots.bandClockAges(63, 61),
     bandClockTodayDesc: slots.bandClockTodayDesc(63, 61),
     bandClockHorizonDesc: slots.bandClockHorizonDesc(93, 91),
+    bandClockWorkStopsDesc: slots.bandClockWorkStopsDesc(64, 62),
     bandClockAgesDesc: slots.bandClockAgesDesc(80, 78),
     xOfTen: slots.xOfTen(7),
     xOfTenAtCeiling: slots.xOfTenAtCeiling(),

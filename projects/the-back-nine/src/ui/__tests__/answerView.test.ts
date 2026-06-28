@@ -3,7 +3,7 @@ import { selectElevatedAnswer, resolvedFocusKey } from '../answerView'
 import { READING_FIXTURES } from '../preview/fixtures'
 import { DATE_FIXTURES, DATE_WINDOW_TOP } from '../preview/dateFixtures'
 import type { MemoryModelSnapshot, ModelAnswer, ScenarioDraft } from '@store/memoryModel'
-import type { BandFan, OutcomeState, SimulationResult } from '@shared/model'
+import type { BandFan, DateBand, DateTrackOutcome, OutcomeState, SimulationResult } from '@shared/model'
 
 /**
  * D2 state-adaptive routing (answerView.selectElevatedAnswer) — the test-oracle core: every committed
@@ -47,10 +47,52 @@ const snap = (answer: ModelAnswer, d: ScenarioDraft): MemoryModelSnapshot => ({
 
 const noop = (): void => undefined
 
+// A still-working couple WITH ages — the date band annotations need both current ages.
+const workingWithAges = draft({
+  people: [
+    { workStatus: 'working', currentAge: 58 },
+    { workStatus: 'retired', currentAge: 60 },
+  ],
+})
+
+// A confirmed-date track crowned at a chosen offset (the fuck-off date) — for the band-threading tests.
+const confirmedAt = (offsetYears: number): DateTrackOutcome => ({
+  kind: 'confirmed-date',
+  offsetYears,
+  grade: { quantizedLowerBound: 0.9, survivalFraction: 0.92, marginAboveBar: 0.05 },
+  nonMonotoneOffsets: [],
+  curve: [],
+})
+
+// A minimal crowned DateBand: a fan from today to `lastYear` (positive p90 ⇒ not $0-screened) + the tag.
+const dateBandTo = (lastYear: number, p90 = 1_000_000): DateBand => ({
+  fan: {
+    byYear: Array.from({ length: lastYear + 1 }, (_, t) => ({
+      yearsFromNow: t,
+      p10: 0,
+      p25: 0,
+      p50: p90 / 2,
+      p75: (p90 * 3) / 4,
+      p90,
+      cohortFraction: 1,
+    })),
+  },
+  outcomeState: 'on-track',
+})
+
 // A 'dates' outcome from the shared DateTrackOutcome fixture (v1 degenerate budget: floor ≡ lifestyle).
-const datesAnswer = (track = DATE_FIXTURES.confirmed): ModelAnswer => ({
+// `bandData` (optional) rides the outcome the way the engine emits it for a crowned date.
+const datesAnswer = (track: DateTrackOutcome = DATE_FIXTURES.confirmed, bandData?: DateBand): ModelAnswer => ({
   kind: 'date',
-  outcome: { kind: 'dates', floor: track, lifestyle: track, tier: 'final', windowTopYears: DATE_WINDOW_TOP, seed: 1 },
+  outcome: {
+    kind: 'dates',
+    floor: track,
+    lifestyle: track,
+    tier: 'final',
+    windowTopYears: DATE_WINDOW_TOP,
+    seed: 1,
+    ...(bandData ? { band: bandData } : {}),
+  },
 })
 
 const distributionWith = (bandFan?: BandFan): SimulationResult['distribution'] => ({
@@ -111,6 +153,39 @@ describe('selectElevatedAnswer — D2 state-adaptive routing', () => {
       kind: 'date',
       view: { kind: 'dates', track: DATE_FIXTURES.confirmed, windowTopYears: DATE_WINDOW_TOP },
     })
+  })
+
+  it('a "dates" outcome WITH a crowned band → the view carries the band + the FUTURE work-stops annotations', () => {
+    const bandData = dateBandTo(40)
+    const r = selectElevatedAnswer(snap(datesAnswer(confirmedAt(6), bandData), workingWithAges), noop)
+    if (r.kind !== 'date' || r.view.kind !== 'dates') throw new Error('expected a date dates view')
+    expect(r.view.band).toBe(bandData)
+    const ann = r.view.bandAnnotations
+    expect(ann?.[0]?.id).toBe('today')
+    expect(ann?.[ann.length - 1]?.id).toBe('horizon')
+    // the date route's signature (vs the spine): a FUTURE "work stops" marker at the crowned offset —
+    // ages 58+6 / 60+6, honest precisely because the household has not stopped working yet.
+    const workStops = ann?.find((m) => m.id === 'work-stops')
+    expect(workStops?.yearsFromNow).toBe(6)
+    expect(workStops?.ages).toBe('64 / 66')
+    // the horizon marker tracks the fan's ACTUAL last year, not a nominal maxHorizon
+    expect(ann?.find((m) => m.id === 'horizon')?.yearsFromNow).toBe(40)
+  })
+
+  it('a $0-portfolio date band (all-$0 fan) drops the band — no honest dollar scale (mirrors the spine screen)', () => {
+    const zeroBand: DateBand = {
+      fan: {
+        byYear: [
+          { yearsFromNow: 0, p10: 0, p25: 0, p50: 0, p75: 0, p90: 0, cohortFraction: 1 },
+          { yearsFromNow: 1, p10: 0, p25: 0, p50: 0, p75: 0, p90: 0, cohortFraction: 1 },
+        ],
+      },
+      outcomeState: 'on-track',
+    }
+    const r = selectElevatedAnswer(snap(datesAnswer(confirmedAt(6), zeroBand), workingWithAges), noop)
+    if (r.kind !== 'date' || r.view.kind !== 'dates') throw new Error('expected a date dates view')
+    expect(r.view.band).toBeUndefined()
+    expect(r.view.bandAnnotations).toBeUndefined()
   })
 
   it('a date input-failure → fallback (names the missing inputs, never a hero date)', () => {

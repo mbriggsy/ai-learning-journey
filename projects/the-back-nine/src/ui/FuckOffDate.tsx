@@ -25,12 +25,16 @@
  * ("or year M for higher odds", R28) and the on-demand confidence-curve drawer are a deliberate
  * follow-up — their curve-reading semantics are honesty-critical and are designed separately.
  */
-import { useEffect, useRef, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, type ReactNode } from 'react'
 import { copy, slots } from './copy'
 import { dateOddsText } from './dateOdds'
 import { dateTradeoffPoint } from './dateTradeoff'
 import { focusHeading } from '@intake/a11y'
-import type { DateTrackOutcome } from '@shared/model'
+import { ConfidenceBandPanel } from '@viz/ConfidenceBandPanel'
+import { resolveBandData, type XAnnotation } from '@viz/bandData'
+import { BAND_LABELS, BAND_CHROME } from './bandPanelChrome'
+import { formatAxisDollar } from './money'
+import type { DateBand, DateTrackOutcome } from '@shared/model'
 import './styles/fuckOffDate.css'
 
 /** What the surface shows. `dates` carries the crowned floor track (the v1 degenerate budget renders
@@ -43,6 +47,13 @@ export type FuckOffDateView =
       /** The window top this run evaluated — the no-date answer names its own window. */
       readonly windowTopYears: number
       readonly provisional?: boolean
+      /** The crowned date's projection band — the fan + the engine's outcome-state tag (DateBand).
+       *  Present iff a date was crowned (confirmed-date / window-edge-unconfirmed); a no-date run has
+       *  none. When present, the "show me the range" drawer mounts under the date headline. */
+      readonly band?: DateBand
+      /** Household-clock x-axis markers (Today / work stops / plan horizon) for the band — the date
+       *  route's deriver carries the FUTURE work-stops marker. Without them the x-axis reads bare. */
+      readonly bandAnnotations?: readonly XAnnotation[]
     }
   | { readonly kind: 'pending' }
   | { readonly kind: 'compute-error'; readonly onRetry: () => void }
@@ -59,6 +70,18 @@ export function FuckOffDate({ view, focusSignal }: FuckOffDateProps) {
   useEffect(() => {
     if (focusSignal !== undefined) focusHeading(headingRef.current)
   }, [focusSignal])
+
+  // The producer seam: resolve the crowned fan into drawable geometry ONCE per view (resolveBandData
+  // owns the fail-loud honesty guards — a malformed fan throws, never a silently-wrong band). Only a
+  // worded date (confirmed / window-edge) WITH a band carries one; no-date / pending / error never do.
+  // The engine's own outcome-state tag drives resolveBandData — the UI re-derives no grade.
+  const resolved = useMemo(() => {
+    if (view.kind !== 'dates' || !view.band) return null
+    return resolveBandData(view.band.fan, view.band.outcomeState, {
+      formatDollar: formatAxisDollar,
+      annotations: view.bandAnnotations,
+    })
+  }, [view])
 
   let body: ReactNode
   if (view.kind === 'pending') {
@@ -106,6 +129,20 @@ export function FuckOffDate({ view, focusSignal }: FuckOffDateProps) {
         )}
         {track.nonMonotoneOffsets.length > 0 && (
           <p className="fod-note">{copy.dateNonMonotoneNote}</p>
+        )}
+        {resolved && (
+          <div className="fod-band">
+            {/* RE-DRAW-NOT-MORPH (the date sweep is tiered): the provisional→final fan can change
+                SCALE (dollarMax / horizon). Keying the panel on the scale remounts it on a scale
+                change — a fresh draw at the new scale — while a stable scale lets the band MORPH
+                (pure signal). Never a misleading cross-scale morph. */}
+            <ConfidenceBandPanel
+              key={`${resolved.dollarMax}:${resolved.horizonYears}`}
+              data={resolved}
+              labels={BAND_LABELS}
+              chrome={BAND_CHROME}
+            />
+          </div>
         )}
       </div>
     )

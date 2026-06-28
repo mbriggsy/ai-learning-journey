@@ -833,6 +833,20 @@ export type DateTrackOutcome =
       readonly curve: readonly DateOffsetReading[]
     }
 
+/** The crowned date's confidence band (D2 slice 2): the crowned candidate's per-year projection
+ *  fan + the ENGINE's reading of that SAME distribution (the band's outcome-state tag). Bundled so
+ *  the fan and its tag are atomically present-or-absent — a fan without its reading is
+ *  unrepresentable, and the UI re-derives NEITHER (it reads the engine's authority tag, never a
+ *  recomputed grade — the "UI re-derives nothing" law, bandData.ts §outcomeState). A crowned
+ *  candidate is on-track-or-better by construction (its quantized lower bound cleared the bar), so
+ *  `outcomeState` ∈ {`on-track`, `over-funded`} — never a fail state. Rides the date wire by
+ *  structured clone with the rest of the outcome (the fan is compact years×6 FINITE numbers —
+ *  DND/009-clean, the $0 ruin floor reads as a real 0; no transferable). */
+export interface DateBand {
+  readonly fan: BandFan
+  readonly outcomeState: OutcomeState
+}
+
 /** The run-level date-search outcome. `input-failure` is the indeterminate-CLASS variant
  *  (the §0 grammar): an all-retired household (the offset axis is undefined — never a
  *  `Y == 0` "work-optional today" crown), an ANY-candidate `validateParams` rejection (the
@@ -857,6 +871,11 @@ export type DateSearchOutcome =
        *  names its own window; a width change re-runs the honesty battery). */
       readonly windowTopYears: number
       readonly seed: number
+      /** The crowned date's projection band (D2 slice 2) — PRESENT iff a date was crowned
+       *  (`confirmed-date` / `window-edge-unconfirmed`); a `no-date-in-window` run carries none
+       *  (nothing to project). The fan is `candidates[crownedOffset]`'s at THIS run's seed —
+       *  CRN-identical to the fan-OFF sweep reading that crowned the date. See {@link DateBand}. */
+      readonly band?: DateBand
     }
   | { readonly kind: 'input-failure'; readonly reason: string }
   | { readonly kind: 'cancelled' }

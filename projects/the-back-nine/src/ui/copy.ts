@@ -304,11 +304,13 @@ export const copy = {
   // is no resolved range yet (the answer is incomplete, not bad).
   bandPlaceholderNote: 'The range fills in as you answer.',
   // Household-clock x-axis MARKER labels (the moment's name; the ages + a11y sentence ride through
-  // slots — numerals never inline). Band-scoped chrome, not a verdict claim. On the already-retired
-  // SPINE route only these two show: a "work stops" marker would point into the past (back-nine-design
-  // honest-axis law). The plan-horizon marker sits at the fan's ACTUAL last year, never a nominal max.
+  // slots — numerals never inline). Band-scoped chrome, not a verdict claim. The plan-horizon marker
+  // sits at the fan's ACTUAL last year, never a nominal max. "Work stops" rides the DATE route only —
+  // the household isn't retired yet, so it points into the FUTURE (the crowned fuck-off date); on the
+  // already-retired SPINE route it would point into the past, so the spine band omits it (honest-axis law).
   bandClockTodayLabel: 'Today',
   bandClockHorizonLabel: 'Plan horizon',
+  bandClockWorkStopsLabel: 'Work stops',
   // --- R19 calm error grammar (icon + adjacent text; color never alone) ---
   errContributionCeiling:
     'That’s more than this year’s legal contribution limit for this account type at this age — combined across accounts of the same kind.',
@@ -395,6 +397,10 @@ export const slots = {
   /** The plan-horizon marker's accessible sentence — anchored at the fan's actual last year. */
   bandClockHorizonDesc: (ageA: number, ageB: number): string =>
     `The plan horizon — ages ${ageA} and ${ageB}`,
+  /** The DATE-route "work stops" marker's accessible sentence — the future fuck-off moment (the
+   *  household's last earner stops). Color-blind law: the marker's meaning reaches the a11y tree as text. */
+  bandClockWorkStopsDesc: (ageA: number, ageB: number): string =>
+    `Work stops — ages ${ageA} and ${ageB}`,
   /** An intermediate decade-age tick's accessible sentence (the reference marks between Today and
    *  the horizon — just the ages, no named moment). */
   bandClockAgesDesc: (ageA: number, ageB: number): string => `Ages ${ageA} and ${ageB}`,

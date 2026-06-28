@@ -31,14 +31,14 @@ import { OUTCOME_PRESENTATION } from './outcomeStates'
 import { VerdictIcon } from './verdictSignal'
 import { formatAxisDollar, formatPerMonth } from './money'
 import { focusHeading } from '@intake/a11y'
-import { ConfidenceBandPanel, type BandPanelChrome } from '@viz/ConfidenceBandPanel'
+import { ConfidenceBandPanel } from '@viz/ConfidenceBandPanel'
 import {
   resolveBandData,
   buildYTicks,
-  type BandLabels,
   type IndeterminateBandData,
   type XAnnotation,
 } from '@viz/bandData'
+import { BAND_LABELS, BAND_CHROME } from './bandPanelChrome'
 import type { BandFan, DollarAdjustment, Headline } from '@shared/model'
 import './styles/confidence.css'
 
@@ -68,21 +68,6 @@ export interface ConfidenceStatementProps {
    *  announce, no double-announce). Omit (default) to leave focus alone: provisional ticks and the
    *  dev preview harness never steal focus. */
   readonly focusSignal?: number | string
-}
-
-const BAND_LABELS: BandLabels = {
-  caption: copy.bandCaption,
-  yAxisLabel: copy.bandYAxis,
-  xAxisLabel: copy.bandXAxis,
-  legendMedian: copy.bandLegendMedian,
-  legendInner: copy.bandLegendInner,
-  legendOuter: copy.bandLegendOuter,
-}
-const BAND_CHROME: BandPanelChrome = {
-  pull: copy.bandPull,
-  enlargeLabel: copy.bandStudyRange,
-  modalTitle: copy.bandModalTitle,
-  closeLabel: copy.bandClose,
 }
 
 /** The indeterminate placeholder band — a wide low-emphasis envelope (no median, no precise band)

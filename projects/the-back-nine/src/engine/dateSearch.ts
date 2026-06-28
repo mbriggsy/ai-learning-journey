@@ -43,9 +43,10 @@
  * plain-environment test can drive cancellation directly).
  */
 import { simulate, validateParams } from '@engine/simulate'
-import { BANDS, quantizeSurvival } from '@engine/confidence'
+import { BANDS, quantizeSurvival, summarize } from '@engine/confidence'
 import { buildHealthcareStreams, type EnteredHealthSchedules } from '@engine/healthcareStreams'
 import type {
+  DateBand,
   DateOffsetReading,
   DateSearchOutcome,
   DateSearchTier,
@@ -463,6 +464,37 @@ export async function runDateSearch(
 
   // V1 degenerate budget: one curve, two coincident tracks (the SHAPE admits U9's split).
   const track = decideTrack(curve, paths)
+
+  // D2 band: the crowned candidate's per-year projection fan, emitted ONCE — only when a date
+  // was crowned (a no-date track has no offset to project; that surface shows no band). The
+  // dense-axis contract guarantees `candidates[offsetYears]` IS the crowned candidate, and CRN
+  // makes this fan-ON re-run byte-identical to the fan-OFF sweep reading that crowned the date —
+  // so the band observes the very distribution behind the date, never a second drifting picture.
+  // The sweep ran every candidate fan-OFF (perf + wire payload); this single targeted re-run at
+  // the crowned offset is the decided cost (2026-06-28), not fattening every candidate.
+  const crownedOffset =
+    track.kind === 'confirmed-date' || track.kind === 'window-edge-unconfirmed'
+      ? track.offsetYears
+      : undefined
+  // The crowned candidate already simulated cleanly in the sweep (it produced the crowning
+  // reading), and bandFan/summarize perturb no feasibility — so a clean fan-ON re-run is
+  // guaranteed. Guard defensively (indeterminate, then infeasible — mirroring the sweep grammar):
+  // an indeterminate/infeasible here would be an engine inconsistency, so leave the band absent
+  // rather than crash the crowned date. The band's tag is the engine's reading of the VERY
+  // distribution the band draws (`summarize` — objective ≡ headline): a crowned candidate is
+  // on-track-or-better by construction (its quantized lower bound cleared the bar), never a fail.
+  let band: DateBand | undefined
+  if (crownedOffset !== undefined) {
+    const crownedParams = candidates[crownedOffset]!
+    const crownedOut = simulate(crownedParams, seed, { bandFan: true })
+    if (!crownedOut.indeterminate && !crownedOut.infeasible) {
+      const fan = crownedOut.distribution.bandFan
+      if (fan !== undefined) {
+        band = { fan, outcomeState: summarize(crownedOut, crownedParams, seed).headline.outcomeState }
+      }
+    }
+  }
+
   return {
     kind: 'dates',
     floor: track,
@@ -470,5 +502,6 @@ export async function runDateSearch(
     tier: opts.tier,
     windowTopYears: DATE_OFFSET_WINDOW_TOP,
     seed,
+    ...(band !== undefined ? { band } : {}),
   }
 }

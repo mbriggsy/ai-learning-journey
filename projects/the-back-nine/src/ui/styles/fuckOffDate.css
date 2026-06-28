@@ -144,6 +144,13 @@
   transform: scale(0.97);
 }
 
+/* The "show me the range" drawer under the date answer — its own section, given a touch more
+   separation than the inter-line gap. The band drawer owns its internal layout (band.css); this is
+   just the slot it sits in (matches the spine's .cs-band wrapper — unstyled but for the breathing room). */
+.fod-band {
+  margin-top: var(--space-2);
+}
+
 /* Reduced motion: drop the movement, keep a short comprehension fade (final state identical). */
 @media (prefers-reduced-motion: reduce) {
   .fod-reveal {

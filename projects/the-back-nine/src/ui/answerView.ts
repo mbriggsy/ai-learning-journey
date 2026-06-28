@@ -20,9 +20,9 @@
  */
 import type { MemoryModelSnapshot } from '@store/memoryModel'
 import { isDateRoute } from '@intake/intakeMap'
-import type { BandFan, SimulationResult } from '@shared/model'
+import type { BandFan, DateBand, DateSearchOutcome, SimulationResult } from '@shared/model'
 import type { XAnnotation } from '@viz/bandData'
-import { deriveSpineBandAnnotations } from './bandAnnotations'
+import { deriveDateBandAnnotations, deriveSpineBandAnnotations } from './bandAnnotations'
 import type { FuckOffDateView } from './FuckOffDate'
 import type { ConfidenceStatementView } from './ConfidenceStatement'
 
@@ -67,6 +67,36 @@ function spineBand(
   return { band: fan, bandAnnotations }
 }
 
+/**
+ * The DATE band + its household-clock annotations — the date-route analog of {@link spineBand}. The
+ * engine carries the crowned candidate's projection fan bundled with its outcome-state tag in
+ * `outcome.band` (present iff a date was crowned; a no-date run has none). The annotations add the
+ * FUTURE "work stops" marker at the crowned offset — honest precisely because the household has not
+ * stopped working yet. $0-portfolio screen mirrors the spine: `resolveBandData` fails loud on an
+ * all-$0 fan, so the band is handed on ONLY when a positive dollar exists somewhere (a crowned date is
+ * on-track-or-better, so this is defensive — but it keeps the producer seam honest, never a render-throw).
+ */
+function dateBand(
+  outcome: Extract<DateSearchOutcome, { kind: 'dates' }>,
+  draft: MemoryModelSnapshot['draft'],
+): { readonly band?: DateBand; readonly bandAnnotations?: readonly XAnnotation[] } {
+  const band = outcome.band
+  if (!band || band.fan.byYear.length < 2 || !band.fan.byYear.some((y) => y.p90 > 0)) return {}
+  const last = band.fan.byYear[band.fan.byYear.length - 1]!
+  const ageA = draft.people[0].currentAge
+  const ageB = draft.people[1].currentAge
+  // The crowned offset = where work stops (the still-working member(s) retire at currentAge + offset).
+  // The band is present ONLY for a crowned track (confirmed-date / window-edge-unconfirmed), so `floor`
+  // carries an `offsetYears` here; a no-date run never reaches this (it emits no band).
+  const offsetYears =
+    outcome.floor.kind === 'no-date-in-window' ? undefined : outcome.floor.offsetYears
+  const bandAnnotations =
+    ageA !== undefined && ageB !== undefined && offsetYears !== undefined
+      ? deriveDateBandAnnotations(ageA, ageB, offsetYears, last.yearsFromNow)
+      : undefined
+  return { band, bandAnnotations }
+}
+
 export function selectElevatedAnswer(
   snapshot: MemoryModelSnapshot,
   onRetry: () => void,
@@ -92,9 +122,16 @@ export function selectElevatedAnswer(
       const outcome = answer.outcome
       if (outcome.kind === 'dates') {
         // v1 degenerate budget: the floor track IS the rendered date (floor ≡ lifestyle, one date).
+        // The crowned projection band + its future-marker annotations ride alongside (dateBand screens
+        // the $0-portfolio case + derives the household-clock x-axis from the draft + the fan's last year).
         return {
           kind: 'date',
-          view: { kind: 'dates', track: outcome.floor, windowTopYears: outcome.windowTopYears },
+          view: {
+            kind: 'dates',
+            track: outcome.floor,
+            windowTopYears: outcome.windowTopYears,
+            ...dateBand(outcome, draft),
+          },
         }
       }
       // input-failure (names what's missing) | cancelled (never committed by memoryModel) → fallback.

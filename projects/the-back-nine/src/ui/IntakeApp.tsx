@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState, useSyncExternalStore } from 'react'
+import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from 'react'
 import { IntakeFlow } from '@intake/flow'
 import { intakeSteps } from '@intake/questions'
 import { AnswerStrip } from '@intake/AnswerStrip'
@@ -26,7 +26,7 @@ import { Result } from './Result'
  * nothing is persisted — U8 owns Save). Re-entering intake restarts the step
  * sequence at the first question; the data is intact, only the cursor resets.
  */
-export default function IntakeApp() {
+export default function IntakeApp({ seed }: { seed?: string | null }) {
   const [phase, setPhase] = useState<'intake' | 'result'>('intake')
   const snapshot = useSyncExternalStore(appModel.subscribe, appModel.getSnapshot)
   const steps = useMemo(() => intakeSteps(snapshot.draft), [snapshot.draft])
@@ -45,6 +45,29 @@ export default function IntakeApp() {
     await appModel.recompute('final')
   }, [])
   const review = useCallback(() => setPhase('intake'), [])
+
+  // DEV-only `?seed=<key>`: apply a COMPLETE fixture to the in-memory appModel and
+  // run the SAME terminal-advance path `complete()` runs (apply → result →
+  // provisional → final), so the seed lands on the elevated answer exactly like a
+  // hand-driven intake. devSeeds.ts is DEV-gated + dynamically imported here, so it
+  // is dead-code-eliminated from prod (the `?preview` DCE contract). Mount-only;
+  // nothing persists (the seed mutates only appModel — U8 owns Save). "Review my
+  // answers" still works: the seeded draft lives in appModel, intact on flip-back.
+  useEffect(() => {
+    if (!(import.meta.env.DEV && seed != null)) return
+    let cancelled = false
+    void import('./devSeeds').then(async ({ resolveDevSeed }) => {
+      const draft = resolveDevSeed(seed)
+      if (draft === null || cancelled) return
+      appModel.update(() => draft)
+      setPhase('result')
+      await appModel.recompute('provisional')
+      await appModel.recompute('final')
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [seed])
 
   if (phase === 'result') return <Result onReview={review} />
 

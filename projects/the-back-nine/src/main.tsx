@@ -17,15 +17,20 @@ if (!rootEl) throw new Error('Root element #root not found')
 // (the D2 fuck-off-date surface). `import.meta.env.DEV` is a static `false` in the production build,
 // so this whole branch — and the dynamic imports it gates — is dead-code-eliminated: the harnesses
 // never ship and never count against the entry-JS budget.
-const previewParam = import.meta.env.DEV
-  ? new URLSearchParams(window.location.search).get('preview')
-  : null
+const search = import.meta.env.DEV ? new URLSearchParams(window.location.search) : null
+const previewParam = search?.get('preview') ?? null
 const Preview =
   previewParam === null
     ? null
     : previewParam === 'date' || previewParam === 'd2'
       ? lazy(() => import('@ui/preview/DatePreview'))
       : lazy(() => import('@ui/preview/U7Preview'))
+
+// DEV-only intake seed (`?seed=<key>`) — jumps the REAL product path straight to a
+// worded result without hand-driving the intake (devSeeds.ts). Same DEV gate, so it
+// is `null` in prod and the seed module is never reached (dynamically imported in
+// IntakeApp, so it is dead-code-eliminated too). `?preview` takes precedence.
+const seedParam = search?.get('seed') ?? null
 
 createRoot(rootEl).render(
   <StrictMode>
@@ -34,7 +39,7 @@ createRoot(rootEl).render(
         <Preview />
       </Suspense>
     ) : (
-      <App />
+      <App seed={seedParam} />
     )}
   </StrictMode>,
 )

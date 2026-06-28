@@ -18,8 +18,11 @@ import { Disclaimer } from './Disclaimer'
  */
 const IntakeApp = lazy(() => import('./IntakeApp'))
 
-export function App() {
-  const [began, setBegan] = useState(false)
+/** `seed` is the DEV-only `?seed=<key>` value (always null in prod — the gate
+ *  lives in main.tsx). When present we skip the cold start and mount the intake
+ *  straight away so IntakeApp can apply the seed and land on the result. */
+export function App({ seed }: { seed?: string | null }) {
+  const [began, setBegan] = useState(seed != null)
 
   useEffect(() => {
     void import('./IntakeApp') // warm the chunk behind the cold-start frame
@@ -29,7 +32,7 @@ export function App() {
     <>
       {began ? (
         <Suspense fallback={null}>
-          <IntakeApp />
+          <IntakeApp seed={seed} />
         </Suspense>
       ) : (
         <ColdStart onBegin={() => setBegan(true)} />

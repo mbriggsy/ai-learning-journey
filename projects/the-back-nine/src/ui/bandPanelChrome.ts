@@ -19,6 +19,11 @@ export const BAND_LABELS: BandLabels = {
   legendMedian: copy.bandLegendMedian,
   legendInner: copy.bandLegendInner,
   legendOuter: copy.bandLegendOuter,
+  readoutAgesLabel: copy.bandReadoutAgesLabel,
+  readoutRangeLabel: copy.bandReadoutRangeLabel,
+  readoutRangeJoiner: copy.bandReadoutRangeJoiner,
+  readoutMedianLabel: copy.bandReadoutMedianLabel,
+  readoutThinNote: copy.bandReadoutThinNote,
 }
 
 /** The drawer chrome (pull-tab overline, enlarge trigger, modal title + close). */

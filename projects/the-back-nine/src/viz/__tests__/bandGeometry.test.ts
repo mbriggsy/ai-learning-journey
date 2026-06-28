@@ -5,13 +5,20 @@ import {
   LABEL_ROWS,
   PLOT,
   PLOT_H,
+  PLOT_W,
+  READOUT_GAP,
+  READOUT_TOP,
+  READOUT_W,
   VIEWBOX,
   areaPath,
   cohortFadeOpacity,
   cohortFadeStops,
+  isThinCohort,
   linePath,
+  nearestLatticeIndex,
   placeAnnotationLabels,
   placeholderPath,
+  placeReadoutBox,
   xForYear,
   yForDollars,
 } from '../bandGeometry'
@@ -328,5 +335,114 @@ describe('cohortFadeStops — the mask gradient stops along the lattice', () => 
   it('an absent cohortFraction (a hand-built fixture) reads as a full cohort — full opacity', () => {
     const stops = cohortFadeStops([{}, {}, {}])
     for (const s of stops) expect(s.opacity).toBe(1)
+  })
+})
+
+// ── the hover/scrub geometry (snap + readout placement) ───────────────────────────────────────
+describe('nearestLatticeIndex — snap a cursor x to the nearest sampled column', () => {
+  const N = LATTICE_POINTS // 49
+
+  it('the plot edges snap to the first / last lattice index', () => {
+    expect(nearestLatticeIndex(PLOT.left, N)).toBe(0)
+    expect(nearestLatticeIndex(PLOT.right, N)).toBe(N - 1)
+  })
+
+  it('the exact plot midpoint snaps to the middle lattice index (49 is odd → a real midpoint)', () => {
+    expect(nearestLatticeIndex(PLOT.left + PLOT_W / 2, N)).toBe((N - 1) / 2)
+  })
+
+  it('an x EXACTLY on a lattice vertex returns that index (round-trip with xForYear)', () => {
+    // pick a few indices, map to their x via the same domain xForYear uses, snap back.
+    for (const i of [1, 7, 24, 40, 48]) {
+      const x = PLOT.left + (i / (N - 1)) * PLOT_W
+      expect(nearestLatticeIndex(x, N)).toBe(i)
+    }
+  })
+
+  it('rounds to the NEAREST vertex (just past the half-step rounds up)', () => {
+    const stepX = PLOT_W / (N - 1)
+    // a hair past the midpoint between vertex 10 and 11 rounds to 11
+    expect(nearestLatticeIndex(PLOT.left + 10.5 * stepX + 0.01, N)).toBe(11)
+    // a hair before rounds to 10
+    expect(nearestLatticeIndex(PLOT.left + 10.5 * stepX - 0.01, N)).toBe(10)
+  })
+
+  it('clamps an out-of-plot cursor to the valid index range (never a NaN / out-of-bounds index)', () => {
+    expect(nearestLatticeIndex(PLOT.left - 9999, N)).toBe(0)
+    expect(nearestLatticeIndex(PLOT.right + 9999, N)).toBe(N - 1)
+  })
+
+  it('defensive: a non-finite x or a degenerate lattice count yields the today anchor (0)', () => {
+    expect(nearestLatticeIndex(Number.NaN, N)).toBe(0)
+    expect(nearestLatticeIndex(200, 1)).toBe(0)
+    expect(nearestLatticeIndex(200, 0)).toBe(0)
+  })
+})
+
+describe('placeReadoutBox — the box never clips an edge AND never paints over the rule', () => {
+  it('a left-half scrub puts the box to the RIGHT of the rule; a right-half scrub flips it LEFT', () => {
+    const leftRule = PLOT.left + 0.2 * PLOT_W
+    const rightRule = PLOT.left + 0.9 * PLOT_W
+    expect(placeReadoutBox(leftRule, READOUT_W).tx).toBe(leftRule + READOUT_GAP)
+    // right-half rule flips the box LEFT; its right edge is the rule minus the gap.
+    const right = placeReadoutBox(rightRule, READOUT_W)
+    expect(right.tx + READOUT_W).toBeCloseTo(rightRule - READOUT_GAP, 6)
+  })
+
+  // The CORE invariant of the flip fix: at EVERY lattice vertex the box must stay inside the plot AND
+  // never contain the rule x (the opaque box must not paint over the live "where I'm pointing" rule).
+  // The old fixed-0.6 threshold violated this for the dead-center vertices (i≈24–28); this sweep is the
+  // planted regression guard — it FAILS against the old threshold and passes now.
+  it('at every one of the 49 lattice vertices the box stays in-plot AND the rule x is never inside it', () => {
+    for (let i = 0; i < LATTICE_POINTS; i++) {
+      const scrubX = PLOT.left + (i / (LATTICE_POINTS - 1)) * PLOT_W
+      const { tx } = placeReadoutBox(scrubX, READOUT_W)
+      // in-plot (no left/right clip)
+      expect(tx, `vertex ${i} left edge`).toBeGreaterThanOrEqual(PLOT.left)
+      expect(tx + READOUT_W, `vertex ${i} right edge`).toBeLessThanOrEqual(PLOT.right + 1e-6)
+      // rule NOT strictly inside the box span [tx, tx+W] (no occlusion of the rule/dots)
+      const ruleInside = scrubX > tx + 1e-6 && scrubX < tx + READOUT_W - 1e-6
+      expect(ruleInside, `vertex ${i} (x=${scrubX.toFixed(1)}) rule inside box [${tx.toFixed(1)}, ${(tx + READOUT_W).toFixed(1)}]`).toBe(false)
+    }
+  })
+
+  it('forces the edge clamp non-vacuously: a left-flipped scrub just past the boundary clamps tx to PLOT.left', () => {
+    // scrubX just above the flip boundary (PLOT.right − GAP − W = 302): the left-placed raw (scrubX −
+    // GAP − W) goes below PLOT.left and MUST clamp to PLOT.left — deleting the clamp would clip the left
+    // edge here. (At the old test's edges the clamp never fired, so it could be deleted green.)
+    const scrubX = PLOT.right - READOUT_GAP - READOUT_W + 4 // 306
+    const { tx } = placeReadoutBox(scrubX, READOUT_W)
+    expect(tx).toBe(PLOT.left)
+    expect(tx + READOUT_W).toBeLessThanOrEqual(PLOT.right)
+    expect(scrubX).toBeGreaterThanOrEqual(tx + READOUT_W) // rule still clear of (right-of) the box
+  })
+
+  it('is pinned to the fixed top gutter (never bobs with the cursor, never covers the mid-plot median)', () => {
+    expect(placeReadoutBox(PLOT.left + 50, READOUT_W).ty).toBe(READOUT_TOP)
+    expect(placeReadoutBox(PLOT.right - 50, READOUT_W).ty).toBe(READOUT_TOP)
+    expect(READOUT_TOP).toBeLessThan((PLOT.top + PLOT.bottom) / 2) // sits above the plot's vertical middle
+  })
+})
+
+describe('isThinCohort — the dead-cohort dollar-withdrawal gate (bound to the visual fade onset)', () => {
+  it('withdraws (thin) strictly BELOW the COHORT_FADE.full onset, shows dollars AT/above it', () => {
+    expect(isThinCohort(COHORT_FADE.full)).toBe(false) // at the onset → still crisp (matches full opacity)
+    expect(isThinCohort(COHORT_FADE.full - 0.001)).toBe(true) // just below → withdraw
+    expect(isThinCohort(1)).toBe(false) // full cohort → crisp
+    expect(isThinCohort(0)).toBe(true) // dead cohort → withdraw
+  })
+
+  it('the withdrawal onset is PINNED to the visual fade onset — both switch at COHORT_FADE.full, same direction', () => {
+    // The honesty coupling: the readout stops showing crisp dollars EXACTLY where the fan stops being
+    // full-opacity. If someone moves one onset and not the other, this fails loud.
+    expect(isThinCohort(COHORT_FADE.full)).toBe(false)
+    expect(cohortFadeOpacity(COHORT_FADE.full)).toBe(1) // full opacity at the onset
+    expect(isThinCohort(COHORT_FADE.full - 0.05)).toBe(true)
+    expect(cohortFadeOpacity(COHORT_FADE.full - 0.05)).toBeLessThan(1) // already fading just below
+  })
+
+  it('a non-finite or absent cohort reads as a FULL cohort (not thin) — the BandSample default', () => {
+    expect(isThinCohort(undefined)).toBe(false)
+    expect(isThinCohort(Number.NaN)).toBe(false)
   })
 })

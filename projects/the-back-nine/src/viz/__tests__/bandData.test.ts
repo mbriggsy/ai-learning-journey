@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest'
-import { LATTICE_POINTS, isFixedLattice, resolveBandData, type BandSample } from '../bandData'
+import {
+  LATTICE_POINTS,
+  composeReadoutLines,
+  isFixedLattice,
+  resolveBandData,
+  type BandLabels,
+  type BandSample,
+  type BandTooltipRow,
+} from '../bandData'
 import type { BandFan } from '@shared/model'
 
 /**
@@ -162,5 +170,93 @@ describe('resolveBandData — the producer seam (resample + dollarMax guard + fa
     expect(() => resolveBandData(nan, 'on-track', { formatDollar: fmt })).toThrow(/cohortFraction/)
     const tooBig: BandFan = { byYear: base.byYear.map((y, i) => (i === 2 ? { ...y, cohortFraction: 1.5 } : y)) }
     expect(() => resolveBandData(tooBig, 'on-track', { formatDollar: fmt })).toThrow(/cohortFraction/)
+  })
+})
+
+/**
+ * The hover/scrub tooltipRows — emitted in the SAME resample loop as the drawn samples, so a readout
+ * figure can NEVER drift from the vertex it annotates (the honesty contract: the number equals the
+ * pixel). Pre-formatted through the injected formatters (string-free viz), ages '' when no closure.
+ */
+describe('resolveBandData — the hover/scrub tooltipRows (lattice-aligned, drift-proof)', () => {
+  it('emits exactly one row per lattice sample (index-parallel to samples)', () => {
+    const r = resolveBandData(linearFan(), 'on-track', { formatDollar: fmt })
+    expect(r.tooltipRows).toHaveLength(LATTICE_POINTS)
+    expect(r.tooltipRows).toHaveLength(r.samples.length)
+  })
+
+  it('each row’s dollars are the SAME formatter on the SAME vertex — byte-equal to the drawn fan (no drift)', () => {
+    const r = resolveBandData(linearFan(), 'on-track', { formatDollar: fmt })
+    r.tooltipRows.forEach((row, i) => {
+      const s = r.samples[i]!
+      expect(row.low).toBe(fmt(s.p10))
+      expect(row.median).toBe(fmt(s.p50))
+      expect(row.high).toBe(fmt(s.p90))
+    })
+  })
+
+  it('ages ride the injected formatAges closure, called once per lattice year', () => {
+    const seen: number[] = []
+    const formatAges = (y: number) => {
+      seen.push(y)
+      return `A${Math.round(y)}`
+    }
+    const r = resolveBandData(linearFan(), 'on-track', { formatDollar: fmt, formatAges })
+    expect(seen).toHaveLength(LATTICE_POINTS)
+    r.tooltipRows.forEach((row, i) => {
+      expect(row.ages).toBe(`A${Math.round(r.samples[i]!.yearsFromNow)}`)
+    })
+  })
+
+  it('ages is "" when no formatAges closure is supplied (the defensive arm — the band still resolves)', () => {
+    const r = resolveBandData(linearFan(), 'on-track', { formatDollar: fmt })
+    expect(r.tooltipRows.every((row) => row.ages === '')).toBe(true)
+  })
+})
+
+/**
+ * composeReadoutLines — the readout's honesty-critical WHAT-to-show decision, extracted as a pure seam
+ * so a regression that re-shows crisp dollars on a dead cohort fails LOUD here (mirrors the project's
+ * "every honesty arm carries a planted-fail control" bar). The DEAD-COHORT arm is the cardinal-rule
+ * guard: thin ⇒ the low/median/high figures are ABSENT (replaced by the calm note).
+ */
+describe('composeReadoutLines — the dead-cohort dollar withdrawal (the calm-but-wrong guard)', () => {
+  const LABELS = {
+    readoutAgesLabel: 'Ages',
+    readoutRangeLabel: 'Eight in ten land between',
+    readoutRangeJoiner: ' – ',
+    readoutMedianLabel: 'Most likely',
+    readoutThinNote: 'Few couples reach these years',
+  } as unknown as BandLabels
+  const ROW: BandTooltipRow = { ages: '80 / 82', low: '$283k', median: '$1.5M', high: '$5M' }
+
+  it('NOT thin: shows ages, then the RANGE (range-first), then the median LAST (subordinate)', () => {
+    const lines = composeReadoutLines(LABELS, ROW, false)
+    expect(lines.map((l) => l.kind)).toEqual(['ages', 'label', 'value', 'label', 'value'])
+    expect(lines[0]!.text).toBe('Ages 80 / 82')
+    expect(lines[1]!.text).toBe('Eight in ten land between')
+    expect(lines[2]!.text).toBe('$283k – $5M') // low joiner high
+    expect(lines[3]!.text).toBe('Most likely')
+    expect(lines[4]!.text).toBe('$1.5M') // the median, last
+  })
+
+  it('PLANTED CONTROL — thin: the crisp dollar figures are ABSENT, replaced by the calm note', () => {
+    const lines = composeReadoutLines(LABELS, ROW, true)
+    expect(lines.map((l) => l.kind)).toEqual(['ages', 'note'])
+    expect(lines[1]!.text).toBe('Few couples reach these years')
+    // the honesty assertion: NONE of the row's dollar figures may appear when thin
+    const joined = lines.map((l) => l.text).join(' | ')
+    expect(joined).not.toContain(ROW.low)
+    expect(joined).not.toContain(ROW.median)
+    expect(joined).not.toContain(ROW.high)
+    expect(joined).not.toContain('Eight in ten') // the range label withdraws too
+  })
+
+  it('drops the ages line when no household-clock closure supplied (row.ages === "")', () => {
+    const noAges: BandTooltipRow = { ...ROW, ages: '' }
+    expect(composeReadoutLines(LABELS, noAges, false).some((l) => l.kind === 'ages')).toBe(false)
+    expect(composeReadoutLines(LABELS, noAges, true)).toEqual([
+      { text: 'Few couples reach these years', kind: 'note' },
+    ])
   })
 })

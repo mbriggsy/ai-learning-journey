@@ -101,12 +101,84 @@
   vector-effect: non-scaling-stroke;
 }
 
+/* ── the hover/scrub readout ──────────────────────────────────────────────────────────────────
+   Pointer-only (aria-hidden); positioned by SVG transform/x/y ATTRIBUTES, so nothing here is an
+   inline style (CSP style-src 'self'). The visuals never intercept the pointer; the transparent
+   capture rect does. No transitions — the readout is glued to the snapped detent and the final DOM
+   is identical with motion on or off. */
+.band-scrub {
+  pointer-events: none;
+}
+/* the transparent capture surface (fill="transparent" in markup) — receives the pointer over the
+   whole plot. `all` so a fully-transparent rect still gets events. */
+.band-scrub-capture {
+  pointer-events: all;
+}
+/* ONLY the enlarged (modal) variant traps a horizontal touch-drag as a scrub; the drawer leaves
+   touch alone (it taps to enlarge) and must not steal page scroll. */
+.band-scrub-capture--enlarged {
+  touch-action: none;
+}
+/* the LIVE scrubber rule — SOLID (distinct from the dashed milestone rules), thin + quiet, ink. */
+.band-scrub-rule {
+  stroke: var(--ink-muted);
+  stroke-width: 1.25;
+  vector-effect: non-scaling-stroke;
+}
+/* the three percentile dots: median FILLED ink, the two edges HOLLOW (shape redundancy, not hue). */
+.band-scrub-dot {
+  vector-effect: non-scaling-stroke;
+}
+.band-scrub-dot--median {
+  fill: var(--ink);
+  stroke: var(--paper-raised);
+  stroke-width: 1;
+}
+.band-scrub-dot--edge {
+  fill: var(--paper-raised);
+  stroke: var(--ink);
+  stroke-width: 1.4;
+}
+/* the readout box — token surface, never a re-typed hex (canonical-source rule). */
+.band-readout-box {
+  fill: var(--paper-raised);
+  stroke: var(--line-control);
+  stroke-width: 1;
+  filter: drop-shadow(0 1px 2px rgb(11 24 19 / 0.18));
+}
+.band-readout-text {
+  font-family: var(--font-body);
+  font-variant-numeric: tabular-nums;
+}
+.band-readout-ages {
+  fill: var(--ink);
+  font-size: 12.5px;
+  font-weight: var(--weight-semibold);
+}
+.band-readout-label {
+  fill: var(--ink-muted);
+  font-size: 11px;
+}
+.band-readout-value {
+  fill: var(--ink);
+  font-size: 13px;
+  font-weight: var(--weight-semibold);
+}
+.band-readout-note {
+  fill: var(--ink-muted);
+  font-size: 12px;
+  font-style: italic;
+}
+
 /* responsive label drop (back-nine-design §3 / phase-2 responsive-SVG contract): below a
    legible band width, DROP the tick + annotation labels rather than shrink them past legibility.
    ~260 CSS px of band width is the floor where the 12.5px@560-viewBox glyphs fall under ~6px on
-   screen — drop them; the band shape + non-scaling strokes still carry the signal. */
+   screen — drop them; the band shape + non-scaling strokes still carry the signal. The scrubber
+   readout drops with them (its text is sub-legible at that width, and a touch user there can't
+   hover-scrub anyway — the drawer is mouse-only). */
 @container (max-width: 260px) {
-  .band-droppable-label {
+  .band-droppable-label,
+  .band-scrub {
     display: none;
   }
 }

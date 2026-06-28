@@ -42,6 +42,11 @@ const labels: BandLabels = {
   legendMedian: 'Most likely path',
   legendInner: 'Middle half of futures',
   legendOuter: '8 in 10 futures',
+  readoutAgesLabel: 'Ages',
+  readoutRangeLabel: 'Eight in ten land between',
+  readoutRangeJoiner: ' – ',
+  readoutMedianLabel: 'Most likely',
+  readoutThinNote: 'Few couples reach these years',
 }
 
 function samples(fn: (y: number) => Omit<BandSample, 'yearsFromNow'>, horizon = 30): BandSample[] {
@@ -54,16 +59,25 @@ function samples(fn: (y: number) => Omit<BandSample, 'yearsFromNow'>, horizon = 
 }
 
 function resolved(over: Partial<ResolvedBandData> = {}): ResolvedBandData {
+  const s = samples((y) => {
+    const mid = 900_000 - y * 8_000
+    const half = 120_000
+    return { p10: mid - 2 * half, p25: mid - half, p50: mid, p75: mid + half, p90: mid + 2 * half }
+  })
   return {
     kind: 'resolved',
     outcomeState: 'borderline',
     dollarMax: 1_500_000,
     horizonYears: 30,
-    samples: samples((y) => {
-      const mid = 900_000 - y * 8_000
-      const half = 120_000
-      return { p10: mid - 2 * half, p25: mid - half, p50: mid, p75: mid + half, p90: mid + 2 * half }
-    }),
+    samples: s,
+    // tooltipRows aligned to the samples (the producer emits these in the same resample loop). Simple
+    // stand-in formatters here; the live formatters are exercised by bandData.test.ts.
+    tooltipRows: s.map((smp) => ({
+      ages: `${Math.round(61 + smp.yearsFromNow)} / ${Math.round(59 + smp.yearsFromNow)}`,
+      low: `$${Math.round(smp.p10 / 1000)}k`,
+      median: `$${Math.round(smp.p50 / 1000)}k`,
+      high: `$${Math.round(smp.p90 / 1000)}k`,
+    })),
     yTicks: [
       { dollars: 0, label: '$0' },
       { dollars: 500_000, label: '$500k' },

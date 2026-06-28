@@ -55,6 +55,9 @@ export type ConfidenceStatementView =
       /** Household-clock x-axis markers (Today / retirement / horizon) for the band; without them
        *  the band's x-axis reads bare. Applied to the resolved band AND the indeterminate placeholder. */
       readonly bandAnnotations?: readonly XAnnotation[]
+      /** Maps a lattice year to the household ages string for the band's hover/scrub readout (the same
+       *  slot the annotations use). Absent ⇒ the readout omits its ages line. */
+      readonly bandAges?: (yearsFromNow: number) => string
       /** Renders the PROVISIONAL eyebrow — a reading taken before the account set is complete is a
        *  labeled provisional update, never a final answer (back-nine-design intake §progressive). */
       readonly provisional?: boolean
@@ -129,6 +132,7 @@ export function ConfidenceStatement({ view, focusSignal }: ConfidenceStatementPr
     return resolveBandData(view.band, view.headline.outcomeState, {
       formatDollar: formatAxisDollar,
       annotations: view.bandAnnotations,
+      formatAges: view.bandAges,
     })
   }, [view])
 

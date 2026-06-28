@@ -23,6 +23,25 @@
 import { copy, slots } from './copy'
 import type { XAnnotation } from '@viz/bandData'
 
+/**
+ * The household-ages closure for the band's hover/scrub readout: maps a lattice year (years-from-now,
+ * possibly fractional) to the both-spouses ages string. SINGLE-SOURCED with the x-axis annotations — it
+ * reuses the SAME `slots.bandClockAges` slot and the SAME `currentAge + yearsFromNow` rule, so a readout
+ * age can never disagree with the axis tick at the same x. The fractional lattice year is rounded to
+ * whole years (the annotations only ever sit at whole-year decade ticks; the readout matches that
+ * convention). Passed to `resolveBandData` as `formatAges` — viz never owns the slot or the age math.
+ *
+ * @param currentAgeA spouse A's (the primary "you") current whole-year age
+ * @param currentAgeB spouse B's current whole-year age
+ */
+export function deriveBandAgesAt(
+  currentAgeA: number,
+  currentAgeB: number,
+): (yearsFromNow: number) => string {
+  return (yearsFromNow: number) =>
+    slots.bandClockAges(Math.round(currentAgeA + yearsFromNow), Math.round(currentAgeB + yearsFromNow))
+}
+
 const DECADE = 10
 /** Don't place an intermediate tick within this many years of the horizon — the Plan-horizon
  *  marker already labels the end, and a tick on top of it just collides. */

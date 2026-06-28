@@ -54,6 +54,9 @@ export type FuckOffDateView =
       /** Household-clock x-axis markers (Today / work stops / plan horizon) for the band — the date
        *  route's deriver carries the FUTURE work-stops marker. Without them the x-axis reads bare. */
       readonly bandAnnotations?: readonly XAnnotation[]
+      /** Maps a lattice year to the household ages string for the band's hover/scrub readout (the same
+       *  slot the annotations use). Absent ⇒ the readout omits its ages line. */
+      readonly bandAges?: (yearsFromNow: number) => string
     }
   | { readonly kind: 'pending' }
   | { readonly kind: 'compute-error'; readonly onRetry: () => void }
@@ -93,6 +96,7 @@ export function FuckOffDate({ view, focusSignal }: FuckOffDateProps) {
     return resolveBandData(view.band.fan, view.band.outcomeState, {
       formatDollar: formatAxisDollar,
       annotations: view.bandAnnotations,
+      formatAges: view.bandAges,
     })
   }, [view])
 

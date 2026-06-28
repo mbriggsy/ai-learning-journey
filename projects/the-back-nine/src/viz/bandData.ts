@@ -54,6 +54,27 @@ export interface BandSample {
   readonly cohortFraction?: number
 }
 
+/** One lattice-aligned readout row for the hover/scrub tooltip (one per {@link BandSample}, same
+ *  index). Every figure arrives PRE-FORMATTED through the injected formatters ({@link resolveBandData}
+ *  builds them with `formatDollar` + the optional `formatAges`) so `src/viz` stays string-free — the
+ *  renderer composes label WORDS (from {@link BandLabels}) around these numbers and never formats a
+ *  figure itself. Built in the SAME resample loop as `samples`, so a row can NEVER drift from the
+ *  drawn vertex it annotates. The honest dead-cohort suppression (a thin late-year slice withdraws its
+ *  crisp dollars) is decided BY THE RENDERER off `samples[i].cohortFraction`, not stored here — the row
+ *  carries the figures; the render carries the honesty gate (so the threshold lives next to the fade). */
+export interface BandTooltipRow {
+  /** Both spouses' ages at this lattice year (e.g. "67 / 65"), via the injected `formatAges` (the same
+   *  `slots.bandClockAges` the x-axis annotations use, so the readout ages match the axis). '' when no
+   *  ages closure was supplied (the defensive arm — a fan resolved without a household clock). */
+  readonly ages: string
+  /** The 10th-percentile (low-futures) value, humane (e.g. "$600k"). */
+  readonly low: string
+  /** The 50th-percentile (most-likely) value, humane (e.g. "$1.2M"). */
+  readonly median: string
+  /** The 90th-percentile (high-futures) value, humane (e.g. "$2M"). */
+  readonly high: string
+}
+
 /** A y-axis dollar gridline. The band decides the PIXEL position from `dollars`; the caller
  *  supplies the already-formatted `label` (Intl currency lives in the ui layer, never here). */
 export interface YTick {
@@ -106,6 +127,19 @@ export interface BandLabels {
   readonly legendMedian: string
   readonly legendInner: string
   readonly legendOuter: string
+  /** Hover/scrub readout label words (composed by the renderer around the pre-formatted
+   *  {@link BandTooltipRow} numbers — the renderer never types a figure or a sentence). All
+   *  band-scoped chrome, supplied from `copy.ts`. */
+  readonly readoutAgesLabel: string
+  /** Leads the range line (e.g. "8 in 10 land between") — echoes `legendOuter`'s p10–p90 framing. */
+  readonly readoutRangeLabel: string
+  /** Joins the two range figures (e.g. " – ") — the separator lives in copy, like the ages "/" slot. */
+  readonly readoutRangeJoiner: string
+  /** Leads the median line (e.g. "Most likely") — never "expected"/"projected" (no-prediction law). */
+  readonly readoutMedianLabel: string
+  /** Replaces the dollar lines where the surviving-couple cohort has thinned past the fade onset — the
+   *  honest withdrawal of crisp figures where the fan goes quiet (e.g. "Few couples reach these years"). */
+  readonly readoutThinNote: string
 }
 
 /** A RESOLVED fan — a real distribution to draw. */
@@ -128,6 +162,11 @@ export interface ResolvedBandData {
   readonly yTicks: readonly YTick[]
   readonly annotations: readonly XAnnotation[]
   readonly callouts: readonly BandCallout[]
+  /** Lattice-aligned readout rows for the hover/scrub tooltip (length === {@link LATTICE_POINTS},
+   *  index-parallel to `samples`). Always emitted (the dollar figures are free from the same resample);
+   *  `ages` is '' when no `formatAges` closure was supplied. The renderer reads `tooltipRows[i]` for the
+   *  pre-formatted strings and `samples[i]` for the position + cohort-fade gate at the scrubbed index. */
+  readonly tooltipRows: readonly BandTooltipRow[]
 }
 
 /** The INDETERMINATE placeholder — the expected first answer. A deliberately WIDE, low-emphasis
@@ -243,6 +282,11 @@ export function resolveBandData(
     readonly formatDollar: (dollars: number) => string
     readonly annotations?: readonly XAnnotation[]
     readonly callouts?: readonly BandCallout[]
+    /** Maps a lattice year (years-from-now, possibly fractional) to the household ages string for the
+     *  hover/scrub readout — the ui-supplied closure built from `slots.bandClockAges` + the draft's
+     *  currentAge (string-free: viz never owns the copy slot or the age math). Absent ⇒ every row's
+     *  `ages` is '' (the band still resolves; the readout simply omits the ages line). */
+    readonly formatAges?: (yearsFromNow: number) => string
   },
 ): ResolvedBandData {
   const grid = fan.byYear
@@ -254,6 +298,7 @@ export function resolveBandData(
   const horizonYears = grid[grid.length - 1]!.yearsFromNow
 
   const samples: BandSample[] = []
+  const tooltipRows: BandTooltipRow[] = []
   let maxP90 = 0
   for (let i = 0; i < LATTICE_POINTS; i++) {
     const x = (i / (LATTICE_POINTS - 1)) * horizonYears
@@ -263,6 +308,10 @@ export function resolveBandData(
     const a = grid[lo]!
     const b = grid[hi]!
     const lerp = (pa: number, pb: number) => pa + frac * (pb - pa)
+    // p10 / p50 / p90 are pulled out (not just inlined into the sample) because the readout row reuses
+    // the SAME interpolated values — one computation feeds both the drawn vertex and its tooltip figure.
+    const p10 = lerp(a.p10, b.p10)
+    const p50 = lerp(a.p50, b.p50)
     const p90 = lerp(a.p90, b.p90)
     if (p90 > maxP90) maxP90 = p90
     // cohortFraction is the honesty signal — a band narrowing because COUPLES DIED must never read as
@@ -276,12 +325,21 @@ export function resolveBandData(
     }
     samples.push({
       yearsFromNow: x,
-      p10: lerp(a.p10, b.p10),
+      p10,
       p25: lerp(a.p25, b.p25),
-      p50: lerp(a.p50, b.p50),
+      p50,
       p75: lerp(a.p75, b.p75),
       p90,
       cohortFraction,
+    })
+    // The lattice-aligned readout row — built from the SAME interpolated percentiles + year as the
+    // sample above, so a figure can never drift from the vertex it annotates. Pre-formatted through the
+    // injected formatters (string-free viz); `ages` is '' when no household-clock closure was supplied.
+    tooltipRows.push({
+      ages: opts.formatAges?.(x) ?? '',
+      low: opts.formatDollar(p10),
+      median: opts.formatDollar(p50),
+      high: opts.formatDollar(p90),
     })
   }
 
@@ -323,5 +381,41 @@ export function resolveBandData(
     yTicks,
     annotations: opts.annotations ?? [],
     callouts: opts.callouts ?? [],
+    tooltipRows,
   }
+}
+
+/** A composed hover/scrub readout line: its display `text` (label words + the row's pre-formatted
+ *  figures) and a semantic `kind` the renderer maps to a CSS class. The renderer owns only the
+ *  kind→class mapping; the WHAT-to-show decision lives in {@link composeReadoutLines}. */
+export type ReadoutLineKind = 'ages' | 'label' | 'value' | 'note'
+export interface ReadoutLine {
+  readonly text: string
+  readonly kind: ReadoutLineKind
+}
+
+/**
+ * Compose the readout's lines for one lattice column — the honesty-critical WHAT-to-show decision,
+ * extracted as a PURE seam (mirroring nearestLatticeIndex / cohortFadeOpacity) so a regression that
+ * re-shows crisp dollars on a dead cohort fails LOUD in a unit test instead of shipping green.
+ *
+ * - `thin` (the caller passes {@link isThinCohort}(sample.cohortFraction)) WITHDRAWS the crisp dollar
+ *   lines and shows the calm note instead — the dead-cohort dollar suppression. When NOT thin, the
+ *   spread leads (range first, the median LAST and subordinate, labelled "most likely" — never a
+ *   prediction). Every figure arrives PRE-FORMATTED on the row (string-free viz); this only arranges
+ *   label words around them.
+ * - The ages line drops when `row.ages` is '' (no household-clock closure was supplied).
+ */
+export function composeReadoutLines(labels: BandLabels, row: BandTooltipRow, thin: boolean): ReadoutLine[] {
+  const lines: ReadoutLine[] = []
+  if (row.ages) lines.push({ text: `${labels.readoutAgesLabel} ${row.ages}`, kind: 'ages' })
+  if (thin) {
+    lines.push({ text: labels.readoutThinNote, kind: 'note' })
+  } else {
+    lines.push({ text: labels.readoutRangeLabel, kind: 'label' })
+    lines.push({ text: `${row.low}${labels.readoutRangeJoiner}${row.high}`, kind: 'value' })
+    lines.push({ text: labels.readoutMedianLabel, kind: 'label' })
+    lines.push({ text: row.median, kind: 'value' })
+  }
+  return lines
 }

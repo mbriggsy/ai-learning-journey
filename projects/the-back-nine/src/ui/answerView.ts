@@ -22,7 +22,7 @@ import type { MemoryModelSnapshot } from '@store/memoryModel'
 import { isDateRoute } from '@intake/intakeMap'
 import type { BandFan, DateBand, DateSearchOutcome, SimulationResult } from '@shared/model'
 import type { XAnnotation } from '@viz/bandData'
-import { deriveDateBandAnnotations, deriveSpineBandAnnotations } from './bandAnnotations'
+import { deriveBandAgesAt, deriveDateBandAnnotations, deriveSpineBandAnnotations } from './bandAnnotations'
 import type { FuckOffDateView } from './FuckOffDate'
 import type { ConfidenceStatementView } from './ConfidenceStatement'
 
@@ -57,18 +57,23 @@ export type ElevatedAnswer =
 function spineBand(
   result: SimulationResult,
   draft: MemoryModelSnapshot['draft'],
-): { readonly band?: BandFan; readonly bandAnnotations?: readonly XAnnotation[] } {
+): {
+  readonly band?: BandFan
+  readonly bandAnnotations?: readonly XAnnotation[]
+  readonly bandAges?: (yearsFromNow: number) => string
+} {
   const fan = result.distribution.bandFan
   if (!fan || fan.byYear.length < 2) return {}
   const last = fan.byYear[fan.byYear.length - 1]
   if (!last || !fan.byYear.some((y) => y.p90 > 0)) return {}
   const ageA = draft.people[0].currentAge
   const ageB = draft.people[1].currentAge
-  const bandAnnotations =
-    ageA !== undefined && ageB !== undefined
-      ? deriveSpineBandAnnotations(ageA, ageB, last.yearsFromNow)
-      : undefined
-  return { band: fan, bandAnnotations }
+  // Annotations + the readout-ages closure share the SAME currentAge guard + slot, so they appear (or
+  // defensively withhold) together — the scrub readout's ages can never disagree with the axis ticks.
+  const haveAges = ageA !== undefined && ageB !== undefined
+  const bandAnnotations = haveAges ? deriveSpineBandAnnotations(ageA, ageB, last.yearsFromNow) : undefined
+  const bandAges = haveAges ? deriveBandAgesAt(ageA, ageB) : undefined
+  return { band: fan, bandAnnotations, bandAges }
 }
 
 /**
@@ -83,7 +88,11 @@ function spineBand(
 function dateBand(
   outcome: Extract<DateSearchOutcome, { kind: 'dates' }>,
   draft: MemoryModelSnapshot['draft'],
-): { readonly band?: DateBand; readonly bandAnnotations?: readonly XAnnotation[] } {
+): {
+  readonly band?: DateBand
+  readonly bandAnnotations?: readonly XAnnotation[]
+  readonly bandAges?: (yearsFromNow: number) => string
+} {
   const band = outcome.band
   if (!band || band.fan.byYear.length < 2 || !band.fan.byYear.some((y) => y.p90 > 0)) return {}
   const last = band.fan.byYear[band.fan.byYear.length - 1]!
@@ -91,12 +100,14 @@ function dateBand(
   const ageB = draft.people[1].currentAge
   // The work-stops marker sits at the band's OWN crowned offset — read from the band (the engine's
   // authority tag), never re-derived from a sibling track field (the "UI re-derives nothing" law). The
-  // still-working member(s) retire at currentAge + offset.
-  const bandAnnotations =
-    ageA !== undefined && ageB !== undefined
-      ? deriveDateBandAnnotations(ageA, ageB, band.offsetYears, last.yearsFromNow)
-      : undefined
-  return { band, bandAnnotations }
+  // still-working member(s) retire at currentAge + offset. The readout-ages closure shares the same
+  // currentAge guard + slot as the annotations, so the scrub ages and the axis ticks agree.
+  const haveAges = ageA !== undefined && ageB !== undefined
+  const bandAnnotations = haveAges
+    ? deriveDateBandAnnotations(ageA, ageB, band.offsetYears, last.yearsFromNow)
+    : undefined
+  const bandAges = haveAges ? deriveBandAgesAt(ageA, ageB) : undefined
+  return { band, bandAnnotations, bandAges }
 }
 
 export function selectElevatedAnswer(

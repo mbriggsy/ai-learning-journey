@@ -156,6 +156,66 @@ export function clampX(x: number): number {
   return x < PLOT.left ? PLOT.left : x > PLOT.right ? PLOT.right : x
 }
 
+// ── hover/scrub geometry (the on-demand readout) ──────────────────────────────────────────────
+// The scrubber SNAPS to the nearest of the fixed lattice points — the readout only ever reports a
+// SAMPLED column (no interpolation in the renderer: the layer boundary forbids the UI inventing an
+// intermediate value, and snapping keeps the readout figure byte-equal to the drawn vertex). All pure
+// + testable, mirroring the rest of this module.
+
+/** Snap a viewBox x to the nearest lattice index. `latticeCount` is PASSED (never imported from
+ *  bandData) so this module keeps its one-way TYPE-only dependency on bandData — a value import would
+ *  cycle. The cursor x is mapped back through the same linear domain `xForYear` uses, then rounded to
+ *  the nearest evenly-spaced sample and clamped to [0, latticeCount-1]. A degenerate count (< 2) or a
+ *  non-finite x yields 0 (the today anchor) — defensive, never a NaN index. */
+export function nearestLatticeIndex(viewBoxX: number, latticeCount: number): number {
+  if (!Number.isFinite(viewBoxX) || latticeCount < 2) return 0
+  const t = clamp01((viewBoxX - PLOT.left) / PLOT_W)
+  const idx = Math.round(t * (latticeCount - 1))
+  return idx < 0 ? 0 : idx > latticeCount - 1 ? latticeCount - 1 : idx
+}
+
+/** Readout box width (viewBox px). Single-sourced so {@link placeReadoutBox}'s edge-clamp and the
+ *  rendered `<rect>` width agree by construction. Sized for the widest line — the spelled-out range
+ *  label "Eight in ten land between" and the thin-cohort note — at the ~12.5px readout text. */
+export const READOUT_W = 224
+/** Gap (viewBox px) between the scrubber rule and the readout box, so the on-rule dots stay visible. */
+export const READOUT_GAP = 14
+/** The readout box is pinned to the TOP gutter — a fixed y that never bobs with the cursor and never
+ *  overlaps the median ink line (which lives mid-plot). */
+export const READOUT_TOP = PLOT.top + 6
+
+/**
+ * Place the readout box for a scrubber sitting at `scrubX`. The box flips to the side OPPOSITE the
+ * rule's half (rule in the left ~60% → box to the RIGHT, else LEFT) — a single mid-plot flip rather
+ * than chasing the cursor (calmer, and it keeps the box clear of the rule + its dots). `tx` is then
+ * clamped so the box's full width stays inside [PLOT.left, PLOT.right] — it can never clip either plot
+ * edge at i=0 or i=48. `ty` is the fixed top-gutter pin. Pure; unit-tested at both edges + the flip.
+ */
+export function placeReadoutBox(scrubX: number, boxW: number): { readonly tx: number; readonly ty: number } {
+  // Flip LEFT as soon as a right-placed box would overflow the plot — derived from the box FIT, not a
+  // magic fraction. A fixed 0.6·PLOT_W threshold was WIDER than the clip boundary, so for scrubX in the
+  // dead-center zone the right-placed box clamped back ONTO the rule (the opaque box painting over the
+  // live "where I'm pointing now" rule + its top dot). Tying the flip to the overflow keeps the box
+  // clear of the rule at EVERY lattice vertex (proven by the all-vertex sweep test).
+  const flipLeft = scrubX + READOUT_GAP + boxW > PLOT.right
+  const raw = flipLeft ? scrubX - READOUT_GAP - boxW : scrubX + READOUT_GAP
+  const maxTx = PLOT.right - boxW
+  const tx = raw < PLOT.left ? PLOT.left : raw > maxTx ? maxTx : raw
+  return { tx, ty: READOUT_TOP }
+}
+
+/** The dead-cohort dollar-withdrawal gate for the hover/scrub readout: TRUE where the surviving-couple
+ *  cohort has thinned past the SAME {@link COHORT_FADE}.full onset at which the fan begins to visually
+ *  fade — so the readout's crisp figures withdraw EXACTLY where the band goes quiet (honesty by a shared
+ *  threshold, proven bound to {@link cohortFadeOpacity} by test). A confident "$X at age 97" on a handful
+ *  of surviving couples is the calm-but-wrong sin this gate prevents. A non-finite / absent cohort reads
+ *  as a FULL cohort (not thin) — the {@link BandSample} contract's documented default; live input is
+ *  always finite (resolveBandData guards it), so this only governs hand-built fixtures. */
+export function isThinCohort(cohortFraction: number | undefined): boolean {
+  const c = Number.isFinite(cohortFraction) ? (cohortFraction as number) : 1
+  return c < COHORT_FADE.full
+}
+
 // ── dead-cohort de-emphasis (back-nine-design §3) ─────────────────────────────────────────────
 // A band slice backed by FEW surviving couples is small-sample noise (the late-year jitter — a $0
 // floor or a fortune from a handful of paths). It must draw QUIET: present (we DO model those years,

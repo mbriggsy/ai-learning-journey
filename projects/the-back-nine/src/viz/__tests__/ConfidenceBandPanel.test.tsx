@@ -34,6 +34,11 @@ const labels: BandLabels = {
   legendMedian: 'Most likely path',
   legendInner: 'Middle half',
   legendOuter: '8 in 10',
+  readoutAgesLabel: 'Ages',
+  readoutRangeLabel: 'Eight in ten land between',
+  readoutRangeJoiner: ' – ',
+  readoutMedianLabel: 'Most likely',
+  readoutThinNote: 'Few couples reach these years',
 }
 
 const chrome: BandPanelChrome = {
@@ -59,6 +64,12 @@ function resolved(): ResolvedBandData {
     yTicks: [{ dollars: 0, label: '$0' }],
     annotations: [],
     callouts: [{ id: 'likely', yearsFromNow: 18, dollars: 760_000, text: 'most likely' }],
+    tooltipRows: samples.map((s) => ({
+      ages: `${Math.round(61 + s.yearsFromNow)} / ${Math.round(59 + s.yearsFromNow)}`,
+      low: `$${Math.round(s.p10 / 1000)}k`,
+      median: `$${Math.round(s.p50 / 1000)}k`,
+      high: `$${Math.round(s.p90 / 1000)}k`,
+    })),
   }
 }
 

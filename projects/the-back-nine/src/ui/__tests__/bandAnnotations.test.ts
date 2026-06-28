@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { deriveDateBandAnnotations, deriveSpineBandAnnotations } from '../bandAnnotations'
+import { deriveBandAgesAt, deriveDateBandAnnotations, deriveSpineBandAnnotations } from '../bandAnnotations'
 import { copy, slots } from '../copy'
 
 describe('deriveSpineBandAnnotations — the spine band household-clock markers', () => {
@@ -104,5 +104,26 @@ describe('deriveDateBandAnnotations — the date band markers (the FUTURE work-s
     for (let i = 1; i < a.length; i++) {
       expect(a[i]!.yearsFromNow).toBeGreaterThan(a[i - 1]!.yearsFromNow)
     }
+  })
+})
+
+describe('deriveBandAgesAt — the hover/scrub readout ages closure (single-sourced with the axis)', () => {
+  it('reuses slots.bandClockAges + the SAME currentAge + yearsFromNow rule the annotations use', () => {
+    const agesAt = deriveBandAgesAt(66, 64)
+    // at a whole-year point it matches what a decade tick at the same x would render
+    expect(agesAt(24)).toBe(slots.bandClockAges(90, 88)) // 66+24 / 64+24 — equals the age-90 tick
+    expect(agesAt(0)).toBe(slots.bandClockAges(66, 64)) // today
+  })
+
+  it('rounds a FRACTIONAL lattice year to whole ages (the readout matches the whole-age axis convention)', () => {
+    const agesAt = deriveBandAgesAt(66, 64)
+    // a lattice point at 12.75 years → ages round to 79 / 77, never "78.75"
+    expect(agesAt(12.75)).toBe(slots.bandClockAges(79, 77))
+    expect(agesAt(12.4)).toBe(slots.bandClockAges(78, 76))
+  })
+
+  it('preserves the spouse age-gap at every year', () => {
+    const agesAt = deriveBandAgesAt(58, 60) // B is older by 2
+    expect(agesAt(10)).toBe(slots.bandClockAges(68, 70))
   })
 })

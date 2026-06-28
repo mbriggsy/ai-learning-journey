@@ -23,23 +23,33 @@
  * STRING-FREE: every label arrives via the `labels` / data props (src/viz imports only @shared).
  */
 
-import { useEffect, useId, useRef } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { motion, useReducedMotion } from 'motion/react'
 import { bandStopCss } from './scale'
 import { BAND_FILL_INNER_P, BAND_FILL_OUTER_P } from './palette'
 import {
   PLOT,
+  PLOT_H,
+  PLOT_W,
+  READOUT_W,
   VIEWBOX,
   areaPath,
   cohortFadeStops,
+  isThinCohort,
   linePath,
+  nearestLatticeIndex,
   placeAnnotationLabels,
   placeholderPath,
+  placeReadoutBox,
   xForYear,
   yForDollars,
 } from './bandGeometry'
-import type { BandViewData, BandLabels, XAnnotation, YTick } from './bandData'
+import { composeReadoutLines } from './bandData'
+import type { BandViewData, BandLabels, BandTooltipRow, ReadoutLineKind, XAnnotation, YTick } from './bandData'
 import './band.css'
+
+/** A resolved fan (the only state the scrubber attaches to — the placeholder has no per-year data). */
+type ResolvedData = Extract<BandViewData, { kind: 'resolved' }>
 
 const OUTER_FILL = bandStopCss(BAND_FILL_OUTER_P)
 const INNER_FILL = bandStopCss(BAND_FILL_INNER_P)
@@ -99,6 +109,9 @@ export function ConfidenceBand({ data, labels, onEnlarge, enlargeLabel, variant 
         <Placeholder data={data} />
       )}
       <Annotations annotations={data.annotations} horizonYears={data.horizonYears} />
+      {/* The hover/scrub readout sits LAST so its transparent capture surface is topmost (catches the
+          pointer over the whole plot). Resolved-only — the placeholder carries no per-year data. */}
+      {data.kind === 'resolved' && <ScrubLayer data={data} labels={labels} variant={variant} />}
     </svg>
   )
 
@@ -327,6 +340,174 @@ function Annotations({
           </g>
         )
       })}
+    </g>
+  )
+}
+
+/* ── the hover/scrub readout (pointer-only; aria-hidden) ───────────────────────────────────────
+ * On pointer-move the cursor x is mapped back into viewBox space and SNAPPED to the nearest of the
+ * fixed lattice samples — the readout only ever reports a sampled column (no interpolation: the layer
+ * boundary forbids the UI inventing a between-samples value, and the snap keeps the readout figure
+ * byte-equal to the drawn vertex). The cursor's Y is IGNORED — you read the whole percentile column at
+ * that year, never "aim" at a point. State lives HERE (inside the band that the panel re-keys on a
+ * scale change, insight 047), so a tiered provisional→final re-draw RESETS a stale readout rather than
+ * point it at superseded-scale dollars. The whole group is aria-hidden — the per-year story already
+ * reaches the a11y tree via the annotation aria-labels + the figure caption; the scrubber is a
+ * pointer-only visual convenience for the (color-blind, not blind) reader. No motion at all → the DOM
+ * is identical with reduced-motion on or off, and the readout is glued to the detent (no chase lag).
+ */
+function ScrubLayer({
+  data,
+  labels,
+  variant,
+}: {
+  data: ResolvedData
+  labels: BandLabels
+  variant: 'drawer' | 'enlarged'
+}) {
+  const [idx, setIdx] = useState<number | null>(null)
+  // A touch drag-scrub (enlarged only) holds pointer capture so a finger that slides off the plot keeps
+  // scrubbing; the ref (not state) gates pointerleave/move without an extra render.
+  const captured = useRef(false)
+
+  // Cursor screen→viewBox via the capture rect's own screen CTM (it sits in the svg root coordinate
+  // system, so its CTM IS the viewBox transform — robust to preserveAspectRatio letterboxing, unlike
+  // getBoundingClientRect ratio math). Null CTM (not laid out, e.g. jsdom) ⇒ no locate, never a NaN.
+  const locate = (e: React.PointerEvent<SVGRectElement>): number | null => {
+    const ctm = e.currentTarget.getScreenCTM()
+    if (!ctm) return null
+    const p = new DOMPoint(e.clientX, e.clientY).matrixTransform(ctm.inverse())
+    return nearestLatticeIndex(p.x, data.samples.length)
+  }
+
+  const onMove = (e: React.PointerEvent<SVGRectElement>) => {
+    // DRAWER: mouse/pen only — touch is reserved for the wrapping enlarge <button> (tap-to-enlarge).
+    if (variant === 'drawer' && e.pointerType === 'touch') return
+    // ENLARGED + touch: only track once a drag is captured (a stray touch-move never scrubs).
+    if (variant === 'enlarged' && e.pointerType === 'touch' && !captured.current) return
+    const i = locate(e)
+    if (i !== null) setIdx(i)
+  }
+  const clear = () => {
+    if (!captured.current) setIdx(null)
+  }
+  // Touch drag-scrub lives ONLY in the enlarged modal (no enlarge button there to fight). We do NOT
+  // preventDefault/stopPropagation in the drawer, so a touch tap still bubbles to the enlarge button.
+  const onDown = (e: React.PointerEvent<SVGRectElement>) => {
+    if (variant !== 'enlarged' || e.pointerType !== 'touch') return
+    e.currentTarget.setPointerCapture(e.pointerId)
+    captured.current = true
+    const i = locate(e)
+    if (i !== null) setIdx(i)
+  }
+  const onUp = (e: React.PointerEvent<SVGRectElement>) => {
+    if (!captured.current) return
+    captured.current = false
+    try {
+      e.currentTarget.releasePointerCapture(e.pointerId)
+    } catch {
+      /* capture may already be gone (pointercancel) — releasing twice throws; ignore */
+    }
+    // Leave idx pinned at the last point so a touch reader can study it; the next tap re-scrubs.
+  }
+
+  return (
+    <g className="band-scrub" aria-hidden="true">
+      {idx !== null && <ScrubVisual data={data} labels={labels} idx={idx} />}
+      {/* The transparent capture surface — `fill="transparent"` + `pointer-events: all` so it receives
+          the pointer where a `fill="none"` rect would not. Rendered AFTER the visuals so it is topmost
+          (no dead zone behind the rule/dots); the visuals carry `pointer-events: none`. */}
+      <rect
+        className={`band-scrub-capture band-scrub-capture--${variant}`}
+        x={PLOT.left}
+        y={PLOT.top}
+        width={PLOT_W}
+        height={PLOT_H}
+        fill="transparent"
+        onPointerMove={onMove}
+        onPointerLeave={clear}
+        onPointerDown={onDown}
+        onPointerUp={onUp}
+        onPointerCancel={onUp}
+      />
+    </g>
+  )
+}
+
+/** The live scrubber marks: one thin SOLID rule (distinct from the DASHED milestone rules — this reads
+ *  as "where I'm pointing now", not a named moment) + three dots where it crosses p10 / p50 / p90
+ *  (median filled, the two edges hollow — shape, not hue), then the readout box. */
+function ScrubVisual({ data, labels, idx }: { data: ResolvedData; labels: BandLabels; idx: number }) {
+  const s = data.samples[idx]!
+  const row = data.tooltipRows[idx]
+  const x = xForYear(s.yearsFromNow, data.horizonYears)
+  // Withdraw the crisp dollars exactly where the fan visibly fades (the cohort thinned past the same
+  // COHORT_FADE.full onset) — a confident "$X at age 97" on a handful of surviving couples is the
+  // calm-but-wrong sin. The rule + dots still draw (you see WHERE you are); only the figures go quiet.
+  // The gate is a PURE, unit-tested helper (isThinCohort) bound to the same onset as the visual fade.
+  const thin = isThinCohort(s.cohortFraction)
+  return (
+    <>
+      <line className="band-scrub-rule" x1={x} y1={PLOT.top} x2={x} y2={PLOT.bottom} />
+      <circle className="band-scrub-dot band-scrub-dot--edge" cx={x} cy={yForDollars(s.p90, data.dollarMax)} r={3} />
+      <circle
+        className="band-scrub-dot band-scrub-dot--median"
+        cx={x}
+        cy={yForDollars(s.p50, data.dollarMax)}
+        r={3.4}
+      />
+      <circle className="band-scrub-dot band-scrub-dot--edge" cx={x} cy={yForDollars(s.p10, data.dollarMax)} r={3} />
+      {row && <ScrubReadout labels={labels} row={row} thin={thin} scrubX={x} />}
+    </>
+  )
+}
+
+/** The readout box — an SVG-internal `<g>` positioned by a `transform` ATTRIBUTE (CSP-clean: not an
+ *  inline `style`), top-pinned and side-flipped clear of the rule. Each line is a label WORD (from
+ *  copy.ts) composed around the PRE-FORMATTED figures — the renderer never types a numeral. The ages
+ *  line drops when no household-clock closure was supplied; on a thinned cohort the dollar lines give
+ *  way to the calm withdrawal note. */
+const READOUT_PAD_X = 12
+const READOUT_PAD_Y = 11
+const READOUT_LINE = 17
+
+/** The renderer's only readout responsibility: map a composed line's semantic kind to its CSS class.
+ *  The WHAT-to-show decision (and the dead-cohort withdrawal) lives in the pure {@link composeReadoutLines}. */
+const READOUT_LINE_CLASS: Record<ReadoutLineKind, string> = {
+  ages: 'band-readout-ages',
+  label: 'band-readout-label',
+  value: 'band-readout-value',
+  note: 'band-readout-note',
+}
+
+function ScrubReadout({
+  labels,
+  row,
+  thin,
+  scrubX,
+}: {
+  labels: BandLabels
+  row: BandTooltipRow
+  thin: boolean
+  scrubX: number
+}) {
+  const lines = composeReadoutLines(labels, row, thin)
+  const h = READOUT_PAD_Y * 2 + lines.length * READOUT_LINE
+  const { tx, ty } = placeReadoutBox(scrubX, READOUT_W)
+  return (
+    <g transform={`translate(${tx},${ty})`}>
+      <rect className="band-readout-box" x={0} y={0} width={READOUT_W} height={h} rx={8} />
+      {lines.map((l, i) => (
+        <text
+          key={i}
+          className={`band-readout-text ${READOUT_LINE_CLASS[l.kind]}`}
+          x={READOUT_PAD_X}
+          y={READOUT_PAD_Y + i * READOUT_LINE}
+          dominantBaseline="hanging"
+        >
+          {l.text}
+        </text>
+      ))}
     </g>
   )
 }

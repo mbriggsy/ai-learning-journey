@@ -45,10 +45,14 @@ export type ElevatedAnswer =
  * `resolveBandData` FAILS LOUD on an all-$0 fan — a VALID Social-Security-funded $0-portfolio
  * household (insight 044) — because there is no honest dollar scale to plot. So the band is handed on
  * ONLY when the fan carries a positive dollar somewhere; the $0-portfolio household renders its verdict
- * with NO band (nothing to plot but the $0 floor — the verdict still stands). The screen tests the
- * EXACT condition `resolveBandData` throws on (every p90 === 0 ⇒ dollarMax === 0), not a proxy. A
- * malformed fan (a producer bug, never a valid household) is deliberately NOT screened here — it is
- * left to fail loud at the producer seam (the fail-loud honesty design; back-nine-design §3).
+ * with NO band (nothing to plot but the $0 floor — the verdict still stands). The screen reads the RAW
+ * per-year grid (does ANY year carry p90 > 0?); `resolveBandData` throws on the RESAMPLED lattice's
+ * `dollarMax === 0`. The two agree for every real household: the today anchor is always positive and
+ * the positive-portfolio years are contiguous, so a positive grid year is always struck by a lattice
+ * sample while `horizonYears < 2·(LATTICE_POINTS − 1)` (≈ 96) — and a longevity-bounded horizon sits far
+ * below that. (Were LATTICE_POINTS shrunk or the horizon cap raised past that bound, make the screen
+ * read the same resampled quantity.) A malformed fan (a producer bug, never a valid household) is
+ * deliberately NOT screened here — it is left to fail loud at the producer seam (back-nine-design §3).
  */
 function spineBand(
   result: SimulationResult,
@@ -85,14 +89,12 @@ function dateBand(
   const last = band.fan.byYear[band.fan.byYear.length - 1]!
   const ageA = draft.people[0].currentAge
   const ageB = draft.people[1].currentAge
-  // The crowned offset = where work stops (the still-working member(s) retire at currentAge + offset).
-  // The band is present ONLY for a crowned track (confirmed-date / window-edge-unconfirmed), so `floor`
-  // carries an `offsetYears` here; a no-date run never reaches this (it emits no band).
-  const offsetYears =
-    outcome.floor.kind === 'no-date-in-window' ? undefined : outcome.floor.offsetYears
+  // The work-stops marker sits at the band's OWN crowned offset — read from the band (the engine's
+  // authority tag), never re-derived from a sibling track field (the "UI re-derives nothing" law). The
+  // still-working member(s) retire at currentAge + offset.
   const bandAnnotations =
-    ageA !== undefined && ageB !== undefined && offsetYears !== undefined
-      ? deriveDateBandAnnotations(ageA, ageB, offsetYears, last.yearsFromNow)
+    ageA !== undefined && ageB !== undefined
+      ? deriveDateBandAnnotations(ageA, ageB, band.offsetYears, last.yearsFromNow)
       : undefined
   return { band, bandAnnotations }
 }

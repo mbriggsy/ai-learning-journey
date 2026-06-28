@@ -845,6 +845,12 @@ export type DateTrackOutcome =
 export interface DateBand {
   readonly fan: BandFan
   readonly outcomeState: OutcomeState
+  /** The crowned offset the fan was projected at — the work-stops (accumulation→decumulation)
+   *  inflection year. Carried so the UI reads the band's OWN inflection rather than re-deriving it
+   *  from a sibling track field (the "UI re-derives nothing" law). In v1 floor ≡ lifestyle so this
+   *  equals `floor.offsetYears`; once U9 splits the tracks, a band crowned off one track still names
+   *  its own offset. */
+  readonly offsetYears: number
 }
 
 /** The run-level date-search outcome. `input-failure` is the indeterminate-CLASS variant

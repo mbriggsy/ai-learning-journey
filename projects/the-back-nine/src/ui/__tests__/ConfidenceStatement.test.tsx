@@ -206,15 +206,20 @@ describe('ConfidenceStatement — the U7 verdict-first surface', () => {
     expect(screen.getByRole('heading', { name: copy.outcomeOffTrack })).toBeInTheDocument()
   })
 
-  it('focusSignal lands focus on the verdict heading (the magic-moment announce); a changed signal re-lands it', () => {
+  it('focusSignal lands focus on the verdict heading ONCE on landing — a later signal change does NOT re-steal it', () => {
     const view = { kind: 'reading' as const, ...READING_FIXTURES['on-track'] }
-    const { rerender } = render(<ConfidenceStatement view={view} focusSignal={1} />)
+    const { rerender, unmount } = render(<ConfidenceStatement view={view} focusSignal={1} />)
     const heading = screen.getByRole('heading', { name: copy.outcomeOnTrack })
-    expect(document.activeElement).toBe(heading)
+    expect(document.activeElement).toBe(heading) // first landing announces
 
     heading.blur()
-    expect(document.activeElement).not.toBe(heading)
+    // a later focusSignal change (e.g. a tiered sharpen) must NOT yank focus back — announce once per landing
     rerender(<ConfidenceStatement view={view} focusSignal={2} />)
+    expect(document.activeElement).not.toBe(heading)
+
+    // a fresh landing (the surface remounts on a Review round-trip) re-announces
+    unmount()
+    render(<ConfidenceStatement view={view} focusSignal={3} />)
     expect(document.activeElement).toBe(screen.getByRole('heading', { name: copy.outcomeOnTrack }))
   })
 

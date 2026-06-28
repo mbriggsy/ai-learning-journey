@@ -31,6 +31,10 @@ export interface BandEnlargeModalProps {
   readonly title: string
   /** Accessible label for the close control (e.g. "Close"). */
   readonly closeLabel: string
+  /** Re-draw key for the enlarged band: when the fan's SCALE changes (a tiered consumer's
+   *  provisional→final), the panel passes a new value so the band inside the OPEN modal re-draws
+   *  rather than cross-scale morphs — without unmounting the dialog or losing its trapped focus. */
+  readonly redrawKey?: string
 }
 
 /** Focusable elements inside the dialog, for the focus trap. */
@@ -50,6 +54,7 @@ export function BandEnlargeModal({
   labels,
   title,
   closeLabel,
+  redrawKey,
 }: BandEnlargeModalProps) {
   const reduce = useReducedMotion() ?? false
   const titleId = useId()
@@ -155,8 +160,9 @@ export function BandEnlargeModal({
                 <span aria-hidden="true">&times;</span>
               </button>
             </div>
-            {/* the SAME band, enlarged — non-color encoding preserved verbatim. */}
-            <ConfidenceBand data={data} labels={labels} variant="enlarged" />
+            {/* the SAME band, enlarged — non-color encoding preserved verbatim. `redrawKey` re-draws
+                it on a scale change while the dialog stays mounted (the open-modal-survives contract). */}
+            <ConfidenceBand key={redrawKey} data={data} labels={labels} variant="enlarged" />
             {/* the legend rides the lightbox too — horizontal here (the modal has the width to
                 span the three tiers across one line, vs the drawer's vertical stack). */}
             <BandLegend labels={labels} layout="row" />

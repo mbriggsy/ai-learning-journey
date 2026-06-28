@@ -103,8 +103,16 @@ function magnitudeClause(dollar: DollarAdjustment): string {
 
 export function ConfidenceStatement({ view, focusSignal }: ConfidenceStatementProps) {
   const headingRef = useRef<HTMLHeadingElement>(null)
+  // Announce on the FIRST landing only (the undefined→defined edge) — the shared once-per-landing
+  // contract (mirrors FuckOffDate). The spine's two recomputes are byte-identical, so its key never
+  // changes across the pair; this guard makes the once-only intent explicit and tier-proof. Review
+  // unmounts the surface, resetting the ref so a fresh completion re-announces.
+  const announcedRef = useRef(false)
   useEffect(() => {
-    if (focusSignal !== undefined) focusHeading(headingRef.current)
+    if (focusSignal !== undefined && !announcedRef.current) {
+      announcedRef.current = true
+      focusHeading(headingRef.current)
+    }
   }, [focusSignal])
 
   // The producer seam: resolve the per-year fan into drawable geometry ONCE per view. resolveBandData

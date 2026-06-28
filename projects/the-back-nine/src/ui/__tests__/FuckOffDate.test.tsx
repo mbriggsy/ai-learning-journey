@@ -5,13 +5,50 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { FuckOffDate } from '../FuckOffDate'
 import { copy, slots } from '../copy'
 import { dateOddsText } from '../dateOdds'
+import { deriveDateBandAnnotations } from '../bandAnnotations'
 import { DATE_FIXTURES, DATE_WINDOW_TOP } from '../preview/dateFixtures'
+import type { DateBand } from '@shared/model'
 
 /*
  * The D2 elevated fuck-off-date surface. The honesty pins: the three first-class outcomes each read
  * correctly (confirmed / window-edge / no-date), free-today is its own lead, the odds come from the
- * conservative grade, and the window-edge + non-monotone disclosures are never dropped.
+ * conservative grade, the window-edge + non-monotone disclosures are never dropped, and a crowned date
+ * MOUNTS its projection band (slice 2) while a no-date never does.
  */
+
+// The band (mounted for a crowned date) reads useReducedMotion() → matchMedia; jsdom lacks it.
+vi.stubGlobal(
+  'matchMedia',
+  (query: string) =>
+    ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addEventListener: () => {},
+      removeEventListener: () => {},
+      addListener: () => {},
+      removeListener: () => {},
+      dispatchEvent: () => false,
+    }) as unknown as MediaQueryList,
+)
+
+// A minimal crowned band: a positive-p90 fan (resolveBandData accepts it) + the engine tag + offset.
+const BAND: DateBand = {
+  fan: {
+    byYear: Array.from({ length: 41 }, (_, t) => ({
+      yearsFromNow: t,
+      p10: 0,
+      p25: 0,
+      p50: 500_000,
+      p75: 700_000,
+      p90: 1_000_000,
+      cohortFraction: 1,
+    })),
+  },
+  outcomeState: 'on-track',
+  offsetYears: 6,
+}
+
 afterEach(cleanup)
 
 const dates = (track: (typeof DATE_FIXTURES)[keyof typeof DATE_FIXTURES]) =>
@@ -87,12 +124,36 @@ describe('FuckOffDate — the D2 landed date surface', () => {
     expect(screen.getByRole('heading', { name: slots.dateInYears(4) })).toBeInTheDocument()
   })
 
-  it('focusSignal lands focus on the date headline (the magic-moment announce)', () => {
-    const { rerender } = render(<FuckOffDate view={dates(DATE_FIXTURES.confirmed)} focusSignal={1} />)
+  it('focusSignal lands focus on the date headline ONCE on landing — a tier sharpen does NOT re-steal it', () => {
+    const { rerender, unmount } = render(<FuckOffDate view={dates(DATE_FIXTURES.confirmed)} focusSignal={1} />)
     const heading = screen.getByRole('heading', { name: slots.dateInYears(4) })
-    expect(document.activeElement).toBe(heading)
+    expect(document.activeElement).toBe(heading) // first landing announces
     heading.blur()
+    // the provisional→final sharpen can crown a different offset → focusSignal changes, but the announce
+    // is once-per-landing: focus must NOT be yanked back from a user who tabbed into the range.
     rerender(<FuckOffDate view={dates(DATE_FIXTURES.confirmed)} focusSignal={2} />)
+    expect(document.activeElement).not.toBe(heading)
+    // a fresh completion (the surface remounts on a Review round-trip) re-announces
+    unmount()
+    render(<FuckOffDate view={dates(DATE_FIXTURES.confirmed)} focusSignal={3} />)
     expect(document.activeElement).toBe(screen.getByRole('heading', { name: slots.dateInYears(4) }))
+  })
+
+  it('a crowned date MOUNTS the projection band (the slice-2 deliverable) under the date headline', () => {
+    const view = {
+      kind: 'dates' as const,
+      track: DATE_FIXTURES.confirmed,
+      windowTopYears: DATE_WINDOW_TOP,
+      band: BAND,
+      bandAnnotations: deriveDateBandAnnotations(58, 60, 6, 40),
+    }
+    render(<FuckOffDate view={view} />)
+    // the band drawer mounts: its graph-as-enlarge-button is the affordance (the sibling spine pin)
+    expect(screen.getByRole('button', { name: copy.bandStudyRange })).toBeInTheDocument()
+  })
+
+  it('a no-date outcome mounts NO band (nothing to plot — the verdict stands alone)', () => {
+    render(<FuckOffDate view={dates(DATE_FIXTURES.noDate)} />)
+    expect(screen.queryByRole('button', { name: copy.bandStudyRange })).not.toBeInTheDocument()
   })
 })

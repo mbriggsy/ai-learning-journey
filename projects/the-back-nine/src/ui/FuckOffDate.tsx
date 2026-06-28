@@ -67,8 +67,18 @@ export interface FuckOffDateProps {
 
 export function FuckOffDate({ view, focusSignal }: FuckOffDateProps) {
   const headingRef = useRef<HTMLHeadingElement>(null)
+  // Announce on the FIRST landing only (the undefined→defined edge). The date route is TIERED: the
+  // provisional→final sharpen can crown a DIFFERENT offset, which flips focusSignal — but re-firing
+  // focusHeading then would yank focus back to the heading + scroll, stealing it from a user who
+  // tabbed into the range. Fire once per mount; Review unmounts the surface (phase flip), so the ref
+  // resets and a fresh completion re-announces. (The spine is byte-identical across tiers, so its key
+  // never changes — but the once-per-landing contract is shared, so both surfaces guard it.)
+  const announcedRef = useRef(false)
   useEffect(() => {
-    if (focusSignal !== undefined) focusHeading(headingRef.current)
+    if (focusSignal !== undefined && !announcedRef.current) {
+      announcedRef.current = true
+      focusHeading(headingRef.current)
+    }
   }, [focusSignal])
 
   // The producer seam: resolve the crowned fan into drawable geometry ONCE per view (resolveBandData
@@ -76,7 +86,10 @@ export function FuckOffDate({ view, focusSignal }: FuckOffDateProps) {
   // worded date (confirmed / window-edge) WITH a band carries one; no-date / pending / error never do.
   // The engine's own outcome-state tag drives resolveBandData — the UI re-derives no grade.
   const resolved = useMemo(() => {
-    if (view.kind !== 'dates' || !view.band) return null
+    // Align the resolve guard with the RENDER guard (the sibling ConfidenceStatement does the same):
+    // a band draws ONLY in the worded confirmed/window-edge branch, so never resolve — and possibly
+    // fail-loud on — a fan a no-date view would never draw.
+    if (view.kind !== 'dates' || view.track.kind === 'no-date-in-window' || !view.band) return null
     return resolveBandData(view.band.fan, view.band.outcomeState, {
       formatDollar: formatAxisDollar,
       annotations: view.bandAnnotations,
@@ -132,16 +145,9 @@ export function FuckOffDate({ view, focusSignal }: FuckOffDateProps) {
         )}
         {resolved && (
           <div className="fod-band">
-            {/* RE-DRAW-NOT-MORPH (the date sweep is tiered): the provisional→final fan can change
-                SCALE (dollarMax / horizon). Keying the panel on the scale remounts it on a scale
-                change — a fresh draw at the new scale — while a stable scale lets the band MORPH
-                (pure signal). Never a misleading cross-scale morph. */}
-            <ConfidenceBandPanel
-              key={`${resolved.dollarMax}:${resolved.horizonYears}`}
-              data={resolved}
-              labels={BAND_LABELS}
-              chrome={BAND_CHROME}
-            />
+            {/* RE-DRAW-NOT-MORPH on the tiered provisional→final scale change lives INSIDE the panel
+                (it re-keys its inner band, not itself — so an open enlarge modal survives). */}
+            <ConfidenceBandPanel data={resolved} labels={BAND_LABELS} chrome={BAND_CHROME} />
           </div>
         )}
       </div>

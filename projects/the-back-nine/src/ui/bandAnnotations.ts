@@ -118,8 +118,11 @@ export function deriveDateBandAnnotations(
     },
   ]
   // The FUTURE work-stops moment (the fuck-off date) — only when strictly in the future AND clear of
-  // the horizon endpoint. At offset 0 the household stops TODAY (already marked); at/after the horizon
-  // there is nothing past it to mark.
+  // the horizon endpoint. At offset 0 the household stops TODAY (already marked by Today). When the
+  // crowned offset lands within the horizon pad, the HERO marker itself is dropped (not just bare
+  // ticks) to avoid colliding with Plan horizon — a SHALLOW-horizon residual reachable only by a
+  // near-window-top offset on an unusually short fan (inside dateSearch's disclosed shallow-window
+  // envelope); for realistic working ages the fan horizon is decades out, so it always renders.
   const workStops =
     offsetYears > 0 && offsetYears < horizonYears - HORIZON_TICK_PAD_YEARS ? offsetYears : undefined
   if (workStops !== undefined) {

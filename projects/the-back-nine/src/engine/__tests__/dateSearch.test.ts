@@ -609,6 +609,9 @@ describe('runDateSearch — the D2 crowned band fan', () => {
     // The engine's tag for the band: a crowned date is on-track-or-better by construction (its
     // quantized lower bound cleared the bar), so the band never carries a fail state.
     expect(['on-track', 'over-funded']).toContain(out.band!.outcomeState)
+    // The band is SELF-DESCRIBING: it carries its OWN crowned offset (the work-stops inflection),
+    // equal to the crowned track's offset — the UI reads this, never re-derives it from floor.
+    expect(out.band!.offsetYears).toBe(out.floor.offsetYears)
 
     // DND/009: every fan value is a FINITE number (the $0 ruin floor reads as a real 0, never an
     // Infinity/NaN that JSON.stringify/IndexedDB would silently null at the U8 persist seam).
@@ -627,11 +630,33 @@ describe('runDateSearch — the D2 crowned band fan', () => {
     if (standalone.indeterminate || standalone.infeasible) return
     expect(out.band!.fan).toEqual(standalone.distribution.bandFan)
 
-    // It rides the date wire unchanged (structured clone — the whole outcome, no field mapping).
+    // It SURVIVES a real structured clone — the worker postMessage semantics, DND/009-clean (no
+    // Infinity/NaN/Map/function/class anywhere on the outcome, band included), not just a passthrough.
+    expect(structuredClone(out)).toEqual(out)
+    // And rides the date wire unchanged (structured clone — the whole outcome, no field mapping).
     const round = dateSearchFromWire({ kind: 'date-search', outcome: out })
     expect(round.ok).toBe(true)
     if (!round.ok || round.outcome.kind !== 'dates') return
     expect(round.outcome.band).toEqual(out.band)
+  })
+
+  it('REDUCE-TO-SPINE for the shipped date config: the crowned candidate is byte-identical fan-OFF vs fan-ON', () => {
+    // The band's honesty ("it observes the very distribution that crowned the date") rests on the
+    // fan-ON re-run matching the fan-OFF sweep run decideTrack crowned on. The CRN-identity test above
+    // is fan-ON vs fan-ON (repeatability); THIS proves the fan only OBSERVES — on the ACTUAL date-
+    // candidate overlay shape (healthcare + accumulation + irmaaMagiOverride forced on), the shape the
+    // thin spine `bandFan.test.ts` overlay arm never exercises.
+    const crowned = buildCandidateParams(coupleInput, 3, DATE_SEARCH_PATHS.provisional)
+    expect(crowned.overlay?.healthcareEnabled).toBe(true) // the date config really has the forced overlay
+    expect(crowned.overlay?.accumulation).toBeDefined()
+    const off = simulate(crowned, 12345)
+    const on = simulate(crowned, 12345, { bandFan: true })
+    if (off.indeterminate || off.infeasible || on.indeterminate || on.infeasible) {
+      throw new Error('the crowned candidate must simulate cleanly under both fan flags')
+    }
+    expect(on.distribution.survivalFraction).toBe(off.distribution.survivalFraction)
+    expect(on.distribution.terminalValuesReal).toEqual(off.distribution.terminalValuesReal)
+    expect(on.distribution.depletionYears).toEqual(off.distribution.depletionYears)
   })
 
   it('a NO-DATE run carries NO fan (no offset to project — the no-date surface shows no band)', { timeout: 60_000 }, async () => {

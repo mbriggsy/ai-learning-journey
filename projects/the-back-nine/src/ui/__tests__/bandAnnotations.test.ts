@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { deriveSpineBandAnnotations } from '../bandAnnotations'
+import { deriveDateBandAnnotations, deriveSpineBandAnnotations } from '../bandAnnotations'
 import { copy, slots } from '../copy'
 
 describe('deriveSpineBandAnnotations — the spine band household-clock markers', () => {
@@ -55,6 +55,52 @@ describe('deriveSpineBandAnnotations — the spine band household-clock markers'
 
   it('the markers are monotonic in yearsFromNow (the band x-axis is a forward clock)', () => {
     const a = deriveSpineBandAnnotations(70, 68, 18)
+    for (let i = 1; i < a.length; i++) {
+      expect(a[i]!.yearsFromNow).toBeGreaterThan(a[i - 1]!.yearsFromNow)
+    }
+  })
+})
+
+describe('deriveDateBandAnnotations — the date band markers (the FUTURE work-stops marker)', () => {
+  it('places a FUTURE "work stops" marker at the crowned offset (the spine deriver never does)', () => {
+    const a = deriveDateBandAnnotations(58, 60, 6, 40) // fuck off in 6 years
+    const ws = a.find((m) => m.id === 'work-stops')
+    expect(ws).toBeDefined()
+    expect(ws!.yearsFromNow).toBe(6)
+    expect(ws!.label).toBe(copy.bandClockWorkStopsLabel)
+    expect(ws!.ages).toBe(slots.bandClockAges(64, 66)) // 58+6 / 60+6
+    expect(ws!.description).toBe(slots.bandClockWorkStopsDesc(64, 66))
+  })
+
+  it('offset 0 (work-optional TODAY) emits NO work-stops marker — Today already marks it (honest-axis law)', () => {
+    const a = deriveDateBandAnnotations(58, 60, 0, 40)
+    expect(a.some((m) => m.id === 'work-stops')).toBe(false)
+    expect(a[0]!.id).toBe('today')
+  })
+
+  it('drops a bare decade tick that would collide with Today (a 58-year-old’s age-60 tick, 2 years out)', () => {
+    const a = deriveDateBandAnnotations(58, 60, 6, 40)
+    expect(a.some((m) => m.id === 'age-60')).toBe(false) // 2 years out (< pad) → yields to Today
+    expect(a.some((m) => m.id === 'age-70')).toBe(true) // 12 out, clear of both named markers → kept
+  })
+
+  it('drops a bare decade tick within the pad of the work-stops moment (named marker wins)', () => {
+    const a = deriveDateBandAnnotations(58, 60, 22, 40) // work-stops at age 80 (year 22)
+    expect(a.some((m) => m.id === 'work-stops')).toBe(true)
+    expect(a.some((m) => m.id === 'age-80')).toBe(false) // the age-80 tick collides → dropped
+    expect(a.some((m) => m.id === 'age-70')).toBe(true) // age-70 (year 12) is clear → kept
+  })
+
+  it('omits the work-stops marker when the crowned offset lands within the horizon pad (shallow-horizon residual)', () => {
+    // horizon 12, offset 10 ⇒ 10 ≥ 12 − 3 ⇒ the hero marker is dropped to avoid the Plan-horizon collision.
+    const a = deriveDateBandAnnotations(58, 60, 10, 12)
+    expect(a.some((m) => m.id === 'work-stops')).toBe(false)
+  })
+
+  it('returns markers in ascending household-clock order, Today first and Plan horizon last', () => {
+    const a = deriveDateBandAnnotations(58, 60, 6, 40)
+    expect(a[0]!.id).toBe('today')
+    expect(a[a.length - 1]!.id).toBe('horizon')
     for (let i = 1; i < a.length; i++) {
       expect(a[i]!.yearsFromNow).toBeGreaterThan(a[i - 1]!.yearsFromNow)
     }

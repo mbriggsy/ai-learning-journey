@@ -41,12 +41,21 @@ export function ConfidenceBandPanel({ data, labels, chrome }: ConfidenceBandPane
   const [enlarged, setEnlarged] = useState(false)
   const open = () => setEnlarged(true)
 
+  // RE-DRAW-NOT-MORPH, scoped to the BAND not the panel: a tiered consumer (the date route) can
+  // change the fan's SCALE between recomputes (provisional→final dollarMax/horizon). Re-keying the
+  // INNER band on the scale forces a fresh draw at the new scale (never a misleading cross-scale
+  // morph) WITHOUT remounting this panel — so an open enlarge modal and its trapped focus survive
+  // (keying the panel itself would reset `enlarged` and drop focus to <body>). An untiered consumer
+  // (the spine) holds a stable scale, so the key never changes and the draw-once behavior is intact.
+  const drawKey = data.kind === 'resolved' ? `${data.dollarMax}:${data.horizonYears}` : 'placeholder'
+
   return (
     <aside className="band-drawer" aria-label={labels.caption}>
       <span className="band-drawer__tab" aria-hidden="true" />
       <p className="band-drawer__pull">{chrome.pull}</p>
 
       <ConfidenceBand
+        key={drawKey}
         data={data}
         labels={labels}
         onEnlarge={open}
@@ -60,6 +69,7 @@ export function ConfidenceBandPanel({ data, labels, chrome }: ConfidenceBandPane
         open={enlarged}
         onClose={() => setEnlarged(false)}
         data={data}
+        redrawKey={drawKey}
         labels={labels}
         title={chrome.modalTitle}
         closeLabel={chrome.closeLabel}

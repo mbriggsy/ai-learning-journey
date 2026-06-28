@@ -64,8 +64,9 @@ const confirmedAt = (offsetYears: number): DateTrackOutcome => ({
   curve: [],
 })
 
-// A minimal crowned DateBand: a fan from today to `lastYear` (positive p90 ⇒ not $0-screened) + the tag.
-const dateBandTo = (lastYear: number, p90 = 1_000_000): DateBand => ({
+// A minimal crowned DateBand: a fan from today to `lastYear` (positive p90 ⇒ not $0-screened), the
+// engine tag, and the crowned offset the marker reads (the band is self-describing — A6).
+const dateBandTo = (lastYear: number, offsetYears: number, p90 = 1_000_000): DateBand => ({
   fan: {
     byYear: Array.from({ length: lastYear + 1 }, (_, t) => ({
       yearsFromNow: t,
@@ -78,6 +79,7 @@ const dateBandTo = (lastYear: number, p90 = 1_000_000): DateBand => ({
     })),
   },
   outcomeState: 'on-track',
+  offsetYears,
 })
 
 // A 'dates' outcome from the shared DateTrackOutcome fixture (v1 degenerate budget: floor ≡ lifestyle).
@@ -156,7 +158,7 @@ describe('selectElevatedAnswer — D2 state-adaptive routing', () => {
   })
 
   it('a "dates" outcome WITH a crowned band → the view carries the band + the FUTURE work-stops annotations', () => {
-    const bandData = dateBandTo(40)
+    const bandData = dateBandTo(40, 6)
     const r = selectElevatedAnswer(snap(datesAnswer(confirmedAt(6), bandData), workingWithAges), noop)
     if (r.kind !== 'date' || r.view.kind !== 'dates') throw new Error('expected a date dates view')
     expect(r.view.band).toBe(bandData)
@@ -181,6 +183,7 @@ describe('selectElevatedAnswer — D2 state-adaptive routing', () => {
         ],
       },
       outcomeState: 'on-track',
+      offsetYears: 6,
     }
     const r = selectElevatedAnswer(snap(datesAnswer(confirmedAt(6), zeroBand), workingWithAges), noop)
     if (r.kind !== 'date' || r.view.kind !== 'dates') throw new Error('expected a date dates view')

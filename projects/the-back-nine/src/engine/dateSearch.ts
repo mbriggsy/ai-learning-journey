@@ -485,12 +485,20 @@ export async function runDateSearch(
   // on-track-or-better by construction (its quantized lower bound cleared the bar), never a fail.
   let band: DateBand | undefined
   if (crownedOffset !== undefined) {
+    // Honor the cooperative-cancellation seam before the most expensive single op (one final-tier
+    // run): a newer/locked request arriving after the last sweep candidate must preempt it, exactly
+    // as the sweep loop gates every candidate (the module's "async ONLY for cancellation" contract).
+    if (!(await shouldContinue())) return { kind: 'cancelled' }
     const crownedParams = candidates[crownedOffset]!
     const crownedOut = simulate(crownedParams, seed, { bandFan: true })
     if (!crownedOut.indeterminate && !crownedOut.infeasible) {
       const fan = crownedOut.distribution.bandFan
       if (fan !== undefined) {
-        band = { fan, outcomeState: summarize(crownedOut, crownedParams, seed).headline.outcomeState }
+        band = {
+          fan,
+          outcomeState: summarize(crownedOut, crownedParams, seed).headline.outcomeState,
+          offsetYears: crownedOffset,
+        }
       }
     }
   }

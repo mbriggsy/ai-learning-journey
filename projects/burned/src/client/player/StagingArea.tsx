@@ -58,6 +58,15 @@ export function StagingArea({
     onUnstageCard(id)
   }, [onUnstageCard]), handleSingleTap)
 
+  // Explicit recall affordance for the enlarge preview — the symmetric
+  // partner of Hand's Stage button. Unstaging is always legal (it's a local,
+  // pre-commit move), so unlike Stage this has no disabled gate.
+  const handleRecall = useCallback((id: string) => {
+    haptic('light')
+    onUnstageCard(id)
+    setEnlargedId(null)
+  }, [onUnstageCard])
+
   const startLongPress = useCallback((cardId: string) => {
     longPressFired.current = false
     longPressTimer.current = setTimeout(() => {
@@ -91,6 +100,10 @@ export function StagingArea({
         .map(id => hand.find(c => c.id === id))
         .filter((c): c is CardInstance => c !== undefined)
     : []
+
+  const enlargedStagedCard = enlargedId
+    ? stagedCards.find(c => c.id === enlargedId) ?? null
+    : null
 
   // Clear enlargement when card leaves staging (unstaged or played)
   useEffect(() => {
@@ -169,7 +182,7 @@ export function StagingArea({
           iOS 26 the same way (close 05-08-2022-5p #039). */}
       {createPortal(
         <AnimatePresence>
-          {enlargedId && stagedCards.find(c => c.id === enlargedId) && (
+          {enlargedStagedCard && (
             <m.div
               key="enlarge-backdrop"
               className={handStyles.enlargeBackdrop}
@@ -179,22 +192,57 @@ export function StagingArea({
               transition={MOTION.enter}
               onPointerUp={() => setEnlargedId(null)}
             >
-              <m.div
-                className={handStyles.enlargeCard}
-                // Blur-mask during the scale transition — MinimalCard's
-                // container-query layout flips thresholds as it grows from
-                // 0.35 to 1, so content rejiggers mid-animation. A 4px blur
-                // at the endpoints smooths the swap into a single perceived
-                // motion instead of two layouts fighting mid-flight. Mirrors
-                // the pattern in Hand.tsx. Keep under 6px — blur is expensive
-                // on Safari mobile.
-                initial={{ transform: 'translateY(-80px) scale(0.35)', filter: 'blur(4px)' }}
-                animate={{ transform: 'translateY(0px) scale(1)', filter: 'blur(0px)' }}
-                exit={{ transform: 'translateY(-80px) scale(0.35)', filter: 'blur(4px)' }}
-                transition={MOTION.snappy}
-              >
-                <MinimalCard type={stagedCards.find(c => c.id === enlargedId)!.type} />
-              </m.div>
+              <div className={handStyles.enlargeStack}>
+                <m.div
+                  className={handStyles.enlargeCard}
+                  // Blur-mask during the scale transition — MinimalCard's
+                  // container-query layout flips thresholds as it grows from
+                  // 0.35 to 1, so content rejiggers mid-animation. A 4px blur
+                  // at the endpoints smooths the swap into a single perceived
+                  // motion instead of two layouts fighting mid-flight. Mirrors
+                  // the pattern in Hand.tsx. Keep under 6px — blur is expensive
+                  // on Safari mobile.
+                  initial={{ transform: 'translateY(-80px) scale(0.35)', filter: 'blur(4px)' }}
+                  animate={{ transform: 'translateY(0px) scale(1)', filter: 'blur(0px)' }}
+                  exit={{ transform: 'translateY(-80px) scale(0.35)', filter: 'blur(4px)' }}
+                  transition={MOTION.snappy}
+                >
+                  <MinimalCard type={enlargedStagedCard.type} />
+                </m.div>
+                {/* Recall — symmetric partner of Hand's Stage button. Pulls
+                    the card back down to the hand. stopPropagation keeps the
+                    tap off the backdrop's dismiss handler. The staged-card
+                    double-tap-to-unstage gesture above is untouched; this only
+                    ADDS the discoverable path. Always available — unstaging is
+                    a local pre-commit move. */}
+                <m.button
+                  type="button"
+                  className={handStyles.enlargeAction}
+                  onPointerUp={(e: React.PointerEvent) => {
+                    e.stopPropagation()
+                    handleRecall(enlargedStagedCard.id)
+                  }}
+                  initial={{ opacity: 0, transform: 'translateY(14px) scale(0.96)' }}
+                  animate={{ opacity: 1, transform: 'translateY(0px) scale(1)', transition: { ...MOTION.snappy, delay: 0.08 } }}
+                  exit={{ opacity: 0, transform: 'translateY(10px) scale(0.96)', transition: MOTION.exit }}
+                  transition={MOTION.snappy}
+                  whileTap={{ transform: 'translateY(0px) scale(0.97)' }}
+                >
+                  Recall
+                  <svg
+                    className={handStyles.enlargeActionArrow}
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={2.5}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M12 4v16M12 20l-7-7M12 20l7-7" />
+                  </svg>
+                </m.button>
+              </div>
             </m.div>
           )}
         </AnimatePresence>,

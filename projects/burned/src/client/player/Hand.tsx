@@ -185,22 +185,63 @@ export function Hand({ hand, disabled, onStageCard, onCardLongPress }: HandProps
                 handleEnlargedTap(enlargedCard.id, e)
               }}
             >
-              <m.div
-                key={enlargedCard.id}
-                className={styles.enlargeCard}
-                // Blur-mask during the scale transition — MinimalCard's
-                // container-query layout flips thresholds as it grows from
-                // 0.35 to 1, so content rejiggers mid-animation. A 4px blur
-                // at the endpoints smooths the swap into a single perceived
-                // motion instead of two layouts fighting mid-flight.
-                // Keep under 6px — blur is expensive on Safari mobile.
-                initial={{ transform: 'translateY(120px) scale(0.35)', filter: 'blur(4px)' }}
-                animate={{ transform: 'translateY(0px) scale(1)', filter: 'blur(0px)' }}
-                exit={{ transform: 'translateY(120px) scale(0.35)', filter: 'blur(4px)' }}
-                transition={MOTION.snappy}
-              >
-                <MinimalCard type={enlargedCard.type} />
-              </m.div>
+              <div className={styles.enlargeStack}>
+                <m.div
+                  key={enlargedCard.id}
+                  className={styles.enlargeCard}
+                  // Blur-mask during the scale transition — MinimalCard's
+                  // container-query layout flips thresholds as it grows from
+                  // 0.35 to 1, so content rejiggers mid-animation. A 4px blur
+                  // at the endpoints smooths the swap into a single perceived
+                  // motion instead of two layouts fighting mid-flight.
+                  // Keep under 6px — blur is expensive on Safari mobile.
+                  initial={{ transform: 'translateY(120px) scale(0.35)', filter: 'blur(4px)' }}
+                  animate={{ transform: 'translateY(0px) scale(1)', filter: 'blur(0px)' }}
+                  exit={{ transform: 'translateY(120px) scale(0.35)', filter: 'blur(4px)' }}
+                  transition={MOTION.snappy}
+                >
+                  <MinimalCard type={enlargedCard.type} />
+                </m.div>
+                {/* Explicit stage affordance — MichaelAnne playtest: the
+                    double-tap-to-stage gesture is hard to land on a phone.
+                    This is the discoverable path (triage #006/#007 framed it
+                    as discoverability, not a broken gesture). The card-tap
+                    vocabulary is untouched above; this only ADDS a button.
+                    stopPropagation keeps the tap off the backdrop's
+                    dismiss/double-tap detector. Hidden when it's not a legal
+                    moment to stage (read-only preview). Entry staggers 80ms
+                    behind the card so it reads as "card lands, then its action
+                    appears." */}
+                {!disabled && (
+                  <m.button
+                    type="button"
+                    className={styles.enlargeAction}
+                    onPointerUp={(e: React.PointerEvent) => {
+                      e.stopPropagation()
+                      handleEnlargedStage(enlargedCard.id)
+                    }}
+                    initial={{ opacity: 0, transform: 'translateY(14px) scale(0.96)' }}
+                    animate={{ opacity: 1, transform: 'translateY(0px) scale(1)', transition: { ...MOTION.snappy, delay: 0.08 } }}
+                    exit={{ opacity: 0, transform: 'translateY(10px) scale(0.96)', transition: MOTION.exit }}
+                    transition={MOTION.snappy}
+                    whileTap={{ transform: 'translateY(0px) scale(0.97)' }}
+                  >
+                    Stage
+                    <svg
+                      className={styles.enlargeActionArrow}
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth={2.5}
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden="true"
+                    >
+                      <path d="M12 20V4M12 4l-7 7M12 4l7 7" />
+                    </svg>
+                  </m.button>
+                )}
+              </div>
             </m.div>
           )}
         </AnimatePresence>,

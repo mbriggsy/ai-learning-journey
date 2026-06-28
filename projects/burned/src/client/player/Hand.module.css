@@ -64,11 +64,84 @@
     padding: var(--space-3);
   }
 
-  .enlargeCard {
-    /* Full-bleed card detail — width:100% of the backdrop container.
-       NO vw/svh here — backdrop constrains the size. */
+  /* Card + action stacked in one centered column. The stack owns the width
+     cap (formerly on .enlargeCard) so the card and its CTA share a single
+     column edge-to-edge; the backdrop's flex-centering contract stays
+     untouched (still consumed by BOTH Hand + StagingArea overlays). */
+  .enlargeStack {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-5);
     width: 100%;
     max-width: min(90%, 460px);
+  }
+
+  .enlargeCard {
+    /* Full-bleed card detail — width:100% of the stack column.
+       NO vw/svh here — the stack constrains the size. */
+    width: 100%;
     aspect-ratio: 5 / 7;
+  }
+
+  /* Primary forward-action CTA inside the enlarge preview (Stage from hand /
+     Recall from staging). Mirrors the SmartActionBox `.action` token
+     vocabulary — interactive fill, focus border, display font, callout size —
+     so the preview button reads as the SAME system as the staging-tray CTA.
+     Deliberately WITHOUT the gameplay-essential breathe pulse: that pulse is
+     reserved for the final commit + near-empty-deck warning; staging is an
+     intermediate step, so this carries a static accent glow, not a living one.
+     Entry/exit + press are owned by Framer (m.button whileTap) — transition
+     here covers only the hover color shift (Emil: name exact properties,
+     never `all`). */
+  .enlargeAction {
+    appearance: none;
+    -webkit-appearance: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    /* Wide word↔arrow separation so "Stage ↑" never collapses into a glyph
+       cluster that reads as "Stage 1" — the ↑ falls back to a system glyph and
+       at small size + tight spacing read as a numeral 1 (caught in the seat). */
+    gap: var(--space-3);
+    width: 100%;
+    min-height: var(--size-touch-target-comfortable);
+    padding: var(--space-3) var(--space-6);
+    background: var(--color-bg-interactive);
+    color: var(--color-fg-primary);
+    border: 2px solid var(--color-border-focus);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-glow-accent);
+    font-family: var(--font-display);
+    font-size: var(--text-callout);
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    transition: background var(--motion-duration-fast) var(--motion-ease-base);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .enlargeAction:hover {
+      background: var(--color-bg-interactive-hover);
+    }
+  }
+
+  .enlargeAction:focus-visible {
+    outline: 2px solid var(--color-border-focus);
+    outline-offset: var(--space-1);
+  }
+
+  /* Directional arrow — drawn as an inline SVG, NOT a text glyph. The Unicode
+     ↑/↓ fall back to the platform system font (Clash Display has no arrow
+     glyph), which rendered thin enough on a phone to read as the numeral "1"
+     (caught in the seat). An SVG is pixel-identical on every device, scales
+     cleanly, and can never collapse into a digit. ↑ promotes to the staging
+     tray (above the hand), ↓ recalls back to the hand — kept distinct from
+     SmartActionBox's `→` ("needs a target"). aria-hidden in markup; the verb
+     carries the accessible label. */
+  .enlargeActionArrow {
+    width: 1.45em;
+    height: 1.45em;
+    flex: none;
   }
 }

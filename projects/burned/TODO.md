@@ -18,7 +18,7 @@ sync only if you want it aligned.
 
 - Tests: **1407 pass** | 6 expected fail (68/68 files green)
 - Typecheck: clean
-- Phone player entry: **19.17 KB gz**
+- Phone player entry: **19.53 KB gz** (re-measured 2026-06-28 — Stage/Recall preview buttons)
 - DramaOverlay lazy chunk: **2.34 KB gz**
 - HOW-TO-PLAY bundle: `howtoplay-*.js` **33.90 KB gz** + shared GSAP **27.21 KB gz**
 - Protocol version: **v6**

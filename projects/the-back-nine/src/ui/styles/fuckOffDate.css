@@ -1,0 +1,149 @@
+/*
+ * src/ui/styles/fuckOffDate.css — the D2 elevated fuck-off-date surface (the Clubhouse Ledger applied
+ * to the not-yet-retired magic moment). Reads ONLY tokens.css var()s (the canonical-source rule).
+ * CSP-clean: class-driven, never an inline style attribute.
+ *
+ * The date is the HERO — the headline sits at the answer-headline scale (--text-2xl), in --ink (hue
+ * never encodes anything here). The odds + disclosures are quieter supporting lines. MOTION is an
+ * occasional first-reveal fade only (figures static — no count-up, the calm law); reduced-motion
+ * drops the movement, final state identical.
+ */
+
+.fuck-off-date {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  width: 100%;
+  max-width: var(--measure);
+}
+
+/* The first-reveal: a calm rise+fade (the magic moment is an occasional, first-time landing).
+   transform + opacity only (GPU); numbers never animate. */
+.fod-reveal {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  opacity: 1;
+  transform: translateY(0);
+  transition:
+    opacity var(--dur-reveal) var(--ease-out),
+    transform var(--dur-reveal) var(--ease-out);
+}
+
+@starting-style {
+  .fod-reveal {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+/* The date headline — the hero. Editorial serif, large, in --ink. tabIndex=-1 makes it the
+   focus-to-answer target (the magic-moment announce on landing). */
+.fod-headline {
+  margin: 0;
+  font-family: var(--font-display);
+  font-optical-sizing: auto;
+  font-weight: var(--weight-display);
+  font-size: var(--text-2xl);
+  line-height: var(--leading-display);
+  letter-spacing: var(--tracking-display);
+  color: var(--ink);
+  max-width: var(--measure);
+}
+
+/* The no-date answer is a calmer, smaller headline — it's an honest "not within this window", not a
+   verdict to land on with full hero weight. */
+.fod-headline--quiet {
+  font-size: var(--text-xl);
+  color: var(--ink-muted);
+}
+
+.fod-headline:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 4px;
+  border-radius: var(--radius-sm);
+}
+
+/* The conservative odds reading — a supporting line under the date. */
+.fod-odds {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: var(--text-lg);
+  line-height: var(--leading-tight);
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  max-width: var(--measure);
+}
+
+/* Disclosure notes (window-edge, non-monotone) — quiet, honest context, never alarm. */
+.fod-note {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  line-height: var(--leading-body);
+  color: var(--ink-muted);
+  max-width: var(--measure);
+}
+
+/* The provisional eyebrow (a date taken before the account set is complete). */
+.fod-provisional {
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-overline);
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+
+/* The pending mode (pre-first-resolve). */
+.fod-pending {
+  font-family: var(--font-display);
+  font-optical-sizing: auto;
+  font-weight: var(--weight-display);
+  font-size: var(--text-lg);
+  color: var(--ink-muted);
+}
+
+/* The compute-error mode (a defined calm result, never a hung promise). */
+.fod-error {
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  color: var(--ink);
+}
+
+.fod-retry {
+  min-height: var(--tap-min);
+  border: none;
+  background: none;
+  color: var(--ink-muted);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+  transition: color var(--dur-fast) ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .fod-retry:hover {
+    color: var(--ink);
+  }
+}
+
+.fod-retry:active {
+  transform: scale(0.97);
+}
+
+/* Reduced motion: drop the movement, keep a short comprehension fade (final state identical). */
+@media (prefers-reduced-motion: reduce) {
+  .fod-reveal {
+    transition: opacity var(--dur-fast) ease;
+  }
+  @starting-style {
+    .fod-reveal {
+      opacity: 0;
+      transform: none;
+    }
+  }
+  .fod-retry {
+    transition: none;
+  }
+}

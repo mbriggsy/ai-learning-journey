@@ -13,18 +13,25 @@ import { App } from '@ui/App'
 const rootEl = document.getElementById('root')
 if (!rootEl) throw new Error('Root element #root not found')
 
-// DEV-only U7 confidence-statement preview harness, reached at `?preview`. `import.meta.env.DEV` is
-// a static `false` in the production build, so this whole branch — and the dynamic import it gates —
-// is dead-code-eliminated: the harness never ships and never counts against the entry-JS budget.
-const U7Preview = import.meta.env.DEV ? lazy(() => import('@ui/preview/U7Preview')) : null
-const previewing =
-  import.meta.env.DEV && new URLSearchParams(window.location.search).has('preview')
+// DEV-only preview harnesses, reached at `?preview` (the U7 confidence surfaces) and `?preview=date`
+// (the D2 fuck-off-date surface). `import.meta.env.DEV` is a static `false` in the production build,
+// so this whole branch — and the dynamic imports it gates — is dead-code-eliminated: the harnesses
+// never ship and never count against the entry-JS budget.
+const previewParam = import.meta.env.DEV
+  ? new URLSearchParams(window.location.search).get('preview')
+  : null
+const Preview =
+  previewParam === null
+    ? null
+    : previewParam === 'date' || previewParam === 'd2'
+      ? lazy(() => import('@ui/preview/DatePreview'))
+      : lazy(() => import('@ui/preview/U7Preview'))
 
 createRoot(rootEl).render(
   <StrictMode>
-    {previewing && U7Preview ? (
+    {Preview ? (
       <Suspense fallback={null}>
-        <U7Preview />
+        <Preview />
       </Suspense>
     ) : (
       <App />

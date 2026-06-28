@@ -237,6 +237,20 @@ export const copy = {
     'Not there yet — with what’s entered so far. Accounts usually move this; the picture isn’t complete.',
   dateFreeToday: 'Your fuck-off date is today, by this math',
   dateWindowEdge: 'at the edge of what this window can confirm',
+  // --- D2 elevated fuck-off-date surface (the landed magic moment — the date-first lead for a
+  //     not-yet-retired household). VERDICT-SCOPED ("date" prefix → free-numeral + superlative): no
+  //     bare numeral (the year count rides slots.dateInYears / noDateInWindow), no superlative, no
+  //     false-certainty. FIRST-DRAFT disclosure wording — the cold-read's call. ---
+  dateRegionLabel: 'Your fuck-off date',
+  // The window-edge note, elevated to a full sentence (the inline dateWindowEdge fragment is for the
+  // provisional strip). The crowned date IS the window top — no later evidence — so it's reported
+  // honestly as the edge of the window, never silently presented as confirmed.
+  dateWindowEdgeNote:
+    'This is as far out as the window reaches — it sits at the edge of what the math can confirm.',
+  // The non-monotone-region disclosure (the ACA-cliff signature: an earlier window clears, then dips
+  // below the line before the date holds). D2 owns the string; the C3 result carries the flags.
+  dateNonMonotoneNote:
+    'An earlier year or two can clear, then dip back below the line before it holds — health costs before Medicare are the usual reason.',
   answerError: 'The math hit a snag.',
   answerRetry: 'Try again',
   outcomeOnTrack: 'On track',

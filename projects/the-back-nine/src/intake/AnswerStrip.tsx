@@ -1,4 +1,5 @@
 import { copy, slots } from '@ui/copy'
+import { dateOddsText } from '@ui/dateOdds'
 import type { DateTrackOutcome, OutcomeState } from '@shared/model'
 import type { MemoryModelSnapshot } from '@store/memoryModel'
 import type { MissingFact } from './intakeMap'
@@ -62,7 +63,7 @@ function DateLine({ track, windowTopYears }: { track: DateTrackOutcome; windowTo
   if (track.kind === 'no-date-in-window') {
     return <p className="strip-lead">{slots.noDateInWindow(windowTopYears)}</p>
   }
-  const odds = slots.withOdds(slots.xOfTen(Math.round(track.grade.quantizedLowerBound * 10)))
+  const odds = dateOddsText(track.grade.quantizedLowerBound)
   const lead =
     track.offsetYears === 0 ? copy.dateFreeToday : slots.dateInYears(track.offsetYears)
   return (

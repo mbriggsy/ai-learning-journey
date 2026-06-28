@@ -4,6 +4,17 @@
  * only (the canonical-source rule) — no raw values.
  */
 
+/* The app shell is a column so a SHORT surface (the landed result) centers in the space ABOVE the
+ * disclaimer instead of forcing its own 100svh and pushing the footer into an overflow-scroll (the
+ * cold-read caught the unnecessary scroll). The intake + cold-start are content-height flex items
+ * (visually identical to their prior block flow); only the result claims the leftover space
+ * (`.result { flex: 1 }`), which also pins the disclaimer to the bottom. */
+#root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100svh;
+}
+
 /* R13 honest-limits disclaimer. Quiet fine print, aligned to the SAME centered content column
  * as the intake, with a hairline to seat it as a footer. (Was an unstyled <footer><p> that
  * inherited the body-size global p and sat flush to the viewport edge — hence the shouty,

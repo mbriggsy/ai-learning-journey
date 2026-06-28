@@ -10,13 +10,15 @@
 
 .result {
   box-sizing: border-box;
-  min-height: 100svh;
+  /* Claim the space above the disclaimer (no own 100svh ⇒ no overflow-scroll past the footer); the
+   * hero centers in that space, and a short answer never forces a scroll. */
+  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: var(--space-8);
-  padding: var(--space-10) var(--gutter) var(--space-9);
+  padding: var(--space-9) var(--gutter);
 }
 
 /* The hero column: the elevated surface sits at the reading measure, centered on the page so the

@@ -437,6 +437,15 @@
   min-height: var(--tap-min);
 }
 
+/* The running total under the account list — a quiet subtotal, right-aligned to read as a sum, the
+ * figure in inherited tabular figures. Sits between the list and the Add button. */
+.accounts-total {
+  margin-block: var(--space-3) var(--space-5);
+  text-align: right;
+  font-weight: var(--weight-semibold);
+  color: var(--ink);
+}
+
 .account-entry {
   display: flex;
   flex-direction: column;

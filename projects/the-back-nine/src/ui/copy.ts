@@ -97,8 +97,11 @@ export const copy = {
   // other-income loop, so the copy must NOT reference streams as already entered —
   // a pension/rental/annuity is added "separately, later," not "below" or "entered."
   workIncomeLabel: 'Income from working — just what work pays',
+  // Dedup (cold-read): the LABEL already says "just what work pays", so the help no longer repeats
+  // it. Names WHY it is asked a second time — same work income, the Medicare lens — and keeps the
+  // exclude-other-income guidance (a pension/rental/annuity/alimony is its own stream, counted later).
   workIncomeHelp:
-    'Just what work pays — salary and bonuses. If you also receive a pension, rental, annuity, or alimony, you’ll add those separately, later — the tool counts each on its own, so don’t include them here. If you’re still working when Medicare begins, this is what can add a surcharge on top of the usual premium.',
+    'Usually the same as the pay you entered earlier — your work income, here for the Medicare side of things. A pension, rental, annuity, or alimony is counted separately later, so leave those out. If you’re still working when Medicare begins, this is what can add a surcharge on top of the usual premium.',
   qIrmaaSeedHeading: 'Your last two tax returns',
   irmaaSeedTwoBackLabel: 'Income, two years back',
   irmaaSeedOneBackLabel: 'Income, last year',
@@ -358,6 +361,9 @@ export const slots = {
   /** One committed account in the loop's quiet list. */
   accountSummary: (kindLabel: string, owner: string, valueFormatted: string): string =>
     `${kindLabel} · ${owner} · $${valueFormatted}`,
+  /** The running total under the account list (cold-read: the user wants to see what they've
+   *  entered add up). Amount pre-formatted by the caller. */
+  accountsTotal: (valueFormatted: string): string => `Everything entered so far — $${valueFormatted}`,
   /** One committed other-income stream's quiet row (R40 — type · owner · ~$X/yr).
    *  The `~` is the humane-precision hedge; the amount is pre-formatted by the
    *  caller (the ui layer can't import the intake money formatter). */
@@ -407,8 +413,8 @@ export const slots = {
    *  empty). The amount is pre-formatted by the caller (the ui layer can't import
    *  the intake money formatter); the figure + its BLS provenance live in
    *  `src/intake/referenceData.ts`. */
-  oopHint: (amountFormatted: string): string =>
-    `Around $${amountFormatted} a year is a reasonable figure for a couple — a bit under the federal average (Bureau of Labor Statistics, 2023). Not sure? Leaving it blank is fine, too.`,
+  oopHint: (amountFormatted: string, averageFormatted: string): string =>
+    `Around $${amountFormatted} a year is a reasonable figure for a couple — a bit under the federal average of about $${averageFormatted} (Bureau of Labor Statistics, 2023). Not sure? Leaving it blank is fine, too.`,
   /** The "still needed" strip's overflow counter — a self-describing list item
    *  (its own span), never a bare "(+N)" glyph fused onto the prior fact name. */
   factsMore: (n: number): string => `${n} more`,

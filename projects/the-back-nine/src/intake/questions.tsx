@@ -438,7 +438,10 @@ const oopStep: StepDef = {
           know the figure isn't guessing blind. It vanishes once they answer. */}
       {api.draft.health.oopMedicalAnnual === undefined && (
         <p className="field-help">
-          {slots.oopHint(formatMoney(OOP_MEDICAL_TYPICAL_HOUSEHOLD.annual))}
+          {slots.oopHint(
+            formatMoney(OOP_MEDICAL_TYPICAL_HOUSEHOLD.annual),
+            formatMoney(OOP_MEDICAL_TYPICAL_HOUSEHOLD.federalAverageApproxAnnual),
+          )}
         </p>
       )}
     </>
@@ -602,6 +605,13 @@ function AccountsStep({ api }: { api: StepApi }) {
           </li>
         ))}
       </ul>
+      {api.draft.enteredAccounts.length > 0 && (
+        <p className="accounts-total">
+          {slots.accountsTotal(
+            formatMoney(api.draft.enteredAccounts.reduce((s, a) => s + a.valueToday, 0)),
+          )}
+        </p>
+      )}
       <button
         type="button"
         className="btn-secondary"

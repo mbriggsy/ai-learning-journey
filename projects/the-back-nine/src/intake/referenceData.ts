@@ -25,6 +25,12 @@
 export const OOP_MEDICAL_TYPICAL_HOUSEHOLD = {
   /** Conservative round household anchor ($/yr, real). */
   annual: 3_000,
+  /** The federal-average figure the anchor sits "a bit under" — SHOWN to the user (the cold-read:
+   *  "a bit under the average" is hollow without the number). The BLS 55–64 out-of-pocket figure
+   *  (≈ $3,397, the pre-Medicare couple's reference) rounded to a calm "about $3,400"; carries the
+   *  same `directionalUntilPinned` caveat as `annual` (grounded-search-sourced, not primary-table
+   *  confirmed). Single-sourced here so the hint copy reads it and never re-types a dated figure. */
+  federalAverageApproxAnnual: 3_400,
   citation:
     'BLS Consumer Expenditure Survey 2023 (released 2024-09-25), per consumer unit — out-of-pocket EXCLUDING premiums = medical services + drugs + medical supplies ≈ $3,397 (ages 55–64) / $3,807 (65–74). $3,000 anchors conservatively below that average; no median-by-age is separately published.',
   directionalUntilPinned: true,

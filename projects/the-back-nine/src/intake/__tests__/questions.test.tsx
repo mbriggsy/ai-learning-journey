@@ -388,7 +388,10 @@ describe('the out-of-pocket step — the optional-field BLS reference hint (cold
       ],
     }))
     reachOop(m)
-    const hint = slots.oopHint(formatMoney(OOP_MEDICAL_TYPICAL_HOUSEHOLD.annual))
+    const hint = slots.oopHint(
+      formatMoney(OOP_MEDICAL_TYPICAL_HOUSEHOLD.annual),
+      formatMoney(OOP_MEDICAL_TYPICAL_HOUSEHOLD.federalAverageApproxAnnual),
+    )
     expect(screen.getByText(hint)).toBeInTheDocument()
 
     const field = screen.getByLabelText(copy.oopLabel)

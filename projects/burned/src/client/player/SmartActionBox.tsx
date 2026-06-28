@@ -60,7 +60,7 @@ interface SmartActionBoxProps {
    * ACTOR-side mirror of `favorMode`. When set, the local player is the
    * favor-requester waiting for the target to surrender a card. Drives a
    * dedicated "Waiting for X / to surrender a card" state so the ACTOR
-   * isn't staring at the misleading default "Double-tap a card to stage
+   * isn't staring at the misleading default "Tap a card, then Stage
    * it" hint during favor-pending. Triage issue #010 / Gap 2.
    */
   readonly favorWaitingFor: { targetName: string } | null
@@ -232,7 +232,7 @@ export function SmartActionBox({
 
     // Favor-requester waiting state — you played Call in a Favor and the
     // target is choosing what to surrender. Without this branch the ACTOR
-    // falls through to the default "Double-tap a card to stage it" hint,
+    // falls through to the default "Tap a card, then Stage it" hint,
     // which is misleading: there's nothing useful for them to stage and no
     // signal the request even reached the target's phone (triage #010 / Gap 2).
     if (favorWaitingFor) {
@@ -254,11 +254,13 @@ export function SmartActionBox({
         return {
           key: 'favor-empty',
           className: `${styles.box} ${styles.standby}`,
-          // "Double-tap" surfaces the gesture vocabulary at the decision
-          // moment so a first-time TARGET doesn't single-tap (preview)
-          // and stall (close 05-08-2022-5p #017 + #034 — favor-response
-          // gesture not surfaced to first-time TARGET).
-          text: `Double-tap a card\nto surrender to ${favorMode.requesterName}`,
+          // Teach the discoverable path — tap a card, then tap Stage in the
+          // preview to set it as the surrender. (Was "Double-tap": that gesture
+          // is hard to land on a phone — the exact friction the Stage button
+          // fixes. Single-tap no longer stalls; it now surfaces the Stage
+          // button. Still closes 05-08-2022-5p #017 + #034 — favor-response
+          // gesture surfaced to a first-time TARGET.)
+          text: `Tap a card, then Stage it\nto surrender to ${favorMode.requesterName}`,
           interactive: false,
         }
       }
@@ -304,7 +306,7 @@ export function SmartActionBox({
       return {
         key: myTurn ? 'hint' : 'standby',
         className: `${styles.box} ${styles.standby}`,
-        text: myTurn ? 'Double-tap a card to stage it' : 'Stand by, operative',
+        text: myTurn ? 'Tap a card, then Stage it' : 'Stand by, operative',
         interactive: false,
       }
     }

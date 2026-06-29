@@ -180,4 +180,25 @@ export default tseslint.config(
       ),
     },
   },
+
+  // .claude/workflows/** — Workflow-tool orchestration scripts (automation, NOT app source and
+  // never bundled). They run in the Workflow runtime, which INJECTS these globals. Declared here
+  // so the scripts still lint for REAL bugs (unused vars, typos) instead of every injected name
+  // reading as no-undef — a blanket ignore would silence genuine issues too. (`meta` is an ESM
+  // export, not a global; agent/parallel/pipeline/phase/log/args/budget/workflow are the runtime's.)
+  {
+    files: ['.claude/workflows/**/*.js'],
+    languageOptions: {
+      globals: {
+        agent: 'readonly',
+        parallel: 'readonly',
+        pipeline: 'readonly',
+        phase: 'readonly',
+        log: 'readonly',
+        args: 'readonly',
+        budget: 'readonly',
+        workflow: 'readonly',
+      },
+    },
+  },
 )

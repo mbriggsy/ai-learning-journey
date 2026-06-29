@@ -174,7 +174,7 @@ const ALL_OPENERS = [
 // string — tolerate both so a stringified payload never silently degrades to
 // "(no issue supplied)" and burns a full council over nothing.
 let A = args
-if (typeof A === 'string') { try { A = JSON.parse(A) } catch (e) { A = {} } }
+if (typeof A === 'string') { try { A = JSON.parse(A) } catch { A = {} } }
 A = A || {}
 
 const issue = (A.issue ? String(A.issue).trim() : '')

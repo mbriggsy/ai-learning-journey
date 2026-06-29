@@ -95,15 +95,18 @@ describe('ConfidenceStatement — the U7 verdict-first surface', () => {
     expect(screen.queryByText(copy.survivorReadoutEyebrow)).not.toBeInTheDocument()
   })
 
-  it('already-failing reads its grim count + a TRIM clause, never a hopeful "room" reading', () => {
+  it('already-failing reads its grim count + a figure-LESS rethink clause — never a hopeful "room" reading, never a sufficient-sounding "trim" figure', () => {
     // the most alarming honest reading — pin it so a component-side regression can't render it hopeful
-    // (a 0-of-10 plan must never show a surplus/"room" framing).
+    // (a 0-of-10 plan must never show a surplus/"room" framing) NOR falsely actionable (a single $X
+    // trim that reads as "would fix it"). The unfundable-from-the-start case forks to the lever-agnostic
+    // rethink clause (Council 2026-06-29); the planted-fail arm asserts the trim FIGURE is GONE.
     const { container } = render(
       <ConfidenceStatement view={{ kind: 'reading', ...READING_FIXTURES['already-failing'] }} />,
     )
     expect(screen.getByRole('heading', { name: copy.outcomeAlreadyFailing })).toBeInTheDocument()
     expect(container.textContent).toContain('0 of 10')
-    expect(container.textContent).toContain(slots.verdictTrimClause('1,180')) // the trim direction
+    expect(container.textContent).toContain(slots.verdictRethinkClause()) // the figure-less rethink direction
+    expect(container.textContent).not.toContain(slots.verdictTrimClause('1,180')) // never a sufficient-sounding trim figure
     expect(container.textContent).not.toContain(slots.verdictRoomClause('1,180')) // never "room"
   })
 

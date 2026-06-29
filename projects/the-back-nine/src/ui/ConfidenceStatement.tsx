@@ -106,6 +106,10 @@ function magnitudeClause(dollar: DollarAdjustment): string {
       return slots.verdictTrimClause(formatPerMonth(dollar.perMonthReal.value))
     case 'on-the-line':
       return slots.verdictHoldClause()
+    case 'rethink':
+      // already-failing (0 of 10, unfundable from the start): the engine drops the figure — no single
+      // trim is a solve — so the clause is figure-less + lever-agnostic. (Council 2026-06-29.)
+      return slots.verdictRethinkClause()
   }
 }
 

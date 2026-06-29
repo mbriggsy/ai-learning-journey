@@ -497,9 +497,14 @@ export interface SurvivorReading {
 
 /** The dollar-grammar adjustment ("trim ~$Y/month" / "you have ~$Y/month of room"). */
 export interface DollarAdjustment {
-  /** Signed real dollars per month: negative = trim, positive = room, 0 = on the line. */
+  /** Signed real dollars per month: negative = trim, positive = room, 0 = on the line. For
+   *  `rethink` the value is still negative (the same gap-scaled proxy) but the verdict DROPS it —
+   *  no single figure is a solve for an unfundable-from-the-start plan, so the clause is figure-less. */
   readonly perMonthReal: WithMargin<number>
-  readonly direction: 'trim' | 'room' | 'on-the-line'
+  /** `rethink` = already-failing (0 of 10, unfundable from the start): a figure-less, lever-agnostic
+   *  verdict, never the sufficiency-implying `trim`. The fork lives in the PURE engine (`buildDollar`),
+   *  so the UI clause is a key-lookup that can't re-derive it (Council 2026-06-29). */
+  readonly direction: 'trim' | 'room' | 'on-the-line' | 'rethink'
 }
 
 /** Per-path tax-aware solver surfaces (U3·M6 — the strategic review's SOLVER OUTPUT

@@ -270,12 +270,70 @@ const stillWorkingBorderline: ScenarioDraft = {
   seed: DEV_CRN_SEED,
 }
 
+/**
+ * A DOA already-FAILING household — the SPINE route's grimmest honest reading, built to cold-read the
+ * lever-agnostic figure-LESS "rethink" verdict clause (Council 2026-06-29). Both retired and UNDERWATER
+ * from year one: a single $60k Traditional IRA against a $96k spend with low Social Security (PIA 16k/8k
+ * ⇒ ~$24k/yr), so the SS floor leaves a ~$72k/yr draw on $60k — every market path depletes inside the
+ * first year. Lands "already-failing, 0 of 10": survival ≈ 0 AND median depletion ≤ 2yr (selectOutcome
+ * State's early-death reservation), so the verdict renders the figure-less rethink clause, never a
+ * sufficient-sounding trim. Old + tiny on purpose: NO market path rescues it, so the state is structural
+ * (devSeeds.test.ts pins outcomeState='already-failing' against the REAL engine, not just the validator).
+ */
+const retiredFailing: ScenarioDraft = {
+  people: [
+    {
+      name: 'Alex',
+      sex: 'female',
+      birthYear: 1954,
+      currentAge: 72,
+      workStatus: 'retired',
+      retirementAge: 66,
+      earnedIncomeReal: 0,
+      pia: 16_000,
+      socialSecurityClaimAge: 67,
+    },
+    {
+      name: 'Sam',
+      sex: 'male',
+      birthYear: 1953,
+      currentAge: 73,
+      workStatus: 'retired',
+      retirementAge: 65,
+      earnedIncomeReal: 0,
+      pia: 8_000,
+      socialSecurityClaimAge: 67,
+    },
+  ],
+  enteredAccounts: [
+    {
+      ownerIndex: 0,
+      kind: 'traditional-ira',
+      valueToday: 60_000,
+      manualBlend: { kind: 'exact', stockPct: 40, bondPct: 40, cashPct: 20 },
+    },
+  ],
+  incomeStreams: [],
+  tickerClassifications: {},
+  health: { irmaaMagiSeed: [20_000, 20_000] },
+  annualSpendingReal: 96_000,
+  spendEntryPeriod: 'month',
+  survivorSpendingRatio: 0.75,
+  drawdownPolicy: 'proportional',
+  filing: 'mfj',
+  startCalendarYear: 2026,
+  taxVintage: 'OBBBA-2025',
+  appDefaultVersion: 'p2-dev-seed',
+  seed: DEV_CRN_SEED,
+}
+
 /** The seed registry — `?seed=<key>` selects one. */
 export const DEV_SEEDS = {
   retired: retiredOnTrack,
   date: stillWorking,
   borderline: retiredBorderline,
   dateborder: stillWorkingBorderline,
+  failing: retiredFailing,
 } satisfies Record<string, ScenarioDraft>
 
 export type DevSeedKey = keyof typeof DEV_SEEDS

@@ -507,9 +507,20 @@ export const slots = {
   /** direction 'room' — even the conservative future leaves a surplus (over-funded / on-track). */
   verdictRoomClause: (perMonthFormatted: string): string =>
     `There looks to be room for about $${perMonthFormatted} more a month.`,
-  /** direction 'trim' — a shortfall the magnitude sizes (off-track / already-failing). */
+  /** direction 'trim' — an off-track shortfall the magnitude sizes. DIRECTIONAL, never a destination
+   *  claim: "would move it TOWARD steadier ground" — even a low off-track plan's trim is a large
+   *  fraction of spend, not an asserted arrival (the old "onto steadier ground" read as a single $X
+   *  solving it: calm-but-wrong, R25). The unfundable-from-the-start case forks to
+   *  `verdictRethinkClause` (Council 2026-06-29). */
   verdictTrimClause: (perMonthFormatted: string): string =>
-    `About $${perMonthFormatted} a month less would bring it onto steadier ground.`,
+    `About $${perMonthFormatted} a month less would move it toward steadier ground.`,
+  /** direction 'rethink' — already-failing (0 of 10, unfundable from the start). FIGURE-LESS and
+   *  LEVER-AGNOSTIC (it also renders for an already-RETIRED household, so it names no accumulation
+   *  lever): the shortfall is structural, not a trim away — a single sufficient-sounding figure here
+   *  is the calm-but-wrong sin (R25). First-draft string — exact word-pick is the N=1 cold-read's call
+   *  (`?seed=failing`). catastrophe-gated via copyGuard `isMortalityKey`. */
+  verdictRethinkClause: (): string =>
+    `As it stands, this plan runs short from the start — closing that gap takes more than trimming the budget.`,
   /** direction 'on-the-line' — borderline (or on-track with a rough downside); no figure. */
   verdictHoldClause: (): string => `It sits close to the line — small changes tip it either way.`,
   /** The survivor income step-down, told as a plain $ drop (R17/R40) — the PRE-TAX monthly

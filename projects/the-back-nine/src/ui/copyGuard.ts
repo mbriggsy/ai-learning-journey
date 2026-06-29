@@ -63,11 +63,13 @@ export function isVerdictKey(key: string): boolean {
 export function isSurvivorKey(key: string): boolean {
   return /survivor/i.test(key)
 }
-/** Mortality-facing copy that must carry NO catastrophe/alarm lexicon — survivor copy PLUS the
- *  dead-cohort scrub note (`bandReadoutThinNote`), the one mortality-adjacent key that isn't
- *  survivor-scoped. Council 2026-06-28: give it the same net so a future morbid edit can't ship green. */
+/** Mortality-facing copy that must carry NO catastrophe/alarm lexicon — survivor copy PLUS two
+ *  mortality-adjacent keys that aren't survivor-scoped: the dead-cohort scrub note
+ *  (`bandReadoutThinNote`, council 2026-06-28) and the already-failing verdict clause
+ *  (`verdictRethinkClause`, council 2026-06-29 — a 0-of-10 plan invites "destitute"/"ruin"/"disaster").
+ *  Same net so a future morbid edit ("you'll be destitute") can't ship green. */
 export function isMortalityKey(key: string): boolean {
-  return isSurvivorKey(key) || key === 'bandReadoutThinNote'
+  return isSurvivorKey(key) || key === 'bandReadoutThinNote' || key === 'verdictRethinkClause'
 }
 
 // --- lexicons --------------------------------------------------------------------------------

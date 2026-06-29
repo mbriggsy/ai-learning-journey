@@ -104,7 +104,7 @@ export const READING_FIXTURES: Record<OutcomeState, ReadingFixture> = {
   },
   'already-failing': {
     headline: headline(0, 'already-failing'),
-    dollar: dollar(-1180, 'trim'),
+    dollar: dollar(-1180, 'rethink'),
     band: makeFan({ years: HORIZON, start: START, drift: -1.05, spread: 0.8, thin: 0.35 }),
   },
   indeterminate: {

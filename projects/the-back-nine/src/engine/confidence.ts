@@ -155,11 +155,16 @@ function buildDollar(distribution: Distribution, params: SimulationParams, state
     direction = 'on-the-line'
     perMonth = 0
   } else {
-    // off-track / already-failing → trim. Coarse proxy: a fraction of current spend
-    // scaled by the shortfall in survival below the on-track floor.
-    direction = 'trim'
+    // off-track / already-failing → a shortfall. Coarse proxy: a fraction of current spend scaled
+    // by the shortfall in survival below the on-track floor (NOT a solve — the precise optimal-
+    // spending answer is the P4 solver). already-failing is unfundable from the start (survival ≈ 0):
+    // no single trim is a solve, and the figure SATURATES to ≈ −spend × the gap, carrying ~zero
+    // state-specific signal — so it forks to a figure-LESS, lever-agnostic 'rethink' verdict, never
+    // the sufficiency-implying 'trim' clause. off-track keeps 'trim' (its reworded clause speaks
+    // DIRECTION — "toward steadier ground" — not arrival). (Council 2026-06-29.)
     const gap = Math.max(0, BANDS.onTrack - quantizeSurvival(distribution.survivalFraction))
     perMonth = -monthlySpend * gap
+    direction = state === 'already-failing' ? 'rethink' : 'trim'
   }
 
   const marginToEdge = Math.abs(perMonth - (Math.round(perMonth / DOLLAR_STEP) * DOLLAR_STEP))

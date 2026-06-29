@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { DEV_SEEDS } from '../devSeeds'
 import { buildDateInput, buildSpineParams, isDateRoute, missingRequiredFacts } from '@intake/intakeMap'
 import { validateParams } from '@engine/simulate'
+import { runEngine } from '@engine/engineProtocol'
 import { buildCandidateParams, DATE_OFFSET_WINDOW_TOP, DATE_SEARCH_PATHS } from '@engine/dateSearch'
 
 /**
@@ -42,5 +43,20 @@ describe('dev seeds reach a worded (engine-accepted) answer', () => {
   it('routes the foundational seeds correctly (retired → spine, date → date)', () => {
     expect(isDateRoute(DEV_SEEDS.retired)).toBe(false)
     expect(isDateRoute(DEV_SEEDS.date)).toBe(true)
+  })
+
+  // The 'failing' seed exists to cold-read the figure-LESS already-failing "rethink" clause
+  // (Council 2026-06-29). Validator-acceptance (above) only proves it reaches a worded answer — pin
+  // the OUTCOME against the REAL engine so a parameter drift can't quietly slide it to off-track (the
+  // reworded trim clause) and strand the cold-read. Proven, not believed (manifesto).
+  it("'failing' lands already-failing through the real engine (the rethink-clause cold-read seed actually fails)", () => {
+    const d = DEV_SEEDS.failing
+    const params = buildSpineParams(d)
+    expect(params, 'failing: buildSpineParams').not.toBeNull()
+    const wire = runEngine(params!, d.seed!)
+    expect(wire.kind, 'failing: a feasible, resolved run (not infeasible/error)').toBe('resolved')
+    if (wire.kind !== 'resolved') return
+    expect(wire.headline.outcomeState, 'survival ≈ 0 AND median depletion ≤ 2yr').toBe('already-failing')
+    expect(wire.dollar.direction, 'already-failing forks to the figure-less rethink clause').toBe('rethink')
   })
 })

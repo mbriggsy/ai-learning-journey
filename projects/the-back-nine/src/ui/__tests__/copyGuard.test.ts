@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { copy, slots, staticDisclosures, type CopyKey } from '../copy'
-import { lintCopy, isVerdictKey, isSurvivorKey, isMortalityKey, DIRECTIVE_VERBS, type CopyGate } from '../copyGuard'
+import { lintCopy, isVerdictKey, isMortalityKey, DIRECTIVE_VERBS, type CopyGate } from '../copyGuard'
 
 /*
  * copyGuard enumerates the catalog and asserts every entry passes its applicable gates. Three
@@ -83,6 +83,7 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     factsMore: slots.factsMore(3),
     verdictRoomClause: slots.verdictRoomClause('430'),
     verdictTrimClause: slots.verdictTrimClause('280'),
+    verdictRethinkClause: slots.verdictRethinkClause(),
     verdictHoldClause: slots.verdictHoldClause(),
     verdictSurvivorStepDown: slots.verdictSurvivorStepDown('1,200'),
   }
@@ -94,7 +95,8 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
   it('slot outputs hold the verdict voice (no advice / superlative / false-certainty; catastrophe on survivor)', () => {
     for (const [name, rendered] of Object.entries(SLOT_RENDER)) {
       const gates: CopyGate[] = ['false-certainty', 'advice-verb', 'superlative']
-      if (isSurvivorKey(name)) gates.push('catastrophe')
+      // mortality net (not just survivor): the already-failing rethink clause is catastrophe-gated too.
+      if (isMortalityKey(name)) gates.push('catastrophe')
       expect(lintCopy(rendered, gates), `${name}: "${rendered}"`).toEqual([])
     }
   })
@@ -109,6 +111,7 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
       expect(lintCopy(rendered, ['free-numeral']), rendered).toEqual([])
     }
     expect(lintCopy(slots.verdictHoldClause(), ['free-numeral'])).toEqual([])
+    expect(lintCopy(slots.verdictRethinkClause(), ['free-numeral'])).toEqual([]) // figure-less by construction
   })
 
   // --- the ADVERSARIAL COVERAGE CORPUS: the threat CLASS, not the lexicon tokens (burned/070) ---

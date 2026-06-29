@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { copy, slots, staticDisclosures, type CopyKey } from '../copy'
-import { lintCopy, isVerdictKey, isSurvivorKey, DIRECTIVE_VERBS, type CopyGate } from '../copyGuard'
+import { lintCopy, isVerdictKey, isSurvivorKey, isMortalityKey, DIRECTIVE_VERBS, type CopyGate } from '../copyGuard'
 
 /*
  * copyGuard enumerates the catalog and asserts every entry passes its applicable gates. Three
@@ -39,10 +39,15 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     }
   })
 
-  it('survivor copy carries no catastrophe/alarm lexicon (no "widow’s penalty")', () => {
-    const survivor = entries.filter(([k]) => isSurvivorKey(k))
-    expect(survivor.length, 'there IS survivor copy to guard').toBeGreaterThan(0)
-    for (const [k, v] of survivor) {
+  it('survivor + dead-cohort copy carries no catastrophe/alarm lexicon (no "widow’s penalty"; the thin-note stays gentle)', () => {
+    const mortality = entries.filter(([k]) => isMortalityKey(k))
+    expect(mortality.length, 'there IS mortality-facing copy to guard').toBeGreaterThan(0)
+    // control arm: prove the scope extension is live — the dead-cohort note IS now in the gated set.
+    expect(
+      mortality.some(([k]) => k === 'bandReadoutThinNote'),
+      'the dead-cohort thin-note is catastrophe-gated (council 2026-06-28)',
+    ).toBe(true)
+    for (const [k, v] of mortality) {
       expect(lintCopy(v, ['catastrophe']), `${k}: "${v}"`).toEqual([])
     }
   })

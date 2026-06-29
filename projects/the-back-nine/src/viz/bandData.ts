@@ -138,7 +138,7 @@ export interface BandLabels {
   /** Leads the median line (e.g. "Most likely") — never "expected"/"projected" (no-prediction law). */
   readonly readoutMedianLabel: string
   /** Replaces the dollar lines where the surviving-couple cohort has thinned past the fade onset — the
-   *  honest withdrawal of crisp figures where the fan goes quiet (e.g. "Few couples reach these years"). */
+   *  honest withdrawal of crisp figures where the fan goes quiet (e.g. "Too few couples to show a range."). */
   readonly readoutThinNote: string
 }
 

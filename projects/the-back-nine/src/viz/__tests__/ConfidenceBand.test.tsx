@@ -46,7 +46,7 @@ const labels: BandLabels = {
   readoutRangeLabel: 'Eight in ten land between',
   readoutRangeJoiner: ' – ',
   readoutMedianLabel: 'Most likely',
-  readoutThinNote: 'Few couples reach these years',
+  readoutThinNote: 'Too few couples to show a range.',
 }
 
 function samples(fn: (y: number) => Omit<BandSample, 'yearsFromNow'>, horizon = 30): BandSample[] {

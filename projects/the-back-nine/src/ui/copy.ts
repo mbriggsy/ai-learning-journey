@@ -310,12 +310,12 @@ export const copy = {
   // is "most likely" not "expected"/"projected" (no-prediction law), and the range leads so the
   // spread — not the point — is the message. The thin-cohort note WITHDRAWS the crisp dollars where
   // the surviving-couple cohort has thinned past the fade onset (readout honesty tracks the visual
-  // fade); kept gentle + factual (no catastrophe lexicon), first-draft WORDING owed to the N=1 cold-read.
+  // fade); kept gentle + factual. WORDING resolved 2026-06-28 (council + N=1 cold-read): names the honest WHY (sample too thin to quote a range, NOT "you're broke"), catastrophe-gated via isMortalityKey, width-verified to fit READOUT_W (164px of ~200 usable, real Source Sans 3).
   bandReadoutAgesLabel: 'Ages',
   bandReadoutRangeLabel: 'Eight in ten land between',
   bandReadoutRangeJoiner: ' – ',
   bandReadoutMedianLabel: 'Most likely',
-  bandReadoutThinNote: 'Few couples reach these years',
+  bandReadoutThinNote: 'Too few couples to show a range.',
   // Household-clock x-axis MARKER labels (the moment's name; the ages + a11y sentence ride through
   // slots — numerals never inline). Band-scoped chrome, not a verdict claim. The plan-horizon marker
   // sits at the fan's ACTUAL last year, never a nominal max. "Work stops" rides the DATE route only —

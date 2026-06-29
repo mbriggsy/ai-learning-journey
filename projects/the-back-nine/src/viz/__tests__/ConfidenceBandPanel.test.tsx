@@ -38,7 +38,7 @@ const labels: BandLabels = {
   readoutRangeLabel: 'Eight in ten land between',
   readoutRangeJoiner: ' – ',
   readoutMedianLabel: 'Most likely',
-  readoutThinNote: 'Few couples reach these years',
+  readoutThinNote: 'Too few couples to show a range.',
 }
 
 const chrome: BandPanelChrome = {

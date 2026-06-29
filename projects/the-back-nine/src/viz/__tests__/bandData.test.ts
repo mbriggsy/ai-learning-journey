@@ -226,7 +226,7 @@ describe('composeReadoutLines — the dead-cohort dollar withdrawal (the calm-bu
     readoutRangeLabel: 'Eight in ten land between',
     readoutRangeJoiner: ' – ',
     readoutMedianLabel: 'Most likely',
-    readoutThinNote: 'Few couples reach these years',
+    readoutThinNote: 'Too few couples to show a range.',
   } as unknown as BandLabels
   const ROW: BandTooltipRow = { ages: '80 / 82', low: '$283k', median: '$1.5M', high: '$5M' }
 
@@ -243,7 +243,7 @@ describe('composeReadoutLines — the dead-cohort dollar withdrawal (the calm-bu
   it('PLANTED CONTROL — thin: the crisp dollar figures are ABSENT, replaced by the calm note', () => {
     const lines = composeReadoutLines(LABELS, ROW, true)
     expect(lines.map((l) => l.kind)).toEqual(['ages', 'note'])
-    expect(lines[1]!.text).toBe('Few couples reach these years')
+    expect(lines[1]!.text).toBe('Too few couples to show a range.')
     // the honesty assertion: NONE of the row's dollar figures may appear when thin
     const joined = lines.map((l) => l.text).join(' | ')
     expect(joined).not.toContain(ROW.low)
@@ -256,7 +256,7 @@ describe('composeReadoutLines — the dead-cohort dollar withdrawal (the calm-bu
     const noAges: BandTooltipRow = { ...ROW, ages: '' }
     expect(composeReadoutLines(LABELS, noAges, false).some((l) => l.kind === 'ages')).toBe(false)
     expect(composeReadoutLines(LABELS, noAges, true)).toEqual([
-      { text: 'Few couples reach these years', kind: 'note' },
+      { text: 'Too few couples to show a range.', kind: 'note' },
     ])
   })
 })

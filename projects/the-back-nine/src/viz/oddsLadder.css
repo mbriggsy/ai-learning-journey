@@ -91,6 +91,14 @@
   font-weight: var(--weight-semibold);
   font-variant-numeric: tabular-nums;
 }
+/* the y-axis odds scale — quiet "X of 10" anchors in the left margin so a dot's height reads as odds
+   off the axis (back-nine-design §2/§3: the X-of-10 frame, no per-dot clutter, no 0–100%/certainty). */
+.ladder-yaxis-label {
+  fill: var(--ink-muted);
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
 .ladder-callout {
   font-family: var(--font-body);
   font-size: 12px;

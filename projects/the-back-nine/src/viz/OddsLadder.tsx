@@ -51,6 +51,14 @@ const MARK_R = 5
 const CROWN_R = 5.5
 const CROWN_RING_R = 9
 
+/** The rungs the y-axis annotates with their "X of 10" odds, so a dot's HEIGHT reads as odds off the
+ *  axis (the council-decided synthesis 2026-06-29: a y-axis scale, NOT a per-dot label on all 11 — full
+ *  "X of 10" collides at ~44 viewBox units of dot spacing — and NOT a smooth line / 0–100% axis, which
+ *  re-introduce the false precision + the "certain" claim the ladder exists to refuse). Stacked in the
+ *  left margin, the full frame fits with no horizontal collision. Deliberately STOPS below the ceiling
+ *  (rung 9 = "on track"; no rung-10 label) so the headroom above stays the "never certain" signal. */
+const Y_AXIS_LABEL_RUNGS = [3, 5, 7] as const
+
 /** Motion timings — mirror band.css's --dur-reveal / --ease-out (numeric for motion). */
 const EASE_OUT = [0.23, 1, 0.32, 1] as const
 const DRAW_S = 0.42
@@ -107,6 +115,7 @@ export function OddsLadder({ track, labels }: OddsLadderProps) {
         aria-label={labels.caption}
       >
         <LadderFrame barLabel={labels.barLabel} />
+        <LadderYAxis formatOdds={labels.formatOdds} />
         <motion.g
           initial={firstDraw && !reduce ? { opacity: 0 } : false}
           animate={{ opacity: 1 }}
@@ -156,6 +165,26 @@ function LadderFrame({ barLabel }: { barLabel: string }) {
       <text className="ladder-bar-label ladder-droppable-label" x={PLOT.left + 6} y={BAR_Y - 6}>
         {barLabel}
       </text>
+    </g>
+  )
+}
+
+/* ── the y-axis odds scale: a few "X of 10" anchors in the left margin so each dot's HEIGHT reads as
+   odds off the axis (no per-dot clutter, no smooth line, no 0–100% / certainty). Decorative — the
+   per-mark a11y already speaks each dot's odds — so aria-hidden, and droppable on the narrowest drawer. */
+function LadderYAxis({ formatOdds }: { formatOdds: (rung: number) => string }) {
+  return (
+    <g className="ladder-yaxis" textAnchor="end" aria-hidden="true">
+      {Y_AXIS_LABEL_RUNGS.map((rung) => (
+        <text
+          key={rung}
+          className="ladder-yaxis-label ladder-droppable-label"
+          x={PLOT.left - 8}
+          y={yForRung(rung) + 4}
+        >
+          {formatOdds(rung)}
+        </text>
+      ))}
     </g>
   )
 }

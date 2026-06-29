@@ -122,4 +122,20 @@ describe('OddsLadder — the honest discrete odds ladder', () => {
     const described = [...container.querySelectorAll('[role="img"][aria-label]')]
     expect(described.length).toBe(track.curve.length + 1)
   })
+
+  it('labels the y-axis with a quiet "X of 10" odds scale (so a dot reads off the axis), decorative + capped below the ceiling', () => {
+    const { container } = render(<OddsLadder track={track} labels={labels} />)
+    const yAxis = container.querySelector('.ladder-yaxis')
+    expect(yAxis).not.toBeNull()
+    // decorative duplication — the per-mark aria already speaks each dot's odds, so the scale is aria-hidden.
+    expect(yAxis).toHaveAttribute('aria-hidden', 'true')
+    const ticks = [...container.querySelectorAll('.ladder-yaxis-label')]
+    // the scale reads through the SAME clamped "X of 10" slot the marks use (plot ≡ text everywhere).
+    expect(ticks.map((t) => t.textContent)).toEqual(['3 of 10', '5 of 10', '7 of 10'])
+    // each anchor sits at its rung's height — the axis is honest (label N drawn at yForRung(N)).
+    expect(Number(ticks[0]?.getAttribute('y'))).toBeCloseTo(yForRung(3) + 4, 3)
+    // STOPS below the on-track bar (~9): no "9 of 10"/"10 of 10" on the AXIS — the headroom above is
+    // the "you can never reach certain" signal (it must never be labelled).
+    expect(ticks.some((t) => /9 of 10|10 of 10/.test(t.textContent ?? ''))).toBe(false)
+  })
 })

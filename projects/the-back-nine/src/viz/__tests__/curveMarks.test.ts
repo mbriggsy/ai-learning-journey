@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest'
 import { curveMarks, BAR_RUNG, LADDER_MAX_RUNG, type CurveMark } from '../curveMarks'
-import { slots } from '../copy'
 import { BANDS } from '@engine/confidence'
 import type { DateOffsetReading, DateTrackOutcome } from '@shared/model'
 
@@ -9,8 +8,10 @@ import type { DateOffsetReading, DateTrackOutcome } from '@shared/model'
  * output): the seam reads the engine's per-offset outputs and derives no threshold. The honesty
  * pins are (1) plot ≡ text (rung = the published X-of-10 count), (2) above-bar ⟺ clears by
  * arithmetic, (3) the crown is the DURABLE date never the tallest rung, (4) every non-monotone
- * offset is flagged and a dip always clears, (5) a ≥ 0.95 bound is atCeiling (never "10 of 10"),
- * (6) a no-date track crowns nothing. Every invariant is SWEPT across all offsets (insight 029).
+ * offset is flagged and a dip always clears, (5) a ≥ 0.95 bound is atCeiling (so the renderer never
+ * prints "10 of 10"), (6) a no-date track crowns nothing. Every invariant is SWEPT across all
+ * offsets (insight 029). The published-text CLAMP itself (slots.xOfTen) is injected by @ui and
+ * asserted at the chrome level; here we pin the rung + the ceiling FLAG the clamp reads.
  */
 
 const reading = (offsetYears: number, qlb: number): DateOffsetReading => ({
@@ -117,21 +118,16 @@ describe('curveMarks — the honest odds-ladder seam', () => {
     }
   })
 
-  it('the plotted rung IS the published X-of-10 count — incl. the ceiling clamp (never 10 of 10)', () => {
+  it('exposes the published X-of-10 count as rung, flagging the ceiling (rung 10) so the drawer never prints "10 of 10"', () => {
     const marks = curveMarks(
       confirmed(8, [reading(4, 0.72), reading(6, 0.88), reading(8, 0.96)]), // 0.96 → round(9.6) = 10
     )
-    for (const m of marks) {
-      const text = slots.xOfTen(m.rung) // the SAME call the drawer + headline make
-      if (m.atCeiling) {
-        expect(text).toBe(slots.xOfTen(LADDER_MAX_RUNG))
-        expect(text).not.toContain('10 of 10')
-      } else {
-        expect(text).toBe(`${m.rung} of 10`)
-      }
-    }
-    expect(at(marks, 8).rung).toBe(10)
+    expect(at(marks, 4).rung).toBe(7) // round(7.2) = 7
+    expect(at(marks, 6).rung).toBe(9) // round(8.8) = 9
+    expect(at(marks, 8).rung).toBe(10) // round(9.6) = 10 → the ceiling
     expect(at(marks, 8).atCeiling).toBe(true)
+    // every non-ceiling mark sits strictly below the certainty rung (the renderer can label it "N of 10")
+    expect(marks.filter((m) => !m.atCeiling).every((m) => m.rung < LADDER_MAX_RUNG)).toBe(true)
   })
 
   it('marks a ≥ 0.95 bound atCeiling (rung 10) and keeps 0.94 at rung 9 — the never-certainty edge', () => {

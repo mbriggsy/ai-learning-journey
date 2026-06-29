@@ -1,10 +1,12 @@
 /*
- * src/ui/curveMarks.ts — the D2c odds-ladder marks, PURE (council-decided 2026-06-28; see
- * docs/council-log.md). The date route's secondary "how your work-optional odds shift by WHEN
- * you stop" reads as a DISCRETE integer-rung odds-ladder, NEVER a smooth curve — a spline would
- * manufacture precision the engine (quantized to X-of-10) does not have. This maps each evaluated
- * offset's reading to one ladder mark; the drawer renders dots/lollipops from these, re-deriving
- * nothing (the "UI re-derives nothing" law).
+ * src/viz/curveMarks.ts — the D2c odds-ladder marks, PURE (council-decided 2026-06-28; see
+ * docs/council-log.md). The producer that feeds the OddsLadder renderer, sited in @viz beside it
+ * (like bandData's resolveBandData beside ConfidenceBand) — it imports ONLY @shared/model, so the
+ * viz layer can consume it without reaching up into @ui. The date route's secondary "how your
+ * work-optional odds shift by WHEN you stop" reads as a DISCRETE integer-rung odds-ladder, NEVER a
+ * smooth curve — a spline would manufacture precision the engine (quantized to X-of-10) does not
+ * have. This maps each evaluated offset's reading to one ladder mark; the renderer draws
+ * dots/lollipops from these, re-deriving nothing (the "UI re-derives nothing" law).
  *
  * THE HONESTY INVARIANTS (each a calm-but-wrong guard the council named; all swept in
  * curveMarks.test.ts across every offset, not just endpoints — insight 029):
@@ -21,7 +23,7 @@
  *    it plots ABOVE the bar (it genuinely clears) carrying a worded "doesn't hold" tell: true
  *    geometry, neither hidden/smoothed nor alarmed.
  *  - atCeiling (rung ≥ 10, a ≥ 0.95 bound) must render "better than 9 in 10", NEVER "10 of 10"
- *    (the same defensive clamp the headline odds ride — slots.xOfTen, dateOdds.ts §clamp).
+ *    (the same defensive clamp the headline odds ride — slots.xOfTen, injected by @ui).
  */
 import type { DateTrackOutcome } from '@shared/model'
 
@@ -34,7 +36,7 @@ export const LADDER_MAX_RUNG = 10
  *  honesty (clears ⟺ rung ≥ 9) cannot silently drift if the bar moves (insight 033). */
 export const BAR_RUNG = 8.5
 
-/** One offset's ladder mark — the honest reading of one evaluated stop-date. The drawer reads
+/** One offset's ladder mark — the honest reading of one evaluated stop-date. The renderer reads
  *  these and re-derives no threshold (clears, the crown, and the non-monotone flags are all the
  *  engine's authority, carried through). */
 export interface CurveMark {

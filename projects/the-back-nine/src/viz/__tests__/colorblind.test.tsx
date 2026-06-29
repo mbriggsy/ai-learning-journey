@@ -258,3 +258,25 @@ describe('CVD self-test — the two band FILL stops (inner vs outer) read as ord
     expect(minCvdDistance(inner, outer)).toBeLessThan(CVD_MIN_OKLAB * 2)
   })
 })
+
+describe('CVD self-test — the D2c odds-ladder marks (crown vermilion + ink dots on paper)', () => {
+  // The ladder spends ONE chromatic accent: the crown's vermilion (a palette presentation attribute,
+  // OddsLadder.tsx), redundant with the halo ring + the "your date" tell + the dot's height. Every
+  // other mark is --ink. back-nine-design §4 still requires probing every color the consumer renders:
+  // the crown must be VISIBLE on the cream page AND distinct from the ink dots under all three CVD
+  // sims — the redundancy is a backstop, never an excuse to skip the probe. Non-vacuity is the
+  // planted matched-luminance red/green pair above (it FAILS the very same minCvdDistance machinery).
+  const CROWN = OKABE_ITO.vermilion
+
+  it('the crown wears the reserved Okabe–Ito vermilion accent', () => {
+    expect(CROWN).toBe(OKABE_ITO.vermilion)
+  })
+
+  it('the crown stays visible on the cream paper under every CVD sim (a crown you can actually read)', () => {
+    expect(minCvdDistance(CROWN, PAPER)).toBeGreaterThanOrEqual(CVD_MIN_OKLAB)
+  })
+
+  it('the crown is distinct from the ink dots under every CVD sim (color reinforces the ring + label)', () => {
+    expect(minCvdDistance(CROWN, INK)).toBeGreaterThanOrEqual(CVD_MIN_OKLAB)
+  })
+})

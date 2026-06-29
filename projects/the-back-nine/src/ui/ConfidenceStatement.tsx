@@ -39,7 +39,7 @@ import {
   type IndeterminateBandData,
   type XAnnotation,
 } from '@viz/bandData'
-import { BAND_LABELS, BAND_CHROME } from './bandPanelChrome'
+import { BAND_LABELS, BAND_CHROME, composeBandAtRange } from './bandPanelChrome'
 import type { BandFan, DollarAdjustment, Headline, SurvivorReading } from '@shared/model'
 import './styles/confidence.css'
 
@@ -145,6 +145,11 @@ export function ConfidenceStatement({ view, focusSignal }: ConfidenceStatementPr
     })
   }, [view])
 
+  // The screen-reader-only band range sentence (AT parity, council 2026-06-29). Composed off the SAME
+  // resolved data, so it re-renders WITH the band on a provisional→final scale re-key (insight 047) and
+  // quotes the same resampled tooltipRows the sighted scrub shows. null ⇒ withdrawn (no clean column).
+  const atRangeSentence = useMemo(() => (resolved ? composeBandAtRange(resolved) : null), [resolved])
+
   let body: ReactNode
   if (view.kind === 'pending') {
     body = <p className="cs-pending">{copy.answerPending}</p>
@@ -206,7 +211,12 @@ export function ConfidenceStatement({ view, focusSignal }: ConfidenceStatementPr
         </div>
         {resolved && (
           <div className="cs-band">
-            <ConfidenceBandPanel data={resolved} labels={BAND_LABELS} chrome={BAND_CHROME} />
+            <ConfidenceBandPanel
+              data={resolved}
+              labels={BAND_LABELS}
+              chrome={BAND_CHROME}
+              atRangeSentence={atRangeSentence}
+            />
           </div>
         )}
         {/* The quieter "as the survivor" statement, BELOW the band — present iff the run carried a

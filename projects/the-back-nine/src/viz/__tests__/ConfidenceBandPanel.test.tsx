@@ -113,3 +113,32 @@ describe('ConfidenceBandPanel — the enlarge affordance (the graph itself is th
     expect(dialog.querySelector('svg[data-variant="enlarged"]')).not.toBeNull()
   })
 })
+
+// The AT (screen-reader) range parity (council 2026-06-29): the band is role="img" and the pointer
+// scrub that carries the $ range is aria-hidden, so a visually-hidden node gives the SR reader that
+// same range. The panel renders the CALLER-composed string (string-free viz); composition + the column
+// choice are tested in ui/bandAtRange.test.ts and viz/bandGeometry.test.ts.
+describe('ConfidenceBandPanel — the AT (screen-reader) range sentence', () => {
+  const SENTENCE = 'Looking about 20 years out, your savings land between $400k and $1.1M across eight in ten futures.'
+
+  it('renders the injected sentence in a visually-hidden node so the SR reader hears the $ range', () => {
+    const { container } = render(
+      <ConfidenceBandPanel data={resolved()} labels={labels} chrome={chrome} atRangeSentence={SENTENCE} />,
+    )
+    const node = container.querySelector('.band-drawer > p.sr-only')
+    expect(node).not.toBeNull()
+    expect(node!.textContent).toBe(SENTENCE)
+  })
+
+  it('renders NO range node when withdrawn (null) — silence over a fabricated range', () => {
+    const { container } = render(
+      <ConfidenceBandPanel data={resolved()} labels={labels} chrome={chrome} atRangeSentence={null} />,
+    )
+    expect(container.querySelector('.band-drawer > p.sr-only')).toBeNull()
+  })
+
+  it('renders NO range node when the prop is omitted (default absent — e.g. the placeholder band)', () => {
+    const { container } = render(<ConfidenceBandPanel data={resolved()} labels={labels} chrome={chrome} />)
+    expect(container.querySelector('.band-drawer > p.sr-only')).toBeNull()
+  })
+})

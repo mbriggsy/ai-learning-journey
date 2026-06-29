@@ -431,6 +431,25 @@ export const slots = {
   /** An intermediate decade-age tick's accessible sentence (the reference marks between Today and
    *  the horizon — just the ages, no named moment). */
   bandClockAgesDesc: (ageA: number, ageB: number): string => `Ages ${ageA} and ${ageB}`,
+  /** The screen-reader-only band range sentence (AT portfolio-range parity, Council 2026-06-29). The
+   *  sighted reader gets the fan + the hover/scrub readout; this is the SR reader's ONE honest dollar
+   *  range. Names the quantity (savings, today's dollars — distinct from the verdict's $/mo), a SURVIVOR-
+   *  NEUTRAL time anchor (years-from-now, never ages / "couples"), range-FIRST + median subordinate ("most
+   *  likely"). `low`/`high`/`median` arrive pre-formatted from the SAME resampled tooltipRows the sighted
+   *  scrub shows — single-sourced, byte-identical. FIRST-DRAFT — the word-pick is the N=1 cold-read's call. */
+  bandAtRange: (years: number, low: string, high: string, median: string): string =>
+    `Looking about ${years} years out, your savings land between ${low} and ${high} across eight in ten futures — most likely about ${median}, in today’s dollars.`,
+  /** The $0-RUIN variant: when the low edge reads $0 (a depleted low-futures path), speak the depletion
+   *  AS depletion — "can run out" — never a soft "between $0 and …" (Council 2026-06-29; the cardinal rule
+   *  in the one channel with no $0 picture). Median-led, the depletion as the honest caveat. */
+  bandAtRangeRuin: (years: number, median: string): string =>
+    `Looking about ${years} years out, your savings most likely sit around ${median} in today’s dollars, but in the hardest futures they can run out.`,
+  /** The TOTAL-depletion variant: when even the MEDIAN reads $0 (an already-failing plan — the savings
+   *  are most likely gone by here), the "$0 but the hardest futures run out" framing is self-contradictory
+   *  (a median of $0 IS the floor). Speak the depletion plainly — most-likely-gone, not a soft range
+   *  around $0. (Council 2026-06-29 + the ?seed=failing live cold-read.) */
+  bandAtRangeGone: (years: number): string =>
+    `Looking about ${years} years out, the savings have most likely run out.`,
   /** The pinned natural-frequency frame. A count below the ceiling renders "N of 10"; the over-funded
    *  near-ceiling is the PROPORTION {@link slots.xOfTenAtCeiling} ("better than 9 in 10"). The `n >= 10`
    *  branch keeps the honesty clamp as a DEFENSIVE backstop so a stray xOfTen(10) anywhere can never

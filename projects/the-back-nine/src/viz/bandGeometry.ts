@@ -250,6 +250,36 @@ export function cohortFadeStops(
   }))
 }
 
+// ── AT (screen-reader) range column selection (back-nine-design §2; council 2026-06-29) ────────
+// The sighted reader gets the full fan + the hover/scrub readout; a SCREEN-READER reader — no y-axis,
+// no visual fade, no $0 picture — must still hear ONE honest dollar range. The trap (model.ts
+// §BandFanYear): the gate-edge cohort is SURVIVOR-DOMINATED (≥1 spouse alive, not an intact couple) and
+// draws at FULL opacity (cohortFadeOpacity(0.5) === 1) — the least-backed, least-warned, most-$0-pinned
+// slice. So the AT range is anchored in a column whose cohort sits COMFORTABLY above the fade onset.
+
+/** The cohort-cleanliness floor for the AT range column: the surviving-couple fraction a column must
+ *  clear to be quoted to a screen-reader user. Deliberately ABOVE {@link COHORT_FADE}.full (0.5) — a
+ *  0.5 cohort is survivor-dominated and UNFADED (the Hawk's calm-but-wrong slice). cold-read-TUNABLE:
+ *  the exact value is Briggsy's owed N=1 cold-read (start firm at a well-populated 0.75); deeper →
+ *  earlier/safer year, shallower → later/wider but thinner. NEVER re-typed elsewhere (one home). */
+export const AT_RANGE_COHORT_MIN = 0.75
+
+/** Pick the lattice column the AT range quotes: the DEEPEST INTERIOR column — excludes the today anchor
+ *  (i=0, zero dispersion) and the horizon (i=n−1, the thinnest terminal slice) — whose cohortFraction
+ *  clears `cohortMin` AND passes {@link isThinCohort} (bound to the same fade onset, so the AT channel and
+ *  the visible fade withdraw together). cohortFraction is monotone non-increasing in time, so the first
+ *  qualifier walking back from the horizon IS the deepest. Returns `null` when NO interior column
+ *  qualifies — the honest WITHDRAWAL (silence over a fabricated range for the one reader who can't watch
+ *  the fan thin). Pure + exported so the honesty gate is unit-tested, never an inline branch on an
+ *  undrivable render path (insight 048). */
+export function selectAtRangeColumn(samples: readonly BandSample[], cohortMin: number): number | null {
+  for (let i = samples.length - 2; i >= 1; i--) {
+    const c = samples[i]!.cohortFraction
+    if (c !== undefined && c >= cohortMin && !isThinCohort(c)) return i
+  }
+  return null
+}
+
 // ── annotation label placement (pure, testable) ──────────────────────────────────────────────
 // The household-clock annotations (Today / each retirement / survivor boundary / horizon) render
 // as a vertical rule + a two-line text label (name + both spouses' ages). When two moments sit

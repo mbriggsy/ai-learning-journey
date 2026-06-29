@@ -35,9 +35,14 @@ export interface ConfidenceBandPanelProps {
   readonly data: BandViewData
   readonly labels: BandLabels
   readonly chrome: BandPanelChrome
+  /** The screen-reader-only band range sentence (AT portfolio-range parity, council 2026-06-29). A
+   *  CALLER-composed string (string-free viz: this layer owns no copy) rendered in a visually-hidden
+   *  node, so a screen-reader user hears the band's $ range that the sighted pointer scrub shows but is
+   *  itself aria-hidden. `null`/absent ⇒ withdrawn (no cohort-clean column to quote — honest silence). */
+  readonly atRangeSentence?: string | null
 }
 
-export function ConfidenceBandPanel({ data, labels, chrome }: ConfidenceBandPanelProps) {
+export function ConfidenceBandPanel({ data, labels, chrome, atRangeSentence }: ConfidenceBandPanelProps) {
   const [enlarged, setEnlarged] = useState(false)
   const open = () => setEnlarged(true)
 
@@ -62,6 +67,12 @@ export function ConfidenceBandPanel({ data, labels, chrome }: ConfidenceBandPane
         enlargeLabel={chrome.enlargeLabel}
         variant="drawer"
       />
+
+      {/* AT portfolio-range parity (council 2026-06-29): the band itself is role="img"; the pointer
+          scrub that carries the $ range is aria-hidden. This visually-hidden node gives the screen-
+          reader user that same range as one honest sentence. Withdrawn (absent) when no cohort-clean
+          column qualifies — silence over a fabricated range. Static text, never aria-live. */}
+      {atRangeSentence && <p className="sr-only">{atRangeSentence}</p>}
 
       <BandLegend labels={labels} />
 

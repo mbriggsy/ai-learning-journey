@@ -34,7 +34,7 @@ import { ConfidenceBandPanel } from '@viz/ConfidenceBandPanel'
 import { OddsLadder } from '@viz/OddsLadder'
 import { curveMarks } from '@viz/curveMarks'
 import { resolveBandData, type XAnnotation } from '@viz/bandData'
-import { BAND_LABELS, BAND_CHROME } from './bandPanelChrome'
+import { BAND_LABELS, BAND_CHROME, composeBandAtRange } from './bandPanelChrome'
 import { LADDER_LABELS } from './oddsLadderChrome'
 import { formatAxisDollar } from './money'
 import type { DateBand, DateTrackOutcome } from '@shared/model'
@@ -103,6 +103,11 @@ export function FuckOffDate({ view, focusSignal }: FuckOffDateProps) {
     })
   }, [view])
 
+  // The screen-reader-only band range sentence (AT parity, council 2026-06-29). Composed off the SAME
+  // resolved data, so it re-renders WITH the band on the date route's provisional→final scale re-key
+  // (insight 047) and quotes the same resampled tooltipRows the sighted scrub shows. null ⇒ withdrawn.
+  const atRangeSentence = useMemo(() => (resolved ? composeBandAtRange(resolved) : null), [resolved])
+
   let body: ReactNode
   if (view.kind === 'pending') {
     body = <p className="fod-pending">{copy.answerPending}</p>
@@ -164,7 +169,12 @@ export function FuckOffDate({ view, focusSignal }: FuckOffDateProps) {
           <div className="fod-band">
             {/* RE-DRAW-NOT-MORPH on the tiered provisional→final scale change lives INSIDE the panel
                 (it re-keys its inner band, not itself — so an open enlarge modal survives). */}
-            <ConfidenceBandPanel data={resolved} labels={BAND_LABELS} chrome={BAND_CHROME} />
+            <ConfidenceBandPanel
+              data={resolved}
+              labels={BAND_LABELS}
+              chrome={BAND_CHROME}
+              atRangeSentence={atRangeSentence}
+            />
           </div>
         )}
         {/* D2c — the odds ladder, one pull DOWN (detail-on-demand, R4: never the first frame). The

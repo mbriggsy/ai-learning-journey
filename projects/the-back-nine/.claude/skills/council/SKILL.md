@@ -69,7 +69,7 @@ Briggsy granted **maximum autonomy** (2026-06-28): execute everything reversible
 
 2. **Confirm-first action** — the *only* things I stop for, because they can't be clawed back: **(a) spending real money** (paid image/voice/API), **(b) publishing something outward/public** beyond the repo, **(c)** a force-push to main or destructive data-loss. Surface as a 5-second framed confirm *regardless of confidence* — **UNLESS Briggsy gave up-front all-clear for this work** (e.g. "we're doing voice today"), in which case prior clearance counts and I proceed. Everything else — code, copy, layout, scale, scope-within-the-app, even taste/direction calls — is **not** confirm-first and executes per step 3.
 
-3. **Confidence HIGH (≥7/10), not a hard-stop** → **execute now.** Any tier — including `yours-to-close` taste/direction calls — gets acted on, because that's what maximum autonomy means. Log it.
+3. **Confidence HIGH (≥7/10), not a hard-stop** → **execute now.** Any tier — including `yours-to-close` taste/direction calls — gets acted on. **Ship the council's lead pick; do NOT re-surface a confident, reversible verdict as a confirmation question (no "A or B, your call").** Shipping it + the ⚑ digest entry IS the review — Briggsy overrides after the fact if he wants. Pre-confirming what the council already resolved is the over-deferral he rejected (2026-06-28). Log it.
 
 4. **Confidence MEDIUM/LOW (<7/10)** → surface to Briggsy with the framed rec + the recorded dissent + "what would flip it." Never a naked "A or B?".
 

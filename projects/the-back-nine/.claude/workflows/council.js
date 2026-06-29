@@ -26,6 +26,7 @@ const CHARTERS = {
     '- docs/decisions/*.md and docs/insights/*.md relevant to the issue.',
     '- CLAUDE.md (project) — project law, the bar.',
     '- the actual source under src/ that the issue touches (read it; cite line numbers).',
+    '- IF the issue is a UI / layout / visual / chart / motion / copy decision: ALSO read the project UI design SKILLS IN FULL and fold their actual RULES into bindingConstraints — .claude/skills/back-nine-design/SKILL.md (THE project design law; it OUTRANKS the general design skills on conflict) and .claude/skills/web-design-guidelines/SKILL.md. The elders must reason INSIDE the project design law (color-blind never-color-alone, honest-chart axes, calm-not-dashboard, the CSP <MotionConfig nonce> landmine), never generic design taste. Naming a skill is NOT loading it — pulling the real law into the dossier is YOUR job.',
     '',
     'PRODUCE THE DOSSIER:',
     '1. facts — each a concrete claim WITH a citation (file:line or doc section). No claim without a source.',

@@ -29,8 +29,50 @@
   max-width: var(--measure);
 }
 
+/* The verdict/date WORDS, grouped so the laptop two-pane can hold them at the reading measure in the
+   LEFT column while the promoted band rides the right. In single column (phone, and any non-two-pane
+   result) this is a TRANSPARENT group — `display: contents` makes it generate no box, so the words
+   stay direct flex children of their reveal and keep today's spacing byte-for-byte. It becomes a real
+   flex column (a grid item) only inside the two-pane @media below. */
+.reveal__lead {
+  display: contents;
+}
+
 /* The quiet return — one low-emphasis action, never competing with the answer. */
 .result-actions {
   display: flex;
   justify-content: center;
+}
+
+/* ── The laptop two-pane FRAME (≥ --bp-laptop / 68rem) ──────────────────────────────────────────
+   The showcase viewport. The single reading-measure column gives way to a verdict-dominant
+   asymmetric composition: the words left at --measure, the projection band promoted to a top-pinned
+   hero on the right (the per-route grid placement lives in fuckOffDate.css / confidence.css, keyed on
+   [data-twopane] — stamped only when a real band resolved). This sheet owns the FRAME: relax the hero
+   + section to --content-wide so a two-pane reveal has room, while a single-column answer (no-date,
+   indeterminate, pending) stays pinned at --measure and centered — visually unchanged from today.
+   NOTE: 68rem is --bp-laptop re-stated as a literal (@media can't read a custom prop); see tokens.css. */
+@media (min-width: 68rem) {
+  .result-hero {
+    max-width: var(--content-wide);
+  }
+  /* Allow the section to fill the widened frame; the reveal below controls the actual content cap. */
+  .fuck-off-date,
+  .confidence {
+    max-width: var(--content-wide);
+  }
+  /* Single-column answer: stay at the reading measure, centered in the widened frame (no left-shift).
+     width:100% is load-bearing — without a definite width the two-pane grid's 1fr band column can't
+     expand (margin-inline:auto would shrink the reveal to content), starving the band to its min. */
+  .fod-reveal,
+  .confidence-reveal {
+    width: 100%;
+    max-width: var(--measure);
+    margin-inline: auto;
+  }
+  /* A resolved band promotes the reveal to the full two-pane width. */
+  .fod-reveal[data-twopane],
+  .confidence-reveal[data-twopane] {
+    max-width: var(--content-wide);
+  }
 }

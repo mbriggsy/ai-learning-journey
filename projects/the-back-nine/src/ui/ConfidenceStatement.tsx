@@ -185,19 +185,21 @@ export function ConfidenceStatement({ view, focusSignal }: ConfidenceStatementPr
     const reading =
       state === 'over-funded' ? slots.xOfTenAtCeiling() : slots.xOfTen(view.headline.xOfTen.value)
     body = (
-      <div className="confidence-reveal" data-framing={pres.framing}>
-        {view.provisional && <p className="cs-provisional">{copy.answerProvisionalTag}</p>}
-        <div className="cs-verdict">
-          <VerdictIcon state={state} className="cs-glyph" />
-          <h2 className="cs-word" tabIndex={-1} ref={headingRef}>
-            {word}
-          </h2>
+      <div className="confidence-reveal" data-framing={pres.framing} data-twopane={resolved ? '' : undefined}>
+        <div className="reveal__lead">
+          {view.provisional && <p className="cs-provisional">{copy.answerProvisionalTag}</p>}
+          <div className="cs-verdict">
+            <VerdictIcon state={state} className="cs-glyph" />
+            <h2 className="cs-word" tabIndex={-1} ref={headingRef}>
+              {word}
+            </h2>
+          </div>
+          <p className="cs-reading">
+            <span className="cs-reading__count">{reading}</span>{' '}
+            <span className="cs-reading__frame">{copy.confidenceCoverageCaption}</span>
+          </p>
+          <p className="cs-magnitude">{magnitudeClause(view.dollar)}</p>
         </div>
-        <p className="cs-reading">
-          <span className="cs-reading__count">{reading}</span>{' '}
-          <span className="cs-reading__frame">{copy.confidenceCoverageCaption}</span>
-        </p>
-        <p className="cs-magnitude">{magnitudeClause(view.dollar)}</p>
         {resolved && (
           <div className="cs-band">
             <ConfidenceBandPanel data={resolved} labels={BAND_LABELS} chrome={BAND_CHROME} />

@@ -210,6 +210,44 @@
   max-width: var(--measure);
 }
 
+/* ── D2d: the laptop two-pane (≥ --bp-laptop / 68rem) ─────────────────────────────────────────────
+   The date is the hero on the LEFT at the reading measure; the projection band is promoted to a
+   top-pinned hero on the RIGHT; the odds-ladder <details> welds under the date in the left column.
+   `grid-template-rows: auto 1fr` lets the band span the full height (grid-row 1/-1) while the lead +
+   ladder stay tight together at the top of column 1 — and `align-items: start` keeps the band from
+   lurching when the ladder opens. data-twopane is stamped ONLY when a band resolved (FuckOffDate.tsx),
+   so a no-date / pending / error result never reaches here. NOTE: 68rem is --bp-laptop as a literal. */
+@media (min-width: 68rem) {
+  .fod-reveal[data-twopane] {
+    display: grid;
+    grid-template-columns: minmax(0, var(--measure)) minmax(var(--pane-band-min), 1fr);
+    grid-template-rows: auto 1fr;
+    column-gap: var(--space-9);
+    row-gap: var(--space-5);
+    align-items: start;
+  }
+  /* the words become a real left-column stack (override the single-column display:contents). */
+  .fod-reveal[data-twopane] > .reveal__lead {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    grid-column: 1;
+    grid-row: 1;
+  }
+  /* the band: right column, spanning full height, pinned to the top. */
+  .fod-reveal[data-twopane] > .fod-band {
+    grid-column: 2;
+    grid-row: 1 / -1;
+    margin-top: 0; /* the grid gap owns the spacing now */
+  }
+  /* the odds-ladder: under the date in the left column (the row-gap owns the spacing). */
+  .fod-reveal[data-twopane] > .fod-ladder {
+    grid-column: 1;
+    grid-row: 2;
+    margin-top: 0;
+  }
+}
+
 /* Reduced motion: drop the movement, keep a short comprehension fade (final state identical). */
 @media (prefers-reduced-motion: reduce) {
   .fod-reveal {

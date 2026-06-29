@@ -141,10 +141,141 @@ const stillWorking: ScenarioDraft = {
   seed: DEV_CRN_SEED,
 }
 
+/**
+ * A BORDERLINE already-retired couple — the SPINE route, for the two-pane HONESTY cold-read (D2d):
+ * the projection band must draw its $0 depletion-to-ruin tail honestly in the promoted right pane,
+ * beside a calm verdict word. 68/70, a single $520k Traditional IRA at 55/35/10 + a $70k Roth, LOW
+ * Social Security (PIA 24k/16k) against a ~$71.6k spend, so the SS floor doesn't cover the gap and the
+ * downside paths deplete. Lands "borderline, ~7 of 10" (survival ≈ 0.65, verified live against the
+ * engine) — most couples make it, but the band's lower percentiles honestly descend toward $0. Older
+ * than `retired` on purpose: the shorter horizon keeps the p90 plume from squashing the ruin tail.
+ */
+const retiredBorderline: ScenarioDraft = {
+  people: [
+    {
+      name: 'Alex',
+      sex: 'female',
+      birthYear: 1958,
+      currentAge: 68,
+      workStatus: 'retired',
+      retirementAge: 64,
+      earnedIncomeReal: 0,
+      pia: 24_000,
+      socialSecurityClaimAge: 67,
+    },
+    {
+      name: 'Sam',
+      sex: 'male',
+      birthYear: 1956,
+      currentAge: 70,
+      workStatus: 'retired',
+      retirementAge: 66,
+      earnedIncomeReal: 0,
+      pia: 16_000,
+      socialSecurityClaimAge: 67,
+    },
+  ],
+  enteredAccounts: [
+    {
+      ownerIndex: 0,
+      kind: 'traditional-ira',
+      valueToday: 520_000,
+      manualBlend: { kind: 'exact', stockPct: 55, bondPct: 35, cashPct: 10 },
+    },
+    {
+      ownerIndex: 1,
+      kind: 'roth-ira',
+      valueToday: 70_000,
+      manualBlend: { kind: 'exact', stockPct: 70, bondPct: 25, cashPct: 5 },
+    },
+  ],
+  incomeStreams: [],
+  tickerClassifications: {},
+  health: { irmaaMagiSeed: [40_000, 40_000] },
+  annualSpendingReal: 71_600,
+  spendEntryPeriod: 'month',
+  survivorSpendingRatio: 0.75,
+  drawdownPolicy: 'proportional',
+  filing: 'mfj',
+  startCalendarYear: 2026,
+  taxVintage: 'OBBBA-2025',
+  appDefaultVersion: 'p2-dev-seed',
+  seed: DEV_CRN_SEED,
+}
+
+/**
+ * A BORDERLINE still-working couple — the DATE route's analog for the honesty cold-read: a confirmed
+ * fuck-off date whose projection band STILL touches $0 in its lower percentiles (the council's point:
+ * even an on-track date honestly draws the ruin tail). 58/59 both working, a marginal $800k 401(k)-
+ * style Traditional IRA + $140k Roth against a $74k spend, so the crowned date (≈ 7 years out, "9 of
+ * 10") carries a fan whose p10/p25 descend to $0. CAVEAT for the cold-read: the long decumulation
+ * horizon gives a ~$5.7M p90 plume that squashes the ruin tail toward the axis (the parked
+ * long-horizon band-scale item) — `borderline` (spine) is the cleaner ruin-tail render. The non-
+ * monotone ACA-cliff "doesn't hold" dip is NOT reachable here: v1's proportional drawdown never
+ * straddles the 400%-FPL cliff non-monotonically (16 candidates swept) — it needs Act 3's conversion
+ * controls to manufacture, so the live cliff dip stays a parked D2c item.
+ */
+const stillWorkingBorderline: ScenarioDraft = {
+  people: [
+    {
+      name: 'Alex',
+      sex: 'female',
+      birthYear: 1968,
+      currentAge: 58,
+      workStatus: 'working',
+      earnedIncomeReal: 95_000,
+      pia: 26_000,
+      socialSecurityClaimAge: 67,
+    },
+    {
+      name: 'Sam',
+      sex: 'male',
+      birthYear: 1967,
+      currentAge: 59,
+      workStatus: 'working',
+      earnedIncomeReal: 85_000,
+      pia: 22_000,
+      socialSecurityClaimAge: 67,
+    },
+  ],
+  enteredAccounts: [
+    {
+      ownerIndex: 0,
+      kind: 'traditional-ira',
+      valueToday: 800_000,
+      manualBlend: { kind: 'exact', stockPct: 65, bondPct: 30, cashPct: 5 },
+    },
+    {
+      ownerIndex: 1,
+      kind: 'roth-ira',
+      valueToday: 140_000,
+      manualBlend: { kind: 'exact', stockPct: 80, bondPct: 15, cashPct: 5 },
+    },
+  ],
+  incomeStreams: [],
+  tickerClassifications: {},
+  health: {
+    enrolledPremiumMonthlyToday: 1_300,
+    slcspMonthlyToday: 1_150,
+    workingYearIrmaaMagiByPerson: [180_000, 0],
+  },
+  annualSpendingReal: 74_000,
+  spendEntryPeriod: 'month',
+  survivorSpendingRatio: 0.75,
+  drawdownPolicy: 'proportional',
+  filing: 'mfj',
+  startCalendarYear: 2026,
+  taxVintage: 'OBBBA-2025',
+  appDefaultVersion: 'p2-dev-seed',
+  seed: DEV_CRN_SEED,
+}
+
 /** The seed registry — `?seed=<key>` selects one. */
 export const DEV_SEEDS = {
   retired: retiredOnTrack,
   date: stillWorking,
+  borderline: retiredBorderline,
+  dateborder: stillWorkingBorderline,
 } satisfies Record<string, ScenarioDraft>
 
 export type DevSeedKey = keyof typeof DEV_SEEDS

@@ -182,6 +182,43 @@
   transform: scale(0.97);
 }
 
+/* ── D2d: the laptop two-pane (≥ --bp-laptop / 68rem) ─────────────────────────────────────────────
+   The verdict word + reading + magnitude are the hero on the LEFT at the reading measure; the
+   projection band is promoted to a top-pinned hero on the RIGHT; the "as the survivor" statement
+   welds under the verdict in the left column (it conditions those words). `grid-template-rows: auto
+   1fr` + grid-row 1/-1 on the band keeps the band spanning full height and top-pinned while the lead +
+   survivor stay tight at the top of column 1. data-twopane is stamped ONLY when a band resolved
+   (ConfidenceStatement.tsx) — the indeterminate placeholder (resolved=null) stays single calm column.
+   NOTE: 68rem is --bp-laptop re-stated as a literal (@media can't read a custom prop); see tokens.css. */
+@media (min-width: 68rem) {
+  .confidence-reveal[data-twopane] {
+    display: grid;
+    grid-template-columns: minmax(0, var(--measure)) minmax(var(--pane-band-min), 1fr);
+    grid-template-rows: auto 1fr;
+    column-gap: var(--space-9);
+    row-gap: var(--space-5);
+    align-items: start;
+  }
+  /* the words become a real left-column stack (override the single-column display:contents). */
+  .confidence-reveal[data-twopane] > .reveal__lead {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    grid-column: 1;
+    grid-row: 1;
+  }
+  /* the band: right column, spanning full height, pinned to the top. */
+  .confidence-reveal[data-twopane] > .cs-band {
+    grid-column: 2;
+    grid-row: 1 / -1;
+  }
+  /* the survivor statement: under the verdict in the left column. */
+  .confidence-reveal[data-twopane] > .survivor {
+    grid-column: 1;
+    grid-row: 2;
+  }
+}
+
 /* ----- reduced motion: drop the movement, keep a short comprehension fade (final state identical;
         no information lives only in the animation) ----- */
 

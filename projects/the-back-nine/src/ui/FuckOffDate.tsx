@@ -143,21 +143,23 @@ export function FuckOffDate({ view, focusSignal }: FuckOffDateProps) {
     const lead = track.offsetYears === 0 ? copy.dateFreeToday : slots.dateInYears(track.offsetYears)
     const tradeoff = dateTradeoffPoint(track)
     body = (
-      <div className="fod-reveal" data-framing="date">
-        {view.provisional && <p className="fod-provisional">{copy.answerProvisionalTag}</p>}
-        <h2 className="fod-headline" tabIndex={-1} ref={headingRef}>
-          {lead}
-        </h2>
-        <p className="fod-odds">{dateOddsText(track.grade.quantizedLowerBound)}</p>
-        {tradeoff && (
-          <p className="fod-tradeoff">{slots.dateTradeoff(tradeoff.yearsSooner, tradeoff.oddsText)}</p>
-        )}
-        {track.kind === 'window-edge-unconfirmed' && (
-          <p className="fod-note">{copy.dateWindowEdgeNote}</p>
-        )}
-        {track.nonMonotoneOffsets.length > 0 && (
-          <p className="fod-note">{copy.dateNonMonotoneNote}</p>
-        )}
+      <div className="fod-reveal" data-framing="date" data-twopane={resolved ? '' : undefined}>
+        <div className="reveal__lead">
+          {view.provisional && <p className="fod-provisional">{copy.answerProvisionalTag}</p>}
+          <h2 className="fod-headline" tabIndex={-1} ref={headingRef}>
+            {lead}
+          </h2>
+          <p className="fod-odds">{dateOddsText(track.grade.quantizedLowerBound)}</p>
+          {tradeoff && (
+            <p className="fod-tradeoff">{slots.dateTradeoff(tradeoff.yearsSooner, tradeoff.oddsText)}</p>
+          )}
+          {track.kind === 'window-edge-unconfirmed' && (
+            <p className="fod-note">{copy.dateWindowEdgeNote}</p>
+          )}
+          {track.nonMonotoneOffsets.length > 0 && (
+            <p className="fod-note">{copy.dateNonMonotoneNote}</p>
+          )}
+        </div>
         {resolved && (
           <div className="fod-band">
             {/* RE-DRAW-NOT-MORPH on the tiered provisional→final scale change lives INSIDE the panel

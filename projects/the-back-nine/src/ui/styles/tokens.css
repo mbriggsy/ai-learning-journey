@@ -89,6 +89,20 @@
 
   /* ----- layout ----- */
   --measure: 36rem; /* prose/question column width */
+  --content-wide: 72rem; /* the relaxed magic-moment frame at the laptop breakpoint: wide enough to
+    seat the verdict words at --measure BESIDE the promoted band pane, and a hard cap so the band
+    never sprawls on a large monitor (at 72rem the band pane is ~33rem / band-figure ~478px). */
+  --pane-band-min: 23rem; /* the two-pane band column floor (grid col 2 minmax). Keeps the band-figure
+    (pane width − ~50px .band-drawer chrome) above the 260px label-drop floor (src/viz/band.css:179)
+    even at the tightest in-range width. */
+  --bp-laptop: 68rem; /* the two-pane breakpoint. NOTE: @media can't read a custom property, so this
+    value is RE-STATED as a literal in the @media rules that two-pane the result (search "--bp-laptop"
+    to find every mirror). DERIVATION (proven against source, council 2026-06-29): at 68rem/1088px,
+    minus ~56px .result gutters, the band pane = 1088 − 56 − 576 (--measure left pane) − 48 (--space-9
+    gap) = 408px; minus ~50px .band-drawer chrome (band.css:192 padding 48 + 2px border) = a 358px
+    band-figure — ~98px clear of the 260px label-drop floor. 60rem yields ~230px and SILENTLY drops the
+    never-color-alone percentile labels (the color-blind reader's honesty channel), so 68rem is the
+    floor, never 60–64rem. */
   --gutter: clamp(1rem, 4vw, 1.75rem); /* page side padding */
   --field-h: 3.25rem; /* 52px — full-size touch field */
   --tap-min: 2.75rem; /* 44px — practical touch floor (WCAG 2.5.8 hard min is 24px) */

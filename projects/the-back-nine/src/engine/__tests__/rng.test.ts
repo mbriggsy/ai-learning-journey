@@ -24,12 +24,19 @@ describe('mulberry32 — seeded determinism (the CRN foundation)', () => {
   })
 
   it('stays uniform on [0, 1) — never < 0, never >= 1', () => {
+    // Collect the extremes over the run and assert ONCE — 200k per-iteration expect() calls are slow
+    // enough to blow the 5s test timeout under heavy parallel load (a deterministic test must never
+    // flake on wall-clock time). min/max capture the same contract: any out-of-range draw moves a bound.
     const r = mulberry32(99)
+    let min = Infinity
+    let max = -Infinity
     for (let i = 0; i < 100_000; i++) {
       const u = r()
-      expect(u).toBeGreaterThanOrEqual(0)
-      expect(u).toBeLessThan(1)
+      if (u < min) min = u
+      if (u > max) max = u
     }
+    expect(min).toBeGreaterThanOrEqual(0)
+    expect(max).toBeLessThan(1)
   })
 
   it('is byte-stable for a pinned seed (a regression in the PRNG fails loud)', () => {

@@ -74,12 +74,12 @@ Precedence on conflict: the **roadmap's You-Are-Here table** wins on build statu
 
 Four skills, each with a distinct job (evaluated 2026-06-11; ui-ux-pro-max REJECTED — permission-system writes, greenfield-landing-page bias, Windows-hostile packaging):
 
-1. **`compound-engineering:frontend-design`** (the Every variant) — aesthetic direction + lifecycle (context detection, calm-dashboard Module B, screenshot verification). **NEVER the official `frontend-design` plugin skill** — it defaults to "pick an EXTREME / maximalist / UNFORGETTABLE," the wrong tone for this product. Every bare `/frontend-design` reference in older plan docs means THIS variant.
+1. **`frontend-design:frontend-design`** (the official plugin skill) — aesthetic direction + lifecycle. The Every variant `compound-engineering:frontend-design` we used to prefer was **dropped from the CE skill list (2026-06-29), so it no longer loads** — the official plugin is now the frontend-design skill and is **permitted**. **CAVEAT (the reason we once banned it, still true):** it biases toward "pick an EXTREME / maximalist / UNFORGETTABLE," the WRONG tone for this calm financial co-pilot — so `back-nine-design`'s calm-not-dashboard law OUTRANKS it (precedence below); when it pushes bold/extreme, that is the bias to COUNTER, not follow. Every bare `/frontend-design` reference in older plan docs meant the now-gone Every variant; read it as this skill, filtered through back-nine-design.
 2. **`emil-design-eng`** (global user skill) — motion/micro-interaction craft: timing, easing, the motion@12 hardware-acceleration trap, reduced-motion.
 3. **`back-nine-design`** (project skill, `.claude/skills/`) — project law the market doesn't cover: color-blind-safe encoding (color is NEVER the only signal — WCAG AA contrast does NOT satisfy this), confidence-band/fan-chart honesty, intake-form UX, the CSP/`<MotionConfig nonce>` landmine, PWA/offline UX.
 4. **`web-design-guidelines`** (project skill, vendored from `vercel/agent-skills` — adapted: WebFetch stripped) — the post-build REVIEW lens (a11y, `tabular-nums`, reduced-motion checklist).
 
-Precedence on conflict: back-nine-design (project law) > emil-design-eng (motion) > frontend-design (direction) > web-design-guidelines (review). Any bare `/frontend-design` reference means THIS Every variant — never the official plugin.
+Precedence on conflict: back-nine-design (project law) > emil-design-eng (motion) > frontend-design (direction) > web-design-guidelines (review). Any bare `/frontend-design` reference means `frontend-design:frontend-design` (the CE Every variant having been dropped 2026-06-29) — always filtered through back-nine-design's calm tone, never followed into maximalism.
 
 ## The bar
 

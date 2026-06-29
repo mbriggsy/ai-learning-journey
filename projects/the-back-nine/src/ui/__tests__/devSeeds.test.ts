@@ -12,26 +12,35 @@ import { buildCandidateParams, DATE_OFFSET_WINDOW_TOP, DATE_SEARCH_PATHS } from 
  * against `validateParams`, not the seed's own formula (DND 012 spirit).
  */
 describe('dev seeds reach a worded (engine-accepted) answer', () => {
-  it('the all-retired seed builds ACCEPTED spine params', () => {
-    const d = DEV_SEEDS.retired
-    expect(isDateRoute(d)).toBe(false)
-    expect(missingRequiredFacts(d)).toEqual([])
-    const params = buildSpineParams(d)
-    expect(params).not.toBeNull()
-    expect(validateParams(params!)).toBeNull() // accepted — no UI/engine drift
-  })
+  // EVERY registered seed (not just the original two) must build engine-accepted params — a seed that
+  // doesn't lands on an indeterminate/input-failure screen instead of the worded answer + band it
+  // exists to cold-read. Iterating the registry auto-covers every seed added later (D2d added the
+  // `borderline` spine + `dateborder` date seeds for the two-pane honesty cold-read).
+  for (const [key, d] of Object.entries(DEV_SEEDS)) {
+    it(`'${key}' builds input the engine validator accepts`, () => {
+      expect(missingRequiredFacts(d), `${key}: missing required facts`).toEqual([])
+      if (isDateRoute(d)) {
+        // Date route: EVERY candidate offset must validate (the all-or-nothing sweep, dateSearch.ts).
+        const input = buildDateInput(d)
+        expect(input, `${key}: buildDateInput`).not.toBeNull()
+        for (let y = 0; y <= DATE_OFFSET_WINDOW_TOP; y += 1) {
+          expect(
+            validateParams(buildCandidateParams(input!, y, DATE_SEARCH_PATHS.provisional)),
+            `${key}: candidate Y=${y}`,
+          ).toBeNull()
+        }
+      } else {
+        const params = buildSpineParams(d)
+        expect(params, `${key}: buildSpineParams`).not.toBeNull()
+        expect(validateParams(params!), `${key}: spine params`).toBeNull() // accepted — no UI/engine drift
+      }
+    })
+  }
 
-  it('the still-working seed builds input EVERY date candidate accepts (all-or-nothing sweep)', () => {
-    const d = DEV_SEEDS.date
-    expect(isDateRoute(d)).toBe(true)
-    expect(missingRequiredFacts(d)).toEqual([])
-    const input = buildDateInput(d)
-    expect(input).not.toBeNull()
-    for (let y = 0; y <= DATE_OFFSET_WINDOW_TOP; y += 1) {
-      expect(
-        validateParams(buildCandidateParams(input!, y, DATE_SEARCH_PATHS.provisional)),
-        `candidate Y=${y}`,
-      ).toBeNull()
-    }
+  // Pin the routing of the two foundational seeds explicitly (a regression in isDateRoute would
+  // silently send a seed down the wrong surface even while its params still validate).
+  it('routes the foundational seeds correctly (retired → spine, date → date)', () => {
+    expect(isDateRoute(DEV_SEEDS.retired)).toBe(false)
+    expect(isDateRoute(DEV_SEEDS.date)).toBe(true)
   })
 })

@@ -303,6 +303,20 @@ export const copy = {
   // The indeterminate-band placeholder note — shown on the wide low-emphasis envelope when there
   // is no resolved range yet (the answer is incomplete, not bad).
   bandPlaceholderNote: 'The range fills in as you answer.',
+  // --- D2c odds-ladder drawer (the date route's secondary "how your odds shift by WHEN you stop").
+  //     LADDER-scoped: chart chrome, not a verdict claim, so the universal gates apply (no certainty,
+  //     no imperative). Odds counts ride slots.xOfTen (never a bare numeral / "10 of 10"). The
+  //     disclosure keeps the ladder one pull DOWN (never the first frame). FIRST-DRAFT wording — the
+  //     N=1 cold-read's call. ---
+  ladderDisclosure: 'How your odds shift by when you stop',
+  ladderCaption:
+    'How your chances of staying work-optional shift by the year you stop — each year read against the on-track line.',
+  ladderBarLabel: 'On track',
+  ladderCrownLabel: 'Your date',
+  ladderDipLabel: 'Doesn’t hold',
+  ladderXAxis: 'Years from now you stop',
+  ladderPlanCaveat:
+    'These odds assume today’s draw-down plan; a different withdrawal order or conversion approach can move them.',
   // Hover/scrub readout labels (the on-demand "what's the spread at this year" tooltip). The
   // renderer composes these WORDS around the pre-formatted figures (ages + dollars) it is handed —
   // it never types a numeral (string-free viz). "readout"-keyed ⇒ VERDICT-scoped (copyGuard runs
@@ -443,6 +457,33 @@ export const slots = {
     yearsSooner === 1
       ? `Or about a year sooner, the odds are nearer ${oddsText}.`
       : `Or about ${yearsSooner} years sooner, the odds are nearer ${oddsText}.`,
+  /** A D2c ladder x-axis tick — the household clock (0 = today). Compact so ≤ 11 ticks don't crowd;
+   *  the "in N years" framing lives in the headline + the crown tell, not every tick. */
+  ladderOffsetTick: (offsetYears: number): string => (offsetYears === 0 ? 'today' : `${offsetYears}`),
+  /** A ladder mark's a11y sentence — the reader is color-blind, so every dot reaches the tree as
+   *  TEXT (the height/shape signal alone isn't enough). The odds ride the CLAMPED oddsText (never
+   *  "10 of 10"); `state` names the non-color reading. */
+  ladderMarkAria: (
+    offsetYears: number,
+    oddsText: string,
+    state: 'crown' | 'dip' | 'clears' | 'below',
+  ): string => {
+    const when = offsetYears === 0 ? 'Stopping today' : `Stopping in ${offsetYears} years`
+    const tail =
+      state === 'crown'
+        ? ' — your date, where the odds hold'
+        : state === 'dip'
+          ? ' — clears, but doesn’t hold'
+          : state === 'clears'
+            ? ' — clears the line'
+            : ' — below the line'
+    return `${when}: about ${oddsText}${tail}.`
+  },
+  /** The no-date "how close" supplement (the Honesty Hawk's v1 alternative to a plotted no-date
+   *  curve): the nearest any year came, short of holding — so a reader knows close-vs-far without a
+   *  pickable above-the-line dot. The odds ride slots.xOfTen. Cold-read's call. */
+  noDateHowClose: (oddsText: string): string =>
+    `The nearest any year came was about ${oddsText} — short of holding all the way through.`,
   /** The catch-up step-down disclosure names its year (D1). */
   stepDownNote: (calendarYear: number): string =>
     `From ${calendarYear}, contribution room narrows as a catch-up window closes — the plan assumes the lower limit from then on.`,

@@ -156,4 +156,19 @@ describe('FuckOffDate — the D2 landed date surface', () => {
     render(<FuckOffDate view={dates(DATE_FIXTURES.noDate)} />)
     expect(screen.queryByRole('button', { name: copy.bandStudyRange })).not.toBeInTheDocument()
   })
+
+  it('a crowned date mounts the D2c odds-ladder drawer (one pull DOWN) + the R28 plan caveat', () => {
+    const { container } = render(<FuckOffDate view={dates(DATE_FIXTURES.confirmed)} />)
+    expect(screen.getByText(copy.ladderDisclosure)).toBeInTheDocument() // a disclosure → never first-frame
+    expect(screen.getByRole('img', { name: copy.ladderCaption })).toBeInTheDocument() // the ladder graphic
+    expect(container.textContent).toContain(copy.ladderPlanCaveat)
+  })
+
+  it('a NO-DATE outcome plots NO odds-ladder (the Honesty Hawk veto) but DOES name how close it came', () => {
+    const { container } = render(<FuckOffDate view={dates(DATE_FIXTURES.noDate)} />)
+    expect(screen.queryByText(copy.ladderDisclosure)).not.toBeInTheDocument()
+    expect(screen.queryByRole('img', { name: copy.ladderCaption })).not.toBeInTheDocument()
+    // the worded "how close" line stands in for the plot — close-vs-far, no pickable above-line dot
+    expect(container.textContent).toContain('The nearest any year came was about')
+  })
 })

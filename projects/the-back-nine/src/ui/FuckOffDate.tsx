@@ -31,8 +31,11 @@ import { dateOddsText } from './dateOdds'
 import { dateTradeoffPoint } from './dateTradeoff'
 import { focusHeading } from '@intake/a11y'
 import { ConfidenceBandPanel } from '@viz/ConfidenceBandPanel'
+import { OddsLadder } from '@viz/OddsLadder'
+import { curveMarks } from '@viz/curveMarks'
 import { resolveBandData, type XAnnotation } from '@viz/bandData'
 import { BAND_LABELS, BAND_CHROME } from './bandPanelChrome'
+import { LADDER_LABELS } from './oddsLadderChrome'
 import { formatAxisDollar } from './money'
 import type { DateBand, DateTrackOutcome } from '@shared/model'
 import './styles/fuckOffDate.css'
@@ -113,14 +116,22 @@ export function FuckOffDate({ view, focusSignal }: FuckOffDateProps) {
       </p>
     )
   } else if (view.track.kind === 'no-date-in-window') {
-    // The calm first-class no-date answer — names its own window, never "never free".
+    // The calm first-class no-date answer — names its own window, never "never free". The Honesty
+    // Hawk vetoed plotting the no-date curve (a scared reader could crown an above-the-line dot under
+    // a "no date" headline); v1 ships a worded "how close" line instead — the nearest odds any year
+    // reached (the max ladder rung, single-sourced through curveMarks → the slots.xOfTen clamp), so
+    // a reader knows close-vs-far without a pickable dot. (The plotted version returns only behind a
+    // no-pickable-dot guard + Briggsy's N=1 cold-read — see docs/council-log.md.)
+    const noDateTrack = view.track
+    const bestRung = curveMarks(noDateTrack).reduce((mx, m) => Math.max(mx, m.rung), 0)
     body = (
       <div className="fod-reveal" data-framing="no-date">
         {view.provisional && <p className="fod-provisional">{copy.answerProvisionalTag}</p>}
         <h2 className="fod-headline fod-headline--quiet" tabIndex={-1} ref={headingRef}>
           {slots.noDateInWindow(view.windowTopYears)}
         </h2>
-        {view.track.nonMonotoneOffsets.length > 0 && (
+        <p className="fod-note">{slots.noDateHowClose(slots.xOfTen(bestRung))}</p>
+        {noDateTrack.nonMonotoneOffsets.length > 0 && (
           <p className="fod-note">{copy.dateNonMonotoneNote}</p>
         )}
       </div>
@@ -154,6 +165,17 @@ export function FuckOffDate({ view, focusSignal }: FuckOffDateProps) {
             <ConfidenceBandPanel data={resolved} labels={BAND_LABELS} chrome={BAND_CHROME} />
           </div>
         )}
+        {/* D2c — the odds ladder, one pull DOWN (detail-on-demand, R4: never the first frame). The
+            non-monotone sentence + the window-edge note above STAY on the landed surface; this is the
+            deeper "how the odds shift by WHEN you stop". A native <details> = calm, keyboard-native,
+            CSP-clean; the ladder inside draws once on reveal (reduced-motion identical). */}
+        <details className="fod-ladder">
+          <summary className="fod-ladder__summary">{copy.ladderDisclosure}</summary>
+          <div className="fod-ladder__body">
+            <OddsLadder track={track} labels={LADDER_LABELS} />
+            <p className="fod-ladder__caveat">{copy.ladderPlanCaveat}</p>
+          </div>
+        </details>
       </div>
     )
   }

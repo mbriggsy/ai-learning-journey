@@ -151,6 +151,65 @@
   margin-top: var(--space-2);
 }
 
+/* ── D2c: the odds-ladder drawer — one pull DOWN (a native <details>: calm, keyboard-native,
+   CSP-clean). The ladder + the plan caveat live behind a quiet disclosure row so they're never on
+   the first frame (R4 detail-on-demand). ───────────────────────────────────────────────────────── */
+.fod-ladder {
+  margin-top: var(--space-2);
+  border-top: 1px solid var(--line-soft);
+  padding-top: var(--space-3);
+}
+/* the disclosure tap-row — finger-sized, quiet; a chevron marks open/closed (shape, not hue). */
+.fod-ladder__summary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--tap-min);
+  cursor: pointer;
+  list-style: none; /* drop the native triangle (Firefox) */
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--ink-muted);
+  letter-spacing: var(--tracking-overline);
+  text-transform: uppercase;
+}
+.fod-ladder__summary::-webkit-details-marker {
+  display: none; /* drop the native triangle (WebKit/Blink) */
+}
+/* the custom chevron — ▸ closed, rotates to ▾ on open (CSP-clean stylesheet transform). */
+.fod-ladder__summary::before {
+  content: '';
+  flex: none;
+  width: 0;
+  height: 0;
+  border-left: 6px solid currentColor;
+  border-top: 4px solid transparent;
+  border-bottom: 4px solid transparent;
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+.fod-ladder[open] .fod-ladder__summary::before {
+  transform: rotate(90deg);
+}
+.fod-ladder__summary:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 3px;
+  border-radius: var(--radius-sm);
+}
+.fod-ladder__body {
+  padding-top: var(--space-4);
+}
+/* the R28 plan caveat under the ladder — quiet, honest context, never a nudge. */
+.fod-ladder__caveat {
+  margin: var(--space-3) 0 0;
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  line-height: var(--leading-body);
+  color: var(--ink-muted);
+  font-style: italic;
+  max-width: var(--measure);
+}
+
 /* Reduced motion: drop the movement, keep a short comprehension fade (final state identical). */
 @media (prefers-reduced-motion: reduce) {
   .fod-reveal {
@@ -163,6 +222,9 @@
     }
   }
   .fod-retry {
+    transition: none;
+  }
+  .fod-ladder__summary::before {
     transition: none;
   }
 }

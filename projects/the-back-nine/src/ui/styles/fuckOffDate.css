@@ -173,6 +173,7 @@
   color: var(--ink-muted);
   letter-spacing: var(--tracking-overline);
   text-transform: uppercase;
+  transition: color var(--dur-fast) var(--ease-out);
 }
 .fod-ladder__summary::-webkit-details-marker {
   display: none; /* drop the native triangle (WebKit/Blink) */
@@ -195,6 +196,15 @@
   outline: 2px solid var(--brand);
   outline-offset: 3px;
   border-radius: var(--radius-sm);
+}
+/* Resting hover affordance for the date route's PRIMARY drawer control — the summary
+   text (and its currentColor chevron) lift from --ink-muted to --ink. Pointer-only
+   (hover:hover + pointer:fine), mirroring .cs-retry (confidence.css:175-178). Council
+   2026-06-29 — the gap the design-engineer caught: only :focus-visible existed, no hover. */
+@media (hover: hover) and (pointer: fine) {
+  .fod-ladder__summary:hover {
+    color: var(--ink);
+  }
 }
 .fod-ladder__body {
   padding-top: var(--space-4);

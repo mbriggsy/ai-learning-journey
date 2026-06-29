@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect, useState } from 'react'
 import { ColdStart } from '@intake/coldStart'
+import { copy } from './copy'
 import { UpdateToast } from './UpdateToast'
 import { Disclaimer } from './Disclaimer'
 
@@ -30,6 +31,16 @@ export function App({ seed }: { seed?: string | null }) {
 
   return (
     <>
+      {/* App-title heading — visually hidden, but it gives every IN-APP view a single
+          top-level <h1> so the intake-step and result <h2> headings nest under it.
+          The result views otherwise start at <h2> with no <h1> present (the cold-start
+          <h1> has unmounted by began=true). Gated on `began` so cold-start keeps its
+          own question <h1> (coldStart.tsx:20) — no double-<h1>, exactly one per view.
+          Screen-reader heading-nav lands here first, then the verdict. Council
+          2026-06-29 (council-decided over the minimalist's verdict-as-h1: one stable
+          app-title h1 covers all four result-view headings + intake + error without
+          blinking the h1 across SPA states). */}
+      {began && <h1 className="sr-only">{copy.appTitle}</h1>}
       {began ? (
         <Suspense fallback={null}>
           <IntakeApp seed={seed} />

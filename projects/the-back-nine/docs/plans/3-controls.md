@@ -3,7 +3,7 @@ title: "Act 3 — Controls"
 doc-type: plan
 status: planned
 created: 2026-06-17
-updated: 2026-06-18
+updated: 2026-06-29
 derives-from: [docs/product.md, docs/roadmap.md]
 ---
 
@@ -20,6 +20,8 @@ derives-from: [docs/product.md, docs/roadmap.md]
 > **Engine context.** The load-bearing invariants this act inherits — CRN / the single shared market draw, the reduce-to-spine byte-identity, the tax-and-accounts overlay, the healthcare overlay (ACA fixed-point + cliff branching, IRMAA 2-yr lag, the two MAGI calculators, the HSA bucket), the encrypted-store key lifecycle + migration ladder, the externally-derived-fixture discipline — live once in [docs/architecture.md](../architecture.md). This plan **links** them; it does not restate them. The accumulation / fuck-off-date decision record is [docs/decisions/accumulation-fuck-off-date.md](../decisions/accumulation-fuck-off-date.md). The lexicographic objective, the lever set, and the requirements ledger are in [docs/product.md](../product.md).
 
 > **Reference-number discipline.** Reference numbers (brackets, RMD ages, ACA/IRMAA/HSA dollars, applicable-%, Part B premium, validation %) are **never inlined here** — every dated tax/health constant lives in the canonical year-keyed `src/engine/constants/` module (cited to the research, marked **directional-until-pinned**), and this plan points to it. See the constants discipline in [docs/architecture.md §8](../architecture.md).
+
+> **⚑ HARD PRE-SHIP GATE — the ACA-cliff "doesn't hold" dip must render LIVE before the Roth-conversion lever (Unit 10) ships.** *(Council 2026-06-29, insight 048; [docs/council-log.md](../council-log.md).)* The D2c odds-ladder's non-monotone dip tell (`src/viz/OddsLadder.tsx:206-219`, the open dot + "doesn't hold" above the on-track bar) is unit-green in `curveMarks.test.ts` but has **never rendered from a real engine-produced non-monotone curve** — v1's proportional drawdown + no-conversions sweep is always monotone, so the dip is **dormant, not seen**. **Unit 10's Roth-conversion lever is the first thing that can manufacture a real non-monotone success-vs-date curve** (a conversion that trips the 400%-FPL ACA cliff or an IRMAA notch, making a *later* stop paradoxically safer). So Unit 10 (and Unit 11's ACA/IRMAA surface) carry a non-negotiable exit condition: **drive a real, engine-produced non-monotone ACA/IRMAA seed through the LIVE odds-ladder render AND pass the N=1 cold-read** — confirm the dip draws *above* the bar with the "doesn't hold" tell and reads as honest recalibration, never as "just retire later." **"Tests green" is never "the warning was seen to draw."** Same discipline as contract #8's cold-read gate.
 
 ---
 

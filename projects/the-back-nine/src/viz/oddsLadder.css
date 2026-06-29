@@ -1,0 +1,130 @@
+/*
+ * src/viz/oddsLadder.css — layout + STATIC token colors for the D2c OddsLadder.
+ *
+ * CSP DISCIPLINE (style-src 'self', no 'unsafe-inline'): all styling lives HERE (classes), never in
+ * per-element `style={{…}}`. The ONLY color set as an SVG presentation ATTRIBUTE is the vermilion
+ * crown (from palette.ts — a data accent), and presentation attributes are NOT governed by style-src
+ * (palette.ts CSP NOTE). Every STATIC color here is a token var() (ink, lines, paper), never a
+ * re-typed hex — tokens.css owns the values, the CVD test source-binds to them.
+ *
+ * The crown's vermilion is the ONE chromatic accent the ladder spends, redundant with the ring +
+ * the "your date" tell + the dot's height — color is never the sole signal (the reader is
+ * color-blind). The crown CALLOUT text is ink (vermilion text fails the 4.5:1 floor); only the DOT
+ * + ring wear the hue.
+ */
+
+.ladder-figure {
+  margin: 0;
+  /* the @container label-drop measures the LADDER's width (it can sit in a narrow drawer). */
+  container-type: inline-size;
+}
+
+.ladder-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* ── the frame ───────────────────────────────────────────────────────────────────────────────── */
+/* the faint rung detent grid — the readable odds lattice. */
+.ladder-grid {
+  stroke: var(--line-soft);
+  vector-effect: non-scaling-stroke;
+}
+/* the y-axis + the floor (rung 0). */
+.ladder-axis {
+  stroke: var(--line-control);
+  vector-effect: non-scaling-stroke;
+}
+/* THE ON-TRACK BAR at true 8.5 — solid + heavier than the dashed grid, so position (above = clears,
+   below = dips) reads at a glance. Ink, never hue. */
+.ladder-bar {
+  stroke: var(--ink);
+  stroke-width: 1.6;
+  vector-effect: non-scaling-stroke;
+}
+.ladder-bar-label {
+  fill: var(--ink-muted);
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: var(--weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-overline);
+  text-anchor: start;
+}
+
+/* ── the marks (shape encodes state; color redundant) ────────────────────────────────────────── */
+.ladder-dot {
+  vector-effect: non-scaling-stroke;
+}
+/* a clearing-and-holding offset: FILLED ink. */
+.ladder-dot--clears {
+  fill: var(--ink);
+}
+/* a cleared-then-dipped offset: OPEN (hollow) — shape distinct from a solid clear, above the bar. */
+.ladder-dot--dip {
+  fill: var(--paper-raised);
+  stroke: var(--ink);
+  stroke-width: 1.6;
+}
+/* a below-the-bar offset: small + faint (context — the odds were lower at this earlier stop-date). */
+.ladder-dot--below {
+  fill: var(--line-control);
+}
+/* the crowned durable date: vermilion fill (set as a presentation attribute in markup), lifted off
+   the grid with a paper hairline. */
+.ladder-dot--crown {
+  stroke: var(--paper-raised);
+  stroke-width: 1;
+}
+/* the crown halo ring — vermilion stroke (presentation attribute in markup), non-scaling. */
+.ladder-ring {
+  stroke-width: 1.6;
+  vector-effect: non-scaling-stroke;
+}
+
+/* ── the callouts + odds ─────────────────────────────────────────────────────────────────────── */
+.ladder-odds {
+  fill: var(--ink);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: var(--weight-semibold);
+  font-variant-numeric: tabular-nums;
+}
+.ladder-callout {
+  font-family: var(--font-body);
+  font-size: 12px;
+}
+/* the crown's "your date" — ink + semibold (NOT vermilion text: it fails the 4.5:1 floor). */
+.ladder-callout--crown {
+  fill: var(--ink);
+  font-weight: var(--weight-semibold);
+}
+/* the dip's "doesn't hold" — muted, italic; calm, never alarmed. */
+.ladder-callout--dip {
+  fill: var(--ink-muted);
+  font-style: italic;
+}
+
+/* ── the household-clock x-axis ──────────────────────────────────────────────────────────────── */
+.ladder-frame-text {
+  fill: var(--ink-muted);
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.ladder-axis-caption {
+  fill: var(--ink-muted);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-overline);
+}
+
+/* responsive label drop (back-nine-design §3 / phase-2 responsive-SVG contract): below a legible
+   width, DROP the text labels rather than shrink them past legibility — the dots + the bar still
+   carry the shape signal, and the a11y tree (per-mark aria-labels) is untouched. */
+@container (max-width: 280px) {
+  .ladder-droppable-label {
+    display: none;
+  }
+}

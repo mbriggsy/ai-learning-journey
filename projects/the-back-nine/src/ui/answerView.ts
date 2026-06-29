@@ -159,7 +159,19 @@ export function selectElevatedAnswer(
       // The "show me the range" band rides the worded spine reading (the engine's per-year fan, now
       // carried across the worker wire). spineBand screens the $0-portfolio household (no honest scale)
       // and derives the household-clock annotations from the draft + the fan's actual last year.
-      return { kind: 'spine', view: { kind: 'reading', headline, dollar, ...spineBand(answer.result, draft) } }
+      // The "as the survivor" reading rides the same spine view (present iff the run carried a survivor
+      // phase — the parent decides; SurvivorReadout mounts below the band). Carried verbatim from the
+      // result, never re-derived (insight 045). Spine-only: the date route is a timing claim, not a joint verdict.
+      return {
+        kind: 'spine',
+        view: {
+          kind: 'reading',
+          headline,
+          dollar,
+          ...spineBand(answer.result, draft),
+          ...(answer.result.survivorReading ? { survivorReading: answer.result.survivorReading } : {}),
+        },
+      }
     }
   }
 }

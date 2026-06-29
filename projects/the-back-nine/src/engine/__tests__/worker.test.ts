@@ -137,6 +137,68 @@ describe('M6 — taxAware across the wire (presence-keyed Float64 buffers) + the
 })
 
 // ===========================================================================
+// U7 — the survivor-conditioned surfaces (survivorConditioned + survivorReading)
+// ACROSS THE WIRE. Presence-keyed like bandFan, both compact STRUCTURED-CLONE
+// payloads: they must reach the main thread intact and must NEVER join the run()
+// transfer list. Before this slice the engine produced them but the ResolvedWire/
+// fromWire gap DROPPED them (the readout sat dark). A survivor phase needs a COUPLE
+// under sampled longevity (one spouse outliving the other in-window) — the single-
+// person fixed-horizon `params` above never produces one.
+// ===========================================================================
+const COUPLE_PARAMS: SimulationParams = {
+  ...params,
+  people: [
+    { ...PERSON, currentAge: 60, birthYear: 1966 },
+    { ...PERSON, sex: 'female', currentAge: 58, birthYear: 1968 },
+  ],
+  maxHorizonYears: 45,
+  longevityMode: 'sampled',
+}
+
+describe('U7 — survivor surfaces across the wire (presence-keyed structured-clone payload)', () => {
+  it('an opted-in couple run packs survivorConditioned + survivorReading and reconstructs them byte-identically', () => {
+    const wire = runEngine(COUPLE_PARAMS, 99, { survivorConditioned: true })
+    expect(wire.kind).toBe('resolved')
+    if (wire.kind !== 'resolved') return
+    expect(wire.survivorConditioned).toBeDefined()
+    expect(wire.survivorReading).toBeDefined()
+    const inThread = simulate(COUPLE_PARAMS, 99, { survivorConditioned: true })
+    if (inThread.indeterminate || inThread.infeasible) throw new Error('expected resolved')
+    const summarized = summarize(inThread, COUPLE_PARAMS, 99)
+    const r = fromWire(wire)
+    if (!r.ok) throw new Error('expected ok')
+    // byte-identical: the wire neither rounds nor reshapes (mirrors the bandFan round-trip)
+    expect(r.result.distribution.survivorConditioned).toEqual(inThread.distribution.survivorConditioned)
+    expect(r.result.survivorReading).toEqual(summarized.survivorReading)
+    // real content, not a vacuous pass (burned/070): a couple under sampled longevity HAS survivor phases
+    expect(r.result.distribution.survivorConditioned!.survivorPhasePaths).toBeGreaterThan(0)
+    // the model's stated iff holds on the reconstructed object (reading present ⟹ conditioned present)
+    expect(Boolean(r.result.survivorReading) && Boolean(r.result.distribution.survivorConditioned)).toBe(true)
+  })
+
+  it('a run that does NOT opt in carries neither survivor surface (presence-keyed absence — the date route never asks)', () => {
+    const wire = runEngine(COUPLE_PARAMS, 99)
+    expect(wire.kind).toBe('resolved')
+    if (wire.kind !== 'resolved') return
+    expect(wire.survivorConditioned).toBeUndefined()
+    expect(wire.survivorReading).toBeUndefined()
+    const r = fromWire(wire)
+    if (!r.ok) throw new Error('expected ok')
+    expect(r.result.distribution.survivorConditioned).toBeUndefined()
+    expect(r.result.survivorReading).toBeUndefined()
+  })
+
+  it('the survivor surfaces ride by STRUCTURED CLONE — engineApi.run leaves them intact (never join the transfer list)', () => {
+    const wire = engineApi.run(COUPLE_PARAMS, 99, { survivorConditioned: true })
+    expect(wire.kind).toBe('resolved')
+    if (wire.kind !== 'resolved') return
+    // readable on the returned wire — a non-buffer field wrongly added to the transfer list would detach
+    expect(wire.survivorConditioned?.survivorPhasePaths).toBeGreaterThan(0)
+    expect(wire.survivorReading).toBeDefined()
+  })
+})
+
+// ===========================================================================
 // U6/U7 — the per-year percentile fan (bandFan) ACROSS THE WIRE. Presence-keyed
 // like taxAware, but a STRUCTURED-CLONE payload (years×6 plain numbers): it must
 // reach the main thread intact and must NEVER join the run() transfer list. The

@@ -30,7 +30,7 @@ export { fromWire, dateSearchFromWire } from '@engine/engineWire'
 export function runEngine(
   params: SimulationParams,
   seed: number,
-  options?: { readonly bandFan?: boolean },
+  options?: { readonly bandFan?: boolean; readonly survivorConditioned?: boolean },
 ): EngineWire {
   try {
     const out = simulate(params, seed, options)
@@ -64,6 +64,11 @@ export function runEngine(
       // A compact years×6 STRUCTURED-CLONE payload: it must NEVER join the `run` transfer
       // list below (that list is for detachable buffers only). Mirrors taxAware's presence key.
       ...(result.distribution.bandFan ? { bandFan: result.distribution.bandFan } : {}),
+      // The U7 survivor surfaces — present iff the run opted in (the `survivorConditioned` option,
+      // the single spine headline run only) AND ≥ 1 survivor phase. Both compact: they ride the
+      // resolved wire by STRUCTURED CLONE and must NEVER join the `run` transfer list below.
+      ...(result.distribution.survivorConditioned ? { survivorConditioned: result.distribution.survivorConditioned } : {}),
+      ...(result.survivorReading ? { survivorReading: result.survivorReading } : {}),
     }
   } catch (e) {
     return { kind: 'calm-error', reason: e instanceof Error ? e.message : 'engine error' }
@@ -137,7 +142,7 @@ export const engineApi = {
   /** Run a simulation and return the reading, transferring the big buffers. `options.bandFan`
    *  opts the single spine headline run into the per-year percentile fan (U6/U7 band INPUT) —
    *  it rides the resolved wire by structured clone (not a transferable). */
-  run(params: SimulationParams, seed: number, options?: { readonly bandFan?: boolean }): EngineWire {
+  run(params: SimulationParams, seed: number, options?: { readonly bandFan?: boolean; readonly survivorConditioned?: boolean }): EngineWire {
     const wire = runEngine(params, seed, options)
     if (wire.kind === 'resolved') {
       // Transfer (detach) the big buffers — the worker keeps none for reuse and allocates

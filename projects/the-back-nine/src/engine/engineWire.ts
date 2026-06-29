@@ -6,7 +6,7 @@
  * chunk). Keeping the boundary structural — not reliant on bundler tree-shaking — means
  * a future main-thread import can never silently drag the engine across the worker line.
  */
-import type { BandFan, DateSearchOutcome, DollarAdjustment, Headline, SimulationResult } from '@shared/model'
+import type { BandFan, DateSearchOutcome, DollarAdjustment, Headline, SimulationResult, SurvivorConditioned, SurvivorReading } from '@shared/model'
 
 /** The per-path tax-aware solver surfaces in WIRE form (U3·M6 — `Distribution.taxAware`
  *  as six transferable Float64 buffers). PRESENT iff the run carried the tax overlay
@@ -39,6 +39,13 @@ export interface ResolvedWire {
    *  `Comlink.transfer` list. DND/009-clean: every field is a finite number (no Infinity/NaN
    *  — the never-depleted $0 ruin floor reads as a real 0 in the fan, not a sentinel). */
   readonly bandFan?: BandFan
+  /** The U7 survivor-conditioned surface — present iff the run opted in (`run`'s `survivorConditioned`
+   *  option, the single spine headline run only) AND ≥ 1 path had a survivor phase. Compact (four
+   *  numbers); crosses by structured clone, NOT a transferable buffer (absent from the transfer list). */
+  readonly survivorConditioned?: SurvivorConditioned
+  /** The U7 "as the survivor" reading (result-level; what `SurvivorReadout` renders). Present iff
+   *  `survivorConditioned` is — the model's stated iff, preserved across the wire. Compact clone. */
+  readonly survivorReading?: SurvivorReading
 }
 
 /** The worker's return contract — a resolved reading, the typed per-candidate INFEASIBLE
@@ -86,9 +93,16 @@ export function fromWire(wire: EngineWire): EngineResult {
         // fallback hands back the engine's own immutable object), so it carries through
         // directly; nothing to widen, mirroring the date-search's clone-only unpack.
         ...(wire.bandFan ? { bandFan: wire.bandFan } : {}),
+        // The survivor-conditioned surface is compact (four numbers) — structured clone delivered it
+        // across; pass it through presence-keyed, preserving the model's survivorReading ⟹
+        // survivorConditioned iff on the reconstructed object (mirrors bandFan / taxAware).
+        ...(wire.survivorConditioned ? { survivorConditioned: wire.survivorConditioned } : {}),
       },
       headline: wire.headline,
       dollar: wire.dollar,
+      // The result-level "as the survivor" reading (what SurvivorReadout renders). Carried VERBATIM,
+      // never re-derived main-thread (insight 045) — summarize already built it worker-side.
+      ...(wire.survivorReading ? { survivorReading: wire.survivorReading } : {}),
       seed: wire.seed,
     },
   }

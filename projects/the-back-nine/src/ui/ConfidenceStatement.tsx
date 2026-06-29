@@ -29,6 +29,7 @@ import { useEffect, useMemo, useRef, type ReactNode } from 'react'
 import { copy, slots } from './copy'
 import { OUTCOME_PRESENTATION } from './outcomeStates'
 import { VerdictIcon } from './verdictSignal'
+import { SurvivorReadout } from './SurvivorReadout'
 import { formatAxisDollar, formatPerMonth } from './money'
 import { focusHeading } from '@intake/a11y'
 import { ConfidenceBandPanel } from '@viz/ConfidenceBandPanel'
@@ -39,7 +40,7 @@ import {
   type XAnnotation,
 } from '@viz/bandData'
 import { BAND_LABELS, BAND_CHROME } from './bandPanelChrome'
-import type { BandFan, DollarAdjustment, Headline } from '@shared/model'
+import type { BandFan, DollarAdjustment, Headline, SurvivorReading } from '@shared/model'
 import './styles/confidence.css'
 
 /** What the surface shows. `reading` covers all six engine states (it reads `outcomeState`);
@@ -61,6 +62,10 @@ export type ConfidenceStatementView =
       /** Renders the PROVISIONAL eyebrow — a reading taken before the account set is complete is a
        *  labeled provisional update, never a final answer (back-nine-design intake §progressive). */
       readonly provisional?: boolean
+      /** The U7 "as the survivor" reading — the quieter second statement. Present iff the spine run
+       *  carried a survivor phase (the parent, answerView, decides); when present, SurvivorReadout
+       *  mounts below the band. Spine-only: the date route renders a timing claim, not a joint verdict. */
+      readonly survivorReading?: SurvivorReading
     }
   | { readonly kind: 'pending' }
   | { readonly kind: 'compute-error'; readonly onRetry: () => void }
@@ -198,6 +203,10 @@ export function ConfidenceStatement({ view, focusSignal }: ConfidenceStatementPr
             <ConfidenceBandPanel data={resolved} labels={BAND_LABELS} chrome={BAND_CHROME} />
           </div>
         )}
+        {/* The quieter "as the survivor" statement, BELOW the band — present iff the run carried a
+            survivor phase. Opacity-only reveal (survivor.css), below-band so the scrub tap-targets
+            never move. Renders nothing on absence (insight 044). */}
+        {view.survivorReading && <SurvivorReadout reading={view.survivorReading} />}
       </div>
     )
   }

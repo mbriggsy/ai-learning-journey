@@ -10,6 +10,7 @@ How it's run: `/council <issue>`, or the pilot auto-convenes whenever it would o
 
 | Date | Issue | Tier | Recommendation | Conf. | Action |
 |---|---|---|---|---|---|
+| 2026-06-28 | What to build next? (full-authority prioritization) | council-decided | **Survivor readout — wire it live** (unanimous 9/10; closes a live calm-but-wrong gap: the widow's-cliff picture was dark) → SHIPPED + verified live | 9/10 | **executed** (wired; 1320 tests green; seen live at ?seed=retired) |
 | 2026-06-28 | Dead-cohort scrub note wording | council-decided + ⚑ final-word yours | **"Too few couples to show a range."** (was "Few couples reach these years") — names the honest *why*, width-verified 164/200px in real Source Sans 3, catastrophe-gated | 8/10 | **executed** (string + gate-scope; you picked the word) |
 | 2026-06-28 | $20M band-scale squash — cap the date-route fan axis? | council-decided + ⚑ yours-to-close | **Don't build the cap** — leave the axis honest-as-is; serve comprehension via the non-axis scrub readout, not the scale lever | 8/10 | executed (stand-down) · surfaced (tone + reproducibility) |
 

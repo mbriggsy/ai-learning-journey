@@ -303,11 +303,12 @@ export function createMemoryModel(deps: MemoryModelDeps): MemoryModel {
           )
         } else {
           const seed = ensureSeed()
-          // The spine headline run opts into the per-year percentile fan (the U6/U7 band
-          // INPUT). Byte-identical to a fan-off run on the headline statistics (the
-          // reduce-to-spine guard) — the fan only observes. The date route deliberately
-          // never requests it (its many sweep candidates would blow the wire payload).
-          const wire = await deps.client.engine.run(params!, seed, { bandFan: true })
+          // The spine headline run opts into the per-year percentile fan (the U6/U7 band INPUT) AND
+          // the U7 survivor-conditioned surface (the "as the survivor" reading). Both are byte-identical
+          // to an opted-out run on the headline statistics (the reduce-to-spine guard) — they only
+          // OBSERVE. The date route deliberately requests NEITHER (its many sweep candidates would blow
+          // the wire payload; and it renders a timing claim, not a joint-solvency verdict).
+          const wire = await deps.client.engine.run(params!, seed, { bandFan: true, survivorConditioned: true })
           const res = fromWire(wire)
           commit(
             epoch,

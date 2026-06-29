@@ -4,7 +4,7 @@ import '@testing-library/jest-dom/vitest'
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { ConfidenceStatement } from '../ConfidenceStatement'
 import { copy, slots } from '../copy'
-import { READING_FIXTURES } from '../preview/fixtures'
+import { READING_FIXTURES, SURVIVOR_FIXTURES } from '../preview/fixtures'
 import { deriveSpineBandAnnotations } from '../bandAnnotations'
 import { simulate } from '@engine/simulate'
 import { summarize } from '@engine/confidence'
@@ -78,6 +78,21 @@ describe('ConfidenceStatement — the U7 verdict-first surface', () => {
       <ConfidenceStatement view={{ kind: 'reading', ...READING_FIXTURES['on-track'] }} />,
     )
     expect(container.textContent).toContain(slots.xOfTen(8)) // "8 of 10"
+  })
+
+  it('mounts the survivor readout below the band when a survivor reading is present', () => {
+    render(
+      <ConfidenceStatement
+        view={{ kind: 'reading', ...READING_FIXTURES['on-track'], survivorReading: SURVIVOR_FIXTURES['on-track'] }}
+      />,
+    )
+    // the quieter "as the survivor" statement reaches the a11y tree as text (its eyebrow label)
+    expect(screen.getByText(copy.survivorReadoutEyebrow)).toBeInTheDocument()
+  })
+
+  it('omits the survivor readout when no survivor reading is present (render nothing on absence — insight 044)', () => {
+    render(<ConfidenceStatement view={{ kind: 'reading', ...READING_FIXTURES['on-track'] }} />)
+    expect(screen.queryByText(copy.survivorReadoutEyebrow)).not.toBeInTheDocument()
   })
 
   it('already-failing reads its grim count + a TRIM clause, never a hopeful "room" reading', () => {

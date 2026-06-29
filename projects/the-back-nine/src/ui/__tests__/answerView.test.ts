@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import { selectElevatedAnswer, resolvedFocusKey } from '../answerView'
-import { READING_FIXTURES } from '../preview/fixtures'
+import { READING_FIXTURES, SURVIVOR_FIXTURES } from '../preview/fixtures'
 import { DATE_FIXTURES, DATE_WINDOW_TOP } from '../preview/dateFixtures'
 import type { MemoryModelSnapshot, ModelAnswer, ScenarioDraft } from '@store/memoryModel'
-import type { BandFan, DateBand, DateTrackOutcome, OutcomeState, SimulationResult } from '@shared/model'
+import type { BandFan, DateBand, DateTrackOutcome, OutcomeState, SimulationResult, SurvivorReading } from '@shared/model'
 
 /**
  * D2 state-adaptive routing (answerView.selectElevatedAnswer) — the test-oracle core: every committed
@@ -109,12 +109,14 @@ const distributionWith = (bandFan?: BandFan): SimulationResult['distribution'] =
 const headlineAnswer = (
   state: OutcomeState,
   bandFan: BandFan | undefined = READING_FIXTURES[state].band,
+  survivorReading?: SurvivorReading,
 ): ModelAnswer => ({
   kind: 'headline',
   result: {
     headline: READING_FIXTURES[state].headline,
     dollar: READING_FIXTURES[state].dollar,
     distribution: distributionWith(bandFan),
+    ...(survivorReading ? { survivorReading } : {}),
     seed: 1,
   },
 })
@@ -210,6 +212,19 @@ describe('selectElevatedAnswer — D2 state-adaptive routing', () => {
     expect(r.view.dollar).toBe(READING_FIXTURES['on-track'].dollar)
     expect(r.view.band).toBe(READING_FIXTURES['on-track'].band) // the per-year fan rides the worded reading
     expect(r.view.provisional).toBeUndefined()
+  })
+
+  it('a worded reading WITH a survivor reading → the spine view carries it (the quieter second statement)', () => {
+    const reading = SURVIVOR_FIXTURES['on-track']
+    const r = selectElevatedAnswer(snap(headlineAnswer('on-track', undefined, reading), retiredWithAges), noop)
+    if (r.kind !== 'spine' || r.view.kind !== 'reading') throw new Error('expected a spine reading')
+    expect(r.view.survivorReading).toBe(reading)
+  })
+
+  it('a worded reading with NO survivor reading → the spine view omits it (render nothing on absence — insight 044)', () => {
+    const r = selectElevatedAnswer(snap(headlineAnswer('on-track'), retiredWithAges), noop)
+    if (r.kind !== 'spine' || r.view.kind !== 'reading') throw new Error('expected a spine reading')
+    expect(r.view.survivorReading).toBeUndefined()
   })
 
   it('the worded reading derives household-clock annotations from the draft ages + the fan’s actual last year', () => {

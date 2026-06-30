@@ -257,7 +257,13 @@ const stillWorkingBorderline: ScenarioDraft = {
   health: {
     enrolledPremiumMonthlyToday: 1_300,
     slcspMonthlyToday: 1_150,
-    workingYearIrmaaMagiByPerson: [180_000, 0],
+    // Per-person (C3 → B): each still-working member's own full working-year income —
+    // Alex $95k + Sam $85k, here pure wages (working-year investment income an explicit 0).
+    // The household total is unchanged ($180k), but attributed per index rather than dumped
+    // on slot 0 with a working member zeroed (the engine sums PER person across still-working
+    // members, so a combined-on-one-slot figure mis-attributes once the two stop in different
+    // years; both stop together on the swept household date here, so the sum is unchanged).
+    workingYearIrmaaMagiByPerson: [95_000, 85_000],
   },
   annualSpendingReal: 74_000,
   spendEntryPeriod: 'month',

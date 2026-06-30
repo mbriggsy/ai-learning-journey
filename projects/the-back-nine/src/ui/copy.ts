@@ -88,20 +88,26 @@ export const copy = {
   oopHelp:
     'A rough yearly figure is plenty. Premiums are added on top by the tool, and out-of-pocket costs should already be inside your spending figure — this only sizes your HSA’s tax-free draw.',
   qWorkIncomeHeading: 'Income Medicare looks at',
-  // KTD-9 copy half (R40 U4): wages-only / non-modeled-MAGI. The override carries
-  // ONLY working-year income the tool isn't already modeling as a retirement income
-  // stream — the engine adds each entered stream's own IRMAA-MAGI in every year
-  // (ongoingTaxableIrmaaOnly), so a stream counted here too would be double-counted.
-  // Inverting this copy is the user-facing half of the KTD-9 structural decouple.
-  // FORWARD-phrased (KTD-9 copy-guard fix): this question is answered BEFORE the
-  // other-income loop, so the copy must NOT reference streams as already entered —
+  // C3 RESOLVED → Option B (council 2026-06-29): this field collects FULL working-year
+  // income = work pay PLUS working-year investment income (interest/dividends/cap-gains/
+  // K-1). It EXCLUDES the separately-MODELED R40 streams (pension/rental/annuity/alimony):
+  // the engine already adds each modeled stream's own IRMAA-MAGI in every year via
+  // `ongoingTaxableIrmaaOnly`, so re-entering one here would double-count (KTD-9). Working-
+  // year INVESTMENT income is NOT modeled anywhere else — it reaches IRMAA-MAGI ONLY through
+  // this field, so leaving it out under-states Medicare cost = the cardinal sin (why the old
+  // "just your pay" framing was wrong). NB the load-bearing ambiguity this comment KILLS:
+  // KTD-9's engine-sense "wages-only" means "exclude MODELED streams," NEVER "exclude
+  // investment income" — conflating the two is exactly what let the help drift to the
+  // optimistic Option A. FORWARD-phrased (KTD-9 copy-guard fix): this question is answered
+  // BEFORE the other-income loop, so the copy must NOT reference streams as already entered —
   // a pension/rental/annuity is added "separately, later," not "below" or "entered."
-  workIncomeLabel: 'Income from working — just what work pays',
-  // Dedup (cold-read): the LABEL already says "just what work pays", so the help no longer repeats
-  // it. Names WHY it is asked a second time — same work income, the Medicare lens — and keeps the
-  // exclude-other-income guidance (a pension/rental/annuity/alimony is its own stream, counted later).
+  workIncomeLabel: 'Income while you’re still working',
+  // The help carries the additive meaning (pay PLUS working-year investment income), so the
+  // label stays a neutral topic frame — no "just what work pays" (the killed Option-A claim).
+  // The help keeps BOTH axes: ADD investment income, but EXCLUDE the modeled streams
+  // (pension/rental/annuity/alimony), which are counted separately, later.
   workIncomeHelp:
-    'Usually the same as the pay you entered earlier — your work income, here for the Medicare side of things. A pension, rental, annuity, or alimony is counted separately later, so leave those out. If you’re still working when Medicare begins, this is what can add a surcharge on top of the usual premium.',
+    'Your pay, plus any interest, dividends, or investment income you expect in the years you’re still working. A pension, rental, annuity, or alimony is counted separately later, so leave those out. While you’re still working when Medicare begins, this is what can add a surcharge on top of the usual premium.',
   qIrmaaSeedHeading: 'Your last two tax returns',
   irmaaSeedTwoBackLabel: 'Income, two years back',
   irmaaSeedOneBackLabel: 'Income, last year',

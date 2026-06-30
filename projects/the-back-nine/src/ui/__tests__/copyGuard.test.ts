@@ -117,6 +117,26 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     expect(lintCopy(slots.verdictRethinkClause(), ['free-numeral'])).toEqual([]) // figure-less by construction
   })
 
+  // --- C3 (council 2026-06-29): the work-income field means FULL working-year income (pay +
+  //     working-year investment income), NEVER salary-only. Source-bound regression — the killed
+  //     Option-A nudge must stay dead and the additive meaning must stay present. This guards the
+  //     MEANING; the universal gates above guard the voice. ---
+  it('workIncome copy carries Option B (additive), not the killed Option-A salary echo', () => {
+    const help = copy.workIncomeHelp
+    const label = copy.workIncomeLabel
+    // (a) the optimistic one-directional nudge is dead (the cardinal-sin trigger)
+    expect(help, 'no "usually the same as the pay" salary echo').not.toMatch(/usually the same|same as the pay/i)
+    expect(label, 'label drops the "just what work pays" Option-A claim').not.toMatch(/just what work pays|only what work pays/i)
+    // (b) the additive inclusion is named in plain words (pay PLUS investment income)
+    expect(help, 'names the working-year investment income to add').toMatch(/interest|dividends|investment/i)
+    // (c) no completeness assertion / no double-count-inviting "everything"
+    expect(help, 'asserts no completeness / invites no double-count').not.toMatch(
+      /the figure medicare looks at|all of it|everything you/i,
+    )
+    // (d) the modeled streams stay excluded (KTD-9 no-double-count — both axes present)
+    expect(help, 'still excludes the modeled streams').toMatch(/pension|rental|annuity|alimony/i)
+  })
+
   // --- the ADVERSARIAL COVERAGE CORPUS: the threat CLASS, not the lexicon tokens (burned/070) ---
   // Real-world calm-but-wrong phrasings the gate MUST catch (sourced from the foundation's
   // adversarial review — every one of these bypassed the first draft).

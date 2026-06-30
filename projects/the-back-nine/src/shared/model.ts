@@ -1057,10 +1057,15 @@ export interface HealthIntakeV3 {
   /** The `t < lookback` prior-year ACTUAL MAGIs (Y-invariant — pre-sim tax
    *  returns no candidate can move). Collected only when a member is at/near 65. */
   readonly irmaaMagiSeed?: readonly number[]
-  /** Per-person working-year MAGI for the conservatively-high IRMAA override —
-   *  aligned by index to `people`. NEVER a salary echo (C3 boundary item (a)): a
-   *  non-salary worker enters their honest figure (K-1/investment income, or an
-   *  explicit 0 for a live-on-cash household). */
+  /** Per-person FULL working-year income for the conservatively-high IRMAA override —
+   *  aligned by index to `people` (C3 → Option B, council 2026-06-29). Each still-working
+   *  member's work pay PLUS their working-year investment income (interest/dividends/
+   *  cap-gains/K-1); a salaried worker adds their dividends/interest on top, a non-salary
+   *  worker enters their honest figure, a live-on-cash household enters an explicit 0.
+   *  EXCLUDES the separately-modeled R40 streams (pension/rental/annuity/alimony) — those
+   *  ride `ongoingTaxableIrmaaOnly` in every year, so entering one here double-counts (KTD-9).
+   *  A bare salary echo is FORBIDDEN: working-year investment income reaches IRMAA-MAGI only
+   *  through this field, so a pay-only figure under-states Medicare cost (the cardinal sin). */
   readonly workingYearIrmaaMagiByPerson?: readonly number[]
 }
 

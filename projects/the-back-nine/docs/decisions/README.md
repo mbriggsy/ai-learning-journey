@@ -3,7 +3,7 @@ title: The Back Nine — Decision Records
 doc-type: readme
 status: living
 created: 2026-06-17
-updated: 2026-06-18
+updated: 2026-06-30
 derives-from: [docs/product.md]
 ---
 
@@ -21,6 +21,7 @@ A record belongs here when its reasoning is **expensive to reconstruct** and **r
 | [ss-computation.md](ss-computation.md) | How the engine computes each person's Social Security — own reduction/credit, the Method-C spousal **excess** (not `max()`), the §202 **survivor** benefit with RIB-LIM and the survivor lock-flat guard, the MFJ→single survivor tax switch, the household survivor-spending ratio (~75%). Holds the §1–§12 record + the `realizedClaimAgeAtDeath` survivor-floor bug as institutional record, and cites the verified SSA rule-set (registered in [research/engine-validation-and-tax.md](../research/engine-validation-and-tax.md)). | `§1`–`§12` |
 | [other-income-r40.md](other-income-r40.md) | The R40 ongoing-income model (pension / rental / alimony / annuity / other) — the nine KTDs, the per-type defaults, the five-seam MAGI-atomicity, the OUT-list with every omission's **direction named**, the provenance corrections, and the conservative-or-disclose discipline. | `KTD-1`–`KTD-9` |
 | [portfolio-holdings.md](portfolio-holdings.md) | How the portfolio is described to the engine — the as-built household-blend model (exact per-account % → one `stockWeight`), the pending multi-holding-entry recommendation (opt-in, rides U8, no v3→v4 migration), and the basis / estate-character decisions (per-account-not-per-lot basis, the §1014 step-up). | §-less |
+| [market-model.md](market-model.md) | How the spine generates market returns — i.i.d. parametric lognormal (§1), the clean engineering that's not in question (§2: vol-drag, CRN, the rail), and the **three optimistic-direction caveats named with their error direction** (§3 no sequence persistence, §4 the US-survivor rail that doesn't bite at the 85% decision line, §5 fixed-deflator inflation), the aggregate bet (§6), and the block-bootstrap + stochastic-inflation trigger (§7). | `§1`–`§7` |
 
 ## Decisions that live elsewhere (on purpose)
 

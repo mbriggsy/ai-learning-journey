@@ -35,6 +35,8 @@ const MODEL: Scenario = {
 
 const PASSPHRASE = 'plinth otter vivid casket 92 lampoon'
 const NEW_PASSPHRASE = 'gallant mosaic thunder eel 7 parquet'
+/** The recovery credential — a second user-chosen passphrase, distinct from both dailies. */
+const RECOVERY_PASSPHRASE = 'lattice harbor cinder vellum 48 thicket'
 
 async function floor(passphrase: string) {
   const checked = await checkPassphraseFloor(passphrase)
@@ -49,7 +51,6 @@ let heldSession: VaultSession | null = null
 
 export interface TrustLoopReport {
   readonly firstSaveOk: boolean
-  readonly phraseWords: number
   readonly lockedStatus: string
   readonly wrongPassphraseReason: string
   readonly unlockOk: boolean
@@ -70,8 +71,7 @@ export async function runTrustLoop(): Promise<TrustLoopReport> {
   await clearVault(db) // a clean slate even if a prior run leaked state
 
   const session = createSession(db)
-  const saved = await session.firstSave(MODEL, await floor(PASSPHRASE))
-  const phrase = saved.ok ? saved.recoveryPhrase.join(' ') : ''
+  const saved = await session.firstSave(MODEL, await floor(PASSPHRASE), await floor(RECOVERY_PASSPHRASE))
 
   await session.lock()
   const lockedStatus = session.status()
@@ -88,8 +88,9 @@ export async function runTrustLoop(): Promise<TrustLoopReport> {
   await clearVault(db) // the wipe (models eviction / a new device)
   const afterClear = await loadVault(db)
 
+  // Restore with the RECOVERY passphrase (the export carries only the recoveryWrap).
   const restored = exported.ok
-    ? await restoreVault(db, exported.file, phrase, await floor(NEW_PASSPHRASE))
+    ? await restoreVault(db, exported.file, RECOVERY_PASSPHRASE, await floor(NEW_PASSPHRASE))
     : { ok: false as const, reason: 'export-failed' }
 
   const reopened = createSession(db)
@@ -99,7 +100,6 @@ export async function runTrustLoop(): Promise<TrustLoopReport> {
 
   return {
     firstSaveOk: saved.ok,
-    phraseWords: phrase === '' ? 0 : phrase.split(' ').length,
     lockedStatus,
     wrongPassphraseReason,
     unlockOk: unlocked.ok,
@@ -120,7 +120,7 @@ export async function setupActiveWriter(): Promise<{ ok: boolean }> {
   const db = await openVaultDb()
   await clearVault(db)
   heldSession = createSession(db)
-  const saved = await heldSession.firstSave(MODEL, await floor(PASSPHRASE))
+  const saved = await heldSession.firstSave(MODEL, await floor(PASSPHRASE), await floor(RECOVERY_PASSPHRASE))
   return { ok: saved.ok }
 }
 

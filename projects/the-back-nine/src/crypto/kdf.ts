@@ -8,22 +8,27 @@
  * the offline attacker brute-forces the passphrase against the blob directly), which is
  * why the passphrase floor below is a security boundary, not UX polish.
  *
- * RECOVERY PHRASE → KEY: the 12-word phrase already carries full 128-bit entropy, so the
- * correct primitive is key-EXPANSION — HKDF-SHA-256 (PBKDF2's password-stretching adds
- * nothing against a 128-bit secret). IKM = the phrase's decoded entropy bytes (NOT the
- * utf8 words — the canonical byte content survives wordlist-presentation concerns),
- * salt = the recoveryWrap record's own 16-byte salt, and the MANDATORY pinned `info`
- * domain-separation string. `info` is what prevents a key collision if a second HKDF use
- * over the same phrase is ever added; its `/v1` suffix is the future rotation lever.
+ * RECOVERY CREDENTIAL → KEY: the recovery credential is a SECOND user-chosen memorable
+ * passphrase (the council 2026-06-30 rework — the BIP-39 12-word phrase was DOA for this
+ * non-technical audience). It carries the SAME low entropy as the daily passphrase, so it
+ * needs the SAME password-STRETCHING — there is no separate primitive: the recoveryWrap is
+ * minted by `deriveNewPassphraseKey` (PBKDF2-600k, floor-gated) over the recoveryWrap's own
+ * 16-byte salt, and opened by `derivePassphraseKey` on the recovery-unlock path. The two
+ * wraps are distinguished only by WHICH credential opens them; the salts (per-wrap, CSPRNG)
+ * supply the domain separation an HKDF `info` string used to. The two credentials are held
+ * distinct (firstSave rejects recovery == daily) so a guessed daily passphrase does not also
+ * open the cloud-resident export — but note this is an equality check, NOT independence: two
+ * human-chosen secrets are correlated where the old 128-bit phrase was not (the entropy
+ * downgrade the ceremony discloses).
  *
  * THE FLOOR GATES WRAP-MINTING, NEVER UNLOCK. `deriveNewPassphraseKey` (the set path —
- * minting a new passphraseWrap) accepts only the `FloorCheckedPassphrase` brand that
- * `checkPassphraseFloor` mints, so a weak passphrase structurally cannot reach a wrap.
- * `derivePassphraseKey` (the unlock path) takes a raw string on purpose: zxcvbn's
- * scoring drifts across library versions, and a floor on unlock would let a future
- * re-score of the user's REAL passphrase brick their own vault — the calm-but-wrong
- * class, survivor edition. A vault can only ever hold a floor-passing passphrase, so
- * the asymmetry loses nothing.
+ * minting a passphraseWrap OR a recoveryWrap) accepts only the `FloorCheckedPassphrase`
+ * brand that `checkPassphraseFloor` mints, so a weak credential structurally cannot reach a
+ * wrap. `derivePassphraseKey` (the unlock path, for BOTH the daily and recovery credential)
+ * takes a raw string on purpose: zxcvbn's scoring drifts across library versions, and a
+ * floor on unlock would let a future re-score of the user's REAL credential brick their own
+ * vault — the calm-but-wrong class, survivor edition. A vault can only ever hold
+ * floor-passing credentials, so the asymmetry loses nothing.
  *
  * zxcvbn-ts is loaded via dynamic import: its dictionaries are heavy and the floor only
  * runs at passphrase-set — they must never ride the entry chunk (the ≤300 KiB budget).
@@ -33,9 +38,6 @@ export const PBKDF2_ITERATIONS = 600_000
 export const KDF_HASH = 'SHA-256'
 export const SALT_BYTES = 16
 export const AES_KEY_BITS = 256
-/** Mandatory HKDF domain separation (the /v1 enables future rotation). Pinned here
- *  beside the PBKDF2 params per the U4 plan — never inlined at a call site. */
-export const HKDF_RECOVERY_INFO = 'the-back-nine/recovery-wrap/v1'
 /** The pinned passphrase floor (plan-level decision, U4 → P2·U8): zxcvbn-ts score ≥ 3
  *  AND an independent length ≥ 12 — the sole at-rest defense is KDF hardness, so both
  *  clauses are load-bearing (strong-but-short and long-but-common each fail one). */
@@ -48,11 +50,6 @@ const utf8 = new TextEncoder()
  *  equivalence test must share — single-sourced so a drift is impossible. */
 export function pbkdf2Params(salt: Uint8Array): Pbkdf2Params {
   return { name: 'PBKDF2', hash: KDF_HASH, salt: salt as BufferSource, iterations: PBKDF2_ITERATIONS }
-}
-
-/** The exact HKDF parameter object for the recovery wrap (pinned info baked in). */
-export function hkdfRecoveryParams(salt: Uint8Array): HkdfParams {
-  return { name: 'HKDF', hash: KDF_HASH, salt: salt as BufferSource, info: utf8.encode(HKDF_RECOVERY_INFO) as BufferSource }
 }
 
 const AES_DERIVED_KEY = { name: 'AES-GCM', length: AES_KEY_BITS } as const
@@ -128,13 +125,4 @@ export async function checkPassphraseFloor(passphrase: string): Promise<FloorRes
  */
 export async function deriveNewPassphraseKey(checked: FloorCheckedPassphrase, salt: Uint8Array): Promise<CryptoKey> {
   return derivePassphraseKey(checked.value, salt)
-}
-
-/**
- * The RECOVERY-path derivation: 128-bit phrase entropy → HKDF-SHA-256 → AES-GCM-256,
- * `extractable:false`, with the pinned domain-separation info.
- */
-export async function deriveRecoveryKey(entropy: Uint8Array, salt: Uint8Array): Promise<CryptoKey> {
-  const base = await crypto.subtle.importKey('raw', entropy as BufferSource, 'HKDF', false, ['deriveKey'])
-  return crypto.subtle.deriveKey(hkdfRecoveryParams(salt), base, AES_DERIVED_KEY, false, ['encrypt', 'decrypt'])
 }

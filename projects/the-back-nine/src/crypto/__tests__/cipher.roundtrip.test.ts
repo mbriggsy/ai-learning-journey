@@ -20,7 +20,7 @@ import {
   rewrapDataKey,
   unwrapDataKey,
 } from '../cipher'
-import { derivePassphraseKey, deriveRecoveryKey } from '../kdf'
+import { derivePassphraseKey } from '../kdf'
 
 const utf8 = (s: string): Uint8Array<ArrayBuffer> => new TextEncoder().encode(s) as Uint8Array<ArrayBuffer>
 
@@ -96,12 +96,11 @@ describe('encrypt / decrypt', () => {
 describe('mintWrappedDataKey', () => {
   const salt = new Uint8Array(16).fill(1)
   const recoverySalt = new Uint8Array(16).fill(2)
-  const entropy = new Uint8Array(16).fill(0xab)
 
   async function credentials() {
     return {
       passphrase: await derivePassphraseKey('a perfectly serviceable passphrase', salt),
-      recovery: await deriveRecoveryKey(entropy, recoverySalt),
+      recovery: await derivePassphraseKey('a different recovery passphrase here', recoverySalt),
     }
   }
 
@@ -152,10 +151,9 @@ describe('mintWrappedDataKey', () => {
 
 describe('rewrapDataKey (passphrase change — recovery untouched)', () => {
   it('the new wrap opens under the new credential; the old recovery wrap still opens; ciphertext under DK stays readable', async () => {
-    const entropy = new Uint8Array(16).fill(0xcd)
     const oldPass = await derivePassphraseKey('the original passphrase here', new Uint8Array(16).fill(3))
     const newPass = await derivePassphraseKey('a brand new passphrase now!', new Uint8Array(16).fill(4))
-    const recovery = await deriveRecoveryKey(entropy, new Uint8Array(16).fill(5))
+    const recovery = await derivePassphraseKey('a recovery passphrase here', new Uint8Array(16).fill(5))
 
     const minted = await mintWrappedDataKey(oldPass, recovery)
     const model = await encrypt(minted.dataKey, new TextEncoder().encode('the plan'))
@@ -181,7 +179,7 @@ describe('rewrapDataKey (passphrase change — recovery untouched)', () => {
     const oldPass = await derivePassphraseKey('the original passphrase here', new Uint8Array(16).fill(3))
     const wrongPass = await derivePassphraseKey('not the original passphrase', new Uint8Array(16).fill(3))
     const newPass = await derivePassphraseKey('a brand new passphrase now!', new Uint8Array(16).fill(4))
-    const recovery = await deriveRecoveryKey(new Uint8Array(16).fill(0xcd), new Uint8Array(16).fill(5))
+    const recovery = await derivePassphraseKey('a recovery passphrase here', new Uint8Array(16).fill(5))
 
     const minted = await mintWrappedDataKey(oldPass, recovery)
     await expect(rewrapDataKey(wrongPass, minted.passphraseWrap, newPass)).rejects.toBeInstanceOf(CipherAuthError)

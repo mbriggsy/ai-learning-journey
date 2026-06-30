@@ -66,7 +66,6 @@ test('the full trust loop holds on real IndexedDB: save → lock → unlock → 
   const report = await page.evaluate(() => window.VaultHarness.runTrustLoop())
 
   expect(report.firstSaveOk).toBe(true)
-  expect(report.phraseWords).toBe(12)
   expect(report.lockedStatus).toBe('locked')
   expect(report.wrongPassphraseReason).toBe('wrong-passphrase')
   expect(report.unlockOk).toBe(true)

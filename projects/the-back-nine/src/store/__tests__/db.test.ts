@@ -217,18 +217,19 @@ describe('replacePassphraseWrap (the passphrase-change record op)', () => {
 describe('the no-key-leak gate (burned/063 — single-sourced shapes, planted secrets)', () => {
   it('the store holds EXACTLY the three defined keys with EXACTLY the defined field sets, and no planted secret byte-pattern appears anywhere', async () => {
     // Build a REAL vault through the real crypto layer so the test plants true secrets.
-    const { derivePassphraseKey, deriveRecoveryKey } = await import('../../crypto/kdf')
+    const { derivePassphraseKey } = await import('../../crypto/kdf')
     const { mintWrappedDataKey, encrypt } = await import('../../crypto/cipher')
 
     const passphrase = 'a genuinely load-bearing passphrase'
     const passphraseBytes = new TextEncoder().encode(passphrase)
-    const recoveryEntropy = new Uint8Array(16).fill(0x5a)
+    const recoveryPassphrase = 'a different recovery secret entirely'
+    const recoveryBytes = new TextEncoder().encode(recoveryPassphrase)
     const modelPlaintext = new TextEncoder().encode('{"schemaVersion":1,"secret":"the plan"}')
 
     const passSalt = new Uint8Array(16).fill(1)
     const recSalt = new Uint8Array(16).fill(2)
     const passKey = await derivePassphraseKey(passphrase, passSalt)
-    const recKey = await deriveRecoveryKey(recoveryEntropy, recSalt)
+    const recKey = await derivePassphraseKey(recoveryPassphrase, recSalt)
     const minted = await mintWrappedDataKey(passKey, recKey)
     const modelBox = await encrypt(minted.dataKey, modelPlaintext)
 
@@ -273,7 +274,7 @@ describe('the no-key-leak gate (burned/063 — single-sourced shapes, planted se
     }
     for (const blob of allStoredBytes) {
       expect(contains(blob, passphraseBytes)).toBe(false)
-      expect(contains(blob, recoveryEntropy)).toBe(false)
+      expect(contains(blob, recoveryBytes)).toBe(false)
       expect(contains(blob, modelPlaintext)).toBe(false)
     }
   })

@@ -83,6 +83,9 @@ export function ExportConfirm({
         {copy.exportHeading}
       </h2>
       <p className="save-step__intro">{copy.exportIntro}</p>
+      {/* Council-mandated substance (2026-06-30): the entropy downgrade + the estate handoff. */}
+      <p className="save-step__intro save-step__intro--secondary">{copy.exportEntropyNote}</p>
+      <p className="save-step__intro save-step__intro--secondary">{copy.exportEstateNote}</p>
 
       <div className="save-export">
         {downloadUrl && (

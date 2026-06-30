@@ -1,10 +1,14 @@
 /**
  * U8 first-Save ceremony orchestrator — ONE routed phase (not a forked modal), in the calm
- * step-machine style. The as-built ordering (reconciled in the U8 plan): strength-gate →
- * `firstSave` (atomic mint+commit, RETURNS the phrase) → phrase display → mandatory capture →
- * mandatory export → complete. The vault is on disk after `firstSave`, and the recovery phrase is
- * heap-only and never re-derivable (insight 031) — so a `beforeunload` guard runs from the moment
- * the phrase exists until export confirms, and phrase-capture is the immediate hard gate.
+ * step-machine style. Flow (the 2026-06-30 council recovery rework): daily passphrase (the
+ * LOCK, typed every time on this device) → recovery word (the KEY — the way back in, and the
+ * survivor's door) → `firstSave` (atomic mint + commit of BOTH wraps) → mandatory backup export
+ * → complete. BOTH credentials are USER-CHOSEN, so there is no system-minted secret to display
+ * or capture — the old phrase-display + positional-capture beats retired with the BIP-39 phrase.
+ *
+ * The `beforeunload` guard runs ONLY on the export step: the single window where the vault is
+ * committed on disk but the off-device backup (the survivor's findable artifact) is not yet
+ * saved. The recovery step is pre-commit (nothing on disk), so it needs no guard.
  *
  * Holds the ONE polite live region (back-nine-design: a single announcer, clear-after-announce),
  * mounted once at the top so it never goes stale across step swaps.
@@ -15,15 +19,20 @@ import './styles/save.css'
 import { createAnnouncer, focusHeading, type Announcer } from '@intake/a11y'
 import { getVaultSession } from './vaultSession'
 import { PassphraseStep } from './PassphraseStep'
-import { RecoveryPhraseDisplay } from './RecoveryPhraseDisplay'
-import { PhraseCapture } from './PhraseCapture'
 import { ExportConfirm } from './ExportConfirm'
 import type { ScenarioV3 } from '@shared/model'
 import type { FloorCheckedPassphrase } from '@crypto/kdf'
 
-type Step = 'passphrase' | 'securing' | 'phrase' | 'capture' | 'export' | 'complete' | 'error'
+type Step = 'passphrase' | 'recovery' | 'securing' | 'export' | 'complete' | 'error'
 
-type FirstSaveReason = 'not-locked' | 'vault-exists' | 'open-in-another-tab' | 'cancelled' | 'quota' | 'write-failed'
+type FirstSaveReason =
+  | 'not-locked'
+  | 'vault-exists'
+  | 'open-in-another-tab'
+  | 'cancelled'
+  | 'quota'
+  | 'write-failed'
+  | 'recovery-equals-passphrase'
 type SaveErrorKey = 'saveErrorQuota' | 'saveErrorBusy' | 'saveErrorFailed'
 
 function firstSaveErrorKey(reason: FirstSaveReason): SaveErrorKey {
@@ -42,8 +51,15 @@ export function SaveFlow({
   readonly onComplete: () => void
 }) {
   const [step, setStep] = useState<Step>('passphrase')
-  const [phrase, setPhrase] = useState<readonly string[] | null>(null)
   const [errorKey, setErrorKey] = useState<SaveErrorKey>('saveErrorFailed')
+  const [recoveryError, setRecoveryError] = useState<string | null>(null)
+  // The daily passphrase, held across the recovery step until firstSave mints both wraps.
+  // A ref (not state): it's a transient secret, and changing it must not re-render.
+  const dailyRef = useRef<FloorCheckedPassphrase | null>(null)
+
+  // State-adaptive recovery framing: a solo household has no second head for a "shared" word,
+  // so it gets the estate-handoff intro; a couple gets the shared-memory framing.
+  const solo = scenario.people.length === 1
 
   // The ONE polite live region, bound once its node mounts; a stable forwarder lets children hold
   // a steady `announcer` prop even before the node exists.
@@ -60,9 +76,9 @@ export function SaveFlow({
     if (step === 'complete' || step === 'error') focusHeading(inlineHeadingRef.current)
   }, [step])
 
-  // beforeunload guard: from the moment the vault is committed + the phrase exists (heap-only,
-  // unrecoverable) until export confirms. The phrase-capture hard gate minimises this window.
-  const guarding = step === 'phrase' || step === 'capture' || step === 'export'
+  // beforeunload guard: only on export — the vault is committed but the off-device backup
+  // (the survivor's findable artifact) is not yet saved.
+  const guarding = step === 'export'
   useEffect(() => {
     if (!guarding) return
     const handler = (e: BeforeUnloadEvent) => {
@@ -73,14 +89,33 @@ export function SaveFlow({
     return () => window.removeEventListener('beforeunload', handler)
   }, [guarding])
 
-  async function handlePassphrase(checked: FloorCheckedPassphrase) {
+  function handlePassphrase(checked: FloorCheckedPassphrase) {
+    dailyRef.current = checked
+    setStep('recovery')
+  }
+
+  async function handleRecovery(recovery: FloorCheckedPassphrase) {
+    const daily = dailyRef.current
+    if (!daily) {
+      setStep('passphrase')
+      return
+    }
+    // UI mirror of the backend's negative-pairing guard — instant feedback before the ~1s
+    // derive. The authoritative check is in session.firstSave.
+    if (recovery.value === daily.value) {
+      setRecoveryError(copy.recoveryEqualsError)
+      return
+    }
+    setRecoveryError(null)
     setStep('securing')
     announcer.announce(copy.securingStatus)
     const session = await getVaultSession()
-    const result = await session.firstSave(scenario, checked)
+    const result = await session.firstSave(scenario, daily, recovery)
     if (result.ok) {
-      setPhrase(result.recoveryPhrase)
-      setStep('phrase')
+      setStep('export')
+    } else if (result.reason === 'recovery-equals-passphrase') {
+      setRecoveryError(copy.recoveryEqualsError)
+      setStep('recovery')
     } else {
       setErrorKey(firstSaveErrorKey(result.reason))
       setStep('error')
@@ -91,13 +126,39 @@ export function SaveFlow({
     switch (step) {
       case 'passphrase':
         return (
+          // Distinct key from the recovery step: both render <PassphraseStep> at the same
+          // tree position, so without a key React reuses the instance and its internal
+          // passphrase/confirm state LEAKS across the step change (the daily passphrase
+          // would pre-fill the recovery field). The key forces a fresh remount.
           <PassphraseStep
+            key="daily"
             heading={copy.saveHeading}
             intro={copy.saveIntro}
             submitLabel={copy.flowNext}
-            onSubmit={(checked) => void handlePassphrase(checked)}
+            onSubmit={handlePassphrase}
             onBack={onCancel}
             announcer={announcer}
+          />
+        )
+
+      case 'recovery':
+        return (
+          <PassphraseStep
+            key="recovery"
+            heading={copy.recoveryHeading}
+            intro={solo ? copy.recoveryIntroSolo : copy.recoveryIntro}
+            secondaryIntro={copy.recoverySteer}
+            fieldLabel={copy.recoveryLabel}
+            confirmFieldLabel={copy.recoveryConfirmLabel}
+            submitLabel={copy.flowNext}
+            onSubmit={(checked) => void handleRecovery(checked)}
+            onBack={() => {
+              setRecoveryError(null)
+              setStep('passphrase')
+            }}
+            announcer={announcer}
+            externalError={recoveryError}
+            onFieldEdit={() => setRecoveryError(null)}
           />
         )
 
@@ -110,26 +171,8 @@ export function SaveFlow({
           </section>
         )
 
-      case 'phrase':
-        return phrase && <RecoveryPhraseDisplay phrase={phrase} onContinue={() => setStep('capture')} />
-
-      case 'capture':
-        return (
-          phrase && (
-            <PhraseCapture phrase={phrase} onPass={() => setStep('export')} onShowAgain={() => setStep('phrase')} />
-          )
-        )
-
       case 'export':
-        return (
-          <ExportConfirm
-            announcer={announcer}
-            onFinish={() => {
-              setPhrase(null) // heap-drop the phrase once captured + backed up
-              setStep('complete')
-            }}
-          />
-        )
+        return <ExportConfirm announcer={announcer} onFinish={() => setStep('complete')} />
 
       case 'complete':
         return (

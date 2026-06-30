@@ -6,13 +6,14 @@
  * the product contract), so correctness is proven in two independent layers:
  *
  *   1. HARNESS PROOFS — `crypto.subtle.deriveBits` is run against the published RFC
- *      vectors (RFC 7914 §11 for PBKDF2-HMAC-SHA-256; RFC 5869 A.1 for HKDF-SHA-256),
- *      proving the platform primitive + this file's own hex/ASCII plumbing are right.
+ *      vectors (RFC 7914 §11 for PBKDF2-HMAC-SHA-256), proving the platform primitive
+ *      + this file's own hex/ASCII plumbing are right.
  *   2. EQUIVALENCE PROBES — the production derive functions are checked against an
  *      INDEPENDENT deriveBits→importKey construction using the documented parameters
- *      (600k/SHA-256/utf8; HKDF salt+pinned info). If our wiring mis-parameterizes
- *      anything (hash, iterations, salt/info transposition, encoding), the probe
- *      ciphertext fails to decrypt. The RFC layer proves the probe's own assumptions.
+ *      (600k/SHA-256/utf8). If our wiring mis-parameterizes anything (hash, iterations,
+ *      salt/encoding), the probe ciphertext fails to decrypt. The RFC layer proves the
+ *      probe's own assumptions. (The recovery wrap now rides this SAME PBKDF2 path — the
+ *      2026-06-30 council retired the HKDF-over-128-bit-phrase recovery key.)
  *
  * The vectors below are transcribed VERBATIM from the RFC texts (fetched 2026-06-10
  * from rfc-editor.org), never recomputed locally.
@@ -21,7 +22,6 @@ import { describe, expect, it } from 'vitest'
 
 import {
   AES_KEY_BITS,
-  HKDF_RECOVERY_INFO,
   KDF_HASH,
   PASSPHRASE_MIN_LENGTH,
   PASSPHRASE_MIN_SCORE,
@@ -30,7 +30,6 @@ import {
   checkPassphraseFloor,
   deriveNewPassphraseKey,
   derivePassphraseKey,
-  deriveRecoveryKey,
 } from '../kdf'
 
 const ascii = (s: string): Uint8Array<ArrayBuffer> => new TextEncoder().encode(s) as Uint8Array<ArrayBuffer>
@@ -71,16 +70,6 @@ async function independentPbkdf2Key(
   return crypto.subtle.importKey('raw', bits, { name: 'AES-GCM' }, false, ['encrypt', 'decrypt'])
 }
 
-async function independentHkdfKey(
-  ikm: Uint8Array<ArrayBuffer>,
-  salt: Uint8Array<ArrayBuffer>,
-  info: Uint8Array<ArrayBuffer>,
-): Promise<CryptoKey> {
-  const base = await crypto.subtle.importKey('raw', ikm, 'HKDF', false, ['deriveBits'])
-  const bits = await crypto.subtle.deriveBits({ name: 'HKDF', hash: 'SHA-256', salt, info }, base, 256)
-  return crypto.subtle.importKey('raw', bits, { name: 'AES-GCM' }, false, ['encrypt', 'decrypt'])
-}
-
 // ---------------------------------------------------------------------------
 // 1. Harness proofs — published RFC vectors, transcribed verbatim.
 // ---------------------------------------------------------------------------
@@ -115,17 +104,6 @@ describe('harness proofs (external RFC vectors, DND/012)', () => {
     )
     expect(bytesToHex(bits)).toBe(bytesToHex(hexToBytes(expected).buffer as ArrayBuffer))
   })
-
-  it('HKDF-SHA-256 matches RFC 5869 A.1 Test Case 1', async () => {
-    const ikm = hexToBytes('0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b')
-    const salt = hexToBytes('000102030405060708090a0b0c')
-    const info = hexToBytes('f0f1f2f3f4f5f6f7f8f9')
-    const expectedOkm =
-      '3cb25f25faacd57a90434f64d0362f2a' + '2d2d0a90cf1a5a4c5db02d56ecc4c5bf' + '34007208d5b887185865'
-    const base = await crypto.subtle.importKey('raw', ikm, 'HKDF', false, ['deriveBits'])
-    const bits = await crypto.subtle.deriveBits({ name: 'HKDF', hash: 'SHA-256', salt, info }, base, 42 * 8)
-    expect(bytesToHex(bits)).toBe(expectedOkm)
-  })
 })
 
 // ---------------------------------------------------------------------------
@@ -138,10 +116,6 @@ describe('pinned constants', () => {
     expect(KDF_HASH).toBe('SHA-256')
     expect(SALT_BYTES).toBe(16)
     expect(AES_KEY_BITS).toBe(256)
-  })
-
-  it('pins the HKDF domain-separation info string with its /v1 rotation suffix', () => {
-    expect(HKDF_RECOVERY_INFO).toBe('the-back-nine/recovery-wrap/v1')
   })
 
   it('pins the passphrase floor (zxcvbn score ≥ 3 AND independent length ≥ 12)', () => {
@@ -190,35 +164,6 @@ describe('derivePassphraseKey (unlock path)', () => {
     // wrap-MINTING — deriveNewPassphraseKey — not derivation per se.)
     const key = await derivePassphraseKey('weak', salt)
     expect(key.type).toBe('secret')
-  })
-})
-
-describe('deriveRecoveryKey (HKDF-SHA-256 over phrase entropy)', () => {
-  const entropy = hexToBytes('77c2b00716cec7213839159e404db50d')
-  const salt = new Uint8Array(16).fill(9)
-
-  it('derives exactly the documented HKDF key with the PINNED info string (equivalence probe)', async () => {
-    const ours = await deriveRecoveryKey(entropy, salt)
-    const independent = await independentHkdfKey(entropy, salt, ascii('the-back-nine/recovery-wrap/v1'))
-    expect(await sameKeyMaterial(ours, independent)).toBe(true)
-  })
-
-  it('domain separation: a different info string yields a DIFFERENT key', async () => {
-    const ours = await deriveRecoveryKey(entropy, salt)
-    const otherDomain = await independentHkdfKey(entropy, salt, ascii('the-back-nine/recovery-wrap/v2'))
-    expect(await sameKeyMaterial(ours, otherDomain)).toBe(false)
-  })
-
-  it('a different salt yields a different key', async () => {
-    const a = await deriveRecoveryKey(entropy, salt)
-    const b = await deriveRecoveryKey(entropy, new Uint8Array(16).fill(10))
-    expect(await sameKeyMaterial(a, b)).toBe(false)
-  })
-
-  it('the recovery key is NOT extractable', async () => {
-    const key = await deriveRecoveryKey(entropy, salt)
-    expect(key.extractable).toBe(false)
-    await expect(crypto.subtle.exportKey('raw', key)).rejects.toThrow()
   })
 })
 

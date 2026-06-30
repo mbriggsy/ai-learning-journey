@@ -2,11 +2,11 @@
  * backup.ts — export/restore (one mechanism) battery.
  *
  * The trust assertions: the export↔restore cycle reproduces the model through a wipe;
- * the phrase is IMMUTABLE (an old export restores after a passphrase change); the
- * format gate runs BEFORE any decrypt (foreign/corrupt files surface calm, typed —
- * never a GCM stack trace); and the NEGATIVE PAIRING is structural — the file carries
- * no passphrase wrap, so file-without-phrase recovers nothing, and phrase-without-file
- * has nothing to open.
+ * the recovery credential is IMMUTABLE (an old export restores after a daily-passphrase
+ * change); the format gate runs BEFORE any decrypt (foreign/corrupt files surface calm,
+ * typed — never a GCM stack trace); and the NEGATIVE PAIRING is structural — the file
+ * carries no passphrase wrap, so the file without the recovery passphrase recovers
+ * nothing, and the recovery passphrase without the file has nothing to open.
  */
 import 'fake-indexeddb/auto'
 import { IDBFactory } from 'fake-indexeddb'
@@ -20,6 +20,8 @@ import { createSession, type VaultSession } from '../session'
 
 const PASSPHRASE = 'plinth otter vivid casket 92 lampoon'
 const NEW_PASSPHRASE = 'gallant mosaic thunder eel 7 parquet'
+/** The recovery credential — a second user-chosen passphrase, distinct from both dailies. */
+const RECOVERY_PASSPHRASE = 'lattice harbor cinder vellum 48 thicket'
 
 const MODEL: Scenario = {
   schemaVersion: 1,
@@ -47,12 +49,12 @@ async function floorPass(passphrase: string): Promise<FloorCheckedPassphrase> {
   return result.passphrase
 }
 
-async function vaulted(): Promise<{ db: VaultDb; session: VaultSession; phrase: string }> {
+async function vaulted(): Promise<{ db: VaultDb; session: VaultSession }> {
   const db = await openVaultDb()
   const session = createSession(db)
-  const saved = await session.firstSave(MODEL, await floorPass(PASSPHRASE))
+  const saved = await session.firstSave(MODEL, await floorPass(PASSPHRASE), await floorPass(RECOVERY_PASSPHRASE))
   if (!saved.ok) throw new Error('firstSave failed')
-  return { db, session, phrase: saved.recoveryPhrase.join(' ') }
+  return { db, session }
 }
 
 beforeEach(() => {
@@ -61,7 +63,7 @@ beforeEach(() => {
 
 describe('the export → wipe → restore cycle (models Safari eviction / device wipe)', () => {
   it('reproduces the model exactly, unlockable with the NEW passphrase', async () => {
-    const { db, session, phrase } = await vaulted()
+    const { db, session } = await vaulted()
     const exported = await exportVault(db)
     expect(exported.ok).toBe(true)
     if (!exported.ok) return
@@ -70,7 +72,7 @@ describe('the export → wipe → restore cycle (models Safari eviction / device
     await clearVault(db) // the wipe
     expect(await loadVault(db)).toEqual({ kind: 'no-vault' })
 
-    const restored = await restoreVault(db, exported.file, phrase, await floorPass(NEW_PASSPHRASE))
+    const restored = await restoreVault(db, exported.file, RECOVERY_PASSPHRASE, await floorPass(NEW_PASSPHRASE))
     expect(restored).toEqual({ ok: true })
 
     const reopened = createSession(db)
@@ -80,17 +82,18 @@ describe('the export → wipe → restore cycle (models Safari eviction / device
     await reopened.lock()
   })
 
-  it('an EARLIER export restores after a passphrase change — the phrase is immutable', async () => {
-    const { db, session, phrase } = await vaulted()
+  it('an EARLIER export restores after a passphrase change — the recovery credential is immutable', async () => {
+    const { db, session } = await vaulted()
     const earlyExport = await exportVault(db)
     if (!earlyExport.ok) throw new Error('export failed')
 
-    // The passphrase changes; the phrase (and the recovery wrap in the old export) do not.
+    // The daily passphrase changes; the recovery credential (and the recovery wrap in the
+    // old export) do not.
     expect((await session.setNewPassphrase(await floorPass(NEW_PASSPHRASE))).ok).toBe(true)
     await session.lock()
 
     await clearVault(db)
-    const restored = await restoreVault(db, earlyExport.file, phrase, await floorPass(PASSPHRASE))
+    const restored = await restoreVault(db, earlyExport.file, RECOVERY_PASSPHRASE, await floorPass(PASSPHRASE))
     expect(restored).toEqual({ ok: true })
 
     const reopened = createSession(db)
@@ -100,44 +103,44 @@ describe('the export → wipe → restore cycle (models Safari eviction / device
   })
 
   it('refuses to restore over a HEALTHY vault (a destructive overwrite is never silent)', async () => {
-    const { db, session, phrase } = await vaulted()
+    const { db, session } = await vaulted()
     const exported = await exportVault(db)
     if (!exported.ok) throw new Error('export failed')
     await session.lock()
 
-    const result = await restoreVault(db, exported.file, phrase, await floorPass(NEW_PASSPHRASE))
+    const result = await restoreVault(db, exported.file, RECOVERY_PASSPHRASE, await floorPass(NEW_PASSPHRASE))
     expect(result).toEqual({ ok: false, reason: 'vault-exists' })
   })
 })
 
 describe('the format gate (checked BEFORE decrypt)', () => {
   it('a non-JSON file → file-damaged, never a crash', async () => {
-    const { db, phrase, session } = await vaulted()
+    const { db, session } = await vaulted()
     await session.lock()
     await clearVault(db)
-    const result = await restoreVault(db, 'not json at all {', phrase, await floorPass(NEW_PASSPHRASE))
+    const result = await restoreVault(db, 'not json at all {', RECOVERY_PASSPHRASE, await floorPass(NEW_PASSPHRASE))
     expect(result.ok).toBe(false)
     if (!result.ok) expect(result.reason).toBe('file-damaged')
   })
 
   it('a foreign JSON file (wrong format marker) → file-damaged', async () => {
-    const { db, phrase, session } = await vaulted()
+    const { db, session } = await vaulted()
     await session.lock()
     await clearVault(db)
     const foreign = JSON.stringify({ format: 'some-other-app', formatVersion: 1 })
-    const result = await restoreVault(db, foreign, phrase, await floorPass(NEW_PASSPHRASE))
+    const result = await restoreVault(db, foreign, RECOVERY_PASSPHRASE, await floorPass(NEW_PASSPHRASE))
     expect(result.ok).toBe(false)
     if (!result.ok) expect(result.reason).toBe('file-damaged')
   })
 
   it('a NEWER format version → the calm newer-format state (never a mis-parse)', async () => {
-    const { db, phrase, session } = await vaulted()
+    const { db, session } = await vaulted()
     const exported = await exportVault(db)
     if (!exported.ok) throw new Error('export failed')
     await session.lock()
     await clearVault(db)
     const bumped = JSON.stringify({ ...JSON.parse(exported.file), formatVersion: 2 })
-    const result = await restoreVault(db, bumped, phrase, await floorPass(NEW_PASSPHRASE))
+    const result = await restoreVault(db, bumped, RECOVERY_PASSPHRASE, await floorPass(NEW_PASSPHRASE))
     expect(result).toEqual({ ok: false, reason: 'newer-format' })
   })
 })
@@ -153,33 +156,21 @@ describe('negative pairing (proven, not believed)', () => {
     expect(parsed.format).toBe(BACKUP_FORMAT)
   })
 
-  it('the file WITHOUT the right phrase recovers nothing (wrong phrase → typed fail, nothing written)', async () => {
-    const { db, phrase: _phrase, session } = await vaulted()
-    const exported = await exportVault(db)
-    if (!exported.ok) throw new Error('export failed')
-    await session.lock()
-    await clearVault(db)
-
-    const wrongPhrase =
-      'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about'
-    const result = await restoreVault(db, exported.file, wrongPhrase, await floorPass(NEW_PASSPHRASE))
-    expect(result).toEqual({ ok: false, reason: 'wrong-recovery-phrase' })
-    expect(await loadVault(db)).toEqual({ kind: 'no-vault' }) // nothing partial landed
-  })
-
-  it('a malformed phrase fails typed before any crypto', async () => {
+  it('the file WITHOUT the right recovery passphrase recovers nothing (wrong credential → typed fail, nothing written)', async () => {
     const { db, session } = await vaulted()
     const exported = await exportVault(db)
     if (!exported.ok) throw new Error('export failed')
     await session.lock()
     await clearVault(db)
-    const result = await restoreVault(db, exported.file, 'only three words', await floorPass(NEW_PASSPHRASE))
-    expect(result.ok).toBe(false)
-    if (!result.ok) expect(result.reason).toBe('phrase-invalid')
+
+    const wrongRecovery = 'not the recovery passphrase at all'
+    const result = await restoreVault(db, exported.file, wrongRecovery, await floorPass(NEW_PASSPHRASE))
+    expect(result).toEqual({ ok: false, reason: 'wrong-recovery-passphrase' })
+    expect(await loadVault(db)).toEqual({ kind: 'no-vault' }) // nothing partial landed
   })
 
-  it('a tampered MODEL ciphertext with the CORRECT phrase → file-damaged (context distinguishes damage from a wrong phrase)', async () => {
-    const { db, phrase, session } = await vaulted()
+  it('a tampered MODEL ciphertext with the CORRECT recovery passphrase → file-damaged (context distinguishes damage from a wrong credential)', async () => {
+    const { db, session } = await vaulted()
     const exported = await exportVault(db)
     if (!exported.ok) throw new Error('export failed')
     await session.lock()
@@ -189,7 +180,7 @@ describe('negative pairing (proven, not believed)', () => {
     const bytes = Uint8Array.from(atob(parsed.model.ciphertext), (c) => c.charCodeAt(0))
     bytes[0] = bytes[0]! ^ 0xff
     parsed.model.ciphertext = btoa(String.fromCharCode(...bytes))
-    const result = await restoreVault(db, JSON.stringify(parsed), phrase, await floorPass(NEW_PASSPHRASE))
+    const result = await restoreVault(db, JSON.stringify(parsed), RECOVERY_PASSPHRASE, await floorPass(NEW_PASSPHRASE))
     expect(result.ok).toBe(false)
     if (!result.ok) expect(result.reason).toBe('file-damaged')
   })
@@ -211,29 +202,28 @@ describe('the U4 boundary-review folds', () => {
     const db = await openVaultDb()
     const session = createSession(db)
     const futureScenario = { ...MODEL, schemaVersion: 4 } as unknown as Scenario
-    const saved = await session.firstSave(futureScenario, await floorPass(PASSPHRASE))
+    const saved = await session.firstSave(futureScenario, await floorPass(PASSPHRASE), await floorPass(RECOVERY_PASSPHRASE))
     if (!saved.ok) throw new Error('firstSave failed')
-    const phrase = saved.recoveryPhrase.join(' ')
     const exported = await exportVault(db)
     if (!exported.ok) throw new Error('export failed')
     await session.lock()
     await clearVault(db)
 
-    const result = await restoreVault(db, exported.file, phrase, await floorPass(NEW_PASSPHRASE))
+    const result = await restoreVault(db, exported.file, RECOVERY_PASSPHRASE, await floorPass(NEW_PASSPHRASE))
     expect(result).toEqual({ ok: false, reason: 'newer-version', got: 4 })
     expect(await loadVault(db)).toEqual({ kind: 'no-vault' }) // nothing landed
   })
 
   it('two concurrent restores from a wiped state: exactly one lands (the TOCTOU critical section)', async () => {
-    const { db, session, phrase } = await vaulted()
+    const { db, session } = await vaulted()
     const exported = await exportVault(db)
     if (!exported.ok) throw new Error('export failed')
     await session.lock()
     await clearVault(db)
 
     const [r1, r2] = await Promise.all([
-      restoreVault(db, exported.file, phrase, await floorPass(NEW_PASSPHRASE)),
-      restoreVault(db, exported.file, phrase, await floorPass('zephyr quilt marble 33 onset')),
+      restoreVault(db, exported.file, RECOVERY_PASSPHRASE, await floorPass(NEW_PASSPHRASE)),
+      restoreVault(db, exported.file, RECOVERY_PASSPHRASE, await floorPass('zephyr quilt marble 33 onset')),
     ])
     const oks = [r1, r2].filter((r) => r.ok)
     const refusals = [r1, r2].filter((r) => !r.ok)

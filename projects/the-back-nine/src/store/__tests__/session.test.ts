@@ -14,12 +14,14 @@ import { beforeEach, describe, expect, it } from 'vitest'
 
 import type { Scenario } from '@shared/model'
 import { checkPassphraseFloor, type FloorCheckedPassphrase } from '../../crypto/kdf'
-import { phraseToEntropy } from '../../crypto/recoveryPhrase'
 import { loadVault, openVaultDb, type VaultDb } from '../db'
 import { createSession, type VaultSession } from '../session'
 
 const PASSPHRASE = 'plinth otter vivid casket 92 lampoon'
 const NEW_PASSPHRASE = 'gallant mosaic thunder eel 7 parquet'
+/** The recovery credential — a second user-chosen passphrase, distinct from both dailies
+ *  (firstSave rejects recovery == daily). */
+const RECOVERY_PASSPHRASE = 'lattice harbor cinder vellum 48 thicket'
 
 const MODEL: Scenario = {
   schemaVersion: 1,
@@ -48,12 +50,12 @@ async function floorPass(passphrase: string): Promise<FloorCheckedPassphrase> {
 }
 
 /** A fresh DB + session with a vault already created (the common starting point). */
-async function vaultedSession(): Promise<{ db: VaultDb; session: VaultSession; phrase: readonly string[] }> {
+async function vaultedSession(): Promise<{ db: VaultDb; session: VaultSession }> {
   const db = await openVaultDb()
   const session = createSession(db)
-  const saved = await session.firstSave(MODEL, await floorPass(PASSPHRASE))
+  const saved = await session.firstSave(MODEL, await floorPass(PASSPHRASE), await floorPass(RECOVERY_PASSPHRASE))
   if (!saved.ok) throw new Error(`firstSave failed: ${JSON.stringify(saved)}`)
-  return { db, session, phrase: saved.recoveryPhrase }
+  return { db, session }
 }
 
 beforeEach(() => {
@@ -61,9 +63,8 @@ beforeEach(() => {
 })
 
 describe('firstSave → lock → unlock (the happy trust loop)', () => {
-  it('round-trips the model byte-identically — including the seed — and returns a decodable recovery phrase', async () => {
-    const { session, phrase } = await vaultedSession()
-    expect((await phraseToEntropy(phrase.join(' '))).ok).toBe(true)
+  it('round-trips the model byte-identically — including the seed', async () => {
+    const { session } = await vaultedSession()
 
     await session.lock()
     expect(session.status()).toBe('locked')
@@ -80,7 +81,7 @@ describe('firstSave → lock → unlock (the happy trust loop)', () => {
     const { db, session } = await vaultedSession()
     await session.lock()
     const second = createSession(db)
-    const result = await second.firstSave(MODEL, await floorPass(PASSPHRASE))
+    const result = await second.firstSave(MODEL, await floorPass(PASSPHRASE), await floorPass(RECOVERY_PASSPHRASE))
     expect(result).toEqual({ ok: false, reason: 'vault-exists' })
   })
 })
@@ -132,10 +133,10 @@ describe('the write-gate conjunction (contract #4 — ONE predicate, every claus
   })
 
   it('recovery-unlock decrypts the model but the SAME seam refuses every write until the new passphrase is set', async () => {
-    const { session, phrase } = await vaultedSession()
+    const { session } = await vaultedSession()
     await session.lock()
 
-    const recovered = await session.recoveryUnlock(phrase.join(' '))
+    const recovered = await session.recoveryUnlock(RECOVERY_PASSPHRASE)
     expect(recovered).toEqual({ ok: true })
     expect(session.status()).toBe('recovery-unlocked')
     expect(session.currentModel()).toEqual(MODEL)
@@ -150,35 +151,35 @@ describe('the write-gate conjunction (contract #4 — ONE predicate, every claus
     expect((await session.save({ ...MODEL, annualSpendingReal: 53_000 })).ok).toBe(true)
     await session.lock()
 
-    // Afterward: the NEW passphrase unlocks; the recovery phrase STILL works.
+    // Afterward: the NEW passphrase unlocks; the recovery passphrase STILL works.
     expect((await session.unlock(NEW_PASSPHRASE)).ok).toBe(true)
     await session.lock()
-    expect((await session.recoveryUnlock(phrase.join(' '))).ok).toBe(true)
+    expect((await session.recoveryUnlock(RECOVERY_PASSPHRASE)).ok).toBe(true)
     await session.setNewPassphrase(await floorPass(NEW_PASSPHRASE))
     await session.lock()
   })
 
-  it('a malformed recovery phrase fails typed BEFORE any crypto (the survivor typo pointer)', async () => {
-    const { session } = await vaultedSession()
-    await session.lock()
-    const result = await session.recoveryUnlock('zebra zebra zebra')
-    expect(result.ok).toBe(false)
-    if (!result.ok) expect(result.reason).toBe('phrase-invalid')
+  it('firstSave rejects a recovery credential equal to the daily passphrase (negative-pairing guard)', async () => {
+    const db = await openVaultDb()
+    const session = createSession(db)
+    // Same string for both credentials — minting would let a guessed daily passphrase
+    // also open the cloud-resident export. Refused BEFORE any vault write.
+    const result = await session.firstSave(MODEL, await floorPass(PASSPHRASE), await floorPass(PASSPHRASE))
+    expect(result).toEqual({ ok: false, reason: 'recovery-equals-passphrase' })
+    expect(await loadVault(db)).toEqual({ kind: 'no-vault' }) // nothing landed
   })
 
-  it('a VALID-shaped but wrong recovery phrase fails as wrong-recovery-phrase (GCM, calm)', async () => {
+  it('a wrong recovery passphrase fails as wrong-recovery-passphrase (GCM, calm)', async () => {
     const { session } = await vaultedSession()
     await session.lock()
-    // A checksum-valid phrase that is simply not this vault's phrase.
-    const wrong = 'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about'
-    const result = await session.recoveryUnlock(wrong)
-    expect(result).toEqual({ ok: false, reason: 'wrong-recovery-phrase' })
+    const result = await session.recoveryUnlock('not the recovery passphrase at all')
+    expect(result).toEqual({ ok: false, reason: 'wrong-recovery-passphrase' })
   })
 })
 
 describe('passphrase change while unlocked', () => {
-  it('re-wraps with fresh salt AND iv; recovery phrase unaffected; old passphrase dead', async () => {
-    const { db, session, phrase } = await vaultedSession()
+  it('re-wraps with fresh salt AND iv; recovery wrap unaffected; old passphrase dead', async () => {
+    const { db, session } = await vaultedSession()
     const before = await loadVault(db)
     if (before.kind !== 'vault') throw new Error('expected vault')
 
@@ -195,7 +196,7 @@ describe('passphrase change while unlocked', () => {
     expect(await session.unlock(PASSPHRASE)).toEqual({ ok: false, reason: 'wrong-passphrase' })
     expect((await session.unlock(NEW_PASSPHRASE)).ok).toBe(true)
     await session.lock()
-    expect((await session.recoveryUnlock(phrase.join(' '))).ok).toBe(true)
+    expect((await session.recoveryUnlock(RECOVERY_PASSPHRASE)).ok).toBe(true)
     await session.setNewPassphrase(await floorPass(NEW_PASSPHRASE))
     await session.lock()
   })
@@ -409,8 +410,12 @@ describe('lock authority (the U4 boundary-review race folds — each was a live 
     const a = createSession(db)
     const b = createSession(db)
     const [ra, rb] = await Promise.all([
-      a.firstSave(MODEL, await floorPass(PASSPHRASE)),
-      b.firstSave({ ...MODEL, annualSpendingReal: 49_000 }, await floorPass(NEW_PASSPHRASE)),
+      a.firstSave(MODEL, await floorPass(PASSPHRASE), await floorPass(RECOVERY_PASSPHRASE)),
+      b.firstSave(
+        { ...MODEL, annualSpendingReal: 49_000 },
+        await floorPass(NEW_PASSPHRASE),
+        await floorPass(RECOVERY_PASSPHRASE),
+      ),
     ])
     const winners = [ra, rb].filter((r) => r.ok)
     const losers = [ra, rb].filter((r) => !r.ok)
@@ -474,9 +479,9 @@ describe('single-active-writer (BroadcastChannel second-tab detection)', () => {
   })
 
   it('a recovery unlock against a vault active in another tab is refused outright (its only exit is a write)', async () => {
-    const { db, session: tabA, phrase } = await vaultedSession()
+    const { db, session: tabA } = await vaultedSession()
     const tabB = createSession(db)
-    const result = await tabB.recoveryUnlock(phrase.join(' '))
+    const result = await tabB.recoveryUnlock(RECOVERY_PASSPHRASE)
     expect(result).toEqual({ ok: false, reason: 'open-in-another-tab' })
     await tabA.lock()
   })

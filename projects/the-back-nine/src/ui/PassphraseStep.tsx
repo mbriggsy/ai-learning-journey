@@ -16,19 +16,36 @@ import type { FloorCheckedPassphrase } from '@crypto/kdf'
 export function PassphraseStep({
   heading,
   intro,
+  secondaryIntro,
+  fieldLabel,
+  confirmFieldLabel,
   submitLabel,
   onSubmit,
   onBack,
   announcer,
   busy = false,
+  externalError = null,
+  onFieldEdit,
 }: {
   readonly heading: string
   readonly intro: string
+  /** An optional second guidance paragraph below the intro (the recovery step uses it for
+   *  the anti-biographical steering). */
+  readonly secondaryIntro?: string
+  /** The field labels — default to the daily-passphrase copy; the recovery step overrides
+   *  them so the two reused steps read as distinct credentials, not "didn't I just do this?". */
+  readonly fieldLabel?: string
+  readonly confirmFieldLabel?: string
   readonly submitLabel: string
   readonly onSubmit: (checked: FloorCheckedPassphrase) => void
   readonly onBack?: () => void
   readonly announcer: Announcer
   readonly busy?: boolean
+  /** A parent-controlled error shown below the fields + announced (the recovery step's
+   *  "must differ from your daily passphrase" bounce). The parent owns it; `onFieldEdit`
+   *  is the signal to clear it. */
+  readonly externalError?: string | null
+  readonly onFieldEdit?: () => void
 }) {
   const headingRef = useRef<HTMLHeadingElement | null>(null)
   const passId = useId()
@@ -45,6 +62,12 @@ export function PassphraseStep({
   // Focus-to-heading on mount (the established pattern; the step is opacity-faded, never
   // visibility-toggled, so .focus() always takes — ai-journey-stats/006).
   useEffect(() => focusHeading(headingRef.current), [])
+
+  // Announce a parent-supplied error (e.g. recovery == daily) so it's never a silent
+  // visual-only block on the security control.
+  useEffect(() => {
+    if (externalError) announcer.announce(externalError)
+  }, [externalError, announcer])
 
   const matched = passphrasesMatch(passphrase, confirm)
   const ready = verdict.ok && matched
@@ -84,10 +107,11 @@ export function PassphraseStep({
         {heading}
       </h2>
       <p className="save-step__intro">{intro}</p>
+      {secondaryIntro && <p className="save-step__intro save-step__intro--secondary">{secondaryIntro}</p>}
 
       <div className="save-field">
         <label className="save-field__label" htmlFor={passId}>
-          {copy.passphraseLabel}
+          {fieldLabel ?? copy.passphraseLabel}
         </label>
         <div className="save-field__row">
           <input
@@ -102,7 +126,10 @@ export function PassphraseStep({
             aria-invalid={showFloor}
             aria-describedby={showFloor ? noteId : undefined}
             disabled={busy}
-            onChange={(e) => setPassphrase(e.target.value)}
+            onChange={(e) => {
+              setPassphrase(e.target.value)
+              onFieldEdit?.()
+            }}
             onBlur={() => void evaluate()}
           />
           <button
@@ -124,7 +151,7 @@ export function PassphraseStep({
 
       <div className="save-field">
         <label className="save-field__label" htmlFor={confirmId}>
-          {copy.passphraseConfirmLabel}
+          {confirmFieldLabel ?? copy.passphraseConfirmLabel}
         </label>
         <input
           id={confirmId}
@@ -140,6 +167,7 @@ export function PassphraseStep({
           onChange={(e) => {
             setConfirm(e.target.value)
             setShowMismatch(false)
+            onFieldEdit?.()
           }}
           onBlur={() => setShowMismatch(!passphrasesMatch(passphrase, confirm) && confirm.length > 0)}
         />
@@ -149,6 +177,12 @@ export function PassphraseStep({
           </p>
         )}
       </div>
+
+      {externalError && (
+        <p className="save-field__note save-field__note--block" role="alert">
+          {externalError}
+        </p>
+      )}
 
       <div className="save-actions">
         {onBack && (

@@ -7,9 +7,11 @@
  * the spec'd restore path re-mints a fresh passphrase wrap, and a file that the old
  * passphrase could open would hole the negative-pairing guarantee for every export
  * sitting in cloud storage. The file is exactly as protected as the vault itself —
- * AES-GCM under DK, recoverable only with the phrase.
+ * AES-GCM under DK, recoverable only with the recovery passphrase. Note the export's
+ * at-rest strength is now that of a memorable user-chosen credential (the 2026-06-30
+ * council rework), not the old 128-bit phrase — the ceremony discloses that downgrade.
  *
- * RESTORE = file + recovery phrase → set NEW passphrase. Mirrors the in-place
+ * RESTORE = file + recovery passphrase → set NEW passphrase. Mirrors the in-place
  * recovery unlock's gate (the new passphraseWrap is minted as part of the SAME
  * atomic write that lands the vault — there is never a restored vault whose
  * passphrase wrap encodes anything but the fresh passphrase). Refuses over a
@@ -30,8 +32,7 @@ import {
 import { decodeScenario } from '@shared/scenarioCodec'
 
 import { CipherAuthError, decrypt, rewrapDataKey, unwrapDataKey } from '../crypto/cipher'
-import { SALT_BYTES, deriveNewPassphraseKey, deriveRecoveryKey, type FloorCheckedPassphrase } from '../crypto/kdf'
-import { phraseToEntropy, type PhraseDecode } from '../crypto/recoveryPhrase'
+import { SALT_BYTES, deriveNewPassphraseKey, derivePassphraseKey, type FloorCheckedPassphrase } from '../crypto/kdf'
 import { loadVault, serializeVaultWrite, writeVault, type VaultDb } from './db'
 
 export type ExportResult =
@@ -43,18 +44,17 @@ export type RestoreResult =
   | { readonly ok: true }
   | {
       readonly ok: false
-      /** `wrong-recovery-phrase` is GCM-ambiguous BY NATURE: a bit-rotted recoveryWrap
-       *  with the CORRECT phrase is cryptographically indistinguishable from a wrong
-       *  phrase with an intact wrap. The P2 copy must hedge BOTH ways ("that phrase
-       *  doesn't match this backup — or the file is damaged; try another export"). */
-      readonly reason: 'vault-exists' | 'file-damaged' | 'newer-format' | 'wrong-recovery-phrase' | 'quota'
+      /** `wrong-recovery-passphrase` is GCM-ambiguous BY NATURE: a bit-rotted recoveryWrap
+       *  with the CORRECT credential is cryptographically indistinguishable from a wrong
+       *  credential with an intact wrap. The P2 copy must hedge BOTH ways ("that recovery
+       *  word doesn't match this backup — or the file is damaged; try another export"). */
+      readonly reason: 'vault-exists' | 'file-damaged' | 'newer-format' | 'wrong-recovery-passphrase' | 'quota'
     }
   /** The backup's MODEL was written by a newer app (schemaVersion above this build's
    *  ladder) — intact data, wrong app vintage. NEVER 'file-damaged' (telling a
    *  survivor their good backup is corrupt is the calm-but-wrong sin). Distinct from
    *  'newer-format' (the file ENVELOPE version). */
   | { readonly ok: false; readonly reason: 'newer-version'; readonly got: number }
-  | { readonly ok: false; readonly reason: 'phrase-invalid'; readonly phrase: Exclude<PhraseDecode, { ok: true }> }
   | { readonly ok: false; readonly reason: 'write-failed'; readonly detail: string }
 
 const toB64 = (bytes: Uint8Array): string => {
@@ -115,7 +115,7 @@ function parseBackupFile(text: string): BackupFileV1 | 'damaged' | 'newer-format
 export async function restoreVault(
   db: VaultDb,
   fileText: string,
-  phrase: string,
+  recoveryPassphrase: string,
   newPassphrase: FloorCheckedPassphrase,
 ): Promise<RestoreResult> {
   // Fast-path refusal before any crypto (UX); the AUTHORITATIVE check re-runs inside
@@ -127,9 +127,6 @@ export async function restoreVault(
   const file = parseBackupFile(fileText)
   if (file === 'damaged') return { ok: false, reason: 'file-damaged' }
   if (file === 'newer-format') return { ok: false, reason: 'newer-format' }
-
-  const decodedPhrase = await phraseToEntropy(phrase)
-  if (!decodedPhrase.ok) return { ok: false, reason: 'phrase-invalid', phrase: decodedPhrase }
 
   let modelIv: Uint8Array<ArrayBuffer>
   let modelCiphertext: Uint8Array<ArrayBuffer>
@@ -146,14 +143,17 @@ export async function restoreVault(
     return { ok: false, reason: 'file-damaged' } // invalid base64 is file damage
   }
 
-  const recoveryKey = await deriveRecoveryKey(decodedPhrase.entropy, recoverySalt)
+  // The recovery credential is a user-chosen passphrase: derive via the UNLOCK path
+  // (raw string, never floor-gated — a future zxcvbn re-score must not brick a real
+  // backup) over the file's own recoveryWrap salt.
+  const recoveryKey = await derivePassphraseKey(recoveryPassphrase, recoverySalt)
   const fileWrap = { iv: recoveryIv, ciphertext: recoveryWrapped }
 
   let dk: CryptoKey
   try {
     dk = await unwrapDataKey(recoveryKey, fileWrap)
   } catch (e) {
-    if (e instanceof CipherAuthError) return { ok: false, reason: 'wrong-recovery-phrase' }
+    if (e instanceof CipherAuthError) return { ok: false, reason: 'wrong-recovery-passphrase' }
     throw e
   }
 

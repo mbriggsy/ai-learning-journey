@@ -73,10 +73,8 @@ import {
   SALT_BYTES,
   deriveNewPassphraseKey,
   derivePassphraseKey,
-  deriveRecoveryKey,
   type FloorCheckedPassphrase,
 } from '../crypto/kdf'
-import { generateRecoveryPhrase, phraseToEntropy, type PhraseDecode } from '../crypto/recoveryPhrase'
 import {
   loadVault,
   replacePassphraseWrap,
@@ -90,10 +88,20 @@ import {
 export type SessionStatus = 'locked' | 'unlocking' | 'securing' | 'unlocked' | 'recovery-unlocked'
 
 export type FirstSaveResult =
-  | { readonly ok: true; readonly recoveryPhrase: readonly string[] }
+  | { readonly ok: true }
   | {
       readonly ok: false
-      readonly reason: 'not-locked' | 'vault-exists' | 'open-in-another-tab' | 'cancelled' | 'quota'
+      readonly reason:
+        | 'not-locked'
+        | 'vault-exists'
+        | 'open-in-another-tab'
+        | 'cancelled'
+        | 'quota'
+        /** The recovery credential equalled the daily passphrase — minting would let a
+         *  guessed daily passphrase also open the cloud-resident export, collapsing the
+         *  negative-pairing the two wraps exist to provide. Necessary, not sufficient
+         *  (it catches exact collision, never correlation — see kdf.ts). */
+        | 'recovery-equals-passphrase'
     }
   | { readonly ok: false; readonly reason: 'write-failed'; readonly detail: string }
 
@@ -107,10 +115,9 @@ export type RecoveryUnlockResult =
   | { readonly ok: true }
   | {
       readonly ok: false
-      readonly reason: 'not-locked' | 'no-vault' | 'wrong-recovery-phrase' | 'open-in-another-tab' | 'cancelled'
+      readonly reason: 'not-locked' | 'no-vault' | 'wrong-recovery-passphrase' | 'open-in-another-tab' | 'cancelled'
     }
   | { readonly ok: false; readonly reason: 'newer-version'; readonly got: number }
-  | { readonly ok: false; readonly reason: 'phrase-invalid'; readonly phrase: Exclude<PhraseDecode, { ok: true }> }
   | { readonly ok: false; readonly reason: 'data-damaged'; readonly detail: string }
 
 export type SaveResult =
@@ -143,9 +150,13 @@ export interface VaultSession {
    *  hook. A write enqueued AFTER this call is not covered: the U0 handler must
    *  re-check `isWriteInFlight()` immediately before applying the update. */
   whenNoWriteInFlight(): Promise<void>
-  firstSave(scenario: AnyScenario, passphrase: FloorCheckedPassphrase): Promise<FirstSaveResult>
+  firstSave(
+    scenario: AnyScenario,
+    passphrase: FloorCheckedPassphrase,
+    recoveryPassphrase: FloorCheckedPassphrase,
+  ): Promise<FirstSaveResult>
   unlock(passphrase: string): Promise<UnlockResult>
-  recoveryUnlock(phrase: string): Promise<RecoveryUnlockResult>
+  recoveryUnlock(recoveryPassphrase: string): Promise<RecoveryUnlockResult>
   setNewPassphrase(passphrase: FloorCheckedPassphrase): Promise<SetPassphraseResult>
   save(scenario: AnyScenario): Promise<SaveResult>
   lock(): Promise<void>
@@ -280,8 +291,17 @@ export function createSession(db: VaultDb): VaultSession {
     isWriteInFlight: () => writesInFlight > 0,
     whenNoWriteInFlight: () => writeTail.then(() => undefined),
 
-    async firstSave(scenario, passphrase) {
+    async firstSave(scenario, passphrase, recoveryPassphrase) {
       if (status !== 'locked' || locking) return { ok: false, reason: 'not-locked' }
+      // The recovery credential must DIFFER from the daily passphrase: the export carries
+      // only the recoveryWrap, so if the two were equal a guessed daily passphrase would
+      // also open the cloud-resident backup, collapsing negative pairing. Cheap synchronous
+      // reject BEFORE the pending state and the ~1s derives. (Equality only — two correlated
+      // human secrets are honestly weaker than the old independent 128-bit phrase; the
+      // ceremony discloses that, this gate just forecloses the exact-collision case.)
+      if (recoveryPassphrase.value === passphrase.value) {
+        return { ok: false, reason: 'recovery-equals-passphrase' }
+      }
       const gen = epoch
       status = 'securing'
       try {
@@ -292,14 +312,10 @@ export function createSession(db: VaultDb): VaultSession {
         if (existing.kind !== 'no-vault') return { ok: false, reason: 'vault-exists' }
         if (await probeActiveWriter()) return { ok: false, reason: 'open-in-another-tab' }
 
-        const words = await generateRecoveryPhrase()
-        const decoded = await phraseToEntropy(words.join(' '))
-        if (!decoded.ok) throw new Error('freshly minted phrase failed decode — unreachable')
-
         const passphraseSalt = freshSalt()
         const recoverySalt = freshSalt()
         const passKey = await deriveNewPassphraseKey(passphrase, passphraseSalt)
-        const recKey = await deriveRecoveryKey(decoded.entropy, recoverySalt)
+        const recKey = await deriveNewPassphraseKey(recoveryPassphrase, recoverySalt)
         const minted = await mintWrappedDataKey(passKey, recKey)
         const modelBox = await encrypt(minted.dataKey, encodeScenario(scenario))
 
@@ -331,10 +347,11 @@ export function createSession(db: VaultDb): VaultSession {
         if (written === 'vault-exists') return { ok: false, reason: 'vault-exists' }
         if (!written.ok) return mapWriteFailure(written)
 
-        // The vault EXISTS on disk now — the phrase MUST reach the caller even if a
-        // lock intervened (a committed vault whose phrase nobody saw is a stranded
-        // vault, strictly worse than a stale in-memory install). Installs are
-        // gen-gated; the returned phrase is not.
+        // The vault EXISTS on disk now. Both credentials are USER-CHOSEN (nothing
+        // system-minted to strand — the insight-031 hazard the old generated phrase
+        // carried is gone), so the only post-commit concern is the in-memory install,
+        // which stays gen-gated: a lock that landed mid-derive leaves the committed
+        // vault openable by either credential and simply does not install this session.
         if (epoch === gen) {
           dataKey = minted.dataKey
           credentialKey = passKey
@@ -345,7 +362,7 @@ export function createSession(db: VaultDb): VaultSession {
           claimWriter()
           status = 'unlocked'
         }
-        return { ok: true, recoveryPhrase: words }
+        return { ok: true }
       } finally {
         if (status === 'securing' && epoch === gen) status = 'locked'
         if (status !== 'unlocked') releaseChannelIfUnclaimed()
@@ -418,7 +435,7 @@ export function createSession(db: VaultDb): VaultSession {
       }
     },
 
-    async recoveryUnlock(phrase) {
+    async recoveryUnlock(recoveryPassphrase) {
       if (status !== 'locked' || locking) return { ok: false, reason: 'not-locked' }
       const gen = epoch
       status = 'unlocking'
@@ -427,14 +444,14 @@ export function createSession(db: VaultDb): VaultSession {
         if (vault.kind === 'no-vault') return { ok: false, reason: 'no-vault' }
         if (vault.kind === 'damaged') return { ok: false, reason: 'data-damaged', detail: vault.detail }
 
-        const decodedPhrase = await phraseToEntropy(phrase)
-        if (!decodedPhrase.ok) return { ok: false, reason: 'phrase-invalid', phrase: decodedPhrase }
-
         // A recovery-unlocked session's ONLY exit is the re-mint WRITE — if another
         // tab is the active writer, refuse up front rather than open a dead end.
         if (await probeActiveWriter()) return { ok: false, reason: 'open-in-another-tab' }
 
-        const recKey = await deriveRecoveryKey(decodedPhrase.entropy, vault.recoveryWrap.salt)
+        // The recovery credential is a user-chosen passphrase: derive it via the UNLOCK
+        // path (raw string, NOT floor-gated — a future zxcvbn re-score must never brick a
+        // real vault), over the recoveryWrap's own salt.
+        const recKey = await derivePassphraseKey(recoveryPassphrase, vault.recoveryWrap.salt)
         let dk: CryptoKey
         try {
           dk = await unwrapDataKey(recKey, {
@@ -442,7 +459,7 @@ export function createSession(db: VaultDb): VaultSession {
             ciphertext: vault.recoveryWrap.wrappedDataKey as Uint8Array<ArrayBuffer>,
           })
         } catch (e) {
-          if (e instanceof CipherAuthError) return { ok: false, reason: 'wrong-recovery-phrase' }
+          if (e instanceof CipherAuthError) return { ok: false, reason: 'wrong-recovery-passphrase' }
           throw e
         }
 

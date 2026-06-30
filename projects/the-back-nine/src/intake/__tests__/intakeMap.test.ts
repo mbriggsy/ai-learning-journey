@@ -102,7 +102,8 @@ const completeDateDraft = (): ScenarioDraft =>
     health: {
       enrolledPremiumMonthlyToday: 1_100,
       slcspMonthlyToday: 1_000,
-      workingYearIrmaaMagiByPerson: [180_000, 0],
+      workingYearWagesByPerson: [150_000, 0],
+      workingYearInvestmentByPerson: [30_000, 0],
     },
   })
 
@@ -203,8 +204,26 @@ describe('missingRequiredFacts — the placeholder naming source', () => {
 
   it('a working member without the working-year MAGI figure is named on the date route only', () => {
     const d = completeDateDraft()
-    const noMagi = { ...d, health: { ...d.health, workingYearIrmaaMagiByPerson: undefined } }
-    expect(missingRequiredFacts(noMagi).map((m) => m.labelKey)).toContain('workIncomeLabel')
+    const noMagi = {
+      ...d,
+      health: { ...d.health, workingYearWagesByPerson: undefined, workingYearInvestmentByPerson: undefined },
+    }
+    // C3 → B split: BOTH pay and the (first-class) investment income are named when missing.
+    const missing = missingRequiredFacts(noMagi).map((m) => m.labelKey)
+    expect(missing).toContain('workPayLabel')
+    expect(missing).toContain('workInvestmentLabel')
+  })
+
+  it('C3 → B: investment income is required even when pay IS present (the lazy-confirm gap-closer)', () => {
+    const d = completeDateDraft()
+    // Pay entered, investment income left blank → the answer stays INCOMPLETE: a blank can
+    // never become a silent $0, so a still-working household can't skip the investment add
+    // (the optimistic under-statement the council's Hawk + red team flagged). This is the
+    // split's whole reason for being — gap closed by construction, not by copy.
+    const noInvestment = { ...d, health: { ...d.health, workingYearInvestmentByPerson: undefined } }
+    const missing = missingRequiredFacts(noInvestment).map((m) => m.labelKey)
+    expect(missing).toContain('workInvestmentLabel')
+    expect(missing).not.toContain('workPayLabel') // pay IS present — only investment is missing
   })
 
   it('two spouses’ HSAs are an honest named limitation, never a silent owner pick', () => {

@@ -1057,16 +1057,22 @@ export interface HealthIntakeV3 {
   /** The `t < lookback` prior-year ACTUAL MAGIs (Y-invariant — pre-sim tax
    *  returns no candidate can move). Collected only when a member is at/near 65. */
   readonly irmaaMagiSeed?: readonly number[]
-  /** Per-person FULL working-year income for the conservatively-high IRMAA override —
-   *  aligned by index to `people` (C3 → Option B, council 2026-06-29). Each still-working
-   *  member's work pay PLUS their working-year investment income (interest/dividends/
-   *  cap-gains/K-1); a salaried worker adds their dividends/interest on top, a non-salary
-   *  worker enters their honest figure, a live-on-cash household enters an explicit 0.
-   *  EXCLUDES the separately-modeled R40 streams (pension/rental/annuity/alimony) — those
-   *  ride `ongoingTaxableIrmaaOnly` in every year, so entering one here double-counts (KTD-9).
-   *  A bare salary echo is FORBIDDEN: working-year investment income reaches IRMAA-MAGI only
-   *  through this field, so a pay-only figure under-states Medicare cost (the cardinal sin). */
-  readonly workingYearIrmaaMagiByPerson?: readonly number[]
+  /** Per-person work PAY in a typical still-working year (salary / self-employment),
+   *  aligned by index to `people` — the first half of the working-year IRMAA-MAGI the date
+   *  route needs (C3 → Option B SPLIT, council 2026-06-29). Composed with
+   *  {@link workingYearInvestmentByPerson} into the engine's per-person override at the
+   *  intake→engine boundary (`intakeMap.buildDateInput`); a retired member's slot is 0. */
+  readonly workingYearWagesByPerson?: readonly number[]
+  /** Per-person working-year INVESTMENT income (interest/dividends/cap-gains/K-1) ON TOP of
+   *  pay, aligned by index to `people` — the second half of the working-year IRMAA-MAGI
+   *  (C3 → Option B SPLIT). This income is on the R40 OUT-list and reaches IRMAA-MAGI ONLY
+   *  through this field, so omitting it under-states Medicare cost = the cardinal sin — hence
+   *  it is a FIRST-CLASS required input (an explicit 0, never a silent skip), not a clause
+   *  buried in pay's help. EXCLUDES the separately-modeled R40 streams
+   *  (pension/rental/annuity/alimony) — those ride `ongoingTaxableIrmaaOnly` in every year,
+   *  so entering one here double-counts (KTD-9). Composed with {@link workingYearWagesByPerson}
+   *  into the engine override at `intakeMap.buildDateInput`; a retired member's slot is 0. */
+  readonly workingYearInvestmentByPerson?: readonly number[]
 }
 
 /** The display unit the household spend figure was ANSWERED in. An explicit

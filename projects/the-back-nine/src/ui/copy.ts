@@ -88,26 +88,20 @@ export const copy = {
   oopHelp:
     'A rough yearly figure is plenty. Premiums are added on top by the tool, and out-of-pocket costs should already be inside your spending figure — this only sizes your HSA’s tax-free draw.',
   qWorkIncomeHeading: 'Income Medicare looks at',
-  // C3 RESOLVED → Option B (council 2026-06-29): this field collects FULL working-year
-  // income = work pay PLUS working-year investment income (interest/dividends/cap-gains/
-  // K-1). It EXCLUDES the separately-MODELED R40 streams (pension/rental/annuity/alimony):
-  // the engine already adds each modeled stream's own IRMAA-MAGI in every year via
-  // `ongoingTaxableIrmaaOnly`, so re-entering one here would double-count (KTD-9). Working-
-  // year INVESTMENT income is NOT modeled anywhere else — it reaches IRMAA-MAGI ONLY through
-  // this field, so leaving it out under-states Medicare cost = the cardinal sin (why the old
-  // "just your pay" framing was wrong). NB the load-bearing ambiguity this comment KILLS:
-  // KTD-9's engine-sense "wages-only" means "exclude MODELED streams," NEVER "exclude
-  // investment income" — conflating the two is exactly what let the help drift to the
-  // optimistic Option A. FORWARD-phrased (KTD-9 copy-guard fix): this question is answered
-  // BEFORE the other-income loop, so the copy must NOT reference streams as already entered —
-  // a pension/rental/annuity is added "separately, later," not "below" or "entered."
-  workIncomeLabel: 'Income while you’re still working',
-  // The help carries the additive meaning (pay PLUS working-year investment income), so the
-  // label stays a neutral topic frame — no "just what work pays" (the killed Option-A claim).
-  // The help keeps BOTH axes: ADD investment income, but EXCLUDE the modeled streams
-  // (pension/rental/annuity/alimony), which are counted separately, later.
-  workIncomeHelp:
-    'Your pay, plus any interest, dividends, or investment income you expect in the years you’re still working. A pension, rental, annuity, or alimony is counted separately later, so leave those out. While you’re still working when Medicare begins, this is what can add a surcharge on top of the usual premium.',
+  // C3 → Option B SPLIT (council 2026-06-29 + Briggsy greenlight): the working-year
+  // IRMAA-MAGI is collected as TWO honest fields per still-working spouse — pay, and
+  // investment income ON TOP — engine-summed at `intakeMap.buildDateInput`. The split (vs
+  // one field + careful copy) closes the lazy-confirm gap BY CONSTRUCTION: the investment
+  // add is a first-class REQUIRED input, not a clause a scared reader skips. The KTD-9
+  // engine-sense "wages-only" = exclude separately-MODELED streams (pension/rental/annuity/
+  // alimony — they ride `ongoingTaxableIrmaaOnly`), NEVER exclude investment income.
+  // FORWARD-phrased (KTD-9): answered BEFORE the other-income loop, so a modeled stream is
+  // "counted separately later," never "below" or "entered."
+  workPayLabel: 'Pay in a typical working year',
+  workPayHelp: 'Your salary or self-employment pay in a typical year you’re still working.',
+  workInvestmentLabel: 'Investment income on top',
+  workInvestmentHelp:
+    'Interest, dividends, or other investment income you expect in those same working years, on top of your pay. Enter 0 if you have none. A pension, rental, annuity, or alimony is counted separately later, so leave those out.',
   qIrmaaSeedHeading: 'Your last two tax returns',
   irmaaSeedTwoBackLabel: 'Income, two years back',
   irmaaSeedOneBackLabel: 'Income, last year',

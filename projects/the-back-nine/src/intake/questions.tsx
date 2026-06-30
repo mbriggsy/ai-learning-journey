@@ -448,6 +448,28 @@ const oopStep: StepDef = {
   ),
 }
 
+/** Write one working-year IRMAA-MAGI part (pay or investment) for person `i`, force-
+ *  zeroing any RETIRED member's slot in the SAME array (the inapplicable-question zeroing —
+ *  a retiree has no working-year count). Both arrays share the per-person/aligned contract;
+ *  the engine override is their per-person SUM, composed at the intake→engine boundary
+ *  (`intakeMap.buildDateInput`). */
+function writeWorkingYearPart(
+  d: ScenarioDraft,
+  key: 'workingYearWagesByPerson' | 'workingYearInvestmentByPerson',
+  i: 0 | 1,
+  v: number | undefined,
+): ScenarioDraft {
+  const next: (number | undefined)[] = [d.health[key]?.[0], d.health[key]?.[1]]
+  next[i] = v
+  for (const j of [0, 1] as const) {
+    if (d.people[j].workStatus === 'retired') next[j] = 0
+  }
+  return { ...d, health: { ...d.health, [key]: next } }
+}
+
+// C3 → Option B SPLIT: pay + working-year investment income as two first-class fields per
+// still-working spouse (engine-summed at the boundary). The investment add can't be silently
+// skipped — a blank leaves the answer incomplete, never a silent $0 (the lazy-confirm gap).
 const workIncomeStep: StepDef = {
   id: 'working-income',
   headingKey: 'qWorkIncomeHeading',
@@ -457,31 +479,26 @@ const workIncomeStep: StepDef = {
       api={api}
       include={(p) => p.workStatus === 'working'}
       render={(_p, i) => (
+        <>
           <CurrencyField
-            labelKey="workIncomeLabel"
-            helpKey="workIncomeHelp"
-            field={`health.workingYearIrmaaMagiByPerson.${i}`}
-            value={api.draft.health.workingYearIrmaaMagiByPerson?.[i]}
+            labelKey="workPayLabel"
+            helpKey="workPayHelp"
+            field={`health.workingYearWagesByPerson.${i}`}
+            value={api.draft.health.workingYearWagesByPerson?.[i]}
             onCommit={(v) =>
-              api.update((d) => {
-                // Per-person, aligned to people; a RETIRED member's slot is 0
-                // (the inapplicable-question zeroing — engine-inert, their
-                // working-year count is zero).
-                const next: (number | undefined)[] = [
-                  d.health.workingYearIrmaaMagiByPerson?.[0],
-                  d.health.workingYearIrmaaMagiByPerson?.[1],
-                ]
-                next[i] = v
-                for (const j of [0, 1] as const) {
-                  if (d.people[j].workStatus === 'retired') next[j] = 0
-                }
-                return {
-                  ...d,
-                  health: { ...d.health, workingYearIrmaaMagiByPerson: next },
-                }
-              })
+              api.update((d) => writeWorkingYearPart(d, 'workingYearWagesByPerson', i, v))
             }
           />
+          <CurrencyField
+            labelKey="workInvestmentLabel"
+            helpKey="workInvestmentHelp"
+            field={`health.workingYearInvestmentByPerson.${i}`}
+            value={api.draft.health.workingYearInvestmentByPerson?.[i]}
+            onCommit={(v) =>
+              api.update((d) => writeWorkingYearPart(d, 'workingYearInvestmentByPerson', i, v))
+            }
+          />
+        </>
       )}
     />
   ),

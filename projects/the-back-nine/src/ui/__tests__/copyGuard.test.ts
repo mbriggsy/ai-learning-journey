@@ -121,20 +121,25 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
   //     working-year investment income), NEVER salary-only. Source-bound regression — the killed
   //     Option-A nudge must stay dead and the additive meaning must stay present. This guards the
   //     MEANING; the universal gates above guard the voice. ---
-  it('workIncome copy carries Option B (additive), not the killed Option-A salary echo', () => {
-    const help = copy.workIncomeHelp
-    const label = copy.workIncomeLabel
-    // (a) the optimistic one-directional nudge is dead (the cardinal-sin trigger)
-    expect(help, 'no "usually the same as the pay" salary echo').not.toMatch(/usually the same|same as the pay/i)
-    expect(label, 'label drops the "just what work pays" Option-A claim').not.toMatch(/just what work pays|only what work pays/i)
-    // (b) the additive inclusion is named in plain words (pay PLUS investment income)
-    expect(help, 'names the working-year investment income to add').toMatch(/interest|dividends|investment/i)
-    // (c) no completeness assertion / no double-count-inviting "everything"
-    expect(help, 'asserts no completeness / invites no double-count').not.toMatch(
+  it('workIncome split copy carries Option B: a first-class investment field, no salary echo (C3)', () => {
+    const investHelp = copy.workInvestmentHelp
+    // (a) no Option-A salary echo / "just what work pays" anywhere in the work-income copy
+    for (const v of [copy.workPayLabel, copy.workPayHelp, copy.workInvestmentLabel, investHelp]) {
+      expect(v, 'no salary-echo / "just what work pays" Option-A framing').not.toMatch(
+        /usually the same|same as the pay|just what work pays|only what work pays/i,
+      )
+    }
+    // (b) investment income is its OWN named, additive field — not a clause buried in pay's help
+    expect(investHelp, 'investment field names interest/dividends/investment').toMatch(/interest|dividends|investment/i)
+    expect(copy.workPayLabel, 'pay is its own field').toMatch(/pay/i)
+    // (c) the explicit-none affordance (a blank can never become a silent $0)
+    expect(investHelp, 'enter 0 if none — explicit, never a silent skip').toMatch(/\b0\b|none/i)
+    // (d) no completeness assertion / no double-count-inviting "everything"
+    expect(investHelp, 'asserts no completeness / invites no double-count').not.toMatch(
       /the figure medicare looks at|all of it|everything you/i,
     )
-    // (d) the modeled streams stay excluded (KTD-9 no-double-count — both axes present)
-    expect(help, 'still excludes the modeled streams').toMatch(/pension|rental|annuity|alimony/i)
+    // (e) the modeled streams stay excluded (KTD-9 no-double-count)
+    expect(investHelp, 'still excludes the modeled streams').toMatch(/pension|rental|annuity|alimony/i)
   })
 
   // --- the ADVERSARIAL COVERAGE CORPUS: the threat CLASS, not the lexicon tokens (burned/070) ---

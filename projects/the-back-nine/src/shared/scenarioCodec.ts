@@ -262,8 +262,11 @@ function checkHealthIntakeV3(v: unknown, path: string): void {
   optFinite(v, 'slcspMonthlyToday', path)
   optFinite(v, 'oopMedicalAnnual', path)
   if (v.irmaaMagiSeed !== undefined) checkFiniteArray(v.irmaaMagiSeed, `${path}.irmaaMagiSeed`)
-  if (v.workingYearIrmaaMagiByPerson !== undefined) {
-    checkFiniteArray(v.workingYearIrmaaMagiByPerson, `${path}.workingYearIrmaaMagiByPerson`)
+  if (v.workingYearWagesByPerson !== undefined) {
+    checkFiniteArray(v.workingYearWagesByPerson, `${path}.workingYearWagesByPerson`)
+  }
+  if (v.workingYearInvestmentByPerson !== undefined) {
+    checkFiniteArray(v.workingYearInvestmentByPerson, `${path}.workingYearInvestmentByPerson`)
   }
 }
 

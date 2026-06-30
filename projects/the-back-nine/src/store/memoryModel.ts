@@ -79,8 +79,12 @@ export type PersonDraft = Partial<PersonInputsV3>
  *  Save gates on completeness (U8), and JSON would silently null an undefined
  *  element (DND/009), so holes never reach disk. */
 export interface HealthDraft
-  extends Omit<HealthIntakeV3, 'workingYearIrmaaMagiByPerson' | 'irmaaMagiSeed'> {
-  readonly workingYearIrmaaMagiByPerson?: readonly (number | undefined)[]
+  extends Omit<
+    HealthIntakeV3,
+    'workingYearWagesByPerson' | 'workingYearInvestmentByPerson' | 'irmaaMagiSeed'
+  > {
+  readonly workingYearWagesByPerson?: readonly (number | undefined)[]
+  readonly workingYearInvestmentByPerson?: readonly (number | undefined)[]
   readonly irmaaMagiSeed?: readonly (number | undefined)[]
 }
 

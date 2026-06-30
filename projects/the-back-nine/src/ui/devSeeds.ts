@@ -128,7 +128,11 @@ const stillWorking: ScenarioDraft = {
   health: {
     enrolledPremiumMonthlyToday: 1_100,
     slcspMonthlyToday: 1_000,
-    workingYearIrmaaMagiByPerson: [180_000, 0],
+    // C3 → B split: pay + working-year investment income (engine-summed at the boundary).
+    // Alex's $180k working-year IRMAA-MAGI = $150k wage (matches earnedIncomeReal) + $30k
+    // investment; retired Sam is 0/0. Sum unchanged → byte-identical seeded outcome.
+    workingYearWagesByPerson: [150_000, 0],
+    workingYearInvestmentByPerson: [30_000, 0],
   },
   annualSpendingReal: 84_000,
   spendEntryPeriod: 'month',
@@ -257,13 +261,13 @@ const stillWorkingBorderline: ScenarioDraft = {
   health: {
     enrolledPremiumMonthlyToday: 1_300,
     slcspMonthlyToday: 1_150,
-    // Per-person (C3 → B): each still-working member's own full working-year income —
-    // Alex $95k + Sam $85k, here pure wages (working-year investment income an explicit 0).
-    // The household total is unchanged ($180k), but attributed per index rather than dumped
-    // on slot 0 with a working member zeroed (the engine sums PER person across still-working
-    // members, so a combined-on-one-slot figure mis-attributes once the two stop in different
-    // years; both stop together on the swept household date here, so the sum is unchanged).
-    workingYearIrmaaMagiByPerson: [95_000, 85_000],
+    // C3 → B split: each still-working member's own pay + working-year investment income
+    // (engine-summed at the boundary). Both work here, pure wages — Alex $95k, Sam $85k,
+    // investment an explicit 0 each. Per-person (not a combined figure dumped on slot 0):
+    // the engine sums PER person across still-working members, each dropping out at their
+    // own stop. Sum unchanged → byte-identical seeded outcome.
+    workingYearWagesByPerson: [95_000, 85_000],
+    workingYearInvestmentByPerson: [0, 0],
   },
   annualSpendingReal: 74_000,
   spendEntryPeriod: 'month',

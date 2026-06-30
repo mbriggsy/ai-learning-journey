@@ -3958,10 +3958,11 @@ describe('taxOverlay — R40 · KTD-9: the IRMAA decouple (clamped working-year 
   //       `ongoingTaxableIrmaaOnly` feed at the history site, asserted by the tests above); and
   //   (2) re-spec the working-year override as WAGES / non-modeled-MAGI ONLY and INVERT the intake
   //       copy to "working-year income EXCLUDING anything you entered as a retirement income stream"
-  //       — LANDED in U4; refined to Option B (C3, council 2026-06-29): src/ui/copy.ts
-  //       `workIncomeLabel`/`workIncomeHelp` now ask for full working-year income (pay PLUS
-  //       working-year investment income) EXCLUDING modeled streams — i.e. the same non-modeled
-  //       override this test seeds, here with working-year investment income = 0 (wages alone).
+  //       — LANDED in U4; refined to Option B then SPLIT into two fields (C3, council 2026-06-29):
+  //       the intake collects pay (`workPay*`) + working-year investment income (`workInvestment*`)
+  //       separately, EXCLUDING modeled streams, and `intakeMap.buildDateInput` composes their SUM
+  //       into the engine's `workingYearIrmaaMagiByPerson` — i.e. the same non-modeled override this
+  //       test seeds, here with working-year investment income = 0 (wages alone).
   // U4 RECIPE EXECUTED: with the inverted copy, a still-working driver types WAGES ALONE into
   //   `workingYearIrmaaMagiByPerson` → it compiles to `irmaaMagiOverride` (healthcareStreams.ts ~163)
   //   carrying wages only, and the engine adds the pension ONCE via `ongoingTaxableIrmaaOnly`

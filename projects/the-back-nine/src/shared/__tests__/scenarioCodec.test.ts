@@ -95,8 +95,7 @@ const V3: ScenarioV3 = {
     slcspMonthlyToday: 1_100,
     oopMedicalAnnual: 6_000,
     irmaaMagiSeed: [180_000, 190_000],
-    workingYearWagesByPerson: [0, 95_000],
-    workingYearInvestmentByPerson: [0, 0],
+    workingYearInvestmentByPerson: [0, 95_000],
   },
   annualSpendingReal: 90_000,
   spendEntryPeriod: 'year',
@@ -405,7 +404,7 @@ describe('v3 — the forward-written persist shape (U8, the first v3 writer)', (
     expect(decodeScenario(mutated(V3, (o) => { (o.enteredAccounts as Obj[])[0]!.manualBlend = 'stocks' })).ok).toBe(false) // non-object manualBlend
     expect(decodeScenario(mutated(V3, (o) => { (o.tickerClassifications as Obj).VFIAX = 'stocks' })).ok).toBe(false) // non-object class value
     expect(decodeScenario(mutated(V3, (o) => { (o.health as Obj).irmaaMagiSeed = 'lots' })).ok).toBe(false) // non-array
-    expect(decodeScenario(mutated(V3, (o) => { (o.health as Obj).workingYearWagesByPerson = [0, null] })).ok).toBe(false) // array-with-null
+    expect(decodeScenario(mutated(V3, (o) => { (o.health as Obj).workingYearInvestmentByPerson = [0, null] })).ok).toBe(false) // array-with-null
     expect(decodeScenario(mutated(V3, (o) => { (o.health as Obj).workingYearInvestmentByPerson = 5 })).ok).toBe(false) // non-array
   })
 

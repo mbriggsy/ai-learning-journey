@@ -448,59 +448,49 @@ const oopStep: StepDef = {
   ),
 }
 
-/** Write one working-year IRMAA-MAGI part (pay or investment) for person `i`, force-
- *  zeroing any RETIRED member's slot in the SAME array (the inapplicable-question zeroing —
- *  a retiree has no working-year count). Both arrays share the per-person/aligned contract;
- *  the engine override is their per-person SUM, composed at the intake→engine boundary
- *  (`intakeMap.buildDateInput`). */
-function writeWorkingYearPart(
-  d: ScenarioDraft,
-  key: 'workingYearWagesByPerson' | 'workingYearInvestmentByPerson',
-  i: 0 | 1,
-  v: number | undefined,
-): ScenarioDraft {
-  const next: (number | undefined)[] = [d.health[key]?.[0], d.health[key]?.[1]]
+/** Write person `i`'s working-year investment income, force-zeroing any RETIRED member's slot
+ *  (the inapplicable-question zeroing — a retiree has no working-year count, and the persisted
+ *  v3 array must be hole-free). The engine override is `earnedIncomeReal + this`, derived at the
+ *  intake→engine boundary (`intakeMap.buildDateInput`) — the salary is never re-asked. */
+function writeWorkingYearInvestment(d: ScenarioDraft, i: 0 | 1, v: number | undefined): ScenarioDraft {
+  const next: (number | undefined)[] = [
+    d.health.workingYearInvestmentByPerson?.[0],
+    d.health.workingYearInvestmentByPerson?.[1],
+  ]
   next[i] = v
   for (const j of [0, 1] as const) {
     if (d.people[j].workStatus === 'retired') next[j] = 0
   }
-  return { ...d, health: { ...d.health, [key]: next } }
+  return { ...d, health: { ...d.health, workingYearInvestmentByPerson: next } }
 }
 
-// C3 → Option B SPLIT: pay + working-year investment income as two first-class fields per
-// still-working spouse (engine-summed at the boundary). The investment add can't be silently
-// skipped — a blank leaves the answer incomplete, never a silent $0 (the lazy-confirm gap).
+// C3 → Option B (simplified): Medicare's working-year income = the salary already entered
+// (derived at the boundary) PLUS investment income — the ONE genuinely-new fact we ask here.
+// We don't re-ask pay (redundant + confusing). Investment can't be silently skipped: a blank
+// leaves the answer incomplete, never a silent $0 (the cardinal-sin guard). The footnote
+// discloses the steady-pay simplification (conservative-or-disclose).
 const workIncomeStep: StepDef = {
   id: 'working-income',
   headingKey: 'qWorkIncomeHeading',
   fields: [],
   render: (api) => (
-    <Paired
-      api={api}
-      include={(p) => p.workStatus === 'working'}
-      render={(_p, i) => (
-        <>
-          <CurrencyField
-            labelKey="workPayLabel"
-            helpKey="workPayHelp"
-            field={`health.workingYearWagesByPerson.${i}`}
-            value={api.draft.health.workingYearWagesByPerson?.[i]}
-            onCommit={(v) =>
-              api.update((d) => writeWorkingYearPart(d, 'workingYearWagesByPerson', i, v))
-            }
-          />
+    <>
+      <p className="field-help">{copy.workIncomeIntro}</p>
+      <Paired
+        api={api}
+        include={(p) => p.workStatus === 'working'}
+        render={(_p, i) => (
           <CurrencyField
             labelKey="workInvestmentLabel"
             helpKey="workInvestmentHelp"
             field={`health.workingYearInvestmentByPerson.${i}`}
             value={api.draft.health.workingYearInvestmentByPerson?.[i]}
-            onCommit={(v) =>
-              api.update((d) => writeWorkingYearPart(d, 'workingYearInvestmentByPerson', i, v))
-            }
+            onCommit={(v) => api.update((d) => writeWorkingYearInvestment(d, i, v))}
           />
-        </>
-      )}
-    />
+        )}
+      />
+      <p className="field-help">{copy.workIncomeDisclosure}</p>
+    </>
   ),
 }
 

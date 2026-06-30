@@ -1057,21 +1057,19 @@ export interface HealthIntakeV3 {
   /** The `t < lookback` prior-year ACTUAL MAGIs (Y-invariant — pre-sim tax
    *  returns no candidate can move). Collected only when a member is at/near 65. */
   readonly irmaaMagiSeed?: readonly number[]
-  /** Per-person work PAY in a typical still-working year (salary / self-employment),
-   *  aligned by index to `people` — the first half of the working-year IRMAA-MAGI the date
-   *  route needs (C3 → Option B SPLIT, council 2026-06-29). Composed with
-   *  {@link workingYearInvestmentByPerson} into the engine's per-person override at the
-   *  intake→engine boundary (`intakeMap.buildDateInput`); a retired member's slot is 0. */
-  readonly workingYearWagesByPerson?: readonly number[]
-  /** Per-person working-year INVESTMENT income (interest/dividends/cap-gains/K-1) ON TOP of
-   *  pay, aligned by index to `people` — the second half of the working-year IRMAA-MAGI
-   *  (C3 → Option B SPLIT). This income is on the R40 OUT-list and reaches IRMAA-MAGI ONLY
-   *  through this field, so omitting it under-states Medicare cost = the cardinal sin — hence
-   *  it is a FIRST-CLASS required input (an explicit 0, never a silent skip), not a clause
-   *  buried in pay's help. EXCLUDES the separately-modeled R40 streams
-   *  (pension/rental/annuity/alimony) — those ride `ongoingTaxableIrmaaOnly` in every year,
-   *  so entering one here double-counts (KTD-9). Composed with {@link workingYearWagesByPerson}
-   *  into the engine override at `intakeMap.buildDateInput`; a retired member's slot is 0. */
+  /** Per-person working-year INVESTMENT income (interest/dividends/cap-gains/K-1) ON TOP of the
+   *  entered salary, aligned by index to `people` — the genuinely-new half of the working-year
+   *  IRMAA-MAGI (C3 → Option B, simplified 2026-06-30). The PAY half is NOT re-collected:
+   *  `intakeMap.buildDateInput` derives the engine's per-person override as
+   *  `earnedIncomeReal + investment` (the salary already funds the bridge — re-asking it was
+   *  redundant + confusing, and the engine cannot model a time-varying salary anyway). This
+   *  investment income is on the R40 OUT-list and reaches IRMAA-MAGI ONLY through this field, so
+   *  omitting it under-states Medicare cost = the cardinal sin — hence it's a first-class required
+   *  input (an explicit 0, never a silent skip). EXCLUDES the separately-modeled R40 streams
+   *  (pension/rental/annuity/alimony) — those ride `ongoingTaxableIrmaaOnly` in every year, so
+   *  entering one here double-counts (KTD-9). A retired member's slot is 0. (A bonus/RSU spike
+   *  above the steady salary is a DISCLOSED simplification — the override uses the steady figure;
+   *  conservative-or-disclose, R40.) */
   readonly workingYearInvestmentByPerson?: readonly number[]
 }
 

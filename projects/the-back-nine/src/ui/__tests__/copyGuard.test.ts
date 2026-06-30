@@ -121,17 +121,18 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
   //     working-year investment income), NEVER salary-only. Source-bound regression — the killed
   //     Option-A nudge must stay dead and the additive meaning must stay present. This guards the
   //     MEANING; the universal gates above guard the voice. ---
-  it('workIncome split copy carries Option B: a first-class investment field, no salary echo (C3)', () => {
+  it('workIncome copy carries Option B (simplified): investment-only ask, no salary echo, disclosed (C3)', () => {
     const investHelp = copy.workInvestmentHelp
+    const intro = copy.workIncomeIntro
+    const disclosure = copy.workIncomeDisclosure
     // (a) no Option-A salary echo / "just what work pays" anywhere in the work-income copy
-    for (const v of [copy.workPayLabel, copy.workPayHelp, copy.workInvestmentLabel, investHelp]) {
+    for (const v of [intro, copy.workInvestmentLabel, investHelp, disclosure]) {
       expect(v, 'no salary-echo / "just what work pays" Option-A framing').not.toMatch(
         /usually the same|same as the pay|just what work pays|only what work pays/i,
       )
     }
-    // (b) investment income is its OWN named, additive field — not a clause buried in pay's help
+    // (b) investment income is its OWN named, additive field
     expect(investHelp, 'investment field names interest/dividends/investment').toMatch(/interest|dividends|investment/i)
-    expect(copy.workPayLabel, 'pay is its own field').toMatch(/pay/i)
     // (c) the explicit-none affordance (a blank can never become a silent $0)
     expect(investHelp, 'enter 0 if none — explicit, never a silent skip').toMatch(/\b0\b|none/i)
     // (d) no completeness assertion / no double-count-inviting "everything"
@@ -140,6 +141,8 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     )
     // (e) the modeled streams stay excluded (KTD-9 no-double-count)
     expect(investHelp, 'still excludes the modeled streams').toMatch(/pension|rental|annuity|alimony/i)
+    // (f) the steady-pay simplification is DISCLOSED (conservative-or-disclose)
+    expect(disclosure, 'discloses the steady-pay simplification').toMatch(/higher|steady pay/i)
   })
 
   // --- the ADVERSARIAL COVERAGE CORPUS: the threat CLASS, not the lexicon tokens (burned/070) ---

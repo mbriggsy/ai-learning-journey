@@ -128,10 +128,9 @@ const stillWorking: ScenarioDraft = {
   health: {
     enrolledPremiumMonthlyToday: 1_100,
     slcspMonthlyToday: 1_000,
-    // C3 → B split: pay + working-year investment income (engine-summed at the boundary).
-    // Alex's $180k working-year IRMAA-MAGI = $150k wage (matches earnedIncomeReal) + $30k
-    // investment; retired Sam is 0/0. Sum unchanged → byte-identical seeded outcome.
-    workingYearWagesByPerson: [150_000, 0],
+    // C3 → B (simplified): only working-year investment income is stored; the pay half derives
+    // from earnedIncomeReal at the boundary. Alex's IRMAA-MAGI = $150k earned + $30k investment
+    // = $180k; retired Sam contributes 0. Override unchanged → byte-identical seeded outcome.
     workingYearInvestmentByPerson: [30_000, 0],
   },
   annualSpendingReal: 84_000,
@@ -261,12 +260,9 @@ const stillWorkingBorderline: ScenarioDraft = {
   health: {
     enrolledPremiumMonthlyToday: 1_300,
     slcspMonthlyToday: 1_150,
-    // C3 → B split: each still-working member's own pay + working-year investment income
-    // (engine-summed at the boundary). Both work here, pure wages — Alex $95k, Sam $85k,
-    // investment an explicit 0 each. Per-person (not a combined figure dumped on slot 0):
-    // the engine sums PER person across still-working members, each dropping out at their
-    // own stop. Sum unchanged → byte-identical seeded outcome.
-    workingYearWagesByPerson: [95_000, 85_000],
+    // C3 → B (simplified): only investment income is stored; pay derives from earnedIncomeReal
+    // at the boundary. Both work, pure wages — IRMAA-MAGI = earned ($95k, $85k) + investment
+    // ($0, $0). Override unchanged → byte-identical seeded outcome.
     workingYearInvestmentByPerson: [0, 0],
   },
   annualSpendingReal: 74_000,

@@ -109,14 +109,11 @@ export function missingRequiredFacts(d: ScenarioDraft): readonly MissingFact[] {
     if (p.pia === undefined) out.push({ labelKey: 'ssAmountLabel', personIndex: i })
     if (p.socialSecurityClaimAge === undefined)
       out.push({ labelKey: 'ssClaimLabel', personIndex: i })
-    if (dateRoute && p.workStatus === 'working') {
-      // C3 → B split: pay AND working-year investment income are each first-class
-      // required facts (investment's explicit 0 can never be a silent skip).
-      if (d.health.workingYearWagesByPerson?.[i] === undefined)
-        out.push({ labelKey: 'workPayLabel', personIndex: i })
-      if (d.health.workingYearInvestmentByPerson?.[i] === undefined)
-        out.push({ labelKey: 'workInvestmentLabel', personIndex: i })
-    }
+    // C3 → B: working-year investment income is its own required fact (an explicit 0, never a
+    // silent skip). The PAY half is the already-required salary (`salaryLabel` above) — not
+    // re-asked; the IRMAA override derives it (`buildDateInput`).
+    if (dateRoute && p.workStatus === 'working' && d.health.workingYearInvestmentByPerson?.[i] === undefined)
+      out.push({ labelKey: 'workInvestmentLabel', personIndex: i })
   })
 
   if (d.annualSpendingReal === undefined) out.push({ labelKey: 'spendLabel' })
@@ -570,19 +567,24 @@ export function buildDateInput(d: ScenarioDraft): DateSearchInput | null {
   if (!isDateRoute(d)) return null
   const params = buildParams(d)
   if (params === null) return null
-  // C3 → Option B: the intake collects pay + working-year investment income as two honest
-  // fields; the engine's per-person override is their SUM, composed HERE at the boundary —
-  // single source of truth (the sum is never stored, so it can never desync from its parts).
-  const wages = d.health.workingYearWagesByPerson
+  // C3 → Option B (simplified): Medicare's working-year IRMAA-MAGI = the already-entered salary
+  // (`earnedIncomeReal`, which also funds the bridge) PLUS working-year investment income —
+  // derived HERE at the boundary, never a stored sum and never a re-asked salary. A working
+  // member needs the investment figure (its explicit 0 can't be a silent skip); a non-working
+  // member contributes 0 (healthcareStreams also zeroes them by window). A bonus/RSU spike above
+  // the steady salary is the DISCLOSED simplification (the override uses the steady figure).
   const investment = d.health.workingYearInvestmentByPerson
   const complete =
-    wages !== undefined &&
     investment !== undefined &&
-    d.people.every((_, i) => wages[i] !== undefined && investment[i] !== undefined)
+    d.people.every((p, i) => p.workStatus !== 'working' || investment[i] !== undefined)
   return {
     params,
     ...(complete
-      ? { workingYearIrmaaMagiByPerson: d.people.map((_, i) => wages[i]! + investment[i]!) }
+      ? {
+          workingYearIrmaaMagiByPerson: d.people.map((p, i) =>
+            p.workStatus === 'working' ? (p.earnedIncomeReal ?? 0) + (investment[i] ?? 0) : 0,
+          ),
+        }
       : {}),
   }
 }

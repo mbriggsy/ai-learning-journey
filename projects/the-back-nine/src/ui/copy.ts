@@ -88,20 +88,23 @@ export const copy = {
   oopHelp:
     'A rough yearly figure is plenty. Premiums are added on top by the tool, and out-of-pocket costs should already be inside your spending figure — this only sizes your HSA’s tax-free draw.',
   qWorkIncomeHeading: 'Income Medicare looks at',
-  // C3 → Option B SPLIT (council 2026-06-29 + Briggsy greenlight): the working-year
-  // IRMAA-MAGI is collected as TWO honest fields per still-working spouse — pay, and
-  // investment income ON TOP — engine-summed at `intakeMap.buildDateInput`. The split (vs
-  // one field + careful copy) closes the lazy-confirm gap BY CONSTRUCTION: the investment
-  // add is a first-class REQUIRED input, not a clause a scared reader skips. The KTD-9
-  // engine-sense "wages-only" = exclude separately-MODELED streams (pension/rental/annuity/
-  // alimony — they ride `ongoingTaxableIrmaaOnly`), NEVER exclude investment income.
-  // FORWARD-phrased (KTD-9): answered BEFORE the other-income loop, so a modeled stream is
-  // "counted separately later," never "below" or "entered."
-  workPayLabel: 'Pay in a typical working year',
-  workPayHelp: 'Your salary or self-employment pay in a typical year you’re still working.',
+  // C3 → Option B, simplified (2026-06-30, Briggsy's call): the working-year IRMAA-MAGI is the
+  // already-entered salary (`earnedIncomeReal`, derived at `intakeMap.buildDateInput`) PLUS the
+  // ONE genuinely-new fact — working-year investment income. We do NOT re-ask pay (redundant +
+  // confusing, and the engine can't model a time-varying salary anyway). The investment add is a
+  // first-class REQUIRED input — its explicit 0 can't be a silent skip (the cardinal sin the C3
+  // fix exists to prevent). KTD-9 engine-sense "wages-only" = exclude separately-MODELED streams
+  // (pension/rental/annuity/alimony — they ride `ongoingTaxableIrmaaOnly`), NEVER exclude
+  // investment income. FORWARD-phrased: answered BEFORE the other-income loop, so a modeled stream
+  // is "counted separately later," never "below"/"entered." The disclosure satisfies conservative-
+  // or-disclose for the steady-pay simplification (a bonus/RSU spike right before Medicare).
+  workIncomeIntro:
+    'While you’re still working, Medicare looks at your pay plus any investment income. We’ll use the pay you entered earlier — just add any investment income on top.',
   workInvestmentLabel: 'Investment income on top',
   workInvestmentHelp:
-    'Interest, dividends, or other investment income you expect in those same working years, on top of your pay. Enter 0 if you have none. A pension, rental, annuity, or alimony is counted separately later, so leave those out.',
+    'Interest, dividends, or other investment income, on top of your pay. Enter 0 if you have none. A pension, rental, annuity, or alimony is counted separately later, so leave those out.',
+  workIncomeDisclosure:
+    'We use the steady pay you entered; if your income runs unusually high in the years right before Medicare, your real costs could be a little higher than shown.',
   qIrmaaSeedHeading: 'Your last two tax returns',
   irmaaSeedTwoBackLabel: 'Income, two years back',
   irmaaSeedOneBackLabel: 'Income, last year',

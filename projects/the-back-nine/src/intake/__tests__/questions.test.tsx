@@ -360,17 +360,12 @@ describe('working-year income (the §3b override source — never a salary echo)
     }
     expect(heading()).toBe(copy.qWorkIncomeHeading)
 
-    // C3 → B split: pay + working-year investment income are two first-class fields per
-    // working spouse; a retired spouse's slot is zeroed in BOTH arrays.
-    const pay = screen.getByLabelText(copy.workPayLabel)
-    fireEvent.focus(pay)
-    fireEvent.change(pay, { target: { value: '180000' } })
-    fireEvent.blur(pay)
+    // C3 → B (simplified): the step asks ONE field per working spouse — investment income on
+    // top of the salary already entered; a retired spouse's slot is zeroed.
     const investment = screen.getByLabelText(copy.workInvestmentLabel)
     fireEvent.focus(investment)
     fireEvent.change(investment, { target: { value: '30000' } })
     fireEvent.blur(investment)
-    expect(draft(m).health.workingYearWagesByPerson).toEqual([180_000, 0])
     expect(draft(m).health.workingYearInvestmentByPerson).toEqual([30_000, 0])
   })
 })

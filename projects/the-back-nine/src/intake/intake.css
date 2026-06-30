@@ -176,6 +176,12 @@
 /* ----- buttons ----- */
 
 .btn-primary {
+  /* Center content on BOTH axes regardless of element — a <button> centers its label via
+     UA styles, but an <a> styled as .btn-primary (the export "Download backup" link) does
+     not, so its text sat top-left. Flex makes anchor and button render identically. */
+  display: flex;
+  align-items: center;
+  justify-content: center;
   min-height: var(--field-h);
   width: 100%;
   border: none;

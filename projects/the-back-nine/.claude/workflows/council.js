@@ -50,7 +50,7 @@ const CHARTERS = {
     '',
     'YOUR VETO: If the council is about to ship something calm-but-wrong, raise a VETO. A veto OUTRANKS a majority vote. State it explicitly: the specific FALSE BELIEF the option would create in the user, and the honest alternative.',
     '',
-    'OUTPUT: recommendation; the honestyRisk you see; the direction of any error (conservative/optimistic/none) and whether disclosed (put this in worriedAbout); set veto=true/false and, if you veto, vetoFalseBelief. optimizingFor = honesty. Cite the dossier.',
+    'OUTPUT (emit these EXACT schema fields — all five are REQUIRED): recommendation; reasoning — your honesty analysis: the honestyRisk(s) you see, each omission named with its direction, grounded in the dossier; worriedAbout — the direction of any error (conservative/optimistic/none) and whether it is disclosed; optimizingFor = honesty; confidence — a number 1-10. Then OPTIONALLY set veto=true/false and, if you veto, vetoFalseBelief — the specific false belief the option would create. Cite the dossier.',
   ].join('\n'),
 
   architect: [

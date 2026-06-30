@@ -22,7 +22,16 @@ import { ConfidenceStatement } from './ConfidenceStatement'
 import { selectElevatedAnswer, resolvedFocusKey } from './answerView'
 import './styles/result.css'
 
-export function Result({ onReview }: { readonly onReview: () => void }) {
+export function Result({
+  onReview,
+  onKeep,
+  saved = false,
+}: {
+  readonly onReview: () => void
+  /** Present only when the answer is complete enough to persist (U8 Save gate). */
+  readonly onKeep?: () => void
+  readonly saved?: boolean
+}) {
   const snapshot = useSyncExternalStore(appModel.subscribe, appModel.getSnapshot)
   const missing = useMemo(() => missingRequiredFacts(snapshot.draft), [snapshot.draft])
   // Retry re-runs the FINAL tier: the result screen only ever shows the crowned final answer, never a
@@ -44,6 +53,21 @@ export function Result({ onReview }: { readonly onReview: () => void }) {
         )}
       </div>
       <div className="result-actions">
+        {saved ? (
+          <p className="result-saved">
+            <span className="result-saved__mark" aria-hidden="true" />
+            {copy.savedBadge}
+          </p>
+        ) : (
+          onKeep && (
+            <div className="result-keep">
+              <button type="button" className="btn-primary" onClick={onKeep}>
+                {copy.saveCta}
+              </button>
+              <p className="result-keep__hint">{copy.saveCtaHint}</p>
+            </div>
+          )
+        )}
         <button type="button" className="btn-quiet" onClick={onReview}>
           {copy.resultReview}
         </button>

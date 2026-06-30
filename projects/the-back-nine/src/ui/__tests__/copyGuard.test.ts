@@ -89,6 +89,9 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     verdictRethinkClause: slots.verdictRethinkClause(),
     verdictHoldClause: slots.verdictHoldClause(),
     verdictSurvivorStepDown: slots.verdictSurvivorStepDown('1,200'),
+    captureWordOrdinal: slots.captureWordOrdinal(3),
+    unlockUnknownWord: slots.unlockUnknownWord('zztop'),
+    unlockWrongCount: slots.unlockWrongCount(11),
   }
 
   it('every slot has a render sample — no silent no-op (burned/070)', () => {

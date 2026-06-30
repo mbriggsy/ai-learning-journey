@@ -355,6 +355,105 @@ export const copy = {
   errSurvivorRatio: 'Survivor spending can’t be more than 100% of household spending.',
   errBirthYearFuture: 'That birth year hasn’t happened yet.',
   errAgeBeyondModel: 'Ages past 119 are beyond what the projection can model.',
+
+  // ==========================================================================
+  // U8 — the first-Save ceremony + decrypt-on-return (the trust handoff).
+  // First-draft strings; the TONE of the blocks + the copy is Briggsy's N=1
+  // render cold-read (council 2026-06-30, yours-to-close). copyGuard-clean:
+  // clauses lead with field-op verbs, no certainty constructions, no advice mood.
+  // ==========================================================================
+
+  // --- the Save beat (Result.tsx .result-actions — the dominant calm completion) ---
+  saveCta: 'Keep this answer',
+  saveCtaHint: 'Save it to this device, encrypted — openable only by you.',
+  savedBadge: 'Saved to this device',
+
+  // --- step 1: set a passphrase ---
+  saveHeading: 'Set a passphrase',
+  saveIntro:
+    'This passphrase encrypts your plan on this device. There’s no reset — if it’s ever forgotten, your recovery phrase is the only way back in.',
+  passphraseLabel: 'Passphrase',
+  passphraseConfirmLabel: 'Type it again',
+  passphraseShow: 'Show',
+  passphraseHide: 'Hide',
+  // The meter-less floor feedback — names WHICH floor is unmet, as plain text (no red gauge).
+  passphraseTooShort: 'A short word is quick to crack — a full phrase of a few words holds up far better.',
+  passphraseTooWeak: 'This follows a common pattern — a few less-expected words make it much harder to guess.',
+  passphraseMismatch: 'The two don’t match yet.',
+  passphraseBlocked: 'This can’t be saved until the passphrase is a little stronger.',
+
+  // --- step 2: securing (firstSave: KDF + atomic commit, ~0.5–1.5 s) ---
+  securingStatus: 'Encrypting and saving…',
+
+  // --- step 3: the recovery phrase (a full credential — screenshot/phishing threat model) ---
+  phraseHeading: 'Your recovery phrase',
+  phraseIntro:
+    'These twelve words are the master key to your plan. Write them on paper, in order, and keep them somewhere private — not a screenshot, not a photo.',
+  phraseStoreNote:
+    'Anyone who has these words can open your plan. With them lost and the passphrase forgotten, no one can get back in — not even us.',
+  phrasePrint: 'Print',
+  phraseWroteItDown: 'I’ve written them down',
+
+  // --- step 4: capture (hidden-then-retype — an engagement nudge, never proof of storage) ---
+  captureHeading: 'Quick check',
+  captureIntro:
+    'From the copy you just wrote, fill in these words. This only helps them stick — no one can check that you saved them, and a lost phrase can’t be brought back.',
+  captureShowAgain: 'Show my words again',
+  captureMismatch: 'Those don’t match the words shown — take another look at your written copy.',
+
+  // --- step 5: the backup export (mandatory; any one channel satisfies it) ---
+  exportHeading: 'Save a backup',
+  exportIntro:
+    'A backup is your second copy for a second place — another device, a USB drive, cloud storage. It’s encrypted, and useless without your recovery phrase, so keep the two apart.',
+  exportDownload: 'Download backup',
+  exportCopy: 'Copy to clipboard',
+  exportShowText: 'Show the text',
+  exportDownloaded: 'Backup downloaded.',
+  exportCopied: 'Copied to the clipboard.',
+  exportTextHint: 'Select all of it and save it wherever you keep important files.',
+  exportTextSaved: 'I’ve saved the text',
+  exportBlocked: 'Save a backup to finish — by download, copy, or the text above.',
+  exportFinish: 'Finish',
+
+  // --- step 6: complete ---
+  savedHeading: 'Your plan is saved',
+  savedBody:
+    'It’s encrypted on this device. Open it any time with your passphrase, or restore it on another device with your backup and recovery phrase.',
+  savedDone: 'Back to my answer',
+
+  // --- ceremony operational errors (firstSave / setNewPassphrase) ---
+  saveErrorQuota: 'This device is out of storage. Free up some space, then try again.',
+  saveErrorBusy: 'Your plan is open in another tab. Close it there, then try again.',
+  saveErrorFailed: 'Saving didn’t finish. Try again.',
+
+  // --- decrypt-on-return: the unlock screen ---
+  unlockHeading: 'Welcome back',
+  unlockIntro: 'Your saved plan is encrypted on this device. Enter your passphrase to open it.',
+  unlockLabel: 'Passphrase',
+  unlockButton: 'Open my plan',
+  unlockForgot: 'I forgot my passphrase',
+  restoringStatus: 'Opening your plan…',
+  // The honesty-critical error copy (keys match unlockCopy.ts UnlockCopyKey).
+  unlockWrongCredential:
+    'That didn’t open it. Check for typos and look-alike letters — a one and an l, a zero and an O. If you’re sure it’s right, the saved data may be damaged, and your backup is the way in.',
+  unlockPhraseMisspelled:
+    'Those words don’t form a valid phrase — a word may be misspelled or out of order. Take another look at your written copy.',
+  unlockDataDamaged:
+    'The saved plan on this device couldn’t be read — it looks damaged. Your backup file and recovery phrase are the way to restore it.',
+  unlockNewerVersion: 'This plan was saved by a newer version of the app. Update to the latest version, then open it.',
+  unlockNoVault: 'There’s no saved plan on this device yet.',
+  unlockOpenElsewhere: 'Your plan is already open in another tab. Close it there, then try again.',
+  unlockGeneric: 'That didn’t work. Try again.',
+
+  // --- the recovery path (forgot passphrase → recovery phrase → new passphrase) ---
+  recoverHeading: 'Use your recovery phrase',
+  recoverIntro: 'Enter your twelve-word recovery phrase to open your plan. You’ll set a new passphrase next.',
+  recoverPhraseLabel: 'Recovery phrase',
+  recoverPhraseHint: 'Twelve words, in order, separated by spaces.',
+  recoverButton: 'Open with recovery phrase',
+  recoverNewPassHeading: 'Set a new passphrase',
+  recoverNewPassIntro:
+    'Your recovery phrase opened your plan. Set a new passphrase to use on this device from now on.',
 } as const satisfies Record<string, string>
 
 export type CopyKey = keyof typeof copy
@@ -560,7 +659,24 @@ export const slots = {
    *  pension/earned income, the minority case) — revisit when D2 wires real households. */
   verdictSurvivorStepDown: (perMonthDropFormatted: string): string =>
     `If one of you is on your own later, the household’s monthly income steps down about $${perMonthDropFormatted} — one Social Security benefit ends. Taxes also move to a single filer’s brackets.`,
+
+  // --- U8 ceremony slots (the only channel a position/word/count enters that copy) ---
+  /** The capture field's label — which written word to re-type (1-indexed ordinal). */
+  captureWordOrdinal: (position: number): string => `the ${ordinal(position)} word`,
+  /** A recovery word that isn't in the BIP-39 list — names it so the user can find the typo. */
+  unlockUnknownWord: (word: string): string => `“${word}” isn’t one of the recovery words — check its spelling.`,
+  /** A recovery phrase of the wrong length — names the count entered. */
+  unlockWrongCount: (count: number): string => `A recovery phrase is twelve words — this one has ${count}.`,
 } as const
+
+/** English ordinal for a small positive integer (1→"1st" … 11→"11th"). Used only by the
+ *  U8 capture slot; the 11/12/13 teens-exception is handled. */
+function ordinal(n: number): string {
+  const tens = n % 100
+  const ones = n % 10
+  const suffix = tens >= 11 && tens <= 13 ? 'th' : ones === 1 ? 'st' : ones === 2 ? 'nd' : ones === 3 ? 'rd' : 'th'
+  return `${n}${suffix}`
+}
 
 /**
  * Static disclosures — OUTSIDE the copyGuard's input by design (phase-2

@@ -1,10 +1,15 @@
-import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useMemo, useState, useSyncExternalStore } from 'react'
 import { IntakeFlow } from '@intake/flow'
 import { intakeSteps } from '@intake/questions'
 import { AnswerStrip } from '@intake/AnswerStrip'
 import { missingRequiredFacts } from '@intake/intakeMap'
 import { appModel } from './appModel'
 import { Result } from './Result'
+import { scenarioFromDraft } from './scenarioFromDraft'
+
+// The ceremony rides its own lazy chunk (it pulls the crypto/zxcvbn graph) — kept off the
+// already-lazy intake chunk's first paint; the Save beat only ever appears on the result screen.
+const SaveFlow = lazy(() => import('./SaveFlow').then((m) => ({ default: m.SaveFlow })))
 
 /**
  * The intake subtree — the LAZY half of the App split (default export for
@@ -27,10 +32,14 @@ import { Result } from './Result'
  * sequence at the first question; the data is intact, only the cursor resets.
  */
 export default function IntakeApp({ seed }: { seed?: string | null }) {
-  const [phase, setPhase] = useState<'intake' | 'result'>('intake')
+  const [phase, setPhase] = useState<'intake' | 'result' | 'save'>('intake')
+  const [saved, setSaved] = useState(false)
   const snapshot = useSyncExternalStore(appModel.subscribe, appModel.getSnapshot)
   const steps = useMemo(() => intakeSteps(snapshot.draft), [snapshot.draft])
   const missing = useMemo(() => missingRequiredFacts(snapshot.draft), [snapshot.draft])
+  // The Save beat appears only when the draft is genuinely persistable (an indeterminate answer
+  // can reach the result screen — the gate, not the screen, decides saveability).
+  const saveReady = useMemo(() => scenarioFromDraft(snapshot.draft), [snapshot.draft])
   const retry = useCallback(() => void appModel.recompute(), [])
   const complete = useCallback(async () => {
     // Reveal the magic moment on the FAST provisional tier, then sharpen to the final IN PLACE —
@@ -45,6 +54,12 @@ export default function IntakeApp({ seed }: { seed?: string | null }) {
     await appModel.recompute('final')
   }, [])
   const review = useCallback(() => setPhase('intake'), [])
+  // Re-entering intake after a Save edits the saved scenario — the "saved" badge no longer holds
+  // (the on-screen answer may now differ from what's on disk), so it clears on review.
+  const reviewAfterSave = useCallback(() => {
+    setSaved(false)
+    setPhase('intake')
+  }, [])
 
   // DEV-only `?seed=<key>`: apply a COMPLETE fixture to the in-memory appModel and
   // run the SAME terminal-advance path `complete()` runs (apply → result →
@@ -69,7 +84,30 @@ export default function IntakeApp({ seed }: { seed?: string | null }) {
     }
   }, [seed])
 
-  if (phase === 'result') return <Result onReview={review} />
+  if (phase === 'save' && saveReady.ready) {
+    return (
+      <Suspense fallback={null}>
+        <SaveFlow
+          scenario={saveReady.scenario}
+          onCancel={() => setPhase('result')}
+          onComplete={() => {
+            setSaved(true)
+            setPhase('result')
+          }}
+        />
+      </Suspense>
+    )
+  }
+
+  if (phase === 'result' || phase === 'save') {
+    return (
+      <Result
+        onReview={saved ? reviewAfterSave : review}
+        onKeep={saveReady.ready && !saved ? () => setPhase('save') : undefined}
+        saved={saved}
+      />
+    )
+  }
 
   return (
     <IntakeFlow

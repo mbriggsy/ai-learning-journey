@@ -38,10 +38,61 @@
   display: contents;
 }
 
-/* The quiet return — one low-emphasis action, never competing with the answer. */
+/* The completion beat — the dominant "Keep this answer" Save (U8), with the quiet Review
+   demoted below it (council 2026-06-30). When unsaveable, only the quiet return shows. */
 .result-actions {
   display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+  margin-block-start: var(--space-6);
+}
+
+.result-keep {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  max-width: var(--measure);
+}
+
+.result-keep .btn-primary {
+  /* The dominant action — full reading-measure width, never crowding the verdict above. */
+  width: 100%;
+}
+
+.result-keep__hint {
+  font-size: var(--text-sm);
+  color: var(--ink-muted);
+  text-align: center;
+  margin: 0;
+}
+
+.result-saved {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-base);
+  font-weight: var(--weight-medium);
+  color: var(--ink);
+  margin: 0;
+}
+
+.result-saved__mark {
+  display: inline-flex;
+  align-items: center;
   justify-content: center;
+  inline-size: 1.5em;
+  block-size: 1.5em;
+  border-radius: var(--radius-pill);
+  background: var(--brand-tint);
+  color: var(--brand);
+  font-size: 0.75em;
+}
+
+.result-saved__mark::before {
+  content: '\2713'; /* ✓ — decorative; the badge text carries the meaning */
 }
 
 /* ── The laptop two-pane FRAME (≥ --bp-laptop / 68rem) ──────────────────────────────────────────

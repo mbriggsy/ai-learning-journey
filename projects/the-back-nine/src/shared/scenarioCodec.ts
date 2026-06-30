@@ -212,12 +212,25 @@ function checkPersonV3(v: unknown, path: string): void {
   needVocab(v, 'sex', SEXES, path)
   needFinite(v, 'currentAge', path)
   needInteger(v, 'birthYear', path) // the FRA-lookup key — integer year is the contract
-  needFinite(v, 'retirementAge', path)
+  needVocab(v, 'workStatus', WORK_STATUSES, path) // the discriminant — read BEFORE the field it gates
+  // `retirementAge` is a BICONDITIONAL of `workStatus` (council 2026-06-30 — Option B, STRICT form).
+  // A retired person's ENTERED stop age is required; a still-working person genuinely HAS no
+  // retirement age (the swept fuck-off-date is the ANSWER, never an input — field-fidelity §264), so
+  // it must be ABSENT. Present-on-working is the Option-A masquerade artifact: a synthetic value that
+  // `questions.tsx`'s flip-to-retired would surface as the user's "entered" age. We REJECT it here at
+  // the SOLE restore gate (insight 046) — `optFinite` is deliberately NOT used (it would let a retired
+  // person decode with no stop age, weakening the retired invariant; and it would ACCEPT the working
+  // masquerade). This is a divergence within an UN-shipped v3 (read+write land atomically at this U8),
+  // not a relaxation of a field any shipped reader trusts — tolerant-reader buys ADDING optionals.
+  if (v.workStatus === 'retired') {
+    needFinite(v, 'retirementAge', path)
+  } else if (v.retirementAge !== undefined) {
+    throw new Corrupt(`${path}.retirementAge: a still-working person carries no retirement age`)
+  }
   needFinite(v, 'earnedIncomeReal', path)
   needFinite(v, 'pia', path) // the live SS field (v3) — never socialSecurityReal
   needFinite(v, 'socialSecurityClaimAge', path)
   needString(v, 'name', path)
-  needVocab(v, 'workStatus', WORK_STATUSES, path)
 }
 
 /** The ticker-classification discriminated union ({@link TickerClassification}): the calm 3-choice

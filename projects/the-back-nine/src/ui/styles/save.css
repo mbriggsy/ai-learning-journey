@@ -1,0 +1,268 @@
+/*
+ * U8 first-Save ceremony styles. Calm trust handoff — not a dashboard, not an alarm.
+ * Tokens-only (CSP `style-src 'self'`, no inline styles); motion via @starting-style +
+ * transition (motion@12 is quarantined to src/viz); reduced-motion keeps the final state
+ * identical. The floor feedback is text-led and muted — never a scary red strength meter.
+ */
+
+.save {
+  width: 100%;
+  max-width: var(--measure);
+  margin-inline: auto;
+  padding: var(--space-8) var(--gutter) var(--space-12);
+}
+
+/* ----- a step ----- */
+.save-step {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  opacity: 1;
+  transform: translateY(0);
+  transition:
+    opacity var(--dur-step) var(--ease-out),
+    transform var(--dur-step) var(--ease-out);
+}
+
+@starting-style {
+  .save-step {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+.save-step__heading {
+  font-family: var(--font-display);
+  font-optical-sizing: auto;
+  font-weight: var(--weight-display);
+  font-size: var(--text-xl);
+  line-height: var(--leading-tight);
+  color: var(--ink);
+  margin: 0;
+}
+
+.save-step__heading:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 4px;
+  border-radius: var(--radius-sm);
+}
+
+.save-step__intro {
+  font-size: var(--text-base);
+  line-height: var(--leading-body);
+  color: var(--ink-muted);
+  margin: 0;
+}
+
+.save-step__note {
+  font-size: var(--text-sm);
+  line-height: var(--leading-body);
+  color: var(--ink-muted);
+  margin: 0;
+}
+
+/* ----- fields ----- */
+.save-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.save-field__label {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--ink);
+}
+
+.save-field__row {
+  display: flex;
+  gap: var(--space-2);
+  align-items: stretch;
+}
+
+.save-field__input {
+  min-height: var(--field-h);
+  width: 100%;
+  padding: 0 var(--space-4);
+  border: 1px solid var(--line-control);
+  border-radius: var(--radius-md);
+  background: var(--paper-raised);
+  color: var(--ink);
+  font-size: var(--text-base); /* ≥16px — iOS never auto-zooms */
+  font-family: var(--font-body);
+  transition: border-color var(--dur-fast) ease;
+}
+
+/* Calm emphasis, never alarm-red: the text note + the disabled CTA carry the signal. */
+.save-field__input[aria-invalid='true'] {
+  border-color: var(--ink-muted);
+  border-width: 2px;
+}
+
+.save-field__reveal {
+  flex: none;
+  padding-inline: var(--space-3);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-md);
+  background: none;
+  color: var(--ink-muted);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  cursor: pointer;
+  transition: color var(--dur-fast) ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .save-field__reveal:hover {
+    color: var(--ink);
+  }
+}
+
+.save-field__note {
+  font-size: var(--text-sm);
+  line-height: var(--leading-body);
+  color: var(--ink-muted);
+  margin: 0;
+}
+
+/* ----- actions ----- */
+.save-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-block-start: var(--space-4);
+}
+
+/* aria-disabled (NOT native disabled): keep it operable so the announced reason fires. */
+.btn-primary[aria-disabled='true'] {
+  opacity: 0.55;
+}
+
+/* ----- the recovery phrase ----- */
+.save-phrase {
+  list-style: none;
+  counter-reset: word;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-2) var(--space-3);
+  margin: 0;
+  padding: var(--space-4);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-lg);
+  background: var(--paper-raised);
+  user-select: none; /* a UX defense (shoulder-surf / accidental copy); the text stays in the a11y tree */
+}
+
+.save-phrase__word {
+  counter-increment: word;
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-medium);
+  color: var(--ink);
+}
+
+.save-phrase__word::before {
+  content: counter(word);
+  flex: none;
+  min-width: 1.5em;
+  text-align: end;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-body);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-muted);
+}
+
+/* ----- capture ----- */
+.save-capture {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* ----- export ----- */
+.save-export {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.save-export__channel {
+  width: 100%;
+}
+
+.save-export__confirm {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--ink);
+  margin: 0;
+}
+
+.save-export__text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.save-export__textarea {
+  width: 100%;
+  padding: var(--space-3);
+  border: 1px solid var(--line-control);
+  border-radius: var(--radius-md);
+  background: var(--paper-raised);
+  color: var(--ink);
+  font-family: ui-monospace, monospace;
+  font-size: var(--text-xs);
+  resize: vertical;
+}
+
+/* ----- pending (securing / restoring) — static, announced, reserve-the-box ----- */
+.save-step--pending {
+  min-height: 8rem;
+  align-items: center;
+  justify-content: center;
+}
+
+.save-pending {
+  font-size: var(--text-lg);
+  color: var(--ink-muted);
+  text-align: center;
+  margin: 0;
+}
+
+/* ----- complete ----- */
+.save-done__heading {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.save-done__mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 1.6em;
+  block-size: 1.6em;
+  flex: none;
+  border-radius: var(--radius-pill);
+  background: var(--brand-tint);
+  color: var(--brand);
+  font-size: 0.7em;
+}
+
+.save-done__mark::before {
+  content: '\2713'; /* ✓ — decorative; the heading text carries the meaning */
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .save-step {
+    transition: opacity var(--dur-fast) ease;
+    transform: none;
+  }
+  @starting-style {
+    .save-step {
+      transform: none;
+    }
+  }
+}

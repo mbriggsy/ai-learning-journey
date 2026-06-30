@@ -79,7 +79,9 @@ const V3: ScenarioV3 = {
   schemaVersion: 3,
   people: [
     { sex: 'male', currentAge: 62, birthYear: 1964, retirementAge: 65, earnedIncomeReal: 0, pia: 36_000, socialSecurityClaimAge: 67, name: 'Pat', workStatus: 'retired' },
-    { sex: 'female', currentAge: 60, birthYear: 1966, retirementAge: 62, earnedIncomeReal: 80_000, pia: 28_000, socialSecurityClaimAge: 67, name: 'Sam', workStatus: 'working' },
+    // A still-working person carries NO retirementAge (Option B, council 2026-06-30 — the swept date
+    // is the answer, never an input). The biconditional is exercised below.
+    { sex: 'female', currentAge: 60, birthYear: 1966, earnedIncomeReal: 80_000, pia: 28_000, socialSecurityClaimAge: 67, name: 'Sam', workStatus: 'working' },
   ],
   enteredAccounts: [
     { ownerIndex: 0, kind: 'brokerage', manualBlend: { kind: 'exact', stockPct: 60, bondPct: 35, cashPct: 5 }, valueToday: 400_000, basis: 250_000 },
@@ -319,6 +321,31 @@ describe('v3 — the forward-written persist shape (U8, the first v3 writer)', (
   it('v3 person name (string) + workStatus (vocab) are validated', () => {
     expect(decodeScenario(mutated(V3, (o) => { (o.people as Obj[])[0]!.workStatus = 'semi-retired' })).ok).toBe(false)
     expect(decodeScenario(mutated(V3, (o) => { (o.people as Obj[])[0]!.name = 42 })).ok).toBe(false)
+  })
+
+  // The retirementAge ⟺ workStatus biconditional (council 2026-06-30, Option B STRICT). The persisted
+  // model is honest: a retired person's ENTERED stop age is required; a working person carries NONE (the
+  // swept fuck-off-date is the answer, not an input). All three arms — including the working-WITH reject
+  // the lenient form would have dropped — guard the SOLE restore gate (insight 046) against the Option-A
+  // masquerade ever decoding.
+  it('retired person WITHOUT a retirementAge is REJECTED (the retired invariant; optFinite would have let it pass)', () => {
+    // people[0] = Pat, retired. Removing the stop age must fail — not silently accepted as "optional".
+    expect(decodeScenario(mutated(V3, (o) => { delete (o.people as Obj[])[0]!.retirementAge })).ok).toBe(false)
+  })
+
+  it('working person WITH a retirementAge is REJECTED (the Option-A masquerade artifact, reject-on-present)', () => {
+    // people[1] = Sam, working. A synthetic stop age must fail to decode, so it can never masquerade
+    // as the user's entered age via the flip-to-retired path.
+    const d = decodeScenario(mutated(V3, (o) => { (o.people as Obj[])[1]!.retirementAge = 64 }))
+    expect(d.ok).toBe(false)
+    if (!d.ok && d.reason === 'corrupt') expect(d.detail).toContain('people[1].retirementAge')
+  })
+
+  it('working person WITHOUT a retirementAge ACCEPTS (the headline fuck-off-date household saves)', () => {
+    // The base V3 fixture's Sam is working-without — it round-trips, byte-identical.
+    const decoded = decodeScenario(encodeScenario(V3))
+    expect(decoded.ok).toBe(true)
+    if (decoded.ok) expect(decoded.scenario.people[1]?.retirementAge).toBeUndefined()
   })
 
   it('an enteredAccount with a dangling ownerIndex (outside people range) is corruption', () => {

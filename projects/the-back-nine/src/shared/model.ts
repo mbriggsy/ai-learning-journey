@@ -961,10 +961,19 @@ export type WorkStatus = (typeof WORK_STATUSES)[number]
  *  `currentAge === startCalendarYear − birthYear` invariant. `birthYear` is inherited from the base
  *  {@link PersonInputs} now (it keys the SS FRA lookup + the per-person mortality cohort) — it is no
  *  longer re-declared here (single-source on the base). */
-export interface PersonInputsV3 extends PersonInputs {
+export interface PersonInputsV3 extends Omit<PersonInputs, 'retirementAge'> {
   /** Display name for the paired two-person screens (PII — encrypted at rest, R39). */
   readonly name: string
   readonly workStatus: WorkStatus
+  /** The persisted retirement age is a BICONDITIONAL of `workStatus` (council 2026-06-30, Option B —
+   *  the honest model). PRESENT (the entered stop age) for a `'retired'` person; ABSENT for a
+   *  `'working'` person — the swept fuck-off-date is their ANSWER, not an input, so the persisted
+   *  model carries no synthetic value (storing `currentAge + 1` would be the masquerade `intakeMap`'s
+   *  own comment forbids: a value `questions.tsx`'s flip-to-retired would surface as "entered"). The
+   *  ENGINE's `PersonInputs.retirementAge` stays REQUIRED — `buildPeople` reconstructs the placeholder
+   *  for the date run, kept PRIVATE to intakeMap, never on disk. The codec (`checkPersonV3`) enforces
+   *  the biconditional at runtime (reject-on-present for working); the `?` alone can't forbid a value. */
+  readonly retirementAge?: number
 }
 
 /** Account types the intake offers. The kind→bucket map is intakeMap's

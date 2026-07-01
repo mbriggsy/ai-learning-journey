@@ -12,7 +12,7 @@ import 'fake-indexeddb/auto'
 import { IDBFactory } from 'fake-indexeddb'
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import { BACKUP_FORMAT, type Scenario } from '@shared/model'
+import { BACKUP_FORMAT, VAULT_STORE_NAME, type Scenario } from '@shared/model'
 import { checkPassphraseFloor, type FloorCheckedPassphrase } from '../../crypto/kdf'
 import { clearVault, loadVault, openVaultDb, type VaultDb } from '../db'
 import { exportVault, restoreVault } from '../backup'
@@ -55,6 +55,29 @@ async function vaulted(): Promise<{ db: VaultDb; session: VaultSession }> {
   const saved = await session.firstSave(MODEL, await floorPass(PASSPHRASE), await floorPass(RECOVERY_PASSPHRASE))
   if (!saved.ok) throw new Error('firstSave failed')
   return { db, session }
+}
+
+/** Raw store surgery — the ONLY way to synthesize an on-disk DAMAGED vault (writeVault
+ *  is all-or-nothing, so a healthy save can never produce a partial set). Drops one of
+ *  the three records → loadVault reports `damaged` (2 of 3). */
+async function deleteRecord(db: VaultDb, key: 'model' | 'passphraseWrap' | 'recoveryWrap'): Promise<void> {
+  const tx = db.transaction(VAULT_STORE_NAME, 'readwrite')
+  void tx.objectStore(VAULT_STORE_NAME).delete(key)
+  await tx.done
+}
+
+/** Plant an out-of-band stray record (a stale key from an older/partial write). */
+async function putStray(db: VaultDb, key: string): Promise<void> {
+  const tx = db.transaction(VAULT_STORE_NAME, 'readwrite')
+  void tx.objectStore(VAULT_STORE_NAME).put({ junk: new Uint8Array([1, 2, 3]) }, key)
+  await tx.done
+}
+
+async function storeKeys(db: VaultDb): Promise<string[]> {
+  const tx = db.transaction(VAULT_STORE_NAME)
+  const keys = await tx.objectStore(VAULT_STORE_NAME).getAllKeys()
+  await tx.done
+  return keys.map(String).sort()
 }
 
 beforeEach(() => {
@@ -110,6 +133,59 @@ describe('the export → wipe → restore cycle (models Safari eviction / device
 
     const result = await restoreVault(db, exported.file, RECOVERY_PASSPHRASE, await floorPass(NEW_PASSPHRASE))
     expect(result).toEqual({ ok: false, reason: 'vault-exists' })
+  })
+})
+
+describe('restore OVER a damaged vault (the survivor device-rot path — was uncovered)', () => {
+  // Every other restore test wipes to no-vault (clearVault) first. The REAL survivor
+  // scenario is a device whose on-disk vault bit-rotted to a partial/damaged set — the
+  // `damaged` arm restore actually flows through. restoreVault refuses only `kind:'vault'`
+  // (backup.ts:125,185), so it proceeds over `damaged`; writeVault clears the store IN the
+  // same transaction before writing (db.ts:197), so no pre-clearVault is needed and none
+  // is called — a pre-clear would destroy this recoverable vault if the restore then failed.
+  it('restores a partial (2-of-3) damaged vault to a clean vault, openable with the new passphrase', async () => {
+    const { db, session } = await vaulted()
+    const exported = await exportVault(db)
+    if (!exported.ok) throw new Error('export failed')
+    await session.lock()
+
+    await deleteRecord(db, 'recoveryWrap') // device-rot: the vault loses a record
+    const damaged = await loadVault(db)
+    expect(damaged.kind).toBe('damaged')
+
+    const restored = await restoreVault(db, exported.file, RECOVERY_PASSPHRASE, await floorPass(NEW_PASSPHRASE))
+    expect(restored).toEqual({ ok: true })
+
+    // Self-consistent + openable by the freshly-minted passphrase, model intact.
+    expect((await loadVault(db)).kind).toBe('vault')
+    expect(await storeKeys(db)).toEqual(['model', 'passphraseWrap', 'recoveryWrap'])
+    const reopened = createSession(db)
+    expect((await reopened.unlock(NEW_PASSPHRASE)).ok).toBe(true)
+    expect(reopened.currentModel()).toEqual(MODEL)
+    await reopened.lock()
+  })
+
+  it('wipes a stray stale record on restore — writeVault clears in-transaction, so no pre-clearVault', async () => {
+    const { db, session } = await vaulted()
+    const exported = await exportVault(db)
+    if (!exported.ok) throw new Error('export failed')
+    await session.lock()
+
+    await deleteRecord(db, 'model') // damaged (2 of 3)…
+    await putStray(db, 'legacy-orphan') // …carrying a stale out-of-band key
+    expect(await storeKeys(db)).toContain('legacy-orphan')
+    expect((await loadVault(db)).kind).toBe('damaged')
+
+    const restored = await restoreVault(db, exported.file, RECOVERY_PASSPHRASE, await floorPass(NEW_PASSPHRASE))
+    expect(restored).toEqual({ ok: true })
+
+    // The stray is GONE — the in-transaction clear (db.ts:197) is what makes a
+    // pre-clearVault redundant AND harmful (it would destroy a recoverable vault on failure).
+    expect(await storeKeys(db)).toEqual(['model', 'passphraseWrap', 'recoveryWrap'])
+    const reopened = createSession(db)
+    expect((await reopened.unlock(NEW_PASSPHRASE)).ok).toBe(true)
+    expect(reopened.currentModel()).toEqual(MODEL)
+    await reopened.lock()
   })
 })
 

@@ -84,6 +84,7 @@ import {
   type VaultDb,
   type VaultWrite,
 } from './db'
+import { restoreVault, type RestoreResult } from './backup'
 
 export type SessionStatus = 'locked' | 'unlocking' | 'securing' | 'unlocked' | 'recovery-unlocked'
 
@@ -159,6 +160,16 @@ export interface VaultSession {
   recoveryUnlock(recoveryPassphrase: string): Promise<RecoveryUnlockResult>
   setNewPassphrase(passphrase: FloorCheckedPassphrase): Promise<SetPassphraseResult>
   save(scenario: AnyScenario): Promise<SaveResult>
+  /** Restore a backup file over a no-vault OR damaged vault, minting a fresh passphrase —
+   *  the device-wiped survivor's door. A THIN wrapper over backup.restoreVault: it only
+   *  brackets the op in the write-in-flight accounting so the PWA update defers skipWaiting
+   *  across the WHOLE restore (a mid-restore reload must never drop the survivor's recovery).
+   *  It installs NO session state — the caller re-enters via unlock(newPassphrase). */
+  restore(
+    fileText: string,
+    recoveryPassphrase: string,
+    newPassphrase: FloorCheckedPassphrase,
+  ): Promise<RestoreResult>
   lock(): Promise<void>
 }
 
@@ -203,16 +214,21 @@ export function createSession(db: VaultDb): VaultSession {
   //     one module-level FIFO per realm + a cross-tab Web Lock per step) ---
   let writesInFlight = 0
   let writeTail: Promise<void> = Promise.resolve()
-  function enqueueWrite<T>(fn: () => Promise<T>): Promise<T> {
+  // Accounting-ONLY bracket: mark a vault-mutating OP in flight (the U0 PWA-update gate
+  // reads isWriteInFlight/whenNoWriteInFlight) and track its tail — WITHOUT serializing.
+  // enqueueWrite composes this over serializeVaultWrite; restore() uses it BARE, because
+  // restoreVault already runs its write under serializeVaultWrite internally (backup.ts) —
+  // wrapping that again would deadlock the realm FIFO AND the exclusive per-step Web Lock.
+  function trackWrite<T>(fn: () => Promise<T>): Promise<T> {
     writesInFlight++
-    const run = serializeVaultWrite(fn)
+    const run = fn()
     writeTail = run.then(
       () => undefined,
       () => undefined,
     )
     // .then(onOk, onErr) — NOT .finally(), whose return re-propagates a rejection
-    // into a void-ed (hence unhandled) promise. The caller of enqueueWrite owns
-    // run's outcome; this side-channel only does the accounting.
+    // into a void-ed (hence unhandled) promise. The caller owns run's outcome; this
+    // side-channel only does the accounting.
     void run.then(
       () => {
         writesInFlight--
@@ -222,6 +238,9 @@ export function createSession(db: VaultDb): VaultSession {
       },
     )
     return run
+  }
+  function enqueueWrite<T>(fn: () => Promise<T>): Promise<T> {
+    return trackWrite(() => serializeVaultWrite(fn))
   }
 
   // --- the single-active-writer channel ---
@@ -571,6 +590,14 @@ export function createSession(db: VaultDb): VaultSession {
       // which is the documented queue-then-drop semantics).
       if (epoch === gen) model = scenario
       return { ok: true }
+    },
+
+    restore(fileText, recoveryPassphrase, newPassphrase) {
+      // Thin accounting bracket ONLY: restoreVault owns the crypto, the validation, and
+      // its own atomic serialized write. trackWrite (not enqueueWrite) marks the op
+      // in-flight without re-serializing — re-serializing restoreVault's internal write
+      // would deadlock. Session secrets are untouched; unlock(newPassphrase) hydrates after.
+      return trackWrite(() => restoreVault(db, fileText, recoveryPassphrase, newPassphrase))
     },
 
     async lock() {

@@ -31,6 +31,7 @@ export type UnlockCopyKey =
   | 'unlockNewerVersion' // saved by a newer app version — NEVER "damaged"
   | 'unlockNoVault' // the vault is gone (evicted between load and unlock)
   | 'unlockOpenElsewhere' // open in another tab — close it there first
+  | 'unlockReadOnly' // a read-only OPEN succeeded (2nd tab holds the writer) — reload to edit
   | 'unlockGeneric' // not-locked / unexpected — a calm catch-all, no alarm
 
 export type UnlockMessage =
@@ -65,4 +66,21 @@ export function describeUnlockFailure(failure: UnlockFailure): UnlockMessage {
       return { kind: 'plain', key: 'unlockGeneric' }
   }
   return { kind: 'plain', key: 'unlockGeneric' }
+}
+
+/**
+ * The read-only-OPEN notice — the SUCCESS arm's counterpart to describeUnlockFailure.
+ * A read-only open is a SUCCESS with a caveat, never a failure: a second tab holds the
+ * writer, so this tab decrypted the plan but cannot save. It is rendered as a STANDING
+ * `role='status'` banner (never `role='alert'` — nothing went wrong), and it steers to
+ * RELOAD, not "close the other tab": `secondTab` is captured ONCE at unlock and never
+ * re-probed (session.ts), so this tab stays read-only until a reload re-runs the writer
+ * probe — telling the user to close the other tab would promise an edit this tab can't
+ * grant without a reload (calm-but-wrong). Silent on a normal writable open.
+ *
+ * Typed off the SUCCESS arm so a change to its shape (e.g. readOnly → an enum) breaks
+ * HERE at compile time, exactly as the failure seam is typed off the {ok:false} arms.
+ */
+export function describeUnlockReadOnly(success: Extract<UnlockResult, { readonly ok: true }>): UnlockMessage {
+  return success.readOnly ? { kind: 'plain', key: 'unlockReadOnly' } : { kind: 'silent' }
 }

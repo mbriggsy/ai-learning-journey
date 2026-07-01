@@ -448,6 +448,11 @@ export const copy = {
   unlockNewerVersion: 'This plan was saved by a newer version of the app. Update to the latest version, then open it.',
   unlockNoVault: 'There’s no saved plan on this device yet.',
   unlockOpenElsewhere: 'Your plan is already open in another tab. Close it there, then try again.',
+  // Read-only OPEN (the plan DID open; a second tab holds the writer). A calm standing
+  // status, never an alarm — and it steers to RELOAD, not "close the other tab" (this tab
+  // won't re-check until reloaded, so "close it there" would promise an edit it can't grant).
+  unlockReadOnly:
+    'Your plan is open in another tab, so this copy is view-only — changes here won’t be saved. Reload this page to make changes here.',
   unlockGeneric: 'That didn’t work. Try again.',
 
   // --- the recovery path (forgot passphrase → recovery word → new passphrase) ---

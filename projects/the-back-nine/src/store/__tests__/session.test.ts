@@ -12,9 +12,10 @@ import 'fake-indexeddb/auto'
 import { IDBFactory } from 'fake-indexeddb'
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import type { Scenario } from '@shared/model'
+import { VAULT_STORE_NAME, type Scenario } from '@shared/model'
 import { checkPassphraseFloor, type FloorCheckedPassphrase } from '../../crypto/kdf'
-import { loadVault, openVaultDb, type VaultDb } from '../db'
+import { clearVault, loadVault, openVaultDb, type VaultDb } from '../db'
+import { exportVault } from '../backup'
 import { createSession, type VaultSession } from '../session'
 
 const PASSPHRASE = 'plinth otter vivid casket 92 lampoon'
@@ -56,6 +57,14 @@ async function vaultedSession(): Promise<{ db: VaultDb; session: VaultSession }>
   const saved = await session.firstSave(MODEL, await floorPass(PASSPHRASE), await floorPass(RECOVERY_PASSPHRASE))
   if (!saved.ok) throw new Error(`firstSave failed: ${JSON.stringify(saved)}`)
   return { db, session }
+}
+
+/** Raw store surgery to synthesize an on-disk DAMAGED vault (a healthy save is all-or-
+ *  nothing, so the partial set can only be made this way). */
+async function deleteRecord(db: VaultDb, key: 'model' | 'passphraseWrap' | 'recoveryWrap'): Promise<void> {
+  const tx = db.transaction(VAULT_STORE_NAME, 'readwrite')
+  void tx.objectStore(VAULT_STORE_NAME).delete(key)
+  await tx.done
 }
 
 beforeEach(() => {
@@ -325,6 +334,54 @@ describe('isWriteInFlight / whenNoWriteInFlight (the U0 PWA-update signal, produ
     await session.whenNoWriteInFlight()
     expect(deferredFired).toBe(true) // …and reloads only once the write committed
     await session.lock()
+  })
+})
+
+describe('restore (the thin write-accounting bracket over backup.restoreVault)', () => {
+  it('marks a write in flight across the WHOLE restore and clears it after — the PWA update defers across it', async () => {
+    const { db, session } = await vaultedSession()
+    const exported = await exportVault(db)
+    if (!exported.ok) throw new Error('export failed')
+    await session.lock()
+    await clearVault(db)
+    expect(session.isWriteInFlight()).toBe(false)
+
+    const newPass = await floorPass(NEW_PASSPHRASE)
+    const restoreP = session.restore(exported.file, RECOVERY_PASSPHRASE, newPass)
+    // In flight SYNCHRONOUSLY on the call — and stays so across restoreVault's derive +
+    // validate + write, not just the final transaction (the write-grained signal is blind
+    // to the derive; bracketing the whole op is what protects the survivor's recovery).
+    expect(session.isWriteInFlight()).toBe(true)
+
+    let deferredFired = false
+    void session.whenNoWriteInFlight().then(() => {
+      deferredFired = true
+    })
+    await Promise.resolve()
+    expect(deferredFired).toBe(false) // a skipWaiting reload would NOT fire mid-restore
+
+    expect(await restoreP).toEqual({ ok: true })
+    expect(session.isWriteInFlight()).toBe(false)
+    await session.whenNoWriteInFlight()
+    expect(deferredFired).toBe(true) // …and only once the restore fully landed
+  })
+
+  it('restores over a DAMAGED vault end-to-end through the session, openable with the new passphrase', async () => {
+    const { db, session } = await vaultedSession()
+    const exported = await exportVault(db)
+    if (!exported.ok) throw new Error('export failed')
+    await session.lock()
+    await deleteRecord(db, 'recoveryWrap') // device-rot to a partial set
+    expect((await loadVault(db)).kind).toBe('damaged')
+
+    const newPass = await floorPass(NEW_PASSPHRASE)
+    expect(await session.restore(exported.file, RECOVERY_PASSPHRASE, newPass)).toEqual({ ok: true })
+
+    // restore installs no session state — the caller re-enters via unlock(newPassphrase).
+    const reopened = createSession(db)
+    expect((await reopened.unlock(NEW_PASSPHRASE)).ok).toBe(true)
+    expect(reopened.currentModel()).toEqual(MODEL)
+    await reopened.lock()
   })
 })
 

@@ -295,6 +295,22 @@ describe('sanity — R40 income entity-scalar ranges (fail-loud, the KTD-4 entit
     ])
   })
 
+  it('colaMode=fixed-pct with an OUT-OF-RANGE colaPct fires the range rule; boundary values pass (not over-strict)', () => {
+    // A fat-fingered 0.30 (30%/yr) compounds to fantasy real income the confidence fan is structurally
+    // blind to — the grounded ceiling (COLA_PCT_MAX, council 2026-07-01) is the sole defense. HARD
+    // refuse at the SAME 0.05 the restore codec + the form enforce (no intake↔codec desync).
+    const hot: IncomeStream = { ownerIndex: 0, type: 'pension', annualRealToday: 40_000, startAge: 60, colaMode: 'fixed-pct', colaPct: 0.3, survivorPct: 1 }
+    expect(validateField(incomeDraft([hot]), incomeField(0, 'colaPct'))).toMatchObject([
+      { rule: 'income-cola-pct-range', messageKey: 'errIncomeColaRange' },
+    ])
+    // NOT over-strict (insight 046/043): the inclusive ceiling (0.05), a real 3% COLA, flat 0, and a
+    // nominally-decaying stream (-0.02, the conservative non-sin direction) raise NOTHING.
+    for (const colaPct of [0.05, 0.03, 0, -0.02]) {
+      const ok: IncomeStream = { ownerIndex: 0, type: 'pension', annualRealToday: 40_000, startAge: 60, colaMode: 'fixed-pct', colaPct, survivorPct: 1 }
+      expect(validateField(incomeDraft([ok]), incomeField(0, 'colaPct'))).toEqual([])
+    }
+  })
+
   it('the taxable/exclusion range rules DISCRIMINATE by type — a cross-arm scalar on the wrong arm is IGNORED (no false fire)', () => {
     // A restored blob (JSON.parse + as) erases the discriminated union, so a corrupt
     // scalar on the wrong arm IS representable. The rule's `type ∈ {...}` guard is the

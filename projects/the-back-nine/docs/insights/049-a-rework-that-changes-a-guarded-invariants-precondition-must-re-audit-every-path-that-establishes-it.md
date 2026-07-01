@@ -69,3 +69,6 @@ An invariant enforced on one of N equivalent paths is enforced on none of the ot
   invariant) and [[027]] (a guard's predicate must match the hazard-creator's domain); the codec-range
   arm is the [[046]] "finiteness is not a range gate" lesson recurring on a *rate*, where — unlike a
   `[0,1]` fraction — the ceiling is a domain judgment that must be grounded, not guessed (burned/062).
+  The colaPct ceiling this review flagged-but-refused-to-guess was settled by the Council of Elders
+  (2026-07-01) at a cited `COLA_PCT_MAX = 0.05` — and the deeper reason it needs a HARD gate (the
+  confidence fan is structurally blind to the deterministic overlay) is [[050]].

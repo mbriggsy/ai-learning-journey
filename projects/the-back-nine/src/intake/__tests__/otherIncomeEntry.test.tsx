@@ -167,6 +167,32 @@ describe('OtherIncomeEntry — the no-safe-default atomic-commit gate (R40.7)', 
     expect(screen.getByRole('alert').textContent).toBe(copy.errIncomeColaPct)
   })
 
+  it('a fixed-pct stream with an OUT-OF-RANGE colaPct (30%/yr) never commits, and names the range error (the never-deplete sin)', () => {
+    const { onSave } = renderEntry(modelWithPeople())
+    fireEvent.click(screen.getByLabelText(copy.incomeTypePension))
+    setMoney(copy.incomeAmountLabel, '40000')
+    fireEvent.click(screen.getByLabelText(copy.incomeTimingNow))
+    fireEvent.click(screen.getByLabelText(copy.incomeColaFixed))
+    setMoney(copy.incomeSurvivorLabel, '100')
+    setMoney(copy.incomeColaPctLabel, '30') // 30%/yr — grossly above the 5% grounded ceiling
+    fireEvent.click(screen.getByRole('button', { name: copy.otherIncomeSave }))
+    expect(onSave).not.toHaveBeenCalled()
+    expect(screen.getByRole('alert').textContent).toBe(copy.errIncomeColaRange)
+  })
+
+  it('a fixed-pct stream with a real 3% colaPct commits — the ceiling is generous, never over-strict', () => {
+    const { onSave } = renderEntry(modelWithPeople())
+    fireEvent.click(screen.getByLabelText(copy.incomeTypePension))
+    setMoney(copy.incomeAmountLabel, '40000')
+    fireEvent.click(screen.getByLabelText(copy.incomeTimingNow))
+    fireEvent.click(screen.getByLabelText(copy.incomeColaFixed))
+    setMoney(copy.incomeSurvivorLabel, '100')
+    setMoney(copy.incomeColaPctLabel, '3') // 3%/yr — a real pension COLA, well inside the band
+    fireEvent.click(screen.getByRole('button', { name: copy.otherIncomeSave }))
+    expect(onSave).toHaveBeenCalledTimes(1)
+    expect(onSave.mock.calls[0]![0]).toMatchObject({ colaMode: 'fixed-pct', colaPct: 0.03 })
+  })
+
   it('alimony commits with survivorPct DERIVED to 0 (by law), carrying the agreement date', () => {
     const { onSave } = renderEntry(modelWithPeople())
     fireEvent.click(screen.getByLabelText(copy.incomeTypeAlimony))

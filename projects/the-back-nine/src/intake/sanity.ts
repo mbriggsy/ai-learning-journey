@@ -28,6 +28,7 @@
 import type { CopyKey } from '@ui/copy'
 import type { ScenarioDraft } from '@store/memoryModel'
 import type { AccountKind } from '@shared/model'
+import { colaRateInRange } from '@shared/incomeBounds'
 import {
   annualAdditions415c2026,
   catchUpForAge,
@@ -393,6 +394,25 @@ const RULES: readonly SanityRule[] = [
       d.incomeStreams.forEach((s, i) => {
         if (s.colaMode === 'fixed-pct' && (s.colaPct === undefined || !Number.isFinite(s.colaPct))) {
           out.push({ rule: 'income-cola-pct-required', field: incomeField(i, 'colaPct'), messageKey: 'errIncomeColaPct' })
+        }
+      })
+      return out
+    },
+  },
+  {
+    // A present-and-finite `fixed-pct` colaPct OUTSIDE the GROUNDED band [COLA_PCT_MIN, COLA_PCT_MAX]
+    // is a gross mis-entry (a 30%/yr COLA compounds to fantasy real income). Unlike the [0,1] shares
+    // above, a COLA is a RATE with no definitional bound, so the ceiling is a cited constant
+    // (@shared/incomeBounds, council 2026-07-01) — the SOLE defense, since the deterministic seedless
+    // overlay is invisible to the confidence fan. HARD refuse (mirrors the codec's needColaRate), same
+    // 0.05 as the form's refuse-to-commit, so intake and the restore codec cannot desync.
+    id: 'income-cola-pct-range',
+    target: (d) => d.incomeStreams.map((_, i) => incomeField(i, 'colaPct')),
+    check: (d) => {
+      const out: SanityViolation[] = []
+      d.incomeStreams.forEach((s, i) => {
+        if (s.colaMode === 'fixed-pct' && s.colaPct !== undefined && Number.isFinite(s.colaPct) && !colaRateInRange(s.colaPct)) {
+          out.push({ rule: 'income-cola-pct-range', field: incomeField(i, 'colaPct'), messageKey: 'errIncomeColaRange' })
         }
       })
       return out

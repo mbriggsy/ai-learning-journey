@@ -2,6 +2,7 @@ import { useId, useState } from 'react'
 import { copy, slots, type CopyKey } from '@ui/copy'
 import type { ColaMode, IncomeStream, IncomeTaxTreatment, IncomeType } from '@shared/model'
 import { INCOME_TYPES } from '@shared/model'
+import { colaRateInRange } from '@shared/incomeBounds'
 import type { ScenarioDraft } from '@store/memoryModel'
 import { CurrencyField, IntegerField, PercentField, SegmentedControl } from './fields'
 import { FieldError } from './FieldError'
@@ -70,6 +71,18 @@ export function survivorNoteFor(draft: ScenarioDraft, s: IncomeStream): string {
 /** A CONTINUING type surfaces the survivor-% (alimony terminates by law → 0). */
 const isContinuingType = (type: IncomeType | undefined): boolean =>
   type === 'pension' || type === 'rental' || type === 'annuity' || type === 'other'
+
+/** The field each in-range/format error belongs to — so the ONE rendered FieldError's id matches the
+ *  invalid field's `aria-describedby` (`err-income-<field>`), never a dangling reference (the field
+ *  set aria-invalid + pointed here, but the error had always rendered at `income.save`). The
+ *  required/missing errors have no single invalid field → they fall through to `income.save`. */
+const ERROR_OWNER_FIELD: Partial<Record<CopyKey, string>> = {
+  errIncomeColaPct: 'income.colaPct',
+  errIncomeColaRange: 'income.colaPct',
+  errIncomeSurvivorRange: 'income.survivorPct',
+  errIncomeTaxableRange: 'income.taxableFraction',
+  errIncomeExclusionRange: 'income.exclusionFraction',
+}
 
 export interface OtherIncomeEntryProps {
   readonly draft: ScenarioDraft
@@ -176,9 +189,18 @@ export function OtherIncomeEntry({ draft, initial, onSave, onCancel }: OtherInco
       if (form.startAge === undefined) return { ok: false, error: 'errIncomeStartAgeRequired' }
       startAge = form.startAge
     }
-    // fixed-pct requires a finite COLA rate (KTD-2 — never coerced to 0).
-    if (form.colaMode === 'fixed-pct' && (form.colaPct === undefined || !Number.isFinite(form.colaPct))) {
-      return { ok: false, error: 'errIncomeColaPct' }
+    // fixed-pct requires a finite COLA rate (KTD-2 — never coerced to 0)…
+    if (form.colaMode === 'fixed-pct') {
+      if (form.colaPct === undefined || !Number.isFinite(form.colaPct)) {
+        return { ok: false, error: 'errIncomeColaPct' }
+      }
+      // …AND within the grounded band. A rate outside it (a fat-fingered 30%/yr) compounds to fantasy
+      // real income the confidence fan is structurally blind to — the never-deplete sin. HARD refuse
+      // at the SAME 0.05 the restore codec enforces (@shared/incomeBounds, council 2026-07-01), never
+      // a soft override (nothing legitimate sits between the ceiling and the sin band).
+      if (!colaRateInRange(form.colaPct)) {
+        return { ok: false, error: 'errIncomeColaRange' }
+      }
     }
     // The optional advanced taxableFraction (pension/rental/other) — when entered,
     // it MUST be in range (out-of-range understates/over-states MAGI; never commits).
@@ -346,7 +368,7 @@ export function OtherIncomeEntry({ draft, initial, onSave, onCancel }: OtherInco
           helpKey="incomeColaPctHelp"
           field="income.colaPct"
           value={form.colaPct}
-          invalid={saveError === 'errIncomeColaPct'}
+          invalid={saveError === 'errIncomeColaPct' || saveError === 'errIncomeColaRange'}
           onEdit={() => setSaveError(null)}
           onCommit={(colaPct) => {
             setSaveError(null)
@@ -480,7 +502,9 @@ export function OtherIncomeEntry({ draft, initial, onSave, onCancel }: OtherInco
         )}
       </div>
 
-      {saveError !== null && <FieldError field="income.save" messageKey={saveError} />}
+      {saveError !== null && (
+        <FieldError field={ERROR_OWNER_FIELD[saveError] ?? 'income.save'} messageKey={saveError} />
+      )}
 
       <div className="account-entry-actions">
         <button type="button" className="btn-primary" onClick={save}>

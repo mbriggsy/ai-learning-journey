@@ -393,6 +393,21 @@ describe('v3 — the forward-written persist shape (U8, the first v3 writer)', (
     expect(decodeScenario(mutated(V3, (o) => { delete (o.incomeStreams as Obj[])[1]!.colaPct })).ok).toBe(true)
   })
 
+  it('income stream: fixed-pct colaPct outside the grounded band [-1, 0.05] is corruption; boundary values pass (not over-strict)', () => {
+    // A fat-fingered 0.30 (30%/yr) compounds to fantasy real income (~$689M/yr by year 40) the
+    // confidence fan is structurally BLIND to — this codec is the SOLE gate (COLA_PCT_MAX/MIN, council
+    // 2026-07-01). [0] is the fixed-pct pension stream. Out-of-range → corrupt.
+    const d = decodeScenario(mutated(V3, (o) => { (o.incomeStreams as Obj[])[0]!.colaPct = 0.3 }))
+    expect(d.ok).toBe(false)
+    if (!d.ok && d.reason === 'corrupt') expect(d.detail).toContain('incomeStreams[0].colaPct')
+    expect(decodeScenario(mutated(V3, (o) => { (o.incomeStreams as Obj[])[0]!.colaPct = -1.5 })).ok).toBe(false)
+    // NOT over-strict (insight 046/043): the inclusive ceiling (0.05), a real 3% COLA, flat (0),
+    // and a nominally-decaying stream (-0.02, the conservative non-sin direction) all decode ok.
+    for (const v of [0.05, 0.03, 0, -0.02]) {
+      expect(decodeScenario(mutated(V3, (o) => { (o.incomeStreams as Obj[])[0]!.colaPct = v })).ok).toBe(true)
+    }
+  })
+
   it('income stream tax-treatment union (KTD-6): alimony needs executedAfter2018; annuity non-qualified needs exclusionFraction', () => {
     expect(decodeScenario(mutated(V3, (o) => { delete (o.incomeStreams as Obj[])[1]!.executedAfter2018 })).ok).toBe(false) // [1] alimony
     expect(decodeScenario(mutated(V3, (o) => { (o.incomeStreams as Obj[])[1]!.executedAfter2018 = 'yes' })).ok).toBe(false)

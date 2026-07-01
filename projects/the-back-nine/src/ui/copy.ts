@@ -216,6 +216,8 @@ export const copy = {
   errIncomeTaxableRange: 'The taxable part is a number from 0 to 100 percent.',
   errIncomeExclusionRange: 'The tax-free part is a number from 0 to 100 percent.',
   errIncomeColaPct: 'A yearly raise needs a number when “rises a set percent” is chosen.',
+  errIncomeColaRange:
+    'Most cost-of-living raises run 2–3% a year, and even the most generous pensions and annuities top out around 5%. A yearly increase this high is almost always a typo — please re-check that number.',
   // The specific "still needed to save" lines — one per no-safe-default fact, so a
   // blocked Save always names what's missing in plain text (WCAG 3.3.1, never a
   // silent dead button). Declarative, calm — the form asks, it never scolds.

@@ -37,6 +37,7 @@ import {
   type ScenarioV2,
   type ScenarioV3,
 } from './model'
+import { COLA_PCT_MAX, COLA_PCT_MIN } from './incomeBounds'
 
 export type ScenarioDecode =
   | { readonly ok: true; readonly scenario: AnyScenario }
@@ -115,6 +116,21 @@ function needUnitFraction(o: Obj, field: string, path: string): void {
   needFinite(o, field, path)
   const n = o[field] as number
   if (n < 0 || n > 1) throw new Corrupt(`${path}.${field}: expected a fraction in [0, 1]`)
+}
+
+/** A fixed-pct COLA rate within the GROUNDED band [COLA_PCT_MIN, COLA_PCT_MAX] (finite FIRST — a NaN
+ *  passes every relational compare, insights 008/010). Unlike a [0,1] fraction, a COLA is a RATE with
+ *  no definitional bound, so the ceiling is a grounded plausibility bound (src/shared/incomeBounds.ts,
+ *  council 2026-07-01). This codec is the SOLE restore-path gate for this multiplied-away overlay
+ *  (KTD-4 sibling of needUnitFraction): the compile is deterministic + seedless, so the confidence fan
+ *  is structurally blind to an over-optimistic in-range COLA — an out-of-range value here is the
+ *  calm-but-wrong never-deplete sin (~$689M/yr from a fat-fingered 0.30), decoded as 'corrupt'. */
+function needColaRate(o: Obj, field: string, path: string): void {
+  needFinite(o, field, path)
+  const n = o[field] as number
+  if (n < COLA_PCT_MIN.value || n > COLA_PCT_MAX.value) {
+    throw new Corrupt(`${path}.${field}: expected a COLA rate in [${COLA_PCT_MIN.value}, ${COLA_PCT_MAX.value}]`)
+  }
 }
 
 /** Every present entry of an array of real $ must be finite (a null entry is the JSON shadow of
@@ -311,7 +327,7 @@ function checkIncomeStreamV3(v: unknown, peopleCount: number, path: string): voi
   needFinite(v, 'startAge', path)
   optFinite(v, 'endAge', path) // absent ≡ lifetime — never an Infinity/NaN sentinel (DND-009)
   needVocab(v, 'colaMode', COLA_MODES, path)
-  if (v.colaMode === 'fixed-pct') needFinite(v, 'colaPct', path)
+  if (v.colaMode === 'fixed-pct') needColaRate(v, 'colaPct', path)
   else optFinite(v, 'colaPct', path)
   needUnitFraction(v, 'survivorPct', path) // ∈ [0,1] — the codec is the sole [0,1] gate on restore (KTD-4)
   // The type-keyed tax-treatment union (KTD-6): each arm's required scalars.

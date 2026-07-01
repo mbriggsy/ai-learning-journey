@@ -15,7 +15,7 @@ import { expect, test } from '@playwright/test'
 import { resolve } from 'node:path'
 import { build } from 'vite'
 
-import type { KdfSpikeReport, TrustLoopReport } from './vaultHarness'
+import type { KdfSpikeReport, RecomputeSpikeReport, TrustLoopReport } from './vaultHarness'
 
 const CONTROL_ORIGIN = 'http://127.0.0.1:4181'
 const ROOT = resolve(import.meta.dirname, '..')
@@ -54,6 +54,7 @@ declare global {
       unlockFromSecondTab(): Promise<{ ok: boolean; readOnly: boolean; saveRefused: boolean }>
       releaseActiveWriter(): Promise<{ ok: boolean }>
       kdfSpike(): Promise<KdfSpikeReport>
+      recomputeSpike(): Promise<RecomputeSpikeReport>
     }
   }
 }
@@ -133,4 +134,32 @@ test('the KDF-location spike: measure whether PBKDF2-600k blocks the Chromium ma
   // WebCrypto on a background thread pool, so the expectation is NO blocking — this
   // assertion is the spike's recorded verdict, and a platform regression fails loud.
   expect(spike.maxGapDuringDeriveMs).toBeLessThan(Math.max(200, spike.controlMaxGapMs * 4 + 50))
+})
+
+test('the U8 decrypt-on-return recompute spike: the 16k-path "restoring…" wall-clock in a real renderer', async ({
+  page,
+}, testInfo) => {
+  // OPT-IN: three 16k sweeps (~24s). Reproducible on the reference device on demand, but
+  // skipped by default so it never taxes the CI CSP gate. Run:
+  //   PROFILE=1 pnpm exec playwright test vault.spec.ts -g "recompute spike"
+  test.skip(!process.env.PROFILE, 'perf profile — set PROFILE=1 to run (~24s of real 16k sweeps)')
+  await page.goto(CONTROL_ORIGIN)
+  await page.addScriptTag({ content: harnessBundle })
+  const spike = await page.evaluate(() => window.VaultHarness.recomputeSpike())
+
+  // Trustworthy measurement, not a pass/fail vibe: the profiled sweep must have really crowned
+  // dates (a rejected input measures validation, not compute) and produced finite, ordered times.
+  expect(spike.outcomeKind).toBe('dates')
+  expect(spike.finalSingleSimulateMs).toBeGreaterThan(0)
+  expect(spike.finalSweepMs).toBeGreaterThan(spike.finalSingleSimulateMs)
+
+  // The Fork-D recompute takes ONE of two shapes: a single 16k run (already-retired household →
+  // the spine headline) or the full 16k date sweep (still-working household). Both are the wait
+  // the "restoring…" state must honestly cover; combine with the kdf-spike deriveMs for the total.
+  const line =
+    `[recompute-spike] final-single-16k(retired spine)=${spike.finalSingleSimulateMs.toFixed(1)}ms ` +
+    `final-sweep-16k(working, ${spike.finalCandidateCount} candidates)=${spike.finalSweepMs.toFixed(1)}ms ` +
+    `ratioVsSingle=${spike.finalRatioVsSingle.toFixed(1)} provisional-sweep-2k=${spike.provisionalSweepMs.toFixed(1)}ms`
+  testInfo.annotations.push({ type: 'recompute-spike', description: line })
+  console.log(line)
 })

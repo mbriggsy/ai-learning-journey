@@ -11,7 +11,10 @@ import { checkPassphraseFloor, derivePassphraseKey } from '../src/crypto/kdf'
 import { clearVault, loadVault, openVaultDb } from '../src/store/db'
 import { exportVault, restoreVault } from '../src/store/backup'
 import { createSession, type VaultSession } from '../src/store/session'
-import type { Scenario } from '../src/shared/model'
+import { profileDateSearch } from '../src/engine/dateSearchProfile'
+import { validationMarket } from '../src/engine/reference/methodology'
+import type { DateSearchInput } from '../src/engine/dateSearch'
+import type { OverlayParams, PersonInputs, Scenario, SimulationParams } from '../src/shared/model'
 
 const MODEL: Scenario = {
   schemaVersion: 1,
@@ -193,5 +196,85 @@ export async function kdfSpike(): Promise<KdfSpikeReport> {
     maxGapDuringDeriveMs: derive.maxGap,
     controlMaxGapMs: control.maxGap,
     ticksDuringDerive: derive.ticks,
+  }
+}
+
+// ---------------------------------------------------------------------------
+// U8 decrypt-on-return: the recompute wall-clock ("restoring…" design gate).
+// ---------------------------------------------------------------------------
+
+/** A representative full-overlay fuck-off-date household — MIRRORS the engine's own
+ *  dateSearch.test.ts `coupleInput` (a 55/58 couple; tax + healthcare + accumulation ON), so
+ *  the measured 16k cost reflects the REAL production overlay machinery, not a bare spine. */
+const PROFILE_A: PersonInputs = {
+  sex: 'male', currentAge: 55, birthYear: 1971, retirementAge: 60,
+  earnedIncomeReal: 90_000, pia: 0, socialSecurityClaimAge: 70,
+}
+const PROFILE_B: PersonInputs = {
+  sex: 'female', currentAge: 58, birthYear: 1968, retirementAge: 63,
+  earnedIncomeReal: 70_000, pia: 0, socialSecurityClaimAge: 70,
+}
+const PROFILE_OVERLAY: OverlayParams = {
+  taxEnabled: true, rmdEnabled: false, startCalendarYear: 2026,
+  buckets: { taxable: 0, pretax: 1_000_000, roth: 0 }, filing: 'mfj',
+  healthcareEnabled: true,
+  enrolledPremium: Array.from({ length: 12 }, (_, t) => 10_000 + 100 * t),
+  slcsp: Array.from({ length: 12 }, (_, t) => 9_000 + 100 * t),
+  oopMedical: Array.from({ length: 12 }, (_, t) => 500 + 10 * t),
+}
+const PROFILE_PARAMS: SimulationParams = {
+  initialPortfolio: 1_000_000, annualSpendingReal: 60_000, stockWeight: 0.6,
+  people: [PROFILE_A, PROFILE_B], survivorSpendingRatio: 0.75,
+  drawdownPolicy: 'pre-tax-first', market: validationMarket.value,
+  paths: 2_000, maxHorizonYears: 40, longevityMode: 'fixed-horizon', overlay: PROFILE_OVERLAY,
+}
+const PROFILE_INPUT: DateSearchInput = {
+  params: {
+    ...PROFILE_PARAMS,
+    overlay: {
+      ...PROFILE_OVERLAY,
+      accumulation: {
+        contributionsByPerson: [
+          { pretax: Array.from({ length: 12 }, () => 20_000) },
+          { pretax: Array.from({ length: 12 }, () => 15_000) },
+        ],
+      },
+    },
+  },
+  workingYearIrmaaMagiByPerson: [90_000, 70_000],
+}
+
+export interface RecomputeSpikeReport {
+  /** ONE 16k-path `simulate` — the SPINE (already-retired) decrypt-on-return recompute cost. */
+  readonly finalSingleSimulateMs: number
+  /** The full 16k date sweep (window+1 candidates) — the DATE-route recompute cost (worst case). */
+  readonly finalSweepMs: number
+  readonly finalCandidateCount: number
+  readonly finalRatioVsSingle: number
+  /** The 2k provisional sweep — the interactive-refire tier, for contrast. */
+  readonly provisionalSweepMs: number
+  readonly outcomeKind: string
+}
+
+/**
+ * THE U8 "restoring…" DESIGN GATE: the real decrypt-on-return recompute wall-clock on THIS
+ * (reference) device's real JS engine. Fork D forces a tier:'final' (16k) recompute on
+ * hydrate; this measures both shapes it can take — the spine single-run (retired household)
+ * and the full date sweep (working household). Combine with kdfSpike().deriveMs for the total
+ * unlock→answer wait. Pure-engine timing (no worker round-trip) — a slight UNDER-estimate vs
+ * production (structured-clone + postMessage), same order of magnitude.
+ */
+export async function recomputeSpike(): Promise<RecomputeSpikeReport> {
+  const now = (): number => performance.now()
+  const seed = 0x0ddba11
+  const final = await profileDateSearch(PROFILE_INPUT, seed, 'final', now)
+  const provisional = await profileDateSearch(PROFILE_INPUT, seed, 'provisional', now)
+  return {
+    finalSingleSimulateMs: final.singleSimulateMs,
+    finalSweepMs: final.sweepMs,
+    finalCandidateCount: final.candidateCount,
+    finalRatioVsSingle: final.ratioVsSingle,
+    provisionalSweepMs: provisional.sweepMs,
+    outcomeKind: final.outcomeKind,
   }
 }

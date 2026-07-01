@@ -37,7 +37,7 @@ import {
   type ScenarioV2,
   type ScenarioV3,
 } from './model'
-import { COLA_PCT_MAX, COLA_PCT_MIN } from './incomeBounds'
+import { COLA_PCT_MAX, COLA_PCT_MIN, colaRateInRange } from './incomeBounds'
 
 export type ScenarioDecode =
   | { readonly ok: true; readonly scenario: AnyScenario }
@@ -128,7 +128,11 @@ function needUnitFraction(o: Obj, field: string, path: string): void {
 function needColaRate(o: Obj, field: string, path: string): void {
   needFinite(o, field, path)
   const n = o[field] as number
-  if (n < COLA_PCT_MIN.value || n > COLA_PCT_MAX.value) {
+  // Reuse the ONE shared predicate the two intake gates use (sanity.ts:414, OtherIncomeEntry.tsx:201)
+  // so all THREE gates run byte-identical range logic — the band's inclusivity can never silently
+  // desync via a hand-copied comparison (insight 020). needFinite ran first (colaRateInRange assumes a
+  // finite caller — a NaN passes every relational compare, insights 008/010).
+  if (!colaRateInRange(n)) {
     throw new Corrupt(`${path}.${field}: expected a COLA rate in [${COLA_PCT_MIN.value}, ${COLA_PCT_MAX.value}]`)
   }
 }

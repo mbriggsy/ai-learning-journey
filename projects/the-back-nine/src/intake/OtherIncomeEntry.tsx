@@ -84,6 +84,11 @@ const ERROR_OWNER_FIELD: Partial<Record<CopyKey, string>> = {
   errIncomeExclusionRange: 'income.exclusionFraction',
 }
 
+/** Errors whose owning field lives INSIDE the collapsed advanced tier. When Save blocks on one of
+ *  these, the tier must be revealed — else the calm `role="alert"` names an out-of-range field the
+ *  user can't see (and its `aria-describedby` target is unmounted). Only taxableFraction is advanced. */
+const ADVANCED_TIER_ERRORS: ReadonlySet<CopyKey> = new Set<CopyKey>(['errIncomeTaxableRange'])
+
 export interface OtherIncomeEntryProps {
   readonly draft: ScenarioDraft
   /** Pre-filled when editing a committed stream. */
@@ -273,7 +278,10 @@ export function OtherIncomeEntry({ draft, initial, onSave, onCancel }: OtherInco
     const result = buildStream()
     if (!result.ok) {
       // Always name the blocking fact (the calm "still need X" / "that's out of
-      // range" line) so the Save never refuses in silence.
+      // range" line) so the Save never refuses in silence. If the offending field
+      // is in the collapsed advanced tier, reveal it so the alert never points at a
+      // field the user can't see (nor at an unmounted aria-describedby target).
+      if (ADVANCED_TIER_ERRORS.has(result.error)) setShowAdvanced(true)
       setSaveError(result.error)
       return
     }

@@ -71,6 +71,17 @@ function renderEntry(model: MemoryModel, onSave = vi.fn(), initial?: IncomeStrea
   return { onSave }
 }
 
+/** Assert the calm error is reachable ON the field (the color-blind / screen-reader law the a11y
+ *  rider guarantees): the input carries aria-invalid AND its aria-describedby list RESOLVES to the
+ *  rendered alert node — never the pre-rider dangling `err-income-save`. `.split(' ').toContain`
+ *  (not a bare-id equality) because a field WITH help text carries a two-id describedby
+ *  (`{helpId} err-income-<field>`), so equality would spuriously fail. */
+const expectFieldBoundToAlert = (labelKey: string, alert: HTMLElement) => {
+  const field = screen.getByLabelText(labelKey)
+  expect(field).toHaveAttribute('aria-invalid', 'true')
+  expect(field.getAttribute('aria-describedby')?.split(' ') ?? []).toContain(alert.id)
+}
+
 afterEach(cleanup)
 
 describe('OtherIncomeEntry — type-conditional anatomy (the KTD-6 union as a form)', () => {
@@ -164,7 +175,9 @@ describe('OtherIncomeEntry — the no-safe-default atomic-commit gate (R40.7)', 
     // colaPct left EMPTY.
     fireEvent.click(screen.getByRole('button', { name: copy.otherIncomeSave }))
     expect(onSave).not.toHaveBeenCalled()
-    expect(screen.getByRole('alert').textContent).toBe(copy.errIncomeColaPct)
+    const alert = screen.getByRole('alert')
+    expect(alert.textContent).toBe(copy.errIncomeColaPct)
+    expectFieldBoundToAlert(copy.incomeColaPctLabel, alert)
   })
 
   it('a fixed-pct stream with an OUT-OF-RANGE colaPct (30%/yr) never commits, and names the range error (the never-deplete sin)', () => {
@@ -177,7 +190,14 @@ describe('OtherIncomeEntry — the no-safe-default atomic-commit gate (R40.7)', 
     setMoney(copy.incomeColaPctLabel, '30') // 30%/yr — grossly above the 5% grounded ceiling
     fireEvent.click(screen.getByRole('button', { name: copy.otherIncomeSave }))
     expect(onSave).not.toHaveBeenCalled()
-    expect(screen.getByRole('alert').textContent).toBe(copy.errIncomeColaRange)
+    const alert = screen.getByRole('alert')
+    expect(alert.textContent).toBe(copy.errIncomeColaRange)
+    // The a11y rider (ERROR_OWNER_FIELD) exists so this error is reachable ON the colaPct field —
+    // the invalid input carries aria-invalid AND an aria-describedby that resolves to THIS alert
+    // (never the pre-rider dangling `err-income-save`). Deleting the map entry or the range arm of
+    // the field's `invalid=` prop re-breaks the color-blind / screen-reader guarantee — and now
+    // trips this assertion instead of shipping green.
+    expectFieldBoundToAlert(copy.incomeColaPctLabel, alert)
   })
 
   it('a fixed-pct stream with a real 3% colaPct commits — the ceiling is generous, never over-strict', () => {
@@ -413,6 +433,28 @@ describe('OtherIncomeEntry — the in-form RANGE gate + the always-announce-on-b
     expect(onSave).not.toHaveBeenCalled()
     expect(screen.getByRole('alert').textContent).toBe(copy.errIncomeTaxableRange)
     expect(screen.getByLabelText(copy.incomeTaxableLabel)).toHaveAttribute('aria-invalid', 'true')
+  })
+
+  it('an advanced-tier error whose field was COLLAPSED before Save re-reveals the tier — the alert never points at a hidden field', () => {
+    // The ERROR_OWNER_FIELD map routes errIncomeTaxableRange to a field that lives in the collapsed
+    // advanced tier. Without the reveal, a blocked Save announces a role=alert whose owning field (and
+    // its aria-describedby target) is unmounted — an orphan alert. Save must re-open the tier.
+    const { onSave } = renderEntry(modelWithPeople())
+    fireEvent.click(screen.getByLabelText(copy.incomeTypePension))
+    setMoney(copy.incomeAmountLabel, '30000')
+    fireEvent.click(screen.getByLabelText(copy.incomeTimingNow))
+    fireEvent.click(screen.getByLabelText(copy.incomeColaReal))
+    setMoney(copy.incomeSurvivorLabel, '50')
+    fireEvent.click(screen.getByRole('button', { name: copy.incomeAdvancedToggle })) // open advanced
+    setMoney(copy.incomeTaxableLabel, '150') // → 1.5, impossible
+    fireEvent.click(screen.getByRole('button', { name: copy.incomeAdvancedToggle })) // collapse it again
+    expect(screen.queryByLabelText(copy.incomeTaxableLabel)).toBeNull() // the offending field is hidden…
+    fireEvent.click(screen.getByRole('button', { name: copy.otherIncomeSave }))
+    expect(onSave).not.toHaveBeenCalled()
+    // …and the blocked Save re-reveals the tier, so the alert's field is visible AND bound to it.
+    const alert = screen.getByRole('alert')
+    expect(alert.textContent).toBe(copy.errIncomeTaxableRange)
+    expectFieldBoundToAlert(copy.incomeTaxableLabel, alert)
   })
 
   it('a blocked Save ALWAYS names the missing fact (WCAG 3.3.1) — never a silent dead button on the survivor-% miss', () => {

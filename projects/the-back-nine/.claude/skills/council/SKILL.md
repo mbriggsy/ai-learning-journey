@@ -46,7 +46,7 @@ When in doubt, let the **clerk's triage** decide — it short-circuits to "oracl
    - **`light`** — a small reversible fork (naming, a tick placement, a refactor shape). Roster = `clerk` + the 2–3 most relevant openers + `red-team` + `chair`. No rebuttal round.
    - **`full`** — honesty-critical, scope, product-direction, taste, or anything touching the engine/correctness. Roster = `clerk` + **all 8** openers + `red-team` + `chair`, **with** a rebuttal round. Default to `full` whenever honesty or correctness is in play.
 
-3. **Pick the openers.** The elder charters are **baked into the workflow** — single source of truth, editable in `.claude/workflows/council.js` (the `CHARTERS` block; project agents don't resolve as `agentType`, so charters live in the script, not separate files). For a `full` council, seat all six (omit `openers`). For a `light` council, pass `openers` = the ids whose lens the issue touches; the **Honesty Hawk is always seated** regardless. Opener ids: `architect`, `minimalist`, `craftsman`, `advocate`, `fiduciary-advisor` (+ the always-on `honesty-hawk`). The clerk, red team, and chair are always seated.
+3. **Pick the openers.** The elder charters are **baked into the workflow** — single source of truth, editable in `.claude/workflows/council.js` (the `CHARTERS` block; project agents don't resolve as `agentType`, so charters live in the script, not separate files). For a `full` council, omit `openers`: the six core openers seat automatically, and the workflow **auto-seats the UI specialists** (`design-engineer`, `motion-designer`, `a11y-auditor`) when the issue reads as UI/visual/motion/a11y, or the **security engineer** (`security-engineer`) when it reads as crypto/threat-model/at-rest — the same regex signal the clerk uses to load the design/security law. For a `light` council, pass `openers` = the ids whose lens the issue touches; the **Honesty Hawk is always seated** regardless. Core opener ids: `architect`, `minimalist`, `craftsman`, `advocate`, `fiduciary-advisor` (+ the always-on `honesty-hawk`); nameable specialists: `design-engineer`, `motion-designer`, `a11y-auditor`, `security-engineer`. The clerk, red team, and chair are always seated.
 
 4. **Invoke the workflow** (each elder runs in its own fresh context window — Briggsy's hard constraint, satisfied by construction):
    ```
@@ -81,19 +81,29 @@ When you surface, lead with the rec (per Briggsy's standing rule — never a bar
 
 ## The roster (why each seat exists)
 
-Each elder is a **pole of a real project value-tension**, so the debate is genuine, not a chorus:
+Each elder is a **pole of a real project value-tension**, so the debate is genuine, not a chorus. **The authoritative roster and the full charters live in `.claude/workflows/council.js` (the `CHARTERS` block) — that is the single source of truth. This section only *sketches* the seats for orientation; never re-derive a charter from here, and if the two disagree, the workflow wins.**
+
+**Always seated** — the **Clerk** (pre-step: builds the cited dossier, triages oracle-settled issues), the **Red Team** (refutes the emerging consensus; no value to defend), the **Chair** (synthesizes; no vote-counting; classifies the tier).
+
+**Core openers** — a `full` council seats all six; the Honesty Hawk is seated even on a `light` council:
 
 | Elder | Guards | Tension pole |
 |---|---|---|
 | **Honesty Hawk** | calm-but-wrong is the sin; omissions named with direction; the hedge on the headline | Honesty / Conservative-or-disclose — **holds a VETO** |
-| **Architect** | CRN, reduce-to-spine byte-identity, engine purity, constants discipline | Engine-purity |
+| **Architect** | CRN / single shared draw, reduce-to-spine byte-identity, engine purity, constants discipline | Engine-purity |
 | **Minimalist** | bounded on-ramp not FIRE, ~5-min path, the one job | Simplicity / scope |
 | **Craftsman** | the water-beads bar; pixel + flow integrity | Craft / WOW — **defers final taste to Briggsy** |
 | **Advocate** | the scared non-expert user betting real money; color-blind-safe; plain language | User-empathy / accessibility |
 | **Fiduciary Advisor** | sound retirement advice, not just sound engineering | Domain authority |
-| **Red Team** | refutes the consensus; hunts the calm-but-wrong failure | Adversary (no value to defend) |
-| **Chair** | weighs the debate; no vote-counting; classifies the tier | Synthesizer |
-| **Clerk** (pre-step) | the cited dossier every elder grounds in; triages oracle-settled issues | Grounding |
+
+**Specialist openers** — kept OUT of the default six (so an engine- or scope-only council isn't diluted); **auto-seated on a `full` council when the issue matches**, and always nameable in `openers`:
+
+| Elder | Guards | Seats when |
+|---|---|---|
+| **Design Engineer** | implementation craft: semantic HTML, design-tokens-as-SoT, CSP-clean, one unforked seam | UI / visual / layout issue |
+| **Motion Designer** | how the UI moves: calm/intentional timing + easing, honest reduced-motion, the motion@12 trap | UI / motion issue |
+| **Accessibility Auditor** | the measurable conformance conscience: WCAG 2.2 AA, screen-reader pass, color-blind-safe as a *tested* assertion | UI / a11y issue |
+| **Security Engineer** | applied crypto + threat model: at-rest exposure, entropy-vs-stretching, survivor recoverability | crypto / threat-model / at-rest issue |
 
 ---
 

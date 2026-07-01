@@ -54,12 +54,15 @@ export default function IntakeApp({ seed }: { seed?: string | null }) {
     await appModel.recompute('final')
   }, [])
   const review = useCallback(() => setPhase('intake'), [])
-  // Re-entering intake after a Save edits the saved scenario — the "saved" badge no longer holds
-  // (the on-screen answer may now differ from what's on disk), so it clears on review.
-  const reviewAfterSave = useCallback(() => {
-    setSaved(false)
-    setPhase('intake')
-  }, [])
+  // INTERIM (U8 review, ①-family): `saved` is STICKY. The prior code cleared it on review so the
+  // user could re-save an edit — but the only save path is SaveFlow→firstSave, and firstSave rejects
+  // a second call with 'not-locked' (the singleton is already 'unlocked'), which mapped to the
+  // transient-sounding "Saving didn't finish. Try again." — a retry that can NEVER succeed, silently
+  // dropping the edit. Keeping `saved` true suppresses the re-save CTA (onKeep below), so the lying
+  // dead-end is unreachable. The PROPER fix lands in decrypt-on-return SLICE 2: a same-session edit
+  // re-saves through the existing writable()-gated session.save() update path (no ceremony — the keys
+  // are resident), and the badge becomes edit-aware. Until then the badge reflects "a plan is saved
+  // on this device", which stays true.
 
   // DEV-only `?seed=<key>`: apply a COMPLETE fixture to the in-memory appModel and
   // run the SAME terminal-advance path `complete()` runs (apply → result →
@@ -102,7 +105,7 @@ export default function IntakeApp({ seed }: { seed?: string | null }) {
   if (phase === 'result' || phase === 'save') {
     return (
       <Result
-        onReview={saved ? reviewAfterSave : review}
+        onReview={review}
         onKeep={saveReady.ready && !saved ? () => setPhase('save') : undefined}
         saved={saved}
       />

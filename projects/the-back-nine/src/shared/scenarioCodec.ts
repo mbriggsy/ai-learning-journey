@@ -245,6 +245,21 @@ function checkTickerClassification(v: unknown, path: string): void {
     needFinite(v, 'stockPct', path)
     needFinite(v, 'bondPct', path)
     needFinite(v, 'cashPct', path)
+    // The exact blend is collapsed downstream by stockWeightForBlend (tickerBlend.ts:1596), which
+    // THROWS on any negative component or a zero sum — an UNCAUGHT throw in the hydrate/render builder,
+    // never a calm typed failure. The codec is the SOLE restore-path gate, so mirror that exact
+    // invariant here (insight 027: derive the guard from the hazard-creator's own domain) → a damaged
+    // blend decodes as calm 'corrupt', never a downstream crash. Shares need not sum to 1 (the collapse
+    // renormalizes by the actual sum); only ≥ 0 and a positive sum are load-bearing.
+    const stockPct = v.stockPct as number
+    const bondPct = v.bondPct as number
+    const cashPct = v.cashPct as number
+    if (stockPct < 0 || bondPct < 0 || cashPct < 0) {
+      throw new Corrupt(`${path}: blend components must be ≥ 0`)
+    }
+    if (stockPct + bondPct + cashPct <= 0) {
+      throw new Corrupt(`${path}: blend must not sum to zero`)
+    }
   }
 }
 

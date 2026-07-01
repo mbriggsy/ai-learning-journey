@@ -245,6 +245,22 @@ describe('negative pairing (proven, not believed)', () => {
     expect(await loadVault(db)).toEqual({ kind: 'no-vault' }) // nothing partial landed
   })
 
+  it('refuses when the NEW daily passphrase equals the recovery credential — mirrors firstSave on the survivor door', async () => {
+    const { db, session } = await vaulted()
+    const exported = await exportVault(db)
+    if (!exported.ok) throw new Error('export failed')
+    await session.lock()
+    await clearVault(db)
+
+    // The survivor reuses their one memorable recovery word as the new daily passphrase — the exact
+    // collision firstSave hard-blocks (session.ts:321). The export file (recoveryWrap only) would then
+    // be openable by the everyday passphrase, so restore must refuse it just as firstSave does — and
+    // nothing may land on disk (a rejected restore leaves the wiped state untouched).
+    const restored = await restoreVault(db, exported.file, RECOVERY_PASSPHRASE, await floorPass(RECOVERY_PASSPHRASE))
+    expect(restored).toEqual({ ok: false, reason: 'recovery-equals-passphrase' })
+    expect(await loadVault(db)).toEqual({ kind: 'no-vault' })
+  })
+
   it('a tampered MODEL ciphertext with the CORRECT recovery passphrase → file-damaged (context distinguishes damage from a wrong credential)', async () => {
     const { db, session } = await vaulted()
     const exported = await exportVault(db)

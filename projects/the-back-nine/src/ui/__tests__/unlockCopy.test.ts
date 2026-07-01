@@ -39,11 +39,26 @@ describe('describeUnlockFailure — the honesty-critical error mapping', () => {
     expect(describeUnlockFailure({ ok: false, reason: 'not-locked' })).toEqual({ kind: 'plain', key: 'unlockGeneric' })
   })
 
-  it('the input type is the real backend failure union (compile-time exhaustiveness)', () => {
-    // A representative value typed as the real union — if the backend adds a reason and the
-    // seam is not updated, this assignment (and the switch) fail to compile.
-    const f: UnlockFailure = { ok: false, reason: 'wrong-passphrase' }
-    expect(describeUnlockFailure(f).kind).toBe('plain')
+  it('every backend failure reason is explicitly mapped — none falls through (the never-default is the compile-time guard)', () => {
+    // The real exhaustiveness guarantee is COMPILE-TIME: describeUnlockFailure's `default: const
+    // _exhaustive: never = failure.reason` cannot compile if the backend adds a reason without calm
+    // copy. This is the runtime companion — EVERY reason the two backend unions can carry resolves to
+    // a real message (never the old silent fall-through to unlockGeneric, never the fail-loud throw).
+    const allReasons: UnlockFailure[] = [
+      { ok: false, reason: 'cancelled' },
+      { ok: false, reason: 'wrong-passphrase' },
+      { ok: false, reason: 'wrong-recovery-passphrase' },
+      { ok: false, reason: 'data-damaged', detail: '' },
+      { ok: false, reason: 'newer-version', got: 9 },
+      { ok: false, reason: 'no-vault' },
+      { ok: false, reason: 'open-in-another-tab' },
+      { ok: false, reason: 'not-locked' },
+    ]
+    for (const f of allReasons) {
+      const m = describeUnlockFailure(f) // throws (never default) if a reason is ever left unmapped
+      if (f.reason === 'cancelled') expect(m).toEqual({ kind: 'silent' })
+      else expect(m.kind === 'plain' && copy[m.key].length > 0).toBe(true)
+    }
   })
 })
 

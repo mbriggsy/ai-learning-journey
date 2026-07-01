@@ -44,7 +44,11 @@ export type UnlockMessage =
  * newer distinction is encoded HERE, once.
  */
 export function describeUnlockFailure(failure: UnlockFailure): UnlockMessage {
-  switch (failure.reason) {
+  // Switch on the captured discriminant (not `failure.reason` inline) so the default narrows a
+  // string-literal union to `never` — narrowing the whole `failure` object to `never` instead makes
+  // `.reason` an error on `never` rather than the clean exhaustiveness binding below.
+  const reason = failure.reason
+  switch (reason) {
     case 'cancelled':
       return { kind: 'silent' }
 
@@ -63,9 +67,19 @@ export function describeUnlockFailure(failure: UnlockFailure): UnlockMessage {
     case 'open-in-another-tab':
       return { kind: 'plain', key: 'unlockOpenElsewhere' }
     case 'not-locked':
+      // A benign non-failure (the session simply wasn't locked) — a calm catch-all, no alarm.
       return { kind: 'plain', key: 'unlockGeneric' }
+    default: {
+      // Compile-time exhaustiveness + runtime fail-loud (the sequencing.ts pattern): a NEW backend
+      // fail reason makes this `never` assignment fail to compile until it is given calm copy above —
+      // the guarantee this seam's header + test claim. The prior trailing `return unlockGeneric`
+      // silently swallowed an unmapped reason into the no-alarm generic (insight 048: calm-but-wrong
+      // on the honesty-critical decrypt-on-return surface). Unreachable while the types are honest
+      // (same-realm typed input, never worker-crossed), so the throw never faces a user.
+      const _exhaustive: never = reason
+      throw new Error(`describeUnlockFailure: unmapped reason ${String(_exhaustive)}`)
+    }
   }
-  return { kind: 'plain', key: 'unlockGeneric' }
 }
 
 /**

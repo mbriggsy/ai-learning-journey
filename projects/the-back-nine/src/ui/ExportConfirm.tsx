@@ -6,7 +6,7 @@
  * dependency, so the gate can always be cleared. No remind-me-later bypass: Finish is
  * `aria-disabled` (never native `disabled`) until the backup is saved by some channel.
  */
-import { useEffect, useId, useRef, useState } from 'react'
+import { useCallback, useEffect, useId, useRef, useState } from 'react'
 import { copy } from './copy'
 import { focusHeading } from '@intake/a11y'
 import type { Announcer } from '@intake/a11y'
@@ -30,17 +30,33 @@ export function ExportConfirm({
   const [showText, setShowText] = useState(false)
   const [confirmKey, setConfirmKey] = useState<'exportDownloaded' | 'exportCopied' | null>(null)
   const [copyFailed, setCopyFailed] = useState(false)
+  const [exportError, setExportError] = useState(false)
 
-  // Produce the backup from the committed vault on mount (firstSave already committed it).
+  // Read the just-committed vault back into a backup file (firstSave already committed it). A failure
+  // here is RARE — the vault is on disk — but it MUST surface: the {ok:false} arm OR a rejected
+  // read (an IndexedDB read transaction can throw) would otherwise leave `fileText` null, disabling
+  // every channel and leaving Finish un-clearable with NO error — stranding the user on the one gate
+  // whose whole purpose is the survivor's off-device artifact. A calm message + retry, never silence.
+  const mounted = useRef(true)
   useEffect(() => {
-    let alive = true
-    void exportVaultFile().then((r) => {
-      if (alive && r.ok) setFileText(r.file)
-    })
+    mounted.current = true
     return () => {
-      alive = false
+      mounted.current = false
     }
   }, [])
+  const loadBackup = useCallback(() => {
+    setExportError(false)
+    void exportVaultFile()
+      .then((r) => {
+        if (!mounted.current) return
+        if (r.ok) setFileText(r.file)
+        else setExportError(true)
+      })
+      .catch(() => {
+        if (mounted.current) setExportError(true)
+      })
+  }, [])
+  useEffect(() => loadBackup(), [loadBackup])
 
   // A persistent object URL for the download anchor; revoked on change/unmount.
   useEffect(() => {
@@ -87,38 +103,53 @@ export function ExportConfirm({
       <p className="save-step__intro save-step__intro--secondary">{copy.exportEntropyNote}</p>
       <p className="save-step__intro save-step__intro--secondary">{copy.exportEstateNote}</p>
 
-      <div className="save-export">
-        {downloadUrl && (
-          <a
-            className="btn-primary save-export__channel"
-            href={downloadUrl}
-            download={BACKUP_FILENAME}
-            onClick={() => markExported('exportDownloaded')}
-          >
-            {copy.exportDownload}
-          </a>
-        )}
-        <button type="button" className="btn-quiet save-export__channel" disabled={fileText === null} onClick={() => void handleCopy()}>
-          {copy.exportCopy}
-        </button>
-        <button type="button" className="btn-quiet save-export__channel" disabled={fileText === null} onClick={() => setShowText(true)}>
-          {copy.exportShowText}
-        </button>
-      </div>
+      {exportError ? (
+        <>
+          <p className="save-step__note" role="alert">
+            {copy.exportUnavailable}
+          </p>
+          <div className="save-actions">
+            <button type="button" className="btn-primary" onClick={loadBackup}>
+              {copy.exportRetry}
+            </button>
+          </div>
+        </>
+      ) : (
+        <>
+          <div className="save-export">
+            {downloadUrl && (
+              <a
+                className="btn-primary save-export__channel"
+                href={downloadUrl}
+                download={BACKUP_FILENAME}
+                onClick={() => markExported('exportDownloaded')}
+              >
+                {copy.exportDownload}
+              </a>
+            )}
+            <button type="button" className="btn-quiet save-export__channel" disabled={fileText === null} onClick={() => void handleCopy()}>
+              {copy.exportCopy}
+            </button>
+            <button type="button" className="btn-quiet save-export__channel" disabled={fileText === null} onClick={() => setShowText(true)}>
+              {copy.exportShowText}
+            </button>
+          </div>
 
-      {confirmKey && <p className="save-export__confirm">{copy[confirmKey]}</p>}
-      {copyFailed && <p className="save-step__note">{copy.exportTextHint}</p>}
+          {confirmKey && <p className="save-export__confirm">{copy[confirmKey]}</p>}
+          {copyFailed && <p className="save-step__note">{copy.exportTextHint}</p>}
 
-      {showText && fileText !== null && (
-        <div className="save-export__text">
-          <label className="save-field__label" htmlFor={textId}>
-            {copy.exportTextHint}
-          </label>
-          <textarea id={textId} className="save-export__textarea" readOnly value={fileText} rows={6} />
-          <button type="button" className="btn-quiet" onClick={() => markExported(null)}>
-            {copy.exportTextSaved}
-          </button>
-        </div>
+          {showText && fileText !== null && (
+            <div className="save-export__text">
+              <label className="save-field__label" htmlFor={textId}>
+                {copy.exportTextHint}
+              </label>
+              <textarea id={textId} className="save-export__textarea" readOnly value={fileText} rows={6} />
+              <button type="button" className="btn-quiet" onClick={() => markExported(null)}>
+                {copy.exportTextSaved}
+              </button>
+            </div>
+          )}
+        </>
       )}
 
       <div className="save-actions">

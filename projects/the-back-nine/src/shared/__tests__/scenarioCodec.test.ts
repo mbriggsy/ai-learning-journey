@@ -369,6 +369,16 @@ describe('v3 — the forward-written persist shape (U8, the first v3 writer)', (
     expect(decodeScenario(mutated(V3, (o) => { (o.enteredAccounts as Obj[])[0]!.manualBlend = { kind: 'exact', stockPct: 60, bondPct: 35 } })).ok).toBe(false)
   })
 
+  it('the exact blend rejects a negative component and a zero-sum blend (mirrors stockWeightForBlend, which throws downstream)', () => {
+    // stockWeightForBlend (tickerBlend.ts:1596) throws on any negative component or a zero sum — an
+    // UNCAUGHT crash in the hydrate/render builder. The codec is the sole restore-path gate, so it must
+    // surface these as calm 'corrupt' BEFORE the collapse (a finite-only check let them through).
+    expect(decodeScenario(mutated(V3, (o) => { (o.tickerClassifications as Obj).VFIAX = { kind: 'exact', stockPct: -50, bondPct: 100, cashPct: 50 } })).ok).toBe(false)
+    expect(decodeScenario(mutated(V3, (o) => { (o.tickerClassifications as Obj).VFIAX = { kind: 'exact', stockPct: 0, bondPct: 0, cashPct: 0 } })).ok).toBe(false)
+    // the same guard on an account's manualBlend
+    expect(decodeScenario(mutated(V3, (o) => { (o.enteredAccounts as Obj[])[0]!.manualBlend = { kind: 'exact', stockPct: -1, bondPct: 1, cashPct: 0 } })).ok).toBe(false)
+  })
+
   it('health: a present scalar must be finite; a MAGI array with a null entry rejects; all-absent passes', () => {
     expect(decodeScenario(mutated(V3, (o) => { (o.health as Obj).slcspMonthlyToday = null })).ok).toBe(false)
     expect(decodeScenario(mutated(V3, (o) => { (o.health as Obj).irmaaMagiSeed = [180_000, null] })).ok).toBe(false)

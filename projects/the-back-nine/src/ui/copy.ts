@@ -421,6 +421,12 @@ export const copy = {
   exportTextSaved: 'I’ve saved the text',
   exportBlocked: 'Save a backup to finish — by download, copy, or the text above.',
   exportFinish: 'Finish',
+  // The rare case where reading the just-committed vault back into a file fails (a storage
+  // read hiccup). The plan itself is already on disk — only the backup copy didn't build — so
+  // the message reassures and offers a retry, never a silent dead-end on this mandatory gate.
+  exportUnavailable:
+    'Couldn’t prepare your backup just now. Your plan is already saved on this device — try again to make your backup copy.',
+  exportRetry: 'Try again',
 
   // --- step 5: complete ---
   savedHeading: 'Your plan is saved',

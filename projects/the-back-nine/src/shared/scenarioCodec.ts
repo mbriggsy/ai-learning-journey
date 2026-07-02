@@ -350,17 +350,23 @@ function checkIncomeStreamV3(v: unknown, peopleCount: number, path: string): voi
   }
 }
 
-/** One {@link BudgetLineItem} (P3·U9) — shape only (the two-gate rule: domain ranges like
- *  non-negative amounts are the engine/intake gates' job — a bad value compiles into a
- *  profile `validateParams` rejects to a calm indeterminate). The WINDOW relation is
- *  structural (the ownerIndex-bounds precedent): a reversed window has no meaning any
- *  layer can compute on, so it is named corruption here. `endYear` ABSENT = lifelong
- *  (DND-009 — a null/Infinity in the slot is corruption, never coerced). */
+/** One {@link BudgetLineItem} (P3·U9) — shape PLUS the one amount-domain rule the engine
+ *  cannot backstop: NON-NEGATIVITY is checked HERE because the engine's gate sees only
+ *  the POST-SUMMATION profile — an offsetting pair (+200/−100, same tier + window) nets
+ *  to a positive slot and sails past `validateParams`, silently UNDERSTATING spend (the
+ *  optimistic cardinal direction). That is insight 046's netted-away class, which the
+ *  two-gate rule assigns to the codec (the sole restore gate for values multiplied/summed
+ *  away before the engine). The WINDOW relation is structural (the ownerIndex-bounds
+ *  precedent): a reversed window has no meaning any layer can compute on. `endYear`
+ *  ABSENT = lifelong (DND-009 — a null/Infinity in the slot is corruption, never coerced). */
 function checkBudgetLineItemV3(v: unknown, path: string): void {
   needObject(v, path)
   needVocab(v, 'category', BUDGET_CATEGORIES, path)
   needString(v, 'label', path)
   needFinite(v, 'annualAmountReal', path)
+  if ((v.annualAmountReal as number) < 0) {
+    throw new Corrupt(`${path}.annualAmountReal: must be ≥ 0 (an offsetting negative nets past the engine's post-summation gate)`)
+  }
   needVocab(v, 'tier', BUDGET_TIERS, path)
   needInteger(v, 'startYear', path)
   const start = v.startYear as number

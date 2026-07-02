@@ -405,6 +405,7 @@ describe('C3 — the compute-profile gate (both regimes, the pinned final tier)'
     const profile = await profileDateSearch(twoRegime, 31415, 'final', () => performance.now())
     expect(profile.outcomeKind).toBe('dates') // a rejected input would measure validation, not compute
     expect(profile.candidateCount).toBe(11)
+    expect(profile.passesPerCandidate).toBe(1) // budget-less input — the P3·U9 rebaseline's 1-arm pin
     expect(Number.isFinite(profile.singleSimulateMs)).toBe(true)
     expect(profile.sweepMs).toBeGreaterThan(profile.singleSimulateMs) // the sweep really ran the window
     // LINEARITY: ≈ 11 single runs + validation. A quadratic regression (re-draw / re-validate

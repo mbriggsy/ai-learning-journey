@@ -925,6 +925,23 @@ export function validateParams(params: SimulationParams): string | null {
           return `budget floor-track essentials at sim-year ${t} is below the out-of-pocket medical the HSA cap is sized off — the floor cannot budget below qualified medical (the containment premise)`
       }
     }
+    // THE RECONCILIATION BACKSTOP (U9a review fold, 2026-07-02): whenever a budget rides,
+    // `annualSpendingReal` MUST equal the compiled year-0 full-track total (sticky +
+    // scalableEssentials + discretionary at k=0). The store's `budgetDraftPatch` maintains
+    // the invariant atomically, but the engine cannot see WHO wrote the scalar — a second,
+    // budget-blind writer (the spend question, a tampered vault) would desync them and the
+    // headline's dollar grammar (`buildDollar` reads the scalar) would render an OPTIMISTIC
+    // spend the budget never funds: the cardinal direction, invisible to every other gate.
+    // Fail loud to the calm indeterminate instead (the buckets-sum-to-portfolio precedent).
+    // Relative tolerance absorbs float summation-order dust between the compile's slot adds
+    // and the reconciliation helper's running total.
+    const yearZeroFull = (bud.sticky[0] ?? 0) + (bud.scalableEssentials[0] ?? 0) + (bud.discretionary[0] ?? 0)
+    if (
+      Math.abs(yearZeroFull - params.annualSpendingReal) >
+      1e-6 * Math.max(1, Math.abs(params.annualSpendingReal))
+    ) {
+      return 'budget does not reconcile: annualSpendingReal must equal the budget’s year-0 full-track total (the reconciliation invariant)'
+    }
   }
   return null
 }

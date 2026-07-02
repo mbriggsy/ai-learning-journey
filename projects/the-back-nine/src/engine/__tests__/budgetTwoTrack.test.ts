@@ -146,7 +146,9 @@ describe('U9 · the degenerate-identity golden (build-gate b)', () => {
 
 describe('U9 · the reachable tier-ordering law (build-gate d)', () => {
   it('full-success ⊆ floor-success PATH-FOR-PATH, floor never depletes earlier, and the discretionary gap is genuinely stressed (presence companion)', () => {
-    const base = coupleParams({})
+    // annualSpendingReal reconciles to the year-0 full total (40 + 35 — the invariant the
+    // engine's backstop now enforces on every budget-carrying run).
+    const base = coupleParams({ annualSpendingReal: 75 })
     const budget = compileBudget(
       [line({ annualAmountReal: 40 }), line({ tier: 'discretionary', annualAmountReal: 35, label: 'Travel' })],
       undefined,
@@ -299,10 +301,15 @@ describe('U9 · the containment gate (build-gate a — fail-loud, never the sile
     buckets: { taxable: 500, pretax: 400, roth: 100 },
     initialTaxableBasis: 400,
   }
-  const withOverlay = (oop: number | undefined, budget: ReturnType<typeof compileBudget>): SimulationParams =>
+  const withOverlay = (
+    oop: number | undefined,
+    budget: ReturnType<typeof compileBudget>,
+    annualSpendingReal: number,
+  ): SimulationParams =>
     coupleParams({
       people,
       initialPortfolio: 1000,
+      annualSpendingReal, // reconciled to the compiled year-0 full total per fixture
       longevityMode: 'fixed-horizon',
       maxHorizonYears: H,
       budget,
@@ -315,20 +322,32 @@ describe('U9 · the containment gate (build-gate a — fail-loud, never the sile
   it('a budget whose floor essentials dip below oopMedical[t] is REJECTED with the named containment reason', () => {
     // Compiled WITHOUT the injection (the planted fail): essentials 5 < oop 7.
     const starved = compileBudget([line({ annualAmountReal: 5 })], undefined, H)
-    const reason = validateParams(withOverlay(7, starved))
+    const reason = validateParams(withOverlay(7, starved, 5))
     expect(reason).toMatch(/floor-track essentials.*out-of-pocket medical/)
   })
 
   it('the compile-injection twin passes BY CONSTRUCTION (the same intake scalar feeds both sides)', () => {
     const injected = compileBudget([line({ annualAmountReal: 5 })], 7, H)
-    expect(validateParams(withOverlay(7, injected))).toBeNull()
+    expect(validateParams(withOverlay(7, injected, 12))).toBeNull()
   })
 
   it('worst-case is the SURVIVOR year: a scalable-only essentials budget that covers oop both-alive can still dip below it at the ratio — rejected', () => {
     // essentials 10 (scalable food), ratio 0.75 ⇒ survivor-year essentials 7.5 < oop 8.
     const scalableOnly = compileBudget([line({ annualAmountReal: 10 })], undefined, H)
-    const reason = validateParams(withOverlay(8, scalableOnly))
+    const reason = validateParams(withOverlay(8, scalableOnly, 10))
     expect(reason).toMatch(/floor-track essentials/)
+  })
+
+  it('THE RECONCILIATION BACKSTOP: a budget-carrying run whose annualSpendingReal disagrees with the year-0 full total is rejected — a budget-blind scalar writer cannot desync the headline dollar grammar silently (review fold 2026-07-02)', () => {
+    const budget = compileBudget([line({ annualAmountReal: 40 })], undefined, H)
+    const desynced = coupleParams({
+      annualSpendingReal: 48, // ≠ 40 — the second-writer desync, planted
+      longevityMode: 'fixed-horizon',
+      maxHorizonYears: H,
+      budget,
+    })
+    expect(validateParams(desynced)).toMatch(/does not reconcile/)
+    expect(validateParams({ ...desynced, annualSpendingReal: 40 })).toBeNull()
   })
 
   it('a negative/non-finite profile entry is rejected as the budget-profile gate (domain, calm indeterminate)', () => {
@@ -431,6 +450,15 @@ describe('U9 · the date-search two-track split (build-gate c)', () => {
     workingYearIrmaaMagiByPerson: [90_000, 70_000],
   }
 
+  it('the compute profile pins passesPerCandidate = 2 for a budget-carrying input (the council’s explicit rebaseline — never a silent 2× drift)', { timeout: 120_000 }, async () => {
+    const { profileDateSearch } = await import('@engine/dateSearchProfile')
+    const profile = await profileDateSearch(input, 20260702, 'provisional', () => performance.now())
+    expect(profile.outcomeKind).toBe('dates')
+    expect(profile.passesPerCandidate).toBe(2)
+    // The RATIO stays linear-in-candidates: the baseline single simulate doubles identically.
+    expect(profile.ratioVsSingle).toBeLessThan(40)
+  })
+
   it('emits two INDEPENDENTLY-derived tracks (never the degenerate alias), floor per-candidate survival ≥ lifestyle, floor date ≤ lifestyle date, and the band rides the FLOOR crown', { timeout: 120_000 }, async () => {
     const outcome = await runDateSearch(input, 20260702, { tier: 'provisional' })
     expect(outcome.kind).toBe('dates')
@@ -462,9 +490,68 @@ describe('U9 · the date-search two-track split (build-gate c)', () => {
   })
 })
 
+describe('U9 · the fan-track sink (review fold 2026-07-02 — the sink-swap regression the suite could not see)', () => {
+  const budget = compileBudget(
+    [line({ annualAmountReal: 40 }), line({ tier: 'discretionary', annualAmountReal: 35, label: 'Travel' })],
+    undefined,
+    45,
+  )
+  const params = coupleParams({ annualSpendingReal: 75, budget })
+
+  it("bandFanTrack:'floor' observes the FLOOR pass: its fan dominates the full-track fan (less spent on identical draws ⇒ never-lower balances, strictly higher somewhere)", () => {
+    const fullFan = resolved(simulate(params, 777, { bandFan: true })).distribution.bandFan!
+    const floorFan = resolved(
+      simulate(params, 777, { bandFan: true, bandFanTrack: 'floor' }),
+    ).distribution.bandFan!
+    expect(floorFan.byYear.length).toBe(fullFan.byYear.length)
+    let strictly = 0
+    for (let i = 0; i < fullFan.byYear.length; i++) {
+      const f = floorFan.byYear[i]!
+      const l = fullFan.byYear[i]!
+      for (const p of ['p10', 'p25', 'p50', 'p75', 'p90'] as const) {
+        expect(f[p]).toBeGreaterThanOrEqual(l[p])
+        if (f[p] > l[p]) strictly++
+      }
+      // The cohort is longevity-driven, identical across tracks (same sampled deaths).
+      expect(f.cohortFraction).toBe(l.cohortFraction)
+    }
+    expect(strictly).toBeGreaterThan(0) // presence companion — a sink swap flips this
+  })
+
+  it("bandFanTrack:'floor' WITHOUT a budget reads as 'full' — byte-identical fan (pins the fallback guard)", () => {
+    const scalar = coupleParams({})
+    const a = resolved(simulate(scalar, 777, { bandFan: true })).distribution.bandFan
+    const b = resolved(simulate(scalar, 777, { bandFan: true, bandFanTrack: 'floor' })).distribution.bandFan
+    expect(b).toEqual(a)
+  })
+})
+
+describe('U9 · buildFloorReading keys already-failing to the FLOOR’s OWN depletion signal (review fold — the joint-key mutant escaped the suite)', () => {
+  it('a floor that is DOA (early median depletion) reads already-failing while the joint headline — same fraction, LATE depletions — reads off-track', () => {
+    const params = coupleParams({ longevityMode: 'fixed-horizon', maxHorizonYears: 40 })
+    const synthetic = {
+      indeterminate: false as const,
+      distribution: {
+        terminalValuesReal: [0, 0, 0, 0],
+        depletionYears: [30, 31, 32, 33], // joint fails LATE ⇒ off-track, never already-failing
+        survivalFraction: 0.01,
+        floor: {
+          survivalFraction: 0.01,
+          depletionYears: [1, 1, 2, 2], // the floor is DOA ⇒ already-failing — iff its OWN years are read
+        },
+      },
+    }
+    const summary = summarize(synthetic, params, 1)
+    expect(summary.headline.outcomeState).toBe('off-track')
+    // A mutant passing the JOINT depletionYears into the floor reading would emit
+    // 'off-track' here too — this is the discriminating fixture.
+    expect(summary.floorReading!.outcomeState).toBe('already-failing')
+  })
+})
+
 describe('U9 · the wire round-trip (floor + floorReading presence-keyed)', () => {
   it('a budget-carrying run crosses runEngine → fromWire with the floor track and verdict intact; a scalar run carries neither', () => {
-    const base = coupleParams({})
+    const base = coupleParams({ annualSpendingReal: 75 }) // reconciled to 40 + 35
     const budget = compileBudget(
       [line({ annualAmountReal: 40 }), line({ tier: 'discretionary', annualAmountReal: 35, label: 'Travel' })],
       undefined,

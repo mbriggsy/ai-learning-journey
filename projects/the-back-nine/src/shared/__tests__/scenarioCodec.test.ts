@@ -325,6 +325,9 @@ describe('v3 — the forward-written persist shape (U8, the first v3 writer)', (
       (b) => { b.startYear = -1 },
       (b) => { b.endYear = null }, // null-in-number-slot is named corruption, never lifelong
       (b) => { b.annualAmountReal = Number.NaN },
+      // Negative amounts are the codec's to reject (review fold 2026-07-02): an offsetting
+      // pair nets past the engine's post-summation gate — insight 046's netted-away class.
+      (b) => { b.annualAmountReal = -5 },
       (b) => { b.label = 7 },
     ]
     for (const arm of arms) {

@@ -87,7 +87,10 @@ export interface HealthDraft
 /** The single in-memory plaintext shape (contract (e)). */
 export interface ScenarioDraft
   extends Partial<
-    Pick<ScenarioV3, 'annualSpendingReal' | 'seed'>
+    // `budget` is optional in the DRAFT exactly as it is in v3: absent = the
+    // un-itemized degenerate (P3·U9). It only ever lands via `setBudget`, which
+    // writes the items AND the reconciled `annualSpendingReal` in ONE update.
+    Pick<ScenarioV3, 'annualSpendingReal' | 'seed' | 'budget'>
   >,
     Pick<
       ScenarioV3,

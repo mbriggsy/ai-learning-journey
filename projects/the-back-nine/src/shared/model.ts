@@ -404,6 +404,85 @@ export interface OverlayParams {
 }
 
 // ---------------------------------------------------------------------------
+// The itemized budget (P3·U9 — the essentials-floor / lifestyle-surplus split).
+// ---------------------------------------------------------------------------
+
+/** The v1 budget category vocabulary (council 2026-07-02 — the add-only one-way door:
+ *  these strings persist into encrypted vaults, so a shipped category can gain siblings
+ *  but never be split or removed). Deliberately EXCLUDES healthcare/medical: the pre-65
+ *  premium is overlay-COMPUTED (never user-typed — plan 3-controls.md, U9 gap-line rule),
+ *  and out-of-pocket medical is compile-INJECTED into the sticky floor single-sourced
+ *  from the health intake — a user-typed medical line would double-count or silently
+ *  starve the HSA qualified-spend cap (the oopMedical containment premise,
+ *  taxOverlay.ts §oopMedical). A scoped OOP-only category may join additively in U11. */
+export const BUDGET_CATEGORIES = [
+  'housing',
+  'utilities',
+  'food',
+  'transportation',
+  'travel',
+  'gifts',
+  'other',
+] as const
+export type BudgetCategory = (typeof BUDGET_CATEGORIES)[number]
+
+/** The two lexicographic tiers (R20): essentials = the survival floor the FLOOR track
+ *  evaluates; discretionary = the surplus the full track adds. Never a third tier. */
+export const BUDGET_TIERS = ['essentials', 'discretionary'] as const
+export type BudgetTier = (typeof BUDGET_TIERS)[number]
+
+/** One itemized budget line (persisted on {@link ScenarioV3} — additive-optional within
+ *  schemaVersion 3). All amounts are TODAY'S-DOLLAR (real) figures, matching the spine's
+ *  inflation-adjusted convention. The window is a pair of integer year-OFFSETS from the
+ *  HOUSEHOLD work-stop anchor (year 0 = the year work stops; for an already-retired
+ *  household that is now; on the date route it is the swept candidate offset Y — the
+ *  window is calendar-planned, so per-candidate expansion is deterministic and CRN-safe).
+ *  `endYear` ABSENT = lifelong (the {@link IncomeStream.endAge} absence precedent;
+ *  never `null`/`Infinity` — DND/009: a null in a number slot is named corruption).
+ *  Forward-looking planning input, never expense tracking. */
+export interface BudgetLineItem {
+  readonly category: BudgetCategory
+  /** The user's own name for the line ("Groceries", "See the grandkids"). Display-only. */
+  readonly label: string
+  /** Real dollars per year while the window is active. Non-negative (R19). */
+  readonly annualAmountReal: number
+  readonly tier: BudgetTier
+  /** First active year, an offset from the household work-stop anchor (0 = the first
+   *  retirement year). Integer ≥ 0. */
+  readonly startYear: number
+  /** Last active year (inclusive), same offset basis. ABSENT = lifelong.
+   *  Must be ≥ `startYear` when present (R19). */
+  readonly endYear?: number
+}
+
+/** The compiled, engine-facing budget construct (produced by `src/budget/budgetToSpending.ts`;
+ *  the engine consumes it and cannot import src/budget — this @shared type is the seam).
+ *  Three per-RETIREMENT-year real-dollar component profiles, each indexed by
+ *  k = years-since-household-work-stop and pre-extended to `maxHorizonYears` (a missing/short
+ *  tail entry reads 0 via the auxiliary-stream `?? 0` idiom — never end-of-data).
+ *
+ *  The survivor composition is realized PER-PATH inside the engine (insight 040 — the
+ *  sampled first death is a stochastic, per-path event): with r = 1 while both spouses are
+ *  alive, else `survivorSpendingRatio`,
+ *    essentials(t) = sticky[k] + r·scalableEssentials[k]
+ *    full(t)       = essentials(t) + r·discretionary[k]
+ *  `sticky` (housing, utilities, `other`-tagged-essentials, and the compile-INJECTED
+ *  out-of-pocket medical floor) does NOT scale at widowhood — scaling the survivor's fixed
+ *  costs by the couple ratio would understate the survivor floor, the cardinal
+ *  calm-but-wrong direction (council 2026-07-02: ratio-on-total in the engine is VETOED;
+ *  r is never baked into these profiles). Containment premise: the injected medical keeps
+ *  the floor track's essentials ≥ the overlay's `oopMedical[t]` — the engine's
+ *  `validateParams` enforces it fail-loud per year. */
+export interface CompiledBudget {
+  /** Survivor-sticky essentials dollars per retirement-year (never scaled by r). */
+  readonly sticky: readonly number[]
+  /** Ratio-scaled essentials dollars per retirement-year. */
+  readonly scalableEssentials: readonly number[]
+  /** Ratio-scaled discretionary (lifestyle-surplus) dollars per retirement-year. */
+  readonly discretionary: readonly number[]
+}
+
+// ---------------------------------------------------------------------------
 // Engine parameters (the injected, pure input to `simulate`).
 // ---------------------------------------------------------------------------
 
@@ -423,6 +502,17 @@ export interface SimulationParams {
   /** Survivor spending as a fraction of the couple's spending after the first death
    *  (grounded ~0.75; too-low understates the survivor's need — the unsafe direction). */
   readonly survivorSpendingRatio: number
+  /** The compiled itemized budget (P3·U9). ABSENT ⇒ the un-itemized degenerate: the
+   *  engine spends the flat `annualSpendingReal` scalar (ratio-on-total at widowhood)
+   *  and emits NO floor surface — byte-identical to every pre-U9 run by construction.
+   *  PRESENT ⇒ the per-year spend expands from the three component profiles (see
+   *  {@link CompiledBudget}) and the run evaluates BOTH tracks — essentials-only (the
+   *  floor) and full — on the SAME single shared draw set (contract #1: a tier is a
+   *  different SPEND on the SAME paths, never a re-simulation), emitting
+   *  {@link Distribution.floor} + a floor reading. When present, `annualSpendingReal`
+   *  MUST equal the budget's year-0 full-track total (the reconciliation invariant the
+   *  store maintains atomically) so every scalar consumer stays coherent. */
+  readonly budget?: CompiledBudget
   /** Which bucket-drawdown policy funds each year's net withdrawal. Inert on a
    *  single pool (the spine), meaningful once U2 splits the portfolio into buckets. */
   readonly drawdownPolicy: DrawdownPolicy
@@ -632,6 +722,25 @@ export interface SurvivorConditioned {
   readonly incomeStepDownMonthlyReal: number
 }
 
+/** The essentials-floor track's outcome (P3·U9). PRESENT on a {@link Distribution} iff the run
+ *  carried a {@link SimulationParams.budget} construct. UNLIKE `bandFan`/`survivorConditioned`,
+ *  this is NOT a free observation of already-computed state — it is a GENUINE second
+ *  decumulation + overlay pass per path (the essentials-only spend vector on the SAME shared
+ *  draws/deaths/returns), so the bandFan byte-identity-guard pattern proves nothing here; the
+ *  floor's correctness guard is the degenerate-identity golden (essentials ≡ full ⇒ the two
+ *  tracks agree exactly) plus its presence companions. Every full-track success is an
+ *  essentials-track success on the same path (essentials spend ≤ full spend per year on
+ *  identical draws), so `floor.survivalFraction ≥ survivalFraction` path-for-path — the
+ *  reachable tier-ordering law U9 pins (the cliff-driven inversion needs U10's conversions). */
+export interface FloorTrack {
+  /** Fraction of paths whose portfolio funded the ESSENTIALS-ONLY spend every year.
+   *  Continuous in [0, 1], pre-quantization — the Tier-1 floor statistic. */
+  readonly survivalFraction: number
+  /** Per-path depletion year AGAINST THE ESSENTIALS-ONLY SPEND (or {@link NEVER_DEPLETED}).
+   *  Length === paths, paths-aligned with the full track's `depletionYears`. */
+  readonly depletionYears: readonly DepletionYear[]
+}
+
 /** The raw, continuous distribution the headline rounds FROM — emitted alongside the
  *  rounded outputs so callers can re-round under their own (stateful) rules. */
 export interface Distribution {
@@ -640,12 +749,13 @@ export interface Distribution {
   /** Per-path depth of failure: the absolute year index of depletion, or
    *  {@link NEVER_DEPLETED}. Length === paths. */
   readonly depletionYears: readonly DepletionYear[]
-  /** Fraction of paths that survived every year — the survival floor statistic the X-of-10 reads.
-   *  Continuous in [0, 1], pre-quantization. Computed as `survivors / paths`, where a path FAILS by
-   *  depleting against the FULL `annualSpendingReal`. The product frames this as the *essentials*
-   *  floor, but in P1/P2 essentials ≡ full spend (the single-total-spend degenerate budget — see
-   *  phase-3's "degenerate budget"); the essentials-vs-full split arrives in P3·U9. Until then this
-   *  is full-spend survival — never read an "essentials-only" meaning off it. */
+  /** Fraction of paths that survived every year against the FULL spend — the statistic the
+   *  X-of-10 headline reads. Continuous in [0, 1], pre-quantization. Computed as
+   *  `survivors / paths`, where a path FAILS by depleting against the full per-year spend
+   *  (the flat `annualSpendingReal` scalar, or the budget's full track when a
+   *  {@link SimulationParams.budget} is present). This is FULL-LIFESTYLE survival — since
+   *  P3·U9 the essentials floor is its own surface ({@link Distribution.floor}), present iff
+   *  a budget rode the run; in the un-itemized degenerate the two coincide. */
   readonly survivalFraction: number
   /** Per-path tax-aware solver surfaces (U3·M6). PRESENT iff the run carried the tax
    *  overlay — see {@link TaxAwareDistribution} for the presence contract. */
@@ -660,6 +770,11 @@ export interface Distribution {
    *  for the presence + byte-identity contract. A parallel observed surface; the joint
    *  `survivalFraction` is never derived from it. */
   readonly survivorConditioned?: SurvivorConditioned
+  /** The essentials-floor track (P3·U9). PRESENT iff the run carried a
+   *  {@link SimulationParams.budget} — see {@link FloorTrack} for why the bandFan
+   *  byte-identity pattern does NOT apply (a genuine second compute, param-driven,
+   *  not caller-opt-in). */
+  readonly floor?: FloorTrack
 }
 
 /** The resolved engine output. */
@@ -671,6 +786,12 @@ export interface SimulationResult {
    *  i.e. the run opted into the survivor surface AND ≥ 1 path had a survivor phase. A PARALLEL
    *  reading (the joint headline never rounds from it). */
   readonly survivorReading?: SurvivorReading
+  /** The essentials-floor verdict (P3·U9) — the joint {@link Headline}'s grammar applied to the
+   *  floor track (identical quantize→band→9-cap pipeline, `already-failing` keyed to the FLOOR's
+   *  own depletion signal). PRESENT iff `distribution.floor` is (i.e. the run carried a budget).
+   *  A PARALLEL reading; the full-track headline never rounds from it. Engine-tagged so no UI
+   *  layer ever re-derives a threshold (the U7/D2 honesty contract). */
+  readonly floorReading?: Headline
   /** The seed this result was produced under (round-trips through U4 persistence
    *  bit-identically, so a reopened plan reproduces the identical headline). */
   readonly seed: number
@@ -1203,6 +1324,16 @@ export interface ScenarioV3 {
    *  ALWAYS present, `[]` when none (never `undefined`): the empty list IS the absence, so reduce-to-
    *  spine reads structurally and `compileIncomeStreams` maps `[]`/all-empty → no `OverlayParams.income`. */
   readonly incomeStreams: readonly IncomeStream[]
+  /** P3·U9 — the itemized budget line items. ADDITIVE-OPTIONAL within schemaVersion 3
+   *  (the hsa/`contributions` tolerant-reader precedent — a pre-U9 v3 vault simply lacks
+   *  the field and decodes unchanged; no version bump, no migration). ABSENT ⇒ the
+   *  un-itemized degenerate (the `annualSpendingReal` scalar IS the budget). PRESENT ⇒
+   *  the line items are the persisted truth; the engine's {@link CompiledBudget} construct
+   *  and the two per-year track vectors are DERIVED at the params builder, never stored
+   *  (fidelity-over-duplication), and `annualSpendingReal` must equal the year-0
+   *  full-track total (the reconciliation invariant — incl. the compile-injected
+   *  out-of-pocket medical floor). */
+  readonly budget?: readonly BudgetLineItem[]
 }
 
 /** The exhaustive v3 field set — U8's `checkV3Fields` checklist (burned/063: the
@@ -1224,6 +1355,7 @@ export const SCENARIO_V3_FIELDS = [
   'appDefaultVersion',
   'seed',
   'incomeStreams',
+  'budget',
 ] as const
 
 // Compile-time: the field array exactly covers ScenarioV3 (both directions).

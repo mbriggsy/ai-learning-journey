@@ -24,6 +24,8 @@
  */
 import {
   ACCOUNT_KINDS,
+  BUDGET_CATEGORIES,
+  BUDGET_TIERS,
   COLA_MODES,
   DRAWDOWN_POLICIES,
   FILING_STATUSES,
@@ -348,6 +350,29 @@ function checkIncomeStreamV3(v: unknown, peopleCount: number, path: string): voi
   }
 }
 
+/** One {@link BudgetLineItem} (P3·U9) — shape only (the two-gate rule: domain ranges like
+ *  non-negative amounts are the engine/intake gates' job — a bad value compiles into a
+ *  profile `validateParams` rejects to a calm indeterminate). The WINDOW relation is
+ *  structural (the ownerIndex-bounds precedent): a reversed window has no meaning any
+ *  layer can compute on, so it is named corruption here. `endYear` ABSENT = lifelong
+ *  (DND-009 — a null/Infinity in the slot is corruption, never coerced). */
+function checkBudgetLineItemV3(v: unknown, path: string): void {
+  needObject(v, path)
+  needVocab(v, 'category', BUDGET_CATEGORIES, path)
+  needString(v, 'label', path)
+  needFinite(v, 'annualAmountReal', path)
+  needVocab(v, 'tier', BUDGET_TIERS, path)
+  needInteger(v, 'startYear', path)
+  const start = v.startYear as number
+  if (start < 0) throw new Corrupt(`${path}.startYear: expected a year offset ≥ 0`)
+  if (v.endYear !== undefined) {
+    needInteger(v, 'endYear', path)
+    if ((v.endYear as number) < start) {
+      throw new Corrupt(`${path}.endYear: must be ≥ startYear (a reversed window has no meaning)`)
+    }
+  }
+}
+
 function checkV3Fields(o: Obj): void {
   needArray(o.people, 'scenario.people')
   if (o.people.length === 0) throw new Corrupt('scenario.people: must not be empty')
@@ -373,6 +398,14 @@ function checkV3Fields(o: Obj): void {
   needInteger(o, 'seed', 'scenario')
   needArray(o.incomeStreams, 'scenario.incomeStreams')
   o.incomeStreams.forEach((s, i) => checkIncomeStreamV3(s, peopleCount, `incomeStreams[${i}]`))
+  // P3·U9 budget — ADDITIVE-OPTIONAL within v3 (the hsa/contributions tolerant-reader
+  // precedent): a pre-U9 vault simply lacks the field and passes; a PRESENT field must
+  // be a fully-valid line-item array (an unvalidated field passing the tolerant reader
+  // silently is the one place shape drift can hide — burned/063).
+  if (o.budget !== undefined) {
+    needArray(o.budget, 'scenario.budget')
+    o.budget.forEach((b, i) => checkBudgetLineItemV3(b, `budget[${i}]`))
+  }
 }
 
 /**

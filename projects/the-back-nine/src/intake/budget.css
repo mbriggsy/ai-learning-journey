@@ -1,0 +1,222 @@
+/*
+ * src/intake/budget.css — the U9b budget-builder sheet (council 2026-07-02).
+ *
+ * Reads ONLY tokens.css var()s (the canonical-source rule). CSP-clean: class-driven, never an
+ * inline style attribute. Phone-first: the sheet rides the bottom edge (thumb-reachable, the
+ * familiar sheet grammar); on the laptop (≥ --bp-laptop, restated as the 68rem literal — @media
+ * can't read a custom prop) it becomes a right-side panel so the two-pane answer stays visible
+ * beside the edit. Motion is transform/opacity only (the sheet's own rise is applied by
+ * motion/react inline-from-the-library; everything here is static layout).
+ */
+
+.budget-sheet__backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-overlay);
+  display: grid;
+  place-items: end center; /* phone: the sheet rests on the bottom edge */
+  background: rgb(11 24 19 / 0.42);
+  overscroll-behavior: contain;
+}
+
+.budget-sheet {
+  position: relative;
+  width: 100%;
+  max-width: 40rem;
+  max-height: 88dvh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: var(--paper);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  padding: var(--space-6) var(--space-5);
+  padding-bottom: max(var(--space-6), env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* Body scroll lock while the sheet is up (the BandEnlargeModal precedent). */
+.budget-sheet-open {
+  overflow: hidden;
+}
+
+.budget-sheet__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-optical-sizing: auto;
+  font-weight: var(--weight-display);
+  font-size: var(--text-xl);
+  line-height: var(--leading-display);
+  letter-spacing: var(--tracking-display);
+  color: var(--ink);
+}
+
+.budget-sheet__intro {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  line-height: var(--leading-body);
+  color: var(--ink-muted);
+  max-width: var(--measure);
+}
+
+/* ── the reconciliation readout — a RESERVED box (insight 035: it re-renders on every commit and
+   sits above the tap targets; reserving its tallest common height keeps every update inside a
+   fixed frame so nothing below shuffles mid-gesture). ─────────────────────────────────────── */
+.budget-sheet__readout {
+  min-block-size: 7.5rem;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-md);
+  background: var(--paper-raised);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.budget-readout__line {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  line-height: var(--leading-body);
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.budget-readout__line--muted {
+  color: var(--ink-muted);
+}
+
+/* ── the line list ───────────────────────────────────────────────────────────────────────── */
+.budget-sheet__lines {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.budget-line {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--line-soft);
+}
+
+.budget-line__head {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-3);
+}
+
+.budget-line__category {
+  flex: 1;
+  min-width: 0;
+}
+
+/* The native select inherits .field-input's box; keep the platform chevron (shape affordance). */
+.budget-line__select {
+  appearance: auto;
+}
+
+/* The remove control — icon-only (aria-label carries the line's name), finger-sized, quiet.
+   The × is CSS content: decorative glyphs live here, outside the inline-copy ban's surface. */
+.budget-line__remove {
+  flex: none;
+  inline-size: 44px;
+  block-size: 44px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--ink-muted);
+  font-size: var(--text-lg);
+  cursor: pointer;
+  transition: color var(--dur-fast) var(--ease-out), transform var(--dur-fast) var(--ease-out);
+}
+
+.budget-line__remove::before {
+  content: '\00d7'; /* × */
+}
+
+.budget-line__remove:active {
+  transform: scale(0.97);
+}
+
+.budget-line__remove:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .budget-line__remove:hover {
+    color: var(--ink);
+  }
+}
+
+/* The window pair — two compact year fields side by side. */
+.budget-line__window {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+}
+
+.budget-sheet__add {
+  align-self: flex-start;
+}
+
+/* ── actions ─────────────────────────────────────────────────────────────────────────────── */
+.budget-sheet__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding-top: var(--space-2);
+}
+
+.budget-sheet__escape {
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--line-soft);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+/* ── the governed spend step (Q4 — read-only value + steer; the input node is absent) ─────── */
+.spend-governed__value {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: var(--text-lg);
+  line-height: var(--leading-tight);
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.spend-governed__steer {
+  align-self: flex-start;
+}
+
+/* ── the laptop panel (≥ --bp-laptop / 68rem): the sheet becomes a right-side column so the
+   two-pane answer stays visible beside the edit — the same DOM, a different resting place. ── */
+@media (min-width: 68rem) {
+  .budget-sheet__backdrop {
+    place-items: stretch end;
+  }
+  .budget-sheet {
+    max-width: min(34rem, 92vw);
+    max-height: 100dvh;
+    block-size: 100dvh;
+    border-radius: 0;
+    padding-top: max(var(--space-6), env(safe-area-inset-top));
+  }
+}
+
+/* Reduced motion: the library-driven rise is already dropped (opacity-only); the remove control's
+   press feedback goes static. Final state identical — no information lives only in animation. */
+@media (prefers-reduced-motion: reduce) {
+  .budget-line__remove {
+    transition: none;
+  }
+}

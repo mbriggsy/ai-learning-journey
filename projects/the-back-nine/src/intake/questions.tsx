@@ -3,6 +3,9 @@ import { copy, slots } from '@ui/copy'
 import type { PersonDraft, ScenarioDraft } from '@store/memoryModel'
 import type { WorkStatus } from '@shared/model'
 import { fraMonthsForBirthYear } from '@engine/constants/socialSecurity'
+import { budgetGoverns, isRampedBudget } from '@budget/budgetModel'
+import { commitBudgetPatch } from '@budget/budgetToSpending'
+import { BudgetBuilder } from './BudgetBuilder'
 import { CurrencyField, IntegerField, NameField, SegmentedControl, formatMoney } from './fields'
 import { FieldError } from './FieldError'
 import { accountField, personField, SS_CLAIM_MIN, SS_CLAIM_MAX } from './sanity'
@@ -321,11 +324,59 @@ const ssStep: StepDef = {
   ),
 }
 
+/** U9b (council 2026-07-02, Q4): when a budget GOVERNS, the spend question is READ-ONLY text —
+ *  the raw field was a budget-blind second writer of `annualSpendingReal` (the engine's
+ *  reconciliation backstop makes a desync loud, but the honest UX is no second writer at all).
+ *  The value is the budget-derived year-0 total (the atomic patch keeps the scalar equal to it);
+ *  the ONLY edit path is the steer into the builder. The input node is ABSENT, not disabled —
+ *  an affordance that cannot change the outcome should not exist (insight 054). A rejected
+ *  alternative, the proportional rescale, would forge an allocation the user never chose. */
+function SpendGovernedByBudget({ api }: { readonly api: StepApi }) {
+  const [open, setOpen] = useState(false)
+  const annual = api.draft.annualSpendingReal
+  const budget = api.draft.budget
+  return (
+    <>
+      <p className="field-label">{copy.spendLabel}</p>
+      {annual !== undefined && (
+        <p className="spend-governed__value">{slots.spendBudgetTotal(formatMoney(annual))}</p>
+      )}
+      <p className="field-help">{copy.spendBudgetGovernedNote}</p>
+      {budget !== undefined && isRampedBudget(budget) && (
+        <p className="field-help">{copy.budgetAnchorRampNote}</p>
+      )}
+      <button type="button" className="btn-quiet spend-governed__steer" onClick={() => setOpen(true)}>
+        {copy.spendEditBudgetCta}
+      </button>
+      <BudgetBuilder
+        open={open}
+        draft={api.draft}
+        onApply={(items) => {
+          // The atomic reconciliation patch (build-gate 2 semantics live in commitBudgetPatch);
+          // the OOP figure is read from the store's CURRENT draft inside the update (insight 036).
+          api.update((d) => ({ ...d, ...commitBudgetPatch(items, d.health.oopMedicalAnnual) }))
+          api.commitField('annualSpendingReal')
+          setOpen(false)
+        }}
+        onEscape={() => {
+          // Back to a single number: the budget clears to strictly-undefined; the scalar keeps
+          // its last reconciled value and the raw field below becomes editable again.
+          api.update((d) => ({ ...d, budget: undefined }))
+          api.commitField('annualSpendingReal')
+          setOpen(false)
+        }}
+        onClose={() => setOpen(false)}
+      />
+    </>
+  )
+}
+
 const spendStep: StepDef = {
   id: 'spend',
   headingKey: 'qSpendHeading',
   fields: ['annualSpendingReal'],
   render: (api) => {
+    if (budgetGoverns(api.draft.budget)) return <SpendGovernedByBudget api={api} />
     const annual = api.draft.annualSpendingReal
     const period = api.draft.spendEntryPeriod
     const displayed = annual === undefined ? undefined : period === 'month' ? annual / 12 : annual

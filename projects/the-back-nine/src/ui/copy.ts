@@ -78,6 +78,56 @@ export const copy = {
   periodLegend: 'That figure is…',
   periodConfirmPrompt:
     'Quick check — that figure reads either way. Each month, or each year?',
+  // --- U9b: the spend question under a GOVERNING budget (council 2026-07-02 Q4). The raw field
+  //     is replaced by labeled read-only text + a steer — the budget's atomic patch is the ONLY
+  //     writer of the spending scalar (a raw edit here was the budget-blind second writer). ---
+  spendBudgetGovernedNote: 'This figure comes from your budget now — edit the lines, and it follows.',
+  spendEditBudgetCta: 'Edit the budget',
+  // --- U9b: the budget builder (the deepening of the single-total answer — R8: reached from the
+  //     answer, never an intake gate). Calm plain language; quantities ride slots. ---
+  budgetCta: 'Break down your spending',
+  budgetEditCta: 'Edit your budget',
+  budgetSheetTitle: 'Your spending, line by line',
+  budgetSheetIntro:
+    'Split the one figure into the lines it’s made of. Essentials are the floor; extras are what could give if it ever came to that.',
+  budgetApply: 'Use this budget',
+  budgetCancel: 'Not now',
+  budgetAddLine: 'Add a line',
+  budgetBackToSingle: 'Back to a single number',
+  budgetBackToSingleHint:
+    'Puts the plan back on one overall spending figure — these lines are let go.',
+  budgetCatLabel: 'Category',
+  budgetCatHousing: 'Housing',
+  budgetCatUtilities: 'Utilities',
+  budgetCatFood: 'Food',
+  budgetCatTransportation: 'Getting around',
+  budgetCatTravel: 'Travel',
+  budgetCatGifts: 'Gifts & giving',
+  budgetCatOther: 'Other',
+  budgetLineLabelLabel: 'Name, if you like',
+  budgetLineLabelPlaceholder: 'e.g. Groceries',
+  budgetAmountLabel: 'Dollars a year',
+  budgetTierLegend: 'Which kind is it?',
+  budgetTierEssentials: 'Essential',
+  budgetTierDiscretionary: 'Extra',
+  budgetWindowFromLabel: 'From year',
+  budgetWindowThroughLabel: 'Through year',
+  budgetWindowHelp:
+    'Counted from the first retirement year — year 0. Leave “through” blank for always.',
+  // The ramped-budget anchor disclosure (shared: the sheet readout + the governed spend step).
+  budgetAnchorRampNote:
+    'With lines that start later or end, the first-year figure is an anchor for the math — not every year’s spending.',
+  // R19 line errors — calm advisor voice, blocking (validate-before-mutate), one per defect kind.
+  errBudgetAmountNonFinite: 'That amount didn’t read as a number — mind checking it?',
+  errBudgetAmountNegative: 'An amount below zero can’t work here.',
+  errBudgetWindowNonInteger: 'Years here are whole numbers — 0, 1, 2…',
+  errBudgetWindowNegativeStart: 'The start year can’t sit before year 0.',
+  errBudgetWindowReversed: 'The end year sits before the start — mind swapping them?',
+  // R19 whole-budget cautions — calm, never blocking.
+  budgetWarnZeroEssentials: 'Nothing here is marked essential yet, so the safety floor reads as empty.',
+  budgetWarnNoYearZero:
+    'No line covers the first retirement year yet, so the starting figure reads as zero.',
+  budgetApplyBlocked: 'A line needs attention before this budget can be used.',
   qHealthHeading: 'Health coverage before Medicare',
   enrolledPremiumLabel: 'Your household’s combined monthly premium',
   slcspLabel: 'Benchmark Silver plan, monthly (whole household)',
@@ -728,6 +778,24 @@ export const slots = {
   /** The "still needed" strip's overflow counter — a self-describing list item
    *  (its own span), never a bare "(+N)" glyph fused onto the prior fact name. */
   factsMore: (n: number): string => `${n} more`,
+  // --- U9b budget-builder reconciliation slots (all figures pre-formatted by the caller) --------
+  /** The anchor — the figure the current answer reads against. */
+  budgetAnchorLead: (totalFormatted: string): string =>
+    `Your answer uses about $${totalFormatted} a year.`,
+  /** The lines-target NETS the injected OOP medical (build-gate 1): typed lines should sum to
+   *  S − M, because the medical floor is carried automatically on top. */
+  budgetLinesTarget: (targetFormatted: string): string =>
+    `Lines to account for: about $${targetFormatted} a year.`,
+  budgetMedicalCarried: (medicalFormatted: string): string =>
+    `About $${medicalFormatted} a year of out-of-pocket medical is carried automatically — it needs no line here.`,
+  /** The running first-year total of the typed lines (year-0 actives, both tiers). */
+  budgetRunningTotal: (totalFormatted: string): string =>
+    `Your lines add up to about $${totalFormatted} a year.`,
+  /** The governed spend step's read-only value line (Q4 — the budget is the only writer). */
+  spendBudgetTotal: (totalFormatted: string): string =>
+    `About $${totalFormatted} a year — set by your budget.`,
+  /** The remove-line control's accessible name (icon-only button). */
+  budgetRemoveLine: (label: string): string => `Remove ${label}`,
   // --- U7 verdict grammar (the confidence statement's magnitude clause) -----------------
   // The second line of the verdict, keyed off the engine's dollar DIRECTION
   // (DollarAdjustment.direction — NEVER re-derived UI-side) + the humane-rounded $/month figure

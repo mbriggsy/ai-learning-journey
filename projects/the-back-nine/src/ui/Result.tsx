@@ -12,10 +12,13 @@
  * the hero room to breathe and seats the quiet return. The hero heading takes focus once on landing
  * (resolvedFocusKey → the surface's focusSignal), the magic-moment announce.
  */
-import { useCallback, useEffect, useMemo, useRef, useSyncExternalStore } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import { AnswerStrip } from '@intake/AnswerStrip'
 import { missingRequiredFacts } from '@intake/intakeMap'
 import { createAnnouncer, type Announcer } from '@intake/a11y'
+import { BudgetBuilder } from '@intake/BudgetBuilder'
+import { budgetGoverns } from '@budget/budgetModel'
+import { commitBudgetPatch } from '@budget/budgetToSpending'
 import { copy } from './copy'
 import { appModel } from './appModel'
 import { FuckOffDate } from './FuckOffDate'
@@ -81,6 +84,19 @@ export function Result({
 
   const elevated = selectElevatedAnswer(snapshot, retry)
   const focusKey = resolvedFocusKey(elevated)
+
+  // U9b — the ONE deepening door (council 2026-07-02, Q1/R8): a quiet affordance on the landed
+  // answer opens the budget-builder sheet; a governing budget re-words the same door. Offered only
+  // on a RESOLVED reading (focusKey is defined exactly then) — the budget deepens an answer, and
+  // an affordance we don't want used on a non-answer shouldn't exist.
+  const [budgetOpen, setBudgetOpen] = useState(false)
+  const governs = budgetGoverns(snapshot.draft.budget)
+  // Apply/escape recompute provisional→final (the decrypt-on-return fast-show precedent): the
+  // provisional lands quickly under the thinking-breathe, the final sharpens in the background.
+  const recomputeBoth = useCallback(async () => {
+    await appModel.recompute('provisional')
+    await appModel.recompute('final')
+  }, [])
 
   return (
     <main className="result">
@@ -152,11 +168,35 @@ export function Result({
               )}
             </div>
           )}
+          {focusKey !== undefined && (
+            <button type="button" className="btn-quiet" onClick={() => setBudgetOpen(true)}>
+              {governs ? copy.budgetEditCta : copy.budgetCta}
+            </button>
+          )}
           <button type="button" className="btn-quiet" onClick={onReview}>
             {copy.resultReview}
           </button>
         </div>
       )}
+      <BudgetBuilder
+        open={budgetOpen}
+        draft={snapshot.draft}
+        onApply={(items) => {
+          // The atomic reconciliation patch — the OOP figure reads the store's CURRENT draft
+          // inside the update (insight 036), never a render-captured copy.
+          appModel.update((d) => ({ ...d, ...commitBudgetPatch(items, d.health.oopMedicalAnnual) }))
+          setBudgetOpen(false)
+          void recomputeBoth()
+        }}
+        onEscape={() => {
+          // Back to a single number: budget → strictly-undefined; the scalar keeps its last
+          // reconciled value (build-gate 2 — never `budget: []`).
+          appModel.update((d) => ({ ...d, budget: undefined }))
+          setBudgetOpen(false)
+          void recomputeBoth()
+        }}
+        onClose={() => setBudgetOpen(false)}
+      />
     </main>
   )
 }

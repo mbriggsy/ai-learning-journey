@@ -103,7 +103,7 @@ describe('RestoreFlow — the one restore call and its seam-routed failures', ()
     expect(restore).not.toHaveBeenCalled()
   })
 
-  it('the happy path: restore(fileText, word, checked) → unlock(newPass) → onRestored', async () => {
+  it('the happy path: restore(fileText, word, checked) → unlock(newPass) → onRestored with NO notice', async () => {
     restore.mockResolvedValue({ ok: true })
     unlock.mockResolvedValue({ ok: true, readOnly: false })
     const onRestored = vi.fn()
@@ -113,6 +113,18 @@ describe('RestoreFlow — the one restore call and its seam-routed failures', ()
     await waitFor(() => expect(onRestored).toHaveBeenCalledTimes(1))
     expect(restore).toHaveBeenCalledWith(FILE_TEXT, WORD, expect.objectContaining({ value: NEW_PASS }))
     expect(unlock).toHaveBeenCalledWith(NEW_PASS)
+    expect(onRestored).toHaveBeenCalledWith(null) // writable open — the banner stays empty
+  })
+
+  it('a READ-ONLY auto-unlock threads the unlockReadOnly notice (Fork C ii — the second consumer of the same unlock path, insight 020)', async () => {
+    restore.mockResolvedValue({ ok: true })
+    unlock.mockResolvedValue({ ok: true, readOnly: true })
+    const onRestored = vi.fn()
+    render(<RestoreFlow onRestored={onRestored} onExitToUnlock={vi.fn()} />)
+    await reachSetNew()
+    submitNewPassphrase(NEW_PASS)
+    await waitFor(() => expect(onRestored).toHaveBeenCalledTimes(1))
+    expect(onRestored).toHaveBeenCalledWith('unlockReadOnly')
   })
 
   it('a wrong recovery word routes BACK TO THE WORD STEP with the GCM-ambiguous hedge on the field', async () => {

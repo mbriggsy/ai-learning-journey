@@ -33,3 +33,142 @@
   color: var(--ink-muted);
   text-align: center;
 }
+
+/* ── Fork C(ii): the standing view-only banner ─────────────────────────────────────────────────
+ * Always mounted (empty when writable — the live region must exist BEFORE it populates or the
+ * announce may not fire, burned/045). Empty ⇒ zero footprint; populated ⇒ a quiet raised strip
+ * aligned to the content column, present from the view's FIRST frame (it populates at the same
+ * commit that mounts the result view, so it never shifts layout mid-view — insight 035). A
+ * standing status, not an alarm: hairline + paper, no error tint, no motion (nothing entered —
+ * the state was true before the page finished opening). */
+.view-only-banner {
+  width: min(100%, calc(var(--measure) + 2 * var(--gutter)));
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+.view-only-banner__inner {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  margin-block: var(--space-4) 0;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-md);
+  background: var(--paper-raised);
+  font-size: var(--text-sm);
+  line-height: var(--leading-body);
+  color: var(--ink-muted);
+}
+
+.view-only-banner__lead {
+  font-weight: var(--weight-semibold);
+  color: var(--ink);
+}
+
+/* The eye-line mark — decorative (aria-hidden); the lead WORD carries the state. Mirrors the
+ * save-done/result-saved pill construction; brand tint = chrome, never a data encoding. */
+.view-only-banner__mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 1.6em;
+  block-size: 1.6em;
+  flex: none;
+  margin-block-start: 0.1em;
+  border-radius: var(--radius-pill);
+  background: var(--brand-tint);
+  color: var(--brand);
+  font-size: 0.8em;
+}
+
+.view-only-banner__mark::before {
+  content: '\1F441\FE0E'; /* ︎eye, text presentation — decorative; the lead word carries the meaning */
+}
+
+/* ── The PWA update toast (prompt mode) ────────────────────────────────────────────────────────
+ * The U8 slice-2 CSS pass the U0 stub deferred. Fixed to the viewport bottom so its appearance
+ * NEVER reflows content (insight 035 — a surface appearing above interactive content shifts tap
+ * targets mid-gesture; fixed + reserved-out-of-flow is the strongest form of the reserved box).
+ * The region is always mounted for the announce contract (burned/045): when empty it has no
+ * chrome, no size, no pointer events — never display:none (a hidden live region may not announce
+ * its populate). Enter is a small opacity+lift transition (occasional event ⇒ standard motion;
+ * interruptible transitions, never keyframes), reduced-motion keeps the fade only. */
+.update-toast {
+  position: fixed;
+  inset-inline: 0;
+  inset-block-end: calc(var(--space-4) + env(safe-area-inset-bottom, 0px));
+  z-index: var(--z-toast);
+  width: min(calc(100% - 2 * var(--gutter)), 26rem);
+  margin-inline: auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-4);
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(0.5rem);
+  transition:
+    opacity var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+}
+
+.update-toast:not(:empty) {
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-lg);
+  background: var(--paper-raised);
+  box-shadow: var(--shadow-raised);
+  pointer-events: auto;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.update-toast__text {
+  flex: 1 1 12rem;
+  min-width: 0;
+  font-size: var(--text-sm);
+  line-height: var(--leading-tight);
+  color: var(--ink);
+}
+
+/* Compact text actions — a toast is no place for a field-height CTA. The action reads by
+ * WEIGHT + underline, not color alone; both clear the 44px practical tap floor via padding. */
+.update-toast__action,
+.update-toast__dismiss {
+  min-height: var(--tap-min);
+  border: none;
+  background: none;
+  padding: var(--space-1) var(--space-2);
+  cursor: pointer;
+  font-size: var(--text-sm);
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+  transition: color var(--dur-fast) ease;
+}
+
+.update-toast__action {
+  font-weight: var(--weight-semibold);
+  color: var(--brand);
+}
+
+.update-toast__dismiss {
+  font-weight: var(--weight-medium);
+  color: var(--ink-muted);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .update-toast__action:hover {
+    color: var(--brand-press);
+  }
+  .update-toast__dismiss:hover {
+    color: var(--ink);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .update-toast {
+    transform: none;
+    transition: opacity var(--dur-fast) ease;
+  }
+}

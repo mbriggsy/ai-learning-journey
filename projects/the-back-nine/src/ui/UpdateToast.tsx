@@ -59,11 +59,11 @@ export function UpdateToast() {
     <div className="update-toast" role="status" aria-live="polite">
       {needRefresh && (
         <>
-          <span>{copy.updateReady}</span>
-          <button type="button" onClick={apply}>
+          <span className="update-toast__text">{copy.updateReady}</span>
+          <button type="button" className="update-toast__action" onClick={apply}>
             {copy.updateReload}
           </button>
-          <button type="button" onClick={() => setNeedRefresh(false)}>
+          <button type="button" className="update-toast__dismiss" onClick={() => setNeedRefresh(false)}>
             {copy.updateLater}
           </button>
         </>

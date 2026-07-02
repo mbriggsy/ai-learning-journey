@@ -459,8 +459,11 @@ export const copy = {
   // Read-only OPEN (the plan DID open; a second tab holds the writer). A calm standing
   // status, never an alarm — and it steers to RELOAD, not "close the other tab" (this tab
   // won't re-check until reloaded, so "close it there" would promise an edit it can't grant).
+  // Renders as the ViewOnlyBanner's icon+WORD+text (color-blind law): the lead carries the
+  // state word, so the body no longer repeats "view-only" mid-sentence.
+  unlockReadOnlyLead: 'View-only',
   unlockReadOnly:
-    'Your plan is open in another tab, so this copy is view-only — changes here won’t be saved. Reload this page to make changes here.',
+    'Your plan is open in another tab, so changes here won’t be saved. Reload this page to make changes here.',
   unlockGeneric: 'That didn’t work. Try again.',
   // The (unreachable-by-construction) reload affordance if a just-unlocked model can't be re-opened
   // onto the result — the vault is safe on disk; a reload re-runs the probe → unlock.

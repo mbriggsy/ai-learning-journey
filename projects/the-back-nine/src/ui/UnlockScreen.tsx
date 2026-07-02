@@ -22,13 +22,14 @@
  *
  * The forgot-passphrase → recovery route is LIVE (App wires `onForgot` → RecoveryFlow); `onForgot`
  * stays optional so a mount without a destination never renders a dead link. The read-only-open
- * caveat (a 2nd tab holds the writer — `describeUnlockReadOnly`) is a LATER surface (Fork C ii).
+ * caveat (a 2nd tab holds the writer) is threaded through `describeUnlockReadOnly` — the seam owns
+ * the decision — and handed up as the notice key App's standing ViewOnlyBanner renders (Fork C ii).
  */
 import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import { copy } from './copy'
 import './styles/save.css'
 import { createAnnouncer, focusHeading, type Announcer } from '@intake/a11y'
-import { describeUnlockFailure, type UnlockCopyKey } from './unlockCopy'
+import { describeUnlockFailure, describeUnlockReadOnly, type UnlockCopyKey } from './unlockCopy'
 
 export function UnlockScreen({
   onUnlocked,
@@ -36,8 +37,9 @@ export function UnlockScreen({
   initialPassphrase,
 }: {
   /** Called once the vault is open (the session's `currentModel()` is populated); App transitions to
-   *  IntakeApp with `hydrateFromVault`. */
-  readonly onUnlocked: () => void
+   *  IntakeApp with `hydrateFromVault`. `notice` is the read-only-open caveat key (Fork C ii) — the
+   *  `describeUnlockReadOnly` verdict — or null on a normal writable open. */
+  readonly onUnlocked: (notice: UnlockCopyKey | null) => void
   /** The forgot-passphrase → recovery route (surface 3). Omitted until built — no dead link. */
   readonly onForgot?: () => void
   /** DEV-only: pre-fill the field (the `?vault` plant passes the known dev passphrase so opening a
@@ -79,9 +81,11 @@ export function UnlockScreen({
       const session = await getVaultSession()
       const result = await session.unlock(passphrase)
       if (result.ok) {
-        // Success — hydration + the read-only caveat (surface 6) are IntakeApp's/later's job. Leave
-        // `busy` true: the pending state persists through the unmount into IntakeApp's restoring beat.
-        onUnlocked()
+        // Success — hydration is IntakeApp's job; the read-only caveat rides up as the seam's
+        // verdict for App's standing banner (Fork C ii). Leave `busy` true: the pending state
+        // persists through the unmount into IntakeApp's restoring beat.
+        const notice = describeUnlockReadOnly(result)
+        onUnlocked(notice.kind === 'plain' ? notice.key : null)
         return
       }
       const message = describeUnlockFailure(result)

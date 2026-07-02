@@ -44,7 +44,7 @@ describe('UnlockScreen — the returning-user door', () => {
     expect(field()).toHaveAttribute('type', 'password')
   })
 
-  it('a successful unlock passes the raw passphrase to the session and hands off via onUnlocked', async () => {
+  it('a successful WRITABLE unlock passes the raw passphrase to the session and hands off with NO notice', async () => {
     unlock.mockResolvedValue({ ok: true, readOnly: false })
     const onUnlocked = vi.fn()
     render(<UnlockScreen onUnlocked={onUnlocked} />)
@@ -52,6 +52,19 @@ describe('UnlockScreen — the returning-user door', () => {
     fireEvent.click(openBtn())
     await waitFor(() => expect(onUnlocked).toHaveBeenCalledTimes(1))
     expect(unlock).toHaveBeenCalledWith('plinth otter vivid casket 92')
+    expect(onUnlocked).toHaveBeenCalledWith(null) // writable open — the banner stays empty
+  })
+
+  it('a READ-ONLY open (2nd tab holds the writer) is a SUCCESS that hands off the unlockReadOnly notice (Fork C ii)', async () => {
+    unlock.mockResolvedValue({ ok: true, readOnly: true })
+    const onUnlocked = vi.fn()
+    render(<UnlockScreen onUnlocked={onUnlocked} />)
+    fireEvent.change(field(), { target: { value: 'plinth otter vivid casket 92' } })
+    fireEvent.click(openBtn())
+    await waitFor(() => expect(onUnlocked).toHaveBeenCalledTimes(1))
+    // The seam's verdict rides up for App's standing banner — never dropped, never an error.
+    expect(onUnlocked).toHaveBeenCalledWith('unlockReadOnly')
+    expect(screen.queryByRole('alert')).toBeNull()
   })
 
   it('a wrong passphrase shows the GCM-ambiguous copy, reachable ON the field (aria-invalid + non-dangling describedby)', async () => {

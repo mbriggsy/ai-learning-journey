@@ -4,7 +4,9 @@ import { copy } from './copy'
 import { UpdateToast } from './UpdateToast'
 import { Disclaimer } from './Disclaimer'
 import { UnlockScreen } from './UnlockScreen'
+import { ViewOnlyBanner } from './ViewOnlyBanner'
 import { AppErrorBoundary } from './ErrorBoundary'
+import type { UnlockCopyKey } from './unlockCopy'
 
 /**
  * The P2 app body: a startup vault PROBE routes the returning user, then the D1 account-level guided
@@ -34,8 +36,10 @@ const RecoveryFlow = lazy(() => import('./RecoveryFlow').then((m) => ({ default:
 const RestoreFlow = lazy(() => import('./RestoreFlow').then((m) => ({ default: m.RestoreFlow })))
 
 /** Where the entry router is. `began` mounts IntakeApp — `hydrate` distinguishes a decrypt-on-return
- *  (read the unlocked vault's model) from a cold/seed start (hydrate from ColdStart or the dev seed).
- *  `planting` is the DEV `?vault` step that writes a vault before showing the unlock screen. */
+ *  (read the unlocked vault's model) from a cold/seed start (hydrate from ColdStart or the dev seed);
+ *  `notice` carries the unlock's read-only caveat key (Fork C ii — a second tab holds the writer) for
+ *  the standing ViewOnlyBanner, null on a writable open (cold/seed/recovery are writable by
+ *  construction). `planting` is the DEV `?vault` step that writes a vault before the unlock screen. */
 type Entry =
   | { readonly kind: 'probing' }
   | { readonly kind: 'planting' }
@@ -43,14 +47,18 @@ type Entry =
   | { readonly kind: 'unlock' }
   | { readonly kind: 'recover' }
   | { readonly kind: 'damaged' }
-  | { readonly kind: 'began'; readonly hydrate: boolean }
+  | { readonly kind: 'began'; readonly hydrate: boolean; readonly notice: UnlockCopyKey | null }
 
 /** `seed`/`vaultSeed` are the DEV-only `?seed`/`?vault` values (always null in prod — the gate lives
  *  in main.tsx). `seed` skips the probe and seeds a result; `vaultSeed` plants a vault then unlocks. */
 export function App({ seed, vaultSeed }: { seed?: string | null; vaultSeed?: string | null }) {
   const planting = import.meta.env.DEV && vaultSeed != null
   const [entry, setEntry] = useState<Entry>(
-    seed != null ? { kind: 'began', hydrate: false } : planting ? { kind: 'planting' } : { kind: 'probing' },
+    seed != null
+      ? { kind: 'began', hydrate: false, notice: null }
+      : planting
+        ? { kind: 'planting' }
+        : { kind: 'probing' },
   )
   /** DEV-only: the passphrase a `?vault` plant minted, pre-filled into the unlock screen (never set in
    *  prod — the plant path is DCE'd). */
@@ -122,19 +130,26 @@ export function App({ seed, vaultSeed }: { seed?: string | null; vaultSeed?: str
   return (
     <AppErrorBoundary>
       {showAppTitleH1 && <h1 className="sr-only">{copy.appTitle}</h1>}
+      {/* The standing read-only notice (Fork C ii) — always mounted so the populate announces
+          (burned/045); empty (zero footprint) on every writable path. */}
+      <ViewOnlyBanner notice={entry.kind === 'began' ? entry.notice : null} />
       {(entry.kind === 'probing' || entry.kind === 'planting') && null /* brief neutral hold */}
-      {entry.kind === 'cold' && <ColdStart onBegin={() => setEntry({ kind: 'began', hydrate: false })} />}
+      {entry.kind === 'cold' && (
+        <ColdStart onBegin={() => setEntry({ kind: 'began', hydrate: false, notice: null })} />
+      )}
       {entry.kind === 'unlock' && (
         <UnlockScreen
           initialPassphrase={devPrefill}
-          onUnlocked={() => setEntry({ kind: 'began', hydrate: true })}
+          onUnlocked={(notice) => setEntry({ kind: 'began', hydrate: true, notice })}
           onForgot={() => setEntry({ kind: 'recover' })}
         />
       )}
       {entry.kind === 'recover' && (
         <Suspense fallback={null}>
           <RecoveryFlow
-            onRecovered={() => setEntry({ kind: 'began', hydrate: true })}
+            // Writable by construction: recovery re-mints through the writer path (a second tab
+            // holding the writer makes recoveryUnlock REFUSE, never open read-only) — no notice.
+            onRecovered={() => setEntry({ kind: 'began', hydrate: true, notice: null })}
             onExit={() => setEntry({ kind: 'unlock' })}
           />
         </Suspense>
@@ -142,7 +157,7 @@ export function App({ seed, vaultSeed }: { seed?: string | null; vaultSeed?: str
       {entry.kind === 'damaged' && (
         <Suspense fallback={null}>
           <RestoreFlow
-            onRestored={() => setEntry({ kind: 'began', hydrate: true })}
+            onRestored={(notice) => setEntry({ kind: 'began', hydrate: true, notice })}
             onExitToUnlock={() => setEntry({ kind: 'unlock' })}
           />
         </Suspense>

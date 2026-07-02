@@ -30,7 +30,7 @@ import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import { copy } from './copy'
 import './styles/save.css'
 import { createAnnouncer, focusHeading, type Announcer } from '@intake/a11y'
-import { describeRestoreFailure } from './unlockCopy'
+import { describeRestoreFailure, describeUnlockReadOnly, type UnlockCopyKey } from './unlockCopy'
 import { PassphraseStep } from './PassphraseStep'
 import type { FloorCheckedPassphrase } from '@crypto/kdf'
 
@@ -44,8 +44,11 @@ export function RestoreFlow({
   onExitToUnlock,
 }: {
   /** The restore committed AND the auto-unlock opened it (`currentModel()` is populated); App
-   *  transitions to IntakeApp with `hydrateFromVault`. */
-  readonly onRestored: () => void
+   *  transitions to IntakeApp with `hydrateFromVault`. `notice` is the read-only-open caveat key
+   *  (Fork C ii — this auto-unlock is the SAME unlock path as UnlockScreen, so it threads the same
+   *  `describeUnlockReadOnly` verdict; insight 020: the second consumer of an invariant gets the
+   *  same guard as the first), or null on a normal writable open. */
+  readonly onRestored: (notice: UnlockCopyKey | null) => void
   /** The rare post-restore fallback: the vault is healthy on disk but the auto-unlock refused —
    *  the unlock screen finishes the job with the passphrase the user just set. */
   readonly onExitToUnlock: () => void
@@ -132,7 +135,8 @@ export function RestoreFlow({
         try {
           const opened = await session.unlock(newPass.value)
           if (opened.ok) {
-            onRestored()
+            const notice = describeUnlockReadOnly(opened)
+            onRestored(notice.kind === 'plain' ? notice.key : null)
             return
           }
         } catch {

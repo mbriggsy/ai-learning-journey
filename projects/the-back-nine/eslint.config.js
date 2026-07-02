@@ -121,6 +121,21 @@ export default tseslint.config(
     },
   },
 
+  // src/budget/** — the pure budget-compile layer (P3·U9): itemized line items →
+  // the engine-facing CompiledBudget construct. Imports ONLY @shared (the engine
+  // consumes its OUTPUT via SimulationParams.budget — the two layers meet in the
+  // @shared type, never by import in either direction).
+  {
+    files: tsGlobs('src/budget'),
+    ignores: TEST_IGNORES,
+    rules: {
+      ...importBan(
+        ['engine', 'crypto', 'store', 'intake', 'viz', 'ui'],
+        'src/budget/ is the pure compile layer: import only @shared (and within @budget). The engine reads its output through SimulationParams.budget, never through an import.',
+      ),
+    },
+  },
+
   // src/engine/** — PURE: imports nothing impure; reads no clock/entropy/env in any form.
   {
     files: tsGlobs('src/engine'),

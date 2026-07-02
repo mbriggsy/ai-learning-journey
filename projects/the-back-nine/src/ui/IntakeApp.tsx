@@ -6,6 +6,9 @@ import { missingRequiredFacts } from '@intake/intakeMap'
 import { appModel } from './appModel'
 import { Result } from './Result'
 import { scenarioFromDraft } from './scenarioFromDraft'
+import { draftFromScenario } from './draftFromScenario'
+import { copy } from './copy'
+import './styles/save.css'
 
 // The ceremony rides its own lazy chunk (it pulls the crypto/zxcvbn graph) — kept off the
 // already-lazy intake chunk's first paint; the Save beat only ever appears on the result screen.
@@ -31,8 +34,18 @@ const SaveFlow = lazy(() => import('./SaveFlow').then((m) => ({ default: m.SaveF
  * nothing is persisted — U8 owns Save). Re-entering intake restarts the step
  * sequence at the first question; the data is intact, only the cursor resets.
  */
-export default function IntakeApp({ seed }: { seed?: string | null }) {
-  const [phase, setPhase] = useState<'intake' | 'result' | 'save'>('intake')
+export default function IntakeApp({
+  seed,
+  hydrateFromVault = false,
+}: {
+  seed?: string | null
+  /** Decrypt-on-return: after a successful unlock, hydrate the result from the session's decrypted
+   *  model instead of starting a fresh intake. App sets this on the post-unlock mount. */
+  hydrateFromVault?: boolean
+}) {
+  const [phase, setPhase] = useState<'restoring' | 'intake' | 'result' | 'save' | 'restore-failed'>(
+    hydrateFromVault ? 'restoring' : 'intake',
+  )
   const [saved, setSaved] = useState(false)
   const snapshot = useSyncExternalStore(appModel.subscribe, appModel.getSnapshot)
   const steps = useMemo(() => intakeSteps(snapshot.draft), [snapshot.draft])
@@ -86,6 +99,76 @@ export default function IntakeApp({ seed }: { seed?: string | null }) {
       cancelled = true
     }
   }, [seed])
+
+  // DECRYPT-ON-RETURN: after a successful unlock the session holds the decrypted model. Mirror the
+  // `?seed` hydration — whole-draft replace → result → provisional (shows FAST) → final (sharpens in
+  // the BACKGROUND), NEVER blocking the reveal on the heavy final sweep (Fork D + the wall-clock
+  // measurement: retired final ~2.9s, working ~20s). The 'restoring…' pending covers unlock +
+  // provisional; the final lands off the blocking path as a band re-draw. `getVaultSession` is a
+  // dynamic import so the crypto graph stays out of the intake chunk's static top-level.
+  useEffect(() => {
+    if (!hydrateFromVault) return
+    let cancelled = false
+    void (async () => {
+      try {
+        const { getVaultSession } = await import('./vaultSession')
+        const model = (await getVaultSession()).currentModel()
+        if (cancelled) return
+        // Unreachable for this app's own vaults (unlock just decoded a 2-person v3 we wrote), but the
+        // type admits null / legacy / a non-two-person shape → refuse rather than render a wrong plan.
+        if (model === null || model.schemaVersion !== 3) {
+          setPhase('restore-failed')
+          return
+        }
+        const hydrated = draftFromScenario(model)
+        if (!hydrated.ok) {
+          setPhase('restore-failed')
+          return
+        }
+        appModel.update(() => hydrated.draft)
+        setPhase('result')
+        await appModel.recompute('provisional')
+        await appModel.recompute('final')
+      } catch {
+        if (!cancelled) setPhase('restore-failed')
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [hydrateFromVault])
+
+  if (phase === 'restoring') {
+    return (
+      <main className="save">
+        <section className="save-step save-step--pending" aria-busy>
+          <p className="save-pending" role="status">
+            {copy.restoringStatus}
+          </p>
+        </section>
+      </main>
+    )
+  }
+
+  if (phase === 'restore-failed') {
+    return (
+      <main className="save">
+        <section className="save-step">
+          <h2 className="save-step__heading" tabIndex={-1}>
+            {copy.unlockHeading}
+          </h2>
+          <p className="save-step__note" role="alert">
+            {copy.unlockGeneric}
+          </p>
+          <div className="save-actions">
+            <button type="button" className="btn-primary" onClick={() => window.location.reload()}>
+              {copy.restoreRetry}
+            </button>
+          </div>
+        </section>
+      </main>
+    )
+  }
 
   if (phase === 'save' && saveReady.ready) {
     return (

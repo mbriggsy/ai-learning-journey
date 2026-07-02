@@ -462,6 +462,9 @@ export const copy = {
   unlockReadOnly:
     'Your plan is open in another tab, so this copy is view-only — changes here won’t be saved. Reload this page to make changes here.',
   unlockGeneric: 'That didn’t work. Try again.',
+  // The (unreachable-by-construction) reload affordance if a just-unlocked model can't be re-opened
+  // onto the result — the vault is safe on disk; a reload re-runs the probe → unlock.
+  restoreRetry: 'Reload the page',
 
   // --- the recovery path (forgot passphrase → recovery word → new passphrase) ---
   recoverHeading: 'Use your recovery word',

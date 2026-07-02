@@ -474,6 +474,17 @@ export const copy = {
   recoverNewPassHeading: 'Set a new passphrase',
   recoverNewPassIntro:
     'Your recovery word opened your plan. Set a new passphrase to use on this device from now on.',
+  recoverNewPassButton: 'Save my new passphrase',
+  // The UI-layer negative-pairing bounce (the inverse of recoveryEqualsError): on the recovery
+  // path the SESSION cannot check this (it holds only the recovery KEY, not the plaintext —
+  // insight 049's documented residual), so this flow's own check is the sole gate.
+  recoverEqualsError:
+    'Your new passphrase needs to be different from your recovery word — if they match, one guess opens both.',
+  // Fork C(i) — the standing both-credentials-lost line on the recovery surface (council
+  // 2026-06-30: no-backdoor truth + steer to the export file, never "it's gone"; there is no
+  // attempt counter, so the no-lockout reassurance is honest). Wording ⚑ Briggsy's cold-read.
+  recoverBothLostNote:
+    'Take your time — there’s no limit on tries. This same word also opens your backup file on any device. If the word itself is lost, no one can open your plan — not even us.',
 } as const satisfies Record<string, string>
 
 export type CopyKey = keyof typeof copy

@@ -26,6 +26,11 @@ import { UnlockScreen, VaultDamagedNotice } from './UnlockScreen'
  */
 const IntakeApp = lazy(() => import('./IntakeApp'))
 
+/** Lazy for the ENTRY BUDGET, not rarity: RecoveryFlow statically pulls PassphraseStep → the
+ *  zxcvbn floor seam, which must not ride the entry chunk. Warmed when the unlock screen shows,
+ *  so the forgot-passphrase click never visibly waits. */
+const RecoveryFlow = lazy(() => import('./RecoveryFlow').then((m) => ({ default: m.RecoveryFlow })))
+
 /** Where the entry router is. `began` mounts IntakeApp — `hydrate` distinguishes a decrypt-on-return
  *  (read the unlocked vault's model) from a cold/seed start (hydrate from ColdStart or the dev seed).
  *  `planting` is the DEV `?vault` step that writes a vault before showing the unlock screen. */
@@ -34,6 +39,7 @@ type Entry =
   | { readonly kind: 'planting' }
   | { readonly kind: 'cold' }
   | { readonly kind: 'unlock' }
+  | { readonly kind: 'recover' }
   | { readonly kind: 'damaged' }
   | { readonly kind: 'began'; readonly hydrate: boolean }
 
@@ -51,6 +57,12 @@ export function App({ seed, vaultSeed }: { seed?: string | null; vaultSeed?: str
   useEffect(() => {
     void import('./IntakeApp') // warm the chunk behind the cold-start / probe frame
   }, [])
+
+  // Warm the recovery chunk once the unlock screen is up — the forgot link's destination loads
+  // behind the screen the user is reading, never on the click.
+  useEffect(() => {
+    if (entry.kind === 'unlock') void import('./RecoveryFlow')
+  }, [entry.kind])
 
   // The startup vault probe (skipped when a dev seed/vault drives the mount). Dynamic import keeps the
   // crypto graph out of entry; a DB-open failure falls to ColdStart (in-session-only degraded mode —
@@ -101,7 +113,8 @@ export function App({ seed, vaultSeed }: { seed?: string | null; vaultSeed?: str
   // The visually-hidden app-title <h1> gives every IN-APP view a single top-level heading so the
   // unlock/result <h2> headings nest under it (ColdStart owns its own visible <h1>; the probe/plant
   // holds are pre-content). One stable app-title h1 across these SPA states (council 2026-06-29).
-  const showAppTitleH1 = entry.kind === 'unlock' || entry.kind === 'damaged' || entry.kind === 'began'
+  const showAppTitleH1 =
+    entry.kind === 'unlock' || entry.kind === 'recover' || entry.kind === 'damaged' || entry.kind === 'began'
 
   return (
     <>
@@ -109,7 +122,19 @@ export function App({ seed, vaultSeed }: { seed?: string | null; vaultSeed?: str
       {(entry.kind === 'probing' || entry.kind === 'planting') && null /* brief neutral hold */}
       {entry.kind === 'cold' && <ColdStart onBegin={() => setEntry({ kind: 'began', hydrate: false })} />}
       {entry.kind === 'unlock' && (
-        <UnlockScreen initialPassphrase={devPrefill} onUnlocked={() => setEntry({ kind: 'began', hydrate: true })} />
+        <UnlockScreen
+          initialPassphrase={devPrefill}
+          onUnlocked={() => setEntry({ kind: 'began', hydrate: true })}
+          onForgot={() => setEntry({ kind: 'recover' })}
+        />
+      )}
+      {entry.kind === 'recover' && (
+        <Suspense fallback={null}>
+          <RecoveryFlow
+            onRecovered={() => setEntry({ kind: 'began', hydrate: true })}
+            onExit={() => setEntry({ kind: 'unlock' })}
+          />
+        </Suspense>
       )}
       {entry.kind === 'damaged' && <VaultDamagedNotice />}
       {entry.kind === 'began' && (

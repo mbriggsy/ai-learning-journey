@@ -370,6 +370,17 @@ export const copy = {
   saveCtaHint: 'Save it to this device, encrypted — openable only by you.',
   savedBadge: 'Saved to this device',
 
+  // --- the edit-and-re-save beat (a saved plan whose answer has since been edited; the update
+  //     write path — no ceremony, the keys are resident) ---
+  resaveCta: 'Save your changes',
+  resaveHint: 'Your saved plan doesn’t include these changes yet.',
+  resavePending: 'Saving your changes…',
+  // The re-save refusal in a READ-ONLY tab. Steers to RELOAD, never "close the other tab" —
+  // this tab's writer probe ran once at unlock, so closing the other tab cannot grant an edit
+  // here (the same law as unlockReadOnly; saveErrorBusy's close-tab steer would be a retry
+  // that can never succeed).
+  saveErrorReadOnly: 'This tab can’t save changes — your plan is open in another tab. Reload this page to save here.',
+
   // --- step 1: set the daily passphrase (the LOCK — typed every time you open this here) ---
   saveHeading: 'Set a passphrase',
   saveIntro:

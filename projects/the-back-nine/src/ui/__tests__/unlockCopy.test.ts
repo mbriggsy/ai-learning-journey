@@ -3,10 +3,28 @@ import {
   describeUnlockFailure,
   describeUnlockReadOnly,
   describeRestoreFailure,
+  describeSaveFailure,
   type UnlockFailure,
   type RestoreFailure,
 } from '../unlockCopy'
 import { copy } from '../copy'
+
+describe('describeSaveFailure — the edit-and-re-save refusal mapping', () => {
+  it('quota and write-failed get their calm operational keys', () => {
+    expect(describeSaveFailure({ ok: false, reason: 'quota' })).toBe('saveErrorQuota')
+    expect(describeSaveFailure({ ok: false, reason: 'write-failed', detail: 'tx aborted' })).toBe('saveErrorFailed')
+  })
+
+  it('not-writable steers to RELOAD — NEVER the close-tab retry (a read-only tab cannot regain the writer without a reload)', () => {
+    const key = describeSaveFailure({ ok: false, reason: 'not-writable' })
+    expect(key).toBe('saveErrorReadOnly')
+    // The trap arm pinned: saveErrorBusy's "Close it there, then try again" is a retry that can
+    // never succeed in a read-only session (secondTab is captured once at unlock, session.ts:295).
+    expect(key).not.toBe('saveErrorBusy')
+    expect(copy.saveErrorReadOnly).toMatch(/reload/i)
+    expect(copy.saveErrorReadOnly).not.toMatch(/close/i)
+  })
+})
 
 describe('describeUnlockFailure — the honesty-critical error mapping', () => {
   it('cancellation shows nothing (not an error)', () => {

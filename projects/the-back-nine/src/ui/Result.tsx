@@ -20,17 +20,25 @@ import { appModel } from './appModel'
 import { FuckOffDate } from './FuckOffDate'
 import { ConfidenceStatement } from './ConfidenceStatement'
 import { selectElevatedAnswer, resolvedFocusKey } from './answerView'
+import type { ResaveCopyKey } from './unlockCopy'
 import './styles/result.css'
+
+/** The save slot's view + handlers — IntakeApp derives the view (resultSave.ts, the tested
+ *  machine) and attaches the callbacks; this screen is dumb wiring over the six states. */
+export type ResultSaveProp =
+  | { readonly kind: 'none' }
+  | { readonly kind: 'first'; readonly onKeep: () => void }
+  | { readonly kind: 'clean' }
+  | { readonly kind: 'dirty'; readonly onSave: () => void }
+  | { readonly kind: 'saving' }
+  | { readonly kind: 'failed'; readonly errorKey: ResaveCopyKey; readonly onRetry: () => void }
 
 export function Result({
   onReview,
-  onKeep,
-  saved = false,
+  save,
 }: {
   readonly onReview: () => void
-  /** Present only when the answer is complete enough to persist (U8 Save gate). */
-  readonly onKeep?: () => void
-  readonly saved?: boolean
+  readonly save: ResultSaveProp
 }) {
   const snapshot = useSyncExternalStore(appModel.subscribe, appModel.getSnapshot)
   const missing = useMemo(() => missingRequiredFacts(snapshot.draft), [snapshot.draft])
@@ -53,20 +61,50 @@ export function Result({
         )}
       </div>
       <div className="result-actions">
-        {saved ? (
-          <p className="result-saved">
-            <span className="result-saved__mark" aria-hidden="true" />
-            {copy.savedBadge}
-          </p>
-        ) : (
-          onKeep && (
-            <div className="result-keep">
-              <button type="button" className="btn-primary" onClick={onKeep}>
-                {copy.saveCta}
-              </button>
-              <p className="result-keep__hint">{copy.saveCtaHint}</p>
-            </div>
-          )
+        {/* The save slot: one reserved box across all five populated states (insight 035 — the
+            Review button below must never shift under a pointer when a click swaps CTA→pending→
+            badge). 'none' renders no slot at all: no claim about a disk state that can't be
+            compared, and no reserved emptiness on the never-saveable answer. */}
+        {save.kind !== 'none' && (
+          <div className="result-save-slot">
+            {save.kind === 'first' && (
+              <div className="result-keep">
+                <button type="button" className="btn-primary" onClick={save.onKeep}>
+                  {copy.saveCta}
+                </button>
+                <p className="result-keep__hint">{copy.saveCtaHint}</p>
+              </div>
+            )}
+            {save.kind === 'dirty' && (
+              <div className="result-keep">
+                <button type="button" className="btn-primary" onClick={save.onSave}>
+                  {copy.resaveCta}
+                </button>
+                <p className="result-keep__hint">{copy.resaveHint}</p>
+              </div>
+            )}
+            {save.kind === 'saving' && (
+              <p className="result-save-pending" role="status">
+                {copy.resavePending}
+              </p>
+            )}
+            {save.kind === 'failed' && (
+              <div className="result-keep">
+                <p className="result-save-error" role="alert">
+                  {copy[save.errorKey]}
+                </p>
+                <button type="button" className="btn-primary" onClick={save.onRetry}>
+                  {copy.exportRetry}
+                </button>
+              </div>
+            )}
+            {save.kind === 'clean' && (
+              <p className="result-saved">
+                <span className="result-saved__mark" aria-hidden="true" />
+                {copy.savedBadge}
+              </p>
+            )}
+          </div>
         )}
         <button type="button" className="btn-quiet" onClick={onReview}>
           {copy.resultReview}

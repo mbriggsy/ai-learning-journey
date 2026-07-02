@@ -17,7 +17,7 @@
  * Holds NO strings: returns a copy KEY, so `copyGuard` stays the single enumerated
  * honesty surface.
  */
-import type { UnlockResult, RecoveryUnlockResult } from '@store/session'
+import type { UnlockResult, RecoveryUnlockResult, SaveResult } from '@store/session'
 import type { RestoreResult } from '@store/backup'
 
 /** The `{ ok: false }` arms of both decrypt-on-return paths (passphrase unlock + recovery
@@ -98,6 +98,35 @@ export function describeUnlockFailure(failure: UnlockFailure): UnlockMessage {
  */
 export function describeUnlockReadOnly(success: Extract<UnlockResult, { readonly ok: true }>): UnlockMessage {
   return success.readOnly ? { kind: 'plain', key: 'unlockReadOnly' } : { kind: 'silent' }
+}
+
+/** The `{ ok: false }` arms of the edit-and-re-save `session.save()` update path. */
+export type SaveFailure = Extract<SaveResult, { readonly ok: false }>
+
+export type ResaveCopyKey = 'saveErrorQuota' | 'saveErrorReadOnly' | 'saveErrorFailed'
+
+/**
+ * Map a re-save refusal to its calm copy. The honesty decision here: `not-writable` on the
+ * result screen means this tab cannot write — in practice a READ-ONLY open (a 2nd tab held
+ * the writer at unlock; `secondTab` is captured ONCE, session.ts:295) — and the ONLY remedy
+ * is a RELOAD. It must never map to `saveErrorBusy`, whose "Close it there, then try again"
+ * is a retry that cannot succeed in a read-only session (the same lying-dead-end shape the
+ * edit-and-re-save fix exists to retire). Exhaustive with the house `never`-default.
+ */
+export function describeSaveFailure(failure: SaveFailure): ResaveCopyKey {
+  const reason = failure.reason
+  switch (reason) {
+    case 'quota':
+      return 'saveErrorQuota'
+    case 'not-writable':
+      return 'saveErrorReadOnly'
+    case 'write-failed':
+      return 'saveErrorFailed'
+    default: {
+      const _exhaustive: never = reason
+      throw new Error(`describeSaveFailure: unmapped reason ${String(_exhaustive)}`)
+    }
+  }
 }
 
 /** The `{ ok: false }` arms of `session.restore` / `restoreVault` (Fork A). No silent arm —

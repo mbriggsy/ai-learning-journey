@@ -69,6 +69,35 @@
   margin: 0;
 }
 
+/* The save slot — ONE reserved box across the CTA/pending/badge/error states (insight 035): a
+   click that swaps the tall CTA for the short pending line must not slide the Review button up
+   into the pointer. Sized to the tallest common state (button + hint); the failed state may
+   exceed it (min-, never fixed — growth is safe, collapse is the mid-gesture trap). */
+.result-save-slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: var(--measure);
+  min-block-size: 5.25rem;
+}
+
+.result-save-pending {
+  font-size: var(--text-base);
+  color: var(--ink-muted);
+  margin: 0;
+}
+
+/* The re-save refusal — role='alert' + adjacent text carry the signal (color is reinforcement,
+   never the channel — the reader is color-blind); the retry button sits directly below. */
+.result-save-error {
+  font-size: var(--text-sm);
+  color: var(--error-ink);
+  text-align: center;
+  margin: 0;
+}
+
 .result-saved {
   display: flex;
   align-items: center;

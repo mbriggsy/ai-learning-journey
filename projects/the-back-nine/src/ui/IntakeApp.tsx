@@ -7,6 +7,8 @@ import { appModel } from './appModel'
 import { Result } from './Result'
 import { scenarioFromDraft } from './scenarioFromDraft'
 import { draftFromScenario } from './draftFromScenario'
+import { deriveResultSave, type PersistState } from './resultSave'
+import { describeSaveFailure } from './unlockCopy'
 import { copy } from './copy'
 import './styles/save.css'
 
@@ -46,7 +48,10 @@ export default function IntakeApp({
   const [phase, setPhase] = useState<'restoring' | 'intake' | 'result' | 'save' | 'restore-failed'>(
     hydrateFromVault ? 'restoring' : 'intake',
   )
-  const [saved, setSaved] = useState(false)
+  // What is on disk (the edit-and-re-save machine, resultSave.ts). Starts 'unsaved' even on a
+  // hydrate mount — the hydrate effect installs the decoded model's normalized scenario, and
+  // until then the phase is 'restoring' so no save UI renders from the placeholder state.
+  const [persist, setPersist] = useState<PersistState>({ kind: 'unsaved' })
   const snapshot = useSyncExternalStore(appModel.subscribe, appModel.getSnapshot)
   const steps = useMemo(() => intakeSteps(snapshot.draft), [snapshot.draft])
   const missing = useMemo(() => missingRequiredFacts(snapshot.draft), [snapshot.draft])
@@ -67,15 +72,35 @@ export default function IntakeApp({
     await appModel.recompute('final')
   }, [])
   const review = useCallback(() => setPhase('intake'), [])
-  // INTERIM (U8 review, ①-family): `saved` is STICKY. The prior code cleared it on review so the
-  // user could re-save an edit — but the only save path is SaveFlow→firstSave, and firstSave rejects
-  // a second call with 'not-locked' (the singleton is already 'unlocked'), which mapped to the
-  // transient-sounding "Saving didn't finish. Try again." — a retry that can NEVER succeed, silently
-  // dropping the edit. Keeping `saved` true suppresses the re-save CTA (onKeep below), so the lying
-  // dead-end is unreachable. The PROPER fix lands in decrypt-on-return SLICE 2: a same-session edit
-  // re-saves through the existing writable()-gated session.save() update path (no ceremony — the keys
-  // are resident), and the badge becomes edit-aware. Until then the badge reflects "a plan is saved
-  // on this device", which stays true.
+
+  // The PROPER edit-and-re-save (retires the U8-review ② interim sticky-`saved`): a same-session
+  // edit re-saves through the writable()-gated `session.save()` UPDATE path — the keys are
+  // resident, so there is no ceremony, and `firstSave`'s 'not-locked' dead-end is structurally
+  // unreachable (deriveResultSave can never offer the ceremony once a vault exists). The gate
+  // reads the store's CURRENT draft, never the render closure (insight 036 — a commit-on-blur
+  // edit and this click can share a task). `session.save` is total over typed results and its
+  // {ok:true} arm has no post-commit throw window (session.ts:574-593), so the catch below only
+  // ever speaks for a save that did NOT land — "didn't finish" stays honest (insight 052).
+  const resave = useCallback(async () => {
+    const ready = scenarioFromDraft(appModel.getSnapshot().draft)
+    if (!ready.ready) return
+    setPersist((p) => (p.kind === 'unsaved' ? p : { kind: 'saving', scenario: p.scenario }))
+    try {
+      const { getVaultSession } = await import('./vaultSession')
+      const session = await getVaultSession()
+      const result = await session.save(ready.scenario)
+      if (result.ok) {
+        setPersist({ kind: 'saved', scenario: ready.scenario })
+      } else {
+        const errorKey = describeSaveFailure(result)
+        setPersist((p) => (p.kind === 'unsaved' ? p : { kind: 'save-failed', scenario: p.scenario, errorKey }))
+      }
+    } catch {
+      setPersist((p) =>
+        p.kind === 'unsaved' ? p : { kind: 'save-failed', scenario: p.scenario, errorKey: 'saveErrorFailed' },
+      )
+    }
+  }, [])
 
   // DEV-only `?seed=<key>`: apply a COMPLETE fixture to the in-memory appModel and
   // run the SAME terminal-advance path `complete()` runs (apply → result →
@@ -125,7 +150,19 @@ export default function IntakeApp({
           setPhase('restore-failed')
           return
         }
+        // The decrypt-on-return session IS saved — without this, the result screen offered the
+        // firstSave ceremony against an existing vault ('not-locked' → the lying "Try again"
+        // dead-end, found closing U8). Normalize through scenarioFromDraft so the dirty
+        // comparison (resultSave.ts) is codec-keyed on BOTH sides; a failed normalization of a
+        // just-decoded model is structurally unreachable (the Fork-D round-trip guarantee), so
+        // it refuses like the adjacent decode failures — never a silently wrong save state.
+        const normalized = scenarioFromDraft(hydrated.draft)
+        if (!normalized.ready) {
+          setPhase('restore-failed')
+          return
+        }
         appModel.update(() => hydrated.draft)
+        setPersist({ kind: 'saved', scenario: normalized.scenario })
         setPhase('result')
         await appModel.recompute('provisional')
         await appModel.recompute('final')
@@ -177,7 +214,9 @@ export default function IntakeApp({
           scenario={saveReady.scenario}
           onCancel={() => setPhase('result')}
           onComplete={() => {
-            setSaved(true)
+            // Record what the ceremony COMMITTED — the same render-captured scenario passed as
+            // its prop (the save phase renders no edit surface, so it cannot have drifted).
+            setPersist({ kind: 'saved', scenario: saveReady.scenario })
             setPhase('result')
           }}
         />
@@ -186,11 +225,19 @@ export default function IntakeApp({
   }
 
   if (phase === 'result' || phase === 'save') {
+    const view = deriveResultSave(persist, saveReady)
     return (
       <Result
         onReview={review}
-        onKeep={saveReady.ready && !saved ? () => setPhase('save') : undefined}
-        saved={saved}
+        save={
+          view.kind === 'first'
+            ? { kind: 'first', onKeep: () => setPhase('save') }
+            : view.kind === 'dirty'
+              ? { kind: 'dirty', onSave: () => void resave() }
+              : view.kind === 'failed'
+                ? { ...view, onRetry: () => void resave() }
+                : view
+        }
       />
     )
   }

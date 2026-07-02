@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest'
-import { describeUnlockFailure, describeUnlockReadOnly, type UnlockFailure } from '../unlockCopy'
+import {
+  describeUnlockFailure,
+  describeUnlockReadOnly,
+  describeRestoreFailure,
+  type UnlockFailure,
+  type RestoreFailure,
+} from '../unlockCopy'
 import { copy } from '../copy'
 
 describe('describeUnlockFailure — the honesty-critical error mapping', () => {
@@ -92,6 +98,68 @@ describe('describeUnlockReadOnly — the read-only-OPEN notice (the SUCCESS arm)
     ]
     for (const msg of emitted) {
       if (msg.kind === 'plain') expect(copy[msg.key].length).toBeGreaterThan(0)
+    }
+  })
+})
+
+describe('describeRestoreFailure — the Fork A failure routing (copy + the step that can fix it)', () => {
+  it('a wrong recovery word is GCM-ambiguous: hedged copy, anchored on the WORD field', () => {
+    expect(describeRestoreFailure({ ok: false, reason: 'wrong-recovery-passphrase' })).toEqual({
+      key: 'restoreWrongCredential',
+      anchor: 'word',
+    })
+  })
+
+  it('a damaged file re-opens the FILE picker (steer to another copy, never "gone")', () => {
+    expect(describeRestoreFailure({ ok: false, reason: 'file-damaged' })).toEqual({
+      key: 'restoreFileDamaged',
+      anchor: 'file',
+    })
+  })
+
+  it('BOTH newer arms (envelope + model) read "newer app" — NEVER damaged (the calm-but-wrong sin)', () => {
+    const format = describeRestoreFailure({ ok: false, reason: 'newer-format' })
+    const version = describeRestoreFailure({ ok: false, reason: 'newer-version', got: 9 })
+    expect(format).toEqual({ key: 'unlockNewerVersion', anchor: 'file' })
+    expect(version).toEqual({ key: 'unlockNewerVersion', anchor: 'file' })
+  })
+
+  it('the backend negative-pairing mirror routes back to the set-new step', () => {
+    expect(describeRestoreFailure({ ok: false, reason: 'recovery-equals-passphrase' })).toEqual({
+      key: 'recoverEqualsError',
+      anchor: 'setNew',
+    })
+  })
+
+  it('operational arms land on the error panel with calm, distinct copy', () => {
+    expect(describeRestoreFailure({ ok: false, reason: 'vault-exists' })).toEqual({
+      key: 'restoreVaultExists',
+      anchor: 'operation',
+    })
+    expect(describeRestoreFailure({ ok: false, reason: 'quota' })).toEqual({
+      key: 'saveErrorQuota',
+      anchor: 'operation',
+    })
+    expect(describeRestoreFailure({ ok: false, reason: 'write-failed', detail: 'x' })).toEqual({
+      key: 'saveErrorFailed',
+      anchor: 'operation',
+    })
+  })
+
+  it('every backend fail reason maps, and every emitted key has real catalog copy', () => {
+    const allReasons: RestoreFailure[] = [
+      { ok: false, reason: 'vault-exists' },
+      { ok: false, reason: 'file-damaged' },
+      { ok: false, reason: 'newer-format' },
+      { ok: false, reason: 'wrong-recovery-passphrase' },
+      { ok: false, reason: 'recovery-equals-passphrase' },
+      { ok: false, reason: 'quota' },
+      { ok: false, reason: 'newer-version', got: 9 },
+      { ok: false, reason: 'write-failed', detail: '' },
+    ]
+    for (const f of allReasons) {
+      const m = describeRestoreFailure(f) // throws (never default) if a reason is ever left unmapped
+      expect(copy[m.key].length).toBeGreaterThan(0)
     }
   })
 })

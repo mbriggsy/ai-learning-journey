@@ -3,7 +3,7 @@ import { ColdStart } from '@intake/coldStart'
 import { copy } from './copy'
 import { UpdateToast } from './UpdateToast'
 import { Disclaimer } from './Disclaimer'
-import { UnlockScreen, VaultDamagedNotice } from './UnlockScreen'
+import { UnlockScreen } from './UnlockScreen'
 
 /**
  * The P2 app body: a startup vault PROBE routes the returning user, then the D1 account-level guided
@@ -26,10 +26,11 @@ import { UnlockScreen, VaultDamagedNotice } from './UnlockScreen'
  */
 const IntakeApp = lazy(() => import('./IntakeApp'))
 
-/** Lazy for the ENTRY BUDGET, not rarity: RecoveryFlow statically pulls PassphraseStep → the
- *  zxcvbn floor seam, which must not ride the entry chunk. Warmed when the unlock screen shows,
- *  so the forgot-passphrase click never visibly waits. */
+/** Lazy for the ENTRY BUDGET, not rarity: both flows statically pull PassphraseStep → the
+ *  zxcvbn floor seam, which must not ride the entry chunk. Each is warmed when its launching
+ *  surface shows, so the click into it never visibly waits. */
 const RecoveryFlow = lazy(() => import('./RecoveryFlow').then((m) => ({ default: m.RecoveryFlow })))
+const RestoreFlow = lazy(() => import('./RestoreFlow').then((m) => ({ default: m.RestoreFlow })))
 
 /** Where the entry router is. `began` mounts IntakeApp — `hydrate` distinguishes a decrypt-on-return
  *  (read the unlocked vault's model) from a cold/seed start (hydrate from ColdStart or the dev seed).
@@ -58,10 +59,11 @@ export function App({ seed, vaultSeed }: { seed?: string | null; vaultSeed?: str
     void import('./IntakeApp') // warm the chunk behind the cold-start / probe frame
   }, [])
 
-  // Warm the recovery chunk once the unlock screen is up — the forgot link's destination loads
-  // behind the screen the user is reading, never on the click.
+  // Warm each flow chunk once its launching surface is up — the forgot link's destination (and
+  // the damaged branch's restore surface) loads behind the screen the user is reading.
   useEffect(() => {
     if (entry.kind === 'unlock') void import('./RecoveryFlow')
+    if (entry.kind === 'damaged') void import('./RestoreFlow')
   }, [entry.kind])
 
   // The startup vault probe (skipped when a dev seed/vault drives the mount). Dynamic import keeps the
@@ -136,7 +138,14 @@ export function App({ seed, vaultSeed }: { seed?: string | null; vaultSeed?: str
           />
         </Suspense>
       )}
-      {entry.kind === 'damaged' && <VaultDamagedNotice />}
+      {entry.kind === 'damaged' && (
+        <Suspense fallback={null}>
+          <RestoreFlow
+            onRestored={() => setEntry({ kind: 'began', hydrate: true })}
+            onExitToUnlock={() => setEntry({ kind: 'unlock' })}
+          />
+        </Suspense>
+      )}
       {entry.kind === 'began' && (
         <Suspense fallback={null}>
           <IntakeApp seed={seed} hydrateFromVault={entry.hydrate} />

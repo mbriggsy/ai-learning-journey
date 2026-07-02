@@ -18,6 +18,7 @@
  * honesty surface.
  */
 import type { UnlockResult, RecoveryUnlockResult } from '@store/session'
+import type { RestoreResult } from '@store/backup'
 
 /** The `{ ok: false }` arms of both decrypt-on-return paths (passphrase unlock + recovery
  *  unlock). Typed off the real results so a NEW backend reason fails to compile here until
@@ -97,4 +98,63 @@ export function describeUnlockFailure(failure: UnlockFailure): UnlockMessage {
  */
 export function describeUnlockReadOnly(success: Extract<UnlockResult, { readonly ok: true }>): UnlockMessage {
   return success.readOnly ? { kind: 'plain', key: 'unlockReadOnly' } : { kind: 'silent' }
+}
+
+/** The `{ ok: false }` arms of `session.restore` / `restoreVault` (Fork A). No silent arm —
+ *  restore has no `cancelled` (the session is never unlocked mid-flow), so every failure is a
+ *  visible, calm message. */
+export type RestoreFailure = Extract<RestoreResult, { readonly ok: false }>
+
+export type RestoreCopyKey =
+  | 'restoreFileDamaged' // the file failed the format gate, base64, or GCM under an authenticated word
+  | 'restoreWrongCredential' // GCM-ambiguous: wrong word OR rotted wrap in THIS copy — steer to another copy
+  | 'restoreVaultExists' // an intact vault appeared between the probe and the write (TOCTOU refusal)
+  | 'unlockNewerVersion' // file envelope (newer-format) or model (newer-version) from a newer app — NEVER "damaged"
+  | 'recoverEqualsError' // the backend negative-pairing mirror bounced (the UI pre-check is the fast path)
+  | 'saveErrorQuota'
+  | 'saveErrorFailed'
+
+/** Where the failure lands in the flow: back on the field that can fix it, or the operational
+ *  error panel. This routing IS part of the honesty decision (a wrong word must re-open the WORD
+ *  field, not strand the user on a generic panel), so it lives in the seam, planted-fail tested,
+ *  and the screen stays dumb wiring. A DISCRIMINATED union — the anchor narrows the key set, so
+ *  the screen's per-step error state can't be handed a key that step has no field for. */
+export type RestoreMessage =
+  | { readonly anchor: 'file'; readonly key: 'restoreFileDamaged' | 'unlockNewerVersion' }
+  | { readonly anchor: 'word'; readonly key: 'restoreWrongCredential' }
+  | { readonly anchor: 'setNew'; readonly key: 'recoverEqualsError' }
+  | { readonly anchor: 'operation'; readonly key: 'restoreVaultExists' | 'saveErrorQuota' | 'saveErrorFailed' }
+
+/**
+ * Map a restore failure to its calm message + the step that can fix it. Exhaustive over
+ * `RestoreResult`'s fail arms — the never-default is the compile-time guard, exactly as
+ * {@link describeUnlockFailure}.
+ */
+export function describeRestoreFailure(failure: RestoreFailure): RestoreMessage {
+  const reason = failure.reason
+  switch (reason) {
+    case 'file-damaged':
+      return { key: 'restoreFileDamaged', anchor: 'file' }
+
+    // Both "newer" arms — the envelope (newer-format) and the model (newer-version) — are intact
+    // data written by a newer app: one honest message (update the app), never "damaged".
+    case 'newer-format':
+    case 'newer-version':
+      return { key: 'unlockNewerVersion', anchor: 'file' }
+
+    case 'wrong-recovery-passphrase':
+      return { key: 'restoreWrongCredential', anchor: 'word' }
+    case 'recovery-equals-passphrase':
+      return { key: 'recoverEqualsError', anchor: 'setNew' }
+    case 'vault-exists':
+      return { key: 'restoreVaultExists', anchor: 'operation' }
+    case 'quota':
+      return { key: 'saveErrorQuota', anchor: 'operation' }
+    case 'write-failed':
+      return { key: 'saveErrorFailed', anchor: 'operation' }
+    default: {
+      const _exhaustive: never = reason
+      throw new Error(`describeRestoreFailure: unmapped reason ${String(_exhaustive)}`)
+    }
+  }
 }

@@ -132,6 +132,25 @@
   margin: 0;
 }
 
+/* The restore flow's REAL file input (Fork A: labelled, never pointer-only). The native control
+   stays — only its frame is brought into the field system; the browse button is the browser's. */
+.save-field__file {
+  min-height: var(--field-h);
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--line-control);
+  border-radius: var(--radius-md);
+  background: var(--paper-raised);
+  color: var(--ink);
+  font-size: var(--text-sm);
+  font-family: var(--font-body);
+}
+
+.save-field__file[aria-invalid='true'] {
+  border-color: var(--ink-muted);
+  border-width: 2px;
+}
+
 /* A step-level alert (recovery == daily) — a touch more present than the inline field
    note, calm not alarmed (no red; color is never the only signal — it's a role=alert). */
 .save-field__note--block {

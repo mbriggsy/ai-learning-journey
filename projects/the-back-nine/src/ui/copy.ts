@@ -485,6 +485,27 @@ export const copy = {
   // attempt counter, so the no-lockout reassurance is honest). Wording ⚑ Briggsy's cold-read.
   recoverBothLostNote:
     'Take your time — there’s no limit on tries. This same word also opens your backup file on any device. If the word itself is lost, no one can open your plan — not even us.',
+
+  // --- restore from backup (Fork A — the damaged-vault door; the survivor's re-entry) ---
+  // R17 grade holds: consume-side of "the file + the word you kept", never "you're covered".
+  // The failure copy is GCM-ambiguous where the crypto is (backup.ts:47-51): a wrong word and a
+  // rotted recoveryWrap opened with the RIGHT word are indistinguishable, so the hedge steers to
+  // ANOTHER copy of the export — never "it's gone", never a bare "corrupt".
+  restoreHeading: 'Restore from your backup',
+  restoreIntro:
+    'The saved plan on this device couldn’t be read — it looks damaged. Your backup file and recovery word can bring it back: pick the file, enter your word, and set a new passphrase.',
+  restoreFileLabel: 'Backup file',
+  restoreFileReadError: 'That file couldn’t be opened. Pick the backup file you saved.',
+  restoreFileDamaged:
+    'This doesn’t look like a backup made by this app — or the file is damaged. If you kept another copy of your backup, that one may open.',
+  restoreWrongCredential:
+    'That word didn’t open this backup. Check for typos and look-alike letters — a one and an l, a zero and an O. If you’re sure it’s right, this copy of the file may be damaged — another copy of your backup may open.',
+  restoreVaultExists: 'This device already has a saved plan. Reload the page to open it with your passphrase.',
+  restoreWordIntro: 'Enter your recovery word — the one that opens your backup file. You’ll set a new passphrase next.',
+  restoreNewPassIntro: 'Your recovery word opened your backup. Set a new passphrase to use on this device from now on.',
+  // The restore surface's standing C(i) line (⚑ wording = Briggsy's cold-read, like recoverBothLostNote).
+  restoreBothLostNote:
+    'Take your time — there’s no limit on tries. If the word is lost, no one can open this backup — not even us.',
 } as const satisfies Record<string, string>
 
 export type CopyKey = keyof typeof copy

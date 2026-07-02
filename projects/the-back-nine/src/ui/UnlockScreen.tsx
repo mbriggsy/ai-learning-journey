@@ -20,9 +20,9 @@
  * appModel/engine graph in the lazy intake chunk. `busy` stays true through the unmount so the
  * "Opening your plan…" message bridges seamlessly into IntakeApp's own restoring state.
  *
- * The read-only-open caveat (a 2nd tab holds the writer — `describeUnlockReadOnly`) and the
- * forgot-passphrase → recovery route are LATER surfaces; `onForgot` is optional so the link renders
- * only once its destination exists (never a dead affordance).
+ * The forgot-passphrase → recovery route is LIVE (App wires `onForgot` → RecoveryFlow); `onForgot`
+ * stays optional so a mount without a destination never renders a dead link. The read-only-open
+ * caveat (a 2nd tab holds the writer — `describeUnlockReadOnly`) is a LATER surface (Fork C ii).
  */
 import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import { copy } from './copy'
@@ -173,26 +173,3 @@ export function UnlockScreen({
   )
 }
 
-/**
- * The interim damaged-vault notice (probe `kind: 'damaged'`). The on-disk records are partial or
- * shape-invalid, so there is nothing to unlock — but falling through to ColdStart would DENY the
- * user's data ever existed (dishonest). This states the truth and points at the backup; the actual
- * restore-from-file UI is surface 4 (Fork A), which will replace this with an actionable flow. Uses
- * the same `unlockDataDamaged` copy the unlock failure path shows, so the message never says "gone".
- */
-export function VaultDamagedNotice() {
-  const headingRef = useRef<HTMLHeadingElement | null>(null)
-  useEffect(() => focusHeading(headingRef.current), [])
-  return (
-    <main className="save">
-      <section className="save-step">
-        <h2 className="save-step__heading" tabIndex={-1} ref={headingRef}>
-          {copy.unlockHeading}
-        </h2>
-        <p className="save-step__note" role="alert">
-          {copy.unlockDataDamaged}
-        </p>
-      </section>
-    </main>
-  )
-}

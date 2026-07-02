@@ -2,7 +2,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import '@testing-library/jest-dom/vitest'
 import { cleanup, render, screen, fireEvent, waitFor } from '@testing-library/react'
-import { UnlockScreen, VaultDamagedNotice } from '../UnlockScreen'
+import { UnlockScreen } from '../UnlockScreen'
 import { copy } from '../copy'
 
 /**
@@ -106,14 +106,5 @@ describe('UnlockScreen — the returning-user door', () => {
     render(<UnlockScreen onUnlocked={vi.fn()} />)
     fireEvent.click(openBtn())
     expect(unlock).not.toHaveBeenCalled()
-  })
-})
-
-describe('VaultDamagedNotice — the interim damaged-vault surface', () => {
-  it('states the damage honestly and steers to the backup (never "gone"), as a role=alert', () => {
-    render(<VaultDamagedNotice />)
-    const alert = screen.getByRole('alert')
-    expect(alert.textContent).toBe(copy.unlockDataDamaged)
-    expect(screen.getByRole('heading', { name: copy.unlockHeading })).toBeInTheDocument()
   })
 })

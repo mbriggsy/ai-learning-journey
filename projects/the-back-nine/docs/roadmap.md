@@ -78,11 +78,11 @@ The C-units and D-units are the accumulation tracks — they extend the U-number
 | **D2** | The state-adaptive first answer surface: date-first for not-yet-retired, spine-first for already-retired; the two-pane laptop layout | shipped | Same calm voice, one intake flow; only the lead answer changes. **Built (2026-06-27, cold-read cleared):** the elevated `FuckOffDate` surface — the date-first magic moment (hero headline in the "fuck-off date" voice — Briggsy's call), the three first-class outcomes + free-today, the conservative odds (single-sourced with the strip via `dateOdds.ts`), the window-edge + non-monotone disclosures, and the **date↔confidence tradeoff** (R28 — an earlier lower-odds point, suppressed when a priority disclosure already shows). Reached at `?preview=date`. **Now COMPLETE (2026-06-28/29, council-decided + cold-read-cleared):** the on-demand odds drawer (D2c — a discrete integer-rung odds-ladder + a y-axis "X of 10" scale, NOT a smooth curve), the **state-adaptive routing** + the **live-wiring** (`runDateSearch` → the surface), and the **two-pane laptop layout** (cold-read cleared 2026-06-29: "calm, not an ambush — ship"). See [`docs/council-log.md`](council-log.md). |
 | **R40** | Other income in retirement (pension / rental / annuity / alimony / other) — engine + intake | shipped | U1–U4 shipped (types · compile + goldens · the atomic engine integration · the **intake UX + the KTD-9 copy half**); U5 doc-reconcile done — R40 complete. Build steps: [docs/plans/2-first-answer.md](plans/2-first-answer.md) |
 
-### Act 3 — The Levers You Hold (not started; `src/budget` is `.gitkeep`-only)
+### Act 3 — The Levers You Hold (in progress — opened 2026-07-02)
 
 | Unit | What it delivers | Status | Note |
 |---|---|---|---|
-| **U9** | Budget builder: itemized, time-boxed, essentials/discretionary; the two-tier lexicographic headline reading | not-started | The two-date split rides U9's degenerate-collapse |
+| **U9** | Budget builder: itemized, time-boxed, essentials/discretionary; the two-tier lexicographic headline reading | in-progress | **U9a (the ENGINE half) SHIPPED 2026-07-02** (council-ratified design, run wf_f18bbb26-389): the persisted `budget?` line items (additive-optional within v3), the `src/budget` compile (sticky rule + OOP-medical injection), the two-track evaluation on ONE shared CRN draw set (a genuine second decumulation+overlay pass), `Distribution.floor` + `floorReading`, the genuinely-split date-search floor/lifestyle tracks with the floor-crowned band, the fail-loud oopMedical containment gate, and the reconciliation invariant. **U9b (ALL UI — BudgetBuilder, TwoTierHeadline, copy) is ahead** under the four-skill loadout + N=1 cold-read. The two-date split rides U9's degenerate-collapse |
 | **U10** | Manual withdrawal-sequencing control + Roth-conversion lever (both drive the U2 overlay); require-the-hedge lint introduced | not-started | |
 | **U11** | Healthcare surfaces (ACA cliff + enhanced toggle + re-verify gate; IRMAA cliffs; HSA entry) over the U3 overlay | not-started | |
 | **U12** | Sharpen loop + assumption editing + power-user escape hatch | not-started | |
@@ -161,10 +161,10 @@ These are the gates a fixture or recommendation must clear before any downstream
 | Gate | What it checks | Command |
 |---|---|---|
 | **Typecheck** | `tsc --noEmit` — must pass before any browser touch | `pnpm typecheck` |
-| **Tests** | 1473 vitest across 84 files (Vitest 4, `globals:false`); externally-derived goldens, absence-tests paired with presence companions | `pnpm test` |
+| **Tests** | 1516 vitest across 87 files (Vitest 4, `globals:false`); externally-derived goldens, absence-tests paired with presence companions | `pnpm test` |
 | **Lint** | Layer-boundary + engine-purity rules (no clock/entropy/env inside `src/engine/**`) | `pnpm lint` |
 | **ACA re-verify** | Fails the build if the enhanced-subsidy legislative entry is stale/unconfirmed — live, possibly-retroactive policy | `pnpm verify:aca` |
-| **Bundle budget** | Initial-JS byte sentinel ≤ 300 KiB entry JS; **currently 220.5 KiB** | `pnpm verify:bundle` |
+| **Bundle budget** | Initial-JS byte sentinel ≤ 300 KiB entry JS; **currently 221.8 KiB** | `pnpm verify:bundle` |
 | **CSP enforcement** | A real Chromium blocks an injected inline script + a cross-origin fetch, while the engine worker still constructs — each with a no-CSP control arm | `pnpm verify:csp` |
 | **Doc-stat drift** | README + roadmap "NNN tests across NN files" must match the live suite (vitest collection) — catches both staleness and cross-surface drift | `pnpm verify:doc-stats` |
 

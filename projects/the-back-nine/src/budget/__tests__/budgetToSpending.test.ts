@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import type { BudgetLineItem } from '@shared/model'
-import { budgetYearZeroFullTotal, compileBudget } from '@budget/budgetToSpending'
+import { budgetDraftPatch, budgetYearZeroFullTotal, compileBudget } from '@budget/budgetToSpending'
 
 const line = (over: Partial<BudgetLineItem>): BudgetLineItem => ({
   category: 'food',
@@ -95,6 +95,18 @@ describe('compileBudget — structural throws vs faithful domain-bad values', ()
   it('compiles a domain-bad AMOUNT faithfully — the ENGINE (validateParams), never this layer, rejects it to a calm indeterminate', () => {
     const c = compileBudget([line({ annualAmountReal: -100 })], undefined, H)
     expect(c.scalableEssentials[0]).toBe(-100)
+  })
+})
+
+describe('budgetDraftPatch — the reconciliation invariant, atomic', () => {
+  it('one patch carries the items AND the reconciled scalar (incl. injected medical) — no consumer can observe them disagreeing', () => {
+    const items = [
+      line({ annualAmountReal: 30_000 }),
+      line({ tier: 'discretionary', annualAmountReal: 15_000, label: 'Travel' }),
+    ]
+    const patch = budgetDraftPatch(items, 6_000)
+    expect(patch.budget).toBe(items)
+    expect(patch.annualSpendingReal).toBe(51_000)
   })
 })
 

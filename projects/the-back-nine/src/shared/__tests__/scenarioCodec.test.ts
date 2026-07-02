@@ -299,6 +299,41 @@ describe('v3 — the forward-written persist shape (U8, the first v3 writer)', (
     if (decoded.ok) expect(decoded.scenario.seed).toBe(0x0badf00d) // the determinism field survives
   })
 
+  // P3·U9 — the budget field (ADDITIVE-OPTIONAL within v3: the V3 fixture above carries
+  // none and round-trips — that IS the pre-U9-vault tolerant-reader proof; these arms
+  // cover the present-and-valid and present-and-corrupt shapes).
+  it('v3 WITH a budget round-trips exactly — windowed + lifelong lines, both tiers', () => {
+    const withBudget: ScenarioV3 = {
+      ...V3,
+      budget: [
+        { category: 'housing', label: 'Mortgage + tax', annualAmountReal: 30_000, tier: 'essentials', startYear: 0 },
+        { category: 'travel', label: 'See the world', annualAmountReal: 15_000, tier: 'discretionary', startYear: 0, endYear: 19 },
+      ],
+    }
+    expect(decodeScenario(encodeScenario(withBudget))).toEqual({ ok: true, scenario: withBudget })
+  })
+
+  it('v3 budget corruption arms: bad category/tier vocab, reversed window, negative start, null endYear (DND-009), non-finite amount — each named corrupt', () => {
+    const withBudget: ScenarioV3 = {
+      ...V3,
+      budget: [{ category: 'food', label: 'Groceries', annualAmountReal: 12_000, tier: 'essentials', startYear: 2, endYear: 5 }],
+    }
+    const arms: ((b: Obj) => void)[] = [
+      (b) => { b.category = 'medical' }, // fenced OUT of the v1 enum (council 2026-07-02)
+      (b) => { b.tier = 'luxury' },
+      (b) => { b.endYear = 1 }, // reversed window — structural, no layer can compute on it
+      (b) => { b.startYear = -1 },
+      (b) => { b.endYear = null }, // null-in-number-slot is named corruption, never lifelong
+      (b) => { b.annualAmountReal = Number.NaN },
+      (b) => { b.label = 7 },
+    ]
+    for (const arm of arms) {
+      const decoded = decodeScenario(mutated(withBudget, (o) => arm((o.budget as Obj[])[0]!)))
+      expect(decoded.ok).toBe(false)
+      if (!decoded.ok) expect(decoded.reason).toBe('corrupt')
+    }
+  })
+
   it('EVERY v3 top-level field is validated — set each to null and the decode rejects as CORRUPT (no silent skip, burned/063)', () => {
     // NOTE: a null on a CONTAINER field (people/enteredAccounts/tickerClassifications/health/incomeStreams)
     // only trips the OUTER needArray/needObject — the inner-shape coverage is the targeted tests below.

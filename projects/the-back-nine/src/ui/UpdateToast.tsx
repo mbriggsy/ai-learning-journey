@@ -15,9 +15,10 @@ import { readyToApplyUpdate } from './updateGate'
  * static import would pull ~21 KiB of vault code into entry for a rarely-clicked control),
  * and the DB is never opened at render for a user who never saves.
  *
- * This is the write-transaction FLOOR ("never skipWaiting mid-write"). Deferral across the
- * whole SAVE ceremony (commit → mandatory export, where no write is in flight) rides
- * SaveFlow's own step signal — the U8 SLICE-2 export-step gate, not this component.
+ * The seam decides BOTH clauses: the write-transaction floor ("never skipWaiting mid-write")
+ * AND the Fork B save-ceremony hold (commit → mandatory export, where no write is in flight —
+ * SaveFlow raises `holdUpdateApply` across securing+export and the gate refuses while it's
+ * open). This component stays dumb wiring either way: a false gate leaves the prompt up.
  */
 export function UpdateToast() {
   const {
@@ -40,7 +41,9 @@ export function UpdateToast() {
           setNeedRefresh(false)
           void updateServiceWorker(true)
         } else {
-          applyingRef.current = false // a write is still in flight — leave the prompt up to retry
+          // A write is still in flight OR the Save ceremony is mid commit→export — leave the
+          // prompt up; the user re-clicks once the ceremony (or write) is done.
+          applyingRef.current = false
         }
       } catch {
         applyingRef.current = false // reaching the session must never brick the prompt

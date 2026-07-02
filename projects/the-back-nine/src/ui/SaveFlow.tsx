@@ -18,6 +18,7 @@ import { copy } from './copy'
 import './styles/save.css'
 import { createAnnouncer, focusHeading, type Announcer } from '@intake/a11y'
 import { getVaultSession } from './vaultSession'
+import { holdUpdateApply } from './updateGate'
 import { PassphraseStep } from './PassphraseStep'
 import { ExportConfirm } from './ExportConfirm'
 import type { ScenarioV3 } from '@shared/model'
@@ -88,6 +89,20 @@ export function SaveFlow({
     window.addEventListener('beforeunload', handler)
     return () => window.removeEventListener('beforeunload', handler)
   }, [guarding])
+
+  // Fork B: hold the PWA update-apply across securing + export. The write gate alone cannot
+  // cover this window — securing's ~1s KDF derive runs BEFORE its write is enqueued (no write
+  // in flight to defer on), and export is a pure READ (vault committed, backup not yet saved).
+  // An "Update now" reload landing anywhere in commit→export leaves the user without their
+  // off-device backup while believing the save finished. Securing is included so the hold is
+  // up BEFORE the commit lands — the write-drain→export handoff has no uncovered instant.
+  // beforeunload (above) deliberately does NOT stop the intentional reload; this hold is what
+  // makes the toast refuse instead. Effect-cleanup release: an unmount can never leak the hold.
+  const holdingUpdate = step === 'securing' || step === 'export'
+  useEffect(() => {
+    if (!holdingUpdate) return
+    return holdUpdateApply()
+  }, [holdingUpdate])
 
   function handlePassphrase(checked: FloorCheckedPassphrase) {
     dailyRef.current = checked

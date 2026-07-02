@@ -161,10 +161,10 @@ These are the gates a fixture or recommendation must clear before any downstream
 | Gate | What it checks | Command |
 |---|---|---|
 | **Typecheck** | `tsc --noEmit` — must pass before any browser touch | `pnpm typecheck` |
-| **Tests** | 1433 vitest across 79 files (Vitest 4, `globals:false`); externally-derived goldens, absence-tests paired with presence companions | `pnpm test` |
+| **Tests** | 1441 vitest across 80 files (Vitest 4, `globals:false`); externally-derived goldens, absence-tests paired with presence companions | `pnpm test` |
 | **Lint** | Layer-boundary + engine-purity rules (no clock/entropy/env inside `src/engine/**`) | `pnpm lint` |
 | **ACA re-verify** | Fails the build if the enhanced-subsidy legislative entry is stale/unconfirmed — live, possibly-retroactive policy | `pnpm verify:aca` |
-| **Bundle budget** | Initial-JS byte sentinel ≤ 300 KiB entry JS; **currently 218.1 KiB** | `pnpm verify:bundle` |
+| **Bundle budget** | Initial-JS byte sentinel ≤ 300 KiB entry JS; **currently 220.5 KiB** | `pnpm verify:bundle` |
 | **CSP enforcement** | A real Chromium blocks an injected inline script + a cross-origin fetch, while the engine worker still constructs — each with a no-CSP control arm | `pnpm verify:csp` |
 | **Doc-stat drift** | README + roadmap "NNN tests across NN files" must match the live suite (vitest collection) — catches both staleness and cross-surface drift | `pnpm verify:doc-stats` |
 

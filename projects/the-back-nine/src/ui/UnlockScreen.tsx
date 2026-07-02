@@ -61,8 +61,13 @@ export function UnlockScreen({
   }, [])
   const announcer = useMemo<Announcer>(() => ({ announce: (t) => realAnnouncer.current?.announce(t) }), [])
 
-  // Focus-to-heading on mount (the established pattern; opacity-only fade so .focus() always takes).
-  useEffect(() => focusHeading(headingRef.current), [])
+  // Focus-to-heading on mount AND on the busy→form return: a failed attempt unmounts the form into
+  // the pending panel (focus falls to <body>), so the remounted form must re-anchor focus or a
+  // keyboard/AT user retries from the top of the page (ultramode review 2026-07-02 — RecoveryFlow
+  // had this right; this mirrors it).
+  useEffect(() => {
+    if (!busy) focusHeading(headingRef.current)
+  }, [busy])
 
   async function handleUnlock() {
     if (busy || passphrase === '') return

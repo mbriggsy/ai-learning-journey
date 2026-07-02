@@ -82,6 +82,20 @@ describe('UnlockScreen — the returning-user door', () => {
     expect((await screen.findByRole('alert')).textContent).toBe(copy.unlockNewerVersion)
   })
 
+  it('a THROWN unlock surfaces the calm generic — never "damaged" — and the remounted form regains heading focus', async () => {
+    unlock.mockRejectedValue(new Error('boom'))
+    render(<UnlockScreen onUnlocked={vi.fn()} />)
+    fireEvent.change(field(), { target: { value: 'x' } })
+    fireEvent.click(openBtn())
+    const alert = await screen.findByRole('alert')
+    expect(alert.textContent).toBe(copy.unlockGeneric)
+    // The busy→form return re-anchors focus on the heading (the form unmounted into the pending
+    // panel, dropping focus to <body>) — a keyboard retry must not start from the top of the page.
+    await waitFor(() =>
+      expect(document.activeElement).toBe(screen.getByRole('heading', { name: copy.unlockHeading })),
+    )
+  })
+
   it('forgives the error the instant the field is re-edited (calm: silent while typing)', async () => {
     unlock.mockResolvedValue({ ok: false, reason: 'wrong-passphrase' })
     render(<UnlockScreen onUnlocked={vi.fn()} />)

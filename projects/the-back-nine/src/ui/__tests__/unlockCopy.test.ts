@@ -102,6 +102,21 @@ describe('describeUnlockReadOnly — the read-only-OPEN notice (the SUCCESS arm)
   })
 })
 
+describe('the copy CONTENT law — keys are routed above; these pin the WORDS (ultramode 2026-07-02)', () => {
+  it('the newer-version/newer-format copy carries NO damage lexicon at all (intact data, wrong vintage)', () => {
+    // The routing tests prove newer → unlockNewerVersion; this proves the STRING itself can never
+    // drift into "damaged"/"corrupt" while the key stays green (the tautological toBe(copy.X) trap).
+    expect(copy.unlockNewerVersion).not.toMatch(/damag|corrupt/i)
+  })
+
+  it('the GCM-ambiguous credential copy HEDGES — damage may be mentioned only as a maybe, never asserted', () => {
+    for (const s of [copy.unlockWrongCredential, copy.restoreWrongCredential]) {
+      expect(s).toMatch(/\b(may|might|could)\b/i) // the hedge marker must survive any rewording
+      expect(s).not.toMatch(/\bis (damaged|corrupt)\b/i) // never a bare assertion of damage
+    }
+  })
+})
+
 describe('describeRestoreFailure — the Fork A failure routing (copy + the step that can fix it)', () => {
   it('a wrong recovery word is GCM-ambiguous: hedged copy, anchored on the WORD field', () => {
     expect(describeRestoreFailure({ ok: false, reason: 'wrong-recovery-passphrase' })).toEqual({

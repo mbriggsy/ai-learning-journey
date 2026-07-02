@@ -4,6 +4,7 @@ import { copy } from './copy'
 import { UpdateToast } from './UpdateToast'
 import { Disclaimer } from './Disclaimer'
 import { UnlockScreen } from './UnlockScreen'
+import { AppErrorBoundary } from './ErrorBoundary'
 
 /**
  * The P2 app body: a startup vault PROBE routes the returning user, then the D1 account-level guided
@@ -119,7 +120,7 @@ export function App({ seed, vaultSeed }: { seed?: string | null; vaultSeed?: str
     entry.kind === 'unlock' || entry.kind === 'recover' || entry.kind === 'damaged' || entry.kind === 'began'
 
   return (
-    <>
+    <AppErrorBoundary>
       {showAppTitleH1 && <h1 className="sr-only">{copy.appTitle}</h1>}
       {(entry.kind === 'probing' || entry.kind === 'planting') && null /* brief neutral hold */}
       {entry.kind === 'cold' && <ColdStart onBegin={() => setEntry({ kind: 'began', hydrate: false })} />}
@@ -153,6 +154,6 @@ export function App({ seed, vaultSeed }: { seed?: string | null; vaultSeed?: str
       )}
       <UpdateToast />
       <Disclaimer />
-    </>
+    </AppErrorBoundary>
   )
 }

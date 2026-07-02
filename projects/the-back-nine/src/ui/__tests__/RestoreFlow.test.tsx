@@ -161,12 +161,26 @@ describe('RestoreFlow — the one restore call and its seam-routed failures', ()
     expect(restore).toHaveBeenCalledTimes(2)
   })
 
-  it('a vault-exists TOCTOU refusal gets its own calm copy on the error panel', async () => {
+  it('a vault-exists TOCTOU refusal gets its own calm copy AND a reload CTA — never a futile Try-again loop', async () => {
     restore.mockResolvedValue({ ok: false, reason: 'vault-exists' })
     render(<RestoreFlow onRestored={vi.fn()} onExitToUnlock={vi.fn()} />)
     await reachSetNew()
     submitNewPassphrase(NEW_PASS)
     expect((await screen.findByRole('alert')).textContent).toBe(copy.restoreVaultExists)
+    // vault-exists is deterministic (a retry re-refuses forever) — the primary action must match
+    // the copy's own "Reload the page" instruction, not offer a retry that cannot succeed.
+    expect(screen.getByRole('button', { name: copy.restoreRetry })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: copy.exportRetry })).toBeNull()
+  })
+
+  it('transient operational arms (quota) keep the Try-again CTA — only vault-exists swaps to reload', async () => {
+    restore.mockResolvedValue({ ok: false, reason: 'quota' })
+    render(<RestoreFlow onRestored={vi.fn()} onExitToUnlock={vi.fn()} />)
+    await reachSetNew()
+    submitNewPassphrase(NEW_PASS)
+    expect((await screen.findByRole('alert')).textContent).toBe(copy.saveErrorQuota)
+    expect(screen.getByRole('button', { name: copy.exportRetry })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: copy.restoreRetry })).toBeNull()
   })
 
   it('a committed restore whose auto-unlock refuses falls back to the unlock screen (the vault is healthy)', async () => {
@@ -177,5 +191,19 @@ describe('RestoreFlow — the one restore call and its seam-routed failures', ()
     await reachSetNew()
     submitNewPassphrase(NEW_PASS)
     await waitFor(() => expect(onExitToUnlock).toHaveBeenCalledTimes(1))
+  })
+
+  it('a committed restore whose auto-unlock THROWS also falls back to the unlock screen — NEVER "Saving didn’t finish"', async () => {
+    // The restore COMMITTED; a thrown post-commit unlock (rethrown programming error / transient
+    // read) must not be misbucketed into the pre-commit catch and mislabel a durable write as
+    // unfinished (the calm-but-wrong durability claim — ultramode review 2026-07-02).
+    restore.mockResolvedValue({ ok: true })
+    unlock.mockRejectedValue(new Error('transient read'))
+    const onExitToUnlock = vi.fn()
+    render(<RestoreFlow onRestored={vi.fn()} onExitToUnlock={onExitToUnlock} />)
+    await reachSetNew()
+    submitNewPassphrase(NEW_PASS)
+    await waitFor(() => expect(onExitToUnlock).toHaveBeenCalledTimes(1))
+    expect(screen.queryByText(copy.saveErrorFailed)).toBeNull()
   })
 })

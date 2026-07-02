@@ -125,13 +125,19 @@ export function RestoreFlow({
       const session = await getVaultSession()
       const result = await session.restore(fileText, word, newPass)
       if (result.ok) {
-        // Committed on disk. Re-enter through the one unlock path, then App hydrates as a normal
-        // return; the pending panel stays mounted as the bridge (the UnlockScreen pattern).
+        // COMMITTED ON DISK — past this line no path may read "didn't finish" (a committed durable
+        // write mis-reported as unfinished is the calm-but-wrong sin; ultramode review 2026-07-02).
+        // Re-enter through the one unlock path; the pending panel bridges (UnlockScreen pattern).
         announcer.announce(copy.restoringStatus)
-        const opened = await session.unlock(newPass.value)
-        if (opened.ok) {
-          onRestored()
-          return
+        try {
+          const opened = await session.unlock(newPass.value)
+          if (opened.ok) {
+            onRestored()
+            return
+          }
+        } catch {
+          // A THROWN post-commit unlock (rethrown programming error / transient read) is the same
+          // situation as a refused one: the vault is healthy — fall through to the unlock door.
         }
         onExitToUnlock()
         return
@@ -158,10 +164,20 @@ export function RestoreFlow({
           announcer.announce(copy[message.key])
           setStep('error')
           return
+        default: {
+          // Compile-time exhaustiveness (the house never-default, mirroring the seam's own): a new
+          // RestoreMessage anchor fails to compile here until routed. Runtime stays CALM (a
+          // retryable panel), never a silent hang on the 'restoring' pending screen.
+          const _exhaustive: never = message
+          setOpError('saveErrorFailed')
+          setStep('error')
+          return
+        }
       }
     } catch {
-      // restoreVault rethrows non-CipherAuthError programming errors; the dynamic import can fail
-      // offline. Either way: a calm operational error with a retry — never a crash, never "damaged".
+      // Pre-commit failures only (the import, session.restore itself): restoreVault rethrows
+      // non-CipherAuthError programming errors; the dynamic import can fail offline. A calm
+      // operational error with a retry — never a crash, never "damaged".
       setOpError('saveErrorFailed')
       announcer.announce(copy.saveErrorFailed)
       setStep('error')
@@ -322,9 +338,18 @@ export function RestoreFlow({
             <button type="button" className="btn-quiet" onClick={() => setStep('file')}>
               {copy.flowBack}
             </button>
-            <button type="button" className="btn-primary" onClick={() => void runRestore()}>
-              {copy.exportRetry}
-            </button>
+            {opError === 'restoreVaultExists' ? (
+              // vault-exists is NOT transient — a retry deterministically re-refuses (backup.ts:135),
+              // so the primary action matches the copy's own instruction: reload (re-probes fresh,
+              // and the healthy vault routes to the unlock screen). Ultramode review 2026-07-02.
+              <button type="button" className="btn-primary" onClick={() => window.location.reload()}>
+                {copy.restoreRetry}
+              </button>
+            ) : (
+              <button type="button" className="btn-primary" onClick={() => void runRestore()}>
+                {copy.exportRetry}
+              </button>
+            )}
           </div>
         </section>
       )}

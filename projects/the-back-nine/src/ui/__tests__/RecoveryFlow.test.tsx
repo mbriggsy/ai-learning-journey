@@ -95,6 +95,19 @@ describe('RecoveryFlow — the word step', () => {
     expect(screen.queryByRole('alert')).toBeNull()
   })
 
+  it('a THROWN recoveryUnlock (programming error / offline chunk miss) surfaces the calm generic — NEVER "damaged"', async () => {
+    // The throw bypasses describeUnlockFailure entirely (session rethrows non-CipherAuthError on
+    // purpose), so this catch is the SOLE realization of the never-mislabel law on this path —
+    // the one honesty arm the seam's own tests cannot cover (ultramode review 2026-07-02).
+    recoveryUnlock.mockRejectedValue(new Error('boom'))
+    render(<RecoveryFlow onRecovered={vi.fn()} onExit={vi.fn()} />)
+    fireEvent.change(wordField(), { target: { value: WORD } })
+    fireEvent.click(openBtn())
+    const alert = await screen.findByRole('alert')
+    expect(alert.textContent).toBe(copy.unlockGeneric)
+    expect(alert.textContent).not.toBe(copy.unlockDataDamaged)
+  })
+
   it('the recovery-specific open-in-another-tab refusal gets its own calm copy', async () => {
     recoveryUnlock.mockResolvedValue({ ok: false, reason: 'open-in-another-tab' })
     render(<RecoveryFlow onRecovered={vi.fn()} onExit={vi.fn()} />)

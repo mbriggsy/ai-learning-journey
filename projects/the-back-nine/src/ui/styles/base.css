@@ -136,12 +136,64 @@ svg {
   border: 0;
 }
 
+/* ----- the ONE thinking gesture (emil-design-eng + Briggsy, 2026-07-02) -----
+ * Every "the engine is working" text shares a single slow breath — opacity only
+ * (compositor-friendly), a ~2.1s cycle deliberately slower than any interaction timing:
+ * a calm tool concentrating, never a spinner's hurry, never a casino shimmer (the
+ * back-nine tone law outranks bedazzle). One keyframes + one family selector so the app
+ * has exactly ONE recognizable working tell:
+ *   .strip-thinking        — the intake strip's "Working it out…" line
+ *   .fod-pending /
+ *   .cs-pending            — the ROUTED result surfaces' own "Working it out…" lines
+ *                            (each hero renders `answerPending` itself — insight 054's
+ *                            same-words-three-renderers shape; all three breathe)
+ *   .save-pending          — "Opening your plan…" / "Securing your plan…" panels
+ *   .result-save-pending   — "Saving your changes…"
+ *   .fod-provisional /
+ *   .cs-provisional        — the "Provisional —" tag: the heartbeat that keeps beating
+ *                            while the heavy FINAL sharpens in the background (the
+ *                            working route's ~20s sweep), and stops when it lands.
+ * The trough (0.65) keeps the muted ink readable mid-dip; the peak is full strength.
+ * An ambient loop is keyframes-correct (the interruptibility rule targets state
+ * transitions, not continuous idles). */
+@keyframes thinking-breathe {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.65;
+  }
+}
+
+.strip-thinking,
+.fod-pending,
+.cs-pending,
+.save-pending,
+.result-save-pending,
+.fod-provisional,
+.cs-provisional {
+  animation: thinking-breathe var(--dur-breathe) var(--ease-in-out) infinite;
+}
+
 /* Reduced motion: movement is dropped at the COMPONENT level (each animation branches
  * on prefers-reduced-motion / useReducedMotion and keeps a short comprehension fade —
  * a global duration-kill would also kill the fades the a11y contract deliberately
- * keeps). This base layer only neutralizes scroll movement. */
+ * keeps). This base layer only neutralizes scroll movement — and stops the ambient
+ * thinking breath (a continuous pulse is exactly the class reduced-motion asks off;
+ * the static text remains the comprehension signal). */
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
+  }
+
+  .strip-thinking,
+  .fod-pending,
+  .cs-pending,
+  .save-pending,
+  .result-save-pending,
+  .fod-provisional,
+  .cs-provisional {
+    animation: none;
   }
 }

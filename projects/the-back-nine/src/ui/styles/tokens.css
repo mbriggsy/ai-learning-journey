@@ -125,6 +125,8 @@
   --dur-fast: 180ms; /* hovers, small fades, error appear/clear */
   --dur-step: 260ms; /* intake step slide+fade */
   --dur-reveal: 420ms; /* first-time reveals only (band first draw — occasional moments) */
+  --dur-breathe: 2100ms; /* the ONE thinking gesture (base.css) — ambient, deliberately slower than
+    any interaction timing: a calm tool concentrating, never a spinner's hurry */
 
   /* ----- stacking ----- */
   --z-thread: 10; /* the quiet progress thread */

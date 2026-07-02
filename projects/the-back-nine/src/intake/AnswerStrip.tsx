@@ -106,7 +106,12 @@ export function AnswerStrip({
         </>
       )}
 
-      {answer.kind === 'pending' && <p className="strip-lead strip-muted">{copy.answerPending}</p>}
+      {answer.kind === 'pending' && (
+        // strip-thinking: the app-wide breathing "working" gesture (base.css). A sub-second
+        // intake tick shows barely a quarter-breath — imperceptible there by design; the full
+        // breath reads on the longer decrypt-on-return / completion crunch.
+        <p className="strip-lead strip-muted strip-thinking">{copy.answerPending}</p>
+      )}
 
       {answer.kind === 'compute-error' && (
         <p className="strip-lead">

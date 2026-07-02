@@ -69,6 +69,18 @@ export function runEngine(
       // resolved wire by STRUCTURED CLONE and must NEVER join the `run` transfer list below.
       ...(result.distribution.survivorConditioned ? { survivorConditioned: result.distribution.survivorConditioned } : {}),
       ...(result.survivorReading ? { survivorReading: result.survivorReading } : {}),
+      // P3·U9 — the floor track (param-driven presence): the paths-length depletion array
+      // packs as a transferable Int32Array (its buffer joins the enumerated transfer list
+      // in `run` below); the verdict rides by clone beside the survivor reading.
+      ...(result.distribution.floor
+        ? {
+            floor: {
+              survivalFraction: result.distribution.floor.survivalFraction,
+              depletionYears: Int32Array.from(result.distribution.floor.depletionYears),
+            },
+          }
+        : {}),
+      ...(result.floorReading ? { floorReading: result.floorReading } : {}),
     }
   } catch (e) {
     return { kind: 'calm-error', reason: e instanceof Error ? e.message : 'engine error' }
@@ -160,6 +172,9 @@ export const engineApi = {
           wire.taxAware.terminalTaxableBasisReal.buffer,
         )
       }
+      // P3·U9 — the floor track's paths-length depletion buffer joins the enumerated list
+      // (its sibling fields — the fraction, the floorReading — stay structured clone).
+      if (wire.floor) buffers.push(wire.floor.depletionYears.buffer)
       return Comlink.transfer(wire, buffers)
     }
     return wire

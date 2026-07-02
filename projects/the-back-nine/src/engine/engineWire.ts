@@ -46,6 +46,18 @@ export interface ResolvedWire {
   /** The U7 "as the survivor" reading (result-level; what `SurvivorReadout` renders). Present iff
    *  `survivorConditioned` is — the model's stated iff, preserved across the wire. Compact clone. */
   readonly survivorReading?: SurvivorReading
+  /** P3·U9 — the essentials-floor track in wire form. Present iff the run carried a budget
+   *  construct (param-driven, mirroring the value model's presence key). `depletionYears`
+   *  is a paths-length Int32Array (carries the −1 NEVER_DEPLETED sentinel) and JOINS the
+   *  transfer list like its full-track sibling — the fraction rides beside it by clone. */
+  readonly floor?: {
+    readonly survivalFraction: number
+    readonly depletionYears: Int32Array
+  }
+  /** P3·U9 — the engine-tagged floor verdict (what the two-tier headline renders). Present
+   *  iff `floor` is — the model's stated iff, preserved across the wire. Compact clone,
+   *  NEVER the transfer list; carried verbatim, never re-derived main-thread. */
+  readonly floorReading?: Headline
 }
 
 /** The worker's return contract — a resolved reading, the typed per-candidate INFEASIBLE
@@ -97,12 +109,24 @@ export function fromWire(wire: EngineWire): EngineResult {
         // across; pass it through presence-keyed, preserving the model's survivorReading ⟹
         // survivorConditioned iff on the reconstructed object (mirrors bandFan / taxAware).
         ...(wire.survivorConditioned ? { survivorConditioned: wire.survivorConditioned } : {}),
+        // P3·U9 — the floor track widens back to the value model (Int32Array → number[]),
+        // exactly like the full track's depletionYears above.
+        ...(wire.floor
+          ? {
+              floor: {
+                survivalFraction: wire.floor.survivalFraction,
+                depletionYears: Array.from(wire.floor.depletionYears),
+              },
+            }
+          : {}),
       },
       headline: wire.headline,
       dollar: wire.dollar,
       // The result-level "as the survivor" reading (what SurvivorReadout renders). Carried VERBATIM,
       // never re-derived main-thread (insight 045) — summarize already built it worker-side.
       ...(wire.survivorReading ? { survivorReading: wire.survivorReading } : {}),
+      // P3·U9 — the floor verdict, verbatim (summarize built it worker-side; insight 045).
+      ...(wire.floorReading ? { floorReading: wire.floorReading } : {}),
       seed: wire.seed,
     },
   }

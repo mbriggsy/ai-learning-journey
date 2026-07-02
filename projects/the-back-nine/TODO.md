@@ -2,7 +2,7 @@
 
 > Actionable next-actions only. **Where we are** ("you are here") lives in [`docs/roadmap.md`](docs/roadmap.md) — the maintained per-unit status table. **What we're building + why** is [`docs/README.md`](docs/README.md). No session history here; git log has it.
 
-> **Dev seeds are LIVE** (`?seed=retired` = all-retired on-track spine band; `?seed=date` = still-working fuck-off-date band; `?seed=borderline` = **borderline retired ("On the line, 7 of 10") whose band descends to $0 — the two-pane honesty cold-read**; `?seed=dateborder` = borderline date with a $0 tail, but long-horizon-squashed). Jump straight to a worded result + band to cold-read any change. DEV-only, DCE'd from prod (`src/ui/devSeeds.ts`).
+> **Dev seeds are LIVE** (`?seed=retired` = all-retired on-track spine band; `?seed=date` = still-working fuck-off-date band; `?seed=borderline` = **borderline retired ("On the line, 7 of 10") whose band descends to $0 — the two-pane honesty cold-read**; `?seed=dateborder` = borderline date with a $0 tail, but long-horizon-squashed). Jump straight to a worded result + band to cold-read any change. DEV-only, DCE'd from prod (`src/ui/devSeeds.ts`). **`?vault=<key>` (e.g. `?vault=retired`) PLANTS an encrypted vault from that seed + drops on the Unlock screen with the passphrase PRE-FILLED — one click opens it, no re-driving intake + the Save ceremony. Reload re-plants (idempotent). DCE-proven (grep dist/ for the dev passphrase = 0).** `plantDevVault` is memoized so StrictMode's double-invoke plants once (a concurrent second plant races the session epoch → spurious write-failed).
 
 ## Next, in priority order
 

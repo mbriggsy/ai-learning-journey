@@ -15,10 +15,14 @@
  * answer. The fixed `seed` makes the percentile fan REPRODUCIBLE across drives: a
  * render change shows as a render change, never a fresh random draw.
  *
- * LANDMINE: a seed only mutates the in-memory `appModel` (same as a normal
- * intake) — nothing persists to IndexedDB (U8 owns the first Save).
+ * LANDMINE: a `?seed` mutates only the in-memory `appModel` (same as a normal
+ * intake) — nothing persists to IndexedDB. The ONE deliberate exception is
+ * `plantDevVault` below (reached at `?vault=<key>`), which DOES write an encrypted
+ * vault — the dev shortcut for exercising decrypt-on-return without re-driving the
+ * intake AND the Save ceremony every time. It is equally DEV-gated + DCE'd.
  */
 import type { ScenarioDraft } from '@store/memoryModel'
+import { scenarioFromDraft } from './scenarioFromDraft'
 
 /** A fixed dev CRN seed → the same fan every drive (a reproducible cold-read).
  *  Any uint32 satisfies the engine's integer-seed gate; `ensureSeed` REUSES a
@@ -347,4 +351,64 @@ export type DevSeedKey = keyof typeof DEV_SEEDS
 /** Resolve a raw `?seed` value to its draft, or null for an unknown key. */
 export function resolveDevSeed(key: string): ScenarioDraft | null {
   return key in DEV_SEEDS ? DEV_SEEDS[key as DevSeedKey] : null
+}
+
+// ---------------------------------------------------------------------------
+// `?vault=<key>` — the decrypt-on-return dev shortcut (DEV-only, DCE'd).
+// ---------------------------------------------------------------------------
+
+/** The fixed dev credentials a planted vault is minted with — chosen to clear the real passphrase
+ *  floor (verified in `vaultRoundTrip.test.ts`), so `plantDevVault` never trips the KDF gate. The
+ *  daily passphrase is what `?vault=<key>` PRE-FILLS on the unlock screen (App), so opening a planted
+ *  vault is one click — no typing. Distinct daily/recovery (the `firstSave` negative-pairing gate). */
+export const DEV_VAULT_PASSPHRASE = 'plinth otter vivid casket 92 lampoon'
+export const DEV_VAULT_RECOVERY = 'lattice harbor cinder vellum 48 thicket'
+
+/**
+ * DEV-only: plant an encrypted vault from a dev seed with {@link DEV_VAULT_PASSPHRASE}, so the
+ * decrypt-on-return flow (probe → UnlockScreen → hydrate) can be exercised WITHOUT re-driving the
+ * intake and the Save ceremony. Idempotent — locks + clears any existing vault first, so reloading
+ * `?vault=<key>` re-plants cleanly. The crypto/store graph is DYNAMICALLY imported so this module's
+ * static top level stays light (and the whole thing is DEV-gated + DCE'd from prod, like the seeds).
+ * Returns the seed's `ScenarioV3` on success (App pre-fills the passphrase + shows the unlock screen)
+ * or a reason string for the (dev-only) failure log.
+ */
+type PlantResult = 'ok' | 'unknown-seed' | 'not-ready' | 'floor-fail' | 'write-failed'
+
+// Memoize the in-flight plant per key so React StrictMode's dev double-invoke of the `?vault` effect
+// runs the plant exactly ONCE. Two concurrent plants race the session epoch (the second's lock()
+// cancels the first's mid-derive firstSave) and the clear→firstSave window → a spurious write-failed.
+// A full page reload re-evaluates this module → fresh memo → re-plants cleanly.
+let plantInFlight: { readonly key: string; readonly promise: Promise<PlantResult> } | null = null
+
+export function plantDevVault(key: string): Promise<PlantResult> {
+  if (plantInFlight && plantInFlight.key === key) return plantInFlight.promise
+  const promise = runPlantDevVault(key)
+  plantInFlight = { key, promise }
+  return promise
+}
+
+async function runPlantDevVault(key: string): Promise<PlantResult> {
+  const draft = resolveDevSeed(key)
+  if (draft === null) return 'unknown-seed'
+  const built = scenarioFromDraft(draft)
+  if (!built.ready) return 'not-ready'
+  const [{ getVaultSession }, { checkPassphraseFloor }, { clearVault, openVaultDb }] = await Promise.all([
+    import('./vaultSession'),
+    import('@crypto/kdf'),
+    import('@store/db'),
+  ])
+  const pass = await checkPassphraseFloor(DEV_VAULT_PASSPHRASE)
+  const rec = await checkPassphraseFloor(DEV_VAULT_RECOVERY)
+  if (!pass.ok || !rec.ok) return 'floor-fail'
+  const session = await getVaultSession()
+  await session.lock().catch(() => {}) // ensure 'locked' (drop any resident keys from a prior plant)
+  await clearVault(await openVaultDb()) // idempotent replace — a prior planted vault would else block firstSave
+  const r = await session.firstSave(built.scenario, pass.passphrase, rec.passphrase)
+  if (!r.ok) return 'write-failed'
+  // firstSave leaves the session UNLOCKED. Lock it so the planter leaves a clean ON-DISK vault the
+  // unlock screen can re-open — else unlock() sees status 'unlocked' and refuses ('not-locked'),
+  // which is exactly the decrypt-on-return path `?vault` exists to exercise.
+  await session.lock()
+  return 'ok'
 }

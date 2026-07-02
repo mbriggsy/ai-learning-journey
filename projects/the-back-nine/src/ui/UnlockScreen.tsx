@@ -33,17 +33,21 @@ import { describeUnlockFailure, type UnlockCopyKey } from './unlockCopy'
 export function UnlockScreen({
   onUnlocked,
   onForgot,
+  initialPassphrase,
 }: {
   /** Called once the vault is open (the session's `currentModel()` is populated); App transitions to
    *  IntakeApp with `hydrateFromVault`. */
   readonly onUnlocked: () => void
   /** The forgot-passphrase → recovery route (surface 3). Omitted until built — no dead link. */
   readonly onForgot?: () => void
+  /** DEV-only: pre-fill the field (the `?vault` plant passes the known dev passphrase so opening a
+   *  planted vault is one click). Undefined in prod — the field starts empty. */
+  readonly initialPassphrase?: string
 }) {
   const headingRef = useRef<HTMLHeadingElement | null>(null)
   const passId = useId()
   const errId = useId()
-  const [passphrase, setPassphrase] = useState('')
+  const [passphrase, setPassphrase] = useState(initialPassphrase ?? '')
   const [reveal, setReveal] = useState(false)
   const [busy, setBusy] = useState(false)
   const [errorKey, setErrorKey] = useState<UnlockCopyKey | null>(null)

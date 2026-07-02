@@ -32,6 +32,12 @@ const Preview =
 // IntakeApp, so it is dead-code-eliminated too). `?preview` takes precedence.
 const seedParam = search?.get('seed') ?? null
 
+// DEV-only vault planter (`?vault=<key>`) — plants an encrypted vault from a dev seed and drops onto
+// the unlock screen (passphrase pre-filled), so decrypt-on-return can be exercised WITHOUT re-driving
+// the intake + Save ceremony. Same DEV gate → DCE'd from prod (the planting graph is dynamically
+// imported in App). `?preview`/`?seed` take precedence (a `?vault` is ignored when either is present).
+const vaultParam = search?.get('vault') ?? null
+
 createRoot(rootEl).render(
   <StrictMode>
     {Preview ? (
@@ -39,7 +45,7 @@ createRoot(rootEl).render(
         <Preview />
       </Suspense>
     ) : (
-      <App seed={seedParam} />
+      <App seed={seedParam} vaultSeed={vaultParam} />
     )}
   </StrictMode>,
 )

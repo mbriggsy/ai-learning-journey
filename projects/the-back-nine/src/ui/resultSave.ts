@@ -13,7 +13,10 @@
  * DIRTY IS COMPUTED, NEVER TRACKED: both scenarios come out of `scenarioFromDraft` (which
  * round-trips the codec, so key order is construction-stable — decodeScenario builds every
  * object) and are compared by JSON identity. An edit that changes nothing, or is edited back,
- * reads clean — the badge tells the truth about the DISK, not about mouse activity.
+ * reads clean — the badge tells the truth about the DISK, not about mouse activity. That law
+ * holds from the 'save-failed' state too: editing back to the on-disk answer clears the
+ * failure alert (nothing is unfinished once the disk matches — alarm-when-fine is a lie in
+ * the safe direction, still a lie).
  */
 import type { ScenarioV3 } from '@shared/model'
 import type { SaveReady } from './scenarioFromDraft'
@@ -47,7 +50,14 @@ export function deriveResultSave(persist: PersistState, ready: SaveReady): Resul
     case 'saving':
       return { kind: 'saving' }
     case 'save-failed':
-      return { kind: 'failed', errorKey: persist.errorKey }
+      // An edit BACK to what is on disk clears the failure honestly: `persist.scenario` is
+      // provably the on-disk model (session.save installs it only on {ok:true}), so a matching
+      // answer has nothing unfinished to report — keeping the alert would be alarm-when-fine
+      // (ultramode 2026-07-02). A STILL-different draft stays 'failed': its retry IS the CTA,
+      // so surfacing 'dirty' there would just duplicate the affordance under a vaguer label.
+      return JSON.stringify(ready.scenario) === JSON.stringify(persist.scenario)
+        ? { kind: 'clean' }
+        : { kind: 'failed', errorKey: persist.errorKey }
     case 'saved':
       return JSON.stringify(ready.scenario) === JSON.stringify(persist.scenario)
         ? { kind: 'clean' }

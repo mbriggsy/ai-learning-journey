@@ -12,9 +12,10 @@
  * the hero room to breathe and seats the quiet return. The hero heading takes focus once on landing
  * (resolvedFocusKey → the surface's focusSignal), the magic-moment announce.
  */
-import { useCallback, useMemo, useSyncExternalStore } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useSyncExternalStore } from 'react'
 import { AnswerStrip } from '@intake/AnswerStrip'
 import { missingRequiredFacts } from '@intake/intakeMap'
+import { createAnnouncer, type Announcer } from '@intake/a11y'
 import { copy } from './copy'
 import { appModel } from './appModel'
 import { FuckOffDate } from './FuckOffDate'
@@ -46,11 +47,35 @@ export function Result({
   // provisional re-blank (a provisional re-fire would mint a higher epoch and supersede the final).
   const retry = useCallback(() => void appModel.recompute('final'), [])
 
+  // The save slot's TRANSITION announcements (ultramode 2026-07-02). The slot swaps whole nodes
+  // per state, so a `role='status'` that mounts already-populated may never announce (burned/045),
+  // and the success badge is plain text — a screen-reader re-save was silent on both the start and
+  // the landing of a durability transition. This persistent, always-mounted polite region (empty
+  // until spoken into, clear-after-announce) owns both: →saving announces the pending line, and
+  // saving→clean announces the badge. The FAILED arm stays with its own role='alert' (an alert
+  // announces on insertion by design — routing it here too would double-speak it). Edit-back
+  // clean (failed→clean with no save) is deliberately silent: no durability event occurred.
+  // (The liveRef+forwarder idiom's 5th site — the filed useLiveAnnouncer() advisory covers all.)
+  const liveRef = useRef<HTMLDivElement | null>(null)
+  const announcerRef = useRef<Announcer | null>(null)
+  useEffect(() => {
+    if (liveRef.current) announcerRef.current = createAnnouncer(liveRef.current)
+  }, [])
+  const prevSaveKind = useRef(save.kind)
+  useEffect(() => {
+    const prev = prevSaveKind.current
+    prevSaveKind.current = save.kind
+    if (save.kind === prev) return
+    if (save.kind === 'saving') announcerRef.current?.announce(copy.resavePending)
+    else if (save.kind === 'clean' && prev === 'saving') announcerRef.current?.announce(copy.savedBadge)
+  }, [save.kind])
+
   const elevated = selectElevatedAnswer(snapshot, retry)
   const focusKey = resolvedFocusKey(elevated)
 
   return (
     <main className="result">
+      <div ref={liveRef} className="sr-only" role="status" aria-live="polite" aria-atomic="true" />
       <div className="result-hero">
         {elevated.kind === 'date' && <FuckOffDate view={elevated.view} focusSignal={focusKey} />}
         {elevated.kind === 'spine' && (
@@ -84,18 +109,29 @@ export function Result({
               </div>
             )}
             {save.kind === 'saving' && (
-              <p className="result-save-pending" role="status">
-                {copy.resavePending}
-              </p>
+              // Announced by the persistent region above (a status inserted already-populated may
+              // not fire, burned/045) — this node is the VISIBLE pending line only.
+              <p className="result-save-pending">{copy.resavePending}</p>
             )}
             {save.kind === 'failed' && (
               <div className="result-keep">
                 <p className="result-save-error" role="alert">
                   {copy[save.errorKey]}
                 </p>
-                <button type="button" className="btn-primary" onClick={save.onRetry}>
-                  {copy.exportRetry}
-                </button>
+                {save.errorKey === 'saveErrorReadOnly' ? (
+                  // The read-only refusal is NON-transient: `secondTab` is captured once at unlock
+                  // and never re-probed, so a retry deterministically re-refuses — the primary
+                  // action must match the copy's own instruction (RELOAD), never a "Try again"
+                  // that can't succeed (the RestoreFlow vault-exists arm's law; ultramode
+                  // 2026-07-02 — 7 lenses converged on this exact lying-remedy shape).
+                  <button type="button" className="btn-primary" onClick={() => window.location.reload()}>
+                    {copy.restoreRetry}
+                  </button>
+                ) : (
+                  <button type="button" className="btn-primary" onClick={save.onRetry}>
+                    {copy.exportRetry}
+                  </button>
+                )}
               </div>
             )}
             {save.kind === 'clean' && (

@@ -61,6 +61,22 @@ describe('deriveResultSave — the edit-and-re-save machine', () => {
     ).toEqual({ kind: 'failed', errorKey: 'saveErrorReadOnly' })
   })
 
+  it('an edit BACK to the on-disk answer clears a save failure (the disk matches — the alert would be alarm-when-fine)', () => {
+    const persist: PersistState = { kind: 'save-failed', scenario: retired.scenario, errorKey: 'saveErrorFailed' }
+    expect(deriveResultSave(persist, retired)).toEqual({ kind: 'clean' })
+    // A STILL-different draft keeps the failure — its retry is the CTA.
+    expect(deriveResultSave(persist, borderline)).toEqual({ kind: 'failed', errorKey: 'saveErrorFailed' })
+  })
+
+  it('clean is STRUCTURAL equality, never reference identity — distinct-but-equal instances read clean (kills the reference-equality mutant)', () => {
+    // Production never compares the same instance: persist.scenario is captured at save/hydrate
+    // while ready.scenario is freshly re-derived each render. A mutant downgrading the JSON
+    // comparison to `===` would make a genuinely-saved plan nag "Save your changes" forever.
+    const other = readyFor('retired')
+    expect(other.scenario).not.toBe(retired.scenario) // distinct instances, same content
+    expect(deriveResultSave({ kind: 'saved', scenario: other.scenario }, retired)).toEqual({ kind: 'clean' })
+  })
+
   it('an incomplete answer makes NO claim regardless of the disk state', () => {
     expect(deriveResultSave({ kind: 'unsaved' }, notReady)).toEqual({ kind: 'none' })
     expect(deriveResultSave({ kind: 'saved', scenario: retired.scenario }, notReady)).toEqual({ kind: 'none' })

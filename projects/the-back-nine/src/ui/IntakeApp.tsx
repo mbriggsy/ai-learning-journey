@@ -226,9 +226,16 @@ export default function IntakeApp({
 
   if (phase === 'result' || phase === 'save') {
     const view = deriveResultSave(persist, saveReady)
+    // 'idle'/'pending' = NOTHING has ever resolved (the "Working it out…" window; `pending`
+    // never recurs after a first resolve — memoryModel holds the last answer visible). Result
+    // withholds its whole actions row there: an affordance we don't want used during the
+    // crunch shouldn't exist (Briggsy, 2026-07-02). A compute-error is NOT computing — the
+    // actions row (Review = fix the inputs) is that failure's remedy.
+    const computing = snapshot.answer.kind === 'idle' || snapshot.answer.kind === 'pending'
     return (
       <Result
         onReview={review}
+        computing={computing}
         save={
           view.kind === 'first'
             ? { kind: 'first', onKeep: () => setPhase('save') }

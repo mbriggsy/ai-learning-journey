@@ -37,9 +37,18 @@ export type ResultSaveProp =
 export function Result({
   onReview,
   save,
+  computing = false,
 }: {
   readonly onReview: () => void
   readonly save: ResultSaveProp
+  /** True while NOTHING has ever resolved (answer 'idle'/'pending' — the "Working it out…"
+   *  window). The whole actions row is withheld: the actions act on an answer that isn't
+   *  there yet, and an affordance we don't want used shouldn't exist (Briggsy, 2026-07-02).
+   *  The edit path is epoch-SAFE during a compute (memoryModel discards stale resolves), so
+   *  this is a calm-affordance rule, not a data guard. `pending` is pre-first-resolve ONLY —
+   *  the background final sharpen never re-hides the row — and a compute-error shows it
+   *  (editing inputs is that failure's remedy). */
+  readonly computing?: boolean
 }) {
   const snapshot = useSyncExternalStore(appModel.subscribe, appModel.getSnapshot)
   const missing = useMemo(() => missingRequiredFacts(snapshot.draft), [snapshot.draft])
@@ -85,67 +94,69 @@ export function Result({
           <AnswerStrip snapshot={snapshot} missing={missing} onRetry={retry} />
         )}
       </div>
-      <div className="result-actions">
-        {/* The save slot: one reserved box across all five populated states (insight 035 — the
+      {!computing && (
+        <div className="result-actions">
+          {/* The save slot: one reserved box across all five populated states (insight 035 — the
             Review button below must never shift under a pointer when a click swaps CTA→pending→
             badge). 'none' renders no slot at all: no claim about a disk state that can't be
             compared, and no reserved emptiness on the never-saveable answer. */}
-        {save.kind !== 'none' && (
-          <div className="result-save-slot">
-            {save.kind === 'first' && (
-              <div className="result-keep">
-                <button type="button" className="btn-primary" onClick={save.onKeep}>
-                  {copy.saveCta}
-                </button>
-                <p className="result-keep__hint">{copy.saveCtaHint}</p>
-              </div>
-            )}
-            {save.kind === 'dirty' && (
-              <div className="result-keep">
-                <button type="button" className="btn-primary" onClick={save.onSave}>
-                  {copy.resaveCta}
-                </button>
-                <p className="result-keep__hint">{copy.resaveHint}</p>
-              </div>
-            )}
-            {save.kind === 'saving' && (
-              // Announced by the persistent region above (a status inserted already-populated may
-              // not fire, burned/045) — this node is the VISIBLE pending line only.
-              <p className="result-save-pending">{copy.resavePending}</p>
-            )}
-            {save.kind === 'failed' && (
-              <div className="result-keep">
-                <p className="result-save-error" role="alert">
-                  {copy[save.errorKey]}
+          {save.kind !== 'none' && (
+            <div className="result-save-slot">
+              {save.kind === 'first' && (
+                <div className="result-keep">
+                  <button type="button" className="btn-primary" onClick={save.onKeep}>
+                    {copy.saveCta}
+                  </button>
+                  <p className="result-keep__hint">{copy.saveCtaHint}</p>
+                </div>
+              )}
+              {save.kind === 'dirty' && (
+                <div className="result-keep">
+                  <button type="button" className="btn-primary" onClick={save.onSave}>
+                    {copy.resaveCta}
+                  </button>
+                  <p className="result-keep__hint">{copy.resaveHint}</p>
+                </div>
+              )}
+              {save.kind === 'saving' && (
+                // Announced by the persistent region above (a status inserted already-populated may
+                // not fire, burned/045) — this node is the VISIBLE pending line only.
+                <p className="result-save-pending">{copy.resavePending}</p>
+              )}
+              {save.kind === 'failed' && (
+                <div className="result-keep">
+                  <p className="result-save-error" role="alert">
+                    {copy[save.errorKey]}
+                  </p>
+                  {save.errorKey === 'saveErrorReadOnly' ? (
+                    // The read-only refusal is NON-transient: `secondTab` is captured once at unlock
+                    // and never re-probed, so a retry deterministically re-refuses — the primary
+                    // action must match the copy's own instruction (RELOAD), never a "Try again"
+                    // that can't succeed (the RestoreFlow vault-exists arm's law; ultramode
+                    // 2026-07-02 — 7 lenses converged on this exact lying-remedy shape).
+                    <button type="button" className="btn-primary" onClick={() => window.location.reload()}>
+                      {copy.restoreRetry}
+                    </button>
+                  ) : (
+                    <button type="button" className="btn-primary" onClick={save.onRetry}>
+                      {copy.exportRetry}
+                    </button>
+                  )}
+                </div>
+              )}
+              {save.kind === 'clean' && (
+                <p className="result-saved">
+                  <span className="result-saved__mark" aria-hidden="true" />
+                  {copy.savedBadge}
                 </p>
-                {save.errorKey === 'saveErrorReadOnly' ? (
-                  // The read-only refusal is NON-transient: `secondTab` is captured once at unlock
-                  // and never re-probed, so a retry deterministically re-refuses — the primary
-                  // action must match the copy's own instruction (RELOAD), never a "Try again"
-                  // that can't succeed (the RestoreFlow vault-exists arm's law; ultramode
-                  // 2026-07-02 — 7 lenses converged on this exact lying-remedy shape).
-                  <button type="button" className="btn-primary" onClick={() => window.location.reload()}>
-                    {copy.restoreRetry}
-                  </button>
-                ) : (
-                  <button type="button" className="btn-primary" onClick={save.onRetry}>
-                    {copy.exportRetry}
-                  </button>
-                )}
-              </div>
-            )}
-            {save.kind === 'clean' && (
-              <p className="result-saved">
-                <span className="result-saved__mark" aria-hidden="true" />
-                {copy.savedBadge}
-              </p>
-            )}
-          </div>
-        )}
-        <button type="button" className="btn-quiet" onClick={onReview}>
-          {copy.resultReview}
-        </button>
-      </div>
+              )}
+            </div>
+          )}
+          <button type="button" className="btn-quiet" onClick={onReview}>
+            {copy.resultReview}
+          </button>
+        </div>
+      )}
     </main>
   )
 }

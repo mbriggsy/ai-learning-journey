@@ -14,7 +14,24 @@ import { copy } from '../copy'
  */
 afterEach(cleanup)
 
-const renderSave = (save: ResultSaveProp) => render(<Result onReview={vi.fn()} save={save} />)
+const renderSave = (save: ResultSaveProp) => render(<Result onReview={vi.fn()} save={save} computing={false} />)
+
+describe('Result — the actions row is withheld while the answer computes', () => {
+  it('while computing ("Working it out…"), NO actions render — no Review, no save slot, no badge (remove the opportunity, Briggsy 2026-07-02)', () => {
+    render(<Result onReview={vi.fn()} save={{ kind: 'clean' }} computing />)
+    expect(document.querySelector('.result-actions')).toBeNull()
+    expect(screen.queryByRole('button', { name: copy.resultReview })).toBeNull()
+    expect(screen.queryByText(copy.savedBadge)).toBeNull()
+  })
+
+  it('once anything resolves, the whole row appears as one beat — Review live, slot rendered', () => {
+    const onReview = vi.fn()
+    render(<Result onReview={onReview} save={{ kind: 'clean' }} computing={false} />)
+    fireEvent.click(screen.getByRole('button', { name: copy.resultReview }))
+    expect(onReview).toHaveBeenCalledTimes(1)
+    expect(screen.getByText(copy.savedBadge)).toBeInTheDocument()
+  })
+})
 
 describe('Result — the save slot states', () => {
   it("'none' renders NO slot: no badge, no CTA, no claim about a disk it can't compare", () => {

@@ -84,12 +84,15 @@ function medianDepletionYear(depletionYears: readonly number[]): number {
   return depleted.length === 0 ? NEVER_DEPLETED : median(depleted)
 }
 
-function selectOutcomeState(quantized: number, distribution: Distribution): OutcomeState {
+// The depletion signal is a PARAMETER (P3·U9): each reading's already-failing check keys to
+// its own track's depletion depth — the joint headline and the survivor reading pass the
+// JOINT depletionYears; the floor reading passes the floor track's own (see each builder).
+function selectOutcomeState(quantized: number, depletionYears: readonly number[]): OutcomeState {
   // already-failing: essentially everything fails AND it dies EARLY (the $0-portfolio
   // / unfundable case — "depleted before the horizon even runs"). A plan that fails
   // late in bad futures is off-track, not already-failing.
   if (quantized <= 0.02) {
-    const medDeplete = medianDepletionYear(distribution.depletionYears)
+    const medDeplete = medianDepletionYear(depletionYears)
     return medDeplete !== NEVER_DEPLETED && medDeplete <= 2 ? 'already-failing' : 'off-track'
   }
   if (quantized >= BANDS.overFunded) return 'over-funded'
@@ -101,7 +104,7 @@ function selectOutcomeState(quantized: number, distribution: Distribution): Outc
 function buildHeadline(distribution: Distribution): Headline {
   const survival = distribution.survivalFraction
   const quantized = quantizeSurvival(survival)
-  const state = selectOutcomeState(quantized, distribution)
+  const state = selectOutcomeState(quantized, distribution.depletionYears)
   // 10/10-honesty clamp: the displayed reading never reaches 10 (false certainty);
   // the over-funded ceiling reads "9 of 10" with the over-funded state carrying the
   // "more than enough" framing. Tie-break: round-half-up (defined + stable).
@@ -124,12 +127,34 @@ function buildSurvivorReading(distribution: Distribution): SurvivorReading | und
   const sc = distribution.survivorConditioned
   if (!sc) return undefined
   const quantized = quantizeSurvival(sc.survivalFraction)
-  const state = selectOutcomeState(quantized, distribution)
+  // already-failing keys to the JOINT depletion signal (the whole-plan DOA reservation —
+  // see the builder doc above); the fraction is the survivor-conditioned one.
+  const state = selectOutcomeState(quantized, distribution.depletionYears)
   const xOfTen = Math.max(0, Math.min(9, Math.round(quantized * 10)))
   return {
     xOfTen: { value: xOfTen, marginToEdge: marginToXOfTenEdge(quantized) },
     outcomeState: state,
     incomeStepDownMonthlyReal: sc.incomeStepDownMonthlyReal,
+  }
+}
+
+/** The essentials-floor verdict (P3·U9) — the joint {@link buildHeadline} grammar applied to
+ *  the floor track's fraction, so the Tier-1 sentence speaks the SAME vocabulary ("X of 10",
+ *  the outcome word) as the lifestyle one. Returns undefined when the run carried no budget
+ *  (presence-keyed). The identical quantize → band → 9-cap pipeline; `already-failing` keys
+ *  to the FLOOR's OWN depletion signal — "even essentials-only spending is unfundable from
+ *  the start" IS the floor tier's DOA case (unlike the survivor reading, whose DOA
+ *  reservation is a whole-plan JOINT property). No UI layer re-derives any of this (the
+ *  U7/D2 honesty contract — the second tier's state is engine-tagged here). */
+function buildFloorReading(distribution: Distribution): Headline | undefined {
+  const floor = distribution.floor
+  if (!floor) return undefined
+  const quantized = quantizeSurvival(floor.survivalFraction)
+  const state = selectOutcomeState(quantized, floor.depletionYears)
+  const xOfTen = Math.max(0, Math.min(9, Math.round(quantized * 10)))
+  return {
+    xOfTen: { value: xOfTen, marginToEdge: marginToXOfTenEdge(quantized) },
+    outcomeState: state,
   }
 }
 
@@ -198,5 +223,14 @@ export function summarize(
   // The survivor reading rides iff the run emitted a survivor surface (presence-keyed — absent, not
   // `undefined`, when there is none, mirroring the distribution's taxAware/bandFan convention).
   const survivorReading = buildSurvivorReading(distribution)
-  return { distribution, headline, dollar, ...(survivorReading ? { survivorReading } : {}), seed }
+  // The floor reading rides iff the run carried a budget (P3·U9, presence-keyed).
+  const floorReading = buildFloorReading(distribution)
+  return {
+    distribution,
+    headline,
+    dollar,
+    ...(survivorReading ? { survivorReading } : {}),
+    ...(floorReading ? { floorReading } : {}),
+    seed,
+  }
 }

@@ -228,6 +228,11 @@ export function cashTermsForYear(
   higherClaimOffset: number,
 ): {
   readonly net: number
+  /** P3·U9 — the FLOOR (essentials-only) track's portfolio-funded withdrawal, through the
+   *  SAME clamp/income terms as `net` (one call, two nets — the income work is track-
+   *  invariant). Equals `net` when no budget construct is present (the degenerate);
+   *  consumed only by the budget run's second decumulation pass. */
+  readonly netFloor: number
   readonly ss: number
   readonly ongoingTaxableGrossUp: number
   readonly ongoingTaxableIrmaaOnly: number
@@ -241,9 +246,34 @@ export function cashTermsForYear(
   for (let i = 0; i < deathOffsets.length; i++) if (t < (deathOffsets[i] ?? 0)) aliveCount++
   const allAlive = aliveCount === offsets.length
 
-  const spending = allAlive
-    ? params.annualSpendingReal
-    : params.annualSpendingReal * params.survivorSpendingRatio
+  // P3·U9 — the per-year spend, two tracks. r (the survivor step-down selector) is realized
+  // HERE, per path-year, off the sampled death timeline (insight 040 — the first death is a
+  // stochastic per-path event) — never baked into the compiled profiles. Un-itemized (budget
+  // absent): the flat scalar with ratio-on-total — byte-identical to every pre-U9 run.
+  // Itemized: the three-component expansion at k = years since the household work-stop
+  // anchor; `sticky` (survivor-fixed costs incl. the injected OOP-medical floor) deliberately
+  // does NOT scale at widowhood (council 2026-07-02 — scaling the survivor's fixed costs by
+  // the couple ratio understates the survivor floor, the cardinal calm-but-wrong direction).
+  // k clamps at 0: a survivor drawing BEFORE the planned work-stop (the worker died early,
+  // the §7 clamp stopped firing) spends the budget's own opening-year composition — never an
+  // out-of-window 0. The anchor reads PLANNED retirement offsets (windows are calendar-
+  // planned; only the ratio is path-realized), so the expansion is deterministic + CRN-safe.
+  const budget = params.budget
+  let spending: number
+  let essentialsSpending: number
+  if (budget !== undefined) {
+    let anchor = 0
+    for (const o of offsets) if (o.retire > anchor) anchor = o.retire
+    const k = Math.max(0, t - anchor)
+    const r = allAlive ? 1 : params.survivorSpendingRatio
+    essentialsSpending = (budget.sticky[k] ?? 0) + r * (budget.scalableEssentials[k] ?? 0)
+    spending = essentialsSpending + r * (budget.discretionary[k] ?? 0)
+  } else {
+    spending = allAlive
+      ? params.annualSpendingReal
+      : params.annualSpendingReal * params.survivorSpendingRatio
+    essentialsSpending = spending
+  }
 
   let earned = 0
   let ss = 0
@@ -340,8 +370,10 @@ export function cashTermsForYear(
   //    IRMAA-MAGI contribution in all years — KTD-9).
   const clamped = accumulating && livingWorker
   const net = clamped ? 0 : Math.max(0, spending - earned - sel.gross - ss)
+  const netFloor = clamped ? 0 : Math.max(0, essentialsSpending - earned - sel.gross - ss)
   return {
     net,
+    netFloor,
     ss,
     ongoingTaxableGrossUp: clamped ? 0 : sel.taxable,
     ongoingTaxableIrmaaOnly: clamped ? sel.taxable : 0,
@@ -855,6 +887,45 @@ export function validateParams(params: SimulationParams): string | null {
       }
     }
   }
+
+  // P3·U9 — the compiled budget construct (R19, engine half). Three per-retirement-year
+  // component profiles; every entry finite ≥ 0 within the dollar domain (NaN-FIRST, insights
+  // 008/010 — a NaN entry would ride the per-year sum into a poisoned withdrawal). The
+  // survivor r-selection happens per-path in cashTermsForYear; the profiles are r-free.
+  const bud = params.budget
+  if (bud !== undefined) {
+    for (const profile of [bud.sticky, bud.scalableEssentials, bud.discretionary]) {
+      if (!profile.every(finiteNonNeg))
+        return 'budget profile invalid (every entry must be a finite dollar ≥ 0)'
+    }
+    // THE CONTAINMENT GATE (council 2026-07-02, build-gate a — FAIL-LOUD, replacing the HSA
+    // cap's silent fundingNeed clamp as the defense): the FLOOR track's essentials spend must
+    // dominate the overlay's oopMedical[t] in EVERY year — the qualified-medical dollars the
+    // HSA cap is sized off must live INSIDE the floor's spending, or the HSA pays for medical
+    // the budget never funded (the portfolio is relieved of spending it should bear → survival
+    // overstated → the floor date crowned too early: the cardinal optimistic sin). The
+    // compile's OOP injection makes this true by construction when both sides read the same
+    // intake scalar (float-safe: fl(a+b) ≥ max(a,b) for non-negative doubles); this gate is
+    // the belt to those braces. Worst-case essentials = sticky + min(1, ratio)·scalableEss
+    // (sticky never scales; ratio > 1 makes the both-alive year the minimum).
+    const oopStream = params.overlay?.oopMedical
+    if (oopStream !== undefined) {
+      let anchor = 0
+      for (const pp of params.people) {
+        const off = pp.retirementAge - pp.currentAge
+        if (off > anchor) anchor = off
+      }
+      const rMin = Math.min(1, params.survivorSpendingRatio)
+      for (let t = 0; t < params.maxHorizonYears; t++) {
+        const oop = oopStream[t] ?? 0
+        if (oop <= 0) continue
+        const k = Math.max(0, t - anchor)
+        const essentialsMin = (bud.sticky[k] ?? 0) + rMin * (bud.scalableEssentials[k] ?? 0)
+        if (essentialsMin < oop)
+          return `budget floor-track essentials at sim-year ${t} is below the out-of-pocket medical the HSA cap is sized off — the floor cannot budget below qualified medical (the containment premise)`
+      }
+    }
+  }
   return null
 }
 
@@ -1037,11 +1108,29 @@ export function survivorIncomeStepDownMonthlyReal(
  * survivor-conditioned survival statistic (U7 e1), observed from the sampled deaths + the resolved
  * depletion, equally byte-identical to an opt-out run. The single headline run sets these; the
  * date-search's many candidates never do (perf + wire).
+ *
+ * P3·U9 — `params.budget` (PARAM-driven, not an option): when the compiled budget construct is
+ * present the run evaluates BOTH tracks — full lifestyle and essentials-only floor — as two
+ * decumulation+overlay passes per path on the SAME draws/deaths/returns (a tier is a different
+ * SPEND on the same paths; zero draws consumed by either pass, so CRN holds), emitting
+ * `distribution.floor` presence-keyed. UNLIKE the option surfaces above this is a genuine second
+ * compute — the byte-identity guard is the degenerate-identity golden, not an opt-out diff.
+ * `options.bandFanTrack` picks which pass feeds the fan ('full' default; 'floor' only for the
+ * date route's floor-crowned band re-run).
  */
 export function simulate(
   params: SimulationParams,
   seed: number,
-  options?: { readonly bandFan?: boolean; readonly survivorConditioned?: boolean },
+  options?: {
+    readonly bandFan?: boolean
+    readonly survivorConditioned?: boolean
+    /** P3·U9 — which track's balances feed the band fan. The date route's floor-crowned
+     *  band re-run passes 'floor' so all three DateBand fields (fan, state, offset) ride
+     *  ONE track; everything else — incl. the spine headline run — reads the FULL track
+     *  (the user's intended spending). 'floor' without a budget construct reads as 'full'
+     *  (there is no second pass to observe). Default 'full'. */
+    readonly bandFanTrack?: 'full' | 'floor'
+  },
 ): SimOutput {
   // The seed is part of the R19 surface (U4 persists it with a bit-identical
   // reproduction contract, matching dateSearch's reject): mulberry32(seed|0) would
@@ -1122,11 +1211,24 @@ export function simulate(
   const depletionYears: DepletionYear[] = new Array(paths)
   let survivors = 0
 
+  // P3·U9 — the floor-track tallies, allocated iff the budget construct is present. The
+  // floor is a GENUINE second decumulation+overlay pass per path (the essentials-only
+  // withdrawals on the SAME draws/deaths/returns — a tier is a different SPEND on the same
+  // paths, never a re-simulation), so unlike bandFan/survivorConditioned it is param-driven,
+  // not caller-opt-in, and the bandFan byte-identity-guard pattern proves nothing about it —
+  // its correctness anchor is the degenerate-identity golden. It emits NO terminals: the
+  // floor verdict needs survival + depletion depth only; the band/dollar read the full track.
+  const floorDepletionYears: DepletionYear[] | undefined = params.budget ? new Array(paths) : undefined
+  let floorSurvivors = 0
+
   // U6/U7 band fan (opt-in): year-major living-cohort balance bins + per-year household-existence
   // count, allocated ONLY when requested (the single headline run). Index t = END of sim-year t
   // (yearsFromNow t+1); the today anchor is added at reduction. A run WITHOUT the option allocates
   // nothing, passes no sink, and is byte-identical (presence-keyed — the reduce-to-spine guard).
   const wantFan = options?.bandFan === true
+  // P3·U9 — the fan's source track (see the options doc): 'floor' only when a budget rode
+  // the run; the degenerate/no-budget fallback is the full pass, which IS the only pass.
+  const fanTrack: 'full' | 'floor' = options?.bandFanTrack === 'floor' && params.budget ? 'floor' : 'full'
   const fanValuesByYear: number[][] | undefined = wantFan
     ? Array.from({ length: maxHorizon }, () => [])
     : undefined
@@ -1177,6 +1279,11 @@ export function simulate(
       terminalValuesReal[p] = params.initialPortfolio
       depletionYears[p] = NEVER_DEPLETED
       survivors++
+      if (floorDepletionYears) {
+        // A zero-length horizon never ran either pass — the floor mirrors the full track.
+        floorDepletionYears[p] = NEVER_DEPLETED
+        floorSurvivors++
+      }
       if (taxAware && overlay) {
         // A zero-length horizon never ran the overlay: the path's "horizon-end" state IS the
         // initial state — no tax paid, the entered buckets/basis verbatim.
@@ -1201,6 +1308,9 @@ export function simulate(
     const realStock: number[] = []
     const realBond: number[] = []
     const withdrawals: number[] = []
+    // P3·U9 — the floor track's per-year net-withdrawal vector, assembled beside the full
+    // track's from the SAME cashTermsForYear call (the income terms are track-invariant).
+    const withdrawalsFloor: number[] | undefined = floorDepletionYears ? [] : undefined
     const ssBenefits: number[] = []
     const householdYears: HouseholdYear[] = []
     const contributionYears: YearContribution[] = []
@@ -1221,6 +1331,7 @@ export function simulate(
       realBond.push(simpleReturnFromNormal(logBond, zb))
       const cash = cashTermsForYear(t, params, offsets, deathOffsets, higherClaimOffset)
       withdrawals.push(cash.net)
+      if (withdrawalsFloor) withdrawalsFloor.push(cash.netFloor)
       if (overlay) {
         ssBenefits.push(cash.ss)
         // R40 — record this year's KTD-9 taxable split for the overlay (presence-keyed on
@@ -1270,31 +1381,26 @@ export function simulate(
 
     // U6/U7 band fan: this path's per-year balance sink (the decumulation pushes each year's
     // post-step total into it). Undefined unless the run opted in ⇒ no sink ⇒ byte-identical.
+    // P3·U9: the sink attaches to exactly ONE pass — `fanTrack` picks which (the full pass
+    // for every shipped caller; the floor pass only for the date route's floor-crowned band).
     const pathBalances: number[] | undefined = wantFan ? [] : undefined
+    const fullSink = fanTrack === 'full' ? pathBalances : undefined
+    const floorSink = fanTrack === 'floor' ? pathBalances : undefined
     let res: DecumulationResult
+    let floorRes: DecumulationResult | undefined
     if (overlay) {
       // Tax-aware decumulation. `overlay.buckets` (sum === initialPortfolio, validated) IS the
       // total, so a collapsed pool under the EXHAUSTIVE OFF condition reduces byte-identically to
       // the spine branch below (the reduce-to-spine golden, contract #3).
-      let taxRes: ReturnType<typeof runTaxAwareDecumulation>
-      try {
-        taxRes = runTaxAwareDecumulation(
-        overlay.buckets,
-        realStock,
-        realBond,
-        withdrawals,
-        params.stockWeight,
-        params.drawdownPolicy,
-        overlayConfig,
-        {
+      // P3·U9: the tax inputs are built ONCE and shared by both passes — the floor pass differs
+      // ONLY in its withdrawals vector (a tier is a different SPEND on the SAME paths; identical
+      // streams, config, and buckets; zero draws consumed by either decumulation, so CRN holds).
+      const taxInputs = {
           ssBenefits,
           conversions: overlay.conversions ?? [],
           initialTaxableBasis: overlay.initialTaxableBasis,
           householdYears,
           bracketFillCeilings: overlay.bracketFillCeilings ?? [],
-          // U6/U7 band fan: spread the sink ONLY when the run opted in (absent ⇒ the
-          // byte-identical pre-fan taxInputs — presence-keyed, reduce-to-spine).
-          ...(pathBalances ? { balancesOut: pathBalances } : {}),
           // Per-person pre-tax split (M6b·B): aligned to `people` (= the overlay's canonical
           // owner→spouse order). Absent ⇒ the aggregate pool (byte-identical M6a path).
           ...(overlay.pretaxByPerson ? { initialPretaxByPerson: overlay.pretaxByPerson } : {}),
@@ -1338,8 +1444,39 @@ export function simulate(
                 ...(overlay.irmaaMagiOverride ? { irmaaMagiOverride: overlay.irmaaMagiOverride } : {}),
               }
             : {}),
-        },
-      )
+      }
+      let taxRes: ReturnType<typeof runTaxAwareDecumulation>
+      let floorTaxRes: ReturnType<typeof runTaxAwareDecumulation> | undefined
+      try {
+        taxRes = runTaxAwareDecumulation(
+          overlay.buckets,
+          realStock,
+          realBond,
+          withdrawals,
+          params.stockWeight,
+          params.drawdownPolicy,
+          overlayConfig,
+          // U6/U7 band fan: spread the sink ONLY when this pass feeds the fan (absent ⇒ the
+          // byte-identical pre-fan taxInputs — presence-keyed, reduce-to-spine).
+          { ...taxInputs, ...(fullSink ? { balancesOut: fullSink } : {}) },
+        )
+        // P3·U9 — the floor pass: identical inputs, the essentials-only withdrawals. Runs
+        // inside the SAME tight catch: a floor-arm failure is the same typed per-candidate
+        // INFEASIBLE (the tier is part of the candidate, never a silently dropped surface).
+        // taxAware collection below stays FULL-track only — the solver surfaces describe
+        // the user's actual plan, not the floor counterfactual.
+        if (withdrawalsFloor) {
+          floorTaxRes = runTaxAwareDecumulation(
+            overlay.buckets,
+            realStock,
+            realBond,
+            withdrawalsFloor,
+            params.stockWeight,
+            params.drawdownPolicy,
+            overlayConfig,
+            { ...taxInputs, ...(floorSink ? { balancesOut: floorSink } : {}) },
+          )
+        }
       } catch (e) {
         // The typed per-candidate INFEASIBLE sentinel (M6 — the strategic review's P1). The
         // catch is deliberately TIGHT around the overlay call: validateParams has already
@@ -1358,6 +1495,7 @@ export function simulate(
         }
       }
       res = taxRes
+      floorRes = floorTaxRes
       // The per-path FINITENESS SEAM (M6 review — the consequence half of the two-layer
       // domain rule; the ENGINE_MAX_* gate is the cause half). The gate bounds every real
       // input, but float overflow remains constructible in the measure-zero stochastic
@@ -1366,6 +1504,8 @@ export function simulate(
       // crosses the wire in surfaces that contract DND/009 finiteness. Throw-or-nothing
       // (never perturbs a value — byte-identity safe); routed to the typed sentinel (the
       // input is outside the engine's computable float domain for this seed).
+      // P3·U9: the FLOOR pass is checked too — lower withdrawals mean HIGHER balances, so
+      // the floor arm is strictly MORE overflow-prone than the full arm, not less.
       if (
         !Number.isFinite(taxRes.terminalReal) ||
         !Number.isFinite(taxRes.totalTaxPaidReal) ||
@@ -1373,7 +1513,9 @@ export function simulate(
         !Number.isFinite(taxRes.finalBuckets.taxable) ||
         !Number.isFinite(taxRes.finalBuckets.pretax) ||
         !Number.isFinite(taxRes.finalBuckets.roth) ||
-        !Number.isFinite(taxRes.finalBuckets.hsa ?? 0)
+        !Number.isFinite(taxRes.finalBuckets.hsa ?? 0) ||
+        (floorTaxRes !== undefined &&
+          (!Number.isFinite(floorTaxRes.terminalReal) || !Number.isFinite(floorTaxRes.totalTaxPaidReal)))
       ) {
         return {
           indeterminate: false,
@@ -1397,11 +1539,25 @@ export function simulate(
         stock: params.stockWeight * params.initialPortfolio,
         bond: (1 - params.stockWeight) * params.initialPortfolio,
       }
-      res = runDecumulation(initial, realStock, realBond, withdrawals, params.stockWeight, undefined, pathBalances)
+      res = runDecumulation(initial, realStock, realBond, withdrawals, params.stockWeight, undefined, fullSink)
+      // P3·U9 — the spine floor pass (the validation twin of the overlay's): same initial
+      // state and returns, the essentials-only withdrawals. Pure + draw-free ⇒ CRN holds.
+      if (withdrawalsFloor) {
+        floorRes = runDecumulation(
+          initial,
+          realStock,
+          realBond,
+          withdrawalsFloor,
+          params.stockWeight,
+          undefined,
+          floorSink,
+        )
+      }
       // The spine arm of the finiteness seam (see the overlay arm above): a pre-existing
       // gap the M6 review surfaced — the spine, too, could resolve an overflowed terminal
-      // as a surviving Infinity before the ENGINE_MAX_* gate bounded the domain.
-      if (!Number.isFinite(res.terminalReal)) {
+      // as a surviving Infinity before the ENGINE_MAX_* gate bounded the domain. The floor
+      // arm is checked too (lower withdrawals ⇒ higher balances ⇒ more overflow-prone).
+      if (!Number.isFinite(res.terminalReal) || (floorRes !== undefined && !Number.isFinite(floorRes.terminalReal))) {
         return {
           indeterminate: false,
           infeasible: true,
@@ -1413,6 +1569,10 @@ export function simulate(
     terminalValuesReal[p] = res.terminalReal
     depletionYears[p] = res.depletionYear
     if (res.depletionYear === NEVER_DEPLETED) survivors++
+    if (floorDepletionYears && floorRes !== undefined) {
+      floorDepletionYears[p] = floorRes.depletionYear
+      if (floorRes.depletionYear === NEVER_DEPLETED) floorSurvivors++
+    }
 
     // U6/U7 band fan fold: this path's household EXISTS for years [0, horizon) (horizon =
     // min(sampled last death, maxHorizon)). Each such year takes the recorded END-of-year value,
@@ -1468,6 +1628,16 @@ export function simulate(
         : {}),
       // The survivor-conditioned surface rides iff opted in AND ≥1 survivor phase occurred (U7 e1).
       ...(survivorConditioned ? { survivorConditioned } : {}),
+      // P3·U9 — the essentials-floor track rides iff the budget construct did (param-driven,
+      // a genuine second pass; see the FloorTrack contract in model.ts).
+      ...(floorDepletionYears
+        ? {
+            floor: {
+              survivalFraction: paths > 0 ? floorSurvivors / paths : 0,
+              depletionYears: floorDepletionYears,
+            },
+          }
+        : {}),
     },
   }
 }

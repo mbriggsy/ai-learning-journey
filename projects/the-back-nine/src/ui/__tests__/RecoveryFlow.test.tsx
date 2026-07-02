@@ -139,6 +139,18 @@ describe('RecoveryFlow — the set-new step and the negative-pairing gate', () =
     expect(screen.queryByRole('alert')).toBeNull()
   })
 
+  it('both set-new fields carry their OWN independent Show toggle (field parity — cold-read 2026-07-02)', async () => {
+    render(<RecoveryFlow onRecovered={vi.fn()} onExit={vi.fn()} />)
+    await reachSetNew()
+    const shows = screen.getAllByRole('button', { name: copy.passphraseShow })
+    expect(shows).toHaveLength(2)
+    const confirmField = screen.getByLabelText(copy.passphraseConfirmLabel)
+    const passField = screen.getByLabelText(copy.passphraseLabel)
+    fireEvent.click(shows[1]!) // the confirm field's toggle
+    expect(confirmField).toHaveAttribute('type', 'text')
+    expect(passField).toHaveAttribute('type', 'password') // independent — field 1 stays masked
+  })
+
   it('a distinct floor-clearing passphrase re-mints and hands off via onRecovered', async () => {
     setNewPassphrase.mockResolvedValue({ ok: true })
     const onRecovered = vi.fn()

@@ -55,6 +55,9 @@ export function PassphraseStep({
   const [passphrase, setPassphrase] = useState('')
   const [confirm, setConfirm] = useState('')
   const [reveal, setReveal] = useState(false)
+  // Per-field reveal (Briggsy's cold-read 2026-07-02): the confirm field gets its OWN row + Show
+  // button so both boxes render identically; each toggle governs only its own field.
+  const [revealConfirm, setRevealConfirm] = useState(false)
   const [verdict, setVerdict] = useState<PassphraseVerdict>(EMPTY_VERDICT)
   const [showMismatch, setShowMismatch] = useState(false)
   const [checking, setChecking] = useState(false)
@@ -153,24 +156,35 @@ export function PassphraseStep({
         <label className="save-field__label" htmlFor={confirmId}>
           {confirmFieldLabel ?? copy.passphraseConfirmLabel}
         </label>
-        <input
-          id={confirmId}
-          className="save-field__input"
-          type={reveal ? 'text' : 'password'}
-          autoComplete="new-password"
-          autoCapitalize="none"
-          autoCorrect="off"
-          spellCheck={false}
-          value={confirm}
-          aria-invalid={showMismatch}
-          disabled={busy}
-          onChange={(e) => {
-            setConfirm(e.target.value)
-            setShowMismatch(false)
-            onFieldEdit?.()
-          }}
-          onBlur={() => setShowMismatch(!passphrasesMatch(passphrase, confirm) && confirm.length > 0)}
-        />
+        <div className="save-field__row">
+          <input
+            id={confirmId}
+            className="save-field__input"
+            type={revealConfirm ? 'text' : 'password'}
+            autoComplete="new-password"
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
+            value={confirm}
+            aria-invalid={showMismatch}
+            disabled={busy}
+            onChange={(e) => {
+              setConfirm(e.target.value)
+              setShowMismatch(false)
+              onFieldEdit?.()
+            }}
+            onBlur={() => setShowMismatch(!passphrasesMatch(passphrase, confirm) && confirm.length > 0)}
+          />
+          <button
+            type="button"
+            className="save-field__reveal"
+            aria-pressed={revealConfirm}
+            disabled={busy}
+            onClick={() => setRevealConfirm((r) => !r)}
+          >
+            {revealConfirm ? copy.passphraseHide : copy.passphraseShow}
+          </button>
+        </div>
         {showMismatch && (
           <p className="save-field__note" role="alert">
             {copy.passphraseMismatch}

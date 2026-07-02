@@ -46,6 +46,7 @@ import { productionMarket } from '@engine/reference/methodology'
 import { findBlendRow, stockWeightForBlend } from '@engine/reference/tickerBlend'
 import { acaAgeRatingCurve } from '@engine/constants/health'
 import type { ScenarioDraft } from '@store/memoryModel'
+import { compileBudget } from '@budget/budgetToSpending'
 import { annualAdditionsCeilingFor, contributionCeilingFor, isEmployerPlanKind } from './sanity'
 import { compileIncomeStreams } from './otherIncome'
 import type { CopyKey } from '@ui/copy'
@@ -551,6 +552,15 @@ function buildParams(d: ScenarioDraft): SimulationParams | null {
     maxHorizonYears: horizonYears,
     longevityMode: 'sampled',
     ...(overlay !== undefined ? { overlay } : {}),
+    // P3·U9 — the compiled budget construct, DERIVED here (fidelity-over-duplication: only
+    // the line items persist; the three component profiles are re-compiled every build).
+    // The OOP-medical injection reads the SAME intake scalar `buildOverlay` fills the
+    // overlay's oopMedical stream from — the single-source that makes the engine's
+    // containment gate true by construction. Absent budget ⇒ absent construct ⇒ the
+    // un-itemized scalar path, byte-identical to pre-U9.
+    ...(d.budget !== undefined
+      ? { budget: compileBudget(d.budget, d.health.oopMedicalAnnual, horizonYears) }
+      : {}),
   }
 }
 

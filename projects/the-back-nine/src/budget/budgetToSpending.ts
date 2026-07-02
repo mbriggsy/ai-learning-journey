@@ -84,11 +84,11 @@ export function compileBudget(
 }
 
 /** The reconciliation figure: the FULL-track total at retirement-year 0 — typed
- *  lines active at k=0 (both tiers) PLUS the injected OOP medical. The store's
- *  `setBudget` writes `annualSpendingReal` to exactly this in the same update that
- *  writes the items (the invariant every scalar consumer — buildDollar, the answer
- *  strip, sanity — stays coherent through). A budget with no line active at k=0
- *  is R19-warned upstream (`no-line-at-year-zero`), never silently anchored. */
+ *  lines active at k=0 (both tiers) PLUS the injected OOP medical. `budgetDraftPatch`
+ *  writes `annualSpendingReal` to exactly this in the same update that writes the
+ *  items (the invariant every scalar consumer — buildDollar, the answer strip,
+ *  sanity — stays coherent through). A budget with no line active at k=0 is
+ *  R19-warned upstream (`no-line-at-year-zero`), never silently anchored. */
 export function budgetYearZeroFullTotal(
   items: readonly BudgetLineItem[],
   oopMedicalAnnual: number | undefined,
@@ -96,4 +96,17 @@ export function budgetYearZeroFullTotal(
   let total = oopMedicalAnnual ?? 0
   for (const item of items) if (isActiveAt(item, 0)) total += item.annualAmountReal
   return total
+}
+
+/** THE RECONCILIATION INVARIANT, made atomic (council 2026-07-02): a budget edit and its
+ *  reconciled `annualSpendingReal` land in ONE draft update, so no consumer can ever
+ *  observe the items and the scalar disagreeing. Callers apply it as
+ *  `model.update((d) => ({ ...d, ...budgetDraftPatch(items, d.health.oopMedicalAnnual) }))`
+ *  — pure and layer-free here (the store is ESLint-banned from importing @budget, so the
+ *  composition happens at the intake/ui call site, exactly like the params builders). */
+export function budgetDraftPatch(
+  items: readonly BudgetLineItem[],
+  oopMedicalAnnual: number | undefined,
+): { readonly budget: readonly BudgetLineItem[]; readonly annualSpendingReal: number } {
+  return { budget: items, annualSpendingReal: budgetYearZeroFullTotal(items, oopMedicalAnnual) }
 }

@@ -110,3 +110,33 @@ export function budgetDraftPatch(
 ): { readonly budget: readonly BudgetLineItem[]; readonly annualSpendingReal: number } {
   return { budget: items, annualSpendingReal: budgetYearZeroFullTotal(items, oopMedicalAnnual) }
 }
+
+/** THE LINES-TARGET (U9b build-gate 1 — the OOP-medical net): the figure the user's TYPED
+ *  lines should sum to so the committed year-0 full total lands back on the scalar S their
+ *  answer already used. `compileBudget` INJECTS the intake OOP-medical M into the sticky
+ *  floor ON TOP of typed lines and `budgetYearZeroFullTotal` = Σactive@0 + M — so a target
+ *  quoted at the raw S invites typing S in lines and committing S+M, a silently-PESSIMISTIC
+ *  answer jump on builder-open (the red team's double-count hit). target = max(0, S − M);
+ *  absent M nets nothing (burned/062 — absence is absence, never a default). */
+export function anchorTarget(
+  annualSpendingReal: number,
+  oopMedicalAnnual: number | undefined,
+): number {
+  return Math.max(0, annualSpendingReal - (oopMedicalAnnual ?? 0))
+}
+
+/** The builder's ONE commit seam (U9b build-gate 2): a non-empty item list commits the
+ *  atomic {@link budgetDraftPatch}; an EMPTY list is the "back to a single number" escape —
+ *  `budget` returns to strictly-undefined and `annualSpendingReal` is deliberately NOT
+ *  touched (the last reconciled scalar keeps governing). `budget: []` must never be
+ *  written: an empty array is truthy at the intakeMap params gate, compiles to an
+ *  all-zero-lines budget, and collapses year-0 spending to just the injected medical —
+ *  the engine's reconciliation backstop would fire loud, but the UI must never mint it. */
+export function commitBudgetPatch(
+  items: readonly BudgetLineItem[],
+  oopMedicalAnnual: number | undefined,
+):
+  | { readonly budget: readonly BudgetLineItem[]; readonly annualSpendingReal: number }
+  | { readonly budget: undefined } {
+  return items.length === 0 ? { budget: undefined } : budgetDraftPatch(items, oopMedicalAnnual)
+}

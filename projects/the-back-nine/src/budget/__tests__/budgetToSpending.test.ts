@@ -1,6 +1,12 @@
 import { describe, it, expect } from 'vitest'
 import type { BudgetLineItem } from '@shared/model'
-import { budgetDraftPatch, budgetYearZeroFullTotal, compileBudget } from '@budget/budgetToSpending'
+import {
+  anchorTarget,
+  budgetDraftPatch,
+  budgetYearZeroFullTotal,
+  commitBudgetPatch,
+  compileBudget,
+} from '@budget/budgetToSpending'
 
 const line = (over: Partial<BudgetLineItem>): BudgetLineItem => ({
   category: 'food',
@@ -107,6 +113,44 @@ describe('budgetDraftPatch — the reconciliation invariant, atomic', () => {
     const patch = budgetDraftPatch(items, 6_000)
     expect(patch.budget).toBe(items)
     expect(patch.annualSpendingReal).toBe(51_000)
+  })
+})
+
+describe('anchorTarget — the lines-target nets OOP medical (U9b build-gate 1)', () => {
+  it('target = S − M: the compile re-adds M on top of typed lines, so quoting the raw S would commit S+M (the double-count answer jump)', () => {
+    expect(anchorTarget(78_000, 6_500)).toBe(71_500)
+  })
+
+  it('planted-fail: a line typed at the RAW scalar with medical present reconciles ABOVE the scalar — the exact miss the net exists to prevent', () => {
+    const patch = budgetDraftPatch([line({ annualAmountReal: 78_000 })], 6_500)
+    expect(patch.annualSpendingReal).toBe(84_500) // S+M — NOT the answer the household had
+    // ...while a line typed at the NETTED target reconciles exactly back to S:
+    const netted = budgetDraftPatch([line({ annualAmountReal: anchorTarget(78_000, 6_500) })], 6_500)
+    expect(netted.annualSpendingReal).toBe(78_000)
+  })
+
+  it('absent M nets nothing (absence is absence — burned/062), and a target never goes negative', () => {
+    expect(anchorTarget(78_000, undefined)).toBe(78_000)
+    expect(anchorTarget(4_000, 6_500)).toBe(0)
+  })
+})
+
+describe('commitBudgetPatch — the ONE commit seam (U9b build-gate 2)', () => {
+  it('a non-empty list commits the atomic reconciliation patch', () => {
+    const items = [line({ annualAmountReal: 30_000 })]
+    expect(commitBudgetPatch(items, 6_000)).toEqual({ budget: items, annualSpendingReal: 36_000 })
+  })
+
+  it('an EMPTY list is the escape hatch: budget returns to strictly-undefined and the scalar is NOT touched', () => {
+    const patch = commitBudgetPatch([], 6_000)
+    expect(patch).toEqual({ budget: undefined })
+    expect('annualSpendingReal' in patch).toBe(false)
+  })
+
+  it('planted-fail: the escape patch never carries `budget: []` — an empty array is truthy at the params gate and collapses spending to just the injected medical', () => {
+    const patch = commitBudgetPatch([], 6_000)
+    expect(patch.budget).toBeUndefined()
+    expect(Array.isArray(patch.budget)).toBe(false)
   })
 })
 

@@ -42,6 +42,25 @@ export function isActiveAt(item: BudgetLineItem, k: number): boolean {
   return item.endYear === undefined || k <= item.endYear
 }
 
+/** THE HAS-BUDGET GATE (U9b — pure + exported per insight 048): a budget governs the
+ *  spending scalar iff the field is PRESENT. Strictly-undefined is the only "no budget"
+ *  (build-gate 2: `[]` is never written; presence ⇒ non-empty by the commit seam), so
+ *  every consumer — the read-only spend question, the entry affordance's wording, the
+ *  builder's open state — reads ONE predicate and can never disagree. */
+export function budgetGoverns(
+  budget: readonly BudgetLineItem[] | undefined,
+): budget is readonly BudgetLineItem[] {
+  return budget !== undefined
+}
+
+/** RAMPED = any line's window departs from lifelong-at-year-0 (a later start, or any
+ *  finite end). For a ramped budget the year-0 reconciled total is an ANCHOR — the figure
+ *  the answer is reconciled through — not a steady-state spend, and the surfaces quoting
+ *  it must label it so (council 2026-07-02, the anchor-not-steady-state carry-forward). */
+export function isRampedBudget(items: readonly BudgetLineItem[]): boolean {
+  return items.some((i) => i.startYear > 0 || i.endYear !== undefined)
+}
+
 /** A blocking R19 problem on one line (calm inline message material — U9b renders). */
 export interface BudgetItemError {
   readonly index: number

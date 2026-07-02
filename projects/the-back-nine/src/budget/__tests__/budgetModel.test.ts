@@ -1,6 +1,12 @@
 import { describe, it, expect } from 'vitest'
 import type { BudgetLineItem } from '@shared/model'
-import { isActiveAt, isSurvivorSticky, validateBudgetItems } from '@budget/budgetModel'
+import {
+  budgetGoverns,
+  isActiveAt,
+  isRampedBudget,
+  isSurvivorSticky,
+  validateBudgetItems,
+} from '@budget/budgetModel'
 
 const line = (over: Partial<BudgetLineItem>): BudgetLineItem => ({
   category: 'food',
@@ -48,6 +54,31 @@ describe('isActiveAt — window semantics', () => {
     expect(isActiveAt(l, 2)).toBe(true)
     expect(isActiveAt(l, 5)).toBe(true)
     expect(isActiveAt(l, 6)).toBe(false)
+  })
+})
+
+describe('budgetGoverns — the has-budget gate (U9b, insight 048)', () => {
+  it('strictly-undefined is the only "no budget"', () => {
+    expect(budgetGoverns(undefined)).toBe(false)
+    expect(budgetGoverns([line({})])).toBe(true)
+  })
+
+  it('an empty array WOULD govern — which is exactly why the commit seam never writes one (build-gate 2)', () => {
+    // Documents the trap rather than papering over it: presence is the predicate, and the
+    // engine params gate (intakeMap `d.budget !== undefined`) reads the same shape. The
+    // commit seam (commitBudgetPatch) is the guard that [] never exists in a draft.
+    expect(budgetGoverns([])).toBe(true)
+  })
+})
+
+describe('isRampedBudget — the anchor-not-steady-state label gate (U9b)', () => {
+  it('all-lifelong-at-zero lines are NOT ramped (the year-0 total IS the steady spend)', () => {
+    expect(isRampedBudget([line({}), line({ tier: 'discretionary' })])).toBe(false)
+  })
+
+  it('a later start OR any finite end makes the budget ramped', () => {
+    expect(isRampedBudget([line({}), line({ startYear: 3 })])).toBe(true)
+    expect(isRampedBudget([line({}), line({ endYear: 19 })])).toBe(true)
   })
 })
 

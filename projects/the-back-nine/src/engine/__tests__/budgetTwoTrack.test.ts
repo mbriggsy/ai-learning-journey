@@ -20,7 +20,7 @@ import { summarize } from '@engine/confidence'
 import { runEngine, fromWire } from '@engine/engineProtocol'
 import { runDateSearch, type DateSearchInput } from '@engine/dateSearch'
 import { validationMarket } from '@engine/reference/methodology'
-import { compileBudget } from '@budget/budgetToSpending'
+import { anchorTarget, compileBudget } from '@budget/budgetToSpending'
 import {
   NEVER_DEPLETED,
   type BudgetLineItem,
@@ -141,6 +141,51 @@ describe('U9 · the degenerate-identity golden (build-gate b)', () => {
     expect(summary.floorReading).toBeDefined()
     expect(summary.floorReading!.outcomeState).toBe(summary.headline.outcomeState)
     expect(summary.floorReading!.xOfTen.value).toBe(summary.headline.xOfTen.value)
+  })
+})
+
+describe('U9b · the MEDICAL-PRESENT identity (build-gate 1 — the red team’s double-count hit; the degenerate golden above tests oopMedical=undefined and cannot see it)', () => {
+  // The UI's lines-target must NET the intake OOP medical M: compileBudget re-INJECTS M
+  // into sticky on top of typed lines, so a line typed at the raw scalar S commits S+M —
+  // a silently-pessimistic answer jump on builder-open. These arms pin the netted seed's
+  // arithmetic END-TO-END through the real engine.
+  const S = 48
+  const M = 6.5
+  const netted = anchorTarget(S, M) // 41.5
+
+  it('ARM A (byte-identity at survivorSpendingRatio 1): a single scalable line at S−M with M injected reproduces the scalar run EXACTLY', () => {
+    // Ratio 1 makes sticky-vs-scalable inert (r = 1 in every phase), so the ONLY way this
+    // identity can break is the double-count — the discriminating arm.
+    const base = coupleParams({ survivorSpendingRatio: 1 })
+    const scalar = resolved(simulate(base, 90210))
+    const budget = compileBudget([line({ annualAmountReal: netted })], M, 45)
+    const budgeted = resolved(simulate({ ...base, budget }, 90210))
+    expect(budgeted.distribution.survivalFraction).toBe(scalar.distribution.survivalFraction)
+    expect(budgeted.distribution.terminalValuesReal).toEqual(scalar.distribution.terminalValuesReal)
+    expect(budgeted.distribution.depletionYears).toEqual(scalar.distribution.depletionYears)
+    expect(budgeted.distribution.floor!.depletionYears).toEqual(scalar.distribution.depletionYears)
+    // Presence companion (insight 029): the fixture genuinely stresses depletion.
+    expect(budgeted.distribution.depletionYears.some((d) => d !== NEVER_DEPLETED)).toBe(true)
+  })
+
+  it('ARM A planted-fail: a line typed at the RAW scalar S no longer reconciles (S+M ≠ S) — the backstop names the desync loud', () => {
+    const budget = compileBudget([line({ annualAmountReal: S })], M, 45)
+    const params = { ...coupleParams({ survivorSpendingRatio: 1 }), budget }
+    expect(validateParams(params)).toMatch(/does not reconcile/)
+  })
+
+  it('ARM B (direction at ratio < 1): the injected M is STICKY, so the survivor years spend MORE than the scalar’s ratio-on-total — survival strictly LOWER, never higher (the conservative divergence)', () => {
+    const base = coupleParams({}) // ratio 0.75, sampled longevity — real survivor phases
+    const scalar = resolved(simulate(base, 90210))
+    const budget = compileBudget([line({ annualAmountReal: netted })], M, 45)
+    const budgeted = resolved(simulate({ ...base, budget }, 90210))
+    // Survivor-year spend: budget = M + r·(S−M) = 37.625 > scalar = r·S = 36.
+    expect(budgeted.distribution.survivalFraction).toBeLessThanOrEqual(
+      scalar.distribution.survivalFraction,
+    )
+    // Presence companion: the survivor phases genuinely separate the two — equality would
+    // mean the sticky-medical arm was never exercised (insight 029).
+    expect(budgeted.distribution.survivalFraction).toBeLessThan(scalar.distribution.survivalFraction)
   })
 })
 

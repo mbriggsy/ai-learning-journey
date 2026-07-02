@@ -433,8 +433,13 @@ export async function runDateSearch(
   }
 
   // The sweep — every candidate on the SAME seed at the SAME pinned paths (CRN-uniform).
+  // P3·U9: a budget-carrying input sweeps BOTH tracks in the same ~(window+1) sims — each
+  // candidate simulate runs the floor pass internally and emits `distribution.floor`, so
+  // the floor curve costs no extra candidate runs (only the per-candidate second pass).
+  const hasBudget = input.params.budget !== undefined
   const shouldContinue = opts.shouldContinue ?? (() => Promise.resolve(true))
   const curve: OffsetSurvival[] = []
+  const curveFloor: OffsetSurvival[] = []
   for (let y = 0; y <= DATE_OFFSET_WINDOW_TOP; y++) {
     // The cooperative-cancellation gate (§3 worker seam): a lock or a newer request means
     // no further candidate is dispatched and the in-flight result is discarded unrendered
@@ -460,10 +465,26 @@ export async function runDateSearch(
       }
     }
     curve.push({ offsetYears: y, survivalFraction: out.distribution.survivalFraction })
+    if (hasBudget) {
+      const fl = out.distribution.floor
+      if (fl === undefined) {
+        // Internal inconsistency (the engine's floor emission is param-driven): a
+        // budget-carrying candidate that emits no floor would silently collapse the
+        // two-date answer back to one — fail loud, never alias-and-continue.
+        throw new Error(`[dateSearch] internal: candidate Y=${y} carried a budget but emitted no floor track`)
+      }
+      curveFloor.push({ offsetYears: y, survivalFraction: fl.survivalFraction })
+    }
   }
 
-  // V1 degenerate budget: one curve, two coincident tracks (the SHAPE admits U9's split).
-  const track = decideTrack(curve, paths)
+  // P3·U9 — the two tracks. LIFESTYLE reads the full-spend curve; FLOOR reads the
+  // essentials-only curve when a budget rode the run — two INDEPENDENTLY-derived
+  // outcomes through the SAME decideTrack rule/z/grid (insight 047: the split must
+  // never alias, or a consumer mutating one corrupts the other). The un-itemized
+  // degenerate keeps the single aliased track object — one curve, two coincident
+  // tracks, byte-identical to every pre-U9 run (test-pinned).
+  const lifestyle = decideTrack(curve, paths)
+  const floor = hasBudget ? decideTrack(curveFloor, paths) : lifestyle
 
   // D2 band: the crowned candidate's per-year projection fan, emitted ONCE — only when a date
   // was crowned (a no-date track has no offset to project; that surface shows no band). The
@@ -472,17 +493,25 @@ export async function runDateSearch(
   // so the band observes the very distribution behind the date, never a second drifting picture.
   // The sweep ran every candidate fan-OFF (perf + wire payload); this single targeted re-run at
   // the crowned offset is the decided cost (2026-06-28), not fattening every candidate.
+  //
+  // P3·U9 (council 2026-07-02): the band crowns off the FLOOR track — the load-bearing survival
+  // claim — and ALL THREE band fields ride that one track: the fan observes the FLOOR pass
+  // (`bandFanTrack: 'floor'`), the state is the FLOOR reading, the offset is the floor's crown.
+  // A mixed pairing would lie in one direction or the other (an "on-track" tag over a full-spend
+  // fan that dips, or a full-track state that breaks the on-track-or-better contract at a
+  // floor-only offset). on-track-or-over-funded still holds by construction: the floor curve's
+  // quantized lower bound cleared the bar at this offset, and the re-run is CRN-identical.
+  // A can't-fund-the-full-lifestyle tier is a no-date lifestyle track + words — never a hidden
+  // red band. The un-itemized degenerate keeps the headline state (the tracks coincide).
   const crownedOffset =
-    track.kind === 'confirmed-date' || track.kind === 'window-edge-unconfirmed'
-      ? track.offsetYears
+    floor.kind === 'confirmed-date' || floor.kind === 'window-edge-unconfirmed'
+      ? floor.offsetYears
       : undefined
   // The crowned candidate already simulated cleanly in the sweep (it produced the crowning
   // reading), and bandFan/summarize perturb no feasibility — so a clean fan-ON re-run is
   // guaranteed. Guard defensively (indeterminate, then infeasible — mirroring the sweep grammar):
   // an indeterminate/infeasible here would be an engine inconsistency, so leave the band absent
-  // rather than crash the crowned date. The band's tag is the engine's reading of the VERY
-  // distribution the band draws (`summarize` — objective ≡ headline): a crowned candidate is
-  // on-track-or-better by construction (its quantized lower bound cleared the bar), never a fail.
+  // rather than crash the crowned date.
   let band: DateBand | undefined
   if (crownedOffset !== undefined) {
     // Honor the cooperative-cancellation seam before the most expensive single op (one final-tier
@@ -490,13 +519,20 @@ export async function runDateSearch(
     // as the sweep loop gates every candidate (the module's "async ONLY for cancellation" contract).
     if (!(await shouldContinue())) return { kind: 'cancelled' }
     const crownedParams = candidates[crownedOffset]!
-    const crownedOut = simulate(crownedParams, seed, { bandFan: true })
+    const crownedOut = simulate(crownedParams, seed, {
+      bandFan: true,
+      ...(hasBudget ? { bandFanTrack: 'floor' as const } : {}),
+    })
     if (!crownedOut.indeterminate && !crownedOut.infeasible) {
       const fan = crownedOut.distribution.bandFan
       if (fan !== undefined) {
+        const summary = summarize(crownedOut, crownedParams, seed)
         band = {
           fan,
-          outcomeState: summarize(crownedOut, crownedParams, seed).headline.outcomeState,
+          outcomeState:
+            hasBudget && summary.floorReading !== undefined
+              ? summary.floorReading.outcomeState
+              : summary.headline.outcomeState,
           offsetYears: crownedOffset,
         }
       }
@@ -505,8 +541,8 @@ export async function runDateSearch(
 
   return {
     kind: 'dates',
-    floor: track,
-    lifestyle: track,
+    floor,
+    lifestyle,
     tier: opts.tier,
     windowTopYears: DATE_OFFSET_WINDOW_TOP,
     seed,

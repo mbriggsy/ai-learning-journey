@@ -8,6 +8,11 @@
  * run) — a super-linear ratio is a regression (an accidental re-validation or re-draw per
  * candidate).
  *
+ * P3·U9 REBASELINE (council 2026-07-02): a budget-carrying input runs TWO decumulation+
+ * overlay passes per candidate (the floor track). The RATIO stays ≈ (window+1) — the
+ * baseline single simulate doubles identically — but the absolute per-candidate cost is
+ * ~2×, surfaced explicitly as `passesPerCandidate` (test-pinned; never a silent drift).
+ *
  * TWO budgets ride this gate (§3c two-tier): the provisional-refire interactive budget at
  * the headline 2,000 paths and the final-crown on-demand budget at the pinned 16,000 (the
  * WASM threshold keys off the latter). The tier is measured as requested; thresholds are
@@ -41,6 +46,9 @@ export interface DateSearchProfile {
   readonly ratioVsSingle: number
   /** The candidate count the window implies (window top + 1). */
   readonly candidateCount: number
+  /** Decumulation+overlay passes per candidate: 2 when the input carries a budget (the
+   *  P3·U9 floor track — an explicit rebaseline, never a silent 2× drift), else 1. */
+  readonly passesPerCandidate: 1 | 2
   /** The sweep's outcome kind — a profile of a rejected input measures validation, not
    *  compute, and must say so. */
   readonly outcomeKind: 'dates' | 'input-failure' | 'cancelled'
@@ -96,6 +104,7 @@ export async function profileDateSearch(
     // budget check must then use a bigger fixture, not trust a vacuous ratio).
     ratioVsSingle: singleSimulateMs > 0 ? sweepMs / singleSimulateMs : Number.POSITIVE_INFINITY,
     candidateCount: DATE_OFFSET_WINDOW_TOP + 1,
+    passesPerCandidate: input.params.budget !== undefined ? 2 : 1,
     outcomeKind: outcome.kind,
   }
 }

@@ -97,6 +97,32 @@
   max-width: var(--measure);
 }
 
+/* U9b — the subordinate essentials line ("essentials covered by ~X"). A real second claim, so it
+   reads in full ink (unlike the muted disclosure notes) but at body size under the hero's odds —
+   subordinate by scale and position, never by hue. Its odds figure rides tabular numerals. */
+.fod-floor {
+  margin: 0;
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--line-soft);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  line-height: var(--leading-body);
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  max-width: var(--measure);
+}
+
+/* U9b — the split reading's band track-note (the single band is FLOOR-crowned while the hero claim
+   reads the lifestyle track — this names what the range follows). Quiet caption under the panel. */
+.fod-band__tracknote {
+  margin: var(--space-2) 0 0;
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  line-height: var(--leading-body);
+  color: var(--ink-muted);
+  max-width: var(--measure);
+}
+
 /* The provisional eyebrow (a date taken before the account set is complete). */
 .fod-provisional {
   font-size: var(--text-xs);

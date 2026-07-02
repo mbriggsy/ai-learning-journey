@@ -184,11 +184,12 @@
 
 /* ── D2d: the laptop two-pane (≥ --bp-laptop / 68rem) ─────────────────────────────────────────────
    The verdict word + reading + magnitude are the hero on the LEFT at the reading measure; the
-   projection band is promoted to a top-pinned hero on the RIGHT; the "as the survivor" statement
-   welds under the verdict in the left column (it conditions those words). `grid-template-rows: auto
-   1fr` + grid-row 1/-1 on the band keeps the band spanning full height and top-pinned while the lead +
-   survivor stay tight at the top of column 1. data-twopane is stamped ONLY when a band resolved
-   (ConfidenceStatement.tsx) — the indeterminate placeholder (resolved=null) stays single calm column.
+   projection band is promoted to a top-pinned hero on the RIGHT; the subordinate readouts (the U9b
+   essentials-relief line + the "as the survivor" statement) weld under the verdict in the left
+   column inside ONE .reveal__subordinates wrapper (they condition those words). `grid-template-rows:
+   auto 1fr` + grid-row 1/-1 on the band keeps the band spanning full height and top-pinned while the
+   lead + subordinates stay tight at the top of column 1. data-twopane is stamped ONLY when a band
+   resolved (ConfidenceStatement.tsx) — the indeterminate placeholder stays single calm column.
    NOTE: 68rem is --bp-laptop re-stated as a literal (@media can't read a custom prop); see tokens.css. */
 @media (min-width: 68rem) {
   .confidence-reveal[data-twopane] {
@@ -212,8 +213,14 @@
     grid-column: 2;
     grid-row: 1 / -1;
   }
-  /* the survivor statement: under the verdict in the left column. */
-  .confidence-reveal[data-twopane] > .survivor {
+  /* the subordinate readouts (floor relief + survivor — U9b build-gate 4): ONE wrapper under the
+     verdict in the left column, so the grid stays two rows however many readouts mount and the
+     band's 1/-1 span stays a true full-height pin (two direct grid children would mint an
+     implicit third row). */
+  .confidence-reveal[data-twopane] > .reveal__subordinates {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
     grid-column: 1;
     grid-row: 2;
   }

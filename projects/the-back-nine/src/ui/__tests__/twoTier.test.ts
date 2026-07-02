@@ -22,10 +22,11 @@ describe('floorRelief — the two-tier spine gate (council 2026-07-02, insight 0
     expect(floorRelief(hero, floor)).toBeNull()
   })
 
-  it('a floor that clears MORE futures than the full lifestyle ⇒ the relief line renders (the reading passes through verbatim)', () => {
+  it('a floor that clears MORE futures than the full lifestyle ⇒ the relief line renders (the reading passes through verbatim) with the trim note (the floor holds)', () => {
     const hero = reading(7)
     const floor = reading(10)
-    expect(floorRelief(hero, floor)).toBe(floor)
+    expect(floorRelief(hero, floor)).toEqual({ reading: floor, showTrimNote: true })
+    expect(floorRelief(hero, floor)!.reading).toBe(floor)
   })
 
   it('planted-fail: an equal COUNT with a different STATE still earns the line (already-failing is keyed to the floor’s own depletion)', () => {
@@ -33,12 +34,21 @@ describe('floorRelief — the two-tier spine gate (council 2026-07-02, insight 0
     const floor = reading(0, 'already-failing')
     // The gate must discriminate on EVERY rendered field — a state-only difference is
     // information, not noise.
-    expect(floorRelief(hero, floor)).toBe(floor)
+    expect(floorRelief(hero, floor)).toEqual({ reading: floor, showTrimNote: false })
   })
 
   it('planted-fail: an equal STATE with a different COUNT earns the line', () => {
     const hero = reading(7)
     const floor = reading(9)
-    expect(floorRelief(hero, floor)).toBe(floor)
+    expect(floorRelief(hero, floor)).toEqual({ reading: floor, showTrimNote: true })
+  })
+
+  it('the TRIM NOTE is gated on the floor’s OWN state: a borderline/off-track floor renders the honest word + count with NO reassuring rider', () => {
+    expect(floorRelief(reading(3, 'off-track'), reading(6, 'borderline'))!.showTrimNote).toBe(false)
+    expect(floorRelief(reading(3, 'off-track'), reading(5, 'off-track'))).toEqual({
+      reading: reading(5, 'off-track'),
+      showTrimNote: false,
+    })
+    expect(floorRelief(reading(9, 'on-track'), reading(10, 'over-funded'))!.showTrimNote).toBe(true)
   })
 })

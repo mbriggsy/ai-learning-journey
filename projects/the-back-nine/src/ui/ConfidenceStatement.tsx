@@ -30,6 +30,8 @@ import { copy, slots } from './copy'
 import { OUTCOME_PRESENTATION } from './outcomeStates'
 import { VerdictIcon } from './verdictSignal'
 import { SurvivorReadout } from './SurvivorReadout'
+import { TwoTierHeadline } from './TwoTierHeadline'
+import { floorRelief } from './twoTier'
 import { formatAxisDollar, formatPerMonth } from './money'
 import { focusHeading } from '@intake/a11y'
 import { ConfidenceBandPanel } from '@viz/ConfidenceBandPanel'
@@ -66,6 +68,11 @@ export type ConfidenceStatementView =
        *  carried a survivor phase (the parent, answerView, decides); when present, SurvivorReadout
        *  mounts below the band. Spine-only: the date route renders a timing claim, not a joint verdict. */
       readonly survivorReading?: SurvivorReading
+      /** The U9b essentials-floor verdict — a PARALLEL engine-tagged Headline, present iff a budget
+       *  rode the run (carried VERBATIM from SimulationResult.floorReading, never re-derived —
+       *  insight 045). The floorRelief gate decides whether it earns the subordinate relief line;
+       *  the value-equal degenerate collapses to the single-metric statement verbatim. */
+      readonly floorReading?: Headline
     }
   | { readonly kind: 'pending' }
   | { readonly kind: 'compute-error'; readonly onRetry: () => void }
@@ -188,6 +195,9 @@ export function ConfidenceStatement({ view, focusSignal }: ConfidenceStatementPr
     const state = view.headline.outcomeState
     const pres = OUTCOME_PRESENTATION[state]
     const word = pres.verdictWordKey ? copy[pres.verdictWordKey] : ''
+    // The two-tier gate (pure, insight 048): null = no budget rode, or the value-equal
+    // degenerate — the single-metric statement renders verbatim, no subordinate wrapper.
+    const relief = floorRelief(view.headline, view.floorReading)
     // The over-funded near-ceiling reads the proportion "better than 9 in 10" via xOfTenAtCeiling (the
     // 10-of-10 honesty clamp, called BY NAME — never the magic xOfTen(10)); every other worded state
     // reads its engine count through the slot.
@@ -219,10 +229,34 @@ export function ConfidenceStatement({ view, focusSignal }: ConfidenceStatementPr
             />
           </div>
         )}
-        {/* The quieter "as the survivor" statement, BELOW the band — present iff the run carried a
-            survivor phase. Opacity-only reveal (survivor.css), below-band so the scrub tap-targets
-            never move. Renders nothing on absence (insight 044). */}
-        {view.survivorReading && <SurvivorReadout reading={view.survivorReading} />}
+        {/* THE SUBORDINATE READOUTS — one wrapper so the two-pane grid stays two rows and the band
+            stays pinned rows 1/-1 whatever mounts here (U9b build-gate 4; two direct grid children
+            would mint an implicit third row). Inside, in order:
+            (1) the U9b essentials-relief line (present iff the floorRelief gate earns it — the
+                value-equal degenerate renders the single-metric statement VERBATIM, wrapper absent
+                when nothing earns it);
+            (2) the "as the survivor" statement — INLINE exactly as shipped when it is the only
+                subordinate face, FOLDED behind a calm <details> when the floor relief already
+                holds the one inline X-of-10 slot (build-gate 7: at most ONE subordinate count on
+                the first frame; R4 — the fold is the seam the cold-read can flip). Both render
+                below the band so the scrub tap-targets never move (insight 035); absence renders
+                nothing (insight 044). */}
+        {(relief || view.survivorReading) && (
+          <div className="reveal__subordinates">
+            {relief && <TwoTierHeadline relief={relief} />}
+            {view.survivorReading &&
+              (relief ? (
+                <details className="survivor-fold">
+                  <summary className="survivor-fold__summary">
+                    {copy.survivorReadoutEyebrow}
+                  </summary>
+                  <SurvivorReadout reading={view.survivorReading} omitEyebrow />
+                </details>
+              ) : (
+                <SurvivorReadout reading={view.survivorReading} />
+              ))}
+          </div>
+        )}
       </div>
     )
   }

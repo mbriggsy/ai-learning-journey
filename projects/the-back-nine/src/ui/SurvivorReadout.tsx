@@ -38,9 +38,13 @@ export interface SurvivorReadoutProps {
    *  survivor phase, so the PARENT decides whether to render this surface at all — by the time it
    *  mounts, the reading exists. */
   readonly reading: SurvivorReading
+  /** U9b (build-gate 7): when this readout is folded behind a <details> whose summary already
+   *  speaks the eyebrow line, the inner eyebrow would double it — omit the visible node and label
+   *  the section directly instead (the a11y name survives; the words render once). */
+  readonly omitEyebrow?: boolean
 }
 
-export function SurvivorReadout({ reading }: SurvivorReadoutProps) {
+export function SurvivorReadout({ reading, omitEyebrow = false }: SurvivorReadoutProps) {
   const eyebrowId = useId()
   const state = reading.outcomeState
   const pres = OUTCOME_PRESENTATION[state]
@@ -67,11 +71,18 @@ export function SurvivorReadout({ reading }: SurvivorReadoutProps) {
   const showStepDown = stepDownText !== '0'
 
   return (
-    <section className="survivor" aria-labelledby={eyebrowId}>
+    <section
+      className="survivor"
+      {...(omitEyebrow
+        ? { 'aria-label': copy.survivorReadoutEyebrow }
+        : { 'aria-labelledby': eyebrowId })}
+    >
       <div className="survivor-reveal">
-        <p className="survivor__eyebrow" id={eyebrowId}>
-          {copy.survivorReadoutEyebrow}
-        </p>
+        {!omitEyebrow && (
+          <p className="survivor__eyebrow" id={eyebrowId}>
+            {copy.survivorReadoutEyebrow}
+          </p>
+        )}
         <div className="survivor__verdict">
           <VerdictIcon state={state} className="survivor__glyph" />
           <p className="survivor__word">{word}</p>

@@ -38,6 +38,15 @@
   display: contents;
 }
 
+/* The SUBORDINATE READOUTS wrapper (U9b build-gate 4) — the floor-relief line + the survivor
+   statement share ONE grid cell so the two-pane grid stays exactly two rows and the band's
+   rows 1/-1 pin means what it says (two direct grid children would mint an implicit third row).
+   Same transparent-group trick as .reveal__lead: no box in single column, a real grid item only
+   inside the two-pane @media (confidence.css). */
+.reveal__subordinates {
+  display: contents;
+}
+
 /* The completion beat — the dominant "Keep this answer" Save (U8), with the quiet Review
    demoted below it (council 2026-06-30). When unsaveable, only the quiet return shows. */
 .result-actions {

@@ -134,14 +134,19 @@ export function selectElevatedAnswer(
     case 'date': {
       const outcome = answer.outcome
       if (outcome.kind === 'dates') {
-        // v1 degenerate budget: the floor track IS the rendered date (floor ≡ lifestyle, one date).
-        // The crowned projection band + its future-marker annotations ride alongside (dateBand screens
-        // the $0-portfolio case + derives the household-clock x-axis from the draft + the fan's last year).
+        // U9b: BOTH tracks cross, carried verbatim (insight 045) — the surface's pure
+        // composeDateSplit decides one-date vs split (the value-coincident degenerate renders the
+        // single composition verbatim; the shipped v1 floor-only render presented an essentials
+        // date AS the fuck-off date — the calm-but-wrong gap this threading closes). The crowned
+        // FLOOR projection band + its future-marker annotations ride alongside (dateBand screens
+        // the $0-portfolio case + derives the household-clock x-axis from the draft + the fan's
+        // last year).
         return {
           kind: 'date',
           view: {
             kind: 'dates',
-            track: outcome.floor,
+            floor: outcome.floor,
+            lifestyle: outcome.lifestyle,
             windowTopYears: outcome.windowTopYears,
             ...dateBand(outcome, draft),
           },
@@ -162,6 +167,9 @@ export function selectElevatedAnswer(
       // The "as the survivor" reading rides the same spine view (present iff the run carried a survivor
       // phase — the parent decides; SurvivorReadout mounts below the band). Carried verbatim from the
       // result, never re-derived (insight 045). Spine-only: the date route is a timing claim, not a joint verdict.
+      // U9b: the essentials-floor verdict rides presence-keyed, carried verbatim (insight 045) —
+      // the surface's floorRelief gate decides whether it earns the subordinate relief line (the
+      // value-equal degenerate renders the single-metric statement verbatim).
       return {
         kind: 'spine',
         view: {
@@ -170,6 +178,7 @@ export function selectElevatedAnswer(
           dollar,
           ...spineBand(answer.result, draft),
           ...(answer.result.survivorReading ? { survivorReading: answer.result.survivorReading } : {}),
+          ...(answer.result.floorReading ? { floorReading: answer.result.floorReading } : {}),
         },
       }
     }
@@ -184,7 +193,10 @@ export function selectElevatedAnswer(
  */
 export function resolvedFocusKey(elevated: ElevatedAnswer): string | undefined {
   if (elevated.kind === 'date' && elevated.view.kind === 'dates') {
-    const track = elevated.view.track
+    // Keyed to the FLOOR track only (U9b build-gate 3, insight 047): a lifestyle-only sharpen must
+    // never look like a fresh landing — the lifestyle claim's change reaches AT through the
+    // surface's own polite live region instead.
+    const track = elevated.view.floor
     const where = track.kind === 'no-date-in-window' ? 'none' : track.offsetYears
     return `date:${track.kind}:${where}`
   }

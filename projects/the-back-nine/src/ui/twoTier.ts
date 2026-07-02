@@ -23,15 +23,34 @@
  */
 import type { Headline } from '@shared/model'
 
+export interface FloorReliefView {
+  /** The engine's floor reading, passed through VERBATIM (never re-derived — the U7/D2
+   *  honesty contract). */
+  readonly reading: Headline
+  /** The Kitces action-first trim note ("trimming would start with the extras, not the
+   *  basics") is itself a CLAIM — it is only true when the floor actually holds. Gated on
+   *  the floor's own state being on-track-or-better; a floor that is itself borderline or
+   *  worse renders the honest word + count with NO reassuring rider. */
+  readonly showTrimNote: boolean
+}
+
 /**
- * The floor-relief gate: the reading to render as the subordinate relief line, or `null`
- * when no line is earned (absent floor — no budget rode — or a value-equal degenerate,
- * where the hero already IS the floor statement).
+ * The floor-relief gate: the subordinate relief line's view, or `null` when no line is
+ * earned (absent floor — no budget rode — or a value-equal degenerate, where the hero
+ * already IS the floor statement).
  */
-export function floorRelief(headline: Headline, floorReading: Headline | undefined): Headline | null {
+export function floorRelief(
+  headline: Headline,
+  floorReading: Headline | undefined,
+): FloorReliefView | null {
   if (floorReading === undefined) return null
   const equal =
     floorReading.outcomeState === headline.outcomeState &&
     floorReading.xOfTen.value === headline.xOfTen.value
-  return equal ? null : floorReading
+  if (equal) return null
+  return {
+    reading: floorReading,
+    showTrimNote:
+      floorReading.outcomeState === 'on-track' || floorReading.outcomeState === 'over-funded',
+  }
 }

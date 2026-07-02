@@ -107,10 +107,79 @@
   max-width: var(--measure);
 }
 
+/* ── U9b: the survivor FOLD (build-gate 7 — at most ONE subordinate X-of-10 face on the first
+   frame). When the essentials-relief line holds the inline slot, the survivor statement lives one
+   calm pull behind a native <details> (the .fod-ladder disclosure pattern: keyboard-native,
+   CSP-clean, R4 detail-on-demand). The folded readout omits its inner eyebrow (the summary IS the
+   eyebrow line) and drops its own top rule (the fold row carries the separation). */
+.survivor-fold {
+  width: 100%;
+  max-width: var(--measure);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--line-soft);
+}
+
+.survivor-fold > .survivor {
+  border-top: none;
+  padding-top: var(--space-3);
+}
+
+/* The disclosure tap-row — finger-sized, quiet; a chevron marks open/closed (shape, not hue). */
+.survivor-fold__summary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 44px;
+  cursor: pointer;
+  list-style: none;
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--ink-muted);
+  transition: color var(--dur-fast) var(--ease-out);
+}
+
+.survivor-fold__summary::-webkit-details-marker {
+  display: none; /* drop the native triangle (WebKit/Blink) */
+}
+
+/* The custom chevron — ▸ closed, rotates to ▾ on open (CSP-clean stylesheet transform). */
+.survivor-fold__summary::before {
+  content: '';
+  flex: none;
+  width: 0;
+  height: 0;
+  border-left: 5px solid currentColor;
+  border-top: 4px solid transparent;
+  border-bottom: 4px solid transparent;
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+
+.survivor-fold[open] .survivor-fold__summary::before {
+  transform: rotate(90deg);
+}
+
+.survivor-fold__summary:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 3px;
+  border-radius: var(--radius-sm);
+}
+
+/* Hover lift on precise pointers only (touch taps must not stick a hover state). */
+@media (hover: hover) and (pointer: fine) {
+  .survivor-fold__summary:hover {
+    color: var(--ink);
+  }
+}
+
 /* Reduced motion: the reveal is already movement-free (opacity only); shorten it to the quick
    comprehension fade. Final state identical — no information lives only in the animation. */
 @media (prefers-reduced-motion: reduce) {
   .survivor-reveal {
     transition: opacity var(--dur-fast) ease;
+  }
+  .survivor-fold__summary,
+  .survivor-fold__summary::before {
+    transition: none;
   }
 }

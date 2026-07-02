@@ -81,6 +81,7 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     ladderOffsetTick: slots.ladderOffsetTick(6),
     ladderMarkAria: slots.ladderMarkAria(6, slots.xOfTen(9), 'crown'),
     noDateHowClose: slots.noDateHowClose(slots.xOfTen(7)),
+    dateFloorCovered: slots.dateFloorCovered(4, slots.withOdds(slots.xOfTen(9)), true),
     stepDownNote: slots.stepDownNote(2030),
     oopHint: slots.oopHint('3,000', '3,400'),
     factsMore: slots.factsMore(3),

@@ -155,7 +155,7 @@ describe('selectElevatedAnswer — D2 state-adaptive routing', () => {
   it('a date "dates" outcome → the FuckOffDate view carrying the FLOOR track + window top', () => {
     expect(selectElevatedAnswer(snap(datesAnswer(), working), noop)).toEqual({
       kind: 'date',
-      view: { kind: 'dates', track: DATE_FIXTURES.confirmed, windowTopYears: DATE_WINDOW_TOP },
+      view: { kind: 'dates', floor: DATE_FIXTURES.confirmed, lifestyle: DATE_FIXTURES.confirmed, windowTopYears: DATE_WINDOW_TOP },
     })
   })
 
@@ -289,11 +289,11 @@ describe('resolvedFocusKey — the one-shot landing announce', () => {
   it('a resolved date reading yields a stable key (equal inputs → equal key, no re-announce)', () => {
     const a = resolvedFocusKey({
       kind: 'date',
-      view: { kind: 'dates', track: DATE_FIXTURES.confirmed, windowTopYears: DATE_WINDOW_TOP },
+      view: { kind: 'dates', floor: DATE_FIXTURES.confirmed, lifestyle: DATE_FIXTURES.confirmed, windowTopYears: DATE_WINDOW_TOP },
     })
     const b = resolvedFocusKey({
       kind: 'date',
-      view: { kind: 'dates', track: DATE_FIXTURES.confirmed, windowTopYears: DATE_WINDOW_TOP },
+      view: { kind: 'dates', floor: DATE_FIXTURES.confirmed, lifestyle: DATE_FIXTURES.confirmed, windowTopYears: DATE_WINDOW_TOP },
     })
     expect(a).toBeDefined()
     expect(a).toBe(b)
@@ -302,7 +302,7 @@ describe('resolvedFocusKey — the one-shot landing announce', () => {
   it('a resolved spine reading yields a stable key distinct from the date key', () => {
     const dateKey = resolvedFocusKey({
       kind: 'date',
-      view: { kind: 'dates', track: DATE_FIXTURES.confirmed, windowTopYears: DATE_WINDOW_TOP },
+      view: { kind: 'dates', floor: DATE_FIXTURES.confirmed, lifestyle: DATE_FIXTURES.confirmed, windowTopYears: DATE_WINDOW_TOP },
     })
     const spineKey = resolvedFocusKey({
       kind: 'spine',
@@ -320,7 +320,7 @@ describe('resolvedFocusKey — the one-shot landing announce', () => {
     expect(
       resolvedFocusKey({
         kind: 'date',
-        view: { kind: 'dates', track: DATE_FIXTURES.noDate, windowTopYears: DATE_WINDOW_TOP },
+        view: { kind: 'dates', floor: DATE_FIXTURES.noDate, lifestyle: DATE_FIXTURES.noDate, windowTopYears: DATE_WINDOW_TOP },
       }),
     ).toBe('date:no-date-in-window:none')
   })

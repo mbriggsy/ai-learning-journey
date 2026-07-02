@@ -80,6 +80,80 @@ describe('ConfidenceStatement — the U7 verdict-first surface', () => {
     expect(container.textContent).toContain(slots.xOfTen(8)) // "8 of 10"
   })
 
+  // --- U9b: the two-tier essentials relief (council 2026-07-02) --------------------------------
+  it('a floor reading that DIFFERS earns the subordinate relief line: eyebrow + word + count, and NEVER a dollar (the 056 guard)', () => {
+    const floorReading = { xOfTen: { value: 10, marginToEdge: 0.05 }, outcomeState: 'on-track' as const }
+    const { container } = render(
+      <ConfidenceStatement
+        view={{ kind: 'reading', ...READING_FIXTURES['borderline'], floorReading }}
+      />,
+    )
+    expect(screen.getByText(copy.floorReadoutEyebrow)).toBeInTheDocument()
+    expect(container.textContent).toContain(copy.floorReadoutCoverage)
+    // Word + count ONLY — the relief section must carry NO dollar figure (floorReading has no
+    // magnitude; borrowing the full-track dollar would be the insight-056 mixed-pairing sin).
+    const relief = container.querySelector('.floor-readout')!
+    expect(relief.textContent).toContain(slots.xOfTen(10))
+    expect(relief.textContent).not.toContain('$')
+    // The floor holds (on-track) ⇒ the Kitces action-first rider renders.
+    expect(relief.textContent).toContain(copy.floorReadoutTrimNote)
+  })
+
+  it('the DEGENERATE (value-equal floor) renders the single-metric statement VERBATIM — no relief line, no subordinates wrapper', () => {
+    const base = READING_FIXTURES['on-track']
+    const floorReading = { ...base.headline } // equal rendered fields, distinct object
+    const { container } = render(
+      <ConfidenceStatement view={{ kind: 'reading', ...base, floorReading }} />,
+    )
+    expect(screen.queryByText(copy.floorReadoutEyebrow)).not.toBeInTheDocument()
+    expect(container.querySelector('.reveal__subordinates')).toBeNull()
+  })
+
+  it('a floor that is itself NOT holding renders the honest word + count WITHOUT the trim rider (the rider is a claim)', () => {
+    const floorReading = { xOfTen: { value: 6, marginToEdge: 0.02 }, outcomeState: 'borderline' as const }
+    const { container } = render(
+      <ConfidenceStatement view={{ kind: 'reading', ...READING_FIXTURES['off-track'], floorReading }} />,
+    )
+    const relief = container.querySelector('.floor-readout')!
+    expect(relief.textContent).toContain(slots.xOfTen(6))
+    expect(relief.textContent).not.toContain(copy.floorReadoutTrimNote)
+  })
+
+  it('with BOTH the relief line and a survivor reading, the survivor FOLDS behind a <details> (≤ 1 subordinate count on the first frame, build-gate 7)', () => {
+    const floorReading = { xOfTen: { value: 10, marginToEdge: 0.05 }, outcomeState: 'on-track' as const }
+    const { container } = render(
+      <ConfidenceStatement
+        view={{
+          kind: 'reading',
+          ...READING_FIXTURES['borderline'],
+          floorReading,
+          survivorReading: SURVIVOR_FIXTURES['on-track'],
+        }}
+      />,
+    )
+    const fold = container.querySelector('details.survivor-fold')
+    expect(fold).not.toBeNull()
+    // The summary speaks the eyebrow line; the folded readout omits its inner copy of it — the
+    // words render exactly once.
+    expect(screen.getAllByText(copy.survivorReadoutEyebrow)).toHaveLength(1)
+    // Closed by default (R4 — one pull down): the survivor count is not on the first frame.
+    expect((fold as HTMLDetailsElement).open).toBe(false)
+  })
+
+  it('with NO floor relief the survivor renders INLINE exactly as shipped (the fold only exists when the relief holds the inline slot)', () => {
+    const { container } = render(
+      <ConfidenceStatement
+        view={{
+          kind: 'reading',
+          ...READING_FIXTURES['on-track'],
+          survivorReading: SURVIVOR_FIXTURES['on-track'],
+        }}
+      />,
+    )
+    expect(container.querySelector('details.survivor-fold')).toBeNull()
+    expect(screen.getByText(copy.survivorReadoutEyebrow)).toBeInTheDocument()
+  })
+
   it('mounts the survivor readout below the band when a survivor reading is present', () => {
     render(
       <ConfidenceStatement

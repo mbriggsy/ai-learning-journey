@@ -259,6 +259,21 @@ export const copy = {
   // below the line before the date holds). D2 owns the string; the C3 result carries the flags.
   dateNonMonotoneNote:
     'An earlier year or two can clear, then dip back below the line before it holds — health costs before Medicare are the usual reason.',
+  // --- U9b date-route floor/lifestyle split (the budget's two-date reading — council 2026-07-02).
+  //     "date"-prefixed → verdict-scoped (free-numeral + superlative): year counts + odds ride
+  //     slots.dateFloorCovered / dateOddsText, never a bare numeral. The essentials line NEVER says
+  //     "work-optional" — that claim belongs to the full-lifestyle track alone (presenting the easier
+  //     essentials date as the fuck-off date is the calm-but-wrong sin U9b closes). FIRST-DRAFT
+  //     wording — the N=1 cold-read's call. ---
+  // The floor track has no date — the quiet severity disclosure when the lifestyle has none either.
+  dateFloorNotWithinEither: 'Covering just the essentials doesn’t clear within this window either.',
+  // The floor track has no date while the FULL plan does (the extreme R27 inversion arm — the
+  // inversion note below carries the why; this line only states the fact, never reordered away).
+  dateFloorNotWithin: 'Covering just the essentials doesn’t clear within this window.',
+  // The R27 floor>lifestyle inversion disclosure (100%-FPL/PTC — correct, surprising engine output
+  // that MUST be explained, never hidden to look tidy). Plain-language subsidy cause, no jargon.
+  dateFloorInversionNote:
+    'Here the essentials-only version lands later than the full plan. Spending less can mean a lower income on paper — which can shrink the health-insurance help before Medicare and raise that cost.',
   answerError: 'The math hit a snag.',
   answerRetry: 'Try again',
   // --- D2 result screen chrome (the landed magic moment's frame). The quiet return to intake; the
@@ -290,6 +305,18 @@ export const copy = {
   // confidenceCoverageCaption ("futures your plan covers"); "still covers you" scopes it to the one
   // who's left without restating the condition (the eyebrow + the income-cliff clause carry that).
   survivorReadoutCoverage: 'futures your plan still covers you',
+  // --- U9b floor readout (the two-tier essentials-relief statement — council 2026-07-02). The
+  //     full-lifestyle verdict stays the HERO; this is the SUBORDINATE relief line, word + count
+  //     ONLY (floorReading carries no dollar — borrowing the full-track magnitude would be the
+  //     insight-056 mixed-pairing sin). "Readout" → verdict-scoped (free-numeral + superlative:
+  //     the count rides slots.xOfTen). FIRST-DRAFT wording — the N=1 cold-read's call (a formal
+  //     Act-3 exit condition: relief-with-honesty, never two competing verdicts). ---
+  floorReadoutEyebrow: 'Just the essentials',
+  // The "X of 10" tail (composed with slots.xOfTen) — parallels confidenceCoverageCaption.
+  floorReadoutCoverage: 'futures your essentials are covered',
+  // The Kitces action-first rider — GATED (twoTier.ts) on the floor's own state holding: a claim
+  // that trimming suffices is only honest when the essentials actually clear.
+  floorReadoutTrimNote: 'If trimming were ever needed, it would start with the extras — not the basics.',
   // --- U7 confidence band chrome (the on-demand "show me the range" drawer — BandLabels +
   //     BandPanelChrome for ConfidenceBandPanel). BAND-SCOPED keys: chart chrome describing the
   //     fan's geometry, not a verdict claim, so the universal gates apply (as for factual intake
@@ -308,6 +335,10 @@ export const copy = {
   // The indeterminate-band placeholder note — shown on the wide low-emphasis envelope when there
   // is no resolved range yet (the answer is incomplete, not bad).
   bandPlaceholderNote: 'The range fills in as you answer.',
+  // U9b: in a SPLIT date reading the single band is FLOOR-crowned (council 2026-07-02) while the
+  // hero claim reads the lifestyle track — this one-line note names the band's own track so the
+  // range and the headline can never silently disagree about what they follow.
+  bandFollowsFloorNote: 'This range follows the essentials-covered date.',
   // --- D2c odds-ladder drawer (the date route's secondary "how your odds shift by WHEN you stop").
   //     LADDER-scoped: chart chrome, not a verdict claim, so the universal gates apply (no certainty,
   //     no imperative). Odds counts ride slots.xOfTen (never a bare numeral / "10 of 10"). The
@@ -671,6 +702,20 @@ export const slots = {
    *  pickable above-the-line dot. The odds ride slots.xOfTen. Cold-read's call. */
   noDateHowClose: (oddsText: string): string =>
     `The nearest any year came was about ${oddsText} — short of holding all the way through.`,
+  /** U9b — the split reading's subordinate essentials line ("essentials covered by ~X", NEVER
+   *  "work-optional by ~X" — the claim assignment, council 2026-07-02). `oddsText` arrives
+   *  pre-composed (dateOddsText — the same conservative lower-bound register as the hero);
+   *  `unconfirmed` folds the floor's own window-edge hedge into the sentence. */
+  dateFloorCovered: (years: number, oddsText: string, unconfirmed: boolean): string => {
+    const when =
+      years === 0
+        ? 'The essentials alone are covered from today'
+        : years === 1
+          ? 'The essentials alone are covered about a year out'
+          : `The essentials alone are covered about ${years} years out`
+    const edge = unconfirmed ? ' That sits at the edge of what this window can confirm.' : ''
+    return `${when} — ${oddsText}.${edge}`
+  },
   /** The catch-up step-down disclosure names its year (D1). */
   stepDownNote: (calendarYear: number): string =>
     `From ${calendarYear}, contribution room narrows as a catch-up window closes — the plan assumes the lower limit from then on.`,

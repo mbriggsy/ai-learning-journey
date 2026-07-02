@@ -85,6 +85,24 @@ const noDate: DateTrackOutcome = {
     [30, 0.72],
   ]),
 }
+// U9b — a LATER confirmed date (crowned at 9) with its own coherent curve, so the split fixtures
+// can pair it against `confirmed` (crowned at 4) as a genuine floor≠lifestyle reading in either
+// direction (normal split / the R27 inversion) without inventing a crown its curve never reached.
+const confirmedLater: DateTrackOutcome = {
+  kind: 'confirmed-date',
+  offsetYears: 9,
+  grade: grade(0.87, 0.9),
+  nonMonotoneOffsets: [],
+  curve: curveOf([
+    [0, 0.5],
+    [2, 0.6],
+    [4, 0.7],
+    [6, 0.78],
+    [8, 0.83],
+    [9, 0.87],
+    [10, 0.88],
+  ]),
+}
 
 export const DATE_FIXTURES = {
   freeToday,
@@ -92,6 +110,7 @@ export const DATE_FIXTURES = {
   confirmedNonMonotone,
   windowEdge,
   noDate,
+  confirmedLater,
 } as const satisfies Record<string, DateTrackOutcome>
 
 export type DateFixtureKey = keyof typeof DATE_FIXTURES

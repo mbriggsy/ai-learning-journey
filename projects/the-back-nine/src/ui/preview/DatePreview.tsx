@@ -41,7 +41,13 @@ export default function DatePreview() {
           <article key={c.key} className="preview__case">
             <p className="preview__case-label">{c.label}</p>
             <FuckOffDate
-              view={{ kind: 'dates', track: DATE_FIXTURES[c.key], windowTopYears: DATE_WINDOW_TOP }}
+              view={{
+                kind: 'dates',
+                // The aliased pair is the value-coincident degenerate — the single-date render.
+                floor: DATE_FIXTURES[c.key],
+                lifestyle: DATE_FIXTURES[c.key],
+                windowTopYears: DATE_WINDOW_TOP,
+              }}
             />
           </article>
         ))}

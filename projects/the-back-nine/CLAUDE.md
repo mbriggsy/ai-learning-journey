@@ -35,7 +35,7 @@ Precedence on conflict: the **roadmap's You-Are-Here table** wins on build statu
 `engine · crypto · store · intake · budget · viz · ui · shared` (path aliases `@engine/*` … `@shared/*`).
 
 - **`src/engine/` is PURE.** A deterministic function of `(params, seed)`. It imports only `@shared`; it must not import ui/store/intake/budget/viz/crypto. It reads **no clock, entropy, or environment** — `Math.random`, `crypto.getRandomValues`, `Date`, `performance`, and `process` are all lint-banned inside `src/engine/**` (the seed is **injected** by the caller). Tests under `src/engine/**` are exempt.
-- **`src/crypto/`** — primitive layer; CSPRNG **required** (`crypto.getRandomValues` for the recovery phrase), `Math.random` banned.
+- **`src/crypto/`** — primitive layer; CSPRNG **required** (`crypto.getRandomValues` for every salt, IV, and the raw data key), `Math.random` banned. The recovery credential is a **second user-chosen passphrase** (PBKDF2-600k, same floor — the v1 BIP-39 phrase was reworked away in U8), never a system-minted wordlist phrase.
 - **`src/shared/`** — leaf (the plaintext model + outcome-state enum); imports nothing from feature layers.
 
 ## Load-bearing engine contracts (do not break)

@@ -230,7 +230,7 @@ These figures are load-bearing — the exact values matter and must not be parap
 - Survivor-spending ratio default **~75%**, grounded to the Blanchett literature, directional-until-pinned.
 - Gross-up worst-case contraction factor **k ≈ 0.74**; `GROSS_UP_MAX_PASSES = 128` (worst case ~113 passes).
 - RMD ages: **72 (≤1950) / 73 (1951–1959) / 75 (1960+)**.
-- PBKDF2 **600,000** iterations → AES-GCM-256; recovery phrase **BIP-39 English, 2048 words, 12 words = 128 bits**, HKDF-SHA-256 wrap with `info = utf8('the-back-nine/recovery-wrap/v1')`.
+- PBKDF2 **600,000** iterations → AES-GCM-256. *(Historical: U4 shipped the recovery credential as a BIP-39 12-word phrase with an HKDF-SHA-256 wrap; the **U8 rework (council 2026-06-30) superseded it** with a second user-chosen passphrase, PBKDF2-600k, same floor — current truth in [architecture.md §7.3](../architecture.md).)*
 - Passphrase floor: **`zxcvbn-ts` score ≥ 3 AND length ≥ 12**.
 - Never-depleted sentinel **`NEVER_DEPLETED = -1`**.
 - Date-search: **`z = 1.645` one-sided**, paths pinned at **16,000** so `z·SE ≤ ½·SURVIVAL_GRID` at the bar; bar = `BANDS.onTrack`.

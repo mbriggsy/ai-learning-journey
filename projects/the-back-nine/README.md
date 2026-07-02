@@ -31,7 +31,7 @@ One product, one engine, two voices.
 
 ## How it works
 
-The Back Nine is a **local-first PWA**. No backend, no account, no cloud. Your financial picture is entered by hand, encrypted at rest in your browser (AES-GCM under a PBKDF2-hardened key), and never leaves the device. The survivor's backstop — a two-person recovery phrase and a mandatory encrypted export — is designed and its cryptography is built and tested; the guided first-Save that puts it in your hands ships with the rest of Act 2.
+The Back Nine is a **local-first PWA**. No backend, no account, no cloud. Your financial picture is entered by hand, encrypted at rest in your browser (AES-GCM under a PBKDF2-hardened key), and never leaves the device. The survivor's backstop is **live**: the guided first-Save ceremony sets a daily passphrase plus a second, memorable **recovery passphrase** (either spouse's door back in) and walks you through a mandatory encrypted export — and the full return arc (unlock, forgot-passphrase recovery, restore-from-backup, view-only second tab, edit-and-re-save) ships with it.
 
 The engine is the heart, and it is held to a deliberately severe standard.
 

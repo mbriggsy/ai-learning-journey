@@ -97,7 +97,7 @@ Sorted alphabetically; `§` and number-prefixed statutory terms are grouped at t
 
 **reduce-to-spine** — the core correctness invariant: every overlay, when **off**, reproduces the Trinity/Bengen-validated decumulation distribution **byte-identically** (same seed). The golden cases are never perturbed. → [architecture.md §5](architecture.md)
 
-**Recovery phrase** — the client-generated BIP-39 12-word phrase that wraps the DK independently of the passphrase; the surviving spouse's primary door back into the vault. Mandatory export at first save. → [architecture.md §7.3](architecture.md)
+**Recovery passphrase** — a **second user-chosen memorable passphrase** (PBKDF2-600k, same strength floor as the daily one; `firstSave` rejects recovery == daily) that wraps the DK independently of the daily passphrase; the surviving spouse's primary door back into the vault. Mandatory export at first save. Superseded the v1 system-minted BIP-39 12-word phrase (U8 rework, council 2026-06-30 — the phrase was DOA for a non-technical audience). → [architecture.md §7.3](architecture.md)
 
 **RIB-LIM** — the Retirement-Insurance-Benefit limit that caps a Social Security survivor benefit. → [architecture.md §7.7](architecture.md)
 

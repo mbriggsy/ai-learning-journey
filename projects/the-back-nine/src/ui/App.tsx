@@ -109,6 +109,15 @@ export function App({ seed, vaultSeed }: { seed?: string | null; vaultSeed?: str
       const result = await plantDevVault(vaultSeed)
       if (cancelled) return
       if (result === 'ok') {
+        // Strip `?vault` the moment the plant lands: the plant CLEARS any existing vault first
+        // (devSeeds clearVault → firstSave), so leaving the param armed makes a plain REFRESH
+        // silently re-plant the pristine seed OVER whatever the drive just edited-and-saved —
+        // caught live (Briggsy, 2026-07-02: a saved birthday reverted on refresh). With the param
+        // stripped, a refresh probes the REAL vault exactly like prod; re-planting is an explicit
+        // re-entry of the `?vault` URL, never a side effect of refresh.
+        const url = new URL(window.location.href)
+        url.searchParams.delete('vault')
+        window.history.replaceState(null, '', url)
         setDevPrefill(DEV_VAULT_PASSPHRASE)
         setEntry({ kind: 'unlock' })
       } else {

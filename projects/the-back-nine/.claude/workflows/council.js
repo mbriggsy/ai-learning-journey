@@ -389,7 +389,7 @@ phase('Dossier')
 const dossier = await agent(
   CHARTERS.clerk + '\n\n## THE ISSUE\n' + issue + '\n\n## CONTEXT FROM THE CALLER\n' + context +
   '\n\nRead the real artifacts and produce the dossier now.',
-  { label: 'clerk', phase: 'Dossier', schema: DOSSIER_SCHEMA },
+  { label: 'clerk', phase: 'Dossier', schema: DOSSIER_SCHEMA, model: 'opus' },
 )
 
 // Triage short-circuit: if an oracle/locked-decision already settles it, stop — no debate.
@@ -439,7 +439,7 @@ const positions = (await parallel(openers.map(o => () =>
     o.charter + '\n\n## THE ISSUE\n' + issue + '\n\n## CONTEXT\n' + context +
     '\n\n## SHARED DOSSIER — cite this, not memory\n' + J(dossier) +
     '\n\nTake your position now. Ground every claim in the dossier.',
-    { label: o.id, phase: 'Opening', schema: POSITION_SCHEMA },
+    { label: o.id, phase: 'Opening', schema: POSITION_SCHEMA, model: 'opus' },
   ).then(p => (p ? { ...p, elder: o.id } : null)),
 ))).filter(Boolean)
 
@@ -449,7 +449,7 @@ const attack = await agent(
   CHARTERS.redTeam + '\n\n## THE ISSUE\n' + issue + '\n\n## SHARED DOSSIER\n' + J(dossier) +
   '\n\n## THE ELDERS POSITIONS\n' + J(positions) +
   '\n\nRefute the emerging consensus. Attack the most confident claim hardest. Ground every attack in the dossier.',
-  { label: 'red-team', phase: 'Red Team', schema: REDTEAM_SCHEMA },
+  { label: 'red-team', phase: 'Red Team', schema: REDTEAM_SCHEMA, model: 'opus' },
 )
 
 // ---- Phase 4: Rebuttal — the actual debate (full councils only) --------------
@@ -463,7 +463,7 @@ if (weight === 'full') {
       '\n\n## THE OTHER ELDERS POSITIONS\n' + J(positions.filter(p => p.elder !== o.id)) +
       '\n\n## THE RED TEAM ATTACK\n' + J(attack) +
       '\n\nNow debate. Concede what is genuinely right, hold what you still believe (and say why), and sharpen your recommendation. Be willing to change your mind — or explain exactly why you do not.',
-      { label: 'rebut:' + o.id, phase: 'Rebuttal', schema: REBUTTAL_SCHEMA },
+      { label: 'rebut:' + o.id, phase: 'Rebuttal', schema: REBUTTAL_SCHEMA, model: 'opus' },
     ).then(r => (r ? { ...r, elder: o.id } : null))
   }))).filter(Boolean)
 }
@@ -477,7 +477,7 @@ const verdict = await agent(
   '\n\n## RED TEAM ATTACK\n' + J(attack) +
   '\n\n## REBUTTAL ROUND\n' + J(rebuttals) +
   '\n\nWeigh the whole debate and produce THE verdict now. Remember: the Honesty Hawk veto outranks any majority; preserve the strongest dissent; grade confidence with a reason; classify the tier (split it if needed); flag hard-stops.',
-  { label: 'chair', phase: 'Synthesis', schema: VERDICT_SCHEMA },
+  { label: 'chair', phase: 'Synthesis', schema: VERDICT_SCHEMA, model: 'opus' },
 )
 
 return { ...verdict, issue, dossier, positions, attack, rebuttals }

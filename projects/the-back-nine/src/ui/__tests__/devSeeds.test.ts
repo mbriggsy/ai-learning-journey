@@ -3,7 +3,7 @@ import { DEV_SEEDS } from '../devSeeds'
 import { scenarioFromDraft } from '../scenarioFromDraft'
 import { floorRelief } from '../twoTier'
 import { composeDateSplit } from '../dateSplit'
-import { buildDateInput, buildSpineParams, isDateRoute, missingRequiredFacts } from '@intake/intakeMap'
+import { buildDateInput, buildSpineParams, healthcarePriced, isDateRoute, missingRequiredFacts } from '@intake/intakeMap'
 import { validateParams } from '@engine/simulate'
 import { runEngine } from '@engine/engineProtocol'
 import {
@@ -87,6 +87,29 @@ describe('dev seeds reach a worded (engine-accepted) answer', () => {
       floorRelief(wire.headline, wire.floorReading),
       'the relief gate must EARN the subordinate line (no degenerate collapse)',
     ).not.toBeNull()
+  })
+
+  // The U11 'health' seed exists to cold-read the FULL Healthcare sheet on the spine route:
+  // a retired pre-65 couple whose headline run emits the per-year healthReadout series. Pin
+  // the OUTCOME against the real engine: the run resolves, the series rides the wire, year 0
+  // is a PRICED marketplace year with a REAL net premium (a subsidy retained under the cliff),
+  // and the door predicate holds — so the sheet this seed exists to drive actually opens with
+  // its empirical lines populated. Proven, not believed (manifesto).
+  it("'health' lands a resolved spine answer CARRYING the per-year healthReadout series (priced year 0, real net premium)", () => {
+    const d = DEV_SEEDS.health
+    expect(isDateRoute(d), 'health: the spine route (all retired)').toBe(false)
+    expect(healthcarePriced(d), 'health: the Healthcare door predicate holds').toBe(true)
+    const params = buildSpineParams(d)
+    expect(params, 'health: buildSpineParams').not.toBeNull()
+    const wire = runEngine(params!, d.seed!, { healthReadout: true })
+    expect(wire.kind, 'health: a feasible, resolved run').toBe('resolved')
+    if (wire.kind !== 'resolved') return
+    expect(wire.healthReadout, 'the series must ride the wire').toBeDefined()
+    const year0 = wire.healthReadout!.byYear[0]!
+    expect(year0.acaPricedFraction, 'year 0 prices the marketplace for (nearly) every path').toBeGreaterThan(0.9)
+    expect(year0.acaNetPremiumP50, 'a real premium was paid').toBeGreaterThan(0)
+    expect(year0.acaNetPremiumP50, 'a real subsidy was retained (under the enrolled total)').toBeLessThan(1_600 * 12)
+    expect(year0.acaMagiP50, 'the shadow-rate anchor is live').toBeGreaterThan(0)
   })
 
   // The U9b 'datesplit' seed exists to cold-read the floor/lifestyle SPLIT (council 2026-07-02 Q3):

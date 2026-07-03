@@ -110,6 +110,9 @@
 .control-policy__tag {
   font-weight: 400;
   color: var(--ink-muted);
+  /* The tag leads with an em-dash — breathe off the label (caught live on the U11 sheet;
+     the sequencing sheet shared the same butting nit). */
+  margin-inline-start: 0.4em;
 }
 
 .control-policy__help {

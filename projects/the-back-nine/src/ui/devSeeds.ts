@@ -575,6 +575,81 @@ const customOrderSeed: ScenarioDraft = {
   seed: DEV_CRN_SEED,
 }
 
+/**
+ * P3·U11 — the HEALTHCARE cold-read seed: a retired PRE-65 couple (61/59) on the SPINE route,
+ * so the headline run emits the per-year healthReadout series and the Healthcare sheet quotes
+ * its full empirical picture — the ACA net-cost median, the cliff frequency, the 22¢-class
+ * shadow rate, the cliff headroom, then (post-65 years) the Medicare look-back story. An
+ * APPLIED conversion keeps the shadow-rate story live, and the marketplace quote pair prices
+ * the window (healthcarePriced ⇒ the door shows). Neither member is ≥ 64 ⇒ no IRMAA seed
+ * required. Engine-proven in devSeeds.test.ts: the spine resolves AND the readout carries a
+ * priced year-0 with a real net premium.
+ */
+const retiredHealth: ScenarioDraft = {
+  people: [
+    {
+      name: 'Alex',
+      sex: 'male',
+      birthYear: 1965,
+      currentAge: 61,
+      workStatus: 'retired',
+      retirementAge: 60,
+      earnedIncomeReal: 0,
+      pia: 28_000,
+      socialSecurityClaimAge: 67,
+    },
+    {
+      name: 'Sam',
+      sex: 'female',
+      birthYear: 1967,
+      currentAge: 59,
+      workStatus: 'retired',
+      retirementAge: 58,
+      earnedIncomeReal: 0,
+      pia: 22_000,
+      socialSecurityClaimAge: 67,
+    },
+  ],
+  enteredAccounts: [
+    {
+      ownerIndex: 0,
+      kind: 'brokerage',
+      valueToday: 900_000,
+      basis: 800_000,
+      manualBlend: { kind: 'exact', stockPct: 60, bondPct: 35, cashPct: 5 },
+    },
+    {
+      ownerIndex: 0,
+      kind: 'traditional-ira',
+      valueToday: 900_000,
+      manualBlend: { kind: 'exact', stockPct: 60, bondPct: 30, cashPct: 10 },
+    },
+    {
+      ownerIndex: 1,
+      kind: 'roth-ira',
+      valueToday: 150_000,
+      manualBlend: { kind: 'exact', stockPct: 70, bondPct: 25, cashPct: 5 },
+    },
+  ],
+  incomeStreams: [],
+  tickerClassifications: {},
+  health: {
+    enrolledPremiumMonthlyToday: 1_600,
+    slcspMonthlyToday: 1_400,
+    oopMedicalAnnual: 4_000,
+  },
+  rothConversion: { annualAmountReal: 20_000, startYearOffset: 0, years: 4 },
+  annualSpendingReal: 78_000,
+  spendEntryPeriod: 'year',
+  survivorSpendingRatio: 0.75,
+  drawdownPolicy: 'proportional',
+  filing: 'mfj',
+  startCalendarYear: 2026,
+  taxVintage: 'OBBBA-2025',
+  appDefaultVersion: 'p2-dev-seed',
+  seed: DEV_CRN_SEED,
+}
+
 /** The seed registry — `?seed=<key>` selects one. */
 export const DEV_SEEDS = {
   retired: retiredOnTrack,
@@ -587,6 +662,7 @@ export const DEV_SEEDS = {
   datemixed: dateMixedSeed,
   dip: dateDipSeed,
   order: customOrderSeed,
+  health: retiredHealth,
 } satisfies Record<string, ScenarioDraft>
 
 export type DevSeedKey = keyof typeof DEV_SEEDS

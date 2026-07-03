@@ -39,11 +39,15 @@ const RestoreFlow = lazy(() => import('./RestoreFlow').then((m) => ({ default: m
  *  (read the unlocked vault's model) from a cold/seed start (hydrate from ColdStart or the dev seed);
  *  `notice` carries the unlock's read-only caveat key (Fork C ii — a second tab holds the writer) for
  *  the standing ViewOnlyBanner, null on a writable open (cold/seed/recovery are writable by
- *  construction). `planting` is the DEV `?vault` step that writes a vault before the unlock screen. */
+ *  construction). `planting` is the DEV `?vault` step that writes a vault before the unlock screen.
+ *  `restore-cold` is ColdStart's quiet restore door: a WIPED/evicted device probes no-vault → cold,
+ *  and its whisper routes here to the SAME RestoreFlow the `damaged` branch mounts (backup file +
+ *  recovery word → a fresh passphrase → auto-unlock), only with a Back that returns to `cold`. */
 type Entry =
   | { readonly kind: 'probing' }
   | { readonly kind: 'planting' }
   | { readonly kind: 'cold' }
+  | { readonly kind: 'restore-cold' }
   | { readonly kind: 'unlock' }
   | { readonly kind: 'recover' }
   | { readonly kind: 'damaged' }
@@ -68,11 +72,12 @@ export function App({ seed, vaultSeed }: { seed?: string | null; vaultSeed?: str
     void import('./IntakeApp') // warm the chunk behind the cold-start / probe frame
   }, [])
 
-  // Warm each flow chunk once its launching surface is up — the forgot link's destination (and
-  // the damaged branch's restore surface) loads behind the screen the user is reading.
+  // Warm each flow chunk once its launching surface is up — the forgot link's destination, and the
+  // restore surface behind BOTH its doors: the damaged branch AND ColdStart's quiet restore whisper
+  // (warm on `cold` so the wiped user's tap into restore-cold never visibly waits).
   useEffect(() => {
     if (entry.kind === 'unlock') void import('./RecoveryFlow')
-    if (entry.kind === 'damaged') void import('./RestoreFlow')
+    if (entry.kind === 'damaged' || entry.kind === 'cold') void import('./RestoreFlow')
   }, [entry.kind])
 
   // The startup vault probe (skipped when a dev seed/vault drives the mount). Dynamic import keeps the
@@ -134,7 +139,11 @@ export function App({ seed, vaultSeed }: { seed?: string | null; vaultSeed?: str
   // unlock/result <h2> headings nest under it (ColdStart owns its own visible <h1>; the probe/plant
   // holds are pre-content). One stable app-title h1 across these SPA states (council 2026-06-29).
   const showAppTitleH1 =
-    entry.kind === 'unlock' || entry.kind === 'recover' || entry.kind === 'damaged' || entry.kind === 'began'
+    entry.kind === 'unlock' ||
+    entry.kind === 'recover' ||
+    entry.kind === 'damaged' ||
+    entry.kind === 'restore-cold' ||
+    entry.kind === 'began'
 
   return (
     <AppErrorBoundary>
@@ -144,7 +153,21 @@ export function App({ seed, vaultSeed }: { seed?: string | null; vaultSeed?: str
       <ViewOnlyBanner notice={entry.kind === 'began' ? entry.notice : null} />
       {(entry.kind === 'probing' || entry.kind === 'planting') && null /* brief neutral hold */}
       {entry.kind === 'cold' && (
-        <ColdStart onBegin={() => setEntry({ kind: 'began', hydrate: false, notice: null })} />
+        <ColdStart
+          onBegin={() => setEntry({ kind: 'began', hydrate: false, notice: null })}
+          onRestore={() => setEntry({ kind: 'restore-cold' })}
+        />
+      )}
+      {entry.kind === 'restore-cold' && (
+        <Suspense fallback={null}>
+          {/* The SAME restore surface as the damaged branch, plus a Back to ColdStart (the wiped
+              user who taps in, then remembers they're new here, is never trapped). */}
+          <RestoreFlow
+            onRestored={(notice) => setEntry({ kind: 'began', hydrate: true, notice })}
+            onExitToUnlock={() => setEntry({ kind: 'unlock' })}
+            onBack={() => setEntry({ kind: 'cold' })}
+          />
+        </Suspense>
       )}
       {entry.kind === 'unlock' && (
         <UnlockScreen

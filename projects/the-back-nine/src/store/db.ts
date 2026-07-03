@@ -25,10 +25,13 @@
 import { openDB, type IDBPDatabase, type IDBPObjectStore } from 'idb'
 
 import {
+  BACKUP_NOTE_FIELDS,
+  BACKUP_NOTE_KEY,
   MODEL_RECORD_FIELDS,
   VAULT_DB_NAME,
   VAULT_STORE_NAME,
   WRAP_RECORD_FIELDS,
+  type BackupNoteRecord,
   type ModelRecord,
   type WrapRecord,
 } from '@shared/model'
@@ -106,6 +109,16 @@ function isRecordShape(value: unknown, fields: readonly string[]): boolean {
   const record = value as Record<string, unknown>
   if (Object.keys(record).length !== fields.length) return false
   return fields.every((f) => record[f] instanceof Uint8Array)
+}
+
+/** The backup-note's shape gate (its field is a NUMBER, not bytes — so it needs its own check,
+ *  not isRecordShape). A note whose count is missing/non-finite (a torn structured-clone null/NaN,
+ *  DND/009) is malformed → the reader treats it as absent (re-offer, the safe direction). */
+function isBackupNoteShape(value: unknown): value is BackupNoteRecord {
+  if (typeof value !== 'object' || value === null) return false
+  const record = value as Record<string, unknown>
+  if (Object.keys(record).length !== BACKUP_NOTE_FIELDS.length) return false
+  return typeof record.exportedCount === 'number' && Number.isFinite(record.exportedCount)
 }
 
 const isQuotaError = (e: unknown): boolean =>
@@ -221,6 +234,38 @@ export async function replacePassphraseWrap(db: VaultDb, wrap: WrapRecord): Prom
     const [model, rw] = await Promise.all([store.get('model'), store.get('recoveryWrap')])
     if (model === undefined || rw === undefined) return { ok: false, reason: 'no-vault' }
     void store.put(wrap, 'passphraseWrap').catch(() => undefined)
+    return null
+  })
+}
+
+/** Read the sibling backup-note's export count. Returns 0 for ABSENT or MALFORMED — the safe
+ *  direction: a lost/garbled note re-offers a backup, never silently claims one exists. A pure
+ *  read (its own readonly transaction); it never touches the three vault records. */
+export async function readBackupNote(db: VaultDb): Promise<number> {
+  const tx = db.transaction(VAULT_STORE_NAME)
+  const note = await tx.objectStore(VAULT_STORE_NAME).get(BACKUP_NOTE_KEY)
+  await tx.done
+  return isBackupNoteShape(note) ? note.exportedCount : 0
+}
+
+/** Record that an off-device backup was saved from this device: increment the sibling note
+ *  (absent ⇒ 1) inside ONE readwrite transaction. REFUSES `no-vault` when the three vault
+ *  records are not all present — a note without a vault is meaningless (mirrors rewriteModel's
+ *  guard). Callers serialize this through `serializeVaultWrite`, exactly like the other mutators. */
+export async function markBackupMade(db: VaultDb): Promise<VaultWrite> {
+  return inWriteTransaction(db, async (store) => {
+    // All four reads in ONE Promise.all (the proven rewriteModel/replacePassphraseWrap read-then-put
+    // pattern) — no sequential get to risk the transaction auto-closing between awaits.
+    const [model, pw, rw, existing] = await Promise.all([
+      store.get('model'),
+      store.get('passphraseWrap'),
+      store.get('recoveryWrap'),
+      store.get(BACKUP_NOTE_KEY),
+    ])
+    if (model === undefined || pw === undefined || rw === undefined) return { ok: false, reason: 'no-vault' }
+    const prior = isBackupNoteShape(existing) ? existing.exportedCount : 0
+    const next: BackupNoteRecord = { exportedCount: (prior > 0 ? prior : 0) + 1 }
+    void store.put(next, BACKUP_NOTE_KEY).catch(() => undefined)
     return null
   })
 }

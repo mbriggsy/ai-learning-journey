@@ -77,6 +77,8 @@ import {
 } from '../crypto/kdf'
 import {
   loadVault,
+  markBackupMade,
+  readBackupNote,
   replacePassphraseWrap,
   rewriteModel,
   serializeVaultWrite,
@@ -170,6 +172,14 @@ export interface VaultSession {
     recoveryPassphrase: string,
     newPassphrase: FloorCheckedPassphrase,
   ): Promise<RestoreResult>
+  /** True iff an off-device backup file was recorded as saved from THIS device (the sibling
+   *  backup-note's count > 0). Absent/garbled note ⇒ false ⇒ the caller re-offers a backup (the
+   *  safe direction). Advisory metadata — a pure read that never touches the three vault records. */
+  hasBackupRecord(): Promise<boolean>
+  /** Record that a backup file was saved from this device (increments the sibling note). Serialized
+   *  like every vault write; SWALLOWS failure — advisory metadata must never break a flow (a failed
+   *  write degrades to a spurious re-offer, the safe direction, never a throw). */
+  recordBackupMade(): Promise<void>
   lock(): Promise<void>
 }
 
@@ -597,7 +607,32 @@ export function createSession(db: VaultDb): VaultSession {
       // its own atomic serialized write. trackWrite (not enqueueWrite) marks the op
       // in-flight without re-serializing — re-serializing restoreVault's internal write
       // would deadlock. Session secrets are untouched; unlock(newPassphrase) hydrates after.
-      return trackWrite(() => restoreVault(db, fileText, recoveryPassphrase, newPassphrase))
+      return trackWrite(async () => {
+        const result = await restoreVault(db, fileText, recoveryPassphrase, newPassphrase)
+        // HONESTY ARM: the file the user JUST RESTORED FROM is itself the off-device artifact —
+        // recoveryWrap + model rode in from it — so a post-restore re-offer would be FALSE. Record
+        // the note NOW, serialized AFTER restoreVault's own committed write (its FIFO step already
+        // drained; no nesting, no deadlock). A failed note write degrades to a spurious re-offer
+        // (safe) — it must NEVER fail the restore, so it is swallowed.
+        if (result.ok) {
+          try {
+            await serializeVaultWrite(() => markBackupMade(db))
+          } catch {
+            // advisory — the survivor's restore already committed; the note is a reminder, not the data
+          }
+        }
+        return result
+      })
+    },
+
+    hasBackupRecord: async () => (await readBackupNote(db)) > 0,
+
+    recordBackupMade: async () => {
+      try {
+        await serializeVaultWrite(() => markBackupMade(db))
+      } catch {
+        // Advisory metadata — a failed note write degrades to a spurious re-offer (safe), never a throw.
+      }
     },
 
     async lock() {

@@ -93,6 +93,28 @@ describe('RestoreFlow — the file and word steps', () => {
   })
 })
 
+describe('RestoreFlow — the cold-entry restore door (optional onBack; the ColdStart wiped-device path)', () => {
+  it('WITH onBack: the FILE step shows a quiet Back that fires onBack, and swaps to the no-vault intro', () => {
+    const onBack = vi.fn()
+    render(<RestoreFlow onRestored={vi.fn()} onExitToUnlock={vi.fn()} onBack={onBack} />)
+    // A cold entry serves a wiped/evicted NO-vault device — the honest opener, not the damaged wording.
+    expect(screen.getByText(copy.restoreColdIntro)).toBeInTheDocument()
+    expect(screen.queryByText(copy.restoreIntro)).toBeNull()
+    // The file step is the flow's first, but the door gives it a way back to ColdStart.
+    const back = screen.getByRole('button', { name: copy.flowBack })
+    fireEvent.click(back)
+    expect(onBack).toHaveBeenCalledTimes(1)
+  })
+
+  it('WITHOUT onBack (the damaged mount): the FILE step has NO Back and keeps the damaged intro (byte-identical)', () => {
+    render(<RestoreFlow onRestored={vi.fn()} onExitToUnlock={vi.fn()} />)
+    expect(screen.getByText(copy.restoreIntro)).toBeInTheDocument()
+    expect(screen.queryByText(copy.restoreColdIntro)).toBeNull()
+    // No Back on the file step (the word step's Back is a different step, reached only after a pick).
+    expect(screen.queryByRole('button', { name: copy.flowBack })).toBeNull()
+  })
+})
+
 describe('RestoreFlow — the one restore call and its seam-routed failures', () => {
   it('PLANTED-FAIL: a new passphrase equal to the recovery word bounces and session.restore is NEVER called', async () => {
     render(<RestoreFlow onRestored={vi.fn()} onExitToUnlock={vi.fn()} />)

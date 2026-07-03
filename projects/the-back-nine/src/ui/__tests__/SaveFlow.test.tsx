@@ -23,8 +23,11 @@ import { copy } from '../copy'
 const firstSave = vi.fn()
 vi.mock('../vaultSession', () => ({
   getVaultSession: () => Promise.resolve({ firstSave }),
-  // ExportConfirm (mounted on the export step) reads the committed vault back as a file.
+  // ExportConfirm (mounted on the export step) reads the committed vault back as a file…
   exportVaultFile: () => Promise.resolve({ ok: true, file: '{"stub":"backup"}' }),
+  // …and records the backup sentinel on a confirmed channel (fire-and-forget). Stubbed so a future
+  // channel-click test here can't trip on a missing seam member.
+  recordBackupMade: () => Promise.resolve(),
 }))
 
 afterEach(() => {

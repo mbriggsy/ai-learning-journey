@@ -41,13 +41,23 @@ export type ResultSaveProp =
   | { readonly kind: 'saving' }
   | { readonly kind: 'failed'; readonly errorKey: ResaveCopyKey; readonly onRetry: () => void }
 
+/** The re-offer backup DOOR (U8-tail) — present ONLY on a returning, WRITABLE session with no
+ *  backup-note on record (IntakeApp owns that gating; this screen is dumb wiring). A quiet,
+ *  subordinate line + CTA that opens the export step; absent (undefined) ⇒ no door at all. */
+export type ResultBackupProp = { readonly onSave: () => void }
+
 export function Result({
   onReview,
   save,
+  backup,
   computing = false,
 }: {
   readonly onReview: () => void
   readonly save: ResultSaveProp
+  /** The re-offer backup door (U8-tail). Present ⇒ render the quiet subordinate line + CTA;
+   *  undefined ⇒ no door. Withheld with the whole actions row while computing (an affordance
+   *  we don't want used on a non-answer shouldn't exist — the same rule as the quiet doors). */
+  readonly backup?: ResultBackupProp
   /** True while NOTHING has ever resolved (answer 'idle'/'pending' — the "Working it out…"
    *  window). The whole actions row is withheld: the actions act on an answer that isn't
    *  there yet, and an affordance we don't want used shouldn't exist (Briggsy, 2026-07-02).
@@ -189,6 +199,18 @@ export function Result({
               {copy.savedBadge}
             </p>
           )}
+        </div>
+      )}
+      {/* The re-offer backup door (U8-tail): a QUIET, subordinate durability affordance — the
+          plan is already saved to this device (the slot above says so); this only offers the
+          off-device second copy when none is on record. Lead states the fact, then a quiet button;
+          it reads under the verdict, never a primary CTA, never color-only. */}
+      {backup !== undefined && (
+        <div className="result-backup-door">
+          <p className="result-backup-door__lead">{copy.backupDoorLead}</p>
+          <button type="button" className="btn-quiet" onClick={backup.onSave}>
+            {copy.backupDoorCta}
+          </button>
         </div>
       )}
       {/* The quiet pair rides ONE transparent wrapper (display:contents in single column — the

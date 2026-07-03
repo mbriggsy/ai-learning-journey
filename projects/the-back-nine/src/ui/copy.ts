@@ -31,6 +31,11 @@ export const copy = {
   coldStartPreflight:
     'Handy to have nearby: recent account statements, and a marketplace health-insurance quote for everyone under 65 in the household, at your ages and ZIP — the benchmark Silver figure and the premium of a plan you’d pick.',
   coldStartBegin: 'Begin',
+  // The quiet returning-user door on the brand-new user's first screen: a WIPED/evicted device
+  // probes no-vault → ColdStart, so a saved backup is the only way back. Subordinate to Begin
+  // (R11 — invited, never a nag); the button label matches the restore surface's own heading.
+  coldStartRestorePrompt: 'Set this up before?',
+  coldStartRestoreAction: 'Restore from your backup',
   // --- external resource links (R36: we never fetch these — the user reads the number off the
   //     site and types it in; each opens in a NEW TAB so the unsaved in-progress intake survives) ---
   linkGetQuote: 'Get a quote:',
@@ -450,6 +455,14 @@ export const copy = {
   saveCtaHint: 'Save it to this device, encrypted — openable only by you.',
   savedBadge: 'Saved to this device',
 
+  // --- the re-offer backup DOOR (U8-tail): a returning, writable session with no backup-note on
+  //     record gets a QUIET, subordinate line + CTA on the result (never a badge, never alarm; the
+  //     plan itself is already saved — this is only the off-device second copy). "backup"-prefixed →
+  //     outside every verdict/control scope, so only the universal ban-gates apply. ---
+  backupDoorLead: 'No backup file has been saved from this device.',
+  backupDoorCta: 'Save a backup file',
+  backupNotNow: 'Not now',
+
   // --- the edit-and-re-save beat (a saved plan whose answer has since been edited; the update
   //     write path — no ceremony, the keys are resident) ---
   resaveCta: 'Save your changes',
@@ -588,6 +601,12 @@ export const copy = {
   restoreHeading: 'Restore from your backup',
   restoreIntro:
     'The saved plan on this device couldn’t be read — it looks damaged. Your backup file and recovery word can bring it back: pick the file, enter your word, and set a new passphrase.',
+  // The cold-entry intro variant: opened from ColdStart, the restore door serves a wiped/evicted
+  // NO-vault device — there is no damaged plan on disk, so the damaged-framed restoreIntro above
+  // would misread ("the saved plan on this device… looks damaged" when there is none). Same steps,
+  // an honest opener for a device that starts empty. (RestoreFlow picks by whether onBack is set.)
+  restoreColdIntro:
+    'If you saved a plan before and kept the backup file and your recovery word, you can bring it back. Pick the file, enter your word, and set a new passphrase for this device.',
   restoreFileLabel: 'Backup file',
   restoreFileReadError: 'That file couldn’t be opened. Pick the backup file you saved.',
   restoreFileDamaged:

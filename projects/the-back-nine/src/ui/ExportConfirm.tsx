@@ -10,16 +10,21 @@ import { useCallback, useEffect, useId, useRef, useState } from 'react'
 import { copy } from './copy'
 import { focusHeading } from '@intake/a11y'
 import type { Announcer } from '@intake/a11y'
-import { exportVaultFile } from './vaultSession'
+import { exportVaultFile, recordBackupMade } from './vaultSession'
 
 const BACKUP_FILENAME = 'the-back-nine-backup.json'
 
 export function ExportConfirm({
   onFinish,
   announcer,
+  onCancel,
 }: {
   readonly onFinish: () => void
   readonly announcer: Announcer
+  /** The OPTIONAL quiet escape ("Not now") for INVITED mounts (the re-offer door), returning
+   *  without exporting or recording. The mandatory first-save ceremony passes nothing — its gate
+   *  stays un-skippable by construction (ultramode 2026-07-03: an optional door must never trap). */
+  readonly onCancel?: () => void
 }) {
   const headingRef = useRef<HTMLHeadingElement | null>(null)
   useEffect(() => focusHeading(headingRef.current), [])
@@ -70,6 +75,15 @@ export function ExportConfirm({
     setExported(true)
     setConfirmKey(key)
     if (key) announcer.announce(copy[key])
+    // Every confirmed channel (download click, copy success, text-saved) records the off-device
+    // backup so a decrypt-on-return never re-nags a household that already has one. Fire-and-forget
+    // (void + internal catch): the note is advisory metadata — it must never block or fail the
+    // mandatory gate the way a thrown promise would.
+    // INHERITED TRADE-OFF (deliberate): the download CLICK records even if the OS write silently
+    // fails (iOS-PWA / locked storage) — download completion is unobservable from the web platform,
+    // and the same click already clears the mandatory gate identically. Show-text is the guaranteed
+    // fallback channel; do not "fix" this by trusting the click less without a real completion signal.
+    void recordBackupMade().catch(() => undefined)
   }
 
   async function handleCopy() {
@@ -153,6 +167,11 @@ export function ExportConfirm({
       )}
 
       <div className="save-actions">
+        {onCancel && (
+          <button type="button" className="btn-quiet" onClick={onCancel}>
+            {copy.backupNotNow}
+          </button>
+        )}
         <button type="button" className="btn-primary" aria-disabled={!exported} onClick={handleFinish}>
           {copy.exportFinish}
         </button>

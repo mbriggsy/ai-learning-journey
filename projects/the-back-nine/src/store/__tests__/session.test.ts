@@ -10,11 +10,19 @@
  */
 import 'fake-indexeddb/auto'
 import { IDBFactory } from 'fake-indexeddb'
-import { beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { VAULT_STORE_NAME, type Scenario } from '@shared/model'
 import { checkPassphraseFloor, type FloorCheckedPassphrase } from '../../crypto/kdf'
-import { clearVault, loadVault, openVaultDb, type VaultDb } from '../db'
+import { clearVault, loadVault, markBackupMade, openVaultDb, type VaultDb } from '../db'
+
+// Pass-through mock: markBackupMade is a spy that DELEGATES to the real implementation, so every
+// test behaves identically — except the advisory-swallow tests, which force ONE rejection to prove
+// a THROWING note write can neither reject recordBackupMade nor fail a committed restore.
+vi.mock('../db', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../db')>()
+  return { ...actual, markBackupMade: vi.fn(actual.markBackupMade) }
+})
 import { exportVault } from '../backup'
 import { createSession, type VaultSession } from '../session'
 
@@ -381,6 +389,67 @@ describe('restore (the thin write-accounting bracket over backup.restoreVault)',
     const reopened = createSession(db)
     expect((await reopened.unlock(NEW_PASSPHRASE)).ok).toBe(true)
     expect(reopened.currentModel()).toEqual(MODEL)
+    await reopened.lock()
+  })
+})
+
+describe('the backup-made sentinel (U8-tail — advisory metadata + the restore honesty arm)', () => {
+  it('a fresh vault has NO backup on record; recordBackupMade flips hasBackupRecord true', async () => {
+    const { session } = await vaultedSession()
+    expect(await session.hasBackupRecord()).toBe(false) // firstSave writes no note (backup is a later channel)
+    await session.recordBackupMade()
+    expect(await session.hasBackupRecord()).toBe(true)
+    await session.lock()
+  })
+
+  it('recordBackupMade REFUSES gracefully over no-vault — resolves without throwing, note stays absent', async () => {
+    const db = await openVaultDb()
+    const session = createSession(db)
+    // No vault: markBackupMade refuses no-vault. recordBackupMade is advisory, so it must resolve
+    // (never reject) and never mint a note against an empty store.
+    await expect(session.recordBackupMade()).resolves.toBeUndefined()
+    expect(await session.hasBackupRecord()).toBe(false)
+  })
+
+  it('recordBackupMade SWALLOWS a THROWING note write — resolves; the failure degrades to a re-offer', async () => {
+    const { session } = await vaultedSession()
+    vi.mocked(markBackupMade).mockRejectedValueOnce(new Error('boom — torn IDB write'))
+    await expect(session.recordBackupMade()).resolves.toBeUndefined()
+    // The throw pre-empted the write: no note landed → the door re-offers (the safe direction).
+    expect(await session.hasBackupRecord()).toBe(false)
+    await session.lock()
+  })
+
+  it('a THROWING note write can NEVER fail a committed restore — the honesty arm is advisory (insight 052 family)', async () => {
+    const { db, session } = await vaultedSession()
+    const exported = await exportVault(db)
+    if (!exported.ok) throw new Error('export failed')
+    await session.lock()
+    await clearVault(db) // a device-wiped survivor: no vault, no note
+
+    vi.mocked(markBackupMade).mockRejectedValueOnce(new Error('boom — torn IDB write'))
+    const newPass = await floorPass(NEW_PASSPHRASE)
+    // The restore COMMITTED before the note write — a throwing note must not turn it into a failure.
+    expect(await session.restore(exported.file, RECOVERY_PASSPHRASE, newPass)).toEqual({ ok: true })
+    expect((await loadVault(db)).kind).toBe('vault') // the vault is really on disk
+    expect(await session.hasBackupRecord()).toBe(false) // the note failed → spurious re-offer, never a lie
+  })
+
+  it('restore RECORDS the note — the restored-from file IS the off-device artifact, so a re-offer would be FALSE', async () => {
+    const { db, session } = await vaultedSession()
+    const exported = await exportVault(db)
+    if (!exported.ok) throw new Error('export failed')
+    await session.lock()
+    await clearVault(db) // a device-wiped survivor: no vault, no note
+    expect(await session.hasBackupRecord()).toBe(false)
+
+    const newPass = await floorPass(NEW_PASSPHRASE)
+    expect(await session.restore(exported.file, RECOVERY_PASSPHRASE, newPass)).toEqual({ ok: true })
+    // The honesty arm wrote the note as part of the restore flow (AFTER the committed writeVault).
+    expect(await session.hasBackupRecord()).toBe(true)
+
+    const reopened = createSession(db)
+    expect((await reopened.unlock(NEW_PASSPHRASE)).ok).toBe(true)
     await reopened.lock()
   })
 })

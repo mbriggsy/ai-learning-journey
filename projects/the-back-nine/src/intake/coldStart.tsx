@@ -13,7 +13,7 @@ import './intake.css'
  * action into question 1. The R13 honest-limits note is NOT re-owned here — it
  * lives app-wide via the U0 shell.
  */
-export function ColdStart({ onBegin }: { onBegin: () => void }) {
+export function ColdStart({ onBegin, onRestore }: { onBegin: () => void; onRestore: () => void }) {
   return (
     <div className="cold-start">
       <span className="intake-wordmark">{copy.appTitle}</span>
@@ -31,6 +31,15 @@ export function ColdStart({ onBegin }: { onBegin: () => void }) {
       <button type="button" className="btn-primary" onClick={onBegin}>
         {copy.coldStartBegin}
       </button>
+      {/* The rare returning-but-wiped user's door — a quiet whisper BENEATH the primary Begin, never
+          a peer to it (R11 invited-not-nagged; back-nine-design: a subordinate affordance must not
+          compete). A new/evicted device probes no-vault → here, and a saved backup is the way back. */}
+      <p className="cold-start-restore">
+        {copy.coldStartRestorePrompt}{' '}
+        <button type="button" className="btn-quiet" onClick={onRestore}>
+          {copy.coldStartRestoreAction}
+        </button>
+      </p>
     </div>
   )
 }

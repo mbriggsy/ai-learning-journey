@@ -23,7 +23,8 @@ import { copy } from '../copy'
  */
 
 const unlock = vi.fn()
-const probeVault = vi.fn(async () => ({ kind: 'vault' as const }))
+// Widened past the default 'vault' so a test can drive the no-vault (ColdStart) and damaged branches.
+const probeVault = vi.fn(async (): Promise<{ kind: 'vault' | 'damaged' | 'no-vault' }> => ({ kind: 'vault' }))
 vi.mock('../vaultSession', () => ({
   probeVault,
   // The dynamic unlock session — currentModel is only read by the (stubbed) IntakeApp, kept null-safe.
@@ -37,7 +38,20 @@ vi.mock('../IntakeApp', () => ({
   ),
 }))
 vi.mock('../RecoveryFlow', () => ({ RecoveryFlow: () => null }))
-vi.mock('../RestoreFlow', () => ({ RestoreFlow: () => null }))
+// A PROPS-ECHO stub (insight 066), not a swallowing null: it echoes whether App wired an `onBack`
+// (the cold-vs-damaged signal) into a data-attribute, and renders a Back button ONLY when onBack was
+// passed — so a test can drive the real App round trip (restore-cold → Back → cold) through it.
+vi.mock('../RestoreFlow', () => ({
+  RestoreFlow: ({ onBack }: { onBack?: () => void }) => (
+    <div data-testid="restore-flow" data-has-onback={String(onBack !== undefined)}>
+      {onBack && (
+        <button type="button" onClick={onBack}>
+          restore-back
+        </button>
+      )}
+    </div>
+  ),
+}))
 vi.mock('virtual:pwa-register/react', () => ({
   useRegisterSW: () => ({ needRefresh: [false, () => {}], updateServiceWorker: () => {}, offlineReady: [false, () => {}] }),
 }))
@@ -82,5 +96,38 @@ describe('App — the entry router threads the unlock read-only verdict into the
     expect(screen.queryByText(copy.unlockReadOnly)).toBeNull()
     expect(screen.queryByText(copy.unlockReadOnlyLead)).toBeNull()
     expect(stub).toHaveAttribute('data-read-only', 'false')
+  })
+})
+
+describe("App — ColdStart's restore door routes to the shared RestoreFlow and back (the wiped-device door)", () => {
+  it('cold → restore-cold mounts RestoreFlow WITH an onBack, and Back returns to the real ColdStart', async () => {
+    probeVault.mockResolvedValueOnce({ kind: 'no-vault' }) // one-shot, no leak into the vault tests above
+    render(<App />)
+    // The probe resolves no-vault → the REAL ColdStart (unmocked): its Begin + the quiet restore door.
+    const begin = await screen.findByRole('button', { name: copy.coldStartBegin })
+    expect(begin).toBeInTheDocument()
+    expect(screen.queryByTestId('restore-flow')).toBeNull()
+
+    // Tap the whisper → restore-cold mounts the SAME RestoreFlow the damaged branch uses, WITH onBack.
+    fireEvent.click(screen.getByRole('button', { name: copy.coldStartRestoreAction }))
+    const flow = await screen.findByTestId('restore-flow')
+    expect(flow).toHaveAttribute('data-has-onback', 'true')
+    // ColdStart is gone while the flow is up (kills a mutant that renders both).
+    expect(screen.queryByRole('button', { name: copy.coldStartBegin })).toBeNull()
+
+    // Back is never a trap: it returns to ColdStart, the flow unmounts.
+    fireEvent.click(screen.getByRole('button', { name: 'restore-back' }))
+    expect(await screen.findByRole('button', { name: copy.coldStartBegin })).toBeInTheDocument()
+    expect(screen.queryByTestId('restore-flow')).toBeNull()
+  })
+
+  it('the damaged branch mounts the SAME RestoreFlow but WITHOUT an onBack (its file step is the flow’s first — nowhere back)', async () => {
+    probeVault.mockResolvedValueOnce({ kind: 'damaged' })
+    render(<App />)
+    const flow = await screen.findByTestId('restore-flow')
+    expect(flow).toHaveAttribute('data-has-onback', 'false')
+    // No Back button, and no ColdStart to return to — the damaged mount stays byte-identical.
+    expect(screen.queryByRole('button', { name: 'restore-back' })).toBeNull()
+    expect(screen.queryByRole('button', { name: copy.coldStartBegin })).toBeNull()
   })
 })

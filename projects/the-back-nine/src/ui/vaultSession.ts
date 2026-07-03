@@ -39,3 +39,10 @@ export async function probeVault(): Promise<VaultLoad> {
 export async function exportVaultFile(): Promise<ExportResult> {
   return exportVault(await getDb())
 }
+
+/** Fire-and-forget: record that a backup file was saved from this device (the re-offer sentinel).
+ *  Advisory metadata — the underlying session call swallows write failure, and this resolves without
+ *  throwing even if opening the session rejects, so a caller can `void` it inside the ceremony. */
+export async function recordBackupMade(): Promise<void> {
+  await (await getVaultSession()).recordBackupMade()
+}

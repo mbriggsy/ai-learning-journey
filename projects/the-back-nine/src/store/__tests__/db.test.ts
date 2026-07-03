@@ -17,6 +17,7 @@ import { IDBFactory } from 'fake-indexeddb'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import {
+  BACKUP_NOTE_KEY,
   MODEL_RECORD_FIELDS,
   VAULT_KEYS,
   VAULT_STORE_NAME,
@@ -24,7 +25,16 @@ import {
   type ModelRecord,
   type WrapRecord,
 } from '@shared/model'
-import { loadVault, openVaultDb, replacePassphraseWrap, rewriteModel, writeVault } from '../db'
+import {
+  clearVault,
+  loadVault,
+  markBackupMade,
+  openVaultDb,
+  readBackupNote,
+  replacePassphraseWrap,
+  rewriteModel,
+  writeVault,
+} from '../db'
 
 const bytes = (...vals: number[]): Uint8Array<ArrayBuffer> => new Uint8Array(vals)
 
@@ -211,6 +221,86 @@ describe('replacePassphraseWrap (the passphrase-change record op)', () => {
     const db = await openVaultDb()
     const result = await replacePassphraseWrap(db, { salt: bytes(1), iv: bytes(2), wrappedDataKey: bytes(3) })
     expect(result.ok).toBe(false)
+  })
+})
+
+describe('the backup-made sentinel (U8-tail — a plaintext sibling note, OUTSIDE VAULT_KEYS)', () => {
+  it('mark → read roundtrip: absent reads 0, first mark → 1, a second mark → 2 (monotone)', async () => {
+    const db = await openVaultDb()
+    await writeVault(db, fixtureVault())
+    expect(await readBackupNote(db)).toBe(0) // absent by construction — no note is written by writeVault
+    expect((await markBackupMade(db)).ok).toBe(true)
+    expect(await readBackupNote(db)).toBe(1)
+    expect((await markBackupMade(db)).ok).toBe(true)
+    expect(await readBackupNote(db)).toBe(2)
+  })
+
+  it('a MALFORMED note reads 0 (a torn count / wrong shape re-offers, never a false "backup exists")', async () => {
+    const db = await openVaultDb()
+    await writeVault(db, fixtureVault())
+    // A structured-clone-torn count (null) and a wrong-shape blob are BOTH malformed → 0 (the safe
+    // direction: readBackupNote > 0 gates the door, so 0 means "re-offer", never "claim one exists").
+    for (const planted of [{ exportedCount: null }, { exportedCount: Number.NaN }, { nope: 1 }]) {
+      const tx = db.transaction(VAULT_STORE_NAME, 'readwrite')
+      void tx.objectStore(VAULT_STORE_NAME).put(planted, BACKUP_NOTE_KEY).catch(() => undefined)
+      await tx.done
+      expect(await readBackupNote(db)).toBe(0)
+    }
+  })
+
+  it('markBackupMade REFUSES no-vault (a note without a vault is meaningless) and writes nothing', async () => {
+    const db = await openVaultDb()
+    expect(await markBackupMade(db)).toEqual({ ok: false, reason: 'no-vault' })
+    expect(await readBackupNote(db)).toBe(0) // the refusal aborts its own transaction — nothing landed
+    expect(await loadVault(db)).toEqual({ kind: 'no-vault' })
+  })
+
+  it('the note lives OUTSIDE VAULT_KEYS — a fourth stored key that never flips loadVault off "vault"', async () => {
+    const db = await openVaultDb()
+    await writeVault(db, fixtureVault())
+    await markBackupMade(db)
+    const keys = await db.getAllKeys(VAULT_STORE_NAME)
+    expect([...keys].sort()).toEqual(['backupNote', 'model', 'passphraseWrap', 'recoveryWrap'])
+    expect((await loadVault(db)).kind).toBe('vault') // the note is not one of loadVault's three records
+  })
+
+  it('writeVault CLEARS the note in the same transaction — a re-minted/restored vault starts note-less', async () => {
+    const db = await openVaultDb()
+    await writeVault(db, fixtureVault())
+    await markBackupMade(db)
+    expect(await readBackupNote(db)).toBe(1)
+    await writeVault(db, fixtureVault()) // the first-save/restore full write clears the store first
+    expect(await readBackupNote(db)).toBe(0)
+    const keys = await db.getAllKeys(VAULT_STORE_NAME)
+    expect([...keys].sort()).toEqual(['model', 'passphraseWrap', 'recoveryWrap']) // the keys==VAULT_KEYS invariant holds
+  })
+
+  it('clearVault CLEARS the note too (the wipe path leaves nothing behind)', async () => {
+    const db = await openVaultDb()
+    await writeVault(db, fixtureVault())
+    await markBackupMade(db)
+    expect(await readBackupNote(db)).toBe(1)
+    await clearVault(db)
+    expect(await readBackupNote(db)).toBe(0)
+  })
+
+  // The insight-058 audit's OTHER half: the two identity writers that deliberately KEEP the note.
+  // Pinning the keeps (not just the clears) guards the honesty reasoning against a future
+  // "make every write clear the note" refactor that would falsely re-nag.
+  it('replacePassphraseWrap KEEPS the note — the recoveryWrap-based backup file still restores, so it stays honest', async () => {
+    const db = await openVaultDb()
+    await writeVault(db, fixtureVault())
+    await markBackupMade(db)
+    expect((await replacePassphraseWrap(db, fixtureVault().passphraseWrap)).ok).toBe(true)
+    expect(await readBackupNote(db)).toBe(1)
+  })
+
+  it('rewriteModel KEEPS the note — the older-model file is still an off-device artifact (presence-only; staleness is U13)', async () => {
+    const db = await openVaultDb()
+    await writeVault(db, fixtureVault())
+    await markBackupMade(db)
+    expect((await rewriteModel(db, fixtureVault().model)).ok).toBe(true)
+    expect(await readBackupNote(db)).toBe(1)
   })
 })
 

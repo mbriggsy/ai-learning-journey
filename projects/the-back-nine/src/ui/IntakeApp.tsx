@@ -16,6 +16,9 @@ import './styles/save.css'
 // The ceremony rides its own lazy chunk (it pulls the crypto/zxcvbn graph) — kept off the
 // already-lazy intake chunk's first paint; the Save beat only ever appears on the result screen.
 const SaveFlow = lazy(() => import('./SaveFlow').then((m) => ({ default: m.SaveFlow })))
+// The re-offer backup step (U8-tail) rides its own lazy chunk too (it pulls the export/crypto
+// graph via ExportConfirm); it only mounts from the result's backup door.
+const BackupStep = lazy(() => import('./BackupStep').then((m) => ({ default: m.BackupStep })))
 
 /**
  * The intake subtree — the LAZY half of the App split (default export for
@@ -51,9 +54,16 @@ export default function IntakeApp({
    *  tab — session.save would refuse), so this is threaded into deriveResultSave. */
   readOnly?: boolean
 }) {
-  const [phase, setPhase] = useState<'restoring' | 'intake' | 'result' | 'save' | 'restore-failed'>(
+  const [phase, setPhase] = useState<'restoring' | 'intake' | 'result' | 'save' | 'restore-failed' | 'backup'>(
     hydrateFromVault ? 'restoring' : 'intake',
   )
+  // The re-offer backup door's gate (U8-tail): set true only on a decrypt-on-return WHERE the
+  // session is writable AND no backup-note is on record — a returning household whose off-device
+  // copy was never made here. Never set on a fresh/seed intake (no vault to lack a backup), never
+  // set read-only (the standing view-only banner is disclosure enough; one door is v1 scope). The
+  // door dissolves when the ceremony records the note: cleared on the in-session finish, and never
+  // re-armed on the next return (hasBackupRecord reads true then).
+  const [needsBackup, setNeedsBackup] = useState(false)
   // What is on disk (the edit-and-re-save machine, resultSave.ts). Starts 'unsaved' even on a
   // hydrate mount — the hydrate effect installs the decoded model's normalized scenario, and
   // until then the phase is 'restoring' so no save UI renders from the placeholder state.
@@ -150,7 +160,8 @@ export default function IntakeApp({
     void (async () => {
       try {
         const { getVaultSession } = await import('./vaultSession')
-        const model = (await getVaultSession()).currentModel()
+        const session = await getVaultSession()
+        const model = session.currentModel()
         if (cancelled) return
         // Unreachable for this app's own vaults (unlock just decoded a 2-person v3 we wrote), but the
         // type admits null / legacy / a non-two-person shape → refuse rather than render a wrong plan.
@@ -176,6 +187,19 @@ export default function IntakeApp({
         }
         appModel.update(() => hydrated.draft)
         setPersist({ kind: 'saved', scenario: normalized.scenario })
+        // The re-offer backup door: a WRITABLE return with no backup-note on record offers the
+        // off-device copy. A read-only tab skips it (the standing view-only banner is disclosure
+        // enough — one door is the deliberate v1 scope). A note-read hiccup must NEVER fail the
+        // hydrate, so it has its OWN guard OUTSIDE the restore-failed catch — a failure just leaves
+        // the door closed (the next return re-checks); re-offer is the safe direction elsewhere.
+        if (!readOnly) {
+          try {
+            const hasBackup = await session.hasBackupRecord()
+            if (!cancelled && !hasBackup) setNeedsBackup(true)
+          } catch {
+            // leave the door closed on a note-read failure — never a restore-failed
+          }
+        }
         setPhase('result')
         await appModel.recompute('provisional')
         await appModel.recompute('final')
@@ -186,7 +210,7 @@ export default function IntakeApp({
     return () => {
       cancelled = true
     }
-  }, [hydrateFromVault])
+  }, [hydrateFromVault, readOnly])
 
   if (phase === 'restoring') {
     return (
@@ -233,6 +257,25 @@ export default function IntakeApp({
     )
   }
 
+  if (phase === 'backup') {
+    // The re-offer backup step: the EXISTING ExportConfirm in the house save shell (BackupStep owns
+    // its live region). onFinish records the note via the ceremony's channels, clears the door's
+    // gate, and returns to the answer — where the dissolved door no longer renders.
+    return (
+      <Suspense fallback={null}>
+        <BackupStep
+          onFinish={() => {
+            setNeedsBackup(false)
+            setPhase('result')
+          }}
+          // The quiet escape: declining records nothing and keeps the door offered (needsBackup
+          // stays true) — an invited offer is never a trap (ultramode 2026-07-03).
+          onCancel={() => setPhase('result')}
+        />
+      </Suspense>
+    )
+  }
+
   if (phase === 'result' || phase === 'save') {
     const view = deriveResultSave(persist, saveReady, readOnly)
     // 'idle'/'pending' = NOTHING has ever resolved (the "Working it out…" window; `pending`
@@ -254,6 +297,9 @@ export default function IntakeApp({
                 ? { ...view, onRetry: () => void resave() }
                 : view
         }
+        // The re-offer backup door — present only when the hydrate armed it (writable + no note on
+        // record). Tapping opens the 'backup' phase; the door dissolves once the ceremony records.
+        backup={needsBackup ? { onSave: () => setPhase('backup') } : undefined}
       />
     )
   }

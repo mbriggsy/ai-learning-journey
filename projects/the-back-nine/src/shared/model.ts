@@ -1517,9 +1517,17 @@ export type AnyScenario = Scenario | ScenarioV2 | ScenarioV3
 // to a record cannot silently bypass the "no raw key material" check; the
 // compile-time checks below force the field arrays to track the interfaces).
 //
-// Exactly THREE record types exist. The wraps each carry their OWN fresh salt + IV;
-// the model record carries no salt (DK is raw random bytes, not derived). Bytes are
-// Uint8Array on purpose — IndexedDB structured-clones them natively.
+// Exactly THREE ENCRYPTED record types exist (the model + the two wraps — the set
+// {@link VAULT_KEYS} names and loadVault classifies). The wraps each carry their OWN
+// fresh salt + IV; the model record carries no salt (DK is raw random bytes, not
+// derived). Bytes are Uint8Array on purpose — IndexedDB structured-clones them natively.
+//
+// A FOURTH, plaintext SIBLING lives in the same object store — {@link BackupNoteRecord}
+// under {@link BACKUP_NOTE_KEY} — but is DELIBERATELY NOT in VAULT_KEYS: it is a note
+// ABOUT the vault (did an off-device backup get saved from this device?), never a vault
+// record, so loadVault's three-key read can never let the note's presence/absence flip
+// the damage verdict. It holds no key material, so it stays outside the no-leak gate's
+// three-record iteration.
 // ---------------------------------------------------------------------------
 
 /** The model encrypted under DK. */
@@ -1550,11 +1558,42 @@ type _WrapKeysCovered = keyof WrapRecord extends (typeof WRAP_RECORD_FIELDS)[num
 const _recordFieldsExhaustive: _ModelFieldsCover & _ModelKeysCovered & _WrapFieldsCover & _WrapKeysCovered = true
 void _recordFieldsExhaustive
 
-/** The vault's fixed IndexedDB geometry: one DB, one object store, three keys. */
+/** The vault's fixed IndexedDB geometry: one DB, one object store, three ENCRYPTED keys. */
 export const VAULT_DB_NAME = 'the-back-nine-vault'
 export const VAULT_STORE_NAME = 'vault'
 export const VAULT_KEYS = ['model', 'passphraseWrap', 'recoveryWrap'] as const
 export type VaultKey = (typeof VAULT_KEYS)[number]
+
+// ---------------------------------------------------------------------------
+// The backup-made SENTINEL (U8-tail) — a plaintext sibling note ABOUT the vault, in the
+// SAME object store but DELIBERATELY OUTSIDE {@link VAULT_KEYS} (loadVault reads only the
+// three named record keys, so a lost/garbled/absent note can never flip the damage
+// verdict). It records that an off-device backup file was saved from THIS device, so a
+// decrypt-on-return can re-offer the backup exactly when none is on record. The safe
+// direction is baked into the reader: absent OR malformed reads as "no backup" (→ re-offer),
+// never a false "a backup exists".
+// ---------------------------------------------------------------------------
+
+/** The backup-made note. `exportedCount` is a monotone count of confirmed off-device
+ *  exports from this device — a NUMBER on purpose (DND/009: never Infinity/NaN/null, which
+ *  JSON.stringify / IndexedDB silently coerce; IndexedDB structured-clones a plain number
+ *  cleanly). Absent ⇒ no backup ever made here; > 0 ⇒ at least one was. */
+export interface BackupNoteRecord {
+  readonly exportedCount: number
+}
+
+/** The exhaustive field set (mirrors MODEL/WRAP_RECORD_FIELDS — the compile-time gate below
+ *  forces it to track the interface, so a field added to the note can't silently escape). */
+export const BACKUP_NOTE_FIELDS = ['exportedCount'] as const
+
+/** The note's object-store key — a sibling of, never a member of, {@link VAULT_KEYS}. */
+export const BACKUP_NOTE_KEY = 'backupNote'
+
+// Compile-time: the field array exactly covers the interface (both directions).
+type _BackupNoteFieldsCover = (typeof BACKUP_NOTE_FIELDS)[number] extends keyof BackupNoteRecord ? true : never
+type _BackupNoteKeysCovered = keyof BackupNoteRecord extends (typeof BACKUP_NOTE_FIELDS)[number] ? true : never
+const _backupNoteFieldsExhaustive: _BackupNoteFieldsCover & _BackupNoteKeysCovered = true
+void _backupNoteFieldsExhaustive
 
 // ---------------------------------------------------------------------------
 // The export/backup envelope (P1·U4). Export = encrypted blob; restore = file +

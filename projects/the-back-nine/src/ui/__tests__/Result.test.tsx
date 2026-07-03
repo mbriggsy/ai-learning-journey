@@ -114,3 +114,25 @@ describe('Result — the save slot states', () => {
     expect(screen.getByText(copy.savedBadge)).toBeInTheDocument() // the visible badge still tells the truth
   })
 })
+
+describe('Result — the re-offer backup door (U8-tail: quiet, subordinate, present only with the prop)', () => {
+  it('renders the quiet lead line + CTA and fires onSave', () => {
+    const onSave = vi.fn()
+    render(<Result onReview={vi.fn()} save={{ kind: 'clean' }} backup={{ onSave }} computing={false} />)
+    expect(screen.getByText(copy.backupDoorLead)).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: copy.backupDoorCta }))
+    expect(onSave).toHaveBeenCalledTimes(1)
+  })
+
+  it('ABSENT when the prop is absent — no line, no CTA (a household with a backup sees nothing)', () => {
+    render(<Result onReview={vi.fn()} save={{ kind: 'clean' }} computing={false} />)
+    expect(screen.queryByText(copy.backupDoorLead)).toBeNull()
+    expect(screen.queryByRole('button', { name: copy.backupDoorCta })).toBeNull()
+  })
+
+  it('WITHHELD while the answer computes — the door rides the actions row, gone during "Working it out…"', () => {
+    render(<Result onReview={vi.fn()} save={{ kind: 'clean' }} backup={{ onSave: vi.fn() }} computing />)
+    expect(screen.queryByText(copy.backupDoorLead)).toBeNull()
+    expect(screen.queryByRole('button', { name: copy.backupDoorCta })).toBeNull()
+  })
+})

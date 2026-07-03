@@ -43,6 +43,7 @@ type OpErrorKey = 'restoreVaultExists' | 'saveErrorQuota' | 'saveErrorFailed'
 export function RestoreFlow({
   onRestored,
   onExitToUnlock,
+  onBack,
 }: {
   /** The restore committed AND the auto-unlock opened it (`currentModel()` is populated); App
    *  transitions to IntakeApp with `hydrateFromVault`. `notice` is the read-only-open caveat key
@@ -53,6 +54,13 @@ export function RestoreFlow({
   /** The rare post-restore fallback: the vault is healthy on disk but the auto-unlock refused —
    *  the unlock screen finishes the job with the passphrase the user just set. */
   readonly onExitToUnlock: () => void
+  /** Provided ONLY by ColdStart's restore door (a wiped/evicted NO-vault device). Its presence is
+   *  the cold-vs-damaged signal: it puts a quiet Back on the FILE step (a change-of-mind — "actually
+   *  I'm new here" — returns to ColdStart, never trapped) and swaps the file-step intro to the
+   *  no-vault opener (the damaged wording would misread a device that starts empty). Omitted on the
+   *  `damaged` mount, which stays byte-identical: no Back, the damaged intro. Only the file step —
+   *  past it the in-flow Backs already navigate WITHIN the flow. */
+  readonly onBack?: () => void
 }) {
   const [step, setStep] = useState<Step>('file')
   const [fileName, setFileName] = useState<string | null>(null)
@@ -192,7 +200,8 @@ export function RestoreFlow({
           <h2 className="save-step__heading" tabIndex={-1} ref={headingRef}>
             {copy.restoreHeading}
           </h2>
-          <p className="save-step__intro">{copy.restoreIntro}</p>
+          {/* Cold entry (onBack set) serves a no-vault device — the damaged intro would misread it. */}
+          <p className="save-step__intro">{onBack ? copy.restoreColdIntro : copy.restoreIntro}</p>
 
           <div className="save-field">
             <label className="save-field__label" htmlFor={fileId}>
@@ -217,6 +226,13 @@ export function RestoreFlow({
           </div>
 
           <div className="save-actions">
+            {/* Only on the cold-entry door: a change-of-mind returns to ColdStart. The damaged
+                mount passes no onBack — its file step is the flow's first, with nowhere to go back to. */}
+            {onBack && (
+              <button type="button" className="btn-quiet" onClick={onBack}>
+                {copy.flowBack}
+              </button>
+            )}
             <button
               type="button"
               className="btn-primary"

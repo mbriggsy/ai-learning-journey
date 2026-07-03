@@ -87,6 +87,25 @@
   margin: 0;
 }
 
+/* The re-offer backup door (U8-tail) — a QUIET, subordinate durability affordance: a lead line
+   states the fact, a quiet button offers the off-device copy. Sits under the save slot, reads
+   subordinate to the verdict, never a primary CTA (mirrors .result-keep__hint's muted voice). */
+.result-backup-door {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  max-width: var(--measure);
+}
+
+.result-backup-door__lead {
+  font-size: var(--text-sm);
+  color: var(--ink-muted);
+  text-align: center;
+  margin: 0;
+}
+
 /* The save slot — ONE reserved box across the CTA/pending/badge/error states (insight 035): a
    click that swaps the tall CTA for the short pending line must not slide the Review button up
    into the pointer. Sized to the tallest common state (button + hint); the failed state may

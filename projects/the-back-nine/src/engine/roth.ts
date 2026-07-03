@@ -93,6 +93,22 @@ export function buildArmParams(
       overlay: { ...overlayRest, ...(conversions !== undefined ? { conversions } : {}) },
     }
   }
+  // P3·U11 — subsidy-regime: the with-arm carries the toggled regime; the without-arm is the
+  // base VERBATIM (the current applied regime — the honest "today's plan" baseline whether the
+  // user is trying the enhanced hypothesis on or taking an applied one back off). The caller
+  // guards healthcareEnabled, so the flag genuinely selects a table.
+  if (control.kind === 'subsidy-regime') {
+    const overlay = base.overlay
+    if (overlay === undefined) return base // guarded by the caller — see runTwoArm's indeterminate
+    if (arm === 'without') return base
+    // Strip-then-spread (the persisted discipline's wire mirror): the reverted arm carries NO
+    // key (the engine's `?? false` default), never `enhancedSubsidies: false`.
+    const { enhancedSubsidies: _regime, ...overlayRest } = overlay
+    return {
+      ...base,
+      overlay: { ...overlayRest, ...(control.enhanced ? { enhancedSubsidies: true } : {}) },
+    }
+  }
   // sequencing: the selected policy vs the proportional baseline. drawdownOrder rides
   // ONLY the with-arm and ONLY when the policy is 'custom' (the biconditional).
   const { drawdownOrder: _order, ...baseRest } = base
@@ -156,6 +172,13 @@ export function runTwoArm(base: SimulationParams, seed: number, control: TwoArmC
     if (base.overlay.buckets.pretax <= 0) {
       return { kind: 'indeterminate', reason: 'the pre-tax pool is empty — there is nothing to convert' }
     }
+  }
+  // P3·U11 — the regime toggle is meaningful only where the overlay prices healthcare (the
+  // enhanced table selects nothing otherwise — the arms would be byte-identical, a fabricated
+  // zero-delta comparison). The UI's categorical door makes this unreachable; this is the
+  // engine's own defined calm arm (R19), never a silent identical pair.
+  if (control.kind === 'subsidy-regime' && base.overlay?.healthcareEnabled !== true) {
+    return { kind: 'indeterminate', reason: 'healthcare is not priced for this household — the subsidy regime changes nothing' }
   }
 
   const arms: TwoArmReading[] = []

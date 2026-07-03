@@ -16,6 +16,7 @@
  */
 import type { ScenarioDraft } from '@store/memoryModel'
 import { encodeScenario, decodeScenario } from '@shared/scenarioCodec'
+import { healthcareVintageStamp } from '@engine/constants/health'
 import type { ScenarioV3 } from '@shared/model'
 
 export type SaveReady =
@@ -25,7 +26,11 @@ export type SaveReady =
 export function scenarioFromDraft(draft: ScenarioDraft): SaveReady {
   // The cast only reaches `encodeScenario`'s type; correctness is decided at runtime by the
   // decode below (the draft's optional seed/spend and Partial people are validated there).
-  const candidate = { schemaVersion: 3 as const, ...draft } as ScenarioV3
+  // P3·U11 — the healthcare vintage is STAMPED FRESH from the current build's constants at
+  // every save (write-time truth: the answer on screen was computed under THIS build), so a
+  // restored draft's ridden-along old stamp is never re-written as if current. U13 reads the
+  // persisted stamp at unlock BEFORE any recompute; the save that follows re-stamps honestly.
+  const candidate = { schemaVersion: 3 as const, ...draft, healthcareVintage: healthcareVintageStamp() } as ScenarioV3
   const decoded = decodeScenario(encodeScenario(candidate))
   if (decoded.ok && decoded.scenario.schemaVersion === 3) {
     return { ready: true, scenario: decoded.scenario }

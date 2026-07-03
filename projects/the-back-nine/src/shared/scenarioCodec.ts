@@ -323,11 +323,29 @@ function checkEnteredAccount(v: unknown, peopleCount: number, path: string): voi
   needVocab(v, 'kind', ACCOUNT_KINDS, path)
   if (v.ticker !== undefined) needString(v, 'ticker', path)
   if (v.manualBlend !== undefined) checkTickerClassification(v.manualBlend, `${path}.manualBlend`)
+  // P3·U11 (the filed insight-046 follow-up): every account dollar gets the full RANGE gate,
+  // not finiteness alone — a negative or absurd-magnitude balance/contribution is corruption
+  // (the engine sees only the SUMMED initialPortfolio, so a negative entry hiding inside a
+  // positive sum escapes its non-negativity backstop — the multiplied-away class).
   needFinite(v, 'valueToday', path)
-  optFinite(v, 'basis', path)
-  optFinite(v, 'annualContribution', path)
-  optFinite(v, 'employerMatchAnnual', path)
-  optFinite(v, 'hsaEmployerAnnual', path)
+  needNonNegativeDollar(v, 'valueToday', path)
+  for (const field of ['basis', 'annualContribution', 'employerMatchAnnual', 'hsaEmployerAnnual'] as const) {
+    if (v[field] !== undefined) {
+      needFinite(v, field, path)
+      needNonNegativeDollar(v, field, path)
+    }
+  }
+}
+
+/** A real-$ amount that must be ≥ 0 AND within the computable-domain ceiling (assumes
+ *  needFinite ran first — insights 008/010). The negative arm is the insight-046 sibling of
+ *  {@link needAtMostMaxDollar}: a negative entry inside a positive SUM escapes the engine's
+ *  non-negativity backstop, silently shrinking a sibling's contribution to the total. */
+function needNonNegativeDollar(o: Obj, field: string, path: string): void {
+  if ((o[field] as number) < 0) {
+    throw new Corrupt(`${path}.${field}: expected a non-negative real-$ amount (corruption)`)
+  }
+  needAtMostMaxDollar(o, field, path)
 }
 
 /** The household health entry ({@link HealthIntakeV3}) — every field optional (its absence is a
@@ -498,6 +516,26 @@ function checkV3Fields(o: Obj): void {
       throw new Corrupt("scenario.drawdownOrder: only meaningful when drawdownPolicy is 'custom' (it would not govern)")
     }
     checkDrawdownOrderV3(o.drawdownOrder, 'scenario.drawdownOrder')
+  }
+  // P3·U11 — the enhanced-subsidy regime toggle (additive-optional). PRESENCE-KEYED with the
+  // literal `true`: the writer strips the key on revert, so a persisted `false` (or any other
+  // value) is a writer bug named loud — never a silently-ignored slot that would desync the
+  // sheet's face from the engine's regime.
+  if (o.enhancedSubsidies !== undefined && o.enhancedSubsidies !== true) {
+    throw new Corrupt('scenario.enhancedSubsidies: expected the literal true (absence IS the reverted regime — false is written as absence)')
+  }
+  // P3·U11 — the healthcare vintage stamp (additive-optional; one atomic object — a partial
+  // stamp set is meaningless, so every field is required when the object is present).
+  if (o.healthcareVintage !== undefined) {
+    const hv = o.healthcareVintage
+    const path = 'scenario.healthcareVintage'
+    needObject(hv, path)
+    needInteger(hv, 'coverageYear', path)
+    needString(hv, 'acaStatus', path)
+    needString(hv, 'acaVerifiedOn', path)
+    needInteger(hv, 'fplGuidelineYear', path)
+    needInteger(hv, 'irmaaTopTierFrozenThrough', path)
+    needFinite(hv, 'partBStandardMonthly', path)
   }
 }
 

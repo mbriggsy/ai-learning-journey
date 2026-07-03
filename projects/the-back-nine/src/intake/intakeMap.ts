@@ -526,6 +526,9 @@ function buildOverlay(d: ScenarioDraft, horizonYears: number): OverlayParams | u
           healthcareEnabled: true,
           enrolledPremium: escalateQuote(enrolled, ages, horizonYears),
           slcsp: escalateQuote(slcsp, ages, horizonYears),
+          // P3·U11 — the enhanced-subsidy what-if regime, spread-if-present (absence IS the
+          // statutory reverted regime — the engine's `?? false` default stays byte-identical).
+          ...(d.enhancedSubsidies === true ? { enhancedSubsidies: true } : {}),
         }
       : {}),
     ...(seedComplete ? { irmaaMagiSeed: [seed![0]!, seed![1]!] } : {}),

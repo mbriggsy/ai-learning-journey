@@ -456,6 +456,71 @@ describe('v3 — the forward-written persist shape (U8, the first v3 writer)', (
     }
   })
 
+  // P3·U11 — the enhanced-subsidy regime toggle + the healthcare vintage stamp (both
+  // additive-optional; the budget/rothConversion tolerant-reader precedent).
+  it('v3 WITH enhancedSubsidies: true + a healthcare vintage stamp round-trips exactly', () => {
+    const withU11: ScenarioV3 = {
+      ...V3,
+      enhancedSubsidies: true,
+      healthcareVintage: {
+        coverageYear: 2026,
+        acaStatus: 'reverted to pre-ARPA (400% FPL cliff back; higher contribution %s)',
+        acaVerifiedOn: '2026-06-04',
+        fplGuidelineYear: 2025,
+        irmaaTopTierFrozenThrough: 2027,
+        partBStandardMonthly: 123.45, // shape-only fixture value (the codec validates types, not the CMS figure)
+      },
+    }
+    expect(decodeScenario(encodeScenario(withU11))).toEqual({ ok: true, scenario: withU11 })
+  })
+
+  it('enhancedSubsidies must be the LITERAL true — false/1/"yes" are writer bugs named corrupt (the writer strips the key on revert; absence IS the reverted regime)', () => {
+    for (const bad of [false, 1, 'yes', 0]) {
+      const d = decodeScenario(mutated(V3, (o) => { o.enhancedSubsidies = bad }))
+      expect(d.ok, `enhancedSubsidies=${String(bad)} must be rejected`).toBe(false)
+      if (!d.ok && d.reason === 'corrupt') expect(d.detail).toContain('enhancedSubsidies')
+    }
+  })
+
+  it('healthcareVintage is one ATOMIC object — a missing clock, a non-integer year, or a non-string status each reject (a partial stamp set is meaningless)', () => {
+    const stamp = {
+      coverageYear: 2026, acaStatus: 'reverted', acaVerifiedOn: '2026-06-04',
+      fplGuidelineYear: 2025, irmaaTopTierFrozenThrough: 2027, partBStandardMonthly: 123.45,
+    }
+    const bads: Array<(o: Obj) => void> = [
+      (o) => { o.healthcareVintage = { ...stamp, coverageYear: undefined } }, // missing clock
+      (o) => { o.healthcareVintage = { ...stamp, coverageYear: 2026.5 } }, // non-integer year
+      (o) => { o.healthcareVintage = { ...stamp, acaStatus: 7 } }, // non-string status
+      (o) => { o.healthcareVintage = { ...stamp, partBStandardMonthly: null } }, // DND-009 null
+      (o) => { o.healthcareVintage = 'reverted' }, // not an object
+    ]
+    for (const mutate of bads) {
+      const d = decodeScenario(mutated(V3, mutate))
+      expect(d.ok).toBe(false)
+      if (!d.ok) expect(d.reason).toBe('corrupt')
+    }
+  })
+
+  // P3·U11 — the filed insight-046 follow-up: entered-account dollars get the full range gate.
+  it('enteredAccount range gates (insight 046): a negative or over-ceiling balance/contribution is corruption; at-ceiling passes (not over-strict)', () => {
+    const bads: Array<(o: Obj) => void> = [
+      (o) => { (o.enteredAccounts as Obj[])[0]!.valueToday = -5 },
+      (o) => { (o.enteredAccounts as Obj[])[0]!.valueToday = MAX_REAL_DOLLAR * 10 },
+      (o) => { (o.enteredAccounts as Obj[])[0]!.basis = -1 },
+      (o) => { (o.enteredAccounts as Obj[])[1]!.annualContribution = -20_000 },
+      (o) => { (o.enteredAccounts as Obj[])[1]!.employerMatchAnnual = MAX_REAL_DOLLAR * 2 },
+      (o) => { (o.enteredAccounts as Obj[])[2]!.hsaEmployerAnnual = -1_000 },
+    ]
+    for (const mutate of bads) {
+      const d = decodeScenario(mutated(V3, mutate))
+      expect(d.ok).toBe(false)
+      if (!d.ok) expect(d.reason).toBe('corrupt')
+    }
+    // At the ceiling exactly: a lavish-but-real balance passes (the gate is corruption-only).
+    const atCeiling = decodeScenario(mutated(V3, (o) => { (o.enteredAccounts as Obj[])[0]!.valueToday = MAX_REAL_DOLLAR }))
+    expect(atCeiling.ok).toBe(true)
+  })
+
   it('EVERY v3 top-level field is validated — set each to null and the decode rejects as CORRUPT (no silent skip, burned/063)', () => {
     // NOTE: a null on a CONTAINER field (people/enteredAccounts/tickerClassifications/health/incomeStreams)
     // only trips the OUTER needArray/needObject — the inner-shape coverage is the targeted tests below.

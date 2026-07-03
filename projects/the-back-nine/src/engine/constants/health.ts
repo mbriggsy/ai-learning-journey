@@ -13,6 +13,7 @@ import {
   type FederalPovertyGuidelines,
   type IrmaaSchedule,
 } from './types'
+import type { HealthcareVintageV3 } from '@shared/model'
 
 export const COVERAGE_YEAR = 2026
 
@@ -317,6 +318,22 @@ export const obbbaHsa2026 = sourced(
     note: 'Bronze/Catastrophic HSA-compatibility expands WHO can contribute; it does NOT make ACA premiums HSA-payable.',
   },
 )
+
+/** The CURRENT build's healthcare vintage stamp (P3·U11 — contract #6's four clocks in one
+ *  atomic object; the {@link HealthcareVintageV3} the Save path writes). Each field is copied
+ *  from its OWN canonical entry above (per-figure provenance, insight 022 — never re-typed,
+ *  never one citation blanketing the family). U13 compares a persisted stamp against THIS at
+ *  unlock to name exactly which clock moved. */
+export function healthcareVintageStamp(): HealthcareVintageV3 {
+  return {
+    coverageYear: COVERAGE_YEAR,
+    acaStatus: acaEnhancedSubsidyStatus.value.regime2026,
+    acaVerifiedOn: acaEnhancedSubsidyStatus.value.verifiedOn,
+    fplGuidelineYear: federalPovertyGuidelines.value.guidelineYear,
+    irmaaTopTierFrozenThrough: irmaa.value.topTierFrozenThrough,
+    partBStandardMonthly: partB2026.value.standardPremiumMonthly,
+  }
+}
 
 /** The full health table — also the iteration surface for the shape test. */
 export const healthConstants = {

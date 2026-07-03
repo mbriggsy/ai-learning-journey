@@ -15,6 +15,7 @@ import { describe, expect, it } from 'vitest'
 import { scenarioFromDraft } from '../scenarioFromDraft'
 import { draftFromScenario } from '../draftFromScenario'
 import { DEV_SEEDS, type DevSeedKey } from '../devSeeds'
+import { healthcareVintageStamp } from '@engine/constants/health'
 import type { DrawdownOrderKey, RothConversionPlan, ScenarioV3 } from '@shared/model'
 
 /** Every dev seed that is genuinely save-ready → its real, complete ScenarioV3. */
@@ -106,5 +107,26 @@ describe('draftFromScenario — the U10 control levers round-trip byte-for-byte'
     const reencoded = scenarioFromDraft(hydrated.draft)
     expect(reencoded.ready).toBe(true)
     if (reencoded.ready) expect(reencoded.scenario).toEqual(withLevers) // byte-for-byte, all three
+  })
+})
+
+describe('scenarioFromDraft — the healthcare vintage stamp (P3-U11, write-time truth)', () => {
+  it('every save carries the CURRENT build vintage stamp', () => {
+    const r = scenarioFromDraft(DEV_SEEDS.retired)
+    expect(r.ready).toBe(true)
+    if (r.ready) expect(r.scenario.healthcareVintage).toEqual(healthcareVintageStamp())
+  })
+
+  it('a stale stamp riding a restored draft is OVERWRITTEN at save (the persisted stamp is the vintage the on-screen answer was computed under — this build)', () => {
+    const stale = {
+      coverageYear: 2019, acaStatus: 'ancient', acaVerifiedOn: '2019-01-01',
+      fplGuidelineYear: 2018, irmaaTopTierFrozenThrough: 2019, partBStandardMonthly: 1,
+    }
+    const r = scenarioFromDraft({ ...DEV_SEEDS.retired, healthcareVintage: stale })
+    expect(r.ready).toBe(true)
+    if (r.ready) {
+      expect(r.scenario.healthcareVintage).toEqual(healthcareVintageStamp())
+      expect(r.scenario.healthcareVintage).not.toEqual(stale)
+    }
   })
 })

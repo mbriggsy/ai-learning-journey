@@ -98,7 +98,16 @@ export interface ScenarioDraft
     // contract: absent = no lever / a named policy; the custom-order⟺'custom'
     // biconditional is maintained at the control's single `model.update` write site
     // (the codec re-proves it at Save — scenarioFromDraft round-trips the pair).
-    Pick<ScenarioV3, 'annualSpendingReal' | 'seed' | 'budget' | 'rothConversion' | 'drawdownOrder'>
+    // `enhancedSubsidies` (P3·U11) is presence-keyed `true` — the sheet's Apply
+    // strips the key on revert (absence IS the statutory reverted regime); the
+    // healthcare sheet writes ONLY this key (the single-key write fence, insight 058).
+    // `healthcareVintage` (P3·U11) rides the draft for the shape tie only — the SAVE
+    // path stamps it fresh from the current build's constants (scenarioFromDraft),
+    // so whatever the draft carries is never the written truth.
+    Pick<
+      ScenarioV3,
+      'annualSpendingReal' | 'seed' | 'budget' | 'rothConversion' | 'drawdownOrder' | 'enhancedSubsidies' | 'healthcareVintage'
+    >
   >,
     Pick<
       ScenarioV3,

@@ -947,6 +947,14 @@ export type TwoArmControl =
       /** REQUIRED iff `policy === 'custom'` (the persisted biconditional's wire mirror). */
       readonly order?: readonly DrawdownOrderKey[]
     }
+  | {
+      /** P3·U11 — the enhanced-ACA-subsidy regime what-if: with-arm = `enhanced`, without-arm
+       *  = the base params VERBATIM (the current applied regime). Meaningful only when the
+       *  base overlay prices healthcare (else the arms are identical — the engine returns
+       *  the defined indeterminate, the R19 calm contract). */
+      readonly kind: 'subsidy-regime'
+      readonly enhanced: boolean
+    }
 
 /** One arm's compact reading — everything TwoFutures + the delta chrome render from,
  *  and nothing else (the per-path arrays stay worker-side; this crosses by structured
@@ -1540,6 +1548,47 @@ export interface ScenarioV3 {
    *  decoding a 'custom' vault fails LOUD (needVocab → corrupt → the damaged door), never
    *  computes a silently-wrong named-policy answer — loud-over-silent, the cardinal rule. */
   readonly drawdownOrder?: readonly DrawdownOrderKey[]
+  /** P3·U11 — the enhanced-ACA-subsidy WHAT-IF regime toggle. ADDITIVE-OPTIONAL within
+   *  schemaVersion 3 (the budget/rothConversion precedent). PRESENCE-KEYED with the literal
+   *  `true`: ABSENT ⇒ the statutory 2026 reverted/cliff-on regime (current law — the engine's
+   *  byte-identical default); `false` is UNREPRESENTABLE (the sheet's Apply STRIPS the key on
+   *  revert, never writes false — DND 009's strip-the-key discipline; a persisted `false`
+   *  reads as writer-bug corruption at the codec). The engine flag it feeds
+   *  ({@link OverlayParams.enhancedSubsidies}) selects the ARPA/IRA applicable-% table
+   *  (no 400%-FPL cliff) over the reverted one. */
+  readonly enhancedSubsidies?: true
+  /** P3·U11 — the healthcare vintage stamp (contract #6's four clocks, one atomic object —
+   *  a partial stamp set is meaningless). WRITTEN FRESH at every Save from the CURRENT
+   *  build's canonical constants (`scenarioFromDraft` overwrites whatever the draft carried
+   *  — the answer being saved was computed under this build, so write-time truth IS the
+   *  honest stamp); READ by U13's staleness check against the live constants at unlock,
+   *  BEFORE the recompute refreshes anything. ADDITIVE-OPTIONAL: a pre-U11 vault lacks it —
+   *  absent-stamp = not-applicable (contract #6). The dated legislative NOTE the U11 surface
+   *  renders reads the LIVE constants at read time, never this stamp (reVerifyEveryBuild —
+   *  a persisted as-of must never masquerade as current truth). */
+  readonly healthcareVintage?: HealthcareVintageV3
+}
+
+/** The persisted healthcare vintage (P3·U11 → read by U13). Each field is a compact,
+ *  purpose-built value copied from its OWN canonical constant (per-figure provenance —
+ *  insight 022; never one citation blanketing the family): a change in any one is a vintage
+ *  bump U13 can name. All plain finite numbers/strings (DND 009). */
+export interface HealthcareVintageV3 {
+  /** The coverage year the ACA/IRMAA tables are keyed to (`COVERAGE_YEAR`). */
+  readonly coverageYear: number
+  /** The ACA legislative regime sentence, verbatim from the canonical entry
+   *  (`acaEnhancedSubsidyStatus.value.regime2026`) — any wording change is a regime bump. */
+  readonly acaStatus: string
+  /** The date the legislative status was last verified (`…verifiedOn`, ISO date string). */
+  readonly acaVerifiedOn: string
+  /** The HHS poverty-guidelines year the FPL denominators come from (prior-year rule). */
+  readonly fplGuidelineYear: number
+  /** The IRMAA top-tier freeze horizon (`irmaa.topTierFrozenThrough` — re-indexes after;
+   *  the frozen-vs-live split a maintainer must not "helpfully" index early, insight 022). */
+  readonly irmaaTopTierFrozenThrough: number
+  /** The standard Part B monthly premium (an annually-moving figure — a cheap, precise
+   *  proxy for the whole CMS vintage). */
+  readonly partBStandardMonthly: number
 }
 
 /** The exhaustive v3 field set — U8's `checkV3Fields` checklist (burned/063: the
@@ -1564,6 +1613,8 @@ export const SCENARIO_V3_FIELDS = [
   'budget',
   'rothConversion',
   'drawdownOrder',
+  'enhancedSubsidies',
+  'healthcareVintage',
 ] as const
 
 // Compile-time: the field array exactly covers ScenarioV3 (both directions).

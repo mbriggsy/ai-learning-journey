@@ -294,3 +294,58 @@ describe('the defined calm closures (R19)', () => {
     expect(out.kind).toBe('two-arm')
   })
 })
+
+// ---------------------------------------------------------------------------
+// P3·U11 — the subsidy-regime what-if arm (the enhanced-ACA toggle's engine half).
+// ---------------------------------------------------------------------------
+describe('the subsidy-regime control (U11)', () => {
+  const flat35 = (v: number) => Array.from({ length: 35 }, () => v)
+  // The younger spouse is 64 — ACA prices year 0; the 66-year-old owner is Medicare-enrolled
+  // from year 0, so the IRMAA seed is REQUIRED (the engine fails loud without it).
+  const HEALTH_OVERLAY: OverlayParams = {
+    ...OVERLAY,
+    healthcareEnabled: true,
+    slcsp: flat35(14_000),
+    enrolledPremium: flat35(16_000),
+    irmaaMagiSeed: [80_000, 80_000],
+  }
+
+  it('buildArmParams: the with-arm carries the toggled regime; the without-arm is the base VERBATIM (the current applied state)', () => {
+    const b = base({ overlay: HEALTH_OVERLAY })
+    const withArm = buildArmParams(b, { kind: 'subsidy-regime', enhanced: true }, 'with')
+    expect(withArm.overlay?.enhancedSubsidies).toBe(true)
+    expect(buildArmParams(b, { kind: 'subsidy-regime', enhanced: true }, 'without')).toBe(b)
+  })
+
+  it('toggling OFF an applied regime STRIPS the key (never enhancedSubsidies: false — the persisted contract, mirrored on the wire)', () => {
+    const applied = base({ overlay: { ...HEALTH_OVERLAY, enhancedSubsidies: true } })
+    const withArm = buildArmParams(applied, { kind: 'subsidy-regime', enhanced: false }, 'with')
+    expect(withArm.overlay !== undefined && 'enhancedSubsidies' in withArm.overlay).toBe(false)
+    // …and nothing else moved: the stripped overlay is the applied one minus exactly that key.
+    const { enhancedSubsidies: _r, ...expected } = applied.overlay!
+    expect(withArm.overlay).toEqual(expected)
+  })
+
+  it('a household the overlay prices no healthcare for gets the DEFINED indeterminate (the regime changes nothing — never a fabricated identical pair)', () => {
+    const out = runTwoArm(base(), SEED, { kind: 'subsidy-regime', enhanced: true })
+    expect(out.kind).toBe('indeterminate')
+    if (out.kind === 'indeterminate') expect(out.reason).toContain('healthcare')
+  })
+
+  it('enhanced-vs-reverted resolves as a real two-arm pair: both arms carry the lifetime health-cost median, and the enhanced arm never costs MORE (its applicable-% is lower at every FPL fraction)', () => {
+    const out = twoArm(runTwoArm(base({ overlay: HEALTH_OVERLAY }), SEED, { kind: 'subsidy-regime', enhanced: true }))
+    expect(out.with.lifetimeHealthCostMedianReal).toBeDefined()
+    expect(out.without.lifetimeHealthCostMedianReal).toBeDefined()
+    expect(out.with.lifetimeHealthCostMedianReal!).toBeLessThanOrEqual(out.without.lifetimeHealthCostMedianReal!)
+    // The presence companion: the priced year paid a REAL premium on both arms.
+    expect(out.without.lifetimeHealthCostMedianReal!).toBeGreaterThan(0)
+  })
+
+  it('the regime without-arm is BYTE-IDENTICAL to the plain base run (the golden no-spurious-delta invariant holds for the new control kind)', () => {
+    const b = base({ overlay: HEALTH_OVERLAY })
+    const direct = directReading(b, SEED)
+    const out = twoArm(runTwoArm(b, SEED, { kind: 'subsidy-regime', enhanced: true }))
+    expect(out.without.headline).toEqual(direct.headline)
+    expect(out.without.survivalFraction).toBe(direct.distribution.survivalFraction)
+  })
+})

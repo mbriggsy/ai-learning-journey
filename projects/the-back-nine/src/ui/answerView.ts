@@ -22,6 +22,7 @@ import type { MemoryModelSnapshot } from '@store/memoryModel'
 import { isDateRoute } from '@intake/intakeMap'
 import type { BandFan, DateBand, DateSearchOutcome, SimulationResult } from '@shared/model'
 import type { XAnnotation } from '@viz/bandData'
+import { truncateFanAtThinCohort } from '@viz/bandGeometry'
 import { deriveBandAgesAt, deriveDateBandAnnotations, deriveSpineBandAnnotations } from './bandAnnotations'
 import type { FuckOffDateView } from './FuckOffDate'
 import type { ConfidenceStatementView } from './ConfidenceStatement'
@@ -62,8 +63,13 @@ function spineBand(
   readonly bandAnnotations?: readonly XAnnotation[]
   readonly bandAges?: (yearsFromNow: number) => string
 } {
-  const fan = result.distribution.bandFan
-  if (!fan || fan.byYear.length < 2) return {}
+  const rawFan = result.distribution.bandFan
+  if (!rawFan || rawFan.byYear.length < 2) return {}
+  // The chart ends where the surviving cohort thins (cold-read 2026-07-03) — truncate FIRST so
+  // the annotations, the ages closure, and the $-scale all read the DRAWN horizon. Identity is
+  // preserved when nothing is cut (the helper returns the SAME array — a no-op stays a no-op).
+  const cutYears = truncateFanAtThinCohort(rawFan.byYear)
+  const fan = cutYears === rawFan.byYear ? rawFan : { ...rawFan, byYear: cutYears }
   const last = fan.byYear[fan.byYear.length - 1]
   if (!last || !fan.byYear.some((y) => y.p90 > 0)) return {}
   const ageA = draft.people[0].currentAge
@@ -93,8 +99,14 @@ function dateBand(
   readonly bandAnnotations?: readonly XAnnotation[]
   readonly bandAges?: (yearsFromNow: number) => string
 } {
-  const band = outcome.band
-  if (!band || band.fan.byYear.length < 2 || !band.fan.byYear.some((y) => y.p90 > 0)) return {}
+  const rawBand = outcome.band
+  if (!rawBand || rawBand.fan.byYear.length < 2) return {}
+  // Same dead-cohort cut as the spine band — one law, both routes (the work-stops marker sits
+  // at offset ≤ 10, far inside any real cut, and the derive below reads the truncated last year).
+  const cutYears = truncateFanAtThinCohort(rawBand.fan.byYear)
+  const band =
+    cutYears === rawBand.fan.byYear ? rawBand : { ...rawBand, fan: { ...rawBand.fan, byYear: cutYears } }
+  if (band.fan.byYear.length < 2 || !band.fan.byYear.some((y) => y.p90 > 0)) return {}
   const last = band.fan.byYear[band.fan.byYear.length - 1]!
   const ageA = draft.people[0].currentAge
   const ageB = draft.people[1].currentAge

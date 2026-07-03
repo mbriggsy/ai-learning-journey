@@ -38,12 +38,14 @@
   cursor: zoom-in;
 }
 
-/* axis + grid — token colors, never hue. */
+/* axis + grid — token colors, never hue. The horizontal $ gridlines ride the SAME visible
+   weight as the vertical milestone rules (cold-read 2026-07-03: --line-soft horizontals read
+   "way too faint" against the clearly-legible verticals — one grid, one weight). */
 .band-axis {
   stroke: var(--line-control);
 }
 .band-grid {
-  stroke: var(--line-soft);
+  stroke: var(--line-control);
 }
 .band-frame-text {
   fill: var(--ink-muted);

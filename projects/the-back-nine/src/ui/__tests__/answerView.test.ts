@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { COHORT_FADE, truncateFanAtThinCohort } from '@viz/bandGeometry'
 import { selectElevatedAnswer, resolvedFocusKey } from '../answerView'
 import { READING_FIXTURES, SURVIVOR_FIXTURES } from '../preview/fixtures'
 import { DATE_FIXTURES, DATE_WINDOW_TOP } from '../preview/dateFixtures'
@@ -210,7 +211,12 @@ describe('selectElevatedAnswer — D2 state-adaptive routing', () => {
     if (r.kind !== 'spine' || r.view.kind !== 'reading') throw new Error('expected a spine reading')
     expect(r.view.headline).toBe(READING_FIXTURES['on-track'].headline)
     expect(r.view.dollar).toBe(READING_FIXTURES['on-track'].dollar)
-    expect(r.view.band).toBe(READING_FIXTURES['on-track'].band) // the per-year fan rides the worded reading
+    // The per-year fan rides the worded reading, CUT at the dead-cohort threshold (cold-read
+    // 2026-07-03: the chart ends where too few couples remain — this fixture decays past 0.5).
+    const src = READING_FIXTURES['on-track'].band!
+    expect(r.view.band?.byYear).toEqual(truncateFanAtThinCohort(src.byYear))
+    expect(r.view.band!.byYear.length).toBeLessThan(src.byYear.length) // the cut genuinely fired here
+    expect(r.view.band!.byYear.every((y) => y.cohortFraction >= COHORT_FADE.full)).toBe(true)
     expect(r.view.provisional).toBeUndefined()
   })
 
@@ -237,8 +243,9 @@ describe('selectElevatedAnswer — D2 state-adaptive routing', () => {
     expect(ann?.some((m) => m.id.startsWith('age-'))).toBe(true)
     const fan = READING_FIXTURES['on-track'].band
     if (!fan) throw new Error('the on-track fixture carries a band')
-    const last = fan.byYear[fan.byYear.length - 1]
-    // the horizon marker tracks the fan's ACTUAL last year, not a nominal maxHorizon
+    const drawn = truncateFanAtThinCohort(fan.byYear)
+    const last = drawn[drawn.length - 1]
+    // the horizon marker tracks the DRAWN last year — the dead-cohort cut, not a nominal maxHorizon
     expect(ann?.find((m) => m.id === 'horizon')?.yearsFromNow).toBe(last?.yearsFromNow)
   })
 

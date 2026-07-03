@@ -23,6 +23,7 @@ import {
   selectAtRangeColumn,
   xForYear,
   yForDollars,
+  truncateFanAtThinCohort,
 } from '../bandGeometry'
 import { LATTICE_POINTS, type BandSample } from '../bandData'
 
@@ -497,5 +498,31 @@ describe('selectAtRangeColumn — the AT (screen-reader) range column (council 2
     const withGap = [mixed[0]!, { ...mixed[1]!, cohortFraction: undefined }, mixed[2]!, mixed[3]!, mixed[4]!]
     // index 2 (0.8) is the deepest interior clearing 0.75 — index 1's absent cohort is skipped.
     expect(selectAtRangeColumn(withGap, AT_RANGE_COHORT_MIN)).toBe(2)
+  })
+})
+
+// Cold-read 2026-07-03 — the chart ENDS where the cohort thins (the honest cut replaced the
+// faded tail; one law with TwoFutures' median truncation).
+describe('truncateFanAtThinCohort', () => {
+  const yr = (cohortFraction: number) => ({ cohortFraction })
+
+  it('cuts the grid after the last ≥ COHORT_FADE.full year', () => {
+    const grid = [yr(1), yr(0.9), yr(0.6), yr(0.5), yr(0.3), yr(0.1)]
+    expect(truncateFanAtThinCohort(grid)).toEqual([yr(1), yr(0.9), yr(0.6), yr(0.5)])
+  })
+
+  it('a fan with no thin tail passes through IDENTICALLY (the no-op stays a no-op)', () => {
+    const grid = [yr(1), yr(0.8), yr(0.6)]
+    expect(truncateFanAtThinCohort(grid)).toBe(grid)
+  })
+
+  it('a fan already thin by its second year passes through untouched (nothing left to cut to)', () => {
+    const grid = [yr(1), yr(0.2), yr(0.1)]
+    expect(truncateFanAtThinCohort(grid)).toBe(grid)
+  })
+
+  it('a NaN cohort never counts as full (finiteness-first)', () => {
+    const grid = [yr(1), yr(0.7), yr(Number.NaN), yr(0.1)]
+    expect(truncateFanAtThinCohort(grid)).toEqual([yr(1), yr(0.7)])
   })
 })

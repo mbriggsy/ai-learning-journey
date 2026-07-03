@@ -228,6 +228,26 @@ export function isThinCohort(cohortFraction: number | undefined): boolean {
  *  hidden (hiding it would fabricate a confident earlier horizon). */
 export const COHORT_FADE = { full: 0.5, floorAt: 0.04, floor: 0.12 } as const
 
+/**
+ * Truncate a fan's grid where the surviving cohort thins below {@link COHORT_FADE}.full — the
+ * chart simply ENDS where too few couples remain to say anything (N=1 cold-read 2026-07-03:
+ * the faded tail spent real estate on "too few couples to show a range"; the honest cut beats
+ * the honest whisper — the same law TwoFutures' median series already rides). cohortFraction
+ * is monotone non-increasing (deaths only accumulate), so the last ≥-full index is a clean
+ * prefix cut. Defensive arms: a fan whose SECOND year is already thin (nothing left to draw)
+ * and a fan with no thin tail both pass through untouched — the caller's ≥2-years screen and
+ * the fade machinery (now naturally a no-op at ≥ full) stay as belt-and-suspenders.
+ */
+export function truncateFanAtThinCohort<T extends { readonly cohortFraction: number }>(byYear: readonly T[]): readonly T[] {
+  let lastFull = -1
+  for (let i = 0; i < byYear.length; i++) {
+    const c = byYear[i]!.cohortFraction
+    if (Number.isFinite(c) && c >= COHORT_FADE.full) lastFull = i
+  }
+  if (lastFull < 1 || lastFull === byYear.length - 1) return byYear
+  return byYear.slice(0, lastFull + 1)
+}
+
 /** Map a sample's cohortFraction (∈ [0,1]) to its band opacity. A non-finite cohort draws at the
  *  floor (defensive — a thin/garbled slice is quiet, never confidently full). */
 export function cohortFadeOpacity(cohortFraction: number): number {

@@ -32,7 +32,7 @@
 import { useEffect, useRef } from 'react'
 import { motion, useReducedMotion } from 'motion/react'
 import { OKABE_ITO } from './palette'
-import { curveMarks, type CurveMark } from './curveMarks'
+import { curveMarks, dipLabelRunCenters, type CurveMark } from './curveMarks'
 import type { DateTrackOutcome } from '@shared/model'
 import {
   PLOT,
@@ -104,6 +104,7 @@ export function OddsLadder({ track, labels }: OddsLadderProps) {
 
   const marks = curveMarks(track)
   const domainMax = domainMaxYears(marks.map((m) => m.offsetYears))
+  const dipLabelOffsets = dipLabelRunCenters(marks)
 
   return (
     <figure className="ladder-figure">
@@ -122,7 +123,13 @@ export function OddsLadder({ track, labels }: OddsLadderProps) {
           transition={{ duration: reduce ? 0 : DRAW_S, ease: EASE_OUT }}
         >
           {marks.map((m) => (
-            <LadderMark key={m.offsetYears} mark={m} domainMax={domainMax} labels={labels} />
+            <LadderMark
+              key={m.offsetYears}
+              mark={m}
+              domainMax={domainMax}
+              labels={labels}
+              showDipLabel={dipLabelOffsets.has(m.offsetYears)}
+            />
           ))}
         </motion.g>
         <LadderXAxis marks={marks} domainMax={domainMax} labels={labels} />
@@ -160,9 +167,18 @@ function LadderFrame({ barLabel }: { barLabel: string }) {
         strokeWidth={1.4}
       />
       {/* THE ON-TRACK BAR — at the TRUE 8.5 midpoint, solid + heavier (distinct from the dashed grid),
-          so clearing dots sit visibly above it and failing dots below. */}
+          so clearing dots sit visibly above it and failing dots below. The label lives in the LEFT
+          MARGIN beside its bar (right-aligned, like the rung anchors below it) — INSIDE the plot it
+          collided with an offset-0/1 dot whenever the curve's front sat at rung 8-9, seen live the
+          first time a real dip curve rendered (?seed=dip, 2026-07-03: the dip run + "ON TRACK"
+          overlapped). The margin at rung 8.5 is structurally free — the y-axis anchors stop at 7. */}
       <line className="ladder-bar" x1={PLOT.left} y1={BAR_Y} x2={PLOT.right} y2={BAR_Y} />
-      <text className="ladder-bar-label ladder-droppable-label" x={PLOT.left + 6} y={BAR_Y - 6}>
+      <text
+        className="ladder-bar-label ladder-droppable-label"
+        x={PLOT.left - 8}
+        y={BAR_Y + 3}
+        textAnchor="end"
+      >
         {barLabel}
       </text>
     </g>
@@ -194,10 +210,15 @@ function LadderMark({
   mark,
   domainMax,
   labels,
+  showDipLabel,
 }: {
   mark: CurveMark
   domainMax: number
   labels: OddsLadderLabels
+  /** True for the CENTER mark of each contiguous dip run — the one dot in the run that draws
+   *  the worded "doesn't hold" tell (see {@link dipLabelRunCenters}). Every dip dot keeps its
+   *  open-dot shape + its own a11y sentence; only the TEXT de-duplicates. */
+  showDipLabel: boolean
 }) {
   const x = xForOffset(mark.offsetYears, domainMax)
   const y = yForRung(mark.rung)
@@ -234,17 +255,24 @@ function LadderMark({
 
   if (mark.isDip) {
     // cleared-then-dipped: an OPEN dot ABOVE the bar (it clears) + the worded "doesn't hold" tell.
+    // The TELL renders once per contiguous dip RUN (the run's center dot — showDipLabel): adjacent
+    // dips one x-step apart drawing per-dot labels overlap into garble (seen live the first time a
+    // REAL multi-dip curve rendered, ?seed=dip 2026-07-03 — the synthetic single-dip fixture could
+    // never show it). The open-dot SHAPE still marks every dip, and every dot keeps its own aria
+    // sentence — only the redundant text de-duplicates.
     return (
       <g role="img" aria-label={desc}>
         <circle className="ladder-dot ladder-dot--dip" cx={x} cy={y} r={MARK_R} />
-        <text
-          className="ladder-callout ladder-callout--dip ladder-droppable-label"
-          x={x}
-          y={y - 13}
-          textAnchor="middle"
-        >
-          {labels.dipLabel}
-        </text>
+        {showDipLabel && (
+          <text
+            className="ladder-callout ladder-callout--dip ladder-droppable-label"
+            x={x}
+            y={y - 13}
+            textAnchor="middle"
+          >
+            {labels.dipLabel}
+          </text>
+        )}
       </g>
     )
   }

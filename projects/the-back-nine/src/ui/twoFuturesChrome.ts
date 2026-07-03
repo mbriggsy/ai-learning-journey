@@ -17,6 +17,7 @@
  */
 import type { OutcomeState, TwoArmOutcome, TwoArmReading } from '@shared/model'
 import type { TwoFuturesLabels, TwoFuturesPoint } from '@viz/TwoFutures'
+import { COHORT_FADE } from '@viz/bandGeometry'
 import { copy, slots } from './copy'
 import { OUTCOME_PRESENTATION } from './outcomeStates'
 import { formatAxisDollar } from './money'
@@ -49,7 +50,13 @@ const survivorOddsOf = (r: TwoArmReading): string =>
 
 function points(r: TwoArmReading): readonly TwoFuturesPoint[] | undefined {
   if (r.bandFan === undefined) return undefined
-  return r.bandFan.byYear.map((y) => ({ yearsFromNow: y.yearsFromNow, medianReal: y.p50 }))
+  // The dead-cohort law (the band's own COHORT_FADE.full threshold — the same line the scrub
+  // withholds dollars past): a median over a handful of still-living paths is noise wearing a
+  // line's confidence, and it spikes at the horizon tail (seen live, ?seed=dip 2026-07-03).
+  // TRUNCATE the series where the living cohort thins — the chart simply ends, honest.
+  return r.bandFan.byYear
+    .filter((y) => y.cohortFraction >= COHORT_FADE.full)
+    .map((y) => ({ yearsFromNow: y.yearsFromNow, medianReal: y.p50 }))
 }
 
 /**

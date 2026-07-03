@@ -32,6 +32,13 @@
   gap: var(--space-4);
 }
 
+/* The sheet SCROLLS — its children never squash. Without this, a taller-than-viewport sheet
+   flex-shrinks the preview block below its content (default flex-shrink:1) and the caption
+   text renders THROUGH the Apply button (measured live, ?seed=dip 2026-07-03). */
+.control-sheet > * {
+  flex-shrink: 0;
+}
+
 .control-sheet__title {
   margin: 0;
   font-family: var(--font-display);

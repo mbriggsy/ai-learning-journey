@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { curveMarks, BAR_RUNG, LADDER_MAX_RUNG, type CurveMark } from '../curveMarks'
+import { curveMarks, dipLabelRunCenters, BAR_RUNG, LADDER_MAX_RUNG, type CurveMark } from '../curveMarks'
 import { BANDS } from '@engine/confidence'
 import type { DateOffsetReading, DateTrackOutcome } from '@shared/model'
 
@@ -159,5 +159,41 @@ describe('curveMarks — the honest odds-ladder seam', () => {
     for (const m of marks) {
       expect(m.rung >= 9).toBe(m.clears) // the core invariant at every interior point, not just ends
     }
+  })
+})
+
+// P3·U10 — the dip-label run-center rule (the ?seed=dip live catch, 2026-07-03): adjacent dips
+// each drawing their own "doesn't hold" overlap into garble, so the TELL renders once per
+// contiguous run (its lower-median center) while every dip keeps its open-dot shape + aria.
+describe('dipLabelRunCenters — one worded tell per contiguous dip run', () => {
+  const dipMark = (offsetYears: number, isDip: boolean): CurveMark => ({
+    offsetYears, rung: 9, atCeiling: false, clears: isDip, isDip, isCrown: false,
+  })
+
+  it('a single dip labels itself', () => {
+    expect([...dipLabelRunCenters([dipMark(0, false), dipMark(4, true), dipMark(5, false)])]).toEqual([4])
+  })
+
+  it('a 3-run labels ONLY its center (the ?seed=dip shape: dips at 0,1,2 → one tell at 1)', () => {
+    const marks = [dipMark(0, true), dipMark(1, true), dipMark(2, true), dipMark(3, false), dipMark(4, false)]
+    expect([...dipLabelRunCenters(marks)]).toEqual([1])
+  })
+
+  it('an even-length run takes the LOWER median; separate runs each get their own tell', () => {
+    const marks = [
+      dipMark(0, true), dipMark(1, true), // run A (even) → center 0
+      dipMark(2, false),
+      dipMark(3, true), // run B → 3
+      dipMark(4, false),
+    ]
+    expect([...dipLabelRunCenters(marks)].sort()).toEqual([0, 3])
+  })
+
+  it('a run ending at the curve top still flushes (the trailing-run arm)', () => {
+    expect([...dipLabelRunCenters([dipMark(0, false), dipMark(1, true), dipMark(2, true)])]).toEqual([1])
+  })
+
+  it('no dips → no labels (never a stray tell)', () => {
+    expect(dipLabelRunCenters([dipMark(0, false), dipMark(1, false)]).size).toBe(0)
   })
 })

@@ -11,6 +11,10 @@
   display: block;
   inline-size: 100%;
   block-size: auto;
+  /* A viewBox alone gives an SVG NO intrinsic ratio in CSS sizing — inline-size:100% then
+     computes block-size 0 and the chart vanishes (measured live: 424.8×0). The ratio mirrors
+     TF_VIEW (560×280); change them together. */
+  aspect-ratio: 560 / 280;
 }
 
 .tf__grid {

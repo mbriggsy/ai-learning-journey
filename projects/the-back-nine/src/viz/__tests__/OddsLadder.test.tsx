@@ -139,3 +139,43 @@ describe('OddsLadder — the honest discrete odds ladder', () => {
     expect(ticks.some((t) => /9 of 10|10 of 10/.test(t.textContent ?? ''))).toBe(false)
   })
 })
+
+// P3·U10 — the multi-dip label rule (the ?seed=dip live catch, 2026-07-03): three ADJACENT dips
+// drew three overlapping "doesn't hold" tells (the synthetic single-dip fixture above could never
+// show it — insight 029's class). The rule: ONE worded tell per contiguous dip run (its center);
+// every dip keeps its open-dot shape and its own a11y sentence.
+describe('OddsLadder — adjacent dips share ONE worded tell (the ?seed=dip garble fix)', () => {
+  const multiDipTrack: DateTrackOutcome = {
+    kind: 'confirmed-date',
+    offsetYears: 5,
+    grade: { quantizedLowerBound: 0.9, survivalFraction: 0.92, marginAboveBar: 0.05 },
+    nonMonotoneOffsets: [0, 1, 2],
+    curve: [
+      reading(0, 0.88), // dip run start
+      reading(1, 0.86), // dip run center — the ONE labelled dot
+      reading(2, 0.85), // dip run end
+      reading(3, 0.84), // below bar
+      reading(4, 0.83), // below bar
+      reading(5, 0.9), // the durable crown
+      reading(6, 0.93),
+    ],
+  }
+
+  it('draws THREE open dip dots but exactly ONE "doesn\'t hold" text, on the run center', () => {
+    const { container, getAllByText } = render(<OddsLadder track={multiDipTrack} labels={labels} />)
+    expect(container.querySelectorAll('.ladder-dot--dip')).toHaveLength(3)
+    expect(getAllByText("doesn't hold")).toHaveLength(1)
+    // the tell sits at the CENTER dip's x (offset 1), not the first or last
+    const tell = container.querySelector('.ladder-callout--dip')
+    const dots = [...container.querySelectorAll('.ladder-dot--dip')]
+    expect(Number(tell?.getAttribute('x'))).toBe(Number(dots[1]?.getAttribute('cx')))
+  })
+
+  it("every dip dot's a11y sentence still carries its own reading (the tell de-duplicates TEXT only)", () => {
+    const { container } = render(<OddsLadder track={multiDipTrack} labels={labels} />)
+    const dipAria = [...container.querySelectorAll('[aria-label]')]
+      .map((e) => e.getAttribute('aria-label') ?? '')
+      .filter((t) => t.includes("doesn't hold"))
+    expect(dipAria).toHaveLength(3)
+  })
+})

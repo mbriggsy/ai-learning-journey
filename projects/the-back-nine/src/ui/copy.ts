@@ -89,14 +89,21 @@ export const copy = {
   spendBudgetGovernedNote: 'This figure comes from your budget now — edit the lines, and it follows.',
   spendEditBudgetCta: 'Edit the budget',
   // --- U9b: the budget builder (the deepening of the single-total answer — R8: reached from the
-  //     answer, never an intake gate). Calm plain language; quantities ride slots. ---
-  budgetCta: 'Break down your spending',
+  //     answer, never an intake gate). Calm plain language; quantities ride slots.
+  //     Council 2026-07-03 (wf_67fa22e5-fbb): the invite/title/intro carry the AXIS (what must
+  //     hold vs what could give) and are DIRECTION-NEUTRAL by veto — never promise the split
+  //     lands sooner/safer/sharper (the R27 100%-FPL/PTC inversion can make the essentials-only
+  //     date land LATER; dateFloorInversionNote ships the opposite claim post-split). Reward
+  //     copy lives ONLY in these static strings, never the role=status readout slots. ---
+  //     (Full-axis label measured single-line in the Result quiet row at 1280×800, 2026-07-03 —
+  //     the row wraps to the same two lines with or without it.)
+  budgetCta: 'Split what must hold from what could give',
   budgetEditCta: 'Edit your budget',
-  budgetSheetTitle: 'Your spending, line by line',
+  budgetSheetTitle: 'What must hold — and what could give',
   budgetSheetIntro:
-    'Split the one figure into the lines it’s made of. Essentials are the floor; extras are what could give if it ever came to that.',
+    'Essentials are the part that has to hold; extras are what could give if it ever came to that. Mark which is which, and the answer takes each on its own terms.',
   budgetApply: 'Use this budget',
-  budgetCancel: 'Cancel',
+  budgetCancel: 'Not now',
   budgetAddLine: 'Add a line',
   budgetBackToSingle: 'Back to a single number',
   budgetBackToSingleHint:
@@ -959,9 +966,11 @@ export const slots = {
   budgetAnchorLead: (totalFormatted: string): string =>
     `Your answer uses about $${totalFormatted} a year.`,
   /** The lines-target NETS the injected OOP medical (build-gate 1): typed lines should sum to
-   *  S − M, because the medical floor is carried automatically on top. */
+   *  S − M, because the medical floor is carried automatically on top. Council 2026-07-03:
+   *  purely functional grammar — this is the role=status live readout (re-announces on every
+   *  commit), so it carries no reward copy and no reconcile-to-target audit voice. */
   budgetLinesTarget: (targetFormatted: string): string =>
-    `Lines to account for: about $${targetFormatted} a year.`,
+    `About $${targetFormatted} a year goes into the lines below.`,
   budgetMedicalCarried: (medicalFormatted: string): string =>
     `About $${medicalFormatted} a year of out-of-pocket medical is carried automatically — it needs no line here.`,
   /** The running first-year total of the typed lines (year-0 actives, both tiers). */

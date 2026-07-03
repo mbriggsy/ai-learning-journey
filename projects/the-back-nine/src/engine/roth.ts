@@ -106,10 +106,27 @@ export function buildArmParams(
   }
 }
 
+/** The median of a plain sample (interpolated midpoint on an even count — the standard
+ *  quantile a reader expects; the DEPLETION median above deliberately differs, see its doc). */
+function medianOf(values: readonly number[]): number | undefined {
+  if (values.length === 0) return undefined
+  const sorted = [...values].sort((a, b) => a - b)
+  const h = (sorted.length - 1) / 2
+  const lo = Math.floor(h)
+  const hi = Math.ceil(h)
+  return sorted[lo]! + (h - lo) * (sorted[hi]! - sorted[lo]!)
+}
+
 /** One arm's compact reading off the resolved result (the wire-crossing subset). */
 function readingFrom(result: SimulationResult): TwoArmReading {
   const dist = result.distribution
   const median = medianDepletionYear(dist.depletionYears)
+  // P3·U11 — the arm's median LIFETIME healthcare cost (Σ net ACA premium + Σ Medicare per
+  // path, then the median). The regime-toggle preview HEADLINES this delta — the regime's
+  // effect concentrates pre-65 and may barely move the portfolio median (council 2026-07-03).
+  const lifetimeHealthCost = dist.taxAware
+    ? medianOf(dist.taxAware.lifetimeNetPremiumReal.map((premium, i) => premium + (dist.taxAware!.lifetimeMedicareCostReal[i] ?? 0)))
+    : undefined
   return {
     headline: result.headline,
     ...(result.survivorReading !== undefined ? { survivorReading: result.survivorReading } : {}),
@@ -119,6 +136,7 @@ function readingFrom(result: SimulationResult): TwoArmReading {
       ? { survivorFraction: dist.survivorConditioned.survivalFraction }
       : {}),
     ...(median !== undefined ? { medianDepletionYear: median } : {}),
+    ...(lifetimeHealthCost !== undefined ? { lifetimeHealthCostMedianReal: lifetimeHealthCost } : {}),
   }
 }
 

@@ -19,6 +19,7 @@ import { runDecumulation, type PortfolioState, type DecumulationResult } from '@
 import { sampleCouplePath, type LongevityPerson } from '@engine/longevity'
 import {
   runTaxAwareDecumulation,
+  type HealthYearSink,
   type TaxOverlayConfig,
   type Household,
   type HouseholdYear,
@@ -37,6 +38,8 @@ import {
   type BandFanYear,
   type DepletionYear,
   type Distribution,
+  type HealthReadout,
+  type HealthReadoutYear,
   type IncomeParams,
   type PersonInputs,
   type SimulationParams,
@@ -983,6 +986,46 @@ export function bandPercentile(sortedAsc: readonly number[], p: number): number 
   return sortedAsc[lo]! + (h - lo) * (sortedAsc[hi]! - sortedAsc[lo]!)
 }
 
+/** The year-major healthcare collectors (P3·U11) — the {@link buildHealthReadout} input. */
+interface HealthAgg {
+  readonly acaNetPremium: number[][]
+  readonly medicareBase: number[][]
+  readonly irmaaSurcharge: number[][]
+  readonly acaMagi: number[][]
+  readonly irmaaMagi: number[][]
+  readonly overCliff: number[]
+  readonly acaPriced: number[]
+  readonly cohort: number[]
+}
+
+/** Reduce the year-major healthcare observations into the {@link HealthReadout} series
+ *  (P3·U11) — the {@link buildBandFan} discipline verbatim: medians among the year's funded
+ *  living paths, ending at the first empty-cohort year (an empty year is never emitted), the
+ *  over-cliff signal a FRACTION of the year's ACA-priced paths (a mean would smear the
+ *  discontinuity — insight 062). No yearsFromNow-0 anchor: today has no flow to observe. */
+export function buildHealthReadout(agg: HealthAgg, paths: number): HealthReadout {
+  const byYear: HealthReadoutYear[] = []
+  const median = (values: readonly number[]): number =>
+    values.length === 0 ? 0 : bandPercentile([...values].sort((a, b) => a - b), 0.5)
+  for (let t = 0; t < agg.cohort.length; t++) {
+    const count = agg.cohort[t] ?? 0
+    if (count === 0) break // no household survives to year t+1 — the series ends here (honest)
+    const priced = agg.acaPriced[t] ?? 0
+    byYear.push({
+      yearsFromNow: t + 1,
+      acaNetPremiumP50: median(agg.acaNetPremium[t] ?? []),
+      medicareBaseP50: median(agg.medicareBase[t] ?? []),
+      irmaaSurchargeP50: median(agg.irmaaSurcharge[t] ?? []),
+      acaMagiP50: median(agg.acaMagi[t] ?? []),
+      irmaaMagiP50: median(agg.irmaaMagi[t] ?? []),
+      overCliffFraction: priced > 0 ? (agg.overCliff[t] ?? 0) / priced : 0,
+      acaPricedFraction: paths > 0 ? priced / paths : 0,
+      cohortFraction: paths > 0 ? count / paths : 0,
+    })
+  }
+  return { byYear }
+}
+
 /** Reduce the year-major living-cohort balances into the {@link BandFan} the band renders.
  *  Index t of `valuesByYear` holds the END-of-sim-year-t portfolio value of every household
  *  that still EXISTS that year ($0 for an alive-but-broke path; a both-dead path is simply
@@ -1164,6 +1207,13 @@ export function simulate(
      *  (the user's intended spending). 'floor' without a budget construct reads as 'full'
      *  (there is no second pass to observe). Default 'full'. */
     readonly bandFanTrack?: 'full' | 'floor'
+    /** P3·U11 — emit the per-year healthcare readout series ({@link HealthReadout}): the
+     *  net-ACA-premium / Medicare base-vs-IRMAA / MAGI-anchor medians + the per-year
+     *  over-cliff fraction, observed from the FULL track's overlay pass. Emitted iff the
+     *  overlay priced healthcare (`healthcareEnabled`) — absence is the honest shape for a
+     *  household outside the engine's priced healthcare domain (the categorical-door
+     *  contract). Observe-only: byte-identical to an opt-out run on every joint field. */
+    readonly healthReadout?: boolean
   },
 ): SimOutput {
   // The seed is part of the R19 surface (U4 persists it with a bit-identical
@@ -1276,6 +1326,25 @@ export function simulate(
   const wantSurvivor = options?.survivorConditioned === true
   const survivorDeathOffsets: number[][] | undefined = wantSurvivor ? [] : undefined
 
+  // P3·U11 healthcare readout (opt-in): year-major healthcare observation bins, allocated only
+  // when requested AND the overlay actually prices healthcare (`healthcareEnabled` — the honest
+  // domain gate: a household the engine prices no healthcare for gets NO series, matching the
+  // categorical door). FULL track only (the user's intended spending — the floor pass never
+  // observes). Observed-not-perturbed (the bandFan precedent, byte-identity presence-keyed).
+  const wantHealth = options?.healthReadout === true && params.overlay?.healthcareEnabled === true
+  const healthAgg = wantHealth
+    ? {
+        acaNetPremium: Array.from({ length: maxHorizon }, (): number[] => []),
+        medicareBase: Array.from({ length: maxHorizon }, (): number[] => []),
+        irmaaSurcharge: Array.from({ length: maxHorizon }, (): number[] => []),
+        acaMagi: Array.from({ length: maxHorizon }, (): number[] => []),
+        irmaaMagi: Array.from({ length: maxHorizon }, (): number[] => []),
+        overCliff: new Array<number>(maxHorizon).fill(0),
+        acaPriced: new Array<number>(maxHorizon).fill(0),
+        cohort: new Array<number>(maxHorizon).fill(0),
+      }
+    : undefined
+
   // The per-path tax-aware solver surfaces (U3·M6 — the solver output contract), collected
   // iff the run carries the overlay (presence-keyed: a spine run has no tax data, and
   // zero-fill would contradict terminalValuesReal — absence is the honest shape). Each
@@ -1290,6 +1359,10 @@ export function simulate(
         terminalRothReal: new Array<number>(paths),
         terminalHsaReal: new Array<number>(paths),
         terminalTaxableBasisReal: new Array<number>(paths),
+        // P3·U11 — the lifetime healthcare Σ pair (already returned by every overlay call,
+        // previously dropped here): the regime-toggle preview's median health-cost delta.
+        lifetimeNetPremiumReal: new Array<number>(paths),
+        lifetimeMedicareCostReal: new Array<number>(paths),
       }
     : undefined
 
@@ -1327,6 +1400,8 @@ export function simulate(
         taxAware.terminalRothReal[p] = overlay.buckets.roth
         taxAware.terminalHsaReal[p] = overlay.buckets.hsa ?? 0
         taxAware.terminalTaxableBasisReal[p] = overlay.initialTaxableBasis ?? 0
+        taxAware.lifetimeNetPremiumReal[p] = 0
+        taxAware.lifetimeMedicareCostReal[p] = 0
       }
       continue
     }
@@ -1420,6 +1495,10 @@ export function simulate(
     const pathBalances: number[] | undefined = wantFan ? [] : undefined
     const fullSink = fanTrack === 'full' ? pathBalances : undefined
     const floorSink = fanTrack === 'floor' ? pathBalances : undefined
+    // P3·U11 — this path's healthcare observation sink (FULL track only; fresh per path).
+    const healthSink: HealthYearSink | undefined = wantHealth
+      ? { acaNetPremium: [], medicareBase: [], irmaaSurcharge: [], acaMagi: [], irmaaMagi: [], acaCliffState: [] }
+      : undefined
     let res: DecumulationResult
     let floorRes: DecumulationResult | undefined
     if (overlay) {
@@ -1490,9 +1569,10 @@ export function simulate(
           params.stockWeight,
           params.drawdownPolicy,
           overlayConfig,
-          // U6/U7 band fan: spread the sink ONLY when this pass feeds the fan (absent ⇒ the
-          // byte-identical pre-fan taxInputs — presence-keyed, reduce-to-spine).
-          { ...taxInputs, ...(fullSink ? { balancesOut: fullSink } : {}) },
+          // U6/U7 band fan + U11 health readout: spread each sink ONLY when observing (absent ⇒
+          // the byte-identical pre-sink taxInputs — presence-keyed, reduce-to-spine). The health
+          // sink rides the FULL pass only (the user's intended spending).
+          { ...taxInputs, ...(fullSink ? { balancesOut: fullSink } : {}), ...(healthSink ? { healthOut: healthSink } : {}) },
           params.drawdownOrder,
         )
         // P3·U9 — the floor pass: identical inputs, the essentials-only withdrawals. Runs
@@ -1569,6 +1649,8 @@ export function simulate(
         taxAware.terminalRothReal[p] = taxRes.finalBuckets.roth
         taxAware.terminalHsaReal[p] = taxRes.finalBuckets.hsa ?? 0
         taxAware.terminalTaxableBasisReal[p] = taxRes.finalTaxableBasis
+        taxAware.lifetimeNetPremiumReal[p] = taxRes.totalNetPremiumReal
+        taxAware.lifetimeMedicareCostReal[p] = taxRes.totalMedicareCostReal
       }
     } else {
       const initial: PortfolioState = {
@@ -1622,6 +1704,30 @@ export function simulate(
         fanValuesByYear[t]!.push(t < pathBalances.length ? pathBalances[t]! : 0)
       }
     }
+
+    // P3·U11 health readout fold: the household EXISTS for years [0, horizon) (the fan's
+    // cohort rule); the sink recorded only the FUNDED years (the overlay stops at depletion —
+    // the Σ-accrual sibling rule), so a depleted-but-alive year counts in the cohort but joins
+    // no cost median (a broke household pays nothing; a $0 premium in the median would read as
+    // a phantom full subsidy — the optimistic direction). The over-cliff numerator/denominator
+    // count only ACA-PRICED funded years (acaCliffState ≥ 0).
+    if (healthAgg && healthSink) {
+      for (let t = 0; t < horizon; t++) {
+        healthAgg.cohort[t]!++
+        if (t < healthSink.acaCliffState.length) {
+          healthAgg.acaNetPremium[t]!.push(healthSink.acaNetPremium[t]!)
+          healthAgg.medicareBase[t]!.push(healthSink.medicareBase[t]!)
+          healthAgg.irmaaSurcharge[t]!.push(healthSink.irmaaSurcharge[t]!)
+          healthAgg.acaMagi[t]!.push(healthSink.acaMagi[t]!)
+          healthAgg.irmaaMagi[t]!.push(healthSink.irmaaMagi[t]!)
+          const cliffState = healthSink.acaCliffState[t]!
+          if (cliffState >= 0) {
+            healthAgg.acaPriced[t]!++
+            if (cliffState === 1) healthAgg.overCliff[t]!++
+          }
+        }
+      }
+    }
   }
 
   // U7 e1: reduce the collected death offsets into the survivor-conditioned surface (null ⇒ no path
@@ -1662,6 +1768,9 @@ export function simulate(
       ...(wantFan && fanValuesByYear && fanCohortByYear
         ? { bandFan: buildBandFan(fanValuesByYear, fanCohortByYear, params.initialPortfolio, paths) }
         : {}),
+      // The per-year healthcare readout rides iff opted in AND the overlay priced healthcare
+      // (P3·U11; presence-keyed; observed from the FULL pass, byte-identical to an opt-out run).
+      ...(healthAgg ? { healthReadout: buildHealthReadout(healthAgg, paths) } : {}),
       // The survivor-conditioned surface rides iff opted in AND ≥1 survivor phase occurred (U7 e1).
       ...(survivorConditioned ? { survivorConditioned } : {}),
       // P3·U9 — the essentials-floor track rides iff the budget construct did (param-driven,

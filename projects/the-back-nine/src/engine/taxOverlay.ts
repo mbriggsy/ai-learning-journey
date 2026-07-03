@@ -93,7 +93,7 @@ import {
   irmaaStepFillHeadroom,
   type CommittedYearIncome,
 } from '@engine/magiLandscape'
-import { solveAcaFundedGross, fplForHousehold, medicareAnnualCost, irmaaMagi, hsaQualifiedSpend, type GrossUpSolution, type MagiComponents } from '@engine/healthOverlay'
+import { solveAcaFundedGross, fplForHousehold, medicareAnnualCost, acaMagi, irmaaMagi, irmaaTierSurchargeMonthly, hsaQualifiedSpend, type GrossUpSolution, type MagiComponents } from '@engine/healthOverlay'
 import { NEVER_DEPLETED, type DepletionYear, type DrawdownPolicy, type FilingStatus } from '@shared/model'
 
 // Filing status is shared model vocabulary (the persisted scenario speaks it too). Re-exported
@@ -357,6 +357,32 @@ export interface TaxYearInputs {
    *  the path's own horizon (the overlay does not know the couple's death year). Mutable by
    *  contract (the overlay pushes into it), unlike the readonly input streams above. */
   balancesOut?: number[]
+  // --- P3·U11 healthcare readout: a second OPTIONAL output sink (the balancesOut twin). ---
+  /** An optional sink observing the per-year HEALTHCARE quantities the overlay already computes
+   *  and previously discarded. One entry per FUNDED year, pushed at the same after-the-depletion-
+   *  check site the Σ accruals use (a year the portfolio could not fund records nothing — the
+   *  sibling rule), so each array's length ≤ the funded-year count and the arrays stay index-
+   *  aligned with each other. A PURE OBSERVATION — byte-identical with or without the sink. */
+  healthOut?: HealthYearSink
+}
+
+/** The per-year healthcare observation arrays (P3·U11 — parallel, index-aligned, one entry per
+ *  funded year). The overlay PUSHES; the caller aggregates (medians / fractions across paths). */
+export interface HealthYearSink {
+  /** Net ACA premium paid that year (enrolled − PTC, ≥ 0; 0 in a non-priced year). */
+  readonly acaNetPremium: number[]
+  /** Base Medicare cost that year (base Part B × enrolled count × 12 — income-invariant). */
+  readonly medicareBase: number[]
+  /** IRMAA surcharge that year (the income-sensitive step on top of the base, per person
+   *  × enrolled count × 12) — SPLIT from the base so the danger-years story is tellable. */
+  readonly irmaaSurcharge: number[]
+  /** The year's converged ACA-MAGI (full-SS calculator) — the readout's empirical anchor. */
+  readonly acaMagi: number[]
+  /** The year's IRMAA-MAGI (taxable-SS calculator) — the distinct second anchor. */
+  readonly irmaaMagi: number[]
+  /** The year's ACA cliff state: 1 = priced and landed strictly over the 400%-FPL cliff
+   *  (PTC 0); 0 = priced, under (or at) the cliff; -1 = not an ACA-priced year. */
+  readonly acaCliffState: number[]
 }
 
 /** One year's per-person, per-bucket contribution inflow (C2). All real $, finite ≥ 0
@@ -884,6 +910,7 @@ export function runTaxAwareDecumulation(
     ongoingTaxableGrossUp = [],
     ongoingTaxableIrmaaOnly = [],
     balancesOut,
+    healthOut,
   } = taxInputs
 
   // Healthcare requires tax (U3 · M3 Slice 4): the ACA PTC keys off ACA-MAGI, which this engine
@@ -1363,6 +1390,14 @@ export function runTaxAwareDecumulation(
     let medicareCostThisYear = 0
     let hsaSpendThisYear = 0
     let taxPaidThisYear = 0
+    // P3·U11 — the healthcare readout's year-locals (observed, never consumed): the IRMAA
+    // surcharge slice of medicareCostThisYear, the two converged MAGIs, and the ACA cliff
+    // state (-1 = not priced / 0 = priced under / 1 = priced over). Set at the pricing sites
+    // below, pushed into the optional healthOut sink at the after-depletion accrual site.
+    let irmaaSurchargeThisYear = 0
+    let acaMagiThisYear = 0
+    let irmaaMagiThisYear = 0
+    let acaCliffStateThisYear = -1
     if (config.taxEnabled && regime) {
       // IRMAA (M4): the year's post-65 Medicare cost is a CONSTANT addend to the spending the gross-up
       // funds — keyed off IRMAA-MAGI[t−lookback] (already known), so it is NEVER a fixed point and NEVER
@@ -1411,6 +1446,13 @@ export function runTaxAwareDecumulation(
           irmaaSchedule,
           partBBaseMonthly,
         )
+        // P3·U11 — the readout's base-vs-surcharge SPLIT, observed through the SAME canonical
+        // tier lookup medicareAnnualCost just used (single producer — the split can never
+        // disagree with the billed total: base = cost − surcharge exactly, by construction).
+        if (healthOut) {
+          irmaaSurchargeThisYear =
+            regime.medicareEnrolledCount * irmaaTierSurchargeMonthly(magiForBill, filingForBill, irmaaSchedule) * 12
+        }
       }
       // HSA qualified spend (U3 · M5): the MAGI-invisible dollars the hsa bucket pays this year —
       // capped at the qualified set (OOP medical + the owner-65+ Medicare premiums; the ACA premium
@@ -1519,10 +1561,20 @@ export function runTaxAwareDecumulation(
         grossWithdrawal = aca.gross
         acaNetPremiumThisYear = aca.netPremium
         magiComponentsThisYear = aca.components
+        // P3·U11 — the readout's cliff state: observed off the solver's OWN disclosure flag
+        // (never re-derived from a second compare that could drift from the CEIL-quantized
+        // branch — single producer, insight 012).
+        acaCliffStateThisYear = aca.overCliff ? 1 : 0
       } else {
         const sol = fundNet(fundingNet)
         grossWithdrawal = sol.gross
         magiComponentsThisYear = sol.components
+      }
+      // P3·U11 — the readout's empirical MAGI anchors, read off the SAME converged floored
+      // components both calculators contract on (never a raw-gain ledger — the sign-inversion).
+      if (healthOut) {
+        acaMagiThisYear = acaMagi(magiComponentsThisYear)
+        irmaaMagiThisYear = irmaaMagi(magiComponentsThisYear)
       }
       // Record this year's IRMAA-MAGI — ONE post-branch write covering BOTH recording sites (C3
       // §3b), only when healthcare is on (acaTable !== undefined; a healthcare-off tax-only year
@@ -1619,6 +1671,18 @@ export function runTaxAwareDecumulation(
     totalQualifiedHsaSpendReal += hsaSpendThisYear
     // The year's federal tax accrues on the SAME footing (U3 · M6, the fourth parallel surface).
     totalTaxPaidReal += taxPaidThisYear
+    // P3·U11 — the healthcare readout sink records on the SAME after-depletion footing (one
+    // entry per FUNDED year, index-aligned across its arrays): a year the portfolio could not
+    // fund observed nothing, exactly like the Σ accruals above. base = billed − surcharge, by
+    // construction (the split shares medicareAnnualCost's own tier lookup).
+    if (healthOut) {
+      healthOut.acaNetPremium.push(acaNetPremiumThisYear)
+      healthOut.medicareBase.push(medicareCostThisYear - irmaaSurchargeThisYear)
+      healthOut.irmaaSurcharge.push(irmaaSurchargeThisYear)
+      healthOut.acaMagi.push(acaMagiThisYear)
+      healthOut.irmaaMagi.push(irmaaMagiThisYear)
+      healthOut.acaCliffState.push(acaCliffStateThisYear)
+    }
 
     // Re-derive the buckets as fractions of the authoritative new total: each bucket's
     // post-withdrawal share grown by the one shared factor (no asset-location). The total

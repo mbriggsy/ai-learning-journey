@@ -31,7 +31,7 @@ export { fromWire, dateSearchFromWire, twoArmFromWire } from '@engine/engineWire
 export function runEngine(
   params: SimulationParams,
   seed: number,
-  options?: { readonly bandFan?: boolean; readonly survivorConditioned?: boolean },
+  options?: { readonly bandFan?: boolean; readonly survivorConditioned?: boolean; readonly healthReadout?: boolean },
 ): EngineWire {
   try {
     const out = simulate(params, seed, options)
@@ -57,6 +57,8 @@ export function runEngine(
               terminalRothReal: Float64Array.from(taxAware.terminalRothReal),
               terminalHsaReal: Float64Array.from(taxAware.terminalHsaReal),
               terminalTaxableBasisReal: Float64Array.from(taxAware.terminalTaxableBasisReal),
+              lifetimeNetPremiumReal: Float64Array.from(taxAware.lifetimeNetPremiumReal),
+              lifetimeMedicareCostReal: Float64Array.from(taxAware.lifetimeMedicareCostReal),
             },
           }
         : {}),
@@ -65,6 +67,10 @@ export function runEngine(
       // A compact years×6 STRUCTURED-CLONE payload: it must NEVER join the `run` transfer
       // list below (that list is for detachable buffers only). Mirrors taxAware's presence key.
       ...(result.distribution.bandFan ? { bandFan: result.distribution.bandFan } : {}),
+      // P3·U11 — the per-year healthcare readout series (the `healthReadout` option, present
+      // iff opted in AND the overlay priced healthcare). Compact years×9 STRUCTURED-CLONE
+      // payload — NEVER the transfer list (the bandFan discipline).
+      ...(result.distribution.healthReadout ? { healthReadout: result.distribution.healthReadout } : {}),
       // The U7 survivor surfaces — present iff the run opted in (the `survivorConditioned` option,
       // the single spine headline run only) AND ≥ 1 survivor phase. Both compact: they ride the
       // resolved wire by STRUCTURED CLONE and must NEVER join the `run` transfer list below.
@@ -169,7 +175,7 @@ export const engineApi = {
   /** Run a simulation and return the reading, transferring the big buffers. `options.bandFan`
    *  opts the single spine headline run into the per-year percentile fan (U6/U7 band INPUT) —
    *  it rides the resolved wire by structured clone (not a transferable). */
-  run(params: SimulationParams, seed: number, options?: { readonly bandFan?: boolean; readonly survivorConditioned?: boolean }): EngineWire {
+  run(params: SimulationParams, seed: number, options?: { readonly bandFan?: boolean; readonly survivorConditioned?: boolean; readonly healthReadout?: boolean }): EngineWire {
     const wire = runEngine(params, seed, options)
     if (wire.kind === 'resolved') {
       // Transfer (detach) the big buffers — the worker keeps none for reuse and allocates
@@ -185,6 +191,8 @@ export const engineApi = {
           wire.taxAware.terminalRothReal.buffer,
           wire.taxAware.terminalHsaReal.buffer,
           wire.taxAware.terminalTaxableBasisReal.buffer,
+          wire.taxAware.lifetimeNetPremiumReal.buffer,
+          wire.taxAware.lifetimeMedicareCostReal.buffer,
         )
       }
       // P3·U9 — the floor track's paths-length depletion buffer joins the enumerated list

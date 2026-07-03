@@ -6,11 +6,12 @@
  * chunk). Keeping the boundary structural — not reliant on bundler tree-shaking — means
  * a future main-thread import can never silently drag the engine across the worker line.
  */
-import type { BandFan, DateSearchOutcome, DollarAdjustment, Headline, SimulationResult, SurvivorConditioned, SurvivorReading, TwoArmOutcome } from '@shared/model'
+import type { BandFan, DateSearchOutcome, DollarAdjustment, Headline, HealthReadout, SimulationResult, SurvivorConditioned, SurvivorReading, TwoArmOutcome } from '@shared/model'
 
 /** The per-path tax-aware solver surfaces in WIRE form (U3·M6 — `Distribution.taxAware`
- *  as six transferable Float64 buffers). PRESENT iff the run carried the tax overlay
- *  (the same presence contract as the value model — absence is the honest spine shape). */
+ *  as eight transferable Float64 buffers, U11 added the lifetime healthcare Σ pair).
+ *  PRESENT iff the run carried the tax overlay (the same presence contract as the value
+ *  model — absence is the honest spine shape). */
 export interface TaxAwareWire {
   readonly lifetimeTaxPaidReal: Float64Array
   readonly terminalTaxableReal: Float64Array
@@ -18,6 +19,9 @@ export interface TaxAwareWire {
   readonly terminalRothReal: Float64Array
   readonly terminalHsaReal: Float64Array
   readonly terminalTaxableBasisReal: Float64Array
+  /** P3·U11 — Σ net ACA premium / Σ Medicare cost per path (the regime-preview medians). */
+  readonly lifetimeNetPremiumReal: Float64Array
+  readonly lifetimeMedicareCostReal: Float64Array
 }
 
 /** A resolved result in WIRE form: the big arrays as transferable typed-array buffers,
@@ -39,6 +43,11 @@ export interface ResolvedWire {
    *  `Comlink.transfer` list. DND/009-clean: every field is a finite number (no Infinity/NaN
    *  — the never-depleted $0 ruin floor reads as a real 0 in the fan, not a sentinel). */
   readonly bandFan?: BandFan
+  /** The P3·U11 per-year healthcare readout series — present iff the run opted in (`run`'s
+   *  `healthReadout` option) AND the overlay priced healthcare. Crosses by structured clone
+   *  (compact years×9 plain numbers), NOT a transferable buffer — absent from the worker's
+   *  `Comlink.transfer` list (the bandFan discipline). DND/009-clean: every field finite. */
+  readonly healthReadout?: HealthReadout
   /** The U7 survivor-conditioned surface — present iff the run opted in (`run`'s `survivorConditioned`
    *  option, the single spine headline run only) AND ≥ 1 path had a survivor phase. Compact (four
    *  numbers); crosses by structured clone, NOT a transferable buffer (absent from the transfer list). */
@@ -97,6 +106,8 @@ export function fromWire(wire: EngineWire): EngineResult {
                 terminalRothReal: Array.from(wire.taxAware.terminalRothReal),
                 terminalHsaReal: Array.from(wire.taxAware.terminalHsaReal),
                 terminalTaxableBasisReal: Array.from(wire.taxAware.terminalTaxableBasisReal),
+                lifetimeNetPremiumReal: Array.from(wire.taxAware.lifetimeNetPremiumReal),
+                lifetimeMedicareCostReal: Array.from(wire.taxAware.lifetimeMedicareCostReal),
               },
             }
           : {}),
@@ -105,6 +116,9 @@ export function fromWire(wire: EngineWire): EngineResult {
         // fallback hands back the engine's own immutable object), so it carries through
         // directly; nothing to widen, mirroring the date-search's clone-only unpack.
         ...(wire.bandFan ? { bandFan: wire.bandFan } : {}),
+        // P3·U11 — the healthcare readout series is compact plain data (years×9 numbers) —
+        // clone delivered it; pass through presence-keyed (the bandFan discipline).
+        ...(wire.healthReadout ? { healthReadout: wire.healthReadout } : {}),
         // The survivor-conditioned surface is compact (four numbers) — structured clone delivered it
         // across; pass it through presence-keyed, preserving the model's survivorReading ⟹
         // survivorConditioned iff on the reconstructed object (mirrors bandFan / taxAware).

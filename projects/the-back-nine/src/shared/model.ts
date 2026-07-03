@@ -693,6 +693,15 @@ export interface TaxAwareDistribution {
   /** The taxable bucket's COST BASIS at the path's horizon end (real $) — with
    *  `terminalTaxableReal` it gives the embedded gain §1014 forgives at death. */
   readonly terminalTaxableBasisReal: readonly number[]
+  /** Σ net ACA premium actually paid across the path's funded years (real $; enrolled − PTC,
+   *  P3·U11). Accrued AFTER the depletion check (the sibling rule). 0 on a path the healthcare
+   *  overlay never priced. The U11 regime-toggle preview headlines the MEDIAN of
+   *  `lifetimeNetPremiumReal + lifetimeMedicareCostReal` per arm — the regime's effect
+   *  concentrates in the pre-65 ACA years and may barely move the portfolio median. */
+  readonly lifetimeNetPremiumReal: readonly number[]
+  /** Σ Medicare cost actually paid across the path's funded years (real $; base Part B + the
+   *  IRMAA surcharge, per enrolled person — P3·U11). Same accrual rule as its siblings. */
+  readonly lifetimeMedicareCostReal: readonly number[]
 }
 
 /** One x-grid sample of the per-year portfolio-value percentile fan (the U6/U7 confidence
@@ -740,6 +749,51 @@ export interface BandFan {
   /** One entry per x-grid point, today (index 0) through the run's max horizon, in
    *  `yearsFromNow` order. */
   readonly byYear: readonly BandFanYear[]
+}
+
+/** One year of the healthcare readout series (P3·U11 — the Healthcare sheet's INPUT). All
+ *  medians are computed among the year's FUNDED living paths (the household exists and the
+ *  portfolio funded the year — a depleted-but-alive year pays nothing, so it is excluded from
+ *  the cost medians while `cohortFraction` still counts it); the UI withdraws the series where
+ *  the cohort thins, exactly like the band (insight 048's pure-gate discipline lives UI-side).
+ *  The over-cliff signal is a per-year FRACTION, never a mean — a mean would smear the
+ *  discontinuity out of visibility (insight 062). */
+export interface HealthReadoutYear {
+  /** Whole years from today — k = the END of sim-year k−1 (the {@link BandFanYear} clock). */
+  readonly yearsFromNow: number
+  /** Median net ACA premium paid (real $/yr; enrolled − PTC, 0 in a year no path priced). */
+  readonly acaNetPremiumP50: number
+  /** Median BASE Medicare cost (real $/yr; base Part B × enrolled count — income-invariant). */
+  readonly medicareBaseP50: number
+  /** Median IRMAA surcharge (real $/yr; the income-sensitive step on top of the base —
+   *  deliberately SPLIT from the base so the readout can tell the danger-years story). */
+  readonly irmaaSurchargeP50: number
+  /** Median ACA-MAGI (real $) — the shadow-rate readout's EMPIRICAL anchor (the council's
+   *  unbiased-best-estimate contract: the simulation's own median, never a modeled skeleton). */
+  readonly acaMagiP50: number
+  /** Median IRMAA-MAGI (real $) — the IRMAA-side anchor (distinct calculator; never reuse one). */
+  readonly irmaaMagiP50: number
+  /** Fraction of the year's ACA-PRICED paths whose MAGI landed strictly over the 400%-FPL
+   *  cliff (PTC = 0). 0 when no path priced — read it only where `acaPricedFraction > 0`. */
+  readonly overCliffFraction: number
+  /** Fraction of ALL paths where ACA actually priced this year (the denominator disclosure
+   *  for `overCliffFraction` — same all-paths denominator family as `cohortFraction`). */
+  readonly acaPricedFraction: number
+  /** Fraction of ALL paths whose household still exists at this year (the {@link BandFanYear}
+   *  semantics — the thin-cohort honesty gate reads this). */
+  readonly cohortFraction: number
+}
+
+/** The per-year healthcare readout series (P3·U11). A PARALLEL observed surface (the
+ *  {@link BandFan} precedent): opt-in per call (`simulate`'s `healthReadout` option — the
+ *  single headline run requests it; the date-search's candidates never do), observed from
+ *  per-year state the overlay already computes, byte-identical to an opt-out run on every
+ *  joint field. PRESENT iff opted in AND the run's overlay priced healthcare
+ *  (`healthcareEnabled`) — a household outside the engine's priced healthcare domain has NO
+ *  honest series to show (the U11 categorical-door contract), so absence is the honest shape. */
+export interface HealthReadout {
+  /** One entry per sim year (yearsFromNow 1..), ending where no household survives. */
+  readonly byYear: readonly HealthReadoutYear[]
 }
 
 /** The survivor-conditioned outcome (U7 e1 — the "as the survivor" reading). An OBSERVED surface,
@@ -828,6 +882,10 @@ export interface Distribution {
    *  presence + byte-identity contract. A parallel presentation surface; the headline never
    *  rounds from it. */
   readonly bandFan?: BandFan
+  /** The per-year healthcare readout series (P3·U11). PRESENT iff the caller opted in via
+   *  `simulate`'s `healthReadout` option AND the overlay priced healthcare — see
+   *  {@link HealthReadout} for the presence + byte-identity contract. */
+  readonly healthReadout?: HealthReadout
   /** The survivor-conditioned outcome (U7 e1). PRESENT iff the caller opted in via `simulate`'s
    *  `survivorConditioned` option AND ≥ 1 path had a survivor phase — see {@link SurvivorConditioned}
    *  for the presence + byte-identity contract. A parallel observed surface; the joint
@@ -910,6 +968,12 @@ export interface TwoArmReading {
    *  real year). ABSENT when the median path never depletes — the "~N years longer"
    *  secondary is only quotable when both arms have a real median (never fabricated). */
   readonly medianDepletionYear?: number
+  /** The arm's median LIFETIME healthcare cost (real $; per-path Σ net ACA premium + Σ
+   *  Medicare cost, then the median — P3·U11). PRESENT iff the arm ran the tax overlay.
+   *  The regime-toggle preview HEADLINES the delta of this figure — the regime's effect
+   *  concentrates in the pre-65 ACA years and may barely move the portfolio median
+   *  (council 2026-07-03). */
+  readonly lifetimeHealthCostMedianReal?: number
 }
 
 /** The two-arm comparison outcome. `indeterminate` = an arm's INPUT was incomputable

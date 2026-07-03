@@ -107,10 +107,13 @@ export function BudgetBuilder({ open, draft, onApply, onEscape, onClose }: Budge
   const items = useMemo(() => rows.map((r) => r.item), [rows])
 
   // The blocked-Apply announce region (clear-after-announce — the one live-region idiom).
-  const liveRef = useRef<HTMLDivElement | null>(null)
+  // The node lives INSIDE the open-gated portal, so a mount-time effect would bind null on
+  // the app's real closed-at-mount shape and never re-run — the announce would be silently
+  // dead in BOTH live mounts (Result, the governed spend step). A CALLBACK ref binds and
+  // unbinds the announcer exactly when the node exists.
   const announcerRef = useRef<Announcer | null>(null)
-  useEffect(() => {
-    if (liveRef.current) announcerRef.current = createAnnouncer(liveRef.current)
+  const bindLiveRegion = useCallback((node: HTMLDivElement | null) => {
+    announcerRef.current = node === null ? null : createAnnouncer(node)
   }, [])
 
   // On OPEN: re-seed from the governing draft unless uncommitted local edits are pending (close-
@@ -277,7 +280,7 @@ export function BudgetBuilder({ open, draft, onApply, onEscape, onClose }: Budge
             exit={{ opacity: 0 }}
             transition={{ duration: reduce ? 0 : 0.2, ease: EASE_OUT }}
           >
-            <div ref={liveRef} className="sr-only" role="status" aria-live="polite" aria-atomic="true" />
+            <div ref={bindLiveRegion} className="sr-only" role="status" aria-live="polite" aria-atomic="true" />
             <h2 className="budget-sheet__title" id={titleId} tabIndex={-1} ref={headingRef}>
               {copy.budgetSheetTitle}
             </h2>

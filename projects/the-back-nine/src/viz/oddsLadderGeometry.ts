@@ -103,3 +103,25 @@ export function domainMaxYears(offsets: readonly number[]): number {
   for (const o of offsets) if (Number.isFinite(o) && o > max) max = o
   return max
 }
+
+/** Snap a viewBox x to the NEAREST evaluated offset's index — the ladder scrub's locate (the band's
+ *  nearestLatticeIndex analog, cold-read 2026-07-03: the ladder reads by hover like the fan chart).
+ *  Pure + exported for the unit test; ≤ 11 marks makes the linear scan the simplest honest thing.
+ *  A non-finite x or an empty set yields null (never a NaN index). */
+export function nearestOffsetIndex(
+  x: number,
+  offsets: readonly number[],
+  domainMax: number,
+): number | null {
+  if (!Number.isFinite(x) || offsets.length === 0) return null
+  let best = 0
+  let bestDist = Number.POSITIVE_INFINITY
+  for (let i = 0; i < offsets.length; i++) {
+    const d = Math.abs(xForOffset(offsets[i]!, domainMax) - x)
+    if (d < bestDist) {
+      bestDist = d
+      best = i
+    }
+  }
+  return best
+}

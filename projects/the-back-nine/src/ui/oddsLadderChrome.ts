@@ -24,6 +24,7 @@ export const LADDER_LABELS: OddsLadderLabels = {
   xAxisLabel: copy.ladderXAxis,
   barLabel: copy.ladderBarLabel,
   crownLabel: copy.ladderCrownLabel,
-  dipLabel: copy.ladderDipLabel,
+  // ONE sentence, TWO channels: every dot's aria-label AND the hover/scrub readout line render
+  // this same worded reading (single-sourced — the two can never disagree).
   describeMark: (m) => slots.ladderMarkAria(m.offsetYears, slots.xOfTen(m.rung), markState(m)),
 }

@@ -161,9 +161,9 @@ describe('FuckOffDate — the D2 landed date surface', () => {
     expect(screen.queryByRole('button', { name: copy.bandStudyRange })).not.toBeInTheDocument()
   })
 
-  it('a crowned date mounts the D2c odds-ladder drawer (one pull DOWN) + the R28 plan caveat', () => {
+  it('a crowned date mounts the odds ladder ALWAYS ON DISPLAY (cold-read 2026-07-03) + the R28 plan caveat', () => {
     const { container } = render(<FuckOffDate view={dates(DATE_FIXTURES.confirmed)} />)
-    expect(screen.getByText(copy.ladderDisclosure)).toBeInTheDocument() // a disclosure → never first-frame
+    expect(screen.getByText(copy.ladderDisclosure)).toBeInTheDocument() // the section title — always on display
     expect(screen.getByRole('img', { name: copy.ladderCaption })).toBeInTheDocument() // the ladder graphic
     expect(container.textContent).toContain(copy.ladderPlanCaveat)
   })

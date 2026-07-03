@@ -233,36 +233,43 @@ export function FuckOffDate({ view, focusSignal, actionsSlot }: FuckOffDateProps
             </>
           )}
         </div>
-        {resolved && (
-          <div className="fod-band">
-            {/* RE-DRAW-NOT-MORPH on the tiered provisional→final scale change lives INSIDE the panel
-                (it re-keys its inner band, not itself — so an open enlarge modal survives). */}
-            <ConfidenceBandPanel
-              data={resolved}
-              labels={BAND_LABELS}
-              chrome={BAND_CHROME}
-              atRangeSentence={atRangeSentence}
-            />
-            {/* In a split reading the single band is FLOOR-crowned while the hero claim reads the
-                lifestyle track — name the band's own track so the two can never silently disagree. */}
-            {split !== null && split.kind === 'split' && (
-              <p className="fod-band__tracknote">{copy.bandFollowsFloorNote}</p>
-            )}
-          </div>
-        )}
-        {/* D2c — the odds ladder, one pull DOWN (detail-on-demand, R4: never the first frame). Reads
-            the HERO track — it explains how the WORK-OPTIONAL claim's odds shift by when you stop.
-            The non-monotone sentence + the window-edge note above STAY on the landed surface. A
-            no-date hero plots NO ladder (the Hawk veto — the worded how-close line rides instead). */}
-        {heroDated && (
-          <details className="fod-ladder">
-            <summary className="fod-ladder__summary">{copy.ladderDisclosure}</summary>
-            <div className="fod-ladder__body">
+        {/* BOTH GRAPHS share one wrapper: display:contents in single column (the phone DOM renders
+            byte-identically) and the right-pane grid cell on two-pane — so the LEFT column's rows
+            never inherit the graphs' height (the actions weld under the words, no dead gap). */}
+        <div className="fod-graphs">
+          {resolved && (
+            <div className="fod-band">
+              {/* RE-DRAW-NOT-MORPH on the tiered provisional→final scale change lives INSIDE the panel
+                  (it re-keys its inner band, not itself — so an open enlarge modal survives). */}
+              <ConfidenceBandPanel
+                data={resolved}
+                labels={BAND_LABELS}
+                chrome={BAND_CHROME}
+                atRangeSentence={atRangeSentence}
+              />
+              {/* In a split reading the single band is FLOOR-crowned while the hero claim reads the
+                  lifestyle track — name the band's own track so the two can never silently disagree. */}
+              {split !== null && split.kind === 'split' && (
+                <p className="fod-band__tracknote">{copy.bandFollowsFloorNote}</p>
+              )}
+            </div>
+          )}
+          {/* D2c — the odds ladder, ALWAYS ON DISPLAY with the fan (N=1 cold-read 2026-07-03
+              superseding the council's one-pull-down: "if it's that important, why isn't it on
+              display with the fan-out?"). Reads the HERO track — it explains how the WORK-OPTIONAL
+              claim's odds shift by when you stop. The non-monotone sentence + the window-edge note
+              above STAY on the landed surface. A no-date hero plots NO ladder (the Hawk veto — the
+              worded how-close line rides instead). */}
+          {heroDated && (
+            <section className="fod-ladder" aria-label={copy.ladderDisclosure}>
+              <p className="fod-ladder__title" aria-hidden="true">
+                {copy.ladderDisclosure}
+              </p>
               <OddsLadder track={heroTrack} labels={LADDER_LABELS} />
               <p className="fod-ladder__caveat">{copy.ladderPlanCaveat}</p>
-            </div>
-          </details>
-        )}
+            </section>
+          )}
+        </div>
         {/* The completion actions, seated in the left reading column on two-pane (display:contents in
             single column keeps them flat below — see fuckOffDate.css). Absent in the preview harness. */}
         {actionsSlot != null && <div className="reveal__actions">{actionsSlot}</div>}

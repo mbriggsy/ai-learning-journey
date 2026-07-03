@@ -81,26 +81,3 @@ export function curveMarks(track: DateTrackOutcome): readonly CurveMark[] {
   })
 }
 
-/**
- * The offsets whose dip dot draws the worded "doesn't hold" TELL — the CENTER (lower-median)
- * mark of each contiguous run of dips. Adjacent dips one x-step apart each drawing their own
- * label overlap into garble (seen the first time a REAL multi-dip curve rendered — ?seed=dip,
- * 2026-07-03; the synthetic single-dip fixture structurally could not show it, insight 029's
- * class). One tell per run keeps the words legible at any run length while every dip dot keeps
- * its open-dot SHAPE and its own a11y sentence — the redundant channels never thin, only the
- * duplicated text. Pure + exported for the planted-fail test (insight 048).
- */
-export function dipLabelRunCenters(marks: readonly CurveMark[]): ReadonlySet<number> {
-  const centers = new Set<number>()
-  let run: number[] = []
-  const flush = () => {
-    if (run.length > 0) centers.add(run[Math.floor((run.length - 1) / 2)]!)
-    run = []
-  }
-  for (const m of marks) {
-    if (m.isDip) run.push(m.offsetYears)
-    else flush()
-  }
-  flush()
-  return centers
-}

@@ -43,15 +43,9 @@
   stroke-width: 1.6;
   vector-effect: non-scaling-stroke;
 }
-.ladder-bar-label {
-  fill: var(--ink-muted);
-  font-family: var(--font-body);
-  font-size: 11px;
-  font-weight: var(--weight-semibold);
-  text-transform: uppercase;
-  letter-spacing: var(--tracking-overline);
-  text-anchor: start;
-}
+/* the bar's label rides .ladder-yaxis-label (a quiet margin anchor beside its bar — the same
+   family as the "X of 10" rung anchors; both prior in-plot placements collided with real curves,
+   cold-read 2026-07-03). */
 
 /* ── the marks (shape encodes state; color redundant) ────────────────────────────────────────── */
 .ladder-dot {
@@ -61,11 +55,11 @@
 .ladder-dot--clears {
   fill: var(--ink);
 }
-/* a cleared-then-dipped offset: OPEN (hollow) — shape distinct from a solid clear, above the bar. */
+/* a cleared-then-dipped offset: QUIET at its TRUE above-bar rung (the same de-emphasis as
+   below-bar — not durable ⇒ never reads pickable; the story lives in the scrub readout + aria.
+   The open-dot + floating-label encoding failed the N=1 cold-read 2026-07-03). */
 .ladder-dot--dip {
-  fill: var(--paper-raised);
-  stroke: var(--ink);
-  stroke-width: 1.6;
+  fill: var(--line-control);
 }
 /* a below-the-bar offset: small + faint (context — the odds were lower at this earlier stop-date). */
 .ladder-dot--below {
@@ -108,10 +102,28 @@
   fill: var(--ink);
   font-weight: var(--weight-semibold);
 }
-/* the dip's "doesn't hold" — muted, italic; calm, never alarmed. */
-.ladder-callout--dip {
-  fill: var(--ink-muted);
-  font-style: italic;
+
+/* ── the scrub (the band's grammar: a solid "where I'm pointing" rule + a reserved readout) ───── */
+.ladder-scrub-rule {
+  stroke: var(--ink);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.ladder-scrub-capture {
+  pointer-events: all;
+  touch-action: manipulation;
+}
+/* the reserved worded readout line above the plot — updates on scrub, never shifts layout
+   (insight 035: reserve the box). Same voice as the band's readout figures. */
+.ladder-readout {
+  margin: 0 0 var(--space-1);
+  min-block-size: 2.6em; /* two body-sm lines — the longest reading wraps once at pane width */
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  line-height: var(--leading-body);
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  max-width: var(--measure);
 }
 
 /* ── the household-clock x-axis ──────────────────────────────────────────────────────────────── */

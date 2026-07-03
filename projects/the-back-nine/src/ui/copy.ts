@@ -397,9 +397,8 @@ export const copy = {
   ladderDisclosure: 'How your odds shift by when you stop',
   ladderCaption:
     'How your chances of staying work-optional shift by the year you stop — each year read against the on-track line.',
-  ladderBarLabel: 'On track',
+  ladderBarLabel: 'on track',
   ladderCrownLabel: 'Your date',
-  ladderDipLabel: 'Doesn’t hold',
   ladderXAxis: 'Years from now you stop',
   ladderPlanCaveat:
     'These odds assume today’s draw-down plan; a different withdrawal order or conversion approach can move them.',
@@ -843,11 +842,13 @@ export const slots = {
     state: 'crown' | 'dip' | 'clears' | 'below',
   ): string => {
     const when = offsetYears === 0 ? 'Stopping today' : `Stopping in ${offsetYears} years`
+    // The dip clause tells the whole story in one breath (cold-read 2026-07-03: "clears, but
+    // doesn't hold" read as a riddle) — it clears NOW and slips below the line BEFORE the date.
     const tail =
       state === 'crown'
-        ? ' — your date, where the odds hold'
+        ? ' — your date, where the odds hold from here on'
         : state === 'dip'
-          ? ' — clears, but doesn’t hold'
+          ? ' at first — but the odds slip below the line in the years after, so it doesn’t last'
           : state === 'clears'
             ? ' — clears the line'
             : ' — below the line'

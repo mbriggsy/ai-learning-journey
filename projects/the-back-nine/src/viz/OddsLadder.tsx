@@ -1,5 +1,6 @@
 /*
- * src/viz/OddsLadder.tsx — the D2c odds ladder (council-decided 2026-06-28; docs/council-log.md).
+ * src/viz/OddsLadder.tsx — the D2c odds ladder (council-decided 2026-06-28; docs/council-log.md;
+ * reworked to the N=1 cold-read 2026-07-03 — see the REWORK note below).
  * A hand-rolled SVG that answers the date route's secondary "how do my work-optional odds shift by
  * WHEN I stop?" as a DISCRETE integer-rung ladder — ONE dot per evaluated stop-date, never a smooth
  * curve (a spline would manufacture precision the engine, quantized to X-of-10, does not have).
@@ -12,14 +13,21 @@
  *   - THE CROWN IS THE DURABLE DATE, not the tallest dot: the engine's crown (longest clearing
  *     suffix) wears the ring + the one reserved vermilion accent + the direct "your date" tell. The
  *     eye is never invited to pick the lucky peak (optimizer's curse).
- *   - A DIP IS DRAWN TRUE: a cleared-then-dipped offset (the non-monotone ACA-cliff signature, R26)
- *     plots ABOVE the bar (it genuinely clears) as an OPEN dot with a worded "doesn't hold" tell —
- *     not hidden, not smoothed, not alarmed (no red gash / shake / zoom).
- *   - NON-COLOR (the reader is color-blind): height + marker SHAPE (filled / open / ringed / faint) +
- *     direct text carry every signal; the vermilion crown is redundant only. role="img" + caption +
- *     a per-mark aria-label put every dot's reading in the a11y tree.
+ *   - A DIP IS DRAWN TRUE — QUIETLY (the 2026-07-03 rework): a cleared-then-dipped offset (the
+ *     non-monotone budget-collision signature, R26) plots at its TRUE above-bar rung but in the
+ *     same small/faint de-emphasis as a below-bar dot — everything left of the crown that is not
+ *     durable reads QUIET, and the STORY ("clears at first, but doesn't hold") lives in the scrub
+ *     readout + the per-dot a11y sentence + the first-frame hero note. The earlier encoding (an
+ *     OPEN dot above the bar + a floating "doesn't hold" label) read as a riddle, not a warning.
+ *   - NON-COLOR (the reader is color-blind): height + marker SHAPE/emphasis + direct text carry
+ *     every signal; the vermilion crown is redundant only. role="img" + caption + a per-mark
+ *     aria-label put every dot's reading in the a11y tree.
  *   - NEVER "10 of 10": a ceiling rung (≥ 0.95) reads "better than 9 in 10" via the injected
  *     formatter; no dot ever means certain (the rung-10 line tops the ladder, headroom above it).
+ *   - SCRUB, NOT TOOLTIP (cold-read 2026-07-03): the ladder reads by hover exactly like the fan
+ *     chart — a snap-to-offset rule + a reserved worded readout line above the plot (the SAME
+ *     sentence the a11y tree speaks; pointer-only, aria-hidden, instant). The native SVG <title>
+ *     tooltip is gone.
  *   - CALM MOTION (back-nine-design §3 / emil): the marks DRAW once (opacity fade), never replay;
  *     prefers-reduced-motion drops the fade and the FINAL DOM is identical (no signal in animation).
  *   - CSP-clean (style-src 'self'): every dynamic value is an SVG presentation/geometry ATTRIBUTE
@@ -29,25 +37,29 @@
  * types no copy and no number — it reads the marks and formats through the injected slots.
  */
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { motion, useReducedMotion } from 'motion/react'
 import { OKABE_ITO } from './palette'
-import { curveMarks, dipLabelRunCenters, type CurveMark } from './curveMarks'
+import { curveMarks, type CurveMark } from './curveMarks'
 import type { DateTrackOutcome } from '@shared/model'
 import {
   PLOT,
+  PLOT_W,
+  PLOT_H,
   VIEWBOX,
   BAR_Y,
   RUNG_YS,
   xForOffset,
   yForRung,
   domainMaxYears,
+  nearestOffsetIndex,
 } from './oddsLadderGeometry'
 import './oddsLadder.css'
 
-/** Marker radii (viewBox px). The crown is larger and ringed; a below-bar dot is smaller + faint
- *  (context, de-emphasized). Kept here as render tuning, not geometry. */
+/** Marker radii (viewBox px). The crown is larger and ringed; a NON-DURABLE dot (below-bar OR a
+ *  dip) is smaller + faint (context, de-emphasized). Kept here as render tuning, not geometry. */
 const MARK_R = 5
+const QUIET_R = MARK_R - 1.4
 const CROWN_R = 5.5
 const CROWN_RING_R = 9
 
@@ -74,13 +86,12 @@ export interface OddsLadderLabels {
   readonly formatOffset: (offsetYears: number) => string
   /** The x-axis caption (e.g. "years from now you stop"). */
   readonly xAxisLabel: string
-  /** The on-track bar's label (e.g. "on track"). */
+  /** The on-track bar's label (e.g. "on track") — a quiet y-axis-margin anchor beside its bar. */
   readonly barLabel: string
   /** The crown's direct tell (e.g. "your date"). */
   readonly crownLabel: string
-  /** A dipped offset's direct tell (e.g. "doesn't hold"). */
-  readonly dipLabel: string
-  /** A mark → its full a11y description (offset + odds + clears/dips/crown), built in copy. */
+  /** A mark → its full worded reading (offset + odds + clears/dips/crown), built in copy. ONE
+   *  sentence, TWO channels: the per-dot aria-label AND the hover/scrub readout line. */
   readonly describeMark: (mark: CurveMark) => string
 }
 
@@ -104,10 +115,36 @@ export function OddsLadder({ track, labels }: OddsLadderProps) {
 
   const marks = curveMarks(track)
   const domainMax = domainMaxYears(marks.map((m) => m.offsetYears))
-  const dipLabelOffsets = dipLabelRunCenters(marks)
+
+  // The scrub (the band's grammar, simplified — no enlarge modal to share touch with): pointer
+  // move/down snaps to the nearest offset; leave clears for mouse/pen, a touch stays PINNED so a
+  // phone reader can study the line (the next tap re-scrubs). State lives here so a remount (the
+  // tiered re-grade) resets a stale readout — insight 047's discipline.
+  const [scrubIdx, setScrubIdx] = useState<number | null>(null)
+  const locate = (e: React.PointerEvent<SVGRectElement>): number | null => {
+    // jsdom's SVG stubs OMIT getScreenCTM entirely (not just return null) — feature-check first.
+    const ctm = typeof e.currentTarget.getScreenCTM === 'function' ? e.currentTarget.getScreenCTM() : null
+    if (!ctm) return null // not laid out — never a NaN index
+    const p = new DOMPoint(e.clientX, e.clientY).matrixTransform(ctm.inverse())
+    return nearestOffsetIndex(p.x, marks.map((m) => m.offsetYears), domainMax)
+  }
+  const onScrub = (e: React.PointerEvent<SVGRectElement>) => {
+    const i = locate(e)
+    if (i !== null) setScrubIdx(i)
+  }
+  const onLeave = (e: React.PointerEvent<SVGRectElement>) => {
+    if (e.pointerType !== 'touch') setScrubIdx(null)
+  }
+  const scrubbed = scrubIdx === null ? null : (marks[scrubIdx] ?? null)
 
   return (
     <figure className="ladder-figure">
+      {/* The reserved readout line (insight 035: it updates on every scrub and sits above the plot;
+          the box never changes height). aria-hidden: every dot's SAME sentence already lives in the
+          a11y tree as its aria-label — this is the pointer channel of one single-sourced reading. */}
+      <p className="ladder-readout" aria-hidden="true">
+        {scrubbed === null ? '' : labels.describeMark(scrubbed)}
+      </p>
       <svg
         className="ladder-svg"
         viewBox={`0 0 ${VIEWBOX.width} ${VIEWBOX.height}`}
@@ -123,17 +160,34 @@ export function OddsLadder({ track, labels }: OddsLadderProps) {
           transition={{ duration: reduce ? 0 : DRAW_S, ease: EASE_OUT }}
         >
           {marks.map((m) => (
-            <LadderMark
-              key={m.offsetYears}
-              mark={m}
-              domainMax={domainMax}
-              labels={labels}
-              showDipLabel={dipLabelOffsets.has(m.offsetYears)}
-            />
+            <LadderMark key={m.offsetYears} mark={m} domainMax={domainMax} labels={labels} />
           ))}
         </motion.g>
         <LadderXAxis marks={marks} domainMax={domainMax} labels={labels} />
-        <title>{labels.caption}</title>
+        {/* the live scrub rule — SOLID (reads as "where I'm pointing", not a named moment) + the
+            transparent capture surface, topmost so no dot creates a dead zone. */}
+        <g className="ladder-scrub" aria-hidden="true">
+          {scrubbed !== null && (
+            <line
+              className="ladder-scrub-rule"
+              x1={xForOffset(scrubbed.offsetYears, domainMax)}
+              y1={PLOT.top}
+              x2={xForOffset(scrubbed.offsetYears, domainMax)}
+              y2={PLOT.bottom}
+            />
+          )}
+          <rect
+            className="ladder-scrub-capture"
+            x={PLOT.left}
+            y={PLOT.top}
+            width={PLOT_W}
+            height={PLOT_H}
+            fill="transparent"
+            onPointerMove={onScrub}
+            onPointerDown={onScrub}
+            onPointerLeave={onLeave}
+          />
+        </g>
       </svg>
     </figure>
   )
@@ -167,18 +221,12 @@ function LadderFrame({ barLabel }: { barLabel: string }) {
         strokeWidth={1.4}
       />
       {/* THE ON-TRACK BAR — at the TRUE 8.5 midpoint, solid + heavier (distinct from the dashed grid),
-          so clearing dots sit visibly above it and failing dots below. The label lives in the LEFT
-          MARGIN beside its bar (right-aligned, like the rung anchors below it) — INSIDE the plot it
-          collided with an offset-0/1 dot whenever the curve's front sat at rung 8-9, seen live the
-          first time a real dip curve rendered (?seed=dip, 2026-07-03: the dip run + "ON TRACK"
-          overlapped). The margin at rung 8.5 is structurally free — the y-axis anchors stop at 7. */}
+          so clearing dots sit visibly above it and failing dots below. Its label is a QUIET y-axis
+          anchor in the left margin (the same family + styling as the "X of 10" rung anchors below
+          it — the margin at rung 8.5 is structurally free). The two earlier in-plot placements both
+          collided with real curves (cold-read 2026-07-03). */}
       <line className="ladder-bar" x1={PLOT.left} y1={BAR_Y} x2={PLOT.right} y2={BAR_Y} />
-      <text
-        className="ladder-bar-label ladder-droppable-label"
-        x={PLOT.left - 8}
-        y={BAR_Y + 3}
-        textAnchor="end"
-      >
+      <text className="ladder-yaxis-label ladder-droppable-label" x={PLOT.left - 8} y={BAR_Y + 4} textAnchor="end">
         {barLabel}
       </text>
     </g>
@@ -205,20 +253,16 @@ function LadderYAxis({ formatOdds }: { formatOdds: (rung: number) => string }) {
   )
 }
 
-/* ── one mark: a dot whose SHAPE encodes its state (filled / open / ringed / faint), color redundant ── */
+/* ── one mark: a dot whose EMPHASIS encodes its state (crown ringed · durable clears filled · every
+   non-durable dot quiet/faint at its TRUE rung), color redundant ──────────────────────────────── */
 function LadderMark({
   mark,
   domainMax,
   labels,
-  showDipLabel,
 }: {
   mark: CurveMark
   domainMax: number
   labels: OddsLadderLabels
-  /** True for the CENTER mark of each contiguous dip run — the one dot in the run that draws
-   *  the worded "doesn't hold" tell (see {@link dipLabelRunCenters}). Every dip dot keeps its
-   *  open-dot shape + its own a11y sentence; only the TEXT de-duplicates. */
-  showDipLabel: boolean
 }) {
   const x = xForOffset(mark.offsetYears, domainMax)
   const y = yForRung(mark.rung)
@@ -254,34 +298,24 @@ function LadderMark({
   }
 
   if (mark.isDip) {
-    // cleared-then-dipped: an OPEN dot ABOVE the bar (it clears) + the worded "doesn't hold" tell.
-    // The TELL renders once per contiguous dip RUN (the run's center dot — showDipLabel): adjacent
-    // dips one x-step apart drawing per-dot labels overlap into garble (seen live the first time a
-    // REAL multi-dip curve rendered, ?seed=dip 2026-07-03 — the synthetic single-dip fixture could
-    // never show it). The open-dot SHAPE still marks every dip, and every dot keeps its own aria
-    // sentence — only the redundant text de-duplicates.
+    // cleared-then-dipped (the non-monotone signature): drawn at its TRUE above-bar rung — the
+    // position never lies — but QUIET (the same de-emphasis as below-bar): it is not durable, so
+    // it must never read as pickable. The story ("clears at first, but doesn't hold") rides the
+    // scrub readout + this dot's aria sentence + the first-frame hero note — the 2026-07-03
+    // cold-read killed the open-dot + floating-label riddle.
     return (
       <g role="img" aria-label={desc}>
-        <circle className="ladder-dot ladder-dot--dip" cx={x} cy={y} r={MARK_R} />
-        {showDipLabel && (
-          <text
-            className="ladder-callout ladder-callout--dip ladder-droppable-label"
-            x={x}
-            y={y - 13}
-            textAnchor="middle"
-          >
-            {labels.dipLabel}
-          </text>
-        )}
+        <circle className="ladder-dot ladder-dot--dip" cx={x} cy={y} r={QUIET_R} />
       </g>
     )
   }
 
-  // a plain clearing dot (filled ink) or a below-bar dot (smaller, faint — context, de-emphasized).
+  // a plain clearing dot: FILLED only at-or-after the crown (durable); a pre-crown clear cannot
+  // exist (it would be a dip by construction). Below-bar: smaller, faint — context, de-emphasized.
   const cls = mark.clears ? 'ladder-dot--clears' : 'ladder-dot--below'
   return (
     <g role="img" aria-label={desc}>
-      <circle className={`ladder-dot ${cls}`} cx={x} cy={y} r={mark.clears ? MARK_R : MARK_R - 1.4} />
+      <circle className={`ladder-dot ${cls}`} cx={x} cy={y} r={mark.clears ? MARK_R : QUIET_R} />
     </g>
   )
 }

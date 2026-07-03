@@ -177,63 +177,28 @@
   margin-top: var(--space-2);
 }
 
-/* ── D2c: the odds-ladder drawer — one pull DOWN (a native <details>: calm, keyboard-native,
-   CSP-clean). The ladder + the plan caveat live behind a quiet disclosure row so they're never on
-   the first frame (R4 detail-on-demand). ───────────────────────────────────────────────────────── */
+/* the graphs wrapper is INVISIBLE in single column (the phone DOM renders byte-identically to the
+   pre-wrapper flow); on two-pane it becomes the right-column flex cell (below). */
+.fod-graphs {
+  display: contents;
+}
+
+/* ── D2c: the odds ladder — ALWAYS ON DISPLAY with the fan (N=1 cold-read 2026-07-03 superseded
+   the one-pull-down <details>). A quiet titled section, the band panel's sibling. ─────────────── */
 .fod-ladder {
   margin-top: var(--space-2);
   border-top: 1px solid var(--line-soft);
   padding-top: var(--space-3);
 }
-/* the disclosure tap-row — finger-sized, quiet; a chevron marks open/closed (shape, not hue). */
-.fod-ladder__summary {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  min-height: var(--tap-min);
-  cursor: pointer;
-  list-style: none; /* drop the native triangle (Firefox) */
+/* the section title — the band's "THE RANGE" eyebrow family: quiet small caps, no affordance. */
+.fod-ladder__title {
+  margin: 0 0 var(--space-3);
   font-family: var(--font-body);
   font-size: var(--text-sm);
   font-weight: var(--weight-semibold);
   color: var(--ink-muted);
   letter-spacing: var(--tracking-overline);
   text-transform: uppercase;
-  transition: color var(--dur-fast) var(--ease-out);
-}
-.fod-ladder__summary::-webkit-details-marker {
-  display: none; /* drop the native triangle (WebKit/Blink) */
-}
-/* the custom chevron — ▸ closed, rotates to ▾ on open (CSP-clean stylesheet transform). */
-.fod-ladder__summary::before {
-  content: '';
-  flex: none;
-  width: 0;
-  height: 0;
-  border-left: 6px solid currentColor;
-  border-top: 4px solid transparent;
-  border-bottom: 4px solid transparent;
-  transition: transform var(--dur-fast) var(--ease-out);
-}
-.fod-ladder[open] .fod-ladder__summary::before {
-  transform: rotate(90deg);
-}
-.fod-ladder__summary:focus-visible {
-  outline: 2px solid var(--brand);
-  outline-offset: 3px;
-  border-radius: var(--radius-sm);
-}
-/* Resting hover affordance for the date route's PRIMARY drawer control — the summary
-   text (and its currentColor chevron) lift from --ink-muted to --ink. Pointer-only
-   (hover:hover + pointer:fine), mirroring .cs-retry (confidence.css:175-178). Council
-   2026-06-29 — the gap the design-engineer caught: only :focus-visible existed, no hover. */
-@media (hover: hover) and (pointer: fine) {
-  .fod-ladder__summary:hover {
-    color: var(--ink);
-  }
-}
-.fod-ladder__body {
-  padding-top: var(--space-4);
 }
 /* the R28 plan caveat under the ladder — quiet, honest context, never a nudge. */
 .fod-ladder__caveat {
@@ -257,16 +222,13 @@
   .fod-reveal[data-twopane] {
     display: grid;
     grid-template-columns: minmax(0, var(--measure)) minmax(var(--pane-band-min), 1fr);
-    /* Left column stacks lead (1) · ladder (2) · actions (3), tucked at the top; row 3 is the 1fr
-       slack-absorber ITSELF (the actions hug its top via align-self:start below) so the band
-       (grid-row 1/-1) still spans the FULL height and stays top-pinned — the actions seat under
-       the date instead of stranding below both panes (Briggsy 2026-07-02, the scroll +
-       dead-lower-left fix). A separate trailing spacer row would cost one more row-gap of dead
-       height against the fit-one-frame vertical budget. */
-    grid-template-rows: auto auto 1fr;
+    /* BOTH GRAPHS TOGETHER on the right (cold-read 2026-07-03: the ladder displays WITH the
+       fan-out, no drawer): right column = band (row 1) over ladder (row 2); left column = the
+       words (row 1) with the actions welded under them (row 2, align-self:start against the
+       1fr slack). */
+    grid-template-rows: auto 1fr;
     column-gap: var(--space-9);
-    /* --space-4 — mirrors confidence.css: the two routes share one two-pane rhythm, and the
-       vertical budget (fit one 768px frame, Briggsy 2026-07-02) is the binding constraint. */
+    /* --space-4 — mirrors confidence.css: the two routes share one two-pane rhythm. */
     row-gap: var(--space-4);
     align-items: start;
   }
@@ -278,24 +240,29 @@
     grid-column: 1;
     grid-row: 1;
   }
-  /* the band: right column, spanning full height, pinned to the top. */
-  .fod-reveal[data-twopane] > .fod-band {
+  /* BOTH GRAPHS in one right-column cell spanning all rows — the left column's row heights never
+     inherit the graphs' (the actions weld under the words, no dead gap). */
+  .fod-reveal[data-twopane] > .fod-graphs {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
     grid-column: 2;
     grid-row: 1 / -1;
-    margin-top: 0; /* the grid gap owns the spacing now */
   }
-  /* the odds-ladder: under the date in the left column (the row-gap owns the spacing). */
-  .fod-reveal[data-twopane] > .fod-ladder {
-    grid-column: 1;
-    grid-row: 2;
+  .fod-reveal[data-twopane] .fod-band {
+    margin-top: 0; /* the flex gap owns the spacing now */
+  }
+  .fod-reveal[data-twopane] .fod-ladder {
     margin-top: 0;
+    border-top: none; /* the flex gap separates the two graphs; the hairline is single-column chrome */
+    padding-top: 0;
   }
-  /* the completion actions: welded under the ladder in the left column (row-gap owns the spacing;
-     align-self:start hugs the words rather than stretching down the 1fr spacer). */
+  /* the completion actions: welded under the words in the left column (align-self:start hugs
+     them against the 1fr slack row). */
   .fod-reveal[data-twopane] > .reveal__actions {
     display: block;
     grid-column: 1;
-    grid-row: 3;
+    grid-row: 2;
     align-self: start;
   }
   .fod-reveal[data-twopane] > .reveal__actions > .result-actions {

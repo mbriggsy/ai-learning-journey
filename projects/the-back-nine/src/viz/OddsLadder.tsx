@@ -139,11 +139,18 @@ export function OddsLadder({ track, labels }: OddsLadderProps) {
 
   return (
     <figure className="ladder-figure">
-      {/* The reserved readout line (insight 035: it updates on every scrub and sits above the plot;
-          the box never changes height). aria-hidden: every dot's SAME sentence already lives in the
-          a11y tree as its aria-label — this is the pointer channel of one single-sourced reading. */}
+      {/* The reserved readout (insight 035 — the box NEVER changes height): every mark's sentence
+          renders STACKED in one grid cell, visibility-hidden except the scrubbed one, so the box
+          is always exactly as tall as the LONGEST reading wraps at the CURRENT width — a fixed
+          em-reserve was one line short and the page jumped on every hover (Briggsy, 2026-07-03).
+          aria-hidden: every dot's SAME sentence already lives in the a11y tree as its aria-label —
+          this is the pointer channel of one single-sourced reading. */}
       <p className="ladder-readout" aria-hidden="true">
-        {scrubbed === null ? '' : labels.describeMark(scrubbed)}
+        {marks.map((m, i) => (
+          <span key={m.offsetYears} className="ladder-readout__line" data-active={i === scrubIdx || undefined}>
+            {labels.describeMark(m)}
+          </span>
+        ))}
       </p>
       <svg
         className="ladder-svg"

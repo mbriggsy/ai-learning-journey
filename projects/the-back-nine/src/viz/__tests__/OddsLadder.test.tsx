@@ -163,12 +163,20 @@ describe('OddsLadder — the honest discrete odds ladder', () => {
 // jsdom has no layout (getScreenCTM() is null → locate() bails, never a NaN) — so the DOM arms pin
 // the reserved line + the capture surface, and the SNAP MATH is pinned through the pure helper.
 describe('OddsLadder — the scrub readout', () => {
-  it('reserves the readout line (empty at rest), aria-hidden — the a11y tree already speaks per-dot', () => {
+  it('reserves the readout by STACKING every reading hidden (the box holds the tallest wrap — no jump), aria-hidden', () => {
     const { container } = render(<OddsLadder track={track} labels={labels} />)
     const readout = container.querySelector('.ladder-readout')
     expect(readout).not.toBeNull()
     expect(readout).toHaveAttribute('aria-hidden', 'true')
-    expect(readout?.textContent).toBe('')
+    // ALL readings render (the height reservation) but NONE is active at rest — hovering only
+    // toggles visibility, so the box can never change height (the Briggsy jump, 2026-07-03).
+    const lines = [...container.querySelectorAll('.ladder-readout__line')]
+    expect(lines).toHaveLength(track.curve.length)
+    expect(lines.every((l) => !l.hasAttribute('data-active'))).toBe(true)
+    // each stacked line carries its own mark's full reading (the fixture's describeMark voice)
+    expect(lines[0]?.textContent).toBe('in 2 years: 7 of 10')
+    expect(lines[3]?.textContent).toBe('in 8 years: 9 of 10, your date')
+    expect(lines.every((l) => (l.textContent ?? '').length > 0)).toBe(true)
   })
 
   it('mounts a transparent capture surface over the whole plot (the band-scrub grammar)', () => {

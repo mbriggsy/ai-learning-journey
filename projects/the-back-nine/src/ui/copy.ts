@@ -841,7 +841,12 @@ export const slots = {
     oddsText: string,
     state: 'crown' | 'dip' | 'clears' | 'below',
   ): string => {
-    const when = offsetYears === 0 ? 'Stopping today' : `Stopping in ${offsetYears} years`
+    const when =
+      offsetYears === 0
+        ? 'Stopping today'
+        : offsetYears === 1
+          ? 'Stopping in a year'
+          : `Stopping in ${offsetYears} years`
     // The dip clause tells the whole story in one breath (cold-read 2026-07-03: "clears, but
     // doesn't hold" read as a riddle) — it clears NOW and slips below the line BEFORE the date.
     const tail =

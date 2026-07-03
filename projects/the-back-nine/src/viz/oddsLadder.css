@@ -113,17 +113,26 @@
   pointer-events: all;
   touch-action: manipulation;
 }
-/* the reserved worded readout line above the plot — updates on scrub, never shifts layout
-   (insight 035: reserve the box). Same voice as the band's readout figures. */
+/* the reserved worded readout above the plot — every mark's sentence stacked in ONE grid cell
+   (visibility toggles; the box is always as tall as the LONGEST reading wraps at the current
+   width, so hovering can never shift layout — insight 035, hardened after the fixed em-reserve
+   proved one line short and jumped, Briggsy 2026-07-03). */
 .ladder-readout {
+  display: grid;
   margin: 0 0 var(--space-1);
-  min-block-size: 2.6em; /* two body-sm lines — the longest reading wraps once at pane width */
   font-family: var(--font-body);
   font-size: var(--text-sm);
   line-height: var(--leading-body);
   color: var(--ink);
   font-variant-numeric: tabular-nums;
   max-width: var(--measure);
+}
+.ladder-readout__line {
+  grid-area: 1 / 1;
+  visibility: hidden;
+}
+.ladder-readout__line[data-active] {
+  visibility: visible;
 }
 
 /* ── the household-clock x-axis ──────────────────────────────────────────────────────────────── */

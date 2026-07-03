@@ -601,6 +601,74 @@ export const copy = {
   // The restore surface's standing C(i) line (⚑ wording = Briggsy's cold-read, like recoverBothLostNote).
   restoreBothLostNote:
     'Take your time — there’s no limit on tries. If the word is lost, no one can open this backup — not even us.',
+
+  // --- P3·U10 — the manual controls (sequencing + the Roth lever). PREFIX LAW: keys prefixed
+  // roth*/sequencing*/twoFutures*/control* are SWEPT by the require-hedge gate (isControlKey) —
+  // reserve those prefixes for genuine plan-moving READOUTS, which must wear a hedge token.
+  // Chrome (titles, CTAs, field labels, closed-state notes) rides the lever*/tfChart* prefixes,
+  // exactly as ladder chrome rides ladder* — an axis label must never be reworded into mush to
+  // satisfy a modal-verb gate. All FIRST-DRAFT craftsman's-lead wording (the cold-read's call). ---
+
+  // The sequencing door + sheet chrome.
+  leverSequencingCta: 'Change your withdrawal order',
+  leverSequencingEditCta: 'Revisit your withdrawal order',
+  leverSequencingTitle: 'Which account pays first?',
+  leverSequencingIntro:
+    'Each year’s spending has to come out of your accounts in some order — and the order changes what you pay in tax along the way. Pick one and compare it against the neutral default.',
+  leverPolicyProportional: 'A little from each',
+  leverPolicyProportionalHelp: 'Draws from every account in proportion to its balance — the neutral default.',
+  leverPolicyTaxableFirst: 'Brokerage first',
+  leverPolicyTaxableFirstHelp: 'Spends the brokerage account down before touching pre-tax or Roth.',
+  leverPolicyPreTaxFirst: 'Pre-tax first',
+  leverPolicyPreTaxFirstHelp: 'Spends the pre-tax account down first, saving Roth for last.',
+  leverPolicyCustom: 'My own order',
+  leverPolicyCustomHelp: 'Put the three accounts in exactly the order you want them spent.',
+  leverPolicyCurrentTag: '— your current order',
+  leverOrderMoveUp: 'Move up',
+  leverOrderMoveDown: 'Move down',
+  leverOrderUpGlyph: '↑',
+  leverOrderDownGlyph: '↓',
+  leverOrderBucketTaxable: 'Brokerage',
+  leverOrderBucketPretax: 'Pre-tax',
+  leverOrderBucketRoth: 'Roth',
+  leverSequencingApply: 'Use this order',
+  // The Roth teaser + lever chrome. The DOOR is categorical (gated on filing status + a resolved
+  // answer only — never a personalized computation; test-pinned) and quiet (R11 — invited, never
+  // a nagging badge); the general-fact teaser line opens the sheet itself.
+  leverRothDoorCta: 'Try a Roth conversion',
+  leverRothDoorEditCta: 'Revisit your Roth conversion',
+  leverRothTitle: 'Try a Roth conversion',
+  leverRothIntro:
+    'A conversion moves money from your pre-tax account into your Roth on purpose — you pay the tax now, and what’s inside grows tax-free afterward. Set an amount and a window; both futures update.',
+  leverRothAmountLabel: 'Amount, dollars a year',
+  leverRothStartLabel: 'Starting how many years from now',
+  leverRothStartHelp: '0 means starting this year.',
+  leverRothYearsLabel: 'For how many years',
+  leverRothApply: 'Add this to my plan',
+  leverRothRemove: 'Take the conversion back out',
+  leverRothClosedNothing:
+    'There’s nothing in a pre-tax account to convert, so this what-if doesn’t apply to you.',
+  leverPreviewPending: 'Working out both futures…',
+  leverPreviewNoDate:
+    'This comparison anchors to your work-optional date, so it needs one on the board first. Applying a change still updates the answer above.',
+  leverNoWorkerNote:
+    'On this device the comparison computes when you finish a field — it can take a moment.',
+  leverCancel: 'Close',
+  // Two-futures CHART CHROME (tfChart* — deliberately OUTSIDE the require-hedge sweep, like
+  // ladder chrome: an end-of-line series label is identity, not a plan-moving claim).
+  tfChartRothWith: 'With the conversion',
+  tfChartRothWithout: 'Today’s plan',
+  // Plan-moving READOUTS (require-hedge-swept; the numbers arrive via slots below).
+  rothTeaserLead:
+    'Couples who file jointly often have a lower-tax window before required withdrawals begin. Some fill it with small Roth conversions, a little at a time.',
+  rothFundingNote:
+    'We assume the conversion’s tax comes out of your withdrawals in the same order as everything else. Paying it from taxable savings instead could make converting look a little better than shown.',
+  rothOmissionsNote:
+    'Not counted here: state income tax, the net-investment-income tax, and pre-65 health-plan side effects — each could move this picture.',
+  twoFuturesCaption:
+    'How the middle-of-the-road path could run with and without the change, in today’s dollars.',
+  sequencingBaselineNote:
+    'The comparison holds everything else still — same markets, same spending — so the gap you see is the order itself, not luck. It can read small; small and real beats big and imagined.',
 } as const satisfies Record<string, string>
 
 export type CopyKey = keyof typeof copy
@@ -872,6 +940,38 @@ export const slots = {
   verdictSurvivorStepDown: (perMonthDropFormatted: string): string =>
     `If one of you is on your own later, the household’s monthly income steps down about $${perMonthDropFormatted} — one Social Security benefit ends. Taxes also move to a single filer’s brackets.`,
 
+  // --- P3·U10 — the two-futures delta readouts (R10/R12: the survivor's number, natural-frequency
+  // FIRST, the "~N years" a hedged secondary, N ≤ 0 a calm in-frame state — never suppressed and
+  // never a bald deterministic claim). Every template wears its hedge by construction; the odds
+  // phrases arrive pre-rendered through slots.xOfTen (the ceiling clamp composes naturally:
+  // "…in better than 9 in 10 futures instead of 7 of 10"). FIRST-DRAFT — the cold-read's call. ---
+  /** The primary delta line, SURVIVOR basis (the plan's emotional headline number). Reads honestly
+   *  in BOTH directions — a loss renders as "…in 5 of 10 futures instead of 7", never suppressed. */
+  rothDeltaSurvivor: (withOdds: string, withoutOdds: string): string =>
+    `For whichever of you outlives the other, the money could last in about ${withOdds} futures instead of ${withoutOdds}.`,
+  /** The JOINT-basis fallback (no survivor phase observed in the runs — rare; same grammar). */
+  rothDeltaJoint: (withOdds: string, withoutOdds: string): string =>
+    `Together, the plan could hold in about ${withOdds} futures instead of ${withoutOdds}.`,
+  /** The EVEN case — the quantized readings agree; the difference is inside the noise the
+   *  quantize deliberately absorbs. Calm, in-frame, never a suppressed delta. */
+  rothDeltaEven: (odds: string): string =>
+    `In these runs it doesn’t look to change much — about ${odds} either way.`,
+  /** The verdict-state transition rider (the 10/10-clamp pivot: when the with-arm reaches the
+   *  ceiling — or the arms land in different states — the headline shift is the STATE move). */
+  rothStateShift: (fromWord: string, toWord: string): string =>
+    `That would read as moving from “${fromWord}” to “${toWord}.”`,
+  /** The hedged "~N years" SECONDARY, tied to its stated percentile (never the headline). Present
+   *  only when BOTH arms have a real median depletion year — never fabricated. */
+  rothYearsSecondary: (n: number, direction: 'more' | 'fewer'): string =>
+    `Around the middle of the road, that’s roughly ${n} ${direction} year${n === 1 ? '' : 's'} of runway.`,
+  /** The sequencing delta line — same grammar, the order as the subject. */
+  sequencingDelta: (withOdds: string, withoutOdds: string): string =>
+    `With this order, the money could last in about ${withOdds} futures instead of ${withoutOdds}.`,
+  /** The user-echoed conversion plan (their own figures back at them — an echo, not a claim). */
+  rothPlanEcho: (amountFormatted: string, startYearsFromNow: number, years: number): string => {
+    const start = startYearsFromNow === 0 ? 'starting this year' : `starting in about ${startYearsFromNow} years`
+    return `Converting ~$${amountFormatted} a year for ${years} year${years === 1 ? '' : 's'}, ${start}.`
+  },
 } as const
 
 /**

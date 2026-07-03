@@ -14,11 +14,15 @@
  */
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import { AnswerStrip } from '@intake/AnswerStrip'
-import { missingRequiredFacts } from '@intake/intakeMap'
+import { buildControlPreviewParams, missingRequiredFacts } from '@intake/intakeMap'
 import { createAnnouncer, type Announcer } from '@intake/a11y'
 import { BudgetBuilder } from '@intake/BudgetBuilder'
+import { SequencingControl } from '@intake/SequencingControl'
+import { RothLever } from '@intake/RothLever'
 import { budgetGoverns } from '@budget/budgetModel'
 import { commitBudgetPatch } from '@budget/budgetToSpending'
+import { runControlPreview } from '@store/controlPreview'
+import type { TwoArmControl } from '@shared/model'
 import { copy } from './copy'
 import { appModel } from './appModel'
 import { FuckOffDate } from './FuckOffDate'
@@ -91,6 +95,34 @@ export function Result({
   // an affordance we don't want used on a non-answer shouldn't exist.
   const [budgetOpen, setBudgetOpen] = useState(false)
   const governs = budgetGoverns(snapshot.draft.budget)
+
+  // P3·U10 — the two control doors (R9/R11: quiet, invited, never a badge). GATING LAW:
+  //  - sequencing: a resolved reading + ≥1 entered account (an order over zero accounts is inert);
+  //  - the Roth door: a resolved reading + CATEGORICAL facts only — filing status, never a
+  //    personalized bracket/balance computation (plan §U10 teaser law; the $0-pre-tax case gets
+  //    the lever's own calm closed face, so even that read stays out of the door predicate).
+  const [sequencingOpen, setSequencingOpen] = useState(false)
+  const [rothOpen, setRothOpen] = useState(false)
+  const rothApplied = snapshot.draft.rothConversion
+  // The date route's preview anchor: the CROWNED lifestyle offset (the plan the answer named);
+  // undefined (⇒ preview withheld) when no date crowned or on the spine route (unused there).
+  const crownedOffset =
+    snapshot.answer.kind === 'date' &&
+    snapshot.answer.outcome.kind === 'dates' &&
+    'offsetYears' in snapshot.answer.outcome.lifestyle
+      ? snapshot.answer.outcome.lifestyle.offsetYears
+      : undefined
+  // The preview runner the sheets inject: params from the CURRENT draft (never a render-captured
+  // copy going stale mid-sheet — composed per call), the household's one CRN seed, latest-wins.
+  const runPreview = useCallback(
+    (control: TwoArmControl) => {
+      const { draft } = appModel.getSnapshot()
+      const params = buildControlPreviewParams(draft, crownedOffset)
+      if (params === null || draft.seed === undefined) return null
+      return runControlPreview(params, draft.seed, control)
+    },
+    [crownedOffset],
+  )
   // Apply/escape recompute provisional→final (the decrypt-on-return fast-show precedent): the
   // provisional lands quickly under the thinking-breathe, the final sharpens in the background.
   const recomputeBoth = useCallback(async () => {
@@ -172,6 +204,18 @@ export function Result({
             {governs ? copy.budgetEditCta : copy.budgetCta}
           </button>
         )}
+        {focusKey !== undefined && snapshot.draft.enteredAccounts.length > 0 && (
+          <button type="button" className="btn-quiet" onClick={() => setSequencingOpen(true)}>
+            {snapshot.draft.drawdownPolicy === 'proportional'
+              ? copy.leverSequencingCta
+              : copy.leverSequencingEditCta}
+          </button>
+        )}
+        {focusKey !== undefined && snapshot.draft.filing === 'mfj' && (
+          <button type="button" className="btn-quiet" onClick={() => setRothOpen(true)}>
+            {rothApplied === undefined ? copy.leverRothDoorCta : copy.leverRothDoorEditCta}
+          </button>
+        )}
         <button type="button" className="btn-quiet" onClick={onReview}>
           {copy.resultReview}
         </button>
@@ -220,6 +264,43 @@ export function Result({
           void recomputeBoth()
         }}
         onClose={() => setBudgetOpen(false)}
+      />
+      <SequencingControl
+        open={sequencingOpen}
+        draft={snapshot.draft}
+        preview={runPreview}
+        onApply={(policy, order) => {
+          // ONE atomic write maintains the 'custom'⟺order biconditional (the codec re-proves it
+          // at Save; validateParams re-proves it at every run — the two-gate rule's write half).
+          appModel.update((d) => {
+            const { drawdownOrder: _order, ...rest } = d
+            return { ...rest, drawdownPolicy: policy, ...(order !== undefined ? { drawdownOrder: order } : {}) }
+          })
+          setSequencingOpen(false)
+          void recomputeBoth()
+        }}
+        onClose={() => setSequencingOpen(false)}
+      />
+      <RothLever
+        open={rothOpen}
+        draft={snapshot.draft}
+        preview={runPreview}
+        onApply={(plan) => {
+          appModel.update((d) => ({ ...d, rothConversion: plan }))
+          setRothOpen(false)
+          void recomputeBoth()
+        }}
+        onRemove={() => {
+          // Strip the KEY (absence ≡ no conversions ≡ reduce-to-spine — never an undefined-valued
+          // slot a JSON write would null, DND/009).
+          appModel.update((d) => {
+            const { rothConversion: _plan, ...rest } = d
+            return rest
+          })
+          setRothOpen(false)
+          void recomputeBoth()
+        }}
+        onClose={() => setRothOpen(false)}
       />
     </main>
   )

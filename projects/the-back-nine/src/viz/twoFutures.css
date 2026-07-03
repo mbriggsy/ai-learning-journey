@@ -1,0 +1,58 @@
+/*
+ * src/viz/twoFutures.css — the two-futures comparison chart (P3·U10).
+ * Static classes only (style-src 'self' — no inline styles); the series COLORS arrive as SVG
+ * presentation attributes from palette.ts, so this file owns only the non-color channels:
+ * stroke weight, the dash geometry (a series-identity channel — held in screen pixels by
+ * non-scaling-stroke), the dotted leader (deliberately distinct from BOTH series strokes so a
+ * displaced end label can never read as a third series), and the quiet axis type.
+ */
+
+.tf {
+  display: block;
+  inline-size: 100%;
+  block-size: auto;
+}
+
+.tf__grid {
+  stroke: var(--line-soft);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.tf__grid--top {
+  stroke-dasharray: 2 4;
+}
+
+.tf__line {
+  fill: none;
+  stroke-width: 2.25;
+}
+
+.tf__line--dashed {
+  stroke-dasharray: 7 5;
+}
+
+.tf__leader {
+  stroke: var(--ink-muted);
+  stroke-width: 1;
+  stroke-dasharray: 1 3;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.tf__axis,
+.tf__label {
+  font-family: inherit;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  fill: var(--ink-muted);
+}
+
+.tf__axis--end {
+  text-anchor: end;
+}
+
+.tf__label {
+  font-size: 13px;
+  fill: var(--ink);
+}

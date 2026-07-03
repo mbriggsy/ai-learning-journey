@@ -42,7 +42,7 @@ import {
   type PersonContributionStreams,
   type TickerClassification,
 } from '@shared/model'
-import type { DateSearchInput } from '@engine/dateSearch'
+import { buildCandidateParams, DATE_SEARCH_PATHS, type DateSearchInput } from '@engine/dateSearch'
 import { productionMarket } from '@engine/reference/methodology'
 import { findBlendRow, stockWeightForBlend } from '@engine/reference/tickerBlend'
 import { acaAgeRatingCurve } from '@engine/constants/health'
@@ -583,6 +583,35 @@ function buildParams(d: ScenarioDraft): SimulationParams | null {
 export function buildSpineParams(d: ScenarioDraft): SimulationParams | null {
   if (isDateRoute(d)) return null
   return buildParams(d)
+}
+
+/** P3·U10 — the entered pre-tax total (the Roth lever's "is there anything to convert?" gate;
+ *  mirrors the engine's own indeterminate closure — the UI just decides which calm face shows). */
+export function draftPretaxTotal(d: ScenarioDraft): number {
+  return d.enteredAccounts.reduce(
+    (s, a) => (KIND_TO_BUCKET[a.kind] === 'pretax' ? s + a.valueToday : s),
+    0,
+  )
+}
+
+/**
+ * P3·U10 — the control-preview anchor: the SimulationParams the two-arm what-if runs against.
+ * All-retired ⇒ the spine params at today's anchor (the household's live answer). Still-working
+ * ⇒ the CROWNED candidate's params (the plan the date answer named) — the caller passes the
+ * crowned lifestyle offset from the resolved answer; with NO crowned date there is no honest
+ * plan anchor and the preview is withheld (null — the surface says so calmly rather than
+ * fabricating a "retire now" the household never chose). Built at the PROVISIONAL path tier:
+ * the preview is a live what-if, and the committed Apply re-runs the full pipeline anyway.
+ */
+export function buildControlPreviewParams(
+  d: ScenarioDraft,
+  crownedOffsetYears: number | undefined,
+): SimulationParams | null {
+  if (!isDateRoute(d)) return buildSpineParams(d)
+  if (crownedOffsetYears === undefined) return null
+  const input = buildDateInput(d)
+  if (input === null) return null
+  return buildCandidateParams(input, crownedOffsetYears, DATE_SEARCH_PATHS.provisional)
 }
 
 /** The date route builder — `ParamsBuilders.buildDateInput`. The engine owns

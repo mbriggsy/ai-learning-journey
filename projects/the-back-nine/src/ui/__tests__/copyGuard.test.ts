@@ -103,7 +103,26 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     verdictRethinkClause: slots.verdictRethinkClause(),
     verdictHoldClause: slots.verdictHoldClause(),
     verdictSurvivorStepDown: slots.verdictSurvivorStepDown('1,200'),
+    // P3·U10 — the two-futures delta readouts (frequency-first, hedge-bearing by construction;
+    // the samples double as the require-hedge control corpus below).
+    rothDeltaSurvivor: slots.rothDeltaSurvivor(slots.xOfTen(8), slots.xOfTen(6)),
+    rothDeltaJoint: slots.rothDeltaJoint(slots.xOfTen(8), slots.xOfTen(7)),
+    rothDeltaEven: slots.rothDeltaEven(slots.xOfTen(7)),
+    rothStateShift: slots.rothStateShift('Off track', 'On track'),
+    rothYearsSecondary: slots.rothYearsSecondary(3, 'more'),
+    sequencingDelta: slots.sequencingDelta(slots.xOfTen(8), slots.xOfTen(7)),
+    rothPlanEcho: slots.rothPlanEcho('40,000', 2, 5),
   }
+
+  it('every U10 delta-readout slot WEARS a hedge (the control readouts are slot-composed, so the require-hedge sweep must reach the rendered samples here)', () => {
+    const deltaSlots = [
+      'rothDeltaSurvivor', 'rothDeltaJoint', 'rothDeltaEven', 'rothStateShift',
+      'rothYearsSecondary', 'sequencingDelta',
+    ] as const
+    for (const name of deltaSlots) {
+      expect(lintCopy(SLOT_RENDER[name], ['require-hedge']), `${name}: "${SLOT_RENDER[name]}"`).toEqual([])
+    }
+  })
 
   it('every slot has a render sample — no silent no-op (burned/070)', () => {
     expect(Object.keys(SLOT_RENDER).sort()).toEqual(Object.keys(slots).sort())

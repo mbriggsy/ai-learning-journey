@@ -195,7 +195,11 @@
   .confidence-reveal[data-twopane] {
     display: grid;
     grid-template-columns: minmax(0, var(--measure)) minmax(var(--pane-band-min), 1fr);
-    grid-template-rows: auto 1fr;
+    /* Left column stacks lead (1) · subordinates (2) · actions (3), tucked at the top; the trailing
+       1fr spacer (4) absorbs the slack so the band (grid-row 1/-1) still spans the FULL height and
+       stays top-pinned — the actions seat under the words instead of stranding below both panes
+       (Briggsy 2026-07-02, the scroll + dead-lower-left fix). */
+    grid-template-rows: auto auto auto 1fr;
     column-gap: var(--space-9);
     row-gap: var(--space-5);
     align-items: start;
@@ -223,6 +227,18 @@
     gap: var(--space-4);
     grid-column: 1;
     grid-row: 2;
+  }
+  /* the completion actions: welded under the subordinates in the left column (the row-gap owns the
+     spacing, so drop the single-column top margin). align-self:start keeps them hugging the words
+     rather than stretching down the 1fr spacer. */
+  .confidence-reveal[data-twopane] > .reveal__actions {
+    display: block;
+    grid-column: 1;
+    grid-row: 3;
+    align-self: start;
+  }
+  .confidence-reveal[data-twopane] > .reveal__actions > .result-actions {
+    margin-block-start: 0;
   }
 }
 

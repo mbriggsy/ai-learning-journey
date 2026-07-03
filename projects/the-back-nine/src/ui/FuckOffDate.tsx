@@ -88,6 +88,10 @@ export interface FuckOffDateProps {
   /** Bump to land focus on the date headline (the magic-moment announce, no double-announce). Omit
    *  to leave focus alone (provisional ticks + the dev preview never steal focus). */
   readonly focusSignal?: number | string
+  /** The completion actions (Result's save slot + budget door + return). Passed ONLY on a resolved
+   *  two-pane answer so the grid seats them in the left reading column (result.css / fuckOffDate.css);
+   *  single column keeps them flat below via `display:contents`. Omitted (preview / fallback) ⇒ none. */
+  readonly actionsSlot?: ReactNode
 }
 
 /** The hero claim's heading text — shared by the render and the polite sharpen announce, so what
@@ -110,7 +114,7 @@ function floorLineText(split: Extract<DateSplitView, { kind: 'split' }>): string
   return slots.dateFloorCovered(fl.offsetYears, dateOddsText(fl.quantizedLowerBound), fl.unconfirmed)
 }
 
-export function FuckOffDate({ view, focusSignal }: FuckOffDateProps) {
+export function FuckOffDate({ view, focusSignal, actionsSlot }: FuckOffDateProps) {
   const headingRef = useRef<HTMLHeadingElement>(null)
   // Announce on the FIRST landing only (the undefined→defined edge). The date route is TIERED: the
   // provisional→final sharpen can crown a DIFFERENT offset, which flips focusSignal — but re-firing
@@ -259,6 +263,9 @@ export function FuckOffDate({ view, focusSignal }: FuckOffDateProps) {
             </div>
           </details>
         )}
+        {/* The completion actions, seated in the left reading column on two-pane (display:contents in
+            single column keeps them flat below — see fuckOffDate.css). Absent in the preview harness. */}
+        {actionsSlot != null && <div className="reveal__actions">{actionsSlot}</div>}
       </div>
     )
   }

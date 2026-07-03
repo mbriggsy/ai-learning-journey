@@ -83,6 +83,11 @@ export interface ConfidenceStatementProps {
    *  announce, no double-announce). Omit (default) to leave focus alone: provisional ticks and the
    *  dev preview harness never steal focus. */
   readonly focusSignal?: number | string
+  /** The completion actions (Result's save slot + budget door + return). Passed ONLY on a resolved
+   *  two-pane answer so the grid can seat them in the left reading column (result.css / confidence.css);
+   *  in single column `.reveal__actions` is `display:contents` so they render flat below, unchanged.
+   *  Omitted (the preview harness, the fallback path) ⇒ nothing renders here. */
+  readonly actionsSlot?: ReactNode
 }
 
 /** The indeterminate placeholder band — a wide low-emphasis envelope (no median, no precise band)
@@ -120,7 +125,7 @@ function magnitudeClause(dollar: DollarAdjustment): string {
   }
 }
 
-export function ConfidenceStatement({ view, focusSignal }: ConfidenceStatementProps) {
+export function ConfidenceStatement({ view, focusSignal, actionsSlot }: ConfidenceStatementProps) {
   const headingRef = useRef<HTMLHeadingElement>(null)
   // Announce on the FIRST landing only (the undefined→defined edge) — the shared once-per-landing
   // contract (mirrors FuckOffDate). The spine's two recomputes are byte-identical, so its key never
@@ -257,6 +262,9 @@ export function ConfidenceStatement({ view, focusSignal }: ConfidenceStatementPr
               ))}
           </div>
         )}
+        {/* The completion actions, seated in the left reading column on two-pane (display:contents in
+            single column keeps them flat below — see confidence.css). Absent in the preview harness. */}
+        {actionsSlot != null && <div className="reveal__actions">{actionsSlot}</div>}
       </div>
     )
   }

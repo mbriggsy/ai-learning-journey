@@ -98,86 +98,105 @@ export function Result({
     await appModel.recompute('final')
   }, [])
 
+  // The completion actions (save slot + the ONE budget door + the quiet return), built once.
+  // On a RESOLVED date/spine answer they are SEATED in the surface's left reading column (the
+  // two-pane grid tucks them under the words instead of stranding them centered below both panes
+  // — the scroll + dead-lower-left fix, Briggsy 2026-07-02); on the fallback/pending answer (no
+  // two-pane) they render below as before. Withheld entirely while computing (the actions act on
+  // an answer that isn't there yet).
+  const seatInLead = focusKey !== undefined && (elevated.kind === 'date' || elevated.kind === 'spine')
+  const actionsNode = computing ? null : (
+    <div className="result-actions">
+      {/* The save slot: one reserved box across all five populated states (insight 035 — the
+        Review button below must never shift under a pointer when a click swaps CTA→pending→
+        badge). 'none' renders no slot at all: no claim about a disk state that can't be
+        compared, and no reserved emptiness on the never-saveable answer. */}
+      {save.kind !== 'none' && (
+        <div className="result-save-slot">
+          {save.kind === 'first' && (
+            <div className="result-keep">
+              <button type="button" className="btn-primary" onClick={save.onKeep}>
+                {copy.saveCta}
+              </button>
+              <p className="result-keep__hint">{copy.saveCtaHint}</p>
+            </div>
+          )}
+          {save.kind === 'dirty' && (
+            <div className="result-keep">
+              <button type="button" className="btn-primary" onClick={save.onSave}>
+                {copy.resaveCta}
+              </button>
+              <p className="result-keep__hint">{copy.resaveHint}</p>
+            </div>
+          )}
+          {save.kind === 'saving' && (
+            // Announced by the persistent region above (a status inserted already-populated may
+            // not fire, burned/045) — this node is the VISIBLE pending line only.
+            <p className="result-save-pending">{copy.resavePending}</p>
+          )}
+          {save.kind === 'failed' && (
+            <div className="result-keep">
+              <p className="result-save-error" role="alert">
+                {copy[save.errorKey]}
+              </p>
+              {save.errorKey === 'saveErrorReadOnly' ? (
+                // The read-only refusal is NON-transient: `secondTab` is captured once at unlock
+                // and never re-probed, so a retry deterministically re-refuses — the primary
+                // action must match the copy's own instruction (RELOAD), never a "Try again"
+                // that can't succeed (the RestoreFlow vault-exists arm's law; ultramode
+                // 2026-07-02 — 7 lenses converged on this exact lying-remedy shape).
+                <button type="button" className="btn-primary" onClick={() => window.location.reload()}>
+                  {copy.restoreRetry}
+                </button>
+              ) : (
+                <button type="button" className="btn-primary" onClick={save.onRetry}>
+                  {copy.exportRetry}
+                </button>
+              )}
+            </div>
+          )}
+          {save.kind === 'clean' && (
+            <p className="result-saved">
+              <span className="result-saved__mark" aria-hidden="true" />
+              {copy.savedBadge}
+            </p>
+          )}
+        </div>
+      )}
+      {focusKey !== undefined && (
+        <button type="button" className="btn-quiet" onClick={() => setBudgetOpen(true)}>
+          {governs ? copy.budgetEditCta : copy.budgetCta}
+        </button>
+      )}
+      <button type="button" className="btn-quiet" onClick={onReview}>
+        {copy.resultReview}
+      </button>
+    </div>
+  )
+
   return (
     <main className="result">
       <div ref={liveRef} className="sr-only" role="status" aria-live="polite" aria-atomic="true" />
       <div className="result-hero">
-        {elevated.kind === 'date' && <FuckOffDate view={elevated.view} focusSignal={focusKey} />}
+        {elevated.kind === 'date' && (
+          <FuckOffDate
+            view={elevated.view}
+            focusSignal={focusKey}
+            actionsSlot={seatInLead ? actionsNode : undefined}
+          />
+        )}
         {elevated.kind === 'spine' && (
-          <ConfidenceStatement view={elevated.view} focusSignal={focusKey} />
+          <ConfidenceStatement
+            view={elevated.view}
+            focusSignal={focusKey}
+            actionsSlot={seatInLead ? actionsNode : undefined}
+          />
         )}
         {elevated.kind === 'fallback' && (
           <AnswerStrip snapshot={snapshot} missing={missing} onRetry={retry} />
         )}
       </div>
-      {!computing && (
-        <div className="result-actions">
-          {/* The save slot: one reserved box across all five populated states (insight 035 — the
-            Review button below must never shift under a pointer when a click swaps CTA→pending→
-            badge). 'none' renders no slot at all: no claim about a disk state that can't be
-            compared, and no reserved emptiness on the never-saveable answer. */}
-          {save.kind !== 'none' && (
-            <div className="result-save-slot">
-              {save.kind === 'first' && (
-                <div className="result-keep">
-                  <button type="button" className="btn-primary" onClick={save.onKeep}>
-                    {copy.saveCta}
-                  </button>
-                  <p className="result-keep__hint">{copy.saveCtaHint}</p>
-                </div>
-              )}
-              {save.kind === 'dirty' && (
-                <div className="result-keep">
-                  <button type="button" className="btn-primary" onClick={save.onSave}>
-                    {copy.resaveCta}
-                  </button>
-                  <p className="result-keep__hint">{copy.resaveHint}</p>
-                </div>
-              )}
-              {save.kind === 'saving' && (
-                // Announced by the persistent region above (a status inserted already-populated may
-                // not fire, burned/045) — this node is the VISIBLE pending line only.
-                <p className="result-save-pending">{copy.resavePending}</p>
-              )}
-              {save.kind === 'failed' && (
-                <div className="result-keep">
-                  <p className="result-save-error" role="alert">
-                    {copy[save.errorKey]}
-                  </p>
-                  {save.errorKey === 'saveErrorReadOnly' ? (
-                    // The read-only refusal is NON-transient: `secondTab` is captured once at unlock
-                    // and never re-probed, so a retry deterministically re-refuses — the primary
-                    // action must match the copy's own instruction (RELOAD), never a "Try again"
-                    // that can't succeed (the RestoreFlow vault-exists arm's law; ultramode
-                    // 2026-07-02 — 7 lenses converged on this exact lying-remedy shape).
-                    <button type="button" className="btn-primary" onClick={() => window.location.reload()}>
-                      {copy.restoreRetry}
-                    </button>
-                  ) : (
-                    <button type="button" className="btn-primary" onClick={save.onRetry}>
-                      {copy.exportRetry}
-                    </button>
-                  )}
-                </div>
-              )}
-              {save.kind === 'clean' && (
-                <p className="result-saved">
-                  <span className="result-saved__mark" aria-hidden="true" />
-                  {copy.savedBadge}
-                </p>
-              )}
-            </div>
-          )}
-          {focusKey !== undefined && (
-            <button type="button" className="btn-quiet" onClick={() => setBudgetOpen(true)}>
-              {governs ? copy.budgetEditCta : copy.budgetCta}
-            </button>
-          )}
-          <button type="button" className="btn-quiet" onClick={onReview}>
-            {copy.resultReview}
-          </button>
-        </div>
-      )}
+      {!seatInLead && actionsNode}
       <BudgetBuilder
         open={budgetOpen}
         draft={snapshot.draft}

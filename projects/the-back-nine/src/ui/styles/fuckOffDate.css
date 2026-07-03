@@ -257,7 +257,11 @@
   .fod-reveal[data-twopane] {
     display: grid;
     grid-template-columns: minmax(0, var(--measure)) minmax(var(--pane-band-min), 1fr);
-    grid-template-rows: auto 1fr;
+    /* Left column stacks lead (1) · ladder (2) · actions (3), tucked at the top; the trailing 1fr
+       spacer (4) absorbs the slack so the band (grid-row 1/-1) still spans the FULL height and stays
+       top-pinned — the actions seat under the date instead of stranding below both panes (Briggsy
+       2026-07-02, the scroll + dead-lower-left fix). */
+    grid-template-rows: auto auto auto 1fr;
     column-gap: var(--space-9);
     row-gap: var(--space-5);
     align-items: start;
@@ -281,6 +285,17 @@
     grid-column: 1;
     grid-row: 2;
     margin-top: 0;
+  }
+  /* the completion actions: welded under the ladder in the left column (row-gap owns the spacing;
+     align-self:start hugs the words rather than stretching down the 1fr spacer). */
+  .fod-reveal[data-twopane] > .reveal__actions {
+    display: block;
+    grid-column: 1;
+    grid-row: 3;
+    align-self: start;
+  }
+  .fod-reveal[data-twopane] > .reveal__actions > .result-actions {
+    margin-block-start: 0;
   }
 }
 

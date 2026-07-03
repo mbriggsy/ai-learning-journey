@@ -107,15 +107,20 @@
   max-width: var(--measure);
 }
 
-/* ── U9b: the survivor FOLD (build-gate 7 — at most ONE subordinate X-of-10 face on the first
-   frame). When the essentials-relief line holds the inline slot, the survivor statement lives one
-   calm pull behind a native <details> (the .fod-ladder disclosure pattern: keyboard-native,
-   CSP-clean, R4 detail-on-demand). The folded readout omits its inner eyebrow (the summary IS the
-   eyebrow line) and drops its own top rule (the fold row carries the separation). */
+/* ── U9b: the survivor FOLD (build-gate 7 — at most ONE subordinate X-of-10 COUNT on the first
+   frame). When the essentials-relief line holds the inline slot, the survivor COUNT lives one calm
+   pull behind a native <details> (keyboard-native, CSP-clean, R4 detail-on-demand). REWORKED
+   2026-07-02 (Briggsy's cold-read — the old small-text + ▸-triangle row read as a form control,
+   "a check box", not a statement): the CLOSED face is now a real subordinate statement — the
+   eyebrow + the verdict lockup (glyph + serif word, the SAME scale as the essentials-relief
+   sibling above it) render in the summary, with a quiet trailing chevron as the reveal affordance.
+   The count + income-cliff clause are what the pull discloses. Gate-7 holds: the WORD carries no
+   count. The folded readout renders the BODY only (count + step-down) and drops its own top rule
+   (the fold row carries the separation). */
 .survivor-fold {
   width: 100%;
   max-width: var(--measure);
-  padding-top: var(--space-4);
+  padding-top: var(--space-3);
   border-top: 1px solid var(--line-soft);
 }
 
@@ -124,39 +129,47 @@
   padding-top: var(--space-3);
 }
 
-/* The disclosure tap-row — finger-sized, quiet; a chevron marks open/closed (shape, not hue). */
+/* The disclosure statement — the eyebrow over the verdict lockup, stacked in the survivor-reveal's
+   own rhythm so closed-fold and open-inline read as the same statement family. */
 .survivor-fold__summary {
   display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  min-height: 44px;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-height: 44px; /* the practical tap floor — the lockup usually exceeds it */
   cursor: pointer;
   list-style: none;
-  font-family: var(--font-body);
-  font-size: var(--text-sm);
-  font-weight: var(--weight-semibold);
-  color: var(--ink-muted);
-  transition: color var(--dur-fast) var(--ease-out);
 }
 
 .survivor-fold__summary::-webkit-details-marker {
   display: none; /* drop the native triangle (WebKit/Blink) */
 }
 
-/* The custom chevron — ▸ closed, rotates to ▾ on open (CSP-clean stylesheet transform). */
-.survivor-fold__summary::before {
-  content: '';
-  flex: none;
-  width: 0;
-  height: 0;
-  border-left: 5px solid currentColor;
-  border-top: 4px solid transparent;
-  border-bottom: 4px solid transparent;
-  transition: transform var(--dur-fast) var(--ease-out);
+/* The verdict row: glyph + word (survivor.css's own scale classes, reused verbatim) + chevron. */
+.survivor-fold__verdict {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
 }
 
-.survivor-fold[open] .survivor-fold__summary::before {
-  transform: rotate(90deg);
+/* The reveal affordance — a quiet stroke chevron at the END of the word line (an editorial
+   "there's more", never the form-control triangle): › closed, rotates to ˅ on open. Shape marks
+   the state, not hue (color-blind law); CSP-clean stylesheet transform. */
+.survivor-fold__chevron {
+  flex: none;
+  width: 0.55rem;
+  height: 0.55rem;
+  margin-left: var(--space-1);
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  color: var(--ink-muted);
+  transform: rotate(-45deg);
+  transition:
+    transform var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
+}
+
+.survivor-fold[open] .survivor-fold__chevron {
+  transform: rotate(45deg);
 }
 
 .survivor-fold__summary:focus-visible {
@@ -165,11 +178,19 @@
   border-radius: var(--radius-sm);
 }
 
-/* Hover lift on precise pointers only (touch taps must not stick a hover state). */
+/* Hover lift on precise pointers only (touch taps must not stick a hover state): the muted
+   eyebrow + chevron rise to full ink; the word is already there. */
 @media (hover: hover) and (pointer: fine) {
-  .survivor-fold__summary:hover {
+  .survivor-fold__summary:hover .survivor__eyebrow,
+  .survivor-fold__summary:hover .survivor-fold__chevron {
     color: var(--ink);
   }
+}
+
+/* The summary's eyebrow shares the inline readout's class; give the fold's copy the hover
+   transition the static inline one never needs. */
+.survivor-fold__summary .survivor__eyebrow {
+  transition: color var(--dur-fast) var(--ease-out);
 }
 
 /* Reduced motion: the reveal is already movement-free (opacity only); shorten it to the quick
@@ -178,8 +199,8 @@
   .survivor-reveal {
     transition: opacity var(--dur-fast) ease;
   }
-  .survivor-fold__summary,
-  .survivor-fold__summary::before {
+  .survivor-fold__chevron,
+  .survivor-fold__summary .survivor__eyebrow {
     transition: none;
   }
 }

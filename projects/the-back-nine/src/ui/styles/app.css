@@ -34,6 +34,17 @@
   text-align: center;
 }
 
+/* Laptop (≥ --bp-laptop as a literal — see tokens.css): the fine-print footer tightens so a
+   resolved two-pane answer + this disclaimer fit an 800px-tall viewport in one frame (Briggsy
+   2026-07-02). Fine print under a hairline stays legible at these margins; the phone/intake
+   rhythm above keeps the generous spacing. */
+@media (min-width: 68rem) {
+  .disclaimer {
+    margin-block-start: var(--space-4);
+    padding: var(--space-4) var(--gutter) var(--space-6);
+  }
+}
+
 /* ── Fork C(ii): the standing view-only banner ─────────────────────────────────────────────────
  * Always mounted (empty when writable — the live region must exist BEFORE it populates or the
  * announce may not fire, burned/045). Empty ⇒ zero footprint; populated ⇒ a quiet raised strip

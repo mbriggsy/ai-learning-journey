@@ -39,12 +39,14 @@ export interface SurvivorReadoutProps {
    *  mounts, the reading exists. */
   readonly reading: SurvivorReading
   /** U9b (build-gate 7): when this readout is folded behind a <details> whose summary already
-   *  speaks the eyebrow line, the inner eyebrow would double it — omit the visible node and label
-   *  the section directly instead (the a11y name survives; the words render once). */
-  readonly omitEyebrow?: boolean
+   *  speaks the eyebrow line AND the verdict lockup (glyph + word — the 2026-07-02 rework: the
+   *  closed fold reads as a real subordinate statement, not a bare disclosure row), rendering
+   *  either again inside would double the words — render the COUNT + step-down body only and
+   *  label the section directly instead (the a11y name survives; every word renders once). */
+  readonly foldBody?: boolean
 }
 
-export function SurvivorReadout({ reading, omitEyebrow = false }: SurvivorReadoutProps) {
+export function SurvivorReadout({ reading, foldBody = false }: SurvivorReadoutProps) {
   const eyebrowId = useId()
   const state = reading.outcomeState
   const pres = OUTCOME_PRESENTATION[state]
@@ -73,20 +75,22 @@ export function SurvivorReadout({ reading, omitEyebrow = false }: SurvivorReadou
   return (
     <section
       className="survivor"
-      {...(omitEyebrow
+      {...(foldBody
         ? { 'aria-label': copy.survivorReadoutEyebrow }
         : { 'aria-labelledby': eyebrowId })}
     >
       <div className="survivor-reveal">
-        {!omitEyebrow && (
+        {!foldBody && (
           <p className="survivor__eyebrow" id={eyebrowId}>
             {copy.survivorReadoutEyebrow}
           </p>
         )}
-        <div className="survivor__verdict">
-          <VerdictIcon state={state} className="survivor__glyph" />
-          <p className="survivor__word">{word}</p>
-        </div>
+        {!foldBody && (
+          <div className="survivor__verdict">
+            <VerdictIcon state={state} className="survivor__glyph" />
+            <p className="survivor__word">{word}</p>
+          </div>
+        )}
         <p className="survivor__reading">
           <span className="survivor__count">{countText}</span>{' '}
           <span className="survivor__frame">{copy.survivorReadoutCoverage}</span>

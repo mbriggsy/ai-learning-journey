@@ -150,9 +150,34 @@
    + section to --content-wide so a two-pane reveal has room, while a single-column answer (no-date,
    indeterminate, pending) stays pinned at --measure and centered — visually unchanged from today.
    NOTE: 68rem is --bp-laptop re-stated as a literal (@media can't read a custom prop); see tokens.css. */
+/* The quiet-action pair wrapper — transparent in single column (no box, the .result-actions flex
+   column owns the stack exactly as before); a real centered row only at the laptop two-pane
+   (@media below — the base rule must precede it, same specificity). */
+.result-quiet-row {
+  display: contents;
+}
+
 @media (min-width: 68rem) {
+  /* Laptop vertical budget (Briggsy 2026-07-02 — "the answer should FULLY fit"): a resolved
+     two-pane answer + the disclaimer must land inside an 800px-tall viewport with no scroll.
+     One step down on the block padding (48→40); the phone/single-column rhythm keeps --space-9
+     (the phone pass is a separately-owed cold-read — don't fold it in blind). */
+  .result {
+    padding-block: var(--space-8);
+  }
   .result-hero {
     max-width: var(--content-wide);
+  }
+  /* The two quiet completion actions (budget door + review) sit SIDE BY SIDE on the laptop: the
+     stacked pair cost 104px of the vertical budget and left the column ending in a ladder of
+     lone buttons; a centered row reads as one quiet action shelf and lets the left column end
+     level with the band. Single column keeps the stack (the display:contents base above). */
+  .result-quiet-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    column-gap: var(--space-6);
   }
   /* Allow the section to fill the widened frame; the reveal below controls the actual content cap. */
   .fuck-off-date,

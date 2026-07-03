@@ -163,14 +163,19 @@ export function Result({
           )}
         </div>
       )}
-      {focusKey !== undefined && (
-        <button type="button" className="btn-quiet" onClick={() => setBudgetOpen(true)}>
-          {governs ? copy.budgetEditCta : copy.budgetCta}
+      {/* The quiet pair rides ONE transparent wrapper (display:contents in single column — the
+          stack renders exactly as before) that becomes a centered ROW at the laptop two-pane,
+          buying back 60px of the fit-one-frame vertical budget (result.css .result-quiet-row). */}
+      <div className="result-quiet-row">
+        {focusKey !== undefined && (
+          <button type="button" className="btn-quiet" onClick={() => setBudgetOpen(true)}>
+            {governs ? copy.budgetEditCta : copy.budgetCta}
+          </button>
+        )}
+        <button type="button" className="btn-quiet" onClick={onReview}>
+          {copy.resultReview}
         </button>
-      )}
-      <button type="button" className="btn-quiet" onClick={onReview}>
-        {copy.resultReview}
-      </button>
+      </div>
     </div>
   )
 

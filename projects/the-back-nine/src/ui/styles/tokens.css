@@ -89,9 +89,14 @@
 
   /* ----- layout ----- */
   --measure: 36rem; /* prose/question column width */
-  --content-wide: 72rem; /* the relaxed magic-moment frame at the laptop breakpoint: wide enough to
+  --content-wide: 70rem; /* the relaxed magic-moment frame at the laptop breakpoint: wide enough to
     seat the verdict words at --measure BESIDE the promoted band pane, and a hard cap so the band
-    never sprawls on a large monitor (at 72rem the band pane is ~33rem / band-figure ~478px). */
+    never sprawls on a large monitor (at 70rem the band pane is ~31rem / band-figure ~446px). Was
+    72rem; trimmed 2026-07-02 so a resolved two-pane answer + footer FIT an 800px-tall laptop
+    viewport with no scroll (the band's height follows its width — the ~27px it gives back is what
+    lets the whole answer land in one frame; Briggsy's cold-read). The cap binds only ≥ ~1176px
+    viewports, so the 68rem-breakpoint honesty-floor derivation below is UNTOUCHED (the gate's
+    worst case is min(available, cap) = available at 1088px — twoPaneHonestyFloor.test.ts). */
   --pane-band-min: 23rem; /* the two-pane band column floor (grid col 2 minmax). Keeps the band-figure
     (pane width − ~50px .band-drawer chrome) above the 260px label-drop floor (src/viz/band.css:179)
     even at the tightest in-range width. */

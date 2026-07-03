@@ -203,6 +203,16 @@ export function ConfidenceStatement({ view, focusSignal, actionsSlot }: Confiden
     // The two-tier gate (pure, insight 048): null = no budget rode, or the value-equal
     // degenerate — the single-metric statement renders verbatim, no subordinate wrapper.
     const relief = floorRelief(view.headline, view.floorReading)
+    // The folded survivor's CLOSED face (2026-07-02 rework — the raw disclosure row read as a
+    // form control, not a statement): the summary speaks the eyebrow AND the verdict lockup
+    // (glyph + word, the same scale as its subordinate siblings), so the fold reads as a real
+    // third statement with its COUNT one calm pull away — build-gate 7 intact (≤1 subordinate
+    // X-of-10 count on the first frame; the WORD carries no count). Defensive absence (insight
+    // 044): a wordless state renders an eyebrow-only summary, never a wordless verdict lockup.
+    const survivorPres = view.survivorReading
+      ? OUTCOME_PRESENTATION[view.survivorReading.outcomeState]
+      : null
+    const survivorWord = survivorPres?.verdictWordKey ? copy[survivorPres.verdictWordKey] : null
     // The over-funded near-ceiling reads the proportion "better than 9 in 10" via xOfTenAtCeiling (the
     // 10-of-10 honesty clamp, called BY NAME — never the magic xOfTen(10)); every other worded state
     // reads its engine count through the slot.
@@ -253,9 +263,21 @@ export function ConfidenceStatement({ view, focusSignal, actionsSlot }: Confiden
               (relief ? (
                 <details className="survivor-fold">
                   <summary className="survivor-fold__summary">
-                    {copy.survivorReadoutEyebrow}
+                    <span className="survivor__eyebrow">{copy.survivorReadoutEyebrow}</span>
+                    <span className="survivor-fold__verdict">
+                      {survivorWord && (
+                        <>
+                          <VerdictIcon
+                            state={view.survivorReading.outcomeState}
+                            className="survivor__glyph"
+                          />
+                          <span className="survivor__word">{survivorWord}</span>
+                        </>
+                      )}
+                      <span className="survivor-fold__chevron" aria-hidden="true" />
+                    </span>
                   </summary>
-                  <SurvivorReadout reading={view.survivorReading} omitEyebrow />
+                  <SurvivorReadout reading={view.survivorReading} foldBody />
                 </details>
               ) : (
                 <SurvivorReadout reading={view.survivorReading} />

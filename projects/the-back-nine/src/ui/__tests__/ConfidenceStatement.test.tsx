@@ -121,23 +121,39 @@ describe('ConfidenceStatement — the U7 verdict-first surface', () => {
 
   it('with BOTH the relief line and a survivor reading, the survivor FOLDS behind a <details> (≤ 1 subordinate count on the first frame, build-gate 7)', () => {
     const floorReading = { xOfTen: { value: 10, marginToEdge: 0.05 }, outcomeState: 'on-track' as const }
+    const survivorReading = SURVIVOR_FIXTURES['on-track'] // xOfTen 8 — distinct from the floor's 10
     const { container } = render(
       <ConfidenceStatement
         view={{
           kind: 'reading',
           ...READING_FIXTURES['borderline'],
           floorReading,
-          survivorReading: SURVIVOR_FIXTURES['on-track'],
+          survivorReading,
         }}
       />,
     )
     const fold = container.querySelector('details.survivor-fold')
     expect(fold).not.toBeNull()
-    // The summary speaks the eyebrow line; the folded readout omits its inner copy of it — the
-    // words render exactly once.
+    // The summary speaks the eyebrow line AND the verdict lockup (the 2026-07-02 rework: the
+    // closed fold is a real statement, not a bare disclosure row); the folded readout omits its
+    // inner copies — every word renders exactly once.
     expect(screen.getAllByText(copy.survivorReadoutEyebrow)).toHaveLength(1)
-    // Closed by default (R4 — one pull down): the survivor count is not on the first frame.
+    // Closed by default (R4 — one pull down).
     expect((fold as HTMLDetailsElement).open).toBe(false)
+    // The survivor WORD is on the first frame (a word carries no count — gate-7's ceiling is on
+    // COUNTS)… the summary's copy is the visible one; the fold body holds no second word.
+    const summaryWord = fold!.querySelector('summary .survivor__word')
+    expect(summaryWord).toHaveTextContent(copy.outcomeOnTrack)
+    expect(summaryWord).toBeVisible()
+    expect(fold!.querySelectorAll('.survivor__word')).toHaveLength(1)
+    // …but the survivor COUNT is NOT: it lives in the fold body, hidden while closed (build-gate
+    // 7's load-bearing clause — the essentials relief holds the ONE visible subordinate count).
+    const survivorCount = screen.getByText(slots.xOfTen(survivorReading.xOfTen.value))
+    expect(survivorCount).not.toBeVisible()
+    // One pull opens it: the count (and only then) reaches the eye.
+    fireEvent.click(fold!.querySelector('summary')!)
+    expect((fold as HTMLDetailsElement).open).toBe(true)
+    expect(survivorCount).toBeVisible()
   })
 
   it('with NO floor relief the survivor renders INLINE exactly as shipped (the fold only exists when the relief holds the inline slot)', () => {

@@ -14,8 +14,9 @@ import type { OutcomeState, TwoArmControl } from '@shared/model'
  *
  * Presentational over props (the BudgetBuilder discipline): local selection state, the two-arm
  * preview injected, Apply routed out. This battery pins the seams:
- *  - The pickable set is EXACTLY {proportional, taxable-first, pre-tax-first, custom} — bracket-fill
- *    is DELIBERATELY withheld (a picked-but-degraded policy is the calm-but-wrong sin).
+ *  - The pickable set is EXACTLY {proportional, taxable-first, pre-tax-first, bracket-fill, custom} —
+ *    bracket-fill JOINED at U11 (the engine derives its cliff-aware ceiling; the old silent
+ *    pre-tax-first degrade is structurally impossible, so the withheld-policy law is retired).
  *  - A named pick previews with {kind:'sequencing', policy} and NO order key; custom carries the
  *    live order; the order editor's Up/Down reorders and re-previews the CURRENT order.
  *  - Apply commits (policy, order?) — custom carries the order, a named policy carries undefined.
@@ -121,17 +122,26 @@ function renderSeq(mutate?: (d: ScenarioDraft) => ScenarioDraft) {
 }
 
 describe('SequencingControl — the pickable set', () => {
-  it('renders exactly the four policy radios and NO bracket-fill option (the withheld-policy law)', () => {
+  it('renders exactly the five policy radios INCLUDING bracket-fill (joined at U11 with the engine-derived ceiling)', () => {
     renderSeq()
     const radios = screen.getAllByRole('radio')
-    expect(radios).toHaveLength(4)
+    expect(radios).toHaveLength(5)
     expect(radios.map((r) => (r as HTMLInputElement).value)).toEqual([
       'proportional',
       'taxable-first',
       'pre-tax-first',
+      'bracket-fill',
       'custom',
     ])
-    expect(document.querySelector('input[value="bracket-fill"]')).toBeNull()
+  })
+
+  it('picking bracket-fill previews {kind:"sequencing", policy:"bracket-fill"} with NO order key, and Apply commits it order-less', () => {
+    const { preview, onApply } = renderSeq()
+    fireEvent.click(radio('bracket-fill'))
+    expect(preview.calls.at(-1)).toEqual({ kind: 'sequencing', policy: 'bracket-fill' })
+    expect(document.querySelectorAll('.control-order__row')).toHaveLength(0) // no order editor — not custom
+    fireEvent.click(screen.getByRole('button', { name: copy.leverSequencingApply }))
+    expect(onApply).toHaveBeenCalledWith('bracket-fill', undefined)
   })
 })
 

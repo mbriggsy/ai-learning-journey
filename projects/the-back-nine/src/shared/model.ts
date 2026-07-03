@@ -370,10 +370,15 @@ export interface OverlayParams {
   /** Per-year requested Roth conversions, indexed by ABSOLUTE year (clamped to the legal pre-tax
    *  pool net of the non-convertible RMD inside the engine). */
   readonly conversions?: readonly number[]
-  /** Per-year `bracket-fill` ceiling (the max discretionary pre-tax draw — the cheap ordinary-income
-   *  room to the caller's target edge), indexed by ABSOLUTE year. Read ONLY when `drawdownPolicy` is
-   *  `bracket-fill`; a missing entry ⇒ the pre-tax-first fallback. The caller (P3 control / P4 solver,
-   *  a tax-bracket edge today and an ACA-MAGI cliff once U3 lands) computes the dollar cap. */
+  /** Per-year `bracket-fill` ceiling OVERRIDE (the max discretionary pre-tax draw), indexed by
+   *  ABSOLUTE year. Read ONLY when `drawdownPolicy` is `bracket-fill`. An EXPLICIT entry wins
+   *  (the direct-caller / P4-solver injection seam); a MISSING entry is ENGINE-DERIVED per
+   *  path-year (U11, `magiLandscape`): the min of the active rails' fill headrooms — the next
+   *  federal bracket edge, the 400%-FPL ACA cliff in a priced cliff-regime year, and the next
+   *  IRMAA step where the recorded MAGI is actually billed inside the horizon. The old
+   *  missing-entry ⇒ +Infinity ⇒ silent pre-tax-first degrade is retired — a caller wanting the
+   *  uncapped shape passes an explicit +Infinity. IN-MEMORY params only, never persisted
+   *  (+Infinity would null under JSON/IndexedDB — DND 009). */
   readonly bracketFillCeilings?: readonly number[]
   // --- U3 healthcare overlay streams (consumed from M3 Slice 4; absent/`healthcareEnabled` false ⇒
   //     the healthcare-blind path, byte-identical to the spine). Each cost stream is per-year real $,

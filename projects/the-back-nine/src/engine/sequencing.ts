@@ -13,11 +13,13 @@
  *
  * `bracket-fill` (U2 · M6a) is the MECHANISM — fill discretionary pre-tax (cheap ordinary
  * income) up to an INJECTED per-year ceiling, then draw tax-free (taxable, then Roth) — with
- * the ceiling VALUE supplied by the caller, NOT decided here: a tax-bracket edge today, the
- * binding ACA-subsidy MAGI ceiling once U3's cliffs exist (`docs/research/pre65-healthcare.md`
- * §line 74: during ACA years the subsidy ceiling, not the tax bracket, is the binding constraint).
- * With NO ceiling (`+Infinity`) it degrades to `pre-tax-first` — the prior behaviour, so a single
- * pool stays inert (reduce-to-spine).
+ * the ceiling VALUE supplied by the caller, NOT decided here. Since U11 the caller is normally
+ * `taxOverlay`'s own per-year derivation (`magiLandscape` — min of the bracket-edge / ACA-cliff /
+ * IRMAA-step rail headrooms; `docs/research/pre65-healthcare.md` §line 74: during ACA years the
+ * subsidy ceiling, not the tax bracket, is the binding constraint), with an explicit
+ * `OverlayParams.bracketFillCeilings` entry as the override seam. At `+Infinity` (the explicit
+ * uncapped escape) it recovers `pre-tax-first` exactly, so a single pool stays inert
+ * (reduce-to-spine).
  */
 import type { DrawdownOrderKey, DrawdownPolicy } from '@shared/model'
 

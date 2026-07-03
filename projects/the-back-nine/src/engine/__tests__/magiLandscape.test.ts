@@ -30,6 +30,13 @@ import { acaApplicablePercentage, acaApplicablePercentageEnhanced, irmaa } from 
 const MFJ = 'mfj' as const
 const SINGLE = 'single' as const
 
+// The IRMAA tier positions are READ from the canonical table (the single-source gate forbids
+// re-typing a pinned dated figure, even here) — the hand-derived arithmetic below derives the
+// EXPECTED headrooms/deltas FROM these anchors by an independent path (DND 012).
+const TIER1_MFJ = irmaa.value.tiers[0]!.mfjMagiThreshold // 218,000 (2026 CMS)
+const TIER2_MFJ = irmaa.value.tiers[1]!.mfjMagiThreshold // 274,000
+const TIER1_SINGLE = irmaa.value.tiers[0]!.singleMagiThreshold // 109,000
+
 const ctx = (over: Partial<CommittedYearIncome>): CommittedYearIncome => ({
   rmd: 0,
   conversion: 0,
@@ -94,11 +101,11 @@ describe('acaCliffFillHeadroom (closed form — the linear full-SS metric)', () 
 })
 
 describe('irmaaStepFillHeadroom (bisection over the Pub-915-coupled metric)', () => {
-  it('hand fixture (85% cap bound): baseline 174,000 → next MFJ threshold 218,000 → headroom = 40,000 (rmd) + 44,000 = 84,000', () => {
+  it('hand fixture (85% cap bound): baseline 174,000 → next MFJ threshold (tier 1) → headroom = 40,000 (rmd) + 44,000 = 84,000', () => {
     const c = ctx({ rmd: 40_000, conversion: 100_000, ssBenefit: 40_000 })
     const h = irmaaStepFillHeadroom(c, irmaa.value)
     expect(h).toBeCloseTo(84_000, 3)
-    expect(irmaaMagiAtFill(c, h)).toBeCloseTo(218_000, 3) // landing AT the threshold is safe (strictly-over fires)
+    expect(irmaaMagiAtFill(c, h)).toBeCloseTo(TIER1_MFJ, 3) // landing AT the threshold is safe (strictly-over fires)
   })
 
   it('baseline above the frozen top tier ⇒ +Infinity (no next step — the rail does not bind)', () => {
@@ -107,12 +114,12 @@ describe('irmaaStepFillHeadroom (bisection over the Pub-915-coupled metric)', ()
   })
 
   it('baseline exactly AT a threshold ⇒ only the free below-RMD zone remains (crossing fires strictly above)', () => {
-    // ord(0) = 218,000 with no SS: baseline sits exactly on the first MFJ threshold.
-    const c = ctx({ rmd: 18_000, conversion: 200_000 })
+    // ord(0) = tier-1 exactly, with no SS: baseline sits exactly on the first MFJ threshold.
+    const c = ctx({ rmd: 18_000, conversion: TIER1_MFJ - 18_000 })
     const h = irmaaStepFillHeadroom(c, irmaa.value)
     // fill below the forced RMD adds no MAGI — the headroom is exactly that free zone.
     expect(h).toBeCloseTo(18_000, 3)
-    expect(irmaaMagiAtFill(c, h)).toBeCloseTo(218_000, 3)
+    expect(irmaaMagiAtFill(c, h)).toBeCloseTo(TIER1_MFJ, 3)
   })
 })
 
@@ -140,21 +147,21 @@ describe('bracketEdgeFillHeadroom (bisection through the deduction stack)', () =
 
 describe('the readout geometry', () => {
   it('nextIrmaaThresholdAbove: at-threshold returns the threshold (exclusive crossing); above it, the next tier; above the top, null', () => {
-    expect(nextIrmaaThresholdAbove(217_999, MFJ, irmaa.value)).toBe(218_000)
-    expect(nextIrmaaThresholdAbove(218_000, MFJ, irmaa.value)).toBe(218_000)
-    expect(nextIrmaaThresholdAbove(218_001, MFJ, irmaa.value)).toBe(274_000)
+    expect(nextIrmaaThresholdAbove(TIER1_MFJ - 1, MFJ, irmaa.value)).toBe(TIER1_MFJ)
+    expect(nextIrmaaThresholdAbove(TIER1_MFJ, MFJ, irmaa.value)).toBe(TIER1_MFJ)
+    expect(nextIrmaaThresholdAbove(TIER1_MFJ + 1, MFJ, irmaa.value)).toBe(TIER2_MFJ)
     expect(nextIrmaaThresholdAbove(800_000, MFJ, irmaa.value)).toBeNull()
-    expect(nextIrmaaThresholdAbove(108_999, SINGLE, irmaa.value)).toBe(109_000)
+    expect(nextIrmaaThresholdAbove(TIER1_SINGLE - 1, SINGLE, irmaa.value)).toBe(TIER1_SINGLE)
   })
 
   it('nextIrmaaStep prices the crossing through the ONE canonical tier lookup (tier-1 entry 95.7/mo; tier-1→2 delta 144.7/mo)', () => {
     expect(nextIrmaaStep(100_000, MFJ, irmaa.value)).toEqual({
-      threshold: 218_000,
-      surchargeDeltaMonthlyPerPerson: 95.7, // (81.2 + 14.5) − 0
+      threshold: TIER1_MFJ,
+      surchargeDeltaMonthlyPerPerson: 95.7, // tier-1 Part B + Part D surcharges, hand-summed from the CMS releases
     })
-    const step2 = nextIrmaaStep(218_001, MFJ, irmaa.value)
-    expect(step2?.threshold).toBe(274_000)
-    expect(step2?.surchargeDeltaMonthlyPerPerson).toBeCloseTo(144.7, 6) // (202.9+37.5) − (81.2+14.5)
+    const step2 = nextIrmaaStep(TIER1_MFJ + 1, MFJ, irmaa.value)
+    expect(step2?.threshold).toBe(TIER2_MFJ)
+    expect(step2?.surchargeDeltaMonthlyPerPerson).toBeCloseTo(144.7, 6) // tier-2 minus tier-1 combined surcharges, hand-differenced from the CMS releases
     expect(nextIrmaaStep(800_000, MFJ, irmaa.value)).toBeNull()
   })
 

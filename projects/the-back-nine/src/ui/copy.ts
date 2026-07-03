@@ -639,6 +639,11 @@ export const copy = {
   leverPolicyTaxableFirstHelp: 'Spends the brokerage account down before touching pre-tax or Roth.',
   leverPolicyPreTaxFirst: 'Pre-tax first',
   leverPolicyPreTaxFirstHelp: 'Spends the pre-tax account down first, saving Roth for last.',
+  // U11 — bracket-fill joined the picker WITH the engine-derived cliff-aware ceiling (the U10
+  // withheld-policy law is retired; the label names what binds, never the jargon — council 2026-07-03).
+  leverPolicyBracketFill: 'Low-tax room first',
+  leverPolicyBracketFillHelp:
+    'Pulls from pre-tax only while that money is cheap to take — up to the next tax bracket, stopping short of your health-insurance cliff and the next Medicare step — then draws tax-free for the rest of the year.',
   leverPolicyCustom: 'My own order',
   leverPolicyCustomHelp: 'Put the three accounts in exactly the order you want them spent.',
   leverPolicyCurrentTag: '— your current order',

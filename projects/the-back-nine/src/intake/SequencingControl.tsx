@@ -10,10 +10,11 @@
  * Apply calls out through `onApply` — the CALLER owns the atomic model write (policy + order in
  * ONE update, the biconditional maintained at the write site) and its recompute.
  *
- * BRACKET-FILL IS DELIBERATELY NOT OFFERED YET: a picked bracket-fill without derived per-year
- * ceilings silently degrades to pre-tax-first (model.ts's documented fallback) — a policy the
- * user chose reading as one they didn't, the calm-but-wrong sin. It joins the picker WITH the
- * cliff-aware ceiling derivation (filed in-unit follow-up), never before.
+ * BRACKET-FILL JOINED THE PICKER AT U11 (the withheld-policy law is retired): the engine now
+ * DERIVES the per-year cliff-aware ceiling itself (taxOverlay reads magiLandscape — the min of
+ * the next-bracket-edge, ACA-cliff, and next-IRMAA-step rails, each active only where the
+ * engine actually prices it), so the old silent pre-tax-first degrade is structurally
+ * impossible. The label names what binds ("Low-tax room first"), never the jargon.
  *
  * ORDER EDITOR: three rows with Up/Down buttons (calm, keyboard-native, no drag — a11y-clean on
  * the phone). Each button carries an aria-label naming its bucket; the list is a real <ol> (the
@@ -29,20 +30,23 @@ import type { Announcer } from './a11y'
 import { ControlSheet } from './controlSheet'
 import { ControlPreviewReadout, useControlPreview } from './controlPreview'
 
-/** The pickable set (v1): the named household-level policies minus bracket-fill (see header). */
-const PICKABLE = ['proportional', 'taxable-first', 'pre-tax-first', 'custom'] as const
+/** The pickable set: every named household-level policy + the user's own order (see header —
+ *  bracket-fill joined at U11 with the engine-derived cliff-aware ceiling). */
+const PICKABLE = ['proportional', 'taxable-first', 'pre-tax-first', 'bracket-fill', 'custom'] as const
 type Pickable = (typeof PICKABLE)[number]
 
 const POLICY_LABEL: Record<Pickable, CopyKey> = {
   proportional: 'leverPolicyProportional',
   'taxable-first': 'leverPolicyTaxableFirst',
   'pre-tax-first': 'leverPolicyPreTaxFirst',
+  'bracket-fill': 'leverPolicyBracketFill',
   custom: 'leverPolicyCustom',
 }
 const POLICY_HELP: Record<Pickable, CopyKey> = {
   proportional: 'leverPolicyProportionalHelp',
   'taxable-first': 'leverPolicyTaxableFirstHelp',
   'pre-tax-first': 'leverPolicyPreTaxFirstHelp',
+  'bracket-fill': 'leverPolicyBracketFillHelp',
   custom: 'leverPolicyCustomHelp',
 }
 const BUCKET_LABEL: Record<DrawdownOrderKey, CopyKey> = {

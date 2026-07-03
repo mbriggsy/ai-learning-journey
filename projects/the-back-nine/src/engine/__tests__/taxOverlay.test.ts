@@ -1352,13 +1352,107 @@ describe('taxOverlay — M6a bracket-fill (the injected tax-aware ceiling)', () 
     expect(bf.finalBuckets.taxable).toBeGreaterThan(0)
   })
 
-  it('an absent ceiling stream makes bracket-fill === pre-tax-first through the decumulation (the fallback)', () => {
+  it('an EXPLICIT +Infinity ceiling recovers pre-tax-first exactly (the caller-owned uncapped escape — absent now derives instead, U11)', () => {
     const buckets: AccountBuckets = { taxable: 0, pretax: 700_000, roth: 300_000 }
     const spend = flat(60_000)
-    const bf = runTaxAwareDecumulation(buckets, realStock, realBond, spend, STOCK_W, 'bracket-fill', TAX_ON_NO_RMD)
+    const inf = Array.from({ length: H }, () => Number.POSITIVE_INFINITY)
+    const bf = runTaxAwareDecumulation(buckets, realStock, realBond, spend, STOCK_W, 'bracket-fill', TAX_ON_NO_RMD, { bracketFillCeilings: inf })
     const pf = runTaxAwareDecumulation(buckets, realStock, realBond, spend, STOCK_W, 'pre-tax-first', TAX_ON_NO_RMD)
     expect(bf.terminalReal).toBe(pf.terminalReal)
     expect(bf.finalBuckets.pretax).toBe(pf.finalBuckets.pretax)
+  })
+
+  describe('U11 — the ENGINE-DERIVED cliff-aware ceiling (absent stream + bracket-fill ⇒ min of the active rails)', () => {
+    // ZERO real returns ⇒ growth factor 1.0 every year ⇒ buckets evolve by subtraction only, so
+    // every expected balance below is EXACT hand arithmetic from the published figures (DND 012):
+    // MFJ standard deduction 32,200 (+ 1,650 × two 65+ filers + the 6,000/person senior bonus
+    // phasing at 0.06 over 150k), the 24,800 @10% / 100,800 / 211,400 bracket edges, the
+    // household-of-2 FPL 21,150 → 84,600 cliff, and the CMS tier-1 MFJ IRMAA threshold.
+    const zeros = (n: number) => Array.from({ length: n }, () => 0)
+
+    it('the bracket-edge rail caps the fill where the old +Infinity fallback silently over-drew (couple 67: D = 47,500, edge 24,800 ⇒ ceiling 72,300)', () => {
+      // 5 × $100k spend from {pretax 1M, roth 1M}. Derived fill = 72,300 ⇒ taxable income lands
+      // EXACTLY on the 24,800 edge ⇒ tax = 2,480/yr (all 10% band); the remaining 30,180 rides Roth.
+      const buckets: AccountBuckets = { taxable: 0, pretax: 1_000_000, roth: 1_000_000 }
+      const spend = Array.from({ length: 5 }, () => 100_000)
+      const bf = runTaxAwareDecumulation(buckets, zeros(5), zeros(5), spend, STOCK_W, 'bracket-fill', TAX_ON_NO_RMD)
+      // millidollar precision: the derived headroom is bisection-exact (ε = 1e-6/yr), not algebraic.
+      expect(bf.finalBuckets.pretax).toBeCloseTo(1_000_000 - 5 * 72_300, 3) // 638,500
+      expect(bf.finalBuckets.roth).toBeCloseTo(1_000_000 - 5 * (100_000 + 2_480 - 72_300), 3) // 849,100
+      expect(bf.totalTaxPaidReal).toBeCloseTo(5 * 2_480, 3)
+      // presence companion: pre-tax-first would have drawn the whole gross from pre-tax.
+      const pf = runTaxAwareDecumulation(buckets, zeros(5), zeros(5), spend, STOCK_W, 'pre-tax-first', TAX_ON_NO_RMD)
+      expect(bf.finalBuckets.pretax).toBeGreaterThan(pf.finalBuckets.pretax)
+    })
+
+    it('an EXPLICIT per-year entry beats the derivation (the direct-caller / solver injection seam stays live)', () => {
+      // Same fixture, explicit $10k ceiling: ord 10,000 sits fully under the 47,500 deduction ⇒
+      // ZERO tax ⇒ gross = spend exactly; Roth carries the other 90,000.
+      const buckets: AccountBuckets = { taxable: 0, pretax: 1_000_000, roth: 1_000_000 }
+      const spend = Array.from({ length: 5 }, () => 100_000)
+      const explicit = Array.from({ length: 5 }, () => 10_000)
+      const bf = runTaxAwareDecumulation(buckets, zeros(5), zeros(5), spend, STOCK_W, 'bracket-fill', TAX_ON_NO_RMD, { bracketFillCeilings: explicit })
+      expect(bf.finalBuckets.pretax).toBeCloseTo(950_000, 6)
+      expect(bf.finalBuckets.roth).toBeCloseTo(550_000, 6)
+      expect(bf.totalTaxPaidReal).toBeCloseTo(0, 6)
+    })
+
+    it('the ACA-cliff rail binds a priced pre-65 year — the subsidy is RETAINED where an uncapped fill torches it', () => {
+      // Pre-65 couple (both 51), $60k/yr conversion committed: cliff headroom = 84,600 − 60,000 =
+      // 24,600 (binds — the bracket rail sits at 73,000). Fill 24,600 ⇒ ACA-MAGI = 84,600 EXACTLY
+      // = eligible (§36B inclusive) ⇒ PTC = 12,000 − 9.96% × 84,600 = 3,573.84 ⇒ net premium
+      // 10,426.16/yr. The uncapped (+Infinity) fill lands far over the cliff ⇒ PTC 0 ⇒ the full
+      // 14,000 enrolled premium, both years.
+      const pre65: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: false, household: mkHousehold(2026, 1975, 1975) }
+      const buckets: AccountBuckets = { taxable: 1_000_000, pretax: 1_000_000, roth: 0 }
+      const health = {
+        healthcareEnabled: true,
+        slcsp: [12_000, 12_000],
+        enrolledPremium: [14_000, 14_000],
+        conversions: [60_000, 60_000],
+        initialTaxableBasis: 1_000_000, // basis === value ⇒ zero realized gain ⇒ MAGI is exactly the fill + conversion
+      }
+      const spend = [100_000, 100_000]
+      const derived = runTaxAwareDecumulation(buckets, zeros(2), zeros(2), spend, STOCK_W, 'bracket-fill', pre65, health)
+      expect(derived.totalNetPremiumReal).toBeCloseTo(2 * (14_000 - (12_000 - 0.0996 * 84_600)), 2) // 20,852.32
+      const uncapped = runTaxAwareDecumulation(buckets, zeros(2), zeros(2), spend, STOCK_W, 'bracket-fill', pre65, {
+        ...health,
+        bracketFillCeilings: [Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY],
+      })
+      expect(uncapped.totalNetPremiumReal).toBeCloseTo(28_000, 6) // over the cliff: the full enrolled premium
+      expect(derived.totalNetPremiumReal).toBeLessThan(uncapped.totalNetPremiumReal)
+    })
+
+    it('the IRMAA-step rail holds BILLED years at the tier line and releases past the horizon (the t+lookback gate)', () => {
+      // Both 66 (Medicare-enrolled), healthcare on, $200k/yr conversions, horizon 4. Years 0–1
+      // record MAGI billed in years 2–3 (inside the horizon) ⇒ the rail caps the fill at the
+      // tier-1 headroom (218,000 − 200,000 = 18,000) ⇒ the recorded MAGI sits EXACTLY on the
+      // threshold ⇒ the billed years stay tier-0 (strictly-over fires). Years 2–3 bill at 4–5 —
+      // OUTSIDE the horizon — so only the bracket rail caps them (52,735.85, the senior-bonus
+      // phase-out band: taxable = 1.06·AGI − 56,500 = 211,400 ⇒ AGI* = 267,900/1.06).
+      const both66: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: false, household: mkHousehold(2026, 1960, 1960) }
+      const buckets: AccountBuckets = { taxable: 1_000_000, pretax: 1_500_000, roth: 0 }
+      const spend = zeros(4).map(() => 60_000)
+      const extra = {
+        healthcareEnabled: true,
+        irmaaMagiSeed: [100_000, 100_000], // seed years bill below tier 1 → base Part B only
+        conversions: [200_000, 200_000, 200_000, 200_000],
+        initialTaxableBasis: 1_000_000,
+      }
+      const derived = runTaxAwareDecumulation(buckets, zeros(4), zeros(4), spend, STOCK_W, 'bracket-fill', both66, extra)
+      const bracketOnlyHeadroom = 267_900 / 1.06 - 200_000 // ≈ 52,735.849
+      expect(derived.finalBuckets.pretax).toBeCloseTo(1_500_000 - 4 * 200_000 - 2 * 18_000 - 2 * bracketOnlyHeadroom, 1)
+      // Every billed year stayed at the base premium — the rail held tier-0 for the whole run.
+      const basePartBOnly = 4 * 2 * 12 * partB2026.value.standardPremiumMonthly
+      expect(derived.totalMedicareCostReal).toBeCloseTo(basePartBOnly, 2)
+      // The uncapped fill records a far-over-threshold MAGI in years 0–1 → the billed years 2–3
+      // pay a real surcharge on top of the base premium.
+      const uncapped = runTaxAwareDecumulation(buckets, zeros(4), zeros(4), spend, STOCK_W, 'bracket-fill', both66, {
+        ...extra,
+        bracketFillCeilings: zeros(4).map(() => Number.POSITIVE_INFINITY),
+      })
+      expect(uncapped.totalMedicareCostReal).toBeGreaterThan(basePartBOnly)
+    })
   })
 
   it('the gross-up converges under bracket-fill across the k≈0.74 corner (no fail-loud cap, insight 006/007)', () => {

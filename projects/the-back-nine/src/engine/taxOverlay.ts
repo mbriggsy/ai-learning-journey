@@ -86,6 +86,13 @@ import {
   type AcaApplicablePercentageTable,
 } from '@engine/constants'
 import { ordinaryPlusCapitalGainsTax, taxableSocialSecurity } from '@engine/taxCore'
+import {
+  acaCliffFillHeadroom,
+  bracketEdgeFillHeadroom,
+  cliffMagiFor,
+  irmaaStepFillHeadroom,
+  type CommittedYearIncome,
+} from '@engine/magiLandscape'
 import { solveAcaFundedGross, fplForHousehold, medicareAnnualCost, irmaaMagi, hsaQualifiedSpend, type GrossUpSolution, type MagiComponents } from '@engine/healthOverlay'
 import { NEVER_DEPLETED, type DepletionYear, type DrawdownPolicy, type FilingStatus } from '@shared/model'
 
@@ -217,12 +224,13 @@ export interface TaxYearInputs {
    *  never threatens reduce-to-spine: under the EXHAUSTIVE OFF condition the gross-up is inert
    *  (gross = net) and the RMD is 0, so the regime changes nothing regardless of its contents. */
   readonly householdYears?: readonly HouseholdYear[]
-  /** Per-year `bracket-fill` ceiling (M6a): the max DISCRETIONARY pre-tax draw that year — the
-   *  cheap ordinary-income room to the caller's target edge (a tax bracket now, an ACA-MAGI cliff
-   *  in U3). Read ONLY when the policy is `bracket-fill`; a missing entry ⇒ `+Infinity` ⇒ the
-   *  pre-tax-first fallback, so an absent stream leaves `bracket-fill` reducing to the spine on a
-   *  single pool. The caller computes the dollar cap (the engine provides the mechanism, not the
-   *  ceiling — the substrate the P3 control + P4 solver drive). */
+  /** Per-year `bracket-fill` ceiling OVERRIDE (M6a · U11): the max DISCRETIONARY pre-tax draw
+   *  that year. Read ONLY when the policy is `bracket-fill`. An EXPLICIT entry wins (the
+   *  direct-caller / P4-solver injection seam — and the explicit `+Infinity` recovers
+   *  pre-tax-first exactly); a MISSING entry is DERIVED in the year loop from the committed
+   *  gross-independent income via `magiLandscape` (min of the bracket-edge / ACA-cliff /
+   *  IRMAA-step rail headrooms, each active only where the engine actually prices it) — the
+   *  old missing ⇒ +Infinity ⇒ silent pre-tax-first degrade is retired. */
   readonly bracketFillCeilings?: readonly number[]
   /** Per-person INITIAL pre-tax split (M6b·B), aligned by index to the household's canonical
    *  people (owner = 0, spouse = 1). Its sum MUST equal `initialBuckets.pretax` (validated).
@@ -1275,11 +1283,6 @@ export function runTaxAwareDecumulation(
       rmd = regime ? rmdForYear(buckets.pretax, config, regime, t) : 0
     }
 
-    // bracket-fill ceiling (M6a): the year's max discretionary pre-tax draw. Used by BOTH the
-    // gross-up fixed point and the ledger allocation so they agree. A missing entry ⇒ +Infinity ⇒
-    // the pre-tax-first fallback (so an absent stream / non-bracket-fill policy is unaffected).
-    const bracketFillCeiling = bracketFillCeilings[t] ?? Number.POSITIVE_INFINITY
-
     // Roth conversion (M5): clamp to feasibility AFTER reserving the non-convertible RMD, using the
     // prior-year-end pre-tax (gross-independent ⇒ constant inside the fixed point). Apply it to the
     // DRAW-TIME buckets (pre-tax→roth) so the spending allocation runs against the conversion-reduced
@@ -1290,6 +1293,60 @@ export function runTaxAwareDecumulation(
       conversion > 0
         ? { taxable: buckets.taxable, pretax: buckets.pretax - conversion, roth: buckets.roth + conversion, hsa: buckets.hsa }
         : buckets
+
+    // bracket-fill ceiling (M6a · U11): the year's max discretionary pre-tax draw. Used by BOTH the
+    // gross-up fixed point and the ledger allocation so they agree. An EXPLICIT per-year entry wins
+    // (the direct-caller / future-solver injection seam — every pre-U11 fixture is byte-identical);
+    // an ABSENT entry under the `bracket-fill` policy is ENGINE-DERIVED from the year's committed,
+    // gross-independent income (magiLandscape — U11): the minimum of the ACTIVE rails' fill headrooms
+    //   · the next federal bracket edge (always active — the policy's tax half),
+    //   · the 400%-FPL ACA cliff (only a year the overlay actually PRICES ACA under a cliff regime —
+    //     the predicate mirrors the pricing gate below verbatim; insight 027),
+    //   · the next IRMAA step (only when the year's recorded MAGI is actually BILLED — someone is
+    //     Medicare-enrolled at t+lookback AND that bill year is inside the horizon; the threshold
+    //     column is THIS year's filing, matching the engine's own lagged filingForBill rule).
+    // This kills the old "missing entry ⇒ +Infinity ⇒ silent pre-tax-first" degrade — the reason
+    // bracket-fill was withheld from the U10 picker. A caller who WANTS the uncapped shape passes
+    // an explicit +Infinity. Derivation is gated on the same `taxEnabled && regime` the tax block
+    // uses (tax off ⇒ the ceiling is meaningless ⇒ the prior +Infinity shape, reduce-to-spine clean).
+    let bracketFillCeiling = bracketFillCeilings[t] ?? Number.POSITIVE_INFINITY
+    if (bracketFillCeilings[t] === undefined && policy === 'bracket-fill' && config.taxEnabled && regime) {
+      const committed: CommittedYearIncome = {
+        rmd,
+        conversion,
+        ongoingTaxable: ongoingTaxableGrossUp[t] ?? 0,
+        ssBenefit: ssBenefits[t] ?? 0,
+        filing: regime.filing,
+        count65: regime.count65,
+      }
+      // The tax-bracket rail — always active under bracket-fill.
+      let ceiling = bracketEdgeFillHeadroom(committed)
+      // The ACA-cliff rail — active iff THIS year prices ACA under a cliff regime (the exact
+      // pricing predicate below: table present + cliff exists + a positive enrolled premium +
+      // a living pre-65 member). Enhanced regime (cliffFplFraction null) has no cliff rail.
+      const enrolledForRail = enrolledPremium[t]
+      if (
+        acaTable !== undefined &&
+        acaTable.cliffFplFraction !== null &&
+        enrolledForRail !== undefined &&
+        Number.isFinite(enrolledForRail) &&
+        enrolledForRail > 0 &&
+        regime.livingCount - regime.count65 > 0
+      ) {
+        const cliff = cliffMagiFor(acaTable, fplForHousehold(regime.livingCount))
+        if (cliff !== null) ceiling = Math.min(ceiling, acaCliffFillHeadroom(committed, cliff))
+      }
+      // The IRMAA-step rail — active iff the MAGI this year records is actually billed: healthcare
+      // on, the bill year inside the horizon, and someone Medicare-enrolled THEN (the path's own
+      // death/enrollment timeline — resolveYear reads the injected per-path stream).
+      if (acaTable !== undefined && t + irmaaLookback < horizon) {
+        const billRegime = resolveYear(config.household, householdYears, t + irmaaLookback, medicareOnsetSimYear)
+        if (billRegime.medicareEnrolledCount > 0) {
+          ceiling = Math.min(ceiling, irmaaStepFillHeadroom(committed, irmaaSchedule))
+        }
+      }
+      bracketFillCeiling = ceiling
+    }
 
     // Gross up for tax (M3–M5), then fold in the income-aware HEALTHCARE cost: the post-65 IRMAA
     // Medicare cost (M4 — a known constant, added to the funded net) AND, when a member is pre-65 this

@@ -5,16 +5,22 @@ import { DRAWDOWN_POLICIES } from '@shared/model'
 const sum = (w: BucketWithdrawals): number => w.taxable + w.pretax + w.roth
 const multi: AccountBuckets = { taxable: 300, pretax: 500, roth: 200 } // total 1000
 
+// P3·U10 — 'custom' REQUIRES an order (fail-loud without one); the exhaustive-policy
+// loops pass this canonical order so 'custom' participates in every conservation law.
+const CUSTOM_ORDER = ['roth', 'taxable', 'pretax'] as const
+const orderFor = (policy: (typeof DRAWDOWN_POLICIES)[number]) =>
+  policy === 'custom' ? CUSTOM_ORDER : undefined
+
 describe('allocateWithdrawal — conservation', () => {
   it('every policy draws exactly the requested amount when funds suffice', () => {
     for (const policy of DRAWDOWN_POLICIES) {
-      expect(sum(allocateWithdrawal(multi, 400, policy))).toBeCloseTo(400, 9)
+      expect(sum(allocateWithdrawal(multi, 400, policy, undefined, orderFor(policy)))).toBeCloseTo(400, 9)
     }
   })
 
   it('never draws more than exists (over-withdrawal clamps to the total)', () => {
     for (const policy of DRAWDOWN_POLICIES) {
-      const w = allocateWithdrawal(multi, 5000, policy)
+      const w = allocateWithdrawal(multi, 5000, policy, undefined, orderFor(policy))
       expect(sum(w)).toBeCloseTo(totalAcrossBuckets(multi), 9)
       expect(w.taxable).toBeLessThanOrEqual(multi.taxable + 1e-9)
       expect(w.pretax).toBeLessThanOrEqual(multi.pretax + 1e-9)
@@ -100,9 +106,9 @@ describe('bracket-fill with an injected ceiling (U2 · M6a) — fill pre-tax to 
 })
 
 describe('reduce-to-spine: policy is INERT on a single pool', () => {
-  it('with funds in only one bucket, all four policies draw identically', () => {
+  it('with funds in only one bucket, every policy draws identically', () => {
     const onePool: AccountBuckets = { taxable: 0, pretax: 1000, roth: 0 }
-    const results = DRAWDOWN_POLICIES.map((p) => allocateWithdrawal(onePool, 350, p))
+    const results = DRAWDOWN_POLICIES.map((p) => allocateWithdrawal(onePool, 350, p, undefined, orderFor(p)))
     const first = results[0]
     for (const r of results) {
       expect(r).toEqual(first)
@@ -125,6 +131,48 @@ describe('reduce-to-spine: policy is INERT on a single pool', () => {
 })
 
 // ---------------------------------------------------------------------------
+// P3·U10 — the custom per-bucket order: the user's own exhaust-in-order sequence.
+// The mechanism is the SAME `ordered()` the named orders use; these pin that the
+// USER's order actually governs (a mislabeled/ignored order would pass a mere
+// "policies differ" assertion — the drain SEQUENCE is the contract).
+// ---------------------------------------------------------------------------
+describe("P3·U10 — the 'custom' policy honors the user's own order", () => {
+  it('drains buckets in EXACTLY the given order (roth → taxable → pretax)', () => {
+    // 400 against roth(200) → exhausted; overflow 200 into taxable(300); pretax untouched.
+    expect(allocateWithdrawal(multi, 400, 'custom', undefined, ['roth', 'taxable', 'pretax'])).toEqual({
+      taxable: 200,
+      pretax: 0,
+      roth: 200,
+    })
+  })
+
+  it('a DIFFERENT order produces a genuinely different allocation (the order discriminates)', () => {
+    const a = allocateWithdrawal(multi, 400, 'custom', undefined, ['roth', 'taxable', 'pretax'])
+    const b = allocateWithdrawal(multi, 400, 'custom', undefined, ['pretax', 'roth', 'taxable'])
+    expect(b).toEqual({ taxable: 0, pretax: 400, roth: 0 })
+    expect(a).not.toEqual(b)
+  })
+
+  it('reproduces a NAMED order when given that order (custom is the same ordered() mechanism)', () => {
+    expect(allocateWithdrawal(multi, 400, 'custom', undefined, ['taxable', 'pretax', 'roth'])).toEqual(
+      allocateWithdrawal(multi, 400, 'taxable-first'),
+    )
+  })
+
+  it("'custom' WITHOUT an order fails loud — never an allocation from a guessed order (burned/062)", () => {
+    expect(() => allocateWithdrawal(multi, 400, 'custom')).toThrowError(/requires a customOrder/)
+  })
+
+  it('conserves + clamps like every policy (sums to target; never overdraws a bucket)', () => {
+    const w = allocateWithdrawal(multi, 5000, 'custom', undefined, ['roth', 'pretax', 'taxable'])
+    expect(sum(w)).toBeCloseTo(totalAcrossBuckets(multi), 9)
+    expect(w.roth).toBe(200)
+    expect(w.pretax).toBe(500)
+    expect(w.taxable).toBe(300)
+  })
+})
+
+// ---------------------------------------------------------------------------
 // U3 · M5 — the hsa 4th bucket is MEDICAL-EARMARKED: structurally outside the
 // general drawdown order. `BucketWithdrawals` is keyed on `GeneralBucketKey`
 // (compile-time guard); these pin the RUNTIME half.
@@ -142,7 +190,7 @@ describe('U3 · M5 — hsa is never a general drawdown source', () => {
 
   it('an over-withdrawal clamps to the GENERAL total — the fat hsa bucket funds nothing (the laundering guard)', () => {
     for (const policy of DRAWDOWN_POLICIES) {
-      const w = allocateWithdrawal(withHsa, 5_000, policy)
+      const w = allocateWithdrawal(withHsa, 5_000, policy, undefined, orderFor(policy))
       // drains the three general buckets exactly; hsa dollars never enter the draw
       expect(sum(w)).toBeCloseTo(generalDrawableTotal(withHsa), 9)
       // the returned record cannot even name hsa (GeneralBucketKey) — pin the runtime shape too
@@ -152,7 +200,9 @@ describe('U3 · M5 — hsa is never a general drawdown source', () => {
 
   it('allocation with an hsa present is byte-identical to the same general buckets without it', () => {
     for (const policy of DRAWDOWN_POLICIES) {
-      expect(allocateWithdrawal(withHsa, 400, policy)).toEqual(allocateWithdrawal(multi, 400, policy))
+      expect(allocateWithdrawal(withHsa, 400, policy, undefined, orderFor(policy))).toEqual(
+        allocateWithdrawal(multi, 400, policy, undefined, orderFor(policy)),
+      )
     }
   })
 

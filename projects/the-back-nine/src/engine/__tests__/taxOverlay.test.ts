@@ -25,6 +25,15 @@ const STOCK_W = 0.6
 const realStock = Array.from({ length: H }, (_, t) => 0.07 + 0.18 * Math.sin(t * 1.3))
 const realBond = Array.from({ length: H }, (_, t) => 0.025 + 0.06 * Math.cos(t * 0.7))
 
+// P3·U10 — 'custom' REQUIRES an order; the exhaustive-policy grids pass this canonical
+// one so 'custom' proves every invariant (reduce-to-spine, total-neutrality, the ledger
+// reconciliation, the hsa guard) exactly like the named policies. Deliberately NOT any
+// named order's sequence, so a custom-ignores-its-order regression cannot hide behind a
+// coincidental match.
+const CUSTOM_TEST_ORDER = ['roth', 'taxable', 'pretax'] as const
+const orderFor = (policy: (typeof DRAWDOWN_POLICIES)[number]) =>
+  policy === 'custom' ? CUSTOM_TEST_ORDER : undefined
+
 const OFF: TaxOverlayConfig = { taxEnabled: false, rmdEnabled: false }
 
 /** A minimal MFJ household for the RMD/tax configs (filing fixed MFJ until the M6 switch). */
@@ -80,6 +89,8 @@ describe('taxOverlay — M1 seam + reduce-to-spine invariant', () => {
               STOCK_W,
               policy,
               OFF,
+              {},
+              orderFor(policy),
             )
             // Byte-identical (exact equality, not approximate): the total trajectory runs
             // through the SAME stepYear the spine uses.
@@ -113,7 +124,7 @@ describe('taxOverlay — M1 seam + reduce-to-spine invariant', () => {
 
     for (const policy of DRAWDOWN_POLICIES) {
       it(`${policy}: multi-bucket total trajectory === the spine, bit-for-bit`, () => {
-        const got = runTaxAwareDecumulation(buckets, realStock, realBond, withdrawals, STOCK_W, policy, OFF)
+        const got = runTaxAwareDecumulation(buckets, realStock, realBond, withdrawals, STOCK_W, policy, OFF, {}, orderFor(policy))
         expect(got.terminalReal).toBe(expected.terminalReal)
         expect(got.depletionYear).toBe(expected.depletionYear)
         // the ledger reconciles to the authoritative total (auxiliary, so relative-close)
@@ -1033,7 +1044,7 @@ describe('taxOverlay — M5 Roth conversion + cap-gains/QD stacking', () => {
           ssBenefits: flat(30_000),
           conversions: flat(60_000),
           initialTaxableBasis: 50_000, // low basis → real embedded gain
-        })
+        }, orderFor(policy))
         if (got.depletionYear === NEVER_DEPLETED) {
           expect(Math.abs(totalAcrossBuckets(got.finalBuckets) / got.terminalReal - 1)).toBeLessThan(1e-9)
         }
@@ -2299,6 +2310,8 @@ describe('taxOverlay — M5 · Slice 1: the hsa bucket rides (reduce-to-spine + 
             STOCK_W,
             policy,
             OFF,
+            {},
+            orderFor(policy),
           )
           expect(got.terminalReal).toBe(expected.terminalReal)
           expect(got.depletionYear).toBe(expected.depletionYear)
@@ -2705,7 +2718,7 @@ describe('taxOverlay — M5 · Slice 5: Σ(4 buckets) === terminalReal under eve
 
   for (const policy of DRAWDOWN_POLICIES) {
     it(`${policy}: the 4-bucket sum reconciles to the terminal and no bucket goes negative`, () => {
-      const got = runTaxAwareDecumulation(buckets, realStock, realBond, flat(45_000), STOCK_W, policy, cfg, inputs)
+      const got = runTaxAwareDecumulation(buckets, realStock, realBond, flat(45_000), STOCK_W, policy, cfg, inputs, orderFor(policy))
       // The fixture is sized to SURVIVE — assert it, so the reconciliation can never go silently
       // vacuous behind a depletion branch (the M5 boundary review caught the unguarded `if`).
       expect(got.depletionYear).toBe(NEVER_DEPLETED)

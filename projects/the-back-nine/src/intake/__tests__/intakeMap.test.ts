@@ -312,6 +312,50 @@ describe('aggregations (derived, never stored)', () => {
   })
 })
 
+describe('P3·U10 — the Roth-conversion lever + the custom order reach the engine input', () => {
+  it('a persisted plan expands into overlay.conversions via the ONE shared expander (zero-prefix, amount per active year)', () => {
+    const d: ScenarioDraft = {
+      ...completeSpineDraft(),
+      rothConversion: { annualAmountReal: 40_000, startYearOffset: 2, years: 3 },
+    }
+    const params = buildSpineParams(d)!
+    expect(params.overlay!.conversions).toEqual([0, 0, 40_000, 40_000, 40_000])
+    expect(validateParams(params)).toBeNull() // the render-anchor coupling holds with the lever set
+  })
+
+  it('an ABSENT lever writes NO conversions key at all — reduce-to-spine is presence-keyed, never a zero-fill', () => {
+    const params = buildSpineParams(completeSpineDraft())!
+    expect('conversions' in params.overlay!).toBe(false)
+  })
+
+  it('a window entirely past the horizon stays ABSENT (the expander returns undefined, the spread drops it)', () => {
+    const d: ScenarioDraft = {
+      ...completeSpineDraft(),
+      rothConversion: { annualAmountReal: 40_000, startYearOffset: 500, years: 3 },
+    }
+    const params = buildSpineParams(d)!
+    expect('conversions' in params.overlay!).toBe(false)
+    expect(validateParams(params)).toBeNull()
+  })
+
+  it("drawdownPolicy 'custom' + drawdownOrder pass through to SimulationParams and the engine gate accepts the pair", () => {
+    const d: ScenarioDraft = {
+      ...completeSpineDraft(),
+      drawdownPolicy: 'custom',
+      drawdownOrder: ['roth', 'taxable', 'pretax'],
+    }
+    const params = buildSpineParams(d)!
+    expect(params.drawdownPolicy).toBe('custom')
+    expect(params.drawdownOrder).toEqual(['roth', 'taxable', 'pretax'])
+    expect(validateParams(params)).toBeNull()
+  })
+
+  it('a NAMED policy carries NO drawdownOrder key (spread-if-present — the biconditional cannot be violated from here)', () => {
+    const params = buildSpineParams(completeSpineDraft())!
+    expect('drawdownOrder' in params).toBe(false)
+  })
+})
+
 describe('R40 — the other-income construct wires into the overlay (the early-return guard fix + compile passthrough)', () => {
   // An all-retired household whose WHOLE picture is a pension + a spend figure: NO accounts, NO
   // marketplace premium. Pre-R40 the overlay early-returned undefined here (a tax-blind run); R40

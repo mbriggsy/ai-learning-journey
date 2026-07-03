@@ -27,6 +27,7 @@ import {
   BUDGET_CATEGORIES,
   BUDGET_TIERS,
   COLA_MODES,
+  DRAWDOWN_ORDER_KEYS,
   DRAWDOWN_POLICIES,
   FILING_STATUSES,
   INCOME_TYPES,
@@ -379,6 +380,48 @@ function checkBudgetLineItemV3(v: unknown, path: string): void {
   }
 }
 
+/** P3·U10 — the Roth-conversion lever's persisted inputs. The codec is the SOLE restore
+ *  gate for these (the per-year vector they expand into is derived downstream, so the
+ *  engine's `validateParams` never sees the RAW plan — the insight-046 multiplied-away
+ *  class, assigned to the codec by the two-gate rule). Finiteness FIRST, then range:
+ *  a present plan must be MEANINGFUL (amount > 0 — a "no conversions" state is written
+ *  as ABSENCE, so present-but-zero is a writer bug, named as corruption), the window
+ *  integers non-negative / ≥ 1 (DND-009: no Infinity/NaN can hide in a JSON slot). */
+function checkRothConversionPlanV3(v: unknown, path: string): void {
+  needObject(v, path)
+  needFinite(v, 'annualAmountReal', path)
+  if ((v.annualAmountReal as number) <= 0) {
+    throw new Corrupt(`${path}.annualAmountReal: must be > 0 (a zero/negative plan is written as absence, never persisted)`)
+  }
+  needInteger(v, 'startYearOffset', path)
+  if ((v.startYearOffset as number) < 0) {
+    throw new Corrupt(`${path}.startYearOffset: expected a sim-year offset ≥ 0`)
+  }
+  needInteger(v, 'years', path)
+  if ((v.years as number) < 1) {
+    throw new Corrupt(`${path}.years: expected ≥ 1 active year`)
+  }
+}
+
+/** P3·U10 — the custom bucket order: EXACTLY the three general buckets, each once (a
+ *  permutation — a short/duplicated/unknown-key order has no allocation meaning any
+ *  layer can compute on; `hsa` is excluded by the vocabulary itself, the M5 laundering
+ *  guard's persisted half). */
+function checkDrawdownOrderV3(v: unknown, path: string): void {
+  needArray(v, path)
+  if (v.length !== DRAWDOWN_ORDER_KEYS.length) {
+    throw new Corrupt(`${path}: expected exactly [${DRAWDOWN_ORDER_KEYS.join(', ')}] in some order`)
+  }
+  for (const key of v) {
+    if (typeof key !== 'string' || !(DRAWDOWN_ORDER_KEYS as readonly string[]).includes(key)) {
+      throw new Corrupt(`${path}: ${String(key)} is not a general drawdown bucket`)
+    }
+  }
+  if (new Set(v).size !== DRAWDOWN_ORDER_KEYS.length) {
+    throw new Corrupt(`${path}: each bucket must appear exactly once`)
+  }
+}
+
 function checkV3Fields(o: Obj): void {
   needArray(o.people, 'scenario.people')
   if (o.people.length === 0) throw new Corrupt('scenario.people: must not be empty')
@@ -411,6 +454,23 @@ function checkV3Fields(o: Obj): void {
   if (o.budget !== undefined) {
     needArray(o.budget, 'scenario.budget')
     o.budget.forEach((b, i) => checkBudgetLineItemV3(b, `budget[${i}]`))
+  }
+  // P3·U10 — the Roth-conversion lever (additive-optional, same precedent).
+  if (o.rothConversion !== undefined) {
+    checkRothConversionPlanV3(o.rothConversion, 'scenario.rothConversion')
+  }
+  // P3·U10 — the custom-order biconditional (the retirementAge-biconditional precedent:
+  // both directions, so a mismatched pair is unrepresentable-persisted). 'custom' with no
+  // order would reach the engine only to be rejected as indeterminate; an order riding a
+  // named policy would silently NOT govern — both are writer bugs, named here.
+  if (o.drawdownPolicy === 'custom' && o.drawdownOrder === undefined) {
+    throw new Corrupt("scenario.drawdownOrder: required when drawdownPolicy is 'custom'")
+  }
+  if (o.drawdownOrder !== undefined) {
+    if (o.drawdownPolicy !== 'custom') {
+      throw new Corrupt("scenario.drawdownOrder: only meaningful when drawdownPolicy is 'custom' (it would not govern)")
+    }
+    checkDrawdownOrderV3(o.drawdownOrder, 'scenario.drawdownOrder')
   }
 }
 

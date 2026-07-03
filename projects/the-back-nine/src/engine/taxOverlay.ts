@@ -74,7 +74,7 @@
  * PURE: no entropy/clock/environment (the engine-purity lint covers `src/engine/**`).
  */
 import { stepYear, totalValue, type DecumulationResult, type PortfolioState } from '@engine/decumulation'
-import { allocateWithdrawal, generalDrawableTotal, totalAcrossBuckets, type AccountBuckets } from '@engine/sequencing'
+import { allocateWithdrawal, generalDrawableTotal, totalAcrossBuckets, type AccountBuckets, type GeneralBucketKey } from '@engine/sequencing'
 import {
   rmdStartAge,
   uniformLifetimeTableDivisors,
@@ -939,6 +939,9 @@ function advancePerPersonLedger(
 interface GrossUpContext {
   readonly drawPool: AccountBuckets
   readonly policy: DrawdownPolicy
+  /** The user's own bucket order (P3·U10) — read only when `policy === 'custom'` (the
+   *  allocateWithdrawal pairing; validated upstream, fail-loud below it). */
+  readonly customOrder?: readonly GeneralBucketKey[]
   readonly rmd: number
   readonly conversion: number
   readonly taxableBasis: number
@@ -956,11 +959,11 @@ interface GrossUpContext {
 }
 
 function solveGrossWithdrawal(net: number, ctx: GrossUpContext): GrossUpSolution {
-  const { drawPool, policy, rmd, conversion, taxableBasis, filing, count65, ssBenefit, bracketFillCeiling, ongoingTaxable } = ctx
+  const { drawPool, policy, customOrder, rmd, conversion, taxableBasis, filing, count65, ssBenefit, bracketFillCeiling, ongoingTaxable } = ctx
   const taxableValue = drawPool.taxable
   let gross = net
   for (let pass = 0; pass < GROSS_UP_MAX_PASSES; pass++) {
-    const alloc = allocateWithdrawal(drawPool, gross, policy, bracketFillCeiling)
+    const alloc = allocateWithdrawal(drawPool, gross, policy, bracketFillCeiling, customOrder)
     // Cap-gains realization (M5): the taxable draw realizes a pro-rata share of embedded gain.
     // A down-market loss (basis > value) floors at 0 — never a negative gain feeding the tax or
     // provisional income (the §1211 loss offset is OUT-but-disclosed).
@@ -1027,6 +1030,12 @@ export function runTaxAwareDecumulation(
   policy: DrawdownPolicy,
   config: TaxOverlayConfig,
   taxInputs: TaxYearInputs = {},
+  /** P3·U10 — the user's own bucket order, REQUIRED iff `policy === 'custom'` (validated at
+   *  `validateParams`; allocateWithdrawal fail-louds for a direct caller). Trails the optional
+   *  `taxInputs` so every existing call site is byte-identical untouched; read by BOTH
+   *  allocation sites (the gross-up loop AND the tax-off ledger — the ledger allocates under
+   *  every config, so this cannot live in the tax-ON-only `TaxYearInputs`). */
+  customOrder?: readonly GeneralBucketKey[],
 ): TaxAwareResult {
   const {
     ssBenefits = [],
@@ -1564,6 +1573,7 @@ export function runTaxAwareDecumulation(
       const grossUpCtx: GrossUpContext = {
         drawPool,
         policy,
+        ...(customOrder !== undefined ? { customOrder } : {}),
         rmd,
         conversion,
         taxableBasis: basis,
@@ -1677,7 +1687,7 @@ export function runTaxAwareDecumulation(
     // Per-bucket ledger: which buckets fund this withdrawal (consumed by the tax math). Allocated
     // against the CONVERSION-REDUCED drawPool, capped at what exists — exactly like the spine.
     const totalBefore = totalAcrossBuckets(buckets) // === totalAcrossBuckets(drawPool)
-    const alloc = allocateWithdrawal(drawPool, grossWithdrawal, policy, bracketFillCeiling)
+    const alloc = allocateWithdrawal(drawPool, grossWithdrawal, policy, bracketFillCeiling, customOrder)
     const drawn = alloc.taxable + alloc.pretax + alloc.roth
 
     // GENERAL-DEPLETION (U3 · M5): with a live HSA the authoritative total (which `stepYear`'s own

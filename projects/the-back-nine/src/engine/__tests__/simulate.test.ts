@@ -472,6 +472,39 @@ describe('R19 engine half + dire-but-honest edges', () => {
     expect(simulate({ ...base, overlay: nanBasisEmptyTaxable }, 1).indeterminate).toBe(true)
   })
 
+  it("P3·U10 — the custom-order biconditional: 'custom' without an order, an order under a named policy, and a non-permutation each → indeterminate", () => {
+    // The wire-side mirror of the codec's persisted biconditional (two-gate rule). Without it,
+    // a desynced builder would reach allocateWithdrawal's fail-loud mid-path (a calm-error
+    // misattributing the cause) or silently carry an order that does not govern.
+    expect(simulate(makeParams({ drawdownPolicy: 'custom' }), 1).indeterminate).toBe(true)
+    expect(
+      simulate(makeParams({ drawdownPolicy: 'proportional', drawdownOrder: ['roth', 'taxable', 'pretax'] }), 1)
+        .indeterminate,
+    ).toBe(true)
+    const nonPermutations = [
+      ['roth', 'taxable'], // short
+      ['roth', 'roth', 'taxable'], // duplicated
+      ['roth', 'taxable', 'hsa'], // the medical-earmarked bucket can never join the order
+      ['roth', 'taxable', 'pretax', 'roth'], // too long
+    ]
+    for (const order of nonPermutations) {
+      expect(
+        simulate(
+          makeParams({
+            drawdownPolicy: 'custom',
+            drawdownOrder: order as unknown as SimulationParams['drawdownOrder'],
+          }),
+          1,
+        ).indeterminate,
+      ).toBe(true)
+    }
+    // The VALID pair is accepted — the guard rejects mismatches, never the feature.
+    expect(
+      simulate(makeParams({ drawdownPolicy: 'custom', drawdownOrder: ['roth', 'taxable', 'pretax'] }), 1)
+        .indeterminate,
+    ).toBe(false)
+  })
+
   it('a NaN bracket-fill ceiling returns indeterminate, NEVER an uncaught throw (the R19 hole the review found)', () => {
     // With drawdownPolicy 'bracket-fill' + tax ON, a NaN ceiling survives `?? +Infinity`, poisons the
     // allocation, and (absent the validateParams guard) makes the gross-up run all 128 passes and THROW

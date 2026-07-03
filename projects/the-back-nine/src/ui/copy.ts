@@ -605,6 +605,39 @@ export const copy = {
 
 export type CopyKey = keyof typeof copy
 
+/**
+ * The hedge vocabulary — the words a probabilistic reading is authored FROM (U10's
+ * `require-hedge` copyGuard gate reads THIS same set, never a hand-copied list —
+ * burned/063 single-source-the-gate). Where SLOT DISCIPLINE governs how a NUMBER
+ * enters copy, this governs how CERTAINTY does: a control readout or a recommendation
+ * headline must WEAR one of these — "could / about / N of 10 / looks to be" — so the
+ * plan-moving claim is never a bald deterministic "buys you 3 years" (R12; calm-but-
+ * wrong is the sin). Reach for one when you write a control/recommendation line:
+ *
+ *   - modal possibility — could · can · may · might · would
+ *   - approximation ("humane precision") — about · around · roughly · the "~" glyph
+ *   - non-committal direction (a nudge, never an asserted arrival) — toward · towards
+ *   - the natural-frequency frame (the spine's honest odds) — "of 10" · "in 10"
+ *   - typical-not-always — often · usually · tends · tend
+ *   - stated likelihood ("most likely" carries it) — likely
+ *   - a reading, not a verdict — "looks to be" · "appears to"
+ *   - named as an estimate / a disclosed assumption — estimate(d/s) · assume(s) · "we assume"
+ *
+ * Matching semantics (word-boundary where the edge is a letter/digit, literal for the
+ * "~" glyph; case-insensitive) live in copyGuard.ts, mirroring the ban lexicons. The
+ * gate needs only ONE token present — the honesty is in the modal, not the exact word.
+ */
+export const HEDGE_TOKENS = [
+  'could', 'can', 'may', 'might', 'would',
+  'about', 'around', 'roughly', '~',
+  'toward', 'towards',
+  'of 10', 'in 10',
+  'often', 'usually', 'tends', 'tend',
+  'likely',
+  'looks to be', 'appears to',
+  'estimate', 'estimated', 'estimates', 'we assume', 'assume', 'assumes',
+] as const
+
 /** The over-funded near-ceiling reading, SINGLE-SOURCED (the verdict surface calls it by name via
  *  {@link slots.xOfTenAtCeiling}, and {@link slots.xOfTen}'s defensive clamp falls back to it). A
  *  PROPORTION ("9 in 10") — never a count ("9 of 10", which snaps to "10 of 10"), never a bald

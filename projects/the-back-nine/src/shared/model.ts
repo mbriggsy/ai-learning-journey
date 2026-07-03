@@ -186,13 +186,67 @@ export type DrawdownPolicy =
   | 'taxable-first' // exhaust taxable, then pre-tax, then Roth
   | 'pre-tax-first' // exhaust pre-tax, then taxable, then Roth
   | 'bracket-fill' // fill ordinary income to a target edge, then draw tax-free (U2-aware)
+  | 'custom' // the user's own bucket order (P3·U10) — carries a `drawdownOrder` alongside
 
 export const DRAWDOWN_POLICIES = [
   'proportional',
   'taxable-first',
   'pre-tax-first',
   'bracket-fill',
+  'custom',
 ] as const
+
+// Compile-time: the vocabulary array exactly covers the union (both directions) — the
+// codec + validateParams membership checks read the array, so a policy added to the
+// union cannot silently skip them.
+type _PoliciesCover = (typeof DRAWDOWN_POLICIES)[number] extends DrawdownPolicy ? true : never
+type _PolicyCovered = DrawdownPolicy extends (typeof DRAWDOWN_POLICIES)[number] ? true : never
+const _policiesExhaustive: _PoliciesCover & _PolicyCovered = true
+void _policiesExhaustive
+
+/** The GENERAL drawdown sources a custom order permutes — every bucket EXCEPT the
+ *  medical-earmarked `hsa` (never a general spending source; the M5 laundering guard).
+ *  Structurally the engine's `GeneralBucketKey`; the canonical persisted vocabulary
+ *  lives here in the leaf layer (sequencing.ts carries the compile-time tie). */
+export const DRAWDOWN_ORDER_KEYS = ['taxable', 'pretax', 'roth'] as const
+export type DrawdownOrderKey = (typeof DRAWDOWN_ORDER_KEYS)[number]
+
+/** The Roth-conversion lever's persisted inputs (P3·U10 — R9's second control). The user's
+ *  TUNABLE facts persist; the per-year `OverlayParams.conversions` vector is DERIVED at the
+ *  params builder (fidelity-over-duplication, the budget precedent). ABSENT ⇒ no conversions
+ *  ⇒ reduce-to-spine byte-identity (presence-keyed — an all-zero vector is NEVER written).
+ *  Offsets are sim-years from `startCalendarYear` (t = 0 = today), Y-INVARIANT on the date
+ *  route (the same absolute schedule rides every swept candidate — dateSearch's existing
+ *  `...overlayBase` semantics): "starting N years from now, convert $X a year for M years."
+ *  All fields finite (DND-009); the engine clamps each year to the legal pool net of the
+ *  non-convertible RMD (`[0, priorYearEndPretax − RMD]`) — magnitude is structurally safe. */
+export interface RothConversionPlan {
+  /** Requested conversion per active year (real $, > 0 — a zero plan is written as ABSENCE,
+   *  never a present-but-empty lever; the codec rejects 0 so present ⟹ meaningful). */
+  readonly annualAmountReal: number
+  /** First active sim-year offset from `startCalendarYear` (integer ≥ 0; 0 = this year). */
+  readonly startYearOffset: number
+  /** Consecutive active years (integer ≥ 1). Years past the horizon are inert. */
+  readonly years: number
+}
+
+/** Expand the persisted lever inputs into the engine's per-year `conversions` vector
+ *  (indexed by absolute sim-year, zero before the window, truncated at the horizon).
+ *  Pure + shared: the intake builder and the two-arm orchestrator (roth.ts) both derive
+ *  from THIS one function, so the lever and the comparison can never disagree about
+ *  which years convert. Returns undefined when the window lies entirely past the
+ *  horizon — absence stays the reduce-to-spine signal, never a zero-fill. */
+export function expandRothConversion(
+  plan: RothConversionPlan,
+  horizonYears: number,
+): readonly number[] | undefined {
+  const start = plan.startYearOffset
+  if (start >= horizonYears) return undefined
+  const end = Math.min(start + plan.years, horizonYears) // exclusive
+  const out = new Array<number>(end).fill(0)
+  for (let t = start; t < end; t++) out[t] = plan.annualAmountReal
+  return out
+}
 
 // ---------------------------------------------------------------------------
 // Tax-and-accounts overlay input (U2). Federal filing status is shared vocabulary
@@ -516,6 +570,10 @@ export interface SimulationParams {
   /** Which bucket-drawdown policy funds each year's net withdrawal. Inert on a
    *  single pool (the spine), meaningful once U2 splits the portfolio into buckets. */
   readonly drawdownPolicy: DrawdownPolicy
+  /** The user's own bucket order (P3·U10). REQUIRED iff `drawdownPolicy === 'custom'`
+   *  (validated both ways — an order riding a named policy is as wrong as a custom
+   *  policy with no order); a permutation of the three GENERAL buckets (never `hsa`). */
+  readonly drawdownOrder?: readonly DrawdownOrderKey[]
   /** The market the spine draws from (injected; see {@link MarketAssumptions}). */
   readonly market: MarketAssumptions
   /** Number of Monte Carlo paths. */
@@ -1334,6 +1392,19 @@ export interface ScenarioV3 {
    *  full-track total (the reconciliation invariant — incl. the compile-injected
    *  out-of-pocket medical floor). */
   readonly budget?: readonly BudgetLineItem[]
+  /** P3·U10 — the Roth-conversion lever's persisted inputs. ADDITIVE-OPTIONAL within
+   *  schemaVersion 3 (the budget/hsa tolerant-reader precedent — a pre-U10 vault simply
+   *  lacks the field and decodes unchanged; no version bump). ABSENT ⇒ no conversions ⇒
+   *  reduce-to-spine; the per-year engine vector is DERIVED at the params builder via
+   *  {@link expandRothConversion}, never stored. */
+  readonly rothConversion?: RothConversionPlan
+  /** P3·U10 — the custom bucket order. REQUIRED iff `drawdownPolicy === 'custom'` (the
+   *  codec enforces the biconditional — an order riding a named policy or a custom policy
+   *  with no order is unrepresentable-persisted, the retirementAge-biconditional precedent).
+   *  NOTE the compat edge this vocab extension accepts deliberately: a pre-U10 reader
+   *  decoding a 'custom' vault fails LOUD (needVocab → corrupt → the damaged door), never
+   *  computes a silently-wrong named-policy answer — loud-over-silent, the cardinal rule. */
+  readonly drawdownOrder?: readonly DrawdownOrderKey[]
 }
 
 /** The exhaustive v3 field set — U8's `checkV3Fields` checklist (burned/063: the
@@ -1356,6 +1427,8 @@ export const SCENARIO_V3_FIELDS = [
   'seed',
   'incomeStreams',
   'budget',
+  'rothConversion',
+  'drawdownOrder',
 ] as const
 
 // Compile-time: the field array exactly covers ScenarioV3 (both directions).

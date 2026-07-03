@@ -19,7 +19,7 @@
  * With NO ceiling (`+Infinity`) it degrades to `pre-tax-first` — the prior behaviour, so a single
  * pool stays inert (reduce-to-spine).
  */
-import type { DrawdownPolicy } from '@shared/model'
+import type { DrawdownOrderKey, DrawdownPolicy } from '@shared/model'
 
 /** The account buckets the policy allocates across. `hsa` (U3 · M5) is the 4th,
  *  MEDICAL-EARMARKED bucket: it shares the one market draw like every bucket (contract #2)
@@ -41,6 +41,14 @@ export type BucketKey = keyof AccountBuckets
  *  check in `taxOverlay.ts`). */
 export type GeneralBucketKey = Exclude<BucketKey, 'hsa'>
 export type BucketWithdrawals = Record<GeneralBucketKey, number>
+
+// Compile-time: the persisted custom-order vocabulary (@shared `DrawdownOrderKey`) IS this
+// engine key set, both directions — a bucket added to either side breaks the build here, so
+// the persisted order and the allocator can never drift apart (burned/063 single-source).
+type _OrderKeysCover = DrawdownOrderKey extends GeneralBucketKey ? true : never
+type _OrderKeysCovered = GeneralBucketKey extends DrawdownOrderKey ? true : never
+const _orderKeysTied: _OrderKeysCover & _OrderKeysCovered = true
+void _orderKeysTied
 
 const ZERO: BucketWithdrawals = { taxable: 0, pretax: 0, roth: 0 }
 
@@ -128,6 +136,11 @@ export function allocateWithdrawal(
   /** `bracket-fill` only: the year's max DISCRETIONARY pre-tax draw (the cheap ordinary-income
    *  room to the caller's target edge). `+Infinity` (the default) ⇒ no ceiling ⇒ `pre-tax-first`. */
   bracketFillCeiling: number = Number.POSITIVE_INFINITY,
+  /** `custom` only (P3·U10): the user's own exhaust-in-order bucket sequence — a permutation of
+   *  the three GENERAL buckets (`hsa` is unrepresentable in the type; the M5 laundering guard).
+   *  REQUIRED when `policy === 'custom'`; validateParams enforces the pairing upstream, and the
+   *  fail-loud below is the direct-caller backstop (burned/062). */
+  customOrder?: readonly GeneralBucketKey[],
 ): BucketWithdrawals {
   const total = generalDrawableTotal(buckets)
   const target = Math.min(Math.max(0, netWithdrawal), total)
@@ -143,6 +156,14 @@ export function allocateWithdrawal(
     case 'bracket-fill':
       // Fill pre-tax to the injected ceiling, then tax-free; `+Infinity` recovers pre-tax-first.
       return bracketFill(buckets, target, bracketFillCeiling)
+    case 'custom':
+      // The user's own order (P3·U10). A missing order is a caller bug the upstream biconditional
+      // (codec + validateParams) makes unreachable — refusing loud beats allocating from a guessed
+      // order (burned/062: a masked bad input is worse than an honest reject).
+      if (customOrder === undefined) {
+        throw new Error("[sequencing] policy 'custom' requires a customOrder")
+      }
+      return ordered(buckets, target, customOrder)
     default:
       // The union is exhaustive at compile time, but the worker boundary is untyped (structured
       // clone) — an out-of-union policy here would otherwise fall through and return `undefined`,

@@ -1,6 +1,13 @@
 import { describe, it, expect } from 'vitest'
-import { copy, slots, staticDisclosures, type CopyKey } from '../copy'
-import { lintCopy, isVerdictKey, isMortalityKey, DIRECTIVE_VERBS, type CopyGate } from '../copyGuard'
+import { copy, slots, staticDisclosures, HEDGE_TOKENS, type CopyKey } from '../copy'
+import {
+  lintCopy,
+  isVerdictKey,
+  isMortalityKey,
+  isControlKey,
+  DIRECTIVE_VERBS,
+  type CopyGate,
+} from '../copyGuard'
 
 /*
  * copyGuard enumerates the catalog and asserts every entry passes its applicable gates. Three
@@ -349,5 +356,98 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     // copyGuard never enumerates staticDisclosures; this asserts WHY (so the exclusion can't
     // silently become vacuous — burned/070). The R13 line is a legal mandatory directive.
     expect(lintCopy(staticDisclosures.honestLimitsValidate, ['advice-verb']).length).toBeGreaterThan(0)
+  })
+
+  // ============================================================================================
+  // U10 — the require-hedge gate (the INVERSE shape): a control readout / recommendation headline
+  // must WEAR a hedge, so a plan-moving claim is never a bald "buys you 3 years" (R12). The gate is
+  // control-SCOPED (isControlKey) — never run over terse honest verdicts ("On track"). Contract #4,
+  // docs/plans/3-controls.md. The U10-6 UI strings land the control keys LATER; today the sweep is
+  // empty, so the canary + adversarial corpus carry the non-vacuity proof.
+  // ============================================================================================
+
+  const controlGates: CopyGate[] = ['false-certainty', 'advice-verb', 'superlative', 'require-hedge']
+
+  it('every control readout passes the ban-gates AND wears a hedge (require-hedge — sweeps when U10-6 lands)', () => {
+    for (const [k, v] of entries.filter(([k]) => isControlKey(k))) {
+      expect(lintCopy(v, controlGates), `${k}: "${v}"`).toEqual([])
+    }
+    // slot-rendered control readouts too (the numeric channel — rendered via SLOT_RENDER, as the
+    // other loops do). Both sweeps are empty TODAY; the machinery below proves they are not vacuous.
+    for (const [name, rendered] of Object.entries(SLOT_RENDER).filter(([name]) => isControlKey(name))) {
+      expect(lintCopy(rendered, controlGates), `${name}: "${rendered}"`).toEqual([])
+    }
+  })
+
+  it('the require-hedge machinery works end-to-end (predicate scope + gate polarity — non-vacuity canary)', () => {
+    // predicate: control readouts IN, chart chrome + terse verdicts OUT
+    expect(isControlKey('rothDeltaReadout'), 'a roth readout is control-scoped').toBe(true)
+    expect(isControlKey('sequencingPolicyNote'), 'a sequencing readout is control-scoped').toBe(true)
+    expect(isControlKey('twoFuturesDeltaHeadline'), 'the two-futures delta headline is control-scoped').toBe(true)
+    expect(isControlKey('ladderBarLabel'), 'ladder chart chrome is NOT control-scoped').toBe(false)
+    expect(isControlKey('bandLegendMedian'), 'band chart chrome is NOT control-scoped').toBe(false)
+    expect(isControlKey('outcomeOnTrack'), 'a terse honest verdict wears no forced hedge').toBe(false)
+    expect(isControlKey('survivorReadoutEyebrow'), 'an existing survivor readout is NOT swept in').toBe(false)
+    // gate polarity: a bald deterministic claim FAILS, a hedged one PASSES
+    expect(lintCopy('The conversion saves you three years.', ['require-hedge']).length, 'bald → fail').toBeGreaterThan(0)
+    expect(lintCopy('Converting could help in about 8 of 10 futures.', ['require-hedge']), 'hedged → pass').toEqual([])
+  })
+
+  it('require-hedge catches bald deterministic control claims (≥8) — the calm-but-wrong family', () => {
+    const mustFail = [
+      'This conversion buys you 3 years.',
+      'Converting saves $40,000.',
+      'This strategy wins.',
+      'Your taxes will drop.',
+      'The Roth conversion adds four years to the plan.',
+      'Sequencing taxable first gives you an extra $12,000.',
+      'The survivor keeps $1,200 more a month.',
+      'This move puts the survivor over the line.',
+      'The delta is three years.',
+      'Converting now is the difference.',
+    ]
+    for (const s of mustFail) {
+      expect(lintCopy(s, ['require-hedge']).length, `MUST fail (no hedge): "${s}"`).toBeGreaterThan(0)
+    }
+  })
+
+  it('require-hedge passes properly hedged control readouts (≥8), incl. the "X of 10" frequency frame', () => {
+    const mustPass = [
+      'Converting could help in about 8 of 10 futures.',
+      `The survivor’s money lasts in ${slots.xOfTen(8)} futures instead of ${slots.xOfTen(6)}.`,
+      'This looks to be worth roughly a few years longer, around the median.',
+      'A conversion may lift the survivor toward steadier ground.',
+      'These odds assume today’s plan; a different order can move them.',
+      'Sequencing taxable first tends to stretch the taxable bucket.',
+      `Converting lands you near ${slots.withOdds(slots.xOfTen(8))}.`,
+      'The survivor keeps about ~$1,200 more a month, most likely.',
+      'Delaying often leaves a little more room before Medicare.',
+      'We estimate the shift is usually small.',
+    ]
+    for (const s of mustPass) {
+      expect(lintCopy(s, ['require-hedge']), `MUST pass (hedged): "${s}"`).toEqual([])
+    }
+  })
+
+  it('require-hedge is non-vacuous — a hedge-less string always goes red, and the catalog can never empty', () => {
+    // With no hedge token present — equivalently, as if HEDGE_TOKENS were EMPTIED (no matcher can
+    // ever fire) — the gate flags EVERY string. That is the loud failure an emptied catalog produces,
+    // never a silent green (burned/070).
+    expect(lintCopy('The conversion changes the plan.', ['require-hedge']).length).toBeGreaterThan(0)
+    expect(HEDGE_TOKENS.length, 'the hedge catalog is never empty').toBeGreaterThan(0)
+    // Load-bearing proof: the sole hedge token IS what flips the verdict — drop it from the same
+    // sentence and it goes red (so a catalog that failed to cover it would wrongly flag honest copy).
+    expect(lintCopy('Converting could change the plan.', ['require-hedge']), 'with a hedge → clean').toEqual([])
+    expect(lintCopy('Converting changes the plan.', ['require-hedge']).length, 'hedge removed → red').toBeGreaterThan(0)
+  })
+
+  it('the hedge catalog already covers honest verdict/plan copy — a future re-scope never rewords it', () => {
+    // ladderPlanCaveat is chart chrome (NOT control-scoped today), but were it ever pulled under
+    // require-hedge it already wears a hedge ("assume" + "can move them") — the tokens must cover it
+    // so the gate never pressures an author to reword honest copy.
+    expect(lintCopy(copy.ladderPlanCaveat, ['require-hedge']), copy.ladderPlanCaveat).toEqual([])
+    // the verdict magnitude clauses wear theirs too ("looks to be" / "toward").
+    expect(lintCopy(slots.verdictRoomClause('430'), ['require-hedge'])).toEqual([])
+    expect(lintCopy(slots.verdictTrimClause('280'), ['require-hedge'])).toEqual([])
   })
 })

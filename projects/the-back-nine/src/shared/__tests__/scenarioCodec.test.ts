@@ -337,6 +337,82 @@ describe('v3 — the forward-written persist shape (U8, the first v3 writer)', (
     }
   })
 
+  // P3·U10 — the Roth-conversion lever (ADDITIVE-OPTIONAL within v3: the base V3 fixture
+  // carries none and round-trips — the pre-U10-vault tolerant-reader proof; these arms cover
+  // present-and-valid + present-and-corrupt). The codec is the SOLE restore gate for the plan
+  // (the per-year vector is derived downstream — insight 046's multiplied-away class).
+  it('v3 WITH a rothConversion plan round-trips exactly', () => {
+    const withLever: ScenarioV3 = {
+      ...V3,
+      rothConversion: { annualAmountReal: 40_000, startYearOffset: 2, years: 5 },
+    }
+    expect(decodeScenario(encodeScenario(withLever))).toEqual({ ok: true, scenario: withLever })
+  })
+
+  it('rothConversion corruption arms: zero/negative/non-finite amount, fractional/zero years, negative/fractional offset — each named corrupt', () => {
+    const withLever: ScenarioV3 = {
+      ...V3,
+      rothConversion: { annualAmountReal: 40_000, startYearOffset: 2, years: 5 },
+    }
+    const arms: ((p: Obj) => void)[] = [
+      (p) => { p.annualAmountReal = 0 }, // a zero plan is written as ABSENCE — present-but-zero is a writer bug
+      (p) => { p.annualAmountReal = -40_000 },
+      (p) => { p.annualAmountReal = null }, // DND-009: a nulled slot is corruption, never coerced
+      (p) => { p.years = 0 },
+      (p) => { p.years = 2.5 },
+      (p) => { p.startYearOffset = -1 },
+      (p) => { p.startYearOffset = 1.5 },
+    ]
+    for (const arm of arms) {
+      const decoded = decodeScenario(mutated(withLever, (o) => arm(o.rothConversion as Obj)))
+      expect(decoded.ok).toBe(false)
+      if (!decoded.ok) expect(decoded.reason).toBe('corrupt')
+    }
+  })
+
+  // P3·U10 — the custom-order biconditional (the retirementAge-biconditional precedent:
+  // a mismatched pair is unrepresentable-persisted, both directions).
+  it("v3 WITH drawdownPolicy 'custom' + a full-permutation order round-trips exactly", () => {
+    const withCustom: ScenarioV3 = {
+      ...V3,
+      drawdownPolicy: 'custom',
+      drawdownOrder: ['roth', 'taxable', 'pretax'],
+    }
+    expect(decodeScenario(encodeScenario(withCustom))).toEqual({ ok: true, scenario: withCustom })
+  })
+
+  it("'custom' WITHOUT an order is REJECTED (the order is required, never guessed)", () => {
+    const d = decodeScenario(mutated(V3, (o) => { o.drawdownPolicy = 'custom' }))
+    expect(d.ok).toBe(false)
+    if (!d.ok && d.reason === 'corrupt') expect(d.detail).toContain('drawdownOrder')
+  })
+
+  it('an order riding a NAMED policy is REJECTED (it would silently not govern)', () => {
+    const d = decodeScenario(mutated(V3, (o) => { o.drawdownOrder = ['roth', 'taxable', 'pretax'] }))
+    expect(d.ok).toBe(false)
+    if (!d.ok && d.reason === 'corrupt') expect(d.detail).toContain('drawdownOrder')
+  })
+
+  it('drawdownOrder corruption arms: short, duplicated, unknown key, hsa (never a general source) — each corrupt', () => {
+    const withCustom: ScenarioV3 = {
+      ...V3,
+      drawdownPolicy: 'custom',
+      drawdownOrder: ['roth', 'taxable', 'pretax'],
+    }
+    const bads: unknown[] = [
+      ['roth', 'taxable'], // short — not a permutation
+      ['roth', 'roth', 'taxable'], // duplicated
+      ['roth', 'taxable', 'crypto'], // unknown key
+      ['roth', 'taxable', 'hsa'], // the medical-earmarked bucket is unrepresentable in an order
+      ['roth', 'taxable', 'pretax', 'roth'], // too long
+    ]
+    for (const bad of bads) {
+      const decoded = decodeScenario(mutated(withCustom, (o) => { o.drawdownOrder = bad }))
+      expect(decoded.ok).toBe(false)
+      if (!decoded.ok) expect(decoded.reason).toBe('corrupt')
+    }
+  })
+
   it('EVERY v3 top-level field is validated — set each to null and the decode rejects as CORRUPT (no silent skip, burned/063)', () => {
     // NOTE: a null on a CONTAINER field (people/enteredAccounts/tickerClassifications/health/incomeStreams)
     // only trips the OUTER needArray/needObject — the inner-shape coverage is the targeted tests below.

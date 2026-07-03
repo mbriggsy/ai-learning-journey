@@ -94,7 +94,11 @@ export interface ScenarioDraft
     // CALL SITE — every writer applies the items AND the reconciled scalar in ONE
     // `model.update` (the builder's `commitBudgetPatch`; the oop-medical step's
     // re-reconcile), so no consumer observes the two disagreeing.
-    Pick<ScenarioV3, 'annualSpendingReal' | 'seed' | 'budget'>
+    // `rothConversion`/`drawdownOrder` (P3·U10) ride the same additive-optional
+    // contract: absent = no lever / a named policy; the custom-order⟺'custom'
+    // biconditional is maintained at the control's single `model.update` write site
+    // (the codec re-proves it at Save — scenarioFromDraft round-trips the pair).
+    Pick<ScenarioV3, 'annualSpendingReal' | 'seed' | 'budget' | 'rothConversion' | 'drawdownOrder'>
   >,
     Pick<
       ScenarioV3,

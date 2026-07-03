@@ -32,14 +32,15 @@
  * AGE-ANCHORED as-if-retired; `healthcareStreams.ts` window-gates them per
  * candidate (never reshapes — its §3b contract).
  */
-import type {
-  AccountKind,
-  EnteredAccount,
-  PersonInputs,
-  SimulationParams,
-  OverlayParams,
-  PersonContributionStreams,
-  TickerClassification,
+import {
+  expandRothConversion,
+  type AccountKind,
+  type EnteredAccount,
+  type PersonInputs,
+  type SimulationParams,
+  type OverlayParams,
+  type PersonContributionStreams,
+  type TickerClassification,
 } from '@shared/model'
 import type { DateSearchInput } from '@engine/dateSearch'
 import { productionMarket } from '@engine/reference/methodology'
@@ -497,6 +498,16 @@ function buildOverlay(d: ScenarioDraft, horizonYears: number): OverlayParams | u
 
   const oop = d.health.oopMedicalAnnual
 
+  // P3·U10 — the Roth-conversion lever: expand the persisted plan into the per-year engine
+  // vector via the ONE shared expander (the same function roth.ts's with-arm derives from, so
+  // the lever and the comparison can never disagree about which years convert). Spread-if-
+  // present ONLY (an absent lever must not write `conversions` at all — an all-zero vector is
+  // NOT absence; reduce-to-spine is presence-keyed). Y-INVARIANT on the date route by
+  // construction: this runs once in buildParams and rides every swept candidate through
+  // `buildCandidateParams`'s `...overlayBase` (the hard-gate mechanism hook).
+  const conversions =
+    d.rothConversion !== undefined ? expandRothConversion(d.rothConversion, horizonYears) : undefined
+
   return {
     taxEnabled: true,
     rmdEnabled: true,
@@ -524,6 +535,7 @@ function buildOverlay(d: ScenarioDraft, horizonYears: number): OverlayParams | u
     ...(hsaOwnerIndex !== undefined ? { hsaOwnerIndex } : {}),
     ...(accumulation !== undefined ? { accumulation } : {}),
     ...(income !== undefined ? { income } : {}),
+    ...(conversions !== undefined ? { conversions } : {}),
   }
 }
 
@@ -547,6 +559,9 @@ function buildParams(d: ScenarioDraft): SimulationParams | null {
     people: buildPeople(d),
     survivorSpendingRatio: d.survivorSpendingRatio,
     drawdownPolicy: d.drawdownPolicy,
+    // P3·U10 — the custom order rides iff present; the 'custom'⟺order biconditional is
+    // maintained at the control's write site + re-proven by validateParams (two-gate rule).
+    ...(d.drawdownOrder !== undefined ? { drawdownOrder: d.drawdownOrder } : {}),
     market: productionMarket.value,
     paths: 2_000,
     maxHorizonYears: horizonYears,

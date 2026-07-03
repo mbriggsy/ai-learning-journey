@@ -29,6 +29,7 @@ import { totalAcrossBuckets } from '@engine/sequencing'
 import { householdBenefits, survivorBenefitAnnual, realizedClaimAgeAtDeath, type BenefitPerson } from '@engine/socialSecurityBenefit'
 import { irmaa } from '@engine/constants'
 import {
+  DRAWDOWN_ORDER_KEYS,
   DRAWDOWN_POLICIES,
   NEVER_DEPLETED,
   type AccumulationParams,
@@ -517,6 +518,22 @@ export function validateParams(params: SimulationParams): string | null {
   // wrong answer, the cardinal sin. (Both fields predate the per-stream R19 hardening and were never
   // re-audited — surfaced by the U3-exit code-review pilot.)
   if (!DRAWDOWN_POLICIES.includes(params.drawdownPolicy)) return 'drawdownPolicy unsupported'
+  // P3·U10 — the custom-order biconditional, mirrored from the codec (the two-gate rule:
+  // the codec proves the PERSISTED pair; this proves the WIRE pair — a direct caller / a
+  // desynced builder crossing the untyped worker boundary gets the contracted indeterminate,
+  // never allocateWithdrawal's mid-path throw surfacing as a calm-error).
+  if (params.drawdownPolicy === 'custom' && params.drawdownOrder === undefined)
+    return "drawdownOrder required for the 'custom' policy"
+  if (params.drawdownOrder !== undefined) {
+    if (params.drawdownPolicy !== 'custom') return "drawdownOrder is only meaningful under the 'custom' policy"
+    const order = params.drawdownOrder
+    if (
+      order.length !== DRAWDOWN_ORDER_KEYS.length ||
+      new Set(order).size !== DRAWDOWN_ORDER_KEYS.length ||
+      !order.every((k) => DRAWDOWN_ORDER_KEYS.includes(k))
+    )
+      return 'drawdownOrder must name each general bucket exactly once'
+  }
   if (params.longevityMode !== 'sampled' && params.longevityMode !== 'fixed-horizon')
     return 'longevityMode unsupported'
   if (params.people.length === 0) return 'no people'
@@ -1476,6 +1493,7 @@ export function simulate(
           // U6/U7 band fan: spread the sink ONLY when this pass feeds the fan (absent ⇒ the
           // byte-identical pre-fan taxInputs — presence-keyed, reduce-to-spine).
           { ...taxInputs, ...(fullSink ? { balancesOut: fullSink } : {}) },
+          params.drawdownOrder,
         )
         // P3·U9 — the floor pass: identical inputs, the essentials-only withdrawals. Runs
         // inside the SAME tight catch: a floor-arm failure is the same typed per-candidate
@@ -1492,6 +1510,7 @@ export function simulate(
             params.drawdownPolicy,
             overlayConfig,
             { ...taxInputs, ...(floorSink ? { balancesOut: floorSink } : {}) },
+            params.drawdownOrder,
           )
         }
       } catch (e) {

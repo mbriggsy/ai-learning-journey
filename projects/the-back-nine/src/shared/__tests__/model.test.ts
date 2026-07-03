@@ -4,6 +4,8 @@ import {
   NEVER_DEPLETED,
   isDepleted,
   DRAWDOWN_POLICIES,
+  DRAWDOWN_ORDER_KEYS,
+  expandRothConversion,
   type OutcomeState,
   type DepletionYear,
   type DateOffsetReading,
@@ -59,10 +61,52 @@ describe('never-depleted sentinel (DND/009 — survives JSON/IndexedDB)', () => 
 })
 
 describe('drawdown policy set (sequencing substrate)', () => {
-  it('names exactly the four locked policies', () => {
+  it("names exactly the four locked policies plus 'custom' (P3·U10 — the user's own order)", () => {
     expect([...DRAWDOWN_POLICIES].sort()).toEqual(
-      ['bracket-fill', 'pre-tax-first', 'proportional', 'taxable-first'].sort(),
+      ['bracket-fill', 'custom', 'pre-tax-first', 'proportional', 'taxable-first'].sort(),
     )
+  })
+
+  it('the custom-order vocabulary is the three GENERAL buckets — hsa is unrepresentable', () => {
+    expect([...DRAWDOWN_ORDER_KEYS].sort()).toEqual(['pretax', 'roth', 'taxable'].sort())
+  })
+})
+
+// ---------------------------------------------------------------------------
+// P3·U10 — expandRothConversion: the ONE shared expander (the intake builder and
+// the two-arm orchestrator both derive from it, so the lever and the comparison
+// can never disagree about which years convert). Hand-derived expectations.
+// ---------------------------------------------------------------------------
+describe('expandRothConversion (the lever → per-year engine vector)', () => {
+  it('expands a window inside the horizon: zeros before the start, the amount for each active year', () => {
+    expect(expandRothConversion({ annualAmountReal: 40_000, startYearOffset: 2, years: 3 }, 30)).toEqual([
+      0, 0, 40_000, 40_000, 40_000,
+    ])
+  })
+
+  it('a start-now window has no zero prefix', () => {
+    expect(expandRothConversion({ annualAmountReal: 25_000, startYearOffset: 0, years: 2 }, 30)).toEqual([
+      25_000, 25_000,
+    ])
+  })
+
+  it('truncates at the horizon (years past it are inert, never an over-long array)', () => {
+    expect(expandRothConversion({ annualAmountReal: 10_000, startYearOffset: 28, years: 5 }, 30)).toEqual([
+      ...new Array<number>(28).fill(0),
+      10_000,
+      10_000,
+    ])
+  })
+
+  it('a window entirely past the horizon returns UNDEFINED — absence, never a zero-fill (reduce-to-spine is presence-keyed)', () => {
+    expect(expandRothConversion({ annualAmountReal: 10_000, startYearOffset: 30, years: 5 }, 30)).toBeUndefined()
+    expect(expandRothConversion({ annualAmountReal: 10_000, startYearOffset: 31, years: 1 }, 30)).toBeUndefined()
+  })
+
+  it('the expansion is JSON-safe end to end (DND-009: finite entries only)', () => {
+    const vec = expandRothConversion({ annualAmountReal: 40_000, startYearOffset: 1, years: 2 }, 10)!
+    expect(vec.every((v) => Number.isFinite(v))).toBe(true)
+    expect(JSON.parse(JSON.stringify(vec))).toEqual(vec)
   })
 })
 

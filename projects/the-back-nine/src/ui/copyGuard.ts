@@ -36,9 +36,21 @@
  * `staticDisclosures` is OUTSIDE this gate's input by design (copy.ts): its R13 line is a mandatory
  * directive ("Validate … with a professional") that must stay legal while imperative mood stays
  * banned in verdict copy. The test proves the exclusion meaningful ('validate' is in DIRECTIVE_VERBS).
+ *
+ * `require-hedge` is the INVERSE gate (U10, the control/recommendation surface). Every other gate
+ * fires when a BANNED phrasing is PRESENT; this one fires when a HEDGE is ABSENT — a plan-moving
+ * readout must WEAR a modal ("could", "about", "N of 10", "looks to be") so it is never a bald
+ * deterministic "buys you 3 years" (R12). It reads the {@link HEDGE_TOKENS} catalog from copy.ts
+ * (copyGuard's ONE import from copy — the strings are authored FROM the same set the lint reads,
+ * burned/063). It is control-SCOPED via {@link isControlKey}: forcing a hedge onto the whole verdict
+ * surface would demand a modal on terse honest verdicts ("On track", "Your date") — see that
+ * predicate for why the scope is narrow.
  */
 
-export type CopyGate = 'false-certainty' | 'advice-verb' | 'superlative' | 'free-numeral' | 'catastrophe'
+import { HEDGE_TOKENS } from './copy'
+
+export type CopyGate =
+  | 'false-certainty' | 'advice-verb' | 'superlative' | 'free-numeral' | 'catastrophe' | 'require-hedge'
 
 export interface CopyViolation {
   readonly gate: CopyGate
@@ -70,6 +82,26 @@ export function isSurvivorKey(key: string): boolean {
  *  Same net so a future morbid edit ("you'll be destitute") can't ship green. */
 export function isMortalityKey(key: string): boolean {
   return isSurvivorKey(key) || key === 'bandReadoutThinNote' || key === 'verdictRethinkClause'
+}
+
+/** Key prefixes for the U10 control/recommendation surface — the sequencing + Roth levers and the
+ *  two-futures delta headline (`roth*`, `sequencing*`, `twoFutures*`, `control*`). */
+export const CONTROL_KEY_PREFIXES: readonly string[] = [
+  'roth', 'sequencing', 'twoFutures', 'control',
+]
+/** True for a control readout / recommendation-class headline — the ONLY surface `require-hedge`
+ *  bites (a plan-moving claim must wear its modal). DELIBERATELY NARROW, by prefix ALONE:
+ *   - NOT {@link isVerdictKey}: that surface includes terse honest verdicts ("On track", "Your
+ *     date", "More than covered") that are TRUE and wear no modal — forcing a hedge onto them
+ *     would push authors to reword correct copy into mush.
+ *   - NO "readout"/"headline" substring fallback (unlike isVerdictKey): those substrings already
+ *     belong to isVerdictKey AND collide with existing chart chrome that must stay hedge-free —
+ *     `survivorReadoutEyebrow` ("And if you’re on your own") and `bandReadoutThinNote` carry no
+ *     modal by design, so a substring net would wrongly demand one and break the build.
+ *  Chart chrome (ladder/band axis · bar · crown · dip · legend labels) is EXCLUDED by construction —
+ *  none of it leads with a control prefix. */
+export function isControlKey(key: string): boolean {
+  return CONTROL_KEY_PREFIXES.some((p) => key.startsWith(p))
 }
 
 // --- lexicons --------------------------------------------------------------------------------
@@ -235,6 +267,22 @@ export const CATASTROPHE_LEXICON: readonly RegExp[] = [
   /\bwiped out\b/i,
 ]
 
+/** Compile one {@link HEDGE_TOKENS} entry into a case-insensitive matcher (mirrors the ban
+ *  lexicons). Word-boundary-guard each edge that is a letter/digit — so "can" doesn't match inside
+ *  "cannot", and "of 10" doesn't match inside "of 100" — but leave a glyph edge (the "~" precision
+ *  hedge) as a bare literal, since \b never fits a non-word char. */
+function hedgeMatcher(token: string): RegExp {
+  const esc = token.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  const lead = /\w/.test(token[0]!) ? '\\b' : ''
+  const tail = /\w/.test(token[token.length - 1]!) ? '\\b' : ''
+  return new RegExp(lead + esc + tail, 'i')
+}
+/** The hedge vocabulary as matchers, compiled ONCE from the single-sourced copy.ts catalog. */
+const HEDGE_MATCHERS: readonly RegExp[] = HEDGE_TOKENS.map(hedgeMatcher)
+/** The `require-hedge` violation's `match` — the gate flags an ABSENCE, so there is no matched
+ *  substring to quote; this names WHY the string tripped in a violation dump. */
+const NO_HEDGE_MATCH = '(no hedge token present)'
+
 // --- helpers ---------------------------------------------------------------------------------
 
 const CLAUSE_BOUNDARIES = ['. ', '? ', '! ', '; ', ': ', ', ', '—', '–', '…']
@@ -305,6 +353,10 @@ export function lintCopy(text: string, gates: readonly CopyGate[]): CopyViolatio
     } else if (gate === 'free-numeral') {
       const m = /\d/.exec(t)
       if (m) out.push({ gate, match: m[0] })
+    } else if (gate === 'require-hedge') {
+      // INVERSE polarity: a violation when NO hedge token is present (the plan-moving readout wears
+      // no modal). Control-scoped by the caller (isControlKey), never run over the whole catalog.
+      if (!HEDGE_MATCHERS.some((re) => re.test(t))) out.push({ gate, match: NO_HEDGE_MATCH })
     } else {
       // gate === 'catastrophe'
       for (const re of CATASTROPHE_LEXICON) {

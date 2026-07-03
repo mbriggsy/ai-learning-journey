@@ -130,6 +130,8 @@ describe('composeHealthSheet', () => {
 describe('medicareUnpriced — the post-65 unpriced-domain predicate (the veto condition)', () => {
   it('true only when EVERY member is a known 65+ (the exact complement of the intake’s pre-65 gate)', () => {
     expect(medicareUnpriced([{ currentAge: 67 }, { currentAge: 66 }])).toBe(true)
+    // exactly 65 is STILL the unpriced domain (the intake gate is `< 65`) — kills the `<=` mutant.
+    expect(medicareUnpriced([{ currentAge: 67 }, { currentAge: 65 }])).toBe(true)
     expect(medicareUnpriced([{ currentAge: 67 }, { currentAge: 64 }])).toBe(false) // a pre-65 member prices healthcare
     expect(medicareUnpriced([{ currentAge: 67 }, {}])).toBe(false) // an unknown age is not a claim
     expect(medicareUnpriced([])).toBe(false)

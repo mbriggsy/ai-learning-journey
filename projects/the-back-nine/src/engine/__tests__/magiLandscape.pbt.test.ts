@@ -47,7 +47,10 @@ describe('magiLandscape — properties', () => {
     fc.assert(
       fc.property(ctxArb, fc.integer({ min: 10_000, max: 200_000 }), (c, cliff) => {
         const h = acaCliffFillHeadroom(c, cliff)
-        if (h > 0) return acaMagiAtFill(c, h) <= cliff
+        // Sound AND tight (the IRMAA/bracket siblings' clause): the fill holds the cliff and
+        // one more dollar always crosses it — the ceiling is the LARGEST safe fill, not
+        // merely a safe one (ultramode 2026-07-03 closed this asymmetry).
+        if (h > 0) return acaMagiAtFill(c, h) <= cliff && acaMagiAtFill(c, h + 1) > cliff
         // h === 0: either the committed baseline is already over, or the room is exactly zero.
         return acaMagiAtFill(c, 0) >= cliff || acaMagiAtFill(c, 1) > cliff
       }),

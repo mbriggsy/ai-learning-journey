@@ -191,6 +191,23 @@ describe('the healthcare door — the engine PRICED domain only, categorical (co
     expect(healthEditDoor()).toBeInTheDocument()
   })
 
+  it('the Apply commits EXACTLY the enhancedSubsidies key, and the escape STRIPS it — the insight-058 single-key fence, end to end through Result', () => {
+    plantResolved()
+    priced()
+    const before = appModel.getSnapshot().draft
+    renderResult()
+    fireEvent.click(screen.getByRole('button', { name: copy.leverHealthDoorCta }))
+    fireEvent.click(document.querySelector('input[name="subsidy-regime"][value="enhanced"]')!)
+    fireEvent.click(screen.getByRole('button', { name: copy.leverHealthRegimeApply }))
+    // EXACTLY one key moved — no health scalar, no sibling field (the fence's whole point).
+    expect(appModel.getSnapshot().draft).toEqual({ ...before, enhancedSubsidies: true })
+    // The door re-worded; the escape strips the KEY (absence — never enhancedSubsidies: false).
+    fireEvent.click(screen.getByRole('button', { name: copy.leverHealthDoorEditCta }))
+    fireEvent.click(screen.getByRole('button', { name: copy.leverHealthRegimeRemove }))
+    expect(appModel.getSnapshot().draft).toEqual(before)
+    expect('enhancedSubsidies' in appModel.getSnapshot().draft).toBe(false)
+  })
+
   it('the ROTH sheet wears the unpriced-Medicare note for a post-65-only household (the Result-level threading proof through a REAL child — insight 066)', () => {
     plantResolved()
     appModel.update((d) => ({

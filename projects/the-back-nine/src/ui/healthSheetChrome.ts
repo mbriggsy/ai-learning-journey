@@ -150,8 +150,16 @@ export function composeHealthSheet(
     const taxable = Math.max(0, agi - deductionStack(draft.filing, count65, agi))
     const marginal = marginalOrdinaryRate(taxable, draft.filing)
     const slcspAnnual = (draft.health.slcspMonthlyToday ?? 0) * 12
+    // The drag term exists only while the credit is genuinely alive at the anchor: past the
+    // cliff the PTC is already 0, but `slidingScalePtc` is deliberately CLIFF-REMOVED (the
+    // solver owns the branch), so an over-cliff anchor would otherwise report a phantom
+    // smooth drag (~10¢) the household cannot actually lose twice (ultramode 2026-07-03 —
+    // conservative-direction, but an overstated teaching figure is still an overstatement).
+    const creditAlive = cliff === null || anchor.acaMagiP50 <= cliff
     const drag =
-      slcspAnnual > 0 ? subsidyLossPerDollar(anchor.acaMagiP50, slcspAnnual, fplDollar, table) : 0
+      slcspAnnual > 0 && creditAlive
+        ? subsidyLossPerDollar(anchor.acaMagiP50, slcspAnnual, fplDollar, table)
+        : 0
     view.shadowLine = slots.shadowRateLine(Math.round((marginal + drag) * 100))
 
     if (cliff !== null) {

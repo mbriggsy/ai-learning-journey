@@ -1423,6 +1423,45 @@ describe('taxOverlay — M6a bracket-fill (the injected tax-aware ceiling)', () 
       expect(derived.totalNetPremiumReal).toBeLessThan(uncapped.totalNetPremiumReal)
     })
 
+    it('the ACA rail’s pre-65 conjunct is LOAD-BEARING: an all-65+ household with a populated premium stream gets NO phantom cliff cap (insight 027 — the rail mirrors the pricing gate)', () => {
+      // Both 66, healthcare ON, enrolled/slcsp POPULATED even in the post-65 years (the shape the
+      // readout fixtures prove reachable). The household's committed ACA-MAGI (120k conversion)
+      // sits far over the 84,600 cliff — if the rail ignored the pre-65 conjunct it would cap the
+      // fill at ZERO. The honest ceiling is the bracket rail alone: D = 47,500 flat (agi stays
+      // under the 150k phase-out through the fill), edge 100,800 ⇒ f = 100,800 − 72,500 = 28,300.
+      const both66: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: false, household: mkHousehold(2026, 1960, 1960) }
+      const buckets: AccountBuckets = { taxable: 1_000_000, pretax: 1_500_000, roth: 0 }
+      const derived = runTaxAwareDecumulation(buckets, zeros(4), zeros(4), zeros(4).map(() => 60_000), STOCK_W, 'bracket-fill', both66, {
+        healthcareEnabled: true,
+        slcsp: Array.from({ length: 4 }, () => 12_000),
+        enrolledPremium: Array.from({ length: 4 }, () => 15_000),
+        irmaaMagiSeed: [100_000, 100_000],
+        conversions: Array.from({ length: 4 }, () => 120_000),
+        initialTaxableBasis: 1_000_000,
+      })
+      // 1.5M − 4×120k conversions − 4×28,300 fills = 906,800 EXACT. A dropped pre-65 conjunct
+      // (ceiling 0 — no discretionary fill at all) would land 1,020,000 instead.
+      expect(derived.finalBuckets.pretax).toBeCloseTo(1_500_000 - 4 * 120_000 - 4 * 28_300, 1)
+    })
+
+    it('the IRMAA rail’s enrolled-at-the-bill conjunct is LOAD-BEARING: a young household near a tier line gets NO phantom step cap (insight 027 — the rail mirrors the billing gate)', () => {
+      // Both 51, healthcare ON but no marketplace streams (the ACA rail skips on the absent
+      // premium), a 200k conversion parking committed IRMAA-MAGI just 18k under the MFJ tier-1
+      // threshold. Nobody is Medicare-enrolled at any bill year — if the rail ignored the
+      // enrolled conjunct it would cap the fill at that phantom 18k headroom. The honest ceiling
+      // is the bracket rail alone: D = 32,200 flat (count65 = 0), edge 211,400 ⇒ f = 43,600.
+      const both51: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: false, household: mkHousehold(2026, 1975, 1975) }
+      const buckets: AccountBuckets = { taxable: 1_000_000, pretax: 1_500_000, roth: 0 }
+      const derived = runTaxAwareDecumulation(buckets, zeros(4), zeros(4), zeros(4).map(() => 60_000), STOCK_W, 'bracket-fill', both51, {
+        healthcareEnabled: true,
+        conversions: Array.from({ length: 4 }, () => 200_000),
+        initialTaxableBasis: 1_000_000,
+      })
+      // 1.5M − 4×200k conversions − 4×43,600 fills = 525,600 EXACT. A dropped enrolled conjunct
+      // (ceiling 18,000) would land 628,000 instead.
+      expect(derived.finalBuckets.pretax).toBeCloseTo(1_500_000 - 4 * 200_000 - 4 * 43_600, 1)
+    })
+
     it('the IRMAA-step rail holds BILLED years at the tier line and releases past the horizon (the t+lookback gate)', () => {
       // Both 66 (Medicare-enrolled), healthcare on, $200k/yr conversions, horizon 4. Years 0–1
       // record MAGI billed in years 2–3 (inside the horizon) ⇒ the rail caps the fill at the

@@ -174,6 +174,46 @@ describe('IntakeFlow — attempt-to-advance validation (the calm grammar)', () =
   })
 })
 
+describe('IntakeFlow — hydration provenance reaches the sanity gate (the restored-draft revisit)', () => {
+  /** A step owning the spend figure, rendering its violations s2-style. */
+  const SPEND_STEPS: readonly StepDef[] = [
+    {
+      id: 'spend',
+      headingKey: 'appTitle',
+      fields: ['annualSpendingReal'],
+      render: (api) =>
+        api.violationsFor('annualSpendingReal').map((v) => (
+          <p role="alert" key={v.rule}>
+            {copy[v.messageKey]}
+          </p>
+        )),
+    },
+    { id: 'after', headingKey: 'flowNext', fields: [], render: () => null },
+  ]
+
+  function modelWithAmbiguousSpend(): MemoryModel {
+    const m = freshModel()
+    // $120k under the untouched 'month' entry default reads $10k/mo ≥ the
+    // ambiguity floor — exactly the shape the force-confirm exists for.
+    m.update((d) => ({ ...d, annualSpendingReal: 120_000 }))
+    return m
+  }
+
+  it('WITHOUT provenance the force-confirm still blocks advance (the guard is intact)', () => {
+    render(<IntakeFlow steps={SPEND_STEPS} model={modelWithAmbiguousSpend()} />)
+    fireEvent.click(screen.getByRole('button', { name: copy.flowNext }))
+    expect(screen.getByRole('alert').textContent).toBe(copy.periodConfirmPrompt)
+    expect(screen.getByRole('heading', { level: 2 }).textContent).toBe(copy.appTitle) // blocked
+  })
+
+  it('periodConfirmed disarms the force-confirm end-to-end (advance sails through)', () => {
+    render(<IntakeFlow steps={SPEND_STEPS} model={modelWithAmbiguousSpend()} periodConfirmed />)
+    expect(screen.queryByRole('alert')).toBeNull()
+    fireEvent.click(screen.getByRole('button', { name: copy.flowNext }))
+    expect(screen.getByRole('heading', { level: 2 }).textContent).toBe(copy.flowNext) // advanced
+  })
+})
+
 describe('IntakeFlow — the one polite live region (burned/045)', () => {
   beforeEach(() => {
     vi.useFakeTimers()

@@ -95,9 +95,13 @@ export function describeUnlockFailure(failure: UnlockFailure): UnlockMessage {
  *
  * Typed off the SUCCESS arm so a change to its shape (e.g. readOnly → an enum) breaks
  * HERE at compile time, exactly as the failure seam is typed off the {ok:false} arms.
+ *
+ * Returns the notice KEY directly (or null) — this success arm has no `cancelled`/silent-vs-plain
+ * distinction to carry (unlike describeUnlockFailure's UnlockMessage), and BOTH call sites (App's
+ * standing ViewOnlyBanner, via UnlockScreen + RestoreFlow) want exactly `UnlockCopyKey | null`.
  */
-export function describeUnlockReadOnly(success: Extract<UnlockResult, { readonly ok: true }>): UnlockMessage {
-  return success.readOnly ? { kind: 'plain', key: 'unlockReadOnly' } : { kind: 'silent' }
+export function describeUnlockReadOnly(success: Extract<UnlockResult, { readonly ok: true }>): UnlockCopyKey | null {
+  return success.readOnly ? 'unlockReadOnly' : null
 }
 
 /** The `{ ok: false }` arms of the edit-and-re-save `session.save()` update path. */

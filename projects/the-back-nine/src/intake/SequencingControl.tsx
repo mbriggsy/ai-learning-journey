@@ -24,10 +24,10 @@ import type { DrawdownOrderKey, DrawdownPolicy, TwoArmControl } from '@shared/mo
 import type { ScenarioDraft } from '@store/memoryModel'
 import type { ControlPreview } from '@store/controlPreview'
 import { copy, slots, type CopyKey } from '@ui/copy'
-import { composeTwoFutures, type TwoFuturesView } from '@ui/twoFuturesChrome'
-import { TwoFutures } from '@viz/TwoFutures'
+import { composeTwoFutures } from '@ui/twoFuturesChrome'
 import type { Announcer } from './a11y'
 import { ControlSheet } from './controlSheet'
+import { ControlPreviewReadout, useControlPreview } from './controlPreview'
 
 /** The pickable set (v1): the named household-level policies minus bracket-fill (see header). */
 const PICKABLE = ['proportional', 'taxable-first', 'pre-tax-first', 'custom'] as const
@@ -50,13 +50,6 @@ const BUCKET_LABEL: Record<DrawdownOrderKey, CopyKey> = {
   pretax: 'leverOrderBucketPretax',
   roth: 'leverOrderBucketRoth',
 }
-
-type PreviewState =
-  | { readonly kind: 'idle' }
-  | { readonly kind: 'pending' }
-  | { readonly kind: 'no-anchor' }
-  | { readonly kind: 'ready'; readonly view: TwoFuturesView }
-  | { readonly kind: 'error'; readonly reason: string }
 
 export interface SequencingControlProps {
   readonly open: boolean
@@ -81,71 +74,41 @@ export function SequencingControl({ open, draft, preview, previewBlocking = fals
   const [order, setOrder] = useState<readonly DrawdownOrderKey[]>(
     draft.drawdownOrder ?? ['taxable', 'pretax', 'roth'],
   )
-  const [previewState, setPreviewState] = useState<PreviewState>({ kind: 'idle' })
-  // The sheet-local GENERATION (ultramode 2026-07-03 — two verified leaks the store's
-  // latest-wins ticket cannot see): (a) a selection that fires NO preview (back to the
-  // baseline) minted no ticket, so an in-flight run still painted 'ready' over 'idle';
-  // (b) an in-flight run outlived a close and leaked into the reopened sheet. EVERY
-  // preview-effect run and every open-edge bumps the generation; a resolve landing under
-  // a stale generation is discarded unrendered.
-  const genRef = useRef(0)
+  // The sheet-local latest-wins seam (shared with RothLever — ultramode 2026-07-03 — two verified
+  // leaks the store's ticket cannot see): (a) a selection that fires NO preview (back to the
+  // baseline) minted no ticket, so an in-flight run still painted 'ready' over 'idle'; (b) an
+  // in-flight run outlived a close and leaked into the reopened sheet. resetForOpen + every `run`
+  // (including the withdraw arm) bump the generation; a stale-generation resolve is discarded.
+  const { previewState, resetForOpen, run } = useControlPreview({ preview, announcerRef })
 
   // Re-seed the selection from the governing draft at the open EDGE only (the BudgetBuilder rule:
   // a mid-open draft change must never clobber an in-progress pick).
   useEffect(() => {
     if (!open) return
-    genRef.current++
+    resetForOpen()
     setPicked(current)
     setOrder(draft.drawdownOrder ?? ['taxable', 'pretax', 'roth'])
-    setPreviewState({ kind: 'idle' })
     // (deps deliberately narrow: open-edge re-seed only — the BudgetBuilder precedent)
   }, [open])
 
   // Preview on every committed selection change (radio pick / order move — discrete commits,
-  // never per-drag; the no-worker rule is satisfied by construction).
+  // never per-drag; the no-worker rule is satisfied by construction). Baseline-vs-baseline
+  // WITHDRAWS the comparison (request null) — a zero-delta non-comparison, kept idle.
   useEffect(() => {
     if (!open) return
-    const gen = ++genRef.current // EVERY run supersedes — including the no-preview arms below
-    if (picked === 'proportional' && current === 'proportional') {
-      setPreviewState({ kind: 'idle' }) // baseline vs baseline is a zero-delta non-comparison
-      return
-    }
-    const control: TwoArmControl =
-      picked === 'custom'
-        ? { kind: 'sequencing', policy: 'custom', order }
-        : { kind: 'sequencing', policy: picked }
-    const run = preview(control)
-    if (run === null) {
-      setPreviewState({ kind: 'no-anchor' })
-      return
-    }
-    setPreviewState({ kind: 'pending' })
-    void run.then((res) => {
-      if (gen !== genRef.current) return // superseded (a newer selection, a reset, or a reopen)
-      if (res.kind === 'stale') return
-      if (res.kind === 'error') {
-        setPreviewState({ kind: 'error', reason: res.reason })
-        announcerRef.current?.announce(copy.leverPreviewError)
-        return
-      }
-      const view = composeTwoFutures(
-        res.outcome,
-        copy[POLICY_LABEL[picked]],
-        copy.leverPolicyProportional,
-        slots.sequencingDelta,
-      )
-      if (view === null) {
-        setPreviewState({ kind: 'error', reason: 'indeterminate' })
-        announcerRef.current?.announce(copy.leverPreviewError)
-        return
-      }
-      setPreviewState({ kind: 'ready', view })
-      announcerRef.current?.announce(view.deltaLine)
+    const request: TwoArmControl | null =
+      picked === 'proportional' && current === 'proportional'
+        ? null
+        : picked === 'custom'
+          ? { kind: 'sequencing', policy: 'custom', order }
+          : { kind: 'sequencing', policy: picked }
+    run(request, (outcome) => {
+      const view = composeTwoFutures(outcome, copy[POLICY_LABEL[picked]], copy.leverPolicyProportional, slots.sequencingDelta)
+      return view === null ? { kind: 'error', reason: 'indeterminate' } : { kind: 'ready', view }
     })
-    // `preview` IS a dep: its identity carries the anchor (the crowned offset), so a
-    // provisional→final sharpen that moves the crown re-anchors an open sheet's preview
-    // (insight 047's tiered-consumer class — ultramode 2026-07-03).
-  }, [open, picked, order, preview, current])
+    // `run`'s identity carries `preview` (the crowned-offset anchor), so a provisional→final
+    // sharpen that moves the crown re-anchors an open sheet's preview (insight 047).
+  }, [open, picked, order, run, current])
 
   const move = (key: DrawdownOrderKey, dir: -1 | 1) => {
     setOrder((prev) => {
@@ -215,30 +178,11 @@ export function SequencingControl({ open, draft, preview, previewBlocking = fals
         </ol>
       )}
 
-      <div className="control-preview" aria-live="off">
-        {previewState.kind === 'pending' && <p className="control-preview__pending">{copy.leverPreviewPending}</p>}
-        {previewState.kind === 'no-anchor' && <p className="field-help">{copy.leverPreviewNoDate}</p>}
-        {previewState.kind === 'error' && <p className="field-help">{copy.leverPreviewError}</p>}
-        {previewBlocking && previewState.kind !== 'idle' && (
-          <p className="field-help">{copy.leverNoWorkerNote}</p>
-        )}
-        {previewState.kind === 'ready' && (
-          <>
-            <p className="control-preview__delta">{previewState.view.deltaLine}</p>
-            {previewState.view.stateLine && <p className="control-preview__state">{previewState.view.stateLine}</p>}
-            {previewState.view.yearsLine && <p className="control-preview__years">{previewState.view.yearsLine}</p>}
-            {previewState.view.series && (
-              <TwoFutures
-                withArm={previewState.view.series.withArm}
-                withoutArm={previewState.view.series.withoutArm}
-                labels={previewState.view.series.labels}
-              />
-            )}
-            <p className="field-help">{copy.twoFuturesCaption}</p>
-            <p className="field-help">{copy.sequencingBaselineNote}</p>
-          </>
-        )}
-      </div>
+      <ControlPreviewReadout
+        previewState={previewState}
+        previewBlocking={previewBlocking}
+        notes={<p className="field-help">{copy.sequencingBaselineNote}</p>}
+      />
 
       <div className="control-sheet__actions">
         <button type="button" className="btn-primary" onClick={() => onApply(picked, picked === 'custom' ? order : undefined)}>

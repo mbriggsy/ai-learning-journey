@@ -212,6 +212,34 @@ describe('the delta basis + arithmetic', () => {
     expect(out.rawDelta).toBe(out.with.survivorFraction! - out.without.survivorFraction!)
   })
 
+  it("a SINGLE-person household has NO survivor phase on any path — deltaBasis 'joint', delta on the JOINT fractions", () => {
+    // Derivation, not hypothesis (insight 025): a survivor phase needs ≥ 2 death offsets AND
+    // firstDeath < lastDeath (simulate.ts isSurvivorPhasePath — `deathOffsets.length < 2 ⇒ false`).
+    // deathOffsets is `people.map(...)` (exactly one entry per person, simulate.ts:1301/1306), so a
+    // people-of-one household has EXACTLY ONE death per path ⇒ buildSurvivorConditioned returns null ⇒
+    // survivorConditioned absent ⇒ BOTH arms' survivorFraction is undefined ⇒ survivorBasis is false ⇒
+    // the delta falls to the JOINT basis (roth.ts:171). This drives the 'joint' branch through the REAL
+    // engine (runTwoArm → simulate); it was previously exercised only over synthetic readings.
+    const solo = base({ people: [OWNER], overlay: { ...OVERLAY, pretaxByPerson: [500_000] } })
+    const out = twoArm(
+      runTwoArm(solo, SEED, { kind: 'conversion', plan: { annualAmountReal: 60_000, startYearOffset: 0, years: 3 } }),
+    )
+    expect(out.deltaBasis).toBe('joint')
+    expect(out.with.survivorFraction).toBeUndefined()
+    expect(out.without.survivorFraction).toBeUndefined()
+    // The meaningful delta assertion (not just the tag): rawDelta is the JOINT-fraction difference — the
+    // 'joint' ternary branch (roth.ts:159), NEVER a survivor pair — and both joint fractions are real
+    // probabilities in [0, 1].
+    expect(out.rawDelta).toBe(out.with.survivalFraction - out.without.survivalFraction)
+    // The subtraction-ORDER pin above is only meaningful if the arms genuinely differ —
+    // assert the premise so an equal-arms drift can never make it vacuous.
+    expect(out.with.survivalFraction).not.toBe(out.without.survivalFraction)
+    for (const f of [out.with.survivalFraction, out.without.survivalFraction]) {
+      expect(f).toBeGreaterThanOrEqual(0)
+      expect(f).toBeLessThanOrEqual(1)
+    }
+  })
+
   it('medianYearsDelta is present iff BOTH arms have a real median depletion year, and is their difference', () => {
     // A hot spend guarantees a real median depletion on both arms.
     const b = base({ annualSpendingReal: 90_000 })

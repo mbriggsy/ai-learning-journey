@@ -13,10 +13,11 @@
  * Holds the ONE polite live region (back-nine-design: a single announcer, clear-after-announce),
  * mounted once at the top so it never goes stale across step swaps.
  */
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { copy } from './copy'
 import './styles/save.css'
-import { createAnnouncer, focusHeading, type Announcer } from '@intake/a11y'
+import { useLiveAnnouncer, focusHeading } from '@intake/a11y'
+import { PendingPanel } from './PendingPanel'
 import { getVaultSession } from './vaultSession'
 import { holdUpdateApply } from './updateGate'
 import { PassphraseStep } from './PassphraseStep'
@@ -62,14 +63,9 @@ export function SaveFlow({
   // so it gets the estate-handoff intro; a couple gets the shared-memory framing.
   const solo = scenario.people.length === 1
 
-  // The ONE polite live region, bound once its node mounts; a stable forwarder lets children hold
-  // a steady `announcer` prop even before the node exists.
-  const liveRef = useRef<HTMLDivElement | null>(null)
-  const realAnnouncer = useRef<Announcer | null>(null)
-  useEffect(() => {
-    if (liveRef.current) realAnnouncer.current = createAnnouncer(liveRef.current)
-  }, [])
-  const announcer = useMemo<Announcer>(() => ({ announce: (t) => realAnnouncer.current?.announce(t) }), [])
+  // The ONE polite live region — a stable announcer children can hold as a steady prop even
+  // before its node mounts (useLiveAnnouncer's callback ref binds late; insight 060).
+  const announcer = useLiveAnnouncer()
 
   // Focus-to-heading for the inline steps (securing has no heading; the sub-components own theirs).
   const inlineHeadingRef = useRef<HTMLHeadingElement | null>(null)
@@ -178,13 +174,7 @@ export function SaveFlow({
         )
 
       case 'securing':
-        return (
-          <section className="save-step save-step--pending" aria-busy>
-            <p className="save-pending" role="status">
-              {copy.securingStatus}
-            </p>
-          </section>
-        )
+        return <PendingPanel status={copy.securingStatus} />
 
       case 'export':
         return <ExportConfirm announcer={announcer} onFinish={() => setStep('complete')} />
@@ -229,7 +219,7 @@ export function SaveFlow({
 
   return (
     <main className="save">
-      <div ref={liveRef} className="sr-only" role="status" aria-live="polite" aria-atomic="true" />
+      <div ref={announcer.ref} className="sr-only" role="status" aria-live="polite" aria-atomic="true" />
       {renderStep()}
     </main>
   )

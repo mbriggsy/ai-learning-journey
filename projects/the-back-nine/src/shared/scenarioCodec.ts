@@ -42,6 +42,21 @@ import {
 } from './model'
 import { COLA_PCT_MAX, COLA_PCT_MIN, colaRateInRange } from './incomeBounds'
 
+/**
+ * The generous real-$ magnitude ceiling for the amount fields the codec is the SOLE restore gate for
+ * (a budget line item + the Roth-conversion plan amount — the insight-046 summed/derived-away class the
+ * engine never sees RAW). MIRRORS the engine's computable-domain cap `ENGINE_MAX_DOLLAR`
+ * (src/engine/simulate.ts): every real-$ input the engine can compute on is ≤ that cap — its
+ * `finiteNonNeg` gate rejects a larger `initialPortfolio`/`annualSpendingReal` and every per-year
+ * vector — so a single field above it is corruption the engine would reject downstream ANYWAY, named
+ * LOUD here instead of clamped silent. Re-declared (not imported) because src/shared is a leaf that must
+ * NOT import engine (the eslint layer ban); a source-bind test asserts the two are EQUAL so the mirror
+ * can never silently drift (the incomeBounds COLA_PCT_MAX precedent). Contract: reject corruption loudly,
+ * generous enough that no real household is ever rejected ($1e12 in a single budget line / conversion
+ * year is unreachable for a real couple).
+ */
+export const MAX_REAL_DOLLAR = 1e12
+
 export type ScenarioDecode =
   | { readonly ok: true; readonly scenario: AnyScenario }
   | { readonly ok: false; readonly reason: 'corrupt'; readonly detail: string }
@@ -137,6 +152,16 @@ function needColaRate(o: Obj, field: string, path: string): void {
   // finite caller — a NaN passes every relational compare, insights 008/010).
   if (!colaRateInRange(n)) {
     throw new Corrupt(`${path}.${field}: expected a COLA rate in [${COLA_PCT_MIN.value}, ${COLA_PCT_MAX.value}]`)
+  }
+}
+
+/** A real-$ amount that must not exceed {@link MAX_REAL_DOLLAR} (the computable-domain ceiling). The
+ *  restore codec is the SOLE gate for amounts summed/derived away before the engine (insight 046); an
+ *  absurd magnitude is corruption the engine's own domain gate would reject downstream — named LOUD
+ *  here. Assumes needFinite ran first (a NaN passes every relational compare — insights 008/010). */
+function needAtMostMaxDollar(o: Obj, field: string, path: string): void {
+  if ((o[field] as number) > MAX_REAL_DOLLAR) {
+    throw new Corrupt(`${path}.${field}: exceeds the ${MAX_REAL_DOLLAR} real-$ computable-domain ceiling (corruption)`)
   }
 }
 
@@ -368,6 +393,7 @@ function checkBudgetLineItemV3(v: unknown, path: string): void {
   if ((v.annualAmountReal as number) < 0) {
     throw new Corrupt(`${path}.annualAmountReal: must be ≥ 0 (an offsetting negative nets past the engine's post-summation gate)`)
   }
+  needAtMostMaxDollar(v, 'annualAmountReal', path)
   needVocab(v, 'tier', BUDGET_TIERS, path)
   needInteger(v, 'startYear', path)
   const start = v.startYear as number
@@ -393,6 +419,7 @@ function checkRothConversionPlanV3(v: unknown, path: string): void {
   if ((v.annualAmountReal as number) <= 0) {
     throw new Corrupt(`${path}.annualAmountReal: must be > 0 (a zero/negative plan is written as absence, never persisted)`)
   }
+  needAtMostMaxDollar(v, 'annualAmountReal', path)
   needInteger(v, 'startYearOffset', path)
   if ((v.startYearOffset as number) < 0) {
     throw new Corrupt(`${path}.startYearOffset: expected a sim-year offset ≥ 0`)

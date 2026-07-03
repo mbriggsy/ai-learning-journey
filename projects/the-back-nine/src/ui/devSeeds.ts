@@ -492,6 +492,89 @@ const dateDipSeed: ScenarioDraft = {
   rothConversion: { annualAmountReal: 34_000, startYearOffset: 4, years: 4 },
 }
 
+/**
+ * THE CUSTOM-DRAWDOWN-ORDER round-trip seed (U10 — the persisted 'custom' policy + `drawdownOrder`).
+ * Every other seed rides the `proportional` default; this one is the ONLY seed that drives the
+ * 'custom' policy and an explicit bucket order through `plantDevVault`'s scenarioFromDraft → codec
+ * encode/decode round-trip — the biconditional (order present iff policy 'custom') has to survive
+ * byte-faithfully, and no seed exercised it until now.
+ *
+ * THREE DISTINCT BUCKETS on purpose: a $725k Traditional IRA (pretax) + a $300k brokerage (taxable,
+ * $180k basis) + a $200k Roth. The order is INERT on a single collapsed pool (reduce-to-spine —
+ * model.ts:180), so an all-in-one-bucket household could carry a 'custom' order that never governs
+ * anything and the round-trip would still "pass" while proving nothing. With the buckets split, the
+ * order genuinely picks which bucket funds each year's net withdrawal → different ordinary income →
+ * different lifetime tax. The order `['roth', 'pretax', 'taxable']` (Roth-first) is DELIBERATELY not
+ * expressible by any named policy (every named order ends at Roth), so a decode that silently decayed
+ * it to a named policy would be caught. All-retired (66/67, both past 65 ⇒ no ACA quote, both ≥ 64 ⇒
+ * the IRMAA seed IS required) — the SPINE route, so devSeeds.test.ts can runEngine it directly and
+ * pin the OUTCOME: it resolves tax-aware, and the same household run `proportional` pays a visibly
+ * different lifetime tax (the order is not inert). A dev seed, not a golden — the pin is an
+ * INEQUALITY (order ≠ proportional), never a hand-typed dollar the engine could drift under.
+ */
+const customOrderSeed: ScenarioDraft = {
+  people: [
+    {
+      name: 'Alex',
+      sex: 'female',
+      birthYear: 1959,
+      currentAge: 67,
+      workStatus: 'retired',
+      retirementAge: 65,
+      earnedIncomeReal: 0,
+      pia: 30_000,
+      socialSecurityClaimAge: 67,
+    },
+    {
+      name: 'Sam',
+      sex: 'male',
+      birthYear: 1960,
+      currentAge: 66,
+      workStatus: 'retired',
+      retirementAge: 64,
+      earnedIncomeReal: 0,
+      pia: 24_000,
+      socialSecurityClaimAge: 67,
+    },
+  ],
+  enteredAccounts: [
+    {
+      ownerIndex: 0,
+      kind: 'traditional-ira',
+      // NOT $750k — that exact value is the top IRMAA MFJ MAGI threshold (a canonical
+      // dated figure), so the constants single-source gate rejects it inlined here.
+      valueToday: 725_000,
+      manualBlend: { kind: 'exact', stockPct: 60, bondPct: 30, cashPct: 10 },
+    },
+    {
+      ownerIndex: 0,
+      kind: 'brokerage',
+      valueToday: 300_000,
+      basis: 180_000,
+      manualBlend: { kind: 'exact', stockPct: 60, bondPct: 30, cashPct: 10 },
+    },
+    {
+      ownerIndex: 1,
+      kind: 'roth-ira',
+      valueToday: 200_000,
+      manualBlend: { kind: 'exact', stockPct: 70, bondPct: 25, cashPct: 5 },
+    },
+  ],
+  incomeStreams: [],
+  tickerClassifications: {},
+  health: { irmaaMagiSeed: [80_000, 80_000] },
+  annualSpendingReal: 96_000,
+  spendEntryPeriod: 'month',
+  survivorSpendingRatio: 0.75,
+  drawdownPolicy: 'custom',
+  drawdownOrder: ['roth', 'pretax', 'taxable'],
+  filing: 'mfj',
+  startCalendarYear: 2026,
+  taxVintage: 'OBBBA-2025',
+  appDefaultVersion: 'p2-dev-seed',
+  seed: DEV_CRN_SEED,
+}
+
 /** The seed registry — `?seed=<key>` selects one. */
 export const DEV_SEEDS = {
   retired: retiredOnTrack,
@@ -503,6 +586,7 @@ export const DEV_SEEDS = {
   datesplit: dateSplitSeed,
   datemixed: dateMixedSeed,
   dip: dateDipSeed,
+  order: customOrderSeed,
 } satisfies Record<string, ScenarioDraft>
 
 export type DevSeedKey = keyof typeof DEV_SEEDS

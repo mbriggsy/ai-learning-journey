@@ -41,6 +41,27 @@ describe('deriveResultSave — the edit-and-re-save machine', () => {
     expect(deriveResultSave(persist, retired)).toEqual({ kind: 'clean' })
   })
 
+  it('a READ-ONLY session derives NO save CTA for ANY disk state — the View-only banner is the whole disclosure (the read-only-verdict fix)', () => {
+    // A 2nd tab holds the writer, so session.save() would REFUSE: a 'dirty' CTA is a lying dead-end
+    // and a 'clean' badge would claim a save THIS tab never made. Every disk state collapses to 'none'.
+    const saved: PersistState = { kind: 'saved', scenario: retired.scenario }
+    // read-only + DIRTY → no CTA (the exact case an edit in a 2nd tab hit before this fix)
+    expect(deriveResultSave(saved, borderline, true)).toEqual({ kind: 'none' })
+    // read-only + a would-be-'clean' matching answer still makes no claim (no misleading Saved badge)
+    expect(deriveResultSave(saved, retired, true)).toEqual({ kind: 'none' })
+    // read-only + a would-be re-save failure is suppressed too — no retry that can never succeed
+    const failed: PersistState = { kind: 'save-failed', scenario: retired.scenario, errorKey: 'saveErrorFailed' }
+    expect(deriveResultSave(failed, borderline, true)).toEqual({ kind: 'none' })
+  })
+
+  it('the read-only flag is NOT a global mute — a WRITABLE dirty edit still derives the re-save CTA', () => {
+    const saved: PersistState = { kind: 'saved', scenario: retired.scenario }
+    // Explicit writable session: the CTA is unchanged from the flag being off.
+    expect(deriveResultSave(saved, borderline, false)).toEqual({ kind: 'dirty' })
+    // …and the default (2-arg) call is writable — read-only is opt-in, never the fallthrough.
+    expect(deriveResultSave(saved, borderline)).toEqual({ kind: 'dirty' })
+  })
+
   it('THE DEAD-END LOCK: once a vault exists, the ceremony can never be offered again', () => {
     const persists: PersistState[] = [
       { kind: 'saved', scenario: retired.scenario },

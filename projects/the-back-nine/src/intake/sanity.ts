@@ -20,7 +20,11 @@
  * upstream Back-edit automatically re-fires downstream rules at the point of
  * edit while never flagging questions the user hasn't reached. Downstream
  * answers are KEPT (the draft is never wiped) — exactly the contract's
- * "keeps answers, re-validates dependents".
+ * "keeps answers, re-validates dependents". A third argument, `provenance`,
+ * carries the one confirmation `touched` cannot express: a draft hydrated from a
+ * persisted vault / dev seed answered the spend-period force-confirm in a PRIOR
+ * session, and a fresh IntakeFlow mount starts `touched` empty (see
+ * {@link SanityProvenance}).
  *
  * VALIDATION TIMING is the flow's job (blur / attempt-to-advance, never per
  * keystroke; clear on re-edit) — these predicates are timing-free.
@@ -146,15 +150,39 @@ export interface SanityViolation {
   readonly messageKey: CopyKey
 }
 
+/** Session provenance a PURE rule cannot derive from the draft alone — the draft
+ *  is byte-identical whether freshly typed or restored, so a "was this answered
+ *  in a PRIOR session?" fact must be threaded in by the caller.
+ *
+ *  `periodConfirmed` — the spend entry period was explicitly answered before
+ *  this session. A draft hydrated from a persisted vault (draftFromScenario) or
+ *  a complete dev seed necessarily cleared the flow's force-confirm gate before
+ *  it was ever written (the codec keeps `spendEntryPeriod` as an authored unit,
+ *  not a default). A fresh IntakeFlow mount starts `touched` EMPTY, so that
+ *  prior confirmation cannot survive as a touched entry — provenance is the only
+ *  channel it has. With it set, revisiting the spend AMOUNT (touching
+ *  `annualSpendingReal` without re-tapping the period) must NOT re-fire the nag.
+ *  A fresh draft leaves this false/absent, so the first-session honesty affordance
+ *  (a silent 'month' default misread as 'year' is a 12× error) is unchanged. */
+export interface SanityProvenance {
+  readonly periodConfirmed?: boolean
+}
+
 interface SanityRule {
   readonly id: string
   /** The field this rule guards (the firing site — must be touched to fire). */
   readonly target: (draft: ScenarioDraft) => readonly FieldPath[]
   /** Returns violations given EVERY input it needs is present; absent inputs ⇒
    *  the rule simply does not fire (never a default — burned/062). `touched`
-   *  is available for confirmation-class rules (the period force-confirm
-   *  clears the instant its control is explicitly answered). */
-  readonly check: (draft: ScenarioDraft, touched: ReadonlySet<FieldPath>) => readonly SanityViolation[]
+   *  is available for confirmation-class rules (the period force-confirm clears
+   *  the instant its control is explicitly answered THIS session); `provenance`
+   *  carries the equivalent PRIOR-session confirmation a hydrated draft can't
+   *  express through `touched` (a fresh mount starts it empty). */
+  readonly check: (
+    draft: ScenarioDraft,
+    touched: ReadonlySet<FieldPath>,
+    provenance: SanityProvenance,
+  ) => readonly SanityViolation[]
 }
 
 const perPerson = (
@@ -234,9 +262,16 @@ const RULES: readonly SanityRule[] = [
     // instant the segment is tapped (touched gains 'spendEntryPeriod').
     id: 'spend-period-unconfirmed',
     target: () => ['annualSpendingReal'],
-    check: (d, touched) => {
+    check: (d, touched, provenance) => {
       if (d.annualSpendingReal === undefined || !Number.isFinite(d.annualSpendingReal)) return []
-      if (touched.has('spendEntryPeriod')) return []
+      // Disarmed by an explicit answer THIS session (touched gains
+      // 'spendEntryPeriod' the instant the segment is tapped) OR the equivalent
+      // PRIOR-session answer a hydrated/restored draft carries as provenance:
+      // its period cleared this same gate before the vault was written, and a
+      // fresh IntakeFlow mount starts `touched` empty, so provenance is the only
+      // way that confirmation survives the round-trip (the restored-draft revisit
+      // false-fire this closes).
+      if (provenance.periodConfirmed === true || touched.has('spendEntryPeriod')) return []
       const entered =
         d.spendEntryPeriod === 'month' ? d.annualSpendingReal / 12 : d.annualSpendingReal
       // No upper bound (the named second line of defense): a figure ABOVE a
@@ -429,8 +464,11 @@ const RULES: readonly SanityRule[] = [
 export function validateDraft(
   draft: ScenarioDraft,
   touched: ReadonlySet<FieldPath>,
+  provenance: SanityProvenance = {},
 ): readonly SanityViolation[] {
-  return RULES.flatMap((rule) => rule.check(draft, touched)).filter((v) => touched.has(v.field))
+  return RULES.flatMap((rule) => rule.check(draft, touched, provenance)).filter((v) =>
+    touched.has(v.field),
+  )
 }
 
 /** Violations for ONE field (the blur-time per-field check). */
@@ -438,6 +476,7 @@ export function validateField(
   draft: ScenarioDraft,
   field: FieldPath,
   touched: ReadonlySet<FieldPath> = new Set(),
+  provenance: SanityProvenance = {},
 ): readonly SanityViolation[] {
-  return RULES.flatMap((rule) => rule.check(draft, touched)).filter((v) => v.field === field)
+  return RULES.flatMap((rule) => rule.check(draft, touched, provenance)).filter((v) => v.field === field)
 }

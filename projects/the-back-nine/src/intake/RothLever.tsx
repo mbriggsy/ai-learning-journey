@@ -22,19 +22,12 @@ import type { RothConversionPlan, TwoArmControl } from '@shared/model'
 import type { ScenarioDraft } from '@store/memoryModel'
 import type { ControlPreview } from '@store/controlPreview'
 import { copy, slots } from '@ui/copy'
-import { composeTwoFutures, type TwoFuturesView } from '@ui/twoFuturesChrome'
-import { TwoFutures } from '@viz/TwoFutures'
+import { composeTwoFutures } from '@ui/twoFuturesChrome'
 import type { Announcer } from './a11y'
 import { ControlSheet } from './controlSheet'
+import { ControlPreviewReadout, useControlPreview } from './controlPreview'
 import { CurrencyField, IntegerField, formatMoney } from './fields'
 import { draftPretaxTotal } from './intakeMap'
-
-type PreviewState =
-  | { readonly kind: 'idle' }
-  | { readonly kind: 'pending' }
-  | { readonly kind: 'no-anchor' }
-  | { readonly kind: 'ready'; readonly view: TwoFuturesView }
-  | { readonly kind: 'error'; readonly reason: string }
 
 /** The draft plan mid-entry: fields optional until committed (the intake hole-tolerance rule). */
 interface PlanDraft {
@@ -68,76 +61,48 @@ export function RothLever({ open, draft, preview, previewBlocking = false, onApp
   const announcerRef = useRef<Announcer | null>(null)
   const applied = draft.rothConversion
   const [plan, setPlan] = useState<PlanDraft>({})
-  const [previewState, setPreviewState] = useState<PreviewState>({ kind: 'idle' })
   const nothingToConvert = draftPretaxTotal(draft) <= 0
-  // The sheet-local GENERATION (ultramode 2026-07-03 — the SequencingControl twin): a cleared
-  // field or a reopen must supersede an in-flight run; the store ticket alone cannot see the
-  // no-new-preview transitions. Every effect run + every open-edge bumps it.
-  const genRef = useRef(0)
+  // The sheet-local latest-wins seam (shared with SequencingControl — ultramode 2026-07-03): a
+  // cleared field or a reopen must supersede an in-flight run; the store ticket alone cannot see
+  // those no-new-preview transitions.
+  const { previewState, resetForOpen, run } = useControlPreview({ preview, announcerRef })
 
   // Open-edge re-seed (the BudgetBuilder rule): the applied plan pre-fills; defaults otherwise.
   useEffect(() => {
     if (!open) return
-    genRef.current++
+    resetForOpen()
     setPlan(
       applied === undefined
         ? { start: 0, years: 5 }
         : { amount: applied.annualAmountReal, start: applied.startYearOffset, years: applied.years },
     )
-    setPreviewState({ kind: 'idle' })
     // (deps deliberately narrow: open-edge re-seed only — the BudgetBuilder precedent)
   }, [open])
 
   // Preview on every COMPLETE committed plan (fields commit on blur — discrete, never per-drag).
+  // A cleared/incomplete plan WITHDRAWS the comparison (request null) — a stale delta over no
+  // entered plan is a confident readout of nothing (ultramode 2026-07-03).
   const candidate = complete(plan)
   const candidateKey = candidate === null ? '' : `${candidate.annualAmountReal}:${candidate.startYearOffset}:${candidate.years}`
   useEffect(() => {
     if (!open || nothingToConvert) return
-    const gen = ++genRef.current
-    if (candidate === null) {
-      // A cleared/incomplete plan WITHDRAWS the comparison — a stale delta over no entered
-      // plan is a confident readout of nothing (ultramode 2026-07-03).
-      setPreviewState({ kind: 'idle' })
-      return
-    }
-    const run = preview({ kind: 'conversion', plan: candidate })
-    if (run === null) {
-      setPreviewState({ kind: 'no-anchor' })
-      return
-    }
-    setPreviewState({ kind: 'pending' })
-    void run.then((res) => {
-      if (gen !== genRef.current) return // superseded (a newer plan, a clear, or a reopen)
-      if (res.kind === 'stale') return
-      if (res.kind === 'error') {
-        setPreviewState({ kind: 'error', reason: res.reason })
-        announcerRef.current?.announce(copy.leverPreviewError)
-        return
-      }
-      if (res.outcome.kind === 'indeterminate') {
+    run(candidate === null ? null : { kind: 'conversion', plan: candidate }, (outcome) => {
+      if (outcome.kind === 'indeterminate') {
         // The engine's own calm closure (e.g. the pool emptied under the hood) — the closed face.
-        setPreviewState({ kind: 'error', reason: res.outcome.reason })
-        announcerRef.current?.announce(copy.leverPreviewError)
-        return
+        return { kind: 'error', reason: outcome.reason }
       }
       const view = composeTwoFutures(
-        res.outcome,
+        outcome,
         copy.tfChartRothWith,
         // An APPLIED conversion makes "Today's plan" a mislabel for the stripped baseline —
         // today's plan HAS the conversion; the honest without-arm name is the negation.
         applied === undefined ? copy.tfChartRothWithout : copy.tfChartRothWithoutApplied,
         slots.rothDeltaSurvivor,
       )
-      if (view === null) {
-        setPreviewState({ kind: 'error', reason: 'indeterminate' })
-        announcerRef.current?.announce(copy.leverPreviewError)
-        return
-      }
-      setPreviewState({ kind: 'ready', view })
-      announcerRef.current?.announce(view.deltaLine)
+      return view === null ? { kind: 'error', reason: 'indeterminate' } : { kind: 'ready', view }
     })
-    // `preview` IS a dep — its identity carries the crowned-offset anchor (insight 047).
-  }, [open, candidateKey, nothingToConvert, preview, applied])
+    // `run`'s identity carries `preview` (the crowned-offset anchor — insight 047).
+  }, [open, candidateKey, nothingToConvert, run, applied])
 
   return (
     <ControlSheet open={open} title={copy.leverRothTitle} onClose={onClose} announcerRef={announcerRef}>
@@ -176,37 +141,16 @@ export function RothLever({ open, draft, preview, previewBlocking = false, onApp
             </p>
           )}
 
-          <div className="control-preview" aria-live="off">
-            {previewState.kind === 'pending' && (
-              <p className="control-preview__pending">{copy.leverPreviewPending}</p>
-            )}
-            {previewState.kind === 'no-anchor' && <p className="field-help">{copy.leverPreviewNoDate}</p>}
-            {previewState.kind === 'error' && <p className="field-help">{copy.leverPreviewError}</p>}
-            {previewBlocking && previewState.kind !== 'idle' && (
-              <p className="field-help">{copy.leverNoWorkerNote}</p>
-            )}
-            {previewState.kind === 'ready' && (
+          <ControlPreviewReadout
+            previewState={previewState}
+            previewBlocking={previewBlocking}
+            notes={
               <>
-                <p className="control-preview__delta">{previewState.view.deltaLine}</p>
-                {previewState.view.stateLine && (
-                  <p className="control-preview__state">{previewState.view.stateLine}</p>
-                )}
-                {previewState.view.yearsLine && (
-                  <p className="control-preview__years">{previewState.view.yearsLine}</p>
-                )}
-                {previewState.view.series && (
-                  <TwoFutures
-                    withArm={previewState.view.series.withArm}
-                    withoutArm={previewState.view.series.withoutArm}
-                    labels={previewState.view.series.labels}
-                  />
-                )}
-                <p className="field-help">{copy.twoFuturesCaption}</p>
                 <p className="field-help">{copy.rothFundingNote}</p>
                 <p className="field-help">{copy.rothOmissionsNote}</p>
               </>
-            )}
-          </div>
+            }
+          />
 
           <div className="control-sheet__actions">
             <button

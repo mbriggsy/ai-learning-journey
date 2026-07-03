@@ -10,6 +10,8 @@
  */
 import { describe, expect, it } from 'vitest'
 
+import { ENGINE_MAX_DOLLAR } from '@engine/simulate'
+
 import {
   NEVER_DEPLETED,
   SCENARIO_V3_FIELDS,
@@ -17,7 +19,7 @@ import {
   type ScenarioV2,
   type ScenarioV3,
 } from '../model'
-import { decodeScenario, encodeScenario } from '../scenarioCodec'
+import { decodeScenario, encodeScenario, MAX_REAL_DOLLAR } from '../scenarioCodec'
 
 type Obj = Record<string, unknown>
 
@@ -337,6 +339,30 @@ describe('v3 — the forward-written persist shape (U8, the first v3 writer)', (
     }
   })
 
+  it('the codec ceiling MAX_REAL_DOLLAR is source-bound to the engine ENGINE_MAX_DOLLAR (the mirror can never silently drift)', () => {
+    // src/shared is a leaf that must not import engine, so the ceiling is RE-DECLARED, not imported — this
+    // asserts the two stay byte-equal so a future engine-cap change forces the codec to follow (the
+    // incomeBounds COLA_PCT_MAX source-bind precedent).
+    expect(MAX_REAL_DOLLAR).toBe(ENGINE_MAX_DOLLAR)
+  })
+
+  it('v3 budget: an amount OVER the computable-domain ceiling is corruption; a large-but-legitimate amount at/below it passes (not over-strict)', () => {
+    const withBudget: ScenarioV3 = {
+      ...V3,
+      budget: [{ category: 'housing', label: 'Estate', annualAmountReal: 30_000, tier: 'essentials', startYear: 0 }],
+    }
+    // An absurd/corrupted vault value the engine's own domain gate (finiteNonNeg ≤ ENGINE_MAX_DOLLAR) would
+    // reject downstream — named LOUD at the sole restore gate, never clamped silent.
+    const over = decodeScenario(mutated(withBudget, (o) => { (o.budget as Obj[])[0]!.annualAmountReal = MAX_REAL_DOLLAR * 10 }))
+    expect(over.ok).toBe(false)
+    if (!over.ok && over.reason === 'corrupt') expect(over.detail).toContain('budget[0].annualAmountReal')
+    // At/below the INCLUSIVE ceiling: the bound itself and a lavish-but-real $5M/yr line both decode ok (the
+    // codec is shape-only — reconciliation to annualSpendingReal is the engine's job, not the codec's).
+    for (const v of [MAX_REAL_DOLLAR, 5_000_000]) {
+      expect(decodeScenario(mutated(withBudget, (o) => { (o.budget as Obj[])[0]!.annualAmountReal = v })).ok, `${v} at/below ceiling`).toBe(true)
+    }
+  })
+
   // P3·U10 — the Roth-conversion lever (ADDITIVE-OPTIONAL within v3: the base V3 fixture
   // carries none and round-trips — the pre-U10-vault tolerant-reader proof; these arms cover
   // present-and-valid + present-and-corrupt). The codec is the SOLE restore gate for the plan
@@ -367,6 +393,23 @@ describe('v3 — the forward-written persist shape (U8, the first v3 writer)', (
       const decoded = decodeScenario(mutated(withLever, (o) => arm(o.rothConversion as Obj)))
       expect(decoded.ok).toBe(false)
       if (!decoded.ok) expect(decoded.reason).toBe('corrupt')
+    }
+  })
+
+  it('v3 rothConversion: an amount OVER the computable-domain ceiling is corruption; a large-but-legitimate amount at/below it passes', () => {
+    const withLever: ScenarioV3 = {
+      ...V3,
+      rothConversion: { annualAmountReal: 40_000, startYearOffset: 2, years: 5 },
+    }
+    // The engine clamps a requested conversion to [0, pretax − RMD] (taxOverlay.ts), so an over-ceiling
+    // amount is latent there — but the codec is the SOLE gate for the RAW plan (insight 046) and must
+    // fail LOUD on the corrupted magnitude the engine's domain gate would reject anyway.
+    const over = decodeScenario(mutated(withLever, (o) => { (o.rothConversion as Obj).annualAmountReal = MAX_REAL_DOLLAR * 10 }))
+    expect(over.ok).toBe(false)
+    if (!over.ok && over.reason === 'corrupt') expect(over.detail).toContain('rothConversion.annualAmountReal')
+    // At/below the INCLUSIVE ceiling: the bound itself and a large-but-real $2M/yr conversion decode ok.
+    for (const v of [MAX_REAL_DOLLAR, 2_000_000]) {
+      expect(decodeScenario(mutated(withLever, (o) => { (o.rothConversion as Obj).annualAmountReal = v })).ok, `${v} at/below ceiling`).toBe(true)
     }
   })
 

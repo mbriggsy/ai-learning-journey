@@ -25,10 +25,11 @@
  * caveat (a 2nd tab holds the writer) is threaded through `describeUnlockReadOnly` — the seam owns
  * the decision — and handed up as the notice key App's standing ViewOnlyBanner renders (Fork C ii).
  */
-import { useEffect, useId, useMemo, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { copy } from './copy'
 import './styles/save.css'
-import { createAnnouncer, focusHeading, type Announcer } from '@intake/a11y'
+import { useLiveAnnouncer, focusHeading } from '@intake/a11y'
+import { PendingPanel } from './PendingPanel'
 import { describeUnlockFailure, describeUnlockReadOnly, type UnlockCopyKey } from './unlockCopy'
 
 export function UnlockScreen({
@@ -54,14 +55,9 @@ export function UnlockScreen({
   const [busy, setBusy] = useState(false)
   const [errorKey, setErrorKey] = useState<UnlockCopyKey | null>(null)
 
-  // The ONE polite live region (mirrors SaveFlow), bound once its node mounts; the stable forwarder
-  // lets the handler announce even across the brief mount window.
-  const liveRef = useRef<HTMLDivElement | null>(null)
-  const realAnnouncer = useRef<Announcer | null>(null)
-  useEffect(() => {
-    if (liveRef.current) realAnnouncer.current = createAnnouncer(liveRef.current)
-  }, [])
-  const announcer = useMemo<Announcer>(() => ({ announce: (t) => realAnnouncer.current?.announce(t) }), [])
+  // The ONE polite live region (mirrors SaveFlow) — a stable announcer that speaks even across
+  // the brief busy→form remount (useLiveAnnouncer's callback ref binds late; insight 060).
+  const announcer = useLiveAnnouncer()
 
   // Focus-to-heading on mount AND on the busy→form return: a failed attempt unmounts the form into
   // the pending panel (focus falls to <body>), so the remounted form must re-anchor focus or a
@@ -82,10 +78,9 @@ export function UnlockScreen({
       const result = await session.unlock(passphrase)
       if (result.ok) {
         // Success — hydration is IntakeApp's job; the read-only caveat rides up as the seam's
-        // verdict for App's standing banner (Fork C ii). Leave `busy` true: the pending state
-        // persists through the unmount into IntakeApp's restoring beat.
-        const notice = describeUnlockReadOnly(result)
-        onUnlocked(notice.kind === 'plain' ? notice.key : null)
+        // verdict (the notice key or null) for App's standing banner (Fork C ii). Leave `busy`
+        // true: the pending state persists through the unmount into IntakeApp's restoring beat.
+        onUnlocked(describeUnlockReadOnly(result))
         return
       }
       const message = describeUnlockFailure(result)
@@ -106,13 +101,9 @@ export function UnlockScreen({
 
   return (
     <main className="save">
-      <div ref={liveRef} className="sr-only" role="status" aria-live="polite" aria-atomic="true" />
+      <div ref={announcer.ref} className="sr-only" role="status" aria-live="polite" aria-atomic="true" />
       {busy ? (
-        <section className="save-step save-step--pending" aria-busy>
-          <p className="save-pending" role="status">
-            {copy.restoringStatus}
-          </p>
-        </section>
+        <PendingPanel status={copy.restoringStatus} />
       ) : (
         <section className="save-step">
           <h2 className="save-step__heading" tabIndex={-1} ref={headingRef}>

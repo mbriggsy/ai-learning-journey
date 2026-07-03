@@ -39,7 +39,14 @@ export type ResultSaveView =
   | { readonly kind: 'saving' } // update write in flight
   | { readonly kind: 'failed'; readonly errorKey: ResaveCopyKey } // last re-save refused — alert + retry
 
-export function deriveResultSave(persist: PersistState, ready: SaveReady): ResultSaveView {
+export function deriveResultSave(persist: PersistState, ready: SaveReady, readOnly = false): ResultSaveView {
+  // A READ-ONLY session (a 2nd tab holds the writer — captured ONCE at unlock, session.ts) has no
+  // functioning save surface: `session.save()` REFUSES (not-writable → "reload to edit"), so a
+  // 'dirty' CTA here is the same lying dead-end the edit-and-re-save machine exists to retire, and a
+  // 'clean' badge would claim a save THIS tab never made. Make no claim at all — App's standing
+  // View-only banner is the whole disclosure. This overrides every disk state, so an edit in a
+  // read-only session can NEVER derive the dirty CTA (the U8-review read-only-verdict fix).
+  if (readOnly) return { kind: 'none' }
   // An incomplete answer can't be compared OR saved: make no claim (never a stale "Saved"
   // badge over an answer that no longer matches the disk, never a CTA that can't build a
   // scenario). The intact vault is untouched; completing the answer re-derives honestly.

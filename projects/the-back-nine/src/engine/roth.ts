@@ -45,7 +45,6 @@ import {
   expandRothConversion,
   isDepleted,
   type DepletionYear,
-  type OverlayParams,
   type SimulationParams,
   type SimulationResult,
   type TwoArmControl,
@@ -86,12 +85,12 @@ export function buildArmParams(
     // candidate's stacked together).
     const { conversions: _base, ...overlayRest } = overlay
     if (arm === 'without') {
-      return { ...base, overlay: overlayRest as OverlayParams }
+      return { ...base, overlay: overlayRest }
     }
     const conversions = expandRothConversion(control.plan, base.maxHorizonYears)
     return {
       ...base,
-      overlay: { ...(overlayRest as OverlayParams), ...(conversions !== undefined ? { conversions } : {}) },
+      overlay: { ...overlayRest, ...(conversions !== undefined ? { conversions } : {}) },
     }
   }
   // sequencing: the selected policy vs the proportional baseline. drawdownOrder rides

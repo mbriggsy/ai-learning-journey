@@ -15,7 +15,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import { AnswerStrip } from '@intake/AnswerStrip'
 import { buildControlPreviewParams, missingRequiredFacts } from '@intake/intakeMap'
-import { createAnnouncer, type Announcer } from '@intake/a11y'
+import { useLiveAnnouncer } from '@intake/a11y'
 import { BudgetBuilder } from '@intake/BudgetBuilder'
 import { SequencingControl } from '@intake/SequencingControl'
 import { RothLever } from '@intake/RothLever'
@@ -71,20 +71,16 @@ export function Result({
   // saving→clean announces the badge. The FAILED arm stays with its own role='alert' (an alert
   // announces on insertion by design — routing it here too would double-speak it). Edit-back
   // clean (failed→clean with no save) is deliberately silent: no durability event occurred.
-  // (The liveRef+forwarder idiom's 5th site — the filed useLiveAnnouncer() advisory covers all.)
-  const liveRef = useRef<HTMLDivElement | null>(null)
-  const announcerRef = useRef<Announcer | null>(null)
-  useEffect(() => {
-    if (liveRef.current) announcerRef.current = createAnnouncer(liveRef.current)
-  }, [])
+  // (The shared useLiveAnnouncer() hook — one callback-ref-bound live-region idiom, insight 060.)
+  const announcer = useLiveAnnouncer()
   const prevSaveKind = useRef(save.kind)
   useEffect(() => {
     const prev = prevSaveKind.current
     prevSaveKind.current = save.kind
     if (save.kind === prev) return
-    if (save.kind === 'saving') announcerRef.current?.announce(copy.resavePending)
-    else if (save.kind === 'clean' && prev === 'saving') announcerRef.current?.announce(copy.savedBadge)
-  }, [save.kind])
+    if (save.kind === 'saving') announcer.announce(copy.resavePending)
+    else if (save.kind === 'clean' && prev === 'saving') announcer.announce(copy.savedBadge)
+  }, [save.kind, announcer])
 
   const elevated = selectElevatedAnswer(snapshot, retry)
   const focusKey = resolvedFocusKey(elevated)
@@ -225,7 +221,7 @@ export function Result({
 
   return (
     <main className="result">
-      <div ref={liveRef} className="sr-only" role="status" aria-live="polite" aria-atomic="true" />
+      <div ref={announcer.ref} className="sr-only" role="status" aria-live="polite" aria-atomic="true" />
       <div className="result-hero">
         {elevated.kind === 'date' && (
           <FuckOffDate

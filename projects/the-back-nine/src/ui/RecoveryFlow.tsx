@@ -22,10 +22,11 @@
  * the unlock screen), because `PassphraseStep` statically pulls the zxcvbn floor seam that must not
  * ride the entry chunk.
  */
-import { useEffect, useId, useMemo, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { copy } from './copy'
 import './styles/save.css'
-import { createAnnouncer, focusHeading, type Announcer } from '@intake/a11y'
+import { useLiveAnnouncer, focusHeading } from '@intake/a11y'
+import { PendingPanel } from './PendingPanel'
 import { describeUnlockFailure, type UnlockCopyKey } from './unlockCopy'
 import { PassphraseStep } from './PassphraseStep'
 import type { FloorCheckedPassphrase } from '@crypto/kdf'
@@ -71,14 +72,9 @@ export function RecoveryFlow({
   const wordId = useId()
   const errId = useId()
 
-  // The ONE polite live region (the SaveFlow pattern), bound once its node mounts; the stable
-  // forwarder lets handlers and the reused PassphraseStep announce across step swaps.
-  const liveRef = useRef<HTMLDivElement | null>(null)
-  const realAnnouncer = useRef<Announcer | null>(null)
-  useEffect(() => {
-    if (liveRef.current) realAnnouncer.current = createAnnouncer(liveRef.current)
-  }, [])
-  const announcer = useMemo<Announcer>(() => ({ announce: (t) => realAnnouncer.current?.announce(t) }), [])
+  // The ONE polite live region (the SaveFlow pattern) — a stable announcer that handlers and the
+  // reused PassphraseStep hold across step swaps (useLiveAnnouncer's callback ref binds late).
+  const announcer = useLiveAnnouncer()
 
   // Focus-to-heading for the panels this flow owns (PassphraseStep owns its own on mount).
   useEffect(() => {
@@ -169,15 +165,11 @@ export function RecoveryFlow({
 
   return (
     <main className="save">
-      <div ref={liveRef} className="sr-only" role="status" aria-live="polite" aria-atomic="true" />
+      <div ref={announcer.ref} className="sr-only" role="status" aria-live="polite" aria-atomic="true" />
 
       {step === 'word' &&
         (busy ? (
-          <section className="save-step save-step--pending" aria-busy>
-            <p className="save-pending" role="status">
-              {copy.restoringStatus}
-            </p>
-          </section>
+          <PendingPanel status={copy.restoringStatus} />
         ) : (
           <section className="save-step">
             <h2 className="save-step__heading" tabIndex={-1} ref={headingRef}>
@@ -260,13 +252,7 @@ export function RecoveryFlow({
         />
       )}
 
-      {step === 'securing' && (
-        <section className="save-step save-step--pending" aria-busy>
-          <p className="save-pending" role="status">
-            {copy.securingStatus}
-          </p>
-        </section>
-      )}
+      {step === 'securing' && <PendingPanel status={copy.securingStatus} />}
 
       {step === 'error' && (
         <section className="save-step">

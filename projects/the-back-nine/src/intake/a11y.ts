@@ -15,7 +15,7 @@
  * text never lingers in the a11y tree (keeps Playwright/N=1 snapshot
  * verification honest — exactly one current question in the tree).
  */
-import { useEffect, useRef } from 'react'
+import { useCallback, useEffect, useMemo, useRef } from 'react'
 
 /** Move focus to a step/verdict heading. The heading carries `tabIndex={-1}`
  *  (focusable, not tabbable). Safe to call mid-enter-animation — the step
@@ -60,4 +60,41 @@ export function createAnnouncer(node: HTMLElement, clearAfterMs = CLEAR_AFTER_MS
       }, clearAfterMs)
     },
   }
+}
+
+/** The single-live-region controller returned by {@link useLiveAnnouncer}: an
+ *  {@link Announcer} (so it drops straight into any child that takes an `announcer`
+ *  prop) that also hands back the ref to bind its DOM node. */
+export interface LiveAnnouncer extends Announcer {
+  /** Attach to the ONE visually-hidden polite live-region node. */
+  readonly ref: (node: HTMLElement | null) => void
+}
+
+/**
+ * React hook wrapping {@link createAnnouncer} — the one live-region idiom, in one place.
+ *
+ * The node is bound by a CALLBACK REF, never a mount effect. A `useEffect(…, [])` that
+ * reads a `liveRef` binds only what exists at the component's FIRST render; when the
+ * region lives inside an open-gated portal that mounts AFTER the component (BudgetBuilder,
+ * mounted-closed-then-opened), that effect binds null and never retries — a dead announcer
+ * that stays green in every always-open test (insight 060). The callback ref binds/unbinds
+ * the announcer exactly when its node mounts/unmounts, so both shapes — an unconditionally-
+ * mounted region and a late portal — are correct by construction.
+ *
+ * `announce` and `ref` are stable across renders and the returned object identity is stable,
+ * so a child holding it as an `announcer` prop never re-fires an announcer-keyed effect. An
+ * `announce` before the node attaches is a safe no-op (never throws); after, it speaks.
+ */
+export function useLiveAnnouncer(clearAfterMs = CLEAR_AFTER_MS): LiveAnnouncer {
+  const announcerRef = useRef<Announcer | null>(null)
+  const ref = useCallback(
+    (node: HTMLElement | null) => {
+      announcerRef.current = node === null ? null : createAnnouncer(node, clearAfterMs)
+    },
+    [clearAfterMs],
+  )
+  const announce = useCallback((text: string) => {
+    announcerRef.current?.announce(text)
+  }, [])
+  return useMemo<LiveAnnouncer>(() => ({ ref, announce }), [ref, announce])
 }

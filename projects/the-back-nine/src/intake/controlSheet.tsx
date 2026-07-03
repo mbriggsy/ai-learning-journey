@@ -1,8 +1,11 @@
 /*
  * src/intake/controlSheet.tsx — the shared portal-sheet scaffold for the U10 control surfaces
- * (SequencingControl + RothLever). Lifted verbatim from BudgetBuilder's PROVEN overlay contract
- * (its third co-sibling — a fold of all three onto this scaffold is the filed follow-up; the
- * shipped budget sheet is deliberately untouched in this unit):
+ * (SequencingControl + RothLever). Lifted verbatim from BudgetBuilder's PROVEN overlay contract.
+ * The two control sheets now also share their what-if PREVIEW plumbing — the PreviewState union,
+ * the genRef latest-wins seam, and the readout block — via the colocated `./controlPreview`
+ * (useControlPreview + ControlPreviewReadout), so this scaffold + that seam are the two sheets'
+ * common spine. Folding BudgetBuilder (the third co-sibling) onto this scaffold remains the filed
+ * follow-up; the shipped budget sheet is deliberately untouched in this unit:
  *   - portaled to document.body (no transform ancestor can trap the fixed backdrop),
  *   - focus trapped, Escape closes, focus restored to the trigger after exit,
  *   - focus-to-heading on open (never an input — the phone-keyboard law),

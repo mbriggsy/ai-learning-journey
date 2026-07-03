@@ -42,7 +42,7 @@ import type { BudgetLineItem as BudgetLine } from '@shared/model'
 import type { ScenarioDraft } from '@store/memoryModel'
 import { budgetGoverns, isRampedBudget, validateBudgetItems, isActiveAt } from '@budget/budgetModel'
 import { anchorTarget } from '@budget/budgetToSpending'
-import { createAnnouncer, focusHeading, type Announcer } from './a11y'
+import { useLiveAnnouncer, focusHeading } from './a11y'
 import { formatMoney } from './fields'
 import { BudgetLineItem } from './BudgetLineItem'
 import './budget.css'
@@ -107,14 +107,10 @@ export function BudgetBuilder({ open, draft, onApply, onEscape, onClose }: Budge
   const items = useMemo(() => rows.map((r) => r.item), [rows])
 
   // The blocked-Apply announce region (clear-after-announce — the one live-region idiom).
-  // The node lives INSIDE the open-gated portal, so a mount-time effect would bind null on
-  // the app's real closed-at-mount shape and never re-run — the announce would be silently
-  // dead in BOTH live mounts (Result, the governed spend step). A CALLBACK ref binds and
-  // unbinds the announcer exactly when the node exists.
-  const announcerRef = useRef<Announcer | null>(null)
-  const bindLiveRegion = useCallback((node: HTMLDivElement | null) => {
-    announcerRef.current = node === null ? null : createAnnouncer(node)
-  }, [])
+  // The node lives INSIDE the open-gated portal, so it mounts only when the sheet opens —
+  // AFTER this component. useLiveAnnouncer is callback-ref based precisely so it binds on
+  // that late mount, never null-at-mount like a `[]`-deps effect would (insight 060).
+  const announcer = useLiveAnnouncer()
 
   // On OPEN: re-seed from the governing draft unless uncommitted local edits are pending (close-
   // without-apply preserves work); capture the focus owner; land focus on the sheet heading
@@ -224,7 +220,7 @@ export function BudgetBuilder({ open, draft, onApply, onEscape, onClose }: Budge
     }
     if (hasErrors) {
       setAttempted(true)
-      announcerRef.current?.announce(copy.budgetApplyBlocked)
+      announcer.announce(copy.budgetApplyBlocked)
       return
     }
     dirtyRef.current = false
@@ -291,7 +287,7 @@ export function BudgetBuilder({ open, draft, onApply, onEscape, onClose }: Budge
             exit={{ opacity: 0 }}
             transition={{ duration: reduce ? 0 : 0.2, ease: EASE_OUT }}
           >
-            <div ref={bindLiveRegion} className="sr-only" role="status" aria-live="polite" aria-atomic="true" />
+            <div ref={announcer.ref} className="sr-only" role="status" aria-live="polite" aria-atomic="true" />
             <h2 className="budget-sheet__title" id={titleId} tabIndex={-1} ref={headingRef}>
               {copy.budgetSheetTitle}
             </h2>

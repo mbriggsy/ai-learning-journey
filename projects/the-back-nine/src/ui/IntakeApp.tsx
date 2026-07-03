@@ -9,6 +9,7 @@ import { scenarioFromDraft } from './scenarioFromDraft'
 import { draftFromScenario } from './draftFromScenario'
 import { deriveResultSave, type PersistState } from './resultSave'
 import { describeSaveFailure } from './unlockCopy'
+import { PendingPanel } from './PendingPanel'
 import { copy } from './copy'
 import './styles/save.css'
 
@@ -39,11 +40,16 @@ const SaveFlow = lazy(() => import('./SaveFlow').then((m) => ({ default: m.SaveF
 export default function IntakeApp({
   seed,
   hydrateFromVault = false,
+  readOnly = false,
 }: {
   seed?: string | null
   /** Decrypt-on-return: after a successful unlock, hydrate the result from the session's decrypted
    *  model instead of starting a fresh intake. App sets this on the post-unlock mount. */
   hydrateFromVault?: boolean
+  /** The unlock opened READ-ONLY (a 2nd tab holds the writer — Fork C ii). App's standing View-only
+   *  banner is the disclosure; the result surface must derive NO save CTA (a save can't land in this
+   *  tab — session.save would refuse), so this is threaded into deriveResultSave. */
+  readOnly?: boolean
 }) {
   const [phase, setPhase] = useState<'restoring' | 'intake' | 'result' | 'save' | 'restore-failed'>(
     hydrateFromVault ? 'restoring' : 'intake',
@@ -52,6 +58,12 @@ export default function IntakeApp({
   // hydrate mount — the hydrate effect installs the decoded model's normalized scenario, and
   // until then the phase is 'restoring' so no save UI renders from the placeholder state.
   const [persist, setPersist] = useState<PersistState>({ kind: 'unsaved' })
+  // DEV-seed provenance for the spend-period disarm: flips ONLY after a seed draft actually
+  // APPLIES — `resolveDevSeed` returns null for a bogus `?seed=` key, and that mount is a
+  // genuinely-fresh intake that must keep the R19 force-confirm armed (ultramode 2026-07-03).
+  // A state flag, not a render-time resolveDevSeed(seed) call: devSeeds must stay behind the
+  // dynamic import so it remains dead-code-eliminated from prod.
+  const [devSeedApplied, setDevSeedApplied] = useState(false)
   const snapshot = useSyncExternalStore(appModel.subscribe, appModel.getSnapshot)
   const steps = useMemo(() => intakeSteps(snapshot.draft), [snapshot.draft])
   const missing = useMemo(() => missingRequiredFacts(snapshot.draft), [snapshot.draft])
@@ -116,6 +128,7 @@ export default function IntakeApp({
       const draft = resolveDevSeed(seed)
       if (draft === null || cancelled) return
       appModel.update(() => draft)
+      setDevSeedApplied(true)
       setPhase('result')
       await appModel.recompute('provisional')
       await appModel.recompute('final')
@@ -178,11 +191,7 @@ export default function IntakeApp({
   if (phase === 'restoring') {
     return (
       <main className="save">
-        <section className="save-step save-step--pending" aria-busy>
-          <p className="save-pending" role="status">
-            {copy.restoringStatus}
-          </p>
-        </section>
+        <PendingPanel status={copy.restoringStatus} />
       </main>
     )
   }
@@ -225,7 +234,7 @@ export default function IntakeApp({
   }
 
   if (phase === 'result' || phase === 'save') {
-    const view = deriveResultSave(persist, saveReady)
+    const view = deriveResultSave(persist, saveReady, readOnly)
     // 'idle'/'pending' = NOTHING has ever resolved (the "Working it out…" window; `pending`
     // never recurs after a first resolve — memoryModel holds the last answer visible). Result
     // withholds its whole actions row there: an affordance we don't want used during the
@@ -255,6 +264,11 @@ export default function IntakeApp({
       model={appModel}
       onComplete={complete}
       answerSlot={<AnswerStrip snapshot={snapshot} missing={missing} onRetry={retry} />}
+      // Hydration provenance: a vault-decrypted (or genuinely APPLIED dev-seed) draft
+      // answered the spend period before it could ever be saved — Review must not re-nag
+      // it. Both signals are mount-lifetime (devSeedApplied never resets), so the flag
+      // survives Review re-entries; a bogus `?seed=` key never sets it.
+      periodConfirmed={hydrateFromVault || devSeedApplied}
     />
   )
 }

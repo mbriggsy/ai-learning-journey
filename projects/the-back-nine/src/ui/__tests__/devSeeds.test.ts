@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { DEV_SEEDS } from '../devSeeds'
+import { scenarioFromDraft } from '../scenarioFromDraft'
 import { floorRelief } from '../twoTier'
 import { composeDateSplit } from '../dateSplit'
 import { buildDateInput, buildSpineParams, isDateRoute, missingRequiredFacts } from '@intake/intakeMap'
@@ -148,4 +149,59 @@ describe('dev seeds reach a worded (engine-accepted) answer', () => {
     if (out.floor.kind !== 'confirmed-date') return
     expect(out.floor.nonMonotoneOffsets, 'the floor NEVER dips — the collision is lifestyle-specific').toEqual([])
   }, 120_000)
+
+  // U10 — the 'order' seed is the ONLY seed that drives the persisted 'custom' drawdown policy + an
+  // explicit `drawdownOrder`. Its job is twofold: prove the order GOVERNS (not the inert single-pool
+  // case), and survive the Save round-trip byte-faithfully (below). Here we pin the OUTCOME against
+  // the real engine: the three-bucket household resolves tax-aware, and running the SAME household
+  // `proportional` pays a visibly different lifetime tax — the order is not inert. An INEQUALITY, not
+  // a hand-typed figure (a dev seed, not a golden): a constants/engine drift can move both sides, but
+  // it can't make a Roth-first order and a pro-rata order pay the SAME lifetime tax on split buckets.
+  it("'order' drives a GOVERNING custom drawdown order (custom ≠ proportional lifetime tax) through the real engine", () => {
+    const d = DEV_SEEDS.order
+    const custom = buildSpineParams(d)
+    expect(custom, 'order: buildSpineParams').not.toBeNull()
+    expect(custom!.drawdownPolicy, 'the seed carries the custom policy').toBe('custom')
+    expect(custom!.drawdownOrder, 'the seed carries the explicit bucket order').toEqual(['roth', 'pretax', 'taxable'])
+
+    const customWire = runEngine(custom!, d.seed!)
+    expect(customWire.kind, 'order: a feasible, resolved run').toBe('resolved')
+    if (customWire.kind !== 'resolved') return
+    // Tax-aware means the overlay ran (the buckets are real) — the precondition for the order to
+    // matter at all. A worded, confident answer (never the indeterminate input-failure screen).
+    expect(customWire.taxAware, 'the run is tax-aware (buckets exist ⇒ the order can govern)').toBeDefined()
+    expect(customWire.headline.outcomeState, 'order: a confident (worded) answer').not.toBe('indeterminate')
+
+    // The SAME household, drawn PROPORTIONALLY (drop the order, name the pro-rata policy) on the SAME
+    // seed = the same CRN paths, so any lifetime-tax difference is the sequencing choice ALONE.
+    const { drawdownOrder: _dropped, ...rest } = custom!
+    const proportional = { ...rest, drawdownPolicy: 'proportional' as const }
+    const propWire = runEngine(proportional, d.seed!)
+    expect(propWire.kind, 'order: the proportional control resolves too').toBe('resolved')
+    if (propWire.kind !== 'resolved') return
+    expect(propWire.taxAware, 'the proportional control is tax-aware too').toBeDefined()
+
+    const sum = (a: Float64Array) => a.reduce((s, x) => s + x, 0)
+    const customTax = sum(customWire.taxAware!.lifetimeTaxPaidReal)
+    const propTax = sum(propWire.taxAware!.lifetimeTaxPaidReal)
+    expect(customTax, 'the custom order changes lifetime tax vs proportional — it GOVERNS').not.toBe(propTax)
+  })
+
+  // U10 — THE ROUND-TRIP: the 'custom' policy + the exact drawdownOrder must survive
+  // scenarioFromDraft (the SAME codec encode→decode the Save ceremony + `?vault=order` run) byte-
+  // faithfully. The codec enforces the biconditional (order present iff policy 'custom'), so a decode
+  // that silently decayed the policy to 'proportional' would DROP the order (and the biconditional
+  // would reject the mismatched pair) — pinning both fields on the DECODED scenario proves neither
+  // half can quietly rot. This is the verified-open gap: no prior seed exercised 'custom' here.
+  it("'order' survives the Save round-trip with its custom policy + exact drawdown order intact", () => {
+    const ready = scenarioFromDraft(DEV_SEEDS.order)
+    expect(ready.ready, `order: scenarioFromDraft (${ready.ready ? '' : ready.detail})`).toBe(true)
+    if (!ready.ready) return
+    expect(ready.scenario.drawdownPolicy, 'the policy survives decode as custom').toBe('custom')
+    expect(ready.scenario.drawdownOrder, 'the exact bucket order survives decode').toEqual([
+      'roth',
+      'pretax',
+      'taxable',
+    ])
+  })
 })

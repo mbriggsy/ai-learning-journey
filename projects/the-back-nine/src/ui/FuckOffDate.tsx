@@ -44,7 +44,7 @@ import { copy, slots } from './copy'
 import { dateOddsText } from './dateOdds'
 import { dateTradeoffPoint } from './dateTradeoff'
 import { composeDateSplit, type DateSplitView } from './dateSplit'
-import { focusHeading, createAnnouncer, type Announcer } from '@intake/a11y'
+import { focusHeading, useLiveAnnouncer } from '@intake/a11y'
 import { ConfidenceBandPanel } from '@viz/ConfidenceBandPanel'
 import { OddsLadder } from '@viz/OddsLadder'
 import { curveMarks } from '@viz/curveMarks'
@@ -139,11 +139,7 @@ export function FuckOffDate({ view, focusSignal, actionsSlot }: FuckOffDateProps
   // be silent to AT while sighted users watch the heading swap. One polite, clear-after-announce
   // region (mounted empty — a region born populated may never speak, burned/045) reads the NEW
   // heading text — exactly what the screen shows, never a second wording.
-  const liveRef = useRef<HTMLDivElement | null>(null)
-  const announcerRef = useRef<Announcer | null>(null)
-  useEffect(() => {
-    if (liveRef.current) announcerRef.current = createAnnouncer(liveRef.current)
-  }, [])
+  const announcer = useLiveAnnouncer()
   const heroClaimKey =
     hero === null
       ? undefined
@@ -154,8 +150,8 @@ export function FuckOffDate({ view, focusSignal, actionsSlot }: FuckOffDateProps
     prevClaimKey.current = heroClaimKey
     if (heroClaimKey === undefined || prev === undefined || prev === heroClaimKey) return
     if (view.kind !== 'dates' || hero === null) return
-    announcerRef.current?.announce(heroLead(hero, view.windowTopYears))
-  }, [heroClaimKey, hero, view])
+    announcer.announce(heroLead(hero, view.windowTopYears))
+  }, [heroClaimKey, hero, view, announcer])
 
   // The producer seam: resolve the floor-crowned fan into drawable geometry ONCE per view
   // (resolveBandData owns the fail-loud honesty guards — a malformed fan throws, never a silently-
@@ -279,7 +275,7 @@ export function FuckOffDate({ view, focusSignal, actionsSlot }: FuckOffDateProps
 
   return (
     <section className="fuck-off-date" aria-label={copy.dateRegionLabel}>
-      <div ref={liveRef} className="sr-only" role="status" aria-live="polite" aria-atomic="true" />
+      <div ref={announcer.ref} className="sr-only" role="status" aria-live="polite" aria-atomic="true" />
       {body}
     </section>
   )

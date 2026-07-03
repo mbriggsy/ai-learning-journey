@@ -26,10 +26,11 @@
  * Crypto stays out of the entry bundle: dynamic `import('./vaultSession')` in the handlers, and
  * the whole flow is `lazy()`-mounted by App (PassphraseStep pulls the zxcvbn floor seam).
  */
-import { useEffect, useId, useMemo, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { copy } from './copy'
 import './styles/save.css'
-import { createAnnouncer, focusHeading, type Announcer } from '@intake/a11y'
+import { useLiveAnnouncer, focusHeading } from '@intake/a11y'
+import { PendingPanel } from './PendingPanel'
 import { describeRestoreFailure, describeUnlockReadOnly, type UnlockCopyKey } from './unlockCopy'
 import { PassphraseStep } from './PassphraseStep'
 import type { FloorCheckedPassphrase } from '@crypto/kdf'
@@ -72,13 +73,8 @@ export function RestoreFlow({
   const wordId = useId()
   const wordErrId = useId()
 
-  // The ONE polite live region (the SaveFlow pattern).
-  const liveRef = useRef<HTMLDivElement | null>(null)
-  const realAnnouncer = useRef<Announcer | null>(null)
-  useEffect(() => {
-    if (liveRef.current) realAnnouncer.current = createAnnouncer(liveRef.current)
-  }, [])
-  const announcer = useMemo<Announcer>(() => ({ announce: (t) => realAnnouncer.current?.announce(t) }), [])
+  // The ONE polite live region (the SaveFlow pattern) — a stable announcer (callback ref binds late).
+  const announcer = useLiveAnnouncer()
 
   // Focus-to-heading on every panel this flow owns (PassphraseStep owns its own) — including the
   // routed-back-with-error returns, where the fresh heading focus re-orients the user.
@@ -135,8 +131,7 @@ export function RestoreFlow({
         try {
           const opened = await session.unlock(newPass.value)
           if (opened.ok) {
-            const notice = describeUnlockReadOnly(opened)
-            onRestored(notice.kind === 'plain' ? notice.key : null)
+            onRestored(describeUnlockReadOnly(opened))
             return
           }
         } catch {
@@ -190,7 +185,7 @@ export function RestoreFlow({
 
   return (
     <main className="save">
-      <div ref={liveRef} className="sr-only" role="status" aria-live="polite" aria-atomic="true" />
+      <div ref={announcer.ref} className="sr-only" role="status" aria-live="polite" aria-atomic="true" />
 
       {step === 'file' && (
         <section className="save-step">
@@ -322,13 +317,7 @@ export function RestoreFlow({
         />
       )}
 
-      {step === 'restoring' && (
-        <section className="save-step save-step--pending" aria-busy>
-          <p className="save-pending" role="status">
-            {copy.securingStatus}
-          </p>
-        </section>
-      )}
+      {step === 'restoring' && <PendingPanel status={copy.securingStatus} />}
 
       {step === 'error' && (
         <section className="save-step">

@@ -1,15 +1,13 @@
 import {
   useCallback,
-  useEffect,
   useMemo,
-  useRef,
   useState,
   useSyncExternalStore,
   type ReactNode,
 } from 'react'
 import { copy, slots, type CopyKey } from '@ui/copy'
 import type { MemoryModel, ScenarioDraft } from '@store/memoryModel'
-import { createAnnouncer, useFocusHeadingOnStep, type Announcer } from './a11y'
+import { useFocusHeadingOnStep, useLiveAnnouncer } from './a11y'
 import { validateDraft, type FieldPath, type SanityViolation } from './sanity'
 import './intake.css'
 
@@ -66,9 +64,22 @@ export interface IntakeFlowProps {
   /** The provisional answer surface, rendered between the header and the step
    *  (cross-cutting #6: the confidence surface CO-EXISTS with intake). */
   readonly answerSlot?: ReactNode
+  /** Hydration provenance: the draft came from a persisted vault (or a DEV
+   *  seed), so the spend entry period was explicitly answered before the vault
+   *  could be written — the force-confirm nag must not re-fire on a revisit
+   *  (sanity.ts `SanityProvenance`). Session-scoped, never persisted: a
+   *  restored draft is byte-identical to a typed one, so only the caller
+   *  knows. */
+  readonly periodConfirmed?: boolean
 }
 
-export function IntakeFlow({ steps, model, onComplete, answerSlot }: IntakeFlowProps) {
+export function IntakeFlow({
+  steps,
+  model,
+  onComplete,
+  answerSlot,
+  periodConfirmed = false,
+}: IntakeFlowProps) {
   const snapshot = useSyncExternalStore(model.subscribe, model.getSnapshot)
   const [index, setIndex] = useState(0)
   const [direction, setDirection] = useState<'forward' | 'back'>('forward')
@@ -84,15 +95,11 @@ export function IntakeFlow({ steps, model, onComplete, answerSlot }: IntakeFlowP
   const headingRef = useFocusHeadingOnStep(step.id)
 
   // The one polite live region (burned/045 clear-after-announce).
-  const liveRef = useRef<HTMLDivElement | null>(null)
-  const announcerRef = useRef<Announcer | null>(null)
-  useEffect(() => {
-    if (liveRef.current !== null) announcerRef.current = createAnnouncer(liveRef.current)
-  }, [])
+  const announcer = useLiveAnnouncer()
 
   const violations = useMemo(
-    () => validateDraft(snapshot.draft, touched),
-    [snapshot.draft, touched],
+    () => validateDraft(snapshot.draft, touched, { periodConfirmed }),
+    [snapshot.draft, touched, periodConfirmed],
   )
 
   const commitField = useCallback((field: FieldPath) => {
@@ -125,15 +132,15 @@ export function IntakeFlow({ steps, model, onComplete, answerSlot }: IntakeFlowP
     // blur-commit and the Continue tap can land in the same task (programmatic
     // dispatch, exotic browsers), and the closure would be one commit stale —
     // letting an unconfirmed value slip past its gate.
-    const blocking = validateDraft(model.getSnapshot().draft, nextTouched).some((v) =>
-      step.fields.includes(v.field),
+    const blocking = validateDraft(model.getSnapshot().draft, nextTouched, { periodConfirmed }).some(
+      (v) => step.fields.includes(v.field),
     )
     if (blocking) return
 
     if (safeIndex + 1 < steps.length) {
       setDirection('forward')
       setIndex(safeIndex + 1)
-      announcerRef.current?.announce(slots.questionPosition(safeIndex + 2))
+      announcer.announce(slots.questionPosition(safeIndex + 2))
       void model.recompute() // question-COMMIT refire, never per keystroke
     } else {
       // The terminal advance delegates SOLELY to onComplete (the final-tier
@@ -142,13 +149,13 @@ export function IntakeFlow({ steps, model, onComplete, answerSlot }: IntakeFlowP
       // would win over the 16k final and render the uncrowned tier (D1 review).
       onComplete?.()
     }
-  }, [safeIndex, model, onComplete, step.fields, steps.length, touched])
+  }, [safeIndex, model, onComplete, step.fields, steps.length, touched, periodConfirmed])
 
   const back = useCallback(() => {
     if (safeIndex === 0) return
     setDirection('back')
     setIndex(safeIndex - 1) // never gated; the draft keeps every downstream answer
-    announcerRef.current?.announce(slots.questionPosition(safeIndex))
+    announcer.announce(slots.questionPosition(safeIndex))
   }, [safeIndex])
 
   const api: StepApi = useMemo(
@@ -196,7 +203,7 @@ export function IntakeFlow({ steps, model, onComplete, answerSlot }: IntakeFlowP
         </nav>
       </section>
 
-      <div ref={liveRef} className="sr-only" aria-live="polite" />
+      <div ref={announcer.ref} className="sr-only" aria-live="polite" />
     </div>
   )
 }

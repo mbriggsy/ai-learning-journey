@@ -176,6 +176,54 @@ describe('sanity — the spend period force-confirm (R19 line one; D1 review AB1
   })
 })
 
+describe('sanity — the spend period force-confirm honors hydration provenance (the restored-draft revisit)', () => {
+  // A draft hydrated from a persisted vault / complete dev seed cleared the flow's
+  // force-confirm BEFORE it was ever written; a fresh IntakeFlow mount starts `touched`
+  // empty, so that prior confirmation survives ONLY as provenance. Revisiting the spend
+  // AMOUNT (touching annualSpendingReal, NOT re-tapping the period) must not re-nag —
+  // the persisted unit is the household's authored, validated choice.
+  const revisitTouched = new Set(['annualSpendingReal']) // amount touched, period NOT
+
+  it('restored draft + revisit spend without touching the period → NO nag (periodConfirmed disarms)', () => {
+    const d = draft({}, {}, { annualSpendingReal: 660_000, spendEntryPeriod: 'month' }) // month-view 55k, over the floor
+    // Without provenance it DOES fire — that is exactly the false-fire this closes.
+    expect(validateDraft(d, revisitTouched)).toMatchObject([{ rule: 'spend-period-unconfirmed' }])
+    // With provenance the nag is disarmed even though 'spendEntryPeriod' is untouched.
+    expect(validateDraft(d, revisitTouched, { periodConfirmed: true })).toEqual([])
+  })
+
+  it('also disarms a persisted YEAR period on revisit (year is never the entry default — only a prior explicit choice)', () => {
+    // spendEntryPeriod='year' → entered = the annual figure itself; a hydrated draft carries
+    // no touched 'spendEntryPeriod', so pre-fix the nag false-fires on the year arm too.
+    const d = draft({}, {}, { annualSpendingReal: 120_000, spendEntryPeriod: 'year' })
+    expect(validateDraft(d, revisitTouched)).toMatchObject([{ rule: 'spend-period-unconfirmed' }])
+    expect(validateDraft(d, revisitTouched, { periodConfirmed: true })).toEqual([])
+  })
+
+  it('fresh draft (no/false provenance), period never touched → the nag STILL fires exactly as today', () => {
+    const d = draft({}, {}, { annualSpendingReal: 660_000, spendEntryPeriod: 'month' })
+    // The 2-arg call flow.tsx makes today (provenance absent) is unchanged.
+    expect(validateDraft(d, revisitTouched)).toMatchObject([
+      { rule: 'spend-period-unconfirmed', messageKey: 'periodConfirmPrompt' },
+    ])
+    // An EXPLICIT periodConfirmed:false is identical — a fresh session never suppresses the guard.
+    expect(validateDraft(d, revisitTouched, { periodConfirmed: false })).toMatchObject([
+      { rule: 'spend-period-unconfirmed' },
+    ])
+  })
+
+  it('fresh draft, period explicitly touched THIS session → still disarmed (touched wins without provenance)', () => {
+    const d = draft({}, {}, { annualSpendingReal: 660_000, spendEntryPeriod: 'month' })
+    expect(validateDraft(d, new Set(['annualSpendingReal', 'spendEntryPeriod']))).toEqual([])
+  })
+
+  it('provenance never MANUFACTURES a violation: a below-floor spend stays clean with periodConfirmed either way', () => {
+    const d = draft({}, {}, { annualSpendingReal: 60_000, spendEntryPeriod: 'month' }) // entered = 5k < 8k floor
+    expect(validateDraft(d, revisitTouched, { periodConfirmed: true })).toEqual([])
+    expect(validateDraft(d, revisitTouched, { periodConfirmed: false })).toEqual([])
+  })
+})
+
 describe('sanity — the combined HSA family ceiling (employer + employee share one limit)', () => {
   // The advance-time backstop the form's single-account pre-check structurally CANNOT
   // cover: a combined personal+employer total over the one HSA family limit — including

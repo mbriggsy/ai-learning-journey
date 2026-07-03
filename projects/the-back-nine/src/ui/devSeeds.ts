@@ -430,6 +430,68 @@ const dateMixedSeed: ScenarioDraft = {
   health: { ...stillWorkingBorderline.health, oopMedicalAnnual: 8_000 },
 }
 
+/**
+ * THE NON-MONOTONE ACA-CLIFF DIP (U10 — the HARD pre-ship gate's seed; council 2026-06-29).
+ * The first REAL engine-produced non-monotone success-vs-date curve, DERIVED (insight 025 —
+ * mechanism before fixture; hunt 2026-07-03, 5-agent fan-out after 10 monotone grids):
+ *
+ * THE BUDGET-COLLISION CHANNEL. Budget line windows are RETIREMENT-ANCHORED (compileBudget
+ * indexes offsets from the candidate's work-stop), while the Roth conversion is ABSOLUTE-year
+ * — so a go-go-years travel line [stop..stop+3] SLIDES across the fixed conversion window
+ * [4..7] as the candidate offset moves. Their overlap is a k-dependent TENT peaking at
+ * offsets 3-4: in a collision year the lifestyle track's travel-draw MAGI stacks on the
+ * conversion MAGI and crosses the 400%-FPL cliff (full unsubsidized premium ~$50k at slcsp
+ * $4,200/mo); a travel-only or conversion-only year stays subsidized (~$7k net). On a
+ * household sitting right at the 0.85 bar, the tent punches offsets 3-4 UNDER the bar while
+ * 0-2 clear and the SS-claim year (62 = offset 5) forms the durable crown. The FLOOR track
+ * (no travel) never collides and stays MONOTONE — the dip is lifestyle-specific by mechanism.
+ *
+ * ENGINE-PROVEN AT BOTH TIERS (16k final / 2k provisional, seed 0xbada55): lifestyle
+ * confirmed-date@5 with nonMonotoneOffsets [0,1,2]; floor confirmed-date@0, no dips — the
+ * outcome pin lives in devSeeds.test.ts. A pure conversion/premium channel CANNOT invert the
+ * curve (the work-year money gradient dominates ~2:1 — the hunt's structural finding); the
+ * dip needs the collision. Note the reconciliation invariant: Σlines@0 = 20k+16k+42k = 78k =
+ * annualSpendingReal (no OOP-medical figure on this household).
+ */
+const dateDipSeed: ScenarioDraft = {
+  people: [
+    {
+      name: 'Alex', sex: 'female', birthYear: 1969, currentAge: 57,
+      workStatus: 'working', earnedIncomeReal: 75_000, pia: 26_000, socialSecurityClaimAge: 62,
+    },
+    {
+      name: 'Sam', sex: 'male', birthYear: 1969, currentAge: 57,
+      workStatus: 'working', earnedIncomeReal: 35_000, pia: 20_000, socialSecurityClaimAge: 62,
+    },
+  ],
+  enteredAccounts: [
+    { ownerIndex: 0, kind: '401k', ticker: 'VTI', valueToday: 567_000, annualContribution: 8_000, employerMatchAnnual: 4_000 },
+    { ownerIndex: 1, kind: 'roth-ira', ticker: 'VFIFX', valueToday: 243_000 },
+  ],
+  incomeStreams: [],
+  tickerClassifications: {},
+  health: {
+    enrolledPremiumMonthlyToday: 4_200,
+    slcspMonthlyToday: 4_200,
+    workingYearInvestmentByPerson: [10_000, 0],
+  },
+  budget: [
+    bline('housing', 'Home', 20_000, 'essentials'),
+    bline('food', 'Living', 16_000, 'essentials'),
+    { category: 'travel', label: 'Go-go years', annualAmountReal: 42_000, tier: 'discretionary', startYear: 0, endYear: 3 },
+  ],
+  annualSpendingReal: 78_000,
+  spendEntryPeriod: 'year',
+  survivorSpendingRatio: 0.75,
+  drawdownPolicy: 'proportional',
+  filing: 'mfj',
+  startCalendarYear: 2026,
+  taxVintage: 'OBBBA-2025',
+  appDefaultVersion: 'p2-dev-seed',
+  seed: DEV_CRN_SEED,
+  rothConversion: { annualAmountReal: 34_000, startYearOffset: 4, years: 4 },
+}
+
 /** The seed registry — `?seed=<key>` selects one. */
 export const DEV_SEEDS = {
   retired: retiredOnTrack,
@@ -440,6 +502,7 @@ export const DEV_SEEDS = {
   budget: retiredBudget,
   datesplit: dateSplitSeed,
   datemixed: dateMixedSeed,
+  dip: dateDipSeed,
 } satisfies Record<string, ScenarioDraft>
 
 export type DevSeedKey = keyof typeof DEV_SEEDS

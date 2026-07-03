@@ -125,4 +125,27 @@ describe('dev seeds reach a worded (engine-accepted) answer', () => {
     if (view.kind !== 'split') return
     expect(view.inverted, 'floor-dated + lifestyle-no-date is the EXPECTED ordering, not R27').toBe(false)
   }, 120_000)
+
+  // U10 — the 'dip' seed IS the hard pre-ship gate's engine half (council 2026-06-29): a REAL
+  // engine-produced non-monotone lifestyle curve via the budget-collision channel (the go-go-years
+  // travel window sliding across the absolute-year conversion window over the 400%-FPL cliff — the
+  // mechanism record lives on the seed). The pin is EXACT (fixed seed ⇒ deterministic sweep): the
+  // cleared-then-dipped offsets [0,1,2] below a crown at 5, and the FLOOR track monotone (no dips)
+  // — the lifestyle-specificity that proves the mechanism is the collision, not a portfolio artifact.
+  // A drift here means the ENGINE changed under the gate's seed — stop and re-derive, never re-pin
+  // blind (insight 025's reactivation discipline).
+  it("'dip' lands a NON-MONOTONE dated lifestyle track (nm=[0,1,2], crown@5) with a monotone floor through the real date search", async () => {
+    const input = buildDateInput(DEV_SEEDS.dip)
+    expect(input, 'dip: buildDateInput').not.toBeNull()
+    const out = await runDateSearch(input!, DEV_SEEDS.dip.seed!, { tier: 'provisional' })
+    expect(out.kind, 'dip: a dates outcome').toBe('dates')
+    if (out.kind !== 'dates') return
+    expect(out.lifestyle.kind, 'lifestyle crowned (the ladder mounts on a dated hero)').toBe('confirmed-date')
+    if (out.lifestyle.kind !== 'confirmed-date') return
+    expect(out.lifestyle.offsetYears, 'the durable crown').toBe(5)
+    expect(out.lifestyle.nonMonotoneOffsets, 'the cleared-then-dipped early offsets — the dip tell').toEqual([0, 1, 2])
+    expect(out.floor.kind, 'floor crowned').toBe('confirmed-date')
+    if (out.floor.kind !== 'confirmed-date') return
+    expect(out.floor.nonMonotoneOffsets, 'the floor NEVER dips — the collision is lifestyle-specific').toEqual([])
+  }, 120_000)
 })

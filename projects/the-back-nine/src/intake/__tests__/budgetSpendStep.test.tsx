@@ -144,11 +144,15 @@ describe('the spend step under a GOVERNING budget (Q4 — no second writer)', ()
     expect(screen.queryByText(copy.budgetAnchorRampNote)).toBeNull()
   })
 
-  it('the steer opens the sheet seeded with the governing lines', () => {
+  it('the steer swaps the step body to the builder IN PLACE (no dialog), seeded with the governing lines', () => {
     render(<SpendHarness model={governedModel()} />)
     fireEvent.click(screen.getByRole('button', { name: copy.spendEditBudgetCta }))
-    expect(screen.getByRole('dialog')).toBeInTheDocument()
+    // De-modalized (council 2026-07-03): the in-flow mount is a body swap, never an overlay.
+    expect(screen.queryByRole('dialog')).toBeNull()
+    expect(document.querySelector('.budget-inline')).not.toBeNull()
     expect(document.querySelectorAll('.budget-line')).toHaveLength(2)
+    // The governed face is gone while the builder is up — a swap, not a stack.
+    expect(screen.queryByText(copy.spendBudgetGovernedNote)).toBeNull()
   })
 
   it('Apply commits the ATOMIC patch: annualSpendingReal === Σactive@0 + M, in the same update as the items', () => {
@@ -271,6 +275,53 @@ describe('the raw spend arm — the in-flow itemize invite (cold-read 2026-07-03
     commitField(screen.getByLabelText(copy.spendLabel), '60000')
     expect(draft(m).annualSpendingReal).toBe(60_000 * 12) // month default until declared
     expect(screen.getByRole('button', { name: copy.budgetCta })).toBeInTheDocument()
+  })
+})
+
+// De-modalized in-flow mount (council 2026-07-03, wf_67fa22e5-fbb — the side-quest remedy,
+// part 2): the builder is a BODY SWAP on the spend step (the accounts/other-income list-in-flow
+// grammar), never an overlay. The Result door keeps the sheet; this file pins the inline shell.
+describe('the de-modalized in-flow mount (the side-quest remedy)', () => {
+  it('opening SWAPS the step body: no dialog, no backdrop, no scroll lock, the raw field gone while open', () => {
+    render(<SpendHarness model={freshModel()} />)
+    fireEvent.click(screen.getByRole('button', { name: copy.budgetCta }))
+    expect(screen.queryByRole('dialog')).toBeNull()
+    expect(document.querySelector('.budget-sheet__backdrop')).toBeNull()
+    expect(document.querySelector('.budget-inline')).not.toBeNull()
+    expect(screen.queryByLabelText(copy.spendLabel)).toBeNull() // a swap, never a stack
+    expect(document.documentElement.classList.contains('budget-sheet-open')).toBe(false)
+  })
+
+  it('focus lands on the builder heading on open and returns to the steer on Cancel (insight-067 escape contract)', () => {
+    render(<SpendHarness model={freshModel()} />)
+    fireEvent.click(screen.getByRole('button', { name: copy.budgetCta }))
+    expect(document.activeElement).toBe(screen.getByRole('heading', { name: copy.budgetSheetTitle }))
+    fireEvent.click(screen.getByRole('button', { name: copy.budgetCancel }))
+    expect(screen.queryByRole('heading', { name: copy.budgetSheetTitle })).toBeNull()
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: copy.budgetCta }))
+  })
+
+  it('local edits survive Cancel-and-reopen within the step (the sheet contract, kept inline)', () => {
+    const m = freshModel()
+    render(<SpendHarness model={m} />)
+    fireEvent.click(screen.getByRole('button', { name: copy.budgetCta }))
+    fireEvent.click(screen.getByRole('button', { name: copy.budgetAddLine }))
+    commitField(screen.getByLabelText(copy.budgetAmountLabel), '12000')
+    fireEvent.click(screen.getByRole('button', { name: copy.budgetCancel }))
+    expect(draft(m).budget).toBeUndefined() // nothing committed by the close
+    fireEvent.click(screen.getByRole('button', { name: copy.budgetCta }))
+    expect(
+      screen.getByText(slots.budgetRunningTotal(formatMoney(12_000))),
+    ).toBeInTheDocument() // the typed line is still there
+  })
+
+  it('Escape closes the inline builder without committing (the convenience mirror of Cancel)', () => {
+    const m = freshModel()
+    render(<SpendHarness model={m} />)
+    fireEvent.click(screen.getByRole('button', { name: copy.budgetCta }))
+    fireEvent.keyDown(document.querySelector('.budget-inline')!, { key: 'Escape' })
+    expect(screen.getByLabelText(copy.spendLabel)).toBeInTheDocument()
+    expect(draft(m).budget).toBeUndefined()
   })
 })
 

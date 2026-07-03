@@ -1,15 +1,20 @@
 /*
- * src/intake/BudgetBuilder.tsx — the U9b budget-builder sheet (council 2026-07-02, Q1/Q5).
+ * src/intake/BudgetBuilder.tsx — the U9b budget builder (council 2026-07-02, Q1/Q5;
+ * de-modalized in-flow 2026-07-03, council wf_67fa22e5-fbb).
  *
- * ONE DOOR, TWO MOUNTS. The builder is the single deepening surface for the itemized budget
- * (R8: the deepening of the single-total answer, never the on-ramp). The Result screen mounts it
- * behind the quiet "break down your spending" affordance; the governed spend question mounts the
- * SAME component behind its steer. Each mount owns its own commit semantics (Result → appModel +
- * an explicit recompute; intake → the flow's question-commit), so this component is presentational
- * + local state over props — it reads the draft it is given and calls out through onApply /
- * onEscape / onClose. It lives in the INTAKE layer deliberately: it is a form built from the
- * intake field primitives (commit-on-blur, format-on-blur, aria-wired), and ui→intake is the
- * established import direction (Result already mounts AnswerStrip).
+ * ONE FORM, TWO SHELLS. The builder is the single deepening surface for the itemized budget
+ * (R8: the deepening of the single-total answer, never the on-ramp), with one form core and a
+ * `variant` picking the reveal shell: the Result screen mounts the `'sheet'` (portaled modal —
+ * a later-edit door over a finished answer), while the intake spend step mounts `'inline'` —
+ * the builder SWAPS the step body in place, the same list-in-flow grammar as the accounts and
+ * other-income steps (the council's side-quest diagnosis: a modal behind a quiet button reads
+ * as an optional errand; a room on the main path reads as the question continuing). Each mount
+ * owns its own commit semantics (Result → appModel + an explicit recompute; intake → the flow's
+ * question-commit), so this component is presentational + local state over props — it reads the
+ * draft it is given and calls out through onApply / onEscape / onClose. It lives in the INTAKE
+ * layer deliberately: it is a form built from the intake field primitives (commit-on-blur,
+ * format-on-blur, aria-wired), and ui→intake is the established import direction (Result
+ * already mounts AnswerStrip).
  *
  * THE STRUCTURAL SHELL (Q5): opening the sheet persists NOTHING — `draft.budget` stays strictly
  * undefined until the first real Apply (build-gate 2: `[]` is never written; an empty Apply is the
@@ -80,9 +85,13 @@ export interface BudgetBuilderProps {
   readonly onEscape: () => void
   /** Cancel / Escape key / backdrop — local edits persist for the session, nothing commits. */
   readonly onClose: () => void
+  /** The reveal shell: `'sheet'` = the portaled modal (the Result door); `'inline'` = the
+   *  in-flow body swap (the intake spend step — de-modalized, council 2026-07-03). The form
+   *  core, state, and commit seams are identical; only the room around them differs. */
+  readonly variant?: 'sheet' | 'inline'
 }
 
-export function BudgetBuilder({ open, draft, onApply, onEscape, onClose }: BudgetBuilderProps) {
+export function BudgetBuilder({ open, draft, onApply, onEscape, onClose, variant = 'sheet' }: BudgetBuilderProps) {
   const reduce = useReducedMotion() ?? false
   const titleId = useId()
   const dialogRef = useRef<HTMLDivElement>(null)
@@ -122,15 +131,21 @@ export function BudgetBuilder({ open, draft, onApply, onEscape, onClose }: Budge
       setTouched(new Set())
       setAttempted(false)
     }
-    restoreRef.current = (document.activeElement as HTMLElement) ?? null
-    document.documentElement.classList.add('budget-sheet-open')
+    // Sheet-only chrome: capture the focus owner BEFORE focus moves (it is the restore target),
+    // plus the scroll lock. The inline swap is a plain body change — the PARENT owns post-close
+    // focus, and the page keeps scrolling.
+    if (variant === 'sheet') {
+      restoreRef.current = (document.activeElement as HTMLElement) ?? null
+      document.documentElement.classList.add('budget-sheet-open')
+    }
     focusHeading(headingRef.current)
+    if (variant !== 'sheet') return
     return () => {
       document.documentElement.classList.remove('budget-sheet-open')
     }
     // draft.budget is deliberately NOT a dep: re-seeding happens at the open EDGE only (a
     // mid-open draft change must never clobber in-progress local edits).
-  }, [open, mintRows])
+  }, [open, mintRows, variant])
 
   const restoreFocus = useCallback(() => {
     const owner = restoreRef.current
@@ -260,6 +275,114 @@ export function BudgetBuilder({ open, draft, onApply, onEscape, onClose }: Budge
   const errorsFor = (index: number, id: number) =>
     attempted || touched.has(id) ? validation.errors.filter((e) => e.index === index) : []
 
+  // The heading subordinates to its room: the sheet is its own dialog context (h2); the inline
+  // swap sits under the flow's step h2 (h3 keeps the outline honest — a11y heading order).
+  const HeadingTag: 'h2' | 'h3' = variant === 'sheet' ? 'h2' : 'h3'
+
+  // ONE form core, rendered by whichever shell is mounted (state above outlives both).
+  const formBody = (
+    <>
+      <div ref={announcer.ref} className="sr-only" role="status" aria-live="polite" aria-atomic="true" />
+      <HeadingTag className="budget-sheet__title" id={titleId} tabIndex={-1} ref={headingRef}>
+        {copy.budgetSheetTitle}
+      </HeadingTag>
+      <p className="budget-sheet__intro">{copy.budgetSheetIntro}</p>
+
+      {/* The reconciliation readout — reserved box (insight 035: it updates on every commit
+          and sits above the tap targets; the box never changes height). */}
+      <div className="budget-sheet__readout" role="status">
+        {S !== undefined && <p className="budget-readout__line">{slots.budgetAnchorLead(formatMoney(S))}</p>}
+        {S !== undefined && M !== undefined && M > 0 && (
+          <>
+            <p className="budget-readout__line">{slots.budgetLinesTarget(formatMoney(target!))}</p>
+            <p className="budget-readout__line budget-readout__line--muted">
+              {slots.budgetMedicalCarried(formatMoney(M))}
+            </p>
+          </>
+        )}
+        {items.length > 0 && (
+          <p className="budget-readout__line">{slots.budgetRunningTotal(formatMoney(running))}</p>
+        )}
+        {items.length > 0 && (
+          <p className="budget-readout__line">
+            {slots.budgetTierSplit(formatMoney(essentialsAt0), formatMoney(extrasAt0))}
+          </p>
+        )}
+        {items.length > 0 && isRampedBudget(items) && (
+          <p className="budget-readout__line budget-readout__line--muted">{copy.budgetAnchorRampNote}</p>
+        )}
+        {items.length > 0 &&
+          validation.warnings.map((w) => (
+            <p key={w} className="budget-readout__line budget-readout__line--muted">
+              {w === 'zero-essentials' ? copy.budgetWarnZeroEssentials : copy.budgetWarnNoYearZero}
+            </p>
+          ))}
+      </div>
+
+      <ul className="budget-sheet__lines">
+        {rows.map((row, i) => (
+          <BudgetLineItem
+            key={row.id}
+            item={row.item}
+            index={i}
+            errors={errorsFor(i, row.id)}
+            onChange={(patch) => setRow(row.id, patch)}
+            onWindowEnd={(end) => setRowEnd(row.id, end)}
+            onRemove={() => removeRow(row.id)}
+            onTouched={() => touchRow(row.id)}
+          />
+        ))}
+      </ul>
+      <button type="button" className="btn-quiet budget-sheet__add" onClick={addLine}>
+        {copy.budgetAddLine}
+      </button>
+
+      <div className="budget-sheet__actions">
+        <button
+          type="button"
+          className="btn-primary"
+          aria-disabled={hasErrors}
+          onClick={apply}
+        >
+          {copy.budgetApply}
+        </button>
+        <button type="button" className="btn-quiet" onClick={onClose}>
+          {copy.budgetCancel}
+        </button>
+      </div>
+      {governs && (
+        <div className="budget-sheet__escape">
+          <button type="button" className="btn-quiet" onClick={escapeHatch}>
+            {copy.budgetBackToSingle}
+          </button>
+          <p className="field-help">{copy.budgetBackToSingleHint}</p>
+        </div>
+      )}
+    </>
+  )
+
+  // ── the IN-FLOW shell: a plain body swap on the step's own entrance timing — no portal, no
+  // backdrop, no focus trap, no dialog role (it is not modal; the flow's Back/Next stay live
+  // and R8's never-a-gate holds). Escape mirrors Cancel as a convenience; the explicit buttons
+  // are the contract (insight 067). ──────────────────────────────────────────────────────────
+  if (variant === 'inline') {
+    if (!open) return null
+    return (
+      <section
+        className="budget-inline"
+        aria-labelledby={titleId}
+        onKeyDown={(e) => {
+          if (e.key === 'Escape') {
+            e.stopPropagation()
+            onClose()
+          }
+        }}
+      >
+        {formBody}
+      </section>
+    )
+  }
+
   if (typeof document === 'undefined') return null
 
   return createPortal(
@@ -287,82 +410,7 @@ export function BudgetBuilder({ open, draft, onApply, onEscape, onClose }: Budge
             exit={{ opacity: 0 }}
             transition={{ duration: reduce ? 0 : 0.2, ease: EASE_OUT }}
           >
-            <div ref={announcer.ref} className="sr-only" role="status" aria-live="polite" aria-atomic="true" />
-            <h2 className="budget-sheet__title" id={titleId} tabIndex={-1} ref={headingRef}>
-              {copy.budgetSheetTitle}
-            </h2>
-            <p className="budget-sheet__intro">{copy.budgetSheetIntro}</p>
-
-            {/* The reconciliation readout — reserved box (insight 035: it updates on every commit
-                and sits above the tap targets; the box never changes height). */}
-            <div className="budget-sheet__readout" role="status">
-              {S !== undefined && <p className="budget-readout__line">{slots.budgetAnchorLead(formatMoney(S))}</p>}
-              {S !== undefined && M !== undefined && M > 0 && (
-                <>
-                  <p className="budget-readout__line">{slots.budgetLinesTarget(formatMoney(target!))}</p>
-                  <p className="budget-readout__line budget-readout__line--muted">
-                    {slots.budgetMedicalCarried(formatMoney(M))}
-                  </p>
-                </>
-              )}
-              {items.length > 0 && (
-                <p className="budget-readout__line">{slots.budgetRunningTotal(formatMoney(running))}</p>
-              )}
-              {items.length > 0 && (
-                <p className="budget-readout__line">
-                  {slots.budgetTierSplit(formatMoney(essentialsAt0), formatMoney(extrasAt0))}
-                </p>
-              )}
-              {items.length > 0 && isRampedBudget(items) && (
-                <p className="budget-readout__line budget-readout__line--muted">{copy.budgetAnchorRampNote}</p>
-              )}
-              {items.length > 0 &&
-                validation.warnings.map((w) => (
-                  <p key={w} className="budget-readout__line budget-readout__line--muted">
-                    {w === 'zero-essentials' ? copy.budgetWarnZeroEssentials : copy.budgetWarnNoYearZero}
-                  </p>
-                ))}
-            </div>
-
-            <ul className="budget-sheet__lines">
-              {rows.map((row, i) => (
-                <BudgetLineItem
-                  key={row.id}
-                  item={row.item}
-                  index={i}
-                  errors={errorsFor(i, row.id)}
-                  onChange={(patch) => setRow(row.id, patch)}
-                  onWindowEnd={(end) => setRowEnd(row.id, end)}
-                  onRemove={() => removeRow(row.id)}
-                  onTouched={() => touchRow(row.id)}
-                />
-              ))}
-            </ul>
-            <button type="button" className="btn-quiet budget-sheet__add" onClick={addLine}>
-              {copy.budgetAddLine}
-            </button>
-
-            <div className="budget-sheet__actions">
-              <button
-                type="button"
-                className="btn-primary"
-                aria-disabled={hasErrors}
-                onClick={apply}
-              >
-                {copy.budgetApply}
-              </button>
-              <button type="button" className="btn-quiet" onClick={onClose}>
-                {copy.budgetCancel}
-              </button>
-            </div>
-            {governs && (
-              <div className="budget-sheet__escape">
-                <button type="button" className="btn-quiet" onClick={escapeHatch}>
-                  {copy.budgetBackToSingle}
-                </button>
-                <p className="field-help">{copy.budgetBackToSingleHint}</p>
-              </div>
-            )}
+            {formBody}
           </motion.div>
         </motion.div>
       )}

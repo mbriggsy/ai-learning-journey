@@ -184,6 +184,47 @@
   gap: var(--space-1);
 }
 
+/* ── the IN-FLOW mount (de-modalized, council 2026-07-03 wf_67fa22e5-fbb): the builder swaps
+   the spend-step body in place — the accounts/other-income list-in-flow grammar, never an
+   overlay. It enters on the step's own timing (--dur-step / --ease-out, the intake.css idiom);
+   reduced motion keeps only the comprehension fade, and opacity is the only faded property on
+   the focus-receiving tree (ai-journey-stats/006). ─────────────────────────────────────────── */
+.budget-inline {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  opacity: 1;
+  transform: translateY(0);
+  transition:
+    opacity var(--dur-step) var(--ease-out),
+    transform var(--dur-step) var(--ease-out);
+}
+
+@starting-style {
+  .budget-inline {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+
+/* Subordinate the inline title to the flow's step h2 — the sheet's display scale would invert
+   the visual outline (the a11y outline is already honest: h3 under h2). */
+.budget-inline .budget-sheet__title {
+  font-size: var(--text-lg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .budget-inline {
+    transition: opacity var(--dur-fast) ease;
+  }
+  @starting-style {
+    .budget-inline {
+      opacity: 0;
+      transform: none;
+    }
+  }
+}
+
 /* ── the governed spend step (Q4 — read-only value + steer; the input node is absent) ─────── */
 .spend-governed__value {
   margin: 0;

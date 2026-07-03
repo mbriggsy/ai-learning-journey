@@ -42,5 +42,20 @@
       "Bash(pnpm dev:cleanup *)",
       "Skill(squeaky-clean)"
     ]
-  }
+  },
+  "enabledMcpjsonServers": [
+    "context7",
+    "sequential-thinking",
+    "playwright-seat-1",
+    "playwright-seat-2",
+    "playwright-seat-3",
+    "playwright-seat-4",
+    "playwright-seat-5",
+    "playwright-seat-6",
+    "playwright-seat-7",
+    "playwright-seat-8",
+    "playwright-seat-9",
+    "playwright-seat-10",
+    "chrome-devtools"
+  ]
 }

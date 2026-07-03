@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode, type Ref } from 'react'
 import { copy, slots } from '@ui/copy'
 import type { PersonDraft, ScenarioDraft } from '@store/memoryModel'
 import type { WorkStatus } from '@shared/model'
@@ -331,8 +331,15 @@ const ssStep: StepDef = {
  *  the ONLY edit path is the steer into the builder. The input node is ABSENT, not disabled —
  *  an affordance that cannot change the outcome should not exist (insight 054). A rejected
  *  alternative, the proportional rescale, would forge an allocation the user never chose. */
-function SpendGovernedByBudget({ api }: { readonly api: StepApi }) {
-  const [open, setOpen] = useState(false)
+function SpendGovernedFace({
+  api,
+  onOpen,
+  steerRef,
+}: {
+  readonly api: StepApi
+  readonly onOpen: () => void
+  readonly steerRef: Ref<HTMLButtonElement>
+}) {
   const annual = api.draft.annualSpendingReal
   const budget = api.draft.budget
   // The tier readback (cold-read 2026-07-03: the essential/extra answer must be SEEN used) —
@@ -354,28 +361,14 @@ function SpendGovernedByBudget({ api }: { readonly api: StepApi }) {
       {budget !== undefined && isRampedBudget(budget) && (
         <p className="field-help">{copy.budgetAnchorRampNote}</p>
       )}
-      <button type="button" className="btn-quiet spend-governed__steer" onClick={() => setOpen(true)}>
+      <button
+        type="button"
+        ref={steerRef}
+        className="btn-quiet spend-governed__steer"
+        onClick={onOpen}
+      >
         {copy.spendEditBudgetCta}
       </button>
-      <BudgetBuilder
-        open={open}
-        draft={api.draft}
-        onApply={(items) => {
-          // The atomic reconciliation patch (build-gate 2 semantics live in commitBudgetPatch);
-          // the OOP figure is read from the store's CURRENT draft inside the update (insight 036).
-          api.update((d) => ({ ...d, ...commitBudgetPatch(items, d.health.oopMedicalAnnual) }))
-          api.commitField('annualSpendingReal')
-          setOpen(false)
-        }}
-        onEscape={() => {
-          // Back to a single number: the budget clears to strictly-undefined; the scalar keeps
-          // its last reconciled value and the raw field below becomes editable again.
-          api.update((d) => ({ ...d, budget: undefined }))
-          api.commitField('annualSpendingReal')
-          setOpen(false)
-        }}
-        onClose={() => setOpen(false)}
-      />
     </>
   )
 }
@@ -384,8 +377,15 @@ function SpendGovernedByBudget({ api }: { readonly api: StepApi }) {
  *  is a core answer, so its builder lives where the question is asked — the same grammar as the
  *  accounts step — not only behind the Result's later-edit door. R8 holds: the invite never
  *  gates; a typed number alone advances exactly as before). */
-function SpendRaw({ api }: { readonly api: StepApi }) {
-  const [open, setOpen] = useState(false)
+function SpendRawFace({
+  api,
+  onOpen,
+  steerRef,
+}: {
+  readonly api: StepApi
+  readonly onOpen: () => void
+  readonly steerRef: Ref<HTMLButtonElement>
+}) {
   const annual = api.draft.annualSpendingReal
   const period = api.draft.spendEntryPeriod
   const displayed = annual === undefined ? undefined : period === 'month' ? annual / 12 : annual
@@ -442,20 +442,62 @@ function SpendRaw({ api }: { readonly api: StepApi }) {
         }}
       />
       {errorsFor(api, 'annualSpendingReal')}
-      <button type="button" className="btn-quiet spend-governed__steer" onClick={() => setOpen(true)}>
+      <button
+        type="button"
+        ref={steerRef}
+        className="btn-quiet spend-governed__steer"
+        onClick={onOpen}
+      >
         {copy.budgetCta}
       </button>
+    </>
+  )
+}
+
+/** The spend step body — ONE inline builder mount over both faces (de-modalized, council
+ *  2026-07-03 wf_67fa22e5-fbb: a modal behind a quiet button read as a side quest; the builder
+ *  now SWAPS the step body in place, the accounts/other-income list-in-flow grammar). The
+ *  builder stays MOUNTED across open/close so local edits survive a Cancel-and-return within
+ *  the step (the same session-persistence contract the Result sheet keeps by staying mounted);
+ *  the faces render only while it is closed — a swap, never a stack. */
+function SpendStepBody({ api }: { readonly api: StepApi }) {
+  const [open, setOpen] = useState(false)
+  const steerRef = useRef<HTMLButtonElement>(null)
+  const wasOpen = useRef(false)
+  useEffect(() => {
+    // The escape contract (insight 067): closing lands focus on the live face's own steer —
+    // whichever face rendered (Apply → the governed steer; Cancel/back-to-single → the arm you
+    // left). Declining costs nothing; you stand exactly where you were.
+    if (wasOpen.current && !open) steerRef.current?.focus()
+    wasOpen.current = open
+  }, [open])
+  const governs = budgetGoverns(api.draft.budget)
+  return (
+    <>
+      {!open &&
+        (governs ? (
+          <SpendGovernedFace api={api} onOpen={() => setOpen(true)} steerRef={steerRef} />
+        ) : (
+          <SpendRawFace api={api} onOpen={() => setOpen(true)} steerRef={steerRef} />
+        ))}
       <BudgetBuilder
+        variant="inline"
         open={open}
         draft={api.draft}
         onApply={(items) => {
-          // Same atomic patch as the governed arm; once applied the budget GOVERNS and this
-          // step re-renders as the read-only governed face (one writer — Q4).
+          // The atomic reconciliation patch (build-gate 2 semantics live in commitBudgetPatch);
+          // the OOP figure is read from the store's CURRENT draft inside the update (insight 036).
           api.update((d) => ({ ...d, ...commitBudgetPatch(items, d.health.oopMedicalAnnual) }))
           api.commitField('annualSpendingReal')
           setOpen(false)
         }}
-        onEscape={() => setOpen(false)}
+        onEscape={() => {
+          // Back to a single number: the budget clears to strictly-undefined; the scalar keeps
+          // its last reconciled value and the raw field becomes editable again.
+          api.update((d) => ({ ...d, budget: undefined }))
+          api.commitField('annualSpendingReal')
+          setOpen(false)
+        }}
         onClose={() => setOpen(false)}
       />
     </>
@@ -466,10 +508,7 @@ const spendStep: StepDef = {
   id: 'spend',
   headingKey: 'qSpendHeading',
   fields: ['annualSpendingReal'],
-  render: (api) => {
-    if (budgetGoverns(api.draft.budget)) return <SpendGovernedByBudget api={api} />
-    return <SpendRaw api={api} />
-  },
+  render: (api) => <SpendStepBody api={api} />,
 }
 
 const healthQuoteStep: StepDef = {

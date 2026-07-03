@@ -103,7 +103,9 @@ export const copy = {
   budgetSheetIntro:
     'Essentials are the part that has to hold; extras are what could give if it ever came to that. Mark which is which, and the answer takes each on its own terms.',
   budgetApply: 'Use this budget',
-  budgetCancel: 'Not now',
+  // 'Cancel' is Briggsy's own 2026-07-03 pick (was 'Not now' — he renamed it for honesty; the
+  // council's later 'neutral leave' note does not outrank the recorded N=1 word).
+  budgetCancel: 'Cancel',
   budgetAddLine: 'Add a line',
   budgetBackToSingle: 'Back to a single number',
   budgetBackToSingleHint:

@@ -714,8 +714,13 @@ export const copy = {
   leverHealthDoorCta: 'See your health-cost picture',
   leverHealthDoorEditCta: 'Revisit your health-cost picture',
   leverHealthTitle: 'Your health-cost picture',
+  // Cold-read 2026-07-03 round 2 ("still not clicking… especially around marketplace help"):
+  // ONE concrete word — DISCOUNT — carries the whole pre-65 story across every sheet line
+  // ("marketplace help" read as jargon and even inverted: he asked whether conversions HELP
+  // with premiums). The intro also separates the two systems (pre-65 discount vs Medicare's
+  // own income-stepped premiums) so the later lines can't blur together.
   leverHealthIntro:
-    'Before Medicare, the marketplace help your household qualifies for depends on each year’s income — and after 65, so do the Medicare premiums themselves. Here’s where those pieces stand in your plan.',
+    'Before Medicare, your household’s health coverage comes with an income-based discount — the lower a year’s income, the bigger the discount. After 65, Medicare’s own premiums also step with income. Here’s where those pieces stand in your plan.',
   leverHealthRegimeLegend: 'Which subsidy rules should the plan figure under?',
   leverHealthRegimeReverted: 'Current law',
   leverHealthRegimeRevertedHelp:
@@ -1076,21 +1081,23 @@ export const slots = {
     `Figured under the ENHANCED subsidy rules — a what-if, not current law. Congress may yet restore them; as of the last check, ${checkedOn}, it hadn’t.`,
   /** The middle-of-the-road pre-65 net coverage cost (the empirical median, humane-rounded). */
   acaCostNet: (amountFormatted: string): string =>
-    `Before Medicare, coverage could run around ~$${amountFormatted} a year after the help your income level tends to qualify for.`,
+    `Before Medicare, coverage could run around ~$${amountFormatted} a year after the income-based discount.`,
   /** The over-cliff frequency (a per-year FRACTION of futures, never a mean — insight 062). */
   acaCostCliff: (odds: string): string =>
-    `In about ${odds} futures, a year’s income tips past the cliff and that year’s help disappears entirely.`,
+    `In about ${odds} futures, a year’s income tips past that line and the year’s discount disappears entirely.`,
   /** The shadow marginal rate on the next converted dollar (tax + the subsidy it burns).
-   *  Cold-read 2026-07-03 ("I don't understand what this is trying to tell me"): the line now
-   *  states the POINT (conversions cost more than the tax alone here) before the mechanism. */
+   *  Cold-read 2026-07-03 rounds 1+2: state the POINT and the DIRECTION plainly — conversions
+   *  work AGAINST the discount (his round-2 read had inverted it into "conversions help with
+   *  premiums"), and the causal chain is spelled out: converted dollar = income → smaller
+   *  discount. Vocabulary rides the intro's "income-based discount", never "marketplace". */
   shadowRateLine: (cents: number): string =>
-    `Around those years, moving a dollar from pre-tax savings into Roth could cost about ${cents}¢ all told — the tax on the move, plus the marketplace help that extra dollar of income takes away.`,
-  /** The cliff headroom at the empirical anchor — now carrying its OWN context (cold-read
+    `Roth conversions work against that discount: every converted dollar counts as income, and more income means a smaller discount. Around those years, a converted dollar could cost about ${cents}¢ all told — the tax on it, plus the discount lost.`,
+  /** The cliff headroom at the empirical anchor — carries its OWN context (cold-read
    *  2026-07-03: "What is my income, and what is the cliff?"): the income figure IS the plan's
-   *  middle-of-the-road counted income at the anchor, and the cliff IS the all-at-once cutoff,
-   *  both quoted in dollars. Renders BEFORE the odds line so "the cliff" has its antecedent. */
+   *  middle-of-the-road counted income at the anchor, and the cutoff IS the all-at-once end of
+   *  the discount, both quoted in dollars. Renders BEFORE the odds line (its antecedent). */
   shadowRateHeadroom: (magiFormatted: string, cliffFormatted: string, headroomFormatted: string): string =>
-    `The marketplace prices its help off your household’s yearly income — around ~$${magiFormatted} in those years on your middle-of-the-road path. Above about ~$${cliffFormatted} the help ends all at once, so there’s roughly ~$${headroomFormatted} of room.`,
+    `The discount rides your household’s yearly income — around ~$${magiFormatted} in those years on your middle-of-the-road path. Above about ~$${cliffFormatted} the discount disappears entirely, so there’s roughly ~$${headroomFormatted} of room.`,
   /** The next IRMAA step's cost + distance (per enrolled spouse — never a flat ×2). */
   irmaaStepNext: (stepFormatted: string, headroomFormatted: string): string =>
     `The next Medicare step could add about ~$${stepFormatted} a year per enrolled spouse; your middle-of-the-road income sits about ~$${headroomFormatted} under that line.`,

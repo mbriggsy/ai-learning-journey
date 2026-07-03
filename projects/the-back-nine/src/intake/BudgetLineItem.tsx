@@ -175,6 +175,10 @@ export function BudgetLineItem({
           field={`budget[${index}].endYear`}
           value={item.endYear}
           invalid={windowInvalid}
+          // blankAllowed: an EMPTY through-year is the lifelong encoding (drop the key); a
+          // non-empty typo ("2.5"/"-3") commits NaN so validateBudgetItems flags it, rather
+          // than silently swallowing it as lifelong (ultramode 2026-07-02, insight 054).
+          blankAllowed
           onCommit={(end) => {
             onWindowEnd(end)
             onTouched()

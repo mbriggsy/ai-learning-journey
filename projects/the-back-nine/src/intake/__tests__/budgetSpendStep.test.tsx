@@ -73,6 +73,17 @@ function SpendHarness({ model }: { model: MemoryModel }) {
   return <IntakeFlow steps={steps} model={model} />
 }
 
+/** The oop-medical step in isolation — the SECOND budget-blind writer the reconciliation
+ *  invariant must survive (ultramode 2026-07-02, P1). */
+function OopHarness({ model }: { model: MemoryModel }) {
+  const snap = useSyncExternalStore(model.subscribe, model.getSnapshot)
+  const steps = useMemo(
+    () => intakeSteps(snap.draft).filter((s) => s.id === 'oop-medical'),
+    [snap.draft],
+  )
+  return <IntakeFlow steps={steps} model={model} />
+}
+
 const draft = (model: MemoryModel): ScenarioDraft => model.getSnapshot().draft
 
 const line = (patch?: Partial<BudgetLineItem>): BudgetLineItem => ({
@@ -199,5 +210,29 @@ describe('the spend step with NO budget (the control arm)', () => {
     expect(screen.getByLabelText(copy.spendLabel)).toBeInTheDocument()
     expect(screen.queryByText(copy.spendBudgetGovernedNote)).toBeNull()
     expect(screen.queryByRole('button', { name: copy.spendEditBudgetCta })).toBeNull()
+  })
+})
+
+describe('the OOP-medical step is the SECOND budget-blind writer — must keep the reconciliation invariant (ultramode 2026-07-02, P1)', () => {
+  it('under a GOVERNING budget, editing OOP medical re-reconciles annualSpendingReal = Σactive@0 + newM in the SAME update', () => {
+    const m = governedModel() // budget: food@30k + travel@3yr; M=8k; annualSpendingReal=38k
+    render(<OopHarness model={m} />)
+    // Change M 8k -> 20k. The year-0 full total must move to Σactive@0 (30k) + 20k = 50k, so the
+    // engine's reconciliation backstop can't fire and demote the confident answer to indeterminate.
+    commitField(screen.getByLabelText(copy.oopLabel), '20000')
+    const d = draft(m)
+    expect(d.health.oopMedicalAnnual).toBe(20_000)
+    expect(d.budget).toHaveLength(2) // budget still governs, untouched
+    expect(d.annualSpendingReal).toBe(50_000) // 30k year-0 lines + 20k medical — re-reconciled atomically
+  })
+
+  it('with NO budget governing, editing OOP medical leaves annualSpendingReal alone (M is a plain input again)', () => {
+    const m = freshModel()
+    m.update((d) => ({ ...d, annualSpendingReal: 60_000 }))
+    render(<OopHarness model={m} />)
+    commitField(screen.getByLabelText(copy.oopLabel), '9000')
+    const d = draft(m)
+    expect(d.health.oopMedicalAnnual).toBe(9_000)
+    expect(d.annualSpendingReal).toBe(60_000) // untouched — no budget, no reconciliation to keep
   })
 })

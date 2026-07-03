@@ -219,6 +219,39 @@ describe('BudgetBuilder — R19 validation timing + per-kind errors', () => {
     expect(screen.getByText(copy.errBudgetWindowReversed)).toBeInTheDocument()
   })
 
+  // ultramode 2026-07-02 (P2/P3): the Through field must NOT silently swallow an invalid
+  // non-empty entry as lifelong. Empty = lifelong (valid); "2.5"/"-3" = a typo that every
+  // OTHER field surfaces — the Through field owes the same honesty affordance (insight 054).
+  it('a non-integer THROUGH-year entry names the whole-years rule and blocks Apply (never silently lifelong)', () => {
+    const onApply = vi.fn()
+    render(<Host draft={draftWith()} onApply={onApply} />)
+    fireEvent.click(addBtn())
+    commitField(screen.getByLabelText(copy.budgetAmountLabel), '12,000')
+    commitField(screen.getByLabelText(copy.budgetWindowThroughLabel), '2.5')
+    expect(screen.getByText(copy.errBudgetWindowNonInteger)).toBeInTheDocument()
+    fireEvent.click(applyBtn())
+    expect(onApply).not.toHaveBeenCalled() // blocked — not committed as a lifelong line
+  })
+
+  it('a NEGATIVE through-year entry also errors (not swallowed to lifelong)', () => {
+    render(<Host draft={draftWith()} />)
+    fireEvent.click(addBtn())
+    commitField(screen.getByLabelText(copy.budgetWindowThroughLabel), '-3')
+    expect(screen.getByText(copy.errBudgetWindowNonInteger)).toBeInTheDocument()
+  })
+
+  it('a CLEARED through-year is still the lifelong encoding — empty is valid, only invalid errors', () => {
+    const onApply = vi.fn()
+    const governing = draftWith((d) => ({ ...d, budget: [line({ endYear: 12 })], annualSpendingReal: 30_000 }))
+    render(<Host draft={governing} onApply={onApply} />)
+    commitField(screen.getByLabelText(copy.budgetWindowThroughLabel), '')
+    expect(screen.queryByRole('alert')).toBeNull() // empty is not an error
+    fireEvent.click(applyBtn())
+    expect(onApply).toHaveBeenCalledTimes(1)
+    const item = onApply.mock.calls[0]![0][0] as BudgetLineItem
+    expect('endYear' in item).toBe(false) // absent = lifelong
+  })
+
   it('one bad line does not leak its error onto a clean sibling (errors are line-scoped)', () => {
     const governing = draftWith((d) => ({
       ...d,

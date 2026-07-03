@@ -117,9 +117,12 @@ describe('the budget door — Result’s commit wiring', () => {
   it('Apply lands the ATOMIC patch in the store (Σactive@0 + M) and requests the provisional→final sharpen', async () => {
     plantResolved()
     const recompute = vi.spyOn(appModel, 'recompute').mockResolvedValue(undefined as never)
+    // The pre-set scalar (40k) is deliberately DISTINCT from the reconciled anchor (35k+5k=40k
+    // would be self-satisfying — the assertion would pass even if the patch dropped M; ultramode
+    // 2026-07-02 nit). Pre-set 99k so only a genuine Σactive@0 + M reconciliation can land 40k.
     appModel.update((d) => ({
       ...d,
-      annualSpendingReal: 40_000,
+      annualSpendingReal: 99_000,
       health: { ...d.health, oopMedicalAnnual: 5_000 },
     }))
     renderResult()
@@ -132,7 +135,9 @@ describe('the budget door — Result’s commit wiring', () => {
     const d = appModel.getSnapshot().draft
     expect(d.budget).toHaveLength(1)
     expect(d.budget![0]!.annualAmountReal).toBe(35_000)
-    expect(d.annualSpendingReal).toBe(40_000) // 35k lines + 5k injected medical — the reconciled anchor
+    // 35k lines + 5k injected medical = 40k — NOT the pre-set 99k, so this proves the reconciliation
+    // actually ran AND netted M (a dropped-M bug would land 35k, a no-op would leave 99k).
+    expect(d.annualSpendingReal).toBe(40_000)
     await waitFor(() => expect(recompute).toHaveBeenCalledWith('provisional'))
     await waitFor(() => expect(recompute).toHaveBeenCalledWith('final'))
     // The sheet closed; the door now reads EDIT (the store's budget governs).

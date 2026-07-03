@@ -88,8 +88,12 @@ export interface HealthDraft
 export interface ScenarioDraft
   extends Partial<
     // `budget` is optional in the DRAFT exactly as it is in v3: absent = the
-    // un-itemized degenerate (P3·U9). It only ever lands via `setBudget`, which
-    // writes the items AND the reconciled `annualSpendingReal` in ONE update.
+    // un-itemized degenerate (P3·U9). The store is ESLint-banned from importing
+    // @budget, so the reconciliation invariant (`annualSpendingReal` == the budget's
+    // year-0 full total incl. injected OOP medical) is maintained at the intake/ui
+    // CALL SITE — every writer applies the items AND the reconciled scalar in ONE
+    // `model.update` (the builder's `commitBudgetPatch`; the oop-medical step's
+    // re-reconcile), so no consumer observes the two disagreeing.
     Pick<ScenarioV3, 'annualSpendingReal' | 'seed' | 'budget'>
   >,
     Pick<

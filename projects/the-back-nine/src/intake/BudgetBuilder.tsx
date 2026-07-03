@@ -233,10 +233,11 @@ export function BudgetBuilder({ open, draft, onApply, onEscape, onClose }: Budge
   }
 
   const escapeHatch = () => {
+    // Just clear the dirty latch and call out — the parent's onEscape closes the sheet in the
+    // SAME click batch, so any local setRows/setTouched here would be batched away unrendered and
+    // the open-edge effect re-seeds on the next open regardless (the resets were dead; ultramode
+    // 2026-07-02 nit). The dirtyRef clear is the one durable effect: it lets that re-seed run.
     dirtyRef.current = false
-    setRows([])
-    setTouched(new Set())
-    setAttempted(false)
     onEscape()
   }
 

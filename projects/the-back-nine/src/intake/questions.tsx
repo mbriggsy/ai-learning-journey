@@ -4,7 +4,7 @@ import type { PersonDraft, ScenarioDraft } from '@store/memoryModel'
 import type { WorkStatus } from '@shared/model'
 import { fraMonthsForBirthYear } from '@engine/constants/socialSecurity'
 import { budgetGoverns, isRampedBudget } from '@budget/budgetModel'
-import { commitBudgetPatch } from '@budget/budgetToSpending'
+import { budgetYearZeroFullTotal, commitBudgetPatch } from '@budget/budgetToSpending'
 import { BudgetBuilder } from './BudgetBuilder'
 import { CurrencyField, IntegerField, NameField, SegmentedControl, formatMoney } from './fields'
 import { FieldError } from './FieldError'
@@ -482,7 +482,20 @@ const oopStep: StepDef = {
         helpKey="oopHelp"
         field="health.oopMedicalAnnual"
         value={api.draft.health.oopMedicalAnnual}
-        onCommit={(v) => api.update((d) => ({ ...d, health: { ...d.health, oopMedicalAnnual: v } }))}
+        onCommit={(v) =>
+          api.update((d) => {
+            // OOP medical is the SECOND budget-blind writer of the year-0 total: compileBudget
+            // injects M into the sticky floor, so the reconciliation invariant (annualSpendingReal
+            // == Σactive@0 + M) breaks the moment M changes under a governing budget — the engine's
+            // backstop would then demote the confident answer to indeterminate (ultramode
+            // 2026-07-02, P1). Re-reconcile atomically here, exactly as the builder's Apply does;
+            // with no budget, M is a plain input and the scalar is left alone.
+            const health = { ...d.health, oopMedicalAnnual: v }
+            return budgetGoverns(d.budget)
+              ? { ...d, health, annualSpendingReal: budgetYearZeroFullTotal(d.budget, v) }
+              : { ...d, health }
+          })
+        }
       />
       {/* The optional-field reference hint shows only while the field is empty:
           a grounded, conservative anchor (referenceData.ts) so a user who doesn't

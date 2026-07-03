@@ -444,9 +444,12 @@ export const DEV_SEEDS = {
 
 export type DevSeedKey = keyof typeof DEV_SEEDS
 
-/** Resolve a raw `?seed` value to its draft, or null for an unknown key. */
+/** Resolve a raw `?seed` value to its draft, or null for an unknown key. `Object.hasOwn`, not
+ *  `in`: a bare `in` walks the prototype chain, so `?seed=toString`/`constructor`/`hasOwnProperty`
+ *  would each resolve to an inherited Object.prototype function cast to ScenarioDraft (ultramode
+ *  2026-07-02 nit — DEV-only, but an unsound cast is an unsound cast). */
 export function resolveDevSeed(key: string): ScenarioDraft | null {
-  return key in DEV_SEEDS ? DEV_SEEDS[key as DevSeedKey] : null
+  return Object.hasOwn(DEV_SEEDS, key) ? DEV_SEEDS[key as DevSeedKey] : null
 }
 
 // ---------------------------------------------------------------------------

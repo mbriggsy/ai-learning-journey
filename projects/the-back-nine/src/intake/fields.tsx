@@ -125,8 +125,19 @@ export function CurrencyField(props: CommonFieldProps) {
   )
 }
 
-/** Whole-number field (ages, years). */
-export function IntegerField(props: CommonFieldProps & { readonly placeholderKey?: CopyKey }) {
+/** Whole-number field (ages, years).
+ *
+ *  `blankAllowed` (opt-in) distinguishes a legitimate CLEARED value from an INVALID one — the
+ *  two collapse to `undefined` by default (a required field routes that to a NaN sentinel
+ *  downstream and errors on both, which is correct when blank is itself an error). For a field
+ *  where BLANK is a valid state (the budget line's "through year" = lifelong), that collapse
+ *  would silently swallow a typo ("2.5", "-3") as the blank encoding, with no error and no
+ *  blocked commit (ultramode 2026-07-02, insight 054 — every other invalid field surfaces an
+ *  error, so this one owes the same). With `blankAllowed`: empty ⇒ `undefined` (cleared), a
+ *  non-empty non-integer/negative ⇒ `NaN` (a distinct value the caller's validator can flag). */
+export function IntegerField(
+  props: CommonFieldProps & { readonly placeholderKey?: CopyKey; readonly blankAllowed?: boolean },
+) {
   const id = useId()
   const helpId = `${id}-help`
   const [editing, setEditing] = useState<string | null>(null)
@@ -152,7 +163,11 @@ export function IntegerField(props: CommonFieldProps & { readonly placeholderKey
         onBlur={() => {
           const cleaned = (editing ?? '').trim()
           const n = Number(cleaned)
-          props.onCommit(cleaned !== '' && Number.isInteger(n) && n >= 0 ? n : undefined)
+          const valid = Number.isInteger(n) && n >= 0
+          // Default: any non-number ⇒ undefined. blankAllowed: empty ⇒ undefined (cleared),
+          // non-empty-invalid ⇒ NaN (a typo the caller's validator surfaces, never swallowed).
+          const committed = cleaned === '' ? undefined : valid ? n : props.blankAllowed ? Number.NaN : undefined
+          props.onCommit(committed)
           setEditing(null)
         }}
       />

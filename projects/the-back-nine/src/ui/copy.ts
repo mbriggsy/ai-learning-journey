@@ -1107,10 +1107,22 @@ export const slots = {
   /** The surcharged arm — the middle-of-the-road path already sits above at least one line. */
   irmaaStepNowSurcharged: (totalFormatted: string, surchargeFormatted: string): string =>
     `In your plan’s Medicare years, premiums could run about ~$${totalFormatted} a year for your household — about ~$${surchargeFormatted} of that is already income surcharge on the middle-of-the-road path.`,
-  /** The next IRMAA line NAMED in dollars (cold-read 2026-07-03: "What is the line?") + the
-   *  middle path's distance under it + the step's cost (per enrolled spouse — never a flat ×2). */
-  irmaaStepNext: (thresholdFormatted: string, headroomFormatted: string, stepFormatted: string): string =>
-    `The next line sits at about ~$${thresholdFormatted} of yearly income — your middle-of-the-road path runs about ~$${headroomFormatted} under it. Crossing it could add about ~$${stepFormatted} a year per enrolled spouse.`,
+  /** The next IRMAA line NAMED in dollars (cold-read 2026-07-03: "What is the line?") with the
+   *  anchor income QUOTED in the same breath and the step cost spoken as the household's own
+   *  number ("don't force the user to think — just tell them", Briggsy's law, same day):
+   *  `bothEnrolled` picks the two-of-you total vs the each-of-you per-person figure (the
+   *  engine's real enrolled count at the anchor — never a flat ×2). */
+  irmaaStepNext: (
+    thresholdFormatted: string,
+    magiFormatted: string,
+    headroomFormatted: string,
+    addFormatted: string,
+    bothEnrolled: boolean,
+  ): string =>
+    `The next line sits at about ~$${thresholdFormatted} of yearly income — your middle-of-the-road income in those years, around ~$${magiFormatted}, runs about ~$${headroomFormatted} under it. ` +
+    (bothEnrolled
+      ? `Crossing it could add about ~$${addFormatted} a year for the two of you.`
+      : `Crossing it could add about ~$${addFormatted} a year for each of you once on Medicare.`),
   /** The regime compare's HEADLINE — the lifetime health-cost delta (the regime's effect
    *  concentrates pre-65 and may barely move the portfolio median; council 2026-07-03). */
   subsidyRegimeCostDelta: (withFormatted: string, withoutFormatted: string): string =>

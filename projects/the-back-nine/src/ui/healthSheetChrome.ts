@@ -189,10 +189,20 @@ export function composeHealthSheet(
         : slots.irmaaStepNowBase(formatDollar(totalNow))
     const step = nextIrmaaStep(medicare.irmaaMagiP50, draft.filing, irmaa.value)
     if (step !== null) {
+      // The household's OWN number for the step ("just tell them"): the enrolled count at the
+      // anchor from the household's ages (the modal both-alive frame the sheet already speaks),
+      // never a flat ×2 — one enrolled quotes the per-person figure on the each-of-you arm.
+      const yearsInAtAnchor = medicare.yearsFromNow - 1
+      const enrolled = draft.people.filter(
+        (p) => p.currentAge !== undefined && p.currentAge + yearsInAtAnchor >= 65,
+      ).length
+      const bothEnrolled = enrolled >= 2
       view.irmaaStepLine = slots.irmaaStepNext(
         formatDollar(step.threshold),
+        formatDollar(medicare.irmaaMagiP50),
         formatDollar(step.threshold - medicare.irmaaMagiP50),
-        formatDollar(step.surchargeDeltaMonthlyPerPerson * 12),
+        formatDollar(step.surchargeDeltaMonthlyPerPerson * 12 * (bothEnrolled ? 2 : 1)),
+        bothEnrolled,
       )
     }
   }

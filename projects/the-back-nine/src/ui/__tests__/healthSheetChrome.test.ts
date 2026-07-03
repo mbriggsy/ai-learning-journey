@@ -124,8 +124,18 @@ describe('composeHealthSheet', () => {
     expect(view.irmaaStoryLine).toBe(copy.irmaaStepStory)
     // The before-any-step anchor (cold-read 2026-07-03): base 4,870 + surcharge 0 → '4,900'.
     expect(view.irmaaNowLine).toBe(slots.irmaaStepNowBase('4,900'))
-    // Threshold NAMED (218,000); 218,000 − 150,000 = 68,000; 95.7/mo × 12 = 1,148.4 → '1,100'.
-    expect(view.irmaaStepLine).toBe(slots.irmaaStepNext('218,000', '68,000', '1,100'))
+    // Threshold NAMED (218,000); the anchor income QUOTED (150,000); 218,000 − 150,000 = 68,000;
+    // both 66 → the two-of-you arm at the ×2 household figure: 95.7 × 12 × 2 = 2,296.8 → '2,300'.
+    expect(view.irmaaStepLine).toBe(slots.irmaaStepNext('218,000', '150,000', '68,000', '2,300', true))
+  })
+
+  it('ONE spouse enrolled at the anchor quotes the per-person figure on the each-of-you arm (never a flat ×2)', () => {
+    const readout: HealthReadout = {
+      byYear: [year({ yearsFromNow: 1, medicareBaseP50: 2_435, irmaaMagiP50: 150_000 })],
+    }
+    const view = composeHealthSheet(readout, draft({ ages: [66, 62] }))
+    // 66 is enrolled, 62 is not: per-person 95.7 × 12 = 1,148.4 → '1,100', bothEnrolled=false.
+    expect(view.irmaaStepLine).toBe(slots.irmaaStepNext('218,000', '150,000', '68,000', '1,100', false))
   })
 
   it('a middle path already paying surcharge composes the SURCHARGED now-arm (total = base + surcharge, the split quoted)', () => {

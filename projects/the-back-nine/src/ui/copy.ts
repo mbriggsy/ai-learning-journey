@@ -1099,8 +1099,11 @@ export const slots = {
   //  Round 5 (cold-read 2026-07-03): the em-dash apposition read ambiguous (is $X the income or
   //  the discount?) and "your household's yearly income" presumed a figure the user never
   //  entered — the plan DERIVES it, so the plan is named as its source. One fact per sentence.
+  //  Round 6: the era is NAMED on the figure ("the years before Medicare") — the sheet quotes a
+  //  different, honestly-lower income for the later Medicare years, and two same-named figures
+  //  with no era on them read as a data bug (cold-read: "test data issue?").
   shadowRateHeadroom: (magiFormatted: string, cliffFormatted: string, headroomFormatted: string): string =>
-    `In those years, the plan expects about ~$${magiFormatted} a year of income for your household. That is the number the discount is judged on. Above about ~$${cliffFormatted} the discount disappears entirely, so there’s roughly ~$${headroomFormatted} of room.`,
+    `In the years before Medicare, the plan expects about ~$${magiFormatted} a year of income for your household. That is the number the discount is judged on. Above about ~$${cliffFormatted} the discount disappears entirely, so there’s roughly ~$${headroomFormatted} of room.`,
   /** What Medicare costs BEFORE any next step — the anchor the step line is measured from
    *  (cold-read 2026-07-03: "What are they before the next step?"). The wire's base/surcharge
    *  split (council Q3) earns its render seat here. Base arm: the middle path pays no
@@ -1122,7 +1125,7 @@ export const slots = {
     addFormatted: string,
     bothEnrolled: boolean,
   ): string =>
-    `The next line sits at about ~$${thresholdFormatted} of yearly income — your middle-of-the-road income in those years, around ~$${magiFormatted}, runs about ~$${headroomFormatted} under it. ` +
+    `The next line sits at about ~$${thresholdFormatted} of yearly income. By those Medicare years the plan expects about ~$${magiFormatted} a year of income, roughly ~$${headroomFormatted} under the line. ` +
     (bothEnrolled
       ? `Crossing it could add about ~$${addFormatted} a year for the two of you.`
       : `Crossing it could add about ~$${addFormatted} a year for each of you once on Medicare.`),

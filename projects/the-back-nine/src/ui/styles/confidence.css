@@ -264,3 +264,16 @@
     transition: none;
   }
 }
+
+/* ----- P3-U11: the unpriced-Medicare disclosure (the council's veto condition) — a quiet
+        subordinate note in the verdict's own reading column: muted ink, body measure, plain
+        text in the a11y tree (never color-alone, never hidden). ----- */
+
+.cs-medicare-note {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  line-height: var(--leading-body);
+  color: var(--ink-muted);
+  max-width: var(--measure);
+}

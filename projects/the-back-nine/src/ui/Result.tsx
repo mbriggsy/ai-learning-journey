@@ -14,11 +14,13 @@
  */
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import { AnswerStrip } from '@intake/AnswerStrip'
-import { buildControlPreviewParams, missingRequiredFacts } from '@intake/intakeMap'
+import { buildControlPreviewParams, healthcarePriced, missingRequiredFacts } from '@intake/intakeMap'
 import { useLiveAnnouncer } from '@intake/a11y'
 import { BudgetBuilder } from '@intake/BudgetBuilder'
 import { SequencingControl } from '@intake/SequencingControl'
 import { RothLever } from '@intake/RothLever'
+import { HealthcareSheet } from '@intake/HealthcareSheet'
+import { medicareUnpriced } from './healthSheetChrome'
 import { budgetGoverns } from '@budget/budgetModel'
 import { commitBudgetPatch } from '@budget/budgetToSpending'
 import { previewRunsInWorker, runControlPreview } from '@store/controlPreview'
@@ -109,7 +111,18 @@ export function Result({
   //    the lever's own calm closed face, so even that read stays out of the door predicate).
   const [sequencingOpen, setSequencingOpen] = useState(false)
   const [rothOpen, setRothOpen] = useState(false)
+  const [healthOpen, setHealthOpen] = useState(false)
   const rothApplied = snapshot.draft.rothConversion
+  // P3·U11 — the Healthcare door's domain (categorical, fact-presence only) is the ENGINE's own
+  // priced-healthcare gate (healthcarePriced — single-sourced with buildOverlay; council
+  // 2026-07-03: no hollow door). The post-65-only household instead gets the verdict-level
+  // unpriced-Medicare disclosure, threaded to BOTH hero surfaces + the Roth lever below.
+  const healthPriced = healthcarePriced(snapshot.draft)
+  const medicareGap = medicareUnpriced(snapshot.draft.people)
+  const enhancedApplied = snapshot.draft.enhancedSubsidies === true
+  // The wire's per-year healthcare series (spine headline runs only — presence-keyed).
+  const healthReadout =
+    snapshot.answer.kind === 'headline' ? snapshot.answer.result.distribution.healthReadout : undefined
   // The date route's preview anchor: the CROWNED lifestyle offset (the plan the answer named);
   // undefined (⇒ preview withheld) when no date crowned or on the spine route (unused there).
   const crownedOffset =
@@ -234,6 +247,11 @@ export function Result({
             {rothApplied === undefined ? copy.leverRothDoorCta : copy.leverRothDoorEditCta}
           </button>
         )}
+        {focusKey !== undefined && healthPriced && (
+          <button type="button" className="btn-quiet" onClick={() => setHealthOpen(true)}>
+            {enhancedApplied ? copy.leverHealthDoorEditCta : copy.leverHealthDoorCta}
+          </button>
+        )}
         <button type="button" className="btn-quiet" onClick={onReview}>
           {copy.resultReview}
         </button>
@@ -250,6 +268,7 @@ export function Result({
             view={elevated.view}
             focusSignal={focusKey}
             actionsSlot={seatInLead ? actionsNode : undefined}
+            medicareUnpricedNote={medicareGap}
           />
         )}
         {elevated.kind === 'spine' && (
@@ -257,6 +276,7 @@ export function Result({
             view={elevated.view}
             focusSignal={focusKey}
             actionsSlot={seatInLead ? actionsNode : undefined}
+            medicareUnpricedNote={medicareGap}
           />
         )}
         {elevated.kind === 'fallback' && (
@@ -305,6 +325,7 @@ export function Result({
         draft={snapshot.draft}
         preview={runPreview}
         previewBlocking={!previewRunsInWorker()}
+        medicareUnpricedNote={medicareGap}
         onApply={(plan) => {
           appModel.update((d) => ({ ...d, rothConversion: plan }))
           setRothOpen(false)
@@ -321,6 +342,25 @@ export function Result({
           void recomputeBoth()
         }}
         onClose={() => setRothOpen(false)}
+      />
+      <HealthcareSheet
+        open={healthOpen}
+        draft={snapshot.draft}
+        readout={healthReadout}
+        preview={runPreview}
+        previewBlocking={!previewRunsInWorker()}
+        onApply={(enhanced) => {
+          // THE SINGLE-KEY WRITE FENCE (insight 058): exactly one key moves — set the literal
+          // `true`, or STRIP the key entirely (absence ≡ the statutory reverted regime — never
+          // `false`, DND/009's strip-the-key discipline; the codec rejects a persisted false).
+          appModel.update((d) => {
+            const { enhancedSubsidies: _regime, ...rest } = d
+            return enhanced ? { ...rest, enhancedSubsidies: true } : rest
+          })
+          setHealthOpen(false)
+          void recomputeBoth()
+        }}
+        onClose={() => setHealthOpen(false)}
       />
     </main>
   )

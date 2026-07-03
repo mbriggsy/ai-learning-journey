@@ -1,0 +1,221 @@
+/**
+ * src/ui/healthSheetChrome.ts — the Healthcare sheet's PURE composition seam (P3·U11).
+ *
+ * Every honesty decision the sheet renders is decided HERE, in exported pure functions
+ * (insight 048 — an honesty gate inline in an undrivable render path is untested despite a
+ * green suite): the empirical anchors picked off the wire's {@link HealthReadout} series, the
+ * thin-cohort withdrawal, the shadow-rate decomposition, the IRMAA step readout, the dated
+ * legislative note, and the regime compare's cost-headline view. The component is dumb
+ * wiring over this view-model.
+ *
+ * THE ANCHOR CONTRACT (council 2026-07-03, the unbiased-skeleton dissolution): every figure
+ * anchors to the simulation's OWN per-year medians (`acaMagiP50` / `irmaaMagiP50` — an
+ * unbiased best estimate by construction), never a modeled skeleton; the landscape geometry
+ * around that anchor (cliff distance, next step, marginal rate, subsidy drag) is read through
+ * the SAME canonical modules the engine prices with (`magiLandscape` → `taxCore` /
+ * `healthOverlay` / the constants) — single producer, so the readout can never disagree with
+ * the engine about where a cliff sits. The one disclosed approximation: the subsidy-drag
+ * probe uses TODAY'S benchmark quote (the per-year escalated stream lives engine-side); the
+ * `~`/`about` hedge carries that honestly.
+ *
+ * REGIME AWARENESS: the cliff lines exist only under the reverted/cliff table; an APPLIED
+ * enhanced regime removes them (no cliff exists to warn about) and swaps the dated status
+ * note to the what-if variant (an applied hypothesis must never read as current law —
+ * council condition Q1).
+ */
+import type { HealthReadout, HealthReadoutYear, ScenarioV3, TwoArmOutcome } from '@shared/model'
+import {
+  cliffMagiFor,
+  marginalOrdinaryRate,
+  nextIrmaaStep,
+  subsidyLossPerDollar,
+} from '@engine/magiLandscape'
+import { deductionStack } from '@engine/taxCore'
+import { fplForHousehold } from '@engine/healthOverlay'
+import {
+  acaApplicablePercentage,
+  acaApplicablePercentageEnhanced,
+  acaEnhancedSubsidyStatus,
+  irmaa,
+} from '@engine/constants/health'
+import { COHORT_FADE } from '@viz/bandGeometry'
+import { copy, slots } from './copy'
+import { composeTwoFutures, type TwoFuturesView } from './twoFuturesChrome'
+
+/** Humane rounding for a readout dollar (the `~$X` grammar owns the imprecision). */
+const roundDollar = (v: number): number => Math.round(v / 100) * 100
+const formatDollar = (v: number): string => roundDollar(v).toLocaleString('en-US')
+
+/** The dated legislative check, formatted for prose (Intl-owned, never hand-assembled). */
+function verifiedOnFormatted(): string {
+  // The ISO date is a calendar DATE (no timezone) — parse the parts, never `new Date(iso)`
+  // (UTC-midnight shifts a day west of Greenwich).
+  const [y, m, d] = acaEnhancedSubsidyStatus.value.verifiedOn.split('-').map(Number)
+  return new Intl.DateTimeFormat('en-US', { dateStyle: 'long' }).format(new Date(y!, m! - 1, d!))
+}
+
+/** A year is QUOTABLE only while the living cohort is thick enough to speak for (the band's
+ *  own COHORT_FADE.full discipline — a median over few living paths is noise in a line's
+ *  clothing). Exported planted-fail style: the tests drive it directly. */
+export function quotableYears(readout: HealthReadout): readonly HealthReadoutYear[] {
+  return readout.byYear.filter((y) => y.cohortFraction >= COHORT_FADE.full)
+}
+
+/** The ACA anchor: the first quotable year where the overlay actually priced a marketplace
+ *  year for most futures. Null when the household has no priced window (post-65, or the
+ *  series is absent — the date route). */
+export function acaAnchor(readout: HealthReadout): HealthReadoutYear | null {
+  return quotableYears(readout).find((y) => y.acaPricedFraction >= 0.5) ?? null
+}
+
+/** The Medicare anchor: the first quotable year where a base Part B bill actually landed. */
+export function medicareAnchor(readout: HealthReadout): HealthReadoutYear | null {
+  return quotableYears(readout).find((y) => y.medicareBaseP50 > 0) ?? null
+}
+
+/** One composed line of the sheet (plain text — the component renders `<p>`s). */
+export interface HealthSheetView {
+  /** The dated legislative-status note (always present — read from LIVE constants). */
+  readonly statusLine: string
+  /** The pre-65 net-cost line — present iff an ACA anchor exists. */
+  readonly acaCostLine?: string
+  /** The over-cliff frequency line — present iff any quotable priced year loses the help
+   *  in ≥ 1 of 10 futures (reverted regime only; no cliff exists under enhanced). */
+  readonly cliffLine?: string
+  /** The shadow-rate line — present iff an ACA anchor exists (the marginal decomposition). */
+  readonly shadowLine?: string
+  /** The cliff-headroom line — present iff a cliff exists AND the anchor sits under it. */
+  readonly headroomLine?: string
+  /** The IRMAA story — present iff a Medicare anchor exists (the danger-years teaching line). */
+  readonly irmaaStoryLine?: string
+  /** The next-step readout — present iff a Medicare anchor exists AND a next tier remains. */
+  readonly irmaaStepLine?: string
+}
+
+/**
+ * Compose the sheet's readout lines from the wire series + the draft's categorical facts.
+ * `readout` undefined (the date route / a pre-resolve open) composes the status line alone —
+ * the sheet still teaches, it just quotes no empirical figures.
+ */
+export function composeHealthSheet(
+  readout: HealthReadout | undefined,
+  draft: Pick<ScenarioV3, 'filing' | 'enhancedSubsidies'> & {
+    readonly people: ReadonlyArray<{ readonly currentAge?: number }>
+    readonly health: { readonly slcspMonthlyToday?: number }
+  },
+): HealthSheetView {
+  const enhancedApplied = draft.enhancedSubsidies === true
+  const checkedOn = verifiedOnFormatted()
+  const statusLine = enhancedApplied
+    ? slots.acaCostStatusEnhanced(checkedOn)
+    : slots.acaCostStatus(checkedOn)
+  if (readout === undefined) return { statusLine }
+
+  const view: {
+    statusLine: string
+    acaCostLine?: string
+    cliffLine?: string
+    shadowLine?: string
+    headroomLine?: string
+    irmaaStoryLine?: string
+    irmaaStepLine?: string
+  } = { statusLine }
+
+  const table = enhancedApplied ? acaApplicablePercentageEnhanced.value : acaApplicablePercentage.value
+  const fplDollar = fplForHousehold(2) // the modal both-alive household (the survivor flip is its own note)
+  const cliff = cliffMagiFor(table, fplDollar)
+
+  const anchor = acaAnchor(readout)
+  if (anchor !== null) {
+    view.acaCostLine = slots.acaCostNet(formatDollar(anchor.acaNetPremiumP50))
+
+    // The over-cliff frequency: the WORST quotable priced year (a cliff smeared into an
+    // average stops being visible — insight 062; the fraction is the honest channel).
+    const worst = quotableYears(readout)
+      .filter((y) => y.acaPricedFraction >= 0.5)
+      .reduce((max, y) => Math.max(max, y.overCliffFraction), 0)
+    const worstOfTen = Math.round(worst * 10)
+    if (cliff !== null && worstOfTen >= 1) {
+      view.cliffLine = slots.acaCostCliff(slots.xOfTen(worstOfTen))
+    }
+
+    // The shadow rate at the empirical anchor: ordinary marginal rate (through the same
+    // deduction stack the tax math uses) + the subsidy drag (through the same sliding scale
+    // the overlay prices with). count65 at the anchor from the household's own ages.
+    const yearsIn = anchor.yearsFromNow - 1 // the series clock: k = END of sim-year k−1
+    const count65 = draft.people.filter(
+      (p) => p.currentAge !== undefined && p.currentAge + yearsIn >= 65,
+    ).length
+    const agi = anchor.irmaaMagiP50
+    const taxable = Math.max(0, agi - deductionStack(draft.filing, count65, agi))
+    const marginal = marginalOrdinaryRate(taxable, draft.filing)
+    const slcspAnnual = (draft.health.slcspMonthlyToday ?? 0) * 12
+    const drag =
+      slcspAnnual > 0 ? subsidyLossPerDollar(anchor.acaMagiP50, slcspAnnual, fplDollar, table) : 0
+    view.shadowLine = slots.shadowRateLine(Math.round((marginal + drag) * 100))
+
+    if (cliff !== null) {
+      const headroom = cliff - anchor.acaMagiP50
+      if (headroom > 0) view.headroomLine = slots.shadowRateHeadroom(formatDollar(headroom))
+    }
+  }
+
+  const medicare = medicareAnchor(readout)
+  if (medicare !== null) {
+    view.irmaaStoryLine = copy.irmaaStepStory
+    const step = nextIrmaaStep(medicare.irmaaMagiP50, draft.filing, irmaa.value)
+    if (step !== null) {
+      view.irmaaStepLine = slots.irmaaStepNext(
+        formatDollar(step.surchargeDeltaMonthlyPerPerson * 12),
+        formatDollar(step.threshold - medicare.irmaaMagiP50),
+      )
+    }
+  }
+
+  return view
+}
+
+/**
+ * Compose the regime compare's two-futures view: the chart + odds line from the shared
+ * composer, HEADLINED by the lifetime health-cost delta (the regime's real effect
+ * concentrates in the pre-65 ACA years and may barely move the portfolio median —
+ * council 2026-07-03). Null mirrors composeTwoFutures's own null (an unusable outcome).
+ */
+export function composeRegimeFutures(
+  outcome: TwoArmOutcome,
+  pickedEnhanced: boolean,
+): TwoFuturesView | null {
+  const base = composeTwoFutures(
+    outcome,
+    pickedEnhanced ? copy.tfChartRegimeEnhanced : copy.tfChartRegimeReverted,
+    copy.tfChartRegimeCurrent,
+    slots.rothDeltaSurvivor,
+  )
+  if (base === null || outcome.kind !== 'two-arm') return base
+  const withCost = outcome.with.lifetimeHealthCostMedianReal
+  const withoutCost = outcome.without.lifetimeHealthCostMedianReal
+  if (withCost === undefined || withoutCost === undefined) return base
+  // The cost delta LEADS; the odds line (the shared composer's deltaLine) demotes to the
+  // second row. Its state/years secondaries stay in their usual seats when present.
+  return {
+    ...base,
+    deltaLine: slots.subsidyRegimeCostDelta(formatDollar(withCost), formatDollar(withoutCost)),
+    stateLine: base.deltaLine,
+  }
+}
+
+/** The post-65 UNPRICED-Medicare domain (the council's veto predicate, 2026-07-03): every
+ *  member is 65+ — the intake never asks the marketplace questions (`anyPre65OrUnknown`
+ *  gates them off), so `healthcareOn` is false and the engine prices $0 Medicare (base Part
+ *  B AND the IRMAA surcharge) every year for a household that in reality pays both. The
+ *  predicate mirrors the CREATOR's domain, not a proxy (insight 027): it is the exact
+ *  complement of intakeMap's `ages.some(a < 65)` healthcare gate over known ages. The
+ *  surfaces this drives: the verdict disclosure (ConfidenceStatement/FuckOffDate) + the
+ *  Roth lever's conversion-looks-better-than-life note. */
+export function medicareUnpriced(people: ReadonlyArray<{ readonly currentAge?: number }>): boolean {
+  return (
+    people.length > 0 &&
+    people.every((p) => p.currentAge !== undefined) &&
+    !people.some((p) => p.currentAge! < 65)
+  )
+}

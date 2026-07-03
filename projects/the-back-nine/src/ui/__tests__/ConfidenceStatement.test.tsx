@@ -336,3 +336,22 @@ describe('ConfidenceStatement — the U7 verdict-first surface', () => {
     expect(document.activeElement).toBe(document.body)
   })
 })
+
+describe('P3-U11 — the unpriced-Medicare disclosure (the council veto condition)', () => {
+  it('renders ON the verdict surface as plain a11y-tree text when the household is in the unpriced domain', () => {
+    render(
+      <ConfidenceStatement
+        view={{ kind: 'reading', ...READING_FIXTURES['on-track'] }}
+        medicareUnpricedNote
+      />,
+    )
+    const note = screen.getByText(copy.verdictMedicareUnpriced)
+    expect(note).toBeInTheDocument()
+    expect(note).not.toHaveAttribute('aria-hidden') // text-reachable, never decoration
+  })
+
+  it('absent by default (the priced domain wears no phantom gap)', () => {
+    render(<ConfidenceStatement view={{ kind: 'reading', ...READING_FIXTURES['on-track'] }} />)
+    expect(screen.queryByText(copy.verdictMedicareUnpriced)).toBeNull()
+  })
+})

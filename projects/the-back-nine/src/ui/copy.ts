@@ -697,6 +697,46 @@ export const copy = {
     'How the middle-of-the-road path could run with and without the change, in today’s dollars.',
   sequencingBaselineNote:
     'The comparison holds everything else still — same markets, same spending — so the gap you see is the order itself, not luck. It can read small; small and real beats big and imagined.',
+
+  // --- P3·U11 — the Healthcare sheet. Chrome rides lever*/tfChart* (hedge-exempt, the prefix
+  // law above); plan-moving READOUTS ride the four U11 control prefixes (shadowRate* /
+  // irmaaStep* / acaCost* / subsidyRegime*) or control* — each swept by require-hedge.
+  // All FIRST-DRAFT craftsman's-lead wording (the cold-read's call; contract #8 exit condition). ---
+  leverHealthDoorCta: 'See your health-cost picture',
+  leverHealthDoorEditCta: 'Revisit your health-cost picture',
+  leverHealthTitle: 'Your health-cost picture',
+  leverHealthIntro:
+    'Before Medicare, the marketplace help your household qualifies for depends on each year’s income — and after 65, so do the Medicare premiums themselves. Here’s where those pieces stand in your plan.',
+  leverHealthRegimeLegend: 'Which subsidy rules should the plan figure under?',
+  leverHealthRegimeReverted: 'Current law',
+  leverHealthRegimeRevertedHelp:
+    'The enhanced marketplace subsidies expired — help fades as income rises and ends entirely at the cliff.',
+  leverHealthRegimeEnhanced: 'If enhanced subsidies return',
+  leverHealthRegimeEnhancedHelp:
+    'The 2021–2025 rules Congress may restore — more help at every income, and no hard cliff.',
+  leverHealthRegimeApply: 'Figure my plan this way',
+  leverHealthRegimeRemove: 'Back to current law',
+  leverHealthRegimeCurrentTag: '— how it’s figured now',
+  // Two-futures CHART CHROME for the regime compare (identity labels, hedge-exempt).
+  tfChartRegimeReverted: 'Under current law',
+  tfChartRegimeEnhanced: 'If subsidies return',
+  tfChartRegimeCurrent: 'As figured now',
+  // Plan-moving READOUTS (require-hedge-swept by prefix).
+  irmaaStepStory:
+    'Medicare premiums look back two years at your income — money converted at 63 can show up in the premium bill at 65. The steps are sharp: a dollar over a line and the higher charge applies for that whole year.',
+  controlHealthOmissionsNote:
+    'Not counted here: state income tax, the net-investment-income tax, differences in plan cost-sharing, the benchmark premium itself, state-level subsidy top-ups, and a survivor’s appeal rights — each could move this picture.',
+  controlHealthSurvivorNote:
+    'If one of you is on your own later, the same income can trip these lines sooner — the marketplace cliff moves right away, and the Medicare step follows about two years behind.',
+  controlHealthHsaNote:
+    'Your HSA can pay medical bills tax-free at any age, and Medicare premiums once its owner is 65 — but usually not marketplace premiums before then. Once Medicare starts, new contributions stop counting.',
+  // The post-65 unpriced-Medicare disclosure (the council's veto condition, 2026-07-03): rendered
+  // ON the verdict surfaces + inside the Roth lever for a household whose Medicare costs the
+  // engine does not yet price — names the gap AND its direction, never buried in a general list.
+  verdictMedicareUnpriced:
+    'One honest gap: Medicare’s own costs — the base premium, plus the income surcharge a conversion can trip — aren’t priced into these numbers for your household yet. Pricing them would pull the picture down some, never up.',
+  rothMedicareUnpricedNote:
+    'Your household’s Medicare premiums — including the income surcharge a conversion can trip two years later — aren’t priced in yet, so converting could look a little better here than it would in real life.',
 } as const satisfies Record<string, string>
 
 export type CopyKey = keyof typeof copy
@@ -1011,6 +1051,37 @@ export const slots = {
     const start = startYearsFromNow === 0 ? 'starting this year' : `starting in about ${startYearsFromNow} years`
     return `Converting ~$${amountFormatted} a year for ${years} year${years === 1 ? '' : 's'}, ${start}.`
   },
+
+  // --- P3·U11 — the Healthcare sheet's readout slots (every figure pre-formatted by the chrome;
+  // each template wears its hedge by construction — the four U11 prefixes are require-hedge-swept).
+  // FIRST-DRAFT craftsman's-lead wording (the cold-read's call). ---
+  /** The DATED legislative-status note — read from the LIVE constants at render time, never a
+   *  persisted stamp (reVerifyEveryBuild); the date names why the note can go stale. */
+  acaCostStatus: (checkedOn: string): string =>
+    `Figured under this year’s rules: the enhanced subsidies expired, so help fades as income rises and stops at the cliff. Congress could still restore them — last checked ${checkedOn}.`,
+  /** The enhanced-regime variant of the status note (an APPLIED what-if is a hypothesis, never
+   *  current law — the ColdStart-restore marker rides this same slot). */
+  acaCostStatusEnhanced: (checkedOn: string): string =>
+    `Figured under the ENHANCED subsidy rules — a what-if, not current law. Congress may yet restore them; as of the last check, ${checkedOn}, it hadn’t.`,
+  /** The middle-of-the-road pre-65 net coverage cost (the empirical median, humane-rounded). */
+  acaCostNet: (amountFormatted: string): string =>
+    `Before Medicare, coverage could run around ~$${amountFormatted} a year after the help your income level tends to qualify for.`,
+  /** The over-cliff frequency (a per-year FRACTION of futures, never a mean — insight 062). */
+  acaCostCliff: (odds: string): string =>
+    `In about ${odds} futures, a year’s income tips past the cliff and that year’s help disappears entirely.`,
+  /** The shadow marginal rate on the next converted dollar (tax + the subsidy it burns). */
+  shadowRateLine: (cents: number): string =>
+    `Around those years, the next converted dollar could cost about ${cents}¢ on its way to Roth — tax plus the marketplace help it burns.`,
+  /** The cliff headroom at the empirical anchor (the middle-of-the-road path's distance). */
+  shadowRateHeadroom: (amountFormatted: string): string =>
+    `Roughly ~$${amountFormatted} of yearly income stands between your middle-of-the-road path and the cliff.`,
+  /** The next IRMAA step's cost + distance (per enrolled spouse — never a flat ×2). */
+  irmaaStepNext: (stepFormatted: string, headroomFormatted: string): string =>
+    `The next Medicare step could add about ~$${stepFormatted} a year per enrolled spouse; your middle-of-the-road income sits about ~$${headroomFormatted} under that line.`,
+  /** The regime compare's HEADLINE — the lifetime health-cost delta (the regime's effect
+   *  concentrates pre-65 and may barely move the portfolio median; council 2026-07-03). */
+  subsidyRegimeCostDelta: (withFormatted: string, withoutFormatted: string): string =>
+    `Lifetime health costs could run around ~$${withFormatted} this way, versus ~$${withoutFormatted} as figured now.`,
 } as const
 
 /**

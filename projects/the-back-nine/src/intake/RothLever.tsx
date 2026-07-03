@@ -55,9 +55,13 @@ export interface RothLeverProps {
   /** Take an applied conversion back out — the caller strips the field and recomputes. */
   readonly onRemove: () => void
   readonly onClose: () => void
+  /** P3·U11 (the council's veto condition): TRUE for a household whose Medicare costs the
+   *  engine does not yet price (post-65-only — no priced healthcare) — the lever then wears
+   *  the conversion-looks-better-than-life note beside its other disclosures. */
+  readonly medicareUnpricedNote?: boolean
 }
 
-export function RothLever({ open, draft, preview, previewBlocking = false, onApply, onRemove, onClose }: RothLeverProps) {
+export function RothLever({ open, draft, preview, previewBlocking = false, onApply, onRemove, onClose, medicareUnpricedNote = false }: RothLeverProps) {
   const announcerRef = useRef<Announcer | null>(null)
   const applied = draft.rothConversion
   const [plan, setPlan] = useState<PlanDraft>({})
@@ -112,6 +116,10 @@ export function RothLever({ open, draft, preview, previewBlocking = false, onApp
         <>
           <p className="control-sheet__eyebrow">{copy.rothTeaserLead}</p>
           <p className="control-sheet__intro">{copy.leverRothIntro}</p>
+          {/* P3·U11 — the unpriced-Medicare note STANDS on the sheet (never inside the
+              ready-arm notes slot, which hides until a comparison lands): the household must
+              read the gap BEFORE weighing any delta (the council's on-surface condition). */}
+          {medicareUnpricedNote && <p className="field-help">{copy.rothMedicareUnpricedNote}</p>}
 
           <div className="control-plan">
             <CurrencyField

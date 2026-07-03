@@ -92,6 +92,11 @@ export interface FuckOffDateProps {
    *  two-pane answer so the grid seats them in the left reading column (result.css / fuckOffDate.css);
    *  single column keeps them flat below via `display:contents`. Omitted (preview / fallback) ⇒ none. */
   readonly actionsSlot?: ReactNode
+  /** P3·U11 (the council's veto condition, 2026-07-03): TRUE for a household whose Medicare
+   *  costs the engine does not yet price (post-65-only, healthcare never prices). The date
+   *  claim then wears the honest-gap disclosure among its notes — on the surface, in the
+   *  a11y tree. Default false (the priced domain). */
+  readonly medicareUnpricedNote?: boolean
 }
 
 /** The hero claim's heading text — shared by the render and the polite sharpen announce, so what
@@ -114,7 +119,7 @@ function floorLineText(split: Extract<DateSplitView, { kind: 'split' }>): string
   return slots.dateFloorCovered(fl.offsetYears, dateOddsText(fl.quantizedLowerBound), fl.unconfirmed)
 }
 
-export function FuckOffDate({ view, focusSignal, actionsSlot }: FuckOffDateProps) {
+export function FuckOffDate({ view, focusSignal, actionsSlot, medicareUnpricedNote = false }: FuckOffDateProps) {
   const headingRef = useRef<HTMLHeadingElement>(null)
   // Announce on the FIRST landing only (the undefined→defined edge). The date route is TIERED: the
   // provisional→final sharpen can crown a DIFFERENT offset, which flips focusSignal — but re-firing
@@ -228,6 +233,9 @@ export function FuckOffDate({ view, focusSignal, actionsSlot }: FuckOffDateProps
               {split.inverted && <p className="fod-note">{copy.dateFloorInversionNote}</p>}
             </>
           )}
+          {/* P3·U11 — the unpriced-Medicare disclosure (the council's veto condition): the
+              post-65-only household's date claim wears the honest gap in its own notes row. */}
+          {medicareUnpricedNote && <p className="fod-note">{copy.verdictMedicareUnpriced}</p>}
         </div>
         {/* BOTH GRAPHS share one wrapper: display:contents in single column (the phone DOM renders
             byte-identically) and the right-pane grid cell on two-pane — so the LEFT column's rows

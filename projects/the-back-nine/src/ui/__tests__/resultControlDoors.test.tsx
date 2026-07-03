@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import '@testing-library/jest-dom/vitest'
-import { cleanup, render, screen } from '@testing-library/react'
+import { cleanup, render, screen, fireEvent } from '@testing-library/react'
 import { Result } from '../Result'
 import { appModel } from '../appModel'
 import { resolvedFocusKey } from '../answerView'
@@ -132,5 +132,86 @@ describe('the Roth door — categorical on filing status alone', () => {
     appModel.update((d) => ({ ...d, filing: 'mfj' }))
     renderResult()
     expect(rothDoor()).toBeNull()
+  })
+})
+
+describe('the healthcare door — the engine PRICED domain only, categorical (council 2026-07-03)', () => {
+  const healthDoor = () => screen.queryByRole('button', { name: copy.leverHealthDoorCta })
+  const healthEditDoor = () => screen.queryByRole('button', { name: copy.leverHealthDoorEditCta })
+  const priced = () =>
+    appModel.update((d) => ({
+      ...d,
+      people: [
+        { ...d.people[0], currentAge: 60 },
+        { ...d.people[1], currentAge: 58 },
+      ],
+      health: { ...d.health, enrolledPremiumMonthlyToday: 1_200, slcspMonthlyToday: 1_100 },
+    }))
+
+  it('present for a priced household (quote pair entered + a pre-65 member) on a resolved reading', () => {
+    plantResolved()
+    priced()
+    renderResult()
+    expect(healthDoor()).toBeInTheDocument()
+  })
+
+  it('ABSENT for the post-65-only household even when resolved — no hollow door over a domain the engine does not price', () => {
+    plantResolved()
+    appModel.update((d) => ({
+      ...d,
+      people: [
+        { ...d.people[0], currentAge: 68 },
+        { ...d.people[1], currentAge: 66 },
+      ],
+    }))
+    renderResult()
+    expect(healthDoor()).toBeNull()
+    expect(healthEditDoor()).toBeNull()
+  })
+
+  it('ABSENT when the marketplace quote pair is missing (the engine prices nothing to see)', () => {
+    plantResolved()
+    appModel.update((d) => ({
+      ...d,
+      people: [
+        { ...d.people[0], currentAge: 60 },
+        { ...d.people[1], currentAge: 58 },
+      ],
+    }))
+    renderResult()
+    expect(healthDoor()).toBeNull()
+  })
+
+  it('re-words once the enhanced regime is applied', () => {
+    plantResolved()
+    priced()
+    appModel.update((d) => ({ ...d, enhancedSubsidies: true }))
+    renderResult()
+    expect(healthDoor()).toBeNull()
+    expect(healthEditDoor()).toBeInTheDocument()
+  })
+
+  it('the ROTH sheet wears the unpriced-Medicare note for a post-65-only household (the Result-level threading proof through a REAL child — insight 066)', () => {
+    plantResolved()
+    appModel.update((d) => ({
+      ...d,
+      people: [
+        { ...d.people[0], currentAge: 68 },
+        { ...d.people[1], currentAge: 66 },
+      ],
+      enteredAccounts: [pretaxAccount],
+    }))
+    renderResult()
+    fireEvent.click(rothDoor()!)
+    expect(screen.getByText(copy.rothMedicareUnpricedNote)).toBeInTheDocument()
+  })
+
+  it('the roth sheet carries NO unpriced note for a priced household (the predicate really discriminates)', () => {
+    plantResolved()
+    priced()
+    appModel.update((d) => ({ ...d, enteredAccounts: [pretaxAccount] }))
+    renderResult()
+    fireEvent.click(rothDoor()!)
+    expect(screen.queryByText(copy.rothMedicareUnpricedNote)).toBeNull()
   })
 })

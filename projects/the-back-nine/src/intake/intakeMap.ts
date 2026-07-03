@@ -480,7 +480,10 @@ function buildOverlay(d: ScenarioDraft, horizonYears: number): OverlayParams | u
   const ages = d.people.map((p) => p.currentAge!).filter((a) => Number.isFinite(a))
   const enrolled = d.health.enrolledPremiumMonthlyToday
   const slcsp = d.health.slcspMonthlyToday
-  const healthcareOn = enrolled !== undefined && slcsp !== undefined && ages.some((a) => a < 65)
+  // The authoritative gate is healthcarePriced (single-sourced with the U11 door — insight
+  // 020/027); the two presence conjuncts restate its own first clauses ONLY so TypeScript
+  // narrows `enrolled`/`slcsp` for the spread below — they cannot disagree with it.
+  const healthcareOn = enrolled !== undefined && slcsp !== undefined && healthcarePriced(d)
 
   const anyContributions = accounts.some(
     (a) =>
@@ -594,6 +597,21 @@ export function draftPretaxTotal(d: ScenarioDraft): number {
   return d.enteredAccounts.reduce(
     (s, a) => (KIND_TO_BUCKET[a.kind] === 'pretax' ? s + a.valueToday : s),
     0,
+  )
+}
+
+/** P3·U11 — the engine's healthcare-PRICED domain as a draft predicate: the marketplace quote
+ *  pair is entered AND a member is pre-65 (the exact gate `buildOverlay` prices on — this IS
+ *  that expression, extracted so the Healthcare DOOR can never drift from the engine's own
+ *  domain; insight 020/027: one predicate, every consumer). A post-65-only household reads
+ *  false — its honesty surface is the verdict-level unpriced-Medicare disclosure, never a
+ *  hollow door (the council's categorical-gating condition, 2026-07-03). */
+export function healthcarePriced(d: ScenarioDraft): boolean {
+  const ages = d.people.map((p) => p.currentAge!).filter((a) => Number.isFinite(a))
+  return (
+    d.health.enrolledPremiumMonthlyToday !== undefined &&
+    d.health.slcspMonthlyToday !== undefined &&
+    ages.some((a) => a < 65)
   )
 }
 

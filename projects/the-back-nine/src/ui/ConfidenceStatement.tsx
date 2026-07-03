@@ -88,6 +88,12 @@ export interface ConfidenceStatementProps {
    *  in single column `.reveal__actions` is `display:contents` so they render flat below, unchanged.
    *  Omitted (the preview harness, the fallback path) ⇒ nothing renders here. */
   readonly actionsSlot?: ReactNode
+  /** P3·U11 (the council's veto condition, 2026-07-03): TRUE for a household whose Medicare
+   *  costs the engine does not yet price (post-65-only — the intake never asks the marketplace
+   *  questions, so healthcare never prices and base Part B + IRMAA read $0). The verdict then
+   *  wears the honest-gap disclosure in its subordinate region — on the surface, in the a11y
+   *  tree, never buried. Default false (the priced domain). */
+  readonly medicareUnpricedNote?: boolean
 }
 
 /** The indeterminate placeholder band — a wide low-emphasis envelope (no median, no precise band)
@@ -125,7 +131,7 @@ function magnitudeClause(dollar: DollarAdjustment): string {
   }
 }
 
-export function ConfidenceStatement({ view, focusSignal, actionsSlot }: ConfidenceStatementProps) {
+export function ConfidenceStatement({ view, focusSignal, actionsSlot, medicareUnpricedNote = false }: ConfidenceStatementProps) {
   const headingRef = useRef<HTMLHeadingElement>(null)
   // Announce on the FIRST landing only (the undefined→defined edge) — the shared once-per-landing
   // contract (mirrors FuckOffDate). The spine's two recomputes are byte-identical, so its key never
@@ -256,7 +262,7 @@ export function ConfidenceStatement({ view, focusSignal, actionsSlot }: Confiden
                 the first frame; R4 — the fold is the seam the cold-read can flip). Both render
                 below the band so the scrub tap-targets never move (insight 035); absence renders
                 nothing (insight 044). */}
-        {(relief || view.survivorReading) && (
+        {(relief || view.survivorReading || medicareUnpricedNote) && (
           <div className="reveal__subordinates">
             {relief && <TwoTierHeadline relief={relief} />}
             {view.survivorReading &&
@@ -282,6 +288,13 @@ export function ConfidenceStatement({ view, focusSignal, actionsSlot }: Confiden
               ) : (
                 <SurvivorReadout reading={view.survivorReading} />
               ))}
+            {/* P3·U11 — the unpriced-Medicare disclosure (the council's veto condition,
+                2026-07-03): ON the verdict surface for the post-65-only household the engine
+                prices $0 Medicare for — plain text in the a11y tree (never aria-hidden, never
+                a buried list), carrying NO count (build-gate 7 untouched). */}
+            {medicareUnpricedNote && (
+              <p className="cs-medicare-note">{copy.verdictMedicareUnpriced}</p>
+            )}
           </div>
         )}
         {/* The completion actions, seated in the left reading column on two-pane (display:contents in

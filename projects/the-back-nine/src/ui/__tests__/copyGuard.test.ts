@@ -113,6 +113,15 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     rothYearsSecondary: slots.rothYearsSecondary(3, 'more'),
     sequencingDelta: slots.sequencingDelta(slots.xOfTen(8), slots.xOfTen(7)),
     rothPlanEcho: slots.rothPlanEcho('40,000', 2, 5),
+    // P3·U11 — the Healthcare sheet's readout slots (require-hedge-swept by their prefixes).
+    acaCostStatus: slots.acaCostStatus('June 4, 2026'),
+    acaCostStatusEnhanced: slots.acaCostStatusEnhanced('June 4, 2026'),
+    acaCostNet: slots.acaCostNet('11,200'),
+    acaCostCliff: slots.acaCostCliff(slots.xOfTen(3)),
+    shadowRateLine: slots.shadowRateLine(34),
+    shadowRateHeadroom: slots.shadowRateHeadroom('18,000'),
+    irmaaStepNext: slots.irmaaStepNext('1,150', '44,000'),
+    subsidyRegimeCostDelta: slots.subsidyRegimeCostDelta('96,000', '128,000'),
   }
 
   it('every U10 delta-readout slot WEARS a hedge (the control readouts are slot-composed, so the require-hedge sweep must reach the rendered samples here)', () => {

@@ -300,3 +300,13 @@ describe('FuckOffDate — the U9b two-track split', () => {
     expect(live.textContent).toBe('')
   })
 })
+
+describe('P3-U11 — the unpriced-Medicare disclosure on the date claim (the council veto condition)', () => {
+  it('renders among the lead notes when the household is in the unpriced domain; absent by default', () => {
+    const withNote = render(<FuckOffDate view={dates(DATE_FIXTURES.confirmed)} medicareUnpricedNote />)
+    expect(withNote.getByText(copy.verdictMedicareUnpriced)).toBeInTheDocument()
+    withNote.unmount()
+    const without = render(<FuckOffDate view={dates(DATE_FIXTURES.confirmed)} />)
+    expect(without.queryByText(copy.verdictMedicareUnpriced)).toBeNull()
+  })
+})

@@ -84,10 +84,17 @@ export function isMortalityKey(key: string): boolean {
   return isSurvivorKey(key) || key === 'bandReadoutThinNote' || key === 'verdictRethinkClause'
 }
 
-/** Key prefixes for the U10 control/recommendation surface — the sequencing + Roth levers and the
- *  two-futures delta headline (`roth*`, `sequencing*`, `twoFutures*`, `control*`). */
+/** Key prefixes for the U10/U11 control/recommendation surface — the sequencing + Roth levers,
+ *  the two-futures delta headline (`roth*`, `sequencing*`, `twoFutures*`, `control*`), and the
+ *  U11 healthcare readout prefixes (`shadowRate*`, `irmaaStep*`, `acaCost*`, `subsidyRegime*`).
+ *  DELIBERATELY these four narrow names: NEVER a bare `health` prefix (it would sweep the
+ *  INTAKE question chrome — `healthQuoteHelp` and siblings — factual help that must stay
+ *  hedge-free), and NEVER a `*Readout*` spelling (the council's draft names collided with
+ *  isVerdictKey's `readout` substring net, which would wrongly free-numeral-sweep prose that
+ *  legitimately teaches with ages — council 2026-07-03, adjusted at build). */
 export const CONTROL_KEY_PREFIXES: readonly string[] = [
   'roth', 'sequencing', 'twoFutures', 'control',
+  'shadowRate', 'irmaaStep', 'acaCost', 'subsidyRegime',
 ]
 /** True for a control readout / recommendation-class headline — the ONLY surface `require-hedge`
  *  bites (a plan-moving claim must wear its modal). DELIBERATELY NARROW, by prefix ALONE:

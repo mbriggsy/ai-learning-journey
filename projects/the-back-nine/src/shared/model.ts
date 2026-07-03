@@ -865,6 +865,72 @@ export type EngineOutcome =
   | { readonly kind: 'calm-error'; readonly reason: string }
 
 // ---------------------------------------------------------------------------
+// P3·U10 — the two-arm control comparison (the manual sequencing + Roth levers).
+// The WIRE-CROSSING request/outcome vocabulary lives here in the leaf layer (the
+// DateSearchOutcome precedent); the orchestration lives in src/engine/roth.ts.
+// ---------------------------------------------------------------------------
+
+/** Which control the two-arm comparison varies — the SOLE difference between arms
+ *  (contract #2: shared CRN; the delta is signal, never luck).
+ *  - `conversion`: with-arm = the candidate {@link RothConversionPlan}; without-arm =
+ *    no conversions. The base drawdown policy is HELD FIXED across both arms.
+ *  - `sequencing`: selected-policy arm vs the neutral `proportional` baseline arm
+ *    (the tax-aware baseline's named policy). The conversion stream is HELD FIXED. */
+export type TwoArmControl =
+  | { readonly kind: 'conversion'; readonly plan: RothConversionPlan }
+  | {
+      readonly kind: 'sequencing'
+      readonly policy: DrawdownPolicy
+      /** REQUIRED iff `policy === 'custom'` (the persisted biconditional's wire mirror). */
+      readonly order?: readonly DrawdownOrderKey[]
+    }
+
+/** One arm's compact reading — everything TwoFutures + the delta chrome render from,
+ *  and nothing else (the per-path arrays stay worker-side; this crosses by structured
+ *  clone). All fields JSON-safe (DND/009). */
+export interface TwoArmReading {
+  /** The arm's joint headline (the same quantize→band→9-cap pipeline as the spine). */
+  readonly headline: Headline
+  /** The arm's "as the survivor" reading — the DELTA's primary basis (the plan's
+   *  emotional headline is the survivor's number). PRESENT iff ≥ 1 survivor phase. */
+  readonly survivorReading?: SurvivorReading
+  /** The arm's per-year percentile fan (the TwoFutures series input). */
+  readonly bandFan?: BandFan
+  /** RAW pre-quantize joint survival fraction ∈ [0,1] — the monotonicity contract's
+   *  value (the clamped X-of-10 string can plateau; this must not jitter). */
+  readonly survivalFraction: number
+  /** RAW pre-quantize survivor-conditioned fraction — present iff the survivor surface is. */
+  readonly survivorFraction?: number
+  /** The LOWER-median depletion year across paths (never-depleted paths order past every
+   *  real year). ABSENT when the median path never depletes — the "~N years longer"
+   *  secondary is only quotable when both arms have a real median (never fabricated). */
+  readonly medianDepletionYear?: number
+}
+
+/** The two-arm comparison outcome. `indeterminate` = an arm's INPUT was incomputable
+ *  (the R19 contract — e.g. no account buckets to convert); `infeasible` = an arm's
+ *  overlay computation failed mid-path (the typed M6 sentinel, never a dropped path). */
+export type TwoArmOutcome =
+  | {
+      readonly kind: 'two-arm'
+      /** The control applied (the candidate plan / the selected policy). */
+      readonly with: TwoArmReading
+      /** The baseline (no conversions / the `proportional` policy). */
+      readonly without: TwoArmReading
+      /** `with − without` on the RAW fractions, survivor-basis when BOTH arms carry the
+       *  survivor surface (the plan's primary framing), else joint-basis. The tests'
+       *  monotonicity contract reads THIS, never a clamped string. */
+      readonly rawDelta: number
+      readonly deltaBasis: 'survivor' | 'joint'
+      /** `with.medianDepletionYear − without.medianDepletionYear` — positive = the
+       *  with-arm's median path lasts ~N years LONGER. PRESENT iff BOTH arms have a
+       *  real median depletion year (never fabricated from a never-depleting median). */
+      readonly medianYearsDelta?: number
+    }
+  | { readonly kind: 'indeterminate'; readonly reason: string }
+  | { readonly kind: 'infeasible'; readonly reason: string }
+
+// ---------------------------------------------------------------------------
 // Persisted scenario skeleton (P1·U1 minimal; U2/U3 add buckets + birth years;
 // U4 wraps it in the encrypted record types). `schemaVersion` exists from v1 so the
 // migration ladder is possible at all (U4 contract).

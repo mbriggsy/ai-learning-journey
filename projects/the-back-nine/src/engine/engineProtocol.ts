@@ -14,12 +14,13 @@ import * as Comlink from 'comlink'
 import { simulate } from '@engine/simulate'
 import { summarize } from '@engine/confidence'
 import { runDateSearch as sweepDateSearch, type DateSearchInput } from '@engine/dateSearch'
-import type { DateSearchTier, SimulationParams } from '@shared/model'
-import type { DateSearchWire, EngineWire } from '@engine/engineWire'
+import { runTwoArm } from '@engine/roth'
+import type { DateSearchTier, SimulationParams, TwoArmControl } from '@shared/model'
+import type { DateSearchWire, EngineWire, TwoArmWire } from '@engine/engineWire'
 
 // Re-export the wire contract so worker-side code has one import surface.
-export type { ResolvedWire, EngineWire, EngineResult, DateSearchWire, DateSearchResult } from '@engine/engineWire'
-export { fromWire, dateSearchFromWire } from '@engine/engineWire'
+export type { ResolvedWire, EngineWire, EngineResult, DateSearchWire, DateSearchResult, TwoArmWire, TwoArmResult } from '@engine/engineWire'
+export { fromWire, dateSearchFromWire, twoArmFromWire } from '@engine/engineWire'
 
 /**
  * Run the engine and PACK the result into wire form. Total: any unexpected throw is
@@ -145,6 +146,20 @@ export async function runDateSearchEngine(
   }
 }
 
+/**
+ * Run the U10 two-arm control comparison and PACK the outcome into wire form. Total:
+ * any unexpected throw is caught and returned as `calm-error` (the worker never dies).
+ * The outcome is COMPACT (headline/fan/scalar pairs — the per-path arrays never leave
+ * the worker), so it crosses by structured clone with NO transfer list.
+ */
+export function runTwoArmEngine(base: SimulationParams, seed: number, control: TwoArmControl): TwoArmWire {
+  try {
+    return { kind: 'two-arm-result', outcome: runTwoArm(base, seed, control) }
+  } catch (e) {
+    return { kind: 'calm-error', reason: e instanceof Error ? e.message : 'engine error' }
+  }
+}
+
 /** The object the worker exposes over Comlink. */
 export const engineApi = {
   /** Liveness probe (a cheap worker round-trip). */
@@ -191,6 +206,13 @@ export const engineApi = {
    *  request's epoch: the sweep cooperatively cancels when a newer epoch is committed. */
   runDateSearch(input: DateSearchInput, seed: number, tier: DateSearchTier, requestEpoch: number): Promise<DateSearchWire> {
     return runDateSearchEngine(input, seed, tier, requestEpoch)
+  },
+  /** Run the U10 two-arm control comparison (the sequencing / Roth-conversion levers).
+   *  ONE worker call computes BOTH arms on the shared seed (the two can never diverge on
+   *  the draw set — CRN by construction); the compact outcome crosses by structured clone
+   *  (never the transfer list — see `TwoArmWire`). */
+  runTwoArm(base: SimulationParams, seed: number, control: TwoArmControl): TwoArmWire {
+    return runTwoArmEngine(base, seed, control)
   },
 }
 

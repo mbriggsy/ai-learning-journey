@@ -6,7 +6,7 @@
  * chunk). Keeping the boundary structural — not reliant on bundler tree-shaking — means
  * a future main-thread import can never silently drag the engine across the worker line.
  */
-import type { BandFan, DateSearchOutcome, DollarAdjustment, Headline, SimulationResult, SurvivorConditioned, SurvivorReading } from '@shared/model'
+import type { BandFan, DateSearchOutcome, DollarAdjustment, Headline, SimulationResult, SurvivorConditioned, SurvivorReading, TwoArmOutcome } from '@shared/model'
 
 /** The per-path tax-aware solver surfaces in WIRE form (U3·M6 — `Distribution.taxAware`
  *  as six transferable Float64 buffers). PRESENT iff the run carried the tax overlay
@@ -155,6 +155,31 @@ export type DateSearchResult =
 /** UNPACK a date-search wire result — compute-free (structured clone already delivered
  *  the value model; nothing widens). */
 export function dateSearchFromWire(wire: DateSearchWire): DateSearchResult {
+  if (wire.kind === 'calm-error') return { ok: false, reason: wire.reason }
+  return { ok: true, outcome: wire.outcome }
+}
+
+// ---------------------------------------------------------------------------
+// The two-arm control-comparison wire (P3·U10). DELIBERATELY thin, the date-search
+// pattern: `TwoArmOutcome` is a COMPACT reading pair (headlines + fans + scalars —
+// the per-path arrays stay worker-side), so it crosses by STRUCTURED CLONE and must
+// NEVER join a transfer list. Its indeterminate/infeasible arms are DEFINED outcomes
+// (the lever's calm closed state / the M6 sentinel); calm-error is reserved for an
+// unexpected engine throw.
+// ---------------------------------------------------------------------------
+
+/** The worker's two-arm return contract — a defined outcome or a calm error. */
+export type TwoArmWire =
+  | { readonly kind: 'two-arm-result'; readonly outcome: TwoArmOutcome }
+  | { readonly kind: 'calm-error'; readonly reason: string }
+
+/** Reconstructed main-thread two-arm result, or a calm error to render. */
+export type TwoArmResult =
+  | { readonly ok: true; readonly outcome: TwoArmOutcome }
+  | { readonly ok: false; readonly reason: string }
+
+/** UNPACK a two-arm wire result — compute-free (clone already delivered the value model). */
+export function twoArmFromWire(wire: TwoArmWire): TwoArmResult {
   if (wire.kind === 'calm-error') return { ok: false, reason: wire.reason }
   return { ok: true, outcome: wire.outcome }
 }

@@ -26,6 +26,7 @@ const nullClient: EngineClient = {
     run: async () => ({ kind: 'calm-error', reason: 'unused' }) as const,
     setLatestEpoch: async () => {},
     runDateSearch: async () => ({ kind: 'date-search', outcome: { kind: 'cancelled' } }) as const,
+    runTwoArm: async () => ({ kind: 'calm-error', reason: 'unused' }) as const,
   },
 }
 

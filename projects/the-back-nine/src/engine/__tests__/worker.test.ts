@@ -264,7 +264,7 @@ describe('U6/U7 — bandFan across the wire (presence-keyed structured-clone pay
 // environment — the decided design keeps the testable logic out of the
 // Comlink bootstrap (engine.worker.ts stays a 3-line expose).
 // ===========================================================================
-import { engineApi, runDateSearchEngine, dateSearchFromWire, type DateSearchWire } from '@engine/engineProtocol'
+import { engineApi, runDateSearchEngine, dateSearchFromWire, twoArmFromWire, type DateSearchWire } from '@engine/engineProtocol'
 import { profileDateSearch } from '@engine/dateSearchProfile'
 import type { DateSearchInput } from '@engine/dateSearch'
 import type { OverlayParams } from '@shared/model'
@@ -420,5 +420,70 @@ describe('C3 — the compute-profile gate (both regimes, the pinned final tier)'
     let calls = 0
     const lyingClock = (): number => (calls++ === 0 ? 100 : 50)
     await expect(profileDateSearch(sweepInput, 1, 'provisional', lyingClock)).rejects.toThrow(/backwards/)
+  })
+})
+
+// ===========================================================================
+// P3·U10 — the two-arm control-comparison seam (engineApi.runTwoArm). The
+// outcome is COMPACT (headline/fan/scalar pairs — the per-path arrays never
+// leave the worker), so it crosses by STRUCTURED CLONE with NO transfer list;
+// these pin the wire contract + totality in the plain environment, exactly
+// like the date-search seam above. The comparison's own value battery lives
+// in roth.test.ts — this is the SEAM, not the math.
+// ===========================================================================
+describe('P3·U10 — the two-arm seam (engineApi.runTwoArm + twoArmFromWire)', () => {
+  const twoArmBase: SimulationParams = {
+    ...params,
+    initialPortfolio: 900_000,
+    annualSpendingReal: 55_000,
+    people: [
+      { ...PERSON, currentAge: 66, birthYear: 1960 },
+      { ...PERSON, sex: 'female', currentAge: 64, birthYear: 1962 },
+    ],
+    maxHorizonYears: 35,
+    longevityMode: 'sampled',
+    overlay: {
+      taxEnabled: true,
+      rmdEnabled: true,
+      startCalendarYear: 2026,
+      buckets: { taxable: 300_000, pretax: 500_000, roth: 100_000 },
+      filing: 'mfj',
+      initialTaxableBasis: 200_000,
+    },
+  }
+
+  it('a real comparison crosses the seam as a defined two-arm outcome and unpacks compute-free', () => {
+    const wire = engineApi.runTwoArm(twoArmBase, 777, {
+      kind: 'conversion',
+      plan: { annualAmountReal: 60_000, startYearOffset: 0, years: 4 },
+    })
+    expect(wire.kind).toBe('two-arm-result')
+    const r = twoArmFromWire(wire)
+    expect(r.ok).toBe(true)
+    if (!r.ok || r.outcome.kind !== 'two-arm') throw new Error('expected a two-arm outcome')
+    // The compact readings arrived intact (clone, no transfer list to detach them).
+    expect(r.outcome.with.headline).toBeDefined()
+    expect(r.outcome.without.bandFan).toBeDefined()
+    expect(Number.isFinite(r.outcome.rawDelta)).toBe(true)
+  })
+
+  it("the lever's defined calm closure crosses as the typed indeterminate arm, never a calm-error", () => {
+    const { overlay: _o, ...noOverlay } = twoArmBase
+    const wire = engineApi.runTwoArm(noOverlay as SimulationParams, 777, {
+      kind: 'conversion',
+      plan: { annualAmountReal: 40_000, startYearOffset: 0, years: 5 },
+    })
+    expect(wire.kind).toBe('two-arm-result')
+    if (wire.kind !== 'two-arm-result') return
+    expect(wire.outcome.kind).toBe('indeterminate')
+  })
+
+  it('runTwoArmEngine is TOTAL — pathological params return a wire, never a throw (the worker never dies)', () => {
+    const garbage = { ...twoArmBase, people: null } as unknown as SimulationParams
+    expect(() => engineApi.runTwoArm(garbage, 1, { kind: 'sequencing', policy: 'taxable-first' })).not.toThrow()
+  })
+
+  it('twoArmFromWire unpacks the calm-error arm as a renderable {ok:false}', () => {
+    expect(twoArmFromWire({ kind: 'calm-error', reason: 'forced' })).toEqual({ ok: false, reason: 'forced' })
   })
 })

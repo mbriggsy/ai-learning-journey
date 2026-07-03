@@ -55,6 +55,8 @@ function fakeClient(opts?: { runWire?: EngineWire; runningInWorker?: boolean }) 
           datePending.push(resolve)
         })
       },
+      // P3·U10 — unused by these mechanics tests (the two-arm surface has its own battery).
+      runTwoArm: async () => ({ kind: 'calm-error', reason: 'unused' }) as const,
     },
   }
   return { client, calls, datePending }
@@ -401,6 +403,7 @@ describe('memoryModel — real-engine spine dispatch', () => {
         run: async (p, s, o) => engineApi.run(p, s, o), // forward the bandFan option the spine now requests
         setLatestEpoch: async (e) => engineApi.setLatestEpoch(e),
         runDateSearch: async (i, s, t, e) => engineApi.runDateSearch(i, s, t, e),
+        runTwoArm: async (b, s, c) => engineApi.runTwoArm(b, s, c),
       },
     }
     const model = createMemoryModel({

@@ -64,6 +64,10 @@ function mainThreadHandle(): EngineHandle {
     setLatestEpoch: async (epoch) => (await api()).setLatestEpoch(epoch),
     runDateSearch: async (input, seed, tier, requestEpoch) =>
       (await api()).runDateSearch(input, seed, tier, requestEpoch),
+    // P3·U10 — the two-arm control comparison. On the fallback this BLOCKS the main
+    // thread for two full runs — exactly why the controls disable LIVE per-drag
+    // recompute when `runningInWorker` is false (recompute on release only).
+    runTwoArm: async (base, seed, control) => (await api()).runTwoArm(base, seed, control),
   }
 }
 

@@ -237,3 +237,54 @@ describe('the OOP-medical step is the SECOND budget-blind writer — must keep t
     expect(d.annualSpendingReal).toBe(60_000) // untouched — no budget, no reconciliation to keep
   })
 })
+
+// Cold-read 2026-07-03 — the three fixes this file's surface carries:
+// (1) the RAW arm gains the in-flow itemize invite (the budget builds where the question is
+//     asked, the accounts-step grammar; the Result door remains the later-edit path);
+// (2) the tier answer is SEEN used — the governed face reads back essentials vs extras;
+// (3) the sheet's quiet close is honestly worded 'Cancel' (was 'Not now').
+describe('the raw spend arm — the in-flow itemize invite (cold-read 2026-07-03)', () => {
+  it('renders the invite alongside the raw field, and it opens the builder', () => {
+    const m = freshModel()
+    render(<SpendHarness model={m} />)
+    expect(screen.getByLabelText(copy.spendLabel)).toBeInTheDocument() // the raw field stays
+    fireEvent.click(screen.getByRole('button', { name: copy.budgetCta }))
+    expect(screen.getByRole('heading', { name: copy.budgetSheetTitle })).toBeInTheDocument()
+  })
+
+  it('Apply from the raw arm lands the atomic patch and the step becomes the governed face', () => {
+    const m = freshModel()
+    m.update((d) => ({ ...d, health: { ...d.health, oopMedicalAnnual: M } }))
+    render(<SpendHarness model={m} />)
+    fireEvent.click(screen.getByRole('button', { name: copy.budgetCta }))
+    fireEvent.click(screen.getByRole('button', { name: copy.budgetAddLine }))
+    commitField(screen.getByLabelText(copy.budgetAmountLabel), '30000')
+    fireEvent.click(screen.getByRole('button', { name: copy.budgetApply }))
+    expect(draft(m).annualSpendingReal).toBe(30_000 + M) // Σactive@0 + M — the same invariant
+    expect(screen.queryByLabelText(copy.spendLabel)).toBeNull() // the raw input is gone
+    expect(screen.getByText(copy.spendBudgetGovernedNote)).toBeInTheDocument()
+  })
+
+  it('the invite never gates: a typed number alone leaves the step exactly as before', () => {
+    const m = freshModel()
+    render(<SpendHarness model={m} />)
+    commitField(screen.getByLabelText(copy.spendLabel), '60000')
+    expect(draft(m).annualSpendingReal).toBe(60_000 * 12) // month default until declared
+    expect(screen.getByRole('button', { name: copy.budgetCta })).toBeInTheDocument()
+  })
+})
+
+describe('the governed face — the tier readback (cold-read 2026-07-03)', () => {
+  it('reads back essentials vs extras from the year-0 lines (lines only — OOP rides its own note)', () => {
+    const m = governedModel()
+    m.update((d) => ({
+      ...d,
+      budget: [line(), line({ category: 'travel', annualAmountReal: 12_000, tier: 'discretionary' })],
+      annualSpendingReal: 42_000 + M,
+    }))
+    render(<SpendHarness model={m} />)
+    expect(
+      screen.getByText(slots.budgetTierSplit(formatMoney(30_000), formatMoney(12_000))),
+    ).toBeInTheDocument()
+  })
+})

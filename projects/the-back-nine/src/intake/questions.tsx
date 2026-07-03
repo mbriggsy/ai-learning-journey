@@ -3,7 +3,7 @@ import { copy, slots } from '@ui/copy'
 import type { PersonDraft, ScenarioDraft } from '@store/memoryModel'
 import type { WorkStatus } from '@shared/model'
 import { fraMonthsForBirthYear } from '@engine/constants/socialSecurity'
-import { budgetGoverns, isRampedBudget } from '@budget/budgetModel'
+import { budgetGoverns, isActiveAt, isRampedBudget } from '@budget/budgetModel'
 import { budgetYearZeroFullTotal, commitBudgetPatch } from '@budget/budgetToSpending'
 import { BudgetBuilder } from './BudgetBuilder'
 import { CurrencyField, IntegerField, NameField, SegmentedControl, formatMoney } from './fields'
@@ -335,11 +335,20 @@ function SpendGovernedByBudget({ api }: { readonly api: StepApi }) {
   const [open, setOpen] = useState(false)
   const annual = api.draft.annualSpendingReal
   const budget = api.draft.budget
+  // The tier readback (cold-read 2026-07-03: the essential/extra answer must be SEEN used) —
+  // LINES ONLY at year 0 (the amounts the user typed; OOP medical is carried separately and
+  // disclosed by its own sheet line), the same active rule the sheet's running total reads.
+  const linesAt0 = (budget ?? []).filter((it) => isActiveAt(it, 0) && Number.isFinite(it.annualAmountReal))
+  const essentials = linesAt0.reduce((sum, it) => (it.tier === 'essentials' ? sum + it.annualAmountReal : sum), 0)
+  const extras = linesAt0.reduce((sum, it) => (it.tier === 'discretionary' ? sum + it.annualAmountReal : sum), 0)
   return (
     <>
       <p className="field-label">{copy.spendLabel}</p>
       {annual !== undefined && (
         <p className="spend-governed__value">{slots.spendBudgetTotal(formatMoney(annual))}</p>
+      )}
+      {essentials + extras > 0 && (
+        <p className="field-help">{slots.budgetTierSplit(formatMoney(essentials), formatMoney(extras))}</p>
       )}
       <p className="field-help">{copy.spendBudgetGovernedNote}</p>
       {budget !== undefined && isRampedBudget(budget) && (
@@ -371,70 +380,95 @@ function SpendGovernedByBudget({ api }: { readonly api: StepApi }) {
   )
 }
 
+/** The raw single-number arm — WITH the in-flow itemize invite (cold-read 2026-07-03: the budget
+ *  is a core answer, so its builder lives where the question is asked — the same grammar as the
+ *  accounts step — not only behind the Result's later-edit door. R8 holds: the invite never
+ *  gates; a typed number alone advances exactly as before). */
+function SpendRaw({ api }: { readonly api: StepApi }) {
+  const [open, setOpen] = useState(false)
+  const annual = api.draft.annualSpendingReal
+  const period = api.draft.spendEntryPeriod
+  const displayed = annual === undefined ? undefined : period === 'month' ? annual / 12 : annual
+  return (
+    <>
+      <CurrencyField
+        labelKey="spendLabel"
+        helpKey="spendHelp"
+        field="annualSpendingReal"
+        value={displayed}
+        invalid={api.violationsFor('annualSpendingReal').length > 0}
+        onEdit={() => api.clearTouched('annualSpendingReal')}
+        onCommit={(entered) => {
+          // Canonical ANNUAL in the model; the entered unit rides
+          // spendEntryPeriod (an explicit answer, persisted — fidelity rule).
+          api.update((d) => ({
+            ...d,
+            annualSpendingReal:
+              entered === undefined
+                ? undefined
+                : d.spendEntryPeriod === 'month'
+                  ? entered * 12
+                  : entered,
+          }))
+          api.commitField('annualSpendingReal')
+        }}
+      />
+      <SegmentedControl
+        legendKey="periodLegend"
+        name="spend-period"
+        options={[
+          { value: 'month', labelKey: 'periodMonth' },
+          { value: 'year', labelKey: 'periodYear' },
+        ]}
+        value={period}
+        onChange={(next) => {
+          // Re-base the canonical annual to the SAME entered digits under the
+          // new unit (the figure the user typed is the truth; the unit moves).
+          api.update((d) => {
+            const enteredNow =
+              d.annualSpendingReal === undefined
+                ? undefined
+                : d.spendEntryPeriod === 'month'
+                  ? d.annualSpendingReal / 12
+                  : d.annualSpendingReal
+            return {
+              ...d,
+              spendEntryPeriod: next,
+              annualSpendingReal:
+                enteredNow === undefined ? undefined : next === 'month' ? enteredNow * 12 : enteredNow,
+            }
+          })
+          api.commitField('spendEntryPeriod') // the explicit answer — clears the force-confirm
+        }}
+      />
+      {errorsFor(api, 'annualSpendingReal')}
+      <button type="button" className="btn-quiet spend-governed__steer" onClick={() => setOpen(true)}>
+        {copy.budgetCta}
+      </button>
+      <BudgetBuilder
+        open={open}
+        draft={api.draft}
+        onApply={(items) => {
+          // Same atomic patch as the governed arm; once applied the budget GOVERNS and this
+          // step re-renders as the read-only governed face (one writer — Q4).
+          api.update((d) => ({ ...d, ...commitBudgetPatch(items, d.health.oopMedicalAnnual) }))
+          api.commitField('annualSpendingReal')
+          setOpen(false)
+        }}
+        onEscape={() => setOpen(false)}
+        onClose={() => setOpen(false)}
+      />
+    </>
+  )
+}
+
 const spendStep: StepDef = {
   id: 'spend',
   headingKey: 'qSpendHeading',
   fields: ['annualSpendingReal'],
   render: (api) => {
     if (budgetGoverns(api.draft.budget)) return <SpendGovernedByBudget api={api} />
-    const annual = api.draft.annualSpendingReal
-    const period = api.draft.spendEntryPeriod
-    const displayed = annual === undefined ? undefined : period === 'month' ? annual / 12 : annual
-    return (
-      <>
-        <CurrencyField
-          labelKey="spendLabel"
-          helpKey="spendHelp"
-          field="annualSpendingReal"
-          value={displayed}
-          invalid={api.violationsFor('annualSpendingReal').length > 0}
-          onEdit={() => api.clearTouched('annualSpendingReal')}
-          onCommit={(entered) => {
-            // Canonical ANNUAL in the model; the entered unit rides
-            // spendEntryPeriod (an explicit answer, persisted — fidelity rule).
-            api.update((d) => ({
-              ...d,
-              annualSpendingReal:
-                entered === undefined
-                  ? undefined
-                  : d.spendEntryPeriod === 'month'
-                    ? entered * 12
-                    : entered,
-            }))
-            api.commitField('annualSpendingReal')
-          }}
-        />
-        <SegmentedControl
-          legendKey="periodLegend"
-          name="spend-period"
-          options={[
-            { value: 'month', labelKey: 'periodMonth' },
-            { value: 'year', labelKey: 'periodYear' },
-          ]}
-          value={period}
-          onChange={(next) => {
-            // Re-base the canonical annual to the SAME entered digits under the
-            // new unit (the figure the user typed is the truth; the unit moves).
-            api.update((d) => {
-              const enteredNow =
-                d.annualSpendingReal === undefined
-                  ? undefined
-                  : d.spendEntryPeriod === 'month'
-                    ? d.annualSpendingReal / 12
-                    : d.annualSpendingReal
-              return {
-                ...d,
-                spendEntryPeriod: next,
-                annualSpendingReal:
-                  enteredNow === undefined ? undefined : next === 'month' ? enteredNow * 12 : enteredNow,
-              }
-            })
-            api.commitField('spendEntryPeriod') // the explicit answer — clears the force-confirm
-          }}
-        />
-        {errorsFor(api, 'annualSpendingReal')}
-      </>
-    )
+    return <SpendRaw api={api} />
   },
 }
 

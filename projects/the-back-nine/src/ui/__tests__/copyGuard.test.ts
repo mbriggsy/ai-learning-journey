@@ -93,6 +93,7 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     budgetLinesTarget: slots.budgetLinesTarget('71,500'),
     budgetMedicalCarried: slots.budgetMedicalCarried('6,500'),
     budgetRunningTotal: slots.budgetRunningTotal('70,000'),
+    budgetTierSplit: slots.budgetTierSplit('36,000', '42,000'),
     spendBudgetTotal: slots.spendBudgetTotal('78,000'),
     budgetRemoveLine: slots.budgetRemoveLine('Groceries'),
     stepDownNote: slots.stepDownNote(2030),

@@ -250,6 +250,16 @@ export function BudgetBuilder({ open, draft, onApply, onEscape, onClose }: Budge
     (sum, it) => (isActiveAt(it, 0) && Number.isFinite(it.annualAmountReal) ? sum + it.annualAmountReal : sum),
     0,
   )
+  // The tier split (cold-read 2026-07-03: the essential/extra answer must be SEEN used) — the
+  // same year-0-active rule as `running`, split by the tier the user picked.
+  const essentialsAt0 = items.reduce(
+    (sum, it) =>
+      it.tier === 'essentials' && isActiveAt(it, 0) && Number.isFinite(it.annualAmountReal)
+        ? sum + it.annualAmountReal
+        : sum,
+    0,
+  )
+  const extrasAt0 = running - essentialsAt0
   // validateBudgetItems is index-keyed (rows and items share order); touched is ID-keyed.
   const errorsFor = (index: number, id: number) =>
     attempted || touched.has(id) ? validation.errors.filter((e) => e.index === index) : []
@@ -301,6 +311,11 @@ export function BudgetBuilder({ open, draft, onApply, onEscape, onClose }: Budge
               )}
               {items.length > 0 && (
                 <p className="budget-readout__line">{slots.budgetRunningTotal(formatMoney(running))}</p>
+              )}
+              {items.length > 0 && (
+                <p className="budget-readout__line">
+                  {slots.budgetTierSplit(formatMoney(essentialsAt0), formatMoney(extrasAt0))}
+                </p>
               )}
               {items.length > 0 && isRampedBudget(items) && (
                 <p className="budget-readout__line budget-readout__line--muted">{copy.budgetAnchorRampNote}</p>

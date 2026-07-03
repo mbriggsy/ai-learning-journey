@@ -77,7 +77,7 @@ export const copy = {
   periodYear: 'Each year',
   periodLegend: 'That figure is…',
   periodConfirmPrompt:
-    'Quick check — that figure reads either way. Each month, or each year?',
+    'That number could be dollars each month or dollars each year — tap “Each month” or “Each year” below so it’s read the way you meant it.',
   // --- U9b: the spend question under a GOVERNING budget (council 2026-07-02 Q4). The raw field
   //     is replaced by labeled read-only text + a steer — the budget's atomic patch is the ONLY
   //     writer of the spending scalar (a raw edit here was the budget-blind second writer). ---
@@ -91,7 +91,7 @@ export const copy = {
   budgetSheetIntro:
     'Split the one figure into the lines it’s made of. Essentials are the floor; extras are what could give if it ever came to that.',
   budgetApply: 'Use this budget',
-  budgetCancel: 'Not now',
+  budgetCancel: 'Cancel',
   budgetAddLine: 'Add a line',
   budgetBackToSingle: 'Back to a single number',
   budgetBackToSingleHint:
@@ -897,6 +897,10 @@ export const slots = {
   /** The running first-year total of the typed lines (year-0 actives, both tiers). */
   budgetRunningTotal: (totalFormatted: string): string =>
     `Your lines add up to about $${totalFormatted} a year.`,
+  /** The essentials/extras split readback (the cold-read 2026-07-03 ask: the tier answer must be
+   *  SEEN used, not just collected) — rendered in the sheet readout AND the governed spend step. */
+  budgetTierSplit: (essentialsFormatted: string, extrasFormatted: string): string =>
+    `Essentials about $${essentialsFormatted} · extras about $${extrasFormatted} a year.`,
   /** The governed spend step's read-only value line (Q4 — the budget is the only writer). */
   spendBudgetTotal: (totalFormatted: string): string =>
     `About $${totalFormatted} a year — set by your budget.`,

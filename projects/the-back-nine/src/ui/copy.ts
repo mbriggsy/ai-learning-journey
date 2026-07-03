@@ -1096,8 +1096,11 @@ export const slots = {
    *  2026-07-03: "What is my income, and what is the cliff?"): the income figure IS the plan's
    *  middle-of-the-road counted income at the anchor, and the cutoff IS the all-at-once end of
    *  the discount, both quoted in dollars. Renders BEFORE the odds line (its antecedent). */
+  //  Round 5 (cold-read 2026-07-03): the em-dash apposition read ambiguous (is $X the income or
+  //  the discount?) and "your household's yearly income" presumed a figure the user never
+  //  entered — the plan DERIVES it, so the plan is named as its source. One fact per sentence.
   shadowRateHeadroom: (magiFormatted: string, cliffFormatted: string, headroomFormatted: string): string =>
-    `The discount rides your household’s yearly income — around ~$${magiFormatted} in those years on your middle-of-the-road path. Above about ~$${cliffFormatted} the discount disappears entirely, so there’s roughly ~$${headroomFormatted} of room.`,
+    `In those years, the plan expects about ~$${magiFormatted} a year of income for your household. That is the number the discount is judged on. Above about ~$${cliffFormatted} the discount disappears entirely, so there’s roughly ~$${headroomFormatted} of room.`,
   /** What Medicare costs BEFORE any next step — the anchor the step line is measured from
    *  (cold-read 2026-07-03: "What are they before the next step?"). The wire's base/surcharge
    *  split (council Q3) earns its render seat here. Base arm: the middle path pays no

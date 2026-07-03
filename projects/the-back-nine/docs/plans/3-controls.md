@@ -1,15 +1,15 @@
 ---
 title: "Act 3 — Controls"
 doc-type: plan
-status: planned
+status: in-progress
 created: 2026-06-17
-updated: 2026-07-02
+updated: 2026-07-03
 derives-from: [docs/product.md, docs/roadmap.md]
 ---
 
 # Act 3 — Controls
 
-> **Status: planned. Zero code.** This act is **not started** — `src/budget/` is `.gitkeep`-only, zero implementation. It is scoped and build-ready; nothing here is built. (There is no lifecycle block above on purpose: an absent lifecycle is the honest signal that no code exists yet.)
+> **Status: IN PROGRESS — U9 SHIPPED, U10 next.** U9 (the budget builder — engine + UI) shipped and cold-read-cleared 2026-07-02: `src/budget/` is live (`budgetModel.ts` + `budgetToSpending.ts`), the two-track floor/lifestyle evaluation runs in the engine, and the builder UI mounts from the Result surface. U10–U13 are scoped and build-ready, **not started**. Per-unit build status lives in the roadmap's You-Are-Here table, which wins on conflict.
 
 **The goal.** Deliver the "pull it toward you" half of the product as a **shippable cold-read milestone before the solver exists**: the itemized **budget builder** (essentials = the survival floor, discretionary = the surplus), the **two manual controls** (withdrawal **sequencing** + **Roth conversion**, both driving the Act-1 overlays the solver will later search), the **healthcare surfaces** (ACA cliff, IRMAA, HSA) over the Act-1 healthcare overlay, the **sharpen loop** (every assumption visible and editable, each edit *sharpening* the answer), and **returning-user re-entry** with honest per-surface staleness. After Act 3 a friend can build a real budget, hand-tune both controls, see the survivor's tax cliff move, and come back tomorrow to a calm, honestly-stale saved answer — all without a recommendation yet.
 

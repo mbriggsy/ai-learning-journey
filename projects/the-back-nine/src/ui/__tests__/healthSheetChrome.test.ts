@@ -106,7 +106,7 @@ describe('composeHealthSheet', () => {
     expect(view.cliffLine).toBe(slots.acaCostCliff(slots.xOfTen(3))) // 0.31 → 3 of 10
     // taxable = 60,000 − 32,200 = 27,800 → 12% band; drag = 9.96% (flat top band, PTC live) → 22¢.
     expect(view.shadowLine).toBe(slots.shadowRateLine(22))
-    expect(view.headroomLine).toBe(slots.shadowRateHeadroom('18,000')) // 84,600 − 66,600
+    expect(view.headroomLine).toBe(slots.shadowRateHeadroom('66,600', '84,600', '18,000')) // magi · cliff · 84,600 − 66,600
   })
 
   it('a sub-1-of-10 worst cliff fraction composes NO cliff line (nothing honest to quote at the frame’s grain)', () => {

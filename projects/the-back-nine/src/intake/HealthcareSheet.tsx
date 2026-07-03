@@ -88,9 +88,12 @@ export function HealthcareSheet({ open, draft, readout, preview, previewBlocking
       {/* The empirical readout lines (each present only when its data honestly exists —
           composed + thin-cohort-gated in the PURE chrome seam, never here). */}
       {view.acaCostLine && <p className="control-sheet__intro">{view.acaCostLine}</p>}
+      {/* Comprehension order (cold-read 2026-07-03): the income-vs-cutoff context line FIRST —
+          it defines "the cliff" the odds line then leans on — then the odds, then the
+          conversion side-effect the two of them explain. */}
+      {view.headroomLine && <p className="control-sheet__intro">{view.headroomLine}</p>}
       {view.cliffLine && <p className="control-sheet__intro">{view.cliffLine}</p>}
       {view.shadowLine && <p className="control-sheet__intro">{view.shadowLine}</p>}
-      {view.headroomLine && <p className="control-sheet__intro">{view.headroomLine}</p>}
       {view.irmaaStoryLine && <p className="control-sheet__intro">{view.irmaaStoryLine}</p>}
       {view.irmaaStepLine && <p className="control-sheet__intro">{view.irmaaStepLine}</p>}
       {hasHsa && <p className="field-help">{copy.controlHealthHsaNote}</p>}

@@ -170,7 +170,7 @@ describe('HealthcareSheet — the readout lines', () => {
     expect(screen.getByText(slots.acaCostNet('10,000'))).toBeInTheDocument()
     expect(screen.getByText(slots.acaCostCliff(slots.xOfTen(3)))).toBeInTheDocument()
     expect(screen.getByText(slots.shadowRateLine(22))).toBeInTheDocument()
-    expect(screen.getByText(slots.shadowRateHeadroom('18,000'))).toBeInTheDocument()
+    expect(screen.getByText(slots.shadowRateHeadroom('66,600', '84,600', '18,000'))).toBeInTheDocument()
   })
 
   it('the omission + survivor disclosures ride the sheet (never a footnote elsewhere)', () => {

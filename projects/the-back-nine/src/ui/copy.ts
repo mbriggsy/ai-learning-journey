@@ -1080,12 +1080,17 @@ export const slots = {
   /** The over-cliff frequency (a per-year FRACTION of futures, never a mean — insight 062). */
   acaCostCliff: (odds: string): string =>
     `In about ${odds} futures, a year’s income tips past the cliff and that year’s help disappears entirely.`,
-  /** The shadow marginal rate on the next converted dollar (tax + the subsidy it burns). */
+  /** The shadow marginal rate on the next converted dollar (tax + the subsidy it burns).
+   *  Cold-read 2026-07-03 ("I don't understand what this is trying to tell me"): the line now
+   *  states the POINT (conversions cost more than the tax alone here) before the mechanism. */
   shadowRateLine: (cents: number): string =>
-    `Around those years, the next converted dollar could cost about ${cents}¢ on its way to Roth — tax plus the marketplace help it burns.`,
-  /** The cliff headroom at the empirical anchor (the middle-of-the-road path's distance). */
-  shadowRateHeadroom: (amountFormatted: string): string =>
-    `Roughly ~$${amountFormatted} of yearly income stands between your middle-of-the-road path and the cliff.`,
+    `Around those years, moving a dollar from pre-tax savings into Roth could cost about ${cents}¢ all told — the tax on the move, plus the marketplace help that extra dollar of income takes away.`,
+  /** The cliff headroom at the empirical anchor — now carrying its OWN context (cold-read
+   *  2026-07-03: "What is my income, and what is the cliff?"): the income figure IS the plan's
+   *  middle-of-the-road counted income at the anchor, and the cliff IS the all-at-once cutoff,
+   *  both quoted in dollars. Renders BEFORE the odds line so "the cliff" has its antecedent. */
+  shadowRateHeadroom: (magiFormatted: string, cliffFormatted: string, headroomFormatted: string): string =>
+    `The marketplace prices its help off your household’s yearly income — around ~$${magiFormatted} in those years on your middle-of-the-road path. Above about ~$${cliffFormatted} the help ends all at once, so there’s roughly ~$${headroomFormatted} of room.`,
   /** The next IRMAA step's cost + distance (per enrolled spouse — never a flat ×2). */
   irmaaStepNext: (stepFormatted: string, headroomFormatted: string): string =>
     `The next Medicare step could add about ~$${stepFormatted} a year per enrolled spouse; your middle-of-the-road income sits about ~$${headroomFormatted} under that line.`,

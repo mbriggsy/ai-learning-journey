@@ -164,7 +164,12 @@ export function composeHealthSheet(
 
     if (cliff !== null) {
       const headroom = cliff - anchor.acaMagiP50
-      if (headroom > 0) view.headroomLine = slots.shadowRateHeadroom(formatDollar(headroom))
+      if (headroom > 0)
+        view.headroomLine = slots.shadowRateHeadroom(
+          formatDollar(anchor.acaMagiP50),
+          formatDollar(cliff),
+          formatDollar(headroom),
+        )
     }
   }
 

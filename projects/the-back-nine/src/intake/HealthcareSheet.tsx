@@ -95,6 +95,7 @@ export function HealthcareSheet({ open, draft, readout, preview, previewBlocking
       {view.cliffLine && <p className="control-sheet__intro">{view.cliffLine}</p>}
       {view.shadowLine && <p className="control-sheet__intro">{view.shadowLine}</p>}
       {view.irmaaStoryLine && <p className="control-sheet__intro">{view.irmaaStoryLine}</p>}
+      {view.irmaaNowLine && <p className="control-sheet__intro">{view.irmaaNowLine}</p>}
       {view.irmaaStepLine && <p className="control-sheet__intro">{view.irmaaStepLine}</p>}
       {hasHsa && <p className="field-help">{copy.controlHealthHsaNote}</p>}
 

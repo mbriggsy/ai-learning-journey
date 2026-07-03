@@ -88,6 +88,9 @@ export interface HealthSheetView {
   readonly headroomLine?: string
   /** The IRMAA story — present iff a Medicare anchor exists (the danger-years teaching line). */
   readonly irmaaStoryLine?: string
+  /** The "before any next step" anchor — present iff a Medicare anchor exists (base + any
+   *  surcharge the middle path already pays; cold-read 2026-07-03). */
+  readonly irmaaNowLine?: string
   /** The next-step readout — present iff a Medicare anchor exists AND a next tier remains. */
   readonly irmaaStepLine?: string
 }
@@ -118,6 +121,7 @@ export function composeHealthSheet(
     shadowLine?: string
     headroomLine?: string
     irmaaStoryLine?: string
+    irmaaNowLine?: string
     irmaaStepLine?: string
   } = { statusLine }
 
@@ -176,11 +180,19 @@ export function composeHealthSheet(
   const medicare = medicareAnchor(readout)
   if (medicare !== null) {
     view.irmaaStoryLine = copy.irmaaStepStory
+    // The "before the next step" anchor (cold-read 2026-07-03): base + any surcharge the
+    // middle path already pays — the wire's split (council Q3) rendered at last.
+    const totalNow = medicare.medicareBaseP50 + medicare.irmaaSurchargeP50
+    view.irmaaNowLine =
+      roundDollar(medicare.irmaaSurchargeP50) > 0
+        ? slots.irmaaStepNowSurcharged(formatDollar(totalNow), formatDollar(medicare.irmaaSurchargeP50))
+        : slots.irmaaStepNowBase(formatDollar(totalNow))
     const step = nextIrmaaStep(medicare.irmaaMagiP50, draft.filing, irmaa.value)
     if (step !== null) {
       view.irmaaStepLine = slots.irmaaStepNext(
-        formatDollar(step.surchargeDeltaMonthlyPerPerson * 12),
+        formatDollar(step.threshold),
         formatDollar(step.threshold - medicare.irmaaMagiP50),
+        formatDollar(step.surchargeDeltaMonthlyPerPerson * 12),
       )
     }
   }

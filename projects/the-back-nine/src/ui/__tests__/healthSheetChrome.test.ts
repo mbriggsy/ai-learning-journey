@@ -116,14 +116,27 @@ describe('composeHealthSheet', () => {
     expect(composeHealthSheet(readout, draft()).cliffLine).toBeUndefined()
   })
 
-  it('the Medicare anchor composes the look-back story + the next-step readout (tier-1 MFJ at a 150,000 anchor: step ~1,148 [95.7×12], headroom 68,000)', () => {
+  it('the Medicare anchor composes the story + the now-anchor + the next-step readout (tier-1 MFJ at a 150,000 anchor: step ~1,148 [95.7×12], headroom 68,000)', () => {
     const readout: HealthReadout = {
       byYear: [year({ yearsFromNow: 1, medicareBaseP50: 4_870, irmaaMagiP50: 150_000 })],
     }
     const view = composeHealthSheet(readout, draft({ ages: [66, 66] }))
     expect(view.irmaaStoryLine).toBe(copy.irmaaStepStory)
-    // 95.7/mo × 12 = 1,148.4 → '1,100' humane-rounded; 218,000 − 150,000 = 68,000.
-    expect(view.irmaaStepLine).toBe(slots.irmaaStepNext('1,100', '68,000'))
+    // The before-any-step anchor (cold-read 2026-07-03): base 4,870 + surcharge 0 → '4,900'.
+    expect(view.irmaaNowLine).toBe(slots.irmaaStepNowBase('4,900'))
+    // Threshold NAMED (218,000); 218,000 − 150,000 = 68,000; 95.7/mo × 12 = 1,148.4 → '1,100'.
+    expect(view.irmaaStepLine).toBe(slots.irmaaStepNext('218,000', '68,000', '1,100'))
+  })
+
+  it('a middle path already paying surcharge composes the SURCHARGED now-arm (total = base + surcharge, the split quoted)', () => {
+    const readout: HealthReadout = {
+      byYear: [
+        year({ yearsFromNow: 1, medicareBaseP50: 4_870, irmaaSurchargeP50: 2_400, irmaaMagiP50: 230_000 }),
+      ],
+    }
+    const view = composeHealthSheet(readout, draft({ ages: [66, 66] }))
+    // 4,870 + 2,400 = 7,270 → '7,300'; the surcharge itself quoted at '2,400'.
+    expect(view.irmaaNowLine).toBe(slots.irmaaStepNowSurcharged('7,300', '2,400'))
   })
 })
 

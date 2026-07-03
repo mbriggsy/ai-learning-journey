@@ -737,7 +737,7 @@ export const copy = {
   tfChartRegimeCurrent: 'As figured now',
   // Plan-moving READOUTS (require-hedge-swept by prefix).
   irmaaStepStory:
-    'Medicare premiums look back two years at your income — money converted at 63 can show up in the premium bill at 65. The steps are sharp: a dollar over a line and the higher charge applies for that whole year.',
+    'Medicare premiums look back two years at your income — money converted at 63 can show up in the premium bill at 65. The steps are sharp: one dollar over an income line and the higher charge applies for that whole year.',
   controlHealthOmissionsNote:
     'Not counted here: state income tax, the net-investment-income tax, differences in plan cost-sharing, the benchmark premium itself, state-level subsidy top-ups, and a survivor’s appeal rights — each could move this picture.',
   controlHealthSurvivorNote:
@@ -1098,9 +1098,19 @@ export const slots = {
    *  the discount, both quoted in dollars. Renders BEFORE the odds line (its antecedent). */
   shadowRateHeadroom: (magiFormatted: string, cliffFormatted: string, headroomFormatted: string): string =>
     `The discount rides your household’s yearly income — around ~$${magiFormatted} in those years on your middle-of-the-road path. Above about ~$${cliffFormatted} the discount disappears entirely, so there’s roughly ~$${headroomFormatted} of room.`,
-  /** The next IRMAA step's cost + distance (per enrolled spouse — never a flat ×2). */
-  irmaaStepNext: (stepFormatted: string, headroomFormatted: string): string =>
-    `The next Medicare step could add about ~$${stepFormatted} a year per enrolled spouse; your middle-of-the-road income sits about ~$${headroomFormatted} under that line.`,
+  /** What Medicare costs BEFORE any next step — the anchor the step line is measured from
+   *  (cold-read 2026-07-03: "What are they before the next step?"). The wire's base/surcharge
+   *  split (council Q3) earns its render seat here. Base arm: the middle path pays no
+   *  surcharge at the anchor. */
+  irmaaStepNowBase: (totalFormatted: string): string =>
+    `In your plan’s Medicare years, premiums could run about ~$${totalFormatted} a year for your household — the base rate, with no income surcharge on the middle-of-the-road path.`,
+  /** The surcharged arm — the middle-of-the-road path already sits above at least one line. */
+  irmaaStepNowSurcharged: (totalFormatted: string, surchargeFormatted: string): string =>
+    `In your plan’s Medicare years, premiums could run about ~$${totalFormatted} a year for your household — about ~$${surchargeFormatted} of that is already income surcharge on the middle-of-the-road path.`,
+  /** The next IRMAA line NAMED in dollars (cold-read 2026-07-03: "What is the line?") + the
+   *  middle path's distance under it + the step's cost (per enrolled spouse — never a flat ×2). */
+  irmaaStepNext: (thresholdFormatted: string, headroomFormatted: string, stepFormatted: string): string =>
+    `The next line sits at about ~$${thresholdFormatted} of yearly income — your middle-of-the-road path runs about ~$${headroomFormatted} under it. Crossing it could add about ~$${stepFormatted} a year per enrolled spouse.`,
   /** The regime compare's HEADLINE — the lifetime health-cost delta (the regime's effect
    *  concentrates pre-65 and may barely move the portfolio median; council 2026-07-03). */
   subsidyRegimeCostDelta: (withFormatted: string, withoutFormatted: string): string =>

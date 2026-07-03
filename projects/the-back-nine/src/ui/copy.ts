@@ -1079,9 +1079,12 @@ export const slots = {
    *  current law — the ColdStart-restore marker rides this same slot). */
   acaCostStatusEnhanced: (checkedOn: string): string =>
     `Figured under the ENHANCED subsidy rules — a what-if, not current law. Congress may yet restore them; as of the last check, ${checkedOn}, it hadn’t.`,
-  /** The middle-of-the-road pre-65 net coverage cost (the empirical median, humane-rounded). */
+  /** The middle-of-the-road pre-65 net coverage cost (the empirical median, humane-rounded).
+   *  Round 7 (cold-read 2026-07-03: "Household? Where is the number coming from?"): the figure's
+   *  SOURCE is named — it is the user's own entered marketplace plan (the household-premium
+   *  intake question), net of the computed discount — never a national average. */
   acaCostNet: (amountFormatted: string): string =>
-    `Before Medicare, coverage could run around ~$${amountFormatted} a year after the income-based discount.`,
+    `Before Medicare, the health plan you entered could run your household around ~$${amountFormatted} a year after the income-based discount.`,
   /** The over-cliff frequency (a per-year FRACTION of futures, never a mean — insight 062). */
   acaCostCliff: (odds: string): string =>
     `In about ${odds} futures, a year’s income tips past that line and the year’s discount disappears entirely.`,

@@ -21,7 +21,7 @@ import { SequencingControl } from '@intake/SequencingControl'
 import { RothLever } from '@intake/RothLever'
 import { budgetGoverns } from '@budget/budgetModel'
 import { commitBudgetPatch } from '@budget/budgetToSpending'
-import { runControlPreview } from '@store/controlPreview'
+import { previewRunsInWorker, runControlPreview } from '@store/controlPreview'
 import type { TwoArmControl } from '@shared/model'
 import { copy } from './copy'
 import { appModel } from './appModel'
@@ -269,6 +269,7 @@ export function Result({
         open={sequencingOpen}
         draft={snapshot.draft}
         preview={runPreview}
+        previewBlocking={!previewRunsInWorker()}
         onApply={(policy, order) => {
           // ONE atomic write maintains the 'custom'⟺order biconditional (the codec re-proves it
           // at Save; validateParams re-proves it at every run — the two-gate rule's write half).
@@ -285,6 +286,7 @@ export function Result({
         open={rothOpen}
         draft={snapshot.draft}
         preview={runPreview}
+        previewBlocking={!previewRunsInWorker()}
         onApply={(plan) => {
           appModel.update((d) => ({ ...d, rothConversion: plan }))
           setRothOpen(false)

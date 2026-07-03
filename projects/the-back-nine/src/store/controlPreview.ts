@@ -29,18 +29,27 @@ export type ControlPreview =
 
 let latestTicket = 0
 
-/** Run one two-arm preview; resolves 'stale' if a newer preview was requested meanwhile. */
+/** Run one two-arm preview; resolves 'stale' if a newer preview was requested meanwhile.
+ *  TOTAL — never rejects (ultramode 2026-07-03): a worker-transport failure (worker death,
+ *  a structured-clone refusal) would otherwise reject a promise the sheets consume with a
+ *  bare `.then`, pinning the preview on "pending" forever. Every failure is the calm typed
+ *  error arm the surfaces render. */
 export async function runControlPreview(
   params: SimulationParams,
   seed: number,
   control: TwoArmControl,
 ): Promise<ControlPreview> {
   const ticket = ++latestTicket
-  const wire = await engineClient.engine.runTwoArm(params, seed, control)
-  if (ticket !== latestTicket) return { kind: 'stale' }
-  const result = twoArmFromWire(wire)
-  if (!result.ok) return { kind: 'error', reason: result.reason }
-  return { kind: 'ok', outcome: result.outcome }
+  try {
+    const wire = await engineClient.engine.runTwoArm(params, seed, control)
+    if (ticket !== latestTicket) return { kind: 'stale' }
+    const result = twoArmFromWire(wire)
+    if (!result.ok) return { kind: 'error', reason: result.reason }
+    return { kind: 'ok', outcome: result.outcome }
+  } catch (e) {
+    if (ticket !== latestTicket) return { kind: 'stale' }
+    return { kind: 'error', reason: e instanceof Error ? e.message : 'preview failed' }
+  }
 }
 
 /** False ⇒ the main-thread fallback is live: a preview BLOCKS the page for two full runs, so

@@ -54,6 +54,9 @@ export interface RothLeverProps {
   readonly open: boolean
   readonly draft: ScenarioDraft
   readonly preview: (control: TwoArmControl) => Promise<ControlPreview> | null
+  /** True ⇒ the main-thread fallback is live: a preview BLOCKS the page while it runs — the
+   *  sheet discloses the wait honestly (the no-worker rule; ultramode 2026-07-03 wired it). */
+  readonly previewBlocking?: boolean
   /** Commit the plan — the caller writes `rothConversion` and recomputes. */
   readonly onApply: (plan: RothConversionPlan) => void
   /** Take an applied conversion back out — the caller strips the field and recomputes. */
@@ -61,16 +64,21 @@ export interface RothLeverProps {
   readonly onClose: () => void
 }
 
-export function RothLever({ open, draft, preview, onApply, onRemove, onClose }: RothLeverProps) {
+export function RothLever({ open, draft, preview, previewBlocking = false, onApply, onRemove, onClose }: RothLeverProps) {
   const announcerRef = useRef<Announcer | null>(null)
   const applied = draft.rothConversion
   const [plan, setPlan] = useState<PlanDraft>({})
   const [previewState, setPreviewState] = useState<PreviewState>({ kind: 'idle' })
   const nothingToConvert = draftPretaxTotal(draft) <= 0
+  // The sheet-local GENERATION (ultramode 2026-07-03 — the SequencingControl twin): a cleared
+  // field or a reopen must supersede an in-flight run; the store ticket alone cannot see the
+  // no-new-preview transitions. Every effect run + every open-edge bumps it.
+  const genRef = useRef(0)
 
   // Open-edge re-seed (the BudgetBuilder rule): the applied plan pre-fills; defaults otherwise.
   useEffect(() => {
     if (!open) return
+    genRef.current++
     setPlan(
       applied === undefined
         ? { start: 0, years: 5 }
@@ -84,7 +92,14 @@ export function RothLever({ open, draft, preview, onApply, onRemove, onClose }: 
   const candidate = complete(plan)
   const candidateKey = candidate === null ? '' : `${candidate.annualAmountReal}:${candidate.startYearOffset}:${candidate.years}`
   useEffect(() => {
-    if (!open || candidate === null || nothingToConvert) return
+    if (!open || nothingToConvert) return
+    const gen = ++genRef.current
+    if (candidate === null) {
+      // A cleared/incomplete plan WITHDRAWS the comparison — a stale delta over no entered
+      // plan is a confident readout of nothing (ultramode 2026-07-03).
+      setPreviewState({ kind: 'idle' })
+      return
+    }
     const run = preview({ kind: 'conversion', plan: candidate })
     if (run === null) {
       setPreviewState({ kind: 'no-anchor' })
@@ -92,22 +107,37 @@ export function RothLever({ open, draft, preview, onApply, onRemove, onClose }: 
     }
     setPreviewState({ kind: 'pending' })
     void run.then((res) => {
+      if (gen !== genRef.current) return // superseded (a newer plan, a clear, or a reopen)
       if (res.kind === 'stale') return
       if (res.kind === 'error') {
         setPreviewState({ kind: 'error', reason: res.reason })
+        announcerRef.current?.announce(copy.leverPreviewError)
         return
       }
       if (res.outcome.kind === 'indeterminate') {
         // The engine's own calm closure (e.g. the pool emptied under the hood) — the closed face.
         setPreviewState({ kind: 'error', reason: res.outcome.reason })
+        announcerRef.current?.announce(copy.leverPreviewError)
         return
       }
-      const view = composeTwoFutures(res.outcome, copy.tfChartRothWith, copy.tfChartRothWithout, slots.rothDeltaSurvivor)
-      setPreviewState(view === null ? { kind: 'error', reason: 'indeterminate' } : { kind: 'ready', view })
-      if (view !== null) announcerRef.current?.announce(view.deltaLine)
+      const view = composeTwoFutures(
+        res.outcome,
+        copy.tfChartRothWith,
+        // An APPLIED conversion makes "Today's plan" a mislabel for the stripped baseline —
+        // today's plan HAS the conversion; the honest without-arm name is the negation.
+        applied === undefined ? copy.tfChartRothWithout : copy.tfChartRothWithoutApplied,
+        slots.rothDeltaSurvivor,
+      )
+      if (view === null) {
+        setPreviewState({ kind: 'error', reason: 'indeterminate' })
+        announcerRef.current?.announce(copy.leverPreviewError)
+        return
+      }
+      setPreviewState({ kind: 'ready', view })
+      announcerRef.current?.announce(view.deltaLine)
     })
-    // (deps deliberately narrow: committed plan changes only)
-  }, [open, candidateKey, nothingToConvert])
+    // `preview` IS a dep — its identity carries the crowned-offset anchor (insight 047).
+  }, [open, candidateKey, nothingToConvert, preview, applied])
 
   return (
     <ControlSheet open={open} title={copy.leverRothTitle} onClose={onClose} announcerRef={announcerRef}>
@@ -151,6 +181,10 @@ export function RothLever({ open, draft, preview, onApply, onRemove, onClose }: 
               <p className="control-preview__pending">{copy.leverPreviewPending}</p>
             )}
             {previewState.kind === 'no-anchor' && <p className="field-help">{copy.leverPreviewNoDate}</p>}
+            {previewState.kind === 'error' && <p className="field-help">{copy.leverPreviewError}</p>}
+            {previewBlocking && previewState.kind !== 'idle' && (
+              <p className="field-help">{copy.leverNoWorkerNote}</p>
+            )}
             {previewState.kind === 'ready' && (
               <>
                 <p className="control-preview__delta">{previewState.view.deltaLine}</p>

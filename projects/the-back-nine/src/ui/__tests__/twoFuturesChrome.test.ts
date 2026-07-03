@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest'
 import { composeTwoFutures } from '../twoFuturesChrome'
 import { copy, slots } from '../copy'
 import { formatAxisDollar } from '../money'
+import { twoFuturesCeiling } from '@viz/TwoFutures'
+import { COHORT_FADE } from '@viz/bandGeometry'
 import type { BandFan, Headline, OutcomeState, SurvivorReading, TwoArmOutcome, TwoArmReading } from '@shared/model'
 
 /**
@@ -31,15 +33,17 @@ const survivor = (xOfTen: number, outcomeState: OutcomeState = 'on-track'): Surv
   incomeStepDownMonthlyReal: 1_200,
 })
 
-const fan = (points: ReadonlyArray<readonly [number, number]>): BandFan => ({
-  byYear: points.map(([yearsFromNow, p50]) => ({
+// [yearsFromNow, p50, cohortFraction?] — cohortFraction defaults to 1 (a fully-living cohort);
+// pass it explicitly to exercise the dead-cohort truncation (points() drops cohortFraction < full).
+const fan = (points: ReadonlyArray<readonly [number, number, number?]>): BandFan => ({
+  byYear: points.map(([yearsFromNow, p50, cohortFraction]) => ({
     yearsFromNow,
     p10: p50 * 0.5,
     p25: p50 * 0.75,
     p50,
     p75: p50 * 1.25,
     p90: p50 * 1.5,
-    cohortFraction: 1,
+    cohortFraction: cohortFraction ?? 1,
   })),
 })
 
@@ -166,7 +170,7 @@ describe('composeTwoFutures — the chart series', () => {
     ])
     expect(s.labels.withLabel).toBe('With the conversion')
     expect(s.labels.withoutLabel).toBe('Today’s plan')
-    expect(s.labels.dollarMaxLabel).toBe(`~${formatAxisDollar(800_000)}`)
+    expect(s.labels.dollarMaxLabel).toBe(`~${formatAxisDollar(twoFuturesCeiling(800_000))}`)
     expect(s.labels.todayLabel).toBe(slots.ladderOffsetTick(0))
     expect(s.labels.horizonLabel).toBe('30')
     expect(s.labels.ariaSummary).toBe(`${copy.twoFuturesCaption} ${view!.deltaLine}`)
@@ -188,6 +192,79 @@ describe('composeTwoFutures — the chart series', () => {
     })
     const view = composeTwoFutures(outcome, 'With', 'Without', slots.rothDeltaSurvivor)
     expect(view!.series).toBeUndefined()
+  })
+})
+
+describe('composeTwoFutures — the dead-cohort truncation (the series ends where the living cohort thins)', () => {
+  it('truncates each arm to the leading cohortFraction ≥ COHORT_FADE.full prefix (the onset year is retained)', () => {
+    // A point AT the onset (COHORT_FADE.full) is kept (>=); below it the median is noise wearing a
+    // line's confidence — the chart simply ends.
+    const cohorts = [1.0, COHORT_FADE.full, 0.3, 0.1]
+    const withFan = fan([
+      [0, 800_000, cohorts[0]],
+      [10, 700_000, cohorts[1]],
+      [20, 400_000, cohorts[2]],
+      [30, 200_000, cohorts[3]],
+    ])
+    const withoutFan = fan([
+      [0, 800_000, cohorts[0]],
+      [10, 690_000, cohorts[1]],
+      [20, 390_000, cohorts[2]],
+      [30, 190_000, cohorts[3]],
+    ])
+    const outcome = twoArm({
+      deltaBasis: 'survivor',
+      with: reading({ headline: headline(9), survivorReading: survivor(9), bandFan: withFan, survivalFraction: 0.9, survivorFraction: 0.88 }),
+      without: reading({ headline: headline(7), survivorReading: survivor(7), bandFan: withoutFan, survivalFraction: 0.7, survivorFraction: 0.68 }),
+    })
+    const view = composeTwoFutures(outcome, 'With', 'Without', slots.rothDeltaSurvivor)
+    expect(view!.series).toBeDefined()
+    expect(view!.series!.withArm.map((p) => p.yearsFromNow)).toEqual([0, 10])
+    expect(view!.series!.withoutArm.map((p) => p.yearsFromNow)).toEqual([0, 10])
+  })
+
+  it('both arms truncate at the SAME year (CRN-shared deaths ⇒ one cohort schedule across both arms)', () => {
+    const cohorts = [1.0, 0.9, 0.6, 0.2, 0.05] // ≥0.5 through index 2 (year 16); dropped at index 3
+    const mk = (base: number): BandFan =>
+      fan([
+        [0, base, cohorts[0]],
+        [8, base - 100_000, cohorts[1]],
+        [16, base - 200_000, cohorts[2]],
+        [24, base - 300_000, cohorts[3]],
+        [32, base - 350_000, cohorts[4]],
+      ])
+    const outcome = twoArm({
+      deltaBasis: 'survivor',
+      with: reading({ headline: headline(9), survivorReading: survivor(9), bandFan: mk(900_000), survivalFraction: 0.9, survivorFraction: 0.88 }),
+      without: reading({ headline: headline(7), survivorReading: survivor(7), bandFan: mk(880_000), survivalFraction: 0.7, survivorFraction: 0.68 }),
+    })
+    const view = composeTwoFutures(outcome, 'With', 'Without', slots.rothDeltaSurvivor)
+    const withArm = view!.series!.withArm
+    const withoutArm = view!.series!.withoutArm
+    expect(withArm.at(-1)!.yearsFromNow).toBe(withoutArm.at(-1)!.yearsFromNow)
+    expect(withArm.at(-1)!.yearsFromNow).toBe(16)
+  })
+})
+
+describe('composeTwoFutures — the y-ceiling label annotates the DRAWN gridline, not the raw max', () => {
+  it('formats twoFuturesCeiling(max), a value distinct from the raw data max', () => {
+    // 1_234_567 raw → $1.2M; its 2-sig-fig ceiling 1_300_000 → $1.3M. The label sits on the DRAWN
+    // ceiling line, so it must read the ceiling (understating its own gridline is the fold's bug).
+    const withFan = fan([
+      [0, 1_234_567, 1],
+      [30, 900_000, 1],
+    ])
+    const withoutFan = fan([
+      [0, 1_000_000, 1],
+      [30, 800_000, 1],
+    ])
+    const outcome = twoArm({
+      with: reading({ headline: headline(8), bandFan: withFan, survivalFraction: 0.85 }),
+      without: reading({ headline: headline(7), bandFan: withoutFan, survivalFraction: 0.8 }),
+    })
+    const view = composeTwoFutures(outcome, 'With', 'Without', slots.rothDeltaSurvivor)
+    expect(view!.series!.labels.dollarMaxLabel).toBe(`~${formatAxisDollar(twoFuturesCeiling(1_234_567))}`)
+    expect(view!.series!.labels.dollarMaxLabel).not.toBe(`~${formatAxisDollar(1_234_567)}`) // ceiling ≠ raw
   })
 })
 

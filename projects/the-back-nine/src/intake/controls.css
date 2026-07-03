@@ -39,6 +39,11 @@
   flex-shrink: 0;
 }
 
+/* Body scroll lock while a control sheet is up (the budget-sheet-open twin). */
+.control-sheet-open {
+  overflow: hidden;
+}
+
 .control-sheet__title {
   margin: 0;
   font-family: var(--font-display);

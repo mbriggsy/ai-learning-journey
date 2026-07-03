@@ -39,7 +39,10 @@ vi.stubGlobal(
     }) as unknown as MediaQueryList,
 )
 
-afterEach(cleanup)
+afterEach(() => {
+  cleanup()
+  document.documentElement.classList.remove('control-sheet-open')
+})
 
 const nullClient: EngineClient = {
   runningInWorker: true,
@@ -228,5 +231,65 @@ describe('SequencingControl — the announcer binds on open, and Escape closes',
     const { onClose } = renderSeq()
     fireEvent.keyDown(screen.getByRole('dialog'), { key: 'Escape' })
     expect(onClose).toHaveBeenCalledTimes(1)
+  })
+})
+
+describe('SequencingControl — the calm error face', () => {
+  it('a preview resolving {kind:"error"} renders leverPreviewError (not blank, not stuck pending)', async () => {
+    const { preview } = renderSeq()
+    fireEvent.click(radio('taxable-first'))
+    expect(document.querySelector('.control-preview__pending')).not.toBeNull() // pending while in flight
+    await act(async () => {
+      preview.resolvers[0]!({ kind: 'error', reason: 'boom' })
+    })
+    // The visible face (the sr-only announcer also carries the string — scope to the rendered <p>).
+    expect(screen.getByText(copy.leverPreviewError, { selector: 'p.field-help' })).toBeInTheDocument()
+    expect(document.querySelector('.control-preview__pending')).toBeNull()
+    expect(document.querySelector('.control-preview__delta')).toBeNull()
+  })
+})
+
+describe('SequencingControl — the sheet-local generation discard (beyond the store ticket)', () => {
+  it('resetting to the baseline while a run is in flight discards its late resolve (stays idle)', async () => {
+    const { preview } = renderSeq()
+    fireEvent.click(radio('taxable-first')) // run A (resolvers[0]) in flight
+    fireEvent.click(radio('proportional')) // baseline-vs-baseline fires NO preview → state idle, gen bumped
+    expect(document.querySelector('.control-preview__pending')).toBeNull() // already back to idle
+
+    await act(async () => {
+      preview.resolvers[0]!(okPreview(8, 6)) // A lands under a superseded generation
+    })
+    // The stale run must NOT paint 'ready' over the reset — the store ticket alone never saw this
+    // transition (the baseline reset minted no new preview ticket).
+    expect(document.querySelector('.control-preview__delta')).toBeNull()
+    expect(document.querySelector('.control-preview__pending')).toBeNull()
+  })
+})
+
+describe('SequencingControl — the no-worker disclosure', () => {
+  it('previewBlocking shows leverNoWorkerNote once a preview has fired (never while idle)', () => {
+    const preview = deferredPreview()
+    render(
+      <SequencingControl open previewBlocking draft={draftWith()} preview={preview.fn} onApply={noop} onClose={noop} />,
+    )
+    expect(screen.queryByText(copy.leverNoWorkerNote)).toBeNull() // idle: no wait to disclose
+    fireEvent.click(radio('taxable-first')) // → pending (a run is now blocking the page)
+    expect(screen.getByText(copy.leverNoWorkerNote)).toBeInTheDocument()
+  })
+})
+
+describe('SequencingControl — the sheet locks body scroll while open (controlSheet)', () => {
+  it('adds control-sheet-open on open and drops it on close', async () => {
+    const preview = deferredPreview()
+    const draft = draftWith()
+    const has = () => document.documentElement.classList.contains('control-sheet-open')
+    const { rerender } = render(
+      <SequencingControl open={false} draft={draft} preview={preview.fn} onApply={noop} onClose={noop} />,
+    )
+    expect(has()).toBe(false)
+    rerender(<SequencingControl open draft={draft} preview={preview.fn} onApply={noop} onClose={noop} />)
+    expect(has()).toBe(true)
+    rerender(<SequencingControl open={false} draft={draft} preview={preview.fn} onApply={noop} onClose={noop} />)
+    await waitFor(() => expect(has()).toBe(false))
   })
 })

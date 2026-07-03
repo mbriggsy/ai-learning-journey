@@ -60,7 +60,13 @@ export function ControlSheet({
   useEffect(() => {
     if (!open) return
     restoreRef.current = (document.activeElement as HTMLElement) ?? null
+    // Body scroll lock while the sheet is up (the BudgetBuilder/BandEnlargeModal precedent —
+    // its absence left the background scrolling behind the open modal; ultramode 2026-07-03).
+    document.documentElement.classList.add('control-sheet-open')
     focusHeading(headingRef.current)
+    return () => {
+      document.documentElement.classList.remove('control-sheet-open')
+    }
   }, [open])
 
   const restoreFocus = useCallback(() => {

@@ -649,6 +649,8 @@ export const copy = {
   leverRothClosedNothing:
     'There’s nothing in a pre-tax account to convert, so this what-if doesn’t apply to you.',
   leverPreviewPending: 'Working out both futures…',
+  leverPreviewError:
+    'That comparison didn’t come together. Adjust a field — or close and reopen — to try again.',
   leverPreviewNoDate:
     'This comparison anchors to your work-optional date, so it needs one on the board first. Applying a change still updates the answer above.',
   leverNoWorkerNote:
@@ -658,6 +660,9 @@ export const copy = {
   // ladder chrome: an end-of-line series label is identity, not a plan-moving claim).
   tfChartRothWith: 'With the conversion',
   tfChartRothWithout: 'Today’s plan',
+  // When a conversion is ALREADY applied, "Today's plan" would mislabel the stripped baseline
+  // (today's plan HAS the conversion) — the honest name for the without-arm is the negation.
+  tfChartRothWithoutApplied: 'Without the conversion',
   // Plan-moving READOUTS (require-hedge-swept; the numbers arrive via slots below).
   rothTeaserLead:
     'Couples who file jointly often have a lower-tax window before required withdrawals begin. Some fill it with small Roth conversions, a little at a time.',

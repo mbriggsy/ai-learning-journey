@@ -16,7 +16,7 @@
  *     engine emitted a real median for BOTH arms (never fabricated).
  */
 import type { OutcomeState, TwoArmOutcome, TwoArmReading } from '@shared/model'
-import type { TwoFuturesLabels, TwoFuturesPoint } from '@viz/TwoFutures'
+import { twoFuturesCeiling, type TwoFuturesLabels, type TwoFuturesPoint } from '@viz/TwoFutures'
 import { COHORT_FADE } from '@viz/bandGeometry'
 import { copy, slots } from './copy'
 import { OUTCOME_PRESENTATION } from './outcomeStates'
@@ -112,7 +112,10 @@ export function composeTwoFutures(
       labels: {
         withLabel,
         withoutLabel,
-        dollarMaxLabel: `~${formatAxisDollar(maxDollar)}`,
+        // The label annotates the DRAWN ceiling gridline, so it formats the SAME ceiling the
+        // renderer computes — the raw data max under-reported the line it sat on (ultramode
+        // 2026-07-03: an axis reference that understates its own value).
+        dollarMaxLabel: `~${formatAxisDollar(twoFuturesCeiling(maxDollar))}`,
         todayLabel: slots.ladderOffsetTick(0),
         horizonLabel: `${maxYears}`,
         ariaSummary: `${copy.twoFuturesCaption} ${deltaLine}`,

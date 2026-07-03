@@ -15,7 +15,7 @@ import { describe, expect, it } from 'vitest'
 import { scenarioFromDraft } from '../scenarioFromDraft'
 import { draftFromScenario } from '../draftFromScenario'
 import { DEV_SEEDS, type DevSeedKey } from '../devSeeds'
-import type { ScenarioV3 } from '@shared/model'
+import type { DrawdownOrderKey, RothConversionPlan, ScenarioV3 } from '@shared/model'
 
 /** Every dev seed that is genuinely save-ready → its real, complete ScenarioV3. */
 const readyScenarios: ReadonlyArray<readonly [DevSeedKey, ScenarioV3]> = (
@@ -84,5 +84,27 @@ describe('draftFromScenario — the decrypt-on-return hydration inverse', () => 
       expect(hydrated.ok).toBe(false)
       if (!hydrated.ok) expect(hydrated.reason).toBe('unsupported-shape')
     }
+  })
+})
+
+describe('draftFromScenario — the U10 control levers round-trip byte-for-byte', () => {
+  it('drawdownPolicy "custom" + drawdownOrder + rothConversion all survive the strip inverse together', () => {
+    // A future ScenarioV3 field the shallow strip mishandles must fail HERE, so pin the three U10
+    // lever fields explicitly on a real save-ready household (the biconditional: custom ⟺ order).
+    const order: readonly DrawdownOrderKey[] = ['roth', 'taxable', 'pretax']
+    const rothConversion: RothConversionPlan = { annualAmountReal: 30_000, startYearOffset: 1, years: 4 }
+    const withLevers: ScenarioV3 = { ...retiredV3(), drawdownPolicy: 'custom', drawdownOrder: order, rothConversion }
+
+    const hydrated = draftFromScenario(withLevers)
+    expect(hydrated.ok).toBe(true)
+    if (!hydrated.ok) return
+    // the three lever fields reach the draft — not stripped, not re-derived
+    expect(hydrated.draft.drawdownPolicy).toBe('custom')
+    expect(hydrated.draft.drawdownOrder).toEqual(order)
+    expect(hydrated.draft.rothConversion).toEqual(rothConversion)
+
+    const reencoded = scenarioFromDraft(hydrated.draft)
+    expect(reencoded.ready).toBe(true)
+    if (reencoded.ready) expect(reencoded.scenario).toEqual(withLevers) // byte-for-byte, all three
   })
 })

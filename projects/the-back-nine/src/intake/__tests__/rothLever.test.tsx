@@ -79,19 +79,32 @@ function deferredPreview() {
   return { fn, calls, resolvers }
 }
 
-function okPreview(withSurv: number, withoutSurv: number, withState: OutcomeState = 'on-track'): ControlPreview {
-  const arm = (surv: number, state: OutcomeState) => ({
+// A two-point, fully-living fan so composeTwoFutures emits a chart series (the end-labels render).
+const seriesFan = (top: number) => ({
+  byYear: [
+    { yearsFromNow: 0, p10: top * 0.5, p25: top * 0.75, p50: top, p75: top * 1.25, p90: top * 1.5, cohortFraction: 1 },
+    { yearsFromNow: 30, p10: top * 0.3, p25: top * 0.45, p50: top * 0.6, p75: top * 0.75, p90: top * 0.9, cohortFraction: 0.9 },
+  ],
+})
+
+function okPreview(
+  withSurv: number,
+  withoutSurv: number,
+  opts: { withSeries?: boolean; withState?: OutcomeState } = {},
+): ControlPreview {
+  const arm = (surv: number, state: OutcomeState, top: number) => ({
     headline: { xOfTen: { value: surv, marginToEdge: 0.05 }, outcomeState: state },
     survivorReading: { xOfTen: { value: surv, marginToEdge: 0.05 }, outcomeState: state, incomeStepDownMonthlyReal: 1_000 },
     survivalFraction: surv / 10,
     survivorFraction: surv / 10,
+    ...(opts.withSeries ? { bandFan: seriesFan(top) } : {}),
   })
   return {
     kind: 'ok',
     outcome: {
       kind: 'two-arm',
-      with: arm(withSurv, withState),
-      without: arm(withoutSurv, 'on-track'),
+      with: arm(withSurv, opts.withState ?? 'on-track', 900_000),
+      without: arm(withoutSurv, 'on-track', 800_000),
       rawDelta: (withSurv - withoutSurv) / 10,
       deltaBasis: 'survivor',
     },
@@ -195,5 +208,88 @@ describe('RothLever — Remove is present only when a conversion is applied', ()
       <RothLever open draft={draftWith(withPretax)} preview={vi.fn()} onApply={noop} onRemove={noop} onClose={noop} />,
     )
     expect(screen.queryByRole('button', { name: copy.leverRothRemove })).toBeNull()
+  })
+})
+
+describe('RothLever — the calm error face', () => {
+  it('a preview resolving {kind:"error"} renders leverPreviewError', async () => {
+    const preview = deferredPreview()
+    render(
+      <RothLever open draft={draftWith(withPretax)} preview={preview.fn} onApply={noop} onRemove={noop} onClose={noop} />,
+    )
+    commitField(screen.getByLabelText(copy.leverRothAmountLabel), '50,000')
+    await act(async () => {
+      preview.resolvers.at(-1)!({ kind: 'error', reason: 'boom' })
+    })
+    // The visible face (the sr-only announcer also carries the string — scope to the rendered <p>).
+    expect(screen.getByText(copy.leverPreviewError, { selector: 'p.field-help' })).toBeInTheDocument()
+  })
+
+  it('an engine-indeterminate outcome maps to the SAME calm error face', async () => {
+    const preview = deferredPreview()
+    render(
+      <RothLever open draft={draftWith(withPretax)} preview={preview.fn} onApply={noop} onRemove={noop} onClose={noop} />,
+    )
+    commitField(screen.getByLabelText(copy.leverRothAmountLabel), '50,000')
+    await act(async () => {
+      preview.resolvers.at(-1)!({ kind: 'ok', outcome: { kind: 'indeterminate', reason: 'pool-empty' } })
+    })
+    expect(screen.getByText(copy.leverPreviewError, { selector: 'p.field-help' })).toBeInTheDocument()
+    expect(document.querySelector('.control-preview__delta')).toBeNull()
+  })
+})
+
+describe('RothLever — a cleared plan withdraws the comparison (the stale-delta fix)', () => {
+  it('clearing the amount after a ready view drops the delta back to idle', async () => {
+    const preview = deferredPreview()
+    render(
+      <RothLever open draft={draftWith(withPretax)} preview={preview.fn} onApply={noop} onRemove={noop} onClose={noop} />,
+    )
+    commitField(screen.getByLabelText(copy.leverRothAmountLabel), '50,000')
+    await act(async () => {
+      preview.resolvers.at(-1)!(okPreview(8, 6))
+    })
+    await waitFor(() => expect(document.querySelector('.control-preview__delta')).not.toBeNull())
+
+    commitField(screen.getByLabelText(copy.leverRothAmountLabel), '') // cleared ⇒ candidate null
+    expect(document.querySelector('.control-preview__delta')).toBeNull() // the confident readout is withdrawn
+    expect(document.querySelector('.control-preview__pending')).toBeNull()
+  })
+})
+
+describe('RothLever — the without-arm is named honestly when a conversion is applied', () => {
+  it('the ready chart labels the baseline "Without the conversion", never the "Today’s plan" mislabel', async () => {
+    const preview = deferredPreview()
+    const draft = draftWith((d) => ({
+      ...withPretax(d),
+      rothConversion: { annualAmountReal: 40_000, startYearOffset: 2, years: 5 },
+    }))
+    render(<RothLever open draft={draft} preview={preview.fn} onApply={noop} onRemove={noop} onClose={noop} />)
+    // The applied plan seeds a COMPLETE candidate on open, so a preview fires immediately.
+    await act(async () => {
+      preview.resolvers.at(-1)!(okPreview(8, 6, { withSeries: true }))
+    })
+    await waitFor(() => expect(screen.getByText(copy.tfChartRothWithoutApplied)).toBeInTheDocument())
+    expect(screen.queryByText(copy.tfChartRothWithout)).toBeNull() // "Today’s plan" would be a lie here
+  })
+})
+
+describe('RothLever — close-then-reopen discards an in-flight preview (open-edge generation bump)', () => {
+  it('a run held across a close never paints into the reopened sheet', async () => {
+    const preview = deferredPreview()
+    const draft = draftWith(withPretax) // no applied conversion ⇒ reopen re-seeds an incomplete plan
+    const { rerender } = render(
+      <RothLever open draft={draft} preview={preview.fn} onApply={noop} onRemove={noop} onClose={noop} />,
+    )
+    commitField(screen.getByLabelText(copy.leverRothAmountLabel), '50,000') // run A (resolvers[0]) in flight
+    rerender(<RothLever open={false} draft={draft} preview={preview.fn} onApply={noop} onRemove={noop} onClose={noop} />)
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
+    rerender(<RothLever open draft={draft} preview={preview.fn} onApply={noop} onRemove={noop} onClose={noop} />)
+    await waitFor(() => expect(screen.getByRole('dialog')).toBeInTheDocument())
+
+    await act(async () => {
+      preview.resolvers[0]!(okPreview(8, 6)) // A lands under a superseded generation
+    })
+    expect(document.querySelector('.control-preview__delta')).toBeNull()
   })
 })

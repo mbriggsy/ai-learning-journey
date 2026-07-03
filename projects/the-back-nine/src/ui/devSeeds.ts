@@ -22,6 +22,7 @@
  * intake AND the Save ceremony every time. It is equally DEV-gated + DCE'd.
  */
 import type { ScenarioDraft } from '@store/memoryModel'
+import type { BudgetLineItem } from '@shared/model'
 import { scenarioFromDraft } from './scenarioFromDraft'
 
 /** A fixed dev CRN seed → the same fan every drive (a reproducible cold-read).
@@ -337,6 +338,98 @@ const retiredFailing: ScenarioDraft = {
   seed: DEV_CRN_SEED,
 }
 
+/** One U9b budget line (labels read in the builder sheet — the cold-read wants real rows). */
+const bline = (
+  category: BudgetLineItem['category'],
+  label: string,
+  annualAmountReal: number,
+  tier: BudgetLineItem['tier'],
+): BudgetLineItem => ({ category, label, annualAmountReal, tier, startYear: 0 })
+
+/**
+ * The TWO-TIER RELIEF spine household (U9b Q2 — the relief-with-honesty cold-read):
+ * `borderline`'s couple carrying an ITEMIZED budget + an OOP-medical figure. Engine-proven
+ * (probe 2026-07-02, seed 0xbada55): full track lands "On the line, 7 of 10" while the
+ * essentials floor lands over-funded 9-of-10 — the widest honest relief spread, so the
+ * subordinate "even at just essentials…" line COLD-READS against a scared verdict. The
+ * reconciliation invariant holds by construction: annualSpendingReal = Σlines@0 (59,600)
+ * + injected M (6,000) = 65,600. All lines lifelong-at-0 (as probed — a window would
+ * change the engine evaluation the proof pinned).
+ */
+const retiredBudget: ScenarioDraft = {
+  ...retiredBorderline,
+  budget: [
+    bline('housing', 'Mortgage & taxes', 18_000, 'essentials'),
+    bline('utilities', '', 4_800, 'essentials'),
+    bline('food', 'Groceries', 9_600, 'essentials'),
+    bline('transportation', '', 4_800, 'essentials'),
+    bline('other', 'Everything else', 4_400, 'essentials'),
+    bline('travel', 'See the kids', 12_000, 'discretionary'),
+    bline('gifts', '', 6_000, 'discretionary'),
+  ],
+  annualSpendingReal: 65_600,
+  health: { ...retiredBorderline.health, oopMedicalAnnual: 6_000 },
+}
+
+/**
+ * The FLOOR<LIFESTYLE date split (U9b Q3 — both tracks dated, floor earlier):
+ * `dateborder`'s working couple with a budget whose discretionary share separates the
+ * tracks. Engine-proven (probe 2026-07-02, provisional tier): floor crowns at offset ≈ 1,
+ * lifestyle at ≈ 8 — the hero stays the LIFESTYLE date, the floor rides the subordinate
+ * "essentials covered by ~year X" line, no inversion note. Reconciled: Σlines@0 (66,000)
+ * + M (8,000) = 74,000 (the same full total `dateborder` proved borderline-dated).
+ */
+const dateSplitSeed: ScenarioDraft = {
+  ...stillWorkingBorderline,
+  budget: [
+    bline('housing', 'Mortgage & taxes', 20_000, 'essentials'),
+    bline('utilities', '', 4_000, 'essentials'),
+    bline('food', 'Groceries', 10_000, 'essentials'),
+    bline('transportation', '', 6_000, 'essentials'),
+    bline('other', 'Everything else', 6_000, 'essentials'),
+    bline('travel', 'Travel', 14_000, 'discretionary'),
+    bline('gifts', 'Grandkids', 6_000, 'discretionary'),
+  ],
+  annualSpendingReal: 74_000,
+  health: { ...stillWorkingBorderline.health, oopMedicalAnnual: 8_000 },
+}
+
+/**
+ * The MIXED date case (U9b Q3 — floor dated, lifestyle NOT within the window): the same
+ * couple wanting a much richer retirement (heavy discretionary). Engine-proven (probe
+ * 2026-07-02, provisional tier): the essentials floor crowns at offset ≈ 4 while the full
+ * lifestyle never clears inside the 10-year window — the hero renders the words + how-close
+ * line, the floor line still gives the honest "essentials covered" beat. NOT the R27
+ * inversion (floor earlier = the expected ordering; no disclosure note). Reconciled:
+ * Σlines@0 (90,000) + M (8,000) = 98,000.
+ *
+ * R27 NOTE (the fourth prescribed seed, `dateinvert`, deliberately does NOT exist): the
+ * floor>lifestyle inversion is UNREACHABLE in v1 — under proportional drawdown the bucket
+ * ratios are preserved path-for-path, so ACA-MAGI is the SAME monotone function of total
+ * outflow on both tracks, and the inversion needs {floor MAGI < 100% FPL ≤ lifestyle MAGI}
+ * with floor outflow ABOVE lifestyle — jointly unsatisfiable. Probed empirically 2026-07-02
+ * (11 configs × 11 offsets across trad-share straddle / near-cliff brokerage drift /
+ * SS-claimed-bridge families: floor strictly stronger at EVERY offset). The render arm
+ * stays fixture-pinned (FuckOffDate.test.tsx + dateSplit.test.ts). REACTIVATION TRIGGER:
+ * U10's Roth-conversion lever adds MAGI with zero outflow — the coupling breaks by
+ * construction, so a real `dateinvert` seed becomes owed the moment conversions ship
+ * (the same trigger family as the parked ACA-cliff ladder dip).
+ */
+const dateMixedSeed: ScenarioDraft = {
+  ...stillWorkingBorderline,
+  budget: [
+    bline('housing', 'Mortgage & taxes', 24_000, 'essentials'),
+    bline('utilities', '', 5_000, 'essentials'),
+    bline('food', 'Groceries', 12_000, 'essentials'),
+    bline('transportation', '', 6_000, 'essentials'),
+    bline('other', 'Everything else', 5_000, 'essentials'),
+    bline('travel', 'The good years', 26_000, 'discretionary'),
+    bline('gifts', '', 12_000, 'discretionary'),
+  ],
+  annualSpendingReal: 98_000,
+  health: { ...stillWorkingBorderline.health, oopMedicalAnnual: 8_000 },
+}
+
 /** The seed registry — `?seed=<key>` selects one. */
 export const DEV_SEEDS = {
   retired: retiredOnTrack,
@@ -344,6 +437,9 @@ export const DEV_SEEDS = {
   borderline: retiredBorderline,
   dateborder: stillWorkingBorderline,
   failing: retiredFailing,
+  budget: retiredBudget,
+  datesplit: dateSplitSeed,
+  datemixed: dateMixedSeed,
 } satisfies Record<string, ScenarioDraft>
 
 export type DevSeedKey = keyof typeof DEV_SEEDS

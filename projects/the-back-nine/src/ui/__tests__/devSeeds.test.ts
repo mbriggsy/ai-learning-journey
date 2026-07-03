@@ -1,9 +1,16 @@
 import { describe, expect, it } from 'vitest'
 import { DEV_SEEDS } from '../devSeeds'
+import { floorRelief } from '../twoTier'
+import { composeDateSplit } from '../dateSplit'
 import { buildDateInput, buildSpineParams, isDateRoute, missingRequiredFacts } from '@intake/intakeMap'
 import { validateParams } from '@engine/simulate'
 import { runEngine } from '@engine/engineProtocol'
-import { buildCandidateParams, DATE_OFFSET_WINDOW_TOP, DATE_SEARCH_PATHS } from '@engine/dateSearch'
+import {
+  buildCandidateParams,
+  runDateSearch,
+  DATE_OFFSET_WINDOW_TOP,
+  DATE_SEARCH_PATHS,
+} from '@engine/dateSearch'
 
 /**
  * The dev-seed validity proof (the SAME render-anchor coupling intakeMap.test.ts
@@ -59,4 +66,63 @@ describe('dev seeds reach a worded (engine-accepted) answer', () => {
     expect(wire.headline.outcomeState, 'survival ≈ 0 AND median depletion ≤ 2yr').toBe('already-failing')
     expect(wire.dollar.direction, 'already-failing forks to the figure-less rethink clause').toBe('rethink')
   })
+
+  // The U9b 'budget' seed exists to cold-read the TWO-TIER relief line (council 2026-07-02 Q2).
+  // Pin the ARM against the real engine: the full track must stay a scared-but-honest borderline
+  // while the essentials floor clears over-funded — the widest relief spread. If a constants or
+  // engine change moves either reading, the seed no longer drives the surface it exists for, and
+  // this test says so (re-tune the lines, don't loosen the pin).
+  it("'budget' lands the two-tier relief through the real engine (borderline full track, over-funded floor)", () => {
+    const d = DEV_SEEDS.budget
+    const params = buildSpineParams(d)
+    expect(params, 'budget: buildSpineParams').not.toBeNull()
+    const wire = runEngine(params!, d.seed!)
+    expect(wire.kind, 'budget: a feasible, resolved run').toBe('resolved')
+    if (wire.kind !== 'resolved') return
+    expect(wire.floorReading, 'a budget run must carry the floor reading').toBeDefined()
+    expect(wire.headline.outcomeState, 'the full track: scared-but-honest').toBe('borderline')
+    expect(wire.floorReading!.outcomeState, 'the essentials floor: the relief').toBe('over-funded')
+    expect(
+      floorRelief(wire.headline, wire.floorReading),
+      'the relief gate must EARN the subordinate line (no degenerate collapse)',
+    ).not.toBeNull()
+  })
+
+  // The U9b 'datesplit' seed exists to cold-read the floor/lifestyle SPLIT (council 2026-07-02 Q3):
+  // both tracks dated, the floor EARLIER (the expected ordering — no R27 inversion note). Provisional
+  // tier for suite speed; the wide crown gap (≈1 vs ≈8 at design time) makes the arm tier-robust.
+  it("'datesplit' lands a dated floor<lifestyle split through the real date search", async () => {
+    const input = buildDateInput(DEV_SEEDS.datesplit)
+    expect(input, 'datesplit: buildDateInput').not.toBeNull()
+    const out = await runDateSearch(input!, DEV_SEEDS.datesplit.seed!, { tier: 'provisional' })
+    expect(out.kind, 'datesplit: a dates outcome').toBe('dates')
+    if (out.kind !== 'dates') return
+    const datedKinds = ['confirmed-date', 'window-edge-unconfirmed']
+    expect(datedKinds, 'floor crowned').toContain(out.floor.kind)
+    expect(datedKinds, 'lifestyle crowned').toContain(out.lifestyle.kind)
+    if (!('offsetYears' in out.floor) || !('offsetYears' in out.lifestyle)) return
+    expect(out.floor.offsetYears, 'floor strictly earlier').toBeLessThan(out.lifestyle.offsetYears)
+    const view = composeDateSplit(out.floor, out.lifestyle)
+    expect(view.kind, 'the render composes a SPLIT, not the degenerate single date').toBe('split')
+    if (view.kind !== 'split') return
+    expect(view.inverted, 'the expected ordering must NOT cry the inversion note').toBe(false)
+  }, 120_000)
+
+  // The U9b 'datemixed' seed exists to cold-read the MIXED arm (floor dated, lifestyle not within
+  // the window — the words + how-close hero with the "essentials covered" beat). The R27 INVERSION
+  // seed ('dateinvert') deliberately does NOT exist: unreachable in v1 (see the derivation +
+  // 121-reading probe record in devSeeds.ts — reactivates with U10's Roth conversions).
+  it("'datemixed' lands floor-dated + lifestyle-no-date through the real date search", async () => {
+    const input = buildDateInput(DEV_SEEDS.datemixed)
+    expect(input, 'datemixed: buildDateInput').not.toBeNull()
+    const out = await runDateSearch(input!, DEV_SEEDS.datemixed.seed!, { tier: 'provisional' })
+    expect(out.kind, 'datemixed: a dates outcome').toBe('dates')
+    if (out.kind !== 'dates') return
+    expect(['confirmed-date', 'window-edge-unconfirmed'], 'floor crowned').toContain(out.floor.kind)
+    expect(out.lifestyle.kind, 'lifestyle must NOT crown inside the window').toBe('no-date-in-window')
+    const view = composeDateSplit(out.floor, out.lifestyle)
+    expect(view.kind, 'the render composes a SPLIT').toBe('split')
+    if (view.kind !== 'split') return
+    expect(view.inverted, 'floor-dated + lifestyle-no-date is the EXPECTED ordering, not R27').toBe(false)
+  }, 120_000)
 })

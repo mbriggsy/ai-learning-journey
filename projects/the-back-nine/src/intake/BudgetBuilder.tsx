@@ -294,10 +294,12 @@ export function BudgetBuilder({ open, draft, onApply, onEscape, onClose, variant
         {S !== undefined && <p className="budget-readout__line">{slots.budgetAnchorLead(formatMoney(S))}</p>}
         {S !== undefined && M !== undefined && M > 0 && (
           <>
-            <p className="budget-readout__line">{slots.budgetLinesTarget(formatMoney(target!))}</p>
+            {/* Carried-medical BEFORE the lines-target (audit 2026-07-03): the reader follows
+                the subtraction in the order it happens — total → what's carried → what's left. */}
             <p className="budget-readout__line budget-readout__line--muted">
               {slots.budgetMedicalCarried(formatMoney(M))}
             </p>
+            <p className="budget-readout__line">{slots.budgetLinesTarget(formatMoney(target!))}</p>
           </>
         )}
         {items.length > 0 && (

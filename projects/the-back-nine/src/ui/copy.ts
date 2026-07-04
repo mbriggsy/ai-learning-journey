@@ -29,7 +29,7 @@ export const copy = {
   coldStartOrientation:
     'A quiet co-pilot for a married couple’s next chapter. About five minutes of questions, answered as honestly as the math.',
   coldStartPreflight:
-    'Handy to have nearby: recent account statements, and a marketplace health-insurance quote for everyone under 65 in the household, at your ages and ZIP — the benchmark Silver figure and the premium of a plan you’d pick.',
+    'Handy to have nearby: recent account statements, and a health-insurance quote for everyone under 65 in the household, at your ages and ZIP — the benchmark Silver figure and the premium of a plan you’d pick.',
   coldStartBegin: 'Begin',
   // The quiet returning-user door on the brand-new user's first screen: a WIPED/evicted device
   // probes no-vault → ColdStart, so a saved backup is the only way back. Subordinate to Begin
@@ -146,7 +146,12 @@ export const copy = {
   enrolledPremiumLabel: 'Your household’s combined monthly premium',
   slcspLabel: 'Benchmark Silver plan, monthly (whole household)',
   healthQuoteHelp:
-    'A marketplace quote for everyone under 65 in the household — combined monthly, not one person’s. The tool splits it by age for each of you.',
+    'A quote for everyone under 65 in the household — combined monthly, not one person’s. The tool splits it by age for each of you.',
+  // The benchmark field's own help (Sonnet-5 audit 2026-07-03, P1: two premium-shaped fields in
+  // a row with nothing distinguishing them invites a silent duplicate entry — the calm-but-wrong
+  // class — and 'the discount' can't be forward-referenced here; it isn't taught until U11).
+  slcspHelp:
+    'A different figure from the same quote — a standard reference plan, not necessarily the one you’d pick.',
   qOopHeading: 'Out-of-pocket health costs',
   oopLabel: 'A typical year, out of pocket',
   oopHelp:
@@ -272,7 +277,7 @@ export const copy = {
     'Blank means it pays for life. Set an age only if it ends earlier — a term-certain annuity, say.',
   incomeTaxableLabel: 'The taxable part each year',
   incomeTaxableHelp:
-    'Leave blank to treat it as fully taxable (the safe default). Lower it only if part is a tax-free return of basis — a conservative simplification the tool holds steady.',
+    'Leave blank to treat it as fully taxable (the safe default). Lower it only if part of it is a tax-free return of what was paid in — a conservative simplification the tool holds steady.',
   // The session-only "nothing saved yet" affordance — reserved slot, neutral
   // text + icon, never a red badge (color is never the only signal — insight 035).
   notSavedYet: 'Nothing’s saved to this device yet — that happens when you save your plan.',
@@ -322,22 +327,19 @@ export const copy = {
   // The non-monotone-region disclosure (the ACA-cliff signature: an earlier window clears, then dips
   // below the line before the date holds). D2 owns the string; the C3 result carries the flags.
   dateNonMonotoneNote:
-    'An earlier year or two can clear, then dip back below the line before it holds — health costs before Medicare are the usual reason.',
+    'An earlier year or two can look like it clears, then fall behind again before this date finally holds — health costs before Medicare are the usual reason.',
   // --- U9b date-route floor/lifestyle split (the budget's two-date reading — council 2026-07-02).
   //     "date"-prefixed → verdict-scoped (free-numeral + superlative): year counts + odds ride
   //     slots.dateFloorCovered / dateOddsText, never a bare numeral. The essentials line NEVER says
   //     "work-optional" — that claim belongs to the full-lifestyle track alone (presenting the easier
   //     essentials date as the fuck-off date is the calm-but-wrong sin U9b closes). FIRST-DRAFT
   //     wording — the N=1 cold-read's call. ---
-  // The floor track has no date — the quiet severity disclosure when the lifestyle has none either.
-  dateFloorNotWithinEither: 'Covering just the essentials doesn’t clear within this window either.',
-  // The floor track has no date while the FULL plan does (the extreme R27 inversion arm — the
-  // inversion note below carries the why; this line only states the fact, never reordered away).
-  dateFloorNotWithin: 'Covering just the essentials doesn’t clear within this window.',
+  // (The floor's two no-date arms moved to SLOTS — dateFloorNotWithin / dateFloorNotWithinEither —
+  //  so "this window" names its own years, the noDateInWindow precedent; Sonnet-5 audit 2026-07-03.)
   // The R27 floor>lifestyle inversion disclosure (100%-FPL/PTC — correct, surprising engine output
   // that MUST be explained, never hidden to look tidy). Plain-language subsidy cause, no jargon.
   dateFloorInversionNote:
-    'Here the essentials-only version lands later than the full plan. Spending less can mean a lower income on paper — which can shrink the health-insurance help before Medicare and raise that cost.',
+    'Here the essentials-only version lands later than the full plan. Spending less can mean a lower income on paper. That lower income on paper can shrink the health-insurance help you’d get before Medicare — which is what raises your cost here.',
   answerError: 'The math hit a snag.',
   answerRetry: 'Try again',
   // --- D2 result screen chrome (the landed magic moment's frame). The quiet return to intake; the
@@ -652,7 +654,7 @@ export const copy = {
   // withheld-policy law is retired; the label names what binds, never the jargon — council 2026-07-03).
   leverPolicyBracketFill: 'Low-tax room first',
   leverPolicyBracketFillHelp:
-    'Pulls from pre-tax only while that money is cheap to take — up to the next tax bracket, stopping short of your health-insurance cliff and the next Medicare step — then draws tax-free for the rest of the year.',
+    'Pulls from pre-tax only while that money is cheap to take — up to the next tax bracket, stopping before a jump in your health-insurance costs or in Medicare’s premiums — then draws tax-free for the rest of the year.',
   leverPolicyCustom: 'My own order',
   leverPolicyCustomHelp: 'Put the three accounts in exactly the order you want them spent.',
   leverPolicyCurrentTag: '— your current order',
@@ -733,26 +735,28 @@ export const copy = {
   leverHealthRegimeLegend: 'Which subsidy rules should the plan figure under?',
   leverHealthRegimeReverted: 'Current law',
   leverHealthRegimeRevertedHelp:
-    'The enhanced marketplace subsidies expired — help fades as income rises and ends entirely at the cliff.',
-  leverHealthRegimeEnhanced: 'If enhanced subsidies return',
+    'The enhanced discount expired — help fades as income rises and disappears entirely above a set income level.',
+  leverHealthRegimeEnhanced: 'If the bigger discount returns',
   leverHealthRegimeEnhancedHelp:
-    'The 2021–2025 rules Congress may restore — more help at every income, and no hard cliff.',
+    'The 2021–2025 rules Congress may restore — more help at every income, with no point where it disappears entirely.',
   leverHealthRegimeApply: 'Figure my plan this way',
   leverHealthRegimeRemove: 'Back to current law',
   leverHealthRegimeCurrentTag: '— how it’s figured now',
   // Two-futures CHART CHROME for the regime compare (identity labels, hedge-exempt).
   tfChartRegimeReverted: 'Under current law',
-  tfChartRegimeEnhanced: 'If subsidies return',
+  tfChartRegimeEnhanced: 'If the discount returns',
   tfChartRegimeCurrent: 'As figured now',
   // Plan-moving READOUTS (require-hedge-swept by prefix).
+  // Vocabulary law (Sonnet-5 audit 2026-07-03): 'line'/'cliff' belong to the ACA discount;
+  // 'step' belongs to Medicare — one word per mechanism, everywhere on the sheet.
   irmaaStepStory:
-    'Medicare premiums look back two years at your income — money converted at 63 can show up in the premium bill at 65. The steps are sharp: one dollar over an income line and the higher charge applies for that whole year.',
+    'Medicare premiums look back two years at your income — money converted at 63 can show up in the premium bill at 65. Each step is sharp: one dollar over it and the higher charge applies for that whole year.',
   controlHealthOmissionsNote:
-    'Not counted here: state income tax, the net-investment-income tax, differences in plan cost-sharing, the benchmark premium itself, state-level subsidy top-ups, and a survivor’s appeal rights — each could move this picture.',
+    'Not counted here: state income tax, the net-investment-income tax, differences in plan cost-sharing, the benchmark premium itself, state-level subsidy top-ups, and a surviving spouse’s chance to have the Medicare surcharge rechecked sooner — each could move this picture.',
   controlHealthSurvivorNote:
-    'If one of you is on your own later, the same income can trip these lines sooner — the marketplace cliff moves right away, and the Medicare step follows about two years behind.',
+    'If one of you is on your own later, the same income can trip these lines sooner — the discount disappears right away, and the Medicare step follows about two years behind.',
   controlHealthHsaNote:
-    'Your HSA can pay medical bills tax-free at any age, and Medicare premiums once its owner is 65 — but usually not marketplace premiums before then. Once Medicare starts, new contributions stop counting.',
+    'Your HSA can pay medical bills tax-free at any age, and Medicare premiums once its owner is 65 — but usually not your coverage costs before then. Once Medicare starts, new contributions stop counting.',
   // The post-65 unpriced-Medicare disclosure (the council's veto condition, 2026-07-03): rendered
   // ON the verdict surfaces + inside the Roth lever for a household whose Medicare costs the
   // engine does not yet price — names the gap AND its direction, never buried in a general list.
@@ -906,6 +910,15 @@ export const slots = {
   /** The first-class no-date answer names its own window (§3c). */
   noDateInWindow: (windowYears: number): string =>
     `No fuck-off date within the next ${windowYears} years — with what you’ve entered so far.`,
+  /** The floor's no-date arm while the FULL plan is dated (the extreme R27 inversion arm — the
+   *  inversion note carries the why; this line only states the fact). Names its own window
+   *  (the noDateInWindow precedent — Sonnet-5 audit 2026-07-03). */
+  dateFloorNotWithin: (windowYears: number): string =>
+    `Covering just the essentials doesn’t clear within the next ${windowYears} years — with what you’ve entered so far.`,
+  /** The quiet severity disclosure when the lifestyle has no date either — the hero line above
+   *  already names the window + carries the entered-so-far tail, so this one leans on it. */
+  dateFloorNotWithinEither: (windowYears: number): string =>
+    `Covering just the essentials doesn’t clear within the next ${windowYears} years either.`,
   /** Odds rider for the date line. */
   withOdds: (xOfTenText: string): string => `about ${xOfTenText} odds`,
   /** The date↔confidence tradeoff (R28) — an EARLIER, lower-odds point than the crowned date, so
@@ -1097,6 +1110,11 @@ export const slots = {
   /** The over-cliff frequency (a per-year FRACTION of futures, never a mean — insight 062). */
   acaCostCliff: (odds: string): string =>
     `In about ${odds} futures, a year’s income tips past that line and the year’s discount disappears entirely.`,
+  /** The over-cliff odds when the anchor has ALREADY crossed the cliff — no headroom sentence
+   *  precedes this fact in that branch, so the cutoff dollar rides inline instead of being
+   *  borrowed from a sentence that never renders (Sonnet-5 audit 2026-07-03). */
+  acaCostCliffOverCliff: (odds: string, cliffFormatted: string): string =>
+    `In about ${odds} futures, a year’s income passes about ~$${cliffFormatted} and that year’s discount disappears entirely.`,
   /** The shadow marginal rate on the next converted dollar (tax + the subsidy it burns).
    *  Cold-read 2026-07-03 rounds 1+2: state the POINT and the DIRECTION plainly — conversions
    *  work AGAINST the discount (his round-2 read had inverted it into "conversions help with
@@ -1137,7 +1155,7 @@ export const slots = {
     addFormatted: string,
     bothEnrolled: boolean,
   ): string =>
-    `The next line sits at about ~$${thresholdFormatted} of yearly income. By those Medicare years the plan expects about ~$${magiFormatted} a year of income, roughly ~$${headroomFormatted} under the line. ` +
+    `The next step sits at about ~$${thresholdFormatted} of yearly income. By those Medicare years the plan expects about ~$${magiFormatted} a year of income, roughly ~$${headroomFormatted} under it. ` +
     (bothEnrolled
       ? `Crossing it could add about ~$${addFormatted} a year for the two of you.`
       : `Crossing it could add about ~$${addFormatted} a year for each of you once on Medicare.`),
@@ -1149,7 +1167,7 @@ export const slots = {
   //     hedged body sentence, so AT hears it once; the ~ carries the humane-precision hedge). ---
   healthFigPerYear: (amountFormatted: string): string => `~$${amountFormatted} a year`,
   healthFigRoom: (amountFormatted: string): string => `~$${amountFormatted} of room`,
-  healthFigCents: (cents: number): string => `${cents}¢ on each dollar moved`,
+  healthFigCents: (cents: number): string => `${cents}¢ on each dollar converted`,
   healthFigStepAdd: (amountFormatted: string): string => `+~$${amountFormatted} a year`,
 } as const
 

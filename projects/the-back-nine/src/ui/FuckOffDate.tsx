@@ -107,14 +107,15 @@ function heroLead(hero: DateTrackOutcome, windowTopYears: number): string {
 }
 
 /** The subordinate essentials line (split only) — the floor's claim in its own register. */
-function floorLineText(split: Extract<DateSplitView, { kind: 'split' }>): string {
+function floorLineText(split: Extract<DateSplitView, { kind: 'split' }>, windowTopYears: number): string {
   const fl = split.floor
   if (fl.kind === 'not-within-window') {
-    // Lifestyle no-date too ⇒ the quiet severity disclosure ("either"); lifestyle dated ⇒ the
-    // extreme-inversion statement of fact (the inversion note carries the why).
+    // Lifestyle no-date too ⇒ the quiet severity disclosure ("either" — the hero line above
+    // already names the window); lifestyle dated ⇒ the extreme-inversion statement of fact
+    // (the inversion note carries the why). Both name their own years (audit 2026-07-03).
     return split.lifestyle.kind === 'no-date-in-window'
-      ? copy.dateFloorNotWithinEither
-      : copy.dateFloorNotWithin
+      ? slots.dateFloorNotWithinEither(windowTopYears)
+      : slots.dateFloorNotWithin(windowTopYears)
   }
   return slots.dateFloorCovered(fl.offsetYears, dateOddsText(fl.quantizedLowerBound), fl.unconfirmed)
 }
@@ -229,7 +230,7 @@ export function FuckOffDate({ view, focusSignal, actionsSlot, medicareUnpricedNo
               inversion is disclosed, never reordered to put a sooner-looking date first). */}
           {split !== null && split.kind === 'split' && (
             <>
-              <p className="fod-floor">{floorLineText(split)}</p>
+              <p className="fod-floor">{floorLineText(split, view.windowTopYears)}</p>
               {split.inverted && <p className="fod-note">{copy.dateFloorInversionNote}</p>}
             </>
           )}

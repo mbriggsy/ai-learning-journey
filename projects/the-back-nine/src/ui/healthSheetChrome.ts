@@ -179,9 +179,15 @@ export function composeHealthSheet(
           ...(cliffLine !== undefined ? [cliffLine] : []),
         ],
       })
-    } else if (cliffLine !== undefined) {
-      // An over-cliff anchor still owes the odds truth — the fact stands without a room figure.
-      facts.push({ id: 'discount', eyebrow: copy.healthFactDiscount, lines: [cliffLine] })
+    } else if (cliff !== null && worstOfTen >= 1) {
+      // An over-cliff anchor still owes the odds truth — and no headroom sentence precedes it
+      // in this branch, so the cutoff dollar rides INLINE (audit 2026-07-03: the shared odds
+      // line borrowed a referent from a sentence that never renders here).
+      facts.push({
+        id: 'discount',
+        eyebrow: copy.healthFactDiscount,
+        lines: [slots.acaCostCliffOverCliff(slots.xOfTen(worstOfTen), formatDollar(cliff))],
+      })
     }
 
     facts.push({

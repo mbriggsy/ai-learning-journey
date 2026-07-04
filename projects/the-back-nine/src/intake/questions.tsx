@@ -528,6 +528,7 @@ const healthQuoteStep: StepDef = {
       />
       <CurrencyField
         labelKey="slcspLabel"
+        helpKey="slcspHelp"
         field="health.slcspMonthlyToday"
         value={api.draft.health.slcspMonthlyToday}
         onCommit={(v) =>

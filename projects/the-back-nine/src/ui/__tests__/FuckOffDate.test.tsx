@@ -214,8 +214,8 @@ describe('FuckOffDate — the U9b two-track split', () => {
   it('the EXTREME inversion (floor no-date, lifestyle dated) states the floor fact + the why — never reordered away', () => {
     const { container } = render(<FuckOffDate view={split(DATE_FIXTURES.noDate, DATE_FIXTURES.confirmed)} />)
     expect(screen.getByRole('heading', { name: slots.dateInYears(4) })).toBeInTheDocument()
-    expect(container.textContent).toContain(copy.dateFloorNotWithin)
-    expect(container.textContent).not.toContain(copy.dateFloorNotWithinEither)
+    expect(container.textContent).toContain(slots.dateFloorNotWithin(DATE_WINDOW_TOP))
+    expect(container.textContent).not.toContain(slots.dateFloorNotWithinEither(DATE_WINDOW_TOP))
     expect(container.textContent).toContain(copy.dateFloorInversionNote)
   })
 
@@ -253,7 +253,7 @@ describe('FuckOffDate — the U9b two-track split', () => {
       })),
     }
     const { container } = render(<FuckOffDate view={split(worseNoDate, DATE_FIXTURES.noDate)} />)
-    expect(container.textContent).toContain(copy.dateFloorNotWithinEither)
+    expect(container.textContent).toContain(slots.dateFloorNotWithinEither(DATE_WINDOW_TOP))
     expect(container.textContent).not.toContain(copy.dateFloorInversionNote)
   })
 

@@ -130,6 +130,15 @@ describe('composeHealthSheet', () => {
     })
   })
 
+  it('an OVER-cliff anchor quotes the cutoff dollar INLINE (no headroom sentence precedes it in that branch — audit 2026-07-03)', () => {
+    const readout: HealthReadout = {
+      byYear: [year({ acaPricedFraction: 1, acaNetPremiumP50: 20_000, acaMagiP50: 90_000, irmaaMagiP50: 85_000, overCliffFraction: 0.62 })],
+    }
+    const discount = factOf(composeHealthSheet(readout, draft()), 'discount')
+    expect(discount?.figure).toBeUndefined() // no room to quote past the cutoff
+    expect(discount?.lines).toEqual([slots.acaCostCliffOverCliff(slots.xOfTen(6), '84,600')])
+  })
+
   it('a sub-1-of-10 worst cliff fraction folds NO odds sentence into the discount fact (nothing honest to quote at the frame’s grain)', () => {
     const readout: HealthReadout = {
       byYear: [year({ acaPricedFraction: 1, acaNetPremiumP50: 9_000, acaMagiP50: 50_000, irmaaMagiP50: 45_000, overCliffFraction: 0.04 })],

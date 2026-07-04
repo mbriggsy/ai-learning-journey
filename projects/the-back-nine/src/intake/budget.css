@@ -2,38 +2,13 @@
  * src/intake/budget.css — the U9b budget-builder sheet (council 2026-07-02).
  *
  * Reads ONLY tokens.css var()s (the canonical-source rule). CSP-clean: class-driven, never an
- * inline style attribute. Phone-first: the sheet rides the bottom edge (thumb-reachable, the
- * familiar sheet grammar); on the laptop (≥ --bp-laptop, restated as the 68rem literal — @media
- * can't read a custom prop) it becomes a right-side panel so the two-pane answer stays visible
- * beside the edit. Motion is transform/opacity only (the sheet's own rise is applied by
+ * inline style attribute. The sheet SHELL (backdrop, phone bottom-edge / laptop centered-stage
+ * geometry, chrome-less scroll + shadow cue) lives in sheetShell.css — the one family grammar
+ * every sheet rides (the budget sheet joined 2026-07-03; its old laptop right-rail was the
+ * "side car" drift). This file carries CONTENT styles only: the line list, the readout, the
+ * in-flow inline mount. Motion is transform/opacity only (the sheet's own rise is applied by
  * motion/react inline-from-the-library; everything here is static layout).
  */
-
-.budget-sheet__backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: var(--z-overlay);
-  display: grid;
-  place-items: end center; /* phone: the sheet rests on the bottom edge */
-  background: rgb(11 24 19 / 0.42);
-  overscroll-behavior: contain;
-}
-
-.budget-sheet {
-  position: relative;
-  width: 100%;
-  max-width: 40rem;
-  max-height: 88dvh;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  background: var(--paper);
-  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-  padding: var(--space-6) var(--space-5);
-  padding-bottom: max(var(--space-6), env(safe-area-inset-bottom));
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-}
 
 /* Body scroll lock while the sheet is up (the BandEnlargeModal precedent). */
 .budget-sheet-open {
@@ -239,18 +214,16 @@
   align-self: flex-start;
 }
 
-/* ── the laptop panel (≥ --bp-laptop / 68rem): the sheet becomes a right-side column so the
-   two-pane answer stays visible beside the edit — the same DOM, a different resting place. ── */
+/* Laptop (the sheetShell.css centered stage): the INTRO rides the family's briefing treatment
+   (fill the stage + one type step up — a measure-capped line over full-width content below read
+   as premature wrapping, the health-sheet round's exact nit). The FORM below keeps its own
+   grammar — full-width finger fields, no type step (the builder is a form, not a briefing).
+   Scoped to the SHEET shell only: the same form core mounts inline in the intake flow
+   (.budget-inline), which rides the step grammar untouched. */
 @media (min-width: 68rem) {
-  .budget-sheet__backdrop {
-    place-items: stretch end;
-  }
-  .budget-sheet {
-    max-width: min(34rem, 92vw);
-    max-height: 100dvh;
-    block-size: 100dvh;
-    border-radius: 0;
-    padding-top: max(var(--space-6), env(safe-area-inset-top));
+  .budget-sheet .budget-sheet__intro {
+    max-width: none;
+    font-size: var(--text-lg);
   }
 }
 

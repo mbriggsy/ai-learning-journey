@@ -1,0 +1,98 @@
+/*
+ * src/intake/sheetShell.css — the ONE sheet-shell grammar (backdrop + stage + scroll cue) that
+ * every Result-side sheet rides: the control-sheet family (sequencing / Roth / Healthcare) AND
+ * the budget builder's sheet variant. Extracted 2026-07-03 after the budget sheet was left
+ * behind on the family's move to the centered stage (Briggsy: "still the weird side car
+ * thingy") — two copies of one grammar is exactly how that drift shipped, so the shell now has
+ * one home. A new sheet joins the family by adding its selectors HERE (and importing this file
+ * from its component); per-sheet files carry CONTENT styles only, never shell geometry.
+ *
+ * Reads ONLY tokens.css var()s (the canonical-source rule). CSP-clean: class-driven, never an
+ * inline style attribute. Phone-first: the sheet rides the bottom edge (thumb-reachable, the
+ * familiar sheet grammar); on the laptop (≥ --bp-laptop, restated as the 68rem literal —
+ * @media can't read a custom prop) it becomes a CENTERED stage. Motion is transform/opacity
+ * only (the rise itself is applied by motion/react from the library; everything here is
+ * static layout).
+ */
+
+.control-sheet__backdrop,
+.budget-sheet__backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-overlay);
+  display: grid;
+  place-items: end center; /* phone: the sheet rests on the bottom edge */
+  background: rgb(11 24 19 / 0.42);
+  overscroll-behavior: contain;
+}
+
+.control-sheet,
+.budget-sheet {
+  position: relative;
+  width: 100%;
+  max-width: 40rem;
+  max-height: 88dvh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  padding: var(--space-6) var(--space-5);
+  padding-bottom: max(var(--space-6), env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  /* No scrollbar CHROME on the sheet (cold-read 2026-07-03: "lose the scroll bar") — when
+     content genuinely exceeds a small window, the affordance is the scroll SHADOW below
+     (a luminance cue, honest in grayscale), and wheel/touch/keys still scroll. The shadows
+     ride the background-attachment trick: the paper covers scroll WITH the content and
+     reveal the shadow only while more remains. */
+  scrollbar-width: none;
+  background:
+    linear-gradient(var(--paper) 30%, rgb(255 255 255 / 0)),
+    linear-gradient(rgb(255 255 255 / 0), var(--paper) 70%) 0 100%,
+    radial-gradient(farthest-side at 50% 0, rgb(11 24 19 / 0.16), rgb(11 24 19 / 0)),
+    radial-gradient(farthest-side at 50% 100%, rgb(11 24 19 / 0.16), rgb(11 24 19 / 0)) 0 100%,
+    var(--paper);
+  background-repeat: no-repeat;
+  background-size:
+    100% 42px,
+    100% 42px,
+    100% 16px,
+    100% 16px,
+    auto;
+  background-attachment: local, local, scroll, scroll, scroll;
+}
+
+.control-sheet::-webkit-scrollbar,
+.budget-sheet::-webkit-scrollbar {
+  display: none;
+}
+
+/* The sheet SCROLLS — its children never squash. Without this, a taller-than-viewport sheet
+   flex-shrinks a reserved block below its content (default flex-shrink:1) and text renders
+   THROUGH the controls below it (measured live, ?seed=dip 2026-07-03). */
+.control-sheet > *,
+.budget-sheet > * {
+  flex-shrink: 0;
+}
+
+/* Laptop: a CENTERED STAGE at reading width (cold-read 2026-07-03: the right-side rail read
+   as inspector chrome — "it makes it feel unimportant"). Not full-screen — a calm dialog at
+   a comfortable measure, the page quieted behind it. STRAIGHT DOWN, family-wide (Briggsy's
+   pick, 2026-07-03 — beat the chaptered 3-column spread in a live test spin; the spread
+   lives at f6aedb78). The chrome-less scroll + shadow (base styles above) carry the
+   "there's more" cue — no bar, ever. The whole family moves together, always. */
+@media (min-width: 68rem) {
+  .control-sheet__backdrop,
+  .budget-sheet__backdrop {
+    place-items: center;
+    padding: var(--space-6);
+  }
+
+  .control-sheet,
+  .budget-sheet {
+    max-width: min(50rem, calc(100vw - 3rem));
+    max-height: 94dvh;
+    border-radius: var(--radius-lg);
+    padding: var(--space-7) var(--space-6);
+  }
+}

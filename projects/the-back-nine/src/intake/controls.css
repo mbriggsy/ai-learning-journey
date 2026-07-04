@@ -1,66 +1,11 @@
 /*
  * src/intake/controls.css — the U10 control surfaces (the sequencing sheet, the Roth lever,
  * the quiet teaser). Reads ONLY tokens.css var()s (the canonical-source rule); CSP-clean:
- * class-driven, never an inline style attribute. Phone-first bottom sheet (the budget.css
- * grammar, verbatim sizing so the two sheets read as one family). Non-color law: the picked
- * policy is signalled by border WEIGHT + the radio itself, never hue alone.
+ * class-driven, never an inline style attribute. The sheet SHELL (backdrop, stage geometry,
+ * chrome-less scroll + shadow cue, the laptop centered stage) lives in sheetShell.css — the
+ * one family grammar every sheet rides; this file carries CONTENT styles only. Non-color
+ * law: the picked policy is signalled by border WEIGHT + the radio itself, never hue alone.
  */
-
-.control-sheet__backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: var(--z-overlay);
-  display: grid;
-  place-items: end center;
-  background: rgb(11 24 19 / 0.42);
-  overscroll-behavior: contain;
-}
-
-.control-sheet {
-  position: relative;
-  width: 100%;
-  max-width: 40rem;
-  max-height: 88dvh;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-  padding: var(--space-6) var(--space-5);
-  padding-bottom: max(var(--space-6), env(safe-area-inset-bottom));
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-  /* No scrollbar CHROME on the sheet (cold-read 2026-07-03: "lose the scroll bar") — when
-     content genuinely exceeds a small window, the affordance is the scroll SHADOW below
-     (a luminance cue, honest in grayscale), and wheel/touch/keys still scroll. The shadows
-     ride the background-attachment trick: the paper covers scroll WITH the content and
-     reveal the shadow only while more remains. */
-  scrollbar-width: none;
-  background:
-    linear-gradient(var(--paper) 30%, rgb(255 255 255 / 0)),
-    linear-gradient(rgb(255 255 255 / 0), var(--paper) 70%) 0 100%,
-    radial-gradient(farthest-side at 50% 0, rgb(11 24 19 / 0.16), rgb(11 24 19 / 0)),
-    radial-gradient(farthest-side at 50% 100%, rgb(11 24 19 / 0.16), rgb(11 24 19 / 0)) 0 100%,
-    var(--paper);
-  background-repeat: no-repeat;
-  background-size:
-    100% 42px,
-    100% 42px,
-    100% 16px,
-    100% 16px,
-    auto;
-  background-attachment: local, local, scroll, scroll, scroll;
-}
-
-.control-sheet::-webkit-scrollbar {
-  display: none;
-}
-
-/* The sheet SCROLLS — its children never squash. Without this, a taller-than-viewport sheet
-   flex-shrinks the preview block below its content (default flex-shrink:1) and the caption
-   text renders THROUGH the Apply button (measured live, ?seed=dip 2026-07-03). */
-.control-sheet > * {
-  flex-shrink: 0;
-}
 
 /* Body scroll lock while a control sheet is up (the budget-sheet-open twin). */
 .control-sheet-open {
@@ -296,32 +241,12 @@
   max-width: var(--measure);
 }
 
-/* Laptop: a CENTERED STAGE at reading width (cold-read 2026-07-03: the right-side rail read
-   as inspector chrome — "it makes it feel unimportant" — and the sheets are BRIEFINGS now,
-   not quick pickers; the BandEnlargeModal precedent, same grammar). Not full-screen — a calm
-   dialog at a comfortable measure, the page quieted behind it. All three control sheets move
-   together (one shared shell — the family stays one family). */
-
+/* Laptop (the sheetShell.css centered stage): the control sheets are BRIEFINGS, so their
+   text FILLS the stage (the 65ch measure cap was the narrow sheet's leftover — a dead right
+   gutter read as premature wrapping) and the body steps one type size UP so the longer lines
+   stay inside comfortable reading measure (~65ch at text-lg). Briefing typography only —
+   the stage geometry itself is the shared shell's. */
 @media (min-width: 68rem) {
-  .control-sheet__backdrop {
-    place-items: center;
-    padding: var(--space-6);
-  }
-
-  /* STRAIGHT DOWN, family-wide (Briggsy's pick, 2026-07-03 — beat the chaptered 3-column
-     spread in a live test spin; the spread lives at f6aedb78). Every control sheet: a
-     CENTERED stage (never a side rail — "it makes it feel unimportant"), one reading line,
-     text FILLING the stage (the 65ch measure cap was the narrow sheet's leftover — a dead
-     right gutter read as premature wrapping), the body one type step UP so the longer lines
-     stay inside comfortable reading measure (~65ch at text-lg). The chrome-less scroll +
-     shadow (base styles above) carry the "there's more" cue — no bar, ever. */
-  .control-sheet {
-    max-width: min(50rem, calc(100vw - 3rem));
-    max-height: 94dvh;
-    border-radius: var(--radius-lg);
-    padding: var(--space-7) var(--space-6);
-  }
-
   .control-sheet .control-sheet__intro,
   .control-sheet .hs-fact__body,
   .control-sheet .field-help {

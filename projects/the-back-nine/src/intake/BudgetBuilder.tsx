@@ -50,6 +50,7 @@ import { anchorTarget } from '@budget/budgetToSpending'
 import { useLiveAnnouncer, focusHeading } from './a11y'
 import { formatMoney } from './fields'
 import { BudgetLineItem } from './BudgetLineItem'
+import './sheetShell.css'
 import './budget.css'
 
 const EASE_OUT = [0.23, 1, 0.32, 1] as const

@@ -19,6 +19,7 @@ import { useCallback, useEffect, useId, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { createAnnouncer, focusHeading, type Announcer } from './a11y'
+import './sheetShell.css'
 import './controls.css'
 
 const EASE_OUT = [0.23, 1, 0.32, 1] as const

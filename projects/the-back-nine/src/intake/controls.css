@@ -308,7 +308,7 @@
      structure encodes time, never a row-wise checkerboard. Siblings keep the 46rem stage. */
   .control-sheet:has(.hs-columns) {
     max-width: min(82rem, calc(100vw - 3rem));
-    max-height: 94dvh;
+    max-height: 96dvh;
     gap: var(--space-3);
   }
 
@@ -329,7 +329,7 @@
   /* Tighter steps at column width (the anchor carries the hierarchy; the one-step-smaller
      body buys five facts of mandated honesty a scroll-free viewport). */
   .hs-fact {
-    padding-block: var(--space-3);
+    padding-block: var(--space-2);
   }
 
   .hs-fact__body {

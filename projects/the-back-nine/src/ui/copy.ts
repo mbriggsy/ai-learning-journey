@@ -716,13 +716,9 @@ export const copy = {
   leverHealthDoorCta: 'See your health-cost picture',
   leverHealthDoorEditCta: 'Revisit your health-cost picture',
   leverHealthTitle: 'Your health-cost picture',
-  // Cold-read 2026-07-03 round 2 ("still not clicking… especially around marketplace help"):
-  // ONE concrete word — DISCOUNT — carries the whole pre-65 story across every sheet line
-  // ("marketplace help" read as jargon and even inverted: he asked whether conversions HELP
-  // with premiums). The intro also separates the two systems (pre-65 discount vs Medicare's
-  // own income-stepped premiums) so the later lines can't blur together.
-  leverHealthIntro:
-    'Before Medicare, your household’s health coverage comes with an income-based discount — the lower a year’s income, the bigger the discount. After 65, Medicare’s own premiums also step with income. Here’s where those pieces stand in your plan.',
+  // (The intro row retired 2026-07-03 — the whole briefing fits scroll-free without it, and
+  //  its one load-bearing rule now LEADS the discount fact's body (shadowRateHeadroom);
+  //  "income-based discount" self-describes, which was the round-2 vocabulary's whole point.)
   // The fact-readout eyebrows (cold-read 2026-07-03: "why isn't the content a first class
   // citizen?" — each empirical fact renders as eyebrow + tabular-nums dollar anchor + the
   // honed sentence, the stepped readout the U11 ratification named). Sentence-case calm labels
@@ -1132,8 +1128,10 @@ export const slots = {
   //  Round 6: the era is NAMED on the figure ("the years before Medicare") — the sheet quotes a
   //  different, honestly-lower income for the later Medicare years, and two same-named figures
   //  with no era on them read as a data bug (cold-read: "test data issue?").
+  //  (The rule sentence leads — the sheet's intro row was retired 2026-07-03 to fit the whole
+  //  briefing scroll-free; this fact now carries the definition its siblings lean on.)
   shadowRateHeadroom: (magiFormatted: string, cliffFormatted: string, headroomFormatted: string): string =>
-    `In the years before Medicare, the plan expects about ~$${magiFormatted} a year of income for your household. That is the number the discount is judged on. Above about ~$${cliffFormatted} the discount disappears entirely, so there’s roughly ~$${headroomFormatted} of room.`,
+    `The lower a year’s income, the bigger this discount. In the years before Medicare, the plan expects about ~$${magiFormatted} a year of income for your household. That is the number the discount is judged on. Above about ~$${cliffFormatted} it disappears entirely, so there’s roughly ~$${headroomFormatted} of room.`,
   /** What Medicare costs BEFORE any next step — the anchor the step line is measured from
    *  (cold-read 2026-07-03: "What are they before the next step?"). The wire's base/surcharge
    *  split (council Q3) earns its render seat here. Base arm: the middle path pays no

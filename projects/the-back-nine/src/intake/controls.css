@@ -273,15 +273,21 @@
   max-width: var(--measure);
 }
 
-/* Laptop: both sheets become a right-side panel (the budget.css grammar). */
+/* Laptop: a CENTERED STAGE at reading width (cold-read 2026-07-03: the right-side rail read
+   as inspector chrome — "it makes it feel unimportant" — and the sheets are BRIEFINGS now,
+   not quick pickers; the BandEnlargeModal precedent, same grammar). Not full-screen — a calm
+   dialog at a comfortable measure, the page quieted behind it. All three control sheets move
+   together (one shared shell — the family stays one family). */
 @media (min-width: 68rem) {
   .control-sheet__backdrop {
-    place-items: stretch end;
+    place-items: center;
+    padding: var(--space-6);
   }
 
   .control-sheet {
-    max-width: 30rem;
-    max-height: 100dvh;
-    border-radius: 0;
+    max-width: 46rem;
+    max-height: 88dvh;
+    border-radius: var(--radius-lg);
+    padding: var(--space-7) var(--space-6);
   }
 }

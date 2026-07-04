@@ -123,6 +123,10 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     irmaaStepNowBase: slots.irmaaStepNowBase('4,900'),
     irmaaStepNowSurcharged: slots.irmaaStepNowSurcharged('7,300', '2,400'),
     irmaaStepNext: slots.irmaaStepNext('218,000', '150,000', '68,000', '2,300', true),
+    healthFigPerYear: slots.healthFigPerYear('8,900'),
+    healthFigRoom: slots.healthFigRoom('19,500'),
+    healthFigCents: slots.healthFigCents(22),
+    healthFigStepAdd: slots.healthFigStepAdd('1,100'),
     subsidyRegimeCostDelta: slots.subsidyRegimeCostDelta('96,000', '128,000'),
   }
 

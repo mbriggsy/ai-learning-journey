@@ -60,12 +60,15 @@ describe('the anchors + the thin-cohort withdrawal', () => {
   })
 })
 
+/** The fact under test, by id — the stepped-readout shape (cold-read 2026-07-03). */
+const factOf = (view: ReturnType<typeof composeHealthSheet>, id: string) =>
+  view.facts.find((f) => f.id === id)
+
 describe('composeHealthSheet', () => {
   it('with NO series (the date route / pre-resolve) it composes the dated status line alone', () => {
     const view = composeHealthSheet(undefined, draft())
     expect(view.statusLine).toBe(slots.acaCostStatus('June 4, 2026'))
-    expect(view.acaCostLine).toBeUndefined()
-    expect(view.shadowLine).toBeUndefined()
+    expect(view.facts).toEqual([])
   })
 
   it('an APPLIED enhanced regime swaps the status note to the what-if variant and drops every cliff line (no cliff exists)', () => {
@@ -83,9 +86,8 @@ describe('composeHealthSheet', () => {
     }
     const view = composeHealthSheet(readout, draft({ enhanced: true }))
     expect(view.statusLine).toBe(slots.acaCostStatusEnhanced('June 4, 2026'))
-    expect(view.cliffLine).toBeUndefined()
-    expect(view.headroomLine).toBeUndefined()
-    expect(view.acaCostLine).toBeDefined() // the cost line still quotes — only the cliff vanished
+    expect(factOf(view, 'discount')).toBeUndefined() // no cliff exists → no discount fact at all
+    expect(factOf(view, 'coverage')).toBeDefined() // the cost fact still quotes — only the cliff vanished
   })
 
   it('the reverted regime composes every ACA line with the hand-derived figures (cost / cliff odds / 22¢ shadow / 18,000 headroom)', () => {
@@ -102,31 +104,61 @@ describe('composeHealthSheet', () => {
       ],
     }
     const view = composeHealthSheet(readout, draft())
-    expect(view.acaCostLine).toBe(slots.acaCostNet('10,000')) // 9,950 humane-rounds to the hundred
-    expect(view.cliffLine).toBe(slots.acaCostCliff(slots.xOfTen(3))) // 0.31 → 3 of 10
+    // The coverage fact: figure anchor + the source-named sentence (9,950 humane-rounds).
+    expect(factOf(view, 'coverage')).toEqual({
+      id: 'coverage',
+      eyebrow: copy.healthFactCoverage,
+      figure: slots.healthFigPerYear('10,000'),
+      lines: [slots.acaCostNet('10,000')],
+    })
+    // The discount fact folds context THEN odds (the odds sentence leans on the named line).
+    expect(factOf(view, 'discount')).toEqual({
+      id: 'discount',
+      eyebrow: copy.healthFactDiscount,
+      figure: slots.healthFigRoom('18,000'), // 84,600 − 66,600
+      lines: [
+        slots.shadowRateHeadroom('66,600', '84,600', '18,000'),
+        slots.acaCostCliff(slots.xOfTen(3)), // 0.31 → 3 of 10
+      ],
+    })
     // taxable = 60,000 − 32,200 = 27,800 → 12% band; drag = 9.96% (flat top band, PTC live) → 22¢.
-    expect(view.shadowLine).toBe(slots.shadowRateLine(22))
-    expect(view.headroomLine).toBe(slots.shadowRateHeadroom('66,600', '84,600', '18,000')) // magi · cliff · 84,600 − 66,600
+    expect(factOf(view, 'conversion')).toEqual({
+      id: 'conversion',
+      eyebrow: copy.healthFactConversion,
+      figure: slots.healthFigCents(22),
+      lines: [slots.shadowRateLine(22)],
+    })
   })
 
-  it('a sub-1-of-10 worst cliff fraction composes NO cliff line (nothing honest to quote at the frame’s grain)', () => {
+  it('a sub-1-of-10 worst cliff fraction folds NO odds sentence into the discount fact (nothing honest to quote at the frame’s grain)', () => {
     const readout: HealthReadout = {
       byYear: [year({ acaPricedFraction: 1, acaNetPremiumP50: 9_000, acaMagiP50: 50_000, irmaaMagiP50: 45_000, overCliffFraction: 0.04 })],
     }
-    expect(composeHealthSheet(readout, draft()).cliffLine).toBeUndefined()
+    const discount = factOf(composeHealthSheet(readout, draft()), 'discount')
+    expect(discount?.lines).toHaveLength(1) // the context sentence alone — no odds line
+    expect(discount?.lines[0]).toBe(slots.shadowRateHeadroom('50,000', '84,600', '34,600'))
   })
 
-  it('the Medicare anchor composes the story + the now-anchor + the next-step readout (tier-1 MFJ at a 150,000 anchor: step ~1,148 [95.7×12], headroom 68,000)', () => {
+  it('the Medicare anchor composes the story + the now-anchor + the next-step fact (tier-1 MFJ at a 150,000 anchor: step ~1,148 [95.7×12], headroom 68,000)', () => {
     const readout: HealthReadout = {
       byYear: [year({ yearsFromNow: 1, medicareBaseP50: 4_870, irmaaMagiP50: 150_000 })],
     }
     const view = composeHealthSheet(readout, draft({ ages: [66, 66] }))
-    expect(view.irmaaStoryLine).toBe(copy.irmaaStepStory)
-    // The before-any-step anchor (cold-read 2026-07-03): base 4,870 + surcharge 0 → '4,900'.
-    expect(view.irmaaNowLine).toBe(slots.irmaaStepNowBase('4,900'))
+    // The Medicare fact: story + the before-any-step anchor (base 4,870 + surcharge 0 → '4,900').
+    expect(factOf(view, 'medicare')).toEqual({
+      id: 'medicare',
+      eyebrow: copy.healthFactMedicare,
+      figure: slots.healthFigPerYear('4,900'),
+      lines: [copy.irmaaStepStory, slots.irmaaStepNowBase('4,900')],
+    })
     // Threshold NAMED (218,000); the anchor income QUOTED (150,000); 218,000 − 150,000 = 68,000;
     // both 66 → the two-of-you arm at the ×2 household figure: 95.7 × 12 × 2 = 2,296.8 → '2,300'.
-    expect(view.irmaaStepLine).toBe(slots.irmaaStepNext('218,000', '150,000', '68,000', '2,300', true))
+    expect(factOf(view, 'step')).toEqual({
+      id: 'step',
+      eyebrow: copy.healthFactStep,
+      figure: slots.healthFigStepAdd('2,300'),
+      lines: [slots.irmaaStepNext('218,000', '150,000', '68,000', '2,300', true)],
+    })
   })
 
   it('ONE spouse enrolled at the anchor quotes the per-person figure on the each-of-you arm (never a flat ×2)', () => {
@@ -135,7 +167,9 @@ describe('composeHealthSheet', () => {
     }
     const view = composeHealthSheet(readout, draft({ ages: [66, 62] }))
     // 66 is enrolled, 62 is not: per-person 95.7 × 12 = 1,148.4 → '1,100', bothEnrolled=false.
-    expect(view.irmaaStepLine).toBe(slots.irmaaStepNext('218,000', '150,000', '68,000', '1,100', false))
+    expect(factOf(view, 'step')?.lines).toEqual([
+      slots.irmaaStepNext('218,000', '150,000', '68,000', '1,100', false),
+    ])
   })
 
   it('a middle path already paying surcharge composes the SURCHARGED now-arm (total = base + surcharge, the split quoted)', () => {
@@ -146,7 +180,7 @@ describe('composeHealthSheet', () => {
     }
     const view = composeHealthSheet(readout, draft({ ages: [66, 66] }))
     // 4,870 + 2,400 = 7,270 → '7,300'; the surcharge itself quoted at '2,400'.
-    expect(view.irmaaNowLine).toBe(slots.irmaaStepNowSurcharged('7,300', '2,400'))
+    expect(factOf(view, 'medicare')?.lines[1]).toBe(slots.irmaaStepNowSurcharged('7,300', '2,400'))
   })
 })
 

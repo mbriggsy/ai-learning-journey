@@ -64,6 +64,52 @@
   max-width: var(--measure);
 }
 
+/* ── the stepped FACT readout (cold-read 2026-07-03: content as the first-class citizen —
+   the "calm stepped readout, tabular-nums anchor" the U11 ratification named). Typographic
+   hierarchy only: hairline steps, a calm sentence-case eyebrow (the survivor precedent —
+   uppercase reads as alarm), the dollar anchor in tabular figures, full-ink body at the
+   reading measure. No tiles, no color blocks — never a dashboard. ─────────────────────────── */
+.hs-facts {
+  display: flex;
+  flex-direction: column;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.hs-fact {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding-block: var(--space-4);
+  border-top: 1px solid var(--line-soft);
+}
+
+.hs-fact__eyebrow {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--ink-muted);
+}
+
+.hs-fact__figure {
+  margin: 0;
+  font-family: var(--font-body);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--text-xl);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-tight);
+  color: var(--ink);
+}
+
+.hs-fact__body {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  line-height: var(--leading-body);
+  color: var(--ink);
+  max-width: var(--measure);
+}
+
 /* ── the policy picker (real radios; the picked row thickens its border — weight, never hue) ── */
 .control-policies {
   margin: 0;

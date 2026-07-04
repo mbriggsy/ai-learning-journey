@@ -721,6 +721,15 @@ export const copy = {
   // own income-stepped premiums) so the later lines can't blur together.
   leverHealthIntro:
     'Before Medicare, your household’s health coverage comes with an income-based discount — the lower a year’s income, the bigger the discount. After 65, Medicare’s own premiums also step with income. Here’s where those pieces stand in your plan.',
+  // The fact-readout eyebrows (cold-read 2026-07-03: "why isn't the content a first class
+  // citizen?" — each empirical fact renders as eyebrow + tabular-nums dollar anchor + the
+  // honed sentence, the stepped readout the U11 ratification named). Sentence-case calm labels
+  // (the survivor-eyebrow precedent — uppercase reads as alarm).
+  healthFactCoverage: 'Coverage before Medicare',
+  healthFactDiscount: 'The income-based discount',
+  healthFactConversion: 'Roth conversions in those years',
+  healthFactMedicare: 'Medicare premiums',
+  healthFactStep: 'The next premium step',
   leverHealthRegimeLegend: 'Which subsidy rules should the plan figure under?',
   leverHealthRegimeReverted: 'Current law',
   leverHealthRegimeRevertedHelp:
@@ -1136,6 +1145,12 @@ export const slots = {
    *  concentrates pre-65 and may barely move the portfolio median; council 2026-07-03). */
   subsidyRegimeCostDelta: (withFormatted: string, withoutFormatted: string): string =>
     `Lifetime health costs could run around ~$${withFormatted} this way, versus ~$${withoutFormatted} as figured now.`,
+  // --- The fact-readout figure ANCHORS (aria-hidden in render — every figure also lives in a
+  //     hedged body sentence, so AT hears it once; the ~ carries the humane-precision hedge). ---
+  healthFigPerYear: (amountFormatted: string): string => `~$${amountFormatted} a year`,
+  healthFigRoom: (amountFormatted: string): string => `~$${amountFormatted} of room`,
+  healthFigCents: (cents: number): string => `${cents}¢ on each dollar moved`,
+  healthFigStepAdd: (amountFormatted: string): string => `+~$${amountFormatted} a year`,
 } as const
 
 /**

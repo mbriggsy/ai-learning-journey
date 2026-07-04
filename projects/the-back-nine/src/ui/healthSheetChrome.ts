@@ -73,26 +73,27 @@ export function medicareAnchor(readout: HealthReadout): HealthReadoutYear | null
   return quotableYears(readout).find((y) => y.medicareBaseP50 > 0) ?? null
 }
 
-/** One composed line of the sheet (plain text — the component renders `<p>`s). */
+/** One FACT of the stepped readout (cold-read 2026-07-03: the content is the first-class
+ *  citizen — each empirical fact renders as a calm eyebrow + a tabular-nums dollar anchor +
+ *  the honed sentence(s), the "calm stepped readout, tabular-nums anchor" the U11 pre-build
+ *  ratification named). The figure is a VISUAL anchor only (aria-hidden in render): every
+ *  quantity also lives inside a hedged body sentence, so the a11y tree hears it exactly once. */
+export interface HealthFact {
+  readonly id: 'coverage' | 'discount' | 'conversion' | 'medicare' | 'step'
+  readonly eyebrow: string
+  readonly figure?: string
+  readonly lines: readonly string[]
+}
+
+/** The sheet's composed view: the dated status note + the fact readout, in reading order. */
 export interface HealthSheetView {
   /** The dated legislative-status note (always present — read from LIVE constants). */
   readonly statusLine: string
-  /** The pre-65 net-cost line — present iff an ACA anchor exists. */
-  readonly acaCostLine?: string
-  /** The over-cliff frequency line — present iff any quotable priced year loses the help
-   *  in ≥ 1 of 10 futures (reverted regime only; no cliff exists under enhanced). */
-  readonly cliffLine?: string
-  /** The shadow-rate line — present iff an ACA anchor exists (the marginal decomposition). */
-  readonly shadowLine?: string
-  /** The cliff-headroom line — present iff a cliff exists AND the anchor sits under it. */
-  readonly headroomLine?: string
-  /** The IRMAA story — present iff a Medicare anchor exists (the danger-years teaching line). */
-  readonly irmaaStoryLine?: string
-  /** The "before any next step" anchor — present iff a Medicare anchor exists (base + any
-   *  surcharge the middle path already pays; cold-read 2026-07-03). */
-  readonly irmaaNowLine?: string
-  /** The next-step readout — present iff a Medicare anchor exists AND a next tier remains. */
-  readonly irmaaStepLine?: string
+  /** The stepped fact readout — empty when no wire series exists (the date route / pre-resolve).
+   *  Presence rules per fact are unchanged from the flat-line era: coverage/discount/conversion
+   *  need the ACA anchor (discount folds the headroom context + the over-cliff odds); medicare/
+   *  step need the Medicare anchor (step also needs a remaining tier). */
+  readonly facts: readonly HealthFact[]
 }
 
 /**
@@ -112,18 +113,9 @@ export function composeHealthSheet(
   const statusLine = enhancedApplied
     ? slots.acaCostStatusEnhanced(checkedOn)
     : slots.acaCostStatus(checkedOn)
-  if (readout === undefined) return { statusLine }
+  if (readout === undefined) return { statusLine, facts: [] }
 
-  const view: {
-    statusLine: string
-    acaCostLine?: string
-    cliffLine?: string
-    shadowLine?: string
-    headroomLine?: string
-    irmaaStoryLine?: string
-    irmaaNowLine?: string
-    irmaaStepLine?: string
-  } = { statusLine }
+  const facts: HealthFact[] = []
 
   const table = enhancedApplied ? acaApplicablePercentageEnhanced.value : acaApplicablePercentage.value
   const fplDollar = fplForHousehold(2) // the modal both-alive household (the survivor flip is its own note)
@@ -131,7 +123,12 @@ export function composeHealthSheet(
 
   const anchor = acaAnchor(readout)
   if (anchor !== null) {
-    view.acaCostLine = slots.acaCostNet(formatDollar(anchor.acaNetPremiumP50))
+    facts.push({
+      id: 'coverage',
+      eyebrow: copy.healthFactCoverage,
+      figure: slots.healthFigPerYear(formatDollar(anchor.acaNetPremiumP50)),
+      lines: [slots.acaCostNet(formatDollar(anchor.acaNetPremiumP50))],
+    })
 
     // The over-cliff frequency: the WORST quotable priced year (a cliff smeared into an
     // average stops being visible — insight 062; the fraction is the honest channel).
@@ -139,9 +136,8 @@ export function composeHealthSheet(
       .filter((y) => y.acaPricedFraction >= 0.5)
       .reduce((max, y) => Math.max(max, y.overCliffFraction), 0)
     const worstOfTen = Math.round(worst * 10)
-    if (cliff !== null && worstOfTen >= 1) {
-      view.cliffLine = slots.acaCostCliff(slots.xOfTen(worstOfTen))
-    }
+    const cliffLine =
+      cliff !== null && worstOfTen >= 1 ? slots.acaCostCliff(slots.xOfTen(worstOfTen)) : undefined
 
     // The shadow rate at the empirical anchor: ordinary marginal rate (through the same
     // deduction stack the tax math uses) + the subsidy drag (through the same sliding scale
@@ -164,29 +160,54 @@ export function composeHealthSheet(
       slcspAnnual > 0 && creditAlive
         ? subsidyLossPerDollar(anchor.acaMagiP50, slcspAnnual, fplDollar, table)
         : 0
-    view.shadowLine = slots.shadowRateLine(Math.round((marginal + drag) * 100))
+    const cents = Math.round((marginal + drag) * 100)
 
-    if (cliff !== null) {
-      const headroom = cliff - anchor.acaMagiP50
-      if (headroom > 0)
-        view.headroomLine = slots.shadowRateHeadroom(
-          formatDollar(anchor.acaMagiP50),
-          formatDollar(cliff),
-          formatDollar(headroom),
-        )
+    // The discount fact: the income-vs-cutoff context first (it defines the line the odds
+    // sentence leans on), the over-cliff odds folded in as its second sentence when quotable.
+    const headroom = cliff !== null ? cliff - anchor.acaMagiP50 : 0
+    if (cliff !== null && headroom > 0) {
+      facts.push({
+        id: 'discount',
+        eyebrow: copy.healthFactDiscount,
+        figure: slots.healthFigRoom(formatDollar(headroom)),
+        lines: [
+          slots.shadowRateHeadroom(
+            formatDollar(anchor.acaMagiP50),
+            formatDollar(cliff),
+            formatDollar(headroom),
+          ),
+          ...(cliffLine !== undefined ? [cliffLine] : []),
+        ],
+      })
+    } else if (cliffLine !== undefined) {
+      // An over-cliff anchor still owes the odds truth — the fact stands without a room figure.
+      facts.push({ id: 'discount', eyebrow: copy.healthFactDiscount, lines: [cliffLine] })
     }
+
+    facts.push({
+      id: 'conversion',
+      eyebrow: copy.healthFactConversion,
+      figure: slots.healthFigCents(cents),
+      lines: [slots.shadowRateLine(cents)],
+    })
   }
 
   const medicare = medicareAnchor(readout)
   if (medicare !== null) {
-    view.irmaaStoryLine = copy.irmaaStepStory
     // The "before the next step" anchor (cold-read 2026-07-03): base + any surcharge the
     // middle path already pays — the wire's split (council Q3) rendered at last.
     const totalNow = medicare.medicareBaseP50 + medicare.irmaaSurchargeP50
-    view.irmaaNowLine =
-      roundDollar(medicare.irmaaSurchargeP50) > 0
-        ? slots.irmaaStepNowSurcharged(formatDollar(totalNow), formatDollar(medicare.irmaaSurchargeP50))
-        : slots.irmaaStepNowBase(formatDollar(totalNow))
+    facts.push({
+      id: 'medicare',
+      eyebrow: copy.healthFactMedicare,
+      figure: slots.healthFigPerYear(formatDollar(totalNow)),
+      lines: [
+        copy.irmaaStepStory,
+        roundDollar(medicare.irmaaSurchargeP50) > 0
+          ? slots.irmaaStepNowSurcharged(formatDollar(totalNow), formatDollar(medicare.irmaaSurchargeP50))
+          : slots.irmaaStepNowBase(formatDollar(totalNow)),
+      ],
+    })
     const step = nextIrmaaStep(medicare.irmaaMagiP50, draft.filing, irmaa.value)
     if (step !== null) {
       // The household's OWN number for the step ("just tell them"): the enrolled count at the
@@ -197,17 +218,25 @@ export function composeHealthSheet(
         (p) => p.currentAge !== undefined && p.currentAge + yearsInAtAnchor >= 65,
       ).length
       const bothEnrolled = enrolled >= 2
-      view.irmaaStepLine = slots.irmaaStepNext(
-        formatDollar(step.threshold),
-        formatDollar(medicare.irmaaMagiP50),
-        formatDollar(step.threshold - medicare.irmaaMagiP50),
-        formatDollar(step.surchargeDeltaMonthlyPerPerson * 12 * (bothEnrolled ? 2 : 1)),
-        bothEnrolled,
-      )
+      const add = formatDollar(step.surchargeDeltaMonthlyPerPerson * 12 * (bothEnrolled ? 2 : 1))
+      facts.push({
+        id: 'step',
+        eyebrow: copy.healthFactStep,
+        figure: slots.healthFigStepAdd(add),
+        lines: [
+          slots.irmaaStepNext(
+            formatDollar(step.threshold),
+            formatDollar(medicare.irmaaMagiP50),
+            formatDollar(step.threshold - medicare.irmaaMagiP50),
+            add,
+            bothEnrolled,
+          ),
+        ],
+      })
     }
   }
 
-  return view
+  return { statusLine, facts }
 }
 
 /**

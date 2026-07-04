@@ -85,18 +85,32 @@ export function HealthcareSheet({ open, draft, readout, preview, previewBlocking
     <ControlSheet open={open} title={copy.leverHealthTitle} onClose={onClose} announcerRef={announcerRef}>
       <p className="control-sheet__intro">{copy.leverHealthIntro}</p>
 
-      {/* The empirical readout lines (each present only when its data honestly exists —
-          composed + thin-cohort-gated in the PURE chrome seam, never here). */}
-      {view.acaCostLine && <p className="control-sheet__intro">{view.acaCostLine}</p>}
-      {/* Comprehension order (cold-read 2026-07-03): the income-vs-cutoff context line FIRST —
-          it defines "the cliff" the odds line then leans on — then the odds, then the
-          conversion side-effect the two of them explain. */}
-      {view.headroomLine && <p className="control-sheet__intro">{view.headroomLine}</p>}
-      {view.cliffLine && <p className="control-sheet__intro">{view.cliffLine}</p>}
-      {view.shadowLine && <p className="control-sheet__intro">{view.shadowLine}</p>}
-      {view.irmaaStoryLine && <p className="control-sheet__intro">{view.irmaaStoryLine}</p>}
-      {view.irmaaNowLine && <p className="control-sheet__intro">{view.irmaaNowLine}</p>}
-      {view.irmaaStepLine && <p className="control-sheet__intro">{view.irmaaStepLine}</p>}
+      {/* The stepped FACT readout (cold-read 2026-07-03: the content is the first-class
+          citizen). Each fact: calm sentence-case eyebrow (the region's accessible name) +
+          a tabular-nums dollar anchor (aria-hidden — every figure also lives in a hedged
+          body sentence, so AT hears it once) + the honed sentence(s). Composed + honesty-
+          gated in the PURE chrome seam, never here. */}
+      {view.facts.length > 0 && (
+        <div className="hs-facts">
+          {view.facts.map((f) => (
+            <section key={f.id} className="hs-fact" aria-label={f.eyebrow}>
+              <p className="hs-fact__eyebrow" aria-hidden="true">
+                {f.eyebrow}
+              </p>
+              {f.figure && (
+                <p className="hs-fact__figure" aria-hidden="true">
+                  {f.figure}
+                </p>
+              )}
+              {f.lines.map((l) => (
+                <p key={l} className="hs-fact__body">
+                  {l}
+                </p>
+              ))}
+            </section>
+          ))}
+        </div>
+      )}
       {hasHsa && <p className="field-help">{copy.controlHealthHsaNote}</p>}
 
       {/* The ONE lever — which subsidy rules the plan figures under (the SequencingControl

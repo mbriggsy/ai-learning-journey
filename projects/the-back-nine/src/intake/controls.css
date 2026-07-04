@@ -282,7 +282,8 @@
    byte-identical to the pre-column sheet (the both-graphs display:contents precedent). The
    laptop block below overrides them into a real grid. */
 .hs-columns,
-.hs-col {
+.hs-col,
+.hs-notes {
   display: contents;
 }
 
@@ -299,10 +300,12 @@
     padding: var(--space-7) var(--space-6);
   }
 
-  /* A sheet carrying the column layout earns the WIDE stage (cold-read 2026-07-03: "make the
-     window larger and get rid of the scroll bars" — the honest cure is content that FITS, so
-     the width is USED: the fact readout goes TWO-UP on the left, the lever + preview ride the
-     right rail). Siblings keep the 46rem stage until they carry columns of their own. */
+  /* A sheet carrying the column layout earns the WIDE stage (cold-read 2026-07-03 rounds:
+     "larger, no scroll bars" then "the checkerboard has no flow" — so the columns are CHAPTERS
+     read top-down, left to right = earlier → later → act: the before-Medicare facts single-file
+     in column 1, the Medicare-years facts in column 2, the lever + preview + notes in column 3.
+     Each column keeps the stepped single-file grammar (rules included) that cleared the eye;
+     structure encodes time, never a row-wise checkerboard. Siblings keep the 46rem stage. */
   .control-sheet:has(.hs-columns) {
     max-width: min(82rem, calc(100vw - 3rem));
     max-height: 94dvh;
@@ -311,7 +314,7 @@
 
   .hs-columns {
     display: grid;
-    grid-template-columns: minmax(0, 1.9fr) minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 1.05fr) minmax(0, 0.9fr);
     column-gap: var(--space-7);
     align-items: start;
   }
@@ -323,24 +326,22 @@
     min-width: 0;
   }
 
-  /* The fact readout goes 2-up at this width: the hairline steps (a single-file grammar)
-     give way to whitespace separation — rules across uneven grid rows would misalign. The
-     body drops one type step (the anchor carries the hierarchy; classic big-figure/small-
-     support) so five facts of mandated honesty fit a viewport. */
-  .hs-facts {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    column-gap: var(--space-7);
-    row-gap: var(--space-4);
-    border-bottom: 0;
-  }
-
+  /* Tighter steps at column width (the anchor carries the hierarchy; the one-step-smaller
+     body buys five facts of mandated honesty a scroll-free viewport). */
   .hs-fact {
-    border-top: 0;
-    padding-block: 0;
+    padding-block: var(--space-3);
   }
 
   .hs-fact__body {
     font-size: var(--text-sm);
+  }
+
+  /* The sheet-wide disclosures run under the columns, two abreast — they gloss the whole
+     stage, and pulling them off the lever rail is what balances the chapter heights. */
+  .hs-notes {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: var(--space-7);
+    align-items: start;
   }
 }

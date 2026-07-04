@@ -32,6 +32,34 @@ import { ControlPreviewReadout, useControlPreview } from './controlPreview'
 
 type Regime = 'reverted' | 'enhanced'
 
+/** One era-chapter of the stepped fact readout — single-file, rules included (the grammar the
+ *  cold-read cleared). Empty chapters render nothing (a fact absent means its data honestly
+ *  doesn't exist — decided in the pure chrome seam). */
+function FactList({ facts }: { readonly facts: readonly import('@ui/healthSheetChrome').HealthFact[] }) {
+  if (facts.length === 0) return null
+  return (
+    <div className="hs-facts">
+      {facts.map((f) => (
+        <section key={f.id} className="hs-fact" aria-label={f.eyebrow}>
+          <p className="hs-fact__eyebrow" aria-hidden="true">
+            {f.eyebrow}
+          </p>
+          {f.figure && (
+            <p className="hs-fact__figure" aria-hidden="true">
+              {f.figure}
+            </p>
+          )}
+          {f.lines.map((l) => (
+            <p key={l} className="hs-fact__body">
+              {l}
+            </p>
+          ))}
+        </section>
+      ))}
+    </div>
+  )
+}
+
 export interface HealthcareSheetProps {
   readonly open: boolean
   readonly draft: ScenarioDraft
@@ -83,39 +111,23 @@ export function HealthcareSheet({ open, draft, readout, preview, previewBlocking
 
   return (
     <ControlSheet open={open} title={copy.leverHealthTitle} onClose={onClose} announcerRef={announcerRef}>
-      {/* Two-column laptop layout (cold-read 2026-07-03: "larger, no scroll bars" — the width
-          is USED so the content FITS: the fact readout left, the lever + preview right). On
-          the phone the wrappers dissolve (display:contents) — DOM order = reading order. */}
+      <p className="control-sheet__intro">{copy.leverHealthIntro}</p>
+
+      {/* The chaptered laptop layout (cold-read 2026-07-03 rounds: width YES, checkerboard NO —
+          "a newspaper without the flow"). Columns are CHAPTERS in time, each read top-down in
+          the stepped single-file grammar: before-Medicare facts | the Medicare years | the
+          lever. On the phone the wrappers dissolve (display:contents) — DOM order = reading
+          order, byte-identical to the single-file sheet. Each fact: calm sentence-case eyebrow
+          (the region's accessible name) + a tabular-nums dollar anchor (aria-hidden — every
+          figure also lives in a hedged body sentence, so AT hears it once) + the honed
+          sentence(s). Composed + honesty-gated in the PURE chrome seam, never here. */}
       <div className="hs-columns">
         <div className="hs-col">
-          <p className="control-sheet__intro">{copy.leverHealthIntro}</p>
+          <FactList facts={view.facts.filter((f) => f.id === 'coverage' || f.id === 'discount' || f.id === 'conversion')} />
+        </div>
 
-          {/* The stepped FACT readout (cold-read 2026-07-03: the content is the first-class
-              citizen). Each fact: calm sentence-case eyebrow (the region's accessible name) +
-              a tabular-nums dollar anchor (aria-hidden — every figure also lives in a hedged
-              body sentence, so AT hears it once) + the honed sentence(s). Composed + honesty-
-              gated in the PURE chrome seam, never here. */}
-          {view.facts.length > 0 && (
-            <div className="hs-facts">
-              {view.facts.map((f) => (
-                <section key={f.id} className="hs-fact" aria-label={f.eyebrow}>
-                  <p className="hs-fact__eyebrow" aria-hidden="true">
-                    {f.eyebrow}
-                  </p>
-                  {f.figure && (
-                    <p className="hs-fact__figure" aria-hidden="true">
-                      {f.figure}
-                    </p>
-                  )}
-                  {f.lines.map((l) => (
-                    <p key={l} className="hs-fact__body">
-                      {l}
-                    </p>
-                  ))}
-                </section>
-              ))}
-            </div>
-          )}
+        <div className="hs-col">
+          <FactList facts={view.facts.filter((f) => f.id === 'medicare' || f.id === 'step')} />
           {hasHsa && <p className="field-help">{copy.controlHealthHsaNote}</p>}
         </div>
 
@@ -150,13 +162,16 @@ export function HealthcareSheet({ open, draft, readout, preview, previewBlocking
           <p className="field-help">{view.statusLine}</p>
 
           <ControlPreviewReadout previewState={previewState} previewBlocking={previewBlocking} notes={null} />
-
-          {/* The survivor + omission disclosures describe the WHOLE readout, not just a landed
-              preview — they stand on the sheet unconditionally (the ready-arm `notes` slot would
-              hide them until a comparison ran; a disclosed omission rides beside the numbers). */}
-          <p className="field-help">{copy.controlHealthSurvivorNote}</p>
-          <p className="field-help">{copy.controlHealthOmissionsNote}</p>
         </div>
+      </div>
+
+      {/* The survivor + omission disclosures describe the WHOLE readout, not just a landed
+          preview — they stand on the sheet unconditionally (the ready-arm `notes` slot would
+          hide them until a comparison ran; a disclosed omission rides beside the numbers), and
+          they span the full stage: they gloss every column above, not just the lever rail. */}
+      <div className="hs-notes">
+        <p className="field-help">{copy.controlHealthSurvivorNote}</p>
+        <p className="field-help">{copy.controlHealthOmissionsNote}</p>
       </div>
 
       <div className="control-sheet__actions">

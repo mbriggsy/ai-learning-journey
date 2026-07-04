@@ -301,14 +301,6 @@
    not quick pickers; the BandEnlargeModal precedent, same grammar). Not full-screen — a calm
    dialog at a comfortable measure, the page quieted behind it. All three control sheets move
    together (one shared shell — the family stays one family). */
-/* Phone / single column: the column wrappers DISSOLVE — the DOM order is the reading order,
-   byte-identical to the pre-column sheet (the both-graphs display:contents precedent). The
-   laptop block below overrides them into a real grid. */
-.hs-columns,
-.hs-col,
-.hs-notes {
-  display: contents;
-}
 
 @media (min-width: 68rem) {
   .control-sheet__backdrop {
@@ -316,77 +308,28 @@
     padding: var(--space-6);
   }
 
+  /* STRAIGHT DOWN, family-wide (Briggsy's pick, 2026-07-03 — beat the chaptered 3-column
+     spread in a live test spin; the spread lives at f6aedb78). Every control sheet: a
+     CENTERED stage (never a side rail — "it makes it feel unimportant"), one reading line,
+     text FILLING the stage (the 65ch measure cap was the narrow sheet's leftover — a dead
+     right gutter read as premature wrapping), the body one type step UP so the longer lines
+     stay inside comfortable reading measure (~65ch at text-lg). The chrome-less scroll +
+     shadow (base styles above) carry the "there's more" cue — no bar, ever. */
   .control-sheet {
-    max-width: 46rem;
-    max-height: 92dvh;
+    max-width: min(50rem, calc(100vw - 3rem));
+    max-height: 94dvh;
     border-radius: var(--radius-lg);
     padding: var(--space-7) var(--space-6);
   }
 
-  /* A sheet carrying the column layout earns the WIDE stage (cold-read 2026-07-03 rounds:
-     "larger, no scroll bars" then "the checkerboard has no flow" — so the columns are CHAPTERS
-     read top-down, left to right = earlier → later → act: the before-Medicare facts single-file
-     in column 1, the Medicare-years facts in column 2, the lever + preview + notes in column 3.
-     Each column keeps the stepped single-file grammar (rules included) that cleared the eye;
-     structure encodes time, never a row-wise checkerboard. Siblings keep the 46rem stage. */
-  .control-sheet:has(.hs-columns) {
-    max-width: min(82rem, calc(100vw - 3rem));
-    max-height: 96dvh;
-    gap: var(--space-3);
+  .control-sheet .control-sheet__intro,
+  .control-sheet .hs-fact__body,
+  .control-sheet .field-help {
+    max-width: none;
   }
 
-  .hs-columns {
-    display: grid;
-    grid-template-columns: minmax(0, 1.05fr) minmax(0, 1.05fr) minmax(0, 0.9fr);
-    column-gap: var(--space-7);
-    align-items: start;
-  }
-
-  .hs-col {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-4);
-    min-width: 0;
-  }
-
-  /* Tighter steps at column width (the anchor carries the hierarchy; the one-step-smaller
-     body buys five facts of mandated honesty a scroll-free viewport). */
-  .hs-fact {
-    padding-block: var(--space-2);
-  }
-
-  .hs-fact__body {
-    font-size: var(--text-sm);
-  }
-
-  /* The intro reads a touch wider on the wide stage (still a capped measure — never full-bleed). */
-  .control-sheet:has(.hs-columns) > .control-sheet__intro {
-    max-width: 75ch;
-  }
-
-  /* The sheet-wide disclosures run under the columns, two abreast — they gloss the whole
-     stage, and keeping them off the lever rail balances the chapter heights. */
-  .hs-notes {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    column-gap: var(--space-7);
-    align-items: start;
-  }
-}
-
-/* Shorter laptop windows (scaled displays, small browser windows): the DENSITY adapts so the
-   content never has to — Briggsy's law, 2026-07-03: content is never removed to satisfy
-   aesthetics. Tighter steps + one type step off the anchors; every sentence stays. */
-@media (min-width: 68rem) and (max-height: 66rem) {
-  .control-sheet:has(.hs-columns) {
-    gap: var(--space-2);
-  }
-
-  .hs-fact {
-    padding-block: var(--space-1);
-  }
-
-  .hs-fact__figure {
+  .control-sheet .control-sheet__intro,
+  .control-sheet .hs-fact__body {
     font-size: var(--text-lg);
   }
 }

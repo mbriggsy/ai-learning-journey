@@ -23,13 +23,36 @@
   max-height: 88dvh;
   overflow-y: auto;
   overscroll-behavior: contain;
-  background: var(--paper);
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
   padding: var(--space-6) var(--space-5);
   padding-bottom: max(var(--space-6), env(safe-area-inset-bottom));
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
+  /* No scrollbar CHROME on the sheet (cold-read 2026-07-03: "lose the scroll bar") — when
+     content genuinely exceeds a small window, the affordance is the scroll SHADOW below
+     (a luminance cue, honest in grayscale), and wheel/touch/keys still scroll. The shadows
+     ride the background-attachment trick: the paper covers scroll WITH the content and
+     reveal the shadow only while more remains. */
+  scrollbar-width: none;
+  background:
+    linear-gradient(var(--paper) 30%, rgb(255 255 255 / 0)),
+    linear-gradient(rgb(255 255 255 / 0), var(--paper) 70%) 0 100%,
+    radial-gradient(farthest-side at 50% 0, rgb(11 24 19 / 0.16), rgb(11 24 19 / 0)),
+    radial-gradient(farthest-side at 50% 100%, rgb(11 24 19 / 0.16), rgb(11 24 19 / 0)) 0 100%,
+    var(--paper);
+  background-repeat: no-repeat;
+  background-size:
+    100% 42px,
+    100% 42px,
+    100% 16px,
+    100% 16px,
+    auto;
+  background-attachment: local, local, scroll, scroll, scroll;
+}
+
+.control-sheet::-webkit-scrollbar {
+  display: none;
 }
 
 /* The sheet SCROLLS — its children never squash. Without this, a taller-than-viewport sheet
@@ -336,12 +359,34 @@
     font-size: var(--text-sm);
   }
 
+  /* The intro reads a touch wider on the wide stage (still a capped measure — never full-bleed). */
+  .control-sheet:has(.hs-columns) > .control-sheet__intro {
+    max-width: 75ch;
+  }
+
   /* The sheet-wide disclosures run under the columns, two abreast — they gloss the whole
-     stage, and pulling them off the lever rail is what balances the chapter heights. */
+     stage, and keeping them off the lever rail balances the chapter heights. */
   .hs-notes {
     display: grid;
     grid-template-columns: 1fr 1fr;
     column-gap: var(--space-7);
     align-items: start;
+  }
+}
+
+/* Shorter laptop windows (scaled displays, small browser windows): the DENSITY adapts so the
+   content never has to — Briggsy's law, 2026-07-03: content is never removed to satisfy
+   aesthetics. Tighter steps + one type step off the anchors; every sentence stays. */
+@media (min-width: 68rem) and (max-height: 66rem) {
+  .control-sheet:has(.hs-columns) {
+    gap: var(--space-2);
+  }
+
+  .hs-fact {
+    padding-block: var(--space-1);
+  }
+
+  .hs-fact__figure {
+    font-size: var(--text-lg);
   }
 }

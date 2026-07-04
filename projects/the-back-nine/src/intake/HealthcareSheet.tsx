@@ -111,6 +111,8 @@ export function HealthcareSheet({ open, draft, readout, preview, previewBlocking
 
   return (
     <ControlSheet open={open} title={copy.leverHealthTitle} onClose={onClose} announcerRef={announcerRef}>
+      <p className="control-sheet__intro">{copy.leverHealthIntro}</p>
+
       {/* The chaptered laptop layout (cold-read 2026-07-03 rounds: width YES, checkerboard NO —
           "a newspaper without the flow"). Columns are CHAPTERS in time, each read top-down in
           the stepped single-file grammar: before-Medicare facts | the Medicare years | the
@@ -165,8 +167,9 @@ export function HealthcareSheet({ open, draft, readout, preview, previewBlocking
 
       {/* The survivor + omission disclosures describe the WHOLE readout, not just a landed
           preview — they stand on the sheet unconditionally (the ready-arm `notes` slot would
-          hide them until a comparison ran; a disclosed omission rides beside the numbers), and
-          they span the full stage: they gloss every column above, not just the lever rail. */}
+          hide them until a comparison ran; a disclosed omission rides beside the numbers).
+          They span the stage under every column they gloss; on the phone the wrapper
+          dissolves and they keep their place before the actions. */}
       <div className="hs-notes">
         <p className="field-help">{copy.controlHealthSurvivorNote}</p>
         <p className="field-help">{copy.controlHealthOmissionsNote}</p>

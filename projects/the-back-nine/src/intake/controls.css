@@ -278,6 +278,14 @@
    not quick pickers; the BandEnlargeModal precedent, same grammar). Not full-screen — a calm
    dialog at a comfortable measure, the page quieted behind it. All three control sheets move
    together (one shared shell — the family stays one family). */
+/* Phone / single column: the column wrappers DISSOLVE — the DOM order is the reading order,
+   byte-identical to the pre-column sheet (the both-graphs display:contents precedent). The
+   laptop block below overrides them into a real grid. */
+.hs-columns,
+.hs-col {
+  display: contents;
+}
+
 @media (min-width: 68rem) {
   .control-sheet__backdrop {
     place-items: center;
@@ -286,8 +294,53 @@
 
   .control-sheet {
     max-width: 46rem;
-    max-height: 88dvh;
+    max-height: 92dvh;
     border-radius: var(--radius-lg);
     padding: var(--space-7) var(--space-6);
+  }
+
+  /* A sheet carrying the column layout earns the WIDE stage (cold-read 2026-07-03: "make the
+     window larger and get rid of the scroll bars" — the honest cure is content that FITS, so
+     the width is USED: the fact readout goes TWO-UP on the left, the lever + preview ride the
+     right rail). Siblings keep the 46rem stage until they carry columns of their own. */
+  .control-sheet:has(.hs-columns) {
+    max-width: min(82rem, calc(100vw - 3rem));
+    max-height: 94dvh;
+    gap: var(--space-3);
+  }
+
+  .hs-columns {
+    display: grid;
+    grid-template-columns: minmax(0, 1.9fr) minmax(0, 1fr);
+    column-gap: var(--space-7);
+    align-items: start;
+  }
+
+  .hs-col {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    min-width: 0;
+  }
+
+  /* The fact readout goes 2-up at this width: the hairline steps (a single-file grammar)
+     give way to whitespace separation — rules across uneven grid rows would misalign. The
+     body drops one type step (the anchor carries the hierarchy; classic big-figure/small-
+     support) so five facts of mandated honesty fit a viewport. */
+  .hs-facts {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: var(--space-7);
+    row-gap: var(--space-4);
+    border-bottom: 0;
+  }
+
+  .hs-fact {
+    border-top: 0;
+    padding-block: 0;
+  }
+
+  .hs-fact__body {
+    font-size: var(--text-sm);
   }
 }

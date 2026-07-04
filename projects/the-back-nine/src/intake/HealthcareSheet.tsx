@@ -83,72 +83,81 @@ export function HealthcareSheet({ open, draft, readout, preview, previewBlocking
 
   return (
     <ControlSheet open={open} title={copy.leverHealthTitle} onClose={onClose} announcerRef={announcerRef}>
-      <p className="control-sheet__intro">{copy.leverHealthIntro}</p>
+      {/* Two-column laptop layout (cold-read 2026-07-03: "larger, no scroll bars" — the width
+          is USED so the content FITS: the fact readout left, the lever + preview right). On
+          the phone the wrappers dissolve (display:contents) — DOM order = reading order. */}
+      <div className="hs-columns">
+        <div className="hs-col">
+          <p className="control-sheet__intro">{copy.leverHealthIntro}</p>
 
-      {/* The stepped FACT readout (cold-read 2026-07-03: the content is the first-class
-          citizen). Each fact: calm sentence-case eyebrow (the region's accessible name) +
-          a tabular-nums dollar anchor (aria-hidden — every figure also lives in a hedged
-          body sentence, so AT hears it once) + the honed sentence(s). Composed + honesty-
-          gated in the PURE chrome seam, never here. */}
-      {view.facts.length > 0 && (
-        <div className="hs-facts">
-          {view.facts.map((f) => (
-            <section key={f.id} className="hs-fact" aria-label={f.eyebrow}>
-              <p className="hs-fact__eyebrow" aria-hidden="true">
-                {f.eyebrow}
-              </p>
-              {f.figure && (
-                <p className="hs-fact__figure" aria-hidden="true">
-                  {f.figure}
-                </p>
-              )}
-              {f.lines.map((l) => (
-                <p key={l} className="hs-fact__body">
-                  {l}
-                </p>
+          {/* The stepped FACT readout (cold-read 2026-07-03: the content is the first-class
+              citizen). Each fact: calm sentence-case eyebrow (the region's accessible name) +
+              a tabular-nums dollar anchor (aria-hidden — every figure also lives in a hedged
+              body sentence, so AT hears it once) + the honed sentence(s). Composed + honesty-
+              gated in the PURE chrome seam, never here. */}
+          {view.facts.length > 0 && (
+            <div className="hs-facts">
+              {view.facts.map((f) => (
+                <section key={f.id} className="hs-fact" aria-label={f.eyebrow}>
+                  <p className="hs-fact__eyebrow" aria-hidden="true">
+                    {f.eyebrow}
+                  </p>
+                  {f.figure && (
+                    <p className="hs-fact__figure" aria-hidden="true">
+                      {f.figure}
+                    </p>
+                  )}
+                  {f.lines.map((l) => (
+                    <p key={l} className="hs-fact__body">
+                      {l}
+                    </p>
+                  ))}
+                </section>
               ))}
-            </section>
-          ))}
+            </div>
+          )}
+          {hasHsa && <p className="field-help">{copy.controlHealthHsaNote}</p>}
         </div>
-      )}
-      {hasHsa && <p className="field-help">{copy.controlHealthHsaNote}</p>}
 
-      {/* The ONE lever — which subsidy rules the plan figures under (the SequencingControl
-          radio grammar: shape/weight mark the pick, never hue alone). */}
-      <fieldset className="control-policies">
-        <legend className="sr-only">{copy.leverHealthRegimeLegend}</legend>
-        {(['reverted', 'enhanced'] as const).map((r) => (
-          <label key={r} className="control-policy" data-picked={picked === r || undefined}>
-            <input
-              type="radio"
-              name="subsidy-regime"
-              value={r}
-              checked={picked === r}
-              onChange={() => setPicked(r)}
-            />
-            <span className="control-policy__body">
-              <span className="control-policy__label">
-                {r === 'reverted' ? copy.leverHealthRegimeReverted : copy.leverHealthRegimeEnhanced}
-                {r === applied && <span className="control-policy__tag">{copy.leverHealthRegimeCurrentTag}</span>}
-              </span>
-              <span className="control-policy__help">
-                {r === 'reverted' ? copy.leverHealthRegimeRevertedHelp : copy.leverHealthRegimeEnhancedHelp}
-              </span>
-            </span>
-          </label>
-        ))}
-      </fieldset>
-      {/* The dated legislative note rides WITH the lever it explains — read from the LIVE
-          constants at render time, never a persisted stamp (reVerifyEveryBuild). */}
-      <p className="field-help">{view.statusLine}</p>
+        <div className="hs-col">
+          {/* The ONE lever — which subsidy rules the plan figures under (the SequencingControl
+              radio grammar: shape/weight mark the pick, never hue alone). */}
+          <fieldset className="control-policies">
+            <legend className="sr-only">{copy.leverHealthRegimeLegend}</legend>
+            {(['reverted', 'enhanced'] as const).map((r) => (
+              <label key={r} className="control-policy" data-picked={picked === r || undefined}>
+                <input
+                  type="radio"
+                  name="subsidy-regime"
+                  value={r}
+                  checked={picked === r}
+                  onChange={() => setPicked(r)}
+                />
+                <span className="control-policy__body">
+                  <span className="control-policy__label">
+                    {r === 'reverted' ? copy.leverHealthRegimeReverted : copy.leverHealthRegimeEnhanced}
+                    {r === applied && <span className="control-policy__tag">{copy.leverHealthRegimeCurrentTag}</span>}
+                  </span>
+                  <span className="control-policy__help">
+                    {r === 'reverted' ? copy.leverHealthRegimeRevertedHelp : copy.leverHealthRegimeEnhancedHelp}
+                  </span>
+                </span>
+              </label>
+            ))}
+          </fieldset>
+          {/* The dated legislative note rides WITH the lever it explains — read from the LIVE
+              constants at render time, never a persisted stamp (reVerifyEveryBuild). */}
+          <p className="field-help">{view.statusLine}</p>
 
-      <ControlPreviewReadout previewState={previewState} previewBlocking={previewBlocking} notes={null} />
+          <ControlPreviewReadout previewState={previewState} previewBlocking={previewBlocking} notes={null} />
 
-      {/* The survivor + omission disclosures describe the WHOLE readout, not just a landed
-          preview — they stand on the sheet unconditionally (the ready-arm `notes` slot would
-          hide them until a comparison ran; a disclosed omission rides beside the numbers). */}
-      <p className="field-help">{copy.controlHealthSurvivorNote}</p>
-      <p className="field-help">{copy.controlHealthOmissionsNote}</p>
+          {/* The survivor + omission disclosures describe the WHOLE readout, not just a landed
+              preview — they stand on the sheet unconditionally (the ready-arm `notes` slot would
+              hide them until a comparison ran; a disclosed omission rides beside the numbers). */}
+          <p className="field-help">{copy.controlHealthSurvivorNote}</p>
+          <p className="field-help">{copy.controlHealthOmissionsNote}</p>
+        </div>
+      </div>
 
       <div className="control-sheet__actions">
         <button

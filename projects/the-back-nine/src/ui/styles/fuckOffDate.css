@@ -222,11 +222,14 @@
   .fod-reveal[data-twopane] {
     display: grid;
     grid-template-columns: minmax(0, var(--measure)) minmax(var(--pane-band-min), 1fr);
-    /* BOTH GRAPHS TOGETHER on the right (cold-read 2026-07-03: the ladder displays WITH the
-       fan-out, no drawer): right column = band (row 1) over ladder (row 2); left column = the
-       words (row 1) with the actions welded under them (row 2, align-self:start against the
-       1fr slack). */
-    grid-template-rows: auto 1fr;
+    /* FIVE rows ("buttons drop below" — Briggsy's fork call, council 2026-07-08; mirrors
+       confidence.css): left column = the words (1) · save slot (2) · backup door (3 — also the
+       1fr slack), then TWO full-width rows below both panes: the in-frame R13 disclaimer (4)
+       and the quiet doors (5 — the sanctioned below-fold flex). On this route the graphs column
+       is intrinsically taller than one frame (both graphs stacked — content-necessary scroll,
+       Briggsy-cleared 2026-07-08), so the ORDER is the honesty contract here: the disclaimer
+       always sits ABOVE the doors, and the doors are the last thing the fold cuts. */
+    grid-template-rows: auto auto 1fr auto auto;
     column-gap: var(--space-9);
     /* --space-4 — mirrors confidence.css: the two routes share one two-pane rhythm. */
     row-gap: var(--space-4);
@@ -240,14 +243,14 @@
     grid-column: 1;
     grid-row: 1;
   }
-  /* BOTH GRAPHS in one right-column cell spanning all rows — the left column's row heights never
-     inherit the graphs' (the actions weld under the words, no dead gap). */
+  /* BOTH GRAPHS in one right-column cell spanning the word/action rows — STOPPING above the
+     full-width disclaimer + doors rows (spanning to -1 would overlap them in column 2). */
   .fod-reveal[data-twopane] > .fod-graphs {
     display: flex;
     flex-direction: column;
     gap: var(--space-4);
     grid-column: 2;
-    grid-row: 1 / -1;
+    grid-row: 1 / 4;
   }
   .fod-reveal[data-twopane] .fod-band {
     margin-top: 0; /* the flex gap owns the spacing now */
@@ -257,16 +260,40 @@
     border-top: none; /* the flex gap separates the two graphs; the hairline is single-column chrome */
     padding-top: 0;
   }
-  /* the completion actions: welded under the words in the left column (align-self:start hugs
-     them against the 1fr slack row). */
-  .fod-reveal[data-twopane] > .reveal__actions {
-    display: block;
+  /* the completion-actions chain UNWRAPS (both wrappers display:contents — mirrors
+     confidence.css): save + backup weld under the words; disclaimer + doors drop below. */
+  .fod-reveal[data-twopane] > .reveal__actions,
+  .fod-reveal[data-twopane] > .reveal__actions > .result-actions {
+    display: contents;
+  }
+  .fod-reveal[data-twopane] .result-save-slot {
     grid-column: 1;
     grid-row: 2;
-    align-self: start;
   }
-  .fod-reveal[data-twopane] > .reveal__actions > .result-actions {
-    margin-block-start: 0;
+  .fod-reveal[data-twopane] .result-backup-door {
+    grid-column: 1;
+    grid-row: 3;
+    align-self: start; /* row 3 is the 1fr slack — hug the words, never stretch down it */
+  }
+  .fod-reveal[data-twopane] .disclaimer--in-frame {
+    grid-column: 1 / -1;
+    grid-row: 4;
+  }
+  .fod-reveal[data-twopane] .result-quiet-row {
+    grid-column: 1 / -1;
+    grid-row: 5;
+  }
+}
+
+/* ── the SHORT-laptop density tier (council 2026-07-08 — see result.css / tokens.css
+   --bp-laptop-short): mirrors confidence.css, the two routes share one two-pane rhythm.
+   Whitespace only. 840px re-stated as a literal (@media can't read a custom property). */
+@media (min-width: 68rem) and (max-height: 840px) {
+  .fod-reveal[data-twopane] {
+    row-gap: var(--space-3);
+  }
+  .fod-reveal[data-twopane] > .reveal__lead {
+    gap: var(--space-2);
   }
 }
 

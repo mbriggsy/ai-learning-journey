@@ -195,17 +195,18 @@
   .confidence-reveal[data-twopane] {
     display: grid;
     grid-template-columns: minmax(0, var(--measure)) minmax(var(--pane-band-min), 1fr);
-    /* Left column stacks lead (1) · subordinates (2) · actions (3), tucked at the top; row 3 is
-       the 1fr slack-absorber ITSELF (the actions hug its top via align-self:start below) so the
-       band (grid-row 1/-1) still spans the FULL height and stays top-pinned — the actions seat
-       under the words instead of stranding below both panes (Briggsy 2026-07-02, the scroll +
-       dead-lower-left fix). A separate trailing spacer row would cost one more row-gap of dead
-       height against the fit-one-frame vertical budget. */
-    grid-template-rows: auto auto 1fr;
+    /* SIX rows ("buttons drop below" — Briggsy's fork call, council 2026-07-08): the left column
+       stacks lead (1) · subordinates (2) · save slot (3) · backup door (4 — ALSO the 1fr
+       slack-absorber; empty when no door mounts), then TWO full-width rows below both panes:
+       the in-frame R13 disclaimer (5) and the quiet doors (6 — the sanctioned below-fold flex,
+       tokens.css --laptop-fit-height degrade contract). The doors are the LAST row so any
+       overflow pushes THEM past the fold, never the honesty caveat (the Hawk's veto). */
+    grid-template-rows: auto auto auto 1fr auto auto;
     column-gap: var(--space-9);
     /* --space-4, one step under the single-column --space-5 rhythm: the two-pane's vertical
-       budget is the binding constraint (fit one 768px frame — Briggsy 2026-07-02); the hairline
-       rules inside the subordinates carry the separation the extra 4px used to. */
+       budget is the binding constraint (fit one --laptop-fit-height/800px frame — tokens.css is
+       the ONE source; this comment once said 768 and that contradiction hid a regression); the
+       hairline rules inside the subordinates carry the separation the extra 4px used to. */
     row-gap: var(--space-4);
     align-items: start;
   }
@@ -217,15 +218,15 @@
     grid-column: 1;
     grid-row: 1;
   }
-  /* the band: right column, spanning full height, pinned to the top. */
+  /* the band: right column, pinned to the top, spanning the left column's word/action rows but
+     STOPPING above the full-width disclaimer + doors rows (1/-1 would overlap them in column 2). */
   .confidence-reveal[data-twopane] > .cs-band {
     grid-column: 2;
-    grid-row: 1 / -1;
+    grid-row: 1 / 5;
   }
   /* the subordinate readouts (floor relief + survivor — U9b build-gate 4): ONE wrapper under the
-     verdict in the left column, so the grid stays two rows however many readouts mount and the
-     band's 1/-1 span stays a true full-height pin (two direct grid children would mint an
-     implicit third row). */
+     verdict in the left column, so however many readouts mount the row count is fixed and the
+     band's span means what it says (two direct grid children would mint an implicit extra row). */
   .confidence-reveal[data-twopane] > .reveal__subordinates {
     display: flex;
     flex-direction: column;
@@ -233,17 +234,46 @@
     grid-column: 1;
     grid-row: 2;
   }
-  /* the completion actions: welded under the subordinates in the left column (the row-gap owns the
-     spacing, so drop the single-column top margin). align-self:start keeps them hugging the words
-     rather than stretching down the 1fr spacer. */
-  .confidence-reveal[data-twopane] > .reveal__actions {
-    display: block;
+  /* the completion-actions chain UNWRAPS (both wrappers display:contents) so the save slot, the
+     backup door, the in-frame disclaimer, and the quiet-door row become grid items directly —
+     the doors can then seat BELOW both panes while the save slot stays welded under the words.
+     The single-column path keeps both wrappers as before (the base rules above this @media). */
+  .confidence-reveal[data-twopane] > .reveal__actions,
+  .confidence-reveal[data-twopane] > .reveal__actions > .result-actions {
+    display: contents;
+  }
+  .confidence-reveal[data-twopane] .result-save-slot {
     grid-column: 1;
     grid-row: 3;
-    align-self: start;
   }
-  .confidence-reveal[data-twopane] > .reveal__actions > .result-actions {
-    margin-block-start: 0;
+  .confidence-reveal[data-twopane] .result-backup-door {
+    grid-column: 1;
+    grid-row: 4;
+    align-self: start; /* row 4 is the 1fr slack — hug the words, never stretch down it */
+  }
+  .confidence-reveal[data-twopane] .disclaimer--in-frame {
+    grid-column: 1 / -1;
+    grid-row: 5;
+  }
+  .confidence-reveal[data-twopane] .result-quiet-row {
+    grid-column: 1 / -1;
+    grid-row: 6;
+  }
+}
+
+/* ── the SHORT-laptop density tier (council 2026-07-08 — see result.css / tokens.css
+   --bp-laptop-short): the two-pane rhythm steps its WHITESPACE down one token so the honest
+   content U10/U11 added stays in one --laptop-fit-height frame. Whitespace only — the type of
+   the survivor / floor-relief / Medicare lines never moves. 840px re-stated as a literal. */
+@media (min-width: 68rem) and (max-height: 840px) {
+  .confidence-reveal[data-twopane] {
+    row-gap: var(--space-3);
+  }
+  .confidence-reveal[data-twopane] > .reveal__lead {
+    gap: var(--space-3);
+  }
+  .confidence-reveal[data-twopane] > .reveal__subordinates {
+    gap: var(--space-2);
   }
 }
 

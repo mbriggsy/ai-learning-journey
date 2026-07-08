@@ -108,6 +108,23 @@
     band-figure — ~98px clear of the 260px label-drop floor. 60rem yields ~230px and SILENTLY drops the
     never-color-alone percentile labels (the color-blind reader's honesty channel), so 68rem is the
     floor, never 60–64rem. */
+  --laptop-fit-height: 800px; /* THE ONE-FRAME FIT LAW (council 2026-07-08, wf_a2d93977-960): a
+    resolved two-pane answer + the R13 disclaimer land inside a viewport THIS tall with no scroll.
+    ONE source — app.css / result.css / confidence.css comments point HERE (a 768-vs-800
+    contradiction between those files hid the 2026-07-08 regression; 768 is formally retired).
+    THE DEGRADE CONTRACT when honest content outgrows the frame: the quiet DOORS are the only
+    permitted below-fold casualty — the verdict, the unpriced-Medicare disclosure, the band, and
+    the R13 disclaimer are PROTECTED (the Honesty-Hawk veto: a reassuring verdict in-frame with
+    "this can be wrong" scrolled out of sight is the calm-but-wrong sin). Enforcement is a
+    REAL-BROWSER height assertion, never a token-sum (vertical fit is reflow-dominated — line
+    wraps, door wrap-count, the survivor face — which no layout-less arithmetic can see). */
+  --bp-laptop-short: 840px; /* the short-laptop DENSITY tier boundary (council 2026-07-08): at
+    (min-width: 68rem) and (max-height: ≤this), the result frame steps its WHITESPACE down one
+    token — .result padding-block, the two-pane row-gap, the left-column stack gaps. WHITESPACE
+    ONLY, never a font-size/line-height (the survivor, floor-relief, Medicare, and disclaimer
+    lines keep their type — content-outranks-aesthetics). Like --bp-laptop, @media can't read a
+    custom property, so this is RE-STATED as a literal (search "--bp-laptop-short"). The 917
+    showcase viewport keeps today's generous rhythm untouched. */
   --gutter: clamp(1rem, 4vw, 1.75rem); /* page side padding */
   --field-h: 3.25rem; /* 52px — full-size touch field */
   --tap-min: 2.75rem; /* 44px — practical touch floor (WCAG 2.5.8 hard min is 24px) */

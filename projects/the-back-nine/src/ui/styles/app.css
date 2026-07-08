@@ -35,13 +35,48 @@
 }
 
 /* Laptop (≥ --bp-laptop as a literal — see tokens.css): the fine-print footer tightens so a
-   resolved two-pane answer + this disclaimer fit an 800px-tall viewport in one frame (Briggsy
-   2026-07-02). Fine print under a hairline stays legible at these margins; the phone/intake
-   rhythm above keeps the generous spacing. */
+   resolved two-pane answer + this disclaimer fit a --laptop-fit-height (800px, tokens.css — the
+   ONE source) viewport in one frame (Briggsy 2026-07-02). Fine print under a hairline stays
+   legible at these margins; the phone/intake rhythm above keeps the generous spacing. NOTE (the
+   Hawk's veto, council 2026-07-08): this footer is the page-TRAILING element — the structural
+   first casualty of any overflow — and it is PROTECTED by the degrade contract at
+   --laptop-fit-height; if the quiet doors are ever chosen as the below-fold flex, this
+   disclaimer must FIRST move out of the trailing position. */
 @media (min-width: 68rem) {
   .disclaimer {
     margin-block-start: var(--space-4);
     padding: var(--space-4) var(--gutter) var(--space-6);
+  }
+}
+
+/* ── the TWO-MOUNT disclaimer swap ("buttons drop below" — Briggsy's fork call, council
+   2026-07-08, wf_a2d93977-960). Result.tsx carries a second, `--in-frame` mount DOM-ordered
+   ABOVE the quiet doors, so the doors — never the honesty caveat — are what any overflow pushes
+   past the fold (the Hawk's veto: the trailing footer is structurally the FIRST casualty).
+   Exactly ONE mount is ever visible:
+   - below the laptop breakpoint the in-frame mount is display:none and the trailing footer
+     stands — the phone renders byte-identically to before;
+   - at ≥ 68rem, main.result stamps data-inframe-disclaimer whenever the in-frame mount is
+     rendered (it is withheld with the whole actions row while computing), and THAT attribute —
+     never a bare `main.result` guess — hides the trailing sibling. A pending/computing result
+     carries no attribute, so the trailing footer stays visible there (zero-disclaimer frames
+     are unrepresentable). Both mounts read the same staticDisclosures strings. */
+.disclaimer--in-frame {
+  display: none;
+}
+
+@media (min-width: 68rem) {
+  .disclaimer--in-frame {
+    display: block;
+    /* In-frame chrome: the grid row-gap owns the spacing above; the hairline + fine print read
+       as the frame's own footer rule. No deep bottom padding — the doors row follows it.
+       (--space-2, not -3: the worst seed's doors row peeked 2px past Briggsy's 791px frame —
+       measured 2026-07-08; neutral chrome pays, per the whitespace-only law.) */
+    margin-block-start: 0;
+    padding: var(--space-2) var(--gutter) 0;
+  }
+  main.result[data-inframe-disclaimer] ~ .disclaimer {
+    display: none;
   }
 }
 

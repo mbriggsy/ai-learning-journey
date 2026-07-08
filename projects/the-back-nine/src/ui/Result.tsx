@@ -27,6 +27,7 @@ import { previewRunsInWorker, runControlPreview } from '@store/controlPreview'
 import type { TwoArmControl } from '@shared/model'
 import { copy } from './copy'
 import { appModel } from './appModel'
+import { Disclaimer } from './Disclaimer'
 import { FuckOffDate } from './FuckOffDate'
 import { ConfidenceStatement } from './ConfidenceStatement'
 import { selectElevatedAnswer, resolvedFocusKey } from './answerView'
@@ -226,9 +227,18 @@ export function Result({
           </button>
         </div>
       )}
-      {/* The quiet pair rides ONE transparent wrapper (display:contents in single column — the
-          stack renders exactly as before) that becomes a centered ROW at the laptop two-pane,
-          buying back 60px of the fit-one-frame vertical budget (result.css .result-quiet-row). */}
+      {/* The IN-FRAME R13 disclaimer (council 2026-07-08, "buttons drop below" — Briggsy's fork
+          call): DOM-ordered ABOVE the quiet doors, so the doors are always the LAST thing any
+          overflow pushes past the fold — never the honesty caveat (the Hawk's veto; the trailing
+          App mount is the structural first casualty). Visible ONLY at the laptop two-pane, where
+          app.css hides the trailing mount; display:none below that width — the phone renders
+          byte-identically (same words, one visible mount, Disclaimer.tsx has the contract). */}
+      <Disclaimer inFrame />
+      {/* The quiet doors: the sanctioned below-fold flex (the --laptop-fit-height degrade
+          contract, tokens.css). display:contents in single column — the stack renders exactly as
+          before; at the laptop two-pane the whole actions chain unwraps (display:contents) and
+          this row seats as the grid's LAST full-width row, below both panes and below the
+          in-frame disclaimer — one flick away, never crowding the answer. */}
       <div className="result-quiet-row">
         {focusKey !== undefined && (
           <button type="button" className="btn-quiet" onClick={() => setBudgetOpen(true)}>
@@ -260,7 +270,10 @@ export function Result({
   )
 
   return (
-    <main className="result">
+    // data-inframe-disclaimer mirrors the actions row EXACTLY (withheld while computing): app.css
+    // hides the page-trailing disclaimer behind it at the laptop tier, so a frame with no visible
+    // disclaimer is unrepresentable — the trailing mount stands whenever the in-frame one is out.
+    <main className="result" data-inframe-disclaimer={computing ? undefined : true}>
       <div ref={announcer.ref} className="sr-only" role="status" aria-live="polite" aria-atomic="true" />
       <div className="result-hero">
         {elevated.kind === 'date' && (

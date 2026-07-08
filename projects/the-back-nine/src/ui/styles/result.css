@@ -178,9 +178,10 @@
 
 @media (min-width: 68rem) {
   /* Laptop vertical budget (Briggsy 2026-07-02 — "the answer should FULLY fit"): a resolved
-     two-pane answer + the disclaimer must land inside an 800px-tall viewport with no scroll.
-     One step down on the block padding (48→40); the phone/single-column rhythm keeps --space-9
-     (the phone pass is a separately-owed cold-read — don't fold it in blind). */
+     two-pane answer + the disclaimer must land inside a --laptop-fit-height (800px — the ONE
+     source is tokens.css) viewport with no scroll. One step down on the block padding (48→40);
+     the phone/single-column rhythm keeps --space-9 (the phone pass is a separately-owed
+     cold-read — don't fold it in blind). */
   .result {
     padding-block: var(--space-8);
   }
@@ -216,5 +217,18 @@
   .fod-reveal[data-twopane],
   .confidence-reveal[data-twopane] {
     max-width: var(--content-wide);
+  }
+}
+
+/* ── the SHORT-laptop density tier (council 2026-07-08, wf_a2d93977-960) ──────────────────────────
+   U10/U11 added honest content (the unpriced-Medicare disclosure, more quiet doors) to a frame that
+   had ~6px of slack — the one-frame fit law (--laptop-fit-height, tokens.css) is reclaimed from
+   NEUTRAL WHITESPACE, never from the disclosures (content-outranks-aesthetics). One token step on
+   the block padding; the two-pane row-gap + left-column gaps step in confidence.css/fuckOffDate.css.
+   WHITESPACE ONLY — no font-size/line-height moves here, ever. Boundary: --bp-laptop-short (840px),
+   re-stated as a literal (@media can't read a custom property); the 917 showcase keeps --space-8. */
+@media (min-width: 68rem) and (max-height: 840px) {
+  .result {
+    padding-block: var(--space-7);
   }
 }

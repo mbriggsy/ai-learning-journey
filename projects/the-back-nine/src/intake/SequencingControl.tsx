@@ -26,6 +26,7 @@ import type { ScenarioDraft } from '@store/memoryModel'
 import type { ControlPreview } from '@store/controlPreview'
 import { copy, slots, type CopyKey } from '@ui/copy'
 import { composeTwoFutures } from '@ui/twoFuturesChrome'
+import { deriveBandAgesAt } from '@ui/bandAnnotations'
 import type { Announcer } from './a11y'
 import { ControlSheet } from './controlSheet'
 import { ControlPreviewReadout, useControlPreview } from './controlPreview'
@@ -95,6 +96,12 @@ export function SequencingControl({ open, draft, preview, previewBlocking = fals
     // (deps deliberately narrow: open-edge re-seed only — the BudgetBuilder precedent)
   }, [open])
 
+  // The chart scrub's household-ages closure — the SAME deriveBandAgesAt the fan's readout rides
+  // (RothLever's note: per-render derivation is safe, ages are open-stable; guard mirrors answerView).
+  const ageA = draft.people[0]?.currentAge
+  const ageB = draft.people[1]?.currentAge
+  const agesAt = ageA !== undefined && ageB !== undefined ? deriveBandAgesAt(ageA, ageB) : undefined
+
   // Preview on every committed selection change (radio pick / order move — discrete commits,
   // never per-drag; the no-worker rule is satisfied by construction). Baseline-vs-baseline
   // WITHDRAWS the comparison (request null) — a zero-delta non-comparison, kept idle.
@@ -107,11 +114,18 @@ export function SequencingControl({ open, draft, preview, previewBlocking = fals
           ? { kind: 'sequencing', policy: 'custom', order }
           : { kind: 'sequencing', policy: picked }
     run(request, (outcome) => {
-      const view = composeTwoFutures(outcome, copy[POLICY_LABEL[picked]], copy.leverPolicyProportional, slots.sequencingDelta)
+      const view = composeTwoFutures(
+        outcome,
+        copy[POLICY_LABEL[picked]],
+        copy.leverPolicyProportional,
+        slots.sequencingDelta,
+        agesAt,
+      )
       return view === null ? { kind: 'error', reason: 'indeterminate' } : { kind: 'ready', view }
     })
     // `run`'s identity carries `preview` (the crowned-offset anchor), so a provisional→final
-    // sharpen that moves the crown re-anchors an open sheet's preview (insight 047).
+    // sharpen that moves the crown re-anchors an open sheet's preview (insight 047). `agesAt`
+    // is deliberately NOT a dep (a per-render closure over open-stable ages — RothLever's note).
   }, [open, picked, order, run, current])
 
   const move = (key: DrawdownOrderKey, dir: -1 | 1) => {

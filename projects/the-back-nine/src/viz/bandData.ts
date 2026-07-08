@@ -225,8 +225,11 @@ export function isFixedLattice(samples: readonly BandSample[]): boolean {
  *  is a VALID decumulation run (validateParams' `finiteNonNeg` accepts 0; only the accumulation
  *  construct rejects it, simulate.ts §683), so an all-$0 fan (a $0-portfolio, income-funded
  *  household) yields maxP90 = 0 ⇒ this returns 0. resolveBandData fails loud on that AT THE SEAM
- *  (below) — the `dollarMax > 0` yForDollars requires is enforced there, never left to the renderer. */
-function niceCeil(x: number): number {
+ *  (below) — the `dollarMax > 0` yForDollars requires is enforced there, never left to the renderer.
+ *  EXPORTED for TwoFutures' axis ceiling (fan parity, Briggsy's station-2 cold-read 2026-07-08):
+ *  ONE humane ladder across both charts, so their quarter-ticks are clean figures by the same
+ *  construction — never a second re-typed scale. */
+export function niceCeil(x: number): number {
   if (!(x > 0)) return 0
   const mag = 10 ** Math.floor(Math.log10(x))
   const norm = x / mag // [1, 10)

@@ -60,3 +60,68 @@
   font-size: 13px;
   fill: var(--ink);
 }
+
+/* ── fan-parity axis chrome (station-2 cold-read 2026-07-08) ─────────────────────────────────
+   Interior y gridlines dashed like the band's (band.css .band-grid "2 4"); tick labels right-
+   anchored into the left gutter, the band's own optics at the same 560-wide viewBox family. */
+.tf__grid--tick {
+  stroke-dasharray: 2 4;
+}
+
+.tf__axis--ytick {
+  text-anchor: end;
+}
+
+/* ── the hover scrub (the fan's band-scrub vocabulary on the TF plot) ────────────────────────
+   Visuals never eat the pointer; only the transparent capture rect listens. The rule is SOLID
+   (reads as "where I'm pointing now"); the per-arm dots carry each series' own marker SHAPE
+   (circle/triangle — identity by shape, never hue) over a paper halo so they read on the lines. */
+.tf__scrub {
+  pointer-events: none;
+}
+
+.tf__scrub-capture {
+  pointer-events: all;
+}
+
+.tf__scrub-rule {
+  stroke: var(--ink-muted);
+  stroke-width: 1.25;
+  vector-effect: non-scaling-stroke;
+}
+
+.tf__scrub-dot {
+  stroke: var(--paper-raised);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+/* the readout box — token surface, never a re-typed hex (canonical-source rule). */
+.tf__readout-box {
+  fill: var(--paper-raised);
+  stroke: var(--line-control);
+  stroke-width: 1;
+  filter: drop-shadow(0 1px 2px rgb(11 24 19 / 0.18));
+}
+
+.tf__readout-text {
+  font-family: var(--font-body);
+  font-variant-numeric: tabular-nums;
+}
+
+.tf__readout-ages {
+  fill: var(--ink);
+  font-size: 12.5px;
+  font-weight: var(--weight-semibold);
+}
+
+.tf__readout-label {
+  fill: var(--ink-muted);
+  font-size: 11px;
+}
+
+.tf__readout-value {
+  fill: var(--ink);
+  font-size: 13px;
+  font-weight: var(--weight-semibold);
+}

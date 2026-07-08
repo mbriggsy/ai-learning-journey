@@ -254,12 +254,14 @@ export function composeHealthSheet(
 export function composeRegimeFutures(
   outcome: TwoArmOutcome,
   pickedEnhanced: boolean,
+  agesAt?: (yearsFromNow: number) => string,
 ): TwoFuturesView | null {
   const base = composeTwoFutures(
     outcome,
     pickedEnhanced ? copy.tfChartRegimeEnhanced : copy.tfChartRegimeReverted,
     copy.tfChartRegimeCurrent,
     slots.rothDeltaSurvivor,
+    agesAt,
   )
   if (base === null || outcome.kind !== 'two-arm') return base
   const withCost = outcome.with.lifetimeHealthCostMedianReal

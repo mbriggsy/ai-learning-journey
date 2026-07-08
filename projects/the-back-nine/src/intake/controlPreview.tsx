@@ -135,6 +135,9 @@ export function ControlPreviewReadout({
               withArm={previewState.view.series.withArm}
               withoutArm={previewState.view.series.withoutArm}
               labels={previewState.view.series.labels}
+              yTicks={previewState.view.series.yTicks}
+              xTicks={previewState.view.series.xTicks}
+              rows={previewState.view.series.rows}
             />
           )}
           <p className="field-help">{copy.twoFuturesCaption}</p>

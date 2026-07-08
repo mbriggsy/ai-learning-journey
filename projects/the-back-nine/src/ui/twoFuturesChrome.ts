@@ -16,7 +16,14 @@
  *     engine emitted a real median for BOTH arms (never fabricated).
  */
 import type { OutcomeState, TwoArmOutcome, TwoArmReading } from '@shared/model'
-import { twoFuturesCeiling, type TwoFuturesLabels, type TwoFuturesPoint } from '@viz/TwoFutures'
+import {
+  twoFuturesCeiling,
+  type TwoFuturesLabels,
+  type TwoFuturesPoint,
+  type TwoFuturesReadoutRow,
+  type TwoFuturesXTick,
+} from '@viz/TwoFutures'
+import { buildYTicks, type YTick } from '@viz/bandData'
 import { COHORT_FADE } from '@viz/bandGeometry'
 import { copy, slots } from './copy'
 import { OUTCOME_PRESENTATION } from './outcomeStates'
@@ -35,6 +42,12 @@ export interface TwoFuturesView {
     readonly withArm: readonly TwoFuturesPoint[]
     readonly withoutArm: readonly TwoFuturesPoint[]
     readonly labels: TwoFuturesLabels
+    /** Fan-parity axis + hover chrome (station-2 cold-read 2026-07-08): the y dollar lattice
+     *  (the fan's OWN buildYTicks over the shared humane ceiling), intermediate x year ticks,
+     *  and per-integer-year readout rows — every figure pre-formatted HERE (string-free viz). */
+    readonly yTicks: readonly YTick[]
+    readonly xTicks: readonly TwoFuturesXTick[]
+    readonly rows: readonly TwoFuturesReadoutRow[]
   }
   /** The hero delta sentence (frequency-first, hedge-bearing). */
   readonly deltaLine: string
@@ -59,16 +72,35 @@ function points(r: TwoArmReading): readonly TwoFuturesPoint[] | undefined {
     .map((y) => ({ yearsFromNow: y.yearsFromNow, medianReal: y.p50 }))
 }
 
+/** Intermediate x-axis year ticks between the endpoints: decade steps on a long horizon, fives on
+ *  a short one; a tick never lands within the pad of either endpoint label (the bandAnnotations
+ *  horizon-pad idea — an endpoint collision is worse than a missing tick). Pure, exported for tests. */
+const X_TICK_ENDPOINT_PAD = 3
+export function deriveTwoFuturesXTicks(horizonYears: number): TwoFuturesXTick[] {
+  if (!Number.isFinite(horizonYears) || horizonYears < 8) return []
+  const step = horizonYears <= 16 ? 5 : 10
+  const ticks: TwoFuturesXTick[] = []
+  for (let y = step; y <= horizonYears - X_TICK_ENDPOINT_PAD; y += step) {
+    ticks.push({ years: y, label: `${y}` })
+  }
+  return ticks
+}
+
 /**
  * Compose the whole view from a two-arm outcome. `withLabel`/`withoutLabel` name THIS control's
  * arms (the Roth lever and the sequencing picker word their own series). Returns null for the
  * indeterminate/infeasible outcomes — the surfaces own those calm states.
+ *
+ * `agesAt` is the household-ages closure (deriveBandAgesAt — the SAME slot + rule the fan's
+ * readout and axis ride, so a scrubbed age here can never disagree with the band's at the same
+ * year); absent ⇒ the readout rows carry '' and the ages line drops.
  */
 export function composeTwoFutures(
   outcome: TwoArmOutcome,
   withLabel: string,
   withoutLabel: string,
   deltaSlot: (withOdds: string, withoutOdds: string) => string,
+  agesAt?: (yearsFromNow: number) => string,
 ): TwoFuturesView | null {
   if (outcome.kind !== 'two-arm') return null
   const survivorBasis = outcome.deltaBasis === 'survivor'
@@ -106,6 +138,24 @@ export function composeTwoFutures(
       withPts[withPts.length - 1]!.yearsFromNow,
       withoutPts[withoutPts.length - 1]!.yearsFromNow,
     )
+    const ceiling = twoFuturesCeiling(maxDollar)
+    // Per-integer-year readout rows (0..maxYears), keyed off each arm's OWN filtered series — a
+    // truncated arm's value is simply ABSENT past its last year (the readout goes quiet exactly
+    // where the drawn line ends; never a median quoted past the cohort). Same formatter as the
+    // axis ticks, so a scrubbed figure and a gridline figure always share one dialect.
+    const withByYear = new Map(withPts.map((p) => [p.yearsFromNow, p.medianReal]))
+    const withoutByYear = new Map(withoutPts.map((p) => [p.yearsFromNow, p.medianReal]))
+    const rows: TwoFuturesReadoutRow[] = []
+    for (let y = 0; y <= maxYears; y++) {
+      const w = withByYear.get(y)
+      const wo = withoutByYear.get(y)
+      rows.push({
+        yearsFromNow: y,
+        ages: agesAt?.(y) ?? '',
+        ...(w !== undefined ? { withValue: formatAxisDollar(w) } : {}),
+        ...(wo !== undefined ? { withoutValue: formatAxisDollar(wo) } : {}),
+      })
+    }
     series = {
       withArm: withPts,
       withoutArm: withoutPts,
@@ -115,11 +165,17 @@ export function composeTwoFutures(
         // The label annotates the DRAWN ceiling gridline, so it formats the SAME ceiling the
         // renderer computes — the raw data max under-reported the line it sat on (ultramode
         // 2026-07-03: an axis reference that understates its own value).
-        dollarMaxLabel: `~${formatAxisDollar(twoFuturesCeiling(maxDollar))}`,
+        dollarMaxLabel: `~${formatAxisDollar(ceiling)}`,
         todayLabel: slots.ladderOffsetTick(0),
         horizonLabel: `${maxYears}`,
+        readoutAgesLabel: copy.bandReadoutAgesLabel,
         ariaSummary: `${copy.twoFuturesCaption} ${deltaLine}`,
       },
+      // The fan's OWN tick builder over the shared humane ceiling — quarters are clean figures
+      // by construction, and the two charts can never grow separate dollar-axis dialects.
+      yTicks: buildYTicks(ceiling, formatAxisDollar),
+      xTicks: deriveTwoFuturesXTicks(maxYears),
+      rows,
     }
   }
 

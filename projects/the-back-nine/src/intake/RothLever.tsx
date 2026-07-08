@@ -23,6 +23,7 @@ import type { ScenarioDraft } from '@store/memoryModel'
 import type { ControlPreview } from '@store/controlPreview'
 import { copy, slots } from '@ui/copy'
 import { composeTwoFutures } from '@ui/twoFuturesChrome'
+import { deriveBandAgesAt } from '@ui/bandAnnotations'
 import type { Announcer } from './a11y'
 import { ControlSheet } from './controlSheet'
 import { ControlPreviewReadout, useControlPreview } from './controlPreview'
@@ -88,6 +89,13 @@ export function RothLever({ open, draft, preview, previewBlocking = false, onApp
   // entered plan is a confident readout of nothing (ultramode 2026-07-03).
   const candidate = complete(plan)
   const candidateKey = candidate === null ? '' : `${candidate.annualAmountReal}:${candidate.startYearOffset}:${candidate.years}`
+  // The chart scrub's household-ages closure — the SAME deriveBandAgesAt the fan's readout rides,
+  // so a scrubbed age here can never disagree with the band's at the same year. Ages are stable
+  // while a sheet is open (the draft can't be edited behind it), so plain per-render derivation
+  // is safe; the guard mirrors answerView's (both ages known, else the line drops).
+  const ageA = draft.people[0]?.currentAge
+  const ageB = draft.people[1]?.currentAge
+  const agesAt = ageA !== undefined && ageB !== undefined ? deriveBandAgesAt(ageA, ageB) : undefined
   useEffect(() => {
     if (!open || nothingToConvert) return
     run(candidate === null ? null : { kind: 'conversion', plan: candidate }, (outcome) => {
@@ -102,10 +110,13 @@ export function RothLever({ open, draft, preview, previewBlocking = false, onApp
         // today's plan HAS the conversion; the honest without-arm name is the negation.
         applied === undefined ? copy.tfChartRothWithout : copy.tfChartRothWithoutApplied,
         slots.rothDeltaSurvivor,
+        agesAt,
       )
       return view === null ? { kind: 'error', reason: 'indeterminate' } : { kind: 'ready', view }
     })
-    // `run`'s identity carries `preview` (the crowned-offset anchor — insight 047).
+    // `run`'s identity carries `preview` (the crowned-offset anchor — insight 047). `agesAt` is
+    // deliberately NOT a dep: a fresh closure every render would refire the preview per render,
+    // and the ages it reads cannot change while the sheet is open.
   }, [open, candidateKey, nothingToConvert, run, applied])
 
   return (

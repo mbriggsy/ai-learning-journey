@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { composeTwoFutures } from '../twoFuturesChrome'
+import { composeTwoFutures, deriveTwoFuturesXTicks } from '../twoFuturesChrome'
 import { copy, slots } from '../copy'
 import { formatAxisDollar } from '../money'
 import { twoFuturesCeiling } from '@viz/TwoFutures'
@@ -248,8 +248,8 @@ describe('composeTwoFutures — the dead-cohort truncation (the series ends wher
 
 describe('composeTwoFutures — the y-ceiling label annotates the DRAWN gridline, not the raw max', () => {
   it('formats twoFuturesCeiling(max), a value distinct from the raw data max', () => {
-    // 1_234_567 raw → $1.2M; its 2-sig-fig ceiling 1_300_000 → $1.3M. The label sits on the DRAWN
-    // ceiling line, so it must read the ceiling (understating its own gridline is the fold's bug).
+    // 1_234_567 raw → $1.2M; its humane-ladder ceiling 1_500_000 → $1.5M. The label sits on the
+    // DRAWN ceiling line, so it must read the ceiling (understating its own gridline is the bug).
     const withFan = fan([
       [0, 1_234_567, 1],
       [30, 900_000, 1],
@@ -277,5 +277,97 @@ describe('composeTwoFutures — the non-two-arm outcomes compose to null', () =>
   it('infeasible → null (the M6 sentinel; a calm error surface owns it)', () => {
     const outcome: TwoArmOutcome = { kind: 'infeasible', reason: 'overlay-failed' }
     expect(composeTwoFutures(outcome, 'With', 'Without', slots.rothDeltaSurvivor)).toBeNull()
+  })
+})
+
+/* ── the fan-parity axis + scrub chrome (station-2 cold-read 2026-07-08) ─────────────────────── */
+
+describe('composeTwoFutures — the y-axis dollar lattice (the fan’s OWN tick builder)', () => {
+  const outcomeWithFans = (top: number): TwoArmOutcome =>
+    twoArm({
+      with: reading({ headline: headline(8), bandFan: fan([[0, top], [30, 500_000]]), survivalFraction: 0.85 }),
+      without: reading({ headline: headline(7), bandFan: fan([[0, top - 10_000], [30, 480_000]]), survivalFraction: 0.8 }),
+    })
+
+  it('emits 5 ticks (quarters + the $0 ruin floor) over the humane ceiling, formatAxisDollar-worded', () => {
+    // max 590_000 → ladder ceiling 600_000 → quarters 0 / 150k / 300k / 450k / 600k — every label
+    // a clean figure BY CONSTRUCTION (the whole point of sharing the fan's ladder).
+    const view = composeTwoFutures(outcomeWithFans(590_000), 'With', 'Without', slots.rothDeltaSurvivor)
+    const ticks = view!.series!.yTicks
+    expect(ticks.map((t) => t.dollars)).toEqual([0, 150_000, 300_000, 450_000, 600_000])
+    expect(ticks.map((t) => t.label)).toEqual(['$0', '$150k', '$300k', '$450k', '$600k'])
+  })
+
+  it('the lattice top IS the drawn ceiling (the dollarMaxLabel’s own value — one scale, two words)', () => {
+    const view = composeTwoFutures(outcomeWithFans(1_234_567), 'With', 'Without', slots.rothDeltaSurvivor)
+    const top = view!.series!.yTicks.at(-1)!
+    expect(top.dollars).toBe(twoFuturesCeiling(1_234_567))
+    expect(view!.series!.labels.dollarMaxLabel).toBe(`~${top.label}`)
+  })
+})
+
+describe('deriveTwoFuturesXTicks — intermediate year ticks between the endpoints', () => {
+  it('decade steps on a long horizon, stopping clear of the horizon label’s pad', () => {
+    // 30y: 10, 20 (30 − 3 pad excludes 30 itself — the horizon endpoint already labels it).
+    expect(deriveTwoFuturesXTicks(30).map((t) => t.years)).toEqual([10, 20])
+    // 24y: 10, 20 (21 is the last eligible year; 20 ≤ 21).
+    expect(deriveTwoFuturesXTicks(24).map((t) => t.years)).toEqual([10, 20])
+  })
+
+  it('five-year steps on a short horizon; none at all when even one tick could not fit', () => {
+    expect(deriveTwoFuturesXTicks(12).map((t) => t.years)).toEqual([5])
+    expect(deriveTwoFuturesXTicks(16).map((t) => t.years)).toEqual([5, 10])
+    expect(deriveTwoFuturesXTicks(7)).toEqual([])
+  })
+})
+
+describe('composeTwoFutures — the per-year readout rows (the scrub’s honest column)', () => {
+  // CONTIGUOUS integer-year fans — the engine’s real byYear grid shape (buildBandFan’s contract);
+  // the sparse grids elsewhere in this file exercise series drawing, but rows are per-year.
+  const contiguous = (medians: readonly number[], cohorts?: readonly number[]): BandFan =>
+    fan(medians.map((m, y) => [y, m, cohorts?.[y] ?? 1] as const))
+
+  it('one row per integer year, both arms’ dollars pre-formatted with the AXIS formatter', () => {
+    const outcome = twoArm({
+      with: reading({ headline: headline(8), bandFan: contiguous([800_000, 741_000, 700_000]), survivalFraction: 0.85 }),
+      without: reading({ headline: headline(7), bandFan: contiguous([790_000, 730_000, 680_000]), survivalFraction: 0.8 }),
+    })
+    const view = composeTwoFutures(outcome, 'With', 'Without', slots.rothDeltaSurvivor)
+    const rows = view!.series!.rows
+    expect(rows.map((r) => r.yearsFromNow)).toEqual([0, 1, 2])
+    expect(rows[1]).toMatchObject({
+      withValue: formatAxisDollar(741_000),
+      withoutValue: formatAxisDollar(730_000),
+    })
+  })
+
+  it('a truncated arm’s value is ABSENT past its last drawn year — never a median past the cohort', () => {
+    // The WITH arm’s cohort thins below COHORT_FADE.full at year 2; the WITHOUT arm survives it.
+    const outcome = twoArm({
+      with: reading({
+        headline: headline(8),
+        bandFan: contiguous([800_000, 741_000, 700_000], [1, COHORT_FADE.full, 0.2]),
+        survivalFraction: 0.85,
+      }),
+      without: reading({ headline: headline(7), bandFan: contiguous([790_000, 730_000, 680_000]), survivalFraction: 0.8 }),
+    })
+    const view = composeTwoFutures(outcome, 'With', 'Without', slots.rothDeltaSurvivor)
+    const rows = view!.series!.rows
+    expect(rows[1]!.withValue).toBe(formatAxisDollar(741_000)) // the onset year is retained (≥)
+    expect(rows[2]!.withValue).toBeUndefined() // ended — quiet, exactly where the line stops
+    expect(rows[2]!.withoutValue).toBe(formatAxisDollar(680_000)) // the surviving arm still speaks
+  })
+
+  it('the ages line rides the injected closure (the fan’s own slot); absent closure ⇒ empty ages', () => {
+    const outcome = twoArm({
+      with: reading({ headline: headline(8), bandFan: contiguous([800_000, 741_000]), survivalFraction: 0.85 }),
+      without: reading({ headline: headline(7), bandFan: contiguous([790_000, 730_000]), survivalFraction: 0.8 }),
+    })
+    const agesAt = (y: number) => slots.bandClockAges(66 + y, 64 + y)
+    const withAges = composeTwoFutures(outcome, 'With', 'Without', slots.rothDeltaSurvivor, agesAt)
+    expect(withAges!.series!.rows[1]!.ages).toBe(slots.bandClockAges(67, 65))
+    expect(withAges!.series!.labels.readoutAgesLabel).toBe(copy.bandReadoutAgesLabel)
+    const noAges = composeTwoFutures(outcome, 'With', 'Without', slots.rothDeltaSurvivor)
+    expect(noAges!.series!.rows[1]!.ages).toBe('')
   })
 })

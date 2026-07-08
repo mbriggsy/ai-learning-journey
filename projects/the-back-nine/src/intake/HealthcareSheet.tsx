@@ -26,6 +26,7 @@ import type { ScenarioDraft } from '@store/memoryModel'
 import type { ControlPreview } from '@store/controlPreview'
 import { copy } from '@ui/copy'
 import { composeHealthSheet, composeRegimeFutures } from '@ui/healthSheetChrome'
+import { deriveBandAgesAt } from '@ui/bandAnnotations'
 import type { Announcer } from './a11y'
 import { ControlSheet } from './controlSheet'
 import { ControlPreviewReadout, useControlPreview } from './controlPreview'
@@ -94,6 +95,12 @@ export function HealthcareSheet({ open, draft, readout, preview, previewBlocking
     // (deps deliberately narrow: open-edge re-seed only — the BudgetBuilder precedent)
   }, [open])
 
+  // The chart scrub's household-ages closure — the SAME deriveBandAgesAt the fan's readout rides
+  // (RothLever's note: per-render derivation is safe, ages are open-stable; guard mirrors answerView).
+  const ageA = draft.people[0]?.currentAge
+  const ageB = draft.people[1]?.currentAge
+  const agesAt = ageA !== undefined && ageB !== undefined ? deriveBandAgesAt(ageA, ageB) : undefined
+
   // Preview on every committed selection change. Picking the APPLIED regime withdraws the
   // comparison (a baseline-vs-baseline zero-delta non-comparison stays idle — the
   // SequencingControl rule); picking the other regime runs the subsidy-regime two-arm.
@@ -103,10 +110,11 @@ export function HealthcareSheet({ open, draft, readout, preview, previewBlocking
       picked === applied ? null : { kind: 'subsidy-regime', enhanced: picked === 'enhanced' }
     run(request, (outcome) => {
       if (outcome.kind === 'indeterminate') return { kind: 'error', reason: outcome.reason }
-      const composed = composeRegimeFutures(outcome, picked === 'enhanced')
+      const composed = composeRegimeFutures(outcome, picked === 'enhanced', agesAt)
       return composed === null ? { kind: 'error', reason: 'indeterminate' } : { kind: 'ready', view: composed }
     })
-    // `run`'s identity carries `preview` (the crowned-offset anchor — insight 047).
+    // `run`'s identity carries `preview` (the crowned-offset anchor — insight 047). `agesAt` is
+    // deliberately NOT a dep (a per-render closure over open-stable ages — RothLever's note).
   }, [open, picked, applied, run])
 
   return (

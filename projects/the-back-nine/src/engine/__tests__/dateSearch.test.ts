@@ -640,7 +640,11 @@ describe('runDateSearch — the D2 crowned band fan', () => {
     expect(round.outcome.band).toEqual(out.band)
   })
 
-  it('REDUCE-TO-SPINE for the shipped date config: the crowned candidate is byte-identical fan-OFF vs fan-ON', () => {
+  it('REDUCE-TO-SPINE for the shipped date config: the crowned candidate is byte-identical fan-OFF vs fan-ON', { timeout: 60_000 }, () => {
+    // { timeout }: two full provisional-tier simulate() runs over the REAL date-candidate overlay
+    // (healthcare + accumulation) sit right at vitest's 5000ms default on CI hardware — this test
+    // ran 5.7s on ubuntu-latest and timed out there while passing locally (caught 2026-07-08; the
+    // file's other full-sweep tests already carry explicit timeouts for exactly this reason).
     // The band's honesty ("it observes the very distribution that crowned the date") rests on the
     // fan-ON re-run matching the fan-OFF sweep run decideTrack crowned on. The CRN-identity test above
     // is fan-ON vs fan-ON (repeatability); THIS proves the fan only OBSERVES — on the ACTUAL date-

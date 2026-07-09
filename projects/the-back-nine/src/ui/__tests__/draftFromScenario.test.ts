@@ -12,11 +12,14 @@
  * shallow strip mishandles fails here rather than surfacing as a silent reload drift.
  */
 import { describe, expect, it } from 'vitest'
-import { scenarioFromDraft } from '../scenarioFromDraft'
+import { currentEpochDay, scenarioFromDraft } from '../scenarioFromDraft'
 import { draftFromScenario } from '../draftFromScenario'
 import { DEV_SEEDS, type DevSeedKey } from '../devSeeds'
 import { healthcareVintageStamp } from '@engine/constants/health'
-import type { DrawdownOrderKey, RothConversionPlan, ScenarioV3 } from '@shared/model'
+import { taxVintageStamp } from '@engine/constants/tax'
+import { dateVintageStamp } from '@engine/constants'
+import { CURRENT_APP_DEFAULT_VERSION } from '@shared/appDefaults'
+import { scenarioIdentity, type DrawdownOrderKey, type RothConversionPlan, type ScenarioV3 } from '@shared/model'
 
 /** Every dev seed that is genuinely save-ready → its real, complete ScenarioV3. */
 const readyScenarios: ReadonlyArray<readonly [DevSeedKey, ScenarioV3]> = (
@@ -128,5 +131,52 @@ describe('scenarioFromDraft — the healthcare vintage stamp (P3-U11, write-time
       expect(r.scenario.healthcareVintage).toEqual(healthcareVintageStamp())
       expect(r.scenario.healthcareVintage).not.toEqual(stale)
     }
+  })
+})
+
+describe('scenarioFromDraft — the U13 stamps (write-time truth, the healthcareVintage contract widened)', () => {
+  it('every save carries the CURRENT build tax + date vintages, the CURRENT app-default version, and a fresh epoch-day savedAt', () => {
+    const r = scenarioFromDraft(DEV_SEEDS.retired)
+    expect(r.ready).toBe(true)
+    if (!r.ready) return
+    expect(r.scenario.taxVintageDetail).toEqual(taxVintageStamp())
+    expect(r.scenario.dateVintage).toEqual(dateVintageStamp())
+    expect(r.scenario.appDefaultVersion).toBe(CURRENT_APP_DEFAULT_VERSION)
+    expect(r.scenario.savedAt).toBe(currentEpochDay())
+  })
+
+  it('STALE U13 stamps riding a restored draft are ALL overwritten at save — a re-saved old vault never re-writes its old provenance as if current', () => {
+    const r = scenarioFromDraft({
+      ...DEV_SEEDS.retired,
+      savedAt: 18_263, // 2020 — a five-year-old save
+      taxVintageDetail: { taxYear: 2019, legalBasis: 'TCJA (pre-OBBBA)' },
+      dateVintage: { contributionYear: 2019, blendSnapshotAsOf: '2019-01-01' },
+      appDefaultVersion: 'p0-ancient',
+    })
+    expect(r.ready).toBe(true)
+    if (!r.ready) return
+    expect(r.scenario.savedAt).toBe(currentEpochDay())
+    expect(r.scenario.taxVintageDetail).toEqual(taxVintageStamp())
+    expect(r.scenario.dateVintage).toEqual(dateVintageStamp())
+    expect(r.scenario.appDefaultVersion).toBe(CURRENT_APP_DEFAULT_VERSION)
+  })
+
+  it('the round trip holds on scenarioIdentity when the persisted savedAt is an OLD day, and the stamp re-mints fresh (the normalizer arm — a raw byte compare would read every next-day session dirty)', () => {
+    const r = scenarioFromDraft(DEV_SEEDS.retired)
+    expect(r.ready).toBe(true)
+    if (!r.ready) return
+    // Simulate a vault saved a month ago: identical content, older wall-time stamp.
+    const oldSave: ScenarioV3 = { ...r.scenario, savedAt: currentEpochDay() - 30 }
+    const hydrated = draftFromScenario(oldSave)
+    expect(hydrated.ok).toBe(true)
+    if (!hydrated.ok) return
+    const reencoded = scenarioFromDraft(hydrated.draft)
+    expect(reencoded.ready).toBe(true)
+    if (!reencoded.ready) return
+    // Identity holds on everything but the wall-time stamp…
+    expect(scenarioIdentity(reencoded.scenario)).toEqual(scenarioIdentity(oldSave))
+    // …and the stamp itself re-mints fresh, never replayed from the old vault.
+    expect(reencoded.scenario.savedAt).toBe(currentEpochDay())
+    expect(reencoded.scenario.savedAt).not.toBe(oldSave.savedAt)
   })
 })

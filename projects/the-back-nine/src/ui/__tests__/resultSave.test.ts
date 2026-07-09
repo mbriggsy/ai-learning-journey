@@ -41,6 +41,26 @@ describe('deriveResultSave — the edit-and-re-save machine', () => {
     expect(deriveResultSave(persist, retired)).toEqual({ kind: 'clean' })
   })
 
+  it('U13 — an untouched session over a vault saved on an EARLIER day reads clean (the scenarioIdentity normalizer; a raw byte compare would false-dirty every next-day return)', () => {
+    // The disk carries the save-day stamp; today's re-derived answer carries today's. Identical
+    // content must still read clean — savedAt is wall-time provenance, not an edit.
+    const monthOld: PersistState = {
+      kind: 'saved',
+      scenario: { ...retired.scenario, savedAt: (retired.scenario.savedAt ?? 20_000) - 30 },
+    }
+    expect(deriveResultSave(monthOld, retired)).toEqual({ kind: 'clean' })
+    // PLANTED-FAIL companion: the normalizer strips ONLY savedAt — a real content edit on the
+    // same old vault still reads dirty (the normalizer must never widen into content-blindness).
+    expect(deriveResultSave(monthOld, borderline)).toEqual({ kind: 'dirty' })
+    // The save-failed arm rides the same normalizer: an old-day disk + matching content clears.
+    const failedOld: PersistState = {
+      kind: 'save-failed',
+      scenario: { ...retired.scenario, savedAt: (retired.scenario.savedAt ?? 20_000) - 30 },
+      errorKey: 'saveErrorFailed',
+    }
+    expect(deriveResultSave(failedOld, retired)).toEqual({ kind: 'clean' })
+  })
+
   it('a READ-ONLY session derives NO save CTA for ANY disk state — the View-only banner is the whole disclosure (the read-only-verdict fix)', () => {
     // A 2nd tab holds the writer, so session.save() would REFUSE: a 'dirty' CTA is a lying dead-end
     // and a 'clean' badge would claim a save THIS tab never made. Every disk state collapses to 'none'.

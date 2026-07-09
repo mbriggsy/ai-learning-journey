@@ -97,7 +97,7 @@ export const DRAFT_DISPOSITIONS: Record<keyof ScenarioDraft, AssumptionDispositi
   },
   taxVintage: {
     kind: 'internal',
-    why: 'A provenance stamp naming the tax-law vintage the answer ran under — app-written, read by U13 staleness.',
+    why: 'The LEGACY opaque tax-vintage string (P2-era; rides the draft unchanged, never re-stamped). Superseded by taxVintageDetail — U13 staleness reads THAT; this stays for the add-only vault law only.',
   },
   appDefaultVersion: {
     kind: 'internal',
@@ -113,6 +113,18 @@ export const DRAFT_DISPOSITIONS: Record<keyof ScenarioDraft, AssumptionDispositi
   healthcareVintage: {
     kind: 'internal',
     why: 'Stamped fresh at Save from the current build’s constants (scenarioFromDraft) — whatever the draft carries mid-session is never the written truth.',
+  },
+  savedAt: {
+    kind: 'internal',
+    why: 'The save wall-time anchor (epoch-day), stamped fresh at every save-commit — U13’s “~N years since your save” clock reads the RAW persisted value at unlock; never a user-facing knob.',
+  },
+  taxVintageDetail: {
+    kind: 'internal',
+    why: 'The structured tax vintage (taxVintageStamp), stamped fresh at Save — read by U13 staleness against the live constants; the controls surface names the drift, the user never sets it.',
+  },
+  dateVintage: {
+    kind: 'internal',
+    why: 'The date-surface vintage (contribution-limit year + ticker-blend snapshot as-of), stamped fresh at Save — read by U13 staleness; app-written, never user-set.',
   },
 }
 

@@ -16,6 +16,8 @@ import { healthConstants, COVERAGE_YEAR } from './health'
 import { contributionConstants, CONTRIBUTION_YEAR } from './contributions'
 import { socialSecurityConstants } from './socialSecurity'
 import type { ConstantEntry } from './types'
+import { BLEND_SNAPSHOT_AS_OF } from '../reference/tickerBlend'
+import type { DateVintageV3 } from '@shared/model'
 
 // `export *` re-exports every named export of each module (including TAX_YEAR,
 // COVERAGE_YEAR, CONTRIBUTION_YEAR, the tables, and the SS factor lookups) — no
@@ -45,3 +47,16 @@ export const CONSTANTS_VINTAGE = Object.freeze({
   coverageYear: COVERAGE_YEAR,
   contributionYear: CONTRIBUTION_YEAR,
 })
+
+/** The CURRENT build's date-surface vintage stamp (P3·U13 — the fuck-off-date clock; the
+ *  healthcareVintageStamp mirror, assembled HERE because its two figures span modules:
+ *  the contribution-limit table year (constants) and the ticker-blend static-snapshot
+ *  as-of (reference — governed by the blend single-source gate, not this registry). The
+ *  save path writes it fresh (`scenarioFromDraft`); U13's staleness comparator diffs a
+ *  persisted stamp against THIS at unlock. */
+export function dateVintageStamp(): DateVintageV3 {
+  return {
+    contributionYear: CONTRIBUTION_YEAR,
+    blendSnapshotAsOf: BLEND_SNAPSHOT_AS_OF,
+  }
+}

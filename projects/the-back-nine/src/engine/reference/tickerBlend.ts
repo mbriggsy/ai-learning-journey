@@ -1564,6 +1564,18 @@ export const TICKER_BLEND_ROWS: readonly TickerBlendRow[] = [
   },
 ]
 
+/** The table's aggregate static-snapshot as-of (P3·U13 — the date-surface vintage clock).
+ *  DERIVED as the max per-row `asOf` (ISO strings compare lexicographically), so a refresh
+ *  pass that re-dates any row moves the aggregate with zero re-typing (single-source — the
+ *  blend gate's discipline). Rows without `asOf` (pure index funds whose allocation is
+ *  definitional) don't hold the aggregate back. Fails loud if NO row carries a date — an
+ *  undated snapshot table has no vintage to stamp (burned/062: no plausible default). */
+export const BLEND_SNAPSHOT_AS_OF: string = TICKER_BLEND_ROWS.reduce<string>((max, row) => {
+  return row.asOf !== undefined && row.asOf > max ? row.asOf : max
+}, '') || (() => {
+  throw new Error('[tickerBlend] no row carries an asOf date — the snapshot vintage is unstampable')
+})()
+
 /** Eager module-level ticker index (ai-journey-stats/003 — never minted in render).
  *  A duplicate ticker across families is a transcription bug: fail loud at module
  *  init, never first-row-wins. */

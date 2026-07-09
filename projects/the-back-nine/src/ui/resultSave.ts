@@ -12,13 +12,16 @@
  *
  * DIRTY IS COMPUTED, NEVER TRACKED: both scenarios come out of `scenarioFromDraft` (which
  * round-trips the codec, so key order is construction-stable — decodeScenario builds every
- * object) and are compared by JSON identity. An edit that changes nothing, or is edited back,
- * reads clean — the badge tells the truth about the DISK, not about mouse activity. That law
- * holds from the 'save-failed' state too: editing back to the on-disk answer clears the
- * failure alert (nothing is unfinished once the disk matches — alarm-when-fine is a lie in
- * the safe direction, still a lie).
+ * object) and are compared by JSON identity ON `scenarioIdentity` — the scenario MINUS the
+ * `savedAt` wall-time stamp (P3·U13: scenarioFromDraft stamps a fresh epoch-day per encode,
+ * so a raw compare would read an untouched session as dirty the day after its save — the
+ * badge would lie about mouse activity, the exact thing this machine exists to never do).
+ * An edit that changes nothing, or is edited back, reads clean — the badge tells the truth
+ * about the DISK, not about mouse activity. That law holds from the 'save-failed' state
+ * too: editing back to the on-disk answer clears the failure alert (nothing is unfinished
+ * once the disk matches — alarm-when-fine is a lie in the safe direction, still a lie).
  */
-import type { ScenarioV3 } from '@shared/model'
+import { scenarioIdentity, type ScenarioV3 } from '@shared/model'
 import type { SaveReady } from './scenarioFromDraft'
 import type { ResaveCopyKey } from './unlockCopy'
 
@@ -38,6 +41,11 @@ export type ResultSaveView =
   | { readonly kind: 'dirty' } // disk is BEHIND the current answer — the re-save CTA
   | { readonly kind: 'saving' } // update write in flight
   | { readonly kind: 'failed'; readonly errorKey: ResaveCopyKey } // last re-save refused — alert + retry
+
+/** Disk-identity on everything EXCEPT the wall-time stamp (the ONE shared normalizer —
+ *  model.ts `scenarioIdentity`; the round-trip guard uses the same one). */
+const sameScenario = (a: ScenarioV3, b: ScenarioV3): boolean =>
+  JSON.stringify(scenarioIdentity(a)) === JSON.stringify(scenarioIdentity(b))
 
 export function deriveResultSave(persist: PersistState, ready: SaveReady, readOnly = false): ResultSaveView {
   // A READ-ONLY session (a 2nd tab holds the writer — captured ONCE at unlock, session.ts) has no
@@ -62,11 +70,11 @@ export function deriveResultSave(persist: PersistState, ready: SaveReady, readOn
       // answer has nothing unfinished to report — keeping the alert would be alarm-when-fine
       // (ultramode 2026-07-02). A STILL-different draft stays 'failed': its retry IS the CTA,
       // so surfacing 'dirty' there would just duplicate the affordance under a vaguer label.
-      return JSON.stringify(ready.scenario) === JSON.stringify(persist.scenario)
+      return sameScenario(ready.scenario, persist.scenario)
         ? { kind: 'clean' }
         : { kind: 'failed', errorKey: persist.errorKey }
     case 'saved':
-      return JSON.stringify(ready.scenario) === JSON.stringify(persist.scenario)
+      return sameScenario(ready.scenario, persist.scenario)
         ? { kind: 'clean' }
         : { kind: 'dirty' }
     default: {

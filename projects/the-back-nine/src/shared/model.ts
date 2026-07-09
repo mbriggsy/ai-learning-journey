@@ -1577,6 +1577,71 @@ export interface ScenarioV3 {
    *  renders reads the LIVE constants at read time, never this stamp (reVerifyEveryBuild —
    *  a persisted as-of must never masquerade as current truth). */
   readonly healthcareVintage?: HealthcareVintageV3
+  /** P3·U13 — the save wall-time anchor: finite integer **epoch-day** (UTC days since
+   *  1970-01-01; DND 009 — never a millisecond value that reads as a plausible year, never
+   *  Infinity/NaN). ENCRYPTED with the model (a cleartext timestamp beside the vault would
+   *  leak activity recency; staleness renders only post-unlock anyway) and codec-RANGE-gated
+   *  (an in-range garbage value is worse than a reject — insight 046). STAMPED FRESH by
+   *  `scenarioFromDraft` at every save-commit; EXCLUDED from the dirty/clean compare and the
+   *  draft↔v3 round-trip guard via {@link scenarioIdentity} (the ONE shared normalizer — a
+   *  fresh stamp per encode would read as a permanently-dirty session). ADDITIVE-OPTIONAL:
+   *  a pre-U13 vault lacks it, and an absent anchor SUPPRESSES every "~N years since your
+   *  save" claim — never fabricated from `startCalendarYear` (that means "since you BUILT
+   *  the plan", which mislabels a re-saver), never defaulted to "today". */
+  readonly savedAt?: number
+  /** P3·U13 — the structured tax vintage (the enrichment the opaque `taxVintage` string
+   *  could never carry: that literal is hardcoded, never re-stamped, and moves on NO real
+   *  bracket refresh). Minted by `taxVintageStamp()` (tax.ts) from the canonical constants,
+   *  WRITTEN FRESH at every save (write-time truth — the healthcareVintage precedent), read
+   *  by U13's staleness comparator at unlock. The legacy string stays untouched (add-only).
+   *  RMD-age rule + senior-bonus sunset are deliberately NOT stamped — they are birth-year/
+   *  calendar-DERIVED communication notes against the LIVE constants (already deterministic
+   *  inside the engine), never stamp-compares. */
+  readonly taxVintageDetail?: TaxVintageV3
+  /** P3·U13 — the date-surface vintage (the two fixture clocks the fuck-off-date answer
+   *  decays on): the contribution-limit table year (the catch-up step-down shapes the
+   *  projected stream) and the ticker-blend/TDF static-snapshot as-of (a stale snapshot
+   *  silently misstates the household stock weight). Minted by `dateVintageStamp()`
+   *  (constants/index.ts), WRITTEN FRESH at every save, read by U13 at unlock. */
+  readonly dateVintage?: DateVintageV3
+}
+
+/** The persisted structured tax vintage (P3·U13 → the controls-surface clock). Keyed on the
+ *  two things a real statutory/table change moves: the table year and the legal-basis
+ *  sentence (verbatim from the canonical entry — any wording change is a vintage bump, the
+ *  `acaStatus` precedent). */
+export interface TaxVintageV3 {
+  /** The tax year the bracket/deduction tables are keyed to (`TAX_YEAR`). */
+  readonly taxYear: number
+  /** The legal-basis display sentence, verbatim (`legalBasis.value`). */
+  readonly legalBasis: string
+}
+
+/** The persisted date-surface vintage (P3·U13 → the fuck-off-date clock). */
+export interface DateVintageV3 {
+  /** The contribution-limit table year (`CONTRIBUTION_YEAR`). */
+  readonly contributionYear: number
+  /** The ticker-blend/TDF static-snapshot as-of date (ISO), aggregated across the
+   *  classification table (`BLEND_SNAPSHOT_AS_OF`). */
+  readonly blendSnapshotAsOf: string
+}
+
+/** `savedAt` codec range gate (insight 046 — a bare finiteness check would admit an epoch-
+ *  MILLISECOND value that silently reads as year ~55000). Epoch-days: 2020-01-01 ≈ 18263,
+ *  2100-01-01 ≈ 47482 — generous on both sides of any real save this product can mint. */
+export const SAVED_AT_EPOCH_DAY_MIN = 18_263
+export const SAVED_AT_EPOCH_DAY_MAX = 47_482
+
+/** The ONE dirty-compare / round-trip normalizer (P3·U13). `scenarioFromDraft` stamps a
+ *  fresh `savedAt` on every encode, and its output is BOTH the disk payload AND the
+ *  `JSON.stringify` dirty-compare operand (resultSave.ts) — so identity is judged on the
+ *  scenario MINUS the wall-time stamp, or an untouched session would read permanently dirty
+ *  the day after its save. Order-preserving key strip (both operands are codec-decode
+ *  outputs, so remaining-key order is stable); consumers compare `JSON.stringify` of THIS,
+ *  never of the raw scenario. */
+export function scenarioIdentity(scenario: ScenarioV3): Omit<ScenarioV3, 'savedAt'> {
+  const { savedAt: _savedAt, ...identity } = scenario
+  return identity
 }
 
 /** The persisted healthcare vintage (P3·U11 → read by U13). Each field is a compact,
@@ -1625,6 +1690,9 @@ export const SCENARIO_V3_FIELDS = [
   'drawdownOrder',
   'enhancedSubsidies',
   'healthcareVintage',
+  'savedAt',
+  'taxVintageDetail',
+  'dateVintage',
 ] as const
 
 // Compile-time: the field array exactly covers ScenarioV3 (both directions).

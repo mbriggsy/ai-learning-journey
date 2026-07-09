@@ -74,6 +74,7 @@ import type {
   TickerClassification,
 } from '@shared/model'
 import type { DateSearchInput } from '@engine/dateSearch'
+import { appDefaultEraFor, CURRENT_APP_DEFAULT_VERSION } from '@shared/appDefaults'
 import { fromWire, dateSearchFromWire } from '@engine/engineWire'
 // The display-geometry constants the sticky gates read — the engine's OWN exported values
 // (never re-typed; the same objects confidence.ts computes the emitted margins against).
@@ -121,9 +122,23 @@ export interface ScenarioDraft
     // `healthcareVintage` (P3·U11) rides the draft for the shape tie only — the SAVE
     // path stamps it fresh from the current build's constants (scenarioFromDraft),
     // so whatever the draft carries is never the written truth.
+    // `savedAt`/`taxVintageDetail`/`dateVintage` (P3·U13) ride the same
+    // stamped-fresh-at-save contract (scenarioFromDraft overwrites all four stamps +
+    // appDefaultVersion); the draft's copies exist for the shape tie and for U13's
+    // staleness reader, which reads the RAW-decoded persisted model at unlock — never
+    // the draft (a re-save would have re-stamped it: reading the draft cries wolf).
     Pick<
       ScenarioV3,
-      'annualSpendingReal' | 'seed' | 'budget' | 'rothConversion' | 'drawdownOrder' | 'enhancedSubsidies' | 'healthcareVintage'
+      | 'annualSpendingReal'
+      | 'seed'
+      | 'budget'
+      | 'rothConversion'
+      | 'drawdownOrder'
+      | 'enhancedSubsidies'
+      | 'healthcareVintage'
+      | 'savedAt'
+      | 'taxVintageDetail'
+      | 'dateVintage'
     >
   >,
     Pick<
@@ -384,12 +399,14 @@ export function createMemoryModel(deps: MemoryModelDeps): MemoryModel {
     // documented ENTRY default — the ambiguous-band force-confirm makes the
     // user own it explicitly before the engine ever runs on it.)
     spendEntryPeriod: 'month',
-    survivorSpendingRatio: 0.75,
+    // Single-sourced from the era map (P3·U13) — the staleness reader's saved-era
+    // comparison is only honest if the shipped default and the era entry can't drift.
+    survivorSpendingRatio: appDefaultEraFor(CURRENT_APP_DEFAULT_VERSION)!.survivorSpendingRatio,
     drawdownPolicy: 'proportional',
     filing: 'mfj',
     startCalendarYear: startYear,
     taxVintage: 'OBBBA-2025',
-    appDefaultVersion: 'p2-d1',
+    appDefaultVersion: CURRENT_APP_DEFAULT_VERSION,
   }
 
   let answer: ModelAnswer = { kind: 'idle' }

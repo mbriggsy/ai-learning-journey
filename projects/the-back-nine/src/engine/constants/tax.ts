@@ -17,6 +17,7 @@ import {
   type UniformLifetimeDivisor,
 } from './types'
 import { jointLifeLastSurvivorData } from './jointLifeLastSurvivor.data'
+import type { TaxVintageV3 } from '@shared/model'
 
 export const TAX_YEAR = 2026
 
@@ -346,6 +347,21 @@ export const inOutRule = sourced(
     note: 'IN: ordinary brackets, standard deduction, RMDs, SS-taxation, MFJ→single, ACA-PTC (pre-65), IRMAA (post-65), cap-gains/QD stacking, and the lever-sensitive §1014/IRD heir-tax adjustment (leave-more). OUT-but-disclosed: NIIT, state.',
   },
 )
+
+/** The CURRENT build's tax vintage stamp (P3·U13 — the controls-surface clock; the
+ *  healthcareVintageStamp mirror). Keyed on the two things a real statutory/table change
+ *  moves: the table year and the legal-basis sentence VERBATIM (any wording change is a
+ *  vintage bump — the `acaStatus` precedent). The save path writes it fresh
+ *  (`scenarioFromDraft`); U13's staleness comparator diffs a persisted stamp against THIS
+ *  at unlock. RMD-age rule + senior-bonus sunset are deliberately NOT here — they are
+ *  birth-year/calendar-DERIVED communication notes against the live constants (already
+ *  deterministic inside the engine), never stamp-compares. */
+export function taxVintageStamp(): TaxVintageV3 {
+  return {
+    taxYear: TAX_YEAR,
+    legalBasis: legalBasis.value,
+  }
+}
 
 /** The full tax table — also the iteration surface for the shape test. */
 export const taxConstants = {

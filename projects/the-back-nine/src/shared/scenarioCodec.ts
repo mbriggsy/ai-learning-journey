@@ -31,6 +31,8 @@ import {
   DRAWDOWN_POLICIES,
   FILING_STATUSES,
   INCOME_TYPES,
+  SAVED_AT_EPOCH_DAY_MAX,
+  SAVED_AT_EPOCH_DAY_MIN,
   SEXES,
   SPEND_ENTRY_PERIODS,
   TICKER_CLASSIFICATION_CHOICES,
@@ -536,6 +538,37 @@ function checkV3Fields(o: Obj): void {
     needInteger(hv, 'fplGuidelineYear', path)
     needInteger(hv, 'irmaaTopTierFrozenThrough', path)
     needFinite(hv, 'partBStandardMonthly', path)
+  }
+  // P3·U13 — the save wall-time anchor (additive-optional). RANGE-gated, not merely
+  // finite (insight 046): an epoch-MILLISECOND value here is a finite integer that would
+  // silently read as year ~55000 — in-range garbage is worse than a reject.
+  if (o.savedAt !== undefined) {
+    const sa = o.savedAt
+    if (!isFiniteNumber(sa) || !Number.isInteger(sa)) {
+      throw new Corrupt('scenario.savedAt: expected an integer epoch-day')
+    }
+    if (sa < SAVED_AT_EPOCH_DAY_MIN || sa > SAVED_AT_EPOCH_DAY_MAX) {
+      throw new Corrupt(
+        `scenario.savedAt: ${sa} outside the epoch-day range [${SAVED_AT_EPOCH_DAY_MIN}, ${SAVED_AT_EPOCH_DAY_MAX}] (an epoch-ms value silently reads as a far-future year)`,
+      )
+    }
+  }
+  // P3·U13 — the structured tax vintage (additive-optional; one atomic object — a partial
+  // stamp set is meaningless, the healthcareVintage precedent).
+  if (o.taxVintageDetail !== undefined) {
+    const tv = o.taxVintageDetail
+    const path = 'scenario.taxVintageDetail'
+    needObject(tv, path)
+    needInteger(tv, 'taxYear', path)
+    needString(tv, 'legalBasis', path)
+  }
+  // P3·U13 — the date-surface vintage (additive-optional; same atomic-object contract).
+  if (o.dateVintage !== undefined) {
+    const dv = o.dateVintage
+    const path = 'scenario.dateVintage'
+    needObject(dv, path)
+    needInteger(dv, 'contributionYear', path)
+    needString(dv, 'blendSnapshotAsOf', path)
   }
 }
 

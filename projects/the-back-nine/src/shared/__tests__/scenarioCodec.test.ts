@@ -14,6 +14,8 @@ import { ENGINE_MAX_DOLLAR } from '@engine/simulate'
 
 import {
   NEVER_DEPLETED,
+  SAVED_AT_EPOCH_DAY_MAX,
+  SAVED_AT_EPOCH_DAY_MIN,
   SCENARIO_V3_FIELDS,
   type Scenario,
   type ScenarioV2,
@@ -493,6 +495,57 @@ describe('v3 — the forward-written persist shape (U8, the first v3 writer)', (
       (o) => { o.healthcareVintage = { ...stamp, acaStatus: 7 } }, // non-string status
       (o) => { o.healthcareVintage = { ...stamp, partBStandardMonthly: null } }, // DND-009 null
       (o) => { o.healthcareVintage = 'reverted' }, // not an object
+    ]
+    for (const mutate of bads) {
+      const d = decodeScenario(mutated(V3, mutate))
+      expect(d.ok).toBe(false)
+      if (!d.ok) expect(d.reason).toBe('corrupt')
+    }
+  })
+
+  // P3·U13 — the save wall-time anchor + the two new vintage stamps (additive-optional).
+  it('v3 WITH savedAt + taxVintageDetail + dateVintage round-trips exactly; absent-all decodes unchanged (the legacy-vault arm)', () => {
+    const withU13: ScenarioV3 = {
+      ...V3,
+      savedAt: 20_643, // ~2026-07 as an epoch-day — shape-only fixture value
+      taxVintageDetail: { taxYear: 2026, legalBasis: 'OBBBA — One Big Beautiful Bill Act, signed 2025-07-04' },
+      dateVintage: { contributionYear: 2026, blendSnapshotAsOf: '2026-04-30' },
+    }
+    expect(decodeScenario(encodeScenario(withU13))).toEqual({ ok: true, scenario: withU13 })
+    // The legacy vault (none of the three) is untouched by the U13 vocabulary.
+    expect(decodeScenario(encodeScenario(V3))).toEqual({ ok: true, scenario: V3 })
+  })
+
+  it('savedAt is RANGE-gated, not merely finite (insight 046): an epoch-MILLISECOND value, a negative, a float, and both just-out-of-range days reject; both boundaries pass', () => {
+    const bads = [
+      Date.parse('2026-07-09'), // the epoch-ms trap — finite, integer, reads as year ~55000
+      -1,
+      20_643.5, // non-integer
+      SAVED_AT_EPOCH_DAY_MIN - 1,
+      SAVED_AT_EPOCH_DAY_MAX + 1,
+      Number.NaN,
+      Number.POSITIVE_INFINITY,
+    ]
+    for (const bad of bads) {
+      const d = decodeScenario(mutated(V3, (o) => { o.savedAt = bad }))
+      expect(d.ok, `savedAt=${String(bad)} must be rejected`).toBe(false)
+      if (!d.ok) expect(d.reason).toBe('corrupt')
+    }
+    for (const boundary of [SAVED_AT_EPOCH_DAY_MIN, SAVED_AT_EPOCH_DAY_MAX]) {
+      const d = decodeScenario(mutated(V3, (o) => { o.savedAt = boundary }))
+      expect(d.ok, `savedAt=${boundary} (boundary) must pass — the gate must not be over-strict`).toBe(true)
+    }
+  })
+
+  it('taxVintageDetail and dateVintage are ATOMIC objects — a missing field, a non-integer year, or a non-string each reject (the healthcareVintage precedent)', () => {
+    const bads: Array<(o: Obj) => void> = [
+      (o) => { o.taxVintageDetail = { taxYear: 2026 } }, // missing legalBasis
+      (o) => { o.taxVintageDetail = { taxYear: 2026.5, legalBasis: 'OBBBA' } }, // non-integer year
+      (o) => { o.taxVintageDetail = { taxYear: 2026, legalBasis: 7 } }, // non-string basis
+      (o) => { o.taxVintageDetail = 'OBBBA-2025' }, // not an object (the legacy-string confusion)
+      (o) => { o.dateVintage = { contributionYear: 2026 } }, // missing blendSnapshotAsOf
+      (o) => { o.dateVintage = { contributionYear: null, blendSnapshotAsOf: '2026-04-30' } }, // DND-009 null
+      (o) => { o.dateVintage = { contributionYear: 2026, blendSnapshotAsOf: 20260430 } }, // non-string as-of
     ]
     for (const mutate of bads) {
       const d = decodeScenario(mutated(V3, mutate))

@@ -57,6 +57,7 @@ export function Result({
   save,
   backup,
   computing = false,
+  stalenessNote = false,
 }: {
   readonly onReview: () => void
   readonly save: ResultSaveProp
@@ -64,6 +65,11 @@ export function Result({
    *  undefined ⇒ no door. Withheld with the whole actions row while computing (an affordance
    *  we don't want used on a non-answer shouldn't exist — the same rule as the quiet doors). */
   readonly backup?: ResultBackupProp
+  /** P3·U13 — TRUE when any staleness clock fired at unlock (IntakeApp's re-entry gate
+   *  derived it from the RAW vault stamps): both heroes wear the standing "figured fresh
+   *  under today's rules" line WITH the verdict. Session-lifetime (drift doesn't un-happen
+   *  by re-saving mid-session). Default false. */
+  readonly stalenessNote?: boolean
   /** True while NOTHING has ever resolved (answer 'idle'/'pending' — the "Working it out…"
    *  window). The whole actions row is withheld: the actions act on an answer that isn't
    *  there yet, and an affordance we don't want used shouldn't exist (Briggsy, 2026-07-02).
@@ -124,6 +130,17 @@ export function Result({
   // unpriced-Medicare disclosure, threaded to BOTH hero surfaces + the Roth lever below.
   const healthPriced = healthcarePriced(snapshot.draft)
   const medicareGap = medicareUnpriced(snapshot.draft.people)
+  // P3·U13 — the date hero's wall-time anchor (presentation arithmetic ONLY — never written
+  // back into the draft; the round-trip guard). Elapsed is 0 for every same-year session;
+  // it goes positive only when an aged vault is re-opened in a later calendar year, and the
+  // hero then re-derives its "~N years out" from TODAY while the calendar label holds.
+  const dateAnchor = useMemo(() => {
+    const startCalendarYear = snapshot.draft.startCalendarYear
+    return {
+      startCalendarYear,
+      elapsedPlanYears: Math.max(0, new Date().getFullYear() - startCalendarYear),
+    }
+  }, [snapshot.draft.startCalendarYear])
   const enhancedApplied = snapshot.draft.enhancedSubsidies === true
   // The wire's per-year healthcare series (spine headline runs only — presence-keyed).
   const healthReadout =
@@ -354,6 +371,8 @@ export function Result({
             focusSignal={focusKey}
             actionsSlot={seatInLead ? actionsNode : undefined}
             medicareUnpricedNote={medicareGap}
+            stalenessNote={stalenessNote}
+            dateAnchor={dateAnchor}
             sheetOpen={sheetOpen}
           />
         )}
@@ -363,6 +382,7 @@ export function Result({
             focusSignal={focusKey}
             actionsSlot={seatInLead ? actionsNode : undefined}
             medicareUnpricedNote={medicareGap}
+            stalenessNote={stalenessNote}
             sheetOpen={sheetOpen}
           />
         )}

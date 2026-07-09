@@ -58,7 +58,10 @@ import type { CopyKey } from '@ui/copy'
 
 type Bucket = 'pretax' | 'roth' | 'taxable' | 'hsa'
 
-const KIND_TO_BUCKET: Readonly<Record<AccountKind, Bucket>> = {
+/** Exported for the U13 re-entry read-back (ui) — the ONE kind→bucket map; the balance
+ *  confirm's per-bucket sums must group exactly the way the engine's buckets do, or the
+ *  read-back would disagree with the plan it fronts. */
+export const KIND_TO_BUCKET: Readonly<Record<AccountKind, Bucket>> = {
   '401k': 'pretax',
   '403b': 'pretax',
   'traditional-ira': 'pretax',

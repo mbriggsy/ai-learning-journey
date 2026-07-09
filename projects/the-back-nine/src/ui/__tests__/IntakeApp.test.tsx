@@ -25,12 +25,14 @@ vi.mock('../Result', () => ({
     save,
     backup,
     onReview,
+    stalenessNote = false,
   }: {
     save: { kind: string }
     backup?: { onSave: () => void }
     onReview: () => void
+    stalenessNote?: boolean
   }) => (
-    <div data-save-kind={save.kind} data-backup={backup ? 'offered' : 'none'}>
+    <div data-save-kind={save.kind} data-backup={backup ? 'offered' : 'none'} data-staleness={String(stalenessNote)}>
       result stub
       <button type="button" onClick={onReview}>
         review-stub
@@ -81,29 +83,40 @@ import IntakeApp from '../IntakeApp'
 import { appModel } from '../appModel'
 import { scenarioFromDraft } from '../scenarioFromDraft'
 import { DEV_SEEDS } from '../devSeeds'
+import { copy } from '../copy'
 
 // A complete, persistable household — the same fixture the seeds prove against the real engine.
 const ready = scenarioFromDraft(DEV_SEEDS.retired)
 if (!ready.ready) throw new Error('IntakeApp.test: the retired dev seed must build a persistable scenario')
 h.model = ready.scenario
 
-// The hydrate path awaits both recompute tiers; the derivation under test never reads the answer.
-vi.spyOn(appModel, 'recompute').mockResolvedValue(undefined)
+// P3·U13: the recompute is GATED behind the re-entry confirm (constraint (b)) — the spy both
+// fakes the engine and lets the gate-order arms count dispatches.
+const recomputeSpy = vi.spyOn(appModel, 'recompute').mockResolvedValue(undefined)
+
+/** Walk the U13 re-entry gate (every hydrate mount lands on it before the result). */
+async function affirmGate(readOnly = false) {
+  const name = readOnly ? copy.reentryContinueCta : copy.reentryAffirmCta
+  fireEvent.click(await screen.findByRole('button', { name }))
+}
 
 beforeEach(() => {
   h.hasBackup = false // default: no backup on record (the door-armed baseline); tests override
+  recomputeSpy.mockClear()
 })
 afterEach(cleanup)
 
 describe('IntakeApp — the read-only verdict reaches deriveResultSave (Fork C ii glue)', () => {
   it('a READ-ONLY hydrated session derives NO save claim (kills the dropped-3rd-arg mutant)', async () => {
     render(<IntakeApp hydrateFromVault readOnly />)
+    await affirmGate(true)
     const stub = await screen.findByText('result stub')
     expect(stub).toHaveAttribute('data-save-kind', 'none')
   })
 
   it('the WRITABLE twin derives the clean saved badge — the flag is the verdict, not a global mute', async () => {
     render(<IntakeApp hydrateFromVault />)
+    await affirmGate()
     const stub = await screen.findByText('result stub')
     expect(stub).toHaveAttribute('data-save-kind', 'clean')
   })
@@ -113,6 +126,7 @@ describe('IntakeApp — the re-offer backup door (U8-tail: hydrated + writable +
   it('OFFERS the door when a writable return has no backup on record', async () => {
     h.hasBackup = false
     render(<IntakeApp hydrateFromVault />)
+    await affirmGate()
     const stub = await screen.findByText('result stub')
     expect(stub).toHaveAttribute('data-backup', 'offered')
   })
@@ -120,6 +134,7 @@ describe('IntakeApp — the re-offer backup door (U8-tail: hydrated + writable +
   it('NO door when the note already exists (a household with a backup is never re-nagged)', async () => {
     h.hasBackup = true
     render(<IntakeApp hydrateFromVault />)
+    await affirmGate()
     const stub = await screen.findByText('result stub')
     expect(stub).toHaveAttribute('data-backup', 'none')
   })
@@ -127,6 +142,7 @@ describe('IntakeApp — the re-offer backup door (U8-tail: hydrated + writable +
   it('NO door on a READ-ONLY return, even with no note (the standing view-only banner is disclosure enough — v1 scope)', async () => {
     h.hasBackup = false
     render(<IntakeApp hydrateFromVault readOnly />)
+    await affirmGate(true)
     const stub = await screen.findByText('result stub')
     expect(stub).toHaveAttribute('data-backup', 'none')
   })
@@ -134,6 +150,7 @@ describe('IntakeApp — the re-offer backup door (U8-tail: hydrated + writable +
   it('finishing the backup step DISSOLVES the door and returns to the answer', async () => {
     h.hasBackup = false
     render(<IntakeApp hydrateFromVault />)
+    await affirmGate()
     const offered = await screen.findByText('result stub')
     expect(offered).toHaveAttribute('data-backup', 'offered')
     // Tap the door → the 'backup' phase mounts BackupStep (stubbed to a Finish button).
@@ -147,6 +164,7 @@ describe('IntakeApp — the re-offer backup door (U8-tail: hydrated + writable +
   it('DECLINING ("Not now") returns to the answer with the door STILL offered — an invited offer is never a trap', async () => {
     h.hasBackup = false
     render(<IntakeApp hydrateFromVault />)
+    await affirmGate()
     const offered = await screen.findByText('result stub')
     expect(offered).toHaveAttribute('data-backup', 'offered')
     fireEvent.click(screen.getByRole('button', { name: 'save-backup-stub' }))
@@ -154,6 +172,54 @@ describe('IntakeApp — the re-offer backup door (U8-tail: hydrated + writable +
     // Back on the answer: nothing recorded, needsBackup intact, the quiet door remains available.
     const back = await screen.findByText('result stub')
     expect(back).toHaveAttribute('data-backup', 'offered')
+  })
+})
+
+describe('IntakeApp — the U13 re-entry gate (council 2026-07-09, constraints (a)+(b))', () => {
+  it('the confirm GATES the reveal: zero recompute dispatches while the gate is up; the affirm fires provisional→final and lands the result (never verdict-then-ask)', async () => {
+    render(<IntakeApp hydrateFromVault />)
+    // The gate is up — the read-back heading renders and NOTHING has been dispatched.
+    await screen.findByRole('button', { name: copy.reentryAffirmCta })
+    expect(screen.getByRole('heading', { name: copy.reentryHeading })).toBeInTheDocument()
+    expect(recomputeSpy).not.toHaveBeenCalled()
+    // Affirm → the held recompute pair fires and the result mounts.
+    fireEvent.click(screen.getByRole('button', { name: copy.reentryAffirmCta }))
+    await screen.findByText('result stub')
+    expect(recomputeSpy.mock.calls.map((c) => c[0])).toEqual(['provisional', 'final'])
+  })
+
+  it('the update route lands in the walk-through (answers preserved, no recompute — the terminal advance owns it)', async () => {
+    render(<IntakeApp hydrateFromVault />)
+    fireEvent.click(await screen.findByRole('button', { name: copy.reentryUpdateCta }))
+    await screen.findByText('flow stub')
+    expect(recomputeSpy).not.toHaveBeenCalled()
+  })
+
+  it('a READ-ONLY return shows Continue ONLY — the update affordance is withheld (session.save would refuse; a dead-end CTA is the lying-remedy shape)', async () => {
+    render(<IntakeApp hydrateFromVault readOnly />)
+    await screen.findByRole('button', { name: copy.reentryContinueCta })
+    expect(screen.queryByRole('button', { name: copy.reentryUpdateCta })).toBeNull()
+    expect(screen.queryByRole('button', { name: copy.reentryAffirmCta })).toBeNull()
+  })
+
+  it('doctored OLD vault stamps → the staleness note reaches Result; the fresh twin reads false (constraint (a): derived from the RAW model)', async () => {
+    const fresh = h.model
+    try {
+      h.model = {
+        ...(fresh as Record<string, unknown>),
+        taxVintageDetail: { taxYear: 2019, legalBasis: 'TCJA (pre-OBBBA)' },
+      }
+      render(<IntakeApp hydrateFromVault />)
+      await affirmGate()
+      expect(await screen.findByText('result stub')).toHaveAttribute('data-staleness', 'true')
+      cleanup()
+      h.model = fresh
+      render(<IntakeApp hydrateFromVault />)
+      await affirmGate()
+      expect(await screen.findByText('result stub')).toHaveAttribute('data-staleness', 'false')
+    } finally {
+      h.model = fresh
+    }
   })
 })
 

@@ -6,11 +6,14 @@ import { missingRequiredFacts } from '@intake/intakeMap'
 import { validateDraft, type FieldPath } from '@intake/sanity'
 import { appModel } from './appModel'
 import { Result } from './Result'
-import { scenarioFromDraft } from './scenarioFromDraft'
+import { scenarioFromDraft, currentEpochDay } from './scenarioFromDraft'
 import { draftFromScenario } from './draftFromScenario'
 import { deriveResultSave, type PersistState } from './resultSave'
 import { describeSaveFailure } from './unlockCopy'
 import { PendingPanel } from './PendingPanel'
+import { ReEntry } from './ReEntry'
+import { composeReentry, type ReentryView } from './reentryChrome'
+import { deriveStaleness } from '@store/staleness'
 import { copy } from './copy'
 import './styles/save.css'
 
@@ -62,9 +65,14 @@ export default function IntakeApp({
    *  tab — session.save would refuse), so this is threaded into deriveResultSave. */
   readOnly?: boolean
 }) {
-  const [phase, setPhase] = useState<'restoring' | 'intake' | 'result' | 'save' | 'restore-failed' | 'backup'>(
-    hydrateFromVault ? 'restoring' : 'intake',
-  )
+  const [phase, setPhase] = useState<
+    'restoring' | 'reentry' | 'intake' | 'result' | 'save' | 'restore-failed' | 'backup'
+  >(hydrateFromVault ? 'restoring' : 'intake')
+  // P3·U13 — the re-entry gate's composed state, set ONCE by the hydrate effect from the
+  // RAW-decoded model (council constraint (a): staleness reads the vault's own stamps,
+  // never the draft a later re-save would have re-stamped). `anyStale` outlives the gate —
+  // it feeds the hero's standing staleness note for the whole session.
+  const [reentry, setReentry] = useState<{ view: ReentryView; anyStale: boolean } | null>(null)
   // The re-offer backup door's gate (U8-tail): set true only on a decrypt-on-return WHERE the
   // session is writable AND no backup-note is on record — a returning household whose off-device
   // copy was never made here. Never set on a fresh/seed intake (no vault to lack a backup), never
@@ -239,9 +247,14 @@ export default function IntakeApp({
             // leave the door closed on a note-read failure — never a restore-failed
           }
         }
-        setPhase('result')
-        await appModel.recompute('provisional')
-        await appModel.recompute('final')
+        // P3·U13 — THE RE-ENTRY GATE (council constraints (a)+(b)). Staleness is derived
+        // from the RAW-decoded `model` — the vault's own stamps, captured before any
+        // re-save could re-stamp them — and the balance confirm resolves BEFORE the result
+        // phase mounts or any recompute dispatches: the verdict never renders on
+        // unconfirmed balances and then asks. The recompute moves to the affirm handler.
+        const report = deriveStaleness(model, currentEpochDay())
+        setReentry({ view: composeReentry(model, report), anyStale: report.anyStale })
+        setPhase('reentry')
       } catch {
         if (!cancelled) setPhase('restore-failed')
       }
@@ -256,6 +269,30 @@ export default function IntakeApp({
       <main className="save">
         <PendingPanel status={copy.restoringStatus} />
       </main>
+    )
+  }
+
+  if (phase === 'reentry' && reentry !== null) {
+    return (
+      <ReEntry
+        view={reentry.view}
+        readOnly={readOnly}
+        onAffirm={() => {
+          // Affirmed (a prompt, not an attestation — nothing recorded): NOW the reveal
+          // proceeds — result phase + the two-tier recompute the gate had been holding.
+          setPhase('result')
+          void (async () => {
+            await appModel.recompute('provisional')
+            await appModel.recompute('final')
+          })()
+        }}
+        onUpdate={() => {
+          // Something changed: route into the walk-through (accounts are edited where they
+          // were entered — the U12 panel precedent; the terminal advance recomputes as
+          // always). The hydrated draft is already installed, so every answer is preserved.
+          setPhase('intake')
+        }}
+      />
     )
   }
 
@@ -339,6 +376,8 @@ export default function IntakeApp({
         // The re-offer backup door — present only when the hydrate armed it (writable + no note on
         // record). Tapping opens the 'backup' phase; the door dissolves once the ceremony records.
         backup={needsBackup ? { onSave: () => setPhase('backup') } : undefined}
+        // P3·U13 — the standing hero staleness echo (session-lifetime once the gate derived it).
+        stalenessNote={reentry?.anyStale === true}
       />
     )
   }

@@ -112,6 +112,11 @@ export interface ConfidenceStatementProps {
    *  wears the honest-gap disclosure in its subordinate region — on the surface, in the a11y
    *  tree, never buried. Default false (the priced domain). */
   readonly medicareUnpricedNote?: boolean
+  /** P3·U13 — TRUE when any staleness clock fired at unlock (IntakeApp's re-entry gate):
+   *  the verdict wears the standing "figured fresh under today's rules" line in its
+   *  subordinate region — the Q1 disclosure rides WITH the verdict, never after it.
+   *  Default false (fresh intakes, no-drift returns). */
+  readonly stalenessNote?: boolean
   /** U12 ultramode: TRUE while a modal sheet/panel owns focus and AT (Result threads its
    *  open-sheet states). Two suppressions, same reason (the insight-067 modal contract):
    *  (1) the mount-time landing focus is CONSUMED without moving focus — an in-panel edit
@@ -140,7 +145,7 @@ function buildPlaceholderBand(annotations: readonly XAnnotation[]): Indeterminat
   }
 }
 
-export function ConfidenceStatement({ view, focusSignal, actionsSlot, medicareUnpricedNote = false, sheetOpen = false }: ConfidenceStatementProps) {
+export function ConfidenceStatement({ view, focusSignal, actionsSlot, medicareUnpricedNote = false, stalenessNote = false, sheetOpen = false }: ConfidenceStatementProps) {
   const headingRef = useRef<HTMLHeadingElement>(null)
   // Announce on the FIRST landing only (the undefined→defined edge) — the shared once-per-landing
   // contract (mirrors FuckOffDate). The spine's two recomputes are byte-identical, so its key never
@@ -343,7 +348,7 @@ export function ConfidenceStatement({ view, focusSignal, actionsSlot, medicareUn
                 the first frame; R4 — the fold is the seam the cold-read can flip). Both render
                 below the band so the scrub tap-targets never move (insight 035); absence renders
                 nothing (insight 044). */}
-        {(relief || view.survivorReading || medicareUnpricedNote) && (
+        {(relief || view.survivorReading || medicareUnpricedNote || stalenessNote) && (
           <div className="reveal__subordinates">
             {relief && <TwoTierHeadline relief={relief} />}
             {view.survivorReading &&
@@ -376,6 +381,11 @@ export function ConfidenceStatement({ view, focusSignal, actionsSlot, medicareUn
             {medicareUnpricedNote && (
               <p className="cs-medicare-note">{copy.verdictMedicareUnpriced}</p>
             )}
+            {/* P3·U13 — the standing staleness echo (Q1): the full per-clock disclosure
+                already rendered at the re-entry gate; this line keeps the fact visible WITH
+                the verdict. Plain text in the a11y tree; its OWN class — the fit gate pins
+                .cs-medicare-note per-seed, so this note must never alias it. */}
+            {stalenessNote && <p className="cs-staleness-note">{copy.stalenessHeroNote}</p>}
           </div>
         )}
         {/* The completion actions, seated in the left reading column on two-pane (display:contents in

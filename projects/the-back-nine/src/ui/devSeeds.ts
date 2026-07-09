@@ -22,7 +22,7 @@
  * intake AND the Save ceremony every time. It is equally DEV-gated + DCE'd.
  */
 import type { ScenarioDraft } from '@store/memoryModel'
-import type { BudgetLineItem } from '@shared/model'
+import type { BudgetLineItem, ScenarioV3 } from '@shared/model'
 import { scenarioFromDraft } from './scenarioFromDraft'
 
 /** A fixed dev CRN seed → the same fan every drive (a reproducible cold-read).
@@ -710,11 +710,37 @@ export function plantDevVault(key: string): Promise<PlantResult> {
   return promise
 }
 
+/**
+ * P3·U13 — `?vault=stale`: the AGED-vault plant (the retired household as if saved ~2 years
+ * ago under older rulebooks). Doctors the freshly-built scenario BEFORE the write — savedAt
+ * back ~400 days (the elapsed line), the tax + healthcare stamps one vintage back (their
+ * clocks fire), the plan anchor back 2 calendar years (the wall-time framing). The ONLY way
+ * to see the re-entry staleness surface live today — every organic save is same-day fresh.
+ * appDefaultVersion stays CURRENT deliberately: the Q7 saved-era map has one era, so that
+ * note is v1-inert by design (a fake era in the shipped map would be a lie to render one).
+ */
+function doctorStaleVault(s: ScenarioV3, todayEpochDay: number): ScenarioV3 {
+  return {
+    ...s,
+    savedAt: todayEpochDay - 400,
+    startCalendarYear: s.startCalendarYear - 2,
+    taxVintageDetail: { taxYear: (s.taxVintageDetail?.taxYear ?? 2026) - 1, legalBasis: 'TCJA (the pre-OBBBA dev fixture)' },
+    healthcareVintage:
+      s.healthcareVintage === undefined
+        ? undefined
+        : { ...s.healthcareVintage, coverageYear: s.healthcareVintage.coverageYear - 1, partBStandardMonthly: s.healthcareVintage.partBStandardMonthly - 10 },
+  }
+}
+
 async function runPlantDevVault(key: string): Promise<PlantResult> {
-  const draft = resolveDevSeed(key)
+  const stale = key === 'stale'
+  const draft = resolveDevSeed(stale ? 'retired' : key)
   if (draft === null) return 'unknown-seed'
   const built = scenarioFromDraft(draft)
   if (!built.ready) return 'not-ready'
+  const scenario = stale
+    ? doctorStaleVault(built.scenario, Math.floor(Date.now() / 86_400_000))
+    : built.scenario
   const [{ getVaultSession }, { checkPassphraseFloor }, { clearVault, openVaultDb }] = await Promise.all([
     import('./vaultSession'),
     import('@crypto/kdf'),
@@ -726,7 +752,7 @@ async function runPlantDevVault(key: string): Promise<PlantResult> {
   const session = await getVaultSession()
   await session.lock().catch(() => {}) // ensure 'locked' (drop any resident keys from a prior plant)
   await clearVault(await openVaultDb()) // idempotent replace — a prior planted vault would else block firstSave
-  const r = await session.firstSave(built.scenario, pass.passphrase, rec.passphrase)
+  const r = await session.firstSave(scenario, pass.passphrase, rec.passphrase)
   if (!r.ok) return 'write-failed'
   // firstSave leaves the session UNLOCKED. Lock it so the planter leaves a clean ON-DISK vault the
   // unlock screen can re-open — else unlock() sees status 'unlocked' and refuses ('not-locked'),

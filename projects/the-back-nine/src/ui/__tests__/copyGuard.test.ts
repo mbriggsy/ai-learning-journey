@@ -140,6 +140,12 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     assumptionMarketStocks: slots.assumptionMarketStocks('5%', '18%'),
     assumptionMarketBonds: slots.assumptionMarketBonds('1%', '6%'),
     assumptionMarketInflation: slots.assumptionMarketInflation('3%'),
+    // P3·U13 — the re-entry read-back + the date answer's wall-time framing.
+    reentryBenefitMonthly: slots.reentryBenefitMonthly('2,000'),
+    reentryElapsedYears: slots.reentryElapsedYears(3),
+    stalenessBudgetLine: slots.stalenessBudgetLine(2028),
+    dateInYearsAnchored: slots.dateInYearsAnchored(7, 2033),
+    dateInYearsPast: slots.dateInYearsPast(2031),
   }
 
   it('every U10 delta-readout slot WEARS a hedge (the control readouts are slot-composed, so the require-hedge sweep must reach the rendered samples here)', () => {

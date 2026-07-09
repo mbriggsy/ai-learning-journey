@@ -850,6 +850,42 @@ export const copy = {
     'Tax on a Roth conversion comes out of the year’s withdrawals in the same order as everything else. That choice errs against converting, so the lever’s benefit reads understated, never oversold.',
   assumptionSsClaimAgeLabel: 'The age Social Security starts',
   errBirthYearBlank: 'The plan needs a birth year to run — mind putting one back?',
+  // --- P3·U13 — the re-entry gate + the staleness notes ---------------------------------
+  // LAW: `reentry*` / `staleness*` are chrome/note prefixes (the `assumption*` precedent) —
+  // factual read-back labels + calm drift disclosures, hedge-EXEMPT and verdict-EXEMPT
+  // (they carry no odds and recommend nothing). The confirm is a PROMPT, never an
+  // attestation (council 2026-07-09 constraint (c)); nothing here claims "confirmed".
+  // FIRST-DRAFT craftsman's-lead wording throughout — the re-entry copy is an Act-3
+  // exit-condition cold-read subject.
+  reentryHeading: 'Are these still your numbers?',
+  reentryIntro:
+    'Your answer is figured from the balances below, exactly as you last entered them. Markets and paychecks move — a quick look keeps the reading honest.',
+  reentryBalancesLegend: 'Account balances, as saved',
+  reentryBenefitsLegend: 'Social Security, monthly at full retirement age',
+  reentryBucketPretax: 'Pre-tax accounts — 401(k), 403(b), traditional IRA',
+  reentryBucketRoth: 'Roth accounts',
+  reentryBucketTaxable: 'Brokerage',
+  reentryBucketHsa: 'HSA',
+  reentryAffirmCta: 'Still about right — show my answer',
+  reentryUpdateCta: 'Something’s changed — update them',
+  reentryContinueCta: 'Continue to your answer',
+  // The calm per-clock drift lines (Q1 — the disclosure that rides WITH the recompute; each
+  // names its own rulebook, none names a direction — the answer itself carries the verdict).
+  stalenessAppDefault:
+    'We’ve updated our default planning assumptions since your save — this reading uses the new ones.',
+  stalenessTax: 'Tax rules have been updated since your save — this reading uses today’s.',
+  stalenessSeniorBonus:
+    'A temporary senior tax deduction that your saved years included has since ended — this reading prices the years as they stand now.',
+  stalenessHealthcare:
+    'Health-coverage rules have been updated since your save — this reading uses today’s.',
+  stalenessDate:
+    'The contribution limits or fund snapshots behind your date have been updated since your save — this reading uses today’s.',
+  // The standing hero note (renders WITH the first verdict when any clock fired — never
+  // after it; the answer is already recomputed under today's rules, this line says so).
+  // DELIBERATELY ONE LINE at the reading measure: the full per-clock disclosure lives at
+  // the re-entry gate the user just read; a two-line echo here pushed the PROTECTED R13
+  // disclaimer below the one-frame fold at 1536×791 (measured live, 2026-07-09).
+  stalenessHeroNote: 'Some rules changed since your save — this answer uses today’s.',
 } as const satisfies Record<string, string>
 
 export type CopyKey = keyof typeof copy
@@ -1305,6 +1341,30 @@ export const slots = {
   assumptionMarketBonds: (meanPct: string, swingPct: string): string =>
     `Bonds — about ${meanPct} a year after inflation, with swings around ${swingPct}.`,
   assumptionMarketInflation: (meanPct: string): string => `Inflation — about ${meanPct} a year.`,
+  // --- P3·U13 — the re-entry gate + the date answer's wall-time framing ------------------
+  /** The SS fold-in row's figure ("are these still your benefit amounts?" — read back in the
+   *  monthly frame the statement and the intake asked in; amount pre-formatted). */
+  reentryBenefitMonthly: (amountFormatted: string): string => `$${amountFormatted} a month`,
+  /** The "~N years since your save" line — renders ONLY off a real `savedAt` anchor
+   *  (absent = suppressed, never fabricated from the plan's start year). */
+  reentryElapsedYears: (n: number): string =>
+    n === 1 ? 'You saved this about a year ago.' : `You saved this about ${n} years ago.`,
+  /** One expired budget window's calm re-confirm (quotes the line's own calendar boundary —
+   *  the user's frame, never a bare offset). */
+  stalenessBudgetLine: (endCalendarYear: number): string =>
+    `Part of your budget was set to end in ${endCalendarYear} — worth a look if that’s changed.`,
+  /** The date hero's ANCHORED framing (U13): the relative years re-derived against wall
+   *  time + the wall-time-stable calendar label — the calendar year never decays, the "~N
+   *  years" is always from TODAY (a re-opened old save must not replay its save-day count). */
+  dateInYearsAnchored: (n: number, calendarYear: number): string =>
+    n === 1
+      ? `Your fuck-off date is about a year out — around ${calendarYear}`
+      : `Your fuck-off date is about ${n} years out — around ${calendarYear}`,
+  /** The arrived arm (wall time has caught up to a saved date): a statement of the plan's
+   *  own calendar, never a fresh "stop now" verdict — the recompute's word carries that.
+   *  Unreachable live today (every vault is same-day); pinned for the day it isn't. */
+  dateInYearsPast: (calendarYear: number): string =>
+    `Your plan penciled the fuck-off date around ${calendarYear} — by the calendar, that’s about now`,
 } as const
 
 /**

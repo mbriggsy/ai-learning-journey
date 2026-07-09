@@ -97,6 +97,18 @@ export interface FuckOffDateProps {
    *  claim then wears the honest-gap disclosure among its notes — on the surface, in the
    *  a11y tree. Default false (the priced domain). */
   readonly medicareUnpricedNote?: boolean
+  /** P3·U13 — TRUE when any staleness clock fired at unlock: the date claim wears the
+   *  standing "figured fresh under today's rules" line among its notes (the Q1 disclosure
+   *  rides WITH the verdict). Default false. */
+  readonly stalenessNote?: boolean
+  /** P3·U13 — the wall-time anchor for the date framing (the council's date rule): the
+   *  plan's own start year + how many CALENDAR years have passed since it. When present,
+   *  the hero line carries the wall-time-stable calendar label ("— around 2033") and the
+   *  relative "~N years out" is re-derived against TODAY (offset − elapsed, floored at the
+   *  arrived arm) — a re-opened old save must never replay its save-day count as current.
+   *  NEVER written back into the draft (the round-trip guard). Absent (the preview
+   *  harness) ⇒ the un-anchored legacy framing. */
+  readonly dateAnchor?: { readonly startCalendarYear: number; readonly elapsedPlanYears: number }
   /** U12 ultramode: TRUE while a modal sheet/panel owns focus and AT (Result threads its
    *  open-sheet states). Mirrors ConfidenceStatement's contract: the landing focus is
    *  CONSUMED without moving focus (an in-panel edit can demote → re-resolve → REMOUNT this
@@ -106,10 +118,24 @@ export interface FuckOffDateProps {
 }
 
 /** The hero claim's heading text — shared by the render and the polite sharpen announce, so what
- *  is spoken is exactly what is shown. */
-function heroLead(hero: DateTrackOutcome, windowTopYears: number): string {
+ *  is spoken is exactly what is shown. With an anchor (P3·U13): the calendar label is the
+ *  wall-time-STABLE claim (startCalendarYear + offset — byte-identical however old the save)
+ *  and the relative count re-derives from today (offset − elapsed). The engine's own offset
+ *  is NEVER mutated — this is presentation arithmetic only. */
+export function heroLead(
+  hero: DateTrackOutcome,
+  windowTopYears: number,
+  anchor?: { readonly startCalendarYear: number; readonly elapsedPlanYears: number },
+): string {
   if (hero.kind === 'no-date-in-window') return slots.noDateInWindow(windowTopYears)
-  return hero.offsetYears === 0 ? copy.dateFreeToday : slots.dateInYears(hero.offsetYears)
+  if (hero.offsetYears === 0) return copy.dateFreeToday
+  if (anchor === undefined) return slots.dateInYears(hero.offsetYears)
+  const calendarYear = anchor.startCalendarYear + hero.offsetYears
+  const yearsFromToday = hero.offsetYears - anchor.elapsedPlanYears
+  // The arrived arm: wall time caught up to (or passed) the saved date — state the plan's
+  // own calendar, never a fresh "stop now" verdict (the recompute's word carries that).
+  if (yearsFromToday <= 0) return slots.dateInYearsPast(calendarYear)
+  return slots.dateInYearsAnchored(yearsFromToday, calendarYear)
 }
 
 /** The subordinate essentials line (split only) — the floor's claim in its own register. */
@@ -126,7 +152,7 @@ function floorLineText(split: Extract<DateSplitView, { kind: 'split' }>, windowT
   return slots.dateFloorCovered(fl.offsetYears, dateOddsText(fl.quantizedLowerBound), fl.unconfirmed)
 }
 
-export function FuckOffDate({ view, focusSignal, actionsSlot, medicareUnpricedNote = false, sheetOpen = false }: FuckOffDateProps) {
+export function FuckOffDate({ view, focusSignal, actionsSlot, medicareUnpricedNote = false, stalenessNote = false, dateAnchor, sheetOpen = false }: FuckOffDateProps) {
   const headingRef = useRef<HTMLHeadingElement>(null)
   // Announce on the FIRST landing only (the undefined→defined edge). The date route is TIERED: the
   // provisional→final sharpen can crown a DIFFERENT offset, which flips focusSignal — but re-firing
@@ -165,8 +191,8 @@ export function FuckOffDate({ view, focusSignal, actionsSlot, medicareUnpricedNo
     if (view.kind !== 'dates' || hero === null) return
     // Behind an open sheet the panel echo is the AT feedback for the edit (aria-modal does
     // not silence background live regions) — the key bookkeeping above still runs.
-    if (!sheetOpen) announcer.announce(heroLead(hero, view.windowTopYears))
-  }, [heroClaimKey, hero, view, announcer, sheetOpen])
+    if (!sheetOpen) announcer.announce(heroLead(hero, view.windowTopYears, dateAnchor))
+  }, [heroClaimKey, hero, view, announcer, sheetOpen, dateAnchor])
 
   // The producer seam: resolve the floor-crowned fan into drawable geometry ONCE per view
   // (resolveBandData owns the fail-loud honesty guards — a malformed fan throws, never a silently-
@@ -219,7 +245,7 @@ export function FuckOffDate({ view, focusSignal, actionsSlot, medicareUnpricedNo
             tabIndex={-1}
             ref={headingRef}
           >
-            {heroLead(heroTrack, view.windowTopYears)}
+            {heroLead(heroTrack, view.windowTopYears, dateAnchor)}
           </h2>
           {heroTrack.kind !== 'no-date-in-window' ? (
             <p className="fod-odds">{dateOddsText(heroTrack.grade.quantizedLowerBound)}</p>
@@ -246,6 +272,9 @@ export function FuckOffDate({ view, focusSignal, actionsSlot, medicareUnpricedNo
           {/* P3·U11 — the unpriced-Medicare disclosure (the council's veto condition): the
               post-65-only household's date claim wears the honest gap in its own notes row. */}
           {medicareUnpricedNote && <p className="fod-note">{copy.verdictMedicareUnpriced}</p>}
+          {/* P3·U13 — the standing staleness echo (Q1): the per-clock disclosure rendered at
+              the re-entry gate; this line keeps the fact visible WITH the date claim. */}
+          {stalenessNote && <p className="fod-note cs-staleness-note">{copy.stalenessHeroNote}</p>}
         </div>
         {/* BOTH GRAPHS share one wrapper: display:contents in single column (the phone DOM renders
             byte-identically) and the right-pane grid cell on two-pane — so the LEFT column's rows

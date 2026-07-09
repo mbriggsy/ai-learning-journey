@@ -32,9 +32,13 @@ const BRIEF = `<the 10-20 line contract brief: invariants · values-not-to-flag 
 // Always-on (map idiom to the stack); add conditionals with a named reason. agentType = the ce agent.
 // LANDMINE (bit 2026-07-09, the U13 review — same class as the council's no-agentType note): the
 // compound-engineering review agents may NOT exist in the session's agent registry, and a missing
-// agentType crashes EVERY lens at launch ("agent type not found"). If they aren't in the Agent
-// tool's available-types list, OMIT agentType entirely — the REVIEW prompt below already carries
-// the full role definition; the default workflow subagent + explicit model is the proven fallback.
+// agentType crashes EVERY lens at launch ("agent type not found"). ROOT CAUSE (verified on disk
+// 2026-07-09): CE's plugin restructure — the old layout's spawnable `agents/review/*.md` became
+// PERSONAS inside the ce-code-review skill (3.14.x: `skills/ce-code-review/references/personas/`),
+// which are prompt documents CE's own skill reads, never registry agents. If the names aren't in
+// the Agent tool's available-types list, OMIT agentType entirely — the REVIEW prompt below already
+// carries the full role definition; the default workflow subagent + explicit model is the proven
+// fallback (and the persona .md files remain minable as prompt material if ever wanted).
 const LENSES = [
   { key: 'correctness', agentType: 'compound-engineering:review:correctness-reviewer' },
   { key: 'architecture', agentType: 'compound-engineering:review:architecture-strategist' },

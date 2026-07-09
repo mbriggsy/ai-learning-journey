@@ -368,3 +368,69 @@ test.describe(`the assumption panel's vertical extent (${REAL.width}×${REAL.hei
     ).toBeGreaterThan(scroll.clientHeight)
   })
 })
+
+// ── U13: the vault-return frames (?vault=stale — the ultramode J3 arm) ────────────────────────
+// Every `?seed=` arm above BYPASSES the re-entry gate (a seed mounts straight into the result
+// with stalenessNote=false), so before this arm NO gate ever measured (a) the gate surface
+// itself or (b) the result frame carrying the extra `.cs-staleness-note` line — the aged-vault
+// return is a reachable PRODUCTION frame rendering strictly MORE content than any `?seed` frame,
+// exactly where an extra line could push the PROTECTED R13 disclaimer below the fold. The
+// `?vault=stale` plant (devSeeds) is the one live drive: it writes the aged vault, strips its own
+// param, and lands on the unlock screen with the dev passphrase PRE-FILLED.
+
+test.describe(`the vault return (?vault=stale) — the gate + the staleness-echo frame (${REAL.width}×${REAL.height})`, () => {
+  test.use({ viewport: REAL, deviceScaleFactor: 2.5 })
+  test('the gate offers its decision pair in-frame with the aged-vault disclosures; the echoed result frame holds the one-frame law', async ({ page }) => {
+    await page.goto('/?vault=stale')
+    const unlock = page.getByRole('button', { name: 'Open my plan' })
+    await expect(unlock, 'the stale plant did not land on the unlock screen').toBeVisible({
+      timeout: 30_000,
+    })
+    await unlock.click()
+
+    // THE GATE FRAME: the balance confirm + the fired clocks render BEFORE any verdict, and
+    // the decision pair must sit in the first frame (the gate is the reveal's front door —
+    // a below-fold affirm strands the survivor at a dead-looking screen).
+    const affirm = page.getByRole('button', { name: /Still about right/ })
+    await expect(affirm).toBeVisible({ timeout: 30_000 })
+    await page.evaluate(() => document.fonts.ready)
+    await page.evaluate(() => window.scrollTo(0, 0))
+    const affirmBox = await affirm.boundingBox()
+    expect(affirmBox, 'the affirm CTA reported no box').not.toBeNull()
+    expect(
+      affirmBox!.y + affirmBox!.height,
+      'the affirm CTA sits below the first frame at the real window',
+    ).toBeLessThanOrEqual(REAL.height)
+    // The aged vault's own disclosures rendered (the frame under test is not vacuous —
+    // insight 029): the plant moves the tax + healthcare stamps → exactly their two lines,
+    // and the ~400-day-old savedAt → the one-year elapsed line.
+    await expect(page.locator('.reentry-notes p')).toHaveCount(2)
+    await expect(page.getByText('You saved this about a year ago.')).toBeVisible()
+
+    // Affirm → the gate releases the held recompute pair; wait out the FINAL tier like every
+    // other arm, then settle animations before measuring (the gotoSeedFinal discipline).
+    await affirm.click()
+    await expect(page.locator('main.result[data-answer-tier="final"]')).toBeAttached({
+      timeout: 90_000,
+    })
+    await page.evaluate(() => document.fonts.ready)
+    await page.waitForFunction(() =>
+      document.getAnimations().every((a) => {
+        const timing = a.effect?.getTiming()
+        return timing?.iterations === Infinity || a.playState !== 'running'
+      }),
+    )
+    await page.evaluate(
+      () => new Promise<void>((r) => requestAnimationFrame(() => requestAnimationFrame(() => r()))),
+    )
+    await page.evaluate(() => window.scrollTo(0, 0))
+
+    await assertResolvedSpine(page)
+    // The frame under measure IS the echoed one — the standing staleness line is visible
+    // (rules moved: tax + healthcare) with the R13 disclaimer still in-frame beside it.
+    await expect(page.locator('.cs-staleness-note')).toBeVisible()
+    await assertOneVisibleDisclaimer(page, 'laptop')
+    await assertResultPadding(page, '32px') // 791 ≤ 840 — the density tier serves this frame too
+    await assertFrameFits(page, true)
+  })
+})

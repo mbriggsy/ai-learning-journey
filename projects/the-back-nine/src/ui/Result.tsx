@@ -26,7 +26,9 @@ import { medicareUnpriced } from './healthSheetChrome'
 import { budgetGoverns } from '@budget/budgetModel'
 import { commitBudgetPatch } from '@budget/budgetToSpending'
 import { previewRunsInWorker, runControlPreview } from '@store/controlPreview'
+import { epochDayToCalendarYear } from '@store/staleness'
 import type { ScenarioDraft } from '@store/memoryModel'
+import { currentEpochDay } from './scenarioFromDraft'
 import type { TwoArmControl } from '@shared/model'
 import { copy } from './copy'
 import { appModel } from './appModel'
@@ -134,11 +136,14 @@ export function Result({
   // back into the draft; the round-trip guard). Elapsed is 0 for every same-year session;
   // it goes positive only when an aged vault is re-opened in a later calendar year, and the
   // hero then re-derives its "~N years out" from TODAY while the calendar label holds.
+  // The year is read through the ONE local-calendar chain (currentEpochDay →
+  // epochDayToCalendarYear — the same basis staleness compares and startCalendarYear was
+  // minted in), never a second ad-hoc clock read (ultramode 2026-07-09, the basis catch).
   const dateAnchor = useMemo(() => {
     const startCalendarYear = snapshot.draft.startCalendarYear
     return {
       startCalendarYear,
-      elapsedPlanYears: Math.max(0, new Date().getFullYear() - startCalendarYear),
+      elapsedPlanYears: Math.max(0, epochDayToCalendarYear(currentEpochDay()) - startCalendarYear),
     }
   }, [snapshot.draft.startCalendarYear])
   const enhancedApplied = snapshot.draft.enhancedSubsidies === true

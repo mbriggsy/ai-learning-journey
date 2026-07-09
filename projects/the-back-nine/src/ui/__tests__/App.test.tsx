@@ -32,12 +32,28 @@ vi.mock('../vaultSession', () => ({
 }))
 
 // The lazy children — stubbed so the App test stays hermetic (no engine/crypto graph, no real SW).
+// PROPS-ECHO stubs (insight 066), never swallowing nulls: the router glue they echo is the
+// mutable thing these tests exist to pin.
 vi.mock('../IntakeApp', () => ({
-  default: ({ readOnly = false }: { readOnly?: boolean }) => (
-    <div data-read-only={String(readOnly)}>intake stub</div>
+  default: ({ readOnly = false, hydrateFromVault = false }: { readOnly?: boolean; hydrateFromVault?: boolean }) => (
+    <div data-read-only={String(readOnly)} data-hydrate={String(hydrateFromVault)}>
+      intake stub
+    </div>
   ),
 }))
-vi.mock('../RecoveryFlow', () => ({ RecoveryFlow: () => null }))
+// Echoes the recover→began link (ultramode 2026-07-09, the J1 seam): App.tsx maps
+// onRecovered → {began, hydrate:true} — the ONE link that arms the U13 re-entry gate for
+// the wiped-device survivor. A null-stub left it unpinned at every level: flipping it to
+// hydrate:false dropped the survivor into a blank fresh intake and survived the suite.
+vi.mock('../RecoveryFlow', () => ({
+  RecoveryFlow: ({ onRecovered }: { onRecovered: () => void }) => (
+    <div data-testid="recovery-flow">
+      <button type="button" onClick={onRecovered}>
+        recovery-recovered
+      </button>
+    </div>
+  ),
+}))
 // A PROPS-ECHO stub (insight 066), not a swallowing null: it echoes whether App wired an `onBack`
 // (the cold-vs-damaged signal) into a data-attribute, and renders a Back button ONLY when onBack was
 // passed — so a test can drive the real App round trip (restore-cold → Back → cold) through it.
@@ -95,6 +111,26 @@ describe('App — the entry router threads the unlock read-only verdict into the
     const stub = await screen.findByText('intake stub')
     expect(screen.queryByText(copy.unlockReadOnly)).toBeNull()
     expect(screen.queryByText(copy.unlockReadOnlyLead)).toBeNull()
+    expect(stub).toHaveAttribute('data-read-only', 'false')
+    // The unlock path HYDRATES (the U13 re-entry gate arms only off this flag).
+    expect(stub).toHaveAttribute('data-hydrate', 'true')
+  })
+})
+
+describe('App — the survivor door composes into the re-entry gate (J1, ultramode 2026-07-09)', () => {
+  it('unlock → forgot → RecoveryFlow.onRecovered lands in IntakeApp WITH hydrate=true and writable — the one link (App.tsx onRecovered) that arms the U13 gate for the wiped-device survivor', async () => {
+    await driveToUnlockScreen()
+    // The forgot door replaces the unlock screen with the recovery flow.
+    fireEvent.click(screen.getByRole('button', { name: copy.unlockForgot }))
+    await screen.findByTestId('recovery-flow')
+    expect(screen.queryByLabelText(copy.unlockLabel)).toBeNull()
+    // Recovery completes → the began entry must carry hydrate:true (the gate's arming flag —
+    // the survivor with the longest gap and the stalest balances is WHO the gate exists for)
+    // and writable (recovery re-mints through the writer path; a read-only verdict here
+    // would withhold the update affordance from the one household most likely to need it).
+    fireEvent.click(screen.getByRole('button', { name: 'recovery-recovered' }))
+    const stub = await screen.findByText('intake stub')
+    expect(stub).toHaveAttribute('data-hydrate', 'true')
     expect(stub).toHaveAttribute('data-read-only', 'false')
   })
 })

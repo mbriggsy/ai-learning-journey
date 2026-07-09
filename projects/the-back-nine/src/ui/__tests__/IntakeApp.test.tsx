@@ -202,7 +202,7 @@ describe('IntakeApp — the U13 re-entry gate (council 2026-07-09, constraints (
     expect(screen.queryByRole('button', { name: copy.reentryAffirmCta })).toBeNull()
   })
 
-  it('doctored OLD vault stamps → the staleness note reaches Result; the fresh twin reads false (constraint (a): derived from the RAW model)', async () => {
+  it('doctored OLD vault stamps → the staleness note reaches Result AND the badge stays CLEAN; the fresh twin reads false (constraint (a): derived from the RAW model)', async () => {
     const fresh = h.model
     try {
       h.model = {
@@ -211,12 +211,22 @@ describe('IntakeApp — the U13 re-entry gate (council 2026-07-09, constraints (
       }
       render(<IntakeApp hydrateFromVault />)
       await affirmGate()
-      expect(await screen.findByText('result stub')).toHaveAttribute('data-staleness', 'true')
+      const stale = await screen.findByText('result stub')
+      expect(stale).toHaveAttribute('data-staleness', 'true')
+      // THE BADGE LAW under drift (ultramode 2026-07-09, the glue-mutant pin): persist is
+      // seeded from the RE-STAMPED normalized scenario, so an UNTOUCHED drifted vault reads
+      // CLEAN — drift discloses via the note, never via a 'dirty' badge lying about mouse
+      // activity (resultSave.ts's own law). Seeding persist from the raw model instead
+      // (identity strips only savedAt; taxVintageDetail differs raw-vs-normalized) would
+      // flip this to 'dirty' and survive every other arm in the suite.
+      expect(stale).toHaveAttribute('data-save-kind', 'clean')
       cleanup()
       h.model = fresh
       render(<IntakeApp hydrateFromVault />)
       await affirmGate()
-      expect(await screen.findByText('result stub')).toHaveAttribute('data-staleness', 'false')
+      const freshStub = await screen.findByText('result stub')
+      expect(freshStub).toHaveAttribute('data-staleness', 'false')
+      expect(freshStub).toHaveAttribute('data-save-kind', 'clean')
     } finally {
       h.model = fresh
     }

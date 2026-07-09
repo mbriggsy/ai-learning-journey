@@ -146,6 +146,9 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     stalenessBudgetLine: slots.stalenessBudgetLine(2028),
     dateInYearsAnchored: slots.dateInYearsAnchored(7, 2033),
     dateInYearsPast: slots.dateInYearsPast(2031),
+    // The floor line's anchored/arrived arms (ultramode 2026-07-09 — one screen, one time base).
+    dateFloorCoveredAnchored: slots.dateFloorCoveredAnchored(4, 2031, 'about 8 of 10 odds', true),
+    dateFloorCoveredPast: slots.dateFloorCoveredPast(2031, 'about 8 of 10 odds', false),
   }
 
   it('every U10 delta-readout slot WEARS a hedge (the control readouts are slot-composed, so the require-hedge sweep must reach the rendered samples here)', () => {

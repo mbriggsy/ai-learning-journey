@@ -16,7 +16,9 @@ import '@testing-library/jest-dom/vitest'
 import { cleanup, render, screen, fireEvent } from '@testing-library/react'
 import { composeReentry } from '../reentryChrome'
 import { ReEntry } from '../ReEntry'
-import { heroLead } from '../FuckOffDate'
+import { heroLead, floorLineText } from '../FuckOffDate'
+import { dateOddsText } from '../dateOdds'
+import type { DateSplitView } from '../dateSplit'
 import { scenarioFromDraft, currentEpochDay } from '../scenarioFromDraft'
 import { DEV_SEEDS } from '../devSeeds'
 import { deriveStaleness } from '@store/staleness'
@@ -95,6 +97,40 @@ describe('composeReentry — the read-back', () => {
       view.noteLines.some((l) => l === slots.stalenessBudgetLine(doctored.startCalendarYear)),
     ).toBe(true)
     expect(view.elapsedLine).toBe(slots.reentryElapsedYears(2))
+  })
+
+  it('two expired windows sharing an end year collapse to ONE line (the copy quotes only the year — twins would render byte-identical sentences and collide on the render key)', () => {
+    const s = freshSave()
+    const doctored: ScenarioV3 = {
+      ...s,
+      budget: [
+        { category: 'travel', label: 'Travel', tier: 'discretionary', annualAmountReal: 8_000, startYear: 0, endYear: 0 },
+        { category: 'gifts', label: 'Gifts', tier: 'discretionary', annualAmountReal: 2_000, startYear: 0, endYear: 0 },
+        { category: 'other', label: 'Boat', tier: 'discretionary', annualAmountReal: 4_000, startYear: 0, endYear: 1 },
+      ] as ScenarioV3['budget'],
+      startCalendarYear: s.startCalendarYear - 3,
+    } as ScenarioV3
+    const view = composeReentry(doctored, reportFor(doctored))
+    const budgetLines = view.noteLines.filter((l) => l.includes('budget'))
+    expect(budgetLines).toEqual([
+      slots.stalenessBudgetLine(doctored.startCalendarYear), // travel + gifts, ONE line
+      slots.stalenessBudgetLine(doctored.startCalendarYear + 1), // the boat's own year
+    ])
+  })
+
+  it('the fund-snapshot clock on an all-retired household speaks the ROUTE-TRUE line — never "your date" to a household with no date (ultramode 2026-07-09)', () => {
+    const s = freshSave() // all-retired
+    const blendMoved = { ...s, dateVintage: { ...s.dateVintage!, blendSnapshotAsOf: '2019-01-01' } }
+    const view = composeReentry(blendMoved, reportFor(blendMoved))
+    expect(view.noteLines).toContain(copy.stalenessBlendSpine)
+    expect(view.noteLines).not.toContain(copy.stalenessDate)
+    // The date-route household keeps the date wording.
+    const d = scenarioFromDraft(DEV_SEEDS.date)
+    if (!d.ready) throw new Error('date seed must be save-ready')
+    const dMoved = { ...d.scenario, dateVintage: { ...d.scenario.dateVintage!, blendSnapshotAsOf: '2019-01-01' } }
+    const dView = composeReentry(dMoved, reportFor(dMoved))
+    expect(dView.noteLines).toContain(copy.stalenessDate)
+    expect(dView.noteLines).not.toContain(copy.stalenessBlendSpine)
   })
 
   it('the wall-time line is SUPPRESSED without savedAt and under a year — never fabricated', () => {
@@ -183,5 +219,61 @@ describe('heroLead — the U13 wall-time anchor (the date answer must not decay 
   it('offset 0 stays the free-today claim regardless of anchor (the engine crowned NOW — no arithmetic to do)', () => {
     const now = { ...dated, offsetYears: 0 } as DateTrackOutcome
     expect(heroLead(now, 30, { startCalendarYear: 2026, elapsedPlanYears: 2 })).toBe(copy.dateFreeToday)
+  })
+})
+
+describe('floorLineText — the SAME anchor as the hero (ultramode 2026-07-09: one screen, one time base)', () => {
+  // The floor and hero share a screen; an anchored hero beside an un-anchored floor could
+  // even invert the true floor<lifestyle ordering on an aged vault.
+  const split = (floorOffset: number): Extract<DateSplitView, { kind: 'split' }> =>
+    ({
+      kind: 'split',
+      lifestyle: { kind: 'confirmed-date', offsetYears: 7 } as unknown as DateSplitView & object,
+      floor: { kind: 'covered', offsetYears: floorOffset, quantizedLowerBound: 0.8, unconfirmed: false },
+      inverted: false,
+    }) as unknown as Extract<DateSplitView, { kind: 'split' }>
+  // The same conservative register the render composes — the render's own producer,
+  // never a re-typed odds string.
+  const odds = () => dateOddsText(0.8)
+
+  it('un-anchored (the preview harness): the legacy relative framing, unchanged', () => {
+    expect(floorLineText(split(5), 30)).toBe(slots.dateFloorCovered(5, odds(), false))
+  })
+
+  it('anchored at elapsed 0 (every fresh session): count unchanged, calendar label rides along', () => {
+    expect(floorLineText(split(5), 30, { startCalendarYear: 2026, elapsedPlanYears: 0 })).toBe(
+      slots.dateFloorCoveredAnchored(5, 2031, odds(), false),
+    )
+  })
+
+  it('anchored on an AGED vault: the count re-derives from TODAY while the calendar label holds', () => {
+    expect(floorLineText(split(5), 30, { startCalendarYear: 2026, elapsedPlanYears: 3 })).toBe(
+      slots.dateFloorCoveredAnchored(2, 2031, odds(), false),
+    )
+  })
+
+  it('the arrived arm: the essentials date has come around by the calendar — the plan states its own year', () => {
+    expect(floorLineText(split(5), 30, { startCalendarYear: 2026, elapsedPlanYears: 5 })).toBe(
+      slots.dateFloorCoveredPast(2031, odds(), false),
+    )
+    expect(floorLineText(split(5), 30, { startCalendarYear: 2026, elapsedPlanYears: 8 })).toBe(
+      slots.dateFloorCoveredPast(2031, odds(), false),
+    )
+  })
+
+  it('offset 0 keeps the covered-from-today claim under any anchor (covered from the plan start ⇒ still covered now)', () => {
+    expect(floorLineText(split(0), 30, { startCalendarYear: 2026, elapsedPlanYears: 4 })).toBe(
+      slots.dateFloorCovered(0, odds(), false),
+    )
+  })
+
+  it('the no-date arms are anchor-independent (they name the window, not a count)', () => {
+    const noFloor = {
+      ...split(5),
+      floor: { kind: 'not-within-window' },
+    } as unknown as Extract<DateSplitView, { kind: 'split' }>
+    expect(floorLineText(noFloor, 30, { startCalendarYear: 2026, elapsedPlanYears: 3 })).toBe(
+      slots.dateFloorNotWithin(30),
+    )
   })
 })

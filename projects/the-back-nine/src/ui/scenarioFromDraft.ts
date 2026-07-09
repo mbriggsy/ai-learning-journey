@@ -26,10 +26,16 @@ export type SaveReady =
   | { readonly ready: true; readonly scenario: ScenarioV3 }
   | { readonly ready: false; readonly detail: string }
 
-/** Today as a UTC epoch-day integer (the `savedAt` unit — DND 009: a plain small integer,
- *  never epoch-ms). ui-layer clock read; the engine never sees it. */
+/** Today as a LOCAL-calendar epoch-day integer (the `savedAt` unit — DND 009: a plain small
+ *  integer, never epoch-ms). LOCAL, not UTC (U13 ultramode review, the basis-mismatch catch):
+ *  the persisted `startCalendarYear` is minted from the household's local year, so every
+ *  wall-year comparison downstream (budget windows, the date anchor, the elapsed line) must
+ *  read the SAME calendar — a UTC day here expired budget windows a few hours early every
+ *  Dec 31 for any household behind UTC. Cross-timezone skew is ±1 day, immaterial at the
+ *  year granularity every claim floors to. ui-layer clock read; the engine never sees it. */
 export function currentEpochDay(): number {
-  return Math.floor(Date.now() / 86_400_000)
+  const now = new Date()
+  return Math.floor((now.getTime() - now.getTimezoneOffset() * 60_000) / 86_400_000)
 }
 
 export function scenarioFromDraft(draft: ScenarioDraft): SaveReady {

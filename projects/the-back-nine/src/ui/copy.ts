@@ -874,12 +874,16 @@ export const copy = {
   stalenessAppDefault:
     'We’ve updated our default planning assumptions since your save — this reading uses the new ones.',
   stalenessTax: 'Tax rules have been updated since your save — this reading uses today’s.',
-  stalenessSeniorBonus:
-    'A temporary senior tax deduction that your saved years included has since ended — this reading prices the years as they stand now.',
+  // (stalenessSeniorBonus was REMOVED by the U13 ultramode review 2026-07-09: the crossing
+  // changes nothing about a saved answer — see the supersession note in staleness.ts.)
   stalenessHealthcare:
     'Health-coverage rules have been updated since your save — this reading uses today’s.',
   stalenessDate:
     'The contribution limits or fund snapshots behind your date have been updated since your save — this reading uses today’s.',
+  // The all-retired (spine) household's blend line: no date to reference, and contribution
+  // limits never touch a decumulation-only answer — only the fund-snapshot clock speaks.
+  stalenessBlendSpine:
+    'The fund snapshots behind your answer have been updated since your save — this reading uses today’s.',
   // The standing hero note (renders WITH the first verdict when any clock fired — never
   // after it; the answer is already recomputed under today's rules, this line says so).
   // DELIBERATELY ONE LINE at the reading measure: the full per-clock disclosure lives at
@@ -1365,6 +1369,23 @@ export const slots = {
    *  Unreachable live today (every vault is same-day); pinned for the day it isn't. */
   dateInYearsPast: (calendarYear: number): string =>
     `Your plan penciled the fuck-off date around ${calendarYear} — by the calendar, that’s about now`,
+  /** The floor line's ANCHORED arm (ultramode 2026-07-09 — the hero and the floor share one
+   *  screen, so they must share one time base): count re-derived from TODAY, calendar label
+   *  wall-time-stable, the same odds + window-edge hedge as the un-anchored line. */
+  dateFloorCoveredAnchored: (n: number, calendarYear: number, oddsText: string, unconfirmed: boolean): string => {
+    const when =
+      n === 1
+        ? `The essentials alone are covered about a year out — around ${calendarYear}`
+        : `The essentials alone are covered about ${n} years out — around ${calendarYear}`
+    const edge = unconfirmed ? ' That sits at the edge of what this window can confirm.' : ''
+    return `${when} — ${oddsText}.${edge}`
+  },
+  /** The floor's arrived arm (mirrors dateInYearsPast): the essentials date has come around
+   *  by the calendar — state the plan's own year, never a fresh verdict. */
+  dateFloorCoveredPast: (calendarYear: number, oddsText: string, unconfirmed: boolean): string => {
+    const edge = unconfirmed ? ' That sits at the edge of what this window can confirm.' : ''
+    return `The essentials alone were penciled as covered around ${calendarYear} — by the calendar, that’s about now — ${oddsText}.${edge}`
+  },
 } as const
 
 /**

@@ -138,8 +138,16 @@ export function heroLead(
   return slots.dateInYearsAnchored(yearsFromToday, calendarYear)
 }
 
-/** The subordinate essentials line (split only) — the floor's claim in its own register. */
-function floorLineText(split: Extract<DateSplitView, { kind: 'split' }>, windowTopYears: number): string {
+/** The subordinate essentials line (split only) — the floor's claim in its own register.
+ *  Anchored EXACTLY like `heroLead` (ultramode 2026-07-09): both lines share one screen, so
+ *  an aged vault must never show a wall-time-corrected hero beside a floor replaying its
+ *  save-day count — two time bases can even invert the true floor<lifestyle ordering.
+ *  Exported for the anchor battery (the heroLead precedent). */
+export function floorLineText(
+  split: Extract<DateSplitView, { kind: 'split' }>,
+  windowTopYears: number,
+  anchor?: { readonly startCalendarYear: number; readonly elapsedPlanYears: number },
+): string {
   const fl = split.floor
   if (fl.kind === 'not-within-window') {
     // Lifestyle no-date too ⇒ the quiet severity disclosure ("either" — the hero line above
@@ -149,7 +157,16 @@ function floorLineText(split: Extract<DateSplitView, { kind: 'split' }>, windowT
       ? slots.dateFloorNotWithinEither(windowTopYears)
       : slots.dateFloorNotWithin(windowTopYears)
   }
-  return slots.dateFloorCovered(fl.offsetYears, dateOddsText(fl.quantizedLowerBound), fl.unconfirmed)
+  const odds = dateOddsText(fl.quantizedLowerBound)
+  // Offset 0 mirrors heroLead's free-today precedence: "covered from today" holds under any
+  // anchor (covered from the plan's own start ⇒ still covered now — no arithmetic to do).
+  if (anchor === undefined || fl.offsetYears === 0) {
+    return slots.dateFloorCovered(fl.offsetYears, odds, fl.unconfirmed)
+  }
+  const calendarYear = anchor.startCalendarYear + fl.offsetYears
+  const yearsFromToday = fl.offsetYears - anchor.elapsedPlanYears
+  if (yearsFromToday <= 0) return slots.dateFloorCoveredPast(calendarYear, odds, fl.unconfirmed)
+  return slots.dateFloorCoveredAnchored(yearsFromToday, calendarYear, odds, fl.unconfirmed)
 }
 
 export function FuckOffDate({ view, focusSignal, actionsSlot, medicareUnpricedNote = false, stalenessNote = false, dateAnchor, sheetOpen = false }: FuckOffDateProps) {
@@ -265,7 +282,7 @@ export function FuckOffDate({ view, focusSignal, actionsSlot, medicareUnpricedNo
               inversion is disclosed, never reordered to put a sooner-looking date first). */}
           {split !== null && split.kind === 'split' && (
             <>
-              <p className="fod-floor">{floorLineText(split, view.windowTopYears)}</p>
+              <p className="fod-floor">{floorLineText(split, view.windowTopYears, dateAnchor)}</p>
               {split.inverted && <p className="fod-note">{copy.dateFloorInversionNote}</p>}
             </>
           )}

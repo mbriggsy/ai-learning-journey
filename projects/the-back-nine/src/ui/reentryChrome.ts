@@ -72,10 +72,20 @@ export function composeReentry(scenario: ScenarioV3, report: StalenessReport): R
   const noteLines: string[] = []
   if (report.spine.appDefaultMoved) noteLines.push(copy.stalenessAppDefault)
   if (report.controls.taxMoved) noteLines.push(copy.stalenessTax)
-  if (report.controls.seniorBonusSunsetCrossed) noteLines.push(copy.stalenessSeniorBonus)
   if (report.healthcare.moved) noteLines.push(copy.stalenessHealthcare)
-  if (report.date.contributionMoved || report.date.blendMoved) noteLines.push(copy.stalenessDate)
+  if (report.date.contributionMoved || report.date.blendMoved) {
+    // Route-true wording: an all-retired household has no fuck-off date to reference (and
+    // its contribution clock is reader-gated quiet) — only the fund-snapshot line speaks.
+    const allRetired = scenario.people.every((p) => p.workStatus === 'retired')
+    noteLines.push(allRetired ? copy.stalenessBlendSpine : copy.stalenessDate)
+  }
+  // One line per boundary YEAR: the copy quotes only the calendar year, so two lines
+  // sharing an endYear would render byte-identical sentences (and collide on the render
+  // key) — the year carries the whole message once.
+  const seenBoundaryYears = new Set<number>()
   for (const line of report.budget.expiredLines) {
+    if (seenBoundaryYears.has(line.endCalendarYear)) continue
+    seenBoundaryYears.add(line.endCalendarYear)
     noteLines.push(slots.stalenessBudgetLine(line.endCalendarYear))
   }
 

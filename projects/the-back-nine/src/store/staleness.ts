@@ -35,17 +35,39 @@
  *   under any wall-clock prices the identical rule. A change to the RULE ITSELF arrives as
  *   a new `legalBasis`/`taxYear` and fires the tax clock. (The plan's "RMD-age rule" clock
  *   is satisfied structurally, not by a boolean that can never be true.)
- * - The senior-bonus sunset IS derivable and fires below: a save whose priced window
- *   included the 2025–2028 bonus for a 65+ person, viewed after the sunset, reads
- *   differently on recompute — the note names why.
+ * - The senior-bonus SUNSET CROSSING has NO clock — REMOVED by the U13 ultramode review
+ *   (2026-07-09, wf_44cdf86d-b71; a dated supersession of the ratified spec's "derived
+ *   note", whose premise the review refuted against source). Crossing the sunset year
+ *   changes NOTHING about a saved answer under EITHER engine world: today the engine does
+ *   not read `seniorBonus.sunsetAfter` at all (it credits the bonus in every sim year — the
+ *   filed REQUIRED engine unit closes that, tripwired in `seniorBonusSunset.tripwire.test`),
+ *   and once the engine models the sunset the save already priced it (calendar-deterministic,
+ *   recompute byte-identical). A "rules changed since your save" note on a byte-identical
+ *   recompute is alarm-when-fine — the same lie the acaVerifiedOn exclusion refuses. A real
+ *   extension/repeal moves `legalBasis`/`taxYear` and fires the tax clock.
+ * - `contributionMoved` is ROUTE-GATED quiet for an all-retired household (same review):
+ *   contribution limits enter the engine only through the accumulation overlay
+ *   (simulate.ts gates `contributions` on it), so a decumulation-only household's answer is
+ *   byte-identical under any CONTRIBUTION_YEAR — and the annual limit bump would otherwise
+ *   fire a false "your date" note at essentially every returning retired household.
+ *
+ * TWO PREDICATES, NOT ONE (the review's hero-echo catch): `rulesMoved` = a clock whose
+ * firing means the CURRENT recompute genuinely differs from the saved answer (the hero's
+ * "Some rules changed — this answer uses today's" echo may only ride THAT); `anyStale` =
+ * anything worth a line at the gate, which ALSO includes the budget window re-confirms —
+ * calendar-passage prompts on a byte-identical recompute ("worth a look", never "rules
+ * changed"). Collapsing them made a lapsed travel budget fire a false "rules changed"
+ * claim on the magic-moment surface.
  */
 import type { BudgetCategory, ScenarioV3 } from '@shared/model'
 import { appDefaultEraFor, CURRENT_APP_DEFAULT_VERSION } from '@shared/appDefaults'
 import { healthcareVintageStamp } from '@engine/constants/health'
 import { taxVintageStamp } from '@engine/constants/tax'
-import { dateVintageStamp, seniorBonus } from '@engine/constants'
+import { dateVintageStamp } from '@engine/constants'
 
-/** Which healthcare clock moved — the surface names it, never a bare "something changed". */
+/** Which healthcare clock moved. The v1 gate renders ONE healthcare line off `moved`; the
+ *  per-clock names are the U17-inheritable granularity (the Act-4 staleness copy names the
+ *  specific rulebook — 4-recommendation #8b), carried now so the report shape never re-opens. */
 export type HealthcareClock =
   | 'coverage-year'
   | 'aca-status'
@@ -69,8 +91,12 @@ export interface StalenessReport {
    *  "since your save" claim is suppressed. Days clamp at 0 (a future stamp from clock
    *  skew never yields a negative claim). */
   readonly elapsed: { readonly days: number; readonly saveYear: number } | null
-  /** The wall-clock UTC year of `todayEpochDay` (derived once — the calendar the budget
-   *  windows and the date-answer decay compare against; independent of `savedAt`). */
+  /** The wall-clock calendar year of `todayEpochDay` (derived once — the calendar the
+   *  budget windows compare against; independent of `savedAt`). SAME BASIS as the persisted
+   *  `startCalendarYear`: the caller injects a LOCAL-calendar epoch-day (`currentEpochDay`),
+   *  because the plan anchor was minted from the household's local year — mixing a UTC wall
+   *  year against the local anchor expired budget windows a few hours early every Dec 31
+   *  (the review's basis-mismatch catch). */
   readonly wallYear: number
   /** The spine verdict's clock: the app methodology defaults moved since the save AND the
    *  household had taken the saved era's default (the Q7 saved-era rule — immunity keys on
@@ -80,15 +106,14 @@ export interface StalenessReport {
   readonly controls: {
     /** The bracket-vintage stamp compare (`taxVintageDetail` vs `taxVintageStamp()`). */
     readonly taxMoved: boolean
-    /** A save whose priced window included the 2025–2028 senior bonus for a 65+ person,
-     *  now viewed after the sunset (derived — needs `savedAt`; suppressed without it). */
-    readonly seniorBonusSunsetCrossed: boolean
   }
   readonly healthcare: {
     readonly moved: boolean
     readonly movedClocks: readonly HealthcareClock[]
   }
   readonly date: {
+    /** Contribution-limit table year moved — DATE ROUTE ONLY (an all-retired household's
+     *  answer never reads a contribution limit; see the route-gate note in the header). */
     readonly contributionMoved: boolean
     readonly blendMoved: boolean
   }
@@ -98,26 +123,24 @@ export interface StalenessReport {
    *  window can be "past" before work actually stops (Q6 — documented-inert, a dated
    *  supersession of the plan's route-agnostic wording). */
   readonly budget: { readonly expiredLines: readonly ExpiredBudgetLine[] }
-  /** Any clock fired — the surface-level "render the staleness note at all" predicate. */
+  /** A RULEBOOK moved — the recompute genuinely differs from the saved answer. The ONLY
+   *  predicate the hero's standing "Some rules changed since your save — this answer uses
+   *  today's" echo may ride (the budget re-confirms are calendar prompts on a byte-identical
+   *  recompute — a "rules changed" claim there is false). */
+  readonly rulesMoved: boolean
+  /** Anything worth a line at the re-entry gate — `rulesMoved` OR a budget re-confirm. */
   readonly anyStale: boolean
 }
 
-/** UTC calendar year of an epoch-day (deterministic — Date used as pure math, never a clock). */
-export function epochDayToUtcYear(epochDay: number): number {
+/** Calendar year of an epoch-day (deterministic — Date used as pure math, never a clock).
+ *  The day number's own calendar: for the LOCAL-calendar epoch-days `currentEpochDay`
+ *  mints, this reads the household's local year; for a UTC day number, the UTC year. */
+export function epochDayToCalendarYear(epochDay: number): number {
   return new Date(epochDay * 86_400_000).getUTCFullYear()
 }
 
-/** The senior-bonus sunset year, fail-loud at import (burned/062 — the meta field is
- *  optional on the TYPE, but this entry without it would silently disarm the crossing
- *  note; a missing year is a build error, never a quiet `undefined` compare). */
-const SENIOR_BONUS_SUNSET_AFTER: number = (() => {
-  const y = seniorBonus.sunsetAfter
-  if (y === undefined) throw new Error('[staleness] seniorBonus.sunsetAfter is missing — the sunset clock cannot arm')
-  return y
-})()
-
 export function deriveStaleness(scenario: ScenarioV3, todayEpochDay: number): StalenessReport {
-  const wallYear = epochDayToUtcYear(todayEpochDay)
+  const wallYear = epochDayToCalendarYear(todayEpochDay)
 
   // ── the wall-time anchor ────────────────────────────────────────────────────────────
   const elapsed =
@@ -125,7 +148,7 @@ export function deriveStaleness(scenario: ScenarioV3, todayEpochDay: number): St
       ? null
       : {
           days: Math.max(0, todayEpochDay - scenario.savedAt),
-          saveYear: epochDayToUtcYear(scenario.savedAt),
+          saveYear: epochDayToCalendarYear(scenario.savedAt),
         }
 
   // ── spine: the app methodology-default clock (Q7 — the saved-era rule) ─────────────
@@ -145,17 +168,6 @@ export function deriveStaleness(scenario: ScenarioV3, todayEpochDay: number): St
     savedTax !== undefined &&
     (savedTax.taxYear !== currentTax.taxYear || savedTax.legalBasis !== currentTax.legalBasis)
 
-  // The senior-bonus sunset crossing: the saved answer priced the 2025–2028 bonus (some
-  // person reaches 65 within the bonus window from the plan's own t=0 anchor) AND the save
-  // predates the sunset AND today is past it. All three from persisted facts + the injected
-  // clock — no stamp needed, but the save-year claim needs `savedAt`.
-  const sunsetAfter = SENIOR_BONUS_SUNSET_AFTER
-  const anyoneBonusEligible = scenario.people.some(
-    (p) => scenario.startCalendarYear + Math.max(0, 65 - p.currentAge) <= sunsetAfter,
-  )
-  const seniorBonusSunsetCrossed =
-    elapsed !== null && anyoneBonusEligible && elapsed.saveYear <= sunsetAfter && wallYear > sunsetAfter
-
   // ── healthcare: the four clocks (acaVerifiedOn deliberately excluded — see header) ──
   const currentHealth = healthcareVintageStamp()
   const savedHealth = scenario.healthcareVintage
@@ -170,16 +182,22 @@ export function deriveStaleness(scenario: ScenarioV3, todayEpochDay: number): St
     if (savedHealth.partBStandardMonthly !== currentHealth.partBStandardMonthly) movedClocks.push('part-b')
   }
 
+  const allRetired = scenario.people.every((p) => p.workStatus === 'retired')
+
   // ── date: the two fixture clocks ─────────────────────────────────────────────────────
+  // The contribution clock is route-gated (header): an all-retired household has no
+  // accumulation overlay, so its recompute is byte-identical under any CONTRIBUTION_YEAR —
+  // firing would be alarm-when-fine at essentially every returning retired household (the
+  // limit table bumps annually). The blend clock fires on BOTH routes: the ticker-blend
+  // snapshot drives the household stock weight, which every projection reads.
   const currentDate = dateVintageStamp()
   const savedDate = scenario.dateVintage
   const contributionMoved =
-    savedDate !== undefined && savedDate.contributionYear !== currentDate.contributionYear
+    !allRetired && savedDate !== undefined && savedDate.contributionYear !== currentDate.contributionYear
   const blendMoved =
     savedDate !== undefined && savedDate.blendSnapshotAsOf !== currentDate.blendSnapshotAsOf
 
   // ── budget: expired time-boxed windows (spine route only — Q6) ───────────────────────
-  const allRetired = scenario.people.every((p) => p.workStatus === 'retired')
   const expiredLines: ExpiredBudgetLine[] = []
   if (allRetired && scenario.budget !== undefined) {
     const elapsedPlanYears = wallYear - scenario.startCalendarYear
@@ -195,23 +213,20 @@ export function deriveStaleness(scenario: ScenarioV3, todayEpochDay: number): St
     })
   }
 
-  const anyStale =
-    appDefaultMoved ||
-    taxMoved ||
-    seniorBonusSunsetCrossed ||
-    movedClocks.length > 0 ||
-    contributionMoved ||
-    blendMoved ||
-    expiredLines.length > 0
+  // The two-predicate split (header): rulebook drift vs calendar-passage prompts.
+  const rulesMoved =
+    appDefaultMoved || taxMoved || movedClocks.length > 0 || contributionMoved || blendMoved
+  const anyStale = rulesMoved || expiredLines.length > 0
 
   return {
     elapsed,
     wallYear,
     spine: { appDefaultMoved },
-    controls: { taxMoved, seniorBonusSunsetCrossed },
+    controls: { taxMoved },
     healthcare: { moved: movedClocks.length > 0, movedClocks },
     date: { contributionMoved, blendMoved },
     budget: { expiredLines },
+    rulesMoved,
     anyStale,
   }
 }

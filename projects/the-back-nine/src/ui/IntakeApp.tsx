@@ -70,9 +70,11 @@ export default function IntakeApp({
   >(hydrateFromVault ? 'restoring' : 'intake')
   // P3·U13 — the re-entry gate's composed state, set ONCE by the hydrate effect from the
   // RAW-decoded model (council constraint (a): staleness reads the vault's own stamps,
-  // never the draft a later re-save would have re-stamped). `anyStale` outlives the gate —
-  // it feeds the hero's standing staleness note for the whole session.
-  const [reentry, setReentry] = useState<{ view: ReentryView; anyStale: boolean } | null>(null)
+  // never the draft a later re-save would have re-stamped). `rulesMoved` outlives the gate —
+  // it feeds the hero's standing staleness note for the whole session. RULES-moved, never
+  // `anyStale` (ultramode 2026-07-09): a lapsed budget window is a calendar prompt on a
+  // byte-identical recompute — "Some rules changed" there is a false claim on the hero.
+  const [reentry, setReentry] = useState<{ view: ReentryView; rulesMoved: boolean } | null>(null)
   // The re-offer backup door's gate (U8-tail): set true only on a decrypt-on-return WHERE the
   // session is writable AND no backup-note is on record — a returning household whose off-device
   // copy was never made here. Never set on a fresh/seed intake (no vault to lack a backup), never
@@ -116,6 +118,19 @@ export default function IntakeApp({
   // can reach the result screen — the gate, not the screen, decides saveability).
   const saveReady = useMemo(() => scenarioFromDraft(snapshot.draft), [snapshot.draft])
   const retry = useCallback(() => void appModel.recompute(), [])
+  // The reveal cadence, ONE seam (ultramode 2026-07-09 — it was open-coded at three sites):
+  // reveal the magic moment on the FAST provisional tier, then sharpen to the final IN
+  // PLACE — never block the reveal on the final-tier sweep (16k paths × candidates ≈ a
+  // multi-second wait, far longer on a phone: it read as "never gets worked out"). The
+  // await ORDER is load-bearing: the provisional must COMMIT (lower epoch) before the
+  // final dispatches, or the final's epoch bump cancels the in-flight provisional and the
+  // reveal is back to a bare blocking spinner. The result holds the provisional reading
+  // while the final computes (no re-blank), then upgrades.
+  const revealAndSharpen = useCallback(async () => {
+    setPhase('result')
+    await appModel.recompute('provisional')
+    await appModel.recompute('final')
+  }, [])
   const complete = useCallback(async () => {
     // The narrow period disarm's probe — the store's CURRENT draft, never the render closure
     // (insight 036: a commit-on-blur and the terminal Continue can share a task). If the
@@ -129,17 +144,8 @@ export default function IntakeApp({
     ) {
       setPeriodAnswerProven(true)
     }
-    // Reveal the magic moment on the FAST provisional tier, then sharpen to the final IN PLACE —
-    // never block the reveal on the final-tier date sweep (16k paths × every candidate year ≈ a
-    // multi-second wait on desktop, far longer on a phone: it read as "never gets worked out"). The
-    // await ORDER is load-bearing: the provisional must COMMIT (lower epoch) before the final
-    // dispatches, or the final's epoch bump cancels the in-flight provisional and we are back to a
-    // bare blocking spinner. The result holds the provisional reading while the final computes (no
-    // re-blank), then upgrades — the calm "settling into its answer", never a frozen spinner.
-    setPhase('result')
-    await appModel.recompute('provisional')
-    await appModel.recompute('final')
-  }, [])
+    await revealAndSharpen()
+  }, [revealAndSharpen])
   const review = useCallback(() => setPhase('intake'), [])
 
   // The PROPER edit-and-re-save (retires the U8-review ② interim sticky-`saved`): a same-session
@@ -186,14 +192,12 @@ export default function IntakeApp({
       if (draft === null || cancelled) return
       appModel.update(() => draft)
       setDevSeedApplied(true)
-      setPhase('result')
-      await appModel.recompute('provisional')
-      await appModel.recompute('final')
+      await revealAndSharpen()
     })
     return () => {
       cancelled = true
     }
-  }, [seed])
+  }, [seed, revealAndSharpen])
 
   // DECRYPT-ON-RETURN: after a successful unlock the session holds the decrypted model. Mirror the
   // `?seed` hydration — whole-draft replace → result → provisional (shows FAST) → final (sharpens in
@@ -253,7 +257,7 @@ export default function IntakeApp({
         // phase mounts or any recompute dispatches: the verdict never renders on
         // unconfirmed balances and then asks. The recompute moves to the affirm handler.
         const report = deriveStaleness(model, currentEpochDay())
-        setReentry({ view: composeReentry(model, report), anyStale: report.anyStale })
+        setReentry({ view: composeReentry(model, report), rulesMoved: report.rulesMoved })
         setPhase('reentry')
       } catch {
         if (!cancelled) setPhase('restore-failed')
@@ -280,11 +284,7 @@ export default function IntakeApp({
         onAffirm={() => {
           // Affirmed (a prompt, not an attestation — nothing recorded): NOW the reveal
           // proceeds — result phase + the two-tier recompute the gate had been holding.
-          setPhase('result')
-          void (async () => {
-            await appModel.recompute('provisional')
-            await appModel.recompute('final')
-          })()
+          void revealAndSharpen()
         }}
         onUpdate={() => {
           // Something changed: route into the walk-through (accounts are edited where they
@@ -376,8 +376,9 @@ export default function IntakeApp({
         // The re-offer backup door — present only when the hydrate armed it (writable + no note on
         // record). Tapping opens the 'backup' phase; the door dissolves once the ceremony records.
         backup={needsBackup ? { onSave: () => setPhase('backup') } : undefined}
-        // P3·U13 — the standing hero staleness echo (session-lifetime once the gate derived it).
-        stalenessNote={reentry?.anyStale === true}
+        // P3·U13 — the standing hero staleness echo (session-lifetime once the gate derived
+        // it). RULES-moved only — the gate's budget re-confirm lines never claim "rules changed".
+        stalenessNote={reentry?.rulesMoved === true}
       />
     )
   }

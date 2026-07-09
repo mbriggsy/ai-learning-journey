@@ -10,9 +10,14 @@
  *   5. acaVerifiedOn alone moving does NOT fire healthcare (re-verify ≠ drift).
  *   6. Budget windows expire on the spine route by calendar advance; the date route is
  *      inert; the boundary year is inclusive-active (endYear == elapsed is NOT past).
+ *   7. The two-predicate split (ultramode 2026-07-09): `rulesMoved` carries ONLY rulebook
+ *      drift (the hero echo's predicate); a budget re-confirm raises `anyStale` alone —
+ *      a calendar prompt on a byte-identical recompute is never "rules changed".
+ *   8. The contribution clock is route-gated: quiet for an all-retired household (whose
+ *      answer never reads a contribution limit); the blend clock fires on BOTH routes.
  */
 import { describe, expect, it } from 'vitest'
-import { deriveStaleness, epochDayToUtcYear } from '../staleness'
+import { deriveStaleness, epochDayToCalendarYear } from '../staleness'
 import { scenarioFromDraft, currentEpochDay } from '@ui/scenarioFromDraft'
 import { DEV_SEEDS } from '@ui/devSeeds'
 import { CURRENT_APP_DEFAULT_VERSION, appDefaultEraFor } from '@shared/appDefaults'
@@ -42,14 +47,14 @@ describe('deriveStaleness — the property arm (a fresh save is never stale)', (
       if (!r.ready) return // non-save-ready seeds are covered by the registry arms elsewhere
       const report = deriveStaleness(r.scenario, TODAY)
       expect(report.anyStale).toBe(false)
+      expect(report.rulesMoved).toBe(false)
       expect(report.spine.appDefaultMoved).toBe(false)
       expect(report.controls.taxMoved).toBe(false)
-      expect(report.controls.seniorBonusSunsetCrossed).toBe(false)
       expect(report.healthcare.moved).toBe(false)
       expect(report.date.contributionMoved).toBe(false)
       expect(report.date.blendMoved).toBe(false)
       expect(report.budget.expiredLines).toEqual([])
-      expect(report.elapsed).toEqual({ days: 0, saveYear: epochDayToUtcYear(TODAY) })
+      expect(report.elapsed).toEqual({ days: 0, saveYear: epochDayToCalendarYear(TODAY) })
     },
   )
 })
@@ -64,8 +69,8 @@ describe('deriveStaleness — the legacy vault (absent stamps = not-applicable, 
     delete legacy.healthcareVintage
     const report = deriveStaleness(legacy as unknown as ScenarioV3, TODAY)
     expect(report.anyStale).toBe(false)
+    expect(report.rulesMoved).toBe(false)
     expect(report.elapsed).toBeNull() // NEVER fabricated from startCalendarYear
-    expect(report.controls.seniorBonusSunsetCrossed).toBe(false) // needs the save-year anchor
   })
 })
 
@@ -105,7 +110,7 @@ describe('deriveStaleness — the healthcare clocks', () => {
 })
 
 describe('deriveStaleness — the date clocks', () => {
-  it('contributionYear and blendSnapshotAsOf each fire independently', () => {
+  it('contributionYear and blendSnapshotAsOf each fire independently (the date route)', () => {
     const s = freshDateSave()
     const dv = s.dateVintage!
     expect(deriveStaleness(s, TODAY).date).toEqual({ contributionMoved: false, blendMoved: false })
@@ -116,6 +121,20 @@ describe('deriveStaleness — the date clocks', () => {
     expect(
       deriveStaleness({ ...s, dateVintage: { ...dv, blendSnapshotAsOf: '2019-01-01' } }, TODAY).date.blendMoved,
     ).toBe(true)
+  })
+
+  it('the ROUTE GATE (ultramode 2026-07-09): an all-retired household is QUIET on the contribution clock (its answer never reads a limit — the annual table bump must not stale every returning retiree) but the blend clock still fires (stock weight is route-agnostic)', () => {
+    const s = freshSave() // all-retired — the spine route
+    const dv = s.dateVintage!
+    const contributionBumped = deriveStaleness(
+      { ...s, dateVintage: { ...dv, contributionYear: dv.contributionYear - 1 } },
+      TODAY,
+    )
+    expect(contributionBumped.date.contributionMoved).toBe(false)
+    expect(contributionBumped.anyStale).toBe(false)
+    const blendBumped = deriveStaleness({ ...s, dateVintage: { ...dv, blendSnapshotAsOf: '2019-01-01' } }, TODAY)
+    expect(blendBumped.date.blendMoved).toBe(true)
+    expect(blendBumped.rulesMoved).toBe(true)
   })
 })
 
@@ -152,26 +171,16 @@ describe('deriveStaleness — the Q7 saved-era rule (the council-rebuilt directi
   })
 })
 
-describe('deriveStaleness — the senior-bonus sunset crossing', () => {
-  it('fires only when: saved pre-sunset + viewed post-sunset + someone reached 65 inside the bonus window; suppressed without savedAt', () => {
-    const s = freshSave() // retired 68/70 in 2026 → both 65+ well inside the window
-    const sunsetYear = 2028
-    const dayIn2028 = Math.floor(Date.UTC(sunsetYear, 5, 1) / 86_400_000)
-    const dayIn2029 = Math.floor(Date.UTC(sunsetYear + 1, 5, 1) / 86_400_000)
+describe('deriveStaleness — the senior-bonus sunset has NO clock (a dated supersession)', () => {
+  it('crossing the sunset year fires NOTHING — the crossing changes nothing about a saved answer (see the staleness.ts header + the tripwire test forcing the filed engine unit)', () => {
+    const s = freshSave() // retired 68/70 → both 65+ inside the bonus window at save
+    const dayIn2029 = Math.floor(Date.UTC(2029, 5, 1) / 86_400_000)
     const savedIn2026 = { ...s, savedAt: Math.floor(Date.UTC(2026, 6, 1) / 86_400_000) }
-    // viewed while the bonus is still live → quiet
-    expect(deriveStaleness(savedIn2026, dayIn2028).controls.seniorBonusSunsetCrossed).toBe(false)
-    // viewed after the sunset → fires
-    expect(deriveStaleness(savedIn2026, dayIn2029).controls.seniorBonusSunsetCrossed).toBe(true)
-    // a post-sunset SAVE viewed post-sunset → quiet (nothing about it changed)
-    const savedIn2029 = { ...s, savedAt: dayIn2029 }
-    expect(deriveStaleness(savedIn2029, dayIn2029 + 100).controls.seniorBonusSunsetCrossed).toBe(false)
-    // no savedAt → suppressed, never guessed
-    const anchorless = { ...s } as Record<string, unknown>
-    delete anchorless.savedAt
-    expect(
-      deriveStaleness(anchorless as unknown as ScenarioV3, dayIn2029).controls.seniorBonusSunsetCrossed,
-    ).toBe(false)
+    const report = deriveStaleness(savedIn2026, dayIn2029)
+    expect(report.rulesMoved).toBe(false)
+    expect(report.anyStale).toBe(false)
+    // The shape law rides the type too: the report carries no sunset field to mis-render.
+    expect('seniorBonusSunsetCrossed' in report.controls).toBe(false)
   })
 })
 
@@ -194,7 +203,11 @@ describe('deriveStaleness — the budget time-box (Q6: spine route only)', () =>
     expect(report.budget.expiredLines).toEqual([
       { index: 1, category: 'travel', endYear: 2, endCalendarYear: y0 + 2 },
     ])
+    // The two-predicate split: a lapsed window is worth a line at the GATE (anyStale) but
+    // it is NOT rulebook drift — the recompute is byte-identical, so the hero's "Some
+    // rules changed" echo (rulesMoved) must stay dark (ultramode 2026-07-09).
     expect(report.anyStale).toBe(true)
+    expect(report.rulesMoved).toBe(false)
   })
 
   it('a DATE-route (still-working) household is inert — its budget anchors to the future work-stop, so no window can be past', () => {

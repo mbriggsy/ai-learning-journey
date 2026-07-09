@@ -41,8 +41,10 @@ function ReadbackGroup({ legend, rows }: { legend: string; rows: ReentryView['ba
     <section className="reentry-group">
       <h3 className="reentry-group__legend">{legend}</h3>
       <dl className="reentry-rows">
-        {rows.map((r) => (
-          <div key={r.label} className="reentry-row">
+        {/* Index keys: the list is composed once and never reorders, and a LABEL key would
+            collide on two spouses sharing a name (the benefit rows are person-name-labeled). */}
+        {rows.map((r, i) => (
+          <div key={i} className="reentry-row">
             <dt className="reentry-row__label">{r.label}</dt>
             <dd className="reentry-row__value">{r.value}</dd>
           </div>

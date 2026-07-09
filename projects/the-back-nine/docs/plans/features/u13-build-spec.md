@@ -123,3 +123,38 @@ Minimalist: drop `savedAt`, anchor every wall-clock on `startCalendarYear`. Rebu
 startCalendarYear = "since you BUILT the plan" (mislabels every re-saver); only an in-ciphertext savedAt
 survives export-restore for the wiped-device survivor. Flips only if re-save frequency proves ~zero AND
 export-restore is ruled out of wall-clock scope.
+
+## Dated supersessions — the U13 ultramode review (2026-07-09, wf_44cdf86d-b71; 13 lenses, 44 agents, per-finding refuters)
+
+1. **The senior-bonus sunset "derived note" (this spec L41-43 / L69-71) is SUPERSEDED — the clock is
+   REMOVED.** The ratified premise ("already deterministic inside the engine given birthYear +
+   startCalendarYear") was refuted against source: `seniorBonusFor` (taxCore.ts) takes only
+   (filing, count65, magi) and NOTHING in the tax math reads `seniorBonus.sunsetAfter` — the engine
+   credits the 2025–2028-only bonus in EVERY sim year. So the shipped note ("this reading prices the
+   years as they stand now") asserted a re-pricing the recompute never performs — calm-but-wrong,
+   OPTIMISTIC-masking, 4-lens convergence. And under a CORRECTED engine the crossing is still not
+   drift (the save already priced the calendar-deterministic sunset — recompute byte-identical), so
+   the note has no honest content in either world. Disposition: the clock + copy removed
+   (staleness.ts header carries the law); the **engine sunset unit is FILED REQUIRED** (thread the
+   sim-year calendar through `deductionStack`/`seniorBonusFor` + the magiLandscape rails, DND-012
+   external fixtures, council-ratified — TODO) and **build-tripwired**
+   (`seniorBonusSunset.tripwire.test.ts` goes red on 2028-01-01 so the sunset's final priced year
+   cannot build with the gap open).
+2. **`anyStale` split into TWO predicates.** The hero's standing "Some rules changed since your save —
+   this answer uses today's" echo rides `rulesMoved` (rulebook drift = the recompute genuinely
+   differs); the budget window re-confirms raise `anyStale` for the GATE only (calendar prompts over a
+   byte-identical recompute — "worth a look", never "rules changed").
+3. **The date-surface contribution clock is ROUTE-GATED** (quiet for an all-retired household — the
+   accumulation overlay is the only consumer of contribution limits, and the annual table bump would
+   otherwise falsely stale every returning retiree), and the blend clock speaks route-true copy on the
+   spine (`stalenessBlendSpine` — never "your date" to a household with no date).
+4. **The whole clock subsystem is LOCAL-calendar-based.** `currentEpochDay()` mints the household's
+   local calendar day (was UTC): `startCalendarYear` is local-minted, so a UTC wall year expired
+   budget windows a few hours early every Dec 31. Result.tsx's date anchor reads the same chain.
+5. **The floor line anchors like the hero** (`floorLineText` takes the same `dateAnchor`;
+   `dateFloorCoveredAnchored`/`dateFloorCoveredPast` slots) — one screen, one time base.
+6. **The v1 disclosure seats are RATIFIED SUFFICIENT** (review judgment J2): the gate's per-clock
+   lines + the one-line hero echo; the plan-L290 per-sheet vintage notes stay un-built (the sheets
+   re-derive under live constants — a per-sheet "computed with [year]" would duplicate the gate's
+   disclosure without adding a decision the user can take there). The elapsed line's whole-year floor
+   (J5) stands as built.

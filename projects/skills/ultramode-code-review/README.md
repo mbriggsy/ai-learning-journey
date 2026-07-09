@@ -107,6 +107,10 @@ Both flights delivered the full loop: fix → project gate green (2,120 tests) �
 | `references/workflow-template.md` | The ready-to-adapt Workflow script: schemas, persona precedence block, adversary-panel mechanism, resolution snippet. |
 | `docs/insights/` | Lessons the flights paid for. `001` — lens convergence validates the finding, never the fix. |
 
+## Upstream Credit
+
+The reviewer personas this skill mines are the work of **[EveryInc/compound-engineering-plugin](https://github.com/EveryInc/compound-engineering-plugin)** (installed via the `every-marketplace`, CE ≥3.14). Their persona documents — the hunting techniques, the anchored-confidence rubric, the ownership boundaries — live at `<CE installPath>/skills/ce-code-review/references/personas/` and are read at review time, never copied into this repo. What's ours: the holistic cadence, the contract brief, the always-on adversary floor, the per-finding verify stage, and the enrichment-not-dependency architecture that keeps the review alive when CE restructures.
+
 ## Design Laws
 
 - **Holistic beats diff-scoped** — read the whole unit; the bugs live in the seams.

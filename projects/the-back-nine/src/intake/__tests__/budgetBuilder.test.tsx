@@ -2,7 +2,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import '@testing-library/jest-dom/vitest'
 import { cleanup, render, screen, fireEvent, waitFor } from '@testing-library/react'
-import { BudgetBuilder } from '../BudgetBuilder'
+import { BudgetBuilder, medicalExceedsTotal } from '../BudgetBuilder'
 import { createMemoryModel, type MemoryModel, type ScenarioDraft } from '@store/memoryModel'
 import type { EngineClient } from '@store/engineClient'
 import { copy, slots } from '@ui/copy'
@@ -348,6 +348,35 @@ describe('BudgetBuilder — the reconciliation readout (build-gate 1: the OOP-me
     expect(screen.getByText(slots.budgetMedicalCarried(formatMoney(M)))).toBeInTheDocument()
   })
 
+  it('M > S: the honest exceeds line REPLACES the lines-target — never "about $0 into the lines" beside "about $M carried" (F10)', () => {
+    const draft = draftWith((d) => ({
+      ...d,
+      annualSpendingReal: 5_000,
+      health: { ...d.health, oopMedicalAnnual: 6_500 },
+    }))
+    render(<Host draft={draft} />)
+    expect(
+      screen.getByText(slots.budgetMedicalExceedsTotal(formatMoney(6_500), formatMoney(5_000))),
+    ).toBeInTheDocument()
+    // The contradictory "$0 into the lines below" line must NOT render beside it.
+    expect(screen.queryByText(slots.budgetLinesTarget(formatMoney(0)))).toBeNull()
+    // The carried line still renders — it stays true (the medical needs no line here).
+    expect(screen.getByText(slots.budgetMedicalCarried(formatMoney(6_500)))).toBeInTheDocument()
+  })
+
+  it('M === S renders the EXISTING readout byte-identically (a $0 lines-target is the truth there — the M>=S mutant-killer)', () => {
+    const draft = draftWith((d) => ({
+      ...d,
+      annualSpendingReal: 6_500,
+      health: { ...d.health, oopMedicalAnnual: 6_500 },
+    }))
+    render(<Host draft={draft} />)
+    expect(screen.getByText(slots.budgetLinesTarget(formatMoney(0)))).toBeInTheDocument()
+    expect(
+      screen.queryByText(slots.budgetMedicalExceedsTotal(formatMoney(6_500), formatMoney(6_500))),
+    ).toBeNull()
+  })
+
   it('with NO M: the target and carried lines are WITHHELD (raw S would invite committing S+M), anchor still shows', () => {
     const draft = draftWith((d) => ({ ...d, annualSpendingReal: S }))
     render(<Host draft={draft} />)
@@ -360,6 +389,12 @@ describe('BudgetBuilder — the reconciliation readout (build-gate 1: the OOP-me
     const draft = draftWith((d) => ({ ...d, annualSpendingReal: undefined }))
     render(<Host draft={draft} />)
     expect(document.querySelectorAll('.budget-readout__line')).toHaveLength(0)
+  })
+
+  it('medicalExceedsTotal fires STRICTLY above (the pure honesty fork — insight 048 planted-fail arms)', () => {
+    expect(medicalExceedsTotal(5_000, 6_500)).toBe(true) // M > S — the contradiction
+    expect(medicalExceedsTotal(6_500, 6_500)).toBe(false) // M === S — a $0 target is the truth
+    expect(medicalExceedsTotal(80_000, 8_000)).toBe(false) // the ordinary M < S readout
   })
 
   it('the running total sums ONLY year-0-active finite lines as typed', () => {

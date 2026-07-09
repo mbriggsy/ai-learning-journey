@@ -88,10 +88,11 @@ function Paired({
   )
 }
 
+// The spread carries the violation's message pair (messageKey + optional params) CORRELATED —
+// the slotted ceiling errors ride their pre-formatted limit (F10); every other violation
+// renders byte-identically (FieldError ignores the extra `rule`).
 const errorsFor = (api: StepApi, field: string): ReactNode =>
-  api
-    .violationsFor(field)
-    .map((v) => <FieldError key={v.rule} field={v.field} messageKey={v.messageKey} />)
+  api.violationsFor(field).map((v) => <FieldError key={v.rule} {...v} />)
 
 // ---------------------------------------------------------------------------
 // steps
@@ -742,10 +743,10 @@ function AccountsStep({ api }: { api: StepApi }) {
               </button>
             </span>
             {api.violationsFor(accountField(i, 'annualContribution')).map((v) => (
-              <FieldError key={v.rule} field={v.field} messageKey={v.messageKey} />
+              <FieldError key={v.rule} {...v} />
             ))}
             {api.violationsFor(accountField(i, 'employerMatchAnnual')).map((v) => (
-              <FieldError key={v.rule} field={v.field} messageKey={v.messageKey} />
+              <FieldError key={v.rule} {...v} />
             ))}
           </li>
         ))}

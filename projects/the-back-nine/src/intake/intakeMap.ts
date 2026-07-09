@@ -118,7 +118,16 @@ export function missingRequiredFacts(d: ScenarioDraft): readonly MissingFact[] {
       out.push({ labelKey: 'workInvestmentLabel', personIndex: i })
   })
 
-  if (d.annualSpendingReal === undefined) out.push({ labelKey: 'spendLabel' })
+  // NOT-VALIDLY-PRESENT, not merely present (the hawk's widened F9 gate, council
+  // 2026-07-08): the engine ACCEPTS a $0 spend (validateParams `x >= 0` — a legitimate
+  // degenerate for CRN draw isolation), so a zeroed/garbage spend that slipped past the
+  // field rule would render a confident "over-funded" verdict on a household spending
+  // nothing — the rosiest calm-but-wrong. One NaN-safe clause catches undefined, 0,
+  // negative, and NaN alike (`!(x > 0)` is true for every one of them).
+  {
+    const s = d.annualSpendingReal
+    if (s === undefined || !(s > 0)) out.push({ labelKey: 'spendLabel' })
+  }
 
   // The date needs a POSITIVE portfolio to test (the engine rejects a $0 start
   // with the accumulation construct present — simulate.ts §C2); a $0-balance

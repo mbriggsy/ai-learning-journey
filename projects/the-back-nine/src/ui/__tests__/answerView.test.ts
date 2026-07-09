@@ -43,6 +43,7 @@ const retiredWithAges = draft({
 const snap = (answer: ModelAnswer, d: ScenarioDraft): MemoryModelSnapshot => ({
   draft: d,
   answer,
+  displayed: null, // U12 sticky triple — routing never reads it
   runningInWorker: true,
 })
 

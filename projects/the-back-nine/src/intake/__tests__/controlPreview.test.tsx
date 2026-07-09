@@ -45,7 +45,7 @@ function recordingAnnouncer() {
  *  compose→view mapping is the sheets' own concern, pinned in their batteries). */
 function okPreview(): ControlPreview {
   const arm = (surv: number, state: OutcomeState) => ({
-    headline: { xOfTen: { value: surv, marginToEdge: 0.05 }, outcomeState: state },
+    headline: { xOfTen: { value: surv, marginToEdge: 0.05 }, outcomeState: state, stateMarginToEdge: 0.05 },
     survivorReading: { xOfTen: { value: surv, marginToEdge: 0.05 }, outcomeState: state, incomeStepDownMonthlyReal: 1_000 },
     survivalFraction: surv / 10,
     survivorFraction: surv / 10,

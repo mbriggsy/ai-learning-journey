@@ -5,6 +5,7 @@ import { floorRelief } from '../twoTier'
 const reading = (x: number, outcomeState: OutcomeState = 'on-track'): Headline => ({
   xOfTen: { value: x, marginToEdge: 0.03 },
   outcomeState,
+  stateMarginToEdge: 0.03,
 })
 
 describe('floorRelief — the two-tier spine gate (council 2026-07-02, insight 048)', () => {

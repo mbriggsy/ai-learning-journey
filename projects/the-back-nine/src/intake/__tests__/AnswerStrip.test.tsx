@@ -35,6 +35,7 @@ const draft = (over: Partial<ScenarioDraft> = {}): ScenarioDraft => ({
 const snap = (answer: ModelAnswer, over: Partial<ScenarioDraft> = {}): MemoryModelSnapshot => ({
   draft: draft(over),
   answer,
+  displayed: null, // U12 sticky triple — the strip never reads it
   runningInWorker: true,
 })
 

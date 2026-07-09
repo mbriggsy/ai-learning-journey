@@ -93,7 +93,7 @@ function okPreview(
   opts: { withSeries?: boolean; withState?: OutcomeState } = {},
 ): ControlPreview {
   const arm = (surv: number, state: OutcomeState, top: number) => ({
-    headline: { xOfTen: { value: surv, marginToEdge: 0.05 }, outcomeState: state },
+    headline: { xOfTen: { value: surv, marginToEdge: 0.05 }, outcomeState: state, stateMarginToEdge: 0.05 },
     survivorReading: { xOfTen: { value: surv, marginToEdge: 0.05 }, outcomeState: state, incomeStepDownMonthlyReal: 1_000 },
     survivalFraction: surv / 10,
     survivorFraction: surv / 10,

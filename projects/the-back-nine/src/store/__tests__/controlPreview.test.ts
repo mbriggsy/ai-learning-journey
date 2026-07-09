@@ -40,7 +40,7 @@ const params = {} as unknown as SimulationParams // the mock ignores params; the
 const control: TwoArmControl = { kind: 'conversion', plan: { annualAmountReal: 40_000, startYearOffset: 0, years: 5 } }
 
 const arm: TwoArmReading = {
-  headline: { xOfTen: { value: 8, marginToEdge: 0.1 }, outcomeState: 'on-track' },
+  headline: { xOfTen: { value: 8, marginToEdge: 0.1 }, outcomeState: 'on-track', stateMarginToEdge: 0.05 },
   survivalFraction: 0.8,
 }
 const okOutcome: TwoArmOutcome = { kind: 'two-arm', with: arm, without: arm, rawDelta: 0.05, deltaBasis: 'joint' }

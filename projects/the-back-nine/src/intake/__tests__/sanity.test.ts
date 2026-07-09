@@ -1,5 +1,14 @@
 import { describe, expect, it } from 'vitest'
-import { accountField, contributionCeilingFor, incomeField, personField, validateDraft, validateField } from '../sanity'
+import {
+  accountField,
+  annualAdditionsCeilingFor,
+  contributionCeilingFor,
+  incomeField,
+  personField,
+  validateDraft,
+  validateField,
+} from '../sanity'
+import { formatMoney } from '../fields'
 import type { ScenarioDraft, PersonDraft } from '@store/memoryModel'
 import type { IncomeStream } from '@shared/model'
 
@@ -111,13 +120,41 @@ describe('sanity — birth year + model-age domain', () => {
 })
 
 describe('sanity — coherent-but-dire flows through (only impossibilities block)', () => {
-  it('a $0 spend with retired people raises NO violation (→ the honest 0-of-10 path)', () => {
+  // SUPERSEDED PIN (U12, council 2026-07-08 — the hawk's F9 veto): this arm previously
+  // pinned "$0 spend raises NO violation (→ the honest 0-of-10 path)". That rationale was
+  // factually BACKWARDS — a $0 spend never depletes, so it renders a confident 10-of-10
+  // "over-funded" on a household spending nothing (the rosiest calm-but-wrong), not 0-of-10.
+  // WORSE, the old pin was VACUOUS (insight 029): `touchedAll` never contained
+  // 'annualSpendingReal', so the touch filter alone produced its expected [] — the rule
+  // layer was never exercised. These arms use a touched set that actually includes the
+  // field. The coherent-but-dire doctrine's real case is the $0 PORTFOLIO with positive
+  // spend (the module header's own example) — that path is untouched and stays clean.
+  const touchedSpend = new Set([...touchedAll, 'annualSpendingReal'])
+  it('a $0 SPEND now fires spend-zero (the F9 widened gate) — it was never coherent-but-dire', () => {
     const d = draft(
       { workStatus: 'retired', retirementAge: 64, currentAge: 65 },
       { workStatus: 'retired', retirementAge: 64, currentAge: 65 },
       { annualSpendingReal: 0 },
     )
-    expect(validateDraft(d, touchedAll)).toEqual([])
+    expect(validateDraft(d, touchedSpend)).toMatchObject([
+      { rule: 'spend-zero', field: 'annualSpendingReal', messageKey: 'errSpendZero' },
+    ])
+  })
+  it('a positive spend raises no spend-zero violation (the release sibling)', () => {
+    const d = draft(
+      { workStatus: 'retired', retirementAge: 64, currentAge: 65 },
+      { workStatus: 'retired', retirementAge: 64, currentAge: 65 },
+      { annualSpendingReal: 48_000 },
+    )
+    expect(validateDraft(d, touchedSpend)).toEqual([])
+  })
+  it('an ABSENT spend stays the missing-fact channel’s job — no spend-zero violation', () => {
+    const d = draft(
+      { workStatus: 'retired', retirementAge: 64, currentAge: 65 },
+      { workStatus: 'retired', retirementAge: 64, currentAge: 65 },
+      {},
+    )
+    expect(validateDraft(d, touchedSpend)).toEqual([])
   })
 })
 
@@ -234,15 +271,43 @@ describe('sanity — the combined HSA family ceiling (employer + employee share 
   const hsaDraft = (over: Partial<ScenarioDraft>): ScenarioDraft =>
     draft({ workStatus: 'working', currentAge: 61, birthYear: 1965 }, {}, over)
 
-  it('fires when personal + employer COMBINED exceed the family ceiling (one account)', () => {
+  it('fires when personal + employer COMBINED exceed the family ceiling (one account) — and QUOTES the limit (F10)', () => {
     const ceiling = contributionCeilingFor('hsa', 61)!
     const d = hsaDraft({
       enteredAccounts: [
         { ownerIndex: 0, kind: 'hsa', valueToday: 30_000, annualContribution: ceiling - 1000, hsaEmployerAnnual: 1001 },
       ],
     })
+    // The params pin is SOURCE-BOUND: the pre-formatted limit is built from the real ceiling
+    // helper + the intake money formatter — never a re-typed dollar (DND 012).
     expect(validateDraft(d, touchedContribution)).toMatchObject([
-      { rule: 'contribution-over-ceiling', messageKey: 'errContributionCeiling' },
+      {
+        rule: 'contribution-over-ceiling',
+        messageKey: 'errContributionCeiling',
+        params: { limitFormatted: formatMoney(ceiling) },
+      },
+    ])
+  })
+
+  it('the advance-time §415(c) rule QUOTES its own limit too (params ride the additions violation — F10)', () => {
+    const ceiling = annualAdditionsCeilingFor(61)
+    const d = hsaDraft({
+      enteredAccounts: [
+        {
+          ownerIndex: 0,
+          kind: '401k',
+          valueToday: 500_000,
+          annualContribution: 10_000,
+          employerMatchAnnual: ceiling - 10_000 + 1,
+        },
+      ],
+    })
+    expect(validateDraft(d, new Set([accountField(0, 'employerMatchAnnual')]))).toMatchObject([
+      {
+        rule: 'additions-over-415c',
+        messageKey: 'errAdditionsCeiling',
+        params: { limitFormatted: formatMoney(ceiling) },
+      },
     ])
   })
 

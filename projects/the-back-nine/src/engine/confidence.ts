@@ -57,6 +57,19 @@ export const DOLLAR_STEP = 10
  *  re-typed grid or a raw compare (objective ≡ headline). */
 export const quantizeSurvival = (s: number): number => Math.round(s / SURVIVAL_GRID) * SURVIVAL_GRID
 
+/** Distance of a QUANTIZED survival fraction to the nearest outcome-STATE band edge —
+ *  the third stateless margin ({@link Headline.stateMarginToEdge}, consumed by the P3
+ *  sticky state gate in memoryModel). Computed on the SAME quantized value
+ *  {@link selectOutcomeState} compares (the margin and the decision share one source),
+ *  and over the exported {@link BANDS} object itself — never re-typed edge literals.
+ *  The x-of-10 lattice ({@link marginToXOfTenEdge}) cannot substitute: its flip points
+ *  coincide with the onTrack/borderline edges (0.85/0.65) but NOT overFunded (0.98). */
+export function marginToStateEdge(quantized: number): number {
+  let min = Infinity
+  for (const edge of Object.values(BANDS)) min = Math.min(min, Math.abs(quantized - edge))
+  return min
+}
+
 /** Nearest distance to a band edge where `round(s*10)` flips (the (k+0.5)/10 points). */
 function marginToXOfTenEdge(survival: number): number {
   const scaled = survival * 10
@@ -112,6 +125,7 @@ function buildHeadline(distribution: Distribution): Headline {
   return {
     xOfTen: { value: xOfTen, marginToEdge: marginToXOfTenEdge(quantized) },
     outcomeState: state,
+    stateMarginToEdge: marginToStateEdge(quantized),
   }
 }
 
@@ -155,6 +169,7 @@ function buildFloorReading(distribution: Distribution): Headline | undefined {
   return {
     xOfTen: { value: xOfTen, marginToEdge: marginToXOfTenEdge(quantized) },
     outcomeState: state,
+    stateMarginToEdge: marginToStateEdge(quantized),
   }
 }
 
@@ -201,7 +216,7 @@ function buildDollar(distribution: Distribution, params: SimulationParams, state
 function indeterminateResult(seed: number): SimulationResult {
   return {
     distribution: { terminalValuesReal: [], depletionYears: [], survivalFraction: 0 },
-    headline: { xOfTen: { value: 0, marginToEdge: 0 }, outcomeState: 'indeterminate' },
+    headline: { xOfTen: { value: 0, marginToEdge: 0 }, outcomeState: 'indeterminate', stateMarginToEdge: 0 },
     dollar: { perMonthReal: { value: 0, marginToEdge: 0 }, direction: 'on-the-line' },
     seed,
   }

@@ -3,6 +3,7 @@ import { IntakeFlow } from '@intake/flow'
 import { intakeSteps } from '@intake/questions'
 import { AnswerStrip } from '@intake/AnswerStrip'
 import { missingRequiredFacts } from '@intake/intakeMap'
+import { validateDraft, type FieldPath } from '@intake/sanity'
 import { appModel } from './appModel'
 import { Result } from './Result'
 import { scenarioFromDraft } from './scenarioFromDraft'
@@ -19,6 +20,13 @@ const SaveFlow = lazy(() => import('./SaveFlow').then((m) => ({ default: m.SaveF
 // The re-offer backup step (U8-tail) rides its own lazy chunk too (it pulls the export/crypto
 // graph via ExportConfirm); it only mounts from the result's backup door.
 const BackupStep = lazy(() => import('./BackupStep').then((m) => ({ default: m.BackupStep })))
+
+/** The completed-intake period probe (the F10 narrow disarm below): a synthetic touched set
+ *  holding ONLY the spend-period gate's target, so `validateDraft`'s touched-filter admits
+ *  exactly that rule's violation — "would the force-confirm fire on this draft in a session
+ *  with no touches and no provenance?" asked through the rule's OWN predicate (sanity.ts
+ *  `spend-period-unconfirmed`), never a re-typed copy of its ambiguity math. */
+const PERIOD_PROBE_TOUCHED: ReadonlySet<FieldPath> = new Set(['annualSpendingReal'])
 
 /**
  * The intake subtree — the LAZY half of the App split (default export for
@@ -74,6 +82,25 @@ export default function IntakeApp({
   // A state flag, not a render-time resolveDevSeed(seed) call: devSeeds must stay behind the
   // dynamic import so it remains dead-code-eliminated from prod.
   const [devSeedApplied, setDevSeedApplied] = useState(false)
+  // THE COMPLETED-INTAKE PERIOD PROVENANCE (the council-ratified NARROW disarm, F10 carry-in
+  // 2026-07-08 — explicitly NOT a lift of the flow's touched state). `touched` is
+  // IntakeFlow-LOCAL and the flow UNMOUNTS on the phase flip to 'result', so a Review remount
+  // starts it empty — an explicit period answer given THIS session cannot survive as a touched
+  // entry (the same channel gap sanity.ts's SanityProvenance documents for the vault
+  // round-trip), and the force-confirm was re-firing on every post-completion spend-step
+  // advance: a false nag against a household that already answered. THE PROOF (mirroring
+  // SanityProvenance's reasoning): the flow gates the spend step's OWN advance on this rule,
+  // and completion means every step was advanced through. So IF the draft at the terminal
+  // advance would STILL trip the spend-period gate under an EMPTY touched set and NO
+  // provenance, the only way the spend step was passed is that the period was EXPLICITLY
+  // answered this session (touched 'spendEntryPeriod' — the tap) or provenance already carried
+  // it — completion is the downstream receipt of that answer. A completion whose draft does
+  // NOT trip the gate proves nothing and must NOT disarm: a Review that first enters an
+  // ambiguous figure is a genuinely fresh first answer, and the R19 12×-silent-misentry
+  // defense stays armed for it (a bare completed-once flag would leak the disarm to exactly
+  // that household). Mount-lifetime like devSeedApplied; never persisted (the vault round-trip
+  // carries its own provenance via hydrateFromVault).
+  const [periodAnswerProven, setPeriodAnswerProven] = useState(false)
   const snapshot = useSyncExternalStore(appModel.subscribe, appModel.getSnapshot)
   const steps = useMemo(() => intakeSteps(snapshot.draft), [snapshot.draft])
   const missing = useMemo(() => missingRequiredFacts(snapshot.draft), [snapshot.draft])
@@ -82,6 +109,18 @@ export default function IntakeApp({
   const saveReady = useMemo(() => scenarioFromDraft(snapshot.draft), [snapshot.draft])
   const retry = useCallback(() => void appModel.recompute(), [])
   const complete = useCallback(async () => {
+    // The narrow period disarm's probe — the store's CURRENT draft, never the render closure
+    // (insight 036: a commit-on-blur and the terminal Continue can share a task). If the
+    // completed draft trips the spend-period gate on a no-touches/no-provenance evaluation,
+    // the spend step can only have been advanced through an explicit period answer (the
+    // provenance proof on periodAnswerProven above) — record it before the flow unmounts.
+    if (
+      validateDraft(appModel.getSnapshot().draft, PERIOD_PROBE_TOUCHED, {}).some(
+        (v) => v.rule === 'spend-period-unconfirmed',
+      )
+    ) {
+      setPeriodAnswerProven(true)
+    }
     // Reveal the magic moment on the FAST provisional tier, then sharpen to the final IN PLACE —
     // never block the reveal on the final-tier date sweep (16k paths × every candidate year ≈ a
     // multi-second wait on desktop, far longer on a phone: it read as "never gets worked out"). The
@@ -310,11 +349,13 @@ export default function IntakeApp({
       model={appModel}
       onComplete={complete}
       answerSlot={<AnswerStrip snapshot={snapshot} missing={missing} onRetry={retry} />}
-      // Hydration provenance: a vault-decrypted (or genuinely APPLIED dev-seed) draft
-      // answered the spend period before it could ever be saved — Review must not re-nag
-      // it. Both signals are mount-lifetime (devSeedApplied never resets), so the flag
-      // survives Review re-entries; a bogus `?seed=` key never sets it.
-      periodConfirmed={hydrateFromVault || devSeedApplied}
+      // Provenance: a vault-decrypted (or genuinely APPLIED dev-seed) draft answered the
+      // spend period before it could ever be saved, and a completed intake whose draft trips
+      // the gate proved the explicit answer on the way through (periodAnswerProven above) —
+      // Review must not re-nag any of them. All three signals are mount-lifetime (none ever
+      // resets), so the flag survives Review re-entries; a bogus `?seed=` key never sets the
+      // second, and a completion that proves nothing never sets the third.
+      periodConfirmed={hydrateFromVault || devSeedApplied || periodAnswerProven}
     />
   )
 }

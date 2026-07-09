@@ -440,10 +440,9 @@ export const copy = {
   bandClockHorizonLabel: 'Plan horizon',
   bandClockWorkStopsLabel: 'Work stops',
   // --- R19 calm error grammar (icon + adjacent text; color never alone) ---
-  errContributionCeiling:
-    'That’s more than this year’s legal contribution limit for this account type at this age — combined across accounts of the same kind.',
-  errAdditionsCeiling:
-    'Together, the contribution and employer match are above what one plan can legally receive in a year.',
+  // The two CEILING errors are NOT here (F10): they quote the actual statutory limit dollar,
+  // so they are slot templates — slots.errContributionCeiling / slots.errAdditionsCeiling,
+  // addressed through the SlottedErrorKey channel below.
   errStopAgeInFuture:
     'This stop age is later than their current age — for someone already retired, it’s the age work actually stopped. Did you mean still working?',
   errSsClaimWindow:
@@ -453,6 +452,12 @@ export const copy = {
   errSurvivorRatio: 'Survivor spending can’t be more than 100% of household spending.',
   errBirthYearFuture: 'That birth year hasn’t happened yet.',
   errAgeBeyondModel: 'Ages past 119 are beyond what the projection can model.',
+  // U12 (the hawk's widened F9 gate): an EXPLICIT $0 spend is an entry to question, never a
+  // household to simulate — a $0-spend run would read confidently over-funded on a plan that
+  // spends nothing (the rosiest possible calm-but-wrong). Companion structural gate:
+  // missingRequiredFacts treats a non-positive spend as not-validly-present.
+  errSpendZero:
+    'Spending of $0 can’t anchor a plan — enter what the two of you actually spend in a year.',
 
   // ==========================================================================
   // U8 — the first-Save ceremony + decrypt-on-return (the trust handoff).
@@ -768,6 +773,27 @@ export const copy = {
 export type CopyKey = keyof typeof copy
 
 /**
+ * The slotted-ERROR message channel (F10). The two ceiling errors are the only R19 messages
+ * that carry a figure — the statutory limit the message quotes — so a violation may ride a
+ * slot key + PRE-formatted params instead of a static catalog key. ONE typed contract shared
+ * by the violation channel (src/intake/sanity.ts) and the renderer (FieldError):
+ * `params` present ⇔ `messageKey` names a slot template — the renderer routes it through
+ * `slots[messageKey](params.limitFormatted)`, and every param-less violation renders
+ * `copy[messageKey]` byte-identically to before.
+ */
+export type SlottedErrorKey = 'errContributionCeiling' | 'errAdditionsCeiling'
+export interface SlottedErrorParams {
+  /** The statutory limit, PRE-formatted by the intake money formatter (digits + grouping,
+   *  no `$` — the slot template supplies the glyph), computed AT FIRE TIME from the canonical
+   *  year-keyed constants (the ceiling is age-dependent; catch-up bands exist). Never a
+   *  re-typed dollar. */
+  readonly limitFormatted: string
+}
+export type CatalogMessage =
+  | { readonly messageKey: CopyKey; readonly params?: undefined }
+  | { readonly messageKey: SlottedErrorKey; readonly params: SlottedErrorParams }
+
+/**
  * The hedge vocabulary — the words a probabilistic reading is authored FROM (U10's
  * `require-hedge` copyGuard gate reads THIS same set, never a hand-copied list —
  * burned/063 single-source-the-gate). Where SLOT DISCIPLINE governs how a NUMBER
@@ -1001,6 +1027,13 @@ export const slots = {
     `About $${targetFormatted} a year goes into the lines below.`,
   budgetMedicalCarried: (medicalFormatted: string): string =>
     `About $${medicalFormatted} a year of out-of-pocket medical is carried automatically — it needs no line here.`,
+  /** The M>S honesty branch (F10): the OOP-medical figure ALONE exceeds the total the answer
+   *  uses, so the lines-target would read "about $0 into the lines below" beside "about $M
+   *  carried automatically" — internally contradictory. This line REPLACES the lines-target in
+   *  that state and names the contradiction plainly, BOTH dollars quoted in-sentence
+   *  (dont-make-users-think). FIRST-DRAFT craftsman's-lead wording — a cold-read subject. */
+  budgetMedicalExceedsTotal: (medicalFormatted: string, totalFormatted: string): string =>
+    `The out-of-pocket medical alone — about $${medicalFormatted} a year — is already more than the total your answer uses, about $${totalFormatted} a year. One of the two may be worth a second look.`,
   /** The running first-year total of the typed lines (year-0 actives, both tiers). */
   budgetRunningTotal: (totalFormatted: string): string =>
     `Your lines add up to about $${totalFormatted} a year.`,
@@ -1013,6 +1046,20 @@ export const slots = {
     `About $${totalFormatted} a year — set by your budget.`,
   /** The remove-line control's accessible name (icon-only button). */
   budgetRemoveLine: (label: string): string => `Remove ${label}`,
+  // --- R19 ceiling errors (F10) — the calm error grammar, QUOTING the statutory limit ----------
+  // Rendered by FieldError through the SlottedErrorKey channel (params ⇔ slot). The limit is
+  // computed AT FIRE TIME from the canonical constants (contributionCeilingFor /
+  // annualAdditionsCeilingFor — age-dependent, catch-up bands included) and arrives
+  // PRE-formatted by the intake money formatter; the templates stay digit-free (the '§§§'
+  // sentinel test). Grammar preserves the pre-slot calm R19 strings.
+  /** The C1 contribution ceiling, with the actual age-dependent limit named in-sentence (the
+   *  dont-make-users-think law — a reader who knows the limit dollar can ACT on it). */
+  errContributionCeiling: (limitFormatted: string): string =>
+    `That’s more than this year’s legal contribution limit for this account type at this age — $${limitFormatted}, combined across accounts of the same kind.`,
+  /** The §415(c) annual-additions ceiling, limit named (the catch-up band sits ON TOP of the
+   *  bare cap — annualAdditionsCeilingFor owns that composition, never this template). */
+  errAdditionsCeiling: (limitFormatted: string): string =>
+    `Together, the contribution and employer match are above what one plan can legally receive in a year — $${limitFormatted} at this age.`,
   // --- U7 verdict grammar (the confidence statement's magnitude clause) -----------------
   // The second line of the verdict, keyed off the engine's dollar DIRECTION
   // (DollarAdjustment.direction — NEVER re-derived UI-side) + the humane-rounded $/month figure

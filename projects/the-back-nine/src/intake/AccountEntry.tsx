@@ -1,5 +1,5 @@
 import { useId, useState } from 'react'
-import { copy, type CopyKey } from '@ui/copy'
+import { copy, type CopyKey, type SlottedErrorKey, type SlottedErrorParams } from '@ui/copy'
 import type { AccountKind, EnteredAccount, TickerClassification } from '@shared/model'
 import { ACCOUNT_KINDS } from '@shared/model'
 import type { ScenarioDraft } from '@store/memoryModel'
@@ -8,6 +8,7 @@ import { FieldError } from './FieldError'
 import { AllocationEntry } from './AllocationEntry'
 import {
   annualAdditionsCeilingFor,
+  ceilingParams,
   contributionCeilingFor,
   isEmployerPlanKind,
 } from './sanity'
@@ -29,7 +30,9 @@ import {
  * account" — a half-entered account abandoned mid-form is like a half-typed
  * field (the committed list in the draft is what back-nav never loses).
  * Ceilings check at Add time through the SAME helpers the advance-time sanity
- * rules use (one source — sanity.ts).
+ * rules use (one source — sanity.ts), and the message quotes the SAME formatted
+ * limit through the same `ceilingParams` assembly (F10) — the Add-time and
+ * advance-time messages can never desync.
  */
 
 const KIND_LABELS: Readonly<Record<AccountKind, CopyKey>> = {
@@ -75,7 +78,10 @@ export function AccountEntry({ draft, initial, onSave, onCancel }: AccountEntryP
     hsaEmployerAnnual: initial?.hsaEmployerAnnual,
     manualBlend: initial?.manualBlend,
   })
-  const [ceilingError, setCeilingError] = useState<CopyKey | null>(null)
+  const [ceilingError, setCeilingError] = useState<{
+    readonly messageKey: SlottedErrorKey
+    readonly params: SlottedErrorParams
+  } | null>(null)
 
   const patch = (p: Partial<FormState>) => setForm((f) => ({ ...f, ...p }))
 
@@ -100,15 +106,15 @@ export function AccountEntry({ draft, initial, onSave, onCancel }: AccountEntryP
       const ownContribution =
         (form.annualContribution ?? 0) + (isHsa ? (form.hsaEmployerAnnual ?? 0) : 0)
       if (ceiling !== null && ownContribution > ceiling) {
-        setCeilingError('errContributionCeiling')
+        setCeilingError({ messageKey: 'errContributionCeiling', params: ceilingParams(ceiling) })
         return
       }
+      const additionsCeiling = annualAdditionsCeilingFor(owner.currentAge)
       if (
         isEmployerPlanKind(form.kind) &&
-        (form.annualContribution ?? 0) + (form.employerMatchAnnual ?? 0) >
-          annualAdditionsCeilingFor(owner.currentAge)
+        (form.annualContribution ?? 0) + (form.employerMatchAnnual ?? 0) > additionsCeiling
       ) {
-        setCeilingError('errAdditionsCeiling')
+        setCeilingError({ messageKey: 'errAdditionsCeiling', params: ceilingParams(additionsCeiling) })
         return
       }
     }
@@ -188,7 +194,7 @@ export function AccountEntry({ draft, initial, onSave, onCancel }: AccountEntryP
           labelKey="accountContributionLabel"
           field="account.annualContribution"
           value={form.annualContribution}
-          invalid={ceilingError === 'errContributionCeiling'}
+          invalid={ceilingError?.messageKey === 'errContributionCeiling'}
           onEdit={() => setCeilingError(null)}
           onCommit={(annualContribution) => {
             setCeilingError(null)
@@ -202,7 +208,7 @@ export function AccountEntry({ draft, initial, onSave, onCancel }: AccountEntryP
           labelKey="accountMatchLabel"
           field="account.employerMatchAnnual"
           value={form.employerMatchAnnual}
-          invalid={ceilingError === 'errAdditionsCeiling'}
+          invalid={ceilingError?.messageKey === 'errAdditionsCeiling'}
           onEdit={() => setCeilingError(null)}
           onCommit={(employerMatchAnnual) => {
             setCeilingError(null)
@@ -216,7 +222,7 @@ export function AccountEntry({ draft, initial, onSave, onCancel }: AccountEntryP
           labelKey="accountHsaEmployerLabel"
           field="account.hsaEmployerAnnual"
           value={form.hsaEmployerAnnual}
-          invalid={ceilingError === 'errContributionCeiling'}
+          invalid={ceilingError?.messageKey === 'errContributionCeiling'}
           onEdit={() => setCeilingError(null)}
           onCommit={(hsaEmployerAnnual) => {
             setCeilingError(null)
@@ -225,7 +231,13 @@ export function AccountEntry({ draft, initial, onSave, onCancel }: AccountEntryP
         />
       )}
 
-      {ceilingError !== null && <FieldError field="account.ceiling" messageKey={ceilingError} />}
+      {ceilingError !== null && (
+        <FieldError
+          field="account.ceiling"
+          messageKey={ceilingError.messageKey}
+          params={ceilingError.params}
+        />
+      )}
 
       <div className="account-entry-actions">
         <button type="button" className="btn-primary" onClick={save}>

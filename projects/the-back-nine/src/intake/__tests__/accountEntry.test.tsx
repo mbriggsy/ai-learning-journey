@@ -16,7 +16,8 @@ import {
 } from '@engine/constants/contributions'
 import { createMemoryModel, type MemoryModel, type ScenarioDraft } from '@store/memoryModel'
 import type { EngineClient } from '@store/engineClient'
-import { copy } from '@ui/copy'
+import { copy, slots } from '@ui/copy'
+import { formatMoney } from '../fields'
 
 /**
  * The account loop battery (D1 slice (d)): kind-conditional anatomy (basis →
@@ -209,7 +210,11 @@ describe('AccountEntry — HSA employer contribution', () => {
     setMoney(copy.accountHsaEmployerLabel, '1001')
     fireEvent.click(screen.getByRole('button', { name: copy.accountSave }))
     expect(onSave).not.toHaveBeenCalled()
-    expect(screen.getByRole('alert').textContent).toBe(copy.errContributionCeiling)
+    // The message QUOTES the actual family limit (F10) — expected string BUILT from the slot
+    // + the real ceiling helper, never a re-typed dollar.
+    expect(screen.getByRole('alert').textContent).toBe(
+      slots.errContributionCeiling(formatMoney(ceiling)),
+    )
 
     cleanup()
     // Exactly at the combined ceiling passes (the boundary is legal).
@@ -251,7 +256,10 @@ describe('AccountEntry — the C1 ceilings (fire AND boundary-pass)', () => {
     setMoney(copy.accountContributionLabel, String(ceiling + 1))
     fireEvent.click(screen.getByRole('button', { name: copy.accountSave }))
     expect(onSave2).not.toHaveBeenCalled() // fires — stays open
-    expect(screen.getByRole('alert').textContent).toBe(copy.errContributionCeiling)
+    // Slot-built, source-bound pin (F10): the quoted limit IS the age-61 super-band ceiling.
+    expect(screen.getByRole('alert').textContent).toBe(
+      slots.errContributionCeiling(formatMoney(ceiling)),
+    )
   })
 
   it('IRA ceiling: base + the age-50 catch-up combined; under 50 the bare base', () => {
@@ -285,7 +293,10 @@ describe('AccountEntry — the C1 ceilings (fire AND boundary-pass)', () => {
     setMoney(copy.accountMatchLabel, String(ceiling - deferral + 1))
     fireEvent.click(screen.getByRole('button', { name: copy.accountSave }))
     expect(onSave2).not.toHaveBeenCalled()
-    expect(screen.getByRole('alert').textContent).toBe(copy.errAdditionsCeiling)
+    // Slot-built, source-bound pin (F10): the quoted limit IS the §415(c) cap + the band.
+    expect(screen.getByRole('alert').textContent).toBe(
+      slots.errAdditionsCeiling(formatMoney(ceiling)),
+    )
   })
 
   it('a brokerage contribution is uncapped (no statutory ceiling)', () => {

@@ -36,12 +36,23 @@
  * if-newer rule — but it too bumps the worker epoch up front (AT2), so a date→
  * spine switch cancels any in-flight sweep instead of letting it run to the end.
  *
- * REQUIRED-FACT ABSENCE IS A SENTINEL, NEVER A DEFAULT (burned/062): a required
- * user-fact not yet collected stays `undefined` in the draft; the params
- * builders (intakeMap, injected — slice (e)) emit an out-of-range sentinel the
- * engine's R19 gate maps to the INDETERMINATE state. There is no `?? 0`, no
- * "skip with a reasonable default" — a partially-entered household can never
- * render a confident headline.
+ * REQUIRED-FACT ABSENCE IS NEVER DEFAULTED — AND ONE AUTHORITY DECIDES IT
+ * (burned/062; amended U12 2026-07-08, council wf_dff75c2f-9e3, resolving this
+ * header's old promise that builders emit engine sentinels — they never did,
+ * and a pure "engine decides" contract is IMPOSSIBLE for intake-domain facts:
+ * an absent ACA quote pair builds params that VALIDATE fine, healthcare
+ * silently unpriced — the optimistic direction — which is exactly why the
+ * intake requires them). The resolved doctrine: a required user-fact not
+ * validly present stays `undefined` (or invalid) in the draft, and
+ * `missingRequiredFacts` is the ONE authority that says so — the builders
+ * return null exactly when it is non-empty (U12 widened it to
+ * NOT-VALIDLY-PRESENT: a zeroed spend is missing, not a household). The
+ * engine's R19 gate stays the decider for everything DISPATCHED (out-of-range
+ * params map to INDETERMINATE — the second layer). Post-first-resolve,
+ * builder-null commits `inputs-incomplete` — the store RECORDS the intake
+ * authority's verdict, it never fabricates an engine result and never holds a
+ * stale confident headline over a draft that no longer supports one. There is
+ * no `?? 0`, no "skip with a reasonable default".
  *
  * Crypto note: this is the store layer — `crypto.getRandomValues` is allowed
  * here (U0's lint bans it only inside src/engine; the seed is INJECTED into the
@@ -50,9 +61,12 @@
 import type {
   DateSearchTier,
   DateSearchOutcome,
+  DollarAdjustment,
   EnteredAccount,
+  Headline,
   HealthIntakeV3,
   IncomeStream,
+  OutcomeState,
   PersonInputsV3,
   ScenarioV3,
   SimulationParams,
@@ -61,6 +75,9 @@ import type {
 } from '@shared/model'
 import type { DateSearchInput } from '@engine/dateSearch'
 import { fromWire, dateSearchFromWire } from '@engine/engineWire'
+// The display-geometry constants the sticky gates read — the engine's OWN exported values
+// (never re-typed; the same objects confidence.ts computes the emitted margins against).
+import { DOLLAR_STEP, SURVIVAL_GRID } from '@engine/confidence'
 import type { EngineClient } from './engineClient'
 
 // ---------------------------------------------------------------------------
@@ -157,21 +174,37 @@ export type ModelAnswer =
   // whether the 'final' dispatch is the one that landed.
   | { readonly kind: 'headline'; readonly result: SimulationResult; readonly tier: DateSearchTier } // spine route (incl. outcomeState 'indeterminate')
   | { readonly kind: 'date'; readonly outcome: DateSearchOutcome; readonly tier: DateSearchTier } // date route (incl. its defined input-failure)
+  // U12 (the F9 demotion, council 2026-07-08): a required fact stopped being validly
+  // present AFTER an answer had resolved (`missingRequiredFacts` — the one authority; the
+  // builders return null on it). Deliberately TIER-LESS: this is not an answer, and the
+  // vertical-fit gate's data-answer-tier="final" wait must never satisfy on it (Result's
+  // tier mirror narrows on headline|date only). answerView routes it to the fallback
+  // strip, which names the still-missing facts from the draft.
+  | { readonly kind: 'inputs-incomplete' }
   | { readonly kind: 'compute-error'; readonly reason: string }
 
 export interface MemoryModelSnapshot {
   readonly draft: ScenarioDraft
   readonly answer: ModelAnswer
+  /** U12 — the sticky-resolved DISPLAY triple for the spine hero sentence (contract (d)).
+   *  Null whenever no complete spine verdict stands (indeterminate / date route / error /
+   *  inputs-incomplete / nothing resolved). The raw result on `answer` is NEVER altered —
+   *  the band + every drill-down read it; only the sentence reads this. Written inside the
+   *  same commit as the answer, before its single notify (burned/017): no listener can
+   *  observe the answer and its displayed triple disagreeing across a frame. */
+  readonly displayed: StickyDisplay | null
   readonly runningInWorker: boolean
 }
 
 // ---------------------------------------------------------------------------
 // The params-builder seam — intakeMap's exports (slice (e)) plug in here; tests
-// drive the orchestration mechanics through fakes. A builder returns null while
-// the draft is below minimum-viable input (no dispatch — `idle`, the
-// input-incomplete placeholder's home), or the engine-shaped input (with
-// burned/062 sentinels standing in for any absent required fact, so the engine
-// — never the UI — decides indeterminate).
+// drive the orchestration mechanics through fakes. A builder returns null
+// whenever `missingRequiredFacts` is non-empty (the ONE intake-domain
+// authority — U12 widened it to not-validly-present) or the draft can't shape
+// params at all; otherwise the engine-shaped input, and the engine's R19 gate
+// remains the decider for everything dispatched. See the module header for why
+// builder-null (not an engine sentinel) carries intake-domain incompleteness,
+// and recompute() for the post-first-resolve `inputs-incomplete` demotion.
 // ---------------------------------------------------------------------------
 
 export interface ParamsBuilders {
@@ -202,6 +235,104 @@ export interface MemoryModel {
    *  headline when all are 'retired' (status drives routing — never inferred
    *  from salary). No-op (→ idle) below minimum-viable input. */
   recompute(tier?: DateSearchTier): Promise<void>
+}
+
+// ---------------------------------------------------------------------------
+// U12 — the sticky-rounding seam (contract (d), the P3 seat filled; plan
+// 3-controls.md:241 + architecture §9). The DISPLAYED spine triple holds steady
+// across a tiny edit whose new reading lands a hair past a display flip, so the
+// sentence never flickers between two honest roundings of one household.
+// Hysteresis on the DISPLAY only — the raw result is never altered.
+//
+// TWO INDEPENDENT GATES IN TWO UNITS (model.ts `WithMargin` names the failure
+// mode — one figure sticky while the other flickers in one sentence):
+//  - the headline count + verdict state gate on the survival-fraction margins
+//    (`xOfTen.marginToEdge` + `stateMarginToEdge` — both are distances to their
+//    FLIP EDGES, computed on the same quantized value the band compare reads);
+//  - the dollar gates on the $/month margin — NOTE THE INVERTED SENSE:
+//    `perMonthReal.marginToEdge` is the distance to the ROUNDED DISPLAY VALUE
+//    (confidence.ts:195), so the flip edge sits at DOLLAR_STEP/2 − margin. This
+//    seam is that emission's FIRST consumer (insight 047: audit a contract its
+//    first consumer never stressed) — the sense difference is deliberate there
+//    and compensated HERE, in one place.
+//
+// EPS POSTURE (a project-owned heuristic, one rule for both units): hold a
+// ONE-step display flip only while the new reading sits within 20% of the
+// half-flip distance of the edge it crossed — SURVIVAL_GRID (0.01 of the 0.05
+// half-flip; on the 0.01 quantize grid this means "exactly on the edge") and
+// DOLLAR_STEP/10 ($1 of the $5 half-flip). Anything past that, a ≥2-step move,
+// or a dollar-DIRECTION change always adopts (a direction flip is a regime
+// change; holding across it would compose an incoherent sentence). The hold
+// direction is CONSERVATIVE by construction: a reading rising exactly onto an
+// edge keeps the lower displayed count.
+//
+// LIFECYCLE: session-only, captured at the resolve→verdict transition inside
+// commit(), freed across indeterminate / error / date-route / inputs-incomplete
+// commits (the seam applies only to a complete spine answer — an escape-hatch
+// edit on an indeterminate answer is defined non-sticky, plan :243), re-seated
+// on re-entry by the deterministic recompute (U13's read). NEVER serialized —
+// it lives beside the epochs, structurally outside the draft (the shape tie
+// makes a draft field a compile error).
+// ---------------------------------------------------------------------------
+
+/** The sticky-resolved spine DISPLAY triple (+ the dollar's direction, which is
+ *  never held across — a direction flip always adopts wholesale). */
+export interface StickyDisplay {
+  readonly xOfTen: number
+  readonly outcomeState: OutcomeState
+  /** The ROUNDED $/month display figure (a DOLLAR_STEP multiple). */
+  readonly perMonthDollar: number
+  readonly direction: DollarAdjustment['direction']
+}
+
+export const HEADLINE_STICKY_EPS = SURVIVAL_GRID
+export const DOLLAR_STICKY_EPS = DOLLAR_STEP / 10
+
+/** The pure hysteresis rule (insight 048 — the decision is an exported, planted-fail-
+ *  tested seam; commit() keeps only the wiring). Given the previous displayed triple and
+ *  the new raw reading, decide what the sentence shows. */
+export function resolveStickyDisplay(
+  prev: StickyDisplay | null,
+  headline: Headline,
+  dollar: DollarAdjustment,
+): StickyDisplay {
+  const rawX = headline.xOfTen.value
+  const rawState = headline.outcomeState
+  const rawDollar = Math.round(dollar.perMonthReal.value / DOLLAR_STEP) * DOLLAR_STEP
+  const direction = dollar.direction
+  if (prev === null) {
+    return { xOfTen: rawX, outcomeState: rawState, perMonthDollar: rawDollar, direction }
+  }
+
+  // Headline count: hold a one-step flip that lands within EPS of the flip edge.
+  const holdX =
+    rawX !== prev.xOfTen &&
+    Math.abs(rawX - prev.xOfTen) === 1 &&
+    headline.xOfTen.marginToEdge < HEADLINE_STICKY_EPS
+
+  // Verdict state: hold only an edge-hugging flip whose count moved at most one
+  // step (a ≥2-step count move is a real regime change — adopt even edge-close;
+  // this needs no band ORDER knowledge, so no engine internals are re-derived).
+  const holdState =
+    rawState !== prev.outcomeState &&
+    Math.abs(rawX - prev.xOfTen) <= 1 &&
+    headline.stateMarginToEdge < HEADLINE_STICKY_EPS
+
+  // Dollar: the emitted margin is distance to the ROUNDED value — flip-edge
+  // distance is the half-step complement (the inverted-sense compensation).
+  const dollarEdgeDistance = DOLLAR_STEP / 2 - dollar.perMonthReal.marginToEdge
+  const holdDollar =
+    direction === prev.direction &&
+    rawDollar !== prev.perMonthDollar &&
+    Math.abs(rawDollar - prev.perMonthDollar) === DOLLAR_STEP &&
+    dollarEdgeDistance < DOLLAR_STICKY_EPS
+
+  return {
+    xOfTen: holdX ? prev.xOfTen : rawX,
+    outcomeState: holdState ? prev.outcomeState : rawState,
+    perMonthDollar: holdDollar ? prev.perMonthDollar : rawDollar,
+    direction,
+  }
 }
 
 const defaultMintSeed = (): number => {
@@ -240,21 +371,25 @@ export function createMemoryModel(deps: MemoryModelDeps): MemoryModel {
   let dispatchedEpoch = 0
   let committedEpoch = 0
 
-  // P3 SEAT (contract (d)) — documented, deliberately not built in P2: the
-  // `lastDisplayed*` sticky-rounding baseline is captured at the resolve→verdict
-  // transition and re-seated on re-entry from the deterministic recompute.
-  // Session-only state living HERE when P3 adds it; NEVER serialized at Save.
-  // P2 intake numbers move freely so sharpening stays visible.
+  // U12 — contract (d) FILLED (the P2 placeholder made real): `lastDisplayed` is
+  // the session-only sticky baseline (see the seam block above for the full
+  // rule + lifecycle), and `everResolved` gates the F9 inputs-incomplete
+  // demotion — pre-first-resolve incompleteness stays the idle home (mid-intake
+  // behavior byte-identical to P2), post-first-resolve it must never hold a
+  // stale confident verdict.
+  let everResolved = false
+  let lastDisplayed: StickyDisplay | null = null
 
   const listeners = new Set<() => void>()
   let snapshot: MemoryModelSnapshot = {
     draft,
     answer,
+    displayed: lastDisplayed,
     runningInWorker: deps.client.runningInWorker,
   }
 
   const notify = () => {
-    snapshot = { draft, answer, runningInWorker: deps.client.runningInWorker }
+    snapshot = { draft, answer, displayed: lastDisplayed, runningInWorker: deps.client.runningInWorker }
     for (const l of listeners) l()
   }
 
@@ -268,6 +403,18 @@ export function createMemoryModel(deps: MemoryModelDeps): MemoryModel {
   const commit = (epoch: number, next: ModelAnswer): void => {
     if (epoch <= committedEpoch) return // stale — discard unrendered (f)
     committedEpoch = epoch
+    if (next.kind === 'headline' || next.kind === 'date') everResolved = true
+    // U12 — the sticky display resolves INSIDE the commit, before its single
+    // notify (burned/017): one snapshot carries the answer AND its displayed
+    // triple, so no listener can ever observe a one-frame mixed pair. A spine
+    // verdict advances the baseline; every other arm frees it (the seam applies
+    // only to a complete spine answer — indeterminate/error/date/incomplete all
+    // reset, and the NEXT verdict is a fresh capture, never held against a
+    // pre-gap number).
+    lastDisplayed =
+      next.kind === 'headline' && next.result.headline.outcomeState !== 'indeterminate'
+        ? resolveStickyDisplay(lastDisplayed, next.result.headline, next.result.dollar)
+        : null
     answer = next
     notify()
   }
@@ -290,14 +437,25 @@ export function createMemoryModel(deps: MemoryModelDeps): MemoryModel {
       const allStatusesAnswered = draft.people.every((p) => p.workStatus !== undefined)
       if (!allStatusesAnswered) return // work-status is THE router — unanswered ⇒ no dispatch
 
-      // Build BEFORE any state change: a null builder result means "below
-      // minimum-viable input" — no dispatch, no flicker. (Pre-first-answer that
-      // leaves `idle`, the input-incomplete placeholder's home; post-first-answer
-      // it HOLDS the last answer — engine-level incompleteness arrives via
-      // burned/062 sentinels → the engine's indeterminate, not via builder-null.)
+      // Build BEFORE any state change: builder-null = intake-domain
+      // incompleteness (`missingRequiredFacts`, the ONE authority — U12 widened
+      // it to not-validly-present, so a zeroed spend lands here too). Pre-first-
+      // resolve this stays `idle` — no dispatch, no flicker, the strip names
+      // what's missing (mid-intake behavior byte-identical to P2). Post-first-
+      // resolve, HOLDING the stale confident verdict is the cardinal sin the F9
+      // veto named (a cleared-or-zeroed spend must never keep "over-funded" on
+      // screen) — demote to `inputs-incomplete`. The epoch mint + worker-side
+      // cancel keep an older in-flight sweep from landing OVER the demotion.
       const input = anyWorking ? deps.builders.buildDateInput(draft) : null
       const params = anyWorking ? null : deps.builders.buildSpineParams(draft)
-      if (anyWorking ? input === null : params === null) return
+      if (anyWorking ? input === null : params === null) {
+        if (everResolved) {
+          const epoch = ++dispatchedEpoch
+          void deps.client.engine.setLatestEpoch(epoch)
+          commit(epoch, { kind: 'inputs-incomplete' })
+        }
+        return
+      }
 
       const epoch = ++dispatchedEpoch
       // The cancel signal is route-INDEPENDENT (AT2, D1 review): bump the

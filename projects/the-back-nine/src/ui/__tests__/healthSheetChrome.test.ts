@@ -206,7 +206,7 @@ describe('medicareUnpriced — the post-65 unpriced-domain predicate (the veto c
 
 describe('composeRegimeFutures — the cost-headline compose', () => {
   const arm = (surv: number, cost?: number) => ({
-    headline: { xOfTen: { value: surv, marginToEdge: 0.05 }, outcomeState: 'on-track' as const },
+    headline: { xOfTen: { value: surv, marginToEdge: 0.05 }, outcomeState: 'on-track' as const, stateMarginToEdge: 0.05 },
     survivalFraction: surv / 10,
     ...(cost !== undefined ? { lifetimeHealthCostMedianReal: cost } : {}),
   })

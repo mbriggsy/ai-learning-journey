@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import '@testing-library/jest-dom/vitest'
 import { cleanup, render, screen, fireEvent, act } from '@testing-library/react'
 import { IntakeFlow, type StepDef } from '../flow'
+import { fieldErrorText } from '../FieldError'
 import { personField } from '../sanity'
 import { createMemoryModel, type MemoryModel } from '@store/memoryModel'
 import type { EngineClient } from '@store/engineClient'
@@ -63,7 +64,7 @@ const STEPS: readonly StepDef[] = [
     render: (api) =>
       api.violationsFor(personField(0, 'retirementAge')).map((v) => (
         <p role="alert" key={v.rule}>
-          {copy[v.messageKey]}
+          {fieldErrorText(v)}
         </p>
       )),
   },
@@ -184,7 +185,7 @@ describe('IntakeFlow — hydration provenance reaches the sanity gate (the resto
       render: (api) =>
         api.violationsFor('annualSpendingReal').map((v) => (
           <p role="alert" key={v.rule}>
-            {copy[v.messageKey]}
+            {fieldErrorText(v)}
           </p>
         )),
     },

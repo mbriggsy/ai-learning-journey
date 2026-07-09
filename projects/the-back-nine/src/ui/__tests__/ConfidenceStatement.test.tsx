@@ -82,7 +82,7 @@ describe('ConfidenceStatement — the U7 verdict-first surface', () => {
 
   // --- U9b: the two-tier essentials relief (council 2026-07-02) --------------------------------
   it('a floor reading that DIFFERS earns the subordinate relief line: eyebrow + word + count, and NEVER a dollar (the 056 guard)', () => {
-    const floorReading = { xOfTen: { value: 10, marginToEdge: 0.05 }, outcomeState: 'on-track' as const }
+    const floorReading = { xOfTen: { value: 10, marginToEdge: 0.05 }, outcomeState: 'on-track' as const, stateMarginToEdge: 0.05 }
     const { container } = render(
       <ConfidenceStatement
         view={{ kind: 'reading', ...READING_FIXTURES['borderline'], floorReading }}
@@ -110,7 +110,7 @@ describe('ConfidenceStatement — the U7 verdict-first surface', () => {
   })
 
   it('a floor that is itself NOT holding renders the honest word + count WITHOUT the trim rider (the rider is a claim)', () => {
-    const floorReading = { xOfTen: { value: 6, marginToEdge: 0.02 }, outcomeState: 'borderline' as const }
+    const floorReading = { xOfTen: { value: 6, marginToEdge: 0.02 }, outcomeState: 'borderline' as const, stateMarginToEdge: 0.02 }
     const { container } = render(
       <ConfidenceStatement view={{ kind: 'reading', ...READING_FIXTURES['off-track'], floorReading }} />,
     )
@@ -120,7 +120,7 @@ describe('ConfidenceStatement — the U7 verdict-first surface', () => {
   })
 
   it('with BOTH the relief line and a survivor reading, the survivor FOLDS behind a <details> (≤ 1 subordinate count on the first frame, build-gate 7)', () => {
-    const floorReading = { xOfTen: { value: 10, marginToEdge: 0.05 }, outcomeState: 'on-track' as const }
+    const floorReading = { xOfTen: { value: 10, marginToEdge: 0.05 }, outcomeState: 'on-track' as const, stateMarginToEdge: 0.05 }
     const survivorReading = SURVIVOR_FIXTURES['on-track'] // xOfTen 8 — distinct from the floor's 10
     const { container } = render(
       <ConfidenceStatement

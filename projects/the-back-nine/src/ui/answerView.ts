@@ -133,6 +133,13 @@ export function selectElevatedAnswer(
     case 'idle':
       return { kind: 'fallback' }
 
+    // U12 (the F9 demotion): a required fact stopped being validly present after an answer
+    // had resolved — the quiet strip names what's missing (from the draft, the same
+    // machinery as idle). Never the stale hero: holding a confident verdict over a draft
+    // that no longer supports one is the cardinal sin this arm exists to kill.
+    case 'inputs-incomplete':
+      return { kind: 'fallback' }
+
     case 'pending':
       return dateRoute
         ? { kind: 'date', view: { kind: 'pending' } }

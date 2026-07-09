@@ -58,6 +58,7 @@ const START = 1_400_000
 const headline = (value: number, outcomeState: OutcomeState): Headline => ({
   xOfTen: { value, marginToEdge: 0 },
   outcomeState,
+  stateMarginToEdge: 0,
 })
 const dollar = (value: number, direction: DollarAdjustment['direction']): DollarAdjustment => ({
   perMonthReal: { value, marginToEdge: 0 },

@@ -18,9 +18,12 @@
  * emits two genuine track objects — they merely COINCIDE in the degenerate. Object identity
  * only exists on the no-budget path and is not a wire contract, so `single` is decided by
  * comparing every field this surface actually renders: the kind, the crowned offset, the
- * conservative grade bound, and the disclosure fields (the non-monotone offsets; the
- * no-date how-close curve). Two tracks that agree on every rendered field render as one
- * date — anything less than full rendered-field agreement is a split.
+ * conservative grade bound, the non-monotone offsets, and the FULL per-offset curve (the
+ * odds ladder, the tradeoff point, and the no-date how-close line all read it — a
+ * coincident-crown pair whose curves differ would otherwise collapse to one date rendering
+ * the FLOOR's ladder as if it were both tracks'; filed 2026-07-02, closed as the F10
+ * carry-in once U10 broke the v1 coupling that made it unreachable). Two tracks that agree
+ * on every rendered field render as one date — anything less is a split.
  *
  * THE R27 INVERSION (floor > lifestyle — the 100%-FPL/PTC signature): a LOWER spend can
  * mean a lower MAGI, which below the subsidy floor means NO premium tax credit and a
@@ -28,7 +31,7 @@
  * full plan (or not at all, while the full plan clears). Correct, surprising, and it MUST
  * ride an explicit plain-language disclosure — never reordered or hidden to look tidy.
  */
-import type { DateTrackOutcome } from '@shared/model'
+import type { DateOffsetReading, DateTrackOutcome } from '@shared/model'
 
 /** The subordinate essentials line, pre-decided. `covered` = the floor crowned a date
  *  (`unconfirmed` carries the window-edge hedge into the wording); `not-within-window` =
@@ -65,25 +68,42 @@ const dated = (
 const sameOffsets = (a: readonly number[], b: readonly number[]): boolean =>
   a.length === b.length && a.every((v, i) => v === b[i])
 
-/** The no-date "how close" input — the max clearing-odds rung any offset reached. Kept in
- *  sync with the render path's curveMarks-derived best rung by reading the same quantized
- *  lower bound the ladder plots. */
-const bestBound = (t: DateTrackOutcome): number =>
-  t.curve.reduce((mx, r) => Math.max(mx, r.quantizedLowerBound), 0)
+/** Element-wise equality over the per-offset curves, on the fields the render path reads:
+ *  the odds ladder plots `offsetYears` + round(quantizedLowerBound·10) + `clears`
+ *  (curveMarks.ts) and the tradeoff point reads `offsetYears` + `quantizedLowerBound`
+ *  (dateTradeoff.ts); the no-date how-close rung is a maximum over `quantizedLowerBound`.
+ *  `clears` is compared as the ENGINE's authority bit (the "UI re-derives nothing" law),
+ *  never re-derived from the bound here. `survivalFraction` is rendered by no surface —
+ *  excluded on exactly the render-field doctrine the grade comparison below follows. */
+const sameCurve = (a: readonly DateOffsetReading[], b: readonly DateOffsetReading[]): boolean =>
+  a.length === b.length &&
+  a.every((r, i) => {
+    const o = b[i]!
+    return (
+      r.offsetYears === o.offsetYears &&
+      r.quantizedLowerBound === o.quantizedLowerBound &&
+      r.clears === o.clears
+    )
+  })
 
 /** Every field the single-date composition renders agrees ⇒ the tracks are (render-)equal. */
 function renderEqual(floor: DateTrackOutcome, lifestyle: DateTrackOutcome): boolean {
   if (floor.kind !== lifestyle.kind) return false
   if (!sameOffsets(floor.nonMonotoneOffsets, lifestyle.nonMonotoneOffsets)) return false
+  // The curve-equality clause (the F10 carry-in): the single composition renders the FLOOR's
+  // ladder, so a coincident crown with a diverging curve would silently misrepresent the
+  // lifestyle track's per-offset story — curve disagreement is ALWAYS a split, on both the
+  // dated and the no-date arms.
+  if (!sameCurve(floor.curve, lifestyle.curve)) return false
   if (dated(floor) && dated(lifestyle)) {
     return (
       floor.offsetYears === lifestyle.offsetYears &&
       floor.grade.quantizedLowerBound === lifestyle.grade.quantizedLowerBound
     )
   }
-  // Both no-date: the rendered fields are the how-close line (the best rung) + the
-  // non-monotone note (already compared above).
-  return bestBound(floor) === bestBound(lifestyle)
+  // Both no-date: the rendered fields are the ladder + the how-close line (the best rung —
+  // a maximum over the now-equal curves) + the non-monotone note, all compared above.
+  return true
 }
 
 export function isFloorLifestyleInverted(

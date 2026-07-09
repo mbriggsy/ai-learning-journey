@@ -1,4 +1,4 @@
-import { copy, type CopyKey } from '@ui/copy'
+import { copy, slots, type CatalogMessage } from '@ui/copy'
 
 /**
  * The R19 calm error grammar — one shared presentation for every inline
@@ -10,13 +10,25 @@ import { copy, type CopyKey } from '@ui/copy'
  *    (the outlined triangle — aria-hidden, decorative beside the text), the
  *    plain-language TEXT adjacent to the field, and color only as
  *    reinforcement. No flash, no shake, no all-caps — advisor voice.
+ *
+ * MESSAGE ADDRESSING (F10): a violation whose `params` ride renders the SLOTTED
+ * template (the limit-quoting ceiling errors); every param-less messageKey renders
+ * the static catalog string byte-identically to before. The fork is
+ * {@link fieldErrorText} — a pure exported helper (insight 048), the ONE
+ * message-text decision for every consumer (component and test harness alike).
  */
 export const fieldErrorId = (field: string): string =>
   `err-${field.replace(/[^a-zA-Z0-9-]/g, '-')}`
 
-export function FieldError({ field, messageKey }: { field: string; messageKey: CopyKey }) {
+/** The one message-text decision: params ⇒ the slot template, else the catalog string. */
+export const fieldErrorText = (m: CatalogMessage): string =>
+  m.params !== undefined ? slots[m.messageKey](m.params.limitFormatted) : copy[m.messageKey]
+
+export type FieldErrorProps = { readonly field: string } & CatalogMessage
+
+export function FieldError(props: FieldErrorProps) {
   return (
-    <p className="field-error" id={fieldErrorId(field)} role="alert">
+    <p className="field-error" id={fieldErrorId(props.field)} role="alert">
       <svg
         className="field-error-icon"
         aria-hidden="true"
@@ -34,7 +46,7 @@ export function FieldError({ field, messageKey }: { field: string; messageKey: C
         <path d="M8 6v3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
         <circle cx="8" cy="12" r="0.9" fill="currentColor" />
       </svg>
-      <span>{copy[messageKey]}</span>
+      <span>{fieldErrorText(props)}</span>
     </p>
   )
 }

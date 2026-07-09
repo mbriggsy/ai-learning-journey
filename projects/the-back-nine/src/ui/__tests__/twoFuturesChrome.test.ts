@@ -25,6 +25,7 @@ import type { BandFan, Headline, OutcomeState, SurvivorReading, TwoArmOutcome, T
 const headline = (xOfTen: number, outcomeState: OutcomeState = 'on-track'): Headline => ({
   xOfTen: { value: xOfTen, marginToEdge: 0.05 },
   outcomeState,
+  stateMarginToEdge: 0.05,
 })
 
 const survivor = (xOfTen: number, outcomeState: OutcomeState = 'on-track'): SurvivorReading => ({

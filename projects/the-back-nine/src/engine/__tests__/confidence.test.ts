@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { summarize, SURVIVAL_GRID } from '@engine/confidence'
+import { summarize, SURVIVAL_GRID, BANDS, quantizeSurvival, marginToStateEdge } from '@engine/confidence'
 import { simulate } from '@engine/simulate'
 import { validationMarket } from '@engine/reference/methodology'
 import { type Distribution, type SimulationParams, type PersonInputs } from '@shared/model'
@@ -108,6 +108,79 @@ describe('margins + framing', () => {
   it('over-funded points to ROOM, off-track points to TRIM (never a probability of failure)', () => {
     expect(summarize(out(0.99, [], [500, 600]), params, 1).dollar.direction).toBe('room')
     expect(summarize(out(0.3, [10, 12, 14]), params, 1).dollar.direction).toBe('trim')
+  })
+})
+
+// F5 (council-ratified): the state-edge margin — the THIRD stateless margin, consumed by the
+// P3 sticky STATE gate (memoryModel, architecture §9). The x-of-10 display lattice cannot
+// stand in for it: its flip points coincide with the onTrack/borderline edges (0.85/0.65)
+// but NOT overFunded (0.98). DND-012: every expected margin below is hand-derived in a
+// comment — never re-computed via the engine's own formula.
+describe('the state-edge margin (stateMarginToEdge — the P3 sticky state gate input)', () => {
+  const marginAt = (s: number) => summarize(out(s), params, 1).headline.stateMarginToEdge
+
+  it('hand-derived fixtures: distance of the QUANTIZED survival to the nearest BANDS state edge', () => {
+    // quantized 0.86 → nearest edge onTrack 0.85 → |0.86 − 0.85| = 0.01
+    expect(marginAt(0.86)).toBeCloseTo(0.01, 12)
+    // quantized 0.90 → |0.90 − 0.85| = 0.05 beats |0.90 − 0.98| = 0.08 → 0.05
+    expect(marginAt(0.9)).toBeCloseTo(0.05, 12)
+    // quantized 0.98 → sits exactly ON the overFunded edge → 0.00
+    expect(marginAt(0.98)).toBeCloseTo(0, 12)
+    // quantized 0.66 → nearest edge borderline 0.65 → |0.66 − 0.65| = 0.01
+    expect(marginAt(0.66)).toBeCloseTo(0.01, 12)
+    // quantized 0.30 → nearest edge is still borderline 0.65 → 0.35 (deep off-track measures far)
+    expect(marginAt(0.3)).toBeCloseTo(0.35, 12)
+  })
+
+  it('is computed ON THE QUANTIZED value — the same value the band compare reads (raw-source mutation arm)', () => {
+    // raw 0.857 quantizes to 0.86 → margin |0.86 − 0.85| = 0.01. A mutant measuring the RAW
+    // value would emit |0.857 − 0.85| = 0.007 — this pin goes red on it (planted 2026-07-08: red).
+    expect(marginAt(0.857)).toBeCloseTo(0.01, 12)
+    // And the emission IS the exported helper applied to the quantized statistic — one source.
+    expect(marginAt(0.72)).toBe(marginToStateEdge(quantizeSurvival(0.72)))
+  })
+
+  it('binds to the exported BANDS — an edge re-typed wrong goes red (the planted-fail arm)', () => {
+    // Derived from the BANDS object itself (never re-typed literals): sitting exactly ON each
+    // exported edge measures 0; one grid step above it measures exactly one grid step. A
+    // re-typed edge inside the helper breaks BOTH pins (planted 2026-07-08: overFunded→0.97 = red).
+    for (const edge of Object.values(BANDS)) {
+      expect(marginToStateEdge(quantizeSurvival(edge))).toBeCloseTo(0, 12)
+      expect(marginToStateEdge(quantizeSurvival(edge + SURVIVAL_GRID))).toBeCloseTo(SURVIVAL_GRID, 12)
+    }
+  })
+
+  it('the FLOOR reading measures its OWN quantized fraction — every Headline construction site emits it', () => {
+    const dist: Distribution = {
+      terminalValuesReal: [],
+      depletionYears: [],
+      survivalFraction: 0.9,
+      floor: { survivalFraction: 0.66, depletionYears: [] },
+    }
+    const r = summarize({ indeterminate: false, distribution: dist }, params, 1)
+    // joint quantized 0.90 → 0.05; floor quantized 0.66 → |0.66 − 0.65| = 0.01 (hand-derived).
+    expect(r.headline.stateMarginToEdge).toBeCloseTo(0.05, 12)
+    expect(r.floorReading!.stateMarginToEdge).toBeCloseTo(0.01, 12)
+  })
+
+  it('the indeterminate reading emits 0 — the existing zero-margin convention', () => {
+    const r = summarize({ indeterminate: true, reason: 'no people' }, params, 7)
+    expect(r.headline.stateMarginToEdge).toBe(0)
+  })
+
+  it('ADDITIVITY: an existing pinned reading keeps every OTHER field byte-unchanged, gaining exactly ONE field', () => {
+    // The pre-F5 pinned reading at survival 0.9 with p10 = 120,000 (all hand-derived):
+    // xOfTen = round(9.0) = 9; its margin = |9.0 − 9.5|/10 = 0.05; state on-track (0.90 ≥ 0.85);
+    // dollar = room at (120,000 × 0.04)/12 = 400/mo. None of these may move.
+    const r = summarize(out(0.9, [], [120_000]), params, 42)
+    expect(r.headline.xOfTen.value).toBe(9)
+    expect(r.headline.xOfTen.marginToEdge).toBeCloseTo(0.05, 12)
+    expect(r.headline.outcomeState).toBe('on-track')
+    expect(r.dollar.direction).toBe('room')
+    expect(r.dollar.perMonthReal.value).toBeCloseTo(400, 6)
+    expect(r.seed).toBe(42)
+    // The additive shape: the ONE new field and nothing else joined the headline.
+    expect(Object.keys(r.headline).sort()).toEqual(['outcomeState', 'stateMarginToEdge', 'xOfTen'])
   })
 })
 

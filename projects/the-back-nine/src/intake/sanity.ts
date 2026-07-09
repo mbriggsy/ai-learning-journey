@@ -29,10 +29,11 @@
  * VALIDATION TIMING is the flow's job (blur / attempt-to-advance, never per
  * keystroke; clear on re-edit) — these predicates are timing-free.
  */
-import type { CopyKey } from '@ui/copy'
+import type { CatalogMessage, SlottedErrorParams } from '@ui/copy'
 import type { ScenarioDraft } from '@store/memoryModel'
 import type { AccountKind } from '@shared/model'
 import { colaRateInRange } from '@shared/incomeBounds'
+import { formatMoney } from './fields'
 import {
   annualAdditions415c2026,
   catchUpForAge,
@@ -123,6 +124,15 @@ export function annualAdditionsCeilingFor(age: number): number {
   return annualAdditions415c2026.value + catchUpForAge(age, 'employerPlan')
 }
 
+/** The ceiling errors' pre-formatted params — ONE assembly for BOTH firing paths (the
+ *  advance-time rules below AND AccountEntry's Add-time pre-check), so the two surfaces can
+ *  never desync on the quoted figure: same canonical ceiling in, same formatted dollar out.
+ *  Formatting is the intake layer's job (its own money formatter) — copy slots receive
+ *  PRE-formatted strings, and the limit is computed at fire time, never a re-typed dollar. */
+export const ceilingParams = (limit: number): SlottedErrorParams => ({
+  limitFormatted: formatMoney(limit),
+})
+
 /** Sums a person's entered contributions across accounts of one ceiling family.
  *  For the HSA family the EMPLOYER contribution counts too (employer + employee
  *  share one statutory HSA limit); `hsaEmployerAnnual` is set on HSA accounts only,
@@ -142,13 +152,16 @@ const combinedContribution = (
     )
   }, 0)
 
-export interface SanityViolation {
+/** A violation = the rule + the field it lands on + its catalog-addressed message. The
+ *  message rides the ONE typed channel copy.ts exports ({@link CatalogMessage}): a static
+ *  CopyKey for every ordinary violation, or a slotted key + pre-formatted `params` for the
+ *  two limit-quoting ceiling errors (F10). FieldError owns the render fork. */
+export type SanityViolation = {
   readonly rule: string
   /** The field the calm inline message attaches to (role="alert" +
    *  aria-invalid + aria-describedby — the error grammar). */
   readonly field: FieldPath
-  readonly messageKey: CopyKey
-}
+} & CatalogMessage
 
 /** Session provenance a PURE rule cannot derive from the draft alone — the draft
  *  is byte-identical whether freshly typed or restored, so a "was this answered
@@ -243,6 +256,21 @@ const RULES: readonly SanityRule[] = [
         : [],
   },
   {
+    // U12 (the widened F9 gate, council 2026-07-08): an EXPLICIT $0/negative spend is an
+    // entry error, never a simulable household — the engine ACCEPTS 0 (a legitimate
+    // degenerate for draw-schedule isolation, simulate.test.ts), so this intake rule +
+    // missingRequiredFacts' not-validly-present clause are the product-level defense.
+    // `<= 0` on a finite value only: absence stays the missing-fact channel's job.
+    id: 'spend-zero',
+    target: () => ['annualSpendingReal'],
+    check: (d) =>
+      d.annualSpendingReal !== undefined &&
+      Number.isFinite(d.annualSpendingReal) &&
+      d.annualSpendingReal <= 0
+        ? [{ rule: 'spend-zero', field: 'annualSpendingReal', messageKey: 'errSpendZero' }]
+        : [],
+  },
+  {
     id: 'birth-year-in-future',
     target: (d) => d.people.map((_, i) => personField(i, 'birthYear')),
     check: (d) =>
@@ -310,6 +338,7 @@ const RULES: readonly SanityRule[] = [
             rule: 'contribution-over-ceiling',
             field: accountField(i, 'annualContribution'),
             messageKey: 'errContributionCeiling',
+            params: ceilingParams(ceiling),
           })
         }
       })
@@ -329,14 +358,13 @@ const RULES: readonly SanityRule[] = [
         if (owner?.currentAge === undefined || !Number.isInteger(owner.currentAge)) return
         if (owner.currentAge < 0 || owner.currentAge > 120) return
         const total = (a.annualContribution ?? 0) + (a.employerMatchAnnual ?? 0)
-        if (
-          Number.isFinite(total) &&
-          total > annualAdditionsCeilingFor(owner.currentAge)
-        ) {
+        const ceiling = annualAdditionsCeilingFor(owner.currentAge)
+        if (Number.isFinite(total) && total > ceiling) {
           out.push({
             rule: 'additions-over-415c',
             field: accountField(i, 'employerMatchAnnual'),
             messageKey: 'errAdditionsCeiling',
+            params: ceilingParams(ceiling),
           })
         }
       })

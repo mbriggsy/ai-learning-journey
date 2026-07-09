@@ -92,6 +92,7 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     budgetAnchorLead: slots.budgetAnchorLead('78,000'),
     budgetLinesTarget: slots.budgetLinesTarget('71,500'),
     budgetMedicalCarried: slots.budgetMedicalCarried('6,500'),
+    budgetMedicalExceedsTotal: slots.budgetMedicalExceedsTotal('6,500', '5,000'),
     budgetRunningTotal: slots.budgetRunningTotal('70,000'),
     budgetTierSplit: slots.budgetTierSplit('36,000', '42,000'),
     spendBudgetTotal: slots.spendBudgetTotal('78,000'),
@@ -131,6 +132,9 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     healthFigCents: slots.healthFigCents(22),
     healthFigStepAdd: slots.healthFigStepAdd('1,100'),
     subsidyRegimeCostDelta: slots.subsidyRegimeCostDelta('96,000', '128,000'),
+    // F10 — the R19 ceiling errors quote the statutory limit (pre-formatted by intake).
+    errContributionCeiling: slots.errContributionCeiling('32,250'),
+    errAdditionsCeiling: slots.errAdditionsCeiling('83,250'),
   }
 
   it('every U10 delta-readout slot WEARS a hedge (the control readouts are slot-composed, so the require-hedge sweep must reach the rendered samples here)', () => {
@@ -167,6 +171,17 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     }
     expect(lintCopy(slots.verdictHoldClause(), ['free-numeral'])).toEqual([])
     expect(lintCopy(slots.verdictRethinkClause(), ['free-numeral'])).toEqual([]) // figure-less by construction
+  })
+
+  it('the F10 slotted messages hardcode no numeral in the template (digit-free — the limit/figures ride the slot args)', () => {
+    const S = '§§§' // a non-numeric sentinel — any digit left is a hardcoded one in the template
+    for (const rendered of [
+      slots.errContributionCeiling(S),
+      slots.errAdditionsCeiling(S),
+      slots.budgetMedicalExceedsTotal(S, S),
+    ]) {
+      expect(lintCopy(rendered, ['free-numeral']), rendered).toEqual([])
+    }
   })
 
   // --- C3 (council 2026-06-29): the work-income field means FULL working-year income (pay +

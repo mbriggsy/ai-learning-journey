@@ -25,7 +25,10 @@
  * target = max(0, S − M) — with the "carried automatically" disclosure, because compileBudget
  * re-adds M on top of typed lines (a target quoted at the raw S would commit S+M, the silently-
  * pessimistic answer jump). The readout sits ABOVE the line controls in a reserved box (insight
- * 035 — it re-renders on every commit and must never shuffle the tap targets below it).
+ * 035 — it re-renders on every commit and must never shuffle the tap targets below it). When M
+ * alone exceeds S the target line is REPLACED by the honest exceeds line (F10 — see
+ * {@link medicalExceedsTotal}); a "$0 into the lines" target beside "$M carried" would be
+ * internally contradictory.
  *
  * VALIDATION TIMING (R19 + insight 036): field edits commit on blur into LOCAL items state; a
  * line's errors show only once it is touched (or an Apply was attempted) — silent while typing,
@@ -63,6 +66,16 @@ const FOCUSABLE = [
   'select:not([disabled])',
   '[tabindex]:not([tabindex="-1"])',
 ].join(',')
+
+/** The reconciliation readout's M>S honesty fork (F10; insight 048 — the decision is a pure
+ *  exported helper): when the OOP-medical floor M ALONE exceeds the total S the answer uses,
+ *  the lines-target line would read "about $0 a year goes into the lines below" beside
+ *  "about $M carried automatically" — internally contradictory — so the readout swaps in the
+ *  honest exceeds line instead. STRICTLY M > S: at M === S a $0 lines-target is the TRUTH
+ *  (every non-medical dollar is zero), not a contradiction. The engine-side anchor stays
+ *  anchorTarget = max(0, S − M) — this fork is presentation-only. */
+export const medicalExceedsTotal = (spendTotal: number, oopMedical: number): boolean =>
+  oopMedical > spendTotal
 
 /** A fresh line: `other` + essentials (the neutral unclassified pick — errs STICKY, insight 055's
  *  conservative direction) with NO amount (NaN blocks Apply until typed — never a silent 0). */
@@ -300,7 +313,18 @@ export function BudgetBuilder({ open, draft, onApply, onEscape, onClose, variant
             <p className="budget-readout__line budget-readout__line--muted">
               {slots.budgetMedicalCarried(formatMoney(M))}
             </p>
-            <p className="budget-readout__line">{slots.budgetLinesTarget(formatMoney(target!))}</p>
+            {/* The M>S honesty fork (F10): the medical figure alone exceeding S would make the
+                target line read "$0 into the lines below" beside "$M carried" — contradictory —
+                so the honest exceeds line REPLACES it, one line for one line in the SAME reserved
+                box (insight 035: S and M are draft-fixed for the whole open, so the branch never
+                flips mid-gesture and the tap targets below never shuffle). */}
+            {medicalExceedsTotal(S, M) ? (
+              <p className="budget-readout__line">
+                {slots.budgetMedicalExceedsTotal(formatMoney(M), formatMoney(S))}
+              </p>
+            ) : (
+              <p className="budget-readout__line">{slots.budgetLinesTarget(formatMoney(target!))}</p>
+            )}
           </>
         )}
         {items.length > 0 && (

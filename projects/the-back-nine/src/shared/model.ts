@@ -628,6 +628,16 @@ export interface Headline {
   readonly xOfTen: WithMargin<number>
   /** The outcome state the engine selected for this distribution. */
   readonly outcomeState: OutcomeState
+  /** Raw distance of the QUANTIZED survival fraction to the nearest outcome-state band
+   *  edge (min over the engine's exported `BANDS` edges, in survival-fraction units) —
+   *  the third stateless margin, emitted for the P3 sticky STATE gate (memoryModel's
+   *  cross-edit hysteresis over the verb-tense/copy-state flip, architecture §9).
+   *  `xOfTen.marginToEdge` cannot stand in for it: the x-of-10 display lattice
+   *  coincides with the onTrack/borderline edges but NOT the over-funded edge.
+   *  Computed on the SAME quantized value the band compare reads (the margin and the
+   *  decision share one source); 0 on the indeterminate reading (the existing
+   *  zero-margin convention). */
+  readonly stateMarginToEdge: number
 }
 
 /** The "as the survivor" reading (U7 e1c) — the joint {@link Headline}'s grammar applied to the

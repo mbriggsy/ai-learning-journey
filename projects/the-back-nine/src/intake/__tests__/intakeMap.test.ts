@@ -126,6 +126,24 @@ describe('the render-anchor coupling (missing-facts empty ⇒ validateParams acc
     }
   })
 
+  it('spend is required NOT-VALIDLY-PRESENT, not merely present (U12, the hawk’s F9 gate)', () => {
+    // The engine ACCEPTS a $0 spend (a legitimate CRN-isolation degenerate), so an
+    // undefined-only presence check would let a zeroed spend build params and render a
+    // confident "over-funded" on a household spending nothing — the veto's named bypass.
+    // One NaN-safe clause (`!(s > 0)`) must catch every not-validly-present shape alike.
+    const d = completeSpineDraft()
+    for (const bad of [undefined, 0, -1, Number.NaN]) {
+      const broken: ScenarioDraft = { ...d, annualSpendingReal: bad }
+      expect(
+        missingRequiredFacts(broken).some((m) => m.labelKey === 'spendLabel'),
+        `spend=${String(bad)} must be NAMED missing`,
+      ).toBe(true)
+      expect(buildSpineParams(broken), `spend=${String(bad)} must not build`).toBeNull()
+    }
+    // The release sibling: a validly-present spend is not flagged and builds accepted params.
+    expect(missingRequiredFacts(d).some((m) => m.labelKey === 'spendLabel')).toBe(false)
+  })
+
   it('spine route: a STALE contribution on a RETIRED owner keeps the coupling (D1 review C1)', () => {
     // An account added while working, then both flipped to retired (Back-nav):
     // the stale contribution must NOT build an accumulation construct, or the

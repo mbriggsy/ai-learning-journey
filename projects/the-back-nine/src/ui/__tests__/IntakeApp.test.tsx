@@ -21,9 +21,20 @@ vi.mock('../vaultSession', () => ({
   getVaultSession: async () => ({ currentModel: () => h.model, hasBackupRecord: async () => h.hasBackup }),
 }))
 vi.mock('../Result', () => ({
-  Result: ({ save, backup }: { save: { kind: string }; backup?: { onSave: () => void } }) => (
+  Result: ({
+    save,
+    backup,
+    onReview,
+  }: {
+    save: { kind: string }
+    backup?: { onSave: () => void }
+    onReview: () => void
+  }) => (
     <div data-save-kind={save.kind} data-backup={backup ? 'offered' : 'none'}>
       result stub
+      <button type="button" onClick={onReview}>
+        review-stub
+      </button>
       {backup && (
         <button type="button" onClick={backup.onSave}>
           save-backup-stub
@@ -44,11 +55,25 @@ vi.mock('../BackupStep', () => ({
     </div>
   ),
 }))
-// Props-echo for the intake phase (the bogus-seed provenance pin below) — the hydrate tests
-// never mount it (they land on the Result phase).
+// Props-echo for the intake phase (the bogus-seed provenance pin + the completed-intake
+// period-disarm block below) — the hydrate tests never mount it (they land on the Result
+// phase). The complete-stub button drives IntakeApp's REAL `complete()` (the terminal-advance
+// callback); the prop→behavior link (periodConfirmed ⇒ the spend-step advance sails through
+// the real rule) is pinned with the REAL IntakeFlow in src/intake/__tests__/flow.test.tsx.
 vi.mock('@intake/flow', () => ({
-  IntakeFlow: ({ periodConfirmed = false }: { periodConfirmed?: boolean }) => (
-    <div data-period-confirmed={String(periodConfirmed)}>flow stub</div>
+  IntakeFlow: ({
+    periodConfirmed = false,
+    onComplete,
+  }: {
+    periodConfirmed?: boolean
+    onComplete?: () => void
+  }) => (
+    <div data-period-confirmed={String(periodConfirmed)}>
+      flow stub
+      <button type="button" onClick={() => onComplete?.()}>
+        complete-stub
+      </button>
+    </div>
   ),
 }))
 
@@ -141,5 +166,49 @@ describe('IntakeApp — dev-seed provenance flips only on an APPLIED seed (the R
     await act(async () => {})
     const stub = screen.getByText('flow stub')
     expect(stub).toHaveAttribute('data-period-confirmed', 'false')
+  })
+})
+
+describe('IntakeApp — the completed-intake period disarm (the council-ratified NARROW fix, F10 carry-in)', () => {
+  // The disarm's proof rides the DRAFT at completion: a draft that trips the spend-period gate
+  // (probed with no touches / no provenance) can only have advanced past the spend step via an
+  // explicit period answer. These pin the prop; flow.test.tsx ('periodConfirmed disarms the
+  // force-confirm end-to-end') pins prop→behavior against the REAL flow + rule.
+  const seedSpend = (annualSpendingReal: number | undefined, spendEntryPeriod: 'month' | 'year') =>
+    appModel.update((d) => ({ ...d, annualSpendingReal, spendEntryPeriod }))
+
+  it('a completion whose draft TRIPS the gate disarms the Review remount (the explicit answer was the only way through)', async () => {
+    // $60k under an explicit 'year' — ambiguous-band ($60k ≥ the $8k floor), so the real flow
+    // could only have advanced the spend step after the segment tap this draft records.
+    seedSpend(60_000, 'year')
+    render(<IntakeApp />)
+    // Pre-completion the disarm is off — the first pass keeps the R19 force-confirm armed.
+    expect(screen.getByText('flow stub')).toHaveAttribute('data-period-confirmed', 'false')
+    fireEvent.click(screen.getByRole('button', { name: 'complete-stub' }))
+    await screen.findByText('result stub')
+    fireEvent.click(screen.getByRole('button', { name: 'review-stub' }))
+    // The Review remount: the flow's touched state is gone, but the provenance survives.
+    expect(screen.getByText('flow stub')).toHaveAttribute('data-period-confirmed', 'true')
+  })
+
+  it('a FRESH session that never completed still fires the force-confirm (kills the hardcoded-disarm mutant)', () => {
+    // The 12× shape itself: $50k/mo under the unconfirmed 'month' default. No completion —
+    // the prop must stay false so the real flow's gate blocks the spend-step advance.
+    seedSpend(600_000, 'month')
+    render(<IntakeApp />)
+    expect(screen.getByText('flow stub')).toHaveAttribute('data-period-confirmed', 'false')
+  })
+
+  it('a completion whose draft NEVER trips the gate does NOT disarm — a Review-first ambiguous entry is a fresh first answer', async () => {
+    // No spend figure at all: the intake completes (absent inputs are never a hard wall) but
+    // proves nothing about the period. A bare completed-once flag would disarm here and let a
+    // Review-entered $50k/mo-as-'month' sail through unconfirmed — the exact 12× silent
+    // misentry the rule exists to catch.
+    seedSpend(undefined, 'month')
+    render(<IntakeApp />)
+    fireEvent.click(screen.getByRole('button', { name: 'complete-stub' }))
+    await screen.findByText('result stub')
+    fireEvent.click(screen.getByRole('button', { name: 'review-stub' }))
+    expect(screen.getByText('flow stub')).toHaveAttribute('data-period-confirmed', 'false')
   })
 })

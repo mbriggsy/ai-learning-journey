@@ -115,8 +115,54 @@ describe('composeDateSplit — the floor/lifestyle date composition (council 202
 
   it('planted-fail: same crowns, different GRADE bounds ⇒ split (the odds line differs)', () => {
     const floor = datedTrack(6, 0.9)
-    const lifestyle = datedTrack(6, 0.85)
+    // The grade object diverges while the CURVE is byte-shared — this fixture must stay
+    // curve-identical so it uniquely kills a dropped-grade-clause mutant (the curve-equality
+    // clause added by the F10 carry-in would otherwise catch it first and mask the mutant).
+    const lifestyle = { ...datedTrack(6, 0.85), curve: floor.curve }
     expect(composeDateSplit(floor, lifestyle).kind).toBe('split')
+  })
+
+  // The curve-equality clause (F10 carry-in 2026-07-08; filed 2026-07-02, TODO deferred-advisory
+  // (2)): crown + bound + nonMonotoneOffsets agreeing is NOT render-equality — the single
+  // composition renders the FLOOR's ladder, and the ladder/tradeoff/how-close line all read the
+  // full per-offset curve. A coincident-crown-but-different-curve pair must SPLIT.
+  describe('the curve-equality clause', () => {
+    it('planted-fail: identical kind/crown/bound/nonMonotone but ONE differing curve point ⇒ SPLIT', () => {
+      const floor = datedTrack(6)
+      // Same crown (6), same grade (0.9), same (empty) nonMonotoneOffsets — only curve[0]'s
+      // bound differs (0.7 → 0.6). Pre-clause this collapsed to a single date rendering the
+      // floor's ladder; the lifestyle track's year-0 rung would silently read one higher.
+      const lifestyle = { ...datedTrack(6), curve: [curveRow(0, 0.6), curveRow(6, 0.9)] }
+      expect(composeDateSplit(floor, lifestyle).kind).toBe('split')
+    })
+
+    it('planted-fail: both NO-DATE with the SAME best rung but a differing mid-curve point ⇒ SPLIT (the retired best-rung-only comparison collapsed this)', () => {
+      const floor = noDateTrack(0.6) // curve [(0, 0.3), (5, 0.6)] — best bound 0.6
+      const lifestyle = { ...noDateTrack(0.6), curve: [curveRow(0, 0.4), curveRow(5, 0.6)] } // best bound also 0.6
+      expect(composeDateSplit(floor, lifestyle).kind).toBe('split')
+    })
+
+    it('planted-fail: an EXTRA evaluated offset (curve length differs) ⇒ SPLIT', () => {
+      const floor = datedTrack(6)
+      const lifestyle = { ...datedTrack(6), curve: [curveRow(0, 0.7), curveRow(3, 0.5), curveRow(6, 0.9)] }
+      expect(composeDateSplit(floor, lifestyle).kind).toBe('split')
+    })
+
+    it('planted-fail: same bounds but the ENGINE clears bit differs ⇒ SPLIT (the clause reads the authority bit, never re-derives it)', () => {
+      const floor = datedTrack(6)
+      const lifestyle = {
+        ...datedTrack(6),
+        curve: [{ ...curveRow(0, 0.7), clears: true }, curveRow(6, 0.9)],
+      }
+      expect(composeDateSplit(floor, lifestyle).kind).toBe('split')
+    })
+
+    it('the REFLEXIVE case still composes SINGLE — value-equal curves on distinct objects (dated and no-date twins)', () => {
+      const datedView = composeDateSplit(datedTrack(6), datedTrack(6))
+      expect(datedView.kind).toBe('single')
+      const noDateView = composeDateSplit(noDateTrack(0.6), noDateTrack(0.6))
+      expect(noDateView.kind).toBe('single')
+    })
   })
 })
 

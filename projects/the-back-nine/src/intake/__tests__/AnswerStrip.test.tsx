@@ -74,6 +74,18 @@ describe('AnswerStrip — the honesty branches (D1 review T3)', () => {
     expect(screen.getByText(copy.spendLabel, { exact: false })).toBeInTheDocument()
   })
 
+  it('the U12 inputs-incomplete DEMOTION names the still-missing facts — never an empty strip (the F9 arm; the gap the U12·C1 battery found)', () => {
+    render(
+      <AnswerStrip
+        snapshot={snap({ kind: 'inputs-incomplete' })}
+        missing={[{ labelKey: 'spendLabel' }]}
+        onRetry={() => {}}
+      />,
+    )
+    expect(screen.getByText(copy.answerIncomplete)).toBeInTheDocument()
+    expect(screen.getByText(copy.spendLabel, { exact: false })).toBeInTheDocument()
+  })
+
   it('a cancelled date outcome renders nothing (hold quiet — a newer sweep is in flight)', () => {
     renderStrip({ kind: 'date', outcome: { kind: 'cancelled' }, tier: 'provisional' })
     expect(screen.queryByTestId('engine-reading')).toBeNull()

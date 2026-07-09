@@ -1,0 +1,158 @@
+/*
+ * src/intake/assumptions.css — the AssumptionPanel's CONTENT styles (P3·U12 · C1).
+ *
+ * Shell geometry (backdrop, stage, chrome-less scroll + shadow cue, the 50rem laptop stage)
+ * lives in sheetShell.css — the ONE family shell; NOTHING here positions the sheet. Reads
+ * ONLY tokens.css var()s (the canonical-source rule). CSP-clean: class-driven, zero inline
+ * styles. No motion of its own (the scaffold owns the rise/fade; reduced motion drops it
+ * there — final state identical). Figures wear tabular-nums; the worsening signal is WORDS
+ * beside moved numbers, never a hue change (the reader is color blind).
+ */
+
+/* ── the live answer echo — a RESERVED box (insight 035): min-height covers its tallest
+   arm (verdict lead + dollar clause + the truer-picture line), so a landing edit or the
+   transition line appearing never resizes it and the rows below never shuffle under a
+   pointer. ── */
+.ap-echo {
+  min-height: 7.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-3) var(--space-4);
+  background: var(--paper-raised);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-md);
+}
+
+.ap-echo__lead {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  font-weight: var(--weight-semibold);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+
+.ap-echo__lead--muted {
+  font-weight: var(--weight-regular, 400);
+  color: var(--ink-muted);
+}
+
+.ap-echo__dollar {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  line-height: var(--leading-body);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-muted);
+  max-width: var(--measure);
+}
+
+.ap-echo__shift {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  line-height: var(--leading-body);
+  color: var(--ink);
+  max-width: var(--measure);
+}
+
+/* ── the two grouped sections — the hs-facts hairline-step grammar (calm list, typographic
+   hierarchy only; no tiles, no color blocks — never a dashboard). ── */
+.ap-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.ap-section__title {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--ink-muted);
+}
+
+.ap-rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.ap-row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding-block: var(--space-4);
+  border-top: 1px solid var(--line-soft);
+}
+
+.ap-row__name {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  font-weight: var(--weight-semibold);
+  color: var(--ink);
+}
+
+.ap-row__value {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  line-height: var(--leading-body);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+  max-width: var(--measure);
+}
+
+.ap-row__prov {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  line-height: var(--leading-body);
+  color: var(--ink-muted);
+  max-width: var(--measure);
+}
+
+.ap-row__edit {
+  align-self: flex-start;
+}
+
+/* Per-person group: the name as a quiet sub-legend, its facts nested on the same hairline
+   grammar (the inner list keeps the row steps; the outer border-top separates persons). */
+.ap-person {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding-block: var(--space-4);
+  border-top: 1px solid var(--line-soft);
+}
+
+.ap-person__name {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--ink-muted);
+}
+
+.ap-person > .ap-rows {
+  border-bottom: 0;
+}
+
+.ap-person > .ap-rows > .ap-row:first-child {
+  border-top: 0;
+  padding-top: var(--space-2);
+}
+
+/* ── the footer: the guided re-walk + the quiet Close (Close ≠ Cancel — edits are already
+   committed per-field; insight 067). ── */
+.ap-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  align-items: center;
+}

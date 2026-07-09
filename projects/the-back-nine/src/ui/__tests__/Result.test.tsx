@@ -17,19 +17,22 @@ afterEach(cleanup)
 const renderSave = (save: ResultSaveProp) => render(<Result onReview={vi.fn()} save={save} computing={false} />)
 
 describe('Result — the actions row is withheld while the answer computes', () => {
-  it('while computing ("Working it out…"), NO actions render — no Review, no save slot, no badge (remove the opportunity, Briggsy 2026-07-02)', () => {
+  it('while computing ("Working it out…"), NO actions render — no doors, no save slot, no badge (remove the opportunity, Briggsy 2026-07-02)', () => {
     render(<Result onReview={vi.fn()} save={{ kind: 'clean' }} computing />)
     expect(document.querySelector('.result-actions')).toBeNull()
-    expect(screen.queryByRole('button', { name: copy.resultReview })).toBeNull()
+    expect(screen.queryByRole('button', { name: copy.assumptionDoorCta })).toBeNull()
     expect(screen.queryByText(copy.savedBadge)).toBeNull()
   })
 
-  it('once anything resolves, the whole row appears as one beat — Review live, slot rendered', () => {
-    const onReview = vi.fn()
-    render(<Result onReview={onReview} save={{ kind: 'clean' }} computing={false} />)
-    fireEvent.click(screen.getByRole('button', { name: copy.resultReview }))
-    expect(onReview).toHaveBeenCalledTimes(1)
+  it('once computing clears, the row appears as one beat — slot rendered; the Assumptions door still gates on a resolved-or-demoted answer (idle here ⇒ withheld)', () => {
+    // U12 (F4): the Review button left this row — the guided re-walk lives inside the
+    // AssumptionPanel now (resultAssumptionsDoor.test.tsx owns the door + re-walk coverage).
+    render(<Result onReview={vi.fn()} save={{ kind: 'clean' }} computing={false} />)
+    expect(document.querySelector('.result-actions')).not.toBeNull()
     expect(screen.getByText(copy.savedBadge)).toBeInTheDocument()
+    // The module appModel is untouched here (answer 'idle', pre-first-resolve): the hatch
+    // gate offers no door on an idle non-answer — same law as its four siblings.
+    expect(screen.queryByRole('button', { name: copy.assumptionDoorCta })).toBeNull()
   })
 })
 

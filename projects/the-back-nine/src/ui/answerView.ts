@@ -195,6 +195,15 @@ export function selectElevatedAnswer(
           kind: 'reading',
           headline,
           dollar,
+          // U12 C2 — THE RAW/STICKY SPLIT (one honest raw record, one sticky sentence): the
+          // SENTENCE (verdict word + "X of 10" + the $/mo clause) renders from the sticky DISPLAY
+          // triple memoryModel resolved inside the same commit as this answer, while the band and
+          // every drill-down (survivor readout, floor relief, scrub, AT range) keep reading the
+          // RAW `headline`/`dollar`/`result` threaded above. `snapshot.displayed` is non-null
+          // exactly on a non-indeterminate spine verdict (the Phase B commit-coherence invariant
+          // — trusted here, never re-derived); presence-keyed like its siblings so the preview
+          // harness's displayed-less fixtures stay legal (the surface then reads raw).
+          ...(snapshot.displayed ? { displayed: snapshot.displayed } : {}),
           ...spineBand(answer.result, draft),
           ...(answer.result.survivorReading ? { survivorReading: answer.result.survivorReading } : {}),
           ...(answer.result.floorReading ? { floorReading: answer.result.floorReading } : {}),
@@ -220,6 +229,10 @@ export function resolvedFocusKey(elevated: ElevatedAnswer): string | undefined {
     return `date:${track.kind}:${where}`
   }
   if (elevated.kind === 'spine' && elevated.view.kind === 'reading') {
+    // U12 C2: keyed on the RAW reading DELIBERATELY, never the sticky `displayed` triple — a held
+    // display over a moved raw (or the reverse) must not churn this key, and the surfaces' own
+    // once-per-mount announcedRef latch holds regardless (insight 047). The sticky sentence's
+    // change reaches AT through the surface's polite live region, never a focus re-fire.
     return `spine:${elevated.view.headline.outcomeState}:${elevated.view.headline.xOfTen.value}`
   }
   return undefined

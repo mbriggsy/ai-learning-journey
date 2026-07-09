@@ -4,7 +4,8 @@
  * On intake completion the quiet provisional AnswerStrip gives way to the ELEVATED state-adaptive
  * lead: the {@link FuckOffDate} hero for a still-working household, the {@link ConfidenceStatement}
  * for an all-retired one ({@link selectElevatedAnswer} owns the routing — the choice is the answer the
- * engine already crowned, never a re-derivation). A calm "review" path returns to the intake with
+ * engine already crowned, never a re-derivation). The U12 Assumptions door (the Review door's old
+ * seat) opens the {@link AssumptionPanel}; the guided re-walk back to intake lives INSIDE it, with
  * every answer preserved (the draft lives in the one `appModel`; nothing is persisted — U8 owns Save).
  *
  * CALM RENDERING (back-nine-design §3): the figures are STATIC and each surface owns its own
@@ -14,16 +15,18 @@
  */
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import { AnswerStrip } from '@intake/AnswerStrip'
-import { buildControlPreviewParams, healthcarePriced, missingRequiredFacts } from '@intake/intakeMap'
+import { buildControlPreviewParams, healthcarePriced, isDateRoute, missingRequiredFacts } from '@intake/intakeMap'
 import { useLiveAnnouncer } from '@intake/a11y'
 import { BudgetBuilder } from '@intake/BudgetBuilder'
 import { SequencingControl } from '@intake/SequencingControl'
 import { RothLever } from '@intake/RothLever'
 import { HealthcareSheet } from '@intake/HealthcareSheet'
+import { AssumptionPanel } from '@intake/AssumptionPanel'
 import { medicareUnpriced } from './healthSheetChrome'
 import { budgetGoverns } from '@budget/budgetModel'
 import { commitBudgetPatch } from '@budget/budgetToSpending'
 import { previewRunsInWorker, runControlPreview } from '@store/controlPreview'
+import type { ScenarioDraft } from '@store/memoryModel'
 import type { TwoArmControl } from '@shared/model'
 import { copy } from './copy'
 import { appModel } from './appModel'
@@ -113,6 +116,7 @@ export function Result({
   const [sequencingOpen, setSequencingOpen] = useState(false)
   const [rothOpen, setRothOpen] = useState(false)
   const [healthOpen, setHealthOpen] = useState(false)
+  const [assumptionsOpen, setAssumptionsOpen] = useState(false)
   const rothApplied = snapshot.draft.rothConversion
   // P3·U11 — the Healthcare door's domain (categorical, fact-presence only) is the ENGINE's own
   // priced-healthcare gate (healthcarePriced — single-sourced with buildOverlay; council
@@ -149,6 +153,39 @@ export function Result({
     await appModel.recompute('provisional')
     await appModel.recompute('final')
   }, [])
+
+  // U12 — the AssumptionPanel's ONE commit seam: apply the mutate atomically (it reads the
+  // store's CURRENT draft inside the update — insight 036, never a render-captured copy),
+  // then the ROUTE-AWARE recompute (the ratified F6 policy): SPINE → 'final' ONLY (the
+  // spine's two tiers are byte-identical, so a provisional re-fire is pure waste); DATE →
+  // the recomputeBoth cadence (provisional lands fast, the final sharpens behind it). The
+  // route is read AFTER the update — panel edits can't change workStatus, but the draft the
+  // recompute serves is the committed one.
+  const commitAssumptionEdit = useCallback(
+    (mutate: (d: ScenarioDraft) => ScenarioDraft) => {
+      appModel.update(mutate)
+      if (isDateRoute(appModel.getSnapshot().draft)) void recomputeBoth()
+      else void appModel.recompute('final')
+    },
+    [recomputeBoth],
+  )
+
+  // U12 — the Assumptions door's gate (F4: it takes the Review door's quiet-row seat; count
+  // stays 5). THIS DOOR GATES DIFFERENTLY FROM ITS SIBLINGS, deliberately (3-controls.md:243):
+  // every other door gates on `focusKey` and so VANISHES exactly while the answer is
+  // indeterminate / inputs-incomplete — but the escape hatch is the way BACK from those
+  // states, so it must stay reachable there: a resolved reading (focusKey), the store's
+  // post-first-resolve `inputs-incomplete` demotion, the post-first-resolve fallback arms
+  // (a date input-failure / an indeterminate headline — the strip is showing, the hero fell
+  // back), AND compute-error (its comment above names editing inputs as the remedy — a
+  // remedy needs its door; the old Review button was unconditional here). While computing
+  // (pre-first-resolve) it is withheld with the whole row, the existing law.
+  const hatchReachable =
+    focusKey !== undefined ||
+    snapshot.answer.kind === 'inputs-incomplete' ||
+    snapshot.answer.kind === 'compute-error' ||
+    (elevated.kind === 'fallback' &&
+      (snapshot.answer.kind === 'headline' || snapshot.answer.kind === 'date'))
 
   // The completion actions (save slot + the ONE budget door + the quiet return), built once.
   // On a RESOLVED date/spine answer they are SEATED in the surface's left reading column (the
@@ -262,9 +299,16 @@ export function Result({
             {enhancedApplied ? copy.leverHealthDoorEditCta : copy.leverHealthDoorCta}
           </button>
         )}
-        <button type="button" className="btn-quiet" onClick={onReview}>
-          {copy.resultReview}
-        </button>
+        {/* U12 (F4): the Assumptions door in the Review door's old seat — door count stays 5,
+            the quiet row stays the grid's LAST full-width row (the vertical-fit contract is
+            untouched). Gated by `hatchReachable`, NOT bare focusKey — see the gate above for
+            why this one door must survive indeterminate/incomplete. The guided re-walk
+            (`onReview`) now lives INSIDE the panel. */}
+        {hatchReachable && (
+          <button type="button" className="btn-quiet" onClick={() => setAssumptionsOpen(true)}>
+            {copy.assumptionDoorCta}
+          </button>
+        )}
       </div>
     </div>
   )
@@ -383,6 +427,37 @@ export function Result({
           void recomputeBoth()
         }}
         onClose={() => setHealthOpen(false)}
+      />
+      {/* U12 — the AssumptionPanel mounts at RESULT level, outside the hero swap (supersession
+          #6): it exists over the fallback strip too, so the escape hatch stays real exactly
+          where the hero has fallen back to incomplete. Via-sheet rows close this panel and
+          open the fact's ONE editor home (insight 058 — never a duplicate editor). */}
+      <AssumptionPanel
+        open={assumptionsOpen}
+        snapshot={snapshot}
+        missing={missing}
+        onCommitEdit={commitAssumptionEdit}
+        onOpenBudget={() => {
+          setAssumptionsOpen(false)
+          setBudgetOpen(true)
+        }}
+        onOpenSequencing={() => {
+          setAssumptionsOpen(false)
+          setSequencingOpen(true)
+        }}
+        onOpenRoth={() => {
+          setAssumptionsOpen(false)
+          setRothOpen(true)
+        }}
+        onOpenHealth={() => {
+          setAssumptionsOpen(false)
+          setHealthOpen(true)
+        }}
+        onReview={() => {
+          setAssumptionsOpen(false)
+          onReview()
+        }}
+        onClose={() => setAssumptionsOpen(false)}
       />
     </main>
   )

@@ -81,8 +81,10 @@ export const copy = {
   periodMonth: 'Each month',
   periodYear: 'Each year',
   periodLegend: 'That figure is…',
+  // (U12: the spatial "below" was dropped — the same prompt now also renders in the
+  //  AssumptionPanel, where the period control sits ABOVE the spend field.)
   periodConfirmPrompt:
-    'That number could be dollars each month or dollars each year — tap “Each month” or “Each year” below so it’s read the way you meant it.',
+    'That number could be dollars each month or dollars each year — tap “Each month” or “Each year” so it’s read the way you meant it.',
   // --- U9b: the spend question under a GOVERNING budget (council 2026-07-02 Q4). The raw field
   //     is replaced by labeled read-only text + a steer — the budget's atomic patch is the ONLY
   //     writer of the spending scalar (a raw edit here was the budget-blind second writer). ---
@@ -342,10 +344,9 @@ export const copy = {
     'Here the essentials-only version lands later than the full plan. Spending less can mean a lower income on paper. That lower income on paper can shrink the health-insurance help you’d get before Medicare — which is what raises your cost here.',
   answerError: 'The math hit a snag.',
   answerRetry: 'Try again',
-  // --- D2 result screen chrome (the landed magic moment's frame). The quiet return to intake; the
-  //     draft is preserved (every answer kept), so this is "look again", never "start over". 'review'
-  //     is not a directive verb and carries no numeral/superlative — copyGuard-clean. ---
-  resultReview: 'Review my answers',
+  // --- D2 result screen chrome (the landed magic moment's frame). (`resultReview` retired at
+  //     U12: the Assumptions door took the Review door's quiet-row seat — F4, council
+  //     2026-07-08 — and the guided re-walk lives inside the panel as `assumptionRewalkCta`.) ---
   outcomeOnTrack: 'On track',
   outcomeBorderline: 'On the line',
   outcomeOffTrack: 'Off track',
@@ -768,6 +769,81 @@ export const copy = {
     'One honest gap: Medicare’s own costs — the base premium, plus the income surcharge a conversion can trip — aren’t priced into these numbers for your household yet. Pricing them would pull the picture down some, never up.',
   rothMedicareUnpricedNote:
     'Your household’s Medicare premiums — including the income surcharge a conversion can trip two years later — aren’t priced in yet, so converting could look a little better here than it would in real life.',
+
+  // --- P3·U12 — the AssumptionPanel (the R7 escape hatch; council wf_dff75c2f-9e3). PREFIX
+  // LAW: `assumption*` is the panel's CHROME prefix — labels, values, provenance lines,
+  // section headings, the door CTA. Deliberately hedge-EXEMPT (never a 'roth'/'sequencing'/
+  // 'control' prefix, which require-hedge sweeps) and verdict-EXEMPT (never an 'answer'/
+  // 'date' prefix or a 'readout'/'headline' substring, which free-numeral sweeps) —
+  // provenance lines carry factual numerals (a table year, a section number) exactly like
+  // intake copy. The scope-seam pins in copyGuard.test.ts document the exemption (the U11
+  // precedent); the universal gates (false-certainty / advice-verb) still cover every string.
+  // Keys containing 'survivor' stay survivor-scoped (catastrophe-gated) by the substring net,
+  // and `assumptionTruerPicture` joins isMortalityKey BY NAME (it renders at the worst
+  // moment). FIRST-DRAFT craftsman's-lead wording throughout — the door CTA, the market-floor
+  // line, and the truer-picture line are N=1 cold-read subjects (the Act-3 exit condition). ---
+  assumptionDoorCta: 'The assumptions behind this',
+  assumptionTitle: 'The assumptions behind this answer',
+  assumptionIntro:
+    'Everything the answer leans on, in one place — yours to check, most of it yours to change. Edits land as you leave each field.',
+  assumptionSectionMethodology: 'On your behalf',
+  assumptionSectionFacts: 'Your facts',
+  // The echo's quiet arm (date route / no standing spine verdict): a plain statement of
+  // where edits land — never a fabricated verdict echo.
+  assumptionEchoQuiet: 'Edits here flow straight into your answer.',
+  // The truer-picture line (R8's honest-worsening arm; F8/council 2026-07-08): renders ONLY
+  // when an edit lands the displayed verdict BELOW the panel-open baseline. The moved
+  // numbers live in the echo above it (word + count + dollars — the non-color signal
+  // grammar); this line only frames the move. Catastrophe-gated by name (copyGuard.ts).
+  assumptionTruerPicture:
+    'The odds above stepped down — that’s the picture getting truer to what you entered, not the plan itself changing.',
+  // The guided re-walk, moved INSIDE the panel (F4 — the Review door left the quiet row).
+  assumptionRewalkCta: 'Walk through everything again',
+  assumptionViaIntakeCta: 'Edit in the walk-through',
+  assumptionCollectionsName: 'Accounts & other income',
+  assumptionCollectionsValue:
+    'Balances, account kinds, tickers, and any pension or other income — edited where they were entered, so nothing gets out of step.',
+  assumptionNoneApplied: 'None applied.',
+  assumptionDrawdownName: 'Withdrawal order',
+  assumptionRothName: 'Roth conversions',
+  assumptionRegimeName: 'Health-subsidy rules',
+  // The ONE real R7-editable methodology knob (the F1/F3 ruling). Its UNSAFE direction is
+  // disclosed in the help — too LOW understates the survivor's need (methodology.ts).
+  assumptionSurvivorRatioLabel: 'Spending if one of you is on your own, as a share of today’s',
+  assumptionSurvivorRatioHelp:
+    'Research on surviving spouses lands around three-quarters of a couple’s spending. Set it lower and the later years can read easier than they may prove.',
+  errSurvivorRatioBlank:
+    'Survivor spending needs a share to run on — three-quarters is the researched default.',
+  assumptionPeriodLegend: 'Your spending figure reads as…',
+  // The panel's period toggle RE-LABELS the committed figure; it never re-bases it (the
+  // intake segment re-bases mid-entry, where the typed digits are the truth — here the
+  // canonical annual is the truth, and a silent 12× re-base would be the cardinal sin).
+  assumptionPeriodHelp:
+    'Only how that figure is entered and shown — the plan is figured in yearly terms underneath, and switching this never changes the amount.',
+  assumptionMarketName: 'Market returns',
+  assumptionMarketProvenance:
+    'A deliberately conservative default — the high-valuation planning assumptions (Pfau/Kitces), figured in today’s dollars.',
+  // The STANDING market-floor line (F8's ratified fallback): a pure statement that the range
+  // includes market randomness that cannot be removed — NEVER a "sharper inputs won't help /
+  // stop refining" directive (council-killed; the insight-025 defect class).
+  assumptionMarketFloorNote:
+    'Part of the range around your answer is the market itself — randomness an honest projection carries rather than removes.',
+  assumptionLongevityName: 'How long the plan runs',
+  assumptionLongevityValue:
+    'Survival odds from the Social Security Administration’s cohort life tables (2024 Trustees Report), taken per person by sex — the plan runs on odds, never one fixed end age.',
+  assumptionSurvivorSsName: 'Social Security if one of you is on your own',
+  assumptionSurvivorSsValue:
+    'Figured by federal law’s own survivor-benefit rule (Section 202 of the Social Security Act) — law the plan applies, not a setting it exposes.',
+  assumptionOutliveName: 'Who outlives whom',
+  assumptionOutliveValue:
+    'Never one fixed guess: every simulated future draws each person’s span from the same survival tables, so both orderings are weighed at their real odds.',
+  assumptionConversionTaxName: 'How a conversion’s tax is paid',
+  // The v1 per-policy funding rule + its CONSERVATIVE direction, disclosed (roth.ts:33-41;
+  // the taxable-first slice is the filed R7-editable upgrade).
+  assumptionConversionTaxValue:
+    'Tax on a Roth conversion comes out of the year’s withdrawals in the same order as everything else. That choice errs against converting, so the lever’s benefit reads understated, never oversold.',
+  assumptionSsClaimAgeLabel: 'The age Social Security starts',
+  errBirthYearBlank: 'The plan needs a birth year to run — mind putting one back?',
 } as const satisfies Record<string, string>
 
 export type CopyKey = keyof typeof copy
@@ -1215,6 +1291,14 @@ export const slots = {
   healthFigRoom: (amountFormatted: string): string => `~$${amountFormatted} of room`,
   healthFigCents: (cents: number): string => `${cents}¢ on each dollar converted`,
   healthFigStepAdd: (amountFormatted: string): string => `+~$${amountFormatted} a year`,
+  // --- P3·U12 — the AssumptionPanel's market disclosure figures. The values are READ from
+  //     `productionMarket.value` at render (never re-typed — the constants-discipline rule)
+  //     and arrive pre-formatted WITH their % glyph; the templates carry no numeral. ---
+  assumptionMarketStocks: (meanPct: string, swingPct: string): string =>
+    `Stocks — about ${meanPct} a year after inflation, with swings around ${swingPct} in a typical year.`,
+  assumptionMarketBonds: (meanPct: string, swingPct: string): string =>
+    `Bonds — about ${meanPct} a year after inflation, with swings around ${swingPct}.`,
+  assumptionMarketInflation: (meanPct: string): string => `Inflation — about ${meanPct} a year.`,
 } as const
 
 /**

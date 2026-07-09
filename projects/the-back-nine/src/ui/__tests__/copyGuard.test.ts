@@ -135,6 +135,11 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     // F10 — the R19 ceiling errors quote the statutory limit (pre-formatted by intake).
     errContributionCeiling: slots.errContributionCeiling('32,250'),
     errAdditionsCeiling: slots.errAdditionsCeiling('83,250'),
+    // P3·U12 — the AssumptionPanel's market disclosure figures (read from productionMarket
+    // at render; the % strings arrive pre-formatted — the templates stay numeral-free).
+    assumptionMarketStocks: slots.assumptionMarketStocks('5%', '18%'),
+    assumptionMarketBonds: slots.assumptionMarketBonds('1%', '6%'),
+    assumptionMarketInflation: slots.assumptionMarketInflation('3%'),
   }
 
   it('every U10 delta-readout slot WEARS a hedge (the control readouts are slot-composed, so the require-hedge sweep must reach the rendered samples here)', () => {
@@ -403,6 +408,37 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
 
   it('DIRECTIVE_VERBS includes "validate" — load-bearing for the staticDisclosures-exclusion proof', () => {
     expect(DIRECTIVE_VERBS).toContain('validate')
+  })
+
+  // --- U12 scope-seam pins: the `assumption*` chrome prefix is DELIBERATELY exempt from the
+  //     scoped gates (the U11 precedent — a documented exemption, never an accident). Panel
+  //     chrome carries factual numerals (a table year, a section number) like intake copy, and
+  //     provenance lines are statements, not plan-moving claims — so neither the verdict sweep
+  //     (free-numeral/superlative) nor the control sweep (require-hedge) may reach it. The
+  //     UNIVERSAL gates still cover every assumption* string via the catalog enumeration above. ---
+  it('U12: assumption* chrome is exempt from the verdict + control sweeps (deliberate, pinned)', () => {
+    for (const k of [
+      'assumptionDoorCta', 'assumptionTitle', 'assumptionMarketName', 'assumptionMarketFloorNote',
+      'assumptionLongevityValue', 'assumptionConversionTaxValue', 'assumptionTruerPicture',
+    ]) {
+      expect(isVerdictKey(k), `${k} must NOT be verdict-swept (factual numerals are legitimate)`).toBe(false)
+      expect(isControlKey(k), `${k} must NOT be require-hedge-swept (chrome, not a plan-moving readout)`).toBe(false)
+    }
+    // The name deliberately avoids the swept substrings — a rename into 'readout'/'headline'
+    // territory would silently change its gate set; these arms pin the vocabulary line.
+    expect(isVerdictKey('assumptionEchoQuiet')).toBe(false)
+    expect(isControlKey('assumptionRothName'), 'assumptionRothName does not LEAD with the roth prefix').toBe(false)
+  })
+
+  it('U12: the truer-picture line IS catastrophe-gated by name, and survivor-substring keys stay swept', () => {
+    // Control arms (burned/070 — prove the scope extension is live, not vacuous):
+    expect(isMortalityKey('assumptionTruerPicture'), 'the worst-moment line joins the catastrophe net').toBe(true)
+    expect(isMortalityKey('assumptionSurvivorRatioHelp'), 'survivor-substring keys ride the survivor net').toBe(true)
+    expect(isMortalityKey('assumptionSurvivorSsValue')).toBe(true)
+    expect(isMortalityKey('assumptionMarketFloorNote'), 'non-mortality panel chrome stays out').toBe(false)
+    // The line itself passes the gate it joined (the catalog sweep above covers it too — this
+    // arm keeps the pairing visible next to the scope pin).
+    expect(lintCopy(copy.assumptionTruerPicture, ['catastrophe'])).toEqual([])
   })
 
   it('staticDisclosures is deliberately OUT of the gate — proven meaningful: its directive WOULD trip', () => {

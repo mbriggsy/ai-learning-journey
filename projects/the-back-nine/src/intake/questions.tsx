@@ -590,8 +590,10 @@ const oopStep: StepDef = {
 /** Write person `i`'s working-year investment income, force-zeroing any RETIRED member's slot
  *  (the inapplicable-question zeroing — a retiree has no working-year count, and the persisted
  *  v3 array must be hole-free). The engine override is `earnedIncomeReal + this`, derived at the
- *  intake→engine boundary (`intakeMap.buildDateInput`) — the salary is never re-asked. */
-function writeWorkingYearInvestment(d: ScenarioDraft, i: 0 | 1, v: number | undefined): ScenarioDraft {
+ *  intake→engine boundary (`intakeMap.buildDateInput`) — the salary is never re-asked.
+ *  EXPORTED for the U12 AssumptionPanel — the ONE write shape for this fact (insight 058:
+ *  a duplicated writer is exactly how a hole-bearing array would ship). */
+export function writeWorkingYearInvestment(d: ScenarioDraft, i: 0 | 1, v: number | undefined): ScenarioDraft {
   const next: (number | undefined)[] = [
     d.health.workingYearInvestmentByPerson?.[0],
     d.health.workingYearInvestmentByPerson?.[1],

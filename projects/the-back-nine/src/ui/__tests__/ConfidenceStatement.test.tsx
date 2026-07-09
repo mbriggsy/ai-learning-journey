@@ -10,6 +10,7 @@ import { simulate } from '@engine/simulate'
 import { summarize } from '@engine/confidence'
 import { productionMarket } from '@engine/reference/methodology'
 import type { OutcomeState, SimulationParams } from '@shared/model'
+import type { StickyDisplay } from '@store/memoryModel'
 
 /*
  * The U7 verdict-first surface. The colorblind law is the spine of these assertions: the verdict
@@ -334,6 +335,162 @@ describe('ConfidenceStatement — the U7 verdict-first surface', () => {
   it('without focusSignal, focus is never stolen (provisional ticks / the dev preview leave it alone)', () => {
     render(<ConfidenceStatement view={{ kind: 'reading', ...READING_FIXTURES['on-track'] }} />)
     expect(document.activeElement).toBe(document.body)
+  })
+})
+
+describe('U12 C2 — the sticky sentence + the verdict crossfade', () => {
+  // Raw fixture: on-track / 8 of 10 / $410 room. Every held triple below DIVERGES from it on the
+  // fields under test — the divergence is the oracle (a component that read RAW where it must read
+  // the sticky display, or vice versa, goes red loud).
+  const RAW = READING_FIXTURES['on-track']
+  const stickyView = (displayed: StickyDisplay) =>
+    ({ kind: 'reading', ...RAW, displayed }) as const
+  const SAME_AS_RAW: StickyDisplay = {
+    xOfTen: 8,
+    outcomeState: 'on-track',
+    perMonthDollar: 410,
+    direction: 'room',
+  }
+  const HELD: StickyDisplay = {
+    xOfTen: 7,
+    outcomeState: 'borderline',
+    perMonthDollar: 380,
+    direction: 'trim',
+  }
+  const liveRegion = (container: HTMLElement) =>
+    container.querySelector('.confidence > .sr-only[role="status"]')!
+
+  it('the SENTENCE renders the displayed triple when it diverges from raw; the band + drill-downs keep reading raw', () => {
+    // floorReading equals the RAW headline — the degenerate. If the two-tier gate compared the
+    // DISPLAYED reading instead of the raw one, they would diverge and the relief line would
+    // wrongly render (the planted divergence covers the drill-down half of the split too).
+    const floorReading = { ...RAW.headline }
+    const { container } = render(
+      <ConfidenceStatement view={{ kind: 'reading', ...RAW, displayed: HELD, floorReading }} />,
+    )
+    // the sentence — word, count, clause, and the framing emphasis — reads the STICKY triple
+    expect(screen.getByRole('heading', { name: copy.outcomeBorderline })).toBeInTheDocument()
+    const lead = container.querySelector('.reveal__lead')!
+    expect(lead.textContent).toContain(slots.xOfTen(7))
+    expect(lead.textContent).toContain(slots.verdictTrimClause('380'))
+    expect(container.querySelector('.confidence-reveal')).toHaveAttribute('data-framing', 'action-first')
+    // ...and NEVER the raw sentence (calm-but-two-sentences would be the mixed-pair sin)
+    expect(lead.textContent).not.toContain(copy.outcomeOnTrack)
+    expect(lead.textContent).not.toContain(slots.xOfTen(8))
+    expect(lead.textContent).not.toContain(slots.verdictRoomClause('410'))
+    // the band still mounts from the RAW fan (one honest raw record under the sticky sentence)
+    expect(screen.getByRole('button', { name: copy.bandStudyRange })).toBeInTheDocument()
+    // the two-tier drill-down read the RAW headline: floor ≡ raw ⇒ degenerate ⇒ no relief wrapper
+    expect(container.querySelector('.reveal__subordinates')).toBeNull()
+  })
+
+  it('without a displayed triple (the preview harness) the sentence reads the raw result — unchanged shipped behavior', () => {
+    const { container } = render(<ConfidenceStatement view={{ kind: 'reading', ...RAW }} />)
+    expect(screen.getByRole('heading', { name: copy.outcomeOnTrack })).toBeInTheDocument()
+    expect(container.textContent).toContain(slots.verdictRoomClause('410'))
+  })
+
+  it('the swap key changes exactly on a displayed-change: a byte-identical recompute keeps the DOM nodes; a change remounts the text containers ONLY', () => {
+    const { container, rerender } = render(<ConfidenceStatement view={stickyView(SAME_AS_RAW)} />)
+    const reading1 = container.querySelector('.cs-reading')!
+    const magnitude1 = container.querySelector('.cs-magnitude')!
+    const heading1 = screen.getByRole('heading', { name: copy.outcomeOnTrack })
+    const enlarge1 = screen.getByRole('button', { name: copy.bandStudyRange })
+    // a byte-identical recompute (a NEW object, equal values) — the key derives from the rendered
+    // values, never object identity: nothing remounts (planted-fail proven: an identity-derived
+    // key turns this red).
+    rerender(<ConfidenceStatement view={stickyView({ ...SAME_AS_RAW })} />)
+    expect(container.querySelector('.cs-reading')).toBe(reading1)
+    expect(container.querySelector('.cs-magnitude')).toBe(magnitude1)
+    // a genuine displayed-change remounts the lockup's text containers...
+    rerender(<ConfidenceStatement view={stickyView({ ...SAME_AS_RAW, xOfTen: 7 })} />)
+    const reading2 = container.querySelector('.cs-reading')!
+    expect(reading2).not.toBe(reading1)
+    expect(reading2.textContent).toContain(slots.xOfTen(7))
+    // ...while the interaction-state nodes survive unmoved (the KEY SCOPING LAW, insight 047):
+    // the h2 focus latch and the band panel's enlarge button are the SAME elements.
+    expect(screen.getByRole('heading', { name: copy.outcomeOnTrack })).toBe(heading1)
+    expect(screen.getByRole('button', { name: copy.bandStudyRange })).toBe(enlarge1)
+  })
+
+  it('first mount never wears the swap class (the reveal owns the entrance); a mounted displayed-change dresses ALL four text containers as one unit', () => {
+    const { container, rerender } = render(<ConfidenceStatement view={stickyView(SAME_AS_RAW)} />)
+    expect(container.querySelector('.cs-swap')).toBeNull()
+    rerender(<ConfidenceStatement view={stickyView(HELD)} />)
+    expect(container.querySelector('.cs-word__text')).toHaveClass('cs-swap')
+    expect(container.querySelector('.cs-reading')).toHaveClass('cs-swap')
+    expect(container.querySelector('.cs-magnitude')).toHaveClass('cs-swap')
+    expect(container.querySelector('.cs-glyph')).toHaveClass('cs-swap')
+  })
+
+  it('a mounted displayed-change announces the NEW sentence once via the polite region; first mount stays silent; focus is never yanked', () => {
+    const { container, rerender } = render(
+      <ConfidenceStatement view={stickyView(SAME_AS_RAW)} focusSignal={1} />,
+    )
+    const live = liveRegion(container)
+    expect(live.textContent).toBe('') // mount-empty — a region born populated may never speak
+    screen.getByRole('heading', { name: copy.outcomeOnTrack }).blur()
+    rerender(<ConfidenceStatement view={stickyView(HELD)} focusSignal={1} />)
+    // spoken = exactly the shown sentence (word + count line + clause), never a second wording
+    expect(live.textContent).toBe(
+      `${copy.outcomeBorderline}. ${slots.xOfTen(7)} ${copy.confidenceCoverageCaption}. ${slots.verdictTrimClause('380')}`,
+    )
+    // the announcedRef focus latch is untouched — the swap must never re-steal focus
+    expect(document.activeElement).not.toBe(screen.getByRole('heading', { name: copy.outcomeBorderline }))
+  })
+
+  it('a displayed-change that leaves the RENDERED sentence identical (a $-step move under a figure-less clause) neither remounts nor announces — the anti-flicker law', () => {
+    const line: StickyDisplay = {
+      xOfTen: 7,
+      outcomeState: 'borderline',
+      perMonthDollar: 0,
+      direction: 'on-the-line', // the clause carries NO figure — the dollar is invisible here
+    }
+    const { container, rerender } = render(
+      <ConfidenceStatement view={{ kind: 'reading', ...READING_FIXTURES.borderline, displayed: line }} />,
+    )
+    const reading1 = container.querySelector('.cs-reading')!
+    rerender(
+      <ConfidenceStatement
+        view={{ kind: 'reading', ...READING_FIXTURES.borderline, displayed: { ...line, perMonthDollar: 10 } }}
+      />,
+    )
+    // identical words must never blink out and fade back in, and AT hears nothing new
+    expect(container.querySelector('.cs-reading')).toBe(reading1)
+    expect(container.querySelector('.cs-swap')).toBeNull()
+    expect(liveRegion(container).textContent).toBe('')
+  })
+
+  it('reduced motion: the final rendered state is the full new sentence — no content rides the transition class (the crossfade is CSS-only)', () => {
+    // Re-stub matchMedia so every prefers-reduced-motion query matches (the band's useReducedMotion
+    // reads it; the crossfade itself is pure CSS and must gate NOTHING content-bearing on it).
+    const stub = (matches: boolean) =>
+      vi.stubGlobal(
+        'matchMedia',
+        (query: string) =>
+          ({
+            matches: matches && query.includes('prefers-reduced-motion'),
+            media: query,
+            onchange: null,
+            addEventListener: () => {},
+            removeEventListener: () => {},
+            addListener: () => {},
+            removeListener: () => {},
+            dispatchEvent: () => false,
+          }) as unknown as MediaQueryList,
+      )
+    stub(true)
+    try {
+      const { container, rerender } = render(<ConfidenceStatement view={stickyView(SAME_AS_RAW)} />)
+      rerender(<ConfidenceStatement view={stickyView(HELD)} />)
+      // identical final state with motion off: the whole new sentence is in the tree
+      expect(screen.getByRole('heading', { name: copy.outcomeBorderline })).toBeInTheDocument()
+      const lead = container.querySelector('.reveal__lead')!
+      expect(lead.textContent).toContain(slots.xOfTen(7))
+      expect(lead.textContent).toContain(slots.verdictTrimClause('380'))
+    } finally {
+      stub(false) // restore the file-default stub shape for the tests after this one
+    }
   })
 })
 

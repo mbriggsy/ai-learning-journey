@@ -74,6 +74,33 @@
   border-radius: var(--radius-sm);
 }
 
+/* ── U12 C2: the verdict-lockup crossfade (the sharpen loop's state→state morph) ─────────────────
+   Fires ONLY on a sticky displayed-triple change on an already-mounted hero: ConfidenceStatement
+   re-keys the lockup's TEXT containers (glyph + word span + count line + clause line — one unit)
+   and this @starting-style entrance fades the fresh nodes in. CSS-ONLY by hard CSP condition
+   (3-controls.md U12 supersession #4): no framer-motion layout animation anywhere in this path —
+   its injected inline <style> dies under style-src 'self' in PROD headers only (the green-local/
+   red-prod trap). Opacity only (GPU; never a hue transition — the word + magnitude carry the
+   change, back-nine-design §2/§3; no count-up). First mount carries no .cs-swap — the
+   .confidence-reveal reveal above owns the entrance; the swap is entrance-only (the outgoing text
+   unmounts instantly, the intake step idiom), interruptible by construction. The band's own morph
+   (0.26s, inside the panel) runs concurrently and is deliberately uncoupled.
+   LAYOUT (insight 035): all five verdict words hold ONE line at the laptop tiers (--text-2xl caps
+   at 44px; the longest, "More than covered", ≈ 420px with glyph+gap inside the 576px --measure),
+   so a swap cannot grow the heading's box. The magnitude clause can change line count only on a
+   genuine regime change (a direction flip always adopts — sticky holds edge-hugging jitter), never
+   on a display wobble. Verified in real Chromium by the integrator's pass, not assumed. */
+.cs-swap {
+  opacity: 1;
+  transition: opacity var(--dur-fast) var(--ease-out);
+}
+
+@starting-style {
+  .cs-swap {
+    opacity: 0;
+  }
+}
+
 /* ----- the "X of 10" coverage reading ----- */
 
 .cs-reading {
@@ -289,6 +316,11 @@
       opacity: 0;
       transform: none;
     }
+  }
+  /* U12 C2: the verdict crossfade drops to an INSTANT swap — identical final state; no
+     information lives in the fade (the new words are the signal). */
+  .cs-swap {
+    transition: none;
   }
   .cs-retry {
     transition: none;

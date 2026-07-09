@@ -106,6 +106,17 @@ export function AnswerStrip({
         </>
       )}
 
+      {/* U12 (the F9 demotion): a required fact stopped being validly present AFTER an answer
+          had resolved — the same naming grammar as idle (answerView routes this arm here with
+          exactly that promise; before this arm existed the demoted state rendered an EMPTY
+          strip — a blank hero over a real household, found by the U12·C1 door battery). */}
+      {answer.kind === 'inputs-incomplete' && (
+        <>
+          <p className="strip-lead strip-muted">{copy.answerIncomplete}</p>
+          <MissingList missing={missing} />
+        </>
+      )}
+
       {answer.kind === 'pending' && (
         // strip-thinking: the app-wide breathing "working" gesture (base.css). A sub-second
         // intake tick shows barely a quarter-breath — imperceptible there by design; the full

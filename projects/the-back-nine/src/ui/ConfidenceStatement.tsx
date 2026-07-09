@@ -21,6 +21,15 @@
  * surface fades in once on its first reveal (the magic moment); numbers never animate. All motion
  * honors prefers-reduced-motion, and the final rendered state is identical with motion on or off.
  *
+ * THE STICKY SENTENCE + THE VERDICT CROSSFADE (U12 C2): the SENTENCE (glyph + verdict word +
+ * "X of 10" + the $/mo clause) renders from the sticky DISPLAY triple when `view.displayed` rides
+ * (memoryModel's hysteresis seam — the sentence never flickers between two honest roundings of one
+ * household); the band + every drill-down keep reading the RAW result. A displayed-change on a
+ * mounted hero crossfades the lockup AS ONE UNIT — a CSS-only @starting-style opacity entrance on
+ * re-keyed TEXT containers (never framer-motion: motion@12 layout features inject an inline
+ * <style> that style-src 'self' kills in prod headers only) — and announces the new sentence once
+ * through the polite live region. Reduced motion: instant swap, identical final state.
+ *
  * STRING-FREE inline (cross-cutting #4): every user-facing string comes from copy.ts (gated by the
  * U7 copyGuard); every numeral enters through a typed slot. CSP-clean: all styling is class-driven
  * (confidence.css), never an inline style attribute.
@@ -33,7 +42,7 @@ import { SurvivorReadout } from './SurvivorReadout'
 import { TwoTierHeadline } from './TwoTierHeadline'
 import { floorRelief } from './twoTier'
 import { formatAxisDollar, formatPerMonth } from './money'
-import { focusHeading } from '@intake/a11y'
+import { focusHeading, useLiveAnnouncer } from '@intake/a11y'
 import { ConfidenceBandPanel } from '@viz/ConfidenceBandPanel'
 import {
   resolveBandData,
@@ -43,6 +52,7 @@ import {
 } from '@viz/bandData'
 import { BAND_LABELS, BAND_CHROME, composeBandAtRange } from './bandPanelChrome'
 import type { BandFan, DollarAdjustment, Headline, SurvivorReading } from '@shared/model'
+import type { StickyDisplay } from '@store/memoryModel'
 import './styles/confidence.css'
 
 /** What the surface shows. `reading` covers all six engine states (it reads `outcomeState`);
@@ -52,6 +62,13 @@ export type ConfidenceStatementView =
       readonly kind: 'reading'
       readonly headline: Headline
       readonly dollar: DollarAdjustment
+      /** U12 C2 — the sticky-resolved DISPLAY triple (memoryModel's hysteresis seam, threaded by
+       *  answerView from the same commit as the answer). When present, the SENTENCE — glyph +
+       *  verdict word + "X of 10" + the $/mo clause — renders from it; the band and every
+       *  drill-down (survivor, floor relief, scrub, AT range) keep reading the RAW
+       *  `headline`/`dollar` above (one honest raw record, one sticky sentence). Absent (the
+       *  preview harness, displayed-less fixtures) ⇒ the sentence reads the raw result directly. */
+      readonly displayed?: StickyDisplay
       /** The engine's per-year fan, opt-in. When present (and the state is a real verdict), the
        *  "show me the range" drawer mounts. Absent ⇒ no drawer (the verdict still stands). */
       readonly band?: BandFan
@@ -115,13 +132,16 @@ function buildPlaceholderBand(annotations: readonly XAnnotation[]): Indeterminat
 
 /** The verdict's second line — the dollar grammar, keyed off the engine DIRECTION (never re-derived
  *  here). The $/month enters through the slot pre-formatted, so the rendered clause carries no
- *  hardcoded numeral (copyGuard slot-discipline). */
-function magnitudeClause(dollar: DollarAdjustment): string {
-  switch (dollar.direction) {
+ *  hardcoded numeral (copyGuard slot-discipline). Takes the pair rather than a DollarAdjustment so
+ *  the sticky DISPLAY figure and the raw figure compose through ONE clause path (U12 C2) — the
+ *  sticky `perMonthDollar` is already a $10 multiple, so `formatPerMonth`'s humane rounding is a
+ *  no-op on it (both steps are $10; see money.ts). */
+function magnitudeClause(direction: DollarAdjustment['direction'], perMonth: number): string {
+  switch (direction) {
     case 'room':
-      return slots.verdictRoomClause(formatPerMonth(dollar.perMonthReal.value))
+      return slots.verdictRoomClause(formatPerMonth(perMonth))
     case 'trim':
-      return slots.verdictTrimClause(formatPerMonth(dollar.perMonthReal.value))
+      return slots.verdictTrimClause(formatPerMonth(perMonth))
     case 'on-the-line':
       return slots.verdictHoldClause()
     case 'rethink':
@@ -144,6 +164,63 @@ export function ConfidenceStatement({ view, focusSignal, actionsSlot, medicareUn
       focusHeading(headingRef.current)
     }
   }, [focusSignal])
+
+  // ── U12 C2 — the sticky sentence + the verdict crossfade ────────────────────────────────────
+  // WHAT THE SENTENCE SHOWS: the sticky DISPLAY triple when one rides the view (production — the
+  // Phase B invariant makes it non-null on every non-indeterminate spine verdict), else the raw
+  // result (the preview harness). All-or-nothing — never a per-field mix of sticky and raw (the
+  // WithMargin failure mode: one figure sticky while another flickers in one sentence).
+  const shown =
+    view.kind === 'reading' && view.headline.outcomeState !== 'indeterminate'
+      ? (view.displayed ?? {
+          xOfTen: view.headline.xOfTen.value,
+          outcomeState: view.headline.outcomeState,
+          perMonthDollar: view.dollar.perMonthReal.value,
+          direction: view.dollar.direction,
+        })
+      : null
+  const shownPres = shown ? OUTCOME_PRESENTATION[shown.outcomeState] : null
+  const shownWord = shownPres?.verdictWordKey ? copy[shownPres.verdictWordKey] : ''
+  // The over-funded near-ceiling reads the proportion "better than 9 in 10" via xOfTenAtCeiling (the
+  // 10-of-10 honesty clamp, called BY NAME — never the magic xOfTen(10)); every other worded state
+  // reads its count through the slot.
+  const shownReading = shown
+    ? shown.outcomeState === 'over-funded'
+      ? slots.xOfTenAtCeiling()
+      : slots.xOfTen(shown.xOfTen)
+    : ''
+  const shownClause = shown ? magnitudeClause(shown.direction, shown.perMonthDollar) : ''
+
+  // THE SWAP KEY (the CSS-only crossfade's re-mount trigger): derived from the RENDERED sentence
+  // pieces — state + count line + clause — so it changes exactly when the visible sentence changes
+  // and NEVER otherwise. Deliberately not the bare `${state}:${xOfTen}:${dollar}` tuple: a $-step
+  // move under a figure-less clause (on-the-line / rethink) leaves the sentence byte-identical, and
+  // re-keying then would blink unchanged words — the exact flicker the sticky seam exists to kill.
+  const lockupKey = shown ? `${shown.outcomeState}:${shownReading}:${shownClause}` : undefined
+
+  // THE CROSSFADE LATCH (the firstDraw pattern): the fade fires only on a lockupKey CHANGE while
+  // mounted — first mount / fresh landing carries no swap class (the .confidence-reveal reveal owns
+  // the entrance). `everSwapped` keeps the class stable across later same-key re-renders (a stale
+  // .cs-swap on a settled element is inert — @starting-style only fires at element creation).
+  const prevLockupKey = useRef(lockupKey)
+  const everSwapped = useRef(false)
+  const isSwap =
+    lockupKey !== undefined && prevLockupKey.current !== undefined && prevLockupKey.current !== lockupKey
+  const swapCls = (base: string): string => (isSwap || everSwapped.current ? `${base} cs-swap` : base)
+
+  // THE SHARPEN ANNOUNCE (AT parity — the FuckOffDate hero-claim idiom, ConfidenceStatement's
+  // sibling): a displayed-triple change on a mounted hero announces the NEW sentence ONCE through
+  // the polite clear-after-announce live region (mounted empty — a region born populated may never
+  // speak, burned/045). Focus is never yanked — the announcedRef latch above is untouched.
+  const announcer = useLiveAnnouncer()
+  const sentence = shown ? `${shownWord}. ${shownReading} ${copy.confidenceCoverageCaption}. ${shownClause}` : ''
+  useEffect(() => {
+    const prev = prevLockupKey.current
+    prevLockupKey.current = lockupKey
+    if (lockupKey === undefined || prev === undefined || prev === lockupKey) return
+    everSwapped.current = true
+    announcer.announce(sentence)
+  }, [lockupKey, sentence, announcer])
 
   // The producer seam: resolve the per-year fan into drawable geometry ONCE per view. resolveBandData
   // owns the fail-loud honesty guards (malformed fan ⇒ throw — never a silently-wrong band). Only a
@@ -203,11 +280,16 @@ export function ConfidenceStatement({ view, focusSignal, actionsSlot, medicareUn
       </div>
     )
   } else {
-    const state = view.headline.outcomeState
-    const pres = OUTCOME_PRESENTATION[state]
-    const word = pres.verdictWordKey ? copy[pres.verdictWordKey] : ''
+    // U12 C2 — THE RAW/STICKY SPLIT, surface half: the SENTENCE below (glyph + word + count +
+    // clause) renders the `shown` values derived above (the sticky display triple when threaded);
+    // everything else in this arm — the two-tier relief gate, the survivor readout, the band, the
+    // AT range sentence — keeps reading the RAW `view.headline`/`view.dollar`/`view.band`. One
+    // honest raw record, one sticky sentence. `shown` is non-null exactly in this arm (the same
+    // worded-reading condition computed it).
+    const s = shown!
     // The two-tier gate (pure, insight 048): null = no budget rode, or the value-equal
-    // degenerate — the single-metric statement renders verbatim, no subordinate wrapper.
+    // degenerate — the single-metric statement renders verbatim, no subordinate wrapper. Reads the
+    // RAW headline (a drill-down must agree with the engine record, never the sticky display).
     const relief = floorRelief(view.headline, view.floorReading)
     // The folded survivor's CLOSED face (2026-07-02 rework — the raw disclosure row read as a
     // form control, not a statement): the summary speaks the eyebrow AND the verdict lockup
@@ -219,26 +301,31 @@ export function ConfidenceStatement({ view, focusSignal, actionsSlot, medicareUn
       ? OUTCOME_PRESENTATION[view.survivorReading.outcomeState]
       : null
     const survivorWord = survivorPres?.verdictWordKey ? copy[survivorPres.verdictWordKey] : null
-    // The over-funded near-ceiling reads the proportion "better than 9 in 10" via xOfTenAtCeiling (the
-    // 10-of-10 honesty clamp, called BY NAME — never the magic xOfTen(10)); every other worded state
-    // reads its engine count through the slot.
-    const reading =
-      state === 'over-funded' ? slots.xOfTenAtCeiling() : slots.xOfTen(view.headline.xOfTen.value)
+    // THE VERDICT CROSSFADE (U12 C2 — CSS-only, the council's hard F7 CSP condition): the lockup's
+    // TEXT containers below carry `key={…lockupKey}` so a displayed-change remounts them and the
+    // .cs-swap @starting-style fade enters the fresh nodes (confidence.css) — word + shape +
+    // magnitude AS ONE UNIT, never a hue transition, no framer-motion anywhere in this path.
+    // THE KEY SCOPING LAW (insight 047): the key rides the text containers ONLY — the h2 (the
+    // focus latch), the band panel, the drawers, and the actions row all survive the swap unmoved.
     body = (
-      <div className="confidence-reveal" data-framing={pres.framing} data-twopane={resolved ? '' : undefined}>
+      <div className="confidence-reveal" data-framing={shownPres!.framing} data-twopane={resolved ? '' : undefined}>
         <div className="reveal__lead">
           {view.provisional && <p className="cs-provisional">{copy.answerProvisionalTag}</p>}
           <div className="cs-verdict">
-            <VerdictIcon state={state} className="cs-glyph" />
+            <VerdictIcon key={`glyph:${lockupKey}`} state={s.outcomeState} className={swapCls('cs-glyph')} />
             <h2 className="cs-word" tabIndex={-1} ref={headingRef}>
-              {word}
+              <span key={`word:${lockupKey}`} className={swapCls('cs-word__text')}>
+                {shownWord}
+              </span>
             </h2>
           </div>
-          <p className="cs-reading">
-            <span className="cs-reading__count">{reading}</span>{' '}
+          <p key={`reading:${lockupKey}`} className={swapCls('cs-reading')}>
+            <span className="cs-reading__count">{shownReading}</span>{' '}
             <span className="cs-reading__frame">{copy.confidenceCoverageCaption}</span>
           </p>
-          <p className="cs-magnitude">{magnitudeClause(view.dollar)}</p>
+          <p key={`magnitude:${lockupKey}`} className={swapCls('cs-magnitude')}>
+            {shownClause}
+          </p>
         </div>
         {resolved && (
           <div className="cs-band">
@@ -306,6 +393,10 @@ export function ConfidenceStatement({ view, focusSignal, actionsSlot, medicareUn
 
   return (
     <section className="confidence" aria-label={copy.confidenceRegionLabel}>
+      {/* U12 C2 — the ONE polite clear-after-announce live region (the FuckOffDate sibling):
+          mounted EMPTY unconditionally (a region born populated may never speak — burned/045);
+          the sharpen announce above speaks the new sticky sentence into it. */}
+      <div ref={announcer.ref} className="sr-only" role="status" aria-live="polite" aria-atomic="true" />
       {body}
     </section>
   )

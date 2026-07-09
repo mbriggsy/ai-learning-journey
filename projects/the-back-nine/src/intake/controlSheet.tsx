@@ -76,6 +76,24 @@ export function ControlSheet({
   const restoreFocus = useCallback(() => {
     const owner = restoreRef.current
     restoreRef.current = null
+    // Sheet→sheet routing (U12: the AssumptionPanel's via-sheet rows close this sheet and
+    // open the fact's own editor in the SAME click). By the time this exit completes, focus
+    // already lives inside the NEXT sheet's dialog — restoring to our trigger here would
+    // STEAL focus back out of an open modal. Leave it alone THEN — but the check must
+    // exempt THIS sheet's own subtree: in a real browser onExitComplete can fire while the
+    // dying dialog is still attached with focus still on its Close/Cancel button, and a
+    // bare "focus is inside a sheet" test reads that as "another modal owns focus" and
+    // suppresses EVERY plain close (live-caught 2026-07-09 — jsdom detaches before the
+    // callback, so the component pin alone ran green; the U12 live walk found focus
+    // stranded on <body> for every sheet, panel and pre-U12 alike).
+    const active = document.activeElement
+    const withinDying = dialogRef.current !== null && dialogRef.current.contains(active)
+    if (
+      !withinDying &&
+      active instanceof HTMLElement &&
+      active.closest('.control-sheet, .budget-sheet') !== null
+    )
+      return
     if (owner !== null && owner.isConnected) owner.focus()
   }, [])
 

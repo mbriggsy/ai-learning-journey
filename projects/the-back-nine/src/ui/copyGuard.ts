@@ -75,13 +75,20 @@ export function isVerdictKey(key: string): boolean {
 export function isSurvivorKey(key: string): boolean {
   return /survivor/i.test(key)
 }
-/** Mortality-facing copy that must carry NO catastrophe/alarm lexicon — survivor copy PLUS two
- *  mortality-adjacent keys that aren't survivor-scoped: the dead-cohort scrub note
- *  (`bandReadoutThinNote`, council 2026-06-28) and the already-failing verdict clause
- *  (`verdictRethinkClause`, council 2026-06-29 — a 0-of-10 plan invites "destitute"/"ruin"/"disaster").
- *  Same net so a future morbid edit ("you'll be destitute") can't ship green. */
+/** Mortality-facing copy that must carry NO catastrophe/alarm lexicon — survivor copy PLUS three
+ *  worst-moment keys that aren't survivor-scoped: the dead-cohort scrub note
+ *  (`bandReadoutThinNote`, council 2026-06-28), the already-failing verdict clause
+ *  (`verdictRethinkClause`, council 2026-06-29 — a 0-of-10 plan invites "destitute"/"ruin"/"disaster"),
+ *  and the U12 truer-picture line (`assumptionTruerPicture` — it renders exactly when an edit
+ *  just WORSENED the displayed verdict, the same worst-moment class; the spec joins it to this
+ *  gate BY NAME so a future dramatic edit can't ship green). */
 export function isMortalityKey(key: string): boolean {
-  return isSurvivorKey(key) || key === 'bandReadoutThinNote' || key === 'verdictRethinkClause'
+  return (
+    isSurvivorKey(key) ||
+    key === 'bandReadoutThinNote' ||
+    key === 'verdictRethinkClause' ||
+    key === 'assumptionTruerPicture'
+  )
 }
 
 /** Key prefixes for the U10/U11 control/recommendation surface — the sequencing + Roth levers,

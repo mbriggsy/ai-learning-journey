@@ -41,6 +41,7 @@ const snap = (answer: ModelAnswer, over: Partial<ScenarioDraft> = {}): MemoryMod
 const headline = (outcomeState: OutcomeState, xOfTen: number): ModelAnswer => ({
   kind: 'headline',
   result: { headline: { outcomeState, xOfTen: { value: xOfTen } } } as unknown as SimulationResult,
+  tier: 'final',
 })
 
 const renderStrip = (answer: ModelAnswer, over?: Partial<ScenarioDraft>) =>
@@ -73,7 +74,7 @@ describe('AnswerStrip — the honesty branches (D1 review T3)', () => {
   })
 
   it('a cancelled date outcome renders nothing (hold quiet — a newer sweep is in flight)', () => {
-    renderStrip({ kind: 'date', outcome: { kind: 'cancelled' } })
+    renderStrip({ kind: 'date', outcome: { kind: 'cancelled' }, tier: 'provisional' })
     expect(screen.queryByTestId('engine-reading')).toBeNull()
     expect(screen.queryByTestId('provisional-tag')).toBeNull()
   })

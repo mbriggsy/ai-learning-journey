@@ -96,6 +96,7 @@ const datesAnswer = (track: DateTrackOutcome = DATE_FIXTURES.confirmed, bandData
     seed: 1,
     ...(bandData ? { band: bandData } : {}),
   },
+  tier: 'final',
 })
 
 const distributionWith = (bandFan?: BandFan): SimulationResult['distribution'] => ({
@@ -120,6 +121,7 @@ const headlineAnswer = (
     ...(survivorReading ? { survivorReading } : {}),
     seed: 1,
   },
+  tier: 'final',
 })
 
 describe('selectElevatedAnswer — D2 state-adaptive routing', () => {
@@ -196,13 +198,13 @@ describe('selectElevatedAnswer — D2 state-adaptive routing', () => {
 
   it('a date input-failure → fallback (names the missing inputs, never a hero date)', () => {
     expect(
-      selectElevatedAnswer(snap({ kind: 'date', outcome: { kind: 'input-failure', reason: 'x' } }, working), noop),
+      selectElevatedAnswer(snap({ kind: 'date', outcome: { kind: 'input-failure', reason: 'x' }, tier: 'final' }, working), noop),
     ).toEqual({ kind: 'fallback' })
   })
 
   it('a date cancelled outcome → fallback (defensive; memoryModel never commits cancelled)', () => {
     expect(
-      selectElevatedAnswer(snap({ kind: 'date', outcome: { kind: 'cancelled' } }, working), noop),
+      selectElevatedAnswer(snap({ kind: 'date', outcome: { kind: 'cancelled' }, tier: 'final' }, working), noop),
     ).toEqual({ kind: 'fallback' })
   })
 
@@ -272,6 +274,7 @@ describe('selectElevatedAnswer — D2 state-adaptive routing', () => {
         distribution: distributionWith(undefined),
         seed: 1,
       },
+      tier: 'final',
     }
     const r = selectElevatedAnswer(snap(answer, retiredWithAges), noop)
     if (r.kind !== 'spine' || r.view.kind !== 'reading') throw new Error('expected a spine reading')

@@ -199,6 +199,7 @@ describe('memoryModel — the request-epoch contract (#1f + C3(b))', () => {
     expect(model.getSnapshot().answer).toEqual({
       kind: 'date',
       outcome: { kind: 'input-failure', reason: 'B-newest' },
+      tier: 'provisional',
     })
 
     const before = model.getSnapshot()
@@ -389,6 +390,31 @@ describe('memoryModel — calm error + capability', () => {
 })
 
 // ---------------------------------------------------------------------------
+// the committed answer records its RECOMPUTE TIER (the vertical-fit gate's
+// synchronization anchor: Result.tsx mirrors it as `data-answer-tier`, and the
+// e2e measures only on "final"). The stamp must carry the DISPATCHING tier —
+// both values pinned so a hardcoded stamp (the swap/constant mutant) fails.
+// ---------------------------------------------------------------------------
+
+describe('memoryModel — the committed answer records its recompute tier', () => {
+  it('stamps the date commit with the tier that dispatched it, provisional then final', async () => {
+    const { client, datePending } = fakeClient()
+    const model = createMemoryModel({ client, builders: dateBuilders, mintSeed: () => 7 })
+    model.update(workingDraft)
+
+    const rp = model.recompute('provisional')
+    datePending[0]!(inputFailureWire('p'))
+    await rp
+    expect(model.getSnapshot().answer).toMatchObject({ kind: 'date', tier: 'provisional' })
+
+    const rf = model.recompute('final')
+    datePending[1]!(inputFailureWire('f'))
+    await rf
+    expect(model.getSnapshot().answer).toMatchObject({ kind: 'date', tier: 'final' })
+  })
+})
+
+// ---------------------------------------------------------------------------
 // the spine route against the REAL engine (in-process, no worker mock — the
 // repo's worker.test.ts convention): one full dispatch through engineApi.run +
 // fromWire proving the headline arm end-to-end.
@@ -416,6 +442,14 @@ describe('memoryModel — real-engine spine dispatch', () => {
     const answer = model.getSnapshot().answer
     expect(answer.kind).toBe('headline')
     if (answer.kind !== 'headline') throw new Error('unreachable')
+    // The tier stamp rides the SPINE commit too (the spine run ignores the tier — the stamp
+    // records which dispatch landed; recompute() defaults to 'provisional'). Both values pinned
+    // on THIS arm's own commit line — the date-route pin can't catch a spine-local hardcode.
+    expect(answer.tier).toBe('provisional')
+    await model.recompute('final')
+    const sharpened = model.getSnapshot().answer
+    if (sharpened.kind !== 'headline') throw new Error('unreachable')
+    expect(sharpened.tier).toBe('final')
     expect(answer.result.headline.xOfTen.value).toBeGreaterThanOrEqual(0)
     expect(answer.result.headline.xOfTen.value).toBeLessThanOrEqual(10)
     expect(answer.result.headline.outcomeState).toBeTruthy()

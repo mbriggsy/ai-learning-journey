@@ -100,4 +100,16 @@ describe('the in-frame R13 disclaimer (the Hawk order contract)', () => {
     expect(container.querySelector('main.result')!).not.toHaveAttribute('data-inframe-disclaimer')
     expect(inFrameDisclaimer(container)).toBeNull()
   })
+
+  it('data-answer-tier is ABSENT until a verdict commits — independent of the actions-row attribute', () => {
+    // The vertical-fit gate synchronizes on `data-answer-tier="final"` (memoryModel stamps the
+    // committing tier; Result mirrors it). With the actions row present but the answer unresolved
+    // (idle here), the tier attribute must NOT exist — a phantom stamp would let the e2e measure
+    // a frame no final answer produced. The present-arm values are pinned in memoryModel.test.ts
+    // (both routes, both tiers); the e2e itself cannot pass without the mirroring.
+    plantResolved()
+    const { container } = renderResult()
+    expect(container.querySelector('main.result')!).toHaveAttribute('data-inframe-disclaimer')
+    expect(container.querySelector('main.result')!).not.toHaveAttribute('data-answer-tier')
+  })
 })

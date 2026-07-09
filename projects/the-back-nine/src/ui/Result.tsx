@@ -269,11 +269,20 @@ export function Result({
     </div>
   )
 
+  // The committed answer's recompute tier, mirrored below as `data-answer-tier` — the vertical-fit
+  // gate's REAL final-tier synchronization (e2e/vertical-fit.spec.ts waits for "final" before any
+  // measurement; a class-absence wait was proven vacuous by the gate's adversarial review). Absent
+  // until a verdict has committed — exactly when there is no frame worth measuring.
+  const answerTier =
+    snapshot.answer.kind === 'headline' || snapshot.answer.kind === 'date'
+      ? snapshot.answer.tier
+      : undefined
+
   return (
     // data-inframe-disclaimer mirrors the actions row EXACTLY (withheld while computing): app.css
     // hides the page-trailing disclaimer behind it at the laptop tier, so a frame with no visible
     // disclaimer is unrepresentable — the trailing mount stands whenever the in-frame one is out.
-    <main className="result" data-inframe-disclaimer={computing ? undefined : true}>
+    <main className="result" data-inframe-disclaimer={computing ? undefined : true} data-answer-tier={answerTier}>
       <div ref={announcer.ref} className="sr-only" role="status" aria-live="polite" aria-atomic="true" />
       <div className="result-hero">
         {elevated.kind === 'date' && (

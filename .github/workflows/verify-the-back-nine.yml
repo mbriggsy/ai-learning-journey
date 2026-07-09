@@ -55,6 +55,11 @@ jobs:
       # headless chromium needs on ubuntu; chromium-only (we don't test firefox/webkit).
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm verify:csp
+      # The real-browser VERTICAL-FIT gate (council 2026-07-08): the one-frame fit law
+      # (--laptop-fit-height) + the date-route order contract, driven through `pnpm dev` on its own
+      # harness (playwright.fit.config.ts) — the ?seed= routes it measures are DCE'd out of dist/,
+      # so it cannot ride the CSP harness above. Needs no dist; chromium is already installed.
+      - run: pnpm verify:fit
       # Surface the HTML report (+ traces) when the CSP e2e fails, so a CI-only failure is debuggable.
       - if: failure()
         uses: actions/upload-artifact@v7

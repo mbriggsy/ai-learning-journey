@@ -147,8 +147,16 @@ void _draftShapeTied
 export type ModelAnswer =
   | { readonly kind: 'idle' } // nothing dispatched yet (pre-minimum-viable input)
   | { readonly kind: 'pending' } // first dispatch in flight, nothing ever resolved
-  | { readonly kind: 'headline'; readonly result: SimulationResult } // spine route (incl. outcomeState 'indeterminate')
-  | { readonly kind: 'date'; readonly outcome: DateSearchOutcome } // date route (incl. its defined input-failure)
+  // The resolved arms RECORD WHICH RECOMPUTE TIER COMMITTED them (`tier`): the real-browser
+  // vertical-fit gate synchronizes on it (Result.tsx mirrors it as `data-answer-tier`, and
+  // e2e/vertical-fit.spec.ts waits for "final" before measuring — the gate's adversarial review
+  // proved a class-absence wait is vacuous on the hero, which never renders a provisional tag).
+  // REQUIRED, not optional: a commit that forgot the stamp would silently break that
+  // synchronization — the compiler holds the door. Note the spine's two tiers are byte-identical
+  // TODAY (the spine run below ignores the tier); the stamp still records the truthful fact —
+  // whether the 'final' dispatch is the one that landed.
+  | { readonly kind: 'headline'; readonly result: SimulationResult; readonly tier: DateSearchTier } // spine route (incl. outcomeState 'indeterminate')
+  | { readonly kind: 'date'; readonly outcome: DateSearchOutcome; readonly tier: DateSearchTier } // date route (incl. its defined input-failure)
   | { readonly kind: 'compute-error'; readonly reason: string }
 
 export interface MemoryModelSnapshot {
@@ -318,7 +326,7 @@ export function createMemoryModel(deps: MemoryModelDeps): MemoryModel {
           commit(
             epoch,
             res.ok
-              ? { kind: 'date', outcome: res.outcome }
+              ? { kind: 'date', outcome: res.outcome, tier }
               : { kind: 'compute-error', reason: res.reason },
           )
         } else {
@@ -335,7 +343,7 @@ export function createMemoryModel(deps: MemoryModelDeps): MemoryModel {
           commit(
             epoch,
             res.ok
-              ? { kind: 'headline', result: res.result }
+              ? { kind: 'headline', result: res.result, tier }
               : { kind: 'compute-error', reason: res.reason },
           )
         }

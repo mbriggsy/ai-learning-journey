@@ -330,3 +330,41 @@ test.describe(`the phone tier (${PHONE.width}×${PHONE.height})`, () => {
     await assertOneVisibleDisclaimer(page, 'narrow')
   })
 })
+
+// ── U12: the AssumptionPanel's OWN vertical extent (the F4 council mandate) ───────────────────
+// "Door count stays 5" proves the RESULT frame fits; it says nothing about the panel. The full
+// assumption inventory (two sections, ~20 rows) is a density surface no other arm measures: the
+// family shell caps the sheet at 94dvh and the content scrolls chrome-lessly INSIDE it — if a
+// regression lets the dialog itself outgrow the viewport, the footer (Close / the re-walk) walks
+// off-screen with no scrollbar to reach it. The assertion is on the DIALOG BOX, not the content.
+
+test.describe(`the assumption panel's vertical extent (${REAL.width}×${REAL.height})`, () => {
+  test.use({ viewport: REAL, deviceScaleFactor: 2.5 })
+  test('the open panel is fully inside the viewport; its content scrolls internally', async ({ page }) => {
+    await gotoSeedFinal(page, 'retired')
+    await assertResolvedSpine(page)
+    await page.getByRole('button', { name: 'The assumptions behind this' }).click()
+    const dialog = page.getByRole('dialog')
+    await expect(dialog).toBeVisible()
+    // Let the enter transition settle before measuring (transform/opacity only, ~200ms).
+    await page.waitForTimeout(400)
+    const box = await dialog.boundingBox()
+    expect(box, 'the dialog reported no bounding box').not.toBeNull()
+    expect(box!.y, 'the panel top sits above the viewport').toBeGreaterThanOrEqual(0)
+    expect(
+      box!.y + box!.height,
+      `the panel bottom (${Math.round(box!.y + box!.height)}px) walks past the ${REAL.height}px viewport — the footer is unreachable`,
+    ).toBeLessThanOrEqual(REAL.height)
+    // The full inventory is TALLER than the box — the chrome-less internal scroll must own the
+    // difference (if this ever fails the inventory shrank below one screen, which is fine, but
+    // then the box bound above is the only live assertion — keep both honest).
+    const scroll = await dialog.evaluate((el) => {
+      const scroller = el.querySelector('.control-sheet__body, .sheet-body, [class*="body"]') ?? el
+      return { scrollHeight: scroller.scrollHeight, clientHeight: scroller.clientHeight }
+    })
+    expect(
+      scroll.scrollHeight,
+      'the inventory no longer overflows its scroller — re-check which element owns the scroll',
+    ).toBeGreaterThan(scroll.clientHeight)
+  })
+})

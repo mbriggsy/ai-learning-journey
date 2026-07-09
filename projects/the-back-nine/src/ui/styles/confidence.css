@@ -274,7 +274,13 @@
      CI, the 2026-07-09 second red): rows 12→8, lead 12→8, notes 8→4 ≈ 32px recovered. Every
      echo-less frame keeps the cleared rhythm byte-identical (:has() scopes it; precedent
      intake.css); :has beats the density tier on specificity, so file order doesn't decide. The
-     verify:fit ?vault=stale arm enforces this frame on CI's own metrics. */
+     verify:fit ?vault=stale arm enforces this frame on CI's own metrics.
+     SCOPE NOTE (post-fold review 2026-07-09, 5-lens convergence): this block carries NO max-height
+     gate, so ABOVE 840px — where the density tier is dark — the echo steps TWO tokens below the
+     16/16/12 base, not "one below the tier." Deliberate for now: tighter-only is the sanctioned
+     degrade direction and can never breach the fold. Do NOT co-gate it to ≤840px without FIRST
+     adding a staleness-frame fit arm in the untested 841–916px band — this is the system's tallest
+     frame, and base rhythm at 841px is its highest fold-pressure point. */
   .confidence-reveal[data-twopane]:has(.cs-staleness-note) {
     row-gap: var(--space-2);
   }

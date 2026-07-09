@@ -163,7 +163,7 @@ describe('HealthcareSheet — the regime lever', () => {
 describe('HealthcareSheet — the readout lines', () => {
   it('the dated status note ALWAYS renders (live constants); the empirical lines only when a series rides in', () => {
     renderSheet()
-    expect(screen.getByText(slots.acaCostStatus('June 4, 2026'))).toBeInTheDocument()
+    expect(screen.getByText(slots.acaCostStatus('July 3, 2026'))).toBeInTheDocument()
     expect(screen.queryByText(slots.acaCostNet('10,000'))).toBeNull()
     cleanup()
     renderSheet({ readout: READOUT })

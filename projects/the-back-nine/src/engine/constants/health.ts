@@ -30,8 +30,8 @@ export const acaEnhancedSubsidyStatus = sourced(
     enhancedExpired: '2025-12-31',
     regime2026: 'reverted to pre-ARPA (400% FPL cliff back; higher contribution %s)',
     pendingExtension:
-      'House passed a 3-yr extension 2026-01-08 (230–196); stalled in Senate; NOT enacted as of 2026-06-04; possibly retroactive to 2026 if restored',
-    verifiedOn: '2026-06-04',
+      'House passed a 3-yr extension 2026-01-08 (230–196); stalled in Senate (a prior attempt, S 3385, failed cloture); NOT enacted as of 2026-07-03; possibly retroactive to 2026 if restored',
+    verifiedOn: '2026-07-03',
   },
   {
     citation: 'pre65-healthcare doc',

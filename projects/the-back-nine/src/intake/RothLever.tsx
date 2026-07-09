@@ -60,9 +60,12 @@ export interface RothLeverProps {
    *  engine does not yet price (post-65-only — no priced healthcare) — the lever then wears
    *  the conversion-looks-better-than-life note beside its other disclosures. */
   readonly medicareUnpricedNote?: boolean
+  /** U12 ultramode: close-time focus fallback for when the opening trigger has unmounted
+   *  (the via-AssumptionPanel route) — forwarded to the ControlSheet scaffold. */
+  readonly restoreFallback?: () => HTMLElement | null
 }
 
-export function RothLever({ open, draft, preview, previewBlocking = false, onApply, onRemove, onClose, medicareUnpricedNote = false }: RothLeverProps) {
+export function RothLever({ open, draft, preview, previewBlocking = false, onApply, onRemove, onClose, medicareUnpricedNote = false, restoreFallback }: RothLeverProps) {
   const announcerRef = useRef<Announcer | null>(null)
   const applied = draft.rothConversion
   const [plan, setPlan] = useState<PlanDraft>({})
@@ -120,7 +123,7 @@ export function RothLever({ open, draft, preview, previewBlocking = false, onApp
   }, [open, candidateKey, nothingToConvert, run, applied])
 
   return (
-    <ControlSheet open={open} title={copy.leverRothTitle} onClose={onClose} announcerRef={announcerRef}>
+    <ControlSheet open={open} title={copy.leverRothTitle} onClose={onClose} announcerRef={announcerRef} restoreFallback={restoreFallback}>
       {nothingToConvert ? (
         <p className="control-sheet__intro">{copy.leverRothClosedNothing}</p>
       ) : (

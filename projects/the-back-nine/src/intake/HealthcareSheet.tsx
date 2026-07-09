@@ -74,9 +74,12 @@ export interface HealthcareSheetProps {
    *  and recomputes. `enhanced === false` IS the escape ("back to current law"). */
   readonly onApply: (enhanced: boolean) => void
   readonly onClose: () => void
+  /** U12 ultramode: close-time focus fallback for when the opening trigger has unmounted
+   *  (the via-AssumptionPanel route) — forwarded to the ControlSheet scaffold. */
+  readonly restoreFallback?: () => HTMLElement | null
 }
 
-export function HealthcareSheet({ open, draft, readout, preview, previewBlocking = false, onApply, onClose }: HealthcareSheetProps) {
+export function HealthcareSheet({ open, draft, readout, preview, previewBlocking = false, onApply, onClose, restoreFallback }: HealthcareSheetProps) {
   const announcerRef = useRef<Announcer | null>(null)
   const applied: Regime = draft.enhancedSubsidies === true ? 'enhanced' : 'reverted'
   const [picked, setPicked] = useState<Regime>(applied)
@@ -118,7 +121,7 @@ export function HealthcareSheet({ open, draft, readout, preview, previewBlocking
   }, [open, picked, applied, run])
 
   return (
-    <ControlSheet open={open} title={copy.leverHealthTitle} onClose={onClose} announcerRef={announcerRef}>
+    <ControlSheet open={open} title={copy.leverHealthTitle} onClose={onClose} announcerRef={announcerRef} restoreFallback={restoreFallback}>
       <p className="control-sheet__intro">{copy.leverHealthIntro}</p>
 
       {/* STRAIGHT DOWN (Briggsy's pick, 2026-07-03 — the chaptered 3-column spread lost the

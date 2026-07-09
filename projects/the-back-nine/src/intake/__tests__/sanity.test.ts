@@ -104,6 +104,24 @@ describe('sanity — survivor ratio ceiling', () => {
   })
 })
 
+describe('sanity — survivor ratio floor (U12 ultramode: the un-fenced optimistic side)', () => {
+  it('an explicit 0 fires — a zeroed survivor share inflates survival, the cardinal-sin direction', () => {
+    // The engine's validateParams accepts 0 (finiteNonNeg), so this entry rule is the SOLE
+    // floor; without it the AssumptionPanel editor committed 0 and the widowed years' spending
+    // vanished from every path.
+    expect(validateDraft(draft({}, {}, { survivorSpendingRatio: 0 }), touchedAll)).toMatchObject([
+      { rule: 'survivor-ratio-floor', messageKey: 'errSurvivorRatioFloor' },
+    ])
+  })
+
+  it('a negative ratio fires; a low-but-positive ratio passes (plausibility stays the user’s call)', () => {
+    expect(validateDraft(draft({}, {}, { survivorSpendingRatio: -0.1 }), touchedAll)).toMatchObject([
+      { rule: 'survivor-ratio-floor' },
+    ])
+    expect(validateDraft(draft({}, {}, { survivorSpendingRatio: 0.4 }), touchedAll)).toEqual([])
+  })
+})
+
 describe('sanity — birth year + model-age domain', () => {
   it('a future birth year fires / the current year passes', () => {
     expect(validateDraft(draft({ birthYear: 2027 }), touchedAll)).toMatchObject([

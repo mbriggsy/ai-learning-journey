@@ -451,6 +451,12 @@ export const copy = {
   errPiaCeiling:
     'That’s higher than any Social Security benefit can be — this asks for the monthly figure from your statement, not the yearly total.',
   errSurvivorRatio: 'Survivor spending can’t be more than 100% of household spending.',
+  // U12 ultramode: the floor mirror of the ceiling above. A 0% survivor share zeroes the
+  // widowed years' spending and inflates survival — the optimistic (cardinal-sin) direction
+  // the fan is structurally blind to. `≤ 0` only (an impossibility, never a guessed band —
+  // burned/062); the plausible-but-low band stays the user's call, disclosed by the help text.
+  errSurvivorRatioFloor:
+    'Survivor spending needs to be above zero — the surviving spouse still spends something every year.',
   errBirthYearFuture: 'That birth year hasn’t happened yet.',
   errAgeBeyondModel: 'Ages past 119 are beyond what the projection can model.',
   // U12 (the hawk's widened F9 gate): an EXPLICIT $0 spend is an entry to question, never a

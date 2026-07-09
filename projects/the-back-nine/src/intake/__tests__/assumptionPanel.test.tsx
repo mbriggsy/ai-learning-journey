@@ -207,6 +207,16 @@ describe('survivorSpendingRatio — fraction commit, refused impossibilities', (
     expect(props.onCommitEdit).not.toHaveBeenCalled()
     expect(screen.getByText(copy.errSurvivorRatioBlank)).toBeInTheDocument()
   })
+
+  it('an explicit 0% is REFUSED — the floor mirror (U12 ultramode: a zeroed survivor share inflates survival)', () => {
+    const { props } = renderPanel()
+    const input = screen.getByLabelText(copy.assumptionSurvivorRatioLabel)
+    fireEvent.focus(input)
+    fireEvent.change(input, { target: { value: '0' } })
+    fireEvent.blur(input)
+    expect(props.onCommitEdit).not.toHaveBeenCalled()
+    expect(screen.getByText(copy.errSurvivorRatioFloor)).toBeInTheDocument()
+  })
 })
 
 // ─── the spend row (insight 058 + the F9 honest demotion) ────────────────────────────────
@@ -229,6 +239,20 @@ describe('the spend row', () => {
     fireEvent.change(input, { target: { value: '9000' } })
     fireEvent.blur(input)
     expect(commitAndApply(props.onCommitEdit, mixedDraft).annualSpendingReal).toBe(108_000)
+  })
+
+  it('editing the AMOUNT never re-fires the period force-confirm (completion IS the period receipt — U12 ultramode)', () => {
+    // mixedDraft is month-view at $8k/mo entered — exactly the ambiguous band the intake rule
+    // guards. This household already answered the period to complete intake; the panel threads
+    // periodConfirmed provenance, so the '$/month or $/year?' nag must NOT render here. (The
+    // panel's own toggle also RE-LABELS-never-re-bases, so the 12× misentry is structurally
+    // impossible on this surface — the nag would be pure gratuitous friction.)
+    renderPanel()
+    const input = screen.getByLabelText(copy.spendLabel)
+    fireEvent.focus(input)
+    fireEvent.change(input, { target: { value: '8000' } })
+    fireEvent.blur(input)
+    expect(screen.queryByText(copy.periodConfirmPrompt)).toBeNull()
   })
 
   it('clear-to-ZERO commits (the F9 machinery answers — never a silent block) and the spend-zero rule fires on the committed draft', () => {
@@ -294,6 +318,18 @@ describe('the live answer echo', () => {
     })
     expect(screen.getByText(`${copy.outcomeOnTrack} — ${slots.xOfTen(7)}`)).toBeInTheDocument()
     expect(screen.queryByText(new RegExp(`8 of 10`))).toBeNull()
+  })
+
+  it('the over-funded ceiling reads through the SHARED composer — "better than 9 in 10", never "9 of 10" (U12 ultramode: the echo had diverged from the hero)', () => {
+    renderPanel({
+      snapshot: snap(mixedDraft, {
+        displayed: shown(9, { outcomeState: 'over-funded' }),
+      }),
+    })
+    expect(
+      screen.getByText(`${copy.outcomeOverFunded} — ${slots.xOfTenAtCeiling()}`),
+    ).toBeInTheDocument()
+    expect(screen.queryByText(new RegExp(slots.xOfTen(9)))).toBeNull()
   })
 
   it('the truer-picture line renders on a baseline-WORSE landing only (both arms + unchanged)', () => {

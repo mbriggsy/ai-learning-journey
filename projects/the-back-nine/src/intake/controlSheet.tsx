@@ -38,6 +38,7 @@ export function ControlSheet({
   title,
   onClose,
   announcerRef,
+  restoreFallback,
   children,
 }: {
   readonly open: boolean
@@ -46,6 +47,12 @@ export function ControlSheet({
   /** The sheet's clear-after-announce channel — the caller speaks through it (blocked applies,
    *  preview landings). Bound exactly while the sheet's live region exists. */
   readonly announcerRef: React.MutableRefObject<Announcer | null>
+  /** U12 ultramode: where focus lands on close when the OPENING trigger has unmounted — the
+   *  via-panel route (an AssumptionPanel Edit row closes the panel and opens this sheet in
+   *  one click; the panel's button is gone by close time, and the bare isConnected skip
+   *  stranded focus on <body>). Consulted ONLY when the captured owner is disconnected; the
+   *  plain door-opened case never reaches it. Omit ⇒ the pre-U12 behavior. */
+  readonly restoreFallback?: () => HTMLElement | null
   readonly children: React.ReactNode
 }) {
   const reduce = useReducedMotion() ?? false
@@ -94,8 +101,16 @@ export function ControlSheet({
       active.closest('.control-sheet, .budget-sheet') !== null
     )
       return
-    if (owner !== null && owner.isConnected) owner.focus()
-  }, [])
+    if (owner !== null && owner.isConnected) {
+      owner.focus()
+      return
+    }
+    // The owner unmounted mid-open (the via-panel route: the Edit row's button died with the
+    // panel) — land on the caller-named fallback landmark instead of stranding focus on
+    // <body> (the focus law: every close steers somewhere real).
+    const fallback = restoreFallback?.() ?? null
+    if (fallback !== null) fallback.focus()
+  }, [restoreFallback])
 
   const onKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLDivElement>) => {

@@ -68,9 +68,12 @@ export interface SequencingControlProps {
   /** Commit the pick — the caller writes policy + order ATOMICALLY and recomputes. */
   readonly onApply: (policy: DrawdownPolicy, order?: readonly DrawdownOrderKey[]) => void
   readonly onClose: () => void
+  /** U12 ultramode: close-time focus fallback for when the opening trigger has unmounted
+   *  (the via-AssumptionPanel route) — forwarded to the ControlSheet scaffold. */
+  readonly restoreFallback?: () => HTMLElement | null
 }
 
-export function SequencingControl({ open, draft, preview, previewBlocking = false, onApply, onClose }: SequencingControlProps) {
+export function SequencingControl({ open, draft, preview, previewBlocking = false, onApply, onClose, restoreFallback }: SequencingControlProps) {
   const announcerRef = useRef<Announcer | null>(null)
   const current: Pickable = (PICKABLE as readonly string[]).includes(draft.drawdownPolicy)
     ? (draft.drawdownPolicy as Pickable)
@@ -141,7 +144,7 @@ export function SequencingControl({ open, draft, preview, previewBlocking = fals
   }
 
   return (
-    <ControlSheet open={open} title={copy.leverSequencingTitle} onClose={onClose} announcerRef={announcerRef}>
+    <ControlSheet open={open} title={copy.leverSequencingTitle} onClose={onClose} announcerRef={announcerRef} restoreFallback={restoreFallback}>
       <p className="control-sheet__intro">{copy.leverSequencingIntro}</p>
 
       <fieldset className="control-policies">

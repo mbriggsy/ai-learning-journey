@@ -38,8 +38,7 @@
 import { useRef, useState, type ReactNode } from 'react'
 import type { MemoryModelSnapshot, ScenarioDraft, StickyDisplay } from '@store/memoryModel'
 import { copy, slots, type CopyKey } from '@ui/copy'
-import { formatPerMonth } from '@ui/money'
-import { OUTCOME_PRESENTATION } from '@ui/outcomeStates'
+import { composeVerdictReading } from '@ui/verdictSentence'
 import { METHODOLOGY_DISCLOSURES, type AssumptionSeat } from '@ui/assumptionRegistry'
 import { productionMarket } from '@engine/reference/methodology'
 import { budgetGoverns } from '@budget/budgetModel'
@@ -197,10 +196,19 @@ export function AssumptionPanel({
       return next
     })
 
+  // The panel's sanity provenance (U12 ultramode, the IntakeApp asymmetry): this surface only
+  // ever renders POST-completion (Result mounts it), and completing intake IS the receipt that
+  // the spend period was explicitly answered — the same downstream proof IntakeApp's
+  // periodAnswerProven rests on. Without it, editing the spend AMOUNT here re-fired the
+  // '$/month or $/year?' force-confirm on a household that already answered it (the panel's
+  // `touched` starts empty every open). The panel's own period toggle RE-LABELS, never
+  // re-bases, so the 12× misentry the rule guards is structurally impossible on this surface.
+  const PANEL_PROVENANCE = { periodConfirmed: true } as const
+
   /** Validate the PATCHED draft for `field`; a firing rule REFUSES the commit (true
    *  impossibilities never reach the draft — burned/021); clean commits through the seam. */
   const commitRefusing = (field: string, mutate: (d: ScenarioDraft) => ScenarioDraft) => {
-    const violations = validateField(mutate(draft), field, touched, {})
+    const violations = validateField(mutate(draft), field, touched, PANEL_PROVENANCE)
     if (violations.length > 0) {
       refuse(field, violations)
       return
@@ -223,7 +231,7 @@ export function AssumptionPanel({
     const blocked = refused.get(field)
     if (blocked !== undefined) return blocked
     if (!touched.has(field)) return []
-    return validateField(draft, field, touched, {})
+    return validateField(draft, field, touched, PANEL_PROVENANCE)
   }
   const renderErrors = (field: string): ReactNode =>
     errorsFor(field).map((v) => <FieldError key={v.rule} {...v} />)
@@ -243,21 +251,14 @@ export function AssumptionPanel({
 
   // ── the echo (the live answer readout + the two-class transition line) ────────────────
   // Reads `displayed` — the STICKY triple — never the raw result (the sentence the user saw
-  // is the sentence the echo continues; the band and drill-downs read raw elsewhere).
+  // is the sentence the echo continues; the band and drill-downs read raw elsewhere). The
+  // word/count/clause come from the ONE shared composer (verdictSentence.ts) — the hero
+  // renders the same seam, so echo and hero can never diverge (U12 ultramode: the hand-rolled
+  // copy here had already diverged on the over-funded ceiling reading).
   // Worse = xOfTen strictly below the panel-open baseline, compared NUMERICALLY (lower =
   // worse; band ORDER is never re-derived UI-side). Improved or unchanged ⇒ nothing (calm).
-  const verdictWordKey = displayed !== null ? OUTCOME_PRESENTATION[displayed.outcomeState].verdictWordKey : null
+  const echoVerdict = displayed !== null ? composeVerdictReading(displayed) : null
   const worsened = displayed !== null && baseline !== null && displayed.xOfTen < baseline.xOfTen
-  const dollarClause =
-    displayed === null
-      ? null
-      : displayed.direction === 'room'
-        ? slots.verdictRoomClause(formatPerMonth(displayed.perMonthDollar))
-        : displayed.direction === 'trim'
-          ? slots.verdictTrimClause(formatPerMonth(displayed.perMonthDollar))
-          : displayed.direction === 'rethink'
-            ? slots.verdictRethinkClause()
-            : slots.verdictHoldClause()
   const missingLine = (() => {
     const names = [...new Set(missing.map((m) => copy[m.labelKey]))]
     const shown = names.slice(0, 3)
@@ -283,10 +284,10 @@ export function AssumptionPanel({
           is aria-modal (the hero behind it is out of the AT tree), so this region is the AT
           user's answer feedback: role=status announces the moved reading, atomically. */}
       <div className="ap-echo" role="status" aria-atomic="true">
-        {displayed !== null && verdictWordKey !== null ? (
+        {displayed !== null && echoVerdict !== null ? (
           <>
-            <p className="ap-echo__lead">{`${copy[verdictWordKey]} — ${slots.xOfTen(displayed.xOfTen)}`}</p>
-            <p className="ap-echo__dollar">{dollarClause}</p>
+            <p className="ap-echo__lead">{`${echoVerdict.word} — ${echoVerdict.reading}`}</p>
+            <p className="ap-echo__dollar">{echoVerdict.clause}</p>
             {/* The truer-picture line: WORDS beside the already-moved numbers (never a
                 hue-only change — the reader is color blind); catastrophe-gated by name. */}
             {worsened && <p className="ap-echo__shift">{copy.assumptionTruerPicture}</p>}

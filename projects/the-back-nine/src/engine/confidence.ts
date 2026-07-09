@@ -70,6 +70,23 @@ export function marginToStateEdge(quantized: number): number {
   return min
 }
 
+/** Optimism ORDER of the outcome states — engine-owned band semantics (the exported
+ *  {@link BANDS} descending, with the two below-band verdicts under them). Consumed by the
+ *  sticky-display seam's conservative-direction gate (memoryModel): a held display may never
+ *  be RANKED ABOVE the raw reading (calm-but-wrong is the sin — an optimistic hold lies).
+ *  `indeterminate` is rank 0 deliberately: the sticky seam never sees it (commit() frees the
+ *  baseline on an indeterminate verdict), and rank-0 means even an accidental comparison
+ *  could only refuse a hold — fail conservative. Record over the union: a new OutcomeState
+ *  member without a rank fails tsc (the R7 compile-enforcement idiom). */
+export const STATE_OPTIMISM_RANK: Record<OutcomeState, number> = {
+  'over-funded': 5,
+  'on-track': 4,
+  borderline: 3,
+  'off-track': 2,
+  'already-failing': 1,
+  indeterminate: 0,
+} as const
+
 /** Nearest distance to a band edge where `round(s*10)` flips (the (k+0.5)/10 points). */
 function marginToXOfTenEdge(survival: number): number {
   const scaled = survival * 10

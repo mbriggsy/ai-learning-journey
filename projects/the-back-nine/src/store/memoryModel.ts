@@ -77,7 +77,7 @@ import type { DateSearchInput } from '@engine/dateSearch'
 import { fromWire, dateSearchFromWire } from '@engine/engineWire'
 // The display-geometry constants the sticky gates read — the engine's OWN exported values
 // (never re-typed; the same objects confidence.ts computes the emitted margins against).
-import { DOLLAR_STEP, SURVIVAL_GRID } from '@engine/confidence'
+import { DOLLAR_STEP, STATE_OPTIMISM_RANK, SURVIVAL_GRID } from '@engine/confidence'
 import type { EngineClient } from './engineClient'
 
 // ---------------------------------------------------------------------------
@@ -262,9 +262,20 @@ export interface MemoryModel {
 // half-flip; on the 0.01 quantize grid this means "exactly on the edge") and
 // DOLLAR_STEP/10 ($1 of the $5 half-flip). Anything past that, a ≥2-step move,
 // or a dollar-DIRECTION change always adopts (a direction flip is a regime
-// change; holding across it would compose an incoherent sentence). The hold
-// direction is CONSERVATIVE by construction: a reading rising exactly onto an
-// edge keeps the lower displayed count.
+// change; holding across it would compose an incoherent sentence).
+//
+// THE CONSERVATIVE-DIRECTION LAW (U12 ultramode, 8-lens convergence): every hold
+// is DIRECTION-GATED — a hold may only ever keep a display LESS optimistic than
+// the raw reading (the lower count, the lower-ranked verdict word per the
+// engine's STATE_OPTIMISM_RANK, the lower dollar). A reading RISING onto an
+// edge holds the prior (calm, conservative); a reading FALLING onto an edge
+// always adopts the worse truth immediately (holding the rosier prior is the
+// calm-but-wrong cardinal sin — the prior comment claimed "conservative by
+// construction", which was only true for the rising direction). And the COUNT
+// may hold only under a STABLE verdict word (unchanged or itself held): a
+// state flip is a regime change, and holding the count across it composes a
+// sentence the engine can never emit ({9, borderline} — buildHeadline's
+// borderline band caps at 8).
 //
 // LIFECYCLE: session-only, captured at the resolve→verdict transition inside
 // commit(), freed across indeterminate / error / date-route / inputs-incomplete
@@ -304,27 +315,44 @@ export function resolveStickyDisplay(
     return { xOfTen: rawX, outcomeState: rawState, perMonthDollar: rawDollar, direction }
   }
 
-  // Headline count: hold a one-step flip that lands within EPS of the flip edge.
-  const holdX =
-    rawX !== prev.xOfTen &&
-    Math.abs(rawX - prev.xOfTen) === 1 &&
-    headline.xOfTen.marginToEdge < HEADLINE_STICKY_EPS
-
   // Verdict state: hold only an edge-hugging flip whose count moved at most one
-  // step (a ≥2-step count move is a real regime change — adopt even edge-close;
-  // this needs no band ORDER knowledge, so no engine internals are re-derived).
-  const holdState =
+  // step (a ≥2-step count move is a real regime change — adopt even edge-close),
+  // and ONLY in the conservative direction: the held word must rank BELOW the
+  // raw one (a falling reading landing on an edge adopts the worse truth; the
+  // engine's own rank table is the one band-order source, never re-derived).
+  const stateHoldEligible =
     rawState !== prev.outcomeState &&
     Math.abs(rawX - prev.xOfTen) <= 1 &&
+    STATE_OPTIMISM_RANK[prev.outcomeState] < STATE_OPTIMISM_RANK[rawState] &&
     headline.stateMarginToEdge < HEADLINE_STICKY_EPS
+
+  // Headline count: hold a one-step flip that lands within EPS of the flip edge —
+  // conservative direction only (the held count must be the LOWER one).
+  const xHoldEligible =
+    rawX !== prev.xOfTen &&
+    Math.abs(rawX - prev.xOfTen) === 1 &&
+    prev.xOfTen < rawX &&
+    headline.xOfTen.marginToEdge < HEADLINE_STICKY_EPS
+
+  // SYMMETRIC REGIME COUPLING: each unit may hold only while the other is STABLE
+  // (unchanged) or itself held — otherwise both adopt together. This makes the
+  // displayed (word, count) pair provably either PREV's pair or RAW's pair, both
+  // engine-emittable — a one-sided coupling still leaked {9, borderline} (count
+  // adopted at the 0.98 edge under a held word; caught by the property sweep).
+  const holdX = xHoldEligible && (rawState === prev.outcomeState || stateHoldEligible)
+  const holdState = stateHoldEligible && (rawX === prev.xOfTen || xHoldEligible)
 
   // Dollar: the emitted margin is distance to the ROUNDED value — flip-edge
   // distance is the half-step complement (the inverted-sense compensation).
+  // Conservative direction only: hold the LOWER figure (less room / the bigger
+  // trim — perMonth is negative under 'trim', so lower = more conservative in
+  // both worded directions).
   const dollarEdgeDistance = DOLLAR_STEP / 2 - dollar.perMonthReal.marginToEdge
   const holdDollar =
     direction === prev.direction &&
     rawDollar !== prev.perMonthDollar &&
     Math.abs(rawDollar - prev.perMonthDollar) === DOLLAR_STEP &&
+    prev.perMonthDollar < rawDollar &&
     dollarEdgeDistance < DOLLAR_STICKY_EPS
 
   return {

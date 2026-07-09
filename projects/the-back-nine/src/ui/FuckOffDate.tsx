@@ -97,6 +97,12 @@ export interface FuckOffDateProps {
    *  claim then wears the honest-gap disclosure among its notes — on the surface, in the
    *  a11y tree. Default false (the priced domain). */
   readonly medicareUnpricedNote?: boolean
+  /** U12 ultramode: TRUE while a modal sheet/panel owns focus and AT (Result threads its
+   *  open-sheet states). Mirrors ConfidenceStatement's contract: the landing focus is
+   *  CONSUMED without moving focus (an in-panel edit can demote → re-resolve → REMOUNT this
+   *  hero behind the open aria-modal), and the sharpen announce is skipped (the panel echo
+   *  is the AT feedback — background live regions still speak under aria-modal). */
+  readonly sheetOpen?: boolean
 }
 
 /** The hero claim's heading text — shared by the render and the polite sharpen announce, so what
@@ -120,7 +126,7 @@ function floorLineText(split: Extract<DateSplitView, { kind: 'split' }>, windowT
   return slots.dateFloorCovered(fl.offsetYears, dateOddsText(fl.quantizedLowerBound), fl.unconfirmed)
 }
 
-export function FuckOffDate({ view, focusSignal, actionsSlot, medicareUnpricedNote = false }: FuckOffDateProps) {
+export function FuckOffDate({ view, focusSignal, actionsSlot, medicareUnpricedNote = false, sheetOpen = false }: FuckOffDateProps) {
   const headingRef = useRef<HTMLHeadingElement>(null)
   // Announce on the FIRST landing only (the undefined→defined edge). The date route is TIERED: the
   // provisional→final sharpen can crown a DIFFERENT offset, which flips focusSignal — but re-firing
@@ -128,13 +134,14 @@ export function FuckOffDate({ view, focusSignal, actionsSlot, medicareUnpricedNo
   // tabbed into the range. Fire once per mount; Review unmounts the surface (phase flip), so the ref
   // resets and a fresh completion re-announces. (The spine is byte-identical across tiers, so its key
   // never changes — but the once-per-landing contract is shared, so both surfaces guard it.)
+  // Behind an open sheet the landing is CONSUMED without moving focus (the sheetOpen prop doc).
   const announcedRef = useRef(false)
   useEffect(() => {
     if (focusSignal !== undefined && !announcedRef.current) {
       announcedRef.current = true
-      focusHeading(headingRef.current)
+      if (!sheetOpen) focusHeading(headingRef.current)
     }
-  }, [focusSignal])
+  }, [focusSignal, sheetOpen])
 
   // The two-track composition — pure (insight 048), decided ONCE per view.
   const split = view.kind === 'dates' ? composeDateSplit(view.floor, view.lifestyle) : null
@@ -156,8 +163,10 @@ export function FuckOffDate({ view, focusSignal, actionsSlot, medicareUnpricedNo
     prevClaimKey.current = heroClaimKey
     if (heroClaimKey === undefined || prev === undefined || prev === heroClaimKey) return
     if (view.kind !== 'dates' || hero === null) return
-    announcer.announce(heroLead(hero, view.windowTopYears))
-  }, [heroClaimKey, hero, view, announcer])
+    // Behind an open sheet the panel echo is the AT feedback for the edit (aria-modal does
+    // not silence background live regions) — the key bookkeeping above still runs.
+    if (!sheetOpen) announcer.announce(heroLead(hero, view.windowTopYears))
+  }, [heroClaimKey, hero, view, announcer, sheetOpen])
 
   // The producer seam: resolve the floor-crowned fan into drawable geometry ONCE per view
   // (resolveBandData owns the fail-loud honesty guards — a malformed fan throws, never a silently-

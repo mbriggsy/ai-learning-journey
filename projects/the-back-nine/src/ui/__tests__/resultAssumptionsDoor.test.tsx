@@ -154,6 +154,29 @@ describe('the Assumptions door — the seat swap + the hatch gate', () => {
     await new Promise((resolve) => setTimeout(resolve, 400))
     expect(document.activeElement?.closest('.control-sheet')).not.toBeNull()
   })
+
+  it('closing a via-panel sheet lands focus on the Assumptions door — never stranded on <body> (the restore fallback, U12 ultramode)', async () => {
+    plantResolved()
+    appModel.update((d) => ({
+      ...d,
+      enteredAccounts: [{ ownerIndex: 0, kind: 'traditional-ira', valueToday: 500_000 }],
+    }))
+    renderResult()
+    door()!.focus()
+    fireEvent.click(door()!)
+    const panel = screen.getByRole('dialog')
+    fireEvent.click(within(panel).getByRole('button', { name: copy.leverSequencingCta }))
+    await waitFor(() =>
+      expect(screen.getByRole('heading', { name: copy.leverSequencingTitle })).toHaveFocus(),
+    )
+    // Let the panel's exit complete: the sheet's captured restore owner (a node inside the
+    // panel — focus lived there when the Edit row was clicked) unmounts WITH the panel.
+    await new Promise((resolve) => setTimeout(resolve, 400))
+    // Plain-close the sheet. The disconnected owner must fall back to the Assumptions door
+    // (the surface the user came through) — the bare isConnected skip left focus on <body>.
+    fireEvent.keyDown(screen.getByRole('dialog'), { key: 'Escape' })
+    await waitFor(() => expect(door()).toHaveFocus())
+  })
 })
 
 describe('the edit → recompute cadence (the ratified F6 policy)', () => {

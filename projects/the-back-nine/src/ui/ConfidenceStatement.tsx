@@ -35,13 +35,14 @@
  * (confidence.css), never an inline style attribute.
  */
 import { useEffect, useMemo, useRef, type ReactNode } from 'react'
-import { copy, slots } from './copy'
+import { copy } from './copy'
 import { OUTCOME_PRESENTATION } from './outcomeStates'
 import { VerdictIcon } from './verdictSignal'
 import { SurvivorReadout } from './SurvivorReadout'
 import { TwoTierHeadline } from './TwoTierHeadline'
 import { floorRelief } from './twoTier'
-import { formatAxisDollar, formatPerMonth } from './money'
+import { formatAxisDollar } from './money'
+import { composeVerdictReading } from './verdictSentence'
 import { focusHeading, useLiveAnnouncer } from '@intake/a11y'
 import { ConfidenceBandPanel } from '@viz/ConfidenceBandPanel'
 import {
@@ -111,6 +112,15 @@ export interface ConfidenceStatementProps {
    *  wears the honest-gap disclosure in its subordinate region — on the surface, in the a11y
    *  tree, never buried. Default false (the priced domain). */
   readonly medicareUnpricedNote?: boolean
+  /** U12 ultramode: TRUE while a modal sheet/panel owns focus and AT (Result threads its
+   *  open-sheet states). Two suppressions, same reason (the insight-067 modal contract):
+   *  (1) the mount-time landing focus is CONSUMED without moving focus — an in-panel edit
+   *  that demotes → re-resolves REMOUNTS this hero, and focusHeading would yank the keyboard
+   *  user out of the open aria-modal onto a heading behind it; (2) the sharpen announce is
+   *  skipped — aria-modal does NOT silence background live regions, so the panel echo
+   *  (role=status, the panel's own AT feedback) would compete with a second reading of the
+   *  same verdict. Default false (the panel-less sharpen keeps both behaviors). */
+  readonly sheetOpen?: boolean
 }
 
 /** The indeterminate placeholder band — a wide low-emphasis envelope (no median, no precise band)
@@ -130,40 +140,22 @@ function buildPlaceholderBand(annotations: readonly XAnnotation[]): Indeterminat
   }
 }
 
-/** The verdict's second line — the dollar grammar, keyed off the engine DIRECTION (never re-derived
- *  here). The $/month enters through the slot pre-formatted, so the rendered clause carries no
- *  hardcoded numeral (copyGuard slot-discipline). Takes the pair rather than a DollarAdjustment so
- *  the sticky DISPLAY figure and the raw figure compose through ONE clause path (U12 C2) — the
- *  sticky `perMonthDollar` is already a $10 multiple, so `formatPerMonth`'s humane rounding is a
- *  no-op on it (both steps are $10; see money.ts). */
-function magnitudeClause(direction: DollarAdjustment['direction'], perMonth: number): string {
-  switch (direction) {
-    case 'room':
-      return slots.verdictRoomClause(formatPerMonth(perMonth))
-    case 'trim':
-      return slots.verdictTrimClause(formatPerMonth(perMonth))
-    case 'on-the-line':
-      return slots.verdictHoldClause()
-    case 'rethink':
-      // already-failing (0 of 10, unfundable from the start): the engine drops the figure — no single
-      // trim is a solve — so the clause is figure-less + lever-agnostic. (Council 2026-06-29.)
-      return slots.verdictRethinkClause()
-  }
-}
-
-export function ConfidenceStatement({ view, focusSignal, actionsSlot, medicareUnpricedNote = false }: ConfidenceStatementProps) {
+export function ConfidenceStatement({ view, focusSignal, actionsSlot, medicareUnpricedNote = false, sheetOpen = false }: ConfidenceStatementProps) {
   const headingRef = useRef<HTMLHeadingElement>(null)
   // Announce on the FIRST landing only (the undefined→defined edge) — the shared once-per-landing
   // contract (mirrors FuckOffDate). The spine's two recomputes are byte-identical, so its key never
   // changes across the pair; this guard makes the once-only intent explicit and tier-proof. Review
   // unmounts the surface, resetting the ref so a fresh completion re-announces.
+  // Behind an open sheet the landing is CONSUMED without moving focus (see the sheetOpen prop
+  // doc): the remount came from an in-panel edit, the modal owns focus, and the panel's own
+  // close/steer owns where focus goes next — the hero must never grab it from behind aria-modal.
   const announcedRef = useRef(false)
   useEffect(() => {
     if (focusSignal !== undefined && !announcedRef.current) {
       announcedRef.current = true
-      focusHeading(headingRef.current)
+      if (!sheetOpen) focusHeading(headingRef.current)
     }
-  }, [focusSignal])
+  }, [focusSignal, sheetOpen])
 
   // ── U12 C2 — the sticky sentence + the verdict crossfade ────────────────────────────────────
   // WHAT THE SENTENCE SHOWS: the sticky DISPLAY triple when one rides the view (production — the
@@ -179,17 +171,16 @@ export function ConfidenceStatement({ view, focusSignal, actionsSlot, medicareUn
           direction: view.dollar.direction,
         })
       : null
+  // The sentence pieces come from the ONE shared composer (verdictSentence.ts — the
+  // AssumptionPanel echo reads the same seam, so hero and echo can never diverge; U12
+  // ultramode). `shown` excludes indeterminate above, so the composer never returns null here.
+  // The FRAMING (outcome-first vs action-first) stays a presentation lookup — it shapes the
+  // lockup's layout, not its words, so it lives outside the sentence composer.
+  const shownVerdict = shown ? composeVerdictReading(shown) : null
   const shownPres = shown ? OUTCOME_PRESENTATION[shown.outcomeState] : null
-  const shownWord = shownPres?.verdictWordKey ? copy[shownPres.verdictWordKey] : ''
-  // The over-funded near-ceiling reads the proportion "better than 9 in 10" via xOfTenAtCeiling (the
-  // 10-of-10 honesty clamp, called BY NAME — never the magic xOfTen(10)); every other worded state
-  // reads its count through the slot.
-  const shownReading = shown
-    ? shown.outcomeState === 'over-funded'
-      ? slots.xOfTenAtCeiling()
-      : slots.xOfTen(shown.xOfTen)
-    : ''
-  const shownClause = shown ? magnitudeClause(shown.direction, shown.perMonthDollar) : ''
+  const shownWord = shownVerdict?.word ?? ''
+  const shownReading = shownVerdict?.reading ?? ''
+  const shownClause = shownVerdict?.clause ?? ''
 
   // THE SWAP KEY (the CSS-only crossfade's re-mount trigger): derived from the RENDERED sentence
   // pieces — state + count line + clause — so it changes exactly when the visible sentence changes
@@ -219,8 +210,11 @@ export function ConfidenceStatement({ view, focusSignal, actionsSlot, medicareUn
     prevLockupKey.current = lockupKey
     if (lockupKey === undefined || prev === undefined || prev === lockupKey) return
     everSwapped.current = true
-    announcer.announce(sentence)
-  }, [lockupKey, sentence, announcer])
+    // Behind an open sheet the panel echo (role=status) IS the AT feedback for the edit —
+    // aria-modal does not silence background live regions, so speaking here too would read
+    // the same verdict twice (U12 ultramode). The crossfade bookkeeping above still runs.
+    if (!sheetOpen) announcer.announce(sentence)
+  }, [lockupKey, sentence, announcer, sheetOpen])
 
   // The producer seam: resolve the per-year fan into drawable geometry ONCE per view. resolveBandData
   // owns the fail-loud honesty guards (malformed fan ⇒ throw — never a silently-wrong band). Only a

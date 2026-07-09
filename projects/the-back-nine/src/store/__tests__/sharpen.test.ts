@@ -10,8 +10,9 @@ import {
 } from '../memoryModel'
 import type { EngineClient } from '../engineClient'
 import { engineApi } from '@engine/engineProtocol'
-import { DOLLAR_STEP, SURVIVAL_GRID } from '@engine/confidence'
+import { DOLLAR_STEP, STATE_OPTIMISM_RANK, SURVIVAL_GRID, summarize } from '@engine/confidence'
 import { productionMarket } from '@engine/reference/methodology'
+import type { SimResolved } from '@engine/simulate'
 import type { DollarAdjustment, Headline, SimulationParams } from '@shared/model'
 
 /**
@@ -104,9 +105,11 @@ describe('resolveStickyDisplay — the pure hysteresis rule', () => {
 
   it('HOLDS an edge-hugging STATE flip whose count moved ≤1 (the 0.98 edge inside a 9-count cell)', () => {
     // The exact gap stateMarginToEdge exists for: over-funded flips at 0.98, which the
-    // x-of-10 lattice does not see — count stays 9-ish while the verdict word would flip.
+    // x-of-10 lattice does not see — the count stays 9 (the honesty cap) while the verdict
+    // word would flip. Engine-real raw at quantized 0.98: xOfTen 9 (capped), xMargin 0.03
+    // (the 9.5 lattice point sits at 0.95), stateMargin 0.
     const settled: StickyDisplay = { ...prev, xOfTen: 9 }
-    const out = resolveStickyDisplay(settled, headline(10, 0.02, 'over-funded', 0), dollar(100, 'trim'))
+    const out = resolveStickyDisplay(settled, headline(9, 0.03, 'over-funded', 0), dollar(100, 'trim'))
     expect(out.outcomeState).toBe('on-track') // held
   })
 
@@ -114,7 +117,7 @@ describe('resolveStickyDisplay — the pure hysteresis rule', () => {
     const settled: StickyDisplay = { ...prev, xOfTen: 9 }
     const out = resolveStickyDisplay(
       settled,
-      headline(10, 0.02, 'over-funded', SURVIVAL_GRID),
+      headline(9, 0.03, 'over-funded', SURVIVAL_GRID),
       dollar(100, 'trim'),
     )
     expect(out.outcomeState).toBe('over-funded')
@@ -153,6 +156,99 @@ describe('resolveStickyDisplay — the pure hysteresis rule', () => {
     const out = resolveStickyDisplay(prev, headline(7, 0.04, 'on-track', 0.05), dollar(105.5, 'trim'))
     expect(out.xOfTen).toBe(7) // adopted
     expect(out.perMonthDollar).toBe(100) // held
+  })
+})
+
+// ---------------------------------------------------------------------------
+// The conservative-direction law (U12 ultramode review — 8-lens convergence on
+// one defect: the holds were direction-BLIND, so a reading FALLING onto an edge
+// held the rosier prior — the calm-but-wrong cardinal sin. Each pin below is
+// written to FAIL against the direction-blind rule.)
+// ---------------------------------------------------------------------------
+
+describe('resolveStickyDisplay — a hold may never be rosier than the raw reading', () => {
+  it('FALLING onto the 0.85 state edge ADOPTS on-track — never holds the rosier over-funded word', () => {
+    // prev over-funded (survival ≥ .98 displays {9, over-funded}); one edit drops the raw
+    // quantized survival to exactly 0.85 → {9, on-track} with stateMarginToEdge 0. The count
+    // is blind to the fall (the 9-cap: both bands display 9) — only the rank gate refuses
+    // the hold. Direction-blind rule: held 'over-funded' ("more than enough… better than
+    // 9 in 10") over a true 85% reading.
+    const settled: StickyDisplay = { xOfTen: 9, outcomeState: 'over-funded', perMonthDollar: 100, direction: 'room' }
+    const out = resolveStickyDisplay(settled, headline(9, 0, 'on-track', 0), dollar(100, 'room'))
+    expect(out.outcomeState).toBe('on-track') // adopted — the worse truth shows immediately
+  })
+
+  it('FALLING onto a count flip edge ADOPTS the lower count AND the worse word together', () => {
+    // prev {9, on-track}; the raw falls to quantized 0.75 → {8, borderline}, xMargin 0 (the
+    // 7/8-vs-8/9 lattice puts a flip point at 0.75), stateMargin 0.10 (borderline's center).
+    // Direction-blind rule: holdX kept 9 while the state adopted borderline → {9, borderline},
+    // a pairing buildHeadline can never emit (borderline caps at 8).
+    const settled: StickyDisplay = { xOfTen: 9, outcomeState: 'on-track', perMonthDollar: 100, direction: 'trim' }
+    const out = resolveStickyDisplay(settled, headline(8, 0, 'borderline', 0.1), dollar(100, 'trim'))
+    expect(out.xOfTen).toBe(8)
+    expect(out.outcomeState).toBe('borderline')
+  })
+
+  it('the count never holds across an ADOPTED state flip (regime coupling — no impossible pairing)', () => {
+    // prev {8, borderline}; the raw jumps to quantized 0.95 → {9, on-track}: xMargin 0 (the
+    // 9.5 lattice point), stateMargin 0.03 (0.95 is 0.03 under the 0.98 over-funded edge) —
+    // so the STATE adopts while the count's own gate would hold. Holding the count under an
+    // adopted word composes {8, on-track}, which the engine never emits (on-track always
+    // displays 9). The coupling makes the count adopt with the word.
+    const settled: StickyDisplay = { xOfTen: 8, outcomeState: 'borderline', perMonthDollar: 100, direction: 'trim' }
+    const out = resolveStickyDisplay(settled, headline(9, 0, 'on-track', 0.03), dollar(100, 'trim'))
+    expect(out.xOfTen).toBe(9)
+    expect(out.outcomeState).toBe('on-track')
+  })
+
+  it('a dollar FALLING one step onto the edge band ADOPTS the lower figure — never holds the rosier one', () => {
+    // prev displayed $110 of 'room'; the raw fell to $104.9 (rounds to $100, edge distance
+    // 0.1 < the $1 EPS). Direction-blind rule: held the rosier $110. Lower = conservative in
+    // BOTH worded directions (less room; the bigger trim — perMonth is negative under trim).
+    const settled: StickyDisplay = { xOfTen: 9, outcomeState: 'on-track', perMonthDollar: 110, direction: 'room' }
+    const out = resolveStickyDisplay(settled, headline(9, 0.05, 'on-track', 0.05), dollar(104.9, 'room'))
+    expect(out.perMonthDollar).toBe(100)
+  })
+
+  it('PROPERTY: across every real quantized (prev, raw) pair the display is never rosier than raw and always an engine-emittable pairing', () => {
+    // The generator is the ENGINE's own mapping (summarize → buildHeadline/buildDollar), never
+    // hand-faked margins: every quantized survival on the full 0.01 grid, with and without the
+    // early-depletion signal (the already-failing arm). The emittable-pair set is DERIVED from
+    // the same sweep — the test re-derives nothing and can't drift from the engine.
+    const mkReading = (q: number, earlyDepletion: boolean) => {
+      const output: SimResolved = {
+        indeterminate: false,
+        distribution: {
+          terminalValuesReal: [250_000],
+          depletionYears: earlyDepletion ? [1, 1, 1] : [],
+          survivalFraction: q,
+        },
+      }
+      return summarize(output, SPINE_PARAMS, 7)
+    }
+    const readings = []
+    for (let i = 0; i <= 100; i++) {
+      readings.push(mkReading(i / 100, false))
+      readings.push(mkReading(i / 100, true))
+    }
+    const emittable = new Set(readings.map((r) => `${r.headline.outcomeState}:${r.headline.xOfTen.value}`))
+    const violations: string[] = []
+    for (const prevR of readings) {
+      const prevDisplay = resolveStickyDisplay(null, prevR.headline, prevR.dollar)
+      for (const rawR of readings) {
+        const out = resolveStickyDisplay(prevDisplay, rawR.headline, rawR.dollar)
+        const rawRounded = Math.round(rawR.dollar.perMonthReal.value / DOLLAR_STEP) * DOLLAR_STEP
+        if (STATE_OPTIMISM_RANK[out.outcomeState] > STATE_OPTIMISM_RANK[rawR.headline.outcomeState])
+          violations.push(`rosier word: ${out.outcomeState} shown over raw ${rawR.headline.outcomeState}`)
+        if (out.xOfTen > rawR.headline.xOfTen.value)
+          violations.push(`rosier count: ${out.xOfTen} shown over raw ${rawR.headline.xOfTen.value}`)
+        if (out.perMonthDollar > rawRounded)
+          violations.push(`rosier dollar: ${out.perMonthDollar} shown over raw ${rawRounded}`)
+        if (!emittable.has(`${out.outcomeState}:${out.xOfTen}`))
+          violations.push(`impossible pairing: {${out.outcomeState}, ${out.xOfTen}}`)
+      }
+    }
+    expect(violations.slice(0, 12)).toEqual([])
   })
 })
 

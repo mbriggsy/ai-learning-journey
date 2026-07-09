@@ -256,6 +256,23 @@ const RULES: readonly SanityRule[] = [
         : [],
   },
   {
+    // U12 ultramode: the FLOOR mirror of the ceiling above — the side the cardinal rule
+    // actually needs fenced. A committed ratio ≤ 0 zeroes the survivor phase's spending, so
+    // survival INFLATES (optimistic — and the Monte-Carlo fan is structurally blind to a
+    // deterministic scalar, insight 050). The engine's validateParams accepts 0 (finiteNonNeg),
+    // so this entry rule is the sole floor. `≤ 0` on a finite value only — an impossibility
+    // (a surviving spouse spends SOMETHING), never a guessed plausibility band (burned/062);
+    // absence stays the panel's own blank-refusal channel.
+    id: 'survivor-ratio-floor',
+    target: () => ['survivorSpendingRatio'],
+    check: (d) =>
+      d.survivorSpendingRatio !== undefined &&
+      Number.isFinite(d.survivorSpendingRatio) &&
+      d.survivorSpendingRatio <= 0
+        ? [{ rule: 'survivor-ratio-floor', field: 'survivorSpendingRatio', messageKey: 'errSurvivorRatioFloor' }]
+        : [],
+  },
+  {
     // U12 (the widened F9 gate, council 2026-07-08): an EXPLICIT $0/negative spend is an
     // entry error, never a simulable household — the engine ACCEPTS 0 (a legitimate
     // degenerate for draw-schedule isolation, simulate.test.ts), so this intake rule +

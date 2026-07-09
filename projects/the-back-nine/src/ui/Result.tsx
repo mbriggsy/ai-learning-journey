@@ -170,6 +170,20 @@ export function Result({
     [recomputeBoth],
   )
 
+  // U12 ultramode — the modal-ownership signal, threaded two ways: (1) `sheetOpen` to both
+  // heroes (suppress the landing focus grab + the sharpen announce while a sheet/panel owns
+  // focus and AT — an in-panel edit can demote → re-resolve → REMOUNT a hero behind the open
+  // aria-modal); (2) `restoreToAssumptionsDoor` to every sheet as the close-time focus
+  // fallback for the via-panel route (the panel's Edit row unmounts with the panel, so the
+  // sheet's captured owner is disconnected by close time — without a fallback focus strands
+  // on <body>). The Assumptions door is the honest landmark: it is the surface the user came
+  // through, and it stays reachable in every post-resolve state (the hatch gate below).
+  const sheetOpen = budgetOpen || sequencingOpen || rothOpen || healthOpen || assumptionsOpen
+  const restoreToAssumptionsDoor = useCallback(
+    () => document.querySelector<HTMLElement>('[data-door="assumptions"]'),
+    [],
+  )
+
   // U12 — the Assumptions door's gate (F4: it takes the Review door's quiet-row seat; count
   // stays 5). THIS DOOR GATES DIFFERENTLY FROM ITS SIBLINGS, deliberately (3-controls.md:243):
   // every other door gates on `focusKey` and so VANISHES exactly while the answer is
@@ -305,7 +319,12 @@ export function Result({
             why this one door must survive indeterminate/incomplete. The guided re-walk
             (`onReview`) now lives INSIDE the panel. */}
         {hatchReachable && (
-          <button type="button" className="btn-quiet" onClick={() => setAssumptionsOpen(true)}>
+          <button
+            type="button"
+            className="btn-quiet"
+            data-door="assumptions"
+            onClick={() => setAssumptionsOpen(true)}
+          >
             {copy.assumptionDoorCta}
           </button>
         )}
@@ -335,6 +354,7 @@ export function Result({
             focusSignal={focusKey}
             actionsSlot={seatInLead ? actionsNode : undefined}
             medicareUnpricedNote={medicareGap}
+            sheetOpen={sheetOpen}
           />
         )}
         {elevated.kind === 'spine' && (
@@ -343,6 +363,7 @@ export function Result({
             focusSignal={focusKey}
             actionsSlot={seatInLead ? actionsNode : undefined}
             medicareUnpricedNote={medicareGap}
+            sheetOpen={sheetOpen}
           />
         )}
         {elevated.kind === 'fallback' && (
@@ -368,12 +389,14 @@ export function Result({
           void recomputeBoth()
         }}
         onClose={() => setBudgetOpen(false)}
+        restoreFallback={restoreToAssumptionsDoor}
       />
       <SequencingControl
         open={sequencingOpen}
         draft={snapshot.draft}
         preview={runPreview}
         previewBlocking={!previewRunsInWorker()}
+        restoreFallback={restoreToAssumptionsDoor}
         onApply={(policy, order) => {
           // ONE atomic write maintains the 'custom'⟺order biconditional (the codec re-proves it
           // at Save; validateParams re-proves it at every run — the two-gate rule's write half).
@@ -392,6 +415,7 @@ export function Result({
         preview={runPreview}
         previewBlocking={!previewRunsInWorker()}
         medicareUnpricedNote={medicareGap}
+        restoreFallback={restoreToAssumptionsDoor}
         onApply={(plan) => {
           appModel.update((d) => ({ ...d, rothConversion: plan }))
           setRothOpen(false)
@@ -415,6 +439,7 @@ export function Result({
         readout={healthReadout}
         preview={runPreview}
         previewBlocking={!previewRunsInWorker()}
+        restoreFallback={restoreToAssumptionsDoor}
         onApply={(enhanced) => {
           // THE SINGLE-KEY WRITE FENCE (insight 058): exactly one key moves — set the literal
           // `true`, or STRIP the key entirely (absence ≡ the statutory reverted regime — never

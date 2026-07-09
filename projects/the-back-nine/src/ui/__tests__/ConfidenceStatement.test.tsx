@@ -423,6 +423,28 @@ describe('U12 C2 — the sticky sentence + the verdict crossfade', () => {
     expect(container.querySelector('.cs-glyph')).toHaveClass('cs-swap')
   })
 
+  it('sheetOpen: a landing behind an open sheet is CONSUMED without moving focus — and stays consumed after the sheet closes (U12 ultramode)', () => {
+    // The in-panel demote → re-resolve REMOUNTS this hero behind the open aria-modal; grabbing
+    // focus from behind it violates the insight-067 modal contract. The landing is consumed
+    // (announcedRef latches), so a later sheet close never fires it late either — the panel's
+    // own close steer owns where focus goes.
+    const view = { kind: 'reading' as const, ...READING_FIXTURES['on-track'] }
+    const { rerender } = render(<ConfidenceStatement view={view} focusSignal={1} sheetOpen />)
+    expect(document.activeElement).toBe(document.body)
+    rerender(<ConfidenceStatement view={view} focusSignal={1} sheetOpen={false} />)
+    expect(document.activeElement).toBe(document.body)
+  })
+
+  it('sheetOpen: a displayed-change behind an open sheet does NOT announce (the panel echo is the one AT source); the crossfade still dresses', () => {
+    const { container, rerender } = render(
+      <ConfidenceStatement view={stickyView(SAME_AS_RAW)} sheetOpen />,
+    )
+    const live = liveRegion(container)
+    rerender(<ConfidenceStatement view={stickyView(HELD)} sheetOpen />)
+    expect(live.textContent).toBe('') // silent — aria-modal does not mute background regions, we must
+    expect(container.querySelector('.cs-reading')).toHaveClass('cs-swap') // the visual swap is untouched
+  })
+
   it('a mounted displayed-change announces the NEW sentence once via the polite region; first mount stays silent; focus is never yanked', () => {
     const { container, rerender } = render(
       <ConfidenceStatement view={stickyView(SAME_AS_RAW)} focusSignal={1} />,

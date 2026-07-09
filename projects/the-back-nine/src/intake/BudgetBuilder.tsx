@@ -103,9 +103,15 @@ export interface BudgetBuilderProps {
    *  in-flow body swap (the intake spend step — de-modalized, council 2026-07-03). The form
    *  core, state, and commit seams are identical; only the room around them differs. */
   readonly variant?: 'sheet' | 'inline'
+  /** U12 ultramode (sheet variant only): where focus lands on close when the OPENING trigger
+   *  has unmounted — the via-panel route (the AssumptionPanel's governed-spend row closes the
+   *  panel and opens this sheet in one click; the row's button is gone by close time).
+   *  Consulted ONLY when the captured owner is disconnected — the ControlSheet scaffold
+   *  carries the identical contract. */
+  readonly restoreFallback?: () => HTMLElement | null
 }
 
-export function BudgetBuilder({ open, draft, onApply, onEscape, onClose, variant = 'sheet' }: BudgetBuilderProps) {
+export function BudgetBuilder({ open, draft, onApply, onEscape, onClose, variant = 'sheet', restoreFallback }: BudgetBuilderProps) {
   const reduce = useReducedMotion() ?? false
   const titleId = useId()
   const dialogRef = useRef<HTMLDivElement>(null)
@@ -164,8 +170,15 @@ export function BudgetBuilder({ open, draft, onApply, onEscape, onClose, variant
   const restoreFocus = useCallback(() => {
     const owner = restoreRef.current
     restoreRef.current = null
-    if (owner !== null && owner.isConnected) owner.focus()
-  }, [])
+    if (owner !== null && owner.isConnected) {
+      owner.focus()
+      return
+    }
+    // The owner unmounted mid-open (the via-panel route) — land on the caller-named fallback
+    // landmark instead of stranding focus on <body> (U12 ultramode; controlSheet.tsx mirror).
+    const fallback = restoreFallback?.() ?? null
+    if (fallback !== null) fallback.focus()
+  }, [restoreFallback])
 
   const onKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLDivElement>) => {

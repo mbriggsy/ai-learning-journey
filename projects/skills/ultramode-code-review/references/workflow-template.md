@@ -30,6 +30,11 @@ const SCOPE = '<file list + how to get the diff, e.g. `git -C PROJ diff <base> -
 const BRIEF = `<the 10-20 line contract brief: invariants · values-not-to-flag · landmines>`
 
 // Always-on (map idiom to the stack); add conditionals with a named reason. agentType = the ce agent.
+// LANDMINE (bit 2026-07-09, the U13 review — same class as the council's no-agentType note): the
+// compound-engineering review agents may NOT exist in the session's agent registry, and a missing
+// agentType crashes EVERY lens at launch ("agent type not found"). If they aren't in the Agent
+// tool's available-types list, OMIT agentType entirely — the REVIEW prompt below already carries
+// the full role definition; the default workflow subagent + explicit model is the proven fallback.
 const LENSES = [
   { key: 'correctness', agentType: 'compound-engineering:review:correctness-reviewer' },
   { key: 'architecture', agentType: 'compound-engineering:review:architecture-strategist' },

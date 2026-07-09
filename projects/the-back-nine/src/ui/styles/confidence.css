@@ -261,6 +261,25 @@
     grid-column: 1;
     grid-row: 2;
   }
+  /* THE STALENESS-ECHO FRAME'S WHITESPACE BUDGET (U13 ultramode fold, CI red 2026-07-09): the
+     vault-return frame is the TALLEST left stack the one-frame law serves — the only frame that
+     carries the unpriced-Medicare note AND the standing staleness echo together — and ubuntu
+     Chromium's text metrics run ~one 28px line taller than Windows on that stack (self-hosted
+     fonts, hinting drift flips a wrap), which pushed the PROTECTED R13 disclaimer 13px below the
+     791px fold ON CI ONLY (local slack was 15px). The echo-bearing frame pays for its extra line
+     in WHITESPACE (the density-tier degrade law: whitespace-only, content never cut): one gap
+     token on the grid rows (16→12 × 5 gaps) + one on the note stack (12→8), ~28px — every
+     echo-less frame keeps the cleared rhythm byte-identical (:has() scopes it; precedent
+     intake.css). The verify:fit ?vault=stale arm enforces this frame on CI's own metrics. */
+  .confidence-reveal[data-twopane]:has(.cs-staleness-note) {
+    row-gap: var(--space-3);
+  }
+  .confidence-reveal[data-twopane]:has(.cs-staleness-note) > .reveal__lead {
+    gap: var(--space-3);
+  }
+  .confidence-reveal[data-twopane]:has(.cs-staleness-note) > .reveal__subordinates {
+    gap: var(--space-2);
+  }
   /* the completion-actions chain UNWRAPS (both wrappers display:contents) so the save slot, the
      backup door, the in-frame disclaimer, and the quiet-door row become grid items directly —
      the doors can then seat BELOW both panes while the save slot stays welded under the words.

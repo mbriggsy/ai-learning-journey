@@ -80,6 +80,8 @@ Do not skip this; it is what makes the review worth trusting. For each finding w
 
 Right-size the severity from what the code actually shows. Then classify what survives: **NEW** (the existing tests/reviews missed it) × **REAL** (verified against source) × **MATERIAL** (it can actually produce a wrong result / real harm). Only NEW × REAL × MATERIAL earns a fix; everything else is advisory.
 
+**Vote-aggregation law (the-back-nine insight 077):** when multiple refuters vote, aggregate `real` and `material` SEPARATELY — never majority-vote the conjunction. A finding whose refuters UNANIMOUSLY affirm existence but split on impact is a **hand-verification trigger for the coordinator**, not a rejection (materiality splits are usually the project-values question — reachability vs the contract's own stated promise — which refuters grade against different standards). And never declare a review clean from the confirmed count alone: read the REJECTED pile's vote texture before reporting. (Sibling of insight 019: a crashed verifier is an abstention; a severity disagreement is an escalation — neither is a refutation.)
+
 ### 6 · Fix + gate
 Apply the verified fixes — the smallest change that holds the contract, matching the surrounding code. Run the project's **full gate** (whatever its `CLAUDE.md` lists — typecheck / tests / lint / project-specific verifies). Report three buckets: what was real (fixed), what's advisory (deferred/documented), and **what you threw out** — the false alarms you caught are part of the review's integrity, not an embarrassment to hide.
 

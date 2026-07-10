@@ -8,6 +8,7 @@
   "packageManager": "pnpm@10.30.3",
   "scripts": {
     "dev": "vite",
+    "dev:phone": "vite --mode phone --port 5174 --strictPort",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
@@ -44,6 +45,7 @@
     "@types/node": "^25.6.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-basic-ssl": "^2.3.0",
     "@vitejs/plugin-react": "^6.0.1",
     "@vitest/coverage-v8": "^4.1.2",
     "culori": "^4.0.2",

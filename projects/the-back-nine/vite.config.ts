@@ -1,14 +1,24 @@
 import { defineConfig, configDefaults } from 'vitest/config'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
+import basicSsl from '@vitejs/plugin-basic-ssl'
 
 // Vite 8 / Rolldown convention (mirrors projects/burned): `rolldownOptions`, not
 // `rollupOptions`; `resolve.tsconfigPaths` (native, no vite-tsconfig-paths plugin);
 // `import.meta.dirname`. Single-entry SPA, so no explicit build.input is needed —
 // the engine worker emits as its own hashed chunk via `new URL(...)` in
 // src/store/engineClient.ts and is precached through the globPatterns below.
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [
+    // `pnpm dev:phone` only (mode 'phone'): self-signed HTTPS so a PHONE on the LAN
+    // gets a SECURE CONTEXT. WebCrypto (`crypto.subtle`) does not exist on a plain-HTTP
+    // LAN-IP origin — the `?vault=` plant/unlock (PBKDF2 importKey) dies before the
+    // unlock screen mounts and the app silently renders footer-only (caught live on
+    // Briggsy's phone, 2026-07-10; localhost is exempt, which is why laptop dev never
+    // hit it). NEVER default: the fit/caddie/CSP harnesses probe http://127.0.0.1
+    // webServer URLs, and mode 'phone' keeps DEV true (seeds stay live) while leaving
+    // every other mode byte-identical.
+    ...(mode === 'phone' ? [basicSsl()] : []),
     react(),
     VitePWA({
       // 'prompt', NOT 'autoUpdate': autoUpdate's skipWaiting+clientsClaim can reload
@@ -69,4 +79,4 @@ export default defineConfig({
     // via `pnpm verify:csp`.
     exclude: [...configDefaults.exclude, 'e2e/**'],
   },
-})
+}))

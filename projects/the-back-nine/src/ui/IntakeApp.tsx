@@ -8,7 +8,7 @@ import { appModel } from './appModel'
 import { Result } from './Result'
 import { scenarioFromDraft, currentEpochDay } from './scenarioFromDraft'
 import { draftFromScenario } from './draftFromScenario'
-import { deriveResultSave, type PersistState } from './resultSave'
+import { agedBalancesYearFor, deriveResultSave, type PersistState } from './resultSave'
 import { describeSaveFailure } from './unlockCopy'
 import { PendingPanel } from './PendingPanel'
 import { ReEntry } from './ReEntry'
@@ -237,7 +237,18 @@ export default function IntakeApp({
           return
         }
         appModel.update(() => hydrated.draft)
-        setPersist({ kind: 'saved', scenario: normalized.scenario })
+        // The persist seed keeps the DISK's own savedAt (review 2026-07-10): scenarioFromDraft
+        // re-stamps a fresh save-day, but persist.scenario's contract is "the LAST COMMITTED
+        // model" — and agedBalancesYearFor reads its savedAt as the year the numbers were
+        // entered (a fresh stamp here silently killed the aged-balances clause on every
+        // hydrated vault). A legacy vault (no savedAt on disk) seeds WITHOUT one — suppression
+        // over fabrication. The dirty/clean compare is savedAt-blind (scenarioIdentity), so
+        // the clean-badge law is untouched either way.
+        const { savedAt: _freshStamp, ...diskIdentity } = normalized.scenario
+        setPersist({
+          kind: 'saved',
+          scenario: model.savedAt !== undefined ? { ...diskIdentity, savedAt: model.savedAt } : diskIdentity,
+        })
         // The re-offer backup door: a WRITABLE return with no backup-note on record offers the
         // off-device copy. A read-only tab skips it (the standing view-only banner is disclosure
         // enough — one door is the deliberate v1 scope). A note-read hiccup must NEVER fail the
@@ -379,6 +390,10 @@ export default function IntakeApp({
         // P3·U13 — the standing hero staleness echo (session-lifetime once the gate derived
         // it). RULES-moved only — the gate's budget re-confirm lines never claim "rules changed".
         stalenessNote={reentry?.rulesMoved === true}
+        // The aged-balances clause's honest year (review 2026-07-10): from the persist
+        // machine's OWN saved scenario — a re-save or an in-session edit suppresses it
+        // through the machine's state, never a second bookkeeping (resultSave.ts doc).
+        agedBalancesYear={agedBalancesYearFor(persist, view, currentEpochDay())}
       />
     )
   }

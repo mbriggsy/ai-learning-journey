@@ -98,6 +98,103 @@ post-fix); corpus pinned: all rules + anti-patterns + E1–E12.
 
 ---
 
+## 2026-07-10 (night) — `?vault=datestale` POST-FIX: the re-based ladder (the council-mandated re-walk — the ship-gate on wf_99415094-417)
+
+**Context:** the card above HARD-FLAGGED the aged ladder; the council ruled DROP+re-base (+ the
+crown-arrived withdraw + the pulled-forward balances caveat), the build landed same session, and
+this walk is the verdict's own ship-gate: does the re-based surface cohere, and does the red
+team's undischarged residual (band↔ladder PICTURE desync) materialize?
+
+**States walked:** datestale unlock → gate → verdict (run `2026-07-10-21-10-42`, REAL + PHONE).
+**Readers:** 6 fresh contexts (first-look · naive-spouse · copy-law finder · calm/honesty ·
+CVD · False-PASS Hunter), chaired against the bundle + the standing rulings.
+
+**firstImpression (locked):** *"Calm, plain-spoken, and reassuring but not salesy — it hedges
+with 'about' and 'around' everywhere, which actually makes me trust it MORE… honest, human, and
+a bit irreverent."*
+
+**toneVerdict: the FIX READS AS INTENDED — the hero/ladder contradiction is DEAD; the residual
+flags land on the PARKED U17 band facets, now corroborated by five independent readers.**
+
+### The fix, verified on the rendered surface
+
+- **The blocker is dead.** Hero "about 6 years out — around 2032" beside ladder ticks
+  "today, 1…8" with the crown at 6 — the spouse walker: *"this chart is honestly the clearest
+  thing on the page for me… that AGREES with the headline."* The Hunter checked the tradeoff
+  lane hard and came up CLEAN (*"2031 is a real future date available to them — no false pass
+  here"*). The fresh-identity + one-clock laws are pinned in `verify:fit` (16/16).
+- **The pulled-forward caveat renders and does its job:** the spouse's next action was
+  *"tap 'Something's changed — update them' and put in what our accounts are actually worth
+  right now, before I believe any of it"* — the exact behavior the clause exists to produce.
+
+### The Hunter's NEW catch — FIXED same session (chair-verified against fold.json)
+
+**BLOCKER [both] — the in-frame echo carried only the reassuring half.** At 1536×791 the fold
+held "9 of 10 · around 2032 · *Some rules changed since your save — this answer uses today's*"
+while the balances-are-2024 truth sat below the fold (date route, on the ladder caveat) or
+NOWHERE in-frame (spine route — the council's facet-c remedy was ladder-seated, and the spine
+has no ladder). "Uses today's" over-generalizes to whole-answer currency — the exact
+calm-but-wrong the datestale variant exists to prevent. **Fix shipped:** `stalenessHeroNote` →
+*"Figured under today's rules, from the numbers you saved."* — one line (the measured one-line
+law holds, both vault fit arms green), both standing epistemic facts in-frame on BOTH routes;
+the "what changed" alarm stays at the gate's per-clock detail. This was facet (c)'s real
+remedy; the ladder caveat stays as the below-fold detail.
+
+### Corroborated — already PARKED for U17 (the council's Q3 ruling; the coupling is now urgent)
+
+Five independent readers (first-look, spouse, copy-law, calm/honesty, Hunter) each stumbled on
+the BAND's frozen-anchor geometry — "Work stops 59/60" drawn BEFORE "Today 60/61" (the spouse's
+hardest flag: *"one part says freedom is six years away, another looks like the stop already
+happened — I never worked it out"*), the elapsed segment drawn as confident projection, and the
+fan carrying only the essentials date while the hero speaks 2032. The calm reader graded the
+pair `tension-real`, optimistic-direction. **Chair ruling: this does NOT condemn the ladder fix
+(the walk's escalate trigger)** — the ladder is now the surface's clearest, hero-agreeing voice
+(withdrawing it would delete the honest chart and leave the misleading one); every tension
+anchor is a facet the council parked WITH a hard-named U17 coupling. The corroboration count +
+the P1-optimistic grade go to U17's charter as urgency evidence.
+
+### Also filed / ruled
+
+- **[fresh-surface, his rule-36 pen] the ladder's x-dialect** ("years from now you stop") vs
+  the fan's ages — pre-existing on EVERY fresh date surface (his stations cleared it before
+  rule 36 was minted from the TwoFutures flag); the council implicitly kept it (rejected
+  calendar ticks as a THIRD dialect). An ages-tick ladder ("62 / 61 …") is a real design
+  alternative. His call, not aged-scope — filed for his eye.
+- **[oracle lane, O3 family] the on-track line is never VALUED in the text channel** (CVD
+  screener, rule-1 shape): every rung's aria says clears/below "the line," but the line's own
+  height (needs 9 of 10) is never worded — rides the next AT-copy touch with the O3 filing.
+- **Chair-killed with citations:** the 27-vs-32 horizon flag (the AT anchor column names its
+  own window — O3 as-designed) · the "doubled headline" (sr-only channel artifact) · the IQR
+  band's text absence (O3 over-parity ruling) · the gate button weighting (card #2's
+  presented-not-flagged standing answer) · eight-in-ten vs 9-of-10 (two genuinely different
+  measures, band grammar as ruled).
+- **Prior-family nits re-observed** (his pen, standing): the floor's arrived-line garden path
+  (parked facet d) · the triple "updated since your save" anaphora (card #2 cleared-as-designed)
+  · "fund data" still half-jargon to the spouse · the $79k ruin-floor lands hard (honest tail,
+  band grammar) · FRA gloss could go one clause further.
+
+**falsePassHunt:** attempted and it FOUND one (the in-frame reassuring-half echo) — fixed same
+session, chair-verified. **colorBlindCheck:** no color-alone meaning above the fold (blue-family
+palette, worded legends, nested-position bands); ladder CVD coverage still the increment-4 gap
+(below-fold; aria channel strong). **comprehension:** the spouse's answers above; the update
+CTA is what they reach for. **prediction (tape hook):** he clears the re-based ladder without
+comment (it now just reads right); he still trips on the band's "Work stops before Today" pair
+and asks the U17 question out loud; the reworded echo passes unremarked.
+
+**disposition: the LADDER FIX + the echo reword PILOT-CLEARED under the grant (high confidence —
+the council's design executed, mutation-proven, live-verified, panel-read; the fix surfaces are
+reversible copy/presentation). The AGED SURFACE as a whole stays PARKED-FOR-BRIGGSY — the
+band's U17 facets are his eye's, and the two-time-bases family is not "closed" until his read.**
+
+**evidence:** bundle `temp/caddie/2026-07-10-21-10-42/vault-datestale/` (REAL + PHONE);
+fit ledger: 10 planted mutants red→reverted (5 unit + 2 live fit-arm + 3 review-fold), plus
+the datestale fit arm catching the persist-seed savedAt defect live (red → spliced → green);
+corpus pinned: rules 1, 6-10, 18-19, 36; exemplars E3, E11-E12. The 3-lens diff review's two
+confirmed correctness findings (the "0 of 10" fabrication + the caveat's year source) are
+recorded oracle-lane in `docs/council-log.md` + TODO item 0 — folded same session.
+
+---
+
 ## 2026-07-10 — `?vault=retired`: the re-entry gate, fresh return (U13 batch — the gate read-back + the button pair)
 
 **States walked:** unlock (passphrase pre-filled) → gate (read-back, NO clock notes — same-day

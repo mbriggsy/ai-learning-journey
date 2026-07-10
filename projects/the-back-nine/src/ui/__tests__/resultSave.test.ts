@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { deriveResultSave, type PersistState } from '../resultSave'
+import { agedBalancesYearFor, deriveResultSave, type PersistState } from '../resultSave'
 import { scenarioFromDraft, type SaveReady } from '../scenarioFromDraft'
 import { DEV_SEEDS } from '../devSeeds'
 
@@ -121,5 +121,51 @@ describe('deriveResultSave — the edit-and-re-save machine', () => {
   it('an incomplete answer makes NO claim regardless of the disk state', () => {
     expect(deriveResultSave({ kind: 'unsaved' }, notReady)).toEqual({ kind: 'none' })
     expect(deriveResultSave({ kind: 'saved', scenario: retired.scenario }, notReady)).toEqual({ kind: 'none' })
+  })
+})
+
+// The aged-balances clause's year derivation (review 2026-07-10): the honest anchor is the
+// persist machine's own saved scenario's savedAt — never startCalendarYear (the BUILD year,
+// which survives every re-save and mislabels a household that just updated its numbers).
+describe('agedBalancesYearFor — the honest entered-in year', () => {
+  const day = (y: number, m: number, d: number): number => Math.floor(Date.UTC(y, m - 1, d) / 86_400_000)
+  const TODAY = day(2026, 7, 10)
+  const savedIn = (savedAt: number | undefined): PersistState => ({
+    kind: 'saved',
+    scenario: savedAt === undefined ? (({ savedAt: _s, ...rest }) => rest)(retired.scenario) as typeof retired.scenario : { ...retired.scenario, savedAt },
+  })
+  const CLEAN = { kind: 'clean' } as const
+  const DIRTY = { kind: 'dirty' } as const
+
+  it('a clean answer over a save from an EARLIER calendar year names that year', () => {
+    expect(agedBalancesYearFor(savedIn(day(2024, 5, 1)), CLEAN, TODAY)).toBe(2024)
+    expect(agedBalancesYearFor(savedIn(day(2025, 12, 31)), CLEAN, TODAY)).toBe(2025) // one year is enough
+  })
+
+  it('a same-year save is not aged — no clause', () => {
+    expect(agedBalancesYearFor(savedIn(day(2026, 1, 2)), CLEAN, TODAY)).toBeUndefined()
+  })
+
+  it('an in-session EDIT (dirty view) suppresses the clause — the rendered numbers are no longer the save', () => {
+    expect(agedBalancesYearFor(savedIn(day(2024, 5, 1)), DIRTY, TODAY)).toBeUndefined()
+  })
+
+  it('a legacy vault (no savedAt) SUPPRESSES rather than fabricates (the staleness reader law)', () => {
+    expect(agedBalancesYearFor(savedIn(undefined), CLEAN, TODAY)).toBeUndefined()
+  })
+
+  it('a clean view over a non-saved persist (edit-back after a failed re-save) makes no claim', () => {
+    const failed: PersistState = {
+      kind: 'save-failed',
+      scenario: { ...retired.scenario, savedAt: day(2024, 5, 1) },
+      errorKey: 'saveErrorFailed',
+    }
+    expect(agedBalancesYearFor(failed, CLEAN, TODAY)).toBeUndefined()
+  })
+
+  it('the POST-UPDATE household reads NO stale claim: a re-save stamps a fresh savedAt and the clause dies with it (the review scenario)', () => {
+    // Built 2024, updated + re-saved today: the persist scenario now carries TODAY's stamp,
+    // whatever startCalendarYear still says.
+    expect(agedBalancesYearFor(savedIn(TODAY), CLEAN, TODAY)).toBeUndefined()
   })
 })

@@ -60,6 +60,7 @@ export function Result({
   backup,
   computing = false,
   stalenessNote = false,
+  agedBalancesYear,
 }: {
   readonly onReview: () => void
   readonly save: ResultSaveProp
@@ -72,6 +73,12 @@ export function Result({
    *  under today's rules" line WITH the verdict. Session-lifetime (drift doesn't un-happen
    *  by re-saving mid-session). Default false. */
   readonly stalenessNote?: boolean
+  /** The aged-balances clause's honest year (review 2026-07-10): present ⇔ the rendered
+   *  answer still matches an on-disk save whose `savedAt` year is at least one calendar
+   *  year old (IntakeApp derives it via `agedBalancesYearFor` — the persist machine's own
+   *  saved scenario, so an edit or a re-save suppresses it structurally). Named by the
+   *  date route's ladder caveat; absent ⇒ no clause. */
+  readonly agedBalancesYear?: number
   /** True while NOTHING has ever resolved (answer 'idle'/'pending' — the "Working it out…"
    *  window). The whole actions row is withheld: the actions act on an answer that isn't
    *  there yet, and an affordance we don't want used shouldn't exist (Briggsy, 2026-07-02).
@@ -381,6 +388,7 @@ export function Result({
             medicareUnpricedNote={medicareGap}
             stalenessNote={stalenessNote}
             dateAnchor={dateAnchor}
+            agedBalancesYear={agedBalancesYear}
             sheetOpen={sheetOpen}
           />
         )}

@@ -40,8 +40,14 @@ export const BAR_RUNG = 8.5
  *  these and re-derives no threshold (clears, the crown, and the non-monotone flags are all the
  *  engine's authority, carried through). */
 export interface CurveMark {
-  /** The candidate offset (whole sim-years from today; the date = today + offsetYears). */
+  /** The candidate offset AS DISPLAYED — whole years from TODAY (the date = today + offsetYears).
+   *  Fresh (elapsed 0) it equals {@link planOffsetYears}; on an aged vault
+   *  {@link agedLadderMarks} re-bases it to wall time (council 2026-07-10). */
   readonly offsetYears: number
+  /** The engine's own DURABLE plan offset (whole sim-years from the plan's start year) — the
+   *  React key and the identity every flag was derived against. Never re-based: display
+   *  re-bases, identity doesn't (a re-key would replay the draw-once fade, insight 047). */
+  readonly planOffsetYears: number
   /** round(quantizedLowerBound·10) — the published X-of-10 count; the plotted rung and the spoken
    *  odds read this same number (plot ≡ text, dateOdds.ts). */
   readonly rung: number
@@ -72,6 +78,7 @@ export function curveMarks(track: DateTrackOutcome): readonly CurveMark[] {
     const rung = Math.round(r.quantizedLowerBound * 10)
     return {
       offsetYears: r.offsetYears,
+      planOffsetYears: r.offsetYears,
       rung,
       atCeiling: rung >= LADDER_MAX_RUNG,
       clears: r.clears,
@@ -79,5 +86,36 @@ export function curveMarks(track: DateTrackOutcome): readonly CurveMark[] {
       isCrown: crownedOffset !== null && r.offsetYears === crownedOffset,
     }
   })
+}
+
+/** Re-base a FRESH mark set to wall time for an AGED vault (council 2026-07-10 — the
+ *  two-time-bases family's third sibling; the hero re-derives "years out" from today, so the
+ *  ladder must speak the same clock or the giant rosier hero sits over a contradicted ladder).
+ *
+ *  THE RULING (each clause a named rail):
+ *  - DROP already-passed stop-years (planOffsetYears < elapsedYears): a past year is not a
+ *    choice — an options chart plots options — and its odds are counterfactual history computed
+ *    against save-day balances. FILTER-BEFORE-GEOMETRY: a negative offset handed to xForOffset
+ *    silently clamps to the left edge ("today"), a fresh lie. Trimmed at the ARRAY, so the
+ *    single-sourced describeMark sentence (aria + scrub) disappears with the dot — never a
+ *    CSS-hidden dot an AT user can still reach.
+ *  - RE-BASE the survivors' DISPLAY offset to years-from-today (planOffset − elapsed); the
+ *    boundary planOffset == elapsed survives as display 0, "today" (the heroLead offset-0
+ *    precedent). planOffsetYears is untouched — the durable React key.
+ *  - IDENTITY (`===`) at elapsed ≤ 0: every fresh surface is byte-identical by REFERENCE (the
+ *    source-bound rail; every organic save today is same-day).
+ *
+ *  Input must be a fresh {@link curveMarks} derivation (offsetYears still plan-relative) —
+ *  never an already-re-based set (a double re-base would silently shift the clock twice).
+ *  The crown-arrived WITHDRAW (crown < elapsed ⇒ no ladder at all — never a crownless dot
+ *  field) is the MOUNT's law (FuckOffDate); this transform only enforces per-mark honesty. */
+export function agedLadderMarks(
+  marks: readonly CurveMark[],
+  elapsedYears: number,
+): readonly CurveMark[] {
+  if (elapsedYears <= 0) return marks
+  return marks
+    .filter((m) => m.planOffsetYears >= elapsedYears)
+    .map((m) => ({ ...m, offsetYears: m.planOffsetYears - elapsedYears }))
 }
 

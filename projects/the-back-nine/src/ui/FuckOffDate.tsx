@@ -47,7 +47,7 @@ import { composeDateSplit, type DateSplitView } from './dateSplit'
 import { focusHeading, useLiveAnnouncer } from '@intake/a11y'
 import { ConfidenceBandPanel } from '@viz/ConfidenceBandPanel'
 import { OddsLadder } from '@viz/OddsLadder'
-import { curveMarks } from '@viz/curveMarks'
+import { agedLadderMarks, curveMarks } from '@viz/curveMarks'
 import { resolveBandData, type XAnnotation } from '@viz/bandData'
 import { BAND_LABELS, BAND_CHROME, composeBandAtRange } from './bandPanelChrome'
 import { LADDER_LABELS } from './oddsLadderChrome'
@@ -109,6 +109,12 @@ export interface FuckOffDateProps {
    *  NEVER written back into the draft (the round-trip guard). Absent (the preview
    *  harness) ⇒ the un-anchored legacy framing. */
   readonly dateAnchor?: { readonly startCalendarYear: number; readonly elapsedPlanYears: number }
+  /** The aged-balances clause's honest year (review 2026-07-10): present ⇔ the rendered
+   *  answer still matches an on-disk save at least one calendar year old — derived by
+   *  IntakeApp from the persist machine's OWN saved scenario's `savedAt` (never
+   *  `startCalendarYear`, the BUILD year that survives every re-save and would mislabel a
+   *  household that just updated its numbers). Present ⇒ the ladder caveat names it. */
+  readonly agedBalancesYear?: number
   /** U12 ultramode: TRUE while a modal sheet/panel owns focus and AT (Result threads its
    *  open-sheet states). Mirrors ConfidenceStatement's contract: the landing focus is
    *  CONSUMED without moving focus (an in-panel edit can demote → re-resolve → REMOUNT this
@@ -169,7 +175,7 @@ export function floorLineText(
   return slots.dateFloorCoveredAnchored(yearsFromToday, calendarYear, odds, fl.unconfirmed)
 }
 
-export function FuckOffDate({ view, focusSignal, actionsSlot, medicareUnpricedNote = false, stalenessNote = false, dateAnchor, sheetOpen = false }: FuckOffDateProps) {
+export function FuckOffDate({ view, focusSignal, actionsSlot, medicareUnpricedNote = false, stalenessNote = false, dateAnchor, agedBalancesYear, sheetOpen = false }: FuckOffDateProps) {
   const headingRef = useRef<HTMLHeadingElement>(null)
   // Announce on the FIRST landing only (the undefined→defined edge). The date route is TIERED: the
   // provisional→final sharpen can crown a DIFFERENT offset, which flips focusSignal — but re-firing
@@ -249,10 +255,33 @@ export function FuckOffDate({ view, focusSignal, actionsSlot, medicareUnpricedNo
   } else {
     const heroTrack = hero!
     const heroDated = heroTrack.kind !== 'no-date-in-window'
+    // The U13 wall-time re-base (council 2026-07-10): 0 on every fresh session — the identity.
+    const elapsedYears = dateAnchor?.elapsedPlanYears ?? 0
     // The no-date "how close" line — the Honesty Hawk's worded alternative to a plotted no-date
     // curve (a scared reader could crown an above-the-line dot); reads the HERO (lifestyle) curve.
-    const bestRung = heroDated ? 0 : curveMarks(heroTrack).reduce((mx, m) => Math.max(mx, m.rung), 0)
-    const tradeoff = heroDated ? dateTradeoffPoint(heroTrack) : null
+    // Aged vaults read the FUTURE offsets only (a passed year's near-miss is not "how close you
+    // are" — the same not-a-choice law as the ladder; best-of-future ≤ best-of-all: conservative).
+    // null ⇒ the aged filter left NO readable future stop-year (a vault older than the whole
+    // date window): the line SUPPRESSES rather than fabricate a "0 of 10" floor off reduce's
+    // initial value (review 2026-07-10 — the suppress-don't-fabricate law the tradeoff-null and
+    // ladder-withdraw siblings already follow).
+    const futureNoDateMarks = heroDated ? null : agedLadderMarks(curveMarks(heroTrack), elapsedYears)
+    const bestRung =
+      futureNoDateMarks !== null && futureNoDateMarks.length > 0
+        ? futureNoDateMarks.reduce((mx, m) => Math.max(mx, m.rung), 0)
+        : null
+    // The aged-vault exclusion (insight 078's same-meaning sweep): the tradeoff OFFERS a stop-year,
+    // and on an aged vault a passed offset is not pickable — elapsed 0 is the fresh identity.
+    const tradeoff = heroDated ? dateTradeoffPoint(heroTrack, elapsedYears) : null
+    // THE CROWN-ARRIVED WITHDRAW (council 2026-07-10, Q2 — strict boundary): the ladder renders
+    // only while the crowned offset is today-or-future (crown ≥ elapsed). A passed crown means
+    // the hero already speaks the arrived arm ("that's about now") and a crownless field of
+    // future dots would invite picking a lucky peak — the ladder withdraws entirely, the hero's
+    // sentence carries the story. At crown == elapsed the "stopping today" crown stays (it
+    // agrees with the hero). Strict-< also makes the fresh path (elapsed 0) unconditionally
+    // rendered — offsets are never negative.
+    const ladderWithdrawn =
+      heroTrack.kind !== 'no-date-in-window' && heroTrack.offsetYears < elapsedYears
     body = (
       <div
         className="fod-reveal"
@@ -270,9 +299,9 @@ export function FuckOffDate({ view, focusSignal, actionsSlot, medicareUnpricedNo
           </h2>
           {heroTrack.kind !== 'no-date-in-window' ? (
             <p className="fod-odds">{dateOddsText(heroTrack.grade.quantizedLowerBound)}</p>
-          ) : (
+          ) : bestRung !== null ? (
             <p className="fod-note">{slots.noDateHowClose(slots.xOfTen(bestRung))}</p>
-          )}
+          ) : null}
           {tradeoff && (
             <p className="fod-tradeoff">{slots.dateTradeoff(tradeoff.yearsSooner, tradeoff.oddsText)}</p>
           )}
@@ -324,13 +353,23 @@ export function FuckOffDate({ view, focusSignal, actionsSlot, medicareUnpricedNo
               claim's odds shift by when you stop. The non-monotone sentence + the window-edge note
               above STAY on the landed surface. A no-date hero plots NO ladder (the Hawk veto — the
               worded how-close line rides instead). */}
-          {heroDated && (
+          {heroDated && !ladderWithdrawn && (
             <section className="fod-ladder" aria-label={copy.ladderDisclosure}>
               <p className="fod-ladder__title" aria-hidden="true">
                 {copy.ladderDisclosure}
               </p>
-              <OddsLadder track={heroTrack} labels={LADDER_LABELS} />
+              <OddsLadder track={heroTrack} labels={LADDER_LABELS} elapsedYears={elapsedYears} />
               <p className="fod-ladder__caveat">{copy.ladderPlanCaveat}</p>
+              {/* The aged-balances clause (council 2026-07-10, the pulled-forward facet c): fires
+                  even when no rules-clock did, because the re-based ladder's new coherence makes
+                  a stale reading MORE believed. The YEAR is the persist machine's own savedAt
+                  year (the agedBalancesYear prop doc — review 2026-07-10: startCalendarYear is
+                  the BUILD year and mislabels a household that just updated its numbers). */}
+              {agedBalancesYear !== undefined && (
+                <p className="fod-ladder__caveat">
+                  {slots.ladderCaveatAgedBalances(agedBalancesYear)}
+                </p>
+              )}
             </section>
           )}
         </div>

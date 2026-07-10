@@ -22,6 +22,7 @@
  * once the disk matches — alarm-when-fine is a lie in the safe direction, still a lie).
  */
 import { scenarioIdentity, type ScenarioV3 } from '@shared/model'
+import { epochDayToCalendarYear } from '@store/staleness'
 import type { SaveReady } from './scenarioFromDraft'
 import type { ResaveCopyKey } from './unlockCopy'
 
@@ -82,4 +83,27 @@ export function deriveResultSave(persist: PersistState, ready: SaveReady, readOn
       throw new Error(`deriveResultSave: unmapped persist state ${String(_exhaustive)}`)
     }
   }
+}
+
+/**
+ * The aged-balances clause's HONEST year (review 2026-07-10, the caveat's year-source catch):
+ * the year the rendered numbers were ENTERED is the persist machine's own saved scenario's
+ * `savedAt` — NEVER `startCalendarYear`, which is the plan's BUILD year, survives every
+ * re-save untouched, and mislabels a re-saver (staleness.ts's own documented law). Present
+ * ONLY while the current answer still MATCHES that save (view 'clean' over persist 'saved'):
+ * an in-session edit (dirty) or a completed re-save (fresh savedAt) each make the "as you
+ * entered them in YEAR" claim false, and the machine's own state carries exactly that truth —
+ * no second bookkeeping. A legacy vault (no savedAt) SUPPRESSES rather than fabricates; a
+ * same-year save (wallYear − saveYear < 1) is not aged and stays quiet.
+ */
+export function agedBalancesYearFor(
+  persist: PersistState,
+  view: ResultSaveView,
+  todayEpochDay: number,
+): number | undefined {
+  if (view.kind !== 'clean' || persist.kind !== 'saved') return undefined
+  const savedAt = persist.scenario.savedAt
+  if (savedAt === undefined) return undefined
+  const saveYear = epochDayToCalendarYear(savedAt)
+  return epochDayToCalendarYear(todayEpochDay) - saveYear >= 1 ? saveYear : undefined
 }

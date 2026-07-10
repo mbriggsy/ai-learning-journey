@@ -208,6 +208,51 @@ describe('OddsLadder — the scrub readout', () => {
   })
 })
 
+// The U13 aged re-base (council 2026-07-10): elapsedYears threads to agedLadderMarks — passed
+// stop-years drop at the mark ARRAY (dot, tick, aria, and readout line all disappear together —
+// the single-sourced sentence law), survivors re-base to years-from-today, and the geometry
+// domain derives from the SURVIVORS' display offsets (filter-before-geometry).
+describe('OddsLadder — the aged wall-time re-base', () => {
+  it('drops passed stop-years and re-bases ticks + aria + readout to years-from-today', () => {
+    // track offsets [2,4,6,8,12], elapsed 3 → plan-2 drops; displays [1,3,5,9].
+    const { container } = render(<OddsLadder track={track} labels={labels} elapsedYears={3} />)
+    const ticks = [...container.querySelectorAll('.ladder-frame-text .ladder-droppable-label')]
+      .map((t) => t.textContent)
+      .slice(0, -1) // the last frame-text node is the axis caption
+    expect(ticks).toEqual(['1', '3', '5', '9'])
+    // the dropped plan-2 mark is gone from EVERY channel: dots, aria, and the stacked readout.
+    expect(container.querySelectorAll('.ladder-dot').length).toBe(4)
+    const aria = [...container.querySelectorAll('[aria-label]')].map((e) => e.getAttribute('aria-label') ?? '')
+    expect(aria.some((t) => t.startsWith('in 2 years'))).toBe(false)
+    expect([...container.querySelectorAll('.ladder-readout__line')]).toHaveLength(4)
+    // the crown (durable plan-8) now SPEAKS display-5 — the hero's own clock.
+    expect(aria.some((t) => t === 'in 5 years: 9 of 10, your date')).toBe(true)
+  })
+
+  it('re-derives the x domain from the SURVIVORS so the rightmost mark stays at the right edge', () => {
+    const { container } = render(<OddsLadder track={track} labels={labels} elapsedYears={3} />)
+    // display domain is [0, 9]: the crown (display 5) sits at 5/9 across the plot, not 8/12.
+    const crown = container.querySelector('.ladder-dot--crown')
+    expect(Number(crown?.getAttribute('cx'))).toBeCloseTo(xForOffset(5, 9), 3)
+  })
+
+  it('elapsed 0 renders byte-identically to the un-anchored mount (the fresh identity)', () => {
+    const fresh = render(<OddsLadder track={track} labels={labels} />)
+    const zero = render(<OddsLadder track={track} labels={labels} elapsedYears={0} />)
+    expect(zero.container.innerHTML).toBe(fresh.container.innerHTML)
+  })
+
+  it('a boundary mark (planOffset == elapsed) survives as the "today" tick', () => {
+    // elapsed 2 → plan-2 re-bases to display 0; the injected formatOffset maps 0 → "today".
+    const { container } = render(<OddsLadder track={track} labels={labels} elapsedYears={2} />)
+    const ticks = [...container.querySelectorAll('.ladder-frame-text .ladder-droppable-label')].map(
+      (t) => t.textContent,
+    )
+    expect(ticks).toContain('today')
+    expect(container.querySelectorAll('.ladder-dot').length).toBe(5) // nothing dropped
+  })
+})
+
 // The multi-dip curve (the ?seed=dip shape): every dip renders quiet at its true rung — no text
 // collision is POSSIBLE because the encoding no longer draws per-dot text (cold-read 2026-07-03
 // superseded the run-center label rule).

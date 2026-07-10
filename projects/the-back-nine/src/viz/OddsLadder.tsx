@@ -40,7 +40,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { motion, useReducedMotion } from 'motion/react'
 import { OKABE_ITO } from './palette'
-import { curveMarks, type CurveMark } from './curveMarks'
+import { agedLadderMarks, curveMarks, type CurveMark } from './curveMarks'
 import type { DateTrackOutcome } from '@shared/model'
 import {
   PLOT,
@@ -101,9 +101,15 @@ export interface OddsLadderProps {
    *  the mount renders a worded "how close" line instead). */
   readonly track: DateTrackOutcome
   readonly labels: OddsLadderLabels
+  /** The U13 wall-time anchor's elapsedPlanYears (council 2026-07-10): on an aged vault the marks
+   *  re-base to years-from-today and already-passed stop-years drop (agedLadderMarks — the ONE
+   *  re-base seam; ticks, aria, and the scrub readout all read the re-based marks). 0 (every
+   *  fresh session) is the reference identity. The crown-arrived withdraw (crown < elapsed) is
+   *  the MOUNT's law — this renderer is never mounted in that state. */
+  readonly elapsedYears?: number
 }
 
-export function OddsLadder({ track, labels }: OddsLadderProps) {
+export function OddsLadder({ track, labels, elapsedYears = 0 }: OddsLadderProps) {
   const reduce = useReducedMotion() ?? false
   // Draw (fade) ONCE; a later render (a tier re-grade) updates dot positions in place, never replays
   // the fade. Reduced motion → no fade, the final DOM identical.
@@ -113,7 +119,10 @@ export function OddsLadder({ track, labels }: OddsLadderProps) {
   }, [])
   const firstDraw = !hasDrawn.current
 
-  const marks = curveMarks(track)
+  // Filter-before-geometry (council 2026-07-10): the aged re-base trims passed stop-years at the
+  // mark ARRAY, then the domain derives from the SURVIVORS' display offsets — a negative offset
+  // reaching xForOffset would silently clamp to the left edge ("today"), a lie.
+  const marks = agedLadderMarks(curveMarks(track), elapsedYears)
   const domainMax = domainMaxYears(marks.map((m) => m.offsetYears))
 
   // The scrub (the band's grammar, simplified — no enlarge modal to share touch with): pointer
@@ -147,7 +156,7 @@ export function OddsLadder({ track, labels }: OddsLadderProps) {
           this is the pointer channel of one single-sourced reading. */}
       <p className="ladder-readout" aria-hidden="true">
         {marks.map((m, i) => (
-          <span key={m.offsetYears} className="ladder-readout__line" data-active={i === scrubIdx || undefined}>
+          <span key={m.planOffsetYears} className="ladder-readout__line" data-active={i === scrubIdx || undefined}>
             {labels.describeMark(m)}
           </span>
         ))}
@@ -167,7 +176,9 @@ export function OddsLadder({ track, labels }: OddsLadderProps) {
           transition={{ duration: reduce ? 0 : DRAW_S, ease: EASE_OUT }}
         >
           {marks.map((m) => (
-            <LadderMark key={m.offsetYears} mark={m} domainMax={domainMax} labels={labels} />
+            // Keyed on the DURABLE plan offset: display re-bases, identity doesn't (council
+            // 2026-07-10 — a re-key would replay the draw-once fade, insight 047).
+            <LadderMark key={m.planOffsetYears} mark={m} domainMax={domainMax} labels={labels} />
           ))}
         </motion.g>
         <LadderXAxis marks={marks} domainMax={domainMax} labels={labels} />
@@ -341,7 +352,7 @@ function LadderXAxis({
     <g className="ladder-frame-text" textAnchor="middle" aria-hidden="true">
       {marks.map((m) => (
         <text
-          key={m.offsetYears}
+          key={m.planOffsetYears}
           className="ladder-droppable-label"
           x={xForOffset(m.offsetYears, domainMax)}
           y={PLOT.bottom + 20}

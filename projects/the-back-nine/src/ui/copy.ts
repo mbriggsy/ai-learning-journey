@@ -911,7 +911,13 @@ export const copy = {
   // DELIBERATELY ONE LINE at the reading measure: the full per-clock disclosure lives at
   // the re-entry gate the user just read; a two-line echo here pushed the PROTECTED R13
   // disclaimer below the one-frame fold at 1536×791 (measured live, 2026-07-09).
-  stalenessHeroNote: 'Some rules changed since your save — this answer uses today’s.',
+  // REWORDED 2026-07-10 (the Caddie False-PASS Hunter, chair-verified against fold.json):
+  // the old tail ("this answer uses today's") was the reassuring HALF alone — in-frame it
+  // read as whole-answer currency while the balances-are-your-save-vintage truth sat below
+  // the fold (date route) or nowhere (spine route). One line cannot carry all three claims,
+  // so the echo keeps the two STANDING epistemic facts — rules currency + input vintage —
+  // and the "what changed" alarm stays at the gate (just affirmed through, per-clock).
+  stalenessHeroNote: 'Figured under today’s rules, from the numbers you saved.',
 } as const satisfies Record<string, string>
 
 export type CopyKey = keyof typeof copy
@@ -1141,6 +1147,15 @@ export const slots = {
             : ' — below the line'
     return `${when}: about ${oddsText}${tail}.`
   },
+  /** The ladder caveat's aged-balances clause (council 2026-07-10 — the red team's second-order
+   *  catch: dropping the hero/ladder contradiction makes a stale reading MORE believed, so the
+   *  balances vintage rides the ladder itself on an aged vault, even when no rules-clock
+   *  fired). Names the SAVE YEAR — the persist machine's own `savedAt` year, re-stamped on
+   *  every save (review 2026-07-10: NEVER `startCalendarYear`, the BUILD year, which survives
+   *  a re-save and would tell a household that just updated its numbers they are stale). A
+   *  named year over a re-derived "about N years ago" span: it never drifts across a New Year. */
+  ladderCaveatAgedBalances: (savedCalendarYear: number): string =>
+    `They also read from your account balances as you entered them in ${savedCalendarYear} — updating your numbers refreshes these odds.`,
   /** The no-date "how close" supplement (the Honesty Hawk's v1 alternative to a plotted no-date
    *  curve): the nearest any year came, short of holding — so a reader knows close-vs-far without a
    *  pickable above-the-line dot. The odds ride slots.xOfTen. Cold-read's call. */
@@ -1373,6 +1388,11 @@ export const slots = {
    *  concentrates pre-65 and may barely move the portfolio median; council 2026-07-03). */
   subsidyRegimeCostDelta: (withFormatted: string, withoutFormatted: string): string =>
     `Lifetime health costs could run around ~$${withFormatted} this way, versus ~$${withoutFormatted} as figured now.`,
+  /** The even arm (Caddie 2026-07-10): both medians can ROUND to one figure, and "~$99,800 …
+   *  versus ~$99,800" reads as a twin-number glitch — say "about the same" and quote the
+   *  shared figure once. The compose gates on the FORMATTED strings being equal. */
+  subsidyRegimeCostEven: (costFormatted: string): string =>
+    `Lifetime health costs could run about the same either way — around ~$${costFormatted}.`,
   // --- The fact-readout figure ANCHORS (aria-hidden in render — every figure also lives in a
   //     hedged body sentence, so AT hears it once; the ~ carries the humane-precision hedge). ---
   healthFigPerYear: (amountFormatted: string): string => `~$${amountFormatted} a year`,

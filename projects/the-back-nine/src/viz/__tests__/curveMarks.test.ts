@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { curveMarks, BAR_RUNG, LADDER_MAX_RUNG, type CurveMark } from '../curveMarks'
+import { agedLadderMarks, curveMarks, BAR_RUNG, LADDER_MAX_RUNG, type CurveMark } from '../curveMarks'
 import { BANDS } from '@engine/confidence'
 import type { DateOffsetReading, DateTrackOutcome } from '@shared/model'
 
@@ -159,5 +159,59 @@ describe('curveMarks — the honest odds-ladder seam', () => {
     for (const m of marks) {
       expect(m.rung >= 9).toBe(m.clears) // the core invariant at every interior point, not just ends
     }
+  })
+
+  it('carries the DURABLE plan offset on every mark, equal to the display offset when fresh', () => {
+    const marks = curveMarks(confirmed(4, [reading(0, 0.6), reading(2, 0.8), reading(4, 0.9)]))
+    for (const m of marks) expect(m.planOffsetYears).toBe(m.offsetYears)
+  })
+})
+
+describe('agedLadderMarks — the U13 wall-time re-base (council 2026-07-10)', () => {
+  // A representative fresh derivation: crown at 8, a dip at 4, below-bar at 2 and 6, a clearing tail.
+  const fresh = () =>
+    curveMarks(
+      confirmed(
+        8,
+        [reading(2, 0.7), reading(4, 0.96), reading(6, 0.82), reading(8, 0.88), reading(12, 0.9)],
+        [4],
+      ),
+    )
+
+  it('elapsed 0 is the REFERENCE identity — every fresh surface is byte-identical (the source-bound rail)', () => {
+    const marks = fresh()
+    expect(agedLadderMarks(marks, 0)).toBe(marks) // same array object, not a copy
+  })
+
+  it('a defensive negative elapsed is also the identity (elapsed is max(0,…) upstream)', () => {
+    const marks = fresh()
+    expect(agedLadderMarks(marks, -1)).toBe(marks)
+  })
+
+  it('DROPS already-passed stop-years (planOffset < elapsed) and RE-BASES the survivors to years-from-today', () => {
+    const aged = agedLadderMarks(fresh(), 3)
+    // plan-2 dropped (passed); plan 4,6,8,12 survive at displays 1,3,5,9.
+    expect(aged.map((m) => m.offsetYears)).toEqual([1, 3, 5, 9])
+    expect(aged.map((m) => m.planOffsetYears)).toEqual([4, 6, 8, 12]) // durable identity untouched
+  })
+
+  it('the boundary planOffset == elapsed SURVIVES as display 0 ("today" — the heroLead offset-0 precedent)', () => {
+    const aged = agedLadderMarks(fresh(), 2)
+    const today = aged.find((m) => m.offsetYears === 0)
+    expect(today).toBeDefined()
+    expect(today?.planOffsetYears).toBe(2)
+    expect(aged).toHaveLength(5) // nothing dropped at elapsed 2 — plan-2 re-bases to today
+  })
+
+  it('carries every honesty flag through the re-base unchanged (rung/clears/dip/crown read the RAW plan offsets)', () => {
+    const marks = fresh()
+    const aged = agedLadderMarks(marks, 3)
+    for (const m of aged) {
+      const raw = marks.find((r) => r.planOffsetYears === m.planOffsetYears)
+      expect({ ...m, offsetYears: raw?.offsetYears }).toEqual(raw)
+    }
+    // the crown is still the durable plan-8 (display 5) — never re-derived from the re-based set
+    expect(aged.filter((m) => m.isCrown).map((m) => m.planOffsetYears)).toEqual([8])
+    expect(aged.filter((m) => m.isDip).map((m) => m.planOffsetYears)).toEqual([4])
   })
 })

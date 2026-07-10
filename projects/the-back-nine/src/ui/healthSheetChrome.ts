@@ -276,9 +276,17 @@ export function composeRegimeFutures(
   if (withCost === undefined || withoutCost === undefined) return base
   // The cost delta LEADS; the odds line (the shared composer's deltaLine) demotes to the
   // second row. Its state/years secondaries stay in their usual seats when present.
+  // The gate reads the FORMATTED strings (Caddie 2026-07-10): two medians within the $100
+  // rounding grain render one figure, and "~$99,800 versus ~$99,800" is a twin-number
+  // against itself — the even arm says "about the same" and quotes the figure once.
+  const withFormatted = formatDollar(withCost)
+  const withoutFormatted = formatDollar(withoutCost)
   return {
     ...base,
-    deltaLine: slots.subsidyRegimeCostDelta(formatDollar(withCost), formatDollar(withoutCost)),
+    deltaLine:
+      withFormatted === withoutFormatted
+        ? slots.subsidyRegimeCostEven(withFormatted)
+        : slots.subsidyRegimeCostDelta(withFormatted, withoutFormatted),
     stateLine: base.deltaLine,
   }
 }

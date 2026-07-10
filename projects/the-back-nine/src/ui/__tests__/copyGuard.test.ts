@@ -89,6 +89,7 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     dateTradeoff: slots.dateTradeoff(2, slots.xOfTen(8)),
     ladderOffsetTick: slots.ladderOffsetTick(6),
     ladderMarkAria: slots.ladderMarkAria(6, slots.xOfTen(9), 'crown'),
+    ladderCaveatAgedBalances: slots.ladderCaveatAgedBalances(2024),
     noDateHowClose: slots.noDateHowClose(slots.xOfTen(7)),
     dateFloorCovered: slots.dateFloorCovered(4, slots.withOdds(slots.xOfTen(9)), true),
     budgetAnchorLead: slots.budgetAnchorLead('78,000'),
@@ -134,6 +135,7 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     healthFigCents: slots.healthFigCents(22),
     healthFigStepAdd: slots.healthFigStepAdd('1,100'),
     subsidyRegimeCostDelta: slots.subsidyRegimeCostDelta('96,000', '128,000'),
+    subsidyRegimeCostEven: slots.subsidyRegimeCostEven('99,800'),
     // F10 — the R19 ceiling errors quote the statutory limit (pre-formatted by intake).
     errContributionCeiling: slots.errContributionCeiling('32,250'),
     errAdditionsCeiling: slots.errAdditionsCeiling('83,250'),

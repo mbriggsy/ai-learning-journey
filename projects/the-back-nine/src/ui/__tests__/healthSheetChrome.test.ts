@@ -258,4 +258,19 @@ describe('composeRegimeFutures — the cost-headline compose', () => {
     const view = composeRegimeFutures(outcome(96_000, undefined), false)
     expect(view?.deltaLine).toBe(slots.rothDeltaJoint(slots.xOfTen(8), slots.xOfTen(7)))
   })
+
+  it('collapses to the even arm when both medians ROUND to one formatted figure (Caddie 2026-07-10 — never "~$99,800 versus ~$99,800")', () => {
+    // 99,840 and 99,790 differ raw but both land on the $100 rounding grain at 99,800.
+    const view = composeRegimeFutures(outcome(99_840, 99_790), true)
+    expect(view?.deltaLine).toBe(slots.subsidyRegimeCostEven('99,800'))
+    expect(view?.deltaLine).not.toContain('versus')
+    // the odds line still demotes to the second row exactly like the delta arm.
+    expect(view?.stateLine).toBe(slots.rothDeltaJoint(slots.xOfTen(8), slots.xOfTen(7)))
+  })
+
+  it('keeps the versus sentence when the formatted figures genuinely differ by one grain', () => {
+    // 99,840 rounds to 99,800; 99,860 rounds to 99,900 — adjacent grains stay a real compare.
+    const view = composeRegimeFutures(outcome(99_840, 99_860), true)
+    expect(view?.deltaLine).toBe(slots.subsidyRegimeCostDelta('99,800', '99,900'))
+  })
 })

@@ -75,3 +75,29 @@ describe('dateTradeoffPoint — the R28 earlier lower-odds point', () => {
     expect(dateTradeoffPoint(track)).toBeNull()
   })
 })
+
+describe('dateTradeoffPoint — the U13 aged-vault exclusion (a passed stop-year is not offerable)', () => {
+  it('skips a candidate whose stop-year already passed and offers the latest still-future one', () => {
+    // crowned at 5 (9 of 10); lower-odds candidates at offsets 1 (7 of 10) and 4 (8 of 10).
+    // elapsed 2 → offset 1 is a year in the PAST — never offered; offset 4 is the pick.
+    const track = confirmed(5, 0.9, [reading(1, 0.7), reading(4, 0.8), reading(5, 0.9)])
+    expect(dateTradeoffPoint(track, 2)).toEqual({ yearsSooner: 1, oddsText: slots.xOfTen(8) })
+  })
+
+  it('returns null when the ONLY lower-odds candidates have already passed (never an unpickable offer)', () => {
+    // offsets 3 and 4 read at-or-above the crowned odds (not tradeoffs); offset 1 is lower but past.
+    const track = confirmed(5, 0.9, [reading(1, 0.7), reading(3, 0.9), reading(4, 0.92), reading(5, 0.9)])
+    expect(dateTradeoffPoint(track, 2)).toBeNull()
+  })
+
+  it('a candidate landing exactly on today (offset == elapsed) stays offerable — stop-now is a real choice', () => {
+    const track = confirmed(5, 0.9, [reading(2, 0.8), reading(5, 0.9)])
+    expect(dateTradeoffPoint(track, 2)).toEqual({ yearsSooner: 3, oddsText: slots.xOfTen(8) })
+  })
+
+  it('elapsed 0 (every fresh session) is the arithmetic identity with the legacy scan', () => {
+    const track = confirmed(4, 0.88, [reading(2, 0.78), reading(3, 0.82), reading(4, 0.88)])
+    expect(dateTradeoffPoint(track, 0)).toEqual(dateTradeoffPoint(track))
+    expect(dateTradeoffPoint(track, 0)).toEqual({ yearsSooner: 1, oddsText: slots.xOfTen(8) })
+  })
+})

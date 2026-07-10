@@ -14,8 +14,15 @@
  *    smallest-sacrifice marginal tradeoff. Strictly-lower also EXCLUDES a non-monotone cleared-then-
  *    dipped earlier offset (it reads at the crowned odds), which is the disclosure's job, not a
  *    "go sooner at lower odds" claim.
+ *  - On an AGED vault (the U13 wall-time anchor, insight 078's same-meaning sweep) a candidate whose
+ *    stop-year has already PASSED (offsetYears − elapsedYears < 0) is never offered — this line
+ *    OFFERS a choice, and a passed year is not pickable. Re-based today (== 0) stays offerable
+ *    (stop-now is a real choice — the heroLead offset-0 precedent). Excluding past candidates can
+ *    only move the offer later or remove it: conservative. elapsed 0 is the arithmetic identity, so
+ *    every fresh session is byte-identical.
  *  - The honesty is in the number: a steep earlier drop reads plainly as "much riskier" — no floor
- *    gate invents a threshold the engine doesn't name.
+ *    gate invents a threshold the engine doesn't name. `yearsSooner` stays the OFFSET difference
+ *    (sooner than the crowned date) — invariant under the re-base, so it needs no anchor arithmetic.
  */
 import { slots } from './copy'
 import type { DateTrackOutcome } from '@shared/model'
@@ -28,14 +35,16 @@ export interface DateTradeoffPoint {
 }
 
 /** The earlier lower-odds tradeoff point for a track, or null when none should show (per the rules
- *  above). The crowned odds and the earlier odds share the round(qlb·10) mapping with dateOdds.ts. */
-export function dateTradeoffPoint(track: DateTrackOutcome): DateTradeoffPoint | null {
+ *  above). The crowned odds and the earlier odds share the round(qlb·10) mapping with dateOdds.ts.
+ *  `elapsedYears` is the U13 anchor's elapsedPlanYears (0 = fresh, the identity). */
+export function dateTradeoffPoint(track: DateTrackOutcome, elapsedYears = 0): DateTradeoffPoint | null {
   if (track.kind !== 'confirmed-date') return null
   if (track.nonMonotoneOffsets.length > 0) return null
   const crownedOdds = Math.round(track.grade.quantizedLowerBound * 10)
   let best: { offsetYears: number; odds: number } | null = null
   for (const r of track.curve) {
     if (r.offsetYears >= track.offsetYears) continue
+    if (r.offsetYears - elapsedYears < 0) continue // aged vault: a passed stop-year is not offerable
     const odds = Math.round(r.quantizedLowerBound * 10)
     if (odds >= crownedOdds) continue // strictly-lower only (excludes cleared-then-dipped earlier offsets)
     if (best === null || r.offsetYears > best.offsetYears) best = { offsetYears: r.offsetYears, odds }

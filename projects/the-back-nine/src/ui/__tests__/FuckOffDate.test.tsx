@@ -177,6 +177,96 @@ describe('FuckOffDate — the D2 landed date surface', () => {
   })
 })
 
+// The U13 aged surface (council 2026-07-10 — the two-time-bases family's third sibling closed):
+// hero, ladder, tradeoff, caveat, and how-close all speak ONE clock on an aged vault.
+describe('FuckOffDate — the aged wall-time re-base', () => {
+  const anchor = (elapsedPlanYears: number) => ({ startCalendarYear: 2024, elapsedPlanYears })
+  const ladderAria = (container: HTMLElement): string[] =>
+    [...container.querySelectorAll('.fod-ladder [aria-label]')].map((e) => e.getAttribute('aria-label') ?? '')
+
+  it('the hero and the ladder crown SPEAK ONE CLOCK on an aged vault (the Caddie blocker regression pin)', () => {
+    // confirmed crowns plan-4; elapsed 2 → hero "about 2 years out — around 2028" AND the crown
+    // aria "Stopping in 2 years … your date" — the exact pair the 2026-07-10 panel caught split.
+    const { container } = render(<FuckOffDate view={dates(DATE_FIXTURES.confirmed)} dateAnchor={anchor(2)} />)
+    expect(screen.getByRole('heading', { name: slots.dateInYearsAnchored(2, 2028) })).toBeInTheDocument()
+    const aria = ladderAria(container)
+    expect(aria).toContain(slots.ladderMarkAria(2, slots.xOfTen(9), 'crown'))
+    // the save-relative crown sentence (the old lie) is GONE
+    expect(aria).not.toContain(slots.ladderMarkAria(4, slots.xOfTen(9), 'crown'))
+    // the passed plan-0 and plan-1 rungs dropped from every channel (display 0 is plan-2, below-bar)
+    expect(aria).toContain(slots.ladderMarkAria(0, slots.xOfTen(8), 'below'))
+    expect(container.querySelectorAll('.fod-ladder .ladder-dot')).toHaveLength(4) // plan 2,3,4,5
+  })
+
+  it('the ladder WITHDRAWS when the crown has passed (crown < elapsed) — the hero arrived arm carries the story', () => {
+    const { container } = render(<FuckOffDate view={dates(DATE_FIXTURES.confirmed)} dateAnchor={anchor(5)} />)
+    expect(screen.getByRole('heading', { name: slots.dateInYearsPast(2028) })).toBeInTheDocument()
+    expect(screen.queryByText(copy.ladderDisclosure)).not.toBeInTheDocument()
+    expect(container.querySelector('.fod-ladder')).toBeNull() // never a crownless field of dots
+  })
+
+  it('the STRICT boundary (crown == elapsed) keeps the ladder with the "stopping today" crown', () => {
+    const { container } = render(<FuckOffDate view={dates(DATE_FIXTURES.confirmed)} dateAnchor={anchor(4)} />)
+    expect(container.querySelector('.fod-ladder')).not.toBeNull()
+    expect(ladderAria(container)).toContain(slots.ladderMarkAria(0, slots.xOfTen(9), 'crown'))
+  })
+
+  it('an aged ladder wears the balances-vintage clause (agedBalancesYear present — the persist machine derived it); absent ⇒ no clause', () => {
+    const aged = render(
+      <FuckOffDate view={dates(DATE_FIXTURES.confirmed)} dateAnchor={anchor(1)} agedBalancesYear={2024} />,
+    )
+    expect(aged.container.textContent).toContain(slots.ladderCaveatAgedBalances(2024))
+    expect(aged.container.textContent).toContain(copy.ladderPlanCaveat) // the base caveat stays
+    aged.unmount()
+    // Absent prop = a fresh save, an in-session edit, a re-save, or a legacy vault — the
+    // derivation (agedBalancesYearFor) owns that truth; the surface renders no clause.
+    const fresh = render(<FuckOffDate view={dates(DATE_FIXTURES.confirmed)} dateAnchor={anchor(1)} />)
+    expect(fresh.container.textContent).not.toContain('They also read from your account balances')
+  })
+
+  it('the aged tradeoff never offers a passed stop-year (all lower-odds candidates passed → no line)', () => {
+    // confirmed's lower-odds candidates are plan 0..3; at elapsed 4 every one has passed.
+    const { container } = render(<FuckOffDate view={dates(DATE_FIXTURES.confirmed)} dateAnchor={anchor(4)} />)
+    expect(container.textContent).not.toContain('sooner')
+  })
+
+  const noDateTrack = {
+    kind: 'no-date-in-window',
+    nonMonotoneOffsets: [],
+    curve: [
+      { offsetYears: 0, survivalFraction: 0.81, quantizedLowerBound: 0.78, clears: false },
+      { offsetYears: 15, survivalFraction: 0.69, quantizedLowerBound: 0.66, clears: false },
+      { offsetYears: 30, survivalFraction: 0.58, quantizedLowerBound: 0.55, clears: false },
+    ],
+  } as const
+
+  it('the aged how-close line reads the FUTURE offsets only (a passed near-miss is not "how close you are")', () => {
+    // best rung sits at plan-0 (0.78 → 8); the future best is 7. Aged, the line must speak 7.
+    const { container } = render(<FuckOffDate view={dates(noDateTrack)} dateAnchor={anchor(2)} />)
+    expect(container.textContent).toContain(slots.noDateHowClose(slots.xOfTen(7)))
+    expect(container.textContent).not.toContain(slots.noDateHowClose(slots.xOfTen(8)))
+  })
+
+  it('a no-date vault older than the WHOLE window SUPPRESSES the how-close line — never a fabricated "0 of 10" (review 2026-07-10)', () => {
+    // elapsed 31 > every evaluated offset: the aged filter leaves nothing readable, and the
+    // reduce's initial 0 must never become a rock-bottom odds claim.
+    const { container } = render(<FuckOffDate view={dates(noDateTrack)} dateAnchor={anchor(31)} />)
+    expect(container.textContent).not.toContain('The nearest any year came')
+    expect(container.textContent).not.toContain('0 of 10')
+    // the calm no-date headline still stands — the window claim is anchor-independent.
+    expect(container.textContent).toContain(slots.noDateInWindow(DATE_WINDOW_TOP))
+  })
+
+  it('an elapsed-0 anchor renders the ladder byte-identically to the un-anchored mount (the fresh identity)', () => {
+    const plain = render(<FuckOffDate view={dates(DATE_FIXTURES.confirmed)} />)
+    const ladderPlain = plain.container.querySelector('.fod-ladder')?.innerHTML
+    plain.unmount()
+    const zero = render(<FuckOffDate view={dates(DATE_FIXTURES.confirmed)} dateAnchor={anchor(0)} />)
+    expect(zero.container.querySelector('.fod-ladder')?.innerHTML).toBe(ladderPlain)
+    expect(ladderPlain).toBeTruthy()
+  })
+})
+
 /*
  * U9b — the floor/lifestyle SPLIT arms (council 2026-07-02). The claim assignment is the honesty
  * spine: the hero (work-optional) claim reads the LIFESTYLE track; the floor renders as the

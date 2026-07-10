@@ -18,6 +18,10 @@ import { REAL, TIER, SHOWCASE, FLOOR, PHONE, gotoSeedFinal } from './reviewSurfa
  *  - The two-pane honesty floor (absorbed from the parked D2d e2e): at 1088px (68rem exactly) the
  *    band's percentile labels — the color-blind reader's honesty channel — must still render
  *    (the ≤260px container query must NOT fire at the tightest in-range pane width).
+ *  - The AGED date route (?vault=datestale, council 2026-07-10): the hero's "about N years out"
+ *    and the ladder crown's "Stopping in N years" speak ONE clock (pinned structurally — an
+ *    engine re-grade may move N, the equality may not), the aged-balances caveat rides the
+ *    ladder, and the order contract holds on the aged frame too.
  *
  * Enforcement is REAL-BROWSER on the DEV server: vertical fit is reflow-dominated (line wraps,
  * door wrap-count, the survivor face) — a token-sum arithmetic gate would go green while the
@@ -407,5 +411,103 @@ test.describe(`the vault return (?vault=stale) — the gate + the staleness-echo
     await assertOneVisibleDisclaimer(page, 'laptop')
     await assertResultPadding(page, '32px') // 791 ≤ 840 — the density tier serves this frame too
     await assertFrameFits(page, true)
+  })
+})
+
+// ── U13 follow-up: the AGED date route (?vault=datestale — the re-based odds ladder) ──────────
+// The two-time-bases fix (council 2026-07-10): the hero re-derives "years out" from TODAY, and
+// the ladder below it must speak the SAME clock — the Caddie panel's hard-flagged blocker was
+// the rosier re-derived hero over a save-relative ladder ("about 6 years out" vs "Stopping in
+// 8 years … your date"). The DATE route scrolls by design, so this arm pins the ORDER contract
+// plus the aged surface's own honesty composition, never a full one-frame fit.
+
+test.describe(`the aged date return (?vault=datestale) — one clock across hero and ladder (${REAL.width}×${REAL.height})`, () => {
+  test.use({ viewport: REAL, deviceScaleFactor: 2.5 })
+  test('the hero count and the ladder crown speak the same years-from-today; the aged-balances caveat rides the ladder; order holds', async ({ page }) => {
+    await page.goto('/?vault=datestale')
+    const unlock = page.getByRole('button', { name: 'Open my plan' })
+    await expect(unlock, 'the datestale plant did not land on the unlock screen').toBeVisible({
+      timeout: 30_000,
+    })
+    await unlock.click()
+
+    // The gate's decision pair sits in the first frame on the DATE route's gate too.
+    const affirm = page.getByRole('button', { name: /Still about right/ })
+    await expect(affirm).toBeVisible({ timeout: 30_000 })
+    await page.evaluate(() => document.fonts.ready)
+    await page.evaluate(() => window.scrollTo(0, 0))
+    const affirmBox = await affirm.boundingBox()
+    expect(affirmBox, 'the affirm CTA reported no box').not.toBeNull()
+    expect(
+      affirmBox!.y + affirmBox!.height,
+      'the affirm CTA sits below the first frame at the real window',
+    ).toBeLessThanOrEqual(REAL.height)
+    await affirm.click()
+
+    await expect(page.locator('main.result[data-answer-tier="final"]')).toBeAttached({
+      timeout: 90_000,
+    })
+    await page.evaluate(() => document.fonts.ready)
+    await page.waitForFunction(() =>
+      document.getAnimations().every((a) => {
+        const timing = a.effect?.getTiming()
+        return timing?.iterations === Infinity || a.playState !== 'running'
+      }),
+    )
+    await page.evaluate(
+      () => new Promise<void>((r) => requestAnimationFrame(() => requestAnimationFrame(() => r()))),
+    )
+    await page.evaluate(() => window.scrollTo(0, 0))
+
+    // Presence companions (insight 029): the two-pane stamped, BOTH graphs drawn, the floor's
+    // ARRIVED line rendered (the aged split really landed — not a fresh page passing vacuously),
+    // the doors offered.
+    await expect(page.locator('.fod-reveal[data-twopane]')).toBeVisible()
+    await expect(page.locator('.fod-band')).toBeVisible()
+    await expect(page.locator('.fod-ladder')).toBeVisible()
+    await expect(page.getByText(/penciled as covered/)).toBeVisible()
+    expect(await page.locator('.result-quiet-row button').count()).toBeGreaterThanOrEqual(2)
+    await assertOneVisibleDisclaimer(page, 'laptop')
+
+    // THE ONE-CLOCK PIN — the exact Caddie-flagged contradiction, pinned STRUCTURALLY (an
+    // engine re-grade may move N; hero-N must equal crown-N forever): the hero's "about N
+    // years out" and the crown aria's "Stopping in N years" read one number.
+    const heroText = await page.locator('.fod-headline').innerText()
+    const heroN = heroText.match(/about (a|\d+) years? out/)
+    expect(heroN, `the hero does not carry the anchored count: "${heroText}"`).not.toBeNull()
+    const crownAria = await page
+      .locator('.fod-ladder [aria-label*="your date"]')
+      .first()
+      .getAttribute('aria-label')
+    expect(crownAria, 'the ladder crown aria is missing').not.toBeNull()
+    const crownN = crownAria!.match(/^Stopping (today|in (a|\d+) years?)/)
+    expect(crownN, `the crown aria does not open with a stopping count: "${crownAria}"`).not.toBeNull()
+    const heroCount = heroN![1] === 'a' ? 1 : Number(heroN![1])
+    const crownCount = crownN![1] === 'today' ? 0 : crownN![2] === 'a' ? 1 : Number(crownN![2])
+    expect(
+      crownCount,
+      `two time bases on one screen: the hero says ${heroCount} years out, the ladder crown says ${crownCount} (aria: "${crownAria}")`,
+    ).toBe(heroCount)
+
+    // THE AGED-BALANCES CAVEAT (council 2026-07-10, the pulled-forward facet c) rides the ladder.
+    await expect(
+      page.getByText('They also read from your account balances as you entered them in'),
+    ).toBeVisible()
+
+    // ORDER (the date route's honesty contract): graphs → in-frame disclaimer → doors, doors last.
+    const box = async (selector: string) => {
+      const b = await page.locator(selector).boundingBox()
+      expect(b, `${selector} must render with a real box`).not.toBeNull()
+      return b as NonNullable<typeof b>
+    }
+    const graphs = await box('.fod-graphs')
+    const disclaimer = await box('footer.disclaimer.disclaimer--in-frame')
+    const doors = await box('.result-quiet-row')
+    expect(disclaimer.y, 'the R13 disclaimer must sit BELOW both graphs').toBeGreaterThanOrEqual(
+      graphs.y + graphs.height - 0.5,
+    )
+    expect(doors.y, 'the quiet doors must sit BELOW the R13 disclaimer').toBeGreaterThanOrEqual(
+      disclaimer.y + disclaimer.height - 0.5,
+    )
   })
 })

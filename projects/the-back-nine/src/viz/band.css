@@ -117,8 +117,17 @@
   pointer-events: all;
 }
 /* ONLY the enlarged (modal) variant traps a horizontal touch-drag as a scrub; the drawer leaves
-   touch alone (it taps to enlarge) and must not steal page scroll. */
-.band-scrub-capture--enlarged {
+   touch alone (it taps to enlarge) and must not steal page scroll.
+   The rect-level rule alone is NOT enough: WebKit does not reliably honor touch-action on inner
+   SVG children, so a real phone still claimed the glide as a pan and fired pointercancel — the
+   scrub froze at the press point and every new value needed a fresh press ("I have to click and
+   hold over and over", Briggsy's live phone read, 2026-07-10). The deny therefore ALSO sits on
+   the svg ROOT (`data-variant` is the render hook reserved for exactly this per-variant CSS)
+   and on the modal's figure — the HTML-ancestor seat every engine honors. The drawer variant
+   keeps default touch-action everywhere: page scroll over the inline chart must survive. */
+.band-scrub-capture--enlarged,
+.band-svg[data-variant='enlarged'],
+.band-modal__dialog .band-figure {
   touch-action: none;
 }
 /* the LIVE scrubber rule — SOLID (distinct from the dashed milestone rules), thin + quiet, ink. */

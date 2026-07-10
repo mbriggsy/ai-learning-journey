@@ -31,6 +31,7 @@ import {
   PLOT,
   PLOT_H,
   PLOT_W,
+  READOUT_PAD_X,
   READOUT_W,
   VIEWBOX,
   areaPath,
@@ -467,7 +468,6 @@ function ScrubVisual({ data, labels, idx }: { data: ResolvedData; labels: BandLa
  *  copy.ts) composed around the PRE-FORMATTED figures — the renderer never types a numeral. The ages
  *  line drops when no household-clock closure was supplied; on a thinned cohort the dollar lines give
  *  way to the calm withdrawal note. */
-const READOUT_PAD_X = 12
 const READOUT_PAD_Y = 11
 const READOUT_LINE = 17
 

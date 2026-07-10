@@ -178,6 +178,11 @@ export function nearestLatticeIndex(viewBoxX: number, latticeCount: number): num
  *  rendered `<rect>` width agree by construction. Sized for the widest line — the spelled-out range
  *  label "Eight in ten land between" and the thin-cohort note — at the ~12.5px readout text. */
 export const READOUT_W = 224
+/** Horizontal text inset inside the readout box (viewBox px) — the usable line width is
+ *  `READOUT_W − 2 × READOUT_PAD_X`. Lives HERE (not in the renderer) so the design-tokens
+ *  e2e width gate binds to the same figure the box math uses (insight 032 — a test without
+ *  a source bind is not a pin). */
+export const READOUT_PAD_X = 12
 /** Gap (viewBox px) between the scrubber rule and the readout box, so the on-rule dots stay visible. */
 export const READOUT_GAP = 14
 /** The readout box is pinned to the TOP gutter — a fixed y that never bobs with the cursor and never

@@ -12,12 +12,33 @@
  * STRING-FREE: every label arrives via the `labels` / `chrome` props (src/ui fills from copy.ts).
  */
 
-import { useState } from 'react'
+import { useState, useSyncExternalStore } from 'react'
 import { ConfidenceBand } from './ConfidenceBand'
 import { BandEnlargeModal } from './BandEnlargeModal'
 import { BandLegend } from './BandLegend'
 import type { BandViewData, BandLabels } from './bandData'
 import './band.css'
+
+/*
+ * The enlarge affordance is FINE-POINTER ONLY (Briggsy's live phone read, 2026-07-10: "the
+ * 'enlarged' popup is actually smaller, lol"). The band's viewBox aspect is fixed, so on a
+ * portrait phone a modal can never render the chart meaningfully larger than the inline band —
+ * the hop is a PHANTOM affordance there (the same class the 2026-06-29 design council killed a
+ * hover for), and the touch reader now drag-scrubs the inline band directly. On a fine pointer
+ * (desktop, hybrid-with-mouse) the lightbox is genuinely larger and the click path is unchanged.
+ * jsdom evaluates every media query to `matches: false` ⇒ tests default to the fine-pointer
+ * (button-present) contract unless they stub matchMedia.
+ */
+const COARSE_QUERY = '(pointer: coarse)'
+const subscribeCoarse = (onChange: () => void): (() => void) => {
+  if (typeof window.matchMedia !== 'function') return () => {}
+  const m = window.matchMedia(COARSE_QUERY)
+  m.addEventListener('change', onChange)
+  return () => m.removeEventListener('change', onChange)
+}
+const readCoarse = (): boolean =>
+  typeof window.matchMedia === 'function' && window.matchMedia(COARSE_QUERY).matches
+const usePointerCoarse = (): boolean => useSyncExternalStore(subscribeCoarse, readCoarse)
 
 /** The drawer's own chrome strings (not part of the band's data — supplied by the caller). */
 export interface BandPanelChrome {
@@ -45,6 +66,9 @@ export interface ConfidenceBandPanelProps {
 export function ConfidenceBandPanel({ data, labels, chrome, atRangeSentence }: ConfidenceBandPanelProps) {
   const [enlarged, setEnlarged] = useState(false)
   const open = () => setEnlarged(true)
+  // Coarse pointer ⇒ no enlarge affordance and no modal (see the header note above): the inline
+  // band IS the chart there, and it drag-scrubs directly.
+  const coarse = usePointerCoarse()
 
   // RE-DRAW-NOT-MORPH, scoped to the BAND not the panel: a tiered consumer (the date route) can
   // change the fan's SCALE between recomputes (provisional→final dollarMax/horizon). Re-keying the
@@ -63,7 +87,7 @@ export function ConfidenceBandPanel({ data, labels, chrome, atRangeSentence }: C
         key={drawKey}
         data={data}
         labels={labels}
-        onEnlarge={open}
+        onEnlarge={coarse ? undefined : open}
         enlargeLabel={chrome.enlargeLabel}
         variant="drawer"
       />
@@ -76,15 +100,17 @@ export function ConfidenceBandPanel({ data, labels, chrome, atRangeSentence }: C
 
       <BandLegend labels={labels} />
 
-      <BandEnlargeModal
-        open={enlarged}
-        onClose={() => setEnlarged(false)}
-        data={data}
-        redrawKey={drawKey}
-        labels={labels}
-        title={chrome.modalTitle}
-        closeLabel={chrome.closeLabel}
-      />
+      {!coarse && (
+        <BandEnlargeModal
+          open={enlarged}
+          onClose={() => setEnlarged(false)}
+          data={data}
+          redrawKey={drawKey}
+          labels={labels}
+          title={chrome.modalTitle}
+          closeLabel={chrome.closeLabel}
+        />
+      )}
     </aside>
   )
 }

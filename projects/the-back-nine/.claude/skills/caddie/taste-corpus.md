@@ -270,3 +270,14 @@ supersedes anything derived from this file.
   comment but stopped on a chart speaking a different axis dialect than the fan (→ rule 36);
   (b) **he free-walks the doors** — the finding sat on a surface the Caddie's walk never
   captured. A cold read that skips the door sheets is not the read he performs.
+- **E12 — the phone fan interaction (2026-07-10, live from his phone mid-U13-walk).** Trigger:
+  touch users had to tap-to-enlarge before scrubbing, and the "enlarged" modal renders the
+  fixed-aspect chart SMALLER than the inline band on a portrait phone. His verbatim: "glide
+  works, but let's not force the click to 'enlarge' it — I think the 'enlarged' popup is
+  actually smaller, lol." Resolution: pointer-adaptive chrome — coarse pointers get direct
+  drag-scrub on the inline band (touch-action pan-y; vertical swipe stays page scroll) and NO
+  enlarge affordance; fine pointers keep the genuinely-bigger lightbox. Two lessons: (a) **an
+  affordance must deliver its name** — "enlarge" that renders smaller is a phantom affordance
+  (the 2026-06-29 hover-kill class), and he catches it by FEEL on the device, with a laugh not
+  anger; (b) **direct manipulation beats a hop** — never route a touch reader through a modal
+  for a value the surface itself could give under their finger.

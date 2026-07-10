@@ -288,16 +288,20 @@ function hookConsole(page: Page): Array<{ type: string; text: string }> {
   return log
 }
 
+// The phone arm carries hasTouch + isMobile so `(pointer: coarse)` matches like a REAL phone —
+// pointer-adaptive chrome (the band's enlarge affordance is fine-pointer-only, 2026-07-10)
+// otherwise captures a desktop DOM into the "phone" bundle and the readers judge a frame no
+// phone user sees.
 const VIEWPORTS = [
-  { name: 'real', viewport: REAL, dpr: REAL_DPR },
-  { name: 'phone', viewport: PHONE, dpr: PHONE_DPR },
+  { name: 'real', viewport: REAL, dpr: REAL_DPR, touch: false },
+  { name: 'phone', viewport: PHONE, dpr: PHONE_DPR, touch: true },
 ] as const
 
 for (const target of TARGETS) {
   const targetSlug = `${target.kind}-${target.key}`
   for (const v of VIEWPORTS) {
     test.describe(`caddie walk — ${target.kind}:${target.key} at ${v.name.toUpperCase()} (${v.viewport.width}×${v.viewport.height} @ ${v.dpr}dpr)`, () => {
-      test.use({ viewport: v.viewport, deviceScaleFactor: v.dpr })
+      test.use({ viewport: v.viewport, deviceScaleFactor: v.dpr, hasTouch: v.touch, isMobile: v.touch })
       test('walk', async ({ page }) => {
         const consoleLog = hookConsole(page)
         const outDir = path.join(OUT_ROOT, targetSlug, v.name)

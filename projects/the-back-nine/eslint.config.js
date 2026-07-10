@@ -57,7 +57,9 @@ const tsGlobs = (base) => [`${base}/**/*.{ts,mts,cts,tsx}`]
 const TEST_IGNORES = ['**/__tests__/**']
 
 export default tseslint.config(
-  { ignores: ['dist/', 'dev-dist/', 'coverage/', 'node_modules/'] },
+  // temp/ is the sanctioned throwaway-scratch dir (gitignored, cleared at squeaky) — ad-hoc
+  // verification probes live there briefly and must never gate the lint.
+  { ignores: ['dist/', 'dev-dist/', 'coverage/', 'node_modules/', 'temp/'] },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {

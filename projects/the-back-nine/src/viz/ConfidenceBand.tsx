@@ -382,20 +382,25 @@ function ScrubLayer({
   }
 
   const onMove = (e: React.PointerEvent<SVGRectElement>) => {
-    // DRAWER: mouse/pen only — touch is reserved for the wrapping enlarge <button> (tap-to-enlarge).
-    if (variant === 'drawer' && e.pointerType === 'touch') return
-    // ENLARGED + touch: only track once a drag is captured (a stray touch-move never scrubs).
-    if (variant === 'enlarged' && e.pointerType === 'touch' && !captured.current) return
+    // Touch tracks ONLY as a captured drag, both variants (a stray touch-move never scrubs);
+    // mouse/pen hover-scrub freely as before.
+    if (e.pointerType === 'touch' && !captured.current) return
     const i = locate(e)
     if (i !== null) setIdx(i)
   }
   const clear = () => {
     if (!captured.current) setIdx(null)
   }
-  // Touch drag-scrub lives ONLY in the enlarged modal (no enlarge button there to fight). We do NOT
-  // preventDefault/stopPropagation in the drawer, so a touch tap still bubbles to the enlarge button.
+  // Touch drag-scrub lives on BOTH variants (Briggsy's live phone read, 2026-07-10 — the enlarge
+  // hop rendered the chart SMALLER on a portrait phone, so the inline band must read directly;
+  // the drawer's `touch-action: pan-y` in band.css keeps vertical pans as page scroll, so only a
+  // horizontal glide scrubs). We do NOT preventDefault/stopPropagation, so where the enlarge
+  // <button> still wraps the band (fine-pointer contexts), a movement-free TAP bubbles a click
+  // and tap-to-enlarge is unchanged — a real drag exceeds the browser's tap slop and fires no
+  // click. On coarse-pointer devices the button is gone (panel gates it) and a tap simply pins
+  // the readout at that column.
   const onDown = (e: React.PointerEvent<SVGRectElement>) => {
-    if (variant !== 'enlarged' || e.pointerType !== 'touch') return
+    if (e.pointerType !== 'touch') return
     e.currentTarget.setPointerCapture(e.pointerId)
     captured.current = true
     const i = locate(e)

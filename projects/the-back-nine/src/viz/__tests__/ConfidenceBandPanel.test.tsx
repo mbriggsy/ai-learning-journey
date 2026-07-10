@@ -114,6 +114,43 @@ describe('ConfidenceBandPanel — the enlarge affordance (the graph itself is th
   })
 })
 
+// Pointer-adaptive chrome (Briggsy's live phone read, 2026-07-10: "the 'enlarged' popup is
+// actually smaller, lol"): on a COARSE pointer the enlarge hop is a phantom affordance — the
+// fixed-aspect chart cannot render larger inside a portrait modal — so the panel withholds the
+// button AND the modal entirely; the inline band drag-scrubs directly (ConfidenceBand's touch
+// capture + band.css `touch-action: pan-y`, live-verified — the pointer glue itself is
+// jsdom-unreachable: getScreenCTM/setPointerCapture are null there). The file's always-false
+// matchMedia stub is the FINE-pointer control arm — every test above proves the button exists
+// there, so this pair is mutation-proof in both directions.
+describe('ConfidenceBandPanel — coarse pointer (phone): no enlarge affordance', () => {
+  it('a coarse pointer gets the bare band — no button wrap, no modal mount', () => {
+    const prior = window.matchMedia
+    window.matchMedia = ((query: string) =>
+      ({
+        matches: query === '(pointer: coarse)',
+        media: query,
+        onchange: null,
+        addEventListener: () => {},
+        removeEventListener: () => {},
+        addListener: () => {},
+        removeListener: () => {},
+        dispatchEvent: () => false,
+      }) as unknown as MediaQueryList) as typeof window.matchMedia
+    try {
+      const { container, queryByRole } = render(
+        <ConfidenceBandPanel data={resolved()} labels={labels} chrome={chrome} />,
+      )
+      expect(queryByRole('button', { name: /study the range/i })).toBeNull()
+      // the band still renders, unwrapped — and without the enlargeable styling hook
+      expect(container.querySelector('svg[data-variant="drawer"]')).not.toBeNull()
+      expect(container.querySelector('.band-svg.is-enlargeable')).toBeNull()
+      expect(queryByRole('dialog')).toBeNull()
+    } finally {
+      window.matchMedia = prior
+    }
+  })
+})
+
 // The AT (screen-reader) range parity (council 2026-06-29): the band is role="img" and the pointer
 // scrub that carries the $ range is aria-hidden, so a visually-hidden node gives the SR reader that
 // same range. The panel renders the CALLER-composed string (string-free viz); composition + the column

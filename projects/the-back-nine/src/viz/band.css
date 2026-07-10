@@ -130,6 +130,16 @@
 .band-modal__dialog .band-figure {
   touch-action: none;
 }
+/* The DRAWER drag-scrubs on touch too (Briggsy's phone read, 2026-07-10: the enlarge hop
+   rendered the chart SMALLER on a portrait phone — the inline band must read directly).
+   `pan-y`, not `none`: a HORIZONTAL glide is the scrub, a vertical swipe stays the page's
+   scroll — the inline chart must never become a scroll trap on a page that scrolls by design.
+   Same WebKit seat law as above: the rect-level rule alone is not honored on inner SVG
+   children, so the deny rides the svg root as well. */
+.band-scrub-capture--drawer,
+.band-svg[data-variant='drawer'] {
+  touch-action: pan-y;
+}
 /* the LIVE scrubber rule — SOLID (distinct from the dashed milestone rules), thin + quiet, ink. */
 .band-scrub-rule {
   stroke: var(--ink-muted);

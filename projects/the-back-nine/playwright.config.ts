@@ -13,10 +13,11 @@ import { defineConfig } from '@playwright/test'
  */
 export default defineConfig({
   testDir: './e2e',
-  // The vertical-fit gate rides its OWN harness (playwright.fit.config.ts — a dev server, because
-  // its `?seed=` routes are DCE'd out of dist/). Against THIS dist harness the fit spec would fail
-  // confusingly (no seeds) — keep each harness to its own specs. Run it via `pnpm verify:fit`.
-  testIgnore: '**/vertical-fit.spec.ts',
+  // The vertical-fit gate and the Caddie walk ride their OWN harnesses (playwright.fit.config.ts /
+  // playwright.caddie.config.ts — dev servers, because their `?seed=` routes are DCE'd out of
+  // dist/). Against THIS dist harness those specs would fail confusingly (no seeds) — keep each
+  // harness to its own specs. Run them via `pnpm verify:fit` / `pnpm caddie:walk`.
+  testIgnore: ['**/vertical-fit.spec.ts', '**/caddie-walk.spec.ts'],
   fullyParallel: true,
   forbidOnly: !!process.env.CI, // a stray test.only fails CI rather than silently narrowing the gate
   retries: process.env.CI ? 1 : 0,

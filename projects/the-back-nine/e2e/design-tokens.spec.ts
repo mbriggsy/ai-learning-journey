@@ -127,6 +127,20 @@ test.describe('design tokens — fonts + the figure law', () => {
 test.describe('the band scrub readout — static catalog lines fit the box', () => {
   test('bandReadoutThinNote + the widest static label fit; the probe can fail', async ({ page }) => {
     await page.goto('/')
+    // The .band-readout-* rules ship in the LAZY IntakeApp chunk's stylesheet (band.css rides
+    // ConfidenceBand), which '/' loads via App.tsx's post-mount chunk WARM — an async race the
+    // probe must not run ahead of (it lost on CI while winning locally — the class silently
+    // absent ⇒ the probe inherits the 18px body size; insight 070: wait for the PRESENCE the
+    // awaited event mints — the rule itself — never assume; a never-arriving rule times out RED).
+    await page.waitForFunction(() =>
+      [...document.styleSheets].some((s) => {
+        try {
+          return [...s.cssRules].some((r) => r.cssText.includes('.band-readout-note'))
+        } catch {
+          return false
+        }
+      }),
+    )
     const measured = await page.evaluate(
       async (texts) => {
         const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')

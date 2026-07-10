@@ -132,4 +132,16 @@ notes: the walk's `fill()` originally CONCATENATED into the masked currency inpu
 adversarial lens works); hardened to select-all + typed digits + a fail-loud value assertion.
 Re-walking overwrites the bundle — run-stamped dirs are the filed increment-2 fix.
 
+> **✓ SCORED — Briggsy's real read landed same-day (2026-07-10).** His verbatim: *"I think
+> everything is fine. The graph in the withdrawal order sub-panel should be consistent with the
+> fanout. The x-axis should be ages. consistency. other than that good to go."* **The U12 batch
+> is CLEARED** (the truer-picture line — the formal Act-3 exit condition — passed untouched).
+> Tape score: PARTIAL (see [the tape](tape.md)) — he cleared both hard flags (recorded as
+> false-flags for tone; their engine-lane halves stay filed) and found a real consistency
+> finding on a surface this card never walked (the withdrawal-order sheet's chart spoke years).
+> **His finding was FIXED + eye-verified same session:** the TwoFutures x-axis now derives from
+> the fan's own canonical decade-age rule (`deriveDecadeAgeTicks`, one home) with a
+> geometry-aware endpoint-collision guard (`visibleXTicks`). Fold-ins: corpus rule 36
+> (one chart dialect) + exemplar E11 + the increment-2 scope lesson (walk EVERY door surface).
+
 ---

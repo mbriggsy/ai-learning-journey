@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { composeTwoFutures, deriveTwoFuturesXTicks } from '../twoFuturesChrome'
+import { deriveDecadeAgeTicks } from '../bandAnnotations'
 import { copy, slots } from '../copy'
 import { formatAxisDollar } from '../money'
 import { twoFuturesCeiling } from '@viz/TwoFutures'
@@ -359,16 +360,62 @@ describe('composeTwoFutures — the per-year readout rows (the scrub’s honest 
     expect(rows[2]!.withoutValue).toBe(formatAxisDollar(680_000)) // the surviving arm still speaks
   })
 
-  it('the ages line rides the injected closure (the fan’s own slot); absent closure ⇒ empty ages', () => {
+  it('the ages line rides the household pair (the fan’s own slot + rule); absent ages ⇒ empty', () => {
     const outcome = twoArm({
       with: reading({ headline: headline(8), bandFan: contiguous([800_000, 741_000]), survivalFraction: 0.85 }),
       without: reading({ headline: headline(7), bandFan: contiguous([790_000, 730_000]), survivalFraction: 0.8 }),
     })
-    const agesAt = (y: number) => slots.bandClockAges(66 + y, 64 + y)
-    const withAges = composeTwoFutures(outcome, 'With', 'Without', slots.rothDeltaSurvivor, agesAt)
+    const withAges = composeTwoFutures(outcome, 'With', 'Without', slots.rothDeltaSurvivor, [66, 64])
     expect(withAges!.series!.rows[1]!.ages).toBe(slots.bandClockAges(67, 65))
     expect(withAges!.series!.labels.readoutAgesLabel).toBe(copy.bandReadoutAgesLabel)
     const noAges = composeTwoFutures(outcome, 'With', 'Without', slots.rothDeltaSurvivor)
     expect(noAges!.series!.rows[1]!.ages).toBe('')
+  })
+})
+
+describe('composeTwoFutures — the x-axis speaks the fan’s ages dialect (Briggsy’s 2026-07-10 cold-read: consistency)', () => {
+  // A 30-year horizon so the decade rule yields real intermediate ticks.
+  const longFan = (start: number) =>
+    fan([
+      [0, start],
+      [10, start - 50_000],
+      [20, start - 100_000],
+      [30, start - 150_000],
+    ])
+  const outcome = () =>
+    twoArm({
+      with: reading({ headline: headline(8), bandFan: longFan(800_000), survivalFraction: 0.85 }),
+      without: reading({ headline: headline(7), bandFan: longFan(790_000), survivalFraction: 0.8 }),
+    })
+
+  it('known ages: endpoints + intermediate ticks all carry ages — BY the fan’s own canonical rule', () => {
+    const view = composeTwoFutures(outcome(), 'With', 'Without', slots.rothDeltaSurvivor, [66, 65])
+    const s = view!.series!
+    // The today endpoint: the fan's word + the ages pair (one row of the fan's endpoint grammar).
+    expect(s.labels.todayLabel).toBe(`${copy.bandClockTodayLabel} ${slots.bandClockAges(66, 65)}`)
+    // The right endpoint: the AGES at the chart's own last drawn year — deliberately NOT the
+    // fan's "Plan horizon" word (this chart ends at the dead-cohort truncation, which can be an
+    // earlier year than the fan's horizon; one word must never name two different years).
+    expect(s.labels.horizonLabel).toBe(slots.bandClockAges(96, 95))
+    expect(s.labels.horizonLabel).not.toContain(copy.bandClockHorizonLabel)
+    // The intermediate ticks ARE the fan's decade-age rule — consistency by construction, not
+    // by a parallel loop that could drift (deriveDecadeAgeTicks is the one canonical home).
+    expect(s.xTicks).toEqual(
+      deriveDecadeAgeTicks(66, 65, 30).map((t) => ({ years: t.yearsFromNow, label: t.ages })),
+    )
+    // And it is non-vacuous: a 66/65 couple over 30 years really gets decade ticks.
+    expect(s.xTicks.map((t) => t.label)).toEqual([
+      slots.bandClockAges(70, 69),
+      slots.bandClockAges(80, 79),
+      slots.bandClockAges(90, 89),
+    ])
+  })
+
+  it('ages unknown: the year-count fallback holds (no fabricated ages, the legacy labels)', () => {
+    const view = composeTwoFutures(outcome(), 'With', 'Without', slots.rothDeltaSurvivor)
+    const s = view!.series!
+    expect(s.labels.todayLabel).toBe(slots.ladderOffsetTick(0))
+    expect(s.labels.horizonLabel).toBe('30')
+    expect(s.xTicks).toEqual(deriveTwoFuturesXTicks(30))
   })
 })

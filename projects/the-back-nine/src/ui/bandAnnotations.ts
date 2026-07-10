@@ -51,6 +51,40 @@ const HORIZON_TICK_PAD_YEARS = 3
  *  true end (which can be older). */
 const MAX_TICK_AGE = 100
 
+/** One intermediate decade-age tick: the primary person's round decade, both ages carried. */
+export interface AgeTick {
+  readonly yearsFromNow: number
+  readonly ageA: number
+  readonly ageB: number
+  /** The rendered pair via `slots.bandClockAges` — the ONE ages dialect every chart speaks. */
+  readonly ages: string
+}
+
+/**
+ * The intermediate decade-age reference ticks — the primary person's next round decade onward,
+ * while they sit clear of the horizon pad and inside the meaningful (non-vanishing-cohort) range.
+ * THE ONE canonical tick rule (Briggsy's 2026-07-10 cold-read: every chart's x-axis speaks the
+ * SAME ages dialect — the fan's annotations AND the TwoFutures charts both derive from HERE, so
+ * the two can never grow separate clock grammars).
+ */
+export function deriveDecadeAgeTicks(
+  currentAgeA: number,
+  currentAgeB: number,
+  horizonYears: number,
+): readonly AgeTick[] {
+  const ageGap = currentAgeA - currentAgeB
+  const ticks: AgeTick[] = []
+  for (
+    let ageA = Math.ceil((currentAgeA + 1) / DECADE) * DECADE;
+    ageA <= MAX_TICK_AGE && ageA - currentAgeA < horizonYears - HORIZON_TICK_PAD_YEARS;
+    ageA += DECADE
+  ) {
+    const ageB = ageA - ageGap
+    ticks.push({ yearsFromNow: ageA - currentAgeA, ageA, ageB, ages: slots.bandClockAges(ageA, ageB) })
+  }
+  return ticks
+}
+
 /**
  * The household-clock markers for an already-retired couple's spine band. Named ENDPOINTS — Today
  * (year 0) and the plan horizon (the fan's ACTUAL last year, not the nominal maxHorizon) — bracket a
@@ -68,7 +102,6 @@ export function deriveSpineBandAnnotations(
   currentAgeB: number,
   horizonYears: number,
 ): readonly XAnnotation[] {
-  const ageGap = currentAgeA - currentAgeB
   const markers: XAnnotation[] = [
     {
       id: 'today',
@@ -78,21 +111,15 @@ export function deriveSpineBandAnnotations(
       description: slots.bandClockTodayDesc(currentAgeA, currentAgeB),
     },
   ]
-  // Intermediate decade-age reference ticks — the primary person's next round decade onward, while
-  // they sit clear of the horizon and inside the meaningful (non-vanishing-cohort) range. Ages only,
-  // on the same baseline as the endpoints' ages (the endpoints alone carry a named word above).
-  for (
-    let ageA = Math.ceil((currentAgeA + 1) / DECADE) * DECADE;
-    ageA <= MAX_TICK_AGE && ageA - currentAgeA < horizonYears - HORIZON_TICK_PAD_YEARS;
-    ageA += DECADE
-  ) {
-    const ageB = ageA - ageGap
+  // Intermediate decade-age reference ticks (the ONE canonical rule — deriveDecadeAgeTicks). Ages
+  // only, on the same baseline as the endpoints' ages (the endpoints alone carry a named word above).
+  for (const t of deriveDecadeAgeTicks(currentAgeA, currentAgeB, horizonYears)) {
     markers.push({
-      id: `age-${ageA}`,
-      yearsFromNow: ageA - currentAgeA,
+      id: `age-${t.ageA}`,
+      yearsFromNow: t.yearsFromNow,
       label: '',
-      ages: slots.bandClockAges(ageA, ageB),
-      description: slots.bandClockAgesDesc(ageA, ageB),
+      ages: t.ages,
+      description: slots.bandClockAgesDesc(t.ageA, t.ageB),
     })
   }
   markers.push({
@@ -126,7 +153,6 @@ export function deriveDateBandAnnotations(
   offsetYears: number,
   horizonYears: number,
 ): readonly XAnnotation[] {
-  const ageGap = currentAgeA - currentAgeB
   const markers: XAnnotation[] = [
     {
       id: 'today',
@@ -153,27 +179,22 @@ export function deriveDateBandAnnotations(
       description: slots.bandClockWorkStopsDesc(currentAgeA + workStops, currentAgeB + workStops),
     })
   }
-  // Intermediate decade-age reference ticks — skipping any within the pad of the work-stops moment or
-  // the horizon (the named markers there carry the moment; a bare tick on top just collides).
-  for (
-    let ageA = Math.ceil((currentAgeA + 1) / DECADE) * DECADE;
-    ageA <= MAX_TICK_AGE && ageA - currentAgeA < horizonYears - HORIZON_TICK_PAD_YEARS;
-    ageA += DECADE
-  ) {
-    const yearsFromNow = ageA - currentAgeA
-    // A bare decade tick yields to the NAMED markers it would crowd: Today (year 0) and the work-stops
-    // moment (the horizon endpoint is already handled by the loop bound). On the date route the first
-    // decade can fall just a year or two out (a 58-year-old's age-60 tick), stacking on top of Today and
-    // the hero "Work stops" marker — the named moments carry the early story, so drop the colliding tick.
-    if (yearsFromNow < HORIZON_TICK_PAD_YEARS) continue
-    if (workStops !== undefined && Math.abs(yearsFromNow - workStops) < HORIZON_TICK_PAD_YEARS) continue
-    const ageB = ageA - ageGap
+  // Intermediate decade-age reference ticks (the ONE canonical rule — deriveDecadeAgeTicks),
+  // skipping any within the pad of the NAMED markers they would crowd: Today (year 0) and the
+  // work-stops moment (the horizon endpoint is already handled by the rule's own bound). On the
+  // date route the first decade can fall just a year or two out (a 58-year-old's age-60 tick),
+  // stacking on top of Today and the hero "Work stops" marker — the named moments carry the early
+  // story, so drop the colliding tick.
+  for (const t of deriveDecadeAgeTicks(currentAgeA, currentAgeB, horizonYears)) {
+    if (t.yearsFromNow < HORIZON_TICK_PAD_YEARS) continue
+    if (workStops !== undefined && Math.abs(t.yearsFromNow - workStops) < HORIZON_TICK_PAD_YEARS)
+      continue
     markers.push({
-      id: `age-${ageA}`,
-      yearsFromNow,
+      id: `age-${t.ageA}`,
+      yearsFromNow: t.yearsFromNow,
       label: '',
-      ages: slots.bandClockAges(ageA, ageB),
-      description: slots.bandClockAgesDesc(ageA, ageB),
+      ages: t.ages,
+      description: slots.bandClockAgesDesc(t.ageA, t.ageB),
     })
   }
   markers.push({

@@ -23,27 +23,23 @@ import type { ScenarioDraft } from '@store/memoryModel'
 import type { ControlPreview } from '@store/controlPreview'
 import { copy, slots } from '@ui/copy'
 import { composeTwoFutures } from '@ui/twoFuturesChrome'
-import { deriveBandAgesAt } from '@ui/bandAnnotations'
 import type { Announcer } from './a11y'
 import { ControlSheet } from './controlSheet'
 import { ControlPreviewReadout, useControlPreview } from './controlPreview'
 import { CurrencyField, IntegerField, formatMoney } from './fields'
 import { draftPretaxTotal } from './intakeMap'
-
 /** The draft plan mid-entry: fields optional until committed (the intake hole-tolerance rule). */
 interface PlanDraft {
   readonly amount?: number
   readonly start?: number
   readonly years?: number
 }
-
 const complete = (p: PlanDraft): RothConversionPlan | null =>
   p.amount !== undefined && Number.isFinite(p.amount) && p.amount > 0 &&
   p.start !== undefined && Number.isInteger(p.start) && p.start >= 0 &&
   p.years !== undefined && Number.isInteger(p.years) && p.years >= 1
     ? { annualAmountReal: p.amount, startYearOffset: p.start, years: p.years }
     : null
-
 export interface RothLeverProps {
   readonly open: boolean
   readonly draft: ScenarioDraft
@@ -64,7 +60,6 @@ export interface RothLeverProps {
    *  (the via-AssumptionPanel route) — forwarded to the ControlSheet scaffold. */
   readonly restoreFallback?: () => HTMLElement | null
 }
-
 export function RothLever({ open, draft, preview, previewBlocking = false, onApply, onRemove, onClose, medicareUnpricedNote = false, restoreFallback }: RothLeverProps) {
   const announcerRef = useRef<Announcer | null>(null)
   const applied = draft.rothConversion
@@ -74,7 +69,6 @@ export function RothLever({ open, draft, preview, previewBlocking = false, onApp
   // cleared field or a reopen must supersede an in-flight run; the store ticket alone cannot see
   // those no-new-preview transitions.
   const { previewState, resetForOpen, run } = useControlPreview({ preview, announcerRef })
-
   // Open-edge re-seed (the BudgetBuilder rule): the applied plan pre-fills; defaults otherwise.
   useEffect(() => {
     if (!open) return
@@ -86,19 +80,19 @@ export function RothLever({ open, draft, preview, previewBlocking = false, onApp
     )
     // (deps deliberately narrow: open-edge re-seed only — the BudgetBuilder precedent)
   }, [open])
-
   // Preview on every COMPLETE committed plan (fields commit on blur — discrete, never per-drag).
   // A cleared/incomplete plan WITHDRAWS the comparison (request null) — a stale delta over no
   // entered plan is a confident readout of nothing (ultramode 2026-07-03).
   const candidate = complete(plan)
   const candidateKey = candidate === null ? '' : `${candidate.annualAmountReal}:${candidate.startYearOffset}:${candidate.years}`
-  // The chart scrub's household-ages closure — the SAME deriveBandAgesAt the fan's readout rides,
-  // so a scrubbed age here can never disagree with the band's at the same year. Ages are stable
-  // while a sheet is open (the draft can't be edited behind it), so plain per-render derivation
-  // is safe; the guard mirrors answerView's (both ages known, else the line drops).
+  // The chart's household ages — the chrome derives the fan-dialect axis ticks AND the scrub
+  // closure from this ONE pair (composeTwoFutures → deriveDecadeAgeTicks/deriveBandAgesAt), so a
+  // scrubbed age can never disagree with a tick. Ages are stable while a sheet is open (the draft
+  // can't be edited behind it), so plain per-render derivation is safe; the guard mirrors
+  // answerView's (both ages known, else the axis drops to the year-count fallback).
   const ageA = draft.people[0]?.currentAge
   const ageB = draft.people[1]?.currentAge
-  const agesAt = ageA !== undefined && ageB !== undefined ? deriveBandAgesAt(ageA, ageB) : undefined
+  const ages = ageA !== undefined && ageB !== undefined ? ([ageA, ageB] as const) : undefined
   useEffect(() => {
     if (!open || nothingToConvert) return
     run(candidate === null ? null : { kind: 'conversion', plan: candidate }, (outcome) => {
@@ -113,15 +107,14 @@ export function RothLever({ open, draft, preview, previewBlocking = false, onApp
         // today's plan HAS the conversion; the honest without-arm name is the negation.
         applied === undefined ? copy.tfChartRothWithout : copy.tfChartRothWithoutApplied,
         slots.rothDeltaSurvivor,
-        agesAt,
+        ages,
       )
       return view === null ? { kind: 'error', reason: 'indeterminate' } : { kind: 'ready', view }
     })
-    // `run`'s identity carries `preview` (the crowned-offset anchor — insight 047). `agesAt` is
-    // deliberately NOT a dep: a fresh closure every render would refire the preview per render,
-    // and the ages it reads cannot change while the sheet is open.
+    // `run`'s identity carries `preview` (the crowned-offset anchor — insight 047). `ages` is
+    // deliberately NOT a dep: a fresh tuple every render would refire the preview per render,
+    // and the ages it carries cannot change while the sheet is open.
   }, [open, candidateKey, nothingToConvert, run, applied])
-
   return (
     <ControlSheet open={open} title={copy.leverRothTitle} onClose={onClose} announcerRef={announcerRef} restoreFallback={restoreFallback}>
       {nothingToConvert ? (
@@ -134,7 +127,6 @@ export function RothLever({ open, draft, preview, previewBlocking = false, onApp
               ready-arm notes slot, which hides until a comparison lands): the household must
               read the gap BEFORE weighing any delta (the council's on-surface condition). */}
           {medicareUnpricedNote && <p className="field-help">{copy.rothMedicareUnpricedNote}</p>}
-
           <div className="control-plan">
             <CurrencyField
               labelKey="leverRothAmountLabel"
@@ -156,13 +148,11 @@ export function RothLever({ open, draft, preview, previewBlocking = false, onApp
               onCommit={(v) => setPlan((p) => ({ ...p, years: v }))}
             />
           </div>
-
           {candidate !== null && (
             <p className="control-plan__echo">
               {slots.rothPlanEcho(formatMoney(candidate.annualAmountReal), candidate.startYearOffset, candidate.years)}
             </p>
           )}
-
           <ControlPreviewReadout
             previewState={previewState}
             previewBlocking={previewBlocking}
@@ -173,7 +163,6 @@ export function RothLever({ open, draft, preview, previewBlocking = false, onApp
               </>
             }
           />
-
           <div className="control-sheet__actions">
             <button
               type="button"

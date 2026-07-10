@@ -113,6 +113,19 @@ supersedes anything derived from this file.
     surface fit. The infinite-space test: would you cut it if space were unlimited? If no,
     it's an aesthetics cut disguised as an edit — reject it.
 
+### Chart grammar
+
+36. **Every chart speaks one dialect.** Axis grammar, tick style, hover treatment, and clock
+    units are product-wide, not per-chart: if the fan's x-axis is ages ("Today 66 / 65",
+    "80 / 79"), every sibling chart's x-axis is ages; if the fan's y-axis rides the humane
+    dollar ladder, every chart's does. Flag ANY chart whose dialect diverges from the fan —
+    derive shared grammar from one canonical home, never a parallel loop that can drift.
+    *(His U12 read, 2026-07-10: "The graph in the withdrawal order sub-panel should be
+    consistent with the fanout. The x-axis should be ages. consistency." Same shape as his
+    2026-07-08 station-2 read: "x and y axis with the same hover treatment we give the fan
+    out." Consistency across charts is a STANDING expectation — check it on every chart-bearing
+    surface.)*
+
 ### Motion
 
 25. **CSP-legal motion only.** Verdict/transition animation is CSS class transform/opacity —
@@ -249,3 +262,11 @@ supersedes anything derived from this file.
   read renamed it "Cancel" for honesty — prior N=1 outranks council on tone.
 - **E10 — the ?vault re-plant clobber.** Trigger: a dev-seam refresh silently clobbering a
   saved edit. Caught live by him — the class of defect only a real walk sees.
+- **E11 — the U12 batch read (2026-07-10, the Caddie's first scored prediction).** His full
+  verbatim: "I think everything is fine. The graph in the withdrawal order sub-panel should be
+  consistent with the fanout. The x-axis should be ages. consistency. other than that good to
+  go." Two calibration lessons: (a) **consistency-across-charts is his standing lens** — he
+  walked past the readers' two hard flags (the $7,300 trim figure, the $530 room) without
+  comment but stopped on a chart speaking a different axis dialect than the fan (→ rule 36);
+  (b) **he free-walks the doors** — the finding sat on a surface the Caddie's walk never
+  captured. A cold read that skips the door sheets is not the read he performs.

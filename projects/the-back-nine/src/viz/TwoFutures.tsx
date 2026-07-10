@@ -101,6 +101,37 @@ export function twoFuturesCeiling(maxDollar: number): number {
   return c > 0 ? c : 1
 }
 
+/** Estimated axis-glyph advance at the 12px `.tf__axis` face (the tfReadoutWidth convention —
+ *  a viewBox-space estimate, not a measurement; the gap absorbs the slack). */
+const TF_AXIS_CHAR_W = 6.4
+const TF_AXIS_GAP = 10
+/**
+ * Drop any intermediate x tick whose label would collide with an ENDPOINT label — the endpoint
+ * carries the named moment, so the colliding tick yields (deriveTwoFuturesXTicks' "an endpoint
+ * collision is worse than a missing tick", made geometry-aware: the ages dialect's labels are
+ * wide, and a household one year past a round decade puts its first tick a few years from Today
+ * — seen live colliding on `?seed=retired`, 2026-07-10). The fan resolves the same crowding by
+ * row-staggering (placeAnnotationLabels); this chart has no second axis row in its viewBox, so
+ * the calm resolution is omission. Pure + exported for tests.
+ */
+export function visibleXTicks(
+  xTicks: readonly TwoFuturesXTick[],
+  todayLabel: string,
+  horizonLabel: string,
+  maxYears: number,
+): TwoFuturesXTick[] {
+  const plotRight = TF_VIEW.w - TF_PLOT.right
+  const px = (years: number): number =>
+    TF_PLOT.left + (maxYears <= 0 ? 0 : (years / maxYears) * (plotRight - TF_PLOT.left))
+  const todayEnd = TF_PLOT.left + todayLabel.length * TF_AXIS_CHAR_W + TF_AXIS_GAP
+  const horizonStart = plotRight - horizonLabel.length * TF_AXIS_CHAR_W - TF_AXIS_GAP
+  return xTicks.filter((t) => {
+    const half = (t.label.length * TF_AXIS_CHAR_W) / 2
+    const cx = px(t.years)
+    return cx - half > todayEnd && cx + half < horizonStart
+  })
+}
+
 /** Snap a viewBox x to the nearest integer lattice year (the fan's nearestLatticeIndex, on the TF
  *  plot box). Pure + exported for tests — the pointer glue itself is jsdom-unreachable. */
 export function tfNearestYear(viewBoxX: number, horizonYears: number): number {
@@ -260,17 +291,18 @@ export function TwoFutures({
       <text className="tf__axis" x={TF_PLOT.left} y={TF_PLOT.bottom + 16}>
         {labels.todayLabel}
       </text>
-      {xTicks?.map((t) => (
-        <text
-          key={t.years}
-          className="tf__axis tf__axis--xtick"
-          x={px(t.years)}
-          y={TF_PLOT.bottom + 16}
-          textAnchor="middle"
-        >
-          {t.label}
-        </text>
-      ))}
+      {xTicks !== undefined &&
+        visibleXTicks(xTicks, labels.todayLabel, labels.horizonLabel, maxYears).map((t) => (
+          <text
+            key={t.years}
+            className="tf__axis tf__axis--xtick"
+            x={px(t.years)}
+            y={TF_PLOT.bottom + 16}
+            textAnchor="middle"
+          >
+            {t.label}
+          </text>
+        ))}
       <text className="tf__axis tf__axis--end" x={plotRight} y={TF_PLOT.bottom + 16}>
         {labels.horizonLabel}
       </text>

@@ -28,6 +28,7 @@ import { COHORT_FADE } from '@viz/bandGeometry'
 import { copy, slots } from './copy'
 import { OUTCOME_PRESENTATION } from './outcomeStates'
 import { formatAxisDollar } from './money'
+import { deriveBandAgesAt, deriveDecadeAgeTicks } from './bandAnnotations'
 
 /** The verdict WORD for a state (null for indeterminate — a two-arm outcome's arms are never
  *  indeterminate by construction, so a null here simply withholds the transition rider). */
@@ -72,9 +73,10 @@ function points(r: TwoArmReading): readonly TwoFuturesPoint[] | undefined {
     .map((y) => ({ yearsFromNow: y.yearsFromNow, medianReal: y.p50 }))
 }
 
-/** Intermediate x-axis year ticks between the endpoints: decade steps on a long horizon, fives on
- *  a short one; a tick never lands within the pad of either endpoint label (the bandAnnotations
- *  horizon-pad idea — an endpoint collision is worse than a missing tick). Pure, exported for tests. */
+/** The AGES-LESS fallback x ticks (an ages-unknown household only): year-count steps between the
+ *  endpoints — decade steps on a long horizon, fives on a short one; a tick never lands within
+ *  the pad of either endpoint label. The KNOWN-ages path speaks the fan's ages dialect instead
+ *  (deriveDecadeAgeTicks — Briggsy's 2026-07-10 cold-read consistency ruling). Pure, exported. */
 const X_TICK_ENDPOINT_PAD = 3
 export function deriveTwoFuturesXTicks(horizonYears: number): TwoFuturesXTick[] {
   if (!Number.isFinite(horizonYears) || horizonYears < 8) return []
@@ -91,16 +93,22 @@ export function deriveTwoFuturesXTicks(horizonYears: number): TwoFuturesXTick[] 
  * arms (the Roth lever and the sequencing picker word their own series). Returns null for the
  * indeterminate/infeasible outcomes — the surfaces own those calm states.
  *
- * `agesAt` is the household-ages closure (deriveBandAgesAt — the SAME slot + rule the fan's
- * readout and axis ride, so a scrubbed age here can never disagree with the band's at the same
- * year); absent ⇒ the readout rows carry '' and the ages line drops.
+ * `ages` is the household's CURRENT whole-year ages `[ageA, ageB]`. Known ages put the whole
+ * x-axis in the fan's dialect (Briggsy's 2026-07-10 cold-read: "the x-axis should be ages —
+ * consistency"): the today endpoint reads word + pair ("Today 66 / 65"), intermediate ticks are
+ * the SAME decade-age rule the fan's annotations ride (deriveDecadeAgeTicks), the right endpoint
+ * is the ages pair at the chart's own last drawn year — deliberately NOT the fan's "Plan horizon"
+ * word, because this chart ends at the dead-cohort TRUNCATION, which can be an earlier year than
+ * the fan's horizon (two same-named endpoints holding different years would be the era-naked-twins
+ * defect) — and the scrub readout rides the same closure (deriveBandAgesAt), so a scrubbed age can
+ * never disagree with a tick. Absent ⇒ year-count ticks, and the readout's ages line drops.
  */
 export function composeTwoFutures(
   outcome: TwoArmOutcome,
   withLabel: string,
   withoutLabel: string,
   deltaSlot: (withOdds: string, withoutOdds: string) => string,
-  agesAt?: (yearsFromNow: number) => string,
+  ages?: readonly [number, number],
 ): TwoFuturesView | null {
   if (outcome.kind !== 'two-arm') return null
   const survivorBasis = outcome.deltaBasis === 'survivor'
@@ -139,6 +147,7 @@ export function composeTwoFutures(
       withoutPts[withoutPts.length - 1]!.yearsFromNow,
     )
     const ceiling = twoFuturesCeiling(maxDollar)
+    const agesAt = ages !== undefined ? deriveBandAgesAt(ages[0], ages[1]) : undefined
     // Per-integer-year readout rows (0..maxYears), keyed off each arm's OWN filtered series — a
     // truncated arm's value is simply ABSENT past its last year (the readout goes quiet exactly
     // where the drawn line ends; never a median quoted past the cohort). Same formatter as the
@@ -166,15 +175,30 @@ export function composeTwoFutures(
         // renderer computes — the raw data max under-reported the line it sat on (ultramode
         // 2026-07-03: an axis reference that understates its own value).
         dollarMaxLabel: `~${formatAxisDollar(ceiling)}`,
-        todayLabel: slots.ladderOffsetTick(0),
-        horizonLabel: `${maxYears}`,
+        // The x endpoints speak the fan's clock dialect when the ages are known (the 2026-07-10
+        // consistency ruling): "Today 66 / 65" left; the AGES PAIR at the chart's last drawn year
+        // right — never the "Plan horizon" word (this chart ends at the dead-cohort truncation,
+        // which can be an earlier year than the fan's horizon; one word must not name two years).
+        todayLabel:
+          ages !== undefined
+            ? `${copy.bandClockTodayLabel} ${slots.bandClockAges(ages[0], ages[1])}`
+            : slots.ladderOffsetTick(0),
+        horizonLabel: agesAt !== undefined ? agesAt(maxYears) : `${maxYears}`,
         readoutAgesLabel: copy.bandReadoutAgesLabel,
         ariaSummary: `${copy.twoFuturesCaption} ${deltaLine}`,
       },
       // The fan's OWN tick builder over the shared humane ceiling — quarters are clean figures
       // by construction, and the two charts can never grow separate dollar-axis dialects.
       yTicks: buildYTicks(ceiling, formatAxisDollar),
-      xTicks: deriveTwoFuturesXTicks(maxYears),
+      // Known ages ⇒ the fan's OWN decade-age tick rule (one canonical home, bandAnnotations) —
+      // the two charts can never grow separate clock dialects; ages-less ⇒ year-count fallback.
+      xTicks:
+        ages !== undefined
+          ? deriveDecadeAgeTicks(ages[0], ages[1], maxYears).map((t) => ({
+              years: t.yearsFromNow,
+              label: t.ages,
+            }))
+          : deriveTwoFuturesXTicks(maxYears),
       rows,
     }
   }

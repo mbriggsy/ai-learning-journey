@@ -11,6 +11,7 @@ import {
   tfPlaceReadout,
   tfReadoutWidth,
   twoFuturesCeiling,
+  visibleXTicks,
   type TwoFuturesLabels,
   type TwoFuturesPoint,
   type TwoFuturesReadoutRow,
@@ -104,6 +105,60 @@ describe('twoFuturesCeiling — hand-derived ceilings on the fan-shared humane l
     expect(twoFuturesCeiling(Number.NaN)).toBe(1)
     expect(twoFuturesCeiling(-100)).toBe(1)
     expect(twoFuturesCeiling(Number.POSITIVE_INFINITY)).toBe(1)
+  })
+})
+
+describe('visibleXTicks — endpoint-collision guard on the ages-dialect axis (cold-read 2026-07-10)', () => {
+  // The live collision this guard exists for: the retired seed (66/65, truncated horizon 27)
+  // puts its first decade tick ("70 / 69") at year 4 — a few viewBox px past the end of
+  // "Today 66 / 65". The endpoint carries the named moment; the colliding tick yields.
+  const RETIRED = {
+    today: 'Today 66 / 65',
+    horizon: '93 / 92',
+    ticks: [
+      { years: 4, label: '70 / 69' },
+      { years: 14, label: '80 / 79' },
+    ],
+    maxYears: 27,
+  }
+
+  it('drops the tick colliding with the Today endpoint, keeps the clear one (the live ?seed=retired shape)', () => {
+    const kept = visibleXTicks(RETIRED.ticks, RETIRED.today, RETIRED.horizon, RETIRED.maxYears)
+    expect(kept.map((t) => t.label)).toEqual(['80 / 79'])
+  })
+
+  it('drops a tick colliding with the HORIZON endpoint label', () => {
+    const kept = visibleXTicks(
+      [{ years: 26, label: '92 / 91' }],
+      RETIRED.today,
+      RETIRED.horizon,
+      RETIRED.maxYears,
+    )
+    expect(kept).toEqual([])
+  })
+
+  it('the guard reads the real label widths — the same tick clears a short Today label and yields to a wide one (non-vacuous)', () => {
+    // Year 6 on the 27-year plot centers ~152 viewBox-px in: past a 5-char "today" extent,
+    // inside a 13-char "Today 66 / 65" extent — one tick, two label widths, opposite verdicts.
+    const tick = [{ years: 6, label: '72 / 71' }]
+    expect(visibleXTicks(tick, 'today', RETIRED.horizon, RETIRED.maxYears).map((t) => t.label)).toEqual([
+      '72 / 71',
+    ])
+    expect(visibleXTicks(tick, RETIRED.today, RETIRED.horizon, RETIRED.maxYears)).toEqual([])
+  })
+
+  it('the rendered axis carries only the surviving ticks', () => {
+    const { container } = render(
+      <TwoFutures
+        withArm={withArm}
+        withoutArm={withoutArm}
+        labels={{ ...labels, todayLabel: RETIRED.today, horizonLabel: RETIRED.horizon }}
+        xTicks={RETIRED.ticks}
+      />,
+    )
+    // maxYears here is the arms' 30 (close enough to the retired shape for the same verdict).
+    const rendered = [...container.querySelectorAll('.tf__axis--xtick')].map((el) => el.textContent)
+    expect(rendered).toEqual(['80 / 79'])
   })
 })
 

@@ -375,6 +375,10 @@ describe('R19 engine half + dire-but-honest edges', () => {
       { taxEnabled: false, rmdEnabled: false, startCalendarYear: 2026, buckets: { taxable: -1, pretax: P + 1, roth: 0 }, filing: 'mfj' }, // negative bucket
       { taxEnabled: true, rmdEnabled: false, startCalendarYear: 2026, buckets: { taxable: 500_000, pretax: 500_000, roth: 0 }, filing: 'mfj' }, // tax on + taxable>0, basis MISSING
       { taxEnabled: false, rmdEnabled: false, startCalendarYear: NaN, buckets: { taxable: 0, pretax: P, roth: 0 }, filing: 'mfj' }, // NaN calendar anchor
+      // The sunset unit's review fold (2026-07-09): a finite NON-integer anchor must be refused
+      // HERE — taxCore's senior-bonus window guard throws on it, and the R19 contract is a calm
+      // indeterminate at the gate, never a mid-path crash.
+      { taxEnabled: true, rmdEnabled: false, startCalendarYear: 2026.5, buckets: { taxable: 0, pretax: P, roth: 0 }, filing: 'mfj' }, // finite non-integer calendar anchor
       { taxEnabled: true, rmdEnabled: false, startCalendarYear: 2026, buckets: { taxable: 0, pretax: P, roth: 0 }, filing: 'mfj', conversions: [NaN] }, // non-finite conversion
       { taxEnabled: true, rmdEnabled: false, startCalendarYear: 2026, buckets: { taxable: 0, pretax: P, roth: 0 }, filing: 'mfj', bracketFillCeilings: [NaN] }, // non-finite ceiling
       { taxEnabled: true, rmdEnabled: false, startCalendarYear: 2026, buckets: { taxable: 0, pretax: P, roth: 0 }, filing: 'mfj', bracketFillCeilings: [-100] }, // negative ceiling

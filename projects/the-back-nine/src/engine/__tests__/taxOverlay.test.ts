@@ -1396,7 +1396,7 @@ describe('taxOverlay — M6a bracket-fill (the injected tax-aware ceiling)', () 
     const bf = runTaxAwareDecumulation(buckets, realStock, realBond, spend, STOCK_W, 'bracket-fill', TAX_ON_NO_RMD, { bracketFillCeilings: ceiling })
     const pf = runTaxAwareDecumulation(buckets, realStock, realBond, spend, STOCK_W, 'pre-tax-first', TAX_ON_NO_RMD)
     const sp = spine(2_000_000, spend)
-    // the cheap $40k pre-tax draw is below the deduction → $0 tax every year → byte-identical to the spine...
+    // the cheap $35k pre-tax draw is below the deduction in EVERY year → $0 tax → byte-identical to the spine...
     expect(bf.terminalReal).toBe(sp.terminalReal)
     // ...while pre-tax-first leaks real tax → strictly below. bracket-fill keeps more wealth: lower lifetime tax.
     expect(pf.terminalReal).toBeLessThan(sp.terminalReal)

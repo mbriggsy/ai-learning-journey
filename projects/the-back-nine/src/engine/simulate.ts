@@ -605,7 +605,10 @@ export function validateParams(params: SimulationParams): string | null {
   // overlay floors the realized gain at 0 for.
   const o = params.overlay
   if (o !== undefined) {
-    if (!Number.isFinite(o.startCalendarYear)) return 'overlay startCalendarYear invalid'
+    // INTEGER, not merely finite (the sunset unit's review fold, 2026-07-09): the senior-bonus
+    // window guard (taxCore.seniorBonusFor) THROWS on a non-integer calendar year — a finite
+    // 2026.5 passing this gate would crash mid-path instead of returning the R19 indeterminate.
+    if (!Number.isInteger(o.startCalendarYear)) return 'overlay startCalendarYear invalid'
     // `filing` crosses the untyped structured-clone worker boundary like every other enum — validate
     // membership HERE (R19), exactly as the U3-exit pilot did for drawdownPolicy/longevityMode/sex. An
     // out-of-union value silently selects the `single` branch in every `filing === 'mfj' ? …` dispatch

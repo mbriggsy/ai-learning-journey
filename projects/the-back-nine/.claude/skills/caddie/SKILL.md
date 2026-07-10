@@ -41,15 +41,24 @@ the N=1 cold read judges tone, never the reverse).
 ## The Walk (capture)
 
 ```
-pnpm caddie:walk                            # full default walk (?seed=retired, both viewports)
-CADDIE_SEED=budget pnpm caddie:walk         # another seed
+pnpm caddie:walk                                              # default (seed:retired, both viewports)
+CADDIE_TARGETS="vault:retired,vault:stale,seed:date" pnpm caddie:walk   # a target list
+CADDIE_SEED=budget pnpm caddie:walk                           # back-compat: one seed target
 ```
 
 The harness (`e2e/caddie-walk.spec.ts`, own config `playwright.caddie.config.ts`, dev server on
 port 4195 — the `?seed`/`?vault` routes are DEV-only and DCE'd from dist) drives the surface to
 its settled final frame using the fit gate's proven recipe (`e2e/reviewSurface.ts`:
 `data-answer-tier="final"` → fonts.ready → finite animations done → 2×rAF → scrollTo(0,0)) and
-writes a per-state bundle to `temp/caddie/<seed>/<viewport>/<state>/`:
+writes a per-state bundle to `temp/caddie/<run-stamp>/<target>/<viewport>/<state>/` — the
+run stamp (minted per invocation; `CADDIE_RUN=name` overrides) means a re-walk NEVER
+overwrites a bundle a reader panel is mid-read on (the first live run's filed defect).
+
+Walk shapes: a `seed:<key>` target captures the settled landing **then opens EVERY quiet-row
+door** and captures each sheet (the tape's first coverage lesson — his real read free-walks
+the doors); a `vault:<key>` target drives the U13 decrypt-on-return arc (unlock → the
+re-entry gate → affirm → the echoed verdict, doors riding the stale verdict), and
+`vault:stale` additionally captures the update route's first frame:
 
 - `viewport.png` — the above-fold frame at CSS scale (what he sees first; long edge < the
   ~2576px model-ingestion cap, so it is never silently downscaled)

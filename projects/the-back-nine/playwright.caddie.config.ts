@@ -1,5 +1,11 @@
 import { defineConfig } from '@playwright/test'
 
+// Run-stamped bundle root (increment 2): a re-walk must never overwrite a bundle a reader is
+// mid-read on (it did exactly that on the first live run, 2026-07-10). Minted ONCE here in the
+// runner process; worker processes inherit the runner's env, so their own `??=` is a no-op and
+// every test in one invocation shares one stamp. `CADDIE_RUN=name` overrides for a named run.
+process.env.CADDIE_RUN ??= new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-')
+
 /**
  * The Caddie's capture harness (`pnpm caddie:walk`) — NOT a CI gate. Drives a `?seed=`/`?vault=`
  * surface to its settled final frame at the canonical review viewports (e2e/reviewSurface.ts)

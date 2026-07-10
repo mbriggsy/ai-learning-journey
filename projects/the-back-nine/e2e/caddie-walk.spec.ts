@@ -19,10 +19,44 @@ import { REAL, REAL_DPR, PHONE, PHONE_DPR, gotoSeedFinal, settleLayout } from '.
  *    transform DevTools applies — a screening flag for the readers, never a color verdict.
  *  - Capture order matters: fold/aria/copy first (no visual side effects), then the above-fold
  *    + CVD shots (same pinned scroll), then fullpage + element crops LAST (they may scroll).
+ *
+ * Increment 2 (2026-07-10, the tape's first two lessons):
+ *  - RUN-STAMPED bundle dirs — temp/caddie/<run>/<target>/<viewport>/<state>/; a re-walk
+ *    lands in a fresh dir instead of overwriting files under a mid-read reader panel.
+ *  - The DOOR WALK — every `.result-quiet-row` door is opened and captured (Briggsy's real
+ *    U12 read free-walked the doors and found a real finding on a sheet the walk never
+ *    captured — the withdrawal-order chart speaking years against the fan's ages).
+ *  - VAULT targets — `vault:<key>` drives the U13 decrypt-on-return arc (unlock → the
+ *    re-entry gate → affirm → the echoed verdict), the only live route to the staleness
+ *    surfaces; `vault:stale` additionally walks the update route's first frame.
+ *
+ * Targets: `CADDIE_TARGETS="vault:retired,vault:stale,seed:date"` (comma list). Back-compat:
+ * `CADDIE_SEED=budget` still works (one seed target). Default: `seed:retired`.
  */
 
-const SEED = process.env.CADDIE_SEED ?? 'retired'
-const OUT_ROOT = process.env.CADDIE_OUT ?? path.join('temp', 'caddie')
+interface Target {
+  readonly kind: 'seed' | 'vault'
+  readonly key: string
+}
+
+function parseTargets(): Target[] {
+  const raw =
+    process.env.CADDIE_TARGETS ??
+    (process.env.CADDIE_SEED !== undefined ? `seed:${process.env.CADDIE_SEED}` : 'seed:retired')
+  return raw.split(',').map((entry) => {
+    const [kind, key] = entry.trim().split(':')
+    if ((kind !== 'seed' && kind !== 'vault') || key === undefined || key === '') {
+      throw new Error(`bad CADDIE_TARGETS entry "${entry}" — expected seed:<key> or vault:<key>`)
+    }
+    return { kind, key }
+  })
+}
+
+const TARGETS = parseTargets()
+// The run stamp is minted once in playwright.caddie.config.ts (the runner process; workers
+// inherit it) — 'adhoc' only if the spec somehow runs outside its own harness.
+const OUT_ROOT =
+  process.env.CADDIE_OUT ?? path.join('temp', 'caddie', process.env.CADDIE_RUN ?? 'adhoc')
 
 /** Text-critical / meaning-critical regions cropped at device scale when present. */
 const CROP_TARGETS = [
@@ -30,6 +64,11 @@ const CROP_TARGETS = [
   { name: 'disclaimer', selector: 'footer.disclaimer.disclaimer--in-frame' },
   { name: 'echo', selector: '.ap-echo' },
   { name: 'panel', selector: '[role="dialog"]' },
+  // U13 (increment 2): the staleness surfaces + the frames the batch asks his eye on.
+  { name: 'staleness-note', selector: '.cs-staleness-note' },
+  { name: 'reentry-notes', selector: '.reentry-notes' },
+  { name: 'backup-door', selector: '.result-backup-door' },
+  { name: 'hero-lead', selector: '.reveal__lead' },
 ] as const
 
 /** Regions whose boxes land in fold.json so readers know what sits above/below the fold. */
@@ -41,6 +80,13 @@ const FOLD_TARGETS = [
   '.result-quiet-row',
   '.ap-echo',
   '[role="dialog"]',
+  // U13 (increment 2): the gate's decision pair + the vault-return frame's stacking question
+  // (the filed a37b5f06 backup-door-above-disclaimer ruling needs these boxes on the record).
+  '.cs-staleness-note',
+  '.reentry-notes',
+  '.save-actions',
+  '.result-backup-door',
+  '.result-save-slot',
 ] as const
 
 async function captureState(page: Page, dir: string): Promise<void> {
@@ -89,27 +135,121 @@ async function captureState(page: Page, dir: string): Promise<void> {
   await page.screenshot({ path: path.join(dir, 'fullpage.png'), fullPage: true, scale: 'css' })
   for (const { name, selector } of CROP_TARGETS) {
     const target = page.locator(selector).first()
-    if ((await target.count()) > 0 && (await target.isVisible())) {
+    // A crop needs a real BOX, not just visibility: display:contents groups (e.g.
+    // `.reveal__lead` in single column / phone) have visible children but generate no box —
+    // isVisible() passes while locator.screenshot rejects ("not visible or not an
+    // HTMLElement"). The box check subsumes "present when it matters": the same element
+    // crops fine at two-pane, where it becomes a real grid item.
+    if (
+      (await target.count()) > 0 &&
+      (await target.isVisible()) &&
+      (await target.boundingBox()) !== null
+    ) {
       await target.screenshot({ path: path.join(dir, `crop-${name}.png`), scale: 'device' })
     }
   }
   await page.evaluate(() => window.scrollTo(0, 0))
 }
 
-/**
- * The retired-spine walk (the U12 cold-read batch's core): landing → the assumptions panel →
- * a worsening spending edit (R8's honest-worsening arm — the truer-picture line renders ONLY
- * when the displayed verdict lands BELOW the panel-open baseline).
- */
-async function walkAssumptionsPanel(page: Page, outDir: string): Promise<void> {
-  await gotoSeedFinal(page, SEED)
-  await captureState(page, path.join(outDir, 'landing'))
+const slugify = (name: string): string =>
+  name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 40)
 
-  // The door CTA (itself a U12 cold-read subject — copy.assumptionDoorCta).
+/**
+ * The DOOR WALK (increment 2 — the tape's coverage lesson): open EVERY quiet-row door on the
+ * settled verdict, capture the sheet, close, next. Briggsy's real read free-walks the doors;
+ * a bundle that stops at the landing pre-digests only half his walk. Close buttons are the
+ * family's own: 'Close' (lever sheets + the assumptions panel) or 'Cancel' (the budget sheet).
+ */
+async function walkDoors(page: Page, outDir: string): Promise<void> {
+  const doors = page.locator('.result-quiet-row button')
+  const count = await doors.count()
+  expect(count, 'no quiet-row doors on a resolved verdict — a vacuous door walk').toBeGreaterThan(0)
+  for (let i = 0; i < count; i++) {
+    const door = doors.nth(i)
+    const name = (await door.innerText()).trim()
+    await door.click()
+    const dialog = page.getByRole('dialog')
+    await expect(dialog, `door "${name}" opened no dialog`).toBeVisible()
+    await captureState(page, path.join(outDir, `door-${i + 1}-${slugify(name)}`))
+    await dialog.getByRole('button', { name: /^(Close|Cancel)$/ }).first().click()
+    await expect(dialog).toBeHidden()
+  }
+}
+
+/**
+ * The U13 decrypt-on-return arc: `?vault=<key>` plants the vault + lands on the unlock screen
+ * with the dev passphrase PRE-FILLED (App) → the re-entry gate (the read-back + every fired
+ * staleness clock, BEFORE any verdict — the reveal is gated) → affirm → the echoed verdict.
+ * `?vault=stale` is the aged plant: the elapsed line + the tax/healthcare/blend notes at the
+ * gate, the one-line standing echo + the un-noted backup door on the verdict frame.
+ */
+async function walkVaultReturn(
+  page: Page,
+  key: string,
+  outDir: string,
+  opts: { readonly doors: boolean },
+): Promise<void> {
+  await page.goto(`/?vault=${key}`)
+  const open = page.getByRole('button', { name: 'Open my plan' })
+  await expect(open, 'the vault plant did not land on the unlock screen').toBeVisible({
+    timeout: 30_000,
+  })
+  await captureState(page, path.join(outDir, 'unlock'))
+  await open.click()
+
+  await expect(
+    page.getByRole('heading', { name: 'Are these still your numbers?' }),
+    'the re-entry gate did not mount after unlock',
+  ).toBeVisible({ timeout: 30_000 })
+  await captureState(page, path.join(outDir, 'gate'))
+
+  await page.getByRole('button', { name: /Still about right/ }).click()
+  await expect(page.locator('main.result[data-answer-tier="final"]')).toBeAttached({
+    timeout: 120_000,
+  })
+  await captureState(page, path.join(outDir, 'verdict'))
+  if (opts.doors) await walkDoors(page, outDir)
+}
+
+/** The stale gate's OTHER exit: "Something's changed — update them" → the walk-through's
+ *  first frame (accounts are edited where they were entered). One capture — the batch judges
+ *  the button pair's wording and where the update door drops you. */
+async function walkUpdateRoute(page: Page, key: string, outDir: string): Promise<void> {
+  await page.goto(`/?vault=${key}`)
+  const open = page.getByRole('button', { name: 'Open my plan' })
+  await expect(open).toBeVisible({ timeout: 30_000 })
+  await open.click()
+  const gateHeading = page.getByRole('heading', { name: 'Are these still your numbers?' })
+  await expect(gateHeading).toBeVisible({ timeout: 30_000 })
+  await page.getByRole('button', { name: /changed — update them/ }).click()
+  await expect(gateHeading, 'the update route did not leave the gate').toBeHidden({
+    timeout: 30_000,
+  })
+  await captureState(page, path.join(outDir, 'update-entry'))
+}
+
+/** A seed target: the settled final landing + the door walk. `seed:retired` additionally
+ *  rides the proven U12 worsening arc (it is that seed's own cold-read subject). */
+async function walkSeed(page: Page, key: string, outDir: string): Promise<void> {
+  await gotoSeedFinal(page, key)
+  await captureState(page, path.join(outDir, 'landing'))
+  await walkDoors(page, outDir)
+  if (key === 'retired') await walkWorsening(page, outDir)
+}
+
+/**
+ * The retired-spine worsening arc (the U12 cold-read batch's core): the assumptions panel →
+ * a worsening spending edit (R8's honest-worsening arm — the truer-picture line renders ONLY
+ * when the displayed verdict lands BELOW the panel-open baseline) → the worsened landing.
+ */
+async function walkWorsening(page: Page, outDir: string): Promise<void> {
   await page.getByRole('button', { name: 'The assumptions behind this', exact: true }).click()
   await expect(page.getByRole('dialog')).toBeVisible()
   await expect(page.locator('.ap-echo__lead')).toBeVisible() // the echo's baseline reading
-  await captureState(page, path.join(outDir, 'panel-open'))
 
   // The worsening edit: the retired seed enters spending MONTHLY (spendEntryPeriod:'month'),
   // so 10,000/mo = $120k/yr against the seed's $78k baseline — the verdict must step down.
@@ -135,9 +275,7 @@ async function walkAssumptionsPanel(page: Page, outDir: string): Promise<void> {
 
   // The worsened LANDING (panel closed): the negative-verdict frame the panel occludes — the
   // first read's honesty lens could not verify the worsened chart isn't a red gash (rule 11),
-  // and the CVD screener's landing arm was all-positive. The sheet's own Close button (Escape
-  // did NOT close it with focus on the body post-blur — filed as an a11y check task, since a
-  // synthetic focus state isn't proof about a real user's Escape).
+  // and the CVD screener's landing arm was all-positive.
   await page.getByRole('dialog').getByRole('button', { name: 'Close' }).click()
   await expect(page.getByRole('dialog')).toBeHidden()
   await captureState(page, path.join(outDir, 'landing-worsened'))
@@ -150,22 +288,41 @@ function hookConsole(page: Page): Array<{ type: string; text: string }> {
   return log
 }
 
-test.describe(`caddie walk — ?seed=${SEED} at REAL (${REAL.width}×${REAL.height} @ ${REAL_DPR}dpr)`, () => {
-  test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR })
-  test('landing → panel → worsened', async ({ page }) => {
-    const consoleLog = hookConsole(page)
-    const outDir = path.join(OUT_ROOT, SEED, 'real')
-    await walkAssumptionsPanel(page, outDir)
-    fs.writeFileSync(path.join(outDir, 'console.json'), JSON.stringify(consoleLog, null, 2))
-  })
-})
+const VIEWPORTS = [
+  { name: 'real', viewport: REAL, dpr: REAL_DPR },
+  { name: 'phone', viewport: PHONE, dpr: PHONE_DPR },
+] as const
 
-test.describe(`caddie walk — ?seed=${SEED} at PHONE (${PHONE.width}×${PHONE.height} @ ${PHONE_DPR}dpr)`, () => {
-  test.use({ viewport: PHONE, deviceScaleFactor: PHONE_DPR })
-  test('landing → panel → worsened', async ({ page }) => {
-    const consoleLog = hookConsole(page)
-    const outDir = path.join(OUT_ROOT, SEED, 'phone')
-    await walkAssumptionsPanel(page, outDir)
-    fs.writeFileSync(path.join(outDir, 'console.json'), JSON.stringify(consoleLog, null, 2))
-  })
-})
+for (const target of TARGETS) {
+  const targetSlug = `${target.kind}-${target.key}`
+  for (const v of VIEWPORTS) {
+    test.describe(`caddie walk — ${target.kind}:${target.key} at ${v.name.toUpperCase()} (${v.viewport.width}×${v.viewport.height} @ ${v.dpr}dpr)`, () => {
+      test.use({ viewport: v.viewport, deviceScaleFactor: v.dpr })
+      test('walk', async ({ page }) => {
+        const consoleLog = hookConsole(page)
+        const outDir = path.join(OUT_ROOT, targetSlug, v.name)
+        if (target.kind === 'vault') {
+          // Doors ride the STALE verdict only — `vault:retired`'s verdict is the same
+          // household minus the staleness surfaces; double-walking its sheets is pure bloat.
+          await walkVaultReturn(page, target.key, outDir, { doors: target.key === 'stale' })
+        } else {
+          await walkSeed(page, target.key, outDir)
+        }
+        fs.writeFileSync(path.join(outDir, 'console.json'), JSON.stringify(consoleLog, null, 2))
+        console.log(`caddie bundle → ${outDir}`)
+      })
+    })
+  }
+  if (target.kind === 'vault' && target.key === 'stale') {
+    test.describe(`caddie walk — vault:stale UPDATE route at REAL (${REAL.width}×${REAL.height} @ ${REAL_DPR}dpr)`, () => {
+      test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR })
+      test('update-entry', async ({ page }) => {
+        const consoleLog = hookConsole(page)
+        const outDir = path.join(OUT_ROOT, targetSlug, 'real')
+        await walkUpdateRoute(page, target.key, outDir)
+        fs.writeFileSync(path.join(outDir, 'console-update.json'), JSON.stringify(consoleLog, null, 2))
+        console.log(`caddie bundle → ${outDir}`)
+      })
+    })
+  }
+}

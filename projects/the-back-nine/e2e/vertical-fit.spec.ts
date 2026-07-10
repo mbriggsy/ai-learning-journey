@@ -354,10 +354,14 @@ test.describe(`the vault return (?vault=stale) — the gate + the staleness-echo
       'the affirm CTA sits below the first frame at the real window',
     ).toBeLessThanOrEqual(REAL.height)
     // The aged vault's own disclosures rendered (the frame under test is not vacuous —
-    // insight 029): the plant moves the tax + healthcare stamps → exactly their two lines,
-    // and the ~400-day-old savedAt → the one-year elapsed line.
-    await expect(page.locator('.reentry-notes p')).toHaveCount(2)
-    await expect(page.getByText('You saved this about a year ago.')).toBeVisible()
+    // insight 029): the plant moves the tax + healthcare stamps + the blend snapshot →
+    // exactly their three lines, and the ~760-day-old savedAt → the two-year elapsed line
+    // (coherent with the seed's -2 startCalendarYear — a real save mints both together).
+    // (The blend line is named, not just counted: an all-retired household must get the
+    // route-true spine wording, never stalenessDate's "behind your date".)
+    await expect(page.locator('.reentry-notes p')).toHaveCount(3)
+    await expect(page.getByText('The fund snapshots behind your answer')).toBeVisible()
+    await expect(page.getByText('You saved this about 2 years ago.')).toBeVisible()
 
     // Affirm → the gate releases the held recompute pair; wait out the FINAL tier like every
     // other arm, then settle animations before measuring (the gotoSeedFinal discipline).

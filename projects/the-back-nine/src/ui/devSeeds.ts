@@ -713,22 +713,37 @@ export function plantDevVault(key: string): Promise<PlantResult> {
 /**
  * P3·U13 — `?vault=stale`: the AGED-vault plant (the retired household as if saved ~2 years
  * ago under older rulebooks). Doctors the freshly-built scenario BEFORE the write — savedAt
- * back ~400 days (the elapsed line), the tax + healthcare stamps one vintage back (their
- * clocks fire), the plan anchor back 2 calendar years (the wall-time framing). The ONLY way
- * to see the re-entry staleness surface live today — every organic save is same-day fresh.
+ * back ~760 days (the elapsed line reads "about 2 years ago", COHERENT with the -2 plan
+ * anchor below: a real save mints both together, so their years must agree or the fixture
+ * describes an impossible household — the first Caddie chair pass caught the old -400/-2
+ * mismatch reading "about a year ago" over a 2024 anchor), the tax + healthcare stamps one
+ * vintage back (their clocks fire), the blend snapshot one year back (the spine blend clock
+ * — without this, `stalenessBlendSpine` is unreachable live: every save stamps `dateVintage`
+ * fresh, so the U13 cold-read batch's blend line would silently never render for anyone's
+ * eye), the plan anchor back 2 calendar years (the wall-time framing). The ONLY way to see
+ * the re-entry staleness surface live today — every organic save is same-day fresh.
  * appDefaultVersion stays CURRENT deliberately: the Q7 saved-era map has one era, so that
  * note is v1-inert by design (a fake era in the shipped map would be a lie to render one).
  */
 function doctorStaleVault(s: ScenarioV3, todayEpochDay: number): ScenarioV3 {
   return {
     ...s,
-    savedAt: todayEpochDay - 400,
+    savedAt: todayEpochDay - 760,
     startCalendarYear: s.startCalendarYear - 2,
     taxVintageDetail: { taxYear: (s.taxVintageDetail?.taxYear ?? 2026) - 1, legalBasis: 'TCJA (the pre-OBBBA dev fixture)' },
     healthcareVintage:
       s.healthcareVintage === undefined
         ? undefined
         : { ...s.healthcareVintage, coverageYear: s.healthcareVintage.coverageYear - 1, partBStandardMonthly: s.healthcareVintage.partBStandardMonthly - 10 },
+    // Year-decrement (never a fixed date): stays one vintage behind whatever the live
+    // BLEND_SNAPSHOT_AS_OF becomes, so the clock fires by construction, forever.
+    dateVintage:
+      s.dateVintage === undefined
+        ? undefined
+        : {
+            ...s.dateVintage,
+            blendSnapshotAsOf: `${Number(s.dateVintage.blendSnapshotAsOf.slice(0, 4)) - 1}${s.dateVintage.blendSnapshotAsOf.slice(4)}`,
+          },
   }
 }
 

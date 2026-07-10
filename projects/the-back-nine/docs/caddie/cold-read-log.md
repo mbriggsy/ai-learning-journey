@@ -12,6 +12,290 @@ Dispositions: **PARKED-FOR-BRIGGSY** (every readable surface — his eye is the 
 
 ---
 
+## 2026-07-10 — `?vault=retired`: the re-entry gate, fresh return (U13 batch — the gate read-back + the button pair)
+
+**States walked:** unlock (passphrase pre-filled) → gate (read-back, NO clock notes — same-day
+save, correct) → affirm → verdict. **Viewports:** REAL 1536×791@2.5dpr + PHONE 390×844@3.
+**Readers:** 7 fresh contexts (first-look · naive-spouse · copy-law finder→refuter ·
+calm/honesty · CVD screener · False-PASS Hunter). **Channel proof:** the first-look readback
+matched the DOM verbatim (headline, all three figures, both button labels, the disclaimer).
+
+**firstImpression (locked):** *"A calm, serious financial check-in screen… quiet, grown-up,
+almost letterpress-like… like a good advisor pausing to make sure we're working from the
+truth."* Gut trust: yes. Phone: *"unmistakably the same product."*
+
+**toneVerdict: SOFT-FLAG** — the gate's bones read right; two wording finds would reward his eye.
+
+### Findings
+
+1. **SOFT-FLAG [tone] — "Markets and paychecks move" is off-audience for an all-retired
+   household.** The spouse walker's PRIMARY stumble (*"we don't HAVE paychecks — does this
+   thing even know we stopped working?"*) + finder-stands-refuter-confirmed (rule 3; the
+   em-dash prong was killed — no dollar rides the sentence). `reentryIntro` is ONE route-blind
+   string (`copy.ts`). Candidate: a route-aware variant for the spine route ("Markets and
+   benefit checks move…"). Tweak path `copy.ts` `reentryIntro`.
+2. **SOFT-FLAG [both] — "Social Security, monthly at full retirement age" is ambiguous for a
+   couple already claiming.** Refuter-confirmed (rule 8 prong): a household that claimed at 62
+   or 70 receives a different check than the FRA figure, and the gate's own question ("Are
+   these still your numbers?") invites comparison against the real check — they can "correct"
+   a right number or okay a benchmark they can't verify. The figure IS the honest stored input
+   (the intake asks at-FRA); the gate just doesn't say which frame it's in. Candidate: one
+   gloss clause ("the statement figure your plan models from").
+3. **Presented, not flagged — the affirm-default tension (HIS batch question: the button
+   pair).** The Hunter's rosier reading: *"we just looked, it said that keeps our reading
+   honest — so our answer is current and safe to act on"* — the glance + big-green-affirm can
+   feel like a freshness stamp though it records nothing and re-prices nothing. Design side,
+   on the record: the gate is a PROMPT never an attestation (council constraint (c)), the
+   read-back exists exactly so the affirm is informed, and "Still about right" hedges.
+   Both hunters (fresh + stale) hit the same shape independently. His ruling.
+4. **Staged (comprehension notes):** "show my answer" — the answer to WHAT is never named on
+   the gate (first-look sat with it); Alex/Sam's relationship is inferred, never labeled; the
+   spouse-who-didn't-build-it presses affirm with a knot ("I'm being asked to certify numbers
+   I never typed") — product-reality, named for the record, no cheap fix.
+
+**falsePassHunt:** attempted — found the freshness-stamp reading (#3). Nothing on the gate
+overstates safety in figures; the hunt's survivor is a feeling, not a number.
+
+**colorBlindCheck:** clean as screened (never a clearance) — achromatic by construction, no
+hue carries meaning; primary/secondary split is fill-vs-underline + wording; every figure is
+a dt/dd text pair in the aria tree.
+
+**comprehension:** the spouse walker derived the situation correctly and chose affirm for the
+right reason (same-day save). Trust verdict: *"the bones are honest: the gate REFUSES to show
+a verdict off stale numbers."*
+
+**capture notes:** the phone gate scrolls by design (901 vs 844) — the first-look's "clipped
+footer" is the fold, not a clip; demoted.
+
+**prediction (tape hook):** he clears the gate's bones on sight — the read-back + the button
+pair are his own ratified shape, and the register reads calm. The likeliest stop is
+"paychecks" ("we're retired — why paychecks?"); the FRA frame he asks about as a comprehension
+question rather than flags; the affirm-default he rules as-designed without breaking stride.
+
+**disposition: PARKED-FOR-BRIGGSY.**
+
+**evidence:** bundle `temp/caddie/2026-07-10-15-24-11/vault-retired/` (3 states × 2
+viewports); corpus pinned: all rules + anti-patterns + E1–E11.
+
+---
+
+## 2026-07-10 — `?vault=stale`: the aged-vault return arc (U13 batch — the stale walk, the clock notes, the hero echo, the update route)
+
+**States walked:** unlock → gate (elapsed line + tax/health/**blend** notes) → affirm →
+verdict (staleness echo + backup door + 4 doors, each opened) → the update route's first
+frame. **Viewports:** REAL + PHONE. **Readers:** 7 fresh contexts. **Two bundles:** the panel
+read `2026-07-10-15-24-11`; the card's canonical frames are the post-fix re-capture
+`2026-07-10-15-32-17` (see capture notes — the run-stamped dirs did exactly their job).
+
+**firstImpression (locked):** *"It's being upfront that its saved data may be stale, and that
+honesty makes me trust it MORE, not less."* Phone: *"genuinely shines on mobile rather than
+merely surviving."*
+
+**toneVerdict: SOFT-FLAG** — the staleness machinery reads honest end-to-end; the flags are
+wording and one landing.
+
+### Findings
+
+1. **SOFT-FLAG [both] — "fund snapshots" is the one jargon phrase among three plain notes**
+   (`stalenessBlendSpine` — HIS batch line). Three lenses stumbled independently (honesty:
+   *"a normal couple can't tell if it means their holdings, market prices, or the model's
+   assumptions"*; spouse: *"is that MY money?"*; hunter graded it the arc's top item). The
+   refuter KILLED the scarier contradiction prong (the 'as saved' $1,000,000 is fenced twice
+   on the same screen + strict parallel structure with the tax/health notes) — the residue is
+   the word itself. Candidates for his pen: "The market data behind your answer…" / "The
+   fund-mix data we read your accounts against…". Tweak path `copy.ts` `stalenessBlendSpine`.
+   *(Capture context: this line was UNREACHABLE live until today — the stale plant never aged
+   `dateVintage`, so `blendMoved` was structurally false; the seed now ages the blend snapshot
+   one year and the fit gate pins the third note by name.)*
+2. **SOFT-FLAG [tone] — the three notes read as a stern anaphora block.** First-look: *"they
+   read like a stern triple disclaimer before I registered they're actually reassurances"*;
+   spouse: *"I felt managed, not informed."* The refuter killed the give-me-a-direction
+   complaint (direction-neutral is the ratified honest choice — a single rulebook's direction
+   is not the net effect), so what stands is DENSITY: three near-identical sentences ending
+   "uses today's" ×3. Candidate: one sentence naming the three rulebooks, or varied tails.
+   His call — the per-clock enumeration is also a defensible disclosure shape.
+3. **SOFT-FLAG [flow] — the update route lands at intake step 1, not at the money.** The
+   button says "Something's changed — update them" (them = the balances just read back); the
+   landing is "First — who are the two of you?" with the progress bar near zero. Values are
+   pre-filled (chair-verified: Alex/1960, Sam/1961 in the aria) so nothing is lost — but the
+   spouse walker got lost: *"did I hit the wrong button? Where's the balance I wanted to
+   change?"* Design side: the council-ratified shape IS the walk-through (accounts are edited
+   where they were entered, and the walk passes through them). Candidates: enter the walk AT
+   the accounts step, or one orienting line at the top ("your saved answers are filled in —
+   walk through to your accounts"). His ruling.
+4. **PRESENTED — the backup-door / disclaimer stacking (the filed a37b5f06 ruling, measured).**
+   At his window the frame holds: staleness echo 482–510 → save slot 518–602 → backup door
+   610–687 → R13 disclaimer 695–744 (in-frame) → doors 752–796 (the sanctioned fold casualty).
+   The Hunter independently graded the order a *"priority-inversion nit, not the headline"*
+   (the unprotected comfort block outranks the protected caveat in reading order; under
+   overflow pressure the door would push the disclaimer past the fold first). A row swap
+   changes focus order — his call, numbers on the record.
+5. **Staged [tone-tension] — "updated" reads as maintenance, no before/after.** The Hunter's
+   strongest survivor: a couple whose position materially worsened in the years away reads
+   "rules have been updated — this reading uses today's" as "kept current, nothing slipped."
+   Design side: the recompute IS today's truth and the verdict beside it carries the real
+   state; a delta-vs-remembered-verdict is a feature (store the old answer), not a copy fix.
+   Named for his eye because the stale return is exactly where a worsening hides.
+
+**falsePassHunt:** attempted — *"the tool already refreshed everything… nothing slipped; it's
+all current"* (the stale-return rosy read, #5). On the figures themselves the hunter could not
+break the honesty (the Medicare gap + never-up direction are disclosed in-frame).
+
+**colorBlindCheck (flags only):** fan bands survive grayscale on three channels (lightness +
+nesting + worded legend); no color-only signal anywhere on the arc. **Flagged to the oracle:**
+the fan's legend text + the "middle half of futures" band + the y-ticks have NO text path in
+the a11y tree (the SR range sentence carries median + 80% band only) — O3 sharpened, below.
+
+**comprehension:** the spouse pieced the whole arc correctly (the read-back, the three notes,
+the echo's meaning, the Medicare caveat's direction) and chose UPDATE for the honest reason —
+then got lost at its landing (#3). Trust: *"I never caught it lying rosier than the truth…
+what keeps me from trusting it fully is execution on the plain-language law."*
+
+**capture/fixture notes (chair-caught, fixed same session):** the panel's three elapsed-line
+findings ("about a year ago" understates) all trace to a SEED incoherence, not the product —
+`doctorStaleVault` aged `savedAt` −400d but the plan anchor −2y, a state no real save can
+mint (both stamp together). Fixed: savedAt −760d; the live gate reads "You saved this about
+2 years ago."; the fit arm re-proven; the re-walk landed in a fresh run-stamped dir while the
+panel was mid-read on the old one. Second channel lesson: `copy.txt` includes sr-only text
+(the "doubled wordmark" finding was the persistent sr-only h1 + the visible intake wordmark —
+pixels show it once; killed) — increment 3 should annotate channels in the capture.
+
+**routedToOracle:** **O6** `reentryChrome.ts:93` — elapsed years uses `Math.floor(days/365)`:
+a 700-day save reads "about a year ago", systematic rosier-direction rounding on a staleness
+disclosure (round-half or "over a year" phrasing) · **O3-extended** — the band legend text,
+the interquartile band, and the y-ticks have no text-path equivalent (both routes; the SR
+sentence names median + 80% band only) · **walk harness** — sr-only text rides `copy.txt`
+unannotated (increment 3).
+
+**prediction (tape hook):** the stale walk itself clears — the gate-names-what-moved + the
+one-line echo is the shape he ratified, and the register holds. He stops on "fund snapshots"
+(the don't-make-users-think shape — E1's family). The triple-note block earns at most a
+"tighten this" tweak. The update-route landing raises an eyebrow only if he walks that exit.
+The backup-door row order he rules in one breath, either way.
+
+**disposition: PARKED-FOR-BRIGGSY.**
+
+**evidence:** bundles `temp/caddie/2026-07-10-15-24-11/vault-stale/` (panel-read) +
+`temp/caddie/2026-07-10-15-32-17/vault-stale/` (canonical, post-fixture-fix); corpus pinned:
+all rules + E1–E11.
+
+---
+
+## 2026-07-10 — `?seed=date`: the anchored date hero + both graphs + all five door sheets (U13 batch — the anchored date line; the door sweep the tape demanded)
+
+**States walked:** landing (final tier) + all five quiet-row doors opened and captured
+(budget split · withdrawal order · Roth conversion · health picture · assumptions).
+**Viewports:** REAL + PHONE. **Readers:** 7 fresh contexts.
+
+**firstImpression (locked):** *"It just handed me an answer with personality… warm, blunt,
+and — weirdly for the profanity — CALM. It hedges honestly instead of promising a hard
+number, which makes me trust it MORE… It feels like it's on my side."*
+
+**toneVerdict: SOFT-FLAG** — the batch's headline subject passes clean; the flags sit beside
+it.
+
+### Findings
+
+1. **THE BATCH SUBJECT PASSES — the anchored hero line reads as intended.** *"Your fuck-off
+   date is about 7 years out — around 2033"*: the honesty lens ruled the apposition IS the
+   relative→absolute gloss working ("it serves the copy law by handing the reader the calendar
+   year"); the refuter killed the letter-of-rule-5 nit (a date, not a dollar); the first-look
+   cross-checked 58+7=65 against "Work stops 65 / 67" and called it consistent. (Live figure
+   is 7y/2033 — the TODO's remembered "6 years — around 2032" was stale; engine truth wins.)
+2. **SOFT-FLAG [both — DISSENT PRESERVED, his call] — the year-sooner line.** Hunter
+   (blocker): the ladder's own rung marks year-6 *"about 8 of 10 — below the line"* while the
+   hero offers the same offset as *"Or about a year sooner, the odds are nearer 8 of 10"* —
+   and 9→8 of 10 doubles the failure rate; the rosy read is *"basically the same, go sooner."*
+   Honesty (pass): *"an HONEST disclosed trade-off, not an invitation — the safer date leads
+   as hero, the earlier option is subordinate WITH its lower odds attached."* Chair context:
+   the two-date hero is the locked R26 design and long cold-read-cleared; only the "— around
+   2033" tag is new. If his eye wants anything, it's a "doesn't hold as durably" whisper on
+   the sooner arm.
+3. **SOFT-FLAG [both] — the ladder's crowned-rung sentence reads as a durability promise.**
+   Aria/readout, chair-verified verbatim: *"Stopping in 7 years: about 9 of 10 — your date,
+   where the odds hold from here on."* The intended claim is the ladder's SHAPE (every later
+   stop-year stays at-or-above the line); the lay read is *"once we reach our date we're
+   locked in at 90%"* (rule 7's certainty shape, the Hunter's second hit). Candidate: "…your
+   date — the first year the odds clear the line and stay there." Tweak path: the ladder's
+   readout slot.
+4. **CF3 FOLDED IN (his own parked item, now with its capture):** the honesty lens
+   independently re-raised the two-pane lower-left whitespace at his real window (rule 21) —
+   worst exactly where the 2026-06-29 council parked it: the DATE route. The landing capture
+   is the evidence his parked read has been waiting for. Calm or dead — his eye.
+5. **Staged:** the date hero's odds line carries no object ("about 9 of 10 odds" — *"odds THAT
+   WHAT?"*, the spouse's top stumble; the spine hero says "futures your plan covers", the date
+   hero is barer) — old cleared surface, staged not flagged · the fan's "$118k floor" p10
+   framing (hunter: the bottom tenth dressed as a soft landing; the "eight in ten" qualifier
+   is the honest carrier) · phone: the primary CTA sits below the fold (the phone scrolls by
+   design; staged for his phone pass).
+6. **Cleared-as-screened (chair):** the "29 years out" caption panic (two lenses + the spouse)
+   is the C2 AT-range sentence — sr-only BY DESIGN, deliberately anchored at the deepest
+   ≥75%-cohort column (~29y), not the 34y horizon (council-approved 2026-06-29); sighted
+   readers never see it, AT readers hear it with its own window named. A copy-channel
+   artifact of reading `copy.txt`. · Door-4's "the cliff"/"set income level" candidates were
+   refuter-killed as qualitative regime-teaching (no delta, no derivation — not E1's shape).
+
+**falsePassHunt:** attempted — the *"go sooner, basically the same"* + *"odds hold = locked
+in"* pair (#2/#3) is the rosier-than-true reading; both halves presented with their design
+side.
+
+**colorBlindCheck (flags only):** palette CVD-safe by construction (no red/green semantics
+anywhere; the gold "your date" ring is redundantly a RING + text label + worded aria);
+bands separate on lightness + nesting + words. The legend/IQR text-path gap files with
+O3-extended.
+
+**comprehension:** the spouse derived the full story correctly but *"had to work for it"*;
+would open "The assumptions behind this" FIRST (*"I don't trust a 9-of-10 I didn't watch get
+made"*) — the door exists and is reachable, which is the design answering her need.
+
+**coverage gap (the tape's lesson, honestly hit):** the finder REFUSED to fake the rule-36
+door-chart check — the three lever sheets capture in their pre-commit input state, so no
+TwoFutures chart exists to verify (his eye verified the axis fix live yesterday; that stands
+as the truth source). Increment 3: the walk drives one preview per lever sheet so the chart
+states bundle.
+
+**routedToOracle:** **O7** — the date hero heading renders a visible focus rectangle at
+landing (programmatic `focusHeading`; check `:focus` vs `:focus-visible` intent — the boxed
+headline is the first thing a cold eye asks about) · the door-chart coverage gap (walk
+extension, not product).
+
+**prediction (tape hook):** he clears the anchored date line on sight — it is the exact frame
+he asked for ("wording is great" register). The year-sooner dissent he rules as-designed (his
+own two-date shape). The ladder's "odds hold from here on" likely goes unnoticed (readout
+channel). CF3 finally gets its ruling standing in front of this capture. If anything stops him
+cold it's the focus rectangle on the hero — "why is my headline boxed?"
+
+**disposition: PARKED-FOR-BRIGGSY.**
+
+**evidence:** bundle `temp/caddie/2026-07-10-15-24-11/seed-date/` (landing + 5 doors × 2
+viewports); corpus pinned: all rules + E1–E11.
+
+---
+
+## 2026-07-10 — the floor's anchored/arrived arms + the hero's arrived arm (U13 batch) — BLOCKED-UNREACHABLE
+
+**Surfaces:** `dateFloorCoveredAnchored` / `dateFloorCoveredPast` / `dateInYearsPast`
+(`copy.ts` slots). **No tone verdict is issued — these cannot be rendered live** (the law:
+never read tone from source). They need an aged DATE-route vault with a split budget;
+`?vault=stale` is the retired spine, and every organic save is same-day fresh. Unit-pinned
+only.
+
+**The words, verbatim, for his optional read (copy-only, not a walked surface):**
+- anchored: *"The essentials alone are covered about N years out — around YYYY — [odds]."*
+  (+ the window-edge hedge when unconfirmed)
+- floor arrived: *"The essentials alone were penciled as covered around YYYY — by the
+  calendar, that's about now — [odds]."*
+- hero arrived: *"Your plan penciled the fuck-off date around YYYY — by the calendar, that's
+  about now"*
+
+**Prescription if he wants them walkable:** a `?vault=datestale` dev plant — the date seed
+with a split budget, savedAt aged past a year, stamps aged one vintage (the same
+`doctorStaleVault` pattern; a small devSeeds arm). Filed, never faked.
+
+**disposition: BLOCKED-UNREACHABLE.**
+
+---
+
 ## 2026-07-10 — `?seed=retired`: the resolved answer + the assumptions panel + the worsening edit (the U12 batch core)
 
 **States walked:** landing → panel-open → panel-worsened (spending 6,500→10,000/mo, the R8

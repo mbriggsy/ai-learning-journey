@@ -54,12 +54,39 @@ export function progressiveOrdinaryTax(taxableIncome: number, brackets: readonly
   return tax
 }
 
-/** The OBBBA senior bonus for a filing status, count of 65+ filers, and MAGI: the base
- *  (`perPerson65Plus` × count) reduced linearly at `phaseOutRatePerDollar` above the
- *  filing-status phase-out start, floored at 0. The linear form is authoritative; the
- *  count-specific `fullyGoneAbove` ceilings are consistent with it (and 0 below the start). */
-function seniorBonusFor(filing: FilingStatus, count65: number, magi: number): number {
+/** The OBBBA bonus's consumed availability window, read from the canonical constant's
+ *  effectiveFrom/sunsetAfter — the ONE home of both figures (council 2026-07-09; the shape
+ *  test pins 2025/2028 symmetrically). They are optional on `Sourced`, so a stripped field
+ *  FAILS LOUD here (the Unsourced.value idiom — never a silently unwindowed bonus). */
+function seniorBonusWindow(): { readonly from: number; readonly through: number } {
+  const from = seniorBonus.effectiveFrom
+  const through = seniorBonus.sunsetAfter
+  if (from === undefined || through === undefined) {
+    throw new Error(
+      '[taxCore] seniorBonus is missing its consumed availability window (effectiveFrom/sunsetAfter) — ' +
+        'the engine prices the OBBBA bonus ONLY inside it; refusing a windowless read (burned/062).',
+    )
+  }
+  return { from, through }
+}
+
+/** The OBBBA senior bonus for a filing status, count of 65+ filers, MAGI, and CALENDAR
+ *  YEAR: the base (`perPerson65Plus` × count) reduced linearly at `phaseOutRatePerDollar`
+ *  above the filing-status phase-out start, floored at 0. The linear form is authoritative;
+ *  the count-specific `fullyGoneAbove` ceilings are consistent with it (and 0 below the
+ *  start). THE SUNSET (the U13-filed engine unit, council-ratified 2026-07-09): the bonus
+ *  prices ONLY in calendar tax years [effectiveFrom .. sunsetAfter] = [2025 .. 2028] —
+ *  outside the window it is 0, so a 2029+ sim year stops crediting the expired deduction
+ *  (the pre-unit engine credited it in EVERY year — calm-but-wrong optimistic, insight 074). */
+function seniorBonusFor(filing: FilingStatus, count65: number, magi: number, calendarYear: number): number {
+  if (!Number.isInteger(calendarYear)) {
+    // NaN would fail BOTH window compares and silently price a $0 bonus (insight 010's
+    // shape — conservative here, but a desynced consumer is never the honest answer).
+    throw new Error(`[taxCore] calendarYear must be an integer calendar year (got ${calendarYear})`)
+  }
   if (count65 === 0) return 0
+  const { from, through } = seniorBonusWindow()
+  if (calendarYear < from || calendarYear > through) return 0
   const sb = seniorBonus.value
   const base = sb.perPerson65Plus * count65
   const start = filing === 'mfj' ? sb.phaseOutStart.mfj : sb.phaseOutStart.single
@@ -67,13 +94,15 @@ function seniorBonusFor(filing: FilingStatus, count65: number, magi: number): nu
 }
 
 /** The full M3 deduction stack: standard deduction + age-65 addition × (65+ filers) +
- *  the senior bonus. Every figure is read from the canonical constants module.
- *  Exported for the U11 MAGI-landscape module (the bracket-edge rail translates a
- *  TAXABLE-income edge back to MAGI space through the same stack the tax math uses). */
-export function deductionStack(filing: FilingStatus, count65: number, magi: number): number {
+ *  the senior bonus (which prices only in its 2025–2028 statutory window — the
+ *  `calendarYear` is the sim year's calendar, `startCalendarYear + t`). Every figure is
+ *  read from the canonical constants module. Exported for the U11 MAGI-landscape module
+ *  (the bracket-edge rail translates a TAXABLE-income edge back to MAGI space through the
+ *  same stack the tax math uses). */
+export function deductionStack(filing: FilingStatus, count65: number, magi: number, calendarYear: number): number {
   const std = filing === 'mfj' ? standardDeductionMFJ.value : standardDeductionSingle.value
   const age65 = (filing === 'mfj' ? age65AdditionMFJ.value : age65AdditionSingle.value) * count65
-  return std + age65 + seniorBonusFor(filing, count65, magi)
+  return std + age65 + seniorBonusFor(filing, count65, magi, calendarYear)
 }
 
 /**
@@ -81,9 +110,15 @@ export function deductionStack(filing: FilingStatus, count65: number, magi: numb
  * progressive brackets. In M3 MAGI = ordinary income (Social-Security inclusion, cap-gains,
  * and tax-exempt interest enter MAGI in M4/M5). Roth and taxable-basis withdrawals are NOT
  * ordinary income here — only the pre-tax distribution (withdrawals + RMD) is taxed.
+ * `calendarYear` is the sim year's calendar (windows the senior bonus).
  */
-export function ordinaryIncomeTax(ordinaryIncome: number, filing: FilingStatus, count65: number): number {
-  const taxable = Math.max(0, ordinaryIncome - deductionStack(filing, count65, ordinaryIncome))
+export function ordinaryIncomeTax(
+  ordinaryIncome: number,
+  filing: FilingStatus,
+  count65: number,
+  calendarYear: number,
+): number {
+  const taxable = Math.max(0, ordinaryIncome - deductionStack(filing, count65, ordinaryIncome, calendarYear))
   return progressiveOrdinaryTax(taxable, bracketsFor(filing))
 }
 
@@ -199,10 +234,11 @@ export function ordinaryPlusCapitalGainsTax(
   realizedGain: number,
   filing: FilingStatus,
   count65: number,
+  calendarYear: number,
 ): number {
   const gain = Math.max(0, realizedGain)
   const magi = ordinaryIncome + gain
-  const deduction = deductionStack(filing, count65, magi)
+  const deduction = deductionStack(filing, count65, magi, calendarYear)
   const ordinaryTaxable = Math.max(0, ordinaryIncome - deduction)
   const leftoverDeduction = Math.max(0, deduction - ordinaryIncome)
   const gainTaxable = Math.max(0, gain - leftoverDeduction)

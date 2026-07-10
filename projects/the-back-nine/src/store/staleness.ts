@@ -37,14 +37,14 @@
  *   is satisfied structurally, not by a boolean that can never be true.)
  * - The senior-bonus SUNSET CROSSING has NO clock — REMOVED by the U13 ultramode review
  *   (2026-07-09, wf_44cdf86d-b71; a dated supersession of the ratified spec's "derived
- *   note", whose premise the review refuted against source). Crossing the sunset year
- *   changes NOTHING about a saved answer under EITHER engine world: today the engine does
- *   not read `seniorBonus.sunsetAfter` at all (it credits the bonus in every sim year — the
- *   filed REQUIRED engine unit closes that, tripwired in `seniorBonusSunset.tripwire.test`),
- *   and once the engine models the sunset the save already priced it (calendar-deterministic,
- *   recompute byte-identical). A "rules changed since your save" note on a byte-identical
- *   recompute is alarm-when-fine — the same lie the acaVerifiedOn exclusion refuses. A real
- *   extension/repeal moves `legalBasis`/`taxYear` and fires the tax clock.
+ *   note", whose premise the review refuted against source). The filed engine unit has
+ *   since SHIPPED (same day, council-ratified): `taxCore.seniorBonusFor` now prices the
+ *   bonus only in calendar years [effectiveFrom .. sunsetAfter], and the crossing is
+ *   STILL not drift — the save already priced the calendar-deterministic sunset, so a
+ *   post-2028 re-open recomputes byte-identical. A "rules changed since your save" note
+ *   on a byte-identical recompute is alarm-when-fine — the same lie the acaVerifiedOn
+ *   exclusion refuses. A real extension/repeal moves `legalBasis`/`taxYear` (and the
+ *   symmetric shape pins on the window) and fires the tax clock.
  * - `contributionMoved` is ROUTE-GATED quiet for an all-retired household (same review):
  *   contribution limits enter the engine only through the accumulation overlay
  *   (simulate.ts gates `contributions` on it), so a decumulation-only household's answer is

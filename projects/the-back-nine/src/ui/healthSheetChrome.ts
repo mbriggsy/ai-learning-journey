@@ -103,7 +103,7 @@ export interface HealthSheetView {
  */
 export function composeHealthSheet(
   readout: HealthReadout | undefined,
-  draft: Pick<ScenarioV3, 'filing' | 'enhancedSubsidies'> & {
+  draft: Pick<ScenarioV3, 'filing' | 'enhancedSubsidies' | 'startCalendarYear'> & {
     readonly people: ReadonlyArray<{ readonly currentAge?: number }>
     readonly health: { readonly slcspMonthlyToday?: number }
   },
@@ -141,13 +141,17 @@ export function composeHealthSheet(
 
     // The shadow rate at the empirical anchor: ordinary marginal rate (through the same
     // deduction stack the tax math uses) + the subsidy drag (through the same sliding scale
-    // the overlay prices with). count65 at the anchor from the household's own ages.
+    // the overlay prices with). count65 at the anchor from the household's own ages, and the
+    // anchor's CALENDAR year from the SAME yearsIn clock (council 2026-07-09 C4 — the senior
+    // bonus windows out of the stack past 2028, and the readout must age exactly with the
+    // engine's own year, single-producer contract).
     const yearsIn = anchor.yearsFromNow - 1 // the series clock: k = END of sim-year k−1
     const count65 = draft.people.filter(
       (p) => p.currentAge !== undefined && p.currentAge + yearsIn >= 65,
     ).length
+    const anchorCalendarYear = draft.startCalendarYear + yearsIn
     const agi = anchor.irmaaMagiP50
-    const taxable = Math.max(0, agi - deductionStack(draft.filing, count65, agi))
+    const taxable = Math.max(0, agi - deductionStack(draft.filing, count65, agi, anchorCalendarYear))
     const marginal = marginalOrdinaryRate(taxable, draft.filing)
     const slcspAnnual = (draft.health.slcspMonthlyToday ?? 0) * 12
     // The drag term exists only while the credit is genuinely alive at the anchor: past the

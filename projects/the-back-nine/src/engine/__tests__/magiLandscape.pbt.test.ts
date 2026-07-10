@@ -26,6 +26,10 @@ const ctxArb: fc.Arbitrary<CommittedYearIncome> = fc.record({
   ssBenefit: fc.integer({ min: 0, max: 120_000 }),
   filing: fc.constantFrom<'mfj' | 'single'>('mfj', 'single'),
   count65: fc.integer({ min: 0, max: 2 }),
+  // The sunset unit: sample calendar years SPANNING the senior bonus's 2025–2028 window
+  // (both edges + outside on both sides), so every property below is pinned in bonus-priced
+  // AND bonus-sunset years alike — the ratified "holds every year" arm.
+  calendarYear: fc.integer({ min: 2023, max: 2036 }),
 })
 
 const fillArb = fc.integer({ min: 0, max: 1_000_000 })

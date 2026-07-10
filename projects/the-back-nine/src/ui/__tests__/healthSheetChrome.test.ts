@@ -32,8 +32,12 @@ const year = (over: Partial<HealthReadoutYear>): HealthReadoutYear => ({
   ...over,
 })
 
-const draft = (over: { enhanced?: true; ages?: readonly number[]; slcsp?: number } = {}) => ({
+const draft = (over: { enhanced?: true; ages?: readonly number[]; slcsp?: number; startYear?: number } = {}) => ({
   filing: 'mfj' as const,
+  // The sunset unit (C4): the anchor's calendar year = startCalendarYear + yearsIn windows
+  // the senior bonus out of the shadow-rate stack past 2028. 2026 = the in-window anchor
+  // every pre-unit expectation was derived at; the readout crossing arm overrides it.
+  startCalendarYear: over.startYear ?? 2026,
   ...(over.enhanced ? { enhancedSubsidies: true as const } : {}),
   people: (over.ages ?? [60, 60]).map((a) => ({ currentAge: a })),
   health: { slcspMonthlyToday: over.slcsp ?? 1_000 },
@@ -128,6 +132,32 @@ describe('composeHealthSheet', () => {
       figure: slots.healthFigCents(22),
       lines: [slots.shadowRateLine(22)],
     })
+  })
+
+  it('the shadow rate CROSSES the senior-bonus sunset with the engine (C4, council 2026-07-09): the same anchor reads 12¢ at a 2028 calendar and 22¢ at 2029', () => {
+    // The year is the ISOLATED variable: identical household (61 + 63 ⇒ count65 = 1 at the
+    // yearsIn-3 anchor), identical anchor MAGI 138,000, drag zeroed (slcsp 0) — only the
+    // startCalendarYear moves the anchor across the boundary. Hand-derived (DND/012):
+    //   2025 + 3 = 2028 (in-window):  D = 32,200 + 1,650 + 6,000 = 39,850 ⇒ taxable 98,150
+    //     ⇒ the 12% band (≤ 100,800) ⇒ 12¢.
+    //   2026 + 3 = 2029 (post-sunset): D = 33,850 ⇒ taxable 104,150 ⇒ the 22% band ⇒ 22¢.
+    // A readout that ignored the calendar would quote 12¢ against an engine pricing 22% —
+    // the single-producer drift C4 exists to forbid.
+    const readout: HealthReadout = {
+      byYear: [
+        year({
+          yearsFromNow: 4,
+          acaPricedFraction: 1,
+          acaNetPremiumP50: 9_000,
+          acaMagiP50: 80_000,
+          irmaaMagiP50: 138_000,
+        }),
+      ],
+    }
+    const at2028 = composeHealthSheet(readout, draft({ ages: [61, 63], slcsp: 0, startYear: 2025 }))
+    const at2029 = composeHealthSheet(readout, draft({ ages: [61, 63], slcsp: 0, startYear: 2026 }))
+    expect(factOf(at2028, 'conversion')?.figure).toBe(slots.healthFigCents(12))
+    expect(factOf(at2029, 'conversion')?.figure).toBe(slots.healthFigCents(22))
   })
 
   it('an OVER-cliff anchor quotes the cutoff dollar INLINE (no headroom sentence precedes it in that branch — audit 2026-07-03)', () => {

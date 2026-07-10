@@ -131,6 +131,11 @@ export const seniorBonus = sourced(
     directionalUntilPinned: false,
     pinTo: 'IRS FS-2025-03 / OBBBA H.R.1',
     legalBasis: 'OBBBA P.L. 119-21 / H.R.1',
+    // BOTH window ends are CONSUMED by the engine (taxCore.seniorBonusFor prices the bonus
+    // ONLY in calendar years [effectiveFrom .. sunsetAfter] — the sunset unit, council
+    // 2026-07-09): priced figures now, not narration (insight 074's inverse). Symmetrically
+    // pinned in constants.shape.test.ts; never re-typed at the consumer.
+    effectiveFrom: 2025,
     sunsetAfter: 2028,
     note: 'Available tax years 2025–2028 only. Use mfjBothSpouses65=$350k when both are 65+; the flat $250k is the one-spouse case.',
   },

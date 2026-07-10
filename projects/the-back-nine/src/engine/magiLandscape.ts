@@ -55,6 +55,10 @@ export interface CommittedYearIncome {
   readonly ssBenefit: number
   readonly filing: FilingStatus
   readonly count65: number
+  /** The sim year's CALENDAR year (`startCalendarYear + t`) — windows the senior bonus
+   *  inside the deduction stack (the sunset unit, council 2026-07-09). Gross-independent
+   *  like every other term, so the headroom stays a constant inside the fixed point. */
+  readonly calendarYear: number
 }
 
 // Bisection controls — the fail-loud discipline mirrors the ACA solver's (burned/062):
@@ -84,12 +88,13 @@ export function irmaaMagiAtFill(c: CommittedYearIncome, f: number): number {
 }
 
 /** Federal TAXABLE income at fill `f`: AGI (= IRMAA-MAGI at gain 0) less the full deduction
- *  stack evaluated at that AGI (the senior-bonus phase-out makes the deduction shrink as the
- *  fill grows — slope ≈ 1.06 in the phase-out band, and 0 while the deduction still shelters
- *  everything). Monotone non-decreasing in `f`. */
+ *  stack evaluated at that AGI (INSIDE the senior bonus's 2025–2028 window its phase-out
+ *  makes the deduction shrink as the fill grows — slope ≈ 1.06 in the phase-out band, and 0
+ *  while the deduction still shelters everything; OUTSIDE the window the stack is flat —
+ *  std + age-65 only). Monotone non-decreasing in `f` in every year. */
 export function taxableIncomeAtFill(c: CommittedYearIncome, f: number): number {
   const agi = irmaaMagiAtFill(c, f)
-  return Math.max(0, agi - deductionStack(c.filing, c.count65, agi))
+  return Math.max(0, agi - deductionStack(c.filing, c.count65, agi, c.calendarYear))
 }
 
 /**
@@ -169,9 +174,10 @@ export function bracketEdgeFillHeadroom(c: CommittedYearIncome): number {
   const edge = nextBracketEdgeAbove(baseline, c.filing)
   if (edge === null) return Number.POSITIVE_INFINITY
   // Crossing bound: taxable(f) ≥ AGI(f) − deduction(f) ≥ f − D₀, where D₀ (the stack at
-  // MAGI 0) is the deduction's MAXIMUM (the senior bonus only phases DOWN as MAGI rises) —
-  // so f = edge + D₀ + 1 provably crosses.
-  const d0 = deductionStack(c.filing, c.count65, 0)
+  // MAGI 0, THIS year) is the deduction's MAXIMUM (the senior bonus only phases DOWN as
+  // MAGI rises; in a post-sunset year D₀ is simply smaller) — so f = edge + D₀ + 1
+  // provably crosses.
+  const d0 = deductionStack(c.filing, c.count65, 0, c.calendarYear)
   return largestFillWithin((f) => taxableIncomeAtFill(c, f), edge, edge + d0 + 1)
 }
 

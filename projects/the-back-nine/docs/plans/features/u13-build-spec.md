@@ -140,6 +140,19 @@ export-restore is ruled out of wall-clock scope.
    external fixtures, council-ratified — TODO) and **build-tripwired**
    (`seniorBonusSunset.tripwire.test.ts` goes red on 2028-01-01 so the sunset's final priced year
    cannot build with the gap open).
+   **→ CLOSED 2026-07-09 (same day): the engine sunset unit SHIPPED** — council-ratified 8/10
+   (wf_a5ccd576-048, no veto; the honesty hawk's opening seat crashed on a schema mismatch and its
+   rebuttal-round seat voted RATIFY explicitly — recorded, insight-019 handling). `seniorBonusFor`
+   now prices the bonus ONLY in calendar years [effectiveFrom .. sunsetAfter] = [2025 .. 2028],
+   consumed from the constant's own metadata behind a fail-loud guard, symmetric shape pins on both
+   ends; the calendar (`startCalendarYear + t`) threads `deductionStack`/`ordinaryIncomeTax`/
+   `ordinaryPlusCapitalGainsTax`/`CommittedYearIncome`/`GrossUpContext` + the healthSheetChrome
+   shadow-rate anchor (the same `yearsIn` clock as its count65). DND-012 batteries: statutory edges
+   both ends, the gain-shelter channel (the runtime primitive, leftoverDeduction > 0), the
+   full-solver gross-up step at exactly 2029, the bracket-fill ceiling→ledger crossing, PBT arms
+   spanning 2023–2036, the readout 12¢→22¢ crossing. The tripwire is RETIRED in the unit's commit.
+   Architecture §7.1/§8 updated; the staleness header now records the shipped-engine world (the
+   crossing is still not drift — byte-identical recompute).
 2. **`anyStale` split into TWO predicates.** The hero's standing "Some rules changed since your save —
    this answer uses today's" echo rides `rulesMoved` (rulebook drift = the recompute genuinely
    differs); the budget window re-confirms raise `anyStale` for the GATE only (calendar prompts over a

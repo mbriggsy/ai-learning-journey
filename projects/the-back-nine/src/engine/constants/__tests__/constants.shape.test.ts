@@ -262,6 +262,13 @@ describe('canonical constants — shape & provenance (contract #6)', () => {
     const sb = taxConstants.seniorBonus.value
     expect(sb.fullyGoneAbove.mfjOneSpouse65).toBe(250_000)
     expect(sb.fullyGoneAbove.mfjBothSpouses65).toBe(350_000)
+  })
+
+  it('the senior-bonus availability window is SYMMETRICALLY pinned — the engine consumes BOTH ends (the sunset unit, council 2026-07-09)', () => {
+    // taxCore.seniorBonusFor prices the bonus only in [effectiveFrom .. sunsetAfter]; these
+    // are priced figures (insight 074's inverse), so both ends get the dated-figure pin —
+    // stripping either one fails the consumer's fail-loud guard AND this pin.
+    expect(taxConstants.seniorBonus.effectiveFrom).toBe(2025)
     expect(taxConstants.seniorBonus.sunsetAfter).toBe(2028)
   })
 

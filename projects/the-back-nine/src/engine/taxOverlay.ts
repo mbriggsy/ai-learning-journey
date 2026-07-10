@@ -461,6 +461,10 @@ const JLLS = jointLifeLastSurvivorTable.value
 // change (a breakpoint shift) could open a k ≥ 1 corner and silently break convergence — re-derive
 // k if the breakpoints move (insight 006: a probe that "confirms" the old k is usually sampling
 // the wrong regime; the cap-gains corner is invisible to a pre-tax-only / large-net probe).
+// THE SUNSET (council 2026-07-09): the senior-bonus phase-out channel exists ONLY in calendar
+// years [2025..2028] — in a post-sunset year that corner vanishes entirely, so per-year k can
+// only SHRINK below the bound above. The k_sup ≈ 0.74 witness never used the bonus channel
+// (senior bonus long gone at ~$645k ordinary), so the bound and 128 passes are year-invariant.
 //
 // 128 passes SUFFICES at k ≈ 0.74 (geometric: ~ln(tax/ε)/ln(1/0.74) ≈ 98 passes even at the
 // self-limiting ~$0.7M tax that corner pins; the unbounded-tax tail sits at the milder k = 0.685
@@ -799,6 +803,10 @@ interface GrossUpContext {
   readonly taxableBasis: number
   readonly filing: FilingStatus
   readonly count65: number
+  /** The sim year's CALENDAR year (`household.startCalendarYear + t`) — windows the OBBBA
+   *  senior bonus inside the deduction stack (the sunset unit, council 2026-07-09). Year-
+   *  constant like everything else here, so the fixed point stays 1-D. */
+  readonly calendarYear: number
   readonly ssBenefit: number
   readonly bracketFillCeiling: number
   /** R40 — this year's ongoing other-income TAXABLE that enters ordinary income (seam 2; KTD-1):
@@ -811,7 +819,7 @@ interface GrossUpContext {
 }
 
 function solveGrossWithdrawal(net: number, ctx: GrossUpContext): GrossUpSolution {
-  const { drawPool, policy, customOrder, rmd, conversion, taxableBasis, filing, count65, ssBenefit, bracketFillCeiling, ongoingTaxable } = ctx
+  const { drawPool, policy, customOrder, rmd, conversion, taxableBasis, filing, count65, calendarYear, ssBenefit, bracketFillCeiling, ongoingTaxable } = ctx
   const taxableValue = drawPool.taxable
   let gross = net
   for (let pass = 0; pass < GROSS_UP_MAX_PASSES; pass++) {
@@ -832,7 +840,7 @@ function solveGrossWithdrawal(net: number, ctx: GrossUpContext): GrossUpSolution
     // converged locals (never recomputed off a raw-gain ledger; the named sign-inversion).
     const ssBenefitTaxable = taxableSocialSecurity(nonSSordinary + realizedGain, ssBenefit, filing)
     const ordinaryIncome = nonSSordinary + ssBenefitTaxable
-    const nextGross = net + ordinaryPlusCapitalGainsTax(ordinaryIncome, realizedGain, filing, count65)
+    const nextGross = net + ordinaryPlusCapitalGainsTax(ordinaryIncome, realizedGain, filing, count65, calendarYear)
     if (Math.abs(nextGross - gross) < GROSS_UP_EPSILON) {
       // Components key off THIS converging pass's gross (pre-update); the |nextGross − gross| < 1e-7
       // lag is sub-penny — far below the dollar grid the M3 cliff branch quantizes to. Do NOT
@@ -1345,6 +1353,7 @@ export function runTaxAwareDecumulation(
         ssBenefit: ssBenefits[t] ?? 0,
         filing: regime.filing,
         count65: regime.count65,
+        calendarYear: config.household.startCalendarYear + t,
       }
       // The tax-bracket rail — always active under bracket-fill.
       let ceiling = bracketEdgeFillHeadroom(committed)
@@ -1496,6 +1505,7 @@ export function runTaxAwareDecumulation(
         taxableBasis: basis,
         filing: regime.filing,
         count65: regime.count65,
+        calendarYear: config.household.startCalendarYear + t,
         ssBenefit: ssBenefits[t] ?? 0,
         bracketFillCeiling,
         // R40 seam 2 (KTD-1): the UNCLAMPED-year ongoing taxable enters `nonSSordinary` ONCE — the

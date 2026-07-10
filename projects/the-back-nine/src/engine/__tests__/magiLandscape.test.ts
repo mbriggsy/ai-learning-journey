@@ -44,6 +44,9 @@ const ctx = (over: Partial<CommittedYearIncome>): CommittedYearIncome => ({
   ssBenefit: 0,
   filing: MFJ,
   count65: 0,
+  // In-window default (the sunset unit): every hand-derived fixture in this file was derived
+  // WITH the senior bonus priced, so they anchor 2026. Sunset-year arms override explicitly.
+  calendarYear: 2026,
   ...over,
 })
 

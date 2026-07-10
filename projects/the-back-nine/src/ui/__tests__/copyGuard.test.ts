@@ -76,6 +76,8 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     bandClockHorizonDesc: slots.bandClockHorizonDesc(93, 91),
     bandClockWorkStopsDesc: slots.bandClockWorkStopsDesc(64, 62),
     bandClockAgesDesc: slots.bandClockAgesDesc(80, 78),
+    // The aged-vault year-0 endpoint (U13 one-time-base law on the chart, 2026-07-10).
+    bandClockSavedDesc: slots.bandClockSavedDesc(58, 59),
     bandAtRange: slots.bandAtRange(23, '$420k', '$1.2M', '$780k'),
     bandAtRangeRuin: slots.bandAtRangeRuin(23, '$120k'),
     bandAtRangeGone: slots.bandAtRangeGone(23),

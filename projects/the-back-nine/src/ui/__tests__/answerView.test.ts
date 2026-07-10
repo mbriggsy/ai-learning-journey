@@ -184,6 +184,21 @@ describe('selectElevatedAnswer — D2 state-adaptive routing', () => {
     expect(ann?.find((m) => m.id === 'horizon')?.yearsFromNow).toBe(40)
   })
 
+  it('threads the AGED savedAnchor to the band derivers — year 0 renames "Your save", wall-Today at x = elapsed (the U13 one-time-base law; a dropped thread would silently resurrect "Today" on the save column)', () => {
+    const bandData = dateBandTo(40, 6)
+    const r = selectElevatedAnswer(
+      snap(datesAnswer(confirmedAt(6), bandData), workingWithAges),
+      noop,
+      { elapsedPlanYears: 2 },
+    )
+    if (r.kind !== 'date' || r.view.kind !== 'dates') throw new Error('expected a date dates view')
+    const ann = r.view.bandAnnotations
+    expect(ann?.[0]?.id).toBe('saved')
+    const today = ann?.find((m) => m.id === 'today')
+    expect(today?.yearsFromNow).toBe(2)
+    expect(today?.ages).toBe('60 / 62') // CURRENT ages (58/60 saved + 2)
+  })
+
   it('a $0-portfolio date band (all-$0 fan) drops the band — no honest dollar scale (mirrors the spine screen)', () => {
     const zeroBand: DateBand = {
       fan: {

@@ -59,6 +59,67 @@ describe('deriveSpineBandAnnotations — the spine band household-clock markers'
       expect(a[i]!.yearsFromNow).toBeGreaterThan(a[i - 1]!.yearsFromNow)
     }
   })
+
+  // ── the AGED-vault arm (U13 one-screen-one-time-base — the chart's turn, 2026-07-10) ──────
+  // Caught live on the first `?vault=datestale` walk: the year-0 column read "Today 58 / 59"
+  // beside a gate that had just said "saved about 2 years ago" — the chart spoke save-time
+  // while the hero + floor line (the U13 ultramode fold) spoke wall time.
+
+  it('AGED: year 0 renames to "Your save" (saved ages) and the REAL Today lands at x = elapsed with CURRENT ages', () => {
+    const a = deriveSpineBandAnnotations(66, 64, 30, { elapsedPlanYears: 2 })
+    const saved = a[0]!
+    expect(saved.id).toBe('saved')
+    expect(saved.yearsFromNow).toBe(0)
+    expect(saved.label).toBe(copy.bandClockSavedLabel)
+    expect(saved.ages).toBe(slots.bandClockAges(66, 64)) // the SAVED ages — that column IS the save
+    expect(saved.description).toBe(slots.bandClockSavedDesc(66, 64))
+    const today = a.find((m) => m.id === 'today')!
+    expect(today.yearsFromNow).toBe(2)
+    expect(today.label).toBe(copy.bandClockTodayLabel)
+    expect(today.ages).toBe(slots.bandClockAges(68, 66)) // CURRENT ages — the reader is ON the picture
+    expect(today.description).toBe(slots.bandClockTodayDesc(68, 66))
+  })
+
+  it('AGED: elapsed 0 (every fresh session) derives BYTE-IDENTICALLY to the un-anchored call — the no-drift pin', () => {
+    expect(deriveSpineBandAnnotations(66, 64, 30, { elapsedPlanYears: 0 })).toEqual(
+      deriveSpineBandAnnotations(66, 64, 30),
+    )
+  })
+
+  it('AGED: a decade tick within the pad of the wall-time Today is dropped (the named moment carries that x)', () => {
+    // 68/66 aged 2: the age-70 tick sits at x = 2 — exactly the wall-Today x → dropped.
+    const a = deriveSpineBandAnnotations(68, 66, 30, { elapsedPlanYears: 2 })
+    expect(a.some((m) => m.id === 'today' && m.yearsFromNow === 2)).toBe(true)
+    expect(a.some((m) => m.id === 'age-70')).toBe(false)
+    expect(a.some((m) => m.id === 'age-80')).toBe(true) // x = 12 — clear, kept
+  })
+
+  it('AGED: a decades-old vault whose today crowds the horizon keeps ONLY the honest "Your save" rename (no off-chart Today)', () => {
+    // elapsed 28 ≥ horizon 30 − pad 3 → the wall-Today marker is withheld; year 0 still renames.
+    const a = deriveSpineBandAnnotations(66, 64, 30, { elapsedPlanYears: 28 })
+    expect(a[0]!.id).toBe('saved')
+    expect(a.some((m) => m.id === 'today')).toBe(false)
+  })
+
+  it('AGED: the markers stay monotonic with the wall-Today inserted', () => {
+    const a = deriveSpineBandAnnotations(66, 64, 30, { elapsedPlanYears: 2 })
+    for (let i = 1; i < a.length; i++) {
+      expect(a[i]!.yearsFromNow).toBeGreaterThan(a[i - 1]!.yearsFromNow)
+    }
+  })
+
+  it('AGED: the sort is LOAD-BEARING — a deep elapsed inserts wall-Today ahead of an earlier kept decade tick (the ultramode red-path witness: delete the spine sort and this goes red)', () => {
+    // 66/64 elapsed 8: wall-Today lands at x=8 BEFORE the age-70 tick at x=4 is appended
+    // (|4−8| = 4 ≥ pad 3, so the tick is KEPT) — insertion order is [saved@0, today@8,
+    // age-70@4, …], non-monotonic until the sort. The label stagger reads neighbors in x
+    // order, so an unsorted return is a real rendering defect, not a cosmetic one.
+    const a = deriveSpineBandAnnotations(66, 64, 30, { elapsedPlanYears: 8 })
+    expect(a.some((m) => m.id === 'age-70' && m.yearsFromNow === 4)).toBe(true)
+    expect(a.some((m) => m.id === 'today' && m.yearsFromNow === 8)).toBe(true)
+    for (let i = 1; i < a.length; i++) {
+      expect(a[i]!.yearsFromNow).toBeGreaterThan(a[i - 1]!.yearsFromNow)
+    }
+  })
 })
 
 describe('deriveDateBandAnnotations — the date band markers (the FUTURE work-stops marker)', () => {
@@ -104,6 +165,28 @@ describe('deriveDateBandAnnotations — the date band markers (the FUTURE work-s
     for (let i = 1; i < a.length; i++) {
       expect(a[i]!.yearsFromNow).toBeGreaterThan(a[i - 1]!.yearsFromNow)
     }
+  })
+
+  // ── the AGED-vault arm (the `?vault=datestale` shape: floor crown 1, elapsed 2) ───────────
+  it('AGED: "Your save" at 0 + wall-Today at elapsed, the work-stops marker untouched at its crowned offset', () => {
+    const a = deriveDateBandAnnotations(58, 59, 1, 40, { elapsedPlanYears: 2 })
+    expect(a[0]!.id).toBe('saved')
+    expect(a[0]!.ages).toBe(slots.bandClockAges(58, 59))
+    const today = a.find((m) => m.id === 'today')!
+    expect(today.yearsFromNow).toBe(2)
+    expect(today.ages).toBe(slots.bandClockAges(60, 61)) // current ages
+    // The band's own crowned offset stays in PLAN time (its x is calendar-stable) — the
+    // named markers "Your save"(0) / work-stops(1) / Today(2) tell the arrived-floor story.
+    const ws = a.find((m) => m.id === 'work-stops')!
+    expect(ws.yearsFromNow).toBe(1)
+    const xs = a.map((m) => m.yearsFromNow)
+    expect([...xs].sort((p, q) => p - q)).toEqual(xs) // ascending with the insertions
+  })
+
+  it('AGED: elapsed 0 derives byte-identically to the un-anchored call (the no-drift pin)', () => {
+    expect(deriveDateBandAnnotations(58, 60, 6, 40, { elapsedPlanYears: 0 })).toEqual(
+      deriveDateBandAnnotations(58, 60, 6, 40),
+    )
   })
 })
 

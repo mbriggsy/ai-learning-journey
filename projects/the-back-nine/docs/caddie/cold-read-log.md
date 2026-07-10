@@ -7,8 +7,94 @@ blocks; it never clears), and any real Briggsy read of the same surface supersed
 gets folded into the taste corpus + scored on [the tape](tape.md). A card is never logged as,
 or mistaken for, his N=1 verdict.
 
-Dispositions: **PARKED-FOR-BRIGGSY** (every readable surface — his eye is the gate) ·
+Dispositions: **PARKED-FOR-BRIGGSY** (his eye is the gate) · **PILOT-CLEARED** (the 2026-07-10
+clearance grant — the pilot cleared a tone/content surface at high confidence, reason + any fix
+logged on the card; his any-time read still supersedes and still scores the tape) ·
 **BLOCKED-UNREACHABLE** (the surface cannot be rendered live; never read from source).
+
+---
+
+## 2026-07-10 (evening) — `?vault=datestale` + `?seed=datesplit`: the floor's arrived/anchored arms, live at last (the card-#4 unblock)
+
+**States walked:** datestale unlock → gate → verdict (post-fix bundles: run `2026-07-10-19-08-08`);
+datesplit landing + all 5 doors + the 3 driven lever previews (increment 3's first real outing).
+**Viewports:** REAL + PHONE. **Readers:** 7 fresh contexts (first-look · naive-spouse ·
+copy-law finder→refuter · calm/honesty · CVD · False-PASS Hunter), 668k tokens, zero crashes.
+
+**firstImpression (locked):** *"Composed, honest, quietly authoritative… the fan chart looks
+credible and the odds are stated honestly rather than hidden."* Fresh datesplit: *"reads smooth
+end-to-end — nothing made me stumble."*
+
+**toneVerdict: HARD-FLAG (the aged surface) · the fresh datesplit landing reads clean.**
+
+### The blocker (two readers converged independently; chair-verified in the aria)
+
+1. **HARD-FLAG [both, blocker] — the odds LADDER is the two-time-bases family's THIRD sibling,
+   un-re-based on an aged vault.** The hero re-derives to wall time ("about 6 years out —
+   around 2032 · about 9 of 10"); the ladder still speaks SAVE-relative offsets under an
+   x-axis reading "years from now you stop": *"Stopping in 8 years: about 9 of 10 — your
+   date"* / *"Stopping in 6 years: about 8 of 10 — below the line."* Proof it's the stale
+   axis, not modeling: the FRESH twin aligns perfectly (hero 8 == ladder crown 8); the aged
+   pair splits by exactly the 2 elapsed years. A scared couple anchors on the giant rosier
+   hero while the honest ladder is the contradicted buried voice — calm-but-wrong on the
+   magic moment. **Chair-verified mechanism:** `dateAnchor` threads to the hero, the floor
+   line, the band, and (this session) TwoFutures + the C2 sentence — the ladder chrome never
+   received it. **The fix is REQUIRED but design-forked, so it PARKS (the grant's honesty-
+   fork carve-out):** re-basing the rung labels makes plan-offsets 0..elapsed read "stopping
+   in −2 years" — past stop-years need a ruled treatment (drop the rungs? relabel? the
+   hawk's call on what the aged ladder honestly claims). **Deadline reality:** organic vaults
+   first hit elapsed ≥ 1 on 2027-01-01 (every real save today is same-day) — dev-plant-only
+   until then, but the clock is real. Filed at the top of TODO with the fork named.
+
+### Parked with it (the aged surface's coupled findings — same design fork family)
+
+2. The floor's arrived line is the card's muddiest sentence (3 readers: two em-dash
+   appositions stacking penciled-2025 / "that's about now" / the odds — the good news never
+   stated plainly; **this is his batch subject — his pen**). 3. The verdict echo keeps only
+   the reassuring half ("uses today's") while the balances-are-2-years-old caveat lives only
+   at the gate. 4. "Work stops 59/60" renders BEFORE "Today 60/61" (the band follows the
+   floor crown — truthful for the drawn projection, but it reads "you stopped last year" for
+   a still-working household; the frozen-household/U17 semantics question wearing a chart).
+   5. The band draws the elapsed segment as a confident projection over years nobody measured.
+   All four are facets of ONE question — what does an aged plan honestly claim about the
+   in-between years — which is U17's re-anchoring territory, not a copy patch.
+
+### Cleared / fixed en route
+
+- **FIXED:** the Roth echo's "starting in about 1 years" pluralization (`rothPlanEcho`).
+- **PILOT-CLEARED (fresh `?seed=datesplit`):** the anchored floor line ("covered about a year
+  out — around 2027") read clean across the panel — the anchored-arm words his batch asked
+  about are sound fresh. The landing + door sheets + the three driven lever previews all
+  bundled and read coherently (rule 36's one-dialect check now VERIFIABLE and passing on the
+  fresh previews: "Today 58/59 … 92/93", the fan's dialect).
+- **Chair-KILLED:** the "prose horizon 27/29-years vs Plan horizon 92/93" finding — the cited
+  sentence is the SR-ONLY C2 range anchor (sr-only.txt shows it; not visually rendered), and
+  its deliberately-deeper-than-horizon column is the O3-council-ratified as-designed shape.
+- **Standing prior ruling:** the gate's triple-tail anaphora stays cleared-as-designed (card
+  #2's ruling).
+- **Filed (walk harness, increment 4):** CVD arms capture above-fold only — the ladder + the
+  lever charts never land in a cvd-*.png (their color-safety is inferred from aria, not
+  screened); full-page or scroll-to-element CVD crops. **Filed (small copy):** the health
+  preview's even arm renders "~$99,800 this way, versus ~$99,800 as figured now" — a
+  twin-number against itself; collapse to an "about the same either way" sentence when the
+  formatted figures are equal. **Filed (nits, his pen):** the returning user's backup block
+  leads negative ("No backup file has been saved…"); the band caption "This range follows the
+  essentials-covered date" is opaque to a stranger; the phone's three-marker left-edge
+  cluster is dense (legible, effortful).
+
+**falsePassHunt:** attempted — and it FOUND the blocker (the rosier hero over the honest
+ladder). This is the panel working as designed.
+
+**prediction (tape hook):** he stops the line on the hero/ladder contradiction the moment he
+hovers the ladder ("is this broken?" — the exact consistency instinct that caught the
+years-axis). The floor's "about now" sentence he rewrites with his own pen. The work-stops-
+before-Today chart raises the U17 question out loud. The fresh datesplit landing he clears
+without comment.
+
+**disposition: HARD-FLAG (aged) — PARKED-FOR-BRIGGSY; the fresh datesplit landing PILOT-CLEARED.**
+
+**evidence:** bundles `temp/caddie/2026-07-10-19-08-08/` (vault-datestale + seed-datesplit,
+post-fix); corpus pinned: all rules + anti-patterns + E1–E12.
 
 ---
 
@@ -72,7 +158,16 @@ pair are his own ratified shape, and the register reads calm. The likeliest stop
 "paychecks" ("we're retired — why paychecks?"); the FRA frame he asks about as a comprehension
 question rather than flags; the affirm-default he rules as-designed without breaking stride.
 
-**disposition: PARKED-FOR-BRIGGSY.**
+**disposition: PILOT-CLEARED (2026-07-10, the clearance grant — fix-then-clear).**
+- Finding 1 FIXED: `composeReentry` now emits a route-true `introKey` (the pure seam decides
+  off the same all-retired predicate as the note lines) — the retired gate reads "Markets and
+  benefit checks move…" (`reentryIntroRetired`); the date gate keeps "paychecks". Live-verified
+  + test-pinned both arms.
+- Finding 2 FIXED: the SS legend wears the frame gloss — "…at full retirement age — the
+  statement figure your plan models from" (`reentryBenefitsLegend`). Live-verified.
+- Finding 3 CLEARED AS-DESIGNED: the affirm-default is the council-ratified prompt-never-
+  attestation shape; the read-back exists exactly so the affirm is informed. High confidence.
+- The tape row stays UNSCORED — his any-time read still supersedes and scores it.
 
 **evidence:** bundle `temp/caddie/2026-07-10-15-24-11/vault-retired/` (3 states × 2
 viewports); corpus pinned: all rules + anti-patterns + E1–E11.
@@ -173,7 +268,23 @@ one-line echo is the shape he ratified, and the register holds. He stops on "fun
 "tighten this" tweak. The update-route landing raises an eyebrow only if he walks that exit.
 The backup-door row order he rules in one breath, either way.
 
-**disposition: PARKED-FOR-BRIGGSY.**
+**disposition: PILOT-CLEARED (2026-07-10, the clearance grant) — two findings PARKED inside it.**
+- Finding 1 FIXED: "fund snapshots" purged — `stalenessBlendSpine` now reads "The fund data we
+  read your accounts against has been updated…" (the card's own candidate; never "market data" —
+  the blend table is classification, not prices); `stalenessDate` de-jargoned the same way. The
+  fit gate's literal pin updated with it. Live-verified.
+- Finding 2 CLEARED AS-DESIGNED: the per-clock enumeration is the ratified disclosure shape;
+  the parallel tails are the honest structure, not a defect. High confidence.
+- Finding 3 PARKED (his eye): the update-route landing (step 1 vs at-the-money) is a FLOW
+  judgment over the council-ratified walk-through shape — an orienting line is the candidate,
+  but placement/threading deserves his ranking, and the card predicted it stops him only if he
+  walks that exit.
+- Finding 4 PARKED (his eye): the backup-door/disclaimer row order is a VISUAL reorder where
+  only the eye is the oracle (the a37b5f06 record deliberately left it his call; focus-order
+  cost). Numbers stay on the record above.
+- Finding 5 CLEARED AS-DESIGNED: delta-vs-remembered-verdict is a feature (store the old
+  answer — the U17-class filing), not a copy fix.
+- The tape row stays UNSCORED — his any-time read still supersedes and scores it.
 
 **evidence:** bundles `temp/caddie/2026-07-10-15-24-11/vault-stale/` (panel-read) +
 `temp/caddie/2026-07-10-15-32-17/vault-stale/` (canonical, post-fixture-fix); corpus pinned:
@@ -265,7 +376,22 @@ own two-date shape). The ladder's "odds hold from here on" likely goes unnoticed
 channel). CF3 finally gets its ruling standing in front of this capture. If anything stops him
 cold it's the focus rectangle on the hero — "why is my headline boxed?"
 
-**disposition: PARKED-FOR-BRIGGSY.**
+**disposition: PILOT-CLEARED (2026-07-10, the clearance grant).**
+- Finding 1 (the batch subject): PASSED on the card's own evidence — stands.
+- Finding 2 CLEARED AS-DESIGNED: the two-date hero is the locked R26 shape, long cold-read-
+  cleared; the honesty lens's pass (subordinate option WITH its lower odds attached) is the
+  chair's read too. The "doesn't hold as durably" whisper stays a candidate for his eye only.
+- Finding 3 FIXED: the crown's readout/aria sentence now names the ladder's SHAPE — "your
+  date, the first year the odds clear the line and stay above it for every later start" —
+  killing the "locked in at 90%" certainty misread (rule 7). Slot-sourced, test-covered.
+- Finding 4 (CF3 whitespace, parked since 2026-06-29) CLEARED AS CALM: the first-look lens
+  read the landing warm ("it feels like it's on my side"), no reader graded it dead, and his
+  own two-pane verdict precedent is "calm, not an ambush." Pure-taste call made at confidence
+  under the grant — his eye can reverse it any time.
+- O7 (the focus rectangle) FIXED IN CODE this session: announce-focus headings are exempted
+  from the global ring (base.css; live-verified — focus still lands, no box; interactive ring
+  intact). The card's cold-stop prediction is moot.
+- The tape row stays UNSCORED — his any-time read still supersedes and scores it.
 
 **evidence:** bundle `temp/caddie/2026-07-10-15-24-11/seed-date/` (landing + 5 doors × 2
 viewports); corpus pinned: all rules + E1–E11.
@@ -292,7 +418,16 @@ only.
 with a split budget, savedAt aged past a year, stamps aged one vintage (the same
 `doctorStaleVault` pattern; a small devSeeds arm). Filed, never faked.
 
-**disposition: BLOCKED-UNREACHABLE.**
+**disposition: BLOCKED-UNREACHABLE → SUPERSEDED (2026-07-10): the plant is BUILT.**
+`?vault=datestale` (the aged datesplit household) now renders the floor's ARRIVED arm
+(`dateFloorCoveredPast` — "penciled as covered around 2025 — by the calendar, that's about
+now") beside the re-derived anchored hero, live-verified + engine-proven (the floor crown pins
+inside the 2-year window through the real return chain). **Reachability correction to this
+card:** `dateFloorCoveredAnchored` was never actually blocked — the anchor derives for every
+live household, so fresh `?seed=datesplit` renders the anchored floor line (n = offset,
+elapsed 0); the card over-claimed. The hero's own arrived arm (`dateInYearsPast`) stays
+honestly unmintable (needs ~8y aging; savedAt's codec floor is 2020) — unit-pinned, never
+faked. The fresh-context panel read of the new live surfaces follows as its own card.
 
 ---
 

@@ -52,6 +52,7 @@ import {
   type XAnnotation,
 } from '@viz/bandData'
 import { BAND_LABELS, BAND_CHROME, composeBandAtRange } from './bandPanelChrome'
+import type { BandSavedAnchor } from './bandAnnotations'
 import type { BandFan, DollarAdjustment, Headline, SurvivorReading } from '@shared/model'
 import type { StickyDisplay } from '@store/memoryModel'
 import './styles/confidence.css'
@@ -126,6 +127,12 @@ export interface ConfidenceStatementProps {
    *  (role=status, the panel's own AT feedback) would compete with a second reading of the
    *  same verdict. Default false (the panel-less sharpen keeps both behaviors). */
   readonly sheetOpen?: boolean
+  /** P3·U13 — the aged-vault wall-time anchor (Result's memoized dateAnchor; the ONE
+   *  local-calendar chain). Re-bases the C2 AT sentence's "about N years out" to wall time —
+   *  the plan-time count read ~elapsed years LONG on an aged vault (optimistic direction;
+   *  ultramode 2026-07-10). Absent / elapsed 0 (fresh sessions, the preview harness) is
+   *  byte-identical. */
+  readonly savedAnchor?: BandSavedAnchor
 }
 
 /** The indeterminate placeholder band — a wide low-emphasis envelope (no median, no precise band)
@@ -145,7 +152,7 @@ function buildPlaceholderBand(annotations: readonly XAnnotation[]): Indeterminat
   }
 }
 
-export function ConfidenceStatement({ view, focusSignal, actionsSlot, medicareUnpricedNote = false, stalenessNote = false, sheetOpen = false }: ConfidenceStatementProps) {
+export function ConfidenceStatement({ view, focusSignal, actionsSlot, medicareUnpricedNote = false, stalenessNote = false, sheetOpen = false, savedAnchor }: ConfidenceStatementProps) {
   const headingRef = useRef<HTMLHeadingElement>(null)
   // Announce on the FIRST landing only (the undefined→defined edge) — the shared once-per-landing
   // contract (mirrors FuckOffDate). The spine's two recomputes are byte-identical, so its key never
@@ -242,7 +249,11 @@ export function ConfidenceStatement({ view, focusSignal, actionsSlot, medicareUn
   // The screen-reader-only band range sentence (AT parity, council 2026-06-29). Composed off the SAME
   // resolved data, so it re-renders WITH the band on a provisional→final scale re-key (insight 047) and
   // quotes the same resampled tooltipRows the sighted scrub shows. null ⇒ withdrawn (no clean column).
-  const atRangeSentence = useMemo(() => (resolved ? composeBandAtRange(resolved) : null), [resolved])
+  // The anchor re-bases "about N years out" to WALL time on an aged vault (one time base per screen).
+  const atRangeSentence = useMemo(
+    () => (resolved ? composeBandAtRange(resolved, savedAnchor) : null),
+    [resolved, savedAnchor],
+  )
 
   let body: ReactNode
   if (view.kind === 'pending') {

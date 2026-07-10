@@ -113,11 +113,28 @@ svg {
   max-width: 100%;
 }
 
-/* ----- focus: one global, always-visible ring (never outline:none anywhere) ----- */
+/* ----- focus: one global, always-visible ring (never outline:none on anything OPERABLE) ----- */
 
 :focus-visible {
   outline: 2px solid var(--brand);
   outline-offset: 2px;
+}
+
+/* THE ONE exception to the ring law (Caddie O7, 2026-07-10): announce-focus headings.
+   Every tabindex="-1" element in this app is a HEADING used as a programmatic focus target
+   (focusHeading / useFocusHeadingOnStep — the focus IS the screen-reader announcement).
+   A tabindex="-1" element is unreachable by Tab, so this ring never serves keyboard
+   NAVIGATION; it painted only when Chromium grants :focus-visible to script focus (a
+   zero-interaction landing, or a keyboard-driven step advance) — boxing the hero verdict
+   at the calm magic moment ("why is my headline boxed?" — the cold eye's first question).
+   A heading is not an operable control, so WCAG 2.4.7 (focus visible on OPERABLE UI) does
+   not bind it; the sighted indicator for an announce-focus is the full frame change itself.
+   Scoped to headings ONLY — any future operable element keeps the global ring above. */
+h1[tabindex='-1']:focus-visible,
+h2[tabindex='-1']:focus-visible,
+h3[tabindex='-1']:focus-visible,
+h4[tabindex='-1']:focus-visible {
+  outline: none;
 }
 
 /* ----- accessibility utilities ----- */

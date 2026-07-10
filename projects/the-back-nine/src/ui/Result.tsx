@@ -106,7 +106,24 @@ export function Result({
     else if (save.kind === 'clean' && prev === 'saving') announcer.announce(copy.savedBadge)
   }, [save.kind, announcer])
 
-  const elevated = selectElevatedAnswer(snapshot, retry)
+  // P3·U13 — the wall-time anchor (presentation arithmetic ONLY — never written back into
+  // the draft; the round-trip guard). Elapsed is 0 for every same-year session; it goes
+  // positive only when an aged vault is re-opened in a later calendar year: the date hero
+  // then re-derives its "~N years out" from TODAY while the calendar label holds, and the
+  // BAND's x-axis re-bases (year 0 = "Your save", wall "Today" at x = elapsed — the
+  // one-screen-one-time-base law, threaded through selectElevatedAnswer). The year is read
+  // through the ONE local-calendar chain (currentEpochDay → epochDayToCalendarYear — the same
+  // basis staleness compares and startCalendarYear was minted in), never a second ad-hoc
+  // clock read (ultramode 2026-07-09, the basis catch).
+  const dateAnchor = useMemo(() => {
+    const startCalendarYear = snapshot.draft.startCalendarYear
+    return {
+      startCalendarYear,
+      elapsedPlanYears: Math.max(0, epochDayToCalendarYear(currentEpochDay()) - startCalendarYear),
+    }
+  }, [snapshot.draft.startCalendarYear])
+
+  const elevated = selectElevatedAnswer(snapshot, retry, dateAnchor)
   const focusKey = resolvedFocusKey(elevated)
 
   // U9b — the ONE deepening door (council 2026-07-02, Q1/R8): a quiet affordance on the landed
@@ -132,20 +149,6 @@ export function Result({
   // unpriced-Medicare disclosure, threaded to BOTH hero surfaces + the Roth lever below.
   const healthPriced = healthcarePriced(snapshot.draft)
   const medicareGap = medicareUnpriced(snapshot.draft.people)
-  // P3·U13 — the date hero's wall-time anchor (presentation arithmetic ONLY — never written
-  // back into the draft; the round-trip guard). Elapsed is 0 for every same-year session;
-  // it goes positive only when an aged vault is re-opened in a later calendar year, and the
-  // hero then re-derives its "~N years out" from TODAY while the calendar label holds.
-  // The year is read through the ONE local-calendar chain (currentEpochDay →
-  // epochDayToCalendarYear — the same basis staleness compares and startCalendarYear was
-  // minted in), never a second ad-hoc clock read (ultramode 2026-07-09, the basis catch).
-  const dateAnchor = useMemo(() => {
-    const startCalendarYear = snapshot.draft.startCalendarYear
-    return {
-      startCalendarYear,
-      elapsedPlanYears: Math.max(0, epochDayToCalendarYear(currentEpochDay()) - startCalendarYear),
-    }
-  }, [snapshot.draft.startCalendarYear])
   const enhancedApplied = snapshot.draft.enhancedSubsidies === true
   // The wire's per-year healthcare series (spine headline runs only — presence-keyed).
   const healthReadout =
@@ -389,6 +392,7 @@ export function Result({
             medicareUnpricedNote={medicareGap}
             stalenessNote={stalenessNote}
             sheetOpen={sheetOpen}
+            savedAnchor={dateAnchor}
           />
         )}
         {elevated.kind === 'fallback' && (
@@ -422,6 +426,7 @@ export function Result({
         preview={runPreview}
         previewBlocking={!previewRunsInWorker()}
         restoreFallback={restoreToAssumptionsDoor}
+        savedAnchor={dateAnchor}
         onApply={(policy, order) => {
           // ONE atomic write maintains the 'custom'⟺order biconditional (the codec re-proves it
           // at Save; validateParams re-proves it at every run — the two-gate rule's write half).
@@ -441,6 +446,7 @@ export function Result({
         previewBlocking={!previewRunsInWorker()}
         medicareUnpricedNote={medicareGap}
         restoreFallback={restoreToAssumptionsDoor}
+        savedAnchor={dateAnchor}
         onApply={(plan) => {
           appModel.update((d) => ({ ...d, rothConversion: plan }))
           setRothOpen(false)
@@ -465,6 +471,7 @@ export function Result({
         preview={runPreview}
         previewBlocking={!previewRunsInWorker()}
         restoreFallback={restoreToAssumptionsDoor}
+        savedAnchor={dateAnchor}
         onApply={(enhanced) => {
           // THE SINGLE-KEY WRITE FENCE (insight 058): exactly one key moves — set the literal
           // `true`, or STRIP the key entirely (absence ≡ the statutory reverted regime — never

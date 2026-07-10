@@ -23,7 +23,12 @@ import { isDateRoute } from '@intake/intakeMap'
 import type { BandFan, DateBand, DateSearchOutcome, SimulationResult } from '@shared/model'
 import type { XAnnotation } from '@viz/bandData'
 import { truncateFanAtThinCohort } from '@viz/bandGeometry'
-import { deriveBandAgesAt, deriveDateBandAnnotations, deriveSpineBandAnnotations } from './bandAnnotations'
+import {
+  deriveBandAgesAt,
+  deriveDateBandAnnotations,
+  deriveSpineBandAnnotations,
+  type BandSavedAnchor,
+} from './bandAnnotations'
 import type { FuckOffDateView } from './FuckOffDate'
 import type { ConfidenceStatementView } from './ConfidenceStatement'
 
@@ -58,6 +63,7 @@ export type ElevatedAnswer =
 function spineBand(
   result: SimulationResult,
   draft: MemoryModelSnapshot['draft'],
+  savedAnchor?: BandSavedAnchor,
 ): {
   readonly band?: BandFan
   readonly bandAnnotations?: readonly XAnnotation[]
@@ -77,7 +83,9 @@ function spineBand(
   // Annotations + the readout-ages closure share the SAME currentAge guard + slot, so they appear (or
   // defensively withhold) together — the scrub readout's ages can never disagree with the axis ticks.
   const haveAges = ageA !== undefined && ageB !== undefined
-  const bandAnnotations = haveAges ? deriveSpineBandAnnotations(ageA, ageB, last.yearsFromNow) : undefined
+  const bandAnnotations = haveAges
+    ? deriveSpineBandAnnotations(ageA, ageB, last.yearsFromNow, savedAnchor)
+    : undefined
   const bandAges = haveAges ? deriveBandAgesAt(ageA, ageB) : undefined
   return { band: fan, bandAnnotations, bandAges }
 }
@@ -94,6 +102,7 @@ function spineBand(
 function dateBand(
   outcome: Extract<DateSearchOutcome, { kind: 'dates' }>,
   draft: MemoryModelSnapshot['draft'],
+  savedAnchor?: BandSavedAnchor,
 ): {
   readonly band?: DateBand
   readonly bandAnnotations?: readonly XAnnotation[]
@@ -116,15 +125,23 @@ function dateBand(
   // currentAge guard + slot as the annotations, so the scrub ages and the axis ticks agree.
   const haveAges = ageA !== undefined && ageB !== undefined
   const bandAnnotations = haveAges
-    ? deriveDateBandAnnotations(ageA, ageB, band.offsetYears, last.yearsFromNow)
+    ? deriveDateBandAnnotations(ageA, ageB, band.offsetYears, last.yearsFromNow, savedAnchor)
     : undefined
   const bandAges = haveAges ? deriveBandAgesAt(ageA, ageB) : undefined
   return { band, bandAnnotations, bandAges }
 }
 
+/**
+ * @param savedAnchor Result's memoized wall-time anchor (the ONE local-calendar chain — U13).
+ *   Positive `elapsedPlanYears` re-bases the band's x-axis endpoints (year 0 = "Your save",
+ *   wall "Today" at x = elapsed) so an aged vault's chart shares the hero's time base — the
+ *   one-screen-one-time-base law. Absent / elapsed 0 (every fresh session, the preview
+ *   harness) derives byte-identically to the pre-U13 shape.
+ */
 export function selectElevatedAnswer(
   snapshot: MemoryModelSnapshot,
   onRetry: () => void,
+  savedAnchor?: BandSavedAnchor,
 ): ElevatedAnswer {
   const { answer, draft } = snapshot
   const dateRoute = isDateRoute(draft)
@@ -167,7 +184,7 @@ export function selectElevatedAnswer(
             floor: outcome.floor,
             lifestyle: outcome.lifestyle,
             windowTopYears: outcome.windowTopYears,
-            ...dateBand(outcome, draft),
+            ...dateBand(outcome, draft, savedAnchor),
           },
         }
       }
@@ -204,7 +221,7 @@ export function selectElevatedAnswer(
           // — trusted here, never re-derived); presence-keyed like its siblings so the preview
           // harness's displayed-less fixtures stay legal (the surface then reads raw).
           ...(snapshot.displayed ? { displayed: snapshot.displayed } : {}),
-          ...spineBand(answer.result, draft),
+          ...spineBand(answer.result, draft, savedAnchor),
           ...(answer.result.survivorReading ? { survivorReading: answer.result.survivorReading } : {}),
           ...(answer.result.floorReading ? { floorReading: answer.result.floorReading } : {}),
         },

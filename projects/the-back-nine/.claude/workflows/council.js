@@ -434,14 +434,40 @@ if (dossier && dossier.grounding && dossier.grounding.grounded === false) {
 
 // ---- Phase 2: Independent opening positions (parallel, blind to each other) ---
 phase('Opening')
+const openingPrompt = (o) =>
+  o.charter + '\n\n## THE ISSUE\n' + issue + '\n\n## CONTEXT\n' + context +
+  '\n\n## SHARED DOSSIER — cite this, not memory\n' + J(dossier) +
+  '\n\nTake your position now. Ground every claim in the dossier.'
 const positions = (await parallel(openers.map(o => () =>
-  agent(
-    o.charter + '\n\n## THE ISSUE\n' + issue + '\n\n## CONTEXT\n' + context +
-    '\n\n## SHARED DOSSIER — cite this, not memory\n' + J(dossier) +
-    '\n\nTake your position now. Ground every claim in the dossier.',
-    { label: o.id, phase: 'Opening', schema: POSITION_SCHEMA, model: 'opus' },
-  ).then(p => (p ? { ...p, elder: o.id } : null)),
+  agent(openingPrompt(o), { label: o.id, phase: 'Opening', schema: POSITION_SCHEMA, model: 'opus' })
+    .then(p => (p ? { ...p, elder: o.id } : null)),
 ))).filter(Boolean)
+
+// THE HAWK-SEAT GUARD (filed 2026-07-09: the sunset council's hawk OPENING died at the
+// StructuredOutput retry cap and .filter(Boolean) silently discarded it — the chair would
+// have reported honestyHawkVeto:{fired:false} over an EMPTY seat). The hawk is the veto
+// organ; its seat is never silently absent. Retry the seat once; if it is STILL empty,
+// REFUSE-TO-CONCLUDE (the clerk-attestation precedent) — never a default no-veto.
+const hawkRefusal = (phaseName) => ({
+  issue,
+  recommendation: 'BLOCKER: the honesty-hawk ' + phaseName + ' seat crashed twice — the council refuses to conclude. Re-dispatch the council; a verdict synthesized over an empty hawk seat would default to "no veto" without the veto organ ever sitting.',
+  rationale: 'The hawk-seat guard fired: the honesty hawk crashed at the ' + phaseName + ' phase and its one retry also failed. honestyHawkVeto:{fired:false} over an empty seat is the exact calm-but-wrong artifact the 2026-07-09 incident named.',
+  confidence: { level: 'high', score: 9, reason: 'Structural refusal — the veto organ never sat, so no verdict is derivable.' },
+  tier: 'yours-to-close',
+  dissent: { position: 'none', who: 'none', whatWouldFlipIt: 'a re-dispatched council whose hawk seat completes' },
+  honestyHawkVeto: { fired: true, falseBelief: 'That the council weighed the honesty dimension when the hawk seat was empty.' },
+  hardStop: { is: false },
+  action: 'surface',
+  digestLine: '[blocked: hawk seat crashed] ' + issue + ' -> re-dispatch',
+  dossier,
+})
+if (!positions.some(p => p.elder === 'honesty-hawk')) {
+  log('The honesty-hawk opening seat crashed — retrying once (the veto organ is never silently absent).')
+  const hawk = openers.find(o => o.id === 'honesty-hawk')
+  const retried = await agent(openingPrompt(hawk), { label: 'honesty-hawk:retry', phase: 'Opening', schema: POSITION_SCHEMA, model: 'opus' })
+  if (retried) positions.push({ ...retried, elder: 'honesty-hawk' })
+}
+if (!positions.some(p => p.elder === 'honesty-hawk')) return hawkRefusal('opening')
 
 // ---- Phase 3: Red team refutes the emerging consensus ------------------------
 phase('Red Team')
@@ -456,16 +482,27 @@ const attack = await agent(
 let rebuttals = []
 if (weight === 'full') {
   phase('Rebuttal')
-  rebuttals = (await parallel(openers.map(o => () => {
+  const rebuttalPrompt = (o) => {
     const mine = positions.find(p => p.elder === o.id)
-    return agent(
-      o.charter + '\n\n## THE ISSUE\n' + issue + '\n\n## YOUR OPENING POSITION\n' + J(mine) +
+    return o.charter + '\n\n## THE ISSUE\n' + issue + '\n\n## YOUR OPENING POSITION\n' + J(mine) +
       '\n\n## THE OTHER ELDERS POSITIONS\n' + J(positions.filter(p => p.elder !== o.id)) +
       '\n\n## THE RED TEAM ATTACK\n' + J(attack) +
-      '\n\nNow debate. Concede what is genuinely right, hold what you still believe (and say why), and sharpen your recommendation. Be willing to change your mind — or explain exactly why you do not.',
-      { label: 'rebut:' + o.id, phase: 'Rebuttal', schema: REBUTTAL_SCHEMA, model: 'opus' },
-    ).then(r => (r ? { ...r, elder: o.id } : null))
-  }))).filter(Boolean)
+      '\n\nNow debate. Concede what is genuinely right, hold what you still believe (and say why), and sharpen your recommendation. Be willing to change your mind — or explain exactly why you do not.'
+  }
+  rebuttals = (await parallel(openers.map(o => () =>
+    agent(rebuttalPrompt(o), { label: 'rebut:' + o.id, phase: 'Rebuttal', schema: REBUTTAL_SCHEMA, model: 'opus' })
+      .then(r => (r ? { ...r, elder: o.id } : null)),
+  ))).filter(Boolean)
+  // The hawk-seat guard, rebuttal arm: the rebuttal round is where a late veto can fire
+  // (or an opening veto be withdrawn) after the red-team evidence — an empty hawk rebuttal
+  // silently forfeits that. Same law: retry once, else refuse-to-conclude.
+  if (!rebuttals.some(r => r.elder === 'honesty-hawk')) {
+    log('The honesty-hawk rebuttal seat crashed — retrying once (the veto organ is never silently absent).')
+    const hawk = openers.find(o => o.id === 'honesty-hawk')
+    const retried = await agent(rebuttalPrompt(hawk), { label: 'rebut:honesty-hawk:retry', phase: 'Rebuttal', schema: REBUTTAL_SCHEMA, model: 'opus' })
+    if (retried) rebuttals.push({ ...retried, elder: 'honesty-hawk' })
+  }
+  if (!rebuttals.some(r => r.elder === 'honesty-hawk')) return hawkRefusal('rebuttal')
 }
 
 // ---- Phase 5: Chair synthesis -----------------------------------------------

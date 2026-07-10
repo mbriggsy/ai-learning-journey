@@ -28,7 +28,7 @@ import { COHORT_FADE } from '@viz/bandGeometry'
 import { copy, slots } from './copy'
 import { OUTCOME_PRESENTATION } from './outcomeStates'
 import { formatAxisDollar } from './money'
-import { deriveBandAgesAt, deriveDecadeAgeTicks } from './bandAnnotations'
+import { deriveBandAgesAt, deriveDecadeAgeTicks, type BandSavedAnchor } from './bandAnnotations'
 
 /** The verdict WORD for a state (null for indeterminate — a two-arm outcome's arms are never
  *  indeterminate by construction, so a null here simply withholds the transition rider). */
@@ -109,6 +109,7 @@ export function composeTwoFutures(
   withoutLabel: string,
   deltaSlot: (withOdds: string, withoutOdds: string) => string,
   ages?: readonly [number, number],
+  savedAnchor?: BandSavedAnchor,
 ): TwoFuturesView | null {
   if (outcome.kind !== 'two-arm') return null
   const survivorBasis = outcome.deltaBasis === 'survivor'
@@ -179,10 +180,15 @@ export function composeTwoFutures(
         // consistency ruling): "Today 66 / 65" left; the AGES PAIR at the chart's last drawn year
         // right — never the "Plan horizon" word (this chart ends at the dead-cohort truncation,
         // which can be an earlier year than the fan's horizon; one word must not name two years).
+        // On an AGED vault (elapsed > 0) the year-0 endpoint is the SAVE moment, not today — it
+        // renames to the fan's own "Your save" (the one-screen-one-time-base law; the ultramode
+        // caller-lens caught this chart as the sibling the band fix missed, 2026-07-10).
         todayLabel:
           ages !== undefined
-            ? `${copy.bandClockTodayLabel} ${slots.bandClockAges(ages[0], ages[1])}`
-            : slots.ladderOffsetTick(0),
+            ? `${(savedAnchor?.elapsedPlanYears ?? 0) > 0 ? copy.bandClockSavedLabel : copy.bandClockTodayLabel} ${slots.bandClockAges(ages[0], ages[1])}`
+            : (savedAnchor?.elapsedPlanYears ?? 0) > 0
+              ? copy.bandClockSavedLabel
+              : slots.ladderOffsetTick(0),
         horizonLabel: agesAt !== undefined ? agesAt(maxYears) : `${maxYears}`,
         readoutAgesLabel: copy.bandReadoutAgesLabel,
         ariaSummary: `${copy.twoFuturesCaption} ${deltaLine}`,

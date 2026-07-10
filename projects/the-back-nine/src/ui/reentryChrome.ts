@@ -28,6 +28,11 @@ export interface ReentryRow {
 }
 
 export interface ReentryView {
+  /** The intro's copy key — ROUTE-TRUE (Caddie card #1, pilot-cleared 2026-07-10): an
+   *  all-retired household has no paychecks, so "Markets and paychecks move" was the spouse
+   *  walker's primary stumble; the retired arm speaks "benefit checks" instead. Decided HERE
+   *  (the pure seam, insight 048) off the SAME all-retired predicate the note lines use. */
+  readonly introKey: 'reentryIntro' | 'reentryIntroRetired'
   /** Per-bucket balances, PRESENT buckets only (an empty bucket is noise, not a row). */
   readonly balanceRows: readonly ReentryRow[]
   /** The Social Security fold-in rows (one per person with a benefit entered). */
@@ -47,6 +52,10 @@ const BUCKET_LABEL_KEY: Readonly<Record<'pretax' | 'roth' | 'taxable' | 'hsa', C
 }
 
 export function composeReentry(scenario: ScenarioV3, report: StalenessReport): ReentryView {
+  // ONE all-retired predicate feeds the intro's register AND the blend note's route-true
+  // wording below — the two can never disagree about what household they address.
+  const allRetired = scenario.people.every((p) => p.workStatus === 'retired')
+
   // ── the per-bucket read-back ─────────────────────────────────────────────────────────
   const sums: Record<'pretax' | 'roth' | 'taxable' | 'hsa', number> = {
     pretax: 0,
@@ -75,8 +84,7 @@ export function composeReentry(scenario: ScenarioV3, report: StalenessReport): R
   if (report.healthcare.moved) noteLines.push(copy.stalenessHealthcare)
   if (report.date.contributionMoved || report.date.blendMoved) {
     // Route-true wording: an all-retired household has no fuck-off date to reference (and
-    // its contribution clock is reader-gated quiet) — only the fund-snapshot line speaks.
-    const allRetired = scenario.people.every((p) => p.workStatus === 'retired')
+    // its contribution clock is reader-gated quiet) — only the blend line speaks.
     noteLines.push(allRetired ? copy.stalenessBlendSpine : copy.stalenessDate)
   }
   // One line per boundary YEAR: the copy quotes only the calendar year, so two lines
@@ -90,8 +98,22 @@ export function composeReentry(scenario: ScenarioV3, report: StalenessReport): R
   }
 
   // ── the wall-time line (suppressed, never fabricated) ────────────────────────────────
-  const years = report.elapsed === null ? 0 : Math.floor(report.elapsed.days / 365)
+  // Round-half, floor-GATED (Caddie O6, 2026-07-10): a bare floor read a 700-day save as
+  // "about a year ago" — systematic ROSIER-direction rounding on a staleness disclosure
+  // (the one line whose whole job is "your save is older than you think"). Round-half keeps
+  // "about" honest within ±half a year in BOTH directions; the <365-day gate is unchanged
+  // (under a year stays suppressed — never fabricated up to "a year ago" by the rounding).
+  const years =
+    report.elapsed === null || report.elapsed.days < 365
+      ? 0
+      : Math.round(report.elapsed.days / 365)
   const elapsedLine = years >= 1 ? slots.reentryElapsedYears(years) : null
 
-  return { balanceRows, benefitRows, noteLines, elapsedLine }
+  return {
+    introKey: allRetired ? 'reentryIntroRetired' : 'reentryIntro',
+    balanceRows,
+    benefitRows,
+    noteLines,
+    elapsedLine,
+  }
 }

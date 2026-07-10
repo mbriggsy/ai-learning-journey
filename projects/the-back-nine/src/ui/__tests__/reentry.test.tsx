@@ -141,6 +141,38 @@ describe('composeReentry — the read-back', () => {
     const recent = { ...s, savedAt: TODAY - 120 }
     expect(composeReentry(recent, reportFor(recent)).elapsedLine).toBeNull()
   })
+
+  it('the intro speaks ROUTE-TRUE (Caddie card #1): "benefit checks" for an all-retired household, "paychecks" only where paychecks exist', () => {
+    // The retired spine household: no paychecks — the spouse walker's primary stumble was
+    // the route-blind intro ("does this thing even know we stopped working?").
+    const s = freshSave()
+    expect(composeReentry(s, reportFor(s)).introKey).toBe('reentryIntroRetired')
+    // The still-working date household keeps the original register.
+    const d = scenarioFromDraft(DEV_SEEDS.date)
+    if (!d.ready) throw new Error('date seed must be save-ready')
+    expect(composeReentry(d.scenario, reportFor(d.scenario)).introKey).toBe('reentryIntro')
+  })
+
+  it('the wall-time line rounds HALF, never floors (Caddie O6): a 700-day save reads "about 2 years", not the rosier "about a year"', () => {
+    const s = freshSave()
+    const at = (days: number) => {
+      const aged = { ...s, savedAt: TODAY - days }
+      return composeReentry(aged, reportFor(aged)).elapsedLine
+    }
+    // The filed witness: 700 days = 1.92y — the old floor read "about a year ago" (rosier
+    // direction on the one line whose job is "your save is older than you think").
+    expect(at(700)).toBe(slots.reentryElapsedYears(2))
+    // The suppression gate is day-based and unchanged: 364d silent, 365d speaks.
+    expect(at(364)).toBeNull()
+    expect(at(365)).toBe(slots.reentryElapsedYears(1))
+    // Round-half boundary, hand-derived: 547d = 1.499y → 1; 548d = 1.501y → 2. "About" is
+    // honest within ±half a year in BOTH directions — the floor's error was one-sided.
+    expect(at(547)).toBe(slots.reentryElapsedYears(1))
+    expect(at(548)).toBe(slots.reentryElapsedYears(2))
+    // The ?vault=stale plant's own witness (savedAt −760d): reads "about 2 years ago"
+    // under BOTH roundings — the fit gate's pinned gate text does not move.
+    expect(at(760)).toBe(slots.reentryElapsedYears(2))
+  })
 })
 
 describe('ReEntry — the surface', () => {

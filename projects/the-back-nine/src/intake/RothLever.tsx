@@ -23,6 +23,7 @@ import type { ScenarioDraft } from '@store/memoryModel'
 import type { ControlPreview } from '@store/controlPreview'
 import { copy, slots } from '@ui/copy'
 import { composeTwoFutures } from '@ui/twoFuturesChrome'
+import type { BandSavedAnchor } from '@ui/bandAnnotations'
 import type { Announcer } from './a11y'
 import { ControlSheet } from './controlSheet'
 import { ControlPreviewReadout, useControlPreview } from './controlPreview'
@@ -59,8 +60,11 @@ export interface RothLeverProps {
   /** U12 ultramode: close-time focus fallback for when the opening trigger has unmounted
    *  (the via-AssumptionPanel route) — forwarded to the ControlSheet scaffold. */
   readonly restoreFallback?: () => HTMLElement | null
+  /** P3·U13 — the aged-vault wall-time anchor: the TwoFutures year-0 endpoint renames
+   *  "Today" → "Your save" when elapsed > 0 (one time base per screen). */
+  readonly savedAnchor?: BandSavedAnchor
 }
-export function RothLever({ open, draft, preview, previewBlocking = false, onApply, onRemove, onClose, medicareUnpricedNote = false, restoreFallback }: RothLeverProps) {
+export function RothLever({ open, draft, preview, previewBlocking = false, onApply, onRemove, onClose, medicareUnpricedNote = false, restoreFallback, savedAnchor }: RothLeverProps) {
   const announcerRef = useRef<Announcer | null>(null)
   const applied = draft.rothConversion
   const [plan, setPlan] = useState<PlanDraft>({})
@@ -108,6 +112,7 @@ export function RothLever({ open, draft, preview, previewBlocking = false, onApp
         applied === undefined ? copy.tfChartRothWithout : copy.tfChartRothWithoutApplied,
         slots.rothDeltaSurvivor,
         ages,
+        savedAnchor,
       )
       return view === null ? { kind: 'error', reason: 'indeterminate' } : { kind: 'ready', view }
     })

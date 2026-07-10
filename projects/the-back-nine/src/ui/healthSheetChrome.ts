@@ -41,6 +41,7 @@ import {
 import { COHORT_FADE } from '@viz/bandGeometry'
 import { copy, slots } from './copy'
 import { composeTwoFutures, type TwoFuturesView } from './twoFuturesChrome'
+import type { BandSavedAnchor } from './bandAnnotations'
 
 /** Humane rounding for a readout dollar (the `~$X` grammar owns the imprecision). */
 const roundDollar = (v: number): number => Math.round(v / 100) * 100
@@ -259,6 +260,7 @@ export function composeRegimeFutures(
   outcome: TwoArmOutcome,
   pickedEnhanced: boolean,
   ages?: readonly [number, number],
+  savedAnchor?: BandSavedAnchor,
 ): TwoFuturesView | null {
   const base = composeTwoFutures(
     outcome,
@@ -266,6 +268,7 @@ export function composeRegimeFutures(
     copy.tfChartRegimeCurrent,
     slots.rothDeltaSurvivor,
     ages,
+    savedAnchor,
   )
   if (base === null || outcome.kind !== 'two-arm') return base
   const withCost = outcome.with.lifetimeHealthCostMedianReal

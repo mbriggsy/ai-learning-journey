@@ -87,4 +87,20 @@ describe('composeBandAtRange — the AT range sentence (council 2026-06-29)', ()
     // every interior column is below the cleanliness floor ⇒ no node at all.
     expect(composeBandAtRange(makeResolved({ cohortAt: () => 0.3 }))).toBeNull()
   })
+
+  // ── the AGED-vault wall-time re-base (ultramode 2026-07-10): the plan-time "N years out"
+  //    read ~elapsed years LONG on an aged vault — the mildly OPTIMISTIC direction (a longer
+  //    runway than the wall-clock truth). The COLUMN (and its figures) stay plan-time data;
+  //    only the spoken distance re-derives — one time base per screen. ─────────────────────
+  it('AGED: "about N years out" re-bases to WALL time (plan-time years minus elapsed), figures unchanged', () => {
+    const r = makeResolved()
+    const row = r.tooltipRows[DEEPEST_INTERIOR]!
+    expect(composeBandAtRange(r, { elapsedPlanYears: 2 })).toBe(
+      slots.bandAtRange(ANCHOR_YEARS - 2, row.low, row.high, row.median),
+    )
+  })
+
+  it('AGED: elapsed 0 (every fresh session) composes byte-identically to the anchor-less call — the no-drift pin', () => {
+    expect(composeBandAtRange(makeResolved(), { elapsedPlanYears: 0 })).toBe(composeBandAtRange(makeResolved()))
+  })
 })

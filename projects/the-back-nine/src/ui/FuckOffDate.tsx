@@ -228,7 +228,11 @@ export function FuckOffDate({ view, focusSignal, actionsSlot, medicareUnpricedNo
   // The screen-reader-only band range sentence (AT parity, council 2026-06-29). Composed off the SAME
   // resolved data, so it re-renders WITH the band on the date route's provisional→final scale re-key
   // (insight 047) and quotes the same resampled tooltipRows the sighted scrub shows. null ⇒ withdrawn.
-  const atRangeSentence = useMemo(() => (resolved ? composeBandAtRange(resolved) : null), [resolved])
+  // The anchor re-bases "about N years out" to WALL time on an aged vault (one time base per screen).
+  const atRangeSentence = useMemo(
+    () => (resolved ? composeBandAtRange(resolved, dateAnchor) : null),
+    [resolved, dateAnchor],
+  )
 
   let body: ReactNode
   if (view.kind === 'pending') {

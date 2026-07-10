@@ -30,6 +30,22 @@ import { REAL, REAL_DPR, PHONE, PHONE_DPR, gotoSeedFinal, settleLayout } from '.
  *    re-entry gate → affirm → the echoed verdict), the only live route to the staleness
  *    surfaces; `vault:stale` additionally walks the update route's first frame.
  *
+ * Increment 3 (2026-07-10, the seed:date card's honest coverage refusal):
+ *  - The LEVER-PREVIEW DRIVE — a door whose sheet carries a what-if lever (the policy/regime
+ *    radios, the Roth plan fields) gets ONE preview driven and the TwoFutures chart captured
+ *    as `door-N-<slug>-preview` (the rule-36 one-dialect check was un-verifiable while the
+ *    sheets bundled only their pre-commit input state). PREVIEW-ONLY: nothing is Applied —
+ *    the walk never mutates the scenario later states capture. A driven preview whose chart
+ *    never arrives FAILS the walk red (insight-029 vacuity discipline).
+ *  - The SR-ONLY channel annotation — `sr-only.txt` lists every visually-hidden text node,
+ *    because `copy.txt` (innerText) INCLUDES clipped sr-only nodes: the "doubled wordmark"
+ *    finding was the persistent sr-only h1 beside the visible wordmark, a channel artifact
+ *    a reader should check against before flagging a rendered duplication.
+ *  - `vault:datestale` (the aged SPLIT-date plant) rides the existing vault grammar — the
+ *    floor's ARRIVED arm + the re-derived anchored hero; `seed:datesplit` covers the floor's
+ *    fresh ANCHORED arm (card #4's blocked-unreachable ruling was half-wrong: the anchor is
+ *    computed for every live household, so the fresh split renders the anchored floor line).
+ *
  * Targets: `CADDIE_TARGETS="vault:retired,vault:stale,seed:date"` (comma list). Back-compat:
  * `CADDIE_SEED=budget` still works (one seed target). Default: `seed:retired`.
  */
@@ -111,6 +127,25 @@ async function captureState(page: Page, dir: string): Promise<void> {
 
   fs.writeFileSync(path.join(dir, 'aria.yaml'), await page.locator('body').ariaSnapshot())
   fs.writeFileSync(path.join(dir, 'copy.txt'), await page.evaluate(() => document.body.innerText))
+  // The SR-ONLY channel annotation (increment 3): innerText does NOT exclude clipped nodes,
+  // so copy.txt contains every .sr-only string mixed into the visible flow — the "doubled
+  // wordmark" false-flag was exactly this. Readers diff apparent duplications against this
+  // list before flagging them as rendered.
+  const srOnly = await page.evaluate(() =>
+    Array.from(document.querySelectorAll('.sr-only'))
+      .map((el) => (el as HTMLElement).innerText.trim())
+      .filter((t) => t.length > 0),
+  )
+  fs.writeFileSync(
+    path.join(dir, 'sr-only.txt'),
+    [
+      '# Screen-reader-only text on this state (these strings ALSO appear inside copy.txt —',
+      '# innerText includes clipped .sr-only nodes). Text that looks doubled in copy.txt but',
+      '# appears here is a CHANNEL artifact, not a rendered duplication.',
+      '',
+      ...srOnly,
+    ].join('\n'),
+  )
   const dialog = page.locator('[role="dialog"]')
   if (await dialog.count()) {
     fs.writeFileSync(path.join(dir, 'dialog.txt'), await dialog.first().innerText())
@@ -159,10 +194,70 @@ const slugify = (name: string): string =>
     .slice(0, 40)
 
 /**
+ * Type a value into one of the family's masked/integer fields the way a REAL user does:
+ * select-all + typed digits + blur, value asserted back (the fill() concatenation trap the
+ * first live read's False-PASS Hunter caught — a mis-commit fails RED here instead of
+ * bundling the wrong scenario).
+ */
+async function typeFieldValue(
+  field: ReturnType<Page['locator']>,
+  digits: string,
+  expected: string,
+): Promise<void> {
+  await field.click()
+  await field.press('ControlOrMeta+a')
+  await field.pressSequentially(digits)
+  await field.blur()
+  await expect(field, 'the preview drive committed a different value than intended').toHaveValue(expected)
+}
+
+/**
+ * The LEVER-PREVIEW DRIVE (increment 3): a sheet that carries a what-if lever gets ONE
+ * preview driven so the TwoFutures chart states bundle — the rule-36 one-dialect check was
+ * honestly un-verifiable while the doors captured only their pre-commit input state.
+ * PREVIEW-ONLY by construction: radios/fields change local sheet state and the preview seam;
+ * nothing is Applied, so the scenario every later state captures is untouched. Returns true
+ * if a preview was driven (the caller then captures the `-preview` state). A driven lever
+ * whose chart never arrives FAILS red — never a silent no-chart bundle (insight 029).
+ */
+async function driveLeverPreview(
+  page: Page,
+  dialog: ReturnType<Page['getByRole']>,
+  name: string,
+): Promise<boolean> {
+  // The policy/regime radio grammar (SequencingControl + HealthcareSheet): pick the first
+  // NON-current option — picking the applied one deliberately withdraws the comparison.
+  const uncheckedRadio = dialog.locator('.control-policies input[type="radio"]:not(:checked)')
+  if ((await uncheckedRadio.count()) > 0) {
+    await uncheckedRadio.first().check()
+    await expect(
+      dialog.locator('svg.tf'),
+      `door "${name}": the driven preview never rendered its TwoFutures chart`,
+    ).toBeVisible({ timeout: 120_000 })
+    return true
+  }
+  // The Roth plan grammar (RothLever): amount / start / years — a COMPLETE plan fires the
+  // preview. Values are small-but-real (a $20k, 4-year plan starting next year).
+  const plan = dialog.locator('.control-plan input')
+  if ((await plan.count()) >= 3) {
+    await typeFieldValue(plan.nth(0), '20000', '20,000')
+    await typeFieldValue(plan.nth(1), '1', '1')
+    await typeFieldValue(plan.nth(2), '4', '4')
+    await expect(
+      dialog.locator('svg.tf'),
+      `door "${name}": the driven Roth preview never rendered its TwoFutures chart`,
+    ).toBeVisible({ timeout: 120_000 })
+    return true
+  }
+  return false // no lever on this sheet (the budget builder, the assumptions panel)
+}
+
+/**
  * The DOOR WALK (increment 2 — the tape's coverage lesson): open EVERY quiet-row door on the
  * settled verdict, capture the sheet, close, next. Briggsy's real read free-walks the doors;
  * a bundle that stops at the landing pre-digests only half his walk. Close buttons are the
  * family's own: 'Close' (lever sheets + the assumptions panel) or 'Cancel' (the budget sheet).
+ * Increment 3: a lever sheet additionally bundles ONE driven preview (`-preview` state).
  */
 async function walkDoors(page: Page, outDir: string): Promise<void> {
   const doors = page.locator('.result-quiet-row button')
@@ -175,6 +270,9 @@ async function walkDoors(page: Page, outDir: string): Promise<void> {
     const dialog = page.getByRole('dialog')
     await expect(dialog, `door "${name}" opened no dialog`).toBeVisible()
     await captureState(page, path.join(outDir, `door-${i + 1}-${slugify(name)}`))
+    if (await driveLeverPreview(page, dialog, name)) {
+      await captureState(page, path.join(outDir, `door-${i + 1}-${slugify(name)}-preview`))
+    }
     await dialog.getByRole('button', { name: /^(Close|Cancel)$/ }).first().click()
     await expect(dialog).toBeHidden()
   }

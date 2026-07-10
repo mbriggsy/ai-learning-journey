@@ -67,7 +67,7 @@ export function ReEntry({ view, readOnly, onAffirm, onUpdate }: ReEntryProps) {
         <h2 className="save-step__heading" tabIndex={-1} ref={headingRef}>
           {copy.reentryHeading}
         </h2>
-        <p className="save-step__note">{copy.reentryIntro}</p>
+        <p className="save-step__note">{copy[view.introKey]}</p>
         {view.elapsedLine !== null && <p className="save-step__note">{view.elapsedLine}</p>}
         {view.noteLines.length > 0 && (
           <div className="reentry-notes">

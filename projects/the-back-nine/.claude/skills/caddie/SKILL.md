@@ -23,13 +23,26 @@ The Caddie pre-walks every surface so Briggsy reviews **verdict cards instead of
 capture done, findings anchored, the calm-but-wrong hunt already attempted. His reads get
 faster and higher-yield; they do not disappear.
 
-**The autonomy law (non-negotiable).** The Caddie is **permanently advisory** with teeth in one
-direction only: it can **FLAG** (park a finding for Briggsy) and **BLOCK** (stop the pilot from
-calling a surface shipped). It can never CLEAR in his place — a READS-CLEAN card still parks.
-This is structural, not humility: an auto-clear regime destroys its own false-PASS sensor (he
-stops reading exactly where misses would be caught), and insight 069 proves same-family fleets
-miss novel comprehension holes (23 agents + 1,930 green tests missed 7). Any future autonomy
-expansion is Briggsy's decision made while looking at the tape — never a mechanism.
+**The autonomy law (amended by Briggsy, 2026-07-10 — the clearance grant).** The Caddie
+MECHANISM is **permanently advisory** with teeth in one direction only: it can **FLAG** (park a
+finding for Briggsy) and **BLOCK** (stop the pilot from calling a surface shipped). The Caddie
+itself never clears — that half is structural, not humility: an auto-clear mechanism destroys
+its own false-PASS sensor, and insight 069 proves same-family fleets miss novel comprehension
+holes (23 agents + 1,930 green tests missed 7).
+
+**The pilot-clearance channel (his grant, from the tape's owner: "if you feel confident, clear
+it"):** the PILOT — with the Caddie's pre-walk in hand — may CLEAR a tone/content surface at
+HIGH confidence in his absence. Discipline that keeps the sensor alive:
+- Every clearance is **logged on the card**: disposition `PILOT-CLEARED` + the reason + any fix
+  shipped en route (fix-then-clear beats clear-alone when a flag names a real defect).
+- **A pilot clearance never scores a tape row.** Prediction rows stay "awaiting his read" —
+  his any-time read of a cleared surface still supersedes, still gets stapled on, and still
+  scores BOTH the Caddie and the pilot's clearance. His eye remains the tone oracle whenever
+  it lands; the pipeline just no longer blocks on it.
+- **Still parks for his eye, always:** one-way doors (persisted shapes / add-only enums),
+  honesty-direction forks the hawk contests, named Act-level formal exit-condition reads,
+  visual/layout reorders where only the eye is the oracle, and anything the pilot grades
+  medium-or-lower confidence. When in doubt → park, exactly as before.
 
 **Precedence.** A real Briggsy read supersedes every Caddie artifact (and re-seeds the corpus).
 The correctness oracle (tests, gates, engine validation) is never overruled by a tone verdict,
@@ -56,9 +69,13 @@ overwrites a bundle a reader panel is mid-read on (the first live run's filed de
 
 Walk shapes: a `seed:<key>` target captures the settled landing **then opens EVERY quiet-row
 door** and captures each sheet (the tape's first coverage lesson — his real read free-walks
-the doors); a `vault:<key>` target drives the U13 decrypt-on-return arc (unlock → the
-re-entry gate → affirm → the echoed verdict, doors riding the stale verdict), and
-`vault:stale` additionally captures the update route's first frame:
+the doors); a lever sheet (policy/regime radios, the Roth plan fields) additionally gets ONE
+preview DRIVEN and its TwoFutures chart captured as a `-preview` state (increment 3 — the
+rule-36 one-dialect check was un-verifiable on pre-commit input states; preview-only, nothing
+is Applied). A `vault:<key>` target drives the U13 decrypt-on-return arc (unlock → the
+re-entry gate → affirm → the echoed verdict, doors riding the stale verdict); `vault:stale`
+additionally captures the update route's first frame; `vault:datestale` is the aged
+SPLIT-DATE plant (the floor's arrived arm + the re-derived anchored hero):
 
 - `viewport.png` — the above-fold frame at CSS scale (what he sees first; long edge < the
   ~2576px model-ingestion cap, so it is never silently downscaled)
@@ -70,6 +87,9 @@ re-entry gate → affirm → the echoed verdict, doors riding the stale verdict)
 - `aria.yaml` — the ARIA snapshot (the programmatic-availability channel)
 - `copy.txt` / `dialog.txt` — the VERBATIM rendered text from the DOM (words are always read
   here, never OCR'd off pixels)
+- `sr-only.txt` — every visually-hidden text node on the state (increment 3): `copy.txt`
+  INCLUDES clipped sr-only text, so an apparent duplication there must be checked here before
+  it is flagged (the "doubled wordmark" false-flag was this channel artifact)
 - `fold.json` — viewport size + key-region boxes (what is above/below the fold)
 - `console.json` — console messages seen during the walk
 

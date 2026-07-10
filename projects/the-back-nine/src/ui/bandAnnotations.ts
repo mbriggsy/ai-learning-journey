@@ -46,6 +46,59 @@ const DECADE = 10
 /** Don't place an intermediate tick within this many years of the horizon — the Plan-horizon
  *  marker already labels the end, and a tick on top of it just collides. */
 const HORIZON_TICK_PAD_YEARS = 3
+
+/**
+ * The aged-vault wall-time anchor (U13 one-screen-one-time-base law, applied to the CHART —
+ * caught live on the first `?vault=datestale` walk, 2026-07-10: the band's year 0 read
+ * "Today 58 / 59" beside a gate that had just said "saved about 2 years ago"). The fan's
+ * year 0 is the PLAN's start (the save moment) — on an aged vault that column is not today.
+ * When `elapsedPlanYears > 0`: the year-0 endpoint renames to "Your save" (saved ages,
+ * id 'saved') and the REAL "Today" marker lands at x = elapsedPlanYears wearing the
+ * household's CURRENT ages — the reader finds themselves ON the picture. elapsed 0 (every
+ * fresh session) derives BYTE-IDENTICALLY to the un-anchored call. This is Result's own
+ * memoized `dateAnchor` (the ONE local-calendar chain) — never a second ad-hoc clock read.
+ */
+export interface BandSavedAnchor {
+  readonly elapsedPlanYears: number
+}
+
+/** The year-0 endpoint: "Today" on a fresh session; "Your save" (saved ages) on an aged vault. */
+function yearZeroMarker(ageA: number, ageB: number, aged: boolean): XAnnotation {
+  return aged
+    ? {
+        id: 'saved',
+        yearsFromNow: 0,
+        label: copy.bandClockSavedLabel,
+        ages: slots.bandClockAges(ageA, ageB),
+        description: slots.bandClockSavedDesc(ageA, ageB),
+      }
+    : {
+        id: 'today',
+        yearsFromNow: 0,
+        label: copy.bandClockTodayLabel,
+        ages: slots.bandClockAges(ageA, ageB),
+        description: slots.bandClockTodayDesc(ageA, ageB),
+      }
+}
+
+/** The aged arm's WALL-TIME "Today" marker at x = elapsed (current ages), or null when it
+ *  would crowd the horizon endpoint (a vanishing-rare decades-old vault whose today sits at
+ *  the chart's far edge — the 'saved' year-0 label alone stays honest there). */
+function wallTodayMarker(
+  ageA: number,
+  ageB: number,
+  elapsedPlanYears: number,
+  horizonYears: number,
+): XAnnotation | null {
+  if (elapsedPlanYears >= horizonYears - HORIZON_TICK_PAD_YEARS) return null
+  return {
+    id: 'today',
+    yearsFromNow: elapsedPlanYears,
+    label: copy.bandClockTodayLabel,
+    ages: slots.bandClockAges(ageA + elapsedPlanYears, ageB + elapsedPlanYears),
+    description: slots.bandClockTodayDesc(ageA + elapsedPlanYears, ageB + elapsedPlanYears),
+  }
+}
 /** Stop ticking past this age: beyond ~100 the cohort is vanishingly thin (the faded tail), so a
  *  tick there is clutter, not a useful clock reference. The Plan-horizon endpoint still labels the
  *  true end (which can be older). */
@@ -101,19 +154,20 @@ export function deriveSpineBandAnnotations(
   currentAgeA: number,
   currentAgeB: number,
   horizonYears: number,
+  savedAnchor?: BandSavedAnchor,
 ): readonly XAnnotation[] {
-  const markers: XAnnotation[] = [
-    {
-      id: 'today',
-      yearsFromNow: 0,
-      label: copy.bandClockTodayLabel,
-      ages: slots.bandClockAges(currentAgeA, currentAgeB),
-      description: slots.bandClockTodayDesc(currentAgeA, currentAgeB),
-    },
-  ]
+  const elapsed = savedAnchor?.elapsedPlanYears ?? 0
+  const markers: XAnnotation[] = [yearZeroMarker(currentAgeA, currentAgeB, elapsed > 0)]
+  const wallToday =
+    elapsed > 0 ? wallTodayMarker(currentAgeA, currentAgeB, elapsed, horizonYears) : null
+  if (wallToday !== null) markers.push(wallToday)
   // Intermediate decade-age reference ticks (the ONE canonical rule — deriveDecadeAgeTicks). Ages
   // only, on the same baseline as the endpoints' ages (the endpoints alone carry a named word above).
+  // On the AGED arm a tick within the pad of the wall-time Today marker is dropped — the named
+  // moment carries that x (the same crowd rule the date deriver applies around its named markers).
   for (const t of deriveDecadeAgeTicks(currentAgeA, currentAgeB, horizonYears)) {
+    if (wallToday !== null && Math.abs(t.yearsFromNow - wallToday.yearsFromNow) < HORIZON_TICK_PAD_YEARS)
+      continue
     markers.push({
       id: `age-${t.ageA}`,
       yearsFromNow: t.yearsFromNow,
@@ -129,7 +183,9 @@ export function deriveSpineBandAnnotations(
     ages: slots.bandClockAges(currentAgeA + horizonYears, currentAgeB + horizonYears),
     description: slots.bandClockHorizonDesc(currentAgeA + horizonYears, currentAgeB + horizonYears),
   })
-  return markers
+  // Household-clock order even on the aged arm (the wall-Today x can exceed an early decade
+  // tick's) — the label stagger reads neighbors in x order.
+  return markers.sort((a, b) => a.yearsFromNow - b.yearsFromNow)
 }
 
 /**
@@ -146,22 +202,20 @@ export function deriveSpineBandAnnotations(
  * @param currentAgeB  spouse B's current whole-year age
  * @param offsetYears  the crowned fuck-off offset — years from today the household stops working
  * @param horizonYears the fan's actual last `yearsFromNow`
+ * @param savedAnchor  the aged-vault wall-time anchor (see {@link BandSavedAnchor})
  */
 export function deriveDateBandAnnotations(
   currentAgeA: number,
   currentAgeB: number,
   offsetYears: number,
   horizonYears: number,
+  savedAnchor?: BandSavedAnchor,
 ): readonly XAnnotation[] {
-  const markers: XAnnotation[] = [
-    {
-      id: 'today',
-      yearsFromNow: 0,
-      label: copy.bandClockTodayLabel,
-      ages: slots.bandClockAges(currentAgeA, currentAgeB),
-      description: slots.bandClockTodayDesc(currentAgeA, currentAgeB),
-    },
-  ]
+  const elapsed = savedAnchor?.elapsedPlanYears ?? 0
+  const markers: XAnnotation[] = [yearZeroMarker(currentAgeA, currentAgeB, elapsed > 0)]
+  const wallToday =
+    elapsed > 0 ? wallTodayMarker(currentAgeA, currentAgeB, elapsed, horizonYears) : null
+  if (wallToday !== null) markers.push(wallToday)
   // The FUTURE work-stops moment (the fuck-off date) — only when strictly in the future AND clear of
   // the horizon endpoint. At offset 0 the household stops TODAY (already marked by Today). When the
   // crowned offset lands within the horizon pad, the HERO marker itself is dropped (not just bare
@@ -180,14 +234,16 @@ export function deriveDateBandAnnotations(
     })
   }
   // Intermediate decade-age reference ticks (the ONE canonical rule — deriveDecadeAgeTicks),
-  // skipping any within the pad of the NAMED markers they would crowd: Today (year 0) and the
-  // work-stops moment (the horizon endpoint is already handled by the rule's own bound). On the
-  // date route the first decade can fall just a year or two out (a 58-year-old's age-60 tick),
-  // stacking on top of Today and the hero "Work stops" marker — the named moments carry the early
-  // story, so drop the colliding tick.
+  // skipping any within the pad of the NAMED markers they would crowd: the year-0 endpoint, the
+  // work-stops moment, and (aged arm) the wall-time Today marker (the horizon endpoint is already
+  // handled by the rule's own bound). On the date route the first decade can fall just a year or
+  // two out (a 58-year-old's age-60 tick), stacking on top of the named early moments — the named
+  // moments carry the early story, so drop the colliding tick.
   for (const t of deriveDecadeAgeTicks(currentAgeA, currentAgeB, horizonYears)) {
     if (t.yearsFromNow < HORIZON_TICK_PAD_YEARS) continue
     if (workStops !== undefined && Math.abs(t.yearsFromNow - workStops) < HORIZON_TICK_PAD_YEARS)
+      continue
+    if (wallToday !== null && Math.abs(t.yearsFromNow - wallToday.yearsFromNow) < HORIZON_TICK_PAD_YEARS)
       continue
     markers.push({
       id: `age-${t.ageA}`,

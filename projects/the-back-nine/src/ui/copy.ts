@@ -440,6 +440,13 @@ export const copy = {
   bandClockTodayLabel: 'Today',
   bandClockHorizonLabel: 'Plan horizon',
   bandClockWorkStopsLabel: 'Work stops',
+  // The AGED-vault year-0 endpoint (U13 follow-up — caught live on the first `?vault=datestale`
+  // walk, 2026-07-10): a re-opened old save's fan starts at the SAVE moment, not today, and
+  // calling that column "Today" put two time bases on one screen (the exact class the U13
+  // ultramode fixed for the hero + floor lines). On an aged vault the year-0 endpoint renames
+  // to this label (saved ages beneath it) and the REAL "Today" marker moves to
+  // x = years-since-save, wearing the household's CURRENT ages.
+  bandClockSavedLabel: 'Your save',
   // --- R19 calm error grammar (icon + adjacent text; color never alone) ---
   // The two CEILING errors are NOT here (F10): they quote the actual statutory limit dollar,
   // so they are slot templates — slots.errContributionCeiling / slots.errAdditionsCeiling,
@@ -860,8 +867,18 @@ export const copy = {
   reentryHeading: 'Are these still your numbers?',
   reentryIntro:
     'Your answer is figured from the balances below, exactly as you last entered them. Markets and paychecks move — a quick look keeps the reading honest.',
+  // The ROUTE-TRUE intro for an all-retired household (Caddie card #1, pilot-cleared with a
+  // fix 2026-07-10): "paychecks" at a household with none was the spouse walker's primary
+  // stumble ("does this thing even know we stopped working?"). Same sentence, honest register.
+  reentryIntroRetired:
+    'Your answer is figured from the balances below, exactly as you last entered them. Markets and benefit checks move — a quick look keeps the reading honest.',
   reentryBalancesLegend: 'Account balances, as saved',
-  reentryBenefitsLegend: 'Social Security, monthly at full retirement age',
+  // The FRAME GLOSS (Caddie card #1, pilot-cleared with a fix 2026-07-10): a couple already
+  // claiming receives a different check than the at-FRA figure, and the gate's own question
+  // invites comparing against the real deposit — the clause names WHICH figure this is, so
+  // they neither "correct" a right number nor okay one they can't verify.
+  reentryBenefitsLegend:
+    'Social Security, monthly at full retirement age — the statement figure your plan models from',
   reentryBucketPretax: 'Pre-tax accounts — 401(k), 403(b), traditional IRA',
   reentryBucketRoth: 'Roth accounts',
   reentryBucketTaxable: 'Brokerage',
@@ -878,12 +895,17 @@ export const copy = {
   // changes nothing about a saved answer — see the supersession note in staleness.ts.)
   stalenessHealthcare:
     'Health-coverage rules have been updated since your save — this reading uses today’s.',
+  // "fund snapshots" PURGED (Caddie card #2's top flag, pilot-cleared with a fix 2026-07-10:
+  // three lenses stumbled independently — "is that MY money?"). The honest referent is the
+  // fund-classification data (the blend table), spoken plainly as "the fund data we read
+  // your accounts against" (the card's own candidate) — never "market data" (it is not
+  // prices) and never the jargon word.
   stalenessDate:
-    'The contribution limits or fund snapshots behind your date have been updated since your save — this reading uses today’s.',
+    'The contribution limits or the fund data behind your date have been updated since your save — this reading uses today’s.',
   // The all-retired (spine) household's blend line: no date to reference, and contribution
-  // limits never touch a decumulation-only answer — only the fund-snapshot clock speaks.
+  // limits never touch a decumulation-only answer — only the blend clock speaks.
   stalenessBlendSpine:
-    'The fund snapshots behind your answer have been updated since your save — this reading uses today’s.',
+    'The fund data we read your accounts against has been updated since your save — this reading uses today’s.',
   // The standing hero note (renders WITH the first verdict when any clock fired — never
   // after it; the answer is already recomputed under today's rules, this line says so).
   // DELIBERATELY ONE LINE at the reading measure: the full per-clock disclosure lives at
@@ -1013,6 +1035,10 @@ export const slots = {
   /** The "Today" marker's accessible sentence (the reader is color-blind — the marker's meaning
    *  must reach the a11y tree as text, not as a vertical rule alone). */
   bandClockTodayDesc: (ageA: number, ageB: number): string => `Today — ages ${ageA} and ${ageB}`,
+  /** The aged-vault "Your save" year-0 endpoint's accessible sentence (the U13 one-time-base
+   *  law applied to the chart — see `bandClockSavedLabel`). Saved ages, the save moment named. */
+  bandClockSavedDesc: (ageA: number, ageB: number): string =>
+    `When you saved this — ages ${ageA} and ${ageB}`,
   /** The plan-horizon marker's accessible sentence — anchored at the fan's actual last year. */
   bandClockHorizonDesc: (ageA: number, ageB: number): string =>
     `The plan horizon — ages ${ageA} and ${ageB}`,
@@ -1028,7 +1054,12 @@ export const slots = {
    *  range. Names the quantity (savings, today's dollars — distinct from the verdict's $/mo), a SURVIVOR-
    *  NEUTRAL time anchor (years-from-now, never ages / "couples"), range-FIRST + median subordinate ("most
    *  likely"). `low`/`high`/`median` arrive pre-formatted from the SAME resampled tooltipRows the sighted
-   *  scrub shows — single-sourced, byte-identical. FIRST-DRAFT — the word-pick is the N=1 cold-read's call. */
+   *  scrub shows — single-sourced, byte-identical. FIRST-DRAFT — the word-pick is the N=1 cold-read's call.
+   *  O3 RATIFIED AS-DESIGNED (council 2026-07-10 + the low-edge probe, PASS on all three fixtures):
+   *  this ONE sentence deliberately carries NO IQR figure, NO tick ladder, NO legend echo — the sighted
+   *  scrub itself quotes only p10/p50/p90, so this is parity, not a gap; and the anchor column is the
+   *  couple-clean region's WORST low edge (probed: anchorIsCleanMin on date/datesplit/retired — the
+   *  docs/council-log.md O3 row has the numbers). Do not extend without a new council. */
   bandAtRange: (years: number, low: string, high: string, median: string): string =>
     `Looking about ${years} years out, your savings land between ${low} and ${high} across eight in ten futures — most likely about ${median}, in today’s dollars.`,
   /** The $0-RUIN variant: when the low edge reads $0 (a depleted low-futures path), speak the depletion
@@ -1096,9 +1127,13 @@ export const slots = {
           : `Stopping in ${offsetYears} years`
     // The dip clause tells the whole story in one breath (cold-read 2026-07-03: "clears, but
     // doesn't hold" read as a riddle) — it clears NOW and slips below the line BEFORE the date.
+    // The crown clause names the ladder's SHAPE, never a certainty (Caddie card #3, pilot-
+    // cleared with a fix 2026-07-10: "where the odds hold from here on" invited the lay read
+    // "once we reach our date we're locked in at 90%" — rule 7's certainty shape. The claim is
+    // that every later stop-year's odds also clear the line, and now it says exactly that).
     const tail =
       state === 'crown'
-        ? ' — your date, where the odds hold from here on'
+        ? ' — your date, the first year the odds clear the line and stay above it for every later start'
         : state === 'dip'
           ? ' at first — but the odds slip below the line in the years after, so it doesn’t last'
           : state === 'clears'
@@ -1252,9 +1287,16 @@ export const slots = {
   /** The sequencing delta line — same grammar, the order as the subject. */
   sequencingDelta: (withOdds: string, withoutOdds: string): string =>
     `With this order, the money could last in about ${withOdds} futures instead of ${withoutOdds}.`,
-  /** The user-echoed conversion plan (their own figures back at them — an echo, not a claim). */
+  /** The user-echoed conversion plan (their own figures back at them — an echo, not a claim).
+   *  Start pluralizes like the duration ("in about a year", never "1 years" — Caddie panel
+   *  2026-07-10, caught on a driven lever preview). */
   rothPlanEcho: (amountFormatted: string, startYearsFromNow: number, years: number): string => {
-    const start = startYearsFromNow === 0 ? 'starting this year' : `starting in about ${startYearsFromNow} years`
+    const start =
+      startYearsFromNow === 0
+        ? 'starting this year'
+        : startYearsFromNow === 1
+          ? 'starting in about a year'
+          : `starting in about ${startYearsFromNow} years`
     return `Converting ~$${amountFormatted} a year for ${years} year${years === 1 ? '' : 's'}, ${start}.`
   },
 

@@ -360,7 +360,7 @@ test.describe(`the vault return (?vault=stale) — the gate + the staleness-echo
     // (The blend line is named, not just counted: an all-retired household must get the
     // route-true spine wording, never stalenessDate's "behind your date".)
     await expect(page.locator('.reentry-notes p')).toHaveCount(3)
-    await expect(page.getByText('The fund snapshots behind your answer')).toBeVisible()
+    await expect(page.getByText('The fund data we read your accounts against')).toBeVisible()
     await expect(page.getByText('You saved this about 2 years ago.')).toBeVisible()
 
     // Affirm → the gate releases the held recompute pair; wait out the FINAL tier like every

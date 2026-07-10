@@ -9,6 +9,7 @@
  */
 import { copy, slots } from './copy'
 import { formatAxisDollar } from './money'
+import type { BandSavedAnchor } from './bandAnnotations'
 import type { BandLabels, ResolvedBandData } from '@viz/bandData'
 import type { BandPanelChrome } from '@viz/ConfidenceBandPanel'
 import { selectAtRangeColumn, AT_RANGE_COHORT_MIN } from '@viz/bandGeometry'
@@ -47,12 +48,34 @@ export const BAND_CHROME: BandPanelChrome = {
  * low edge is spoken AS depletion, never a soft "$0". Returns `null` to WITHDRAW (no cohort-clean column
  * — the honest silence, mirroring the scrub's dead-cohort thin-note). Pure off the resolved data, so it
  * re-renders WITH the band on a provisional→final scale re-key (insight 047), never a stranded figure.
+ *
+ * O3 RATIFIED AS-DESIGNED (council 2026-07-10, wf_27e87ceb-745; CLOSED same day by the low-edge
+ * probe — PASS on all three fixtures): the IQR "middle half" band, the y-tick dollar ladder, and
+ * the legend text owe this sentence NOTHING — the sighted scrub itself quotes p10/p50/p90 and never
+ * an IQR figure (parity is with the sighted NUMERIC channel, and folding p25/p75 in would hand the
+ * SR reader MORE precision than any sighted reader gets); the y-ticks are a position→dollar decoder
+ * the SR reader is handed pre-decoded; the legend's two load-bearing tiers are verbatim in the
+ * sentence. Do NOT add a second SR sentence or an SR tick-ladder. The red team's anchor-direction
+ * doubt was MEASURED, not reasoned away: on date/datesplit/retired the anchor column IS the
+ * couple-clean region's minimum low edge (anchorIsCleanMin true ×3 — the numbers live in the
+ * docs/council-log.md O3 row); every lower low sits in the survivor-dominated 0.5–0.75 band the
+ * Briggsy-approved AT_RANGE_COHORT_MIN margin deliberately excludes (his cold-read-TUNABLE knob).
  */
-export function composeBandAtRange(resolved: ResolvedBandData): string | null {
+export function composeBandAtRange(
+  resolved: ResolvedBandData,
+  savedAnchor?: BandSavedAnchor,
+): string | null {
   const i = selectAtRangeColumn(resolved.samples, AT_RANGE_COHORT_MIN)
   if (i === null) return null
   const row = resolved.tooltipRows[i]!
-  const years = Math.round(resolved.samples[i]!.yearsFromNow)
+  // "About N years OUT" re-bases to WALL time on an aged vault (the one-screen-one-time-base
+  // law's last un-anchored text — ultramode 2026-07-10, mildly OPTIMISTIC direction: a plan-time
+  // count overstates the remaining runway by the elapsed years). The COLUMN stays plan-time
+  // data (the same resampled figures the scrub shows); only the spoken distance re-derives.
+  // Math.max(0, …) is defensive-only: the anchor column sits ≥ ~15y deep for any real
+  // household while elapsed is codec-bounded to ~6.
+  const elapsed = savedAnchor?.elapsedPlanYears ?? 0
+  const years = Math.max(0, Math.round(resolved.samples[i]!.yearsFromNow) - elapsed)
   // Depletion by the DISPLAYED figure (never a soft "$0"), tested against the SAME formatter the row
   // uses (so a lerp-dust $0.4 that formats to "$0" is caught too). Three honest shapes, median first:
   //  - median reads $0 ⇒ TOTAL depletion (already-failing): the savings are most likely gone — "$0 but

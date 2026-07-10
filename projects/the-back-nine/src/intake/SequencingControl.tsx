@@ -26,6 +26,7 @@ import type { ScenarioDraft } from '@store/memoryModel'
 import type { ControlPreview } from '@store/controlPreview'
 import { copy, slots, type CopyKey } from '@ui/copy'
 import { composeTwoFutures } from '@ui/twoFuturesChrome'
+import type { BandSavedAnchor } from '@ui/bandAnnotations'
 
 import type { Announcer } from './a11y'
 import { ControlSheet } from './controlSheet'
@@ -71,9 +72,13 @@ export interface SequencingControlProps {
   /** U12 ultramode: close-time focus fallback for when the opening trigger has unmounted
    *  (the via-AssumptionPanel route) — forwarded to the ControlSheet scaffold. */
   readonly restoreFallback?: () => HTMLElement | null
+  /** P3·U13 — the aged-vault wall-time anchor (Result's memoized dateAnchor): the TwoFutures
+   *  year-0 endpoint renames "Today" → "Your save" when elapsed > 0 (one time base per screen;
+   *  the ultramode caller-lens caught this chart as the sibling the band fix missed). */
+  readonly savedAnchor?: BandSavedAnchor
 }
 
-export function SequencingControl({ open, draft, preview, previewBlocking = false, onApply, onClose, restoreFallback }: SequencingControlProps) {
+export function SequencingControl({ open, draft, preview, previewBlocking = false, onApply, onClose, restoreFallback, savedAnchor }: SequencingControlProps) {
   const announcerRef = useRef<Announcer | null>(null)
   const current: Pickable = (PICKABLE as readonly string[]).includes(draft.drawdownPolicy)
     ? (draft.drawdownPolicy as Pickable)
@@ -124,12 +129,14 @@ export function SequencingControl({ open, draft, preview, previewBlocking = fals
         copy.leverPolicyProportional,
         slots.sequencingDelta,
         ages,
+        savedAnchor,
       )
       return view === null ? { kind: 'error', reason: 'indeterminate' } : { kind: 'ready', view }
     })
     // `run`'s identity carries `preview` (the crowned-offset anchor), so a provisional→final
     // sharpen that moves the crown re-anchors an open sheet's preview (insight 047). `ages`
-    // is deliberately NOT a dep (a per-render tuple over open-stable ages — RothLever's note).
+    // is deliberately NOT a dep (a per-render tuple over open-stable ages — RothLever's note);
+    // `savedAnchor` likewise (memoized in Result off startCalendarYear — open-stable).
   }, [open, picked, order, run, current])
 
   const move = (key: DrawdownOrderKey, dir: -1 | 1) => {

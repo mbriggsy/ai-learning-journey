@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { DEV_SEEDS } from '../devSeeds'
-import { scenarioFromDraft } from '../scenarioFromDraft'
+import { DEV_SEEDS, doctorStaleVault } from '../devSeeds'
+import { scenarioFromDraft, currentEpochDay } from '../scenarioFromDraft'
+import { draftFromScenario } from '../draftFromScenario'
 import { floorRelief } from '../twoTier'
 import { composeDateSplit } from '../dateSplit'
 import { buildDateInput, buildSpineParams, healthcarePriced, isDateRoute, missingRequiredFacts } from '@intake/intakeMap'
@@ -130,6 +131,45 @@ describe('dev seeds reach a worded (engine-accepted) answer', () => {
     expect(view.kind, 'the render composes a SPLIT, not the degenerate single date').toBe('split')
     if (view.kind !== 'split') return
     expect(view.inverted, 'the expected ordering must NOT cry the inversion note').toBe(false)
+  }, 120_000)
+
+  // P3·U13 follow-up (the Caddie card-#4 unblock, 2026-07-10): the '?vault=datestale' AGED
+  // plant — the datesplit household doctored 2 calendar years stale. The plant exists to render
+  // the floor's ARRIVED arm (`dateFloorCoveredPast`: the recomputed floor crown must sit INSIDE
+  // the 2-year elapsed window, 0 excluded — offset 0 short-circuits to the plain covered line)
+  // beside a still-ANCHORED hero (the lifestyle crown beyond the window). Proven through the
+  // REAL return chain — doctor → draftFromScenario → buildDateInput → the real date search —
+  // so a drift in ANY link (a doctored shape the hydrator refuses; a crown shift out of the
+  // window under the 2024 year-0 tax anchoring) fails HERE, not at his cold read. Provisional
+  // tier for suite speed (the ≈1-vs-≈8 design-time crown gap is tier-robust, the datesplit
+  // arm above). The hero's own arrived arm (`dateInYearsPast`) stays unit-pinned only —
+  // documented on the plant as NOT coherently mintable (savedAt codec floor 2020).
+  it("'datestale' (the aged datesplit plant) keeps the floor crown INSIDE the 2-year window and the lifestyle crown beyond it — the dateFloorCoveredPast + anchored-hero pair the plant exists to render", async () => {
+    const built = scenarioFromDraft(DEV_SEEDS.datesplit)
+    expect(built.ready, 'datesplit must be save-ready').toBe(true)
+    if (!built.ready) return
+    const TODAY = currentEpochDay()
+    const aged = doctorStaleVault(built.scenario, TODAY)
+    // Coherence pin (the first chair pass's own catch): the savedAt aging and the plan-anchor
+    // aging must describe the SAME save moment — ~760 days ≈ the 2-calendar-year anchor delta.
+    expect(aged.startCalendarYear).toBe(built.scenario.startCalendarYear - 2)
+    expect(aged.savedAt).toBe(TODAY - 760)
+    const rehydrated = draftFromScenario(aged)
+    expect(rehydrated.ok, 'the hydrator must accept the doctored shape').toBe(true)
+    if (!rehydrated.ok) return
+    const input = buildDateInput(rehydrated.draft)
+    expect(input, 'datestale: buildDateInput').not.toBeNull()
+    const out = await runDateSearch(input!, rehydrated.draft.seed!, { tier: 'provisional' })
+    expect(out.kind, 'datestale: a dates outcome').toBe('dates')
+    if (out.kind !== 'dates') return
+    const datedKinds = ['confirmed-date', 'window-edge-unconfirmed']
+    expect(datedKinds, 'floor crowned').toContain(out.floor.kind)
+    expect(datedKinds, 'lifestyle crowned').toContain(out.lifestyle.kind)
+    if (!('offsetYears' in out.floor) || !('offsetYears' in out.lifestyle)) return
+    const ELAPSED_PLAN_YEARS = 2 // wall time − the doctored startCalendarYear
+    expect(out.floor.offsetYears, 'floor crown must be > 0 (0 short-circuits past the Past arm)').toBeGreaterThan(0)
+    expect(out.floor.offsetYears, 'floor crown INSIDE the elapsed window → dateFloorCoveredPast').toBeLessThanOrEqual(ELAPSED_PLAN_YEARS)
+    expect(out.lifestyle.offsetYears, 'lifestyle crown BEYOND the window → the hero stays anchored, never arrived').toBeGreaterThan(ELAPSED_PLAN_YEARS)
   }, 120_000)
 
   // The U9b 'datemixed' seed exists to cold-read the MIXED arm (floor dated, lifestyle not within

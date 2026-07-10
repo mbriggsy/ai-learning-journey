@@ -58,11 +58,9 @@
   color: var(--ink-muted);
 }
 
-.fod-headline:focus-visible {
-  outline: 2px solid var(--brand);
-  outline-offset: 4px;
-  border-radius: var(--radius-sm);
-}
+/* No :focus-visible ring here — announce-focus headings are exempted from the global ring
+   in base.css (Caddie O7): the ring painted on every zero-interaction landing, boxing the
+   hero. A class-scoped ring here would OUT-SPECIFY that exemption and resurrect the box. */
 
 /* The conservative odds reading — a supporting line under the date. */
 .fod-odds {

@@ -68,11 +68,8 @@
   color: var(--ink);
 }
 
-.cs-word:focus-visible {
-  outline: 2px solid var(--brand);
-  outline-offset: 4px;
-  border-radius: var(--radius-sm);
-}
+/* No :focus-visible ring — announce-focus headings are exempted in base.css (Caddie O7);
+   a class-scoped ring would out-specify the exemption and box the verdict at landing. */
 
 /* ── U12 C2: the verdict-lockup crossfade (the sharpen loop's state→state morph) ─────────────────
    Fires ONLY on a sticky displayed-triple change on an already-mounted hero: ConfidenceStatement
@@ -162,11 +159,7 @@
   color: var(--ink-muted);
 }
 
-.cs-range__lead:focus-visible {
-  outline: 2px solid var(--brand);
-  outline-offset: 4px;
-  border-radius: var(--radius-sm);
-}
+/* No :focus-visible ring — the base.css announce-heading exemption (Caddie O7). */
 
 /* ----- the pending mode (pre-first-resolve) ----- */
 

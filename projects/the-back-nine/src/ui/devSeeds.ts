@@ -23,7 +23,7 @@
  */
 import type { ScenarioDraft } from '@store/memoryModel'
 import type { BudgetLineItem, ScenarioV3 } from '@shared/model'
-import { scenarioFromDraft } from './scenarioFromDraft'
+import { scenarioFromDraft, currentEpochDay } from './scenarioFromDraft'
 
 /** A fixed dev CRN seed → the same fan every drive (a reproducible cold-read).
  *  Any uint32 satisfies the engine's integer-seed gate; `ensureSeed` REUSES a
@@ -711,21 +711,23 @@ export function plantDevVault(key: string): Promise<PlantResult> {
 }
 
 /**
- * P3·U13 — `?vault=stale`: the AGED-vault plant (the retired household as if saved ~2 years
- * ago under older rulebooks). Doctors the freshly-built scenario BEFORE the write — savedAt
- * back ~760 days (the elapsed line reads "about 2 years ago", COHERENT with the -2 plan
- * anchor below: a real save mints both together, so their years must agree or the fixture
- * describes an impossible household — the first Caddie chair pass caught the old -400/-2
- * mismatch reading "about a year ago" over a 2024 anchor), the tax + healthcare stamps one
- * vintage back (their clocks fire), the blend snapshot one year back (the spine blend clock
- * — without this, `stalenessBlendSpine` is unreachable live: every save stamps `dateVintage`
- * fresh, so the U13 cold-read batch's blend line would silently never render for anyone's
- * eye), the plan anchor back 2 calendar years (the wall-time framing). The ONLY way to see
- * the re-entry staleness surface live today — every organic save is same-day fresh.
- * appDefaultVersion stays CURRENT deliberately: the Q7 saved-era map has one era, so that
- * note is v1-inert by design (a fake era in the shipped map would be a lie to render one).
+ * P3·U13 — the AGED-vault doctoring (the household as if saved ~2 years ago under older
+ * rulebooks; see {@link AGED_PLANTS} for the keys that ride it). Doctors the freshly-built
+ * scenario BEFORE the write — savedAt back ~760 days (the elapsed line reads "about 2 years
+ * ago", COHERENT with the -2 plan anchor below: a real save mints both together, so their
+ * years must agree or the fixture describes an impossible household — the first Caddie chair
+ * pass caught the old -400/-2 mismatch reading "about a year ago" over a 2024 anchor), the
+ * tax + healthcare stamps one vintage back (their clocks fire), the blend snapshot one year
+ * back (the blend clock — without this, `stalenessBlendSpine`/`stalenessDate` are unreachable
+ * live: every save stamps `dateVintage` fresh, so the U13 cold-read batch's blend line would
+ * silently never render for anyone's eye), the plan anchor back 2 calendar years (the
+ * wall-time framing). The ONLY way to see the re-entry staleness surfaces live today — every
+ * organic save is same-day fresh. appDefaultVersion stays CURRENT deliberately: the Q7
+ * saved-era map has one era, so that note is v1-inert by design (a fake era in the shipped
+ * map would be a lie to render one). EXPORTED for the devSeeds battery — the aged plants'
+ * outcome pins drive the doctored scenario through the REAL draft→input→search chain.
  */
-function doctorStaleVault(s: ScenarioV3, todayEpochDay: number): ScenarioV3 {
+export function doctorStaleVault(s: ScenarioV3, todayEpochDay: number): ScenarioV3 {
   return {
     ...s,
     savedAt: todayEpochDay - 760,
@@ -747,15 +749,31 @@ function doctorStaleVault(s: ScenarioV3, todayEpochDay: number): ScenarioV3 {
   }
 }
 
+/** The AGED plants: `?vault=<key>` → {@link doctorStaleVault} over a base seed. `stale` =
+ *  the retired spine (the U13 staleness batch's original surface); `datestale` = the SPLIT
+ *  date household (`datesplit` — floor crowns ≈1, lifestyle ≈8 at design time), the only
+ *  live route to the floor's ARRIVED arm (`dateFloorCoveredPast`: elapsed 2 ≥ the floor
+ *  offset — "penciled as covered … that's about now") beside a RE-DERIVED aged hero count
+ *  (`dateInYearsAnchored` with n = offset − elapsed), plus the date-route gate wording
+ *  (`stalenessDate`) no walk had ever rendered. The hero's own arrived arm
+ *  (`dateInYearsPast`) needs elapsed ≥ the lifestyle crown (≈8y); savedAt's codec floor is
+ *  2020 (~6y back), so it is NOT coherently mintable — it stays unit-pinned, never faked. */
+const AGED_PLANTS: Readonly<Partial<Record<string, DevSeedKey>>> = {
+  stale: 'retired',
+  datestale: 'datesplit',
+}
+
 async function runPlantDevVault(key: string): Promise<PlantResult> {
-  const stale = key === 'stale'
-  const draft = resolveDevSeed(stale ? 'retired' : key)
+  const agedBase = Object.hasOwn(AGED_PLANTS, key) ? AGED_PLANTS[key] : undefined
+  const draft = resolveDevSeed(agedBase ?? key)
   if (draft === null) return 'unknown-seed'
   const built = scenarioFromDraft(draft)
   if (!built.ready) return 'not-ready'
-  const scenario = stale
-    ? doctorStaleVault(built.scenario, Math.floor(Date.now() / 86_400_000))
-    : built.scenario
+  // The LOCAL-calendar chain, never a raw UTC epoch-day (the U13 basis catch — a second
+  // ad-hoc clock read is exactly the class the 2026-07-09 ultramode unified away; DEV-only
+  // here, but the plant feeds cold-reads and its elapsed line must agree with the app's).
+  const scenario =
+    agedBase !== undefined ? doctorStaleVault(built.scenario, currentEpochDay()) : built.scenario
   const [{ getVaultSession }, { checkPassphraseFloor }, { clearVault, openVaultDb }] = await Promise.all([
     import('./vaultSession'),
     import('@crypto/kdf'),

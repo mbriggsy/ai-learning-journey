@@ -582,12 +582,18 @@ describe('canonical constants — shape & provenance (contract #6)', () => {
     })
 
     it('the gate — no distinctive value appears in any src file outside the constants module', () => {
+      // DIGIT-BOUNDARY matching, not bare substring (2026-07-10): "11250" firing inside an
+      // unrelated 1_125_000 (a band-axis quarter tick) is exactly the collision class the
+      // DISTINCTIVE comment already warns about for small figures — a proper sub-number is
+      // a false positive, while a standalone re-typed figure still fires. `norm` strips
+      // underscores first, so the boundary is checked on the digits as compiled.
       const offenders: string[] = []
       for (const f of allTs) {
         if (inConstants(f)) continue
         const blob = norm(readFileSync(f, 'utf-8'))
         for (const v of DISTINCTIVE) {
-          if (blob.includes(v)) offenders.push(`${relative(SRC, f)} inlines ${v}`)
+          const boundary = new RegExp(`(?<![\\d.])${v.replace('.', '\\.')}(?![\\d.])`)
+          if (boundary.test(blob)) offenders.push(`${relative(SRC, f)} inlines ${v}`)
         }
       }
       expect(offenders, 'inlined constants found (read them from @engine/constants instead)').toEqual([])

@@ -41,11 +41,7 @@
   margin: 0;
 }
 
-.save-step__heading:focus-visible {
-  outline: 2px solid var(--brand);
-  outline-offset: 4px;
-  border-radius: var(--radius-sm);
-}
+/* No :focus-visible ring — the base.css announce-heading exemption (Caddie O7). */
 
 .save-step__intro {
   font-size: var(--text-base);

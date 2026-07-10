@@ -26,6 +26,7 @@ import type { ScenarioDraft } from '@store/memoryModel'
 import type { ControlPreview } from '@store/controlPreview'
 import { copy } from '@ui/copy'
 import { composeHealthSheet, composeRegimeFutures } from '@ui/healthSheetChrome'
+import type { BandSavedAnchor } from '@ui/bandAnnotations'
 
 import type { Announcer } from './a11y'
 import { ControlSheet } from './controlSheet'
@@ -77,9 +78,12 @@ export interface HealthcareSheetProps {
   /** U12 ultramode: close-time focus fallback for when the opening trigger has unmounted
    *  (the via-AssumptionPanel route) — forwarded to the ControlSheet scaffold. */
   readonly restoreFallback?: () => HTMLElement | null
+  /** P3·U13 — the aged-vault wall-time anchor: the TwoFutures year-0 endpoint renames
+   *  "Today" → "Your save" when elapsed > 0 (one time base per screen). */
+  readonly savedAnchor?: BandSavedAnchor
 }
 
-export function HealthcareSheet({ open, draft, readout, preview, previewBlocking = false, onApply, onClose, restoreFallback }: HealthcareSheetProps) {
+export function HealthcareSheet({ open, draft, readout, preview, previewBlocking = false, onApply, onClose, restoreFallback, savedAnchor }: HealthcareSheetProps) {
   const announcerRef = useRef<Announcer | null>(null)
   const applied: Regime = draft.enhancedSubsidies === true ? 'enhanced' : 'reverted'
   const [picked, setPicked] = useState<Regime>(applied)
@@ -114,7 +118,7 @@ export function HealthcareSheet({ open, draft, readout, preview, previewBlocking
       picked === applied ? null : { kind: 'subsidy-regime', enhanced: picked === 'enhanced' }
     run(request, (outcome) => {
       if (outcome.kind === 'indeterminate') return { kind: 'error', reason: outcome.reason }
-      const composed = composeRegimeFutures(outcome, picked === 'enhanced', ages)
+      const composed = composeRegimeFutures(outcome, picked === 'enhanced', ages, savedAnchor)
       return composed === null ? { kind: 'error', reason: 'indeterminate' } : { kind: 'ready', view: composed }
     })
     // `run`'s identity carries `preview` (the crowned-offset anchor — insight 047). `ages` is

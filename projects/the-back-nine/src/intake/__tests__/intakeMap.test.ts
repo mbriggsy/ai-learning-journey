@@ -5,7 +5,9 @@ import {
   escalateQuote,
   firstStepDownYear,
   householdStockWeight,
+  medicareOnlyPriced,
   missingRequiredFacts,
+  spineMedicarePriced,
 } from '../intakeMap'
 import { contributionCeilingFor } from '../sanity'
 import { validateParams } from '@engine/simulate'
@@ -434,6 +436,59 @@ describe('R40 — the other-income construct wires into the overlay (the early-r
     // fires before the overlay assembly; missingRequiredFacts is empty so buildParams is non-null.)
     expect(params).not.toBeNull()
     expect(params!.overlay).toBeUndefined()
+  })
+
+  // The ultramode fold's DIVERGENCE WITNESS (6-lens convergence, 2026-07-10): the SS-only
+  // $0-account all-65+ household is exactly where "age says priceable" and "the run actually
+  // priced" split — buildOverlay's degenerate early-return fires UPSTREAM of the medicareOnly
+  // branch, so NO overlay exists and Medicare priced $0, while the age predicate still reads
+  // true. The disclosure MUST read the built output (spineMedicarePriced), or the verdict
+  // surface asserts "Medicare's premiums are already in these numbers" over a run that priced
+  // nothing — a confidently-false factual claim (the unit's own cardinal class).
+  it('the SS-only $0-portfolio all-65+ household: age predicate TRUE, spineMedicarePriced FALSE — the affirmation is withheld', () => {
+    const d = base({
+      people: [
+        retiredPerson({ birthYear: 1958, currentAge: 68, retirementAge: 64, pia: 24_000 }),
+        retiredPerson({ name: 'S', sex: 'female', birthYear: 1958, currentAge: 68, retirementAge: 64, pia: 16_000 }),
+      ],
+      health: { irmaaMagiSeed: [40_000, 40_000] },
+    })
+    expect(missingRequiredFacts(d)).toEqual([])
+    expect(medicareOnlyPriced(d), 'ages alone say priceable').toBe(true)
+    expect(buildSpineParams(d)!.overlay, 'but the run builds NO overlay').toBeUndefined()
+    expect(spineMedicarePriced(d), 'so the disclosure reads NOT priced').toBe(false)
+  })
+
+  // The direct wiring assertion (the review's testing-lens advisory): the all-65+ household
+  // WITH assets gets the Medicare-only overlay — healthcareEnabled true, ACA streams absent —
+  // and the disclosure seam reads the same built truth.
+  it('an all-65+ household WITH accounts builds the Medicare-only overlay (healthcareEnabled, no ACA streams) and spineMedicarePriced agrees', () => {
+    const d = base({
+      people: [
+        retiredPerson({ birthYear: 1958, currentAge: 68, retirementAge: 64 }),
+        retiredPerson({ name: 'S', sex: 'female', birthYear: 1958, currentAge: 68, retirementAge: 64, pia: 16_000 }),
+      ],
+      enteredAccounts: [
+        { ownerIndex: 0, kind: 'traditional-ira', valueToday: 500_000, manualBlend: { kind: 'exact', stockPct: 60, bondPct: 35, cashPct: 5 } },
+      ],
+      health: { irmaaMagiSeed: [40_000, 40_000] },
+    })
+    const params = buildSpineParams(d)
+    expect(params).not.toBeNull()
+    expect(params!.overlay?.healthcareEnabled, 'the medicareOnly branch fires').toBe(true)
+    expect(params!.overlay?.enrolledPremium, 'no ACA premium stream').toBeUndefined()
+    expect(params!.overlay?.slcsp, 'no SLCSP stream').toBeUndefined()
+    expect(params!.overlay?.irmaaMagiSeed, 'the seed rides').toEqual([40_000, 40_000])
+    expect(spineMedicarePriced(d), 'the disclosure seam reads the built truth').toBe(true)
+    expect(validateParams(params!)).toBeNull()
+  })
+
+  // The income-only sibling: a pension with no accounts ALSO opens the overlay (the guard fix
+  // above), and post-unit that overlay carries Medicare pricing — the built truth, disclosed.
+  it('the income-only all-65+ household prices Medicare too (the overlay exists, so the branch rides it)', () => {
+    const d = incomeOnlyDraft()
+    expect(buildSpineParams(d)!.overlay?.healthcareEnabled).toBe(true)
+    expect(spineMedicarePriced(d)).toBe(true)
   })
 })
 

@@ -500,8 +500,11 @@ function buildOverlay(d: ScenarioDraft, horizonYears: number): OverlayParams | u
   // reaches no ACA quote pair yet pays base Part B + IRMAA every year. Enable healthcare WITHOUT
   // the ACA streams: the priced pipeline (taxOverlay's `acaTable !== undefined && enrolledCount > 0`
   // gate) then fires for Medicare while ACA self-skips on its own `pre65 > 0` price gate. Mutually
-  // exclusive with `healthcareOn` (that needs a pre-65 member; this needs none) — single-sourced
-  // with the M3 disclosure predicate (medicareOnlyPriced) so enablement and disclosure never drift.
+  // exclusive with `healthcareOn` (that needs a pre-65 member; this needs none). NOTE the
+  // degenerate early-return above sits UPSTREAM of this branch: a $0-account/no-income all-65+
+  // household never reaches it (no overlay ⇒ Medicare priced $0), which is exactly why the UI
+  // disclosure reads `spineMedicarePriced` (the BUILT output), never this predicate (ultramode
+  // fold 2026-07-10 — the enablement/disclosure "never drift" claim was false at the early return).
   const medicareOnly = medicareOnlyPriced(d)
 
   const anyContributions = accounts.some(
@@ -641,20 +644,34 @@ export function healthcarePriced(d: ScenarioDraft): boolean {
 /** P3·U11 follow-up (the post-65 Medicare pricing unit) — the all-known-ages, all-65+ household:
  *  every member is 65+, so the household reaches no ACA marketplace quote pair, yet it pays base
  *  Part B + the IRMAA surcharge every year. This is the EXACT complement of `healthcarePriced`'s
- *  `ages.some(a < 65)` over known ages — the ONE seam deciding Medicare-only enablement, so
- *  buildOverlay (which flips `healthcareEnabled` on it, WITHOUT the ACA streams) and Result's
- *  route-aware "was Medicare priced this run" term both READ this predicate — enablement and
- *  disclosure can never drift (insight 020/027: one predicate, every consumer). It supersedes the
- *  retired UI-only age-predicate `medicareUnpriced` (now the pricing-fact seam `showMedicarePricedNote`,
- *  keyed off the decision never ages — insight 080). An unknown age is NOT a claim (the missing-fact gate has not resolved it),
- *  so the whole household must be age-known: a household with a still-unknown age reads false here
- *  AND false in `healthcarePriced` unless a KNOWN member is pre-65. */
+ *  `ages.some(a < 65)` over known ages — buildOverlay's Medicare-only ENABLEMENT branch (age IS
+ *  Medicare's enablement domain). It is NOT the disclosure seam: buildOverlay's degenerate
+ *  early-return ($0 accounts + no premium + no income ⇒ NO overlay at all) sits UPSTREAM of this
+ *  predicate, so "age says priceable" and "the run actually priced" genuinely diverge there —
+ *  the ultramode fold's SS-only $0-portfolio witness. The disclosure reads `spineMedicarePriced`
+ *  below, which reads the BUILT params' own overlay decision (the producer's output, never a
+ *  re-derivation of its inputs — insight 080's fold-time sharpening). An unknown age is NOT a
+ *  claim (the missing-fact gate has not resolved it), so the whole household must be age-known:
+ *  a household with a still-unknown age reads false here AND false in `healthcarePriced` unless
+ *  a KNOWN member is pre-65. */
 export function medicareOnlyPriced(d: ScenarioDraft): boolean {
   return (
     d.people.length > 0 &&
     d.people.every((p) => p.currentAge !== undefined) &&
     !d.people.some((p) => p.currentAge! < 65)
   )
+}
+
+/** The SPINE-route "was Medicare priced in this run" — read off the BUILT params' own overlay
+ *  decision, never re-derived from the draft's ages. `buildSpineParams` is the exact builder the
+ *  headline run uses, so this is true iff the run's overlay carried `healthcareEnabled` — which
+ *  the degenerate early-return household ($0 accounts, no premium, no income ⇒ overlay absent,
+ *  Medicare priced $0) correctly reads as FALSE even though `medicareOnlyPriced` (ages) is true.
+ *  A missing-facts draft (builder null) also reads false — no claim before a run exists. The
+ *  date route never calls this (dateSearch forces `healthcareEnabled` on every candidate —
+ *  structurally priced; Result's `isDateRoute` term short-circuits first). */
+export function spineMedicarePriced(d: ScenarioDraft): boolean {
+  return buildSpineParams(d)?.overlay?.healthcareEnabled === true
 }
 
 /**

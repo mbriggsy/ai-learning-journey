@@ -5,7 +5,10 @@ import { cleanup, render, screen, fireEvent } from '@testing-library/react'
 import { Result } from '../Result'
 import { appModel } from '../appModel'
 import { resolvedFocusKey } from '../answerView'
+import { DEV_SEEDS } from '../devSeeds'
 import { copy } from '@ui/copy'
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import type { EnteredAccount } from '@shared/model'
 
 /**
@@ -210,14 +213,13 @@ describe('the healthcare door — the engine PRICED domain only, categorical (co
 
   it('the ROTH sheet wears the priced-Medicare residual note for a post-65-only household (the Result-level threading proof through a REAL child — insight 066)', () => {
     plantResolved()
-    appModel.update((d) => ({
-      ...d,
-      people: [
-        { ...d.people[0], currentAge: 68 },
-        { ...d.people[1], currentAge: 66 },
-      ],
-      enteredAccounts: [pretaxAccount],
-    }))
+    // The disclosure seam reads the BUILT params (spineMedicarePriced — the ultramode fold,
+    // 2026-07-10), which honestly refuses to claim anything for a draft that cannot build. So the
+    // note arms ride a COMPLETE, engine-proven all-65+ draft (the `retired` dev seed) instead of
+    // this file's deliberately-skeletal door-gating draft (U12's demotion law: a resolved verdict
+    // never coexists with missing facts in production, so the skeleton+note pairing was never a
+    // real shape).
+    appModel.update(() => ({ ...DEV_SEEDS.retired }))
     renderResult()
     fireEvent.click(rothDoor()!)
     expect(screen.getByText(copy.rothMedicareResidualNote)).toBeInTheDocument()
@@ -249,5 +251,23 @@ describe('the healthcare door — the engine PRICED domain only, categorical (co
     renderResult()
     fireEvent.click(rothDoor()!)
     expect(screen.queryByText(copy.rothMedicareResidualNote)).toBeNull()
+  })
+
+  it('Result derives the priced-Medicare disclosure from the BUILT params (spineMedicarePriced), never the age predicate — the source-bind pin (insight 032)', () => {
+    // The ultramode fold's divergence household (the SS-only $0-account all-65+ couple:
+    // buildOverlay's degenerate early-return fires UPSTREAM of the medicareOnly branch — NO
+    // overlay, Medicare priced $0, while the AGE predicate still reads "priceable") is
+    // STRUCTURALLY unreachable through any render channel this harness can drive without
+    // vacuousness (insight 029): the hero notes need a real planted answer these door tests
+    // don't stand up, and every sheet channel needs an account — which would destroy the
+    // divergence (an account defeats the early return). The behavioral chain is pinned at both
+    // ends — spineMedicarePriced's divergence witness (intakeMap.test) and the components'
+    // note-iff-prop pins — so THIS pin closes the one remaining link: Result's derivation line.
+    // A revert to the age predicate (the exact shipped defect) goes red here (proven 2026-07-10).
+    const src = readFileSync(resolve(__dirname, '../Result.tsx'), 'utf8')
+    expect(src, 'the disclosure derivation reads the built params').toMatch(/spineMedicarePriced\(/)
+    expect(src, 'the age predicate must never re-enter Result (insight 080)').not.toMatch(
+      /medicareOnlyPriced/,
+    )
   })
 })

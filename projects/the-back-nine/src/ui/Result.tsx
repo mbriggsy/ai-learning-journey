@@ -15,7 +15,7 @@
  */
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import { AnswerStrip } from '@intake/AnswerStrip'
-import { buildControlPreviewParams, healthcarePriced, isDateRoute, medicareOnlyPriced, missingRequiredFacts } from '@intake/intakeMap'
+import { buildControlPreviewParams, healthcarePriced, isDateRoute, missingRequiredFacts, spineMedicarePriced } from '@intake/intakeMap'
 import { useLiveAnnouncer } from '@intake/a11y'
 import { BudgetBuilder } from '@intake/BudgetBuilder'
 import { SequencingControl } from '@intake/SequencingControl'
@@ -155,15 +155,18 @@ export function Result({
   // 2026-07-03: no hollow door).
   const healthPriced = healthcarePriced(snapshot.draft)
   // P3·U11 follow-up (the post-65 Medicare pricing unit, 2026-07-10) — "was Medicare priced in this
-  // run?", route-aware and single-sourced with the ENGINE's OWN pricing gate, NEVER ages (insight
-  // 080: the retired age-predicate became a silent lie once dateSearch turned into a second producer
-  // of healthcareEnabled). Spine: buildOverlay sets healthcareEnabled iff healthcarePriced ||
-  // medicareOnlyPriced. Date route: dateSearch.ts:222 forces healthcareEnabled true on every
-  // candidate, so Medicare is priced structurally. The household with a priced run but NO Healthcare
-  // door (all-65+ — healthcarePriced needs a pre-65 member) wears the "Medicare is priced in"
-  // affirmation + the narrowed residual (the composing seam takes pricing FACTS, not people[]).
-  const medicarePriced =
-    isDateRoute(snapshot.draft) || healthPriced || medicareOnlyPriced(snapshot.draft)
+  // run?", route-aware and read off the BUILT params' own overlay decision, never ages and never a
+  // re-derivation of the builder's inputs (insight 080; the ultramode fold's sharpening: the age
+  // predicate diverged from the run at buildOverlay's degenerate early-return — the SS-only
+  // $0-portfolio all-65+ household built NO overlay yet read "priced" from its ages). Spine:
+  // `spineMedicarePriced` = the headline builder's own output. Date route: dateSearch.ts:222 forces
+  // healthcareEnabled true on every candidate, so Medicare is priced structurally. The household
+  // with a priced run but NO Healthcare door (all-65+ — healthcarePriced needs a pre-65 member)
+  // wears the "Medicare is priced in" affirmation + the narrowed residual.
+  const medicarePriced = useMemo(
+    () => isDateRoute(snapshot.draft) || spineMedicarePriced(snapshot.draft),
+    [snapshot.draft],
+  )
   const medicarePricedNote = showMedicarePricedNote({ medicarePriced, reachesHealthDoor: healthPriced })
   const enhancedApplied = snapshot.draft.enhancedSubsidies === true
   // The wire's per-year healthcare series (spine headline runs only — presence-keyed).

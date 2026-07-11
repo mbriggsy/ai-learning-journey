@@ -50,7 +50,16 @@
  *   (simulate.ts gates `contributions` on it), so a decumulation-only household's answer is
  *   byte-identical under any CONTRIBUTION_YEAR — and the annual limit bump would otherwise
  *   fire a false "your date" note at essentially every returning retired household.
- *
+ * - An ENGINE-DOMAIN change has NO clock — a structural blind spot, named (the Medicare
+ *   pricing unit's ultramode review, 2026-07-10, 3-lens convergence, voted real-but-
+ *   immaterial): these clocks diff CONSTANT vintages (stamp fields), never whether the APP
+ *   ITSELF started pricing something it previously didn't. A pre-unit all-65+ vault
+ *   recomputes LOWER on return (Medicare now priced) with every stamp equal — no note.
+ *   Held immaterial at ship: the installed base is ~zero (pre-launch, dev plants only) and
+ *   the drift direction is CONSERVATIVE (the answer drops — never calm-but-wrong). The
+ *   sanctioned mechanism WHEN a real installed base exists is a Q7 saved-era entry
+ *   (`appDefaults.ts` — the add-only era map exists for exactly this class); any future
+ *   engine-domain unit shipping against real vaults must mint one, not a new clock here.
  * TWO PREDICATES, NOT ONE (the review's hero-echo catch): `rulesMoved` = a clock whose
  * firing means the CURRENT recompute genuinely differs from the saved answer (the hero's
  * "Some rules changed — this answer uses today's" echo may only ride THAT); `anyStale` =

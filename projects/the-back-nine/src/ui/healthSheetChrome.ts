@@ -306,8 +306,13 @@ export function composeRegimeFutures(
  * still-working all-65+ household read "Medicare not priced" over numbers Medicare had already moved.
  * Keying the disclosure off the RUN's own pricing decision closes that by construction, and this
  * signature has no `people[]` parameter, so no age can reach it to re-open the equivalence (the
- * age-mutation witness is type-level: there is no age to mutate). The caller supplies the decision:
- * `medicarePriced = isDateRoute || healthcarePriced || medicareOnlyPriced` (the engine's own gate).
+ * age-mutation witness is type-level: there is no age to mutate). The caller supplies the decision
+ * READ OFF THE BUILT PARAMS, never re-derived from the builder's inputs:
+ * `medicarePriced = isDateRoute || spineMedicarePriced` — where `spineMedicarePriced` returns
+ * `buildSpineParams(d)?.overlay?.healthcareEnabled === true`. (The first shipped caller re-derived
+ * via the age predicate `medicareOnlyPriced` and diverged from the run at buildOverlay's degenerate
+ * early-return — the SS-only $0-portfolio household built NO overlay yet read "priced"; the
+ * ultramode fold 2026-07-10 closed it. A producer's output is the only non-drifting source.)
  *
  * The residual is WITHHELD when the household reaches the Healthcare door: that sheet already carries
  * its own residual (`controlHealthOmissionsNote`), so one honest home per fact. The two lines SHIP

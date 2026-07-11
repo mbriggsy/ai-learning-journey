@@ -407,6 +407,22 @@ describe('BudgetBuilder — the reconciliation readout (build-gate 1: the OOP-me
     expect(screen.getByText(slots.budgetRunningTotal(formatMoney(30_000)))).toBeInTheDocument()
   })
 
+  it('a fresh Add-a-line row (amount untouched) keeps the running-total + tier-split lines ABSENT; the first real dollar starts the scoreboard (Briggsy live read 2026-07-11)', () => {
+    // One "Add a line" click mints a NaN-amount row; a readout that then speaks "lines add up
+    // to about $0 · essentials $0 · extras $0" over an untouched field is the blank-becomes-a-
+    // spoken-zero shape (the R19 family, one level up — his verbatim: "weirdness w/ 78k/year
+    // and 0/year lines"). The totals wait for the first FINITE amount anywhere in the list.
+    const draft = draftWith((d) => ({ ...d, annualSpendingReal: 78_000 }))
+    render(<Host draft={draft} />)
+    expect(screen.getByText(slots.budgetAnchorLead(formatMoney(78_000)))).toBeInTheDocument()
+    fireEvent.click(addBtn())
+    expect(screen.queryByText(slots.budgetRunningTotal(formatMoney(0)))).not.toBeInTheDocument()
+    expect(screen.queryByText(slots.budgetTierSplit(formatMoney(0), formatMoney(0)))).not.toBeInTheDocument()
+    commitField(screen.getByLabelText(copy.budgetAmountLabel), '12,000')
+    expect(screen.getByText(slots.budgetRunningTotal(formatMoney(12_000)))).toBeInTheDocument()
+    expect(screen.getByText(slots.budgetTierSplit(formatMoney(12_000), formatMoney(0)))).toBeInTheDocument()
+  })
+
   it('a ramped budget shows the anchor-not-steady-state note; a lifelong-at-0 one does not', () => {
     const ramped = draftWith((d) => ({
       ...d,

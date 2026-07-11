@@ -298,6 +298,13 @@ export function BudgetBuilder({ open, draft, onApply, onEscape, onClose, variant
     0,
   )
   const extrasAt0 = running - essentialsAt0
+  // A row that carries no number yet contributes nothing to `running` — and a readout that
+  // SPEAKS "$0" for lines the user never valued is the blank-becomes-a-spoken-zero shape (the
+  // R19 law's readout face; Briggsy's live read 2026-07-11: one "Add a line" click made the
+  // box announce "lines add up to about $0 · essentials $0 · extras $0" over an untouched
+  // field). The running total + tier split wait for the FIRST real dollar anywhere in the
+  // list; all-NaN fresh rows keep the calm anchor-only readout the empty builder shows.
+  const anyValued = items.some((it) => Number.isFinite(it.annualAmountReal))
   // validateBudgetItems is index-keyed (rows and items share order); touched is ID-keyed.
   const errorsFor = (index: number, id: number) =>
     attempted || touched.has(id) ? validation.errors.filter((e) => e.index === index) : []
@@ -340,10 +347,10 @@ export function BudgetBuilder({ open, draft, onApply, onEscape, onClose, variant
             )}
           </>
         )}
-        {items.length > 0 && (
+        {anyValued && (
           <p className="budget-readout__line">{slots.budgetRunningTotal(formatMoney(running))}</p>
         )}
-        {items.length > 0 && (
+        {anyValued && (
           <p className="budget-readout__line">
             {slots.budgetTierSplit(formatMoney(essentialsAt0), formatMoney(extrasAt0))}
           </p>

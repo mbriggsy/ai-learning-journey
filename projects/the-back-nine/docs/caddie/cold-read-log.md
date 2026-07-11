@@ -42,8 +42,15 @@ shown')."* Readback matched `copy.txt` — capture clean.
 > cleared"* — including BOTH parked stale looks (the door-below-disclaimer reorder + the
 > update-route landing). **Ride-alongs out of the walk:** the state-tax council
 > (wf_cc065e3b-bc1) + the filed state-tax engine unit (TODO item 11, roster {NC,PA → SC,GA,FL,DE})
-> + the OPEN ask-for-Medicare-extras question (his GO/no-GO owed). `spendHelp` REMAINS unwalked —
-> its first read now also covers the new income-tax fence line.
+> + the OPEN ask-for-Medicare-extras question (his GO/no-GO owed — **GO given later the same
+> evening; pre-build council wf_efc6ece2-675**). **THE SPENDHELP WALK LANDED (same evening,
+> via the stale vault's update route):** the fence line itself drew no comment (seen live
+> without objection — not formally cleared), and the walk caught a REAL defect: one
+> "Add a line" click in the budget builder made the readout speak a three-line ZERO scoreboard
+> ("lines add up to about $0 · essentials $0 · extras $0") over a field he never touched — his
+> "weirdness w/ 78k/year and 0/year lines." Fixed same session (the totals now wait for the
+> first FINITE amount — `anyValued`, BudgetBuilder.tsx; mutant-proven arm; live re-verified
+> both directions), anti-pattern folded into the corpus.
 
 ### Card 1 — `?seed=retired` (the spine affirmation + residual). **toneVerdict: READS-CLEAN on the unit's lines · pre-existing tensions noted.**
 The affirmation was read as cause-naming by every lens — no cheerleading flag anywhere; the

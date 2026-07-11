@@ -192,6 +192,10 @@ supersedes anything derived from this file.
 ## Anti-patterns (things he has explicitly rejected — flag on sight)
 
 - Color as the only signal for any state. WCAG AA contrast is not a substitute.
+- A totals/readout line speaking "$0" over fields the user hasn't valued yet (one Add-a-line
+  click → a three-line zero scoreboard). Totals wait for the first real number — a blank must
+  never become a SPOKEN $0. *(His spend-step walk, 2026-07-11: "weirdness w/ 78k/year and
+  0/year lines.")*
 - Cutting/folding teaching or disclosure content to make a surface fit.
 - Making the reader derive a number; a delta without both endpoints.
 - Em-dash appositions / multi-fact sentences on load-bearing dollar figures.

@@ -299,6 +299,20 @@
   .confidence-reveal[data-twopane]:has(.cs-medicare-note) > .reveal__subordinates {
     gap: var(--space-1);
   }
+  /* The Linux wrap-drift reservoir, round 2 (CI 2026-07-11, run 29170580301): the
+     MAGNITUDE-HONEST residual (the hawk's veto on "a little tighter", council wf_cc065e3b-bc1)
+     re-lengthened the pair, and ubuntu's hinting drift (the 2026-07-09 saga's exact mechanism,
+     documented above) pushed the BUDGET frame's protected R13 disclaimer 13px past the fold ON
+     CI ONLY (Windows was 17/17 green). The gaps above are already at their sanctioned floor,
+     so the pair pays in LEADING: body 1.55 → snug 1.4 on the two medicare notes ≈ −2.7px per
+     wrapped line × ~6–7 pair lines ≈ 16–19px — platform-independent arithmetic, and the words
+     are untouched (the degrade law: whitespace/density only, content never cut). The budget
+     REAL fit arm pins the computed ratio, so deleting this rule is red on EVERY platform
+     (insight 075's standing encoding), never only under CI's taller metrics. */
+  .confidence-reveal[data-twopane] .cs-medicare-note,
+  .confidence-reveal[data-twopane] .cs-medicare-residual {
+    line-height: var(--leading-snug);
+  }
   /* the completion-actions chain UNWRAPS (both wrappers display:contents) so the save slot, the
      backup door, the in-frame disclaimer, and the quiet-door row become grid items directly —
      the doors can then seat BELOW both panes while the save slot stays welded under the words.

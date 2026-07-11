@@ -785,7 +785,7 @@ export const copy = {
   verdictMedicarePriced:
     'Medicare’s premiums for the two of you are already in these numbers — the base Part B premium and its income-based surcharge.',
   verdictMedicareResidual:
-    'That’s the only piece this tool adds by itself. A Part D drug plan, a Medigap supplement plan, and the rare Part A premium count only inside the spending you gave us. State income tax isn’t counted — a real yearly bill in a taxing state, not a rounding error. The base premium is held flat in today’s dollars too, so the true picture could sit tighter than shown.',
+    'That’s the only piece this tool adds by itself. A Part D drug plan, a Medigap supplement plan, and the rare Part A premium live inside the spending you gave us. State income tax isn’t counted — a real yearly bill in a taxing state — and the base premium is held flat in today’s dollars, so the true picture could sit tighter than shown.',
   rothMedicareResidualNote:
     'The income surcharge a conversion can trip two years later is now part of these numbers. One modeling choice remains: the base premium is held level in today’s dollars, so a conversion that crosses a surcharge step could look a shade easier here than in real life.',
 

@@ -181,6 +181,19 @@ async function assertMedicareNote(page: Page, expected: boolean): Promise<void> 
   }
 }
 
+async function assertMedicareSnugLeading(page: Page): Promise<void> {
+  // The Linux wrap-drift reservoir (CI 2026-07-11, run 29170580301): the pair pays for the
+  // magnitude-honest residual in LEADING (body 1.55 → snug 1.4) — a platform-independent
+  // delta pinned here by computed style, so deleting the rule goes red on EVERY platform
+  // (insight 075's standing encoding), never only under ubuntu's taller text metrics.
+  const ratio = await page.locator('.cs-medicare-residual').evaluate((el) => {
+    const cs = getComputedStyle(el)
+    return parseFloat(cs.lineHeight) / parseFloat(cs.fontSize)
+  })
+  expect(ratio, 'the medicare pair rides --leading-snug (~1.4)').toBeGreaterThan(1.35)
+  expect(ratio, 'the medicare pair rides --leading-snug (~1.4)').toBeLessThan(1.45)
+}
+
 // ── the spine frame matrix: {budget, retired, health} × {REAL, TIER, SHOWCASE} ────────────────
 
 for (const { seed, medicareNote } of SPINE_SEEDS) {
@@ -191,6 +204,7 @@ for (const { seed, medicareNote } of SPINE_SEEDS) {
         await gotoSeedFinal(page, seed)
         await assertResolvedSpine(page)
         await assertMedicareNote(page, medicareNote)
+        if (medicareNote) await assertMedicareSnugLeading(page)
         await assertOneVisibleDisclaimer(page, 'laptop')
         await assertResultPadding(page, '32px') // 791 ≤ 840 — the density tier serves his window
         await assertFrameFits(page, true)

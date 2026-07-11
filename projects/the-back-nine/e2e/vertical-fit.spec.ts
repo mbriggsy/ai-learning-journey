@@ -301,7 +301,7 @@ test.describe(`?seed=date65 — priced Medicare on the date route, no false "unp
       'the priced-Medicare affirmation must render on the date route',
     ).toBeVisible()
     await expect(
-      page.getByText('could sit a little tighter than shown'),
+      page.getByText('could sit tighter than shown'),
       'the narrowed residual must ship WITH the affirmation',
     ).toBeVisible()
 

@@ -77,7 +77,7 @@ export const copy = {
   qSpendHeading: 'What does your life cost?',
   spendLabel: 'Household spending, all in',
   spendHelp:
-    'Everything — housing, food, fun, and the medical costs you pay out of pocket (including any Part D or Medigap premiums). Leave out the Medicare Part B premium and its income surcharge — the tool adds those on top. The whole household, not just the bills that feel like retirement.',
+    'Everything — housing, food, fun, and the medical costs you pay out of pocket (including any Part D or Medigap premiums). Leave out the Medicare Part B premium and its income surcharge — the tool adds those on top. Leave out income taxes too: the tool works out federal tax from your withdrawals itself, and state income tax isn’t counted. The whole household, not just the bills that feel like retirement.',
   periodMonth: 'Each month',
   periodYear: 'Each year',
   periodLegend: 'That figure is…',
@@ -785,7 +785,7 @@ export const copy = {
   verdictMedicarePriced:
     'Medicare’s premiums for the two of you are already in these numbers — the base Part B premium and its income-based surcharge.',
   verdictMedicareResidual:
-    'A few Medicare costs stay in your own spending — a Part D drug plan, a Medigap supplement plan, and the rare Part A premium. State income tax isn’t counted either, and the base premium is held flat in today’s dollars, so the true picture could sit a little tighter than shown.',
+    'That’s the only piece this tool adds by itself. A Part D drug plan, a Medigap supplement plan, and the rare Part A premium count only inside the spending you gave us. State income tax isn’t counted — a real yearly bill in a taxing state, not a rounding error. The base premium is held flat in today’s dollars too, so the true picture could sit tighter than shown.',
   rothMedicareResidualNote:
     'The income surcharge a conversion can trip two years later is now part of these numbers. One modeling choice remains: the base premium is held level in today’s dollars, so a conversion that crosses a surcharge step could look a shade easier here than in real life.',
 
@@ -1279,7 +1279,7 @@ export const slots = {
    *  median-scoped for v1 (the representative retired household; $X also covers any lost
    *  pension/earned income, the minority case) — revisit when D2 wires real households. */
   verdictSurvivorStepDown: (perMonthDropFormatted: string): string =>
-    `If one of you is on your own later, the household’s monthly income steps down about $${perMonthDropFormatted} — one Social Security benefit ends. Taxes also move to a single filer’s brackets.`,
+    `If one of you is on your own later, the household’s monthly income steps down about $${perMonthDropFormatted} — as one Social Security benefit ends. Taxes also move to a single filer’s brackets.`,
 
   // --- P3·U10 — the two-futures delta readouts (R10/R12: the survivor's number, natural-frequency
   // FIRST, the "~N years" a hedged secondary, N ≤ 0 a calm in-frame state — never suppressed and

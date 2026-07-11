@@ -7,9 +7,12 @@ import { REAL, TIER, SHOWCASE, FLOOR, PHONE, gotoSeedFinal } from './reviewSurfa
  *
  * THE FRAME CONTRACT it pins (tokens.css `--laptop-fit-height` carries the law):
  *  - A resolved two-pane answer fits ONE laptop frame; the quiet doors (`.result-quiet-row`) are
- *    the ONLY sanctioned below-fold casualty. The verdict, the unpriced-Medicare disclosure, the
- *    band, and the R13 disclaimer are PROTECTED (the Honesty-Hawk veto: a reassuring verdict
- *    in-frame with "this can be wrong" scrolled out of sight is the calm-but-wrong sin).
+ *    the sanctioned below-fold casualty, and — on the tallest composite frame only (an all-65+
+ *    writable stale return) — the UNPROTECTED backup door (`.result-backup-door`, DOM-ordered
+ *    below the disclaimer, 2026-07-10) degrades with them. The verdict, the priced-Medicare
+ *    disclosure lines (affirmation + narrowed residual), the band, and the R13 disclaimer are
+ *    PROTECTED (the Honesty-Hawk veto: a reassuring verdict in-frame with "this can be wrong"
+ *    scrolled out of sight is the calm-but-wrong sin).
  *  - The DATE route scrolls BY DESIGN (both graphs stacked — content-necessary, Briggsy-accepted
  *    2026-07-08); its honesty contract is ORDER: graphs → in-frame disclaimer → doors, doors last.
  *  - TWO disclaimer mounts, exactly ONE visible per tier (laptop = in-frame, <68rem = trailing).
@@ -43,10 +46,12 @@ import { REAL, TIER, SHOWCASE, FLOOR, PHONE, gotoSeedFinal } from './reviewSurfa
 // The viewport constants (REAL/TIER/SHOWCASE/FLOOR/PHONE) and the settle recipe live in
 // e2e/reviewSurface.ts — the ONE canonical home, shared with the Caddie cold-read walk.
 
-/** The three spine seeds the council named for the frame contract. `cs-medicare-note` is
- *  per-seed HONEST, not blanket: the disclosure renders only for an all-65+ household
- *  (healthSheetChrome.medicareUnpriced) — `retired` (66/65) and `budget` (68/70) carry it;
- *  `health` (61/59, the ACA-priced household) must NOT (it gets the Healthcare door instead). */
+/** The three spine seeds the council named for the frame contract. The priced-Medicare disclosure
+ *  lines (`.cs-medicare-note` affirmation + `.cs-medicare-residual`) are per-seed HONEST, not
+ *  blanket: they render only for an all-65+ household with NO ACA door (showMedicarePricedNote,
+ *  keyed off the run's pricing facts never ages — insight 080) — `retired` (66/65) and `budget`
+ *  (68/70) carry them; `health` (61/59, the ACA-priced household) must NOT (it reaches the
+ *  Healthcare door, whose sheet carries the residual — one honest home per fact). */
 const SPINE_SEEDS = [
   { seed: 'budget', medicareNote: true },
   { seed: 'retired', medicareNote: true },
@@ -78,14 +83,26 @@ type FrameReport = {
  * `counted` guards the walk itself: a blank/error page yields near-zero rendered elements and
  * MUST fail the companion floor, never pass an empty-offender check (insight 029).
  */
-async function frameReport(page: Page, excludeQuietRow: boolean): Promise<FrameReport> {
-  return page.evaluate((excludeQuiet) => {
+async function frameReport(
+  page: Page,
+  excludeQuietRow: boolean,
+  excludeBackupDoor = false,
+): Promise<FrameReport> {
+  return page.evaluate(({ excludeQuiet, excludeBackup }) => {
     const vh = window.innerHeight
     const quiet = document.querySelector('.result-quiet-row')
+    const backup = document.querySelector('.result-backup-door')
     const offenders: Array<{ desc: string; bottom: number }> = []
     let counted = 0
     for (const el of Array.from(document.querySelectorAll('body *'))) {
       if (excludeQuiet && quiet !== null && (quiet.contains(el) || el.contains(quiet))) continue
+      // The backup door is an UNPROTECTED durability affordance, DOM-ordered BELOW the disclaimer
+      // (Result.tsx). On the tallest composite frame (an all-65+ writable stale return) it is a
+      // sanctioned below-fold casualty, so its subtree AND its ancestor chain are excluded (an
+      // ancestor's bottom is driven by the door it contains — the quiet-row precedent). The
+      // PROTECTED disclaimer is a SIBLING <footer>, never an ancestor of the door, so it stays
+      // measured — this arm still fails if the caveat itself breaches the fold.
+      if (excludeBackup && backup !== null && (backup.contains(el) || el.contains(backup))) continue
       const style = window.getComputedStyle(el)
       if (style.display === 'none' || style.visibility === 'hidden') continue
       // Viewport-anchored chrome (the update toast) sits outside document flow — not a fit fact.
@@ -103,15 +120,19 @@ async function frameReport(page: Page, excludeQuietRow: boolean): Promise<FrameR
       }
     }
     return { counted, offenders }
-  }, excludeQuietRow)
+  }, { excludeQuiet: excludeQuietRow, excludeBackup: excludeBackupDoor })
 }
 
 /** A resolved two-pane answer renders hundreds of elements; a walk that counted fewer than this
  *  measured a broken page, not the frame. */
 const WALK_FLOOR = 60
 
-async function assertFrameFits(page: Page, excludeQuietRow: boolean): Promise<void> {
-  const report = await frameReport(page, excludeQuietRow)
+async function assertFrameFits(
+  page: Page,
+  excludeQuietRow: boolean,
+  excludeBackupDoor = false,
+): Promise<void> {
+  const report = await frameReport(page, excludeQuietRow, excludeBackupDoor)
   expect(report.counted, 'frame walk counted too few elements — page did not render').toBeGreaterThan(
     WALK_FLOOR,
   )
@@ -147,9 +168,17 @@ async function assertResultPadding(page: Page, px: '32px' | '40px'): Promise<voi
 }
 
 async function assertMedicareNote(page: Page, expected: boolean): Promise<void> {
-  const note = page.locator('.cs-medicare-note')
-  if (expected) await expect(note, 'the unpriced-Medicare disclosure must render').toBeVisible()
-  else await expect(note, 'a pre-65 household must NOT carry the Medicare disclosure').toHaveCount(0)
+  // The priced-Medicare disclosure is TWO lines that ship together (hard constraint 2): the
+  // affirmation (.cs-medicare-note) + the narrowed residual (.cs-medicare-residual).
+  const affirm = page.locator('.cs-medicare-note')
+  const residual = page.locator('.cs-medicare-residual')
+  if (expected) {
+    await expect(affirm, 'the priced-Medicare affirmation must render').toBeVisible()
+    await expect(residual, 'the narrowed residual must render WITH the affirmation').toBeVisible()
+  } else {
+    await expect(affirm, 'a door household carries no hero-level Medicare lines').toHaveCount(0)
+    await expect(residual, 'a door household carries no hero-level Medicare lines').toHaveCount(0)
+  }
 }
 
 // ── the spine frame matrix: {budget, retired, health} × {REAL, TIER, SHOWCASE} ────────────────
@@ -242,6 +271,54 @@ test.describe(`?seed=dip — the date route's order contract (${REAL.width}×${R
     })
     expect(maxOtherBottom, 'content renders BELOW the quiet doors — doors must be last').toBeLessThanOrEqual(
       doors.y + doors.height + 0.5,
+    )
+  })
+})
+
+// ── the all-65+ still-working date route (?seed=date65): priced Medicare, no false "unpriced" ──
+// The insight-080 fix, live on the date route: dateSearch.ts:222 forces healthcareEnabled true on
+// every candidate, so a still-working all-65+ household PRICES Medicare even with no ACA door. The
+// retired age-predicate called this exact household "Medicare not priced" over numbers Medicare had
+// already moved; the surface now names it PRICED (affirmation + narrowed residual, shipped together)
+// and never a false unpriced claim. The date route scrolls by design, so this arm pins the ORDER
+// contract plus the priced-in naming, never a full one-frame fit.
+
+test.describe(`?seed=date65 — priced Medicare on the date route, no false "unpriced" note (${REAL.width}×${REAL.height})`, () => {
+  test.use({ viewport: REAL, deviceScaleFactor: 2.5 })
+  test('the date surface names Medicare priced (affirmation + residual) and holds graphs → disclaimer → doors', async ({ page }) => {
+    await gotoSeedFinal(page, 'date65')
+    // Presence companions (insight 029): the date hero two-pane stamped, BOTH graphs drawn, doors offered.
+    await expect(page.locator('.fod-reveal[data-twopane]')).toBeVisible()
+    await expect(page.locator('.fod-band')).toBeVisible()
+    await expect(page.locator('.fod-ladder')).toBeVisible()
+    expect(await page.locator('.result-quiet-row button').count()).toBeGreaterThanOrEqual(2)
+    await assertOneVisibleDisclaimer(page, 'laptop')
+
+    // Medicare is named PRICED, never falsely "unpriced" — the affirmation and the narrowed residual
+    // both render on the date surface (distinctive substrings of verdictMedicarePriced / Residual).
+    await expect(
+      page.getByText('are already in these numbers'),
+      'the priced-Medicare affirmation must render on the date route',
+    ).toBeVisible()
+    await expect(
+      page.getByText('could sit a little tighter than shown'),
+      'the narrowed residual must ship WITH the affirmation',
+    ).toBeVisible()
+
+    // ORDER (the date route's honesty contract): graphs → in-frame disclaimer → doors, doors last.
+    const box = async (selector: string) => {
+      const b = await page.locator(selector).boundingBox()
+      expect(b, `${selector} must render with a real box`).not.toBeNull()
+      return b as NonNullable<typeof b>
+    }
+    const graphs = await box('.fod-graphs')
+    const disclaimer = await box('footer.disclaimer.disclaimer--in-frame')
+    const doors = await box('.result-quiet-row')
+    expect(disclaimer.y, 'the R13 disclaimer must sit BELOW both graphs').toBeGreaterThanOrEqual(
+      graphs.y + graphs.height - 0.5,
+    )
+    expect(doors.y, 'the quiet doors must sit BELOW the R13 disclaimer').toBeGreaterThanOrEqual(
+      disclaimer.y + disclaimer.height - 0.5,
     )
   })
 })
@@ -410,7 +487,30 @@ test.describe(`the vault return (?vault=stale) — the gate + the staleness-echo
     ).toBe('4px')
     await assertOneVisibleDisclaimer(page, 'laptop')
     await assertResultPadding(page, '32px') // 791 ≤ 840 — the density tier serves this frame too
-    await assertFrameFits(page, true)
+
+    // THE FOLD-PRIORITY FIX (the Medicare-pricing unit, 2026-07-10 — the pulled-forward TODO-7 /
+    // Caddie-#3 inversion): this all-65+ writable stale return is the tallest composite frame —
+    // it carries the priced-Medicare pair AND the staleness echo AND the backup door together.
+    // Prove the frame is NOT vacuous (the priced-Medicare affirmation renders) and that the
+    // UNPROTECTED backup door is DOM- + visually BELOW the PROTECTED disclaimer, so any overflow
+    // sacrifices the door before the caveat (the Hawk's veto).
+    await expect(page.locator('.cs-medicare-note')).toBeVisible()
+    const foldOrder = await page.evaluate(() => {
+      const disc = document.querySelector('footer.disclaimer.disclaimer--in-frame')
+      const door = document.querySelector('.result-backup-door')
+      if (disc === null || door === null) return null
+      return { discBottom: disc.getBoundingClientRect().bottom, doorTop: door.getBoundingClientRect().top }
+    })
+    expect(foldOrder, 'the disclaimer and the backup door must both render on this frame').not.toBeNull()
+    expect(
+      foldOrder!.doorTop,
+      'the backup door must sit BELOW the R13 disclaimer (the caveat wins the fold)',
+    ).toBeGreaterThanOrEqual(foldOrder!.discBottom - 0.5)
+
+    // The backup door is the sanctioned below-fold casualty on THIS composite frame (decision (b) —
+    // it stays measured on every other arm; here it may degrade past the fold). The disclaimer is a
+    // sibling <footer>, so it stays measured — the arm still fails if the caveat itself breaches.
+    await assertFrameFits(page, true, true)
   })
 })
 

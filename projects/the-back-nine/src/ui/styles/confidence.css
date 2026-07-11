@@ -215,13 +215,16 @@
   .confidence-reveal[data-twopane] {
     display: grid;
     grid-template-columns: minmax(0, var(--measure)) minmax(var(--pane-band-min), 1fr);
-    /* SIX rows ("buttons drop below" — Briggsy's fork call, council 2026-07-08): the left column
-       stacks lead (1) · subordinates (2) · save slot (3) · backup door (4 — ALSO the 1fr
-       slack-absorber; empty when no door mounts), then TWO full-width rows below both panes:
-       the in-frame R13 disclaimer (5) and the quiet doors (6 — the sanctioned below-fold flex,
-       tokens.css --laptop-fit-height degrade contract). The doors are the LAST row so any
-       overflow pushes THEM past the fold, never the honesty caveat (the Hawk's veto). */
-    grid-template-rows: auto auto auto 1fr auto auto;
+    /* SEVEN rows (the Medicare-pricing unit's fold-priority fix, 2026-07-10 — the pulled-forward
+       TODO-7 / Caddie-#3 inversion): the left column stacks lead (1) · subordinates (2) · save
+       slot (3) · a bare 1fr slack-absorber (4 — empty; it pushes the protected caveat down), then
+       the in-frame R13 disclaimer (5), and BELOW it the two UNPROTECTED degradable rows: the
+       backup door (6) and the quiet doors (7 — the sanctioned below-fold flex, tokens.css
+       --laptop-fit-height degrade contract). The disclaimer sits ABOVE both, so any overflow
+       pushes the doors THEN the backup door past the fold, never the honesty caveat (the Hawk's
+       veto). Before this the backup door held row 4's slack ABOVE the disclaimer, so a tall
+       composite frame sacrificed the caveat before the door — backwards. */
+    grid-template-rows: auto auto auto 1fr auto auto auto;
     column-gap: var(--space-9);
     /* --space-4, one step under the single-column --space-5 rhythm: the two-pane's vertical
        budget is the binding constraint (fit one --laptop-fit-height/800px frame — tokens.css is
@@ -276,13 +279,24 @@
      degrade direction and can never breach the fold. Do NOT co-gate it to ≤840px without FIRST
      adding a staleness-frame fit arm in the untested 841–916px band — this is the system's tallest
      frame, and base rhythm at 841px is its highest fold-pressure point. */
-  .confidence-reveal[data-twopane]:has(.cs-staleness-note) {
+  /* The priced-Medicare disclosure (the Medicare-pricing unit, 2026-07-10) joins this tight budget:
+     its affirmation + narrowed residual are a TWO-line subordinate pair (where the retired single
+     "unpriced" note was one line), so an all-65+ frame is now the second-tallest left stack the
+     one-frame law serves. It pays for the extra line in the SAME whitespace-only step (rows 8, lead
+     8, notes 4 — the degrade law, content never cut). The :has() has no max-height gate, so it also
+     tightens the SHOWCASE (>840px) medicare frame — where the density tier is dark and the doors are
+     in the fit — which the ?seed showcase arm measures. The ?vault=stale frame matched already
+     (staleness) and is unchanged. */
+  .confidence-reveal[data-twopane]:has(.cs-staleness-note),
+  .confidence-reveal[data-twopane]:has(.cs-medicare-note) {
     row-gap: var(--space-2);
   }
-  .confidence-reveal[data-twopane]:has(.cs-staleness-note) > .reveal__lead {
+  .confidence-reveal[data-twopane]:has(.cs-staleness-note) > .reveal__lead,
+  .confidence-reveal[data-twopane]:has(.cs-medicare-note) > .reveal__lead {
     gap: var(--space-2);
   }
-  .confidence-reveal[data-twopane]:has(.cs-staleness-note) > .reveal__subordinates {
+  .confidence-reveal[data-twopane]:has(.cs-staleness-note) > .reveal__subordinates,
+  .confidence-reveal[data-twopane]:has(.cs-medicare-note) > .reveal__subordinates {
     gap: var(--space-1);
   }
   /* the completion-actions chain UNWRAPS (both wrappers display:contents) so the save slot, the
@@ -297,18 +311,19 @@
     grid-column: 1;
     grid-row: 3;
   }
-  .confidence-reveal[data-twopane] .result-backup-door {
-    grid-column: 1;
-    grid-row: 4;
-    align-self: start; /* row 4 is the 1fr slack — hug the words, never stretch down it */
-  }
   .confidence-reveal[data-twopane] .disclaimer--in-frame {
     grid-column: 1 / -1;
-    grid-row: 5;
+    grid-row: 5; /* after the row-4 1fr slack — pinned protected, ABOVE the degradable tail */
+  }
+  .confidence-reveal[data-twopane] .result-backup-door {
+    grid-column: 1;
+    grid-row: 6; /* BELOW the disclaimer (2026-07-10) — a degradable durability affordance that
+                    drops past the fold before the caveat does on the tallest composite frame */
+    align-self: start;
   }
   .confidence-reveal[data-twopane] .result-quiet-row {
     grid-column: 1 / -1;
-    grid-row: 6;
+    grid-row: 7;
   }
 }
 
@@ -351,13 +366,15 @@
   }
 }
 
-/* ----- P3-U11: the unpriced-Medicare disclosure (the council's veto condition) — a quiet
-        subordinate note in the verdict's own reading column: muted ink, body measure, plain
-        text in the a11y tree (never color-alone, never hidden). P3-U13's standing staleness
-        echo shares the treatment via its OWN class (the fit gate pins .cs-medicare-note
-        per-seed, so the staleness note must never alias it). ----- */
+/* ----- P3-U11 follow-up: the priced-Medicare disclosure (the Medicare-pricing unit) — the
+        affirmation (.cs-medicare-note) SHIPPED WITH the narrowed residual (.cs-medicare-residual),
+        each a quiet subordinate note in the verdict's own reading column: muted ink, body measure,
+        plain text in the a11y tree (never color-alone, never hidden). P3-U13's standing staleness
+        echo shares the treatment via its OWN class (the fit gate pins .cs-medicare-note /
+        .cs-medicare-residual per-seed, so the staleness note must never alias them). ----- */
 
 .cs-medicare-note,
+.cs-medicare-residual,
 .cs-staleness-note {
   margin: 0;
   font-family: var(--font-body);

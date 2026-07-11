@@ -391,12 +391,14 @@ describe('FuckOffDate — the U9b two-track split', () => {
   })
 })
 
-describe('P3-U11 — the unpriced-Medicare disclosure on the date claim (the council veto condition)', () => {
-  it('renders among the lead notes when the household is in the unpriced domain; absent by default', () => {
-    const withNote = render(<FuckOffDate view={dates(DATE_FIXTURES.confirmed)} medicareUnpricedNote />)
-    expect(withNote.getByText(copy.verdictMedicareUnpriced)).toBeInTheDocument()
+describe('P3-U11 follow-up — the priced-Medicare disclosure on the date claim', () => {
+  it('renders the affirmation AND the residual among the lead notes when priced with no door; absent by default', () => {
+    const withNote = render(<FuckOffDate view={dates(DATE_FIXTURES.confirmed)} medicarePricedNote />)
+    expect(withNote.getByText(copy.verdictMedicarePriced)).toBeInTheDocument()
+    expect(withNote.getByText(copy.verdictMedicareResidual)).toBeInTheDocument()
     withNote.unmount()
     const without = render(<FuckOffDate view={dates(DATE_FIXTURES.confirmed)} />)
-    expect(without.queryByText(copy.verdictMedicareUnpriced)).toBeNull()
+    expect(without.queryByText(copy.verdictMedicarePriced)).toBeNull()
+    expect(without.queryByText(copy.verdictMedicareResidual)).toBeNull()
   })
 })

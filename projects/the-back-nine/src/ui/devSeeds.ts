@@ -152,11 +152,13 @@ const stillWorking: ScenarioDraft = {
 /**
  * A BORDERLINE already-retired couple — the SPINE route, for the two-pane HONESTY cold-read (D2d):
  * the projection band must draw its $0 depletion-to-ruin tail honestly in the promoted right pane,
- * beside a calm verdict word. 68/70, a single $520k Traditional IRA at 55/35/10 + a $70k Roth, LOW
+ * beside a calm verdict word. 68/70, a single $640k Traditional IRA at 55/35/10 + a $70k Roth, LOW
  * Social Security (PIA 24k/16k) against a ~$71.6k spend, so the SS floor doesn't cover the gap and the
- * downside paths deplete. Lands "borderline, ~7 of 10" (survival ≈ 0.65, verified live against the
- * engine) — most couples make it, but the band's lower percentiles honestly descend toward $0. Older
- * than `retired` on purpose: the shorter horizon keeps the p90 plume from squashing the ruin tail.
+ * downside paths deplete. Lands "borderline, 7 of 10" (engine-probed 2026-07-10 under PRICED Medicare
+ * — the pricing unit added ~$4.9k/yr of Part B for this couple, so the IRA moved 520k→640k to keep the
+ * seed rendering its NAMED state; the un-retuned drift rides the unit's record) — most couples make
+ * it, but the band's lower percentiles honestly descend toward $0. Older than `retired` on purpose:
+ * the shorter horizon keeps the p90 plume from squashing the ruin tail.
  */
 const retiredBorderline: ScenarioDraft = {
   people: [
@@ -187,7 +189,7 @@ const retiredBorderline: ScenarioDraft = {
     {
       ownerIndex: 0,
       kind: 'traditional-ira',
-      valueToday: 520_000,
+      valueToday: 640_000,
       manualBlend: { kind: 'exact', stockPct: 55, bondPct: 35, cashPct: 10 },
     },
     {
@@ -349,15 +351,21 @@ const bline = (
 /**
  * The TWO-TIER RELIEF spine household (U9b Q2 — the relief-with-honesty cold-read):
  * `borderline`'s couple carrying an ITEMIZED budget + an OOP-medical figure. Engine-proven
- * (probe 2026-07-02, seed 0xbada55): full track lands "On the line, 7 of 10" while the
- * essentials floor lands over-funded 9-of-10 — the widest honest relief spread, so the
- * subordinate "even at just essentials…" line COLD-READS against a scared verdict. The
- * reconciliation invariant holds by construction: annualSpendingReal = Σlines@0 (59,600)
- * + injected M (6,000) = 65,600. All lines lifelong-at-0 (as probed — a window would
- * change the engine evaluation the proof pinned).
+ * (probe 2026-07-10 under PRICED Medicare, seed 0xbada55): full track lands "On the line,
+ * 7 of 10" while the essentials floor lands over-funded 9-of-10 — the widest honest relief
+ * spread, so the subordinate "even at just essentials…" line COLD-READS against a scared
+ * verdict. The IRA is OVERRIDDEN to $600k (not `borderline`'s $640k): one knob cannot serve
+ * both seeds — at 640k this fuller track reads 8-of-10 with marginToEdge 0 (band-edge
+ * fragile) and the relief spread collapses to one step; 600k restores the probed 7-vs-9
+ * spread with healthy margins. The reconciliation invariant holds by construction:
+ * annualSpendingReal = Σlines@0 (59,600) + injected M (6,000) = 65,600. All lines
+ * lifelong-at-0 (as probed — a window would change the engine evaluation the proof pinned).
  */
 const retiredBudget: ScenarioDraft = {
   ...retiredBorderline,
+  enteredAccounts: retiredBorderline.enteredAccounts.map((a, i) =>
+    i === 0 ? { ...a, valueToday: 600_000 } : a,
+  ),
   budget: [
     bline('housing', 'Mortgage & taxes', 18_000, 'essentials'),
     bline('utilities', '', 4_800, 'essentials'),
@@ -650,6 +658,75 @@ const retiredHealth: ScenarioDraft = {
   seed: DEV_CRN_SEED,
 }
 
+/**
+ * P3·U11 follow-up (the post-65 Medicare pricing unit) — the ALL-65+ STILL-WORKING household on
+ * the DATE route: the live drive for the disclosure's date-route arm (insight 080). Alex is 66 and
+ * still working (deferring Medicare until retirement), Sam is 65 and retired — so no member is
+ * pre-65 (the marketplace questions are never asked; `healthcarePriced` reads FALSE, no ACA door),
+ * yet `dateSearch.ts:222` forces `healthcareEnabled: true` on every candidate, so Medicare IS priced
+ * on this route. The RETIRED age-predicate (`medicareUnpriced`) called this household "Medicare not
+ * priced" over numbers Medicare had already moved — the exact false statement insight 080 names;
+ * `showMedicarePricedNote` fixes it, and this seed proves the fix live. Both ≥ 64 ⇒ the IRMAA seed
+ * IS required; Alex working ⇒ the working-year investment figure IS required (its explicit-0 sibling
+ * for retired Sam). A generous portfolio (1.3M 401(k) + 250k Roth vs 78k spend) so it crowns a
+ * confident date — the ladder + floor band render for the fit arm. Engine-proven in devSeeds.test.ts.
+ */
+const stillWorkingAllMedicare: ScenarioDraft = {
+  people: [
+    {
+      name: 'Alex',
+      sex: 'male',
+      birthYear: 1960,
+      currentAge: 66,
+      workStatus: 'working',
+      earnedIncomeReal: 120_000,
+      pia: 30_000,
+      socialSecurityClaimAge: 67,
+    },
+    {
+      name: 'Sam',
+      sex: 'female',
+      birthYear: 1961,
+      currentAge: 65,
+      workStatus: 'retired',
+      retirementAge: 63,
+      earnedIncomeReal: 0,
+      pia: 24_000,
+      socialSecurityClaimAge: 67,
+    },
+  ],
+  enteredAccounts: [
+    {
+      ownerIndex: 0,
+      kind: '401k',
+      ticker: 'VTI',
+      valueToday: 1_300_000,
+      annualContribution: 20_000,
+      employerMatchAnnual: 8_000,
+    },
+    { ownerIndex: 1, kind: 'roth-ira', ticker: 'VFIFX', valueToday: 250_000 },
+  ],
+  incomeStreams: [],
+  tickerClassifications: {},
+  health: {
+    // No ACA quote pair — no member is pre-65, so the marketplace questions are never asked.
+    // Alex still works past 65: the working-year IRMAA-MAGI = the entered salary + this investment
+    // figure; retired Sam contributes 0 (the explicit-0, never a silent skip). Both ≥ 64 ⇒ the
+    // 2-year IRMAA seed is required.
+    irmaaMagiSeed: [90_000, 90_000],
+    workingYearInvestmentByPerson: [15_000, 0],
+  },
+  annualSpendingReal: 78_000,
+  spendEntryPeriod: 'month',
+  survivorSpendingRatio: 0.75,
+  drawdownPolicy: 'proportional',
+  filing: 'mfj',
+  startCalendarYear: 2026,
+  taxVintage: 'OBBBA-2025',
+  appDefaultVersion: 'p2-dev-seed',
+  seed: DEV_CRN_SEED,
+}
+
 /** The seed registry — `?seed=<key>` selects one. */
 export const DEV_SEEDS = {
   retired: retiredOnTrack,
@@ -663,6 +740,7 @@ export const DEV_SEEDS = {
   dip: dateDipSeed,
   order: customOrderSeed,
   health: retiredHealth,
+  date65: stillWorkingAllMedicare,
 } satisfies Record<string, ScenarioDraft>
 
 export type DevSeedKey = keyof typeof DEV_SEEDS

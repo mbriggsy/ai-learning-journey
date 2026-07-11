@@ -69,6 +69,22 @@ describe('dev seeds reach a worded (engine-accepted) answer', () => {
     expect(wire.dollar.direction, 'already-failing forks to the figure-less rethink clause').toBe('rethink')
   })
 
+  // The 'borderline' seed exists to cold-read the two-pane HONESTY render (D2d): a calm
+  // "On the line, 7 of 10" verdict beside a band whose lower percentiles descend to $0. Its
+  // PURPOSE is the named state — the Medicare pricing unit (2026-07-10) proved the gap: the
+  // seed drifted to off-track un-pinned and only `budget`'s pin said so. Pin the state
+  // against the real engine (re-tune the account knob, don't loosen the pin — the budget
+  // pin's own law).
+  it("'borderline' lands borderline through the real engine (the two-pane honesty cold-read seed renders its named state)", () => {
+    const d = DEV_SEEDS.borderline
+    const params = buildSpineParams(d)
+    expect(params, 'borderline: buildSpineParams').not.toBeNull()
+    const wire = runEngine(params!, d.seed!)
+    expect(wire.kind, 'borderline: a feasible, resolved run').toBe('resolved')
+    if (wire.kind !== 'resolved') return
+    expect(wire.headline.outcomeState, 'the named state IS the purpose').toBe('borderline')
+  })
+
   // The U9b 'budget' seed exists to cold-read the TWO-TIER relief line (council 2026-07-02 Q2).
   // Pin the ARM against the real engine: the full track must stay a scared-but-honest borderline
   // while the essentials floor clears over-funded — the widest relief spread. If a constants or
@@ -112,6 +128,27 @@ describe('dev seeds reach a worded (engine-accepted) answer', () => {
     expect(year0.acaNetPremiumP50, 'a real subsidy was retained (under the enrolled total)').toBeLessThan(1_600 * 12)
     expect(year0.acaMagiP50, 'the shadow-rate anchor is live').toBeGreaterThan(0)
   })
+
+  // P3·U11 follow-up — the 'date65' seed is the ALL-65+ STILL-WORKING date-route drive for the
+  // priced-Medicare disclosure (insight 080). Pin what the disclosure keys off: it date-ROUTES (Alex
+  // still working), reads healthcarePriced FALSE (no pre-65 member ⇒ no ACA door for the residual to
+  // defer to) yet prices Medicare STRUCTURALLY on the date route, and crowns a real date so the fit
+  // arm's floor band + odds ladder actually render (a no-date hero would mount neither). The retired
+  // age-predicate called this exact household "Medicare not priced" — this seed proves the fix live.
+  it("'date65' date-routes an all-65+ still-working household with NO ACA door, and crowns a real date (the fit-arm drive)", async () => {
+    const d = DEV_SEEDS.date65
+    expect(isDateRoute(d), 'date65: one member still working ⇒ the date route').toBe(true)
+    expect(healthcarePriced(d), 'date65: no pre-65 member ⇒ no ACA door').toBe(false)
+    const input = buildDateInput(d)
+    expect(input, 'date65: buildDateInput').not.toBeNull()
+    const out = await runDateSearch(input!, d.seed!, { tier: 'provisional' })
+    expect(out.kind, 'date65: a dates outcome').toBe('dates')
+    if (out.kind !== 'dates') return
+    // The hero (lifestyle) track crowns a real date — so the ladder + floor band mount for the fit arm.
+    expect(['confirmed-date', 'window-edge-unconfirmed'], 'lifestyle crowned (the hero is dated)').toContain(
+      out.lifestyle.kind,
+    )
+  }, 120_000)
 
   // The U9b 'datesplit' seed exists to cold-read the floor/lifestyle SPLIT (council 2026-07-02 Q3):
   // both tracks dated, the floor EARLIER (the expected ordering — no R27 inversion note). Provisional

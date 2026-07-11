@@ -208,7 +208,7 @@ describe('the healthcare door — the engine PRICED domain only, categorical (co
     expect('enhancedSubsidies' in appModel.getSnapshot().draft).toBe(false)
   })
 
-  it('the ROTH sheet wears the unpriced-Medicare note for a post-65-only household (the Result-level threading proof through a REAL child — insight 066)', () => {
+  it('the ROTH sheet wears the priced-Medicare residual note for a post-65-only household (the Result-level threading proof through a REAL child — insight 066)', () => {
     plantResolved()
     appModel.update((d) => ({
       ...d,
@@ -220,15 +220,34 @@ describe('the healthcare door — the engine PRICED domain only, categorical (co
     }))
     renderResult()
     fireEvent.click(rothDoor()!)
-    expect(screen.getByText(copy.rothMedicareUnpricedNote)).toBeInTheDocument()
+    expect(screen.getByText(copy.rothMedicareResidualNote)).toBeInTheDocument()
   })
 
-  it('the roth sheet carries NO unpriced note for a priced household (the predicate really discriminates)', () => {
+  it('a STILL-WORKING all-65+ household (date route) also wears the residual note — Medicare is priced structurally, never a false "unpriced" claim (insight 080 regression)', () => {
+    // dateSearch.ts:222 forces healthcareEnabled true on every candidate, so a 66/65 still-working
+    // household prices Medicare on the date route even though it reaches no ACA door. The retired
+    // age-predicate falsely called this "Medicare not priced"; the route-aware seam prices it.
+    plantResolved()
+    appModel.update((d) => ({
+      ...d,
+      filing: 'mfj',
+      people: [
+        { ...d.people[0], currentAge: 66, workStatus: 'working' },
+        { ...d.people[1], currentAge: 65, workStatus: 'retired' },
+      ],
+      enteredAccounts: [pretaxAccount],
+    }))
+    renderResult()
+    fireEvent.click(rothDoor()!)
+    expect(screen.getByText(copy.rothMedicareResidualNote)).toBeInTheDocument()
+  })
+
+  it('the roth sheet carries NO priced-Medicare note for an ACA-priced (door) household (the predicate discriminates)', () => {
     plantResolved()
     priced()
     appModel.update((d) => ({ ...d, enteredAccounts: [pretaxAccount] }))
     renderResult()
     fireEvent.click(rothDoor()!)
-    expect(screen.queryByText(copy.rothMedicareUnpricedNote)).toBeNull()
+    expect(screen.queryByText(copy.rothMedicareResidualNote)).toBeNull()
   })
 })

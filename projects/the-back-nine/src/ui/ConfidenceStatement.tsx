@@ -107,12 +107,14 @@ export interface ConfidenceStatementProps {
    *  in single column `.reveal__actions` is `display:contents` so they render flat below, unchanged.
    *  Omitted (the preview harness, the fallback path) ⇒ nothing renders here. */
   readonly actionsSlot?: ReactNode
-  /** P3·U11 (the council's veto condition, 2026-07-03): TRUE for a household whose Medicare
-   *  costs the engine does not yet price (post-65-only — the intake never asks the marketplace
-   *  questions, so healthcare never prices and base Part B + IRMAA read $0). The verdict then
-   *  wears the honest-gap disclosure in its subordinate region — on the surface, in the a11y
-   *  tree, never buried. Default false (the priced domain). */
-  readonly medicareUnpricedNote?: boolean
+  /** P3·U11 follow-up (the Medicare-pricing unit, 2026-07-10): TRUE for a household whose run
+   *  PRICED Medicare but reaches no Healthcare door (all-65+ — healthcarePriced needs a pre-65
+   *  member). The verdict then wears the priced-in affirmation + the narrowed residual
+   *  (verdictMedicarePriced + verdictMedicareResidual) in its subordinate region — on the surface,
+   *  in the a11y tree, never buried. Result owns the ONE route-aware decision (showMedicarePricedNote,
+   *  keyed off pricing facts never ages — insight 080); this component stays a dumb bool-prop
+   *  renderer (insight 048). Default false (a door household carries the residual on its own sheet). */
+  readonly medicarePricedNote?: boolean
   /** P3·U13 — TRUE when any staleness clock fired at unlock (IntakeApp's re-entry gate):
    *  the verdict wears the standing "figured fresh under today's rules" line in its
    *  subordinate region — the Q1 disclosure rides WITH the verdict, never after it.
@@ -152,7 +154,7 @@ function buildPlaceholderBand(annotations: readonly XAnnotation[]): Indeterminat
   }
 }
 
-export function ConfidenceStatement({ view, focusSignal, actionsSlot, medicareUnpricedNote = false, stalenessNote = false, sheetOpen = false, savedAnchor }: ConfidenceStatementProps) {
+export function ConfidenceStatement({ view, focusSignal, actionsSlot, medicarePricedNote = false, stalenessNote = false, sheetOpen = false, savedAnchor }: ConfidenceStatementProps) {
   const headingRef = useRef<HTMLHeadingElement>(null)
   // Announce on the FIRST landing only (the undefined→defined edge) — the shared once-per-landing
   // contract (mirrors FuckOffDate). The spine's two recomputes are byte-identical, so its key never
@@ -359,7 +361,7 @@ export function ConfidenceStatement({ view, focusSignal, actionsSlot, medicareUn
                 the first frame; R4 — the fold is the seam the cold-read can flip). Both render
                 below the band so the scrub tap-targets never move (insight 035); absence renders
                 nothing (insight 044). */}
-        {(relief || view.survivorReading || medicareUnpricedNote || stalenessNote) && (
+        {(relief || view.survivorReading || medicarePricedNote || stalenessNote) && (
           <div className="reveal__subordinates">
             {relief && <TwoTierHeadline relief={relief} />}
             {view.survivorReading &&
@@ -385,12 +387,18 @@ export function ConfidenceStatement({ view, focusSignal, actionsSlot, medicareUn
               ) : (
                 <SurvivorReadout reading={view.survivorReading} />
               ))}
-            {/* P3·U11 — the unpriced-Medicare disclosure (the council's veto condition,
-                2026-07-03): ON the verdict surface for the post-65-only household the engine
-                prices $0 Medicare for — plain text in the a11y tree (never aria-hidden, never
-                a buried list), carrying NO count (build-gate 7 untouched). */}
-            {medicareUnpricedNote && (
-              <p className="cs-medicare-note">{copy.verdictMedicareUnpriced}</p>
+            {/* P3·U11 follow-up — the priced-Medicare disclosure (the Medicare-pricing unit): the
+                all-65+ household reaches no Healthcare door, so these TWO lines are its only Medicare
+                honesty surface — the affirmation that base Part B + the income surcharge ARE in the
+                numbers, SHIPPED WITH the narrowed residual of what still isn't (never the affirmative
+                alone — that would imply all of Medicare is priced). Plain text in the a11y tree
+                (never aria-hidden, never a buried list), carrying NO count (build-gate 7 untouched).
+                Distinct classes so the fit gate pins each line's per-seed visibility. */}
+            {medicarePricedNote && (
+              <>
+                <p className="cs-medicare-note">{copy.verdictMedicarePriced}</p>
+                <p className="cs-medicare-residual">{copy.verdictMedicareResidual}</p>
+              </>
             )}
             {/* P3·U13 — the standing staleness echo (Q1): the full per-clock disclosure
                 already rendered at the re-entry gate; this line keeps the fact visible WITH

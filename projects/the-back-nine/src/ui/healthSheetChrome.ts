@@ -291,18 +291,31 @@ export function composeRegimeFutures(
   }
 }
 
-/** The post-65 UNPRICED-Medicare domain (the council's veto predicate, 2026-07-03): every
- *  member is 65+ — the intake never asks the marketplace questions (`anyPre65OrUnknown`
- *  gates them off), so `healthcareOn` is false and the engine prices $0 Medicare (base Part
- *  B AND the IRMAA surcharge) every year for a household that in reality pays both. The
- *  predicate mirrors the CREATOR's domain, not a proxy (insight 027): it is the exact
- *  complement of intakeMap's `ages.some(a < 65)` healthcare gate over known ages. The
- *  surfaces this drives: the verdict disclosure (ConfidenceStatement/FuckOffDate) + the
- *  Roth lever's conversion-looks-better-than-life note. */
-export function medicareUnpriced(people: ReadonlyArray<{ readonly currentAge?: number }>): boolean {
-  return (
-    people.length > 0 &&
-    people.every((p) => p.currentAge !== undefined) &&
-    !people.some((p) => p.currentAge! < 65)
-  )
+/**
+ * Should the verdict surfaces wear the priced-Medicare disclosure — the AFFIRMATION that base Part
+ * B + the income surcharge ARE in these numbers, TOGETHER with the narrowed residual of what still
+ * isn't (copy `verdictMedicarePriced` + `verdictMedicareResidual`; the Roth lever's own
+ * `rothMedicareResidualNote`)? True exactly when the run PRICED Medicare and the household reaches
+ * no Healthcare door.
+ *
+ * THE INPUTS ARE PRICING FACTS, NEVER AGES — this is the insight-080 fix, and it is STRUCTURAL. The
+ * predecessor (`medicareUnpriced`) keyed the disclosure off ages: every member a known 65+. At write
+ * time that equalled the pricing-complement because the intake gate (which needs a pre-65 member) was
+ * the ONLY producer of `healthcareEnabled`. Then `dateSearch.ts:222` became a SECOND producer — it
+ * forces `healthcareEnabled: true` on every date candidate — and the age predicate silently lied: a
+ * still-working all-65+ household read "Medicare not priced" over numbers Medicare had already moved.
+ * Keying the disclosure off the RUN's own pricing decision closes that by construction, and this
+ * signature has no `people[]` parameter, so no age can reach it to re-open the equivalence (the
+ * age-mutation witness is type-level: there is no age to mutate). The caller supplies the decision:
+ * `medicarePriced = isDateRoute || healthcarePriced || medicareOnlyPriced` (the engine's own gate).
+ *
+ * The residual is WITHHELD when the household reaches the Healthcare door: that sheet already carries
+ * its own residual (`controlHealthOmissionsNote`), so one honest home per fact. The two lines SHIP
+ * TOGETHER — the affirmative alone would imply ALL of Medicare is priced, a fresh optimistic lie.
+ */
+export function showMedicarePricedNote(run: {
+  readonly medicarePriced: boolean
+  readonly reachesHealthDoor: boolean
+}): boolean {
+  return run.medicarePriced && !run.reachesHealthDoor
 }

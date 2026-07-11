@@ -77,7 +77,7 @@ export const copy = {
   qSpendHeading: 'What does your life cost?',
   spendLabel: 'Household spending, all in',
   spendHelp:
-    'Everything — housing, food, insurance, fun. The whole household, not just the bills that feel like retirement.',
+    'Everything — housing, food, fun, and the medical costs you pay out of pocket (including any Part D or Medigap premiums). Leave out the Medicare Part B premium and its income surcharge — the tool adds those on top. The whole household, not just the bills that feel like retirement.',
   periodMonth: 'Each month',
   periodYear: 'Each year',
   periodLegend: 'That figure is…',
@@ -775,13 +775,19 @@ export const copy = {
     'If one of you is on your own later, the same income can trip these lines sooner — the discount disappears right away, and the Medicare step follows about two years behind.',
   controlHealthHsaNote:
     'Your HSA can pay medical bills tax-free at any age, and Medicare premiums once its owner is 65 — but usually not your coverage costs before then. Once Medicare starts, new contributions stop counting.',
-  // The post-65 unpriced-Medicare disclosure (the council's veto condition, 2026-07-03): rendered
-  // ON the verdict surfaces + inside the Roth lever for a household whose Medicare costs the
-  // engine does not yet price — names the gap AND its direction, never buried in a general list.
-  verdictMedicareUnpriced:
-    'One honest gap: Medicare’s own costs — the base premium, plus the income surcharge a conversion can trip — aren’t priced into these numbers for your household yet. Pricing them would pull the picture down some, never up.',
-  rothMedicareUnpricedNote:
-    'Your household’s Medicare premiums — including the income surcharge a conversion can trip two years later — aren’t priced in yet, so converting could look a little better here than it would in real life.',
+  // The post-65 PRICED-Medicare disclosure (the Medicare-pricing unit, 2026-07-10 — supersedes the
+  // retired age-keyed "unpriced" note). An all-65+ household reaches no ACA door, so these two lines
+  // are its ONLY Medicare honesty surface: the AFFIRMATION that base Part B + the income surcharge
+  // ARE in the numbers (so a steeper figure has its cause named) SHIPS WITH the narrowed residual
+  // (what still isn't) — the affirmative alone would imply ALL of Medicare is priced, a fresh
+  // optimistic lie. A household that reaches the Healthcare door is NOT shown these: its sheet
+  // already carries the residual (controlHealthOmissionsNote) — one honest home per fact.
+  verdictMedicarePriced:
+    'Medicare’s premiums for the two of you are already in these numbers — the base Part B premium and its income-based surcharge.',
+  verdictMedicareResidual:
+    'A few Medicare costs stay in your own spending — a Part D drug plan, Medigap, and the rare Part A premium. State income tax isn’t counted either, and the base premium is held flat in today’s dollars, so the true picture could sit a little tighter than shown.',
+  rothMedicareResidualNote:
+    'The income surcharge a conversion can trip two years later is now part of these numbers. One modeling choice remains: the base premium is held level in today’s dollars, so a conversion that crosses a surcharge step could look a shade easier here than in real life.',
 
   // --- P3·U12 — the AssumptionPanel (the R7 escape hatch; council wf_dff75c2f-9e3). PREFIX
   // LAW: `assumption*` is the panel's CHROME prefix — labels, values, provenance lines,

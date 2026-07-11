@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import {
   simulate,
+  validateParams,
   buildDraws,
   netWithdrawalForYear,
   cashTermsForYear,
@@ -1021,6 +1022,95 @@ describe('U3 healthcare overlay wired into simulate (M3 Slice 4)', () => {
       // non-vacuous: the conversion genuinely moved the terminal (else monotonicity is trivially true).
       expect(t2[0]!).toBeLessThan(t0[0]!)
     })
+  })
+})
+
+// ===========================================================================
+// P3·U11 follow-up — the post-65 Medicare pricing unit (the widened intake gate). An
+// all-65+ household now enables healthcare WITHOUT the ACA quote pair (intakeMap's
+// `medicareOnlyPriced` seam), so base Part B + IRMAA price on the SPINE route the ACA door
+// never reaches. The tax MATH is golden at the overlay level (taxOverlay.test.ts); these
+// pin the ENGINE contracts widening now exercises through simulate: validateParams ACCEPTS
+// the streamless shape, a real cost leaves the portfolio (burned/027 presence companion),
+// the Medicare inputs reduce to the spine when the gate is OFF, and the 076/R19 seed-coverage
+// gate FIRES for the spine all-65+ run (calm indeterminate, never a silent tier-1 $0).
+// ===========================================================================
+describe('P3·U11 follow-up — post-65 Medicare-only pricing (healthcareEnabled WITHOUT the ACA quote pair)', () => {
+  const P = 1_000_000
+  const M66: PersonInputs = { ...MALE_65, currentAge: 66, retirementAge: 65 }
+  const F66: PersonInputs = { ...FEMALE_65, currentAge: 66, retirementAge: 65 }
+  const base = makeParams({
+    initialPortfolio: P,
+    annualSpendingReal: 40_000,
+    people: [M66, F66],
+    longevityMode: 'fixed-horizon',
+    maxHorizonYears: 4,
+    paths: 100,
+    drawdownPolicy: 'pre-tax-first',
+  })
+  // The tax-only overlay (healthcare OFF) — the reduce-to-spine anchor.
+  const taxOnly: OverlayParams = {
+    taxEnabled: true,
+    rmdEnabled: false,
+    startCalendarYear: 2026,
+    buckets: { taxable: 0, pretax: P, roth: 0 },
+    filing: 'mfj',
+  }
+  // The Medicare-only ON shape: the EXACT overlay buildOverlay now emits for an all-65+
+  // household — healthcareEnabled with NO enrolledPremium/slcsp; the seed rides the
+  // unconditional intake spread (already collected for any member ≥ 64).
+  const medicareOnly: OverlayParams = { ...taxOnly, healthcareEnabled: true, irmaaMagiSeed: [60_000, 60_000] }
+
+  it('validateParams ACCEPTS the streamless Medicare-only shape (healthcareEnabled true, absent enrolledPremium/slcsp, seed present)', () => {
+    // The slcsp / wage-blind / date-route ACA arms each self-skip (enrolled ?? [] is empty; no
+    // accumulation construct), while the seed-coverage arm is satisfied by the present seed — so
+    // NO arm falsely rejects the honest all-65+ run. The widened gate's core admission pin.
+    expect(validateParams({ ...base, overlay: medicareOnly })).toBeNull()
+  })
+
+  it('prices base Part B + IRMAA (burned/027 presence companion): every path ends strictly below the tax-only run, and the cost is a real positive Σ', () => {
+    const on = dist(simulate({ ...base, overlay: medicareOnly }, 2468))
+    const off = dist(simulate({ ...base, overlay: taxOnly }, 2468))
+    // CRN: same seed + dims → the ONLY difference is the Medicare cost leaving the portfolio.
+    expect(on.terminalValuesReal).not.toEqual(off.terminalValuesReal)
+    for (let p = 0; p < on.terminalValuesReal.length; p++) {
+      expect(on.terminalValuesReal[p]!).toBeLessThan(off.terminalValuesReal[p]!)
+    }
+    // Non-vacuous absence guard: the cost is a REAL positive figure on every path in the ON arm
+    // and provably ZERO in the OFF arm — so "strictly below" is Medicare, not some other channel.
+    expect(on.taxAware!.lifetimeMedicareCostReal.every((v) => Number.isFinite(v) && v > 0)).toBe(true)
+    expect(off.taxAware!.lifetimeMedicareCostReal.every((v) => v === 0)).toBe(true)
+  })
+
+  it('reduce-to-spine (the Medicare-only OFF arm): populated Medicare inputs with healthcareEnabled FALSE is byte-identical to the tax-only overlay', () => {
+    // The mirror of the ACA reduce-to-spine contract (the "U3 healthcare fields PRESENT but
+    // disabled" test above), re-proven for the MEDICARE inputs: the seed + onset are INERT when
+    // the gate is off, so a healthcare-OFF run carrying them never perturbs the tax-only
+    // decumulation (presence-keyed byte-identity — the gate is no longer ACA-synonymous).
+    const withMedicareOff: OverlayParams = {
+      ...taxOnly,
+      healthcareEnabled: false,
+      irmaaMagiSeed: [60_000, 60_000],
+      medicareOnsetSimYear: [-1, -1],
+    }
+    const offInputs = dist(simulate({ ...base, overlay: withMedicareOff }, 2468))
+    const taxOnlyDist = dist(simulate({ ...base, overlay: taxOnly }, 2468))
+    expect(offInputs.terminalValuesReal).toEqual(taxOnlyDist.terminalValuesReal)
+    expect(offInputs.depletionYears).toEqual(taxOnlyDist.depletionYears)
+    expect(offInputs.survivalFraction).toBe(taxOnlyDist.survivalFraction)
+  })
+
+  it('the 076/R19 pin: an all-65+ Medicare-only run with an ABSENT seed returns the CALM INDETERMINATE, never a silent tier-1 $0 and never the overlay throw', () => {
+    // Widening the gate makes the seed-coverage arm (nested in `if (o.healthcareEnabled)`) FIRE
+    // for the spine all-65+ run — insight 076's exact discharge. Both spouses are 66 (enrolled from
+    // year 0), so years 0..lookback-1 REQUIRE the seed; absent → the DEFINED indeterminate output,
+    // never a mid-path throw (taxOverlay's backstop) and never a phantom $0 surcharge (burned/062).
+    const seedless: OverlayParams = { ...taxOnly, healthcareEnabled: true }
+    const out = simulate({ ...base, overlay: seedless }, 1)
+    expect(out.indeterminate).toBe(true) // R19: the defined output — simulate did NOT throw/crash
+    if (out.indeterminate) expect(out.reason).toMatch(/irmaaMagiSeed/)
+    // The frontline mirror at the validator itself (the layer the planted mutant neuters).
+    expect(validateParams({ ...base, overlay: seedless })).toMatch(/irmaaMagiSeed/)
   })
 })
 

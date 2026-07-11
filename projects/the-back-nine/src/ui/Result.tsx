@@ -15,14 +15,14 @@
  */
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import { AnswerStrip } from '@intake/AnswerStrip'
-import { buildControlPreviewParams, healthcarePriced, isDateRoute, missingRequiredFacts } from '@intake/intakeMap'
+import { buildControlPreviewParams, healthcarePriced, isDateRoute, medicareOnlyPriced, missingRequiredFacts } from '@intake/intakeMap'
 import { useLiveAnnouncer } from '@intake/a11y'
 import { BudgetBuilder } from '@intake/BudgetBuilder'
 import { SequencingControl } from '@intake/SequencingControl'
 import { RothLever } from '@intake/RothLever'
 import { HealthcareSheet } from '@intake/HealthcareSheet'
 import { AssumptionPanel } from '@intake/AssumptionPanel'
-import { medicareUnpriced } from './healthSheetChrome'
+import { showMedicarePricedNote } from './healthSheetChrome'
 import { budgetGoverns } from '@budget/budgetModel'
 import { commitBudgetPatch } from '@budget/budgetToSpending'
 import { previewRunsInWorker, runControlPreview } from '@store/controlPreview'
@@ -152,10 +152,19 @@ export function Result({
   const rothApplied = snapshot.draft.rothConversion
   // P3·U11 — the Healthcare door's domain (categorical, fact-presence only) is the ENGINE's own
   // priced-healthcare gate (healthcarePriced — single-sourced with buildOverlay; council
-  // 2026-07-03: no hollow door). The post-65-only household instead gets the verdict-level
-  // unpriced-Medicare disclosure, threaded to BOTH hero surfaces + the Roth lever below.
+  // 2026-07-03: no hollow door).
   const healthPriced = healthcarePriced(snapshot.draft)
-  const medicareGap = medicareUnpriced(snapshot.draft.people)
+  // P3·U11 follow-up (the post-65 Medicare pricing unit, 2026-07-10) — "was Medicare priced in this
+  // run?", route-aware and single-sourced with the ENGINE's OWN pricing gate, NEVER ages (insight
+  // 080: the retired age-predicate became a silent lie once dateSearch turned into a second producer
+  // of healthcareEnabled). Spine: buildOverlay sets healthcareEnabled iff healthcarePriced ||
+  // medicareOnlyPriced. Date route: dateSearch.ts:222 forces healthcareEnabled true on every
+  // candidate, so Medicare is priced structurally. The household with a priced run but NO Healthcare
+  // door (all-65+ — healthcarePriced needs a pre-65 member) wears the "Medicare is priced in"
+  // affirmation + the narrowed residual (the composing seam takes pricing FACTS, not people[]).
+  const medicarePriced =
+    isDateRoute(snapshot.draft) || healthPriced || medicareOnlyPriced(snapshot.draft)
+  const medicarePricedNote = showMedicarePricedNote({ medicarePriced, reachesHealthDoor: healthPriced })
   const enhancedApplied = snapshot.draft.enhancedSubsidies === true
   // The wire's per-year healthcare series (spine headline runs only — presence-keyed).
   const healthReadout =
@@ -298,10 +307,23 @@ export function Result({
           )}
         </div>
       )}
-      {/* The re-offer backup door (U8-tail): a QUIET, subordinate durability affordance — the
-          plan is already saved to this device (the slot above says so); this only offers the
-          off-device second copy when none is on record. Lead states the fact, then a quiet button;
-          it reads under the verdict, never a primary CTA, never color-only. */}
+      {/* The IN-FRAME R13 disclaimer (council 2026-07-08, "buttons drop below" — Briggsy's fork
+          call): DOM-ordered ABOVE the backup door AND the quiet doors (the Medicare-pricing unit's
+          fold-priority fix, 2026-07-10 — the pulled-forward TODO-7 / Caddie-#3 inversion): every
+          UNPROTECTED affordance below it degrades past the fold FIRST, so the protected honesty
+          caveat wins the frame (the Hawk's veto; the trailing App mount is the structural first
+          casualty). Visible ONLY at the laptop two-pane, where app.css hides the trailing mount;
+          display:none below that width — the phone renders byte-identically (same words, one
+          visible mount, Disclaimer.tsx has the contract). */}
+      <Disclaimer inFrame />
+      {/* The re-offer backup door (U8-tail): a QUIET, subordinate durability affordance — the plan
+          is already saved to this device (the slot above says so); this only offers the off-device
+          second copy when none is on record. Reads under the verdict, never a primary CTA, never
+          color-only. DOM-ordered BELOW the disclaimer (2026-07-10): it is unprotected, so on the
+          tallest composite frame (an all-65+ writable stale return, where the priced-Medicare pair
+          + the staleness echo + this door together overrun the fold) it degrades below the fold
+          before the disclaimer does — focus order matches visual order, no CSS-only reorder
+          (WCAG 2.4.3). A normal vault frame with slack keeps it in-frame. */}
       {backup !== undefined && (
         <div className="result-backup-door">
           <p className="result-backup-door__lead">{copy.backupDoorLead}</p>
@@ -310,13 +332,6 @@ export function Result({
           </button>
         </div>
       )}
-      {/* The IN-FRAME R13 disclaimer (council 2026-07-08, "buttons drop below" — Briggsy's fork
-          call): DOM-ordered ABOVE the quiet doors, so the doors are always the LAST thing any
-          overflow pushes past the fold — never the honesty caveat (the Hawk's veto; the trailing
-          App mount is the structural first casualty). Visible ONLY at the laptop two-pane, where
-          app.css hides the trailing mount; display:none below that width — the phone renders
-          byte-identically (same words, one visible mount, Disclaimer.tsx has the contract). */}
-      <Disclaimer inFrame />
       {/* The quiet doors: the sanctioned below-fold flex (the --laptop-fit-height degrade
           contract, tokens.css). display:contents in single column — the stack renders exactly as
           before; at the laptop two-pane the whole actions chain unwraps (display:contents) and
@@ -385,7 +400,7 @@ export function Result({
             view={elevated.view}
             focusSignal={focusKey}
             actionsSlot={seatInLead ? actionsNode : undefined}
-            medicareUnpricedNote={medicareGap}
+            medicarePricedNote={medicarePricedNote}
             stalenessNote={stalenessNote}
             dateAnchor={dateAnchor}
             agedBalancesYear={agedBalancesYear}
@@ -397,7 +412,7 @@ export function Result({
             view={elevated.view}
             focusSignal={focusKey}
             actionsSlot={seatInLead ? actionsNode : undefined}
-            medicareUnpricedNote={medicareGap}
+            medicarePricedNote={medicarePricedNote}
             stalenessNote={stalenessNote}
             sheetOpen={sheetOpen}
             savedAnchor={dateAnchor}
@@ -452,7 +467,7 @@ export function Result({
         draft={snapshot.draft}
         preview={runPreview}
         previewBlocking={!previewRunsInWorker()}
-        medicareUnpricedNote={medicareGap}
+        medicarePricedNote={medicarePricedNote}
         restoreFallback={restoreToAssumptionsDoor}
         savedAnchor={dateAnchor}
         onApply={(plan) => {

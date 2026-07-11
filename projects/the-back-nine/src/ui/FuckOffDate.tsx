@@ -92,11 +92,12 @@ export interface FuckOffDateProps {
    *  two-pane answer so the grid seats them in the left reading column (result.css / fuckOffDate.css);
    *  single column keeps them flat below via `display:contents`. Omitted (preview / fallback) ⇒ none. */
   readonly actionsSlot?: ReactNode
-  /** P3·U11 (the council's veto condition, 2026-07-03): TRUE for a household whose Medicare
-   *  costs the engine does not yet price (post-65-only, healthcare never prices). The date
-   *  claim then wears the honest-gap disclosure among its notes — on the surface, in the
-   *  a11y tree. Default false (the priced domain). */
-  readonly medicareUnpricedNote?: boolean
+  /** P3·U11 follow-up (the Medicare-pricing unit, 2026-07-10): TRUE for a household whose run
+   *  PRICED Medicare but reaches no Healthcare door (all-65+). The date claim then wears the
+   *  priced-in affirmation + the narrowed residual among its notes — on the surface, in the a11y
+   *  tree. Result owns the ONE route-aware decision (showMedicarePricedNote, pricing facts never
+   *  ages — insight 080); this stays a dumb bool-prop renderer (insight 048). Default false. */
+  readonly medicarePricedNote?: boolean
   /** P3·U13 — TRUE when any staleness clock fired at unlock: the date claim wears the
    *  standing "figured fresh under today's rules" line among its notes (the Q1 disclosure
    *  rides WITH the verdict). Default false. */
@@ -175,7 +176,7 @@ export function floorLineText(
   return slots.dateFloorCoveredAnchored(yearsFromToday, calendarYear, odds, fl.unconfirmed)
 }
 
-export function FuckOffDate({ view, focusSignal, actionsSlot, medicareUnpricedNote = false, stalenessNote = false, dateAnchor, agedBalancesYear, sheetOpen = false }: FuckOffDateProps) {
+export function FuckOffDate({ view, focusSignal, actionsSlot, medicarePricedNote = false, stalenessNote = false, dateAnchor, agedBalancesYear, sheetOpen = false }: FuckOffDateProps) {
   const headingRef = useRef<HTMLHeadingElement>(null)
   // Announce on the FIRST landing only (the undefined→defined edge). The date route is TIERED: the
   // provisional→final sharpen can crown a DIFFERENT offset, which flips focusSignal — but re-firing
@@ -319,9 +320,16 @@ export function FuckOffDate({ view, focusSignal, actionsSlot, medicareUnpricedNo
               {split.inverted && <p className="fod-note">{copy.dateFloorInversionNote}</p>}
             </>
           )}
-          {/* P3·U11 — the unpriced-Medicare disclosure (the council's veto condition): the
-              post-65-only household's date claim wears the honest gap in its own notes row. */}
-          {medicareUnpricedNote && <p className="fod-note">{copy.verdictMedicareUnpriced}</p>}
+          {/* P3·U11 follow-up — the priced-Medicare disclosure (the Medicare-pricing unit): the
+              all-65+ household reaches no Healthcare door, so the date claim wears the affirmation
+              that base Part B + the income surcharge ARE priced, SHIPPED WITH the narrowed residual
+              of what still isn't (never the affirmative alone). Both plain text in the a11y tree. */}
+          {medicarePricedNote && (
+            <>
+              <p className="fod-note">{copy.verdictMedicarePriced}</p>
+              <p className="fod-note">{copy.verdictMedicareResidual}</p>
+            </>
+          )}
           {/* P3·U13 — the standing staleness echo (Q1): the per-clock disclosure rendered at
               the re-entry gate; this line keeps the fact visible WITH the date claim. */}
           {stalenessNote && <p className="fod-note cs-staleness-note">{copy.stalenessHeroNote}</p>}

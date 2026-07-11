@@ -220,14 +220,15 @@
   .fod-reveal[data-twopane] {
     display: grid;
     grid-template-columns: minmax(0, var(--measure)) minmax(var(--pane-band-min), 1fr);
-    /* FIVE rows ("buttons drop below" — Briggsy's fork call, council 2026-07-08; mirrors
-       confidence.css): left column = the words (1) · save slot (2) · backup door (3 — also the
-       1fr slack), then TWO full-width rows below both panes: the in-frame R13 disclaimer (4)
-       and the quiet doors (5 — the sanctioned below-fold flex). On this route the graphs column
-       is intrinsically taller than one frame (both graphs stacked — content-necessary scroll,
-       Briggsy-cleared 2026-07-08), so the ORDER is the honesty contract here: the disclaimer
-       always sits ABOVE the doors, and the doors are the last thing the fold cuts. */
-    grid-template-rows: auto auto 1fr auto auto;
+    /* SIX rows (mirrors confidence.css after the 2026-07-10 fold-priority fix): left column =
+       the words (1) · save slot (2) · a bare 1fr slack (3), then the in-frame R13 disclaimer (4)
+       and BELOW it the two UNPROTECTED degradable rows — the backup door (5) and the quiet doors
+       (6 — the sanctioned below-fold flex). On this route the graphs column is intrinsically taller
+       than one frame (both graphs stacked — content-necessary scroll, Briggsy-cleared 2026-07-08),
+       so the ORDER is the honesty contract here: the disclaimer sits ABOVE the backup door AND the
+       quiet doors, and they are the last things the fold cuts. Matching the shared actionsNode's
+       DOM order (Result.tsx: save → disclaimer → backup → quiet) keeps focus order = visual order. */
+    grid-template-rows: auto auto 1fr auto auto auto;
     column-gap: var(--space-9);
     /* --space-4 — mirrors confidence.css: the two routes share one two-pane rhythm. */
     row-gap: var(--space-4);
@@ -268,18 +269,18 @@
     grid-column: 1;
     grid-row: 2;
   }
-  .fod-reveal[data-twopane] .result-backup-door {
-    grid-column: 1;
-    grid-row: 3;
-    align-self: start; /* row 3 is the 1fr slack — hug the words, never stretch down it */
-  }
   .fod-reveal[data-twopane] .disclaimer--in-frame {
     grid-column: 1 / -1;
-    grid-row: 4;
+    grid-row: 4; /* after the row-3 1fr slack — pinned protected, ABOVE the degradable tail */
+  }
+  .fod-reveal[data-twopane] .result-backup-door {
+    grid-column: 1;
+    grid-row: 5; /* BELOW the disclaimer (2026-07-10) — degradable durability affordance */
+    align-self: start;
   }
   .fod-reveal[data-twopane] .result-quiet-row {
     grid-column: 1 / -1;
-    grid-row: 5;
+    grid-row: 6;
   }
 }
 

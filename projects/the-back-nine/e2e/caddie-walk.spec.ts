@@ -97,7 +97,9 @@ const FOLD_TARGETS = [
   '.ap-echo',
   '[role="dialog"]',
   // U13 (increment 2): the gate's decision pair + the vault-return frame's stacking question
-  // (the filed a37b5f06 backup-door-above-disclaimer ruling needs these boxes on the record).
+  // (the filed a37b5f06 backup-door-above-disclaimer ruling — RESOLVED 2026-07-10 by the
+  // Medicare-pricing unit: the door is now DOM-ordered BELOW the disclaimer; these boxes keep the
+  // before/after on the record).
   '.cs-staleness-note',
   '.reentry-notes',
   '.save-actions',

@@ -516,21 +516,25 @@ describe('U12 C2 — the sticky sentence + the verdict crossfade', () => {
   })
 })
 
-describe('P3-U11 — the unpriced-Medicare disclosure (the council veto condition)', () => {
-  it('renders ON the verdict surface as plain a11y-tree text when the household is in the unpriced domain', () => {
+describe('P3-U11 follow-up — the priced-Medicare disclosure on the verdict surface', () => {
+  it('renders the affirmation AND the narrowed residual as plain a11y-tree text (they ship together)', () => {
     render(
       <ConfidenceStatement
         view={{ kind: 'reading', ...READING_FIXTURES['on-track'] }}
-        medicareUnpricedNote
+        medicarePricedNote
       />,
     )
-    const note = screen.getByText(copy.verdictMedicareUnpriced)
-    expect(note).toBeInTheDocument()
-    expect(note).not.toHaveAttribute('aria-hidden') // text-reachable, never decoration
+    const affirm = screen.getByText(copy.verdictMedicarePriced)
+    expect(affirm).toBeInTheDocument()
+    expect(affirm).not.toHaveAttribute('aria-hidden') // text-reachable, never decoration
+    const residual = screen.getByText(copy.verdictMedicareResidual)
+    expect(residual).toBeInTheDocument()
+    expect(residual).not.toHaveAttribute('aria-hidden')
   })
 
-  it('absent by default (the priced domain wears no phantom gap)', () => {
+  it('absent by default (a door household carries the residual on its own sheet — no hero duplicate)', () => {
     render(<ConfidenceStatement view={{ kind: 'reading', ...READING_FIXTURES['on-track'] }} />)
-    expect(screen.queryByText(copy.verdictMedicareUnpriced)).toBeNull()
+    expect(screen.queryByText(copy.verdictMedicarePriced)).toBeNull()
+    expect(screen.queryByText(copy.verdictMedicareResidual)).toBeNull()
   })
 })

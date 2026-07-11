@@ -27,6 +27,12 @@ const MALE_60: PersonInputs = {
 }
 const FEMALE_60: PersonInputs = { ...MALE_60, sex: 'female' }
 
+const MALE_66: PersonInputs = {
+  sex: 'male', currentAge: 66, birthYear: 1960, retirementAge: 65,
+  earnedIncomeReal: 0, pia: 0, socialSecurityClaimAge: 70,
+}
+const FEMALE_66: PersonInputs = { ...MALE_66, sex: 'female' }
+
 const flatN = (len: number, val: number): number[] => Array.from({ length: len }, () => val)
 
 const dist = (o: SimOutput) => {
@@ -112,6 +118,50 @@ describe('healthReadout — the simulate-level emission (opt-in, observe-only)',
     expect(ta.lifetimeNetPremiumReal.length).toBe(500)
     expect(ta.lifetimeNetPremiumReal.every((v) => Number.isFinite(v) && v > 0)).toBe(true)
     expect(ta.lifetimeMedicareCostReal.every((v) => Number.isFinite(v) && v > 0)).toBe(true)
+  })
+
+  it('P3·U11 follow-up — a post-65 Medicare-ONLY run (healthcareEnabled WITHOUT the ACA quote pair) emits the Medicare series: base Part B priced, ACA all-zero', () => {
+    // The widened intake gate (intakeMap.medicareOnlyPriced) shape: healthcareEnabled true, NO
+    // enrolledPremium/slcsp. wantHealth still fires (the domain gate is healthcareEnabled, not the
+    // ACA streams), so the sink emits the medicareBase/irmaaSurcharge series while acaNetPremium is
+    // all-zero and acaCliffState -1 (never ACA-priced) on every year. Both spouses 66 ⇒ enrolled
+    // from year 0; the seed covers years 0..lookback-1.
+    const params: SimulationParams = {
+      initialPortfolio: 2_000_000,
+      annualSpendingReal: 90_000,
+      stockWeight: 0.5,
+      people: [MALE_66, FEMALE_66],
+      survivorSpendingRatio: 0.75,
+      drawdownPolicy: 'proportional',
+      market: validationMarket.value,
+      paths: 500,
+      maxHorizonYears: 6,
+      longevityMode: 'fixed-horizon',
+      overlay: {
+        taxEnabled: true,
+        rmdEnabled: false,
+        startCalendarYear: 2026,
+        buckets: { taxable: 1_000_000, pretax: 1_000_000, roth: 0 },
+        initialTaxableBasis: 1_000_000, // gain 0 ⇒ IRMAA-MAGI is spending-driven, far under the MFJ tier
+        filing: 'mfj',
+        healthcareEnabled: true,
+        irmaaMagiSeed: [60_000, 60_000],
+      },
+    }
+    const on = dist(simulate(params, 777, { healthReadout: true }))
+    expect(on.healthReadout).toBeDefined()
+    const year0 = on.healthReadout!.byYear[0]!
+    expect(year0.acaPricedFraction, 'no marketplace quote ⇒ ACA never prices').toBe(0)
+    expect(year0.acaNetPremiumP50).toBe(0)
+    expect(year0.overCliffFraction, 'acaCliffState -1 ⇒ no over-cliff paths').toBe(0)
+    expect(year0.medicareBaseP50, 'both enrolled ⇒ 2 × 12 × base Part B').toBeCloseTo(
+      2 * 12 * partB2026.value.standardPremiumMonthly,
+      6,
+    )
+    expect(year0.irmaaSurchargeP50, 'MAGI far under the first MFJ tier').toBe(0)
+    // The lifetime Σ pair confirms a real Medicare cost with zero ACA premium.
+    expect(on.taxAware!.lifetimeMedicareCostReal.every((v) => Number.isFinite(v) && v > 0)).toBe(true)
+    expect(on.taxAware!.lifetimeNetPremiumReal.every((v) => v === 0)).toBe(true)
   })
 
   it('overCliffFraction reads 1 when a committed conversion pushes every priced path over the cliff — and the full enrolled premium is paid', () => {

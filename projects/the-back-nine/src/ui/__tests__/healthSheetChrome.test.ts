@@ -13,7 +13,7 @@ import {
   composeHealthSheet,
   composeRegimeFutures,
   medicareAnchor,
-  medicareUnpriced,
+  showMedicarePricedNote,
   quotableYears,
 } from '../healthSheetChrome'
 import { copy, slots } from '../copy'
@@ -223,14 +223,27 @@ describe('composeHealthSheet', () => {
   })
 })
 
-describe('medicareUnpriced — the post-65 unpriced-domain predicate (the veto condition)', () => {
-  it('true only when EVERY member is a known 65+ (the exact complement of the intake’s pre-65 gate)', () => {
-    expect(medicareUnpriced([{ currentAge: 67 }, { currentAge: 66 }])).toBe(true)
-    // exactly 65 is STILL the unpriced domain (the intake gate is `< 65`) — kills the `<=` mutant.
-    expect(medicareUnpriced([{ currentAge: 67 }, { currentAge: 65 }])).toBe(true)
-    expect(medicareUnpriced([{ currentAge: 67 }, { currentAge: 64 }])).toBe(false) // a pre-65 member prices healthcare
-    expect(medicareUnpriced([{ currentAge: 67 }, {}])).toBe(false) // an unknown age is not a claim
-    expect(medicareUnpriced([])).toBe(false)
+describe('showMedicarePricedNote — the route-aware priced-Medicare disclosure seam (insight 080)', () => {
+  it('shows the priced-in disclosure exactly when the run PRICED Medicare AND no Healthcare door is reached', () => {
+    // Priced + no door (the all-65+ household, spine or date route): its ONLY Medicare surface.
+    expect(showMedicarePricedNote({ medicarePriced: true, reachesHealthDoor: false })).toBe(true)
+    // Priced + a door (the ACA-priced household): the sheet already carries the residual
+    // (controlHealthOmissionsNote) — no hero duplicate (one honest home per fact).
+    expect(showMedicarePricedNote({ medicarePriced: true, reachesHealthDoor: true })).toBe(false)
+    // Not priced ⇒ nothing to affirm (both door arms).
+    expect(showMedicarePricedNote({ medicarePriced: false, reachesHealthDoor: false })).toBe(false)
+    expect(showMedicarePricedNote({ medicarePriced: false, reachesHealthDoor: true })).toBe(false)
+  })
+
+  it('is STRUCTURALLY age-free — the seam takes PRICING FACTS, so no age can re-key it (the insight-080 fix)', () => {
+    // The age-mutation witness is TYPE-LEVEL: there is no `people[]`/age parameter to mutate. Passing
+    // one is a compile error (excess-property check) — the predecessor `medicareUnpriced(people)`
+    // keyed off exactly this and silently lied once dateSearch became a second producer of the flag.
+    // @ts-expect-error — an age/people[] input is UNREPRESENTABLE on the pricing-fact seam
+    showMedicarePricedNote({ medicarePriced: true, reachesHealthDoor: false, people: [{ currentAge: 40 }] })
+    // Behavioral arm: the decision depends ONLY on the pricing facts — identical for every household
+    // that shares them, whatever the ages behind the run.
+    expect(showMedicarePricedNote({ medicarePriced: true, reachesHealthDoor: false })).toBe(true)
   })
 })
 

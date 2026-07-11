@@ -53,10 +53,12 @@ export interface RothLeverProps {
   /** Take an applied conversion back out — the caller strips the field and recomputes. */
   readonly onRemove: () => void
   readonly onClose: () => void
-  /** P3·U11 (the council's veto condition): TRUE for a household whose Medicare costs the
-   *  engine does not yet price (post-65-only — no priced healthcare) — the lever then wears
-   *  the conversion-looks-better-than-life note beside its other disclosures. */
-  readonly medicareUnpricedNote?: boolean
+  /** P3·U11 follow-up (the Medicare-pricing unit, 2026-07-10): TRUE for a household whose run
+   *  PRICED Medicare but reaches no Healthcare door (all-65+) — the lever then wears the residual
+   *  note beside its other disclosures. The surcharge a conversion trips IS now priced (the
+   *  two-arm preview genuinely moves), so the note names the ONE residual — the base premium held
+   *  level in today's dollars — never the retired false "not priced yet" claim. */
+  readonly medicarePricedNote?: boolean
   /** U12 ultramode: close-time focus fallback for when the opening trigger has unmounted
    *  (the via-AssumptionPanel route) — forwarded to the ControlSheet scaffold. */
   readonly restoreFallback?: () => HTMLElement | null
@@ -64,7 +66,7 @@ export interface RothLeverProps {
    *  "Today" → "Your save" when elapsed > 0 (one time base per screen). */
   readonly savedAnchor?: BandSavedAnchor
 }
-export function RothLever({ open, draft, preview, previewBlocking = false, onApply, onRemove, onClose, medicareUnpricedNote = false, restoreFallback, savedAnchor }: RothLeverProps) {
+export function RothLever({ open, draft, preview, previewBlocking = false, onApply, onRemove, onClose, medicarePricedNote = false, restoreFallback, savedAnchor }: RothLeverProps) {
   const announcerRef = useRef<Announcer | null>(null)
   const applied = draft.rothConversion
   const [plan, setPlan] = useState<PlanDraft>({})
@@ -128,10 +130,11 @@ export function RothLever({ open, draft, preview, previewBlocking = false, onApp
         <>
           <p className="control-sheet__eyebrow">{copy.rothTeaserLead}</p>
           <p className="control-sheet__intro">{copy.leverRothIntro}</p>
-          {/* P3·U11 — the unpriced-Medicare note STANDS on the sheet (never inside the
-              ready-arm notes slot, which hides until a comparison lands): the household must
-              read the gap BEFORE weighing any delta (the council's on-surface condition). */}
-          {medicareUnpricedNote && <p className="field-help">{copy.rothMedicareUnpricedNote}</p>}
+          {/* P3·U11 follow-up — the priced-Medicare residual note STANDS on the sheet (never inside
+              the ready-arm notes slot, which hides until a comparison lands): the household reads
+              the ONE residual — the surcharge IS priced now, only real-flat Part B remains — BEFORE
+              weighing any delta. */}
+          {medicarePricedNote && <p className="field-help">{copy.rothMedicareResidualNote}</p>}
           <div className="control-plan">
             <CurrencyField
               labelKey="leverRothAmountLabel"

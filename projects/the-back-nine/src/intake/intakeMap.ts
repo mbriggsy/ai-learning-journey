@@ -496,6 +496,13 @@ function buildOverlay(d: ScenarioDraft, horizonYears: number): OverlayParams | u
   // 020/027); the two presence conjuncts restate its own first clauses ONLY so TypeScript
   // narrows `enrolled`/`slcsp` for the spread below — they cannot disagree with it.
   const healthcareOn = enrolled !== undefined && slcsp !== undefined && healthcarePriced(d)
+  // P3·U11 follow-up (the post-65 Medicare pricing unit) — an all-known-ages, all-65+ household
+  // reaches no ACA quote pair yet pays base Part B + IRMAA every year. Enable healthcare WITHOUT
+  // the ACA streams: the priced pipeline (taxOverlay's `acaTable !== undefined && enrolledCount > 0`
+  // gate) then fires for Medicare while ACA self-skips on its own `pre65 > 0` price gate. Mutually
+  // exclusive with `healthcareOn` (that needs a pre-65 member; this needs none) — single-sourced
+  // with the M3 disclosure predicate (medicareOnlyPriced) so enablement and disclosure never drift.
+  const medicareOnly = medicareOnlyPriced(d)
 
   const anyContributions = accounts.some(
     (a) =>
@@ -545,7 +552,11 @@ function buildOverlay(d: ScenarioDraft, horizonYears: number): OverlayParams | u
           // statutory reverted regime — the engine's `?? false` default stays byte-identical).
           ...(d.enhancedSubsidies === true ? { enhancedSubsidies: true } : {}),
         }
-      : {}),
+      : medicareOnly
+        ? // The Medicare-only branch: healthcareEnabled with NO ACA quote pair. The seed rides
+          // the unconditional spread below (already collected for any member ≥ 64).
+          { healthcareEnabled: true }
+        : {}),
     ...(seedComplete ? { irmaaMagiSeed: [seed![0]!, seed![1]!] } : {}),
     ...(oop !== undefined
       ? { oopMedical: new Array<number>(horizonYears).fill(oop) }
@@ -624,6 +635,25 @@ export function healthcarePriced(d: ScenarioDraft): boolean {
     d.health.enrolledPremiumMonthlyToday !== undefined &&
     d.health.slcspMonthlyToday !== undefined &&
     ages.some((a) => a < 65)
+  )
+}
+
+/** P3·U11 follow-up (the post-65 Medicare pricing unit) — the all-known-ages, all-65+ household:
+ *  every member is 65+, so the household reaches no ACA marketplace quote pair, yet it pays base
+ *  Part B + the IRMAA surcharge every year. This is the EXACT complement of `healthcarePriced`'s
+ *  `ages.some(a < 65)` over known ages — the ONE seam deciding Medicare-only enablement, so
+ *  buildOverlay (which flips `healthcareEnabled` on it, WITHOUT the ACA streams) and Result's
+ *  route-aware "was Medicare priced this run" term both READ this predicate — enablement and
+ *  disclosure can never drift (insight 020/027: one predicate, every consumer). It supersedes the
+ *  retired UI-only age-predicate `medicareUnpriced` (now the pricing-fact seam `showMedicarePricedNote`,
+ *  keyed off the decision never ages — insight 080). An unknown age is NOT a claim (the missing-fact gate has not resolved it),
+ *  so the whole household must be age-known: a household with a still-unknown age reads false here
+ *  AND false in `healthcarePriced` unless a KNOWN member is pre-65. */
+export function medicareOnlyPriced(d: ScenarioDraft): boolean {
+  return (
+    d.people.length > 0 &&
+    d.people.every((p) => p.currentAge !== undefined) &&
+    !d.people.some((p) => p.currentAge! < 65)
   )
 }
 

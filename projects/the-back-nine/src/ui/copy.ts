@@ -785,7 +785,7 @@ export const copy = {
   verdictMedicarePriced:
     'Medicare’s premiums for the two of you are already in these numbers — the base Part B premium and its income-based surcharge.',
   verdictMedicareResidual:
-    'A few Medicare costs stay in your own spending — a Part D drug plan, Medigap, and the rare Part A premium. State income tax isn’t counted either, and the base premium is held flat in today’s dollars, so the true picture could sit a little tighter than shown.',
+    'A few Medicare costs stay in your own spending — a Part D drug plan, a Medigap supplement plan, and the rare Part A premium. State income tax isn’t counted either, and the base premium is held flat in today’s dollars, so the true picture could sit a little tighter than shown.',
   rothMedicareResidualNote:
     'The income surcharge a conversion can trip two years later is now part of these numbers. One modeling choice remains: the base premium is held level in today’s dollars, so a conversion that crosses a surcharge step could look a shade easier here than in real life.',
 

@@ -14,7 +14,90 @@ logged on the card; his any-time read still supersedes and still scores the tape
 
 ---
 
-## 2026-07-10 (evening) — `?vault=datestale` + `?seed=datesplit`: the floor's arrived/anchored arms, live at last (the card-#4 unblock)
+## 2026-07-11 (night) — THE MEDICARE PRICING UNIT batch: `?seed=retired` · `?seed=date65` · `?seed=budget` · `?vault=stale` (commits 3454c224 + bc76182b)
+
+**States walked:** all four targets, landings + every quiet-row door + the 3 driven lever previews;
+the stale target's full return arc (unlock → gate → verdict → update-entry). **Viewports:** REAL +
+PHONE (bundles: `temp/caddie/2026-07-11-03-37-45/`). **Readers:** 7 fresh lenses × 4 targets + 93
+refuters (121 agents, wf_f668af86-1fc, zero crashes); 97 raw findings → 36 survived refutation →
+chair-verified below. **What this batch judges:** the NEW priced-Medicare affirmation + narrowed
+residual pair, the spendHelp boundary rewrite, the `date65` seed's first-ever walk, the re-tuned
+borderline/budget households, and the door-below-disclaimer reorder on the composite stale frame.
+
+**firstImpression (locked, retired):** *"Calm, editorial, plain-spoken, and trustworthy — a quiet
+advisor, not a sales tool… it hedges honestly ('the true picture could sit a little tighter than
+shown')."* Readback matched `copy.txt` — capture clean.
+
+### Card 1 — `?seed=retired` (the spine affirmation + residual). **toneVerdict: READS-CLEAN on the unit's lines · pre-existing tensions noted.**
+The affirmation was read as cause-naming by every lens — no cheerleading flag anywhere; the
+first-look folded the residual's hedge into WHY it trusted the surface. **Fix shipped en route:**
+"Medigap" was glossless jargon (spouse + copy-law, two-target convergence) → now *"a Medigap
+supplement plan"* (fit 17/17 re-proven). Pre-existing, NOT this unit's, parked as observations:
+(a) the two-fractions frame tension — "9 of 10 futures your plan covers" beside the legend's
+"Eight in ten futures fall inside the band" (three lenses independently; his-designed pair, never
+before flagged — a candidate future copy pass); (b) the worsened-state trim figure "About $7,600 a
+month less" never names less-of-WHAT (the trim-clause family, rides O1's filing); (c) the hunter's
+$148k-floor read (the failing tenth lives outside the band's floor) — the C2/band family, council-
+adjudicated. **falsePassHunt:** attempted, found only the pre-existing band-floor tension above.
+**colorBlindCheck:** the IQR band's no-text-path flags re-raise O3 — council-closed AS-DESIGNED
+(wf_27e87ceb-745); grayscale hierarchy survives. **disposition: PILOT-CLEARED (the unit's lines;
+gloss fixed en route) — his eye supersedes.**
+
+### Card 2 — `?seed=date65` (first-ever walk). **toneVerdict: SOFT-FLAG (the residual's sizing — the council's ⚑ yours-to-close slice).**
+No false "unpriced" claim anywhere (the unit's whole point — verified in copy + aria on every
+state). The Hunter's best swing: *"Medicare's fully handled and the stuff that isn't only costs a
+hair"* — the residual sizes the unmodeled bucket as "a little tighter" while Part D + Medigap can
+run $5–10k/yr. **Chair ruling:** the specific math dies on the ratified containment design (Part
+D/Medigap are IN the user's entered spending by instruction — the residual's own first clause
+names that ownership), and state-tax + real-flat are honestly directional — but the reader on THIS
+surface never saw spendHelp, so their compliance is unverifiable. The sizing tension is exactly
+the wording slice the council split ⚑ yours-to-close: **PARKED for his eye** (the pair otherwise
+ships pilot-cleared). Also noted: the spouse bounced twice on the Roth note's "trip… two years
+later / crosses a surcharge step" (the established one-word-per-mechanism dialect; his prior
+health-sheet rounds cleared 'step' — noted, not flagged). **Filed (rule-36 sweep, his pen):** the
+odds dialect splits 'of'/'in' on one surface (ladder rungs "7 of 10" vs hero/top-rung "better than
+9 in 10") + the "about better than 9 in 10" double hedge. **falsePassHunt:** the sizing read above
+— chair-adjudicated defensible, parked. **disposition: SOFT-FLAG → PARKED-FOR-BRIGGSY (the
+residual's direction-line wording only).**
+
+### Card 3 — `?seed=budget` (the re-tuned two-tier household). **toneVerdict: READS-CLEAN on the unit's lines.**
+The re-tuned household renders its named relief spread (7-of-10 full track / over-funded floor).
+The Hunter re-read the relief line's "— not the basics" as a hard promise erasing the ~1-in-10
+floor tail — **superseded: that exact stack is his Q2 formal-exit-condition clearance** ("honest
+relief, keep the stack"), logged as a tape-visible re-read, not a flag. The main-fan-vs-preview
+"two dollar ladders" finding was **chair-killed with source evidence**: both charts derive from
+the SHARED `niceCeil`/`buildYTicks` dialect (fcc35556) — different data ranges legitimately pick
+different rungs of one ladder family. **routedToOracle:** the TF preview's y-ticks can mix units
+on one axis ("$750k" among "$1.5M/$2.25M/$3M") — a `buildYTicks` formatter-consistency nit, filed
+O8. **disposition: PILOT-CLEARED (the unit's lines; Medigap gloss rides Card 1's fix).**
+
+### Card 4 — `?vault=stale` (the reordered composite frame). **toneVerdict: the UNIT's slice READS-CLEAN · the AGED-ANCHOR family stays HARD-FLAGGED (U17, unchanged).**
+The door-below-disclaimer reorder drew ZERO reader comment (the caveat now precedes the durability
+door; no lens stumbled on the order); the three update notices read fine with one opaque phrase —
+the blend line ("The fund data we read your accounts against…") bounced the spouse AGAIN, post-fix
+(second consecutive panel; his tape read arbitrates — noted, unscored). The Hunter's headline —
+the verdict projects from the 2-year-stale, drawdown-ignorant $1M anchor while "Today 68/67" sits
+two sim-years INTO the band — **is the U17-parked aged-vault family, now corroborated ×6 readers**
+(appended to the U17 coupling's urgency evidence; every organic vault is same-day until 2027, the
+frame is dev-plant-only). Also noted (pre-existing): the sequencing sheet's "Put the three accounts
+in exactly the order…" on a two-bucket household (copy-count nit, filed); the survivor-ratio
+panel row cites "Research" generically beside precisely-cited neighbors (nit, filed). One
+channel-artifact killed at chair: the "each— your" em-dash jam is text-extraction only —
+`controls.css:127` already breathes the tag off the label (the sr-only-class lesson, again).
+**disposition: the unit's slice PILOT-CLEARED · the aged card unchanged (HARD-FLAG, U17).**
+
+**Coverage honesty:** `spendHelp` (the rewritten intake boundary copy) was NOT walked — it renders
+only on the intake flow, which seed/vault targets bypass; the update route lands at step 1 but the
+walk doesn't drive to the spend step. His eye on the walk-through, or a targeted intake walk,
+still owes that string its first cold read. The pre-65 caveat clause on the Roth omissions line
+("pre-65 health-plan side effects") rendering for all-65+ households is filed O9 (an age-gated
+copy variant — age IS that clause's display domain).
+
+**prediction (the tape's hook):** he clears the affirmation/residual pair on sight (the residual's
+"a little tighter" MAY draw a squint — if he flags anything it's that sizing line or the Roth
+note's density); the reorder he either doesn't notice or likes ("caveat before the door" was his
+own filed instinct); the aged-anchor stays his U17 call. **evidence:** bundles above; corpus rules
+1/36 + the seven hole shapes pinned; exemplars E11/E12 current.
 
 **States walked:** datestale unlock → gate → verdict (post-fix bundles: run `2026-07-10-19-08-08`);
 datesplit landing + all 5 doors + the 3 driven lever previews (increment 3's first real outing).

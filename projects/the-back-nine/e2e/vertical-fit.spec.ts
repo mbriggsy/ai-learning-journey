@@ -484,8 +484,9 @@ test.describe(`the vault return (?vault=stale) — the gate + the staleness-echo
     // encoding of the measured-delta rule; U13 post-fold review advisory 6): the only other
     // guard on the `:has(.cs-staleness-note)` step-down is assertFrameFits GEOMETRY, which a
     // deleted :has() rule can survive on Windows text metrics while red on CI (the exact 075
-    // loop). Pin the COMPUTED styles: one token below the ≤840px density tier — row-gap
-    // --space-2 (8px) on the two-pane grid, gap --space-1 (4px) on the subordinates.
+    // loop). Pin the COMPUTED styles: two tokens below the ≤840px density tier since the
+    // 2026-07-11 round-3 reservoir step — row-gap --space-1 (4px) on the two-pane grid,
+    // gap --space-1 (4px) on the subordinates.
     const echoGaps = await page
       .locator('.confidence-reveal[data-twopane]')
       .evaluate((reveal) => ({
@@ -494,7 +495,7 @@ test.describe(`the vault return (?vault=stale) — the gate + the staleness-echo
         // gap-shorthand serialization question entirely).
         subordinatesRowGap: getComputedStyle(reveal.querySelector('.reveal__subordinates')!).rowGap,
       }))
-    expect(echoGaps.rowGap, 'the staleness-echo frame row-gap must step to --space-2').toBe('8px')
+    expect(echoGaps.rowGap, 'the note-frame row-gap must step to --space-1 (round 3)').toBe('4px')
     expect(
       echoGaps.subordinatesRowGap,
       'the staleness-echo subordinates row-gap must step to --space-1',

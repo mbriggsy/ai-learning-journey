@@ -271,7 +271,8 @@
      echo-less frame keeps the cleared rhythm byte-identical (:has() scopes it; precedent
      intake.css); :has beats the density tier on specificity, so file order doesn't decide. The
      verify:fit ?vault=stale arm enforces this frame on CI's own metrics — AND pins these
-     computed gaps directly (8px/4px, mutant-proven), so deleting this block is red on every
+     computed gaps directly (4px/4px since the 2026-07-11 round-3 step, mutant-proven), so
+     deleting this block is red on every
      platform, not just CI's taller text metrics (insight 075's standing encoding).
      SCOPE NOTE (post-fold review 2026-07-09, 5-lens convergence): this block carries NO max-height
      gate, so ABOVE 840px — where the density tier is dark — the echo steps TWO tokens below the
@@ -289,7 +290,7 @@
      (staleness) and is unchanged. */
   .confidence-reveal[data-twopane]:has(.cs-staleness-note),
   .confidence-reveal[data-twopane]:has(.cs-medicare-note) {
-    row-gap: var(--space-2);
+    row-gap: var(--space-1); /* round 3 — see the reservoir note below (was --space-2) */
   }
   .confidence-reveal[data-twopane]:has(.cs-staleness-note) > .reveal__lead,
   .confidence-reveal[data-twopane]:has(.cs-medicare-note) > .reveal__lead {
@@ -308,7 +309,14 @@
      wrapped line × ~6–7 pair lines ≈ 16–19px — platform-independent arithmetic, and the words
      are untouched (the degrade law: whitespace/density only, content never cut). The budget
      REAL fit arm pins the computed ratio, so deleting this rule is red on EVERY platform
-     (insight 075's standing encoding), never only under CI's taller metrics. */
+     (insight 075's standing encoding), never only under CI's taller metrics.
+     ROUND 3 (same day, run 29170964353): the leading recovered 18px measured on CI (813→795)
+     but the REAL window's 791 fold still lost by 4px on ubuntu — so the note-bearing frames'
+     row-gap steps 8→4 above (−4px × the FOUR gaps in the chain above the disclaimer, including
+     BOTH flanking the empty 1fr slack row = −16px, ubuntu reservoir ≈ 12px). On Windows, where
+     slack > 0, the disclaimer stays bottom-anchored by rows 6–7 — the only visible change is
+     the two upper-stack gaps tightening 4px each. The ?vault=stale arm's computed pin moves
+     with it (8px → 4px). */
   .confidence-reveal[data-twopane] .cs-medicare-note,
   .confidence-reveal[data-twopane] .cs-medicare-residual {
     line-height: var(--leading-snug);

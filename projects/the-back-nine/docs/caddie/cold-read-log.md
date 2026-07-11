@@ -28,6 +28,23 @@ borderline/budget households, and the door-below-disclaimer reorder on the compo
 advisor, not a sales tool… it hedges honestly ('the true picture could sit a little tighter than
 shown')."* Readback matched `copy.txt` — capture clean.
 
+> **RESOLVED BY HIS READ (2026-07-11, live walk — the tape row is SCORED: PARTIAL with one
+> FALSE-PASS clause).** All four cards CLOSED. **Card 1:** the affirmation cleared as
+> cause-naming, but the residual's OWNERSHIP clause bounced him THREE rounds ("stay in your own
+> spending" → "come out of the spending you entered" → the mechanism-naming lead that now ships)
+> — a FALSE-PASS on a pilot-cleared unit line (rules 37/39 + E13 minted; the pilot's clearance
+> of that line graded MISS; the hawk's magnitude reword + the two-round Linux fold fix rode the
+> same arc). His survivor-line finds (the causal "as" — shipped; the bracket-detail hunger —
+> filed O10) and his theme law ("general terms are fine as long as there is somewhere to see
+> the details" → rule 38) came out of this card. **Card 2:** the ⚑ sizing slice CLOSED by his
+> call — *"the little tighter is fine as long as we show details in future feature set"* (the
+> Medicare-only door filing now carries his demand signal). **Cards 3+4:** *"3 & 4 are
+> cleared"* — including BOTH parked stale looks (the door-below-disclaimer reorder + the
+> update-route landing). **Ride-alongs out of the walk:** the state-tax council
+> (wf_cc065e3b-bc1) + the filed state-tax engine unit (TODO item 11, roster {NC,PA → SC,GA,FL,DE})
+> + the OPEN ask-for-Medicare-extras question (his GO/no-GO owed). `spendHelp` REMAINS unwalked —
+> its first read now also covers the new income-tax fence line.
+
 ### Card 1 — `?seed=retired` (the spine affirmation + residual). **toneVerdict: READS-CLEAN on the unit's lines · pre-existing tensions noted.**
 The affirmation was read as cause-naming by every lens — no cheerleading flag anywhere; the
 first-look folded the residual's hedge into WHY it trusted the surface. **Fix shipped en route:**

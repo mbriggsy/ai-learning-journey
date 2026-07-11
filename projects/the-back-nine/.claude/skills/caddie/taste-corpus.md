@@ -50,6 +50,22 @@ supersedes anything derived from this file.
    *(He read exactly that as "test data issue?")*
 7. **Certainty language.** Flag "guarantees", "no matter what", "unbreakable", "you're covered"
    in any verdict/projection copy. Probabilistic framing only (R12).
+37. **Disclosures name the mechanism, never the reader's memory.** Flag any disclosure whose
+    load-bearing referent is the reader's recall of their own intake ("the spending you
+    entered", "you told us…"). Seeded/demo surfaces have no intake memory at all, and a real
+    user doesn't recall field boundaries months later — the sentence must name WHO adds WHAT
+    ("That's the only piece this tool adds by itself…"), with the reader's entry as supporting
+    context at most.
+    *(The Medicare residual bounced him THREE rounds, 2026-07-11: "stay in your own spending"
+    → "who else's spending would it be?"; his own approved rewrite "come out of the spending
+    you entered" → "I still don't get what this is trying to tell me. I entered these amounts
+    in an expense section earlier?" — it landed only when the mechanism led.)*
+38. **General terms require a details home.** A surface may speak a quantity in general terms
+    ONLY if a details surface exists — or is filed — where the reader can see the dollars.
+    Flag any generalized quantity with no detail home live or on the roadmap.
+    *(His law, verbatim 2026-07-11: "We talk about numbers in general terms — which is fine as
+    long as there is somewhere to see the details. So if that's still a pending feature set,
+    then fine, we'll get to it. If not, Houston we had a problem.")*
 
 ### Tone
 
@@ -163,6 +179,13 @@ supersedes anything derived from this file.
     in the prior decision, closing with a jargon-free one-breath go/no-go. Never a bare "A or
     B?", never a close that requires understanding a technical lever.
     *("I don't know what the fucking lever on the left does.")*
+39. **Civilians read omission lists as bills.** Every "isn't counted" item invites "why not?
+    I count my gas bill." A reader lens must interrogate each disclosed omission with "why
+    isn't this just an expense like my others?" — and the surface (or a filed answer) must
+    survive that question in the household's frame.
+    *(His state-tax challenge, 2026-07-11: "We count car payments as an expense, food as an
+    expense, why not state taxes?… An educated guess is worse than ignoring it?" — it spawned
+    a full council + a filed engine unit; no Caddie lens had asked the question.)*
 
 ---
 
@@ -281,3 +304,16 @@ supersedes anything derived from this file.
   (the 2026-06-29 hover-kill class), and he catches it by FEEL on the device, with a laugh not
   anger; (b) **direct manipulation beats a hop** — never route a touch reader through a modal
   for a value the surface itself could give under their finger.
+- **E13 — the Medicare residual, three rounds live (2026-07-11).** Trigger: the priced-Medicare
+  residual's ownership clause. Round 1: "stay in your own spending" — "what does it mean…
+  who else's spending would it be?" Round 2 (his own chat-approved rewrite, re-read on the
+  surface): "come out of the spending you entered" — "I still don't get what this is trying
+  to tell me. I entered these amounts in an expense section earlier?" Round 3 landed: the
+  mechanism-naming lead ("That's the only piece this tool adds by itself."). Then the
+  generalization: "why don't we just ask for it?… correctness always out rules everything" →
+  the ask-for-Medicare-extras question + the state-tax council + a filed engine unit. Three
+  lessons: (a) rule 37 — his approval of a rewrite IN CHAT does not survive his re-read ON
+  THE SURFACE; only the surface read counts; (b) a Caddie panel graded this exact clause as
+  trust-building ("it hedges honestly") — civilian ownership-mechanics are a distinct failure
+  axis from tone (the FALSE-PASS that minted rules 37/39); (c) his comprehension questions
+  are PRODUCT signals, not copy nits — two engine-unit filings came out of one paragraph.

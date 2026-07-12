@@ -3,8 +3,9 @@ name: caddie
 description: >-
   The Caddie — the Briggsy-proxy cold reader. Walks the REAL rendered UI (capture harness at
   his exact 1536×791@2.5dpr viewport + phone), fans out fresh-context readers calibrated on his
-  taste corpus, adversarially hunts the calm-but-wrong reading, and files a verdict card he
-  reviews instead of walking pixels. Use BEFORE calling any new or changed user-facing surface
+  taste corpus, adversarially hunts the calm-but-wrong reading, and files a chaired verdict
+  card that ships — his eye audits the tape at product cadence instead of walking pixels per
+  surface. Use BEFORE calling any new or changed user-facing surface
   shipped (pre-walk every U-batch), whenever a tone/comprehension/trust judgment of a rendered
   surface is needed, or as `/caddie consult "<question>"` for an expert-depth UI/UX/tone
   question. THE BATCHED-ORACLE LAW (Briggsy's 2026-07-11 grant): a chaired card SHIPS —

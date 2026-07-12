@@ -86,9 +86,14 @@ the doors); a lever sheet (policy/regime radios, the Roth plan fields) additiona
 preview DRIVEN and its TwoFutures chart captured as a `-preview` state (increment 3 — the
 rule-36 one-dialect check was un-verifiable on pre-commit input states; preview-only, nothing
 is Applied). A `vault:<key>` target drives the U13 decrypt-on-return arc (unlock → the
-re-entry gate → affirm → the echoed verdict, doors riding the stale verdict); `vault:stale`
-additionally captures the update route's first frame; `vault:datestale` is the aged
-SPLIT-DATE plant (the floor's arrived arm + the re-derived anchored hero):
+re-entry gate → affirm → the echoed verdict, doors riding the STALE verdicts — both
+`vault:stale` and `vault:datestale` since increment 4, the aged lever-preview landmine);
+`vault:stale` additionally captures the update route's first frame; `vault:datestale` is the
+aged SPLIT-DATE plant (the floor's arrived arm + the re-derived anchored hero). An
+`intake:fork` target (increment 4) drives the GUIDED INTAKE to the Medicare-extras payment
+fork — blank-start → the half-answer R19 block → mixed provenance (one entered dollar, one
+adopted typical) — capturing the spend step en route; the fork renders on no seed or vault
+route, so this is its only capturable home:
 
 - `viewport.png` — the above-fold frame at CSS scale (what he sees first; long edge < the
   ~2576px model-ingestion cap, so it is never silently downscaled)
@@ -96,7 +101,9 @@ SPLIT-DATE plant (the floor's arrived arm + the re-derived anchored hero):
 - `crop-*.png` — DEVICE-scale (2.5×/3×) crops of the text-critical regions (band labels, the
   echo, the disclaimer) — small text is read from crops, never from the full frame
 - `cvd-deuteranopia.png` / `cvd-protanopia.png` / `cvd-grayscale.png` — Chrome-native CVD
-  emulation (CDP `Emulation.setEmulatedVisionDeficiency`) of the above-fold frame
+  emulation (CDP `Emulation.setEmulatedVisionDeficiency`) of the above-fold frame; PLUS
+  `cvd-<arm>-<chart>.png` device-scale crops of every chart on the state (band / ladder /
+  TwoFutures — increment 4: the above-fold arms were structurally blind to below-fold charts)
 - `aria.yaml` — the ARIA snapshot (the programmatic-availability channel)
 - `copy.txt` / `dialog.txt` — the VERBATIM rendered text from the DOM (words are always read
   here, never OCR'd off pixels)

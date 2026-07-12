@@ -46,12 +46,22 @@ import { REAL, REAL_DPR, PHONE, PHONE_DPR, gotoSeedFinal, settleLayout } from '.
  *    fresh ANCHORED arm (card #4's blocked-unreachable ruling was half-wrong: the anchor is
  *    computed for every live household, so the fresh split renders the anchored floor line).
  *
- * Targets: `CADDIE_TARGETS="vault:retired,vault:stale,seed:date"` (comma list). Back-compat:
- * `CADDIE_SEED=budget` still works (one seed target). Default: `seed:retired`.
+ * Increment 4 (2026-07-12, the Medicare-extras pre-walk's coverage demands):
+ *  - CVD CHART crops — the viewport-scoped cvd-*.png arms captured above-fold only, so the
+ *    odds ladder and every sheet's TwoFutures chart never landed in a color-vision frame;
+ *    each chart now ships a device-scale crop under each arm (`cvd-<arm>-<chart>.png`).
+ *  - `intake:fork` — the guided-intake walk to the Medicare-extras payment fork (blank →
+ *    R19-blocked → mixed-provenance) + the spend step en route; the fork is intake-only, so
+ *    seed/vault targets structurally cannot reach it.
+ *  - `vault:datestale` joins the DOOR walk — the aged date household's lever previews were
+ *    an uncaptured landmine (stale-timeline inheritance unverified).
+ *
+ * Targets: `CADDIE_TARGETS="vault:retired,vault:stale,seed:date,intake:fork"` (comma list).
+ * Back-compat: `CADDIE_SEED=budget` still works (one seed target). Default: `seed:retired`.
  */
 
 interface Target {
-  readonly kind: 'seed' | 'vault'
+  readonly kind: 'seed' | 'vault' | 'intake'
   readonly key: string
 }
 
@@ -61,8 +71,14 @@ function parseTargets(): Target[] {
     (process.env.CADDIE_SEED !== undefined ? `seed:${process.env.CADDIE_SEED}` : 'seed:retired')
   return raw.split(',').map((entry) => {
     const [kind, key] = entry.trim().split(':')
-    if ((kind !== 'seed' && kind !== 'vault') || key === undefined || key === '') {
-      throw new Error(`bad CADDIE_TARGETS entry "${entry}" — expected seed:<key> or vault:<key>`)
+    if (
+      (kind !== 'seed' && kind !== 'vault' && kind !== 'intake') ||
+      key === undefined ||
+      key === ''
+    ) {
+      throw new Error(
+        `bad CADDIE_TARGETS entry "${entry}" — expected seed:<key>, vault:<key>, or intake:<key>`,
+      )
     }
     return { kind, key }
   })
@@ -85,6 +101,27 @@ const CROP_TARGETS = [
   { name: 'reentry-notes', selector: '.reentry-notes' },
   { name: 'backup-door', selector: '.result-backup-door' },
   { name: 'hero-lead', selector: '.reveal__lead' },
+] as const
+
+/** The Chrome-native color-vision arms (CDP emulation — the same transform DevTools applies). */
+const CVD_ARMS = [
+  ['deuteranopia', 'deuteranopia'],
+  ['protanopia', 'protanopia'],
+  ['grayscale', 'achromatopsia'],
+] as const
+
+/**
+ * Meaning-critical CHART regions, additionally cropped under EACH CVD arm (increment 4): the
+ * viewport-scoped cvd-*.png captures above-fold only, so the odds ladder (below the fold on
+ * the date route) and the lever sheets' TwoFutures charts never landed in a color-vision
+ * frame at all — the CVD screener was structurally blind to exactly the surfaces where color
+ * carries the most meaning. Element crops may SCROLL to their target, so these run in the
+ * LAST capture stage, never before the pinned-scroll frames.
+ */
+const CVD_CHART_TARGETS = [
+  { name: 'band', selector: 'svg.band-svg' },
+  { name: 'ladder', selector: 'svg.ladder-svg' },
+  { name: 'twofutures', selector: 'svg.tf' },
 ] as const
 
 /** Regions whose boxes land in fold.json so readers know what sits above/below the fold. */
@@ -156,17 +193,11 @@ async function captureState(page: Page, dir: string): Promise<void> {
   // 2) The above-fold frame + its color-vision arms, all at the SAME pinned scroll origin.
   await page.screenshot({ path: path.join(dir, 'viewport.png'), scale: 'css' })
   const cdp = await page.context().newCDPSession(page)
-  const arms = [
-    ['deuteranopia', 'deuteranopia'],
-    ['protanopia', 'protanopia'],
-    ['grayscale', 'achromatopsia'],
-  ] as const
-  for (const [name, type] of arms) {
+  for (const [name, type] of CVD_ARMS) {
     await cdp.send('Emulation.setEmulatedVisionDeficiency', { type })
     await page.screenshot({ path: path.join(dir, `cvd-${name}.png`), scale: 'css' })
   }
   await cdp.send('Emulation.setEmulatedVisionDeficiency', { type: 'none' })
-  await cdp.detach()
 
   // 3) Full page, then element crops LAST — locator screenshots may scroll to their target.
   await page.screenshot({ path: path.join(dir, 'fullpage.png'), fullPage: true, scale: 'css' })
@@ -185,6 +216,33 @@ async function captureState(page: Page, dir: string): Promise<void> {
       await target.screenshot({ path: path.join(dir, `crop-${name}.png`), scale: 'device' })
     }
   }
+
+  // 4) The CVD CHART crops (increment 4) — every chart on the state, under each arm, at
+  // device scale. Runs after the pinned-scroll frames by the same scroll-side-effect law as
+  // stage 3; absence is fine (an intake step has no chart), presence captures every match
+  // (a sheet's TwoFutures beside the landing's band).
+  for (const [armName, type] of CVD_ARMS) {
+    let emulating = false
+    for (const { name, selector } of CVD_CHART_TARGETS) {
+      const charts = page.locator(selector)
+      const count = await charts.count()
+      for (let i = 0; i < count; i++) {
+        const chart = charts.nth(i)
+        if (!(await chart.isVisible()) || (await chart.boundingBox()) === null) continue
+        if (!emulating) {
+          await cdp.send('Emulation.setEmulatedVisionDeficiency', { type })
+          emulating = true
+        }
+        const suffix = count > 1 ? `-${i + 1}` : ''
+        await chart.screenshot({
+          path: path.join(dir, `cvd-${armName}-${name}${suffix}.png`),
+          scale: 'device',
+        })
+      }
+    }
+    if (emulating) await cdp.send('Emulation.setEmulatedVisionDeficiency', { type: 'none' })
+  }
+  await cdp.detach()
   await page.evaluate(() => window.scrollTo(0, 0))
 }
 
@@ -381,6 +439,103 @@ async function walkWorsening(page: Page, outDir: string): Promise<void> {
   await captureState(page, path.join(outDir, 'landing-worsened'))
 }
 
+/**
+ * The INTAKE walk (increment 4 — `intake:fork`): the Medicare-extras payment fork is
+ * intake-ONLY — every seed/vault target bypasses the guided flow entirely, so the fork's
+ * blank-start frame, its half-answer R19 block, and the mixed-provenance state (one entered
+ * dollar, one adopted typical) were structurally uncapturable before this target. The drive
+ * mirrors the CSP walk's proven near-Medicare household (65/63) up to the fork; the SPEND
+ * step is captured en route (`spendHelp`'s first-ever walk — it carries the post-flip
+ * premium-boundary sentence + the income-tax fence). Nothing past the fork is driven —
+ * verdict/door/panel coverage rides the seed and vault targets.
+ */
+async function walkIntakeFork(page: Page, outDir: string): Promise<void> {
+  await page.goto('/')
+  await page.getByRole('button', { name: 'Begin' }).click()
+
+  // Person groups locate by the STABLE class — committing a name renames the group's
+  // accessible legend mid-flow (by design), which would stale a name-based locator.
+  const you = page.locator('.person-group').first()
+  const spouse = page.locator('.person-group').nth(1)
+  // NOT check({force}) (the CSP walk's idiom): the segment radios are sr-only 1px boxes, and
+  // on the PHONE arm the forced click can land off-target ("did not change its state" —
+  // caught by this walk's own smoke run). A NATIVE element click is layout-independent,
+  // still bubbles to React's root listener, and the committed state is asserted back.
+  const pick = async (
+    scope: Page | ReturnType<Page['locator']>,
+    name: string | RegExp,
+  ): Promise<void> => {
+    const radio = scope.getByRole('radio', { name, exact: typeof name === 'string' })
+    await radio.evaluate((el) => (el as HTMLInputElement).click())
+    await expect(radio, 'the picked radio did not commit').toBeChecked()
+  }
+  const next = () => page.getByRole('button', { name: 'Continue' }).click()
+
+  await you.getByLabel('First name').fill('Pat')
+  await you.getByLabel('Birth year').fill('1961')
+  await pick(you, 'Male')
+  await spouse.getByLabel('First name').fill('Sam')
+  await spouse.getByLabel('Birth year').fill('1963')
+  await pick(spouse, 'Female')
+  await next()
+
+  await pick(you, 'Already retired')
+  await you.getByLabel('The age work stopped').fill('63')
+  await pick(spouse, 'Already retired')
+  await spouse.getByLabel('The age work stopped').fill('61')
+  await next()
+
+  const ssAmounts = page.getByLabel('Monthly benefit at full retirement age')
+  await ssAmounts.first().fill('2000')
+  await ssAmounts.last().fill('1500')
+  const claims = page.getByLabel('The year you’ll start Social Security')
+  await claims.first().fill('2028')
+  await claims.last().fill('2030')
+  await next()
+
+  // The SPEND step — captured BEFORE any entry (the help text is the read).
+  await expect(page.getByLabel('Household spending, all in')).toBeVisible()
+  await captureState(page, path.join(outDir, 'spend-step'))
+  await page.getByLabel('Household spending, all in').fill('7000')
+  await pick(page, 'Each month')
+  await next()
+
+  // ACA pair (63 < 65 ⇒ required) → out-of-pocket (optional, skipped) → IRMAA seed.
+  await page.getByLabel('Your household’s combined monthly premium').fill('950')
+  await page.getByLabel('Benchmark Silver plan, monthly (whole household)').fill('880')
+  await next()
+  await next()
+  await page.getByLabel('Income, two years back').fill('120000')
+  await page.getByLabel('Income, last year').fill('110000')
+  await next()
+
+  // THE FORK, blank-start: nothing pre-selected — an unanswered arm is never a silent $0.
+  await expect(
+    page.getByRole('heading', { name: 'Medicare, beyond Part B' }),
+    'the intake drive did not land on the payment-fork step',
+  ).toBeVisible()
+  await captureState(page, path.join(outDir, 'fork-blank'))
+
+  // The half-answer R19 block: 'entered below' with no dollar + Continue → the
+  // finish-the-answer-or-unsay-it line. Asserted so a silent advance (or a never-rendered
+  // error) fails the walk RED instead of bundling a frame identical to fork-blank
+  // (insight-029 vacuity discipline).
+  await pick(you, 'A monthly premium — entered below')
+  await pick(spouse, /Not sure — use a typical figure/)
+  await next()
+  await expect(
+    page.getByText('Enter the monthly amount — or pick one of the other choices.'),
+    'the half-answered fork did not fire its R19 block',
+  ).toBeVisible()
+  await captureState(page, path.join(outDir, 'fork-blocked'))
+
+  // Mixed provenance: Pat enters a real $180; Sam stays on the adopted typical — the state
+  // the standing disclosures must keep legible per person (spec F2). Select-all + typed
+  // digits + value asserted back (the fill() concatenation trap — the walk's own law).
+  await typeFieldValue(you.getByLabel('Monthly premium, all in'), '180', '180')
+  await captureState(page, path.join(outDir, 'fork-mixed'))
+}
+
 function hookConsole(page: Page): Array<{ type: string; text: string }> {
   const log: Array<{ type: string; text: string }> = []
   page.on('console', (m) => log.push({ type: m.type(), text: m.text() }))
@@ -406,9 +561,20 @@ for (const target of TARGETS) {
         const consoleLog = hookConsole(page)
         const outDir = path.join(OUT_ROOT, targetSlug, v.name)
         if (target.kind === 'vault') {
-          // Doors ride the STALE verdict only — `vault:retired`'s verdict is the same
+          // Doors ride the STALE verdicts only — `vault:retired`'s verdict is the same
           // household minus the staleness surfaces; double-walking its sheets is pure bloat.
-          await walkVaultReturn(page, target.key, outDir, { doors: target.key === 'stale' })
+          // Increment 4: `datestale` JOINS the door walk — the aged DATE household's sheets
+          // are where a driven lever preview inherits (or fails to inherit) the stale
+          // timeline; that interplay was an uncaptured landmine while only the spine-stale
+          // vault opened its doors.
+          await walkVaultReturn(page, target.key, outDir, {
+            doors: target.key === 'stale' || target.key === 'datestale',
+          })
+        } else if (target.kind === 'intake') {
+          if (target.key !== 'fork') {
+            throw new Error(`unknown intake walk "${target.key}" — only intake:fork exists`)
+          }
+          await walkIntakeFork(page, outDir)
         } else {
           await walkSeed(page, target.key, outDir)
         }

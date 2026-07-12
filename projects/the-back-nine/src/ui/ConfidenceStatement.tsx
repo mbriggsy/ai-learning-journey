@@ -406,7 +406,9 @@ export function ConfidenceStatement({ view, focusSignal, actionsSlot, medicarePr
                 {/* The on-typical appendix rides INSIDE the residual paragraph (the extras
                     unit) — one block, wrap-driven height only, so the tallest composite
                     frame (the stale vault) gains no new row. */}
-                <p className="cs-medicare-residual">
+                <p
+                  className={`cs-medicare-residual${medicareExtrasTypicalNote !== undefined ? ' cs-medicare-residual--typical' : ''}`}
+                >
                   {copy.verdictMedicareResidual}
                   {medicareExtrasTypicalNote !== undefined ? ` ${medicareExtrasTypicalNote}` : ''}
                 </p>

@@ -186,12 +186,23 @@ async function assertMedicareSnugLeading(page: Page): Promise<void> {
   // magnitude-honest residual in LEADING (body 1.55 → snug 1.4) — a platform-independent
   // delta pinned here by computed style, so deleting the rule goes red on EVERY platform
   // (insight 075's standing encoding), never only under ubuntu's taller text metrics.
-  const ratio = await page.locator('.cs-medicare-residual').evaluate((el) => {
+  // ROUND 5: the ON-TYPICAL frames (the appended bi-directional typical sentence — the
+  // modifier class) step one further to --leading-tight (~1.3); entered/mixed frames keep
+  // snug. Branch on the modifier so BOTH regimes stay pinned.
+  const { ratio, typical } = await page.locator('.cs-medicare-residual').evaluate((el) => {
     const cs = getComputedStyle(el)
-    return parseFloat(cs.lineHeight) / parseFloat(cs.fontSize)
+    return {
+      ratio: parseFloat(cs.lineHeight) / parseFloat(cs.fontSize),
+      typical: el.classList.contains('cs-medicare-residual--typical'),
+    }
   })
-  expect(ratio, 'the medicare pair rides --leading-snug (~1.4)').toBeGreaterThan(1.35)
-  expect(ratio, 'the medicare pair rides --leading-snug (~1.4)').toBeLessThan(1.45)
+  if (typical) {
+    expect(ratio, 'the ON-TYPICAL pair rides --leading-tight (~1.3) — round 5').toBeGreaterThan(1.25)
+    expect(ratio, 'the ON-TYPICAL pair rides --leading-tight (~1.3) — round 5').toBeLessThan(1.35)
+  } else {
+    expect(ratio, 'the medicare pair rides --leading-snug (~1.4)').toBeGreaterThan(1.35)
+    expect(ratio, 'the medicare pair rides --leading-snug (~1.4)').toBeLessThan(1.45)
+  }
 }
 
 // ── the spine frame matrix: {budget, retired, health} × {REAL, TIER, SHOWCASE} ────────────────
@@ -495,11 +506,13 @@ test.describe(`the vault return (?vault=stale) — the gate + the staleness-echo
         // gap-shorthand serialization question entirely).
         subordinatesRowGap: getComputedStyle(reveal.querySelector('.reveal__subordinates')!).rowGap,
       }))
-    expect(echoGaps.rowGap, 'the note-frame row-gap must step to --space-1 (round 3)').toBe('4px')
+    // ROUND 5: the stale vault is an ON-TYPICAL frame (doctorStaleVault strips the fork —
+    // the recompute funds typical-both), so its chain gaps ride the 2px typical tier.
+    expect(echoGaps.rowGap, 'the ON-TYPICAL note-frame row-gap steps to 2px (round 5)').toBe('2px')
     expect(
       echoGaps.subordinatesRowGap,
-      'the staleness-echo subordinates row-gap must step to --space-1',
-    ).toBe('4px')
+      'the ON-TYPICAL subordinates row-gap steps to 2px (round 5)',
+    ).toBe('2px')
     await assertOneVisibleDisclaimer(page, 'laptop')
     await assertResultPadding(page, '32px') // 791 ≤ 840 — the density tier serves this frame too
 

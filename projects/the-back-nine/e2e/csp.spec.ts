@@ -221,6 +221,14 @@ test.describe('CSP — real browser enforcement', () => {
     await page.getByLabel('Income, last year').fill('110000')
     await next()
 
+    // Medicare extras (the ask-for-extras payment fork, 503213f4) — per-person
+    // REQUIRED, nothing pre-selected; half-answers block advance. The MA arm is
+    // an affirmed $0 beyond Part B, keeping this walk's household numbers as
+    // they were before the unit.
+    await pick(you, 'About nothing beyond Part B (common on Medicare Advantage)')
+    await pick(spouse, 'About nothing beyond Part B (common on Medicare Advantage)')
+    await next()
+
     // One account (401k), committed to the loop. The single-ticker lookup was
     // retired in the account-form redesign — the blend is now one precise
     // stock/bond/cash split (sum-to-100, committed on blur). 100/0/0 = an

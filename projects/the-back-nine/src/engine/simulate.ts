@@ -1029,6 +1029,12 @@ export function buildHealthReadout(agg: HealthAgg, paths: number): HealthReadout
       acaNetPremiumP50: median(agg.acaNetPremium[t] ?? []),
       medicareBaseP50: median(agg.medicareBase[t] ?? []),
       irmaaSurchargeP50: median(agg.irmaaSurcharge[t] ?? []),
+      // No UI consumer yet — DELIBERATELY reserved (extras ultramode 2026-07-12, conscious
+      // call): the per-year extras median completes the base/surcharge/extras split for the
+      // filed Medicare-only detail door (medicare-pricing-build-spec.md — the rule-38 dollars
+      // home). The user-facing extras disclosure travels the draft-side per-person channel
+      // (medicareExtrasDisclosureView), which survives the date route where this readout
+      // is absent — this field is the future readout's, not the disclosure's.
       medicareExtrasP50: median(agg.medicareExtras[t] ?? []),
       acaMagiP50: median(agg.acaMagi[t] ?? []),
       irmaaMagiP50: median(agg.irmaaMagi[t] ?? []),

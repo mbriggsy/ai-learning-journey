@@ -50,7 +50,7 @@ import type { ScenarioDraft } from '@store/memoryModel'
 import { compileBudget } from '@budget/budgetToSpending'
 import { annualAdditionsCeilingFor, contributionCeilingFor, isEmployerPlanKind } from './sanity'
 import { compileIncomeStreams } from './otherIncome'
-import type { CopyKey } from '@ui/copy'
+import { copy, type CopyKey } from '@ui/copy'
 
 // ---------------------------------------------------------------------------
 // kind → bucket / family maps
@@ -734,6 +734,26 @@ export function medicareExtrasView(d: ScenarioDraft): readonly MedicareExtrasPer
           : 'typical'
     return { monthly, provenance }
   })
+}
+
+/** {@link MedicareExtrasPersonView} + the person's display label, resolved ONCE. */
+export interface MedicareExtrasDisclosurePersonView extends MedicareExtrasPersonView {
+  readonly who: string
+}
+
+/** The ONE disclosure-view assembly both F5 homes consume (Result's hero appendix + the
+ *  Healthcare door sheet). The You/Your-spouse name fallback is resolved here exactly once
+ *  so the two populations can never drift on name semantics — the byte-duplicated per-home
+ *  IIFE pair was folded by the extras ultramode review (2026-07-12). */
+export function medicareExtrasDisclosureView(
+  d: ScenarioDraft,
+): readonly MedicareExtrasDisclosurePersonView[] | null {
+  const view = medicareExtrasView(d)
+  if (view === null) return null
+  return view.map((p, i) => ({
+    ...p,
+    who: d.people[i]?.name ?? (i === 0 ? copy.personYou : copy.personSpouse),
+  }))
 }
 
 /**

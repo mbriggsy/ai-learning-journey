@@ -1199,6 +1199,18 @@ export function runTaxAwareDecumulation(
       `[taxOverlay] medicareOnsetSimYear has ${medicareOnsetSimYear.length} entries but the household has ${people.length} people — never silently re-indexed`,
     )
   }
+  // The extras vector aligns to the SAME canonical people (the F3 heterogeneous vector — its
+  // consumer indexes it by enrolled person): `.every` skips holes, so a SHORT vector passes the
+  // finiteness backstop above while silently $0-ing the missing member's extras — the
+  // cost-understating, survival-overstating direction. validateParams already gates this at the
+  // frontline (R19); this is the onset/pretax siblings' fail-loud second layer for direct
+  // callers, folded by the extras ultramode review (2026-07-12) as the one sibling stream
+  // missing it. Purely downstream of the existing gate — no insight-076 contract narrowing.
+  if (medicareExtrasMonthly !== undefined && household && medicareExtrasMonthly.length !== people.length) {
+    throw new Error(
+      `[taxOverlay] medicareExtrasMonthly has ${medicareExtrasMonthly.length} entries but the household has ${people.length} people — never silently re-indexed`,
+    )
+  }
   if (config.taxEnabled && hsaLive && hsaOwnerIndex === undefined) {
     throw new Error(
       '[taxOverlay] hsaOwnerIndex is required when tax is on and the hsa bucket is non-empty — ' +

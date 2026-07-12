@@ -265,3 +265,36 @@ describe('medicare extras — validateParams gates the vector like its per-perso
     expect(validateParams(params([200]))).toBe('overlay medicareExtrasMonthly length must match people')
   })
 })
+
+// ===========================================================================
+// The OVERLAY's own direct-caller length backstop (the extras ultramode fold,
+// 2026-07-12): `.every` skips holes, so a SHORT vector passes the finiteness
+// backstop while its consumer indexes past the end — silently $0-ing the
+// missing member (cost-understating). validateParams gates production callers
+// above; this is the fail-loud second layer the onset/pretax siblings carry.
+// This arm IS the planted-fail witness: delete the guard and the run succeeds
+// silently, going red here.
+// ===========================================================================
+describe('medicare extras — the overlay direct-caller length backstop', () => {
+  it('a SHORT vector on a 2-person household throws up-front, never a silent under-charge', () => {
+    const household: Household = {
+      startCalendarYear: 2026,
+      filing: 'mfj',
+      owner: { birthYear: 1959 },
+      spouse: { birthYear: 1959 },
+    }
+    const stream: HouseholdYear[] = [{ living: [household.owner, household.spouse!] }]
+    expect(() =>
+      runTaxAwareDecumulation(
+        { taxable: 0, pretax: 2_000_000, roth: 0 }, zeros(1), zeros(1), [40_000], STOCK_W,
+        'pre-tax-first', { taxEnabled: true, rmdEnabled: false, household },
+        {
+          healthcareEnabled: true,
+          irmaaMagiSeed: [60_000, 60_000],
+          householdYears: stream,
+          medicareExtrasMonthly: [200], // one entry, two people — the missing member's slot
+        },
+      ),
+    ).toThrow(/medicareExtrasMonthly has 1 entries but the household has 2 people/)
+  })
+})

@@ -5,6 +5,7 @@ import {
   escalateQuote,
   firstStepDownYear,
   householdStockWeight,
+  medicareExtrasDisclosureView,
   medicareExtrasView,
   medicareOnlyPriced,
   missingRequiredFacts,
@@ -17,6 +18,7 @@ import { buildCandidateParams, DATE_OFFSET_WINDOW_TOP, DATE_SEARCH_PATHS } from 
 import { acaAgeRatingCurve, medicareExtrasTypicalMonthly } from '@engine/constants/health'
 import { employerPlan2026, catchUpForAge } from '@engine/constants/contributions'
 import type { ScenarioDraft, PersonDraft } from '@store/memoryModel'
+import { copy } from '@ui/copy'
 
 /**
  * The intake→engine contract battery (D1 slice (e)).
@@ -593,6 +595,48 @@ describe('medicare extras — resolution, threading, and the disclosure view', (
 
   it('extras are NEVER a required fact (optional-with-average — the R5 never-gate law)', () => {
     expect(missingRequiredFacts(all65Draft())).toEqual([])
+  })
+
+  // The ONE disclosure-view assembly both F5 homes consume (the extras ultramode fold,
+  // 2026-07-12 — the byte-duplicated Result/HealthcareSheet IIFE pair collapsed here).
+  it('the disclosure view resolves each person’s display label ONCE — names when present, the You/Your-spouse fallback when not', () => {
+    const typical = medicareExtrasTypicalMonthly()
+    const named = {
+      ...all65Draft(),
+      medicareExtrasByPerson: [
+        { kind: 'entered' as const, monthly: 185 },
+        { kind: 'typical' as const, adoptionVintage: 'extras-2026a' },
+      ],
+    }
+    expect(medicareExtrasDisclosureView(named)).toEqual([
+      { monthly: 185, provenance: 'entered', who: 'R' },
+      { monthly: typical, provenance: 'typical', who: 'S' },
+    ])
+    // The defensive label fallback (the shared assembly's own semantics — position 0 reads
+    // as You, position 1 as Your spouse when no name is resolvable at that index).
+    const base65 = all65Draft()
+    const nameless = {
+      ...base65,
+      people: [
+        { ...base65.people[0], name: undefined as unknown as string },
+        { ...base65.people[1], name: undefined as unknown as string },
+      ] as ScenarioDraft['people'],
+    }
+    expect((medicareExtrasDisclosureView(nameless) ?? []).map((p) => p.who)).toEqual([
+      copy.personYou,
+      copy.personSpouse,
+    ])
+    // NULL propagates — the 081-witness early-return household (no overlay) makes no claim
+    // in either home.
+    const degenerate = base({
+      people: [
+        retiredPerson({ birthYear: 1958, currentAge: 68, retirementAge: 64, pia: 24_000 }),
+        retiredPerson({ name: 'S', sex: 'female', birthYear: 1958, currentAge: 68, retirementAge: 64, pia: 16_000 }),
+      ],
+      health: { irmaaMagiSeed: [40_000, 40_000] },
+    })
+    expect(medicareExtrasView(degenerate)).toBeNull()
+    expect(medicareExtrasDisclosureView(degenerate)).toBeNull()
   })
 })
 

@@ -11,6 +11,7 @@ import { describe, it, expect } from 'vitest'
 import {
   acaAnchor,
   composeHealthSheet,
+  composeMedicareExtrasTypicalNote,
   composeRegimeFutures,
   medicareAnchor,
   showMedicarePricedNote,
@@ -286,5 +287,51 @@ describe('composeRegimeFutures — the cost-headline compose', () => {
     // 99,840 rounds to 99,800; 99,860 rounds to 99,900 — adjacent grains stay a real compare.
     const view = composeRegimeFutures(outcome(99_840, 99_860), true)
     expect(view?.deltaLine).toBe(slots.subsidyRegimeCostDelta('99,800', '99,900'))
+  })
+})
+
+// ===========================================================================
+// composeMedicareExtrasTypicalNote — the F5 population-A HERO appendix (the
+// extras ultramode review's one confirmed finding, 2026-07-12: the door half
+// had end-to-end proof, the hero composer's arm selection had none). The live
+// producer chain is transitively pinned by the fit gate (?vault=stale's
+// row-gap 2px holds only under :has(.cs-medicare-residual--typical), stamped
+// off this composer's output) — these arms pin the SELECTION logic itself.
+// ===========================================================================
+describe('composeMedicareExtrasTypicalNote — the hero on-typical appendix (F5, population A)', () => {
+  const person = (
+    who: string,
+    provenance: 'entered' | 'affirmed-zero' | 'typical',
+    monthly: number,
+  ) => ({ who, provenance, monthly })
+
+  it('a NULL view (no Medicare-bearing overlay) makes NO claim', () => {
+    expect(composeMedicareExtrasTypicalNote(null)).toBeUndefined()
+  })
+
+  it('an entered/affirmed household needs NO typical caveat', () => {
+    expect(
+      composeMedicareExtrasTypicalNote([person('Pat', 'entered', 220), person('Sam', 'affirmed-zero', 0)]),
+    ).toBeUndefined()
+  })
+
+  it('ONE on-typical person is named — and it is the TYPICAL person, never positionally person 1', () => {
+    // The who-correctness trap: person 2 rides the typical, person 1 entered — the sentence
+    // must name Sam with Sam's OWN figure (typicals[0] AFTER the filter, not view[0]).
+    expect(
+      composeMedicareExtrasTypicalNote([person('Pat', 'entered', 220), person('Sam', 'typical', 187)]),
+    ).toBe(slots.medicareExtrasTypicalOne('Sam', '187'))
+  })
+
+  it('BOTH on-typical collapses to ONE sentence (the triple-note anaphora lesson, U13)', () => {
+    expect(
+      composeMedicareExtrasTypicalNote([person('Pat', 'typical', 203), person('Sam', 'typical', 203)]),
+    ).toBe(slots.medicareExtrasTypicalBoth('203'))
+  })
+
+  it('the figure rides the humane thousands format (1250 → "1,250")', () => {
+    expect(
+      composeMedicareExtrasTypicalNote([person('Pat', 'typical', 1_250)]),
+    ).toBe(slots.medicareExtrasTypicalOne('Pat', '1,250'))
   })
 })

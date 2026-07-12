@@ -15,7 +15,7 @@
  */
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import { AnswerStrip } from '@intake/AnswerStrip'
-import { buildControlPreviewParams, healthcarePriced, isDateRoute, medicareExtrasView, missingRequiredFacts, spineMedicarePriced } from '@intake/intakeMap'
+import { buildControlPreviewParams, healthcarePriced, isDateRoute, medicareExtrasDisclosureView, missingRequiredFacts, spineMedicarePriced } from '@intake/intakeMap'
 import { useLiveAnnouncer } from '@intake/a11y'
 import { BudgetBuilder } from '@intake/BudgetBuilder'
 import { SequencingControl } from '@intake/SequencingControl'
@@ -169,20 +169,14 @@ export function Result({
   )
   const medicarePricedNote = showMedicarePricedNote({ medicarePriced, reachesHealthDoor: healthPriced })
   // The ask-for-Medicare-extras on-typical appendix (F5, population A): per-person BUILT
-  // dollars (medicareExtrasView reads the params builder's own output — insight 081) +
-  // draft provenance, composed to the ONE bi-directional sentence appended inside the
-  // residual paragraph. `undefined` for entered/affirmed households and non-priced runs.
-  const medicareExtrasTypicalNote = useMemo(() => {
-    const view = medicareExtrasView(snapshot.draft)
-    return composeMedicareExtrasTypicalNote(
-      view === null
-        ? null
-        : view.map((p, i) => ({
-            ...p,
-            who: snapshot.draft.people[i]?.name ?? (i === 0 ? copy.personYou : copy.personSpouse),
-          })),
-    )
-  }, [snapshot.draft])
+  // dollars + draft provenance + the name fallback (medicareExtrasDisclosureView — the ONE
+  // assembly both F5 homes consume, insight 081), composed to the ONE bi-directional
+  // sentence appended inside the residual paragraph. `undefined` for entered/affirmed
+  // households and non-priced runs.
+  const medicareExtrasTypicalNote = useMemo(
+    () => composeMedicareExtrasTypicalNote(medicareExtrasDisclosureView(snapshot.draft)),
+    [snapshot.draft],
+  )
   const enhancedApplied = snapshot.draft.enhancedSubsidies === true
   // The wire's per-year healthcare series (spine headline runs only — presence-keyed).
   const healthReadout =

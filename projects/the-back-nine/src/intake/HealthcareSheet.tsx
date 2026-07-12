@@ -31,7 +31,7 @@ import type { BandSavedAnchor } from '@ui/bandAnnotations'
 import type { Announcer } from './a11y'
 import { ControlSheet } from './controlSheet'
 import { ControlPreviewReadout, useControlPreview } from './controlPreview'
-import { medicareExtrasView } from './intakeMap'
+import { medicareExtrasDisclosureView } from './intakeMap'
 
 type Regime = 'reverted' | 'enhanced'
 
@@ -93,19 +93,9 @@ export function HealthcareSheet({ open, draft, readout, preview, previewBlocking
   // The composed readout lines — PURE, decided in healthSheetChrome (regime-aware: an applied
   // enhanced regime swaps the dated status note to the what-if variant and drops the cliff lines).
   const view = composeHealthSheet(readout, draft)
-  // The extras door-home lines (F5): BUILT dollars (medicareExtrasView — the params builder's
-  // output, insight 081) + draft provenance + the You/Your-spouse name fallback.
-  const extrasLines = composeMedicareExtrasLines(
-    (() => {
-      const v = medicareExtrasView(draft)
-      return v === null
-        ? null
-        : v.map((p, i) => ({
-            ...p,
-            who: draft.people[i]?.name ?? (i === 0 ? copy.personYou : copy.personSpouse),
-          }))
-    })(),
-  )
+  // The extras door-home lines (F5): BUILT dollars + draft provenance + the name fallback
+  // (medicareExtrasDisclosureView — the ONE assembly both F5 homes consume, insight 081).
+  const extrasLines = composeMedicareExtrasLines(medicareExtrasDisclosureView(draft))
   const hasHsa = draft.enteredAccounts.some((a) => a.kind === 'hsa')
 
   // Open-edge re-seed (the BudgetBuilder rule): the applied regime pre-selects.

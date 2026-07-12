@@ -9,10 +9,11 @@
 > out rules everything"). This unit AMENDS the Medicare containment ruling's F3 scope
 > (wf_4c8cd836-b22) by its author's own directive — it EXTENDS the additive premise (the tool
 > adds what it knows; the user now tells it what it can't derive), never reverses it.
-> **Tier split:** council-decided on ALL mechanics below (execute); **⚑ yours-to-close on
-> tone/copy** — the payment-fork wording, the load-bearing MA-$0 fork line, the door-sheet
-> disclosure copy, the bi-directional standing-disclosure wording — produced by the build, then
-> routed to the Caddie pre-walk and HIS eye per the standing cadence (not a pre-confirm).
+> **Tier split:** council-decided on ALL mechanics below (execute); tone/copy — the
+> payment-fork wording, the load-bearing MA-$0 fork line, the door-sheet disclosure copy, the
+> bi-directional standing-disclosure wording — produced by the build, then routed to the Caddie
+> pre-walk and **pilot-cleared + shipped per the 2026-07-11 batched-oracle grant** (his eye
+> audits any-time + at the Briggsy-bar gauntlet; the tape scores every prediction).
 
 ## F1 — intake shape
 
@@ -106,7 +107,8 @@
   (text+shape/label, never color alone).
 - Insight-076 re-audit of `validateParams` if a fail-loud backstop is added.
 - Dev-seed drift recorded before any re-tune. ONE commit (the ACA-sheet real-flat gap rides its
-  own touch, never a rider). Then: ultramode review → Caddie pre-walk → his eye.
+  own touch, never a rider). Then: ultramode review → Caddie pre-walk → pilot-clear + ship
+  (the 2026-07-11 batched-oracle grant — his eye audits any-time + at the gauntlet).
 
 ## The hawk's scoped veto — SIX FORBIDDEN SHAPES (standing build constraints)
 

@@ -2,14 +2,20 @@
 
 The Briggsy-proxy cold reader's verdict cards, newest first (mechanism:
 [`.claude/skills/caddie/SKILL.md`](../../.claude/skills/caddie/SKILL.md)). **Every card here is
-a SUBORDINATE, provisional stand-in** — the Caddie is permanently advisory (it flags and
-blocks; it never clears), and any real Briggsy read of the same surface supersedes its card and
-gets folded into the taste corpus + scored on [the tape](tape.md). A card is never logged as,
-or mistaken for, his N=1 verdict.
+a SUBORDINATE, provisional stand-in** — any real Briggsy read of the same surface supersedes
+its card and gets folded into the taste corpus + scored on [the tape](tape.md). A card is never
+logged as, or mistaken for, his N=1 verdict.
 
-Dispositions: **PARKED-FOR-BRIGGSY** (his eye is the gate) · **PILOT-CLEARED** (the 2026-07-10
-clearance grant — the pilot cleared a tone/content surface at high confidence, reason + any fix
-logged on the card; his any-time read still supersedes and still scores the tape) ·
+**The batched-oracle law (Briggsy's 2026-07-11 grant — *"I don't review your code — why am I
+reviewing your content?"*):** a chaired card SHIPS; there is no per-surface park for his eye.
+His eye audits at product cadence — any-time reads plus the pre-exposure **Briggsy-bar
+gauntlet** (nothing leaves the repo for anyone else until it clears) — and his findings staple
+back onto the cards that missed them. *(Cards dated before 2026-07-11 were filed under the
+earlier parking law; their dispositions are historical records.)*
+
+Dispositions: **PILOT-CLEARED** (the default for a readable surface — ships; reason + any fix
+logged; the tape row stays open for his audit) · **PARKED-FOR-BRIGGSY** (the exception:
+one-way doors, framing-level forks, or genuine pilot doubt — reason logged) ·
 **BLOCKED-UNREACHABLE** (the surface cannot be rendered live; never read from source).
 
 ---

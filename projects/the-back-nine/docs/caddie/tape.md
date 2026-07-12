@@ -1,7 +1,11 @@
 # The Caddie — The Tape (prediction vs. the real read)
 
-Every Caddie card carries a falsifiable **prediction** of Briggsy's verdict. When his real
-cold read of the same surface lands, his verbatim gets stapled onto the row and scored:
+Every Caddie card carries a falsifiable **prediction** of Briggsy's verdict. Scoring events
+(the 2026-07-11 batched-oracle law): his **any-time read** of a surface, and every
+**Briggsy-bar gauntlet** pass — his brutal full-product acceptance run, which must clear
+before anything leaves the repo for anyone else; each gauntlet finding staples back onto the
+card(s) that covered that surface retroactively. His verbatim gets stapled onto the row and
+scored:
 
 - **HIT** — the card's flags/clean-read matched his reaction.
 - **FALSE-PASS** — the Caddie read clean where he flagged a real defect. **The cardinal miss**
@@ -12,11 +16,13 @@ cold read of the same surface lands, his verbatim gets stapled onto the row and 
 - **PARTIAL** — some flags matched, some missed; note which.
 
 The tape is **diagnostic only**. It measures the proxy and improves the corpus; it never
-expands autonomy by itself (the 2026-07-10 pilot-clearance grant was Briggsy's OWN decision,
-not a tape mechanism — see the amended autonomy law in the skill). **A pilot clearance never
-scores a row**: prediction rows stay "awaiting his read" until HIS verbatim lands — his read
-of a pilot-cleared surface still supersedes and scores both the Caddie's prediction AND the
-pilot's clearance.
+expands autonomy by itself (the 2026-07-10 pilot-clearance grant AND the 2026-07-11
+batched-oracle grant were both Briggsy's OWN decisions, never a tape mechanism — see the
+amended autonomy law in the skill). **A pilot clearance never scores a row**: prediction rows
+stay "awaiting his read" until HIS verbatim lands — an **audit state, never a pipeline gate**.
+His read of a pilot-cleared surface still supersedes and scores both the Caddie's prediction
+AND the pilot's clearance; a gauntlet FALSE-PASS additionally fires a family sweep over
+everything shipped since the last fold-in.
 
 | Date | Surface (seed · states · viewport) | Caddie prediction | Briggsy verbatim | Score | Fold-in done |
 |---|---|---|---|---|---|

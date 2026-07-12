@@ -4,13 +4,15 @@ description: >-
   The Caddie — the Briggsy-proxy cold reader. Walks the REAL rendered UI (capture harness at
   his exact 1536×791@2.5dpr viewport + phone), fans out fresh-context readers calibrated on his
   taste corpus, adversarially hunts the calm-but-wrong reading, and files a verdict card he
-  reviews instead of walking pixels. Use BEFORE spending Briggsy's cold read on any new or
-  changed user-facing surface (pre-walk the U-batch cold reads), whenever a tone/comprehension/
-  trust judgment of a rendered surface is needed in his absence, or as `/caddie consult
-  "<question>"` for an expert-depth UI/UX/tone question. PERMANENTLY ADVISORY: it can FLAG or
-  BLOCK, it can never CLEAR a surface in his place — a READS-CLEAN card still parks for his eye.
+  reviews instead of walking pixels. Use BEFORE calling any new or changed user-facing surface
+  shipped (pre-walk every U-batch), whenever a tone/comprehension/trust judgment of a rendered
+  surface is needed, or as `/caddie consult "<question>"` for an expert-depth UI/UX/tone
+  question. THE BATCHED-ORACLE LAW (Briggsy's 2026-07-11 grant): a chaired card SHIPS —
+  PILOT-CLEARED is the default disposition, no per-surface park; his eye audits at product
+  cadence (any-time reads + the pre-exposure Briggsy-bar gauntlet) and always supersedes. The
+  mechanism can FLAG and BLOCK-until-fixed; one-way doors and framing-level forks still park.
   Not for correctness questions (tests/gates/oracle own those) and never a substitute for his
-  N=1 read.
+  N=1 read — the tape still scores every prediction against his eye.
 ---
 
 # The Caddie
@@ -18,31 +20,41 @@ description: >-
 *A caddie walks the course ahead, reads the green, hands the player the read — and never takes
 the shot.*
 
-**Why it exists.** The N=1 cold read is the project's tone oracle and its scarcest resource.
-The Caddie pre-walks every surface so Briggsy reviews **verdict cards instead of raw pixels**:
-capture done, findings anchored, the calm-but-wrong hunt already attempted. His reads get
-faster and higher-yield; they do not disappear.
+**Why it exists.** The N=1 cold read is the project's tone oracle. The Caddie pre-walks every
+surface so tone defects are caught at build time without spending his eye per-surface: capture
+done, findings anchored, the calm-but-wrong hunt already attempted, and a **falsifiable
+prediction logged for his eventual audit**. His eye gets higher-yield; it does not disappear.
 
-**The autonomy law (amended by Briggsy, 2026-07-10 — the clearance grant).** The Caddie
-MECHANISM is **permanently advisory** with teeth in one direction only: it can **FLAG** (park a
-finding for Briggsy) and **BLOCK** (stop the pilot from calling a surface shipped). The Caddie
-itself never clears — that half is structural, not humility: an auto-clear mechanism destroys
-its own false-PASS sensor, and insight 069 proves same-family fleets miss novel comprehension
-holes (23 agents + 1,930 green tests missed 7).
+**The autonomy law (re-amended by Briggsy, 2026-07-11 — the batched-oracle grant).** Lineage:
+born permanently-advisory (2026-07-10, increment 1); the pilot-clearance grant (2026-07-10,
+"if you feel confident, clear it"); then the batched-oracle grant (2026-07-11, his framing:
+*"I don't review your code — why am I reviewing your content?"*). The law now:
 
-**The pilot-clearance channel (his grant, from the tape's owner: "if you feel confident, clear
-it"):** the PILOT — with the Caddie's pre-walk in hand — may CLEAR a tone/content surface at
-HIGH confidence in his absence. Discipline that keeps the sensor alive:
-- Every clearance is **logged on the card**: disposition `PILOT-CLEARED` + the reason + any fix
-  shipped en route (fix-then-clear beats clear-alone when a flag names a real defect).
-- **A pilot clearance never scores a tape row.** Prediction rows stay "awaiting his read" —
-  his any-time read of a cleared surface still supersedes, still gets stapled on, and still
-  scores BOTH the Caddie and the pilot's clearance. His eye remains the tone oracle whenever
-  it lands; the pipeline just no longer blocks on it.
-- **Still parks for his eye, always:** one-way doors (persisted shapes / add-only enums),
-  honesty-direction forks the hawk contests, named Act-level formal exit-condition reads,
-  visual/layout reorders where only the eye is the oracle, and anything the pilot grades
-  medium-or-lower confidence. When in doubt → park, exactly as before.
+- **The content lane runs like the code lane.** The reader panel + the pilot's chairing are
+  content-CI: they catch what they can at build time, and a chaired card — READS-CLEAN with a
+  genuine false-pass hunt, or flags fixed-then-cleared — **ships. No per-surface park for his
+  eye.** `PILOT-CLEARED` is the default disposition for a readable surface.
+- **His eye remains the tone oracle — batched, not removed.** It enters at product cadence:
+  **any-time reads** (always welcome, always supersede, always score) and the **Briggsy-bar
+  gauntlet** — his brutal full-product acceptance pass that MUST clear before anything leaves
+  the repo for anyone else. The gauntlet is **load-bearing**: it is the false-PASS sensor
+  under this law. Nothing third-party-facing ever ships without it.
+- **Scoring survives batching.** Every card still logs its prediction; tape rows stay open as
+  **audit hooks, not pipeline gates**. His findings — any-time or gauntlet — staple back onto
+  the cards that missed them and score BOTH the Caddie and the pilot's clearance; a FALSE-PASS
+  still triggers same-session corpus regeneration. The priced, accepted cost of batching:
+  calibration arrives in waves — a miss pattern can replicate across surfaces between his
+  passes, so a gauntlet false-pass triggers a **family sweep** across everything shipped since
+  the last fold-in, never a single-surface patch.
+- **The mechanism still never self-certifies.** The chair (the pilot) verifies every finding
+  against the bundle and issues the clearance; a raw panel output is never a clearance.
+  Author-judges-author is the honest disanalogy with code-CI — same-family readers share blind
+  spots (insight 069: 23 agents + 1,930 green tests missed 7 holes) — which is exactly why his
+  gauntlet, not the tape, is the exposure gate.
+- **Still parks (the shrunken list):** one-way doors (persisted shapes / add-only enums) and
+  framing-level forks — what-the-product-promises decisions, his WHAT/WHY. Pilot discretion to
+  park anything at genuine doubt stays; parking is now the exception that logs a reason, not
+  the default.
 
 **Precedence.** A real Briggsy read supersedes every Caddie artifact (and re-seeds the corpus).
 The correctness oracle (tests, gates, engine validation) is never overruled by a tone verdict,
@@ -157,7 +169,9 @@ colorBlindCheck   — grayscale/CVD survival + programmatic availability (flags 
 comprehension     — the spouse walker's answers + stumbles (hole shapes named)
 routedToOracle[]  — correctness findings filed, with where
 prediction        — "would Briggsy flag it?" — the tape's scoring hook, in his vocabulary
-disposition       — PARKED-FOR-BRIGGSY (always, for a readable surface) | BLOCKED-UNREACHABLE
+disposition       — PILOT-CLEARED (the default for a readable surface — ships; the row stays
+                    open for his audit) | PARKED-FOR-BRIGGSY (one-way door · framing fork ·
+                    pilot doubt — reason logged) | BLOCKED-UNREACHABLE
 evidence          — bundle path + which exemplars/rules were pinned for this run
 ```
 
@@ -166,11 +180,16 @@ confidence (decorative per the verification literature) — enums + anchored evi
 
 ## The tape (`docs/caddie/tape.md`)
 
-Every card's `prediction` is a falsifiable claim about his verdict. When Briggsy actually reads
-the surface, staple his verbatim on and score the row: **HIT** · **FALSE-PASS** (the Caddie
-read clean, he flagged a real defect — the cardinal miss) · **FALSE-FLAG** (safe noise) ·
-**PARTIAL**. A FALSE-PASS triggers a corpus/rubric regeneration in the same session — never a
-shrug. The tape is diagnostic only; it never expands autonomy.
+Every card's `prediction` is a falsifiable claim about his verdict. Scoring events (the
+batched-oracle law): his **any-time read** of a surface, and every **Briggsy-bar gauntlet**
+pass — each gauntlet finding is traced back to the card(s) that covered that surface and
+staples on retroactively. Score rows: **HIT** · **FALSE-PASS** (the Caddie read clean, he
+flagged a real defect — the cardinal miss) · **FALSE-FLAG** (safe noise) · **PARTIAL**. A
+FALSE-PASS triggers a corpus/rubric regeneration in the same session — never a shrug — plus,
+after a gauntlet, a family sweep over everything shipped since the last fold-in. An open
+"awaiting his read" row is an **audit state, never a pipeline gate** — a pilot clearance never
+scores a row. The tape is diagnostic only; it never expands autonomy by itself (both grants
+were Briggsy's own decisions made over the tape, never a mechanism earned by a streak).
 
 ## Consult mode
 

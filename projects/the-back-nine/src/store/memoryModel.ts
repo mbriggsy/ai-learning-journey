@@ -127,6 +127,13 @@ export interface ScenarioDraft
     // appDefaultVersion); the draft's copies exist for the shape tie and for U13's
     // staleness reader, which reads the RAW-decoded persisted model at unlock — never
     // the draft (a re-save would have re-stamped it: reading the draft cries wolf).
+    // `medicareExtrasByPerson` (the ask-for-Medicare-extras unit) is a TOP-LEVEL key
+    // deliberately — nested under `health` it would dodge the R7 assumption-registry
+    // compile gate (Record<keyof ScenarioDraft>). The V3 entry type itself tolerates a
+    // mid-entry 'entered'-without-dollar at the TYPE level (the biconditional is
+    // codec-enforced at Save); the ONE write-shape helper (`writeMedicareExtras`,
+    // questions.tsx) always emits complete two-entry arrays ('unanswered' fills), so
+    // per-person holes never exist and no hole-tolerant draft twin is needed.
     Pick<
       ScenarioV3,
       | 'annualSpendingReal'
@@ -135,6 +142,7 @@ export interface ScenarioDraft
       | 'rothConversion'
       | 'drawdownOrder'
       | 'enhancedSubsidies'
+      | 'medicareExtrasByPerson'
       | 'healthcareVintage'
       | 'savedAt'
       | 'taxVintageDetail'

@@ -36,6 +36,12 @@ const DEV_CRN_SEED = 0xbada55
  * $1M Traditional IRA at 60/30/10, both claiming Social Security at 67. At 66/65
  * nobody is pre-65 (no ACA quote required), but both are ≥ 64 (the IRMAA seed IS
  * required) — the draft carries it.
+ *
+ * EXTRAS (2026-07-11, the ask-for-Medicare-extras unit): the flagship MIXED-PROVENANCE
+ * showcase — Alex entered $220/mo, Sam affirmed ~$0 (Medicare Advantage). One entered
+ * dollar + one affirmed MA-$0, so the disclosure renders both fork arms. This funds LESS
+ * than the typical-both (~$203+$203) the absent-field engine would fund, so the drift the
+ * unit introduced (on-track → borderline 8/10 under typical-both) reverses back to on-track.
  */
 const retiredOnTrack: ScenarioDraft = {
   people: [
@@ -75,6 +81,8 @@ const retiredOnTrack: ScenarioDraft = {
   incomeStreams: [],
   tickerClassifications: {},
   health: { irmaaMagiSeed: [80_000, 80_000] },
+  // The mixed-provenance extras showcase: Alex's entered dollar + Sam's affirmed MA-$0.
+  medicareExtrasByPerson: [{ kind: 'entered', monthly: 220 }, { kind: 'none' }],
   annualSpendingReal: 78_000,
   spendEntryPeriod: 'month',
   survivorSpendingRatio: 0.75,
@@ -154,11 +162,13 @@ const stillWorking: ScenarioDraft = {
  * the projection band must draw its $0 depletion-to-ruin tail honestly in the promoted right pane,
  * beside a calm verdict word. 68/70, a single $640k Traditional IRA at 55/35/10 + a $70k Roth, LOW
  * Social Security (PIA 24k/16k) against a ~$71.6k spend, so the SS floor doesn't cover the gap and the
- * downside paths deplete. Lands "borderline, 7 of 10" (engine-probed 2026-07-10 under PRICED Medicare
- * — the pricing unit added ~$4.9k/yr of Part B for this couple, so the IRA moved 520k→640k to keep the
- * seed rendering its NAMED state; the un-retuned drift rides the unit's record) — most couples make
- * it, but the band's lower percentiles honestly descend toward $0. Older than `retired` on purpose:
- * the shorter horizon keeps the p90 plume from squashing the ruin tail.
+ * downside paths deplete. Lands "borderline, 7 of 10" (engine-probed 2026-07-11 under the extras
+ * engine, seed 0xbada55: survival 0.71). Field DELIBERATELY ABSENT — the on-typical disclosure
+ * flagship, so it funds the conservative-HIGH typical for both. That typical (~$203/mo/person) sank
+ * this couple from borderline-7 to off-track-5, so the IRA moved 640k→760k to restore the NAMED
+ * state (the earlier 520k→640k move was the Part-B pricing unit's). Most couples make it, but the
+ * band's lower percentiles honestly descend toward $0. Older than `retired` on purpose: the shorter
+ * horizon keeps the p90 plume from squashing the ruin tail.
  */
 const retiredBorderline: ScenarioDraft = {
   people: [
@@ -189,7 +199,7 @@ const retiredBorderline: ScenarioDraft = {
     {
       ownerIndex: 0,
       kind: 'traditional-ira',
-      valueToday: 640_000,
+      valueToday: 760_000,
       manualBlend: { kind: 'exact', stockPct: 55, bondPct: 35, cashPct: 10 },
     },
     {
@@ -351,20 +361,21 @@ const bline = (
 /**
  * The TWO-TIER RELIEF spine household (U9b Q2 — the relief-with-honesty cold-read):
  * `borderline`'s couple carrying an ITEMIZED budget + an OOP-medical figure. Engine-proven
- * (probe 2026-07-10 under PRICED Medicare, seed 0xbada55): full track lands "On the line,
- * 7 of 10" while the essentials floor lands over-funded 9-of-10 — the widest honest relief
- * spread, so the subordinate "even at just essentials…" line COLD-READS against a scared
- * verdict. The IRA is OVERRIDDEN to $600k (not `borderline`'s $640k): one knob cannot serve
- * both seeds — at 640k this fuller track reads 8-of-10 with marginToEdge 0 (band-edge
- * fragile) and the relief spread collapses to one step; 600k restores the probed 7-vs-9
- * spread with healthy margins. The reconciliation invariant holds by construction:
+ * (probe 2026-07-11 under the extras engine, seed 0xbada55): full track lands "On the line,
+ * 7 of 10" (survival 0.726) while the essentials floor lands over-funded 9-of-10 (0.99) — the
+ * widest honest relief spread, so the subordinate "even at just essentials…" line COLD-READS
+ * against a scared verdict. Field DELIBERATELY ABSENT (funds the typical for both). The IRA is
+ * OVERRIDDEN independently of `borderline` (one knob cannot serve both seeds); the extras
+ * typical sank the full track to off-track-6, so the override moved 600k→720k to restore the
+ * 7-vs-9 spread with the widest joint margin (full 0.02 from the 8-flip, floor a full grid
+ * step over the 0.98 over-funded edge). The reconciliation invariant holds by construction:
  * annualSpendingReal = Σlines@0 (59,600) + injected M (6,000) = 65,600. All lines
  * lifelong-at-0 (as probed — a window would change the engine evaluation the proof pinned).
  */
 const retiredBudget: ScenarioDraft = {
   ...retiredBorderline,
   enteredAccounts: retiredBorderline.enteredAccounts.map((a, i) =>
-    i === 0 ? { ...a, valueToday: 600_000 } : a,
+    i === 0 ? { ...a, valueToday: 720_000 } : a,
   ),
   budget: [
     bline('housing', 'Mortgage & taxes', 18_000, 'essentials'),
@@ -382,13 +393,25 @@ const retiredBudget: ScenarioDraft = {
 /**
  * The FLOOR<LIFESTYLE date split (U9b Q3 — both tracks dated, floor earlier):
  * `dateborder`'s working couple with a budget whose discretionary share separates the
- * tracks. Engine-proven (probe 2026-07-02, provisional tier): floor crowns at offset ≈ 1,
- * lifestyle at ≈ 8 — the hero stays the LIFESTYLE date, the floor rides the subordinate
- * "essentials covered by ~year X" line, no inversion note. Reconciled: Σlines@0 (66,000)
- * + M (8,000) = 74,000 (the same full total `dateborder` proved borderline-dated).
+ * tracks. Engine-proven (probe 2026-07-11 under the extras engine, provisional tier): floor
+ * crowns at offset 1, lifestyle at 8 — the hero stays the LIFESTYLE date, the floor rides the
+ * subordinate "essentials covered by ~year X" line, no inversion note. Reconciled: Σlines@0
+ * (66,000) + M (8,000) = 74,000 (the same full total `dateborder` proved borderline-dated).
+ *
+ * PRE-65 ⇒ the extras field is DELIBERATELY ABSENT (the intake never asks a household with no
+ * member ≥64 — a fork answer from a never-shown step is an impossible household, insight 079).
+ * The post-65 extras the absent field funds sank the lifestyle track below the clearing bar
+ * (it fell to no-date-in-window), so this seed OVERRIDES its OWN accounts (trad 800k→900k,
+ * roth 140k→158k — NOT `stillWorkingBorderline`'s, which `dateborder`/`datemixed` share) to
+ * re-crown floor@1 / lifestyle@8. `datestale` (the aged plant) rides these accounts, so the
+ * override also keeps its floor crown INSIDE the 2-year window (@1) with the hero beyond (@8).
  */
 const dateSplitSeed: ScenarioDraft = {
   ...stillWorkingBorderline,
+  enteredAccounts: [
+    { ...stillWorkingBorderline.enteredAccounts[0]!, valueToday: 900_000 },
+    { ...stillWorkingBorderline.enteredAccounts[1]!, valueToday: 158_000 },
+  ],
   budget: [
     bline('housing', 'Mortgage & taxes', 20_000, 'essentials'),
     bline('utilities', '', 4_000, 'essentials'),
@@ -460,6 +483,14 @@ const dateMixedSeed: ScenarioDraft = {
  * curve (the work-year money gradient dominates ~2:1 — the hunt's structural finding); the
  * dip needs the collision. Note the reconciliation invariant: Σlines@0 = 20k+16k+42k = 78k =
  * annualSpendingReal (no OOP-medical figure on this household).
+ *
+ * EXTRAS RE-TUNE (2026-07-11): PRE-65 ⇒ the extras field is DELIBERATELY ABSENT (insight 079 —
+ * the intake never asks a sub-64 household). The absent-field typical the engine funds post-65
+ * added flat cost that sank offsets 0-2 below the clearing bar (nonMonotoneOffsets collapsed to
+ * [], the dip lost), so the portfolio moved 567k→644k / 243k→276k — the SMALLEST bump that
+ * re-lifts 0,1,2 over the bar at BOTH tiers while offset 3 stays under it (the two-tier
+ * intersection is narrow: offset 2 clears at final qL 0.85 with offset 3 held at 0.84; a
+ * further ~6k pushes provisional to [0,1,2,3]). Crown@5 and the monotone floor are unmoved.
  */
 const dateDipSeed: ScenarioDraft = {
   people: [
@@ -473,8 +504,8 @@ const dateDipSeed: ScenarioDraft = {
     },
   ],
   enteredAccounts: [
-    { ownerIndex: 0, kind: '401k', ticker: 'VTI', valueToday: 567_000, annualContribution: 8_000, employerMatchAnnual: 4_000 },
-    { ownerIndex: 1, kind: 'roth-ira', ticker: 'VFIFX', valueToday: 243_000 },
+    { ownerIndex: 0, kind: '401k', ticker: 'VTI', valueToday: 644_000, annualContribution: 8_000, employerMatchAnnual: 4_000 },
+    { ownerIndex: 1, kind: 'roth-ira', ticker: 'VFIFX', valueToday: 276_000 },
   ],
   incomeStreams: [],
   tickerClassifications: {},
@@ -806,15 +837,25 @@ export function plantDevVault(key: string): Promise<PlantResult> {
  * outcome pins drive the doctored scenario through the REAL draft→input→search chain.
  */
 export function doctorStaleVault(s: ScenarioV3, todayEpochDay: number): ScenarioV3 {
+  // A PRE-EXTRAS-ERA save (insight 079 truthfulness): the ask-for-Medicare-extras unit did not
+  // exist ~2 years ago, so the aged model carries NEITHER the per-person fork field NOR the
+  // typical's adoption-vintage in its healthcare stamp — both are STRIPPED. An entered fork
+  // answer from a never-shipped step, or a vintage minted by an unshipped unit, would describe
+  // an impossible household. Absent fork ⇒ the current engine conservatively funds the typical
+  // on re-run (honest degradation); absent vintage ⇒ the U13 comparator reads "not-comparable",
+  // never "the typical moved" (the extras-typical clock's own absence-means-not-applicable arm).
+  const { medicareExtrasByPerson: _strippedExtras, ...preExtras } = s
+  let staleHealthcare = undefined as ScenarioV3['healthcareVintage']
+  if (s.healthcareVintage !== undefined) {
+    const { medicareExtrasTypicalVintage: _strippedVintage, ...hv } = s.healthcareVintage
+    staleHealthcare = { ...hv, coverageYear: hv.coverageYear - 1, partBStandardMonthly: hv.partBStandardMonthly - 10 }
+  }
   return {
-    ...s,
+    ...preExtras,
     savedAt: todayEpochDay - 760,
     startCalendarYear: s.startCalendarYear - 2,
     taxVintageDetail: { taxYear: (s.taxVintageDetail?.taxYear ?? 2026) - 1, legalBasis: 'TCJA (the pre-OBBBA dev fixture)' },
-    healthcareVintage:
-      s.healthcareVintage === undefined
-        ? undefined
-        : { ...s.healthcareVintage, coverageYear: s.healthcareVintage.coverageYear - 1, partBStandardMonthly: s.healthcareVintage.partBStandardMonthly - 10 },
+    healthcareVintage: staleHealthcare,
     // Year-decrement (never a fixed date): stays one vintage behind whatever the live
     // BLEND_SNAPSHOT_AS_OF becomes, so the clock fires by construction, forever.
     dateVintage:

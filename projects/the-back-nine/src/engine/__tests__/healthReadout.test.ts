@@ -178,7 +178,7 @@ describe('healthReadout — the simulate-level emission (opt-in, observe-only)',
 // ---------------------------------------------------------------------------
 
 const freshSink = (): HealthYearSink => ({
-  acaNetPremium: [], medicareBase: [], irmaaSurcharge: [], acaMagi: [], irmaaMagi: [], acaCliffState: [],
+  acaNetPremium: [], medicareBase: [], irmaaSurcharge: [], medicareExtras: [], acaMagi: [], irmaaMagi: [], acaCliffState: [],
 })
 const zeros = (n: number) => Array.from({ length: n }, () => 0)
 const STOCK_W = 0.5

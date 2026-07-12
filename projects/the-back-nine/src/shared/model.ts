@@ -431,6 +431,21 @@ export interface OverlayParams {
    *  SILENTLY (0 is finite — the fail-loud seed guard only catches undefined/NaN). Built
    *  conservatively-HIGH from entered working-year income (`healthcareStreams.ts`). */
   readonly irmaaMagiOverride?: readonly number[]
+  /** Per-person Medicare-EXTRAS monthly premium (real $ — Part D / Medigap / Medicare-Advantage
+   *  beyond Part B), aligned by index to `people` (owner = 0, spouse = 1); the ask-for-Medicare-
+   *  extras unit (wf_efc6ece2-675). Charged as a per-person HETEROGENEOUS vector: each year adds
+   *  Σ over {living ∩ Medicare-enrolled} of THAT person's own `extras[i] × 12`, ending at each
+   *  death — NEVER `enrolledCount × average` (count×avg reproduces the optimistic survivor
+   *  under-charge per-person pricing exists to kill: the surviving high-premium spouse keeps
+   *  their FULL premium). Enrollment gates on the same onset machinery as Part B
+   *  ({@link medicareOnsetSimYear} / biological-65 default). Real-flat like Part B (no
+   *  escalation — the disclosed landmine family). EXCLUDED from the HSA qualified-spend cap
+   *  (Pub 969: Medigap is not a qualified premium — extras must never ride the `medicareCost`
+   *  arg into `hsaQualifiedSpend`). ABSENT or all-zero ⇒ byte-identical reduce-to-spine
+   *  (Σ 0 — the shipped Medicare goldens are a superset, never perturbed). Values are RESOLVED
+   *  dollars (the intake's payment fork resolves entered / affirmed-$0 / typical BEFORE the
+   *  engine — the engine never sees provenance). */
+  readonly medicareExtrasMonthly?: readonly number[]
   // --- U3 · M5: the HSA spend-side inputs (absent / `buckets.hsa` 0 ⇒ the 3-bucket path,
   //     byte-identical — the as-we-go default). ---
   /** Per-year out-of-pocket QUALIFIED medical cost (real $), indexed by ABSOLUTE year. CAP-ONLY —
@@ -778,6 +793,11 @@ export interface HealthReadoutYear {
   /** Median IRMAA surcharge (real $/yr; the income-sensitive step on top of the base —
    *  deliberately SPLIT from the base so the readout can tell the danger-years story). */
   readonly irmaaSurchargeP50: number
+  /** Median Medicare-EXTRAS cost (real $/yr; Σ over living∩enrolled of each person's own
+   *  Part D / Medigap / MA premium × 12 — income-invariant, deterministic per living-set;
+   *  SPLIT from the base line so "base Part B" never silently inflates). 0 when the run
+   *  carries no extras vector. */
+  readonly medicareExtrasP50: number
   /** Median ACA-MAGI (real $) — the shadow-rate readout's EMPIRICAL anchor (the council's
    *  unbiased-best-estimate contract: the simulation's own median, never a modeled skeleton). */
   readonly acaMagiP50: number
@@ -1567,6 +1587,19 @@ export interface ScenarioV3 {
    *  ({@link OverlayParams.enhancedSubsidies}) selects the ARPA/IRA applicable-% table
    *  (no 400%-FPL cliff) over the reverted one. */
   readonly enhancedSubsidies?: true
+  /** The ask-for-Medicare-extras payment fork (council wf_efc6ece2-675, F1/F2). ADDITIVE-
+   *  OPTIONAL within schemaVersion 3 (the budget/rothConversion precedent — a pre-unit vault
+   *  lacks the field and decodes unchanged). WHEN PRESENT: exactly `people.length` entries,
+   *  aligned by index (owner = 0, spouse = 1) — a TOP-LEVEL key, never nested under `health`,
+   *  so the R7 assumption-registry compile gate fires (a nested `health.*` sub-field dodges
+   *  `Record<keyof ScenarioDraft, …>` — the assumptionRegistry landmine). Resolution at the
+   *  params builder: 'entered' → the person's own monthly dollar; 'none' → an AFFIRMED $0
+   *  (honest — the Medicare-Advantage arm); 'typical' / 'unanswered' / the ABSENT field →
+   *  the conservative-HIGH typical FUNDED (never a silent $0 — deleting a real recurring
+   *  bill is the cardinal optimistic sin; absence of the OOP mirror is pessimistic-safe,
+   *  absence HERE is not). 'unanswered' is the honest persisted hole for an asked-but-
+   *  skipped member — never a fabricated 'typical' adoption. */
+  readonly medicareExtrasByPerson?: readonly MedicareExtrasEntryV3[]
   /** P3·U11 — the healthcare vintage stamp (contract #6's four clocks, one atomic object —
    *  a partial stamp set is meaningless). WRITTEN FRESH at every Save from the CURRENT
    *  build's canonical constants (`scenarioFromDraft` overwrites whatever the draft carried
@@ -1604,6 +1637,29 @@ export interface ScenarioV3 {
    *  silently misstates the household stock weight). Minted by `dateVintageStamp()`
    *  (constants/index.ts), WRITTEN FRESH at every save, read by U13 at unlock. */
   readonly dateVintage?: DateVintageV3
+}
+
+/** The three user-forkable arms of the Medicare-extras payment fork plus the honest
+ *  persisted hole. Discriminated on `kind` with codec-enforced biconditionals:
+ *  `monthly` iff 'entered'; `adoptionVintage` iff 'typical'. */
+export const MEDICARE_EXTRAS_KINDS = ['none', 'entered', 'typical', 'unanswered'] as const
+export type MedicareExtrasKind = (typeof MEDICARE_EXTRAS_KINDS)[number]
+
+/** One person's Medicare-extras fork answer (the ask-for-Medicare-extras unit). */
+export interface MedicareExtrasEntryV3 {
+  /** 'none' = "I pay ~nothing beyond Part B" (the Medicare-Advantage arm — an AFFIRMED $0,
+   *  honest); 'entered' = "I pay $X/mo" (own dollar in `monthly`); 'typical' = "not sure —
+   *  use a typical figure" (an EXPLICIT adoption, era-stamped in `adoptionVintage`);
+   *  'unanswered' = asked, not answered (funds the typical, carries NO adoption stamp —
+   *  the system never fabricates an adoption the user didn't make). */
+  readonly kind: MedicareExtrasKind
+  /** The person's own combined monthly Part D / Medigap / MA premium (real $).
+   *  PRESENT iff `kind === 'entered'` (codec biconditional). */
+  readonly monthly?: number
+  /** The typical-figure era adopted (`medicareExtrasTypical.value.vintage` at adoption
+   *  time — F2's saved-era key; NEVER re-derived from `value == current-typical`, the
+   *  appDefaults inversion trap). PRESENT iff `kind === 'typical'` (codec biconditional). */
+  readonly adoptionVintage?: string
 }
 
 /** The persisted structured tax vintage (P3·U13 → the controls-surface clock). Keyed on the
@@ -1664,6 +1720,13 @@ export interface HealthcareVintageV3 {
   /** The standard Part B monthly premium (an annually-moving figure — a cheap, precise
    *  proxy for the whole CMS vintage). */
   readonly partBStandardMonthly: number
+  /** The Medicare-extras typical's era string (`medicareExtrasTypical.value.vintage`).
+   *  ADDITIVE-OPTIONAL (a pre-extras-unit stamp lacks it — absent = not-comparable, quiet;
+   *  the staleness reader never coerces absence to "unchanged"). The extras-typical clock
+   *  additionally gates on the vault actually having a typical-EXPOSED member (any fork
+   *  entry not 'entered'/'none', or the field absent) — a household of entered dollars
+   *  does not care that the typical moved. */
+  readonly medicareExtrasTypicalVintage?: string
 }
 
 /** The exhaustive v3 field set — U8's `checkV3Fields` checklist (burned/063: the
@@ -1689,6 +1752,7 @@ export const SCENARIO_V3_FIELDS = [
   'rothConversion',
   'drawdownOrder',
   'enhancedSubsidies',
+  'medicareExtrasByPerson',
   'healthcareVintage',
   'savedAt',
   'taxVintageDetail',

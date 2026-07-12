@@ -3,8 +3,9 @@ import { useMemo, useSyncExternalStore } from 'react'
 import { afterEach, describe, expect, it } from 'vitest'
 import '@testing-library/jest-dom/vitest'
 import { cleanup, render, screen, fireEvent } from '@testing-library/react'
-import { intakeSteps } from '../questions'
+import { intakeSteps, writeMedicareExtras } from '../questions'
 import { IntakeFlow } from '../flow'
+import { medicareExtrasTypical } from '@engine/constants/health'
 import { createMemoryModel, type MemoryModel, type ScenarioDraft } from '@store/memoryModel'
 import type { EngineClient } from '@store/engineClient'
 import { copy, slots } from '@ui/copy'
@@ -105,6 +106,54 @@ describe('intakeSteps — conditional gates', () => {
     expect(intakeSteps(draft(m)).map((s) => s.id)).not.toContain('irmaa-seed')
     m.update((d) => ({ ...d, people: [{ ...d.people[0], currentAge: 64 }, d.people[1]] }))
     expect(intakeSteps(draft(m)).map((s) => s.id)).toContain('irmaa-seed')
+  })
+
+  it('the Medicare-extras fork rides the SAME near-65 gate (the Medicare cluster — never asked of a younger household, which funds the typical engine-side)', () => {
+    const m = freshModel()
+    m.update((d) => ({ ...d, people: [{ ...d.people[0], currentAge: 63 }, { ...d.people[1], currentAge: 60 }] }))
+    expect(intakeSteps(draft(m)).map((s) => s.id)).not.toContain('medicare-extras')
+    m.update((d) => ({ ...d, people: [{ ...d.people[0], currentAge: 64 }, d.people[1]] }))
+    expect(intakeSteps(draft(m)).map((s) => s.id)).toContain('medicare-extras')
+  })
+})
+
+describe('the Medicare-extras write shape (writeMedicareExtras — the ONE editor home)', () => {
+  const twoRetired65 = (m: MemoryModel) =>
+    m.update((d) => ({
+      ...d,
+      people: [
+        { ...d.people[0], workStatus: 'retired' as const, currentAge: 67, birthYear: 1959 },
+        { ...d.people[1], workStatus: 'retired' as const, currentAge: 66, birthYear: 1960 },
+      ],
+    }))
+
+  it('a single answer fills the OTHER slot with the honest unanswered hole — never a fabricated adoption', () => {
+    const m = freshModel()
+    twoRetired65(m)
+    m.update((d) => writeMedicareExtras(d, 0, { kind: 'entered', monthly: 220 }))
+    expect(draft(m).medicareExtrasByPerson).toEqual([
+      { kind: 'entered', monthly: 220 },
+      { kind: 'unanswered' },
+    ])
+  })
+
+  it('clearing BOTH slots back to unanswered STRIPS the field entirely (absence = never engaged)', () => {
+    const m = freshModel()
+    twoRetired65(m)
+    m.update((d) => writeMedicareExtras(d, 1, { kind: 'none' }))
+    expect(draft(m).medicareExtrasByPerson).toBeDefined()
+    m.update((d) => writeMedicareExtras(d, 1, undefined))
+    expect(draft(m).medicareExtrasByPerson).toBeUndefined()
+  })
+
+  it('the typical arm stamps the adoption vintage from the constant (never re-derived from value equality)', () => {
+    const m = freshModel()
+    twoRetired65(m)
+    m.update((d) => writeMedicareExtras(d, 0, { kind: 'typical', adoptionVintage: medicareExtrasTypical.value.vintage }))
+    expect(draft(m).medicareExtrasByPerson?.[0]).toEqual({
+      kind: 'typical',
+      adoptionVintage: medicareExtrasTypical.value.vintage,
+    })
   })
 })
 

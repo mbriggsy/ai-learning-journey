@@ -208,6 +208,13 @@ export function buildCandidateParams(
   // (Truncating it the way contributions are truncated would zero a retiree's pension over [0, Y),
   // un-modeling income they actually receive — the calm-but-wrong direction. The income-invariance
   // CRN test pins that two candidates differing only in Y carry the identical income vectors.)
+  //
+  // `medicareExtrasMonthly` (the ask-for-Medicare-extras unit) is likewise DELIBERATELY NOT
+  // destructured out: the per-person premium dollar is Y-INVARIANT (what a person pays for
+  // Part D/Medigap does not depend on the candidate stop date) — WHICH YEARS it charges is
+  // decided engine-side by the per-candidate `medicareOnsetSimYear` ∩ living set. Stripping it
+  // here would silently $0 every date candidate's extras — the forbidden shape (b), the
+  // cardinal optimistic sin.
   const {
     enrolledPremium: _e,
     slcsp: _s,

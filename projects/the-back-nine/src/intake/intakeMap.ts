@@ -45,7 +45,7 @@ import {
 import { buildCandidateParams, DATE_SEARCH_PATHS, type DateSearchInput } from '@engine/dateSearch'
 import { productionMarket } from '@engine/reference/methodology'
 import { findBlendRow, stockWeightForBlend } from '@engine/reference/tickerBlend'
-import { acaAgeRatingCurve } from '@engine/constants/health'
+import { acaAgeRatingCurve, medicareExtrasTypicalMonthly } from '@engine/constants/health'
 import type { ScenarioDraft } from '@store/memoryModel'
 import { compileBudget } from '@budget/budgetToSpending'
 import { annualAdditionsCeilingFor, contributionCeilingFor, isEmployerPlanKind } from './sanity'
@@ -523,6 +523,12 @@ function buildOverlay(d: ScenarioDraft, horizonYears: number): OverlayParams | u
 
   const oop = d.health.oopMedicalAnnual
 
+  // The ask-for-Medicare-extras vector — resolved for EVERY Medicare-bearing overlay arm
+  // (healthcareOn prices Medicare at each member's 65-crossing; medicareOnly from year 0).
+  // Never gated on the fork being answered: the ABSENT/unanswered fork FUNDS the typical
+  // (forbidden shape (b) — a silent $0 for an unasked household deletes a real recurring bill).
+  const medicareExtras = healthcareOn || medicareOnly ? resolveMedicareExtrasMonthly(d) : undefined
+
   // P3·U10 — the Roth-conversion lever: expand the persisted plan into the per-year engine
   // vector via the ONE shared expander (the same function roth.ts's with-arm derives from, so
   // the lever and the comparison can never disagree about which years convert). Spread-if-
@@ -561,6 +567,7 @@ function buildOverlay(d: ScenarioDraft, horizonYears: number): OverlayParams | u
           { healthcareEnabled: true }
         : {}),
     ...(seedComplete ? { irmaaMagiSeed: [seed![0]!, seed![1]!] } : {}),
+    ...(medicareExtras !== undefined ? { medicareExtrasMonthly: medicareExtras } : {}),
     ...(oop !== undefined
       ? { oopMedical: new Array<number>(horizonYears).fill(oop) }
       : {}),
@@ -672,6 +679,61 @@ export function medicareOnlyPriced(d: ScenarioDraft): boolean {
  *  structurally priced; Result's `isDateRoute` term short-circuits first). */
 export function spineMedicarePriced(d: ScenarioDraft): boolean {
   return buildSpineParams(d)?.overlay?.healthcareEnabled === true
+}
+
+/** Resolve the Medicare-extras payment fork to per-person MONTHLY dollars (the ask-for-
+ *  Medicare-extras unit — the ONE fork→dollar owner; the engine never sees provenance):
+ *  'entered' → the person's own dollar; 'none' → an AFFIRMED $0 (the Medicare-Advantage arm,
+ *  honest); 'typical' / 'unanswered' / an ABSENT field → the conservative-HIGH typical
+ *  FUNDED — never a silent $0 (forbidden shape (b): absence deletes a real recurring bill,
+ *  the cardinal optimistic sin; contrast oopMedical, whose absence is pessimistic-safe).
+ *  A mid-entry 'entered' with NO committed dollar also degrades to the TYPICAL (conservative
+ *  — an unfinished answer never zeroes a bill; the R19 sanity rule names the half-answered
+ *  state at the field before Save can persist it). */
+export function resolveMedicareExtrasMonthly(d: ScenarioDraft): readonly number[] {
+  const typical = medicareExtrasTypicalMonthly()
+  return d.people.map((_, i) => {
+    const e = d.medicareExtrasByPerson?.[i]
+    if (e === undefined) return typical
+    if (e.kind === 'none') return 0
+    if (e.kind === 'entered') {
+      return e.monthly !== undefined && Number.isFinite(e.monthly) ? e.monthly : typical
+    }
+    return typical // 'typical' | 'unanswered'
+  })
+}
+
+/** One person's extras disclosure state (the F5 three-way, per person). */
+export interface MedicareExtrasPersonView {
+  /** The BUILT funded monthly dollar (the params builder's own output — insight 081: the
+   *  priced claim reads the producer's OUTPUT, never a re-derivation of its inputs). */
+  readonly monthly: number
+  /** Where the dollar came from — a DRAFT fact (who chose what at the fork), which is an
+   *  intake-provenance claim, not an engine claim, so reading the draft for it is honest. */
+  readonly provenance: 'entered' | 'affirmed-zero' | 'typical'
+}
+
+/** The route-aware BUILT-params extras view (F5's disclosure source). NULL ⇒ this run prices
+ *  no Medicare-bearing overlay at all (missing facts / the degenerate early-return / no
+ *  healthcare arm) — no claim is made. `buildParams` is the ONE shared body both routes
+ *  consume (the date route's candidates inherit the identical Y-invariant vector through
+ *  `buildCandidateParams`'s `...overlayBase`), so this is the producer-output read for
+ *  BOTH populations. */
+export function medicareExtrasView(d: ScenarioDraft): readonly MedicareExtrasPersonView[] | null {
+  const overlay = buildParams(d)?.overlay
+  if (overlay?.healthcareEnabled !== true) return null
+  const vector = overlay.medicareExtrasMonthly
+  if (vector === undefined) return null
+  return vector.map((monthly, i) => {
+    const e = d.medicareExtrasByPerson?.[i]
+    const provenance: MedicareExtrasPersonView['provenance'] =
+      e?.kind === 'entered' && e.monthly !== undefined
+        ? 'entered'
+        : e?.kind === 'none'
+          ? 'affirmed-zero'
+          : 'typical'
+    return { monthly, provenance }
+  })
 }
 
 /**

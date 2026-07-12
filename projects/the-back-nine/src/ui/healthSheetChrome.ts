@@ -46,6 +46,10 @@ import type { BandSavedAnchor } from './bandAnnotations'
 /** Humane rounding for a readout dollar (the `~$X` grammar owns the imprecision). */
 const roundDollar = (v: number): number => Math.round(v / 100) * 100
 const formatDollar = (v: number): string => roundDollar(v).toLocaleString('en-US')
+/** A MONTHLY premium formats at whole-dollar grain — the $100 grain above is the ANNUAL
+ *  readout's humane rounding and would flatten a $203/mo figure to $200 (a false precision
+ *  loss in the other direction: the "about" hedge owns the fuzz, the digits stay real). */
+const formatMonthlyDollar = (v: number): string => Math.round(v).toLocaleString('en-US')
 
 /** The dated legislative check, formatted for prose (Intl-owned, never hand-assembled). */
 function verifiedOnFormatted(): string {
@@ -323,4 +327,51 @@ export function showMedicarePricedNote(run: {
   readonly reachesHealthDoor: boolean
 }): boolean {
   return run.medicarePriced && !run.reachesHealthDoor
+}
+
+/** One person's extras disclosure input (the ask-for-Medicare-extras unit): the BUILT funded
+ *  monthly dollar (the params builder's output — insight 081) + the draft-side provenance.
+ *  Mirrors `intakeMap.MedicareExtrasPersonView` structurally (kept structural here so this
+ *  pure chrome module needs no intake import). */
+export interface MedicareExtrasDisclosurePerson {
+  readonly monthly: number
+  readonly provenance: 'entered' | 'affirmed-zero' | 'typical'
+  /** The person's display label — their name, or the You/Your-spouse fallback. */
+  readonly who: string
+}
+
+/** The HERO's on-typical appendix (F5, population A — the non-door household): the
+ *  bi-directional per-person disclosure, appended INSIDE the residual paragraph (same
+ *  block — the tallest composite frame gains no new row). `undefined` when nobody is
+ *  on-typical: an entered/affirmed household needs no typical caveat. BOTH-on-typical
+ *  collapses to one sentence (the triple-note anaphora lesson, U13). */
+export function composeMedicareExtrasTypicalNote(
+  view: readonly MedicareExtrasDisclosurePerson[] | null,
+): string | undefined {
+  if (view === null) return undefined
+  const typicals = view.filter((p) => p.provenance === 'typical')
+  if (typicals.length === 0) return undefined
+  const fig = formatMonthlyDollar(typicals[0]!.monthly)
+  if (typicals.length >= 2) return slots.medicareExtrasTypicalBoth(fig)
+  return slots.medicareExtrasTypicalOne(typicals[0]!.who, fig)
+}
+
+/** The DOOR SHEET's extras block (F5, population B — the household whose verdict residual is
+ *  structurally withheld by {@link showMedicarePricedNote}; also the spine door household):
+ *  per-person provenance lines, deliberately INDEPENDENT of the wire readout (the date route's
+ *  sheet composes with `readout === undefined`, so a wire-fact home would silently vanish for
+ *  exactly the population the F5 floor protects). NULL when the run prices no Medicare-bearing
+ *  overlay — no claim is made. Its own legible lines — never folded into the six-item
+ *  omissions run-on. */
+export function composeMedicareExtrasLines(
+  view: readonly MedicareExtrasDisclosurePerson[] | null,
+): readonly string[] | null {
+  if (view === null) return null
+  return view.map((p) =>
+    p.provenance === 'entered'
+      ? slots.medicareExtrasFactEntered(p.who, formatMonthlyDollar(p.monthly))
+      : p.provenance === 'affirmed-zero'
+        ? slots.medicareExtrasFactNone(p.who)
+        : slots.medicareExtrasFactTypical(p.who, formatMonthlyDollar(p.monthly)),
+  )
 }

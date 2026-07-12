@@ -8,6 +8,8 @@ import type { EngineClient } from '@store/engineClient'
 import type { ControlPreview } from '@store/controlPreview'
 import { copy, slots } from '@ui/copy'
 import type { HealthReadout, TwoArmControl } from '@shared/model'
+import { medicareExtrasView } from '../intakeMap'
+import { medicareExtrasTypicalMonthly } from '@engine/constants/health'
 
 /**
  * The U11 Healthcare sheet (src/intake/HealthcareSheet.tsx). Presentational over props: the
@@ -85,6 +87,7 @@ const READOUT: HealthReadout = {
       acaNetPremiumP50: 9_950,
       medicareBaseP50: 0,
       irmaaSurchargeP50: 0,
+      medicareExtrasP50: 0,
       acaMagiP50: 66_600,
       irmaaMagiP50: 60_000,
       overCliffFraction: 0.31,
@@ -192,5 +195,68 @@ describe('HealthcareSheet — the readout lines', () => {
       <HealthcareSheet open draft={draft} readout={undefined} preview={preview.fn} onApply={vi.fn()} onClose={vi.fn()} />,
     )
     expect(screen.getByText(copy.controlHealthHsaNote)).toBeInTheDocument()
+  })
+})
+
+// ---------------------------------------------------------------------------
+// The Medicare-extras door home (the ask-for-Medicare-extras unit, F5's HARD LOCK):
+// the pre-65-window household's verdict residual is STRUCTURALLY withheld
+// (showMedicarePricedNote), so the door sheet is its ONLY extras-disclosure home —
+// these arms are the planted-RED proof the population actually SEES it.
+// (Planted-mutant record: the sheet's extras block was temporarily removed and BOTH
+// arms below went red, then the block was restored — a witness seen red, 080/081.)
+// ---------------------------------------------------------------------------
+describe('HealthcareSheet — the Medicare-extras door home (F5)', () => {
+  /** A COMPLETE pre-65 door household (the run prices ACA now, Medicare at each member's
+   *  65-crossing) whose extras fork was never asked → BOTH on-typical. */
+  const doorDraft = (mutate?: (d: ScenarioDraft) => ScenarioDraft): ScenarioDraft =>
+    draftWith((d) => {
+      const complete: ScenarioDraft = {
+        ...d,
+        people: [
+          { name: 'A', sex: 'male', birthYear: 1965, currentAge: 61, workStatus: 'retired', retirementAge: 60, earnedIncomeReal: 0, pia: 24_000, socialSecurityClaimAge: 67 },
+          { name: 'B', sex: 'female', birthYear: 1967, currentAge: 59, workStatus: 'retired', retirementAge: 58, earnedIncomeReal: 0, pia: 16_000, socialSecurityClaimAge: 67 },
+        ],
+        enteredAccounts: [
+          { ownerIndex: 0, kind: 'traditional-ira', valueToday: 800_000, manualBlend: { kind: 'exact', stockPct: 60, bondPct: 35, cashPct: 5 } },
+        ],
+        annualSpendingReal: 60_000,
+        health: { ...d.health, enrolledPremiumMonthlyToday: 1_500, slcspMonthlyToday: 1_300, oopMedicalAnnual: 4_000 },
+      }
+      return mutate ? mutate(complete) : complete
+    })
+
+  it('an on-typical door household SEES the per-person disclosure — its own legible lines, never the omissions run-on', () => {
+    const draft = doorDraft()
+    expect(medicareExtrasView(draft), 'precondition: the run prices a Medicare-bearing overlay').not.toBeNull()
+    render(
+      <HealthcareSheet open draft={draft} readout={undefined} preview={deferredPreview().fn} onApply={vi.fn()} onClose={vi.fn()} />,
+    )
+    const fig = Math.round(medicareExtrasTypicalMonthly()).toLocaleString('en-US')
+    expect(screen.getByText(copy.medicareExtrasSheetLead)).toBeInTheDocument()
+    expect(screen.getByText(slots.medicareExtrasFactTypical('A', fig))).toBeInTheDocument()
+    expect(screen.getByText(slots.medicareExtrasFactTypical('B', fig))).toBeInTheDocument()
+    // Its OWN lines — the omissions run-on did not absorb it (the F5 never-buried clause).
+    expect(copy.controlHealthOmissionsNote).not.toContain('Medigap')
+  })
+
+  it('entered and affirmed-$0 members render their own provenance lines (the fork answers, disclosed per person)', () => {
+    const draft = doorDraft((d) => ({
+      ...d,
+      medicareExtrasByPerson: [
+        { kind: 'entered', monthly: 185 },
+        { kind: 'none' },
+      ],
+    }))
+    render(
+      <HealthcareSheet open draft={draft} readout={undefined} preview={deferredPreview().fn} onApply={vi.fn()} onClose={vi.fn()} />,
+    )
+    expect(screen.getByText(slots.medicareExtrasFactEntered('A', '185'))).toBeInTheDocument()
+    expect(screen.getByText(slots.medicareExtrasFactNone('B'))).toBeInTheDocument()
+  })
+
+  it('an INCOMPLETE draft (no priced run) makes NO extras claim — the lead line is absent', () => {
+    renderSheet() // the incomplete fresh-model draft — buildParams null ⇒ view null
+    expect(screen.queryByText(copy.medicareExtrasSheetLead)).toBeNull()
   })
 })

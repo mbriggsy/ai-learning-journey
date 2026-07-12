@@ -690,6 +690,15 @@ export function validateParams(params: SimulationParams): string | null {
     // the coverage arm below decides WHICH years need it). NaN-first, mirroring its stream siblings.
     if (o.irmaaMagiOverride !== undefined && !o.irmaaMagiOverride.every(finiteNonNeg))
       return 'overlay irmaaMagiOverride invalid'
+    // The ask-for-Medicare-extras per-person vector: finite ≥ 0 per entry (a negative premium
+    // inside the funding Σ is the insight-046 netted-away optimistic class; a NaN silently
+    // un-prices a member), and EXACTLY one entry per person (the medicareOnsetSimYear
+    // per-person length discipline — a short vector would silently $0 the missing member).
+    if (o.medicareExtrasMonthly !== undefined) {
+      if (!o.medicareExtrasMonthly.every(finiteNonNeg)) return 'overlay medicareExtrasMonthly invalid'
+      if (o.medicareExtrasMonthly.length !== params.people.length)
+        return 'overlay medicareExtrasMonthly length must match people'
+    }
     // U3 · M5 — the HSA spend-side inputs, guarded like their siblings (insights 008/010):
     // oopMedical is a real dollar cost — finite ≥ 0, NO +Infinity sentinel (mirror slcsp, NOT the
     // bracket-fill ceilings). A NaN would poison the qualified-spend cap's Math.min mid-path.
@@ -994,6 +1003,7 @@ interface HealthAgg {
   readonly acaNetPremium: number[][]
   readonly medicareBase: number[][]
   readonly irmaaSurcharge: number[][]
+  readonly medicareExtras: number[][]
   readonly acaMagi: number[][]
   readonly irmaaMagi: number[][]
   readonly overCliff: number[]
@@ -1019,6 +1029,7 @@ export function buildHealthReadout(agg: HealthAgg, paths: number): HealthReadout
       acaNetPremiumP50: median(agg.acaNetPremium[t] ?? []),
       medicareBaseP50: median(agg.medicareBase[t] ?? []),
       irmaaSurchargeP50: median(agg.irmaaSurcharge[t] ?? []),
+      medicareExtrasP50: median(agg.medicareExtras[t] ?? []),
       acaMagiP50: median(agg.acaMagi[t] ?? []),
       irmaaMagiP50: median(agg.irmaaMagi[t] ?? []),
       overCliffFraction: priced > 0 ? (agg.overCliff[t] ?? 0) / priced : 0,
@@ -1340,6 +1351,7 @@ export function simulate(
         acaNetPremium: Array.from({ length: maxHorizon }, (): number[] => []),
         medicareBase: Array.from({ length: maxHorizon }, (): number[] => []),
         irmaaSurcharge: Array.from({ length: maxHorizon }, (): number[] => []),
+        medicareExtras: Array.from({ length: maxHorizon }, (): number[] => []),
         acaMagi: Array.from({ length: maxHorizon }, (): number[] => []),
         irmaaMagi: Array.from({ length: maxHorizon }, (): number[] => []),
         overCliff: new Array<number>(maxHorizon).fill(0),
@@ -1500,7 +1512,7 @@ export function simulate(
     const floorSink = fanTrack === 'floor' ? pathBalances : undefined
     // P3·U11 — this path's healthcare observation sink (FULL track only; fresh per path).
     const healthSink: HealthYearSink | undefined = wantHealth
-      ? { acaNetPremium: [], medicareBase: [], irmaaSurcharge: [], acaMagi: [], irmaaMagi: [], acaCliffState: [] }
+      ? { acaNetPremium: [], medicareBase: [], irmaaSurcharge: [], medicareExtras: [], acaMagi: [], irmaaMagi: [], acaCliffState: [] }
       : undefined
     let res: DecumulationResult
     let floorRes: DecumulationResult | undefined
@@ -1558,6 +1570,10 @@ export function simulate(
                 bridgeYearMask: bridgeMask,
                 ...(overlay.medicareOnsetSimYear ? { medicareOnsetSimYear: overlay.medicareOnsetSimYear } : {}),
                 ...(overlay.irmaaMagiOverride ? { irmaaMagiOverride: overlay.irmaaMagiOverride } : {}),
+                // The ask-for-Medicare-extras per-person vector — inside the healthcareEnabled
+                // spread (extras price ONLY where Medicare prices; a healthcare-off run keeps
+                // the byte-identical taxInputs), spread only when present (absent ⇒ Σ 0).
+                ...(overlay.medicareExtrasMonthly ? { medicareExtrasMonthly: overlay.medicareExtrasMonthly } : {}),
               }
             : {}),
       }
@@ -1721,6 +1737,7 @@ export function simulate(
           healthAgg.acaNetPremium[t]!.push(healthSink.acaNetPremium[t]!)
           healthAgg.medicareBase[t]!.push(healthSink.medicareBase[t]!)
           healthAgg.irmaaSurcharge[t]!.push(healthSink.irmaaSurcharge[t]!)
+          healthAgg.medicareExtras[t]!.push(healthSink.medicareExtras[t]!)
           healthAgg.acaMagi[t]!.push(healthSink.acaMagi[t]!)
           healthAgg.irmaaMagi[t]!.push(healthSink.irmaaMagi[t]!)
           const cliffState = healthSink.acaCliffState[t]!

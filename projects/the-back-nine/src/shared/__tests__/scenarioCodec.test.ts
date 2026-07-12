@@ -503,6 +503,66 @@ describe('v3 — the forward-written persist shape (U8, the first v3 writer)', (
     }
   })
 
+  // The ask-for-Medicare-extras payment fork (wf_efc6ece2-675 — additive-optional; the
+  // biconditional discipline is the drawdownOrder precedent, both directions).
+  it('v3 WITH medicareExtrasByPerson round-trips exactly across all four kinds; absent decodes unchanged', () => {
+    const arms: ScenarioV3[] = [
+      { ...V3, medicareExtrasByPerson: [{ kind: 'entered', monthly: 220 }, { kind: 'none' }] },
+      { ...V3, medicareExtrasByPerson: [{ kind: 'typical', adoptionVintage: 'extras-2026a' }, { kind: 'unanswered' }] },
+      { ...V3, medicareExtrasByPerson: [{ kind: 'entered', monthly: 0 }, { kind: 'entered', monthly: 1_500 }] }, // an explicit $0 entry is honest
+    ]
+    for (const s of arms) expect(decodeScenario(encodeScenario(s))).toEqual({ ok: true, scenario: s })
+    expect(decodeScenario(encodeScenario(V3))).toEqual({ ok: true, scenario: V3 }) // pre-unit vault untouched
+  })
+
+  it('extras corruption arms: negative/over-ceiling/NaN dollar, both biconditional directions, garbage kind, length mismatch — each corrupt (the strict needNonNegativeDollar path, never optFinite)', () => {
+    const bads: Array<(o: Obj) => void> = [
+      // A NEGATIVE entered dollar — the insight-046 netted-away optimistic class.
+      (o) => { o.medicareExtrasByPerson = [{ kind: 'entered', monthly: -50 }, { kind: 'none' }] },
+      // Over the computable-domain ceiling.
+      (o) => { o.medicareExtrasByPerson = [{ kind: 'entered', monthly: MAX_REAL_DOLLAR * 2 }, { kind: 'none' }] },
+      // A null dollar (the JSON shadow of NaN).
+      (o) => { o.medicareExtrasByPerson = [{ kind: 'entered', monthly: null }, { kind: 'none' }] },
+      // 'entered' WITHOUT a dollar — the half-answer is unrepresentable-persisted.
+      (o) => { o.medicareExtrasByPerson = [{ kind: 'entered' }, { kind: 'none' }] },
+      // A dollar riding a non-'entered' kind (it would not price — writer bug).
+      (o) => { o.medicareExtrasByPerson = [{ kind: 'none', monthly: 100 }, { kind: 'none' }] },
+      // 'typical' WITHOUT its adoption vintage.
+      (o) => { o.medicareExtrasByPerson = [{ kind: 'typical' }, { kind: 'none' }] },
+      // A vintage riding a non-'typical' kind (no adoption occurred — writer bug).
+      (o) => { o.medicareExtrasByPerson = [{ kind: 'entered', monthly: 100, adoptionVintage: 'extras-2026a' }, { kind: 'none' }] },
+      // Garbage kind.
+      (o) => { o.medicareExtrasByPerson = [{ kind: 'ma-plan' }, { kind: 'none' }] },
+      // Length mismatch — a short vector would silently $0 the missing member.
+      (o) => { o.medicareExtrasByPerson = [{ kind: 'none' }] },
+      (o) => { o.medicareExtrasByPerson = [{ kind: 'none' }, { kind: 'none' }, { kind: 'none' }] },
+      // Not an array.
+      (o) => { o.medicareExtrasByPerson = { kind: 'none' } },
+    ]
+    for (const mutate of bads) {
+      const d = decodeScenario(mutated(V3, mutate))
+      expect(d.ok).toBe(false)
+      if (!d.ok) expect(d.reason).toBe('corrupt')
+    }
+  })
+
+  it('healthcareVintage tolerates the ADDITIVE extras-typical vintage: present-string passes, absent passes (pre-extras stamp), non-string rejects', () => {
+    const stamp = {
+      coverageYear: 2026, acaStatus: 'reverted', acaVerifiedOn: '2026-06-04',
+      fplGuidelineYear: 2025, irmaaTopTierFrozenThrough: 2027, partBStandardMonthly: 123.45,
+    }
+    const withVintage: ScenarioV3 = {
+      ...V3,
+      healthcareVintage: { ...stamp, medicareExtrasTypicalVintage: 'extras-2026a' },
+    }
+    expect(decodeScenario(encodeScenario(withVintage))).toEqual({ ok: true, scenario: withVintage })
+    const without: ScenarioV3 = { ...V3, healthcareVintage: stamp }
+    expect(decodeScenario(encodeScenario(without))).toEqual({ ok: true, scenario: without })
+    const bad = decodeScenario(mutated(V3, (o) => { o.healthcareVintage = { ...stamp, medicareExtrasTypicalVintage: 7 } }))
+    expect(bad.ok).toBe(false)
+    if (!bad.ok) expect(bad.reason).toBe('corrupt')
+  })
+
   // P3·U13 — the save wall-time anchor + the two new vintage stamps (additive-optional).
   it('v3 WITH savedAt + taxVintageDetail + dateVintage round-trips exactly; absent-all decodes unchanged (the legacy-vault arm)', () => {
     const withU13: ScenarioV3 = {

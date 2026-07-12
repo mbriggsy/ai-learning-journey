@@ -49,7 +49,7 @@ import { CurrencyField, IntegerField, PercentField, SegmentedControl, formatMone
 import { FieldError } from './FieldError'
 import { validateField, personField, type SanityViolation } from './sanity'
 import { healthcarePriced, isDateRoute, type MissingFact } from './intakeMap'
-import { writeWorkingYearInvestment } from './questions'
+import { MedicareExtrasFork, writeWorkingYearInvestment } from './questions'
 import './assumptions.css'
 
 export interface AssumptionPanelProps {
@@ -647,6 +647,28 @@ export function AssumptionPanel({
                   />
                 </Row>
               ))}
+
+          {/* The Medicare-extras payment fork (the ask-for-Medicare-extras unit) — the
+              standing refine seat AND the details home for the funded typical (corpus rule
+              38): per person, the ONE fork face over the ONE write shape. UNCONDITIONAL:
+              every route prices Medicare's 65+ years, and the unanswered fork IS the
+              on-typical state this row exists to let the household refine. */}
+          <Row seat="medicare-extras">
+            <p className="ap-row__name">{copy.assumptionMedicareExtrasName}</p>
+            {([0, 1] as const).map((i) => (
+              <div key={`mx-${i}`}>
+                <p className="ap-row__prov">
+                  {draft.people[i].name ?? (i === 0 ? copy.personYou : copy.personSpouse)}
+                </p>
+                <MedicareExtrasFork
+                  draft={draft}
+                  i={i}
+                  onWrite={(field, write) => commitOpen(field, write)}
+                  errors={renderErrors(`medicareExtrasByPerson.${i}.monthly`)}
+                />
+              </div>
+            ))}
+          </Row>
 
           {/* The complex collections — via-intake (accounts carry per-account facts a flat
               row can't honestly edit; the walk-through is their one editor home). */}

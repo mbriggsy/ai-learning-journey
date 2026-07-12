@@ -24,6 +24,7 @@ const year = (over: Partial<HealthReadoutYear>): HealthReadoutYear => ({
   acaNetPremiumP50: 0,
   medicareBaseP50: 0,
   irmaaSurchargeP50: 0,
+  medicareExtrasP50: 0,
   acaMagiP50: 0,
   irmaaMagiP50: 0,
   overCliffFraction: 0,

@@ -83,6 +83,7 @@ export type HealthcareClock =
   | 'fpl-guideline'
   | 'irmaa-freeze'
   | 'part-b'
+  | 'extras-typical'
 
 export interface ExpiredBudgetLine {
   /** Index into the persisted `budget` array (the re-confirm names the line). */
@@ -189,6 +190,21 @@ export function deriveStaleness(scenario: ScenarioV3, todayEpochDay: number): St
       movedClocks.push('irmaa-freeze')
     }
     if (savedHealth.partBStandardMonthly !== currentHealth.partBStandardMonthly) movedClocks.push('part-b')
+    // The extras-typical clock (the ask-for-Medicare-extras unit): fires ONLY when (a) the
+    // saved stamp CARRIES the extras vintage (a pre-extras-unit vault lacks it — absence is
+    // not-comparable, quiet, never coerced to "unchanged"), (b) the vintage moved, AND (c)
+    // the vault is actually typical-EXPOSED — some member's fork is not an explicit
+    // entered-dollar/affirmed-$0 (an absent field or an 'unanswered'/'typical' entry funds
+    // the typical at recompute, so a typical revision genuinely moves THEIR answer; a
+    // household of explicit dollars does not care — firing for them is alarm-when-fine).
+    if (
+      savedHealth.medicareExtrasTypicalVintage !== undefined &&
+      savedHealth.medicareExtrasTypicalVintage !== currentHealth.medicareExtrasTypicalVintage &&
+      (scenario.medicareExtrasByPerson === undefined ||
+        scenario.medicareExtrasByPerson.some((e) => e.kind === 'typical' || e.kind === 'unanswered'))
+    ) {
+      movedClocks.push('extras-typical')
+    }
   }
 
   const allRetired = scenario.people.every((p) => p.workStatus === 'retired')

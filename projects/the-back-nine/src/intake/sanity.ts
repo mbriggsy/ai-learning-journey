@@ -288,6 +288,27 @@ const RULES: readonly SanityRule[] = [
         : [],
   },
   {
+    // The ask-for-Medicare-extras half-answer (insight 059's family): the 'entered' fork arm
+    // with NO committed dollar is self-contradictory — named at the field, blocking advance.
+    // The engine-side resolution funds the TYPICAL for it (conservative, never a silent $0),
+    // and the codec's monthly-iff-'entered' biconditional refuses it at Save; this rule is
+    // the surface-honest first line: finish the answer or unsay it.
+    id: 'medicare-extras-entered-blank',
+    target: (d) => (d.medicareExtrasByPerson ?? []).map((_, i) => `medicareExtrasByPerson.${i}.monthly`),
+    check: (d) =>
+      (d.medicareExtrasByPerson ?? []).flatMap((e, i) =>
+        e.kind === 'entered' && e.monthly === undefined
+          ? [
+              {
+                rule: 'medicare-extras-entered-blank',
+                field: `medicareExtrasByPerson.${i}.monthly`,
+                messageKey: 'errMedicareExtrasBlank' as const,
+              },
+            ]
+          : [],
+      ),
+  },
+  {
     id: 'birth-year-in-future',
     target: (d) => d.people.map((_, i) => personField(i, 'birthYear')),
     check: (d) =>

@@ -31,6 +31,7 @@ import {
   DRAWDOWN_POLICIES,
   FILING_STATUSES,
   INCOME_TYPES,
+  MEDICARE_EXTRAS_KINDS,
   SAVED_AT_EPOCH_DAY_MAX,
   SAVED_AT_EPOCH_DAY_MIN,
   SEXES,
@@ -526,8 +527,41 @@ function checkV3Fields(o: Obj): void {
   if (o.enhancedSubsidies !== undefined && o.enhancedSubsidies !== true) {
     throw new Corrupt('scenario.enhancedSubsidies: expected the literal true (absence IS the reverted regime — false is written as absence)')
   }
+  // The ask-for-Medicare-extras payment fork (wf_efc6ece2-675 — additive-optional). WHEN
+  // PRESENT: exactly one entry per person, each kind-discriminated with BOTH biconditionals
+  // enforced in BOTH directions (monthly iff 'entered'; adoptionVintage iff 'typical') — a
+  // mismatched pair is unrepresentable-persisted (the drawdownOrder precedent). The 'entered'
+  // dollar runs the STRICT gate (needFinite → needNonNegativeDollar): a negative extras
+  // premium inside the funding sum is the insight-046 optimistic class the engine cannot
+  // backstop; the siblings' optFinite / finite-only checkFiniteArray are deliberately NOT
+  // reused (the spec's ship gate names this trap).
+  if (o.medicareExtrasByPerson !== undefined) {
+    const path = 'scenario.medicareExtrasByPerson'
+    needArray(o.medicareExtrasByPerson, path)
+    if (o.medicareExtrasByPerson.length !== peopleCount) {
+      throw new Corrupt(`${path}: expected exactly ${peopleCount} entries (one per person)`)
+    }
+    o.medicareExtrasByPerson.forEach((e, i) => {
+      const p = `${path}[${i}]`
+      needObject(e, p)
+      needVocab(e, 'kind', MEDICARE_EXTRAS_KINDS, p)
+      if (e.kind === 'entered') {
+        needFinite(e, 'monthly', p)
+        needNonNegativeDollar(e, 'monthly', p)
+      } else if (e.monthly !== undefined) {
+        throw new Corrupt(`${p}.monthly: only meaningful when kind is 'entered' (it would not price — writer bug)`)
+      }
+      if (e.kind === 'typical') {
+        needString(e, 'adoptionVintage', p)
+      } else if (e.adoptionVintage !== undefined) {
+        throw new Corrupt(`${p}.adoptionVintage: only meaningful when kind is 'typical' (no adoption occurred — writer bug)`)
+      }
+    })
+  }
   // P3·U11 — the healthcare vintage stamp (additive-optional; one atomic object — a partial
-  // stamp set is meaningless, so every field is required when the object is present).
+  // stamp set is meaningless, so every field is required when the object is present; the
+  // extras-typical vintage is the one ADDITIVE-OPTIONAL member — a pre-extras-unit stamp
+  // legitimately lacks it, and absence reads not-comparable, never "unchanged").
   if (o.healthcareVintage !== undefined) {
     const hv = o.healthcareVintage
     const path = 'scenario.healthcareVintage'
@@ -538,6 +572,9 @@ function checkV3Fields(o: Obj): void {
     needInteger(hv, 'fplGuidelineYear', path)
     needInteger(hv, 'irmaaTopTierFrozenThrough', path)
     needFinite(hv, 'partBStandardMonthly', path)
+    if (hv.medicareExtrasTypicalVintage !== undefined) {
+      needString(hv, 'medicareExtrasTypicalVintage', path)
+    }
   }
   // P3·U13 — the save wall-time anchor (additive-optional). RANGE-gated, not merely
   // finite (insight 046): an epoch-MILLISECOND value here is a finite integer that would

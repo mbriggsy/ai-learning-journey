@@ -76,8 +76,12 @@ export const copy = {
     'Spousal and survivor benefits are worked out from both of these — there’s nothing extra to enter.',
   qSpendHeading: 'What does your life cost?',
   spendLabel: 'Household spending, all in',
+  // The ask-for-Medicare-extras BOUNDARY FLIP (F4, fund-first — this wording ships in the same
+  // commit as the engine funding, never ahead of it): Part D / Medigap / MA premiums moved OUT
+  // of the spending figure — the tool now asks for them (or funds a typical) and adds them on
+  // top, alongside Part B. Mechanism-named, never a memory referent (corpus rule 37).
   spendHelp:
-    'Everything — housing, food, fun, and the medical costs you pay out of pocket (including any Part D or Medigap premiums). Leave out the Medicare Part B premium and its income surcharge — the tool adds those on top. Leave out income taxes too: the tool works out federal tax from your withdrawals itself, and state income tax isn’t counted. The whole household, not just the bills that feel like retirement.',
+    'Everything — housing, food, fun, and the medical costs you pay out of pocket. Leave Medicare premiums out entirely: Part B, its income surcharge, and any Part D, Medigap, or Medicare Advantage premium — the tool handles those separately and adds them on top itself. Leave out income taxes too: the tool works out federal tax from your withdrawals itself, and state income tax isn’t counted. The whole household, not just the bills that feel like retirement.',
   periodMonth: 'Each month',
   periodYear: 'Each year',
   periodLegend: 'That figure is…',
@@ -181,6 +185,23 @@ export const copy = {
   irmaaSeedOneBackLabel: 'Income, last year',
   irmaaSeedHelp:
     'Medicare premiums look back two years — these anchor the early years.',
+  // --- The ask-for-Medicare-extras step (wf_efc6ece2-675 F1 — the payment fork). Asked of any
+  // household with a member near 65 or older; a younger household is never asked and simply
+  // funds the conservative typical at each 65-crossing (never a silent $0 — forbidden shape
+  // (b)). The MA arm's wording is LOAD-BEARING copy: it is how the Medicare-Advantage
+  // plurality lands honestly on an AFFIRMED $0. The fork starts with NOTHING selected —
+  // never pre-filled with the high anchor. ---
+  qMedicareExtrasHeading: 'Medicare, beyond Part B',
+  medicareExtrasIntro:
+    'The tool adds the Part B premium and its income surcharge by itself. Most people also pay something for extra coverage — a Part D drug plan, a Medigap supplement plan, or a Medicare Advantage plan. Tell it what each of you pays a month for those and it adds that on top too — so keep it out of your spending figure.',
+  medicareExtrasForkLegend: 'Beyond Part B, this is…',
+  medicareExtrasForkNone: 'About nothing beyond Part B (common on Medicare Advantage)',
+  medicareExtrasForkEntered: 'A monthly premium — entered below',
+  medicareExtrasAmountLabel: 'Monthly premium, all in',
+  medicareExtrasAmountHelp:
+    'Everything this person pays each month for coverage beyond Part B — drug plan, supplement plan, or Medicare Advantage premium, added together.',
+  medicareExtrasTypicalPicked:
+    'A typical figure, not a bill — it assumes the pricier supplement-plus-drug-plan path. Real costs sit higher or lower, including next to nothing on many Medicare Advantage plans. Swap in your own number any time.',
   // A quiet, color-free requiredness cue for a segmented group with no native
   // "unanswered" signal (the reader is color blind — text, never a red asterisk).
   fieldRequiredMarker: '(required)',
@@ -472,6 +493,11 @@ export const copy = {
   // missingRequiredFacts treats a non-positive spend as not-validly-present.
   errSpendZero:
     'Spending of $0 can’t anchor a plan — enter what the two of you actually spend in a year.',
+  // The extras half-answer (insight 059's family): "a monthly premium" with no dollar is a
+  // self-contradictory state — named at the field, blocking advance. The engine-side
+  // resolution would fund the TYPICAL for it (conservative, never a silent $0), but the
+  // honest surface makes the user finish the answer or unsay it.
+  errMedicareExtrasBlank: 'Enter the monthly amount — or pick one of the other choices.',
 
   // ==========================================================================
   // U8 — the first-Save ceremony + decrypt-on-return (the trust handoff).
@@ -771,6 +797,12 @@ export const copy = {
     'Medicare premiums look back two years at your income — money converted at 63 can show up in the premium bill at 65. Each step is sharp: one dollar over it and the higher charge applies for that whole year.',
   controlHealthOmissionsNote:
     'Not counted here: state income tax, the net-investment-income tax, differences in plan cost-sharing, the benchmark premium itself, state-level subsidy top-ups, and a surviving spouse’s chance to have the Medicare surcharge rechecked sooner — each could move this picture.',
+  // The extras block's lead (the ask-for-Medicare-extras unit, F5's door home). Deliberately
+  // NOT a control* key (the require-hedge sweep is for plan-moving readouts; this is a
+  // mechanism disclosure — the universal gates still apply). Mechanism-named (rule 37):
+  // WHO adds WHAT, the reader's entries as supporting context in the per-person lines.
+  medicareExtrasSheetLead:
+    'Coverage beyond Part B — the tool adds each person’s premium on top of your spending:',
   controlHealthSurvivorNote:
     'If one of you is on your own later, the same income can trip these lines sooner — the discount disappears right away, and the Medicare step follows about two years behind.',
   controlHealthHsaNote:
@@ -782,12 +814,19 @@ export const copy = {
   // (what still isn't) — the affirmative alone would imply ALL of Medicare is priced, a fresh
   // optimistic lie. A household that reaches the Healthcare door is NOT shown these: its sheet
   // already carries the residual (controlHealthOmissionsNote) — one honest home per fact.
+  // The extras unit widened the affirmation (extra coverage now priced — entered, affirmed-$0,
+  // or the typical) and moved the residual pair AS A SET (F4): the Part D/Medigap "inside your
+  // spending" clause DIED (now added on top), the state-tax clause STAYS (its own filed engine
+  // unit), and the real-flat clause BROADENED from "the base premium" to every premium the tool
+  // adds. The on-typical household additionally gets a per-person bi-directional sentence
+  // (slots.medicareExtrasTypical*) appended INSIDE the residual paragraph — same block, no new
+  // frame row (the one-frame fit law's tallest composite).
   verdictMedicarePriced:
-    'Medicare’s premiums for the two of you are already in these numbers — the base Part B premium and its income-based surcharge.',
+    'Medicare’s costs for the two of you are already in these numbers — the Part B premium, its income surcharge, and extra coverage: a drug plan, a supplement plan, or a Medicare Advantage premium.',
   verdictMedicareResidual:
-    'That’s the only piece this tool adds by itself. A Part D drug plan, a Medigap supplement plan, and the rare Part A premium live inside the spending you gave us. State income tax isn’t counted — a real yearly bill in a taxing state — and the base premium is held flat in today’s dollars, so the true picture could sit tighter than shown.',
+    'Those are the pieces this tool adds by itself. The rare Part A premium stays inside the spending you gave us. State income tax isn’t counted — a real yearly bill in a taxing state — and premiums are held flat in today’s dollars, so the true picture could sit tighter than shown.',
   rothMedicareResidualNote:
-    'The income surcharge a conversion can trip two years later is now part of these numbers. One modeling choice remains: the base premium is held level in today’s dollars, so a conversion that crosses a surcharge step could look a shade easier here than in real life.',
+    'The income surcharge a conversion can trip two years later is now part of these numbers. One modeling choice remains: premiums are held level in today’s dollars, so a conversion that crosses a surcharge step could look a shade easier here than in real life.',
 
   // --- P3·U12 — the AssumptionPanel (the R7 escape hatch; council wf_dff75c2f-9e3). PREFIX
   // LAW: `assumption*` is the panel's CHROME prefix — labels, values, provenance lines,
@@ -822,6 +861,10 @@ export const copy = {
   assumptionCollectionsName: 'Accounts & other income',
   assumptionCollectionsValue:
     'Balances, account kinds, tickers, and any pension or other income — edited where they were entered, so nothing gets out of step.',
+  // The Medicare-extras refine seat (the ask-for-Medicare-extras unit) — the standing
+  // DETAILS HOME for the funded figure (corpus rule 38: general terms need a place to see
+  // the dollars) and the refine path for the conservative typical.
+  assumptionMedicareExtrasName: 'Medicare extra coverage — Part D, Medigap, or Advantage',
   assumptionNoneApplied: 'None applied.',
   assumptionDrawdownName: 'Withdrawal order',
   assumptionRothName: 'Roth conversions',
@@ -1403,6 +1446,27 @@ export const slots = {
   //     hedged body sentence, so AT hears it once; the ~ carries the humane-precision hedge). ---
   healthFigPerYear: (amountFormatted: string): string => `~$${amountFormatted} a year`,
   healthFigRoom: (amountFormatted: string): string => `~$${amountFormatted} of room`,
+  // --- The ask-for-Medicare-extras figures (templates carry NO digit — the slot law; the
+  //     dollar is the single-sourced constant, medicareExtrasTypicalMonthly(), pre-formatted). ---
+  /** The intake fork's typical-arm label. */
+  medicareExtrasForkTypical: (monthlyFormatted: string): string =>
+    `Not sure — use a typical figure (about $${monthlyFormatted} a month)`,
+  /** The hero's on-typical disclosure, ONE person (bi-directional + mechanism-named, corpus
+   *  rule 37; `who` = the person's name or the You/Your-spouse fallback). Appended inside the
+   *  residual paragraph — no new block on the tallest frame. */
+  medicareExtrasTypicalOne: (who: string, monthlyFormatted: string): string =>
+    `${who} — extra coverage here is a typical figure, about $${monthlyFormatted} a month, not an actual bill; real costs run higher or lower, including next to nothing on many Medicare Advantage plans.`,
+  /** BOTH on-typical, collapsed to one sentence (the triple-note anaphora lesson). */
+  medicareExtrasTypicalBoth: (monthlyFormatted: string): string =>
+    `Extra coverage here is a typical figure — about $${monthlyFormatted} a month each, not your bills; real costs run higher or lower, including next to nothing on many Medicare Advantage plans.`,
+  // --- The door sheet's extras fact lines (per person — the F5 door home; provenance is the
+  //     load-bearing content: whose number, entered vs affirmed vs typical). ---
+  medicareExtrasFactEntered: (who: string, monthlyFormatted: string): string =>
+    `${who} — about $${monthlyFormatted} a month, the figure you entered.`,
+  medicareExtrasFactNone: (who: string): string =>
+    `${who} — about nothing beyond Part B, as you answered.`,
+  medicareExtrasFactTypical: (who: string, monthlyFormatted: string): string =>
+    `${who} — a typical figure of about $${monthlyFormatted} a month, not an actual bill; real costs sit higher or lower, including next to nothing on Medicare Advantage.`,
   healthFigCents: (cents: number): string => `${cents}¢ on each dollar converted`,
   healthFigStepAdd: (amountFormatted: string): string => `+~$${amountFormatted} a year`,
   // --- P3·U12 — the AssumptionPanel's market disclosure figures. The values are READ from

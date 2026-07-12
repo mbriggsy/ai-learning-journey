@@ -537,4 +537,19 @@ describe('P3-U11 follow-up — the priced-Medicare disclosure on the verdict sur
     expect(screen.queryByText(copy.verdictMedicarePriced)).toBeNull()
     expect(screen.queryByText(copy.verdictMedicareResidual)).toBeNull()
   })
+
+  it('the on-typical appendix (the extras unit) rides INSIDE the residual paragraph — one block, no new row; absent when nobody is on-typical', () => {
+    const note = slots.medicareExtrasTypicalBoth('203')
+    const { container } = render(
+      <ConfidenceStatement
+        view={{ kind: 'reading', ...READING_FIXTURES['on-track'] }}
+        medicarePricedNote
+        medicareExtrasTypicalNote={note}
+      />,
+    )
+    const residual = container.querySelector('.cs-medicare-residual')!
+    expect(residual.textContent).toContain(copy.verdictMedicareResidual)
+    expect(residual.textContent).toContain(note) // appended in the SAME paragraph
+    expect(container.querySelectorAll('.cs-medicare-residual')).toHaveLength(1) // never a second block
+  })
 })

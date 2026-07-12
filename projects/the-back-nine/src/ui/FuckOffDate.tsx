@@ -98,6 +98,10 @@ export interface FuckOffDateProps {
    *  tree. Result owns the ONE route-aware decision (showMedicarePricedNote, pricing facts never
    *  ages — insight 080); this stays a dumb bool-prop renderer (insight 048). Default false. */
   readonly medicarePricedNote?: boolean
+  /** The ask-for-Medicare-extras on-typical appendix (F5): the composed bi-directional
+   *  per-person sentence, appended INSIDE the residual note — same block, no new row
+   *  (mirrors ConfidenceStatement; rendered only with `medicarePricedNote`). */
+  readonly medicareExtrasTypicalNote?: string
   /** P3·U13 — TRUE when any staleness clock fired at unlock: the date claim wears the
    *  standing "figured fresh under today's rules" line among its notes (the Q1 disclosure
    *  rides WITH the verdict). Default false. */
@@ -176,7 +180,7 @@ export function floorLineText(
   return slots.dateFloorCoveredAnchored(yearsFromToday, calendarYear, odds, fl.unconfirmed)
 }
 
-export function FuckOffDate({ view, focusSignal, actionsSlot, medicarePricedNote = false, stalenessNote = false, dateAnchor, agedBalancesYear, sheetOpen = false }: FuckOffDateProps) {
+export function FuckOffDate({ view, focusSignal, actionsSlot, medicarePricedNote = false, medicareExtrasTypicalNote, stalenessNote = false, dateAnchor, agedBalancesYear, sheetOpen = false }: FuckOffDateProps) {
   const headingRef = useRef<HTMLHeadingElement>(null)
   // Announce on the FIRST landing only (the undefined→defined edge). The date route is TIERED: the
   // provisional→final sharpen can crown a DIFFERENT offset, which flips focusSignal — but re-firing
@@ -327,7 +331,10 @@ export function FuckOffDate({ view, focusSignal, actionsSlot, medicarePricedNote
           {medicarePricedNote && (
             <>
               <p className="fod-note">{copy.verdictMedicarePriced}</p>
-              <p className="fod-note">{copy.verdictMedicareResidual}</p>
+              <p className="fod-note">
+                {copy.verdictMedicareResidual}
+                {medicareExtrasTypicalNote !== undefined ? ` ${medicareExtrasTypicalNote}` : ''}
+              </p>
             </>
           )}
           {/* P3·U13 — the standing staleness echo (Q1): the per-clock disclosure rendered at

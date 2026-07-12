@@ -5,14 +5,16 @@ import {
   escalateQuote,
   firstStepDownYear,
   householdStockWeight,
+  medicareExtrasView,
   medicareOnlyPriced,
   missingRequiredFacts,
+  resolveMedicareExtrasMonthly,
   spineMedicarePriced,
 } from '../intakeMap'
 import { contributionCeilingFor } from '../sanity'
 import { validateParams } from '@engine/simulate'
 import { buildCandidateParams, DATE_OFFSET_WINDOW_TOP, DATE_SEARCH_PATHS } from '@engine/dateSearch'
-import { acaAgeRatingCurve } from '@engine/constants/health'
+import { acaAgeRatingCurve, medicareExtrasTypicalMonthly } from '@engine/constants/health'
 import { employerPlan2026, catchUpForAge } from '@engine/constants/contributions'
 import type { ScenarioDraft, PersonDraft } from '@store/memoryModel'
 
@@ -489,6 +491,108 @@ describe('R40 — the other-income construct wires into the overlay (the early-r
     const d = incomeOnlyDraft()
     expect(buildSpineParams(d)!.overlay?.healthcareEnabled).toBe(true)
     expect(spineMedicarePriced(d)).toBe(true)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// The ask-for-Medicare-extras unit (wf_efc6ece2-675): the fork→dollar resolution,
+// the overlay threading, and the F5 disclosure view (built-params output — 081).
+// ---------------------------------------------------------------------------
+describe('medicare extras — resolution, threading, and the disclosure view', () => {
+  const all65Draft = () =>
+    base({
+      people: [
+        retiredPerson({ birthYear: 1958, currentAge: 68, retirementAge: 64 }),
+        retiredPerson({ name: 'S', sex: 'female', birthYear: 1958, currentAge: 68, retirementAge: 64, pia: 16_000 }),
+      ],
+      enteredAccounts: [
+        { ownerIndex: 0, kind: 'traditional-ira', valueToday: 500_000, manualBlend: { kind: 'exact', stockPct: 60, bondPct: 35, cashPct: 5 } },
+      ],
+      health: { irmaaMagiSeed: [40_000, 40_000] },
+    })
+
+  it('resolution: entered → the own dollar; none → an AFFIRMED $0; typical/unanswered/absent → the conservative typical FUNDED (never a silent $0)', () => {
+    const typical = medicareExtrasTypicalMonthly()
+    expect(resolveMedicareExtrasMonthly(all65Draft())).toEqual([typical, typical]) // absent field
+    const d = {
+      ...all65Draft(),
+      medicareExtrasByPerson: [
+        { kind: 'entered' as const, monthly: 220 },
+        { kind: 'none' as const },
+      ],
+    }
+    expect(resolveMedicareExtrasMonthly(d)).toEqual([220, 0])
+    const mixed = {
+      ...all65Draft(),
+      medicareExtrasByPerson: [
+        { kind: 'typical' as const, adoptionVintage: 'extras-2026a' },
+        { kind: 'unanswered' as const },
+      ],
+    }
+    expect(resolveMedicareExtrasMonthly(mixed)).toEqual([typical, typical])
+  })
+
+  it('resolution: the mid-entry entered-with-NO-dollar half-answer degrades to the TYPICAL (conservative), never $0', () => {
+    const d = {
+      ...all65Draft(),
+      medicareExtrasByPerson: [{ kind: 'entered' as const }, { kind: 'none' as const }],
+    }
+    expect(resolveMedicareExtrasMonthly(d)).toEqual([medicareExtrasTypicalMonthly(), 0])
+  })
+
+  it('the built overlay CARRIES the per-person vector on the Medicare-only arm (absent fork ⇒ the typical, both) and validates', () => {
+    const params = buildSpineParams(all65Draft())!
+    const typical = medicareExtrasTypicalMonthly()
+    expect(params.overlay?.medicareExtrasMonthly).toEqual([typical, typical])
+    expect(validateParams(params)).toBeNull()
+  })
+
+  it('the degenerate early-return household carries NO vector and the view makes NO claim — even WITH fork answers (the 081 witness, extras edition)', () => {
+    const d = {
+      ...base({
+        people: [
+          retiredPerson({ birthYear: 1958, currentAge: 68, retirementAge: 64, pia: 24_000 }),
+          retiredPerson({ name: 'S', sex: 'female', birthYear: 1958, currentAge: 68, retirementAge: 64, pia: 16_000 }),
+        ],
+        health: { irmaaMagiSeed: [40_000, 40_000] },
+      }),
+      medicareExtrasByPerson: [
+        { kind: 'entered' as const, monthly: 300 },
+        { kind: 'none' as const },
+      ],
+    }
+    expect(buildSpineParams(d)!.overlay, 'no overlay at the early return').toBeUndefined()
+    expect(medicareExtrasView(d), 'no overlay ⇒ no extras claim').toBeNull()
+  })
+
+  it('the disclosure view maps per-person provenance off the draft while the DOLLARS come from the BUILT vector', () => {
+    const typical = medicareExtrasTypicalMonthly()
+    const d = {
+      ...all65Draft(),
+      medicareExtrasByPerson: [
+        { kind: 'entered' as const, monthly: 185 },
+        { kind: 'typical' as const, adoptionVintage: 'extras-2026a' },
+      ],
+    }
+    expect(medicareExtrasView(d)).toEqual([
+      { monthly: 185, provenance: 'entered' },
+      { monthly: typical, provenance: 'typical' },
+    ])
+    // The affirmed-$0 arm reads as its own provenance (the MA household's honest state).
+    const ma = { ...all65Draft(), medicareExtrasByPerson: [{ kind: 'none' as const }, { kind: 'none' as const }] }
+    expect(medicareExtrasView(ma)).toEqual([
+      { monthly: 0, provenance: 'affirmed-zero' },
+      { monthly: 0, provenance: 'affirmed-zero' },
+    ])
+    // The never-asked household (absent field) reads on-typical for both.
+    expect(medicareExtrasView(all65Draft())).toEqual([
+      { monthly: typical, provenance: 'typical' },
+      { monthly: typical, provenance: 'typical' },
+    ])
+  })
+
+  it('extras are NEVER a required fact (optional-with-average — the R5 never-gate law)', () => {
+    expect(missingRequiredFacts(all65Draft())).toEqual([])
   })
 })
 

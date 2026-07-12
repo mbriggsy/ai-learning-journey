@@ -115,6 +115,12 @@ export interface ConfidenceStatementProps {
    *  keyed off pricing facts never ages — insight 080); this component stays a dumb bool-prop
    *  renderer (insight 048). Default false (a door household carries the residual on its own sheet). */
   readonly medicarePricedNote?: boolean
+  /** The ask-for-Medicare-extras on-typical appendix (F5): the composed bi-directional
+   *  per-person sentence (composeMedicareExtrasTypicalNote), appended INSIDE the residual
+   *  paragraph — same block, no new frame row (the one-frame fit law's tallest composite).
+   *  Rendered only with `medicarePricedNote` (it qualifies the residual's claims); absent ⇒
+   *  the residual renders verbatim (an entered/affirmed household needs no typical caveat). */
+  readonly medicareExtrasTypicalNote?: string
   /** P3·U13 — TRUE when any staleness clock fired at unlock (IntakeApp's re-entry gate):
    *  the verdict wears the standing "figured fresh under today's rules" line in its
    *  subordinate region — the Q1 disclosure rides WITH the verdict, never after it.
@@ -154,7 +160,7 @@ function buildPlaceholderBand(annotations: readonly XAnnotation[]): Indeterminat
   }
 }
 
-export function ConfidenceStatement({ view, focusSignal, actionsSlot, medicarePricedNote = false, stalenessNote = false, sheetOpen = false, savedAnchor }: ConfidenceStatementProps) {
+export function ConfidenceStatement({ view, focusSignal, actionsSlot, medicarePricedNote = false, medicareExtrasTypicalNote, stalenessNote = false, sheetOpen = false, savedAnchor }: ConfidenceStatementProps) {
   const headingRef = useRef<HTMLHeadingElement>(null)
   // Announce on the FIRST landing only (the undefined→defined edge) — the shared once-per-landing
   // contract (mirrors FuckOffDate). The spine's two recomputes are byte-identical, so its key never
@@ -397,7 +403,13 @@ export function ConfidenceStatement({ view, focusSignal, actionsSlot, medicarePr
             {medicarePricedNote && (
               <>
                 <p className="cs-medicare-note">{copy.verdictMedicarePriced}</p>
-                <p className="cs-medicare-residual">{copy.verdictMedicareResidual}</p>
+                {/* The on-typical appendix rides INSIDE the residual paragraph (the extras
+                    unit) — one block, wrap-driven height only, so the tallest composite
+                    frame (the stale vault) gains no new row. */}
+                <p className="cs-medicare-residual">
+                  {copy.verdictMedicareResidual}
+                  {medicareExtrasTypicalNote !== undefined ? ` ${medicareExtrasTypicalNote}` : ''}
+                </p>
               </>
             )}
             {/* P3·U13 — the standing staleness echo (Q1): the full per-clock disclosure

@@ -108,6 +108,13 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     verdictRethinkClause: slots.verdictRethinkClause(),
     verdictHoldClause: slots.verdictHoldClause(),
     verdictSurvivorStepDown: slots.verdictSurvivorStepDown('1,200'),
+    // The ask-for-Medicare-extras unit — the fork label + the bi-directional disclosures.
+    medicareExtrasForkTypical: slots.medicareExtrasForkTypical('203'),
+    medicareExtrasTypicalOne: slots.medicareExtrasTypicalOne('Craig', '203'),
+    medicareExtrasTypicalBoth: slots.medicareExtrasTypicalBoth('203'),
+    medicareExtrasFactEntered: slots.medicareExtrasFactEntered('You', '220'),
+    medicareExtrasFactNone: slots.medicareExtrasFactNone('Your spouse'),
+    medicareExtrasFactTypical: slots.medicareExtrasFactTypical('Craig', '203'),
     // P3·U10 — the two-futures delta readouts (frequency-first, hedge-bearing by construction;
     // the samples double as the require-hedge control corpus below).
     rothDeltaSurvivor: slots.rothDeltaSurvivor(slots.xOfTen(8), slots.xOfTen(6)),

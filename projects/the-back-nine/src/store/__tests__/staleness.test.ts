@@ -107,6 +107,51 @@ describe('deriveStaleness — the healthcare clocks', () => {
       expect(report.healthcare.movedClocks).toEqual([clock])
     }
   })
+
+  it('extras-typical: fires ONLY for a typical-EXPOSED vault under a moved vintage; a pre-extras stamp (absent vintage) and an all-explicit household stay quiet', () => {
+    const s = freshSave()
+    const hv = s.healthcareVintage!
+    const movedStamp = { ...hv, medicareExtrasTypicalVintage: 'extras-2024x' }
+    // (a) Typical-exposed by ABSENCE (no fork field at all — funds the typical at recompute).
+    // The retired seed CARRIES fork answers (the flagship mixed pair), so strip the field to
+    // get the genuinely-never-engaged vault.
+    const exposedAbsent = { ...s, healthcareVintage: movedStamp } as Record<string, unknown>
+    delete exposedAbsent.medicareExtrasByPerson
+    expect(
+      deriveStaleness(exposedAbsent as unknown as ScenarioV3, TODAY).healthcare.movedClocks,
+    ).toEqual(['extras-typical'])
+    // (b) Typical-exposed by an explicit 'typical'/'unanswered' entry.
+    const exposedTypical = {
+      ...s,
+      healthcareVintage: movedStamp,
+      medicareExtrasByPerson: [
+        { kind: 'entered' as const, monthly: 180 },
+        { kind: 'typical' as const, adoptionVintage: 'extras-2024x' },
+      ],
+    }
+    expect(deriveStaleness(exposedTypical, TODAY).healthcare.movedClocks).toEqual(['extras-typical'])
+    // (c) An all-EXPLICIT household (entered + affirmed-$0) does not care the typical moved —
+    // firing would be alarm-when-fine.
+    const explicit = {
+      ...s,
+      healthcareVintage: movedStamp,
+      medicareExtrasByPerson: [
+        { kind: 'entered' as const, monthly: 180 },
+        { kind: 'none' as const },
+      ],
+    }
+    expect(deriveStaleness(explicit, TODAY).healthcare.movedClocks).toEqual([])
+    // (d) A pre-extras-unit stamp LACKS the vintage — not-comparable, quiet (never coerced
+    // to "unchanged", and never fired off absence).
+    const preUnit = { ...s } as Record<string, unknown>
+    const legacyHv = { ...hv } as Record<string, unknown>
+    delete legacyHv.medicareExtrasTypicalVintage
+    preUnit.healthcareVintage = legacyHv
+    delete preUnit.medicareExtrasByPerson
+    expect(
+      deriveStaleness(preUnit as unknown as ScenarioV3, TODAY).healthcare.movedClocks,
+    ).toEqual([])
+  })
 })
 
 describe('deriveStaleness — the date clocks', () => {

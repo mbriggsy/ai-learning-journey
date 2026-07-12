@@ -320,6 +320,17 @@
   .confidence-reveal[data-twopane] .cs-medicare-note,
   .confidence-reveal[data-twopane] .cs-medicare-residual {
     line-height: var(--leading-snug);
+    /* ROUND 4 (the ask-for-Medicare-extras unit, 2026-07-11): the pair grew again — the
+       affirmation now names extra coverage and the on-typical frames append the per-person
+       bi-directional sentence INSIDE the residual (same block, no new row). The gaps sit at
+       their round-3 floor and the leading is already snug, so the pair steps into the R13
+       disclaimer's own subordinate-disclosure register (--text-sm — the SAME register, the
+       same frame, long-cleared): ~3px/line + ~12% more glyphs per line ≈ 40–50px recovered
+       on the on-typical frames, words untouched (the degrade law — type density adapts,
+       content never cut). TWO-PANE ONLY: the phone column scrolls freely and keeps the pair
+       at base, byte-identical. The staleness echo deliberately does NOT join (its own class,
+       its own solved budget — never aliased). */
+    font-size: var(--text-sm);
   }
   /* the completion-actions chain UNWRAPS (both wrappers display:contents) so the save slot, the
      backup door, the in-frame disclaimer, and the quiet-door row become grid items directly —

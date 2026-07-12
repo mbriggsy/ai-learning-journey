@@ -285,6 +285,16 @@ export interface TaxYearInputs {
    *  MAGI is exactly 0). Covers the bridge years a lagged read can land on (the seed covers only
    *  `t < lookback` — structurally the ONLY window it can reach). */
   readonly irmaaMagiOverride?: readonly number[]
+  /** Per-person Medicare-EXTRAS monthly premium (the ask-for-Medicare-extras unit — real $,
+   *  aligned to the CANONICAL people: owner = 0, spouse = 1). Charged as a per-person
+   *  HETEROGENEOUS Σ — each Medicare-priced year adds `Σ over medicareEnrolledIndices of
+   *  extras[idx] × 12`, so each person's own premium ends at THEIR death and the surviving
+   *  high-premium spouse keeps their FULL premium (count×avg is the forbidden shape — it
+   *  reproduces the optimistic survivor under-charge). Gated by the SAME predicate as base
+   *  Part B (healthcare on + ≥1 living member enrolled); real-flat like Part B; EXCLUDED from
+   *  the HSA qualified-spend `medicareCost` arg (Pub 969 — Medigap is not a qualified premium)
+   *  while still joining the funding need. ABSENT / all-zero ⇒ byte-identical (Σ 0). */
+  readonly medicareExtrasMonthly?: readonly number[]
   /** Per-year bridge-year mask (`bridge[t] = ∃i: t < retireOffset_i && t < deathOffset_i &&
    *  earnedIncomeReal_i > 0` — the bridge's own dead-earner predicate shape), assembled PER-PATH
    *  by `simulate` beside `householdYears` (zero-draw, CRN-safe). The overlay's two C3 fail-loud
@@ -376,6 +386,10 @@ export interface HealthYearSink {
   /** IRMAA surcharge that year (the income-sensitive step on top of the base, per person
    *  × enrolled count × 12) — SPLIT from the base so the danger-years story is tellable. */
   readonly irmaaSurcharge: number[]
+  /** Medicare-EXTRAS cost that year (Σ over living∩enrolled of each person's own premium × 12)
+   *  — its OWN line, SPLIT from `medicareBase` so the base-Part-B readout never silently
+   *  inflates (and the base − surcharge subtraction stays exact). */
+  readonly medicareExtras: number[]
   /** The year's converged ACA-MAGI (full-SS calculator) — the readout's empirical anchor. */
   readonly acaMagi: number[]
   /** The year's IRMAA-MAGI (taxable-SS calculator) — the distinct second anchor. */
@@ -516,6 +530,18 @@ interface ResolvedYear {
    *  marketplace count while accruing ZERO Medicare cost (base Part B included — the pricing
    *  count gates both). */
   readonly medicareEnrolledCount: number
+  /** The CANONICAL indices (owner = 0, spouse = 1) of the living∩enrolled set — the per-person
+   *  companion of `medicareEnrolledCount` (the ask-for-Medicare-extras unit): the extras Σ reads
+   *  each enrolled person's OWN premium off `OverlayParams.medicareExtrasMonthly[idx]`, so the
+   *  heterogeneous vector charges exactly the living-enrolled members and each person's extras
+   *  END at their death (count×avg is forbidden — it under-charges the surviving high-premium
+   *  spouse). Holds only IDENTITY-MATCHED members (a stranger living ref has no canonical index),
+   *  so `length ≤ medicareEnrolledCount` in general and `===` exactly when reference identity
+   *  holds — which the year loop's identity guard ENFORCES for every extras-carrying run (the
+   *  FIFTH identity consumer): a stranger ref must throw there, never silently drop a member's
+   *  premium from the Σ (the cost-understating direction). The COUNT keeps the verbatim legacy
+   *  semantics (a stranger ref on the no-onset path still bills base Part B biologically). */
+  readonly medicareEnrolledIndices: readonly number[]
   /** People alive this year = the ACA FPL household size (U3 · M3 Slice 4). The pre-65 count the
    *  age gate reads is `livingCount − count65` (living members under 65). */
   readonly livingCount: number
@@ -561,22 +587,41 @@ function resolveYear(
     const filing: FilingStatus = living.length >= 2 ? 'mfj' : 'single'
     let count65 = 0
     let medicareEnrolledCount = 0
+    const medicareEnrolledIndices: number[] = []
     for (const p of living) {
       if (ageInSimYear(p, household.startCalendarYear, t) >= AGE_65_THRESHOLD) count65++
-      // The enrolled count INTERSECTS the living set (C3 §3b) — computed here, the sibling of
+      // The enrolled COUNT intersects the living set (C3 §3b) — computed here, the sibling of
       // count65, so a dead spouse is never billed (a count over all entered persons would bill
-      // a dead member's Part B forever).
-      if (enrolledAt(p, canonicalIndexOf(p))) medicareEnrolledCount++
+      // a dead member's Part B forever). VERBATIM legacy semantics: a stranger living ref (no
+      // canonical identity — legal on the aggregate no-onset path) still counts biologically.
+      // The canonical INDEX list rides along for the extras Σ (the extras unit) and holds only
+      // identity-matched members — the year loop's identity guard throws for any stranger ref
+      // on an extras-carrying run, so the idx ≥ 0 filter can never silently drop a premium.
+      const idx = canonicalIndexOf(p)
+      if (enrolledAt(p, idx)) {
+        medicareEnrolledCount++
+        if (idx >= 0) medicareEnrolledIndices.push(idx)
+      }
     }
-    return { filing, count65, medicareEnrolledCount, livingCount: living.length, rmdOwner: living[0], rmdSpouse: living[1] }
+    return {
+      filing,
+      count65,
+      medicareEnrolledCount,
+      medicareEnrolledIndices,
+      livingCount: living.length,
+      rmdOwner: living[0],
+      rmdSpouse: living[1],
+    }
   }
   // Static (M5): both people present every year, filing as configured — verbatim M1–M5.
-  let staticEnrolled = enrolledAt(household.owner, 0) ? 1 : 0
-  if (household.spouse && enrolledAt(household.spouse, 1)) staticEnrolled++
+  const staticIndices: number[] = []
+  if (enrolledAt(household.owner, 0)) staticIndices.push(0)
+  if (household.spouse && enrolledAt(household.spouse, 1)) staticIndices.push(1)
   return {
     filing: household.filing,
     count65: count65PlusInSimYear(household, t),
-    medicareEnrolledCount: staticEnrolled,
+    medicareEnrolledCount: staticIndices.length,
+    medicareEnrolledIndices: staticIndices,
     livingCount: household.spouse ? 2 : 1,
     rmdOwner: household.owner,
     rmdSpouse: household.spouse,
@@ -911,6 +956,7 @@ export function runTaxAwareDecumulation(
     irmaaMagiSeed = [],
     medicareOnsetSimYear,
     irmaaMagiOverride = [],
+    medicareExtrasMonthly,
     bridgeYearMask = [],
     oopMedical = [],
     hsaOwnerIndex,
@@ -948,6 +994,12 @@ export function runTaxAwareDecumulation(
     }
     if (!slcsp.every((x) => Number.isFinite(x) && x >= 0)) {
       throw new Error('[taxOverlay] slcsp entries must be finite and ≥ 0 (burned/062)')
+    }
+    // The extras vector (the ask-for-Medicare-extras unit): finite ≥ 0 per entry — a negative
+    // entry inside the funding Σ silently shrinks a sibling's charge (insight 046's netted-away
+    // class, the optimistic direction); a NaN would silently un-price a member's extras.
+    if (medicareExtrasMonthly !== undefined && !medicareExtrasMonthly.every((x) => Number.isFinite(x) && x >= 0)) {
+      throw new Error('[taxOverlay] medicareExtrasMonthly entries must be finite and ≥ 0 (insights 008/010/046; burned/062)')
     }
     // COVERAGE (mirror validateParams' frontline gate — the "fail-loud at BOTH layers" discipline):
     // a PRICED year (finite enrolled > 0) needs a finite §36B benchmark. `.every` above SKIPS holes, so
@@ -1243,12 +1295,15 @@ export function runTaxAwareDecumulation(
     // that cited it. C3 adds the FOURTH consumer: the Medicare-enrolled count keys each living
     // member's onset by canonical INDEX via reference match, so a stranger ref would silently
     // fall back to the biological predicate — un-delaying a 65+ worker's Medicare, the
-    // cost-understating direction.)
+    // cost-understating direction. The extras unit adds the FIFTH: the Medicare-extras Σ
+    // attributes each premium by canonical INDEX, so a stranger ref would silently drop that
+    // member's Part D/Medigap from every bill — the same cost-understating direction.)
     if (
       pretaxLedger ||
       (hsaLive && hsaOwnerPerson !== undefined) ||
       (yearC !== undefined && household !== undefined) ||
-      (medicareOnsetSimYear !== undefined && household !== undefined)
+      (medicareOnsetSimYear !== undefined && household !== undefined) ||
+      (medicareExtrasMonthly !== undefined && household !== undefined)
     ) {
       alive = aliveCanonical(people, householdYears, t)
       const injected = householdYears[t]
@@ -1397,6 +1452,11 @@ export function runTaxAwareDecumulation(
     // fund does not over-count a premium/surcharge it failed to pay.
     let acaNetPremiumThisYear = 0
     let medicareCostThisYear = 0
+    // The extras unit: kept SEPARATE from medicareCostThisYear for the whole year — the HSA
+    // qualified-spend `medicareCost` arg (Pub 969 excludes Medigap) and the readout's
+    // base − surcharge split both consume medicareCostThisYear and must NEVER see extras;
+    // only the funding need and the Σ accrual add the two together.
+    let medicareExtrasThisYear = 0
     let hsaSpendThisYear = 0
     let taxPaidThisYear = 0
     // P3·U11 — the healthcare readout's year-locals (observed, never consumed): the IRMAA
@@ -1462,6 +1522,17 @@ export function runTaxAwareDecumulation(
           irmaaSurchargeThisYear =
             regime.medicareEnrolledCount * irmaaTierSurchargeMonthly(magiForBill, filingForBill, irmaaSchedule) * 12
         }
+        // The ask-for-Medicare-extras Σ — the per-person HETEROGENEOUS vector: each living∩
+        // enrolled member is charged THEIR OWN premium × 12 via the canonical index, so a
+        // person's extras end at their death and the surviving high-premium spouse keeps their
+        // full premium (count×avg is the forbidden shape — it under-charges that survivor).
+        // Same gate as base Part B (this block); real-flat (the same constant every year);
+        // absent vector / a $0 entry ⇒ `+ 0` — byte-identical reduce-to-spine.
+        if (medicareExtrasMonthly !== undefined) {
+          for (const idx of regime.medicareEnrolledIndices) {
+            medicareExtrasThisYear += (medicareExtrasMonthly[idx] ?? 0) * 12
+          }
+        }
       }
       // HSA qualified spend (U3 · M5): the MAGI-invisible dollars the hsa bucket pays this year —
       // capped at the qualified set (OOP medical + the owner-65+ Medicare premiums; the ACA premium
@@ -1482,17 +1553,22 @@ export function runTaxAwareDecumulation(
         hsaSpendThisYear = hsaQualifiedSpend({
           hsaBalance: drawPool.hsa ?? 0,
           oopMedical: oopMedical[t] ?? 0,
+          // Base + surcharge ONLY — extras (Part D / Medigap / MA) are NOT a Pub 969 qualified
+          // premium (Medigap is the named exclusion), so they must never widen the cap.
           medicareCost: medicareCostThisYear,
           ownerIs65Plus,
-          fundingNeed: net + medicareCostThisYear,
+          // The TRUE funding need (incl. extras) — the clamp's job is "never overdraw beyond
+          // the year's need"; the qualified set above still bounds WHAT the HSA may pay.
+          fundingNeed: net + medicareCostThisYear + medicareExtrasThisYear,
         })
       }
-      // The cash this year must fund = base spending + the (known) Medicare cost − the qualified
-      // HSA-paid portion (U3 · M5: the hsa bucket pays its share OUTSIDE the gross-up, so the
-      // taxable withdrawal — and through it both MAGIs — genuinely DROPS: the loop-breaking lever).
-      // With no Medicare cost and no live hsa, fundingNet === net EXACTLY (`net + 0 − 0`), so the
-      // pre-65 / pre-M5 paths are untouched. ≥ 0 by the cap's fundingNeed clamp.
-      const fundingNet = net + medicareCostThisYear - hsaSpendThisYear
+      // The cash this year must fund = base spending + the (known) Medicare cost + the extras
+      // vector − the qualified HSA-paid portion (U3 · M5: the hsa bucket pays its share OUTSIDE
+      // the gross-up, so the taxable withdrawal — and through it both MAGIs — genuinely DROPS:
+      // the loop-breaking lever). With no Medicare cost, no extras, and no live hsa,
+      // fundingNet === net EXACTLY (`net + 0 + 0 − 0`), so the pre-65 / pre-M5 paths are
+      // untouched. ≥ 0 by the cap's fundingNeed clamp.
+      const fundingNet = net + medicareCostThisYear + medicareExtrasThisYear - hsaSpendThisYear
 
       // The inner tax gross-up as a closure the ACA solver probes at (fundingNet + a candidate premium).
       // The year-constant inputs are bundled into one NAMED context (no positional transposition risk).
@@ -1676,7 +1752,9 @@ export function runTaxAwareDecumulation(
     totalNetPremiumReal += acaNetPremiumThisYear
     // IRMAA Medicare cost accrues on the SAME after-depletion footing (the parallel post-65 accounting
     // surface) — a year that could not fund its grossed-up withdrawal never over-counts the surcharge.
-    totalMedicareCostReal += medicareCostThisYear
+    // The extras Σ joins the lifetime Medicare total here (the honest all-in figure the Healthcare
+    // sheet's lifetime delta reads) — `+ 0` exactly when no extras vector rides.
+    totalMedicareCostReal += medicareCostThisYear + medicareExtrasThisYear
     // The qualified HSA spend accrues on the SAME footing (U3 · M5, the third parallel surface).
     totalQualifiedHsaSpendReal += hsaSpendThisYear
     // The year's federal tax accrues on the SAME footing (U3 · M6, the fourth parallel surface).
@@ -1689,6 +1767,7 @@ export function runTaxAwareDecumulation(
       healthOut.acaNetPremium.push(acaNetPremiumThisYear)
       healthOut.medicareBase.push(medicareCostThisYear - irmaaSurchargeThisYear)
       healthOut.irmaaSurcharge.push(irmaaSurchargeThisYear)
+      healthOut.medicareExtras.push(medicareExtrasThisYear)
       healthOut.acaMagi.push(acaMagiThisYear)
       healthOut.irmaaMagi.push(irmaaMagiThisYear)
       healthOut.acaCliffState.push(acaCliffStateThisYear)

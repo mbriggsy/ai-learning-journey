@@ -137,6 +137,7 @@ describe('the no-write-until-Save seam (against the REAL store layer)', () => {
     fireEvent.click(screen.getByRole('button', { name: copy.flowNext })) // → health
     fireEvent.click(screen.getByRole('button', { name: copy.flowNext })) // → oop
     fireEvent.click(screen.getByRole('button', { name: copy.flowNext })) // → irmaa seed (65 ⇒ shown)
+    fireEvent.click(screen.getByRole('button', { name: copy.flowNext })) // → medicare extras (the fork — optional-with-average, advancing blank is legal)
     fireEvent.click(screen.getByRole('button', { name: copy.flowNext })) // → accounts
 
     fireEvent.click(screen.getByRole('button', { name: copy.addAccount }))

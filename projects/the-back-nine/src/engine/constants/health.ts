@@ -188,6 +188,34 @@ export const partA2026 = sourced(
   },
 )
 
+/** The ask-for-Medicare-extras conservative-HIGH typical (council wf_efc6ece2-675, F2): the
+ *  Medigap+Part-D regime path, NEVER a population mean — the bimodal distribution's MA-$0
+ *  mass drags a mean down, which understates the Medigap couple (the optimistic sin). Two
+ *  components, each carried verbatim from its own primary; the combined figure is DERIVED in
+ *  {@link medicareExtrasTypicalMonthly}, never re-typed. `vintage` is the adoption-era string
+ *  the intake stamps onto a kind:'typical' fork entry (F2 provenance) — any revision of
+ *  either component mints a NEW vintage string alongside the new figures. */
+export const medicareExtrasTypical = sourced(
+  {
+    partDBaseBeneficiaryMonthly: 38.99,
+    medigapPlanGNationalAvgMonthly: 164,
+    vintage: 'extras-2026a',
+  },
+  {
+    citation:
+      'CMS fact sheet "2026 Medicare Part D Bid Information and Part D Premium Stabilization Demonstration Parameters" (2025-07-28, fetched 2026-07-11): "For 2026, the base beneficiary premium will be $38.99." + KFF "Key Facts About Medigap Enrollment and Premiums for Medicare Beneficiaries" (2024-10-18, 2023 data, fetched 2026-07-11): Plan G — the most-purchased plan, 39% of policyholders — "average monthly premium among current policyholders in 2023 was $164"',
+    directionalUntilPinned: true,
+    pinTo: 'a 2026-vintage national Medigap Plan G average (KFF/NAIC refresh) — the $164 is a 2023-dollar blended book (all ages, all three rating methods), known to LAG premium trend (2026 filings ran +12–26%); the Part D component is already primary-pinned',
+    note: 'Conservative-HIGH by REGIME CHOICE (the Medigap+PartD path; roughly half of enrollees pay ~$0 extra on Medicare Advantage) — the components themselves are central figures, never inflated. Consumed by the intakeMap fork resolution (absent / unanswered / typical arms all FUND this — never a silent $0), the intake fork label, and the assumption-panel seat. Real-flat like Part B. Combined ≈ $203/mo/person.',
+  },
+)
+
+/** The one derived combined monthly figure — computed from the entry, never re-typed. */
+export function medicareExtrasTypicalMonthly(): number {
+  const t = medicareExtrasTypical.value
+  return t.partDBaseBeneficiaryMonthly + t.medigapPlanGNationalAvgMonthly
+}
+
 /** TWO distinct MAGI calculators — ACA-MAGI ≠ IRMAA-MAGI (mandatory). */
 export const magiDefinitions = sourced(
   {
@@ -332,6 +360,7 @@ export function healthcareVintageStamp(): HealthcareVintageV3 {
     fplGuidelineYear: federalPovertyGuidelines.value.guidelineYear,
     irmaaTopTierFrozenThrough: irmaa.value.topTierFrozenThrough,
     partBStandardMonthly: partB2026.value.standardPremiumMonthly,
+    medicareExtrasTypicalVintage: medicareExtrasTypical.value.vintage,
   }
 }
 
@@ -346,6 +375,7 @@ export const healthConstants = {
   irmaa,
   partB2026,
   partA2026,
+  medicareExtrasTypical,
   magiDefinitions,
   hsaFourthBucketRules,
   obbbaHsa2026,

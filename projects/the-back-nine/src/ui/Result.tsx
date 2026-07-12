@@ -15,14 +15,14 @@
  */
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import { AnswerStrip } from '@intake/AnswerStrip'
-import { buildControlPreviewParams, healthcarePriced, isDateRoute, missingRequiredFacts, spineMedicarePriced } from '@intake/intakeMap'
+import { buildControlPreviewParams, healthcarePriced, isDateRoute, medicareExtrasView, missingRequiredFacts, spineMedicarePriced } from '@intake/intakeMap'
 import { useLiveAnnouncer } from '@intake/a11y'
 import { BudgetBuilder } from '@intake/BudgetBuilder'
 import { SequencingControl } from '@intake/SequencingControl'
 import { RothLever } from '@intake/RothLever'
 import { HealthcareSheet } from '@intake/HealthcareSheet'
 import { AssumptionPanel } from '@intake/AssumptionPanel'
-import { showMedicarePricedNote } from './healthSheetChrome'
+import { composeMedicareExtrasTypicalNote, showMedicarePricedNote } from './healthSheetChrome'
 import { budgetGoverns } from '@budget/budgetModel'
 import { commitBudgetPatch } from '@budget/budgetToSpending'
 import { previewRunsInWorker, runControlPreview } from '@store/controlPreview'
@@ -168,6 +168,21 @@ export function Result({
     [snapshot.draft],
   )
   const medicarePricedNote = showMedicarePricedNote({ medicarePriced, reachesHealthDoor: healthPriced })
+  // The ask-for-Medicare-extras on-typical appendix (F5, population A): per-person BUILT
+  // dollars (medicareExtrasView reads the params builder's own output — insight 081) +
+  // draft provenance, composed to the ONE bi-directional sentence appended inside the
+  // residual paragraph. `undefined` for entered/affirmed households and non-priced runs.
+  const medicareExtrasTypicalNote = useMemo(() => {
+    const view = medicareExtrasView(snapshot.draft)
+    return composeMedicareExtrasTypicalNote(
+      view === null
+        ? null
+        : view.map((p, i) => ({
+            ...p,
+            who: snapshot.draft.people[i]?.name ?? (i === 0 ? copy.personYou : copy.personSpouse),
+          })),
+    )
+  }, [snapshot.draft])
   const enhancedApplied = snapshot.draft.enhancedSubsidies === true
   // The wire's per-year healthcare series (spine headline runs only — presence-keyed).
   const healthReadout =
@@ -404,6 +419,7 @@ export function Result({
             focusSignal={focusKey}
             actionsSlot={seatInLead ? actionsNode : undefined}
             medicarePricedNote={medicarePricedNote}
+            medicareExtrasTypicalNote={medicareExtrasTypicalNote}
             stalenessNote={stalenessNote}
             dateAnchor={dateAnchor}
             agedBalancesYear={agedBalancesYear}
@@ -416,6 +432,7 @@ export function Result({
             focusSignal={focusKey}
             actionsSlot={seatInLead ? actionsNode : undefined}
             medicarePricedNote={medicarePricedNote}
+            medicareExtrasTypicalNote={medicareExtrasTypicalNote}
             stalenessNote={stalenessNote}
             sheetOpen={sheetOpen}
             savedAnchor={dateAnchor}

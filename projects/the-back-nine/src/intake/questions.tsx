@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState, type ReactNode, type Ref } from 'react'
 import { copy, slots } from '@ui/copy'
 import type { PersonDraft, ScenarioDraft } from '@store/memoryModel'
-import type { WorkStatus } from '@shared/model'
+import type { MedicareExtrasEntryV3, WorkStatus } from '@shared/model'
 import { fraMonthsForBirthYear } from '@engine/constants/socialSecurity'
+import { medicareExtrasTypical, medicareExtrasTypicalMonthly } from '@engine/constants/health'
 import { budgetGoverns, isActiveAt, isRampedBudget } from '@budget/budgetModel'
 import { budgetYearZeroFullTotal, commitBudgetPatch } from '@budget/budgetToSpending'
 import { BudgetBuilder } from './BudgetBuilder'
@@ -635,6 +636,135 @@ const workIncomeStep: StepDef = {
   ),
 }
 
+/** Write person `i`'s Medicare-extras fork answer — the ONE write shape for this fact
+ *  (insight 058; EXPORTED for the AssumptionPanel seat). Always emits a COMPLETE two-entry
+ *  array (`'unanswered'` fills the untouched slot — the honest persisted hole, never a
+ *  fabricated 'typical' adoption); when BOTH slots read unanswered the field is STRIPPED
+ *  entirely (absence = never engaged — the strip-the-key discipline). */
+export function writeMedicareExtras(
+  d: ScenarioDraft,
+  i: 0 | 1,
+  entry: MedicareExtrasEntryV3 | undefined,
+): ScenarioDraft {
+  const next: [MedicareExtrasEntryV3, MedicareExtrasEntryV3] = [
+    d.medicareExtrasByPerson?.[0] ?? { kind: 'unanswered' },
+    d.medicareExtrasByPerson?.[1] ?? { kind: 'unanswered' },
+  ]
+  next[i] = entry ?? { kind: 'unanswered' }
+  if (next.every((e) => e.kind === 'unanswered')) {
+    const { medicareExtrasByPerson: _stripped, ...rest } = d
+    return rest
+  }
+  return { ...d, medicareExtrasByPerson: next }
+}
+
+/** One person's payment fork (F1 — the ask-for-Medicare-extras unit). Three legible arms,
+ *  NOTHING pre-selected (the MA plurality must actively land on the affirmed $0 — a
+ *  pre-filled high anchor is forbidden), the dollar field revealed only under the entered
+ *  arm (the COLA-mode precedent), and the picked-typical note carrying the bi-directional
+ *  disclosure. EXPORTED for the AssumptionPanel's refine seat — the ONE fork face over the
+ *  ONE write shape; `onWrite` adapts to the host's commit seam (the step's api.update, the
+ *  panel's commitOpen). */
+export function MedicareExtrasFork({
+  draft,
+  i,
+  onWrite,
+  errors,
+}: {
+  draft: ScenarioDraft
+  i: 0 | 1
+  onWrite: (field: string, write: (d: ScenarioDraft) => ScenarioDraft) => void
+  errors?: ReactNode
+}) {
+  const entry = draft.medicareExtrasByPerson?.[i]
+  const picked = entry !== undefined && entry.kind !== 'unanswered' ? entry.kind : undefined
+  const typicalLabel = slots.medicareExtrasForkTypical(
+    formatMoney(Math.round(medicareExtrasTypicalMonthly())),
+  )
+  return (
+    <>
+      <SegmentedControl<'none' | 'entered' | 'typical'>
+        legendKey="medicareExtrasForkLegend"
+        name={`medicare-extras-${i}`}
+        vertical
+        value={picked}
+        options={[
+          { value: 'none', labelKey: 'medicareExtrasForkNone' },
+          { value: 'entered', labelKey: 'medicareExtrasForkEntered' },
+          { value: 'typical', label: typicalLabel },
+        ]}
+        onChange={(v) =>
+          onWrite(`medicareExtrasByPerson.${i}.monthly`, (d) => {
+            const prev = d.medicareExtrasByPerson?.[i]
+            return writeMedicareExtras(
+              d,
+              i,
+              v === 'none'
+                ? { kind: 'none' }
+                : v === 'typical'
+                  ? { kind: 'typical', adoptionVintage: medicareExtrasTypical.value.vintage }
+                  : {
+                      kind: 'entered',
+                      // Keep an already-entered dollar across a re-tap (idempotent);
+                      // a fresh pick starts blank — the field below asks for it.
+                      ...(prev?.kind === 'entered' && prev.monthly !== undefined
+                        ? { monthly: prev.monthly }
+                        : {}),
+                    },
+            )
+          })
+        }
+      />
+      {entry?.kind === 'entered' && (
+        <CurrencyField
+          labelKey="medicareExtrasAmountLabel"
+          helpKey="medicareExtrasAmountHelp"
+          field={`medicareExtrasByPerson.${i}.monthly`}
+          value={entry.monthly}
+          onCommit={(v) =>
+            onWrite(`medicareExtrasByPerson.${i}.monthly`, (d) =>
+              writeMedicareExtras(d, i, {
+                kind: 'entered',
+                ...(v !== undefined ? { monthly: v } : {}),
+              }),
+            )
+          }
+        />
+      )}
+      {entry?.kind === 'typical' && <p className="field-help">{copy.medicareExtrasTypicalPicked}</p>}
+      {errors}
+    </>
+  )
+}
+
+// F1 (the ask-for-Medicare-extras unit): asked of any household with a member near 65 or
+// older — the same cohort gate as the IRMAA seed (both are the Medicare cluster). Younger
+// households are never asked; their runs fund the conservative typical at each 65-crossing
+// (the engine-side degradation — never a silent $0). Optional-with-average: nothing here
+// blocks advance EXCEPT the self-contradictory entered-with-no-dollar half-answer (the R19
+// rule names it at the field).
+const medicareExtrasStep: StepDef = {
+  id: 'medicare-extras',
+  headingKey: 'qMedicareExtrasHeading',
+  fields: ['medicareExtrasByPerson.0.monthly', 'medicareExtrasByPerson.1.monthly'],
+  render: (api) => (
+    <>
+      <p className="field-help">{copy.medicareExtrasIntro}</p>
+      <Paired
+        api={api}
+        render={(_p, i) => (
+          <MedicareExtrasFork
+            draft={api.draft}
+            i={i}
+            onWrite={(_field, write) => api.update(write)}
+            errors={errorsFor(api, `medicareExtrasByPerson.${i}.monthly`)}
+          />
+        )}
+      />
+    </>
+  ),
+}
+
 const irmaaSeedStep: StepDef = {
   id: 'irmaa-seed',
   headingKey: 'qIrmaaSeedHeading',
@@ -936,7 +1066,7 @@ export function intakeSteps(draft: ScenarioDraft): readonly StepDef[] {
   if (anyPre65OrUnknown(draft)) steps.push(healthQuoteStep)
   steps.push(oopStep)
   if (anyWorking(draft)) steps.push(workIncomeStep)
-  if (anyNearMedicare(draft)) steps.push(irmaaSeedStep)
+  if (anyNearMedicare(draft)) steps.push(irmaaSeedStep, medicareExtrasStep)
   steps.push(accountsStep(draft))
   // R40 — the opt-in other-income loop, last (off the 5-minute guided path; a
   // household with no pension/rental/annuity/alimony simply advances past it).

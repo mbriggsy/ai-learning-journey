@@ -53,6 +53,7 @@ export type AssumptionSeat =
   | 'health-oop' // OOP medical (re-reconciles atomically under a governing budget — the oopStep pattern)
   | 'health-quote' // the ACA quote pair (pre-65 households)
   | 'work-investment' // working-year investment income (date route, per working member)
+  | 'medicare-extras' // the per-person Medicare-extras payment fork (the ask-for-Medicare-extras unit — the refine path + the details home for the funded typical)
   | 'collections' // accounts + other income — via-intake ("edit in the walk-through")
 
 /** How one draft field reaches the panel. The four visible kinds name their seat(s); an
@@ -110,6 +111,7 @@ export const DRAFT_DISPOSITIONS: Record<keyof ScenarioDraft, AssumptionDispositi
   budget: { kind: 'via-sheet', seats: ['spend'] },
   rothConversion: { kind: 'via-sheet', seats: ['roth-conversion'] },
   enhancedSubsidies: { kind: 'via-sheet', seats: ['subsidy-regime'] },
+  medicareExtrasByPerson: { kind: 'row-editable', seats: ['medicare-extras'] },
   healthcareVintage: {
     kind: 'internal',
     why: 'Stamped fresh at Save from the current build’s constants (scenarioFromDraft) — whatever the draft carries mid-session is never the written truth.',

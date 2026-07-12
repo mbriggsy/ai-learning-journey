@@ -81,7 +81,12 @@ export const copy = {
   // of the spending figure — the tool now asks for them (or funds a typical) and adds them on
   // top, alongside Part B. Mechanism-named, never a memory referent (corpus rule 37).
   spendHelp:
-    'Everything — housing, food, fun, and the medical costs you pay out of pocket. Leave Medicare premiums out entirely: Part B, its income surcharge, and any Part D, Medigap, or Medicare Advantage premium — the tool handles those separately and adds them on top itself. Leave out income taxes too: the tool works out federal tax from your withdrawals itself, and state income tax isn’t counted. The whole household, not just the bills that feel like retirement.',
+    // The tax boundary (the extras pre-walk's two-lens survivor, 2026-07-12): the old "leave
+    // out income taxes too … state income tax isn't counted" instructed the reader to strip
+    // BOTH taxes while pricing only the federal one — a taxed-state household's state bill
+    // landed NOWHERE (the optimistic direction). Federal leaves (the tool prices it); state
+    // STAYS INSIDE the figure until the filed state-tax engine unit prices it for real.
+    'Everything — housing, food, fun, and the medical costs you pay out of pocket. Leave Medicare premiums out entirely: Part B, its income surcharge, and any Part D, Medigap, or Medicare Advantage premium — the tool handles those separately and adds them on top itself. Leave out federal income tax: the tool works that out from your withdrawals itself. State income tax isn’t priced yet — if your state taxes retirement income, keep that bill inside this figure so it still counts. The whole household, not just the bills that feel like retirement.',
   periodMonth: 'Each month',
   periodYear: 'Each year',
   periodLegend: 'That figure is…',
@@ -1451,6 +1456,12 @@ export const slots = {
   /** The intake fork's typical-arm label. */
   medicareExtrasForkTypical: (monthlyFormatted: string): string =>
     `Not sure — use a typical figure (about $${monthlyFormatted} a month)`,
+  /** The assumptions panel's UNANSWERED-fork standing line (the extras pre-walk's confirmed
+   *  finding, 2026-07-12): the details home must let the reader CONFIRM the dollar the
+   *  verdict quotes (rule 38) without pre-checking an arm the user never chose (rule 14).
+   *  One fact + the refine invitation — the bi-directional caveat lives in the residual. */
+  medicareExtrasPanelStanding: (monthlyFormatted: string): string =>
+    `No answer yet — the plan prices a typical figure meanwhile, about $${monthlyFormatted} a month. Pick a choice to make it your own.`,
   /** The hero's on-typical disclosure, ONE person (bi-directional + mechanism-named, corpus
    *  rule 37; `who` = the person's name or the You/Your-spouse fallback). Appended inside the
    *  residual paragraph — no new block on the tallest frame. */

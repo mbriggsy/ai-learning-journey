@@ -110,6 +110,7 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     verdictSurvivorStepDown: slots.verdictSurvivorStepDown('1,200'),
     // The ask-for-Medicare-extras unit — the fork label + the bi-directional disclosures.
     medicareExtrasForkTypical: slots.medicareExtrasForkTypical('203'),
+    medicareExtrasPanelStanding: slots.medicareExtrasPanelStanding('203'),
     medicareExtrasTypicalOne: slots.medicareExtrasTypicalOne('Craig', '203'),
     medicareExtrasTypicalBoth: slots.medicareExtrasTypicalBoth('203'),
     medicareExtrasFactEntered: slots.medicareExtrasFactEntered('You', '220'),

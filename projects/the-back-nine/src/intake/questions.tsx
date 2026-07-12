@@ -670,17 +670,24 @@ export function MedicareExtrasFork({
   i,
   onWrite,
   errors,
+  standingNote = false,
 }: {
   draft: ScenarioDraft
   i: 0 | 1
   onWrite: (field: string, write: (d: ScenarioDraft) => ScenarioDraft) => void
   errors?: ReactNode
+  /** PANEL-ONLY (the extras pre-walk's confirmed finding, 2026-07-12): when the fork is
+   *  UNANSWERED, render the read-only standing line naming the typical the answer funds.
+   *  The details home (rule 38) must let the reader CONFIRM the verdict's $-figure — but
+   *  pre-checking the typical arm would fabricate a choice the user never made (rule 14),
+   *  so the fork stays blank and the STANDING is disclosed beside it. Never at intake:
+   *  there the user is mid-answer, and "it's already handled" steers toward inertia. */
+  standingNote?: boolean
 }) {
   const entry = draft.medicareExtrasByPerson?.[i]
   const picked = entry !== undefined && entry.kind !== 'unanswered' ? entry.kind : undefined
-  const typicalLabel = slots.medicareExtrasForkTypical(
-    formatMoney(Math.round(medicareExtrasTypicalMonthly())),
-  )
+  const typicalFig = formatMoney(Math.round(medicareExtrasTypicalMonthly()))
+  const typicalLabel = slots.medicareExtrasForkTypical(typicalFig)
   return (
     <>
       <SegmentedControl<'none' | 'entered' | 'typical'>
@@ -732,6 +739,9 @@ export function MedicareExtrasFork({
         />
       )}
       {entry?.kind === 'typical' && <p className="field-help">{copy.medicareExtrasTypicalPicked}</p>}
+      {standingNote && picked === undefined && (
+        <p className="field-help">{slots.medicareExtrasPanelStanding(typicalFig)}</p>
+      )}
       {errors}
     </>
   )

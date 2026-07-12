@@ -20,6 +20,116 @@ one-way doors, framing-level forks, or genuine pilot doubt — reason logged) ·
 
 ---
 
+## 2026-07-12 — THE ASK-FOR-MEDICARE-EXTRAS UNIT batch: `intake:fork` (first-ever) · `?seed=retired` · `?seed=budget` · `?seed=date65` · `?vault=stale` (commits 503213f4 + 019f5334; fixes b026245e's harness walked them)
+
+**States walked:** the guided-intake fork arc (spend-step → fork-blank → fork-blocked → fork-mixed
+— the fork renders on NO seed/vault route; increment 4's `intake:fork` target is its only home),
+plus all four verdict targets with doors + driven lever previews + the stale return arc. REAL +
+PHONE (bundles `temp/caddie/extras-prewalk/`, re-fix walk `temp/caddie/extras-refix/`).
+**Readers:** the codified `.claude/workflows/caddie.js` panel's FIRST run — 6 lenses × 5 targets +
+per-finding refuters (57 agents, wf_7a620d35-4ca, zero crashes); 27 blocker/high+copy-law findings
+refuter-checked → 11 survived → chair-verified below. **What this batch judges:** the payment
+fork itself, the verdict affirmation + per-person on-typical residual sentence (retired = the
+mixed fork entered-$220/affirmed-$0; budget + stale = on-typical), the door sheet's per-person
+extras block (date65), the rewritten spendHelp boundary, and the extras-typical staleness clock.
+
+**firstImpression (locked, fork-blank):** *"A calm, plain-language money intake form… warm,
+editorial, unhurried — no dashboard clutter, no alarm. It reads like a careful, honest co-pilot
+rather than a salesy tool: it openly admits 'the picture isn't complete' and gives a 'not sure'
+escape hatch with a concrete fallback number. I trust it on the strength of that plain-spokenness."*
+Readback matched `copy.txt` — capture clean.
+
+**TWO FIXES SHIPPED FROM THE CHAIR (same session, live re-verified in the re-fix walk, full gate
+green incl. fit 17/17):**
+1. **The details-home standing line (the batch's headliner — 3 targets × 4 lenses, refuters
+   CONFIRMED, traced to AssumptionPanel's own rule-38 comment):** for an on-typical household the
+   assumptions panel — *"everything the answer leans on, yours to check"* — rendered the extras
+   fork BLANK while the verdict quoted the funded ~$203, so the promised details home could not
+   CONFIRM the verdict's dollar. Pre-checking the typical arm would fabricate authorship (rule
+   14), so the fix is a read-only standing line on the UNANSWERED panel fork only:
+   *"No answer yet — the plan prices a typical figure meanwhile, about $203 a month. Pick a
+   choice to make it your own."* (`medicareExtrasPanelStanding`; intake keeps blank-start
+   silence — mid-answer, never steered; 3 test arms + live re-verified in the door bundle.)
+2. **The spend-step's strip-it-nowhere tax instruction (2 lenses, refuters CONFIRMED):** the old
+   *"Leave out income taxes too … state income tax isn't counted"* told a taxed-state household
+   to strip a bill the tool then priced NOWHERE — the optimistic direction, rule 39's exact
+   shape. Now: federal leaves (the tool prices it); *"State income tax isn't priced yet — if
+   your state taxes retirement income, keep that bill inside this figure so it still counts."*
+   Conservative until the filed state-tax engine unit (TODO item 11) prices it for real.
+
+### Card 1 — `intake:fork` (the payment fork + the spend step, first-ever walk). **toneVerdict: SOFT-FLAG → fixes shipped.**
+The spouse walker reached for the *"Not sure — use a typical figure"* lifeline exactly as
+designed and named the anti-calm-but-wrong trio worth preserving: no pre-selection (silence never
+becomes a spoken $0), the half-answer BLOCKED with an escape route, and the not-sure path
+priced CONSERVATIVE. The state-tax instruction (fix 2 above) was the hunter's real catch.
+Noted, no fix: the provisional strip's "Not there yet… accounts usually move this" reads unmoored
+on the fork step to a genuinely cold reader (honest mid-intake truth; pre-existing strip
+behavior); the blank segmented control shows no at-rest radio affordance (his own organic
+2026-07-11 walk drove it without a stumble — prior live evidence outranks the cold reader's
+uncertainty); "entered below" names a field that reveals on selection (the COLA-reveal
+pattern). **falsePassHunt:** attempted; the rosier reading found (state tax landing nowhere)
+was REAL → fixed. **colorBlindCheck (flags only):** the selected arm survives grayscale by
+border + weight + fill; the R19 error carries its glyph — no color-alone meaning found.
+**comprehension:** the spouse could answer all three questions; stumbles were the noted
+textures. **prediction:** he walks the fork without comment; the spend-step tax line now reads
+as an instruction he can act on. **disposition: PILOT-CLEARED (two fixes shipped) — his eye
+supersedes.**
+
+### Card 2 — `?seed=retired` (the mixed-fork flagship verdict). **toneVerdict: READS-CLEAN on the unit's lines.**
+The mixed provenance renders exactly as ratified: Alex's entered $220 and Sam's affirmed-nothing
+each legible in the panel; the residual carries no on-typical sentence (nobody is on-typical) —
+the arm-selection law working. The E13-shape concerns on *"the spending you gave us"* (Part A
+clause) were KILLED by the refuters here: the mechanism-naming lead ships first and the
+line-36→38 contrast supplies the purpose E13 lacked. Routed to existing filings: the
+components-named-no-dollars hunger (base Part B/IRMAA quoted nowhere) REINFORCES the filed
+Medicare-only detail door (his own card-2 demand signal, 2026-07-11); the honest-direction
+payload riding a four-fact sentence joins the residual-density filing (below). The hunter's
+worsened-panel note ("truer to what you entered" on a user-driven edit) dies on prior N=1 —
+that line is the CLEARED U12 exit condition. **falsePassHunt:** attempted, came up empty on the
+unit's lines. **disposition: PILOT-CLEARED — his eye supersedes.**
+
+### Card 3 — `?seed=budget` (on-typical, borderline, the details home). **toneVerdict: HARD-FLAG → FIXED same session.**
+The headliner (fix 1 above) was found here first and confirmed hardest: a scared reader opening
+the panel to verify the verdict's $203 found a blank fork. Fixed + re-walked — the standing line
+now renders per unanswered person in the door bundle (all three channels). Also real, FILED with
+prescriptions (not churned into the fit law's tightest frame tonight): (a) the residual paragraph
+sits under the survivor heading with no divider — a mis-attribution risk (Medicare facts reading
+as survivor-conditional); prescription: a hairline `border-top` on the medicare block in
+`confidence.css`, measured at 1536×791 + the ubuntu drift arm BEFORE shipping (the one-frame law's
+tightest frames carry ~9px CI margin); (b) the residual is a four-to-six-fact single paragraph on
+every on-typical frame (multiple lenses, all four verdict targets — the no-new-row fit constraint
+is exactly what packed it); prescription: its own design pass WITH a fit round, filed as the
+residual-density item. The hunter's "rosy final clause" swing died on the rendered order (*"real
+costs run higher or lower"* — higher named first, "not your bills" adjacent). **falsePassHunt:**
+attempted; the details-home gap WAS the calm-but-wrong candidate and is fixed.
+**disposition: PILOT-CLEARED (fix shipped; two filings) — his eye supersedes.**
+
+### Card 4 — `?seed=date65` (the door population's extras home). **toneVerdict: READS-CLEAN after the shared fix.**
+No false claim anywhere on the route (re-verified); the door sheet's per-person extras block
+reads legibly (provenance-first fact lines); the panel fork gap was this population's too — the
+standing line now renders. The verdict's $203-each sentence leads with the figure (the hunter's
+hedge-burial swing died on word order). Noted textures riding existing filings: *"its income
+surcharge"* stays mechanism-frame beside glossed neighbors (the one-word-per-mechanism family —
+the sheet's step-story is the detail home); the six-line disclosure wall joins the
+residual-density filing. **disposition: PILOT-CLEARED — his eye supersedes.**
+
+### Card 5 — `?vault=stale` (aged, on-typical, the extras clock). **toneVerdict: READS-CLEAN on the unit's delta.**
+The extras-typical clock's SILENCE at this gate is as-designed and the refuters proved the cover:
+this pre-unit vault decodes with the stamp ABSENT (quiet by ratified design — insight 079's
+truthful-seed law), and the category-level *"Health-coverage rules have been updated since your
+save"* clock fires and covers the movement at the gate's zero-figures altitude. One lens's
+E13-referent concern on the Part A clause SURVIVED its refuter here (the only target where it
+did, 3-of-4 killed elsewhere); chair ruling: the clause rides BEHIND the mechanism-naming lead
+(the E13 lesson is about the LEAD), so it ships — logged as a watch-his-eye line on the
+residual-density filing, not buried. **disposition: PILOT-CLEARED — his eye supersedes.**
+
+**Cross-batch evidence:** bundle `temp/caddie/extras-prewalk/` + `extras-refix/`; corpus rules
+pinned this run: 1, 8, 14, 18, 37, 38, 39; exemplars E1, E13. Increment 4's CVD chart crops ran
+their first live batch (band/ladder/TwoFutures under each arm — the screener's below-fold
+blindness is closed). Oracle-lane routings: the detail-door filing REINFORCED (card 2); NEW
+**O12** the residual-density pass (cards 2–5; needs its own fit round); NEW **O13** the
+medicare-block divider (card 3; measure-first prescription above).
+
 ## 2026-07-11 (night) — THE MEDICARE PRICING UNIT batch: `?seed=retired` · `?seed=date65` · `?seed=budget` · `?vault=stale` (commits 3454c224 + bc76182b)
 
 **States walked:** all four targets, landings + every quiet-row door + the 3 driven lever previews;

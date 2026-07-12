@@ -26,11 +26,14 @@ export const meta = {
 const PROJECT = 'C:/Users/brigg/ai-learning-journey/projects/the-back-nine'
 const CORPUS = PROJECT + '/.claude/skills/caddie/taste-corpus.md'
 
-if (!args || !args.runDir || !Array.isArray(args.targets) || args.targets.length === 0) {
+// The args-string landmine (the council.js lesson): the harness sometimes delivers `args`
+// as a JSON-ENCODED STRING rather than the parsed object — parse defensively, never assume.
+const ARGS = typeof args === 'string' ? JSON.parse(args) : args
+if (!ARGS || !ARGS.runDir || !Array.isArray(ARGS.targets) || ARGS.targets.length === 0) {
   throw new Error('caddie panel needs args { runDir, targets: [{ dir, firstState?, note? }], focus? }')
 }
-const RUN = PROJECT + '/' + args.runDir
-const FOCUS = args.focus ? 'WHAT THIS RUN JUDGES (scope note from the harness, not authorship): ' + args.focus : ''
+const RUN = PROJECT + '/' + ARGS.runDir
+const FOCUS = ARGS.focus ? 'WHAT THIS RUN JUDGES (scope note from the harness, not authorship): ' + ARGS.focus : ''
 
 const FINDING_ITEMS = { type: 'object', additionalProperties: false,
   required: ['statement', 'anchor', 'lane', 'severity', 'corpusRules'],
@@ -70,9 +73,9 @@ Findings must be ANCHORED (a copy.txt string, an aria node, a named region of a 
 const CORPUS_NOTE = `FIRST read the taste corpus: ${CORPUS} — the evidenced rules + anti-patterns + vocabulary of the ONE reader this product serves (color-blind; hates jargon, false precision, forced derivation; loves plain named mechanisms). Cite rules by number in corpusRules.`
 
 phase('Read')
-log(`Panel over ${args.targets.length} target(s) — 6 lenses each, fresh contexts`)
+log(`Panel over ${ARGS.targets.length} target(s) — 6 lenses each, fresh contexts`)
 
-const panels = await parallel(args.targets.map((t) => () => (async () => {
+const panels = await parallel(ARGS.targets.map((t) => () => (async () => {
   const dir = t.dir
   const first = t.firstState ?? 'landing'
   const note = t.note ? 'TARGET NOTE (walk shape, not authorship): ' + t.note : ''

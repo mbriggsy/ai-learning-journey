@@ -3,9 +3,9 @@ import { useMemo, useSyncExternalStore } from 'react'
 import { afterEach, describe, expect, it } from 'vitest'
 import '@testing-library/jest-dom/vitest'
 import { cleanup, render, screen, fireEvent } from '@testing-library/react'
-import { intakeSteps, writeMedicareExtras } from '../questions'
+import { intakeSteps, writeMedicareExtras, MedicareExtrasFork } from '../questions'
 import { IntakeFlow } from '../flow'
-import { medicareExtrasTypical } from '@engine/constants/health'
+import { medicareExtrasTypical, medicareExtrasTypicalMonthly } from '@engine/constants/health'
 import { createMemoryModel, type MemoryModel, type ScenarioDraft } from '@store/memoryModel'
 import type { EngineClient } from '@store/engineClient'
 import { copy, slots } from '@ui/copy'
@@ -470,5 +470,38 @@ describe('paired screens', () => {
     // segmented control nests its own fieldset inside each — query by name).
     expect(screen.getByRole('group', { name: 'Sam' })).toBeInTheDocument()
     expect(screen.getByRole('group', { name: 'Alex' })).toBeInTheDocument()
+  })
+})
+
+describe('the Medicare-extras fork STANDING line (the details-home fix — extras pre-walk 2026-07-12)', () => {
+  // The panel is the details home for the funded typical (rule 38): an UNANSWERED fork must
+  // let the reader CONFIRM the dollar the verdict quotes — without pre-checking an arm the
+  // user never chose (rule 14 — no fabricated authorship). Intake keeps the blank-start law:
+  // no standing line while the user is mid-answer.
+  const fig = formatMoney(Math.round(medicareExtrasTypicalMonthly()))
+
+  it('PANEL (standingNote): the unanswered fork names the funded typical, quoted in-sentence', () => {
+    const m = freshModel()
+    render(
+      <MedicareExtrasFork draft={draft(m)} i={0} onWrite={() => {}} standingNote />,
+    )
+    expect(screen.getByText(slots.medicareExtrasPanelStanding(fig))).toBeInTheDocument()
+    // No arm is checked — the standing line discloses; it never fabricates a choice.
+    for (const r of screen.getAllByRole('radio')) expect(r).not.toBeChecked()
+  })
+
+  it('PANEL: an ANSWERED fork carries no standing line (the picked state has its own voice)', () => {
+    const m = freshModel()
+    m.update((d) => writeMedicareExtras(d, 0, { kind: 'none' }))
+    render(
+      <MedicareExtrasFork draft={draft(m)} i={0} onWrite={() => {}} standingNote />,
+    )
+    expect(screen.queryByText(slots.medicareExtrasPanelStanding(fig))).toBeNull()
+  })
+
+  it('INTAKE (no standingNote): the blank-start fork stays silent — mid-answer, never steered', () => {
+    const m = freshModel()
+    render(<MedicareExtrasFork draft={draft(m)} i={0} onWrite={() => {}} />)
+    expect(screen.queryByText(slots.medicareExtrasPanelStanding(fig))).toBeNull()
   })
 })

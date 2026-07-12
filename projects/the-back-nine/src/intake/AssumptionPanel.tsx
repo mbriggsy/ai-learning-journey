@@ -665,6 +665,7 @@ export function AssumptionPanel({
                   i={i}
                   onWrite={(field, write) => commitOpen(field, write)}
                   errors={renderErrors(`medicareExtrasByPerson.${i}.monthly`)}
+                  standingNote
                 />
               </div>
             ))}

@@ -128,7 +128,9 @@ pinned this run: 1, 8, 14, 18, 37, 38, 39; exemplars E1, E13. Increment 4's CVD 
 their first live batch (band/ladder/TwoFutures under each arm — the screener's below-fold
 blindness is closed). Oracle-lane routings: the detail-door filing REINFORCED (card 2); NEW
 **O12** the residual-density pass (cards 2–5; needs its own fit round); NEW **O13** the
-medicare-block divider (card 3; measure-first prescription above).
+medicare-block divider (card 3; measure-first prescription above) — **✓ SHIPPED 2026-07-15**
+(the survivor-family hairline on `.cs-medicare-note`: 1px rule + 4px padding = 5px against the
+~9px round-5 CI headroom, measured first; fit 17/17 + full suite green; eyeballed REAL + phone).
 
 ## 2026-07-11 (night) — THE MEDICARE PRICING UNIT batch: `?seed=retired` · `?seed=date65` · `?seed=budget` · `?vault=stale` (commits 3454c224 + bc76182b)
 

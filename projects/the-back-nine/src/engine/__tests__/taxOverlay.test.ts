@@ -4422,6 +4422,24 @@ describe('taxOverlay — state income tax (the state-tax unit)', () => {
       expect(paOn.totalTaxPaidReal).toBe(off.totalTaxPaidReal)
       expect(ncOn.totalTaxPaidReal).toBeGreaterThan(paOn.totalTaxPaidReal)
     })
+
+    it('PA mixed-age (58/62): the OLDER spouse does not exempt the household — the min-living-age gate taxes the conversion', () => {
+      // The Math.min aggregation witness (the ultramode review's surviving MAX-mutant, 2026-07-15):
+      // every other PA arm is same-age, so min==max and a Math.min→Math.max (or living[0]) mutant
+      // survived the suite. Owner born 1968 (integer age 58 at 2026) < 59½ ≤ spouse born 1964 (62):
+      // the conservative HOUSEHOLD gate taxes the conversion; a max-keyed gate would exempt it —
+      // understating PA tax, the calm-but-wrong direction the gate exists to refuse.
+      const household: Household = { startCalendarYear: 2026, filing: 'mfj', owner: { birthYear: 1968 }, spouse: { birthYear: 1964 } }
+      const cfgNone: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: false, household }
+      const cfgPA: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: false, household: { ...household, retirementState: 'PA' } }
+      // Roth-funded tax (roth-first) keeps the state base EXACTLY the conversion (the NC-fixture idiom).
+      const buckets: AccountBuckets = { taxable: 0, pretax: 3_000_000, roth: 500_000 }
+      const C = 100_000
+      const off = runTaxAwareDecumulation(buckets, realStock, realBond, [0], STOCK_W, 'custom', cfgNone, { conversions: [C] }, CUSTOM_TEST_ORDER)
+      const pa = runTaxAwareDecumulation(buckets, realStock, realBond, [0], STOCK_W, 'custom', cfgPA, { conversions: [C] }, CUSTOM_TEST_ORDER)
+      // PA has no standard deduction: the state Σ is exactly C × the flat rate (DND-012: 100,000 × 307/10,000 = $3,070).
+      expect(pa.totalTaxPaidReal - off.totalTaxPaidReal).toBeCloseTo(C * paRate, 3)
+    })
   })
 
   // ---------------------------------------------------------------------------
@@ -4486,6 +4504,14 @@ describe('taxOverlay — state income tax (the state-tax unit)', () => {
   // ---------------------------------------------------------------------------
   // Convergence: the state term raises k_total to ≈0.78 — the raised 192-pass cap must still cover the
   // federal-worst corner WITH STATE ON (a state-OFF probe samples the benign regime — insight 006/007).
+  // WHAT THIS SWEEP PROVES vs WHAT THE CAP COVERS (the ultramode review's precision, 2026-07-15): the
+  // sweep locks the documented SLOW REGIME state-ON (small-net × low-basis × large-SS × conversions —
+  // ~100-120 passes at these inputs, comfortably under 192 but ABOVE what a benign probe exercises).
+  // The >128 tail that justifies 192 over the old cap lives at astronomically-large-but-VALID SS
+  // (tax → ~$10^13; the validated domain does not bound the benefit) and is covered by the GEOMETRIC
+  // derivation in the solveGrossWithdrawal comment — the same analysis-plus-slow-regime-sweep law the
+  // federal 128 cap always lived under (a cap-trim mutant is caught by the analysis review, not this
+  // sweep; an empirical cap-pin would need a preposterous-SS fixture that adds no real coverage).
   // ---------------------------------------------------------------------------
   describe('the gross-up converges with NC state ON at the federal-worst corner (k_total ≈ 0.78, no fail-loud cap)', () => {
     it('small-net × low-basis × large-SS × conversions × NC converges without hitting the raised cap', () => {

@@ -29,6 +29,7 @@ import {
 import { totalAcrossBuckets } from '@engine/sequencing'
 import { householdBenefits, survivorBenefitAnnual, realizedClaimAgeAtDeath, type BenefitPerson } from '@engine/socialSecurityBenefit'
 import { irmaa } from '@engine/constants'
+import { isPricedState, earliestPricedRateYear } from '@engine/constants/stateTax'
 import {
   DRAWDOWN_ORDER_KEYS,
   DRAWDOWN_POLICIES,
@@ -629,6 +630,18 @@ export function validateParams(params: SimulationParams): string | null {
     // untyped boundary the compile-time `RetirementState` type cannot police.
     if (o.retirementState !== undefined && !isRetirementState(o.retirementState as string))
       return 'overlay retirementState invalid'
+    // A PRICED state's rate schedule starts at its earliest step (2026 for NC/PA) and the rate
+    // lookup FAIL-LOUD-throws below it — so a priced household whose startCalendarYear precedes
+    // its schedule (a device clock set back past New Year, an aged dev plant) would throw inside
+    // the overlay on EVERY path/candidate instead of returning the R19 calm indeterminate,
+    // asymmetric with a federal-only household (bracketsFor is year-agnostic). The two-layer law
+    // (M6, this file's header): every known overlay throw gets a validateParams twin. FL has no
+    // schedule (null ⇒ no year read). (The ultramode review's boundary adversary, 2026-07-15.)
+    if (o.retirementState !== undefined && isPricedState(o.retirementState)) {
+      const earliest = earliestPricedRateYear(o.retirementState)
+      if (earliest !== null && o.startCalendarYear < earliest)
+        return 'overlay startCalendarYear precedes the priced state rate schedule'
+    }
     const b = o.buckets
     if (!finiteNonNeg(b.taxable) || !finiteNonNeg(b.pretax) || !finiteNonNeg(b.roth)) return 'overlay buckets invalid'
     // The hsa bucket (U3 · M5) is optional (absent ⇒ 0, reduce-to-spine) but when PRESENT it is

@@ -36,9 +36,6 @@ import {
 } from './types'
 import type { StateTaxVintageV3 } from '@shared/model'
 
-/** The tax year the roster figures are transcribed for. */
-export const STATE_TAX_YEAR = 2026
-
 /**
  * The v1 PRICED roster. A household whose state is in this tuple gets its state income tax
  * PRICED into every headline; every other state (including the explicit `'elsewhere'`) keeps
@@ -389,6 +386,39 @@ export function stateTaxVintageStamp(): StateTaxVintageV3 {
     paProfile: JSON.stringify(STATE_TAX_PROFILES.PA),
     flProfile: JSON.stringify(STATE_TAX_PROFILES.FL),
   }
+}
+
+/** COMPILE TIE (the ultramode review fold, 2026-07-15 — insight 074's expansion twin): the
+ *  persisted `StateTaxVintageV3` must carry exactly one `<state>Profile` field per PRICED
+ *  state. Adding SC to PRICED_STATES without growing the stamp — and therefore the staleness
+ *  compare — fails tsc HERE, never silently ships a priced state whose rule changes can't
+ *  stale a vault. Mutual-extends, the model.ts `_V3FieldsCover` idiom. */
+type StampKeys = { [K in PricedState as `${Lowercase<K>}Profile`]: string }
+const _stampCoversRoster: StateTaxVintageV3 extends StampKeys ? true : never = true
+const _rosterCoversStamp: StampKeys extends StateTaxVintageV3 ? true : never = true
+void _stampCoversRoster
+void _rosterCoversStamp
+
+/** The stamp field for a priced state — ONE derivation shared by the staleness reader and any
+ *  future consumer, so a per-state branch that could mis-select a SIBLING's profile (the
+ *  ultramode review's wrong-profile mutant class) is structurally impossible. */
+export function stateProfileKey(state: PricedState): keyof StateTaxVintageV3 {
+  return `${state.toLowerCase()}Profile` as keyof StateTaxVintageV3
+}
+
+/** The earliest year a priced state's rate schedule can price (null = no schedule, FL). The
+ *  validateParams lower-bound TWIN of `flatStateRateForYear`'s fail-loud guard (the two-layer
+ *  R19 law): a priced household whose startCalendarYear precedes its schedule would otherwise
+ *  throw mid-path on every candidate instead of returning the calm indeterminate (the
+ *  ultramode review's boundary adversary, 2026-07-15). */
+export function earliestPricedRateYear(state: PricedState): number | null {
+  const schedule = STATE_TAX_PROFILES[state].rateSchedule
+  if (schedule === null) return null
+  const first = schedule.steps[0]
+  // A priced schedule is non-empty by construction (the shape test walks every entry) — an empty
+  // one here is table corruption, never a default (burned/062).
+  if (first === undefined) throw new Error(`state ${state} has an empty rate schedule`)
+  return first.fromYear
 }
 
 /**

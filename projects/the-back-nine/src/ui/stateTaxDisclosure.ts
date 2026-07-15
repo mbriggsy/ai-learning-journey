@@ -31,12 +31,24 @@ import { copy } from './copy'
  *  affirm+narrowed-residual SET, never affirm-alone. Same paragraph, wrap-driven height only. */
 export function composeVerdictMedicareResidual(pricedState: PricedState | undefined): string {
   if (pricedState === undefined) return copy.verdictMedicareResidual
-  const affirm =
-    pricedState === 'NC'
-      ? copy.verdictResidualStateNC
-      : pricedState === 'PA'
-        ? copy.verdictResidualStatePA
-        : copy.verdictResidualStateFL
+  // EXHAUSTIVE by construction (the ultramode review fold, 2026-07-15): a catch-all arm would
+  // silently dress a FUTURE priced state (SC) in Florida's "no state income tax" words — the
+  // calm-but-wrong sentence for a state that DOES tax. Widening PricedState fails tsc here
+  // until the new state's own affirmation ships.
+  const affirm = ((): string => {
+    switch (pricedState) {
+      case 'NC':
+        return copy.verdictResidualStateNC
+      case 'PA':
+        return copy.verdictResidualStatePA
+      case 'FL':
+        return copy.verdictResidualStateFL
+      default: {
+        const never: never = pricedState
+        throw new Error(`unhandled priced state ${String(never)}`)
+      }
+    }
+  })()
   return `${copy.verdictResidualLead} ${affirm}${copy.verdictResidualTail}`
 }
 

@@ -106,6 +106,13 @@ function includeByTreatment(amount: number, treatment: StateIncomeTreatment, qua
       return amount
     case 'taxed-if-under-qualified-age':
       return qualified ? 0 : amount
+    default: {
+      // Exhaustive by construction: a new StateIncomeTreatment member (a future graduated or
+      // partially-excluded regime) must pick its inclusion rule HERE, never fall to a silent 0
+      // (the optimistic direction) — tsc holds the door (the ultramode review fold, 2026-07-15).
+      const never: never = treatment
+      throw new Error(`unhandled state income treatment ${String(never)}`)
+    }
   }
 }
 

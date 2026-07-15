@@ -105,6 +105,18 @@ describe('deriveStaleness — the state-tax clock (the state-tax unit; route-tru
     expect(report.anyStale).toBe(true)
   })
 
+  it('FIRES for a PRICED PA household whose paProfile drifted — the per-state selection is not NC-only (the review fold, 2026-07-15)', () => {
+    // PA is a shipped priced state (Craig's household); before this arm no retirementState:'PA'
+    // household existed anywhere in the file, so a paProfile→ncProfile mis-selection survived the
+    // whole suite (the wrong-profile mutant the derived stateProfileKey now makes structural).
+    const s = { ...freshSave(), retirementState: 'PA' as const }
+    expect(deriveStaleness(s, TODAY).controls.stateTaxMoved, 'a fresh save is quiet').toBe(false)
+    const moved = drift(s, { paProfile: '{"drifted":"pa"}' })
+    const report = deriveStaleness(moved, TODAY)
+    expect(report.controls.stateTaxMoved).toBe(true)
+    expect(report.rulesMoved).toBe(true)
+  })
+
   it("ROUTE-TRUE quiet: an 'elsewhere' household prices no state tax, so a drifted stamp NEVER fires (nothing state-priced to stale)", () => {
     const s = drift({ ...freshSave(), retirementState: 'elsewhere' as const }, { ncProfile: '{"drifted":"nc"}' })
     expect(deriveStaleness(s, TODAY).controls.stateTaxMoved).toBe(false)

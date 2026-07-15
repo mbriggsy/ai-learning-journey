@@ -501,6 +501,16 @@ describe('R19 engine half + dire-but-honest edges', () => {
       expect(validateParams({ ...base, overlay: withState(s) })).toBeNull()
     }
     expect(validateParams({ ...base, overlay: { taxEnabled: true, rmdEnabled: false, startCalendarYear: 2026, buckets: { taxable: 0, pretax: P, roth: 0 }, filing: 'mfj' } })).toBeNull()
+    // The priced-state schedule LOWER BOUND (the ultramode review's boundary adversary, 2026-07-15):
+    // a priced household whose startCalendarYear precedes its earliest rate step must be the calm
+    // indeterminate at THIS gate — the overlay's flatStateRateForYear would otherwise fail-loud-throw
+    // on EVERY path/candidate (all-infeasible, no answer), asymmetric with a federal-only household
+    // (bracketsFor is year-agnostic). The two-layer law: every known overlay throw has a twin here.
+    expect(validateParams({ ...base, overlay: { ...withState('NC'), startCalendarYear: 2024 } })).toMatch(/precedes the priced state/)
+    expect(validateParams({ ...base, overlay: { ...withState('PA'), startCalendarYear: 2025 } })).toMatch(/precedes the priced state/)
+    // FL has no schedule (no year is ever read) and an unpriced code reads none — 2024 passes both.
+    expect(validateParams({ ...base, overlay: { ...withState('FL'), startCalendarYear: 2024 } })).toBeNull()
+    expect(validateParams({ ...base, overlay: { ...withState('SC'), startCalendarYear: 2024 } })).toBeNull()
   })
 
   it("P3·U10 — the custom-order biconditional: 'custom' without an order, an order under a named policy, and a non-permutation each → indeterminate", () => {

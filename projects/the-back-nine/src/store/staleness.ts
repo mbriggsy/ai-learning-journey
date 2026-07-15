@@ -72,7 +72,7 @@ import type { BudgetCategory, ScenarioV3 } from '@shared/model'
 import { appDefaultEraFor, CURRENT_APP_DEFAULT_VERSION } from '@shared/appDefaults'
 import { healthcareVintageStamp } from '@engine/constants/health'
 import { taxVintageStamp } from '@engine/constants/tax'
-import { stateTaxVintageStamp, isPricedState } from '@engine/constants/stateTax'
+import { stateTaxVintageStamp, isPricedState, stateProfileKey } from '@engine/constants/stateTax'
 import { dateVintageStamp } from '@engine/constants'
 
 /** Which healthcare clock moved. The v1 gate renders ONE healthcare line off `moved`; the
@@ -189,29 +189,28 @@ export function deriveStaleness(scenario: ScenarioV3, todayEpochDay: number): St
   // ── controls: the state-tax clock (the state-tax unit) ──────────────────────────────
   // Route-gated to the household's OWN priced state: a stateless / 'elsewhere' / unbuilt-roster
   // household prices no state tax (nothing to stale — isPricedState is false), and an NC vault is
-  // compared ONLY against the current NC profile (never PA/FL — per-state, not whole-roster, so
-  // an NC step-down cannot alarm a PA or FL vault; the alarm-when-fine the header refuses is a lie
-  // even in the safe direction). A pre-unit vault lacks the stamp (absent = not-comparable,
-  // quiet). FL's profile is a constitutional $0, constant by construction ⇒ an FL vault never
-  // fires. The serialized profile catches a FUTURE pinned rate step the current-year rate misses.
+  // compared ONLY against the current NC profile (never PA/FL — per-state via ONE derived
+  // stampProfileKey, so a branch that could mis-select a sibling's profile is structurally
+  // impossible; the ultramode review's wrong-profile mutant class, 2026-07-15). A pre-unit vault
+  // lacks the stamp (absent = not-comparable, quiet). FL's profile is a constitutional $0,
+  // constant by construction ⇒ an FL vault never fires. The serialized profile catches a FUTURE
+  // pinned rate step the current-year rate misses.
+  //
+  // KNOWN QUIET LIMITATION (the ultramode review, 3-lens convergence, refuters unanimous P3):
+  // this clock keys on the persisted GEOGRAPHY, not the run's own pricing decision — the store
+  // cannot call the intake builders (layer law), so the producer's-output predicate (insights
+  // 080/081) is unreachable here. A DEGENERATE-OVERLAY priced-state vault ($0 accounts, no
+  // income, no premium — its run built NO overlay and priced NO state tax) therefore reads a
+  // false "rules changed" note on a rate re-pin. Direction: over-alarm (a re-look steer), never
+  // calm-but-wrong; installed base ≈ zero. The sanctioned mechanism when a real installed base
+  // exists: persist the run's state-pricing flag at save (the producer's output) and key this
+  // clock on it — never a geography re-derivation.
   const savedStateTax = scenario.stateTaxVintage
   const hhState = scenario.retirementState
   let stateTaxMoved = false
   if (savedStateTax !== undefined && hhState !== undefined && isPricedState(hhState)) {
-    const currentStateTax = stateTaxVintageStamp()
-    const savedProfile =
-      hhState === 'NC'
-        ? savedStateTax.ncProfile
-        : hhState === 'PA'
-          ? savedStateTax.paProfile
-          : savedStateTax.flProfile
-    const currentProfile =
-      hhState === 'NC'
-        ? currentStateTax.ncProfile
-        : hhState === 'PA'
-          ? currentStateTax.paProfile
-          : currentStateTax.flProfile
-    stateTaxMoved = savedProfile !== currentProfile
+    const key = stateProfileKey(hhState)
+    stateTaxMoved = savedStateTax[key] !== stateTaxVintageStamp()[key]
   }
 
   // ── healthcare: the four clocks (acaVerifiedOn deliberately excluded — see header) ──

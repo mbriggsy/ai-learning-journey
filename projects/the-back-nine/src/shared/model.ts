@@ -737,9 +737,10 @@ export interface DollarAdjustment {
  *  perturb the headline trajectory, and `objective ≡ headline` means the P4 objective
  *  reads THESE — never recomputes them in objective.ts (the M3 sign-inversion class). */
 export interface TaxAwareDistribution {
-  /** Σ federal income tax actually paid across the path's funded years (real $; ordinary +
-   *  preferential cap-gains, the engine's full tax model). Accrued AFTER the depletion
-   *  check — a year the portfolio could not fund counts nothing (the sibling rule). */
+  /** Σ income tax actually paid across the path's funded years (real $; federal ordinary +
+   *  preferential cap-gains PLUS the priced-state flat layer for a PRICED_STATES household —
+   *  one lifetime-tax lens, the state-tax unit). Accrued AFTER the depletion check — a year
+   *  the portfolio could not fund counts nothing (the sibling rule). */
   readonly lifetimeTaxPaidReal: readonly number[]
   /** The taxable bucket's value at the path's horizon end (real $). */
   readonly terminalTaxableReal: readonly number[]

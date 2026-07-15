@@ -24,6 +24,7 @@ import type { ControlPreview } from '@store/controlPreview'
 import { copy, slots } from '@ui/copy'
 import { composeTwoFutures } from '@ui/twoFuturesChrome'
 import { composeRothOmissionsNote } from '@ui/stateTaxDisclosure'
+import type { PricedState } from '@engine/constants/stateTax'
 import type { BandSavedAnchor } from '@ui/bandAnnotations'
 import type { Announcer } from './a11y'
 import { ControlSheet } from './controlSheet'
@@ -64,7 +65,7 @@ export interface RothLeverProps {
    *  from the lever's omissions note — the run now prices it, so listing it as "not counted" would
    *  be false. The predicate is the run's OWN pricing decision (`pricedStateForRun`, Result), never
    *  geography (insight 080/081); this stays a dumb prop renderer. Undefined ⇒ today's list. */
-  readonly statePricedNote?: import('@engine/constants/stateTax').PricedState
+  readonly statePricedNote?: PricedState
   /** U12 ultramode: close-time focus fallback for when the opening trigger has unmounted
    *  (the via-AssumptionPanel route) — forwarded to the ControlSheet scaffold. */
   readonly restoreFallback?: () => HTMLElement | null

@@ -54,6 +54,7 @@ export type AssumptionSeat =
   | 'health-quote' // the ACA quote pair (pre-65 households)
   | 'work-investment' // working-year investment income (date route, per working member)
   | 'medicare-extras' // the per-person Medicare-extras payment fork (the ask-for-Medicare-extras unit — the refine path + the details home for the funded typical)
+  | 'retirement-state' // the household's retirement state (the state-tax unit S3 — a changeable best guess; edit → re-run the SC-vs-GA what-if)
   | 'collections' // accounts + other income — via-intake ("edit in the walk-through")
 
 /** How one draft field reaches the panel. The four visible kinds name their seat(s); an
@@ -112,6 +113,13 @@ export const DRAFT_DISPOSITIONS: Record<keyof ScenarioDraft, AssumptionDispositi
   rothConversion: { kind: 'via-sheet', seats: ['roth-conversion'] },
   enhancedSubsidies: { kind: 'via-sheet', seats: ['subsidy-regime'] },
   medicareExtrasByPerson: { kind: 'row-editable', seats: ['medicare-extras'] },
+  retirementState: {
+    // S3: the changeable best guess IS an R7-editable row (edit → re-run answers the SC-vs-GA
+    // what-if manually; no new lever in v1). Stamped in AssumptionPanel via <Row seat> over the
+    // shared StateResidencePicker, committed through commitOpen.
+    kind: 'row-editable',
+    seats: ['retirement-state'],
+  },
   healthcareVintage: {
     kind: 'internal',
     why: 'Stamped fresh at Save from the current build’s constants (scenarioFromDraft) — whatever the draft carries mid-session is never the written truth.',
@@ -127,6 +135,10 @@ export const DRAFT_DISPOSITIONS: Record<keyof ScenarioDraft, AssumptionDispositi
   dateVintage: {
     kind: 'internal',
     why: 'The date-surface vintage (contribution-limit year + ticker-blend snapshot as-of), stamped fresh at Save — read by U13 staleness; app-written, never user-set.',
+  },
+  stateTaxVintage: {
+    kind: 'internal',
+    why: 'The state-tax vintage (serialized per-state roster profiles), stamped fresh at Save from the current build’s stateTaxConstants — read by staleness.ts’s controls.stateTaxMoved clock; app-written, never user-set (the taxVintageDetail/dateVintage precedent).',
   },
 }
 

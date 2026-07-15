@@ -614,6 +614,59 @@ describe('v3 — the forward-written persist shape (U8, the first v3 writer)', (
     }
   })
 
+  // The state-tax unit — retirementState (a needVocab enum) + the stateTaxVintage stamp (an
+  // atomic object). Additive-optional: a pre-unit vault lacks both and decodes unchanged.
+  it('v3 WITH retirementState round-trips exactly — a PRICED state (NC), an explicit "elsewhere", and ABSENT (pre-unit) all persist as themselves', () => {
+    const nc: ScenarioV3 = { ...V3, retirementState: 'NC' }
+    const elsewhere: ScenarioV3 = { ...V3, retirementState: 'elsewhere' }
+    // A PRICED state persists as a fact.
+    expect(decodeScenario(encodeScenario(nc))).toEqual({ ok: true, scenario: nc })
+    // 'elsewhere' is an EXPLICIT vocab member — a chosen "somewhere else" persists as itself,
+    // never collapsed to absence (distinct from never-asked; the advocate's trust law).
+    expect(decodeScenario(encodeScenario(elsewhere))).toEqual({ ok: true, scenario: elsewhere })
+    // ABSENT: the pre-unit / unanswered vault is untouched by the new vocabulary (tolerant reader).
+    expect(decodeScenario(encodeScenario(V3))).toEqual({ ok: true, scenario: V3 })
+    if (decodeScenario(encodeScenario(V3)).ok) {
+      const d = decodeScenario(encodeScenario(V3))
+      if (d.ok && d.scenario.schemaVersion === 3) expect(d.scenario.retirementState).toBeUndefined()
+    }
+  })
+
+  it('every DEFERRED roster state (SC/GA/DE) is a legitimate persistable value (recognised-but-unpriced), and an out-of-vocab string fails decode CALMLY (corrupt, never silently unpriced)', () => {
+    for (const deferred of ['SC', 'GA', 'DE'] as const) {
+      const s: ScenarioV3 = { ...V3, retirementState: deferred }
+      expect(decodeScenario(encodeScenario(s)), `${deferred} must round-trip`).toEqual({ ok: true, scenario: s })
+    }
+    // The needVocab rejection arm: an out-of-roster string (a typo'd state, a lowercase code, a
+    // full name) is corruption named LOUD — NEVER silently treated as 'elsewhere'/unpriced (a
+    // typo'd 'NC' silently unpriced would UNDERSTATE tax for a household that meant a priced state).
+    for (const bad of ['NY', 'nc', 'North Carolina', 'PR', '', 42, null]) {
+      const d = decodeScenario(mutated(V3, (o) => { o.retirementState = bad }))
+      expect(d.ok, `retirementState=${String(bad)} must be rejected`).toBe(false)
+      if (!d.ok && d.reason === 'corrupt') expect(d.detail).toContain('retirementState')
+    }
+  })
+
+  it('v3 WITH the stateTaxVintage stamp round-trips exactly; it is an ATOMIC object — a missing profile or a non-string profile rejects (the healthcareVintage precedent)', () => {
+    const withStamp: ScenarioV3 = {
+      ...V3,
+      retirementState: 'NC',
+      stateTaxVintage: { ncProfile: '{"nc":1}', paProfile: '{"pa":1}', flProfile: '{"fl":0}' },
+    }
+    expect(decodeScenario(encodeScenario(withStamp))).toEqual({ ok: true, scenario: withStamp })
+    const bads: Array<(o: Obj) => void> = [
+      (o) => { o.stateTaxVintage = { paProfile: 'x', flProfile: 'y' } }, // missing ncProfile
+      (o) => { o.stateTaxVintage = { ncProfile: 7, paProfile: 'y', flProfile: 'z' } }, // non-string
+      (o) => { o.stateTaxVintage = { ncProfile: 'x', paProfile: null, flProfile: 'z' } }, // DND-009 null
+      (o) => { o.stateTaxVintage = 'nc-profile' }, // not an object
+    ]
+    for (const mutate of bads) {
+      const d = decodeScenario(mutated(V3, mutate))
+      expect(d.ok).toBe(false)
+      if (!d.ok) expect(d.reason).toBe('corrupt')
+    }
+  })
+
   // P3·U11 — the filed insight-046 follow-up: entered-account dollars get the full range gate.
   it('enteredAccount range gates (insight 046): a negative or over-ceiling balance/contribution is corruption; at-ceiling passes (not over-strict)', () => {
     const bads: Array<(o: Obj) => void> = [

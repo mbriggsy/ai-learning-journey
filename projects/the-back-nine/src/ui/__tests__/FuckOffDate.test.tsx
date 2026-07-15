@@ -401,4 +401,17 @@ describe('P3-U11 follow-up — the priced-Medicare disclosure on the date claim'
     expect(without.queryByText(copy.verdictMedicarePriced)).toBeNull()
     expect(without.queryByText(copy.verdictMedicareResidual)).toBeNull()
   })
+
+  // S5 — the state affirmation swaps the residual clause in place on the date surface too (the
+  // .fod-note render block; same paragraph, no new row).
+  it('a PRICED state (FL) swaps the residual clause to the affirmation naming the state', () => {
+    const { container } = render(
+      <FuckOffDate view={dates(DATE_FIXTURES.confirmed)} medicarePricedNote statePricedNote="FL" />,
+    )
+    const notes = Array.from(container.querySelectorAll('.fod-note')).map((n) => n.textContent ?? '')
+    const residual = notes.find((t) => t.includes('Florida'))
+    expect(residual, 'the residual note names Florida').toBeDefined()
+    expect(residual, 'FL names the genuinely-zero fact').toContain('no state income tax')
+    expect(residual).not.toContain('isn’t counted')
+  })
 })

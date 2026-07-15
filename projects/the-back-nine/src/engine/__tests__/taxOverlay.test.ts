@@ -8,12 +8,13 @@ import {
   type TaxOverlayConfig,
   type Household,
   type HouseholdYear,
+  type OverlayPerson,
   type TaxYearInputs,
 } from '@engine/taxOverlay'
 import { runDecumulation, type PortfolioState } from '@engine/decumulation'
-import { DRAWDOWN_POLICIES, NEVER_DEPLETED } from '@shared/model'
+import { DRAWDOWN_POLICIES, NEVER_DEPLETED, type RetirementState } from '@shared/model'
 import { totalAcrossBuckets, type AccountBuckets } from '@engine/sequencing'
-import { uniformLifetimeTableDivisors, capitalGainsBreakpoints, irmaa, partB2026 } from '@engine/constants'
+import { uniformLifetimeTableDivisors, capitalGainsBreakpoints, irmaa, partB2026, stateRateForYear, stateStandardDeductionFor } from '@engine/constants'
 import { fplForHousehold } from '@engine/healthOverlay'
 
 // ---------------------------------------------------------------------------
@@ -4328,5 +4329,204 @@ describe('taxOverlay — the sunset CROSSES the full solver (externally derived,
     expect(inWindow.totalTaxPaidReal).toBeCloseTo(2_480, 3)
     expect(postSunset.totalTaxPaidReal).toBeCloseTo(2_480, 3)
     expect(postSunset.terminalReal).toBeCloseTo(inWindow.terminalReal, 3)
+  })
+})
+
+// ===========================================================================
+// The STATE-TAX unit — integration: the state tax folds into the SAME gross-up fixed point + into
+// totalTaxPaidReal, MEMBERSHIP-keyed byte-identity for every non-priced state, the mid-sim crossing
+// years (insight 014), and the state-ON convergence corner (k_total ≈ 0.78). The state rate/SD are
+// read from the canonical constants (the copyGuard-gated tokens live ONLY in engine/constants).
+// ===========================================================================
+describe('taxOverlay — state income tax (the state-tax unit)', () => {
+  // Both 67 at 2026, MFJ, no RMD — isolates the conversion/draw from the RMD mechanic.
+  const TAX_ON_NO_RMD: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: false, household: mkHousehold(2026, 1959, 1959) }
+  // Add a retirement state to an ON config's household (presence-keyed on the household).
+  const withState = (config: TaxOverlayConfig, retirementState: RetirementState): TaxOverlayConfig =>
+    config.taxEnabled || config.rmdEnabled
+      ? { ...config, household: { ...config.household, retirementState } }
+      : config
+
+  const ncRate = stateRateForYear('NC', 2026)
+  const paRate = stateRateForYear('PA', 2026)
+  const ncSdMfj = stateStandardDeductionFor('NC', 'mfj')
+  const ncSdSingle = stateStandardDeductionFor('NC', 'single')
+
+  // ---------------------------------------------------------------------------
+  // Reduce-to-spine byte-identity — MEMBERSHIP, not truthiness (the red-team fold).
+  // ---------------------------------------------------------------------------
+  describe('byte-identity: absent / unbuilt / elsewhere / FL all reduce to the no-state golden (same seed)', () => {
+    const buckets: AccountBuckets = { taxable: 400_000, pretax: 600_000, roth: 0 }
+    const inputs: TaxYearInputs = { ssBenefits: [40_000], conversions: [30_000], initialTaxableBasis: 100_000 }
+    // The golden: tax ON, NO state field — a run with REAL federal tax happening (non-vacuous).
+    const golden = runTaxAwareDecumulation(buckets, realStock, realBond, [50_000], STOCK_W, 'proportional', TAX_ON_NO_RMD, inputs)
+
+    it('the golden actually taxes (the byte-identity below is non-vacuous)', () => {
+      expect(golden.totalTaxPaidReal).toBeGreaterThan(0)
+      expect(golden.terminalReal).toBeGreaterThan(0)
+    })
+
+    // 'SC' is a recognised-but-UNBUILT roster state; 'elsewhere' is the explicit somewhere-else; both
+    // take the STRUCTURAL `+ 0` (the module is never called). 'FL' is PRICED but a structural literal 0.
+    for (const state of ['elsewhere', 'SC', 'FL'] as const) {
+      it(`retirementState '${state}' → byte-identical terminal + lifetime tax + basis`, () => {
+        const got = runTaxAwareDecumulation(
+          buckets, realStock, realBond, [50_000], STOCK_W, 'proportional', withState(TAX_ON_NO_RMD, state), inputs,
+        )
+        expect(got.terminalReal).toBe(golden.terminalReal)
+        expect(got.totalTaxPaidReal).toBe(golden.totalTaxPaidReal)
+        expect(got.finalTaxableBasis).toBe(golden.finalTaxableBasis)
+      })
+    }
+
+    it('tax-OFF exhaustive anchor is untouched: an RMD-only (tax-off) run with NC state is byte-identical', () => {
+      // With tax OFF the gross-up never runs, so the state term is structurally unreachable — an NC
+      // household with tax off is byte-identical to the same household without a state.
+      const rmdOnlyNoState: TaxOverlayConfig = { taxEnabled: false, rmdEnabled: true, household: mkHousehold(2026, 1948, 1950) }
+      const rmdOnlyNC = withState(rmdOnlyNoState, 'NC')
+      const a = runTaxAwareDecumulation({ taxable: 0, pretax: 800_000, roth: 200_000 }, realStock, realBond, flat(40_000), STOCK_W, 'pre-tax-first', rmdOnlyNoState)
+      const b = runTaxAwareDecumulation({ taxable: 0, pretax: 800_000, roth: 200_000 }, realStock, realBond, flat(40_000), STOCK_W, 'pre-tax-first', rmdOnlyNC)
+      expect(b.terminalReal).toBe(a.terminalReal)
+      expect(b.totalTaxPaidReal).toBe(a.totalTaxPaidReal)
+    })
+  })
+
+  // ---------------------------------------------------------------------------
+  // The gross-up coupling: the state tax folds into the fixed point + into totalTaxPaidReal.
+  // ---------------------------------------------------------------------------
+  describe('the state tax folds into the gross-up fixed point + totalTaxPaidReal (one lifetime-tax lens)', () => {
+    // Funding the year's tax from ROTH (the CUSTOM_TEST_ORDER = roth-first) keeps the state base
+    // EXACTLY the conversion: a roth draw is tax-free, so `alloc.pretax` stays 0 and the base is not
+    // inflated by the tax-funding draw (a pre-tax-first draw would gross up the pretax draw, which NC
+    // ALSO taxes — the base would then be conversion + tax-funding-draw, not the clean conversion).
+    it('NC: the state-ON minus state-OFF lifetime-tax delta equals the hand-computed NC tax on the year (DND-012)', () => {
+      // Single year, net=0, one conversion C=100k, tax funded from roth (no gain/SS/pretax-draw). The
+      // conversion is gross-independent (clamped to prior-year-end pretax), so NC base = C, deterministic.
+      const buckets: AccountBuckets = { taxable: 0, pretax: 3_000_000, roth: 500_000 }
+      const C = 100_000
+      const off = runTaxAwareDecumulation(buckets, realStock, realBond, [0], STOCK_W, 'custom', TAX_ON_NO_RMD, { conversions: [C] }, CUSTOM_TEST_ORDER)
+      const on = runTaxAwareDecumulation(buckets, realStock, realBond, [0], STOCK_W, 'custom', withState(TAX_ON_NO_RMD, 'NC'), { conversions: [C] }, CUSTOM_TEST_ORDER)
+      // NC state tax on the conversion = (C − MFJ SD) × the flat rate ≈ (100,000 − 25,500) × ≈0.04 ≈ $2,973.
+      expect(on.totalTaxPaidReal - off.totalTaxPaidReal).toBeCloseTo((C - ncSdMfj) * ncRate, 3)
+      // And the state tax LEFT the portfolio (terminal dropped) — it is a real bill, not just a ledger.
+      expect(on.terminalReal).toBeLessThan(off.terminalReal)
+    })
+
+    it('PA at qualified age: the SAME conversion is $0 state tax (the NC-vs-PA lever asymmetry, integrated)', () => {
+      const buckets: AccountBuckets = { taxable: 0, pretax: 3_000_000, roth: 500_000 }
+      const C = 100_000
+      const off = runTaxAwareDecumulation(buckets, realStock, realBond, [0], STOCK_W, 'custom', TAX_ON_NO_RMD, { conversions: [C] }, CUSTOM_TEST_ORDER)
+      const paOn = runTaxAwareDecumulation(buckets, realStock, realBond, [0], STOCK_W, 'custom', withState(TAX_ON_NO_RMD, 'PA'), { conversions: [C] }, CUSTOM_TEST_ORDER)
+      const ncOn = runTaxAwareDecumulation(buckets, realStock, realBond, [0], STOCK_W, 'custom', withState(TAX_ON_NO_RMD, 'NC'), { conversions: [C] }, CUSTOM_TEST_ORDER)
+      // PA (both 67, qualified) exempts the conversion → byte-identical to state-off; NC taxes it.
+      expect(paOn.totalTaxPaidReal).toBe(off.totalTaxPaidReal)
+      expect(ncOn.totalTaxPaidReal).toBeGreaterThan(paOn.totalTaxPaidReal)
+    })
+  })
+
+  // ---------------------------------------------------------------------------
+  // Mid-sim crossing years (insight 014): the gate/deduction MUST update as the sim runs, not freeze
+  // at t=0. Each isolates the crossing year with net=0 + a fixed conversion so the state Σ is exact.
+  // ---------------------------------------------------------------------------
+  describe('the PA 59½ crossing: the age gate flips mid-run, not frozen at t=0 (insight 014)', () => {
+    it('both cross 59→60 across two years; only the age-59 conversion is PA-taxed', () => {
+      // Both born 1967, start 2026 → integer age 59 at t=0, 60 at t=1. A conversion each year, net=0,
+      // large pretax pool so the conversion is C both years. PA taxes the t=0 (age 59) conversion and
+      // EXEMPTS the t=1 (age 60) one — so the state Σ is exactly ONE year's PA tax, not two. A gate
+      // frozen at t=0's age 59 would tax BOTH → 2×; a gate frozen at "already qualified" would tax 0.
+      const household: Household = { startCalendarYear: 2026, filing: 'mfj', owner: { birthYear: 1967 }, spouse: { birthYear: 1967 } }
+      const cfgNone: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: false, household }
+      const cfgPA: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: false, household: { ...household, retirementState: 'PA' } }
+      // Roth-funded tax (roth-first) keeps each year's state base EXACTLY the conversion.
+      const buckets: AccountBuckets = { taxable: 0, pretax: 5_000_000, roth: 500_000 }
+      const C = 100_000
+      const none = runTaxAwareDecumulation(buckets, realStock, realBond, [0, 0], STOCK_W, 'custom', cfgNone, { conversions: [C, C] }, CUSTOM_TEST_ORDER)
+      const pa = runTaxAwareDecumulation(buckets, realStock, realBond, [0, 0], STOCK_W, 'custom', cfgPA, { conversions: [C, C] }, CUSTOM_TEST_ORDER)
+      const stateSigma = pa.totalTaxPaidReal - none.totalTaxPaidReal
+      expect(stateSigma).toBeCloseTo(C * paRate, 3) // exactly ONE year's PA tax on the conversion (no SD)
+      // Guard against the frozen-gate bugs: clearly ONE year taxed, not two, and not zero.
+      expect(stateSigma).toBeLessThan(1.5 * C * paRate)
+      expect(stateSigma).toBeGreaterThan(0.5 * C * paRate)
+    })
+  })
+
+  describe('the NC survivor SD-halving crossing: the standard deduction halves at the death year (insight 014)', () => {
+    it('the survivor year uses the SINGLE standard deduction, the pre-death year MFJ — same conversion, more tax', () => {
+      // Both born 1958 (age 68 at 2026 — 65+ deduction, NO RMD). Year 0: no income (net 0, no conv) so
+      // no tax and the portfolio just grows — identical in the crossing + control runs. Year 1: a
+      // conversion C. In the CROSSING run the spouse has died (householdYears drops them) so the
+      // survivor files SINGLE → NC uses the halved single SD; the CONTROL keeps both alive (MFJ SD).
+      const owner: OverlayPerson = { birthYear: 1958 }
+      const spouse: OverlayPerson = { birthYear: 1958 }
+      const household: Household = { startCalendarYear: 2026, filing: 'mfj', owner, spouse }
+      const cfgNone: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: false, household }
+      const cfgNC: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: false, household: { ...household, retirementState: 'NC' } }
+      const crossingYears: readonly HouseholdYear[] = [{ living: [owner, spouse] }, { living: [owner] }] // spouse dies before t=1
+      const controlYears: readonly HouseholdYear[] = [{ living: [owner, spouse] }, { living: [owner, spouse] }] // no death
+      // Roth-funded tax (roth-first) keeps the survivor year's state base EXACTLY the conversion.
+      const buckets: AccountBuckets = { taxable: 0, pretax: 3_000_000, roth: 500_000 }
+      const C = 120_000
+      const conv = { conversions: [0, C] }
+      const run = (cfg: TaxOverlayConfig, years: readonly HouseholdYear[]) =>
+        runTaxAwareDecumulation(buckets, realStock, realBond, [0, 0], STOCK_W, 'custom', cfg, { ...conv, householdYears: years }, CUSTOM_TEST_ORDER).totalTaxPaidReal
+
+      // Isolate the STATE tax by subtracting the no-state run WITHIN each timeline (federal cancels —
+      // both members of a pair share the same filing timeline, so only the NC addend differs).
+      const crossState = run(cfgNC, crossingYears) - run(cfgNone, crossingYears)
+      const ctrlState = run(cfgNC, controlYears) - run(cfgNone, controlYears)
+
+      // The survivor year taxes the conversion on the SINGLE SD; the control (no death) on the MFJ SD.
+      expect(crossState).toBeCloseTo((C - ncSdSingle) * ncRate, 3)
+      expect(ctrlState).toBeCloseTo((C - ncSdMfj) * ncRate, 3)
+      // The widow's state cliff: the SAME conversion costs (SD_mfj − SD_single) × rate MORE as a survivor.
+      expect(crossState - ctrlState).toBeCloseTo((ncSdMfj - ncSdSingle) * ncRate, 3)
+    })
+  })
+
+  // ---------------------------------------------------------------------------
+  // Convergence: the state term raises k_total to ≈0.78 — the raised 192-pass cap must still cover the
+  // federal-worst corner WITH STATE ON (a state-OFF probe samples the benign regime — insight 006/007).
+  // ---------------------------------------------------------------------------
+  describe('the gross-up converges with NC state ON at the federal-worst corner (k_total ≈ 0.78, no fail-loud cap)', () => {
+    it('small-net × low-basis × large-SS × conversions × NC converges without hitting the raised cap', () => {
+      const nc = withState(TAX_ON_NO_RMD, 'NC')
+      for (const pool of [2_000_000, 50_000_000]) {
+        for (const ss of [0, 5_000_000]) {
+          for (const conv of [0, 200_000]) {
+            const buckets: AccountBuckets = { taxable: pool / 2, pretax: pool / 2, roth: 0 }
+            expect(() =>
+              runTaxAwareDecumulation(buckets, realStock, realBond, [0], STOCK_W, 'proportional', nc, {
+                ssBenefits: [ss],
+                conversions: [conv],
+                initialTaxableBasis: 1, // basis ≈ 0 → near-100% of the taxable draw is realized gain
+              }),
+            ).not.toThrow()
+          }
+        }
+      }
+    })
+  })
+
+  // ---------------------------------------------------------------------------
+  // R19: an out-of-vocabulary state is the calm indeterminate at BOTH layers (validateParams is proven
+  // in simulate.test.ts; here is the overlay fail-loud backstop for a direct caller).
+  // ---------------------------------------------------------------------------
+  describe('R19: the overlay fail-loud backstop rejects an out-of-vocabulary retirementState', () => {
+    it('a garbage state code throws (never silently takes the unpriced +0 branch)', () => {
+      // Cast through unknown — the untyped worker boundary the backstop defends (a corrupted value the
+      // compile-time RetirementState type cannot police).
+      const bad = { ...TAX_ON_NO_RMD, household: { ...TAX_ON_NO_RMD.household, retirementState: 'California' as unknown as RetirementState } } as TaxOverlayConfig
+      expect(() =>
+        runTaxAwareDecumulation({ taxable: 0, pretax: 500_000, roth: 0 }, realStock, realBond, [40_000], STOCK_W, 'pre-tax-first', bad),
+      ).toThrow(/retirementState/)
+    })
+
+    it('a recognised-but-unbuilt roster code and elsewhere pass (legitimately unpriced)', () => {
+      for (const s of ['SC', 'GA', 'DE', 'elsewhere'] as const) {
+        expect(() =>
+          runTaxAwareDecumulation({ taxable: 0, pretax: 500_000, roth: 0 }, realStock, realBond, [40_000], STOCK_W, 'pre-tax-first', withState(TAX_ON_NO_RMD, s)),
+        ).not.toThrow()
+      }
+    })
   })
 })

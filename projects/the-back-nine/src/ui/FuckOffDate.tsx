@@ -44,6 +44,8 @@ import { copy, slots } from './copy'
 import { dateOddsText } from './dateOdds'
 import { dateTradeoffPoint } from './dateTradeoff'
 import { composeDateSplit, type DateSplitView } from './dateSplit'
+import { composeVerdictMedicareResidual } from './stateTaxDisclosure'
+import type { PricedState } from '@engine/constants/stateTax'
 import { focusHeading, useLiveAnnouncer } from '@intake/a11y'
 import { ConfidenceBandPanel } from '@viz/ConfidenceBandPanel'
 import { OddsLadder } from '@viz/OddsLadder'
@@ -102,6 +104,11 @@ export interface FuckOffDateProps {
    *  per-person sentence, appended INSIDE the residual note — same block, no new row
    *  (mirrors ConfidenceStatement; rendered only with `medicarePricedNote`). */
   readonly medicareExtrasTypicalNote?: string
+  /** The state-tax unit (S5): the PRICED state THIS run priced, or undefined. Swaps the residual's
+   *  embedded state clause IN PLACE — a priced household reads the outcome-scoped affirmation
+   *  naming its state; undefined reads today's "isn't counted" words verbatim (mirrors
+   *  ConfidenceStatement; route-aware off the built params in Result — insight 080/081). */
+  readonly statePricedNote?: PricedState
   /** P3·U13 — TRUE when any staleness clock fired at unlock: the date claim wears the
    *  standing "figured fresh under today's rules" line among its notes (the Q1 disclosure
    *  rides WITH the verdict). Default false. */
@@ -180,7 +187,7 @@ export function floorLineText(
   return slots.dateFloorCoveredAnchored(yearsFromToday, calendarYear, odds, fl.unconfirmed)
 }
 
-export function FuckOffDate({ view, focusSignal, actionsSlot, medicarePricedNote = false, medicareExtrasTypicalNote, stalenessNote = false, dateAnchor, agedBalancesYear, sheetOpen = false }: FuckOffDateProps) {
+export function FuckOffDate({ view, focusSignal, actionsSlot, medicarePricedNote = false, medicareExtrasTypicalNote, statePricedNote, stalenessNote = false, dateAnchor, agedBalancesYear, sheetOpen = false }: FuckOffDateProps) {
   const headingRef = useRef<HTMLHeadingElement>(null)
   // Announce on the FIRST landing only (the undefined→defined edge). The date route is TIERED: the
   // provisional→final sharpen can crown a DIFFERENT offset, which flips focusSignal — but re-firing
@@ -332,7 +339,7 @@ export function FuckOffDate({ view, focusSignal, actionsSlot, medicarePricedNote
             <>
               <p className="fod-note">{copy.verdictMedicarePriced}</p>
               <p className="fod-note">
-                {copy.verdictMedicareResidual}
+                {composeVerdictMedicareResidual(statePricedNote)}
                 {medicareExtrasTypicalNote !== undefined ? ` ${medicareExtrasTypicalNote}` : ''}
               </p>
             </>

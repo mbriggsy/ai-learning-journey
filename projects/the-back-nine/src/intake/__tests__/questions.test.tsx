@@ -214,10 +214,12 @@ describe('DOB → derived age (one derivation site)', () => {
 describe('the spend step — period discipline (R19)', () => {
   function reachSpend(m: MemoryModel) {
     render(<Harness model={m} />)
-    // all-retired path: names → work → social-security → spend
-    fireEvent.click(screen.getByRole('button', { name: copy.flowNext }))
-    fireEvent.click(screen.getByRole('button', { name: copy.flowNext }))
-    fireEvent.click(screen.getByRole('button', { name: copy.flowNext }))
+    // all-retired path: names → work → social-security → retirement-state → spend (the state
+    // step lands unconditionally before spend, so walk until the spend heading rather than a
+    // brittle fixed count).
+    for (let i = 0; i < 8 && heading() !== copy.qSpendHeading; i += 1) {
+      fireEvent.click(screen.getByRole('button', { name: copy.flowNext }))
+    }
     expect(heading()).toBe(copy.qSpendHeading)
   }
 
@@ -404,8 +406,9 @@ describe('working-year income (the §3b override source — never a salary echo)
       ],
     }))
     render(<Harness model={m} />)
-    // walk: names → work → income → ss → spend → health-quote → oop → working-income
-    for (let i = 0; i < 7; i += 1) {
+    // walk: names → work → income → ss → retirement-state → spend → health-quote → oop →
+    // working-income (walk until the heading — the state step lands before spend).
+    for (let i = 0; i < 12 && heading() !== copy.qWorkIncomeHeading; i += 1) {
       fireEvent.click(screen.getByRole('button', { name: copy.flowNext }))
     }
     expect(heading()).toBe(copy.qWorkIncomeHeading)
@@ -503,5 +506,95 @@ describe('the Medicare-extras fork STANDING line (the details-home fix — extra
     const m = freshModel()
     render(<MedicareExtrasFork draft={draft(m)} i={0} onWrite={() => {}} />)
     expect(screen.queryByText(slots.medicareExtrasPanelStanding(fig))).toBeNull()
+  })
+})
+
+describe('the retirement-state step (the state-tax unit S3 — a changeable best guess)', () => {
+  function reachState(m: MemoryModel) {
+    render(<Harness model={m} />)
+    for (let i = 0; i < 8 && heading() !== copy.qStateHeading; i += 1) {
+      fireEvent.click(screen.getByRole('button', { name: copy.flowNext }))
+    }
+    expect(heading()).toBe(copy.qStateHeading)
+  }
+
+  it('lands UNCONDITIONALLY, ordered right BEFORE spend (so S5 spendHelp can branch on the state)', () => {
+    const m = freshModel()
+    const ids = intakeSteps(draft(m)).map((s) => s.id)
+    expect(ids).toContain('retirement-state')
+    expect(ids.indexOf('retirement-state')).toBeLessThan(ids.indexOf('spend'))
+    // present for an all-retired household too (unconditional — never a conditional gate)
+    setStatuses(m, 'retired', 'retired')
+    const retiredIds = intakeSteps(draft(m)).map((s) => s.id)
+    expect(retiredIds.indexOf('retirement-state')).toBeLessThan(retiredIds.indexOf('spend'))
+  })
+
+  it('offers exactly the 4 honest arms — NC · PA · FL · Somewhere else — with nothing pre-selected', () => {
+    const m = freshModel()
+    setStatuses(m, 'retired', 'retired')
+    reachState(m)
+    for (const label of [copy.stateOptionNC, copy.stateOptionPA, copy.stateOptionFL, copy.stateOptionElsewhere]) {
+      expect(screen.getByLabelText(label)).toBeInTheDocument()
+    }
+    // the deferred/unbuilt roster states are NOT exposed (they ride 'elsewhere')
+    expect(screen.queryByText('South Carolina')).toBeNull()
+    expect(screen.queryByText('Georgia')).toBeNull()
+    for (const r of screen.getAllByRole('radio')) expect(r).not.toBeChecked()
+  })
+
+  it('picking a priced state writes it to the draft', () => {
+    const m = freshModel()
+    setStatuses(m, 'retired', 'retired')
+    reachState(m)
+    fireEvent.click(screen.getByLabelText(copy.stateOptionNC))
+    expect(draft(m).retirementState).toBe('NC')
+    fireEvent.click(screen.getByLabelText(copy.stateOptionPA))
+    expect(draft(m).retirementState).toBe('PA')
+    fireEvent.click(screen.getByLabelText(copy.stateOptionFL))
+    expect(draft(m).retirementState).toBe('FL')
+  })
+
+  it('the honest "Somewhere else" arm PERSISTS an explicit elsewhere (a fact, distinct from never-asked absent)', () => {
+    const m = freshModel()
+    setStatuses(m, 'retired', 'retired')
+    reachState(m)
+    expect(draft(m).retirementState).toBeUndefined() // never-asked ⇒ absent (the disclosed-out posture)
+    fireEvent.click(screen.getByLabelText(copy.stateOptionElsewhere))
+    expect(draft(m).retirementState).toBe('elsewhere') // an explicit answer, not absence
+  })
+
+  it('is NON-BLOCKING: advancing with no state picked moves past it (never a hard wall, never a silent default)', () => {
+    const m = freshModel()
+    setStatuses(m, 'retired', 'retired')
+    reachState(m)
+    expect(draft(m).retirementState).toBeUndefined()
+    fireEvent.click(screen.getByRole('button', { name: copy.flowNext }))
+    expect(heading()).toBe(copy.qSpendHeading) // advanced to spend on a blank answer
+    expect(draft(m).retirementState).toBeUndefined() // and wrote NO silent default
+  })
+
+  // S5.1 — the spendHelp branch reads the DRAFT answer (the state step precedes spend). A PRICED
+  // state flips the instruction to leave the state bill OUT; an unbuilt/elsewhere/unanswered state
+  // keeps the keep-it-inside instruction VERBATIM (the containment boundary until pricing ships).
+  it('S5: a PRICED state flips spendHelp to the leave-it-OUT instruction', () => {
+    const m = freshModel()
+    setStatuses(m, 'retired', 'retired')
+    reachState(m)
+    fireEvent.click(screen.getByLabelText(copy.stateOptionNC))
+    fireEvent.click(screen.getByRole('button', { name: copy.flowNext }))
+    expect(heading()).toBe(copy.qSpendHeading)
+    expect(screen.getByText(copy.spendHelpStatePriced)).toBeInTheDocument()
+    expect(screen.queryByText(copy.spendHelp)).toBeNull()
+  })
+
+  it("S5: an 'elsewhere' (or unanswered) state keeps the keep-it-INSIDE spendHelp verbatim", () => {
+    const m = freshModel()
+    setStatuses(m, 'retired', 'retired')
+    reachState(m)
+    fireEvent.click(screen.getByLabelText(copy.stateOptionElsewhere))
+    fireEvent.click(screen.getByRole('button', { name: copy.flowNext }))
+    expect(heading()).toBe(copy.qSpendHeading)
+    expect(screen.getByText(copy.spendHelp)).toBeInTheDocument()
+    expect(screen.queryByText(copy.spendHelpStatePriced)).toBeNull()
   })
 })

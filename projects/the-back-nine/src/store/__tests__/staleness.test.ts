@@ -21,7 +21,7 @@ import { deriveStaleness, epochDayToCalendarYear } from '../staleness'
 import { scenarioFromDraft, currentEpochDay } from '@ui/scenarioFromDraft'
 import { DEV_SEEDS } from '@ui/devSeeds'
 import { CURRENT_APP_DEFAULT_VERSION, appDefaultEraFor } from '@shared/appDefaults'
-import type { ScenarioV3 } from '@shared/model'
+import type { ScenarioV3, StateTaxVintageV3 } from '@shared/model'
 
 const TODAY = currentEpochDay()
 
@@ -50,6 +50,7 @@ describe('deriveStaleness — the property arm (a fresh save is never stale)', (
       expect(report.rulesMoved).toBe(false)
       expect(report.spine.appDefaultMoved).toBe(false)
       expect(report.controls.taxMoved).toBe(false)
+      expect(report.controls.stateTaxMoved).toBe(false)
       expect(report.healthcare.moved).toBe(false)
       expect(report.date.contributionMoved).toBe(false)
       expect(report.date.blendMoved).toBe(false)
@@ -83,6 +84,61 @@ describe('deriveStaleness — the tax clock', () => {
     const basisMoved = { ...s, taxVintageDetail: { ...s.taxVintageDetail!, legalBasis: 'TCJA (pre-OBBBA)' } }
     expect(deriveStaleness(basisMoved, TODAY).controls.taxMoved).toBe(true)
     expect(deriveStaleness(basisMoved, TODAY).anyStale).toBe(true)
+  })
+})
+
+describe('deriveStaleness — the state-tax clock (the state-tax unit; route-true + per-state)', () => {
+  /** A drifted disk stamp: the household's ncProfile is from an OLD build (an NC rate step that
+   *  pinned since save), the rest fresh. */
+  const drift = (s: ScenarioV3, over: Partial<StateTaxVintageV3>): ScenarioV3 => ({
+    ...s,
+    stateTaxVintage: { ...s.stateTaxVintage!, ...over },
+  })
+
+  it('FIRES for a PRICED household (NC) whose own state profile drifted — and raises rulesMoved/anyStale', () => {
+    const s = { ...freshSave(), retirementState: 'NC' as const }
+    expect(deriveStaleness(s, TODAY).controls.stateTaxMoved, 'a fresh save is quiet').toBe(false)
+    const moved = drift(s, { ncProfile: '{"drifted":"nc"}' })
+    const report = deriveStaleness(moved, TODAY)
+    expect(report.controls.stateTaxMoved).toBe(true)
+    expect(report.rulesMoved).toBe(true)
+    expect(report.anyStale).toBe(true)
+  })
+
+  it("ROUTE-TRUE quiet: an 'elsewhere' household prices no state tax, so a drifted stamp NEVER fires (nothing state-priced to stale)", () => {
+    const s = drift({ ...freshSave(), retirementState: 'elsewhere' as const }, { ncProfile: '{"drifted":"nc"}' })
+    expect(deriveStaleness(s, TODAY).controls.stateTaxMoved).toBe(false)
+    expect(deriveStaleness(s, TODAY).rulesMoved).toBe(false)
+  })
+
+  it('ROUTE-TRUE quiet: an ABSENT retirementState (a pre-unit / unanswered household) never fires even with a drifted stamp', () => {
+    const bare = freshSave()
+    expect(bare.retirementState).toBeUndefined()
+    const s = drift(bare, { ncProfile: '{"drifted":"nc"}' })
+    expect(deriveStaleness(s, TODAY).controls.stateTaxMoved).toBe(false)
+  })
+
+  it('ROUTE-TRUE quiet: a recognised-but-UNBUILT roster state (SC) is not priced, so it never fires', () => {
+    const s = drift({ ...freshSave(), retirementState: 'SC' as const }, { ncProfile: '{"drifted":"nc"}', paProfile: '{"drifted":"pa"}' })
+    expect(deriveStaleness(s, TODAY).controls.stateTaxMoved).toBe(false)
+  })
+
+  it('PER-STATE: an NC household compares ONLY its ncProfile — a PA/FL profile drift never alarms it (the alarm-when-fine the header refuses)', () => {
+    const s = drift({ ...freshSave(), retirementState: 'NC' as const }, { paProfile: '{"drifted":"pa"}', flProfile: '{"drifted":"fl"}' })
+    expect(deriveStaleness(s, TODAY).controls.stateTaxMoved).toBe(false)
+  })
+
+  it('quiet on an IDENTICAL stamp (same build), and on an ABSENT stamp (a pre-unit vault has nothing to compare)', () => {
+    const nc = { ...freshSave(), retirementState: 'NC' as const }
+    expect(deriveStaleness(nc, TODAY).controls.stateTaxMoved).toBe(false)
+    const noStamp = { ...nc } as Record<string, unknown>
+    delete noStamp.stateTaxVintage
+    expect(deriveStaleness(noStamp as unknown as ScenarioV3, TODAY).controls.stateTaxMoved).toBe(false)
+  })
+
+  it('FL is a constitutional $0 — byte-identical forever; an FL household reads clean on a fresh stamp', () => {
+    const fl = { ...freshSave(), retirementState: 'FL' as const }
+    expect(deriveStaleness(fl, TODAY).controls.stateTaxMoved).toBe(false)
   })
 })
 

@@ -6,6 +6,12 @@
  * NOTE: the validated MC spine reads NOTHING from this module (the spine is
  * tax-free); only the tax overlay (U2) consumes it — so a constants change can
  * never perturb a Trinity/Bengen golden case (the reduce-to-spine invariant).
+ *
+ * STATE TAX (2026-07-15): the `stateIncomeTax` entry below is now a SCOPE SENTINEL, not an
+ * OUT marker — state income tax is PRICED for the roster {NC, PA, FL} (their dated figures
+ * live in the sibling `stateTax.ts` / `stateTaxConstants` table, consumed by the state
+ * overlay) and stays OUT-but-disclosed for every OTHER state. See `stateIncomeTax` +
+ * `inOutRule` below.
  */
 import {
   sourced,
@@ -333,13 +339,22 @@ export const niit = sourced(
   },
 )
 
-/** State income tax — OUT but disclosed (a parallel system neither control moves). */
+/**
+ * State income tax — the SCOPE SENTINEL (reconciled 2026-07-15, the state-tax unit). Now
+ * PRICED for the roster {NC, PA, FL} (dated figures in the sibling `stateTaxConstants`),
+ * OUT-but-disclosed for every OTHER state. The old note ("neither sequencing nor conversion
+ * moves it") was FALSE for the roster: NC taxes IRA withdrawals AND Roth conversions at its
+ * flat rate, which DOES move the conversion-lever ranking (the D6 rule reclassifies state IN
+ * for priced states; the reason the 50-state broad brush was rejected). Everything outside
+ * the built roster keeps today's disclosed-out posture VERBATIM.
+ */
 export const stateIncomeTax = sourced(
-  { status: 'OUT-but-disclosed' as const },
+  { status: 'IN-for-roster; OUT-but-disclosed-elsewhere' as const, pricedRoster: 'NC, PA, FL' },
   {
-    citation: 'findings §Strand 5',
+    citation: 'findings §Strand 5; state-tax unit (council wf_d04148cb-1e5, 2026-07-15)',
     directionalUntilPinned: false,
-    note: 'Configurable context; neither sequencing nor conversion moves it.',
+    note:
+      'PRICED for {NC, PA, FL} via stateTaxConstants — sequencing/conversion MOVE it (NC taxes conversions + withdrawals at the flat rate), so it is IN by the D6 rule. For every state OUTSIDE the built roster the posture is UNCHANGED: OUT-but-disclosed — configurable context the tool does not price. A state-only rate change is clocked by StateTaxVintageV3 (the persistence unit), NOT the federal tax stamp.',
   },
 )
 
@@ -349,7 +364,7 @@ export const inOutRule = sourced(
   {
     citation: 'findings §Strand 5 banner',
     directionalUntilPinned: false,
-    note: 'IN: ordinary brackets, standard deduction, RMDs, SS-taxation, MFJ→single, ACA-PTC (pre-65), IRMAA (post-65), cap-gains/QD stacking, and the lever-sensitive §1014/IRD heir-tax adjustment (leave-more). OUT-but-disclosed: NIIT, state.',
+    note: 'IN: ordinary brackets, standard deduction, RMDs, SS-taxation, MFJ→single, ACA-PTC (pre-65), IRMAA (post-65), cap-gains/QD stacking, the lever-sensitive §1014/IRD heir-tax adjustment (leave-more), AND state income tax FOR THE PRICED ROSTER {NC, PA, FL} (NC taxes conversions — sequencing/conversion move it; see stateTaxConstants). OUT-but-disclosed: NIIT, and state income tax for every state OUTSIDE the built roster.',
   },
 )
 

@@ -97,7 +97,9 @@ const READOUT: HealthReadout = {
   ],
 }
 
-function renderSheet(opts: { enhanced?: boolean; readout?: HealthReadout } = {}) {
+function renderSheet(
+  opts: { enhanced?: boolean; readout?: HealthReadout; statePricedNote?: import('@engine/constants/stateTax').PricedState } = {},
+) {
   const preview = deferredPreview()
   const onApply = vi.fn()
   const onClose = vi.fn()
@@ -113,6 +115,7 @@ function renderSheet(opts: { enhanced?: boolean; readout?: HealthReadout } = {})
       draft={draft}
       readout={opts.readout}
       preview={preview.fn}
+      statePricedNote={opts.statePricedNote}
       onApply={onApply}
       onClose={onClose}
     />,
@@ -180,6 +183,18 @@ describe('HealthcareSheet — the readout lines', () => {
     renderSheet()
     expect(screen.getByText(copy.controlHealthOmissionsNote)).toBeInTheDocument()
     expect(screen.getByText(copy.controlHealthSurvivorNote)).toBeInTheDocument()
+  })
+
+  // S5 — a PRICED household (statePricedNote present) DROPS the state-tax item from THIS sheet's
+  // omissions note, gated independently of the verdict + Roth homes (insight 078). Unpriced verbatim.
+  it('a priced household drops the state-tax omission on the sheet; unpriced keeps it verbatim', () => {
+    renderSheet({ statePricedNote: 'PA' })
+    expect(screen.getByText(copy.controlHealthOmissionsNoteStatePriced)).toBeInTheDocument()
+    expect(screen.queryByText(copy.controlHealthOmissionsNote)).toBeNull()
+    cleanup()
+    renderSheet()
+    expect(screen.getByText(copy.controlHealthOmissionsNote)).toBeInTheDocument()
+    expect(screen.queryByText(copy.controlHealthOmissionsNoteStatePriced)).toBeNull()
   })
 
   it('the HSA trap note renders only for a household that entered an HSA', () => {

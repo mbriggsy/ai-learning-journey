@@ -12,6 +12,7 @@
  * cannot drift from them (burned/061: derive at execution, never transcribe).
  */
 import { taxConstants, TAX_YEAR } from './tax'
+import { stateTaxConstants } from './stateTax'
 import { healthConstants, COVERAGE_YEAR } from './health'
 import { contributionConstants, CONTRIBUTION_YEAR } from './contributions'
 import { socialSecurityConstants } from './socialSecurity'
@@ -25,6 +26,7 @@ import type { DateVintageV3 } from '@shared/model'
 // COLA year — the module carries no year key.)
 export * from './types'
 export * from './tax'
+export * from './stateTax'
 export * from './health'
 export * from './contributions'
 export * from './socialSecurity'
@@ -32,6 +34,7 @@ export * from './socialSecurity'
 /** Flattened registry: dotted key → entry. Derived from the structured tables. */
 export const ALL_CONSTANTS: Readonly<Record<string, ConstantEntry>> = Object.freeze({
   ...Object.fromEntries(Object.entries(taxConstants).map(([k, v]) => [`tax.${k}`, v])),
+  ...Object.fromEntries(Object.entries(stateTaxConstants).map(([k, v]) => [`state.${k}`, v])),
   ...Object.fromEntries(Object.entries(healthConstants).map(([k, v]) => [`health.${k}`, v])),
   ...Object.fromEntries(
     Object.entries(contributionConstants).map(([k, v]) => [`contributions.${k}`, v]),

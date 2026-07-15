@@ -15,7 +15,7 @@
  */
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import { AnswerStrip } from '@intake/AnswerStrip'
-import { buildControlPreviewParams, healthcarePriced, isDateRoute, medicareExtrasDisclosureView, missingRequiredFacts, spineMedicarePriced } from '@intake/intakeMap'
+import { buildControlPreviewParams, healthcarePriced, isDateRoute, medicareExtrasDisclosureView, missingRequiredFacts, pricedStateForRun, spineMedicarePriced } from '@intake/intakeMap'
 import { useLiveAnnouncer } from '@intake/a11y'
 import { BudgetBuilder } from '@intake/BudgetBuilder'
 import { SequencingControl } from '@intake/SequencingControl'
@@ -177,6 +177,13 @@ export function Result({
     () => composeMedicareExtrasTypicalNote(medicareExtrasDisclosureView(snapshot.draft)),
     [snapshot.draft],
   )
+  // The state-tax unit (S5) — "which PRICED state did THIS run price?", read route-aware off the
+  // route's OWN built-params overlay decision (never draft.retirementState — insight 081; never a
+  // bare isDateRoute disjunct — insight 080). undefined for not-priced / 'elsewhere' / unbuilt /
+  // the degenerate-overlay household. Threaded to every disclosure home (the verdict residual's
+  // affirmation names the state; the Roth lever + Healthcare sheet drop the state-tax omission),
+  // each gating on `!== undefined`.
+  const statePricedNote = useMemo(() => pricedStateForRun(snapshot.draft), [snapshot.draft])
   const enhancedApplied = snapshot.draft.enhancedSubsidies === true
   // The wire's per-year healthcare series (spine headline runs only — presence-keyed).
   const healthReadout =
@@ -414,6 +421,7 @@ export function Result({
             actionsSlot={seatInLead ? actionsNode : undefined}
             medicarePricedNote={medicarePricedNote}
             medicareExtrasTypicalNote={medicareExtrasTypicalNote}
+            statePricedNote={statePricedNote}
             stalenessNote={stalenessNote}
             dateAnchor={dateAnchor}
             agedBalancesYear={agedBalancesYear}
@@ -427,6 +435,7 @@ export function Result({
             actionsSlot={seatInLead ? actionsNode : undefined}
             medicarePricedNote={medicarePricedNote}
             medicareExtrasTypicalNote={medicareExtrasTypicalNote}
+            statePricedNote={statePricedNote}
             stalenessNote={stalenessNote}
             sheetOpen={sheetOpen}
             savedAnchor={dateAnchor}
@@ -482,6 +491,7 @@ export function Result({
         preview={runPreview}
         previewBlocking={!previewRunsInWorker()}
         medicarePricedNote={medicarePricedNote}
+        statePricedNote={statePricedNote}
         restoreFallback={restoreToAssumptionsDoor}
         savedAnchor={dateAnchor}
         onApply={(plan) => {
@@ -507,6 +517,7 @@ export function Result({
         readout={healthReadout}
         preview={runPreview}
         previewBlocking={!previewRunsInWorker()}
+        statePricedNote={statePricedNote}
         restoreFallback={restoreToAssumptionsDoor}
         savedAnchor={dateAnchor}
         onApply={(enhanced) => {

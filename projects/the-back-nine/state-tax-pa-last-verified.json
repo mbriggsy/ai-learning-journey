@@ -1,0 +1,21 @@
+{
+  "state": "PA",
+  "verifiedOn": "2026-07-15",
+  "status": "flat-3.07-stable",
+  "statusConfirmed": true,
+  "nextDue": "2027-07-15",
+  "attests": {
+    "rateSchedule": "Flat 3.07% (72 P.S. § 7302) — in effect continuously since 2004, NO scheduled statutory step-down, NO revenue trigger, NO bracket table; held forward. The 2.8% Shapiro budget proposal was never enacted — excluded.",
+    "standardDeduction": "NONE — $0 both MFJ and single ('No provision'). PA has no standard deduction and no personal exemption; taxable investment income is taxed from the first dollar.",
+    "exemptions": "Eight-class system (72 P.S. § 7303), NOT federal-AGI-derived. Social Security 100% exempt. Retirement-plan withdrawals AND Roth conversions EXEMPT at qualified age (>= 59.5), TAXED below it (the conservative arm). Taxable-account interest/dividends/net gains taxed at 3.07% (no LTCG preference, no holding-period distinction). OUT (named, never modeled, conservative-direction): US/PA-obligation interest exemption, Tax Forgiveness (Schedule SP), local Earned Income Tax ($0 on decumulation income), Philadelphia School Income Tax."
+  },
+  "primarySources": [
+    "72 P.S. § 7302 (PA personal income-tax rate 3.07%) — pa.gov, fetched 2026-07-15",
+    "72 P.S. § 7303 (eight enumerated income classes) — pa.gov",
+    "PA DOR PIT Guide — rate history ('2004 – Present'), Deductions-Not-Allowed table, Gross-Compensation retirement-plan distributions — pa.gov",
+    "61 Pa. Code § 101.6 (eligible-plan retirement-age gate; corroboration)"
+  ],
+  "pinTo": "pa.gov PIT Guide (rate / Deductions / Gross-Compensation chapters) + 72 P.S. §§ 7302, 7303",
+  "note": "PA is STABLE (flat 3.07% since 2004, no scheduled change, no revenue trigger) — re-verified ANNUALLY for drift, NOT a live-flip watch, so nextDue is one year out (2027-07-15). No StateTaxVintageV3 bump is expected absent a rate change; if the flat rate or the 59.5 retirement/conversion gate ever moves, add/adjust the schedule in src/engine/constants/stateTax.ts and let the vintage stamp stale saved vaults.",
+  "howToClear": "Re-verify the CURRENT PA flat rate AND the 59.5 retirement/conversion exemption gate against 72 P.S. § 7302 / § 7303 and the PA DOR PIT Guide (pa.gov). Then update this record (verifiedOn + status + attests + nextDue). Do NOT just bump the date."
+}

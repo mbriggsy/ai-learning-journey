@@ -18,6 +18,7 @@ import type { ScenarioDraft } from '@store/memoryModel'
 import { encodeScenario, decodeScenario } from '@shared/scenarioCodec'
 import { healthcareVintageStamp } from '@engine/constants/health'
 import { taxVintageStamp } from '@engine/constants/tax'
+import { stateTaxVintageStamp } from '@engine/constants/stateTax'
 import { dateVintageStamp } from '@engine/constants'
 import { CURRENT_APP_DEFAULT_VERSION } from '@shared/appDefaults'
 import type { ScenarioV3 } from '@shared/model'
@@ -56,6 +57,7 @@ export function scenarioFromDraft(draft: ScenarioDraft): SaveReady {
     healthcareVintage: healthcareVintageStamp(),
     taxVintageDetail: taxVintageStamp(),
     dateVintage: dateVintageStamp(),
+    stateTaxVintage: stateTaxVintageStamp(),
     appDefaultVersion: CURRENT_APP_DEFAULT_VERSION,
     savedAt: currentEpochDay(),
   } as ScenarioV3

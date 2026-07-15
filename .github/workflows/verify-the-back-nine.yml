@@ -42,6 +42,9 @@ jobs:
       - run: pnpm install --frozen-lockfile
       # Fail fast on a stale/unconfirmed ACA legislative assumption.
       - run: pnpm verify:aca
+      # Fail fast on a stale/unconfirmed/missing state-tax record (the priced roster {NC,PA,FL};
+      # NC's carries the ~Aug-2026 certification checkpoint). Mirrors verify:aca.
+      - run: pnpm verify:state-tax
       - run: pnpm lint
       - run: pnpm typecheck
       - run: pnpm test

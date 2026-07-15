@@ -99,6 +99,33 @@ describe('composeReentry — the read-back', () => {
     expect(view.elapsedLine).toBe(slots.reentryElapsedYears(2))
   })
 
+  // S5.4 — the state-tax staleness clock's own named line: a PRICED household (NC) whose own
+  // state profile drifted since save gets `stalenessStateTax` at the re-entry gate (never aliased
+  // onto stalenessTax — the two clocks fire independently).
+  it('S5: a priced household whose state rules moved gets the state-tax staleness line, named', () => {
+    const s = freshSave()
+    const drifted: ScenarioV3 = {
+      ...s,
+      retirementState: 'NC',
+      stateTaxVintage: { ...s.stateTaxVintage!, ncProfile: '{"drifted":"nc"}' },
+    }
+    const report = reportFor(drifted)
+    expect(report.controls.stateTaxMoved, 'the state clock fired').toBe(true)
+    const view = composeReentry(drifted, report)
+    expect(view.noteLines).toContain(copy.stalenessStateTax)
+  })
+
+  it("S5: an 'elsewhere' vault whose stamp drifted fires NO state-tax line (nothing state-priced to stale)", () => {
+    const s = freshSave()
+    const drifted: ScenarioV3 = {
+      ...s,
+      retirementState: 'elsewhere',
+      stateTaxVintage: { ...s.stateTaxVintage!, ncProfile: '{"drifted":"nc"}' },
+    }
+    const view = composeReentry(drifted, reportFor(drifted))
+    expect(view.noteLines).not.toContain(copy.stalenessStateTax)
+  })
+
   it('two expired windows sharing an end year collapse to ONE line (the copy quotes only the year — twins would render byte-identical sentences and collide on the render key)', () => {
     const s = freshSave()
     const doctored: ScenarioV3 = {

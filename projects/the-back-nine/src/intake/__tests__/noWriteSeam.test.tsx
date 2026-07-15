@@ -131,7 +131,8 @@ describe('the no-write-until-Save seam (against the REAL store layer)', () => {
     expect(await databaseNames()).toEqual([])
 
     // --- through spend into the account loop ---
-    fireEvent.click(screen.getByRole('button', { name: copy.flowNext })) // ss → spend
+    fireEvent.click(screen.getByRole('button', { name: copy.flowNext })) // ss → retirement-state
+    fireEvent.click(screen.getByRole('button', { name: copy.flowNext })) // retirement-state → spend
     setMoney(copy.spendLabel, '7000')
     fireEvent.click(screen.getByLabelText(copy.periodMonth)) // explicit period
     fireEvent.click(screen.getByRole('button', { name: copy.flowNext })) // → health

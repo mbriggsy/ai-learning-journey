@@ -23,6 +23,7 @@ import type { ScenarioDraft } from '@store/memoryModel'
 import type { ControlPreview } from '@store/controlPreview'
 import { copy, slots } from '@ui/copy'
 import { composeTwoFutures } from '@ui/twoFuturesChrome'
+import { composeRothOmissionsNote } from '@ui/stateTaxDisclosure'
 import type { BandSavedAnchor } from '@ui/bandAnnotations'
 import type { Announcer } from './a11y'
 import { ControlSheet } from './controlSheet'
@@ -59,6 +60,11 @@ export interface RothLeverProps {
    *  two-arm preview genuinely moves), so the note names the ONE residual — the base premium held
    *  level in today's dollars — never the retired false "not priced yet" claim. */
   readonly medicarePricedNote?: boolean
+  /** The state-tax unit (S5): TRUE (the PRICED state code is present) ⇒ the state-tax item DROPS
+   *  from the lever's omissions note — the run now prices it, so listing it as "not counted" would
+   *  be false. The predicate is the run's OWN pricing decision (`pricedStateForRun`, Result), never
+   *  geography (insight 080/081); this stays a dumb prop renderer. Undefined ⇒ today's list. */
+  readonly statePricedNote?: import('@engine/constants/stateTax').PricedState
   /** U12 ultramode: close-time focus fallback for when the opening trigger has unmounted
    *  (the via-AssumptionPanel route) — forwarded to the ControlSheet scaffold. */
   readonly restoreFallback?: () => HTMLElement | null
@@ -66,7 +72,7 @@ export interface RothLeverProps {
    *  "Today" → "Your save" when elapsed > 0 (one time base per screen). */
   readonly savedAnchor?: BandSavedAnchor
 }
-export function RothLever({ open, draft, preview, previewBlocking = false, onApply, onRemove, onClose, medicarePricedNote = false, restoreFallback, savedAnchor }: RothLeverProps) {
+export function RothLever({ open, draft, preview, previewBlocking = false, onApply, onRemove, onClose, medicarePricedNote = false, statePricedNote, restoreFallback, savedAnchor }: RothLeverProps) {
   const announcerRef = useRef<Announcer | null>(null)
   const applied = draft.rothConversion
   const [plan, setPlan] = useState<PlanDraft>({})
@@ -167,7 +173,7 @@ export function RothLever({ open, draft, preview, previewBlocking = false, onApp
             notes={
               <>
                 <p className="field-help">{copy.rothFundingNote}</p>
-                <p className="field-help">{copy.rothOmissionsNote}</p>
+                <p className="field-help">{composeRothOmissionsNote(statePricedNote !== undefined)}</p>
               </>
             }
           />

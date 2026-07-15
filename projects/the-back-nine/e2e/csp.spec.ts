@@ -205,6 +205,13 @@ test.describe('CSP — real browser enforcement', () => {
     await claims.last().fill('2030')
     await next()
 
+    // The retirement-state step (the state-tax unit — it sits BEFORE spend so the
+    // spend help can speak state-aware). Pick NC: the priced-state path then runs
+    // through the real engine under the enforced CSP — the state pricing is part
+    // of the round trip this walk proves.
+    await page.getByRole('radio', { name: 'North Carolina' }).check({ force: true })
+    await next()
+
     // Spend (+ the explicit period confirm — the figure is ambiguous-band).
     await page.getByLabel('Household spending, all in').fill('7000')
     await page.getByRole('radio', { name: 'Each month' }).check({ force: true })

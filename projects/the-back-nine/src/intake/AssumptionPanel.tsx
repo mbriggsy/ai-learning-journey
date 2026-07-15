@@ -49,7 +49,7 @@ import { CurrencyField, IntegerField, PercentField, SegmentedControl, formatMone
 import { FieldError } from './FieldError'
 import { validateField, personField, type SanityViolation } from './sanity'
 import { healthcarePriced, isDateRoute, type MissingFact } from './intakeMap'
-import { MedicareExtrasFork, writeWorkingYearInvestment } from './questions'
+import { MedicareExtrasFork, StateResidencePicker, writeWorkingYearInvestment } from './questions'
 import './assumptions.css'
 
 export interface AssumptionPanelProps {
@@ -479,6 +479,22 @@ export function AssumptionPanel({
                 />
                 {renderErrors('annualSpendingReal')}
               </>
+            )}
+          </Row>
+
+          {/* Where you’ll retire (the state-tax unit S3) — a household fact like spend. The shared
+              StateResidencePicker IS the edit affordance: the active segment shows the current
+              answer (a state name, or the honest 'not priced yet'), and re-picking re-runs (the
+              SC-vs-GA what-if lever). commitOpen never refuses — any roster value is legal. An
+              UNANSWERED household shows no active segment + the honest not-set note, never a
+              fabricated default. */}
+          <Row seat="retirement-state">
+            <StateResidencePicker
+              value={draft.retirementState}
+              onChange={(v) => commitOpen('retirementState', (d) => ({ ...d, retirementState: v }))}
+            />
+            {draft.retirementState === undefined && (
+              <p className="ap-row__prov">{copy.assumptionStateUnsetNote}</p>
             )}
           </Row>
 

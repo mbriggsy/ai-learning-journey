@@ -52,7 +52,8 @@
  *     spending. QD is subsumed into realization-on-withdrawal (no sourced dividend-yield constant;
  *     the annual-dividend MAGI bump is an OUT-but-disclosed, optimistic-direction boundary — it
  *     sharpens once U3's ACA/IRMAA cliffs land). Worst-case contraction k ≈ 0.74 (the cap-gains
- *     15→20% straddle × the SS torpedo); GROSS_UP_MAX_PASSES stays 128 (proven, see below).
+ *     15→20% straddle × the SS torpedo); GROSS_UP_MAX_PASSES was 128 at M5 — the state-tax unit
+ *     re-derived k_total ≈ 0.78 (the flat state term, no SS torpedo) and raised it to 192 (see below).
  *   - M6a (this): the MFJ→single survivor filing switch. The overlay reads a per-year
  *     {@link HouseholdYear} regime ({@link TaxYearInputs.householdYears}) — supplied by
  *     `simulate.ts`, which owns the per-path death timeline — so filing, the 65+ deduction
@@ -83,9 +84,11 @@ import {
   acaApplicablePercentageEnhanced,
   irmaa,
   partB2026,
+  isPricedState,
   type AcaApplicablePercentageTable,
 } from '@engine/constants'
 import { ordinaryPlusCapitalGainsTax, taxableSocialSecurity } from '@engine/taxCore'
+import { stateIncomeTax } from '@engine/stateTax'
 import {
   acaCliffFillHeadroom,
   bracketEdgeFillHeadroom,
@@ -94,7 +97,7 @@ import {
   type CommittedYearIncome,
 } from '@engine/magiLandscape'
 import { solveAcaFundedGross, fplForHousehold, medicareAnnualCost, acaMagi, irmaaMagi, irmaaTierSurchargeMonthly, hsaQualifiedSpend, type GrossUpSolution, type MagiComponents } from '@engine/healthOverlay'
-import { NEVER_DEPLETED, type DepletionYear, type DrawdownPolicy, type FilingStatus } from '@shared/model'
+import { NEVER_DEPLETED, isRetirementState, type DepletionYear, type DrawdownPolicy, type FilingStatus, type RetirementState } from '@shared/model'
 
 // Filing status is shared model vocabulary (the persisted scenario speaks it too). Re-exported
 // here so existing `@engine/taxOverlay` importers keep their path.
@@ -118,6 +121,12 @@ export interface Household {
    *  is deferred to M6b's schemaVersion-2 shape). */
   readonly owner: OverlayPerson
   readonly spouse?: OverlayPerson
+  /** The household's retirement state of residence (the state-tax unit). ABSENT/undefined ⇒ the
+   *  disclosed-out posture: the state layer is a STRUCTURAL `+ 0` (byte-identical to the spine).
+   *  PRESENT + in `PRICED_STATES` ⇒ that state's income tax folds into the gross-up fixed point +
+   *  `totalTaxPaidReal`. A recognised-but-unbuilt roster code or `'elsewhere'` also takes the `+ 0`
+   *  branch (never the module — a computed-then-zeroed value would perturb the float lineage). */
+  readonly retirementState?: RetirementState
 }
 
 /**
@@ -454,17 +463,30 @@ const JLLS = jointLifeLastSurvivorTable.value
 // shoves that fixed gain block ACROSS a cap-gains rate breakpoint, owing the rate JUMP on the
 // shifted dollars.
 //
-//   k = (m_ord + j) × (1 + ssInclusionSlope)
+//   k = (m_ord + j) × (1 + ssInclusionSlope) + m_state × (1 + stateSSInclusionSlope)
 //
 // where m_ord ≤ 0.37 is the ordinary marginal rate and j is the cap-gains rate jump at a
 // STRADDLED breakpoint (0.15 at the 0→15% point, 0.05 at the 15→20% point; 0 if the gain block
 // straddles neither). M4's worst case was k = 0.37 × 1.85 ≈ 0.685 (top 37% bracket, torpedo
 // uncapped). M5's worst REACHABLE corner is HIGHER: ordinary taxable income parked in the 35%
 // bracket with a realized-gain block straddling the MFJ 15→20% cap-gains breakpoint while the
-// torpedo is still uncapped → k = (0.35 + 0.05) × 1.85 ≈ 0.74. Witness: nonSS pre-tax draw +
+// torpedo is still uncapped → k_fed = (0.35 + 0.05) × 1.85 ≈ 0.74. Witness: nonSS pre-tax draw +
 // conversion ≈ $150k, a huge SS benefit (~$0.8M, keeping taxable-SS uncapped: 0.85·SS still
 // above the inclusion) so ordinary income ≈ $645k → ordinary taxable just under the 15→20%
 // breakpoint with the gain on top, senior bonus long gone, marginal dollar pre-tax-sourced.
+//
+// THE STATE TERM (the state-tax unit — a correctness obligation, insights 006/007). A marginal
+// pre-tax gross dollar now ALSO owes the flat state rate m_state on the state's ordinary base. The
+// roster's income-tax states (NC ≈0.04, PA ≈0.03) EXEMPT Social Security, so `stateSSInclusionSlope
+// = 0` — the state term rides WITHOUT the ×1.85 torpedo — and their FLAT rate has no bracket jump,
+// so the term is a constant m_state ADDED UNIFORMLY across every federal regime (it never shifts
+// WHICH corner is worst). k_state = m_state × (1 + 0) ≈ 0.04 (NC, the higher of the two). So at the
+// federal-worst corner k_total = k_fed + k_state ≈ 0.74 + 0.04 ≈ 0.78 < 1 — still a contraction, and
+// the sup is still the SAME self-limiting cap-gains-straddle corner (the state term lifts every
+// regime's k equally). FUTURE LANDMINE (S2.8, the standing constraint): a GRADUATED state (SC/GA/DE)
+// would add a state marginal rate that VARIES across a STATE bracket edge — a NEW straddle channel
+// that could open a k ≥ 1 corner (the exact insight-007 disjointness risk). Re-derive k the instant a
+// graduated state joins the roster; a FLAT state can only lift k by a constant, never re-order corners.
 //
 // The other corners are all LOWER and mutually DISJOINT by income region: the 37% bracket sits
 // ABOVE both cap-gains breakpoints (j = 0 → k = 0.685); the 0→15% straddle needs the 12% bracket
@@ -477,19 +499,23 @@ const JLLS = jointLifeLastSurvivorTable.value
 // the wrong regime; the cap-gains corner is invisible to a pre-tax-only / large-net probe).
 // THE SUNSET (council 2026-07-09): the senior-bonus phase-out channel exists ONLY in calendar
 // years [2025..2028] — in a post-sunset year that corner vanishes entirely, so per-year k can
-// only SHRINK below the bound above. The k_sup ≈ 0.74 witness never used the bonus channel
-// (senior bonus long gone at ~$645k ordinary), so the bound and 128 passes are year-invariant.
+// only SHRINK below the bound above. The k_total ≈ 0.78 witness never used the bonus channel
+// (senior bonus long gone at ~$645k ordinary), so the bound and 192 passes are year-invariant.
 //
-// 128 passes SUFFICES at k ≈ 0.74 (geometric: ~ln(tax/ε)/ln(1/0.74) ≈ 98 passes even at the
-// self-limiting ~$0.7M tax that corner pins; the unbounded-tax tail sits at the milder k = 0.685
-// → ~122 passes only at a ~$10^13 tax, far beyond any input). The early-exit on convergence keeps
-// the common case cheap; MAX_PASSES stays a FAIL-LOUD backstop — a non-converged year THROWS,
-// never an in-range default (burned/062). The convergence stress sweep in the tests probes the
-// k ≈ 0.74 regime directly (low-basis taxable pool straddling the breakpoints × large SS ×
-// conversions × SMALL net) so the cap can't be silently trimmed toward a value that throws in
-// production for real gain-straddle inputs.
+// 192 passes SUFFICES at k_total ≈ 0.78 (geometric: n ≈ ln(tax/ε)/ln(1/k), ε = 10^-7). Two corners,
+// mirroring the federal derivation: (1) the self-limiting cap-gains-straddle corner k ≈ 0.78 pins a
+// bounded ~$0.7M tax → tax/ε = 7·10^12 → ln(7·10^12)/ln(1/0.78) ≈ 119 passes; (2) the UNBOUNDED-tax
+// top-37%-bracket tail — where j = 0 (the 37% bracket sits ABOVE both cap-gains breakpoints) so
+// k = 0.685 + m_state ≈ 0.725 — bounded CONSERVATIVELY with the sup k = 0.78 at a ~$10^13 tax →
+// tax/ε = 10^20 → ln(10^20)/ln(1/0.78) ≈ 185. So 192 (= the prior 128 × 1.5) clears BOTH corners with
+// margin — the same headroom 128 held
+// over the federal-only 98/122. The early-exit on convergence keeps the common case cheap; MAX_PASSES
+// stays a FAIL-LOUD backstop — a non-converged year THROWS, never an in-range default (burned/062).
+// The convergence stress sweep in the tests probes the k_total ≈ 0.78 regime directly WITH STATE ON at
+// the federal-worst corner (low-basis taxable pool straddling the breakpoints × large SS × NC × SMALL
+// net) so the cap can't be silently trimmed toward a value that throws for real gain-straddle inputs.
 const GROSS_UP_EPSILON = 1e-7 // dollars
-const GROSS_UP_MAX_PASSES = 128
+const GROSS_UP_MAX_PASSES = 192
 
 // =========================================================================
 // Pure federal-tax primitives (M3–M5) — EXTRACTED VERBATIM to `taxCore.ts` (U11 pre-work)
@@ -861,10 +887,18 @@ interface GrossUpContext {
    *  every fold an exact IEEE no-op — reduce-to-spine byte-identical). This is the gross-up feed; the
    *  KTD-9 clamped-working-year IRMAA-only taxable is recorded separately at the history site. */
   readonly ongoingTaxable: number
+  /** The household's retirement state (the state-tax unit). READ only inside the `isPricedState`
+   *  MEMBERSHIP branch below — absent / `'elsewhere'` / an unbuilt roster code take the structural
+   *  `+ 0` no-op (the state module is NEVER called for them; a computed-then-zeroed value would
+   *  perturb the reduce-to-spine float lineage). Year-constant like everything else here. */
+  readonly retirementState?: RetirementState
+  /** The MIN integer age among this year's LIVING members — the household-granularity qualified-age
+   *  gate for a class-based age-gated state (PA 59½). Year-constant; consumed only by the state term. */
+  readonly minLivingAge: number
 }
 
 function solveGrossWithdrawal(net: number, ctx: GrossUpContext): GrossUpSolution {
-  const { drawPool, policy, customOrder, rmd, conversion, taxableBasis, filing, count65, calendarYear, ssBenefit, bracketFillCeiling, ongoingTaxable } = ctx
+  const { drawPool, policy, customOrder, rmd, conversion, taxableBasis, filing, count65, calendarYear, ssBenefit, bracketFillCeiling, ongoingTaxable, retirementState, minLivingAge } = ctx
   const taxableValue = drawPool.taxable
   let gross = net
   for (let pass = 0; pass < GROSS_UP_MAX_PASSES; pass++) {
@@ -879,13 +913,37 @@ function solveGrossWithdrawal(net: number, ctx: GrossUpContext): GrossUpSolution
     // ONE producer SS-§86 / ACA-MAGI / IRMAA-MAGI all ride, KTD-1) + the taxable portion of SS. The
     // realized gain joins provisional's "other income" (lifting taxable SS) but is taxed at
     // preferential rates inside ordinaryPlusCapitalGainsTax — never folded into the ordinary base.
-    const nonSSordinary = Math.max(alloc.pretax, rmd) + conversion + ongoingTaxable
+    const pretaxDistribution = Math.max(alloc.pretax, rmd)
+    const nonSSordinary = pretaxDistribution + conversion + ongoingTaxable
     // Surface the taxable-SS local (M3): the identical value + call as before, so `nextGross` stays
     // byte-identical — now also fed to the returned MagiComponents so acaMagi reads the FLOORED
     // converged locals (never recomputed off a raw-gain ledger; the named sign-inversion).
     const ssBenefitTaxable = taxableSocialSecurity(nonSSordinary + realizedGain, ssBenefit, filing)
     const ordinaryIncome = nonSSordinary + ssBenefitTaxable
-    const nextGross = net + ordinaryPlusCapitalGainsTax(ordinaryIncome, realizedGain, filing, count65, calendarYear)
+    // The state income tax (the state-tax unit) folds in as a SECOND ADDEND beside the federal tax —
+    // INSIDE the fixed point, so the gross is solved to net `net` AFTER both taxes jointly, never
+    // bolted on after convergence. MEMBERSHIP-keyed on `isPricedState` (the red-team fold): absent /
+    // `'elsewhere'` / an unbuilt roster code take the LITERAL `+ 0` STRUCTURALLY (the module is never
+    // called), so the non-state path is byte-identical to the pre-state expression `net + federalTax`
+    // and the reduce-to-spine float lineage is untouched. A priced state's own base is assembled from
+    // these converged channels (NC folds SS out + gains into ordinary; PA age-gates the distribution +
+    // conversion; FL is a structural 0) — the state term rides WITHOUT the SS torpedo (k re-derivation
+    // above). The k_total ≈ 0.78 contraction still converges within GROSS_UP_MAX_PASSES.
+    const federalTax = ordinaryPlusCapitalGainsTax(ordinaryIncome, realizedGain, filing, count65, calendarYear)
+    let nextGross = net + federalTax
+    if (retirementState !== undefined && isPricedState(retirementState)) {
+      nextGross += stateIncomeTax({
+        state: retirementState,
+        filing,
+        calendarYear,
+        pretaxDistribution,
+        conversion,
+        ongoingTaxable,
+        realizedGain,
+        ssBenefitTaxable,
+        minLivingAge,
+      })
+    }
     if (Math.abs(nextGross - gross) < GROSS_UP_EPSILON) {
       // Components key off THIS converging pass's gross (pre-update); the |nextGross − gross| < 1e-7
       // lag is sub-penny — far below the dollar grid the M3 cliff branch quantizes to. Do NOT
@@ -976,6 +1034,23 @@ export function runTaxAwareDecumulation(
     throw new Error(
       '[taxOverlay] healthcareEnabled requires taxEnabled — the ACA PTC is MAGI-driven and MAGI comes from the tax solver',
     )
+  }
+
+  // The state-tax unit's overlay fail-loud backstop (the "BOTH validateParams AND the overlay
+  // backstop" discipline). validateParams shields `simulate`; THIS protects a direct P3/P4 caller.
+  // An out-of-vocabulary retirementState crossing the boundary must THROW — NOT silently take the
+  // unpriced `+ 0` branch: a corrupted `'NC'` that arrived as garbage would silently drop the state
+  // tax, UNDERSTATING tax for a household that meant a priced state (the survival-overstating,
+  // calm-but-wrong direction; burned/062). A recognised roster code (including an unbuilt one) and
+  // `'elsewhere'` pass — they are legitimately unpriced (the byte-identical `+ 0` branch); ABSENT is
+  // the disclosed-out default. Only the ON config carries a household (the OFF anchor has none).
+  if (config.taxEnabled || config.rmdEnabled) {
+    const sc = config.household.retirementState
+    if (sc !== undefined && !isRetirementState(sc)) {
+      throw new Error(
+        `[taxOverlay] household.retirementState "${sc}" is not a known roster state or "elsewhere" — an out-of-vocabulary value would silently take the unpriced +0 branch, understating tax for a household that meant a priced state (burned/062)`,
+      )
+    }
   }
 
   // Overlay fail-loud backstop for the health cost streams (the "BOTH validateParams AND the overlay
@@ -1223,7 +1298,7 @@ export function runTaxAwareDecumulation(
   if (initialPretaxByPerson !== undefined && household) {
     // Finiteness FIRST (insight 008): a NaN entry survives the sum guard below —
     // `Math.abs(NaN − x) > tol` is `false`, so the throw would NOT fire and the NaN would poison
-    // the per-person ledger (tax off → NaN buckets) or run the gross-up to its 128-pass throw (tax
+    // the per-person ledger (tax off → NaN buckets) or run the gross-up to its fail-loud pass-cap throw (tax
     // on). validateParams shields `simulate`, but this is the engine's own fail-loud backstop for a
     // direct caller (a future P3 control / P4 solver computing a split by arithmetic). Reject
     // non-finite / negative entries loudly — never coerce (burned/062).
@@ -1582,6 +1657,20 @@ export function runTaxAwareDecumulation(
       // untouched. ≥ 0 by the cap's fundingNeed clamp.
       const fundingNet = net + medicareCostThisYear + medicareExtrasThisYear - hsaSpendThisYear
 
+      // The state-tax unit: the household's LIVING-age floor for the class-based qualified-age gate
+      // (PA 59½). The living set is resolveYear's rmdOwner/rmdSpouse (living[0]/living[1]); the
+      // aggregate draw + conversion are NOT per-person-attributable (recon §5), so the gate is
+      // household-granularity conservative (all-living-must-be-qualified — see stateIncomeTax).
+      // +Infinity when nobody is alive (defensive; the horizon guarantees ≥1 living), reading as
+      // "qualified". Year-constant, consumed ONLY inside the priced-state branch of the fixed point.
+      const livingPeople = [regime.rmdOwner, regime.rmdSpouse].filter(
+        (p): p is OverlayPerson => p !== undefined,
+      )
+      const stateMinLivingAge =
+        livingPeople.length > 0
+          ? Math.min(...livingPeople.map((p) => ageInSimYear(p, config.household.startCalendarYear, t)))
+          : Number.POSITIVE_INFINITY
+
       // The inner tax gross-up as a closure the ACA solver probes at (fundingNet + a candidate premium).
       // The year-constant inputs are bundled into one NAMED context (no positional transposition risk).
       const grossUpCtx: GrossUpContext = {
@@ -1600,6 +1689,12 @@ export function runTaxAwareDecumulation(
         // clamped working-year taxable rides `ongoingTaxableIrmaaOnly` and lands at the history site
         // below, never here (no phantom gross-up withdrawal, KTD-9). Absent ⇒ `?? 0`, an IEEE no-op.
         ongoingTaxable: ongoingTaxableGrossUp[t] ?? 0,
+        // The state-tax unit: presence-keyed (the membership check lives in solveGrossWithdrawal —
+        // absent ⇒ the field is omitted ⇒ the structural `+ 0` no-op path, reduce-to-spine clean).
+        ...(config.household.retirementState !== undefined
+          ? { retirementState: config.household.retirementState }
+          : {}),
+        minLivingAge: stateMinLivingAge,
       }
       const fundNet = (netTotal: number): GrossUpSolution => solveGrossWithdrawal(netTotal, grossUpCtx)
       // AGE GATE (red-team blocker): ACA prices ONLY when ≥1 living member is pre-65. With every living

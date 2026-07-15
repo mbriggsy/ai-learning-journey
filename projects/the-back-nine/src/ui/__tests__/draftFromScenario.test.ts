@@ -17,6 +17,7 @@ import { draftFromScenario } from '../draftFromScenario'
 import { DEV_SEEDS, type DevSeedKey } from '../devSeeds'
 import { healthcareVintageStamp } from '@engine/constants/health'
 import { taxVintageStamp } from '@engine/constants/tax'
+import { stateTaxVintageStamp } from '@engine/constants/stateTax'
 import { dateVintageStamp } from '@engine/constants'
 import { CURRENT_APP_DEFAULT_VERSION } from '@shared/appDefaults'
 import { scenarioIdentity, type DrawdownOrderKey, type RothConversionPlan, type ScenarioV3 } from '@shared/model'
@@ -113,6 +114,41 @@ describe('draftFromScenario — the U10 control levers round-trip byte-for-byte'
   })
 })
 
+describe('draftFromScenario — the state-tax field round-trips (value AND absence)', () => {
+  it('a PRICED retirementState (NC) survives the strip inverse byte-for-byte (the R7 seat + picker fact reaches the draft, not re-derived)', () => {
+    const withState: ScenarioV3 = { ...retiredV3(), retirementState: 'NC' }
+    const hydrated = draftFromScenario(withState)
+    expect(hydrated.ok).toBe(true)
+    if (!hydrated.ok) return
+    expect(hydrated.draft.retirementState).toBe('NC')
+    const reencoded = scenarioFromDraft(hydrated.draft)
+    expect(reencoded.ready).toBe(true)
+    if (reencoded.ready) expect(reencoded.scenario).toEqual(withState)
+  })
+
+  it("an explicit 'elsewhere' persists as itself (a chosen fact, never collapsed to absence)", () => {
+    const withElsewhere: ScenarioV3 = { ...retiredV3(), retirementState: 'elsewhere' }
+    const hydrated = draftFromScenario(withElsewhere)
+    expect(hydrated.ok).toBe(true)
+    if (!hydrated.ok) return
+    expect(hydrated.draft.retirementState).toBe('elsewhere')
+    const reencoded = scenarioFromDraft(hydrated.draft)
+    if (reencoded.ready) expect(reencoded.scenario.retirementState).toBe('elsewhere')
+  })
+
+  it('ABSENCE is preserved: a never-asked household round-trips with retirementState still undefined (the disclosed-out posture, never defaulted to a state)', () => {
+    const bare = retiredV3()
+    expect(bare.retirementState).toBeUndefined()
+    const hydrated = draftFromScenario(bare)
+    expect(hydrated.ok).toBe(true)
+    if (!hydrated.ok) return
+    expect(hydrated.draft.retirementState).toBeUndefined()
+    const reencoded = scenarioFromDraft(hydrated.draft)
+    expect(reencoded.ready).toBe(true)
+    if (reencoded.ready) expect(reencoded.scenario.retirementState).toBeUndefined()
+  })
+})
+
 describe('scenarioFromDraft — the healthcare vintage stamp (P3-U11, write-time truth)', () => {
   it('every save carries the CURRENT build vintage stamp', () => {
     const r = scenarioFromDraft(DEV_SEEDS.retired)
@@ -141,6 +177,7 @@ describe('scenarioFromDraft — the U13 stamps (write-time truth, the healthcare
     if (!r.ready) return
     expect(r.scenario.taxVintageDetail).toEqual(taxVintageStamp())
     expect(r.scenario.dateVintage).toEqual(dateVintageStamp())
+    expect(r.scenario.stateTaxVintage).toEqual(stateTaxVintageStamp())
     expect(r.scenario.appDefaultVersion).toBe(CURRENT_APP_DEFAULT_VERSION)
     expect(r.scenario.savedAt).toBe(currentEpochDay())
   })
@@ -151,6 +188,9 @@ describe('scenarioFromDraft — the U13 stamps (write-time truth, the healthcare
       savedAt: 18_263, // 2020 — a five-year-old save
       taxVintageDetail: { taxYear: 2019, legalBasis: 'TCJA (pre-OBBBA)' },
       dateVintage: { contributionYear: 2019, blendSnapshotAsOf: '2019-01-01' },
+      // A DRIFTED state-tax stamp (the state-tax unit): an old-build NC profile riding a restored
+      // draft — the drifted-vault clean-badge law (insight 079) demands it re-mint fresh at save.
+      stateTaxVintage: { ncProfile: '{"stale":"nc"}', paProfile: '{"stale":"pa"}', flProfile: '{"stale":"fl"}' },
       appDefaultVersion: 'p0-ancient',
     })
     expect(r.ready).toBe(true)
@@ -158,6 +198,7 @@ describe('scenarioFromDraft — the U13 stamps (write-time truth, the healthcare
     expect(r.scenario.savedAt).toBe(currentEpochDay())
     expect(r.scenario.taxVintageDetail).toEqual(taxVintageStamp())
     expect(r.scenario.dateVintage).toEqual(dateVintageStamp())
+    expect(r.scenario.stateTaxVintage).toEqual(stateTaxVintageStamp())
     expect(r.scenario.appDefaultVersion).toBe(CURRENT_APP_DEFAULT_VERSION)
   })
 
@@ -178,5 +219,28 @@ describe('scenarioFromDraft — the U13 stamps (write-time truth, the healthcare
     // …and the stamp itself re-mints fresh, never replayed from the old vault.
     expect(reencoded.scenario.savedAt).toBe(currentEpochDay())
     expect(reencoded.scenario.savedAt).not.toBe(oldSave.savedAt)
+  })
+
+  it('the DRIFTED-VAULT clean-badge law (state-tax unit): a disk vault whose stateTaxVintage is from an OLD build re-mints fresh on hydrate → scenarioIdentity matches a fresh save (reads CLEAN, not falsely dirty)', () => {
+    const fresh = retiredV3()
+    // Simulate a vault saved under an older build: identical content, a DRIFTED state-tax stamp on
+    // disk (the vintage stamp is IN scenarioIdentity — not savedAt-stripped — so a naive compare
+    // would read dirty on load). The clean-badge law holds because BOTH the persist seed and the
+    // current answer come from scenarioFromDraft under the CURRENT build, which re-mints the stamp.
+    const drifted: ScenarioV3 = {
+      ...fresh,
+      stateTaxVintage: { ncProfile: '{"old":"nc"}', paProfile: '{"old":"pa"}', flProfile: '{"old":"fl"}' },
+    }
+    const hydrated = draftFromScenario(drifted)
+    expect(hydrated.ok).toBe(true)
+    if (!hydrated.ok) return
+    const reencoded = scenarioFromDraft(hydrated.draft)
+    expect(reencoded.ready).toBe(true)
+    if (!reencoded.ready) return
+    // The re-mint erases the drift: the hydrated vault's identity equals a FRESH save's identity
+    // (the dirty-compare operand) — so deriveResultSave reads 'clean', never a false 'dirty' on load.
+    expect(scenarioIdentity(reencoded.scenario)).toEqual(scenarioIdentity(fresh))
+    expect(reencoded.scenario.stateTaxVintage).toEqual(stateTaxVintageStamp())
+    expect(reencoded.scenario.stateTaxVintage).not.toEqual(drifted.stateTaxVintage)
   })
 })

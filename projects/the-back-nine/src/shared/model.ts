@@ -268,6 +268,31 @@ type _FilingCovered = FilingStatus extends (typeof FILING_STATUSES)[number] ? tr
 const _filingsExhaustive: _FilingsCover & _FilingCovered = true
 void _filingsExhaustive
 
+/**
+ * The retirement-state vocabulary (the state-tax unit; the FILING_STATUSES / MEDICARE_EXTRAS_KINDS
+ * precedent — the ONE canonical membership surface the engine's R19 gate, the codec, and the intake
+ * picker read). It is the ROSTER FOOTPRINT + an EXPLICIT `'elsewhere'`:
+ *   - the v1 PRICED subset `{NC, PA, FL}` (engine `PRICED_STATES` ⊆ this — asserted in
+ *     `engine/stateTax.ts`) get their state income tax priced into every headline;
+ *   - the DEFERRED roster `{SC, GA, DE}` are recognised-but-UNPRICED — a valid persistable value the
+ *     engine takes on the structural `+ 0` no-op branch (byte-identical to the spine) until they are
+ *     primary-pinned + built; the v1 picker does not expose them (they collapse to `'elsewhere'`);
+ *   - `'elsewhere'` is an EXPLICIT member: a chosen "somewhere else" is a fact worth persisting,
+ *     distinct from never-asked ABSENT (the field is optional/undefined for a pre-unit or unanswered
+ *     household — the disclosed-out posture verbatim).
+ * A value OUTSIDE this set crossing the untyped worker/codec boundary is corruption (R19 → the calm
+ * indeterminate), NEVER silently treated as `'elsewhere'` — a typo'd `'NC'` silently unpriced would
+ * UNDERSTATE tax for a household that meant a priced state (the survival-overstating, calm-but-wrong
+ * direction). Pricing membership is `PRICED_STATES` (engine); this is the persistable/legal vocabulary.
+ */
+export const STATE_ROSTER = ['NC', 'PA', 'FL', 'SC', 'GA', 'DE', 'elsewhere'] as const
+export type RetirementState = (typeof STATE_ROSTER)[number]
+
+/** Roster membership guard — the enum-membership surface for the R19 gate + the codec (the untyped
+ *  boundary means the compile-time `RetirementState` type is a promise the runtime must still check). */
+export const isRetirementState = (s: string): s is RetirementState =>
+  (STATE_ROSTER as readonly string[]).includes(s)
+
 /** An account split by tax treatment (real dollars). Structurally the engine's
  *  `AccountBuckets`; the canonical plaintext vocabulary lives here in the leaf layer. */
 export interface AccountBalances {
@@ -367,6 +392,15 @@ export interface OverlayParams {
   readonly initialTaxableBasis?: number
   /** Initial filing status; the engine flips it to single at the sampled first death (M6a). */
   readonly filing: FilingStatus
+  /** The household's retirement state of residence (the state-tax unit). ABSENT/undefined ⇒ the
+   *  disclosed-out posture: NO state income tax is priced and the layer is a structural `+ 0` no-op
+   *  (byte-identical to the spine). PRESENT + in `PRICED_STATES` (engine) ⇒ that state's income tax
+   *  folds into the SAME per-year gross-up fixed point as federal tax (a second addend, never bolted
+   *  on after) and into `totalTaxPaidReal`. A recognised-but-unbuilt roster code or `'elsewhere'` is
+   *  a legitimate value the engine also takes on the `+ 0` branch. This flag lives on `params.overlay`
+   *  (the `healthcareEnabled` precedent) so the route's BUILT params carry it — the S5 producer's-output
+   *  state-priced predicate reads it there, never re-deriving geography. R19-validated at the boundary. */
+  readonly retirementState?: RetirementState
   /** Per-year requested Roth conversions, indexed by ABSOLUTE year (clamped to the legal pre-tax
    *  pool net of the non-convertible RMD inside the engine). */
   readonly conversions?: readonly number[]
@@ -1600,6 +1634,25 @@ export interface ScenarioV3 {
    *  absence HERE is not). 'unanswered' is the honest persisted hole for an asked-but-
    *  skipped member — never a fabricated 'typical' adoption. */
   readonly medicareExtrasByPerson?: readonly MedicareExtrasEntryV3[]
+  /** The household's retirement state of residence (the state-tax unit; council
+   *  wf_cc065e3b-bc1 / wf_d04148cb-1e5). ADDITIVE-OPTIONAL within schemaVersion 3 (the
+   *  budget/rothConversion/enhancedSubsidies tolerant-reader precedent — a pre-unit vault
+   *  lacks the field and decodes unchanged; no version bump, no migration). A TOP-LEVEL key
+   *  (never nested), so the R7 assumption-registry compile gate fires (the medicareExtrasByPerson
+   *  reasoning). TWO ABSENCE SEMANTICS, deliberately distinct:
+   *   - the field ABSENT/undefined = the household was never asked (a pre-unit vault or an
+   *     unanswered step) ⇒ the disclosed-out posture VERBATIM: NO state income tax is priced;
+   *   - an EXPLICIT `'elsewhere'` = the household answered "somewhere else / outside the built
+   *     set" — a FACT worth persisting, distinct from never-asked (the intake picker's 4th arm).
+   *  Both are UNPRICED at the engine (only `PRICED_STATES` {NC,PA,FL} members price; every other
+   *  roster code and `'elsewhere'` take the structural `+ 0` no-op, byte-identical to the spine).
+   *  The distinction is NOT a strip-on-revert field like `enhancedSubsidies`: `'elsewhere'` is a
+   *  real answer that persists as itself, never collapsed to absence (a chosen "somewhere else"
+   *  ≠ an unanswered household — the advocate's trust law, S3). The engine flag it feeds
+   *  ({@link OverlayParams.retirementState}) rides `params.overlay` presence-keyed (intakeMap),
+   *  so the route's BUILT params carry it — the S5 producer's-output state-priced predicate reads
+   *  it THERE, never re-deriving geography. `needVocab`-gated at the codec against `STATE_ROSTER`. */
+  readonly retirementState?: RetirementState
   /** P3·U11 — the healthcare vintage stamp (contract #6's four clocks, one atomic object —
    *  a partial stamp set is meaningless). WRITTEN FRESH at every Save from the CURRENT
    *  build's canonical constants (`scenarioFromDraft` overwrites whatever the draft carried
@@ -1637,6 +1690,18 @@ export interface ScenarioV3 {
    *  silently misstates the household stock weight). Minted by `dateVintageStamp()`
    *  (constants/index.ts), WRITTEN FRESH at every save, read by U13 at unlock. */
   readonly dateVintage?: DateVintageV3
+  /** The state-tax vintage stamp (the state-tax unit; the healthcareVintage/taxVintageDetail
+   *  precedent). The federal `taxVintageDetail` keys only on (taxYear, legalBasis) and would
+   *  NEVER fire on a state-only rate change (NC's expected step-down, a Q1-silent change) — the
+   *  state constants live in their OWN `stateTaxConstants` table, so they need their OWN clock
+   *  (074's law: a stamp nothing reads prices nothing). Minted by `stateTaxVintageStamp()`
+   *  (engine/constants/stateTax) from the roster's canonical constants, WRITTEN FRESH at every
+   *  save (write-time truth — the healthcareVintage precedent), READ by `src/store/staleness.ts`
+   *  at unlock. ADDITIVE-OPTIONAL: a pre-unit vault lacks it (absent = not-comparable, quiet —
+   *  never coerced to "unchanged"). Follows the vintage-in-identity rule ({@link scenarioIdentity}
+   *  strips ONLY the wall-time `savedAt`): build-deterministic, so two same-build saves stamp
+   *  identically and an untouched next-day session still reads clean. */
+  readonly stateTaxVintage?: StateTaxVintageV3
 }
 
 /** The three user-forkable arms of the Medicare-extras payment fork plus the honest
@@ -1680,6 +1745,32 @@ export interface DateVintageV3 {
   /** The ticker-blend/TDF static-snapshot as-of date (ISO), aggregated across the
    *  classification table (`BLEND_SNAPSHOT_AS_OF`). */
   readonly blendSnapshotAsOf: string
+}
+
+/** The persisted state-tax vintage (the state-tax unit → the `controls.stateTaxMoved` clock in
+ *  `src/store/staleness.ts`). Each field is one v1-PRICED state's COMPLETE decumulation profile,
+ *  JSON-serialized from `STATE_TAX_PROFILES[state]` (itself assembled from the sourced `.value`s
+ *  — source-bound, insight 022; a drifted producer is a clock that never fires). Why the whole
+ *  profile rather than a current-year rate scalar: the roster's flat rates are HELD FORWARD (the
+ *  NC hawk-veto), so a FUTURE pinned step (e.g. NC 3.49%/2030) changes an out-year the household
+ *  still prices while leaving the current-year rate untouched — a scalar would MISS it, the
+ *  serialized schedule catches it. Why PER-STATE (not one whole-roster digest): the staleness
+ *  reader compares ONLY the household's OWN state's field, so an NC rate change never alarms a
+ *  PA or FL vault (the alarm-when-fine the staleness header refuses is a lie even in the safe
+ *  direction). FL's profile is a constitutional $0 and is byte-identical forever by construction
+ *  — an FL vault never stales. All plain strings (DND-009-clean). A stateless/'elsewhere'/unbuilt
+ *  household is route-gated OUT of the clock entirely (it prices no state tax — nothing to stale). */
+export interface StateTaxVintageV3 {
+  /** North Carolina's full decumulation profile (`STATE_TAX_PROFILES.NC`), serialized — the
+   *  flat-rate schedule (incl. any future pinned step), standard deduction, and every treatment
+   *  flag. Compared ONLY for an `retirementState === 'NC'` household. */
+  readonly ncProfile: string
+  /** Pennsylvania's full decumulation profile (`STATE_TAX_PROFILES.PA`), serialized. Compared
+   *  ONLY for a `retirementState === 'PA'` household. */
+  readonly paProfile: string
+  /** Florida's decumulation profile (`STATE_TAX_PROFILES.FL`, the constitutional $0), serialized.
+   *  Compared ONLY for a `retirementState === 'FL'` household; constant by construction. */
+  readonly flProfile: string
 }
 
 /** `savedAt` codec range gate (insight 046 — a bare finiteness check would admit an epoch-
@@ -1753,10 +1844,12 @@ export const SCENARIO_V3_FIELDS = [
   'drawdownOrder',
   'enhancedSubsidies',
   'medicareExtrasByPerson',
+  'retirementState',
   'healthcareVintage',
   'savedAt',
   'taxVintageDetail',
   'dateVintage',
+  'stateTaxVintage',
 ] as const
 
 // Compile-time: the field array exactly covers ScenarioV3 (both directions).

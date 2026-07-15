@@ -25,6 +25,7 @@ import {
   type SimulationParams,
   type PersonInputs,
   type OverlayParams,
+  type RetirementState,
 } from '@shared/model'
 
 const MALE_65: PersonInputs = {
@@ -477,6 +478,31 @@ describe('R19 engine half + dire-but-honest edges', () => {
     expect(simulate({ ...base, overlay: nanBasisEmptyTaxable }, 1).indeterminate).toBe(true)
   })
 
+  it('R19: retirementState (the state-tax unit) is an enum-membership gate — garbage → indeterminate; valid/unbuilt/absent → accepted', () => {
+    // The state code crosses the same untyped structured-clone worker boundary as `filing`. An
+    // out-of-vocabulary value must return the DEFINED indeterminate (never silently take the unpriced
+    // +0 branch — a corrupted 'NC' silently dropped would UNDERSTATE tax, the survival-overstating sin).
+    const P = 1_000_000
+    const base = makeParams({ initialPortfolio: P, annualSpendingReal: 40_000 })
+    const withState = (retirementState: unknown): OverlayParams => ({
+      taxEnabled: true,
+      rmdEnabled: false,
+      startCalendarYear: 2026,
+      buckets: { taxable: 0, pretax: P, roth: 0 },
+      filing: 'mfj',
+      retirementState: retirementState as OverlayParams['retirementState'],
+    })
+    // Garbage → the calm indeterminate, named.
+    expect(validateParams({ ...base, overlay: withState('California') })).toMatch(/retirementState/)
+    expect(validateParams({ ...base, overlay: withState('nc') })).toMatch(/retirementState/) // wrong case is corruption
+    expect(simulate({ ...base, overlay: withState('California') }, 1).indeterminate).toBe(true)
+    // Priced, recognised-but-unbuilt, and the explicit 'elsewhere' all PASS (null = computable); ABSENT passes.
+    for (const s of ['NC', 'PA', 'FL', 'SC', 'GA', 'DE', 'elsewhere']) {
+      expect(validateParams({ ...base, overlay: withState(s) })).toBeNull()
+    }
+    expect(validateParams({ ...base, overlay: { taxEnabled: true, rmdEnabled: false, startCalendarYear: 2026, buckets: { taxable: 0, pretax: P, roth: 0 }, filing: 'mfj' } })).toBeNull()
+  })
+
   it("P3·U10 — the custom-order biconditional: 'custom' without an order, an order under a named policy, and a non-permutation each → indeterminate", () => {
     // The wire-side mirror of the codec's persisted biconditional (two-gate rule). Without it,
     // a desynced builder would reach allocateWithdrawal's fail-loud mid-path (a calm-error
@@ -661,6 +687,41 @@ describe('U2 overlay wired into simulate (M6a)', () => {
           transitions++
       }
       expect(transitions).toBeGreaterThan(0)
+    })
+
+    it('the retirement state threads end-to-end through simulate (the overlayConfig wiring): NC ≤ PA ≤ off, per-state, elsewhere unpriced', () => {
+      // Proves the simulate → overlayConfig → household.retirementState → gross-up wiring, not just the
+      // direct-caller path — AND that the treatment is PER-STATE (not a generic "any state = same tax").
+      // Both members are 65 (qualified age). NC taxes the conversions + RMD distributions + the gains
+      // realized as RMDs relocate to the taxable bucket; PA at qualified age taxes ONLY those realized
+      // gains (conversions + distributions exempt), so PA < NC; off has no state tax. The state tax is a
+      // pure additional withdrawal on the SAME CRN draws/deaths, so the terminals are MONOTONE per path.
+      const conversions = flatN(55, 50_000)
+      const withStateConv = (retirementState?: RetirementState): SimulationParams => ({
+        ...crnBase,
+        overlay: {
+          taxEnabled: true, rmdEnabled: true, startCalendarYear: 2026,
+          buckets: { taxable: 0, pretax: P, roth: 0 }, filing: 'mfj', conversions,
+          ...(retirementState !== undefined ? { retirementState } : {}),
+        },
+      })
+      const off = dist(simulate(withStateConv(), 2468))
+      const nc = dist(simulate(withStateConv('NC'), 2468))
+      const pa = dist(simulate(withStateConv('PA'), 2468))
+      const elsewhere = dist(simulate(withStateConv('elsewhere'), 2468))
+      const T = off.terminalValuesReal
+      const at = (arr: readonly number[], i: number) => arr[i] ?? 0
+      // 'elsewhere' is unpriced → byte-identical to state-off (the disclosed-out posture / reduce-to-spine).
+      expect(elsewhere.terminalValuesReal).toEqual(T)
+      // Monotone per path: NC (taxes everything) ≤ PA (taxes only gains at qualified age) ≤ off (no state tax).
+      for (let i = 0; i < T.length; i++) {
+        expect(nc.terminalValuesReal[i]!).toBeLessThanOrEqual(at(pa.terminalValuesReal, i) + 1e-6)
+        expect(pa.terminalValuesReal[i]!).toBeLessThanOrEqual(at(T, i) + 1e-6)
+      }
+      // Non-vacuous: NC genuinely prices (some path strictly below off) AND the two states DIFFER (the
+      // per-state treatment threads — NC taxes the conversions PA exempts, so NC is strictly below PA).
+      expect(nc.terminalValuesReal.some((v, i) => v < at(T, i) - 1)).toBe(true)
+      expect(nc.terminalValuesReal.some((v, i) => v < at(pa.terminalValuesReal, i) - 1)).toBe(true)
     })
 
     it('the per-path delta is MONOTONE + jitter-free in the conversion amount (a draw desync would oscillate)', () => {

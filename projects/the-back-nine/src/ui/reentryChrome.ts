@@ -81,6 +81,10 @@ export function composeReentry(scenario: ScenarioV3, report: StalenessReport): R
   const noteLines: string[] = []
   if (report.spine.appDefaultMoved) noteLines.push(copy.stalenessAppDefault)
   if (report.controls.taxMoved) noteLines.push(copy.stalenessTax)
+  // S4/S5.4 — the state-tax clock's own line (fires only for a PRICED household whose own state
+  // profile drifted; `deriveStaleness` gates the per-state comparison, so a non-priced/'elsewhere'
+  // vault never reaches this). Its OWN line, never aliased onto stalenessTax.
+  if (report.controls.stateTaxMoved) noteLines.push(copy.stalenessStateTax)
   if (report.healthcare.moved) noteLines.push(copy.stalenessHealthcare)
   if (report.date.contributionMoved || report.date.blendMoved) {
     // Route-true wording: an all-retired household has no fuck-off date to reference (and

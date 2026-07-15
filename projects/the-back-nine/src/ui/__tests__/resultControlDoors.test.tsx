@@ -270,4 +270,21 @@ describe('the healthcare door — the engine PRICED domain only, categorical (co
       /medicareOnlyPriced/,
     )
   })
+
+  it('Result derives the STATE-tax disclosure from the route-aware BUILT params (pricedStateForRun), never draft.retirementState and never a bare isDateRoute disjunct — the S5 source-bind (insight 080/081)', () => {
+    // The degenerate-overlay divergence household (insight 081 — $0 accounts + no income + no
+    // premium builds NO overlay ⇒ prices NO state tax, even when the draft says NC) is
+    // STRUCTURALLY unreachable through this harness (an account defeats the early return). The
+    // behavioral chain is pinned at both ends — pricedStateForRun's divergence witness
+    // (intakeMap.test) + the components' note-iff-prop pins — so THIS pin closes Result's
+    // derivation line. A revert to draft.retirementState OR an `|| isDateRoute` widening goes red.
+    const src = readFileSync(resolve(__dirname, '../Result.tsx'), 'utf8')
+    expect(src, 'the state derivation reads the producer output').toMatch(
+      /const statePricedNote = useMemo\(\(\) => pricedStateForRun\(snapshot\.draft\)/,
+    )
+    // The derivation line must never re-derive geography or force the date route (insights 080/081).
+    const stateLine = src.split('\n').find((l) => l.includes('const statePricedNote =')) ?? ''
+    expect(stateLine, 'never re-derives from draft.retirementState').not.toMatch(/draft\.retirementState/)
+    expect(stateLine, 'never a bare isDateRoute disjunct for state (insight 080)').not.toMatch(/isDateRoute/)
+  })
 })

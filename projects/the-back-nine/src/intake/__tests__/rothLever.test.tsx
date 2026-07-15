@@ -186,6 +186,23 @@ describe('RothLever — a landed reading discloses funding + omissions beside th
     expect(screen.getByText(copy.rothFundingNote)).toBeInTheDocument()
     expect(screen.getByText(copy.rothOmissionsNote)).toBeInTheDocument()
   })
+
+  // S5 — a PRICED household (statePricedNote present) DROPS the state-tax item from the omissions
+  // list once a reading lands; a non-priced household keeps today's list VERBATIM (the existing
+  // arm above proves the unpriced default). Gated on the run's own priced code.
+  it('a priced household drops the state-tax omission from the landed reading (the unpriced note is gone)', async () => {
+    const preview = deferredPreview()
+    render(
+      <RothLever open draft={draftWith(withPretax)} preview={preview.fn} onApply={noop} onRemove={noop} onClose={noop} statePricedNote="NC" />,
+    )
+    commitField(screen.getByLabelText(copy.leverRothAmountLabel), '50,000')
+    await act(async () => {
+      preview.resolvers.at(-1)!(okPreview(8, 6))
+    })
+    await waitFor(() => expect(document.querySelector('.control-preview__delta')).not.toBeNull())
+    expect(screen.getByText(copy.rothOmissionsNoteStatePriced)).toBeInTheDocument()
+    expect(screen.queryByText(copy.rothOmissionsNote)).toBeNull()
+  })
 })
 
 describe('RothLever — Remove is present only when a conversion is applied', () => {

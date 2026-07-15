@@ -1,0 +1,22 @@
+{
+  "state": "NC",
+  "verifiedOn": "2026-07-15",
+  "status": "held-3.99-flat",
+  "statusConfirmed": true,
+  "nextDue": "2026-09-01",
+  "attests": {
+    "rateSchedule": "Flat 3.99% for TY2026 AND all later years — HELD FORWARD under the hawk veto (§V). The codified 2027+ step-downs (G.S. 105-153.7(a1)) are revenue-trigger-conditional and are NOT priced; a 2027 lookup returns 3.99%, never the unpinned 3.49%.",
+    "standardDeduction": "$25,500 MFJ / $12,750 single — fixed statutory dollars (G.S. 105-153.5(a)(1)), NOT inflation-indexed, NO age-65+/blindness add-on. Survivor transition halves MFJ -> single on the first death (rate unchanged).",
+    "exemptions": "Social Security 100% exempt (G.S. 105-153.5(b)(3)); private IRA/401(k)/RMD withdrawals and the FULL taxable Roth conversion taxed as ordinary income at the flat rate (no age/source condition); dividends + short- AND long-term gains ordinary (no LTCG preference); no local/municipal income tax statewide. OUT (named in the constants, never modeled): Bailey govt-plan carve-out, military-retirement deduction, muni add-backs."
+  },
+  "primarySources": [
+    "N.C.G.S. § 105-153.7 (individual income-tax rate; codified 'After 2025 — 3.99%') + trigger provision § 105-153.7(a1) (SL 2023-134) — ncleg.gov, codified statute fetched 2026-07-15",
+    "N.C.G.S. § 105-153.5(a)(1) (standard-deduction table by filing status; fixed statutory dollars) — ncleg.gov",
+    "N.C.G.S. § 105-153.5(b)(3) (Social Security / Railroad Retirement subtraction) — ncleg.gov",
+    "N.C.G.S. § 105-153.4 (NC taxable income begins at federal AGI) — ncleg.gov",
+    "NCDOR tax-rate + standard-deduction pages (corroboration)"
+  ],
+  "pinTo": "ncleg.gov codified G.S. 105-153.7 / .5(a)(1) / .5(b)(3) / .4 + the FY2025-26 revenue certification (~Aug 2026, Office of the State Controller)",
+  "note": "NC's 3.99% is HELD FORWARD (the hawk veto, wf_d04148cb-1e5 §V): the table holds 3.99% for every year until one of TWO re-checks pins a LOWER rate — (1) the FY2025-26 REVENUE CERTIFICATION (the Office of the State Controller's August-2026 final FY accounting, which conditionally triggers the codified G.S. 105-153.7(a1) 2027+ step-downs), AND (2) a codified-STATUTE re-fetch for the reported July-2026 budget-deal rate schedule (UNLOCATED at primary as of 2026-07-15 — SL 2026-31 / SB 595 is only the IRC-conformity bill and does NOT touch § 105-153.7). Holding 3.99% OVERSTATES out-year tax on the RMD/withdrawal stream = conservative; pricing 3.49%/2027 is the optimistic cardinal-sin direction. The instant a lower rate pins: add a step to ncRateSchedule (src/engine/constants/stateTax.ts) AND stale saved vaults — the StateTaxVintageV3 stamp fingerprints the WHOLE held-forward schedule, so a future out-year step moves the clock even while the current-year rate is unchanged. nextDue is set to the certification checkpoint (2026-09-01), NOT the annual cadence.",
+  "howToClear": "Re-verify the CURRENT NC rate / standard-deduction / exemption figures against the codified G.S. (ncleg.gov) AND check whether the FY2025-26 certification or a primary session law has pinned a LOWER 2027+ rate. Then update this record (verifiedOn + status + attests + nextDue) and, if a rate pinned, add the step to ncRateSchedule + let the vintage stamp stale saved vaults. Do NOT just bump the date — re-verify the law (NC's rate flips the out-year RMD/withdrawal stream)."
+}

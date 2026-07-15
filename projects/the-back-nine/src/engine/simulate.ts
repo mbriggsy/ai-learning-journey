@@ -33,6 +33,7 @@ import {
   DRAWDOWN_ORDER_KEYS,
   DRAWDOWN_POLICIES,
   NEVER_DEPLETED,
+  isRetirementState,
   type AccumulationParams,
   type BandFan,
   type BandFanYear,
@@ -618,6 +619,16 @@ export function validateParams(params: SimulationParams): string | null {
     // bites only a direct runTaxAwareDecumulation caller's static fallback — but R19 validates every
     // boundary input regardless of which path consumes it. (U3-exit code-review-pilot follow-up.)
     if (o.filing !== 'mfj' && o.filing !== 'single') return 'overlay filing invalid'
+    // retirementState (the state-tax unit) is an ENUM-MEMBERSHIP gate exactly like `filing` — it
+    // crosses the untyped structured-clone worker boundary, so an out-of-vocabulary value must return
+    // the defined indeterminate (R19), NEVER silently take the unpriced `+ 0` branch (a corrupted
+    // `'NC'` silently dropped would UNDERSTATE tax for a household that meant a priced state — the
+    // survival-overstating, calm-but-wrong direction). ABSENT/undefined is valid (state unpriced — the
+    // disclosed-out posture); a recognised roster code (including an unbuilt one) or `'elsewhere'`
+    // passes (legitimately unpriced ⇒ byte-identical to the spine). The `as string` reflects the
+    // untyped boundary the compile-time `RetirementState` type cannot police.
+    if (o.retirementState !== undefined && !isRetirementState(o.retirementState as string))
+      return 'overlay retirementState invalid'
     const b = o.buckets
     if (!finiteNonNeg(b.taxable) || !finiteNonNeg(b.pretax) || !finiteNonNeg(b.roth)) return 'overlay buckets invalid'
     // The hsa bucket (U3 · M5) is optional (absent ⇒ 0, reduce-to-spine) but when PRESENT it is
@@ -1307,6 +1318,11 @@ export function simulate(
             filing: overlay.filing,
             owner,
             ...(spouse ? { spouse } : {}),
+            // The state-tax unit: thread the household state (presence-keyed — absent ⇒ the field is
+            // omitted ⇒ the engine's structural `+ 0` no-op, byte-identical to the spine). The engine
+            // keys pricing on `isPricedState` membership; the BUILT `params.overlay.retirementState`
+            // is what the S5 producer's-output predicate reads (never a geography re-derivation).
+            ...(overlay.retirementState !== undefined ? { retirementState: overlay.retirementState } : {}),
           } satisfies Household,
         }
       : { taxEnabled: false, rmdEnabled: false }

@@ -4,11 +4,17 @@ import { join, relative, sep } from 'node:path'
 import {
   ALL_CONSTANTS,
   taxConstants,
+  stateTaxConstants,
   healthConstants,
   contributionConstants,
   socialSecurityConstants,
   catchUpForAge,
   fraMonthsForBirthYear,
+  PRICED_STATES,
+  isPricedState,
+  stateRateForYear,
+  stateStandardDeductionFor,
+  STATE_TAX_PROFILES,
 } from '../index'
 import { isUnsourced } from '../types'
 
@@ -275,10 +281,109 @@ describe('canonical constants — shape & provenance (contract #6)', () => {
   it('ALL_CONSTANTS is DERIVED from the tables, never hand-listed (burned/061)', () => {
     const expected =
       Object.keys(taxConstants).length +
+      Object.keys(stateTaxConstants).length +
       Object.keys(healthConstants).length +
       Object.keys(contributionConstants).length +
       Object.keys(socialSecurityConstants).length
     expect(Object.keys(ALL_CONSTANTS).length).toBe(expected)
+  })
+
+  describe('state income tax — the v1 priced roster {NC, PA, FL} (the state-tax unit, DND/012)', () => {
+    it('PRICED_STATES is exactly {NC, PA, FL}; membership is a type guard, not a truthy check', () => {
+      expect(PRICED_STATES).toEqual(['NC', 'PA', 'FL'])
+      expect(isPricedState('NC') && isPricedState('PA') && isPricedState('FL')).toBe(true)
+      // 'elsewhere', absent, and every unbuilt state are NOT priced (byte-identical-OFF branch).
+      expect(isPricedState('elsewhere')).toBe(false)
+      expect(isPricedState('SC') || isPricedState('GA') || isPricedState('DE')).toBe(false)
+    })
+
+    it('every state entry is sourced (never a throw-on-read gap) + carries its split statute/DOR citation', () => {
+      for (const [key, entry] of Object.entries(stateTaxConstants)) {
+        expect(isUnsourced(entry), `${key} is sourced`).toBe(false)
+        expect(() => entry.value, `${key} reads without throwing`).not.toThrow()
+        expect(entry.citation.length, `${key} carries a citation`).toBeGreaterThan(0)
+        // Freshly transcribed 2026-07-15 — directional until the S6 verify:state-tax pin.
+        expect(entry.directionalUntilPinned, `${key} directional until the re-verify hook confirms it`).toBe(true)
+      }
+    })
+
+    it('the NC rate schedule carries reVerifyEveryBuild — the live-flip watch the verify:state-tax gate hooks (the ACA/spousalRate precedent)', () => {
+      // NC holds 3.99% flat under the hawk veto; the Aug-2026 certification / budget-deal re-fetch
+      // could pin a LOWER 2027+ rate at any build, so the NC rate entry is the every-build flip
+      // watch — verify:state-tax gates its state-tax-nc-last-verified.json record every build.
+      expect(stateTaxConstants.ncRateSchedule.reVerifyEveryBuild).toBe(true)
+      // PA (flat 3.07% since 2004) and FL (constitutional $0) have NO live-flip risk — their
+      // records re-verify ANNUALLY for drift, but the every-build flip flag is NC-only.
+      expect(stateTaxConstants.paRateSchedule.reVerifyEveryBuild, 'PA is stable — not a flip watch').toBeUndefined()
+      expect(stateTaxConstants.flIncomeTax.reVerifyEveryBuild, 'FL is constitutional — not a flip watch').toBeUndefined()
+    })
+
+    /**
+     * THE HAWK-VETO TRAP (wf_d04148cb-1e5, §V; the spirit of insight 022's trap tests): the
+     * codified NC 2027+ step-downs are revenue-trigger-conditional on a certification that does
+     * not yet exist, and the reported budget-deal schedule is unlocated at primary. Pricing
+     * 3.49% for TY2027 is the OPTIMISTIC cardinal-sin direction (understates out-year tax). The
+     * rate is HELD FORWARD at 3.99% for 2026 AND every later year; a 2027 lookup returning
+     * 0.0349 (the exact wrong derivation) must fail here.
+     */
+    it('NC rate is HELD at 3.99% for 2026 AND all later years — the 3.49%/2027 veto (never price the unpinned step-down)', () => {
+      expect(stateRateForYear('NC', 2026)).toBe(0.0399)
+      expect(stateRateForYear('NC', 2027), 'the veto: 2027 holds 3.99%, NOT the unpinned 3.49%').toBe(0.0399)
+      expect(stateRateForYear('NC', 2050), 'held forward indefinitely until a lower rate pins').toBe(0.0399)
+      expect(stateRateForYear('NC', 2027)).not.toBe(0.0349)
+      // A query BEFORE the earliest step is fail-loud (never a silent 0 — burned/062);
+      // a non-integer tax year is fail-loud (insight 020).
+      expect(() => stateRateForYear('NC', 2025)).toThrow(/no rate step/)
+      expect(() => stateRateForYear('NC', 2026.5)).toThrow(/integer/)
+    })
+
+    it('NC — fixed standard deduction $25,500 MFJ / $12,750 single (no 65+ add-on) + all-ordinary treatments', () => {
+      // $25,500 MFJ is pinned HERE by assertion (not the copyGuard substring gate — it collides
+      // with the unrelated 0.85×30,000 SS-taxable figure in healthOverlay.test.ts).
+      expect(stateTaxConstants.ncStandardDeduction.value).toEqual({ mfj: 25_500, single: 12_750 })
+      expect(stateStandardDeductionFor('NC', 'mfj')).toBe(25_500)
+      expect(stateStandardDeductionFor('NC', 'single'), 'survivor SD halves to the single figure (insight 014)').toBe(12_750)
+      expect(stateTaxConstants.ncBaseSystem.value).toBe('federal-agi-derived')
+      expect(stateTaxConstants.ncSocialSecurity.value, 'SS 100% exempt → state term rides without the ×1.85 torpedo').toBe('exempt')
+      expect(stateTaxConstants.ncConversionTreatment.value, 'NC taxes conversions — the ranking-relevant term').toBe('taxed-ordinary')
+      expect(stateTaxConstants.ncRetirementIncome.value).toBe('taxed-ordinary')
+      expect(stateTaxConstants.ncCapitalGains.value, 'no LTCG preference — gains ordinary').toBe('taxed-ordinary')
+    })
+
+    it('PA — flat 3.07% all years, NO standard deduction, class-based, 59½ retirement/conversion gate', () => {
+      expect(stateRateForYear('PA', 2026)).toBe(0.0307)
+      expect(stateRateForYear('PA', 2099), 'flat since 2004, held forward, no scheduled step-down').toBe(0.0307)
+      expect(stateTaxConstants.paStandardDeduction.value, 'No provision — $0 both statuses').toEqual({ mfj: 0, single: 0 })
+      expect(stateStandardDeductionFor('PA', 'mfj')).toBe(0)
+      expect(stateTaxConstants.paBaseSystem.value, 'eight-class system, NOT federal-AGI-derived').toBe('class-based')
+      expect(stateTaxConstants.paQualifiedAge.value, 'the 59½ exemption gate').toBe(59.5)
+      expect(stateTaxConstants.paSocialSecurity.value).toBe('exempt')
+      // The conservative arm: exempt at/after 59½, TAXED below it (the under-59½ conversion
+      // exemption could not be pinned at primary; the date route can reach those ages).
+      expect(stateTaxConstants.paConversionTreatment.value).toBe('taxed-if-under-qualified-age')
+      expect(stateTaxConstants.paRetirementIncome.value).toBe('taxed-if-under-qualified-age')
+      expect(stateTaxConstants.paCapitalGains.value, 'brokerage income at 3.07%, no LTCG preference').toBe('taxed-ordinary')
+    })
+
+    it('FL — a sourced constitutional $0 (never a silent default); the no-income-tax profile', () => {
+      expect(stateTaxConstants.flIncomeTax.value, 'a pinned constitutional $0, not an absent default').toBe(0)
+      expect(stateTaxConstants.flIncomeTax.citation, 'Art. VII §5(a)').toMatch(/Art\. VII/)
+      expect(stateRateForYear('FL', 2026), 'no income tax → $0 rate').toBe(0)
+      expect(stateRateForYear('FL', 2099)).toBe(0)
+      expect(stateStandardDeductionFor('FL', 'mfj')).toBe(0)
+      const fl = STATE_TAX_PROFILES.FL
+      expect(fl.baseSystem).toBe('no-income-tax')
+      expect([fl.ssTreatment, fl.retirementIncomeTreatment, fl.conversionTreatment, fl.capGainsTreatment])
+        .toEqual(['none', 'none', 'none', 'none'])
+      expect([fl.rateSchedule, fl.standardDeduction, fl.qualifiedAge]).toEqual([null, null, null])
+    })
+
+    it('the engine profiles read the sourced entries (no re-typed figure) for every priced state', () => {
+      expect(STATE_TAX_PROFILES.NC.rateSchedule).toBe(stateTaxConstants.ncRateSchedule.value)
+      expect(STATE_TAX_PROFILES.NC.standardDeduction).toBe(stateTaxConstants.ncStandardDeduction.value)
+      expect(STATE_TAX_PROFILES.PA.qualifiedAge).toBe(stateTaxConstants.paQualifiedAge.value)
+      expect(Object.keys(STATE_TAX_PROFILES)).toEqual([...PRICED_STATES])
+    })
   })
 
   describe('C1 contribution limits — tiers, identities, provenance (Notice 2025-67 / Rev. Proc. 2025-19, verbatim-read 2026-06-10)', () => {
@@ -561,6 +666,11 @@ describe('canonical constants — shape & provenance (contract #6)', () => {
       // the §109 super catch-up, the §415(c) ceiling. (Smaller figures like 8,000/1,100
       // are too collision-prone for a substring gate — the shape tests pin them instead.)
       '24500', '11250', '72000',
+      // State tax (single-sourced in stateTax.ts): NC single standard deduction, and the
+      // NC + PA flat rates. NC MFJ $25,500 is DELIBERATELY NOT here — it collides with an
+      // unrelated 0.85×30,000 SS-taxable figure in healthOverlay.test.ts (the exact
+      // collision the comment above names); the state-shape test pins it by assertion instead.
+      '12750', '0.0399', '0.0307',
     ]
     // Underscore-insensitive so 768_700 and 768700 both match.
     const norm = (s: string) => s.replace(/_/g, '')

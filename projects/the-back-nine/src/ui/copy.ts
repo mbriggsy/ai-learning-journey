@@ -74,6 +74,22 @@ export const copy = {
   ssClaimYearPlaceholder: 'e.g. 2032',
   ssSpousalNote:
     'Spousal and survivor benefits are worked out from both of these — there’s nothing extra to enter.',
+  // --- the retirement-state question (the state-tax unit, S3). A HOUSEHOLD-level single step
+  //     placed BEFORE spend (so S5's spendHelp can branch on the answered state). Framed as a
+  //     changeable best guess — non-blocking, never a hard wall, never a silent default. The lead
+  //     names WHY it matters (state income tax on withdrawals) in plain words; the help line is
+  //     honest that only a few states are priced so far and that nothing is assumed for an unpriced
+  //     one. This is the ONLY state-tax disclosure copy S3 owns (S5 owns verdict/omission/spendHelp). ---
+  qStateHeading: 'Where will you live in retirement?',
+  stateResidenceLead:
+    'Where you settle sets the state income tax on the money you take from savings each year — some states tax it, some don’t. A best guess is fine; you can change it whenever your plans firm up.',
+  stateResidenceLegend: 'Where you’ll retire',
+  stateOptionNC: 'North Carolina',
+  stateOptionPA: 'Pennsylvania',
+  stateOptionFL: 'Florida',
+  stateOptionElsewhere: 'Somewhere else — not priced yet',
+  stateResidenceHelp:
+    'So far the tool prices a few states in full. If yours isn’t here yet, pick “Somewhere else” — its state tax stays out of these numbers for now, and nothing is assumed in its place.',
   qSpendHeading: 'What does your life cost?',
   spendLabel: 'Household spending, all in',
   // The ask-for-Medicare-extras BOUNDARY FLIP (F4, fund-first — this wording ships in the same
@@ -87,6 +103,15 @@ export const copy = {
     // landed NOWHERE (the optimistic direction). Federal leaves (the tool prices it); state
     // STAYS INSIDE the figure until the filed state-tax engine unit prices it for real.
     'Everything — housing, food, fun, and the medical costs you pay out of pocket. Leave Medicare premiums out entirely: Part B, its income surcharge, and any Part D, Medigap, or Medicare Advantage premium — the tool handles those separately and adds them on top itself. Leave out federal income tax: the tool works that out from your withdrawals itself. State income tax isn’t priced yet — if your state taxes retirement income, keep that bill inside this figure so it still counts. The whole household, not just the bills that feel like retirement.',
+  // S5.1 — the state-aware spendHelp twin (the state-tax unit). The state step precedes spend,
+  // so a household that named a PRICED state is told the OPPOSITE of the verbatim line above:
+  // leave the state bill OUT (the tool now prices it), exactly like the federal one — keeping it
+  // inside would DOUBLE-COUNT the moment pricing ships (the federal double-count class). Shares
+  // its prefix + suffix with `spendHelp` verbatim; ONLY the state sentence flips (a copyGuard test
+  // pins the shared endpoints so the two can't drift). Selected in the spend step on the DRAFT
+  // answer (intake domain — never the built-params predicate the verdict/lever/sheet read).
+  spendHelpStatePriced:
+    'Everything — housing, food, fun, and the medical costs you pay out of pocket. Leave Medicare premiums out entirely: Part B, its income surcharge, and any Part D, Medigap, or Medicare Advantage premium — the tool handles those separately and adds them on top itself. Leave out federal income tax: the tool works that out from your withdrawals itself. Your state’s income tax is priced by the tool too — leave that bill out of this figure, the same as the federal one. The whole household, not just the bills that feel like retirement.',
   periodMonth: 'Each month',
   periodYear: 'Each year',
   periodLegend: 'That figure is…',
@@ -754,6 +779,12 @@ export const copy = {
     'We assume the conversion’s tax comes out of your withdrawals in the same order as everything else. Paying it from taxable savings instead could make converting look a little better than shown.',
   rothOmissionsNote:
     'Not counted here: state income tax, the net-investment-income tax, and pre-65 health-plan side effects — each could move this picture.',
+  // S5.2 — the state-priced twin (the state-tax unit): the state-tax item DROPS from the list for
+  // a household whose run prices its state (the composeRothOmissionsNote seam gates it on the
+  // producer's-output predicate). The pre-65 clause + NIIT stay (O9 is filed separately — not
+  // widened here). 'roth' prefix ⇒ require-hedge-swept: keeps "could move this picture".
+  rothOmissionsNoteStatePriced:
+    'Not counted here: the net-investment-income tax and pre-65 health-plan side effects — each could move this picture.',
   twoFuturesCaption:
     'How the middle-of-the-road path could run with and without the change, in today’s dollars.',
   sequencingBaselineNote:
@@ -802,6 +833,12 @@ export const copy = {
     'Medicare premiums look back two years at your income — money converted at 63 can show up in the premium bill at 65. Each step is sharp: one dollar over it and the higher charge applies for that whole year.',
   controlHealthOmissionsNote:
     'Not counted here: state income tax, the net-investment-income tax, differences in plan cost-sharing, the benchmark premium itself, state-level subsidy top-ups, and a surviving spouse’s chance to have the Medicare surcharge rechecked sooner — each could move this picture.',
+  // S5.2 — the state-priced twin (the state-tax unit), gated INDEPENDENTLY of the other homes
+  // (insight 078 — different population, own chrome): the state-tax item DROPS for a priced
+  // household. Everything else (NIIT, cost-sharing, benchmark, top-ups, the survivor recheck)
+  // stays. 'control' prefix ⇒ require-hedge-swept: keeps "could move this picture".
+  controlHealthOmissionsNoteStatePriced:
+    'Not counted here: the net-investment-income tax, differences in plan cost-sharing, the benchmark premium itself, state-level subsidy top-ups, and a surviving spouse’s chance to have the Medicare surcharge rechecked sooner — each could move this picture.',
   // The extras block's lead (the ask-for-Medicare-extras unit, F5's door home). Deliberately
   // NOT a control* key (the require-hedge sweep is for plan-moving readouts; this is a
   // mechanism disclosure — the universal gates still apply). Mechanism-named (rule 37):
@@ -830,6 +867,24 @@ export const copy = {
     'Medicare’s costs for the two of you are already in these numbers — the Part B premium, its income surcharge, and extra coverage: a drug plan, a supplement plan, or a Medicare Advantage premium.',
   verdictMedicareResidual:
     'Those are the pieces this tool adds by itself. The rare Part A premium stays inside the spending you gave us. State income tax isn’t counted — a real yearly bill in a taxing state — and premiums are held flat in today’s dollars, so the true picture could sit tighter than shown.',
+  // S5.2/S5.3 — the verdict residual SPLIT into clause-parts (the monolith above stays as the
+  // UNPRICED render, verbatim). For a state-PRICED household the embedded "state income tax isn’t
+  // counted" clause DIES and is REPLACED by the outcome-scoped affirmation naming the state,
+  // composed in `stateTaxDisclosure.composeVerdictMedicareResidual` as `lead + affirm + tail`.
+  // The affirmation ALWAYS ships WITH the narrowed residual (the `…Tail` "premiums held flat"
+  // clause) — never affirm-alone (that would imply ALL of state tax is optimized; the rails stay
+  // FEDERAL in v1, provably state-neutral for a flat roster — §V/S2.8, so this is outcome
+  // language, never an optimization claim). A copyGuard drift-pin asserts `verdictMedicareResidual`
+  // starts with `…Lead` and ends with `…Tail`, so the split can't silently diverge from the
+  // shipped monolith. `verdict` prefix ⇒ free-numeral-gated: NAME the state, never a rate.
+  verdictResidualLead:
+    'Those are the pieces this tool adds by itself. The rare Part A premium stays inside the spending you gave us.',
+  verdictResidualTail:
+    ' — and premiums are held flat in today’s dollars, so the true picture could sit tighter than shown.',
+  verdictResidualStateNC: 'Your North Carolina state income tax is reflected in these numbers',
+  verdictResidualStatePA:
+    'Your Pennsylvania state income tax is reflected in these numbers, usually a small piece since Pennsylvania leaves most retirement income untaxed',
+  verdictResidualStateFL: 'Florida has no state income tax, so there’s no state bill on your withdrawals',
   rothMedicareResidualNote:
     'The income surcharge a conversion can trip two years later is now part of these numbers. One modeling choice remains: premiums are held level in today’s dollars, so a conversion that crosses a surcharge step could look a shade easier here than in real life.',
 
@@ -874,6 +929,11 @@ export const copy = {
   assumptionDrawdownName: 'Withdrawal order',
   assumptionRothName: 'Roth conversions',
   assumptionRegimeName: 'Health-subsidy rules',
+  // The retirement-state row (the state-tax unit, S3): the editable "where you’ll retire" pick —
+  // a changeable best guess, edit → re-run (the SC-vs-GA what-if lever). The picker's own legend
+  // (stateResidenceLegend) labels the row; this note names the disclosed-out posture HONESTLY when
+  // the household has not answered — never a fabricated default state.
+  assumptionStateUnsetNote: 'Not set yet — no state income tax is in these numbers.',
   // The ONE real R7-editable methodology knob (the F1/F3 ruling). Its UNSAFE direction is
   // disclosed in the help — too LOW understates the survivor's need (methodology.ts).
   assumptionSurvivorRatioLabel: 'Spending if one of you is on your own, as a share of today’s',
@@ -945,6 +1005,11 @@ export const copy = {
   stalenessAppDefault:
     'We’ve updated our default planning assumptions since your save — this reading uses the new ones.',
   stalenessTax: 'Tax rules have been updated since your save — this reading uses today’s.',
+  // S4/S5.4 — the state-tax staleness clock's own line (the `controls.stateTaxMoved` predicate):
+  // a priced household's state rules moved since its save. Its OWN line, never aliased onto
+  // stalenessTax — the two clocks fire independently (an NC rate step must not read as a federal
+  // change, and vice versa).
+  stalenessStateTax: 'State tax rules have been updated since your save — this reading uses today’s.',
   // (stalenessSeniorBonus was REMOVED by the U13 ultramode review 2026-07-09: the crossing
   // changes nothing about a saved answer — see the supersession note in staleness.ts.)
   stalenessHealthcare:

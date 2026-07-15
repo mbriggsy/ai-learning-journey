@@ -40,12 +40,14 @@ import {
   type SimulationParams,
   type OverlayParams,
   type PersonContributionStreams,
+  type RetirementState,
   type TickerClassification,
 } from '@shared/model'
 import { buildCandidateParams, DATE_SEARCH_PATHS, type DateSearchInput } from '@engine/dateSearch'
 import { productionMarket } from '@engine/reference/methodology'
 import { findBlendRow, stockWeightForBlend } from '@engine/reference/tickerBlend'
 import { acaAgeRatingCurve, medicareExtrasTypicalMonthly } from '@engine/constants/health'
+import { isPricedState, type PricedState } from '@engine/constants/stateTax'
 import type { ScenarioDraft } from '@store/memoryModel'
 import { compileBudget } from '@budget/budgetToSpending'
 import { annualAdditionsCeilingFor, contributionCeilingFor, isEmployerPlanKind } from './sanity'
@@ -552,6 +554,15 @@ function buildOverlay(d: ScenarioDraft, horizonYears: number): OverlayParams | u
     pretaxByPerson,
     ...(taxable > 0 ? { initialTaxableBasis: basis } : {}),
     filing: d.filing,
+    // The household's retirement state (the state-tax unit) — PRESENCE-KEYED: an absent draft
+    // field writes NO overlay field (the disclosed-out posture; reduce-to-spine is structural,
+    // never a default — an 'elsewhere'/unbuilt code is a legit value the engine takes on the `+ 0`
+    // no-op). BOTH routes thread it through this ONE builder: buildSpineParams reads it directly,
+    // buildDateInput carries it on `params.overlay` (swept per candidate via `...overlayBase`).
+    // The S5 producer's-output state-priced predicate reads THIS BUILT `overlay.retirementState`
+    // (never `draft.retirementState`) — so the degenerate-overlay household (the early-return
+    // above ⇒ no overlay ⇒ no state field) correctly prices no state tax (insight 081).
+    ...(d.retirementState !== undefined ? { retirementState: d.retirementState } : {}),
     ...(healthcareOn
       ? {
           healthcareEnabled: true,
@@ -679,6 +690,43 @@ export function medicareOnlyPriced(d: ScenarioDraft): boolean {
  *  structurally priced; Result's `isDateRoute` term short-circuits first). */
 export function spineMedicarePriced(d: ScenarioDraft): boolean {
   return buildSpineParams(d)?.overlay?.healthcareEnabled === true
+}
+
+/** Roster-filter a BUILT overlay's `retirementState` to a PRICED code (or `undefined`). The ONE
+ *  place the S5 disclosure turns a built-params field into a "priced?" answer: an absent field,
+ *  `'elsewhere'`, and every recognised-but-UNBUILT roster state (SC/GA/DE) fall through to
+ *  `undefined` (isPricedState is roster membership, NEVER a truthy string check). */
+function pricedOverlayState(code: RetirementState | undefined): PricedState | undefined {
+  return code !== undefined && isPricedState(code) ? code : undefined
+}
+
+/** The SPINE route's "which priced state did THIS run price?", read off `buildSpineParams`' OWN
+ *  overlay output — the producer's OUTPUT, NEVER `draft.retirementState` (insight 081: the
+ *  degenerate-overlay $0-portfolio/no-income household builds NO overlay ⇒ NO `retirementState`
+ *  field ⇒ prices no state tax, even when the draft says 'NC'). `buildSpineParams` returns null on
+ *  the date route, so this is spine-only by construction (undefined there). */
+export function spineStatePriced(d: ScenarioDraft): PricedState | undefined {
+  return pricedOverlayState(buildSpineParams(d)?.overlay?.retirementState)
+}
+
+/** The DATE route's own read — off `buildDateInput`'s `overlayBase` (`params.overlay`), the exact
+ *  vector every swept candidate inherits. Read HERE (not via a bare `isDateRoute` disjunct): the
+ *  Medicare `isDateRoute ||` shortcut works only because `dateSearch` forces `healthcareEnabled`
+ *  on every candidate — but it does NOT force state pricing (roster-gated), so an 'elsewhere'
+ *  date-route household must read UNPRICED, never a false "counted" (insight 080's exact
+ *  recurrence). `buildDateInput` returns null on the spine route ⇒ undefined there. */
+export function dateStatePriced(d: ScenarioDraft): PricedState | undefined {
+  return pricedOverlayState(buildDateInput(d)?.params.overlay?.retirementState)
+}
+
+/** The route-aware S5 state-priced predicate: the PricedState code THIS run priced, else
+ *  undefined. A route-safe UNION of the two producers' outputs (each is undefined on the OTHER
+ *  route — `buildSpineParams`/`buildDateInput` return null off-route), so it needs NO
+ *  `isDateRoute` disjunct: the forbidden `isDateRoute || spineStatePriced` would falsely price
+ *  every date-route household, 'elsewhere' included. Result threads the result to every disclosure
+ *  home; each derives its boolean gate as `!== undefined`. */
+export function pricedStateForRun(d: ScenarioDraft): PricedState | undefined {
+  return spineStatePriced(d) ?? dateStatePriced(d)
 }
 
 /** Resolve the Medicare-extras payment fork to per-person MONTHLY dollars (the ask-for-

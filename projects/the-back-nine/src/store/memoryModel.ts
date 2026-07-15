@@ -134,6 +134,14 @@ export interface ScenarioDraft
     // codec-enforced at Save); the ONE write-shape helper (`writeMedicareExtras`,
     // questions.tsx) always emits complete two-entry arrays ('unanswered' fills), so
     // per-person holes never exist and no hole-tolerant draft twin is needed.
+    // `retirementState` (the state-tax unit) rides the draft so intake/panel can read+write it
+    // (the R7 seat + the picker). A TOP-LEVEL key (never nested under `health`) so the
+    // assumption-registry compile gate fires. It is a USER FACT, not a stamped-fresh field:
+    // scenarioFromDraft carries it via `...draft` (unlike the vintage stamps below). ABSENT =
+    // never-asked (disclosed-out); an explicit 'elsewhere' persists as a fact. `stateTaxVintage`
+    // (the state-tax clock) rides the same stamped-fresh-at-save contract as the other vintages
+    // (scenarioFromDraft overwrites it from the current build's constants; the draft's copy exists
+    // for the shape tie and for U13's staleness reader, which reads the RAW-decoded model).
     Pick<
       ScenarioV3,
       | 'annualSpendingReal'
@@ -143,10 +151,12 @@ export interface ScenarioDraft
       | 'drawdownOrder'
       | 'enhancedSubsidies'
       | 'medicareExtrasByPerson'
+      | 'retirementState'
       | 'healthcareVintage'
       | 'savedAt'
       | 'taxVintageDetail'
       | 'dateVintage'
+      | 'stateTaxVintage'
     >
   >,
     Pick<

@@ -1,13 +1,14 @@
 import { useEffect, useRef, useState, type ReactNode, type Ref } from 'react'
 import { copy, slots } from '@ui/copy'
 import type { PersonDraft, ScenarioDraft } from '@store/memoryModel'
-import type { MedicareExtrasEntryV3, WorkStatus } from '@shared/model'
+import type { MedicareExtrasEntryV3, RetirementState, WorkStatus } from '@shared/model'
 import { fraMonthsForBirthYear } from '@engine/constants/socialSecurity'
 import { medicareExtrasTypical, medicareExtrasTypicalMonthly } from '@engine/constants/health'
+import { isPricedState } from '@engine/constants/stateTax'
 import { budgetGoverns, isActiveAt, isRampedBudget } from '@budget/budgetModel'
 import { budgetYearZeroFullTotal, commitBudgetPatch } from '@budget/budgetToSpending'
 import { BudgetBuilder } from './BudgetBuilder'
-import { CurrencyField, IntegerField, NameField, SegmentedControl, formatMoney } from './fields'
+import { CurrencyField, IntegerField, NameField, SegmentedControl, formatMoney, type SegmentOption } from './fields'
 import { FieldError } from './FieldError'
 import { accountField, personField, SS_CLAIM_MIN, SS_CLAIM_MAX } from './sanity'
 import { AccountEntry, kindLabel } from './AccountEntry'
@@ -395,7 +396,15 @@ function SpendRawFace({
     <>
       <CurrencyField
         labelKey="spendLabel"
-        helpKey="spendHelp"
+        // S5.1 — state-aware on the DRAFT answer (the state step precedes spend). A PRICED-state
+        // household is told to leave its state bill OUT (the tool now prices it); 'elsewhere' /
+        // unanswered / an unbuilt state keeps the keep-it-inside instruction VERBATIM. Reads the
+        // DRAFT (intake domain), NOT the built-params predicate the verdict/lever/sheet read.
+        helpKey={
+          api.draft.retirementState !== undefined && isPricedState(api.draft.retirementState)
+            ? 'spendHelpStatePriced'
+            : 'spendHelp'
+        }
         field="annualSpendingReal"
         value={displayed}
         invalid={api.violationsFor('annualSpendingReal').length > 0}
@@ -511,6 +520,73 @@ const spendStep: StepDef = {
   headingKey: 'qSpendHeading',
   fields: ['annualSpendingReal'],
   render: (api) => <SpendStepBody api={api} />,
+}
+
+// ---------------------------------------------------------------------------
+// The retirement-state question (the state-tax unit, S3). A HOUSEHOLD-level
+// single-question step (ONE state per run — NOT Paired) placed BEFORE spendStep,
+// so S5's spendHelp can conditionalize on the answered state (the placement is
+// load-bearing). A changeable best guess: NON-BLOCKING (fields: []), never a
+// hard wall, never a silent geographic default (ABSENT = never-asked
+// disclosed-out; an explicit 'elsewhere' persists as a fact).
+// ---------------------------------------------------------------------------
+
+/** The v1 picker arms: the PRICED roster {NC, PA, FL} + the honest 'elsewhere'. An arm exists
+ *  ONLY for a state whose pick CHANGES the answer (a priced state) plus the honest
+ *  outside-the-set arm — never a theater option that collapses to 'elsewhere' (advocate's trust
+ *  law). The DEFERRED roster {SC, GA, DE} are recognised-but-unpriced values the persistence
+ *  layer accepts but the picker does not expose; they ride 'elsewhere' until built. */
+const STATE_PICKER_OPTIONS: ReadonlyArray<SegmentOption<RetirementState>> = [
+  { value: 'NC', labelKey: 'stateOptionNC' },
+  { value: 'PA', labelKey: 'stateOptionPA' },
+  { value: 'FL', labelKey: 'stateOptionFL' },
+  { value: 'elsewhere', labelKey: 'stateOptionElsewhere' },
+]
+
+/** The retirement-state picker — the ONE control shared by the intake step and the
+ *  AssumptionPanel seat (the MedicareExtrasFork precedent: one face, host-supplied commit seam).
+ *  Reuses the vertical SegmentedControl (native radios in a fieldset/legend; active-by-weight+fill,
+ *  NEVER hue — the color-blind law; a visible focus ring via `.segment:has(input:focus-visible)`) —
+ *  no new component, no dropdown. The active segment IS the current answer (a state name, or the
+ *  honest 'Somewhere else — not priced yet'); NOTHING is active when the household has not answered
+ *  (the honest not-set face — never a fabricated default). EXPORTED for the panel's R7 seat. */
+export function StateResidencePicker({
+  value,
+  onChange,
+}: {
+  value: RetirementState | undefined
+  onChange: (v: RetirementState) => void
+}) {
+  return (
+    <SegmentedControl<RetirementState>
+      legendKey="stateResidenceLegend"
+      name="retirement-state"
+      vertical
+      value={value}
+      options={STATE_PICKER_OPTIONS}
+      onChange={onChange}
+    />
+  )
+}
+
+const stateStep: StepDef = {
+  id: 'retirement-state',
+  headingKey: 'qStateHeading',
+  // NON-BLOCKING: no advance-gate field. A best guess is never required to move on (the
+  // oopStep/medicareExtras optional pattern) — an empty fields[] means attempt-to-advance finds
+  // no rule to fire, so the step never walls the flow; the household keeps the disclosed-out
+  // posture until it answers, never a silent default.
+  fields: [],
+  render: (api) => (
+    <>
+      <p className="field-help">{copy.stateResidenceLead}</p>
+      <StateResidencePicker
+        value={api.draft.retirementState}
+        onChange={(v) => api.update((d) => ({ ...d, retirementState: v }))}
+      />
+      <p className="field-help">{copy.stateResidenceHelp}</p>
+    </>
+  ),
 }
 
 const healthQuoteStep: StepDef = {
@@ -1072,7 +1148,10 @@ const anyNearMedicare = (d: ScenarioDraft): boolean =>
 export function intakeSteps(draft: ScenarioDraft): readonly StepDef[] {
   const steps: StepDef[] = [namesStep, workStep]
   if (anyWorking(draft)) steps.push(incomeStep)
-  steps.push(ssStep, spendStep)
+  // The retirement-state step lands UNCONDITIONALLY, right BEFORE spend — the placement is
+  // load-bearing (S5's spendHelp branches on the answered state; a step after spend would leave
+  // spendHelp generic).
+  steps.push(ssStep, stateStep, spendStep)
   if (anyPre65OrUnknown(draft)) steps.push(healthQuoteStep)
   steps.push(oopStep)
   if (anyWorking(draft)) steps.push(workIncomeStep)

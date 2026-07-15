@@ -513,3 +513,31 @@ describe('Escape / Close', () => {
     expect(props.onCommitEdit).not.toHaveBeenCalled() // leaving neither commits nor un-commits
   })
 })
+
+// ─── the retirement-state row (the state-tax unit S3 — the changeable best guess) ─────────────
+describe('the retirement-state row', () => {
+  it('renders the 4 honest picker arms and commits a re-pick through commitOpen (edit → re-run)', () => {
+    const { props } = renderPanel() // mixedDraft: retirementState undefined
+    for (const label of [copy.stateOptionNC, copy.stateOptionPA, copy.stateOptionFL, copy.stateOptionElsewhere]) {
+      expect(screen.getByLabelText(label)).toBeInTheDocument()
+    }
+    // The shared SegmentedControl fires onChange + onClick (the idempotent double-write the
+    // period-toggle relies on), so assert the COMMITTED value from the last call, not a count.
+    fireEvent.click(screen.getByLabelText(copy.stateOptionPA))
+    expect(props.onCommitEdit).toHaveBeenCalled()
+    expect(commitAndApply(props.onCommitEdit, mixedDraft).retirementState).toBe('PA')
+  })
+
+  it('an UNANSWERED household shows the honest not-set note and no active arm (never a fabricated default)', () => {
+    renderPanel() // mixedDraft: retirementState undefined
+    expect(screen.getByText(copy.assumptionStateUnsetNote)).toBeInTheDocument()
+    expect((screen.getByLabelText(copy.stateOptionNC) as HTMLInputElement).checked).toBe(false)
+  })
+
+  it('an ANSWERED household shows the picked state as the active arm and drops the not-set note', () => {
+    const withState = draftWith(() => ({ ...mixedDraft, retirementState: 'NC' as const }))
+    renderPanel({ snapshot: snap(withState) })
+    expect((screen.getByLabelText(copy.stateOptionNC) as HTMLInputElement).checked).toBe(true)
+    expect(screen.queryByText(copy.assumptionStateUnsetNote)).toBeNull()
+  })
+})

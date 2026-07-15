@@ -26,6 +26,8 @@ import type { ScenarioDraft } from '@store/memoryModel'
 import type { ControlPreview } from '@store/controlPreview'
 import { copy } from '@ui/copy'
 import { composeHealthSheet, composeMedicareExtrasLines, composeRegimeFutures } from '@ui/healthSheetChrome'
+import { composeControlHealthOmissionsNote } from '@ui/stateTaxDisclosure'
+import type { PricedState } from '@engine/constants/stateTax'
 import type { BandSavedAnchor } from '@ui/bandAnnotations'
 
 import type { Announcer } from './a11y'
@@ -72,6 +74,11 @@ export interface HealthcareSheetProps {
   readonly preview: (control: TwoArmControl) => Promise<ControlPreview> | null
   /** True ⇒ the main-thread fallback is live (the no-worker disclosure rule). */
   readonly previewBlocking?: boolean
+  /** The state-tax unit (S5): TRUE (the PRICED state code is present) ⇒ the state-tax item DROPS
+   *  from this sheet's omissions note — gated INDEPENDENTLY of the verdict + Roth homes (insight
+   *  078: the door population is its own, own chrome). The run's OWN pricing decision
+   *  (`pricedStateForRun`, Result), never geography (insight 080/081); presentational (insight 048). */
+  readonly statePricedNote?: PricedState
   /** Commit the picked regime — the caller writes the ONE key (set `true` / strip) atomically
    *  and recomputes. `enhanced === false` IS the escape ("back to current law"). */
   readonly onApply: (enhanced: boolean) => void
@@ -84,7 +91,7 @@ export interface HealthcareSheetProps {
   readonly savedAnchor?: BandSavedAnchor
 }
 
-export function HealthcareSheet({ open, draft, readout, preview, previewBlocking = false, onApply, onClose, restoreFallback, savedAnchor }: HealthcareSheetProps) {
+export function HealthcareSheet({ open, draft, readout, preview, previewBlocking = false, statePricedNote, onApply, onClose, restoreFallback, savedAnchor }: HealthcareSheetProps) {
   const announcerRef = useRef<Announcer | null>(null)
   const applied: Regime = draft.enhancedSubsidies === true ? 'enhanced' : 'reverted'
   const [picked, setPicked] = useState<Regime>(applied)
@@ -195,7 +202,7 @@ export function HealthcareSheet({ open, draft, readout, preview, previewBlocking
           preview — they stand on the sheet unconditionally (the ready-arm `notes` slot would
           hide them until a comparison ran; a disclosed omission rides beside the numbers). */}
       <p className="field-help">{copy.controlHealthSurvivorNote}</p>
-      <p className="field-help">{copy.controlHealthOmissionsNote}</p>
+      <p className="field-help">{composeControlHealthOmissionsNote(statePricedNote !== undefined)}</p>
 
       <div className="control-sheet__actions">
         <button

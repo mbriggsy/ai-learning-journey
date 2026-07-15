@@ -6,6 +6,7 @@
 import { describe, expect, it } from 'vitest'
 import { taxVintageStamp, TAX_YEAR, legalBasis, taxConstants } from '../tax'
 import { dateVintageStamp, CONTRIBUTION_YEAR } from '../index'
+import { stateTaxVintageStamp, STATE_TAX_PROFILES, ncRateSchedule } from '../stateTax'
 import { BLEND_SNAPSHOT_AS_OF, TICKER_BLEND_ROWS } from '../../reference/tickerBlend'
 
 describe('taxVintageStamp — the controls-surface clock producer', () => {
@@ -45,8 +46,46 @@ describe('taxVintageStamp — the controls-surface clock producer', () => {
     ).toEqual({
       taxYear: 2026,
       legalBasis: 'OBBBA — One Big Beautiful Bill Act, signed 2025-07-04',
-      contentDigest: 1_538_881_492, // the 2026/OBBBA table content — re-pin ONLY per the message above
+      // Re-pinned 2026-07-15 (state-tax unit S0): the `stateIncomeTax` SCOPE SENTINEL's status
+      // value was reclassified OUT-but-disclosed → priced-for-roster {NC,PA,FL}. NO federal
+      // vintage bump — the state's DATED figures live in the separate `stateTaxConstants` table
+      // (its own StateTaxVintageV3 clock), so no saved vault recomputes a federal figure from
+      // this edit; the sentinel is documentation. A conscious re-pin, not a silent value drift.
+      contentDigest: 947_260_549,
     })
+  })
+})
+
+describe('stateTaxVintageStamp — the state-tax clock producer', () => {
+  it('source-binds each field to the serialized per-state profile (STATE_TAX_PROFILES[state])', () => {
+    expect(stateTaxVintageStamp()).toEqual({
+      ncProfile: JSON.stringify(STATE_TAX_PROFILES.NC),
+      paProfile: JSON.stringify(STATE_TAX_PROFILES.PA),
+      flProfile: JSON.stringify(STATE_TAX_PROFILES.FL),
+    })
+  })
+
+  it('is deterministic within a build (two calls, one stamp — the dirty-compare / round-trip guard depend on it)', () => {
+    expect(stateTaxVintageStamp()).toEqual(stateTaxVintageStamp())
+  })
+
+  /**
+   * THE WHOLE-SCHEDULE BINDING (074's law: a stamp nothing reads prices nothing): the NC rate is
+   * HELD FORWARD (the hawk veto), so a FUTURE pinned step (the expected 3.49% self-correction)
+   * changes an out-year the household prices while leaving the current-year rate untouched. The
+   * profile is the WHOLE schedule, so such a step MOVES the fingerprint — a current-year scalar
+   * would miss it and the saved vault would silently recompute with the new out-year rate.
+   */
+  it('a future rate step added to a held-forward schedule MOVES the NC fingerprint (the out-year step a scalar would miss)', () => {
+    const before = stateTaxVintageStamp().ncProfile
+    // Simulate a pinned 2030 step-down landing (the S6 self-correction path) WITHOUT mutating the
+    // shipped constant: the fingerprint is over STATE_TAX_PROFILES.NC, whose rateSchedule IS
+    // ncRateSchedule.value — a new step there changes the serialized profile.
+    const withFutureStep = JSON.stringify({
+      ...STATE_TAX_PROFILES.NC,
+      rateSchedule: { steps: [...ncRateSchedule.value.steps, { fromYear: 2030, rate: 0.0349 }] },
+    })
+    expect(withFutureStep).not.toBe(before) // the clock WOULD fire on the real edit
   })
 })
 

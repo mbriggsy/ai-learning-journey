@@ -1,0 +1,19 @@
+{
+  "state": "FL",
+  "verifiedOn": "2026-07-15",
+  "status": "constitutional-zero",
+  "statusConfirmed": true,
+  "nextDue": "2027-07-15",
+  "attests": {
+    "rateSchedule": "No state personal income tax — a sourced constitutional $0 (Fla. Const. Art. VII § 5(a)), NOT an absent default. No rate, no brackets, no year schedule.",
+    "standardDeduction": "N/A — no income tax (the no-income-tax profile carries null; resolves to $0).",
+    "exemptions": "A Roth conversion, a pre-tax withdrawal, Social Security, and taxable gains all incur $0 FL state tax in every year — only federal tax applies. CONSTITUTIONALLY PROHIBITED (not merely absent), changeable only by a 60%-voter amendment."
+  },
+  "primarySources": [
+    "Fla. Const. Art. VII § 5(a) (no state personal income tax on natural persons; constitutionally prohibited) — verbatim-verified 2026-07-15",
+    "No income-tax constitutional amendment on the Nov-2026 ballot (checked 2026-07-15)"
+  ],
+  "pinTo": "Fla. Const. Art. VII § 5(a)",
+  "note": "FL's presence in the priced roster is exactly what makes 'no state income tax — nothing to add for Florida' an HONEST affirmation rather than a silent unbuilt-state omission (burned/062). Re-verified ANNUALLY (nextDue one year out): confirm Art. VII § 5(a) is unchanged and no 60%-voter income-tax amendment has passed. Such a change would be extraordinary; until then the pinned constitutional $0 holds and no StateTaxVintageV3 bump is expected.",
+  "howToClear": "Re-verify Fla. Const. Art. VII § 5(a) is unchanged and no income-tax constitutional amendment has passed. Then update this record (verifiedOn + status + nextDue). Do NOT just bump the date."
+}

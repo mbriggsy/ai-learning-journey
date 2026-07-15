@@ -17,6 +17,7 @@
     "lint": "eslint .",
     "verify:bundle": "tsx scripts/verify-prod-bundle.ts",
     "verify:aca": "tsx scripts/verify-aca-status.ts",
+    "verify:state-tax": "tsx scripts/verify-state-tax.ts",
     "verify:csp": "playwright test",
     "verify:fit": "playwright test --config playwright.fit.config.ts",
     "verify:doc-stats": "tsx scripts/verify-doc-stats.ts",

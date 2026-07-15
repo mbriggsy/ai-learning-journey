@@ -552,4 +552,31 @@ describe('P3-U11 follow-up — the priced-Medicare disclosure on the verdict sur
     expect(residual.textContent).toContain(note) // appended in the SAME paragraph
     expect(container.querySelectorAll('.cs-medicare-residual')).toHaveLength(1) // never a second block
   })
+
+  // S5 — the state-tax affirmation SWAPS the residual's embedded state clause IN PLACE (same
+  // paragraph, no new row): a priced household names its state and reads "reflected"; undefined
+  // reads the "isn’t counted" words. Gated on `statePricedNote` (the run's own priced code).
+  it('a PRICED state (NC) swaps the residual clause to the outcome-scoped affirmation — one block, still text-reachable', () => {
+    const { container } = render(
+      <ConfidenceStatement
+        view={{ kind: 'reading', ...READING_FIXTURES['on-track'] }}
+        medicarePricedNote
+        statePricedNote="NC"
+      />,
+    )
+    const residual = container.querySelector('.cs-medicare-residual')!
+    expect(residual.textContent).toContain('North Carolina')
+    expect(residual.textContent).toContain('reflected in these numbers')
+    expect(residual.textContent, 'the unpriced clause dies for a priced household').not.toContain('isn’t counted')
+    expect(residual, 'plain text, never decoration').not.toHaveAttribute('aria-hidden')
+    expect(container.querySelectorAll('.cs-medicare-residual')).toHaveLength(1) // no new row
+  })
+
+  it('an UNPRICED verdict (statePricedNote undefined) keeps the "isn’t counted" residual verbatim', () => {
+    const { container } = render(
+      <ConfidenceStatement view={{ kind: 'reading', ...READING_FIXTURES['on-track'] }} medicarePricedNote />,
+    )
+    const residual = container.querySelector('.cs-medicare-residual')!
+    expect(residual.textContent).toBe(copy.verdictMedicareResidual)
+  })
 })

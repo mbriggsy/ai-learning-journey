@@ -72,6 +72,7 @@ import type { BudgetCategory, ScenarioV3 } from '@shared/model'
 import { appDefaultEraFor, CURRENT_APP_DEFAULT_VERSION } from '@shared/appDefaults'
 import { healthcareVintageStamp } from '@engine/constants/health'
 import { taxVintageStamp } from '@engine/constants/tax'
+import { stateTaxVintageStamp, isPricedState } from '@engine/constants/stateTax'
 import { dateVintageStamp } from '@engine/constants'
 
 /** Which healthcare clock moved. The v1 gate renders ONE healthcare line off `moved`; the
@@ -116,6 +117,13 @@ export interface StalenessReport {
   readonly controls: {
     /** The bracket-vintage stamp compare (`taxVintageDetail` vs `taxVintageStamp()`). */
     readonly taxMoved: boolean
+    /** The state-tax vintage clock (the state-tax unit): the household's OWN priced state's
+     *  profile moved (`stateTaxVintage` vs `stateTaxVintageStamp()`). ROUTE-GATED two ways —
+     *  quiet for a stateless/'elsewhere'/unbuilt household (it prices no state tax, so nothing
+     *  can be stale), and PER-STATE (only the household's own state's serialized profile is
+     *  compared, so an NC rate step never alarms a PA/FL vault — the alarm-when-fine the header
+     *  refuses). FL is a constitutional $0, byte-identical forever ⇒ an FL vault never fires. */
+    readonly stateTaxMoved: boolean
   }
   readonly healthcare: {
     readonly moved: boolean
@@ -177,6 +185,34 @@ export function deriveStaleness(scenario: ScenarioV3, todayEpochDay: number): St
   const taxMoved =
     savedTax !== undefined &&
     (savedTax.taxYear !== currentTax.taxYear || savedTax.legalBasis !== currentTax.legalBasis)
+
+  // ── controls: the state-tax clock (the state-tax unit) ──────────────────────────────
+  // Route-gated to the household's OWN priced state: a stateless / 'elsewhere' / unbuilt-roster
+  // household prices no state tax (nothing to stale — isPricedState is false), and an NC vault is
+  // compared ONLY against the current NC profile (never PA/FL — per-state, not whole-roster, so
+  // an NC step-down cannot alarm a PA or FL vault; the alarm-when-fine the header refuses is a lie
+  // even in the safe direction). A pre-unit vault lacks the stamp (absent = not-comparable,
+  // quiet). FL's profile is a constitutional $0, constant by construction ⇒ an FL vault never
+  // fires. The serialized profile catches a FUTURE pinned rate step the current-year rate misses.
+  const savedStateTax = scenario.stateTaxVintage
+  const hhState = scenario.retirementState
+  let stateTaxMoved = false
+  if (savedStateTax !== undefined && hhState !== undefined && isPricedState(hhState)) {
+    const currentStateTax = stateTaxVintageStamp()
+    const savedProfile =
+      hhState === 'NC'
+        ? savedStateTax.ncProfile
+        : hhState === 'PA'
+          ? savedStateTax.paProfile
+          : savedStateTax.flProfile
+    const currentProfile =
+      hhState === 'NC'
+        ? currentStateTax.ncProfile
+        : hhState === 'PA'
+          ? currentStateTax.paProfile
+          : currentStateTax.flProfile
+    stateTaxMoved = savedProfile !== currentProfile
+  }
 
   // ── healthcare: the four clocks (acaVerifiedOn deliberately excluded — see header) ──
   const currentHealth = healthcareVintageStamp()
@@ -240,14 +276,19 @@ export function deriveStaleness(scenario: ScenarioV3, todayEpochDay: number): St
 
   // The two-predicate split (header): rulebook drift vs calendar-passage prompts.
   const rulesMoved =
-    appDefaultMoved || taxMoved || movedClocks.length > 0 || contributionMoved || blendMoved
+    appDefaultMoved ||
+    taxMoved ||
+    stateTaxMoved ||
+    movedClocks.length > 0 ||
+    contributionMoved ||
+    blendMoved
   const anyStale = rulesMoved || expiredLines.length > 0
 
   return {
     elapsed,
     wallYear,
     spine: { appDefaultMoved },
-    controls: { taxMoved },
+    controls: { taxMoved, stateTaxMoved },
     healthcare: { moved: movedClocks.length > 0, movedClocks },
     date: { contributionMoved, blendMoved },
     budget: { expiredLines },

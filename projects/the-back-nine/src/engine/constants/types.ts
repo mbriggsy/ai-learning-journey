@@ -139,6 +139,53 @@ export interface JointLifeLastSurvivorTable {
   readonly byOwnerThenSpouse: Readonly<Record<number, readonly number[]>>
 }
 
+// ---- State income-tax value shapes (the state-tax unit) ---------------------
+
+/** How a state assembles its taxable base — the trap the broad brush ignored. NC starts
+ *  from FEDERAL AGI and applies its own standard deduction (`federal-agi-derived`); PA is a
+ *  stand-alone EIGHT-CLASS system with NO linkage to federal AGI (`class-based` — the engine
+ *  assembles PA's base from its own converged channels, never a rate on the federal figure);
+ *  FL levies NO income tax at all (`no-income-tax`). */
+export type StateBaseSystem = 'federal-agi-derived' | 'class-based' | 'no-income-tax'
+
+/** How a state taxes ONE decumulation income stream (SS, pre-tax withdrawals/RMDs,
+ *  Roth-conversion income, taxable-account gains). `taxed-ordinary` folds the stream into
+ *  the state's ordinary base at the flat rate; `exempt` never enters the base;
+ *  `taxed-if-under-qualified-age` is EXEMPT at/after the qualified age but TAXED before it
+ *  (PA's 59½ retirement-plan gate — the conservative arm below the gate); `none` is the
+ *  no-income-tax state (FL). Never a bare boolean — the age-gated case is a third state. */
+export type StateIncomeTreatment =
+  | 'taxed-ordinary'
+  | 'exempt'
+  | 'taxed-if-under-qualified-age'
+  | 'none'
+
+/** One flat-rate step: the `rate` takes effect in tax year `fromYear` and is HELD FORWARD
+ *  until a later step supersedes it. */
+export interface StateRateStep {
+  readonly fromYear: number
+  readonly rate: number
+}
+
+/** A flat state income-tax rate schedule — ASCENDING `steps`, HELD FORWARD (the latest step
+ *  whose `fromYear` ≤ the query year wins; a query BEFORE the earliest step is fail-loud,
+ *  never a silent 0 — burned/062). A flat-forever state carries ONE step. A legislated or
+ *  revenue-triggered step-down is added ONLY once it is primary-pinned — the NC hawk-veto
+ *  posture: hold the HIGHER rate (conservative: overstates tax) until a lower rate pins.
+ *  The year is CONSUMED at lookup (insight 074) so a future pinned step-down actually
+ *  prices instead of being a dead narration note. */
+export interface StateFlatRateSchedule {
+  readonly steps: readonly StateRateStep[]
+}
+
+/** A state standard deduction by filing status (fixed-dollar per the state statute). NC is
+ *  fixed / not-indexed / no 65+ add-on; PA is $0 both (its guide's "No provision"); a
+ *  no-income-tax state (FL) carries `null` in the profile (not applicable, not $0). */
+export interface StateStandardDeduction {
+  readonly mfj: number
+  readonly single: number
+}
+
 // ---- Healthcare value shapes (U3) -------------------------------------------
 
 /** One band of the ACA premium-tax-credit applicable-percentage schedule (IRC

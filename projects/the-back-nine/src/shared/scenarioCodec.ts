@@ -36,6 +36,7 @@ import {
   SAVED_AT_EPOCH_DAY_MIN,
   SEXES,
   SPEND_ENTRY_PERIODS,
+  STATE_ROSTER,
   TICKER_CLASSIFICATION_CHOICES,
   WORK_STATUSES,
   type AnyScenario,
@@ -558,6 +559,16 @@ function checkV3Fields(o: Obj): void {
       }
     })
   }
+  // The retirement state (the state-tax unit; additive-optional). needVocab against the SINGLE-
+  // SOURCED STATE_ROSTER (model.ts) inside the tolerant-reader guard: a pre-unit vault lacks the
+  // key and passes unchanged. An out-of-vocab string is corruption named LOUD (never silently
+  // treated as 'elsewhere' — a typo'd 'NC' silently unpriced would UNDERSTATE tax for a household
+  // that meant a priced state, the calm-but-wrong direction). 'elsewhere' is an EXPLICIT member —
+  // a chosen "somewhere else" persists as a fact, distinct from never-asked ABSENT (not a
+  // strip-on-revert field: it is never collapsed to absence).
+  if (o.retirementState !== undefined) {
+    needVocab(o, 'retirementState', STATE_ROSTER, 'scenario')
+  }
   // P3·U11 — the healthcare vintage stamp (additive-optional; one atomic object — a partial
   // stamp set is meaningless, so every field is required when the object is present; the
   // extras-typical vintage is the one ADDITIVE-OPTIONAL member — a pre-extras-unit stamp
@@ -606,6 +617,18 @@ function checkV3Fields(o: Obj): void {
     needObject(dv, path)
     needInteger(dv, 'contributionYear', path)
     needString(dv, 'blendSnapshotAsOf', path)
+  }
+  // The state-tax vintage stamp (the state-tax unit; additive-optional; one atomic object — a
+  // partial stamp set is meaningless, so every field is required when the object is present; the
+  // healthcareVintage/taxVintageDetail precedent). Each field is a serialized per-state profile
+  // (a plain string); the staleness reader diffs the household's own state's string.
+  if (o.stateTaxVintage !== undefined) {
+    const sv = o.stateTaxVintage
+    const path = 'scenario.stateTaxVintage'
+    needObject(sv, path)
+    needString(sv, 'ncProfile', path)
+    needString(sv, 'paProfile', path)
+    needString(sv, 'flProfile', path)
   }
 }
 

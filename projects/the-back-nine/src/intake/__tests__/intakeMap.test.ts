@@ -11,6 +11,9 @@ import {
   missingRequiredFacts,
   resolveMedicareExtrasMonthly,
   spineMedicarePriced,
+  spineStatePriced,
+  dateStatePriced,
+  pricedStateForRun,
 } from '../intakeMap'
 import { contributionCeilingFor } from '../sanity'
 import { validateParams } from '@engine/simulate'
@@ -493,6 +496,116 @@ describe('R40 — the other-income construct wires into the overlay (the early-r
     const d = incomeOnlyDraft()
     expect(buildSpineParams(d)!.overlay?.healthcareEnabled).toBe(true)
     expect(spineMedicarePriced(d)).toBe(true)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// The state-tax unit (S4): retirementState threads draft → params.overlay on BOTH
+// builders, PRESENCE-KEYED both ways (an absent draft field writes NO overlay field —
+// the disclosed-out posture, reduce-to-spine is structural, never a default). The S5
+// producer's-output state-priced predicate reads THIS built `overlay.retirementState`,
+// so the degenerate-overlay household (no overlay) must carry no state field at all.
+// ---------------------------------------------------------------------------
+describe('the state-tax unit — retirementState threads to params.overlay (both routes, presence-keyed)', () => {
+  it('spine route: a PRICED state (NC) threads onto overlay.retirementState', () => {
+    const params = buildSpineParams({ ...completeSpineDraft(), retirementState: 'NC' })!
+    expect(params.overlay!.retirementState).toBe('NC')
+  })
+
+  it("spine route: an explicit 'elsewhere' threads as itself (a legit value the engine takes on the +0 branch — persisted as a fact, never collapsed)", () => {
+    const params = buildSpineParams({ ...completeSpineDraft(), retirementState: 'elsewhere' })!
+    expect(params.overlay!.retirementState).toBe('elsewhere')
+  })
+
+  it('spine route: an ABSENT draft field writes NO overlay field (presence-keyed — the planted-absence arm; a default here would break reduce-to-spine)', () => {
+    const params = buildSpineParams(completeSpineDraft())! // completeSpineDraft carries no retirementState
+    expect('retirementState' in params.overlay!).toBe(false)
+  })
+
+  it('date route: the field threads onto params.overlay AND is Y-invariant across the candidate sweep (rides ...overlayBase, never re-derived per candidate)', () => {
+    const input = buildDateInput({ ...completeDateDraft(), retirementState: 'PA' })!
+    expect(input.params.overlay!.retirementState).toBe('PA')
+    for (let y = 0; y <= DATE_OFFSET_WINDOW_TOP; y += 1) {
+      const candidate = buildCandidateParams(input, y, DATE_SEARCH_PATHS.provisional)
+      expect(candidate.overlay!.retirementState, `candidate Y=${y}`).toBe('PA')
+    }
+  })
+
+  it('date route: an ABSENT draft field writes NO overlay field (presence-keyed both ways)', () => {
+    const input = buildDateInput(completeDateDraft())! // no retirementState
+    expect('retirementState' in input.params.overlay!).toBe(false)
+  })
+
+  it('the degenerate-overlay household ($0 accounts, no income, no premium) builds NO overlay EVEN with a state set — so the S5 state-priced predicate reads unpriced (insight 081; the existing degenerate arm stays green)', () => {
+    const d = base({
+      people: [
+        retiredPerson({ birthYear: 1958, currentAge: 68, retirementAge: 64, pia: 0 }),
+        retiredPerson({ name: 'S', sex: 'female', birthYear: 1958, currentAge: 68, retirementAge: 64, pia: 0 }),
+      ],
+      health: { irmaaMagiSeed: [80_000, 80_000] },
+      retirementState: 'NC',
+    })
+    const params = buildSpineParams(d)
+    expect(params).not.toBeNull()
+    // The early-return fires UPSTREAM of the overlay assembly: no overlay ⇒ the state field has
+    // nowhere to attach ⇒ the run prices no state tax (the disclosed-out posture is preserved).
+    expect(params!.overlay).toBeUndefined()
+  })
+})
+
+// ---------------------------------------------------------------------------
+// The state-tax unit (S5): the PRODUCER'S-OUTPUT state-priced predicate — read off the route's
+// OWN built-params overlay decision, roster-gated, NEVER draft.retirementState (insight 081) and
+// NEVER a bare isDateRoute disjunct (insight 080). These are the seams Result threads to every
+// disclosure home; the compose-side (which words each home shows) is tested in stateTaxDisclosure.
+// ---------------------------------------------------------------------------
+describe('the state-tax unit (S5) — the producer-output state-priced predicate (route-aware, roster-gated)', () => {
+  const spineWith = (state: ScenarioDraft['retirementState']) => ({ ...completeSpineDraft(), retirementState: state })
+  const dateWith = (state: ScenarioDraft['retirementState']) => ({ ...completeDateDraft(), retirementState: state })
+
+  it('spine route: each PRICED roster state reads its OWN code (NC/PA/FL); the date reader is null there', () => {
+    for (const s of ['NC', 'PA', 'FL'] as const) {
+      expect(spineStatePriced(spineWith(s)), `spineStatePriced ${s}`).toBe(s)
+      expect(pricedStateForRun(spineWith(s)), `pricedStateForRun ${s}`).toBe(s)
+      // buildDateInput returns null on the spine route ⇒ the date reader makes no claim.
+      expect(dateStatePriced(spineWith(s)), `dateStatePriced null on spine ${s}`).toBeUndefined()
+    }
+  })
+
+  it("spine route: 'elsewhere', an ABSENT field, and a recognised-but-UNBUILT roster state (SC) all read UNPRICED", () => {
+    expect(spineStatePriced(spineWith('elsewhere')), "'elsewhere'").toBeUndefined()
+    expect(spineStatePriced(completeSpineDraft()), 'absent').toBeUndefined()
+    expect(spineStatePriced(spineWith('SC')), 'SC is roster-recognised but UNBUILT ⇒ not priced').toBeUndefined()
+    expect(pricedStateForRun(spineWith('SC'))).toBeUndefined()
+  })
+
+  it('date route: a PRICED state reads its own code off buildDateInput’s overlayBase (the spine reader is null there)', () => {
+    expect(dateStatePriced(dateWith('NC')), 'dateStatePriced NC').toBe('NC')
+    expect(pricedStateForRun(dateWith('NC')), 'pricedStateForRun NC (date)').toBe('NC')
+    expect(spineStatePriced(dateWith('NC')), 'spineStatePriced null on date').toBeUndefined()
+  })
+
+  it("date route, OUT OF ROSTER: an 'elsewhere' date household reads UNPRICED — the bare isDateRoute disjunct is FORBIDDEN (insight 080; dateSearch forces healthcare, NOT state pricing)", () => {
+    expect(dateStatePriced(dateWith('elsewhere')), "date 'elsewhere'").toBeUndefined()
+    expect(pricedStateForRun(dateWith('elsewhere')), "the run prices no state tax for an 'elsewhere' date household").toBeUndefined()
+    // An ABSENT field on the date route is likewise unpriced.
+    expect(pricedStateForRun(completeDateDraft())).toBeUndefined()
+  })
+
+  it('the DEGENERATE-OVERLAY household ($0 accounts, no income, no premium) reads UNPRICED even with the draft set to NC (insight 081: it builds NO overlay ⇒ prices NO state tax; the divergence witness)', () => {
+    const degenerate = base({
+      people: [
+        retiredPerson({ birthYear: 1958, currentAge: 68, retirementAge: 64, pia: 0 }),
+        retiredPerson({ name: 'S', sex: 'female', birthYear: 1958, currentAge: 68, retirementAge: 64, pia: 0 }),
+      ],
+      health: { irmaaMagiSeed: [80_000, 80_000] },
+      retirementState: 'NC',
+    })
+    // The draft SAYS NC, but the producer's output (no overlay) prices nothing — the predicate
+    // MUST agree with the run, never the geography. (A draft.retirementState re-derivation would
+    // wrongly read 'NC' here — the killed mutant.)
+    expect(spineStatePriced(degenerate)).toBeUndefined()
+    expect(pricedStateForRun(degenerate)).toBeUndefined()
   })
 })
 

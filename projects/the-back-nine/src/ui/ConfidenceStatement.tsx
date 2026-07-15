@@ -43,6 +43,8 @@ import { TwoTierHeadline } from './TwoTierHeadline'
 import { floorRelief } from './twoTier'
 import { formatAxisDollar } from './money'
 import { composeVerdictReading } from './verdictSentence'
+import { composeVerdictMedicareResidual } from './stateTaxDisclosure'
+import type { PricedState } from '@engine/constants/stateTax'
 import { focusHeading, useLiveAnnouncer } from '@intake/a11y'
 import { ConfidenceBandPanel } from '@viz/ConfidenceBandPanel'
 import {
@@ -121,6 +123,13 @@ export interface ConfidenceStatementProps {
    *  Rendered only with `medicarePricedNote` (it qualifies the residual's claims); absent ⇒
    *  the residual renders verbatim (an entered/affirmed household needs no typical caveat). */
   readonly medicareExtrasTypicalNote?: string
+  /** The state-tax unit (S5): the PRICED state THIS run priced, or undefined. Swaps the residual's
+   *  embedded state clause IN PLACE — a priced household reads the outcome-scoped affirmation
+   *  naming its state; undefined (not priced / 'elsewhere' / unbuilt / degenerate overlay) reads
+   *  today's "isn't counted" words verbatim. Result owns the ONE route-aware decision
+   *  (`pricedStateForRun` off the built params, never geography/ages — insight 080/081); this stays
+   *  a dumb prop renderer (insight 048). Rendered inside the SAME residual paragraph — no new row. */
+  readonly statePricedNote?: PricedState
   /** P3·U13 — TRUE when any staleness clock fired at unlock (IntakeApp's re-entry gate):
    *  the verdict wears the standing "figured fresh under today's rules" line in its
    *  subordinate region — the Q1 disclosure rides WITH the verdict, never after it.
@@ -160,7 +169,7 @@ function buildPlaceholderBand(annotations: readonly XAnnotation[]): Indeterminat
   }
 }
 
-export function ConfidenceStatement({ view, focusSignal, actionsSlot, medicarePricedNote = false, medicareExtrasTypicalNote, stalenessNote = false, sheetOpen = false, savedAnchor }: ConfidenceStatementProps) {
+export function ConfidenceStatement({ view, focusSignal, actionsSlot, medicarePricedNote = false, medicareExtrasTypicalNote, statePricedNote, stalenessNote = false, sheetOpen = false, savedAnchor }: ConfidenceStatementProps) {
   const headingRef = useRef<HTMLHeadingElement>(null)
   // Announce on the FIRST landing only (the undefined→defined edge) — the shared once-per-landing
   // contract (mirrors FuckOffDate). The spine's two recomputes are byte-identical, so its key never
@@ -409,7 +418,7 @@ export function ConfidenceStatement({ view, focusSignal, actionsSlot, medicarePr
                 <p
                   className={`cs-medicare-residual${medicareExtrasTypicalNote !== undefined ? ' cs-medicare-residual--typical' : ''}`}
                 >
-                  {copy.verdictMedicareResidual}
+                  {composeVerdictMedicareResidual(statePricedNote)}
                   {medicareExtrasTypicalNote !== undefined ? ` ${medicareExtrasTypicalNote}` : ''}
                 </p>
               </>

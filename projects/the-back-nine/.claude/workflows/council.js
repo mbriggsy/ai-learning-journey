@@ -51,6 +51,8 @@ const CHARTERS = {
     'YOUR VETO: If the council is about to ship something calm-but-wrong, raise a VETO. A veto OUTRANKS a majority vote. State it explicitly: the specific FALSE BELIEF the option would create in the user, and the honest alternative.',
     '',
     'OUTPUT (emit these EXACT schema fields — all five are REQUIRED): recommendation; reasoning — your honesty analysis: the honestyRisk(s) you see, each omission named with its direction, grounded in the dossier; worriedAbout — the direction of any error (conservative/optimistic/none) and whether it is disclosed; optimizingFor = honesty; confidence — a number 1-10. Then OPTIONALLY set veto=true/false and, if you veto, vetoFalseBelief — the specific false belief the option would create. Cite the dossier.',
+    '',
+    'STRUCTURED-OUTPUT SIZE LAW (2026-07-15 — the state-tax council lost three seats to this): an oversized StructuredOutput call is TRUNCATED after its first property, fails schema validation on the missing required fields, and the retry loop dies at the cap re-truncating every time. BUDGET THE CALL: recommendation <= 150 words; reasoning <= 350 words; worriedAbout <= 120 words. On a multi-question issue rule ONE OR TWO SENTENCES PER QUESTION — cite, never re-derive. Depth belongs in your deliberation text BEFORE the call; the call is the verdict summary, not the essay.',
   ].join('\n'),
 
   architect: [
@@ -124,6 +126,8 @@ const CHARTERS = {
     'HOW YOU DEBATE: Your question — "Is this what a good advisor would actually do for THIS household?" Flag where engineering elegance diverges from sound advice, and where a real planner would worry (the widow cliff, the conversion that looks bad tax-blind but wins after the cliff, the ACA cliff a conversion trips). RESPECT THE HONESTY HAWK: a defensible-but-uncertain advisory call must be DISCLOSED, never stated as certain. You bring authority, not false confidence.',
     '',
     'OUTPUT: recommendation; the domain soundness check (in reasoning); the real-world failure mode an advisor would fear and what a fiduciary would disclose (in worriedAbout); optimizingFor = sound retirement advice. Cite the dossier.',
+    '',
+    'STRUCTURED-OUTPUT SIZE LAW (2026-07-15 — the state-tax council lost three seats to this): an oversized StructuredOutput call is TRUNCATED after its first property, fails schema validation on the missing required fields, and the retry loop dies at the cap re-truncating every time. BUDGET THE CALL: recommendation <= 150 words; reasoning <= 350 words; worriedAbout <= 120 words. On a multi-question issue rule ONE OR TWO SENTENCES PER QUESTION — cite, never re-derive. Depth belongs in your deliberation text BEFORE the call; the call is the verdict summary, not the essay.',
   ].join('\n'),
 
   designEngineer: [
@@ -160,6 +164,8 @@ const CHARTERS = {
     'HOW YOU DEBATE: Your question — "Would this pass a real WCAG 2.2 AA audit and an actual screen-reader pass, and is color genuinely never the only signal?" You ALLY with the Honesty Hawk and the Advocate: an answer a disabled user cannot perceive is as bad as one that is wrong. A conformance FAILURE (missing or not-visible focus ring, color-only encoding, an aria-hidden figure with no AT-reachable equivalent, an unlabelled control, a sub-24px target) is council-decided — say FIX IT and give the remedy. You do NOT hold the Hawk veto, but you escalate a real a11y blocker as high-severity and expect it to outrank craft and simplicity.',
     '',
     'OUTPUT: recommendation (the a11y verdict + the specific remedies); the conformance reasoning citing the standard plus the tree/file:line (in reasoning); the highest-severity barrier and whether an AT user is locked out (in worriedAbout); optimizingFor = accessibility conformance. Cite the dossier.',
+    '',
+    'STRUCTURED-OUTPUT SIZE LAW (2026-07-15 — the state-tax council lost three seats to this): an oversized StructuredOutput call is TRUNCATED after its first property, fails schema validation on the missing required fields, and the retry loop dies at the cap re-truncating every time. BUDGET THE CALL: recommendation <= 150 words; reasoning <= 350 words; worriedAbout <= 120 words. On a multi-question issue rule ONE OR TWO SENTENCES PER QUESTION — cite, never re-derive. Depth belongs in your deliberation text BEFORE the call; the call is the verdict summary, not the essay.',
   ].join('\n'),
 
   securityEngineer: [
@@ -191,6 +197,8 @@ const CHARTERS = {
     'HONESTY ABOUT YOUR OWN ATTACKS: If you genuinely CANNOT break the consensus after a real attempt, SAY SO plainly. Do not manufacture weak attacks to look busy — a fake objection wastes the chair judgment and erodes trust in the real ones. A clean "I tried these N angles and the consensus holds because..." is a valuable result.',
     '',
     'OUTPUT: attacks (each: target, failureMode, severity high/med/low, evidence from the dossier); the single mostDangerousCalmButWrongRisk in the consensus; couldBreakConsensus true/false with the reason.',
+    '',
+    'STRUCTURED-OUTPUT SIZE LAW (2026-07-15): an oversized StructuredOutput call is TRUNCATED after its first property and dies schema validation at the retry cap. Cap the list at your SIX strongest attacks; evidence <= 60 words each; mostDangerousCalmButWrongRisk <= 100 words.',
   ].join('\n'),
 
   chair: [
@@ -213,6 +221,8 @@ const CHARTERS = {
     'RECOMMEND THE ACTION: at confidence >= 7/10, not a hard-stop, no live veto -> action=execute AND commit to ONE recommendation (ship the lead; the runner-up lives in dissent). Do NOT hedge a confident, reversible call into "A or B, your call" — if the council resolved it, ship it and let Briggsy override via the digest (the over-deferral he rejected 2026-06-28). action=surface ONLY when confidence < 7/10, OR a live veto, OR hardStop.is=true (money/public/irreversible).',
     '',
     'OUTPUT THE VERDICT: recommendation (the SPECIFIC action to take); rationale (grounded, cite the dossier); confidence {level, score, reason}; tier (+ split if any); dissent {position, who, whatWouldFlipIt}; honestyHawkVeto {fired, falseBelief}; hardStop {is, reason}; action; and a one-line digestLine for the log.',
+    '',
+    'STRUCTURED-OUTPUT SIZE LAW (2026-07-15 — the state-tax council lost three seats to this): an oversized StructuredOutput call is TRUNCATED after its first property and dies schema validation at the retry cap. BUDGET THE VERDICT: recommendation <= 300 words (terse per-question dispositions — one or two sentences each); rationale <= 350 words; dissent + digestLine tight. The full debate is already journaled — your verdict is the ruling, not the recap.',
   ].join('\n'),
 }
 
@@ -487,7 +497,8 @@ if (weight === 'full') {
     return o.charter + '\n\n## THE ISSUE\n' + issue + '\n\n## YOUR OPENING POSITION\n' + J(mine) +
       '\n\n## THE OTHER ELDERS POSITIONS\n' + J(positions.filter(p => p.elder !== o.id)) +
       '\n\n## THE RED TEAM ATTACK\n' + J(attack) +
-      '\n\nNow debate. Concede what is genuinely right, hold what you still believe (and say why), and sharpen your recommendation. Be willing to change your mind — or explain exactly why you do not.'
+      '\n\nNow debate. Concede what is genuinely right, hold what you still believe (and say why), and sharpen your recommendation. Be willing to change your mind — or explain exactly why you do not.' +
+      '\n\nSTRUCTURED-OUTPUT SIZE LAW (2026-07-15): an oversized StructuredOutput call is TRUNCATED after its first property and dies schema validation at the retry cap. Keep concede and hold <= 120 words each and sharpenedRecommendation <= 150 words.'
   }
   rebuttals = (await parallel(openers.map(o => () =>
     agent(rebuttalPrompt(o), { label: 'rebut:' + o.id, phase: 'Rebuttal', schema: REBUTTAL_SCHEMA, model: 'opus' })

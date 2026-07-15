@@ -496,7 +496,9 @@ async function walkIntakeFork(page: Page, outDir: string): Promise<void> {
   // The RETIREMENT-STATE step (the state-tax unit) — captured blank (the lead +
   // help + the four honest arms are the read), then NC picked so the spend step
   // downstream carries the PRICED-state spendHelp branch into its capture.
-  await expect(page.getByRole('heading', { name: 'Where will you live in retirement?' })).toBeVisible()
+  // This walk's household is both-already-retired, so the ROUTE-TRUE present-tense heading
+  // renders (the Caddie chair fix, 2026-07-15).
+  await expect(page.getByRole('heading', { name: 'Where do you live in retirement?' })).toBeVisible()
   await captureState(page, path.join(outDir, 'state-step'))
   await page.getByRole('radio', { name: 'North Carolina' }).check({ force: true })
   await next()

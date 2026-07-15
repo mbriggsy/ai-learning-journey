@@ -589,6 +589,11 @@ const stateStep: StepDef = {
   ),
 }
 
+/** The route-true face of the state step (the Caddie chair fix, 2026-07-15): an already-retired
+ *  household reads "Where WILL you live…" as not-applicable-to-us — same body, present-tense
+ *  heading. intakeSteps picks by the derived route (anyWorking). */
+const stateStepRetired: StepDef = { ...stateStep, headingKey: 'qStateHeadingRetired' }
+
 const healthQuoteStep: StepDef = {
   id: 'health-quote',
   headingKey: 'qHealthHeading',
@@ -1151,7 +1156,7 @@ export function intakeSteps(draft: ScenarioDraft): readonly StepDef[] {
   // The retirement-state step lands UNCONDITIONALLY, right BEFORE spend — the placement is
   // load-bearing (S5's spendHelp branches on the answered state; a step after spend would leave
   // spendHelp generic).
-  steps.push(ssStep, stateStep, spendStep)
+  steps.push(ssStep, anyWorking(draft) ? stateStep : stateStepRetired, spendStep)
   if (anyPre65OrUnknown(draft)) steps.push(healthQuoteStep)
   steps.push(oopStep)
   if (anyWorking(draft)) steps.push(workIncomeStep)

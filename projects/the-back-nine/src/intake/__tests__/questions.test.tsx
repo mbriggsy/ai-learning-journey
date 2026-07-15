@@ -510,12 +510,15 @@ describe('the Medicare-extras fork STANDING line (the details-home fix — extra
 })
 
 describe('the retirement-state step (the state-tax unit S3 — a changeable best guess)', () => {
+  // Route-true headings (the Caddie chair fix, 2026-07-15): still-working reads the future
+  // tense, all-retired the present — the helper accepts either face.
+  const isStateHeading = () => heading() === copy.qStateHeading || heading() === copy.qStateHeadingRetired
   function reachState(m: MemoryModel) {
     render(<Harness model={m} />)
-    for (let i = 0; i < 8 && heading() !== copy.qStateHeading; i += 1) {
+    for (let i = 0; i < 8 && !isStateHeading(); i += 1) {
       fireEvent.click(screen.getByRole('button', { name: copy.flowNext }))
     }
-    expect(heading()).toBe(copy.qStateHeading)
+    expect(isStateHeading()).toBe(true)
   }
 
   it('lands UNCONDITIONALLY, ordered right BEFORE spend (so S5 spendHelp can branch on the state)', () => {
@@ -527,6 +530,17 @@ describe('the retirement-state step (the state-tax unit S3 — a changeable best
     setStatuses(m, 'retired', 'retired')
     const retiredIds = intakeSteps(draft(m)).map((s) => s.id)
     expect(retiredIds.indexOf('retirement-state')).toBeLessThan(retiredIds.indexOf('spend'))
+  })
+
+  it('speaks ROUTE-TRUE: an all-retired household reads the present-tense heading, a working one the future (the Caddie chair fix, 2026-07-15)', () => {
+    const m = freshModel()
+    setStatuses(m, 'retired', 'retired')
+    const retiredStep = intakeSteps(draft(m)).find((s) => s.id === 'retirement-state')
+    expect(retiredStep?.headingKey).toBe('qStateHeadingRetired')
+    const w = freshModel()
+    setStatuses(w, 'working', 'retired')
+    const workingStep = intakeSteps(draft(w)).find((s) => s.id === 'retirement-state')
+    expect(workingStep?.headingKey).toBe('qStateHeading')
   })
 
   it('offers exactly the 4 honest arms — NC · PA · FL · Somewhere else — with nothing pre-selected', () => {

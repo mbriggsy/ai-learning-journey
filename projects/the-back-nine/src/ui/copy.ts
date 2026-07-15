@@ -81,6 +81,10 @@ export const copy = {
   //     honest that only a few states are priced so far and that nothing is assumed for an unpriced
   //     one. This is the ONLY state-tax disclosure copy S3 owns (S5 owns verdict/omission/spendHelp). ---
   qStateHeading: 'Where will you live in retirement?',
+  /** The route-true sibling (the state-tax Caddie chair fix, 2026-07-15): an ALREADY-retired
+   *  household reads the future tense as "not applicable to us" — the reentryIntroRetired
+   *  precedent. intakeSteps picks by the derived route. */
+  qStateHeadingRetired: 'Where do you live in retirement?',
   stateResidenceLead:
     'Where you settle sets the state income tax on the money you take from savings each year — some states tax it, some don’t. A best guess is fine; you can change it whenever your plans firm up.',
   stateResidenceLegend: 'Where you’ll retire',
@@ -933,7 +937,13 @@ export const copy = {
   // a changeable best guess, edit → re-run (the SC-vs-GA what-if lever). The picker's own legend
   // (stateResidenceLegend) labels the row; this note names the disclosed-out posture HONESTLY when
   // the household has not answered — never a fabricated default state.
-  assumptionStateUnsetNote: 'Not set yet — no state income tax is in these numbers.',
+  /** The unanswered face is a TOOL fact with the direction rider (the state-tax Caddie chair
+   *  fix, 2026-07-15 — four lenses converged, refuters held: the old "no state income tax is
+   *  in these numbers" skimmed as a HOUSEHOLD fact ("we owe none") and was the one state
+   *  disclosure that dropped the real-bill rider its verdict/spendHelp siblings carry —
+   *  corpus rule 37, the 2026-07-11 residual family's exact crack). */
+  assumptionStateUnsetNote:
+    'Not set yet — the plan counts no state income tax until you pick one. If your state taxes retirement income, that’s a real yearly bill these numbers leave out.',
   // The ONE real R7-editable methodology knob (the F1/F3 ruling). Its UNSAFE direction is
   // disclosed in the help — too LOW understates the survivor's need (methodology.ts).
   assumptionSurvivorRatioLabel: 'Spending if one of you is on your own, as a share of today’s',

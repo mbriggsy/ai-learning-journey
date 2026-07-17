@@ -287,4 +287,22 @@ describe('the healthcare door — the engine PRICED domain only, categorical (co
     expect(stateLine, 'never re-derives from draft.retirementState').not.toMatch(/draft\.retirementState/)
     expect(stateLine, 'never a bare isDateRoute disjunct for state (insight 080)').not.toMatch(/isDateRoute/)
   })
+
+  it('Result derives the ACA-priced disclosure from the route-aware BUILT params (acaPricedForRun) AND threads it to the Roth lever — the O16 source-bind (insight 080/081)', () => {
+    // Same closure idiom as its two siblings above: the predicate's divergence witnesses
+    // (Medicare-only, degenerate-overlay, unknown-age) live in intakeMap.test, the component's
+    // note-iff-prop arms in rothLever.test — THIS pin closes Result's derivation + threading
+    // links. A revert to an age/draft re-derivation, a bare isDateRoute widening, or a dropped
+    // prop (the ACA household silently reading the stale blanket clause) goes red here.
+    const src = readFileSync(resolve(__dirname, '../Result.tsx'), 'utf8')
+    expect(src, 'the ACA derivation reads the producer output').toMatch(
+      /const acaPricedNote = useMemo\(\(\) => acaPricedForRun\(snapshot\.draft\)/,
+    )
+    const acaLine = src.split('\n').find((l) => l.includes('const acaPricedNote =')) ?? ''
+    expect(acaLine, 'never re-derives from draft health fields or ages').not.toMatch(/draft\.health|currentAge/)
+    expect(acaLine, 'never a bare isDateRoute disjunct (insight 080)').not.toMatch(/isDateRoute/)
+    expect(src, 'the flag is THREADED to the lever (a dropped prop is the silent stale-clause mutant)').toMatch(
+      /acaPricedNote=\{acaPricedNote\}/,
+    )
+  })
 })

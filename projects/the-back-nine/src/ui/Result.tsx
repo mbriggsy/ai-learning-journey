@@ -15,7 +15,7 @@
  */
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import { AnswerStrip } from '@intake/AnswerStrip'
-import { buildControlPreviewParams, healthcarePriced, isDateRoute, medicareExtrasDisclosureView, missingRequiredFacts, pricedStateForRun, spineMedicarePriced } from '@intake/intakeMap'
+import { acaPricedForRun, buildControlPreviewParams, healthcarePriced, isDateRoute, medicareExtrasDisclosureView, missingRequiredFacts, pricedStateForRun, spineMedicarePriced } from '@intake/intakeMap'
 import { useLiveAnnouncer } from '@intake/a11y'
 import { BudgetBuilder } from '@intake/BudgetBuilder'
 import { SequencingControl } from '@intake/SequencingControl'
@@ -184,6 +184,10 @@ export function Result({
   // affirmation names the state; the Roth lever + Healthcare sheet drop the state-tax omission),
   // each gating on `!== undefined`.
   const statePricedNote = useMemo(() => pricedStateForRun(snapshot.draft), [snapshot.draft])
+  // O16 (council 2026-07-17) — "did THIS run price the ACA discount?", the Roth omissions note's
+  // pre-65 axis: producer's-output like its two sibling predicates above (insight 080/081 — the
+  // degenerate-overlay and unknown-age households read false and conservatively KEEP the clause).
+  const acaPricedNote = useMemo(() => acaPricedForRun(snapshot.draft), [snapshot.draft])
   const enhancedApplied = snapshot.draft.enhancedSubsidies === true
   // The wire's per-year healthcare series (spine headline runs only — presence-keyed).
   const healthReadout =
@@ -492,6 +496,7 @@ export function Result({
         previewBlocking={!previewRunsInWorker()}
         medicarePricedNote={medicarePricedNote}
         statePricedNote={statePricedNote}
+        acaPricedNote={acaPricedNote}
         restoreFallback={restoreToAssumptionsDoor}
         savedAnchor={dateAnchor}
         onApply={(plan) => {

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  acaPricedForRun,
   buildDateInput,
   buildSpineParams,
   escalateQuote,
@@ -606,6 +607,58 @@ describe('the state-tax unit (S5) — the producer-output state-priced predicate
     // wrongly read 'NC' here — the killed mutant.)
     expect(spineStatePriced(degenerate)).toBeUndefined()
     expect(pricedStateForRun(degenerate)).toBeUndefined()
+  })
+})
+
+// ---------------------------------------------------------------------------
+// O16 (council 2026-07-17, wf_fd7f75cb-916): the producer-output ACA-priced predicate — the Roth
+// omissions note's pre-65 axis. Same discipline as its state sibling above: read the BUILT
+// overlay's own quote stream (insight 080/081), never ages, never healthcareEnabled alone (the
+// Medicare-only branch carries healthcareEnabled with NO stream and must read FALSE).
+// ---------------------------------------------------------------------------
+describe('O16 — acaPricedForRun (the producer-output ACA-priced predicate, route-aware)', () => {
+  it('a pre-65 household with the quote pair reads TRUE on its own route (spine and date each via their own producer)', () => {
+    expect(acaPricedForRun(completeSpineDraft()), 'spine ACA household').toBe(true)
+    expect(acaPricedForRun(completeDateDraft()), 'date ACA household (the date producer arm)').toBe(true)
+  })
+
+  it('an all-65+ Medicare-only household reads FALSE — healthcareEnabled WITHOUT a quote stream is not ACA (the healthcareEnabled-alone mutant)', () => {
+    const all65 = base({
+      people: [
+        retiredPerson({ birthYear: 1958, currentAge: 68, retirementAge: 64 }),
+        retiredPerson({ name: 'S', sex: 'female', birthYear: 1959, currentAge: 67, retirementAge: 64 }),
+      ],
+      enteredAccounts: [{ ownerIndex: 0, kind: '401k', ticker: 'VTI', valueToday: 600_000 }],
+      health: { irmaaMagiSeed: [120_000, 110_000] },
+    })
+    // The Medicare-only branch ships healthcareEnabled with NO enrolledPremium stream — a
+    // predicate reading the flag alone would falsely narrow the pre-65 clause for a household
+    // that has no ACA years at all.
+    expect(buildSpineParams(all65)?.overlay?.healthcareEnabled, 'the premise: Medicare-only IS enabled').toBe(true)
+    expect(acaPricedForRun(all65)).toBe(false)
+  })
+
+  it('the DEGENERATE-OVERLAY household reads FALSE (no overlay ⇒ no ACA ⇒ the pre-65 clause conservatively stays)', () => {
+    const degenerate = base({
+      people: [
+        retiredPerson({ birthYear: 1962, currentAge: 64, retirementAge: 62, pia: 0 }),
+        retiredPerson({ name: 'S', sex: 'female', birthYear: 1962, currentAge: 64, retirementAge: 62, pia: 0 }),
+      ],
+      health: { irmaaMagiSeed: [80_000, 80_000] },
+    })
+    expect(acaPricedForRun(degenerate)).toBe(false)
+  })
+
+  it('an unknown-age household reads FALSE — an unresolved age is never a claim, the clause conservatively stays', () => {
+    const unknownAges = base({
+      people: [
+        retiredPerson({ currentAge: undefined }),
+        retiredPerson({ name: 'S', sex: 'female', currentAge: undefined }),
+      ],
+      enteredAccounts: [{ ownerIndex: 0, kind: '401k', ticker: 'VTI', valueToday: 600_000 }],
+      health: { enrolledPremiumMonthlyToday: 950, slcspMonthlyToday: 880 },
+    })
+    expect(acaPricedForRun(unknownAges)).toBe(false)
   })
 })
 

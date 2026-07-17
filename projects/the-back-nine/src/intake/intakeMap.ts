@@ -729,6 +729,31 @@ export function pricedStateForRun(d: ScenarioDraft): PricedState | undefined {
   return spineStatePriced(d) ?? dateStatePriced(d)
 }
 
+/** One producer's built overlay, read for "does THIS run price the ACA discount in some year?" —
+ *  mirrors the engine's own per-year gate (taxOverlay: `acaTable` present ⇔ `healthcareEnabled`,
+ *  AND a finite positive `enrolledPremium[t]`; the pre-65 age condition is already baked into the
+ *  built stream — the escalator sums only members pre-65 at t, and the Medicare-only branch ships
+ *  NO quote stream at all). Reading the OUTPUT keeps every conservative arm free (insight 081):
+ *  the degenerate early-return builds no overlay ⇒ false, and an unknown-age household never
+ *  reaches `healthcareOn` ⇒ no stream ⇒ false — both KEEP the pre-65 omissions clause. */
+function acaPricedOverlayArm(o: OverlayParams | undefined): boolean {
+  return o?.healthcareEnabled === true && (o.enrolledPremium ?? []).some((p) => Number.isFinite(p) && p > 0)
+}
+
+/** The route-aware "did THIS run price the ACA discount?" — the O16 council's producer's-output
+ *  predicate (2026-07-17, wf_fd7f75cb-916) for the Roth omissions note's pre-65 axis. The engine
+ *  prices the conversion→MAGI→discount coupling in BOTH preview arms whenever ACA is priced
+ *  (taxOverlay's per-year gate; roth.ts runs both arms at identical fidelity), so the note's
+ *  "pre-65 health-plan side effects — not counted" clause is FALSE exactly here and must narrow
+ *  to the true residual (plan cost-sharing). Same route-safe union shape as
+ *  {@link pricedStateForRun} — each producer is null off-route, so no `isDateRoute` disjunct. */
+export function acaPricedForRun(d: ScenarioDraft): boolean {
+  return (
+    acaPricedOverlayArm(buildSpineParams(d)?.overlay) ||
+    acaPricedOverlayArm(buildDateInput(d)?.params.overlay)
+  )
+}
+
 /** The spend-question help variant for a draft — the ONE home for the two INPUT surfaces (the
  *  intake spend step and the assumption panel's spend row), which edit the SAME draft and must
  *  agree with each other BY CONSTRUCTION (the seed-increment review's fold: this ternary was

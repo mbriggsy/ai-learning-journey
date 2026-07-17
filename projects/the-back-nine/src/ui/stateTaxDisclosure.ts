@@ -53,15 +53,35 @@ export function composeVerdictMedicareResidual(pricedState: PricedState | undefi
 }
 
 /** The Roth lever's omissions note (home #2): the state-tax item drops for a priced household,
- *  and the pre-65 clause drops for an all-65+ household (O9, closed 2026-07-17 — age is that
- *  clause's display domain; the caller passes `medicareOnlyPriced(draft)`, whose unknown-age
- *  arm is FALSE, so an unanswered age conservatively keeps the clause). Two independent axes,
- *  four variants — each a static catalog key so every arm rides the require-hedge sweep. */
-export function composeRothOmissionsNote(statePriced: boolean, householdAll65: boolean): string {
-  if (statePriced) {
-    return householdAll65 ? copy.rothOmissionsNoteStatePricedAll65 : copy.rothOmissionsNoteStatePriced
+ *  and the pre-65 clause rides a THREE-state axis (O9 closed 2026-07-17; O16 council
+ *  2026-07-17, wf_fd7f75cb-916 — the hawk's veto shaped the middle state):
+ *
+ *    - all-65+ (`householdAll65` — `medicareOnlyPriced(draft)`, draft ages; an unknown age is
+ *      FALSE, conservatively keeping a clause): the clause DROPS — no pre-65 years exist.
+ *    - ACA-priced run (`acaPriced` — `acaPricedForRun`, the producer's-output read, insight
+ *      080/081): the blanket "pre-65 health-plan side effects" clause is FALSE (the engine
+ *      prices the conversion→MAGI→discount coupling in both preview arms), so the variant
+ *      NARROWS it to the true residual — plan cost-sharing — and affirms the discount coupling
+ *      is in. Routing this household to the All65 words instead was VETOED: it would silently
+ *      drop the cost-sharing omission, the one-way-optimistic direction on the conversion delta
+ *      (converting past an income line can forfeit cost-sharing help the tool never models).
+ *    - pre-65, no ACA priced: the original clause stays — it is true there (no health model).
+ *
+ *  Age wins over ACA by construction (an all-65+ run builds no quote stream, so `acaPriced` is
+ *  false for it — the guard order below just makes the precedence explicit). Six static catalog
+ *  keys so every arm rides the require-hedge sweep. */
+export function composeRothOmissionsNote(
+  statePriced: boolean,
+  householdAll65: boolean,
+  acaPriced: boolean,
+): string {
+  if (householdAll65) {
+    return statePriced ? copy.rothOmissionsNoteStatePricedAll65 : copy.rothOmissionsNoteAll65
   }
-  return householdAll65 ? copy.rothOmissionsNoteAll65 : copy.rothOmissionsNote
+  if (acaPriced) {
+    return statePriced ? copy.rothOmissionsNoteStatePricedAcaPriced : copy.rothOmissionsNoteAcaPriced
+  }
+  return statePriced ? copy.rothOmissionsNoteStatePriced : copy.rothOmissionsNote
 }
 
 /** The Healthcare door sheet's omissions note (home #3): the state-tax item drops when priced,

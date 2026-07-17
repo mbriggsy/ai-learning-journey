@@ -66,6 +66,12 @@ export interface RothLeverProps {
    *  be false. The predicate is the run's OWN pricing decision (`pricedStateForRun`, Result), never
    *  geography (insight 080/081); this stays a dumb prop renderer. Undefined ⇒ today's list. */
   readonly statePricedNote?: PricedState
+  /** O16 (council 2026-07-17): TRUE ⇒ this run PRICES the ACA discount, so the omissions note's
+   *  blanket "pre-65 health-plan side effects" clause would be false — the composer narrows it to
+   *  the true residual (plan cost-sharing) and affirms the discount coupling is in. The predicate
+   *  is the run's own pricing decision (`acaPricedForRun`, Result — producer's output, insight
+   *  080/081); this stays a dumb prop renderer. Absent ⇒ the clause stays (conservative). */
+  readonly acaPricedNote?: boolean
   /** U12 ultramode: close-time focus fallback for when the opening trigger has unmounted
    *  (the via-AssumptionPanel route) — forwarded to the ControlSheet scaffold. */
   readonly restoreFallback?: () => HTMLElement | null
@@ -73,7 +79,7 @@ export interface RothLeverProps {
    *  "Today" → "Your save" when elapsed > 0 (one time base per screen). */
   readonly savedAnchor?: BandSavedAnchor
 }
-export function RothLever({ open, draft, preview, previewBlocking = false, onApply, onRemove, onClose, medicarePricedNote = false, statePricedNote, restoreFallback, savedAnchor }: RothLeverProps) {
+export function RothLever({ open, draft, preview, previewBlocking = false, onApply, onRemove, onClose, medicarePricedNote = false, statePricedNote, acaPricedNote = false, restoreFallback, savedAnchor }: RothLeverProps) {
   const announcerRef = useRef<Announcer | null>(null)
   const applied = draft.rothConversion
   const [plan, setPlan] = useState<PlanDraft>({})
@@ -174,11 +180,12 @@ export function RothLever({ open, draft, preview, previewBlocking = false, onApp
             notes={
               <>
                 <p className="field-help">{copy.rothFundingNote}</p>
-                {/* O9 (2026-07-17): the second axis drops the pre-65 clause for an all-65+
-                    household — medicareOnlyPriced is the draft-age predicate (unknown age ⇒
-                    false ⇒ the clause conservatively stays). */}
+                {/* The pre-65 axis is THREE-state (O9 + O16, both 2026-07-17): all-65+ drops the
+                    clause (medicareOnlyPriced — draft ages; unknown age ⇒ false ⇒ a clause
+                    conservatively stays); an ACA-priced run (acaPricedNote — producer's output)
+                    narrows it to the true cost-sharing residual; a pre-65 non-ACA run keeps it. */}
                 <p className="field-help">
-                  {composeRothOmissionsNote(statePricedNote !== undefined, medicareOnlyPriced(draft))}
+                  {composeRothOmissionsNote(statePricedNote !== undefined, medicareOnlyPriced(draft), acaPricedNote)}
                 </p>
               </>
             }

@@ -85,6 +85,22 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     expect(stateUnpriced).not.toBe(statePriced)
   })
 
+  // --- the panel-note ↔ spendHelp reconciliation (O16 Fork A, council 2026-07-17,
+  //     wf_fd7f75cb-916): the two render on ONE AssumptionPanel sheet for a state-unset
+  //     household, and the old note's flat "these numbers leave out" was engine-proven FALSE for
+  //     a household that obeyed spendHelp's keep-it-inside instruction (the kept-inside bill
+  //     flows through annualSpendingReal into every simulated year). The tool cannot observe
+  //     which population reads it, so the note must condition inclusion on the reader's OWN
+  //     action and may never flatly assert the bill is out — while keeping the rule-37
+  //     real-bill direction rider. ---
+  it('assumptionStateUnsetNote conditions inclusion on the reader’s action — never a flat exclusion claim (O16 drift-pin)', () => {
+    const note = copy.assumptionStateUnsetNote
+    expect(note, 'the flat exclusion claim is dead (false for a compliant household)').not.toMatch(/leave[s]? out/)
+    expect(note, 'inclusion is conditional on the reader’s own action').toContain('only if you kept it inside')
+    expect(note, 'the rule-37 real-bill direction rider survives').toContain('a real yearly bill')
+    expect(note, 'the family frame (the O14 counts/counted polysemy stays dead)').toContain('prices no state income tax')
+  })
+
   // --- slots: render with representative args, then scan. Slots are the SANCTIONED numeric channel,
   //     so they are NOT free-numeral scanned; the verdict voice still must hold. Record<keyof typeof
   //     slots, …> makes a new slot without a sample a COMPILE error (no silent no-op — burned/070). ---

@@ -800,14 +800,29 @@ export const copy = {
   // O9 CLOSED (2026-07-17, rode the O14 sweep — the sweep touched these exact strings): the
   // "pre-65 health-plan side effects" clause is age-gated OFF for an all-65+ household — no
   // pre-65 years exist, so the clause was inapplicable noise for exactly the population that
-  // reads this note most (the Medicare-priced hero's own households). The composer's SECOND
-  // axis (`householdAll65` — `medicareOnlyPriced`, draft ages; an unknown age conservatively
-  // KEEPS the clause) picks these variants. The single-item variant says "it", never "each" —
-  // grammar honesty; "could" carries require-hedge on all four.
+  // reads this note most (the Medicare-priced hero's own households). The composer's pre-65
+  // axis is now THREE-state (O16 council 2026-07-17, wf_fd7f75cb-916 — hawk veto honored):
+  // all-65+ (`medicareOnlyPriced`, draft ages; an unknown age conservatively KEEPS the clause)
+  // drops it; an ACA-priced run (`acaPricedForRun` — the producer's-output read, insight 081)
+  // swaps it for the NARROWED residual below, because the engine prices the conversion→MAGI→
+  // discount coupling in both preview arms, making the blanket "not counted" claim FALSE for
+  // exactly the convert-in-the-gap-years household; only a pre-65 run that prices NO ACA keeps
+  // the original clause, where it is true. The single-item variant says "it", never "each" —
+  // grammar honesty; "could" carries require-hedge on all six.
   rothOmissionsNoteAll65:
     'Not counted here: state income tax and the net-investment-income tax — each could move this picture.',
   rothOmissionsNoteStatePricedAll65:
     'Not counted here: the net-investment-income tax — it could move this picture.',
+  // O16 (2026-07-17) — the ACA-priced pre-65 variants: the discount coupling is IN the numbers,
+  // so the residual narrows to what genuinely is not: plan cost-sharing (the health sheet's own
+  // words, rule 36 — converting past an income line can also cost cost-sharing help the tool
+  // never models, the one-way-optimistic omission the hawk's veto protected). The trailing
+  // affirmation names the mechanism (E13: mechanism-naming lands) so the reader who was told
+  // "not counted" for a year is actively corrected — affirm-with-residual, the house pattern.
+  rothOmissionsNoteAcaPriced:
+    'Not counted here: state income tax, the net-investment-income tax, and differences in plan cost-sharing — each could move this picture. The income-based discount itself is already in these numbers, including what a conversion does to it.',
+  rothOmissionsNoteStatePricedAcaPriced:
+    'Not counted here: the net-investment-income tax and differences in plan cost-sharing — each could move this picture. The income-based discount itself is already in these numbers, including what a conversion does to it.',
   twoFuturesCaption:
     'How the middle-of-the-road path could run with and without the change, in today’s dollars.',
   sequencingBaselineNote:
@@ -924,7 +939,11 @@ export const copy = {
     // "held flat" (chair fix, the 2026-07-17 sweep pre-walk): the landing residual says "held
     // flat in today's dollars" for the SAME modeling choice — one mechanism, one word (rule 36;
     // five panel lenses independently flagged the flat/level synonym drift across the two doors).
-    'The income surcharge a conversion can trip two years later is now part of these numbers. One modeling choice remains: premiums are held flat in today’s dollars, so a conversion that crosses a surcharge step could look a shade easier here than in real life.',
+    // "A modeling choice:" (O16 D-1, council 2026-07-17): the old "One modeling choice remains:"
+    // claimed exhaustivity on a sheet whose OWN omissions note lists more uncounted items — the
+    // count-claim read false-adjacent beside the longer list; the article drops the count, the
+    // hedge ("could") and "held flat" stay.
+    'The income surcharge a conversion can trip two years later is now part of these numbers. A modeling choice: premiums are held flat in today’s dollars, so a conversion that crosses a surcharge step could look a shade easier here than in real life.',
 
   // --- P3·U12 — the AssumptionPanel (the R7 escape hatch; council wf_dff75c2f-9e3). PREFIX
   // LAW: `assumption*` is the panel's CHROME prefix — labels, values, provenance lines,
@@ -975,9 +994,17 @@ export const copy = {
    *  fix, 2026-07-15 — four lenses converged, refuters held: the old "no state income tax is
    *  in these numbers" skimmed as a HOUSEHOLD fact ("we owe none") and was the one state
    *  disclosure that dropped the real-bill rider its verdict/spendHelp siblings carry —
-   *  corpus rule 37, the 2026-07-11 residual family's exact crack). */
+   *  corpus rule 37, the 2026-07-11 residual family's exact crack).
+   *  Reworded O16 Fork A (council 2026-07-17, wf_fd7f75cb-916): the old tail "…these numbers
+   *  leave out" was engine-proven FALSE for a COMPLIANT household — spendHelp (rendered on this
+   *  SAME sheet) says "keep that bill inside this figure so it still counts", and a kept-inside
+   *  bill flows through annualSpendingReal into every simulated year's outflow. Three unobservable
+   *  populations read this note (kept-inside / legacy-stripped / no-bill), so the honest clause
+   *  conditions inclusion on the reader's OWN action and asserts neither "in" nor "out" flatly;
+   *  "prices" joins the family's frame (the O14 counts/counted polysemy stays dead). The rule-37
+   *  real-bill rider survives. */
   assumptionStateUnsetNote:
-    'Not set yet — the plan counts no state income tax until you pick one. If your state taxes retirement income, that’s a real yearly bill these numbers leave out.',
+    'Not set yet — the plan prices no state income tax until you pick one. If your state taxes retirement income, that’s a real yearly bill: it’s in these numbers only if you kept it inside your spending figure.',
   // The ONE real R7-editable methodology knob (the F1/F3 ruling). Its UNSAFE direction is
   // disclosed in the help — too LOW understates the survivor's need (methodology.ts).
   assumptionSurvivorRatioLabel: 'Spending if one of you is on your own, as a share of today’s',

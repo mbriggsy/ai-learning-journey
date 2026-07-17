@@ -245,6 +245,38 @@ describe('RothLever — a landed reading discloses funding + omissions beside th
     expect(screen.getByText(copy.rothOmissionsNoteStatePricedAll65)).toBeInTheDocument()
     expect(screen.queryByText(copy.rothOmissionsNoteStatePriced)).toBeNull()
   })
+
+  // O16 (council 2026-07-17): an ACA-priced run (acaPricedNote — the producer's-output flag)
+  // NARROWS the blanket pre-65 clause to the true cost-sharing residual. The arms above render
+  // with the prop ABSENT, so they already prove the conservative default (no flag ⇒ the
+  // original clause stays — exactly the unknown-age / degenerate-overlay households).
+  it('an ACA-priced household reads the narrowed cost-sharing residual, never the blanket pre-65 claim', async () => {
+    const preview = deferredPreview()
+    render(
+      <RothLever open draft={draftWith(withPretax)} preview={preview.fn} onApply={noop} onRemove={noop} onClose={noop} acaPricedNote />,
+    )
+    commitField(screen.getByLabelText(copy.leverRothAmountLabel), '50,000')
+    await act(async () => {
+      preview.resolvers.at(-1)!(okPreview(8, 6))
+    })
+    await waitFor(() => expect(document.querySelector('.control-preview__delta')).not.toBeNull())
+    expect(screen.getByText(copy.rothOmissionsNoteAcaPriced)).toBeInTheDocument()
+    expect(screen.queryByText(copy.rothOmissionsNote)).toBeNull()
+  })
+
+  it('an ACA-priced STATE-priced household composes both axes (state dropped by pricing, the pre-65 clause narrowed by ACA)', async () => {
+    const preview = deferredPreview()
+    render(
+      <RothLever open draft={draftWith(withPretax)} preview={preview.fn} onApply={noop} onRemove={noop} onClose={noop} statePricedNote="NC" acaPricedNote />,
+    )
+    commitField(screen.getByLabelText(copy.leverRothAmountLabel), '50,000')
+    await act(async () => {
+      preview.resolvers.at(-1)!(okPreview(8, 6))
+    })
+    await waitFor(() => expect(document.querySelector('.control-preview__delta')).not.toBeNull())
+    expect(screen.getByText(copy.rothOmissionsNoteStatePricedAcaPriced)).toBeInTheDocument()
+    expect(screen.queryByText(copy.rothOmissionsNoteStatePriced)).toBeNull()
+  })
 })
 
 describe('RothLever — Remove is present only when a conversion is applied', () => {

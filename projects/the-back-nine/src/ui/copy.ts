@@ -1005,6 +1005,16 @@ export const copy = {
    *  real-bill rider survives. */
   assumptionStateUnsetNote:
     'Not set yet — the plan prices no state income tax until you pick one. If your state taxes retirement income, that’s a real yearly bill: it’s in these numbers only if you kept it inside your spending figure.',
+  /** The BUDGET-GOVERNED twin (the O16 pre-walk's one surviving finding, chair fix 2026-07-17):
+   *  on the governed face the spend row reads "all in — set by your budget" (a completeness
+   *  claim) and the OOP row's same construction is legitimately auto-satisfied — together they
+   *  primed a budget reader to self-grade the base note's conditional as "covered" (the rosier
+   *  direction) when the budget flow offers NO tax category and never guided the bill inside.
+   *  This twin names the BUDGET mechanism (rule 37 — who-adds-what, never the reader's memory)
+   *  and its tail contradicts the "all in" assumption in the conservative direction. Shares the
+   *  base note's prefix verbatim (the spendHelp-twins pin idiom — copyGuard holds it). */
+  assumptionStateUnsetNoteBudget:
+    'Not set yet — the plan prices no state income tax until you pick one. If your state taxes retirement income, that’s a real yearly bill: it’s in these numbers only if you gave it a budget line yourself — most budgets don’t.',
   // The ONE real R7-editable methodology knob (the F1/F3 ruling). Its UNSAFE direction is
   // disclosed in the help — too LOW understates the survivor's need (methodology.ts).
   assumptionSurvivorRatioLabel: 'Spending if one of you is on your own, as a share of today’s',

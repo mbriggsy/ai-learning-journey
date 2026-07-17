@@ -93,17 +93,31 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
   //     which population reads it, so the note must condition inclusion on the reader's OWN
   //     action and may never flatly assert the bill is out — while keeping the rule-37
   //     real-bill direction rider. ---
-  it('assumptionStateUnsetNote conditions inclusion on the reader’s action — never a flat exclusion claim (O16 drift-pin)', () => {
-    const note = copy.assumptionStateUnsetNote
-    // The negative guards the exclusion MEANING, not one lexeme (the fold broadened it — a
-    // synonym reword resurrecting the falsehood must trip it, per insight 087's spirit): the
-    // note may say the tool doesn't PRICE the tax, but never that the bill is OUT of the numbers.
-    expect(note, 'the flat exclusion claim is dead (false for a compliant household)').not.toMatch(
-      /(leave[s]?|left) out|excluded|do(es)?n[’']t (include|count)|not (in|counted in) these numbers|sits outside/,
-    )
-    expect(note, 'inclusion is conditional on the reader’s own action').toContain('only if you kept it inside')
-    expect(note, 'the rule-37 real-bill direction rider survives').toContain('a real yearly bill')
-    expect(note, 'the family frame (the O14 counts/counted polysemy stays dead)').toContain('prices no state income tax')
+  it('the assumptionStateUnsetNote twins condition inclusion on the reader’s action — never a flat exclusion claim (O16 drift-pin, both faces)', () => {
+    const base = copy.assumptionStateUnsetNote
+    const budget = copy.assumptionStateUnsetNoteBudget
+    for (const [name, note] of [['base', base], ['budget', budget]] as const) {
+      // The negative guards the exclusion MEANING, not one lexeme (the fold broadened it — a
+      // synonym reword resurrecting the falsehood must trip it, per insight 087's spirit): a
+      // note may say the tool doesn't PRICE the tax, but never that the bill is OUT of the numbers.
+      expect(note, `${name}: the flat exclusion claim is dead (false for a compliant household)`).not.toMatch(
+        /(leave[s]?|left) out|excluded|do(es)?n[’']t (include|count)|not (in|counted in) these numbers|sits outside/,
+      )
+      expect(note, `${name}: inclusion is conditional on the reader’s own action`).toContain('only if you')
+      expect(note, `${name}: the rule-37 real-bill direction rider survives`).toContain('a real yearly bill')
+      expect(note, `${name}: the family frame (the O14 counts/counted polysemy stays dead)`).toContain('prices no state income tax')
+    }
+    // The twins share their prefix VERBATIM through the real-bill colon — only the conditional
+    // tail differs (the spendHelp-twins idiom): the base face conditions on the kept-inside
+    // spending figure; the governed face names the BUDGET-LINE mechanism (rule 37) and its tail
+    // contradicts the spend row's "all in" completeness prime in the conservative direction.
+    const prefixEnd = 'that’s a real yearly bill: '
+    const cut = base.indexOf(prefixEnd)
+    expect(cut, 'the real-bill clause anchors the shared prefix').toBeGreaterThan(0)
+    expect(budget.startsWith(base.slice(0, cut + prefixEnd.length)), 'the twins share the whole prefix verbatim').toBe(true)
+    expect(base).toContain('only if you kept it inside your spending figure')
+    expect(budget).toContain('only if you gave it a budget line yourself')
+    expect(budget, 'the conservative tail contradicts the “all in” prime').toContain('most budgets don’t')
   })
 
   // --- slots: render with representative args, then scan. Slots are the SANCTIONED numeric channel,

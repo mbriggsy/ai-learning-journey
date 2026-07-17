@@ -534,11 +534,28 @@ describe('the retirement-state row', () => {
     expect((screen.getByLabelText(copy.stateOptionNC) as HTMLInputElement).checked).toBe(false)
   })
 
+  // O16 pre-walk chair fix (2026-07-17): the GOVERNED face reads the BUDGET twin — the base
+  // note's kept-inside conditional sat under the spend row's "all in — set by your budget"
+  // completeness claim, priming a rosier self-grade for a household whose budget flow offers
+  // no tax category; the twin names the budget-line mechanism instead. Both directions pinned
+  // (the swapped-ternary mutant goes red on either arm).
+  it('a GOVERNED unanswered household reads the budget twin, never the kept-inside base note', () => {
+    renderPanel({ snapshot: snap(governedDraft) }) // budget governs; retirementState undefined
+    expect(screen.getByText(copy.assumptionStateUnsetNoteBudget)).toBeInTheDocument()
+    expect(screen.queryByText(copy.assumptionStateUnsetNote)).toBeNull()
+  })
+
+  it('an UNGOVERNED unanswered household never reads the budget twin', () => {
+    renderPanel() // mixedDraft: no budget
+    expect(screen.queryByText(copy.assumptionStateUnsetNoteBudget)).toBeNull()
+  })
+
   it('an ANSWERED household shows the picked state as the active arm and drops the not-set note', () => {
     const withState = draftWith(() => ({ ...mixedDraft, retirementState: 'NC' as const }))
     renderPanel({ snapshot: snap(withState) })
     expect((screen.getByLabelText(copy.stateOptionNC) as HTMLInputElement).checked).toBe(true)
     expect(screen.queryByText(copy.assumptionStateUnsetNote)).toBeNull()
+    expect(screen.queryByText(copy.assumptionStateUnsetNoteBudget)).toBeNull()
   })
 })
 

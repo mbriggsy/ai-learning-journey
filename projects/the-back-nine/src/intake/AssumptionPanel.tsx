@@ -499,7 +499,13 @@ export function AssumptionPanel({
               onChange={(v) => commitOpen('retirementState', (d) => ({ ...d, retirementState: v }))}
             />
             {draft.retirementState === undefined && (
-              <p className="ap-row__prov">{copy.assumptionStateUnsetNote}</p>
+              /* The governed face reads the BUDGET twin (the O16 pre-walk chair fix): the base
+                 note's "kept it inside your spending figure" conditional sat under the spend
+                 row's "all in — set by your budget" completeness claim, priming the rosier
+                 self-grade; the twin names the budget-line mechanism instead. */
+              <p className="ap-row__prov">
+                {governs ? copy.assumptionStateUnsetNoteBudget : copy.assumptionStateUnsetNote}
+              </p>
             )}
           </Row>
 

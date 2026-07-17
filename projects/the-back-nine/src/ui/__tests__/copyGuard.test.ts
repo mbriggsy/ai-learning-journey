@@ -59,6 +59,32 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     }
   })
 
+  // --- the spendHelp twins (S5.1): ONE state sentence swaps inside an otherwise-verbatim string.
+  //     The copy.ts comment CLAIMED this pin existed; the 2026-07-17 council (wf_d3666133-c34)
+  //     found the claim false against source and mandated the real guard land BEFORE any twin
+  //     reword (a comment claiming an absent guardrail bites the very next edit). Anchors are
+  //     deliberate literals — the pin's job is friction on exactly these shared sentences. ---
+  it('the spendHelp twins share prefix + suffix verbatim — only the state sentence differs (S5.1 drift-pin)', () => {
+    const unpriced = copy.spendHelp
+    const priced = copy.spendHelpStatePriced
+    // The shared SUFFIX (the closing household sentence) — identical, verbatim.
+    const suffix = 'The whole household, not just the bills that feel like retirement.'
+    expect(unpriced.endsWith(suffix), 'spendHelp keeps the shared closing sentence').toBe(true)
+    expect(priced.endsWith(suffix), 'spendHelpStatePriced keeps the shared closing sentence').toBe(true)
+    // The shared PREFIX runs through the federal sentence; the state sentence is the next clause.
+    const prefixEnd = 'the tool works that out from your withdrawals itself. '
+    const cut = unpriced.indexOf(prefixEnd)
+    expect(cut, 'the federal sentence anchors the shared prefix').toBeGreaterThan(0)
+    const sharedPrefix = unpriced.slice(0, cut + prefixEnd.length)
+    expect(priced.startsWith(sharedPrefix), 'the twins share the whole prefix verbatim').toBe(true)
+    // The state sentences (between prefix and suffix) DIFFER, each carrying its own honest frame.
+    const stateUnpriced = unpriced.slice(sharedPrefix.length, unpriced.length - suffix.length)
+    const statePriced = priced.slice(sharedPrefix.length, priced.length - suffix.length)
+    expect(stateUnpriced, 'the unpriced arm keeps the family frame').toContain('isn’t priced yet')
+    expect(statePriced, 'the priced arm names the tool as the payer').toContain('priced by the tool')
+    expect(stateUnpriced).not.toBe(statePriced)
+  })
+
   // --- slots: render with representative args, then scan. Slots are the SANCTIONED numeric channel,
   //     so they are NOT free-numeral scanned; the verdict voice still must hold. Record<keyof typeof
   //     slots, …> makes a new slot without a sample a COMPILE error (no silent no-op — burned/070). ---

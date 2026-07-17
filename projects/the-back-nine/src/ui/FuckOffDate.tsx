@@ -338,10 +338,15 @@ export function FuckOffDate({ view, focusSignal, actionsSlot, medicarePricedNote
           {medicarePricedNote && (
             <>
               <p className="fod-note">{copy.verdictMedicarePriced}</p>
-              <p className="fod-note">
-                {composeVerdictMedicareResidual(statePricedNote)}
-                {medicareExtrasTypicalNote !== undefined ? ` ${medicareExtrasTypicalNote}` : ''}
-              </p>
+              <p className="fod-note">{composeVerdictMedicareResidual(statePricedNote)}</p>
+              {/* O12/F6(ii) (council 2026-07-17): the on-typical extras appendix gets its OWN
+                  paragraph on the DATE route only — this surface scrolls by design, so the
+                  one-frame no-new-row law doesn't bind here and the 4-6-fact block breathes.
+                  Order preserved (residual → appendix). The SPINE keeps the same-<p> concat
+                  (ConfidenceStatement.tsx) — its fold law still forbids a new row. */}
+              {medicareExtrasTypicalNote !== undefined && (
+                <p className="fod-note">{medicareExtrasTypicalNote}</p>
+              )}
             </>
           )}
           {/* P3·U13 — the standing staleness echo (Q1): the per-clock disclosure rendered at

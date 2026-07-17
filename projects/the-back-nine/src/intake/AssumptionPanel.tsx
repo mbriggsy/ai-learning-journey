@@ -487,7 +487,7 @@ export function AssumptionPanel({
             )}
           </Row>
 
-          {/* Where you’ll retire (the state-tax unit S3) — a household fact like spend. The shared
+          {/* Your retirement state (the state-tax unit S3) — a household fact like spend. The shared
               StateResidencePicker IS the edit affordance: the active segment shows the current
               answer (a state name, or the honest 'not priced yet'), and re-picking re-runs (the
               SC-vs-GA what-if lever). commitOpen never refuses — any roster value is legal. An

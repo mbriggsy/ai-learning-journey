@@ -52,9 +52,16 @@ export function composeVerdictMedicareResidual(pricedState: PricedState | undefi
   return `${copy.verdictResidualLead} ${affirm}${copy.verdictResidualTail}`
 }
 
-/** The Roth lever's omissions note (home #2): the state-tax item drops for a priced household. */
-export function composeRothOmissionsNote(statePriced: boolean): string {
-  return statePriced ? copy.rothOmissionsNoteStatePriced : copy.rothOmissionsNote
+/** The Roth lever's omissions note (home #2): the state-tax item drops for a priced household,
+ *  and the pre-65 clause drops for an all-65+ household (O9, closed 2026-07-17 — age is that
+ *  clause's display domain; the caller passes `medicareOnlyPriced(draft)`, whose unknown-age
+ *  arm is FALSE, so an unanswered age conservatively keeps the clause). Two independent axes,
+ *  four variants — each a static catalog key so every arm rides the require-hedge sweep. */
+export function composeRothOmissionsNote(statePriced: boolean, householdAll65: boolean): string {
+  if (statePriced) {
+    return householdAll65 ? copy.rothOmissionsNoteStatePricedAll65 : copy.rothOmissionsNoteStatePriced
+  }
+  return householdAll65 ? copy.rothOmissionsNoteAll65 : copy.rothOmissionsNote
 }
 
 /** The Healthcare door sheet's omissions note (home #3): the state-tax item drops when priced,

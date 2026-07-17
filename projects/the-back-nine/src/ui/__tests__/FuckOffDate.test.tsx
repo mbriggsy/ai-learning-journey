@@ -412,6 +412,23 @@ describe('P3-U11 follow-up — the priced-Medicare disclosure on the date claim'
     const residual = notes.find((t) => t.includes('Florida'))
     expect(residual, 'the residual note names Florida').toBeDefined()
     expect(residual, 'FL names the genuinely-zero fact').toContain('no state income tax')
-    expect(residual).not.toContain('isn’t counted')
+    expect(residual).not.toContain('isn’t priced yet')
+  })
+
+  // O12/F6(ii) (council 2026-07-17): on the DATE route the on-typical extras appendix gets its
+  // OWN paragraph (this surface scrolls by design — the spine's no-new-row fold law doesn't bind
+  // here). Order preserved: affirmation → residual → appendix. The spine's same-<p> concat is
+  // pinned in ConfidenceStatement.test.tsx — the two routes deliberately differ on this.
+  it('the on-typical appendix renders as its OWN note on the date route, AFTER the residual', () => {
+    const note = 'Craig’s coverage is figured at a typical ~$203 a month.'
+    const { container } = render(
+      <FuckOffDate view={dates(DATE_FIXTURES.confirmed)} medicarePricedNote medicareExtrasTypicalNote={note} />,
+    )
+    const notes = Array.from(container.querySelectorAll('.fod-note')).map((n) => n.textContent ?? '')
+    const residualIdx = notes.findIndex((t) => t.includes('Premiums are held flat'))
+    const appendixIdx = notes.findIndex((t) => t === note)
+    expect(residualIdx, 'the residual renders').toBeGreaterThanOrEqual(0)
+    expect(appendixIdx, 'the appendix is its OWN note (never concatenated into the residual)').toBeGreaterThan(residualIdx)
+    expect(notes[residualIdx], 'the residual does not swallow the appendix').not.toContain(note)
   })
 })

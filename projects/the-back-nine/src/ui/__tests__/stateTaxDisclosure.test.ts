@@ -29,20 +29,20 @@ describe('S5 — composeVerdictMedicareResidual (the verdict home, clause swaps 
     expect(copy.verdictMedicareResidual.endsWith(copy.verdictResidualTail)).toBe(true)
   })
 
-  it('each PRICED state NAMES the state, affirms it is REFLECTED, and drops the "isn’t counted" clause', () => {
+  it('each PRICED state NAMES the state, affirms it is REFLECTED, and drops the unpriced "isn’t priced yet" clause', () => {
     const nc = composeVerdictMedicareResidual('NC')
     expect(nc).toContain('North Carolina')
     expect(nc).toContain('reflected in these numbers')
-    expect(nc, 'the unpriced "isn’t counted" clause dies for a priced household').not.toContain('isn’t counted')
+    expect(nc, 'the unpriced "isn’t priced yet" clause dies for a priced household').not.toContain('isn’t priced yet')
 
     const pa = composeVerdictMedicareResidual('PA')
     expect(pa).toContain('Pennsylvania')
     expect(pa, 'PA is honest about its near-zero reality').toContain('leaves most retirement income untaxed')
-    expect(pa).not.toContain('isn’t counted')
+    expect(pa).not.toContain('isn’t priced yet')
 
     const fl = composeVerdictMedicareResidual('FL')
     expect(fl, 'FL names the genuinely-zero fact').toContain('Florida has no state income tax')
-    expect(fl).not.toContain('isn’t counted')
+    expect(fl).not.toContain('isn’t priced yet')
   })
 
   it('the affirmation NEVER renders alone — every priced variant ships WITH the narrowed residual (premiums held flat)', () => {
@@ -67,13 +67,35 @@ describe('S5 — composeVerdictMedicareResidual (the verdict home, clause swaps 
 
 describe('S5 — the omission-list homes (state-tax item drops when priced, gated independently)', () => {
   it('composeRothOmissionsNote: priced DROPS the state-tax item; unpriced keeps today’s words verbatim', () => {
-    expect(composeRothOmissionsNote(false)).toBe(copy.rothOmissionsNote)
-    const priced = composeRothOmissionsNote(true)
+    expect(composeRothOmissionsNote(false, false)).toBe(copy.rothOmissionsNote)
+    const priced = composeRothOmissionsNote(true, false)
     expect(priced, 'the run prices state tax ⇒ it is no longer "not counted"').not.toContain('state income tax')
-    expect(priced, 'the NIIT + pre-65 items STAY (O9 not widened)').toContain('net-investment-income tax')
+    expect(priced, 'the NIIT + pre-65 items STAY for an age-mixed household').toContain('net-investment-income tax')
     expect(priced).toContain('pre-65 health-plan side effects')
     // 'roth' prefix ⇒ require-hedge-swept: the priced variant still wears its hedge.
     expect(lintCopy(priced, ['require-hedge'])).toEqual([])
+  })
+
+  // O9 (closed 2026-07-17, rode the O14 sweep): the SECOND axis — an all-65+ household has no
+  // pre-65 years, so the "pre-65 health-plan side effects" item drops; the state axis composes
+  // independently (4 variants total). The FALSE arm of the age axis is the conservative default
+  // (an unknown age keeps the clause — the caller's predicate, medicareOnlyPriced, is false there).
+  it('composeRothOmissionsNote all-65+ axis: the pre-65 item drops; each of the 4 variants wears its hedge', () => {
+    const all65Unpriced = composeRothOmissionsNote(false, true)
+    expect(all65Unpriced).toBe(copy.rothOmissionsNoteAll65)
+    expect(all65Unpriced, 'state-tax item STAYS while unpriced').toContain('state income tax')
+    expect(all65Unpriced, 'the pre-65 clause dies for an all-65+ household').not.toContain('pre-65')
+
+    const all65Priced = composeRothOmissionsNote(true, true)
+    expect(all65Priced).toBe(copy.rothOmissionsNoteStatePricedAll65)
+    expect(all65Priced, 'both axes drop their items — the NIIT alone remains').not.toContain('state income tax')
+    expect(all65Priced).not.toContain('pre-65')
+    expect(all65Priced).toContain('net-investment-income tax')
+    expect(all65Priced, 'the single-item variant reads "it", never a dangling "each"').not.toContain('each')
+
+    for (const v of [all65Unpriced, all65Priced]) {
+      expect(lintCopy(v, ['require-hedge'])).toEqual([])
+    }
   })
 
   it('composeControlHealthOmissionsNote: priced DROPS the state-tax item; the rest of the list STAYS; unpriced verbatim', () => {

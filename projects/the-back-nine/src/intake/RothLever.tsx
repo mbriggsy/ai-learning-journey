@@ -30,7 +30,7 @@ import type { Announcer } from './a11y'
 import { ControlSheet } from './controlSheet'
 import { ControlPreviewReadout, useControlPreview } from './controlPreview'
 import { CurrencyField, IntegerField, formatMoney } from './fields'
-import { draftPretaxTotal } from './intakeMap'
+import { draftPretaxTotal, medicareOnlyPriced } from './intakeMap'
 /** The draft plan mid-entry: fields optional until committed (the intake hole-tolerance rule). */
 interface PlanDraft {
   readonly amount?: number
@@ -174,7 +174,12 @@ export function RothLever({ open, draft, preview, previewBlocking = false, onApp
             notes={
               <>
                 <p className="field-help">{copy.rothFundingNote}</p>
-                <p className="field-help">{composeRothOmissionsNote(statePricedNote !== undefined)}</p>
+                {/* O9 (2026-07-17): the second axis drops the pre-65 clause for an all-65+
+                    household — medicareOnlyPriced is the draft-age predicate (unknown age ⇒
+                    false ⇒ the clause conservatively stays). */}
+                <p className="field-help">
+                  {composeRothOmissionsNote(statePricedNote !== undefined, medicareOnlyPriced(draft))}
+                </p>
               </>
             }
           />

@@ -68,6 +68,12 @@ function draftWith(mutate?: (d: ScenarioDraft) => ScenarioDraft): ScenarioDraft 
 
 const pretaxAccount: EnteredAccount = { ownerIndex: 0, kind: 'traditional-ira', valueToday: 500_000 }
 const withPretax = (d: ScenarioDraft): ScenarioDraft => ({ ...d, enteredAccounts: [pretaxAccount] })
+/** O9: an all-65+ household (both ages known, ≥65) — flips `medicareOnlyPriced` true. The fresh
+ *  draft's UNANSWERED ages are the conservative false arm the earlier arms already prove. */
+const all65 = (d: ScenarioDraft): ScenarioDraft => ({
+  ...d,
+  people: d.people.map((p) => ({ ...p, currentAge: 68 })) as unknown as ScenarioDraft['people'],
+})
 
 function deferredPreview() {
   const calls: TwoArmControl[] = []
@@ -202,6 +208,37 @@ describe('RothLever — a landed reading discloses funding + omissions beside th
     await waitFor(() => expect(document.querySelector('.control-preview__delta')).not.toBeNull())
     expect(screen.getByText(copy.rothOmissionsNoteStatePriced)).toBeInTheDocument()
     expect(screen.queryByText(copy.rothOmissionsNote)).toBeNull()
+  })
+
+  // O9 (closed 2026-07-17): the pre-65 clause drops for an all-65+ household — the age axis
+  // composes independently of the state axis. The arms above render with UNANSWERED ages, so
+  // they already prove the conservative default (unknown age ⇒ the clause stays).
+  it('an all-65+ household drops the pre-65 clause from the omissions note (state item stays while unpriced)', async () => {
+    const preview = deferredPreview()
+    render(
+      <RothLever open draft={draftWith((d) => all65(withPretax(d)))} preview={preview.fn} onApply={noop} onRemove={noop} onClose={noop} />,
+    )
+    commitField(screen.getByLabelText(copy.leverRothAmountLabel), '50,000')
+    await act(async () => {
+      preview.resolvers.at(-1)!(okPreview(8, 6))
+    })
+    await waitFor(() => expect(document.querySelector('.control-preview__delta')).not.toBeNull())
+    expect(screen.getByText(copy.rothOmissionsNoteAll65)).toBeInTheDocument()
+    expect(screen.queryByText(copy.rothOmissionsNote)).toBeNull()
+  })
+
+  it('an all-65+ PRICED household reads the single-item note (state dropped by pricing, pre-65 by age)', async () => {
+    const preview = deferredPreview()
+    render(
+      <RothLever open draft={draftWith((d) => all65(withPretax(d)))} preview={preview.fn} onApply={noop} onRemove={noop} onClose={noop} statePricedNote="NC" />,
+    )
+    commitField(screen.getByLabelText(copy.leverRothAmountLabel), '50,000')
+    await act(async () => {
+      preview.resolvers.at(-1)!(okPreview(8, 6))
+    })
+    await waitFor(() => expect(document.querySelector('.control-preview__delta')).not.toBeNull())
+    expect(screen.getByText(copy.rothOmissionsNoteStatePricedAll65)).toBeInTheDocument()
+    expect(screen.queryByText(copy.rothOmissionsNoteStatePriced)).toBeNull()
   })
 })
 

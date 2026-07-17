@@ -87,7 +87,11 @@ export const copy = {
   qStateHeadingRetired: 'Where do you live in retirement?',
   stateResidenceLead:
     'Where you settle sets the state income tax on the money you take from savings each year — some states tax it, some don’t. A best guess is fine; you can change it whenever your plans firm up.',
-  stateResidenceLegend: 'Where you’ll retire',
+  // Tense-neutral (council F3, 2026-07-17): the old "Where you’ll retire" stayed future-tense for
+  // an ALREADY-retired household while the heading above route-swaps — and the legend IS the
+  // fieldset's accessible name. Preserved dissent (⚑ digest): route-swap it like the heading if
+  // Briggsy's eye reads neutral as flat.
+  stateResidenceLegend: 'Your retirement state',
   stateOptionNC: 'North Carolina',
   stateOptionPA: 'Pennsylvania',
   stateOptionFL: 'Florida',
@@ -111,11 +115,16 @@ export const copy = {
   // so a household that named a PRICED state is told the OPPOSITE of the verbatim line above:
   // leave the state bill OUT (the tool now prices it), exactly like the federal one — keeping it
   // inside would DOUBLE-COUNT the moment pricing ships (the federal double-count class). Shares
-  // its prefix + suffix with `spendHelp` verbatim; ONLY the state sentence flips (a copyGuard test
-  // pins the shared endpoints so the two can't drift). Selected in the spend step on the DRAFT
-  // answer (intake domain — never the built-params predicate the verdict/lever/sheet read).
+  // its prefix + suffix with `spendHelp` verbatim; ONLY the state sentence flips (the S5.1
+  // drift-pin in copyGuard.test.ts holds the shared endpoints — the 2026-07-17 council found the
+  // prior version of this comment claimed a pin that did NOT exist, and mandated the real one
+  // land before any twin reword). Selected in the spend step on the DRAFT answer (intake domain —
+  // never the built-params predicate the verdict/lever/sheet read). The state sentence is
+  // deliberately presupposition-free (council F5, same ruling): "State income tax" the category,
+  // never "your state's income tax"/"that bill" — Florida households have NO such tax or bill,
+  // and the old wording told them to leave out a bill that doesn't exist.
   spendHelpStatePriced:
-    'Everything — housing, food, fun, and the medical costs you pay out of pocket. Leave Medicare premiums out entirely: Part B, its income surcharge, and any Part D, Medigap, or Medicare Advantage premium — the tool handles those separately and adds them on top itself. Leave out federal income tax: the tool works that out from your withdrawals itself. Your state’s income tax is priced by the tool too — leave that bill out of this figure, the same as the federal one. The whole household, not just the bills that feel like retirement.',
+    'Everything — housing, food, fun, and the medical costs you pay out of pocket. Leave Medicare premiums out entirely: Part B, its income surcharge, and any Part D, Medigap, or Medicare Advantage premium — the tool handles those separately and adds them on top itself. Leave out federal income tax: the tool works that out from your withdrawals itself. State income tax is priced by the tool too — leave it out of this figure, the same as the federal one. The whole household, not just the bills that feel like retirement.',
   periodMonth: 'Each month',
   periodYear: 'Each year',
   periodLegend: 'That figure is…',
@@ -785,10 +794,20 @@ export const copy = {
     'Not counted here: state income tax, the net-investment-income tax, and pre-65 health-plan side effects — each could move this picture.',
   // S5.2 — the state-priced twin (the state-tax unit): the state-tax item DROPS from the list for
   // a household whose run prices its state (the composeRothOmissionsNote seam gates it on the
-  // producer's-output predicate). The pre-65 clause + NIIT stay (O9 is filed separately — not
-  // widened here). 'roth' prefix ⇒ require-hedge-swept: keeps "could move this picture".
+  // producer's-output predicate). 'roth' prefix ⇒ require-hedge-swept: keeps "could move this picture".
   rothOmissionsNoteStatePriced:
     'Not counted here: the net-investment-income tax and pre-65 health-plan side effects — each could move this picture.',
+  // O9 CLOSED (2026-07-17, rode the O14 sweep — the sweep touched these exact strings): the
+  // "pre-65 health-plan side effects" clause is age-gated OFF for an all-65+ household — no
+  // pre-65 years exist, so the clause was inapplicable noise for exactly the population that
+  // reads this note most (the Medicare-priced hero's own households). The composer's SECOND
+  // axis (`householdAll65` — `medicareOnlyPriced`, draft ages; an unknown age conservatively
+  // KEEPS the clause) picks these variants. The single-item variant says "it", never "each" —
+  // grammar honesty; "could" carries require-hedge on all four.
+  rothOmissionsNoteAll65:
+    'Not counted here: state income tax and the net-investment-income tax — each could move this picture.',
+  rothOmissionsNoteStatePricedAll65:
+    'Not counted here: the net-investment-income tax — it could move this picture.',
   twoFuturesCaption:
     'How the middle-of-the-road path could run with and without the change, in today’s dollars.',
   sequencingBaselineNote:
@@ -869,8 +888,17 @@ export const copy = {
   // frame row (the one-frame fit law's tallest composite).
   verdictMedicarePriced:
     'Medicare’s costs for the two of you are already in these numbers — the Part B premium, its income surcharge, and extra coverage: a drug plan, a supplement plan, or a Medicare Advantage premium.',
+  // Reworded 2026-07-17 (council wf_d3666133-c34, O14 sweep): (1) the old "isn’t counted" was the
+  // family's lone outlier — one lexeme, two referents against intake's "keep that bill inside this
+  // figure so it still counts" (a compliant taxed-state household read its kept-inside bill as
+  // VANISHED — the calm-but-wrong direction); the clause now speaks the family's own "priced"
+  // frame. (2) The double-em-dash three-fact chain reshaped into one-fact sentences (the O12
+  // density ruling — zero facts dropped, the hawk's veto). (3) The hedge "could sit tighter than
+  // shown" was twice refuter-confirmed ambiguous in the ROSIER direction (more precise vs less
+  // margin) — replaced with an explicit not-rosier direction. S1 magnitude law holds: the state
+  // bill stays "a real yearly bill", never a rounding hedge.
   verdictMedicareResidual:
-    'Those are the pieces this tool adds by itself. The rare Part A premium stays inside the spending you gave us. State income tax isn’t counted — a real yearly bill in a taxing state — and premiums are held flat in today’s dollars, so the true picture could sit tighter than shown.',
+    'Those are the pieces this tool adds by itself. The rare Part A premium stays inside the spending you gave us. State income tax isn’t priced yet. In a taxing state, that’s a real yearly bill. Premiums are held flat in today’s dollars, so their true cost could run higher than shown.',
   // S5.2/S5.3 — the verdict residual SPLIT into clause-parts (the monolith above stays as the
   // UNPRICED render, verbatim). For a state-PRICED household the embedded "state income tax isn’t
   // counted" clause DIES and is REPLACED by the outcome-scoped affirmation naming the state,
@@ -883,8 +911,11 @@ export const copy = {
   // shipped monolith. `verdict` prefix ⇒ free-numeral-gated: NAME the state, never a rate.
   verdictResidualLead:
     'Those are the pieces this tool adds by itself. The rare Part A premium stays inside the spending you gave us.',
+  // The Tail now opens with a period graft (was an em-dash): every priced affirmation ends
+  // mid-clause ("…reflected in these numbers" / "…no state bill on your withdrawals"), so the
+  // Tail closes that sentence and starts its own — one fact per sentence on both compositions.
   verdictResidualTail:
-    ' — and premiums are held flat in today’s dollars, so the true picture could sit tighter than shown.',
+    '. Premiums are held flat in today’s dollars, so their true cost could run higher than shown.',
   verdictResidualStateNC: 'Your North Carolina state income tax is reflected in these numbers',
   verdictResidualStatePA:
     'Your Pennsylvania state income tax is reflected in these numbers, usually a small piece since Pennsylvania leaves most retirement income untaxed',

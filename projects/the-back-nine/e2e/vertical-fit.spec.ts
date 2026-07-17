@@ -302,7 +302,7 @@ test.describe(`?seed=nc — the NC state clause on the borderline priced residua
     )
     // The unpriced monolith's distinctive aside DIES for a priced household (the swap, not an append).
     await expect(residual, 'the unpriced clause must not survive on a priced household').not.toContainText(
-      'a real yearly bill in a taxing state',
+      'a real yearly bill',
     )
   })
 })
@@ -353,7 +353,7 @@ test.describe(`?seed=elsewhere — the answered-but-unpriced monolith, no state 
     const residual = page.locator('.cs-medicare-residual')
     // The monolith's distinctive state SENTENCE — the unpriced words a priced household drops.
     await expect(residual, 'the unpriced monolith clause must render verbatim').toContainText(
-      'a real yearly bill in a taxing state',
+      'a real yearly bill',
     )
     // No BUILT state affirmation leaks onto the unpriced household (roster membership, not truthiness).
     await expect(residual, 'no NC affirmation on an unpriced household').not.toContainText('North Carolina')
@@ -443,7 +443,7 @@ test.describe(`?seed=date65 — priced Medicare on the date route, no false "unp
       'the priced-Medicare affirmation must render on the date route',
     ).toBeVisible()
     await expect(
-      page.getByText('could sit tighter than shown'),
+      page.getByText('could run higher than shown'),
       'the narrowed residual must ship WITH the affirmation',
     ).toBeVisible()
 

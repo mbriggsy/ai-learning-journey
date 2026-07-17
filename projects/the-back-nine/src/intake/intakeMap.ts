@@ -729,6 +729,19 @@ export function pricedStateForRun(d: ScenarioDraft): PricedState | undefined {
   return spineStatePriced(d) ?? dateStatePriced(d)
 }
 
+/** The spend-question help variant for a draft — the ONE home for the two INPUT surfaces (the
+ *  intake spend step and the assumption panel's spend row), which edit the SAME draft and must
+ *  agree with each other BY CONSTRUCTION (the seed-increment review's fold: this ternary was
+ *  byte-duplicated across both surfaces, and the panel copy had already drifted once — the false
+ *  "isn't priced yet" on a priced household). DRAFT-keyed deliberately — the instruction precedes
+ *  the run, so it reads the answer being edited, not a producer's output; OUTPUT surfaces (the
+ *  verdict/lever/sheet disclosures) stay producer-keyed via {@link pricedStateForRun} (insight 081). */
+export function spendHelpKeyFor(d: ScenarioDraft): 'spendHelp' | 'spendHelpStatePriced' {
+  return d.retirementState !== undefined && isPricedState(d.retirementState)
+    ? 'spendHelpStatePriced'
+    : 'spendHelp'
+}
+
 /** Resolve the Medicare-extras payment fork to per-person MONTHLY dollars (the ask-for-
  *  Medicare-extras unit — the ONE fork→dollar owner; the engine never sees provenance):
  *  'entered' → the person's own dollar; 'none' → an AFFIRMED $0 (the Medicare-Advantage arm,

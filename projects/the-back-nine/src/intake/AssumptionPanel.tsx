@@ -41,7 +41,6 @@ import { copy, slots, type CopyKey } from '@ui/copy'
 import { composeVerdictReading } from '@ui/verdictSentence'
 import { METHODOLOGY_DISCLOSURES, type AssumptionSeat } from '@ui/assumptionRegistry'
 import { productionMarket } from '@engine/reference/methodology'
-import { isPricedState } from '@engine/constants/stateTax'
 import { budgetGoverns } from '@budget/budgetModel'
 import { budgetYearZeroFullTotal } from '@budget/budgetToSpending'
 import type { Announcer } from './a11y'
@@ -49,7 +48,7 @@ import { ControlSheet } from './controlSheet'
 import { CurrencyField, IntegerField, PercentField, SegmentedControl, formatMoney, formatPercent } from './fields'
 import { FieldError } from './FieldError'
 import { validateField, personField, type SanityViolation } from './sanity'
-import { healthcarePriced, isDateRoute, type MissingFact } from './intakeMap'
+import { healthcarePriced, isDateRoute, spendHelpKeyFor, type MissingFact } from './intakeMap'
 import { MedicareExtrasFork, StateResidencePicker, writeWorkingYearInvestment } from './questions'
 import './assumptions.css'
 
@@ -461,18 +460,12 @@ export function AssumptionPanel({
               <>
                 <CurrencyField
                   labelKey="spendLabel"
-                  // S5.1 — state-aware on the DRAFT answer, MIRRORING the intake's SpendRawFace
-                  // (questions.tsx) exactly: the panel edits the SAME draft the intake wrote, so two
-                  // input surfaces must agree with each other or a priced-state household is told to
-                  // "keep your state bill inside" here (spendHelp) after the intake told it to leave
-                  // it OUT (spendHelpStatePriced) — a false "isn't priced yet" claim + the federal
-                  // double-count class. Reads the DRAFT (intake domain), NOT the built-params
-                  // predicate the verdict/lever/sheet (output surfaces) read.
-                  helpKey={
-                    draft.retirementState !== undefined && isPricedState(draft.retirementState)
-                      ? 'spendHelpStatePriced'
-                      : 'spendHelp'
-                  }
+                  // S5.1 — state-aware on the DRAFT answer via the ONE shared home with the intake's
+                  // SpendRawFace (spendHelpKeyFor, intakeMap): the panel edits the SAME draft the
+                  // intake wrote, so the two input surfaces agree BY CONSTRUCTION — the duplicated
+                  // ternary here had already drifted once (the false "isn't priced yet" on a priced
+                  // household, the federal double-count class; the review's fold made it structural).
+                  helpKey={spendHelpKeyFor(draft)}
                   field="annualSpendingReal"
                   value={spendDisplayed}
                   invalid={errorsFor('annualSpendingReal').length > 0}

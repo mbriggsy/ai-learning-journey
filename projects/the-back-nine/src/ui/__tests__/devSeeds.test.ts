@@ -557,4 +557,27 @@ describe('the statestale aged plant (the state-tax gate note; light doctor, F2 s
       false,
     )
   })
+
+  // Arm 5 — the review's fold (6-lens convergence): the fail-loud pair is COMPLETE. (a) FL passes
+  // `isPricedState` but its null rateSchedule can never diverge — without the agedStateProfile
+  // throw, an FL statestale plant would be the exact "silent no-op whose clock can't fire" the
+  // light doctor's guard promises away. (b) The full doctorStaleVault now enforces its
+  // never-take-a-priced-base rule (its −2y anchor trips the engine's priced-state year bound →
+  // R19 indeterminate, the F2-superseded bug) instead of holding it in prose.
+  it('the fail-loud pair is complete: FL refuses the light doctor; a priced base refuses the full doctor', () => {
+    const flBuilt = scenarioFromDraft(DEV_SEEDS.fl)
+    expect(flBuilt.ready).toBe(true)
+    if (!flBuilt.ready) return
+    expect(
+      () => doctorStateStaleVault(flBuilt.scenario, TODAY),
+      'FL (priced, schedule-less) can never fire the clock — must throw, never a silent no-op',
+    ).toThrow(/never diverge|no rate step/)
+    const ncBuilt = scenarioFromDraft(DEV_SEEDS.nc)
+    expect(ncBuilt.ready).toBe(true)
+    if (!ncBuilt.ready) return
+    expect(
+      () => doctorStaleVault(ncBuilt.scenario, TODAY),
+      'a priced-state base through the FULL doctor is the F2-superseded bug — must throw',
+    ).toThrow(/doctorStateStaleVault/)
+  })
 })

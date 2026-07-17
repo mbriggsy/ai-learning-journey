@@ -4,9 +4,9 @@ import type { PersonDraft, ScenarioDraft } from '@store/memoryModel'
 import type { MedicareExtrasEntryV3, RetirementState, WorkStatus } from '@shared/model'
 import { fraMonthsForBirthYear } from '@engine/constants/socialSecurity'
 import { medicareExtrasTypical, medicareExtrasTypicalMonthly } from '@engine/constants/health'
-import { isPricedState } from '@engine/constants/stateTax'
 import { budgetGoverns, isActiveAt, isRampedBudget } from '@budget/budgetModel'
 import { budgetYearZeroFullTotal, commitBudgetPatch } from '@budget/budgetToSpending'
+import { spendHelpKeyFor } from './intakeMap'
 import { BudgetBuilder } from './BudgetBuilder'
 import { CurrencyField, IntegerField, NameField, SegmentedControl, formatMoney, type SegmentOption } from './fields'
 import { FieldError } from './FieldError'
@@ -398,13 +398,10 @@ function SpendRawFace({
         labelKey="spendLabel"
         // S5.1 — state-aware on the DRAFT answer (the state step precedes spend). A PRICED-state
         // household is told to leave its state bill OUT (the tool now prices it); 'elsewhere' /
-        // unanswered / an unbuilt state keeps the keep-it-inside instruction VERBATIM. Reads the
-        // DRAFT (intake domain), NOT the built-params predicate the verdict/lever/sheet read.
-        helpKey={
-          api.draft.retirementState !== undefined && isPricedState(api.draft.retirementState)
-            ? 'spendHelpStatePriced'
-            : 'spendHelp'
-        }
+        // unanswered / an unbuilt state keeps the keep-it-inside instruction VERBATIM. ONE shared
+        // home with the assumption panel's spend row (spendHelpKeyFor — the two input surfaces
+        // over the same draft agree by construction; the review's fold of the duplicated ternary).
+        helpKey={spendHelpKeyFor(api.draft)}
         field="annualSpendingReal"
         value={displayed}
         invalid={api.violationsFor('annualSpendingReal').length > 0}

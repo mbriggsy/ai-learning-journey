@@ -920,8 +920,18 @@ export function plantDevVault(key: string): Promise<PlantResult> {
  * demotes to the R19 calm indeterminate and no verdict renders. A priced-state stale plant rides
  * {@link doctorStateStaleVault} (savedAt-only, startCalendarYear + all vintages UNTOUCHED, ONLY the
  * state profile aged). This doctor leaves `stateTaxVintage` untouched (spread through) by design.
+ * The rule is ENFORCED by the guard below (the review's fold — its light sibling fail-louds on a
+ * mis-wire, so this one does too; prose alone held the asymmetry).
  */
 export function doctorStaleVault(s: ScenarioV3, todayEpochDay: number): ScenarioV3 {
+  if (s.retirementState !== undefined && isPricedState(s.retirementState)) {
+    throw new Error(
+      `doctorStaleVault must never take a priced-state base (got ${s.retirementState}): its -2y ` +
+        `startCalendarYear aging precedes the state's earliest rate row, and the engine's ` +
+        `priced-state lower bound (simulate.ts:640) demotes the recompute to the R19 calm ` +
+        `indeterminate — no verdict renders. Use doctorStateStaleVault (the F2 supersession).`,
+    )
+  }
   // A PRE-EXTRAS-ERA save (insight 079 truthfulness): the ask-for-Medicare-extras unit did not
   // exist ~2 years ago, so the aged model carries NEITHER the per-person fork field NOR the
   // typical's adoption-vintage in its healthcare stamp — both are STRIPPED. An entered fork
@@ -960,19 +970,25 @@ export function doctorStaleVault(s: ScenarioV3, todayEpochDay: number): Scenario
  *  `controls.stateTaxMoved` fires. This ages the STATE CONSTANT's own schedule inside the persisted
  *  stamp — NOT the household's `startCalendarYear` (untouched by the light doctor), so it never trips
  *  the engine's priced-state year bound. FL (rateSchedule null) has nothing to age (constitutional $0,
- *  never stales). */
+ *  never stales) — handed FL, this THROWS rather than silently returning a non-diverging profile
+ *  (the ultramode review's 6-lens convergence: FL passes `isPricedState`, so without this the light
+ *  doctor's "never a silent no-op" promise had an FL-shaped hole — a plant whose clock can never fire). */
 function agedStateProfile(state: PricedState): string {
   const current = STATE_TAX_PROFILES[state]
   const firstStep = current.rateSchedule?.steps[0]
-  const older: StateTaxProfile =
-    firstStep === undefined
-      ? current
-      : {
-          ...current,
-          rateSchedule: {
-            steps: [{ fromYear: firstStep.fromYear - 2, rate: Math.round((firstStep.rate + 0.005) * 1e4) / 1e4 }],
-          },
-        }
+  if (firstStep === undefined) {
+    throw new Error(
+      `agedStateProfile(${state}): a schedule-less priced state has no rate step to age — its profile ` +
+        `can never diverge from the fresh stamp, so an aged plant on this base could never fire the ` +
+        `state-tax clock (FL's constitutional $0 never stales). A wiring error, never a silent no-op.`,
+    )
+  }
+  const older: StateTaxProfile = {
+    ...current,
+    rateSchedule: {
+      steps: [{ fromYear: firstStep.fromYear - 2, rate: Math.round((firstStep.rate + 0.005) * 1e4) / 1e4 }],
+    },
+  }
   return JSON.stringify(older)
 }
 
@@ -989,13 +1005,17 @@ function agedStateProfile(state: PricedState): string {
  * also organically impossible: `retirementState` shipped 2026-07-15, so no genuinely-old save could
  * carry it.
  *
- * THE COHERENCE CONSTRAINT (the load-bearing invariant): `savedAt`'s calendar year MUST equal
- * `startCalendarYear` (both 2026 — untouched), because the engine validates on `startCalendarYear`
- * and the two describe the same save moment. −150 days from any plausible 2026 wall-clock keeps
- * `savedAt` inside 2026 with a safe margin from Jan 1. The tax / healthcare / date vintages are left
- * FRESH (a same-year save carries same-year vintages) — so the ONLY clock that fires is the state-tax
- * one: the `stalenessStateTax` note renders in ISOLATION (a cleaner face-#4 cold read), and the
- * affirm recompute lands the SAME engine-proven verdict as `?seed=nc` (borderline).
+ * THE COHERENCE CONSTRAINT: `savedAt`'s calendar year SHOULD equal `startCalendarYear` (untouched —
+ * the two describe the same save moment), and −150 days holds that from a MID-YEAR wall-clock
+ * (June–December, where the walks and fit arms run). A Jan–May drive lands `savedAt` in the PRIOR
+ * year — harmless, verified: nothing renders the save YEAR (the elapsed line is days-gated and
+ * suppressed under a year; every fired note is year-agnostic), and the engine reads only the
+ * untouched `startCalendarYear` (the load-bearing half of the constraint) — but the same-year
+ * framing itself only holds mid-year; don't tighten copy against it in an H1 drive. The tax /
+ * healthcare / date vintages are left FRESH (a same-year save carries same-year vintages) — so the
+ * ONLY clock that fires is the state-tax one: the `stalenessStateTax` note renders in ISOLATION
+ * (a cleaner face-#4 cold read), and the affirm recompute lands the SAME engine-proven verdict as
+ * `?seed=nc` (borderline).
  *
  * EXPORTED for the devSeeds battery (like {@link doctorStaleVault}). Fail-loud if handed a
  * non-priced-state base — the ONLY legitimate caller is a priced-state aged plant (`statestale`).

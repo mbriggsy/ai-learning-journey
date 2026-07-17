@@ -551,7 +551,7 @@ async function walkIntakeFork(page: Page, outDir: string): Promise<void> {
   // renders (the Caddie chair fix, 2026-07-15).
   await expect(page.getByRole('heading', { name: 'Where do you live in retirement?' })).toBeVisible()
   await captureState(page, path.join(outDir, 'state-step'))
-  await page.getByRole('radio', { name: 'North Carolina' }).check({ force: true })
+  await pick(page, 'North Carolina')
   // The SELECTED-picker face (increment 5): the answered picker is a walked cold-read surface of
   // its own — the state-tax read law is that the picked segment survives WITHOUT hue (weight +
   // fill + inset ring, intake.css .segment-active). Assert the pick committed a visually-active

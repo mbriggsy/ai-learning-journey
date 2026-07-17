@@ -611,15 +611,29 @@ describe('the state-tax unit (S5) — the producer-output state-priced predicate
 })
 
 // ---------------------------------------------------------------------------
-// O16 (council 2026-07-17, wf_fd7f75cb-916): the producer-output ACA-priced predicate — the Roth
-// omissions note's pre-65 axis. Same discipline as its state sibling above: read the BUILT
-// overlay's own quote stream (insight 080/081), never ages, never healthcareEnabled alone (the
-// Medicare-only branch carries healthcareEnabled with NO stream and must read FALSE).
+// O16 (council 2026-07-17, wf_fd7f75cb-916; the ultramode fold's P1 same day): the ACA-priced
+// predicate reads the PREVIEW producer (buildControlPreviewParams — spine params, or the CROWNED
+// window-gated candidate), never buildDateInput's pre-sweep base overlay and never
+// healthcareEnabled alone (the Medicare-only branch carries the flag with NO stream).
 // ---------------------------------------------------------------------------
-describe('O16 — acaPricedForRun (the producer-output ACA-priced predicate, route-aware)', () => {
-  it('a pre-65 household with the quote pair reads TRUE on its own route (spine and date each via their own producer)', () => {
-    expect(acaPricedForRun(completeSpineDraft()), 'spine ACA household').toBe(true)
-    expect(acaPricedForRun(completeDateDraft()), 'date ACA household (the date producer arm)').toBe(true)
+describe('O16 — acaPricedForRun (the preview-producer ACA-priced predicate)', () => {
+  it('a pre-65 household with the quote pair reads TRUE on its own route (spine; date via the crowned candidate)', () => {
+    expect(acaPricedForRun(completeSpineDraft(), undefined), 'spine ACA household').toBe(true)
+    // The date household (58 working / 60 retired): a retire-now crown leaves 7 pre-65 retired
+    // years, so the crowned candidate genuinely prices ACA.
+    expect(acaPricedForRun(completeDateDraft(), 0), 'date ACA household at a pre-65 crown').toBe(true)
+  })
+
+  it('the FOLD P1 witness: a work-to-65+ CROWN reads FALSE — the crowned candidate window-gates the quote stream to zero ACA years, and the pre-sweep base overlay must not overrule it', () => {
+    const d = completeDateDraft()
+    // The youngest member is 58: at crowned offset 8 every member is 65+ when work stops, so the
+    // candidate the preview runs prices ZERO ACA years. The pre-sweep base overlay still carries
+    // a positive quote stream (its escalator keys off TODAY's ages) — reading it here rendered a
+    // false "the discount is already in these numbers" affirmation (the vetoed shape, one
+    // producer deeper — the base-overlay mutant this arm kills).
+    expect(acaPricedForRun(d, 8)).toBe(false)
+    // And with NO crowned date there is no preview to describe — conservative false.
+    expect(acaPricedForRun(d, undefined)).toBe(false)
   })
 
   it('an all-65+ Medicare-only household reads FALSE — healthcareEnabled WITHOUT a quote stream is not ACA (the healthcareEnabled-alone mutant)', () => {
@@ -635,7 +649,18 @@ describe('O16 — acaPricedForRun (the producer-output ACA-priced predicate, rou
     // predicate reading the flag alone would falsely narrow the pre-65 clause for a household
     // that has no ACA years at all.
     expect(buildSpineParams(all65)?.overlay?.healthcareEnabled, 'the premise: Medicare-only IS enabled').toBe(true)
-    expect(acaPricedForRun(all65)).toBe(false)
+    expect(acaPricedForRun(all65, undefined)).toBe(false)
+  })
+
+  it('a $0-premium quote pair reads FALSE — a PRESENT all-zero stream is not a priced ACA year (the positivity-conjunct mutant)', () => {
+    // An UNMASKED pre-65 household: healthcareOn fires (0 !== undefined), the built overlay
+    // carries healthcareEnabled + a PRESENT all-zero enrolledPremium stream — the engine's own
+    // per-year gate requires a POSITIVE premium, so no year prices; dropping the `p > 0`
+    // conjunct (keeping the presence check) would falsely narrow the clause here.
+    const zeroQuote = { ...completeSpineDraft() }
+    const d = { ...zeroQuote, health: { ...zeroQuote.health, enrolledPremiumMonthlyToday: 0 } }
+    expect(buildSpineParams(d)?.overlay?.healthcareEnabled, 'the premise: the overlay IS enabled').toBe(true)
+    expect(acaPricedForRun(d, undefined)).toBe(false)
   })
 
   it('the DEGENERATE-OVERLAY household reads FALSE (no overlay ⇒ no ACA ⇒ the pre-65 clause conservatively stays)', () => {
@@ -646,7 +671,7 @@ describe('O16 — acaPricedForRun (the producer-output ACA-priced predicate, rou
       ],
       health: { irmaaMagiSeed: [80_000, 80_000] },
     })
-    expect(acaPricedForRun(degenerate)).toBe(false)
+    expect(acaPricedForRun(degenerate, undefined)).toBe(false)
   })
 
   it('an unknown-age household reads FALSE — an unresolved age is never a claim, the clause conservatively stays', () => {
@@ -658,7 +683,7 @@ describe('O16 — acaPricedForRun (the producer-output ACA-priced predicate, rou
       enteredAccounts: [{ ownerIndex: 0, kind: '401k', ticker: 'VTI', valueToday: 600_000 }],
       health: { enrolledPremiumMonthlyToday: 950, slcspMonthlyToday: 880 },
     })
-    expect(acaPricedForRun(unknownAges)).toBe(false)
+    expect(acaPricedForRun(unknownAges, undefined)).toBe(false)
   })
 })
 

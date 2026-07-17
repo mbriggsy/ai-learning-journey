@@ -740,18 +740,24 @@ function acaPricedOverlayArm(o: OverlayParams | undefined): boolean {
   return o?.healthcareEnabled === true && (o.enrolledPremium ?? []).some((p) => Number.isFinite(p) && p > 0)
 }
 
-/** The route-aware "did THIS run price the ACA discount?" — the O16 council's producer's-output
- *  predicate (2026-07-17, wf_fd7f75cb-916) for the Roth omissions note's pre-65 axis. The engine
- *  prices the conversion→MAGI→discount coupling in BOTH preview arms whenever ACA is priced
- *  (taxOverlay's per-year gate; roth.ts runs both arms at identical fidelity), so the note's
- *  "pre-65 health-plan side effects — not counted" clause is FALSE exactly here and must narrow
- *  to the true residual (plan cost-sharing). Same route-safe union shape as
- *  {@link pricedStateForRun} — each producer is null off-route, so no `isDateRoute` disjunct. */
-export function acaPricedForRun(d: ScenarioDraft): boolean {
-  return (
-    acaPricedOverlayArm(buildSpineParams(d)?.overlay) ||
-    acaPricedOverlayArm(buildDateInput(d)?.params.overlay)
-  )
+/** "Does the run the Roth preview describes price the ACA discount?" — the O16 council's
+ *  producer's-output predicate (2026-07-17, wf_fd7f75cb-916) for the omissions note's pre-65
+ *  axis. The engine prices the conversion→MAGI→discount coupling in BOTH preview arms whenever
+ *  ACA is priced (taxOverlay's per-year gate; roth.ts runs both arms at identical fidelity), so
+ *  the note's "pre-65 health-plan side effects — not counted" clause is FALSE exactly there and
+ *  must narrow to the true residual (plan cost-sharing).
+ *
+ *  Reads {@link buildControlPreviewParams} — the EXACT params builder the two-arm preview beside
+ *  the note executes — never `buildDateInput`'s pre-sweep base overlay (the O16 ultramode fold,
+ *  same day: the base quote stream is positive for any member pre-65 TODAY, but the CROWNED
+ *  candidate window-gates ACA to post-crown pre-65 years, so a work-to-65+ crown prices ZERO
+ *  ACA years while the base read claimed priced — the insight-081 class one producer deeper.
+ *  The state sibling {@link pricedStateForRun} can read the base overlay only because
+ *  `retirementState` is Y-invariant; the quote stream is not). Spine: the same spine params as
+ *  the headline. No crowned date: null ⇒ false — conservative, and the note only renders beside
+ *  a landed preview, which is withheld there anyway. */
+export function acaPricedForRun(d: ScenarioDraft, crownedOffsetYears: number | undefined): boolean {
+  return acaPricedOverlayArm(buildControlPreviewParams(d, crownedOffsetYears)?.overlay)
 }
 
 /** The spend-question help variant for a draft — the ONE home for the two INPUT surfaces (the

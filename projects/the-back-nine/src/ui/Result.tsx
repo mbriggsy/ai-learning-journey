@@ -184,10 +184,6 @@ export function Result({
   // affirmation names the state; the Roth lever + Healthcare sheet drop the state-tax omission),
   // each gating on `!== undefined`.
   const statePricedNote = useMemo(() => pricedStateForRun(snapshot.draft), [snapshot.draft])
-  // O16 (council 2026-07-17) — "did THIS run price the ACA discount?", the Roth omissions note's
-  // pre-65 axis: producer's-output like its two sibling predicates above (insight 080/081 — the
-  // degenerate-overlay and unknown-age households read false and conservatively KEEP the clause).
-  const acaPricedNote = useMemo(() => acaPricedForRun(snapshot.draft), [snapshot.draft])
   const enhancedApplied = snapshot.draft.enhancedSubsidies === true
   // The wire's per-year healthcare series (spine headline runs only — presence-keyed).
   const healthReadout =
@@ -200,6 +196,16 @@ export function Result({
     'offsetYears' in snapshot.answer.outcome.lifestyle
       ? snapshot.answer.outcome.lifestyle.offsetYears
       : undefined
+  // O16 (council 2026-07-17; the fold same day) — "does the run the Roth PREVIEW describes price
+  // the ACA discount?": producer's-output (insight 080/081) read off buildControlPreviewParams —
+  // the exact builder the two-arm preview executes (spine params, or the CROWNED window-gated
+  // candidate). Never buildDateInput's pre-sweep base overlay (its quote stream is positive for a
+  // pre-65-today member even when a work-to-65+ crown prices zero ACA years). The degenerate,
+  // unknown-age, and no-crown households read false and conservatively KEEP the clause.
+  const acaPricedNote = useMemo(
+    () => acaPricedForRun(snapshot.draft, crownedOffset),
+    [snapshot.draft, crownedOffset],
+  )
   // The preview runner the sheets inject: params from the CURRENT draft (never a render-captured
   // copy going stale mid-sheet — composed per call), the household's one CRN seed, latest-wins.
   const runPreview = useCallback(

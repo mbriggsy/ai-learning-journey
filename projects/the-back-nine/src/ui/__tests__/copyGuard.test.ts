@@ -95,7 +95,12 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
   //     real-bill direction rider. ---
   it('assumptionStateUnsetNote conditions inclusion on the reader’s action — never a flat exclusion claim (O16 drift-pin)', () => {
     const note = copy.assumptionStateUnsetNote
-    expect(note, 'the flat exclusion claim is dead (false for a compliant household)').not.toMatch(/leave[s]? out/)
+    // The negative guards the exclusion MEANING, not one lexeme (the fold broadened it — a
+    // synonym reword resurrecting the falsehood must trip it, per insight 087's spirit): the
+    // note may say the tool doesn't PRICE the tax, but never that the bill is OUT of the numbers.
+    expect(note, 'the flat exclusion claim is dead (false for a compliant household)').not.toMatch(
+      /(leave[s]?|left) out|excluded|do(es)?n[’']t (include|count)|not (in|counted in) these numbers|sits outside/,
+    )
     expect(note, 'inclusion is conditional on the reader’s own action').toContain('only if you kept it inside')
     expect(note, 'the rule-37 real-bill direction rider survives').toContain('a real yearly bill')
     expect(note, 'the family frame (the O14 counts/counted polysemy stays dead)').toContain('prices no state income tax')

@@ -288,17 +288,18 @@ describe('the healthcare door — the engine PRICED domain only, categorical (co
     expect(stateLine, 'never a bare isDateRoute disjunct for state (insight 080)').not.toMatch(/isDateRoute/)
   })
 
-  it('Result derives the ACA-priced disclosure from the route-aware BUILT params (acaPricedForRun) AND threads it to the Roth lever — the O16 source-bind (insight 080/081)', () => {
+  it('Result derives the ACA-priced disclosure from the PREVIEW producer (acaPricedForRun over the crowned offset) AND threads it to the Roth lever — the O16 source-bind (insight 080/081)', () => {
     // Same closure idiom as its two siblings above: the predicate's divergence witnesses
-    // (Medicare-only, degenerate-overlay, unknown-age) live in intakeMap.test, the component's
-    // note-iff-prop arms in rothLever.test — THIS pin closes Result's derivation + threading
-    // links. A revert to an age/draft re-derivation, a bare isDateRoute widening, or a dropped
-    // prop (the ACA household silently reading the stale blanket clause) goes red here.
+    // (Medicare-only, degenerate-overlay, unknown-age, the work-to-65+ crown) live in
+    // intakeMap.test, the component's note-iff-prop arms in rothLever.test — THIS pin closes
+    // Result's derivation + threading links. A revert to an age/draft re-derivation, a bare
+    // isDateRoute widening, a drop of the crowned-offset key (back to the pre-sweep base overlay
+    // — the fold's P1), or a dropped prop goes red here.
     const src = readFileSync(resolve(__dirname, '../Result.tsx'), 'utf8')
-    expect(src, 'the ACA derivation reads the producer output').toMatch(
-      /const acaPricedNote = useMemo\(\(\) => acaPricedForRun\(snapshot\.draft\)/,
+    expect(src, 'the ACA derivation reads the PREVIEW producer, keyed by the crowned offset').toMatch(
+      /acaPricedForRun\(snapshot\.draft, crownedOffset\)/,
     )
-    const acaLine = src.split('\n').find((l) => l.includes('const acaPricedNote =')) ?? ''
+    const acaLine = src.split('\n').find((l) => l.includes('acaPricedForRun(')) ?? ''
     expect(acaLine, 'never re-derives from draft health fields or ages').not.toMatch(/draft\.health|currentAge/)
     expect(acaLine, 'never a bare isDateRoute disjunct (insight 080)').not.toMatch(/isDateRoute/)
     expect(src, 'the flag is THREADED to the lever (a dropped prop is the silent stale-clause mutant)').toMatch(

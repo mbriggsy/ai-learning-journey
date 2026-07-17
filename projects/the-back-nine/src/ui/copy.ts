@@ -921,7 +921,10 @@ export const copy = {
     'Your Pennsylvania state income tax is reflected in these numbers, usually a small piece since Pennsylvania leaves most retirement income untaxed',
   verdictResidualStateFL: 'Florida has no state income tax, so there’s no state bill on your withdrawals',
   rothMedicareResidualNote:
-    'The income surcharge a conversion can trip two years later is now part of these numbers. One modeling choice remains: premiums are held level in today’s dollars, so a conversion that crosses a surcharge step could look a shade easier here than in real life.',
+    // "held flat" (chair fix, the 2026-07-17 sweep pre-walk): the landing residual says "held
+    // flat in today's dollars" for the SAME modeling choice — one mechanism, one word (rule 36;
+    // five panel lenses independently flagged the flat/level synonym drift across the two doors).
+    'The income surcharge a conversion can trip two years later is now part of these numbers. One modeling choice remains: premiums are held flat in today’s dollars, so a conversion that crosses a surcharge step could look a shade easier here than in real life.',
 
   // --- P3·U12 — the AssumptionPanel (the R7 escape hatch; council wf_dff75c2f-9e3). PREFIX
   // LAW: `assumption*` is the panel's CHROME prefix — labels, values, provenance lines,

@@ -41,6 +41,7 @@ import { copy, slots, type CopyKey } from '@ui/copy'
 import { composeVerdictReading } from '@ui/verdictSentence'
 import { METHODOLOGY_DISCLOSURES, type AssumptionSeat } from '@ui/assumptionRegistry'
 import { productionMarket } from '@engine/reference/methodology'
+import { isPricedState } from '@engine/constants/stateTax'
 import { budgetGoverns } from '@budget/budgetModel'
 import { budgetYearZeroFullTotal } from '@budget/budgetToSpending'
 import type { Announcer } from './a11y'
@@ -460,7 +461,18 @@ export function AssumptionPanel({
               <>
                 <CurrencyField
                   labelKey="spendLabel"
-                  helpKey="spendHelp"
+                  // S5.1 — state-aware on the DRAFT answer, MIRRORING the intake's SpendRawFace
+                  // (questions.tsx) exactly: the panel edits the SAME draft the intake wrote, so two
+                  // input surfaces must agree with each other or a priced-state household is told to
+                  // "keep your state bill inside" here (spendHelp) after the intake told it to leave
+                  // it OUT (spendHelpStatePriced) — a false "isn't priced yet" claim + the federal
+                  // double-count class. Reads the DRAFT (intake domain), NOT the built-params
+                  // predicate the verdict/lever/sheet (output surfaces) read.
+                  helpKey={
+                    draft.retirementState !== undefined && isPricedState(draft.retirementState)
+                      ? 'spendHelpStatePriced'
+                      : 'spendHelp'
+                  }
                   field="annualSpendingReal"
                   value={spendDisplayed}
                   invalid={errorsFor('annualSpendingReal').length > 0}

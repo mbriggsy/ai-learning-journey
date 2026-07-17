@@ -56,6 +56,14 @@ const SPINE_SEEDS = [
   { seed: 'budget', medicareNote: true },
   { seed: 'retired', medicareNote: true },
   { seed: 'health', medicareNote: false },
+  // The NC priced face (the state-carrying seed increment): a `retired` (retiredOnTrack) clone in
+  // North Carolina. The NC flat-tax drag pushes the state-absent twin's on-track DOWN across the
+  // band edge to BORDERLINE — the FIRST borderline in this matrix, so the auto 3-viewport set also
+  // proves the borderline two-pane (word + ruin-tail band) holds the one-frame law. Its state clause
+  // is OUTCOME-independent (statePricedNote = pricedStateForRun off the built params, never the
+  // verdict), so it reads the same affirmation shape as an on-track priced household; the clause
+  // TEXT is pinned by the bespoke `?seed=nc` residual arm below (the matrix never reads the words).
+  { seed: 'nc', medicareNote: true },
 ] as const
 
 /** The spine presence companions (insight 029 — geometry over an unresolved/blank page passes
@@ -246,6 +254,115 @@ for (const { seed, medicareNote } of SPINE_SEEDS) {
   })
 }
 
+// ── the priced-state faces (the state-tax unit / the state-carrying seed increment) ───────────
+// Each priced seed is a retiredOnTrack clone carrying ONE `retirementState`, so the all-65+
+// medicarePricedNote block renders with the household's state clause SWAPPED into the narrowed
+// residual (composeVerdictMedicareResidual, stateTaxDisclosure.ts). The SPINE matrix above already
+// pins nc's FRAME across three viewports; these bespoke arms add what the matrix never reads — the
+// rendered residual TEXT — and carry pa/fl at BOTH laptop tiers (pa is the LONGEST clause variant,
+// the wrap-risk arm). All are non-typical (retiredOnTrack's mixed-provenance extras — one entered,
+// one MA-$0), so the residual rides --leading-snug, asserted where the house asserts it (REAL).
+
+/** The priced-state spine face: pin the one-frame law PLUS the rendered state clause the matrix
+ *  never reads. `snug` only on the REAL medicare-note frame (the house asserts leading there). */
+async function assertPricedSpineFrame(
+  page: Page,
+  seed: string,
+  clausePins: readonly string[],
+  opts: { readonly snug: boolean },
+): Promise<void> {
+  await gotoSeedFinal(page, seed)
+  await assertResolvedSpine(page)
+  await assertMedicareNote(page, true)
+  if (opts.snug) await assertMedicareSnugLeading(page)
+  await assertOneVisibleDisclaimer(page, 'laptop')
+  await assertResultPadding(page, '32px') // both laptop tiers (791, 800) ≤ 840 — the density tier
+  for (const pin of clausePins) {
+    await expect(
+      page.locator('.cs-medicare-residual'),
+      `the narrowed residual must carry the state clause: "${pin}"`,
+    ).toContainText(pin)
+  }
+  await assertFrameFits(page, true)
+}
+
+// nc: the residual-TEXT pin at the REAL tier (the matrix proves the frame; this proves the clause
+// survives all the way onto the BORDERLINE hero — the exact insight-033 question this increment
+// exists to answer: the affirm+residual set is outcome-scoped in copy but outcome-INDEPENDENT in
+// gating, so a band-crossing verdict still names the state).
+test.describe(`?seed=nc — the NC state clause on the borderline priced residual (${REAL.width}×${REAL.height} @ 2.5dpr)`, () => {
+  test.use({ viewport: REAL, deviceScaleFactor: 2.5 })
+  test('the borderline hero still names North Carolina; the unpriced monolith clause is gone', async ({ page }) => {
+    await gotoSeedFinal(page, 'nc')
+    await assertResolvedSpine(page)
+    await assertMedicareNote(page, true)
+    const residual = page.locator('.cs-medicare-residual')
+    await expect(residual, 'the NC affirmation must swap into the residual').toContainText(
+      'Your North Carolina state income tax is reflected in these numbers',
+    )
+    // The unpriced monolith's distinctive aside DIES for a priced household (the swap, not an append).
+    await expect(residual, 'the unpriced clause must not survive on a priced household').not.toContainText(
+      'a real yearly bill in a taxing state',
+    )
+  })
+})
+
+test.describe('?seed=pa — the LONGEST priced clause (the wrap-risk arm) + one-frame fit', () => {
+  // Pennsylvania exempts most retirement income, so the clause carries the extra "usually a small
+  // piece …" qualifier — the longest state variant, where a wrap would breach the fold first.
+  const PA_PINS = ['Pennsylvania', 'Pennsylvania leaves most retirement income untaxed'] as const
+  test.describe(`at Briggsy's real window (${REAL.width}×${REAL.height} @ 2.5dpr)`, () => {
+    test.use({ viewport: REAL, deviceScaleFactor: 2.5 })
+    test('pa: everything but the doors fits; the residual names Pennsylvania (untaxed)', async ({ page }) => {
+      await assertPricedSpineFrame(page, 'pa', PA_PINS, { snug: true })
+    })
+  })
+  test.describe(`at the fit-law tier floor (${TIER.width}×${TIER.height})`, () => {
+    test.use({ viewport: TIER })
+    test('pa: everything but the doors fits; the residual names Pennsylvania (untaxed)', async ({ page }) => {
+      await assertPricedSpineFrame(page, 'pa', PA_PINS, { snug: false })
+    })
+  })
+})
+
+test.describe('?seed=fl — the constitutional-$0 priced clause + one-frame fit', () => {
+  const FL_PINS = ['Florida has no state income tax'] as const
+  test.describe(`at Briggsy's real window (${REAL.width}×${REAL.height} @ 2.5dpr)`, () => {
+    test.use({ viewport: REAL, deviceScaleFactor: 2.5 })
+    test('fl: everything but the doors fits; the residual names the Florida $0 fact', async ({ page }) => {
+      await assertPricedSpineFrame(page, 'fl', FL_PINS, { snug: true })
+    })
+  })
+  test.describe(`at the fit-law tier floor (${TIER.width}×${TIER.height})`, () => {
+    test.use({ viewport: TIER })
+    test('fl: everything but the doors fits; the residual names the Florida $0 fact', async ({ page }) => {
+      await assertPricedSpineFrame(page, 'fl', FL_PINS, { snug: false })
+    })
+  })
+})
+
+// elsewhere: the ANSWERED-but-unpriced face (the cards' noted coverage gap — 'elsewhere' is an
+// explicit roster member, NOT in PRICED_STATES, so the run reduces byte-identically to the
+// state-absent twin and the residual reads the shipped monolith VERBATIM, no state named).
+test.describe(`?seed=elsewhere — the answered-but-unpriced monolith, no state clause (${REAL.width}×${REAL.height} @ 2.5dpr)`, () => {
+  test.use({ viewport: REAL, deviceScaleFactor: 2.5 })
+  test('the residual reads the shipped monolith with NO built state affirmation', async ({ page }) => {
+    await gotoSeedFinal(page, 'elsewhere')
+    await assertResolvedSpine(page)
+    await assertMedicareNote(page, true)
+    const residual = page.locator('.cs-medicare-residual')
+    // The monolith's distinctive state SENTENCE — the unpriced words a priced household drops.
+    await expect(residual, 'the unpriced monolith clause must render verbatim').toContainText(
+      'a real yearly bill in a taxing state',
+    )
+    // No BUILT state affirmation leaks onto the unpriced household (roster membership, not truthiness).
+    await expect(residual, 'no NC affirmation on an unpriced household').not.toContainText('North Carolina')
+    await expect(residual, 'no PA affirmation on an unpriced household').not.toContainText('Pennsylvania')
+    await expect(residual, 'no FL affirmation on an unpriced household').not.toContainText('Florida')
+    await assertFrameFits(page, true)
+  })
+})
+
 // ── the date route (?seed=dip): scrolls BY DESIGN — its contract is ORDER ─────────────────────
 
 test.describe(`?seed=dip — the date route's order contract (${REAL.width}×${REAL.height})`, () => {
@@ -344,6 +461,69 @@ test.describe(`?seed=date65 — priced Medicare on the date route, no false "unp
     )
     expect(doors.y, 'the quiet doors must sit BELOW the R13 disclaimer').toBeGreaterThanOrEqual(
       disclaimer.y + disclaimer.height - 0.5,
+    )
+  })
+})
+
+// ── the date-route NC witness (?seed=datenc — the second producer, insight 080) ───────────────
+// datenc = stillWorkingAllMedicare (the date65 shape) in North Carolina. The date route rides its
+// OWN state producer (dateStatePriced, off buildDateInput's overlay — NOT the spine's), so a
+// roster-gate regression on the date route surfaces HERE. Same honesty contract as date65: the
+// route scrolls by design, so this arm pins the NC clause on the residual + the ORDER contract
+// (graphs → in-frame disclaimer → doors LAST, the dip block's stronger check), never a full fit.
+
+test.describe(`?seed=datenc — the NC clause on the date residual + the order contract (${REAL.width}×${REAL.height} @ 2.5dpr)`, () => {
+  test.use({ viewport: REAL, deviceScaleFactor: 2.5 })
+  test('the date hero names North Carolina; graphs → in-frame disclaimer → doors last', async ({ page }) => {
+    await gotoSeedFinal(page, 'datenc')
+    // Presence companions (insight 029): the date hero two-pane stamped, BOTH graphs drawn, doors offered.
+    await expect(page.locator('.fod-reveal[data-twopane]')).toBeVisible()
+    await expect(page.locator('.fod-band')).toBeVisible()
+    await expect(page.locator('.fod-ladder')).toBeVisible()
+    expect(await page.locator('.result-quiet-row button').count()).toBeGreaterThanOrEqual(2)
+    await assertOneVisibleDisclaimer(page, 'laptop')
+
+    // The NC affirmation rides the date residual (the .fod-note render block; the second producer's
+    // live witness — a date-route roster regression would drop or mis-name this clause).
+    await expect(
+      page.getByText('Your North Carolina state income tax is reflected in these numbers'),
+      'the NC state clause must render on the date residual',
+    ).toBeVisible()
+
+    // ORDER (the date route's honesty contract): graphs → in-frame disclaimer → doors, doors last.
+    const box = async (selector: string) => {
+      const b = await page.locator(selector).boundingBox()
+      expect(b, `${selector} must render with a real box`).not.toBeNull()
+      return b as NonNullable<typeof b>
+    }
+    const graphs = await box('.fod-graphs')
+    const disclaimer = await box('footer.disclaimer.disclaimer--in-frame')
+    const doors = await box('.result-quiet-row')
+    expect(disclaimer.y, 'the R13 disclaimer must sit BELOW both graphs').toBeGreaterThanOrEqual(
+      graphs.y + graphs.height - 0.5,
+    )
+    expect(doors.y, 'the quiet doors must sit BELOW the R13 disclaimer').toBeGreaterThanOrEqual(
+      disclaimer.y + disclaimer.height - 0.5,
+    )
+
+    // Doors LAST (the dip block's stronger check): no content element ends below the doors row.
+    const maxOtherBottom = await page.evaluate(() => {
+      const doorsEl = document.querySelector('.result-quiet-row')
+      let max = 0
+      for (const el of Array.from(document.querySelectorAll('body *'))) {
+        if (doorsEl !== null && (doorsEl.contains(el) || el.contains(doorsEl))) continue
+        const style = window.getComputedStyle(el)
+        if (style.display === 'none' || style.visibility === 'hidden' || style.position === 'fixed')
+          continue
+        if (el.getClientRects().length === 0) continue
+        const r = el.getBoundingClientRect()
+        if (r.width <= 1 || r.height <= 1) continue
+        max = Math.max(max, r.bottom)
+      }
+      return max
+    })
+    expect(maxOtherBottom, 'content renders BELOW the quiet doors — doors must be last').toBeLessThanOrEqual(
+      doors.y + doors.height + 0.5,
     )
   })
 })
@@ -538,6 +718,128 @@ test.describe(`the vault return (?vault=stale) — the gate + the staleness-echo
     // The backup door is the sanctioned below-fold casualty on THIS composite frame (decision (b) —
     // it stays measured on every other arm; here it may degrade past the fold). The disclaimer is a
     // sibling <footer>, so it stays measured — the arm still fails if the caveat itself breaches.
+    await assertFrameFits(page, true, true)
+  })
+})
+
+// ── the state-tax staleness return (?vault=statestale — the state-carrying seed increment) ────
+// The state-tax analog of ?vault=stale, on the LIGHT doctor (F2 supersession, 2026-07-15): the
+// NC-priced spine household saved ~150d ago with startCalendarYear UNTOUCHED (2026) and the tax /
+// healthcare / blend stamps FRESH — ONLY the state profile diverged. So the re-entry gate fires
+// the stalenessStateTax clock in ISOLATION (an NC rate step must never read as a federal /
+// healthcare / blend change), and — unlike the full doctor that stranded a 2024 anchor below
+// simulate.ts's priced-state lower bound (R19 calm indeterminate) — the affirm recompute resolves
+// a REAL borderline verdict whose residual names North Carolina. This is the only live route to
+// the stalenessStateTax note AND to the state clause on a writable stale return.
+
+test.describe(`the state-tax staleness return (?vault=statestale) — the isolated clock + the NC-clause echo frame (${REAL.width}×${REAL.height})`, () => {
+  test.use({ viewport: REAL, deviceScaleFactor: 2.5 })
+  test('the gate fires the state-tax clock in isolation, decision pair in-frame; the echoed borderline hero names NC and holds the one-frame law', async ({ page }) => {
+    await page.goto('/?vault=statestale')
+    const unlock = page.getByRole('button', { name: 'Open my plan' })
+    await expect(unlock, 'the statestale plant did not land on the unlock screen').toBeVisible({
+      timeout: 30_000,
+    })
+    await unlock.click()
+
+    // THE GATE FRAME: the decision pair sits in the first frame (a below-fold affirm strands the
+    // survivor at a dead-looking screen).
+    const affirm = page.getByRole('button', { name: /Still about right/ })
+    await expect(affirm).toBeVisible({ timeout: 30_000 })
+    await page.evaluate(() => document.fonts.ready)
+    await page.evaluate(() => window.scrollTo(0, 0))
+    const affirmBox = await affirm.boundingBox()
+    expect(affirmBox, 'the affirm CTA reported no box').not.toBeNull()
+    expect(
+      affirmBox!.y + affirmBox!.height,
+      'the affirm CTA sits below the first frame at the real window',
+    ).toBeLessThanOrEqual(REAL.height)
+
+    // THE ISOLATION (the light doctor's design): EXACTLY ONE reentry note fires — the state-tax
+    // clock — with the sibling clocks (federal tax / healthcare / blend) quiet. The count is the
+    // airtight isolation proof (the federal-tax note's wording is a case-insensitive substring of
+    // the state note, so isolation is asserted by count, not by a fragile federal-tax negative).
+    const notes = page.locator('.reentry-notes p')
+    await expect(notes, 'the state-tax clock fires in ISOLATION — exactly one reentry note').toHaveCount(1)
+    await expect(notes, 'the one fired note is the state-tax clock, by name').toContainText(
+      'State tax rules have been updated since your save',
+    )
+    // The two distinctively-worded sibling clocks are demonstrably dark (belt-and-suspenders on the
+    // count): healthcare + blend never fire on a stamps-fresh save.
+    await expect(
+      page.getByText('Health-coverage rules have been updated'),
+      'the healthcare clock must be dark (stamp fresh)',
+    ).toHaveCount(0)
+    await expect(
+      page.getByText('The fund data we read your accounts against'),
+      'the blend clock must be dark (stamp fresh)',
+    ).toHaveCount(0)
+    // At ~150d elapsed no "You saved this … ago" line renders (O6 floor-rounding — verified live),
+    // so none is pinned; the isolated state note is the whole gate disclosure.
+
+    // Affirm → the held recompute pair; wait the FINAL tier, then settle (the gotoSeedFinal discipline).
+    await affirm.click()
+    await expect(page.locator('main.result[data-answer-tier="final"]')).toBeAttached({
+      timeout: 90_000,
+    })
+    await page.evaluate(() => document.fonts.ready)
+    await page.waitForFunction(() =>
+      document.getAnimations().every((a) => {
+        const timing = a.effect?.getTiming()
+        return timing?.iterations === Infinity || a.playState !== 'running'
+      }),
+    )
+    await page.evaluate(
+      () => new Promise<void>((r) => requestAnimationFrame(() => requestAnimationFrame(() => r()))),
+    )
+    await page.evaluate(() => window.scrollTo(0, 0))
+
+    await assertResolvedSpine(page)
+    // The echoed frame carries the standing staleness line AND — the state-tax unit's whole point —
+    // the priced residual names North Carolina on the writable stale return, not only on fresh ?seed=nc.
+    await expect(page.locator('.cs-staleness-note')).toBeVisible()
+    await expect(
+      page.locator('.cs-medicare-residual'),
+      'the NC state clause must ride the echoed borderline hero',
+    ).toContainText('Your North Carolina state income tax is reflected in these numbers')
+
+    // THE ECHO WHITESPACE BUDGET (insight 075) — pinned by COMPUTED style so a deleted
+    // `:has(.cs-staleness-note)` rule goes red on EVERY platform, never only under CI's taller
+    // metrics. UNLIKE ?vault=stale (on-typical — the full doctor strips the extras fork, so its
+    // gaps step to the 2px round-5 tier): the LIGHT doctor KEEPS the base's mixed-provenance
+    // extras, so statestale is a NON-typical staleness-echo frame — the round-3 --space-1 (4px) tier.
+    const echoGaps = await page
+      .locator('.confidence-reveal[data-twopane]')
+      .evaluate((reveal) => ({
+        rowGap: getComputedStyle(reveal).rowGap,
+        subordinatesRowGap: getComputedStyle(reveal.querySelector('.reveal__subordinates')!).rowGap,
+      }))
+    expect(echoGaps.rowGap, 'the NON-typical note-frame row-gap rides --space-1 (4px, round 3)').toBe('4px')
+    expect(
+      echoGaps.subordinatesRowGap,
+      'the NON-typical subordinates row-gap rides --space-1 (4px, round 3)',
+    ).toBe('4px')
+    await assertOneVisibleDisclaimer(page, 'laptop')
+    await assertResultPadding(page, '32px') // 791 ≤ 840 — the density tier serves this frame too
+
+    // The all-65+ writable stale return is a tall composite (priced-Medicare pair + staleness echo +
+    // backup door). Prove non-vacuous (the priced-Medicare affirmation renders) and that the
+    // UNPROTECTED backup door is DOM- + visually BELOW the PROTECTED disclaimer (the Hawk's veto).
+    await expect(page.locator('.cs-medicare-note')).toBeVisible()
+    const foldOrder = await page.evaluate(() => {
+      const disc = document.querySelector('footer.disclaimer.disclaimer--in-frame')
+      const door = document.querySelector('.result-backup-door')
+      if (disc === null || door === null) return null
+      return { discBottom: disc.getBoundingClientRect().bottom, doorTop: door.getBoundingClientRect().top }
+    })
+    expect(foldOrder, 'the disclaimer and the backup door must both render on this frame').not.toBeNull()
+    expect(
+      foldOrder!.doorTop,
+      'the backup door must sit BELOW the R13 disclaimer (the caveat wins the fold)',
+    ).toBeGreaterThanOrEqual(foldOrder!.discBottom - 0.5)
+
+    // The backup door is the sanctioned below-fold casualty on THIS composite frame (the disclaimer
+    // is a sibling <footer>, so it stays measured — the arm still fails if the caveat itself breaches).
     await assertFrameFits(page, true, true)
   })
 })

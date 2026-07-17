@@ -87,12 +87,22 @@ preview DRIVEN and its TwoFutures chart captured as a `-preview` state (incremen
 rule-36 one-dialect check was un-verifiable on pre-commit input states; preview-only, nothing
 is Applied). A `vault:<key>` target drives the U13 decrypt-on-return arc (unlock → the
 re-entry gate → affirm → the echoed verdict, doors riding the STALE verdicts — both
-`vault:stale` and `vault:datestale` since increment 4, the aged lever-preview landmine);
-`vault:stale` additionally captures the update route's first frame; `vault:datestale` is the
-aged SPLIT-DATE plant (the floor's arrived arm + the re-derived anchored hero). An
+`vault:stale`, `vault:datestale`, and `vault:statestale` since increment 5, the aged
+lever-preview landmine); `vault:stale` and `vault:statestale` additionally capture the update
+route's first frame; `vault:datestale` is the aged SPLIT-DATE plant (the floor's arrived arm +
+the re-derived anchored hero); `vault:statestale` (increment 5) is the aged-STATE-profile plant
+(a fresh-vintage NC save whose own state profile drifted — the `stalenessStateTax` gate note in
+ISOLATION, then the borderline NC-clause hero; its Assumptions door is the priced/ANSWERED
+picker-row face). The state seeds (`seed:nc|pa|fl|elsewhere|datenc`, increment 5) ride the
+plain `seed:<key>` shape — each landing carries its state's verdict clause (NC bites to
+borderline / PA "usually a small piece" / FL's $0 affirmation / the elsewhere monolith / the
+date-route NC witness). An
 `intake:fork` target (increment 4) drives the GUIDED INTAKE to the Medicare-extras payment
 fork — blank-start → the half-answer R19 block → mixed provenance (one entered dollar, one
-adopted typical) — capturing the spend step en route; the fork renders on no seed or vault
+adopted typical) — capturing the spend step en route, plus (increment 5) the retirement-state
+step: after the NC pick, the ANSWERED picker is captured as a device-scale crop AND under every
+CVD arm (`captureCvdRegion` — the read law: the active segment must survive without hue, via
+weight+fill+ring); the fork renders on no seed or vault
 route, so this is its only capturable home:
 
 - `viewport.png` — the above-fold frame at CSS scale (what he sees first; long edge < the
@@ -104,6 +114,8 @@ route, so this is its only capturable home:
   emulation (CDP `Emulation.setEmulatedVisionDeficiency`) of the above-fold frame; PLUS
   `cvd-<arm>-<chart>.png` device-scale crops of every chart on the state (band / ladder /
   TwoFutures — increment 4: the above-fold arms were structurally blind to below-fold charts)
+  and `cvd-<arm>-state-picker.png` (increment 5: the fork walk's ANSWERED state picker under
+  every arm — a selected-control face, not a chart)
 - `aria.yaml` — the ARIA snapshot (the programmatic-availability channel)
 - `copy.txt` / `dialog.txt` — the VERBATIM rendered text from the DOM (words are always read
   here, never OCR'd off pixels)

@@ -1,12 +1,22 @@
 import { describe, expect, it } from 'vitest'
-import { DEV_SEEDS, doctorStaleVault } from '../devSeeds'
+import { DEV_SEEDS, doctorStaleVault, doctorStateStaleVault } from '../devSeeds'
 import { scenarioFromDraft, currentEpochDay } from '../scenarioFromDraft'
 import { draftFromScenario } from '../draftFromScenario'
 import { floorRelief } from '../twoTier'
 import { composeDateSplit } from '../dateSplit'
-import { buildDateInput, buildSpineParams, healthcarePriced, isDateRoute, missingRequiredFacts } from '@intake/intakeMap'
+import {
+  buildDateInput,
+  buildSpineParams,
+  dateStatePriced,
+  healthcarePriced,
+  isDateRoute,
+  missingRequiredFacts,
+  pricedStateForRun,
+} from '@intake/intakeMap'
 import { validateParams } from '@engine/simulate'
 import { runEngine } from '@engine/engineProtocol'
+import { stateTaxVintageStamp } from '@engine/constants/stateTax'
+import { deriveStaleness } from '@store/staleness'
 import {
   buildCandidateParams,
   runDateSearch,
@@ -303,5 +313,248 @@ describe('dev seeds reach a worded (engine-accepted) answer', () => {
       'pretax',
       'taxable',
     ])
+  })
+})
+
+// ===========================================================================
+// The state-carrying seed increment — the priced/answered state faces + the statestale gate.
+// Every seed pins the PRODUCER'S OUTPUT (`pricedStateForRun`, insight 081 — never draft truthiness)
+// PLUS the engine-proven relation to its state-absent twin (the `'order'` seed's inequality idiom —
+// a dev seed pins RELATIONS the engine can't drift under, never a hand-typed golden dollar).
+// ===========================================================================
+describe('the state-tax seed faces (the state-carrying seed increment)', () => {
+  const sumF64 = (a: Float64Array): number => a.reduce((s, x) => s + x, 0)
+  const f64Equal = (a: Float64Array, b: Float64Array): boolean =>
+    a.length === b.length && a.every((v, i) => v === b[i])
+
+  /** The state-ABSENT twin — `retiredOnTrack` with NO retirementState (prices no state tax). Every
+   *  state face is `{ ...retiredOnTrack, retirementState }`, so the twin is the exact same household
+   *  minus the state term — any wire delta is the state overlay ALONE (same seed ⇒ same CRN paths). */
+  const twinWire = () => {
+    const w = runEngine(buildSpineParams(DEV_SEEDS.retired)!, DEV_SEEDS.retired.seed!)
+    if (w.kind !== 'resolved') throw new Error('twin: expected a resolved wire')
+    return w
+  }
+  const spineWire = (key: 'nc' | 'pa' | 'fl' | 'elsewhere') => {
+    const d = DEV_SEEDS[key]
+    const w = runEngine(buildSpineParams(d)!, d.seed!)
+    if (w.kind !== 'resolved') throw new Error(`${key}: expected a resolved wire`)
+    return w
+  }
+
+  // nc — the PRICED flagship. Pin `pricedStateForRun === 'NC'` (the producer's output) + the engine
+  // INEQUALITY (NC prices a HIGHER lifetime tax than the twin: the flat rate taxes the pretax draw AND
+  // the realized gains on the taxable bucket this household forms from reinvested RMD surplus) + the
+  // engine-PROVEN outcomeState. The drag crosses the on-track band edge: the twin is on-track
+  // (survival 0.8555) and NC is BORDERLINE (0.838). Recorded, not assumed (the seed comment names it);
+  // re-tune the account knob on drift, never loosen the pin (the standing C3 law — no existing seed is
+  // touched here, so no existing pin should move).
+  it("'nc' prices NC and NC tax moves lifetime tax up, crossing on-track → BORDERLINE vs the twin", () => {
+    expect(pricedStateForRun(DEV_SEEDS.nc)).toBe('NC')
+    const twin = twinWire()
+    const nc = spineWire('nc')
+    expect(
+      sumF64(nc.taxAware!.lifetimeTaxPaidReal),
+      'NC prices a strictly HIGHER lifetime tax than the state-absent twin',
+    ).toBeGreaterThan(sumF64(twin.taxAware!.lifetimeTaxPaidReal))
+    expect(nc.headline.outcomeState, 'engine-proven: NC bites enough to cross on-track → borderline').toBe(
+      'borderline',
+    )
+    expect(twin.headline.outcomeState, 'the twin (state-absent) stays on-track — the drag is NC').toBe('on-track')
+  })
+
+  // pa — the DERIVED "usually a small piece". Working memory GUESSED byte-identity; the engine refutes
+  // it. At qualified age (both 65+) PA exempts the IRA withdrawal + SS, but it taxes the realized
+  // capital gains on the taxable bucket the household develops from reinvested RMD surplus
+  // (`capGains: taxed-ordinary` at 3.07%), so PA lifetime tax is slightly ABOVE the twin — a small
+  // non-zero state tax that does NOT move the verdict (survival identical, still on-track). Pin the
+  // TRUE relation, not the refuted byte-identity.
+  it("'pa' prices PA and levies a SMALL non-zero tax (realized gains at qualified age) that leaves the verdict unmoved — NOT byte-identical", () => {
+    expect(pricedStateForRun(DEV_SEEDS.pa)).toBe('PA')
+    const twin = twinWire()
+    const pa = spineWire('pa')
+    expect(
+      sumF64(pa.taxAware!.lifetimeTaxPaidReal),
+      'PA prices a small non-zero tax ABOVE the twin (taxable-account gains, exempt withdrawals)',
+    ).toBeGreaterThan(sumF64(twin.taxAware!.lifetimeTaxPaidReal))
+    expect(pa.survivalFraction, 'the small piece does NOT move the verdict — survival is unchanged').toBe(
+      twin.survivalFraction,
+    )
+    expect(pa.headline.outcomeState, 'the verdict is unmoved — still on-track').toBe('on-track')
+  })
+
+  // fl — the constitutional-$0 honesty demonstration. FL is PRICED (`pricedStateForRun === 'FL'`) yet
+  // `stateIncomeTax` early-returns a structural literal 0 (rateSchedule null), so a priced-FL run is
+  // BYTE-IDENTICAL to the state-absent twin. The affirmation "no state income tax — nothing to add"
+  // ships as an honest fact, not an unbuilt-state omission.
+  it("'fl' prices FL yet is BYTE-IDENTICAL to the twin (the constitutional-$0 honesty demonstration)", () => {
+    expect(pricedStateForRun(DEV_SEEDS.fl)).toBe('FL')
+    const twin = twinWire()
+    const fl = spineWire('fl')
+    expect(fl.survivalFraction, 'survival byte-identical').toBe(twin.survivalFraction)
+    expect(f64Equal(fl.terminalValuesReal, twin.terminalValuesReal), 'terminal wealth byte-identical').toBe(true)
+    expect(
+      f64Equal(fl.taxAware!.lifetimeTaxPaidReal, twin.taxAware!.lifetimeTaxPaidReal),
+      'lifetime tax byte-identical ($0 FL added structurally)',
+    ).toBe(true)
+  })
+
+  // elsewhere — the ANSWERED-but-unpriced face. `'elsewhere'` is an explicit roster member (a persisted
+  // fact, distinct from never-asked absent) but NOT in PRICED_STATES, so `pricedStateForRun` reads
+  // undefined (roster membership, NEVER a truthy string) and the engine takes the structural `+ 0`
+  // no-op branch ⇒ BYTE-IDENTICAL to the twin (the reduce-to-spine membership witness, spec S2.5). The
+  // verdict renders the residual monolith verbatim with no state clause.
+  it("'elsewhere' reads UNPRICED (pricedStateForRun undefined) and is BYTE-IDENTICAL to the twin (the reduce-to-spine membership witness)", () => {
+    expect(pricedStateForRun(DEV_SEEDS.elsewhere)).toBeUndefined()
+    const twin = twinWire()
+    const el = spineWire('elsewhere')
+    expect(el.survivalFraction).toBe(twin.survivalFraction)
+    expect(f64Equal(el.terminalValuesReal, twin.terminalValuesReal), 'terminal byte-identical').toBe(true)
+    expect(
+      f64Equal(el.taxAware!.lifetimeTaxPaidReal, twin.taxAware!.lifetimeTaxPaidReal),
+      'lifetime tax byte-identical',
+    ).toBe(true)
+  })
+
+  // datenc — the DATE-route NC witness (insight 080: the second producer gets its OWN live witness).
+  // The date route reads state off `dateStatePriced` (`buildDateInput`'s overlayBase — the vector every
+  // swept candidate inherits), never the spine's `buildSpineParams` (null here). Pin BOTH the DATE
+  // producer's output === 'NC' AND a real crown, so a roster-gate regression that failed to price — or
+  // falsely priced — an off-route household surfaces HERE. Provisional tier for suite speed
+  // (the 120s-timeout idiom).
+  it("'datenc' date-routes and prices NC via the DATE producer, crowning a real date", async () => {
+    const d = DEV_SEEDS.datenc
+    expect(isDateRoute(d), 'datenc: one member still working ⇒ the date route').toBe(true)
+    expect(dateStatePriced(d), 'the DATE producer (dateStatePriced) prices NC').toBe('NC')
+    expect(pricedStateForRun(d), 'the route-aware union prices NC').toBe('NC')
+    const input = buildDateInput(d)
+    expect(input, 'datenc: buildDateInput').not.toBeNull()
+    const out = await runDateSearch(input!, d.seed!, { tier: 'provisional' })
+    expect(out.kind, 'datenc: a dates outcome').toBe('dates')
+    if (out.kind !== 'dates') return
+    expect(
+      ['confirmed-date', 'window-edge-unconfirmed'],
+      'lifestyle crowned (the fit arm mounts the ladder + floor band on a dated hero)',
+    ).toContain(out.lifestyle.kind)
+  }, 120_000)
+})
+
+// ===========================================================================
+// The `?vault=statestale` aged plant — the NC-priced spine household doctored stale THIS SAME YEAR
+// via the LIGHT doctor (`doctorStateStaleVault`; F2 supersession 2026-07-16). It is the ONLY live
+// route to the `stalenessStateTax` gate note, fired in ISOLATION. Proven through the REAL
+// scenarioFromDraft → doctorStateStaleVault → (deriveStaleness | hydrate → validateParams → run)
+// chain — a drift in the doctor, the reader, OR the engine's priced-state year bound fails HERE.
+//
+// WHY THE LIGHT DOCTOR (the bug this shape supersedes): routing `statestale` through the FULL
+// doctorStaleVault aged `startCalendarYear` −2 (→ 2024), and the engine's priced-state lower bound
+// (simulate.ts:640-643) correctly REFUSES a priced-NC household whose year-0 precedes NC's earliest
+// rate row (2026) → the affirm recompute demoted to the R19 calm indeterminate (S2's live drive
+// caught it). The engine-acceptance arm below is the pin that would have caught it up front.
+// ===========================================================================
+describe('the statestale aged plant (the state-tax gate note; light doctor, F2 supersession)', () => {
+  const TODAY = currentEpochDay()
+
+  // Arm 1 — the doctored NC vault FIRES `controls.stateTaxMoved` through the real staleness reader,
+  // in ISOLATION: the household's own NC profile is aged one rate-step back (3.99%@2026 → 4.49%@2024)
+  // so `stateProfileKey('NC')` diverges, while the PA sibling and EVERY other clock (tax/health/blend/
+  // contribution/appDefault) stay quiet — the light doctor leaves those vintages fresh. The isolation
+  // is the point: a cleaner face-#4 cold read where only the state note renders.
+  it("'statestale' fires controls.stateTaxMoved in ISOLATION (every other clock quiet) through the real staleness reader", () => {
+    const built = scenarioFromDraft(DEV_SEEDS.nc)
+    expect(built.ready, 'nc must be save-ready').toBe(true)
+    if (!built.ready) return
+    const aged = doctorStateStaleVault(built.scenario, TODAY)
+    expect(aged.retirementState, 'the base is the NC-priced household').toBe('NC')
+    expect(aged.startCalendarYear, 'the light doctor leaves startCalendarYear UNTOUCHED (the whole point)').toBe(
+      built.scenario.startCalendarYear,
+    )
+    expect(aged.stateTaxVintage!.ncProfile, 'the NC profile was aged (diverges from the current stamp)').not.toBe(
+      stateTaxVintageStamp().ncProfile,
+    )
+    expect(aged.stateTaxVintage!.paProfile, 'only the household OWN state (NC) was touched — PA is fresh').toBe(
+      stateTaxVintageStamp().paProfile,
+    )
+    const report = deriveStaleness(aged, TODAY)
+    expect(report.controls.stateTaxMoved, "the NC household's own profile moved ⇒ the state-tax clock fires").toBe(true)
+    expect(report.rulesMoved, 'a rulebook moved ⇒ the hero echo may ride').toBe(true)
+    // ISOLATION — the fresh vintages leave every OTHER clock dark.
+    expect(report.controls.taxMoved, 'the federal tax vintage is fresh').toBe(false)
+    expect(report.healthcare.moved, 'the healthcare vintage is fresh').toBe(false)
+    expect(report.date.blendMoved, 'the blend snapshot is fresh').toBe(false)
+    expect(report.date.contributionMoved, 'the contribution year is fresh (and route-gated)').toBe(false)
+    expect(report.spine.appDefaultMoved, 'the app-default era is current').toBe(false)
+  })
+
+  // Arm 2 — the ENGINE-ACCEPTANCE pin (the arm that would have caught the superseded bug): the
+  // doctored statestale vault, hydrated and re-built, must be ACCEPTED by the real engine validator
+  // and RESOLVE to a real worded answer — never the R19 calm indeterminate. Because the light doctor
+  // leaves `startCalendarYear` at 2026 (≥ NC's 2026 rate row), validateParams accepts and the run
+  // lands the SAME engine-proven verdict as `?seed=nc`: BORDERLINE (only savedAt + the state stamp
+  // moved, neither of which the engine reads).
+  it("'statestale' is ENGINE-ACCEPTED and resolves to a real verdict (borderline) — never the R19 indeterminate (the pin that would have caught the superseded −2y bug)", () => {
+    const built = scenarioFromDraft(DEV_SEEDS.nc)
+    if (!built.ready) return
+    const aged = doctorStateStaleVault(built.scenario, TODAY)
+    const hydrated = draftFromScenario(aged)
+    expect(hydrated.ok, 'the hydrator accepts the doctored aged NC vault').toBe(true)
+    if (!hydrated.ok) return
+    const params = buildSpineParams(hydrated.draft)
+    expect(params, 'statestale: buildSpineParams').not.toBeNull()
+    expect(
+      validateParams(params!),
+      'the engine ACCEPTS the doctored priced-NC household (startCalendarYear 2026 ≥ NC rate row)',
+    ).toBeNull()
+    const wire = runEngine(params!, hydrated.draft.seed!)
+    expect(wire.kind, 'statestale: a feasible, resolved run — never the R19 indeterminate').toBe('resolved')
+    if (wire.kind !== 'resolved') return
+    expect(wire.headline.outcomeState, 'the same engine-proven verdict as fresh nc — savedAt/stamp do not move it').toBe(
+      'borderline',
+    )
+  })
+
+  // Arm 3 — the DRIFTED-VAULT clean-badge law: the doctored state stamp does NOT survive to read
+  // dirty. On hydrate → re-encode under the CURRENT build, the state-tax stamp RE-MINTS fresh (the
+  // vintage stamp IS in scenarioIdentity — not savedAt-stripped), erasing the drift. Mirrors the
+  // draftFromScenario.test.ts clean-badge test.
+  it("'statestale' — the doctored state-tax stamp re-mints fresh on hydrate (reads CLEAN, never dirty from the stamp)", () => {
+    const built = scenarioFromDraft(DEV_SEEDS.nc)
+    if (!built.ready) return
+    const aged = doctorStateStaleVault(built.scenario, TODAY)
+    const hydrated = draftFromScenario(aged)
+    expect(hydrated.ok).toBe(true)
+    if (!hydrated.ok) return
+    const reencoded = scenarioFromDraft(hydrated.draft)
+    expect(reencoded.ready).toBe(true)
+    if (!reencoded.ready) return
+    expect(
+      reencoded.scenario.stateTaxVintage,
+      'the drift is erased — the stamp re-mints to the current build',
+    ).toEqual(stateTaxVintageStamp())
+    expect(reencoded.scenario.stateTaxVintage, 'the drifted stamp did NOT survive the re-mint').not.toEqual(
+      aged.stateTaxVintage,
+    )
+  })
+
+  // Arm 4 — the doctors stay in their lanes. (a) The light doctor FAILS LOUD on a non-priced base
+  // (a wiring error must never silently produce a vault whose state clock can't fire). (b) The full
+  // doctorStaleVault no longer touches the state stamp AT ALL now that the divergence logic moved out
+  // — so a stateless base ('stale' → retired, 'datestale' → datesplit) keeps its FRESH state stamp
+  // and stays byte-identical to today (the regression pin the code move earns).
+  it('the doctors stay in their lanes: the light doctor rejects a non-priced base; doctorStaleVault never touches the state stamp', () => {
+    // (a) fail-loud on a stateless base.
+    const statelessBuilt = scenarioFromDraft(DEV_SEEDS.datesplit)
+    expect(statelessBuilt.ready).toBe(true)
+    if (!statelessBuilt.ready) return
+    expect(() => doctorStateStaleVault(statelessBuilt.scenario, TODAY), 'a non-priced base is a wiring error').toThrow()
+    // (b) doctorStaleVault leaves the state stamp fresh for a stateless base.
+    const aged = doctorStaleVault(statelessBuilt.scenario, TODAY)
+    expect(aged.retirementState, 'the stateless base has no retirementState').toBeUndefined()
+    expect(aged.stateTaxVintage, 'doctorStaleVault leaves the state stamp untouched — the fresh current stamp').toEqual(
+      statelessBuilt.scenario.stateTaxVintage,
+    )
+    expect(deriveStaleness(aged, TODAY).controls.stateTaxMoved, 'a stateless household never fires the clock').toBe(
+      false,
+    )
   })
 })

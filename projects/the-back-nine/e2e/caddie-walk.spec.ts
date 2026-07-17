@@ -56,6 +56,18 @@ import { REAL, REAL_DPR, PHONE, PHONE_DPR, gotoSeedFinal, settleLayout } from '.
  *  - `vault:datestale` joins the DOOR walk — the aged date household's lever previews were
  *    an uncaptured landmine (stale-timeline inheritance unverified).
  *
+ * Increment 5 (2026-07-16, the state-carrying seed increment's cold-read faces):
+ *  - `vault:statestale` — the aged-STATE-profile plant (a fresh-vintage NC save whose OWN state
+ *    profile drifted one rate-step back) joins the DOOR walk: the affirm lands the BORDERLINE
+ *    NC-clause hero, and the Assumptions door opens the panel on the ANSWERED retirement-state
+ *    seat (the priced/answered picker-row face). It also rides the UPDATE-route arm — the
+ *    stateTaxMoved household's "update them" exit is the same walk-through as `vault:stale`.
+ *  - The CVD SELECTED-PICKER face — `intake:fork` picks NC, then captures the answered state
+ *    picker as a device-scale crop AND under each CVD arm (captureCvdRegion): the priced-state
+ *    read law is that the active segment survives WITHOUT hue (weight+fill+ring, .segment-active).
+ *  - `seed:nc|pa|fl|elsewhere|datenc` ride the existing `walkSeed` grammar (landing + door walk;
+ *    the Assumptions-door capture IS each seed's priced/answered panel-row face).
+ *
  * Targets: `CADDIE_TARGETS="vault:retired,vault:stale,seed:date,intake:fork"` (comma list).
  * Back-compat: `CADDIE_SEED=budget` still works (one seed target). Default: `seed:retired`.
  */
@@ -244,6 +256,45 @@ async function captureState(page: Page, dir: string): Promise<void> {
   }
   await cdp.detach()
   await page.evaluate(() => window.scrollTo(0, 0))
+}
+
+/**
+ * Capture ONE static, meaning-critical region as a device-scale crop PLUS a device-scale crop
+ * under each CVD arm (increment 5 — the state-tax picker's SELECTED-segment face). captureState's
+ * stage-4 CVD crops are CHART-shaped (svg selectors) and re-run on every state; the state picker
+ * is a static fieldset that lives only on the intake state step, so it gets its own parallel path
+ * here rather than bloating the per-state chart loop with a selector that matches nowhere else.
+ * The read law this proves: the ACTIVE segment must be distinguishable in every arm WITHOUT hue
+ * (weight + fill + inset ring — intake.css .segment-active); the CVD screener reads exactly these
+ * crops. A region that never renders FAILS the walk red (insight-029 vacuity discipline).
+ */
+async function captureCvdRegion(
+  page: Page,
+  dir: string,
+  selector: string,
+  baseName: string,
+): Promise<void> {
+  fs.mkdirSync(dir, { recursive: true })
+  const region = page.locator(selector).first()
+  await expect(
+    region,
+    `captureCvdRegion "${baseName}" (${selector}) never became visible — a vacuous CVD crop`,
+  ).toBeVisible()
+  expect(
+    await region.boundingBox(),
+    `captureCvdRegion "${baseName}" (${selector}) has no box`,
+  ).not.toBeNull()
+  await region.screenshot({ path: path.join(dir, `crop-${baseName}.png`), scale: 'device' })
+  const cdp = await page.context().newCDPSession(page)
+  for (const [armName, type] of CVD_ARMS) {
+    await cdp.send('Emulation.setEmulatedVisionDeficiency', { type })
+    await region.screenshot({
+      path: path.join(dir, `cvd-${armName}-${baseName}.png`),
+      scale: 'device',
+    })
+  }
+  await cdp.send('Emulation.setEmulatedVisionDeficiency', { type: 'none' })
+  await cdp.detach()
 }
 
 const slugify = (name: string): string =>
@@ -501,6 +552,20 @@ async function walkIntakeFork(page: Page, outDir: string): Promise<void> {
   await expect(page.getByRole('heading', { name: 'Where do you live in retirement?' })).toBeVisible()
   await captureState(page, path.join(outDir, 'state-step'))
   await page.getByRole('radio', { name: 'North Carolina' }).check({ force: true })
+  // The SELECTED-picker face (increment 5): the answered picker is a walked cold-read surface of
+  // its own — the state-tax read law is that the picked segment survives WITHOUT hue (weight +
+  // fill + inset ring, intake.css .segment-active). Assert the pick committed a visually-active
+  // segment BEFORE the crop so a forced-click that missed (the sr-only 1px-box phone trap the
+  // `pick` helper guards) fails RED here, not a bundle showing no selection. The full state
+  // (copy/aria/whole-viewport CVD arms) lands the answered picker in context; captureCvdRegion
+  // adds the dedicated device-scale picker crops under every arm for the fine read.
+  const pickerSel = 'fieldset.segmented:has(input[name$="-retirement-state"])'
+  await expect(
+    page.locator(`${pickerSel} .segment-active`),
+    'the North Carolina pick did not activate a segment — the picker crop would show no selection',
+  ).toBeVisible()
+  await captureState(page, path.join(outDir, 'state-step-picked'))
+  await captureCvdRegion(page, path.join(outDir, 'state-step-picked'), pickerSel, 'state-picker')
   await next()
 
   // The SPEND step — captured BEFORE any entry (the help text is the read).
@@ -577,8 +642,15 @@ for (const target of TARGETS) {
           // are where a driven lever preview inherits (or fails to inherit) the stale
           // timeline; that interplay was an uncaptured landmine while only the spine-stale
           // vault opened its doors.
+          // Increment 5: `statestale` JOINS the door walk — the affirm lands the BORDERLINE
+          // NC-clause hero, and the Assumptions door opens the panel on the ANSWERED
+          // retirement-state seat (the priced/answered picker-row face — face #2 of the
+          // state-carrying increment, uncapturable on any non-door state).
           await walkVaultReturn(page, target.key, outDir, {
-            doors: target.key === 'stale' || target.key === 'datestale',
+            doors:
+              target.key === 'stale' ||
+              target.key === 'datestale' ||
+              target.key === 'statestale',
           })
         } else if (target.kind === 'intake') {
           if (target.key !== 'fork') {
@@ -593,8 +665,8 @@ for (const target of TARGETS) {
       })
     })
   }
-  if (target.kind === 'vault' && target.key === 'stale') {
-    test.describe(`caddie walk — vault:stale UPDATE route at REAL (${REAL.width}×${REAL.height} @ ${REAL_DPR}dpr)`, () => {
+  if (target.kind === 'vault' && (target.key === 'stale' || target.key === 'statestale')) {
+    test.describe(`caddie walk — ${target.kind}:${target.key} UPDATE route at REAL (${REAL.width}×${REAL.height} @ ${REAL_DPR}dpr)`, () => {
       test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR })
       test('update-entry', async ({ page }) => {
         const consoleLog = hookConsole(page)

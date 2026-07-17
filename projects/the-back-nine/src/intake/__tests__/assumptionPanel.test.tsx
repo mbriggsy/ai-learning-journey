@@ -541,3 +541,35 @@ describe('the retirement-state row', () => {
     expect(screen.queryByText(copy.assumptionStateUnsetNote)).toBeNull()
   })
 })
+
+// ─── the spend-row help mirrors the intake (input surfaces AGREE on the draft-keyed state) ────
+// The panel edits the SAME draft the intake wrote, so its ungoverned spend field must select its
+// helpKey by the SAME draft-keyed predicate SpendRawFace uses (questions.tsx): a PRICED state gets
+// the leave-it-OUT copy; an unpriced/absent state keeps the keep-it-INSIDE copy. The bug this pins:
+// the panel hardcoded `spendHelp`, so a priced NC/PA/FL household re-editing spend here was told to
+// "keep your state bill inside" — a false "isn't priced yet" claim contradicting the intake, the
+// federal double-count class (insight-080: two INPUT surfaces over one draft must never disagree).
+describe('the spend-row help — draft-keyed, mirroring the intake', () => {
+  it.each(['NC', 'PA', 'FL'] as const)(
+    'a PRICED state (%s) shows the leave-it-OUT help — never the false "isn\'t priced yet" claim',
+    (state) => {
+      const priced = draftWith(() => ({ ...mixedDraft, retirementState: state }))
+      renderPanel({ snapshot: snap(priced) })
+      expect(screen.getByText(copy.spendHelpStatePriced)).toBeInTheDocument()
+      expect(screen.queryByText(copy.spendHelp)).toBeNull()
+    },
+  )
+
+  it("an 'elsewhere' (unpriced) state keeps the keep-it-INSIDE help verbatim (the containment boundary holds)", () => {
+    const elsewhere = draftWith(() => ({ ...mixedDraft, retirementState: 'elsewhere' as const }))
+    renderPanel({ snapshot: snap(elsewhere) })
+    expect(screen.getByText(copy.spendHelp)).toBeInTheDocument()
+    expect(screen.queryByText(copy.spendHelpStatePriced)).toBeNull()
+  })
+
+  it('an ABSENT retirementState (a pre-state / unanswered household) keeps the keep-it-INSIDE help', () => {
+    renderPanel() // mixedDraft: retirementState undefined
+    expect(screen.getByText(copy.spendHelp)).toBeInTheDocument()
+    expect(screen.queryByText(copy.spendHelpStatePriced)).toBeNull()
+  })
+})

@@ -23,6 +23,13 @@
  */
 import type { ScenarioDraft } from '@store/memoryModel'
 import type { BudgetLineItem, ScenarioV3 } from '@shared/model'
+import {
+  STATE_TAX_PROFILES,
+  isPricedState,
+  stateProfileKey,
+  type PricedState,
+  type StateTaxProfile,
+} from '@engine/constants/stateTax'
 import { scenarioFromDraft, currentEpochDay } from './scenarioFromDraft'
 
 /** A fixed dev CRN seed → the same fan every drive (a reproducible cold-read).
@@ -758,6 +765,71 @@ const stillWorkingAllMedicare: ScenarioDraft = {
   seed: DEV_CRN_SEED,
 }
 
+// ---------------------------------------------------------------------------
+// The state-tax faces (the state-tax unit; the state-carrying seed increment). Each is a
+// `retiredOnTrack` clone (66/65, both retired) carrying ONE `retirementState` — so the state
+// clause renders inside the all-65+ `medicarePricedNote` block (ConfidenceStatement) and the
+// SPINE overlay prices (or byte-identically no-ops) that state. `pricedStateForRun` reads the
+// PRODUCER'S OUTPUT (`buildSpineParams`' overlay), never draft truthiness (insight 081).
+// ---------------------------------------------------------------------------
+
+/**
+ * THE NC-PRICED AFFIRMATION FLAGSHIP — `retiredOnTrack`'s couple in North Carolina. NC's 3.99%
+ * flat tax genuinely BITES: the private-sector Traditional-IRA draw is fully taxed at the flat rate
+ * (SS exempt, no age carve-out), AND — because this all-retired household develops a taxable
+ * brokerage bucket from reinvested RMD surplus in the RMD years — NC also taxes those realized gains
+ * as ordinary income (no LTCG preference). The drag is real enough to PUSH the state-absent twin's
+ * on-track (survival 0.8555) DOWN across the on-track band edge to BORDERLINE (survival 0.838) —
+ * engine-proven in devSeeds.test.ts, recorded not assumed. This is the seed the priced verdict
+ * affirmation + narrowed residual ("… North Carolina …") cold-reads on BOTH mounts; the pin is the
+ * lifetime-tax INEQUALITY vs the twin plus the found borderline state (re-tune the knob on drift,
+ * never loosen the pin — the standing C3 law).
+ */
+const ncAffirmation: ScenarioDraft = { ...retiredOnTrack, retirementState: 'NC' }
+
+/**
+ * THE PA AFFIRMATION ("usually a small piece") — `retiredOnTrack`'s couple in Pennsylvania. At
+ * qualified age (both 65+) PA EXEMPTS the IRA withdrawal AND conversions, and SS is exempt — but PA
+ * taxes taxable-account income (`capGains: taxed-ordinary` at 3.07%), and this all-retired household
+ * DEVELOPS a taxable brokerage bucket from reinvested RMD surplus, so PA prices a SMALL non-zero
+ * state tax on those realized gains. Working memory guessed byte-identity; the engine REFUTES it —
+ * devSeeds.test.ts DERIVES the true relation and pins it: PA lifetime tax is slightly ABOVE the twin
+ * (the "usually a small piece") yet leaves the verdict UNMOVED (survival identical, still on-track).
+ */
+const paAffirmation: ScenarioDraft = { ...retiredOnTrack, retirementState: 'PA' }
+
+/**
+ * THE FL $0-CONSTITUTIONAL AFFIRMATION — `retiredOnTrack`'s couple in Florida. FL is a sourced
+ * constitutional $0 (Fla. Const. Art. VII § 5(a)): every decumulation dollar incurs $0 state tax,
+ * so the affirmation "no state income tax — nothing to add" ships as an HONEST fact (FL's presence
+ * in PRICED_STATES is exactly what distinguishes it from an unbuilt-state omission). devSeeds.test.ts
+ * DERIVES the relation to the twin (a priced $0 profile — the engine takes the priced branch and
+ * computes zero) and pins what it finds.
+ */
+const flAffirmation: ScenarioDraft = { ...retiredOnTrack, retirementState: 'FL' }
+
+/**
+ * THE ANSWERED-BUT-UNPRICED FACE — `retiredOnTrack`'s couple who chose "somewhere else". `'elsewhere'`
+ * is an EXPLICIT roster member (a persisted fact, distinct from never-asked ABSENT), but it is NOT in
+ * PRICED_STATES, so the engine takes the structural `+ 0` no-op branch: the verdict renders the
+ * `verdictMedicareResidual` monolith VERBATIM (no state clause) and the run is BYTE-IDENTICAL to the
+ * state-absent twin — the reduce-to-spine membership witness (spec S2.5). `pricedStateForRun` reads
+ * `undefined` (roster membership, never a truthy string check). The unpriced direction the 2026-07-15
+ * bundle never showed the lenses (the cards' noted coverage gap).
+ */
+const elsewhereAnswered: ScenarioDraft = { ...retiredOnTrack, retirementState: 'elsewhere' }
+
+/**
+ * THE DATE-ROUTE NC WITNESS — `stillWorkingAllMedicare` (the all-65+ still-working `date65` shape) in
+ * North Carolina. The date route rides its OWN state producer (`dateStatePriced`, off `buildDateInput`'s
+ * `params.overlay` — the vector every swept candidate inherits), NOT the spine's `buildSpineParams`
+ * (null on this route). Insight 080's lesson: the second producer gets its OWN live witness, so a
+ * roster-gate regression that falsely priced (or failed to price) an 'elsewhere' date-route household
+ * would surface HERE. devSeeds.test.ts pins the async date-route crown AND `pricedStateForRun === 'NC'`
+ * via the date producer.
+ */
+const dateNcSeed: ScenarioDraft = { ...stillWorkingAllMedicare, retirementState: 'NC' }
+
 /** The seed registry — `?seed=<key>` selects one. */
 export const DEV_SEEDS = {
   retired: retiredOnTrack,
@@ -772,6 +844,11 @@ export const DEV_SEEDS = {
   order: customOrderSeed,
   health: retiredHealth,
   date65: stillWorkingAllMedicare,
+  nc: ncAffirmation,
+  pa: paAffirmation,
+  fl: flAffirmation,
+  elsewhere: elsewhereAnswered,
+  datenc: dateNcSeed,
 } satisfies Record<string, ScenarioDraft>
 
 export type DevSeedKey = keyof typeof DEV_SEEDS
@@ -835,6 +912,14 @@ export function plantDevVault(key: string): Promise<PlantResult> {
  * saved-era map has one era, so that note is v1-inert by design (a fake era in the shipped
  * map would be a lie to render one). EXPORTED for the devSeeds battery — the aged plants'
  * outcome pins drive the doctored scenario through the REAL draft→input→search chain.
+ *
+ * NEVER wire a PRICED-STATE base to this doctor (the state-tax unit; F2 supersession 2026-07-16):
+ * the −2y `startCalendarYear` aging (→ 2024) precedes NC/PA's earliest rate row (2026), and the
+ * engine's priced-state lower bound (`simulate.ts:640-643`, the 2026-07-15 ultramode fold whose
+ * comment names "an aged dev plant" as the exact anticipated caller) REFUSES it — the recompute
+ * demotes to the R19 calm indeterminate and no verdict renders. A priced-state stale plant rides
+ * {@link doctorStateStaleVault} (savedAt-only, startCalendarYear + all vintages UNTOUCHED, ONLY the
+ * state profile aged). This doctor leaves `stateTaxVintage` untouched (spread through) by design.
  */
 export function doctorStaleVault(s: ScenarioV3, todayEpochDay: number): ScenarioV3 {
   // A PRE-EXTRAS-ERA save (insight 079 truthfulness): the ask-for-Medicare-extras unit did not
@@ -868,7 +953,70 @@ export function doctorStaleVault(s: ScenarioV3, todayEpochDay: number): Scenario
   }
 }
 
-/** The AGED plants: `?vault=<key>` → {@link doctorStaleVault} over a base seed. `stale` =
+/** A priced state's decumulation profile aged one rate-step back — the dev-fixture idiom (the
+ *  `taxVintageDetail` "pre-OBBBA dev fixture" precedent): a plausible OLDER, higher flat rate dated
+ *  ~2 calendar years back (NC 3.99%@2026 → 4.49%@2024, the conservative overstating direction),
+ *  serialized so the string at `stateProfileKey(state)` diverges from the current stamp and
+ *  `controls.stateTaxMoved` fires. This ages the STATE CONSTANT's own schedule inside the persisted
+ *  stamp — NOT the household's `startCalendarYear` (untouched by the light doctor), so it never trips
+ *  the engine's priced-state year bound. FL (rateSchedule null) has nothing to age (constitutional $0,
+ *  never stales). */
+function agedStateProfile(state: PricedState): string {
+  const current = STATE_TAX_PROFILES[state]
+  const firstStep = current.rateSchedule?.steps[0]
+  const older: StateTaxProfile =
+    firstStep === undefined
+      ? current
+      : {
+          ...current,
+          rateSchedule: {
+            steps: [{ fromYear: firstStep.fromYear - 2, rate: Math.round((firstStep.rate + 0.005) * 1e4) / 1e4 }],
+          },
+        }
+  return JSON.stringify(older)
+}
+
+/**
+ * The state-tax unit's LIGHT stale doctor (F2 supersession 2026-07-16) — a PRICED-state household as
+ * if saved earlier THIS SAME calendar year under an older state rulebook. It moves ONLY two things:
+ * `savedAt` back 150 days (the elapsed line reads "earlier this year") and the household's OWN state
+ * profile one rate-step back ({@link agedStateProfile}). Everything else stays FRESH.
+ *
+ * WHY NOT {@link doctorStaleVault} (the whole reason this exists): that doctor ages `startCalendarYear`
+ * −2 (→ 2024), and the engine's priced-state lower bound (`simulate.ts:640-643`) REFUSES a priced-NC
+ * household whose year-0 precedes NC's earliest rate row (2026) — the recompute demotes to the R19
+ * calm indeterminate and no verdict renders (S2's insight-033 live drive caught exactly this). It was
+ * also organically impossible: `retirementState` shipped 2026-07-15, so no genuinely-old save could
+ * carry it.
+ *
+ * THE COHERENCE CONSTRAINT (the load-bearing invariant): `savedAt`'s calendar year MUST equal
+ * `startCalendarYear` (both 2026 — untouched), because the engine validates on `startCalendarYear`
+ * and the two describe the same save moment. −150 days from any plausible 2026 wall-clock keeps
+ * `savedAt` inside 2026 with a safe margin from Jan 1. The tax / healthcare / date vintages are left
+ * FRESH (a same-year save carries same-year vintages) — so the ONLY clock that fires is the state-tax
+ * one: the `stalenessStateTax` note renders in ISOLATION (a cleaner face-#4 cold read), and the
+ * affirm recompute lands the SAME engine-proven verdict as `?seed=nc` (borderline).
+ *
+ * EXPORTED for the devSeeds battery (like {@link doctorStaleVault}). Fail-loud if handed a
+ * non-priced-state base — the ONLY legitimate caller is a priced-state aged plant (`statestale`).
+ */
+export function doctorStateStaleVault(s: ScenarioV3, todayEpochDay: number): ScenarioV3 {
+  const hhState = s.retirementState
+  if (s.stateTaxVintage === undefined || hhState === undefined || !isPricedState(hhState)) {
+    throw new Error(
+      `doctorStateStaleVault requires a priced-state base with a state-tax stamp; got ${String(hhState)} ` +
+        `(a non-priced base can never fire the state-tax clock — a wiring error, never a silent no-op).`,
+    )
+  }
+  return {
+    ...s,
+    savedAt: todayEpochDay - 150,
+    stateTaxVintage: { ...s.stateTaxVintage, [stateProfileKey(hhState)]: agedStateProfile(hhState) },
+  }
+}
+
+/** The AGED plants: `?vault=<key>` → a doctor over a base seed (each key names BOTH — the state-tax
+ *  unit split the one doctor into two, so the dispatch carries the pairing). `stale` =
  *  the retired spine (the U13 staleness batch's original surface); `datestale` = the SPLIT
  *  date household (`datesplit` — floor crowns ≈1, lifestyle ≈8 at design time), the only
  *  live route to the floor's ARRIVED arm (`dateFloorCoveredPast`: elapsed 2 ≥ the floor
@@ -877,14 +1025,32 @@ export function doctorStaleVault(s: ScenarioV3, todayEpochDay: number): Scenario
  *  (`stalenessDate`) no walk had ever rendered. The hero's own arrived arm
  *  (`dateInYearsPast`) needs elapsed ≥ the lifestyle crown (≈8y); savedAt's codec floor is
  *  2020 (~6y back), so it is NOT coherently mintable — it stays unit-pinned, never faked. */
-const AGED_PLANTS: Readonly<Partial<Record<string, DevSeedKey>>> = {
-  stale: 'retired',
-  datestale: 'datesplit',
+/** One aged plant: the base seed it doctors + WHICH doctor (the state-tax unit split the single
+ *  doctor into two — the spine/date stale plants ride the full {@link doctorStaleVault}; a
+ *  priced-state stale plant rides the light {@link doctorStateStaleVault}, which never trips the
+ *  engine's priced-state year bound). Both doctors share the `(ScenarioV3, todayEpochDay) → ScenarioV3`
+ *  shape, so the dispatch is uniform. */
+interface AgedPlant {
+  readonly base: DevSeedKey
+  readonly doctor: (s: ScenarioV3, todayEpochDay: number) => ScenarioV3
+}
+
+const AGED_PLANTS: Readonly<Partial<Record<string, AgedPlant>>> = {
+  stale: { base: 'retired', doctor: doctorStaleVault },
+  datestale: { base: 'datesplit', doctor: doctorStaleVault },
+  // `statestale` = the NC-priced spine household (`nc`) doctored stale THIS SAME YEAR via the LIGHT
+  // doctor (F2 supersession 2026-07-16). Base MUST be a PRICED-state household (NC): the
+  // `controls.stateTaxMoved` clock is route-gated to the household's own priced state, so a stateless
+  // base could never fire it; NC not FL because FL's constitutional $0 never stales. The full
+  // doctorStaleVault's −2y aging (→ 2024) would trip the engine's priced-state year bound
+  // (simulate.ts:640) → R19 indeterminate, so this plant rides `doctorStateStaleVault` (savedAt-only,
+  // startCalendarYear + all vintages fresh) → the `stalenessStateTax` gate note fires in ISOLATION.
+  statestale: { base: 'nc', doctor: doctorStateStaleVault },
 }
 
 async function runPlantDevVault(key: string): Promise<PlantResult> {
-  const agedBase = Object.hasOwn(AGED_PLANTS, key) ? AGED_PLANTS[key] : undefined
-  const draft = resolveDevSeed(agedBase ?? key)
+  const aged = Object.hasOwn(AGED_PLANTS, key) ? AGED_PLANTS[key] : undefined
+  const draft = resolveDevSeed(aged?.base ?? key)
   if (draft === null) return 'unknown-seed'
   const built = scenarioFromDraft(draft)
   if (!built.ready) return 'not-ready'
@@ -892,7 +1058,7 @@ async function runPlantDevVault(key: string): Promise<PlantResult> {
   // ad-hoc clock read is exactly the class the 2026-07-09 ultramode unified away; DEV-only
   // here, but the plant feeds cold-reads and its elapsed line must agree with the app's).
   const scenario =
-    agedBase !== undefined ? doctorStaleVault(built.scenario, currentEpochDay()) : built.scenario
+    aged !== undefined ? aged.doctor(built.scenario, currentEpochDay()) : built.scenario
   const [{ getVaultSession }, { checkPassphraseFloor }, { clearVault, openVaultDb }] = await Promise.all([
     import('./vaultSession'),
     import('@crypto/kdf'),

@@ -101,12 +101,13 @@ export interface FuckOffDateProps {
    *  ages — insight 080); this stays a dumb bool-prop renderer (insight 048). Default false. */
   readonly medicarePricedNote?: boolean
   /** The ask-for-Medicare-extras on-typical appendix (F5): the composed bi-directional
-   *  per-person sentence, appended INSIDE the residual note — same block, no new row
-   *  (mirrors ConfidenceStatement; rendered only with `medicarePricedNote`). */
+   *  per-person sentence, rendered as its OWN `.fod-note` AFTER the residual (O12/F6(ii),
+   *  council 2026-07-17 — the date route scrolls by design, so it does NOT mirror
+   *  ConfidenceStatement's same-<p> concat; rendered only with `medicarePricedNote`). */
   readonly medicareExtrasTypicalNote?: string
   /** The state-tax unit (S5): the PRICED state THIS run priced, or undefined. Swaps the residual's
    *  embedded state clause IN PLACE — a priced household reads the outcome-scoped affirmation
-   *  naming its state; undefined reads today's "isn't counted" words verbatim (mirrors
+   *  naming its state; undefined reads today's "isn't priced yet" monolith verbatim (mirrors
    *  ConfidenceStatement; route-aware off the built params in Result — insight 080/081). */
   readonly statePricedNote?: PricedState
   /** P3·U13 — TRUE when any staleness clock fired at unlock: the date claim wears the

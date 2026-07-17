@@ -126,7 +126,7 @@ export interface ConfidenceStatementProps {
   /** The state-tax unit (S5): the PRICED state THIS run priced, or undefined. Swaps the residual's
    *  embedded state clause IN PLACE — a priced household reads the outcome-scoped affirmation
    *  naming its state; undefined (not priced / 'elsewhere' / unbuilt / degenerate overlay) reads
-   *  today's "isn't counted" words verbatim. Result owns the ONE route-aware decision
+   *  today's "isn't priced yet" monolith verbatim. Result owns the ONE route-aware decision
    *  (`pricedStateForRun` off the built params, never geography/ages — insight 080/081); this stays
    *  a dumb prop renderer (insight 048). Rendered inside the SAME residual paragraph — no new row. */
   readonly statePricedNote?: PricedState

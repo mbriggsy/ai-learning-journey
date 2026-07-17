@@ -69,10 +69,15 @@ function draftWith(mutate?: (d: ScenarioDraft) => ScenarioDraft): ScenarioDraft 
 const pretaxAccount: EnteredAccount = { ownerIndex: 0, kind: 'traditional-ira', valueToday: 500_000 }
 const withPretax = (d: ScenarioDraft): ScenarioDraft => ({ ...d, enteredAccounts: [pretaxAccount] })
 /** O9: an all-65+ household (both ages known, ≥65) — flips `medicareOnlyPriced` true. The fresh
- *  draft's UNANSWERED ages are the conservative false arm the earlier arms already prove. */
+ *  draft's UNANSWERED ages are the conservative false arm the earlier arms already prove.
+ *  Cast-free tuple literal (the sibling tests' idiom) so a `currentAge` rename fails tsc here
+ *  instead of silently un-aging the fixture. */
 const all65 = (d: ScenarioDraft): ScenarioDraft => ({
   ...d,
-  people: d.people.map((p) => ({ ...p, currentAge: 68 })) as unknown as ScenarioDraft['people'],
+  people: [
+    { ...d.people[0], currentAge: 68 },
+    { ...d.people[1], currentAge: 68 },
+  ],
 })
 
 function deferredPreview() {

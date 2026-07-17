@@ -27,7 +27,7 @@ import { buildYTicks, type YTick } from '@viz/bandData'
 import { COHORT_FADE } from '@viz/bandGeometry'
 import { copy, slots } from './copy'
 import { OUTCOME_PRESENTATION } from './outcomeStates'
-import { formatAxisDollar } from './money'
+import { axisDollarFormatterFor, formatAxisDollar } from './money'
 import { deriveBandAgesAt, deriveDecadeAgeTicks, type BandSavedAnchor } from './bandAnnotations'
 
 /** The verdict WORD for a state (null for indeterminate — a two-arm outcome's arms are never
@@ -195,7 +195,9 @@ export function composeTwoFutures(
       },
       // The fan's OWN tick builder over the shared humane ceiling — quarters are clean figures
       // by construction, and the two charts can never grow separate dollar-axis dialects.
-      yTicks: buildYTicks(ceiling, formatAxisDollar),
+      // O8 (2026-07-17): the lattice is unit-LOCKED to its top tick (rule 36) — a $3M ceiling
+      // reads "$0.75M…$3M", never "$750k" among "$M" gridlines.
+      yTicks: buildYTicks(ceiling, axisDollarFormatterFor(ceiling)),
       // Known ages ⇒ the fan's OWN decade-age tick rule (one canonical home, bandAnnotations) —
       // the two charts can never grow separate clock dialects; ages-less ⇒ year-count fallback.
       xTicks:

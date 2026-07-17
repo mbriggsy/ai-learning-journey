@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { formatAxisDollar, formatPerMonth } from '../money'
+import { axisDollarFormatterFor, formatAxisDollar, formatPerMonth } from '../money'
+import { buildYTicks } from '@viz/bandData'
 
 /**
  * formatAxisDollar — the ONE dollar-axis dialect (fan gridlines, TwoFutures gridlines, the
@@ -57,6 +58,53 @@ describe('formatAxisDollar — exact-when-round gridline labels', () => {
 
   it('defensive |x|: a stray sign never prints "$-"', () => {
     expect(formatAxisDollar(-2_250_000)).toBe('$2.25M')
+  })
+})
+
+/**
+ * axisDollarFormatterFor — O8 (2026-07-17): ONE dialect per tick lattice (corpus rule 36, the
+ * fcc35556 axis family). The per-value formatter mixed units on any $M-class ceiling whose
+ * quarters dip under $1M ("$750k" between "$1.5M" gridlines). The factory locks the lattice to
+ * the TOP tick's unit; the scrub/tooltip path deliberately keeps per-value units (the readout
+ * is prose, the axis is the ruler). Expectations hand-derived (DND 012).
+ */
+describe('axisDollarFormatterFor — the unit-locked tick lattice (O8)', () => {
+  it('the filed witness: a $3M ceiling reads one dialect — "$0.75M", never "$750k" among "$M" gridlines', () => {
+    const labels = buildYTicks(3_000_000, axisDollarFormatterFor(3_000_000)).map((t) => t.label)
+    expect(labels).toEqual(['$0', '$0.75M', '$1.5M', '$2.25M', '$3M'])
+  })
+
+  it('the retired-seed shape: a $2M ceiling locks its half-million quarters to M', () => {
+    const labels = buildYTicks(2_000_000, axisDollarFormatterFor(2_000_000)).map((t) => t.label)
+    expect(labels).toEqual(['$0', '$0.5M', '$1M', '$1.5M', '$2M'])
+  })
+
+  it('the budget-seed shape: a $1.5M ceiling keeps the exact-when-round law in the locked dialect', () => {
+    const labels = buildYTicks(1_500_000, axisDollarFormatterFor(1_500_000)).map((t) => t.label)
+    expect(labels).toEqual(['$0', '$0.375M', '$0.75M', '$1.125M', '$1.5M'])
+  })
+
+  it('the $0 ruin-floor anchor stays plain "$0" — never "$0M"', () => {
+    expect(axisDollarFormatterFor(3_000_000)(0)).toBe('$0')
+  })
+
+  it('a sub-$1M ceiling keeps the per-value dialect verbatim (its quarters never cross a unit boundary)', () => {
+    const labels = buildYTicks(800_000, axisDollarFormatterFor(800_000)).map((t) => t.label)
+    expect(labels).toEqual(['$0', '$200k', '$400k', '$600k', '$800k'])
+    expect(axisDollarFormatterFor(800_000)).toBe(formatAxisDollar)
+  })
+
+  it('the one-dialect property: no $≥1M lattice ever mixes a "k" label among its "M" gridlines', () => {
+    for (const ceiling of [1_000_000, 1_500_000, 2_000_000, 3_000_000, 4_000_000, 5_000_000, 6_000_000, 8_000_000]) {
+      const labels = buildYTicks(ceiling, axisDollarFormatterFor(ceiling)).map((t) => t.label)
+      for (const label of labels.slice(1)) {
+        expect(label, `${ceiling} lattice: ${labels.join(' ')}`).toMatch(/M$/)
+      }
+    }
+  })
+
+  it('a non-round stray falls back to the humane 1-decimal in the locked unit (defensive, mirrors the per-value M branch)', () => {
+    expect(axisDollarFormatterFor(2_000_000)(1_234_567)).toBe('$1.2M')
   })
 })
 

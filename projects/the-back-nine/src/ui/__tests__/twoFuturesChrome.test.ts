@@ -331,6 +331,16 @@ describe('composeTwoFutures — the y-axis dollar lattice (the fan’s OWN tick 
     expect(top.dollars).toBe(twoFuturesCeiling(1_234_567))
     expect(view!.series!.labels.dollarMaxLabel).toBe(`~${top.label}`)
   })
+
+  // O8 (2026-07-17) — the unit-locked lattice, wired: a $3M-class ceiling's sub-$1M quarter
+  // reads "$0.75M", never "$750k" among "$M" gridlines (one dialect per axis, rule 36). This
+  // is the CALL-SITE pin — reverting twoFuturesChrome's tick builder to the per-value
+  // formatter goes red here (the factory's own arms live in money.test).
+  it('a mixed-magnitude ceiling emits ONE dialect (the filed "$750k among $M" witness, killed)', () => {
+    const view = composeTwoFutures(outcomeWithFans(2_900_000), 'With', 'Without', slots.rothDeltaSurvivor)
+    const labels = view!.series!.yTicks.map((t) => t.label)
+    expect(labels).toEqual(['$0', '$0.75M', '$1.5M', '$2.25M', '$3M'])
+  })
 })
 
 describe('deriveTwoFuturesXTicks — intermediate year ticks between the endpoints', () => {

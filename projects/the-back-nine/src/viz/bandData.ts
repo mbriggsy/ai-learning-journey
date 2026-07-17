@@ -283,6 +283,12 @@ export function resolveBandData(
   outcomeState: OutcomeState,
   opts: {
     readonly formatDollar: (dollars: number) => string
+    /** O8 (2026-07-17) — the TICK-lattice formatter FACTORY, applied to the resolver's own
+     *  computed `dollarMax` (the ceiling is derived in here, so the caller cannot pre-bind it):
+     *  locks the y-axis to one dialect per lattice (rule 36) while `formatDollar` keeps
+     *  formatting the scrub/tooltip rows per-value (the readout is prose, the axis is the
+     *  ruler). Absent ⇒ the ticks ride `formatDollar` unchanged. */
+    readonly tickFormatterFor?: (dollarMax: number) => (dollars: number) => string
     readonly annotations?: readonly XAnnotation[]
     readonly callouts?: readonly BandCallout[]
     /** Maps a lattice year (years-from-now, possibly fractional) to the household ages string for the
@@ -373,7 +379,8 @@ export function resolveBandData(
 
   // y-ticks INCLUDING the $0 ruin-floor anchor — single-sourced via buildYTicks so the indeterminate
   // placeholder band matches a resolved card's gridlines by construction, not by a duplicated loop.
-  const yTicks = buildYTicks(dollarMax, opts.formatDollar)
+  // The tick formatter rides the O8 factory when supplied (one dialect per lattice, rule 36).
+  const yTicks = buildYTicks(dollarMax, opts.tickFormatterFor?.(dollarMax) ?? opts.formatDollar)
 
   return {
     kind: 'resolved',

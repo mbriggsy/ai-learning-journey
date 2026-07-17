@@ -53,7 +53,7 @@ import { agedLadderMarks, curveMarks } from '@viz/curveMarks'
 import { resolveBandData, type XAnnotation } from '@viz/bandData'
 import { BAND_LABELS, BAND_CHROME, composeBandAtRange } from './bandPanelChrome'
 import { LADDER_LABELS } from './oddsLadderChrome'
-import { formatAxisDollar } from './money'
+import { axisDollarFormatterFor, formatAxisDollar } from './money'
 import type { DateBand, DateTrackOutcome } from '@shared/model'
 import './styles/fuckOffDate.css'
 
@@ -239,6 +239,7 @@ export function FuckOffDate({ view, focusSignal, actionsSlot, medicarePricedNote
     if (view.kind !== 'dates' || !view.band) return null
     return resolveBandData(view.band.fan, view.band.outcomeState, {
       formatDollar: formatAxisDollar,
+      tickFormatterFor: axisDollarFormatterFor,
       annotations: view.bandAnnotations,
       formatAges: view.bandAges,
     })

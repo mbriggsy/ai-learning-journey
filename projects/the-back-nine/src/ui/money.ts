@@ -56,3 +56,26 @@ export function formatAxisDollar(dollars: number): string {
   }
   return `$${Math.round(v)}`
 }
+
+/** ONE dialect per axis lattice (O8, 2026-07-17 — corpus rule 36, the fcc35556 axis family):
+ *  `formatAxisDollar` picks its unit per-VALUE, so any $M-class ceiling whose quarters dip under
+ *  $1M rendered a mixed ladder — "$750k" between "$1.5M" gridlines, an evenly-spaced ruler
+ *  reading unevenly. This factory locks a lattice to its TOP tick's unit: an $≥1M ceiling
+ *  formats every non-zero tick in M ("$0.75M, $1.5M, $2.25M, $3M" — quarters of the niceCeil
+ *  ladder are exact dyadics, so Number→template prints the shortest exact decimal, the O5
+ *  exact-when-round law), $0 stays "$0" (never "$0M" — the ruin-floor anchor reads plain).
+ *  A sub-$1M ceiling keeps the per-value formatter (its quarters never cross a unit boundary
+ *  in the band's reachable domain — the $0-portfolio household is screened upstream).
+ *  DELIBERATE SCOPE: tick lattices only. The scrub/tooltip readout keeps per-value units
+ *  ("$623k" in a sentence, never "$0.623M") — the axis is the ruler, the readout is prose. */
+export function axisDollarFormatterFor(ceiling: number): (dollars: number) => string {
+  if (ceiling < 1_000_000) return formatAxisDollar
+  return (dollars: number): string => {
+    const v = Math.abs(dollars)
+    if (v === 0) return '$0'
+    // The same exact-when-round gate as the per-value M branch (integer arithmetic, never a
+    // float round-trip); a non-round stray falls back to the humane 1-decimal.
+    if (v % 1_000 === 0) return `$${v / 1_000_000}M`
+    return `$${(v / 1_000_000).toFixed(1).replace(/\.0$/, '')}M`
+  }
+}

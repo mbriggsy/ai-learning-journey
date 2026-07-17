@@ -41,7 +41,7 @@ import { VerdictIcon } from './verdictSignal'
 import { SurvivorReadout } from './SurvivorReadout'
 import { TwoTierHeadline } from './TwoTierHeadline'
 import { floorRelief } from './twoTier'
-import { formatAxisDollar } from './money'
+import { axisDollarFormatterFor, formatAxisDollar } from './money'
 import { composeVerdictReading } from './verdictSentence'
 import { composeVerdictMedicareResidual } from './stateTaxDisclosure'
 import type { PricedState } from '@engine/constants/stateTax'
@@ -163,7 +163,7 @@ function buildPlaceholderBand(annotations: readonly XAnnotation[]): Indeterminat
     kind: 'indeterminate',
     horizonYears: PLACEHOLDER_HORIZON_YEARS,
     dollarMax: PLACEHOLDER_DOLLAR_MAX,
-    yTicks: buildYTicks(PLACEHOLDER_DOLLAR_MAX, formatAxisDollar),
+    yTicks: buildYTicks(PLACEHOLDER_DOLLAR_MAX, axisDollarFormatterFor(PLACEHOLDER_DOLLAR_MAX)),
     annotations,
     placeholderNote: copy.bandPlaceholderNote,
   }
@@ -258,6 +258,7 @@ export function ConfidenceStatement({ view, focusSignal, actionsSlot, medicarePr
     }
     return resolveBandData(view.band, view.headline.outcomeState, {
       formatDollar: formatAxisDollar,
+      tickFormatterFor: axisDollarFormatterFor,
       annotations: view.bandAnnotations,
       formatAges: view.bandAges,
     })

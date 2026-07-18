@@ -59,6 +59,16 @@ function magnitudeClause(direction: DollarAdjustment['direction'], perMonth: num
   }
 }
 
+/** The count READING alone — the over-funded ceiling BY NAME (`xOfTenAtCeiling`, never the
+ *  magic `xOfTen(10)`), the plain count otherwise. The ONE home for the state→reading branch:
+ *  the hero + panel echo consume it through {@link composeVerdictReading}, and the provisional
+ *  AnswerStrip calls it directly (the strip renders no clause, so composing the full triple
+ *  there would fabricate arguments — council 2026-07-18 Q4a: the strip was the un-folded
+ *  sibling of the U12 echo desync, reading "9 of 10" where the hero read the ceiling). */
+export function verdictReadingText(outcomeState: OutcomeState, xOfTen: number): string {
+  return outcomeState === 'over-funded' ? slots.xOfTenAtCeiling() : slots.xOfTen(xOfTen)
+}
+
 /** Compose the rendered verdict sentence pieces for a displayed triple. Returns `null` only
  *  for `indeterminate` (not a verdict — the surface shows its own incompleteness copy; the
  *  sixth-state asymmetry, outcomeStates.ts). */
@@ -67,7 +77,7 @@ export function composeVerdictReading(shown: VerdictDisplay): VerdictReading | n
   if (wordKey === null) return null
   return {
     word: copy[wordKey],
-    reading: shown.outcomeState === 'over-funded' ? slots.xOfTenAtCeiling() : slots.xOfTen(shown.xOfTen),
+    reading: verdictReadingText(shown.outcomeState, shown.xOfTen),
     clause: magnitudeClause(shown.direction, shown.perMonthDollar),
   }
 }

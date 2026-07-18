@@ -7,11 +7,15 @@
  *   - PRIMARY: the natural-frequency shift in the SAME "X of 10" register as the spine —
  *     SURVIVOR-basis when both arms observed one (the emotional headline number), joint fallback.
  *   - The QUANTIZED readings drive the words (the engine's own rounding — never re-derived);
- *     equal quantized readings render the calm EVEN line, never a suppressed delta and never a
- *     fabricated difference the quantize deliberately absorbed.
- *   - The ceiling composes naturally ("in better than 9 in 10 futures instead of 7 of 10") via
- *     slots.xOfTen / xOfTenAtCeiling; a state CHANGE between arms adds the verdict-transition
- *     rider (the 10/10-clamp pivot).
+ *     equal quantized readings across SAME-state arms render the calm EVEN line, never a
+ *     suppressed delta and never a fabricated difference the quantize deliberately absorbed.
+ *   - The delta lines DELIBERATELY speak the conservative count: the engine clamps each arm's
+ *     emitted count to ≤ 9, so the ceiling proportion never renders here (an over-funded arm
+ *     reads "9 of 10" — council 2026-07-18 Q4b ratified the count; folding the ceiling in would
+ *     mint a fresh of/in collision inside one sentence). A state CHANGE between arms adds the
+ *     verdict-transition rider — that is how an over-funded arm surfaces past the clamp — and
+ *     equal counts across a state move render the count-only line, never the false "doesn't
+ *     look to change much" (Q4d: the recommend-second suppression).
  *   - "~N years" is a HEDGED SECONDARY tied to its stated percentile, present only when the
  *     engine emitted a real median for BOTH arms (never fabricated).
  */
@@ -116,19 +120,26 @@ export function composeTwoFutures(
   const withOdds = survivorBasis ? survivorOddsOf(outcome.with) : oddsOf(outcome.with)
   const withoutOdds = survivorBasis ? survivorOddsOf(outcome.without) : oddsOf(outcome.without)
 
-  const deltaLine =
-    withOdds === withoutOdds
-      ? slots.rothDeltaEven(withOdds)
-      : survivorBasis
-        ? deltaSlot(withOdds, withoutOdds)
-        : slots.rothDeltaJoint(withOdds, withoutOdds)
-
   const fromWord = stateWord(outcome.without.headline.outcomeState)
   const toWord = stateWord(outcome.with.headline.outcomeState)
   const stateLine =
     fromWord !== null && toWord !== null && fromWord !== toWord
       ? slots.rothStateShift(fromWord, toWord)
       : undefined
+
+  // The EVEN line is gated on the state rider being ABSENT: equal clamped counts across a state
+  // move (over-funded 0.99 vs on-track 0.90 both read "9 of 10") are NOT "doesn't look to change
+  // much" — that line was suppressing a real improvement (or harm) on the recommend-second
+  // surface (council 2026-07-18 Q4d). The count-only sibling states the count fact and lets the
+  // state rider directly below carry the move.
+  const deltaLine =
+    withOdds === withoutOdds
+      ? stateLine === undefined
+        ? slots.rothDeltaEven(withOdds)
+        : slots.rothDeltaCountEven(withOdds)
+      : survivorBasis
+        ? deltaSlot(withOdds, withoutOdds)
+        : slots.rothDeltaJoint(withOdds, withoutOdds)
 
   const yearsLine =
     outcome.medianYearsDelta !== undefined && Math.round(Math.abs(outcome.medianYearsDelta)) >= 1

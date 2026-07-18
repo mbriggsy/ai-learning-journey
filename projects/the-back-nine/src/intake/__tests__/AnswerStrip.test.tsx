@@ -62,6 +62,24 @@ describe('AnswerStrip — the honesty branches (D1 review T3)', () => {
     expect(screen.getByTestId('engine-reading').textContent).toContain(copy.outcomeOffTrack)
   })
 
+  it('an OVER-FUNDED reading rides the composer’s ceiling route — "better than 9 in 10", byte-identical to the hero, never the raw clamped count (council 2026-07-18 Q4a: the strip was the un-folded sibling of the U12 echo desync)', () => {
+    renderStrip(headline('over-funded', 9), {
+      enteredAccounts: [{ ownerIndex: 0, kind: '401k', valueToday: 5_000_000 }],
+    })
+    const reading = screen.getByTestId('engine-reading').textContent!
+    expect(reading).toContain(copy.outcomeOverFunded)
+    expect(reading).toContain(slots.xOfTenAtCeiling())
+    expect(reading).not.toContain(slots.xOfTen(9)) // the raw "9 of 10" desync is dead
+    expect(reading).not.toContain('10 of 10')
+  })
+
+  it('a below-ceiling reading keeps the plain count (the fold narrows only the ceiling)', () => {
+    renderStrip(headline('on-track', 8), {
+      enteredAccounts: [{ ownerIndex: 0, kind: '401k', valueToday: 900_000 }],
+    })
+    expect(screen.getByTestId('engine-reading').textContent).toContain(slots.xOfTen(8))
+  })
+
   it('an indeterminate headline renders the input-incomplete placeholder + the named missing input', () => {
     render(
       <AnswerStrip

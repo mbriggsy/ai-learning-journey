@@ -174,7 +174,7 @@ describe('HealthcareSheet — the readout lines', () => {
     cleanup()
     renderSheet({ readout: READOUT })
     expect(screen.getByText(slots.acaCostNet('10,000'))).toBeInTheDocument()
-    expect(screen.getByText(slots.acaCostCliff(slots.xOfTen(3)))).toBeInTheDocument()
+    expect(screen.getByText(slots.acaCostCliff(3))).toBeInTheDocument()
     expect(screen.getByText(slots.shadowRateLine(22))).toBeInTheDocument()
     expect(screen.getByText(slots.shadowRateHeadroom('66,600', '84,600', '18,000'))).toBeInTheDocument()
   })

@@ -140,9 +140,11 @@ export function composeHealthSheet(
     const worst = quotableYears(readout)
       .filter((y) => y.acaPricedFraction >= 0.5)
       .reduce((max, y) => Math.max(max, y.overCliffFraction), 0)
+    // UNCLAMPED by design (insight 062's no-silent-clamp cousin): at ≥ 10 the slot renders the
+    // valence-neutral adverse ceiling ("more than 9 in 10"), never the good-news "better than"
+    // and never a snapped "10 of 10" (council 2026-07-18 Q3, the hawk's veto).
     const worstOfTen = Math.round(worst * 10)
-    const cliffLine =
-      cliff !== null && worstOfTen >= 1 ? slots.acaCostCliff(slots.xOfTen(worstOfTen)) : undefined
+    const cliffLine = cliff !== null && worstOfTen >= 1 ? slots.acaCostCliff(worstOfTen) : undefined
 
     // The shadow rate at the empirical anchor: ordinary marginal rate (through the same
     // deduction stack the tax math uses) + the subsidy drag (through the same sliding scale
@@ -195,7 +197,7 @@ export function composeHealthSheet(
       facts.push({
         id: 'discount',
         eyebrow: copy.healthFactDiscount,
-        lines: [slots.acaCostCliffOverCliff(slots.xOfTen(worstOfTen), formatDollar(cliff))],
+        lines: [slots.acaCostCliffOverCliff(worstOfTen, formatDollar(cliff))],
       })
     }
 

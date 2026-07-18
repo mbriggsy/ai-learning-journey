@@ -25,6 +25,9 @@ export const LADDER_LABELS: OddsLadderLabels = {
   barLabel: copy.ladderBarLabel,
   crownLabel: copy.ladderCrownLabel,
   // ONE sentence, TWO channels: every dot's aria-label AND the hover/scrub readout line render
-  // this same worded reading (single-sourced — the two can never disagree).
-  describeMark: (m) => slots.ladderMarkAria(m.offsetYears, slots.xOfTen(m.rung), markState(m)),
+  // this same worded reading (single-sourced — the two can never disagree). The mark's own
+  // state-derived atCeiling flag drops the "about" at the ceiling (the bound is the hedge —
+  // council 2026-07-18 Q2; never sniffed off the rendered string).
+  describeMark: (m) =>
+    slots.ladderMarkAria(m.offsetYears, slots.xOfTen(m.rung), markState(m), m.atCeiling),
 }

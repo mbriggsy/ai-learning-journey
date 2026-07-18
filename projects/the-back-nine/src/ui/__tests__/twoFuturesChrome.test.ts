@@ -101,6 +101,32 @@ describe('composeTwoFutures — the primary delta line', () => {
     expect(view!.deltaLine).toBe(slots.rothDeltaEven(slots.xOfTen(8)))
     expect(view!.deltaLine).not.toBe(slots.rothDeltaSurvivor(slots.xOfTen(8), slots.xOfTen(8)))
   })
+
+  it('EQUAL counts across a STATE move render the count-only line + the state rider — never the false "doesn’t look to change much" (council 2026-07-18 Q4d: the ≤9 clamp compresses the top, so an over-funded 0.99 arm and an on-track 0.90 arm both read "9 of 10" over a REAL improvement — the even line was suppressing a beneficial conversion on the recommend-second surface)', () => {
+    const outcome = twoArm({
+      deltaBasis: 'joint',
+      rawDelta: 0.09,
+      with: reading({ headline: headline(9, 'over-funded'), survivalFraction: 0.99 }),
+      without: reading({ headline: headline(9, 'on-track'), survivalFraction: 0.9 }),
+    })
+    const view = composeTwoFutures(outcome, 'With', 'Without', slots.rothDeltaSurvivor)
+    expect(view!.deltaLine).toBe(slots.rothDeltaCountEven(slots.xOfTen(9)))
+    expect(view!.deltaLine).not.toBe(slots.rothDeltaEven(slots.xOfTen(9)))
+    // The state rider carries the move — the pair composes "count holds · verdict word moves".
+    expect(view!.stateLine).toBe(slots.rothStateShift(copy.outcomeOnTrack, copy.outcomeOverFunded))
+  })
+
+  it('EQUAL counts with SAME states still render the calm even line (the Q4d gate narrows nothing else)', () => {
+    const outcome = twoArm({
+      deltaBasis: 'joint',
+      rawDelta: 0.02,
+      with: reading({ headline: headline(9, 'on-track'), survivalFraction: 0.92 }),
+      without: reading({ headline: headline(9, 'on-track'), survivalFraction: 0.9 }),
+    })
+    const view = composeTwoFutures(outcome, 'With', 'Without', slots.rothDeltaSurvivor)
+    expect(view!.deltaLine).toBe(slots.rothDeltaEven(slots.xOfTen(9)))
+    expect(view!.stateLine).toBeUndefined()
+  })
 })
 
 describe('composeTwoFutures — the verdict-state rider', () => {

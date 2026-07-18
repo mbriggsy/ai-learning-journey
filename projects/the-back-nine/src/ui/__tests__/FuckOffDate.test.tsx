@@ -190,11 +190,11 @@ describe('FuckOffDate — the aged wall-time re-base', () => {
     const { container } = render(<FuckOffDate view={dates(DATE_FIXTURES.confirmed)} dateAnchor={anchor(2)} />)
     expect(screen.getByRole('heading', { name: slots.dateInYearsAnchored(2, 2028) })).toBeInTheDocument()
     const aria = ladderAria(container)
-    expect(aria).toContain(slots.ladderMarkAria(2, slots.xOfTen(9), 'crown'))
+    expect(aria).toContain(slots.ladderMarkAria(2, slots.xOfTen(9), 'crown', false))
     // the save-relative crown sentence (the old lie) is GONE
-    expect(aria).not.toContain(slots.ladderMarkAria(4, slots.xOfTen(9), 'crown'))
+    expect(aria).not.toContain(slots.ladderMarkAria(4, slots.xOfTen(9), 'crown', false))
     // the passed plan-0 and plan-1 rungs dropped from every channel (display 0 is plan-2, below-bar)
-    expect(aria).toContain(slots.ladderMarkAria(0, slots.xOfTen(8), 'below'))
+    expect(aria).toContain(slots.ladderMarkAria(0, slots.xOfTen(8), 'below', false))
     expect(container.querySelectorAll('.fod-ladder .ladder-dot')).toHaveLength(4) // plan 2,3,4,5
   })
 
@@ -208,7 +208,7 @@ describe('FuckOffDate — the aged wall-time re-base', () => {
   it('the STRICT boundary (crown == elapsed) keeps the ladder with the "stopping today" crown', () => {
     const { container } = render(<FuckOffDate view={dates(DATE_FIXTURES.confirmed)} dateAnchor={anchor(4)} />)
     expect(container.querySelector('.fod-ladder')).not.toBeNull()
-    expect(ladderAria(container)).toContain(slots.ladderMarkAria(0, slots.xOfTen(9), 'crown'))
+    expect(ladderAria(container)).toContain(slots.ladderMarkAria(0, slots.xOfTen(9), 'crown', false))
   })
 
   it('an aged ladder wears the balances-vintage clause (agedBalancesYear present — the persist machine derived it); absent ⇒ no clause', () => {
@@ -361,6 +361,7 @@ describe('FuckOffDate — the U9b two-track split', () => {
       9,
       slots.xOfTen(Math.round(DATE_FIXTURES.confirmedLater.grade.quantizedLowerBound * 10)),
       'crown',
+      Math.round(DATE_FIXTURES.confirmedLater.grade.quantizedLowerBound * 10) >= 10,
     )
     expect(screen.getByLabelText(crownAria)).toBeInTheDocument()
   })

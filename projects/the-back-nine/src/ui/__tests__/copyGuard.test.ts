@@ -147,9 +147,10 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     dateInYears: slots.dateInYears(8),
     noDateInWindow: slots.noDateInWindow(30),
     withOdds: slots.withOdds('7 of 10'),
+    withOddsAtCeiling: slots.withOddsAtCeiling(),
     dateTradeoff: slots.dateTradeoff(2, slots.xOfTen(8)),
     ladderOffsetTick: slots.ladderOffsetTick(6),
-    ladderMarkAria: slots.ladderMarkAria(6, slots.xOfTen(9), 'crown'),
+    ladderMarkAria: slots.ladderMarkAria(6, slots.xOfTen(9), 'crown', false),
     ladderCaveatAgedBalances: slots.ladderCaveatAgedBalances(2024),
     noDateHowClose: slots.noDateHowClose(slots.xOfTen(7)),
     dateFloorCovered: slots.dateFloorCovered(4, slots.withOdds(slots.xOfTen(9)), true),
@@ -182,6 +183,7 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     rothDeltaSurvivor: slots.rothDeltaSurvivor(slots.xOfTen(8), slots.xOfTen(6)),
     rothDeltaJoint: slots.rothDeltaJoint(slots.xOfTen(8), slots.xOfTen(7)),
     rothDeltaEven: slots.rothDeltaEven(slots.xOfTen(7)),
+    rothDeltaCountEven: slots.rothDeltaCountEven(slots.xOfTen(9)),
     rothStateShift: slots.rothStateShift('Off track', 'On track'),
     rothYearsSecondary: slots.rothYearsSecondary(3, 'more'),
     sequencingDelta: slots.sequencingDelta(slots.xOfTen(8), slots.xOfTen(7)),
@@ -190,8 +192,8 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     acaCostStatus: slots.acaCostStatus('July 3, 2026'),
     acaCostStatusEnhanced: slots.acaCostStatusEnhanced('July 3, 2026'),
     acaCostNet: slots.acaCostNet('11,200'),
-    acaCostCliff: slots.acaCostCliff(slots.xOfTen(3)),
-    acaCostCliffOverCliff: slots.acaCostCliffOverCliff(slots.xOfTen(3), '84,600'),
+    acaCostCliff: slots.acaCostCliff(3),
+    acaCostCliffOverCliff: slots.acaCostCliffOverCliff(3, '84,600'),
     dateFloorNotWithin: slots.dateFloorNotWithin(11),
     dateFloorNotWithinEither: slots.dateFloorNotWithinEither(11),
     shadowRateLine: slots.shadowRateLine(34),
@@ -226,7 +228,7 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
 
   it('every U10 delta-readout slot WEARS a hedge (the control readouts are slot-composed, so the require-hedge sweep must reach the rendered samples here)', () => {
     const deltaSlots = [
-      'rothDeltaSurvivor', 'rothDeltaJoint', 'rothDeltaEven', 'rothStateShift',
+      'rothDeltaSurvivor', 'rothDeltaJoint', 'rothDeltaEven', 'rothDeltaCountEven', 'rothStateShift',
       'rothYearsSecondary', 'sequencingDelta',
     ] as const
     for (const name of deltaSlots) {

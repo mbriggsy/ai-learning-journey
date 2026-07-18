@@ -122,7 +122,10 @@ describe('App — the survivor door composes into the re-entry gate (J1, ultramo
     await driveToUnlockScreen()
     // The forgot door replaces the unlock screen with the recovery flow.
     fireEvent.click(screen.getByRole('button', { name: copy.unlockForgot }))
-    await screen.findByTestId('recovery-flow')
+    // Explicit wait budget: RecoveryFlow is a LAZY chunk — under a loaded full-suite run the
+    // default 1s findBy window can miss the import (seen locally 2026-07-18; the burned/055
+    // near-ceiling discipline applied to waitFor).
+    await screen.findByTestId('recovery-flow', undefined, { timeout: 5_000 })
     expect(screen.queryByLabelText(copy.unlockLabel)).toBeNull()
     // Recovery completes → the began entry must carry hydrate:true (the gate's arming flag —
     // the survivor with the longest gap and the stalest balances is WHO the gate exists for)

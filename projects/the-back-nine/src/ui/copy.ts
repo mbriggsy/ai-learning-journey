@@ -1182,6 +1182,21 @@ export const HEDGE_TOKENS = [
  *  "10 of 10" (the honesty clamp). */
 const XOFTEN_CEILING = 'better than 9 in 10'
 
+/** The ceiling for an ADVERSE-event frequency (the ACA over-cliff odds) — valence-neutral
+ *  "more than", NEVER {@link XOFTEN_CEILING}'s good-news "better than": on a bad-news count
+ *  ("the discount disappears") the good-news frame reads as reassurance — the calm-but-wrong
+ *  shape (council 2026-07-18, the hawk's veto). Same proportion form, same never-"10 of 10". */
+const XOFTEN_CEILING_ADVERSE = 'more than 9 in 10'
+
+/** The adverse-frequency phrase: the hedged count below the ceiling, the valence-neutral
+ *  proportion AT it. Branches on the unclamped count — never on sniffing a rendered string
+ *  (a string sniff would silently orphan the adverse constant when a wording moves). The
+ *  "about" hedge applies only below the ceiling; "more than" IS the bound at it (the Q2
+ *  de-stack law: a bound never wears a second hedge). Below the ceiling the count rides
+ *  {@link slots.xOfTen} — ONE home for the count format (call-time reference; safe). */
+const adverseOddsPhrase = (worstOfTen: number): string =>
+  worstOfTen >= 10 ? XOFTEN_CEILING_ADVERSE : `about ${slots.xOfTen(worstOfTen)}`
+
 /**
  * Typed quantitative slots — the ONLY way a number enters user-facing copy
  * (the certainty-hygiene slot discipline). Question counts are an allowlisted
@@ -1303,8 +1318,13 @@ export const slots = {
    *  already names the window + carries the entered-so-far tail, so this one leans on it. */
   dateFloorNotWithinEither: (windowYears: number): string =>
     `Covering just the essentials doesn’t clear within the next ${windowYears} years either.`,
-  /** Odds rider for the date line. */
+  /** Odds rider for the date line — the below-ceiling arm ("about 8 of 10 odds"). */
   withOdds: (xOfTenText: string): string => `about ${xOfTenText} odds`,
+  /** The odds rider AT the ceiling — the bound stands alone, no "about": "better than" IS the
+   *  hedge, and stacking them rendered the "about better than 9 in 10 odds" double hedge the
+   *  rule-36 sweep killed (council 2026-07-18 Q2; the caller branches on the count, never on
+   *  sniffing the rendered string). */
+  withOddsAtCeiling: (): string => `${XOFTEN_CEILING} odds`,
   /** The date↔confidence tradeoff (R28) — an EARLIER, lower-odds point than the crowned date, so
    *  the date is never a single deterministic line. `yearsSooner` is whole sim-years before the
    *  crowned offset; `oddsText` is the earlier point's "X of 10" reading (the SAME register as the
@@ -1319,11 +1339,14 @@ export const slots = {
   ladderOffsetTick: (offsetYears: number): string => (offsetYears === 0 ? 'today' : `${offsetYears}`),
   /** A ladder mark's a11y sentence — the reader is color-blind, so every dot reaches the tree as
    *  TEXT (the height/shape signal alone isn't enough). The odds ride the CLAMPED oddsText (never
-   *  "10 of 10"); `state` names the non-color reading. */
+   *  "10 of 10"); `state` names the non-color reading. `atCeiling` (the mark's own state-derived
+   *  flag, curveMarks) drops the "about" — the ceiling text is already a bound, and stacking
+   *  rendered the "about better than 9 in 10" double hedge (council 2026-07-18 Q2). */
   ladderMarkAria: (
     offsetYears: number,
     oddsText: string,
     state: 'crown' | 'dip' | 'clears' | 'below',
+    atCeiling: boolean,
   ): string => {
     const when =
       offsetYears === 0
@@ -1345,7 +1368,7 @@ export const slots = {
           : state === 'clears'
             ? ' — clears the line'
             : ' — below the line'
-    return `${when}: about ${oddsText}${tail}.`
+    return `${when}: ${atCeiling ? oddsText : `about ${oddsText}`}${tail}.`
   },
   /** The ladder caveat's aged-balances clause (council 2026-07-10 — the red team's second-order
    *  catch: dropping the hero/ladder contradiction makes a stale reading MORE believed, so the
@@ -1478,8 +1501,10 @@ export const slots = {
   // --- P3·U10 — the two-futures delta readouts (R10/R12: the survivor's number, natural-frequency
   // FIRST, the "~N years" a hedged secondary, N ≤ 0 a calm in-frame state — never suppressed and
   // never a bald deterministic claim). Every template wears its hedge by construction; the odds
-  // phrases arrive pre-rendered through slots.xOfTen (the ceiling clamp composes naturally:
-  // "…in better than 9 in 10 futures instead of 7 of 10"). FIRST-DRAFT — the cold-read's call. ---
+  // phrases arrive pre-rendered through slots.xOfTen and DELIBERATELY speak the conservative
+  // count — the engine clamps each arm's emitted count to ≤ 9, so the ceiling proportion never
+  // renders in a delta line (an over-funded arm reads "9 of 10"; the STATE rider carries the
+  // move — council 2026-07-18 Q4b ratified the count). FIRST-DRAFT — the cold-read's call. ---
   /** The primary delta line, SURVIVOR basis (the plan's emotional headline number). Reads honestly
    *  in BOTH directions — a loss renders as "…in 5 of 10 futures instead of 7", never suppressed. */
   rothDeltaSurvivor: (withOdds: string, withoutOdds: string): string =>
@@ -1487,12 +1512,21 @@ export const slots = {
   /** The JOINT-basis fallback (no survivor phase observed in the runs — rare; same grammar). */
   rothDeltaJoint: (withOdds: string, withoutOdds: string): string =>
     `Together, the plan could hold in about ${withOdds} futures instead of ${withoutOdds}.`,
-  /** The EVEN case — the quantized readings agree; the difference is inside the noise the
-   *  quantize deliberately absorbs. Calm, in-frame, never a suppressed delta. */
+  /** The EVEN case — the quantized readings agree AND the verdict states agree; the difference
+   *  is inside the noise the quantize deliberately absorbs. Calm, in-frame, never a suppressed
+   *  delta. Fires ONLY on same-state arms: equal clamped counts across a state move (over-funded
+   *  vs on-track both read "9 of 10") were rendering this line's "doesn’t look to change much"
+   *  over a real improvement — the recommend-second suppression (council 2026-07-18 Q4d). */
   rothDeltaEven: (odds: string): string =>
     `In these runs it doesn’t look to change much — about ${odds} either way.`,
-  /** The verdict-state transition rider (the 10/10-clamp pivot: when the with-arm reaches the
-   *  ceiling — or the arms land in different states — the headline shift is the STATE move). */
+  /** The equal-counts-DIFFERENT-states arm (the ≤9 clamp compresses the top, so a real move can
+   *  hold the count still): states only the count fact, claims nothing about magnitude — the
+   *  state rider directly below carries the move (council 2026-07-18 Q4d). */
+  rothDeltaCountEven: (odds: string): string =>
+    `The odds read about ${odds} either way in these runs.`,
+  /** The verdict-state transition rider — fires when the arms' verdict WORDS differ (which is
+   *  how an over-funded arm surfaces past the ≤9 count clamp: the count holds "9 of 10", the
+   *  STATE move is the headline shift). */
   rothStateShift: (fromWord: string, toWord: string): string =>
     `That would read as moving from “${fromWord}” to “${toWord}.”`,
   /** The hedged "~N years" SECONDARY, tied to its stated percentile (never the headline). Present
@@ -1532,14 +1566,20 @@ export const slots = {
    *  intake question), net of the computed discount — never a national average. */
   acaCostNet: (amountFormatted: string): string =>
     `Before Medicare, the health plan you entered could run your household around ~$${amountFormatted} a year after the income-based discount.`,
-  /** The over-cliff frequency (a per-year FRACTION of futures, never a mean — insight 062). */
-  acaCostCliff: (odds: string): string =>
-    `In about ${odds} futures, a year’s income tips past that line and the year’s discount disappears entirely.`,
+  /** The over-cliff frequency (a per-year FRACTION of futures, never a mean — insight 062).
+   *  Takes the UNCLAMPED count: at ≥ 10 the frequency renders the valence-neutral
+   *  {@link XOFTEN_CEILING_ADVERSE} via {@link adverseOddsPhrase} — the good-news "better than"
+   *  is BANNED on this bad-news fact (a deep-over-cliff household must never read its vanishing
+   *  discount as reassurance; council 2026-07-18, the hawk's veto discharged by this template
+   *  edit + the ceiling fixture). */
+  acaCostCliff: (worstOfTen: number): string =>
+    `In ${adverseOddsPhrase(worstOfTen)} futures, a year’s income tips past that line and the year’s discount disappears entirely.`,
   /** The over-cliff odds when the anchor has ALREADY crossed the cliff — no headroom sentence
    *  precedes this fact in that branch, so the cutoff dollar rides inline instead of being
-   *  borrowed from a sentence that never renders (Sonnet-5 audit 2026-07-03). */
-  acaCostCliffOverCliff: (odds: string, cliffFormatted: string): string =>
-    `In about ${odds} futures, a year’s income passes about ~$${cliffFormatted} and that year’s discount disappears entirely.`,
+   *  borrowed from a sentence that never renders (Sonnet-5 audit 2026-07-03). Same unclamped
+   *  count + adverse ceiling as {@link slots.acaCostCliff}. */
+  acaCostCliffOverCliff: (worstOfTen: number, cliffFormatted: string): string =>
+    `In ${adverseOddsPhrase(worstOfTen)} futures, a year’s income passes about ~$${cliffFormatted} and that year’s discount disappears entirely.`,
   /** The shadow marginal rate on the next converted dollar (tax + the subsidy it burns).
    *  Cold-read 2026-07-03 rounds 1+2: state the POINT and the DIRECTION plainly — conversions
    *  work AGAINST the discount (his round-2 read had inverted it into "conversions help with

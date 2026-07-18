@@ -14,10 +14,18 @@ describe('dateOddsText — the single-sourced date odds reading', () => {
   })
 
   it('rides the 10-of-10 honesty clamp — a ≥0.95 bound reads "better than 9 in 10", never "10 of 10"', () => {
-    // 0.95 → round(9.5) = 10 → xOfTen(10) → the ceiling proportion (NOT a count)
+    // 0.95 → round(9.5) = 10 → the ceiling BY NAME (withOddsAtCeiling — NOT a count)
     const odds = dateOddsText(0.95)
+    expect(odds).toBe(slots.withOddsAtCeiling())
     expect(odds).toContain('better than 9 in 10')
     expect(odds).not.toContain('10 of 10')
+  })
+
+  it('the ceiling drops the "about" — "better than" IS the hedge, never the stacked "about better than 9 in 10 odds" (council 2026-07-18 Q2)', () => {
+    expect(dateOddsText(0.99)).toBe('better than 9 in 10 odds')
+    expect(dateOddsText(0.99)).not.toContain('about')
+    // The below-ceiling arm keeps its "about" (the de-stack narrows only the ceiling).
+    expect(dateOddsText(0.86)).toContain('about')
   })
 
   it('reads the LOWER bound, not the point estimate (the conservative grade — §3c)', () => {

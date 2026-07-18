@@ -124,7 +124,7 @@ describe('composeHealthSheet', () => {
       figure: slots.healthFigRoom('18,000'), // 84,600 − 66,600
       lines: [
         slots.shadowRateHeadroom('66,600', '84,600', '18,000'),
-        slots.acaCostCliff(slots.xOfTen(3)), // 0.31 → 3 of 10
+        slots.acaCostCliff(3), // 0.31 → 3 of 10
       ],
     })
     // taxable = 60,000 − 32,200 = 27,800 → 12% band; drag = 9.96% (flat top band, PTC live) → 22¢.
@@ -168,7 +168,31 @@ describe('composeHealthSheet', () => {
     }
     const discount = factOf(composeHealthSheet(readout, draft()), 'discount')
     expect(discount?.figure).toBeUndefined() // no room to quote past the cutoff
-    expect(discount?.lines).toEqual([slots.acaCostCliffOverCliff(slots.xOfTen(6), '84,600')])
+    expect(discount?.lines).toEqual([slots.acaCostCliffOverCliff(6, '84,600')])
+  })
+
+  it('the CEILING over-cliff frequency renders the VALENCE-NEUTRAL "more than 9 in 10" — never the good-news "better than", never a stacked "about", never "10 of 10" (council 2026-07-18 Q3, the hawk’s veto: a ≥0.95 over-cliff household must never read its vanishing discount as reassurance)', () => {
+    // Below-cliff anchor (headroom branch): the cliffLine rides acaCostCliff at worstOfTen = 10.
+    const headroomReadout: HealthReadout = {
+      byYear: [year({ acaPricedFraction: 1, acaNetPremiumP50: 12_000, acaMagiP50: 66_600, irmaaMagiP50: 60_000, overCliffFraction: 0.97 })],
+    }
+    const headroomLines = factOf(composeHealthSheet(headroomReadout, draft()), 'discount')?.lines ?? []
+    const cliffLine = headroomLines[headroomLines.length - 1]!
+    expect(cliffLine).toBe(slots.acaCostCliff(10))
+    expect(cliffLine).toContain('In more than 9 in 10 futures')
+    expect(cliffLine).not.toContain('better than')
+    expect(cliffLine).not.toContain('about more than')
+    expect(cliffLine).not.toContain('10 of 10')
+
+    // Over-cliff anchor: the inline-cutoff sibling rides the same adverse ceiling.
+    const overReadout: HealthReadout = {
+      byYear: [year({ acaPricedFraction: 1, acaNetPremiumP50: 20_000, acaMagiP50: 90_000, irmaaMagiP50: 85_000, overCliffFraction: 0.96 })],
+    }
+    const overLine = factOf(composeHealthSheet(overReadout, draft()), 'discount')?.lines[0]
+    expect(overLine).toBe(slots.acaCostCliffOverCliff(10, '84,600'))
+    expect(overLine).toContain('In more than 9 in 10 futures')
+    expect(overLine).not.toContain('better than')
+    expect(overLine).not.toContain('about more than')
   })
 
   it('a sub-1-of-10 worst cliff fraction folds NO odds sentence into the discount fact (nothing honest to quote at the frame’s grain)', () => {

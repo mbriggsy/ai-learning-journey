@@ -1,5 +1,6 @@
 import { copy, slots } from '@ui/copy'
 import { dateOddsText } from '@ui/dateOdds'
+import { verdictReadingText } from '@ui/verdictSentence'
 import type { DateTrackOutcome, OutcomeState } from '@shared/model'
 import type { MemoryModelSnapshot } from '@store/memoryModel'
 import type { MissingFact } from './intakeMap'
@@ -16,9 +17,11 @@ import type { MissingFact } from './intakeMap'
  *    tick; an off-track mid-entry reading wears the incompleteness class;
  *  - the input-incomplete placeholder NAMES the missing inputs and why the
  *    tool won't synthesize the ACA quote (R36);
- *  - "X of 10" is the pinned frame; the top of scale reads "more than 9 of 10"
- *    (10 of 10 can never appear); the date grade renders its CONSERVATIVE
- *    quantized lower bound;
+ *  - "X of 10" is the pinned frame; the top of scale reads "better than 9 in 10"
+ *    via the composer's ceiling route, `verdictReadingText` — "10 of 10" can
+ *    never appear (council 2026-07-18 Q4a: this doc used to promise a ceiling
+ *    the render never routed — the strip read "9 of 10" where the hero read the
+ *    proportion); the date grade renders its CONSERVATIVE quantized lower bound;
  *  - numbers render STATIC (no count-up — the calm law), in tabular figures
  *    (inherited);
  *  - `pending` appears only pre-first-resolve (memoryModel holds the last
@@ -163,7 +166,7 @@ export function AnswerStrip({
         ) : (
           <>
             <p className="strip-lead" data-testid="engine-reading">
-              {`${OUTCOME_WORDS[answer.result.headline.outcomeState]} — ${slots.xOfTen(answer.result.headline.xOfTen.value)}`}
+              {`${OUTCOME_WORDS[answer.result.headline.outcomeState]} — ${verdictReadingText(answer.result.headline.outcomeState, answer.result.headline.xOfTen.value)}`}
             </p>
             <p className="strip-tertiary" data-testid="provisional-tag">
               {copy.answerProvisionalTag}

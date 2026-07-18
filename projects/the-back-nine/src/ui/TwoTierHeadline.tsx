@@ -26,9 +26,10 @@
  * subtler family), reduced-motion identical. STRING-FREE: copy.ts + slots only.
  */
 import { useId } from 'react'
-import { copy, slots } from './copy'
+import { copy } from './copy'
 import { OUTCOME_PRESENTATION } from './outcomeStates'
 import { VerdictIcon } from './verdictSignal'
+import { verdictReadingText } from './verdictSentence'
 import type { FloorReliefView } from './twoTier'
 import './styles/survivor.css'
 
@@ -48,10 +49,10 @@ export function TwoTierHeadline({ relief }: TwoTierHeadlineProps) {
   if (pres.verdictWordKey === null) return null
   const word = copy[pres.verdictWordKey]
 
-  // The over-funded near-ceiling reads the PROPORTION via xOfTenAtCeiling BY NAME — the
-  // same 10-of-10 honesty clamp every other count surface rides.
-  const countText =
-    state === 'over-funded' ? slots.xOfTenAtCeiling() : slots.xOfTen(relief.reading.xOfTen.value)
+  // The over-funded near-ceiling reads the PROPORTION via the composer's ONE reading seam
+  // (verdictReadingText — the ceiling BY NAME, the same 10-of-10 honesty clamp every other
+  // count surface rides; folded onto the shared home in the 2026-07-18 dialect sweep).
+  const countText = verdictReadingText(state, relief.reading.xOfTen.value)
 
   return (
     <section className="survivor floor-readout" aria-labelledby={eyebrowId}>

@@ -187,6 +187,10 @@ export function evaluateEpsilonClause(): readonly WithheldReason[] {
     ['solver.solverMinBPaths', solverMinBPaths.value],
     ['solver.solverBFamilySize', solverBFamilySize.value],
     ['solver.solverConversionNearTieDemotionMargin', solverConversionNearTieDemotionMargin.value],
+    // The freshness window rides the SAME finiteness-first discipline (U14 fold): it feeds
+    // the one `>` compare in the ACA clause, and `ageDays > NaN` is false — a non-finite
+    // window would otherwise fail OPEN (optimistic), the only clause constant left unguarded.
+    ['solver.solverAcaFreshnessWindowDays', solverAcaFreshnessWindowDays.value],
   ])
 }
 
@@ -260,15 +264,24 @@ export function mintOracleToken(inputs: {
   readonly todayEpochDay: number
   readonly oracleReport: OracleReport
   readonly stabilityReport: RankingStabilityReport
+  /** TEST-SEAM ONLY (insight 048, U14 fold): overrides the ε clause's live constant list so
+   *  the MINT's epsilon leg can be driven red — without it, deleting the leg stays green.
+   *  The live binding never passes this. */
+  readonly _epsilonRequired?: ReadonlyArray<readonly [string, number]>
 }): MintOutcome {
   const { params, candidateConversionAmounts, todayEpochDay, oracleReport, stabilityReport } = inputs
+  if (oracleReport.caseIds.length === 0) {
+    // A zero-case oracle report proves nothing (runOptimalityOracle refuses to build one —
+    // reaching here requires a deliberate cast, and the mint still fails loud, never green).
+    throw new Error('[oracleToken] an oracle report over ZERO cases cannot clear a token — a vacuous gate is theater')
+  }
   const pinning = evaluatePinningClause(params)
   const withheld: WithheldReason[] = [...pinning.blocking]
   const trend = evaluateMedicareTrendClause(candidateSetHasConversions(candidateConversionAmounts))
   if (trend !== null) withheld.push(trend)
   const aca = evaluateAcaFreshnessClause(params, todayEpochDay)
   if (aca !== null) withheld.push(aca)
-  withheld.push(...evaluateEpsilonClause())
+  withheld.push(...(inputs._epsilonRequired === undefined ? evaluateEpsilonClause() : _evaluateEpsilonClause(inputs._epsilonRequired)))
   if (withheld.length > 0) {
     return { withheld, disclosedDirectional: pinning.disclosedDirectional }
   }

@@ -262,4 +262,24 @@ describe('applyCandidate — the shared apply seam (the buildArmParams disciplin
       applyCandidate(spineBase, { policy: 'proportional', conversion: { annualAmountReal: 1, startYearOffset: 0, years: 1 }, provenance: 'grid' }),
     ).toThrow(/overlay/)
   })
+
+  it('a window entirely past the horizon fails LOUD (U14 fold) — never a silent conversion-0 twin under a conversion-bearing id', () => {
+    // expandRothConversion returns undefined at startYearOffset ≥ horizon; the old spread
+    // silently dropped the key, scoring this candidate byte-identical to the conversion-0 arm.
+    expect(() =>
+      applyCandidate(base, {
+        policy: 'bracket-fill',
+        conversion: { annualAmountReal: 20_000, startYearOffset: base.maxHorizonYears, years: 2 },
+        provenance: 'grid',
+      }),
+    ).toThrow(/entirely past the .*horizon/)
+    // The boundary CONTROL: the last in-horizon year is legal and expands (fail-loud is not over-broad).
+    const lastYear = applyCandidate(base, {
+      policy: 'bracket-fill',
+      conversion: { annualAmountReal: 20_000, startYearOffset: base.maxHorizonYears - 1, years: 2 },
+      provenance: 'grid',
+    })
+    expect(lastYear.overlay?.conversions).toHaveLength(base.maxHorizonYears)
+    expect(lastYear.overlay?.conversions?.[base.maxHorizonYears - 1]).toBe(20_000)
+  })
 })

@@ -664,7 +664,7 @@ describe('canonical constants — shape & provenance (contract #6)', () => {
       expect(socialSecurityConstants.deemedFilingDobCutoff.value).toEqual({ year: 1954, month: 1, day: 2 })
     })
 
-    it('provenance split: POMS byte-pulled factors are PINNED; the grounding-confirmed FRA tables stay directional', () => {
+    it('provenance: POMS byte-pulled factors AND both FRA tables are PINNED (the U14 S0 browser pull)', () => {
       for (const key of [
         'workerReduction',
         'spouseReduction',

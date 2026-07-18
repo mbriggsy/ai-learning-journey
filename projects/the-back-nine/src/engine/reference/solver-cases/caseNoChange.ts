@@ -17,7 +17,7 @@ import type { SimulationParams } from '@shared/model'
 import { enumerateCandidates, type CandidateStrategy } from '../../solver/candidates'
 import { handOrdinaryTax } from './handTax'
 import type { SolverCaseFixture } from './types'
-import { caseConstantRate } from './caseConstantRate'
+import { CASE_I_TOP_MARGINAL, caseConstantRate } from './caseConstantRate'
 
 const STREAM_TAXABLE = 950_000
 const SPENDING = 1_000_000
@@ -46,7 +46,7 @@ function expected(): Readonly<Record<string, number>> {
   const t0 = handOrdinaryTax(STREAM_TAXABLE, 'mfj')
   return {
     lifetimeTaxTaxableFirst: HORIZON * t0,
-    lifetimeTaxPretaxFirst: HORIZON * ((NET + t0) / (1 - 0.37) - NET),
+    lifetimeTaxPretaxFirst: HORIZON * ((NET + t0) / (1 - CASE_I_TOP_MARGINAL) - NET), // the table-read rate (U14 fold — never re-typed)
   }
 }
 

@@ -33,6 +33,7 @@ import {
   collectCandidateOutcome,
   evaluateCandidates,
   rankCandidates,
+  scoreFromDistribution,
   type CandidateOutcome,
 } from '../evaluate'
 
@@ -172,13 +173,20 @@ describe('case (iv) — the §1014/IRD inversion: the gross argmax is the after-
 })
 
 describe('case (v) — the no-change routing: the LABELED conventional baseline is crowned', () => {
+  const verdict = checkOracleCase(caseNoChange)
+
   it('the winner IS the conventional-baseline candidate (provenance-checked, conversion null) — never a fabricated active move', () => {
-    const verdict = checkOracleCase(caseNoChange)
     const ranked = rankCandidates(verdict.outcomes, caseNoChange.goal, 0)
     const winner = ranked[0]!
     expect(winner.candidate.provenance).toBe('conventional-baseline')
     expect(winner.candidate.conversion).toBeNull()
     expect(winner.candidate.policy).toBe('taxable-first')
+  })
+
+  it('the closed-form dollars are ASSERTED, not just implied (U14 fold — expected() was a dead re-derivation)', () => {
+    const exp = caseNoChange.expected()
+    expect(byId(verdict.outcomes, 'taxable-first:0').score.lifetimeTaxMeanReal).toBeCloseTo(exp.lifetimeTaxTaxableFirst!, 2)
+    expect(byId(verdict.outcomes, 'pre-tax-first:0').score.lifetimeTaxMeanReal).toBeCloseTo(exp.lifetimeTaxPretaxFirst!, 2)
   })
 })
 
@@ -206,6 +214,11 @@ describe('the state companions — the NC flip, the NC dollars, and the PA byte-
       expect(paOutcome.distribution.terminalValuesReal).toEqual(fedOutcome.distribution.terminalValuesReal)
       expect(paOutcome.score.lifetimeTaxMeanReal).toBe(fedOutcome.score.lifetimeTaxMeanReal)
     }
+    // The closed-form DOLLARS asserted too (U14 fold — expected() was a dead re-derivation):
+    // the winner's whole-run tax is the federal-only figure EXACTLY (PA adds literally $0).
+    const exp = caseStatePa.expected()
+    expect(exp.paStateCost).toBe(0)
+    expect(byId(pa.outcomes, caseStatePa.expectedRankingIds[0]!).score.lifetimeTaxMeanReal).toBeCloseTo(exp.lifetimeTaxA22!, 2)
   })
 })
 
@@ -250,6 +263,10 @@ describe('the oracle is FALSIFIABLE (insights 016/070, burned/070) — the plant
     // The CONTROL arm: the genuine fixture passes on the same machinery (the checker can
     // distinguish — a gate that can never fail is theater).
     expect(checkOracleCase(caseBracketFill).pass).toBe(true)
+  })
+
+  it('an EMPTY roster is REFUSED (U14 fold) — zero cases would mint a vacuously-green report, the gate that cannot go red', () => {
+    expect(() => runOptimalityOracle([])).toThrow(/EMPTY fixture roster.*vacuous/)
   })
 
   it('runOptimalityOracle mints the branded report ONLY on a clean roster; a planted roster yields failures, never a report', () => {
@@ -300,5 +317,16 @@ describe('the evaluation seams (insight 048 — the synthetic arms the live engi
   it('a NaN tie-tolerance fails LOUD (a NaN admits everything — insight 010)', () => {
     const verdict = checkOracleCase(caseBracketFill)
     expect(() => rankCandidates(verdict.outcomes, 'leave-more', Number.NaN)).toThrow(/finite/)
+  })
+
+  it('scoreFromDistribution refuses an out-of-domain heirBracket (U14 fold — the guard had no red test): =1, negative, NaN', () => {
+    // heirBracket = 1 would zero the IRD term and ≥ 1 would flip its sign — the leave-more
+    // objective's OPTIMISTIC error direction; the [0, 1) guard must be pinned red.
+    const dist = byId(checkOracleCase(caseBracketFill).outcomes, 'taxable-first:0').distribution
+    expect(() => scoreFromDistribution(dist, 1)).toThrow(/heirBracket/)
+    expect(() => scoreFromDistribution(dist, -0.1)).toThrow(/heirBracket/)
+    expect(() => scoreFromDistribution(dist, Number.NaN)).toThrow(/heirBracket/)
+    // CONTROL: the declared in-domain bracket scores clean on the same distribution.
+    expect(scoreFromDistribution(dist, 0.23).afterTaxBequestMeanReal).toBeDefined()
   })
 })

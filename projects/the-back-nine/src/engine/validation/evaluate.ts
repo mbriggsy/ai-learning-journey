@@ -62,7 +62,12 @@ export type CandidateOutcome =
 const mean = (xs: readonly number[]): number => {
   if (xs.length === 0) throw new Error('[evaluate] mean of an empty array (insight 010 — refuse, never NaN)')
   let s = 0
-  for (const x of xs) s += x
+  for (const x of xs) {
+    // A NaN element would make the ranking comparator NaN, which Array.sort coerces to 0 —
+    // an ARBITRARY rank. Refuse loud, like memberMargin/selectionTieTolerance (insight 010).
+    if (!Number.isFinite(x)) throw new Error('[evaluate] non-finite element in a scored statistic (insight 010 — refuse, never NaN)')
+    s += x
+  }
   return s / xs.length
 }
 

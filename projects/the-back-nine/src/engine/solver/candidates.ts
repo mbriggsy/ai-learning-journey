@@ -363,8 +363,16 @@ export function applyCandidate(base: SimulationParams, candidate: CandidateStrat
     return { ...withPolicy, overlay: overlayRest }
   }
   const conversions = expandRothConversion(candidate.conversion, base.maxHorizonYears)
-  return {
-    ...withPolicy,
-    overlay: { ...overlayRest, ...(conversions !== undefined ? { conversions } : {}) },
+  if (conversions === undefined) {
+    // expandRothConversion returns undefined ONLY for a window entirely past the horizon —
+    // silently dropping the key would score this candidate as its conversion-0 twin's
+    // byte-identical duplicate under a conversion-bearing id (the double-scoring the
+    // legality filter forbids, and a phantom "conversion" presented as real).
+    throw new Error(
+      `[candidates] the conversion window (startYearOffset ${candidate.conversion.startYearOffset}) lies ` +
+        `entirely past the ${base.maxHorizonYears}-year horizon — a caller bug; refusing the silent ` +
+        `conversion-free degrade (fail loud, never a quiet twin)`,
+    )
   }
+  return { ...withPolicy, overlay: { ...overlayRest, conversions } }
 }

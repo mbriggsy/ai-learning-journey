@@ -57,6 +57,14 @@ export const DOLLAR_STEP = 10
  *  re-typed grid or a raw compare (objective ≡ headline). */
 export const quantizeSurvival = (s: number): number => Math.round(s / SURVIVAL_GRID) * SURVIVAL_GRID
 
+/** The 10/10-honesty clamp on a QUANTIZED survival fraction — the displayed "X of 10" count
+ *  never reaches 10 (false certainty); the over-funded ceiling reads "9 of 10" with the state
+ *  carrying the "more than enough" framing. Tie-break: round-half-up (defined + stable).
+ *  EXPORTED as the ONE canonical home (U14 review fold): every headline builder here AND the
+ *  solver grade's display-tenth reconciliation (gradeCalibration.ts) read THIS function —
+ *  a re-typed mirror of the clamp is a drift seam. */
+export const xOfTenClamp = (quantized: number): number => Math.max(0, Math.min(9, Math.round(quantized * 10)))
+
 /** Distance of a QUANTIZED survival fraction to the nearest outcome-STATE band edge —
  *  the third stateless margin ({@link Headline.stateMarginToEdge}, consumed by the P3
  *  sticky state gate in memoryModel). Computed on the SAME quantized value
@@ -135,10 +143,7 @@ function buildHeadline(distribution: Distribution): Headline {
   const survival = distribution.survivalFraction
   const quantized = quantizeSurvival(survival)
   const state = selectOutcomeState(quantized, distribution.depletionYears)
-  // 10/10-honesty clamp: the displayed reading never reaches 10 (false certainty);
-  // the over-funded ceiling reads "9 of 10" with the over-funded state carrying the
-  // "more than enough" framing. Tie-break: round-half-up (defined + stable).
-  const xOfTen = Math.max(0, Math.min(9, Math.round(quantized * 10)))
+  const xOfTen = xOfTenClamp(quantized) // the canonical 10/10-honesty clamp (see its export)
   return {
     xOfTen: { value: xOfTen, marginToEdge: marginToXOfTenEdge(quantized) },
     outcomeState: state,
@@ -161,7 +166,7 @@ function buildSurvivorReading(distribution: Distribution): SurvivorReading | und
   // already-failing keys to the JOINT depletion signal (the whole-plan DOA reservation —
   // see the builder doc above); the fraction is the survivor-conditioned one.
   const state = selectOutcomeState(quantized, distribution.depletionYears)
-  const xOfTen = Math.max(0, Math.min(9, Math.round(quantized * 10)))
+  const xOfTen = xOfTenClamp(quantized)
   return {
     xOfTen: { value: xOfTen, marginToEdge: marginToXOfTenEdge(quantized) },
     outcomeState: state,
@@ -182,7 +187,7 @@ function buildFloorReading(distribution: Distribution): Headline | undefined {
   if (!floor) return undefined
   const quantized = quantizeSurvival(floor.survivalFraction)
   const state = selectOutcomeState(quantized, floor.depletionYears)
-  const xOfTen = Math.max(0, Math.min(9, Math.round(quantized * 10)))
+  const xOfTen = xOfTenClamp(quantized)
   return {
     xOfTen: { value: xOfTen, marginToEdge: marginToXOfTenEdge(quantized) },
     outcomeState: state,

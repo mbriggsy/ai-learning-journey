@@ -13,10 +13,10 @@
  * checker):
  *  - The reduction/credit FRACTIONS + RIB-LIM + survivor 28.5% + spousal rate +
  *    deemed-filing cutoff were byte-pulled from POMS (HTTP 200) → directionalUntilPinned:false.
- *  - The FRA tables were grounding-confirmed against ssa.gov (the NRA/survivor chart
- *    HTML is Akamai-gated to curl) → directionalUntilPinned:true; a browser pull
- *    upgrades them. The 67-for-1960+ value both household cohorts use is universally
- *    agreed and was re-derived.
+ *  - BOTH FRA tables are BYTE-PINNED (U14 S0, 2026-07-18 — the browser pull happened):
+ *    the retirement table verbatim against the live nra.html all-13-band chart, the
+ *    survivor table against SSA's own Survivor-FRA calculator at every graduated edge
+ *    → directionalUntilPinned:false. The per-entry citations carry the pull record.
  *
  * Citation LANDMINES baked into the strings (do NOT "correct" them back):
  *  - The worker reduction is POMS RS 00615.101 — RS 00615.102 is a DEAD 404.

@@ -43,7 +43,7 @@ describe('gradeOnFamily — the all-members rule, the demotion, the floor, the c
   const strong = Array.from({ length: 5 }, () => member(20, 200)) // margin 0.10 ≫ band
 
   it('a dominant advantage on EVERY member grades just-do-it', () => {
-    const out = gradeOnFamily({ family: strong, winnerHasConversion: false, runnerUpHasConversion: false, minPathsOverride: 100 })
+    const out = gradeOnFamily({ family: strong, statistic: 'survival', winnerHasConversion: false, runnerUpHasConversion: false, minPathsOverride: 100 })
     expect(out.grade).toBe('just-do-it')
     expect(out.memberMargins.every((m) => m.beyondBand)).toBe(true)
     expect(out.demotionFired).toBe(false)
@@ -51,7 +51,7 @@ describe('gradeOnFamily — the all-members rule, the demotion, the floor, the c
 
   it('ONE luck-flippable member forces the conservative coin-flip (grade stability is built in)', () => {
     const family = [...strong.slice(0, 4), member(0, 200)] // the fifth member: margin 0
-    const out = gradeOnFamily({ family, winnerHasConversion: false, runnerUpHasConversion: false, minPathsOverride: 100 })
+    const out = gradeOnFamily({ family, statistic: 'survival', winnerHasConversion: false, runnerUpHasConversion: false, minPathsOverride: 100 })
     expect(out.grade).toBe('coin-flip')
     // Presence (insight 029): the members genuinely disagree — four beyond, one not.
     expect(out.memberMargins.filter((m) => m.beyondBand)).toHaveLength(4)
@@ -61,18 +61,18 @@ describe('gradeOnFamily — the all-members rule, the demotion, the floor, the c
     // 30 winner-only paths of 2,000: margin 0.015 — beyond its band (~0.005), INSIDE the
     // calibrated 0.02 demotion margin: exactly the flattered near-tie regime.
     const nearTie = Array.from({ length: 5 }, () => member(30, 2_000))
-    const demoted = gradeOnFamily({ family: nearTie, winnerHasConversion: true, runnerUpHasConversion: false, minPathsOverride: 100 })
+    const demoted = gradeOnFamily({ family: nearTie, statistic: 'survival', winnerHasConversion: true, runnerUpHasConversion: false, minPathsOverride: 100 })
     expect(demoted.memberMargins.every((m) => m.beyondBand), 'the bands are cleared — demotion is the ONLY reason').toBe(true)
     expect(demoted.demotionFired).toBe(true)
     expect(demoted.grade).toBe('coin-flip')
     // CONTROL 1: the SAME margins without a conversion winner grade just-do-it (the demotion
     // is conversion-specific — the flattered lever, never a blanket caution).
-    const noConv = gradeOnFamily({ family: nearTie, winnerHasConversion: false, runnerUpHasConversion: false, minPathsOverride: 100 })
+    const noConv = gradeOnFamily({ family: nearTie, statistic: 'survival', winnerHasConversion: false, runnerUpHasConversion: false, minPathsOverride: 100 })
     expect(noConv.grade).toBe('just-do-it')
     // CONTROL 2: a conversion winner CLEAR of the margin still earns just-do-it (an upper
     // edge exists — the demotion is a near-tie rule, not a conversion ban).
     const clear = Array.from({ length: 5 }, () => member(60, 2_000)) // margin 0.03 > 0.02
-    const cleared = gradeOnFamily({ family: clear, winnerHasConversion: true, runnerUpHasConversion: false, minPathsOverride: 100 })
+    const cleared = gradeOnFamily({ family: clear, statistic: 'survival', winnerHasConversion: true, runnerUpHasConversion: false, minPathsOverride: 100 })
     expect(cleared.demotionFired).toBe(false)
     expect(cleared.grade).toBe('just-do-it')
     // The calibrated value itself is the measured-class derivation, not a sentinel:
@@ -82,6 +82,7 @@ describe('gradeOnFamily — the all-members rule, the demotion, the floor, the c
   it('the display-tenth clause: a cleared advantage whose tenths AGREE carries subTenthCollapse', () => {
     const out = gradeOnFamily({
       family: strong,
+      statistic: 'survival',
       winnerHasConversion: false,
       runnerUpHasConversion: false,
       minPathsOverride: 100,
@@ -97,16 +98,29 @@ describe('gradeOnFamily — the all-members rule, the demotion, the floor, the c
     expect(out.subTenthCollapse).toBe(true)
   })
 
+  it('THE DEMOTION AXIS GUARD (U14 fold): a pay-less-tax conversion-winner near-tie REFUSES — the 0.02 margin is survival units, dollar diffs would silently never fire it', () => {
+    const dollarFamily = Array.from({ length: 5 }, () => Array.from({ length: 200 }, () => 1_200)) // tax-DOLLAR diffs
+    expect(() =>
+      gradeOnFamily({ family: dollarFamily, statistic: 'pay-less-tax', winnerHasConversion: true, runnerUpHasConversion: false, minPathsOverride: 100 }),
+    ).toThrow(/SURVIVAL-FRACTION units/)
+    // CONTROL: the same dollar family with a NON-conversion winner grades fine — the demotion
+    // is not applicable, so no uncalibrated caution is being skipped.
+    const out = gradeOnFamily({ family: dollarFamily, statistic: 'pay-less-tax', winnerHasConversion: false, runnerUpHasConversion: false, minPathsOverride: 100 })
+    expect(out.grade).toBe('just-do-it')
+    expect(out.demotionFired).toBe(false)
+  })
+
   it('guards: family size, the min-B floor (the LIVE 16,000 floor with no override), NaN diffs', () => {
     expect(() =>
-      gradeOnFamily({ family: strong.slice(0, 4), winnerHasConversion: false, runnerUpHasConversion: false, minPathsOverride: 100 }),
+      gradeOnFamily({ family: strong.slice(0, 4), statistic: 'survival', winnerHasConversion: false, runnerUpHasConversion: false, minPathsOverride: 100 }),
     ).toThrow(/B-family/)
     expect(() =>
-      gradeOnFamily({ family: Array.from({ length: 5 }, () => member(10, 250)), winnerHasConversion: false, runnerUpHasConversion: false }),
+      gradeOnFamily({ family: Array.from({ length: 5 }, () => member(10, 250)), statistic: 'survival', winnerHasConversion: false, runnerUpHasConversion: false }),
     ).toThrow(/floor/)
     expect(() =>
       gradeOnFamily({
         family: [...strong.slice(0, 4), [Number.NaN, ...member(10, 199)]],
+        statistic: 'survival',
         winnerHasConversion: false,
         runnerUpHasConversion: false,
         minPathsOverride: 100,
@@ -184,6 +198,12 @@ describe('gradeRecommendation — the real engine at the calibrated floor (16k �
       gradeRecommendation({ base: probeWorld(500), winner: conv0, runnerUp: conv250, seedA: 0xca11b, statistic: 'survival' }),
     ).toThrow(/floor/)
   }, 240_000)
+
+  it('the demotion-axis guard fires BEFORE the expensive family evaluation (a pay-less-tax conversion winner refuses instantly)', () => {
+    expect(() =>
+      gradeRecommendation({ base: probeWorld(16_000), winner: conv30, runnerUp: conv0, seedA: 0xca11b, statistic: 'pay-less-tax' }),
+    ).toThrow(/SURVIVAL-FRACTION units/)
+  })
 
   it('the leave-more statistic is honestly deferred to U15’s objective wiring (named throw, never a silent wrong grade)', () => {
     expect(() =>

@@ -49,14 +49,18 @@
  */
 import type { PersonInputs, SimulationParams } from '@shared/model'
 import { enumerateCandidates, type CandidateStrategy } from '../../solver/candidates'
-import { handOrdinaryTax } from './handTax'
+import { handMarginalRate, handOrdinaryTax, handStandardDeduction } from './handTax'
 import type { SolverCaseFixture } from './types'
 
 const STREAM_TAXABLE = 950_000
 const SPENDING = 1_050_000
 const NET = SPENDING - STREAM_TAXABLE // 100,000 — the per-year portfolio draw
 const HORIZON = 5
-const TOP_MARGINAL = 0.37 // the open band's rate — re-asserted against the table in expected()
+/** The open band's rate, READ from the canonical table at the world's own baseline taxable
+ *  income (950,000 − SD sits in the open band — buildCandidates' zero-anchor guard witnesses
+ *  the premise). Never re-typed (the single-source gate; U14 fold — the old inline 0.37
+ *  claimed a re-assertion expected() never performed). Exported for case (v)'s twin ledger. */
+export const CASE_I_TOP_MARGINAL = handMarginalRate(STREAM_TAXABLE - handStandardDeduction('mfj'), 'mfj')
 const PRETAX_SHARE = 0.5 // 4M of 8M; constant under uniform scaling (see the header)
 
 const people: readonly PersonInputs[] = [
@@ -128,8 +132,8 @@ function buildCandidates(): readonly CandidateStrategy[] {
 function expected(): Readonly<Record<string, number>> {
   const t0 = handOrdinaryTax(STREAM_TAXABLE, 'mfj')
   const grossTaxableFirst = NET + t0
-  const grossPretaxFirst = (NET + t0) / (1 - TOP_MARGINAL)
-  const grossProportional = (NET + t0) / (1 - TOP_MARGINAL * PRETAX_SHARE)
+  const grossPretaxFirst = (NET + t0) / (1 - CASE_I_TOP_MARGINAL)
+  const grossProportional = (NET + t0) / (1 - CASE_I_TOP_MARGINAL * PRETAX_SHARE)
   return {
     perYearStreamTax: t0,
     lifetimeTaxTaxableFirst: HORIZON * t0,

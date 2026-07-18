@@ -25,7 +25,7 @@ import {
   _evaluateEpsilonClause,
   _evaluateMedicareTrendClause,
 } from '../oracleToken'
-import { runOptimalityOracle } from '../optimalityOracle'
+import { runOptimalityOracle, type OracleReport } from '../optimalityOracle'
 import { runRankingStability } from '../rankingStability'
 import { SOLVER_CASES } from '../../reference/solver-cases'
 
@@ -343,6 +343,38 @@ describe('S6 — mintOracleToken: the assembled gate (reports required, clauses 
       const kinds = out.withheld.map((w) => w.kind).sort()
       expect(kinds).toEqual(['aca-unverified', 'medicare-trend-unsourced', 'state-certification-pending'])
     }
+  })
+
+  it('the MINT’s epsilon leg goes red (U14 fold — the seam the live list could not drive): a planted sentinel withholds THROUGH the mint', () => {
+    // Before the _epsilonRequired test seam, deleting the mint's epsilon push stayed green —
+    // the live constants are all calibrated, so no test could distinguish wired from unwired.
+    const out = mintOracleToken({
+      params: makeParams({ overlay: overlayFor('FL') }),
+      candidateConversionAmounts: [undefined],
+      todayEpochDay: today,
+      oracleReport,
+      stabilityReport,
+      _epsilonRequired: [['solver.planted', -1]],
+    })
+    expect('withheld' in out).toBe(true)
+    if ('withheld' in out) {
+      expect(out.withheld).toEqual([{ kind: 'epsilon-uncalibrated', name: 'solver.planted' }])
+    }
+  })
+
+  it('a ZERO-case oracle report is refused at the mint (U14 fold) — reachable only by deliberate cast, still never green', () => {
+    // runOptimalityOracle refuses an empty roster, so this report requires the documented
+    // double-cast — the mint is the defense-in-depth backstop, loud even then.
+    const emptyReport = { caseIds: [], pass: true } as unknown as OracleReport
+    expect(() =>
+      mintOracleToken({
+        params: makeParams({ overlay: overlayFor('FL') }),
+        candidateConversionAmounts: [undefined],
+        todayEpochDay: today,
+        oracleReport: emptyReport,
+        stabilityReport,
+      }),
+    ).toThrow(/ZERO cases.*vacuous gate is theater/)
   })
 
   it('the derivation is LIVE, not a snapshot: two mints on the same inputs agree byte-for-byte', () => {

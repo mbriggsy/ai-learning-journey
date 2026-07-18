@@ -8,9 +8,10 @@
  */
 import { describe, it, expect } from 'vitest'
 import type { PersonInputs, SimulationParams } from '@shared/model'
+import type { Distribution } from '@shared/model'
 import { enumerateCandidates, type CandidateStrategy } from '../../solver/candidates'
 import { caseIiBuildBase } from '../../reference/solver-cases/caseBracketFill'
-import { runRankingStability } from '../rankingStability'
+import { decisionSurfaceIdentical, runRankingStability } from '../rankingStability'
 
 const people: readonly PersonInputs[] = [
   { sex: 'female', currentAge: 64, birthYear: 1962, retirementAge: 63, earnedIncomeReal: 0, pia: 30_000, socialSecurityClaimAge: 67 },
@@ -62,6 +63,39 @@ function stochasticCandidates(): readonly CandidateStrategy[] {
   return candidates
 }
 
+describe('decisionSurfaceIdentical — the perturbation law reads the WHOLE ranked surface (U14 fold)', () => {
+  const dist = (rothShift: number): Distribution => ({
+    terminalValuesReal: [1_000, 2_000],
+    depletionYears: [-1, -1],
+    survivalFraction: 1,
+    taxAware: {
+      lifetimeTaxPaidReal: [50, 60],
+      terminalTaxableReal: [400, 800],
+      terminalPretaxReal: [300 - rothShift, 600],
+      terminalRothReal: [200 + rothShift, 400], // the reallocation CONSERVES the total
+      terminalHsaReal: [100, 200],
+      terminalTaxableBasisReal: [350, 700],
+      lifetimeNetPremiumReal: [0, 0],
+      lifetimeMedicareCostReal: [0, 0],
+    },
+  })
+
+  it('a pretax→Roth reallocation that conserves the TOTAL is still caught — totals-only identity was the S3 blind spot', () => {
+    expect(decisionSurfaceIdentical(dist(0), dist(0))).toBe(true)
+    const shifted = dist(75)
+    // The old check (terminalValuesReal only) would call these identical:
+    expect(shifted.terminalValuesReal).toEqual(dist(0).terminalValuesReal)
+    // The full-surface check refuses — the ranked bequest statistics moved.
+    expect(decisionSurfaceIdentical(dist(0), shifted)).toBe(false)
+  })
+
+  it('tax-aware presence itself is part of the surface (one side undefined ⇒ not identical)', () => {
+    const { taxAware: _t, ...blind } = dist(0)
+    expect(decisionSurfaceIdentical(dist(0), blind as Distribution)).toBe(false)
+    expect(decisionSurfaceIdentical(blind as Distribution, blind as Distribution)).toBe(true)
+  })
+})
+
 describe('runRankingStability — the live K-candidate CRN pass', () => {
   it('mints the branded report: dimensions invariant, perturbation-clean, survivor crossings non-vacuous on BOTH seeds', () => {
     const candidates = stochasticCandidates()
@@ -99,6 +133,28 @@ describe('runRankingStability — the live K-candidate CRN pass', () => {
       expect(out.violations.some((v) => /survivor regime.*vacuous/.test(v))).toBe(true)
     }
   }, 60_000)
+
+  it('REFUSES an INERT perturbation (insight 029, U14 fold): a pretax-0 world executes every conversion plan as $0, so the +1,000 moves nothing — the vacuity is named, never a green pass', () => {
+    // The engine caps a conversion at the pretax balance (taxOverlay: min(planned, pretax − rmd)),
+    // so with pretax 0 the perturbed candidate and its +1,000 variant run BYTE-IDENTICAL —
+    // sibling-identity would "pass" while proving no decoupling at all. A genuinely inert
+    // world, no mocks — the red-arm discipline of this file.
+    const base = stochasticBase()
+    const inert: SimulationParams = {
+      ...base,
+      overlay: { ...base.overlay!, buckets: { taxable: 1_000_000, pretax: 0, roth: 100_000 } },
+    }
+    const candidates: readonly CandidateStrategy[] = [
+      { policy: 'taxable-first', conversion: null, provenance: 'conventional-baseline' },
+      { policy: 'taxable-first', conversion: { annualAmountReal: 10_000, startYearOffset: 0, years: 3 }, provenance: 'grid' },
+      { policy: 'taxable-first', conversion: { annualAmountReal: 20_000, startYearOffset: 0, years: 3 }, provenance: 'grid' },
+    ]
+    const out = runRankingStability({ base: inert, candidates, seedA: 0xa11ce, seedB: 0xb0b5eed, perturbIndex: 1, siblingIndex: 2 })
+    expect('report' in out).toBe(false)
+    if ('ok' in out && !out.ok) {
+      expect(out.violations.some((v) => /perturbation arm VACUOUS.*nothing moved/.test(v))).toBe(true)
+    }
+  }, 240_000)
 
   it('REFUSES a misconfigured perturbation arm (the perturbed candidate must carry a conversion plan)', () => {
     const base = stochasticBase()

@@ -12,10 +12,14 @@
  *     people.length)` byte-equals the base's. A violation is recorded (never smoothed) and
  *     the report is not mintable.
  *  2. THE PERTURBATION LAW — perturbing ONE candidate's conversion amount and re-running a
- *     SIBLING yields the sibling's byte-identical distribution: no shared mutable state, no
- *     cross-candidate caching, no draw-consumption coupling anywhere in the evaluation path
- *     (the seam U15's batch runner will inherit; a future runner with per-batch state goes
- *     red HERE).
+ *     SIBLING yields the sibling's byte-identical DECISION SURFACE (Tier-1 survival +
+ *     depletion, the gross terminal sample, and every tax-aware Tier-2 vector — the total
+ *     alone conserves under a pretax→Roth reallocation, so the ranked statistics are checked
+ *     TOO): no shared mutable state, no cross-candidate caching, no draw-consumption coupling
+ *     anywhere in the evaluation path (the seam U15's batch runner will inherit; a future
+ *     runner with per-batch state goes red HERE). The perturbation itself must be REAL —
+ *     the varied candidate's own surface must MOVE (insight 029's presence companion; an
+ *     inert perturbation makes "sibling unchanged" a vacuous decoupling proof).
  *  3. PRESENCE (insights 027/029, burned/027) — the CRN claim is about consumption ACROSS
  *     the survivor MFJ→single transition, so ≥1 path must actually enter the survivor
  *     regime, witnessed by the engine's OWN minted state (`survivorConditioned.
@@ -24,9 +28,37 @@
  *     recorded as infeasible-whole-candidate (ranked worst downstream), never a throw that
  *     aborts the batch; an INDETERMINATE output still throws (enumerator bug — evaluate.ts).
  */
-import type { SimulationParams } from '@shared/model'
+import type { Distribution, SimulationParams } from '@shared/model'
 import { evaluateCandidates, type CandidateOutcome } from './evaluate'
 import { applyCandidate, type CandidateStrategy } from '../solver/candidates'
+
+/** Byte-compare the FULL decision surface of two distributions: Tier-1 (survival fraction +
+ *  per-path depletion), the gross terminal sample, and — when the runs are tax-aware — every
+ *  per-path tax-aware vector (lifetime tax, the four bucket terminals the after-tax bequest
+ *  reads, basis, and both healthcare accruals). The total-terminal check alone would pass a
+ *  pretax→Roth reallocation that conserves the sum while moving the RANKED statistics —
+ *  EXPORTED so the S3 battery pins that distinction directly (the mutant-killer). */
+export function decisionSurfaceIdentical(a: Distribution, b: Distribution): boolean {
+  const vec = (x: readonly number[], y: readonly number[]): boolean =>
+    x.length === y.length && x.every((v, i) => v === y[i])
+  if (a.survivalFraction !== b.survivalFraction) return false
+  if (!vec(a.terminalValuesReal, b.terminalValuesReal)) return false
+  if (!vec(a.depletionYears, b.depletionYears)) return false
+  const ta = a.taxAware
+  const tb = b.taxAware
+  if ((ta === undefined) !== (tb === undefined)) return false
+  if (ta === undefined || tb === undefined) return true
+  return (
+    vec(ta.lifetimeTaxPaidReal, tb.lifetimeTaxPaidReal) &&
+    vec(ta.terminalTaxableReal, tb.terminalTaxableReal) &&
+    vec(ta.terminalPretaxReal, tb.terminalPretaxReal) &&
+    vec(ta.terminalRothReal, tb.terminalRothReal) &&
+    vec(ta.terminalHsaReal, tb.terminalHsaReal) &&
+    vec(ta.terminalTaxableBasisReal, tb.terminalTaxableBasisReal) &&
+    vec(ta.lifetimeNetPremiumReal, tb.lifetimeNetPremiumReal) &&
+    vec(ta.lifetimeMedicareCostReal, tb.lifetimeMedicareCostReal)
+  )
+}
 
 declare const STABILITY_REPORT: unique symbol
 
@@ -107,20 +139,33 @@ export function runRankingStability(opts: {
       survivorConditioned: true,
     })
     const original = outcomesBySeed[0]![siblingIndex]!
-    if (original.kind !== 'scored' || rerunSibling!.kind !== 'scored') {
+    const rerunS = rerunSibling!
+    if (original.kind !== 'scored' || rerunS.kind !== 'scored') {
       violations.push('perturbation arm: the sibling must be a scored candidate on seed A')
-    } else {
-      const a = original.distribution.terminalValuesReal
-      const b = rerunSibling!.distribution.terminalValuesReal
-      const identical = a.length === b.length && a.every((x, i) => x === b[i])
-      if (!identical) {
+    } else if (!decisionSurfaceIdentical(original.distribution, rerunS.distribution)) {
+      violations.push(
+        'THE PERTURBATION LAW BROKE: perturbing one candidate’s conversion amount changed a SIBLING’s ' +
+          'decision surface — shared state or draw-consumption coupling has entered the evaluation path',
+      )
+    }
+    // The presence companion (insight 029): the +1,000 must have MOVED the varied candidate —
+    // sibling-identity proves decoupling only when something genuinely changed on the other arm.
+    const originalPerturbed = outcomesBySeed[0]![perturbIndex]!
+    const rerunV = rerunVariant!
+    if (originalPerturbed.kind === 'scored' && rerunV.kind === 'scored') {
+      if (decisionSurfaceIdentical(originalPerturbed.distribution, rerunV.distribution)) {
         violations.push(
-          'THE PERTURBATION LAW BROKE: perturbing one candidate’s conversion amount changed a SIBLING’s ' +
-            'distribution — shared state or draw-consumption coupling has entered the evaluation path',
+          'perturbation arm VACUOUS: the +1,000 conversion perturbation left the varied candidate’s own ' +
+            'decision surface byte-identical — nothing moved, so sibling-identity proves no decoupling (insight 029)',
         )
       }
-    }
-    if (rerunVariant!.kind === 'infeasible') infeasibleCount += 1
+    } else if (originalPerturbed.kind === 'infeasible' && rerunV.kind === 'infeasible') {
+      violations.push(
+        'perturbation arm VACUOUS: the perturbed candidate and its +1,000 variant are BOTH infeasible — ' +
+          'no movement is witnessable (insight 029)',
+      )
+    } // exactly one infeasible ⇒ the perturbation demonstrably moved the outcome — presence held
+    if (rerunV.kind === 'infeasible') infeasibleCount += 1
   }
 
   if (violations.length > 0) return { ok: false, violations }

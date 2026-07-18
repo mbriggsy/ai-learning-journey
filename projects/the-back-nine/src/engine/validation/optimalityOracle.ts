@@ -100,6 +100,11 @@ export function checkOracleCase(fixture: SolverCaseFixture): OracleCaseVerdict {
 export function runOptimalityOracle(
   fixtures: readonly SolverCaseFixture[],
 ): { readonly report: OracleReport } | { readonly failures: readonly OracleCaseVerdict[] } {
+  if (fixtures.length === 0) {
+    // Zero cases ⇒ zero failures ⇒ a vacuously-green branded report — the gate that cannot
+    // go red, this module's own named sin. An empty roster is a caller bug: refuse loud.
+    throw new Error('[oracle] an EMPTY fixture roster cannot pass — a zero-case gate is vacuous theater (fail loud, never green)')
+  }
   const verdicts = fixtures.map(checkOracleCase)
   const failures = verdicts.filter((v) => !v.pass)
   if (failures.length > 0) return { failures }

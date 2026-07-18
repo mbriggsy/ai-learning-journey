@@ -39,7 +39,7 @@ import {
   solverMinBPaths,
   solverSelectionTieZ,
 } from '@engine/constants'
-import { quantizeSurvival } from '@engine/confidence'
+import { quantizeSurvival, xOfTenClamp } from '@engine/confidence'
 import type { CandidateStrategy } from '../solver/candidates'
 import { evaluateCandidates, rankCandidates, type CandidateOutcome, type OracleGoal } from './evaluate'
 import { deriveBFamilyMember, deriveSeedB, survivalIndicators } from './heldOutSeed'
@@ -62,11 +62,10 @@ export interface GradeResult {
   readonly subTenthCollapse: boolean
 }
 
-/** The displayed tenth — the ONE canonical formula (confidence.ts:141's 9-cap on the
- *  quantized fraction; quantizeSurvival is READ from confidence, the cap mirrored here and
- *  drift-pinned by the S4 battery against the confidence contract tests' fixtures). */
-export const displayTenth = (survival: number): number =>
-  Math.max(0, Math.min(9, Math.round(quantizeSurvival(survival) * 10)))
+/** The displayed tenth — READ from the confidence pipeline's own exported pieces (quantize →
+ *  the canonical {@link xOfTenClamp} honesty clamp; the U14 review fold killed the re-typed
+ *  mirror — one formula, one home, no drift-pin obligation). */
+export const displayTenth = (survival: number): number => xOfTenClamp(quantizeSurvival(survival))
 
 /** One member's margin + band from its CRN-paired per-path differences (B-side). */
 function memberMargin(pairedDiffs: readonly number[], minPaths: number): MemberMargin {
@@ -93,6 +92,10 @@ export interface GradeOnFamilyInputs {
   /** Per-member CRN-paired per-path differences (winner − runner-up, oriented so POSITIVE
    *  means the winner is better) in the decision statistic. */
   readonly family: ReadonlyArray<readonly number[]>
+  /** The decision statistic the family's differences are measured IN — the demotion margin
+   *  is calibrated in SURVIVAL-FRACTION units (solver.ts), so a conversion-winner near-tie
+   *  on any other axis REFUSES rather than silently comparing dollars to 0.02 (U14 fold). */
+  readonly statistic: 'survival' | 'pay-less-tax'
   readonly winnerHasConversion: boolean
   readonly runnerUpHasConversion: boolean
   /** Supplied when the decision statistic is survival — enables the display-tenth clause. */
@@ -100,6 +103,25 @@ export interface GradeOnFamilyInputs {
   /** TEST-SEAM ONLY (insight 048): the synthetic arms drive small vectors; the live binding
    *  never passes this — the calibrated floor governs. */
   readonly minPathsOverride?: number
+}
+
+/** The demotion-axis guard, ONE home (U14 fold): the calibrated 0.02 demotion margin is
+ *  survival-fraction units, so a conversion-winner-over-non-conversion near-tie on any other
+ *  statistic REFUSES — a dollar-diff family would make `minMargin < 0.02` structurally false
+ *  and silently skip the caution on exactly the flattered lever. Called by the live binding
+ *  BEFORE the expensive family evaluation, and again at the pure seam (no bypass). */
+function assertDemotionAxisCalibrated(
+  statistic: 'survival' | 'pay-less-tax',
+  winnerHasConversion: boolean,
+  runnerUpHasConversion: boolean,
+): void {
+  if (winnerHasConversion && !runnerUpHasConversion && statistic !== 'survival') {
+    throw new Error(
+      `[gradeCalibration] the conversion-near-tie demotion margin is calibrated in SURVIVAL-FRACTION ` +
+        `units — a '${statistic}' conversion-winner near-tie needs its own calibrated margin ` +
+        `(U15's objective wiring); refusing rather than silently skipping the demotion (burned/062)`,
+    )
+  }
 }
 
 /** The PURE grade decision (the live binding is {@link gradeRecommendation}). */
@@ -118,6 +140,7 @@ export function gradeOnFamily(inputs: GradeOnFamilyInputs): GradeResult {
 
   const demotionMargin = solverConversionNearTieDemotionMargin.value
   const demotionApplies = inputs.winnerHasConversion && !inputs.runnerUpHasConversion
+  assertDemotionAxisCalibrated(inputs.statistic, inputs.winnerHasConversion, inputs.runnerUpHasConversion)
   if (demotionApplies && !isCalibrated(demotionMargin)) {
     throw new Error(
       '[gradeCalibration] the conversion-near-tie demotion margin is UNCALIBRATED (sentinel) — ' +
@@ -186,6 +209,9 @@ export function gradeRecommendation(opts: {
   readonly statistic: 'survival' | 'pay-less-tax'
 }): GradeRecommendationResult {
   const { base, winner, runnerUp, seedA, statistic } = opts
+  // Fail BEFORE the expensive family evaluation: the demotion axis must be calibrated for
+  // this statistic (the guard's one home — gradeOnFamily re-checks at the pure seam).
+  assertDemotionAxisCalibrated(statistic, winner.conversion !== null, runnerUp.conversion !== null)
   const seedB = deriveSeedB(seedA)
   const familySize = solverBFamilySize.value
   const familySeeds = Array.from({ length: familySize }, (_, i) => deriveBFamilyMember(seedB, i))
@@ -200,6 +226,7 @@ export function gradeRecommendation(opts: {
   }
   const result = gradeOnFamily({
     family,
+    statistic,
     winnerHasConversion: winner.conversion !== null,
     runnerUpHasConversion: runnerUp.conversion !== null,
     ...(statistic === 'survival' ? { displayReads } : {}),

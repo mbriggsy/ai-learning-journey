@@ -47,8 +47,9 @@ const DEV_CRN_SEED = 0xbada55
  * EXTRAS (2026-07-11, the ask-for-Medicare-extras unit): the flagship MIXED-PROVENANCE
  * showcase — Alex entered $220/mo, Sam affirmed ~$0 (Medicare Advantage). One entered
  * dollar + one affirmed MA-$0, so the disclosure renders both fork arms. This funds LESS
- * than the typical-both (~$203+$203) the absent-field engine would fund, so the drift the
- * unit introduced (on-track → borderline 8/10 under typical-both) reverses back to on-track.
+ * than the typical-both (~$244+$244 since the U14 S0 refresh; ~$203+$203 before) the
+ * absent-field engine would fund, so the drift the unit introduced (on-track → borderline
+ * 8/10 under typical-both) reverses back to on-track.
  */
 const retiredOnTrack: ScenarioDraft = {
   people: [
@@ -175,7 +176,9 @@ const stillWorking: ScenarioDraft = {
  * this couple from borderline-7 to off-track-5, so the IRA moved 640k→760k to restore the NAMED
  * state (the earlier 520k→640k move was the Part-B pricing unit's). Most couples make it, but the
  * band's lower percentiles honestly descend toward $0. Older than `retired` on purpose: the shorter
- * horizon keeps the p90 plume from squashing the ruin tail.
+ * horizon keeps the p90 plume from squashing the ruin tail. SURVIVED the U14 S0 extras refresh
+ * ($203→~$244/mo/person, 2026-07-18) with the named state intact — no re-tune needed (the
+ * devSeeds outcome pin is the witness).
  */
 const retiredBorderline: ScenarioDraft = {
   people: [
@@ -498,6 +501,13 @@ const dateMixedSeed: ScenarioDraft = {
  * re-lifts 0,1,2 over the bar at BOTH tiers while offset 3 stays under it (the two-tier
  * intersection is narrow: offset 2 clears at final qL 0.85 with offset 3 held at 0.84; a
  * further ~6k pushes provisional to [0,1,2,3]). Crown@5 and the monotone floor are unmoved.
+ *
+ * EXTRAS RE-TUNE 2 (2026-07-18, the U14 S0 medicareExtrasTypical refresh $203→~$244/mo/person):
+ * the richer absent-field typical sank offset 2 again (nm collapsed to [0,1] — provisional AND
+ * final), so the portfolio moved 644k→658k / 276k→282k — probed as the SMALLEST grid bump
+ * restoring nm=[0,1,2] + crown@5 + monotone floor at BOTH tiers (the +12k/+5k midpoint still
+ * loses offset 2 at final; +18k/+8k overshoots provisional to [0,1,2,3]). Same knife-edge, same
+ * mechanism, one constant richer.
  */
 const dateDipSeed: ScenarioDraft = {
   people: [
@@ -511,8 +521,8 @@ const dateDipSeed: ScenarioDraft = {
     },
   ],
   enteredAccounts: [
-    { ownerIndex: 0, kind: '401k', ticker: 'VTI', valueToday: 644_000, annualContribution: 8_000, employerMatchAnnual: 4_000 },
-    { ownerIndex: 1, kind: 'roth-ira', ticker: 'VFIFX', valueToday: 276_000 },
+    { ownerIndex: 0, kind: '401k', ticker: 'VTI', valueToday: 658_000, annualContribution: 8_000, employerMatchAnnual: 4_000 },
+    { ownerIndex: 1, kind: 'roth-ira', ticker: 'VFIFX', valueToday: 282_000 },
   ],
   incomeStreams: [],
   tickerClassifications: {},

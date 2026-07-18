@@ -16,6 +16,7 @@ import { stateTaxConstants } from './stateTax'
 import { healthConstants, COVERAGE_YEAR } from './health'
 import { contributionConstants, CONTRIBUTION_YEAR } from './contributions'
 import { socialSecurityConstants } from './socialSecurity'
+import { solverConstants } from './solver'
 import type { ConstantEntry } from './types'
 import { BLEND_SNAPSHOT_AS_OF } from '../reference/tickerBlend'
 import type { DateVintageV3 } from '@shared/model'
@@ -30,6 +31,7 @@ export * from './stateTax'
 export * from './health'
 export * from './contributions'
 export * from './socialSecurity'
+export * from './solver'
 
 /** Flattened registry: dotted key → entry. Derived from the structured tables. */
 export const ALL_CONSTANTS: Readonly<Record<string, ConstantEntry>> = Object.freeze({
@@ -42,6 +44,7 @@ export const ALL_CONSTANTS: Readonly<Record<string, ConstantEntry>> = Object.fre
   ...Object.fromEntries(
     Object.entries(socialSecurityConstants).map(([k, v]) => [`socialSecurity.${k}`, v]),
   ),
+  ...Object.fromEntries(Object.entries(solverConstants).map(([k, v]) => [`solver.${k}`, v])),
 })
 
 /** The vintage these constants describe. */

@@ -14,6 +14,21 @@
  * in-range default fallbacks).
  */
 
+/**
+ * The directional KIND split (U14 S0, the Act-4 reconciliation supersession item 5) — how the
+ * oracle-token mint predicate treats a still-directional entry the graded run CONSUMES:
+ *  - `certification-pinnable` — a dated pin event exists (the NC FY2025-26 revenue certification,
+ *    ~Aug 2026). The entry BLOCKS that household's oracle-cleared token until its event pins it —
+ *    an NC household stays honestly blocked; FL/PA households are not hostage to NC's calendar.
+ *  - `methodology-substrate` — no dated pin event exists (`productionMarket`, ε's calibration
+ *    context, `survivorSpendingRatio`). Does NOT block; the grade ships difference-keyed with the
+ *    directional level DISCLOSED. Flipping such an entry's `directionalUntilPinned` to `false`
+ *    to clear a gate is a REJECT (laundering — the NC sin in mirror).
+ * The shape test requires every `directionalUntilPinned: true` entry to carry a kind — an
+ * unclassified directional entry cannot exist (the mint predicate would have to guess).
+ */
+export type DirectionalKind = 'certification-pinnable' | 'methodology-substrate'
+
 /** A dated figure with provenance. */
 export interface Sourced<T> {
   readonly value: T
@@ -21,6 +36,9 @@ export interface Sourced<T> {
   readonly citation: string
   /** True until confirmed against the named primary (`pinTo`). */
   readonly directionalUntilPinned: boolean
+  /** REQUIRED while `directionalUntilPinned` is true (shape-test-enforced): how the U14 mint
+   *  predicate treats this entry when a graded run consumes it. See {@link DirectionalKind}. */
+  readonly directionalKind?: DirectionalKind
   /** The IRS/CMS/HHS primary this figure must be confirmed against. */
   readonly pinTo?: string
   /** Statutory provenance (e.g. OBBBA), so a law change reads as a vintage bump, not drift. */
@@ -42,6 +60,9 @@ export interface Sourced<T> {
 export interface Unsourced {
   readonly requiresSourcing: true
   readonly directionalUntilPinned: true
+  /** An unsourced figure always blocks whatever consumes it (its `.value` throws), so its
+   *  kind is `certification-pinnable` — the pin event is the sourcing task itself. */
+  readonly directionalKind: DirectionalKind
   readonly citation: string
   readonly pinTo: string
   readonly note?: string
@@ -62,6 +83,7 @@ export const sourced = <T>(value: T, meta: Omit<Sourced<T>, 'value'>): Sourced<T
 export const unsourced = (pinTo: string, note?: string): Unsourced => ({
   requiresSourcing: true,
   directionalUntilPinned: true,
+  directionalKind: 'certification-pinnable',
   citation: 'UNSOURCED — must pin to the primary before use',
   pinTo,
   note,

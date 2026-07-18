@@ -961,6 +961,24 @@ function solveGrossWithdrawal(net: number, ctx: GrossUpContext): GrossUpSolution
 }
 
 /**
+ * HOW THIS ENGINE PRICES THE PART-B PREMIUM ACROSS YEARS — the U14 trend-consumption witness.
+ *
+ * `'real-flat'` = the base Part B premium is a constant real dollar every year
+ * (`partB2026.value.standardPremiumMonthly`, bound once per run inside
+ * {@link runTaxAwareDecumulation} — the ONE consumer). Reality trends Part B faster than CPI, and
+ * real-flat specifically UNDER-penalizes late-year IRMAA cliff-crossing — the exact payoff channel
+ * of Roth-conversion candidates (architecture §7.2; the Act-4 reconciliation supersession item 4).
+ *
+ * The U14 oracle token reads THIS value as the consumption half of its Medicare-trend block: the
+ * conversion ranking stays withheld until `health.medicareCostTrend` is SOURCED **and** the pricing
+ * here actually consumes it (insight 074 — a stamp nothing reads prices nothing). The future
+ * trend-sourcing unit flips this to `'trended'` ONLY in the same change that threads the sourced
+ * trend into the per-year premium below — flipping the label without the pricing change is the
+ * lying-mirror shape (insight 081) and the token's planted-witness test exists to catch it.
+ */
+export const PART_B_PRICING_MODE: 'real-flat' | 'trended' = 'real-flat'
+
+/**
  * Run a tax-aware decumulation path. Tracks per-bucket balances + the taxable cost basis for the
  * tax computation while advancing the authoritative TOTAL through the shared {@link stepYear}, so
  * the total trajectory matches the spine byte-for-byte under the OFF condition.

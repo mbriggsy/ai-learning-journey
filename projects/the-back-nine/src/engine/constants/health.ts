@@ -7,6 +7,7 @@
  */
 import {
   sourced,
+  unsourced,
   type AcaAgeRatingCurve,
   type ConstantEntry,
   type AcaApplicablePercentageTable,
@@ -176,6 +177,23 @@ export const partB2026 = sourced(
   },
 )
 
+/**
+ * The Medicare-cost-trend constant — NAMED but deliberately NOT VALUED (the first live use of
+ * the `Unsourced` sentinel; burned/062). Part B is priced REAL-FLAT today (a disclosed modeling
+ * choice, architecture §7.2); reality trends Part B faster than CPI, and real-flat specifically
+ * UNDER-PENALIZES late-year IRMAA cliff-crossing — the exact payoff channel of Roth-conversion
+ * candidates. The Act-4 reconciliation (supersession item 4, council wf_d873be6e-5b2) ruled this
+ * HARD solver-BLOCKING: the U14 oracle token withholds the conversion ranking
+ * (`medicare-trend-unsourced`) until a SOURCED trend constant lands AND is genuinely CONSUMED by
+ * the Part-B pricing (insight 074 — a stamp nothing reads prices nothing). Disclose-and-ship is
+ * FORBIDDEN (a disclosure fixes a number, never a mis-ranking). The sourcing task is its own
+ * small unit; this sentinel only enforces the block — reading `.value` throws by design.
+ */
+export const medicareCostTrend = unsourced(
+  'CMS Medicare Trustees Report — the Part B premium real-growth trend (a sourced constant, never a guessed growth rate)',
+  'Clearing the U14 token block requires BOTH a sourced value here AND real consumption by the Part-B pricing in healthOverlay (the oracleToken clause reads both halves).',
+)
+
 /** 2026 Medicare Part A purchased premiums + deductible (pin only if the tool
  *  models post-65 Part A spend). */
 export const partA2026 = sourced(
@@ -198,15 +216,15 @@ export const partA2026 = sourced(
 export const medicareExtrasTypical = sourced(
   {
     partDBaseBeneficiaryMonthly: 38.99,
-    medigapPlanGNationalAvgMonthly: 164,
-    vintage: 'extras-2026a',
+    medigapPlanGNationalAvgMonthly: 205,
+    vintage: 'extras-2026b',
   },
   {
     citation:
-      'CMS fact sheet "2026 Medicare Part D Bid Information and Part D Premium Stabilization Demonstration Parameters" (2025-07-28, fetched 2026-07-11): "For 2026, the base beneficiary premium will be $38.99." + KFF "Key Facts About Medigap Enrollment and Premiums for Medicare Beneficiaries" (2024-10-18, 2023 data, fetched 2026-07-11): Plan G — the most-purchased plan, 39% of policyholders — "average monthly premium among current policyholders in 2023 was $164"',
-    directionalUntilPinned: true,
-    pinTo: 'a 2026-vintage national Medigap Plan G average (KFF/NAIC refresh) — the $164 is a 2023-dollar blended book (all ages, all three rating methods), known to LAG premium trend (2026 filings ran +12–26%); the Part D component is already primary-pinned',
-    note: 'Conservative-HIGH by REGIME CHOICE (the Medigap+PartD path; roughly half of enrollees pay ~$0 extra on Medicare Advantage) — the components themselves are central figures, never inflated. Consumed by the intakeMap fork resolution (absent / unanswered / typical arms all FUND this — never a silent $0), the intake fork label, and the assumption-panel seat. Real-flat like Part B. Combined ≈ $203/mo/person.',
+      'Part D: CMS fact sheet "2026 Medicare Part D Bid Information and Part D Premium Stabilization Demonstration Parameters" (2025-07-28; re-fetched + Medicare.gov LEP-page second-sourced 2026-07-18): "For 2026, the base beneficiary premium will be $38.99." Medigap G: 2026-vintage typical anchor $205/mo at 65 — NO government/actuarial national average exists (CMS/KFF publish none); anchored to the 2026 sourced central band ~$150–$220 (MoneyGeek 2026 age-65 avg ~$220, per-carrier $196–$306; other 2026 cites ~$166–$189) and the prior KFF 2023 book average $164 grown by the Telos Actuarial 2026 filing increases +12–26% across six named carriers (CBS News / KFF Health News; CSG Actuarial corroborates 11.7%/12.7%) → $184–$207. Researched + adversarially second-sourced 2026-07-18 (U14 S0), zero source disagreements.',
+    directionalUntilPinned: false,
+    pinTo: 'a future official national Medigap Plan G average if one is ever published (none exists today — the 2026 pin is the multi-source anchor above); the Part D component is CMS-primary-pinned',
+    note: 'Conservative-HIGH by REGIME CHOICE (the Medigap+PartD path; roughly half of enrollees pay ~$0 extra on Medicare Advantage). $205 sits at the top of the Telos-implied refresh ($164 × 1.26 ≈ $207) and mid-high in the 2026 central band — extras-too-LOW is the optimistic sin for a funded budget, so the anchor errs high, never inflated past the sourced band. Consumed by the intakeMap fork resolution (absent / unanswered / typical arms all FUND this — never a silent $0), the intake fork label, and the assumption-panel seat. Real-flat like Part B. Combined ≈ $244/mo/person. The vintage bump (extras-2026a → extras-2026b) deliberately fires the U13 staleness clock on vaults that adopted the old figure.',
   },
 )
 
@@ -374,6 +392,7 @@ export const healthConstants = {
   acaPtc,
   irmaa,
   partB2026,
+  medicareCostTrend,
   partA2026,
   medicareExtrasTypical,
   magiDefinitions,

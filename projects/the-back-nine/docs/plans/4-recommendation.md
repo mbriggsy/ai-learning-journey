@@ -10,7 +10,7 @@ sources: [docs/research/engine-validation-and-tax.md, docs/research/pre65-health
 
 # Act 4 — Solver & Recommendation
 
-> **Status: planned. Zero code.** This act is **not started** — `src/engine/solver/` and `src/engine/validation/` are `.gitkeep`-only. This is the actual differentiator and it is still entirely ahead. The lifecycle block above asserts that truthfully (both fields empty = not built).
+> **Status: U14 SHIPPED (2026-07-18); U15–U17 ahead.** `src/engine/solver/` holds the shared candidate enumerator + apply seam; `src/engine/validation/` holds the full harness (oracle, stability, grades, held-out defense, the oracle-cleared token). Each remaining unit fires its own pre-build council (U16 inherits the hawk's surplus-pivot veto verbatim; U17's council decides the six-rider charter).
 
 > ## RECONCILIATION SUPERSESSION — 2026-07-18 (council-ratified, EXECUTE high 8/10)
 >
@@ -58,6 +58,17 @@ sources: [docs/research/engine-validation-and-tax.md, docs/research/pre65-health
 ---
 
 ## Unit 14 — Solver validation harness (GATES Unit 15)
+
+> **SHIPPED 2026-07-18.** The executable shape was `docs/plans/features/act4-u14-validation-harness-build-spec.md`
+> (which supersedes this section where they conflict); the shipped summary lives in the
+> roadmap's U14 row. Two dated deviations from this section's body, both derivation-forced:
+> (1) the pick-quality SHRINKAGE calibration case is deliberately NOT built in U14 —
+> `select.ts` is U15's (both docs agree), and a U14 reference implementation of shrinkage
+> would be the premise-ahead-of-machinery trap (insight 025); the case lands WITH U15's
+> `select.ts`. (2) `seedB` is DERIVED (`deriveSeedB`, structurally canonical), never a
+> top-level persisted model field — the supersession block's item 3 already ruled the
+> schemaVersion narrative counterfactual; the `savedRecommendation?` record (U17) is where
+> a seedB is ever written down.
 
 *The optimality oracle, ranking-stability, grade calibration, the held-out-seed defense.*
 

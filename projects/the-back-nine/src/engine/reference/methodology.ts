@@ -42,6 +42,10 @@ export const validationMarket: Sourced<MarketAssumptions> = sourced(
     citation:
       'findings §Strand 4; Ibbotson SBBI 1926–2020 nominal (S&P ~12.1%/σ19.8, intermediate-govt ~5.3%/σ5.6, CPI ~3.0%/σ4.1), converted to real (gemini-grounding 2026-06-05)',
     directionalUntilPinned: true,
+    // No dated pin event exists (a deliberate re-calibration pass, undated) → methodology
+    // substrate: never blocks the U14 oracle token; validation-only anyway (never consumed
+    // by a graded production run).
+    directionalKind: 'methodology-substrate',
     pinTo: 're-derive from the committed Damodaran series (reference/damodaranSeries.ts, landed 2026-06-11) at a deliberate re-calibration pass — exact SBBI RETIRED (commercial, edition-revised); these summary moments stay directional until that pass',
     note: 'VALIDATION ONLY — calibrates the Mode-B MC band to Trinity behavior. Not a user default. Real intermediate-government bonds (NOT corporate), to pair with Bengen.',
   },
@@ -66,6 +70,11 @@ export const productionMarket: Sourced<MarketAssumptions> = sourced(
     citation:
       'Pfau/Kitces high-CAPE conservative real assumptions (gemini-grounding 2026-06-05): stocks real ~3.5–5.5%, bonds real ~0–1.5%, → ~3–3.5% safe rate',
     directionalUntilPinned: true,
+    // No dated pin event exists → methodology substrate (U14 S0, supersession item 5): does
+    // NOT block the oracle token; the grade ships difference-keyed with the directional level
+    // DISCLOSED. Flipping this flag to false to clear a gate is a REJECT (laundering — the
+    // NC sin in mirror; the hawk's standing law).
+    directionalKind: 'methodology-substrate',
     pinTo: 'Pfau (Retirement Researcher) / Kitces capital-market-assumption articles',
     note: 'The real-user DEFAULT. Deliberately conservative (high valuations); user-overridable.',
   },
@@ -83,6 +92,10 @@ export const survivorSpendingRatio: Sourced<number> = sourced(0.75, {
   citation:
     'findings §Strand 4; Blanchett "My Heart Will Go On" / widowhood-effect literature; planning range 67–80% (gemini-grounding 2026-06-05)',
   directionalUntilPinned: true,
+  // No dated pin event → methodology substrate (never blocks the U14 token; ships-disclosed).
+  // If ever pinned it needs a SOURCED equivalence-scale anchor (the U12 advisory's ≈⅔ note),
+  // never a guessed one (U14 S0 worklist).
+  directionalKind: 'methodology-substrate',
   pinTo: 'Blanchett widowhood-effect paper (the exact survivor-spending multiplier)',
   note: 'Unsafe direction = too LOW (understates survivor need). Editable; the low-edit note is the P3 UI half.',
 })

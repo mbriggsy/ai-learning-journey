@@ -8,6 +8,7 @@ import {
   healthConstants,
   contributionConstants,
   socialSecurityConstants,
+  solverConstants,
   catchUpForAge,
   fraMonthsForBirthYear,
   PRICED_STATES,
@@ -52,6 +53,27 @@ describe('canonical constants — shape & provenance (contract #6)', () => {
         expect(entry.value, `${key}.value defined`).toBeDefined()
       }
     }
+  })
+
+  it('every still-directional entry carries a directionalKind — the U14 mint predicate never guesses (S0, supersession item 5)', () => {
+    // certification-pinnable → BLOCKS the consuming household's oracle token until the dated
+    // event pins it; methodology-substrate → ships-disclosed, never blocks. An unclassified
+    // directional entry would force the mint predicate to guess a household's honesty posture.
+    for (const [key, entry] of Object.entries(ALL_CONSTANTS)) {
+      if (entry.directionalUntilPinned) {
+        expect(
+          entry.directionalKind,
+          `${key} is directional and MUST declare its kind (certification-pinnable | methodology-substrate)`,
+        ).toMatch(/^(certification-pinnable|methodology-substrate)$/)
+      }
+    }
+  })
+
+  it('the Medicare-cost-trend gap sentinel exists and THROWS — the Act-4 conversion-ranking block is live, never a guessed growth rate (supersession item 4)', () => {
+    const entry = ALL_CONSTANTS['health.medicareCostTrend']
+    expect(entry, 'health.medicareCostTrend registered').toBeDefined()
+    expect(isUnsourced(entry!), 'named but deliberately NOT valued (burned/062)').toBe(true)
+    expect(() => entry!.value, 'reading the trend without sourcing it must throw').toThrow(/not yet sourced/)
   })
 
   it('the formerly-unsourced tax gaps are now ALL SOURCED + still directional (U2 closed; pin gate still pending)', () => {
@@ -284,7 +306,8 @@ describe('canonical constants — shape & provenance (contract #6)', () => {
       Object.keys(stateTaxConstants).length +
       Object.keys(healthConstants).length +
       Object.keys(contributionConstants).length +
-      Object.keys(socialSecurityConstants).length
+      Object.keys(socialSecurityConstants).length +
+      Object.keys(solverConstants).length
     expect(Object.keys(ALL_CONSTANTS).length).toBe(expected)
   })
 
@@ -302,8 +325,21 @@ describe('canonical constants — shape & provenance (contract #6)', () => {
         expect(isUnsourced(entry), `${key} is sourced`).toBe(false)
         expect(() => entry.value, `${key} reads without throwing`).not.toThrow()
         expect(entry.citation.length, `${key} carries a citation`).toBeGreaterThan(0)
-        // Freshly transcribed 2026-07-15 — directional until the S6 verify:state-tax pin.
-        expect(entry.directionalUntilPinned, `${key} directional until the re-verify hook confirms it`).toBe(true)
+      }
+    })
+
+    it('the U14 S0 pin split: ncRateSchedule is the ONE directional state entry (certification-pinnable, ~Aug-2026); every other entry is PINNED (2026-07-18)', () => {
+      // Transcribed from the primaries 2026-07-15; pinned at the U14 S0 pass on the primary
+      // fetches + the verify:state-tax attestation records. The NC rate schedule's 2027+
+      // out-years wait on the FY2025-26 revenue certification — a DATED pin event, so the
+      // entry is certification-pinnable: an NC household's oracle-cleared token is BLOCKED
+      // (state-certification-pending) while FL/PA households mint on the same build. Flipping
+      // this flag without the certification is the laundering REJECT (the hawk's veto).
+      expect(stateTaxConstants.ncRateSchedule.directionalUntilPinned, 'NC out-years uncertified').toBe(true)
+      expect(stateTaxConstants.ncRateSchedule.directionalKind).toBe('certification-pinnable')
+      for (const [key, entry] of Object.entries(stateTaxConstants)) {
+        if (key === 'ncRateSchedule') continue
+        expect(entry.directionalUntilPinned, `${key} pinned at the U14 S0 pass`).toBe(false)
       }
     })
 
@@ -640,8 +676,12 @@ describe('canonical constants — shape & provenance (contract #6)', () => {
       ] as const) {
         expect(socialSecurityConstants[key].directionalUntilPinned, `${key} POMS-pinned`).toBe(false)
       }
-      expect(socialSecurityConstants.fullRetirementAge.directionalUntilPinned, 'FRA grounding-confirmed').toBe(true)
-      expect(socialSecurityConstants.survivorFullRetirementAge.directionalUntilPinned).toBe(true)
+      // BOTH FRA tables byte-pinned at the U14 S0 pass (2026-07-18): the retirement table
+      // against the live nra.html page verbatim; the survivor table against SSA's own
+      // Survivor-FRA calculator at every graduated edge (1944/1945/1956/1957–1961/1962 + an
+      // interior spot). The citations carry the pull record.
+      expect(socialSecurityConstants.fullRetirementAge.directionalUntilPinned, 'FRA byte-pinned vs live nra.html').toBe(false)
+      expect(socialSecurityConstants.survivorFullRetirementAge.directionalUntilPinned, 'survivor-FRA byte-pinned vs the live calculator').toBe(false)
     })
 
     it('the citation LANDMINE corrections are baked in (RS .101 live + .102-is-dead flagged; deemed filing GN 00204.035)', () => {

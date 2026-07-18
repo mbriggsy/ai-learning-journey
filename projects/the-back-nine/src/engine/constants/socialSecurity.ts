@@ -55,9 +55,9 @@ export const fullRetirementAge = sourced<readonly FraBand[]>(
   ],
   {
     citation:
-      'SSA NRA chart (ssa.gov/oact/ProgData/nra.html) + planner agereduction.html — grounding-confirmed (HTML Akamai-gated to curl); every band edge cross-agreed across sources and re-derived by the verify sweep (2026-06-14); 1960+→67 universally confirmed. The "born Jan 1 → treated as the prior year" rule needs a full DOB the model does not carry (a bounded, disclosed simplification; both household cohorts are interior to their bands).',
-    directionalUntilPinned: true,
-    pinTo: 'SSA NRA chart ssa.gov/oact/ProgData/nra.html (a browser pull upgrades this to byte-level primary)',
+      'BYTE-PINNED against the live primary (U14 S0, 2026-07-18): ssa.gov/oact/ProgData/nra.html rendered in real Chromium — every committed band matches the page table VERBATIM (1937-and-prior/65 · 1938–42 graduated +2mo steps · 1943-54/66 · 1955–59 graduated · 1960-and-later/67). Independently reproduced by the research sweep (AARP/Investopedia/SmartAsset — zero disagreements) and the planner agereduction.html live pull (1943+ rows + the at-62 reduction column). The "born Jan 1 / 1st-of-month → prior period" rule needs a full DOB the model does not carry (a bounded, disclosed simplification; both household cohorts are interior to their bands). The schedule is statutorily stable (the 1983 Amendments).',
+    directionalUntilPinned: false,
+    pinTo: 'SSA NRA chart ssa.gov/oact/ProgData/nra.html',
     legalBasis: '42 U.S.C. §416(l) (retirement age)',
   },
 )
@@ -84,9 +84,9 @@ export const survivorFullRetirementAge = sourced<readonly FraBand[]>(
   ],
   {
     citation:
-      'SSA survivor-FRA chart (ssa.gov/benefits/survivors/survivorchartred.html) + POMS RS 00615.301B.2 — a SEPARATE schedule from retirement-FRA, earlier for the 1957–1961 band. Grounding-confirmed (HTML Akamai-gated); 1962+→67 (= both household cohorts) is solid; the 1957–1961 graduated bands + lower edges still need a browser pull to byte-pin.',
-    directionalUntilPinned: true,
-    pinTo: 'SSA survivor-FRA chart / POMS RS 00615.301B.2 (a browser pull byte-pins the 1957–1961 band)',
+      "BYTE-PINNED against the live primary (U14 S0, 2026-07-18): SSA's own Survivor-FRA calculator (ssa.gov/survivor/full-retirement-age-survivor — the modern home; the old survivorchartred.html redirects there) driven in real Chromium at EVERY graduated edge: 1944→65+10 · 1945→66 · 1956→66 (both plateau edges) · 1957→66+2 · 1958→66+4 · 1959→66+6 · 1960→66+8 · 1961→66+10 · 1962→67, interior spot 1941→65+4 — each matching the committed band verbatim. The 1939–43 rows below the sampled points follow the same +2mo lattice (POMS RS 00615.301B.2, the standing corroboration). A SEPARATE schedule from retirement-FRA (shifted ~2 years later), kept separately keyed so a cohort change cannot silently alias them.",
+    directionalUntilPinned: false,
+    pinTo: 'SSA Survivor-FRA calculator ssa.gov/survivor/full-retirement-age-survivor / POMS RS 00615.301B.2',
     legalBasis: '42 U.S.C. §416(l)',
   },
 )

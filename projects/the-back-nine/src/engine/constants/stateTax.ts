@@ -9,10 +9,13 @@
  * clock (StateTaxVintageV3, the persistence unit) rather than riding the federal tax stamp.
  *
  * DISCIPLINE (burned/057,061,062,063; insight 022):
- *  - Every figure is `Sourced` with its citation + `directionalUntilPinned` marker; these
- *    are FRESHLY transcribed (2026-07-15) and stay `directional` until the S6 verify:state-tax
- *    re-verify hook confirms them against the codified primary (the ACA legislatively-gated
- *    precedent). A figure the research names-but-doesn't-value would be an `Unsourced` throw,
+ *  - Every figure is `Sourced` with its citation + `directionalUntilPinned` marker. Transcribed
+ *    from the primaries 2026-07-15; PINNED at the U14 S0 pin pass (2026-07-18) on the strength
+ *    of the primary fetches + the verify:state-tax attestation records (statusConfirmed, all
+ *    three axes attested, CI-gated). The ONE exception is `ncRateSchedule` — its 2027+
+ *    out-years wait on the ~Aug-2026 FY2025-26 revenue certification (a dated pin event →
+ *    `directionalKind: 'certification-pinnable'`; the hawk veto holds 3.99% until then).
+ *    A figure the research names-but-doesn't-value would be an `Unsourced` throw,
  *    never a plausible default.
  *  - Per-figure citations are SPLIT statute-vs-DOR (insight 022): the load-bearing statute
  *    section AND the DOR/guide corroboration, so a single dead link never silently unsources it.
@@ -67,6 +70,11 @@ export const ncRateSchedule = sourced<StateFlatRateSchedule>(
     citation:
       'N.C.G.S. § 105-153.7 (individual income-tax rate; codified schedule "After 2025 — 3.99%") · trigger provision § 105-153.7(a1) (SL 2023-134), codified statute fetched from ncleg.gov 2026-07-15 · NCDOR tax-rate page (corroboration)',
     directionalUntilPinned: true,
+    // The ONE state entry still directional after the U14 S0 pin pass: the 2027+ out-years are
+    // revenue-trigger-conditional on a certification that does not exist until ~Aug 2026. A
+    // dated pin event exists → certification-pinnable: an NC household's oracle-cleared token
+    // is BLOCKED (state-certification-pending) until the certification pins the schedule.
+    directionalKind: 'certification-pinnable',
     // The live-flip watch: the Aug-2026 certification / budget-deal re-fetch could pin a lower
     // 2027+ rate at any build. `reVerifyEveryBuild` is the ACA/spousalRate precedent — the
     // verify:state-tax CI gate (scripts/verify-state-tax.ts) hooks this flag's NC record every
@@ -91,7 +99,7 @@ export const ncStandardDeduction = sourced<StateStandardDeduction>(
   {
     citation:
       'N.C.G.S. § 105-153.5(a)(1) (standard-deduction table by filing status; fixed statutory dollars, not indexed) · NCDOR "North Carolina Standard Deduction" page (corroboration); unchanged by SL 2026-31',
-    directionalUntilPinned: true,
+    directionalUntilPinned: false,
     pinTo: 'ncleg.gov codified G.S. 105-153.5(a)(1)',
     note:
       'Fixed, NOT inflation-indexed — no COLA. NO age-65+/blindness add-on (contrast the federal §63(f) addition + OBBBA senior bonus, which do NOT flow through because NC starts from AGI and applies its own SD). Survivor transition: on the first death the SD steps $25,500 (MFJ) → $12,750 (single), rate unchanged (insight 014). NOT modeled (lead only, do NOT price): SB 437 "Middle Class Momentum Act" ($26,000/$13,000) sits in Senate Rules committee, not enacted 2026-07-15.',
@@ -105,7 +113,7 @@ export const ncStandardDeduction = sourced<StateStandardDeduction>(
 export const ncBaseSystem = sourced<StateBaseSystem>('federal-agi-derived', {
   citation:
     'N.C.G.S. § 105-153.4 (NC taxable income begins at federal AGI) · § 105-153.7 (single statewide rate; no Chapter-105 local income-tax enabling authority) · NCDOR (corroboration)',
-  directionalUntilPinned: true,
+  directionalUntilPinned: false,
   pinTo: 'ncleg.gov codified G.S. 105-153.4',
   note: 'No local/municipal/county income tax statewide ($0). NC muni add-backs / Treasury subtractions exist (§ 105-153.5(b)(1)/(c)(1)) but are OUT of the modeled base (named, never modeled).',
 })
@@ -115,7 +123,7 @@ export const ncBaseSystem = sourced<StateBaseSystem>('federal-agi-derived', {
 export const ncSocialSecurity = sourced<StateIncomeTreatment>('exempt', {
   citation:
     'N.C.G.S. § 105-153.5(b)(3) (subtraction for Title II Social Security + Railroad Retirement benefits) · NCDOR (corroboration)',
-  directionalUntilPinned: true,
+  directionalUntilPinned: false,
   pinTo: 'ncleg.gov codified G.S. 105-153.5(b)(3)',
   note: '100% exempt at every income level. This is why the NC state term is additive at the federal-worst corner without the SS-inclusion multiplier (the k-derivation, insights 006/007).',
 })
@@ -127,7 +135,7 @@ export const ncSocialSecurity = sourced<StateIncomeTreatment>('exempt', {
 export const ncRetirementIncome = sourced<StateIncomeTreatment>('taxed-ordinary', {
   citation:
     'N.C.G.S. § 105-153.4 (IRA/401(k) distributions in federal AGI) · § 105-153.5(b) (no subtraction covers private retirement income; the old $4,000/$2,000 deduction repealed eff. TY2014) · NCDOR Bailey page (corroboration)',
-  directionalUntilPinned: true,
+  directionalUntilPinned: false,
   pinTo: 'ncleg.gov codified G.S. 105-153.4 / .5(b)',
   note: 'Private-sector IRA/401(k)/pension: 100% taxable at the flat rate. OUT (never modeled — this household never qualifies): Bailey govt-plan carve-out (§ 105-153.5(b)(5), 5+ yrs by 8/12/1989) and military retirement (§ 105-153.5(b)(5a)).',
 })
@@ -139,7 +147,7 @@ export const ncRetirementIncome = sourced<StateIncomeTreatment>('taxed-ordinary'
 export const ncConversionTreatment = sourced<StateIncomeTreatment>('taxed-ordinary', {
   citation:
     'N.C.G.S. § 105-153.4 (federal AGI start) · IRC § 408A(d)(3) (conversion taxable amount is in federal AGI) · § 105-153.5(b) (no subtraction removes it) · NCDOR (corroboration)',
-  directionalUntilPinned: true,
+  directionalUntilPinned: false,
   pinTo: 'ncleg.gov codified G.S. 105-153.4 / .5(b) + IRC § 408A(d)(3)',
   note: '100% of the taxable conversion taxed at the flat rate (3.99% in 2026); NO age/source condition. Qualified Roth DISTRIBUTIONS in retirement are excluded from federal AGI → $0 NC tax. The NC-vs-PA conversion DELTA (NC taxes it, PA at qualified age does not) is the mandatory DND-012 fixture.',
 })
@@ -150,7 +158,7 @@ export const ncConversionTreatment = sourced<StateIncomeTreatment>('taxed-ordina
 export const ncCapitalGains = sourced<StateIncomeTreatment>('taxed-ordinary', {
   citation:
     'N.C.G.S. § 105-153.4 (gains/dividends already in federal AGI; no preferential-rate schedule) · NCDOR (corroboration)',
-  directionalUntilPinned: true,
+  directionalUntilPinned: false,
   pinTo: 'ncleg.gov codified G.S. 105-153.4',
   note: 'Dividends + short- AND long-term gains all taxed at the flat rate — no LTCG preference. OUT (named, never modeled): out-of-state municipal-bond interest add-back (§ 105-153.5(c)(1)) and the US-obligation/NC-muni interest deduction (§ 105-153.5(b)(1)).',
 })
@@ -165,7 +173,7 @@ export const paRateSchedule = sourced<StateFlatRateSchedule>(
   {
     citation:
       '72 P.S. § 7302 (PA personal income-tax rate 3.07%) · PA DOR PIT Guide rate history ("2004 – Present"), pa.gov fetched 2026-07-15',
-    directionalUntilPinned: true,
+    directionalUntilPinned: false,
     pinTo: 'pa.gov PIT Guide rate chapter + 72 P.S. § 7302',
     note: 'Stable since 2004; no scheduled step-down and no revenue trigger (unlike NC/SC/GA). One step, held forward. The 2.8% Shapiro budget proposal was never enacted — excluded.',
   },
@@ -179,7 +187,7 @@ export const paStandardDeduction = sourced<StateStandardDeduction>(
   {
     citation:
       'PA DOR PIT Guide "Deductions Not Allowed" table (federal standard deduction → "No provision"; no personal exemption), pa.gov fetched 2026-07-15',
-    directionalUntilPinned: true,
+    directionalUntilPinned: false,
     pinTo: 'pa.gov PIT Guide (Deductions chapter)',
     note: 'Literal $0 for MFJ AND single — PA has no standard deduction and no personal exemption (the only PA deductions are MSA/HSA/529/529A contributions, none of which a decumulating retiree touches). Low-income relief is Tax Forgiveness (Schedule SP), a step-function credit — OUT (named, never modeled, conservative-direction).',
   },
@@ -192,7 +200,7 @@ export const paStandardDeduction = sourced<StateStandardDeduction>(
 export const paBaseSystem = sourced<StateBaseSystem>('class-based', {
   citation:
     '72 P.S. § 7303 (eight enumerated income classes: compensation; interest; dividends; net profits; net gains; rents/royalties; estate/trust; gambling) · PA DOR PIT Guide (corroboration)',
-  directionalUntilPinned: true,
+  directionalUntilPinned: false,
   pinTo: 'pa.gov PIT Guide + 72 P.S. § 7303',
   note: 'NOT AGI-based — no linkage to federal AGI, no federal itemized/standard deductions, no personal exemptions. Do NOT compute PA tax by scaling federal AGI; assemble it from the class-level PA figures. No cross-class loss offset, no capital-loss carryover (second-order for a decumulating retiree).',
 })
@@ -202,7 +210,7 @@ export const paBaseSystem = sourced<StateBaseSystem>('class-based', {
 export const paSocialSecurity = sourced<StateIncomeTreatment>('exempt', {
   citation:
     '72 P.S. § 7303 (SS is not an enumerated taxable class) · PA DOR PIT Guide (SS / Railroad Retirement never taxable) · pa.gov fetched 2026-07-15',
-  directionalUntilPinned: true,
+  directionalUntilPinned: false,
   pinTo: 'pa.gov PIT Guide + 72 P.S. § 7303',
   note: '100% exempt at all income levels (contrast federal, which taxes up to 85%). Not counted in Tax Forgiveness eligibility income either.',
 })
@@ -213,7 +221,7 @@ export const paSocialSecurity = sourced<StateIncomeTreatment>('exempt', {
 export const paQualifiedAge = sourced(59.5, {
   citation:
     'PA DOR PIT Guide (eligible-PA-retirement-plan retirement-age gate; IRA default = federal 59½) · 61 Pa. Code § 101.6 (corroboration), pa.gov fetched 2026-07-15',
-  directionalUntilPinned: true,
+  directionalUntilPinned: false,
   pinTo: 'pa.gov PIT Guide (Gross Compensation / retirement-plan distributions)',
   note: 'The age gate on retirement-plan withdrawals AND Roth conversions. At/after 59½ → exempt; before it → the conservative TAXED arm. The date route can reach ages < 59½, so the gate is load-bearing.',
 })
@@ -224,7 +232,7 @@ export const paQualifiedAge = sourced(59.5, {
 export const paRetirementIncome = sourced<StateIncomeTreatment>('taxed-if-under-qualified-age', {
   citation:
     'PA DOR PIT Guide (Gross Compensation — eligible-PA-retirement-plan distributions exempt at retirement age; early distributions taxable via cost recovery) · 61 Pa. Code § 101.6 (corroboration)',
-  directionalUntilPinned: true,
+  directionalUntilPinned: false,
   pinTo: 'pa.gov PIT Guide (Gross Compensation / retirement-plan distributions)',
   note: 'Post-59½/post-retirement withdrawals: $0 PA tax (uncapped) — the core reason PA decumulation tax is near-zero. Pre-59½: TAXED (the conservative arm; PA has no federal-style early-withdrawal exceptions and taxes early distributions above previously-taxed contributions).',
 })
@@ -235,7 +243,7 @@ export const paRetirementIncome = sourced<StateIncomeTreatment>('taxed-if-under-
 export const paConversionTreatment = sourced<StateIncomeTreatment>('taxed-if-under-qualified-age', {
   citation:
     'PA DOR PIT Guide (eligible-plan distribution rule — a 59½+ conversion is not PA-taxable; Roth IRAs are themselves eligible PA plans) · pa.gov fetched 2026-07-15',
-  directionalUntilPinned: true,
+  directionalUntilPinned: false,
   pinTo: 'pa.gov PIT Guide (Gross Compensation / retirement-plan distributions)',
   note: 'Qualified-age (≥ 59½) conversion: $0 PA tax on the converted amount — PA is one of the few states that does not tax conversions for qualified-age retirees (the recommender treats PA conversion state-cost as ZERO). Under-59½: TAXED (the conservative arm — the primary sentence for the under-59½ conversion exemption could NOT be pinned; the date route can reach those ages).',
 })
@@ -246,7 +254,7 @@ export const paConversionTreatment = sourced<StateIncomeTreatment>('taxed-if-und
 export const paCapitalGains = sourced<StateIncomeTreatment>('taxed-ordinary', {
   citation:
     'PA DOR PIT Guide (net-gains / dividends / interest classes all taxed at 3.07%; no preferential LTCG rate, no holding-period distinction) · pa.gov fetched 2026-07-15',
-  directionalUntilPinned: true,
+  directionalUntilPinned: false,
   pinTo: 'pa.gov PIT Guide (net gains / dividends / interest)',
   note: 'Interest, dividends, and net gains all at 3.07% — no LTCG preference. OUT (each named, never modeled, conservative-direction): the US/PA-obligation interest exemption, Tax Forgiveness (Schedule SP), local Earned Income Tax (mechanism-confirmed $0 for decumulation income — EIT reaches only earned compensation/net profits), and Philadelphia School Income Tax.',
 })
@@ -265,7 +273,7 @@ export const paCapitalGains = sourced<StateIncomeTreatment>('taxed-ordinary', {
 export const flIncomeTax = sourced(0, {
   citation:
     'Fla. Const. Art. VII § 5(a) (no state personal income tax; constitutionally prohibited — changeable only by a 60%-voter amendment, none on the Nov-2026 ballot), verbatim-verified 2026-07-15',
-  directionalUntilPinned: true,
+  directionalUntilPinned: false,
   pinTo: 'Fla. Const. Art. VII § 5(a)',
   note: 'Literal $0 for all decumulation income in every year — no rate, no brackets, no standard deduction, no treatment rules. The pinned constitutional $0 is what lets the affirmation "nothing to add for Florida" ship as an honest fact, not a silent unbuilt-state default.',
 })

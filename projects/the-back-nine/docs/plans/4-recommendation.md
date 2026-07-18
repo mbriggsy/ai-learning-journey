@@ -69,6 +69,28 @@ sources: [docs/research/engine-validation-and-tax.md, docs/research/pre65-health
 > top-level persisted model field — the supersession block's item 3 already ruled the
 > schemaVersion narrative counterfactual; the `savedRecommendation?` record (U17) is where
 > a seedB is ever written down.
+>
+> **The 2026-07-18 ultramode-fold FORWARD SEAMS (U15's pre-build council inherits these BY
+> NAME — recorded here 2026-07-18 so the charter reads them from a durable home; the fold
+> commit d6a4b66d is the finding record):** (1) **the mint-binding family** —
+> `mintOracleToken` (oracleToken.ts) binds the run's params and the candidates' CONVERSION
+> AMOUNTS only: the token carries no binding to the full candidate-set identity it cleared,
+> and `RankingStabilityReport` (rankingStability.ts) carries counts/seeds but NO household
+> fingerprint — so a token or report minted over one (household, candidate set) is not
+> structurally refused when presented with another. Neutralized in U14 (one call site — the
+> harness builds both in-line); U15's solve entry is where a second call site is born, so
+> U15 closes both bindings or its council rules the gap with cause. (2) **`solverCandidateId`
+> injectivity** (`reference/solver-cases/types.ts:81` — `policy:amount`): injective over the
+> shipped enumerator's roster, but a non-custom `userBaseline` candidate can collide two
+> distinct candidates onto one id; U15 owns the proof or the id scheme the moment that
+> candidate ships. (3) **the tax-axis demotion margin** — `gradeCalibration.ts`'s
+> `assertDemotionAxisCalibrated` REFUSES a pay-less-tax (dollar-statistic) conversion
+> near-tie grade until U15's objective wiring calibrates that axis's own margin (the
+> survival-units 0.02 must never silently govern dollars). (4) For the record, the fold's
+> other rejections carry standing neutralizers and are NOT U15 seams: tieZ-unguarded (the
+> mint ε clause backstops), the PA presence companion (real-overlay tests pin positive PA
+> tax), SelectionScore (U16's spec-mandated contract), the deterministic-gate mean check
+> (a nonzero-mean fixture fails loud).
 
 *The optimality oracle, ranking-stability, grade calibration, the held-out-seed defense.*
 

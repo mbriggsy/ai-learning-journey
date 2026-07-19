@@ -250,7 +250,7 @@ anchored off the anchor year → 1 red (the C0 pin); (4) pre-anchor extrapolated
 1 red (the clamp arm); (5) the partition re-hardcoded to `conversion === null` → 2 red
 (conversions orphaned — the rank arm + its sibling); (6) Part D ridden on Part B's ratio →
 1 red (the disaggregation pin). GATES, all green by the pilot's own hand: typecheck · lint ·
-**2716 tests / 145 files** · bundle 249.8 KiB · verify:aca · verify:doc-stats (README +
+**2719 tests / 145 files** · bundle 249.8 KiB · verify:aca · verify:doc-stats (README +
 roadmap counts + the two now-false README narrative clauses swapped) · **verify:fit 28/28**
 (the re-tuned seeds + the reworded residual hold the one-frame law) · verify:csp 13 ·
 verify:state-tax. The Caddie walk on the reworded residual family + the ultramode review

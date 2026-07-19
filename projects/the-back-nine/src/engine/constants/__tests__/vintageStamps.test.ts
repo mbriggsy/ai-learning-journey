@@ -6,6 +6,16 @@
 import { describe, expect, it } from 'vitest'
 import { taxVintageStamp, TAX_YEAR, legalBasis, taxConstants } from '../tax'
 import { dateVintageStamp, CONTRIBUTION_YEAR } from '../index'
+import {
+  healthcareVintageStamp,
+  COVERAGE_YEAR,
+  acaEnhancedSubsidyStatus,
+  federalPovertyGuidelines,
+  irmaa,
+  partB2026,
+  medicareExtrasTypical,
+  medicareCostTrend,
+} from '../health'
 import { stateTaxVintageStamp, STATE_TAX_PROFILES, ncRateSchedule } from '../stateTax'
 import { BLEND_SNAPSHOT_AS_OF, TICKER_BLEND_ROWS } from '../../reference/tickerBlend'
 
@@ -95,6 +105,30 @@ describe('dateVintageStamp — the fuck-off-date clock producer', () => {
       contributionYear: CONTRIBUTION_YEAR,
       blendSnapshotAsOf: BLEND_SNAPSHOT_AS_OF,
     })
+  })
+})
+
+describe('healthcareVintageStamp — the healthcare clock producer (the trend unit closed the missing source-bind — the ultramode fold, 2026-07-19)', () => {
+  it('source-binds EVERY field to its own canonical entry (a re-typed literal in the stamp = a clock that can never fire)', () => {
+    // The one unanimous-material finding of the trend unit's review: this stamp had NO
+    // source-bind block (the round-trip tests compared the stamp to its own output — the
+    // insight-081 tautology), so a maintainer re-typing any field's literal here would
+    // silently kill that field's staleness clock. Each expectation reads the CANONICAL
+    // entry directly — per-figure provenance (insight 022), the taxVintageStamp idiom above.
+    expect(healthcareVintageStamp()).toEqual({
+      coverageYear: COVERAGE_YEAR,
+      acaStatus: acaEnhancedSubsidyStatus.value.regime2026,
+      acaVerifiedOn: acaEnhancedSubsidyStatus.value.verifiedOn,
+      fplGuidelineYear: federalPovertyGuidelines.value.guidelineYear,
+      irmaaTopTierFrozenThrough: irmaa.value.topTierFrozenThrough,
+      partBStandardMonthly: partB2026.value.standardPremiumMonthly,
+      medicareExtrasTypicalVintage: medicareExtrasTypical.value.vintage,
+      partBTrendVintage: medicareCostTrend.value.vintage,
+    })
+  })
+
+  it('is deterministic within a build (two calls, one stamp — the dirty-compare / staleness reader depend on it)', () => {
+    expect(healthcareVintageStamp()).toEqual(healthcareVintageStamp())
   })
 })
 

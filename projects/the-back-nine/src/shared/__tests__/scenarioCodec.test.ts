@@ -563,6 +563,26 @@ describe('v3 — the forward-written persist shape (U8, the first v3 writer)', (
     if (!bad.ok) expect(bad.reason).toBe('corrupt')
   })
 
+  it('healthcareVintage tolerates the ADDITIVE Part-B-trend vintage: present-string passes, absent passes (pre-trend stamp), non-string rejects', () => {
+    // The trend unit's sibling of the extras-typical arm above (the review fold, 2026-07-19 —
+    // the guard existed untested; a deleted guard would let a non-string vintage decode clean
+    // and turn deriveStaleness's compare into an unconditional false 'rules changed' note).
+    const stamp = {
+      coverageYear: 2026, acaStatus: 'reverted', acaVerifiedOn: '2026-06-04',
+      fplGuidelineYear: 2025, irmaaTopTierFrozenThrough: 2027, partBStandardMonthly: 123.45,
+    }
+    const withVintage: ScenarioV3 = {
+      ...V3,
+      healthcareVintage: { ...stamp, partBTrendVintage: 'medicare-trend-2026a' },
+    }
+    expect(decodeScenario(encodeScenario(withVintage))).toEqual({ ok: true, scenario: withVintage })
+    const without: ScenarioV3 = { ...V3, healthcareVintage: stamp }
+    expect(decodeScenario(encodeScenario(without))).toEqual({ ok: true, scenario: without })
+    const bad = decodeScenario(mutated(V3, (o) => { o.healthcareVintage = { ...stamp, partBTrendVintage: 7 } }))
+    expect(bad.ok).toBe(false)
+    if (!bad.ok) expect(bad.reason).toBe('corrupt')
+  })
+
   // P3·U13 — the save wall-time anchor + the two new vintage stamps (additive-optional).
   it('v3 WITH savedAt + taxVintageDetail + dateVintage round-trips exactly; absent-all decodes unchanged (the legacy-vault arm)', () => {
     const withU13: ScenarioV3 = {

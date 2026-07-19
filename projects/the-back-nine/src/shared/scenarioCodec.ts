@@ -571,9 +571,10 @@ function checkV3Fields(o: Obj): void {
     needVocab(o, 'retirementState', STATE_ROSTER, 'scenario')
   }
   // P3·U11 — the healthcare vintage stamp (additive-optional; one atomic object — a partial
-  // stamp set is meaningless, so every field is required when the object is present; the
-  // extras-typical vintage is the one ADDITIVE-OPTIONAL member — a pre-extras-unit stamp
-  // legitimately lacks it, and absence reads not-comparable, never "unchanged").
+  // stamp set is meaningless, so every field is required when the object is present; TWO
+  // additive-optional members ride inside it — the extras-typical vintage (the extras unit)
+  // and the Part-B-trend vintage (the trend unit) — a pre-unit stamp legitimately lacks each,
+  // and absence reads not-comparable, never "unchanged").
   if (o.healthcareVintage !== undefined) {
     const hv = o.healthcareVintage
     const path = 'scenario.healthcareVintage'

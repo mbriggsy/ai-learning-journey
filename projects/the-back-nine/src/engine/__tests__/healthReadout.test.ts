@@ -47,7 +47,8 @@ const dist = (o: SimOutput) => {
  *  (partB2026, scale 1); table years = V.E2 nominal ÷ (1 + cpiNearTermAvg)^(y − anchor) (the
  *  horizon-matched near-term deflator); beyond the table edge = the edge's real × the ultimate
  *  real escalator ((1 + ultimateNominalGrowth)/(1 + cpiUltimate)) per year. The Part B IRMAA
- *  surcharge for year y then scales by baseRealAt(y)/anchor (Part D is NOT scaled). */
+ *  surcharge for year y then scales by baseRealAt(y)/anchor; the Part D add-on trends separately
+ *  ({@link partDRealAt}, off Table V.E4). */
 const baseRealAt = (calendarYear: number): number => {
   const trend = medicareCostTrend.value
   const anchor = partB2026.value.standardPremiumMonthly
@@ -61,6 +62,25 @@ const baseRealAt = (calendarYear: number): number => {
   const edgeNominal = trend.premiums[trend.premiums.length - 1]!.nominalMonthly
   const edgeReal = edgeNominal / (1 + trend.cpiNearTermAvg) ** (edgeYear - trend.anchorYear)
   return edgeReal * realUltimate ** (calendarYear - edgeYear)
+}
+
+/** The real-dollar Part D IRMAA add-on for a calendar year + tier index, hand-derived (DND 012)
+ *  from the sourced Table V.E4 (`medicareCostTrend.partDIrmaa`) BY HAND — never via the engine's
+ *  schedule. Anchor year and earlier = the pinned anchor add-on (`irmaa.tiers[k].partDSurchargeMonthly`,
+ *  the one home — V.E4's 2026 row equals it); table years = V.E4 nominal ÷ (1 + cpiNearTermAvg)^(y −
+ *  anchor), the SAME horizon-matched deflator as Part B (the 2030 §11201 cliff is real primary data,
+ *  ~3× on tier 1); beyond the table edge the REAL add-on HOLDS at its 2035 level (the printed horizon
+ *  ends — an unsourced tail is never extrapolated). This is the disaggregated Part D term the engine
+ *  reaches as `partD_k × scales.partDByTier[k]` (the anchor cancels), so the combined year-y tier-k
+ *  monthly surcharge = tier_k.partBSurcharge × (baseRealAt(y)/anchor) + partDRealAt(y, k). */
+const partDRealAt = (calendarYear: number, tierIdx: number): number => {
+  const trend = medicareCostTrend.value
+  const anchorAddOn = irmaa.value.tiers[tierIdx]!.partDSurchargeMonthly
+  if (calendarYear <= trend.anchorYear) return anchorAddOn
+  const edgeYear = trend.anchorYear + trend.partDIrmaa.length
+  const y = Math.min(calendarYear, edgeYear) // beyond the edge: HOLD the 2035 real add-on
+  const nominal = trend.partDIrmaa.find((r) => r.calendarYear === y)!.addOnsMonthly[tierIdx]!
+  return nominal / (1 + trend.cpiNearTermAvg) ** (y - trend.anchorYear)
 }
 
 /** A real-dollar pre-65 couple whose ACA window (years 0–4) then Medicare window (5+) both
@@ -289,11 +309,12 @@ describe('healthReadout — the overlay healthOut sink', () => {
     // The surcharge stays 0 through death+lookback−1 (the billed filing is the LAGGED year's — still MFJ)…
     for (let t = 0; t < 2 + lookback; t++) expect(sink.irmaaSurcharge[t]).toBe(0)
     // …and fires at death+lookback exactly, on the single tier-1 step (per-person × the 1 enrolled
-    // survivor), scaled by THAT sim year's own trended base (the surcharge rides the CURRENT year's
-    // Part B scale while MAGI + filing stay the lagged year's — so years 4 (2030) and 5 (2031) carry
-    // DIFFERENT surcharges; Part D is NOT scaled).
+    // survivor). BOTH programs trend on THAT sim year (the surcharge rides the CURRENT year's scales
+    // while MAGI + filing stay the lagged year's): the Part B term scales by baseRealAt(y)/anchor and
+    // the Part D add-on is its OWN V.E4 real value (partDRealAt) — so years 4 (2030) and 5 (2031) carry
+    // DIFFERENT surcharges, and 2030 already reflects the §11201 Part D cliff (tier-1 ~3× jump).
     const singleTier1Annual = (t: number): number =>
-      1 * 12 * (tier1.partBSurchargeMonthly * (baseRealAt(startCal + t) / partB) + tier1.partDSurchargeMonthly)
+      1 * 12 * (tier1.partBSurchargeMonthly * (baseRealAt(startCal + t) / partB) + partDRealAt(startCal + t, 0))
     expect(sink.irmaaSurcharge[2 + lookback]).toBeCloseTo(singleTier1Annual(2 + lookback), 6)
     expect(sink.irmaaSurcharge[2 + lookback + 1]).toBeCloseTo(singleTier1Annual(2 + lookback + 1), 6)
     // ACA never priced (no pre-65 member) — every year reads the not-priced sentinel.

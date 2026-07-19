@@ -103,7 +103,26 @@ describe('canonical constants — shape & provenance (contract #6)', () => {
     expect(trend.cpiUltimate).toBe(0.024)
     expect(trend.ultimateNominalGrowth).toBe(0.038)
     expect(trend.reportEdition).toBe(2026)
-    expect(trend.vintage).toBe('part-b-trend-2026a')
+    expect(trend.vintage).toBe('medicare-trend-2026a')
+    // THE V.E4 FULL-VECTOR PIN (the Part D sourcing pass, 2026-07-19 — insight 021 again):
+    // transcribed from the primary PDF (Table V.E4 p.211–212) by the research pass, never from
+    // the committed module. THE 2030 JUMP IS DATA (IRA §11201's 6% cap lapses; the 20%-of-bid
+    // formula governs 2030+) — a smoothed or base-premium-derived table CANNOT reproduce it.
+    expect(trend.partDIrmaa).toEqual([
+      { calendarYear: 2027, addOnsMonthly: [15.4, 39.7, 64.0, 88.3, 96.4] },
+      { calendarYear: 2028, addOnsMonthly: [16.3, 42.1, 67.9, 93.6, 102.2] },
+      { calendarYear: 2029, addOnsMonthly: [17.3, 44.6, 71.9, 99.3, 108.4] },
+      { calendarYear: 2030, addOnsMonthly: [51.7, 103.4, 155.1, 206.8, 224.0] },
+      { calendarYear: 2031, addOnsMonthly: [53.5, 106.9, 160.4, 213.8, 231.6] },
+      { calendarYear: 2032, addOnsMonthly: [53.7, 107.4, 161.1, 214.8, 232.7] },
+      { calendarYear: 2033, addOnsMonthly: [55.5, 111.0, 166.5, 222.0, 240.5] },
+      { calendarYear: 2034, addOnsMonthly: [56.6, 113.2, 169.8, 226.4, 245.3] },
+      { calendarYear: 2035, addOnsMonthly: [58.4, 116.7, 175.1, 233.4, 252.9] },
+    ])
+    // The CROSS-CONSTANT IDENTITY for Part D (the 009 axis again): V.E4's 2026 row equals the
+    // pinned irmaa.tiers Part D surcharges TO THE CENT (the researcher's (d) check) — the anchor
+    // row is NOT re-typed in the trend table (one home per figure).
+    expect(trend.partDIrmaa.some((r) => r.calendarYear === 2026), 'the Part D anchor row must NOT be re-typed here').toBe(false)
     // Provenance: pinned (the packet verified the primary byte-for-byte), derivations NAMED in
     // the note (022 — the uniform near-term average + the consumer-derived ultimate real growth).
     expect(medicareCostTrend.directionalUntilPinned).toBe(false)

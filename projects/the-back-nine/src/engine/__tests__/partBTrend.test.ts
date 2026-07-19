@@ -44,6 +44,9 @@ const trend = medicareCostTrend.value
  *  2026 row IS this value, and the trend table deliberately omits the anchor row (shape test pins
  *  `premiums.some(2026) === false`). At scale 1.0 by definition. */
 const anchor = partB2026.value.standardPremiumMonthly
+/** The anchor-year Part D IRMAA add-ons per tier — the ONE home (`irmaa.tiers`); V.E4's 2026 row
+ *  equals it to the cent (the Part D sourcing pass, 2026-07-19). */
+const partDAnchor = irmaa.value.tiers.map((t) => t.partDSurchargeMonthly)
 /** The near-term horizon-matched deflator base (Table II.D1, 3.2%/yr avg on the near decade). */
 const NEAR = 1 + trend.cpiNearTermAvg
 /** The derived ultimate REAL escalator (1+3.8% nominal)/(1+2.4% CPI-W) ≈ 1.0137 — the tail's
@@ -67,13 +70,13 @@ const realFor = (year: number): number => nominalFor(year) / Math.pow(NEAR, year
 
 describe('buildPartBPricingSchedule — shape (c): deflated V.E2, pre-anchor clamp, C0 ultimate tail (DND-012)', () => {
   // Arms 1/2/4 index into one 2026-anchored schedule (calendar 2026 @ t0 … 2036 @ t10).
-  const sched = buildPartBPricingSchedule(trend, anchor, 2026, 11)
+  const sched = buildPartBPricingSchedule(trend, anchor, partDAnchor, 2026, 11)
 
   it('ARM 1 — the anchor year (calendar 2026, t=0) prices the anchor exactly at scale {1, 1}', () => {
     // y === anchorYear ⇒ baseMonthlyReal = partBBaseMonthlyAnchor verbatim; scale = anchor/anchor = 1.
     // The identity V.E2[2026] == partB2026 == scale-1 is the one-home pin (burned/057).
     expect(sched[0]!.baseMonthlyReal).toBe(anchor)
-    expect(sched[0]!.scales).toEqual({ partB: 1, partD: 1 })
+    expect(sched[0]!.scales).toEqual({ partB: 1, partDByTier: [1, 1, 1, 1, 1] })
   })
 
   it('ARM 2 — a mid-table year (calendar 2030, t=4): base_real = nominal(2030) ÷ 1.032^4, scale = base_real/anchor', () => {
@@ -84,7 +87,17 @@ describe('buildPartBPricingSchedule — shape (c): deflated V.E2, pre-anchor cla
     const expected2030 = realFor(2030) // nominal(2030) / Math.pow(NEAR, 4)
     expect(sched[4]!.baseMonthlyReal).toBeCloseTo(expected2030, 8)
     expect(sched[4]!.scales.partB).toBeCloseTo(expected2030 / anchor, 10)
-    expect(sched[4]!.scales.partD).toBe(1)
+    // Part D at 2030 — the FIRST post-cliff year (the Part D sourcing pass): V.E4(2030) =
+    // [51.70, 103.40, 155.10, 206.80, 224.00] nominal, deflated by the SAME 1.032^4, divided by
+    // the pinned anchor row [14.50, 37.50, 60.40, 83.30, 91.00]. HAND: tier 1 = 51.70/1.134276/14.50
+    // ≈ 3.1434; tier 5 = 224.00/1.134276/91.00 ≈ 2.1703 — the PER-TIER DIVERGENCE the scalar-scale
+    // (and any base-premium-derived) design cannot represent.
+    const vE4_2030 = trend.partDIrmaa.find((r) => r.calendarYear === 2030)!.addOnsMonthly
+    vE4_2030.forEach((nom, k) => {
+      expect(sched[4]!.scales.partDByTier[k]!, `partD tier ${k} @2030`).toBeCloseTo(nom / Math.pow(NEAR, 4) / partDAnchor[k]!, 10)
+    })
+    expect(sched[4]!.scales.partDByTier[0]!).toBeGreaterThan(3) // tier-1 post-cliff ≈ 3.14×
+    expect(sched[4]!.scales.partDByTier[4]!).toBeLessThan(2.5) //  tier-5 post-cliff ≈ 2.17× — genuinely different
     // Sanity: a mid-cliff-decade real premium sits well ABOVE the anchor (real growth is real).
     expect(sched[4]!.baseMonthlyReal).toBeGreaterThan(anchor)
   })
@@ -111,7 +124,7 @@ describe('buildPartBPricingSchedule — shape (c): deflated V.E2, pre-anchor cla
     // $174.70 / $185.00 (packet anchors) — BELOW the $202.90 2026 anchor, and lower still in real
     // terms — so clamping UP to the anchor OVERSTATES the pre-anchor Medicare cost (the honest,
     // survival-understating direction; a downward extrapolation would be the optimistic sin).
-    const clamp = buildPartBPricingSchedule(trend, anchor, 2024, 6) // 2024..2029
+    const clamp = buildPartBPricingSchedule(trend, anchor, partDAnchor, 2024, 6) // 2024..2029
     expect(clamp[0]!.baseMonthlyReal).toBe(anchor) // 2024 clamps to anchor …
     expect(clamp[1]!.baseMonthlyReal).toBe(anchor) // 2025 clamps to anchor …
     expect(clamp[2]!.baseMonthlyReal).toBe(anchor) // 2026 IS the anchor year (y <= anchorYear)
@@ -141,7 +154,7 @@ describe('buildPartBPricingSchedule — shape (c): deflated V.E2, pre-anchor cla
   })
 
   it('ARM 5 — long-tail sanity (insight 028): a ~2075 horizon (50yr) stays finite/positive; consecutive tail ratios are CONSTANT', () => {
-    const tail = buildPartBPricingSchedule(trend, anchor, 2026, 50) // calendar 2026..2075
+    const tail = buildPartBPricingSchedule(trend, anchor, partDAnchor, 2026, 50) // calendar 2026..2075
     expect(tail.length).toBe(50)
     // Finite and strictly positive THROUGHOUT (never Infinity/NaN — the persisted-sentinel / DND-009
     // class; a runaway escalator or a zero-divide would surface here on the far horizon).
@@ -160,15 +173,15 @@ describe('buildPartBPricingSchedule — shape (c): deflated V.E2, pre-anchor cla
 
   describe('ARM 6 — fail-loud on malformed inputs (burned/062; insight 010)', () => {
     it('a non-integer startCalendarYear throws', () => {
-      expect(() => buildPartBPricingSchedule(trend, anchor, 2026.5, 10)).toThrow(/startCalendarYear must be an integer/)
+      expect(() => buildPartBPricingSchedule(trend, anchor, partDAnchor, 2026.5, 10)).toThrow(/startCalendarYear must be an integer/)
     })
     it('a negative horizon throws', () => {
-      expect(() => buildPartBPricingSchedule(trend, anchor, 2026, -1)).toThrow(/horizon must be a non-negative integer/)
+      expect(() => buildPartBPricingSchedule(trend, anchor, partDAnchor, 2026, -1)).toThrow(/horizon must be a non-negative integer/)
     })
     it('a non-finite or zero anchor premium throws', () => {
-      expect(() => buildPartBPricingSchedule(trend, Number.NaN, 2026, 10)).toThrow(/anchor premium must be finite > 0/)
-      expect(() => buildPartBPricingSchedule(trend, 0, 2026, 10)).toThrow(/anchor premium must be finite > 0/)
-      expect(() => buildPartBPricingSchedule(trend, -1, 2026, 10)).toThrow(/anchor premium must be finite > 0/)
+      expect(() => buildPartBPricingSchedule(trend, Number.NaN, partDAnchor, 2026, 10)).toThrow(/anchor premium must be finite > 0/)
+      expect(() => buildPartBPricingSchedule(trend, 0, partDAnchor, 2026, 10)).toThrow(/anchor premium must be finite > 0/)
+      expect(() => buildPartBPricingSchedule(trend, -1, partDAnchor, 2026, 10)).toThrow(/anchor premium must be finite > 0/)
     })
     it('a malformed trend table (GAP year OR non-positive nominal) throws with the named message', () => {
       // Doctored MedicareCostTrendTable literals (NOT dated-figure retypes — synthetic values). The
@@ -189,8 +202,95 @@ describe('buildPartBPricingSchedule — shape (c): deflated V.E2, pre-anchor cla
         ],
         vintage: 'doctored-neg',
       }
-      expect(() => buildPartBPricingSchedule(gapTable, anchor, 2026, 10)).toThrow(/malformed trend table/)
-      expect(() => buildPartBPricingSchedule(negTable, anchor, 2026, 10)).toThrow(/malformed trend table/)
+      expect(() => buildPartBPricingSchedule(gapTable, anchor, partDAnchor, 2026, 10)).toThrow(/malformed trend table/)
+      expect(() => buildPartBPricingSchedule(negTable, anchor, partDAnchor, 2026, 10)).toThrow(/malformed trend table/)
+    })
+    it('a malformed Part D table (row-count mismatch OR a non-positive add-on) throws with the named message', () => {
+      const shortD: MedicareCostTrendTable = {
+        ...trend,
+        partDIrmaa: trend.partDIrmaa.slice(0, 4), // 4 rows vs 9 premium rows — one table, one edge
+        vintage: 'doctored-short-d',
+      }
+      const negD: MedicareCostTrendTable = {
+        ...trend,
+        partDIrmaa: trend.partDIrmaa.map((r, i) =>
+          i === 2 ? { ...r, addOnsMonthly: [...r.addOnsMonthly.slice(0, 4), -1] } : r,
+        ),
+        vintage: 'doctored-neg-d',
+      }
+      expect(() => buildPartBPricingSchedule(shortD, anchor, partDAnchor, 2026, 10)).toThrow(/one table, one edge/)
+      expect(() => buildPartBPricingSchedule(negD, anchor, partDAnchor, 2026, 10)).toThrow(/malformed Part D trend row/)
+      // The mis-LENGTH scales guard at the consumer (a 4-scale vector against 5 tiers):
+      expect(() =>
+        irmaaTierSurchargeMonthly(irmaa.value.tiers[0]!.singleMagiThreshold + 1, 'single', irmaa.value, {
+          partB: 1,
+          partDByTier: [1, 1, 1, 1],
+        }),
+      ).toThrow(/partDByTier carries 4 scales for 5 tiers/)
+    })
+  })
+
+  describe('the Part D per-tier trend arms (the Part D sourcing pass, 2026-07-19 — DND-012/DND-009)', () => {
+    const sched = buildPartBPricingSchedule(trend, anchor, partDAnchor, 2026, 12) // 2026..2037
+
+    it('the pre-cliff capped years ride ≈6%/yr NOMINAL per tier (the §11201 cap made visible), and the 2030 cliff BREAKS it', () => {
+      // HAND (V.E4 verbatim / the pinned anchor row): 2027 nominal ratios per tier =
+      // [15.40/14.50, 39.70/37.50, 64.00/60.40, 88.30/83.30, 96.40/91.00] ≈ 1.059–1.062 — the
+      // capped regime; real scale = nominal ratio / 1.032 ≈ 1.026–1.029. The 2029→2030 step is the
+      // formula reset: tier-1 nominal 17.30→51.70 (≈2.99×) — no smooth model reproduces it, which
+      // is WHY the table ships verbatim (never a fitted rate across the boundary; the researcher's
+      // named trap #1).
+      const y2027 = sched[1]!.scales.partDByTier
+      trend.partDIrmaa[0]!.addOnsMonthly.forEach((nom, k) => {
+        const nominalRatio = nom / partDAnchor[k]!
+        expect(nominalRatio).toBeGreaterThan(1.055)
+        expect(nominalRatio).toBeLessThan(1.065)
+        expect(y2027[k]!).toBeCloseTo(nominalRatio / NEAR, 10)
+      })
+      const t1_2029 = sched[3]!.scales.partDByTier[0]!
+      const t1_2030 = sched[4]!.scales.partDByTier[0]!
+      expect(t1_2030 / t1_2029).toBeGreaterThan(2.5) // the cliff (nominal ≈ 2.99×, real ≈ 2.90×)
+    })
+
+    it('beyond the 2035 edge the Part D scales HOLD the edge-year real level (the printed horizon ends; Part B keeps escalating)', () => {
+      // 2036 (t=10) and 2037 (t=11) carry BYTE-IDENTICAL Part D scales to 2035 (t=9) — the
+      // unsourced tail is never extrapolated as sourced (the disclosed hold; optimistic-direction
+      // named in the constant note) — while Part B's tail keeps growing at its sourced escalator.
+      expect(sched[10]!.scales.partDByTier).toEqual(sched[9]!.scales.partDByTier)
+      expect(sched[11]!.scales.partDByTier).toEqual(sched[9]!.scales.partDByTier)
+      expect(sched[10]!.scales.partB).toBeGreaterThan(sched[9]!.scales.partB)
+    })
+
+    it('DND-009 — the derived Part B surcharge path reproduces the Trustees’ OWN Table V.E3 within CMS rounding (±$0.30), 2027–2035', () => {
+      // Table V.E3 (p.208–209, transcribed verbatim from the primary PDF by the Part D research
+      // pass — an INDEPENDENT CMS computation, not our formula's echo): the per-tier Part B
+      // income-related monthly adjustment amounts. Our design derives that path as
+      // pinned2026_k × (V.E2 nominal(y)/202.90) — the cost-share identity riding the trended
+      // base. The cross-check: derived NOMINAL vs V.E3 verbatim, tolerance max($0.50, 0.2%) —
+      // CMS rounds each tier-year cell of its independent computation to the dime AND our
+      // derivation compounds the anchor row's own dime-rounding through the tier multiple
+      // (largest observed gap: 2035 65% tier, derived $576.89 vs printed $577.40 — 0.09%).
+      // Bit-exact equality would fail against CMS's own rounding (the researcher's trap (ii));
+      // a 0.2% relative bound still refutes any real drift (a mis-deflated path is off by ≥3%).
+      const VE3: ReadonlyArray<readonly [number, readonly number[]]> = [
+        [2027, [83.7, 209.4, 335.1, 460.7, 502.6]],
+        [2028, [89.8, 224.5, 359.2, 493.9, 538.8]],
+        [2029, [95.3, 238.4, 381.5, 524.5, 572.2]],
+        [2030, [102.1, 255.4, 408.7, 561.9, 613.0]],
+        [2031, [108.8, 272.1, 435.4, 598.6, 653.0]],
+        [2032, [116.0, 290.1, 464.2, 638.3, 696.3]],
+        [2033, [125.4, 313.6, 501.8, 689.9, 752.6]],
+        [2034, [135.3, 338.4, 541.5, 744.5, 812.2]],
+        [2035, [144.4, 360.9, 577.4, 794.0, 866.2]],
+      ]
+      for (const [year, addOns] of VE3) {
+        const nominalRatio = nominalFor(year) / anchor
+        irmaa.value.tiers.forEach((tier, k) => {
+          const derived = tier.partBSurchargeMonthly * nominalRatio
+          const tolerance = Math.max(0.5, 0.002 * addOns[k]!)
+          expect(Math.abs(derived - addOns[k]!), `V.E3 ${year} tier ${k}: derived ${derived.toFixed(2)} vs printed ${addOns[k]}`).toBeLessThanOrEqual(tolerance)
+        })
+      }
     })
   })
 })
@@ -205,7 +305,7 @@ describe('irmaaTierSurchargeMonthly — the disaggregated trend scales (hawk-hon
     const magi = t0.singleMagiThreshold + 1
     expect(magi).toBeGreaterThan(t0.singleMagiThreshold) // over tier-1 …
     expect(magi).toBeLessThan(tiers[1]!.singleMagiThreshold) //   … under tier-2 ⇒ cleanly tier 0
-    const scales: IrmaaSurchargeScales = { partB: 2, partD: 1 }
+    const scales: IrmaaSurchargeScales = { partB: 2, partDByTier: [1, 1, 1, 1, 1] }
     // EXACT: partB rides ×2, partD stays ×1 (its OWN path — never Part B's ratio). A
     // Part-D-scaled-by-Part-B mutant would compute partB×2 + partD×2 here (off by one partD),
     // reddening this assertion — the disaggregation catch that ARM 8's anchor tie-out (both
@@ -220,13 +320,14 @@ describe('irmaaTierSurchargeMonthly — the disaggregated trend scales (hawk-hon
     )
     // NaN/zero/negative scales THROW on EITHER field (finiteness-first; a NaN scale would silently
     // zero/corrupt a surcharge through the multiply — insight 010).
+    const unit = [1, 1, 1, 1, 1]
     for (const bad of [
-      { partB: Number.NaN, partD: 1 },
-      { partB: 1, partD: Number.NaN },
-      { partB: 0, partD: 1 },
-      { partB: 1, partD: 0 },
-      { partB: -1, partD: 1 },
-      { partB: 1, partD: -1 },
+      { partB: Number.NaN, partDByTier: unit },
+      { partB: 1, partDByTier: [1, 1, Number.NaN, 1, 1] },
+      { partB: 0, partDByTier: unit },
+      { partB: 1, partDByTier: [1, 1, 1, 0, 1] },
+      { partB: -1, partDByTier: unit },
+      { partB: 1, partDByTier: [-1, 1, 1, 1, 1] },
     ]) {
       expect(() => irmaaTierSurchargeMonthly(magi, 'single', SCHED, bad)).toThrow(/surcharge scales must be finite > 0/)
     }

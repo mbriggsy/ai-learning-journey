@@ -432,24 +432,38 @@ export function solveAcaFundedGross(
 /** The per-program IRMAA surcharge trend scales for one billed year (the hawk-honored
  *  DISAGGREGATION): Part B surcharges ride the trended Part B base via the statutory
  *  cost-share identity (tier totals = {35/50/65/80/85}% of full program cost vs the base's
- *  25% ⇒ surcharge ∝ base, exact 2026 tie-out at scale 1); Part D surcharges are on their
- *  OWN path — NEVER Part B's ratio (different program, different trend). */
+ *  25% ⇒ surcharge ∝ base, exact 2026 tie-out at scale 1); Part D surcharges ride their OWN
+ *  primary path — PER TIER (Table V.E4 verbatim): the IRA §11201 2030 formula reset moves the
+ *  tiers by DIFFERENT ratios (tier 1 ≈ 3.57× vs tier 5 ≈ 2.46×), so a scalar Part D scale —
+ *  or Part B's ratio — mis-prices the exact cliff the primary prints. */
 export interface IrmaaSurchargeScales {
   readonly partB: number
-  readonly partD: number
+  /** Per-tier Part D scale, ascending, length = the IRMAA tier count (the consumer asserts
+   *  the length against the schedule — a tier-count drift fails loud, never mis-indexes). */
+  readonly partDByTier: readonly number[]
 }
 
 /** The anchor-year (2026-real) scales — the identity element. For readout geometry that
- *  speaks in today's terms (`nextIrmaaStep`) and for tests of the step function itself. */
-export const IRMAA_ANCHOR_SCALES: IrmaaSurchargeScales = { partB: 1, partD: 1 }
+ *  speaks in today's terms (`nextIrmaaStep`) and for tests of the step function itself.
+ *  Length 5 = the IRMAA tier count (shape-test-pinned); the length assert in the consumer
+ *  makes a 6th-tier drift loud here too. */
+export const IRMAA_ANCHOR_SCALES: IrmaaSurchargeScales = { partB: 1, partDByTier: [1, 1, 1, 1, 1] }
 
 /** Finiteness-first (insight 010): a NaN scale would silently zero or corrupt a surcharge
  *  through the multiply — reject loudly, never coerce (burned/062). */
-function assertSurchargeScales(scales: IrmaaSurchargeScales): void {
-  if (!(Number.isFinite(scales.partB) && scales.partB > 0) || !(Number.isFinite(scales.partD) && scales.partD > 0)) {
+function assertSurchargeScales(scales: IrmaaSurchargeScales, tierCount: number): void {
+  if (!(Number.isFinite(scales.partB) && scales.partB > 0)) {
+    throw new Error(`[healthOverlay] IRMAA surcharge scales must be finite > 0 (got partB=${scales.partB}) — insight 010`)
+  }
+  if (scales.partDByTier.length !== tierCount) {
     throw new Error(
-      `[healthOverlay] IRMAA surcharge scales must be finite > 0 (got partB=${scales.partB}, partD=${scales.partD}) — insight 010`,
+      `[healthOverlay] partDByTier carries ${scales.partDByTier.length} scales for ${tierCount} tiers — a mis-length silently mis-prices a tier (burned/062)`,
     )
+  }
+  for (const s of scales.partDByTier) {
+    if (!(Number.isFinite(s) && s > 0)) {
+      throw new Error(`[healthOverlay] IRMAA surcharge scales must be finite > 0 (got a partD tier scale ${s}) — insight 010`)
+    }
   }
 }
 
@@ -478,8 +492,13 @@ export interface PartBYearPricing {
  *     CONSTRUCTION (the tail anchors at the edge's own real value), pinned by test.
  *
  * The Part B surcharge scale is baseMonthlyReal(y)/anchor (the cost-share identity). The
- * Part D scale is HELD at 1 — held-and-DISCLOSED (the council's fallback pending a sourced
- * Part D path; the residual copy names it), never silently ridden on Part B's ratio.
+ * Part D surcharge scales are PER-TIER off Table V.E4 verbatim (the Part D sourcing pass,
+ * 2026-07-19): scale_k(y) = realAddOn_k(y)/anchorAddOn_k with the same horizon-matched
+ * deflator — the 2030 §11201 formula reset moves tiers by DIFFERENT ratios, so neither a
+ * scalar nor a base-premium derivation survives the primary. Beyond the table edge the Part D
+ * scales HOLD their edge-year real level (the printed horizon ends at 2035 — an unsourced
+ * tail is never extrapolated as sourced; the hold's optimistic direction is the disclosed
+ * residual) while Part B rides its sourced ultimate escalator.
  *
  * Iterative (cumulative multiplies, no per-year pow) — this runs once per PATH inside the
  * 16k-path loop, so the construction stays O(horizon) multiplies.
@@ -487,6 +506,9 @@ export interface PartBYearPricing {
 export function buildPartBPricingSchedule(
   trend: MedicareCostTrendTable,
   partBBaseMonthlyAnchor: number,
+  /** The anchor-year Part D IRMAA add-ons per tier — bound from `irmaa.tiers[].partDSurchargeMonthly`
+   *  (the one home) by the caller; V.E4's 2026 row equals it to the cent (identity test-pinned). */
+  partDAnchorMonthlyByTier: readonly number[],
   startCalendarYear: number,
   horizon: number,
 ): readonly PartBYearPricing[] {
@@ -504,11 +526,33 @@ export function buildPartBPricingSchedule(
     )
   }
   // The table contract (shape-test-pinned on the constant; re-asserted here fail-loud because
-  // the derivation below WALKS it): ascending contiguous from anchor+1.
+  // the derivation below WALKS it): ascending contiguous from anchor+1, the Part D rows on the
+  // SAME year lattice (one table, one edge), every add-on finite > 0 at the anchor's tier count.
   trend.premiums.forEach((row, i) => {
     if (row.calendarYear !== trend.anchorYear + 1 + i || !(Number.isFinite(row.nominalMonthly) && row.nominalMonthly > 0)) {
       throw new Error(
         `[healthOverlay] buildPartBPricingSchedule: malformed trend table at index ${i} (year ${row.calendarYear}, nominal ${row.nominalMonthly}) — expected ascending contiguous from ${trend.anchorYear + 1} (burned/062)`,
+      )
+    }
+  })
+  if (partDAnchorMonthlyByTier.length === 0 || partDAnchorMonthlyByTier.some((a) => !(Number.isFinite(a) && a > 0))) {
+    throw new Error(
+      `[healthOverlay] buildPartBPricingSchedule: the Part D anchor add-ons must be non-empty finite > 0 (got [${partDAnchorMonthlyByTier}]) — burned/062`,
+    )
+  }
+  if (trend.partDIrmaa.length !== trend.premiums.length) {
+    throw new Error(
+      `[healthOverlay] buildPartBPricingSchedule: the Part D table carries ${trend.partDIrmaa.length} rows vs ${trend.premiums.length} premium rows — one table, one edge (burned/062)`,
+    )
+  }
+  trend.partDIrmaa.forEach((row, i) => {
+    if (
+      row.calendarYear !== trend.anchorYear + 1 + i ||
+      row.addOnsMonthly.length !== partDAnchorMonthlyByTier.length ||
+      row.addOnsMonthly.some((a) => !(Number.isFinite(a) && a > 0))
+    ) {
+      throw new Error(
+        `[healthOverlay] buildPartBPricingSchedule: malformed Part D trend row at index ${i} (year ${row.calendarYear}) — expected ascending contiguous from ${trend.anchorYear + 1} with ${partDAnchorMonthlyByTier.length} finite positive add-ons (burned/062)`,
       )
     }
   })
@@ -534,6 +578,24 @@ export function buildPartBPricingSchedule(
     tailReal = real
     realByYear.set(y, real)
   }
+  // The Part D per-tier REAL scales per calendar year: table years deflate V.E4 verbatim by the
+  // same horizon-matched deflator and divide by the anchor add-ons; pre-anchor years are the
+  // identity; beyond the edge the EDGE year's real scales HOLD (the printed horizon ends).
+  const anchorPartDScales: readonly number[] = partDAnchorMonthlyByTier.map(() => 1)
+  const partDScalesByYear = new Map<number, readonly number[]>()
+  {
+    let deflatorD = 1
+    let lastScales: readonly number[] = anchorPartDScales
+    for (let y = trend.anchorYear; y <= Math.max(lastYear, trend.anchorYear); y++) {
+      if (y > trend.anchorYear && y <= tableEdgeYear) {
+        deflatorD *= 1 + trend.cpiNearTermAvg
+        const row = trend.partDIrmaa[y - trend.anchorYear - 1]!
+        const d = deflatorD
+        lastScales = row.addOnsMonthly.map((nominal, k) => nominal / d / partDAnchorMonthlyByTier[k]!)
+      }
+      partDScalesByYear.set(y, lastScales)
+    }
+  }
   const schedule: PartBYearPricing[] = []
   for (let t = 0; t < horizon; t++) {
     const y = startCalendarYear + t
@@ -544,9 +606,10 @@ export function buildPartBPricingSchedule(
         `[healthOverlay] buildPartBPricingSchedule: non-finite real premium at sim year ${t} (calendar ${y}) — refusing (burned/062)`,
       )
     }
+    const partDByTier = y <= trend.anchorYear ? anchorPartDScales : partDScalesByYear.get(y)!
     schedule.push({
       baseMonthlyReal,
-      scales: { partB: baseMonthlyReal / partBBaseMonthlyAnchor, partD: 1 },
+      scales: { partB: baseMonthlyReal / partBBaseMonthlyAnchor, partDByTier },
     })
   }
   return schedule
@@ -590,13 +653,14 @@ export function irmaaTierSurchargeMonthly(
       `[healthOverlay] irmaaTierSurchargeMonthly: IRMAA-MAGI must be finite (got ${magi}) — a NaN passes every > compare (insight 010)`,
     )
   }
-  assertSurchargeScales(scales)
+  assertSurchargeScales(scales, schedule.tiers.length)
   // tiers are ascending (constants.shape pins it); the LAST one strictly exceeded is the highest.
   let surchargeMonthly = 0
-  for (const tier of schedule.tiers) {
+  for (let k = 0; k < schedule.tiers.length; k++) {
+    const tier = schedule.tiers[k]!
     const threshold = filing === 'mfj' ? tier.mfjMagiThreshold : tier.singleMagiThreshold
     if (magi > threshold)
-      surchargeMonthly = tier.partBSurchargeMonthly * scales.partB + tier.partDSurchargeMonthly * scales.partD
+      surchargeMonthly = tier.partBSurchargeMonthly * scales.partB + tier.partDSurchargeMonthly * scales.partDByTier[k]!
   }
   return surchargeMonthly
 }

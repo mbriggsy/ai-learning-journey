@@ -19,17 +19,22 @@ import { fplForHousehold } from '@engine/healthOverlay'
 
 // ---------------------------------------------------------------------------
 // The Medicare-cost-trend hand oracle (DND/012 — the trend sourcing unit, 2026-07-19). ONE canonical
-// home for the trended per-year Part B bill (the four M4/C3/M6/KTD-9 batteries all read it). Sim year
-// t bills calendar `startCalendarYear + t` (the fixtures start 2026, so t=0 → the 2026 anchor). Part B
-// is NO LONGER real-flat: this reads the dated figures SYMBOLICALLY off the committed constants and
-// applies the DOCUMENTED formula by hand — never buildPartBPricingSchedule / medicareAnnualCost, which
-// are exactly what these fixtures GUARD:
+// home for the trended per-year Medicare bill (the four M4/C3/M6/KTD-9 batteries all read it). Sim year
+// t bills calendar `startCalendarYear + t` (the fixtures start 2026, so t=0 → the 2026 anchor). NEITHER
+// Part B NOR the IRMAA surcharge is real-flat any more: this reads the dated figures SYMBOLICALLY off the
+// committed constants and applies the DOCUMENTED formula by hand — never buildPartBPricingSchedule /
+// medicareAnnualCost, which are exactly what these fixtures GUARD:
 //   base_real(y) = the anchor for 2026 (and the pre-anchor clamp); else the V.E2 nominal for y deflated
 //     by the horizon-matched near-term CPI average applied uniformly per table year; past the table the
 //     ultimate real escalator ((1+g_nom)/(1+cpi_ult)) compounds off the 2035 edge.
-//   one year's full cost = count × (base_real + IRMAA surcharge) × 12, where the Part B surcharge rides
-//     the base's real trend scale (base_real / anchor) and Part D is HELD at anchor scale 1 (the
-//     council-ratified DISAGGREGATION — Part D does not ride Part B's ratio).
+//   surcharge_k(y) = partB_k × (base_real(y)/anchor)  +  partDreal_k(y), the DISAGGREGATED pair (council
+//     wf_c673339e-257, hawk-honored): the Part B surcharge rides the base's real trend scale, while
+//     Part D rides its OWN sourced Table V.E4 path — the per-tier nominal add-on for y deflated by the
+//     same near-term CPI (NOT Part B's ratio; the 2030 §11201 reset moves tiers by different ratios, so
+//     a scalar cannot represent it). The anchor row (y ≤ 2026) is the pinned irmaa.tiers[].partD… (V.E4's
+//     2026 row equals it to the cent). Beyond the 2035 edge the Part D real value HOLDS (the printed
+//     horizon ends — an unsourced tail is never extrapolated), while Part B rides its ultimate escalator.
+//   one year's full cost = count × (base_real + surcharge_k) × 12.
 const partBAnchorMonthly = partB2026.value.standardPremiumMonthly // read, never re-typed (copyGuard)
 const partBNominalMonthly = (calendarYear: number) =>
   medicareCostTrend.value.premiums.find((p) => p.calendarYear === calendarYear)!.nominalMonthly
@@ -42,14 +47,25 @@ const partBBaseRealMonthly = (calendarYear: number): number => {
   const realUltimate = (1 + trend.ultimateNominalGrowth) / (1 + trend.cpiUltimate)
   return partBBaseRealMonthly(tableEdgeYear) * realUltimate ** (calendarYear - tableEdgeYear)
 }
-/** One post-65 year's full Medicare cost (real $): count × (base_real + IRMAA surcharge) × 12 — the
+// The tier-k Part D IRMAA surcharge in REAL anchor-year dollars: the anchor row for y ≤ 2026 (the pinned
+// irmaa constant), else the V.E4 nominal add-on for the year (or the 2035 edge for y past the horizon —
+// the HOLD) deflated by the same horizon-matched near-term CPI. Reads the constants; types no literal.
+const partDIrmaaRealMonthly = (tierIdx: number, calendarYear: number): number => {
+  const trend = medicareCostTrend.value
+  if (calendarYear <= trend.anchorYear) return irmaa.value.tiers[tierIdx]!.partDSurchargeMonthly
+  const tableEdgeYear = trend.anchorYear + trend.partDIrmaa.length
+  const y = calendarYear <= tableEdgeYear ? calendarYear : tableEdgeYear // HOLD the edge beyond the printed horizon
+  const nominal = trend.partDIrmaa.find((r) => r.calendarYear === y)!.addOnsMonthly[tierIdx]!
+  return nominal / (1 + trend.cpiNearTermAvg) ** (y - trend.anchorYear)
+}
+/** One post-65 year's full Medicare cost (real $): count × (base_real + surcharge_k) × 12 — the
  *  independent hand oracle for the trended per-year bill. `tierIdx` null = the implicit base tier (no
- *  surcharge); the Part B surcharge scales with the year's real base trend, Part D stays anchor scale. */
+ *  surcharge). Part B surcharge scales with the year's real base trend; Part D rides its own V.E4 path. */
 const medicareAnnualReal = (count: number, tierIdx: number | null, calendarYear: number): number => {
   const baseReal = partBBaseRealMonthly(calendarYear)
   if (tierIdx === null) return count * baseReal * 12
-  const tier = irmaa.value.tiers[tierIdx]!
-  const surcharge = tier.partBSurchargeMonthly * (baseReal / partBAnchorMonthly) + tier.partDSurchargeMonthly
+  const partBSurcharge = irmaa.value.tiers[tierIdx]!.partBSurchargeMonthly * (baseReal / partBAnchorMonthly)
+  const surcharge = partBSurcharge + partDIrmaaRealMonthly(tierIdx, calendarYear)
   return count * (baseReal + surcharge) * 12
 }
 
@@ -3905,10 +3921,11 @@ describe('taxOverlay — M6: the cross-overlay integration battery (ACA × IRMAA
     // anchor puts t=0..2 INSIDE the senior bonus's 2025–2028 window and t=3,4 (2029, 2030)
     // PAST the sunset — the sunset unit, council 2026-07-09). The Medicare bill now TRENDS per
     // calendar year (the Medicare-cost-trend unit): each year's base is its V.E2 real premium
-    // (deflated), and t=4 adds the single-column tier-1 surcharge scaled to that year's base.
-    // Medicare per year (real, ×1 enrolled, ×12): t=0 (2026) 2,434.80 · t=1 (2027) 2,436.05 ·
-    // t=2 (2028) 2,529.52 · t=3 (2029) 2,603.94 · t=4 (2030) 3,958.80 (tier-1). Each feeds
-    // fundingNet, so every gross shifts off the old flat-base run:
+    // (deflated), and t=4 adds the single-column tier-1 surcharge — Part B scaled to that year's base
+    // PLUS the trended Part D add-on (its own V.E4 path, deflated; the 2030 §11201 reset is why the
+    // tier-1 bill jumps hard). Medicare per year (real, ×1 enrolled, ×12): t=0 (2026) 2,434.80 ·
+    // t=1 (2027) 2,436.05 · t=2 (2028) 2,529.52 · t=3 (2029) 2,603.94 · t=4 (2030) 4,331.75 (tier-1).
+    // Each feeds fundingNet, so every gross shifts off the old flat-base run:
     //   t=0 (2026: MFJ, count65=1, full bonus, 12% band): over-cliff gross funds fundingNet + 16,000
     //     = 95,000 + 2,434.80 + 16,000 ⇒ g = (113,434.80 − 5,278)/0.88 = 122,905.4545
     //     (taxable 83,055.45 ∈ (24,800, 100,800) ✓; MAGI < 150,000 ⇒ bonus full ✓).
@@ -3922,11 +3939,11 @@ describe('taxOverlay — M6: the cross-overlay integration battery (ACA × IRMAA
     //     tax = 5,800 + 0.22·(g − 18,150 − 50,400) = 0.22·g − 9,281 ⇒
     //     g = (100,000 + 2,603.94 − 9,281)/0.78 = 119,644.7915 (taxable 101,494.79 ∈
     //     (50,400, 105,700) ✓ — interior, no bonus term to phase).
-    //   t=4 (2030: single, post-sunset, tier-1 surcharge now in the bill):
-    //     g = (100,000 + 3,958.80 − 9,281)/0.78 = 121,381.7905 (taxable 103,231.79 ✓ interior).
-    // TOTALS: medicare = 2,434.80 + 2,436.05 + 2,529.52 + 2,603.94 + 3,958.80 = 13,963.10; premium =
+    //   t=4 (2030: single, post-sunset, tier-1 surcharge now in the bill — Part B + trended Part D):
+    //     g = (100,000 + 4,331.75 − 9,281)/0.78 = 121,859.9402 (taxable 103,709.94 ✓ interior).
+    // TOTALS: medicare = 2,434.80 + 2,436.05 + 2,529.52 + 2,603.94 + 4,331.75 = 14,336.06; premium =
     // 2 × 16,000 = 32,000; terminal = 2,000,000 − (122,905.4545 + 122,906.8710 + 118,594.8363 +
-    //          119,644.7915 + 121,381.7905) = 1,394,566.2561.
+    //          119,644.7915 + 121,859.9402) = 1,394,088.1064.
     const owner = { birthYear: 1959 }
     const spouse = { birthYear: 1965 }
     const cfg: TaxOverlayConfig = {
@@ -3971,7 +3988,7 @@ describe('taxOverlay — M6: the cross-overlay integration battery (ACA × IRMAA
     it('the IRMAA clock is +2yr: t=2,3 bill the MFJ column (no surcharge on a 109k–218k MAGI); the single column — and the surcharge — first land at t=4', () => {
       // Per-year Medicare cost via horizon differencing. t=2: lag reads MAGI[0] = 122,905.45
       // against filing[0] = MFJ ⇒ under 218,000 ⇒ base only — the widow is STILL billed as MFJ
-      // (the mistimed-penalty mechanism). t=4: lag reads MAGI[2] = 118,471.31 against
+      // (the mistimed-penalty mechanism). t=4: lag reads MAGI[2] = 118,594.84 against
       // filing[2] = SINGLE ⇒ over 109,000 ⇒ tier-1 surcharge ×1. A current-filing regression
       // (filing[t]) would surcharge t=2,3 too; a current-MAGI regression (MAGI[t]) moves the
       // dollar values; a dead-member-billing regression (the spouse turns 65 at t=4 — dead)
@@ -3998,7 +4015,7 @@ describe('taxOverlay — M6: the cross-overlay integration battery (ACA × IRMAA
         8,
       )
       expect(r.totalNetPremiumReal).toBe(32_000)
-      expect(r.terminalReal).toBeCloseTo(1_394_566.2561, 2)
+      expect(r.terminalReal).toBeCloseTo(1_394_088.1064, 2)
     })
   })
 

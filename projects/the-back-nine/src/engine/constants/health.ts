@@ -216,19 +216,30 @@ export const medicareCostTrend = sourced<MedicareCostTrendTable>(
       { calendarYear: 2034, nominalMonthly: 338.5 },
       { calendarYear: 2035, nominalMonthly: 360.6 },
     ],
+    partDIrmaa: [
+      { calendarYear: 2027, addOnsMonthly: [15.4, 39.7, 64.0, 88.3, 96.4] },
+      { calendarYear: 2028, addOnsMonthly: [16.3, 42.1, 67.9, 93.6, 102.2] },
+      { calendarYear: 2029, addOnsMonthly: [17.3, 44.6, 71.9, 99.3, 108.4] },
+      { calendarYear: 2030, addOnsMonthly: [51.7, 103.4, 155.1, 206.8, 224.0] },
+      { calendarYear: 2031, addOnsMonthly: [53.5, 106.9, 160.4, 213.8, 231.6] },
+      { calendarYear: 2032, addOnsMonthly: [53.7, 107.4, 161.1, 214.8, 232.7] },
+      { calendarYear: 2033, addOnsMonthly: [55.5, 111.0, 166.5, 222.0, 240.5] },
+      { calendarYear: 2034, addOnsMonthly: [56.6, 113.2, 169.8, 226.4, 245.3] },
+      { calendarYear: 2035, addOnsMonthly: [58.4, 116.7, 175.1, 233.4, 252.9] },
+    ],
     cpiNearTermAvg: 0.032,
     cpiUltimate: 0.024,
     ultimateNominalGrowth: 0.038,
-    vintage: 'part-b-trend-2026a',
+    vintage: 'medicare-trend-2026a',
   },
   {
     citation:
-      '2026 Medicare Trustees Report (cms.gov, released 2026-06-09; ONE edition, no mixing), verified byte-for-byte against the primary PDF (research wf_933cef3b-16b, 2026-07-19): premiums = Table V.E2 p.207 verbatim (2033 is $313.60 in the primary — secondary press printing $313.65 loses); the 2026 anchor $202.90 (finalized) lives in partB2026, identity test-pinned. cpiNearTermAvg = Table II.D1 2026–2035 CPI-W average 3.2%; cpiUltimate = §III.B Table III.B12 CPI-W ultimate 2.4%; ultimateNominalGrowth = §III.D ultimate per-beneficiary Part B cost growth 3.8%/yr nominal EXCL. demographics (the report’s "1.7% real" is GDP-deflated, NOT CPI — importing it overstates CPI-real by ~0.35pp; the packet’s named trap).',
+      '2026 Medicare Trustees Report (cms.gov, released 2026-06-09; ONE edition, no mixing), verified byte-for-byte against the primary PDF (research wf_933cef3b-16b + the Part D pass, both 2026-07-19): premiums = Table V.E2 p.207 verbatim (2033 is $313.60 in the primary — secondary press printing $313.65 loses); the 2026 anchor $202.90 (finalized) lives in partB2026, identity test-pinned. partDIrmaa = Table V.E4 p.211–212 verbatim per tier (the 2026 anchor row [14.50, 37.50, 60.40, 83.30, 91.00] lives in irmaa.tiers, identity test-pinned to the cent); THE 2030 JUMP IS THE PRIMARY’S OWN DATA — IRA §11201’s 6%/yr base-premium cap covers 2024–2029, and for 2030+ the 20%-of-bid formula governs (report p.148: "the base beneficiary premium will be set at the maximum of a) 6 percent increase from the prior year and b) 20 percent of the national average monthly bid amount and the estimated catastrophic reinsurance"; V.E4 footnote 3 names the faster 2030+ growth). cpiNearTermAvg = Table II.D1 2026–2035 CPI-W average 3.2%; cpiUltimate = §III.B Table III.B12 CPI-W ultimate 2.4%; ultimateNominalGrowth = §III.D ultimate per-beneficiary Part B cost growth 3.8%/yr nominal EXCL. demographics (the report’s "1.7% real" is GDP-deflated, NOT CPI — importing it overstates CPI-real by ~0.35pp; the packet’s named trap).',
     directionalUntilPinned: false,
     pinTo:
-      '2026 Medicare Trustees Report Tables V.E2 (p.207) / II.D1 / III.B12 + §III.D; ANNUAL RE-VERIFY against each new Trustees Report (~June; the medicareTrend.reverify tripwire reds when the 2027 edition is due un-adopted)',
+      '2026 Medicare Trustees Report Tables V.E2 (p.207) / V.E4 (p.211–212) / II.D1 / III.B12 + §III.D + the §11201 passage (p.148); ANNUAL RE-VERIFY against each new Trustees Report (~June; the medicareTrend.reverify tripwire reds when the 2027 edition is due un-adopted)',
     note:
-      'DERIVATION CHOICES (named, insight 022): the near-term deflator applies the 3.2% AVERAGE uniformly per table year (per-year CPI rows are not transcribed; horizon-matched by construction); the ultimate real growth is derived in the consumer ((1+0.038)/(1+0.024)−1 ≈ +1.37%/yr), never stored. 2027’s low nominal step (+3.25%) is a policy artifact — never anchor a single year (packet). Real-flat is FALSIFIED in every window: near-term ≈+2.8–3%/yr real over horizon-matched CPI, ultimate ≈+1.4%/yr. Consumers: buildPartBPricingSchedule (healthOverlay) → runTaxAwareDecumulation’s per-year Part-B pricing (taxOverlay, PART_B_PRICING_MODE ’trended’); the U14 token’s trend clause reads both halves. The vintage bump fires the U13 staleness clock on pre-trend vaults BY DESIGN.',
+      'DERIVATION CHOICES (named, insight 022): the near-term deflator applies the 3.2% AVERAGE uniformly per table year (per-year CPI rows are not transcribed; horizon-matched by construction); the ultimate real growth is derived in the consumer ((1+0.038)/(1+0.024)−1 ≈ +1.37%/yr), never stored. 2027’s low nominal V.E2 step (+3.25%) is a policy artifact — never anchor a single year (packet). Real-flat is FALSIFIED in every window: near-term ≈+2.8–3%/yr real over horizon-matched CPI, ultimate ≈+1.4%/yr. PART D IS CONSUMED PER-TIER VERBATIM (never a scalar scale, never derived from the Part D base premium — the per-tier ratios diverge across the 2030 boundary, tier 1 ≈ 3.57× vs tier 5 ≈ 2.46×; primary-source-wins over the council’s guessed tied-to-base mechanism, dated in the build spec); beyond the 2035 table edge the Part D add-ons HOLD their 2035 real level (the printed horizon ends — an unsourced tail is never extrapolated as sourced; the optimistic direction of the hold is disclosed in the residual) while Part B rides its sourced ultimate escalator. Consumers: buildPartBPricingSchedule (healthOverlay) → runTaxAwareDecumulation’s per-year pricing (taxOverlay, PART_B_PRICING_MODE ’trended’); the U14 token’s trend clause reads both halves. The vintage bump fires the U13 staleness clock on pre-trend vaults BY DESIGN.',
   },
 )
 

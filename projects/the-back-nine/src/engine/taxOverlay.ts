@@ -1180,6 +1180,7 @@ export function runTaxAwareDecumulation(
       ? buildPartBPricingSchedule(
           medicareCostTrend.value,
           partB2026.value.standardPremiumMonthly,
+          irmaaSchedule.tiers.map((t) => t.partDSurchargeMonthly),
           config.household.startCalendarYear,
           netWithdrawals.length,
         )

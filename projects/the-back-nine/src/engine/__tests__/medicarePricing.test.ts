@@ -56,31 +56,53 @@ import {
 // ---------------------------------------------------------------------------
 const SCHED = irmaa.value
 const BASE = partB2026.value.standardPremiumMonthly // base Part B / person / month (the 2026 anchor)
-const TREND = medicareCostTrend.value // the sourced Part B cost-trend table (V.E2, deflated horizon-matched)
+const TREND = medicareCostTrend.value // the sourced Medicare cost-trend table (V.E2 base + V.E4 Part D)
 const ANCHOR_YEAR = TREND.anchorYear // 2026 — read, never hard-coded
 const LOOKBACK = SCHED.magiLookbackYears // 2 — read, never hard-coded
+/** The horizon-matched near-term deflator (1 + cpiNearTermAvg)^(year − anchor), accumulated
+ *  iteratively so it matches the engine's cumulative product; anchor (and earlier) → 1. Shared by
+ *  the Part B base AND the per-tier Part D real derivations (both ride the SAME CPI path). */
+const deflatorFor = (calendarYear: number): number => {
+  let deflator = 1
+  for (let y = ANCHOR_YEAR + 1; y <= calendarYear; y++) deflator *= 1 + TREND.cpiNearTermAvg
+  return deflator
+}
 /**
  * The REAL (anchor-dollar) monthly base Part B for a CALENDAR year — the Medicare-cost-trend unit's
  * documented horizon-matched deflation applied BY HAND off the sourced constant (DND-012: never
  * `buildPartBPricingSchedule`). The anchor (and any earlier year) clamps to `BASE`; a table year is
- * its nominal V.E2 premium ÷ (1 + cpiNearTermAvg)^(year − anchor), the deflator accumulated
- * iteratively. Every dated figure is READ off the constant (the nominals + the CPI) — no premium
- * literal is re-typed (the copyGuard). Fixtures stay inside the table window (≤ 2035).
+ * its nominal V.E2 premium ÷ (1 + cpiNearTermAvg)^(year − anchor). Every dated figure is READ off the
+ * constant (the nominals + the CPI) — no premium literal is re-typed (the copyGuard). Fixtures stay
+ * inside the table window (≤ 2035).
  */
 const baseRealMonthly = (calendarYear: number): number => {
   if (calendarYear <= ANCHOR_YEAR) return BASE
   const row = TREND.premiums[calendarYear - ANCHOR_YEAR - 1]
   if (row === undefined) throw new Error(`baseRealMonthly: ${calendarYear} is beyond the trend table edge`)
-  let deflator = 1
-  for (let y = ANCHOR_YEAR + 1; y <= calendarYear; y++) deflator *= 1 + TREND.cpiNearTermAvg
-  return row.nominalMonthly / deflator
+  return row.nominalMonthly / deflatorFor(calendarYear)
+}
+/**
+ * The REAL (anchor-dollar) monthly Part D IRMAA add-on for tier `i` at a CALENDAR year — the Part D
+ * half of the trend, now ALSO trended (Table V.E4, `medicareCostTrend.value.partDIrmaa`): per-TIER
+ * nominal ÷ the SAME horizon-matched deflator (the IRA §11201 2030 reset moves tiers by different
+ * ratios, so a scalar/Part-B-ratio scale is forbidden — the engine carries `partDByTier`). The 2026
+ * anchor is NOT in `partDIrmaa`; it is the pinned `irmaa.tiers[i].partDSurchargeMonthly` (the one
+ * home), so the anchor (and earlier) clamps to it. Read symbolically off the constant — no add-on
+ * literal is re-typed. Fixtures stay ≤ 2035.
+ */
+const partDRealMonthly = (i: number, calendarYear: number): number => {
+  if (calendarYear <= ANCHOR_YEAR) return SCHED.tiers[i]!.partDSurchargeMonthly
+  const row = TREND.partDIrmaa[calendarYear - ANCHOR_YEAR - 1]
+  if (row === undefined) throw new Error(`partDRealMonthly: ${calendarYear} is beyond the trend table edge`)
+  return row.addOnsMonthly[i]! / deflatorFor(calendarYear)
 }
 /** Tier `i`'s combined (Part B + Part D) monthly surcharge for a billed CALENDAR year: the Part B
- *  surcharge rides the trended base via the cost-share identity (scale = baseReal(y)/anchor), Part D
- *  does NOT (the hawk-honored disaggregation). Defaults to the anchor (scale 1 = the pre-trend twin). */
+ *  surcharge rides the trended base via the cost-share identity (scale = baseReal(y)/anchor), and the
+ *  Part D add-on rides its OWN per-tier V.E4 path (the hawk-honored disaggregation — same deflator,
+ *  independent nominals). Defaults to the anchor (both at scale 1 = the pinned pre-trend twin). */
 const tierSurchargeMonthly = (i: number, calendarYear: number = ANCHOR_YEAR) =>
   SCHED.tiers[i]!.partBSurchargeMonthly * (baseRealMonthly(calendarYear) / BASE) +
-  SCHED.tiers[i]!.partDSurchargeMonthly
+  partDRealMonthly(i, calendarYear)
 /** The hand oracle: `count × (baseReal(y) + surcharge(y)) × 12` (medicareAnnualCost's independent
  *  twin), trend-priced for calendar year `y` (default = the 2026 anchor, scale 1 — every anchor-only
  *  fixture keeps its old value). */
@@ -189,8 +211,9 @@ describe('post-65 Medicare pricing — the seed→history handoff crossing (simu
 
     // HAND-DERIVED expected series (count = 2 enrolled every year). The Medicare-cost-trend unit made
     // the base per-YEAR (V.E2 deflated horizon-matched), NO LONGER one flat scalar; the IRMAA Part B
-    // surcharge rides that trended base (cost-share identity ⇒ scale = baseReal(y)/anchor), Part D does
-    // not. Sim year t prices calendar 2026 + t (overlay.startCalendarYear).
+    // surcharge rides that trended base (cost-share identity ⇒ scale = baseReal(y)/anchor), and the
+    // Part D surcharge ALSO trends now — per-tier off V.E4, its own nominals on the same deflator (the
+    // hawk-honored disaggregation). Sim year t prices calendar 2026 + t (overlay.startCalendarYear).
     const baseAt = (t: number) => medicareAnnual(2, null, 2026 + t) // 2 × baseReal(2026+t) × 12
     const tier1SurchargeAt = (t: number) => medicareAnnual(2, 0, 2026 + t) - baseAt(t) // the year's scaled surcharge
 
@@ -218,8 +241,9 @@ describe('post-65 Medicare pricing — the seed→history handoff crossing (simu
     expect(s[1]!.irmaaSurchargeP50).not.toBe(s[LOOKBACK]!.irmaaSurchargeP50) // 0 → tier 1 AT t=lookback
     expect(s[0]!.irmaaSurchargeP50).toBe(s[1]!.irmaaSurchargeP50) // flat-ZERO through the seed window (no change at t=1)
     // The TIER does not change after the crossing (history = CONV every year ⇒ tier 1 throughout), but
-    // the surcharge now TRENDS UP with the base it rides — so t=lookback+1 sits strictly ABOVE
-    // t=lookback (each its own year's scaled tier-1, pinned above); real-flat pricing once had them equal.
+    // the surcharge now TRENDS UP — BOTH components climb year over year (the Part B scale rises with
+    // the base, the Part D add-on rises off V.E4) — so t=lookback+1 sits strictly ABOVE t=lookback
+    // (each its own year's scaled tier-1, pinned above); real-flat pricing once had them equal.
     expect(s[LOOKBACK + 1]!.irmaaSurchargeP50).toBeGreaterThan(s[LOOKBACK]!.irmaaSurchargeP50)
     // Direction sanity: the recorded-history year genuinely costs MORE than the seed years.
     expect(s[LOOKBACK]!.irmaaSurchargeP50).toBeGreaterThan(0)

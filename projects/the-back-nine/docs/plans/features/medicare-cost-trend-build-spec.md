@@ -217,6 +217,32 @@ at close — the unit ships the council's ratified FALLBACK (held-and-DISCLOSED:
 the residual naming the drug-plan piece); if the research lands 'sourceable', building the
 Part D path is its own small follow-up increment, never a rider.
 
+**THE PART D SOURCING PASS — SAME DAY (2026-07-19, post-ca41256f):** the supplemental research
+returned **SOURCEABLE** — the 2026 Trustees Report prints BOTH the per-year Part D base
+beneficiary premium (Table V.E2: $38.99 → $77.81, with the §11201 2030 formula reset
+$46.44→$68.93) AND the per-year per-tier Part D IRMAA add-ons (Table V.E4, p.211–212,
+2026–2035), every 2026 anchor matching our pinned constants TO THE CENT. The council's
+source-it arm therefore applies — **with one dated MECHANISM CORRECTION (primary-source-wins):
+the council guessed the add-ons ride the Part D base premium; the primary falsifies that
+across the 2030 boundary** (the tiers jump by DIFFERENT ratios — tier 1 ≈ 3.57×, tier 5 ≈
+2.46× — while the base jumps 1.77×; V.E4 footnote 3 names the new base-premium percentage),
+so the engine consumes **V.E4 verbatim per tier**: `partDIrmaa` joins `medicareCostTrend`
+(2027–2035 rows; the 2026 anchor stays in `irmaa.tiers` — one home, identity-pinned),
+`IrmaaSurchargeScales.partD` became `partDByTier` (scalar FORBIDDEN — it cannot represent the
+2030 divergence), the resolver deflates V.E4 by the same horizon-matched deflator and HOLDS
+the 2035 real level beyond the printed edge (an unsourced tail is never extrapolated as
+sourced; the hold's optimistic direction is the constant note's + detail-door era's residual),
+and the vintage bumped `part-b-trend-2026a` → `medicare-trend-2026a` (same-day, zero installed
+base). The V.E3 DND-009 cross-check LANDED with the research's verbatim transcription: the
+derived Part B surcharge path reproduces CMS's independent Table V.E3 within max($0.50, 0.2%)
+across 2027–2035 (largest gap 0.09%). The residual copy swapped a SECOND time — the still-flat
+referent is now the extra-coverage premiums ALONE, and the roth note prices the drug-plan
+piece's climb with the >2035 hold as its named modeling choice. **The interim (Part-D-flat)
+Tail sentence had also wrapped one extra Linux-metrics line on the budget composite and pushed
+the R13 disclaimer 1px past the fold on CI ONLY (run 29696587230 — the burned/055 class); the
+shorter post-Part-D truth restores the one-line class.** The 2035-edge Part D hold + the
+annual re-verify tripwire share the same ~2027 Trustees re-pin event.
+
 **S7 — CLOSED (2026-07-19):** the mutant battery — 6 planted red → reverted with named
 killers: (1) the lying-mirror mode revert → 3 red (the flip witness + the LIVE clause arm +
 the mint); (2) the wrong scale base → 3 red (anchor/scales/tie-out arms); (3) the splice
@@ -224,7 +250,7 @@ anchored off the anchor year → 1 red (the C0 pin); (4) pre-anchor extrapolated
 1 red (the clamp arm); (5) the partition re-hardcoded to `conversion === null` → 2 red
 (conversions orphaned — the rank arm + its sibling); (6) Part D ridden on Part B's ratio →
 1 red (the disaggregation pin). GATES, all green by the pilot's own hand: typecheck · lint ·
-**2712 tests / 145 files** · bundle 249.8 KiB · verify:aca · verify:doc-stats (README +
+**2716 tests / 145 files** · bundle 249.8 KiB · verify:aca · verify:doc-stats (README +
 roadmap counts + the two now-false README narrative clauses swapped) · **verify:fit 28/28**
 (the re-tuned seeds + the reworded residual hold the one-frame law) · verify:csp 13 ·
 verify:state-tax. The Caddie walk on the reworded residual family + the ultramode review

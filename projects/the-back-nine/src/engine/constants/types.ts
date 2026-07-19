@@ -361,8 +361,24 @@ export interface PartBPremiumProjectionYear {
   readonly nominalMonthly: number
 }
 
+/** One projected NOMINAL monthly Part D IRMAA add-on row (2026 Trustees Report Table V.E4,
+ *  p.211–212 — transcribed verbatim, one value per surcharge tier ascending). The 2026 anchor
+ *  row is NOT stored here — the Part D surcharges' one canonical home is
+ *  `irmaa.tiers[].partDSurchargeMonthly` (identity test-pinned). THE 2030 CLIFF IS REAL DATA:
+ *  the IRA §11201 6%/yr cap on the base beneficiary premium lapses after 2029 and the
+ *  20%-of-bid formula takes over — the add-ons jump ~3× in 2030 (V.E4 footnote 3). The
+ *  per-tier ratios DIVERGE across that boundary (tier 1 ≈ 3.57×, tier 5 ≈ 2.46×), so a
+ *  scalar Part-D scale — or any derivation off the Part D base premium — is FALSIFIED by the
+ *  primary; the engine consumes these rows verbatim (primary-source-wins over the council's
+ *  guessed tied-to-base mechanism, recorded in the build spec). */
+export interface PartDIrmaaProjectionYear {
+  readonly calendarYear: number
+  /** Monthly per-person add-on per surcharge tier, ascending (length = the IRMAA tier count). */
+  readonly addOnsMonthly: readonly number[]
+}
+
 /**
- * The Medicare Part-B cost-trend table (the trend sourcing unit, council wf_c673339e-257).
+ * The Medicare cost-trend table (the trend sourcing unit, council wf_c673339e-257).
  * Shape (c): the year-keyed primary table — Table V.E2's nominal premiums verbatim for the
  * near decade, deflated IN-ENGINE horizon-matched (near-term CPI on the near decade, never
  * the ultimate), with the ultimate real escalator beyond the table's edge. Every field is a
@@ -378,6 +394,10 @@ export interface MedicareCostTrendTable {
   /** Projected nominal premiums for anchorYear+1 .. the table edge, ascending contiguous
    *  (Table V.E2 verbatim; the anchor-year row lives in `partB2026`). */
   readonly premiums: readonly PartBPremiumProjectionYear[]
+  /** Projected nominal Part D IRMAA add-ons for anchorYear+1 .. the table edge, ascending
+   *  contiguous (Table V.E4 verbatim; the anchor-year row lives in `irmaa.tiers`). Consumed
+   *  per-tier — see {@link PartDIrmaaProjectionYear} for why a scalar scale is forbidden. */
+  readonly partDIrmaa: readonly PartDIrmaaProjectionYear[]
   /** Near-term CPI-W average over the table window (Table II.D1, 2026–2035: 3.2%/yr) —
    *  applied uniformly per-year within the table (the horizon-matched deflator; the
    *  uniform-application choice is a named derivation, see the entry note). */

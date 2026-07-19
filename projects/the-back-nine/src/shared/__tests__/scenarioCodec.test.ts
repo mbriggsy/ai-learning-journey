@@ -647,6 +647,26 @@ describe('v3 — the forward-written persist shape (U8, the first v3 writer)', (
     }
   })
 
+  // Act-4 · U15 — the chosen Tier-2 goal (a needVocab enum, additive-optional). ABSENT is the
+  // explicit unset sentinel (burned/062 — never a default goal); an out-of-vocab string is corrupt.
+  it('v3 WITH chosenGoal round-trips exactly — both goals persist; ABSENT (pre-U15/unset) decodes untouched; an out-of-vocab goal is corrupt (never a default)', () => {
+    for (const goal of ['leave-more', 'pay-less-tax'] as const) {
+      const s: ScenarioV3 = { ...V3, chosenGoal: goal }
+      expect(decodeScenario(encodeScenario(s)), `${goal} must round-trip`).toEqual({ ok: true, scenario: s })
+    }
+    // ABSENT: the unset sentinel — a pre-U15 vault (or an unchosen goal) decodes unchanged.
+    const decoded = decodeScenario(encodeScenario(V3))
+    expect(decoded).toEqual({ ok: true, scenario: V3 })
+    if (decoded.ok && decoded.scenario.schemaVersion === 3) expect(decoded.scenario.chosenGoal).toBeUndefined()
+    // The needVocab rejection arm: a fabricated / typo'd goal is corruption named LOUD, NEVER coerced
+    // to a plausible default goal (asserting a goal the user never picked is the calm-but-wrong shape).
+    for (const bad of ['leave more', 'PAY-LESS-TAX', 'live-bigger-now', '', 1, null]) {
+      const d = decodeScenario(mutated(V3, (o) => { o.chosenGoal = bad }))
+      expect(d.ok, `chosenGoal=${String(bad)} must be rejected`).toBe(false)
+      if (!d.ok && d.reason === 'corrupt') expect(d.detail).toContain('chosenGoal')
+    }
+  })
+
   it('v3 WITH the stateTaxVintage stamp round-trips exactly; it is an ATOMIC object — a missing profile or a non-string profile rejects (the healthcareVintage precedent)', () => {
     const withStamp: ScenarioV3 = {
       ...V3,

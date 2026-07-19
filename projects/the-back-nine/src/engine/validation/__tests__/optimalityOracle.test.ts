@@ -62,14 +62,14 @@ describe('case (i) — constant-marginal-rate: the dollars, the tie, and the deg
   const exp = caseConstantRate.expected()
 
   it('lifetime tax matches the closed forms EXACTLY (per policy, re-derived from the table)', () => {
-    expect(byId(verdict.outcomes, 'taxable-first:0').score.lifetimeTaxMeanReal).toBeCloseTo(exp.lifetimeTaxTaxableFirst!, 2)
-    expect(byId(verdict.outcomes, 'proportional:0').score.lifetimeTaxMeanReal).toBeCloseTo(exp.lifetimeTaxProportional!, 2)
-    expect(byId(verdict.outcomes, 'pre-tax-first:0').score.lifetimeTaxMeanReal).toBeCloseTo(exp.lifetimeTaxPretaxFirst!, 2)
+    expect(byId(verdict.outcomes, 'conventional:taxable-first:0').score.lifetimeTaxMeanReal).toBeCloseTo(exp.lifetimeTaxTaxableFirst!, 2)
+    expect(byId(verdict.outcomes, 'grid:proportional:0').score.lifetimeTaxMeanReal).toBeCloseTo(exp.lifetimeTaxProportional!, 2)
+    expect(byId(verdict.outcomes, 'grid:pre-tax-first:0').score.lifetimeTaxMeanReal).toBeCloseTo(exp.lifetimeTaxPretaxFirst!, 2)
   })
 
   it('bracket-fill degrades to pre-tax-first BYTE-identically (no active rail ⇒ +∞ ceiling — the live degrade witness)', () => {
-    const pretaxFirst = byId(verdict.outcomes, 'pre-tax-first:0')
-    const bracketFill = byId(verdict.outcomes, 'bracket-fill:0')
+    const pretaxFirst = byId(verdict.outcomes, 'grid:pre-tax-first:0')
+    const bracketFill = byId(verdict.outcomes, 'grid:bracket-fill:0')
     expect(bracketFill.score.lifetimeTaxMeanReal).toBe(pretaxFirst.score.lifetimeTaxMeanReal)
     expect(bracketFill.distribution.terminalValuesReal).toEqual(pretaxFirst.distribution.terminalValuesReal)
   })
@@ -87,19 +87,19 @@ describe('case (ii) — the bracket-fill conversion optimum (fill to the 22%-top
   const exp = caseBracketFill.expected()
 
   it('the after-tax bequest matches the closed form at every anchor', () => {
-    expect(byId(verdict.outcomes, 'taxable-first:0').score.afterTaxBequestMeanReal).toBeCloseTo(exp.bequestConv0!, 2)
-    expect(byId(verdict.outcomes, `taxable-first:${exp.anchor10}`).score.afterTaxBequestMeanReal).toBeCloseTo(exp.bequestA10!, 2)
-    expect(byId(verdict.outcomes, `taxable-first:${exp.anchor12}`).score.afterTaxBequestMeanReal).toBeCloseTo(exp.bequestA12!, 2)
-    expect(byId(verdict.outcomes, `taxable-first:${exp.anchor22}`).score.afterTaxBequestMeanReal).toBeCloseTo(exp.bequestA22!, 2)
+    expect(byId(verdict.outcomes, 'conventional:taxable-first:0').score.afterTaxBequestMeanReal).toBeCloseTo(exp.bequestConv0!, 2)
+    expect(byId(verdict.outcomes, `grid:taxable-first:${exp.anchor10}`).score.afterTaxBequestMeanReal).toBeCloseTo(exp.bequestA10!, 2)
+    expect(byId(verdict.outcomes, `grid:taxable-first:${exp.anchor12}`).score.afterTaxBequestMeanReal).toBeCloseTo(exp.bequestA12!, 2)
+    expect(byId(verdict.outcomes, `grid:taxable-first:${exp.anchor22}`).score.afterTaxBequestMeanReal).toBeCloseTo(exp.bequestA22!, 2)
   })
 
   it('the conversion tax is the world’s ONLY tax (the winner’s lifetime tax = its conversion’s own tax)', () => {
-    expect(byId(verdict.outcomes, `taxable-first:${exp.anchor22}`).score.lifetimeTaxMeanReal).toBeCloseTo(exp.lifetimeTaxA22!, 2)
-    expect(byId(verdict.outcomes, 'taxable-first:0').score.lifetimeTaxMeanReal).toBeCloseTo(0, 2)
+    expect(byId(verdict.outcomes, `grid:taxable-first:${exp.anchor22}`).score.lifetimeTaxMeanReal).toBeCloseTo(exp.lifetimeTaxA22!, 2)
+    expect(byId(verdict.outcomes, 'conventional:taxable-first:0').score.lifetimeTaxMeanReal).toBeCloseTo(0, 2)
   })
 
   it('presence companion (insight 029): the winner’s conversion genuinely relocated into Roth on every path', () => {
-    const winner = byId(verdict.outcomes, `taxable-first:${exp.anchor22}`)
+    const winner = byId(verdict.outcomes, `grid:taxable-first:${exp.anchor22}`)
     const roth = winner.distribution.taxAware!.terminalRothReal
     expect(roth.length).toBeGreaterThan(0)
     expect(roth.every((r) => r >= exp.anchor22! - 1)).toBe(true) // the full amount landed (r = 0 world)
@@ -111,8 +111,8 @@ describe('case (ii) — the bracket-fill conversion optimum (fill to the 22%-top
     })
     const ranked = rankCandidates(again, caseBracketFill.goal, 0).map((o) => solverCandidateId(o.candidate))
     expect(ranked).toEqual([...caseBracketFill.expectedRankingIds])
-    expect(byId(again, `taxable-first:${exp.anchor22}`).score.afterTaxBequestMeanReal).toBe(
-      byId(verdict.outcomes, `taxable-first:${exp.anchor22}`).score.afterTaxBequestMeanReal,
+    expect(byId(again, `grid:taxable-first:${exp.anchor22}`).score.afterTaxBequestMeanReal).toBe(
+      byId(verdict.outcomes, `grid:taxable-first:${exp.anchor22}`).score.afterTaxBequestMeanReal,
     )
   })
 })
@@ -123,23 +123,23 @@ describe('case (iii) — the ACA cliff: the true ranking, the hand-exact premium
   const premiumsOf = (id: string): number => meanOf(byId(verdict.outcomes, id).distribution.taxAware!.lifetimeNetPremiumReal)
 
   it('lifetime net premiums match the closed forms (the crossing-year witness — the over candidate pays FULL enrolled in exactly the conversion years)', () => {
-    expect(premiumsOf('pre-tax-first:0')).toBeCloseTo(exp.premiumsConv0!, 2)
-    expect(premiumsOf(`pre-tax-first:${CASE_III_UNDER_AMOUNT}`)).toBeCloseTo(exp.premiumsUnder!, 2)
-    expect(premiumsOf(`pre-tax-first:${CASE_III_OVER_AMOUNT}`)).toBeCloseTo(exp.premiumsOver!, 2)
+    expect(premiumsOf('grid:pre-tax-first:0')).toBeCloseTo(exp.premiumsConv0!, 2)
+    expect(premiumsOf(`grid:pre-tax-first:${CASE_III_UNDER_AMOUNT}`)).toBeCloseTo(exp.premiumsUnder!, 2)
+    expect(premiumsOf(`grid:pre-tax-first:${CASE_III_OVER_AMOUNT}`)).toBeCloseTo(exp.premiumsOver!, 2)
   })
 
   it('the after-tax bequests match the closed forms (under > none > over — filling past the cliff LOSES)', () => {
-    expect(byId(verdict.outcomes, 'pre-tax-first:0').score.afterTaxBequestMeanReal).toBeCloseTo(exp.afterTaxConv0!, 2)
-    expect(byId(verdict.outcomes, `pre-tax-first:${CASE_III_UNDER_AMOUNT}`).score.afterTaxBequestMeanReal).toBeCloseTo(exp.afterTaxUnder!, 2)
-    expect(byId(verdict.outcomes, `pre-tax-first:${CASE_III_OVER_AMOUNT}`).score.afterTaxBequestMeanReal).toBeCloseTo(exp.afterTaxOver!, 2)
+    expect(byId(verdict.outcomes, 'grid:pre-tax-first:0').score.afterTaxBequestMeanReal).toBeCloseTo(exp.afterTaxConv0!, 2)
+    expect(byId(verdict.outcomes, `grid:pre-tax-first:${CASE_III_UNDER_AMOUNT}`).score.afterTaxBequestMeanReal).toBeCloseTo(exp.afterTaxUnder!, 2)
+    expect(byId(verdict.outcomes, `grid:pre-tax-first:${CASE_III_OVER_AMOUNT}`).score.afterTaxBequestMeanReal).toBeCloseTo(exp.afterTaxOver!, 2)
   })
 
   it('THE SIGN INVERSION: the healthcare-BLIND counterfactual (premiums added back from the engine’s own surface) crowns the over-cliff candidate', () => {
-    const blind = (['pre-tax-first:0', `pre-tax-first:${CASE_III_UNDER_AMOUNT}`, `pre-tax-first:${CASE_III_OVER_AMOUNT}`] as const).map(
+    const blind = (['grid:pre-tax-first:0', `grid:pre-tax-first:${CASE_III_UNDER_AMOUNT}`, `grid:pre-tax-first:${CASE_III_OVER_AMOUNT}`] as const).map(
       (id) => ({ id, value: byId(verdict.outcomes, id).score.afterTaxBequestMeanReal! + premiumsOf(id) }),
     )
     const blindWinner = blind.reduce((m, x) => (x.value > m.value ? x : m))
-    expect(blindWinner.id).toBe(`pre-tax-first:${CASE_III_OVER_AMOUNT}`)
+    expect(blindWinner.id).toBe(`grid:pre-tax-first:${CASE_III_OVER_AMOUNT}`)
     // …and the blind values themselves re-derive:
     expect(blind[0]!.value).toBeCloseTo(exp.blindConv0!, 2)
     expect(blind[1]!.value).toBeCloseTo(exp.blindUnder!, 2)
@@ -159,7 +159,7 @@ describe('case (iv) — the §1014/IRD inversion: the gross argmax is the after-
     const grossWinner = scoredOf(verdict.outcomes).reduce((m, o) =>
       o.score.terminalGrossMeanReal > m.score.terminalGrossMeanReal ? o : m,
     )
-    expect(solverCandidateId(grossWinner.candidate)).toBe('taxable-first:0')
+    expect(solverCandidateId(grossWinner.candidate)).toBe('conventional:taxable-first:0')
     expect(solverCandidateId(grossWinner.candidate)).not.toBe(caseLeaveMore.expectedRankingIds[0])
     expect(grossWinner.score.terminalGrossMeanReal).toBeCloseTo(exp.grossConv0!, 2)
   })
@@ -185,8 +185,8 @@ describe('case (v) — the no-change routing: the LABELED conventional baseline 
 
   it('the closed-form dollars are ASSERTED, not just implied (U14 fold — expected() was a dead re-derivation)', () => {
     const exp = caseNoChange.expected()
-    expect(byId(verdict.outcomes, 'taxable-first:0').score.lifetimeTaxMeanReal).toBeCloseTo(exp.lifetimeTaxTaxableFirst!, 2)
-    expect(byId(verdict.outcomes, 'pre-tax-first:0').score.lifetimeTaxMeanReal).toBeCloseTo(exp.lifetimeTaxPretaxFirst!, 2)
+    expect(byId(verdict.outcomes, 'conventional:taxable-first:0').score.lifetimeTaxMeanReal).toBeCloseTo(exp.lifetimeTaxTaxableFirst!, 2)
+    expect(byId(verdict.outcomes, 'grid:pre-tax-first:0').score.lifetimeTaxMeanReal).toBeCloseTo(exp.lifetimeTaxPretaxFirst!, 2)
   })
 })
 
@@ -322,7 +322,7 @@ describe('the evaluation seams (insight 048 — the synthetic arms the live engi
   it('scoreFromDistribution refuses an out-of-domain heirBracket (U14 fold — the guard had no red test): =1, negative, NaN', () => {
     // heirBracket = 1 would zero the IRD term and ≥ 1 would flip its sign — the leave-more
     // objective's OPTIMISTIC error direction; the [0, 1) guard must be pinned red.
-    const dist = byId(checkOracleCase(caseBracketFill).outcomes, 'taxable-first:0').distribution
+    const dist = byId(checkOracleCase(caseBracketFill).outcomes, 'conventional:taxable-first:0').distribution
     expect(() => scoreFromDistribution(dist, 1)).toThrow(/heirBracket/)
     expect(() => scoreFromDistribution(dist, -0.1)).toThrow(/heirBracket/)
     expect(() => scoreFromDistribution(dist, Number.NaN)).toThrow(/heirBracket/)

@@ -1,0 +1,522 @@
+/**
+ * `solve.ts` — the SOLVER's recommendation ENTRY (U15 §S5): the gate, the trend-block-by-design,
+ * the wire payload's value model. RANKS the sequencing-only field, ENUMERATES the withheld
+ * conversion levers, and assembles the one structured payload U16 renders.
+ *
+ * THE GATE IS TWO-CLAUSE (§S5 (1)): `solve()` takes an {@link OracleClearedToken} as a REQUIRED
+ * parameter — a recommendation path without a token is a TypeScript COMPILE error (the Act-1
+ * no-unkeyed-write mirror, oracleToken.ts) — AND it RE-COMPUTES the run fingerprint (§S0.2) and
+ * REFUSES, structurally (never a silent proceed, never a throw), a token whose `mintedOver.fingerprint`
+ * differs from the run it is asked to bless. Order (the token) AND identity (the fingerprint) are both
+ * enforced: the compile gate proves a token exists; the fingerprint proves it is THIS household's.
+ *
+ * CONVERSIONS STAY TREND-BLOCKED BY DESIGN (§S5 (2); insight 092). The candidate roster the token was
+ * minted over (and the fingerprint covers) may CONTAIN conversion candidates, but the Medicare-cost
+ * trend is unsourced, so a conversion RANKING would under-penalize late-year IRMAA cliff-crossing — the
+ * exact payoff channel of conversions (architecture §7.2). So `solve()` ranks ONLY the sequencing-only
+ * subset (conversion === null) today and enumerates EVERY withheld conversion lever with its named
+ * reason + direction on the payload — a silently-dropped channel is an abstention, not a pass (insight
+ * 092), so U16 can say "conversions aren't ranked yet" honestly instead of rendering a shrunken space.
+ * (The token itself minted precisely because the RANKED conversions are conversion-free — the trend
+ * clause blocks conversion RANKING, and none is happening; the withheld levers are disclosed, never
+ * ranked. See `solveEntry.ts`.)
+ *
+ * THE PAYLOAD IS THE WIRE'S VALUE MODEL (§S5 (4)): full seed-B distributions for the winner + retained
+ * runner-up + no-action baseline (the buffers the wire transfer-lists), scalar selection scores for the
+ * pruned field (marked NEVER-rendered), the grade + named-driver + surplus-regime + withheld-lever
+ * enumeration + `SOLVER_CODE_VERSION` as structured clone. Every DISPLAYED figure reads seed-set B
+ * (never the optimizer's-curse-biased seed-A selection score — plan contract #2).
+ *
+ * PURE (engine-purity lint): no clock, entropy, or environment — a deterministic function of `(token,
+ * input)`. The heir bracket + goal ride `input.ranking` (the engine params are goal-agnostic).
+ */
+import type { Distribution, DrawdownOrderKey, DrawdownPolicy, RothConversionPlan, SimulationParams } from '@shared/model'
+import { solverBFamilySize } from '@engine/constants'
+import {
+  afterTaxBequestPerPath,
+  tier2,
+  type CandidateOutcome,
+  type OracleGoal,
+} from '../validation/evaluate'
+import { solverRunFingerprint, type SolverRunRanking } from '../validation/solverRunFingerprint'
+import { evaluateMedicareTrendClause, type OracleClearedToken, type WithheldReason } from '../validation/oracleToken'
+import {
+  deriveBFamilyMember,
+  deriveSeedB,
+  survivalIndicators,
+  type SelectionScore,
+} from '../validation/heldOutSeed'
+import {
+  gradeOnFamily,
+  namedDriverProbe,
+  type GradeResult,
+  type GradeStatistic,
+} from '../validation/gradeCalibration'
+import { evaluateCandidates } from '../validation/evaluate'
+import { goalHeadlineStatistic, leaveMoreSkewDisclosure, type LeaveMoreSkewDisclosure } from './objective'
+import { runSearch, type CandidateEvaluation, type SolverSearchResult } from './search'
+import { selectRecommendation } from './select'
+import { solverCandidateId, type AnchoredRail, type CandidateStrategy } from './candidates'
+import { SOLVER_CODE_VERSION } from './solverCodeVersion'
+import { abortRequested, solveAborted, type ShouldAbort, type SolveAborted } from './cancel'
+
+// ---- the input -------------------------------------------------------------------------------
+
+export interface SolveInput {
+  /** The built household params — MUST be the exact params the token was minted over (the
+   *  fingerprint binds them). Carries the tax overlay (the bucket precondition — §S5 (3)). */
+  readonly base: SimulationParams
+  /** The FULL enumerated candidate roster the token's fingerprint covers (sequencing arms +
+   *  the conversion grid). `solve()` ranks the sequencing-only subset and enumerates the
+   *  conversion subset as withheld — it never RE-enumerates (the shared `candidates.ts` is the
+   *  one enumerator; a caller passes `enumerateCandidates(...).candidates` straight through). */
+  readonly candidates: readonly CandidateStrategy[]
+  /** The Act-2 selection seed (integer). seed-set B is `deriveSeedB(seedA)` — never re-derived here. */
+  readonly seedA: number
+  /** The ranking objective — goal + heir bracket. MUST equal the objective the token's fingerprint
+   *  pins (§S0.2); a `leave-more` token can never bless a `pay-less-tax` solve. */
+  readonly ranking: SolverRunRanking
+  /** The A-side CRN-difference selection tie-tolerance the ranking runs at (heldOutSeed's
+   *  `selectionTieTolerance` in a live solve; 0 on the zero-vol oracle worlds). */
+  readonly tieTolerance: number
+  /** TEST-SEAM ONLY (insight 048): overrides the grade's live 16,000-path B-floor so the grade
+   *  path is drivable at a small path count. The live binding NEVER passes this — the calibrated
+   *  floor governs, and a base below it yields a structured `gradeUnavailable` (never a throw). */
+  readonly _gradeMinPaths?: number
+}
+
+// ---- the value-model payload (the wire serializes this) --------------------------------------
+
+/** One DISPLAYED arm (winner / retained runner-up / no-action baseline): its id + the FULL seed-B
+ *  distribution (the buffers the wire transfer-lists) + the goal's headline statistic on B + the B
+ *  survival fraction. Every figure here is seed-set B (contract #2 — never the seed-A selection score). */
+export interface SolveArm {
+  readonly id: string
+  readonly policy: DrawdownPolicy
+  /** The conversion plan (always `null` in the live sequencing-only ranking — carried for shape). */
+  readonly conversion: RothConversionPlan | null
+  /** Present iff `policy === 'custom'` (the shipped biconditional) — the user's out-of-grid order. */
+  readonly drawdownOrder?: readonly DrawdownOrderKey[]
+  /** The seed-B distribution — the U16 band/fan/figures read THIS. */
+  readonly distributionB: Distribution
+  /** The goal's headline statistic on seed-B (objective ≡ headline — real $). */
+  readonly headlineStatisticB: number
+  /** The seed-B survival fraction (raw pre-clamp). */
+  readonly survivalB: number
+}
+
+/** A pruned/losing candidate — a SCALAR only (structured clone, no distribution; plan line 178). */
+export interface SolvePrunedScore {
+  readonly id: string
+  /** Position in the shrunk seed-A ranked order (0 = would-be winner). */
+  readonly rankIndex: number
+  /** The seed-A selection scalar (the lexicographic Tier-2 score), MARKED never-rendered — U16
+   *  renders the ORDER, never this value as a displayed figure (the optimizer's-curse-biased read
+   *  the held-out machinery defeats). Absent for an infeasible candidate (no score). */
+  readonly selectionScoreA?: SelectionScore
+}
+
+/** A conversion lever WITHHELD from ranking (insight 092 — a silently-dropped channel is an
+ *  abstention). Named + directioned so U16 says "conversions aren't ranked yet" honestly. */
+export interface WithheldConversionLever {
+  readonly id: string
+  readonly policy: DrawdownPolicy
+  readonly annualAmountReal: number
+  readonly startYearOffset: number
+  readonly years: number
+  /** The structured reason (the Medicare-trend block owns conversions today — §S5 (2)). */
+  readonly reason: WithheldReason
+  /** The income rail this conversion was anchored just under — the DIRECTION (insight 092): the
+   *  payoff channel (ACA cliff / IRMAA step / bracket edge) that cannot be priced without the
+   *  sourced Medicare trend. Undefined only if the caller injected an un-anchored conversion. */
+  readonly anchoredRail: AnchoredRail | undefined
+}
+
+export interface SolveRefused {
+  readonly kind: 'refused'
+  readonly reason: 'fingerprint-mismatch' | 'bucket-precondition' | 'held-out-infeasible'
+  readonly detail: string
+  readonly solverCodeVersion: number
+}
+
+/** The demotion-axis structured withhold (§S4.5) routed up from `select.ts` — never an uncaught
+ *  throw. Unreachable in a live sequencing-only solve (conversions blocked), planted-seam-tested. */
+export interface SolveWithheld {
+  readonly kind: 'withheld'
+  readonly reason: 'demotion-axis-uncalibrated'
+  readonly detail: string
+  readonly winnerId: string
+  readonly runnerUpId: string | undefined
+  readonly surplusRegime: boolean
+  readonly solverCodeVersion: number
+}
+
+export interface SolveRecommendation {
+  readonly kind: 'recommended'
+  readonly goal: OracleGoal
+  readonly heirBracket: number | undefined
+  readonly seedA: number
+  /** `deriveSeedB(seedA)` — carried so U17 re-derives byte-identically (never persisted raw). */
+  readonly seedB: number
+  readonly winner: SolveArm
+  /** The retained runner-up (R23) — undefined only for a one-arm rankable set (never in a live solve). */
+  readonly runnerUp: SolveArm | undefined
+  /** The user's CURRENT strategy → recommended comparison anchor (the conventional-order/conversion-0
+   *  baseline). Always present (the enumerator + the shrinkage prior require it). */
+  readonly noActionBaseline: SolveArm
+  /** The full shrunk seed-A ranked order, best-first (a permutation of every ranked candidate id). */
+  readonly rankedIds: readonly string[]
+  /** Every ranked candidate that is not a displayed arm — scalar only. */
+  readonly prunedScores: readonly SolvePrunedScore[]
+  /** The winner IS the conventional prior — the no-change routing signal (plan R25; a structured
+   *  flag, no copy authored here). */
+  readonly noChange: boolean
+  /** The 10/10→surplus pivot signal (§S4.4 — A and B agree over the over-funded ε). */
+  readonly surplusRegime: boolean
+  /** The calibrated grade (U14) on the decision axis. `undefined` iff it could not be computed at
+   *  the calibrated B-floor (see `gradeUnavailable`) or there is no runner-up to grade against. */
+  readonly grade: GradeResult | undefined
+  /** The axis the grade was decided on (survival in the on-track regime; the goal dollar in surplus). */
+  readonly gradeStatistic: GradeStatistic
+  /** Present iff `grade` is undefined AND a grade WAS attempted — the named reason (never a silent
+   *  drop; the grade path stays total — insight 092). */
+  readonly gradeUnavailable: { readonly reason: string } | undefined
+  /** The named driver the crown hinges on (`gradeCalibration.namedDriverProbe`); the honest
+   *  `sampling-noise-near-tie` sentinel when no probe can flip it — never a fabricated cause. */
+  readonly namedDriver: string
+  /** The §S2 leave-more skew disclosure (the mean's skew beside the typical bequest) — present iff
+   *  the goal is leave-more (undefined for pay-less-tax; carried honestly, never fabricated). */
+  readonly skewDisclosure: LeaveMoreSkewDisclosure | undefined
+  /** EVERY conversion lever withheld from ranking, named + directioned (insight 092). */
+  readonly withheldConversionLevers: readonly WithheldConversionLever[]
+  readonly solverCodeVersion: number
+}
+
+export type SolveResult = SolveRefused | SolveWithheld | SolveRecommendation | SolveAborted
+
+// ---- helpers ---------------------------------------------------------------------------------
+
+type ScoredOutcome = Extract<CandidateOutcome, { kind: 'scored' }>
+
+/** Build a displayed arm from a candidate evaluation's seed-B outcome. `undefined` iff B is
+ *  infeasible (the held-out draw could not fund it) — the caller routes a required arm's absence
+ *  to a structured refusal rather than displaying a phantom figure. */
+function armOfB(evaluation: CandidateEvaluation, goal: OracleGoal): SolveArm | undefined {
+  const b = evaluation.b
+  if (b.kind !== 'scored') return undefined
+  const c = evaluation.candidate
+  return {
+    id: evaluation.id,
+    policy: c.policy,
+    conversion: c.conversion,
+    ...(c.drawdownOrder !== undefined ? { drawdownOrder: c.drawdownOrder } : {}),
+    distributionB: b.distribution,
+    headlineStatisticB: goalHeadlineStatistic(b.score, goal),
+    survivalB: b.score.survival,
+  }
+}
+
+/** Enumerate every withheld conversion lever (insight 092) with the structured trend reason +
+ *  its anchored-rail direction. The reason is the LIVE Medicare-trend clause read (unsourced today
+ *  ⇒ `medicare-trend-unsourced`); a future sourced+trended pricing clears it and these levers rejoin
+ *  the ranked field. */
+export function enumerateWithheldConversionLevers(
+  conversionCandidates: readonly CandidateStrategy[],
+): readonly WithheldConversionLever[] {
+  if (conversionCandidates.length === 0) return []
+  const reason = evaluateMedicareTrendClause(true)
+  // The trend clause returns null only when the trend is sourced AND Part-B pricing consumes it —
+  // in which case conversions are no longer withheld and this enumeration is empty by construction.
+  if (reason === null) return []
+  return conversionCandidates.map((c) => {
+    if (c.conversion === null) {
+      throw new Error('[solve] enumerateWithheldConversionLevers: a non-conversion candidate was passed as withheld')
+    }
+    return {
+      id: solverCandidateId(c),
+      policy: c.policy,
+      annualAmountReal: c.conversion.annualAmountReal,
+      startYearOffset: c.conversion.startYearOffset,
+      years: c.conversion.years,
+      reason,
+      anchoredRail: c.anchoredRail,
+    }
+  })
+}
+
+/** The grade decision axis: SURVIVAL in the on-track regime (the headline is survival), the GOAL
+ *  dollar axis in the surplus regime (the headline pivots to the goal — §S4.4 / plan line 224). */
+export function gradeAxisFor(goal: OracleGoal, surplusRegime: boolean): GradeStatistic {
+  return surplusRegime ? goal : 'survival'
+}
+
+/**
+ * The leave-more objective wiring the harness deferred (gradeCalibration's `pairedGoalDiffs` throws
+ * for leave-more — the heir bracket is per-solve HERE). Assembles the deterministic B-family (the
+ * SAME `deriveBFamilyMember` expansion the harness uses) and hands the CRN-paired per-path decision
+ * differences to `gradeOnFamily` — the ONE grade DECISION home (never re-implemented). Handles all
+ * three axes uniformly so the surplus leave-more grade rides the same machinery as survival/tax.
+ *
+ * Returns `undefined` (never a throw) when the B-floor cannot be met at the base's path count OR an
+ * arm is infeasible on a family member — a structured `gradeUnavailable` the caller carries honestly.
+ */
+export function gradeSolveRecommendation(opts: {
+  readonly base: SimulationParams
+  readonly winner: CandidateStrategy
+  readonly runnerUp: CandidateStrategy
+  readonly seedA: number
+  readonly statistic: GradeStatistic
+  readonly heirBracket: number | undefined
+  readonly minPathsOverride?: number
+}): { readonly grade: GradeResult } | { readonly unavailable: string } {
+  const { base, winner, runnerUp, seedA, statistic, heirBracket, minPathsOverride } = opts
+  if (statistic === 'leave-more' && heirBracket === undefined) {
+    return { unavailable: 'leave-more grade requires a declared heir bracket' }
+  }
+  const seedB = deriveSeedB(seedA)
+  const familySize = solverBFamilySize.value
+  const familySeeds = Array.from({ length: familySize }, (_, i) => deriveBFamilyMember(seedB, i))
+  const family: Array<readonly number[]> = []
+  const displayReads: Array<{ winnerSurvival: number; runnerUpSurvival: number }> = []
+  const evalOpts = heirBracket !== undefined ? { heirBracket } : {}
+  for (const seed of familySeeds) {
+    const [w, r] = evaluateCandidates(base, [winner, runnerUp], seed, evalOpts)
+    if (w!.kind !== 'scored' || r!.kind !== 'scored') {
+      return { unavailable: 'a B-family member is infeasible — the grade cannot be read on it' }
+    }
+    family.push(pairedDecisionDiffs(w!, r!, statistic, heirBracket))
+    if (statistic === 'survival') {
+      displayReads.push({ winnerSurvival: w!.score.survival, runnerUpSurvival: r!.score.survival })
+    }
+  }
+  try {
+    const grade = gradeOnFamily({
+      family,
+      statistic,
+      winnerHasConversion: winner.conversion !== null,
+      runnerUpHasConversion: runnerUp.conversion !== null,
+      ...(statistic === 'survival' ? { displayReads } : {}),
+      ...(minPathsOverride !== undefined ? { minPathsOverride } : {}),
+    })
+    return { grade }
+  } catch (e) {
+    // The min-B floor refusal (a base below the calibrated 16,000-path floor) is a NAMED
+    // unavailable, never a throw that aborts the solve (the grade path stays total — insight 092).
+    return { unavailable: e instanceof Error ? e.message : 'grade could not be computed' }
+  }
+}
+
+/** Winner-positive CRN-paired per-path decision differences (POSITIVE = the winner is better). */
+function pairedDecisionDiffs(
+  winner: ScoredOutcome,
+  runnerUp: ScoredOutcome,
+  statistic: GradeStatistic,
+  heirBracket: number | undefined,
+): readonly number[] {
+  if (statistic === 'survival') {
+    const w = survivalIndicators(winner.distribution)
+    const r = survivalIndicators(runnerUp.distribution)
+    return w.map((x, i) => x - r[i]!)
+  }
+  if (statistic === 'pay-less-tax') {
+    const wTa = winner.distribution.taxAware
+    const rTa = runnerUp.distribution.taxAware
+    if (wTa === undefined || rTa === undefined) {
+      throw new Error('[solve] a pay-less-tax grade requires tax-aware runs (burned/062)')
+    }
+    // Winner-positive: the winner PAYS LESS, so runner − winner.
+    return wTa.lifetimeTaxPaidReal.map((w, i) => rTa.lifetimeTaxPaidReal[i]! - w)
+  }
+  // leave-more: winner-positive = winner LEAVES MORE, so winner − runner. The heir bracket is the
+  // per-solve IRD discount (the reason the harness deferred this to U15's objective wiring).
+  if (heirBracket === undefined) {
+    throw new Error('[solve] a leave-more grade requires a declared heir bracket (burned/062)')
+  }
+  const wVec = afterTaxBequestPerPath(winner.distribution, heirBracket)
+  const rVec = afterTaxBequestPerPath(runnerUp.distribution, heirBracket)
+  if (wVec === undefined || rVec === undefined) {
+    throw new Error('[solve] a leave-more grade requires tax-aware runs (burned/062)')
+  }
+  return wVec.map((w, i) => w - rVec[i]!)
+}
+
+const refused = (reason: SolveRefused['reason'], detail: string): SolveRefused => ({
+  kind: 'refused',
+  reason,
+  detail,
+  solverCodeVersion: SOLVER_CODE_VERSION,
+})
+
+// ---- the entry -------------------------------------------------------------------------------
+
+/**
+ * Solve for the recommendation over a household + its enumerated roster, gated by the
+ * oracle-cleared token (§S5). The token is REQUIRED (the compile gate) and its fingerprint is
+ * re-checked (the identity gate). Conversions stay trend-blocked (ranked sequencing-only + the
+ * withheld levers enumerated). Deterministic in `(token, input)`.
+ *
+ * `shouldAbort` is the OPTIONAL injected cooperative-abort seam (§S6, `cancel.ts`): checked at the
+ * COARSE stage boundaries that bracket the two dominant cost centers — before the K-candidate search
+ * and before the m-draw grade B-family — returning a NAMED `aborted` bin rather than burning that
+ * compute on a superseded solve. The engine reads no clock; the caller owns the epoch. Finer
+ * (per-candidate) granularity + the live worker-epoch transport WAIT on the profile's numbers (§S6).
+ */
+export function solve(token: OracleClearedToken, input: SolveInput, shouldAbort?: ShouldAbort): SolveResult {
+  const { base, candidates, seedA, ranking, tieTolerance } = input
+  const goal = ranking.goal
+  const heirBracket = ranking.heirBracket
+
+  // (1) The IDENTITY gate (§S0.2): recompute the fingerprint over the run this token is asked to
+  // bless and refuse a mismatch — structurally, never a silent proceed. The compile gate already
+  // proved a token EXISTS; this proves it is THIS (household, roster, objective).
+  const runFingerprint = solverRunFingerprint(base, candidates, ranking)
+  if (runFingerprint !== token.mintedOver.fingerprint) {
+    return refused(
+      'fingerprint-mismatch',
+      'the oracle-cleared token was minted over a DIFFERENT run (household / candidate roster / objective) ' +
+        'than the one solve() was asked to bless — refusing rather than shipping another run’s validation',
+    )
+  }
+
+  // (2) The bucket precondition (§S5 (3)): the solver searches sequencing × conversion, which
+  // require per-person tax buckets — a tax-blind spine has no split to sequence. Refuse structurally.
+  if (base.overlay === undefined) {
+    return refused(
+      'bucket-precondition',
+      'the run carries no tax overlay (per-person buckets) — the solver never runs on a defaulted split (burned/062)',
+    )
+  }
+
+  // (3) Partition: rank the sequencing-only subset; enumerate the conversion subset as withheld.
+  const rankable = candidates.filter((c) => c.conversion === null)
+  const conversionCandidates = candidates.filter((c) => c.conversion !== null)
+  const withheldConversionLevers = enumerateWithheldConversionLevers(conversionCandidates)
+
+  // COOPERATIVE ABORT (§S6) — before the first dominant cost center (the K-candidate search). A
+  // superseded solve bails HERE with a named `aborted` bin rather than decumulating the whole batch.
+  if (abortRequested(shouldAbort)) {
+    return solveAborted('solve aborted before the K-candidate search (a newer dispatch superseded it)')
+  }
+
+  // (4) Search the sequencing-only field on BOTH seed-sets (A selects; B displays + grades).
+  const search: SolverSearchResult = runSearch({
+    base,
+    candidates: rankable,
+    seedA,
+    goal,
+    tieTolerance,
+    ...(heirBracket !== undefined ? { heirBracket } : {}),
+  })
+
+  // (5) Select: shrinkage + deterministic crown. A demotion-axis refusal routes to a structured
+  // withheld state (never a throw); unreachable live (sequencing-only ⇒ no conversion winner).
+  const selection = selectRecommendation(search)
+  if (selection.kind === 'withheld') {
+    return {
+      kind: 'withheld',
+      reason: selection.reason,
+      detail: selection.detail,
+      winnerId: selection.winnerId,
+      runnerUpId: selection.runnerUpId,
+      surplusRegime: selection.surplusRegime,
+      solverCodeVersion: SOLVER_CODE_VERSION,
+    }
+  }
+
+  // (6) Build the displayed arms from seed-set B (contract #2 — never the seed-A selection score).
+  const winnerEval = search.evaluations[selection.winnerIndex]!
+  const winner = armOfB(winnerEval, goal)
+  const baseline = armOfB(search.conventionalBaseline, goal)
+  if (winner === undefined || baseline === undefined) {
+    return refused(
+      'held-out-infeasible',
+      'the winner or the no-action baseline is infeasible on the held-out seed-set B — refusing to display a phantom figure',
+    )
+  }
+  const runnerUpEval =
+    selection.runnerUpIndex !== undefined ? search.evaluations[selection.runnerUpIndex]! : undefined
+  const runnerUp = runnerUpEval !== undefined ? armOfB(runnerUpEval, goal) : undefined
+
+  // (7) The pruned field — scalar selection scores only, MARKED never-rendered, in ranked order.
+  const armIndices = new Set<number>([
+    selection.winnerIndex,
+    ...(selection.runnerUpIndex !== undefined ? [selection.runnerUpIndex] : []),
+    search.evaluations.indexOf(search.conventionalBaseline),
+  ])
+  const prunedScores: SolvePrunedScore[] = []
+  selection.rankedIndices.forEach((candIndex, rankIndex) => {
+    if (armIndices.has(candIndex)) return
+    const a = search.evaluations[candIndex]!.a
+    prunedScores.push({
+      id: search.evaluations[candIndex]!.id,
+      rankIndex,
+      ...(a.kind === 'scored'
+        ? { selectionScoreA: { neverRendered: true, value: tier2(a.score, goal) } as SelectionScore }
+        : {}),
+    })
+  })
+
+  // COOPERATIVE ABORT (§S6) — before the second dominant cost center (the grade's m-draw B-family at
+  // the 16k held-out floor). Selection is done + the arms are built (cheap); bail before the grade.
+  if (abortRequested(shouldAbort)) {
+    return solveAborted('solve aborted before the grade B-family (a newer dispatch superseded it)')
+  }
+
+  // (8) The grade on the regime-appropriate axis (survival on-track; the goal dollar in surplus).
+  const gradeStatistic = gradeAxisFor(goal, selection.surplusRegime)
+  let grade: GradeResult | undefined
+  let gradeUnavailable: { readonly reason: string } | undefined
+  if (runnerUpEval !== undefined) {
+    const graded = gradeSolveRecommendation({
+      base,
+      winner: winnerEval.candidate,
+      runnerUp: runnerUpEval.candidate,
+      seedA,
+      statistic: gradeStatistic,
+      heirBracket,
+      ...(input._gradeMinPaths !== undefined ? { minPathsOverride: input._gradeMinPaths } : {}),
+    })
+    if ('grade' in graded) grade = graded.grade
+    else gradeUnavailable = { reason: graded.unavailable }
+  }
+
+  // (9) The named driver the crown hinges on (over the RANKABLE field) — the honest sentinel when
+  // no probe can flip it. Cheap re-ranks; never fabricates a cause.
+  const { driver: namedDriver } = namedDriverProbe({
+    base,
+    candidates: rankable,
+    goal,
+    tieTolerance,
+    seed: seedA,
+    ...(heirBracket !== undefined ? { heirBracket } : {}),
+  })
+
+  // The §S2 leave-more skew disclosure (the mean's skew beside the typical bequest) on the WINNER's
+  // seed-B distribution — present iff leave-more (undefined for pay-less-tax; carried honestly).
+  const skewDisclosure =
+    goal === 'leave-more' && heirBracket !== undefined
+      ? leaveMoreSkewDisclosure(winner.distributionB, heirBracket)
+      : undefined
+
+  return {
+    kind: 'recommended',
+    goal,
+    heirBracket,
+    seedA,
+    seedB: search.seedB,
+    winner,
+    runnerUp,
+    noActionBaseline: baseline,
+    rankedIds: selection.rankedIds,
+    prunedScores,
+    noChange: selection.noChange,
+    surplusRegime: selection.surplusRegime,
+    grade,
+    gradeStatistic,
+    gradeUnavailable,
+    namedDriver,
+    skewDisclosure,
+    withheldConversionLevers,
+    solverCodeVersion: SOLVER_CODE_VERSION,
+  }
+}

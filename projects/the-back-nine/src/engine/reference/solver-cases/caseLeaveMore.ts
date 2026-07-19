@@ -85,11 +85,13 @@ function expected(): Readonly<Record<string, number>> {
 
 function expectedRankingIds(): readonly string[] {
   const sd = handStandardDeduction('mfj')
+  // U15 §S0.4 provenance labels (amounts unchanged): grid conversion arms + the conventional
+  // conversion-0 baseline (the gross-argmax LOSER, contract #7 — see the test's inversion arm).
   return [
-    `taxable-first:${handBandTop(0.22, 'mfj') + sd}`,
-    `taxable-first:${handBandTop(0.12, 'mfj') + sd}`,
-    `taxable-first:${handBandTop(0.1, 'mfj') + sd}`,
-    'taxable-first:0',
+    `grid:taxable-first:${handBandTop(0.22, 'mfj') + sd}`,
+    `grid:taxable-first:${handBandTop(0.12, 'mfj') + sd}`,
+    `grid:taxable-first:${handBandTop(0.1, 'mfj') + sd}`,
+    'conventional:taxable-first:0',
   ]
 }
 

@@ -48,6 +48,7 @@ const snap = (
   draft: d,
   answer,
   displayed,
+  solve: { kind: 'idle' }, // U15 solve channel — answerView reads the first beat only
   runningInWorker: true,
 })
 

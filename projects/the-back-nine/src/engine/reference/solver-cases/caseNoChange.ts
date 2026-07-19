@@ -64,7 +64,9 @@ export const caseNoChange: SolverCaseFixture = {
   seed: 0x5eed5,
   buildBase,
   buildCandidates,
-  expectedRankingIds: ['taxable-first:0', 'proportional:0', 'pre-tax-first:0', 'bracket-fill:0'],
+  // U15 §S0.4 provenance labels (values unchanged): the crowned winner IS the conventional
+  // baseline (the no-change routing contract) — its id carries the `conventional:` arm.
+  expectedRankingIds: ['conventional:taxable-first:0', 'grid:proportional:0', 'grid:pre-tax-first:0', 'grid:bracket-fill:0'],
   expected,
   tieTolerance: 0,
 }

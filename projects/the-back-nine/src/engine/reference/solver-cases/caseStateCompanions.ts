@@ -98,11 +98,13 @@ export const caseStateNc: SolverCaseFixture = {
   buildCandidates,
   get expectedRankingIds(): readonly string[] {
     const sd = handStandardDeduction('mfj')
+    // U15 §S0.4 provenance labels (the NC flip + amounts unchanged): grid conversion arms + the
+    // conventional conversion-0 baseline (caseIiBuildCandidates = the enumerator's taxable-first row).
     return [
-      `taxable-first:${handBandTop(0.12, 'mfj') + sd}`, // the FLIPPED crown
-      `taxable-first:${handBandTop(0.22, 'mfj') + sd}`,
-      `taxable-first:${handBandTop(0.1, 'mfj') + sd}`,
-      'taxable-first:0',
+      `grid:taxable-first:${handBandTop(0.12, 'mfj') + sd}`, // the FLIPPED crown
+      `grid:taxable-first:${handBandTop(0.22, 'mfj') + sd}`,
+      `grid:taxable-first:${handBandTop(0.1, 'mfj') + sd}`,
+      'conventional:taxable-first:0',
     ]
   },
   expected: () => {
@@ -146,11 +148,13 @@ export const caseStatePa: SolverCaseFixture = {
   buildCandidates,
   get expectedRankingIds(): readonly string[] {
     const sd = handStandardDeduction('mfj')
+    // U15 §S0.4 provenance labels (amounts unchanged; the PA crown stays the federal 22%-top):
+    // grid conversion arms + the conventional conversion-0 baseline.
     return [
-      `taxable-first:${handBandTop(0.22, 'mfj') + sd}`,
-      `taxable-first:${handBandTop(0.12, 'mfj') + sd}`,
-      `taxable-first:${handBandTop(0.1, 'mfj') + sd}`,
-      'taxable-first:0',
+      `grid:taxable-first:${handBandTop(0.22, 'mfj') + sd}`,
+      `grid:taxable-first:${handBandTop(0.12, 'mfj') + sd}`,
+      `grid:taxable-first:${handBandTop(0.1, 'mfj') + sd}`,
+      'conventional:taxable-first:0',
     ]
   },
   expected: () => {

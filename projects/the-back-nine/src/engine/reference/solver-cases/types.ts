@@ -77,6 +77,8 @@ export interface SolverCaseFixture {
   readonly tieTolerance: number
 }
 
-/** The candidate identity the expected rankings are written in: policy + annual amount. */
-export const solverCandidateId = (c: CandidateStrategy): string =>
-  `${c.policy}:${c.conversion?.annualAmountReal ?? 0}`
+/** The candidate identity the expected rankings are written in — provenance-widened + injective
+ *  (U15 §S0.4). Its canonical home is now `solver/candidates.ts` (with the candidate it names);
+ *  re-exported here so every U14 import path (`{@link SolverCaseFixture.expectedRankingIds}`,
+ *  the oracle, the fixtures) is unbroken. */
+export { solverCandidateId } from '../../solver/candidates'

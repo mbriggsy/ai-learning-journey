@@ -12,6 +12,12 @@ import type { Distribution } from '@shared/model'
 import { enumerateCandidates, type CandidateStrategy } from '../../solver/candidates'
 import { caseIiBuildBase } from '../../reference/solver-cases/caseBracketFill'
 import { decisionSurfaceIdentical, runRankingStability } from '../rankingStability'
+import { solverRunFingerprint } from '../solverRunFingerprint'
+
+/** The ranking objective the report's fingerprint pins (U15 §S0.2). The stability CHECK is
+ *  goal-agnostic, so any valid objective drives these arms; leave-more + a heirBracket exercises
+ *  the present-heirBracket path through the fingerprint. */
+const ranking = { goal: 'leave-more', heirBracket: 0.25 } as const
 
 const people: readonly PersonInputs[] = [
   { sex: 'female', currentAge: 64, birthYear: 1962, retirementAge: 63, earnedIncomeReal: 0, pia: 30_000, socialSecurityClaimAge: 67 },
@@ -102,19 +108,24 @@ describe('runRankingStability — the live K-candidate CRN pass', () => {
     const perturbIndex = candidates.findIndex((c) => c.conversion !== null)
     const siblingIndex = candidates.findIndex((c, i) => i !== perturbIndex && c.conversion !== null)
     expect(perturbIndex, 'the enumerated set carries conversion candidates').toBeGreaterThanOrEqual(0)
+    const base = stochasticBase()
     const out = runRankingStability({
-      base: stochasticBase(),
+      base,
       candidates,
       seedA: 0xa11ce,
       seedB: 0xb0b5eed, // a distinct literal — S5 owns the REAL seedB derivation discipline
       perturbIndex,
       siblingIndex,
+      ranking,
     })
     expect('report' in out, 'ok' in out && out.ok === false ? (out as { violations: readonly string[] }).violations.join(' | ') : '').toBe(true)
     if ('report' in out) {
       expect(out.report.candidateCount).toBe(candidates.length)
       expect(out.report.minSurvivorCrossings).toBeGreaterThan(0) // burned/027 — never vacuous
       expect(out.report.infeasibleCount).toBe(0)
+      // §S0.2: the report is the fingerprint AUTHORITY — its fingerprint is bound to the EXACT
+      // (base, candidates, ranking) it evaluated (a mint that hardcoded or dropped it fails here).
+      expect(out.report.fingerprint).toBe(solverRunFingerprint(base, candidates, ranking))
     }
   }, 240_000)
 
@@ -127,7 +138,7 @@ describe('runRankingStability — the live K-candidate CRN pass', () => {
       { policy: 'taxable-first', conversion: { annualAmountReal: 10_000, startYearOffset: 0, years: 1 }, provenance: 'grid' },
       { policy: 'taxable-first', conversion: { annualAmountReal: 20_000, startYearOffset: 0, years: 1 }, provenance: 'grid' },
     ]
-    const out = runRankingStability({ base, candidates, seedA: 1, seedB: 2, perturbIndex: 1, siblingIndex: 2 })
+    const out = runRankingStability({ base, candidates, seedA: 1, seedB: 2, perturbIndex: 1, siblingIndex: 2, ranking })
     expect('report' in out).toBe(false)
     if ('ok' in out && !out.ok) {
       expect(out.violations.some((v) => /survivor regime.*vacuous/.test(v))).toBe(true)
@@ -149,7 +160,7 @@ describe('runRankingStability — the live K-candidate CRN pass', () => {
       { policy: 'taxable-first', conversion: { annualAmountReal: 10_000, startYearOffset: 0, years: 3 }, provenance: 'grid' },
       { policy: 'taxable-first', conversion: { annualAmountReal: 20_000, startYearOffset: 0, years: 3 }, provenance: 'grid' },
     ]
-    const out = runRankingStability({ base: inert, candidates, seedA: 0xa11ce, seedB: 0xb0b5eed, perturbIndex: 1, siblingIndex: 2 })
+    const out = runRankingStability({ base: inert, candidates, seedA: 0xa11ce, seedB: 0xb0b5eed, perturbIndex: 1, siblingIndex: 2, ranking })
     expect('report' in out).toBe(false)
     if ('ok' in out && !out.ok) {
       expect(out.violations.some((v) => /perturbation arm VACUOUS.*nothing moved/.test(v))).toBe(true)
@@ -162,7 +173,7 @@ describe('runRankingStability — the live K-candidate CRN pass', () => {
       { policy: 'proportional', conversion: null, provenance: 'grid' },
       { policy: 'taxable-first', conversion: null, provenance: 'conventional-baseline' },
     ]
-    const out = runRankingStability({ base, candidates, seedA: 1, seedB: 2, perturbIndex: 0, siblingIndex: 1 })
+    const out = runRankingStability({ base, candidates, seedA: 1, seedB: 2, perturbIndex: 0, siblingIndex: 1, ranking })
     expect('report' in out).toBe(false)
     if ('ok' in out && !out.ok) {
       expect(out.violations.some((v) => /misconfigured/.test(v))).toBe(true)

@@ -16,8 +16,10 @@ import {
   anchoredConversionAmounts,
   applyCandidate,
   enumerateCandidates,
+  solverCandidateId,
   CONVENTIONAL_POLICY,
   SEARCHED_POLICIES,
+  type CandidateStrategy,
   type ConversionAnchorContext,
 } from '../candidates'
 import type { SimulationParams } from '@shared/model'
@@ -281,5 +283,48 @@ describe('applyCandidate — the shared apply seam (the buildArmParams disciplin
     })
     expect(lastYear.overlay?.conversions).toHaveLength(base.maxHorizonYears)
     expect(lastYear.overlay?.conversions?.[base.maxHorizonYears - 1]).toBe(20_000)
+  })
+})
+
+describe('solverCandidateId — provenance-widened + injective (U15 §S0.4)', () => {
+  it('the three provenance arms give DISTINCT ids for the SAME policy:amount', () => {
+    const grid: CandidateStrategy = { policy: 'taxable-first', conversion: null, provenance: 'grid' }
+    const conventional: CandidateStrategy = { policy: 'taxable-first', conversion: null, provenance: 'conventional-baseline' }
+    const userBaseline: CandidateStrategy = { policy: 'taxable-first', conversion: null, provenance: 'user-baseline' }
+    expect(solverCandidateId(grid)).toBe('grid:taxable-first:0')
+    expect(solverCandidateId(conventional)).toBe('conventional:taxable-first:0')
+    expect(solverCandidateId(userBaseline)).toBe('baseline:taxable-first:0')
+    expect(new Set([grid, conventional, userBaseline].map(solverCandidateId)).size).toBe(3)
+  })
+
+  it('resolves the MODAL collision: a non-custom userBaseline no longer aliases the conventional taxable-first:0', () => {
+    // The fold's named gap: when the user's CURRENT strategy IS the common default (taxable-first),
+    // the injected userBaseline and the enumerator's conventional baseline both minted `taxable-first:0`.
+    const { candidates } = enumerateCandidates({
+      anchor: {
+        committed: { rmd: 0, conversion: 0, ongoingTaxable: 0, ssBenefit: 0, filing: 'mfj', count65: 0, calendarYear: 2026 },
+        acaCliffMagi: null,
+        irmaaSchedule: null,
+        pretaxAvailableAtStart: 400_000,
+        rmdAtStart: 0,
+      },
+      window: { startYearOffset: 0, years: 1 },
+      userBaseline: { policy: 'taxable-first' },
+    })
+    const ids = candidates.map(solverCandidateId)
+    // Injective by construction: the WHOLE enumerated set has no duplicate id.
+    expect(new Set(ids).size).toBe(ids.length)
+    // Both taxable-first:0 candidates exist, now DISTINCTLY (the two real points, different jobs).
+    expect(ids).toContain('conventional:taxable-first:0')
+    expect(ids).toContain('baseline:taxable-first:0')
+  })
+
+  it('a conversion arm carries its whole-dollar amount in the id', () => {
+    const c: CandidateStrategy = {
+      policy: 'taxable-first',
+      conversion: { annualAmountReal: 20_000, startYearOffset: 0, years: 3 },
+      provenance: 'grid',
+    }
+    expect(solverCandidateId(c)).toBe('grid:taxable-first:20000')
   })
 })

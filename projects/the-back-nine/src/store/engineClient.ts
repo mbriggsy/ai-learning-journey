@@ -68,6 +68,10 @@ function mainThreadHandle(): EngineHandle {
     // thread for two full runs — exactly why the controls disable LIVE per-drag
     // recompute when `runningInWorker` is false (recompute on release only).
     runTwoArm: async (base, seed, control) => (await api()).runTwoArm(base, seed, control),
+    // P4·U15 — the on-demand solve. On the fallback this BLOCKS the main thread for the whole
+    // solve (the token mint + the K-candidate batch + the grade B-family); memoryModel dispatches
+    // it off the paint the same way (the pending state renders first).
+    runSolve: async (request) => (await api()).runSolve(request),
   }
 }
 

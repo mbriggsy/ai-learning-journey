@@ -1,9 +1,12 @@
 import { describe, it, expect } from 'vitest'
-import { runEngine, fromWire, type EngineWire } from '@engine/engineProtocol'
+import { runEngine, fromWire, packSolveWire, type EngineWire } from '@engine/engineProtocol'
+import { solveFromWire } from '@engine/engineWire'
 import { simulate } from '@engine/simulate'
 import { summarize } from '@engine/confidence'
 import { validationMarket } from '@engine/reference/methodology'
-import { NEVER_DEPLETED, type SimulationParams, type PersonInputs } from '@shared/model'
+import { NEVER_DEPLETED, type Distribution, type SimulationParams, type PersonInputs } from '@shared/model'
+import type { SolveArm, SolveRecommendation } from '@engine/solver/solve'
+import type { SolvePayload } from '@engine/solver/solveEntry'
 
 const PERSON: PersonInputs = {
   sex: 'male', currentAge: 65, birthYear: 1961, retirementAge: 65,
@@ -50,6 +53,112 @@ describe('worker pack/unpack — equivalence to the in-thread run', () => {
     // most fixed-horizon survivors carry the sentinel; it must round-trip as −1, not 0/null
     const survivors = reconstructed.result.distribution.depletionYears.filter((y) => y === NEVER_DEPLETED)
     expect(survivors.length).toBeGreaterThan(0)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// U15 §S5 (4) — the solve wire: the recommended arm's three seed-B distributions pack as transferable
+// buffers; every other arm (plain data) crosses unchanged. Isolated from the mint (synthetic payloads).
+// ---------------------------------------------------------------------------
+
+const armFixture = (id: string, survival: number): SolveArm => {
+  const distributionB: Distribution = {
+    terminalValuesReal: [100, 200, 300],
+    depletionYears: [NEVER_DEPLETED, 12, NEVER_DEPLETED], // the −1 sentinel rides the Int32 channel
+    survivalFraction: survival,
+    taxAware: {
+      lifetimeTaxPaidReal: [10, 20, 30],
+      terminalTaxableReal: [1, 2, 3],
+      terminalPretaxReal: [4, 5, 6],
+      terminalRothReal: [7, 8, 9],
+      terminalHsaReal: [0, 0, 0],
+      terminalTaxableBasisReal: [1, 1, 1],
+      lifetimeNetPremiumReal: [0, 0, 0],
+      lifetimeMedicareCostReal: [0, 0, 0],
+    },
+  }
+  return { id, policy: 'taxable-first', conversion: null, distributionB, headlineStatisticB: 12_345, survivalB: survival }
+}
+
+const recFixture = (over: Partial<SolveRecommendation> = {}): SolveRecommendation => ({
+  kind: 'recommended',
+  goal: 'leave-more',
+  heirBracket: 0.25,
+  seedA: 1,
+  seedB: 2,
+  winner: armFixture('conventional:taxable-first:0', 0.9),
+  runnerUp: armFixture('grid:pre-tax-first:0', 0.85),
+  noActionBaseline: armFixture('conventional:taxable-first:0', 0.9),
+  rankedIds: ['conventional:taxable-first:0', 'grid:pre-tax-first:0'],
+  prunedScores: [{ id: 'grid:proportional:0', rankIndex: 2, selectionScoreA: { neverRendered: true, value: 42 } }],
+  noChange: true,
+  surplusRegime: false,
+  grade: undefined,
+  gradeStatistic: 'survival',
+  gradeUnavailable: { reason: 'below floor (synthetic)' },
+  namedDriver: 'sampling-noise-near-tie',
+  skewDisclosure: undefined,
+  withheldConversionLevers: [
+    {
+      id: 'grid:taxable-first:20000',
+      policy: 'taxable-first',
+      annualAmountReal: 20_000,
+      startYearOffset: 0,
+      years: 3,
+      reason: { kind: 'medicare-trend-unsourced' },
+      anchoredRail: { kind: 'bracket-edge', edge: 120_000 },
+    },
+  ],
+  solverCodeVersion: 1,
+  ...over,
+})
+
+describe('solve wire pack/unpack (§S5 (4))', () => {
+  it('packs the three arms as transferable typed buffers; every scalar rides by clone', () => {
+    const wire = packSolveWire(recFixture())
+    expect(wire.kind).toBe('recommended')
+    if (wire.kind !== 'recommended') throw new Error('unreachable')
+    expect(wire.winner.terminalValuesReal).toBeInstanceOf(Float64Array)
+    expect(wire.winner.depletionYears).toBeInstanceOf(Int32Array)
+    expect(wire.winner.taxAware?.lifetimeTaxPaidReal).toBeInstanceOf(Float64Array)
+    // The pruned scalars are NOT buffers — they cross by structured clone, marked never-rendered.
+    expect(wire.prunedScores[0]?.selectionScoreA?.neverRendered).toBe(true)
+    expect(wire.withheldConversionLevers[0]?.reason).toEqual({ kind: 'medicare-trend-unsourced' })
+  })
+
+  it('round-trips byte-identically (buffers → number[]) incl. the −1 sentinel', () => {
+    const rec = recFixture()
+    const view = solveFromWire(packSolveWire(rec))
+    expect(view.ok).toBe(true)
+    if (!view.ok) throw new Error('unreachable')
+    expect(view.payload).toEqual(rec)
+    if (view.payload.kind !== 'recommended') throw new Error('unreachable')
+    expect(view.payload.winner.distributionB.depletionYears).toContain(NEVER_DEPLETED)
+  })
+
+  it('an undefined runner-up round-trips as undefined (a one-arm rankable set)', () => {
+    const rec = recFixture({ runnerUp: undefined })
+    const view = solveFromWire(packSolveWire(rec))
+    if (!view.ok || view.payload.kind !== 'recommended') throw new Error('unreachable')
+    expect(view.payload.runnerUp).toBeUndefined()
+  })
+
+  it('the plain payload arms cross unchanged (no buffers): refused / token-withheld / mint-failed', () => {
+    const plain: SolvePayload[] = [
+      { kind: 'refused', reason: 'fingerprint-mismatch', detail: 'x', solverCodeVersion: 1 },
+      { kind: 'withheld', reason: 'demotion-axis-uncalibrated', detail: 'x', winnerId: 'a', runnerUpId: 'b', surplusRegime: true, solverCodeVersion: 1 },
+      { kind: 'token-withheld', reasons: [{ kind: 'state-certification-pending', state: 'NC' }], disclosedDirectional: [], solverCodeVersion: 1 },
+      { kind: 'mint-failed', stage: 'roster', detail: 'x', solverCodeVersion: 1 },
+    ]
+    for (const p of plain) {
+      expect(packSolveWire(p)).toEqual(p) // identity (no arm to transfer)
+      const view = solveFromWire(packSolveWire(p))
+      expect(view).toEqual({ ok: true, payload: p })
+    }
+  })
+
+  it('a calm-error wire reconstructs as a not-ok view', () => {
+    expect(solveFromWire({ kind: 'calm-error', reason: 'boom' })).toEqual({ ok: false, reason: 'boom' })
   })
 })
 

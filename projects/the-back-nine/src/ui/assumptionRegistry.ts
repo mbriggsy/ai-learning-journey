@@ -140,6 +140,10 @@ export const DRAFT_DISPOSITIONS: Record<keyof ScenarioDraft, AssumptionDispositi
     kind: 'internal',
     why: 'The state-tax vintage (serialized per-state roster profiles), stamped fresh at Save from the current build’s stateTaxConstants — read by staleness.ts’s controls.stateTaxMoved clock; app-written, never user-set (the taxVintageDetail/dateVintage precedent).',
   },
+  chosenGoal: {
+    kind: 'internal',
+    why: 'The recommender’s Tier-2 goal (leave-more / pay-less-tax) — NOT an assumption behind the FIRST answer (the spine): it is the recommendation-time pick set via the U16 GoalPicker (the second beat’s first interaction), never a silent default (burned/062). The solve is refused while it is unset, so no panel row asserts a goal the user never chose; its editable home is the GoalPicker, not the intake assumption panel.',
+  },
 }
 
 /** One non-draft methodology constant’s disclosure row: where it renders (`seat`), what the

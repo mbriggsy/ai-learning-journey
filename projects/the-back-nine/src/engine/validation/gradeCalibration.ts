@@ -46,6 +46,13 @@ import { deriveBFamilyMember, deriveSeedB, survivalIndicators } from './heldOutS
 
 export type Grade = 'just-do-it' | 'coin-flip'
 
+/** The axis the grade's per-path differences are measured in. `survival` (the on-track headline)
+ *  and `pay-less-tax` (the surplus dollar axis) are the U14 live-binding axes; `leave-more` is the
+ *  U15 objective-wiring axis (assembled per-solve in solve.ts with the heir bracket, decided HERE).
+ *  The demotion margin is calibrated ONLY in survival-fraction units, so any non-survival axis with
+ *  a conversion winner over a non-conversion runner-up is UNCALIBRATED (fail-closed). */
+export type GradeStatistic = 'survival' | 'pay-less-tax' | 'leave-more'
+
 export interface MemberMargin {
   readonly margin: number
   readonly band: number
@@ -94,8 +101,13 @@ export interface GradeOnFamilyInputs {
   readonly family: ReadonlyArray<readonly number[]>
   /** The decision statistic the family's differences are measured IN — the demotion margin
    *  is calibrated in SURVIVAL-FRACTION units (solver.ts), so a conversion-winner near-tie
-   *  on any other axis REFUSES rather than silently comparing dollars to 0.02 (U14 fold). */
-  readonly statistic: 'survival' | 'pay-less-tax'
+   *  on any other axis REFUSES rather than silently comparing dollars to 0.02 (U14 fold).
+   *  `leave-more` joins as a valid PURE-DECISION axis (U15 §S5 — the objective wiring the harness
+   *  deferred): `gradeOnFamily` decides its grade from a caller-assembled after-tax-bequest family
+   *  (solve.ts owns the per-solve heir-bracket assembly; the DECISION stays this one home). Note the
+   *  live-binding {@link gradeRecommendation} still throws for leave-more — its `pairedGoalDiffs`
+   *  cannot see the per-solve heir bracket; solve.ts assembles the leave-more family and calls THIS. */
+  readonly statistic: GradeStatistic
   readonly winnerHasConversion: boolean
   readonly runnerUpHasConversion: boolean
   /** Supplied when the decision statistic is survival — enables the display-tenth clause. */
@@ -105,17 +117,37 @@ export interface GradeOnFamilyInputs {
   readonly minPathsOverride?: number
 }
 
-/** The demotion-axis guard, ONE home (U14 fold): the calibrated 0.02 demotion margin is
- *  survival-fraction units, so a conversion-winner-over-non-conversion near-tie on any other
- *  statistic REFUSES — a dollar-diff family would make `minMargin < 0.02` structurally false
- *  and silently skip the caution on exactly the flattered lever. Called by the live binding
- *  BEFORE the expensive family evaluation, and again at the pure seam (no bypass). */
+/**
+ * The demotion-axis CONDITION, ONE home (U14 fold): the calibrated 0.02 demotion margin is
+ * survival-fraction units, so a conversion-winner-over-non-conversion near-tie on any other
+ * statistic is UNCALIBRATED — a dollar-diff family would make `minMargin < 0.02` structurally
+ * false and silently skip the caution on exactly the flattered lever. `true` ⇒ the demotion axis
+ * is calibrated for this (statistic, winner/runner-up conversion) triple; `false` ⇒ the dollar-axis
+ * conversion near-tie margin is uncalibrated (fail-closed).
+ *
+ * EXPORTED (U15 §S4.5) as the SINGLE source of the condition: {@link assertDemotionAxisCalibrated}
+ * throws on it (the grade path's fail-closed guard), and `select.ts`'s solve path READS it to route
+ * the same refusal to a STRUCTURED withheld state (never an uncaught worker throw) — one condition,
+ * two enforcement shapes, no re-typed boolean to drift.
+ */
+export function demotionAxisCalibrated(
+  statistic: GradeStatistic,
+  winnerHasConversion: boolean,
+  runnerUpHasConversion: boolean,
+): boolean {
+  return !(winnerHasConversion && !runnerUpHasConversion && statistic !== 'survival')
+}
+
+/** The demotion-axis guard, ONE home (U14 fold) — the THROWING shape of {@link demotionAxisCalibrated}.
+ *  Called by the live binding BEFORE the expensive family evaluation, and again at the pure seam
+ *  (no bypass). `select.ts` uses the boolean predicate instead, to route to a structured withheld
+ *  state rather than throw. */
 function assertDemotionAxisCalibrated(
-  statistic: 'survival' | 'pay-less-tax',
+  statistic: GradeStatistic,
   winnerHasConversion: boolean,
   runnerUpHasConversion: boolean,
 ): void {
-  if (winnerHasConversion && !runnerUpHasConversion && statistic !== 'survival') {
+  if (!demotionAxisCalibrated(statistic, winnerHasConversion, runnerUpHasConversion)) {
     throw new Error(
       `[gradeCalibration] the conversion-near-tie demotion margin is calibrated in SURVIVAL-FRACTION ` +
         `units — a '${statistic}' conversion-winner near-tie needs its own calibrated margin ` +

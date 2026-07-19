@@ -197,10 +197,13 @@ export const caseAcaCliff: SolverCaseFixture = {
   seed: 0x5eed3,
   buildBase,
   buildCandidates,
+  // U15 §S0.4 provenance labels (amounts unchanged): buildCandidates mints all three EXPLICITLY
+  // with `provenance: 'grid'` (the conversion-0 arm here is pre-tax-first, NOT the conventional
+  // taxable-first policy, so it is a plain `grid:` point — never `conventional:`).
   expectedRankingIds: [
-    `pre-tax-first:${CASE_III_UNDER_AMOUNT}`,
-    'pre-tax-first:0',
-    `pre-tax-first:${CASE_III_OVER_AMOUNT}`,
+    `grid:pre-tax-first:${CASE_III_UNDER_AMOUNT}`,
+    'grid:pre-tax-first:0',
+    `grid:pre-tax-first:${CASE_III_OVER_AMOUNT}`,
   ],
   expected,
   tieTolerance: 0,

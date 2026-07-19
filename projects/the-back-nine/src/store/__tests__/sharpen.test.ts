@@ -287,6 +287,7 @@ function realSpineClient() {
       runDateSearch: (input, seed, tier, requestEpoch) =>
         engineApi.runDateSearch(input, seed, tier, requestEpoch),
       runTwoArm: async () => ({ kind: 'calm-error', reason: 'unused' }) as const,
+      runSolve: async () => ({ kind: 'calm-error', reason: 'unused' }) as const,
     },
   }
   return { client, epochCommits }

@@ -22,13 +22,17 @@
  * throws (fail loud), never a quiet skip.
  */
 import { simulate, type SimOutput } from '@engine/simulate'
-import type { Distribution, SimulationParams } from '@shared/model'
+import type { Distribution, RecommendationGoal, SimulationParams } from '@shared/model'
 import { DRAWDOWN_POLICIES } from '@shared/model'
 import { applyCandidate, type CandidateStrategy } from '../solver/candidates'
 
-/** The Tier-2 goal axis (the live-bigger goal joins with U15's go-go machinery — the oracle's
- *  five cases exercise tax + bequest + no-change). */
-export type OracleGoal = 'pay-less-tax' | 'leave-more'
+/** The Tier-2 goal axis. ALIASED to the SHARED canonical vocabulary ({@link RecommendationGoal},
+ *  model.ts) so the engine's ranking objective, the codec's enum gate, and the intake GoalPicker
+ *  read ONE membership surface (U15 §S5 — the chosen-goal field rides that same vocabulary). The
+ *  members are unchanged (`leave-more` / `pay-less-tax`); the `live-bigger-now` goal joins the
+ *  shared vocabulary additively when its objective wiring lands (the oracle's five cases exercise
+ *  tax + bequest + no-change). */
+export type OracleGoal = RecommendationGoal
 
 export interface CandidateScore {
   /** Tier-1: the raw survival fraction (quantization happens at DECISION surfaces, not here). */
@@ -71,24 +75,39 @@ const mean = (xs: readonly number[]): number => {
   return s / xs.length
 }
 
+/**
+ * The per-path AFTER-TAX-to-heirs bequest VECTOR (real $) — the §1014/IRD first-order form: the
+ * taxable bucket steps up (heirs owe nothing on the embedded gain), pre-tax + HSA are IRD-taxed at
+ * the declared heir bracket, Roth passes tax-free. SINGLE-SOURCED here (U15 §S2): `scoreFromDistribution`
+ * means this vector for the RANKING statistic (`afterTaxBequestMeanReal`), and `objective.ts`'s
+ * skew-disclosure reads the SAME vector for its downside quantiles — the after-tax formula (the M3
+ * sign-inversion class the whole architecture guards) is authored ONCE and never duplicated into a
+ * parallel scorer. `undefined` when the run carried no tax overlay (there is no bequest lens). Pure.
+ */
+export function afterTaxBequestPerPath(dist: Distribution, heirBracket: number): readonly number[] | undefined {
+  if (!(Number.isFinite(heirBracket) && heirBracket >= 0 && heirBracket < 1)) {
+    throw new Error(`[evaluate] heirBracket must be finite in [0, 1) (got ${heirBracket}) — insight 010`)
+  }
+  const ta = dist.taxAware
+  if (ta === undefined) return undefined
+  return ta.terminalTaxableReal.map(
+    (taxable, p) =>
+      taxable + // §1014: stepped up at death — heirs owe nothing on the gain
+      (ta.terminalPretaxReal[p] ?? 0) * (1 - heirBracket) + // IRD at the declared bracket
+      (ta.terminalRothReal[p] ?? 0) + // tax-free
+      (ta.terminalHsaReal[p] ?? 0) * (1 - heirBracket), // taxable to a non-spouse heir (first-order)
+  )
+}
+
 /** Score one resolved distribution (pure — the oracle's re-derivation arms drive it directly). */
 export function scoreFromDistribution(dist: Distribution, heirBracket?: number): CandidateScore {
   if (heirBracket !== undefined && !(Number.isFinite(heirBracket) && heirBracket >= 0 && heirBracket < 1)) {
     throw new Error(`[evaluate] heirBracket must be finite in [0, 1) (got ${heirBracket}) — insight 010`)
   }
   const ta = dist.taxAware
-  const afterTax =
-    ta !== undefined && heirBracket !== undefined
-      ? mean(
-          ta.terminalTaxableReal.map(
-            (taxable, p) =>
-              taxable + // §1014: stepped up at death — heirs owe nothing on the gain
-              (ta.terminalPretaxReal[p] ?? 0) * (1 - heirBracket) + // IRD at the declared bracket
-              (ta.terminalRothReal[p] ?? 0) + // tax-free
-              (ta.terminalHsaReal[p] ?? 0) * (1 - heirBracket), // taxable to a non-spouse heir (first-order)
-          ),
-        )
-      : undefined
+  // The mean of the SINGLE-SOURCED per-path bequest vector — byte-identical to the prior inline map.
+  const afterTaxVec = heirBracket !== undefined ? afterTaxBequestPerPath(dist, heirBracket) : undefined
+  const afterTax = afterTaxVec !== undefined ? mean(afterTaxVec) : undefined
   return {
     survival: dist.survivalFraction,
     lifetimeTaxMeanReal: ta !== undefined ? mean(ta.lifetimeTaxPaidReal) : undefined,
@@ -150,9 +169,17 @@ export function candidateTieBreak(a: CandidateStrategy, b: CandidateStrategy): n
   return (a.conversion?.years ?? 0) - (b.conversion?.years ?? 0)
 }
 
-/** The goal's Tier-2 read on a score — smaller-is-better normalized (tax ascending; bequest
- *  DESCENDING, so it negates). An undefined statistic under an active goal fails LOUD. */
-function tier2(score: CandidateScore, goal: OracleGoal): number {
+/**
+ * The goal's Tier-2 read on a score — smaller-is-better normalized (tax ascending; bequest
+ * DESCENDING, so it negates). An undefined statistic under an active goal fails LOUD.
+ *
+ * EXPORTED (U15 §S1) as the ONE ranking ORIENTATION. `select.ts` (S4) composes its deterministic
+ * shrinkage + `candidateTieBreak` on THIS scalar, and `objective.ts` (S1) forwards to
+ * `rankCandidates` (which reads it) rather than re-scoring — so no downstream selection surface
+ * can re-derive a sign convention that drifts from the reference ranking (objective ≡ headline,
+ * plan contract #4). No signature change: it is the same module-private function, now shared.
+ */
+export function tier2(score: CandidateScore, goal: OracleGoal): number {
   if (goal === 'pay-less-tax') {
     if (score.lifetimeTaxMeanReal === undefined) {
       throw new Error('[evaluate] pay-less-tax ranking requires taxAware runs (burned/062 — no silent default)')

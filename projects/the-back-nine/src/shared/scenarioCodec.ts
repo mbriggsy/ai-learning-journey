@@ -32,6 +32,7 @@ import {
   FILING_STATUSES,
   INCOME_TYPES,
   MEDICARE_EXTRAS_KINDS,
+  RECOMMENDATION_GOALS,
   SAVED_AT_EPOCH_DAY_MAX,
   SAVED_AT_EPOCH_DAY_MIN,
   SEXES,
@@ -629,6 +630,14 @@ function checkV3Fields(o: Obj): void {
     needString(sv, 'ncProfile', path)
     needString(sv, 'paProfile', path)
     needString(sv, 'flProfile', path)
+  }
+  // Act-4 · U15 — the recommender's chosen Tier-2 goal (additive-optional). needVocab against the
+  // SINGLE-SOURCED RECOMMENDATION_GOALS (model.ts) inside the tolerant-reader guard: a pre-U15
+  // vault lacks the key and passes unchanged (ABSENCE is the explicit unset sentinel — burned/062,
+  // never a default goal). An out-of-vocab string is corruption named LOUD — never silently coerced
+  // to a default goal (fabricating a goal the user never picked is the calm-but-wrong shape).
+  if (o.chosenGoal !== undefined) {
+    needVocab(o, 'chosenGoal', RECOMMENDATION_GOALS, 'scenario')
   }
 }
 

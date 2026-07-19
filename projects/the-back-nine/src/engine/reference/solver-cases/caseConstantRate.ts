@@ -166,7 +166,9 @@ export const caseConstantRate: SolverCaseFixture = {
   seed: 0x5eed1,
   buildBase,
   buildCandidates,
-  expectedRankingIds: ['taxable-first:0', 'proportional:0', 'pre-tax-first:0', 'bracket-fill:0'],
+  // U15 §S0.4 provenance labels (values unchanged): the conventional-policy conversion-0 arm is
+  // the `conventional-baseline`; the other three policy arms are `grid`.
+  expectedRankingIds: ['conventional:taxable-first:0', 'grid:proportional:0', 'grid:pre-tax-first:0', 'grid:bracket-fill:0'],
   expected,
   tieTolerance: 0,
 }

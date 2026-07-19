@@ -128,11 +128,13 @@ function expected(): Readonly<Record<string, number>> {
  *  bump, loudly, instead of a stale literal silently mismatching). */
 function expectedRankingIds(): readonly string[] {
   const sd = handStandardDeduction('mfj')
+  // U15 §S0.4 provenance labels (the hand-derived anchor amounts are unchanged): every
+  // conversion arm is a `grid:` point; the conversion-0 arm is the `conventional:` baseline.
   return [
-    `taxable-first:${handBandTop(0.22, 'mfj') + sd}`,
-    `taxable-first:${handBandTop(0.12, 'mfj') + sd}`,
-    `taxable-first:${handBandTop(0.1, 'mfj') + sd}`,
-    'taxable-first:0',
+    `grid:taxable-first:${handBandTop(0.22, 'mfj') + sd}`,
+    `grid:taxable-first:${handBandTop(0.12, 'mfj') + sd}`,
+    `grid:taxable-first:${handBandTop(0.1, 'mfj') + sd}`,
+    'conventional:taxable-first:0',
   ]
 }
 

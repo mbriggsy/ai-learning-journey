@@ -16,11 +16,13 @@ import { summarize } from '@engine/confidence'
 import { runDateSearch as sweepDateSearch, type DateSearchInput } from '@engine/dateSearch'
 import { runTwoArm } from '@engine/roth'
 import type { DateSearchTier, SimulationParams, TwoArmControl } from '@shared/model'
-import type { DateSearchWire, EngineWire, TwoArmWire } from '@engine/engineWire'
+import type { DateSearchWire, EngineWire, SolveArmWire, SolveWire, TwoArmWire } from '@engine/engineWire'
+import { solveWithMint, type SolvePayload, type SolveRequest } from '@engine/solver/solveEntry'
+import type { SolveArm } from '@engine/solver/solve'
 
 // Re-export the wire contract so worker-side code has one import surface.
-export type { ResolvedWire, EngineWire, EngineResult, DateSearchWire, DateSearchResult, TwoArmWire, TwoArmResult } from '@engine/engineWire'
-export { fromWire, dateSearchFromWire, twoArmFromWire } from '@engine/engineWire'
+export type { ResolvedWire, EngineWire, EngineResult, DateSearchWire, DateSearchResult, TwoArmWire, TwoArmResult, SolveWire, SolveResultView } from '@engine/engineWire'
+export { fromWire, dateSearchFromWire, twoArmFromWire, solveFromWire } from '@engine/engineWire'
 
 /**
  * Run the engine and PACK the result into wire form. Total: any unexpected throw is
@@ -166,6 +168,89 @@ export function runTwoArmEngine(base: SimulationParams, seed: number, control: T
   }
 }
 
+// ---------------------------------------------------------------------------
+// The U15 solve wire pack (§S5 (4)). `solveWithMint` mints the oracle-cleared token worker-side (it
+// cannot cross the wire — it is branded) and runs `solve()`; this layer packs the value model into the
+// wire, transferring ONLY the three displayed arms' seed-B distribution buffers (the Act-1 transfer
+// discipline at K-candidate scale — the pruned field's scalars ride by clone).
+// ---------------------------------------------------------------------------
+
+/** Pack one displayed arm's seed-B distribution into transferable typed-array buffers (the ResolvedWire
+ *  discipline: Int32 for the −1 sentinel; Float64 for terminals + the tax-aware surfaces). */
+function packArm(arm: SolveArm): SolveArmWire {
+  const d = arm.distributionB
+  const ta = d.taxAware
+  return {
+    id: arm.id,
+    policy: arm.policy,
+    conversion: arm.conversion,
+    ...(arm.drawdownOrder !== undefined ? { drawdownOrder: arm.drawdownOrder } : {}),
+    headlineStatisticB: arm.headlineStatisticB,
+    survivalB: arm.survivalB,
+    terminalValuesReal: Float64Array.from(d.terminalValuesReal),
+    depletionYears: Int32Array.from(d.depletionYears),
+    survivalFraction: d.survivalFraction,
+    ...(ta
+      ? {
+          taxAware: {
+            lifetimeTaxPaidReal: Float64Array.from(ta.lifetimeTaxPaidReal),
+            terminalTaxableReal: Float64Array.from(ta.terminalTaxableReal),
+            terminalPretaxReal: Float64Array.from(ta.terminalPretaxReal),
+            terminalRothReal: Float64Array.from(ta.terminalRothReal),
+            terminalHsaReal: Float64Array.from(ta.terminalHsaReal),
+            terminalTaxableBasisReal: Float64Array.from(ta.terminalTaxableBasisReal),
+            lifetimeNetPremiumReal: Float64Array.from(ta.lifetimeNetPremiumReal),
+            lifetimeMedicareCostReal: Float64Array.from(ta.lifetimeMedicareCostReal),
+          },
+        }
+      : {}),
+  }
+}
+
+/** Pack the solve payload into wire form — the recommended arm's three distributions become buffers;
+ *  every other arm (refused / withheld / token-withheld / mint-failed) is plain data carried verbatim. */
+export function packSolveWire(payload: SolvePayload): SolveWire {
+  if (payload.kind !== 'recommended') return payload
+  return {
+    ...payload,
+    winner: packArm(payload.winner),
+    runnerUp: payload.runnerUp !== undefined ? packArm(payload.runnerUp) : undefined,
+    noActionBaseline: packArm(payload.noActionBaseline),
+  }
+}
+
+/** Enumerate an arm's transferable buffers (the enumerated-list discipline — a non-buffer field added
+ *  later must never silently join a transfer). */
+function armBuffers(arm: SolveArmWire): ArrayBufferLike[] {
+  const bufs: ArrayBufferLike[] = [arm.terminalValuesReal.buffer, arm.depletionYears.buffer]
+  if (arm.taxAware) {
+    bufs.push(
+      arm.taxAware.lifetimeTaxPaidReal.buffer,
+      arm.taxAware.terminalTaxableReal.buffer,
+      arm.taxAware.terminalPretaxReal.buffer,
+      arm.taxAware.terminalRothReal.buffer,
+      arm.taxAware.terminalHsaReal.buffer,
+      arm.taxAware.terminalTaxableBasisReal.buffer,
+      arm.taxAware.lifetimeNetPremiumReal.buffer,
+      arm.taxAware.lifetimeMedicareCostReal.buffer,
+    )
+  }
+  return bufs
+}
+
+/**
+ * Run the U15 solve and PACK the outcome into wire form. Total: any unexpected throw is caught and
+ * returned as `calm-error` (the worker never dies — `runEngine`'s contract). The oracle-cleared token
+ * is minted + consumed entirely inside `solveWithMint` (it cannot cross the wire).
+ */
+export function runSolveEngine(request: SolveRequest): SolveWire {
+  try {
+    return packSolveWire(solveWithMint(request))
+  } catch (e) {
+    return { kind: 'calm-error', reason: e instanceof Error ? e.message : 'engine error' }
+  }
+}
+
 /** The object the worker exposes over Comlink. */
 export const engineApi = {
   /** Liveness probe (a cheap worker round-trip). */
@@ -221,6 +306,22 @@ export const engineApi = {
    *  (never the transfer list — see `TwoArmWire`). */
   runTwoArm(base: SimulationParams, seed: number, control: TwoArmControl): TwoArmWire {
     return runTwoArmEngine(base, seed, control)
+  },
+  /** Run the U15 solve (§S5). Mints the oracle-cleared token worker-side (it cannot cross the
+   *  wire — branded) and returns ONE structured payload. Only the recommended arm's THREE seed-B
+   *  distributions are transferred (detached, fresh per run — the Act-1 discipline at K-candidate
+   *  scale); every scalar / grade / withheld-lever field rides by structured clone. */
+  runSolve(request: SolveRequest): SolveWire {
+    const wire = runSolveEngine(request)
+    if (wire.kind === 'recommended') {
+      const buffers = [
+        ...armBuffers(wire.winner),
+        ...(wire.runnerUp !== undefined ? armBuffers(wire.runnerUp) : []),
+        ...armBuffers(wire.noActionBaseline),
+      ]
+      return Comlink.transfer(wire, buffers)
+    }
+    return wire
   },
 }
 

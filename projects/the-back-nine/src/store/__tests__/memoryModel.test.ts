@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest'
 import { createMemoryModel, type ParamsBuilders, type ScenarioDraft } from '../memoryModel'
 import type { EngineClient } from '../engineClient'
 import type { DateSearchInput } from '@engine/dateSearch'
-import type { DateSearchWire, EngineWire } from '@engine/engineWire'
+import type { DateSearchWire, EngineWire, SolveWire } from '@engine/engineWire'
+import type { SolveRequest } from '@engine/solver/solveEntry'
 import { engineApi } from '@engine/engineProtocol'
 import { productionMarket } from '@engine/reference/methodology'
 import type { SimulationParams } from '@shared/model'
@@ -28,15 +29,16 @@ const inputFailureWire = (reason: string): DateSearchWire => ({
 })
 
 interface Call {
-  readonly method: 'run' | 'setLatestEpoch' | 'runDateSearch'
+  readonly method: 'run' | 'setLatestEpoch' | 'runDateSearch' | 'runSolve'
   readonly args: readonly unknown[]
 }
 
-/** A controllable fake engine client: date-search promises resolve only when the
+/** A controllable fake engine client: date-search + solve promises resolve only when the
  *  test releases them (out-of-order races become deterministic). */
 function fakeClient(opts?: { runWire?: EngineWire; runningInWorker?: boolean }) {
   const calls: Call[] = []
   const datePending: Array<(w: DateSearchWire) => void> = []
+  const solvePending: Array<(w: SolveWire) => void> = []
   const client: EngineClient = {
     runningInWorker: opts?.runningInWorker ?? true,
     engine: {
@@ -57,9 +59,16 @@ function fakeClient(opts?: { runWire?: EngineWire; runningInWorker?: boolean }) 
       },
       // P3·U10 — unused by these mechanics tests (the two-arm surface has its own battery).
       runTwoArm: async () => ({ kind: 'calm-error', reason: 'unused' }) as const,
+      // U15 — the solve dispatch. Controllable: the test releases each resolve deterministically.
+      runSolve: (request) => {
+        calls.push({ method: 'runSolve', args: [request] })
+        return new Promise<SolveWire>((resolve) => {
+          solvePending.push(resolve)
+        })
+      },
     },
   }
-  return { client, calls, datePending }
+  return { client, calls, datePending, solvePending }
 }
 
 const dateBuilders: ParamsBuilders = {
@@ -430,6 +439,7 @@ describe('memoryModel — real-engine spine dispatch', () => {
         setLatestEpoch: async (e) => engineApi.setLatestEpoch(e),
         runDateSearch: async (i, s, t, e) => engineApi.runDateSearch(i, s, t, e),
         runTwoArm: async (b, s, c) => engineApi.runTwoArm(b, s, c),
+        runSolve: async (r) => engineApi.runSolve(r),
       },
     }
     const model = createMemoryModel({
@@ -470,5 +480,118 @@ describe('memoryModel — real-engine spine dispatch', () => {
         expect(Number.isFinite(v)).toBe(true)
       }
     }
+  })
+})
+
+// ---------------------------------------------------------------------------
+// U15 §S5 (5) — the TIER-LESS solve lifecycle (dispatch/pending/committed + the two preconditions).
+// The solve engine is a fake (the fingerprint/mint machinery has its own engine battery); these
+// prove the STORE orchestration: no fabricated recommendation on an unmet precondition, the pending
+// window, commit-if-newer, and that no solve state ever carries a tier.
+// ---------------------------------------------------------------------------
+
+const FAKE_SOLVE_REQUEST = { fake: true } as unknown as SolveRequest
+const refusedWire: SolveWire = { kind: 'refused', reason: 'bucket-precondition', detail: 'x', solverCodeVersion: 1 }
+
+/** Builders with a controllable solve dispatch: `dispatch` decides null (buckets defaulted) vs a request. */
+const solveBuilders = (dispatch: () => SolveRequest | null): ParamsBuilders => ({
+  buildSpineParams: () => null,
+  buildDateInput: () => null,
+  buildSolveDispatch: dispatch,
+})
+
+const withGoal = (d: ScenarioDraft): ScenarioDraft => ({ ...d, chosenGoal: 'leave-more' })
+
+describe('memoryModel — the solve lifecycle (§S5 (5))', () => {
+  it('is a NO-OP when no solve builder is wired (P2/P3 models never reach the second beat)', async () => {
+    const { client } = fakeClient()
+    const model = createMemoryModel({ client, builders: dateBuilders })
+    await model.dispatchSolve()
+    expect(model.getSnapshot().solve).toEqual({ kind: 'idle' })
+  })
+
+  it('BLOCKS on goal-unset — the solve is never dispatched while the goal sentinel is unset (burned/062)', async () => {
+    const { client, calls } = fakeClient()
+    const model = createMemoryModel({ client, builders: solveBuilders(() => FAKE_SOLVE_REQUEST) })
+    await model.dispatchSolve() // draft.chosenGoal is undefined by default
+    expect(model.getSnapshot().solve).toEqual({ kind: 'blocked', gap: 'goal-unset', label: 'goal-unset' })
+    expect(calls.filter((c) => c.method === 'runSolve')).toHaveLength(0) // NEVER dispatched
+  })
+
+  it('BLOCKS on the bucket precondition — the builder returns null on a defaulted split', async () => {
+    const { client, calls } = fakeClient()
+    const model = createMemoryModel({ client, builders: solveBuilders(() => null) })
+    model.update(withGoal)
+    await model.dispatchSolve()
+    expect(model.getSnapshot().solve).toEqual({ kind: 'blocked', gap: 'buckets-defaulted', label: 'buckets-defaulted' })
+    expect(calls.filter((c) => c.method === 'runSolve')).toHaveLength(0)
+  })
+
+  it('goes pending → committed when the preconditions are met (a TIER-LESS lifecycle — no fabricated tier)', async () => {
+    const { client, solvePending } = fakeClient()
+    const model = createMemoryModel({ client, builders: solveBuilders(() => FAKE_SOLVE_REQUEST) })
+    model.update(withGoal)
+    const p = model.dispatchSolve()
+    expect(model.getSnapshot().solve).toEqual({ kind: 'pending', label: 'solving' })
+    solvePending[0]!(refusedWire)
+    await p
+    const solve = model.getSnapshot().solve
+    expect(solve.kind).toBe('committed')
+    if (solve.kind !== 'committed') throw new Error('unreachable')
+    expect(solve.payload).toEqual({ kind: 'refused', reason: 'bucket-precondition', detail: 'x', solverCodeVersion: 1 })
+    // No solve state ever carries a DateSearchTier (the vertical-fit gate must never satisfy on it).
+    expect('tier' in solve).toBe(false)
+  })
+
+  it('commits the NEWER solve and DISCARDS a stale in-flight one (the epoch guard)', async () => {
+    const { client, solvePending } = fakeClient()
+    const model = createMemoryModel({ client, builders: solveBuilders(() => FAKE_SOLVE_REQUEST) })
+    model.update(withGoal)
+    const first = model.dispatchSolve()
+    const second = model.dispatchSolve()
+    // Release the SECOND first (it commits), then the stale FIRST (it must be discarded).
+    solvePending[1]!({ kind: 'mint-failed', stage: 'roster', detail: 'newer', solverCodeVersion: 1 })
+    await second
+    solvePending[0]!(refusedWire)
+    await first
+    const solve = model.getSnapshot().solve
+    if (solve.kind !== 'committed') throw new Error('unreachable')
+    expect(solve.payload).toMatchObject({ kind: 'mint-failed', detail: 'newer' }) // the newer one stands
+  })
+
+  it('HOLDS on a cooperatively-ABORTED solve — a superseded run that bailed never commits (§S6)', async () => {
+    // The commit-epoch guard discards a stale RESULT once a newer solve has committed; the aborted bin
+    // is HELD directly (mirroring the date route's `cancelled` hold) so it never renders as an answer,
+    // even before the newer solve lands. Deleting the hold ⇒ the aborted payload commits ⇒ this fails.
+    const { client, solvePending } = fakeClient()
+    const model = createMemoryModel({ client, builders: solveBuilders(() => FAKE_SOLVE_REQUEST) })
+    model.update(withGoal)
+    const p = model.dispatchSolve()
+    expect(model.getSnapshot().solve).toEqual({ kind: 'pending', label: 'solving' })
+    const abortedWire: SolveWire = { kind: 'aborted', detail: 'superseded', solverCodeVersion: 1 }
+    solvePending[0]!(abortedWire)
+    await p
+    // Held — never committed to an answer (the pending window stands until a real solve lands).
+    expect(model.getSnapshot().solve).toEqual({ kind: 'pending', label: 'solving' })
+  })
+
+  it('a rejected solve promise commits the calm compute-error mode (never an uncaught rejection)', async () => {
+    const client: EngineClient = {
+      runningInWorker: true,
+      engine: {
+        ping: async () => 'pong' as const,
+        run: async () => ({ kind: 'calm-error', reason: 'unused' }) as const,
+        setLatestEpoch: async () => {},
+        runDateSearch: async () => ({ kind: 'calm-error', reason: 'unused' }) as const,
+        runTwoArm: async () => ({ kind: 'calm-error', reason: 'unused' }) as const,
+        runSolve: async () => {
+          throw new Error('worker died')
+        },
+      },
+    }
+    const model = createMemoryModel({ client, builders: solveBuilders(() => FAKE_SOLVE_REQUEST) })
+    model.update(withGoal)
+    await model.dispatchSolve()
+    expect(model.getSnapshot().solve).toEqual({ kind: 'compute-error', reason: 'engine-unavailable' })
   })
 })

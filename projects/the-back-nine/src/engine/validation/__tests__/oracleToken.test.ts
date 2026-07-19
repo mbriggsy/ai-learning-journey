@@ -255,6 +255,9 @@ describe('S6 — mintOracleToken: the assembled gate (reports required, clauses 
     { policy: 'taxable-first', conversion: { annualAmountReal: 20_000, startYearOffset: 0, years: 3 }, provenance: 'grid' },
     { policy: 'taxable-first', conversion: { annualAmountReal: 40_000, startYearOffset: 0, years: 3 }, provenance: 'grid' },
   ] as const
+  // The ranking objective the report's fingerprint pins (§S0.2) — the stability check is
+  // goal-agnostic, so any valid objective drives this shared report.
+  const ranking = { goal: 'leave-more', heirBracket: 0.25 } as const
   const stabilityOut = runRankingStability({
     base: stochastic,
     candidates: stabilityCandidates,
@@ -262,6 +265,7 @@ describe('S6 — mintOracleToken: the assembled gate (reports required, clauses 
     seedB: 0xb0b5eed,
     perturbIndex: 1,
     siblingIndex: 2,
+    ranking,
   })
   if (!('report' in stabilityOut)) {
     throw new Error(`stability must pass to build the mint battery: ${(stabilityOut as { violations: readonly string[] }).violations.join(' | ')}`)
@@ -282,6 +286,10 @@ describe('S6 — mintOracleToken: the assembled gate (reports required, clauses 
       expect(out.token.mintedOver.oracleCaseIds).toEqual(SOLVER_CASES.map((f) => f.id))
       expect(out.token.mintedOver.stabilityCandidateCount).toBe(3)
       expect(out.disclosedDirectional).toContain('methodology.productionMarket')
+      // §S0.2: the token COPIES the stability report's fingerprint verbatim (the single authority)
+      // — a mint that dropped or recomputed it (drift) fails here. Non-empty (a real identity).
+      expect(out.token.mintedOver.fingerprint).toBe(stabilityReport.fingerprint)
+      expect(out.token.mintedOver.fingerprint.length).toBeGreaterThan(0)
     }
   })
 

@@ -75,7 +75,15 @@ import type {
 } from '@shared/model'
 import type { DateSearchInput } from '@engine/dateSearch'
 import { appDefaultEraFor, CURRENT_APP_DEFAULT_VERSION } from '@shared/appDefaults'
-import { fromWire, dateSearchFromWire } from '@engine/engineWire'
+import { fromWire, dateSearchFromWire, solveFromWire } from '@engine/engineWire'
+// TYPE-ONLY (erased — the solver stays out of the store bundle; the token is minted worker-side and
+// never crosses the wire). The solve DISPATCH is store orchestration; the request is built by the
+// injected builder (U16's real builder; tests drive a fake), the payload reconstructed by solveFromWire.
+import type { SolvePayload, SolveRequest } from '@engine/solver/solveEntry'
+// The PURE commit-epoch guard for the solve lane (§S6, cancel.ts) — a runtime import of one leaf
+// predicate (it drags no MC compute; cancel.ts imports only the version constant). The UNCONDITIONAL
+// discard rule lives in ONE tested home, wired here (insight 048 — the decision is never inlined).
+import { shouldCommitSolve } from '@engine/solver/cancel'
 // The display-geometry constants the sticky gates read — the engine's OWN exported values
 // (never re-typed; the same objects confidence.ts computes the emitted margins against).
 import { DOLLAR_STEP, STATE_OPTIMISM_RANK, SURVIVAL_GRID } from '@engine/confidence'
@@ -157,6 +165,11 @@ export interface ScenarioDraft
       | 'taxVintageDetail'
       | 'dateVintage'
       | 'stateTaxVintage'
+      // Act-4 · U15 — the chosen Tier-2 goal (additive-optional; ABSENT = the unset sentinel).
+      // A USER FACT carried via `...draft` at Save (the retirementState precedent), NOT a
+      // stamped-fresh vintage. intake/GoalPicker (U16) reads+writes it; the solve precondition
+      // refuses to dispatch while it is unset (no Tier-1-only tie-break crowned as advice).
+      | 'chosenGoal'
     >
   >,
     Pick<
@@ -216,6 +229,37 @@ export type ModelAnswer =
   | { readonly kind: 'inputs-incomplete' }
   | { readonly kind: 'compute-error'; readonly reason: string }
 
+// ---------------------------------------------------------------------------
+// U15 §S5 (5) — the TIER-LESS solve lifecycle (the recommend-second dispatch/pending/committed
+// arm, mirroring U12's tier-less `inputs-incomplete`). Every user-READ state is a structured
+// flag + a MACHINE label — NO copy is authored in this unit (the pending-state CHARACTER — what
+// the wait feels like — is decided AFTER profile.ts reports real numbers; ⚑ digest, his eye may
+// re-cut it). NO fabricated tier: a solve is a recommendation, not a spine/date answer, so it
+// carries no DateSearchTier (the vertical-fit gate's data-answer-tier="final" wait must never
+// satisfy on a solve state — Result mirrors ModelAnswer only, never SolveAnswer). This is WIRING,
+// not chrome: U16's GoalPicker + rendered beats read these flags, they are never rendered here.
+// ---------------------------------------------------------------------------
+
+/** The precondition the solve was NOT dispatched on (§S5 (3)) — each a structured flag the U16
+ *  surface routes (goal-unset ⇒ present the GoalPicker; buckets-defaulted ⇒ the RothAccounts
+ *  mini-intake). Never a fabricated recommendation on an unmet precondition (burned/062). */
+export type SolvePreconditionGap = 'goal-unset' | 'buckets-defaulted'
+
+export type SolveAnswer =
+  | { readonly kind: 'idle' } // no solve invited yet (the second beat not opened)
+  // A precondition blocked the dispatch — the solve was NEVER sent (no Tier-1-only tie-break
+  // crowned as advice). `label` is a stable MACHINE key (no copy), equal to `gap`.
+  | { readonly kind: 'blocked'; readonly gap: SolvePreconditionGap; readonly label: SolvePreconditionGap }
+  // A solve is in flight (the calm "working on it" window). `label` is a machine key; the
+  // wait's CHARACTER is deferred (profile.ts), so no copy rides here.
+  | { readonly kind: 'pending'; readonly label: 'solving' }
+  // A solve committed — the reconstructed payload (recommended / refused / withheld /
+  // token-withheld / mint-failed; each its own structured flag via `payload.kind`).
+  | { readonly kind: 'committed'; readonly payload: SolvePayload }
+  // The worker promise rejected (worker death / clone failure) — the calm retry mode, never an
+  // uncaught rejection into the UI (the recompute() precedent).
+  | { readonly kind: 'compute-error'; readonly reason: string }
+
 export interface MemoryModelSnapshot {
   readonly draft: ScenarioDraft
   readonly answer: ModelAnswer
@@ -226,6 +270,9 @@ export interface MemoryModelSnapshot {
    *  same commit as the answer, before its single notify (burned/017): no listener can
    *  observe the answer and its displayed triple disagreeing across a frame. */
   readonly displayed: StickyDisplay | null
+  /** U15 §S5 (5) — the recommend-second solve lifecycle (tier-less; a SEPARATE channel from
+   *  `answer`, which stays the spine/date first beat). `idle` until the second beat is invited. */
+  readonly solve: SolveAnswer
   readonly runningInWorker: boolean
 }
 
@@ -243,6 +290,15 @@ export interface MemoryModelSnapshot {
 export interface ParamsBuilders {
   readonly buildSpineParams: (draft: ScenarioDraft) => SimulationParams | null
   readonly buildDateInput: (draft: ScenarioDraft) => DateSearchInput | null
+  /** U15 §S5 — build the on-demand solve request from the draft (the enumerated roster + the
+   *  household params + the injected `todayEpochDay` clock read). Returns null on the BUCKET
+   *  precondition (a defaulted split can't be sequenced — burned/062), exactly the builder-null
+   *  convention the spine/date builders use. OPTIONAL: a model wired without it never dispatches a
+   *  solve (the U16 builder plugs in here; the P2/P3 surfaces don't carry it). The chosen-goal
+   *  precondition is checked BEFORE this (memoryModel reads `draft.chosenGoal` directly for a precise
+   *  `goal-unset` gap). The oracle-cleared token is NOT the builder's concern — it is minted
+   *  worker-side inside `runSolve` (it cannot cross the wire). */
+  readonly buildSolveDispatch?: (draft: ScenarioDraft) => SolveRequest | null
 }
 
 export interface MemoryModelDeps {
@@ -268,6 +324,14 @@ export interface MemoryModel {
    *  headline when all are 'retired' (status drives routing — never inferred
    *  from salary). No-op (→ idle) below minimum-viable input. */
   recompute(tier?: DateSearchTier): Promise<void>
+  /** U15 §S5 (5) — invite the recommend-second solve for the current draft (the SECOND beat,
+   *  a separate channel from `recompute`'s first beat). Refuses to dispatch on an unmet
+   *  precondition (goal unset ⇒ `blocked{goal-unset}`; the injected builder returns null on a
+   *  defaulted bucket split ⇒ `blocked{buckets-defaulted}`), never fabricating a recommendation.
+   *  Otherwise dispatches the worker solve (which mints the oracle-cleared token) and commits the
+   *  reconstructed payload if newer (the epoch-discard discipline). No-op if no solve builder is
+   *  wired (P2/P3 models). */
+  dispatchSolve(): Promise<void>
 }
 
 // ---------------------------------------------------------------------------
@@ -428,11 +492,17 @@ export function createMemoryModel(deps: MemoryModelDeps): MemoryModel {
   }
 
   let answer: ModelAnswer = { kind: 'idle' }
+  // U15 §S5 (5) — the solve lifecycle state (a SEPARATE channel from `answer`).
+  let solveAnswer: SolveAnswer = { kind: 'idle' }
 
   // (f) — the epoch pair: `dispatched` mints (monotonic), `committed` gates
   // rendering. A resolve whose epoch ≤ committed is DISCARDED unrendered.
   let dispatchedEpoch = 0
   let committedEpoch = 0
+  // U15 — the solve's OWN epoch pair (commit-if-newer on the solve channel, so a rapid
+  // re-invite discards a stale in-flight solve; worker-side cooperative cancel is S6/cancel.ts).
+  let solveDispatchedEpoch = 0
+  let solveCommittedEpoch = 0
 
   // U12 — contract (d) FILLED (the P2 placeholder made real): `lastDisplayed` is
   // the session-only sticky baseline (see the seam block above for the full
@@ -448,11 +518,12 @@ export function createMemoryModel(deps: MemoryModelDeps): MemoryModel {
     draft,
     answer,
     displayed: lastDisplayed,
+    solve: solveAnswer,
     runningInWorker: deps.client.runningInWorker,
   }
 
   const notify = () => {
-    snapshot = { draft, answer, displayed: lastDisplayed, runningInWorker: deps.client.runningInWorker }
+    snapshot = { draft, answer, displayed: lastDisplayed, solve: solveAnswer, runningInWorker: deps.client.runningInWorker }
     for (const l of listeners) l()
   }
 
@@ -479,6 +550,19 @@ export function createMemoryModel(deps: MemoryModelDeps): MemoryModel {
         ? resolveStickyDisplay(lastDisplayed, next.result.headline, next.result.dollar)
         : null
     answer = next
+    notify()
+  }
+
+  // U15 §S5 (5) — the solve channel's commit-if-newer (mirrors `commit`'s epoch discard, on the
+  // solve's OWN epoch pair). A blocked/pending transition is NOT epoch-gated (it is the local
+  // dispatch decision); only a worker RESOLVE races, so only the resolve commit checks the epoch.
+  const commitSolve = (epoch: number, next: SolveAnswer): void => {
+    // The UNCONDITIONAL commit-epoch guard (§S6 — cancel.ts's pure seam): a resolved solve commits
+    // ONLY if strictly newer than the last committed. A superseded solve NEVER renders, whatever its
+    // speed (the Act-2 request-epoch discipline extended to the solve lane).
+    if (!shouldCommitSolve(epoch, solveCommittedEpoch)) return
+    solveCommittedEpoch = epoch
+    solveAnswer = next
     notify()
   }
 
@@ -572,6 +656,57 @@ export function createMemoryModel(deps: MemoryModelDeps): MemoryModel {
         // A rejected engine promise (worker death, clone failure) is the calm
         // compute-error mode — never an uncaught rejection into the UI.
         commit(epoch, { kind: 'compute-error', reason: 'engine-unavailable' })
+      }
+    },
+
+    async dispatchSolve(): Promise<void> {
+      // No solve builder wired (P2/P3 models) ⇒ the second beat is not reachable; stay idle.
+      const build = deps.builders.buildSolveDispatch
+      if (build === undefined) return
+
+      // PRECONDITION 1 — the chosen goal (§S5 (3); plan line 175). Read the draft DIRECTLY so the
+      // gap is precise (`goal-unset` ⇒ U16 presents the GoalPicker first). The solve is never
+      // dispatched while unset — no Tier-1-only tie-break is crowned as advice (burned/062). This
+      // is a LOCAL decision (not epoch-gated): it commits the structured blocked flag immediately.
+      if (draft.chosenGoal === undefined) {
+        solveAnswer = { kind: 'blocked', gap: 'goal-unset', label: 'goal-unset' }
+        notify()
+        return
+      }
+
+      // PRECONDITION 2 — the bucket precondition (plan line 174): the injected builder returns null
+      // on a defaulted split (the builder-null convention). A defaulted split is a silent
+      // measurement, the calm-but-wrong shape — refuse, never solve on it.
+      const request = build(draft)
+      if (request === null) {
+        solveAnswer = { kind: 'blocked', gap: 'buckets-defaulted', label: 'buckets-defaulted' }
+        notify()
+        return
+      }
+
+      // Dispatch. Mint the epoch, render the pending state, and commit-if-newer on resolve (a rapid
+      // re-invite discards the stale in-flight solve). The oracle-cleared token is minted worker-side
+      // inside runSolve (it cannot cross the wire); every payload arm is a NAMED bin (insight 092).
+      const epoch = ++solveDispatchedEpoch
+      solveAnswer = { kind: 'pending', label: 'solving' }
+      notify()
+      try {
+        const wire = await deps.client.engine.runSolve(request)
+        const view = solveFromWire(wire)
+        // A cooperatively-ABORTED solve (§S6) is a superseded run that bailed mid-flight — HOLD the
+        // prior answer, never commit it (the date route's `cancelled` discipline: committing a
+        // non-answer would blank the surface). The commit-epoch guard discards a stale result once a
+        // NEWER solve has committed, but the newer one may still be in flight — so recognize the
+        // aborted bin explicitly and hold. (Reachable only once the worker-epoch transport is wired —
+        // the granularity call deferred to the profile, §S6 — but handled now so it is never rendered.)
+        if (view.ok && view.payload.kind === 'aborted') return
+        commitSolve(
+          epoch,
+          view.ok ? { kind: 'committed', payload: view.payload } : { kind: 'compute-error', reason: view.reason },
+        )
+      } catch {
+        // A rejected engine promise (worker death, clone failure) is the calm compute-error mode.
+        commitSolve(epoch, { kind: 'compute-error', reason: 'engine-unavailable' })
       }
     },
   }

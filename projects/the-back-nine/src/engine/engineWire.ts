@@ -6,7 +6,12 @@
  * chunk). Keeping the boundary structural — not reliant on bundler tree-shaking — means
  * a future main-thread import can never silently drag the engine across the worker line.
  */
-import type { BandFan, DateSearchOutcome, DollarAdjustment, Headline, HealthReadout, SimulationResult, SurvivorConditioned, SurvivorReading, TwoArmOutcome } from '@shared/model'
+import type { BandFan, DateSearchOutcome, Distribution, DollarAdjustment, Headline, HealthReadout, SimulationResult, SurvivorConditioned, SurvivorReading, TwoArmOutcome } from '@shared/model'
+// TYPE-ONLY (erased at compile — no runtime edge, so the MC engine + the solver stay OUT of the main
+// bundle; `verify:bundle` guards the real import graph). The solve payload's value model lives with the
+// solver (solve.ts / solveEntry.ts); this module owns only the WIRE variant + the main-thread unpack.
+import type { SolveArm, SolveRecommendation } from '@engine/solver/solve'
+import type { SolvePayload } from '@engine/solver/solveEntry'
 
 /** The per-path tax-aware solver surfaces in WIRE form (U3·M6 — `Distribution.taxAware`
  *  as eight transferable Float64 buffers, U11 added the lifetime healthcare Σ pair).
@@ -196,4 +201,104 @@ export type TwoArmResult =
 export function twoArmFromWire(wire: TwoArmWire): TwoArmResult {
   if (wire.kind === 'calm-error') return { ok: false, reason: wire.reason }
   return { ok: true, outcome: wire.outcome }
+}
+
+// ---------------------------------------------------------------------------
+// The U15 solve wire (§S5 (4) — extends Act-1's transfer contract to K candidates). ONE structured
+// payload: the FULL seed-B distributions for the winner + retained runner-up + no-action baseline are
+// the ONLY buffers in the transfer list (Act-1's typed-array discipline); everything else — the pruned
+// field's scalar selection scores, the grade, the named driver, the surplus-regime flag, the withheld-
+// lever enumeration, `SOLVER_CODE_VERSION` — crosses by structured clone. Every other payload arm
+// (refused / withheld / token-withheld / mint-failed) is already plain data and crosses unchanged.
+//
+// The per-solve allocation is sized for THREE distributions + scalars, never K full distributions —
+// keeping Act-1's "fresh per run, retains none" discipline true at K-candidate scale (plan line 178).
+// ---------------------------------------------------------------------------
+
+/** One displayed arm in WIRE form — its seed-B distribution as transferable typed-array buffers (the
+ *  ResolvedWire discipline: `depletionYears` is Int32 for the −1 NEVER_DEPLETED sentinel; terminals +
+ *  the tax-aware surfaces are Float64). The scalar display figures ride by clone alongside. */
+export interface SolveArmWire {
+  readonly id: string
+  readonly policy: SolveArm['policy']
+  readonly conversion: SolveArm['conversion']
+  readonly drawdownOrder?: SolveArm['drawdownOrder']
+  readonly headlineStatisticB: number
+  readonly survivalB: number
+  readonly terminalValuesReal: Float64Array
+  readonly depletionYears: Int32Array
+  readonly survivalFraction: number
+  /** Present iff the run carried the tax overlay (the ResolvedWire presence contract). */
+  readonly taxAware?: TaxAwareWire
+}
+
+/** The recommended payload with its three displayed arms in buffer form; every non-arm field is the
+ *  solver's own plain-data value model, carried verbatim by clone. */
+export type SolveRecommendedWire = Omit<SolveRecommendation, 'winner' | 'runnerUp' | 'noActionBaseline'> & {
+  readonly winner: SolveArmWire
+  readonly runnerUp: SolveArmWire | undefined
+  readonly noActionBaseline: SolveArmWire
+}
+
+/** The worker's solve return contract — the recommended payload (buffers) or any plain-data payload
+ *  arm (refused / withheld / token-withheld / mint-failed), or a calm error for an UNEXPECTED throw. */
+export type SolveWire =
+  | SolveRecommendedWire
+  | Exclude<SolvePayload, SolveRecommendation>
+  | { readonly kind: 'calm-error'; readonly reason: string }
+
+/** The reconstructed main-thread solve payload, or a calm error to render. */
+export type SolveResultView =
+  | { readonly ok: true; readonly payload: SolvePayload }
+  | { readonly ok: false; readonly reason: string }
+
+/** Rebuild one arm's seed-B distribution from its buffers (typed arrays → plain number[]). */
+function armFromWire(arm: SolveArmWire): SolveArm {
+  const distributionB: Distribution = {
+    terminalValuesReal: Array.from(arm.terminalValuesReal),
+    depletionYears: Array.from(arm.depletionYears),
+    survivalFraction: arm.survivalFraction,
+    ...(arm.taxAware
+      ? {
+          taxAware: {
+            lifetimeTaxPaidReal: Array.from(arm.taxAware.lifetimeTaxPaidReal),
+            terminalTaxableReal: Array.from(arm.taxAware.terminalTaxableReal),
+            terminalPretaxReal: Array.from(arm.taxAware.terminalPretaxReal),
+            terminalRothReal: Array.from(arm.taxAware.terminalRothReal),
+            terminalHsaReal: Array.from(arm.taxAware.terminalHsaReal),
+            terminalTaxableBasisReal: Array.from(arm.taxAware.terminalTaxableBasisReal),
+            lifetimeNetPremiumReal: Array.from(arm.taxAware.lifetimeNetPremiumReal),
+            lifetimeMedicareCostReal: Array.from(arm.taxAware.lifetimeMedicareCostReal),
+          },
+        }
+      : {}),
+  }
+  return {
+    id: arm.id,
+    policy: arm.policy,
+    conversion: arm.conversion,
+    ...(arm.drawdownOrder !== undefined ? { drawdownOrder: arm.drawdownOrder } : {}),
+    distributionB,
+    headlineStatisticB: arm.headlineStatisticB,
+    survivalB: arm.survivalB,
+  }
+}
+
+/** UNPACK a solve wire result back to the solver's value model on the main-thread side. The three
+ *  displayed arms widen their buffers back to plain number[] (the value model U16 reads); every
+ *  other payload arm is plain data carried verbatim. Compute-free. */
+export function solveFromWire(wire: SolveWire): SolveResultView {
+  if (wire.kind === 'calm-error') return { ok: false, reason: wire.reason }
+  if (wire.kind !== 'recommended') {
+    // refused / withheld / token-withheld / mint-failed are plain data — carried verbatim.
+    return { ok: true, payload: wire }
+  }
+  const { winner, runnerUp, noActionBaseline, ...rest } = wire
+  const payload: SolveRecommendation = {
+    ...rest,
+    winner: armFromWire(winner),
+    runnerUp: runnerUp !== undefined ? armFromWire(runnerUp) : undefined,
+    noActionBaseline: armFromWire(noActionBaseline),
+  }
+  return { ok: true, payload }
 }

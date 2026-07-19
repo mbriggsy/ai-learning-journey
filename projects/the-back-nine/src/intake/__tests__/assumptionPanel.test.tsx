@@ -61,6 +61,7 @@ const nullClient: EngineClient = {
     setLatestEpoch: async () => {},
     runDateSearch: async () => ({ kind: 'date-search', outcome: { kind: 'cancelled' } }) as const,
     runTwoArm: async () => ({ kind: 'calm-error', reason: 'unused' }) as const,
+    runSolve: async () => ({ kind: 'calm-error', reason: 'unused' }) as const,
   },
 }
 
@@ -124,6 +125,7 @@ const snap = (draft: ScenarioDraft, over: Partial<MemoryModelSnapshot> = {}): Me
   draft,
   answer: { kind: 'idle' },
   displayed: null,
+  solve: { kind: 'idle' },
   runningInWorker: true,
   ...over,
 })

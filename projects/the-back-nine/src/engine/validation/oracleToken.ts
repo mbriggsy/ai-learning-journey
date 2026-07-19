@@ -35,6 +35,7 @@ import { PART_B_PRICING_MODE } from '../taxOverlay'
 import { consumedConstantEntries, type ConsumedConstant } from './consumedConstants'
 import type { OracleReport } from './optimalityOracle'
 import type { RankingStabilityReport } from './rankingStability'
+import type { SolverRunFingerprint } from './solverRunFingerprint'
 
 // ---- The withheld-reason enum (S6.3 — first-class, so U17's gate-red branch names the TRUE
 //      reason, never blaming the law when a primary is merely un-pinned) ----------------------
@@ -234,6 +235,12 @@ export interface OracleClearedToken {
     readonly stabilityCandidateCount: number
     readonly todayEpochDay: number
     readonly disclosedDirectional: readonly string[]
+    /** THE RUN FINGERPRINT (U15 §S0.2) — COPIED verbatim from the stability report this token
+     *  composes (the single fingerprint authority, never a re-computation here), so the token's
+     *  identity is EXACTLY the roster ranking-stability was proven over. `solve()` (S5) refuses a
+     *  token whose fingerprint differs from the run it is asked to bless — the household binding
+     *  the un-fingerprinted `mintedOver` lacked (the honored honesty-hawk veto). */
+    readonly fingerprint: SolverRunFingerprint
   }
 }
 
@@ -291,6 +298,10 @@ export function mintOracleToken(inputs: {
       stabilityCandidateCount: stabilityReport.candidateCount,
       todayEpochDay,
       disclosedDirectional: pinning.disclosedDirectional,
+      // COPIED from the stability report (§S0.2) — the single fingerprint authority. The token's
+      // identity is therefore EXACTLY the roster ranking-stability was proven over; in a real S5
+      // solve `params`, the stability `base`, and the recompute all derive from the ONE household.
+      fingerprint: stabilityReport.fingerprint,
     },
   } as unknown as OracleClearedToken
   return { token, disclosedDirectional: pinning.disclosedDirectional }

@@ -249,6 +249,31 @@ export function expandRothConversion(
 }
 
 // ---------------------------------------------------------------------------
+// The recommendation Tier-2 goal (Act-4 · U15 — the surplus goal the solver
+// optimizes ABOVE the survival floor; the chosen-goal field the second beat sets).
+// THE ONE canonical membership surface (the STATE_ROSTER precedent): the engine's
+// ranking objective (`evaluate.ts`'s `OracleGoal` aliases this), the codec's enum
+// gate, and the intake GoalPicker all read THIS array — a goal added to the union
+// cannot silently skip them (the derived type + the codec's needVocab both track it).
+// ---------------------------------------------------------------------------
+
+/** The Tier-2 surplus goals the recommender ranks on above the survival floor (R21):
+ *  `leave-more` = maximize the after-tax-to-heirs bequest (first-order §1014/IRD at the
+ *  disclosed heir bracket — never the gross figure); `pay-less-tax` = minimize lifetime
+ *  tax paid. (`live-bigger-now` is a plan-named third goal deferred past U15 — it ranks a
+ *  confidence-over-fixed-spending statistic, not a distributional dollar, so it joins this
+ *  vocabulary additively when its objective wiring lands.) */
+export const RECOMMENDATION_GOALS = ['leave-more', 'pay-less-tax'] as const
+export type RecommendationGoal = (typeof RECOMMENDATION_GOALS)[number]
+
+// Compile-time exhaustiveness (the OUTCOME_STATES pattern) — the array and the derived
+// type can never drift, and the codec's needVocab reads the array.
+type _GoalsCover = (typeof RECOMMENDATION_GOALS)[number] extends RecommendationGoal ? true : never
+type _GoalCovered = RecommendationGoal extends (typeof RECOMMENDATION_GOALS)[number] ? true : never
+const _goalsExhaustive: _GoalsCover & _GoalCovered = true
+void _goalsExhaustive
+
+// ---------------------------------------------------------------------------
 // Tax-and-accounts overlay input (U2). Federal filing status is shared vocabulary
 // (the engine's tax overlay + the persisted scenario both speak it). The overlay is
 // OPTIONAL on the engine input: absent ⇒ the tax-blind spine (the reduce-to-spine
@@ -1703,6 +1728,19 @@ export interface ScenarioV3 {
    *  strips ONLY the wall-time `savedAt`): build-deterministic, so two same-build saves stamp
    *  identically and an untouched next-day session still reads clean. */
   readonly stateTaxVintage?: StateTaxVintageV3
+  /** Act-4 · U15 — the recommender's chosen Tier-2 goal (the surplus goal the solver ranks
+   *  ABOVE the survival floor; R21). ADDITIVE-OPTIONAL within schemaVersion 3 (the
+   *  budget/rothConversion/retirementState tolerant-reader precedent — a pre-U15 vault lacks
+   *  the field and decodes unchanged; NO schemaVersion bump — the runway supersession ruled the
+   *  Act-4 bump narrative counterfactual). THE EXPLICIT UNSET SENTINEL IS ABSENCE (burned/062):
+   *  an unchosen goal is the field ABSENT/undefined, NEVER a plausible default goal — the solve
+   *  is never dispatched while unset (memoryModel's precondition), and no Tier-1-only tie-break
+   *  is ever crowned as advice. It is a USER FACT, not a stamped-fresh field: `scenarioFromDraft`
+   *  carries it via `...draft` (the retirementState precedent, unlike the vintage stamps).
+   *  `needVocab`-gated at the codec against {@link RECOMMENDATION_GOALS}; an out-of-vocab string
+   *  is corruption named loud (never silently coerced to a default goal — the calm-but-wrong
+   *  shape of fabricating a goal the user never picked). */
+  readonly chosenGoal?: RecommendationGoal
 }
 
 /** The three user-forkable arms of the Medicare-extras payment fork plus the honest
@@ -1851,6 +1889,7 @@ export const SCENARIO_V3_FIELDS = [
   'taxVintageDetail',
   'dateVintage',
   'stateTaxVintage',
+  'chosenGoal',
 ] as const
 
 // Compile-time: the field array exactly covers ScenarioV3 (both directions).

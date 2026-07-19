@@ -114,6 +114,46 @@ export type AnchoredRail =
   | { readonly kind: 'irmaa-step'; readonly threshold: number }
   | { readonly kind: 'bracket-edge'; readonly edge: number }
 
+/**
+ * THE CANDIDATE IDENTITY the expected rankings + the run fingerprint are written in (U15 §S0.4).
+ * Widened from the U14 `policy:amount` form with a PROVENANCE ARM so it is INJECTIVE by
+ * construction: `candidates.ts` and an injected `userBaseline` both mint a `taxable-first:0`
+ * when the user's current strategy IS the common default (the MODAL collision the fold named,
+ * `reference/solver-cases/types.ts:81`), and a lossy id would score two distinct candidates —
+ * two real points with DIFFERENT jobs (a searched grid point vs the user's own labeled baseline)
+ * — as one. WIDEN, never dedup. Home is HERE, with the candidate it identifies (the fingerprint
+ * is a shipped concern; a shipped module depending on the fixtures for the id would be backwards)
+ * — re-exported from `reference/solver-cases/types.ts` so every U14 import path is unbroken.
+ *
+ * NOTE (the non-custom gap the fold flagged is CLOSED; the custom-order gap is fingerprint's):
+ * within ONE enumerated set there is at most one `custom` candidate (the single injected
+ * userBaseline), so the id never collides internally. ACROSS runs two different custom drawdown
+ * orders share `baseline:custom:0` — that difference is ranking-affecting and is captured by the
+ * RUN FINGERPRINT (which serializes each candidate's FULL fields, `drawdownOrder` included),
+ * never left to the id string alone.
+ */
+export const solverCandidateId = (c: CandidateStrategy): string =>
+  `${candidateProvenanceArm(c.provenance)}:${c.policy}:${c.conversion?.annualAmountReal ?? 0}`
+
+/** Map the provenance to its id arm — an EXHAUSTIVE switch so a new provenance value forces a
+ *  new arm at COMPILE time (the `never` default), never a silent collision into an existing arm. */
+function candidateProvenanceArm(p: CandidateStrategy['provenance']): 'grid' | 'conventional' | 'baseline' {
+  switch (p) {
+    case 'grid':
+      return 'grid'
+    case 'conventional-baseline':
+      return 'conventional'
+    case 'user-baseline':
+      return 'baseline'
+    default: {
+      const _exhaustive: never = p
+      throw new Error(
+        `[candidates] unknown candidate provenance ${String(_exhaustive)} — the id scheme must widen with a new arm (S0.4 injectivity)`,
+      )
+    }
+  }
+}
+
 /** A grid amount rejected by the RMD-first legality filter — recorded, never scored. */
 export interface RejectedAmount {
   readonly amountReal: number

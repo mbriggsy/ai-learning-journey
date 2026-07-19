@@ -229,3 +229,69 @@ that harmless; U15's solve entry is the second consumer being born (insight 020'
   engine-side; entry-JS delta expected ≈ 0 — the worker chunk is the watch) + CI green by
   explicit run id. `/ultramode-code-review` at the boundary; insights distilled; docs
   synced one pass (README / roadmap You-Are-Here / TODO / this spec's build stamp).
+
+## Build stamp
+
+### 2026-07-18 — §S7 the proof battery: scenario sweep + 2 authored gaps + 6 planted mutants + FULL gates (UNIT CLOSED)
+
+**The sweep.** Every plan §S7 scenario has a LIVE test, cited (not duplicated) in the build handoff — reduce-to-spine, K-candidate CRN, objective≡headline, deterministic selection, surplus (both directions + sub-ε), no-action baseline incl. custom-order, goal/bucket preconditions, compute fallback (the fail-closed sentinel form), cliff-anchored grid (the just-under law + case iii), legality, cancellation commit-epoch, the contract-#1 gate, the profile, and the spec additions (S0 moved-witness, S2 dispersed-world, S4 zero-shrinkage + insight-025, S5 withheld-lever).
+
+**Two GAPS the sweep found and authored (no live test existed):**
+1. **Lexicographic FLOOR-ABSOLUTE (R21)** — every committed oracle fixture is survival = 1.0, so none exercised the survival PARTITION. NEW `select.test.ts` battery: `rankCandidates`/`selectCore` crown the higher-survival candidate over a strictly-better-Tier-2 candidate sitting outside the tolerance (shrinkage on AND off); a widened tolerance flips it (non-vacuity).
+2. **Spending immutable (contract #8a)** — no live test. NEW `search.test.ts` battery: `applyCandidate` preserves the budget line for every provenance arm; `CandidateStrategy` carries no budget key (immutable by construction); `runSearch` mutates no field of the base.
+   *(A third — "the shrinkage prior is the conventional baseline, never the user's custom" — was authored as the mutant-#4 killer: the insight-025 tests pass `conventionalIndex` explicitly to `selectCore`, so nothing caught a `selectRecommendation` anchor flip.)*
+
+**The 6 planted mutants (each RED→reverted, Edit-only, killer named in the handoff):** a fingerprint-blind mint (killed by the S0 moved-witness), a parallel scorer in `objective.ts` (killed by the rankForGoal≡rankCandidates identity), a mean/quantile display-vs-rank split (killed by the S2 "MEAN ranking crowns A"), shrinkage toward the user's custom prior (killed by the new anchor test), a trend-blocked conversion silently scored (killed by the withheld-lever enumeration), a stale solve committing past the epoch guard (killed by `shouldCommitSolve` + the store's stale-discard test).
+
+**Gates (all green):** typecheck + lint clean; the full suite **2677 tests / 143 files** (+7 vs S6's 2670 — floor-absolute 3 + anchor 1 + spending 3; NO new files); `pnpm build` OK; `verify:bundle` **249.7 KiB ≤ 300** (UNCHANGED — every S7 edit is test-side, entry-JS delta = 0); `verify:doc-stats` OK (README + roadmap reconciled to 2677/143); `verify:aca` OK. No user surface (U16's) — no Caddie walk.
+
+### 2026-07-18 — §S6 the cancel/profile split + the fallback ladder + the FIRST profile datapoint (dev-laptop)
+
+**cancel.ts (`src/engine/solver/cancel.ts`, NEW) — the ratified split, both halves PURE + exported (insight 048):**
+- `shouldCommitSolve(resolvedEpoch, committedEpoch)` — the UNCONDITIONAL commit-epoch guard (a superseded solve NEVER commits, whatever its speed), finiteness-FIRST (a NaN epoch never commits — the `setLatestEpoch` posture). Wired into `memoryModel.commitSolve` (replacing the inline `<=` check); the existing "commits the NEWER solve and DISCARDS a stale in-flight one" store test now exercises the seam, and a NEW "HOLDS on a cooperatively-ABORTED solve" store test pins the hold.
+- `abortRequested(shouldAbort)` + `solveAborted(detail)` + the `SolveAborted` named bin (`kind: 'aborted'`, insight 092). The injected `shouldAbort?: () => boolean` seam is threaded through `solveWithMint` (checkpoints: before the harness gates; after stability, before the mint) AND `solve` (before the K-candidate search; before the grade B-family) — each returns the `aborted` bin, plain-data across the wire (`packSolveWire`/`solveFromWire` carry it verbatim; the store HOLDS it, never renders it). **Granularity DEFERRED per §S6:** the live worker-epoch transport (a `setLatestSolveEpoch` analog + a macrotask yield) + finer (per-candidate) checkpoints wait on the profile's numbers — U15 ships the seam + coarse per-stage checkpoints, test-driven (`cancel.test.ts` drives every checkpoint; deleting any goes red).
+
+**profile.ts (`src/engine/solver/profile.ts`, NEW) — PURE, injected `now: () => number`** (the seed-injection idiom; `performance`/`Date` stay lint-banned in `src/engine/**`). `profileSolve(request, now)` times one full `solveWithMint` against a single-`simulate` baseline; refuses a non-finite/backwards clock (a lying clock is a measurement fault, never a datapoint) and an indeterminate/infeasible baseline (validation cost is not compute cost); surfaces `payloadKind` so a short-circuited solve (token-withheld / mint-failed / aborted) can NEVER masquerade as a measured full solve (the `outcomeKind` discipline). The caller-side runner **`scripts/profile-solver.ts`** (OUTSIDE `src/engine`, supplies `() => performance.now()`, NOT a CI gate) records the first datapoint.
+
+**THE FIRST PROFILE DATAPOINT (dev-laptop, NOT the reference device — the reference-device measurement is the WASM trigger + the knob-pin event):** worst-case shape = 16,000 paths × 45 yr, an 8-candidate roster (3 sequencing + a 5-amount cliff-anchored conversion grid), tax overlay (IRMAA regime), the m=5 held-out B-family, both seed-sets — a `recommended` (full-solve) measurement:
+- single `simulate` (16k × 45, overlay) ≈ **1.29 s**
+- full `solveWithMint` ≈ **48.1 s**
+- ratio ≈ **37.4×** a single simulate — **LINEAR in the candidate count**, matching the stated budget shape (≈ 2·|roster| + 2·|rankable| + 2·m + O(1) = 16 + 6 + 10 + probe ≈ 37). No super-linear regression.
+- **Reading:** a 48 s synchronous full-precision solve is FAR past any interactive window — so the fallback ladder (the interactive/full split + coarse-then-refine) and the mid-solve cooperative-abort seam are load-bearing, and the WASM port question is live. The DECISION (enable mid-solve abort, its granularity, the interactive path count, the candidate ceiling) waits on the reference-device number, per §S6.
+
+**The fallback ladder (`src/engine/solver/fallback.ts`, NEW) — sentinel-guarded, not guessed (burned/062):** the `SolveComputeTier` (`interactive`/`full-precision`) + `CoarseThenRefinePlan` structured shapes; the three tuning knobs (`solverInteractivePaths`, `solverCandidateCeiling`, `solverCoarseSurvivors`) are `sourced(-1)` out-of-range sentinels (`methodology-substrate` — pinned by MEASUREMENT, never read by the oracle token nor any ranking; NOT added to the canonical constants registry — compute-routing, not a dated figure); `assertFallbackCalibrated()` THROWS while any knob is un-tuned (the `assertDemotionAxisCalibrated` posture — the U16 router cannot route on a guessed threshold). The core U15 solve consumes NONE of them yet (it ranks the full set at the base's path count) — they ship READY + FAIL-CLOSED. `fallback.test.ts` proves the sentinel bites.
+
+Gates: `pnpm typecheck` + `pnpm lint` clean; the full suite **2670 tests / 143 files** green (+124 tests / +10 files across U15's S0–S6); `verify:doc-stats` reconciled (README + roadmap You-Are-Here). No user surface (U16's) — no Caddie walk.
+
+### 2026-07-18 — §S2 the dispersed-world fixture verdict: **INTRACTABLE → the architect's default ships** (mean ranks; skew disclosed)
+
+The blocking amendment was attempted in full and **the ordering flip is REAL** — it is derived
+exactly by hand in `src/engine/solver/__tests__/objective.test.ts` (the `dispersedWorld` block):
+a right-skewed after-tax-to-heirs world where candidate A ranks FIRST on the mean (480 vs 300)
+and B ranks first on the median / p10 (300 vs 100) — the mean and the downside statistic produce
+the **exact reverse** ordering, both derived by hand and both re-checked through the REAL
+`scoreFromDistribution` + `distributionSkew`.
+
+**But it CANNOT become an engine-run oracle fixture** (a `SolverCaseFixture` graded via `simulate`
+with exact `expected()`), so the RANKING statistic **cannot** be switched to a downside quantile
+without moving the ranking onto an un-oracled quantity:
+
+1. Every exact oracle world is **zero-vol / fixed-horizon** — there mean = median = every quantile,
+   so `caseLeaveMore` is degenerate for this question by construction (as §S2 itself states). A
+   deterministic fixture can never distinguish a mean switch from a median switch.
+2. The engine's **only** dispersion sources are (a) market returns via Box-Muller
+   (`rng.standardNormal` = `Math.sqrt`/`Math.log`/`Math.cos` — not hand-derivable, and per CLAUDE.md
+   not bit-identical across JS engines) and (b) the mortality table (whose by-hand re-derivation
+   re-implements the engine → proves typing, not correctness → DND-012). A dispersed ledger cannot be
+   made exact without loosening tolerance, and **insight 091 forbids buying tractability with tolerance.**
+
+**Resolution shipped (the council's Intractable exit, verbatim):** the **mean RANKS** (the
+deterministic battery genuinely oracles `expectedRankingIds`); the grade's per-path CRN axis carries
+robustness (insight 093); and the mean's skew is **disclosed, never silent** via
+`leaveMoreSkewDisclosure` (`objective.ts`) — a structured flag carrying the ranked mean beside the
+median + p10 + skew direction/magnitude, riding the solve payload for U16 to voice ("the average
+leans on a few lucky futures; the typical bequest is $X"; insight 092 — a dropped channel is an
+abstention, not a pass). The disclosure is **never a second ranking authority**: one statistic (the
+mean) both ranks and is the primary display (contract #4). The dispersed-world demonstration is the
+durable record of the attempt; it is deliberately a direct-to-scorer test, **not** a `SolverCaseFixture`
+(it has no engine world producing those exact dispersed paths — which is precisely the intractability).

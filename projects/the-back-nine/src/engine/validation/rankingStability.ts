@@ -31,6 +31,7 @@
 import type { Distribution, SimulationParams } from '@shared/model'
 import { evaluateCandidates, type CandidateOutcome } from './evaluate'
 import { applyCandidate, type CandidateStrategy } from '../solver/candidates'
+import { solverRunFingerprint, type SolverRunFingerprint, type SolverRunRanking } from './solverRunFingerprint'
 
 /** Byte-compare the FULL decision surface of two distributions: Tier-1 (survival fraction +
  *  per-path depletion), the gross terminal sample, and — when the runs are tax-aware — every
@@ -71,6 +72,12 @@ export interface RankingStabilityReport {
   /** Minimum survivor-phase path count across every scored candidate × both seeds. */
   readonly minSurvivorCrossings: number
   readonly infeasibleCount: number
+  /** THE RUN FINGERPRINT (U15 §S0.2) — computed over the EXACT `(base, candidates, ranking)`
+   *  this report was proven on, so the identity is bound to the evaluated roster (never a
+   *  caller-supplied opaque). The stability runner is the SINGLE fingerprint authority: the
+   *  oracle-cleared token COPIES this value (never recomputes it) so the two can never disagree,
+   *  and `solve()` (S5) refuses any token/report whose fingerprint differs from the run it blesses. */
+  readonly fingerprint: SolverRunFingerprint
 }
 
 export interface RankingStabilityFailure {
@@ -87,8 +94,13 @@ export function runRankingStability(opts: {
   readonly perturbIndex: number
   /** Index of the sibling whose byte-identity is asserted after the perturbation. */
   readonly siblingIndex: number
+  /** The ranking objective this report's fingerprint pins (U15 §S0.2). The stability CHECK is
+   *  goal-agnostic (it proves CRN decoupling, not the ranked winner); the goal is threaded ONLY
+   *  because the report is the run-fingerprint authority and the goal is a ranking-affecting input
+   *  absent from the engine params. */
+  readonly ranking: SolverRunRanking
 }): { readonly report: RankingStabilityReport } | RankingStabilityFailure {
-  const { base, candidates, seedA, seedB, perturbIndex, siblingIndex } = opts
+  const { base, candidates, seedA, seedB, perturbIndex, siblingIndex, ranking } = opts
   const violations: string[] = []
 
   // 1. Dimension invariance — the draw schedule's whole input tuple, per candidate.
@@ -175,6 +187,8 @@ export function runRankingStability(opts: {
     seeds: [seedA, seedB],
     minSurvivorCrossings: minCrossings,
     infeasibleCount,
+    // Bound to the EXACT roster this report proved stable (§S0.2) — the token copies it verbatim.
+    fingerprint: solverRunFingerprint(base, candidates, ranking),
   } as unknown as RankingStabilityReport
   return { report }
 }

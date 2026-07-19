@@ -85,6 +85,7 @@ export type HealthcareClock =
   | 'irmaa-freeze'
   | 'part-b'
   | 'extras-typical'
+  | 'part-b-trend'
 
 export interface ExpiredBudgetLine {
   /** Index into the persisted `budget` array (the re-confirm names the line). */
@@ -239,6 +240,17 @@ export function deriveStaleness(scenario: ScenarioV3, todayEpochDay: number): St
         scenario.medicareExtrasByPerson.some((e) => e.kind === 'typical' || e.kind === 'unanswered'))
     ) {
       movedClocks.push('extras-typical')
+    }
+    // The Part-B trend table's era (the trend sourcing unit): a new Trustees-edition adoption
+    // mints a new vintage — every vault saved under the old table re-prices its Medicare years
+    // under the new one, so the clock fires unconditionally on a mismatch (no exposure gate:
+    // the trend prices every Medicare-bearing year both routes reach). Absent on a pre-trend
+    // stamp = not-comparable, quiet (never coerced to "unchanged").
+    if (
+      savedHealth.partBTrendVintage !== undefined &&
+      savedHealth.partBTrendVintage !== currentHealth.partBTrendVintage
+    ) {
+      movedClocks.push('part-b-trend')
     }
   }
 

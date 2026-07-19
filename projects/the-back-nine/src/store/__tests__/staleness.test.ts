@@ -168,6 +168,10 @@ describe('deriveStaleness — the healthcare clocks', () => {
       [{ ...hv, fplGuidelineYear: hv.fplGuidelineYear + 1 }, 'fpl-guideline'],
       [{ ...hv, irmaaTopTierFrozenThrough: hv.irmaaTopTierFrozenThrough + 1 }, 'irmaa-freeze'],
       [{ ...hv, partBStandardMonthly: hv.partBStandardMonthly + 10 }, 'part-b'],
+      // The trend sourcing unit: a Trustees-edition adoption mints a new vintage — the clock
+      // fires unconditionally on the mismatch (no exposure gate; the trend prices every
+      // Medicare-bearing year both routes reach).
+      [{ ...hv, partBTrendVintage: 'part-b-trend-2025x' }, 'part-b-trend'],
     ] as const
     for (const [stamp, clock] of arms) {
       const report = deriveStaleness({ ...s, healthcareVintage: stamp }, TODAY)
@@ -219,6 +223,18 @@ describe('deriveStaleness — the healthcare clocks', () => {
     expect(
       deriveStaleness(preUnit as unknown as ScenarioV3, TODAY).healthcare.movedClocks,
     ).toEqual([])
+  })
+
+  it('part-b-trend: a pre-trend stamp (absent vintage) is not-comparable — quiet, never coerced to a fired clock', () => {
+    // The trend sourcing unit's absence arm (the extras-typical precedent): a vault saved
+    // before the trend unit carries NO partBTrendVintage — the reader must not fire the clock
+    // off absence (its recompute already prices the new trend; the clock narrates ERA drift
+    // between two carried vintages, never the feature's own arrival).
+    const s = freshSave()
+    const legacyHv = { ...s.healthcareVintage! } as Record<string, unknown>
+    delete legacyHv.partBTrendVintage
+    const preTrend = { ...s, healthcareVintage: legacyHv } as unknown as ScenarioV3
+    expect(deriveStaleness(preTrend, TODAY).healthcare.movedClocks).toEqual([])
   })
 })
 

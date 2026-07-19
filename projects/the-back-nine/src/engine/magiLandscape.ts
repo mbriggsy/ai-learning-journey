@@ -33,7 +33,7 @@
  * `@engine/constants` — never re-typed here (architecture §8; burned/063).
  */
 import { bracketsFor, deductionStack, taxableSocialSecurity } from '@engine/taxCore'
-import { irmaaTierSurchargeMonthly, slidingScalePtc } from '@engine/healthOverlay'
+import { IRMAA_ANCHOR_SCALES, irmaaTierSurchargeMonthly, slidingScalePtc } from '@engine/healthOverlay'
 import type { AcaApplicablePercentageTable, IrmaaSchedule } from '@engine/constants'
 import type { FilingStatus } from '@shared/model'
 
@@ -212,7 +212,11 @@ export function nextIrmaaThresholdAbove(magi: number, filing: FilingStatus, sche
 /** The next IRMAA step above `magi`: its threshold + the PER-PERSON MONTHLY surcharge jump
  *  crossing it costs (the delta between the tier just over the threshold and the tier at
  *  `magi` — read through the ONE canonical tier lookup, never a re-typed table). `null` when
- *  no step remains. The caller multiplies by the enrolled count × 12 (never a flat ×2). */
+ *  no step remains. The caller multiplies by the enrolled count × 12 (never a flat ×2).
+ *  ANCHOR-SCALE by design (the trend unit): this is readout geometry — the healthcare sheet
+ *  speaks the household's landscape in TODAY's (2026-real) terms, and it prices nothing (the
+ *  per-year pricing itself trends in taxOverlay). A future year-contextual readout would
+ *  thread the year's scales here explicitly. */
 export function nextIrmaaStep(
   magi: number,
   filing: FilingStatus,
@@ -223,7 +227,8 @@ export function nextIrmaaStep(
   return {
     threshold,
     surchargeDeltaMonthlyPerPerson:
-      irmaaTierSurchargeMonthly(threshold + 1, filing, schedule) - irmaaTierSurchargeMonthly(magi, filing, schedule),
+      irmaaTierSurchargeMonthly(threshold + 1, filing, schedule, IRMAA_ANCHOR_SCALES) -
+      irmaaTierSurchargeMonthly(magi, filing, schedule, IRMAA_ANCHOR_SCALES),
   }
 }
 

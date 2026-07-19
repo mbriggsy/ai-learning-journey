@@ -349,6 +349,49 @@ export interface IrmaaSchedule {
   readonly rothConversionIsSsa44LifeChangingEvent: boolean
 }
 
+// ---- Medicare cost-trend value shapes (the trend sourcing unit) ---------------
+
+/** One projected NOMINAL standard Part B monthly premium (2026 Trustees Report Table V.E2,
+ *  p.207 — transcribed verbatim). The 2026 anchor row is NOT stored here — the standard
+ *  premium's one canonical home is `partB2026.standardPremiumMonthly` (burned/057: a dated
+ *  figure is never re-typed; the identity V.E2[2026] == partB2026 is test-pinned). */
+export interface PartBPremiumProjectionYear {
+  readonly calendarYear: number
+  /** The Trustees' projected nominal standard monthly premium for that calendar year. */
+  readonly nominalMonthly: number
+}
+
+/**
+ * The Medicare Part-B cost-trend table (the trend sourcing unit, council wf_c673339e-257).
+ * Shape (c): the year-keyed primary table — Table V.E2's nominal premiums verbatim for the
+ * near decade, deflated IN-ENGINE horizon-matched (near-term CPI on the near decade, never
+ * the ultimate), with the ultimate real escalator beyond the table's edge. Every field is a
+ * PRIMARY figure from ONE report edition (no mixing); all derivations (real premiums, the
+ * ultimate real growth) happen in the consumer (`buildPartBPricingSchedule`) so each stored
+ * figure keeps per-figure provenance (insight 022).
+ */
+export interface MedicareCostTrendTable {
+  /** The ONE Trustees Report edition every figure comes from (2026 — no edition mixing). */
+  readonly reportEdition: number
+  /** The real-dollar anchor year (2026 — the engine's real-$ basis; scale 1.0 by definition). */
+  readonly anchorYear: number
+  /** Projected nominal premiums for anchorYear+1 .. the table edge, ascending contiguous
+   *  (Table V.E2 verbatim; the anchor-year row lives in `partB2026`). */
+  readonly premiums: readonly PartBPremiumProjectionYear[]
+  /** Near-term CPI-W average over the table window (Table II.D1, 2026–2035: 3.2%/yr) —
+   *  applied uniformly per-year within the table (the horizon-matched deflator; the
+   *  uniform-application choice is a named derivation, see the entry note). */
+  readonly cpiNearTermAvg: number
+  /** Ultimate CPI-W assumption (Table III.B12: 2.4%/yr) — the tail deflator component. */
+  readonly cpiUltimate: number
+  /** Ultimate per-beneficiary Part B NOMINAL cost growth excl. demographics (§III.D: 3.8%/yr).
+   *  The tail's real growth is DERIVED in the consumer: (1+this)/(1+cpiUltimate) − 1 ≈ +1.37%. */
+  readonly ultimateNominalGrowth: number
+  /** The adoption-era string (the extras-2026b idiom) — a revision of any component mints a
+   *  NEW vintage alongside the new figures, firing the U13 staleness clock BY DESIGN. */
+  readonly vintage: string
+}
+
 // ---- Social Security value shapes (the PIA-driven benefit sub-engine) ---------
 
 /** A reduction/credit rate stated the SSA way: "numerator/denominator of 1% per

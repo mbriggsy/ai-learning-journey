@@ -897,10 +897,13 @@ export const copy = {
   // The extras unit widened the affirmation (extra coverage now priced — entered, affirmed-$0,
   // or the typical) and moved the residual pair AS A SET (F4): the Part D/Medigap "inside your
   // spending" clause DIED (now added on top), the state-tax clause STAYS (its own filed engine
-  // unit), and the real-flat clause BROADENED from "the base premium" to every premium the tool
-  // adds. The on-typical household additionally gets a per-person bi-directional sentence
-  // (slots.medicareExtrasTypical*) appended INSIDE the residual paragraph — same block, no new
-  // frame row (the one-frame fit law's tallest composite).
+  // unit). The trend sourcing unit (2026-07-19, council wf_c673339e-257) NARROWED the still-flat
+  // clause: Part B + its surcharge piece now TREND (priced off the Trustees' own projections),
+  // so "premiums are held flat" became false for them — the residual's referent shrank to what
+  // is genuinely still flat (the extra-coverage premiums + the drug-plan piece of the income
+  // surcharge), a SWAP never an ADD. The on-typical household additionally gets a per-person
+  // bi-directional sentence (slots.medicareExtrasTypical*) appended INSIDE the residual
+  // paragraph — same block, no new frame row (the one-frame fit law's tallest composite).
   verdictMedicarePriced:
     'Medicare’s costs for the two of you are already in these numbers — the Part B premium, its income surcharge, and extra coverage: a drug plan, a supplement plan, or a Medicare Advantage premium.',
   // Reworded 2026-07-17 (council wf_d3666133-c34, O14 sweep): (1) the old "isn’t counted" was the
@@ -911,9 +914,10 @@ export const copy = {
   // density ruling — zero facts dropped, the hawk's veto). (3) The hedge "could sit tighter than
   // shown" was twice refuter-confirmed ambiguous in the ROSIER direction (more precise vs less
   // margin) — replaced with an explicit not-rosier direction. S1 magnitude law holds: the state
-  // bill stays "a real yearly bill", never a rounding hedge.
+  // bill stays "a real yearly bill", never a rounding hedge. Final sentence swapped 2026-07-19
+  // (the trend unit — see the Tail's note; the drift-pin keeps monolith ≡ Lead…Tail).
   verdictMedicareResidual:
-    'Those are the pieces this tool adds by itself. The rare Part A premium stays inside the spending you gave us. State income tax isn’t priced yet. In a taxing state, that’s a real yearly bill. Premiums are held flat in today’s dollars, so their true cost could run higher than shown.',
+    'Those are the pieces this tool adds by itself. The rare Part A premium stays inside the spending you gave us. State income tax isn’t priced yet. In a taxing state, that’s a real yearly bill. The extra-coverage premiums and the drug-plan piece of the income surcharge are held flat in today’s dollars, so their true cost could run higher than shown.',
   // S5.2/S5.3 — the verdict residual SPLIT into clause-parts (the monolith above stays as the
   // UNPRICED render, verbatim). For a state-PRICED household the embedded "state income tax isn’t
   // counted" clause DIES and is REPLACED by the outcome-scoped affirmation naming the state,
@@ -929,21 +933,24 @@ export const copy = {
   // The Tail now opens with a period graft (was an em-dash): every priced affirmation ends
   // mid-clause ("…reflected in these numbers" / "…no state bill on your withdrawals"), so the
   // Tail closes that sentence and starts its own — one fact per sentence on both compositions.
+  // Swapped 2026-07-19 (the trend unit): the old "Premiums are held flat" covered EVERY
+  // tool-added premium — false once Part B + its surcharge piece trend. The referent narrowed
+  // to the genuinely-still-flat set; the not-rosier direction clause is unchanged.
   verdictResidualTail:
-    '. Premiums are held flat in today’s dollars, so their true cost could run higher than shown.',
+    '. The extra-coverage premiums and the drug-plan piece of the income surcharge are held flat in today’s dollars, so their true cost could run higher than shown.',
   verdictResidualStateNC: 'Your North Carolina state income tax is reflected in these numbers',
   verdictResidualStatePA:
     'Your Pennsylvania state income tax is reflected in these numbers, usually a small piece since Pennsylvania leaves most retirement income untaxed',
   verdictResidualStateFL: 'Florida has no state income tax, so there’s no state bill on your withdrawals',
   rothMedicareResidualNote:
-    // "held flat" (chair fix, the 2026-07-17 sweep pre-walk): the landing residual says "held
-    // flat in today's dollars" for the SAME modeling choice — one mechanism, one word (rule 36;
-    // five panel lenses independently flagged the flat/level synonym drift across the two doors).
-    // "A modeling choice:" (O16 D-1, council 2026-07-17): the old "One modeling choice remains:"
-    // claimed exhaustivity on a sheet whose OWN omissions note lists more uncounted items — the
-    // count-claim read false-adjacent beside the longer list; the article drops the count, the
-    // hedge ("could") and "held flat" stay.
-    'The income surcharge a conversion can trip two years later is now part of these numbers. A modeling choice: premiums are held flat in today’s dollars, so a conversion that crosses a surcharge step could look a shade easier here than in real life.',
+    // Swapped 2026-07-19 (the trend unit): the old sentence blamed "premiums held flat" for a
+    // crossing looking "a shade easier" — TRUE pre-flip, false after: the Part B surcharge a
+    // conversion trips is now TRENDED (priced off the Trustees' projections), so the affirmation
+    // names the climb and the modeling-choice clause narrows to the drug-plan piece — the one
+    // surcharge component genuinely still flat. "held flat" + "a shade easier" + the hedge
+    // ("could") keep their one-mechanism-one-word vocabulary (rule 36, the 2026-07-17 chair fix);
+    // "A modeling choice:" keeps the count-free article (O16 D-1).
+    'The income surcharge a conversion can trip two years later is now part of these numbers, priced to climb the way Medicare’s own projections read. A modeling choice: the drug-plan piece of that surcharge is held flat in today’s dollars, so a crossing could look a shade easier here than in real life.',
 
   // --- P3·U12 — the AssumptionPanel (the R7 escape hatch; council wf_dff75c2f-9e3). PREFIX
   // LAW: `assumption*` is the panel's CHROME prefix — labels, values, provenance lines,

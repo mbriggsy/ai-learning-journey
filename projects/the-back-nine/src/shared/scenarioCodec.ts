@@ -587,6 +587,9 @@ function checkV3Fields(o: Obj): void {
     if (hv.medicareExtrasTypicalVintage !== undefined) {
       needString(hv, 'medicareExtrasTypicalVintage', path)
     }
+    if (hv.partBTrendVintage !== undefined) {
+      needString(hv, 'partBTrendVintage', path)
+    }
   }
   // P3·U13 — the save wall-time anchor (additive-optional). RANGE-gated, not merely
   // finite (insight 046): an epoch-MILLISECOND value here is a finite integer that would

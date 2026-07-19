@@ -26,19 +26,42 @@ import {
 } from '@engine/taxOverlay'
 import { validateParams } from '@engine/simulate'
 import { type AccountBuckets } from '@engine/sequencing'
-import { partB2026 } from '@engine/constants'
+import { partB2026, medicareCostTrend } from '@engine/constants'
 import type { MarketAssumptions, PersonInputs, SimulationParams } from '@shared/model'
 
 // ---------------------------------------------------------------------------
 // Canonical figures — READ from the constants (never re-typed; the copyGuard).
 // ---------------------------------------------------------------------------
-const BASE = partB2026.value.standardPremiumMonthly // base Part B / person / month
+const BASE = partB2026.value.standardPremiumMonthly // base Part B / person / month (the 2026 anchor)
+const TREND = medicareCostTrend.value // the sourced Part B cost-trend table (V.E2, deflated horizon-matched)
 
 const STOCK_W = 0.5
 const zeros = (n: number) => Array.from({ length: n }, () => 0)
-/** The hand oracle for the BASE bill: `count × BASE × 12` (no surcharge — every fixture
- *  below keeps IRMAA-MAGI far under the first MFJ/single tier, seeds and history alike). */
+/** The hand oracle for the ANCHOR-year BASE bill: `count × BASE × 12` (no surcharge — every fixture
+ *  below keeps IRMAA-MAGI far under the first MFJ/single tier, seeds and history alike). Valid ONLY
+ *  at the 2026 anchor (sim year 0); later years trend — see {@link baseAnnualAt}. */
 const baseAnnual = (count: number) => count * BASE * 12
+/**
+ * The REAL (anchor-dollar) monthly base Part B for a CALENDAR year — the Medicare-cost-trend unit's
+ * documented horizon-matched deflation applied BY HAND off the sourced constant (DND-012: never
+ * `buildPartBPricingSchedule`). The anchor (and any earlier year) clamps to `BASE`; a table year is
+ * its nominal V.E2 premium ÷ (1 + cpiNearTermAvg)^(year − anchor), the deflator accumulated
+ * iteratively so it matches the engine's cumulative product byte-for-byte (so the `toEqual` pins
+ * below stay exact). Every dated figure is READ off the constant (the nominals + the CPI) — no
+ * premium literal is re-typed (the copyGuard). Fixtures here stay inside the table window (≤ 2035).
+ */
+const baseRealMonthly = (calendarYear: number): number => {
+  if (calendarYear <= TREND.anchorYear) return BASE
+  const row = TREND.premiums[calendarYear - TREND.anchorYear - 1]
+  if (row === undefined) throw new Error(`baseRealMonthly: ${calendarYear} is beyond the trend table edge`)
+  let deflator = 1
+  for (let y = TREND.anchorYear + 1; y <= calendarYear; y++) deflator *= 1 + TREND.cpiNearTermAvg
+  return row.nominalMonthly / deflator
+}
+/** The trended base bill for `count` enrolled at a CALENDAR year (sim year t ⇒ 2026 + t): the
+ *  per-YEAR analog of {@link baseAnnual}. Surcharge-free — every fixture keeps IRMAA-MAGI far
+ *  sub-tier — so the whole Medicare base is `count × baseReal(y) × 12`. */
+const baseAnnualAt = (count: number, calendarYear: number) => count * baseRealMonthly(calendarYear) * 12
 
 const freshSink = (): HealthYearSink => ({
   acaNetPremium: [], medicareBase: [], irmaaSurcharge: [], medicareExtras: [],
@@ -101,19 +124,29 @@ describe('medicare extras — the asymmetric survivor golden (per-person vector,
     const { res, sink } = run([0, 200])
     // Per-year extras, hand-derived: both-alive years charge the spouse's 200×12; the
     // survivor years STILL charge 200×12 — the dead $0 spouse's slot simply leaves the Σ.
+    // Extras are deliberately UN-trended (Medigap/Part D plan premiums have no sourced trend),
+    // so this vector is unchanged by the Part-B cost-trend unit.
     expect(sink.medicareExtras).toEqual([2_400, 2_400, 2_400, 2_400])
-    // The lifetime Medicare total = base (6×BASE×12) + extras (4 × 2_400).
-    expect(res.totalMedicareCostReal).toBeCloseTo(6 * BASE * 12 + 9_600, 6)
-    // The base line never absorbed extras (the split stays exact).
-    expect(sink.medicareBase).toEqual([baseAnnual(2), baseAnnual(2), baseAnnual(1), baseAnnual(1)])
+    // The base line is now per-YEAR trended (V.E2 deflated) — 2026 at the anchor, then 2027/2028/2029
+    // stepping up — with counts 2/2/1/1 as the owner dies after year 1; extras never leaked into it
+    // (the split stays exact — extras are the SEPARATE un-trended sink line).
+    const base = [baseAnnualAt(2, 2026), baseAnnualAt(2, 2027), baseAnnualAt(1, 2028), baseAnnualAt(1, 2029)]
+    expect(sink.medicareBase).toEqual(base)
+    // The lifetime Medicare total = the trended base sum + extras (4 × 2_400 = 9_600).
+    expect(res.totalMedicareCostReal).toBeCloseTo(base.reduce((a, b) => a + b, 0) + 9_600, 6)
   })
 
   it('the survivor pays NOTHING when the $200 spouse dies first (extras [200, 0] — owner dies): the orderings genuinely differ', () => {
     const { res: high, sink } = run([200, 0])
     expect(sink.medicareExtras).toEqual([2_400, 2_400, 0, 0])
-    expect(high.totalMedicareCostReal).toBeCloseTo(6 * BASE * 12 + 4_800, 6)
+    // Same counts (2/2/1/1 — owner dies after year 1) ⇒ the SAME trended base sum as the swapped
+    // ordering; the high-cost owner dying leaves the survivor with 0 extras (4_800 total).
+    const baseSum =
+      baseAnnualAt(2, 2026) + baseAnnualAt(2, 2027) + baseAnnualAt(1, 2028) + baseAnnualAt(1, 2029)
+    expect(high.totalMedicareCostReal).toBeCloseTo(baseSum + 4_800, 6)
     // THE MUTANT KILLER: count×avg charges both orderings identically (avg 100/mo hides WHO
-    // died). The per-person vector makes them differ by exactly the survivor-years' premium gap.
+    // died). The per-person vector makes them differ by exactly the survivor-years' premium gap —
+    // the base is byte-identical across the two runs (same counts), so it cancels cleanly.
     const { res: low } = run([0, 200])
     expect(low.totalMedicareCostReal - high.totalMedicareCostReal).toBeCloseTo(4_800, 6)
   })
@@ -176,9 +209,12 @@ describe('medicare extras — the 65-crossing charges the joiner from EXACTLY th
       },
     )
     expect(sink.medicareExtras).toEqual([1_800, 1_800, 4_800, 4_800])
-    expect(sink.medicareBase).toEqual([baseAnnual(1), baseAnnual(1), baseAnnual(2), baseAnnual(2)])
-    // Lifetime hand total: base (1+1+2+2)×BASE×12 + extras (1_800+1_800+4_800+4_800).
-    expect(res.totalMedicareCostReal).toBeCloseTo(6 * BASE * 12 + 13_200, 6)
+    // The base steps with the count (1 owner @ t=0,1 → 2 once the spouse joins at t=2) AND trends
+    // with the year (2026 anchor → 2027/2028/2029): baseReal(y) rises even as the count doubles.
+    const base = [baseAnnualAt(1, 2026), baseAnnualAt(1, 2027), baseAnnualAt(2, 2028), baseAnnualAt(2, 2029)]
+    expect(sink.medicareBase).toEqual(base)
+    // Lifetime hand total: the per-YEAR trended base sum + extras (1_800+1_800+4_800+4_800 = 13_200).
+    expect(res.totalMedicareCostReal).toBeCloseTo(base.reduce((a, b) => a + b, 0) + 13_200, 6)
   })
 })
 

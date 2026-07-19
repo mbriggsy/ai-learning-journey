@@ -17,7 +17,7 @@
 import { describe, it, expect } from 'vitest'
 import { simulate, type SimOutput } from '../simulate'
 import { runTaxAwareDecumulation, type HealthYearSink, type TaxOverlayConfig } from '../taxOverlay'
-import { irmaa, partB2026 } from '@engine/constants'
+import { irmaa, medicareCostTrend, partB2026 } from '@engine/constants'
 import { validationMarket } from '@engine/reference/methodology'
 import type { OverlayParams, PersonInputs, SimulationParams } from '@shared/model'
 
@@ -39,6 +39,28 @@ const dist = (o: SimOutput) => {
   if (o.indeterminate) throw new Error(`unexpected indeterminate: ${o.reason}`)
   if (o.infeasible) throw new Error(`unexpected infeasible: ${o.reason}`)
   return o.distribution
+}
+
+/** The real-dollar base Part B premium for a calendar year, hand-derived (DND 012) by applying
+ *  the sourced `medicareCostTrend` formula BY HAND from constants read symbolically — never via
+ *  the engine's `buildPartBPricingSchedule`. Anchor year and earlier CLAMP to the anchor
+ *  (partB2026, scale 1); table years = V.E2 nominal ÷ (1 + cpiNearTermAvg)^(y − anchor) (the
+ *  horizon-matched near-term deflator); beyond the table edge = the edge's real × the ultimate
+ *  real escalator ((1 + ultimateNominalGrowth)/(1 + cpiUltimate)) per year. The Part B IRMAA
+ *  surcharge for year y then scales by baseRealAt(y)/anchor (Part D is NOT scaled). */
+const baseRealAt = (calendarYear: number): number => {
+  const trend = medicareCostTrend.value
+  const anchor = partB2026.value.standardPremiumMonthly
+  if (calendarYear <= trend.anchorYear) return anchor
+  const edgeYear = trend.anchorYear + trend.premiums.length
+  if (calendarYear <= edgeYear) {
+    const nominal = trend.premiums.find((p) => p.calendarYear === calendarYear)!.nominalMonthly
+    return nominal / (1 + trend.cpiNearTermAvg) ** (calendarYear - trend.anchorYear)
+  }
+  const realUltimate = (1 + trend.ultimateNominalGrowth) / (1 + trend.cpiUltimate)
+  const edgeNominal = trend.premiums[trend.premiums.length - 1]!.nominalMonthly
+  const edgeReal = edgeNominal / (1 + trend.cpiNearTermAvg) ** (edgeYear - trend.anchorYear)
+  return edgeReal * realUltimate ** (calendarYear - edgeYear)
 }
 
 /** A real-dollar pre-65 couple whose ACA window (years 0–4) then Medicare window (5+) both
@@ -96,10 +118,12 @@ describe('healthReadout — the simulate-level emission (opt-in, observe-only)',
     expect(acaYear.acaMagiP50).toBeGreaterThan(21_150) // above the 100%-FPL floor (couple FPL, hand-derived)
     expect(acaYear.cohortFraction).toBe(1)
     // Year 5 = both 65: ACA stops pricing (no pre-65 member), Medicare starts (biological onset).
+    // Sim year 5 = calendar 2031 (startCalendarYear 2026), so the base is the TRENDED real Part B for
+    // 2031 (V.E2 nominal deflated), not the flat anchor — the Medicare-cost-trend unit's per-year base.
     const medicareYear = byYear[5]!
     expect(medicareYear.acaPricedFraction).toBe(0)
     expect(medicareYear.acaNetPremiumP50).toBe(0)
-    expect(medicareYear.medicareBaseP50).toBeCloseTo(2 * 12 * partB2026.value.standardPremiumMonthly, 6)
+    expect(medicareYear.medicareBaseP50).toBeCloseTo(2 * 12 * baseRealAt(2031), 6)
     expect(medicareYear.irmaaSurchargeP50).toBe(0) // spending-driven MAGI sits far under the first MFJ tier
   })
 
@@ -240,6 +264,7 @@ describe('healthReadout — the overlay healthOut sink', () => {
     }
     const both = { living: [{ birthYear: 1958 }, { birthYear: 1958 }] }
     const one = { living: [{ birthYear: 1958 }] }
+    const startCal = cfg.household.startCalendarYear // sim year t ⇒ calendar startCal + t
     const sink = freshSink()
     // A constant 120k IRMAA-MAGI: under the MFJ tier-1 threshold, over the SINGLE tier-1 threshold
     // (and under single tier-2) — so the surcharge appears IFF the single table is the billed column.
@@ -255,15 +280,22 @@ describe('healthReadout — the overlay healthOut sink', () => {
         healthOut: sink,
       },
     )
-    // The base halves AT the death year (the enrolled count intersects the living set — immediate).
-    expect(sink.medicareBase[0]).toBeCloseTo(2 * 12 * partB, 6)
-    expect(sink.medicareBase[2]).toBeCloseTo(1 * 12 * partB, 6)
+    // The base halves AT the death year — the "immediate" halving is 2→1 in the enrolled COUNT.
+    // Under the trend the base is each year's OWN real Part B: year 0 = calendar 2026 (the anchor,
+    // scale 1 ⇒ exactly partB), year 2 = calendar 2028 (V.E2-deflated, > the anchor) — so the drop is
+    // NOT to half the year-0 dollars; it is one survivor × year-2's higher base (insight 091 trace).
+    expect(sink.medicareBase[0]).toBeCloseTo(2 * 12 * baseRealAt(startCal), 6)
+    expect(sink.medicareBase[2]).toBeCloseTo(1 * 12 * baseRealAt(startCal + 2), 6)
     // The surcharge stays 0 through death+lookback−1 (the billed filing is the LAGGED year's — still MFJ)…
     for (let t = 0; t < 2 + lookback; t++) expect(sink.irmaaSurcharge[t]).toBe(0)
-    // …and fires at death+lookback exactly, on the single tier-1 step (per-person × the 1 enrolled survivor).
-    const singleTier1Annual = 1 * 12 * (tier1.partBSurchargeMonthly + tier1.partDSurchargeMonthly)
-    expect(sink.irmaaSurcharge[2 + lookback]).toBeCloseTo(singleTier1Annual, 6)
-    expect(sink.irmaaSurcharge[2 + lookback + 1]).toBeCloseTo(singleTier1Annual, 6)
+    // …and fires at death+lookback exactly, on the single tier-1 step (per-person × the 1 enrolled
+    // survivor), scaled by THAT sim year's own trended base (the surcharge rides the CURRENT year's
+    // Part B scale while MAGI + filing stay the lagged year's — so years 4 (2030) and 5 (2031) carry
+    // DIFFERENT surcharges; Part D is NOT scaled).
+    const singleTier1Annual = (t: number): number =>
+      1 * 12 * (tier1.partBSurchargeMonthly * (baseRealAt(startCal + t) / partB) + tier1.partDSurchargeMonthly)
+    expect(sink.irmaaSurcharge[2 + lookback]).toBeCloseTo(singleTier1Annual(2 + lookback), 6)
+    expect(sink.irmaaSurcharge[2 + lookback + 1]).toBeCloseTo(singleTier1Annual(2 + lookback + 1), 6)
     // ACA never priced (no pre-65 member) — every year reads the not-priced sentinel.
     expect(sink.acaCliffState).toEqual([-1, -1, -1, -1, -1, -1])
   })

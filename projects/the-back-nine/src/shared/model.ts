@@ -1857,6 +1857,12 @@ export interface HealthcareVintageV3 {
    *  entry not 'entered'/'none', or the field absent) — a household of entered dollars
    *  does not care that the typical moved. */
   readonly medicareExtrasTypicalVintage?: string
+  /** The Part-B cost-trend table's era string (`medicareCostTrend.value.vintage` — the trend
+   *  sourcing unit). ADDITIVE-OPTIONAL (a pre-trend stamp lacks it — absent = not-comparable,
+   *  quiet; never coerced to "unchanged"). A Trustees-edition adoption mints a new vintage and
+   *  fires the clock on every vault saved under the old table BY DESIGN (the extras-2026b
+   *  precedent) — the trend prices every Medicare-bearing year, so no exposure gate. */
+  readonly partBTrendVintage?: string
 }
 
 /** The exhaustive v3 field set — U8's `checkV3Fields` checklist (burned/063: the

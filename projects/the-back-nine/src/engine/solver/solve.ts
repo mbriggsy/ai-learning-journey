@@ -10,16 +10,15 @@
  * differs from the run it is asked to bless. Order (the token) AND identity (the fingerprint) are both
  * enforced: the compile gate proves a token exists; the fingerprint proves it is THIS household's.
  *
- * CONVERSIONS STAY TREND-BLOCKED BY DESIGN (§S5 (2); insight 092). The candidate roster the token was
- * minted over (and the fingerprint covers) may CONTAIN conversion candidates, but the Medicare-cost
- * trend is unsourced, so a conversion RANKING would under-penalize late-year IRMAA cliff-crossing — the
- * exact payoff channel of conversions (architecture §7.2). So `solve()` ranks ONLY the sequencing-only
- * subset (conversion === null) today and enumerates EVERY withheld conversion lever with its named
- * reason + direction on the payload — a silently-dropped channel is an abstention, not a pass (insight
- * 092), so U16 can say "conversions aren't ranked yet" honestly instead of rendering a shrunken space.
- * (The token itself minted precisely because the RANKED conversions are conversion-free — the trend
- * clause blocks conversion RANKING, and none is happening; the withheld levers are disclosed, never
- * ranked. See `solveEntry.ts`.)
+ * CONVERSIONS RANK (the trend sourcing unit, 2026-07-19 — council wf_c673339e-257). The Medicare-cost
+ * trend is SOURCED and the Part-B pricing consumes it (`PART_B_PRICING_MODE: 'trended'`), so the
+ * token's trend clause is CLEAR and the whole roster ranks — conversion candidates included. The
+ * partition below still DERIVES from the clause (never a hardcoded filter): if the clause ever
+ * re-blocks (e.g. a future vintage regression flips the entry back to unsourced), the conversion
+ * subset drops out of ranking and every withheld lever is enumerated with its named reason +
+ * direction on the payload — a silently-dropped channel is an abstention, not a pass (insight 092).
+ * The pre-sourcing posture (sequencing-only ranking, conversions disclosed-withheld) remains the
+ * clause's blocking arm, exercised by test through the pure `_evaluateMedicareTrendClause` seam.
  *
  * THE PAYLOAD IS THE WIRE'S VALUE MODEL (§S5 (4)): full seed-B distributions for the winner + retained
  * runner-up + no-action baseline (the buffers the wire transfer-lists), scalar selection scores for the
@@ -393,10 +392,18 @@ export function solve(token: OracleClearedToken, input: SolveInput, shouldAbort?
     )
   }
 
-  // (3) Partition: rank the sequencing-only subset; enumerate the conversion subset as withheld.
-  const rankable = candidates.filter((c) => c.conversion === null)
+  // (3) Partition — DERIVED FROM THE TOKEN'S TREND CLAUSE (the trend sourcing unit closed the
+  // U15 tripwire's named seam): `enumerateWithheldConversionLevers` reads the live clause and
+  // returns [] when the trend is sourced AND Part-B pricing consumes it — in which case the WHOLE
+  // roster ranks (conversions included). While any lever is withheld, only the sequencing-only
+  // subset ranks. The rankable field derives from the clause's own output — never a duplicated
+  // hardcoded `conversion === null` filter that could silently orphan a cleared channel.
   const conversionCandidates = candidates.filter((c) => c.conversion !== null)
   const withheldConversionLevers = enumerateWithheldConversionLevers(conversionCandidates)
+  const rankable =
+    conversionCandidates.length > 0 && withheldConversionLevers.length === 0
+      ? candidates
+      : candidates.filter((c) => c.conversion === null)
 
   // COOPERATIVE ABORT (§S6) — before the first dominant cost center (the K-candidate search). A
   // superseded solve bails HERE with a named `aborted` bin rather than decumulating the whole batch.

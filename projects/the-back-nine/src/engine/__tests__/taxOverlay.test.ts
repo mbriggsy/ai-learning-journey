@@ -14,8 +14,44 @@ import {
 import { runDecumulation, type PortfolioState } from '@engine/decumulation'
 import { DRAWDOWN_POLICIES, NEVER_DEPLETED, type RetirementState } from '@shared/model'
 import { totalAcrossBuckets, type AccountBuckets } from '@engine/sequencing'
-import { uniformLifetimeTableDivisors, capitalGainsBreakpoints, irmaa, partB2026, stateRateForYear, stateStandardDeductionFor } from '@engine/constants'
+import { uniformLifetimeTableDivisors, capitalGainsBreakpoints, irmaa, partB2026, medicareCostTrend, stateRateForYear, stateStandardDeductionFor } from '@engine/constants'
 import { fplForHousehold } from '@engine/healthOverlay'
+
+// ---------------------------------------------------------------------------
+// The Medicare-cost-trend hand oracle (DND/012 — the trend sourcing unit, 2026-07-19). ONE canonical
+// home for the trended per-year Part B bill (the four M4/C3/M6/KTD-9 batteries all read it). Sim year
+// t bills calendar `startCalendarYear + t` (the fixtures start 2026, so t=0 → the 2026 anchor). Part B
+// is NO LONGER real-flat: this reads the dated figures SYMBOLICALLY off the committed constants and
+// applies the DOCUMENTED formula by hand — never buildPartBPricingSchedule / medicareAnnualCost, which
+// are exactly what these fixtures GUARD:
+//   base_real(y) = the anchor for 2026 (and the pre-anchor clamp); else the V.E2 nominal for y deflated
+//     by the horizon-matched near-term CPI average applied uniformly per table year; past the table the
+//     ultimate real escalator ((1+g_nom)/(1+cpi_ult)) compounds off the 2035 edge.
+//   one year's full cost = count × (base_real + IRMAA surcharge) × 12, where the Part B surcharge rides
+//     the base's real trend scale (base_real / anchor) and Part D is HELD at anchor scale 1 (the
+//     council-ratified DISAGGREGATION — Part D does not ride Part B's ratio).
+const partBAnchorMonthly = partB2026.value.standardPremiumMonthly // read, never re-typed (copyGuard)
+const partBNominalMonthly = (calendarYear: number) =>
+  medicareCostTrend.value.premiums.find((p) => p.calendarYear === calendarYear)!.nominalMonthly
+const partBBaseRealMonthly = (calendarYear: number): number => {
+  const trend = medicareCostTrend.value
+  if (calendarYear <= trend.anchorYear) return partBAnchorMonthly
+  const tableEdgeYear = trend.anchorYear + trend.premiums.length
+  if (calendarYear <= tableEdgeYear)
+    return partBNominalMonthly(calendarYear) / (1 + trend.cpiNearTermAvg) ** (calendarYear - trend.anchorYear)
+  const realUltimate = (1 + trend.ultimateNominalGrowth) / (1 + trend.cpiUltimate)
+  return partBBaseRealMonthly(tableEdgeYear) * realUltimate ** (calendarYear - tableEdgeYear)
+}
+/** One post-65 year's full Medicare cost (real $): count × (base_real + IRMAA surcharge) × 12 — the
+ *  independent hand oracle for the trended per-year bill. `tierIdx` null = the implicit base tier (no
+ *  surcharge); the Part B surcharge scales with the year's real base trend, Part D stays anchor scale. */
+const medicareAnnualReal = (count: number, tierIdx: number | null, calendarYear: number): number => {
+  const baseReal = partBBaseRealMonthly(calendarYear)
+  if (tierIdx === null) return count * baseReal * 12
+  const tier = irmaa.value.tiers[tierIdx]!
+  const surcharge = tier.partBSurchargeMonthly * (baseReal / partBAnchorMonthly) + tier.partDSurchargeMonthly
+  return count * (baseReal + surcharge) * 12
+}
 
 // ---------------------------------------------------------------------------
 // Deterministic fixtures (no RNG — the seam is a pure transform). Mixed-sign real
@@ -1558,8 +1594,14 @@ describe('taxOverlay — M6a bracket-fill (the injected tax-aware ceiling)', () 
         1_500_000 - 4 * 200_000 - 2 * 18_000 - bracketOnlyHeadroom2028 - bracketOnlyHeadroom2029,
         1,
       )
-      // Every billed year stayed at the base premium — the rail held tier-0 for the whole run.
-      const basePartBOnly = 4 * 2 * 12 * partB2026.value.standardPremiumMonthly
+      // Every billed year stayed at the tier-0 base premium — but the base now TRENDS per calendar
+      // year (t 0–3 ⇒ 2026 anchor, then V.E2 deflated), so the honest total is the trended base sum,
+      // ×2 enrolled, not 4× the flat anchor.
+      const basePartBOnly =
+        medicareAnnualReal(2, null, 2026) +
+        medicareAnnualReal(2, null, 2027) +
+        medicareAnnualReal(2, null, 2028) +
+        medicareAnnualReal(2, null, 2029)
       expect(derived.totalMedicareCostReal).toBeCloseTo(basePartBOnly, 2)
       // The uncapped fill records a far-over-threshold MAGI in years 0–1 → the billed years 2–3
       // pay a real surcharge on top of the base premium.
@@ -2319,20 +2361,17 @@ describe('taxOverlay — M4: the post-65 IRMAA feed-forward (externally derived,
   // member ⇒ ACA never prices, so slcsp/enrolledPremium are omitted).
   const POST65: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: false, household: mkHousehold(2026, 1959, 1959) }
   const IRMAA_SCHED = irmaa.value
-  const BASE = partB2026.value.standardPremiumMonthly // read, never re-typed (copyGuard)
   const lowSeed = [60_000, 60_000] // pre-sim IRMAA-MAGI below tier 1 ⇒ base premium only, no surcharge
-  // The independent hand oracle for one year's full Medicare cost: count × (base + surcharge) × 12.
-  const surchargeMonthly = (tierIdx: number) =>
-    IRMAA_SCHED.tiers[tierIdx]!.partBSurchargeMonthly + IRMAA_SCHED.tiers[tierIdx]!.partDSurchargeMonthly
-  const medicareAnnual = (count: number, tierIdx: number | null) =>
-    count * (BASE + (tierIdx === null ? 0 : surchargeMonthly(tierIdx))) * 12
+  // The independent hand oracle is the module-level `medicareAnnualReal(count, tier, calendarYear)`:
+  // count × (base_real + surcharge) × 12. Sim year t bills calendar 2026 + t, so each billed year names
+  // its own trended base (the base is no longer run-invariant — the Medicare-cost-trend unit).
   const run = (net: readonly number[], inputs: TaxYearInputs, cfg: TaxOverlayConfig = POST65) =>
     runTaxAwareDecumulation(POOL, realStock, realBond, net, STOCK_W, 'pre-tax-first', cfg, inputs)
 
   it('presence + value: a post-65 couple funds the base Part B premium (×2 enrolled, ×12) that leaves the portfolio', () => {
     const on = run([40_000], { healthcareEnabled: true, irmaaMagiSeed: lowSeed })
     const off = run([40_000], {})
-    expect(on.totalMedicareCostReal).toBeCloseTo(medicareAnnual(2, null), 4) // 2 enrolled, base only (low seed)
+    expect(on.totalMedicareCostReal).toBeCloseTo(medicareAnnualReal(2, null, 2026), 4) // year 0 → 2026 anchor, 2 enrolled, base only (low seed)
     expect(on.terminalReal).toBeLessThan(off.terminalReal) // the cost (+ its tax gross-up) left the portfolio
     expect(off.totalMedicareCostReal).toBe(0) // healthcare off prices nothing (reduce-to-spine)
   })
@@ -2342,7 +2381,7 @@ describe('taxOverlay — M4: the post-65 IRMAA feed-forward (externally derived,
     // (pre-sim, both alive), count65 = 2 ⇒ 2 × (base + tier-1 surcharge) × 12.
     const seedHi = [IRMAA_SCHED.tiers[0]!.mfjMagiThreshold + 1, 60_000]
     const r = run([40_000], { healthcareEnabled: true, irmaaMagiSeed: seedHi })
-    expect(r.totalMedicareCostReal).toBeCloseTo(medicareAnnual(2, 0), 4)
+    expect(r.totalMedicareCostReal).toBeCloseTo(medicareAnnualReal(2, 0, 2026), 4) // year 0 → 2026 anchor (scale 1)
   })
 
   it('the lag is EXACTLY 2 years: a year-0 conversion moves the surcharge at year 2, NEVER years 0 or 1 (insight 014)', () => {
@@ -2372,7 +2411,10 @@ describe('taxOverlay — M4: the post-65 IRMAA feed-forward (externally derived,
     // Run CONV: the SAME $240k delivered as a fully-ordinary year-0 Roth conversion ⇒ IRMAA-MAGI[0] ≫ $218k
     // ⇒ year 2 IS surcharged. The contrast isolates the SS treatment as the only mover.
     const runConv = run([20_000, 20_000, 20_000], { healthcareEnabled: true, irmaaMagiSeed: lowSeed, conversions: [bigSS, 0, 0] })
-    expect(runSS.totalMedicareCostReal).toBeCloseTo(medicareAnnual(2, null) * 3, 4) // all 3 years base only — no surcharge
+    expect(runSS.totalMedicareCostReal).toBeCloseTo(
+      medicareAnnualReal(2, null, 2026) + medicareAnnualReal(2, null, 2027) + medicareAnnualReal(2, null, 2028),
+      4,
+    ) // all 3 years base only — no surcharge (years 0–2 → 2026–2028, each at its own trended base)
     expect(runConv.totalMedicareCostReal).toBeGreaterThan(runSS.totalMedicareCostReal) // the conversion DID trigger year 2
   })
 
@@ -2405,8 +2447,8 @@ describe('taxOverlay — M4: the post-65 IRMAA feed-forward (externally derived,
     // Isolate each year's Medicare cost by horizon differencing.
     const year3Cost = total(4) - total(3) // survivor, MFJ-thresholded (filing[1]) on MAGI[1] ≈ $150k < $218k
     const year4Cost = total(5) - total(4) // survivor, SINGLE-thresholded (filing[2]) on MAGI[2] ≈ $150k > $109k
-    expect(year3Cost).toBeCloseTo(medicareAnnual(1, null), 4) // 1 survivor, NO surcharge (still MFJ-thresholded)
-    expect(year4Cost).toBeGreaterThan(medicareAnnual(1, null)) // the single-threshold surcharge has now landed
+    expect(year3Cost).toBeCloseTo(medicareAnnualReal(1, null, 2029), 4) // year 3 → 2029, 1 survivor, NO surcharge (still MFJ-thresholded)
+    expect(year4Cost).toBeGreaterThan(medicareAnnualReal(1, null, 2030)) // year 4 → 2030: the single-threshold surcharge lands ON TOP of the trended base
     expect(year4Cost).toBeGreaterThan(year3Cost) // the widow(er)’s penalty — same income, +2yr after the death
   })
 
@@ -2443,8 +2485,8 @@ describe('taxOverlay — M4: the post-65 IRMAA feed-forward (externally derived,
     const distinct: TaxYearInputs = { healthcareEnabled: true, irmaaMagiSeed: [A, B] }
     const year0 = run([40_000], distinct).totalMedicareCostReal
     const both = run([40_000, 40_000], distinct).totalMedicareCostReal
-    expect(year0).toBeCloseTo(medicareAnnual(2, 0), 4) // seed[0] = A ⇒ tier 1 at year 0
-    expect(both - year0).toBeCloseTo(medicareAnnual(2, null), 4) // seed[1] = B ⇒ base only at year 1
+    expect(year0).toBeCloseTo(medicareAnnualReal(2, 0, 2026), 4) // seed[0] = A ⇒ tier 1 at year 0 → 2026 anchor
+    expect(both - year0).toBeCloseTo(medicareAnnualReal(2, null, 2027), 4) // seed[1] = B ⇒ base only at year 1 → 2027 (trended)
   })
 
   it('cross-65 feed-forward (the MAIN path, NO seed): a pre-65 year records the IRMAA-MAGI that bills the first post-65 surcharge 2 years later', () => {
@@ -2457,7 +2499,7 @@ describe('taxOverlay — M4: the post-65 IRMAA feed-forward (externally derived,
     const inputs: TaxYearInputs = { healthcareEnabled: true, conversions: [900_000, 0, 0] } // NO irmaaMagiSeed
     const total = (years: number) => run([40_000, 40_000, 40_000].slice(0, years), inputs, cross).totalMedicareCostReal
     expect(total(2)).toBe(0) // years 0,1 pre-65 ⇒ zero Medicare cost (count65 = 0)
-    expect(total(3) - total(2)).toBeCloseTo(medicareAnnual(2, 4), 4) // year 2: first surcharge, top tier, from pre-65 history[0]
+    expect(total(3) - total(2)).toBeCloseTo(medicareAnnualReal(2, 4, 2028), 4) // year 2 → 2028: first surcharge, top tier, from pre-65 history[0]
   })
 
   it('the pre-65 ACA-priced year records IRMAA-MAGI off TAXABLE SS (the ACA branch uses irmaaMagi, not acaMagi), across the 65 handoff', () => {
@@ -2867,9 +2909,10 @@ describe('taxOverlay — M5 · Slices 3–4: owner-age keying, the ACA-premium t
     it('SPOUSAL ROLLOVER re-keys the privilege at the death year (insight 014 — test the crossing, not the endpoints)', () => {
       // Person 0 born 1959 (67, Medicare every year); person 1 born 1966 (60) OWNS the HSA.
       // y0: owner(60) alive ⇒ privilege CLOSED ⇒ spend 0 (the bill is grossed up).
-      // y1: the OWNER DIES ⇒ the HSA rolls to the 67yo survivor ⇒ privilege OPENS ⇒ spend = BASE×12.
-      // A planted privilege-dies-with-the-owner arm yields 0; an always-open arm yields 2×BASE×12;
-      // a rollover-to-wrong-person arm yields 0 — the single-year total discriminates all three.
+      // y1: the OWNER DIES ⇒ the HSA rolls to the 67yo survivor ⇒ privilege OPENS ⇒ spend = the
+      // survivor's y1 (→ 2027) trended base × 12. A planted privilege-dies-with-the-owner arm yields 0;
+      // an always-open arm yields the y0+y1 base sum; a rollover-to-wrong-person arm yields 0 — the
+      // single-year total discriminates all three.
       const cfg: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: false, household: mkHousehold(2026, 1959, 1966) }
       const hh = cfg.taxEnabled ? cfg.household : (undefined as never)
       const years = [
@@ -2881,8 +2924,8 @@ describe('taxOverlay — M5 · Slices 3–4: owner-age keying, the ACA-premium t
         [0, 0], [0, 0], [40_000, 40_000], STOCK_W, 'pre-tax-first', cfg,
         { healthcareEnabled: true, irmaaMagiSeed: lowSeed, hsaOwnerIndex: 1, householdYears: years },
       )
-      expect(r.totalQualifiedHsaSpendReal).toBeCloseTo(1 * BASE * 12, 8) // y1 ONLY — the crossing year pinned
-      expect(r.finalBuckets.hsa).toBeCloseTo(HSA - 1 * BASE * 12, 6)
+      expect(r.totalQualifiedHsaSpendReal).toBeCloseTo(medicareAnnualReal(1, null, 2027), 8) // y1 ONLY (→ 2027, trended base) — the crossing year pinned
+      expect(r.finalBuckets.hsa).toBeCloseTo(HSA - medicareAnnualReal(1, null, 2027), 6)
     })
   })
 
@@ -2974,7 +3017,7 @@ describe('taxOverlay — M5 boundary review: the verified seams', () => {
   it('the owner AGING INTO 65 mid-run opens the privilege at the birthday year (insight 014 — the third crossing)', () => {
     // Both born 1962 ⇒ 64 at t=0 (count65 = 0, no Medicare cost), 65 at t=1 (count65 = 2, the
     // privilege opens via the owner''s OWN birthday — no death involved). oop = 0 isolates the
-    // premium component: y0 spend 0 (nothing priced), y1 spend = 2×BASE×12 (low seed, base only).
+    // premium component: y0 spend 0 (nothing priced), y1 spend = 2 × the y1 (2027) trended base × 12 (low seed, base only).
     // A frozen age-at-year-0 implementation (ownerIs65Plus hoisted out of the loop — the plausible
     // P4 hot-loop refactor) yields 0 and fails.
     const cfg: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: false, household: mkHousehold(2026, 1962, 1962) }
@@ -2983,7 +3026,7 @@ describe('taxOverlay — M5 boundary review: the verified seams', () => {
       [0, 0], [0, 0], [40_000, 40_000], STOCK_W, 'pre-tax-first', cfg,
       { healthcareEnabled: true, irmaaMagiSeed: lowSeed, hsaOwnerIndex: 0 },
     )
-    const mc1 = 2 * BASE * 12
+    const mc1 = medicareAnnualReal(2, null, 2027) // year 1 → 2027 (trended base), 2 enrolled, base only
     expect(r.totalQualifiedHsaSpendReal).toBeCloseTo(mc1, 8) // year 1 ONLY — the crossing pinned
     expect(r.finalBuckets.hsa).toBeCloseTo(100_000 - mc1, 6)
   })
@@ -3032,7 +3075,6 @@ describe('taxOverlay — M5 boundary review: the verified seams', () => {
 // ledger co-live arm, and the two missing overlay backstops.
 // ===========================================================================
 describe('taxOverlay — M5 boundary review #2: the re-verified seams', () => {
-  const BASE = partB2026.value.standardPremiumMonthly
   const lowSeed = [60_000, 60_000]
 
   it('hsa ABSENT vs hsa: 0 is byte-identical under TAX ON + healthcare (toBe-exact — the zero===absent sibling ssBenefits/conversions already have)', () => {
@@ -3092,8 +3134,9 @@ describe('taxOverlay — M5 boundary review #2: the re-verified seams', () => {
       },
     )
     // y0: owner(64) alive ⇒ privilege CLOSED (count65 = 1, the bill grossed up, spend 0).
-    // y1, y2: the HSA rolled to the 65+ survivor ⇒ spend = 1 × BASE × 12 each year (low seed).
-    expect(r.totalQualifiedHsaSpendReal).toBeCloseTo(2 * (1 * BASE * 12), 6)
+    // y1 (→ 2027), y2 (→ 2028): the HSA rolled to the 65+ survivor ⇒ spend = 1 × the year's trended
+    // base × 12 each year (low seed) — each year at its OWN trended base, no longer 2× the flat anchor.
+    expect(r.totalQualifiedHsaSpendReal).toBeCloseTo(medicareAnnualReal(1, null, 2027) + medicareAnnualReal(1, null, 2028), 6)
     // and the 4-bucket ledger still reconciles to the terminal with both re-keys fired:
     expect(Math.abs(totalAcrossBuckets(r.finalBuckets) / r.terminalReal - 1)).toBeLessThan(1e-9)
     expect(r.depletionYear).toBe(NEVER_DEPLETED)
@@ -3546,13 +3589,9 @@ describe('C2 — §6 overlay arm, the R19 backstop, and the depleted-year forfei
 describe('taxOverlay — C3 §3b: per-person Medicare onset + additive override + the bridge-mask arms', () => {
   const PP = 2_000_000
   const POOL: AccountBuckets = { taxable: 0, pretax: PP, roth: 0 }
-  const IRMAA_SCHED = irmaa.value
-  const BASE = partB2026.value.standardPremiumMonthly
   const lowSeed = [60_000, 60_000]
-  const surchargeMonthly = (tierIdx: number) =>
-    IRMAA_SCHED.tiers[tierIdx]!.partBSurchargeMonthly + IRMAA_SCHED.tiers[tierIdx]!.partDSurchargeMonthly
-  const medicareAnnual = (count: number, tierIdx: number | null) =>
-    count * (BASE + (tierIdx === null ? 0 : surchargeMonthly(tierIdx))) * 12
+  // The hand oracle is the module-level `medicareAnnualReal(count, tier, calendarYear)`; sim year t
+  // bills calendar 2026 + t (the trended per-year base — the Medicare-cost-trend unit).
   // A still-working 66yo (born 1960, age 66 at 2026): onset [3] = Medicare at the work stop.
   const W66: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: false, household: mkHousehold(2026, 1960) }
   const run = (net: readonly number[], inputs: TaxYearInputs, cfg: TaxOverlayConfig) =>
@@ -3576,13 +3615,16 @@ describe('taxOverlay — C3 §3b: per-person Medicare onset + additive override 
     expect(() => run([40_000, 40_000], { healthcareEnabled: true }, W66)).toThrow(/irmaaMagiSeed/)
     // Seed supplied: the SAME run prices base Part B ×1 ×12 per year — vs ZERO under onset [3].
     const biological = run([40_000, 40_000], { healthcareEnabled: true, irmaaMagiSeed: lowSeed }, W66)
-    expect(biological.totalMedicareCostReal).toBeCloseTo(medicareAnnual(1, null) * 2, 4)
+    expect(biological.totalMedicareCostReal).toBeCloseTo(
+      medicareAnnualReal(1, null, 2026) + medicareAnnualReal(1, null, 2027), // years 0,1 → 2026,2027, ×1, base only
+      4,
+    )
   })
 
   it('enrollment STARTS at the onset: year 3 prices off the override-free recorded history (base tier)', () => {
     const r = run([40_000, 40_000, 40_000, 40_000], { healthcareEnabled: true, medicareOnsetSimYear: [3] }, W66)
-    // Years 0..2 free; year 3: lag = 1 → history[1] (computed ≈ a 40k gross-up MAGI ≪ tier 1) → base only.
-    expect(r.totalMedicareCostReal).toBeCloseTo(medicareAnnual(1, null), 4)
+    // Years 0..2 free; year 3 → 2029: lag = 1 → history[1] (computed ≈ a 40k gross-up MAGI ≪ tier 1) → base only.
+    expect(r.totalMedicareCostReal).toBeCloseTo(medicareAnnualReal(1, null, 2029), 4)
   })
 
   it('the retired-spouse discriminator: a retired 67yo spouse of a still-working 66yo IS priced from t=0 (per-person, never household max)', () => {
@@ -3591,7 +3633,10 @@ describe('taxOverlay — C3 §3b: per-person Medicare onset + additive override 
     const r = run([40_000, 40_000, 40_000], { healthcareEnabled: true, medicareOnsetSimYear: [3, -2], irmaaMagiSeed: lowSeed }, cfg)
     // EXACTLY one enrolled member each of years 0..2: a household max(65th, work-stop) design
     // would price ZERO (nobody until year 3); a biological-only design would price ×2. Both fail.
-    expect(r.totalMedicareCostReal).toBeCloseTo(medicareAnnual(1, null) * 3, 4)
+    expect(r.totalMedicareCostReal).toBeCloseTo(
+      medicareAnnualReal(1, null, 2026) + medicareAnnualReal(1, null, 2027) + medicareAnnualReal(1, null, 2028), // years 0–2 → 2026–2028, ×1, base only
+      4,
+    )
   })
 
   it('absent-onset byte-identity: an explicit biological onset array reproduces the absent-signal run EXACTLY', () => {
@@ -3617,20 +3662,20 @@ describe('taxOverlay — C3 §3b: per-person Medicare onset + additive override 
       // history[0] = computed-only ≈ $0 (net 0, no conversion) → year 2 base only — the exact
       // silent understatement the override exists to prevent (here it is the FIXTURE, not a bug:
       // the validateParams arm + the mask arm are what forbid this configuration in production).
-      expect(r.totalMedicareCostReal).toBeCloseTo(medicareAnnual(1, null), 4)
+      expect(r.totalMedicareCostReal).toBeCloseTo(medicareAnnualReal(1, null, 2028), 4) // year 2 → 2028, ×1, base only
     })
 
     it('the override prices the surcharge implied by working-year income (above tier-1 — below it a $0 surcharge proves nothing)', () => {
-      // override 230k > MFJ tier-1 218k ⇒ year 2 bills tier 1.
+      // override 230k > MFJ tier-1 218k ⇒ year 2 → 2028 bills tier 1.
       const r = run(net3, { ...onset2, irmaaMagiOverride: [230_000, 230_000] }, W66)
-      expect(r.totalMedicareCostReal).toBeCloseTo(medicareAnnual(1, 0), 4)
+      expect(r.totalMedicareCostReal).toBeCloseTo(medicareAnnualReal(1, 0, 2028), 4)
     })
 
     it('ADDITIVITY: a working-year Roth conversion lands ON TOP of the override (a planted replacement-write fails)', () => {
       // history[0] = 230k (override) + 50k (the conversion is computed nonSSordinary) = 280k >
       // MFJ tier-2 274k ⇒ tier 2. A replacement write reads 230k ⇒ tier 1; max() likewise.
       const r = run(net3, { ...onset2, irmaaMagiOverride: [230_000, 230_000], conversions: [50_000, 0, 0] }, W66)
-      expect(r.totalMedicareCostReal).toBeCloseTo(medicareAnnual(1, 1), 4)
+      expect(r.totalMedicareCostReal).toBeCloseTo(medicareAnnualReal(1, 1, 2028), 4) // year 2 → 2028, ×1, tier 2
     })
   })
 
@@ -3645,7 +3690,7 @@ describe('taxOverlay — C3 §3b: per-person Medicare onset + additive override 
         { healthcareEnabled: true, medicareOnsetSimYear: [2], bridgeYearMask: [true, true, false], irmaaMagiOverride: [230_000, 230_000] },
         W66,
       )
-      expect(ok.totalMedicareCostReal).toBeCloseTo(medicareAnnual(1, 0), 4)
+      expect(ok.totalMedicareCostReal).toBeCloseTo(medicareAnnualReal(1, 0, 2028), 4) // year 2 → 2028, ×1, tier 1
     })
 
     it('the masked ACA price-gate throw: a priced ACA year on a bridge year is wage-blind — unpriceable, rejected', () => {
@@ -3682,7 +3727,7 @@ describe('taxOverlay — C3 §3b: per-person Medicare onset + additive override 
       // Control: WITHOUT the onset (and no other consumer), the same strangers run fine —
       // resolveYear reads them age-wise only (the pre-C3 behavior, unchanged).
       const ok = run([40_000], { healthcareEnabled: true, irmaaMagiSeed: lowSeed, householdYears: strangers }, cfg)
-      expect(ok.totalMedicareCostReal).toBeCloseTo(medicareAnnual(2, null), 4)
+      expect(ok.totalMedicareCostReal).toBeCloseTo(medicareAnnualReal(2, null, 2026), 4) // year 0 → 2026 anchor, ×2, base only
     })
   })
 })
@@ -3717,11 +3762,8 @@ describe('taxOverlay — C3 §3b: per-person Medicare onset + additive override 
 // ===========================================================================
 describe('taxOverlay — M6: the cross-overlay integration battery (ACA × IRMAA × HSA, externally derived, DND/012)', () => {
   const IRMAA_SCHED = irmaa.value
-  const BASE = partB2026.value.standardPremiumMonthly
-  const surchargeMonthly = (tierIdx: number) =>
-    IRMAA_SCHED.tiers[tierIdx]!.partBSurchargeMonthly + IRMAA_SCHED.tiers[tierIdx]!.partDSurchargeMonthly
-  const medicareAnnual = (count: number, tierIdx: number | null) =>
-    count * (BASE + (tierIdx === null ? 0 : surchargeMonthly(tierIdx))) * 12
+  // The hand oracle is the module-level `medicareAnnualReal(count, tier, calendarYear)`; sim year t
+  // bills calendar 2026 + t (the trended per-year base — the Medicare-cost-trend unit).
 
   describe('the dual-regime year: ONE household pays IRMAA ×1 (MFJ column) AND receives ACA-PTC, same income, same year', () => {
     // The plan's named scenario (phase-1 U3 "IRMAA enrolled-count + seeding"): an age-gap couple —
@@ -3756,7 +3798,7 @@ describe('taxOverlay — M6: the cross-overlay integration battery (ACA × IRMAA
       // = 69,396.2071 (3.281× FPL, flat-band interior; taxable 29,546.21, 12%-band interior).
       // netPremium = 2,000 + 0.0996·M = 8,911.8622. terminal = P − M.
       const r = oneYr(55_000, 150_000)
-      expect(r.totalMedicareCostReal).toBeCloseTo(medicareAnnual(1, null), 8) // MFJ column, ×1, base only
+      expect(r.totalMedicareCostReal).toBeCloseTo(medicareAnnualReal(1, null, 2026), 8) // year 0 → 2026 anchor: MFJ column, ×1, base only
       expect(r.totalNetPremiumReal).toBeCloseTo(8_911.8622, 2)
       expect(r.terminalReal).toBeCloseTo(P - 69_396.2071, 2)
     })
@@ -3770,7 +3812,7 @@ describe('taxOverlay — M6: the cross-overlay integration battery (ACA × IRMAA
       // surcharge erodes the ACA subsidy through the funded MAGI; a model pricing the two
       // overlays independently would hold the premium fixed across the arms).
       const r = oneYr(55_000, IRMAA_SCHED.tiers[0]!.mfjMagiThreshold + 2_000)
-      expect(r.totalMedicareCostReal).toBeCloseTo(medicareAnnual(1, 0), 8) // tier 1 fired, still ×1
+      expect(r.totalMedicareCostReal).toBeCloseTo(medicareAnnualReal(1, 0, 2026), 8) // year 0 → 2026 anchor: tier 1 fired, still ×1
       expect(r.totalNetPremiumReal).toBeCloseTo(9_058.4289, 2)
       expect(r.terminalReal).toBeCloseTo(P - 70_867.7601, 2)
     })
@@ -3812,8 +3854,8 @@ describe('taxOverlay — M6: the cross-overlay integration battery (ACA × IRMAA
       // netPremium = 2,000 + 0.0996·M = 8,664.9298. terminal = 1,050,000 − M − hsaSpend
       // (the HSA outflow leaves the portfolio beside the gross). hsa after = 50,000 − 7,434.80.
       const r = allThree()
-      expect(r.totalMedicareCostReal).toBeCloseTo(medicareAnnual(1, null), 8)
-      expect(r.totalQualifiedHsaSpendReal).toBeCloseTo(5_000 + medicareAnnual(1, null), 8)
+      expect(r.totalMedicareCostReal).toBeCloseTo(medicareAnnualReal(1, null, 2026), 8) // year 0 → 2026 anchor
+      expect(r.totalQualifiedHsaSpendReal).toBeCloseTo(5_000 + medicareAnnualReal(1, null, 2026), 8)
       expect(r.totalNetPremiumReal).toBeCloseTo(8_664.9298, 2)
       expect(r.terminalReal).toBeCloseTo(TOTAL - 66_916.9657 - 7_434.8, 2)
       expect(r.finalBuckets.hsa).toBeCloseTo(42_565.2, 6)
@@ -3853,31 +3895,38 @@ describe('taxOverlay — M6: the cross-overlay integration battery (ACA × IRMAA
     //   ACA: pre65 = livingCount(1) − count65(1) = 0 from t=2 ⇒ the premium stops IMMEDIATELY.
     //   IRMAA: year t bills IRMAA-MAGI[t−2] against filing[t−2] ⇒ t=2,3 still bill the MFJ
     //   column (both alive at the lagged years 0,1); the SINGLE column first bites at t=4 —
-    //   on a MAGI recorded at t=2. Both lagged MAGIs (history[1] = 122,905.45 from the
-    //   ACA-priced year, history[2] = 118,471.31 from the survivor year) sit BETWEEN the
-    //   single tier-1 threshold (109,000) and the MFJ tier-1 threshold (218,000), and below
-    //   single tier-2 (137,000) — so the t=3→t=4 bill jump is PURELY the threshold column
+    //   on a MAGI recorded at t=2. Both lagged MAGIs (history[1] = 122,906.87 from the
+    //   ACA-priced year, history[2] = 118,594.84 from the survivor year — the trended-base grosses
+    //   below) sit BETWEEN the single tier-1 threshold (109,000) and the MFJ tier-1 threshold
+    //   (218,000), and below single tier-2 (137,000) — so the t=3→t=4 bill jump is PURELY the threshold column
     //   flipping, the mistimed-widow-penalty mechanism itself (insight 014: the crossing year).
     //
     // PER-YEAR DERIVATIONS (each value interior to its named regime — insight 023; the 2026
     // anchor puts t=0..2 INSIDE the senior bonus's 2025–2028 window and t=3,4 (2029, 2030)
-    // PAST the sunset — the sunset unit, council 2026-07-09):
-    //   t=0,1 (2026–27: MFJ, count65=1, full bonus, 12% band): over-cliff gross funds
-    //     fundingNet + 16,000 = 95,000 + 2,434.80 + 16,000 ⇒ g = (113,434.80 − 5,278)/0.88
-    //     = 122,905.4545 (taxable 83,055.45 ∈ (24,800, 100,800) ✓; MAGI < 150,000 ⇒ bonus full ✓).
+    // PAST the sunset — the sunset unit, council 2026-07-09). The Medicare bill now TRENDS per
+    // calendar year (the Medicare-cost-trend unit): each year's base is its V.E2 real premium
+    // (deflated), and t=4 adds the single-column tier-1 surcharge scaled to that year's base.
+    // Medicare per year (real, ×1 enrolled, ×12): t=0 (2026) 2,434.80 · t=1 (2027) 2,436.05 ·
+    // t=2 (2028) 2,529.52 · t=3 (2029) 2,603.94 · t=4 (2030) 3,958.80 (tier-1). Each feeds
+    // fundingNet, so every gross shifts off the old flat-base run:
+    //   t=0 (2026: MFJ, count65=1, full bonus, 12% band): over-cliff gross funds fundingNet + 16,000
+    //     = 95,000 + 2,434.80 + 16,000 ⇒ g = (113,434.80 − 5,278)/0.88 = 122,905.4545
+    //     (taxable 83,055.45 ∈ (24,800, 100,800) ✓; MAGI < 150,000 ⇒ bonus full ✓).
+    //   t=1 (2027: same regime, trended base): g = (95,000 + 2,436.05 + 16,000 − 5,278)/0.88
+    //     = 122,906.8710 (taxable 83,056.87 interior ✓).
     //   t=2 (2028: single survivor, count65=1, bonus PHASED, 22% band): D(g) = 16,100 + 2,050 +
     //     (6,000 − 0.06(g − 75,000)) = 28,650 − 0.06g ⇒ tax = 0.2332·g − 11,591 ⇒
-    //     g = (100,000 + 2,434.80 − 11,591)/0.7668 = 118,471.3093 (bonus 3,391.72 ∈ (0, 6,000) ✓;
-    //     taxable 96,929.59 ∈ (50,400, 105,700) ✓).
+    //     g = (100,000 + 2,529.52 − 11,591)/0.7668 = 118,594.8363 (bonus 3,384.31 ∈ (0, 6,000) ✓;
+    //     taxable 97,060.53 ∈ (50,400, 105,700) ✓).
     //   t=3 (2029: single survivor, POST-SUNSET — D = 16,100 + 2,050 = 18,150 FLAT, 22% band):
     //     tax = 5,800 + 0.22·(g − 18,150 − 50,400) = 0.22·g − 9,281 ⇒
-    //     g = (100,000 + 2,434.80 − 9,281)/0.78 = 119,427.9487 (taxable 101,277.95 ∈
+    //     g = (100,000 + 2,603.94 − 9,281)/0.78 = 119,644.7915 (taxable 101,494.79 ∈
     //     (50,400, 105,700) ✓ — interior, no bonus term to phase).
     //   t=4 (2030: single, post-sunset, tier-1 surcharge now in the bill):
-    //     g = (100,000 + 3,583.20 − 9,281)/0.78 = 120,900.2564 (taxable 102,750.26 ✓ interior).
-    // TOTALS: medicare = 4 × 2,434.80 + 3,583.20 = 13,322.40; premium = 2 × 16,000 = 32,000;
-    // terminal = 2,000,000 − (2×122,905.4545 + 118,471.3093 + 119,427.9487 + 120,900.2564)
-    //          = 1,395,389.5764.
+    //     g = (100,000 + 3,958.80 − 9,281)/0.78 = 121,381.7905 (taxable 103,231.79 ✓ interior).
+    // TOTALS: medicare = 2,434.80 + 2,436.05 + 2,529.52 + 2,603.94 + 3,958.80 = 13,963.10; premium =
+    // 2 × 16,000 = 32,000; terminal = 2,000,000 − (122,905.4545 + 122,906.8710 + 118,594.8363 +
+    //          119,644.7915 + 121,381.7905) = 1,394,566.2561.
     const owner = { birthYear: 1959 }
     const spouse = { birthYear: 1965 }
     const cfg: TaxOverlayConfig = {
@@ -3930,17 +3979,26 @@ describe('taxOverlay — M6: the cross-overlay integration battery (ACA × IRMAA
       const t2Cost = runYears(3).totalMedicareCostReal - runYears(2).totalMedicareCostReal
       const t3Cost = runYears(4).totalMedicareCostReal - runYears(3).totalMedicareCostReal
       const t4Cost = runYears(5).totalMedicareCostReal - runYears(4).totalMedicareCostReal
-      expect(t2Cost).toBeCloseTo(medicareAnnual(1, null), 8) // MFJ column at t=2 — no surcharge
-      expect(t3Cost).toBeCloseTo(medicareAnnual(1, null), 8) // MFJ column at t=3 — no surcharge
-      expect(t4Cost).toBeCloseTo(medicareAnnual(1, 0), 8) // SINGLE column at t=4 — tier 1, ×1
+      expect(t2Cost).toBeCloseTo(medicareAnnualReal(1, null, 2028), 8) // t=2 → 2028, MFJ column — no surcharge
+      expect(t3Cost).toBeCloseTo(medicareAnnualReal(1, null, 2029), 8) // t=3 → 2029, MFJ column — no surcharge
+      expect(t4Cost).toBeCloseTo(medicareAnnualReal(1, 0, 2030), 8) // t=4 → 2030, SINGLE column — tier 1, ×1
     })
 
     it('the full 5-year value chain lands exactly (terminal + both health totals — the integrated cross-overlay golden)', () => {
       const r = runYears(5)
       expect(r.depletionYear).toBe(NEVER_DEPLETED)
-      expect(r.totalMedicareCostReal).toBeCloseTo(4 * medicareAnnual(1, null) + medicareAnnual(1, 0), 8)
+      // ×1 enrolled every year (only the 1959 owner); t=0..3 base only, t=4 the single-column tier-1
+      // surcharge — each at its OWN trended base (t → 2026..2030), NOT 5× the flat anchor.
+      expect(r.totalMedicareCostReal).toBeCloseTo(
+        medicareAnnualReal(1, null, 2026) +
+          medicareAnnualReal(1, null, 2027) +
+          medicareAnnualReal(1, null, 2028) +
+          medicareAnnualReal(1, null, 2029) +
+          medicareAnnualReal(1, 0, 2030),
+        8,
+      )
       expect(r.totalNetPremiumReal).toBe(32_000)
-      expect(r.terminalReal).toBeCloseTo(1_395_389.5764, 2)
+      expect(r.terminalReal).toBeCloseTo(1_394_566.2561, 2)
     })
   })
 
@@ -4101,12 +4159,9 @@ describe('taxOverlay — R40 · KTD-9: the IRMAA decouple (clamped working-year 
   const POOL: AccountBuckets = { taxable: 0, pretax: PP, roth: 0 }
   const POST65: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: false, household: mkHousehold(2026, 1959, 1959) }
   const IRMAA_SCHED = irmaa.value
-  const BASE = partB2026.value.standardPremiumMonthly
   const lowSeed = [60_000, 60_000]
-  const surchargeMonthly = (tierIdx: number) =>
-    IRMAA_SCHED.tiers[tierIdx]!.partBSurchargeMonthly + IRMAA_SCHED.tiers[tierIdx]!.partDSurchargeMonthly
-  const medicareAnnual = (count: number, tierIdx: number | null) =>
-    count * (BASE + (tierIdx === null ? 0 : surchargeMonthly(tierIdx))) * 12
+  // The hand oracle is the module-level `medicareAnnualReal(count, tier, calendarYear)`; sim year t
+  // bills calendar 2026 + t (the trended per-year base — the Medicare-cost-trend unit).
   const run = (net: readonly number[], inputs: TaxYearInputs) =>
     runTaxAwareDecumulation(POOL, realStock, realBond, net, STOCK_W, 'pre-tax-first', POST65, inputs)
 
@@ -4170,14 +4225,17 @@ describe('taxOverlay — R40 · KTD-9: the IRMAA decouple (clamped working-year 
       ongoingTaxableIrmaaOnly: [pension, 0, 0],
       // bridgeYearMask absent (post-65, no bridge) so the override coverage gate is inert here.
     })
-    // year 2 reads IRMAA-MAGI[0] = wages + pension ⇒ tier 1 (count 2). Years 0,1 base only (low seed).
-    const expected = medicareAnnual(2, null) * 2 + medicareAnnual(2, 0)
+    // year 2 (→ 2028) reads IRMAA-MAGI[0] = wages + pension ⇒ tier 1 (count 2). Years 0,1 (→ 2026,2027)
+    // base only (low seed) — each year at its OWN trended base.
+    const expected =
+      medicareAnnualReal(2, null, 2026) + medicareAnnualReal(2, null, 2027) + medicareAnnualReal(2, 0, 2028)
     expect(r.totalMedicareCostReal).toBeCloseTo(expected, 4)
     // The fixture STRADDLES the tier boundary, so the exact tier-1 total refutes BOTH mutants:
     //  • DROPPED-pension (IRMAA-MAGI[0] = wages alone < T1 ⇒ all base, strictly less).
     //  • DOUBLE-count (wages + 2×pension ≥ T2 ⇒ tier-2 cost, strictly greater than tier-1).
     // Only counting wages + pension exactly once lands in (T1, T2) ⇒ the tier-1 `expected` above.
-    const droppedPension = medicareAnnual(2, null) * 3
+    const droppedPension =
+      medicareAnnualReal(2, null, 2026) + medicareAnnualReal(2, null, 2027) + medicareAnnualReal(2, null, 2028) // all three base only
     expect(r.totalMedicareCostReal).toBeGreaterThan(droppedPension)
   })
 
@@ -4229,7 +4287,8 @@ describe('taxOverlay — R40 · KTD-9: the IRMAA decouple (clamped working-year 
       irmaaMagiOverride: [wages, 0, 0], // U4: override = wages-only (the copy now says so)
       ongoingTaxableIrmaaOnly: [pension, 0, 0],
     })
-    const expectedCountedOnce = medicareAnnual(2, null) * 2 + medicareAnnual(2, 0)
+    const expectedCountedOnce =
+      medicareAnnualReal(2, null, 2026) + medicareAnnualReal(2, null, 2027) + medicareAnnualReal(2, 0, 2028) // yrs 0,1 → 2026,2027 base; yr 2 → 2028 tier 1
     expect(wagesOnly.totalMedicareCostReal).toBeCloseTo(expectedCountedOnce, 4)
 
     // NEGATIVE CONTROL (the closed landmine): the PRE-U4 whole-income override (wages + pension)

@@ -75,34 +75,39 @@ export const solverAcaFreshnessWindowDays = sourced(30, {
 })
 
 /**
- * The conversion-near-tie DEMOTION margin (S4.3 — the council's Q3 amendment): the
- * difference-keyed grade's shape-bias cancellation is ASYMMETRIC (conversion front-loads
- * balance reduction, so the non-cancelling i.i.d.-lognormal residual FLATTERS conversion
- * exactly in the near-tie regime). A conversion-lever winner whose held-out-B Tier-1
- * survival-fraction margin over the no-conversion runner-up is below THIS margin grades
- * coin-flip — never "just do it".
+ * The conversion-near-tie DEMOTION SE-MULTIPLE (S4.3, re-shaped by the trend sourcing unit —
+ * U15 council Q4d, ratified by wf_c673339e-257): the difference-keyed grade's shape-bias
+ * cancellation is ASYMMETRIC (conversion front-loads balance reduction, so the non-cancelling
+ * i.i.d.-lognormal residual FLATTERS conversion exactly in the near-tie regime). A
+ * conversion-lever winner whose held-out-B survival margin over the no-conversion runner-up
+ * sits inside THIS multiple of the member's own CRN-difference SE grades coin-flip — never
+ * "just do it". SCALE-FREE by construction (the ruling's point): the demotion width rides the
+ * run's own difference resolution instead of a world-specific absolute dollar/fraction, so it
+ * travels across worlds whose margins and bands differ in magnitude. No second constant — the
+ * SE is the already-built per-member paired-difference SE the band machinery computes.
  *
- * CALIBRATED 2026-07-18 (the S4 measurement probe, 16,000 paths × the 5-member B-family,
- * real engine): the measured conversion-near-tie CLASS — a 30k×3yr conversion winner over
- * conversion-0 on a mid-fragility household — carries member margins 0.0101…0.0118 survival
- * (member bands ≈ 0.0016: CRN resolves even a 1-point margin at the floor, so the demotion
- * is genuinely about the SHAPE RESIDUAL, never sampling noise), with a cross-member spread
- * of ±0.0016. The margin = 0.02 — TWO SURVIVAL_GRID cells: the measured class (≈0.011) +
- * its family spread + headroom to the next grid cell. A conversion winner inside 0.02 of
- * its no-conversion runner-up on B is exactly the regime where the §3–§5 i.i.d. residual
- * could BE the whole margin. The residual's true magnitude is UNQUANTIFIED in v1 (the
- * dissent's point); the standing flip condition — a near-tie stress test showing the
- * difference-keyed grade inverts a ranking under the richer block-bootstrap draw — would
- * re-derive this value, not merely bump it.
+ * CALIBRATED 2026-07-19 (the Q4d measurement, 16,000 paths × the 5-member B-family, real
+ * engine, on the mandated MEDICARE-BEARING POST-TREND-FLIP worlds — all-65+ MFJ, trended
+ * Part B + scaled IRMAA, 30k×3yr conversion winner over conversion-0): the measured class —
+ * two fragility variants (spend 124k and 112k on a $1.9M-pretax household) — carries member
+ * margins 0.0021…0.0041 survival with per-member SE ≈ 0.00037–0.00051 (bands = 1.96·SE ≈
+ * 0.00073–0.00099; every member beyondBand — CRN resolves the margin, so the demotion is
+ * genuinely about the SHAPE RESIDUAL, never sampling noise). The class's max margin/SE ratio
+ * ≈ 8.1 (max margin/band 4.15 × z 1.96) → the multiple = 10: the measured class + ~23%
+ * headroom, the U14 class-plus-headroom idiom. The known-robust contrast (margins ≈ 0.125,
+ * ratio ≈ 49 SE) stays far outside the demotion width. The residual's true magnitude remains
+ * UNQUANTIFIED in v1 (the dissent's point); the standing flip condition — a near-tie stress
+ * test showing the difference-keyed grade inverts a ranking under the richer block-bootstrap
+ * draw — would re-derive this value, not merely bump it.
  */
-export const solverConversionNearTieDemotionMargin = sourced(0.02, {
+export const solverConversionNearTieDemotionSeMultiple = sourced(10, {
   citation:
-    'U14 S4 calibration probe 2026-07-18 (16k × 5-member B-family, real engine): measured conversion-near-tie class margins 0.0101–0.0118 ± 0.0016 spread → 0.02 = the class + spread + one-grid-cell headroom; council wf_d873be6e-5b2 Q3 amendment (the asymmetric-cancellation demotion)',
+    'Q4d calibration 2026-07-19 (16k × 5-member B-family, real engine, Medicare-bearing post-trend-flip worlds per U15 council Q4d + wf_c673339e-257): measured class margins 0.0021–0.0041 at margin/SE ratios ≤ 8.1 → 10 = the class max + headroom (the U14 class-plus-headroom idiom); supersedes the pre-flip absolute 0.02 (U14 S4 2026-07-18, measured Medicare-BLIND)',
   directionalUntilPinned: true,
-  // The demotion margin's LEVEL is methodology (no dated pin event will ever "certify" it);
+  // The demotion width's LEVEL is methodology (no dated pin event will ever "certify" it);
   // the dissent's flip condition (a richer-draw near-tie inversion) would re-derive it.
   directionalKind: 'methodology-substrate',
-  note: 'Units: held-out-B Tier-1 survival-fraction margin (winner − runner-up). Applies ONLY when the winner carries a nonzero conversion and the runner-up does not (the flattered direction); a no-conversion winner is never demoted by this margin.',
+  note: 'Dimensionless multiple of the per-member held-out-B paired-difference SE (survival axis ONLY — the calibration class was measured on survival; any other axis stays fail-closed). Applies ONLY when the winner carries a nonzero conversion and the runner-up does not (the flattered direction); a no-conversion winner is never demoted.',
 })
 
 /** Finiteness-FIRST calibration check (insights 008/010/039): a NaN/Infinity/sentinel is
@@ -114,5 +119,5 @@ export const solverConstants = {
   solverMinBPaths,
   solverBFamilySize,
   solverAcaFreshnessWindowDays,
-  solverConversionNearTieDemotionMargin,
+  solverConversionNearTieDemotionSeMultiple,
 } as const

@@ -84,11 +84,15 @@ describe('perturbationPair — ranking-stability requires a conversion candidate
 })
 
 describe('solveWithMint — the named bins (insight 092)', () => {
-  it('RECOMMENDS end-to-end on a clean household (oracle + stability + mint + solve)', () => {
+  it('RECOMMENDS end-to-end on a clean household (oracle + stability + mint + solve) — conversions RANK, nothing withheld', () => {
     const out = solveWithMint(requestFor())
     expect(out.kind).toBe('recommended')
     if (out.kind !== 'recommended') throw new Error('unreachable')
-    expect(out.withheldConversionLevers).toHaveLength(2) // conversions withheld, enumerated
+    // The trend sourcing unit lifted the standing blocker: the clause is clear (sourced +
+    // consumed), so the conversion levers rejoin the ranked field END-TO-END through the live
+    // mint (the withheld enumeration is the clause's regression arm, empty by construction here).
+    expect(out.withheldConversionLevers).toEqual([])
+    expect(out.rankedIds).toContain('grid:taxable-first:20000')
     expect(out.noActionBaseline.id).toBe('conventional:taxable-first:0')
   }, 120_000)
 

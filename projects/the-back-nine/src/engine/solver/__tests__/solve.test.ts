@@ -1,12 +1,14 @@
 /**
  * U15 §S5 — the solve entry: the two-clause gate (the required token + the fingerprint identity
- * refusal), the trend-blocked-by-design withheld-lever enumeration (insight 092), the seed-B display
- * discipline (no seed-A selection score ever reaches a displayed figure), and the deterministic
- * byte-reproducible recommendation. The token is minted in-test via the U14 harness runners; the
- * fingerprint battery is the planted-mutant killer (a fingerprint-blind gate accepts a mismatch).
+ * refusal), the clause-derived conversion partition (the trend sourcing unit lifted the block —
+ * conversions RANK; the withheld channel stays wired for a clause regression, insight 092), the
+ * seed-B display discipline (no seed-A selection score ever reaches a displayed figure), and the
+ * deterministic byte-reproducible recommendation. The token is minted in-test via the U14 harness
+ * runners; the fingerprint battery is the planted-mutant killer (a fingerprint-blind gate accepts
+ * a mismatch).
  */
 import { describe, expect, it } from 'vitest'
-import type { CandidateStrategy } from '../candidates'
+import { solverCandidateId, type CandidateStrategy } from '../candidates'
 import { NEVER_DEPLETED, type SimulationParams } from '@shared/model'
 import type { SolvePayload } from '../solveEntry'
 import type { SolveArm } from '../solve'
@@ -21,6 +23,7 @@ import { evaluateCandidates } from '../../validation/evaluate'
 import { packSolveWire } from '../../engineProtocol'
 import { solveFromWire } from '../../engineWire'
 import { enumerateWithheldConversionLevers, gradeAxisFor, gradeSolveRecommendation, solve, type SolveInput } from '../solve'
+import { PART_B_PRICING_MODE } from '../../taxOverlay'
 
 // A tax-overlay household (no state, no healthcare — mints clean on this build), sampled longevity so
 // ranking stability sees a survivor crossing; modest paths keep the mint + grade cheap.
@@ -78,8 +81,9 @@ const RANKING: SolverRunRanking = { goal: 'leave-more', heirBracket: 0.25 }
 const TODAY = epochDayFromIsoDate(acaEnhancedSubsidyStatus.value.verifiedOn) + 5 // inside the freshness window
 
 /** Mint a real oracle-cleared token over (BASE, CANDIDATES, RANKING). The trend clause sees the
- *  RANKED (sequencing-only) subset's amounts — conversion-free — so it PASSES (conversions stay
- *  withheld from ranking, never blocked from the run). */
+ *  TRUE amounts of the WHOLE roster (mirroring solveEntry's live binding) — post-trend-sourcing
+ *  the clause is CLEAR (sourced constant + consuming Part-B pricing), so the conversion-bearing
+ *  set MINTS; the blocking arm stays exercised through the pure seam + the mint's _trendOverride. */
 function mintToken(): OracleClearedToken {
   const oracleOut = runOptimalityOracle(SOLVER_CASES)
   if (!('report' in oracleOut)) throw new Error('the committed oracle roster must pass')
@@ -98,7 +102,7 @@ function mintToken(): OracleClearedToken {
   }
   const mint = mintOracleToken({
     params: BASE,
-    candidateConversionAmounts: [undefined, undefined, undefined], // the ranked sequencing-only subset
+    candidateConversionAmounts: [undefined, undefined, undefined, 20_000, 40_000], // the whole ranked roster
     todayEpochDay: TODAY,
     oracleReport: oracleOut.report,
     stabilityReport: stabilityOut.report,
@@ -135,7 +139,7 @@ describe('solve() — the gate (§S5 (1))', () => {
     }
     expect(out.seedB).toBe(deriveSeedB(SEED_A))
     expect(out.solverCodeVersion).toBe(1)
-    expect(out.rankedIds.length).toBe(3) // the sequencing-only field ranked
+    expect(out.rankedIds.length).toBe(5) // the WHOLE field ranks — conversions included (the trend clause clear)
   }, 120_000)
 
   it('REFUSES a token minted over a DIFFERENT run — the fingerprint identity gate (the mutant-killer)', () => {
@@ -194,42 +198,42 @@ describe('solve() — the gate (§S5 (1))', () => {
   })
 })
 
-describe('solve() — conversions trend-blocked BY DESIGN + the withheld enumeration (§S5 (2), insight 092)', () => {
+describe('solve() — conversions RANK (the trend clause clear) + the withheld channel stays wired (§S5 (2), insight 092)', () => {
   const token = mintToken()
 
-  it('ranks ONLY the sequencing-only field and ENUMERATES every withheld conversion lever, named + directioned', () => {
+  it('ranks the WHOLE field — both conversion candidates join rankedIds and the withheld enumeration is EMPTY', () => {
+    // The U15 tripwire's named re-wire, proven end-to-end: the partition derives from the token's
+    // trend clause (clear: sourced + consumed), so the conversion levers REJOIN the ranked field.
+    // This arm is also the partition-revert mutant killer — re-hardcoding
+    // `rankable = candidates.filter(c => c.conversion === null)` orphans both ids and reds here.
     const out = solve(token, solveInput())
     if (out.kind !== 'recommended') throw new Error('unreachable')
-    // No conversion candidate is crowned or in the ranked field.
-    expect(out.rankedIds.every((id) => id.endsWith(':0'))).toBe(true)
-    // Both conversion candidates are enumerated as withheld — a silently-dropped channel is an
-    // abstention, not a pass (insight 092).
-    expect(out.withheldConversionLevers).toHaveLength(2)
-    const amounts = out.withheldConversionLevers.map((l) => l.annualAmountReal).sort((a, b) => a - b)
-    expect(amounts).toEqual([20_000, 40_000])
-    for (const lever of out.withheldConversionLevers) {
-      expect(lever.reason).toEqual({ kind: 'medicare-trend-unsourced' }) // the named reason
-      expect(lever.anchoredRail).toEqual({ kind: 'bracket-edge', edge: 100_000 + lever.annualAmountReal }) // the direction
-    }
+    expect(out.rankedIds).toHaveLength(5)
+    expect(out.rankedIds).toContain('grid:taxable-first:20000')
+    expect(out.rankedIds).toContain('grid:taxable-first:40000')
+    // No lever is withheld — an empty enumeration here is the CLEAR state, not a dropped channel
+    // (insight 092: the channel still exists and re-fills if the clause ever re-blocks).
+    expect(out.withheldConversionLevers).toEqual([])
   }, 120_000)
 
   it('enumerateWithheldConversionLevers is empty for a conversion-free set (nothing to abstain on)', () => {
     expect(enumerateWithheldConversionLevers([])).toEqual([])
   })
 
-  it('TRIPWIRE — medicareCostTrend is STILL unsourced; sourcing it must re-wire the TWO conversion seams', () => {
-    // The conversion trend-block is enforced by TWO hardcoded seams that BOTH assume the trend is
-    // unsourced. When it is finally sourced this test reds — a loud checkpoint (the 2028-IRMAA-tripwire
-    // idiom): the day it goes green→red, conversions stay SILENTLY ORPHANED unless both seams re-wire.
-    expect(
-      isUnsourced(medicareCostTrend),
-      'medicareCostTrend is now SOURCED — the conversion trend-block is lifting. Re-wire the TWO seams that ' +
-        'hardcode it, or conversions stay silently orphaned (never ranked, never disclosed): ' +
-        "(1) solve.ts's partition `rankable = candidates.filter(c => c.conversion === null)` must DERIVE the " +
-        "rankable set from the token's trend clause, not the hardcoded conversion === null filter; " +
-        "(2) enumerateWithheldConversionLevers's `medicare-trend-unsourced` reason must clear (evaluateMedicareTrendClause " +
-        'returns null once Part-B pricing consumes the sourced trend) so the withheld conversion levers rejoin the ranked field.',
-    ).toBe(true)
+  it('enumerateWithheldConversionLevers is empty for a CONVERSION-BEARING set — the live clause is clear (the second re-wired seam)', () => {
+    // Pre-sourcing this enumerated every lever with `medicare-trend-unsourced`; the clause now
+    // returns null (sourced + consumed) and the enumeration self-empties by construction.
+    expect(enumerateWithheldConversionLevers([conv(20_000), conv(40_000)])).toEqual([])
+  })
+
+  it('the flip witness — medicareCostTrend is SOURCED and the Part-B pricing mode is trended (both halves of the U14 clause)', () => {
+    // The old TRIPWIRE arm (green while unsourced, red the day it sourced) did its job on
+    // 2026-07-19: both named seams re-wired in the same change (the partition derivation above +
+    // the enumeration clearing). This pin holds the pair in the sourced direction; the
+    // lying-mirror direction (sourced entry + unmoved real-flat mode STILL blocks) lives in
+    // oracleToken.test's pure-seam arms.
+    expect(isUnsourced(medicareCostTrend)).toBe(false)
+    expect(PART_B_PRICING_MODE).toBe('trended')
   })
 })
 
@@ -240,10 +244,9 @@ describe('solve() — the seed-B display discipline + determinism (contract #2)'
     const out = solve(token, solveInput())
     if (out.kind !== 'recommended') throw new Error('unreachable')
     // The winner arm's distribution IS the seed-B run (not the curse-biased seed-A read). Reconstruct
-    // the winner strategy from the sequencing field and run it on BOTH seeds to prove which one displays.
-    const winnerStrategy = CANDIDATES.filter((c) => c.conversion === null).find(
-      (c) => `${c.provenance === 'conventional-baseline' ? 'conventional' : c.provenance}:${c.policy}:0` === out.winner.id,
-    )!
+    // the winner strategy from the FULL ranked field (conversions rank too, post-trend-sourcing) and
+    // run it on BOTH seeds to prove which one displays.
+    const winnerStrategy = CANDIDATES.find((c) => solverCandidateId(c) === out.winner.id)!
     const [runB] = evaluateCandidates(BASE, [winnerStrategy], deriveSeedB(SEED_A), { heirBracket: 0.25 })
     const [runA] = evaluateCandidates(BASE, [winnerStrategy], SEED_A, { heirBracket: 0.25 })
     if (runB!.kind !== 'scored' || runA!.kind !== 'scored') throw new Error('unreachable')
@@ -333,7 +336,7 @@ describe('gradeSolveRecommendation — the U15 objective wiring the harness defe
         heirBracket: undefined,
         minPathsOverride: 50,
       }),
-    ).toThrow(/SURVIVAL-FRACTION units/)
+    ).toThrow(/SURVIVAL axis only/)
   }, 120_000)
 })
 

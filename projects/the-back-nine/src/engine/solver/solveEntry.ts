@@ -9,14 +9,16 @@
  * stability over THIS household), mints, and hands the token straight to `solve()`. `engineProtocol`'s
  * `runSolve` calls this and packs the payload — the main thread never holds a token.
  *
- * THE TREND-BLOCK RECONCILIATION (§S5 (2)). The candidate roster carries the conversion grid (ranking
- * stability's perturbation law REQUIRES a conversion candidate to perturb — rankingStability.ts:143),
- * and the run fingerprint covers that whole roster. But the token's trend clause is evaluated on the
- * amounts of the candidates ACTUALLY RANKED — and `solve()` ranks the sequencing-only subset today, so
- * those amounts are conversion-free and the clause PASSES (the trend block owns conversion RANKING; no
- * conversion is being ranked). The withheld conversion levers are enumerated on the payload, never
- * ranked (insight 092). This is the exact shape U14's mint tests pin ("conversion-free set — the trend
- * block owns conversions today").
+ * THE TREND CLAUSE (§S5 (2), closed by the trend sourcing unit 2026-07-19). The candidate roster
+ * carries the conversion grid (ranking stability's perturbation law REQUIRES a conversion candidate
+ * to perturb — rankingStability.ts:143), and the run fingerprint covers that whole roster. The
+ * token's trend clause is evaluated on the TRUE amounts of the roster `solve()` ranks — the whole
+ * roster, conversions included, now that the trend is sourced AND the Part-B pricing consumes it
+ * (the clause reads both halves and is CLEAR). The clause stays load-bearing in the blocking
+ * direction: a future regression to an unsourced trend or an un-consuming pricing mode re-blocks
+ * every conversion-bearing mint right here (the lying-mirror witness pins it), and `solve()`'s
+ * partition re-derives the sequencing-only posture from the same clause (insight 092 — withheld
+ * levers enumerate, never silently drop).
  *
  * EVERY EXIT IS A NAMED BIN (insight 092): mint-failed (the harness gate itself broke — never ship),
  * token-withheld (a real honesty gate fired — state cert / stale ACA / uncalibrated ε), or `solve()`'s
@@ -166,12 +168,14 @@ export function solveWithMint(request: SolveRequest, shouldAbort?: ShouldAbort):
     return solveAborted('solve aborted after the harness gates, before the mint (a newer dispatch superseded it)')
   }
 
-  // (c) The mint. The trend clause is evaluated on the RANKED (sequencing-only) subset's amounts —
-  // conversion-free, because conversions stay withheld from ranking (§S5 (2)); the fingerprint the
-  // token copies is over the WHOLE roster (matching what `solve()` re-checks).
-  const rankedConversionAmounts = candidates
-    .filter((c) => c.conversion === null)
-    .map(() => undefined as number | undefined)
+  // (c) The mint. The trend clause is evaluated on the TRUE amounts of the roster `solve()` will
+  // rank — post-trend-sourcing that is the WHOLE roster, conversions included (the clause is clear:
+  // sourced constant + consuming pricing). Passing the real amounts keeps the clause honest in both
+  // directions: if the trend ever regresses to unsourced, the conversion-bearing set is blocked at
+  // the mint again, never silently ranked (the lying-mirror witness drives exactly that arm).
+  const rankedConversionAmounts = candidates.map((c) =>
+    c.conversion === null ? undefined : c.conversion.annualAmountReal,
+  )
   const mint = mintOracleToken({
     params: base,
     candidateConversionAmounts: rankedConversionAmounts,

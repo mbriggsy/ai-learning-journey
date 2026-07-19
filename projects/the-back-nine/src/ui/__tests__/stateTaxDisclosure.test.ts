@@ -45,7 +45,7 @@ describe('S5 — composeVerdictMedicareResidual (the verdict home, clause swaps 
     expect(fl).not.toContain('isn’t priced yet')
   })
 
-  it('the affirmation NEVER renders alone — every priced variant ships WITH the narrowed residual (premiums held flat)', () => {
+  it('the affirmation NEVER renders alone — every priced variant ships WITH the narrowed residual (the still-flat clause)', () => {
     for (const s of ['NC', 'PA', 'FL'] as const) {
       const out = composeVerdictMedicareResidual(s)
       expect(out, `${s} ships the residual sibling`).toContain(copy.verdictResidualTail.trim())

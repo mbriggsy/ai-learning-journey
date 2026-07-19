@@ -118,9 +118,9 @@ describe('classifyConsumedConstants — the pure classification seam (planted ar
   })
 })
 
-describe('the Medicare-cost-trend block (S0.4 — HARD solver-blocking, disclose-and-ship forbidden)', () => {
-  it('LIVE: a conversion-bearing candidate set is blocked TODAY (the trend is a named, unvalued gap)', () => {
-    expect(evaluateMedicareTrendClause(true)).toEqual({ kind: 'medicare-trend-unsourced' })
+describe('the Medicare-cost-trend clause (S0.4 — the standing conversion blocker, LIFTED by the trend sourcing unit)', () => {
+  it('LIVE: a conversion-bearing candidate set is CLEAR — the trend is sourced AND Part-B pricing consumes it (both halves, insight 074)', () => {
+    expect(evaluateMedicareTrendClause(true)).toBeNull()
   })
 
   it('LIVE: a conversion-free candidate set is not the block’s domain', () => {
@@ -274,7 +274,7 @@ describe('S6 — mintOracleToken: the assembled gate (reports required, clauses 
   const stabilityReport = stabilityOut.report
   const today = epochDayFromIsoDate(acaEnhancedSubsidyStatus.value.verifiedOn) + 5
 
-  it('an FL household MINTS on this build (conversion-free set — the trend block owns conversions today) with its provenance', () => {
+  it('an FL household MINTS on this build (conversion-free set) with its provenance', () => {
     const out = mintOracleToken({
       params: makeParams({ overlay: overlayFor('FL') }),
       candidateConversionAmounts: [undefined, undefined],
@@ -294,7 +294,7 @@ describe('S6 — mintOracleToken: the assembled gate (reports required, clauses 
     }
   })
 
-  it('the SAME FL household with a conversion-bearing set is withheld for EXACTLY the trend block — no state reason (the NC contrast, both directions)', () => {
+  it('the SAME FL household with a conversion-bearing set now MINTS — the trend clause is CLEAR (the standing blocker lifted, 2026-07-19)', () => {
     const out = mintOracleToken({
       params: makeParams({ overlay: overlayFor('FL') }),
       candidateConversionAmounts: [undefined, 20_000],
@@ -302,13 +302,13 @@ describe('S6 — mintOracleToken: the assembled gate (reports required, clauses 
       oracleReport,
       stabilityReport,
     })
-    expect('withheld' in out).toBe(true)
-    if ('withheld' in out) {
-      expect(out.withheld).toEqual([{ kind: 'medicare-trend-unsourced' }])
-    }
+    // Pre-sourcing this exact input was withheld [{ kind: 'medicare-trend-unsourced' }] — the
+    // sourced trend + the 'trended' Part-B pricing clear the clause (both halves, insight 074);
+    // the blocking arm stays exercised through the pure seam + the mint's _trendOverride arm.
+    expect('token' in out, 'token' in out ? '' : JSON.stringify((out as { withheld: unknown }).withheld)).toBe(true)
   })
 
-  it('an NC household is WITHHELD on the SAME build with the SAME reports — state-certification-pending(NC)', () => {
+  it('an NC household is WITHHELD on the SAME build with the SAME reports — state-certification-pending(NC) ALONE (the trend reason is gone)', () => {
     const out = mintOracleToken({
       params: makeParams({ overlay: overlayFor('NC') }),
       candidateConversionAmounts: [undefined, 20_000],
@@ -318,10 +318,10 @@ describe('S6 — mintOracleToken: the assembled gate (reports required, clauses 
     })
     expect('token' in out).toBe(false)
     if ('withheld' in out) {
-      expect(out.withheld).toContainEqual({ kind: 'state-certification-pending', state: 'NC' })
-      // The Medicare-trend block ALSO fires (the candidate set carries conversions and the
-      // trend is a named, unvalued gap) — the withheld list names EVERY true reason.
-      expect(out.withheld).toContainEqual({ kind: 'medicare-trend-unsourced' })
+      // EXACTLY the certification reason: the trend clause no longer fires on a conversion-bearing
+      // set (sourced + consumed), and the withheld-reason enum names only TRUE reasons — a stale
+      // trend reason here would blame the wrong gate (the S6.3 contract).
+      expect(out.withheld).toEqual([{ kind: 'state-certification-pending', state: 'NC' }])
     }
   })
 
@@ -336,16 +336,20 @@ describe('S6 — mintOracleToken: the assembled gate (reports required, clauses 
     expect('token' in out).toBe(true)
   })
 
-  it('the clause union: an NC + conversions + stale-ACA + priced-ACA run names ALL its reasons at once (the wiring pin)', () => {
+  it('the clause union: an NC + conversions + stale-ACA + planted-unsourced-trend run names ALL its reasons at once (the wiring pin — the trend leg driven through the seam now the live clause is clear)', () => {
     const params = makeParams({
       overlay: { ...overlayFor('NC'), healthcareEnabled: true, enrolledPremium: [12_000], slcsp: [12_000] },
     })
+    // The trend leg rides `_trendOverride` (the `_epsilonRequired` precedent, insight 048): the
+    // LIVE clause is clear post-sourcing, so without the seam, deleting the mint's trend push
+    // would stay green on every live test — the planted unsourced entry proves the leg is wired.
     const out = mintOracleToken({
       params,
       candidateConversionAmounts: [30_000],
       todayEpochDay: today + 400,
       oracleReport,
       stabilityReport,
+      _trendOverride: { entry: unsourced('planted pinTo'), mode: 'trended' },
     })
     expect('withheld' in out).toBe(true)
     if ('withheld' in out) {

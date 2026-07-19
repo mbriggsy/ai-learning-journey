@@ -8,7 +8,7 @@
  */
 import { describe, it, expect } from 'vitest'
 import { NEVER_DEPLETED, type PersonInputs, type SimulationParams } from '@shared/model'
-import { solverConversionNearTieDemotionMargin } from '@engine/constants'
+import { solverConversionNearTieDemotionSeMultiple } from '@engine/constants'
 import type { CandidateStrategy } from '../../solver/candidates'
 import type { CandidateOutcome } from '../evaluate'
 import { caseAcaCliff, caseBracketFill, CASE_III_HEIR_BRACKET } from '../../reference/solver-cases'
@@ -117,9 +117,11 @@ describe('gradeOnFamily — the all-members rule, the demotion, the floor, the c
     expect(out.memberMargins.filter((m) => m.beyondBand)).toHaveLength(4)
   })
 
-  it('THE DEMOTION (Q3): a conversion winner beyond every band but inside the calibrated margin grades coin-flip', () => {
-    // 30 winner-only paths of 2,000: margin 0.015 — beyond its band (~0.005), INSIDE the
-    // calibrated 0.02 demotion margin: exactly the flattered near-tie regime.
+  it('THE DEMOTION (Q3, the Q4d SE-multiple): a conversion winner beyond every band but inside the multiple grades coin-flip', () => {
+    // The synthetic arithmetic: member(x, n) has margin x/n and SE ≈ √(p(1−p))/√n, so the
+    // margin/SE ratio ≈ √x for small p. 30 winner-only paths of 2,000: margin 0.015, ratio
+    // ≈ √30 ≈ 5.5 — beyond its ~1.96·SE band, INSIDE the calibrated 10·SE demotion width:
+    // exactly the flattered near-tie regime.
     const nearTie = Array.from({ length: 5 }, () => member(30, 2_000))
     const demoted = gradeOnFamily({ family: nearTie, statistic: 'survival', winnerHasConversion: true, runnerUpHasConversion: false, minPathsOverride: 100 })
     expect(demoted.memberMargins.every((m) => m.beyondBand), 'the bands are cleared — demotion is the ONLY reason').toBe(true)
@@ -129,14 +131,15 @@ describe('gradeOnFamily — the all-members rule, the demotion, the floor, the c
     // is conversion-specific — the flattered lever, never a blanket caution).
     const noConv = gradeOnFamily({ family: nearTie, statistic: 'survival', winnerHasConversion: false, runnerUpHasConversion: false, minPathsOverride: 100 })
     expect(noConv.grade).toBe('just-do-it')
-    // CONTROL 2: a conversion winner CLEAR of the margin still earns just-do-it (an upper
-    // edge exists — the demotion is a near-tie rule, not a conversion ban).
-    const clear = Array.from({ length: 5 }, () => member(60, 2_000)) // margin 0.03 > 0.02
+    // CONTROL 2: a conversion winner CLEAR of the width still earns just-do-it (an upper edge
+    // exists — a near-tie rule, not a conversion ban). 120 winner-paths: ratio ≈ √120 ≈ 11 > 10.
+    const clear = Array.from({ length: 5 }, () => member(120, 2_000))
     const cleared = gradeOnFamily({ family: clear, statistic: 'survival', winnerHasConversion: true, runnerUpHasConversion: false, minPathsOverride: 100 })
     expect(cleared.demotionFired).toBe(false)
     expect(cleared.grade).toBe('just-do-it')
-    // The calibrated value itself is the measured-class derivation, not a sentinel:
-    expect(solverConversionNearTieDemotionMargin.value).toBe(0.02)
+    // The calibrated value itself is the measured-class derivation, not a sentinel (the Q4d
+    // Medicare-bearing measurement: class max margin/SE ≈ 8.1 → 10 with headroom):
+    expect(solverConversionNearTieDemotionSeMultiple.value).toBe(10)
   })
 
   it('the display-tenth clause: a cleared advantage whose tenths AGREE carries subTenthCollapse', () => {
@@ -158,11 +161,11 @@ describe('gradeOnFamily — the all-members rule, the demotion, the floor, the c
     expect(out.subTenthCollapse).toBe(true)
   })
 
-  it('THE DEMOTION AXIS GUARD (U14 fold): a pay-less-tax conversion-winner near-tie REFUSES — the 0.02 margin is survival units, dollar diffs would silently never fire it', () => {
+  it('THE DEMOTION AXIS GUARD (U14 fold): a pay-less-tax conversion-winner near-tie REFUSES — the SE-multiple is calibrated on the survival axis only', () => {
     const dollarFamily = Array.from({ length: 5 }, () => Array.from({ length: 200 }, () => 1_200)) // tax-DOLLAR diffs
     expect(() =>
       gradeOnFamily({ family: dollarFamily, statistic: 'pay-less-tax', winnerHasConversion: true, runnerUpHasConversion: false, minPathsOverride: 100 }),
-    ).toThrow(/SURVIVAL-FRACTION units/)
+    ).toThrow(/SURVIVAL axis only/)
     // CONTROL: the same dollar family with a NON-conversion winner grades fine — the demotion
     // is not applicable, so no uncalibrated caution is being skipped.
     const out = gradeOnFamily({ family: dollarFamily, statistic: 'pay-less-tax', winnerHasConversion: false, runnerUpHasConversion: false, minPathsOverride: 100 })
@@ -224,6 +227,43 @@ const probeWorld = (paths: number): SimulationParams => ({
   },
 })
 
+/** The Q4d calibration world (the trend sourcing unit, measured 2026-07-19): all-65+ MFJ,
+ *  Medicare-priced under the TRENDED Part B (the mandated post-flip world) — the near-tie
+ *  proving case runs here; the pre-65 `probeWorld` stays for the known-robust + floor arms
+ *  (no demotion involved there — the winner carries no conversion). */
+const q4dWorld = (paths: number): SimulationParams => ({
+  initialPortfolio: 2_150_000,
+  annualSpendingReal: 124_000,
+  stockWeight: 0.5,
+  people: [
+    { sex: 'female', currentAge: 66, birthYear: 1960, retirementAge: 65, earnedIncomeReal: 0, pia: 26_000, socialSecurityClaimAge: 66 },
+    { sex: 'male', currentAge: 65, birthYear: 1961, retirementAge: 64, earnedIncomeReal: 0, pia: 18_000, socialSecurityClaimAge: 65 },
+  ],
+  survivorSpendingRatio: 0.75,
+  drawdownPolicy: 'taxable-first',
+  market: {
+    stock: { mean: 0.04, stdDev: 0.12 },
+    bond: { mean: 0.015, stdDev: 0.055 },
+    inflation: { mean: 0.03, stdDev: 0.041 },
+    stockBondCorrelation: 0,
+    space: 'simple',
+    returnsAreReal: true,
+  },
+  paths,
+  maxHorizonYears: 38,
+  longevityMode: 'sampled',
+  overlay: {
+    taxEnabled: true,
+    rmdEnabled: true,
+    startCalendarYear: 2026,
+    buckets: { taxable: 150_000, pretax: 1_900_000, roth: 100_000 },
+    initialTaxableBasis: 130_000,
+    filing: 'mfj',
+    healthcareEnabled: true,
+    irmaaMagiSeed: [120_000, 120_000],
+  },
+})
+
 const conv0: CandidateStrategy = { policy: 'taxable-first', conversion: null, provenance: 'conventional-baseline' }
 const conv30: CandidateStrategy = {
   policy: 'taxable-first',
@@ -245,10 +285,21 @@ describe('gradeRecommendation — the real engine at the calibrated floor (16k �
     expect(out.memberMargins.every((m) => m.beyondBand && m.paths === 16_000)).toBe(true)
   }, 900_000)
 
-  it('THE MEASURED NEAR-TIE (the S4.3 proving case, real engine): the conversion winner’s ~0.011 margin clears every band and is DEMOTED to coin-flip', () => {
-    const out = gradeRecommendation({ base: probeWorld(16_000), winner: conv30, runnerUp: conv0, seedA: 0xca11b, statistic: 'survival' })
+  it('THE MEASURED NEAR-TIE (the Q4d proving case, real engine, MEDICARE-BEARING per the calibration ruling): the conversion winner clears every band yet sits inside the SE-multiple — DEMOTED to coin-flip', () => {
+    // The Q4d calibration world (wf_c673339e-257, measured 2026-07-19 at 16k × 5): all-65+
+    // MFJ, trended Part B + scaled IRMAA surcharges live, a 30k×3yr conversion winner over
+    // conversion-0 — measured member margins 0.0021–0.0028 at margin/SE ratios ≤ 3.2, every
+    // member beyondBand (CRN resolves the margin; the demotion is the shape-residual caution,
+    // never sampling noise). The pre-flip Medicare-BLIND proving world (62yo, no healthcare,
+    // margins ~0.011 at ratios ~12–14) now sits OUTSIDE the width — the re-calibration's
+    // point: the Medicare-bearing class defines the demotion regime, per the U15 Q4d ruling.
+    const out = gradeRecommendation({ base: q4dWorld(16_000), winner: conv30, runnerUp: conv0, seedA: 0xca11b, statistic: 'survival' })
     expect(out.memberMargins.every((m) => m.beyondBand), 'CRN resolves the margin — demotion is the ONLY conservative force').toBe(true)
-    expect(Math.min(...out.memberMargins.map((m) => m.margin))).toBeLessThan(solverConversionNearTieDemotionMargin.value)
+    const k = solverConversionNearTieDemotionSeMultiple.value
+    expect(
+      out.memberMargins.some((m) => m.margin < k * m.se),
+      'the measured class sits inside the calibrated width',
+    ).toBe(true)
     expect(out.demotionFired).toBe(true)
     expect(out.grade).toBe('coin-flip')
   }, 900_000)
@@ -262,7 +313,7 @@ describe('gradeRecommendation — the real engine at the calibrated floor (16k �
   it('the demotion-axis guard fires BEFORE the expensive family evaluation (a pay-less-tax conversion winner refuses instantly)', () => {
     expect(() =>
       gradeRecommendation({ base: probeWorld(16_000), winner: conv30, runnerUp: conv0, seedA: 0xca11b, statistic: 'pay-less-tax' }),
-    ).toThrow(/SURVIVAL-FRACTION units/)
+    ).toThrow(/SURVIVAL axis only/)
   })
 
   it('the leave-more statistic is honestly deferred to U15’s objective wiring (named throw, never a silent wrong grade)', () => {

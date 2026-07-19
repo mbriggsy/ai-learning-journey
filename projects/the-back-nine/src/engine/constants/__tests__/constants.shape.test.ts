@@ -16,6 +16,8 @@ import {
   stateRateForYear,
   stateStandardDeductionFor,
   STATE_TAX_PROFILES,
+  medicareCostTrend,
+  partB2026,
 } from '../index'
 import { isUnsourced } from '../types'
 
@@ -69,11 +71,44 @@ describe('canonical constants — shape & provenance (contract #6)', () => {
     }
   })
 
-  it('the Medicare-cost-trend gap sentinel exists and THROWS — the Act-4 conversion-ranking block is live, never a guessed growth rate (supersession item 4)', () => {
+  it('the Medicare-cost-trend entry is SOURCED (the trend sourcing unit, 2026-07-19) — the full V.E2 vector pinned VERBATIM from the research packet (insight 021)', () => {
     const entry = ALL_CONSTANTS['health.medicareCostTrend']
     expect(entry, 'health.medicareCostTrend registered').toBeDefined()
-    expect(isUnsourced(entry!), 'named but deliberately NOT valued (burned/062)').toBe(true)
-    expect(() => entry!.value, 'reading the trend without sourcing it must throw').toThrow(/not yet sourced/)
+    expect(isUnsourced(entry!), 'the former gap sentinel is now a sourced table').toBe(false)
+    const trend = medicareCostTrend.value
+    // THE FULL-VECTOR PIN (insight 021 — anchors + structural invariants admit smooth
+    // corruptions): every literal below is transcribed from docs/research/medicare-cost-trend.md
+    // (Table V.E2 p.207, primary-verified byte-for-byte) — NEVER from the committed module, so
+    // this test stays an independent transcription axis (DND-012). 2033 is $313.60 in the
+    // primary; secondary press printing $313.65 loses (the packet's named discrepancy).
+    expect(trend.premiums).toEqual([
+      { calendarYear: 2027, nominalMonthly: 209.5 },
+      { calendarYear: 2028, nominalMonthly: 224.5 },
+      { calendarYear: 2029, nominalMonthly: 238.5 },
+      { calendarYear: 2030, nominalMonthly: 255.5 },
+      { calendarYear: 2031, nominalMonthly: 272.1 },
+      { calendarYear: 2032, nominalMonthly: 290.2 },
+      { calendarYear: 2033, nominalMonthly: 313.6 },
+      { calendarYear: 2034, nominalMonthly: 338.5 },
+      { calendarYear: 2035, nominalMonthly: 360.6 },
+    ])
+    // The CROSS-CONSTANT IDENTITY (insight 009's cross-table axis): V.E2's finalized 2026 row
+    // ($202.90) IS partB2026.standardPremiumMonthly — the anchor is NOT re-typed in the trend
+    // table (one home per figure, burned/057); the resolver binds it from partB2026.
+    expect(trend.anchorYear).toBe(2026)
+    expect(partB2026.value.standardPremiumMonthly).toBe(202.9)
+    expect(trend.premiums.some((r) => r.calendarYear === 2026), 'the anchor row must NOT be re-typed here').toBe(false)
+    // The macro assumptions, transcribed from the packet (II.D1 / III.B12 / §III.D):
+    expect(trend.cpiNearTermAvg).toBe(0.032)
+    expect(trend.cpiUltimate).toBe(0.024)
+    expect(trend.ultimateNominalGrowth).toBe(0.038)
+    expect(trend.reportEdition).toBe(2026)
+    expect(trend.vintage).toBe('part-b-trend-2026a')
+    // Provenance: pinned (the packet verified the primary byte-for-byte), derivations NAMED in
+    // the note (022 — the uniform near-term average + the consumer-derived ultimate real growth).
+    expect(medicareCostTrend.directionalUntilPinned).toBe(false)
+    expect(medicareCostTrend.note).toMatch(/DERIVATION CHOICES/)
+    expect(medicareCostTrend.citation).toMatch(/Table V\.E2/)
   })
 
   it('the formerly-unsourced tax gaps are now ALL SOURCED + still directional (U2 closed; pin gate still pending)', () => {

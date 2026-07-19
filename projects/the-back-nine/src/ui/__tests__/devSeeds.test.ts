@@ -346,9 +346,9 @@ describe('the state-tax seed faces (the state-carrying seed increment)', () => {
   // INEQUALITY (NC prices a HIGHER lifetime tax than the twin: the flat rate taxes the pretax draw AND
   // the realized gains on the taxable bucket this household forms from reinvested RMD surplus) + the
   // engine-PROVEN outcomeState. The drag crosses the on-track band edge: the twin is on-track
-  // (survival 0.8555) and NC is BORDERLINE (0.838). Recorded, not assumed (the seed comment names it);
-  // re-tune the account knob on drift, never loosen the pin (the standing C3 law — no existing seed is
-  // touched here, so no existing pin should move).
+  // (survival 0.8585 — post-trend-re-tune 2026-07-19) and NC is BORDERLINE (0.8425). Recorded, not
+  // assumed (the seed comment names it); re-tune the account knob on drift, never loosen the pin (the
+  // standing C3 law — no existing seed is touched here, so no existing pin should move).
   it("'nc' prices NC and NC tax moves lifetime tax up, crossing on-track → BORDERLINE vs the twin", () => {
     expect(pricedStateForRun(DEV_SEEDS.nc)).toBe('NC')
     const twin = twinWire()

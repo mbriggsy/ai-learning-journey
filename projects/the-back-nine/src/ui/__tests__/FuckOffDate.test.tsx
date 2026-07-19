@@ -426,7 +426,7 @@ describe('P3-U11 follow-up — the priced-Medicare disclosure on the date claim'
       <FuckOffDate view={dates(DATE_FIXTURES.confirmed)} medicarePricedNote medicareExtrasTypicalNote={note} />,
     )
     const notes = Array.from(container.querySelectorAll('.fod-note')).map((n) => n.textContent ?? '')
-    const residualIdx = notes.findIndex((t) => t.includes('Premiums are held flat'))
+    const residualIdx = notes.findIndex((t) => t.includes('held flat in today’s dollars'))
     const appendixIdx = notes.findIndex((t) => t === note)
     expect(residualIdx, 'the residual renders').toBeGreaterThanOrEqual(0)
     expect(appendixIdx, 'the appendix is its OWN note (never concatenated into the residual)').toBeGreaterThan(residualIdx)

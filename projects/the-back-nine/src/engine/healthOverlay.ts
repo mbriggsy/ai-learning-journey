@@ -34,7 +34,12 @@
  *   enter BOTH MAGIs AND §86 provisional income (`taxableSocialSecurity`) in the SAME change (see the
  *   MagiComponents note below) — touching the MAGIs alone still understates IRMAA-MAGI.
  */
-import { federalPovertyGuidelines, type AcaApplicablePercentageTable, type IrmaaSchedule } from '@engine/constants'
+import {
+  federalPovertyGuidelines,
+  type AcaApplicablePercentageTable,
+  type IrmaaSchedule,
+  type MedicareCostTrendTable,
+} from '@engine/constants'
 import type { FilingStatus } from '@shared/model'
 
 /**
@@ -417,6 +422,137 @@ export function solveAcaFundedGross(
 // IRMAA-MAGI[t−2], which is already known, so within year t it is a CONSTANT addend to the spending
 // the gross-up funds — never a search variable, so the step-discontinuity hazard (insight 013) cannot
 // reach a root-finder here (it would only bite if a solver searched over an IRMAA-affected quantity).
+// The Part-B cost-trend schedule (the trend sourcing unit, council wf_c673339e-257) — the
+// pure derivation from the sourced `medicareCostTrend` table to per-sim-year REAL pricing.
+// Consumed by runTaxAwareDecumulation (taxOverlay), which binds the constants and passes the
+// per-year pricing into `medicareAnnualCost` — the consumption half of the U14 token's
+// Medicare-trend clause (insight 074: a stamp nothing reads prices nothing).
+// =========================================================================
+
+/** The per-program IRMAA surcharge trend scales for one billed year (the hawk-honored
+ *  DISAGGREGATION): Part B surcharges ride the trended Part B base via the statutory
+ *  cost-share identity (tier totals = {35/50/65/80/85}% of full program cost vs the base's
+ *  25% ⇒ surcharge ∝ base, exact 2026 tie-out at scale 1); Part D surcharges are on their
+ *  OWN path — NEVER Part B's ratio (different program, different trend). */
+export interface IrmaaSurchargeScales {
+  readonly partB: number
+  readonly partD: number
+}
+
+/** The anchor-year (2026-real) scales — the identity element. For readout geometry that
+ *  speaks in today's terms (`nextIrmaaStep`) and for tests of the step function itself. */
+export const IRMAA_ANCHOR_SCALES: IrmaaSurchargeScales = { partB: 1, partD: 1 }
+
+/** Finiteness-first (insight 010): a NaN scale would silently zero or corrupt a surcharge
+ *  through the multiply — reject loudly, never coerce (burned/062). */
+function assertSurchargeScales(scales: IrmaaSurchargeScales): void {
+  if (!(Number.isFinite(scales.partB) && scales.partB > 0) || !(Number.isFinite(scales.partD) && scales.partD > 0)) {
+    throw new Error(
+      `[healthOverlay] IRMAA surcharge scales must be finite > 0 (got partB=${scales.partB}, partD=${scales.partD}) — insight 010`,
+    )
+  }
+}
+
+/** One sim year's REAL (anchor-year-dollar) Part B pricing. */
+export interface PartBYearPricing {
+  /** The standard Part B monthly premium in REAL anchor-year dollars. */
+  readonly baseMonthlyReal: number
+  /** The IRMAA surcharge scales for the year ({@link IrmaaSurchargeScales}). */
+  readonly scales: IrmaaSurchargeScales
+}
+
+/**
+ * Build the per-sim-year REAL Part B pricing schedule from the sourced trend table — shape (c),
+ * the year-keyed primary table, deflated HORIZON-MATCHED:
+ *
+ *   - year < anchor (an aged vault's 2024/2025 year-0): CLAMP to the anchor value — the
+ *     conservative direction (realized 2024/2025 real premiums sit BELOW the 2026 level), and
+ *     total (no new refusal domain for the 085 aged-plant class; validateParams unchanged).
+ *   - anchor: `partBBaseMonthlyAnchor` verbatim (scale 1 by definition — V.E2's finalized 2026
+ *     row IS `partB2026.standardPremiumMonthly`; the identity is test-pinned, one home).
+ *   - table years (anchor+1 .. edge): nominal V.E2 verbatim ÷ (1 + cpiNearTermAvg)^(y − anchor)
+ *     — the near-term deflator on the near decade, never the ultimate (the horizon mismatch
+ *     the packet rules against).
+ *   - beyond the table edge: real(edge) × realUltimate^(y − edge) where realUltimate =
+ *     (1 + ultimateNominalGrowth)/(1 + cpiUltimate) — C0-continuous at the splice BY
+ *     CONSTRUCTION (the tail anchors at the edge's own real value), pinned by test.
+ *
+ * The Part B surcharge scale is baseMonthlyReal(y)/anchor (the cost-share identity). The
+ * Part D scale is HELD at 1 — held-and-DISCLOSED (the council's fallback pending a sourced
+ * Part D path; the residual copy names it), never silently ridden on Part B's ratio.
+ *
+ * Iterative (cumulative multiplies, no per-year pow) — this runs once per PATH inside the
+ * 16k-path loop, so the construction stays O(horizon) multiplies.
+ */
+export function buildPartBPricingSchedule(
+  trend: MedicareCostTrendTable,
+  partBBaseMonthlyAnchor: number,
+  startCalendarYear: number,
+  horizon: number,
+): readonly PartBYearPricing[] {
+  if (!Number.isInteger(startCalendarYear)) {
+    throw new Error(
+      `[healthOverlay] buildPartBPricingSchedule: startCalendarYear must be an integer (got ${startCalendarYear}) — insight 010`,
+    )
+  }
+  if (!Number.isInteger(horizon) || horizon < 0) {
+    throw new Error(`[healthOverlay] buildPartBPricingSchedule: horizon must be a non-negative integer (got ${horizon})`)
+  }
+  if (!(Number.isFinite(partBBaseMonthlyAnchor) && partBBaseMonthlyAnchor > 0)) {
+    throw new Error(
+      `[healthOverlay] buildPartBPricingSchedule: the anchor premium must be finite > 0 (got ${partBBaseMonthlyAnchor}) — burned/062`,
+    )
+  }
+  // The table contract (shape-test-pinned on the constant; re-asserted here fail-loud because
+  // the derivation below WALKS it): ascending contiguous from anchor+1.
+  trend.premiums.forEach((row, i) => {
+    if (row.calendarYear !== trend.anchorYear + 1 + i || !(Number.isFinite(row.nominalMonthly) && row.nominalMonthly > 0)) {
+      throw new Error(
+        `[healthOverlay] buildPartBPricingSchedule: malformed trend table at index ${i} (year ${row.calendarYear}, nominal ${row.nominalMonthly}) — expected ascending contiguous from ${trend.anchorYear + 1} (burned/062)`,
+      )
+    }
+  })
+  const tableEdgeYear = trend.anchorYear + trend.premiums.length
+  const realUltimate = (1 + trend.ultimateNominalGrowth) / (1 + trend.cpiUltimate)
+  // ONE walk over calendar years from the anchor to the sim's last year, carrying the cumulative
+  // near-term deflator and the tail escalator as running products — the real premium for every
+  // year is derived exactly once, then sliced into the sim window (pre-anchor years clamp).
+  const lastYear = startCalendarYear + horizon - 1
+  const realByYear = new Map<number, number>()
+  let deflator = 1
+  let tailReal = 0
+  for (let y = trend.anchorYear; y <= Math.max(lastYear, trend.anchorYear); y++) {
+    let real: number
+    if (y === trend.anchorYear) {
+      real = partBBaseMonthlyAnchor
+    } else if (y <= tableEdgeYear) {
+      deflator *= 1 + trend.cpiNearTermAvg
+      real = trend.premiums[y - trend.anchorYear - 1]!.nominalMonthly / deflator
+    } else {
+      real = tailReal * realUltimate
+    }
+    tailReal = real
+    realByYear.set(y, real)
+  }
+  const schedule: PartBYearPricing[] = []
+  for (let t = 0; t < horizon; t++) {
+    const y = startCalendarYear + t
+    // Pre-anchor CLAMP (conservative — realized 2024/2025 real premiums sit below the anchor).
+    const baseMonthlyReal = y <= trend.anchorYear ? partBBaseMonthlyAnchor : realByYear.get(y)!
+    if (!(Number.isFinite(baseMonthlyReal) && baseMonthlyReal > 0)) {
+      throw new Error(
+        `[healthOverlay] buildPartBPricingSchedule: non-finite real premium at sim year ${t} (calendar ${y}) — refusing (burned/062)`,
+      )
+    }
+    schedule.push({
+      baseMonthlyReal,
+      scales: { partB: baseMonthlyReal / partBBaseMonthlyAnchor, partD: 1 },
+    })
+  }
+  return schedule
+}
+
+// =========================================================================
 // These two functions are the pure pieces; the per-year IRMAA-MAGI history, the 2yr lag, the seed for
 // a sim starting near 65, and the survivor MFJ→single threshold flip (lagged +2yr, since year t's
 // threshold uses filing[t−2]) all live in taxOverlay.ts's runTaxAwareDecumulation.
@@ -438,17 +574,29 @@ export function solveAcaFundedGross(
  * silently return 0 — a phantom no-surcharge → understated cost → overstated survival, the cardinal
  * calm-but-wrong sin. Reject it loudly before any compare (burned/062), never coerce.
  */
-export function irmaaTierSurchargeMonthly(magi: number, filing: FilingStatus, schedule: IrmaaSchedule): number {
+export function irmaaTierSurchargeMonthly(
+  magi: number,
+  filing: FilingStatus,
+  schedule: IrmaaSchedule,
+  /** The per-program trend scales for the billed year (the trend unit's DISAGGREGATION —
+   *  council wf_c673339e-257, hawk-honored). REQUIRED, never defaulted: a caller that forgot
+   *  the scale would silently price the 2026 surcharge into a 2035 bill (insight 020 — the
+   *  second consumer is not protected by the first one remembering). Anchor-scale callers
+   *  (readout geometry, tests of the step function itself) pass {@link IRMAA_ANCHOR_SCALES}. */
+  scales: IrmaaSurchargeScales,
+): number {
   if (!Number.isFinite(magi)) {
     throw new Error(
       `[healthOverlay] irmaaTierSurchargeMonthly: IRMAA-MAGI must be finite (got ${magi}) — a NaN passes every > compare (insight 010)`,
     )
   }
+  assertSurchargeScales(scales)
   // tiers are ascending (constants.shape pins it); the LAST one strictly exceeded is the highest.
   let surchargeMonthly = 0
   for (const tier of schedule.tiers) {
     const threshold = filing === 'mfj' ? tier.mfjMagiThreshold : tier.singleMagiThreshold
-    if (magi > threshold) surchargeMonthly = tier.partBSurchargeMonthly + tier.partDSurchargeMonthly
+    if (magi > threshold)
+      surchargeMonthly = tier.partBSurchargeMonthly * scales.partB + tier.partDSurchargeMonthly * scales.partD
   }
   return surchargeMonthly
 }
@@ -480,9 +628,12 @@ export function medicareAnnualCost(
   enrolledCount: number,
   schedule: IrmaaSchedule,
   partBBaseMonthly: number,
+  /** The billed year's surcharge trend scales — the SAME object the caller's readout split
+   *  reads (single-producer: base = cost − surcharge stays exact by construction). */
+  scales: IrmaaSurchargeScales,
 ): number {
   if (enrolledCount <= 0) return 0
-  const surchargeMonthly = irmaaTierSurchargeMonthly(irmaaMagiForBill, filing, schedule)
+  const surchargeMonthly = irmaaTierSurchargeMonthly(irmaaMagiForBill, filing, schedule, scales)
   return enrolledCount * (partBBaseMonthly + surchargeMonthly) * 12
 }
 

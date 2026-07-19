@@ -84,6 +84,7 @@ import {
   acaApplicablePercentageEnhanced,
   irmaa,
   partB2026,
+  medicareCostTrend,
   isPricedState,
   type AcaApplicablePercentageTable,
 } from '@engine/constants'
@@ -96,7 +97,7 @@ import {
   irmaaStepFillHeadroom,
   type CommittedYearIncome,
 } from '@engine/magiLandscape'
-import { solveAcaFundedGross, fplForHousehold, medicareAnnualCost, acaMagi, irmaaMagi, irmaaTierSurchargeMonthly, hsaQualifiedSpend, type GrossUpSolution, type MagiComponents } from '@engine/healthOverlay'
+import { solveAcaFundedGross, fplForHousehold, medicareAnnualCost, acaMagi, irmaaMagi, irmaaTierSurchargeMonthly, buildPartBPricingSchedule, hsaQualifiedSpend, type GrossUpSolution, type MagiComponents } from '@engine/healthOverlay'
 import { NEVER_DEPLETED, isRetirementState, type DepletionYear, type DrawdownPolicy, type FilingStatus, type RetirementState } from '@shared/model'
 
 // Filing status is shared model vocabulary (the persisted scenario speaks it too). Re-exported
@@ -963,20 +964,24 @@ function solveGrossWithdrawal(net: number, ctx: GrossUpContext): GrossUpSolution
 /**
  * HOW THIS ENGINE PRICES THE PART-B PREMIUM ACROSS YEARS — the U14 trend-consumption witness.
  *
- * `'real-flat'` = the base Part B premium is a constant real dollar every year
- * (`partB2026.value.standardPremiumMonthly`, bound once per run inside
- * {@link runTaxAwareDecumulation} — the ONE consumer). Reality trends Part B faster than CPI, and
- * real-flat specifically UNDER-penalizes late-year IRMAA cliff-crossing — the exact payoff channel
+ * `'trended'` (the trend sourcing unit, 2026-07-19 — council wf_c673339e-257): the base Part B
+ * premium is a PER-YEAR real dollar — `buildPartBPricingSchedule(medicareCostTrend.value, …)`
+ * bound once per run inside {@link runTaxAwareDecumulation} (the ONE consumer), V.E2's nominal
+ * premiums deflated horizon-matched with the ultimate real escalator beyond the table. The IRMAA
+ * Part B surcharges scale with the trended base (the statutory cost-share identity); Part D
+ * surcharges are held at anchor scale, DISCLOSED (the hawk-honored disaggregation — never Part
+ * B's ratio). Real-flat under-penalized late-year IRMAA cliff-crossing — the exact payoff channel
  * of Roth-conversion candidates (architecture §7.2; the Act-4 reconciliation supersession item 4).
  *
- * The U14 oracle token reads THIS value as the consumption half of its Medicare-trend block: the
- * conversion ranking stays withheld until `health.medicareCostTrend` is SOURCED **and** the pricing
- * here actually consumes it (insight 074 — a stamp nothing reads prices nothing). The future
- * trend-sourcing unit flips this to `'trended'` ONLY in the same change that threads the sourced
- * trend into the per-year premium below — flipping the label without the pricing change is the
- * lying-mirror shape (insight 081) and the token's planted-witness test exists to catch it.
+ * The U14 oracle token reads THIS value as the consumption half of its Medicare-trend block:
+ * the conversion ranking was withheld until `health.medicareCostTrend` was SOURCED **and** the
+ * pricing here actually consumed it (insight 074 — a stamp nothing reads prices nothing). This
+ * flip landed in the SAME change that threads the sourced trend into the per-year premium —
+ * flipping the label without the pricing change is the lying-mirror shape (insight 081) and the
+ * token's planted-witness test (a fake-sourced entry with an unmoved mode must still block)
+ * guards the pair in both directions.
  */
-export const PART_B_PRICING_MODE: 'real-flat' | 'trended' = 'real-flat'
+export const PART_B_PRICING_MODE: 'real-flat' | 'trended' = 'trended'
 
 /**
  * Run a tax-aware decumulation path. Tracks per-bucket balances + the taxable cost basis for the
@@ -1150,15 +1155,35 @@ export function runTaxAwareDecumulation(
   let totalNetPremiumReal = 0
 
   // IRMAA (M4): the post-65 Medicare cost is a 2-year-LAGGED feed-forward (research §4c), NOT a fixed
-  // point. The schedule + base Part B premium + the lookback length are run-invariant; bind them once.
-  // The lookback is READ from the constant (never a hard-coded 2). `irmaaMagiHistory[t]` records this
-  // engine's IRMAA-MAGI at every healthcare-on year's converged gross — EVEN pre-65 years, whose MAGI
-  // feeds a later Medicare year's surcharge (the lagged feed-forward); for t < lookback the lagged year
-  // predates the sim, so the surcharge reads `irmaaMagiSeed` instead. acaTable !== undefined IS the
-  // healthcare gate, so when healthcare is off none of this runs and reduce-to-spine is untouched.
+  // point. The schedule + the lookback length are run-invariant; bind them once. The lookback is READ
+  // from the constant (never a hard-coded 2). `irmaaMagiHistory[t]` records this engine's IRMAA-MAGI at
+  // every healthcare-on year's converged gross — EVEN pre-65 years, whose MAGI feeds a later Medicare
+  // year's surcharge (the lagged feed-forward); for t < lookback the lagged year predates the sim, so
+  // the surcharge reads `irmaaMagiSeed` instead. acaTable !== undefined IS the healthcare gate, so when
+  // healthcare is off none of this runs and reduce-to-spine is untouched.
+  //
+  // THE PART-B TREND (the trend sourcing unit — PART_B_PRICING_MODE 'trended'): the base premium is
+  // NO LONGER one run-invariant scalar — `partBPricingByT[t]` carries each sim year's REAL premium +
+  // the disaggregated IRMAA surcharge scales, derived from the sourced `medicareCostTrend` table
+  // (V.E2 verbatim, horizon-matched deflation, ultimate tail; healthOverlay owns the derivation).
+  // The anchor is STILL `partB2026.standardPremiumMonthly` (one home; V.E2[2026] identity pinned).
+  // Both the billed total (`medicareAnnualCost`) and the readout split's surcharge recomputation
+  // read the SAME per-year entry — base = cost − surcharge stays exact by construction.
   const irmaaSchedule = irmaa.value
   const irmaaLookback = irmaaSchedule.magiLookbackYears
-  const partBBaseMonthly = partB2026.value.standardPremiumMonthly
+  // Bound ONLY on the healthcare-priced arm: the tax-off / healthcare-off runs never touch the
+  // trend (reduce-to-spine byte-identity untouched), and `config.household` only exists on the
+  // tax-on config member. Reachability of the `!` at the use site is guaranteed by the
+  // `healthcareEnabled requires taxEnabled` throw above (taxOverlay's own M3-Slice-4 gate).
+  const partBPricingByT =
+    healthcareEnabled && config.taxEnabled
+      ? buildPartBPricingSchedule(
+          medicareCostTrend.value,
+          partB2026.value.standardPremiumMonthly,
+          config.household.startCalendarYear,
+          netWithdrawals.length,
+        )
+      : undefined
   const irmaaMagiHistory: number[] = []
   let totalMedicareCostReal = 0
   let totalQualifiedHsaSpendReal = 0
@@ -1613,26 +1638,35 @@ export function runTaxAwareDecumulation(
           lag >= 0
             ? resolveYear(config.household, householdYears, lag, medicareOnsetSimYear).filing
             : config.household.filing
+        // Non-null by construction: this block runs under the healthcare gate, and healthcare-on
+        // without tax-on threw at entry — exactly the arm the schedule was bound for.
+        const partBYear = partBPricingByT![t]!
         medicareCostThisYear = medicareAnnualCost(
           magiForBill,
           filingForBill,
           regime.medicareEnrolledCount,
           irmaaSchedule,
-          partBBaseMonthly,
+          partBYear.baseMonthlyReal,
+          partBYear.scales,
         )
         // P3·U11 — the readout's base-vs-surcharge SPLIT, observed through the SAME canonical
-        // tier lookup medicareAnnualCost just used (single producer — the split can never
-        // disagree with the billed total: base = cost − surcharge exactly, by construction).
+        // tier lookup medicareAnnualCost just used, at the SAME per-year trend scales (single
+        // producer — the split can never disagree with the billed total: base = cost − surcharge
+        // exactly, by construction).
         if (healthOut) {
           irmaaSurchargeThisYear =
-            regime.medicareEnrolledCount * irmaaTierSurchargeMonthly(magiForBill, filingForBill, irmaaSchedule) * 12
+            regime.medicareEnrolledCount *
+            irmaaTierSurchargeMonthly(magiForBill, filingForBill, irmaaSchedule, partBYear.scales) *
+            12
         }
         // The ask-for-Medicare-extras Σ — the per-person HETEROGENEOUS vector: each living∩
         // enrolled member is charged THEIR OWN premium × 12 via the canonical index, so a
         // person's extras end at their death and the surviving high-premium spouse keeps their
         // full premium (count×avg is the forbidden shape — it under-charges that survivor).
-        // Same gate as base Part B (this block); real-flat (the same constant every year);
-        // absent vector / a $0 entry ⇒ `+ 0` — byte-identical reduce-to-spine.
+        // Same gate as base Part B (this block); the extras stay REAL-FLAT (the same constant
+        // every year — deliberately NOT ridden on the Part B trend: Medigap/Part D plan premiums
+        // are user-entered market figures with no sourced trend, the disclosed residual names
+        // it); absent vector / a $0 entry ⇒ `+ 0` — byte-identical reduce-to-spine.
         if (medicareExtrasMonthly !== undefined) {
           for (const idx of regime.medicareEnrolledIndices) {
             medicareExtrasThisYear += (medicareExtrasMonthly[idx] ?? 0) * 12

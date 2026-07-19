@@ -118,7 +118,7 @@ describe('consumedConstantEntries — the derivation is the run, not the registr
     ).toContain('health.medicareExtrasTypical')
   })
 
-  it('healthcare ON never pulls the doc/parked health rows, and NEVER an Unsourced sentinel', () => {
+  it('healthcare ON never pulls the doc/parked health rows (and DOES pull the now-sourced trend)', () => {
     const keys = keysOf(
       makeParams({ overlay: { ...baseOverlay, healthcareEnabled: true, medicareExtrasMonthly: [244] } }),
     )
@@ -129,10 +129,14 @@ describe('consumedConstantEntries — the derivation is the run, not the registr
       'health.hsaFourthBucketRules',
       'health.obbbaHsa2026',
       'health.acaEnhancedSubsidyStatus', // its OWN clause (aca-freshness) owns it
-      'health.medicareCostTrend', // Unsourced — self-enforcing (.value throws); its own S0.4 clause
     ]) {
       expect(keys, `${doc} must not join the pinning walk`).not.toContain(doc)
     }
+    // The trend sourcing unit: `medicareCostTrend` is SOURCED and the per-year Part-B pricing
+    // consumes it (buildPartBPricingSchedule in runTaxAwareDecumulation), so a healthcare-ON run
+    // genuinely consumes the entry — it JOINS the pinning walk (pinned, so it neither blocks nor
+    // discloses; presence here is the consumption record, insight 074).
+    expect(keys).toContain('health.medicareCostTrend')
   })
 
   it('a positive PIA pulls the Social Security family (FRA tables ride via their accessor)', () => {
@@ -181,6 +185,7 @@ const WITNESSES: ReadonlyArray<readonly [key: string, file: string, symbol: stri
   ['health.federalPovertyGuidelines', 'src/engine/healthOverlay.ts', 'federalPovertyGuidelines'],
   ['health.irmaa', 'src/engine/taxOverlay.ts', 'irmaa'],
   ['health.partB2026', 'src/engine/taxOverlay.ts', 'partB2026'],
+  ['health.medicareCostTrend', 'src/engine/taxOverlay.ts', 'medicareCostTrend'], // the trend unit's consumption half (074)
   ['health.acaAgeRatingCurve', 'src/intake/intakeMap.ts', 'acaAgeRatingCurve'],
   ['health.medicareExtrasTypical', 'src/intake/intakeMap.ts', 'medicareExtrasTypicalMonthly'],
   ['socialSecurity.fullRetirementAge', 'src/engine/socialSecurityBenefit.ts', 'fraMonthsForBirthYear'],
@@ -275,7 +280,6 @@ describe('consumedConstants — SOURCE-BIND (the mapping tracks the live tree, n
         'socialSecurity.ribLim',
         'contributions.ira2026',
         'contributions.annualAdditions415c2026',
-        'health.medicareCostTrend', // Unsourced — self-enforcing
         'health.acaEnhancedSubsidyStatus', // enforced by the token's OWN aca-freshness clause
       ]
       return !siblingWitnessed.includes(key)

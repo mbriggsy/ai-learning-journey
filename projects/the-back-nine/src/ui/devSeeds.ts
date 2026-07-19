@@ -50,6 +50,13 @@ const DEV_CRN_SEED = 0xbada55
  * than the typical-both (~$244+$244 since the U14 S0 refresh; ~$203+$203 before) the
  * absent-field engine would fund, so the drift the unit introduced (on-track → borderline
  * 8/10 under typical-both) reverses back to on-track.
+ *
+ * TREND RE-TUNE (2026-07-19, the Medicare-cost-trend sourcing unit): trended Part B + scaled
+ * IRMAA surcharges shaved this household's survival 0.8555 → 0.8185 (on-track → borderline —
+ * RECORDED before any re-tune, the pricing-unit precedent). The IRA moved 1.00M → 1.055M: the
+ * probed window is NARROW — +40k lands the twin exactly AT the 0.85 edge (band-edge fragile),
+ * +60k lifts the NC face over the edge too (killing the nc seed's crossing purpose); +55k
+ * restores twin 0.8585 on-track / NC 0.8425 borderline with balanced margins both sides.
  */
 const retiredOnTrack: ScenarioDraft = {
   people: [
@@ -80,7 +87,7 @@ const retiredOnTrack: ScenarioDraft = {
     {
       ownerIndex: 0,
       kind: 'traditional-ira',
-      valueToday: 1_000_000,
+      valueToday: 1_055_000,
       // A no-ticker account requires the per-account manual blend (burned/062 —
       // never a silent default). 60/30/10 stocks/bonds/cash.
       manualBlend: { kind: 'exact', stockPct: 60, bondPct: 30, cashPct: 10 },
@@ -508,6 +515,14 @@ const dateMixedSeed: ScenarioDraft = {
  * restoring nm=[0,1,2] + crown@5 + monotone floor at BOTH tiers (the +12k/+5k midpoint still
  * loses offset 2 at final; +18k/+8k overshoots provisional to [0,1,2,3]). Same knife-edge, same
  * mechanism, one constant richer.
+ *
+ * TREND RE-TUNE 3 (2026-07-19, the Medicare-cost-trend sourcing unit): trended post-65 Part B
+ * (this couple reaches 65 in 2034 — deep in the trended decade) sank the dip again (nm → [] at
+ * provisional — RECORDED before re-tune). The portfolio moved 658k→700k / 282k→299k. The hunt's
+ * texture: the two-tier intersection is EMPTY along the prior proportional ray (+35/+15 and
+ * +40/+17 read [0,1,2] provisional but [0,1] final; +42/+18 reads [0,1,2] final but overshoots
+ * provisional to [0,1,2,3]) — the working point came OFF-RAY (+42/+17; +43/+16 also works,
+ * same total). Same knife-edge, third constant richer.
  */
 const dateDipSeed: ScenarioDraft = {
   people: [
@@ -521,8 +536,8 @@ const dateDipSeed: ScenarioDraft = {
     },
   ],
   enteredAccounts: [
-    { ownerIndex: 0, kind: '401k', ticker: 'VTI', valueToday: 658_000, annualContribution: 8_000, employerMatchAnnual: 4_000 },
-    { ownerIndex: 1, kind: 'roth-ira', ticker: 'VFIFX', valueToday: 282_000 },
+    { ownerIndex: 0, kind: '401k', ticker: 'VTI', valueToday: 700_000, annualContribution: 8_000, employerMatchAnnual: 4_000 },
+    { ownerIndex: 1, kind: 'roth-ira', ticker: 'VFIFX', valueToday: 299_000 },
   ],
   incomeStreams: [],
   tickerClassifications: {},
@@ -789,7 +804,8 @@ const stillWorkingAllMedicare: ScenarioDraft = {
  * (SS exempt, no age carve-out), AND — because this all-retired household develops a taxable
  * brokerage bucket from reinvested RMD surplus in the RMD years — NC also taxes those realized gains
  * as ordinary income (no LTCG preference). The drag is real enough to PUSH the state-absent twin's
- * on-track (survival 0.8555) DOWN across the on-track band edge to BORDERLINE (survival 0.838) —
+ * on-track (survival 0.8585 — post-trend-re-tune 2026-07-19; 0.8555 pre-trend) DOWN across the
+ * on-track band edge to BORDERLINE (survival 0.8425; 0.838 pre-trend) —
  * engine-proven in devSeeds.test.ts, recorded not assumed. This is the seed the priced verdict
  * affirmation + narrowed residual ("… North Carolina …") cold-reads on BOTH mounts; the pin is the
  * lifetime-tax INEQUALITY vs the twin plus the found borderline state (re-tune the knob on drift,

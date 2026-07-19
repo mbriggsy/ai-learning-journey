@@ -35,7 +35,7 @@ import type { SimulationParams } from '@shared/model'
 import {
   isCalibrated,
   solverBFamilySize,
-  solverConversionNearTieDemotionMargin,
+  solverConversionNearTieDemotionSeMultiple,
   solverMinBPaths,
   solverSelectionTieZ,
 } from '@engine/constants'
@@ -70,6 +70,9 @@ export type GradeStatistic = 'survival' | 'pay-less-tax' | 'leave-more'
 
 export interface MemberMargin {
   readonly margin: number
+  /** The raw per-member CRN-paired-difference standard error — the demotion width's unit
+   *  (the Q4d SE-multiple reads THIS; `band` is its z-scaled tie form). */
+  readonly se: number
   readonly band: number
   readonly beyondBand: boolean
   readonly paths: number
@@ -106,8 +109,9 @@ function memberMargin(pairedDiffs: readonly number[], minPaths: number): MemberM
   const margin = sum / n
   let ss = 0
   for (const d of pairedDiffs) ss += (d - margin) * (d - margin)
-  const band = solverSelectionTieZ.value * Math.sqrt(ss / (n - 1) / n)
-  return { margin, band, beyondBand: margin > band, paths: n }
+  const se = Math.sqrt(ss / (n - 1) / n)
+  const band = solverSelectionTieZ.value * se
+  return { margin, se, band, beyondBand: margin > band, paths: n }
 }
 
 export interface GradeOnFamilyInputs {
@@ -134,12 +138,13 @@ export interface GradeOnFamilyInputs {
 }
 
 /**
- * The demotion-axis CONDITION, ONE home (U14 fold): the calibrated 0.02 demotion margin is
- * survival-fraction units, so a conversion-winner-over-non-conversion near-tie on any other
- * statistic is UNCALIBRATED — a dollar-diff family would make `minMargin < 0.02` structurally
- * false and silently skip the caution on exactly the flattered lever. `true` ⇒ the demotion axis
- * is calibrated for this (statistic, winner/runner-up conversion) triple; `false` ⇒ the dollar-axis
- * conversion near-tie margin is uncalibrated (fail-closed).
+ * The demotion-axis CONDITION, ONE home (U14 fold; re-derived under the Q4d SE-multiple): the
+ * demotion width is dimensionless (a multiple of the member's own SE), but its CALIBRATION CLASS
+ * was measured on the SURVIVAL axis only (the Medicare-bearing post-flip worlds, 2026-07-19) —
+ * the shape residual the demotion guards manifests per-axis, so a conversion-winner near-tie on
+ * a dollar statistic is UNCALIBRATED (fail-closed), never silently compared against a
+ * survival-measured multiple. `true` ⇒ the demotion axis is calibrated for this (statistic,
+ * winner/runner-up conversion) triple; `false` ⇒ fail-closed.
  *
  * EXPORTED (U15 §S4.5) as the SINGLE source of the condition: {@link assertDemotionAxisCalibrated}
  * throws on it (the grade path's fail-closed guard), and `select.ts`'s solve path READS it to route
@@ -165,8 +170,8 @@ function assertDemotionAxisCalibrated(
 ): void {
   if (!demotionAxisCalibrated(statistic, winnerHasConversion, runnerUpHasConversion)) {
     throw new Error(
-      `[gradeCalibration] the conversion-near-tie demotion margin is calibrated in SURVIVAL-FRACTION ` +
-        `units — a '${statistic}' conversion-winner near-tie needs its own calibrated margin ` +
+      `[gradeCalibration] the conversion-near-tie demotion SE-multiple is calibrated on the SURVIVAL ` +
+        `axis only — a '${statistic}' conversion-winner near-tie needs its own calibrated width ` +
         `(U15's objective wiring); refusing rather than silently skipping the demotion (burned/062)`,
     )
   }
@@ -184,18 +189,25 @@ export function gradeOnFamily(inputs: GradeOnFamilyInputs): GradeResult {
   const minPaths = inputs.minPathsOverride ?? solverMinBPaths.value
   const memberMargins = inputs.family.map((diffs) => memberMargin(diffs, minPaths))
   const allBeyond = memberMargins.every((m) => m.beyondBand)
-  const minMargin = Math.min(...memberMargins.map((m) => m.margin))
 
-  const demotionMargin = solverConversionNearTieDemotionMargin.value
+  // The Q4d SE-MULTIPLE demotion (the trend sourcing unit — scale-free by ruling): a conversion
+  // winner is demoted when ANY family member's margin sits inside `multiple × its own SE` (the
+  // per-member form is the conservative translation of the old absolute compare — one member
+  // inside its demotion width is enough caution). The SE is the member's own CRN-paired
+  // difference SE, already computed for the band — no second constant (U15 Q3's discipline).
+  const demotionSeMultiple = solverConversionNearTieDemotionSeMultiple.value
   const demotionApplies = inputs.winnerHasConversion && !inputs.runnerUpHasConversion
   assertDemotionAxisCalibrated(inputs.statistic, inputs.winnerHasConversion, inputs.runnerUpHasConversion)
-  if (demotionApplies && !isCalibrated(demotionMargin)) {
+  if (demotionApplies && !isCalibrated(demotionSeMultiple)) {
     throw new Error(
-      '[gradeCalibration] the conversion-near-tie demotion margin is UNCALIBRATED (sentinel) — ' +
+      '[gradeCalibration] the conversion-near-tie demotion SE-multiple is UNCALIBRATED (sentinel) — ' +
         'the token refuses upstream; refusing to grade a conversion winner here too (burned/062)',
     )
   }
-  const demotionFired = demotionApplies && isCalibrated(demotionMargin) && minMargin < demotionMargin
+  const demotionFired =
+    demotionApplies &&
+    isCalibrated(demotionSeMultiple) &&
+    memberMargins.some((m) => m.margin < demotionSeMultiple * m.se)
 
   const subTenthCollapse =
     allBeyond &&

@@ -25,7 +25,7 @@ import {
   acaEnhancedSubsidyStatus,
   solverAcaFreshnessWindowDays,
   solverBFamilySize,
-  solverConversionNearTieDemotionMargin,
+  solverConversionNearTieDemotionSeMultiple,
   solverMinBPaths,
   solverSelectionTieZ,
   type ConstantEntry,
@@ -187,7 +187,7 @@ export function evaluateEpsilonClause(): readonly WithheldReason[] {
     ['solver.solverSelectionTieZ', solverSelectionTieZ.value],
     ['solver.solverMinBPaths', solverMinBPaths.value],
     ['solver.solverBFamilySize', solverBFamilySize.value],
-    ['solver.solverConversionNearTieDemotionMargin', solverConversionNearTieDemotionMargin.value],
+    ['solver.solverConversionNearTieDemotionSeMultiple', solverConversionNearTieDemotionSeMultiple.value],
     // The freshness window rides the SAME finiteness-first discipline (U14 fold): it feeds
     // the one `>` compare in the ACA clause, and `ageDays > NaN` is false — a non-finite
     // window would otherwise fail OPEN (optimistic), the only clause constant left unguarded.
@@ -275,6 +275,11 @@ export function mintOracleToken(inputs: {
    *  the MINT's epsilon leg can be driven red — without it, deleting the leg stays green.
    *  The live binding never passes this. */
   readonly _epsilonRequired?: ReadonlyArray<readonly [string, number]>
+  /** TEST-SEAM ONLY (insight 048, the trend sourcing unit): overrides the trend clause's live
+   *  (entry, mode) pair so the MINT's trend leg can be driven red now that the live clause is
+   *  CLEAR (sourced + consumed) — without it, deleting the trend push below would stay green on
+   *  every live test (the exact `_epsilonRequired` precedent). The live binding never passes this. */
+  readonly _trendOverride?: { readonly entry: ConstantEntry; readonly mode: 'real-flat' | 'trended' }
 }): MintOutcome {
   const { params, candidateConversionAmounts, todayEpochDay, oracleReport, stabilityReport } = inputs
   if (oracleReport.caseIds.length === 0) {
@@ -284,7 +289,14 @@ export function mintOracleToken(inputs: {
   }
   const pinning = evaluatePinningClause(params)
   const withheld: WithheldReason[] = [...pinning.blocking]
-  const trend = evaluateMedicareTrendClause(candidateSetHasConversions(candidateConversionAmounts))
+  const trend =
+    inputs._trendOverride === undefined
+      ? evaluateMedicareTrendClause(candidateSetHasConversions(candidateConversionAmounts))
+      : _evaluateMedicareTrendClause(
+          candidateSetHasConversions(candidateConversionAmounts),
+          inputs._trendOverride.entry,
+          inputs._trendOverride.mode,
+        )
   if (trend !== null) withheld.push(trend)
   const aca = evaluateAcaFreshnessClause(params, todayEpochDay)
   if (aca !== null) withheld.push(aca)

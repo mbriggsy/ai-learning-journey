@@ -41,7 +41,7 @@ import {
   type Household,
 } from '@engine/taxOverlay'
 import { type AccountBuckets } from '@engine/sequencing'
-import { irmaa, partB2026 } from '@engine/constants'
+import { irmaa, partB2026, medicareCostTrend } from '@engine/constants'
 import { compileBudget } from '@budget/budgetToSpending'
 import {
   type BudgetLineItem,
@@ -55,14 +55,39 @@ import {
 // Canonical figures — READ from the constants (never re-typed; the copyGuard).
 // ---------------------------------------------------------------------------
 const SCHED = irmaa.value
-const BASE = partB2026.value.standardPremiumMonthly // base Part B / person / month
+const BASE = partB2026.value.standardPremiumMonthly // base Part B / person / month (the 2026 anchor)
+const TREND = medicareCostTrend.value // the sourced Part B cost-trend table (V.E2, deflated horizon-matched)
+const ANCHOR_YEAR = TREND.anchorYear // 2026 — read, never hard-coded
 const LOOKBACK = SCHED.magiLookbackYears // 2 — read, never hard-coded
-/** Tier `i`'s combined (Part B + Part D) monthly surcharge, from the canonical table. */
-const tierSurchargeMonthly = (i: number) =>
-  SCHED.tiers[i]!.partBSurchargeMonthly + SCHED.tiers[i]!.partDSurchargeMonthly
-/** The hand oracle: `count × (base + surcharge) × 12` (medicareAnnualCost's independent twin). */
-const medicareAnnual = (count: number, tierIdx: number | null) =>
-  count * (BASE + (tierIdx === null ? 0 : tierSurchargeMonthly(tierIdx))) * 12
+/**
+ * The REAL (anchor-dollar) monthly base Part B for a CALENDAR year — the Medicare-cost-trend unit's
+ * documented horizon-matched deflation applied BY HAND off the sourced constant (DND-012: never
+ * `buildPartBPricingSchedule`). The anchor (and any earlier year) clamps to `BASE`; a table year is
+ * its nominal V.E2 premium ÷ (1 + cpiNearTermAvg)^(year − anchor), the deflator accumulated
+ * iteratively. Every dated figure is READ off the constant (the nominals + the CPI) — no premium
+ * literal is re-typed (the copyGuard). Fixtures stay inside the table window (≤ 2035).
+ */
+const baseRealMonthly = (calendarYear: number): number => {
+  if (calendarYear <= ANCHOR_YEAR) return BASE
+  const row = TREND.premiums[calendarYear - ANCHOR_YEAR - 1]
+  if (row === undefined) throw new Error(`baseRealMonthly: ${calendarYear} is beyond the trend table edge`)
+  let deflator = 1
+  for (let y = ANCHOR_YEAR + 1; y <= calendarYear; y++) deflator *= 1 + TREND.cpiNearTermAvg
+  return row.nominalMonthly / deflator
+}
+/** Tier `i`'s combined (Part B + Part D) monthly surcharge for a billed CALENDAR year: the Part B
+ *  surcharge rides the trended base via the cost-share identity (scale = baseReal(y)/anchor), Part D
+ *  does NOT (the hawk-honored disaggregation). Defaults to the anchor (scale 1 = the pre-trend twin). */
+const tierSurchargeMonthly = (i: number, calendarYear: number = ANCHOR_YEAR) =>
+  SCHED.tiers[i]!.partBSurchargeMonthly * (baseRealMonthly(calendarYear) / BASE) +
+  SCHED.tiers[i]!.partDSurchargeMonthly
+/** The hand oracle: `count × (baseReal(y) + surcharge(y)) × 12` (medicareAnnualCost's independent
+ *  twin), trend-priced for calendar year `y` (default = the 2026 anchor, scale 1 — every anchor-only
+ *  fixture keeps its old value). */
+const medicareAnnual = (count: number, tierIdx: number | null, calendarYear: number = ANCHOR_YEAR) =>
+  count *
+  (baseRealMonthly(calendarYear) + (tierIdx === null ? 0 : tierSurchargeMonthly(tierIdx, calendarYear))) *
+  12
 const T1_MFJ = SCHED.tiers[0]!.mfjMagiThreshold
 const T2_MFJ = SCHED.tiers[1]!.mfjMagiThreshold
 
@@ -162,34 +187,40 @@ describe('post-65 Medicare pricing — the seed→history handoff crossing (simu
     const s = on.healthReadout!.byYear
     expect(s.length).toBe(YEARS)
 
-    // HAND-DERIVED expected costs (count = 2 enrolled every year):
-    //   base per year        = 2 × BASE × 12                    (medicareBaseP50, invariant to the surcharge)
-    //   tier-1 surcharge/yr  = 2 × (tier0.partB + tier0.partD) × 12
-    const baseAnnual = medicareAnnual(2, null)
-    const tier1Surcharge = medicareAnnual(2, 0) - baseAnnual // the surcharge component alone
+    // HAND-DERIVED expected series (count = 2 enrolled every year). The Medicare-cost-trend unit made
+    // the base per-YEAR (V.E2 deflated horizon-matched), NO LONGER one flat scalar; the IRMAA Part B
+    // surcharge rides that trended base (cost-share identity ⇒ scale = baseReal(y)/anchor), Part D does
+    // not. Sim year t prices calendar 2026 + t (overlay.startCalendarYear).
+    const baseAt = (t: number) => medicareAnnual(2, null, 2026 + t) // 2 × baseReal(2026+t) × 12
+    const tier1SurchargeAt = (t: number) => medicareAnnual(2, 0, 2026 + t) - baseAt(t) // the year's scaled surcharge
 
-    // The base is CONSTANT across the crossing (only the surcharge moves) — presence + invariance.
+    // The base is INVARIANT TO THE SURCHARGE (it keys off the year, never the MAGI/tier), but it TRENDS
+    // across years — so assert each year's OWN trended base, not one constant value.
     for (let t = 0; t < YEARS; t++) {
-      expect(s[t]!.medicareBaseP50, `year ${t} base = 2×base×12`).toBeCloseTo(baseAnnual, 4)
+      expect(s[t]!.medicareBaseP50, `year ${t} base = 2×baseReal(${2026 + t})×12`).toBeCloseTo(baseAt(t), 4)
       expect(s[t]!.acaNetPremiumP50, `year ${t} ACA never prices (no quote pair)`).toBe(0)
     }
 
     // THE CROSSING: seed window (t=0,1) reads the sub-tier seed ⇒ 0; from t=lookback the recorded
-    // history (=CONV, tier 1) bills ⇒ the tier-1 surcharge. The change is AT t=lookback, nowhere else.
+    // history (=CONV, tier 1) bills ⇒ the tier-1 surcharge, now TREND-SCALED to each billed year. The
+    // change FROM ZERO is AT t=lookback, nowhere else.
     expect(s[0]!.irmaaSurchargeP50, 't=0 reads irmaaMagiSeed[0] (sub-tier) ⇒ no surcharge').toBe(0)
     expect(s[1]!.irmaaSurchargeP50, 't=1 reads irmaaMagiSeed[1] (sub-tier) ⇒ no surcharge').toBe(0)
-    expect(s[LOOKBACK]!.irmaaSurchargeP50, 't=lookback FIRST reads irmaaMagiHistory[0] ⇒ tier 1').toBeCloseTo(
-      tier1Surcharge,
+    expect(s[LOOKBACK]!.irmaaSurchargeP50, 't=lookback FIRST reads irmaaMagiHistory[0] ⇒ tier 1 (scaled to its year)').toBeCloseTo(
+      tier1SurchargeAt(LOOKBACK),
       4,
     )
-    expect(s[LOOKBACK + 1]!.irmaaSurchargeP50, 't=lookback+1 reads history[1] ⇒ still tier 1').toBeCloseTo(
-      tier1Surcharge,
+    expect(s[LOOKBACK + 1]!.irmaaSurchargeP50, 't=lookback+1 reads history[1] ⇒ still tier 1 (scaled to its year)').toBeCloseTo(
+      tier1SurchargeAt(LOOKBACK + 1),
       4,
     )
     // The change is AT the seed→history boundary — not a year early, not a year late.
-    expect(s[1]!.irmaaSurchargeP50).not.toBe(s[LOOKBACK]!.irmaaSurchargeP50) // changes AT t=lookback
-    expect(s[0]!.irmaaSurchargeP50).toBe(s[1]!.irmaaSurchargeP50) // flat through the seed window (no change at t=1)
-    expect(s[LOOKBACK]!.irmaaSurchargeP50).toBeCloseTo(s[LOOKBACK + 1]!.irmaaSurchargeP50, 4) // flat after (no change at t=3)
+    expect(s[1]!.irmaaSurchargeP50).not.toBe(s[LOOKBACK]!.irmaaSurchargeP50) // 0 → tier 1 AT t=lookback
+    expect(s[0]!.irmaaSurchargeP50).toBe(s[1]!.irmaaSurchargeP50) // flat-ZERO through the seed window (no change at t=1)
+    // The TIER does not change after the crossing (history = CONV every year ⇒ tier 1 throughout), but
+    // the surcharge now TRENDS UP with the base it rides — so t=lookback+1 sits strictly ABOVE
+    // t=lookback (each its own year's scaled tier-1, pinned above); real-flat pricing once had them equal.
+    expect(s[LOOKBACK + 1]!.irmaaSurchargeP50).toBeGreaterThan(s[LOOKBACK]!.irmaaSurchargeP50)
     // Direction sanity: the recorded-history year genuinely costs MORE than the seed years.
     expect(s[LOOKBACK]!.irmaaSurchargeP50).toBeGreaterThan(0)
   })

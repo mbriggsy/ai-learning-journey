@@ -7,12 +7,12 @@
  */
 import {
   sourced,
-  unsourced,
   type AcaAgeRatingCurve,
   type ConstantEntry,
   type AcaApplicablePercentageTable,
   type FederalPovertyGuidelines,
   type IrmaaSchedule,
+  type MedicareCostTrendTable,
 } from './types'
 import type { HealthcareVintageV3 } from '@shared/model'
 
@@ -178,20 +178,58 @@ export const partB2026 = sourced(
 )
 
 /**
- * The Medicare-cost-trend constant — NAMED but deliberately NOT VALUED (the first live use of
- * the `Unsourced` sentinel; burned/062). Part B is priced REAL-FLAT today (a disclosed modeling
- * choice, architecture §7.2); reality trends Part B faster than CPI, and real-flat specifically
- * UNDER-PENALIZES late-year IRMAA cliff-crossing — the exact payoff channel of Roth-conversion
- * candidates. The Act-4 reconciliation (supersession item 4, council wf_d873be6e-5b2) ruled this
- * HARD solver-BLOCKING: the U14 oracle token withholds the conversion ranking
- * (`medicare-trend-unsourced`) until a SOURCED trend constant lands AND is genuinely CONSUMED by
- * the Part-B pricing (insight 074 — a stamp nothing reads prices nothing). Disclose-and-ship is
- * FORBIDDEN (a disclosure fixes a number, never a mis-ranking). The sourcing task is its own
- * small unit; this sentinel only enforces the block — reading `.value` throws by design.
+ * The Medicare-cost-trend constant — SOURCED (the trend sourcing unit, 2026-07-19; council
+ * wf_c673339e-257 over the research packet `docs/research/medicare-cost-trend.md`,
+ * wf_933cef3b-16b — every figure cross-checker-verified byte-for-byte against the primary PDF).
+ * This entry was the first live `Unsourced` sentinel: Part B was priced REAL-FLAT (a disclosed
+ * modeling choice, architecture §7.2), which UNDER-penalized late-year IRMAA cliff-crossing —
+ * the exact payoff channel of Roth-conversion candidates — so the Act-4 reconciliation ruled it
+ * HARD solver-BLOCKING (`medicare-trend-unsourced`) until a sourced trend landed AND was
+ * genuinely consumed by the Part-B pricing (insight 074). Both halves land in the trend unit's
+ * one atomic change: this table + `buildPartBPricingSchedule` (healthOverlay) +
+ * `PART_B_PRICING_MODE: 'trended'` (taxOverlay) + the solver-seam re-wire.
+ *
+ * Shape (c), the year-keyed primary table (council-ruled, rank-flip-probe-gated): nominal
+ * V.E2 premiums verbatim 2027–2035 (2026 lives in `partB2026` — one home per figure), deflated
+ * in-engine by the HORIZON-MATCHED near-term CPI (3.2%/yr avg on the near decade — deflating
+ * the near-term path by the 2.4% ultimate is the horizon mismatch the packet rules against),
+ * then the ultimate real escalator ((1.038/1.024)−1 ≈ +1.37%/yr, derived in the consumer)
+ * beyond 2035. Pre-anchor years CLAMP to the anchor (conservative: realized 2024/2025 real
+ * premiums sit BELOW the 2026 level — $174.70/$185.00 nominal). The IRMAA Part B surcharges
+ * scale with the trended base via the statutory cost-share identity (tier totals =
+ * {35/50/65/80/85}% of full cost vs the base's 25% — surcharge ∝ base); Table V.E3 is the
+ * DND-009 cross-check for that derivation, NEVER a second stored vector (the hawk-honored
+ * disaggregation: Part D surcharges do NOT ride Part B's ratio).
  */
-export const medicareCostTrend = unsourced(
-  'CMS Medicare Trustees Report — the Part B premium real-growth trend (a sourced constant, never a guessed growth rate)',
-  'Clearing the U14 token block requires BOTH a sourced value here AND real consumption by the Part-B pricing in healthOverlay (the oracleToken clause reads both halves).',
+export const medicareCostTrend = sourced<MedicareCostTrendTable>(
+  {
+    reportEdition: 2026,
+    anchorYear: 2026,
+    premiums: [
+      { calendarYear: 2027, nominalMonthly: 209.5 },
+      { calendarYear: 2028, nominalMonthly: 224.5 },
+      { calendarYear: 2029, nominalMonthly: 238.5 },
+      { calendarYear: 2030, nominalMonthly: 255.5 },
+      { calendarYear: 2031, nominalMonthly: 272.1 },
+      { calendarYear: 2032, nominalMonthly: 290.2 },
+      { calendarYear: 2033, nominalMonthly: 313.6 },
+      { calendarYear: 2034, nominalMonthly: 338.5 },
+      { calendarYear: 2035, nominalMonthly: 360.6 },
+    ],
+    cpiNearTermAvg: 0.032,
+    cpiUltimate: 0.024,
+    ultimateNominalGrowth: 0.038,
+    vintage: 'part-b-trend-2026a',
+  },
+  {
+    citation:
+      '2026 Medicare Trustees Report (cms.gov, released 2026-06-09; ONE edition, no mixing), verified byte-for-byte against the primary PDF (research wf_933cef3b-16b, 2026-07-19): premiums = Table V.E2 p.207 verbatim (2033 is $313.60 in the primary — secondary press printing $313.65 loses); the 2026 anchor $202.90 (finalized) lives in partB2026, identity test-pinned. cpiNearTermAvg = Table II.D1 2026–2035 CPI-W average 3.2%; cpiUltimate = §III.B Table III.B12 CPI-W ultimate 2.4%; ultimateNominalGrowth = §III.D ultimate per-beneficiary Part B cost growth 3.8%/yr nominal EXCL. demographics (the report’s "1.7% real" is GDP-deflated, NOT CPI — importing it overstates CPI-real by ~0.35pp; the packet’s named trap).',
+    directionalUntilPinned: false,
+    pinTo:
+      '2026 Medicare Trustees Report Tables V.E2 (p.207) / II.D1 / III.B12 + §III.D; ANNUAL RE-VERIFY against each new Trustees Report (~June; the medicareTrend.reverify tripwire reds when the 2027 edition is due un-adopted)',
+    note:
+      'DERIVATION CHOICES (named, insight 022): the near-term deflator applies the 3.2% AVERAGE uniformly per table year (per-year CPI rows are not transcribed; horizon-matched by construction); the ultimate real growth is derived in the consumer ((1+0.038)/(1+0.024)−1 ≈ +1.37%/yr), never stored. 2027’s low nominal step (+3.25%) is a policy artifact — never anchor a single year (packet). Real-flat is FALSIFIED in every window: near-term ≈+2.8–3%/yr real over horizon-matched CPI, ultimate ≈+1.4%/yr. Consumers: buildPartBPricingSchedule (healthOverlay) → runTaxAwareDecumulation’s per-year Part-B pricing (taxOverlay, PART_B_PRICING_MODE ’trended’); the U14 token’s trend clause reads both halves. The vintage bump fires the U13 staleness clock on pre-trend vaults BY DESIGN.',
+  },
 )
 
 /** 2026 Medicare Part A purchased premiums + deductible (pin only if the tool
@@ -379,6 +417,7 @@ export function healthcareVintageStamp(): HealthcareVintageV3 {
     irmaaTopTierFrozenThrough: irmaa.value.topTierFrozenThrough,
     partBStandardMonthly: partB2026.value.standardPremiumMonthly,
     medicareExtrasTypicalVintage: medicareExtrasTypical.value.vintage,
+    partBTrendVintage: medicareCostTrend.value.vintage,
   }
 }
 

@@ -8,9 +8,10 @@
  *
  * THE WORST-CASE SHAPE it measures: the longest tractable horizon, the full 16,000-path final-crown
  * floor (so the grade runs REAL, not the below-floor `gradeUnavailable`), a multi-amount cliff-anchored
- * conversion grid (the ranking-stability perturbation load), the tax overlay's IRMAA regime, and the
- * m-draw held-out B-family the grade sweeps. `payloadKind` must read `recommended` or the number is a
- * gate short-circuit, not a full-solve cost. Run: `pnpm tsx scripts/profile-solver.ts`.
+ * conversion grid (the ranking-stability perturbation load), the healthcare overlay's BOTH regimes —
+ * ACA (pre-65, the 64yo's fixed-point iteration) + IRMAA (post-65, the 66yo's surcharge feed-forward) —
+ * and the m-draw held-out B-family the grade sweeps. `payloadKind` must read `recommended` or the number
+ * is a gate short-circuit, not a full-solve cost. Run: `pnpm tsx scripts/profile-solver.ts`.
  */
 import { performance } from 'node:perf_hooks'
 import type { CandidateStrategy } from '@engine/solver/candidates'
@@ -23,6 +24,14 @@ import type { SimulationParams } from '@shared/model'
 
 const WORST_CASE_PATHS = 16_000 // the final-crown floor — the grade runs a REAL (not below-floor) read
 const WORST_CASE_HORIZON = 45 // a long household horizon
+
+// The worst-case healthcare load: BOTH regimes priced on the same run — the 64yo is pre-65 (ACA, its
+// fixed-point iteration is the pre-65 cost driver) and the 66yo is already Medicare-enrolled (IRMAA,
+// the post-65 surcharge feed-forward). Enhanced subsidies pick the ARPA/IRA applicable-% table; the
+// per-year enrolled/benchmark premium streams trigger the ACA fixed point in every pre-65 year, and
+// the irmaaMagiSeed feeds the 2-year IRMAA lookback the year-0/1 Medicare enrollee needs (fail-loud
+// without it). Cost-shape only — the profiler measures compute, never correctness.
+const HEALTHCARE_PREMIUM = 18_000 // a realistic pre-65 enrolled/benchmark annual premium (real $)
 
 const base: SimulationParams = {
   initialPortfolio: 1_400_000,
@@ -52,6 +61,12 @@ const base: SimulationParams = {
     buckets: { taxable: 500_000, pretax: 800_000, roth: 100_000 },
     initialTaxableBasis: 400_000,
     filing: 'mfj',
+    // The healthcare overlay — BOTH regimes priced (ACA pre-65 for the 64yo, IRMAA post-65 for the 66yo).
+    healthcareEnabled: true,
+    enhancedSubsidies: true,
+    slcsp: Array.from({ length: WORST_CASE_HORIZON }, () => HEALTHCARE_PREMIUM),
+    enrolledPremium: Array.from({ length: WORST_CASE_HORIZON }, () => HEALTHCARE_PREMIUM),
+    irmaaMagiSeed: [130_000, 130_000], // [MAGI[−2], MAGI[−1]] — the 66yo is IRMAA-priced in years 0 & 1
   },
 }
 

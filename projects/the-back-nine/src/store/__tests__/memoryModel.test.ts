@@ -559,6 +559,45 @@ describe('memoryModel — the solve lifecycle (§S5 (5))', () => {
     expect(solve.payload).toMatchObject({ kind: 'mint-failed', detail: 'newer' }) // the newer one stands
   })
 
+  it('THE KILLER — a stale in-flight solve resolving AFTER the goal is cleared never overwrites the blocked state (fix a)', async () => {
+    // The blocked branches must MINT + COMMIT an epoch (not assign solveAnswer directly): otherwise the
+    // still-committed epoch stays 0 and the stale #1 resolve commits OVER the blocked state. Reverting
+    // fix (a) (direct assignment in the goal-unset branch) makes this red.
+    const { client, solvePending } = fakeClient()
+    const model = createMemoryModel({ client, builders: solveBuilders(() => FAKE_SOLVE_REQUEST) })
+    model.update(withGoal)
+    const inFlight = model.dispatchSolve() // #1 — deferred, pending
+    expect(model.getSnapshot().solve).toEqual({ kind: 'pending', label: 'solving' })
+    // Clear the goal + re-dispatch → the goal-unset blocked branch (now epoch-minting + committing).
+    model.update((d) => ({ ...d, chosenGoal: undefined }))
+    await model.dispatchSolve()
+    expect(model.getSnapshot().solve).toEqual({ kind: 'blocked', gap: 'goal-unset', label: 'goal-unset' })
+    // Release the STALE first solve — it must be DISCARDED; the blocked state stands.
+    solvePending[0]!(refusedWire)
+    await inFlight
+    expect(model.getSnapshot().solve).toEqual({ kind: 'blocked', gap: 'goal-unset', label: 'goal-unset' })
+  })
+
+  it('a stale resolve while a NEWER solve is still PENDING never overwrites the pending window (fix b)', async () => {
+    // Two pending dispatches, nothing committed yet (committedEpoch still 0). Only the dispatch-epoch
+    // HOLD (`epoch !== solveDispatchedEpoch`) stops the stale #1 from committing over the newer pending —
+    // commitSolve's committed-epoch guard alone would let it through. Reverting fix (b) makes this red.
+    const { client, solvePending } = fakeClient()
+    const model = createMemoryModel({ client, builders: solveBuilders(() => FAKE_SOLVE_REQUEST) })
+    model.update(withGoal)
+    const first = model.dispatchSolve() // #1 pending
+    const second = model.dispatchSolve() // #2 pending (newer)
+    expect(model.getSnapshot().solve).toEqual({ kind: 'pending', label: 'solving' })
+    solvePending[0]!(refusedWire) // release the STALE #1
+    await first
+    expect(model.getSnapshot().solve).toEqual({ kind: 'pending', label: 'solving' }) // pending STAYS
+    solvePending[1]!({ kind: 'mint-failed', stage: 'roster', detail: 'newer', solverCodeVersion: 1 })
+    await second
+    const solve = model.getSnapshot().solve
+    if (solve.kind !== 'committed') throw new Error('unreachable')
+    expect(solve.payload).toMatchObject({ kind: 'mint-failed', detail: 'newer' }) // the newer one commits
+  })
+
   it('HOLDS on a cooperatively-ABORTED solve — a superseded run that bailed never commits (§S6)', async () => {
     // The commit-epoch guard discards a stale RESULT once a newer solve has committed; the aborted bin
     // is HELD directly (mirroring the date route's `cancelled` hold) so it never renders as an answer,

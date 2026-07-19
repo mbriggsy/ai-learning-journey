@@ -40,11 +40,26 @@ import {
   solverSelectionTieZ,
 } from '@engine/constants'
 import { quantizeSurvival, xOfTenClamp } from '@engine/confidence'
-import type { CandidateStrategy } from '../solver/candidates'
-import { evaluateCandidates, rankCandidates, type CandidateOutcome, type OracleGoal } from './evaluate'
+import { solverCandidateId, type CandidateStrategy } from '../solver/candidates'
+import { afterTaxBequestPerPath, evaluateCandidates, rankCandidates, type CandidateOutcome, type OracleGoal } from './evaluate'
 import { deriveBFamilyMember, deriveSeedB, survivalIndicators } from './heldOutSeed'
 
 export type Grade = 'just-do-it' | 'coin-flip'
+
+/**
+ * A grade could not be READ because the B-family it was handed is too thin to decide on — the min-B
+ * per-member path floor, or a family that is not the full m-member set. This is a CALM, EXPECTED
+ * shortfall (a base below the calibrated floor), NOT a programming error: the caller demotes it to a
+ * NAMED `gradeUnavailable`. A TYPED class (not a bare Error) so solve.ts's catch can narrow to EXACTLY
+ * this — every other throw here (the demotion-axis guard, a non-finite difference, the uncalibrated
+ * sentinel) is a fail-closed defect that must stay LOUD, never laundered into a calm unavailable.
+ */
+export class GradeFloorRefusal extends Error {
+  constructor(message: string) {
+    super(message)
+    this.name = 'GradeFloorRefusal'
+  }
+}
 
 /** The axis the grade's per-path differences are measured in. `survival` (the on-track headline)
  *  and `pay-less-tax` (the surplus dollar axis) are the U14 live-binding axes; `leave-more` is the
@@ -78,7 +93,7 @@ export const displayTenth = (survival: number): number => xOfTenClamp(quantizeSu
 function memberMargin(pairedDiffs: readonly number[], minPaths: number): MemberMargin {
   const n = pairedDiffs.length
   if (n < minPaths) {
-    throw new Error(
+    throw new GradeFloorRefusal(
       `[gradeCalibration] a B-family member read on ${n} paths is below the ${minPaths}-path floor — ` +
         `the margin decision would itself be noise (refused, never averaged)`,
     )
@@ -105,8 +120,9 @@ export interface GradeOnFamilyInputs {
    *  `leave-more` joins as a valid PURE-DECISION axis (U15 §S5 — the objective wiring the harness
    *  deferred): `gradeOnFamily` decides its grade from a caller-assembled after-tax-bequest family
    *  (solve.ts owns the per-solve heir-bracket assembly; the DECISION stays this one home). Note the
-   *  live-binding {@link gradeRecommendation} still throws for leave-more — its `pairedGoalDiffs`
-   *  cannot see the per-solve heir bracket; solve.ts assembles the leave-more family and calls THIS. */
+   *  live-binding {@link gradeRecommendation} still refuses leave-more — it calls {@link pairedDecisionDiffs}
+   *  with NO heir bracket (its statistic union excludes leave-more), so the per-solve IRD discount is
+   *  absent and the named refusal fires; solve.ts passes the bracket and grades leave-more through THIS. */
   readonly statistic: GradeStatistic
   readonly winnerHasConversion: boolean
   readonly runnerUpHasConversion: boolean
@@ -160,7 +176,7 @@ function assertDemotionAxisCalibrated(
 export function gradeOnFamily(inputs: GradeOnFamilyInputs): GradeResult {
   const familySize = solverBFamilySize.value
   if (!isCalibrated(familySize) || inputs.family.length !== familySize) {
-    throw new Error(
+    throw new GradeFloorRefusal(
       `[gradeCalibration] the grade runs over the FULL ${familySize}-member B-family (got ${inputs.family.length}) — ` +
         `a partial family is not a stability check`,
     )
@@ -202,30 +218,51 @@ export interface GradeRecommendationResult extends GradeResult {
   readonly familySeeds: readonly number[]
 }
 
-/** Per-path goal statistic, oriented winner-positive. */
-function pairedGoalDiffs(
+/**
+ * Winner-positive CRN-paired per-path DECISION differences (POSITIVE ⇒ the winner is better) — the
+ * ONE home (U15 §S5 fold: solve.ts's private twin was DELETED and imports THIS; the winner-positive
+ * sign convention now lives in exactly one place — the M3 sign-inversion class the architecture guards).
+ *  - survival:       winner − runner survival indicators;
+ *  - pay-less-tax:   runner − winner lifetime tax (winner-positive ⇒ the winner PAYS LESS);
+ *  - leave-more:     winner − runner after-tax-to-heirs bequest at the per-solve heir bracket (the
+ *                    IRD discount the harness deferred — winner-positive ⇒ the winner LEAVES MORE).
+ * The two leave-more throws are the burned/062 named refusals (no silent default): an absent heir
+ * bracket and an absent tax-aware run each REFUSE loud.
+ */
+export function pairedDecisionDiffs(
   winner: CandidateOutcome,
   runner: CandidateOutcome,
-  goal: OracleGoal | 'survival',
+  statistic: GradeStatistic,
+  heirBracket?: number,
 ): readonly number[] {
   if (winner.kind !== 'scored' || runner.kind !== 'scored') {
     throw new Error('[gradeCalibration] grading requires two SCORED candidates (an infeasible candidate never grades)')
   }
-  if (goal === 'survival') {
+  if (statistic === 'survival') {
     const w = survivalIndicators(winner.distribution)
     const r = survivalIndicators(runner.distribution)
     return w.map((x, i) => x - r[i]!)
   }
-  const wTa = winner.distribution.taxAware
-  const rTa = runner.distribution.taxAware
-  if (wTa === undefined || rTa === undefined) {
-    throw new Error('[gradeCalibration] a goal-statistic grade requires tax-aware runs (burned/062)')
-  }
-  if (goal === 'pay-less-tax') {
+  if (statistic === 'pay-less-tax') {
+    const wTa = winner.distribution.taxAware
+    const rTa = runner.distribution.taxAware
+    if (wTa === undefined || rTa === undefined) {
+      throw new Error('[gradeCalibration] a pay-less-tax grade requires tax-aware runs (burned/062)')
+    }
     // Winner-positive: the winner PAYS LESS, so runner − winner.
     return wTa.lifetimeTaxPaidReal.map((w, i) => rTa.lifetimeTaxPaidReal[i]! - w)
   }
-  throw new Error('[gradeCalibration] leave-more per-path grading lands with U15\'s objective wiring (the heir bracket is per-solve there)')
+  // leave-more: winner-positive = winner LEAVES MORE, so winner − runner. The heir bracket is the
+  // per-solve IRD discount (the reason the harness deferred this to U15's objective wiring).
+  if (heirBracket === undefined) {
+    throw new Error('[gradeCalibration] a leave-more grade requires a declared heir bracket (burned/062)')
+  }
+  const wVec = afterTaxBequestPerPath(winner.distribution, heirBracket)
+  const rVec = afterTaxBequestPerPath(runner.distribution, heirBracket)
+  if (wVec === undefined || rVec === undefined) {
+    throw new Error('[gradeCalibration] a leave-more grade requires tax-aware runs (burned/062)')
+  }
+  return wVec.map((w, i) => w - rVec[i]!)
 }
 
 /**
@@ -251,7 +288,7 @@ export function gradeRecommendation(opts: {
   const displayReads: Array<{ winnerSurvival: number; runnerUpSurvival: number }> = []
   for (const seed of familySeeds) {
     const [w, r] = evaluateCandidates(base, [winner, runnerUp], seed)
-    family.push(pairedGoalDiffs(w!, r!, statistic))
+    family.push(pairedDecisionDiffs(w!, r!, statistic))
     if (statistic === 'survival' && w!.kind === 'scored' && r!.kind === 'scored') {
       displayReads.push({ winnerSurvival: w!.score.survival, runnerUpSurvival: r!.score.survival })
     }
@@ -298,16 +335,30 @@ export function namedDriverProbe(opts: {
   readonly seed: number
   readonly heirBracket?: number
   readonly probes?: readonly NamedDriverProbe[]
+  /** Optional INJECTED crown function (U15 §S4.2 fold): when supplied it replaces the internal
+   *  rankCandidates-based crownOf ENTIRELY, so the probe reflects the SHIPPED selection path
+   *  (shrinkage + the withhold arm), not the raw argmax — a probe that flips the raw argmax but NOT
+   *  the shrunk crown (or vice versa) would otherwise name a driver the user never sees. Absent ⇒ the
+   *  built-in rankCandidates crown stands (U14's calibration tests keep exercising the probe mechanism). */
+  readonly crownFor?: (params: SimulationParams) => string
+  /** Optional SHIPPED baseline crown: when supplied, skip computing crownOf(base) and use it (the
+   *  caller already knows the shipped crown — the selection winner's id — so a full base re-evaluation
+   *  is redundant). Must be produced by the SAME crown authority as `crownFor` to compare meaningfully. */
+  readonly baselineCrown?: string
 }): { readonly driver: string } {
   const { base, candidates, goal, tieTolerance, seed, heirBracket } = opts
   const probes = opts.probes ?? [ACA_ENHANCED_PROBE]
-  const crownOf = (params: SimulationParams): string => {
-    const ranked = rankCandidates(evaluateCandidates(params, candidates, seed, { heirBracket }), goal, tieTolerance)
-    const top = ranked[0]
-    if (top === undefined) throw new Error('[gradeCalibration] namedDriverProbe: empty candidate set')
-    return `${top.candidate.policy}:${top.candidate.conversion?.annualAmountReal ?? 0}`
-  }
-  const baseline = crownOf(base)
+  const crownOf =
+    opts.crownFor ??
+    ((params: SimulationParams): string => {
+      const ranked = rankCandidates(evaluateCandidates(params, candidates, seed, { heirBracket }), goal, tieTolerance)
+      const top = ranked[0]
+      if (top === undefined) throw new Error('[gradeCalibration] namedDriverProbe: empty candidate set')
+      // The §S0.4 provenance-injective id (never the lossy pre-provenance `policy:amount` — two
+      // custom orders would collide, and it drifts from the shipped arm ids the payload writes).
+      return solverCandidateId(top.candidate)
+    })
+  const baseline = opts.baselineCrown ?? crownOf(base)
   for (const probe of probes) {
     const probed = probe.transform(base)
     if (probed === base) continue // the probe declared itself inapplicable to this world

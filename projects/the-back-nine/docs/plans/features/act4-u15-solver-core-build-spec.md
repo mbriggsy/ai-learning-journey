@@ -295,3 +295,53 @@ abstention, not a pass). The disclosure is **never a second ranking authority**:
 mean) both ranks and is the primary display (contract #4). The dispersed-world demonstration is the
 durable record of the attempt; it is deliberately a direct-to-scorer test, **not** a `SolverCaseFixture`
 (it has no engine world producing those exact dispersed paths — which is precisely the intractability).
+
+### 2026-07-19 — the `/ultramode-code-review` FOLD (review wf_284d845b-a1b · 14 lenses / 34 verified findings / zero refuted outright)
+
+**The confirmed roots, FIXED:** (1) the solve lane's **blocked-state epoch gap** (10/10 refuter
+votes, 4-lens convergence) — `dispatchSolve`'s blocked branches assigned `solveAnswer` directly, so a
+stale in-flight solve resolving after a precondition regression committed a recommendation OVER the
+refusal (calm-but-wrong); blocked now mints + commits through `commitSolve`, AND the resolve arms
+hold unless the dispatch is still the latest (`epoch !== solveDispatchedEpoch` — the solve lane has
+no worker-side cancel yet, so the epoch pair carries the WHOLE staleness discipline; the old comment
+rationalizing the gap stated a false premise and is rewritten). (2) the **namedDriver probed the raw
+`rankCandidates[0]` argmax while the shipped crown is the SHRUNK selection winner** (4/4) — the probe
+now takes an injected `crownFor` (solve wires the real runSearch→selectRecommendation path) +
+`baselineCrown` (the already-computed winner, killing the redundant baseline re-evaluation), and its
+internal crown id uses `solverCandidateId` (the hand-derived pre-provenance format is dead).
+
+**The hand-verified materiality-split folds (the 077 law — unanimous-real, split-impact, coordinator
+verdict):** the **fingerprint under-included its own SolveInput siblings** — `seedA` and
+`tieTolerance` are ranking-affecting but lived beside the serialized triple; both join the
+fingerprint (schema `solver-run-fp/v2`), `tieTolerance` gains a finiteness refusal
+(`tie-tolerance-invalid`), and the moved-witness battery grows seedA/tieTolerance/conversion-window
+arms. The **winner-positive paired-diffs convention had TWO homes** (solve.ts's private copy vs
+gradeCalibration's private `pairedGoalDiffs`) — consolidated to ONE exported
+`pairedDecisionDiffs` in gradeCalibration (the leave-more arm lands there; the sign convention is
+numerically pinned for all three axes, sign-flip mutant proven). The **grade catch was over-broad**
+— narrowed to the typed `GradeFloorRefusal`; the demotion-axis fail-closed guard and every
+programming error now propagate LOUD (a fail-closed refusal must never launder to a calm
+"unavailable"). A **leave-more solve without an heir bracket** refuses NAMED
+(`heir-bracket-missing`) instead of throwing to compute-error. Every **goal dispatch is exhaustive**
+(switch + never-guard ×4 — a third `RECOMMENDATION_GOALS` member now fails tsc, never silently
+scores as leave-more). The **solve arm's wire dropped the floor track** a budgeted household's
+distribution carries — `SolveArmWire` packs/reconstructs it presence-keyed (`floorReading` per arm
+was REFUSED as prescribed-wrong: it is a `summarize()`-level product absent from a per-candidate
+`Distribution` — if U16 wants a floor VERDICT per arm, that is a new per-arm-summarize decision, not
+a packer fix). The **trend-unblock tripwire** ships (a test reds the day `medicareCostTrend` is
+sourced, naming the two seams — the hardcoded conversion partition + the withheld-lever reason —
+that must re-wire to the token's trend clause, or conversions stay silently orphaned).
+
+**THE DATAPOINT CORRECTION (an under-measurement the review caught):** the §S6 profile world carried
+NO `healthcareEnabled` — the spec's own worst case demands both ACA (pre-65) + IRMAA regimes priced.
+Healthcare-priced re-measurement (dev-laptop): single simulate **1.57 s**, full solve **72.4 s**,
+ratio **45.9×**. The fallback-ladder/abort/WASM stakes are HIGHER than the S6 stamp read.
+
+**Advisory, FILED (not built):** the solve lane's draft-mutation staleness (a committed
+recommendation survives an input edit un-invalidated) + the single-worker monopolization (a 72 s
+solve starves the first-beat lane) = U16's router/invalidation charter, named landmines there; the
+unknown-`chosenGoal` vault-wide decode refusal = the 3rd-goal unit's forward-compat decision; the
+skew-disclosure percentile convention single-sources against `confidence.ts` when U16 renders both.
+
+**Gates (all green, coordinator-verified):** 2696 tests / 143 files; typecheck + lint clean;
+doc-stats reconciled; bundle 249.7 KiB unchanged.

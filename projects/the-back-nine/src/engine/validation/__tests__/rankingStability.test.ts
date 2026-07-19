@@ -117,6 +117,7 @@ describe('runRankingStability — the live K-candidate CRN pass', () => {
       perturbIndex,
       siblingIndex,
       ranking,
+      tieTolerance: 0, // identity-only (the fingerprint pins it); this world ranks at an exact 0
     })
     expect('report' in out, 'ok' in out && out.ok === false ? (out as { violations: readonly string[] }).violations.join(' | ') : '').toBe(true)
     if ('report' in out) {
@@ -125,7 +126,7 @@ describe('runRankingStability — the live K-candidate CRN pass', () => {
       expect(out.report.infeasibleCount).toBe(0)
       // §S0.2: the report is the fingerprint AUTHORITY — its fingerprint is bound to the EXACT
       // (base, candidates, ranking) it evaluated (a mint that hardcoded or dropped it fails here).
-      expect(out.report.fingerprint).toBe(solverRunFingerprint(base, candidates, ranking))
+      expect(out.report.fingerprint).toBe(solverRunFingerprint(base, candidates, ranking, { seedA: 0xa11ce, tieTolerance: 0 }))
     }
   }, 240_000)
 
@@ -138,7 +139,7 @@ describe('runRankingStability — the live K-candidate CRN pass', () => {
       { policy: 'taxable-first', conversion: { annualAmountReal: 10_000, startYearOffset: 0, years: 1 }, provenance: 'grid' },
       { policy: 'taxable-first', conversion: { annualAmountReal: 20_000, startYearOffset: 0, years: 1 }, provenance: 'grid' },
     ]
-    const out = runRankingStability({ base, candidates, seedA: 1, seedB: 2, perturbIndex: 1, siblingIndex: 2, ranking })
+    const out = runRankingStability({ base, candidates, seedA: 1, seedB: 2, perturbIndex: 1, siblingIndex: 2, ranking, tieTolerance: 0 })
     expect('report' in out).toBe(false)
     if ('ok' in out && !out.ok) {
       expect(out.violations.some((v) => /survivor regime.*vacuous/.test(v))).toBe(true)
@@ -160,7 +161,7 @@ describe('runRankingStability — the live K-candidate CRN pass', () => {
       { policy: 'taxable-first', conversion: { annualAmountReal: 10_000, startYearOffset: 0, years: 3 }, provenance: 'grid' },
       { policy: 'taxable-first', conversion: { annualAmountReal: 20_000, startYearOffset: 0, years: 3 }, provenance: 'grid' },
     ]
-    const out = runRankingStability({ base: inert, candidates, seedA: 0xa11ce, seedB: 0xb0b5eed, perturbIndex: 1, siblingIndex: 2, ranking })
+    const out = runRankingStability({ base: inert, candidates, seedA: 0xa11ce, seedB: 0xb0b5eed, perturbIndex: 1, siblingIndex: 2, ranking, tieTolerance: 0 })
     expect('report' in out).toBe(false)
     if ('ok' in out && !out.ok) {
       expect(out.violations.some((v) => /perturbation arm VACUOUS.*nothing moved/.test(v))).toBe(true)
@@ -173,7 +174,7 @@ describe('runRankingStability — the live K-candidate CRN pass', () => {
       { policy: 'proportional', conversion: null, provenance: 'grid' },
       { policy: 'taxable-first', conversion: null, provenance: 'conventional-baseline' },
     ]
-    const out = runRankingStability({ base, candidates, seedA: 1, seedB: 2, perturbIndex: 0, siblingIndex: 1, ranking })
+    const out = runRankingStability({ base, candidates, seedA: 1, seedB: 2, perturbIndex: 0, siblingIndex: 1, ranking, tieTolerance: 0 })
     expect('report' in out).toBe(false)
     if ('ok' in out && !out.ok) {
       expect(out.violations.some((v) => /misconfigured/.test(v))).toBe(true)

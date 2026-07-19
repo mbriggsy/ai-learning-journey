@@ -204,6 +204,17 @@ function packArm(arm: SolveArm): SolveArmWire {
           },
         }
       : {}),
+    // P3·U9 — the essentials-floor track (param-driven presence): the paths-length depletion array
+    // packs as a transferable Int32Array (its buffer joins the arm's transfer list in `armBuffers`);
+    // the fraction rides by clone. Without this the floor track is SILENTLY dropped from the arm wire.
+    ...(d.floor
+      ? {
+          floor: {
+            survivalFraction: d.floor.survivalFraction,
+            depletionYears: Int32Array.from(d.floor.depletionYears),
+          },
+        }
+      : {}),
   }
 }
 
@@ -235,6 +246,9 @@ function armBuffers(arm: SolveArmWire): ArrayBufferLike[] {
       arm.taxAware.lifetimeMedicareCostReal.buffer,
     )
   }
+  // The floor track's paths-length depletion buffer joins the transfer list (its sibling fraction
+  // stays a structured clone) — the ResolvedWire floor discipline at K-candidate scale.
+  if (arm.floor) bufs.push(arm.floor.depletionYears.buffer)
   return bufs
 }
 

@@ -65,16 +65,25 @@ export function rankForGoal(
  * ranks on the SAME field (negated for leave-more inside `tier2`), so the two can never disagree.
  */
 export function goalHeadlineStatistic(score: CandidateScore, goal: OracleGoal): number {
-  if (goal === 'pay-less-tax') {
-    if (score.lifetimeTaxMeanReal === undefined) {
-      throw new Error('[objective] pay-less-tax headline requires taxAware runs (burned/062 — no silent default)')
+  // EXHAUSTIVE switch + never-guard (the sequencing.ts/candidates.ts idiom): a future third
+  // RECOMMENDATION_GOALS member fails tsc HERE, never silently scoring as leave-more (the fall-through
+  // an if-chain would hide). Copied to every goal-dispatch surface (tier2, goalHigherIsBetter, gradeAxisFor).
+  switch (goal) {
+    case 'pay-less-tax':
+      if (score.lifetimeTaxMeanReal === undefined) {
+        throw new Error('[objective] pay-less-tax headline requires taxAware runs (burned/062 — no silent default)')
+      }
+      return score.lifetimeTaxMeanReal
+    case 'leave-more':
+      if (score.afterTaxBequestMeanReal === undefined) {
+        throw new Error('[objective] leave-more headline requires taxAware runs + a declared heirBracket (burned/062)')
+      }
+      return score.afterTaxBequestMeanReal
+    default: {
+      const _exhaustive: never = goal
+      throw new Error(`[objective] goalHeadlineStatistic: unknown goal ${String(_exhaustive)} — the objective wiring must widen with a new goal`)
     }
-    return score.lifetimeTaxMeanReal
   }
-  if (score.afterTaxBequestMeanReal === undefined) {
-    throw new Error('[objective] leave-more headline requires taxAware runs + a declared heirBracket (burned/062)')
-  }
-  return score.afterTaxBequestMeanReal
 }
 
 /**
@@ -84,7 +93,18 @@ export function goalHeadlineStatistic(score: CandidateScore, goal: OracleGoal): 
  * (the objective ≡ headline pin — a sign flip in either function fails it).
  */
 export function goalHigherIsBetter(goal: OracleGoal): boolean {
-  return goal === 'leave-more'
+  // EXHAUSTIVE switch + never-guard: a future third goal fails tsc here rather than defaulting to
+  // `false` (the pay-less-tax orientation) — a silent wrong orientation is a sign-inversion class bug.
+  switch (goal) {
+    case 'leave-more':
+      return true
+    case 'pay-less-tax':
+      return false
+    default: {
+      const _exhaustive: never = goal
+      throw new Error(`[objective] goalHigherIsBetter: unknown goal ${String(_exhaustive)} — declare its display orientation`)
+    }
+  }
 }
 
 // ---- §S2 the skew disclosure (the INTRACTABLE-exit honest channel) --------------------------------

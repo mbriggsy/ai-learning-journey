@@ -152,6 +152,9 @@ export function solveWithMint(request: SolveRequest, shouldAbort?: ShouldAbort):
     perturbIndex: pair.perturbIndex,
     siblingIndex: pair.siblingIndex,
     ranking,
+    // The run pair (seedA already above, tieTolerance here) rides the report's fingerprint (§S0.2 v2),
+    // so the token's identity binds the tolerance solve() re-checks against — never a stale bless.
+    tieTolerance,
   })
   if (!('report' in stabilityOut)) {
     return mintFailed('stability', `ranking stability found a CRN break: ${stabilityOut.violations.join(' | ')}`)

@@ -230,6 +230,18 @@ export interface SolveArmWire {
   readonly survivalFraction: number
   /** Present iff the run carried the tax overlay (the ResolvedWire presence contract). */
   readonly taxAware?: TaxAwareWire
+  /** P3·U9 — the essentials-floor track of the arm's seed-B distribution, in wire form. Present iff
+   *  the household carried a {@link SimulationParams.budget} construct (param-driven — the arm's
+   *  `distributionB.floor` is populated by the same second decumulation pass the spine runs). Without
+   *  this, a budget household's winner arm SILENTLY DROPS its essentials-floor track across the wire.
+   *  `depletionYears` is a paths-length Int32Array (the −1 NEVER_DEPLETED sentinel) and JOINS the
+   *  transfer list like the full-track sibling; the fraction rides beside it by clone (the ResolvedWire
+   *  floor discipline). NOTE: unlike ResolvedWire there is NO `floorReading` here — that verdict is a
+   *  summarize/result-level Headline the solver's per-candidate evaluation never computes per arm. */
+  readonly floor?: {
+    readonly survivalFraction: number
+    readonly depletionYears: Int32Array
+  }
 }
 
 /** The recommended payload with its three displayed arms in buffer form; every non-arm field is the
@@ -269,6 +281,16 @@ function armFromWire(arm: SolveArmWire): SolveArm {
             terminalTaxableBasisReal: Array.from(arm.taxAware.terminalTaxableBasisReal),
             lifetimeNetPremiumReal: Array.from(arm.taxAware.lifetimeNetPremiumReal),
             lifetimeMedicareCostReal: Array.from(arm.taxAware.lifetimeMedicareCostReal),
+          },
+        }
+      : {}),
+    // P3·U9 — the essentials-floor track widens back to the value model (Int32Array → number[]),
+    // exactly like the spine's ResolvedWire.floor. Presence-keyed on the same param-driven iff.
+    ...(arm.floor
+      ? {
+          floor: {
+            survivalFraction: arm.floor.survivalFraction,
+            depletionYears: Array.from(arm.floor.depletionYears),
           },
         }
       : {}),

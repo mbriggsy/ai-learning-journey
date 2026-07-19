@@ -152,6 +152,55 @@ describe('§S4 the insight-025 shrinkage calibration case — defaults to conven
   })
 })
 
+describe('§S4 the shrinkage tolerance is LIVE (keyed to the CRN-difference SE), never a hardcoded constant', () => {
+  const cTax = [100, 100, 100, 100]
+  it('SAME mean advantage, DIFFERENT per-path SE ⇒ DIFFERENT crown (a hardcoded tolerance could not distinguish these)', () => {
+    // Both X worlds pay a MEAN 95 (advantage 5 over the prior's 100) — only the per-path SPREAD differs.
+    // LOW SE: a flat −5 every path ⇒ SE≈0 ⇒ tolerance≈0 ⇒ the advantage SURVIVES ⇒ X displaces the prior.
+    const lowSE = selectCore({
+      outcomesA: [taxOutcome(C, cTax, 1), taxOutcome(X_PROP, [95, 95, 95, 95], 1)],
+      goal: 'pay-less-tax',
+      tieTolerance: 0,
+      conventionalIndex: 0,
+      shrinkage: 'on',
+    })
+    if (lowSE.kind !== 'selected') throw new Error('unreachable')
+    expect(lowSE.winnerId).toBe('grid:proportional:0')
+    expect(lowSE.noChange).toBe(false)
+    // HIGH SE: the SAME mean 95, but a dispersed diff ⇒ a large z·SE tolerance ⇒ the advantage COLLAPSES
+    // ⇒ the conventional prior stands. Only a LIVE SE-keyed tolerance can produce a different crown here.
+    const highSE = selectCore({
+      outcomesA: [taxOutcome(C, cTax, 1), taxOutcome(X_PROP, [95, 105, 85, 95], 1)],
+      goal: 'pay-less-tax',
+      tieTolerance: 0,
+      conventionalIndex: 0,
+      shrinkage: 'on',
+    })
+    if (highSE.kind !== 'selected') throw new Error('unreachable')
+    expect(highSE.winnerId).toBe('conventional:taxable-first:0')
+    expect(highSE.noChange).toBe(true)
+    // The discriminating fact: the MEAN advantage is IDENTICAL in both worlds — a constant tolerance
+    // (SE-blind) would crown identically; the SE is the only input that moved.
+    expect(mean([95, 95, 95, 95])).toBe(mean([95, 105, 85, 95]))
+  })
+})
+
+describe('§S4 the infeasible-partition arm — an infeasible candidate ranks WORST, never crowned, never dropped (R21)', () => {
+  it('folds a typed infeasible outcome into the worst rank while keeping it in rankedIds (the comparative field)', () => {
+    const infeasible: CandidateOutcome = { kind: 'infeasible', candidate: Y_PRE, reason: 'depleted on a path', pathIndex: 0 }
+    const outcomesA = [taxOutcome(C, [100, 100], 1), taxOutcome(X_PROP, [90, 90], 1), infeasible]
+    const sel = selectCore({ outcomesA, goal: 'pay-less-tax', tieTolerance: 0, conventionalIndex: 0, shrinkage: 'off' })
+    if (sel.kind !== 'selected') throw new Error('unreachable')
+    // Never dropped — every candidate stays in the ranked field (the R21 comparative surface).
+    expect(sel.rankedIds).toHaveLength(3)
+    // Ranked WORST (last), and never the crown.
+    expect(sel.rankedIds[sel.rankedIds.length - 1]).toBe(solverCandidateId(Y_PRE))
+    expect(sel.winnerId).not.toBe(solverCandidateId(Y_PRE))
+    // The two scored candidates rank ahead of it; the lower-tax grid arm wins (shrinkage off ⇒ raw order).
+    expect(sel.winnerId).toBe('grid:proportional:0')
+  })
+})
+
 describe('§S4 the zero-shrinkage identity — select({shrinkage:off}) ≡ rankCandidates on EVERY committed fixture', () => {
   for (const fixture of SOLVER_CASES) {
     it(`${fixture.id}: winner AND full order collapse onto the oracled ranking`, () => {

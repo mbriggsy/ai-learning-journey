@@ -21,8 +21,13 @@
  * re-prices the ACA cliff → re-ranks) — none of which that compact list names. Under-inclusion is
  * the DANGEROUS direction (a stale token blesses a run that differs in an omitted field — the
  * cardinal calm-but-wrong sin); over-inclusion only refuses MORE (fail-closed). So the fingerprint
- * serializes the WHOLE built `params` + the WHOLE candidate roster + the ranking objective, and the
- * §S0.3 moved-witness battery red-arms each ENUMERATED class explicitly on top of that.
+ * serializes the WHOLE built `params` + the WHOLE candidate roster + the ranking objective + the RUN
+ * PAIR (`seedA`, `tieTolerance`), and the §S0.3 moved-witness battery red-arms each ENUMERATED class
+ * explicitly on top of that. `seedA` decides the shared draws (and therefore the winner near a tie);
+ * `tieTolerance` decides survival-equivalence (and therefore which candidates enter the Tier-2 goal
+ * contest, and therefore the winner) — both are genuinely ranking-affecting, and both were omitted from
+ * the v1 (params, candidates, ranking) triple, so a token minted at one (seedA, tieTolerance) could
+ * bless a solve at another (the same under-inclusion — calm-but-wrong — the whole clause guards).
  *
  * NOT `consumedConstantEntries` (§S0.1, red-team-falsified): that walk is HOUSEHOLD-BLIND
  * (consumedConstants.ts derives from overlay FLAGS alone — two different households in one state
@@ -57,7 +62,7 @@ export type SolverRunFingerprint = string
 
 /** The fingerprint FORMAT version — bumped if the serialized SHAPE below changes (distinct from
  *  SOLVER_CODE_VERSION, which versions the ranking CODE; this versions the identity ENCODING). */
-const FINGERPRINT_SCHEMA = 'solver-run-fp/v1'
+const FINGERPRINT_SCHEMA = 'solver-run-fp/v2'
 
 /**
  * A deterministic, key-order-invariant, non-finite-SAFE canonical serialization.
@@ -109,11 +114,18 @@ export function solverRunFingerprint(
   params: SimulationParams,
   candidates: readonly CandidateStrategy[],
   ranking: SolverRunRanking,
+  run: { readonly seedA: number; readonly tieTolerance: number },
 ): SolverRunFingerprint {
   return canon({
     fp: FINGERPRINT_SCHEMA,
     goal: ranking.goal,
     heirBracket: ranking.heirBracket,
+    // The RUN PAIR (§S0.2 v2): seedA fixes the shared draws (⇒ the winner near a tie); tieTolerance
+    // fixes survival-equivalence (⇒ which candidates reach the Tier-2 contest ⇒ the winner). Both
+    // ranking-affecting, both absent from the v1 triple — a token minted at one pair must never bless
+    // a solve at another (the under-inclusion the whole clause fails closed against).
+    seedA: run.seedA,
+    tieTolerance: run.tieTolerance,
     // The WHOLE built params — every field is run-defining (see the header on fail-closed scope).
     params,
     // The full ordered roster: the id list + the ranking-relevant fields behind each id.

@@ -554,8 +554,14 @@ export function createMemoryModel(deps: MemoryModelDeps): MemoryModel {
   }
 
   // U15 §S5 (5) — the solve channel's commit-if-newer (mirrors `commit`'s epoch discard, on the
-  // solve's OWN epoch pair). A blocked/pending transition is NOT epoch-gated (it is the local
-  // dispatch decision); only a worker RESOLVE races, so only the resolve commit checks the epoch.
+  // solve's OWN epoch pair). THE LAW: every rendered solve-lane state EXCEPT pending advances the
+  // committed epoch through this commitSolve (blocked, committed, compute-error alike — a blocked
+  // transition is still epoch-gated: an OLDER worker RESOLVE races a NEWER local blocked/committed
+  // transition, and committing the stale resolve OVER the newer state is exactly the bug the epoch
+  // pair closes). `pending` is the sole exception: it does not advance the committed epoch, it MARKS
+  // the newest dispatch (solveDispatchedEpoch), and the resolve path additionally HOLDS unless its
+  // own epoch IS that newest dispatch (the lane has no worker-side cancel yet — the epoch pair carries
+  // the whole discipline).
   const commitSolve = (epoch: number, next: SolveAnswer): void => {
     // The UNCONDITIONAL commit-epoch guard (§S6 — cancel.ts's pure seam): a resolved solve commits
     // ONLY if strictly newer than the last committed. A superseded solve NEVER renders, whatever its
@@ -666,11 +672,14 @@ export function createMemoryModel(deps: MemoryModelDeps): MemoryModel {
 
       // PRECONDITION 1 — the chosen goal (§S5 (3); plan line 175). Read the draft DIRECTLY so the
       // gap is precise (`goal-unset` ⇒ U16 presents the GoalPicker first). The solve is never
-      // dispatched while unset — no Tier-1-only tie-break is crowned as advice (burned/062). This
-      // is a LOCAL decision (not epoch-gated): it commits the structured blocked flag immediately.
+      // dispatched while unset — no Tier-1-only tie-break is crowned as advice (burned/062).
       if (draft.chosenGoal === undefined) {
-        solveAnswer = { kind: 'blocked', gap: 'goal-unset', label: 'goal-unset' }
-        notify()
+        // A LOCAL decision, but epoch-gated all the same: mint the newest solve epoch and commit
+        // through commitSolve, so a stale in-flight resolve (an older dispatch still pending
+        // worker-side) is discarded by the commit-epoch guard instead of landing OVER this blocked
+        // state (no worker-side cancel on the solve lane — the epoch pair carries the discipline).
+        const epoch = ++solveDispatchedEpoch
+        commitSolve(epoch, { kind: 'blocked', gap: 'goal-unset', label: 'goal-unset' })
         return
       }
 
@@ -679,8 +688,10 @@ export function createMemoryModel(deps: MemoryModelDeps): MemoryModel {
       // measurement, the calm-but-wrong shape — refuse, never solve on it.
       const request = build(draft)
       if (request === null) {
-        solveAnswer = { kind: 'blocked', gap: 'buckets-defaulted', label: 'buckets-defaulted' }
-        notify()
+        // Epoch-gated for the same reason as goal-unset above: mint + commit so a stale in-flight
+        // resolve is discarded rather than rendered over this blocked state.
+        const epoch = ++solveDispatchedEpoch
+        commitSolve(epoch, { kind: 'blocked', gap: 'buckets-defaulted', label: 'buckets-defaulted' })
         return
       }
 
@@ -700,12 +711,20 @@ export function createMemoryModel(deps: MemoryModelDeps): MemoryModel {
         // aborted bin explicitly and hold. (Reachable only once the worker-epoch transport is wired —
         // the granularity call deferred to the profile, §S6 — but handled now so it is never rendered.)
         if (view.ok && view.payload.kind === 'aborted') return
+        // HOLD unless this dispatch is still the latest. The solve lane has NO worker-side cancel yet,
+        // so the epoch pair must carry the whole discipline: an OLDER solve resolving after a NEWER
+        // dispatch must not render its stale result over the newer pending (the date route's
+        // cancelled-hold mirror). commitSolve's own committed-epoch guard is defense-in-depth; this
+        // guard is load-bearing while the newer dispatch is still PENDING (nothing committed yet).
+        if (epoch !== solveDispatchedEpoch) return
         commitSolve(
           epoch,
           view.ok ? { kind: 'committed', payload: view.payload } : { kind: 'compute-error', reason: view.reason },
         )
       } catch {
-        // A rejected engine promise (worker death, clone failure) is the calm compute-error mode.
+        // A rejected engine promise (worker death, clone failure) is the calm compute-error mode —
+        // but still epoch-held: a superseded dispatch's rejection must not blank the newer pending.
+        if (epoch !== solveDispatchedEpoch) return
         commitSolve(epoch, { kind: 'compute-error', reason: 'engine-unavailable' })
       }
     },

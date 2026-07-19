@@ -263,6 +263,7 @@ describe('runSearch — A/B discipline + the U14 K-candidate stability runs over
         perturbIndex,
         siblingIndex,
         ranking: STOCH_RANKING,
+        tieTolerance: 0,
       })
       expect(
         'report' in stability,

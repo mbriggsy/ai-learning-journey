@@ -7,9 +7,10 @@
  * `sampling-noise-near-tie` when no probe can flip the crown.
  */
 import { describe, it, expect } from 'vitest'
-import type { PersonInputs, SimulationParams } from '@shared/model'
+import { NEVER_DEPLETED, type PersonInputs, type SimulationParams } from '@shared/model'
 import { solverConversionNearTieDemotionMargin } from '@engine/constants'
 import type { CandidateStrategy } from '../../solver/candidates'
+import type { CandidateOutcome } from '../evaluate'
 import { caseAcaCliff, caseBracketFill, CASE_III_HEIR_BRACKET } from '../../reference/solver-cases'
 import {
   composeShapeDisclosure,
@@ -17,6 +18,8 @@ import {
   gradeOnFamily,
   gradeRecommendation,
   namedDriverProbe,
+  pairedDecisionDiffs,
+  type NamedDriverProbe,
 } from '../gradeCalibration'
 
 // ---- The pure-seam batteries (insight 048) --------------------------------------------------
@@ -30,6 +33,63 @@ describe('displayTenth — the confidence pipeline mirror (quantize → 9-cap)',
     expect(displayTenth(0.844)).toBe(8)
     expect(displayTenth(0.72)).toBe(7)
     expect(displayTenth(0)).toBe(0)
+  })
+})
+
+// ---- pairedDecisionDiffs — the ONE winner-positive sign-convention home (§S5 fold) ----------
+describe('pairedDecisionDiffs — the winner-positive orientation, numerically pinned (all three axes)', () => {
+  const dummy: CandidateStrategy = { policy: 'taxable-first', conversion: null, provenance: 'grid' }
+  /** A synthetic scored outcome carrying only the fields the three decision axes read. */
+  const scored = (over: {
+    depletionYears?: readonly number[]
+    tax?: readonly number[]
+    taxable?: readonly number[]
+  }): CandidateOutcome => {
+    const n = (over.tax ?? over.taxable ?? over.depletionYears ?? [0, 0]).length
+    const zeros: readonly number[] = new Array(n).fill(0)
+    return {
+      kind: 'scored',
+      candidate: dummy,
+      score: { survival: 1, lifetimeTaxMeanReal: undefined, terminalGrossMeanReal: 0, afterTaxBequestMeanReal: undefined },
+      distribution: {
+        terminalValuesReal: zeros,
+        depletionYears: over.depletionYears ?? new Array(n).fill(NEVER_DEPLETED),
+        survivalFraction: 1,
+        taxAware: {
+          lifetimeTaxPaidReal: over.tax ?? zeros,
+          terminalTaxableReal: over.taxable ?? zeros,
+          terminalPretaxReal: zeros,
+          terminalRothReal: zeros,
+          terminalHsaReal: zeros,
+          terminalTaxableBasisReal: zeros,
+          lifetimeNetPremiumReal: zeros,
+          lifetimeMedicareCostReal: zeros,
+        },
+      },
+    }
+  }
+
+  it('survival: winner survives every path, runner none ⇒ diffs all +1', () => {
+    expect(pairedDecisionDiffs(scored({ depletionYears: [NEVER_DEPLETED, NEVER_DEPLETED, NEVER_DEPLETED] }), scored({ depletionYears: [3, 5, 7] }), 'survival')).toEqual([1, 1, 1])
+  })
+
+  it('pay-less-tax: winner pays 100 LESS every path ⇒ diffs all +100 (winner-positive = runner − winner)', () => {
+    // The killer for a sign flip in the pay-less-tax arm: reverse the subtraction and this reads −100.
+    expect(pairedDecisionDiffs(scored({ tax: [200, 200, 200] }), scored({ tax: [300, 300, 300] }), 'pay-less-tax')).toEqual([100, 100, 100])
+  })
+
+  it('leave-more: winner leaves 200 MORE to heirs every path ⇒ diffs all +200 (winner-positive = winner − runner)', () => {
+    // Taxable steps up (§1014 — no IRD discount), so a +200 taxable gap flows straight to the bequest.
+    expect(pairedDecisionDiffs(scored({ taxable: [500, 500] }), scored({ taxable: [300, 300] }), 'leave-more', 0.25)).toEqual([200, 200])
+  })
+
+  it('leave-more with NO heir bracket REFUSES (burned/062 — no silent default)', () => {
+    expect(() => pairedDecisionDiffs(scored({ taxable: [500] }), scored({ taxable: [300] }), 'leave-more')).toThrow(/heir bracket/)
+  })
+
+  it('an infeasible outcome never grades (the scored guard)', () => {
+    const infeasible: CandidateOutcome = { kind: 'infeasible', candidate: dummy, reason: 'x', pathIndex: 0 }
+    expect(() => pairedDecisionDiffs(infeasible, scored({ tax: [1] }), 'pay-less-tax')).toThrow(/SCORED/)
   })
 })
 
@@ -242,6 +302,49 @@ describe('the named-driver sensitivity probe (S4.2)', () => {
     })
     expect(out.driver).toBe('sampling-noise-near-tie')
   }, 120_000)
+
+  // §S4.2 FOLD — the crown authority the probe measures against is the INJECTED (SHIPPED) selection,
+  // never the raw rankCandidates argmax. solve.ts wires `crownFor` = runSearch→selectRecommendation
+  // (shrinkage + the withhold arm) and `baselineCrown` = the shrunk winner's id. These two arms prove
+  // the SAME probe world reads as a FLIP under the shipped authority yet as NO flip under the argmax
+  // authority the fix removes — the discrimination is the whole point (a driver the user never sees).
+  describe('the crown authority is the injected shipped selection, not the raw argmax', () => {
+    const base = { id: 'base' } as unknown as SimulationParams
+    const probedWorld = { id: 'probed' } as unknown as SimulationParams
+    const probe: NamedDriverProbe = { name: 'regime-x', transform: () => probedWorld }
+
+    it('names the driver when the SHIPPED (shrunk) crown flips — base crowns the prior, the probe world crowns a grid arm', () => {
+      // crownFor is fully injected ⇒ `candidates` is never evaluated (no engine run needed).
+      const shippedCrown = (p: SimulationParams): string =>
+        p === probedWorld ? 'grid:proportional:0' : 'conventional:taxable-first:0'
+      const out = namedDriverProbe({
+        base,
+        candidates: [],
+        goal: 'pay-less-tax',
+        tieTolerance: 0,
+        seed: 1,
+        probes: [probe],
+        baselineCrown: 'conventional:taxable-first:0', // the SHIPPED (shrunk) winner id
+        crownFor: shippedCrown,
+      })
+      expect(out.driver).toBe('regime-x')
+    })
+
+    it('the SAME probe world reads as NO flip under the raw-argmax authority (already crowns the grid arm on the base) — the sentinel the un-injected probe would report', () => {
+      const argmaxCrown = (_p: SimulationParams): string => 'grid:proportional:0'
+      const out = namedDriverProbe({
+        base,
+        candidates: [],
+        goal: 'pay-less-tax',
+        tieTolerance: 0,
+        seed: 1,
+        probes: [probe],
+        baselineCrown: 'grid:proportional:0', // the raw-argmax baseline (the fix removes this authority)
+        crownFor: argmaxCrown,
+      })
+      expect(out.driver).toBe('sampling-noise-near-tie')
+    })
+  })
 })
 
 describe('the substrate disclosure seam (S4.5, insight 048)', () => {

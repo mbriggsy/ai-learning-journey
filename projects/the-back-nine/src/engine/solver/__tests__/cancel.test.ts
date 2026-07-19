@@ -118,6 +118,7 @@ function mintToken(): OracleClearedToken {
     perturbIndex: 3,
     siblingIndex: 0,
     ranking: RANKING,
+    tieTolerance: 0,
   })
   if (!('report' in stabilityOut)) throw new Error('stability must pass')
   const mint = mintOracleToken({

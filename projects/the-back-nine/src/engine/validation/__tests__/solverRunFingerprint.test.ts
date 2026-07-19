@@ -76,11 +76,15 @@ const baseCandidates: readonly CandidateStrategy[] = [
 
 const baseRanking: SolverRunRanking = { goal: 'leave-more', heirBracket: 0.25 }
 
+/** The run pair (§S0.2 v2) — seedA + tieTolerance, both ranking-affecting, both fingerprinted. */
+const baseRun = { seedA: 0xa11ce, tieTolerance: 0 } as const
+
 const fp = (
   params: SimulationParams = baseParams(),
   candidates: readonly CandidateStrategy[] = baseCandidates,
   ranking: SolverRunRanking = baseRanking,
-): string => solverRunFingerprint(params, candidates, ranking)
+  run: { readonly seedA: number; readonly tieTolerance: number } = baseRun,
+): string => solverRunFingerprint(params, candidates, ranking, run)
 
 const baseFp = fp()
 
@@ -201,6 +205,33 @@ describe('solverRunFingerprint — the §S0.1 enumerated input classes each move
         baseCandidates[2]!,
       ]),
     )
+    // change ONLY a candidate's conversion WINDOW (same amount) — the window rides `conversion:
+    // c.conversion`, NOT the `policy:amount:provenance` id, so only the full-object capture
+    // distinguishes a 3-year from a 4-year conversion of the same size (the id-lossy window case).
+    moves(
+      'a candidate conversion years (window rides conversion, not the id)',
+      fp(baseParams(), [
+        baseCandidates[0]!,
+        { policy: 'taxable-first', conversion: { annualAmountReal: 20_000, startYearOffset: 0, years: 4 }, provenance: 'grid' },
+        baseCandidates[2]!,
+      ]),
+    )
+    moves(
+      'a candidate conversion startYearOffset (window rides conversion, not the id)',
+      fp(baseParams(), [
+        baseCandidates[0]!,
+        { policy: 'taxable-first', conversion: { annualAmountReal: 20_000, startYearOffset: 1, years: 3 }, provenance: 'grid' },
+        baseCandidates[2]!,
+      ]),
+    )
+  })
+
+  it('the run pair — seedA and tieTolerance each move it ALONE (§S0.2 v2)', () => {
+    // seedA fixes the shared draws ⇒ the winner near a tie; a token minted at one seedA must never
+    // bless a solve at another (the under-inclusion the v1 triple left open).
+    moves('seedA', fp(baseParams(), baseCandidates, baseRanking, { seedA: 0xb0b5eed, tieTolerance: 0 }))
+    // tieTolerance fixes survival-equivalence ⇒ which candidates reach the Tier-2 contest ⇒ the winner.
+    moves('tieTolerance', fp(baseParams(), baseCandidates, baseRanking, { seedA: 0xa11ce, tieTolerance: 0.01 }))
   })
 })
 

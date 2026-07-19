@@ -180,16 +180,25 @@ export function candidateTieBreak(a: CandidateStrategy, b: CandidateStrategy): n
  * plan contract #4). No signature change: it is the same module-private function, now shared.
  */
 export function tier2(score: CandidateScore, goal: OracleGoal): number {
-  if (goal === 'pay-less-tax') {
-    if (score.lifetimeTaxMeanReal === undefined) {
-      throw new Error('[evaluate] pay-less-tax ranking requires taxAware runs (burned/062 — no silent default)')
+  // EXHAUSTIVE switch + never-guard (the sequencing.ts idiom): a future third RECOMMENDATION_GOALS
+  // member fails tsc HERE — it must NEVER fall through and score as leave-more (the negated bequest),
+  // the sign-inversion the whole architecture guards. This is the ONE ranking orientation home.
+  switch (goal) {
+    case 'pay-less-tax':
+      if (score.lifetimeTaxMeanReal === undefined) {
+        throw new Error('[evaluate] pay-less-tax ranking requires taxAware runs (burned/062 — no silent default)')
+      }
+      return score.lifetimeTaxMeanReal
+    case 'leave-more':
+      if (score.afterTaxBequestMeanReal === undefined) {
+        throw new Error('[evaluate] leave-more ranking requires taxAware runs + a declared heirBracket (burned/062)')
+      }
+      return -score.afterTaxBequestMeanReal
+    default: {
+      const _exhaustive: never = goal
+      throw new Error(`[evaluate] tier2: unknown goal ${String(_exhaustive)} — the ranking orientation must widen with a new goal`)
     }
-    return score.lifetimeTaxMeanReal
   }
-  if (score.afterTaxBequestMeanReal === undefined) {
-    throw new Error('[evaluate] leave-more ranking requires taxAware runs + a declared heirBracket (burned/062)')
-  }
-  return -score.afterTaxBequestMeanReal
 }
 
 /**

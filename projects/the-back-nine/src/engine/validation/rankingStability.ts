@@ -99,8 +99,13 @@ export function runRankingStability(opts: {
    *  because the report is the run-fingerprint authority and the goal is a ranking-affecting input
    *  absent from the engine params. */
   readonly ranking: SolverRunRanking
+  /** The selection tie-tolerance this report's fingerprint pins (U15 §S0.2 v2). IDENTITY-ONLY: the
+   *  stability CHECK never consumes it (CRN decoupling is tolerance-independent); it is threaded ONLY
+   *  because the report is the run-fingerprint authority and tieTolerance is a ranking-affecting input
+   *  (it decides survival-equivalence ⇒ the winner) absent from the engine params. */
+  readonly tieTolerance: number
 }): { readonly report: RankingStabilityReport } | RankingStabilityFailure {
-  const { base, candidates, seedA, seedB, perturbIndex, siblingIndex, ranking } = opts
+  const { base, candidates, seedA, seedB, perturbIndex, siblingIndex, ranking, tieTolerance } = opts
   const violations: string[] = []
 
   // 1. Dimension invariance — the draw schedule's whole input tuple, per candidate.
@@ -188,7 +193,8 @@ export function runRankingStability(opts: {
     minSurvivorCrossings: minCrossings,
     infeasibleCount,
     // Bound to the EXACT roster this report proved stable (§S0.2) — the token copies it verbatim.
-    fingerprint: solverRunFingerprint(base, candidates, ranking),
+    // The run pair (seedA, tieTolerance) joins the identity (§S0.2 v2) — both ranking-affecting.
+    fingerprint: solverRunFingerprint(base, candidates, ranking, { seedA, tieTolerance }),
   } as unknown as RankingStabilityReport
   return { report }
 }

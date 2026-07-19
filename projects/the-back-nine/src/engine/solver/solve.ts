@@ -33,9 +33,7 @@
 import type { Distribution, DrawdownOrderKey, DrawdownPolicy, RothConversionPlan, SimulationParams } from '@shared/model'
 import { solverBFamilySize } from '@engine/constants'
 import {
-  afterTaxBequestPerPath,
   tier2,
-  type CandidateOutcome,
   type OracleGoal,
 } from '../validation/evaluate'
 import { solverRunFingerprint, type SolverRunRanking } from '../validation/solverRunFingerprint'
@@ -43,12 +41,13 @@ import { evaluateMedicareTrendClause, type OracleClearedToken, type WithheldReas
 import {
   deriveBFamilyMember,
   deriveSeedB,
-  survivalIndicators,
   type SelectionScore,
 } from '../validation/heldOutSeed'
 import {
+  GradeFloorRefusal,
   gradeOnFamily,
   namedDriverProbe,
+  pairedDecisionDiffs,
   type GradeResult,
   type GradeStatistic,
 } from '../validation/gradeCalibration'
@@ -134,7 +133,7 @@ export interface WithheldConversionLever {
 
 export interface SolveRefused {
   readonly kind: 'refused'
-  readonly reason: 'fingerprint-mismatch' | 'bucket-precondition' | 'held-out-infeasible'
+  readonly reason: 'fingerprint-mismatch' | 'bucket-precondition' | 'held-out-infeasible' | 'tie-tolerance-invalid' | 'heir-bracket-missing'
   readonly detail: string
   readonly solverCodeVersion: number
 }
@@ -196,8 +195,6 @@ export type SolveResult = SolveRefused | SolveWithheld | SolveRecommendation | S
 
 // ---- helpers ---------------------------------------------------------------------------------
 
-type ScoredOutcome = Extract<CandidateOutcome, { kind: 'scored' }>
-
 /** Build a displayed arm from a candidate evaluation's seed-B outcome. `undefined` iff B is
  *  infeasible (the held-out draw could not fund it) — the caller routes a required arm's absence
  *  to a structured refusal rather than displaying a phantom figure. */
@@ -247,15 +244,29 @@ export function enumerateWithheldConversionLevers(
 /** The grade decision axis: SURVIVAL in the on-track regime (the headline is survival), the GOAL
  *  dollar axis in the surplus regime (the headline pivots to the goal — §S4.4 / plan line 224). */
 export function gradeAxisFor(goal: OracleGoal, surplusRegime: boolean): GradeStatistic {
-  return surplusRegime ? goal : 'survival'
+  if (!surplusRegime) return 'survival'
+  // EXHAUSTIVE switch + never-guard: in the surplus regime the axis IS the goal dollar — a future
+  // third goal must declare its surplus axis explicitly, never pass through untyped (the id-chain
+  // `surplusRegime ? goal : 'survival'` would silently widen GradeStatistic behind the compiler).
+  switch (goal) {
+    case 'pay-less-tax':
+      return 'pay-less-tax'
+    case 'leave-more':
+      return 'leave-more'
+    default: {
+      const _exhaustive: never = goal
+      throw new Error(`[solve] gradeAxisFor: unknown goal ${String(_exhaustive)} — declare its surplus-regime grade axis`)
+    }
+  }
 }
 
 /**
- * The leave-more objective wiring the harness deferred (gradeCalibration's `pairedGoalDiffs` throws
- * for leave-more — the heir bracket is per-solve HERE). Assembles the deterministic B-family (the
- * SAME `deriveBFamilyMember` expansion the harness uses) and hands the CRN-paired per-path decision
- * differences to `gradeOnFamily` — the ONE grade DECISION home (never re-implemented). Handles all
- * three axes uniformly so the surplus leave-more grade rides the same machinery as survival/tax.
+ * The leave-more objective wiring the harness deferred (the per-solve heir bracket is supplied HERE).
+ * Assembles the deterministic B-family (the SAME `deriveBFamilyMember` expansion the harness uses) and
+ * hands the CRN-paired per-path decision differences — computed by the ONE exported
+ * `pairedDecisionDiffs` sign-convention home (gradeCalibration.ts; solve.ts's private twin was deleted
+ * in the U15 fold) — to `gradeOnFamily`, the ONE grade DECISION home (never re-implemented). Handles
+ * all three axes uniformly so the surplus leave-more grade rides the same machinery as survival/tax.
  *
  * Returns `undefined` (never a throw) when the B-floor cannot be met at the base's path count OR an
  * arm is infeasible on a family member — a structured `gradeUnavailable` the caller carries honestly.
@@ -300,44 +311,14 @@ export function gradeSolveRecommendation(opts: {
     })
     return { grade }
   } catch (e) {
-    // The min-B floor refusal (a base below the calibrated 16,000-path floor) is a NAMED
-    // unavailable, never a throw that aborts the solve (the grade path stays total — insight 092).
-    return { unavailable: e instanceof Error ? e.message : 'grade could not be computed' }
+    // NARROW: only the typed floor refusal (a base below the calibrated 16,000-path floor, or a
+    // non-full B-family) demotes to a NAMED unavailable (the grade path stays total — insight 092).
+    // EVERY other throw — the demotion-axis fail-closed guard, a non-finite paired difference, the
+    // uncalibrated-sentinel refusal, any programming error — propagates LOUD: a fail-closed guard must
+    // never be laundered into a calm "unavailable" (the calm-but-wrong cardinal sin).
+    if (e instanceof GradeFloorRefusal) return { unavailable: e.message }
+    throw e
   }
-}
-
-/** Winner-positive CRN-paired per-path decision differences (POSITIVE = the winner is better). */
-function pairedDecisionDiffs(
-  winner: ScoredOutcome,
-  runnerUp: ScoredOutcome,
-  statistic: GradeStatistic,
-  heirBracket: number | undefined,
-): readonly number[] {
-  if (statistic === 'survival') {
-    const w = survivalIndicators(winner.distribution)
-    const r = survivalIndicators(runnerUp.distribution)
-    return w.map((x, i) => x - r[i]!)
-  }
-  if (statistic === 'pay-less-tax') {
-    const wTa = winner.distribution.taxAware
-    const rTa = runnerUp.distribution.taxAware
-    if (wTa === undefined || rTa === undefined) {
-      throw new Error('[solve] a pay-less-tax grade requires tax-aware runs (burned/062)')
-    }
-    // Winner-positive: the winner PAYS LESS, so runner − winner.
-    return wTa.lifetimeTaxPaidReal.map((w, i) => rTa.lifetimeTaxPaidReal[i]! - w)
-  }
-  // leave-more: winner-positive = winner LEAVES MORE, so winner − runner. The heir bracket is the
-  // per-solve IRD discount (the reason the harness deferred this to U15's objective wiring).
-  if (heirBracket === undefined) {
-    throw new Error('[solve] a leave-more grade requires a declared heir bracket (burned/062)')
-  }
-  const wVec = afterTaxBequestPerPath(winner.distribution, heirBracket)
-  const rVec = afterTaxBequestPerPath(runnerUp.distribution, heirBracket)
-  if (wVec === undefined || rVec === undefined) {
-    throw new Error('[solve] a leave-more grade requires tax-aware runs (burned/062)')
-  }
-  return wVec.map((w, i) => w - rVec[i]!)
 }
 
 const refused = (reason: SolveRefused['reason'], detail: string): SolveRefused => ({
@@ -366,10 +347,22 @@ export function solve(token: OracleClearedToken, input: SolveInput, shouldAbort?
   const goal = ranking.goal
   const heirBracket = ranking.heirBracket
 
+  // (0) INPUT VALIDATION before the fingerprint gate: tieTolerance is a ranking-affecting run input
+  // (it now rides the fingerprint), and every downstream consumer (rankCandidates / selectCore /
+  // the shrinkage tolerance) refuses a non-finite or negative tolerance with a throw — so refuse it
+  // HERE, loud and structured (a NaN admits every candidate to the survival-top set; insight 010).
+  if (!Number.isFinite(tieTolerance) || tieTolerance < 0) {
+    return refused(
+      'tie-tolerance-invalid',
+      `the selection tie-tolerance must be finite ≥ 0 (got ${tieTolerance}) — a non-finite tolerance admits ` +
+        'every candidate to the survival-top set (insight 010); refusing rather than ranking on a broken equivalence',
+    )
+  }
+
   // (1) The IDENTITY gate (§S0.2): recompute the fingerprint over the run this token is asked to
   // bless and refuse a mismatch — structurally, never a silent proceed. The compile gate already
-  // proved a token EXISTS; this proves it is THIS (household, roster, objective).
-  const runFingerprint = solverRunFingerprint(base, candidates, ranking)
+  // proved a token EXISTS; this proves it is THIS (household, roster, objective, seedA, tieTolerance).
+  const runFingerprint = solverRunFingerprint(base, candidates, ranking, { seedA, tieTolerance })
   if (runFingerprint !== token.mintedOver.fingerprint) {
     return refused(
       'fingerprint-mismatch',
@@ -384,6 +377,19 @@ export function solve(token: OracleClearedToken, input: SolveInput, shouldAbort?
     return refused(
       'bucket-precondition',
       'the run carries no tax overlay (per-person buckets) — the solver never runs on a defaulted split (burned/062)',
+    )
+  }
+
+  // (2.5) leave-more REQUIRES a declared heir bracket (the §1014/IRD discount the bequest is scored
+  // at). Without it the objective cannot RANK (tier2 throws) or GRADE the after-tax-to-heirs bequest —
+  // refuse loud + NAMED here, BEFORE the search, never a compute-error surfacing deep in the grade
+  // (burned/062 — no silent default). The fingerprint already pins heirBracket, but this is a run
+  // WELL-FORMEDNESS refusal, not an identity mismatch, so it earns its own reason.
+  if (goal === 'leave-more' && heirBracket === undefined) {
+    return refused(
+      'heir-bracket-missing',
+      'a leave-more solve requires a declared heir bracket (the §1014/IRD discount the bequest is scored at) — ' +
+        'refusing rather than ranking or grading an undefined bequest (burned/062)',
     )
   }
 
@@ -481,7 +487,23 @@ export function solve(token: OracleClearedToken, input: SolveInput, shouldAbort?
   }
 
   // (9) The named driver the crown hinges on (over the RANKABLE field) — the honest sentinel when
-  // no probe can flip it. Cheap re-ranks; never fabricates a cause.
+  // no probe can flip it. The crown authority is the SHIPPED selection path (shrinkage + the withhold
+  // arm), not the raw argmax: a probe that flips the argmax but not the shrunk crown (or the reverse)
+  // would name a driver the user never sees. `baselineCrown` is the selection winner we already
+  // computed (reused, not re-evaluated). A probed world whose selection WITHHOLDS is a DIFFERENT crown
+  // by construction (the string arm is deliberate). Cheap re-ranks; never fabricates a cause.
+  const shippedCrown = (probedParams: SimulationParams): string => {
+    const s = runSearch({
+      base: probedParams,
+      candidates: rankable,
+      seedA,
+      goal,
+      tieTolerance,
+      ...(heirBracket !== undefined ? { heirBracket } : {}),
+    })
+    const sel = selectRecommendation(s)
+    return sel.kind === 'withheld' ? `withheld:${sel.reason}` : s.evaluations[sel.winnerIndex]!.id
+  }
   const { driver: namedDriver } = namedDriverProbe({
     base,
     candidates: rankable,
@@ -489,6 +511,8 @@ export function solve(token: OracleClearedToken, input: SolveInput, shouldAbort?
     tieTolerance,
     seed: seedA,
     ...(heirBracket !== undefined ? { heirBracket } : {}),
+    baselineCrown: selection.winnerId,
+    crownFor: shippedCrown,
   })
 
   // The §S2 leave-more skew disclosure (the mean's skew beside the typical bequest) on the WINNER's

@@ -149,6 +149,31 @@ describe('draftFromScenario — the state-tax field round-trips (value AND absen
   })
 })
 
+describe('draftFromScenario — the chosenGoal field round-trips (the U15 second-beat fact)', () => {
+  it('a set chosenGoal survives draft → scenario → draft byte-for-byte (a writer dropping it in the strip reds here)', () => {
+    const withGoal: ScenarioV3 = { ...retiredV3(), chosenGoal: 'leave-more' }
+    const hydrated = draftFromScenario(withGoal)
+    expect(hydrated.ok).toBe(true)
+    if (!hydrated.ok) return
+    expect(hydrated.draft.chosenGoal).toBe('leave-more') // reaches the draft, not stripped
+    const reencoded = scenarioFromDraft(hydrated.draft)
+    expect(reencoded.ready).toBe(true)
+    if (reencoded.ready) expect(reencoded.scenario).toEqual(withGoal) // byte-for-byte
+  })
+
+  it('ABSENCE is preserved: an unset chosenGoal round-trips still undefined (the unset sentinel, never defaulted)', () => {
+    const bare = retiredV3()
+    expect(bare.chosenGoal).toBeUndefined()
+    const hydrated = draftFromScenario(bare)
+    expect(hydrated.ok).toBe(true)
+    if (!hydrated.ok) return
+    expect(hydrated.draft.chosenGoal).toBeUndefined()
+    const reencoded = scenarioFromDraft(hydrated.draft)
+    expect(reencoded.ready).toBe(true)
+    if (reencoded.ready) expect(reencoded.scenario.chosenGoal).toBeUndefined()
+  })
+})
+
 describe('scenarioFromDraft — the healthcare vintage stamp (P3-U11, write-time truth)', () => {
   it('every save carries the CURRENT build vintage stamp', () => {
     const r = scenarioFromDraft(DEV_SEEDS.retired)

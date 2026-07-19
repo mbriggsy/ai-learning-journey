@@ -959,8 +959,14 @@ export const copy = {
     // channel: the projections end at 2035, and the drug-plan piece HOLDS its last level
     // beyond that edge — a far-out crossing is the one direction still flattered. "a shade
     // easier" + the hedge ("could") keep their vocabulary (rule 36); "A modeling choice:"
-    // keeps the count-free article (O16 D-1).
-    'The income surcharge a conversion can trip two years later is now part of these numbers, priced to climb the way Medicare’s own projections read — the drug-plan piece included. A modeling choice: past those projections’ 2035 edge the drug-plan piece holds at its last level, so a crossing far out could look a shade easier here than in real life.',
+    // keeps the count-free article (O16 D-1). CHAIR FIX (the 2026-07-19 pre-walk, wf_afe262c4-ca2):
+    // the pair used TWO metaphors for one event — "trip" then "a crossing" — and nine lenses
+    // independently stumbled on the second (the refuters killed the "no referent" claim on the
+    // opening clause, but the two-metaphor texture survived as the one standing nit); "its/the
+    // surcharge's drug-plan piece" now binds the decomposition possessively, killing the
+    // cross-surface polysemy with the landing's "a drug plan" (an extra-coverage PREMIUM —
+    // the O14 one-lexeme-two-referents class). ONE verb, one owner, same hedges.
+    'The income surcharge a conversion can trip two years later is now part of these numbers, priced to climb the way Medicare’s own projections read — its drug-plan piece included. A modeling choice: past those projections’ 2035 edge the surcharge’s drug-plan piece holds at its last level, so a conversion that trips it far in the future could look a shade easier here than in real life.',
 
   // --- P3·U12 — the AssumptionPanel (the R7 escape hatch; council wf_dff75c2f-9e3). PREFIX
   // LAW: `assumption*` is the panel's CHROME prefix — labels, values, provenance lines,

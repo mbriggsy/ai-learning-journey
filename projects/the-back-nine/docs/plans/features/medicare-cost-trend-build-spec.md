@@ -241,7 +241,7 @@ piece's climb with the >2035 hold as its named modeling choice. **The interim (P
 Tail sentence had also wrapped one extra Linux-metrics line on the budget composite and pushed
 the R13 disclaimer 1px past the fold on CI ONLY (run 29696587230 — the burned/055 class); the
 shorter post-Part-D truth restores the one-line class.** The 2035-edge Part D hold + the
-annual re-verify tripwire share the same ~2027 Trustees re-pin event.
+annual re-verify tripwire share the same ~2027 Trustees re-pin event. **Committed 45a69496; CI GREEN by explicit id: run 29697251176 (completed·success) — the fold breach is closed on the Linux metrics that produced it; the unit's first commit ca41256f remains red on record (run 29696587230) as the interim-sentence artifact, superseded same-day.**
 
 **S7 — CLOSED (2026-07-19):** the mutant battery — 6 planted red → reverted with named
 killers: (1) the lying-mirror mode revert → 3 red (the flip witness + the LIVE clause arm +

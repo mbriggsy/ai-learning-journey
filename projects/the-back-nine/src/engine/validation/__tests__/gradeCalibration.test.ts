@@ -21,6 +21,9 @@ import {
   pairedDecisionDiffs,
   type NamedDriverProbe,
 } from '../gradeCalibration'
+// The measured near-tie class — ONE fixture home (nearTieInversion.ts; a re-typed twin is the
+// 048 drift class): the Q4d world + its conversion pair, shared with the §S0.2 stress probe.
+import { nearTieRunnerUp as conv0, nearTieWinner as conv30, q4dNearTieWorld as q4dWorld } from '../nearTieInversion'
 
 // ---- The pure-seam batteries (insight 048) --------------------------------------------------
 
@@ -227,49 +230,10 @@ const probeWorld = (paths: number): SimulationParams => ({
   },
 })
 
-/** The Q4d calibration world (the trend sourcing unit, measured 2026-07-19): all-65+ MFJ,
- *  Medicare-priced under the TRENDED Part B (the mandated post-flip world) — the near-tie
- *  proving case runs here; the pre-65 `probeWorld` stays for the known-robust + floor arms
- *  (no demotion involved there — the winner carries no conversion). */
-const q4dWorld = (paths: number): SimulationParams => ({
-  initialPortfolio: 2_150_000,
-  annualSpendingReal: 124_000,
-  stockWeight: 0.5,
-  people: [
-    { sex: 'female', currentAge: 66, birthYear: 1960, retirementAge: 65, earnedIncomeReal: 0, pia: 26_000, socialSecurityClaimAge: 66 },
-    { sex: 'male', currentAge: 65, birthYear: 1961, retirementAge: 64, earnedIncomeReal: 0, pia: 18_000, socialSecurityClaimAge: 65 },
-  ],
-  survivorSpendingRatio: 0.75,
-  drawdownPolicy: 'taxable-first',
-  market: {
-    stock: { mean: 0.04, stdDev: 0.12 },
-    bond: { mean: 0.015, stdDev: 0.055 },
-    inflation: { mean: 0.03, stdDev: 0.041 },
-    stockBondCorrelation: 0,
-    space: 'simple',
-    returnsAreReal: true,
-  },
-  paths,
-  maxHorizonYears: 38,
-  longevityMode: 'sampled',
-  overlay: {
-    taxEnabled: true,
-    rmdEnabled: true,
-    startCalendarYear: 2026,
-    buckets: { taxable: 150_000, pretax: 1_900_000, roth: 100_000 },
-    initialTaxableBasis: 130_000,
-    filing: 'mfj',
-    healthcareEnabled: true,
-    irmaaMagiSeed: [120_000, 120_000],
-  },
-})
+// The Q4d calibration world + its conversion pair now import from nearTieInversion.ts (the one
+// fixture home, above) — the near-tie proving case runs there; the pre-65 `probeWorld` stays for
+// the known-robust + floor arms (no demotion involved there — the winner carries no conversion).
 
-const conv0: CandidateStrategy = { policy: 'taxable-first', conversion: null, provenance: 'conventional-baseline' }
-const conv30: CandidateStrategy = {
-  policy: 'taxable-first',
-  conversion: { annualAmountReal: 30_000, startYearOffset: 0, years: 3 },
-  provenance: 'grid',
-}
 const conv250: CandidateStrategy = {
   policy: 'taxable-first',
   conversion: { annualAmountReal: 250_000, startYearOffset: 0, years: 1 },

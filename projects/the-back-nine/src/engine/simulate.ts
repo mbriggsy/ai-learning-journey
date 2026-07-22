@@ -1258,6 +1258,14 @@ export function simulate(
      *  household outside the engine's priced healthcare domain (the categorical-door
      *  contract). Observe-only: byte-identical to an opt-out run on every joint field. */
     readonly healthReadout?: boolean
+    /** VALIDATION-HARNESS-ONLY (the `_epsilonRequired` test-seam idiom; U16 §S0.2). Substitute
+     *  the CRN draw matrices — the near-tie inversion stress gate feeds block-bootstrap
+     *  market sequences through the WHOLE shipped machinery (transform, decumulation, overlay,
+     *  scoring) so only the DRAW SOURCE varies (the 095 shipped-path law). Passing
+     *  `buildDraws(seed, …)` itself is proven byte-identical to omitting the option. NEVER set
+     *  from product code — a shape test pins the only non-test consumers; dimensions are
+     *  fail-loud-guarded (a mismatched matrix would read as silent NaN paths). */
+    readonly _injectedDraws?: Draws
   },
 ): SimOutput {
   // The seed is part of the R19 surface (U4 persists it with a bit-identical
@@ -1272,7 +1280,25 @@ export function simulate(
 
   const { paths, maxHorizonYears: maxHorizon, market } = params
   const people = params.people
-  const draws = buildDraws(seed, paths, maxHorizon, people.length)
+  const injected = options?._injectedDraws
+  if (injected !== undefined) {
+    // Fail-loud dimension guard (harness seam, not R19 user input — a mismatched matrix would
+    // silently read undefined→NaN into every path; refuse it as the caller bug it is).
+    if (
+      injected.stockZ.length !== paths ||
+      injected.bondZ.length !== paths ||
+      injected.longevityU.length !== paths ||
+      injected.stockZ.some((r) => r.length !== maxHorizon) ||
+      injected.bondZ.some((r) => r.length !== maxHorizon) ||
+      injected.longevityU.some((r) => r.length !== people.length)
+    ) {
+      throw new Error(
+        `[simulate] _injectedDraws dimensions mismatch the run (need paths=${paths}, horizon=${maxHorizon}, ` +
+          `people=${people.length}) — the harness built its matrix against different dims (fail-loud, never NaN paths)`,
+      )
+    }
+  }
+  const draws = injected ?? buildDraws(seed, paths, maxHorizon, people.length)
 
   // Log-space moments + the Cholesky factor, computed once.
   const logStock = toLogMoments(market.stock.mean, market.stock.stdDev)

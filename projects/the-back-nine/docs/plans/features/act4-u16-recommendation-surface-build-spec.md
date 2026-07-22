@@ -54,6 +54,28 @@ and reduced search paths can re-rank. Pin the knobs to the measured **winner-can
 guarantee (the rankingStability machinery exists to measure it) — a latency-tuned knob that lets
 a provisional winner flip on refine is the calm-but-wrong trap.
 
+> **§S0.1 RUN — 2026-07-22, the reference device (the dev laptop IS the reference machine): ALL
+> THREE KNOBS PINNED, `assertFallbackCalibrated` now PASSES.** Method: the SHIPPED
+> `runSearch`→`selectRecommendation` crown (the exact selection U16 renders) at `tieTolerance 0`
+> — the STRICTEST regime, so the pin is conservative-safe under any looser live tolerance — over
+> a three-cell battery: the profile worst case (both-regime healthcare, 45y, 8-roster,
+> leave-more), the Q4d NEAR-TIE class with a dense conversion grid (pay-less-tax — the flip-prone
+> regime that drives the requirement), and the fast known-robust contrast cell. RESULTS: rung
+> 1000 DIVERGED on BOTH hard cells (W1 crowned pre-tax-first over the true proportional; W2
+> crowned conversion-20k over the true 30k — the rank-stability requirement is real, not
+> theater); rungs 2000/4000/8000 matched the 16k truth on every cell, monotone. DERIVATIONS —
+> **`solverInteractivePaths` = 4000** (smallest all-match rung 2000 + one rung headroom);
+> **`solverCoarseSurvivors` = 2** (worst truth-position 0 at the pinned rung, +1 position→count,
+> +1 headroom — a lower bound from this battery; the S5 build re-proves pruning safety on its
+> actual coarse-grid design); **`solverCandidateCeiling` = 5** (W1 16k search 27.7s / 8
+> candidates = 3.47s per candidate across both seed-sets; the ~20s shipped working-route window
+> anchor → floor(20/3.47) = 5 — full-precision-inside-the-window only fits a 5-roster on this
+> machine, the measured reality that makes the ladder load-bearing). All three flipped
+> `directionalUntilPinned` → false with the calibration cited; the fail-closed guard stays
+> provably-biting forever through the new `assertFallbackCalibratedOver` seam (planted −1 per
+> knob drives it red, control arm proves non-vacuous). Harness committed:
+> `scripts/calibrate-fallback.ts`.
+
 ### S0.2 The near-tie inversion stress-test gate (the red team's absorbed hit)
 
 The runway's item-7 dissent (hawk/fiduciary, 4-recommendation.md:25) preserves a flip condition
@@ -76,6 +98,27 @@ line?** Recorded here as a **U14/U15 grade-calibration lane gate** — never a U
 
 **Gate order:** S0 completes (both gates green, results dated in this spec) before any S3
 conversion-grade render lands.
+
+> **§S0.2 RUN — 2026-07-22, the reference device: NO FIRE. The richer-draw deferral is
+> RATIFIED on the record; the dissent's flip condition was tested and did not trigger.**
+> The machinery: the `_injectedDraws` harness seam (simulate.ts — byte-transparent, identity-
+> and consumer-pinned), `blockBootstrap.ts` (moving-block resample of the committed Shiller
+> 1926–1995 REAL series, standardized in log space — the world keeps its own marginal level and
+> varies ONLY in temporal shape; longevity draws held verbatim), `nearTieInversion.ts` (the
+> probe + the PRE-REGISTERED fires criterion, fixed in code before the first run), run full-scale
+> by `scripts/stress-near-tie-inversion.ts` on the Q4d measured class (16k paths × 12
+> pre-registered rep seeds, the 30k×3yr-conversion vs conversion-0 pair). RESULTS — control
+> mean advantage **+0.00264** (conversion winner 12/12; reproduces the recorded class margins
+> 0.0021–0.0041 — the validity check): PRIMARY L=10 bootstrap **+0.00236** (12/12 positive,
+> SE-of-mean 0.000122, shape penalty +0.00028) — no fire; ROBUSTNESS L=5 **+0.00285** (12/12,
+> penalty −0.00021, slightly conversion-favorable) — no fire; NULL L=1 permutation **+0.00242**
+> (12/12, penalty +0.00022) — no fire. The sign never inverted in any of the 36 rep-arms; the
+> L=1 arm's penalty matching L=10's shows the small residual is mostly empirical-marginal
+> texture, not temporal shape. One committed-data fact recorded en route: the Shiller ANNUAL
+> real STOCK series carries slightly negative lag-1 autocorrelation, so the persistence witness
+> is the BOND/inflation channel (the §5 grind) — pinned in `blockBootstrap.test.ts`. The
+> conversion-near-tie demotion (re-calibrated post-trend-flip 2026-07-19) remains the standing
+> valve; the §7 triggers in `docs/decisions/market-model.md` stay live and unchanged.
 
 ---
 

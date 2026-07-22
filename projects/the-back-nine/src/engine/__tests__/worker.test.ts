@@ -493,7 +493,13 @@ describe('C3 — the epoch-gated date-search seam (cooperative cancellation, pla
 })
 
 describe('C3 — the compute-profile gate (both regimes, the pinned final tier)', () => {
-  it('profiles the worst-case two-regime sweep: LINEAR in candidates, never quadratic', { timeout: 120_000 }, async () => {
+  // Timeout sized from MEASURED CI datapoints, not local green (burned/055): 75.1s on the
+  // 2026-07-19 green run, then >120s on 2026-07-22 when an added test FILE reshuffled vitest's
+  // parallel schedule and this sweep started sharing the 2-core CI runner with the 16k
+  // gradeCalibration arms (test files couple through shared cores — the insight-083 shape).
+  // The assertion is time-INDEPENDENT (linearity in candidates), so a generous ceiling costs
+  // nothing in falsifiability; 300s covers the contended schedule with headroom.
+  it('profiles the worst-case two-regime sweep: LINEAR in candidates, never quadratic', { timeout: 300_000 }, async () => {
     // BOTH regimes live: a retired 67yo (IRMAA from t=0) + a working 58yo whose candidate
     // windows price pre-65 ACA years. Age-anchored coverage spans the 58yo's pre-65 years.
     const retired67: PersonInputs = { ...working66, currentAge: 67, retirementAge: 67, earnedIncomeReal: 0 }

@@ -204,6 +204,16 @@ sources: [docs/research/engine-validation-and-tax.md, docs/research/pre65-health
 
 ## Unit 16 — Recommendation surface
 
+> **BUILD-RATIFIED 2026-07-22** (pre-build council wf_8d4c6f65-415, 8/10 EXECUTE; hawk veto
+> fired + honored into the shape — delta-as-hero, survival context source-bound to the spine's
+> rendered confidence object, never a fresh absolute). The executable shape is
+> **`docs/plans/features/act4-u16-recommendation-surface-build-spec.md`**, which supersedes this
+> section where they conflict — including its binding **DEAD COPY list**: the "safe either way" /
+> "more than enough" absolutes at :222/:224/:243 and contract #6's phrasing, and the dead
+> tax-blind→tax-aware reframe at :225/:239 (supersession item 2), must never be implemented from
+> a grep of this body. The near-tie inversion stress test is RECORDED as a U14/U15
+> grade-calibration gate (spec §S0.2), never a U16 assumption.
+
 *Recommend-second, confidence-graded, comparative, hedge-on-headline, the surplus pivot.*
 
 **Goal.** Surface the solver's output as the calm **second beat**: a confidence-graded recommendation that never contradicts the spine, with the hedge on the headline, the runner-up retained and the comparison one tap down, the modeled omissions disclosed adjacent to the delta, every input + reasoning visible/editable, and an honest 10/10→surplus pivot — landing as *earned*, never overconfident.

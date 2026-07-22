@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { createMemoryModel, type ParamsBuilders, type ScenarioDraft } from '../memoryModel'
+import { createMemoryModel, type MemoryModel, type ParamsBuilders, type ScenarioDraft } from '../memoryModel'
 import type { EngineClient } from '../engineClient'
 import type { DateSearchInput } from '@engine/dateSearch'
 import type { DateSearchWire, EngineWire, SolveWire } from '@engine/engineWire'
 import type { SolveRequest } from '@engine/solver/solveEntry'
+import type { CandidateStrategy } from '@engine/solver/candidates'
+import { solverRunFingerprint } from '@engine/validation/solverRunFingerprint'
 import { engineApi } from '@engine/engineProtocol'
 import { productionMarket } from '@engine/reference/methodology'
 import type { SimulationParams } from '@shared/model'
@@ -484,23 +486,64 @@ describe('memoryModel — real-engine spine dispatch', () => {
 })
 
 // ---------------------------------------------------------------------------
-// U15 §S5 (5) — the TIER-LESS solve lifecycle (dispatch/pending/committed + the two preconditions).
-// The solve engine is a fake (the fingerprint/mint machinery has its own engine battery); these
-// prove the STORE orchestration: no fabricated recommendation on an unmet precondition, the pending
-// window, commit-if-newer, and that no solve state ever carries a tier.
+// U15 §S5 (5) + U16 §S1 — the TIER-LESS solve lifecycle (dispatch/pending/committed + the two
+// preconditions) AND the recommend-second ordering + fingerprint invalidation. The solve engine is
+// a fake (the fingerprint/mint machinery has its own engine battery); these prove the STORE
+// orchestration: no fabricated recommendation on an unmet precondition, the pending window,
+// commit-if-newer, no solve state ever carries a tier, the solve never dispatches before the spine
+// beat commits, and a fingerprint-changing draft edit demotes a committed rec to `stale` (never a
+// stale rec rendered as current, never an auto-re-solve).
 // ---------------------------------------------------------------------------
 
+// FAKE is used only where the request is NEVER built into a fingerprint (the goal-unset/no-op arms,
+// which return before any dispatch). Every DISPATCH arm uses a REAL request so the fingerprint seam
+// computes for real (a fake would throw in solverRunFingerprint — that throw would itself be a bug).
 const FAKE_SOLVE_REQUEST = { fake: true } as unknown as SolveRequest
+const REAL_CANDIDATE: CandidateStrategy = { policy: 'proportional', conversion: null, provenance: 'conventional-baseline' }
+/** A real, fingerprintable solve request over the gate-valid SPINE_PARAMS. `over` varies exactly
+ *  the ranking-affecting field a test wants to move (or leave alone). */
+const realRequest = (over?: Partial<SolveRequest>): SolveRequest => ({
+  base: SPINE_PARAMS,
+  candidates: [REAL_CANDIDATE],
+  seedA: 7,
+  ranking: { goal: 'leave-more' },
+  tieTolerance: 0,
+  todayEpochDay: 20_000,
+  ...over,
+})
+const REAL_SOLVE_REQUEST = realRequest()
 const refusedWire: SolveWire = { kind: 'refused', reason: 'bucket-precondition', detail: 'x', solverCodeVersion: 1 }
+const tokenWithheldWire: SolveWire = {
+  kind: 'token-withheld',
+  reasons: [{ kind: 'state-certification-pending', state: 'NC' }],
+  disclosedDirectional: [],
+  solverCodeVersion: 1,
+}
 
-/** Builders with a controllable solve dispatch: `dispatch` decides null (buckets defaulted) vs a request. */
-const solveBuilders = (dispatch: () => SolveRequest | null): ParamsBuilders => ({
+/** Builders with a controllable solve dispatch: `dispatch` decides null (buckets defaulted) vs a
+ *  request. `buildDateInput` returns a fake so a spine 'date' beat can commit (the recommend-second
+ *  gate needs `everResolved`); the goal-unset/bucket arms never recompute, so it is inert there. */
+const solveBuilders = (dispatch: (d: ScenarioDraft) => SolveRequest | null): ParamsBuilders => ({
   buildSpineParams: () => null,
-  buildDateInput: () => null,
+  buildDateInput: () => FAKE_DATE_INPUT,
   buildSolveDispatch: dispatch,
 })
 
 const withGoal = (d: ScenarioDraft): ScenarioDraft => ({ ...d, chosenGoal: 'leave-more' })
+
+/** Open the second beat: a working household + chosen goal + a committed spine 'date' beat, so
+ *  `everResolved` is true and the recommend-second dispatch gate opens. A date input-failure IS a
+ *  committed 'date' answer (the lightest real spine commit — it sets everResolved). */
+async function withCommittedSpine(
+  model: MemoryModel,
+  datePending: Array<(w: DateSearchWire) => void>,
+): Promise<void> {
+  model.update((d) => withGoal(workingDraft(d)))
+  const idx = datePending.length
+  const spine = model.recompute()
+  datePending[idx]!(inputFailureWire('spine-beat'))
+  await spine
+}
 
 describe('memoryModel — the solve lifecycle (§S5 (5))', () => {
   it('is a NO-OP when no solve builder is wired (P2/P3 models never reach the second beat)', async () => {
@@ -528,9 +571,9 @@ describe('memoryModel — the solve lifecycle (§S5 (5))', () => {
   })
 
   it('goes pending → committed when the preconditions are met (a TIER-LESS lifecycle — no fabricated tier)', async () => {
-    const { client, solvePending } = fakeClient()
-    const model = createMemoryModel({ client, builders: solveBuilders(() => FAKE_SOLVE_REQUEST) })
-    model.update(withGoal)
+    const { client, solvePending, datePending } = fakeClient()
+    const model = createMemoryModel({ client, builders: solveBuilders(() => REAL_SOLVE_REQUEST) })
+    await withCommittedSpine(model, datePending) // recommend-second: the spine beat must commit first
     const p = model.dispatchSolve()
     expect(model.getSnapshot().solve).toEqual({ kind: 'pending', label: 'solving' })
     solvePending[0]!(refusedWire)
@@ -544,9 +587,9 @@ describe('memoryModel — the solve lifecycle (§S5 (5))', () => {
   })
 
   it('commits the NEWER solve and DISCARDS a stale in-flight one (the epoch guard)', async () => {
-    const { client, solvePending } = fakeClient()
-    const model = createMemoryModel({ client, builders: solveBuilders(() => FAKE_SOLVE_REQUEST) })
-    model.update(withGoal)
+    const { client, solvePending, datePending } = fakeClient()
+    const model = createMemoryModel({ client, builders: solveBuilders(() => REAL_SOLVE_REQUEST) })
+    await withCommittedSpine(model, datePending)
     const first = model.dispatchSolve()
     const second = model.dispatchSolve()
     // Release the SECOND first (it commits), then the stale FIRST (it must be discarded).
@@ -563,9 +606,9 @@ describe('memoryModel — the solve lifecycle (§S5 (5))', () => {
     // The blocked branches must MINT + COMMIT an epoch (not assign solveAnswer directly): otherwise the
     // still-committed epoch stays 0 and the stale #1 resolve commits OVER the blocked state. Reverting
     // fix (a) (direct assignment in the goal-unset branch) makes this red.
-    const { client, solvePending } = fakeClient()
-    const model = createMemoryModel({ client, builders: solveBuilders(() => FAKE_SOLVE_REQUEST) })
-    model.update(withGoal)
+    const { client, solvePending, datePending } = fakeClient()
+    const model = createMemoryModel({ client, builders: solveBuilders(() => REAL_SOLVE_REQUEST) })
+    await withCommittedSpine(model, datePending)
     const inFlight = model.dispatchSolve() // #1 — deferred, pending
     expect(model.getSnapshot().solve).toEqual({ kind: 'pending', label: 'solving' })
     // Clear the goal + re-dispatch → the goal-unset blocked branch (now epoch-minting + committing).
@@ -582,9 +625,9 @@ describe('memoryModel — the solve lifecycle (§S5 (5))', () => {
     // Two pending dispatches, nothing committed yet (committedEpoch still 0). Only the dispatch-epoch
     // HOLD (`epoch !== solveDispatchedEpoch`) stops the stale #1 from committing over the newer pending —
     // commitSolve's committed-epoch guard alone would let it through. Reverting fix (b) makes this red.
-    const { client, solvePending } = fakeClient()
-    const model = createMemoryModel({ client, builders: solveBuilders(() => FAKE_SOLVE_REQUEST) })
-    model.update(withGoal)
+    const { client, solvePending, datePending } = fakeClient()
+    const model = createMemoryModel({ client, builders: solveBuilders(() => REAL_SOLVE_REQUEST) })
+    await withCommittedSpine(model, datePending)
     const first = model.dispatchSolve() // #1 pending
     const second = model.dispatchSolve() // #2 pending (newer)
     expect(model.getSnapshot().solve).toEqual({ kind: 'pending', label: 'solving' })
@@ -602,9 +645,9 @@ describe('memoryModel — the solve lifecycle (§S5 (5))', () => {
     // The commit-epoch guard discards a stale RESULT once a newer solve has committed; the aborted bin
     // is HELD directly (mirroring the date route's `cancelled` hold) so it never renders as an answer,
     // even before the newer solve lands. Deleting the hold ⇒ the aborted payload commits ⇒ this fails.
-    const { client, solvePending } = fakeClient()
-    const model = createMemoryModel({ client, builders: solveBuilders(() => FAKE_SOLVE_REQUEST) })
-    model.update(withGoal)
+    const { client, solvePending, datePending } = fakeClient()
+    const model = createMemoryModel({ client, builders: solveBuilders(() => REAL_SOLVE_REQUEST) })
+    await withCommittedSpine(model, datePending)
     const p = model.dispatchSolve()
     expect(model.getSnapshot().solve).toEqual({ kind: 'pending', label: 'solving' })
     const abortedWire: SolveWire = { kind: 'aborted', detail: 'superseded', solverCodeVersion: 1 }
@@ -621,16 +664,176 @@ describe('memoryModel — the solve lifecycle (§S5 (5))', () => {
         ping: async () => 'pong' as const,
         run: async () => ({ kind: 'calm-error', reason: 'unused' }) as const,
         setLatestEpoch: async () => {},
-        runDateSearch: async () => ({ kind: 'calm-error', reason: 'unused' }) as const,
+        // An input-failure date wire commits a 'date' answer → everResolved (the recommend-second gate).
+        runDateSearch: async () => ({ kind: 'date-search', outcome: { kind: 'input-failure', reason: 'x' } }) as const,
         runTwoArm: async () => ({ kind: 'calm-error', reason: 'unused' }) as const,
         runSolve: async () => {
           throw new Error('worker died')
         },
       },
     }
-    const model = createMemoryModel({ client, builders: solveBuilders(() => FAKE_SOLVE_REQUEST) })
-    model.update(withGoal)
+    const model = createMemoryModel({ client, builders: solveBuilders(() => REAL_SOLVE_REQUEST) })
+    model.update((d) => withGoal(workingDraft(d)))
+    await model.recompute() // commit a spine 'date' beat first (everResolved)
     await model.dispatchSolve()
     expect(model.getSnapshot().solve).toEqual({ kind: 'compute-error', reason: 'engine-unavailable' })
+  })
+})
+
+// ---------------------------------------------------------------------------
+// U16 §S1 — recommend-second ORDERING + fingerprint INVALIDATION (the store substrate; no render).
+// FATAL wall #1: no decision re-derived from displayed figures — invalidation source-binds to
+// solverRunFingerprint, never a bespoke mirror. FATAL wall #4: the solve channel never carries a
+// tier. The stale demotion mirrors U12's tier-less inputs-incomplete on the solve channel.
+// ---------------------------------------------------------------------------
+
+// A builder whose request fingerprint MOVES with `draft.retirementState` (a genuine ranking-affecting
+// field: state tax re-prices the ranking). Encoded here as a tieTolerance swing that
+// solverRunFingerprint captures — the store test proves the store DETECTS the change via the run
+// identity, not that the identity is complete (solverRunFingerprint owns that). The GOAL is held
+// FIXED, so a mutant keyed to a coarse goal-mirror instead of the full fingerprint fails to detect it.
+const fingerprintSensitiveDispatch = (d: ScenarioDraft): SolveRequest | null => {
+  if (d.chosenGoal === undefined) return null
+  return realRequest({ tieTolerance: d.retirementState === 'NC' ? 1 : 0 })
+}
+
+/** Bring a model to a COMMITTED solve over the fingerprint-sensitive builder (spine committed, goal
+ *  set, one solve resolved to `refused`). Returns the model + fakes for the follow-on edit. */
+async function committedSolveModel() {
+  const { client, calls, solvePending, datePending } = fakeClient()
+  const model = createMemoryModel({ client, builders: solveBuilders(fingerprintSensitiveDispatch) })
+  await withCommittedSpine(model, datePending) // retirementState still unset here → tieTolerance 0
+  const p = model.dispatchSolve()
+  solvePending[0]!(refusedWire)
+  await p
+  return { model, client, calls, solvePending, datePending }
+}
+
+describe('memoryModel — recommend-second ordering (§S1)', () => {
+  it('a solve NEVER dispatches before the spine beat commits — even with the goal set and buckets valid', async () => {
+    const { client, calls } = fakeClient()
+    const model = createMemoryModel({ client, builders: solveBuilders(() => REAL_SOLVE_REQUEST) })
+    model.update(withGoal) // goal set, builder returns a request — preconditions PASS
+    await model.dispatchSolve() // but no spine beat has committed (everResolved === false)
+    expect(calls.filter((c) => c.method === 'runSolve')).toHaveLength(0) // the worker was never asked
+    expect(model.getSnapshot().solve).toEqual({ kind: 'idle' }) // dormant — not blocked, not pending
+  })
+
+  it('dispatches once the spine beat HAS committed (the gate opens, the spine lane never starved first)', async () => {
+    const { client, calls, datePending } = fakeClient()
+    const model = createMemoryModel({ client, builders: solveBuilders(() => REAL_SOLVE_REQUEST) })
+    await withCommittedSpine(model, datePending) // spine 'date' beat commits → everResolved
+    void model.dispatchSolve()
+    expect(calls.filter((c) => c.method === 'runSolve')).toHaveLength(1) // now the solve reaches the worker
+    expect(model.getSnapshot().solve).toEqual({ kind: 'pending', label: 'solving' })
+  })
+})
+
+describe('memoryModel — fingerprint invalidation (§S1)', () => {
+  it('the committed arm CARRIES the solver-run fingerprint it solved on (source-bound, not a mirror)', async () => {
+    const { model } = await committedSolveModel()
+    const solve = model.getSnapshot().solve
+    if (solve.kind !== 'committed') throw new Error('unreachable')
+    // Byte-identical to the independent solverRunFingerprint over the dispatched request (proves the
+    // store stashed the REAL run identity, computed the same way a fresh diff will be).
+    const expected = solverRunFingerprint(
+      SPINE_PARAMS,
+      [REAL_CANDIDATE],
+      { goal: 'leave-more' },
+      { seedA: 7, tieTolerance: 0 },
+    )
+    expect(solve.fingerprint).toBe(expected)
+  })
+
+  it('a draft edit that CHANGES the fingerprint demotes the committed rec to `stale` (the killer for fix a)', async () => {
+    // Moves retirementState (a ranking-affecting field) with the goal HELD FIXED. The full run
+    // fingerprint changes; a coarse goal-mirror would not — reverting fix (a) (a bespoke goal-keyed
+    // mirror) leaves this committed and fails the assertion.
+    const { model } = await committedSolveModel()
+    model.update((d) => ({ ...d, retirementState: 'NC' }))
+    const solve = model.getSnapshot().solve
+    expect(solve).toEqual({ kind: 'stale', label: 'inputs-changed' })
+  })
+
+  it('a draft edit that does NOT change the fingerprint LEAVES the committed rec standing (no false demotion)', async () => {
+    const { model } = await committedSolveModel()
+    // spendEntryPeriod is not read by the builder → the request (and its fingerprint) is unchanged.
+    model.update((d) => ({ ...d, spendEntryPeriod: 'year' }))
+    expect(model.getSnapshot().solve.kind).toBe('committed')
+  })
+
+  it('a draft edit that makes the request UNBUILDABLE (cleared goal) is itself an invalidation → `stale`', async () => {
+    const { model } = await committedSolveModel()
+    model.update((d) => ({ ...d, chosenGoal: undefined })) // builder now returns null
+    expect(model.getSnapshot().solve).toEqual({ kind: 'stale', label: 'inputs-changed' })
+  })
+
+  it('a fingerprint change NEVER triggers a re-dispatch — no auto-re-solve storm (the killer for fix b)', async () => {
+    // Re-solving is INVITED, never fired on a draft edit. Reverting fix (b) (auto-dispatch on demotion)
+    // both re-calls runSolve AND leaves the state `pending` instead of `stale` — either fails here.
+    const { model, calls } = await committedSolveModel()
+    const solvesBefore = calls.filter((c) => c.method === 'runSolve').length
+    model.update((d) => ({ ...d, retirementState: 'NC' }))
+    expect(model.getSnapshot().solve).toEqual({ kind: 'stale', label: 'inputs-changed' }) // demoted, not re-run
+    expect(calls.filter((c) => c.method === 'runSolve').length).toBe(solvesBefore) // NO new dispatch
+  })
+
+  it('the stale state NEVER renders as current — it carries no payload to show as a live rec (structural)', async () => {
+    const { model } = await committedSolveModel()
+    model.update((d) => ({ ...d, retirementState: 'NC' }))
+    const solve = model.getSnapshot().solve
+    expect(solve.kind).not.toBe('committed') // a rec render keys on 'committed'; stale is a different arm
+    expect('payload' in solve).toBe(false) // no seed-B figures reachable to render as a live answer
+    expect('tier' in solve).toBe(false) // tier-less like every solve state (wall #4)
+  })
+
+  it('a rec RESOLVING onto an already-edited draft lands `stale`, never committed-as-current (pending-during-edit)', async () => {
+    // The draft is edited WHILE the solve is in flight (an edit during the ~72s wait). The resolving
+    // rec is for the superseded household — it must commit `stale`, not a rec shown as current.
+    const { client, solvePending, datePending } = fakeClient()
+    const model = createMemoryModel({ client, builders: solveBuilders(fingerprintSensitiveDispatch) })
+    await withCommittedSpine(model, datePending) // tieTolerance 0 at dispatch
+    const p = model.dispatchSolve()
+    expect(model.getSnapshot().solve).toEqual({ kind: 'pending', label: 'solving' })
+    // Edit the draft mid-flight — the fingerprint moves under the pending solve (pending is not
+    // 'committed', so update()'s invalidation is a no-op; the commit path must catch it).
+    model.update((d) => ({ ...d, retirementState: 'NC' }))
+    expect(model.getSnapshot().solve).toEqual({ kind: 'pending', label: 'solving' }) // still pending
+    solvePending[0]!(refusedWire) // the in-flight solve (for the OLD draft) resolves
+    await p
+    expect(model.getSnapshot().solve).toEqual({ kind: 'stale', label: 'inputs-changed' }) // never current
+  })
+
+  it('the blocked precondition arm is STRUCTURALLY DISTINCT from a committed withheld payload (§S1)', async () => {
+    // Two calm states that both name a true reason but are NEVER confusable: `blocked` is a
+    // pre-dispatch USER precondition (gap), `committed`+token-withheld is a worker-computed refusal.
+    const blocked = await (async () => {
+      const { client } = fakeClient()
+      const m = createMemoryModel({ client, builders: solveBuilders(() => REAL_SOLVE_REQUEST) })
+      await m.dispatchSolve() // goal unset → blocked
+      return m.getSnapshot().solve
+    })()
+    const withheld = await (async () => {
+      const { client, solvePending, datePending } = fakeClient()
+      const m = createMemoryModel({ client, builders: solveBuilders(() => REAL_SOLVE_REQUEST) })
+      await withCommittedSpine(m, datePending)
+      const p = m.dispatchSolve()
+      solvePending[0]!(tokenWithheldWire)
+      await p
+      return m.getSnapshot().solve
+    })()
+
+    expect(blocked.kind).toBe('blocked')
+    expect(withheld.kind).toBe('committed')
+    if (blocked.kind !== 'blocked' || withheld.kind !== 'committed') throw new Error('unreachable')
+    // The blocked reason is a structured GAP (no payload); the withheld reason is TEXT inside the
+    // committed payload (no gap) — a render routes them by `kind`, never one as the other.
+    expect(blocked.gap).toBe('goal-unset')
+    expect('payload' in blocked).toBe(false)
+    expect(withheld.payload).toMatchObject({
+      kind: 'token-withheld',
+      reasons: [{ kind: 'state-certification-pending', state: 'NC' }],
+    })
+    expect('gap' in withheld).toBe(false)
   })
 })

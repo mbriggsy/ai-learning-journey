@@ -187,6 +187,13 @@ export interface SolveRecommendation {
   readonly skewDisclosure: LeaveMoreSkewDisclosure | undefined
   /** EVERY conversion lever withheld from ranking, named + directioned (insight 092). */
   readonly withheldConversionLevers: readonly WithheldConversionLever[]
+  /** The methodology-substrate directional levels this run was minted OVER (the token's
+   *  `mintedOver.disclosedDirectional` — U16 §S3, seam (ii)). Copied onto the recommendation so the
+   *  grade's ShapeDisclosure note (`composeShapeDisclosure`) rides the SAME substrate the token was
+   *  cleared against — the honesty-hawk phasing law: the figure and its disclosure land TOGETHER, never
+   *  a structurally-dormant disclosure fed from an empty default. Empty ⇒ no shape note (the common case
+   *  today — no methodology-substrate directional entry is live). Engine-pure, additive. */
+  readonly disclosedDirectional: readonly string[]
   readonly solverCodeVersion: number
 }
 
@@ -548,6 +555,9 @@ export function solve(token: OracleClearedToken, input: SolveInput, shouldAbort?
     namedDriver,
     skewDisclosure,
     withheldConversionLevers,
+    // Seam (ii): the figure and its disclosure land together — the recommendation carries the SAME
+    // methodology-substrate directional levels the token was minted over (never an empty default).
+    disclosedDirectional: token.mintedOver.disclosedDirectional,
     solverCodeVersion: SOLVER_CODE_VERSION,
   }
 }

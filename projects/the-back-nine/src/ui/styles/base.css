@@ -166,6 +166,7 @@ h4[tabindex='-1']:focus-visible {
  *                            same-words-three-renderers shape; all three breathe)
  *   .save-pending          — "Opening your plan…" / "Securing your plan…" panels
  *   .result-save-pending   — "Saving your changes…"
+ *   .solve-pending         — "Working out your strategy…" (the U16 recommend-second solve)
  *   .fod-provisional /
  *   .cs-provisional        — the "Provisional —" tag: the heartbeat that keeps beating
  *                            while the heavy FINAL sharpens in the background (the
@@ -188,6 +189,7 @@ h4[tabindex='-1']:focus-visible {
 .cs-pending,
 .save-pending,
 .result-save-pending,
+.solve-pending,
 .fod-provisional,
 .cs-provisional {
   animation: thinking-breathe var(--dur-breathe) var(--ease-in-out) infinite;
@@ -209,6 +211,7 @@ h4[tabindex='-1']:focus-visible {
   .cs-pending,
   .save-pending,
   .result-save-pending,
+  .solve-pending,
   .fod-provisional,
   .cs-provisional {
     animation: none;

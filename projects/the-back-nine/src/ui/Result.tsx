@@ -29,7 +29,9 @@ import { previewRunsInWorker, runControlPreview } from '@store/controlPreview'
 import { epochDayToCalendarYear } from '@store/staleness'
 import type { ScenarioDraft } from '@store/memoryModel'
 import { currentEpochDay } from './scenarioFromDraft'
-import type { TwoArmControl } from '@shared/model'
+import type { RecommendationGoal, TwoArmControl } from '@shared/model'
+import { GoalPicker } from '@intake/GoalPicker'
+import { RecommendationSurface } from './RecommendationSurface'
 import { copy } from './copy'
 import { appModel } from './appModel'
 import { Disclaimer } from './Disclaimer'
@@ -149,6 +151,9 @@ export function Result({
   const [rothOpen, setRothOpen] = useState(false)
   const [healthOpen, setHealthOpen] = useState(false)
   const [assumptionsOpen, setAssumptionsOpen] = useState(false)
+  // Act-4 · U16 §S2 — the recommend-second GOAL choice (the picker precedes the solve). The affordance
+  // opens it; a confirmed pick writes `chosenGoal` and dispatches the solve.
+  const [goalOpen, setGoalOpen] = useState(false)
   const rothApplied = snapshot.draft.rothConversion
   // P3·U11 — the Healthcare door's domain (categorical, fact-presence only) is the ENGINE's own
   // priced-healthcare gate (healthcarePriced — single-sourced with buildOverlay; council
@@ -248,7 +253,7 @@ export function Result({
   // sheet's captured owner is disconnected by close time — without a fallback focus strands
   // on <body>). The Assumptions door is the honest landmark: it is the surface the user came
   // through, and it stays reachable in every post-resolve state (the hatch gate below).
-  const sheetOpen = budgetOpen || sequencingOpen || rothOpen || healthOpen || assumptionsOpen
+  const sheetOpen = budgetOpen || sequencingOpen || rothOpen || healthOpen || assumptionsOpen || goalOpen
   const restoreToAssumptionsDoor = useCallback(
     () => document.querySelector<HTMLElement>('[data-door="assumptions"]'),
     [],
@@ -278,6 +283,24 @@ export function Result({
   // two-pane) they render below as before. Withheld entirely while computing (the actions act on
   // an answer that isn't there yet).
   const seatInLead = focusKey !== undefined && (elevated.kind === 'date' || elevated.kind === 'spine')
+
+  // §S2 — the recommend-second invited affordance is offered only when the solve is INVITABLE: no
+  // beat yet (idle), or a goal-unset precondition that steers to the picker. A buckets-defaulted block
+  // and the pending/committed/stale beats own their own renders (S3). Never on a non-answer (the
+  // affordance is gated by focusKey with the doors below). `solve` is the tier-less solve channel.
+  const solve = snapshot.solve
+  const solveInvitable =
+    solve.kind === 'idle' || (solve.kind === 'blocked' && solve.gap === 'goal-unset')
+  // A CONFIRMED goal pick: write `chosenGoal`, close the picker, dispatch the solve. A re-pick writes
+  // the new goal and re-dispatches — the store's invalidateStaleSolve + the solve request-epoch carry
+  // the visible re-solve. NO auto-save: `chosenGoal` rides the draft in-session (the explicit-resave
+  // ceremony persists it, like every model field — §S1). Mirrors the sheets' update→close→recompute.
+  const pickGoal = useCallback((goal: RecommendationGoal) => {
+    appModel.update((d) => ({ ...d, chosenGoal: goal }))
+    setGoalOpen(false)
+    void appModel.dispatchSolve()
+  }, [])
+
   const actionsNode = computing ? null : (
     <div className="result-actions">
       {/* The save slot: one reserved box across all five populated states (insight 035 — the
@@ -361,12 +384,35 @@ export function Result({
           </button>
         </div>
       )}
+      {/* §S2 — the recommend-second beat's surface (the second magic moment): the PENDING tell (this
+          stage) and, in §S3, the committed grade lockup + RecommendationViz. DOM-ordered as the
+          recommend-SECOND (after the graphs + the in-frame disclaimer, before the quiet doors) so the
+          date-route "doors last" order contract holds. Renders 0-height (just its live region) until
+          the solve is invited, so it never perturbs the idle frame. The invited AFFORDANCE lives in
+          the quiet row below (a calm door); this region carries the response. §S4: the committed beat's
+          RE-PICK door reopens the GoalPicker (the standing goal pre-selected); `pickGoal` re-dispatches
+          — the visible re-solve. */}
+      <RecommendationSurface solve={snapshot.solve} onRepick={() => setGoalOpen(true)} />
       {/* The quiet doors: the sanctioned below-fold flex (the --laptop-fit-height degrade
           contract, tokens.css). display:contents in single column — the stack renders exactly as
           before; at the laptop two-pane the whole actions chain unwraps (display:contents) and
           this row seats as the grid's LAST full-width row, below both panes and below the
           in-frame disclaimer — one flick away, never crowding the answer. */}
       <div className="result-quiet-row">
+        {/* §S2 — the invited recommend-second affordance: FIRST in the doors DOM order (so it degrades
+            below-fold LAST among the doors), rendered STATICALLY — no scroll-entrance / Intersection
+            Observer / badge / pulse (R11: invited, never engagement bait; R12: no imperative). A real
+            calm door (btn-quiet, ≥24px, visible non-color focus ring, the --dur-press resting press);
+            activating it opens the GoalPicker FIRST (the goal precedes the solve). */}
+        {focusKey !== undefined && solveInvitable && (
+          <button
+            type="button"
+            className="btn-quiet result-recommend-invite"
+            onClick={() => setGoalOpen(true)}
+          >
+            {copy.recommendInviteCta}
+          </button>
+        )}
         {focusKey !== undefined && (
           <button type="button" className="btn-quiet" onClick={() => setBudgetOpen(true)}>
             {governs ? copy.budgetEditCta : copy.budgetCta}
@@ -574,6 +620,17 @@ export function Result({
           onReview()
         }}
         onClose={() => setAssumptionsOpen(false)}
+      />
+      {/* §S2 — the GoalPicker: the Tier-2 goal choice that PRECEDES the solve. Reuses the ControlSheet
+          focus contract verbatim; a confirmed pick writes `chosenGoal` + dispatches. The via-panel
+          focus fallback is the honest Assumptions landmark (the invite trigger unmounts once the beat
+          leaves the invitable state). */}
+      <GoalPicker
+        open={goalOpen}
+        current={snapshot.draft.chosenGoal}
+        onPick={pickGoal}
+        onClose={() => setGoalOpen(false)}
+        restoreFallback={restoreToAssumptionsDoor}
       />
     </main>
   )

@@ -102,7 +102,11 @@ function marginToXOfTenEdge(survival: number): number {
   return Math.abs(scaled - nearestFlip) / 10
 }
 
-function median(sorted: readonly number[]): number {
+/** Median on an ASCENDING-sorted sample (even n averages the two middles); empty ⇒ 0. EXPORTED as
+ *  the ONE nearest-rank convention home (U16 §Q6 source-bind): the solver's skew disclosure
+ *  (`objective.ts`) reads THIS rather than a re-typed mirror, so the "typical" figure U16 shows lines
+ *  up with the band's own p50 byte-for-byte (the displayTenth/xOfTenClamp single-source precedent). */
+export function median(sorted: readonly number[]): number {
   const n = sorted.length
   if (n === 0) return 0
   const mid = Math.floor(n / 2)
@@ -110,7 +114,10 @@ function median(sorted: readonly number[]): number {
   return ((sorted[mid - 1] ?? 0) + (sorted[mid] ?? 0)) / 2
 }
 
-function percentile(sorted: readonly number[], p: number): number {
+/** Nearest-rank percentile on an ASCENDING-sorted sample (the band's p10/p90 convention); empty ⇒ 0.
+ *  EXPORTED alongside {@link median} as the single convention home (U16 §Q6 source-bind) — the skew
+ *  disclosure's p10/p90 read THIS, never a parallel mirror that could drift from the band. */
+export function percentile(sorted: readonly number[], p: number): number {
   if (sorted.length === 0) return 0
   const idx = Math.min(sorted.length - 1, Math.max(0, Math.floor(p * (sorted.length - 1))))
   return sorted[idx] ?? 0

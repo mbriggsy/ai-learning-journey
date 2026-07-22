@@ -1,5 +1,5 @@
 import { test, expect, type Page } from '@playwright/test'
-import { REAL, TIER, SHOWCASE, FLOOR, PHONE, gotoSeedFinal } from './reviewSurface'
+import { REAL, REAL_DPR, TIER, SHOWCASE, FLOOR, PHONE, gotoSeedFinal } from './reviewSurface'
 
 /**
  * The real-browser VERTICAL-FIT gate (council 2026-07-08, wf_a2d93977-960 — run via
@@ -252,6 +252,54 @@ for (const { seed, medicareNote } of SPINE_SEEDS) {
       })
     })
   })
+}
+
+// ── U16 §S2: the recommend-second INVITED AFFORDANCE — measured posture ───────────────────────
+// The affordance (`.result-recommend-invite`) joins the doors DOM region as the FIRST quiet-row door
+// (so it degrades below-fold LAST among the doors). Its fit posture is MEASURED, not decreed
+// (the advocate's ratified priority): (1) spine content protected in-frame > (2) affordance in-frame
+// > (3) affordance a doors casualty. Because it lives INSIDE `.result-quiet-row` — the sanctioned
+// below-fold exclusion — spine content is STRUCTURALLY protected (posture 1) whatever the affordance's
+// own posture; this arm proves that invariant AND records where the affordance itself lands at each
+// walk tier. (The DATE-route "doors last" order contract needs no new arm: the affordance is a
+// quiet-row child, so the existing dip/datenc order checks — which exclude the quiet-row subtree —
+// already cover it.) The affordance is inert-on-click until §S3 wires the intakeMap solve builder into
+// appModel; its PRESENCE + posture (what this arm measures) needs no builder.
+
+const AFFORDANCE_SEEDS = ['retired', 'nc'] as const
+
+for (const seed of AFFORDANCE_SEEDS) {
+  for (const vp of [REAL, TIER] as const) {
+    const scale = vp === REAL ? { deviceScaleFactor: REAL_DPR } : {}
+    test.describe(`?seed=${seed} — the recommend-second affordance posture (${vp.width}×${vp.height})`, () => {
+      test.use({ viewport: vp, ...scale })
+      test(`${seed}: the affordance is the FIRST quiet-row door; spine content stays frame-protected`, async ({
+        page,
+      }) => {
+        await gotoSeedFinal(page, seed)
+        await assertResolvedSpine(page)
+        // Offered, rendered STATICALLY (no badge/pulse/scroll-entrance — R11), and it is the FIRST
+        // door (degrades below-fold LAST among the doors).
+        const affordance = page.locator('.result-recommend-invite')
+        await expect(affordance, 'the recommend-second affordance must be offered').toBeVisible()
+        await expect(
+          page.locator('.result-quiet-row > button').first(),
+          'the affordance is the first quiet-row door (degrades last)',
+        ).toHaveClass(/result-recommend-invite/)
+        // POSTURE (1) — spine content protected: the frame fits with the quiet row (the affordance's
+        // home) excluded. The affordance itself MAY be a below-fold doors casualty; the spine cannot.
+        await assertFrameFits(page, true)
+        // Record the measured posture (in-frame vs below-fold) — the spec's measured-not-decreed law.
+        const box = await affordance.boundingBox()
+        expect(box, 'the affordance reported no box').not.toBeNull()
+        const bottom = Math.round(box!.y + box!.height)
+        const inFrame = bottom <= vp.height + 0.5
+        console.log(
+          `[U16 affordance posture] seed=${seed} ${vp.width}x${vp.height}: bottom=${bottom} viewport=${vp.height} → ${inFrame ? 'IN-FRAME (posture 2)' : 'below-fold doors casualty (posture 3)'}`,
+        )
+      })
+    })
+  }
 }
 
 // ── the priced-state faces (the state-tax unit / the state-carrying seed increment) ───────────

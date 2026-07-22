@@ -1,0 +1,412 @@
+import { describe, it, expect } from 'vitest'
+import { NEVER_DEPLETED, type Distribution, type TaxAwareDistribution, type RecommendationGoal } from '@shared/model'
+import { headlineStatisticFromDistribution } from '@engine/solver/objectiveHeadline'
+import type { SolveArm, SolveRecommendation } from '@engine/solver/solve'
+import type { SolvePayload, SolveTokenWithheld } from '@engine/solver/solveEntry'
+import type { GradeResult } from '@engine/validation/gradeCalibration'
+import type { WithheldReason } from '@engine/validation/oracleToken'
+import type { SolverRunFingerprint } from '@engine/validation/solverRunFingerprint'
+import type { SolveAnswer } from '@store/memoryModel'
+import type { ConfidenceStatementView } from '../ConfidenceStatement'
+import {
+  recommendationView,
+  withheldReasonText,
+  disclosuresFor,
+  DISCLOSURE_ORDER,
+  type RecommendedView,
+} from '../recommendationView'
+import { copy, slots } from '../copy'
+import { formatBracketPercent, formatDeltaDollar } from '../money'
+
+/*
+ * recommendationView — the U16 §S3a STATES layer. Every payload shape gets a render; the survival
+ * context is source-bound to the spine BY REFERENCE (mutant a); every WithheldReason arm renders true +
+ * humane, never a bare "unavailable" (mutant c); the runner-up is retained (R23); a payload whose
+ * displayed figure disagrees with what ranked routes to a CALM unavailable (the render-path guard).
+ */
+
+// ---- fixtures -------------------------------------------------------------------------------------
+
+function distOf(ta: Partial<TaxAwareDistribution>): Distribution {
+  const n = (ta.lifetimeTaxPaidReal ?? ta.terminalTaxableReal ?? [0]).length
+  const zeros = Array<number>(n).fill(0)
+  const taxAware: TaxAwareDistribution = {
+    lifetimeTaxPaidReal: zeros,
+    terminalTaxableReal: zeros,
+    terminalPretaxReal: zeros,
+    terminalRothReal: zeros,
+    terminalHsaReal: zeros,
+    terminalTaxableBasisReal: zeros,
+    lifetimeNetPremiumReal: zeros,
+    lifetimeMedicareCostReal: zeros,
+    ...ta,
+  }
+  return { terminalValuesReal: zeros, depletionYears: Array(n).fill(NEVER_DEPLETED), survivalFraction: 1, taxAware }
+}
+
+/** An arm whose displayed figure IS the objective statistic on its own distribution (guard-consistent). */
+function armFor(
+  goal: RecommendationGoal,
+  hb: number | undefined,
+  id: string,
+  policy: SolveArm['policy'],
+  ta: Partial<TaxAwareDistribution>,
+): SolveArm {
+  const dist = distOf(ta)
+  return { id, policy, conversion: null, distributionB: dist, headlineStatisticB: headlineStatisticFromDistribution(dist, goal, hb), survivalB: 0.99 }
+}
+
+function grade(g: 'just-do-it' | 'coin-flip', subTenthCollapse = false): GradeResult {
+  return { grade: g, memberMargins: [{ margin: 0.02, se: 0.001, band: 0.002, beyondBand: true, paths: 16000 }], demotionFired: false, subTenthCollapse }
+}
+
+const HB = 0.24
+
+/** A leave-more active recommendation whose winner leaves more than the baseline (positive delta). */
+function leaveMoreRec(o: Partial<SolveRecommendation> = {}): SolveRecommendation {
+  const goal: RecommendationGoal = 'leave-more'
+  const winner = armFor(goal, HB, 'taxable-first', 'taxable-first', { terminalTaxableReal: [400_000, 600_000], terminalPretaxReal: [100_000, 100_000], terminalRothReal: [0, 0], terminalHsaReal: [0, 0] })
+  const baseline = armFor(goal, HB, 'proportional', 'proportional', { terminalTaxableReal: [300_000, 400_000], terminalPretaxReal: [100_000, 100_000], terminalRothReal: [0, 0], terminalHsaReal: [0, 0] })
+  const runnerUp = armFor(goal, HB, 'bracket-fill', 'bracket-fill', { terminalTaxableReal: [380_000, 560_000], terminalPretaxReal: [100_000, 100_000], terminalRothReal: [0, 0], terminalHsaReal: [0, 0] })
+  return {
+    kind: 'recommended', goal, heirBracket: HB, seedA: 1, seedB: 2,
+    winner, runnerUp, noActionBaseline: baseline,
+    rankedIds: ['taxable-first', 'bracket-fill', 'proportional'], prunedScores: [],
+    noChange: false, surplusRegime: false,
+    grade: grade('just-do-it'), gradeStatistic: 'leave-more', gradeUnavailable: undefined,
+    namedDriver: 'sampling-noise-near-tie',
+    skewDisclosure: { meanReal: winner.headlineStatisticB, medianReal: winner.headlineStatisticB, p10Real: 0, p90Real: 0, skewDirection: 'symmetric', meanMinusMedianReal: 0 },
+    withheldConversionLevers: [], disclosedDirectional: [], solverCodeVersion: 1,
+    ...o,
+  }
+}
+
+const committed = (payload: SolvePayload): SolveAnswer => ({ kind: 'committed', payload, fingerprint: 'fp' as SolverRunFingerprint })
+
+const spine: ConfidenceStatementView = {
+  kind: 'reading',
+  headline: { xOfTen: { value: 9, marginToEdge: 0.03 }, outcomeState: 'over-funded', stateMarginToEdge: 0.02 },
+  dollar: { perMonthReal: { value: 500, marginToEdge: 0 }, direction: 'room' },
+}
+
+const asRec = (v: ReturnType<typeof recommendationView>): RecommendedView => {
+  expect(v.kind).toBe('recommended')
+  return v as RecommendedView
+}
+
+// ---- the entry states (S2-owned; named here) ------------------------------------------------------
+
+describe('recommendationView — the entry + non-committed states', () => {
+  it('idle / blocked / pending / stale / compute-error each render honestly', () => {
+    expect(recommendationView({ kind: 'idle' })).toEqual({ kind: 'idle' })
+    expect(recommendationView({ kind: 'blocked', gap: 'goal-unset', label: 'goal-unset' })).toEqual({ kind: 'blocked', gap: 'goal-unset' })
+    expect(recommendationView({ kind: 'pending', label: 'solving' })).toEqual({ kind: 'pending' })
+    expect(recommendationView({ kind: 'stale', label: 'inputs-changed' })).toEqual({ kind: 'stale', note: copy.inputsChangedNote })
+    const err = recommendationView({ kind: 'compute-error', reason: 'worker died' })
+    expect(err).toEqual({ kind: 'unavailable', note: copy.recommendUnavailable, detail: 'worker died' })
+  })
+})
+
+// ---- the committed non-recommendation payloads ----------------------------------------------------
+
+describe('recommendationView — refusals / mint-failures / demotions route to ONE calm unavailable', () => {
+  it('refused / withheld(demotion) / mint-failed / aborted all become the calm retry line, reason hidden', () => {
+    const shapes: SolvePayload[] = [
+      { kind: 'refused', reason: 'fingerprint-mismatch', detail: 'stale token', solverCodeVersion: 1 },
+      { kind: 'withheld', reason: 'demotion-axis-uncalibrated', detail: 'no width', winnerId: 'w', runnerUpId: 'r', surplusRegime: false, solverCodeVersion: 1 },
+      { kind: 'mint-failed', stage: 'oracle', detail: 'wrong-best', solverCodeVersion: 1 },
+      { kind: 'aborted', detail: 'superseded', solverCodeVersion: 1 },
+    ]
+    for (const p of shapes) {
+      const v = recommendationView(committed(p))
+      expect(v.kind).toBe('unavailable')
+      if (v.kind === 'unavailable') {
+        expect(v.note, 'the user sees ONE calm line, never the raw reason').toBe(copy.recommendUnavailable)
+        expect(v.note).not.toMatch(/fingerprint|demotion|wrong-best|superseded/)
+      }
+    }
+  })
+})
+
+// ---- the withheld HOLD (Q5) — the NC household is Briggsy's own -----------------------------------
+
+describe('recommendationView — the honesty-gate HOLD names the true reason (Q5)', () => {
+  it('a token withheld on NC certification renders the STATE by name, the direction, ~August, refusing to guess', () => {
+    const payload: SolveTokenWithheld = { kind: 'token-withheld', reasons: [{ kind: 'state-certification-pending', state: 'NC' }], disclosedDirectional: [], solverCodeVersion: 1 }
+    const v = recommendationView(committed(payload))
+    expect(v.kind).toBe('held')
+    if (v.kind === 'held') {
+      expect(v.heading).toBe(copy.recommendHeldHeading)
+      expect(v.reasons).toHaveLength(1)
+      const r = v.reasons[0]!
+      expect(r, 'the state is named').toContain('North Carolina')
+      expect(r, 'refuses to guess, direction honest').toMatch(/could help or hurt/)
+      expect(r, 'the ~August timeframe').toMatch(/August/)
+    }
+  })
+
+  it('every WithheldReason arm gets its own humane text — NEVER a bare "unavailable" (mutant c)', () => {
+    const arms: WithheldReason[] = [
+      { kind: 'state-certification-pending', state: 'PA' },
+      { kind: 'medicare-trend-unsourced' },
+      { kind: 'aca-unverified', ageDays: 400 },
+      { kind: 'rec-relevant-primary-directional', name: 'x' },
+      { kind: 'epsilon-uncalibrated', name: 'y' },
+    ]
+    for (const arm of arms) {
+      const text = withheldReasonText(arm)
+      expect(text.length, `${arm.kind} has real copy`).toBeGreaterThan(20)
+      expect(text.toLowerCase(), `${arm.kind} is never a bare "unavailable"`).not.toBe('unavailable')
+    }
+    expect(withheldReasonText({ kind: 'state-certification-pending', state: 'PA' })).toContain('Pennsylvania')
+    expect(withheldReasonText({ kind: 'medicare-trend-unsourced' })).toBe(copy.recHoldTrend)
+    expect(withheldReasonText({ kind: 'aca-unverified', ageDays: 1 })).toBe(copy.recHoldAcaUnverified)
+    // fail-closed: a shape outside the union degrades to the generic hold (never blank/crash).
+    expect(withheldReasonText({ kind: 'not-a-real-reason' } as unknown as WithheldReason)).toBe(copy.recHoldGeneric)
+  })
+})
+
+// ---- the committed RECOMMENDATION (active / no-change / surplus) ----------------------------------
+
+describe('recommendationView — the committed beat (Q1 delta-as-hero + source-bind + grade)', () => {
+  it('active leave-more: delta-as-hero comparative, delta figure via money.ts, grade word from the flag', () => {
+    const payload = leaveMoreRec()
+    const v = asRec(recommendationView(committed(payload), { spineConfidence: spine }))
+    expect(v.mode).toBe('active')
+    const expectedDelta = formatDeltaDollar(payload.winner.headlineStatisticB - payload.noActionBaseline.headlineStatisticB)
+    expect(v.grade.deltaFigure).toBe(expectedDelta)
+    expect(v.grade.heroLine).toBe(slots.recDeltaLeaveMore(expectedDelta))
+    expect(v.grade.word).toBe(copy.recommendGradeConfident)
+    expect(v.grade.hingeNote, 'just-do-it names no hinge').toBeUndefined()
+    expect(v.winnerStrategyKey).toBe('leverPolicyTaxableFirst')
+    expect(v.baselineNameplate).toBe(copy.recommendBaselineNameplate)
+    // Q7: the baseline nameplate carries NO number (the A↔B residual is never rendered).
+    expect(v.baselineNameplate).not.toMatch(/\d/)
+  })
+
+  it('pay-less-tax: the surviving pivot ("keeps ~$X more"), NOT the dead "safe either way" absolute', () => {
+    const goal: RecommendationGoal = 'pay-less-tax'
+    const winner = armFor(goal, undefined, 'bracket-fill', 'bracket-fill', { lifetimeTaxPaidReal: [40_000, 40_000] })
+    const baseline = armFor(goal, undefined, 'proportional', 'proportional', { lifetimeTaxPaidReal: [55_000, 55_000] })
+    const payload = { ...leaveMoreRec(), goal, heirBracket: undefined, winner, noActionBaseline: baseline, runnerUp: undefined, gradeStatistic: 'pay-less-tax' as const, skewDisclosure: undefined }
+    const v = asRec(recommendationView(committed(payload), { spineConfidence: spine }))
+    const expectedDelta = formatDeltaDollar(baseline.headlineStatisticB - winner.headlineStatisticB)
+    expect(v.grade.heroLine).toBe(slots.recDeltaPayLessTax(expectedDelta))
+    expect(v.grade.heroLine).not.toMatch(/safe either way/)
+    expect(v.skew, 'pay-less-tax has no skew disclosure').toBeUndefined()
+  })
+
+  it('Q1 SOURCE-BIND: the survival context IS the spine object by reference (never a parallel claim) — mutant a', () => {
+    const v = asRec(recommendationView(committed(leaveMoreRec()), { spineConfidence: spine }))
+    // reference identity ⇒ level parity is guaranteed (require-hedge alone could not prove this: a
+    // parallel survival string could wear a hedge yet desync the LEVEL).
+    expect(v.survivalContext).toBe(spine)
+    // With no spine (the date route) the beat stands alone — NEVER a fabricated survival claim.
+    const noSpine = asRec(recommendationView(committed(leaveMoreRec())))
+    expect(noSpine.survivalContext).toBeUndefined()
+  })
+
+  it('no-change (winner IS prior OR sub-tenth collapse): NO dollar hero, the "already" compose reassurance', () => {
+    const byPrior = asRec(recommendationView(committed(leaveMoreRec({ noChange: true })), { spineConfidence: spine }))
+    expect(byPrior.mode).toBe('no-change')
+    expect(byPrior.grade.deltaFigure, 'no fabricated dollar hero in no-change').toBeUndefined()
+    expect(byPrior.grade.heroLine).toBe(copy.recComposeAlready)
+    // the subTenthCollapse source ALSO routes to no-change (a HOT path).
+    const bySubTenth = asRec(recommendationView(committed(leaveMoreRec({ grade: grade('just-do-it', true) })), { spineConfidence: spine }))
+    expect(bySubTenth.mode).toBe('no-change')
+    expect(bySubTenth.grade.deltaFigure).toBeUndefined()
+  })
+
+  it('R23: the runner-up is RETAINED (hedged "why" text); a set without a runner-up carries none (stripping fails the suite)', () => {
+    const withRunner = asRec(recommendationView(committed(leaveMoreRec()), { spineConfidence: spine }))
+    expect(withRunner.runnerUp!.why, 'a live solve retains its runner-up text').toBe(copy.recRunnerUpWhy)
+    expect(withRunner.runnerUp!.why.length).toBeGreaterThan(0)
+    const noRunner = asRec(recommendationView(committed(leaveMoreRec({ runnerUp: undefined })), { spineConfidence: spine }))
+    expect(noRunner.runnerUp).toBeUndefined()
+  })
+
+  it('coin-flip names WHAT IT HINGES ON from the named driver; the sampling sentinel is sampling-framed', () => {
+    const aca = asRec(recommendationView(committed(leaveMoreRec({ grade: grade('coin-flip'), namedDriver: 'aca-enhanced-subsidies' })), { spineConfidence: spine }))
+    expect(aca.grade.word).toBe(copy.recommendGradeCoinFlip)
+    expect(aca.grade.hingeNote).toBe(copy.recGradeNoteHingeAca)
+    const sampling = asRec(recommendationView(committed(leaveMoreRec({ grade: grade('coin-flip'), namedDriver: 'sampling-noise-near-tie' })), { spineConfidence: spine }))
+    expect(sampling.grade.hingeNote).toBe(copy.recGradeNoteHingeSampling)
+    // a probe name we don't recognize fails CLOSED to the generic hinge, never a fabricated cause.
+    const unknown = asRec(recommendationView(committed(leaveMoreRec({ grade: grade('coin-flip'), namedDriver: 'brand-new-probe' })), { spineConfidence: spine }))
+    expect(unknown.grade.hingeNote).toBe(copy.recGradeNoteHingeGeneric)
+  })
+
+  it('the grade could not be computed ⇒ no word, a calm ungraded caveat, the delta still shows', () => {
+    const v = asRec(recommendationView(committed(leaveMoreRec({ grade: undefined, gradeUnavailable: { reason: 'base below the 16k floor' } })), { spineConfidence: spine }))
+    expect(v.grade.word).toBeUndefined()
+    expect(v.grade.ungradedNote).toBe(copy.recGradeNoteUngraded)
+    expect(v.grade.deltaFigure, 'the delta is still honest without a grade').toBeDefined()
+  })
+
+  it('§Q6 skew: leave-more UPSIDE skew QUOTES the median as the typical bequest; a symmetric skew stays quiet', () => {
+    const winner = armFor('leave-more', HB, 'taxable-first', 'taxable-first', { terminalTaxableReal: [400_000, 600_000], terminalPretaxReal: [100_000, 100_000], terminalRothReal: [0, 0], terminalHsaReal: [0, 0] })
+    const mean = winner.headlineStatisticB
+    const median = mean - 300_000 // visibly lower typical — the disclosure-worthy shape
+    const payload = leaveMoreRec({ winner, skewDisclosure: { meanReal: mean, medianReal: median, p10Real: median - 100_000, p90Real: mean + 100_000, skewDirection: 'upside', meanMinusMedianReal: mean - median } })
+    const v = asRec(recommendationView(committed(payload), { spineConfidence: spine }))
+    expect(v.skew).toEqual({ medianQuote: slots.recSkewMedian(formatDeltaDollar(median)) })
+    // a symmetric (mean === median) skew is NOT disclosure-worthy — the leaveMoreRec default.
+    expect(asRec(recommendationView(committed(leaveMoreRec()), { spineConfidence: spine })).skew).toBeUndefined()
+  })
+
+  it('conversion-only WITHHELD levers render their reason + the coupling caveat (dormant today, built anyway)', () => {
+    const lever = { id: 'roth-30k', policy: 'proportional' as const, annualAmountReal: 30_000, startYearOffset: 0, years: 3, reason: { kind: 'medicare-trend-unsourced' } as WithheldReason, anchoredRail: undefined }
+    const v = asRec(recommendationView(committed(leaveMoreRec({ withheldConversionLevers: [lever, { ...lever, id: 'roth-20k', annualAmountReal: 20_000 }] })), { spineConfidence: spine }))
+    expect(v.withheldConversion, 'the sequencing rec still ships; conversions named-held').toBeDefined()
+    expect(v.withheldConversion!.reasons, 'levers sharing a reason dedupe to one line').toEqual([copy.recHoldTrend])
+    expect(v.withheldConversion!.coupling).toBe(copy.recHoldCoupling)
+  })
+
+  it('the render-path objective≡headline guard routes a LYING payload to a calm unavailable, never a figure', () => {
+    const good = leaveMoreRec()
+    // Corrupt the displayed winner figure (a seed-A leak / wrong-goal value) — the render must refuse.
+    const lying: SolveRecommendation = { ...good, winner: { ...good.winner, headlineStatisticB: good.winner.headlineStatisticB + 999_999 } }
+    const v = recommendationView(committed(lying), { spineConfidence: spine })
+    expect(v.kind, 'a payload that disagrees with what ranked never renders a lockup').toBe('unavailable')
+  })
+})
+
+// ---- §S3b — the disclosures adjacent to the delta (R7 nets) --------------------------------------
+
+describe('recommendationView — the disclosures adjacent to the delta', () => {
+  it('DISCLOSURE_ORDER is complete over every id the builders declare (a new seat must be ordered too)', () => {
+    // Drive every applicable disclosure ON (leave-more + the ACA hinge) so the union is fully exercised.
+    const all = disclosuresFor(leaveMoreRec({ namedDriver: 'aca-enhanced-subsidies' }))
+    const ids = all.map((d) => d.id)
+    expect(new Set(ids).size, 'no duplicate ids').toBe(ids.length)
+    for (const id of ids) expect(DISCLOSURE_ORDER).toContain(id)
+    // The render order is respected (a subset of DISCLOSURE_ORDER, in order).
+    const orderIndex = ids.map((id) => DISCLOSURE_ORDER.indexOf(id))
+    expect(orderIndex).toEqual([...orderIndex].sort((a, b) => a - b))
+  })
+
+  it('the ALWAYS disclosures (SS-claim-held-fixed, NIIT, state-tax) ride EVERY committed recommendation', () => {
+    const v = asRec(recommendationView(committed(leaveMoreRec()), { spineConfidence: spine }))
+    const ids = v.disclosures.map((d) => d.id)
+    expect(ids).toContain('ss-claim-fixed')
+    expect(ids).toContain('niit')
+    expect(ids).toContain('state-tax')
+    for (const d of v.disclosures) expect(d.text.length, `${d.id} has real copy`).toBeGreaterThan(10)
+  })
+
+  it('the heir-bracket disclosure rides LEAVE-MORE (names the assumed bracket, r7-editable) — mutant b', () => {
+    const payload = leaveMoreRec({ heirBracket: 0.24 })
+    const v = asRec(recommendationView(committed(payload), { spineConfidence: spine }))
+    const heir = v.disclosures.find((d) => d.id === 'heir-bracket')
+    expect(heir, 'leave-more carries the heir-bracket disclosure (dropping it fails here)').toBeDefined()
+    expect(heir!.disposition, 'the heir-bracket seat is r7-editable').toBe('r7-editable')
+    expect(heir!.text, 'names the assumed bracket percent').toContain(formatBracketPercent(0.24))
+    // pay-less-tax has no heir bracket ⇒ no heir-bracket disclosure (the leave-more-only gate). Drive
+    // `disclosuresFor` directly (the pure composer) so the check needs no pay-less-tax-consistent arms.
+    const payLessTax: SolveRecommendation = { ...payload, goal: 'pay-less-tax', heirBracket: undefined }
+    expect(disclosuresFor(payLessTax).find((d) => d.id === 'heir-bracket'), 'no heir bracket on pay-less-tax').toBeUndefined()
+  })
+
+  it('the ACA SLCSP caveat rides ONLY when the delta leans on ACA (the named-driver signal)', () => {
+    const leans = asRec(recommendationView(committed(leaveMoreRec({ namedDriver: 'aca-enhanced-subsidies' })), { spineConfidence: spine }))
+    expect(leans.disclosures.find((d) => d.id === 'aca-slcsp'), 'ACA-leaning delta discloses SLCSP/CSR').toBeDefined()
+    const noLean = asRec(recommendationView(committed(leaveMoreRec()), { spineConfidence: spine }))
+    expect(noLean.disclosures.find((d) => d.id === 'aca-slcsp'), 'a non-ACA delta does not').toBeUndefined()
+  })
+})
+
+// ---- §S3b — the two-arm comparison viz view model ------------------------------------------------
+
+describe('recommendationView — the two-arm viz props', () => {
+  it('ACTIVE mode composes the viz: winner/baseline magnitudes + resolved labels; the aria carries all figures', () => {
+    const payload = leaveMoreRec()
+    const v = asRec(recommendationView(committed(payload), { spineConfidence: spine }))
+    expect(v.viz, 'an active delta shows the two-arm viz').toBeDefined()
+    expect(v.viz!.withoutMagnitude).toBe(payload.noActionBaseline.headlineStatisticB)
+    expect(v.viz!.withMagnitude).toBe(payload.winner.headlineStatisticB)
+    expect(v.viz!.labels.withLabel).toBe(copy.recVizWithLabel)
+    expect(v.viz!.labels.withoutLabel).toBe(copy.recVizWithoutLabel)
+    // A2 AT-parity: the delta magnitude is reachable inside the role="img" aria sentence.
+    const delta = formatDeltaDollar(payload.winner.headlineStatisticB - payload.noActionBaseline.headlineStatisticB)
+    expect(v.viz!.labels.deltaLabel).toBe(`$${delta}`)
+    expect(v.viz!.labels.ariaSummary).toContain(delta)
+  })
+
+  it('NO-CHANGE mode shows NO viz (never a fabricated ~$0 two-bar delta)', () => {
+    const v = asRec(recommendationView(committed(leaveMoreRec({ noChange: true })), { spineConfidence: spine }))
+    expect(v.mode).toBe('no-change')
+    expect(v.viz, 'the compose reassurance stands alone').toBeUndefined()
+  })
+})
+
+// ---- §S4 — the runner-up comparison viz (winner vs runner-up, one tap down) -----------------------
+
+describe('recommendationView — the §S4 runner-up comparison viz', () => {
+  it('ACTIVE leave-more, winner AHEAD at seed-B: the runner-up carries the two-arm viz (recommended vs runner-up)', () => {
+    const payload = leaveMoreRec() // default fixture: winner (576k) displays ahead of runner-up (546k)
+    const v = asRec(recommendationView(committed(payload), { spineConfidence: spine }))
+    const rv = v.runnerUp!.viz
+    expect(rv, 'the winner displays ahead → the picture ships').toBeDefined()
+    // the recommended arm = the winner (its hatch/triangle identity is preserved across both vizzes).
+    expect(rv!.withMagnitude).toBe(payload.winner.headlineStatisticB)
+    expect(rv!.withoutMagnitude).toBe(payload.runnerUp!.headlineStatisticB)
+    expect(rv!.labels.withLabel).toBe(copy.recVizWithLabel)
+    expect(rv!.labels.withoutLabel).toBe(copy.recVizRunnerUpLabel)
+    // A2 AT-parity: the winner-vs-runner-up GAP is reachable in the delta label AND the role="img" aria.
+    const gap = formatDeltaDollar(payload.winner.headlineStatisticB - payload.runnerUp!.headlineStatisticB)
+    expect(rv!.labels.deltaLabel).toBe(`$${gap}`)
+    expect(rv!.labels.ariaSummary).toContain(gap)
+  })
+
+  it('the A-decides / B-displays INVERSION drops the picture (never a chart contradicting the ranking); the hedged TEXT is kept', () => {
+    // The runner-up DISPLAYS ahead of the winner at seed-B (a near-tie inverted on the display seed).
+    // Drawing "the recommended strategy" with a shorter bar than the runner-up is calm-but-wrong, so
+    // the view model suppresses the viz; the honest "came out ahead more often" text is retained.
+    const higherRunnerUp = armFor('leave-more', HB, 'bracket-fill', 'bracket-fill', { terminalTaxableReal: [700_000, 900_000], terminalPretaxReal: [100_000, 100_000], terminalRothReal: [0, 0], terminalHsaReal: [0, 0] })
+    const payload = leaveMoreRec({ runnerUp: higherRunnerUp })
+    expect(higherRunnerUp.headlineStatisticB, 'the runner-up displays ahead of the winner').toBeGreaterThan(payload.winner.headlineStatisticB)
+    const v = asRec(recommendationView(committed(payload), { spineConfidence: spine }))
+    expect(v.runnerUp!.viz, 'no picture on a display inversion').toBeUndefined()
+    expect(v.runnerUp!.why, 'the runner-up is still retained as hedged text').toBe(copy.recRunnerUpWhy)
+  })
+
+  it('pay-less-tax orients the gate by LOWER lifetime tax: winner-pays-less ships the picture, winner-pays-more drops it', () => {
+    const goal: RecommendationGoal = 'pay-less-tax'
+    const winner = armFor(goal, undefined, 'bracket-fill', 'bracket-fill', { lifetimeTaxPaidReal: [40_000, 40_000] })
+    const baseline = armFor(goal, undefined, 'proportional', 'proportional', { lifetimeTaxPaidReal: [55_000, 55_000] })
+    const runnerUp = armFor(goal, undefined, 'taxable-first', 'taxable-first', { lifetimeTaxPaidReal: [50_000, 50_000] })
+    const payload = { ...leaveMoreRec(), goal, heirBracket: undefined, winner, noActionBaseline: baseline, runnerUp, gradeStatistic: 'pay-less-tax' as const, skewDisclosure: undefined }
+    const ahead = asRec(recommendationView(committed(payload), { spineConfidence: spine }))
+    expect(ahead.runnerUp!.viz, 'the winner pays LESS tax → ahead → the picture ships').toBeDefined()
+    // a pay-less-tax winner whose tax displays HIGHER than the runner-up's inverts → picture dropped.
+    const invWinner = armFor(goal, undefined, 'bracket-fill', 'bracket-fill', { lifetimeTaxPaidReal: [60_000, 60_000] })
+    const inverted = { ...payload, winner: invWinner }
+    expect(asRec(recommendationView(committed(inverted), { spineConfidence: spine })).runnerUp!.viz, 'winner pays MORE → dropped').toBeUndefined()
+  })
+
+  it('NO-CHANGE mode carries NO runner-up viz (the primary viz is suppressed too — never a fabricated compare)', () => {
+    const v = asRec(recommendationView(committed(leaveMoreRec({ noChange: true })), { spineConfidence: spine }))
+    expect(v.mode).toBe('no-change')
+    expect(v.runnerUp!.viz, 'no winner-ahead delta to draw in no-change').toBeUndefined()
+    expect(v.runnerUp!.why, 'the runner-up text is still retained').toBe(copy.recRunnerUpWhy)
+  })
+})
+
+// ---- §S3b — the grade SIGNAL state + the seam-(ii) shape note -------------------------------------
+
+describe('recommendationView — the grade signal state + the ShapeDisclosure seam', () => {
+  it('the grade signal glyph is source-bound to the grade FLAG (never re-derived from the word)', () => {
+    expect(asRec(recommendationView(committed(leaveMoreRec({ grade: grade('just-do-it') })), { spineConfidence: spine })).grade.signalState).toBe('confident')
+    expect(asRec(recommendationView(committed(leaveMoreRec({ grade: grade('coin-flip') })), { spineConfidence: spine })).grade.signalState).toBe('coin-flip')
+    expect(asRec(recommendationView(committed(leaveMoreRec({ grade: undefined })), { spineConfidence: spine })).grade.signalState).toBe('ungraded')
+  })
+
+  it('SEAM (ii): the ShapeDisclosure note lights from the payload’s OWN disclosedDirectional (not an empty default)', () => {
+    // Dormant by default (no methodology-substrate directional entry is live).
+    expect(asRec(recommendationView(committed(leaveMoreRec()), { spineConfidence: spine })).grade.shapeNote).toBeUndefined()
+    // The day a substrate ships directional, the note lights from the figure’s OWN disclosure (the hawk
+    // phasing law: the figure and its disclosure land together, never fed from an empty default).
+    const withSubstrate = leaveMoreRec({ disclosedDirectional: ['medicare-part-b-trend'] })
+    expect(asRec(recommendationView(committed(withSubstrate), { spineConfidence: spine })).grade.shapeNote).toBe(copy.recGradeNoteShape)
+  })
+})

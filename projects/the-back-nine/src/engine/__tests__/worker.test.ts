@@ -109,6 +109,7 @@ const recFixture = (over: Partial<SolveRecommendation> = {}): SolveRecommendatio
       anchoredRail: { kind: 'bracket-edge', edge: 120_000 },
     },
   ],
+  disclosedDirectional: [],
   solverCodeVersion: 1,
   ...over,
 })

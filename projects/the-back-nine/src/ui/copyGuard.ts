@@ -102,6 +102,17 @@ export function isMortalityKey(key: string): boolean {
 export const CONTROL_KEY_PREFIXES: readonly string[] = [
   'roth', 'sequencing', 'twoFutures', 'control',
   'shadowRate', 'irmaaStep', 'acaCost', 'subsidyRegime',
+  // U16 §S3 — the recommendation-surface PLAN-MOVING CLAIMS (the delta-as-hero, the skew median quote,
+  // the ShapeDisclosure note + coin-flip hinge, the compose reassurance, the withheld reasons + coupling
+  // caveat, the runner-up "why this beat it"): a figure / direction / confidence claim that moves a plan
+  // must WEAR its modal (the "live silent hole" the spec named — require-hedge did not bite these keys
+  // before this line). DELIBERATELY NOT a bare `recommend`/`recGrade` sweep: the terse GRADE WORDS,
+  // baseline nameplate, held HEADINGS, and the calm-unavailable ride `recommend*` = verdict-scoped, and a
+  // forced hedge would mush a terse verdict ("A confident lean") into weaker copy (the isControlKey law).
+  'recDelta', 'recSkew', 'recGradeNote', 'recCompose', 'recHold', 'recRunnerUp',
+  // U16 §S3b — the disclosures adjacent to the delta (NIIT + state-tax scope, the SS-claim-held-fixed
+  // note, the leave-more heir bracket): each qualifies a plan-moving figure, so it must WEAR its modal.
+  'recDisc',
 ]
 /** True for a control readout / recommendation-class headline — the ONLY surface `require-hedge`
  *  bites (a plan-moving claim must wear its modal). DELIBERATELY NARROW, by prefix ALONE:

@@ -31,6 +31,7 @@
  * PURE (engine-purity lint): no clock, entropy, or environment.
  */
 import type { Distribution } from '@shared/model'
+import { median, percentile } from '@engine/confidence'
 import {
   afterTaxBequestPerPath,
   rankCandidates,
@@ -110,11 +111,11 @@ export function goalHigherIsBetter(goal: OracleGoal): boolean {
 // ---- §S2 the skew disclosure (the INTRACTABLE-exit honest channel) --------------------------------
 
 /**
- * A raw distributional skew read (orientation-free) over a per-path real-$ statistic. The quantiles use
- * the confidence band's nearest-rank convention (a mirror of `confidence.ts` `median`/`percentile`,
- * lines 105–116) so a "typical" figure the disclosure hands U16 lines up with the band's own p10/p50 —
- * U16 MUST single-source this convention against `confidence.ts` when it renders the two adjacently
- * (flagged in the build handoff); `objective.test.ts` pins the convention against a known vector meanwhile.
+ * A raw distributional skew read (orientation-free) over a per-path real-$ statistic. The quantiles are
+ * SOURCE-BOUND to the confidence band's nearest-rank convention — `distributionSkew` calls the exported
+ * `confidence.ts` `median`/`percentile` DIRECTLY (U16 §Q6 fold; the re-typed local mirror was deleted),
+ * so a "typical" figure the disclosure hands U16 lines up with the band's own p10/p50 byte-for-byte and
+ * can never drift from it; `objective.test.ts` pins the identity against `@engine/confidence`.
  */
 export interface DistributionSkew {
   readonly meanReal: number
@@ -126,20 +127,6 @@ export interface DistributionSkew {
 }
 
 const sortAsc = (xs: readonly number[]): number[] => [...xs].sort((a, b) => a - b)
-
-/** Nearest-rank percentile on an ASCENDING-sorted sample — mirror of `confidence.ts:113-116`. */
-const sortedPercentile = (sorted: readonly number[], p: number): number => {
-  const idx = Math.min(sorted.length - 1, Math.max(0, Math.floor(p * (sorted.length - 1))))
-  return sorted[idx] ?? 0
-}
-
-/** Median on an ASCENDING-sorted sample (even n averages the two middles) — mirror of `confidence.ts:105-111`. */
-const sortedMedian = (sorted: readonly number[]): number => {
-  const n = sorted.length
-  const mid = Math.floor(n / 2)
-  if (n % 2 === 1) return sorted[mid] ?? 0
-  return ((sorted[mid - 1] ?? 0) + (sorted[mid] ?? 0)) / 2
-}
 
 /**
  * Mean + median + p10/p90 of a per-path statistic. Every element must be FINITE (insight 010 — a NaN
@@ -160,9 +147,10 @@ export function distributionSkew(values: readonly number[]): DistributionSkew {
   const sorted = sortAsc(values)
   return {
     meanReal: s / values.length,
-    medianReal: sortedMedian(sorted),
-    p10Real: sortedPercentile(sorted, 0.1),
-    p90Real: sortedPercentile(sorted, 0.9),
+    // The p10/p50/p90 convention is SOURCE-BOUND to the confidence band (U16 §Q6) — one home, no drift.
+    medianReal: median(sorted),
+    p10Real: percentile(sorted, 0.1),
+    p90Real: percentile(sorted, 0.9),
   }
 }
 

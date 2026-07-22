@@ -396,6 +396,7 @@ describe('solve() → the wire round-trip (§S5 (4))', () => {
       namedDriver: 'sampling-noise-near-tie',
       skewDisclosure: undefined,
       withheldConversionLevers: [],
+      disclosedDirectional: [],
       solverCodeVersion: 1,
     }
     const view = solveFromWire(packSolveWire(payload))

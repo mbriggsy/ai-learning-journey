@@ -84,6 +84,13 @@ import type { SolvePayload, SolveRequest } from '@engine/solver/solveEntry'
 // predicate (it drags no MC compute; cancel.ts imports only the version constant). The UNCONDITIONAL
 // discard rule lives in ONE tested home, wired here (insight 048 — the decision is never inlined).
 import { shouldCommitSolve } from '@engine/solver/cancel'
+// U16 §S1 — the solve-run FINGERPRINT (invalidation SOURCE-BINDS to this pure identity, never a
+// bespoke epoch mirror — the forked-seam trap). A runtime import of one pure leaf function: it
+// reaches only `solverCandidateId` + a self-contained canonical serializer (candidates.ts's heavy
+// magiLandscape/taxCore imports are unreachable from that path — tree-shaken; verify:bundle guards
+// the budget). The store computes BOTH the dispatched run's identity AND the fresh-vs-committed diff
+// with this one function, so the comparison is apples-to-apples.
+import { solverRunFingerprint, type SolverRunFingerprint } from '@engine/validation/solverRunFingerprint'
 // The display-geometry constants the sticky gates read — the engine's OWN exported values
 // (never re-typed; the same objects confidence.ts computes the emitted margins against).
 import { DOLLAR_STEP, STATE_OPTIMISM_RANK, SURVIVAL_GRID } from '@engine/confidence'
@@ -248,14 +255,26 @@ export type SolvePreconditionGap = 'goal-unset' | 'buckets-defaulted'
 export type SolveAnswer =
   | { readonly kind: 'idle' } // no solve invited yet (the second beat not opened)
   // A precondition blocked the dispatch — the solve was NEVER sent (no Tier-1-only tie-break
-  // crowned as advice). `label` is a stable MACHINE key (no copy), equal to `gap`.
+  // crowned as advice). `label` is a stable MACHINE key (no copy), equal to `gap`. Structurally
+  // DISTINCT from a committed withheld payload (§S1): a pre-dispatch USER precondition (goal /
+  // buckets), never a worker-computed refusal — two calm states, both naming the true reason.
   | { readonly kind: 'blocked'; readonly gap: SolvePreconditionGap; readonly label: SolvePreconditionGap }
   // A solve is in flight (the calm "working on it" window). `label` is a machine key; the
   // wait's CHARACTER is deferred (profile.ts), so no copy rides here.
   | { readonly kind: 'pending'; readonly label: 'solving' }
   // A solve committed — the reconstructed payload (recommended / refused / withheld /
-  // token-withheld / mint-failed; each its own structured flag via `payload.kind`).
-  | { readonly kind: 'committed'; readonly payload: SolvePayload }
+  // token-withheld / mint-failed; each its own structured flag via `payload.kind`). `fingerprint`
+  // is the solver-run identity it was solved on (§S1) — the committed arm carries WHAT IT SOLVED
+  // ON, so a later draft edit diffs a freshly-built fingerprint against it (source-bound to
+  // solverRunFingerprint, never a bespoke mirror).
+  | { readonly kind: 'committed'; readonly payload: SolvePayload; readonly fingerprint: SolverRunFingerprint }
+  // §S1 INVALIDATION: a draft mutation changed a ranking-affecting input since this rec was found,
+  // so the committed rec no longer describes the current household. Demoted to this structured
+  // state — NEVER a stale rec rendered as current, and NEVER an auto-re-solve (re-solving is
+  // INVITED, like the beat itself). Mirrors U12's tier-less inputs-incomplete demotion on the solve
+  // channel; TIER-LESS by construction (the vertical-fit gate must never satisfy on it). `label` is
+  // a machine key; the copy (`inputsChangedNote`) is minted in copy.ts and rendered in S3.
+  | { readonly kind: 'stale'; readonly label: 'inputs-changed' }
   // The worker promise rejected (worker death / clone failure) — the calm retry mode, never an
   // uncaught rejection into the UI (the recompute() precedent).
   | { readonly kind: 'compute-error'; readonly reason: string }
@@ -572,6 +591,41 @@ export function createMemoryModel(deps: MemoryModelDeps): MemoryModel {
     notify()
   }
 
+  // U16 §S1 — the solve-run fingerprint of a dispatched request (its whole ranking-affecting input
+  // set; see solverRunFingerprint's header for the fail-closed scope). Computed store-side from the
+  // SAME request handed to the worker, so the committed identity and every fresh diff share one
+  // definition (never a re-typed subset).
+  const fingerprintOf = (request: SolveRequest): SolverRunFingerprint =>
+    solverRunFingerprint(request.base, request.candidates, request.ranking, {
+      seedA: request.seedA,
+      tieTolerance: request.tieTolerance,
+    })
+
+  // The CURRENT draft's solve fingerprint, or null when the draft can no longer build a solve
+  // request (a defaulted bucket / a removed required fact — itself an invalidation). Built through
+  // the SAME injected builder dispatchSolve uses, so the fresh identity is never a bespoke
+  // re-derivation of the run.
+  const currentDraftFingerprint = (): SolverRunFingerprint | null => {
+    const build = deps.builders.buildSolveDispatch
+    if (build === undefined) return null
+    const request = build(draft)
+    return request === null ? null : fingerprintOf(request)
+  }
+
+  // §S1 INVALIDATION: demote a COMMITTED solve whose fingerprint no longer matches the current
+  // draft to the structured `stale` state. Only the committed arm demotes; a null fresh fingerprint
+  // (the draft can't build a run any more) is itself a change. Mutates `solveAnswer` in place — the
+  // caller owns the notify. Returns true iff it demoted. It NEVER dispatches: re-solving is invited,
+  // never stormed on a draft edit (the planted auto-re-solve mutant re-dispatches here, which the
+  // no-auto-resolve test forbids).
+  const invalidateStaleSolve = (): boolean => {
+    if (solveAnswer.kind !== 'committed') return false
+    const fresh = currentDraftFingerprint()
+    if (fresh !== null && fresh === solveAnswer.fingerprint) return false
+    solveAnswer = { kind: 'stale', label: 'inputs-changed' }
+    return true
+  }
+
   return {
     subscribe(listener) {
       listeners.add(listener)
@@ -582,6 +636,10 @@ export function createMemoryModel(deps: MemoryModelDeps): MemoryModel {
 
     update(mutate) {
       draft = mutate(draft)
+      // §S1 invalidation: a draft edit that changes the solver-run fingerprint demotes a committed
+      // recommendation to `stale` — never a stale rec rendered as current, and NEVER an auto-re-solve
+      // (re-solving is invited, not stormed). A no-op for every non-committed solve state.
+      invalidateStaleSolve()
       notify()
     },
 
@@ -695,9 +753,21 @@ export function createMemoryModel(deps: MemoryModelDeps): MemoryModel {
         return
       }
 
-      // Dispatch. Mint the epoch, render the pending state, and commit-if-newer on resolve (a rapid
-      // re-invite discards the stale in-flight solve). The oracle-cleared token is minted worker-side
-      // inside runSolve (it cannot cross the wire); every payload arm is a NAMED bin (insight 092).
+      // RECOMMEND-SECOND ORDERING (§S1): the solve DISPATCHES only after the spine beat has
+      // committed — the spine lane never starves the one shared worker. Source-binds to
+      // `everResolved` (the same flag the U12 demotion gates on), never a bespoke ordering mirror.
+      // Belt-and-suspenders behind the UI (the affordance lives in the doors region, shown only
+      // post-spine-commit): a no-op keeps the solve channel dormant until the first beat lands. NOT
+      // a `blocked` arm — the two blocked states name USER preconditions (goal / buckets); this is a
+      // structural ordering guard, not a user gap.
+      if (!everResolved) return
+
+      // Dispatch. Compute the run FINGERPRINT from the SAME request handed to the worker (§S1) so
+      // the committed arm carries exactly what it solved on. Mint the epoch, render the pending
+      // state, and commit-if-newer on resolve (a rapid re-invite discards the stale in-flight solve).
+      // The oracle-cleared token is minted worker-side inside runSolve (it cannot cross the wire);
+      // every payload arm is a NAMED bin (insight 092).
+      const dispatchedFingerprint = fingerprintOf(request)
       const epoch = ++solveDispatchedEpoch
       solveAnswer = { kind: 'pending', label: 'solving' }
       notify()
@@ -717,10 +787,23 @@ export function createMemoryModel(deps: MemoryModelDeps): MemoryModel {
         // cancelled-hold mirror). commitSolve's own committed-epoch guard is defense-in-depth; this
         // guard is load-bearing while the newer dispatch is still PENDING (nothing committed yet).
         if (epoch !== solveDispatchedEpoch) return
-        commitSolve(
-          epoch,
-          view.ok ? { kind: 'committed', payload: view.payload } : { kind: 'compute-error', reason: view.reason },
-        )
+        if (view.ok) {
+          // PENDING-DURING-EDIT guard (§S1, the calm-but-wrong close): if the draft's fingerprint
+          // moved WHILE this solve was in flight (an edit during the ~72s wait), the just-computed
+          // rec already describes a superseded household — commit the `stale` state, never a rec for
+          // the old inputs shown as current for even one frame. A fresh fingerprint that still
+          // matches means no ranking-affecting edit landed, and the rec stands.
+          const fresh = currentDraftFingerprint()
+          const stillCurrent = fresh !== null && fresh === dispatchedFingerprint
+          commitSolve(
+            epoch,
+            stillCurrent
+              ? { kind: 'committed', payload: view.payload, fingerprint: dispatchedFingerprint }
+              : { kind: 'stale', label: 'inputs-changed' },
+          )
+        } else {
+          commitSolve(epoch, { kind: 'compute-error', reason: view.reason })
+        }
       } catch {
         // A rejected engine promise (worker death, clone failure) is the calm compute-error mode —
         // but still epoch-held: a superseded dispatch's rejection must not blank the newer pending.

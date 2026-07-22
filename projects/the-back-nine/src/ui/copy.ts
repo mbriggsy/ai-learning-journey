@@ -1129,6 +1129,17 @@ export const copy = {
   // limits never touch a decumulation-only answer — only the blend clock speaks.
   stalenessBlendSpine:
     'The fund data we read your accounts against has been updated since your save — this reading uses today’s.',
+  // Act-4 · U16 §S1 — the SOLVE channel's invalidation note (the `SolveAnswer` stale/re-solve arm,
+  // machine label 'inputs-changed'). A draft edit changed a ranking-affecting input since the
+  // committed recommendation was found (source-bound to solverRunFingerprint), so the rec no longer
+  // describes the current household — the store demotes it, never rendering a stale rec as current
+  // and never auto-re-solving. Re-solving is INVITED (R11), like the beat itself; this is a calm
+  // status line, not a nag. The KEY is minted here (S1) so the store's structured flag has its
+  // humane string ready; the render wires it in S3. DISTINCT from the save-vintage staleness clocks
+  // above — those name a rulebook that moved under a SAVED answer; this names the user's OWN
+  // in-session edits moving out from under an unsaved recommendation.
+  inputsChangedNote:
+    'Some of your numbers have changed since we found this — re-open it whenever you’d like the current read.',
   // The standing hero note (renders WITH the first verdict when any clock fired — never
   // after it; the answer is already recomputed under today's rules, this line says so).
   // DELIBERATELY ONE LINE at the reading measure: the full per-clock disclosure lives at
@@ -1141,6 +1152,142 @@ export const copy = {
   // so the echo keeps the two STANDING epistemic facts — rules currency + input vintage —
   // and the "what changed" alarm stays at the gate (just affirmed through, per-clock).
   stalenessHeroNote: 'Figured under today’s rules, from the numbers you saved.',
+  // Act-4 · U16 §S2 — the ENTRY surfaces (the recommend-second's invited affordance, the GoalPicker,
+  // the pending tell). All calm, plain-language, hedge-free-where-a-hedge-would-mush (a door label and
+  // a status line carry no figure to hedge — the require-hedge scope must stay on the GRADE/figure keys
+  // S3 adds, never a bare `recommend` sweep that would demand a modal on THESE two). No count-up, no ETA.
+  //
+  // The invited affordance — the recommend-second door in the doors region (R11: invited, never a nag;
+  // R12: no imperative). A DOOR, calm-styled like its siblings; the goal choice precedes the solve.
+  recommendInviteCta: 'See the recommended strategy',
+  // Act-4 · U16 §S4 — the goal RE-PICK door (the committed beat's "aim at something else"): the
+  // un-saved hypothetical is freely re-aimable, and a re-pick VISIBLY re-solves (both futures
+  // update). A calm door label, NOT an imperative advice verb ("aim" is not a directive verb, so it
+  // never trips copyGuard) — `recommend*` = verdict-scoped, so no forced hedge mushes it.
+  recommendRepickCta: 'Aim at a different goal',
+  // The solve's pending tell — the shipped thinking-breathe family's plain-language label (burned/045
+  // clear-after-announce owns the a11y side). Ends with the ellipsis glyph (loading-state convention);
+  // NO spinner / % / count / ETA (the ~72s full-precision wait reassures by calm, never a fake clock).
+  recommendPendingLabel: 'Working out your strategy…',
+  // The GoalPicker (the Tier-2 goal that precedes the solve — RECOMMENDATION_GOALS, model.ts). A real
+  // labelled-radio dialog; three-goals-each-a-gloss per the spec, live vocabulary = {leave-more,
+  // pay-less-tax} today (live-bigger-now is deferred). Unset sentinel — no goal is pre-selected.
+  goalPickerTitle: 'What should your plan aim for?',
+  goalPickerIntro: 'With the basics covered, pick the one thing your plan should lean toward.',
+  goalPickerConfirmCta: 'See the strategy',
+  // The goal options — a plain label + a one-line noun-phrase gloss each (no imperative verb, no jargon).
+  // `leave-more` = the after-tax-to-heirs bequest (first-order §1014/IRD at the disclosed heir bracket —
+  // never the gross figure); the gloss names the after-tax frame honestly.
+  goalLeaveMoreLabel: 'Leave more behind',
+  goalLeaveMoreGloss: 'More left for your heirs, after taxes.',
+  // `pay-less-tax` = minimize lifetime tax paid.
+  goalPayLessTaxLabel: 'Pay less tax',
+  goalPayLessTaxGloss: 'Less total tax over your lifetime.',
+
+  // --- Act-4 · U16 §S3 — the COMMITTED beat (the honesty arc). PREFIX LAW (copyGuard):
+  //   · GRADE WORDS + nameplate + the calm-unavailable + the withheld HEADINGS ride the `recommend*`
+  //     prefix = isVerdictKey (superlative/free-numeral gated) but NOT control-swept — terse verdicts
+  //     wear no forced modal (the "On track" precedent), so a grade word never mushes into a hedge.
+  //   · PLAN-MOVING CLAIMS ride the new control prefixes (recDelta / recSkew / recGradeNote /
+  //     recCompose / recHold / recRunnerUp) = require-hedge-swept: a figure/direction/confidence claim
+  //     that moves a plan must WEAR its modal. The enum ids 'just-do-it'/'coin-flip' stay INTERNAL —
+  //     never authored here (the render maps them to these humane words). All FIRST-DRAFT wording — the
+  //     exact reframe TONE is the N=1 cold-read's call (spec ⚑ #2). ---
+
+  // The grade WORDS (the calibrated-confidence lockup headline; hedged-confident, never an absolute).
+  // just-do-it → a confident lean; coin-flip → a close call. Terse verdicts (recommend* = verdict-scoped).
+  recommendGradeConfident: 'A confident lean',
+  recommendGradeCoinFlip: 'A close call',
+  // The no-action baseline nameplate (Q7) — a STATIC label, NO number, the A↔B residual never rendered.
+  recommendBaselineNameplate: 'Compared with your plan today',
+  // The calm couldn't-work-it-out state (a solve refusal / mint-failure / demotion-withhold — each a
+  // structured bin, surfaced as ONE honest retry line, never a raw reason code or a blank).
+  recommendUnavailable:
+    'We couldn’t work out a recommendation just now — adjust a number, or re-open this, to try again.',
+  // The withheld-render HEADINGS (calm-competent, never an alarm / red badge). The whole-solve hold
+  // (a household waiting on a certification) and the conversion-only hold (the sequencing rec ships).
+  recommendHeldHeading: 'Holding this recommendation for now',
+  recommendWithheldConversionsHeading: 'Roth conversions — held for now',
+
+  // The DELTA-as-hero comparative is a SLOT (recDelta*, below). These are the non-figure claim lines.
+
+  // The compose state (surplus + no-change): NO-dollar reassurance, the word "already" carrying the
+  // relief, the inherited confidence carrying the honesty. Never a fabricated dollar hero, never "safe
+  // either way" (DEAD COPY). recCompose* ⇒ require-hedge-swept ("likely" carries it).
+  recComposeAlready:
+    'You’re already on one of the strongest paths we tested — nothing else we tried looks likely to pull clearly ahead.',
+
+  // The ShapeDisclosure note (composeShapeDisclosure → HUMANE): the grade's LEVEL rides methodology
+  // substrate that isn't final, so treat the exact edge as a lean, not a lock. recGradeNote* ⇒ swept
+  // ("could" carries it). Dormant today (no methodology-substrate directional entry is live).
+  recGradeNoteShape:
+    'A couple of the figures behind this are still being finalized, so the exact edge could shift — it’s a lean here, not a lock.',
+  // The coin-flip HINGE — names WHAT IT HINGES ON from the payload's named driver (never a fabricated
+  // cause). The ACA-regime probe, the sampling-noise sentinel, and a fail-closed generic for any future
+  // probe name. recGradeNote* ⇒ swept ("can" carries each).
+  recGradeNoteHingeAca:
+    'Which one comes out ahead can hinge on whether the enhanced ACA discount returns — and we can’t call that yet.',
+  recGradeNoteHingeSampling:
+    'These two run so close that which one edges ahead can come down to chance across the futures we tested.',
+  recGradeNoteHingeGeneric:
+    'Which one comes out ahead can hinge on an assumption we can’t pin down yet, so it’s a lean here, not a lock.',
+  // The calm caveat when the confidence GRADE couldn't be computed (a one-arm set, or the paths were
+  // too few) — the delta still shows, but the "how close is this call" read is withheld honestly.
+  recGradeNoteUngraded:
+    'We couldn’t grade how close this call is here, so the exact edge could be rough — lean on the numbers, not a confidence read.',
+
+  // The runner-up, one tap down as TEXT (R23 — retained + reachable; stripping it fails the suite).
+  // recRunnerUp* ⇒ swept ("often" carries it).
+  recRunnerUpWhy:
+    'The runner-up ran close; this one came out a little ahead more often across the futures we tested.',
+
+  // The WITHHELD reasons — one humane string per WithheldReason arm (Q5: the TRUE reason, the DIRECTION
+  // honestly, framed as REFUSING TO GUESS; an unclassified reason fails CLOSED with the generic). The
+  // state-cert arm is a SLOT (recHoldStateCert, below — it names the state). recHold* ⇒ swept.
+  recHoldTrend:
+    'We’re holding off on ranking Roth conversions here — the numbers hinge on how Medicare’s costs climb over the years, and we won’t lean on an estimate we can’t yet stand behind. Converting could help or hurt, so we’d rather wait than guess.',
+  recHoldAcaUnverified:
+    'Our health-insurance figures are past their re-check date, so we’re holding the recommendation until we re-verify the marketplace rules — a stale read there could tip which strategy comes out ahead.',
+  recHoldPrimaryDirectional:
+    'A figure this recommendation leans on hasn’t been finalized yet, so we’re holding off rather than rank on a number that could still move.',
+  recHoldEpsilon:
+    'One of the tool’s own calibration numbers isn’t set, so we’re holding the recommendation rather than risk a ranking that could be off.',
+  recHoldGeneric:
+    'We’re holding this recommendation back for now — leaning on a number we can’t yet stand behind could mislead, and we’d rather wait than guess.',
+  // The COUPLING caveat (Q5, from the red team's Attack 4): withdrawal order and conversions rank
+  // JOINTLY, so a sequencing-only winner is a coupled sub-solution — the read for now, not the last word.
+  recHoldCoupling:
+    'Withdrawal order and conversions are weighed together, so this could still shift once those rates are certified — it’s the read for now, not the last word.',
+
+  // --- Act-4 · U16 §S3b — the disclosures adjacent to the delta (R7 nets) + the viz arm labels + the
+  //     grade-signal standalone aria name. recDisc* ⇒ require-hedge-swept (each wears its modal — a
+  //     methodology caveat that qualifies a plan-moving figure); the viz arm labels are plain nouns
+  //     (not plan-moving), and the viz aria SLOT below wears the hedge. ---
+  // The SS claim-age held-fixed note (a disclosure seat — NOT optimized in the comparison). "assume" hedges.
+  recDiscSsClaimFixed:
+    'We assume you each claim Social Security at the ages you entered, and hold those steady while we compare.',
+  // The NIIT scope note — the federal surtax on higher investment income the delta doesn’t split out.
+  // "could" hedges; no bare numeral (the surtax rate is named in plain language, never a free figure).
+  recDiscNiit:
+    'This weighs your federal income tax; a federal surtax on higher investment income could also apply and isn’t broken out here.',
+  // The state-tax scope note — priced only for the roster states; elsewhere the delta is federal-only.
+  recDiscStateTax:
+    'Where we can’t yet price a state’s income tax, this compares federal tax only — the state piece could move it either way.',
+  // The ACA SLCSP/CSR caveat, by reference — shown only when the delta LEANS ON ACA. "could" hedges.
+  recDiscAcaSlcsp:
+    'This leans on your marketplace benchmark and cost-sharing figures; if those shift, the edge here could move.',
+  // The viz arm labels (string-free viz; DIRECT end-of-line labels, never a color legend). Plain nouns.
+  recVizWithLabel: 'The recommended strategy',
+  recVizWithoutLabel: 'Your plan today',
+  // Act-4 · U16 §S4 — the RUNNER-UP comparison viz arm label (winner vs runner-up, one tap down). A
+  // plain noun (not a plan-moving claim — the hedged claim is `recRunnerUpWhy`); the recommended arm
+  // keeps its `recVizWithLabel` identity so the hatch/triangle means "recommended" across both vizzes.
+  recVizRunnerUpLabel: 'The runner-up strategy',
+  // The grade signal's standalone aria name (the ungraded glyph, drawn with no adjacent verdict word).
+  recGradeAriaUngraded: 'Confidence rating unavailable',
+  // The runner-up's one-tap-down toggle label (R23: retained + reachable). NOT control-scoped (a
+  // disclosure TOGGLE, never a plan-moving claim — the claim itself is `recRunnerUpWhy`, hedged).
+  recSeeRunnerUp: 'How the runner-up compared',
 } as const satisfies Record<string, string>
 
 export type CopyKey = keyof typeof copy
@@ -1738,6 +1885,42 @@ export const slots = {
     const edge = unconfirmed ? ' That sits at the edge of what this window can confirm.' : ''
     return `The essentials alone were penciled as covered around ${calendarYear} — by the calendar, that’s about now — ${oddsText}.${edge}`
   },
+
+  // --- Act-4 · U16 §S3 — the delta-as-hero + skew + state-cert SLOTS (the numeric channel; every
+  //     figure arrives PRE-FORMATTED by money.ts, so the template carries no hardcoded numeral). All
+  //     control-scoped by their recDelta*/recSkew*/recHold* prefixes ⇒ require-hedge-swept (the sample
+  //     renders in copyGuard.test.ts's SLOT_RENDER must WEAR a modal — each does). ---
+  /** The delta-as-hero for `leave-more`: the goal-dollar DELTA as a comparative, the WORD ("more")
+   *  carrying direction so the magnitude reads sign-free. "about" is the require-hedge modal. */
+  recDeltaLeaveMore: (deltaFormatted: string): string =>
+    `Leaves about $${deltaFormatted} more to your heirs than today’s plan, after taxes.`,
+  /** The delta-as-hero for `pay-less-tax` (the surviving pivot: "keeps ~$X more" — the DEAD "safe
+   *  either way" absolute stripped). "about" is the require-hedge modal. */
+  recDeltaPayLessTax: (deltaFormatted: string): string =>
+    `Keeps about $${deltaFormatted} more out of your lifetime tax than today’s plan.`,
+  /** The §S2 skew disclosure (leave-more): the MEAN ranks + displays, but a few lucky futures pull it
+   *  up, so the disclosure QUOTES THE MEDIAN as the typical bequest. "about" is the require-hedge modal;
+   *  the median arrives pre-formatted (single-sourced against the band's percentile convention). */
+  recSkewMedian: (medianFormatted: string): string =>
+    `A few very good futures pull the average up — the more typical outcome is closer to about $${medianFormatted}.`,
+  /** The withheld reason for `state-certification-pending` (Q5, LIVE for the NC household): the STATE
+   *  by name, the TRUE reason (rates not officially set), the DIRECTION honestly, the ~August timeframe,
+   *  framed as REFUSING to guess. "could" + "around" carry require-hedge. `stateName` arrives from the
+   *  existing stateOption* copy (no re-typed state name). */
+  recHoldStateCert: (stateName: string): string =>
+    `${stateName} hasn’t officially set its upcoming income-tax rates yet, so we’re holding off rather than guess — converting could help or hurt depending on the final rate, and we won’t call it until it’s certified, which we expect around August.`,
+
+  // --- Act-4 · U16 §S3b — the heir-bracket disclosure (leave-more) + the viz aria sentence (AT parity:
+  //     every disclosed figure reachable inside the role="img" name). Figures PRE-FORMATTED (money.ts). ---
+  /** The leave-more heir-bracket note — the assumed IRD bracket the after-tax bequest is computed at
+   *  (recDisc* ⇒ require-hedge-swept; "Assumes" + "roughly" carry it). The percent arrives pre-formatted. */
+  recDiscHeirBracket: (percentFormatted: string): string =>
+    `Assumes your heirs are in roughly the ${percentFormatted}% tax bracket when they inherit — adjust it in your assumptions if that’s off.`,
+  /** The RecommendationViz accessible sentence (the role="img" name): both arms' magnitudes AND the
+   *  delta, so the whole comparison is reachable in the a11y tree (A2 AT-parity). "about" carries the
+   *  hedge; every figure arrives pre-formatted (the axis dialect), so the sentence carries no bare numeral. */
+  recVizAria: (withoutLabel: string, withoutFig: string, withLabel: string, withFig: string, deltaFig: string): string =>
+    `${withoutLabel} lands near about $${withoutFig}; ${withLabel} about $${withFig} — a difference of about $${deltaFig}.`,
 } as const
 
 /**

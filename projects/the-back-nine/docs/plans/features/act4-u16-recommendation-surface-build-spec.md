@@ -290,6 +290,48 @@ FIGURES beneath an unchanging winner; a winner-swap on refine is forbidden (if t
 made, S5 doesn't ship and the full-precision breathe stands). The interactive→full refinement
 carries `SolveComputeTier` on the payload — never a tier the fit gate can see (wall #4).
 
+> **§S5 DEFERRAL — 2026-07-22, the reference device: S5 does NOT ship. The clean winner-cannot-flip
+> proof CANNOT be made, and under wall #2 the tier is degenerate — so the full-precision breathe
+> (S2's `.solve-pending`) STANDS and the `.cs-provisional` heartbeat stays RESERVED + unwired.** The
+> gate ran its own "attempt the proof first" path (the shipped `runSearch`→`selectRecommendation`
+> crown at 4000 vs the 16000-path `solverMinBPaths` confirm; the 095 shipped-path law), and returned
+> `deferred` on two independent findings, each sufficient:
+>
+> (1) **THE FLIP BAND IS PROVABLY NON-EMPTY (measured mechanism).** The interactive tier reduces the
+> seed-A SEARCH to `solverInteractivePaths` (4000); the selection shrinkage tolerance
+> (`selectionTieTolerance` = 1.96·SE of the CRN-paired per-path goal difference, heldOutSeed.ts)
+> scales as 1/√n, so the near-tie COLLAPSE band is EXACTLY 2× wider at 4000 than at the 16000-path
+> confirm — measured directly through the shipped `tier2` / `selectionTieTolerance` /
+> `survivingAdvantage` primitives on a surplus Medicare world (every row: tol₄ₖ = 2·tol₁₆ₖ, e.g.
+> $61/$31, $121/$61, $243/$123, $365/$185). A conversion whose advantage lands in `(tol₁₆ₖ, tol₄ₖ)`
+> — equivalently a CRN t-statistic in (1.96, 3.92) — DISPLACES the prior at full precision (crowned
+> convert) but COLLAPSES to the prior at the interactive tier (crowned no-change): a prior↔active
+> WINNER SWAP on refine, at exactly the no-change/act decision boundary. So "NEVER swaps the winner
+> on refine" is FALSE as a universal guarantee, and the S0.1 pin (one seed, three cells) cannot
+> certify a universal "never" over the continuous household space. The band is THIN — CRN drives the
+> paired SE to ~$15–30 so it bites only a near-breakeven conversion (this scan: the committed W2
+> near-tie held 6/6, and clearly-beneficial conversions held 40/40 at t-stats 115–227) — but thin is
+> not empty, and thin sits precisely where a calm-but-wrong swap does the most damage.
+>
+> (2) **THE DEGENERACY (spec-internal, dispositive).** Wall #2 fixes every displayed figure + the
+> grade at `solverMinBPaths` (16000) in BOTH tiers. So when the winner is stable — the proof's own
+> promise — the provisional lockup and the final lockup are BYTE-IDENTICAL (same candidate, same
+> seed-B figures, same 16000 paths): the `.cs-provisional` crossfade would animate NOTHING. There is
+> no honest "provisional that sharpens FIGURES beneath an unchanging winner" to render — under wall
+> #2 the figures never sharpen; the tier's ONLY non-identical transition is the forbidden swap. The
+> latency win is modest anyway (the seed-B display + the m-draw grade dominate cost and are fixed at
+> 16000; only the seed-A search drops), so the interactive provisional buys little while adding a
+> greenfield router + two-phase store dispatch + heartbeat and a residual swap-risk — whereas S2's
+> full-precision breathe waits honestly and shows nothing until the answer is final. A forced ship is
+> the failure mode (the council's own S5 gate).
+>
+> **Standing posture:** the pinned knobs, the fail-closed `assertFallbackCalibrated` guard, and the
+> `SolveComputeTier` / `CoarseThenRefinePlan` shapes remain shipped + tested (`fallback.ts` unchanged;
+> the ladder stays load-bearing in the blocking direction). **Revival trigger:** S5 revives only when
+> a future profile proves the (already-committed-first) spine lane STARVES *and* a winner-stable,
+> honestly-renderable provisional design clears this gate — a design that reduces DISPLAY latency
+> without down-sampling any displayed figure (the thing wall #2 forbids of the current shape).
+
 ---
 
 ## Cross-cutting laws (all stages)

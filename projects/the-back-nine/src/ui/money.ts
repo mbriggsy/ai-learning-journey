@@ -29,6 +29,29 @@ export function formatPerMonth(perMonthReal: number): string {
   return grouped.format(stepped)
 }
 
+/** The Q1 recommendation DELTA hero magnitude — grouped with thousands separators and rounded to a
+ *  humane, magnitude-scaled step so a comparative reads calm and never spuriously precise
+ *  (back-nine-design §3): "$48,000", "$6,300", "$230,000" — never "$47,832". SIGN-AGNOSTIC on purpose
+ *  (|x|): the copy WORD carries the direction ("more" / "less"), exactly like {@link formatPerMonth}, so
+ *  the slot never renders a bare "$-". The delta is a bequest/lifetime-tax figure (tens of thousands to
+ *  low millions), so the step scales: nearest $100 under $10k, nearest $1,000 under $100k, nearest
+ *  $10,000 above — two significant figures, the ruler naming a calm gridline, not a solve. Pre-formats
+ *  the slot input so the rendered comparative carries no hardcoded numeral (copy.ts SLOT DISCIPLINE). */
+export function formatDeltaDollar(deltaReal: number): string {
+  const v = Math.abs(deltaReal)
+  const step = v < 10_000 ? 100 : v < 100_000 ? 1_000 : 10_000
+  return grouped.format(Math.round(v / step) * step)
+}
+
+/** The heir-bracket disclosure percent — the assumed IRD bracket (a fraction in [0,1)) as a whole
+ *  percent for the leave-more heir-bracket note ("about 24%"). Humane: rounded to a whole percent (a
+ *  bequest bracket is a coarse assumption, never spuriously precise — back-nine-design §3). Sign-free
+ *  (a bracket is ≥ 0); the copy WORD ("about") carries the hedge. Pre-formats the slot input so the
+ *  rendered note carries no hardcoded numeral (copy.ts SLOT DISCIPLINE). */
+export function formatBracketPercent(bracketFraction: number): string {
+  return `${Math.round(Math.abs(bracketFraction) * 100)}`
+}
+
 /** A humane y-axis tick — "$0", "$1.2M", "$500k". The band fan tops out in the low millions for a
  *  couple, so k/M suffixes keep the gridline legible without false precision. Negative inputs can't
  *  occur (a fan percentile is ≥ 0), but |x| is taken defensively so a stray sign never prints "$-".

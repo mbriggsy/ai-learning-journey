@@ -20,6 +20,8 @@ import {
   SERIES,
 } from '../palette'
 import { bandStopCss } from '../scale'
+import { VERDICT_GLYPH, type VerdictGlyph } from '../../ui/verdictSignal'
+import { GRADE_GLYPH } from '../../ui/GradeSignal'
 
 /**
  * The CVD self-test (back-nine-design §4) — the project's color-blind-safety gate. The reader
@@ -38,10 +40,14 @@ import { bandStopCss } from '../scale'
  * The gate is proven NON-VACUOUS (burned insight 070): a planted matched-luminance red/green
  * pair MUST fail the floor, asserted alongside the real tokens passing.
  *
- * SCOPE: covers what the viz layer renders TODAY — the two-series colors + the band ramp. DEFERRED
- * to the held render components (the N=1 cold-read): the verdict-state colors + icon swatches (with
- * verdictSignal.tsx), the icon-silhouette pairwise-distinctness check (with the icons), and the
- * line-over-band / label-over-band COMPOSITE arms (with ConfidenceBand) — see the LANDMINE below.
+ * SCOPE: covers the viz layer's two-series colors + the band ramp + the on-band composite (below),
+ * AND — U16 §S3b, A1 closure — the STATE-SIGNAL GLYPHS both render consumers draw: the six verdict
+ * silhouettes (verdictSignal.tsx) and the three confidence-GRADE silhouettes (GradeSignal.tsx). Those
+ * glyphs are drawn in pure --ink (NO per-state chroma), so the closure is two-part: (1) there is no
+ * per-state COLOR to collapse — asserted structurally (color is never the sole state signal), and
+ * (2) the silhouettes are pairwise-distinct FORMS — asserted with a planted-fail duplicate. The N=1
+ * cold-read stays the perceptual oracle for the glyph forms; this gate catches the realistic regression
+ * (a glyph aliased/reused for two states). The label-over-band composite stays with ConfidenceBand.
  */
 
 // Source-bound to palette.ts's canonical CVD_METRIC (never a re-typed 'oklab' literal — the
@@ -278,5 +284,68 @@ describe('CVD self-test — the D2c odds-ladder marks (crown vermilion + ink dot
 
   it('the crown is distinct from the ink dots under every CVD sim (color reinforces the ring + label)', () => {
     expect(minCvdDistance(CROWN, INK)).toBeGreaterThanOrEqual(CVD_MIN_OKLAB)
+  })
+})
+
+// ─── U16 §S3b (A1 closure) — the STATE-SIGNAL GLYPHS: verdict + confidence GRADE silhouettes ────────
+// The reader is color-blind, and the ConfidenceGrade is the most trust-load-bearing signal on the
+// recommendation surface (word + distinct SHAPE + aria-label, NEVER color alone). Both glyph sets are
+// drawn in pure --ink, so the closure is (1) NO per-state color to collapse and (2) pairwise-distinct
+// silhouettes — proven non-vacuous by a planted duplicate.
+
+/** A structural silhouette signature — the rounded coordinate multiset over a glyph's stroked paths +
+ *  filled dots. Two glyphs with the SAME overall FORM (or an aliased/duplicated glyph) collapse to the
+ *  same signature; distinct forms differ. Catches the realistic regression (a glyph reused for two
+ *  states); the cold-read remains the perceptual oracle. */
+function glyphSignature(g: VerdictGlyph): string {
+  const nums = (g.paths.join(' ').match(/-?\d+(?:\.\d+)?/g) ?? []).map(Number)
+  const dots = (g.dots ?? []).flat()
+  return [...nums, ...dots].map((n) => Math.round(n)).sort((a, b) => a - b).join(',')
+}
+
+describe('CVD self-test — the state-signal glyphs are NON-COLOR (no per-state chroma)', () => {
+  it('every verdict + grade glyph encodes its state in SHAPE ONLY — the glyph data carries no color field', () => {
+    // The glyph objects are {paths, dots?} — no per-state color key exists, so color can never be the
+    // sole (or even a) state channel for these signals (they render in currentColor = --ink).
+    const allowed = new Set(['paths', 'dots'])
+    for (const [state, g] of [...Object.entries(VERDICT_GLYPH), ...Object.entries(GRADE_GLYPH)]) {
+      for (const k of Object.keys(g)) {
+        expect(allowed.has(k), `${state} glyph carries only shape data (no per-state color): unexpected key "${k}"`).toBe(true)
+      }
+    }
+  })
+})
+
+describe('CVD self-test — the state-signal glyphs are pairwise-DISTINCT silhouettes (planted-fail)', () => {
+  const verdictEntries = Object.entries(VERDICT_GLYPH)
+  const gradeEntries = Object.entries(GRADE_GLYPH)
+
+  it('all six VERDICT silhouettes are pairwise distinct (C(6,2)=15 pairs)', () => {
+    for (let i = 0; i < verdictEntries.length; i++) {
+      for (let j = i + 1; j < verdictEntries.length; j++) {
+        const [na, a] = verdictEntries[i]!
+        const [nb, b] = verdictEntries[j]!
+        expect(glyphSignature(a), `${na} vs ${nb} must be distinct silhouettes`).not.toBe(glyphSignature(b))
+      }
+    }
+  })
+
+  it('all three GRADE silhouettes are pairwise distinct (confident / coin-flip / ungraded)', () => {
+    for (let i = 0; i < gradeEntries.length; i++) {
+      for (let j = i + 1; j < gradeEntries.length; j++) {
+        const [na, a] = gradeEntries[i]!
+        const [nb, b] = gradeEntries[j]!
+        expect(glyphSignature(a), `${na} vs ${nb} must be distinct silhouettes`).not.toBe(glyphSignature(b))
+      }
+    }
+  })
+
+  it('PLANTED: an aliased glyph (one state reusing another’s silhouette) COLLAPSES the signature — the probe is not vacuous', () => {
+    // The exact regression the gate guards: someone points 'coin-flip' at the 'confident' glyph. The
+    // signatures must then be EQUAL — proving the pairwise-distinctness arms above can actually fail.
+    const aliased: VerdictGlyph = GRADE_GLYPH.confident
+    expect(glyphSignature(aliased)).toBe(glyphSignature(GRADE_GLYPH.confident))
+    // …and a genuinely different form does NOT collapse (the probe is not trivially-equal either).
+    expect(glyphSignature(GRADE_GLYPH.confident)).not.toBe(glyphSignature(GRADE_GLYPH['coin-flip']))
   })
 })

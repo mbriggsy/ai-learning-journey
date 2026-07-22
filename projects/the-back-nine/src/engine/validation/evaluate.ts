@@ -25,6 +25,14 @@ import { simulate, type SimOutput } from '@engine/simulate'
 import type { Distribution, RecommendationGoal, SimulationParams } from '@shared/model'
 import { DRAWDOWN_POLICIES } from '@shared/model'
 import { applyCandidate, type CandidateStrategy } from '../solver/candidates'
+import { afterTaxBequestPerPath } from '../solver/objectiveHeadline'
+
+// The §1014/IRD per-path bequest formula is RE-HOMED to the simulate-free `objectiveHeadline.ts`
+// (U16 §Q6 — so the render-path objective≡headline guard can recompute it without dragging `simulate`
+// into the entry bundle) and RE-EXPORTED verbatim here: every existing importer (`objective.ts`,
+// `gradeCalibration.ts`, the oracle tests) keeps `from './evaluate'` unchanged, and the formula
+// (the M3 sign-inversion class) still lives in exactly ONE place.
+export { afterTaxBequestPerPath }
 
 /** The Tier-2 goal axis. ALIASED to the SHARED canonical vocabulary ({@link RecommendationGoal},
  *  model.ts) so the engine's ranking objective, the codec's enum gate, and the intake GoalPicker
@@ -75,31 +83,9 @@ const mean = (xs: readonly number[]): number => {
   return s / xs.length
 }
 
-/**
- * The per-path AFTER-TAX-to-heirs bequest VECTOR (real $) — the §1014/IRD first-order form: the
- * taxable bucket steps up (heirs owe nothing on the embedded gain), pre-tax + HSA are IRD-taxed at
- * the declared heir bracket, Roth passes tax-free. SINGLE-SOURCED here (U15 §S2): `scoreFromDistribution`
- * means this vector for the RANKING statistic (`afterTaxBequestMeanReal`), and `objective.ts`'s
- * skew-disclosure reads the SAME vector for its downside quantiles — the after-tax formula (the M3
- * sign-inversion class the whole architecture guards) is authored ONCE and never duplicated into a
- * parallel scorer. `undefined` when the run carried no tax overlay (there is no bequest lens). Pure.
- */
-export function afterTaxBequestPerPath(dist: Distribution, heirBracket: number): readonly number[] | undefined {
-  if (!(Number.isFinite(heirBracket) && heirBracket >= 0 && heirBracket < 1)) {
-    throw new Error(`[evaluate] heirBracket must be finite in [0, 1) (got ${heirBracket}) — insight 010`)
-  }
-  const ta = dist.taxAware
-  if (ta === undefined) return undefined
-  return ta.terminalTaxableReal.map(
-    (taxable, p) =>
-      taxable + // §1014: stepped up at death — heirs owe nothing on the gain
-      (ta.terminalPretaxReal[p] ?? 0) * (1 - heirBracket) + // IRD at the declared bracket
-      (ta.terminalRothReal[p] ?? 0) + // tax-free
-      (ta.terminalHsaReal[p] ?? 0) * (1 - heirBracket), // taxable to a non-spouse heir (first-order)
-  )
-}
-
-/** Score one resolved distribution (pure — the oracle's re-derivation arms drive it directly). */
+/** Score one resolved distribution (pure — the oracle's re-derivation arms drive it directly). The
+ *  §1014/IRD per-path bequest vector it means for `afterTaxBequestMeanReal` is `afterTaxBequestPerPath`,
+ *  re-homed to `objectiveHeadline.ts` and re-exported above — one formula, byte-identical everywhere. */
 export function scoreFromDistribution(dist: Distribution, heirBracket?: number): CandidateScore {
   if (heirBracket !== undefined && !(Number.isFinite(heirBracket) && heirBracket >= 0 && heirBracket < 1)) {
     throw new Error(`[evaluate] heirBracket must be finite in [0, 1) (got ${heirBracket}) — insight 010`)

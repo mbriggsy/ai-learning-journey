@@ -224,6 +224,16 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     // The floor line's anchored/arrived arms (ultramode 2026-07-09 — one screen, one time base).
     dateFloorCoveredAnchored: slots.dateFloorCoveredAnchored(4, 2031, 'about 8 of 10 odds', true),
     dateFloorCoveredPast: slots.dateFloorCoveredPast(2031, 'about 8 of 10 odds', false),
+    // Act-4 · U16 §S3 — the delta-as-hero + skew + state-cert slots (control-swept by their prefixes;
+    // the require-hedge control sweep below reaches these rendered samples). Figures pre-formatted.
+    recDeltaLeaveMore: slots.recDeltaLeaveMore('48,000'),
+    recDeltaPayLessTax: slots.recDeltaPayLessTax('12,000'),
+    recSkewMedian: slots.recSkewMedian('230,000'),
+    recHoldStateCert: slots.recHoldStateCert('North Carolina'),
+    // Act-4 · U16 §S3b — the heir-bracket disclosure (recDisc* ⇒ require-hedge-swept) + the viz aria
+    // sentence (recViz* — NOT control-scoped; universal-gate-swept only). Figures pre-formatted.
+    recDiscHeirBracket: slots.recDiscHeirBracket('24'),
+    recVizAria: slots.recVizAria('Your plan today', '740,000', 'The recommended strategy', '788,000', '48,000'),
   }
 
   it('every U10 delta-readout slot WEARS a hedge (the control readouts are slot-composed, so the require-hedge sweep must reach the rendered samples here)', () => {
@@ -561,6 +571,18 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     expect(isControlKey('bandLegendMedian'), 'band chart chrome is NOT control-scoped').toBe(false)
     expect(isControlKey('outcomeOnTrack'), 'a terse honest verdict wears no forced hedge').toBe(false)
     expect(isControlKey('survivorReadoutEyebrow'), 'an existing survivor readout is NOT swept in').toBe(false)
+    // U16 §S3 — the recommendation-surface PLAN-MOVING keys MUST be control-scoped (mutant c: remove a
+    // prefix from CONTROL_KEY_PREFIXES and require-hedge stops biting that key — this canary goes RED).
+    // Each row is one prefix's representative key; the grade WORDS + nameplate stay verdict-scoped (out).
+    expect(isControlKey('recDeltaLeaveMore'), 'the delta-as-hero is control-scoped (require-hedge)').toBe(true)
+    expect(isControlKey('recSkewMedian'), 'the skew median quote is control-scoped').toBe(true)
+    expect(isControlKey('recGradeNoteShape'), 'the ShapeDisclosure/hinge notes are control-scoped').toBe(true)
+    expect(isControlKey('recComposeAlready'), 'the compose reassurance is control-scoped').toBe(true)
+    expect(isControlKey('recHoldTrend'), 'the withheld reasons are control-scoped').toBe(true)
+    expect(isControlKey('recRunnerUpWhy'), 'the runner-up "why this beat it" is control-scoped').toBe(true)
+    expect(isControlKey('recDiscNiit'), 'the delta disclosures are control-scoped').toBe(true)
+    expect(isControlKey('recommendGradeConfident'), 'the terse GRADE WORD stays verdict-scoped (no forced hedge)').toBe(false)
+    expect(isControlKey('recommendBaselineNameplate'), 'the baseline nameplate stays verdict-scoped').toBe(false)
     // gate polarity: a bald deterministic claim FAILS, a hedged one PASSES
     expect(lintCopy('The conversion saves you three years.', ['require-hedge']).length, 'bald → fail').toBeGreaterThan(0)
     expect(lintCopy('Converting could help in about 8 of 10 futures.', ['require-hedge']), 'hedged → pass').toEqual([])

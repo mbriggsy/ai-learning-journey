@@ -251,8 +251,9 @@ export type ModelAnswer =
  *  convention collapsed every unbuildable draft into one `buckets-defaulted` gap, whose note told
  *  a false accounts story on a facts-broken re-dispatch, and a false "lump sum" story on every
  *  household — the intake's mandatory account kinds mean a lump-sum entry cannot exist):
- *   - `no-pretax`     — the run has no pre-tax dollars to sequence/convert (no tax overlay at all,
- *                       or no anchored conversion candidate — the honest bucket precondition);
+ *   - `no-pretax`     — NOT ENOUGH pre-tax savings for a strategy to rank (no tax overlay at all,
+ *                       or no anchored conversion candidate — which includes an entered-but-small
+ *                       pre-tax pool below every rail; the honest bucket precondition);
  *   - `spine-unready` — the draft cannot build the spine base right now (a missing fact, the date
  *                       route, an unminted seed) — the strategy read follows the main answer. */
 export type SolveBlockReason = 'no-pretax' | 'spine-unready'

@@ -276,14 +276,14 @@ describe('RecommendationSurface — the withheld / stale / unavailable renders (
     const { container } = render(
       <RecommendationSurface solve={{ kind: 'blocked', gap: 'no-pretax', label: 'no-pretax' }} />,
     )
-    const note = container.querySelector('.rec-note--buckets')
+    const note = container.querySelector('.rec-note--no-pretax')
     expect(note, 'a picked goal on a no-pretax household is NOT a silent dead-end').not.toBeNull()
     expect(note).toHaveAttribute('role', 'status')
     expect(note?.textContent).toBe(copy.recommendNoPretaxNote)
     // goal-unset stays bodyless here (its steer is the Result invite door, not a surface note).
     cleanup()
     const goalUnset = render(<RecommendationSurface solve={{ kind: 'blocked', gap: 'goal-unset', label: 'goal-unset' }} />)
-    expect(goalUnset.container.querySelector('.rec-note--buckets')).toBeNull()
+    expect(goalUnset.container.querySelector('.rec-note--no-pretax')).toBeNull()
   })
 
   it('a blocked{spine-unready} renders ITS OWN note — the true dependency story, never the accounts one (the steer-seed increment)', () => {
@@ -295,7 +295,7 @@ describe('RecommendationSurface — the withheld / stale / unavailable renders (
     expect(note).toHaveAttribute('role', 'status')
     expect(note?.textContent).toBe(copy.recommendSpineUnreadyNote)
     // and NEVER the accounts story (the wrong-reason swap mutant reds on BOTH these asserts).
-    expect(container.querySelector('.rec-note--buckets')).toBeNull()
+    expect(container.querySelector('.rec-note--no-pretax')).toBeNull()
     expect(container.textContent).not.toContain(copy.recommendNoPretaxNote)
   })
 })
@@ -354,5 +354,41 @@ describe('RecommendationSurface — the delta heros median qualification (the me
   it('a symmetric delta renders NO qualifier (the default fixture stays byte-identical)', () => {
     const { container } = render(<RecommendationSurface solve={committedRec()} />)
     expect(container.textContent).not.toContain('an average across the futures we tested')
+  })
+})
+
+describe('RecommendationSurface — the blocked steers are SPOKEN (review wf_6f89fe6f-35a P2, burden/045)', () => {
+  it('idle → blocked{no-pretax} announces the steer through the persistent region (synchronous, never through pending)', () => {
+    vi.useFakeTimers()
+    try {
+      const { rerender } = render(<RecommendationSurface solve={IDLE} />)
+      expect(liveRegion()?.textContent).toBe('')
+      rerender(<RecommendationSurface solve={{ kind: 'blocked', gap: 'no-pretax', label: 'no-pretax' }} />)
+      expect(liveRegion()?.textContent, 'the sighted note and the spoken steer are the SAME sentence').toBe(copy.recommendNoPretaxNote)
+      act(() => {
+        vi.advanceTimersByTime(2000)
+      })
+      expect(liveRegion()?.textContent, 'clear-after-announce (burden/045)').toBe('')
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('idle → blocked{spine-unready} announces ITS steer; goal-unset stays silent (the GoalPicker owns that beat)', () => {
+    vi.useFakeTimers()
+    try {
+      const { rerender } = render(<RecommendationSurface solve={IDLE} />)
+      rerender(<RecommendationSurface solve={{ kind: 'blocked', gap: 'spine-unready', label: 'spine-unready' }} />)
+      expect(liveRegion()?.textContent).toBe(copy.recommendSpineUnreadyNote)
+      act(() => {
+        vi.advanceTimersByTime(2000)
+      })
+      cleanup()
+      const second = render(<RecommendationSurface solve={IDLE} />)
+      second.rerender(<RecommendationSurface solve={{ kind: 'blocked', gap: 'goal-unset', label: 'goal-unset' }} />)
+      expect(liveRegion()?.textContent, 'goal-unset never speaks here — the picker owns focus + announcement').toBe('')
+    } finally {
+      vi.useRealTimers()
+    }
   })
 })

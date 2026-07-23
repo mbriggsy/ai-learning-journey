@@ -54,7 +54,15 @@ export function RecommendationSurface({
     prevKind.current = solve.kind
     if (solve.kind === prev) return
     if (solve.kind === 'pending') announcer.announce(copy.recommendPendingLabel)
-  }, [solve.kind, announcer])
+    // The builder-refusal steers land SYNCHRONOUSLY (idle → blocked, never through pending), so a
+    // note section inserted already-populated is the burden/045 may-not-fire shape — speak each
+    // steer through the persistent region (review wf_6f89fe6f-35a P2: a sighted user reads the calm
+    // note; an AT user heard nothing after confirming a goal). goal-unset stays silent here (its
+    // steer is the GoalPicker itself, which owns focus + announcement).
+    if (solve.kind === 'blocked' && solve.gap !== 'goal-unset') {
+      announcer.announce(solve.gap === 'no-pretax' ? copy.recommendNoPretaxNote : copy.recommendSpineUnreadyNote)
+    }
+  }, [solve, announcer])
 
   const view = recommendationView(solve, spineConfidence !== undefined ? { spineConfidence } : undefined)
 
@@ -91,7 +99,7 @@ function CommittedBeat({ view, onRepick }: { readonly view: RecommendationView; 
           return null
         case 'no-pretax':
           return (
-            <section className="rec-note rec-note--buckets" role="status">
+            <section className="rec-note rec-note--no-pretax" role="status">
               <p className="rec-note__line">{copy.recommendNoPretaxNote}</p>
             </section>
           )

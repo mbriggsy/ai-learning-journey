@@ -677,4 +677,38 @@ describe('the no-pretax steer witness seed (engine-proven refusal regime)', () =
     if (w.kind !== 'resolved') return
     expect(w.headline.outcomeState, 'recorded, not assumed — re-tune the accounts on drift (C3 law)').toBe('on-track')
   })
+
+  // The vacuity lens's two holes (review wf_6f89fe6f-35a re-run), closed with REAL-builder witnesses
+  // (probed 2026-07-23 before pinning — recorded, not assumed):
+  it("the SMALL-IRA sub-arm: entered pre-tax dollars BELOW every rail still land 'no-pretax' (the reword's justification, test-proven)", () => {
+    // The steer household + one $25k traditional IRA: overlay PRESENT with pretax 25,000, yet every
+    // rail-anchored conversion amount exceeds the post-RMD headroom (candidates.ts:323), so the
+    // roster is conversion-free and the builder refuses 'no-pretax'. This is the household the
+    // note's "doesn't have enough of them entered" was reworded FOR — the claim is now bitten.
+    const blend = { kind: 'exact', stockPct: 60, bondPct: 30, cashPct: 10 } as const
+    const smallIra: ScenarioDraft = {
+      ...DEV_SEEDS.steer,
+      enteredAccounts: [
+        ...DEV_SEEDS.steer.enteredAccounts,
+        { ownerIndex: 0, kind: 'traditional-ira', valueToday: 25_000, manualBlend: blend },
+      ],
+      chosenGoal: 'leave-more',
+    }
+    const params = buildSpineParams(smallIra)
+    expect(params?.overlay, 'the overlay is PRESENT — dollars were entered').toBeDefined()
+    expect(params!.overlay!.buckets.pretax, 'the entered pre-tax pool').toBe(25_000)
+    expect(buildSolveRequest(smallIra, FRESH_STEER), 'entered-but-under-every-rail refuses no-pretax').toBe('no-pretax')
+  })
+
+  it("the DEGENERATE no-overlay arm (solveDispatch line set===null) also maps to 'no-pretax' through the REAL builder", () => {
+    // $0 accounts (no premium, no income beyond SS) ⇒ buildSpineParams is NON-null but writes NO
+    // overlay ⇒ enumerateSolveCandidates returns null ⇒ the FIRST refusal arm fires. The planted
+    // reason-swap on that arm ('spine-unready') would tell this household a FALSE dependency story
+    // ("once that answer is complete again" — it IS complete); this pin reds it.
+    const degenerate: ScenarioDraft = { ...DEV_SEEDS.steer, enteredAccounts: [], chosenGoal: 'leave-more' }
+    const params = buildSpineParams(degenerate)
+    expect(params, 'the degenerate household still RESOLVES a spine answer').not.toBeNull()
+    expect(params!.overlay, 'no overlay — the line-74 arm discriminator').toBeUndefined()
+    expect(buildSolveRequest(degenerate, FRESH_STEER), 'the no-overlay arm refuses no-pretax too').toBe('no-pretax')
+  })
 })

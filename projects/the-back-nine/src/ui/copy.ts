@@ -1184,8 +1184,14 @@ export const copy = {
   // exactly like recommendUnavailable.
   // ("401(k)" is deliberately absent — the verdict scope's free-numeral gate; "a pre-tax workplace
   // plan" is the numeral-free equivalent, and the re-entry read-back teaches the full roster.)
+  // REWORDED same-day (review wf_6f89fe6f-35a P1, refuters 2-0): the first draft claimed "this plan
+  // has none entered" — FALSE on the small-IRA arm (candidates.ts:323 rejects every rail-anchored
+  // conversion amount above the post-RMD headroom, so a household with a $25k IRA below every rail
+  // ALSO lands no-pretax). "doesn't have enough entered for one order to beat another" is true on
+  // BOTH sub-arms (zero entered, and entered-but-under-every-rail), and the steer's promise
+  // ("with more...") is the one the self-heal genuinely fulfills.
   recommendNoPretaxNote:
-    'This strategy compares ways of drawing pre-tax savings — a traditional IRA or a pre-tax workplace plan — and this plan has none entered. If you do hold pre-tax accounts, add them and we can work one out.',
+    'This strategy compares ways of drawing pre-tax savings — a traditional IRA or a pre-tax workplace plan — and this plan doesn’t have enough of them entered for one order to beat another. With more pre-tax savings in the picture, we can work one out.',
   // The `blocked{spine-unready}` sibling (the steer-seed increment): the strategy read FOLLOWS the
   // main answer, and on a facts-broken re-dispatch (a committed rec goes stale, a fact is cleared,
   // the stale card's re-open control survives) the old note blamed the ACCOUNTS — a false diagnosis.
@@ -1949,13 +1955,24 @@ export const slots = {
    *  arrive pre-formatted in the DELTA dialect (formatDeltaDollar — the hero's own ruler). */
   recDeltaTypical: (deltaFormatted: string, medianFormatted: string): string =>
     `The “$${deltaFormatted} more” above is an average across the futures we tested. In the typical future the edge is closer to about $${medianFormatted}.`,
-  /** The qualification's NO-DOLLAR arm: the typical per-future advantage is at-or-below zero (or
-   *  under the display step), so quoting a median dollar would fabricate a figure — the honest
-   *  sentence is that at least half the tested futures gain little or nothing from the change.
-   *  "likely" is the require-hedge modal (a 16k-path median is an estimate). The average still
-   *  displays as the hero; this names what carries it. */
+  /** The qualification's NO-DOLLAR arm: the typical per-future advantage sits at zero (or under
+   *  the display step in EITHER direction), so quoting a median dollar would fabricate a figure —
+   *  the honest sentence is that at least half the tested futures gain little or nothing from the
+   *  change. "likely" is the require-hedge modal (a 16k-path median is an estimate). The average
+   *  still displays as the hero; this names what carries it. A MATERIALLY negative typical takes
+   *  {@link slots.recDeltaTypicalBehind} instead (review wf_6f89fe6f-35a P2 — "little or nothing"
+   *  floors a real loss at zero, the optimistic direction). */
   recDeltaTypicalNone: (deltaFormatted: string): string =>
     `The “$${deltaFormatted} more” above is an average across the futures we tested. In at least half of them, this change likely gains little or nothing.`,
+  /** The qualification's BEHIND arm (review wf_6f89fe6f-35a P2, refuters 4-0 across two lenses):
+   *  when the typical per-future advantage is MATERIALLY negative — the median future actively
+   *  loses vs doing nothing while a few strong futures prop the average up — "gains little or
+   *  nothing" would floor the loss at zero, the calm-but-wrong-OPTIMISTIC direction inside the very
+   *  channel built to prevent it. Quote the typical setback in the delta's own dialect (half the
+   *  futures sit at-or-beyond the median, so "about $Y or more behind" is exact). "likely" + "about"
+   *  carry require-hedge. */
+  recDeltaTypicalBehind: (deltaFormatted: string, behindFormatted: string): string =>
+    `The “$${deltaFormatted} more” above is an average across the futures we tested. In about half of them, this change likely comes out about $${behindFormatted} or more behind.`,
   /** The withheld reason for `state-certification-pending` (Q5, LIVE for the NC household): the STATE
    *  by name, the TRUE reason (rates not officially set), the DIRECTION honestly, the ~August timeframe,
    *  framed as REFUSING to guess. "could" + "around" carry require-hedge. `stateName` arrives from the

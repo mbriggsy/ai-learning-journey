@@ -583,7 +583,7 @@ async function walkSolve(page: Page, key: string, outDir: string): Promise<void>
   // renders immediately, and the invite door is GONE (a blocked non-goal-unset gap is not invitable —
   // a second door would re-promise the solve the note just declined). The walk ends on the note frame.
   if (plan!.terminal === 'steer') {
-    const note = page.locator('.rec-note--buckets')
+    const note = page.locator('.rec-note--no-pretax')
     await expect(note, `solve:${key}: the no-pretax steer note never rendered (a silent dead-end)`).toBeVisible()
     await expect(page.locator('.solve-pending'), `solve:${key}: a steer face must never breathe`).toHaveCount(0)
     await expect(

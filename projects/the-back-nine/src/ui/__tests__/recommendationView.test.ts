@@ -554,7 +554,13 @@ describe('recommendationView — a winner-ahead delta that formats to $0 routes 
 // diffs) — never the leave-more LEVEL channel (arm 7 kills that swap).
 // ---------------------------------------------------------------------------------------------
 describe('recommendationView — the delta heros median qualification (deltaSkew)', () => {
-  const upsideDelta = (medianReal: number, meanReal = 150_000) => ({
+  const upsideDelta = (medianReal: number, meanReal = 150_000) => {
+    // The vacuity lens's latent-trap guard: this helper hardcodes 'upside', so a call with
+    // median ≥ mean would mint an INCOHERENT fixture that could green a wrong predicate.
+    if (!(meanReal > medianReal)) throw new Error('upsideDelta requires mean > median (upside by definition)')
+    return upsideDeltaUnchecked(medianReal, meanReal)
+  }
+  const upsideDeltaUnchecked = (medianReal: number, meanReal: number) => ({
     meanReal,
     medianReal,
     p10Real: Math.min(0, medianReal),
@@ -575,10 +581,19 @@ describe('recommendationView — the delta heros median qualification (deltaSkew
     expect(big.grade.deltaQualifier).not.toMatch(/\$\d+(\.\d+)?M\b/)
   })
 
-  it('a typical advantage at-or-below zero → the honest no-dollar arm (never a fabricated median dollar)', () => {
+  it('a MATERIALLY negative typical names the setback — never "little or nothing" flooring a real loss (review wf_6f89fe6f-35a P2)', () => {
+    // median −$5,000: half the futures sit $5,000-or-more BEHIND — the behind arm quotes it in the
+    // delta dialect. The old none-arm here was the optimistic sin inside this very channel.
     const v = asRec(recommendationView(committed(leaveMoreRec({ deltaSkew: upsideDelta(-5_000) })), { spineConfidence: spine }))
-    expect(v.grade.deltaQualifier).toBe(slots.recDeltaTypicalNone('150,000'))
-    // sub-display-step positive median (formats to '0') routes the SAME honest arm.
+    expect(v.grade.deltaQualifier).toBe(slots.recDeltaTypicalBehind('150,000', '5,000'))
+    expect(v.grade.deltaQualifier).toContain('behind')
+  })
+
+  it('a sub-step typical (either side of zero) → the honest no-dollar arm (never a fabricated median dollar)', () => {
+    // tiny NEGATIVE (formats to '0'): "little or nothing" is the honest register, not a "$0 behind".
+    const tinyNeg = asRec(recommendationView(committed(leaveMoreRec({ deltaSkew: upsideDelta(-30) })), { spineConfidence: spine }))
+    expect(tinyNeg.grade.deltaQualifier).toBe(slots.recDeltaTypicalNone('150,000'))
+    // tiny POSITIVE (formats to '0') routes the SAME honest arm.
     const sub = asRec(recommendationView(committed(leaveMoreRec({ deltaSkew: upsideDelta(30) })), { spineConfidence: spine }))
     expect(sub.grade.deltaQualifier).toBe(slots.recDeltaTypicalNone('150,000'))
   })

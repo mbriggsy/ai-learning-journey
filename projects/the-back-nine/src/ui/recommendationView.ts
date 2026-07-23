@@ -121,8 +121,10 @@ export interface RecommendationGradeView {
   readonly deltaFigure: string | undefined
   /** The hero's MEDIAN qualification (the median-advantage increment): when the shown mean advantage
    *  leans on a few strong futures (upside skew), name what the TYPICAL future gains — the median
-   *  quote when it carries a display-distinct positive dollar, the no-dollar "little or nothing"
-   *  arm when the typical advantage sits at-or-below zero (or under the display step). Lives INSIDE
+   *  quote when it carries a display-distinct positive dollar; the "comes out about $Y or more
+   *  behind" arm when the typical is MATERIALLY negative (never "little or nothing" flooring a real
+   *  loss — review wf_6f89fe6f-35a P2); the no-dollar "little or nothing" arm when the typical sits
+   *  under the display step either side of zero. Lives INSIDE
    *  the grade lockup (it qualifies the hero directly and must repaint with it — the cs-swap
    *  crossfade key covers the whole group, so a fresh hero never sits beside a stale qualifier).
    *  `undefined` when there is no hero to qualify, the skew is not upside (downside understates the
@@ -504,18 +506,27 @@ function hingeNote(namedDriver: string): string {
  * what the typical future gains — the calm-but-wrong-OPTIMISTIC direction; downside understates the
  * shown figure, conservative, quiet). Reads `payload.deltaSkew` (the PAIRED winner-vs-baseline diffs)
  * — NEVER `payload.skewDisclosure` (the leave-more LEVEL, a different vector; the level-for-delta
- * swap is mutant-guarded). Three arms, source-bound to the DISPLAYED strings (never a re-typed
+ * swap is mutant-guarded). Four arms, source-bound to the DISPLAYED strings (never a re-typed
  * threshold): a positive median that formats display-distinct → the quote (in the delta's own
- * formatDeltaDollar dialect — one ruler per axis, rule 36); a median ≤ 0 or under the display step →
- * the honest no-dollar "little or nothing" arm (a "$0" or negative-quoted median would fabricate);
- * a median that rounds to the hero's own figure → quiet (adds nothing).
+ * formatDeltaDollar dialect — one ruler per axis, rule 36); a MATERIALLY negative median → the
+ * "comes out about $Y or more behind" arm (review wf_6f89fe6f-35a P2 — flooring a real loss at
+ * "little or nothing" is the optimistic sin); a sub-step median either side of zero → the honest
+ * "little or nothing" arm; a median that rounds to the hero's own figure → quiet (adds nothing).
  */
 function deltaQualifierFor(payload: SolveRecommendation, deltaFigure: string | undefined): string | undefined {
   if (deltaFigure === undefined) return undefined // no hero shown (the no-dollar register) — nothing to qualify
   const s = payload.deltaSkew
   if (s === undefined || s.skewDirection !== 'upside') return undefined
-  if (s.medianReal <= 0) return slots.recDeltaTypicalNone(deltaFigure)
-  const medianFmt = formatDeltaDollar(s.medianReal)
+  const medianFmt = formatDeltaDollar(s.medianReal) // sign-agnostic magnitude, the delta's own ruler
+  if (s.medianReal <= 0) {
+    // A MATERIALLY negative typical (its magnitude carries a display-distinct dollar) names the
+    // setback — "gains little or nothing" would floor a real loss at zero, the optimistic sin
+    // inside this very channel (review wf_6f89fe6f-35a P2). A sub-step median (either side of
+    // zero) stays the honest "little or nothing".
+    return medianFmt === '0'
+      ? slots.recDeltaTypicalNone(deltaFigure)
+      : slots.recDeltaTypicalBehind(deltaFigure, medianFmt)
+  }
   if (medianFmt === '0') return slots.recDeltaTypicalNone(deltaFigure)
   if (medianFmt === deltaFigure) return undefined
   return slots.recDeltaTypical(deltaFigure, medianFmt)

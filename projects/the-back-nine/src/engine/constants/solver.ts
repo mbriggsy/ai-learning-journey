@@ -110,6 +110,29 @@ export const solverConversionNearTieDemotionSeMultiple = sourced(10, {
   note: 'Dimensionless multiple of the per-member held-out-B paired-difference SE (survival axis ONLY — the calibration class was measured on survival; any other axis stays fail-closed). Applies ONLY when the winner carries a nonzero conversion and the runner-up does not (the flattered direction); a no-conversion winner is never demoted.',
 })
 
+/**
+ * The R7 ASSUMED HEIR BRACKET (U16 §S3 / F4) — the first-order §1014/IRD marginal rate a `leave-more`
+ * solve scores the pre-tax + HSA bequest at when the household has not overridden it. The live solve
+ * builder feeds THIS into `ranking.heirBracket`; the S3 disclosure formats whatever it supplies and
+ * the R7 registry (`recommendationView.ts`) makes it plain-language editable — so the value is the
+ * DEFAULT, never a hidden constant. Representative middle federal ordinary bracket: a household
+ * inheriting a traditional IRA (IRD, taxed at the heir's ordinary rate) is typically in peak earning
+ * years. A METHODOLOGY ASSUMPTION, not a dated legal figure — `directionalUntilPinned`
+ * (methodology-substrate: ships disclosed + editable, never blocks the mint; the token's
+ * consumed-constant walk is overlay-flag-keyed and never reaches this ranking param). NOT in the
+ * `solverConstants` aggregate / `ALL_CONSTANTS` on purpose: it is a ranking DEFAULT the user edits,
+ * not a validation-calibration threshold the harness reads. In [0, 1) per `scoreFromDistribution`.
+ */
+export const solverAssumedHeirBracket = sourced(0.24, {
+  citation:
+    'U16 §S3 (F4): the representative middle federal ordinary marginal bracket (24% MFJ, TCJA/OBBBA schedule) as the leave-more IRD/§1014 heir-bracket DEFAULT — R7-editable (recommendationView.ts registry), surfaced not hidden',
+  directionalUntilPinned: true,
+  // A methodology default (the household edits it); no dated event certifies a heir bracket. Ships
+  // disclosed via the R7 note, never blocks — the mint's directional walk never consumes it.
+  directionalKind: 'methodology-substrate',
+  note: 'The DEFAULT heir marginal rate the live leave-more solve ranks the after-tax bequest at; the user overrides it in the R7 disclosure. Deliberately outside solverConstants/ALL_CONSTANTS — a ranking default, not a harness-read calibration threshold.',
+})
+
 /** Finiteness-FIRST calibration check (insights 008/010/039): a NaN/Infinity/sentinel is
  *  detectably uncalibrated — it must never reach a `> ε` compare. */
 export const isCalibrated = (x: number): boolean => Number.isFinite(x) && x > 0

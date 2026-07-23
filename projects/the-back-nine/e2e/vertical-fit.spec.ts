@@ -302,6 +302,144 @@ for (const seed of AFFORDANCE_SEEDS) {
   }
 }
 
+// ── U16 §S2/§S3: the recommend-second PENDING frame + the recorded S2→S3 CLS alignment ─────────
+// THE LIVE DISPATCH SEAM (the recorded blocker, now closed by this fleet): a real GoalPicker pick
+// drives the affordance → GoalPicker → the SOLVE, so the pending tell renders — `idle` no longer
+// dead-ends. This arm PROVES the organic dispatch fires (the whole point of the fleet) and pins the
+// S2→S3 CLS seam.
+//
+// WHY THE COMMITTED / HELD RENDERS ARE NOT MEASURED HERE (recorded, 2026-07-22): a live solve on the
+// DEV server runs FULL PRECISION (16k paths through the mint's oracle gate + search + grade) — MEASURED
+// on this reference machine at 80s (nc → held, which short-circuits at the mint) to 200s+ (surplus →
+// recommended), FAR past this harness's 120s per-test budget. The fit gate is architected for the fast
+// SPINE tier (`data-answer-tier="final"`, seconds), NOT the solve channel (there is no live path-count
+// seam — S5 deferred, wall #2 fixes every displayed figure at `solverMinBPaths`). So the committed /
+// held OUTCOMES are engine-proven where they are tractable — solveDispatch.test.ts drives the REAL
+// builder → REAL engine at the fast test counts (nc → token-withheld{state-cert}, fl → recommended) —
+// and their RENDER SHAPES in RecommendationSurface.test.tsx; this real-browser arm owns the two facts
+// only Chromium can settle: the pending tell's live presence, and the CLS alignment of the reserved
+// well to the real committed grade lockup.
+//
+// THE CLS ALIGNMENT (measured, no solve): the committed `.rec-grade` lockup is injected into the live
+// `.recommendation-surface` (real CSS, real fonts, real wrap at the `--measure` reading width) and
+// measured — the pending placeholder's reserved well must ALIGN to it (`.solve-pending-panel`
+// min-height 7rem ≈ the ~110px lockup, MEASURED here 2026-07-22), so the committed beat lands in place,
+// not shoved (the recorded S2→S3 CLS seam). The grade WORD holds ONE line (the CLS law). Planted-mutant
+// killer (b): dropping the pending well's min-height collapses it below the lockup and the committed
+// beat jumps on land — the `panelWell ≥ lockup` band goes RED.
+
+/** Reach the pending tell organically: affordance → GoalPicker → confirm the goal → the solve
+ *  dispatches (the store sets `pending` synchronously before awaiting the worker). */
+async function dispatchToPending(page: Page): Promise<void> {
+  await page.locator('.result-recommend-invite').click()
+  await expect(page.getByRole('dialog'), 'the GoalPicker must open before the solve').toBeVisible()
+  await page.locator('input[name="recommendation-goal"][value="leave-more"]').check()
+  await page.getByRole('dialog').getByRole('button', { name: 'See the strategy' }).click()
+}
+
+const PENDING_SEEDS = ['surplus', 'nc'] as const
+
+for (const seed of PENDING_SEEDS) {
+  for (const vp of [REAL, TIER] as const) {
+    const scale = vp === REAL ? { deviceScaleFactor: REAL_DPR } : {}
+    test.describe(`?seed=${seed} — the recommend-second pending frame + CLS alignment (${vp.width}×${vp.height})`, () => {
+      test.use({ viewport: vp, ...scale })
+      test(`${seed}: the goal pick drives the pending tell; its well aligns to the committed grade lockup`, async ({
+        page,
+      }) => {
+        await gotoSeedFinal(page, seed)
+        await assertResolvedSpine(page) // the spine stands before the pick
+
+        await dispatchToPending(page)
+
+        // THE PENDING TELL renders — the dispatch fired (idle no longer dead-ends). One recognizable
+        // working tell: the `.solve-pending` label under `aria-busy`, placeholder-SHAPED (not a spinner).
+        const panel = page.locator('.solve-pending-panel')
+        await expect(panel, 'the pending tell must render — the live dispatch fired').toBeVisible()
+        await expect(panel).toHaveAttribute('aria-busy', /.*/)
+        await expect(page.locator('.solve-pending')).toBeVisible()
+
+        // The spine is UNPERTURBED by the pick (posture 1 — spine content protected): the two-pane
+        // verdict + band still stand (the solve is a SEPARATE channel; it never touches the first beat).
+        await assertResolvedSpine(page)
+
+        // The thinking-breathe (the ONE working-tell family) runs on the label — an INFINITE
+        // opacity animation (base.css), unless reduced motion drops it (then the label alone stands).
+        const motion = await page.evaluate(() => {
+          const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+          const label = document.querySelector('.solve-pending')
+          const anims = label
+            ? label.getAnimations().map((a) => ({
+                name: (a as CSSAnimation).animationName,
+                infinite: a.effect?.getTiming().iterations === Infinity,
+                running: a.playState === 'running',
+              }))
+            : []
+          return { reduce, anims }
+        })
+        if (!motion.reduce) {
+          expect(
+            motion.anims.some((a) => a.name === 'thinking-breathe' && a.infinite && a.running),
+            'the pending tell must carry the shared infinite thinking-breathe (not a second working tell)',
+          ).toBe(true)
+        }
+
+        // THE S2→S3 CLS ALIGNMENT: inject the real committed grade lockup (no solve — a live solve is
+        // 80–200s+, past this harness's budget), measure it under the real CSS at this tier, and pin
+        // that the pending well ALIGNS to it and the grade word holds ONE line.
+        const cls = await page.locator('.recommendation-surface').evaluate((surface) => {
+          const panelEl = document.querySelector('.solve-pending-panel') as HTMLElement | null
+          const panelWell = panelEl ? panelEl.getBoundingClientRect().height : 0
+          const el = document.createElement('div')
+          el.className = 'rec-committed'
+          // The real RecommendedBeat grade-lockup DOM (the no-note core the pending well aligns to):
+          // the glyph+word head + the two-line delta-as-hero comparative.
+          el.innerHTML =
+            '<div class="rec-grade" role="group">' +
+            '<p class="rec-grade__head"><svg class="rec-grade__glyph" width="22" height="22" viewBox="0 0 22 22"></svg>' +
+            '<span class="rec-grade__word">A confident lean</span></p>' +
+            '<p class="rec-grade__hero">This keeps about $128,000 more for the two of you to pass on than staying on your current plan.</p>' +
+            '</div>'
+          surface.appendChild(el)
+          const word = el.querySelector('.rec-grade__word') as HTMLElement
+          const wordLineHeight = parseFloat(getComputedStyle(word).lineHeight)
+          const lockup = Math.round((el.querySelector('.rec-grade') as HTMLElement).getBoundingClientRect().height)
+          const wordOneLine = word.getBoundingClientRect().height <= wordLineHeight * 1.4
+          el.remove()
+          return { panelWell: Math.round(panelWell), lockup, wordOneLine }
+        })
+
+        // The grade word (the longest confident/coin-flip word) holds ONE line at this laptop tier — the
+        // CLS law (the lockup never wraps the word beside its glyph).
+        expect(cls.wordOneLine, 'the grade word must hold one line at this tier (the CLS law)').toBe(true)
+
+        // ALIGNMENT (mutant killer b): the reserved pending well is at least the committed grade
+        // lockup's height, so the committed beat lands in place. Dropping the min-height collapses the
+        // well to the bare label and the committed lockup jumps on land — this lower bound goes RED.
+        expect(
+          cls.panelWell,
+          `the pending well (${cls.panelWell}px) collapsed below the committed grade lockup (${cls.lockup}px) — the committed beat would jump on land (CLS)`,
+        ).toBeGreaterThanOrEqual(cls.lockup - 8)
+        // …and not grossly OVER-reserved (a large empty well breathing over the ~72s solve).
+        expect(
+          cls.panelWell,
+          `the pending well (${cls.panelWell}px) over-reserves vs the committed lockup (${cls.lockup}px)`,
+        ).toBeLessThanOrEqual(cls.lockup + 44)
+
+        // POSTURE (measured, not decreed — the S2 law): record where the pending well lands at this tier
+        // (in-frame vs a below-fold doors-region casualty), like the affordance-posture arm.
+        const posture = await panel.evaluate((el) => {
+          const b = el.getBoundingClientRect()
+          return { bottom: Math.round(b.bottom), inFrame: b.bottom <= window.innerHeight + 0.5 }
+        })
+        console.log(
+          `[U16 pending posture] seed=${seed} ${vp.width}x${vp.height}: well=${cls.panelWell}px lockup=${cls.lockup}px bottom=${posture.bottom} → ${posture.inFrame ? 'IN-FRAME' : 'below-fold (doors-region casualty)'}`,
+        )
+      })
+    })
+  }
+}
+
 // ── the priced-state faces (the state-tax unit / the state-carrying seed increment) ───────────
 // Each priced seed is a retiredOnTrack clone carrying ONE `retirementState`, so the all-65+
 // medicarePricedNote block renders with the household's state clause SWAPPED into the narrowed

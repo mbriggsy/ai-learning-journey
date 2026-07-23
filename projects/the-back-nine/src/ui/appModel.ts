@@ -7,8 +7,18 @@
 import { createMemoryModel } from '@store/memoryModel'
 import { engineClient } from '@store/engineClient'
 import { buildDateInput, buildSpineParams } from '@intake/intakeMap'
+import { buildSolveRequest } from '@intake/solveDispatch'
+import { currentEpochDay } from './scenarioFromDraft'
 
 export const appModel = createMemoryModel({
   client: engineClient,
-  builders: { buildSpineParams, buildDateInput },
+  builders: {
+    buildSpineParams,
+    buildDateInput,
+    // U16 §S1 — the recommend-second solve builder. The clock is injected HERE (the ui composition
+    // layer reads `currentEpochDay()`), so the intake builder stays a deterministic function of the
+    // draft + today, and the engine stays clock-free. `todayEpochDay` rides the ACA freshness clause
+    // only; it is NOT in the run fingerprint, so a tick between build calls never spuriously invalidates.
+    buildSolveDispatch: (draft) => buildSolveRequest(draft, currentEpochDay()),
+  },
 })

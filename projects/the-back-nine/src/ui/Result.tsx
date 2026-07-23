@@ -288,9 +288,15 @@ export function Result({
   // beat yet (idle), or a goal-unset precondition that steers to the picker. A buckets-defaulted block
   // and the pending/committed/stale beats own their own renders (S3). Never on a non-answer (the
   // affordance is gated by focusKey with the doors below). `solve` is the tier-less solve channel.
+  // U16 §S1 — the ALL-RETIRED (spine) route only in v1: the live solve base is `buildSpineParams`
+  // (retirement params), and a still-working household's honest base is the CROWNED date, whose offset
+  // this dispatch does not yet thread — so the working-route recommend-second is a follow-up increment
+  // (never a `blocked{buckets-defaulted}` mis-reason on a working household). Both fit-gate affordance
+  // seeds (`retired`, `nc`) are all-retired, so this gate does not regress the measured posture.
   const solve = snapshot.solve
   const solveInvitable =
-    solve.kind === 'idle' || (solve.kind === 'blocked' && solve.gap === 'goal-unset')
+    !isDateRoute(snapshot.draft) &&
+    (solve.kind === 'idle' || (solve.kind === 'blocked' && solve.gap === 'goal-unset'))
   // A CONFIRMED goal pick: write `chosenGoal`, close the picker, dispatch the solve. A re-pick writes
   // the new goal and re-dispatches — the store's invalidateStaleSolve + the solve request-epoch carry
   // the visible re-solve. NO auto-save: `chosenGoal` rides the draft in-session (the explicit-resave

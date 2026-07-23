@@ -173,12 +173,14 @@ describe('consumedConstantEntries — the derivation is the run, not the registr
  *  the read — the mapping (and this table) must move in the same change. */
 const WITNESSES: ReadonlyArray<readonly [key: string, file: string, symbol: string]> = [
   ['tax.ordinaryBracketsMFJ', 'src/engine/taxCore.ts', 'ordinaryBracketsMFJ'],
-  ['tax.uniformLifetimeTableDivisors', 'src/engine/taxOverlay.ts', 'uniformLifetimeTableDivisors'],
-  ['tax.jointLifeLastSurvivorTable', 'src/engine/taxOverlay.ts', 'jointLifeLastSurvivorTable'],
+  // U16 §S1 — the RMD divisor + start-age reads re-homed to @engine/rmd (the ONE producer shared with
+  // the live solve anchor deriver); the mapping's witness moves with the consumption (source-bind law).
+  ['tax.uniformLifetimeTableDivisors', 'src/engine/rmd.ts', 'uniformLifetimeTableDivisors'],
+  ['tax.jointLifeLastSurvivorTable', 'src/engine/rmd.ts', 'jointLifeLastSurvivorTable'],
   ['tax.seniorBonus', 'src/engine/taxCore.ts', 'seniorBonus'],
   ['tax.capitalGainsBreakpoints', 'src/engine/taxCore.ts', 'capitalGainsBreakpoints'],
   ['tax.ssProvisionalThresholds', 'src/engine/taxCore.ts', 'ssProvisionalThresholds'],
-  ['tax.rmdStartAge', 'src/engine/taxOverlay.ts', 'rmdStartAge'],
+  ['tax.rmdStartAge', 'src/engine/rmd.ts', 'rmdStartAge'],
   ['state.* (the whole priced-profile family)', 'src/engine/stateTax.ts', 'STATE_TAX_PROFILES'],
   ['health.acaApplicablePercentage', 'src/engine/taxOverlay.ts', 'acaApplicablePercentage'],
   ['health.acaApplicablePercentageEnhanced', 'src/engine/taxOverlay.ts', 'acaApplicablePercentageEnhanced'],

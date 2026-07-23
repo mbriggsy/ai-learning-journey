@@ -6,6 +6,14 @@ import { Result } from '../Result'
 import { appModel } from '../appModel'
 import { resolvedFocusKey } from '../answerView'
 import { copy } from '@ui/copy'
+import { resolveDevSeed } from '../devSeeds'
+
+// U16 §S1 — the solve builder is now WIRED live into appModel. A goal pick therefore reaches the REAL
+// dispatchSolve, so these picks run over a COMPLETE retired draft (a resolvable devSeed) rather than
+// the pristine/empty one: the request builds, but no spine beat has committed (recommend-second
+// ordering — everResolved false), so the solve stays `idle` (invitable, the affordance persists across
+// re-picks) instead of the `blocked{buckets-defaulted}` an unbuildable empty draft would yield.
+const completeRetired = () => ({ ...resolveDevSeed('fl')!, chosenGoal: undefined })
 
 /**
  * Act-4 · U16 §S2 — the recommend-second INVITED AFFORDANCE + its wiring (Result.tsx).
@@ -86,6 +94,7 @@ describe('the recommend-second invited affordance', () => {
 
   it('a confirmed pick writes chosenGoal in-session AND dispatches the solve (no auto-save)', () => {
     plantResolved()
+    appModel.update(completeRetired) // a buildable draft ⇒ the pick's dispatch stays idle (no spine beat)
     const dispatch = vi.spyOn(appModel, 'dispatchSolve')
     renderResult()
     expect(appModel.getSnapshot().draft.chosenGoal).toBeUndefined()
@@ -99,6 +108,7 @@ describe('the recommend-second invited affordance', () => {
 
   it('a RE-pick writes the new goal and re-dispatches (the visible re-solve)', () => {
     plantResolved()
+    appModel.update(completeRetired) // buildable ⇒ the solve stays idle-invitable, so the affordance persists across re-picks
     const dispatch = vi.spyOn(appModel, 'dispatchSolve')
     renderResult()
     // First pick: leave-more.

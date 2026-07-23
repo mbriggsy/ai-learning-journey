@@ -14,13 +14,19 @@
   gap: var(--space-3);
 }
 
-/* The PENDING placeholder — a calm reserved well so the committed lockup lands without a jump. The
-   min-height is a conservative reservation for the S3 grade lockup + its subordinate note; S3 aligns
-   it exactly. transform/opacity-only motion (the breathe, base.css) — no layout animation (CSP). */
+/* The PENDING placeholder — a calm reserved well so the committed grade lockup lands without a jump
+   (the recorded S2→S3 CLS seam). The min-height is ALIGNED to the real committed `.rec-grade` lockup
+   MEASURED in Chromium at the reading measure (`--measure` 576px): the word line (--text-lg, one line)
+   + the two-line delta-as-hero comparative + the inter-row --space-2 gap read ~110px, so the well
+   reserves 7rem (112px) — the modal committed lockup lands in place, not shoved (the dormant shape
+   note adds the subordinate line inside the same reserved rhythm). The vertical-fit gate pins this
+   alignment against the live-measured lockup height (mutant: dropping the min-height collapses the well
+   to the label and the committed lockup jumps — the CLS arm goes red). transform/opacity-only motion
+   (the breathe, base.css) — no layout animation (CSP). */
 .solve-pending-panel {
   display: flex;
   align-items: center;
-  min-height: 4.5rem;
+  min-height: 7rem;
   padding: var(--space-4) var(--space-5);
   border-radius: var(--radius-lg);
   background: var(--paper-raised);

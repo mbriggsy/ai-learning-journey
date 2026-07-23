@@ -790,6 +790,24 @@ const stillWorkingAllMedicare: ScenarioDraft = {
   seed: DEV_CRN_SEED,
 }
 
+/**
+ * P4·U16 — THE SURPLUS (over-funded) recommend-second witness. `retiredOnTrack`'s 66/65 couple with a
+ * $3M Traditional IRA against a $60k/yr spend — so over-funded that the recommended strategy clears the
+ * over-funded band on BOTH seed sets (`surplusRegime`), yet the crown is an ACTIVE move (a bracket-fill
+ * conversion beats the conventional taxable-first/conv-0), so `noChange` is FALSE — the delta-as-hero
+ * surplus render (Q1), NOT the compose state. Stateless + NO `chosenGoal` (like `nc`): the live walk
+ * drives the GoalPicker organically to the committed beat; the spine faces read the idle affordance
+ * frame unchanged. Engine-proven at the shipped fast test counts in devSeeds.test.ts (surplusRegime
+ * true, noChange false, kind 'recommended') — the pin is the seed contract; re-tune the IRA/spend on
+ * drift, never loosen it (the standing C3 law). The mutant killer: pinning this seed's `noChange` TRUE
+ * goes red (it is structurally false — an over-funded household still has a beneficial conversion).
+ */
+const surplusWitness: ScenarioDraft = {
+  ...retiredOnTrack,
+  enteredAccounts: [{ ...retiredOnTrack.enteredAccounts[0]!, valueToday: 3_000_000 }],
+  annualSpendingReal: 60_000,
+}
+
 // ---------------------------------------------------------------------------
 // The state-tax faces (the state-tax unit; the state-carrying seed increment). Each is a
 // `retiredOnTrack` clone (66/65, both retired) carrying ONE `retirementState` — so the state
@@ -870,6 +888,7 @@ export const DEV_SEEDS = {
   order: customOrderSeed,
   health: retiredHealth,
   date65: stillWorkingAllMedicare,
+  surplus: surplusWitness,
   nc: ncAffirmation,
   pa: paAffirmation,
   fl: flAffirmation,

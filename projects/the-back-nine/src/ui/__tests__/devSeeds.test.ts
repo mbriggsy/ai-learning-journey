@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { DEV_SEEDS, doctorStaleVault, doctorStateStaleVault } from '../devSeeds'
+import type { ScenarioDraft } from '@store/memoryModel'
 import { scenarioFromDraft, currentEpochDay } from '../scenarioFromDraft'
 import { draftFromScenario } from '../draftFromScenario'
 import { floorRelief } from '../twoTier'
@@ -14,7 +15,11 @@ import {
   pricedStateForRun,
 } from '@intake/intakeMap'
 import { validateParams } from '@engine/simulate'
-import { runEngine } from '@engine/engineProtocol'
+import { runEngine, engineApi } from '@engine/engineProtocol'
+import { solveFromWire } from '@engine/engineWire'
+import { buildSolveRequest } from '@intake/solveDispatch'
+import { epochDayFromIsoDate } from '@engine/validation/oracleToken'
+import { acaEnhancedSubsidyStatus } from '@engine/constants'
 import { stateTaxVintageStamp } from '@engine/constants/stateTax'
 import { deriveStaleness } from '@store/staleness'
 import {
@@ -580,4 +585,63 @@ describe('the statestale aged plant (the state-tax gate note; light doctor, F2 s
       'a priced-state base through the FULL doctor is the F2-superseded bug — must throw',
     ).toThrow(/doctorStateStaleVault/)
   })
+})
+
+// ===========================================================================
+// P4·U16 — the recommend-second WITNESS seed (the surplus / over-funded regime), engine-proven.
+// Driven through the REAL intake solve builder (`buildSolveRequest`) → the REAL in-process engine
+// (`engineApi.runSolve` — the memoryModel real-engine precedent, no worker mock), at the SHIPPED fast
+// test path counts (base.paths 256 + _gradeMinPaths 50, the exact seams solveEntry/solveDispatch use)
+// so the 16k-path live solve is CI-tractable; the anchor/candidate/ranking/seed derivation under test
+// is untouched. The pin is the SEED CONTRACT (the insight-081 discipline, mirrored from the state-tax
+// faces): a constants/engine drift that moves the regime fails HERE — re-tune the household, never
+// loosen the pin (the standing C3 law). TODAY is pinned inside the ACA freshness window (the
+// solveEntry.test convention) so the witness mints regardless of wall-clock.
+//
+// NOTE (the no-change witness — RECORDED, 2026-07-22): a companion no-change devSeed engine-proven at
+// the shipped fast counts is NOT achievable, so it is not registered. (1) `payload.noChange` (the
+// conventional taxable-first/conv-0 winning) is structurally unreachable for a natural LIVE household:
+// `enumerateSolveCandidates` anchors conversions near-free, so a beneficial conversion exists over any
+// real horizon, and where conversions ARE killed (very over-funded / short-horizon) the conventional
+// loses the sequencing tie-break to an earlier-enumerated identical grid candidate (confirmed across
+// ~45 probed households, both goals, single- and multi-bucket, ages 66–83). (2) The alternative live
+// route, `subTenthCollapse`, needs full-precision (16k-path) survival convergence to a shared display
+// tenth and does NOT fire at the fast test counts. The no-change RENDER stays covered where a render
+// witness belongs — RecommendationSurface.test.tsx / recommendationView.test.ts drive a synthetic
+// `noChange`/`subTenthCollapse` payload — the correct home for a shape the live engine can't reach at
+// test cost. The SURPLUS render (this witness) covers the committed `recommended` path live.
+// ===========================================================================
+describe('the recommend-second witness seed (engine-proven solve regime)', () => {
+  const FRESH = epochDayFromIsoDate(acaEnhancedSubsidyStatus.value.verifiedOn) + 5
+
+  /** Drive a witness seed + goal through the REAL builder → REAL engine at the fast test counts. */
+  const solveWitness = (key: 'surplus', goal: 'leave-more' | 'pay-less-tax') => {
+    const draft: ScenarioDraft = { ...DEV_SEEDS[key], chosenGoal: goal }
+    const req0 = buildSolveRequest(draft, FRESH)
+    expect(req0, `${key}: buildSolveRequest`).not.toBeNull()
+    if (req0 === null) throw new Error('unreachable')
+    const req = { ...req0, base: { ...req0.base, paths: 256 }, _gradeMinPaths: 50 }
+    const view = solveFromWire(engineApi.runSolve(req))
+    expect(view.ok, `${key}: solveFromWire`).toBe(true)
+    if (!view.ok) throw new Error('unreachable')
+    return view.payload
+  }
+
+  // The 'surplus' seed exists to cold-read the Q1 delta-as-hero SURPLUS render (an over-funded active
+  // recommendation, NOT the compose state). Pin the two structured flags the render keys on against the
+  // real engine: surplusRegime TRUE (over-funded on both seed sets) and noChange FALSE (the crown is an
+  // active move — an over-funded household still has a beneficial conversion, so the conventional never
+  // wins). The mutant killer lives on the noChange pin: inverting it to `.toBe(true)` goes red.
+  it("'surplus' lands an OVER-FUNDED active recommendation (surplusRegime true, noChange false) through the real solve", () => {
+    const p = solveWitness('surplus', 'leave-more')
+    expect(p.kind, 'the over-funded household MINTS a real recommendation (stateless + fresh ACA)').toBe(
+      'recommended',
+    )
+    if (p.kind !== 'recommended') return
+    expect(p.surplusRegime, 'over-funded on BOTH seed sets → the surplus pivot (Q1 delta-as-hero)').toBe(true)
+    expect(
+      p.noChange,
+      'the crown is an ACTIVE move (a beneficial conversion beats the conventional) — never no-change',
+    ).toBe(false)
+  }, 60_000)
 })

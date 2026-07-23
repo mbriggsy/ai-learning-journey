@@ -55,3 +55,14 @@ makes the healthy majority free.
 Any Workflow `agent(…, {schema})` call — review finders/refuters, research dossiers, caddie
 reader cards; any future council-shaped harness. The same law governs schema design itself:
 prefer few, bounded string fields over "write your full analysis into this property."
+
+## Refinement (2026-07-22, the U16 fold)
+
+Prose budgets alone are NOT sufficient enforcement: the U16 review shipped the size law
+verbatim in every prompt and still lost 4 of 42 agents to the cap (two finder lenses whose
+schema allowed `maxItems: 8` findings × four ~450-char fields, two refuters). The re-run of
+the same lenses with a STRUCTURALLY smaller schema — `maxItems: 4`, tighter per-field
+maxLengths, required-field-first — ran clean. The stronger form of the law: the SCHEMA is
+the enforcement layer and the prompt is only advisory — cap array sizes and field lengths so
+that a maximal legal payload still fits under the truncation threshold, and order the one
+required field first so a truncated call fails loud on content, not on a missing property.

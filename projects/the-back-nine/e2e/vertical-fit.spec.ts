@@ -440,6 +440,98 @@ for (const seed of PENDING_SEEDS) {
   }
 }
 
+// ── U16 F-A: the recommend-second surface fills the right rail (the dead-rail fix) ────────────
+// THE DEAD RAIL (refuter-confirmed): the committed recommend-second beat rendered in a 576px LEFT
+// rail beside ~950px of blank right pane — the spine band ends ~615px, and the whole rail below it
+// was dead while the tall committed beat stacked down the left. The fix seats the surface as a
+// FULL-WIDTH row BELOW the two panes (confidence.css, keyed on the surface carrying a beat so the
+// IDLE frame stays byte-identical — the matrix arms above prove that), and the committed viz
+// continues the band down into that rail at the SAME x + width.
+//
+// Like the CLS arm above, a LIVE committed solve is 80–200s+ (past this harness's budget), so this
+// INJECTS the real committed DOM (grade lockup + the fixed-dimension viz box + the text rest) into
+// the live `.recommendation-surface` — the viz box's PRESENCE is exactly what the shipped CSS keys
+// the inner two-pane on (`.rec-committed:has(> .rec-viz-box)`) — and measures where the real CSS
+// seats it. Two seeds: `retired` (tall verdict column) and `health` (SHORT verdict column, where a
+// naive full-width span at the slack row would paint the viz OVER the band — the collision this
+// placement structurally avoids). Planted-mutant killers: reverting the surface span
+// (`.recommendation-surface` back to `grid-column: 1`) reds assertion (1); reverting the inner
+// two-pane (`.rec-committed` back to the --measure single column) reds assertion (3).
+const DEAD_RAIL_SEEDS = ['retired', 'health'] as const
+
+for (const seed of DEAD_RAIL_SEEDS) {
+  for (const vp of [REAL, TIER] as const) {
+    const scale = vp === REAL ? { deviceScaleFactor: REAL_DPR } : {}
+    test.describe(`?seed=${seed} — the recommend-second surface fills the right rail (${vp.width}×${vp.height})`, () => {
+      test.use({ viewport: vp, ...scale })
+      test(`${seed}: the committed beat spans full width with the viz seated under the band, never over it`, async ({
+        page,
+      }) => {
+        await gotoSeedFinal(page, seed)
+        await assertResolvedSpine(page)
+        const geom = await page.locator('.recommendation-surface').evaluate((surface) => {
+          // The real committed DOM (RecommendationSurface.tsx → RecommendedBeat): the grade lockup,
+          // the fixed-dimension viz box (its placeholder holds the RV_VIEW aspect), and the text
+          // rest wrapper. Injected (no live solve — 80–200s+) exactly as the CLS arm injects its
+          // grade lockup; the viz box's presence triggers the inner two-pane.
+          const el = document.createElement('section')
+          el.className = 'rec-committed'
+          el.innerHTML =
+            '<div class="rec-grade" role="group"><p class="rec-grade__head">' +
+            '<svg class="rec-grade__glyph" width="22" height="22" viewBox="0 0 22 22"></svg>' +
+            '<span class="rec-grade__word">A confident lean</span></p>' +
+            '<p class="rec-grade__hero">This keeps about $128,000 more for the two of you to pass on than staying on your current plan.</p></div>' +
+            '<div class="rec-viz-box"><div class="rec-viz-box__placeholder" aria-hidden="true"></div></div>' +
+            '<div class="rec-committed__rest"><p class="rec-baseline">Compared with keeping your current plan</p>' +
+            '<p class="rec-limits">Validate big, irreversible moves with a professional.</p></div>'
+          surface.appendChild(el)
+          const rect = (node: Element | null) => {
+            if (node === null) return null
+            const r = node.getBoundingClientRect()
+            return { left: Math.round(r.left), right: Math.round(r.right), top: Math.round(r.top), bottom: Math.round(r.bottom), width: Math.round(r.width) }
+          }
+          const out = {
+            surface: rect(surface)!,
+            viz: rect(el.querySelector('.rec-viz-box'))!,
+            grade: rect(el.querySelector('.rec-grade'))!,
+            band: rect(document.querySelector('.cs-band'))!,
+            reveal: rect(document.querySelector('.confidence-reveal[data-twopane]'))!,
+          }
+          el.remove()
+          return out
+        })
+        // (1) FULL-WIDTH — the surface LEAVES the left column: its right edge reaches the reveal's
+        // right edge (not the ~576px left rail). MUTANT (revert the span → grid-column: 1): the
+        // right edge pins back at the left column (~784px) and this goes RED.
+        expect(
+          geom.surface.right,
+          `the committed surface stayed in the left rail (right=${geom.surface.right}, reveal right=${geom.reveal.right}) — the dead rail is back`,
+        ).toBeGreaterThanOrEqual(geom.reveal.right - 2)
+        // (2) the grade lockup stays at the comfortable reading measure (never stretched wall-wide).
+        expect(
+          geom.grade.width,
+          `the grade lockup stretched past the reading measure (width=${geom.grade.width})`,
+        ).toBeLessThanOrEqual(600)
+        // (3) RIGHT RAIL — the viz seats in the right pane, aligned with the band's own left edge (its
+        // vertical continuation). MUTANT (revert the inner two-pane): the viz collapses into the left
+        // column (~208px) and this goes RED.
+        expect(
+          geom.viz.left,
+          `the viz did not reach the right rail (viz left=${geom.viz.left}, band left=${geom.band.left}) — the right pane is still dead below the fan`,
+        ).toBeGreaterThanOrEqual(geom.band.left - 4)
+        expect(geom.viz.width, `the viz has no breathing width in the rail (width=${geom.viz.width})`).toBeGreaterThan(300)
+        // (4) NO COLLISION — the viz seats BELOW the band's render bottom, never painted over the fan
+        // (the short-`health` verdict column is the structural test: its slack row ends exactly at the
+        // band bottom, so the full-width row below it clears the fan).
+        expect(
+          geom.viz.top,
+          `the viz overlaps the band (viz top=${geom.viz.top}, band bottom=${geom.band.bottom}) — the recommendation paints over the fan`,
+        ).toBeGreaterThanOrEqual(geom.band.bottom - 1)
+      })
+    })
+  }
+}
+
 // ── the priced-state faces (the state-tax unit / the state-carrying seed increment) ───────────
 // Each priced seed is a retiredOnTrack clone carrying ONE `retirementState`, so the all-65+
 // medicarePricedNote block renders with the household's state clause SWAPPED into the narrowed

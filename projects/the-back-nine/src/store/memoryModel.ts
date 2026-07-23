@@ -273,7 +273,8 @@ export type SolveAnswer =
   // state — NEVER a stale rec rendered as current, and NEVER an auto-re-solve (re-solving is
   // INVITED, like the beat itself). Mirrors U12's tier-less inputs-incomplete demotion on the solve
   // channel; TIER-LESS by construction (the vertical-fit gate must never satisfy on it). `label` is
-  // a machine key; the copy (`inputsChangedNote`) is minted in copy.ts and rendered in S3.
+  // a machine key; the copy (`recommendStale*` — heading + body + re-open CTA) is minted in copy.ts
+  // and rendered as ONE coherent card in RecommendationSurface (F-B).
   | { readonly kind: 'stale'; readonly label: 'inputs-changed' }
   // The worker promise rejected (worker death / clone failure) — the calm retry mode, never an
   // uncaught rejection into the UI (the recompute() precedent).

@@ -86,6 +86,16 @@ describe('GoalPicker — the UNSET SENTINEL (never a silent default)', () => {
     expect(confirmBtn()).toBeDisabled()
   })
 
+  it('the confirm CTA is visibly MUTED until a pick — the disabled state flips to enabled on pick (F-D)', () => {
+    render(<GoalPicker open current={undefined} onPick={noop} onClose={noop} />)
+    // Unpicked: the native `disabled` state drives the shipped muted treatment (.btn-primary:disabled —
+    // opacity, a LIGHTNESS cue, never hue), so a spouse never reads a full-saturation CTA as ready to act.
+    expect(confirmBtn()).toBeDisabled()
+    fireEvent.click(payLess())
+    // Picking a goal flips the state — the CTA regains full saturation and its press affordance.
+    expect(confirmBtn()).toBeEnabled()
+  })
+
   it('picking a goal enables the confirm, and confirming reports THAT goal', () => {
     const onPick = vi.fn()
     render(<GoalPicker open current={undefined} onPick={onPick} onClose={noop} />)

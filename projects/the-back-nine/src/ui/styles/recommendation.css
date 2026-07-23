@@ -49,6 +49,15 @@
   max-width: var(--measure);
 }
 
+/* The committed beat's text lockup below the grade + viz. A TRANSPARENT group in single column
+   (`display: contents` mints no box), so the phone renders baseline · disclosures · runner-up ·
+   limits · re-pick · save-slot as flat flex children of .rec-committed exactly as before. It
+   becomes a real reading-measure LEFT column (with the viz riding the right) only at the laptop
+   two-pane — the F-A dead-rail switch lives in confidence.css, keyed on [data-twopane]. */
+.rec-committed__rest {
+  display: contents;
+}
+
 /* The grade lockup — ONE semantic group, ONE crossfade key (.cs-swap, confidence.css: a grade change
    repaints word+delta+note together, @starting-style fade; reduced motion drops it). */
 .rec-grade {
@@ -212,12 +221,26 @@
   text-wrap: pretty;
 }
 
-/* The calm status notes (stale / unavailable) — quiet, plain, never an error register. */
+/* The calm status notes (stale / unavailable / buckets) — quiet, plain, never an error register. A
+   flex column so a multi-part card (F-B: the stale card's heading + body + in-card control) stacks with
+   an even rhythm; a single-line note (unavailable / buckets) is one child, so the gap is inert there. */
 .rec-note {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
   padding: var(--space-3) var(--space-4);
   border-radius: var(--radius-md);
   background: var(--paper-raised);
   max-width: var(--measure);
+}
+
+/* F-B — the stale card's calm heading (mirrors the held card's head: display face, semibold, --ink),
+   naming that the strategy read is out of date, never an alarm. */
+.rec-note__head {
+  font-family: var(--font-display);
+  font-size: var(--text-base);
+  font-weight: var(--weight-semibold);
+  color: var(--ink);
 }
 
 .rec-note__line {
@@ -225,4 +248,11 @@
   font-size: var(--text-sm);
   color: var(--ink-muted);
   text-wrap: pretty;
+}
+
+/* F-B — the in-card re-open control: the promise ("see the current strategy") and its action share ONE
+   home. A compact calm door (btn-quiet carries the ≥24px target + the visible non-color focus ring +
+   the --dur-press resting press), left-aligned below the body. */
+.rec-note__reopen {
+  align-self: flex-start;
 }

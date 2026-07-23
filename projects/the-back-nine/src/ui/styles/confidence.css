@@ -381,6 +381,85 @@
     grid-column: 1 / -1;
     grid-row: 7;
   }
+
+  /* ── F-A the DEAD RAIL: the recommend-second surface's two-pane seat ──────────────────────────
+     The problem this fixes: the committed recommend-second beat rendered in a 576px LEFT rail beside
+     ~950px of blank right pane (the spine band ends at ~615px; the rail below it was dead). The fix
+     seats the surface as a FULL-WIDTH row below the two panes, with the committed viz continuing the
+     band down into that rail.
+     THE IDLE SEAT (byte-identical to the auto-placement it replaces): the surface tucks into the r4
+     `1fr` slack row in the LEFT column, 0-height until a beat lands — so every IDLE fit frame the
+     one-frame law gates (retired/budget/health/nc/pa/fl, the vault returns) is UNTOUCHED: no new row,
+     no new gap, no shift of the protected disclaimer. */
+  .confidence-reveal[data-twopane] .recommendation-surface {
+    grid-column: 1;
+    grid-row: 4;
+    min-width: 0;
+  }
+  /* WHEN the surface carries a real beat (pending / committed / held / stale / steer — any child but
+     the bare `.sr-only` live region) it LEAVES the left column for a FULL-WIDTH row (r5) BELOW the two
+     panes, and the protected disclaimer + the degradable tail step down one row. r5's top is the r4
+     slack's bottom, and the band's own overflow pins that at ≥ the band's render bottom on every
+     verdict-column height (a short left column can't lift the row up into the band) — so the row is
+     collision-free WITHOUT measuring anything. Such a frame SCROLLS by design (it is not one of the
+     fast idle fit frames — a live solve is 80–200s, past the fit harness budget), so the added row is
+     free; the idle seat above stays byte-identical. The `:has()` keys on the surface's OWN content, so
+     the switch is scoped to exactly the frames that carry a beat. */
+  .confidence-reveal[data-twopane]:has(.recommendation-surface > :not(.sr-only)) {
+    grid-template-rows: auto auto auto 1fr auto auto auto auto;
+  }
+  .confidence-reveal[data-twopane]:has(.recommendation-surface > :not(.sr-only)) .recommendation-surface {
+    grid-column: 1 / -1;
+    grid-row: 5;
+  }
+  .confidence-reveal[data-twopane]:has(.recommendation-surface > :not(.sr-only)) .disclaimer--in-frame {
+    grid-row: 6;
+  }
+  .confidence-reveal[data-twopane]:has(.recommendation-surface > :not(.sr-only)) .result-backup-door {
+    grid-row: 7;
+  }
+  .confidence-reveal[data-twopane]:has(.recommendation-surface > :not(.sr-only)) .result-quiet-row {
+    grid-row: 8;
+  }
+  /* the pending well + the calm held/stale notes keep the reading measure inside the full-width row
+     (a calm well, never a wall-wide bar); the pending well's reserved HEIGHT is untouched, so the
+     S2→S3 CLS alignment (vertical-fit.spec.ts) holds. */
+  .confidence-reveal[data-twopane] .solve-pending-panel {
+    max-width: var(--measure);
+  }
+  /* the COMMITTED beat WITH a viz becomes an INNER two-pane: the grade lockup + text ride the LEFT at
+     the reading measure (--measure), the RecommendationViz rides the RIGHT — the SAME column-gap
+     (--space-9) + x + width as the spine band directly above it, so the viz reads as the band
+     continued down into the once-dead rail. The viz spans both text rows (grade · rest) via the
+     explicit two-row template, so `1 / -1` reaches them (no implicit-row gotcha). Without a viz
+     (surplus / no-change) the beat keeps its base --measure single column — no empty right rail. */
+  .confidence-reveal[data-twopane] .rec-committed:has(> .rec-viz-box) {
+    display: grid;
+    grid-template-columns: minmax(0, var(--measure)) minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    column-gap: var(--space-9);
+    row-gap: var(--space-4);
+    align-items: start;
+    max-width: none;
+  }
+  .confidence-reveal[data-twopane] .rec-committed:has(> .rec-viz-box) > .rec-grade {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .confidence-reveal[data-twopane] .rec-committed:has(> .rec-viz-box) > .rec-committed__rest {
+    grid-column: 1;
+    grid-row: 2;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    min-width: 0;
+  }
+  .confidence-reveal[data-twopane] .rec-committed:has(> .rec-viz-box) > .rec-viz-box {
+    grid-column: 2;
+    grid-row: 1 / -1;
+    align-self: start;
+    min-width: 0;
+  }
 }
 
 /* ── the SHORT-laptop density tier (council 2026-07-08 — see result.css / tokens.css

@@ -120,6 +120,24 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     expect(budget, 'the conservative tail contradicts the “all in” prime').toContain('most budgets don’t')
   })
 
+  // --- F-B (U16 chair fix, cold-read panel): the STALE card's body drift-pin. Two falsehoods the
+  //     cold read killed must stay dead: (1) "since we found this" — FALSE when the predecessor was the
+  //     HELD card (nothing is "found" on a hold), so the body must never claim a find; (2) the body must
+  //     positively affirm the ANSWER above is current (only the strategy read went stale) — the honest
+  //     truth the coherent card carries. Planted mutant (b): restoring the old wording reds this pin. ---
+  it('the stale card body kills "since we found this" and affirms the answer above is current (F-B drift-pin)', () => {
+    const body = copy.recommendStaleBody
+    // (1) the false "found" claim is dead (untrue whenever the predecessor was the HELD card).
+    expect(body, 'the "since we found this" falsehood must stay dead').not.toMatch(/found this/i)
+    // Broadened past the one lexeme (insight 087 spirit): no "found"/"we made"/"we worked out" claim
+    // that a HOLD predecessor would falsify — a synonym reword resurrecting the falsehood trips this.
+    expect(body, 'no find/produce claim a hold predecessor would falsify').not.toMatch(/\b(found|we made|worked out|we built)\b/i)
+    // (2) the positive anchor (non-vacuity — burned/070): the body affirms the answer above is current.
+    expect(body, 'the body affirms the answer above already reflects the change').toContain('Your answer above already reflects them')
+    // The heading names the state calmly (the strategy READ is out of date — true for held OR recommended).
+    expect(copy.recommendStaleHeading, 'the heading names the strategy read out of date').toContain('out of date')
+  })
+
   // --- slots: render with representative args, then scan. Slots are the SANCTIONED numeric channel,
   //     so they are NOT free-numeral scanned; the verdict voice still must hold. Record<keyof typeof
   //     slots, …> makes a new slot without a sample a COMPILE error (no silent no-op — burned/070). ---

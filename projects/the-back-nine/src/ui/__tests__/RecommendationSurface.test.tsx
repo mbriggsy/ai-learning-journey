@@ -48,6 +48,12 @@ describe('RecommendationSurface — the pending tell', () => {
     const line = document.querySelector('.solve-pending')
     expect(line).not.toBeNull()
     expect(line?.textContent).toBe(copy.recommendPendingLabel)
+    // F-C: the label sets an HONEST duration expectation ("a few minutes" — TRUE for the measured
+    // 90s–6min wait) so the reader is never left wondering if it stalled. The planted mutant (reverting
+    // to the no-duration label) reds here.
+    expect(line?.textContent, 'the pending label carries an honest duration phrase').toMatch(/a few minutes/)
+    // Never a fake clock: NO digit ⇒ no countdown / % / ETA — calm reassurance, not a fabricated progress bar.
+    expect(copy.recommendPendingLabel, 'no fake ETA / countdown / % — no digit at all').not.toMatch(/\d/)
     // The persistent announce channel is polite (never assertive — a working tell is not an alarm).
     expect(liveRegion()).toHaveAttribute('aria-live', 'polite')
   })
@@ -61,6 +67,8 @@ describe('RecommendationSurface — the pending tell', () => {
       rerender(<RecommendationSurface solve={PENDING} />)
       // The transition announced.
       expect(liveRegion()?.textContent).toBe(copy.recommendPendingLabel)
+      // F-C: the spoken tell carries the honest duration phrase too (announced once, calm — not an ETA).
+      expect(liveRegion()?.textContent, 'the announce carries the honest duration phrase').toMatch(/a few minutes/)
       // Clear-after-announce: the a11y tree is clean well before the next interaction (no stale
       // "working…" lingering — the planted never-clears mutant leaves it populated here).
       act(() => {
@@ -225,11 +233,28 @@ describe('RecommendationSurface — the withheld / stale / unavailable renders (
     expect(container.textContent, 'the state is named, direction honest').toMatch(/North Carolina/)
   })
 
-  it('the §S1 stale demotion renders a calm status note, never a stale rec as current', () => {
+  it('the §S1 stale demotion renders ONE coherent card — heading + body + the in-card re-open control (F-B)', () => {
+    const onRepick = vi.fn()
+    const { container } = render(
+      <RecommendationSurface solve={{ kind: 'stale', label: 'inputs-changed' }} onRepick={onRepick} />,
+    )
+    const card = container.querySelector('.rec-note--stale')
+    expect(card, 'the stale card renders, never a stale rec as current').not.toBeNull()
+    // The heading names the state calmly; the body carries the honest truths (answer above is current).
+    expect(card?.querySelector('.rec-note__head')?.textContent).toBe(copy.recommendStaleHeading)
+    expect(card?.textContent).toContain(copy.recommendStaleBody)
+    // ADJACENCY (mutant a): the re-open CONTROL lives INSIDE the stale card — the promise and its action
+    // in ONE home, never a separate below-fold door. Removing it (the mutant) makes this arm red.
+    const reopen = screen.getByRole('button', { name: copy.recommendStaleReopenCta })
+    expect(card?.contains(reopen), 'the re-open control is inside the stale card region').toBe(true)
+    fireEvent.click(reopen)
+    expect(onRepick, 'the in-card control re-opens the goal choice (the caller re-dispatches)').toHaveBeenCalledTimes(1)
+  })
+
+  it('the stale card renders NO dead re-open control when the picker is unwired (the P2/P3 shells)', () => {
     const { container } = render(<RecommendationSurface solve={{ kind: 'stale', label: 'inputs-changed' }} />)
-    const note = container.querySelector('.rec-note--stale')
-    expect(note).not.toBeNull()
-    expect(note?.textContent).toContain(copy.inputsChangedNote)
+    expect(container.querySelector('.rec-note--stale'), 'the calm card still renders').not.toBeNull()
+    expect(screen.queryByRole('button', { name: copy.recommendStaleReopenCta }), 'no dead button unwired').toBeNull()
   })
 
   it('a compute-error renders the ONE calm retry line, never the raw reason', () => {

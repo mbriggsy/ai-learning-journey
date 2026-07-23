@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { axisDollarFormatterFor, formatAxisDollar, formatPerMonth } from '../money'
+import { axisDollarFormatterFor, formatAbsoluteDollar, formatAxisDollar, formatPerMonth } from '../money'
 import { buildYTicks } from '@viz/bandData'
 
 /**
@@ -105,6 +105,44 @@ describe('axisDollarFormatterFor — the unit-locked tick lattice (O8)', () => {
 
   it('a non-round stray falls back to the humane 1-decimal in the locked unit (defensive, mirrors the per-value M branch)', () => {
     expect(axisDollarFormatterFor(2_000_000)(1_234_567)).toBe('$1.2M')
+  })
+})
+
+/**
+ * formatAbsoluteDollar — the recommendation lockup's ABSOLUTE-magnitude PROSE dialect (the §S2 median
+ * quote + the §S3b viz-aria endpoints). A portfolio-scale level ≥ $1M joins the spine's humane "$X.XM"
+ * prose (ONE decimal — deliberately NOT formatAxisDollar's exact-when-round RULER precision, and never
+ * full grouped digits); a sub-$1M level stays the DELTA's grouped dialect (formatDeltaDollar), never a
+ * "$Xk" axis unit. Returns BARE of the "$" glyph — the copy slot supplies it. Every expectation is
+ * HAND-DERIVED from the rules (DND 012), never computed by running the function.
+ */
+describe('formatAbsoluteDollar — the lockup absolute prose dialect (≥ $1M → "$X.XM", < $1M → grouped, bare glyph)', () => {
+  it('≥ $1M reads the spine humane $X.XM prose — one decimal, never full digits', () => {
+    // 4,160,000 / 1e6 = 4.16 → toFixed(1) "4.2" (the calm gap line's typical bequest)
+    expect(formatAbsoluteDollar(4_160_000)).toBe('4.2M')
+    // 5,760,000 / 1e6 = 5.76 → "5.8"
+    expect(formatAbsoluteDollar(5_760_000)).toBe('5.8M')
+    // an exact million strips the ".0" → "1M", never "1.0M"
+    expect(formatAbsoluteDollar(1_000_000)).toBe('1M')
+    expect(formatAbsoluteDollar(1_200_000)).toBe('1.2M')
+    expect(formatAbsoluteDollar(2_000_000)).toBe('2M')
+  })
+
+  it('< $1M stays GROUPED humane digits (the delta dialect), never formatAxisDollar’s "$Xk" axis unit', () => {
+    // delegates to formatDeltaDollar: the $10k step above $100k rounds 276,000 → 280,000
+    expect(formatAbsoluteDollar(276_000)).toBe('280,000')
+    expect(formatAbsoluteDollar(280_000)).toBe('280,000')
+    // the $100 step below $10k keeps 6,300 exact
+    expect(formatAbsoluteDollar(6_300)).toBe('6,300')
+  })
+
+  it('is BARE of the "$" glyph — the copy SLOT supplies it (unlike formatAxisDollar, which carries it)', () => {
+    expect(formatAbsoluteDollar(4_160_000).startsWith('$')).toBe(false)
+    expect(formatAbsoluteDollar(280_000).startsWith('$')).toBe(false)
+  })
+
+  it('defensive |x|: a stray sign never leaks (the copy WORD carries direction)', () => {
+    expect(formatAbsoluteDollar(-4_160_000)).toBe('4.2M')
   })
 })
 

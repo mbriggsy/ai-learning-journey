@@ -16,7 +16,7 @@ import {
   type RecommendedView,
 } from '../recommendationView'
 import { copy, slots } from '../copy'
-import { formatBracketPercent, formatDeltaDollar } from '../money'
+import { formatAbsoluteDollar, formatBracketPercent, formatDeltaDollar } from '../money'
 
 /*
  * recommendationView — the U16 §S3a STATES layer. Every payload shape gets a render; the survival
@@ -101,7 +101,7 @@ describe('recommendationView — the entry + non-committed states', () => {
     expect(recommendationView({ kind: 'idle' })).toEqual({ kind: 'idle' })
     expect(recommendationView({ kind: 'blocked', gap: 'goal-unset', label: 'goal-unset' })).toEqual({ kind: 'blocked', gap: 'goal-unset' })
     expect(recommendationView({ kind: 'pending', label: 'solving' })).toEqual({ kind: 'pending' })
-    expect(recommendationView({ kind: 'stale', label: 'inputs-changed' })).toEqual({ kind: 'stale', note: copy.inputsChangedNote })
+    expect(recommendationView({ kind: 'stale', label: 'inputs-changed' })).toEqual({ kind: 'stale', heading: copy.recommendStaleHeading, body: copy.recommendStaleBody })
     const err = recommendationView({ kind: 'compute-error', reason: 'worker died' })
     expect(err).toEqual({ kind: 'unavailable', note: copy.recommendUnavailable, detail: 'worker died' })
   })
@@ -243,13 +243,18 @@ describe('recommendationView — the committed beat (Q1 delta-as-hero + source-b
     expect(v.grade.deltaFigure, 'the delta is still honest without a grade').toBeDefined()
   })
 
-  it('§Q6 skew: leave-more UPSIDE skew QUOTES the median as the typical bequest; a symmetric skew stays quiet', () => {
-    const winner = armFor('leave-more', HB, 'taxable-first', 'taxable-first', { terminalTaxableReal: [400_000, 600_000], terminalPretaxReal: [100_000, 100_000], terminalRothReal: [0, 0], terminalHsaReal: [0, 0] })
-    const mean = winner.headlineStatisticB
-    const median = mean - 300_000 // visibly lower typical — the disclosure-worthy shape
-    const payload = leaveMoreRec({ winner, skewDisclosure: { meanReal: mean, medianReal: median, p10Real: median - 100_000, p90Real: mean + 100_000, skewDirection: 'upside', meanMinusMedianReal: mean - median } })
+  it('§Q6 skew: leave-more UPSIDE skew QUOTES the median in the humane $X.XM dialect; a symmetric skew stays quiet (F-E dialect pin)', () => {
+    // A portfolio-scale (≥ $1M) bequest so the ABSOLUTE dialect is visible: mean 5,760,000, median 4,160,000.
+    const winner = armFor('leave-more', HB, 'taxable-first', 'taxable-first', { terminalTaxableReal: [4_000_000, 6_000_000], terminalPretaxReal: [1_000_000, 1_000_000], terminalRothReal: [0, 0], terminalHsaReal: [0, 0] })
+    const mean = winner.headlineStatisticB // = 5,760,000 (guard: skew mean MUST equal the winner headline)
+    const median = mean - 1_600_000 // 4,160,000 — a visibly lower, still-$M typical
+    const payload = leaveMoreRec({ winner, skewDisclosure: { meanReal: mean, medianReal: median, p10Real: median - 800_000, p90Real: mean + 1_000_000, skewDirection: 'upside', meanMinusMedianReal: mean - median } })
     const v = asRec(recommendationView(committed(payload), { spineConfidence: spine }))
-    expect(v.skew).toEqual({ medianQuote: slots.recSkewMedian(formatDeltaDollar(median)) })
+    // the quote joins the spine's humane $X.XM prose dialect — NOT full grouped digits.
+    expect(v.skew).toEqual({ medianQuote: slots.recSkewMedian(formatAbsoluteDollar(median)) })
+    // F-E dialect pin (mutant b — re-typing the median line to formatDeltaDollar full digits reds BOTH):
+    expect(v.skew!.medianQuote, 'the median reads "$X.XM", the spine dialect').toMatch(/\$\d+(\.\d+)?M\b/)
+    expect(v.skew!.medianQuote, 'never re-typed to full grouped digits').not.toMatch(/\d,\d{3},\d{3}/)
     // a symmetric (mean === median) skew is NOT disclosure-worthy — the leaveMoreRec default.
     expect(asRec(recommendationView(committed(leaveMoreRec()), { spineConfidence: spine })).skew).toBeUndefined()
   })
@@ -330,6 +335,24 @@ describe('recommendationView — the two-arm viz props', () => {
     const delta = formatDeltaDollar(payload.winner.headlineStatisticB - payload.noActionBaseline.headlineStatisticB)
     expect(v.viz!.labels.deltaLabel).toBe(`$${delta}`)
     expect(v.viz!.labels.ariaSummary).toContain(delta)
+  })
+
+  it('F-E: the viz aria ENDPOINTS join the $X.XM prose dialect (≥ $1M absolutes); the DELTA stays grouped', () => {
+    // Portfolio-scale absolutes (≥ $1M): winner mean 5,760,000 vs baseline mean 5,560,000, delta 200,000.
+    const winner = armFor('leave-more', HB, 'taxable-first', 'taxable-first', { terminalTaxableReal: [4_000_000, 6_000_000], terminalPretaxReal: [1_000_000, 1_000_000], terminalRothReal: [0, 0], terminalHsaReal: [0, 0] })
+    const baseline = armFor('leave-more', HB, 'proportional', 'proportional', { terminalTaxableReal: [3_800_000, 5_800_000], terminalPretaxReal: [1_000_000, 1_000_000], terminalRothReal: [0, 0], terminalHsaReal: [0, 0] })
+    const payload = leaveMoreRec({ winner, noActionBaseline: baseline, skewDisclosure: { meanReal: winner.headlineStatisticB, medianReal: winner.headlineStatisticB, p10Real: 0, p90Real: 0, skewDirection: 'symmetric', meanMinusMedianReal: 0 } })
+    const v = asRec(recommendationView(committed(payload), { spineConfidence: spine }))
+    const aria = v.viz!.labels.ariaSummary
+    // each portfolio ENDPOINT reads the humane "$X.XM" prose, never full grouped digits.
+    expect(aria).toContain(`$${formatAbsoluteDollar(winner.headlineStatisticB)}`)
+    expect(aria).toContain(`$${formatAbsoluteDollar(baseline.headlineStatisticB)}`)
+    expect(aria, 'the endpoints are the $X.XM dialect').toMatch(/\$\d+(\.\d+)?M/)
+    // the DELTA between them stays grouped digits (a smaller difference reads naturally grouped).
+    const delta = formatDeltaDollar(winner.headlineStatisticB - baseline.headlineStatisticB)
+    expect(aria, 'the delta stays grouped digits').toContain(`$${delta}`)
+    // the delta label (the bar) is unchanged — grouped digits.
+    expect(v.viz!.labels.deltaLabel).toBe(`$${delta}`)
   })
 
   it('NO-CHANGE mode shows NO viz (never a fabricated ~$0 two-bar delta)', () => {

@@ -92,10 +92,23 @@ function CommittedBeat({ view, onRepick }: { readonly view: RecommendationView; 
       ) : null
     case 'stale':
       // §S1 invalidation — the committed rec no longer describes the current household; calm status,
-      // re-solve INVITED (never auto-re-solved). A terminal note, not a nag.
+      // re-solve INVITED (never auto-re-solved). F-B (U16 chair fix): ONE coherent card — a calm HEADING,
+      // a BODY (the answer above is current; only this strategy read went stale — TRUE whether the
+      // predecessor was held or recommended), and the re-open CONTROL rendered INSIDE the card (the
+      // promise and its action in ONE home). This is now the STALE channel's ONE re-open control home:
+      // Result.tsx retires the prepended door-row invite for `stale` (compute-error keeps it). The
+      // control opens the GoalPicker (the invite/re-pick path — the goal precedes the solve, the standing
+      // goal pre-selected), so its label names the OUTCOME it leads to, never an imperative. Rendered
+      // only when the caller wired the picker (onRepick) — never a dead button (the P2/P3 shells).
       return (
         <section className="rec-note rec-note--stale" role="status">
-          <p className="rec-note__line">{view.note}</p>
+          <h3 className="rec-note__head">{view.heading}</h3>
+          <p className="rec-note__line">{view.body}</p>
+          {onRepick !== undefined && (
+            <button type="button" className="btn-quiet rec-note__reopen" onClick={onRepick}>
+              {copy.recommendStaleReopenCta}
+            </button>
+          )}
         </section>
       )
     case 'unavailable':
@@ -163,7 +176,10 @@ function RecommendedBeat({ view, onRepick }: { readonly view: RecommendedView; r
         {g.ungradedNote !== undefined && <p className="rec-grade__note">{g.ungradedNote}</p>}
       </div>
 
-      {/* The two-arm comparison viz — ACTIVE mode only, lazy-chunked behind a fixed-dimension box. */}
+      {/* The two-arm comparison viz — ACTIVE mode only, lazy-chunked behind a fixed-dimension box.
+          A direct child of .rec-committed (NOT wrapped below): at the laptop two-pane it rides the
+          RIGHT column of the committed beat's inner grid, aligned under the spine band, while the
+          text below rides the left at the reading measure (F-A the dead-rail fix, confidence.css). */}
       {view.viz !== undefined && (
         <div className="rec-viz-box">
           <Suspense fallback={<div className="rec-viz-box__placeholder" aria-hidden="true" />}>
@@ -176,83 +192,89 @@ function RecommendedBeat({ view, onRepick }: { readonly view: RecommendedView; r
         </div>
       )}
 
-      {/* Q7 — the baseline nameplate: a STATIC label, NO number (the A↔B residual never renders). */}
-      <p className="rec-baseline">{view.baselineNameplate}</p>
+      {/* The text lockup below the grade — the reading-measure column of the two-pane committed beat
+          (a transparent `display:contents` group in single column, so the phone renders these as flat
+          flex children exactly as before; a real left grid column only at the laptop two-pane where the
+          viz above rides the right — confidence.css owns the switch). */}
+      <div className="rec-committed__rest">
+        {/* Q7 — the baseline nameplate: a STATIC label, NO number (the A↔B residual never renders). */}
+        <p className="rec-baseline">{view.baselineNameplate}</p>
 
-      {/* Q6 — the leave-more skew median quote (present iff disclosure-worthy). */}
-      {view.skew !== undefined && <p className="rec-skew">{view.skew.medianQuote}</p>}
+        {/* Q6 — the leave-more skew median quote (present iff disclosure-worthy). */}
+        {view.skew !== undefined && <p className="rec-skew">{view.skew.medianQuote}</p>}
 
-      {/* The disclosures adjacent to the delta (R7 nets) — read-only NOTES (no inert editing affordance
-          ships; the heir-bracket r7-editable seat's inline editor lands with its persisted field). */}
-      {view.disclosures.length > 0 && (
-        <ul className="rec-disclosures">
-          {view.disclosures.map((d) => (
-            <li key={d.id} className="rec-disclosure" data-disclosure={d.id} data-disposition={d.disposition}>
-              {d.text}
-            </li>
-          ))}
-        </ul>
-      )}
+        {/* The disclosures adjacent to the delta (R7 nets) — read-only NOTES (no inert editing affordance
+            ships; the heir-bracket r7-editable seat's inline editor lands with its persisted field). */}
+        {view.disclosures.length > 0 && (
+          <ul className="rec-disclosures">
+            {view.disclosures.map((d) => (
+              <li key={d.id} className="rec-disclosure" data-disclosure={d.id} data-disposition={d.disposition}>
+                {d.text}
+              </li>
+            ))}
+          </ul>
+        )}
 
-      {/* R23 — the runner-up, retained + reachable one tap down. The hedged "why this beat it" TEXT
-          always shows; the §S4 comparative-depth two-arm viz (winner vs runner-up) rides beside it ONLY
-          when the winner DISPLAYS ahead at seed-B (the view model drops the picture on an A-decides/
-          B-displays inversion — never a chart contradicting the ranking). Reuses the SAME lazy
-          RecommendationViz chunk (already loaded by the primary viz in active mode) behind a
-          fixed-dimension box so it never reflows the panel on land (CLS). */}
-      {view.runnerUp !== undefined && (
-        <details className="rec-runnerup">
-          <summary className="rec-runnerup__summary">{copy.recSeeRunnerUp}</summary>
-          <p className="rec-runnerup__why">{view.runnerUp.why}</p>
-          {view.runnerUp.viz !== undefined && (
-            <div className="rec-viz-box rec-runnerup__viz">
-              <Suspense fallback={<div className="rec-viz-box__placeholder" aria-hidden="true" />}>
-                <RecommendationViz
-                  withoutMagnitude={view.runnerUp.viz.withoutMagnitude}
-                  withMagnitude={view.runnerUp.viz.withMagnitude}
-                  labels={view.runnerUp.viz.labels}
-                />
-              </Suspense>
-            </div>
-          )}
-        </details>
-      )}
+        {/* R23 — the runner-up, retained + reachable one tap down. The hedged "why this beat it" TEXT
+            always shows; the §S4 comparative-depth two-arm viz (winner vs runner-up) rides beside it ONLY
+            when the winner DISPLAYS ahead at seed-B (the view model drops the picture on an A-decides/
+            B-displays inversion — never a chart contradicting the ranking). Reuses the SAME lazy
+            RecommendationViz chunk (already loaded by the primary viz in active mode) behind a
+            fixed-dimension box so it never reflows the panel on land (CLS). */}
+        {view.runnerUp !== undefined && (
+          <details className="rec-runnerup">
+            <summary className="rec-runnerup__summary">{copy.recSeeRunnerUp}</summary>
+            <p className="rec-runnerup__why">{view.runnerUp.why}</p>
+            {view.runnerUp.viz !== undefined && (
+              <div className="rec-viz-box rec-runnerup__viz">
+                <Suspense fallback={<div className="rec-viz-box__placeholder" aria-hidden="true" />}>
+                  <RecommendationViz
+                    withoutMagnitude={view.runnerUp.viz.withoutMagnitude}
+                    withMagnitude={view.runnerUp.viz.withMagnitude}
+                    labels={view.runnerUp.viz.labels}
+                  />
+                </Suspense>
+              </div>
+            )}
+          </details>
+        )}
 
-      {/* Q5 — the conversion-only hold (dormant today): the sequencing rec ships, conversions named-held
-          with their true reason(s) + the coupling caveat. */}
-      {view.withheldConversion !== undefined && (
-        <section className="rec-conv-hold">
-          <h4 className="rec-conv-hold__head">{copy.recommendWithheldConversionsHeading}</h4>
-          {view.withheldConversion.reasons.map((reason, i) => (
-            <p key={i} className="rec-conv-hold__reason">
-              {reason}
-            </p>
-          ))}
-          <p className="rec-conv-hold__coupling">{view.withheldConversion.coupling}</p>
-        </section>
-      )}
+        {/* Q5 — the conversion-only hold (dormant today): the sequencing rec ships, conversions named-held
+            with their true reason(s) + the coupling caveat. */}
+        {view.withheldConversion !== undefined && (
+          <section className="rec-conv-hold">
+            <h4 className="rec-conv-hold__head">{copy.recommendWithheldConversionsHeading}</h4>
+            {view.withheldConversion.reasons.map((reason, i) => (
+              <p key={i} className="rec-conv-hold__reason">
+                {reason}
+              </p>
+            ))}
+            <p className="rec-conv-hold__coupling">{view.withheldConversion.coupling}</p>
+          </section>
+        )}
 
-      {/* §S4 — the honest-limits note (R13): calm, invited. The recommendation is the most plan-moving
-          beat, so it carries its own honest-limits caveat — the ONE `staticDisclosures` source (never a
-          parallel string that could drift; the same words the spine Disclaimer reads), a quiet
-          subordinate line, never an alarm and never an imperative CTA. */}
-      <p className="rec-limits">{staticDisclosures.honestLimitsValidate}</p>
+        {/* §S4 — the honest-limits note (R13): calm, invited. The recommendation is the most plan-moving
+            beat, so it carries its own honest-limits caveat — the ONE `staticDisclosures` source (never a
+            parallel string that could drift; the same words the spine Disclaimer reads), a quiet
+            subordinate line, never an alarm and never an imperative CTA. */}
+        <p className="rec-limits">{staticDisclosures.honestLimitsValidate}</p>
 
-      {/* §S4 — the goal RE-PICK door: the un-saved hypothetical is freely re-aimable, and a re-pick
-          VISIBLY re-solves (both futures update). A calm door (btn-quiet, ≥24px, visible non-color
-          focus ring), NEVER a save. Rendered only when the caller wired the picker (onRepick). */}
-      {onRepick !== undefined && (
-        <button type="button" className="btn-quiet rec-repick" onClick={onRepick}>
-          {copy.recommendRepickCta}
-        </button>
-      )}
+        {/* §S4 — the goal RE-PICK door: the un-saved hypothetical is freely re-aimable, and a re-pick
+            VISIBLY re-solves (both futures update). A calm door (btn-quiet, ≥24px, visible non-color
+            focus ring), NEVER a save. Rendered only when the caller wired the picker (onRepick). */}
+        {onRepick !== undefined && (
+          <button type="button" className="btn-quiet rec-repick" onClick={onRepick}>
+            {copy.recommendRepickCta}
+          </button>
+        )}
 
-      {/* §S4 — the RESERVED save slot: layout space ONLY (kills the U17 CLS relayout). NO live Save
-          control ships in U16 — a gesture whose commit doesn't persist is a lie (the security seat's
-          `writable()`-refuses finding: an inert "saved" in the recovery-unlocked/no-vault survivor
-          state is data loss at the widow-cliff). The gesture + the v3 write land TOGETHER in U17; here
-          the slot is an EMPTY reservation (aria-hidden — nothing to announce), never interactive. */}
-      <div className="rec-save-slot" aria-hidden="true" />
+        {/* §S4 — the RESERVED save slot: layout space ONLY (kills the U17 CLS relayout). NO live Save
+            control ships in U16 — a gesture whose commit doesn't persist is a lie (the security seat's
+            `writable()`-refuses finding: an inert "saved" in the recovery-unlocked/no-vault survivor
+            state is data loss at the widow-cliff). The gesture + the v3 write land TOGETHER in U17; here
+            the slot is an EMPTY reservation (aria-hidden — nothing to announce), never interactive. */}
+        <div className="rec-save-slot" aria-hidden="true" />
+      </div>
     </section>
   )
 }

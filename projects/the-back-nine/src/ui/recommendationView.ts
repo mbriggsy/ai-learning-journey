@@ -37,7 +37,7 @@ import type { RecommendationVizLabels } from '@viz/RecommendationViz'
 import type { ConfidenceStatementView } from './ConfidenceStatement'
 import type { GradeSignalState } from './GradeSignal'
 import { copy, slots, type CopyKey } from './copy'
-import { formatAxisDollar, formatBracketPercent, formatDeltaDollar } from './money'
+import { formatAbsoluteDollar, formatAxisDollar, formatBracketPercent, formatDeltaDollar } from './money'
 
 // ---- the disclosures adjacent to the delta (§S3 "its nets" — R7 on the recommendation surface) ----
 
@@ -195,8 +195,10 @@ export type RecommendationView =
   | { readonly kind: 'blocked'; readonly gap: SolvePreconditionGap }
   | { readonly kind: 'pending' }
   // §S1 invalidation — a fingerprint-changing draft edit demoted a committed rec. Calm status; re-solve
-  // INVITED (never auto-re-solved). `note` = the shipped `inputsChangedNote` (minted S1).
-  | { readonly kind: 'stale'; readonly note: string }
+  // INVITED (never auto-re-solved). F-B: ONE coherent card — a `heading` + a `body` (the answer above is
+  // current, only the strategy read went stale; TRUE whether the predecessor was held or recommended);
+  // the re-open CONTROL is rendered INSIDE the card by the surface (its label pulled at the render).
+  | { readonly kind: 'stale'; readonly heading: string; readonly body: string }
   // No honest recommendation could be produced (a refusal / mint-failure / demotion-withhold / compute
   // error / aborted) — ONE calm retry line. `detail` is the MACHINE reason (logging only, never rendered).
   | { readonly kind: 'unavailable'; readonly note: string; readonly detail: string }
@@ -274,7 +276,7 @@ export function recommendationView(solve: SolveAnswer, opts?: RecommendationView
     case 'pending':
       return { kind: 'pending' }
     case 'stale':
-      return { kind: 'stale', note: copy.inputsChangedNote }
+      return { kind: 'stale', heading: copy.recommendStaleHeading, body: copy.recommendStaleBody }
     case 'compute-error':
       return { kind: 'unavailable', note: copy.recommendUnavailable, detail: solve.reason }
     case 'committed':
@@ -421,11 +423,14 @@ function recommendedView(payload: SolveRecommendation, opts: RecommendationViewO
             deltaLabel: `$${deltaFigure!}`,
             floorLabel: formatAxisDollar(0),
             axisMaxLabel: `~${formatAxisDollar(ceiling)}`,
+            // The ENDPOINTS are portfolio-scale ABSOLUTES → the humane $X.XM prose dialect
+            // (formatAbsoluteDollar); the DELTA between them stays grouped digits (deltaFigure), a smaller
+            // difference that reads naturally grouped — the spine's dialect for the lockup's absolutes.
             ariaSummary: slots.recVizAria(
               copy.recVizWithoutLabel,
-              formatDeltaDollar(baseM),
+              formatAbsoluteDollar(baseM),
               copy.recVizWithLabel,
-              formatDeltaDollar(winM),
+              formatAbsoluteDollar(winM),
               deltaFigure!,
             ),
           }
@@ -490,8 +495,12 @@ function hingeNote(namedDriver: string): string {
 function skewQuote(payload: SolveRecommendation): { readonly medianQuote: string } | undefined {
   const s = payload.skewDisclosure
   if (payload.goal !== 'leave-more' || s === undefined || s.skewDirection !== 'upside') return undefined
-  if (formatDeltaDollar(s.meanReal) === formatDeltaDollar(s.medianReal)) return undefined
-  return { medianQuote: slots.recSkewMedian(formatDeltaDollar(s.medianReal)) }
+  // The quote is a portfolio-scale ABSOLUTE (the typical bequest), so it speaks the humane $X.XM prose
+  // dialect (formatAbsoluteDollar), not full grouped digits. The "adds nothing" gate is SOURCE-BOUND to
+  // the figure the quote would SHOW: if the median rounds to the same displayed magnitude as the mean at
+  // that dialect, quoting it is noise — test the actual formatted string, never a re-typed threshold.
+  if (formatAbsoluteDollar(s.meanReal) === formatAbsoluteDollar(s.medianReal)) return undefined
+  return { medianQuote: slots.recSkewMedian(formatAbsoluteDollar(s.medianReal)) }
 }
 
 /**
@@ -531,11 +540,12 @@ function runnerUpVizFor(payload: SolveRecommendation, isNoChange: boolean): Reco
     deltaLabel: `$${gap}`,
     floorLabel: formatAxisDollar(0),
     axisMaxLabel: `~${formatAxisDollar(ceiling)}`,
+    // The ENDPOINTS ride the absolute $X.XM prose dialect; the winner-vs-runner-up GAP stays grouped.
     ariaSummary: slots.recVizAria(
       copy.recVizRunnerUpLabel,
-      formatDeltaDollar(runM),
+      formatAbsoluteDollar(runM),
       copy.recVizWithLabel,
-      formatDeltaDollar(winM),
+      formatAbsoluteDollar(winM),
       gap,
     ),
   }

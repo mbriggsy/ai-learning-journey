@@ -64,6 +64,9 @@ afterEach(() => {
 const renderResult = () => render(<Result onReview={vi.fn()} save={{ kind: 'none' }} computing={false} />)
 const plantResolved = () => mockFocusKey.mockReturnValue('planted-focus-key')
 const invite = () => screen.queryByRole('button', { name: copy.recommendInviteCta })
+/** F-B — the STALE card's IN-CARD re-open control (its own control home; the door-row invite is retired
+ *  for `stale`). Queried by its own copy, so a stale channel never depends on the door-row invite. */
+const staleReopen = () => screen.queryByRole('button', { name: copy.recommendStaleReopenCta })
 
 describe('the recommend-second invited affordance', () => {
   it('is offered as a quiet-row door on a resolved reading, STATIC (present immediately, no entrance)', () => {
@@ -127,8 +130,10 @@ describe('the recommend-second invited affordance', () => {
 })
 
 /**
- * F2 — the re-invite is REAL from a stale / compute-error channel (the notes promise "re-open", so the
- * only control that fulfils that promise must return). F4 — the whole recommend-second surface is
+ * F2 — the re-open control is REAL from a stale / compute-error channel (the notes promise "re-open", so
+ * the control that fulfils that promise must exist). F-B (U16 chair fix) splits the two homes: the STALE
+ * channel carries its re-open control INSIDE the stale card (`.rec-note--stale`, NOT the door-row invite);
+ * the compute-error channel still uses the door-row invite. F4 — the whole recommend-second surface is
  * ROUTE-GATED to the all-retired route (a route flip must not strand an orphaned rec note in the date
  * hero). The solve channel is planted by spying getSnapshot (the store's stale/error/committed arms need
  * the worker to reach organically); the draft rides the same snapshot so the route predicate reads it.
@@ -156,35 +161,41 @@ const plantSnapshot = (solve: SolveAnswer, dateRoute = false) => {
 }
 
 describe('the recommend-second RE-invite (F2 stale/compute-error) + the date-route gate (F4)', () => {
-  it('F2: from STALE, the re-invite returns ALONGSIDE the stale note (the note+door pairing)', () => {
+  it('F-B: from STALE, the re-open control is INSIDE the stale card — NOT the door-row invite (ONE control home)', () => {
     plantResolved()
     plantSnapshot(staleSolve)
     const { container } = renderResult()
-    expect(container.querySelector('.rec-note--stale')?.textContent, 'the stale note renders').toContain(copy.inputsChangedNote)
-    expect(invite(), 'the re-open control the note promises is REAL').toBeInTheDocument()
+    const card = container.querySelector('.rec-note--stale')
+    expect(card?.textContent, 'the stale card renders its heading + body').toContain(copy.recommendStaleBody)
+    // The promise and its action share ONE home: the control lives INSIDE the stale card…
+    const reopen = staleReopen()
+    expect(reopen, 'the in-card re-open control the card promises is REAL').toBeInTheDocument()
+    expect(card?.contains(reopen!), 'and it lives INSIDE the stale card, not the doors region').toBe(true)
+    // …and the door-row invite is RETIRED for the stale channel (no second control for the same promise).
+    expect(invite(), 'no prepended door-row invite in the stale state').toBeNull()
   })
 
-  it('F2: from COMPUTE-ERROR, the re-invite returns alongside the unavailable note', () => {
+  it('F2: from COMPUTE-ERROR, the re-invite returns alongside the unavailable note (door-row invite kept)', () => {
     plantResolved()
     plantSnapshot(errorSolve)
     const { container } = renderResult()
     expect(container.querySelector('.rec-note--unavailable')?.textContent).toContain(copy.recommendUnavailable)
-    expect(invite()).toBeInTheDocument()
+    expect(invite(), 'compute-error keeps the door-row invite (untouched by F-B)').toBeInTheDocument()
   })
 
-  it('F2: a pick from the stale channel RE-DISPATCHES (the visible re-solve replaces the old state)', () => {
+  it('F-B: a pick from the STALE card RE-DISPATCHES (the in-card control opens the picker → the visible re-solve)', () => {
     plantResolved()
     appModel.update(completeRetired) // a buildable real draft so the dispatch runs cleanly
     plantSnapshot(staleSolve)
     const dispatch = vi.spyOn(appModel, 'dispatchSolve')
     renderResult()
-    fireEvent.click(invite()!)
+    fireEvent.click(staleReopen()!)
     fireEvent.click(within(screen.getByRole('dialog')).getByRole('radio', { name: /Pay less tax/ }))
     fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: copy.goalPickerConfirmCta }))
-    expect(dispatch, 'a fresh solve is dispatched from the stale channel').toHaveBeenCalledTimes(1)
+    expect(dispatch, 'a fresh solve is dispatched from the stale card').toHaveBeenCalledTimes(1)
   })
 
-  it('F4: the recommend-second surface is ABSENT on the date route (no orphaned stale note); a flip back re-mounts it', () => {
+  it('F4: the recommend-second surface is ABSENT on the date route (no orphaned stale card); a flip back re-mounts it', () => {
     plantResolved()
     const spy = vi.spyOn(appModel, 'getSnapshot')
     // Committed-then-route-flipped: the store still holds the stale beat, but the household is now a
@@ -192,13 +203,13 @@ describe('the recommend-second RE-invite (F2 stale/compute-error) + the date-rou
     plantSnapshot(staleSolve, /* dateRoute */ true)
     const { container, rerender } = renderResult()
     expect(container.querySelector('.recommendation-surface'), 'the whole surface is gated out on the date route').toBeNull()
-    expect(container.querySelector('.rec-note--stale'), 'no orphaned stale note in the date hero').toBeNull()
-    expect(invite(), 'and no invite on the date route').toBeNull()
-    // Flip back to the all-retired (spine) route: the stale note + the re-invite return.
+    expect(container.querySelector('.rec-note--stale'), 'no orphaned stale card in the date hero').toBeNull()
+    expect(staleReopen(), 'and no in-card re-open control on the date route').toBeNull()
+    // Flip back to the all-retired (spine) route: the stale card + its in-card re-open control return.
     plantSnapshot(staleSolve, /* dateRoute */ false)
     rerender(<Result onReview={vi.fn()} save={{ kind: 'none' }} computing={false} />)
-    expect(container.querySelector('.rec-note--stale'), 'the stale note renders on the spine route').not.toBeNull()
-    expect(invite(), 'the re-invite returns').toBeInTheDocument()
+    expect(container.querySelector('.rec-note--stale'), 'the stale card renders on the spine route').not.toBeNull()
+    expect(staleReopen(), 'the in-card re-open control returns').toBeInTheDocument()
     void spy
   })
 })

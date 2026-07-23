@@ -68,12 +68,30 @@ import { REAL, REAL_DPR, PHONE, PHONE_DPR, gotoSeedFinal, settleLayout } from '.
  *  - `seed:nc|pa|fl|elsewhere|datenc` ride the existing `walkSeed` grammar (landing + door walk;
  *    the Assumptions-door capture IS each seed's priced/answered panel-row face).
  *
+ * Increment 6 (2026-07-22, the recommend-second SOLVE arc's cold-read faces):
+ *  - `solve:<seed>` — the U16 recommend-second walk: the settled landing → the invited affordance
+ *    (`.result-recommend-invite`) → the GoalPicker (goal chosen by its rendered LABEL, never an index —
+ *    SOLVE_GOAL below) → the PENDING breathe (captured immediately; the working tell is the only thing
+ *    changing on screen) → the COMMITTED frame, at FULL worker precision (16k paths, multi-minute — the
+ *    committed body is POLLED, never slept on; `test.setTimeout(720_000)` for solve targets). Two shipped
+ *    worlds: `solve:nc` commits the state-certification HOLD card (~90s), `solve:surplus` the over-funded
+ *    RECOMMENDED lockup (~4-7min: delta hero + the RecommendationViz two-arm chart, its own `svg.rv`).
+ *  - The STALE demotion (`solve:nc` only): a fingerprint-changing control-door edit (the withdrawal-order
+ *    sheet, applied off the committed `proportional`) demotes the committed rec → the stale CARD — a calm
+ *    heading + body + its IN-CARD re-open control, in one frame (`stale`, F-B: the promise and its action
+ *    in ONE home; the door-row invite is retired for this channel). The base's drawdownPolicy rides the
+ *    solve fingerprint, so the demotion is structural even where the order is inert on a single pool.
+ *  - The STEER face (`blocked{buckets-defaulted}`) has NO seed: it fires only when the solve builder
+ *    returns null on a household with NO tax overlay / no pre-tax headroom, and EVERY registered spine
+ *    seed carries a pre-tax bucket (date seeds are route-gated out of the invite). No new seed is minted
+ *    for a face no shipped household reaches — the render stays unit-pinned (RecommendationSurface.test).
+ *
  * Targets: `CADDIE_TARGETS="vault:retired,vault:stale,seed:date,intake:fork"` (comma list).
  * Back-compat: `CADDIE_SEED=budget` still works (one seed target). Default: `seed:retired`.
  */
 
 interface Target {
-  readonly kind: 'seed' | 'vault' | 'intake'
+  readonly kind: 'seed' | 'vault' | 'intake' | 'solve'
   readonly key: string
 }
 
@@ -84,12 +102,12 @@ function parseTargets(): Target[] {
   return raw.split(',').map((entry) => {
     const [kind, key] = entry.trim().split(':')
     if (
-      (kind !== 'seed' && kind !== 'vault' && kind !== 'intake') ||
+      (kind !== 'seed' && kind !== 'vault' && kind !== 'intake' && kind !== 'solve') ||
       key === undefined ||
       key === ''
     ) {
       throw new Error(
-        `bad CADDIE_TARGETS entry "${entry}" — expected seed:<key>, vault:<key>, or intake:<key>`,
+        `bad CADDIE_TARGETS entry "${entry}" — expected seed:<key>, vault:<key>, intake:<key>, or solve:<key>`,
       )
     }
     return { kind, key }
@@ -113,6 +131,12 @@ const CROP_TARGETS = [
   { name: 'reentry-notes', selector: '.reentry-notes' },
   { name: 'backup-door', selector: '.result-backup-door' },
   { name: 'hero-lead', selector: '.reveal__lead' },
+  // U16 (increment 6): the recommend-second COMMITTED text regions — the grade lockup (a RECOMMENDED
+  // beat), the HELD card, and the calm note (stale / buckets). Each renders on the committed frame ONLY,
+  // so it is absent (guarded) on landing / goalpicker / pending — no vacuous crop.
+  { name: 'rec-grade', selector: '.rec-grade' },
+  { name: 'rec-held', selector: '.rec-held' },
+  { name: 'rec-note', selector: '.rec-note' },
 ] as const
 
 /** The Chrome-native color-vision arms (CDP emulation — the same transform DevTools applies). */
@@ -134,6 +158,11 @@ const CVD_CHART_TARGETS = [
   { name: 'band', selector: 'svg.band-svg' },
   { name: 'ladder', selector: 'svg.ladder-svg' },
   { name: 'twofutures', selector: 'svg.tf' },
+  // U16 (increment 6): the RecommendationViz two-arm delta chart carries the with/without arms in color,
+  // so the CVD screener must see it. It is its OWN svg class (`svg.rv`), NOT `svg.tf`. The collapsed
+  // runner-up viz is a second in-DOM `svg.rv` skipped by the loop's visibility guard, so the visible
+  // primary lands as `cvd-<arm>-recviz` (or `-recviz-1` when the runner-up chart is also mounted).
+  { name: 'recviz', selector: 'svg.rv' },
 ] as const
 
 /** Regions whose boxes land in fold.json so readers know what sits above/below the fold. */
@@ -154,6 +183,14 @@ const FOLD_TARGETS = [
   '.save-actions',
   '.result-backup-door',
   '.result-save-slot',
+  // U16 (increment 6): where the recommend-second beat sits in the frame — the invited door, the working
+  // breathe, and the committed lockup / note (the second magic moment's fold positions for the readers).
+  '.result-recommend-invite',
+  '.recommendation-surface',
+  '.solve-pending',
+  '.rec-committed',
+  '.rec-held',
+  '.rec-note',
 ] as const
 
 async function captureState(page: Page, dir: string): Promise<void> {
@@ -491,6 +528,132 @@ async function walkWorsening(page: Page, outDir: string): Promise<void> {
 }
 
 /**
+ * The SOLVE arc's per-seed plan (increment 6): the goal each seed's WORLD solves under, read by its
+ * rendered RADIO LABEL (never an nth-index — RECOMMENDATION_GOALS order is not a walk contract), plus
+ * whether this seed additionally walks the post-commit STALE demotion. nc: pay-less-tax → the NC
+ * state-certification HOLD; surplus: leave-more → the over-funded delta-as-hero RECOMMENDED lockup.
+ */
+const SOLVE_GOAL: Record<string, { readonly label: RegExp; readonly stale: boolean }> = {
+  nc: { label: /Pay less tax/, stale: true },
+  surplus: { label: /Leave more behind/, stale: false },
+}
+
+/**
+ * A `solve:<seed>` target (increment 6): the recommend-second walk from the settled landing through the
+ * committed frame, at FULL worker precision. Every stage synchronizes on a real selector — the multi-
+ * minute committed body is POLLED (720s budget), never slept on; the pending breathe is the only thing
+ * changing on screen meanwhile. `solve:nc` additionally walks the STALE demotion (walkSolveStale).
+ */
+async function walkSolve(page: Page, key: string, outDir: string): Promise<void> {
+  const plan = SOLVE_GOAL[key]
+  expect(plan, `solve:${key} has no goal mapping — add it to SOLVE_GOAL`).toBeDefined()
+
+  await gotoSeedFinal(page, key)
+  await captureState(page, path.join(outDir, 'landing'))
+
+  // The invited affordance — a calm door in the quiet row (present iff the solve is invitable).
+  const invite = page.locator('.result-recommend-invite')
+  await expect(invite, `solve:${key}: the recommend-second invite never mounted`).toBeVisible()
+  await invite.click()
+
+  // The GoalPicker (the Tier-2 goal that PRECEDES the solve). Its dialog carries the copy + aria read.
+  await expect(
+    page.getByRole('heading', { name: 'What should your plan aim for?' }),
+    `solve:${key}: the GoalPicker did not open`,
+  ).toBeVisible()
+  await captureState(page, path.join(outDir, 'goalpicker'))
+
+  // Pick the goal by its rendered LABEL. NATIVE click (the sr-only radio trap the intake walk documents —
+  // layout-independent, still bubbles to React's root), asserted checked so a missed click fails RED here.
+  const dialog = page.getByRole('dialog')
+  const radio = dialog.getByRole('radio', { name: plan!.label })
+  await radio.evaluate((el) => (el as HTMLInputElement).click())
+  await expect(radio, `solve:${key}: the goal radio did not commit`).toBeChecked()
+  await dialog.getByRole('button', { name: 'See the strategy', exact: true }).click()
+
+  // The PENDING breathe — the picker closes, the solve dispatches. Capture the working frame IMMEDIATELY
+  // (it holds for the full worker wait); its role=status announce rides aria.yaml / copy.txt.
+  await expect(dialog, `solve:${key}: the GoalPicker did not close on confirm`).toBeHidden()
+  await expect(
+    page.locator('.solve-pending'),
+    `solve:${key}: the pending breathe never mounted (a defaulted-bucket steer would render instantly here)`,
+  ).toBeVisible()
+  await captureState(page, path.join(outDir, 'pending'))
+
+  // The COMMITTED frame — the terminal lockup (a HELD card OR the RECOMMENDED lockup). Poll patiently:
+  // the full-precision (16k-path) worker solve is ~90s (nc) to ~4-7min (surplus). A never-arriving
+  // lockup FAILS the walk red (insight-029) rather than bundling a frozen pending frame.
+  await expect(
+    page.locator('.rec-held, .rec-committed'),
+    `solve:${key}: no committed lockup after the full-precision solve (expected held / recommended)`,
+  ).toBeVisible({ timeout: 720_000 })
+  // A RECOMMENDED lockup carries the lazy-chunked RecommendationViz — wait for the real chart (never the
+  // Suspense placeholder) so the recviz crop + its CVD arms are non-vacuous (insight-029). The primary
+  // viz is DOM-first (the runner-up's is inside a collapsed <details>), so `.first()` is the primary.
+  if ((await page.locator('.rec-committed').count()) > 0) {
+    await expect(
+      page.locator('svg.rv').first(),
+      `solve:${key}: the recommended lockup never rendered its RecommendationViz chart`,
+    ).toBeVisible({ timeout: 60_000 })
+  }
+  await captureState(page, path.join(outDir, 'committed'))
+
+  if (plan!.stale) await walkSolveStale(page, outDir)
+}
+
+/**
+ * The post-commit STALE demotion (increment 6, `solve:nc` only): a fingerprint-changing control-door
+ * edit demotes the committed rec → `stale`. The cheapest real edit: the withdrawal-order sheet, applied
+ * off the committed `proportional` (the base's drawdownPolicy rides the solve fingerprint, so the
+ * demotion is structural even where the order is inert on a single pool). One capture — the stale CARD
+ * (heading + body + its IN-CARD re-open control) in one frame; the walk ends here (no revert needed).
+ *
+ * F-B (U16 chair fix): the fit arm now asserts note+control ADJACENCY — the re-open control lives INSIDE
+ * the stale card (`.rec-note--stale .rec-note__reopen`), the promise and its action in ONE home; the
+ * prepended door-row invite (`.result-recommend-invite`) is RETIRED for the stale channel (asserted gone).
+ */
+async function walkSolveStale(page: Page, outDir: string): Promise<void> {
+  await page.getByRole('button', { name: 'Change your withdrawal order' }).click()
+  const dialog = page.getByRole('dialog')
+  await expect(dialog, 'the withdrawal-order sheet did not open').toBeVisible()
+
+  // Pick a policy OTHER than the committed one (the fingerprint-changing edit). Target it by a STABLE
+  // value-based locator — NEVER a `:not(:checked)` locator: that re-resolves to a DIFFERENT radio the
+  // instant the pick flips the checked state, so the follow-up toBeChecked lands on a now-unchecked
+  // element and times out (the run1 stale-step trap). The value attribute never moves, so this locator
+  // points at the same radio before and after the NATIVE click (the sr-only radio idiom).
+  const currentPolicy = await dialog.locator('input[name="drawdown-policy"]:checked').getAttribute('value')
+  expect(currentPolicy, 'no committed withdrawal policy to change from').not.toBeNull()
+  const changedPolicy = dialog
+    .locator(`input[name="drawdown-policy"]:not([value="${currentPolicy}"])`)
+    .first()
+  await changedPolicy.evaluate((el) => (el as HTMLInputElement).click())
+  await expect(changedPolicy, 'the changed withdrawal policy did not commit').toBeChecked()
+  await dialog.getByRole('button', { name: 'Use this order' }).click()
+
+  // The demotion is synchronous on the model write (invalidateStaleSolve), but the sheet close +
+  // spine recompute settle around it — wait for BOTH the stale card AND its in-card re-open control
+  // so the captured frame is the settled staleness read, not a mid-transition flicker.
+  const staleCard = page.locator('.rec-note--stale')
+  await expect(
+    staleCard,
+    'the fingerprint-changing edit did not demote the committed rec to stale',
+  ).toBeVisible({ timeout: 120_000 })
+  // ADJACENCY (F-B): the re-open control the card promises lives INSIDE the card — the scoped locator
+  // proves it structurally (a descendant of `.rec-note--stale`), and it must be in-frame with the note.
+  await expect(
+    staleCard.locator('.rec-note__reopen'),
+    'the stale card promises a re-open — its IN-CARD control must be present, in one home with the note',
+  ).toBeVisible()
+  // The prepended door-row invite is RETIRED for the stale channel (ONE control home; no second door).
+  await expect(
+    page.locator('.result-recommend-invite'),
+    'the door-row invite must NOT re-appear in the stale state (the in-card control is its one home)',
+  ).toHaveCount(0)
+  await captureState(page, path.join(outDir, 'stale'))
+}
+
+/**
  * The INTAKE walk (increment 4 — `intake:fork`): the Medicare-extras payment fork is
  * intake-ONLY — every seed/vault target bypasses the guided flow entirely, so the fork's
  * blank-start frame, its half-answer R19 block, and the mixed-provenance state (one entered
@@ -633,6 +796,7 @@ for (const target of TARGETS) {
     test.describe(`caddie walk — ${target.kind}:${target.key} at ${v.name.toUpperCase()} (${v.viewport.width}×${v.viewport.height} @ ${v.dpr}dpr)`, () => {
       test.use({ viewport: v.viewport, deviceScaleFactor: v.dpr, hasTouch: v.touch, isMobile: v.touch })
       test('walk', async ({ page }) => {
+        if (target.kind === 'solve') test.setTimeout(720_000) // the full-precision worker solve is multi-minute
         const consoleLog = hookConsole(page)
         const outDir = path.join(OUT_ROOT, targetSlug, v.name)
         if (target.kind === 'vault') {
@@ -657,6 +821,8 @@ for (const target of TARGETS) {
             throw new Error(`unknown intake walk "${target.key}" — only intake:fork exists`)
           }
           await walkIntakeFork(page, outDir)
+        } else if (target.kind === 'solve') {
+          await walkSolve(page, target.key, outDir)
         } else {
           await walkSeed(page, target.key, outDir)
         }

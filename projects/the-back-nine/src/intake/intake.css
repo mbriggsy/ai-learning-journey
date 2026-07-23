@@ -196,12 +196,25 @@
     background-color var(--dur-fast) ease;
 }
 
+/* The disabled state — an unmet-precondition CTA (GoalPicker's "See the strategy" stays disabled
+   until a goal is picked, the unset sentinel). Reuses the shipped muted idiom (save.css's
+   .btn-primary[aria-disabled='true'] { opacity: 0.55 }) for the native-disabled sibling: the button
+   reads visibly MUTED via opacity — a LIGHTNESS cue, never hue (the color-blind law) — and drops its
+   press-cursor, so a spouse never reads a full-saturation button as ready to act. Picking a goal flips
+   the state, restoring full saturation and the press/hover affordances below — the enabled transition
+   is carried by weight + affordance, not color alone. */
+.btn-primary:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
 .btn-primary:active {
   transform: scale(0.97); /* the interface heard you */
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .btn-primary:hover {
+  /* No press-darken on a disabled CTA — an inert button must never feel pressable. */
+  .btn-primary:not(:disabled):hover {
     background: var(--brand-press);
   }
 }

@@ -295,16 +295,18 @@ export function Result({
   // seeds (`retired`, `nc`) are all-retired, so this gate does not regress the measured posture.
   const solve = snapshot.solve
   // The invite door is INVITABLE whenever a first-or-fresh solve is the honest next step: no beat yet
-  // (idle), a goal-unset precondition (steer to the picker), OR a channel the store demoted to `stale`
-  // (a fingerprint-changing edit) / `compute-error` (a worker death) — both of whose notes PROMISE the
-  // user they can re-open, so the control that fulfils that promise must return (the only dispatch paths
-  // are this invite door and the committed-view re-pick door; a stale/error channel renders NEITHER
-  // without this). A `blocked{buckets-defaulted}` deliberately does NOT invite — the gap is accounts,
-  // not the goal, so its own calm note carries the steer (§Q5, F3).
+  // (idle), a goal-unset precondition (steer to the picker), OR a `compute-error` channel (a worker
+  // death) whose note PROMISES the user they can re-open, so the control that fulfils that promise must
+  // return. F-B (U16 chair fix): the `stale` channel is DROPPED from this predicate — it now carries its
+  // OWN re-open control INSIDE the stale card (RecommendationSurface), so the promise and its action
+  // share ONE home; a second door-row invite would be a SECOND control for the same promise. The four
+  // non-invite doors (budget · sequencing · roth · health · assumptions) are unaffected (they gate on
+  // focusKey). The dispatch paths stay two — this invite door and the committed/stale re-pick door
+  // (both open the GoalPicker). A `blocked{buckets-defaulted}` deliberately does NOT invite — the gap is
+  // accounts, not the goal, so its own calm note carries the steer (§Q5, F3).
   const solveInvitable =
     !isDateRoute(snapshot.draft) &&
     (solve.kind === 'idle' ||
-      solve.kind === 'stale' ||
       solve.kind === 'compute-error' ||
       (solve.kind === 'blocked' && solve.gap === 'goal-unset'))
   // A CONFIRMED goal pick: write `chosenGoal`, close the picker, dispatch the solve. A re-pick writes
@@ -375,6 +377,26 @@ export function Result({
           )}
         </div>
       )}
+      {/* §S2 — the recommend-second beat's surface (the second magic moment): the PENDING tell, the
+          committed grade lockup + RecommendationViz, and the held/stale/steer notes. DOM-ordered
+          directly UNDER the save slot — the recommend-SECOND beat sits ABOVE the in-frame disclaimer
+          + the quiet doors, so focus order matches its visual row (F-A the dead-rail fix: at the
+          laptop two-pane it leaves the left column for a FULL-WIDTH row below the two panes, the viz
+          continuing the band down into the once-blank right rail — confidence.css owns the placement,
+          keyed on the surface carrying a real beat so the IDLE frame is byte-identical). Renders
+          0-height (just its live region) until the solve is invited, so it never perturbs the idle
+          fit frame. The invited AFFORDANCE lives in the quiet row below (a calm door); this region
+          carries the response. §S4: the committed beat's RE-PICK door reopens the GoalPicker (the
+          standing goal pre-selected); `pickGoal` re-dispatches — the visible re-solve. ROUTE-GATED on
+          the SAME !isDateRoute predicate the invite uses (§S1: the v1 recommend-second is
+          all-retired-route only — the working-route base is the crowned date this dispatch does not
+          yet thread; the date route never renders the surface, so the "doors last" order contract is
+          untouched): after a committed/stale beat, a route flip (a spouse un-retires) must not strand
+          an orphaned rec note inside the date hero. Idle renders nothing here anyway; the gate drops
+          the non-idle body the store still holds. A flip back re-mounts the surface + invite. */}
+      {!isDateRoute(snapshot.draft) && (
+        <RecommendationSurface solve={snapshot.solve} onRepick={() => setGoalOpen(true)} />
+      )}
       {/* The IN-FRAME R13 disclaimer (council 2026-07-08, "buttons drop below" — Briggsy's fork
           call): DOM-ordered ABOVE the backup door AND the quiet doors (the Medicare-pricing unit's
           fold-priority fix, 2026-07-10 — the pulled-forward TODO-7 / Caddie-#3 inversion): every
@@ -399,21 +421,6 @@ export function Result({
             {copy.backupDoorCta}
           </button>
         </div>
-      )}
-      {/* §S2 — the recommend-second beat's surface (the second magic moment): the PENDING tell (this
-          stage) and, in §S3, the committed grade lockup + RecommendationViz. DOM-ordered as the
-          recommend-SECOND (after the graphs + the in-frame disclaimer, before the quiet doors) so the
-          date-route "doors last" order contract holds. Renders 0-height (just its live region) until
-          the solve is invited, so it never perturbs the idle frame. The invited AFFORDANCE lives in
-          the quiet row below (a calm door); this region carries the response. §S4: the committed beat's
-          RE-PICK door reopens the GoalPicker (the standing goal pre-selected); `pickGoal` re-dispatches
-          — the visible re-solve. ROUTE-GATED on the SAME !isDateRoute predicate the invite uses (§S1: the
-          v1 recommend-second is all-retired-route only — the working-route base is the crowned date this
-          dispatch does not yet thread): after a committed/stale beat, a route flip (a spouse un-retires)
-          must not strand an orphaned rec note inside the date hero. Idle renders nothing here anyway; the
-          gate drops the non-idle body the store still holds. A flip back re-mounts the surface + invite. */}
-      {!isDateRoute(snapshot.draft) && (
-        <RecommendationSurface solve={snapshot.solve} onRepick={() => setGoalOpen(true)} />
       )}
       {/* The quiet doors: the sanctioned below-fold flex (the --laptop-fit-height degrade
           contract, tokens.css). display:contents in single column — the stack renders exactly as

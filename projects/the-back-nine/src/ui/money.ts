@@ -43,6 +43,25 @@ export function formatDeltaDollar(deltaReal: number): string {
   return grouped.format(Math.round(v / step) * step)
 }
 
+/** The recommendation lockup's ABSOLUTE-magnitude prose dialect — the portfolio-scale figures quoted in
+ *  a sentence (the §S2 leave-more median quote + the §S3b viz-aria endpoint magnitudes). The DELTA hero is
+ *  a difference ({@link formatDeltaDollar}); these are the portfolio LEVELS the sentence compares, and a
+ *  couple's bequest/portfolio level runs in the low millions, where "$4,240,000" of full grouped digits
+ *  reads as a spreadsheet cell, not calm prose. So a level ≥ $1M joins the SPINE's humane "$X.XM" dialect
+ *  (the same one the confidence band's scrub readout speaks) — ONE decimal, deliberately NOT
+ *  formatAxisDollar's exact-when-round two-decimal RULER precision (a sentence is prose, not a gridline;
+ *  back-nine-design §3 no-spurious-precision). A sub-$1M level stays GROUPED humane digits via
+ *  formatDeltaDollar (never formatAxisDollar's "$Xk" axis unit), so the lockup's small-figure dialect is
+ *  the delta's, never a third one. SIGN-AGNOSTIC (|x|): the copy WORD carries direction, like the family.
+ *  Returns BARE of the "$" glyph (unlike formatAxisDollar) — the copy SLOT supplies it (copy.ts SLOT
+ *  DISCIPLINE), so the rendered sentence carries no hardcoded numeral. The $1M unit boundary is the SAME
+ *  one formatAxisDollar draws (the shared prose/axis dialect line). */
+export function formatAbsoluteDollar(dollars: number): string {
+  const v = Math.abs(dollars)
+  if (v < 1_000_000) return formatDeltaDollar(v)
+  return `${(v / 1_000_000).toFixed(1).replace(/\.0$/, '')}M`
+}
+
 /** The heir-bracket disclosure percent — the assumed IRD bracket (a fraction in [0,1)) as a whole
  *  percent for the leave-more heir-bracket note ("about 24%"). Humane: rounded to a whole percent (a
  *  bequest bracket is a coarse assumption, never spuriously precise — back-nine-design §3). Sign-free

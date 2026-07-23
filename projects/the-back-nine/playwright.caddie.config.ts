@@ -6,6 +6,12 @@ import { defineConfig } from '@playwright/test'
 // every test in one invocation shares one stamp. `CADDIE_RUN=name` overrides for a named run.
 process.env.CADDIE_RUN ??= new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-')
 
+// Increment 6 (the solve arc): a `solve:` target runs a full-precision (16k-path) WORKER solve per
+// viewport — CPU-bound and multi-minute (~90s the NC hold, ~4-7min the surplus lockup). Several in
+// parallel thrash the cores and can push a single solve past even its generous 720s per-test budget,
+// so a solve run SERIALIZES (workers 1); the fast seed/vault/intake targets keep the default parallelism.
+const hasSolveTarget = (process.env.CADDIE_TARGETS ?? '').includes('solve:')
+
 /**
  * The Caddie's capture harness (`pnpm caddie:walk`) — NOT a CI gate. Drives a `?seed=`/`?vault=`
  * surface to its settled final frame at the canonical review viewports (e2e/reviewSurface.ts)
@@ -22,6 +28,9 @@ export default defineConfig({
   testDir: './e2e',
   testMatch: '**/caddie-walk.spec.ts',
   fullyParallel: true,
+  // A solve run serializes so each full-precision solve gets the whole machine (see hasSolveTarget
+  // above); every other run keeps the runner's default parallelism (undefined ⇒ Playwright's default).
+  workers: hasSolveTarget ? 1 : undefined,
   forbidOnly: !!process.env.CI,
   retries: 0, // a flaky capture must be SEEN, not silently retried into a different frame
   reporter: 'list',

@@ -1129,17 +1129,29 @@ export const copy = {
   // limits never touch a decumulation-only answer — only the blend clock speaks.
   stalenessBlendSpine:
     'The fund data we read your accounts against has been updated since your save — this reading uses today’s.',
-  // Act-4 · U16 §S1 — the SOLVE channel's invalidation note (the `SolveAnswer` stale/re-solve arm,
-  // machine label 'inputs-changed'). A draft edit changed a ranking-affecting input since the
-  // committed recommendation was found (source-bound to solverRunFingerprint), so the rec no longer
-  // describes the current household — the store demotes it, never rendering a stale rec as current
-  // and never auto-re-solving. Re-solving is INVITED (R11), like the beat itself; this is a calm
-  // status line, not a nag. The KEY is minted here (S1) so the store's structured flag has its
-  // humane string ready; the render wires it in S3. DISTINCT from the save-vintage staleness clocks
-  // above — those name a rulebook that moved under a SAVED answer; this names the user's OWN
-  // in-session edits moving out from under an unsaved recommendation.
-  inputsChangedNote:
-    'Some of your numbers have changed since we found this — re-open it whenever you’d like the current read.',
+  // Act-4 · U16 §S1 — the SOLVE channel's invalidation card (the `SolveAnswer` stale/re-solve arm,
+  // machine label 'inputs-changed'). A draft edit changed a ranking-affecting input since the last
+  // strategy read (source-bound to solverRunFingerprint), so that read no longer describes the current
+  // household — the store demotes it, never rendering a stale rec as current and never auto-re-solving.
+  // Re-solving is INVITED (R11), like the beat itself; this is a calm status card, not a nag.
+  //
+  // F-B (U16 chair fix, cold-read panel): the stale note becomes ONE coherent card — a calm HEADING,
+  // a BODY carrying the honest truths, and the re-open CONTROL rendered INSIDE the card (recommendation.tsx;
+  // its label pulled at the render). THREE truths the wording holds: (1) the ANSWER above is current —
+  // only the strategy read went stale (the edit recomputes the headline; the solve channel does NOT
+  // auto-re-solve); (2) TRUE whether the predecessor was a recommendation OR the HELD card — so NEVER
+  // "since we found this" (nothing is "found" on a hold); (3) NO blame register ("your numbers have
+  // changed" is neutral, never a fault). DISTINCT from the save-vintage staleness clocks above — those
+  // name a rulebook that moved under a SAVED answer; this names the user's OWN in-session edits moving
+  // out from under an unsaved strategy read. `recommend*` = verdict-scoped (superlative/free-numeral
+  // gated), no figure to hedge — the recommendBucketsNote precedent.
+  recommendStaleHeading: 'This strategy read is out of date',
+  recommendStaleBody:
+    'Some of your numbers have changed. Your answer above already reflects them — this strategy read doesn’t yet.',
+  // The in-card re-open control (F-B): the promise and its action share ONE home. Names the outcome the
+  // button leads to (the goal choice precedes the solve, the invite/re-pick precedent), never an
+  // imperative — "see" is not a directive verb, so no copyGuard trip.
+  recommendStaleReopenCta: 'See the current strategy',
   // The standing hero note (renders WITH the first verdict when any clock fired — never
   // after it; the answer is already recomputed under today's rules, this line says so).
   // DELIBERATELY ONE LINE at the reading measure: the full per-clock disclosure lives at
@@ -1164,7 +1176,7 @@ export const copy = {
   // whose accounts are entered as ONE lump sum gives the sequencing/conversion strategy nothing to work
   // with, so a picked goal must not dead-end on a silent blank. Names the TRUE precondition (the account
   // mix, NOT the goal — so this arm never re-shows the goal invite; the note carries the steer). A
-  // DECLARATIVE steer in the inputsChangedNote voice — no imperative, no figure to hedge; rides
+  // DECLARATIVE steer in the calm stale-note voice — no imperative, no figure to hedge; rides
   // `recommend*` = verdict-scoped (superlative/free-numeral gated) but NOT control-swept (no forced
   // modal on a terse steer), exactly like recommendUnavailable.
   recommendBucketsNote:
@@ -1175,9 +1187,12 @@ export const copy = {
   // never trips copyGuard) — `recommend*` = verdict-scoped, so no forced hedge mushes it.
   recommendRepickCta: 'Aim at a different goal',
   // The solve's pending tell — the shipped thinking-breathe family's plain-language label (burned/045
-  // clear-after-announce owns the a11y side). Ends with the ellipsis glyph (loading-state convention);
-  // NO spinner / % / count / ETA (the ~72s full-precision wait reassures by calm, never a fake clock).
-  recommendPendingLabel: 'Working out your strategy…',
+  // clear-after-announce owns the a11y side). Carries an HONEST duration phrase ("a few minutes" — TRUE
+  // for the measured 90s–6min full-precision wait), so the calm sets the expectation rather than leave
+  // the reader wondering if it stalled. Ends with the ellipsis glyph (loading-state convention); NO
+  // spinner / % / count / ETA / countdown (a real duration in plain words reassures; a fabricated
+  // progress clock would lie).
+  recommendPendingLabel: 'Working out your strategy — this can take a few minutes…',
   // The GoalPicker (the Tier-2 goal that precedes the solve — RECOMMENDATION_GOALS, model.ts). A real
   // labelled-radio dialog; three-goals-each-a-gloss per the spec, live vocabulary = {leave-more,
   // pay-less-tax} today (live-bigger-now is deferred). Unset sentinel — no goal is pre-selected.
@@ -1230,7 +1245,7 @@ export const copy = {
   // substrate that isn't final, so treat the exact edge as a lean, not a lock. recGradeNote* ⇒ swept
   // ("could" carries it). Dormant today (no methodology-substrate directional entry is live).
   recGradeNoteShape:
-    'A couple of the figures behind this are still being finalized, so the exact edge could shift — it’s a lean here, not a lock.',
+    'A couple of the figures behind this are still being finalized, so the exact gap could shift — it’s a lean here, not a lock.',
   // The coin-flip HINGE — names WHAT IT HINGES ON from the payload's named driver (never a fabricated
   // cause). The ACA-regime probe, the sampling-noise sentinel, and a fail-closed generic for any future
   // probe name. recGradeNote* ⇒ swept ("can" carries each).

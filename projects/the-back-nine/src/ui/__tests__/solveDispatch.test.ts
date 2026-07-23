@@ -43,32 +43,33 @@ const withGoalSeed = (key: string, goal: ScenarioDraft['chosenGoal'], seed = 0xa
 })
 
 // ---------------------------------------------------------------------------
-// 1. BUILDER UNIT — the builder-null convention + the ONE LAW + the mutant killers
+// 1. BUILDER UNIT — the TYPED-refusal convention (the steer-seed increment) + the ONE LAW + the
+//    mutant killers
 // ---------------------------------------------------------------------------
 
-describe('buildSolveRequest — the builder-null convention', () => {
-  it('null on an UNSET goal — the goal precedes the solve (KILLER for mutant b: a default-goal substitution)', () => {
-    // A `chosenGoal ?? "leave-more"` substitution would build a request here — it must stay null so the
-    // store's dispatchSolve routes goal-unset → the GoalPicker, never a fabricated tie-break as advice.
+describe('buildSolveRequest — the typed-refusal convention', () => {
+  it('spine-unready on an UNSET goal — the goal precedes the solve (KILLER for mutant b: a default-goal substitution)', () => {
+    // A `chosenGoal ?? "leave-more"` substitution would build a request here — it must stay refused so
+    // the store's dispatchSolve routes goal-unset → the GoalPicker, never a fabricated tie-break as advice.
     const draft = { ...withGoalSeed('fl', 'leave-more'), chosenGoal: undefined }
-    expect(buildSolveRequest(draft, TODAY)).toBeNull()
+    expect(buildSolveRequest(draft, TODAY)).toBe('spine-unready')
   })
 
-  it('null before the shared-draw seed is minted (the spine beat mints it first)', () => {
+  it('spine-unready before the shared-draw seed is minted (the spine beat mints it first)', () => {
     const { seed: _s, ...noSeed } = withGoalSeed('fl', 'leave-more')
     void _s
-    expect(buildSolveRequest(noSeed as ScenarioDraft, TODAY)).toBeNull()
+    expect(buildSolveRequest(noSeed as ScenarioDraft, TODAY)).toBe('spine-unready')
   })
 
-  it('null on the DATE route — buildSpineParams is null (v1 supports the all-retired route)', () => {
-    expect(buildSolveRequest(withGoalSeed('date', 'leave-more'), TODAY)).toBeNull()
+  it('spine-unready on the DATE route — buildSpineParams is null (v1 supports the all-retired route)', () => {
+    expect(buildSolveRequest(withGoalSeed('date', 'leave-more'), TODAY)).toBe('spine-unready')
   })
 
   it('builds a well-formed request from a retired draft; every field from its canonical producer', () => {
     const draft = withGoalSeed('fl', 'leave-more', 0xbeef)
     const req = buildSolveRequest(draft, TODAY)
-    expect(req).not.toBeNull()
-    if (req === null) throw new Error('unreachable')
+    expect(typeof req).not.toBe('string')
+    if (typeof req === 'string') throw new Error('unreachable')
     expect(req.tieTolerance).toBe(0) // KILLER for mutant a: a re-typed tolerance ≠ the shipped 0
     expect(req.seedA).toBe(0xbeef) // the ONE minted shared-draw CRN seed
     expect(req.todayEpochDay).toBe(TODAY) // injected clock, not read inside the engine
@@ -81,8 +82,10 @@ describe('buildSolveRequest — the builder-null convention', () => {
 
   it('pay-less-tax carries NO heir bracket (leave-more only)', () => {
     const req = buildSolveRequest(withGoalSeed('fl', 'pay-less-tax'), TODAY)
-    expect(req?.ranking.goal).toBe('pay-less-tax')
-    expect(req?.ranking.heirBracket).toBeUndefined()
+    expect(typeof req).not.toBe('string')
+    if (typeof req === 'string') throw new Error('unreachable')
+    expect(req.ranking.goal).toBe('pay-less-tax')
+    expect(req.ranking.heirBracket).toBeUndefined()
   })
 })
 
@@ -145,7 +148,7 @@ const realBuilders = (opts?: { readonly fast?: boolean }): ParamsBuilders => ({
   buildDateInput,
   buildSolveDispatch: (draft) => {
     const req = buildSolveRequest(draft, TODAY)
-    if (req === null || opts?.fast !== true) return req
+    if (typeof req === 'string' || opts?.fast !== true) return req
     return { ...req, base: { ...req.base, paths: 256 }, _gradeMinPaths: 50 }
   },
 })
@@ -176,7 +179,8 @@ describe('the live recommend-second arc — real draft → real engine', () => {
     expect(solve.payload.kind).toBe('recommended')
     // The committed arm carries the REAL run identity (wall #1 — source-bound, not a mirror): rebuild
     // the exact dispatched request through the SAME builder and fingerprint it independently.
-    const req = builders.buildSolveDispatch!(model.getSnapshot().draft)!
+    const req = builders.buildSolveDispatch!(model.getSnapshot().draft)
+    if (typeof req === 'string') throw new Error('unreachable — the FL household builds')
     const expected = solverRunFingerprint(req.base, req.candidates, req.ranking, {
       seedA: req.seedA,
       tieTolerance: req.tieTolerance,

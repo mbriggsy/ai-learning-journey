@@ -45,6 +45,7 @@ import {
   goalHigherIsBetter,
   leaveMoreSkewDisclosure,
   rankForGoal,
+  skewOf,
 } from '../objective'
 import { evaluateCandidates, rankCandidates, scoreFromDistribution, type CandidateOutcome } from '../../validation/evaluate'
 import { solverCandidateId, type CandidateStrategy } from '../candidates'
@@ -291,5 +292,33 @@ describe('leaveMoreSkewDisclosure — presence contract', () => {
     expect(disc?.medianReal).toBe(300)
     expect(disc?.skewDirection).toBe('downside')
     expect(disc?.meanMinusMedianReal).toBe(-50)
+  })
+})
+
+describe('skewOf — the ONE shared skew constructor (the median-advantage increment, 2026-07-23)', () => {
+  it('wraps distributionSkew with the direction + gap, byte-identical on the same sample', () => {
+    const sample = [100, 100, 100, 100, 2_000]
+    const s = skewOf(sample)
+    const raw = distributionSkew(sample)
+    expect(s.meanReal).toBe(raw.meanReal)
+    expect(s.medianReal).toBe(raw.medianReal)
+    expect(s.p10Real).toBe(raw.p10Real)
+    expect(s.p90Real).toBe(raw.p90Real)
+    expect(s.meanMinusMedianReal).toBe(raw.meanReal - raw.medianReal)
+    expect(s.skewDirection).toBe('upside')
+  })
+
+  it('names all three directions on hand-derived samples (the symmetric boundary is EXACT equality)', () => {
+    expect(skewOf([100, 100, 100, 100, 2_000]).skewDirection).toBe('upside')
+    expect(skewOf([50, 300, 300, 300, 300]).skewDirection).toBe('downside')
+    expect(skewOf([300, 300, 300]).skewDirection).toBe('symmetric')
+  })
+
+  it('leaveMoreSkewDisclosure now CONSUMES skewOf (one constructor — no second direction ternary to drift)', () => {
+    // The downside fixture from the presence contract, reproduced through both paths byte-identically.
+    const dist = distFromBuckets({ roth: [50, 300, 300, 300, 300] })
+    const viaLevel = leaveMoreSkewDisclosure(dist, 0.25)!
+    const viaSkewOf = skewOf([50, 300, 300, 300, 300].map((v) => v)) // roth passes through untaxed at any bracket
+    expect(viaLevel).toEqual(viaSkewOf)
   })
 })

@@ -808,6 +808,38 @@ const surplusWitness: ScenarioDraft = {
   annualSpendingReal: 60_000,
 }
 
+/**
+ * THE NO-PRETAX STEER WITNESS (the steer-seed increment, 2026-07-23 — the first walkable face of
+ * `blocked{no-pretax}`). `retiredOnTrack`'s 66/65 couple whose split savings hold NO pre-tax
+ * dollars: Alex's Roth IRA + Sam's brokerage account (basis entered) — a REALISTIC shape (a couple
+ * who Roth-converted years ago, or saved outside employer plans). The spine resolves a confident
+ * verdict and the recommend-second invite fires (solve idle), but a confirmed goal pick REFUSES at
+ * the builder with the TYPED `no-pretax` reason — there is no anchored conversion candidate and no
+ * pre-tax draw to sequence — so the surface renders `recommendNoPretaxNote`, the calm named-reason
+ * steer, instead of a solve. Engine-proven in devSeeds.test.ts: the built overlay is PRESENT with
+ * `buckets.pretax === 0` (pinning the REALISTIC arm, never the degenerate no-overlay one) and the
+ * builder returns `'no-pretax'` verbatim. NO `chosenGoal` (the walk drives the GoalPicker
+ * organically, like `surplus`/`nc`).
+ */
+const noPretaxSteer: ScenarioDraft = {
+  ...retiredOnTrack,
+  enteredAccounts: [
+    {
+      ownerIndex: 0,
+      kind: 'roth-ira',
+      valueToday: 480_000,
+      manualBlend: { kind: 'exact', stockPct: 60, bondPct: 30, cashPct: 10 },
+    },
+    {
+      ownerIndex: 1,
+      kind: 'brokerage',
+      valueToday: 575_000,
+      basis: 460_000,
+      manualBlend: { kind: 'exact', stockPct: 60, bondPct: 30, cashPct: 10 },
+    },
+  ],
+}
+
 // ---------------------------------------------------------------------------
 // The state-tax faces (the state-tax unit; the state-carrying seed increment). Each is a
 // `retiredOnTrack` clone (66/65, both retired) carrying ONE `retirementState` — so the state
@@ -889,6 +921,7 @@ export const DEV_SEEDS = {
   health: retiredHealth,
   date65: stillWorkingAllMedicare,
   surplus: surplusWitness,
+  steer: noPretaxSteer,
   nc: ncAffirmation,
   pa: paAffirmation,
   fl: flAffirmation,

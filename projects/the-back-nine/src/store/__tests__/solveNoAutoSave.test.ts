@@ -77,7 +77,9 @@ const solveBuilders = (): ParamsBuilders => ({
   // the standing rec and re-dispatches — the real visible-re-solve path). Encoded via tieTolerance
   // (a ranking-affecting field solverRunFingerprint captures) to stay type-clean.
   buildSolveDispatch: (d) =>
-    d.chosenGoal === undefined ? null : { ...SOLVE_REQUEST, tieTolerance: d.chosenGoal === 'pay-less-tax' ? 1 : 0 },
+    d.chosenGoal === undefined
+      ? 'spine-unready'
+      : { ...SOLVE_REQUEST, tieTolerance: d.chosenGoal === 'pay-less-tax' ? 1 : 0 },
 })
 
 const workingWithGoal = (d: ScenarioDraft): ScenarioDraft => ({

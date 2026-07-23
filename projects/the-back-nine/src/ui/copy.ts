@@ -1144,7 +1144,7 @@ export const copy = {
   // changed" is neutral, never a fault). DISTINCT from the save-vintage staleness clocks above — those
   // name a rulebook that moved under a SAVED answer; this names the user's OWN in-session edits moving
   // out from under an unsaved strategy read. `recommend*` = verdict-scoped (superlative/free-numeral
-  // gated), no figure to hedge — the recommendBucketsNote precedent.
+  // gated), no figure to hedge — the recommendNoPretaxNote precedent.
   recommendStaleHeading: 'This strategy read is out of date',
   recommendStaleBody:
     'Some of your numbers have changed. Your answer above already reflects them — this strategy read doesn’t yet.',
@@ -1172,15 +1172,27 @@ export const copy = {
   // The invited affordance — the recommend-second door in the doors region (R11: invited, never a nag;
   // R12: no imperative). A DOOR, calm-styled like its siblings; the goal choice precedes the solve.
   recommendInviteCta: 'See the recommended strategy',
-  // Act-4 · U16 §S1/§Q5 (F3) — the pre-dispatch `blocked{buckets-defaulted}` calm steer: a household
-  // whose accounts are entered as ONE lump sum gives the sequencing/conversion strategy nothing to work
-  // with, so a picked goal must not dead-end on a silent blank. Names the TRUE precondition (the account
-  // mix, NOT the goal — so this arm never re-shows the goal invite; the note carries the steer). A
-  // DECLARATIVE steer in the calm stale-note voice — no imperative, no figure to hedge; rides
-  // `recommend*` = verdict-scoped (superlative/free-numeral gated) but NOT control-swept (no forced
-  // modal on a terse steer), exactly like recommendUnavailable.
-  recommendBucketsNote:
-    'Right now your savings are entered as one lump sum, so there’s nothing yet for a tax strategy to work with — once the pre-tax, Roth, and taxable pieces are entered separately, we can work one out.',
+  // Act-4 · U16 §S1/§Q5 (F3, REWORDED by the steer-seed increment 2026-07-23) — the pre-dispatch
+  // `blocked{no-pretax}` calm steer. THE OLD LINE WAS FALSE ON EVERY REACHABLE HOUSEHOLD (insight
+  // 100's class): it claimed "your savings are entered as one lump sum", but the intake's account
+  // kinds are MANDATORY — a lump-sum entry cannot exist. The TRUE precondition both reachable arms
+  // share (a split household with no pre-tax dollars; the degenerate no-accounts household) is that
+  // there are no pre-tax (IRA/401k) dollars for a withdrawal-order/conversion strategy to work
+  // with — so the note names THAT, in the household's own frame. A DECLARATIVE steer in the calm
+  // stale-note voice — no imperative, no figure to hedge; rides `recommend*` = verdict-scoped
+  // (superlative/free-numeral gated) but NOT control-swept (no forced modal on a terse steer),
+  // exactly like recommendUnavailable.
+  // ("401(k)" is deliberately absent — the verdict scope's free-numeral gate; "a pre-tax workplace
+  // plan" is the numeral-free equivalent, and the re-entry read-back teaches the full roster.)
+  recommendNoPretaxNote:
+    'This strategy compares ways of drawing pre-tax savings — a traditional IRA or a pre-tax workplace plan — and this plan has none entered. If you do hold pre-tax accounts, add them and we can work one out.',
+  // The `blocked{spine-unready}` sibling (the steer-seed increment): the strategy read FOLLOWS the
+  // main answer, and on a facts-broken re-dispatch (a committed rec goes stale, a fact is cleared,
+  // the stale card's re-open control survives) the old note blamed the ACCOUNTS — a false diagnosis.
+  // This arm names the true dependency without re-diagnosing the missing fact (the answer's own
+  // incomplete strip above already names it). Same calm declarative register.
+  recommendSpineUnreadyNote:
+    'This strategy read builds on the answer above. Once that answer is complete again, this can run.',
   // Act-4 · U16 §S4 — the goal RE-PICK door (the committed beat's "aim at something else"): the
   // un-saved hypothetical is freely re-aimable, and a re-pick VISIBLY re-solves (both futures
   // update). A calm door label, NOT an imperative advice verb ("aim" is not a directive verb, so it
@@ -1927,6 +1939,23 @@ export const slots = {
    *  the median arrives pre-formatted (single-sourced against the band's percentile convention). */
   recSkewMedian: (medianFormatted: string): string =>
     `A few very good futures pull the average up — the more typical outcome is closer to about $${medianFormatted}.`,
+  /** The DELTA hero's median qualification (the median-advantage increment, 2026-07-23): the hero's
+   *  "$X more" is a MEAN of the per-future advantage, and when its skew is upside the TYPICAL future
+   *  gains less — say so, quoting BOTH endpoints in-sentence (the don't-make-users-think law: the
+   *  referent by its own verbatim figure, the typical by its own dollar). TWO sentences, one fact
+   *  each (no em-dash apposition on a load-bearing figure). Deliberately a DIFFERENT construction
+   *  from `recSkewMedian` (the level's line) so the two stacked disclosures never read as one
+   *  repeated sentence (the anaphora-density class). "about" is the require-hedge modal. Both figures
+   *  arrive pre-formatted in the DELTA dialect (formatDeltaDollar — the hero's own ruler). */
+  recDeltaTypical: (deltaFormatted: string, medianFormatted: string): string =>
+    `The “$${deltaFormatted} more” above is an average across the futures we tested. In the typical future the edge is closer to about $${medianFormatted}.`,
+  /** The qualification's NO-DOLLAR arm: the typical per-future advantage is at-or-below zero (or
+   *  under the display step), so quoting a median dollar would fabricate a figure — the honest
+   *  sentence is that at least half the tested futures gain little or nothing from the change.
+   *  "likely" is the require-hedge modal (a 16k-path median is an estimate). The average still
+   *  displays as the hero; this names what carries it. */
+  recDeltaTypicalNone: (deltaFormatted: string): string =>
+    `The “$${deltaFormatted} more” above is an average across the futures we tested. In at least half of them, this change likely gains little or nothing.`,
   /** The withheld reason for `state-certification-pending` (Q5, LIVE for the NC household): the STATE
    *  by name, the TRUE reason (rates not officially set), the DIRECTION honestly, the ~August timeframe,
    *  framed as REFUSING to guess. "could" + "around" carry require-hedge. `stateName` arrives from the

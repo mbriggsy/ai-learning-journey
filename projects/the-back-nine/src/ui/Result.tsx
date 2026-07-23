@@ -285,14 +285,15 @@ export function Result({
   const seatInLead = focusKey !== undefined && (elevated.kind === 'date' || elevated.kind === 'spine')
 
   // §S2 — the recommend-second invited affordance is offered only when the solve is INVITABLE: no
-  // beat yet (idle), or a goal-unset precondition that steers to the picker. A buckets-defaulted block
-  // and the pending/committed/stale beats own their own renders (S3). Never on a non-answer (the
-  // affordance is gated by focusKey with the doors below). `solve` is the tier-less solve channel.
-  // U16 §S1 — the ALL-RETIRED (spine) route only in v1: the live solve base is `buildSpineParams`
-  // (retirement params), and a still-working household's honest base is the CROWNED date, whose offset
-  // this dispatch does not yet thread — so the working-route recommend-second is a follow-up increment
-  // (never a `blocked{buckets-defaulted}` mis-reason on a working household). Both fit-gate affordance
-  // seeds (`retired`, `nc`) are all-retired, so this gate does not regress the measured posture.
+  // beat yet (idle), or a goal-unset precondition that steers to the picker. A builder-refusal block
+  // (no-pretax / spine-unready) and the pending/committed/stale beats own their own renders (S3).
+  // Never on a non-answer (the affordance is gated by focusKey with the doors below). `solve` is the
+  // tier-less solve channel. U16 §S1 — the ALL-RETIRED (spine) route only in v1: the live solve base
+  // is `buildSpineParams` (retirement params), and a still-working household's honest base is the
+  // CROWNED date, whose offset this dispatch does not yet thread — so the working-route
+  // recommend-second is a follow-up increment (the builder's `spine-unready` refusal covers the date
+  // route honestly). Both fit-gate affordance seeds (`retired`, `nc`) are all-retired, so this gate
+  // does not regress the measured posture.
   const solve = snapshot.solve
   // The invite door is INVITABLE whenever a first-or-fresh solve is the honest next step: no beat yet
   // (idle), a goal-unset precondition (steer to the picker), OR a `compute-error` channel (a worker
@@ -302,8 +303,9 @@ export function Result({
   // share ONE home; a second door-row invite would be a SECOND control for the same promise. The four
   // non-invite doors (budget · sequencing · roth · health · assumptions) are unaffected (they gate on
   // focusKey). The dispatch paths stay two — this invite door and the committed/stale re-pick door
-  // (both open the GoalPicker). A `blocked{buckets-defaulted}` deliberately does NOT invite — the gap is
-  // accounts, not the goal, so its own calm note carries the steer (§Q5, F3).
+  // (both open the GoalPicker). A builder-refusal `blocked` (no-pretax / spine-unready) deliberately
+  // does NOT invite — the gap is never the goal, so its own calm named-reason note carries the steer
+  // (§Q5, F3; the steer-seed increment split the reasons).
   const solveInvitable =
     !isDateRoute(snapshot.draft) &&
     (solve.kind === 'idle' ||

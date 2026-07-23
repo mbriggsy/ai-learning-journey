@@ -51,7 +51,14 @@ import {
   type GradeStatistic,
 } from '../validation/gradeCalibration'
 import { evaluateCandidates } from '../validation/evaluate'
-import { goalHeadlineStatistic, leaveMoreSkewDisclosure, type LeaveMoreSkewDisclosure } from './objective'
+import {
+  goalHeadlineStatistic,
+  leaveMoreSkewDisclosure,
+  skewOf,
+  type CandidateOutcome,
+  type LeaveMoreSkewDisclosure,
+  type SkewDisclosure,
+} from './objective'
 import { runSearch, type CandidateEvaluation, type SolverSearchResult } from './search'
 import { selectRecommendation } from './select'
 import { solverCandidateId, type AnchoredRail, type CandidateStrategy } from './candidates'
@@ -185,6 +192,16 @@ export interface SolveRecommendation {
   /** The §S2 leave-more skew disclosure (the mean's skew beside the typical bequest) — present iff
    *  the goal is leave-more (undefined for pay-less-tax; carried honestly, never fabricated). */
   readonly skewDisclosure: LeaveMoreSkewDisclosure | undefined
+  /** The DELTA hero's skew disclosure (the median-advantage increment, 2026-07-23): the skew of the
+   *  CRN-PAIRED per-path winner-vs-no-action goal differences on seed-set B — the same vector family
+   *  the grade reads (`pairedDecisionDiffs`, the ONE sign-convention home; winner-positive on both
+   *  goals, matching the hero's own orientation). The displayed "$X more" is a MEAN of these diffs
+   *  (linearity: mean(diffs) ≡ the headline delta), and a mean advantage can lean on a few lucky
+   *  futures while the TYPICAL future gains far less — the calm-but-wrong-OPTIMISTIC shape this
+   *  channel exists to surface (the level got this disclosure in §S2; the delta never did — the
+   *  hunter's surviving asymmetry). `undefined` only when the diffs cannot be computed honestly (no
+   *  tax lens / no declared heir bracket) — carried honestly, never fabricated. */
+  readonly deltaSkew: SkewDisclosure | undefined
   /** EVERY conversion lever withheld from ranking, named + directioned (insight 092). */
   readonly withheldConversionLevers: readonly WithheldConversionLever[]
   /** The methodology-substrate directional levels this run was minted OVER (the token's
@@ -325,6 +342,33 @@ export function gradeSolveRecommendation(opts: {
     if (e instanceof GradeFloorRefusal) return { unavailable: e.message }
     throw e
   }
+}
+
+/**
+ * The DELTA hero's skew disclosure (the median-advantage increment): skew of the CRN-paired per-path
+ * winner-vs-baseline goal differences on seed-set B, via the ONE sign-convention home
+ * (`pairedDecisionDiffs` — winner-positive on both goals, the hero's own orientation) and the ONE
+ * skew constructor (`skewOf`). By linearity `meanReal` reproduces the displayed headline delta
+ * exactly on a zero-vol world (every path identical — the committed-fixture coherence arm pins it)
+ * and to float dust on a live one.
+ *
+ * `undefined` — carried honestly, never a throw in payload assembly — when the diffs cannot be
+ * computed: an unscored arm (unreachable here; `armOfB` already refused), a missing tax lens, or a
+ * leave-more goal without a declared heir bracket (unreachable live; the (2.5) refusal holds the
+ * door). A presence CHECK, never a catch — a swallowed computation error would be laundering.
+ */
+export function deltaSkewFor(
+  winner: CandidateOutcome,
+  baseline: CandidateOutcome,
+  goal: OracleGoal,
+  heirBracket: number | undefined,
+): SkewDisclosure | undefined {
+  if (winner.kind !== 'scored' || baseline.kind !== 'scored') return undefined
+  if (goal === 'leave-more' && heirBracket === undefined) return undefined
+  if (winner.distribution.taxAware === undefined || baseline.distribution.taxAware === undefined) {
+    return undefined
+  }
+  return skewOf(pairedDecisionDiffs(winner, baseline, goal, heirBracket))
 }
 
 const refused = (reason: SolveRefused['reason'], detail: string): SolveRefused => ({
@@ -536,6 +580,11 @@ export function solve(token: OracleClearedToken, input: SolveInput, shouldAbort?
       ? leaveMoreSkewDisclosure(winner.distributionB, heirBracket)
       : undefined
 
+  // The DELTA hero's skew (the median-advantage increment): the paired winner-vs-no-action per-path
+  // goal differences on seed-set B — the same outcomes the displayed arms were built from, so the
+  // disclosed mean IS the hero's delta (linearity; the committed-fixture coherence arm pins it).
+  const deltaSkew = deltaSkewFor(winnerEval.b, search.conventionalBaseline.b, goal, heirBracket)
+
   return {
     kind: 'recommended',
     goal,
@@ -554,6 +603,7 @@ export function solve(token: OracleClearedToken, input: SolveInput, shouldAbort?
     gradeUnavailable,
     namedDriver,
     skewDisclosure,
+    deltaSkew,
     withheldConversionLevers,
     // Seam (ii): the figure and its disclosure land together — the recommendation carries the SAME
     // methodology-substrate directional levels the token was minted over (never an empty default).

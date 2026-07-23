@@ -247,6 +247,9 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     recDeltaLeaveMore: slots.recDeltaLeaveMore('48,000'),
     recDeltaPayLessTax: slots.recDeltaPayLessTax('12,000'),
     recSkewMedian: slots.recSkewMedian('230,000'),
+    // The median-advantage increment (2026-07-23): the hero's typical-future qualification arms.
+    recDeltaTypical: slots.recDeltaTypical('48,000', '9,000'),
+    recDeltaTypicalNone: slots.recDeltaTypicalNone('48,000'),
     recHoldStateCert: slots.recHoldStateCert('North Carolina'),
     // Act-4 · U16 §S3b — the heir-bracket disclosure (recDisc* ⇒ require-hedge-swept) + the viz aria
     // sentence (recViz* — NOT control-scoped; universal-gate-swept only). Figures pre-formatted.
@@ -594,6 +597,8 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     // Each row is one prefix's representative key; the grade WORDS + nameplate stay verdict-scoped (out).
     expect(isControlKey('recDeltaLeaveMore'), 'the delta-as-hero is control-scoped (require-hedge)').toBe(true)
     expect(isControlKey('recSkewMedian'), 'the skew median quote is control-scoped').toBe(true)
+    expect(isControlKey('recDeltaTypical'), 'the heros median qualification is control-scoped').toBe(true)
+    expect(isControlKey('recDeltaTypicalNone'), 'the qualifications no-dollar arm is control-scoped').toBe(true)
     expect(isControlKey('recGradeNoteShape'), 'the ShapeDisclosure/hinge notes are control-scoped').toBe(true)
     expect(isControlKey('recComposeAlready'), 'the compose reassurance is control-scoped').toBe(true)
     expect(isControlKey('recHoldTrend'), 'the withheld reasons are control-scoped').toBe(true)

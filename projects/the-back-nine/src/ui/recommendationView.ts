@@ -119,6 +119,15 @@ export interface RecommendationGradeView {
   /** The formatted delta MAGNITUDE (tabular-nums face at render) — active mode only; the compose
    *  state carries NO figure (never a fabricated dollar hero). */
   readonly deltaFigure: string | undefined
+  /** The hero's MEDIAN qualification (the median-advantage increment): when the shown mean advantage
+   *  leans on a few strong futures (upside skew), name what the TYPICAL future gains — the median
+   *  quote when it carries a display-distinct positive dollar, the no-dollar "little or nothing"
+   *  arm when the typical advantage sits at-or-below zero (or under the display step). Lives INSIDE
+   *  the grade lockup (it qualifies the hero directly and must repaint with it — the cs-swap
+   *  crossfade key covers the whole group, so a fresh hero never sits beside a stale qualifier).
+   *  `undefined` when there is no hero to qualify, the skew is not upside (downside understates the
+   *  shown figure — conservative, quiet), or the median rounds to the hero's own displayed figure. */
+  readonly deltaQualifier: string | undefined
   /** The ShapeDisclosure note (the grade's LEVEL rides still-directional methodology substrate) —
    *  present iff `directionalLevel`. Dormant today (no methodology-substrate directional entry is live);
    *  the seam is wired so it lights the day one lands. */
@@ -385,6 +394,7 @@ function recommendedView(payload: SolveRecommendation, opts: RecommendationViewO
     signalState: gradeSignalState(payload.grade?.grade),
     heroLine,
     deltaFigure,
+    deltaQualifier: deltaQualifierFor(payload, deltaFigure),
     shapeNote: directionalLevel ? copy.recGradeNoteShape : undefined,
     hingeNote: payload.grade?.grade === 'coin-flip' ? hingeNote(payload.namedDriver) : undefined,
     ungradedNote: payload.grade === undefined ? copy.recGradeNoteUngraded : undefined,
@@ -486,6 +496,29 @@ function hingeNote(namedDriver: string): string {
     default:
       return copy.recGradeNoteHingeGeneric
   }
+}
+
+/**
+ * The DELTA hero's median qualification (the median-advantage increment, 2026-07-23) — shown iff a
+ * hero figure is displayed AND the paired-advantage skew is UPSIDE (the shown mean advantage exceeds
+ * what the typical future gains — the calm-but-wrong-OPTIMISTIC direction; downside understates the
+ * shown figure, conservative, quiet). Reads `payload.deltaSkew` (the PAIRED winner-vs-baseline diffs)
+ * — NEVER `payload.skewDisclosure` (the leave-more LEVEL, a different vector; the level-for-delta
+ * swap is mutant-guarded). Three arms, source-bound to the DISPLAYED strings (never a re-typed
+ * threshold): a positive median that formats display-distinct → the quote (in the delta's own
+ * formatDeltaDollar dialect — one ruler per axis, rule 36); a median ≤ 0 or under the display step →
+ * the honest no-dollar "little or nothing" arm (a "$0" or negative-quoted median would fabricate);
+ * a median that rounds to the hero's own figure → quiet (adds nothing).
+ */
+function deltaQualifierFor(payload: SolveRecommendation, deltaFigure: string | undefined): string | undefined {
+  if (deltaFigure === undefined) return undefined // no hero shown (the no-dollar register) — nothing to qualify
+  const s = payload.deltaSkew
+  if (s === undefined || s.skewDirection !== 'upside') return undefined
+  if (s.medianReal <= 0) return slots.recDeltaTypicalNone(deltaFigure)
+  const medianFmt = formatDeltaDollar(s.medianReal)
+  if (medianFmt === '0') return slots.recDeltaTypicalNone(deltaFigure)
+  if (medianFmt === deltaFigure) return undefined
+  return slots.recDeltaTypical(deltaFigure, medianFmt)
 }
 
 /** The leave-more skew median quote — shown iff disclosure-worthy: the goal is leave-more, the skew is

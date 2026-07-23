@@ -618,8 +618,8 @@ describe('the recommend-second witness seed (engine-proven solve regime)', () =>
   const solveWitness = (key: 'surplus', goal: 'leave-more' | 'pay-less-tax') => {
     const draft: ScenarioDraft = { ...DEV_SEEDS[key], chosenGoal: goal }
     const req0 = buildSolveRequest(draft, FRESH)
-    expect(req0, `${key}: buildSolveRequest`).not.toBeNull()
-    if (req0 === null) throw new Error('unreachable')
+    expect(typeof req0, `${key}: buildSolveRequest must BUILD (a typed refusal here is a broken seed)`).not.toBe('string')
+    if (typeof req0 === 'string') throw new Error('unreachable')
     const req = { ...req0, base: { ...req0.base, paths: 256 }, _gradeMinPaths: 50 }
     const view = solveFromWire(engineApi.runSolve(req))
     expect(view.ok, `${key}: solveFromWire`).toBe(true)
@@ -644,4 +644,37 @@ describe('the recommend-second witness seed (engine-proven solve regime)', () =>
       'the crown is an ACTIVE move (a beneficial conversion beats the conventional) — never no-change',
     ).toBe(false)
   }, 60_000)
+})
+
+// ===========================================================================
+// The NO-PRETAX STEER witness seed (the steer-seed increment, 2026-07-23) — the first walkable face
+// of `blocked{no-pretax}`. The chain of custody across three suites: THIS file pins the builder's
+// TYPED refusal + the realistic arm (overlay PRESENT, pretax exactly 0 — never the degenerate
+// no-overlay household); memoryModel.test pins the store landing the reason verbatim as the gap;
+// RecommendationSurface.test pins the gap rendering `recommendNoPretaxNote`. The live arc is the
+// caddie walk's `solve:steer` target (invite → GoalPicker → confirm → the steer note, no solve).
+// ===========================================================================
+describe('the no-pretax steer witness seed (engine-proven refusal regime)', () => {
+  const FRESH_STEER = epochDayFromIsoDate(acaEnhancedSubsidyStatus.value.verifiedOn) + 5
+
+  it("'steer' is the REALISTIC no-pretax arm: overlay PRESENT with buckets.pretax exactly 0 (producer's output)", () => {
+    const params = buildSpineParams(DEV_SEEDS.steer)
+    expect(params, 'the spine builds (the verdict resolves before the refusal)').not.toBeNull()
+    expect(params!.overlay, 'the overlay is PRESENT — never the degenerate no-overlay arm').toBeDefined()
+    expect(params!.overlay!.buckets.pretax, 'no pre-tax dollars — the refusal precondition').toBe(0)
+    expect(params!.overlay!.buckets.roth, 'the split is REAL (roth dollars present)').toBeGreaterThan(0)
+    expect(params!.overlay!.buckets.taxable, 'the split is REAL (taxable dollars present)').toBeGreaterThan(0)
+  })
+
+  it("'steer' → buildSolveRequest returns the TYPED 'no-pretax' refusal on BOTH goals (the reason-swap mutant killer)", () => {
+    expect(buildSolveRequest({ ...DEV_SEEDS.steer, chosenGoal: 'leave-more' }, FRESH_STEER)).toBe('no-pretax')
+    expect(buildSolveRequest({ ...DEV_SEEDS.steer, chosenGoal: 'pay-less-tax' }, FRESH_STEER)).toBe('no-pretax')
+  })
+
+  it("'steer' resolves a calm ON-TRACK spine verdict (recorded 2026-07-23; the invite face is a confident answer)", () => {
+    const w = runEngine(buildSpineParams(DEV_SEEDS.steer)!, DEV_SEEDS.steer.seed!)
+    expect(w.kind).toBe('resolved')
+    if (w.kind !== 'resolved') return
+    expect(w.headline.outcomeState, 'recorded, not assumed — re-tune the accounts on drift (C3 law)').toBe('on-track')
+  })
 })

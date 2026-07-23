@@ -164,17 +164,37 @@ export function distributionSkew(values: readonly number[]): DistributionSkew {
 export type SkewDirection = 'upside' | 'downside' | 'symmetric'
 
 /**
- * The structured leave-more skew disclosure that rides the solve payload for U16 (§S2 INTRACTABLE exit).
- * It carries the RANKED figure (the mean — what `rankForGoal` crowns on) beside the downside-aware
- * figures (median = the typical bequest; p10 = the low-futures edge) and the skew DIRECTION + magnitude,
- * so U16 discloses the mean's skew adjacent to the figure. NO copy is authored here (Q6) and NO threshold
- * is minted (that is U16's copy call); the engine NAMES the channel and hands over the numbers. This is a
- * DISCLOSURE, never a ranking — the mean still both ranks and is the primary displayed quantity.
+ * The structured skew disclosure shape that rides the solve payload for U16 (§S2 INTRACTABLE exit,
+ * generalized by the median-advantage increment 2026-07-23). It carries the RANKED/DISPLAYED figure
+ * (the mean) beside the downside-aware figures (median = the typical; p10 = the low-futures edge) and
+ * the skew DIRECTION + magnitude, so U16 can disclose a mean's skew adjacent to the figure it shows.
+ * TWO channels consume it: the leave-more LEVEL ({@link leaveMoreSkewDisclosure} — the typical bequest
+ * beside the ranked mean) and the DELTA hero (`solve.ts deltaSkewFor` — the typical per-path advantage
+ * beside the displayed mean advantage). NO copy is authored here (Q6) and NO threshold is minted (that
+ * is U16's copy call); the engine NAMES the channel and hands over the numbers. This is a DISCLOSURE,
+ * never a ranking — the mean still both ranks and is the primary displayed quantity.
  */
-export interface LeaveMoreSkewDisclosure extends DistributionSkew {
+export interface SkewDisclosure extends DistributionSkew {
   readonly skewDirection: SkewDirection
-  /** meanReal − medianReal (real $): how much the ranked average exceeds the typical bequest. */
+  /** meanReal − medianReal (real $): how much the shown average exceeds the typical figure. */
   readonly meanMinusMedianReal: number
+}
+
+/** The original §S2 name — the leave-more LEVEL channel's alias for the shared shape (kept so the
+ *  fixture/test vocabulary written against §S2 stays truthful; same type, one home). */
+export type LeaveMoreSkewDisclosure = SkewDisclosure
+
+/**
+ * Wrap a per-path statistic's {@link distributionSkew} with the direction + magnitude of its mean-vs-
+ * median gap — the ONE skew-disclosure constructor both channels share (a re-typed direction ternary
+ * in a second home could silently disagree on the `symmetric` boundary). Pure; refuses empty/non-finite
+ * input via `distributionSkew`'s own guards (insight 010).
+ */
+export function skewOf(values: readonly number[]): SkewDisclosure {
+  const skew = distributionSkew(values)
+  const gap = skew.meanReal - skew.medianReal
+  const skewDirection: SkewDirection = gap > 0 ? 'upside' : gap < 0 ? 'downside' : 'symmetric'
+  return { ...skew, skewDirection, meanMinusMedianReal: gap }
 }
 
 /**
@@ -187,8 +207,5 @@ export interface LeaveMoreSkewDisclosure extends DistributionSkew {
 export function leaveMoreSkewDisclosure(dist: Distribution, heirBracket: number): LeaveMoreSkewDisclosure | undefined {
   const perPath = afterTaxBequestPerPath(dist, heirBracket)
   if (perPath === undefined) return undefined
-  const skew = distributionSkew(perPath)
-  const gap = skew.meanReal - skew.medianReal
-  const skewDirection: SkewDirection = gap > 0 ? 'upside' : gap < 0 ? 'downside' : 'symmetric'
-  return { ...skew, skewDirection, meanMinusMedianReal: gap }
+  return skewOf(perPath)
 }

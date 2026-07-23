@@ -98,6 +98,7 @@ const recFixture = (over: Partial<SolveRecommendation> = {}): SolveRecommendatio
   gradeUnavailable: { reason: 'below floor (synthetic)' },
   namedDriver: 'sampling-noise-near-tie',
   skewDisclosure: undefined,
+  deltaSkew: undefined,
   withheldConversionLevers: [
     {
       id: 'grid:taxable-first:20000',

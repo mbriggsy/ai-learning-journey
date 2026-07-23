@@ -81,10 +81,12 @@ import { REAL, REAL_DPR, PHONE, PHONE_DPR, gotoSeedFinal, settleLayout } from '.
  *    heading + body + its IN-CARD re-open control, in one frame (`stale`, F-B: the promise and its action
  *    in ONE home; the door-row invite is retired for this channel). The base's drawdownPolicy rides the
  *    solve fingerprint, so the demotion is structural even where the order is inert on a single pool.
- *  - The STEER face (`blocked{buckets-defaulted}`) has NO seed: it fires only when the solve builder
- *    returns null on a household with NO tax overlay / no pre-tax headroom, and EVERY registered spine
- *    seed carries a pre-tax bucket (date seeds are route-gated out of the invite). No new seed is minted
- *    for a face no shipped household reaches — the render stays unit-pinned (RecommendationSurface.test).
+ *  - The STEER face (`blocked{no-pretax}` — the steer-seed increment, 2026-07-23, superseding the old
+ *    "no seed" note): `solve:steer` walks it — the no-pretax household (`?seed=steer`, Roth + brokerage
+ *    only) lands its verdict, the invite fires, the GoalPicker confirm REFUSES at the builder with the
+ *    typed reason, and the calm named-reason note is the terminal frame (no pending — nothing dispatches;
+ *    the invite retires with the note). The `spine-unready` sibling stays unit-pinned only
+ *    (RecommendationSurface.test) — its live face needs a facts-broken re-dispatch, not a seed.
  *
  * Targets: `CADDIE_TARGETS="vault:retired,vault:stale,seed:date,intake:fork"` (comma list).
  * Back-compat: `CADDIE_SEED=budget` still works (one seed target). Default: `seed:retired`.
@@ -533,9 +535,12 @@ async function walkWorsening(page: Page, outDir: string): Promise<void> {
  * whether this seed additionally walks the post-commit STALE demotion. nc: pay-less-tax → the NC
  * state-certification HOLD; surplus: leave-more → the over-funded delta-as-hero RECOMMENDED lockup.
  */
-const SOLVE_GOAL: Record<string, { readonly label: RegExp; readonly stale: boolean }> = {
+const SOLVE_GOAL: Record<string, { readonly label: RegExp; readonly stale: boolean; readonly terminal?: 'steer' }> = {
   nc: { label: /Pay less tax/, stale: true },
   surplus: { label: /Leave more behind/, stale: false },
+  // The steer-seed increment (2026-07-23): the no-pretax household's confirmed pick REFUSES at the
+  // builder (typed reason) — no dispatch, no pending; the calm named-reason note is the terminal.
+  steer: { label: /Leave more behind/, stale: false, terminal: 'steer' },
 }
 
 /**
@@ -571,12 +576,29 @@ async function walkSolve(page: Page, key: string, outDir: string): Promise<void>
   await expect(radio, `solve:${key}: the goal radio did not commit`).toBeChecked()
   await dialog.getByRole('button', { name: 'See the strategy', exact: true }).click()
 
+  await expect(dialog, `solve:${key}: the GoalPicker did not close on confirm`).toBeHidden()
+
+  // The STEER terminal (the steer-seed increment): the builder REFUSES with the typed `no-pretax`
+  // reason BEFORE any dispatch — no pending breathe (nothing is working), the calm named-reason note
+  // renders immediately, and the invite door is GONE (a blocked non-goal-unset gap is not invitable —
+  // a second door would re-promise the solve the note just declined). The walk ends on the note frame.
+  if (plan!.terminal === 'steer') {
+    const note = page.locator('.rec-note--buckets')
+    await expect(note, `solve:${key}: the no-pretax steer note never rendered (a silent dead-end)`).toBeVisible()
+    await expect(page.locator('.solve-pending'), `solve:${key}: a steer face must never breathe`).toHaveCount(0)
+    await expect(
+      page.locator('.result-recommend-invite'),
+      `solve:${key}: the invite must retire once the steer note carries the story`,
+    ).toHaveCount(0)
+    await captureState(page, path.join(outDir, 'steer-note'))
+    return
+  }
+
   // The PENDING breathe — the picker closes, the solve dispatches. Capture the working frame IMMEDIATELY
   // (it holds for the full worker wait); its role=status announce rides aria.yaml / copy.txt.
-  await expect(dialog, `solve:${key}: the GoalPicker did not close on confirm`).toBeHidden()
   await expect(
     page.locator('.solve-pending'),
-    `solve:${key}: the pending breathe never mounted (a defaulted-bucket steer would render instantly here)`,
+    `solve:${key}: the pending breathe never mounted (a no-pretax steer would render instantly here)`,
   ).toBeVisible()
   await captureState(page, path.join(outDir, 'pending'))
 

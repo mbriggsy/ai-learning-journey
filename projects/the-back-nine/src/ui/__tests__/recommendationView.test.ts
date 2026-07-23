@@ -76,6 +76,8 @@ function leaveMoreRec(o: Partial<SolveRecommendation> = {}): SolveRecommendation
     grade: grade('just-do-it'), gradeStatistic: 'leave-more', gradeUnavailable: undefined,
     namedDriver: 'sampling-noise-near-tie',
     skewDisclosure: { meanReal: winner.headlineStatisticB, medianReal: winner.headlineStatisticB, p10Real: 0, p90Real: 0, skewDirection: 'symmetric', meanMinusMedianReal: 0 },
+    // The DELTA skew defaults SYMMETRIC (qualifier quiet) — each qualifier arm overrides it.
+    deltaSkew: { meanReal: 0, medianReal: 0, p10Real: 0, p90Real: 0, skewDirection: 'symmetric', meanMinusMedianReal: 0 },
     withheldConversionLevers: [], disclosedDirectional: [], solverCodeVersion: 1,
     ...o,
   }
@@ -542,5 +544,80 @@ describe('recommendationView — a winner-ahead delta that formats to $0 routes 
     expect(v.grade.deltaFigure).toBe(expectedDelta)
     expect(v.grade.heroLine).toBe(slots.recDeltaLeaveMore(expectedDelta))
     expect(v.viz, 'the active two-arm viz still ships').toBeDefined()
+  })
+})
+
+// ---------------------------------------------------------------------------------------------
+// The DELTA hero's median qualification (the median-advantage increment, 2026-07-23): the hero's
+// "$X more" is a MEAN of the per-future advantage; when its skew is upside the TYPICAL future
+// gains less, and the lockup says so. Reads payload.deltaSkew (the PAIRED winner-vs-baseline
+// diffs) — never the leave-more LEVEL channel (arm 7 kills that swap).
+// ---------------------------------------------------------------------------------------------
+describe('recommendationView — the delta heros median qualification (deltaSkew)', () => {
+  const upsideDelta = (medianReal: number, meanReal = 150_000) => ({
+    meanReal,
+    medianReal,
+    p10Real: Math.min(0, medianReal),
+    p90Real: meanReal * 2,
+    skewDirection: 'upside' as const,
+    meanMinusMedianReal: meanReal - medianReal,
+  })
+
+  it('upside + a positive display-distinct median → the quote, BOTH endpoints in the DELTA dialect', () => {
+    // leaveMoreRec's hero delta is exactly 150,000 (mean 576k − 426k) → deltaFigure '150,000'.
+    const v = asRec(recommendationView(committed(leaveMoreRec({ deltaSkew: upsideDelta(40_000) })), { spineConfidence: spine }))
+    expect(v.grade.deltaFigure).toBe('150,000')
+    expect(v.grade.deltaQualifier).toBe(slots.recDeltaTypical('150,000', '40,000'))
+    // The DELTA dialect (grouped digits — the hero's own ruler), never the $X.XM prose dialect,
+    // even at a portfolio-scale median (rule 36: one ruler per axis; the level quote is the $X.XM one).
+    const big = asRec(recommendationView(committed(leaveMoreRec({ deltaSkew: upsideDelta(1_200_000, 2_400_000) })), { spineConfidence: spine }))
+    expect(big.grade.deltaQualifier).toBe(slots.recDeltaTypical('150,000', '1,200,000'))
+    expect(big.grade.deltaQualifier).not.toMatch(/\$\d+(\.\d+)?M\b/)
+  })
+
+  it('a typical advantage at-or-below zero → the honest no-dollar arm (never a fabricated median dollar)', () => {
+    const v = asRec(recommendationView(committed(leaveMoreRec({ deltaSkew: upsideDelta(-5_000) })), { spineConfidence: spine }))
+    expect(v.grade.deltaQualifier).toBe(slots.recDeltaTypicalNone('150,000'))
+    // sub-display-step positive median (formats to '0') routes the SAME honest arm.
+    const sub = asRec(recommendationView(committed(leaveMoreRec({ deltaSkew: upsideDelta(30) })), { spineConfidence: spine }))
+    expect(sub.grade.deltaQualifier).toBe(slots.recDeltaTypicalNone('150,000'))
+  })
+
+  it('a median that rounds to the heros own figure adds nothing → quiet (source-bound to the DISPLAYED strings)', () => {
+    // 149,600 formats to '150,000' — the same displayed magnitude as the hero.
+    const v = asRec(recommendationView(committed(leaveMoreRec({ deltaSkew: upsideDelta(149_600) })), { spineConfidence: spine }))
+    expect(v.grade.deltaQualifier).toBeUndefined()
+  })
+
+  it('downside / symmetric skew stays quiet (the shown mean UNDERSTATES the typical — conservative)', () => {
+    const symmetric = asRec(recommendationView(committed(leaveMoreRec()), { spineConfidence: spine }))
+    expect(symmetric.grade.deltaQualifier).toBeUndefined()
+    const downside = asRec(recommendationView(committed(leaveMoreRec({
+      deltaSkew: { meanReal: 150_000, medianReal: 200_000, p10Real: 0, p90Real: 300_000, skewDirection: 'downside', meanMinusMedianReal: -50_000 },
+    })), { spineConfidence: spine }))
+    expect(downside.grade.deltaQualifier).toBeUndefined()
+  })
+
+  it('the no-dollar register (no-change / inversion) carries NO qualifier — nothing to qualify', () => {
+    const noChange = asRec(recommendationView(committed(leaveMoreRec({ noChange: true, deltaSkew: upsideDelta(40_000) })), { spineConfidence: spine }))
+    expect(noChange.grade.deltaFigure).toBeUndefined()
+    expect(noChange.grade.deltaQualifier).toBeUndefined()
+    // an absent deltaSkew (no tax lens) is carried honestly — quiet, never a crash.
+    const absent = asRec(recommendationView(committed(leaveMoreRec({ deltaSkew: undefined })), { spineConfidence: spine }))
+    expect(absent.grade.deltaQualifier).toBeUndefined()
+  })
+
+  it('INDEPENDENCE (the level-for-delta swap mutant): an upside LEVEL with a symmetric DELTA fires the level quote and keeps the qualifier quiet', () => {
+    const winner = armFor('leave-more', HB, 'taxable-first', 'taxable-first', { terminalTaxableReal: [4_000_000, 6_000_000], terminalPretaxReal: [1_000_000, 1_000_000], terminalRothReal: [0, 0], terminalHsaReal: [0, 0] })
+    const mean = winner.headlineStatisticB
+    const median = mean - 1_600_000
+    const payload = leaveMoreRec({
+      winner,
+      skewDisclosure: { meanReal: mean, medianReal: median, p10Real: median - 800_000, p90Real: mean + 1_000_000, skewDirection: 'upside', meanMinusMedianReal: mean - median },
+      // the DELTA channel stays symmetric — a qualifier that reads the LEVEL channel would fire here.
+    })
+    const v = asRec(recommendationView(committed(payload), { spineConfidence: spine }))
+    expect(v.skew, 'the LEVEL quote fires').toBeDefined()
+    expect(v.grade.deltaQualifier, 'the DELTA qualifier stays quiet — different vector, different channel').toBeUndefined()
   })
 })

@@ -247,10 +247,20 @@ export type ModelAnswer =
 // not chrome: U16's GoalPicker + rendered beats read these flags, they are never rendered here.
 // ---------------------------------------------------------------------------
 
+/** The builder's TYPED refusal (the steer-seed increment, 2026-07-23 — the old builder-NULL
+ *  convention collapsed every unbuildable draft into one `buckets-defaulted` gap, whose note told
+ *  a false accounts story on a facts-broken re-dispatch, and a false "lump sum" story on every
+ *  household — the intake's mandatory account kinds mean a lump-sum entry cannot exist):
+ *   - `no-pretax`     — the run has no pre-tax dollars to sequence/convert (no tax overlay at all,
+ *                       or no anchored conversion candidate — the honest bucket precondition);
+ *   - `spine-unready` — the draft cannot build the spine base right now (a missing fact, the date
+ *                       route, an unminted seed) — the strategy read follows the main answer. */
+export type SolveBlockReason = 'no-pretax' | 'spine-unready'
+
 /** The precondition the solve was NOT dispatched on (§S5 (3)) — each a structured flag the U16
- *  surface routes (goal-unset ⇒ present the GoalPicker; buckets-defaulted ⇒ the RothAccounts
- *  mini-intake). Never a fabricated recommendation on an unmet precondition (burned/062). */
-export type SolvePreconditionGap = 'goal-unset' | 'buckets-defaulted'
+ *  surface routes (goal-unset ⇒ present the GoalPicker; no-pretax / spine-unready ⇒ their own calm
+ *  named-reason notes). Never a fabricated recommendation on an unmet precondition (burned/062). */
+export type SolvePreconditionGap = 'goal-unset' | SolveBlockReason
 
 export type SolveAnswer =
   | { readonly kind: 'idle' } // no solve invited yet (the second beat not opened)
@@ -311,14 +321,16 @@ export interface ParamsBuilders {
   readonly buildSpineParams: (draft: ScenarioDraft) => SimulationParams | null
   readonly buildDateInput: (draft: ScenarioDraft) => DateSearchInput | null
   /** U15 §S5 — build the on-demand solve request from the draft (the enumerated roster + the
-   *  household params + the injected `todayEpochDay` clock read). Returns null on the BUCKET
-   *  precondition (a defaulted split can't be sequenced — burned/062), exactly the builder-null
-   *  convention the spine/date builders use. OPTIONAL: a model wired without it never dispatches a
-   *  solve (the U16 builder plugs in here; the P2/P3 surfaces don't carry it). The chosen-goal
-   *  precondition is checked BEFORE this (memoryModel reads `draft.chosenGoal` directly for a precise
-   *  `goal-unset` gap). The oracle-cleared token is NOT the builder's concern — it is minted
-   *  worker-side inside `runSolve` (it cannot cross the wire). */
-  readonly buildSolveDispatch?: (draft: ScenarioDraft) => SolveRequest | null
+   *  household params + the injected `todayEpochDay` clock read). Returns a TYPED {@link
+   *  SolveBlockReason} when the draft cannot honestly build one (the steer-seed increment,
+   *  2026-07-23 — the old builder-NULL convention collapsed every arm into one gap whose note told
+   *  the wrong story on a facts-broken re-dispatch; burned/062 refuses a defaulted measurement,
+   *  and the refusal now NAMES which precondition failed). OPTIONAL: a model wired without it never
+   *  dispatches a solve (the U16 builder plugs in here; the P2/P3 surfaces don't carry it). The
+   *  chosen-goal precondition is checked BEFORE this (memoryModel reads `draft.chosenGoal` directly
+   *  for a precise `goal-unset` gap). The oracle-cleared token is NOT the builder's concern — it is
+   *  minted worker-side inside `runSolve` (it cannot cross the wire). */
+  readonly buildSolveDispatch?: (draft: ScenarioDraft) => SolveRequest | SolveBlockReason
 }
 
 export interface MemoryModelDeps {
@@ -346,8 +358,8 @@ export interface MemoryModel {
   recompute(tier?: DateSearchTier): Promise<void>
   /** U15 §S5 (5) — invite the recommend-second solve for the current draft (the SECOND beat,
    *  a separate channel from `recompute`'s first beat). Refuses to dispatch on an unmet
-   *  precondition (goal unset ⇒ `blocked{goal-unset}`; the injected builder returns null on a
-   *  defaulted bucket split ⇒ `blocked{buckets-defaulted}`), never fabricating a recommendation.
+   *  precondition (goal unset ⇒ `blocked{goal-unset}`; the injected builder returns its TYPED
+   *  refusal ⇒ `blocked{no-pretax | spine-unready}`), never fabricating a recommendation.
    *  Otherwise dispatches the worker solve (which mints the oracle-cleared token) and commits the
    *  reconstructed payload if newer (the epoch-discard discipline). No-op if no solve builder is
    *  wired (P2/P3 models). */
@@ -610,7 +622,7 @@ export function createMemoryModel(deps: MemoryModelDeps): MemoryModel {
     const build = deps.builders.buildSolveDispatch
     if (build === undefined) return null
     const request = build(draft)
-    return request === null ? null : fingerprintOf(request)
+    return typeof request === 'string' ? null : fingerprintOf(request)
   }
 
   // §S1 INVALIDATION: demote a COMMITTED solve whose fingerprint no longer matches the current
@@ -641,6 +653,26 @@ export function createMemoryModel(deps: MemoryModelDeps): MemoryModel {
       // recommendation to `stale` — never a stale rec rendered as current, and NEVER an auto-re-solve
       // (re-solving is invited, not stormed). A no-op for every non-committed solve state.
       invalidateStaleSolve()
+      // The blocked BUILDER-REFUSAL states are SELF-HEALING (the steer-seed increment; insight-100 —
+      // both steer notes PROMISE "once fixed, this can run", and a promise without its mechanism is
+      // the F2 class): an edit re-derives the gap through the SAME injected builder. A now-buildable
+      // draft demotes blocked → idle (the invite door RETURNS structurally — never a dead note over
+      // a fixed household); a different refusal re-lands so the note tells the CURRENT truth (a
+      // facts-fix on a no-pretax household moves spine-unready → no-pretax, never a stale story).
+      // goal-unset stays (its steer is the invite door itself, and the goal is not a builder input).
+      // Direct mutation like invalidateStaleSolve — epochs untouched (the blocked commit already
+      // out-epochs any stale in-flight; a NEW dispatch mints higher). NEVER an auto-re-solve.
+      if (solveAnswer.kind === 'blocked' && solveAnswer.gap !== 'goal-unset') {
+        const build = deps.builders.buildSolveDispatch
+        if (build !== undefined) {
+          // Mirror dispatchSolve's own precedence: a cleared goal is the goal-unset gap (the invite
+          // + picker steer — invitable), never a builder reason for a question the builder doesn't own.
+          const fresh: SolveRequest | SolvePreconditionGap =
+            draft.chosenGoal === undefined ? 'goal-unset' : build(draft)
+          if (typeof fresh !== 'string') solveAnswer = { kind: 'idle' }
+          else if (fresh !== solveAnswer.gap) solveAnswer = { kind: 'blocked', gap: fresh, label: fresh }
+        }
+      }
       notify()
     },
 
@@ -742,15 +774,16 @@ export function createMemoryModel(deps: MemoryModelDeps): MemoryModel {
         return
       }
 
-      // PRECONDITION 2 — the bucket precondition (plan line 174): the injected builder returns null
-      // on a defaulted split (the builder-null convention). A defaulted split is a silent
-      // measurement, the calm-but-wrong shape — refuse, never solve on it.
+      // PRECONDITION 2 — the builder's TYPED refusal (plan line 174; the steer-seed increment): the
+      // injected builder names WHICH precondition failed (`no-pretax` / `spine-unready`) instead of
+      // the old one-size null. An unbuildable draft is a silent measurement, the calm-but-wrong
+      // shape — refuse with the TRUE reason, never solve on it and never mis-name the gap.
       const request = build(draft)
-      if (request === null) {
+      if (typeof request === 'string') {
         // Epoch-gated for the same reason as goal-unset above: mint + commit so a stale in-flight
         // resolve is discarded rather than rendered over this blocked state.
         const epoch = ++solveDispatchedEpoch
-        commitSolve(epoch, { kind: 'blocked', gap: 'buckets-defaulted', label: 'buckets-defaulted' })
+        commitSolve(epoch, { kind: 'blocked', gap: request, label: request })
         return
       }
 

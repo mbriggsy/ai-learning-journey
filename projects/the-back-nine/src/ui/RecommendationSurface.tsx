@@ -80,16 +80,32 @@ function CommittedBeat({ view, onRepick }: { readonly view: RecommendationView; 
     case 'pending':
       return null
     case 'blocked':
-      // goal-unset: the invite door (Result's quiet row) owns the steer → no body here. buckets-defaulted:
-      // NO invite fires (the gap is ACCOUNTS, not the goal — §Q5/F2), so this calm note is the ONLY steer:
-      // the household's accounts are entered as a single total, so a tax strategy has nothing to work with
-      // until the pre-tax / Roth / taxable pieces are broken out. Never a silent null dead-end where a
-      // goal was picked but nothing renders (the blank-render mutant reds on the buckets arm).
-      return view.gap === 'buckets-defaulted' ? (
-        <section className="rec-note rec-note--buckets" role="status">
-          <p className="rec-note__line">{copy.recommendBucketsNote}</p>
-        </section>
-      ) : null
+      // goal-unset: the invite door (Result's quiet row) owns the steer → no body here. The two
+      // builder-refusal gaps (the steer-seed increment's TYPED reasons) each render their OWN calm
+      // named-reason note — NO invite fires on them (the gap is never the goal — §Q5/F2), so the note
+      // is the ONLY steer, and each note tells ITS arm's true story (the old one-note-for-every-arm
+      // told a false accounts story on a facts-broken re-dispatch). Never a silent null dead-end
+      // where a goal was picked but nothing renders (the blank-render mutant reds on both arms).
+      switch (view.gap) {
+        case 'goal-unset':
+          return null
+        case 'no-pretax':
+          return (
+            <section className="rec-note rec-note--buckets" role="status">
+              <p className="rec-note__line">{copy.recommendNoPretaxNote}</p>
+            </section>
+          )
+        case 'spine-unready':
+          return (
+            <section className="rec-note rec-note--spine-unready" role="status">
+              <p className="rec-note__line">{copy.recommendSpineUnreadyNote}</p>
+            </section>
+          )
+        default: {
+          const _exhaustive: never = view.gap
+          throw new Error(`[RecommendationSurface] unhandled precondition gap — declare its steer (${String(_exhaustive)})`)
+        }
+      }
     case 'stale':
       // §S1 invalidation — the committed rec no longer describes the current household; calm status,
       // re-solve INVITED (never auto-re-solved). F-B (U16 chair fix): ONE coherent card — a calm HEADING,
@@ -171,6 +187,9 @@ function RecommendedBeat({ view, onRepick }: { readonly view: RecommendedView; r
           )}
         </p>
         <p className="rec-grade__hero">{g.heroLine}</p>
+        {/* The hero's MEDIAN qualification (the median-advantage increment) — INSIDE the lockup so it
+            crossfades with the hero it qualifies (a fresh hero never sits beside a stale qualifier). */}
+        {g.deltaQualifier !== undefined && <p className="rec-grade__note">{g.deltaQualifier}</p>}
         {g.shapeNote !== undefined && <p className="rec-grade__note">{g.shapeNote}</p>}
         {g.hingeNote !== undefined && <p className="rec-grade__note">{g.hingeNote}</p>}
         {g.ungradedNote !== undefined && <p className="rec-grade__note">{g.ungradedNote}</p>}

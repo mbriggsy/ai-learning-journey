@@ -135,7 +135,7 @@ function committedRec(over: Partial<SolveRecommendation> = {}): SolveAnswer {
     rankedIds: ['taxable-first', 'bracket-fill', 'proportional'], prunedScores: [],
     noChange: false, surplusRegime: false,
     grade, gradeStatistic: 'leave-more', gradeUnavailable: undefined,
-    namedDriver: 'sampling-noise-near-tie', skewDisclosure: undefined,
+    namedDriver: 'sampling-noise-near-tie', skewDisclosure: undefined, deltaSkew: undefined,
     withheldConversionLevers: [], disclosedDirectional: [], solverCodeVersion: 1,
     ...over,
   }
@@ -272,18 +272,31 @@ describe('RecommendationSurface — the withheld / stale / unavailable renders (
     expect(blocked.container.querySelector('.rec-committed')).toBeNull()
   })
 
-  it('a blocked{buckets-defaulted} renders a CALM steer note, never a silent blank (F3 — the blank-render mutant reds)', () => {
+  it('a blocked{no-pretax} renders ITS calm steer note, never a silent blank (F3 — the blank-render mutant reds)', () => {
     const { container } = render(
-      <RecommendationSurface solve={{ kind: 'blocked', gap: 'buckets-defaulted', label: 'buckets-defaulted' }} />,
+      <RecommendationSurface solve={{ kind: 'blocked', gap: 'no-pretax', label: 'no-pretax' }} />,
     )
     const note = container.querySelector('.rec-note--buckets')
-    expect(note, 'a picked goal on a single-total household is NOT a silent dead-end').not.toBeNull()
+    expect(note, 'a picked goal on a no-pretax household is NOT a silent dead-end').not.toBeNull()
     expect(note).toHaveAttribute('role', 'status')
-    expect(note?.textContent).toBe(copy.recommendBucketsNote)
+    expect(note?.textContent).toBe(copy.recommendNoPretaxNote)
     // goal-unset stays bodyless here (its steer is the Result invite door, not a surface note).
     cleanup()
     const goalUnset = render(<RecommendationSurface solve={{ kind: 'blocked', gap: 'goal-unset', label: 'goal-unset' }} />)
     expect(goalUnset.container.querySelector('.rec-note--buckets')).toBeNull()
+  })
+
+  it('a blocked{spine-unready} renders ITS OWN note — the true dependency story, never the accounts one (the steer-seed increment)', () => {
+    const { container } = render(
+      <RecommendationSurface solve={{ kind: 'blocked', gap: 'spine-unready', label: 'spine-unready' }} />,
+    )
+    const note = container.querySelector('.rec-note--spine-unready')
+    expect(note, 'a facts-broken re-dispatch is NOT a silent dead-end').not.toBeNull()
+    expect(note).toHaveAttribute('role', 'status')
+    expect(note?.textContent).toBe(copy.recommendSpineUnreadyNote)
+    // and NEVER the accounts story (the wrong-reason swap mutant reds on BOTH these asserts).
+    expect(container.querySelector('.rec-note--buckets')).toBeNull()
+    expect(container.textContent).not.toContain(copy.recommendNoPretaxNote)
   })
 })
 
@@ -319,5 +332,27 @@ describe('RecommendationSurface — reduced motion (the breath is dropped, the l
     expect(reduceBlock, 'the solve-pending tell drops its breath under reduced motion').toContain(
       '.solve-pending,',
     )
+  })
+})
+
+describe('RecommendationSurface — the delta heros median qualification (the median-advantage increment)', () => {
+  it('renders the qualifier INSIDE the .rec-grade lockup (it crossfades with the hero it qualifies)', () => {
+    const deltaSkew = {
+      meanReal: 260_000, medianReal: 40_000, p10Real: 0, p90Real: 500_000,
+      skewDirection: 'upside' as const, meanMinusMedianReal: 220_000,
+    }
+    const { container } = render(<RecommendationSurface solve={committedRec({ deltaSkew })} />)
+    const lockup = container.querySelector('.rec-grade')
+    expect(lockup, 'the grade lockup renders').not.toBeNull()
+    // the qualifier lives INSIDE the lockup group — the cs-swap crossfade key covers it, so a fresh
+    // hero can never sit beside a stale qualifier (the U16 crossfade-unit law).
+    expect(lockup!.textContent).toContain('an average across the futures we tested')
+    // and it is the DELTA-dialect quote arm (the typical dollar quoted in grouped digits).
+    expect(lockup!.textContent).toContain('$40,000')
+  })
+
+  it('a symmetric delta renders NO qualifier (the default fixture stays byte-identical)', () => {
+    const { container } = render(<RecommendationSurface solve={committedRec()} />)
+    expect(container.textContent).not.toContain('an average across the futures we tested')
   })
 })

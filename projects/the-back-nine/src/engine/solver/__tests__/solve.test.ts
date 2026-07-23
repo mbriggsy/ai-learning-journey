@@ -22,7 +22,7 @@ import { SOLVER_CASES } from '../../reference/solver-cases'
 import { evaluateCandidates } from '../../validation/evaluate'
 import { packSolveWire } from '../../engineProtocol'
 import { solveFromWire } from '../../engineWire'
-import { enumerateWithheldConversionLevers, gradeAxisFor, gradeSolveRecommendation, solve, type SolveInput } from '../solve'
+import { deltaSkewFor, enumerateWithheldConversionLevers, gradeAxisFor, gradeSolveRecommendation, solve, type SolveInput } from '../solve'
 import { PART_B_PRICING_MODE } from '../../taxOverlay'
 
 // A tax-overlay household (no state, no healthcare — mints clean on this build), sampled longevity so
@@ -413,6 +413,9 @@ describe('solve() → the wire round-trip (§S5 (4))', () => {
       gradeUnavailable: undefined,
       namedDriver: 'sampling-noise-near-tie',
       skewDisclosure: undefined,
+      // A REAL value (not undefined): pins that the packer/unpacker spread carries the field — a
+      // future enumerating packer that forgets deltaSkew fails the equality below.
+      deltaSkew: { meanReal: 12_345, medianReal: 4_000, p10Real: -1_000, p90Real: 30_000, skewDirection: 'upside', meanMinusMedianReal: 8_345 },
       withheldConversionLevers: [],
       disclosedDirectional: [],
       solverCodeVersion: 1,
@@ -420,6 +423,8 @@ describe('solve() → the wire round-trip (§S5 (4))', () => {
     const view = solveFromWire(packSolveWire(payload))
     expect(view.ok).toBe(true)
     if (!view.ok || view.payload.kind !== 'recommended') throw new Error('unreachable')
+    // The delta skew rides the wire intact (structured-clone spread, never dropped by the packer).
+    expect(view.payload.deltaSkew).toEqual(payload.deltaSkew)
     // The floor track round-trips (Int32 → number[]); the packer no longer drops it.
     expect(view.payload.winner.distributionB.floor).toEqual({
       survivalFraction: 1,
@@ -427,5 +432,121 @@ describe('solve() → the wire round-trip (§S5 (4))', () => {
     })
     // Presence-keyed: a floor-less arm stays floor-less across the wire (absence preserved).
     expect('floor' in view.payload.runnerUp!.distributionB).toBe(false)
+  })
+})
+
+// ---------------------------------------------------------------------------------------------
+// The DELTA skew disclosure (the median-advantage increment, 2026-07-23): the hero's "$X more"
+// is a MEAN of the CRN-paired per-path winner-vs-baseline goal differences, and the payload now
+// carries that vector's skew so U16 can qualify the mean with the TYPICAL future's gain. Four
+// pins: (1) the live arc carries it with internal + hero coherence; (2) a COMMITTED zero-vol
+// fixture world reproduces the hero delta BYTE-EXACTLY (mean ≡ median ≡ headline difference —
+// linearity with every path identical); (3) the winner-positive sign convention on BOTH goals
+// (the argument-order mutant killer); (4) the honest-undefined arms (never a throw in payload
+// assembly).
+// ---------------------------------------------------------------------------------------------
+describe('solve() — the DELTA skew disclosure (the median-advantage increment)', () => {
+  it('the live solve carries deltaSkew, internally consistent and coherent with the hero delta', () => {
+    const out = solve(mintToken(), solveInput())
+    expect(out.kind).toBe('recommended')
+    if (out.kind !== 'recommended') throw new Error('unreachable')
+    const s = out.deltaSkew
+    expect(s, 'the tax-aware live solve always has the delta lens').toBeDefined()
+    if (s === undefined) throw new Error('unreachable')
+    // Internal consistency: the gap field IS mean − median, and the direction matches its sign.
+    expect(s.meanMinusMedianReal).toBe(s.meanReal - s.medianReal)
+    const dir = s.meanMinusMedianReal > 0 ? 'upside' : s.meanMinusMedianReal < 0 ? 'downside' : 'symmetric'
+    expect(s.skewDirection).toBe(dir)
+    // COHERENCE with the hero: mean(paired diffs) reproduces the goal-oriented headline delta
+    // (exact linearity up to float summation order — bound the dust well under a display cent).
+    const heroDelta =
+      out.goal === 'leave-more'
+        ? out.winner.headlineStatisticB - out.noActionBaseline.headlineStatisticB
+        : out.noActionBaseline.headlineStatisticB - out.winner.headlineStatisticB
+    expect(Math.abs(s.meanReal - heroDelta)).toBeLessThan(1e-4)
+  })
+
+  it('COMMITTED zero-vol fixture (case iv, leave-more): deltaSkew reproduces the hero delta BYTE-EXACTLY, symmetric', () => {
+    const fixture = SOLVER_CASES.find((c) => c.id === 'case-iv-leave-more-inversion')
+    expect(fixture, 'the case-(iv) leave-more fixture is committed').toBeDefined()
+    if (fixture === undefined) throw new Error('unreachable')
+    const base = fixture.buildBase()
+    const candidates = fixture.buildCandidates()
+    expect(candidates.length).toBeGreaterThanOrEqual(2)
+    const hb = fixture.preconditions.heirBracket
+    expect(hb, 'case (iv) declares its heir bracket').toBeDefined()
+    // The hand-derived BEST vs the conversion-0 baseline — the exact pair a live crown displays.
+    const bestId = fixture.expectedRankingIds[0]!
+    const winnerC = candidates.find((c) => solverCandidateId(c) === bestId)!
+    const baselineC = candidates.find((c) => c.conversion === null)!
+    const [w, b] = evaluateCandidates(base, [winnerC, baselineC], fixture.seed, { heirBracket: hb! })
+    const s = deltaSkewFor(w!, b!, fixture.goal, hb)
+    expect(s).toBeDefined()
+    if (s === undefined || w!.kind !== 'scored' || b!.kind !== 'scored') throw new Error('unreachable')
+    // Zero-vol: every path identical ⇒ mean ≡ median ≡ the headline difference, byte-exact.
+    const heroDelta = w!.score.afterTaxBequestMeanReal! - b!.score.afterTaxBequestMeanReal!
+    expect(s.meanReal).toBe(heroDelta)
+    expect(s.medianReal).toBe(heroDelta)
+    expect(s.skewDirection).toBe('symmetric')
+    expect(heroDelta, 'case (iv): the conversion winner leaves MORE after tax').toBeGreaterThan(0)
+  })
+
+  it('the sign convention is WINNER-POSITIVE on both goals (the hero orientation — argument-order mutant killer)', () => {
+    const dist = (terminalTaxable: number, lifetimeTax: number) => ({
+      terminalValuesReal: [terminalTaxable, terminalTaxable],
+      depletionYears: [NEVER_DEPLETED, NEVER_DEPLETED],
+      survivalFraction: 1,
+      taxAware: {
+        lifetimeTaxPaidReal: [lifetimeTax, lifetimeTax],
+        terminalTaxableReal: [terminalTaxable, terminalTaxable],
+        terminalPretaxReal: [0, 0],
+        terminalRothReal: [0, 0],
+        terminalHsaReal: [0, 0],
+        terminalTaxableBasisReal: [terminalTaxable, terminalTaxable],
+        lifetimeNetPremiumReal: [0, 0],
+        lifetimeMedicareCostReal: [0, 0],
+      },
+    })
+    const scored = (terminalTaxable: number, lifetimeTax: number) =>
+      ({
+        kind: 'scored',
+        candidate: { policy: 'taxable-first', conversion: null, provenance: 'grid' },
+        distribution: dist(terminalTaxable, lifetimeTax),
+        score: { survival: 1 },
+      }) as unknown as Parameters<typeof deltaSkewFor>[0]
+    // leave-more: the winner LEAVES 10k more per path ⇒ +10,000 exactly (winner-positive).
+    const lm = deltaSkewFor(scored(110_000, 5_000), scored(100_000, 5_000), 'leave-more', 0.25)
+    expect(lm).toBeDefined()
+    expect(lm!.meanReal).toBe(10_000)
+    // pay-less-tax: the winner PAYS 4k less per path ⇒ +4,000 exactly (winner-positive).
+    const plt = deltaSkewFor(scored(100_000, 6_000), scored(100_000, 10_000), 'pay-less-tax', undefined)
+    expect(plt).toBeDefined()
+    expect(plt!.meanReal).toBe(4_000)
+  })
+
+  it('honest-undefined: no tax lens or a leave-more goal without a declared heir bracket carries undefined, never a throw', () => {
+    const candidate = { policy: 'taxable-first', conversion: null, provenance: 'grid' }
+    const bareDistribution = { terminalValuesReal: [1, 2], depletionYears: [NEVER_DEPLETED, NEVER_DEPLETED], survivalFraction: 1 }
+    const bare = {
+      kind: 'scored',
+      candidate,
+      distribution: bareDistribution,
+      score: { survival: 1 },
+    } as unknown as Parameters<typeof deltaSkewFor>[0]
+    expect(deltaSkewFor(bare, bare, 'pay-less-tax', undefined)).toBeUndefined()
+    const taxed = {
+      kind: 'scored',
+      candidate,
+      distribution: {
+        ...bareDistribution,
+        taxAware: {
+          lifetimeTaxPaidReal: [1, 1], terminalTaxableReal: [1, 1], terminalPretaxReal: [0, 0],
+          terminalRothReal: [0, 0], terminalHsaReal: [0, 0], terminalTaxableBasisReal: [1, 1],
+          lifetimeNetPremiumReal: [0, 0], lifetimeMedicareCostReal: [0, 0],
+        },
+      },
+      score: { survival: 1 },
+    } as unknown as Parameters<typeof deltaSkewFor>[0]
+    expect(deltaSkewFor(taxed, taxed, 'leave-more', undefined)).toBeUndefined()
   })
 })

@@ -13,7 +13,7 @@ import type { SolveAnswer } from '@store/memoryModel'
 // dispatchSolve, so these picks run over a COMPLETE retired draft (a resolvable devSeed) rather than
 // the pristine/empty one: the request builds, but no spine beat has committed (recommend-second
 // ordering — everResolved false), so the solve stays `idle` (invitable, the affordance persists across
-// re-picks) instead of the `blocked{buckets-defaulted}` an unbuildable empty draft would yield.
+// re-picks) instead of the `blocked{no-pretax / spine-unready}` an unbuildable empty draft would yield.
 const completeRetired = () => ({ ...resolveDevSeed('fl')!, chosenGoal: undefined })
 
 /**

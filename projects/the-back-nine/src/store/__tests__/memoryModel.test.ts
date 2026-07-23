@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { createMemoryModel, type MemoryModel, type ParamsBuilders, type ScenarioDraft } from '../memoryModel'
+import { createMemoryModel, type MemoryModel, type ParamsBuilders, type ScenarioDraft, type SolveBlockReason } from '../memoryModel'
 import type { EngineClient } from '../engineClient'
 import type { DateSearchInput } from '@engine/dateSearch'
 import type { DateSearchWire, EngineWire, SolveWire } from '@engine/engineWire'
@@ -520,10 +520,11 @@ const tokenWithheldWire: SolveWire = {
   solverCodeVersion: 1,
 }
 
-/** Builders with a controllable solve dispatch: `dispatch` decides null (buckets defaulted) vs a
- *  request. `buildDateInput` returns a fake so a spine 'date' beat can commit (the recommend-second
- *  gate needs `everResolved`); the goal-unset/bucket arms never recompute, so it is inert there. */
-const solveBuilders = (dispatch: (d: ScenarioDraft) => SolveRequest | null): ParamsBuilders => ({
+/** Builders with a controllable solve dispatch: `dispatch` decides a TYPED refusal (the steer-seed
+ *  increment's reason channel) vs a request. `buildDateInput` returns a fake so a spine 'date' beat
+ *  can commit (the recommend-second gate needs `everResolved`); the goal-unset/refusal arms never
+ *  recompute, so it is inert there. */
+const solveBuilders = (dispatch: (d: ScenarioDraft) => SolveRequest | SolveBlockReason): ParamsBuilders => ({
   buildSpineParams: () => null,
   buildDateInput: () => FAKE_DATE_INPUT,
   buildSolveDispatch: dispatch,
@@ -561,13 +562,58 @@ describe('memoryModel — the solve lifecycle (§S5 (5))', () => {
     expect(calls.filter((c) => c.method === 'runSolve')).toHaveLength(0) // NEVER dispatched
   })
 
-  it('BLOCKS on the bucket precondition — the builder returns null on a defaulted split', async () => {
+  it('BLOCKS on the builder refusal — the TYPED reason lands verbatim as the gap (no-pretax / spine-unready)', async () => {
     const { client, calls } = fakeClient()
-    const model = createMemoryModel({ client, builders: solveBuilders(() => null) })
+    const model = createMemoryModel({ client, builders: solveBuilders(() => 'no-pretax') })
     model.update(withGoal)
     await model.dispatchSolve()
-    expect(model.getSnapshot().solve).toEqual({ kind: 'blocked', gap: 'buckets-defaulted', label: 'buckets-defaulted' })
+    expect(model.getSnapshot().solve).toEqual({ kind: 'blocked', gap: 'no-pretax', label: 'no-pretax' })
     expect(calls.filter((c) => c.method === 'runSolve')).toHaveLength(0)
+    // The SECOND reason arm lands verbatim too — the store never re-collapses the builder's channel
+    // (the old one-gap null convention is the mutant this pins against).
+    const second = createMemoryModel({ client, builders: solveBuilders(() => 'spine-unready') })
+    second.update(withGoal)
+    await second.dispatchSolve()
+    expect(second.getSnapshot().solve).toEqual({ kind: 'blocked', gap: 'spine-unready', label: 'spine-unready' })
+  })
+
+  it('a blocked builder-refusal SELF-HEALS on the edit that fixes it — idle returns the invite (insight 100: the note PROMISED it)', async () => {
+    const { client, calls } = fakeClient()
+    // Draft-sensitive: the builder refuses no-pretax until the edit lands (spend 111 = "pretax added").
+    const model = createMemoryModel({
+      client,
+      builders: solveBuilders((d) => (d.annualSpendingReal === 111 ? REAL_SOLVE_REQUEST : 'no-pretax')),
+    })
+    model.update(withGoal)
+    await model.dispatchSolve()
+    expect(model.getSnapshot().solve).toEqual({ kind: 'blocked', gap: 'no-pretax', label: 'no-pretax' })
+    model.update((d) => ({ ...d, annualSpendingReal: 111 })) // the fixing edit
+    expect(model.getSnapshot().solve, 'a now-buildable draft demotes blocked → idle (the invite returns)').toEqual({ kind: 'idle' })
+    // NEVER an auto-re-solve: the heal re-opens the DOOR, it does not walk through it.
+    expect(calls.filter((c) => c.method === 'runSolve')).toHaveLength(0)
+  })
+
+  it('a blocked refusal whose REASON moves re-lands the CURRENT truth (spine-unready → no-pretax), never a stale story', async () => {
+    const { client } = fakeClient()
+    const model = createMemoryModel({
+      client,
+      builders: solveBuilders((d) => (d.annualSpendingReal === 222 ? 'no-pretax' : 'spine-unready')),
+    })
+    model.update(withGoal)
+    await model.dispatchSolve()
+    expect(model.getSnapshot().solve).toEqual({ kind: 'blocked', gap: 'spine-unready', label: 'spine-unready' })
+    model.update((d) => ({ ...d, annualSpendingReal: 222 })) // the facts-fix on a still-no-pretax household
+    expect(model.getSnapshot().solve).toEqual({ kind: 'blocked', gap: 'no-pretax', label: 'no-pretax' })
+  })
+
+  it('clearing the GOAL from a blocked refusal re-lands goal-unset (the invite + picker steer), mirroring dispatch precedence', async () => {
+    const { client } = fakeClient()
+    const model = createMemoryModel({ client, builders: solveBuilders(() => 'no-pretax') })
+    model.update(withGoal)
+    await model.dispatchSolve()
+    expect(model.getSnapshot().solve).toEqual({ kind: 'blocked', gap: 'no-pretax', label: 'no-pretax' })
+    model.update((d) => ({ ...d, chosenGoal: undefined }))
+    expect(model.getSnapshot().solve).toEqual({ kind: 'blocked', gap: 'goal-unset', label: 'goal-unset' })
   })
 
   it('goes pending → committed when the preconditions are met (a TIER-LESS lifecycle — no fabricated tier)', async () => {
@@ -692,8 +738,8 @@ describe('memoryModel — the solve lifecycle (§S5 (5))', () => {
 // solverRunFingerprint captures — the store test proves the store DETECTS the change via the run
 // identity, not that the identity is complete (solverRunFingerprint owns that). The GOAL is held
 // FIXED, so a mutant keyed to a coarse goal-mirror instead of the full fingerprint fails to detect it.
-const fingerprintSensitiveDispatch = (d: ScenarioDraft): SolveRequest | null => {
-  if (d.chosenGoal === undefined) return null
+const fingerprintSensitiveDispatch = (d: ScenarioDraft): SolveRequest | SolveBlockReason => {
+  if (d.chosenGoal === undefined) return 'spine-unready'
   return realRequest({ tieTolerance: d.retirementState === 'NC' ? 1 : 0 })
 }
 

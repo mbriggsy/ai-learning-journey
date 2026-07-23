@@ -142,6 +142,15 @@ conversion-grade render lands.
 - The pre-dispatch `blocked` arm (goal-unset → GoalPicker steer; buckets-defaulted →
   the RothAccounts mini-intake precondition) stays DISTINCT from the committed withheld payload —
   two calm renders, both naming the true reason (§Q5).
+  *(SUPERSEDED 2026-07-23, the steer-seed increment — commits 8b9cab61 + 0b75740f: the one
+  `buckets-defaulted` gap became the builder's TYPED refusal `no-pretax` | `spine-unready`
+  landing verbatim as the gap, each with its own true note; the old note's "one lump sum"
+  household cannot exist (account kinds are mandatory) and its successor was falsified on the
+  small-IRA-under-every-rail sibling — insight 101. Blocked builder-refusal states are now
+  SELF-HEALING on the fixing edit (blocked → idle re-opens the invite; a moved reason re-lands;
+  a cleared goal re-lands goal-unset), and both steers are SPOKEN through the persistent live
+  region (the synchronous idle→blocked transition never passes through pending). `?seed=steer`
+  + the `solve:steer` walk target are the live face.)*
 - `chosenGoal` persistence: NO new write path. The field is shipped (additive-in-v3, unset
   sentinel); it rides the EXISTING explicit re-save ceremony like every other model field —
   in-session until the user saves, never auto-written on pick.

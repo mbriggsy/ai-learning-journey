@@ -302,6 +302,57 @@ for (const seed of AFFORDANCE_SEEDS) {
   }
 }
 
+// ── The STEER-NOTE frame (the steer-seed increment, 2026-07-23) — the sanctioned-scroll ORDER
+// contract under the no-pretax refusal. The refusal is SYNCHRONOUS (no worker wait), so the frame
+// is fit-tractable — but it is a BEAT-CARRYING frame, and the F-A design (confidence.css r5)
+// RECORDS that beat frames scroll by design (the surface takes a full-width row; the disclaimer +
+// tail step down — 'steer' is enumerated in that ruling). So this arm pins what the frame OWES,
+// the date-route order-contract idiom, not the idle one-frame law: (1) the NOTE — the response to
+// the user's own goal pick — fully IN-FRAME (a refusal the user must scroll to find is a silent
+// dead-end; the A/B walk measured the first three-line draft at surface-bottom 776 and the
+// tightened note at 751 — the tighter TRUE sentence bought the headroom, insight 097); (2) the
+// order holds: note → disclaimer → doors, doors last; (3) nothing breathes and the invite retires.
+for (const vp of [REAL, TIER] as const) {
+  const scale = vp === REAL ? { deviceScaleFactor: REAL_DPR } : {}
+  test.describe(`?seed=steer — the no-pretax steer-note frame (${vp.width}×${vp.height})`, () => {
+    test.use({ viewport: vp, ...scale })
+    test('the goal pick lands the calm steer note IN-FRAME; the beat-frame order contract holds', async ({
+      page,
+    }) => {
+      await gotoSeedFinal(page, 'steer')
+      await assertResolvedSpine(page)
+      await page.locator('.result-recommend-invite').click()
+      const dialog = page.getByRole('dialog')
+      const radio = dialog.getByRole('radio', { name: /Leave more behind/ })
+      // NATIVE click — the sr-only radio trap (layout-independent, still bubbles to React's root).
+      await radio.evaluate((el) => (el as HTMLInputElement).click())
+      await expect(radio).toBeChecked()
+      await dialog.getByRole('button', { name: 'See the strategy', exact: true }).click()
+      await expect(dialog).toBeHidden()
+      // The refusal is synchronous: the note renders, nothing breathes, the invite retires.
+      const note = page.locator('.rec-note--no-pretax')
+      await expect(note, 'the steer note must render (never a silent dead-end)').toBeVisible()
+      await expect(page.locator('.solve-pending')).toHaveCount(0)
+      await expect(page.locator('.result-recommend-invite')).toHaveCount(0)
+      // (1) The note — the answer to the user's own action — fully IN-FRAME, no scroll to find it.
+      const noteBox = await note.boundingBox()
+      expect(noteBox, 'the steer note reported no box').not.toBeNull()
+      expect(
+        Math.round(noteBox!.y + noteBox!.height),
+        'the refusal must be visible where the door was — never below the fold',
+      ).toBeLessThanOrEqual(vp.height)
+      // (2) The beat-frame ORDER contract (the date-route idiom): note → disclaimer → doors last.
+      const disclaimer = page.locator('.disclaimer--in-frame')
+      const dBox = await disclaimer.boundingBox()
+      const qBox = await page.locator('.result-quiet-row').boundingBox()
+      expect(dBox, 'the in-frame disclaimer mount must exist').not.toBeNull()
+      expect(qBox, 'the quiet row must exist').not.toBeNull()
+      expect(dBox!.y, 'the disclaimer sits BELOW the note').toBeGreaterThan(noteBox!.y + noteBox!.height - 1)
+      expect(qBox!.y, 'the doors sit BELOW the disclaimer — doors always last').toBeGreaterThan(dBox!.y + dBox!.height - 1)
+    })
+  })
+}
+
 // ── U16 §S2/§S3: the recommend-second PENDING frame + the recorded S2→S3 CLS alignment ─────────
 // THE LIVE DISPATCH SEAM (the recorded blocker, now closed by this fleet): a real GoalPicker pick
 // drives the affordance → GoalPicker → the SOLVE, so the pending tell renders — `idle` no longer

@@ -1187,11 +1187,16 @@ export const copy = {
   // REWORDED same-day (review wf_6f89fe6f-35a P1, refuters 2-0): the first draft claimed "this plan
   // has none entered" — FALSE on the small-IRA arm (candidates.ts:323 rejects every rail-anchored
   // conversion amount above the post-RMD headroom, so a household with a $25k IRA below every rail
-  // ALSO lands no-pretax). "doesn't have enough entered for one order to beat another" is true on
-  // BOTH sub-arms (zero entered, and entered-but-under-every-rail), and the steer's promise
-  // ("with more...") is the one the self-heal genuinely fulfills.
+  // ALSO lands no-pretax). "needs more … than this plan has entered" is true on BOTH sub-arms (zero
+  // entered, and entered-but-under-every-rail — extension-monotone, insight 101), and the steer's
+  // promise ("with more…") is the one the self-heal genuinely fulfills.
+  // TIGHTENED by the A/B walk's chair (wf_91a3fa9a-b2e): the three-line draft pushed the protected
+  // R13 disclaimer 38px past the 1536×791 fold on the steer-note frame (the Sonnet copy-law seat's
+  // survivor, confirmed against fold.json) — the shorter TRUE sentence is the layout fix (insight
+  // 097's law), and naming "a withdrawal strategy" outright also cures the panel's unglossed-"order"
+  // stumble (two spouse lenses).
   recommendNoPretaxNote:
-    'This strategy compares ways of drawing pre-tax savings — a traditional IRA or a pre-tax workplace plan — and this plan doesn’t have enough of them entered for one order to beat another. With more pre-tax savings in the picture, we can work one out.',
+    'A withdrawal strategy needs more pre-tax savings — a traditional IRA or a pre-tax workplace plan — than this plan has entered. With more in the picture, we can work one out.',
   // The `blocked{spine-unready}` sibling (the steer-seed increment): the strategy read FOLLOWS the
   // main answer, and on a facts-broken re-dispatch (a committed rec goes stale, a fact is cleared,
   // the stale card's re-open control survives) the old note blamed the ACCOUNTS — a false diagnosis.
@@ -1942,9 +1947,14 @@ export const slots = {
     `Keeps about $${deltaFormatted} more out of your lifetime tax than today’s plan.`,
   /** The §S2 skew disclosure (leave-more): the MEAN ranks + displays, but a few lucky futures pull it
    *  up, so the disclosure QUOTES THE MEDIAN as the typical bequest. "about" is the require-hedge modal;
-   *  the median arrives pre-formatted (single-sourced against the band's percentile convention). */
+   *  the median arrives pre-formatted (single-sourced against the band's percentile convention).
+   *  REWORDED by the A/B walk's chair (wf_91a3fa9a-b2e survivor, Sonnet calm seat + four convergent
+   *  formulations): the old "the more typical outcome" named no referent — and the average it corrected
+   *  never renders as a visible figure, so the sentence qualified a number the reader never saw. "What
+   *  you'd more typically leave behind" names the outcome (this slot renders for leave-more only), and
+   *  the average clause becomes the explanation rather than the subject. */
   recSkewMedian: (medianFormatted: string): string =>
-    `A few very good futures pull the average up — the more typical outcome is closer to about $${medianFormatted}.`,
+    `What you’d more typically leave behind is closer to about $${medianFormatted} — a few very good futures pull the average above it.`,
   /** The DELTA hero's median qualification (the median-advantage increment, 2026-07-23): the hero's
    *  "$X more" is a MEAN of the per-future advantage, and when its skew is upside the TYPICAL future
    *  gains less — say so, quoting BOTH endpoints in-sentence (the don't-make-users-think law: the

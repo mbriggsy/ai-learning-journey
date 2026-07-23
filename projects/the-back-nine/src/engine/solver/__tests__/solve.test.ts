@@ -235,6 +235,24 @@ describe('solve() — conversions RANK (the trend clause clear) + the withheld c
     expect(isUnsourced(medicareCostTrend)).toBe(false)
     expect(PART_B_PRICING_MODE).toBe('trended')
   })
+
+  it('seam (ii): copies the token’s mintedOver.disclosedDirectional onto the payload VERBATIM — the []-hardcode mutant reds here', () => {
+    // The live mint produces an EMPTY disclosedDirectional today (no methodology-substrate entry is
+    // directional), so every other arm exercises the copy only with [] — a `disclosedDirectional: []`
+    // hardcode in solve.ts survives them all. Drive the copy with a NON-empty list (the mint CAN produce
+    // one — oracleToken collects directional methodology-substrate keys, oracleToken.test's pinning arms):
+    // fingerprint is unchanged (disclosedDirectional is NOT a fingerprint input), so solve() recommends
+    // and must carry the token's list through verbatim (the hawk phasing law — the figure and its
+    // disclosure land together, never fed from an empty default).
+    const disclosed = ['medicare-part-b-trend', 'heir-bracket-irs-2026']
+    const withDisclosed: OracleClearedToken = {
+      ...token,
+      mintedOver: { ...token.mintedOver, disclosedDirectional: disclosed },
+    }
+    const out = solve(withDisclosed, solveInput())
+    if (out.kind !== 'recommended') throw new Error('unreachable')
+    expect(out.disclosedDirectional).toEqual(disclosed)
+  }, 120_000)
 })
 
 describe('solve() — the seed-B display discipline + determinism (contract #2)', () => {

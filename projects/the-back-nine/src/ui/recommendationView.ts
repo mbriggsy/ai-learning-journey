@@ -144,7 +144,10 @@ export interface RecommendationVizProps {
 export interface RecommendedView {
   readonly kind: 'recommended'
   /** `active` = a delta hero shows; `no-change` = the compose reassurance (`noChange` OR the grade's
-   *  `subTenthCollapse` — a HOT path, oracle cases i/v). */
+   *  `subTenthCollapse` — a HOT path, oracle cases i/v — OR a seed-B display inversion where the
+   *  A-crowned winner shows BEHIND the no-action baseline OR the goal-dollar delta collapses to a
+   *  formatted $0: a fabricated positive "keeps ~$X more" (or a "$0 more" hero) is calm-but-wrong, so
+   *  the render routes to the no-dollar register, winner and baseline being display-indistinguishable). */
   readonly mode: 'active' | 'no-change'
   /** The over-funded pivot flag (A and B agree over the ε) — carried for the surface's framing; the
    *  survival context (source-bound below) already carries the honest over-funded reading. */
@@ -179,8 +182,9 @@ export interface RecommendedView {
    *  delta leans on ACA. Compile-enforced complete over `RecommendationDisclosureId`. */
   readonly disclosures: readonly RecommendationDisclosure[]
   /** The two-arm comparison viz props (winner vs no-action baseline terminal magnitudes + resolved,
-   *  pre-formatted string-free labels). `undefined` in NO-CHANGE mode — the compose reassurance stands
-   *  alone, never a fabricated two-bar delta of ~$0. */
+   *  pre-formatted string-free labels). `undefined` in NO-CHANGE mode (which now includes a seed-B
+   *  display inversion) — the compose reassurance stands alone, never a fabricated two-bar delta of
+   *  ~$0 and never a winner-ahead bar the ranking would contradict. */
   readonly viz: RecommendationVizProps | undefined
 }
 
@@ -324,16 +328,44 @@ function recommendedView(payload: SolveRecommendation, opts: RecommendationViewO
   // below one display tenth (the grade's subTenthCollapse). Either way the compose reassurance shows.
   const isNoChange = payload.noChange || (payload.grade?.subTenthCollapse ?? false)
 
+  // The A-decides / B-displays INVERSION (wall #1's render corollary — the same gate runnerUpVizFor
+  // enforces for winner-vs-runner-up, here for winner-vs-baseline): the seed-A-crowned winner can
+  // DISPLAY behind the no-action baseline at seed-B on a near-tie (deltaReal's sign contradicts the goal
+  // direction — leave-more wants winnerB ≥ baselineB, pay-less-tax the reverse). formatDeltaDollar strips
+  // the sign, so a NEGATIVE advantage would render as a fabricated POSITIVE "keeps ~$X more", a
+  // winner-ahead bar, and a positive aria — calm-but-wrong wearing the delta's face. On inversion route
+  // to the honest no-dollar register (winner and baseline display-indistinguishable; never a fabricated
+  // dollar, never a fabricated cause).
+  const winnerDisplaysAhead =
+    goal === 'leave-more'
+      ? payload.winner.headlineStatisticB >= payload.noActionBaseline.headlineStatisticB
+      : payload.winner.headlineStatisticB <= payload.noActionBaseline.headlineStatisticB
+
   // The DELTA-as-hero (active only) — the goal-dollar DELTA, oriented by goal (the WORD carries
   // direction, so the magnitude reads sign-free). Both arms share the CRN draw, so the delta cancels
   // common-mode regime error (the fiduciary's grounding) — defensible where an absolute level is not.
+  // Computed BEFORE the no-dollar decision so the zero-collapse guard can read the ACTUAL hero figure.
   const deltaReal =
     goal === 'leave-more'
       ? payload.winner.headlineStatisticB - payload.noActionBaseline.headlineStatisticB
       : payload.noActionBaseline.headlineStatisticB - payload.winner.headlineStatisticB
-  const deltaFigure = isNoChange ? undefined : formatDeltaDollar(deltaReal)
 
-  const heroLine = isNoChange
+  // The ZERO-COLLAPSE sibling of the inversion (wall #1's second hole): a winner that DISPLAYS ahead
+  // with a real survival edge can still carry a seed-B goal-dollar delta under formatDeltaDollar's
+  // smallest step — the formatter has NO zero-floor, so it returns '0' and the hero would render
+  // "…about $0 more", an absurd active claim (calm-but-wrong wearing the delta's face). Source-bound
+  // predicate: test the ACTUAL formatted figure the hero would show, never a re-typed rounding threshold.
+  const deltaCollapsesToZero = formatDeltaDollar(deltaReal) === '0'
+
+  // The no-DOLLAR compose register: a true no-change OR a seed-B display inversion OR a delta that
+  // formats to zero. All show the "already on one of the strongest paths we tested" reassurance — never
+  // a fabricated positive dollar (a fabricated positive, a $0 hero, and a winner-ahead bar the ranking
+  // would contradict are all calm-but-wrong).
+  const noDollar = isNoChange || !winnerDisplaysAhead || deltaCollapsesToZero
+
+  const deltaFigure = noDollar ? undefined : formatDeltaDollar(deltaReal)
+
+  const heroLine = noDollar
     ? copy.recComposeAlready
     : goal === 'leave-more'
       ? slots.recDeltaLeaveMore(deltaFigure!)
@@ -358,7 +390,7 @@ function recommendedView(payload: SolveRecommendation, opts: RecommendationViewO
 
   return {
     kind: 'recommended',
-    mode: isNoChange ? 'no-change' : 'active',
+    mode: noDollar ? 'no-change' : 'active',
     surplusRegime: payload.surplusRegime,
     goal,
     winnerStrategyKey: WINNER_STRATEGY_KEY[payload.winner.policy],
@@ -367,16 +399,17 @@ function recommendedView(payload: SolveRecommendation, opts: RecommendationViewO
     baselineNameplate: copy.recommendBaselineNameplate,
     runnerUp:
       payload.runnerUp !== undefined
-        ? { why: copy.recRunnerUpWhy, viz: runnerUpVizFor(payload, isNoChange) }
+        ? { why: copy.recRunnerUpWhy, viz: runnerUpVizFor(payload, noDollar) }
         : undefined,
     skew: skewQuote(payload),
     withheldConversion: withheldConversionView(payload),
     disclosures: disclosuresFor(payload),
-    // The two-arm comparison viz — ACTIVE mode only (no-change shows no fabricated ~$0 delta bars).
-    // The winner/baseline seed-B headline magnitudes + pre-formatted string-free labels; the aria
-    // sentence carries BOTH magnitudes AND the delta (A2 AT-parity). The ceiling is source-bound to
+    // The two-arm comparison viz — ACTIVE mode only (no-change AND the seed-B display inversion show no
+    // fabricated delta bars; the inversion would otherwise paint the winner AHEAD, contradicting the
+    // ranking). The winner/baseline seed-B headline magnitudes + pre-formatted string-free labels; the
+    // aria sentence carries BOTH magnitudes AND the delta (A2 AT-parity). The ceiling is source-bound to
     // TwoFutures' humane ladder, so the bar geometry and the axis-max label can never disagree.
-    viz: isNoChange
+    viz: noDollar
       ? undefined
       : (() => {
           const winM = payload.winner.headlineStatisticB
@@ -487,6 +520,10 @@ function runnerUpVizFor(payload: SolveRecommendation, isNoChange: boolean): Reco
   const winnerDisplaysAhead = payload.goal === 'leave-more' ? winM >= runM : winM <= runM
   if (!winnerDisplaysAhead) return undefined
   const gap = formatDeltaDollar(winM - runM)
+  // The zero-collapse MIRROR (recommendedView's deltaCollapsesToZero, here for winner-vs-runner-up): a
+  // gap under formatDeltaDollar's smallest step formats to '0' — drawing two display-tied bars labeled
+  // "$0" is the same absurd claim. Source-bound: test the formatted gap, never a re-typed threshold.
+  if (gap === '0') return undefined
   const ceiling = twoFuturesCeiling(Math.max(winM, runM, 0))
   const labels: RecommendationVizLabels = {
     withLabel: copy.recVizWithLabel,

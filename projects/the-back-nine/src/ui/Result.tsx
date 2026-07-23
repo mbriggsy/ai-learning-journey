@@ -294,9 +294,19 @@ export function Result({
   // (never a `blocked{buckets-defaulted}` mis-reason on a working household). Both fit-gate affordance
   // seeds (`retired`, `nc`) are all-retired, so this gate does not regress the measured posture.
   const solve = snapshot.solve
+  // The invite door is INVITABLE whenever a first-or-fresh solve is the honest next step: no beat yet
+  // (idle), a goal-unset precondition (steer to the picker), OR a channel the store demoted to `stale`
+  // (a fingerprint-changing edit) / `compute-error` (a worker death) — both of whose notes PROMISE the
+  // user they can re-open, so the control that fulfils that promise must return (the only dispatch paths
+  // are this invite door and the committed-view re-pick door; a stale/error channel renders NEITHER
+  // without this). A `blocked{buckets-defaulted}` deliberately does NOT invite — the gap is accounts,
+  // not the goal, so its own calm note carries the steer (§Q5, F3).
   const solveInvitable =
     !isDateRoute(snapshot.draft) &&
-    (solve.kind === 'idle' || (solve.kind === 'blocked' && solve.gap === 'goal-unset'))
+    (solve.kind === 'idle' ||
+      solve.kind === 'stale' ||
+      solve.kind === 'compute-error' ||
+      (solve.kind === 'blocked' && solve.gap === 'goal-unset'))
   // A CONFIRMED goal pick: write `chosenGoal`, close the picker, dispatch the solve. A re-pick writes
   // the new goal and re-dispatches — the store's invalidateStaleSolve + the solve request-epoch carry
   // the visible re-solve. NO auto-save: `chosenGoal` rides the draft in-session (the explicit-resave
@@ -397,8 +407,14 @@ export function Result({
           the solve is invited, so it never perturbs the idle frame. The invited AFFORDANCE lives in
           the quiet row below (a calm door); this region carries the response. §S4: the committed beat's
           RE-PICK door reopens the GoalPicker (the standing goal pre-selected); `pickGoal` re-dispatches
-          — the visible re-solve. */}
-      <RecommendationSurface solve={snapshot.solve} onRepick={() => setGoalOpen(true)} />
+          — the visible re-solve. ROUTE-GATED on the SAME !isDateRoute predicate the invite uses (§S1: the
+          v1 recommend-second is all-retired-route only — the working-route base is the crowned date this
+          dispatch does not yet thread): after a committed/stale beat, a route flip (a spouse un-retires)
+          must not strand an orphaned rec note inside the date hero. Idle renders nothing here anyway; the
+          gate drops the non-idle body the store still holds. A flip back re-mounts the surface + invite. */}
+      {!isDateRoute(snapshot.draft) && (
+        <RecommendationSurface solve={snapshot.solve} onRepick={() => setGoalOpen(true)} />
+      )}
       {/* The quiet doors: the sanctioned below-fold flex (the --laptop-fit-height degrade
           contract, tokens.css). display:contents in single column — the stack renders exactly as
           before; at the laptop two-pane the whole actions chain unwraps (display:contents) and

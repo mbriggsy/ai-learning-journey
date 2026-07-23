@@ -246,6 +246,37 @@ describe('RecommendationSurface — the withheld / stale / unavailable renders (
     const blocked = render(<RecommendationSurface solve={{ kind: 'blocked', gap: 'goal-unset', label: 'goal-unset' }} />)
     expect(blocked.container.querySelector('.rec-committed')).toBeNull()
   })
+
+  it('a blocked{buckets-defaulted} renders a CALM steer note, never a silent blank (F3 — the blank-render mutant reds)', () => {
+    const { container } = render(
+      <RecommendationSurface solve={{ kind: 'blocked', gap: 'buckets-defaulted', label: 'buckets-defaulted' }} />,
+    )
+    const note = container.querySelector('.rec-note--buckets')
+    expect(note, 'a picked goal on a single-total household is NOT a silent dead-end').not.toBeNull()
+    expect(note).toHaveAttribute('role', 'status')
+    expect(note?.textContent).toBe(copy.recommendBucketsNote)
+    // goal-unset stays bodyless here (its steer is the Result invite door, not a surface note).
+    cleanup()
+    const goalUnset = render(<RecommendationSurface solve={{ kind: 'blocked', gap: 'goal-unset', label: 'goal-unset' }} />)
+    expect(goalUnset.container.querySelector('.rec-note--buckets')).toBeNull()
+  })
+})
+
+describe('RecommendationSurface — the seed-B display inversion routes to the honest no-dollar register (F1)', () => {
+  it('winner DISPLAYS BEHIND the baseline: the compose reassurance renders, NO dollar hero, NO viz box', () => {
+    // The no-action baseline out-displays the crowned winner at seed-B (a near-tie inverted on the
+    // display seed) — a "keeps ~$X more" hero + a winner-ahead bar would be calm-but-wrong.
+    const higherBaseline = leaveMoreArm('proportional', 'proportional', [900_000, 1_100_000], [100_000, 100_000])
+    const { container } = render(<RecommendationSurface solve={committedRec({ noActionBaseline: higherBaseline })} />)
+    // the honest register renders: the "already on a strong path" reassurance IS the hero line.
+    expect(container.querySelector('.rec-grade__hero')?.textContent).toBe(copy.recComposeAlready)
+    // no fabricated positive dollar hero anywhere in the lockup.
+    expect(container.textContent).toContain(copy.recComposeAlready)
+    // no two-arm viz (primary or runner-up) — nothing paints the winner ahead against the ranking.
+    expect(container.querySelector('.rec-viz-box'), 'no winner-ahead bars on a display inversion').toBeNull()
+    // the runner-up TEXT is still retained one tap down (R23).
+    expect(container.querySelector('.rec-runnerup__why')?.textContent).toBe(copy.recRunnerUpWhy)
+  })
 })
 
 describe('RecommendationSurface — reduced motion (the breath is dropped, the label kept)', () => {

@@ -7,6 +7,7 @@ import { appModel } from '../appModel'
 import { resolvedFocusKey } from '../answerView'
 import { copy } from '@ui/copy'
 import { resolveDevSeed } from '../devSeeds'
+import type { SolveAnswer } from '@store/memoryModel'
 
 // U16 §S1 — the solve builder is now WIRED live into appModel. A goal pick therefore reaches the REAL
 // dispatchSolve, so these picks run over a COMPLETE retired draft (a resolvable devSeed) rather than
@@ -122,5 +123,82 @@ describe('the recommend-second invited affordance', () => {
     fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: copy.goalPickerConfirmCta }))
     expect(appModel.getSnapshot().draft.chosenGoal).toBe('pay-less-tax')
     expect(dispatch).toHaveBeenCalledTimes(2)
+  })
+})
+
+/**
+ * F2 — the re-invite is REAL from a stale / compute-error channel (the notes promise "re-open", so the
+ * only control that fulfils that promise must return). F4 — the whole recommend-second surface is
+ * ROUTE-GATED to the all-retired route (a route flip must not strand an orphaned rec note in the date
+ * hero). The solve channel is planted by spying getSnapshot (the store's stale/error/committed arms need
+ * the worker to reach organically); the draft rides the same snapshot so the route predicate reads it.
+ */
+const staleSolve: SolveAnswer = { kind: 'stale', label: 'inputs-changed' }
+const errorSolve: SolveAnswer = { kind: 'compute-error', reason: 'worker died' }
+/** Freeze a snapshot with a chosen solve + route. Reads the REAL base first (before the spy), then
+ *  overrides draft + solve; a working person on person 0 makes it the date route. */
+const plantSnapshot = (solve: SolveAnswer, dateRoute = false) => {
+  const retired = completeRetired()
+  // A working person 0 makes it the date route (isDateRoute reads workStatus). Rebuilding the people
+  // tuple widens it to an array, so the assembled draft is cast back to the retired draft type (test-only).
+  const draft = dateRoute
+    ? ({
+        ...retired,
+        people: [{ ...retired.people[0], workStatus: 'working' as const }, retired.people[1]],
+      } as unknown as typeof retired)
+    : retired
+  const wasMocked = vi.isMockFunction(appModel.getSnapshot)
+  const base = appModel.getSnapshot() // real pristine on the first plant; the frozen one on a re-plant
+  const snap = { ...base, draft, solve }
+  if (wasMocked) vi.mocked(appModel.getSnapshot).mockReturnValue(snap)
+  else vi.spyOn(appModel, 'getSnapshot').mockReturnValue(snap)
+  return snap
+}
+
+describe('the recommend-second RE-invite (F2 stale/compute-error) + the date-route gate (F4)', () => {
+  it('F2: from STALE, the re-invite returns ALONGSIDE the stale note (the note+door pairing)', () => {
+    plantResolved()
+    plantSnapshot(staleSolve)
+    const { container } = renderResult()
+    expect(container.querySelector('.rec-note--stale')?.textContent, 'the stale note renders').toContain(copy.inputsChangedNote)
+    expect(invite(), 'the re-open control the note promises is REAL').toBeInTheDocument()
+  })
+
+  it('F2: from COMPUTE-ERROR, the re-invite returns alongside the unavailable note', () => {
+    plantResolved()
+    plantSnapshot(errorSolve)
+    const { container } = renderResult()
+    expect(container.querySelector('.rec-note--unavailable')?.textContent).toContain(copy.recommendUnavailable)
+    expect(invite()).toBeInTheDocument()
+  })
+
+  it('F2: a pick from the stale channel RE-DISPATCHES (the visible re-solve replaces the old state)', () => {
+    plantResolved()
+    appModel.update(completeRetired) // a buildable real draft so the dispatch runs cleanly
+    plantSnapshot(staleSolve)
+    const dispatch = vi.spyOn(appModel, 'dispatchSolve')
+    renderResult()
+    fireEvent.click(invite()!)
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('radio', { name: /Pay less tax/ }))
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: copy.goalPickerConfirmCta }))
+    expect(dispatch, 'a fresh solve is dispatched from the stale channel').toHaveBeenCalledTimes(1)
+  })
+
+  it('F4: the recommend-second surface is ABSENT on the date route (no orphaned stale note); a flip back re-mounts it', () => {
+    plantResolved()
+    const spy = vi.spyOn(appModel, 'getSnapshot')
+    // Committed-then-route-flipped: the store still holds the stale beat, but the household is now a
+    // date route — the surface must not render it inside the date hero.
+    plantSnapshot(staleSolve, /* dateRoute */ true)
+    const { container, rerender } = renderResult()
+    expect(container.querySelector('.recommendation-surface'), 'the whole surface is gated out on the date route').toBeNull()
+    expect(container.querySelector('.rec-note--stale'), 'no orphaned stale note in the date hero').toBeNull()
+    expect(invite(), 'and no invite on the date route').toBeNull()
+    // Flip back to the all-retired (spine) route: the stale note + the re-invite return.
+    plantSnapshot(staleSolve, /* dateRoute */ false)
+    rerender(<Result onReview={vi.fn()} save={{ kind: 'none' }} computing={false} />)
+    expect(container.querySelector('.rec-note--stale'), 'the stale note renders on the spine route').not.toBeNull()
+    expect(invite(), 'the re-invite returns').toBeInTheDocument()
+    void spy
   })
 })

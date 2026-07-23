@@ -410,3 +410,114 @@ describe('recommendationView — the grade signal state + the ShapeDisclosure se
     expect(asRec(recommendationView(committed(withSubstrate), { spineConfidence: spine })).grade.shapeNote).toBe(copy.recGradeNoteShape)
   })
 })
+
+// ---- F1 — the winner-vs-baseline seed-B display inversion (wall #1's render corollary) ------------
+
+describe('recommendationView — the A-decides / B-displays inversion suppresses the fabricated dollar hero', () => {
+  it('leave-more, winner DISPLAYS BEHIND the no-action baseline at seed-B: NO dollar hero, NO viz, the honest compose register', () => {
+    // The seed-A-crowned winner shows a SMALLER bequest than the baseline at seed-B (a near-tie inverted
+    // on the display seed). "keeps ~$X more" here would sign-strip a NEGATIVE advantage into a fabricated
+    // positive claim, and a winner-ahead bar would contradict the ranking — both calm-but-wrong.
+    const higherBaseline = armFor('leave-more', HB, 'proportional', 'proportional', {
+      terminalTaxableReal: [900_000, 1_100_000], terminalPretaxReal: [100_000, 100_000], terminalRothReal: [0, 0], terminalHsaReal: [0, 0],
+    })
+    const payload = leaveMoreRec({ noActionBaseline: higherBaseline })
+    expect(payload.winner.headlineStatisticB, 'the winner displays BEHIND the baseline').toBeLessThan(payload.noActionBaseline.headlineStatisticB)
+    const v = asRec(recommendationView(committed(payload), { spineConfidence: spine }))
+    // routed to the honest no-dollar register — winner and baseline are display-indistinguishable.
+    expect(v.mode).toBe('no-change')
+    expect(v.grade.deltaFigure, 'no fabricated dollar magnitude').toBeUndefined()
+    expect(v.grade.heroLine, 'the "already on a strong path" reassurance, never "keeps ~$X more"').toBe(copy.recComposeAlready)
+    expect(v.grade.heroLine).not.toMatch(/more/)
+    // no primary viz (so no positive winner-ahead aria claim) AND no runner-up picture on the inversion.
+    expect(v.viz, 'no fabricated winner-ahead bars / positive aria').toBeUndefined()
+    expect(v.runnerUp?.viz, 'no runner-up picture in the no-dollar register').toBeUndefined()
+    expect(v.runnerUp?.why, 'the runner-up TEXT is still retained (R23)').toBe(copy.recRunnerUpWhy)
+  })
+
+  it('pay-less-tax, winner PAYS MORE tax than the baseline at seed-B: same inversion suppression (goal-oriented)', () => {
+    const goal: RecommendationGoal = 'pay-less-tax'
+    const winner = armFor(goal, undefined, 'bracket-fill', 'bracket-fill', { lifetimeTaxPaidReal: [62_000, 62_000] }) // pays MORE
+    const baseline = armFor(goal, undefined, 'proportional', 'proportional', { lifetimeTaxPaidReal: [45_000, 45_000] }) // pays less
+    const payload = { ...leaveMoreRec(), goal, heirBracket: undefined, winner, noActionBaseline: baseline, runnerUp: undefined, gradeStatistic: 'pay-less-tax' as const, skewDisclosure: undefined }
+    expect(payload.winner.headlineStatisticB, 'the winner pays MORE (displays behind)').toBeGreaterThan(payload.noActionBaseline.headlineStatisticB)
+    const v = asRec(recommendationView(committed(payload), { spineConfidence: spine }))
+    expect(v.mode).toBe('no-change')
+    expect(v.grade.deltaFigure).toBeUndefined()
+    expect(v.grade.heroLine).toBe(copy.recComposeAlready)
+    expect(v.viz).toBeUndefined()
+  })
+
+  it('CONTROL: winner DISPLAYS AHEAD ⇒ the normal active delta-as-hero path is unchanged (the guard is scoped to real inversions)', () => {
+    const payload = leaveMoreRec() // default: winner ahead of baseline
+    expect(payload.winner.headlineStatisticB).toBeGreaterThan(payload.noActionBaseline.headlineStatisticB)
+    const v = asRec(recommendationView(committed(payload), { spineConfidence: spine }))
+    const expectedDelta = formatDeltaDollar(payload.winner.headlineStatisticB - payload.noActionBaseline.headlineStatisticB)
+    expect(v.mode).toBe('active')
+    expect(v.grade.deltaFigure).toBe(expectedDelta)
+    expect(v.grade.heroLine).toBe(slots.recDeltaLeaveMore(expectedDelta))
+    expect(v.viz, 'the active two-arm viz still ships').toBeDefined()
+  })
+})
+
+// ---- the ZERO-COLLAPSE sibling: a winner-ahead delta that FORMATS to $0 (no zero-floor) ------------
+
+describe('recommendationView — a winner-ahead delta that formats to $0 routes to the no-dollar register', () => {
+  it('leave-more: winner DISPLAYS AHEAD but the seed-B delta rounds to a formatted $0 ⇒ NO "$0 more" hero, NO viz, the compose register', () => {
+    // The winner leads the baseline by $40 at seed-B — a REAL survival winner (not the prior, not sub-tenth,
+    // and winnerDisplaysAhead is TRUE so this is NOT the inversion arm) — but formatDeltaDollar has no
+    // zero-floor: $40 rounds to '0'. "Leaves about $0 more" is an absurd active claim (calm-but-wrong).
+    // Baseline mean = default winner mean (576,000) − 40; only the baseline is overridden so the default
+    // skewDisclosure.meanReal still equals the (untouched) winner headline (the objective≡headline guard).
+    const nearTieBaseline = armFor('leave-more', HB, 'proportional', 'proportional', {
+      terminalTaxableReal: [499_960, 499_960], terminalPretaxReal: [100_000, 100_000], terminalRothReal: [0, 0], terminalHsaReal: [0, 0],
+    })
+    const payload = leaveMoreRec({ noActionBaseline: nearTieBaseline })
+    const delta = payload.winner.headlineStatisticB - payload.noActionBaseline.headlineStatisticB
+    expect(delta, 'the winner displays AHEAD by a hair').toBeGreaterThan(0)
+    expect(formatDeltaDollar(delta), 'but the delta formats to a bare $0').toBe('0')
+    const v = asRec(recommendationView(committed(payload), { spineConfidence: spine }))
+    expect(v.mode).toBe('no-change')
+    expect(v.grade.deltaFigure, 'no fabricated $0 magnitude').toBeUndefined()
+    expect(v.grade.heroLine, 'the "already on a strong path" reassurance, never "…about $0 more"').toBe(copy.recComposeAlready)
+    expect(v.grade.heroLine).not.toMatch(/\$?0/)
+    expect(v.viz, 'no $0-delta two-bar viz').toBeUndefined()
+    expect(v.runnerUp?.viz, 'no runner-up picture in the no-dollar register').toBeUndefined()
+  })
+
+  it('MIRROR: an active winner (real primary delta) whose winner-vs-runner-up GAP formats to $0 draws NO runner-up viz', () => {
+    // The PRIMARY delta (winner 576k vs baseline 426k = 150,000) does not collapse ⇒ active mode, primary
+    // viz ships. But the runner-up is a near-tie: winner leads it by $40 (winnerDisplaysAhead TRUE), which
+    // formatDeltaDollar rounds to '0' — a $0-gap two-bar picture is the same absurd compare, so it's dropped.
+    const nearTieRunnerUp = armFor('leave-more', HB, 'bracket-fill', 'bracket-fill', {
+      terminalTaxableReal: [499_960, 499_960], terminalPretaxReal: [100_000, 100_000], terminalRothReal: [0, 0], terminalHsaReal: [0, 0],
+    })
+    const payload = leaveMoreRec({ runnerUp: nearTieRunnerUp })
+    const gap = payload.winner.headlineStatisticB - payload.runnerUp!.headlineStatisticB
+    expect(gap, 'the winner leads the runner-up by a hair').toBeGreaterThan(0)
+    expect(formatDeltaDollar(gap), 'the gap formats to a bare $0').toBe('0')
+    const v = asRec(recommendationView(committed(payload), { spineConfidence: spine }))
+    expect(v.mode, 'the primary delta (150k) still makes this an active rec').toBe('active')
+    expect(v.grade.deltaFigure, 'the primary dollar hero still shows').toBeDefined()
+    expect(v.runnerUp!.viz, 'no $0-gap runner-up picture').toBeUndefined()
+    expect(v.runnerUp!.why, 'the runner-up TEXT is still retained (R23)').toBe(copy.recRunnerUpWhy)
+  })
+
+  it('CONTROL: a delta JUST ABOVE the collapse threshold ($100) still renders the dollar hero (the guard is scoped to real $0 collapses)', () => {
+    // $100 is the first magnitude that survives formatDeltaDollar's smallest step ('100', not '0'), so the
+    // active delta-as-hero path is unchanged — the guard suppresses only a genuine formatted-$0 collapse.
+    const justAboveBaseline = armFor('leave-more', HB, 'proportional', 'proportional', {
+      terminalTaxableReal: [499_900, 499_900], terminalPretaxReal: [100_000, 100_000], terminalRothReal: [0, 0], terminalHsaReal: [0, 0],
+    })
+    const payload = leaveMoreRec({ noActionBaseline: justAboveBaseline })
+    const delta = payload.winner.headlineStatisticB - payload.noActionBaseline.headlineStatisticB
+    expect(delta).toBe(100)
+    const expectedDelta = formatDeltaDollar(delta)
+    expect(expectedDelta, 'above the threshold ⇒ a non-zero figure').toBe('100')
+    const v = asRec(recommendationView(committed(payload), { spineConfidence: spine }))
+    expect(v.mode).toBe('active')
+    expect(v.grade.deltaFigure).toBe(expectedDelta)
+    expect(v.grade.heroLine).toBe(slots.recDeltaLeaveMore(expectedDelta))
+    expect(v.viz, 'the active two-arm viz still ships').toBeDefined()
+  })
+})

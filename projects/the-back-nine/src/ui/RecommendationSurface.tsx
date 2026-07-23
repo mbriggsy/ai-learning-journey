@@ -77,9 +77,19 @@ export function RecommendationSurface({
 function CommittedBeat({ view, onRepick }: { readonly view: RecommendationView; readonly onRepick?: () => void }) {
   switch (view.kind) {
     case 'idle':
-    case 'blocked':
     case 'pending':
       return null
+    case 'blocked':
+      // goal-unset: the invite door (Result's quiet row) owns the steer → no body here. buckets-defaulted:
+      // NO invite fires (the gap is ACCOUNTS, not the goal — §Q5/F2), so this calm note is the ONLY steer:
+      // the household's accounts are entered as a single total, so a tax strategy has nothing to work with
+      // until the pre-tax / Roth / taxable pieces are broken out. Never a silent null dead-end where a
+      // goal was picked but nothing renders (the blank-render mutant reds on the buckets arm).
+      return view.gap === 'buckets-defaulted' ? (
+        <section className="rec-note rec-note--buckets" role="status">
+          <p className="rec-note__line">{copy.recommendBucketsNote}</p>
+        </section>
+      ) : null
     case 'stale':
       // §S1 invalidation — the committed rec no longer describes the current household; calm status,
       // re-solve INVITED (never auto-re-solved). A terminal note, not a nag.
@@ -110,6 +120,13 @@ function CommittedBeat({ view, onRepick }: { readonly view: RecommendationView; 
       )
     case 'recommended':
       return <RecommendedBeat view={view} onRepick={onRepick} />
+    default: {
+      // The exhaustiveness guard (the shipped gradeWord / gradeSignalState idiom): a future
+      // RecommendationView arm fails tsc HERE rather than silently rendering nothing — a payload shape
+      // without a render is a broken state (the honesty arc handles EVERY shape).
+      const _exhaustive: never = view
+      throw new Error(`[RecommendationSurface] unhandled solve view — declare its render (${String(_exhaustive)})`)
+    }
   }
 }
 

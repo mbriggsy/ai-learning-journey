@@ -1160,6 +1160,15 @@ export const copy = {
   // The invited affordance — the recommend-second door in the doors region (R11: invited, never a nag;
   // R12: no imperative). A DOOR, calm-styled like its siblings; the goal choice precedes the solve.
   recommendInviteCta: 'See the recommended strategy',
+  // Act-4 · U16 §S1/§Q5 (F3) — the pre-dispatch `blocked{buckets-defaulted}` calm steer: a household
+  // whose accounts are entered as ONE lump sum gives the sequencing/conversion strategy nothing to work
+  // with, so a picked goal must not dead-end on a silent blank. Names the TRUE precondition (the account
+  // mix, NOT the goal — so this arm never re-shows the goal invite; the note carries the steer). A
+  // DECLARATIVE steer in the inputsChangedNote voice — no imperative, no figure to hedge; rides
+  // `recommend*` = verdict-scoped (superlative/free-numeral gated) but NOT control-swept (no forced
+  // modal on a terse steer), exactly like recommendUnavailable.
+  recommendBucketsNote:
+    'Right now your savings are entered as one lump sum, so there’s nothing yet for a tax strategy to work with — once the pre-tax, Roth, and taxable pieces are entered separately, we can work one out.',
   // Act-4 · U16 §S4 — the goal RE-PICK door (the committed beat's "aim at something else"): the
   // un-saved hypothetical is freely re-aimable, and a re-pick VISIBLY re-solves (both futures
   // update). A calm door label, NOT an imperative advice verb ("aim" is not a directive verb, so it

@@ -27,6 +27,7 @@ import { budgetGoverns } from '@budget/budgetModel'
 import { commitBudgetPatch } from '@budget/budgetToSpending'
 import { previewRunsInWorker, runControlPreview } from '@store/controlPreview'
 import { epochDayToCalendarYear } from '@store/staleness'
+import { planClockAnchor } from './bandAnnotations'
 import type { ScenarioDraft } from '@store/memoryModel'
 import { currentEpochDay } from './scenarioFromDraft'
 import type { RecommendationGoal, TwoArmControl } from '@shared/model'
@@ -116,21 +117,26 @@ export function Result({
   }, [save.kind, announcer])
 
   // P3·U13 — the wall-time anchor (presentation arithmetic ONLY — never written back into
-  // the draft; the round-trip guard). Elapsed is 0 for every same-year session; it goes
-  // positive only when an aged vault is re-opened in a later calendar year: the date hero
+  // the draft; the round-trip guard). The plan clock is 0 for every same-year session; it goes
+  // positive only when a plan BUILT in an earlier calendar year is re-opened: the date hero
   // then re-derives its "~N years out" from TODAY while the calendar label holds, and the
-  // BAND's x-axis re-bases (year 0 = "Your save", wall "Today" at x = elapsed — the
+  // BAND's x-axis re-bases (year 0 = "Plan built", wall "Today" at x = the plan clock — the
   // one-screen-one-time-base law, threaded through selectElevatedAnswer). The year is read
   // through the ONE local-calendar chain (currentEpochDay → epochDayToCalendarYear — the same
   // basis staleness compares and startCalendarYear was minted in), never a second ad-hoc
   // clock read (ultramode 2026-07-09, the basis catch).
-  const dateAnchor = useMemo(() => {
-    const startCalendarYear = snapshot.draft.startCalendarYear
-    return {
-      startCalendarYear,
-      elapsedPlanYears: Math.max(0, epochDayToCalendarYear(currentEpochDay()) - startCalendarYear),
-    }
-  }, [snapshot.draft.startCalendarYear])
+  //
+  // IT MEASURES THE BUILD, NOT THE SAVE (U17 §S0.2). `startCalendarYear` is written once when
+  // the plan is built and survives every re-save, so this is "years since you built this plan"
+  // — never "years since your save". The SAVE's own vintage rides `savedAt` on its own rail
+  // (agedBalancesYearFor, threaded by IntakeApp); the two diverge for any re-saver, and the
+  // aged band used to speak the wrong one. Math.max(0, …) clamps a device clock that reads
+  // BEHIND the build year to the fresh identity — no re-base at all, never a negative x.
+  const dateAnchor = useMemo(
+    () =>
+      planClockAnchor(snapshot.draft.startCalendarYear, epochDayToCalendarYear(currentEpochDay())),
+    [snapshot.draft.startCalendarYear],
+  )
 
   const elevated = selectElevatedAnswer(snapshot, retry, dateAnchor)
   const focusKey = resolvedFocusKey(elevated)

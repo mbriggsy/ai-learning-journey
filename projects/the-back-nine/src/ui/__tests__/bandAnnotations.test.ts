@@ -60,19 +60,27 @@ describe('deriveSpineBandAnnotations — the spine band household-clock markers'
     }
   })
 
-  // ── the AGED-vault arm (U13 one-screen-one-time-base — the chart's turn, 2026-07-10) ──────
+  // ── the AGED-plan arm (U13 one-screen-one-time-base — the chart's turn, 2026-07-10) ──────
   // Caught live on the first `?vault=datestale` walk: the year-0 column read "Today 58 / 59"
-  // beside a gate that had just said "saved about 2 years ago" — the chart spoke save-time
+  // beside a gate that had just said "saved about 2 years ago" — the chart spoke plan-time
   // while the hero + floor line (the U13 ultramode fold) spoke wall time.
+  //
+  // U17 §S0.2 (council wf_f4ced3c8-2f6) RE-AIMED the year-0 marker: it names the plan's BUILD,
+  // not the save. The clock was always `startCalendarYear`-derived — build-time — so calling
+  // that column 'Your save' was false for any re-saver (built last year, saved five minutes
+  // ago) and contradicted the fresh "Saved to this device" badge on the same screen.
 
-  it('AGED: year 0 renames to "Your save" (saved ages) and the REAL Today lands at x = elapsed with CURRENT ages', () => {
-    const a = deriveSpineBandAnnotations(66, 64, 30, { elapsedPlanYears: 2 })
-    const saved = a[0]!
-    expect(saved.id).toBe('saved')
-    expect(saved.yearsFromNow).toBe(0)
-    expect(saved.label).toBe(copy.bandClockSavedLabel)
-    expect(saved.ages).toBe(slots.bandClockAges(66, 64)) // the SAVED ages — that column IS the save
-    expect(saved.description).toBe(slots.bandClockSavedDesc(66, 64))
+  it('AGED: year 0 renames to the BUILD marker (build-era ages + the build YEAR named) and the REAL Today lands at x = the plan clock with CURRENT ages', () => {
+    const a = deriveSpineBandAnnotations(66, 64, 30, { startCalendarYear: 2024, yearsSincePlanBuilt: 2 })
+    const built = a[0]!
+    expect(built.id).toBe('built')
+    expect(built.yearsFromNow).toBe(0)
+    expect(built.label).toBe(copy.bandClockBuiltLabel)
+    expect(built.ages).toBe(slots.bandClockAges(66, 64)) // the BUILD-era ages — that column IS the build
+    expect(built.description).toBe(slots.bandClockBuiltDesc(2024, 66, 64))
+    // …and it makes NO claim about the save (the U17 falsehood, dead in both channels).
+    expect(built.label).not.toMatch(/save/i)
+    expect(built.description).not.toMatch(/save/i)
     const today = a.find((m) => m.id === 'today')!
     expect(today.yearsFromNow).toBe(2)
     expect(today.label).toBe(copy.bandClockTodayLabel)
@@ -81,28 +89,67 @@ describe('deriveSpineBandAnnotations — the spine band household-clock markers'
   })
 
   it('AGED: elapsed 0 (every fresh session) derives BYTE-IDENTICALLY to the un-anchored call — the no-drift pin', () => {
-    expect(deriveSpineBandAnnotations(66, 64, 30, { elapsedPlanYears: 0 })).toEqual(
+    expect(deriveSpineBandAnnotations(66, 64, 30, { startCalendarYear: 2024, yearsSincePlanBuilt: 0 })).toEqual(
       deriveSpineBandAnnotations(66, 64, 30),
     )
   })
 
   it('AGED: a decade tick within the pad of the wall-time Today is dropped (the named moment carries that x)', () => {
     // 68/66 aged 2: the age-70 tick sits at x = 2 — exactly the wall-Today x → dropped.
-    const a = deriveSpineBandAnnotations(68, 66, 30, { elapsedPlanYears: 2 })
+    const a = deriveSpineBandAnnotations(68, 66, 30, { startCalendarYear: 2024, yearsSincePlanBuilt: 2 })
     expect(a.some((m) => m.id === 'today' && m.yearsFromNow === 2)).toBe(true)
     expect(a.some((m) => m.id === 'age-70')).toBe(false)
     expect(a.some((m) => m.id === 'age-80')).toBe(true) // x = 12 — clear, kept
   })
 
-  it('AGED: a decades-old vault whose today crowds the horizon keeps ONLY the honest "Your save" rename (no off-chart Today)', () => {
-    // elapsed 28 ≥ horizon 30 − pad 3 → the wall-Today marker is withheld; year 0 still renames.
-    const a = deriveSpineBandAnnotations(66, 64, 30, { elapsedPlanYears: 28 })
-    expect(a[0]!.id).toBe('saved')
+  it('AGED: a decades-old plan whose today crowds the horizon keeps ONLY the honest "Plan built" rename (no off-chart Today)', () => {
+    // plan clock 28 ≥ horizon 30 − pad 3 → the wall-Today marker is withheld; year 0 still renames.
+    // Still INSIDE the drawable domain [0, 30) — the refusal below is the next year up.
+    const a = deriveSpineBandAnnotations(66, 64, 30, { startCalendarYear: 2024, yearsSincePlanBuilt: 28 })
+    expect(a[0]!.id).toBe('built')
     expect(a.some((m) => m.id === 'today')).toBe(false)
   })
 
+  // U17 §S0.2 — the plan clock is CLAMPED to [0, horizonYears) and REFUSES ALOUD outside it.
+  it('AGED: a plan clock at or past the drawn horizon REFUSES ALOUD — a skewed clock never redraws', () => {
+    // At 30 (== horizon) today itself is off the right edge: there is no honest picture to
+    // re-base, so the deriver throws at the producer seam rather than render a fan whose every
+    // year is in the past under a wall-Today marker that does not exist on it.
+    expect(() =>
+      deriveSpineBandAnnotations(66, 64, 30, { startCalendarYear: 1996, yearsSincePlanBuilt: 30 }),
+    ).toThrow(/skewed plan clock/)
+    expect(() =>
+      deriveDateBandAnnotations(58, 60, 6, 40, { startCalendarYear: 1900, yearsSincePlanBuilt: 126 }),
+    ).toThrow(/skewed plan clock/)
+    // A non-integer clock is indeterminate, not a value — it refuses too (never a fractional x).
+    expect(() =>
+      deriveSpineBandAnnotations(66, 64, 30, { startCalendarYear: 2024, yearsSincePlanBuilt: 2.5 }),
+    ).toThrow(/skewed plan clock/)
+  })
+
+  it('AGED: a NEGATIVE clock (a device clock behind the build year) clamps to the fresh identity — no re-base, never a negative x', () => {
+    // The producer already mints Math.max(0, …); this is the deriver's own belt: clamping to 0
+    // IS the refusal to redraw (the un-anchored picture), never a marker left of year 0.
+    expect(deriveSpineBandAnnotations(66, 64, 30, { startCalendarYear: 2030, yearsSincePlanBuilt: -4 })).toEqual(
+      deriveSpineBandAnnotations(66, 64, 30),
+    )
+  })
+
+  it('AGED: the low-end clamp is the LOAD-BEARING gate — a NON-INTEGER negative clock still lands on the fresh identity, never the refusal', () => {
+    // THE MUTANT THIS KILLS (U17 §S0 verifier): weakening the guard to `years === 0` left the
+    // integer arm above GREEN, because a negative integer falls through to the downstream
+    // `yearsSinceBuilt > 0` gate, which nulls the aged arm anyway — the assertion never
+    // witnessed the clamp it names (insight 029: an equality assertion on a structurally inert
+    // surface discriminates nothing). A NON-INTEGER negative routes differently: guarded it
+    // clamps to the fresh identity; unguarded it reaches the integer check and REFUSES ALOUD.
+    // So this arm is the one that can tell the two implementations apart.
+    expect(deriveSpineBandAnnotations(66, 64, 30, { startCalendarYear: 2030, yearsSincePlanBuilt: -2.5 })).toEqual(
+      deriveSpineBandAnnotations(66, 64, 30),
+    )
+  })
+
   it('AGED: the markers stay monotonic with the wall-Today inserted', () => {
-    const a = deriveSpineBandAnnotations(66, 64, 30, { elapsedPlanYears: 2 })
+    const a = deriveSpineBandAnnotations(66, 64, 30, { startCalendarYear: 2024, yearsSincePlanBuilt: 2 })
     for (let i = 1; i < a.length; i++) {
       expect(a[i]!.yearsFromNow).toBeGreaterThan(a[i - 1]!.yearsFromNow)
     }
@@ -113,7 +160,7 @@ describe('deriveSpineBandAnnotations — the spine band household-clock markers'
     // (|4−8| = 4 ≥ pad 3, so the tick is KEPT) — insertion order is [saved@0, today@8,
     // age-70@4, …], non-monotonic until the sort. The label stagger reads neighbors in x
     // order, so an unsorted return is a real rendering defect, not a cosmetic one.
-    const a = deriveSpineBandAnnotations(66, 64, 30, { elapsedPlanYears: 8 })
+    const a = deriveSpineBandAnnotations(66, 64, 30, { startCalendarYear: 2024, yearsSincePlanBuilt: 8 })
     expect(a.some((m) => m.id === 'age-70' && m.yearsFromNow === 4)).toBe(true)
     expect(a.some((m) => m.id === 'today' && m.yearsFromNow === 8)).toBe(true)
     for (let i = 1; i < a.length; i++) {
@@ -167,16 +214,18 @@ describe('deriveDateBandAnnotations — the date band markers (the FUTURE work-s
     }
   })
 
-  // ── the AGED-vault arm (the `?vault=datestale` shape: floor crown 1, elapsed 2) ───────────
-  it('AGED: "Your save" at 0 + wall-Today at elapsed, the work-stops marker untouched at its crowned offset', () => {
-    const a = deriveDateBandAnnotations(58, 59, 1, 40, { elapsedPlanYears: 2 })
-    expect(a[0]!.id).toBe('saved')
+  // ── the AGED-plan arm (the `?vault=datestale` shape: floor crown 1, plan clock 2) ─────────
+  it('AGED: "Plan built" at 0 + wall-Today at the plan clock, the work-stops marker untouched at its crowned offset', () => {
+    const a = deriveDateBandAnnotations(58, 59, 1, 40, { startCalendarYear: 2024, yearsSincePlanBuilt: 2 })
+    expect(a[0]!.id).toBe('built')
+    expect(a[0]!.label).toBe(copy.bandClockBuiltLabel)
+    expect(a[0]!.description).toBe(slots.bandClockBuiltDesc(2024, 58, 59))
     expect(a[0]!.ages).toBe(slots.bandClockAges(58, 59))
     const today = a.find((m) => m.id === 'today')!
     expect(today.yearsFromNow).toBe(2)
     expect(today.ages).toBe(slots.bandClockAges(60, 61)) // current ages
     // The band's own crowned offset stays in PLAN time (its x is calendar-stable) — the
-    // named markers "Your save"(0) / work-stops(1) / Today(2) tell the arrived-floor story.
+    // named markers "Plan built"(0) / work-stops(1) / Today(2) tell the arrived-floor story.
     const ws = a.find((m) => m.id === 'work-stops')!
     expect(ws.yearsFromNow).toBe(1)
     const xs = a.map((m) => m.yearsFromNow)
@@ -184,7 +233,7 @@ describe('deriveDateBandAnnotations — the date band markers (the FUTURE work-s
   })
 
   it('AGED: elapsed 0 derives byte-identically to the un-anchored call (the no-drift pin)', () => {
-    expect(deriveDateBandAnnotations(58, 60, 6, 40, { elapsedPlanYears: 0 })).toEqual(
+    expect(deriveDateBandAnnotations(58, 60, 6, 40, { startCalendarYear: 2024, yearsSincePlanBuilt: 0 })).toEqual(
       deriveDateBandAnnotations(58, 60, 6, 40),
     )
   })

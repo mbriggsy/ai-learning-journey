@@ -191,14 +191,17 @@ export function composeTwoFutures(
         // consistency ruling): "Today 66 / 65" left; the AGES PAIR at the chart's last drawn year
         // right — never the "Plan horizon" word (this chart ends at the dead-cohort truncation,
         // which can be an earlier year than the fan's horizon; one word must not name two years).
-        // On an AGED vault (elapsed > 0) the year-0 endpoint is the SAVE moment, not today — it
-        // renames to the fan's own "Your save" (the one-screen-one-time-base law; the ultramode
-        // caller-lens caught this chart as the sibling the band fix missed, 2026-07-10).
+        // On an AGED plan (the plan clock > 0) the year-0 endpoint is where the PLAN starts, not
+        // today — it renames to the fan's own "Plan built" (the one-screen-one-time-base law; the
+        // ultramode caller-lens caught this chart as the sibling the band fix missed, 2026-07-10).
+        // Re-pointed WITH the band in the same commit (U17 §S0.2, insight 086: splitting a copy
+        // key orphans every renderer not re-pointed with it) — the old 'Your save' wording was
+        // false for a re-saver on this chart exactly as it was on the fan.
         todayLabel:
           ages !== undefined
-            ? `${(savedAnchor?.elapsedPlanYears ?? 0) > 0 ? copy.bandClockSavedLabel : copy.bandClockTodayLabel} ${slots.bandClockAges(ages[0], ages[1])}`
-            : (savedAnchor?.elapsedPlanYears ?? 0) > 0
-              ? copy.bandClockSavedLabel
+            ? `${(savedAnchor?.yearsSincePlanBuilt ?? 0) > 0 ? copy.bandClockBuiltLabel : copy.bandClockTodayLabel} ${slots.bandClockAges(ages[0], ages[1])}`
+            : (savedAnchor?.yearsSincePlanBuilt ?? 0) > 0
+              ? copy.bandClockBuiltLabel
               : slots.ladderOffsetTick(0),
         horizonLabel: agesAt !== undefined ? agesAt(maxYears) : `${maxYears}`,
         readoutAgesLabel: copy.bandReadoutAgesLabel,

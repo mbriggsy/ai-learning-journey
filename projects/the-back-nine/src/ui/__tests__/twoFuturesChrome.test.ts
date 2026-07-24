@@ -222,28 +222,30 @@ describe('composeTwoFutures — the chart series', () => {
     expect(view!.series).toBeUndefined()
   })
 
-  // ── the AGED-vault year-0 endpoint (ultramode 2026-07-10 — the caller-lens sibling catch:
-  //    the band's year-0 was fixed to "Your save" while this chart still said "Today" over the
-  //    same save-moment ages, re-splitting one screen into two time bases) ──────────────────
+  // ── the AGED-plan year-0 endpoint (ultramode 2026-07-10 — the caller-lens sibling catch:
+  //    the band's year-0 was fixed while this chart still said "Today" over the same build-era
+  //    ages, re-splitting one screen into two time bases). U17 §S0.2 re-aimed the shared key at
+  //    the BUILD (insight 086 — this renderer moved WITH the band, in the same commit; a split
+  //    key would have left this chart alone saying 'Your save' to a re-saver). ───────────────
   const agedOutcome = () =>
     twoArm({
       with: reading({ headline: headline(8), bandFan: fan([[0, 800_000], [30, 520_000]]), survivalFraction: 0.85 }),
       without: reading({ headline: headline(7), bandFan: fan([[0, 800_000], [30, 500_000]]), survivalFraction: 0.8 }),
     })
 
-  it('AGED (elapsed > 0) with ages: the year-0 endpoint renames to "Your save" over the SAVED ages', () => {
-    const view = composeTwoFutures(agedOutcome(), 'With', 'Without', slots.rothDeltaSurvivor, [58, 59], { elapsedPlanYears: 2 })
-    expect(view!.series!.labels.todayLabel).toBe(`${copy.bandClockSavedLabel} ${slots.bandClockAges(58, 59)}`)
+  it('AGED (plan clock > 0) with ages: the year-0 endpoint renames to "Plan built" over the BUILD-era ages', () => {
+    const view = composeTwoFutures(agedOutcome(), 'With', 'Without', slots.rothDeltaSurvivor, [58, 59], { startCalendarYear: 2024, yearsSincePlanBuilt: 2 })
+    expect(view!.series!.labels.todayLabel).toBe(`${copy.bandClockBuiltLabel} ${slots.bandClockAges(58, 59)}`)
   })
 
-  it('AGED ages-less: the fallback endpoint word swaps to "Your save" too (never a lying "today")', () => {
-    const view = composeTwoFutures(agedOutcome(), 'With', 'Without', slots.rothDeltaSurvivor, undefined, { elapsedPlanYears: 2 })
-    expect(view!.series!.labels.todayLabel).toBe(copy.bandClockSavedLabel)
+  it('AGED ages-less: the fallback endpoint word swaps to "Plan built" too (never a lying "today")', () => {
+    const view = composeTwoFutures(agedOutcome(), 'With', 'Without', slots.rothDeltaSurvivor, undefined, { startCalendarYear: 2024, yearsSincePlanBuilt: 2 })
+    expect(view!.series!.labels.todayLabel).toBe(copy.bandClockBuiltLabel)
   })
 
   it('elapsed 0 (every fresh session) composes BYTE-IDENTICALLY to the anchor-less call — the no-drift pin', () => {
     expect(
-      composeTwoFutures(agedOutcome(), 'With', 'Without', slots.rothDeltaSurvivor, [58, 59], { elapsedPlanYears: 0 }),
+      composeTwoFutures(agedOutcome(), 'With', 'Without', slots.rothDeltaSurvivor, [58, 59], { startCalendarYear: 2024, yearsSincePlanBuilt: 0 }),
     ).toEqual(composeTwoFutures(agedOutcome(), 'With', 'Without', slots.rothDeltaSurvivor, [58, 59]))
   })
 })

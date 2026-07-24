@@ -180,7 +180,7 @@ describe('FuckOffDate — the D2 landed date surface', () => {
 // The U13 aged surface (council 2026-07-10 — the two-time-bases family's third sibling closed):
 // hero, ladder, tradeoff, caveat, and how-close all speak ONE clock on an aged vault.
 describe('FuckOffDate — the aged wall-time re-base', () => {
-  const anchor = (elapsedPlanYears: number) => ({ startCalendarYear: 2024, elapsedPlanYears })
+  const anchor = (yearsSincePlanBuilt: number) => ({ startCalendarYear: 2024, yearsSincePlanBuilt })
   const ladderAria = (container: HTMLElement): string[] =>
     [...container.querySelectorAll('.fod-ladder [aria-label]')].map((e) => e.getAttribute('aria-label') ?? '')
 

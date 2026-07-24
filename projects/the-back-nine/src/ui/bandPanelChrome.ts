@@ -68,14 +68,14 @@ export function composeBandAtRange(
   const i = selectAtRangeColumn(resolved.samples, AT_RANGE_COHORT_MIN)
   if (i === null) return null
   const row = resolved.tooltipRows[i]!
-  // "About N years OUT" re-bases to WALL time on an aged vault (the one-screen-one-time-base
+  // "About N years OUT" re-bases to WALL time on an aged plan (the one-screen-one-time-base
   // law's last un-anchored text — ultramode 2026-07-10, mildly OPTIMISTIC direction: a plan-time
-  // count overstates the remaining runway by the elapsed years). The COLUMN stays plan-time
-  // data (the same resampled figures the scrub shows); only the spoken distance re-derives.
-  // Math.max(0, …) is defensive-only: the anchor column sits ≥ ~15y deep for any real
-  // household while elapsed is codec-bounded to ~6.
-  const elapsed = savedAnchor?.elapsedPlanYears ?? 0
-  const years = Math.max(0, Math.round(resolved.samples[i]!.yearsFromNow) - elapsed)
+  // count overstates the remaining runway by the years since the plan was BUILT). The COLUMN
+  // stays plan-time data (the same resampled figures the scrub shows); only the spoken distance
+  // re-derives. Math.max(0, …) is defensive-only: the anchor column sits ≥ ~15y deep for any
+  // real household while the plan clock is codec-bounded to ~6.
+  const yearsSinceBuilt = savedAnchor?.yearsSincePlanBuilt ?? 0
+  const years = Math.max(0, Math.round(resolved.samples[i]!.yearsFromNow) - yearsSinceBuilt)
   // Depletion by the DISPLAYED figure (never a soft "$0"), tested against the SAME formatter the row
   // uses (so a lerp-dust $0.4 that formats to "$0" is caught too). Three honest shapes, median first:
   //  - median reads $0 ⇒ TOTAL depletion (already-failing): the savings are most likely gone — "$0 but

@@ -88,34 +88,59 @@ export function curveMarks(track: DateTrackOutcome): readonly CurveMark[] {
   })
 }
 
+/**
+ * THE ONE arrived predicate (Act-4 · U17 §S0.1, council wf_f4ced3c8-2f6) — "has this plan
+ * stop-year already gone by?" Exported from here and consumed by EVERY surface that gates on
+ * it; a re-typed inline compare is the drift that produced the U17 defect (insight 099: the
+ * ladder got the guard, the band was the unguarded sibling), and the source-bind pin in
+ * `planClockSeam.test.ts` fails if any consumer re-types it.
+ *
+ * STRICT `<`, and the strictness is load-bearing: at `planOffsetYears === yearsSincePlanBuilt`
+ * the stop-year is TODAY — still a real choice, still the hero's own claim — so it is NOT
+ * passed (the ladder keeps its "stopping today" crown, `FuckOffDate.test.tsx:208-212`). Only a
+ * year strictly BEFORE today is history, and history is not an option an options chart plots.
+ *
+ * @param planOffsetYears the DURABLE plan offset (whole sim-years from the plan's start year)
+ * @param yearsSincePlanBuilt how many calendar years have passed since the plan was BUILT
+ *   (0 on every fresh session — the identity, under which nothing is ever passed)
+ */
+export function offsetHasPassed(planOffsetYears: number, yearsSincePlanBuilt: number): boolean {
+  return planOffsetYears < yearsSincePlanBuilt
+}
+
 /** Re-base a FRESH mark set to wall time for an AGED vault (council 2026-07-10 — the
  *  two-time-bases family's third sibling; the hero re-derives "years out" from today, so the
  *  ladder must speak the same clock or the giant rosier hero sits over a contradicted ladder).
  *
  *  THE RULING (each clause a named rail):
- *  - DROP already-passed stop-years (planOffsetYears < elapsedYears): a past year is not a
- *    choice — an options chart plots options — and its odds are counterfactual history computed
- *    against save-day balances. FILTER-BEFORE-GEOMETRY: a negative offset handed to xForOffset
- *    silently clamps to the left edge ("today"), a fresh lie. Trimmed at the ARRAY, so the
- *    single-sourced describeMark sentence (aria + scrub) disappears with the dot — never a
- *    CSS-hidden dot an AT user can still reach.
- *  - RE-BASE the survivors' DISPLAY offset to years-from-today (planOffset − elapsed); the
- *    boundary planOffset == elapsed survives as display 0, "today" (the heroLead offset-0
- *    precedent). planOffsetYears is untouched — the durable React key.
- *  - IDENTITY (`===`) at elapsed ≤ 0: every fresh surface is byte-identical by REFERENCE (the
- *    source-bound rail; every organic save today is same-day).
+ *  - DROP already-passed stop-years ({@link offsetHasPassed} — the ONE predicate, never a
+ *    re-typed compare): a past year is not a choice — an options chart plots options — and its
+ *    odds are counterfactual history computed against build-era balances. FILTER-BEFORE-GEOMETRY:
+ *    a negative offset handed to xForOffset silently clamps to the left edge ("today"), a fresh
+ *    lie. Trimmed at the ARRAY, so the single-sourced describeMark sentence (aria + scrub)
+ *    disappears with the dot — never a CSS-hidden dot an AT user can still reach.
+ *  - RE-BASE the survivors' DISPLAY offset to years-from-today (planOffset − yearsSincePlanBuilt);
+ *    the boundary planOffset == yearsSincePlanBuilt survives as display 0, "today" (the heroLead
+ *    offset-0 precedent). planOffsetYears is untouched — the durable React key.
+ *  - IDENTITY (`===`) at yearsSincePlanBuilt ≤ 0: every fresh surface is byte-identical by
+ *    REFERENCE (the source-bound rail; every organic save today is same-day).
  *
  *  Input must be a fresh {@link curveMarks} derivation (offsetYears still plan-relative) —
  *  never an already-re-based set (a double re-base would silently shift the clock twice).
- *  The crown-arrived WITHDRAW (crown < elapsed ⇒ no ladder at all — never a crownless dot
- *  field) is the MOUNT's law (FuckOffDate); this transform only enforces per-mark honesty. */
+ *  The crown-arrived WITHDRAW (the crown has passed ⇒ no ladder at all — never a crownless dot
+ *  field) is the MOUNT's law (FuckOffDate); this transform only enforces per-mark honesty.
+ *
+ *  @param yearsSincePlanBuilt calendar years since the plan was BUILT (U17 §S0.2 — this clock
+ *    is anchored on `startCalendarYear`, the BUILD year, NOT on `savedAt`; a re-saver's plan is
+ *    years old while their save is minutes old).
+ */
 export function agedLadderMarks(
   marks: readonly CurveMark[],
-  elapsedYears: number,
+  yearsSincePlanBuilt: number,
 ): readonly CurveMark[] {
-  if (elapsedYears <= 0) return marks
+  if (yearsSincePlanBuilt <= 0) return marks
   return marks
-    .filter((m) => m.planOffsetYears >= elapsedYears)
-    .map((m) => ({ ...m, offsetYears: m.planOffsetYears - elapsedYears }))
+    .filter((m) => !offsetHasPassed(m.planOffsetYears, yearsSincePlanBuilt))
+    .map((m) => ({ ...m, offsetYears: m.planOffsetYears - yearsSincePlanBuilt }))
 }
 

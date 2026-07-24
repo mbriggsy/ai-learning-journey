@@ -505,12 +505,20 @@ export const copy = {
   bandClockHorizonLabel: 'Plan horizon',
   bandClockWorkStopsLabel: 'Work stops',
   // The AGED-vault year-0 endpoint (U13 follow-up — caught live on the first `?vault=datestale`
-  // walk, 2026-07-10): a re-opened old save's fan starts at the SAVE moment, not today, and
+  // walk, 2026-07-10): a re-opened old plan's fan starts where the PLAN does, not today, and
   // calling that column "Today" put two time bases on one screen (the exact class the U13
-  // ultramode fixed for the hero + floor lines). On an aged vault the year-0 endpoint renames
-  // to this label (saved ages beneath it) and the REAL "Today" marker moves to
-  // x = years-since-save, wearing the household's CURRENT ages.
-  bandClockSavedLabel: 'Your save',
+  // ultramode fixed for the hero + floor lines). On an aged plan the year-0 endpoint renames
+  // to this label (the BUILD-era ages beneath it) and the REAL "Today" marker moves to
+  // x = years-since-built, wearing the household's CURRENT ages.
+  //
+  // IT NAMES THE BUILD, NOT THE SAVE (U17 §S0.2, council wf_f4ced3c8-2f6). The old wording —
+  // 'Your save' / "When you saved this" — attributed that column to `savedAt`, but the column is
+  // the plan's own `startCalendarYear`: the BUILD year, written once and untouched by every
+  // re-save. On a RE-SAVER (built last year, saved five minutes ago) the old label was flatly
+  // false, and it contradicted the fresh "Saved to this device" badge on the same screen. The
+  // year itself rides `slots.bandClockBuiltDesc` (the a11y sentence) — the short axis word stays
+  // short so it can never crowd the wall-Today marker beside it.
+  bandClockBuiltLabel: 'Plan built',
   // --- R19 calm error grammar (icon + adjacent text; color never alone) ---
   // The two CEILING errors are NOT here (F10): they quote the actual statutory limit dollar,
   // so they are slot templates — slots.errContributionCeiling / slots.errAdditionsCeiling,
@@ -1473,10 +1481,13 @@ export const slots = {
   /** The "Today" marker's accessible sentence (the reader is color-blind — the marker's meaning
    *  must reach the a11y tree as text, not as a vertical rule alone). */
   bandClockTodayDesc: (ageA: number, ageB: number): string => `Today — ages ${ageA} and ${ageB}`,
-  /** The aged-vault "Your save" year-0 endpoint's accessible sentence (the U13 one-time-base
-   *  law applied to the chart — see `bandClockSavedLabel`). Saved ages, the save moment named. */
-  bandClockSavedDesc: (ageA: number, ageB: number): string =>
-    `When you saved this — ages ${ageA} and ${ageB}`,
+  /** The aged-plan "Plan built" year-0 endpoint's accessible sentence (the U13 one-time-base
+   *  law applied to the chart — see `bandClockBuiltLabel`). Names the BUILD YEAR and the ages
+   *  the household entered then — NEVER the save (U17 §S0.2: the save is `savedAt` and a
+   *  re-saver's is minutes old, while this column is `startCalendarYear`, untouched by every
+   *  re-save). The year is quoted in-sentence so the reader never derives it from the ages. */
+  bandClockBuiltDesc: (builtCalendarYear: number, ageA: number, ageB: number): string =>
+    `When you built this plan, in ${builtCalendarYear} — ages ${ageA} and ${ageB}`,
   /** The plan-horizon marker's accessible sentence — anchored at the fan's actual last year. */
   bandClockHorizonDesc: (ageA: number, ageB: number): string =>
     `The plan horizon — ages ${ageA} and ${ageB}`,
@@ -1905,7 +1916,8 @@ export const slots = {
     `Part of your budget was set to end in ${endCalendarYear} — worth a look if that’s changed.`,
   /** The date hero's ANCHORED framing (U13): the relative years re-derived against wall
    *  time + the wall-time-stable calendar label — the calendar year never decays, the "~N
-   *  years" is always from TODAY (a re-opened old save must not replay its save-day count). */
+   *  years" is always from TODAY (a re-opened old plan must not replay the count it carried on
+   *  the day it was BUILT — U17 §S0.2; the anchor's clock measures the build, not the save). */
   dateInYearsAnchored: (n: number, calendarYear: number): string =>
     n === 1
       ? `Your fuck-off date is about a year out — around ${calendarYear}`

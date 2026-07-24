@@ -71,6 +71,19 @@ already forbid attributing that quantity to the save (`staleness.ts:26`, `result
 - **The balance vintage stays on `savedAt`** (`agedBalancesYearFor`, `resultSave.ts:99-109`) — unchanged.
 - **Clamp to `[0, horizonYears)`** and **refuse aloud** outside it. A skewed clock refuses; it never
   redraws.
+
+  **PILOT RULING (2026-07-24, dated amendment — the S0 verifier asked for it explicitly):** the two ends
+  are **deliberately asymmetric**, and this is the contract, not a builder's reading. The **HIGH end
+  throws** (the `resolveBandData` fail-loud-at-the-producer-seam idiom): a plan clock at or past the drawn
+  horizon has no honest picture to re-base — every drawn year would be in the past under a wall-Today
+  marker that isn't on the chart. The **LOW end clamps to the fresh identity** and does **not** throw: a
+  device clock reading behind the build year is a *broken clock, not a household state*, and clamping to 0
+  IS the refusal to redraw — no re-base, no claim, the un-anchored picture. Throwing there would crash a
+  reader over their own system settings, which is hostile and buys no honesty. Only a **positive** claim
+  ("this plan is N years old") can be out of the drawable domain, so only a positive claim can refuse
+  aloud. **The low-end clamp must be pinned by an arm that can actually witness it** — a non-integer
+  negative, since a negative *integer* is nulled downstream by the `yearsSinceBuilt > 0` gate and so
+  passes vacuously (insight 029).
 - **The user-visible label follows the rename.** `bandAnnotations.ts:66-82`'s aged arm currently renders
   `bandClockSavedLabel` (`'Your save'`) + `bandClockSavedDesc` (*"When you saved this — ages A and B"*)
   at plan-year 0. On a **re-saver** (built last year, saved five minutes ago) that is **false**, and it

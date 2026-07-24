@@ -72,9 +72,10 @@ export interface SequencingControlProps {
   /** U12 ultramode: close-time focus fallback for when the opening trigger has unmounted
    *  (the via-AssumptionPanel route) — forwarded to the ControlSheet scaffold. */
   readonly restoreFallback?: () => HTMLElement | null
-  /** P3·U13 — the aged-vault wall-time anchor (Result's memoized dateAnchor): the TwoFutures
-   *  year-0 endpoint renames "Today" → "Your save" when elapsed > 0 (one time base per screen;
-   *  the ultramode caller-lens caught this chart as the sibling the band fix missed). */
+  /** P3·U13 — the aged-plan wall-time anchor (Result's memoized dateAnchor): the TwoFutures
+   *  year-0 endpoint renames "Today" → "Plan built" when the plan clock > 0 (one time base per
+   *  screen; the ultramode caller-lens caught this chart as the sibling the band fix missed.
+   *  U17 §S0.2 — the clock measures the BUILD, never the save). */
   readonly savedAnchor?: BandSavedAnchor
 }
 

@@ -255,29 +255,29 @@ describe('heroLead — the U13 wall-time anchor (the date answer must not decay 
   })
 
   it('anchored at elapsed 0 (every fresh session): the relative count is UNCHANGED and the calendar label rides along', () => {
-    expect(heroLead(dated, 30, { startCalendarYear: 2026, elapsedPlanYears: 0 })).toBe(
+    expect(heroLead(dated, 30, { startCalendarYear: 2026, yearsSincePlanBuilt: 0 })).toBe(
       slots.dateInYearsAnchored(7, 2033),
     )
   })
 
-  it('anchored on an AGED vault: the count re-derives from TODAY while the calendar label holds (never a replayed save-day count)', () => {
-    expect(heroLead(dated, 30, { startCalendarYear: 2026, elapsedPlanYears: 3 })).toBe(
+  it('anchored on an AGED plan: the count re-derives from TODAY while the calendar label holds (never a replayed build-day count)', () => {
+    expect(heroLead(dated, 30, { startCalendarYear: 2026, yearsSincePlanBuilt: 3 })).toBe(
       slots.dateInYearsAnchored(4, 2033),
     )
   })
 
   it('the arrived arm: wall time caught up — the plan states its own calendar, never a fresh "stop now" verdict', () => {
-    expect(heroLead(dated, 30, { startCalendarYear: 2026, elapsedPlanYears: 7 })).toBe(
+    expect(heroLead(dated, 30, { startCalendarYear: 2026, yearsSincePlanBuilt: 7 })).toBe(
       slots.dateInYearsPast(2033),
     )
-    expect(heroLead(dated, 30, { startCalendarYear: 2026, elapsedPlanYears: 9 })).toBe(
+    expect(heroLead(dated, 30, { startCalendarYear: 2026, yearsSincePlanBuilt: 9 })).toBe(
       slots.dateInYearsPast(2033),
     )
   })
 
   it('offset 0 stays the free-today claim regardless of anchor (the engine crowned NOW — no arithmetic to do)', () => {
     const now = { ...dated, offsetYears: 0 } as DateTrackOutcome
-    expect(heroLead(now, 30, { startCalendarYear: 2026, elapsedPlanYears: 2 })).toBe(copy.dateFreeToday)
+    expect(heroLead(now, 30, { startCalendarYear: 2026, yearsSincePlanBuilt: 2 })).toBe(copy.dateFreeToday)
   })
 })
 
@@ -300,28 +300,28 @@ describe('floorLineText — the SAME anchor as the hero (ultramode 2026-07-09: o
   })
 
   it('anchored at elapsed 0 (every fresh session): count unchanged, calendar label rides along', () => {
-    expect(floorLineText(split(5), 30, { startCalendarYear: 2026, elapsedPlanYears: 0 })).toBe(
+    expect(floorLineText(split(5), 30, { startCalendarYear: 2026, yearsSincePlanBuilt: 0 })).toBe(
       slots.dateFloorCoveredAnchored(5, 2031, odds(), false),
     )
   })
 
   it('anchored on an AGED vault: the count re-derives from TODAY while the calendar label holds', () => {
-    expect(floorLineText(split(5), 30, { startCalendarYear: 2026, elapsedPlanYears: 3 })).toBe(
+    expect(floorLineText(split(5), 30, { startCalendarYear: 2026, yearsSincePlanBuilt: 3 })).toBe(
       slots.dateFloorCoveredAnchored(2, 2031, odds(), false),
     )
   })
 
   it('the arrived arm: the essentials date has come around by the calendar — the plan states its own year', () => {
-    expect(floorLineText(split(5), 30, { startCalendarYear: 2026, elapsedPlanYears: 5 })).toBe(
+    expect(floorLineText(split(5), 30, { startCalendarYear: 2026, yearsSincePlanBuilt: 5 })).toBe(
       slots.dateFloorCoveredPast(2031, odds(), false),
     )
-    expect(floorLineText(split(5), 30, { startCalendarYear: 2026, elapsedPlanYears: 8 })).toBe(
+    expect(floorLineText(split(5), 30, { startCalendarYear: 2026, yearsSincePlanBuilt: 8 })).toBe(
       slots.dateFloorCoveredPast(2031, odds(), false),
     )
   })
 
   it('offset 0 keeps the covered-from-today claim under any anchor (covered from the plan start ⇒ still covered now)', () => {
-    expect(floorLineText(split(0), 30, { startCalendarYear: 2026, elapsedPlanYears: 4 })).toBe(
+    expect(floorLineText(split(0), 30, { startCalendarYear: 2026, yearsSincePlanBuilt: 4 })).toBe(
       slots.dateFloorCovered(0, odds(), false),
     )
   })
@@ -331,7 +331,7 @@ describe('floorLineText — the SAME anchor as the hero (ultramode 2026-07-09: o
       ...split(5),
       floor: { kind: 'not-within-window' },
     } as unknown as Extract<DateSplitView, { kind: 'split' }>
-    expect(floorLineText(noFloor, 30, { startCalendarYear: 2026, elapsedPlanYears: 3 })).toBe(
+    expect(floorLineText(noFloor, 30, { startCalendarYear: 2026, yearsSincePlanBuilt: 3 })).toBe(
       slots.dateFloorNotWithin(30),
     )
   })

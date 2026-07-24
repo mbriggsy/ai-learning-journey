@@ -215,7 +215,7 @@ describe('OddsLadder — the scrub readout', () => {
 describe('OddsLadder — the aged wall-time re-base', () => {
   it('drops passed stop-years and re-bases ticks + aria + readout to years-from-today', () => {
     // track offsets [2,4,6,8,12], elapsed 3 → plan-2 drops; displays [1,3,5,9].
-    const { container } = render(<OddsLadder track={track} labels={labels} elapsedYears={3} />)
+    const { container } = render(<OddsLadder track={track} labels={labels} yearsSincePlanBuilt={3} />)
     const ticks = [...container.querySelectorAll('.ladder-frame-text .ladder-droppable-label')]
       .map((t) => t.textContent)
       .slice(0, -1) // the last frame-text node is the axis caption
@@ -230,7 +230,7 @@ describe('OddsLadder — the aged wall-time re-base', () => {
   })
 
   it('re-derives the x domain from the SURVIVORS so the rightmost mark stays at the right edge', () => {
-    const { container } = render(<OddsLadder track={track} labels={labels} elapsedYears={3} />)
+    const { container } = render(<OddsLadder track={track} labels={labels} yearsSincePlanBuilt={3} />)
     // display domain is [0, 9]: the crown (display 5) sits at 5/9 across the plot, not 8/12.
     const crown = container.querySelector('.ladder-dot--crown')
     expect(Number(crown?.getAttribute('cx'))).toBeCloseTo(xForOffset(5, 9), 3)
@@ -238,13 +238,13 @@ describe('OddsLadder — the aged wall-time re-base', () => {
 
   it('elapsed 0 renders byte-identically to the un-anchored mount (the fresh identity)', () => {
     const fresh = render(<OddsLadder track={track} labels={labels} />)
-    const zero = render(<OddsLadder track={track} labels={labels} elapsedYears={0} />)
+    const zero = render(<OddsLadder track={track} labels={labels} yearsSincePlanBuilt={0} />)
     expect(zero.container.innerHTML).toBe(fresh.container.innerHTML)
   })
 
   it('a boundary mark (planOffset == elapsed) survives as the "today" tick', () => {
     // elapsed 2 → plan-2 re-bases to display 0; the injected formatOffset maps 0 → "today".
-    const { container } = render(<OddsLadder track={track} labels={labels} elapsedYears={2} />)
+    const { container } = render(<OddsLadder track={track} labels={labels} yearsSincePlanBuilt={2} />)
     const ticks = [...container.querySelectorAll('.ladder-frame-text .ladder-droppable-label')].map(
       (t) => t.textContent,
     )

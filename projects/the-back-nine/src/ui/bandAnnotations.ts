@@ -48,29 +48,99 @@ const DECADE = 10
 const HORIZON_TICK_PAD_YEARS = 3
 
 /**
- * The aged-vault wall-time anchor (U13 one-screen-one-time-base law, applied to the CHART —
+ * The aged-plan wall-time anchor (U13 one-screen-one-time-base law, applied to the CHART —
  * caught live on the first `?vault=datestale` walk, 2026-07-10: the band's year 0 read
  * "Today 58 / 59" beside a gate that had just said "saved about 2 years ago"). The fan's
- * year 0 is the PLAN's start (the save moment) — on an aged vault that column is not today.
- * When `elapsedPlanYears > 0`: the year-0 endpoint renames to "Your save" (saved ages,
- * id 'saved') and the REAL "Today" marker lands at x = elapsedPlanYears wearing the
- * household's CURRENT ages — the reader finds themselves ON the picture. elapsed 0 (every
- * fresh session) derives BYTE-IDENTICALLY to the un-anchored call. This is Result's own
+ * year 0 is the PLAN's own start year — on an aged plan that column is not today.
+ * When `yearsSincePlanBuilt > 0`: the year-0 endpoint renames to "Plan built" (the BUILD-era
+ * ages, id 'built') and the REAL "Today" marker lands at x = yearsSincePlanBuilt wearing the
+ * household's CURRENT ages — the reader finds themselves ON the picture. A plan clock of 0
+ * (every fresh session) derives BYTE-IDENTICALLY to the un-anchored call. This is Result's own
  * memoized `dateAnchor` (the ONE local-calendar chain) — never a second ad-hoc clock read.
+ *
+ * THE CLOCK IS THE BUILD CLOCK, NOT THE SAVE CLOCK (U17 §S0.2 — the rename that made the field
+ * say what it always computed). Both members derive from `startCalendarYear`, which is written
+ * ONCE when the plan is built (`memoryModel.ts:522`) and survives every re-save untouched. The
+ * SAVE's own vintage is `savedAt` and lives on a separate rail (`agedBalancesYearFor`) — a
+ * re-saver (built last year, saved five minutes ago) has an aged plan clock and NO aged
+ * balances at all, which is exactly the household the old 'Your save' label lied to.
+ *
+ * (FILED, not done here: the type name still says "Saved". Renaming it touches eight import
+ * sites across three layers and is not this stage's decided scope — U17 §S0 renames the field.)
  */
 export interface BandSavedAnchor {
-  readonly elapsedPlanYears: number
+  /** The plan's BUILD year — `startCalendarYear`, the calendar the fan's year 0 sits in. */
+  readonly startCalendarYear: number
+  /** Calendar years since the plan was BUILT (wall year − `startCalendarYear`), clamped at 0
+   *  by {@link planClockAnchor}. 0 on every fresh session — the byte-identity. */
+  readonly yearsSincePlanBuilt: number
 }
 
-/** The year-0 endpoint: "Today" on a fresh session; "Your save" (saved ages) on an aged vault. */
-function yearZeroMarker(ageA: number, ageB: number, aged: boolean): XAnnotation {
-  return aged
+/**
+ * MINT THE PLAN CLOCK — the ONE derivation, consumed by `Result.tsx` and by its tests.
+ *
+ * This exists because a test that RE-TYPES the mint pins nothing: the U17 §S0 verifier planted
+ * `wallYear - startCalendarYear + 3` in the component and the whole suite stayed green (1096
+ * tests), because the seam test had copied the arithmetic into its own helper under a comment
+ * claiming it matched. A comment is not a bind (insight 032); re-deriving a producer's inputs
+ * forks at its first divergence (insight 081). So the arithmetic lives HERE, once, and the
+ * component calls it — the same idiom `offsetHasPassed` uses for the arrived predicate.
+ *
+ * `Math.max(0, …)` is the LOW-end refusal: a device clock reading BEHIND the build year is a
+ * broken clock, not a household state, and the honest answer is to decline to age the surface
+ * at all (the fresh identity) rather than to crash a reader over their own system settings.
+ * The HIGH end refuses aloud instead — see {@link planClockWithin} — because only a POSITIVE
+ * claim ("this plan is N years old") can be out of the drawable domain.
+ */
+export function planClockAnchor(startCalendarYear: number, wallCalendarYear: number): BandSavedAnchor {
+  return {
+    startCalendarYear,
+    yearsSincePlanBuilt: Math.max(0, wallCalendarYear - startCalendarYear),
+  }
+}
+
+/**
+ * The plan clock resolved against the DRAWN horizon — the ONE gate every aged x-axis re-base
+ * passes through (U17 §S0.2).
+ *
+ * `[0, horizonYears)` is the whole domain in which "the plan was built N years before today"
+ * can be DRAWN: at N ≥ horizon, today itself is off the right edge of the chart, so there is no
+ * honest picture to re-base — the fan would be a run of years that are all in the past, wearing
+ * a wall-Today marker that does not exist on it. A clock that lands there is SKEWED (a corrupt
+ * or imported `startCalendarYear`, a device clock set decades wrong), and a skewed clock
+ * REFUSES ALOUD — it never redraws. This is `resolveBandData`'s fail-loud-at-the-producer-seam
+ * idiom, deliberately: a silently-degraded axis is the calm-but-wrong sin, and there is no calm
+ * sentence a pure annotation deriver could render instead.
+ *
+ * The LOW end clamps rather than throws, and the asymmetry is deliberate: the producer already
+ * mints `Math.max(0, …)` (Result.tsx), and clamping to 0 IS the refusal to redraw — the fresh
+ * identity, not a re-based picture. Only a POSITIVE claim ("this plan is N years old") can be
+ * out of the drawable domain, so only a positive claim can refuse.
+ */
+function planClockWithin(anchor: BandSavedAnchor | undefined, horizonYears: number): number {
+  const years = anchor?.yearsSincePlanBuilt ?? 0
+  if (years <= 0) return 0 // the fresh identity — nothing is re-based, no domain question arises
+  if (!Number.isInteger(years) || years >= horizonYears) {
+    throw new Error(
+      `bandAnnotations: yearsSincePlanBuilt ${String(years)} is outside the drawable domain ` +
+        `[0, ${String(horizonYears)}) — a skewed plan clock refuses, it never redraws (U17 §S0.2).`,
+    )
+  }
+  return years
+}
+
+/** The year-0 endpoint: "Today" on a fresh session; "Plan built" (the BUILD year + the ages the
+ *  household entered then) on an aged plan — never a claim about the SAVE (U17 §S0.2). */
+function yearZeroMarker(ageA: number, ageB: number, aged: BandSavedAnchor | null): XAnnotation {
+  return aged !== null
     ? {
-        id: 'saved',
+        id: 'built',
         yearsFromNow: 0,
-        label: copy.bandClockSavedLabel,
+        label: copy.bandClockBuiltLabel,
         ages: slots.bandClockAges(ageA, ageB),
-        description: slots.bandClockSavedDesc(ageA, ageB),
+        // The BUILD year comes from the anchor itself — there is no arm in which the year is
+        // unavailable, so nothing is ever fabricated or suppressed here.
+        description: slots.bandClockBuiltDesc(aged.startCalendarYear, ageA, ageB),
       }
     : {
         id: 'today',
@@ -81,22 +151,22 @@ function yearZeroMarker(ageA: number, ageB: number, aged: boolean): XAnnotation 
       }
 }
 
-/** The aged arm's WALL-TIME "Today" marker at x = elapsed (current ages), or null when it
- *  would crowd the horizon endpoint (a vanishing-rare decades-old vault whose today sits at
- *  the chart's far edge — the 'saved' year-0 label alone stays honest there). */
+/** The aged arm's WALL-TIME "Today" marker at x = years-since-built (current ages), or null when
+ *  it would crowd the horizon endpoint (a vanishing-rare decade-old plan whose today sits at the
+ *  chart's far edge — the 'built' year-0 label alone stays honest there). */
 function wallTodayMarker(
   ageA: number,
   ageB: number,
-  elapsedPlanYears: number,
+  yearsSincePlanBuilt: number,
   horizonYears: number,
 ): XAnnotation | null {
-  if (elapsedPlanYears >= horizonYears - HORIZON_TICK_PAD_YEARS) return null
+  if (yearsSincePlanBuilt >= horizonYears - HORIZON_TICK_PAD_YEARS) return null
   return {
     id: 'today',
-    yearsFromNow: elapsedPlanYears,
+    yearsFromNow: yearsSincePlanBuilt,
     label: copy.bandClockTodayLabel,
-    ages: slots.bandClockAges(ageA + elapsedPlanYears, ageB + elapsedPlanYears),
-    description: slots.bandClockTodayDesc(ageA + elapsedPlanYears, ageB + elapsedPlanYears),
+    ages: slots.bandClockAges(ageA + yearsSincePlanBuilt, ageB + yearsSincePlanBuilt),
+    description: slots.bandClockTodayDesc(ageA + yearsSincePlanBuilt, ageB + yearsSincePlanBuilt),
   }
 }
 /** Stop ticking past this age: beyond ~100 the cohort is vanishingly thin (the faded tail), so a
@@ -156,10 +226,13 @@ export function deriveSpineBandAnnotations(
   horizonYears: number,
   savedAnchor?: BandSavedAnchor,
 ): readonly XAnnotation[] {
-  const elapsed = savedAnchor?.elapsedPlanYears ?? 0
-  const markers: XAnnotation[] = [yearZeroMarker(currentAgeA, currentAgeB, elapsed > 0)]
+  const yearsSinceBuilt = planClockWithin(savedAnchor, horizonYears)
+  const aged = yearsSinceBuilt > 0 && savedAnchor !== undefined ? savedAnchor : null
+  const markers: XAnnotation[] = [yearZeroMarker(currentAgeA, currentAgeB, aged)]
   const wallToday =
-    elapsed > 0 ? wallTodayMarker(currentAgeA, currentAgeB, elapsed, horizonYears) : null
+    aged !== null
+      ? wallTodayMarker(currentAgeA, currentAgeB, yearsSinceBuilt, horizonYears)
+      : null
   if (wallToday !== null) markers.push(wallToday)
   // Intermediate decade-age reference ticks (the ONE canonical rule — deriveDecadeAgeTicks). Ages
   // only, on the same baseline as the endpoints' ages (the endpoints alone carry a named word above).
@@ -211,10 +284,13 @@ export function deriveDateBandAnnotations(
   horizonYears: number,
   savedAnchor?: BandSavedAnchor,
 ): readonly XAnnotation[] {
-  const elapsed = savedAnchor?.elapsedPlanYears ?? 0
-  const markers: XAnnotation[] = [yearZeroMarker(currentAgeA, currentAgeB, elapsed > 0)]
+  const yearsSinceBuilt = planClockWithin(savedAnchor, horizonYears)
+  const aged = yearsSinceBuilt > 0 && savedAnchor !== undefined ? savedAnchor : null
+  const markers: XAnnotation[] = [yearZeroMarker(currentAgeA, currentAgeB, aged)]
   const wallToday =
-    elapsed > 0 ? wallTodayMarker(currentAgeA, currentAgeB, elapsed, horizonYears) : null
+    aged !== null
+      ? wallTodayMarker(currentAgeA, currentAgeB, yearsSinceBuilt, horizonYears)
+      : null
   if (wallToday !== null) markers.push(wallToday)
   // The FUTURE work-stops moment (the fuck-off date) — only when strictly in the future AND clear of
   // the horizon endpoint. At offset 0 the household stops TODAY (already marked by Today). When the

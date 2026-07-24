@@ -49,8 +49,9 @@ import type { PricedState } from '@engine/constants/stateTax'
 import { focusHeading, useLiveAnnouncer } from '@intake/a11y'
 import { ConfidenceBandPanel } from '@viz/ConfidenceBandPanel'
 import { OddsLadder } from '@viz/OddsLadder'
-import { agedLadderMarks, curveMarks } from '@viz/curveMarks'
+import { agedLadderMarks, curveMarks, offsetHasPassed } from '@viz/curveMarks'
 import { resolveBandData, type XAnnotation } from '@viz/bandData'
+import type { BandSavedAnchor } from './bandAnnotations'
 import { BAND_LABELS, BAND_CHROME, composeBandAtRange } from './bandPanelChrome'
 import { LADDER_LABELS } from './oddsLadderChrome'
 import { axisDollarFormatterFor, formatAxisDollar } from './money'
@@ -115,13 +116,16 @@ export interface FuckOffDateProps {
    *  rides WITH the verdict). Default false. */
   readonly stalenessNote?: boolean
   /** P3·U13 — the wall-time anchor for the date framing (the council's date rule): the
-   *  plan's own start year + how many CALENDAR years have passed since it. When present,
-   *  the hero line carries the wall-time-stable calendar label ("— around 2033") and the
-   *  relative "~N years out" is re-derived against TODAY (offset − elapsed, floored at the
-   *  arrived arm) — a re-opened old save must never replay its save-day count as current.
-   *  NEVER written back into the draft (the round-trip guard). Absent (the preview
-   *  harness) ⇒ the un-anchored legacy framing. */
-  readonly dateAnchor?: { readonly startCalendarYear: number; readonly elapsedPlanYears: number }
+   *  plan's own BUILD year + how many CALENDAR years have passed since the plan was BUILT
+   *  (U17 §S0.2 — the clock was never "since your save"; a re-saver's plan is years old
+   *  while their save is minutes old). When present, the hero line carries the wall-time-
+   *  stable calendar label ("— around 2033") and the relative "~N years out" is re-derived
+   *  against TODAY (offset − the plan clock, floored at the arrived arm) — a re-opened old
+   *  plan must never replay its build-day count as current. NEVER written back into the
+   *  draft (the round-trip guard). Absent (the preview harness) ⇒ the un-anchored legacy
+   *  framing. The ONE anchor shape the band derivers take, so the hero and the chart can
+   *  never grow two clocks. */
+  readonly dateAnchor?: BandSavedAnchor
   /** The aged-balances clause's honest year (review 2026-07-10): present ⇔ the rendered
    *  answer still matches an on-disk save at least one calendar year old — derived by
    *  IntakeApp from the persist machine's OWN saved scenario's `savedAt` (never
@@ -138,19 +142,19 @@ export interface FuckOffDateProps {
 
 /** The hero claim's heading text — shared by the render and the polite sharpen announce, so what
  *  is spoken is exactly what is shown. With an anchor (P3·U13): the calendar label is the
- *  wall-time-STABLE claim (startCalendarYear + offset — byte-identical however old the save)
- *  and the relative count re-derives from today (offset − elapsed). The engine's own offset
- *  is NEVER mutated — this is presentation arithmetic only. */
+ *  wall-time-STABLE claim (startCalendarYear + offset — byte-identical however old the plan)
+ *  and the relative count re-derives from today (offset − years since the plan was BUILT). The
+ *  engine's own offset is NEVER mutated — this is presentation arithmetic only. */
 export function heroLead(
   hero: DateTrackOutcome,
   windowTopYears: number,
-  anchor?: { readonly startCalendarYear: number; readonly elapsedPlanYears: number },
+  anchor?: BandSavedAnchor,
 ): string {
   if (hero.kind === 'no-date-in-window') return slots.noDateInWindow(windowTopYears)
   if (hero.offsetYears === 0) return copy.dateFreeToday
   if (anchor === undefined) return slots.dateInYears(hero.offsetYears)
   const calendarYear = anchor.startCalendarYear + hero.offsetYears
-  const yearsFromToday = hero.offsetYears - anchor.elapsedPlanYears
+  const yearsFromToday = hero.offsetYears - anchor.yearsSincePlanBuilt
   // The arrived arm: wall time caught up to (or passed) the saved date — state the plan's
   // own calendar, never a fresh "stop now" verdict (the recompute's word carries that).
   if (yearsFromToday <= 0) return slots.dateInYearsPast(calendarYear)
@@ -159,13 +163,13 @@ export function heroLead(
 
 /** The subordinate essentials line (split only) — the floor's claim in its own register.
  *  Anchored EXACTLY like `heroLead` (ultramode 2026-07-09): both lines share one screen, so
- *  an aged vault must never show a wall-time-corrected hero beside a floor replaying its
- *  save-day count — two time bases can even invert the true floor<lifestyle ordering.
+ *  an aged plan must never show a wall-time-corrected hero beside a floor replaying its
+ *  build-day count — two time bases can even invert the true floor<lifestyle ordering.
  *  Exported for the anchor battery (the heroLead precedent). */
 export function floorLineText(
   split: Extract<DateSplitView, { kind: 'split' }>,
   windowTopYears: number,
-  anchor?: { readonly startCalendarYear: number; readonly elapsedPlanYears: number },
+  anchor?: BandSavedAnchor,
 ): string {
   const fl = split.floor
   if (fl.kind === 'not-within-window') {
@@ -183,7 +187,7 @@ export function floorLineText(
     return slots.dateFloorCovered(fl.offsetYears, odds, fl.unconfirmed)
   }
   const calendarYear = anchor.startCalendarYear + fl.offsetYears
-  const yearsFromToday = fl.offsetYears - anchor.elapsedPlanYears
+  const yearsFromToday = fl.offsetYears - anchor.yearsSincePlanBuilt
   if (yearsFromToday <= 0) return slots.dateFloorCoveredPast(calendarYear, odds, fl.unconfirmed)
   return slots.dateFloorCoveredAnchored(yearsFromToday, calendarYear, odds, fl.unconfirmed)
 }
@@ -269,33 +273,40 @@ export function FuckOffDate({ view, focusSignal, actionsSlot, medicarePricedNote
   } else {
     const heroTrack = hero!
     const heroDated = heroTrack.kind !== 'no-date-in-window'
-    // The U13 wall-time re-base (council 2026-07-10): 0 on every fresh session — the identity.
-    const elapsedYears = dateAnchor?.elapsedPlanYears ?? 0
+    // The U13 wall-time re-base (council 2026-07-10): calendar years since the plan was BUILT
+    // (U17 §S0.2 — never "since your save"). 0 on every fresh session — the identity.
+    const yearsSinceBuilt = dateAnchor?.yearsSincePlanBuilt ?? 0
     // The no-date "how close" line — the Honesty Hawk's worded alternative to a plotted no-date
     // curve (a scared reader could crown an above-the-line dot); reads the HERO (lifestyle) curve.
-    // Aged vaults read the FUTURE offsets only (a passed year's near-miss is not "how close you
+    // Aged plans read the FUTURE offsets only (a passed year's near-miss is not "how close you
     // are" — the same not-a-choice law as the ladder; best-of-future ≤ best-of-all: conservative).
-    // null ⇒ the aged filter left NO readable future stop-year (a vault older than the whole
+    // null ⇒ the aged filter left NO readable future stop-year (a plan older than the whole
     // date window): the line SUPPRESSES rather than fabricate a "0 of 10" floor off reduce's
     // initial value (review 2026-07-10 — the suppress-don't-fabricate law the tradeoff-null and
     // ladder-withdraw siblings already follow).
-    const futureNoDateMarks = heroDated ? null : agedLadderMarks(curveMarks(heroTrack), elapsedYears)
+    const futureNoDateMarks = heroDated
+      ? null
+      : agedLadderMarks(curveMarks(heroTrack), yearsSinceBuilt)
     const bestRung =
       futureNoDateMarks !== null && futureNoDateMarks.length > 0
         ? futureNoDateMarks.reduce((mx, m) => Math.max(mx, m.rung), 0)
         : null
-    // The aged-vault exclusion (insight 078's same-meaning sweep): the tradeoff OFFERS a stop-year,
-    // and on an aged vault a passed offset is not pickable — elapsed 0 is the fresh identity.
-    const tradeoff = heroDated ? dateTradeoffPoint(heroTrack, elapsedYears) : null
+    // The aged-plan exclusion (insight 078's same-meaning sweep): the tradeoff OFFERS a stop-year,
+    // and on an aged plan a passed offset is not pickable — a plan clock of 0 is the fresh identity.
+    const tradeoff = heroDated ? dateTradeoffPoint(heroTrack, yearsSinceBuilt) : null
     // THE CROWN-ARRIVED WITHDRAW (council 2026-07-10, Q2 — strict boundary): the ladder renders
-    // only while the crowned offset is today-or-future (crown ≥ elapsed). A passed crown means
-    // the hero already speaks the arrived arm ("that's about now") and a crownless field of
-    // future dots would invite picking a lucky peak — the ladder withdraws entirely, the hero's
-    // sentence carries the story. At crown == elapsed the "stopping today" crown stays (it
-    // agrees with the hero). Strict-< also makes the fresh path (elapsed 0) unconditionally
-    // rendered — offsets are never negative.
+    // only while the crowned offset is today-or-future. A passed crown means the hero already
+    // speaks the arrived arm ("that's about now") and a crownless field of future dots would
+    // invite picking a lucky peak — the ladder withdraws entirely, the hero's sentence carries
+    // the story. At crown == the plan clock the "stopping today" crown stays (it agrees with the
+    // hero). The strict-< also makes the fresh path (plan clock 0) unconditionally rendered —
+    // offsets are never negative. THE PREDICATE IS THE LADDER'S OWN (U17 §S0.1): `offsetHasPassed`
+    // is exported once from @viz/curveMarks and consumed here and there, so this gate and the
+    // ladder's per-mark filter can never drift apart again (insight 099 — the guarded sibling
+    // indicted the unguarded primary; a re-typed compare here reds the source-bind pin).
     const ladderWithdrawn =
-      heroTrack.kind !== 'no-date-in-window' && heroTrack.offsetYears < elapsedYears
+      heroTrack.kind !== 'no-date-in-window' &&
+      offsetHasPassed(heroTrack.offsetYears, yearsSinceBuilt)
     body = (
       <div
         className="fod-reveal"
@@ -387,7 +398,11 @@ export function FuckOffDate({ view, focusSignal, actionsSlot, medicarePricedNote
               <p className="fod-ladder__title" aria-hidden="true">
                 {copy.ladderDisclosure}
               </p>
-              <OddsLadder track={heroTrack} labels={LADDER_LABELS} elapsedYears={elapsedYears} />
+              <OddsLadder
+                track={heroTrack}
+                labels={LADDER_LABELS}
+                yearsSincePlanBuilt={yearsSinceBuilt}
+              />
               <p className="fod-ladder__caveat">{copy.ladderPlanCaveat}</p>
               {/* The aged-balances clause (council 2026-07-10, the pulled-forward facet c): fires
                   even when no rules-clock did, because the re-based ladder's new coherence makes

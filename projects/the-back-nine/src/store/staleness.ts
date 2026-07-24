@@ -272,9 +272,13 @@ export function deriveStaleness(scenario: ScenarioV3, todayEpochDay: number): St
   // ── budget: expired time-boxed windows (spine route only — Q6) ───────────────────────
   const expiredLines: ExpiredBudgetLine[] = []
   if (allRetired && scenario.budget !== undefined) {
-    const elapsedPlanYears = wallYear - scenario.startCalendarYear
+    // Years since the plan was BUILT — `startCalendarYear` is the budget windows' own year-0
+    // anchor on this route. Named for what it measures (U17 §S0.2, the repo-wide rename): it is
+    // NOT "years since your save", which is `savedAt`'s job three blocks up and diverges from
+    // this the moment a household re-saves an older plan.
+    const yearsSincePlanBuilt = wallYear - scenario.startCalendarYear
     scenario.budget.forEach((line, index) => {
-      if (line.endYear !== undefined && elapsedPlanYears > line.endYear) {
+      if (line.endYear !== undefined && yearsSincePlanBuilt > line.endYear) {
         expiredLines.push({
           index,
           category: line.category,

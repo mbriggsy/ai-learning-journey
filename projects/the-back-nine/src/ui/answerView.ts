@@ -133,10 +133,11 @@ function dateBand(
 
 /**
  * @param savedAnchor Result's memoized wall-time anchor (the ONE local-calendar chain — U13).
- *   Positive `elapsedPlanYears` re-bases the band's x-axis endpoints (year 0 = "Your save",
- *   wall "Today" at x = elapsed) so an aged vault's chart shares the hero's time base — the
- *   one-screen-one-time-base law. Absent / elapsed 0 (every fresh session, the preview
- *   harness) derives byte-identically to the pre-U13 shape.
+ *   A positive `yearsSincePlanBuilt` re-bases the band's x-axis endpoints (year 0 = "Plan
+ *   built", wall "Today" at x = the plan clock) so an aged plan's chart shares the hero's time
+ *   base — the one-screen-one-time-base law. Absent / a plan clock of 0 (every fresh session,
+ *   the preview harness) derives byte-identically to the pre-U13 shape. The clock measures the
+ *   BUILD, never the save (U17 §S0.2).
  */
 export function selectElevatedAnswer(
   snapshot: MemoryModelSnapshot,

@@ -95,12 +95,12 @@ describe('composeBandAtRange — the AT range sentence (council 2026-06-29)', ()
   it('AGED: "about N years out" re-bases to WALL time (plan-time years minus elapsed), figures unchanged', () => {
     const r = makeResolved()
     const row = r.tooltipRows[DEEPEST_INTERIOR]!
-    expect(composeBandAtRange(r, { elapsedPlanYears: 2 })).toBe(
+    expect(composeBandAtRange(r, { startCalendarYear: 2024, yearsSincePlanBuilt: 2 })).toBe(
       slots.bandAtRange(ANCHOR_YEARS - 2, row.low, row.high, row.median),
     )
   })
 
   it('AGED: elapsed 0 (every fresh session) composes byte-identically to the anchor-less call — the no-drift pin', () => {
-    expect(composeBandAtRange(makeResolved(), { elapsedPlanYears: 0 })).toBe(composeBandAtRange(makeResolved()))
+    expect(composeBandAtRange(makeResolved(), { startCalendarYear: 2024, yearsSincePlanBuilt: 0 })).toBe(composeBandAtRange(makeResolved()))
   })
 })

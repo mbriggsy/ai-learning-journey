@@ -101,15 +101,16 @@ export interface OddsLadderProps {
    *  the mount renders a worded "how close" line instead). */
   readonly track: DateTrackOutcome
   readonly labels: OddsLadderLabels
-  /** The U13 wall-time anchor's elapsedPlanYears (council 2026-07-10): on an aged vault the marks
-   *  re-base to years-from-today and already-passed stop-years drop (agedLadderMarks — the ONE
-   *  re-base seam; ticks, aria, and the scrub readout all read the re-based marks). 0 (every
-   *  fresh session) is the reference identity. The crown-arrived withdraw (crown < elapsed) is
-   *  the MOUNT's law — this renderer is never mounted in that state. */
-  readonly elapsedYears?: number
+  /** The U13 wall-time anchor's plan clock — calendar years since the plan was BUILT (council
+   *  2026-07-10; renamed U17 §S0.2, it was never "years since your save"): on an aged vault the
+   *  marks re-base to years-from-today and already-passed stop-years drop (agedLadderMarks — the
+   *  ONE re-base seam; ticks, aria, and the scrub readout all read the re-based marks). 0 (every
+   *  fresh session) is the reference identity. The crown-arrived withdraw (the crown has passed —
+   *  `offsetHasPassed`) is the MOUNT's law — this renderer is never mounted in that state. */
+  readonly yearsSincePlanBuilt?: number
 }
 
-export function OddsLadder({ track, labels, elapsedYears = 0 }: OddsLadderProps) {
+export function OddsLadder({ track, labels, yearsSincePlanBuilt = 0 }: OddsLadderProps) {
   const reduce = useReducedMotion() ?? false
   // Draw (fade) ONCE; a later render (a tier re-grade) updates dot positions in place, never replays
   // the fade. Reduced motion → no fade, the final DOM identical.
@@ -122,7 +123,7 @@ export function OddsLadder({ track, labels, elapsedYears = 0 }: OddsLadderProps)
   // Filter-before-geometry (council 2026-07-10): the aged re-base trims passed stop-years at the
   // mark ARRAY, then the domain derives from the SURVIVORS' display offsets — a negative offset
   // reaching xForOffset would silently clamp to the left edge ("today"), a lie.
-  const marks = agedLadderMarks(curveMarks(track), elapsedYears)
+  const marks = agedLadderMarks(curveMarks(track), yearsSincePlanBuilt)
   const domainMax = domainMaxYears(marks.map((m) => m.offsetYears))
 
   // The scrub (the band's grammar, simplified — no enlarge modal to share touch with): pointer

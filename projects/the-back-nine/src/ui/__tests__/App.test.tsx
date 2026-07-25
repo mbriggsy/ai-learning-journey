@@ -72,10 +72,29 @@ vi.mock('virtual:pwa-register/react', () => ({
   useRegisterSW: () => ({ needRefresh: [false, () => {}], updateServiceWorker: () => {}, offlineReady: [false, () => {}] }),
 }))
 
+const PROBE_DEFAULT = async (): Promise<{ kind: 'vault' | 'damaged' | 'no-vault' }> => ({ kind: 'vault' })
+
 afterEach(() => {
   cleanup()
   unlock.mockReset()
-  probeVault.mockClear()
+  // FULL RESET + RE-SEEDED DEFAULT, never `mockClear()` — this fixed a real CI-only failure
+  // (run 30169928294, both restore-door arms red on Linux while Windows ran green twice).
+  //
+  // THE MECHANISM, proven not guessed. `mockClear()` resets recorded CALLS but does NOT drain the
+  // `mockResolvedValueOnce` QUEUE (verified with a two-arm scratch test: queue a one-shot, clear,
+  // and the NEXT test still receives it). Meanwhile `App.tsx:91` does `await import('./vaultSession')`
+  // BEFORE it calls `probeVault()`, so under load that call can land after its own test has ended —
+  // `cleanup()` sets the effect's `cancelled` flag so no state is set, but the CALL still happens and
+  // still takes a value off the queue. The two defects compose in both directions: a late call steals
+  // the NEXT test's one-shot (that test then sees the default 'vault' and renders the unlock screen —
+  // exactly the CI DOM), and a one-shot that is never consumed survives into a later test.
+  //
+  // Timing-dependent, so it stayed dormant until an unrelated stage grew the suite enough to shift
+  // scheduling. Resetting the queue at the boundary makes the leak UNREPRESENTABLE rather than
+  // unlikely; the per-test arms below use `mockResolvedValue` (not `…Once`) so an extra probe or a
+  // re-run effect can never fall through to a different branch mid-test.
+  probeVault.mockReset()
+  probeVault.mockImplementation(PROBE_DEFAULT)
 })
 
 async function driveToUnlockScreen() {
@@ -140,7 +159,7 @@ describe('App — the survivor door composes into the re-entry gate (J1, ultramo
 
 describe("App — ColdStart's restore door routes to the shared RestoreFlow and back (the wiped-device door)", () => {
   it('cold → restore-cold mounts RestoreFlow WITH an onBack, and Back returns to the real ColdStart', async () => {
-    probeVault.mockResolvedValueOnce({ kind: 'no-vault' }) // one-shot, no leak into the vault tests above
+    probeVault.mockResolvedValue({ kind: 'no-vault' }) // whole-test, not a one-shot: see the afterEach note
     render(<App />)
     // The probe resolves no-vault → the REAL ColdStart (unmocked): its Begin + the quiet restore door.
     const begin = await screen.findByRole('button', { name: copy.coldStartBegin })
@@ -161,12 +180,59 @@ describe("App — ColdStart's restore door routes to the shared RestoreFlow and 
   })
 
   it('the damaged branch mounts the SAME RestoreFlow but WITHOUT an onBack (its file step is the flow’s first — nowhere back)', async () => {
-    probeVault.mockResolvedValueOnce({ kind: 'damaged' })
+    probeVault.mockResolvedValue({ kind: 'damaged' }) // whole-test, not a one-shot: see the afterEach note
     render(<App />)
     const flow = await screen.findByTestId('restore-flow')
     expect(flow).toHaveAttribute('data-has-onback', 'false')
     // No Back button, and no ColdStart to return to — the damaged mount stays byte-identical.
     expect(screen.queryByRole('button', { name: 'restore-back' })).toBeNull()
     expect(screen.queryByRole('button', { name: copy.coldStartBegin })).toBeNull()
+  })
+
+  /**
+   * REGRESSION — CI run 30169928294 (both arms above, red on Linux, green twice on Windows).
+   *
+   * The two arms above are BRANCH tests: each asserts where a probe verdict routes. Neither can
+   * catch the defect that broke them, because the defect is in how the verdict is SUPPLIED — a
+   * one-shot mock, drained by a call arriving from outside its own test (App.tsx:91 awaits a
+   * dynamic import before probing, so its call can land after `cleanup()`), leaving the queuing
+   * test to fall through to the default 'vault' and render the unlock screen.
+   *
+   * This arm pins the SUPPLY property instead: however many times the probe is called, an active
+   * test's branch is what that test asked for. Revert either half of the fix — `mockResolvedValue`
+   * back to `…Once`, or the afterEach's `mockReset` back to `mockClear` — and it goes red here, in
+   * a second, deterministically, instead of intermittently on a machine none of us is sitting at.
+   */
+  it('REGRESSION: an extra or late probe call cannot change the branch the active test asked for', async () => {
+    probeVault.mockResolvedValue({ kind: 'no-vault' })
+    // Stand in for the stray calls the real defect produced: a dynamic-import-delayed probe from a
+    // torn-down test, and a re-run of App's own `[seed, planting]` effect. A one-shot queue is
+    // drained by these; a whole-test implementation is not.
+    await probeVault()
+    await probeVault()
+    render(<App />)
+    // Still ColdStart. Under the old supply this fell through to the default 'vault' → the unlock
+    // screen, which is exactly the DOM CI reported.
+    expect(await screen.findByRole('button', { name: copy.coldStartBegin })).toBeInTheDocument()
+    expect(screen.queryByLabelText(copy.unlockLabel)).toBeNull()
+  })
+
+  /**
+   * The OTHER half of the same fix, made load-bearing. The arm above pins the per-test supply
+   * (`mockResolvedValue` over `…Once`); this one pins the BOUNDARY (`mockReset` + re-seeded default
+   * over `mockClear`, which leaves a previous test's implementation installed).
+   *
+   * It must run AFTER a test that set its own probe implementation, and it must rely on the DEFAULT
+   * — otherwise it proves nothing. Every arm before it sets 'no-vault' or 'damaged', so under
+   * `mockClear()` this inherits one of those and never reaches the unlock screen. ORDER IS THE
+   * ASSERTION here: do not reorder this above its neighbours, and do not give it its own mock.
+   */
+  it('REGRESSION: the probe default is restored at the test boundary — a prior test’s verdict never leaks forward', async () => {
+    unlock.mockResolvedValue({ ok: true, readOnly: false })
+    // Deliberately NO probeVault mock: the re-seeded default ('vault') must route to Unlock.
+    render(<App />)
+    expect(await screen.findByLabelText(copy.unlockLabel)).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: copy.coldStartBegin })).toBeNull()
+    expect(screen.queryByTestId('restore-flow')).toBeNull()
   })
 })

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { agedBalancesYearFor, deriveResultSave, type PersistState } from '../resultSave'
 import { scenarioFromDraft, type SaveReady } from '../scenarioFromDraft'
 import { DEV_SEEDS } from '../devSeeds'
+import { scenarioIdentity, type ScenarioV3 } from '@shared/model'
 
 /**
  * The edit-and-re-save machine (resultSave.ts) — the pure seam that retires the U8-review ②
@@ -167,5 +168,100 @@ describe('agedBalancesYearFor — the honest entered-in year', () => {
     // Built 2024, updated + re-saved today: the persist scenario now carries TODAY's stamp,
     // whatever startCalendarYear still says.
     expect(agedBalancesYearFor(savedIn(TODAY), CLEAN, TODAY)).toBeUndefined()
+  })
+})
+
+/**
+ * THE KEY-ORDER LAW (U17·S3·D5) — the CONSUMER-side arm. `model.test.ts` proves
+ * `scenarioIdentityKey` itself is order-canonical; only this file can prove `deriveResultSave`
+ * still ROUTES THROUGH IT (insight 032/081: calling a shared function from a test proves the
+ * function, never that the consumer still calls it).
+ *
+ * WHY IT MATTERS. The old compare was `JSON.stringify(scenarioIdentity(a)) === …(b)`, defended by
+ * a comment claiming `decodeScenario` builds every object. It does not — `scenarioCodec.ts`'s v3
+ * arm is a validated PASS-THROUGH CAST of `JSON.parse` output. The compare rested on `JSON.parse`
+ * preserving source key order, which nothing pins, while IntakeApp's persist-seed reconstruction
+ * already re-orders one operand's keys. The arm below is NON-VACUOUS by construction: it FAILS
+ * against that old implementation (the witness assertion states so explicitly).
+ */
+describe('deriveResultSave — the dirty compare is key-order-INSENSITIVE (never a badge that lies about the disk)', () => {
+  /** A legal JSON re-serialization: the same content with every object's keys reversed. */
+  const reverseKeys = <T,>(v: T): T => {
+    if (Array.isArray(v)) return v.map(reverseKeys) as unknown as T
+    if (v !== null && typeof v === 'object') {
+      const o = v as Record<string, unknown>
+      const out: Record<string, unknown> = {}
+      for (const k of Object.keys(o).reverse()) out[k] = reverseKeys(o[k])
+      return out as T
+    }
+    return v
+  }
+
+  it('(a) a disk operand whose keys are in a DIFFERENT order reads CLEAN — and the raw-stringify compare it replaced would read DIRTY (the arm witnesses the fix, not the accident)', () => {
+    const reordered = reverseKeys(retired.scenario)
+    const persist: PersistState = { kind: 'saved', scenario: reordered }
+    expect(deriveResultSave(persist, retired)).toEqual({ kind: 'clean' })
+    // THE NON-VACUITY WITNESS: the OLD mechanism disagrees on this very pair, so a revert to
+    // `JSON.stringify(scenarioIdentity(...))` inside sameScenario turns the assertion above RED.
+    expect(JSON.stringify(scenarioIdentity(retired.scenario))).not.toBe(
+      JSON.stringify(scenarioIdentity(reordered)),
+    )
+    // The same law from the save-failed state (it runs the identical comparator).
+    const failed: PersistState = { kind: 'save-failed', scenario: reordered, errorKey: 'saveErrorFailed' }
+    expect(deriveResultSave(failed, retired)).toEqual({ kind: 'clean' })
+  })
+
+  it('(b) a NESTED VALUE difference under a reordered disk operand still reads DIRTY — order-blindness never widened into content-blindness', () => {
+    const edited: ScenarioV3 = { ...retired.scenario, annualSpendingReal: retired.scenario.annualSpendingReal + 1 }
+    const persist: PersistState = { kind: 'saved', scenario: reverseKeys(edited) }
+    expect(deriveResultSave(persist, retired)).toEqual({ kind: 'dirty' })
+    // …and a deep, nested edit (a person's claim age) under the same reordering.
+    const deepEdited: ScenarioV3 = {
+      ...retired.scenario,
+      people: [
+        { ...retired.scenario.people[0]!, socialSecurityClaimAge: retired.scenario.people[0]!.socialSecurityClaimAge + 1 },
+        retired.scenario.people[1]!,
+      ],
+    }
+    expect(deriveResultSave({ kind: 'saved', scenario: reverseKeys(deepEdited) }, retired)).toEqual({ kind: 'dirty' })
+  })
+
+  it('a REORDERED people array is a real edit and still reads DIRTY (arrays keep their order — sorting them would make swapping the spouses read clean)', () => {
+    const swapped: ScenarioV3 = {
+      ...retired.scenario,
+      people: [retired.scenario.people[1]!, retired.scenario.people[0]!],
+    }
+    expect(deriveResultSave({ kind: 'saved', scenario: swapped }, retired)).toEqual({ kind: 'dirty' })
+  })
+
+  it('the saved-recommendation record participates in the compare: same plan, a DIFFERENT remembered record reads DIRTY (a mint is a real change to what is on disk)', () => {
+    const record = {
+      mintedAt: 20_500,
+      fingerprint: 'fp-a',
+      solverCodeVersion: 1,
+      goal: 'leave-more',
+      action: { candidateId: 'baseline:taxable-first:0', policy: 'taxable-first' },
+      verdict: { grade: 'just-do-it', subTenthCollapse: false, noChange: false, surplusRegime: false, noDollarRegister: false },
+      era: {
+        appDefaultVersion: 'defaults-2026-06',
+        taxVintageDetail: { taxYear: 2026, legalBasis: 'OBBBA' },
+        stateTaxVintage: { ncProfile: '{"nc":1}', paProfile: '{"pa":1}', flProfile: '{"fl":0}' },
+        healthcareVintage: {
+          coverageYear: 2026,
+          acaStatus: 'reverted',
+          acaVerifiedOn: '2026-07-01',
+          fplGuidelineYear: 2025,
+          irmaaTopTierFrozenThrough: 2028,
+          partBStandardMonthly: 206.5,
+        },
+        dateVintage: { contributionYear: 2026, blendSnapshotAsOf: '2026-01-01' },
+      },
+    } as const
+    const onDisk: ScenarioV3 = { ...retired.scenario, savedRecommendation: record }
+    const live: SaveReady = { ready: true, droppedAtoms: [], scenario: { ...retired.scenario, savedRecommendation: { ...record, fingerprint: 'fp-b' } } }
+    expect(deriveResultSave({ kind: 'saved', scenario: onDisk }, live)).toEqual({ kind: 'dirty' })
+    // …and an identical record on both sides (in a different key order) reads clean.
+    const sameLive: SaveReady = { ready: true, droppedAtoms: [], scenario: { ...retired.scenario, savedRecommendation: record } }
+    expect(deriveResultSave({ kind: 'saved', scenario: reverseKeys(onDisk) }, sameLive)).toEqual({ kind: 'clean' })
   })
 })

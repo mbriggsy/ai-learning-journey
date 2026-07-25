@@ -883,3 +883,71 @@ describe('memoryModel — fingerprint invalidation (§S1)', () => {
     expect('gap' in withheld).toBe(false)
   })
 })
+
+// ---------------------------------------------------------------------------
+// U17·S3 — THE SAVED-RECOMMENDATION RECORD SURVIVES DRAFT EDITS (the D4 trap).
+//
+// `update()` runs `invalidateStaleSolve()` on EVERY draft mutation, demoting a committed LIVE
+// solve to `stale`. The persisted RECORD must be untouched by that: it is a memory of what was
+// once recommended, and `store/savedRecommendation.ts`'s trichotomy is what reports its
+// staleness. A draft edit that silently erased it would destroy the very evidence the re-entry
+// warning is built from — the household would return to a plan that quietly forgot it ever had
+// a recommendation, with no error and nothing to warn about.
+// ---------------------------------------------------------------------------
+
+const A_RECORD = {
+  mintedAt: 20_500,
+  fingerprint: 'solver-run-fp/v2:{"goal"=s"leave-more"}',
+  solverCodeVersion: 1,
+  goal: 'leave-more',
+  action: { candidateId: 'baseline:taxable-first:0', policy: 'taxable-first' },
+  verdict: { grade: 'just-do-it', subTenthCollapse: false, noChange: false, surplusRegime: false, noDollarRegister: false },
+  // ALL FIVE era fields: required on a RECORD (a record is born after every stamp exists, so an
+  // absent one is a minter bug that would pin every rulebook clock quiet — model.ts).
+  era: {
+    appDefaultVersion: 'p2-d1',
+    taxVintageDetail: { taxYear: 2026, legalBasis: 'OBBBA' },
+    stateTaxVintage: { ncProfile: '{"nc":1}', paProfile: '{"pa":1}', flProfile: '{"fl":0}' },
+    healthcareVintage: {
+      coverageYear: 2026,
+      acaStatus: 'reverted',
+      acaVerifiedOn: '2026-07-01',
+      fplGuidelineYear: 2025,
+      irmaaTopTierFrozenThrough: 2028,
+      partBStandardMonthly: 206.5,
+    },
+    dateVintage: { contributionYear: 2026, blendSnapshotAsOf: '2026-01-01' },
+  },
+} as const
+
+describe('memoryModel — the saved-recommendation record is a USER FACT on the draft (U17·S3)', () => {
+  it('an edit that DEMOTES the live solve to `stale` leaves the record untouched (the trichotomy owns its staleness, not the solve lane)', async () => {
+    const { model } = await committedSolveModel()
+    model.update((d) => ({ ...d, savedRecommendation: A_RECORD }))
+    expect(model.getSnapshot().draft.savedRecommendation).toEqual(A_RECORD)
+    // The ranking-affecting edit that demotes the LIVE solve…
+    model.update((d) => ({ ...d, retirementState: 'NC' }))
+    expect(model.getSnapshot().solve).toEqual({ kind: 'stale', label: 'inputs-changed' })
+    // …must not touch the RECORD. (insight 029: the assertion routes through the same update()
+    // call that fires invalidateStaleSolve, so a clear-the-record mutant inside it goes red here.)
+    expect(model.getSnapshot().draft.savedRecommendation).toEqual(A_RECORD)
+  })
+
+  it('it also survives an edit that makes the solve request UNBUILDABLE (a cleared goal) — the harshest invalidation path', async () => {
+    const { model } = await committedSolveModel()
+    model.update((d) => ({ ...d, savedRecommendation: A_RECORD }))
+    model.update((d) => ({ ...d, chosenGoal: undefined }))
+    expect(model.getSnapshot().solve).toEqual({ kind: 'stale', label: 'inputs-changed' })
+    expect(model.getSnapshot().draft.savedRecommendation).toEqual(A_RECORD)
+  })
+
+  it('NOTHING in the store MINTS one: the record is absent until a writer puts it there (S3 builds no writer — the mint lands with the S5 save gesture)', async () => {
+    const { model } = await committedSolveModel()
+    // A committed solve does NOT create a record — saving stays an explicit gesture (the
+    // no-auto-save law). A store that quietly stashed one here would be an implicit write path.
+    expect(model.getSnapshot().solve.kind).toBe('committed')
+    expect(model.getSnapshot().draft.savedRecommendation).toBeUndefined()
+    model.update((d) => ({ ...d, retirementState: 'NC' }))
+    expect(model.getSnapshot().draft.savedRecommendation).toBeUndefined()
+  })
+})

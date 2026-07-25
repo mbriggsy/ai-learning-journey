@@ -439,6 +439,12 @@ export function createSession(db: VaultDb): VaultSession {
           if (decoded.reason === 'newer-version') return { ok: false, reason: 'newer-version', got: decoded.got }
           return { ok: false, reason: 'data-damaged', detail: decoded.detail }
         }
+        // `decoded.droppedAtoms` IS DELIBERATELY IGNORED HERE — the ruling, not an oversight (the
+        // asymmetry with `scenarioFromDraft`, which REFUSES on a non-empty list, is the point).
+        // This is the READ side, and the drop's whole charter is this codepath: a household's plan
+        // must never become unopenable at unlock because its recommendation MEMORY went bad. The
+        // plan is the asset; the record is a note about it. Failing the unlock over a dropped note
+        // would cost the household every balance, budget line and date they entered.
 
         const otherTabActive = await probeActiveWriter()
 
@@ -509,6 +515,9 @@ export function createSession(db: VaultDb): VaultSession {
           if (decoded.reason === 'newer-version') return { ok: false, reason: 'newer-version', got: decoded.got }
           return { ok: false, reason: 'data-damaged', detail: decoded.detail }
         }
+        // `decoded.droppedAtoms` DELIBERATELY IGNORED — same ruling as the passphrase unlock above,
+        // and it binds harder here: recovery is the LAST door. Refusing to open a vault over a
+        // dropped recommendation memory on the recovery path would strand the household entirely.
 
         if (epoch !== gen) return { ok: false, reason: 'cancelled' }
 

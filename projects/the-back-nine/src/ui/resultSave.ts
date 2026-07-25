@@ -11,8 +11,7 @@
  * sticky flag but a LIVE comparison of the current answer against what is actually on disk.
  *
  * DIRTY IS COMPUTED, NEVER TRACKED: both scenarios come out of `scenarioFromDraft` (which
- * round-trips the codec, so key order is construction-stable — decodeScenario builds every
- * object) and are compared by JSON identity ON `scenarioIdentity` — the scenario MINUS the
+ * round-trips the codec) and are compared on `scenarioIdentity` — the scenario MINUS the
  * `savedAt` wall-time stamp (P3·U13: scenarioFromDraft stamps a fresh epoch-day per encode,
  * so a raw compare would read an untouched session as dirty the day after its save — the
  * badge would lie about mouse activity, the exact thing this machine exists to never do).
@@ -20,8 +19,21 @@
  * about the DISK, not about mouse activity. That law holds from the 'save-failed' state
  * too: editing back to the on-disk answer clears the failure alert (nothing is unfinished
  * once the disk matches — alarm-when-fine is a lie in the safe direction, still a lie).
+ *
+ * THE COMPARE IS KEY-ORDER-INSENSITIVE (U17·S3, correcting this header's own old claim). It
+ * used to read `JSON.stringify(scenarioIdentity(a)) === JSON.stringify(scenarioIdentity(b))`,
+ * justified here by *"decodeScenario builds every object."* IT DOES NOT: `scenarioCodec.ts`'s v3
+ * arm is a validated PASS-THROUGH CAST of `JSON.parse`'s output — the codec constructs nothing,
+ * and the key order it "guarantees" is really `JSON.parse` preserving the source text's order,
+ * which nothing pins. Worse, one operand is already re-ordered in practice: `IntakeApp`'s
+ * persist-seed reconstruction destructures `savedAt` off and re-appends it, moving that key to
+ * LAST on the disk side only (it survives today solely because `scenarioIdentity` then strips
+ * that very key). A future field-order change in `encodeScenario` would silently flip an
+ * untouched session to a permanently-dirty badge. So the DEPENDENCY is gone rather than
+ * documented: `scenarioIdentityKey` (model.ts) canonicalizes with SORTED object keys — while
+ * keeping ARRAY order, because a real people/budget/drawdown reorder MUST still read dirty.
  */
-import { scenarioIdentity, type ScenarioV3 } from '@shared/model'
+import { scenarioIdentityKey, type ScenarioV3 } from '@shared/model'
 import { epochDayToCalendarYear } from '@store/staleness'
 import type { SaveReady } from './scenarioFromDraft'
 import type { ResaveCopyKey } from './unlockCopy'
@@ -43,10 +55,13 @@ export type ResultSaveView =
   | { readonly kind: 'saving' } // update write in flight
   | { readonly kind: 'failed'; readonly errorKey: ResaveCopyKey } // last re-save refused — alert + retry
 
-/** Disk-identity on everything EXCEPT the wall-time stamp (the ONE shared normalizer —
- *  model.ts `scenarioIdentity`; the round-trip guard uses the same one). */
+/** Disk-identity on everything EXCEPT the wall-time stamp, compared on the CANONICAL key (the
+ *  ONE shared normalizer — model.ts `scenarioIdentityKey`, which wraps the same
+ *  `scenarioIdentity` the round-trip guard uses). Two scenarios with identical content in a
+ *  different key order are the SAME answer and must read clean; a nested VALUE difference — or a
+ *  reordered people/budget/drawdown ARRAY — must still read dirty. See the header. */
 const sameScenario = (a: ScenarioV3, b: ScenarioV3): boolean =>
-  JSON.stringify(scenarioIdentity(a)) === JSON.stringify(scenarioIdentity(b))
+  scenarioIdentityKey(a) === scenarioIdentityKey(b)
 
 export function deriveResultSave(persist: PersistState, ready: SaveReady, readOnly = false): ResultSaveView {
   // A READ-ONLY session (a 2nd tab holds the writer — captured ONCE at unlock, session.ts) has no
@@ -83,6 +98,37 @@ export function deriveResultSave(persist: PersistState, ready: SaveReady, readOn
       throw new Error(`deriveResultSave: unmapped persist state ${String(_exhaustive)}`)
     }
   }
+}
+
+/**
+ * THE PERSIST SEED for a decrypt-on-return hydrate — ONE producer, called by IntakeApp.
+ *
+ * WHAT IT DOES. `scenarioFromDraft` re-stamps a FRESH `savedAt` on every encode, but
+ * `PersistState.scenario`'s contract is "the LAST COMMITTED model", and `agedBalancesYearFor`
+ * (below) reads its `savedAt` as the year the household's numbers were ENTERED. Seeding the fresh
+ * stamp silently killed the aged-balances clause on every hydrated vault (review 2026-07-10). So
+ * the normalized scenario supplies every field EXCEPT the stamp, and the DISK's own `savedAt` is
+ * re-attached — or, for a legacy vault that has none, omitted entirely (suppression over
+ * fabrication; `agedBalancesYearFor` already treats an absent stamp as "make no claim").
+ *
+ * WHY IT IS EXPORTED RATHER THAN INLINE IN THE COMPONENT. It used to be four lines inside
+ * `IntakeApp.tsx`, and the test that claimed to exercise it RE-TYPED those four lines under a
+ * comment saying it matched. That is this repo's named landmine verbatim — *"a copy of a
+ * producer's arithmetic under a comment claiming it matches IS NOT A PIN"* — and it is what cost
+ * stage S0 a failed verification (a `+ 3` planted in the component left 1096 tests green). The
+ * reconstruction lives here, at the persistence seam (insight 048: the honesty-critical decisions
+ * come out of the un-drivable render path into a pure, planted-fail-testable module), and the test
+ * calls THIS. Calling it from a test still proves only the FUNCTION — a SOURCE-BIND arm on the
+ * consumer (`draftFromScenario.test.ts`) is what proves IntakeApp still calls it (insights
+ * 032/081).
+ *
+ * The key ORDER this produces differs from the normalized scenario's (`savedAt` moves to last).
+ * That is harmless BY CONSTRUCTION, not by luck: the dirty compare goes through
+ * `scenarioIdentityKey`, which sorts keys — see the header.
+ */
+export function persistSeedFor(normalized: ScenarioV3, diskSavedAt: number | undefined): ScenarioV3 {
+  const { savedAt: _freshStamp, ...diskIdentity } = normalized
+  return diskSavedAt !== undefined ? { ...diskIdentity, savedAt: diskSavedAt } : diskIdentity
 }
 
 /**

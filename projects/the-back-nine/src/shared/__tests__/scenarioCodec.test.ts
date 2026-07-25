@@ -17,6 +17,7 @@ import {
   SAVED_AT_EPOCH_DAY_MAX,
   SAVED_AT_EPOCH_DAY_MIN,
   SCENARIO_V3_FIELDS,
+  type SavedRecommendationV3,
   type Scenario,
   type ScenarioV2,
   type ScenarioV3,
@@ -130,13 +131,13 @@ function mutated(base: Scenario | ScenarioV2 | ScenarioV3, mutate: (obj: Obj) =>
 describe('round-trip', () => {
   it('v1 round-trips exactly — including the seed (the determinism field)', () => {
     const decoded = decodeScenario(encodeScenario(V1))
-    expect(decoded).toEqual({ ok: true, scenario: V1 })
+    expect(decoded).toEqual({ ok: true, scenario: V1, droppedAtoms: [] })
     if (decoded.ok) expect(decoded.scenario.seed).toBe(0x1234abcd)
   })
 
   it('v2 round-trips exactly — including optional hsa + contribution streams', () => {
     const decoded = decodeScenario(encodeScenario(V2))
-    expect(decoded).toEqual({ ok: true, scenario: V2 })
+    expect(decoded).toEqual({ ok: true, scenario: V2, droppedAtoms: [] })
   })
 
   it('the NEVER_DEPLETED sentinel survives a JSON round-trip as -1 (DND/009 — the reason it is an integer)', () => {
@@ -299,7 +300,7 @@ describe('tolerant reader (additive-within-version fields pass through)', () => 
 describe('v3 — the forward-written persist shape (U8, the first v3 writer)', () => {
   it('v3 round-trips EXACTLY — people(pia/birthYear/name/workStatus), entered accounts, both unions, health, income streams', () => {
     const decoded = decodeScenario(encodeScenario(V3))
-    expect(decoded).toEqual({ ok: true, scenario: V3 })
+    expect(decoded).toEqual({ ok: true, scenario: V3, droppedAtoms: [] })
     if (decoded.ok) expect(decoded.scenario.seed).toBe(0x0badf00d) // the determinism field survives
   })
 
@@ -314,7 +315,7 @@ describe('v3 — the forward-written persist shape (U8, the first v3 writer)', (
         { category: 'travel', label: 'See the world', annualAmountReal: 15_000, tier: 'discretionary', startYear: 0, endYear: 19 },
       ],
     }
-    expect(decodeScenario(encodeScenario(withBudget))).toEqual({ ok: true, scenario: withBudget })
+    expect(decodeScenario(encodeScenario(withBudget))).toEqual({ ok: true, scenario: withBudget, droppedAtoms: [] })
   })
 
   it('v3 budget corruption arms: bad category/tier vocab, reversed window, negative start, null endYear (DND-009), non-finite amount — each named corrupt', () => {
@@ -374,7 +375,7 @@ describe('v3 — the forward-written persist shape (U8, the first v3 writer)', (
       ...V3,
       rothConversion: { annualAmountReal: 40_000, startYearOffset: 2, years: 5 },
     }
-    expect(decodeScenario(encodeScenario(withLever))).toEqual({ ok: true, scenario: withLever })
+    expect(decodeScenario(encodeScenario(withLever))).toEqual({ ok: true, scenario: withLever, droppedAtoms: [] })
   })
 
   it('rothConversion corruption arms: zero/negative/non-finite amount, fractional/zero years, negative/fractional offset — each named corrupt', () => {
@@ -423,7 +424,7 @@ describe('v3 — the forward-written persist shape (U8, the first v3 writer)', (
       drawdownPolicy: 'custom',
       drawdownOrder: ['roth', 'taxable', 'pretax'],
     }
-    expect(decodeScenario(encodeScenario(withCustom))).toEqual({ ok: true, scenario: withCustom })
+    expect(decodeScenario(encodeScenario(withCustom))).toEqual({ ok: true, scenario: withCustom, droppedAtoms: [] })
   })
 
   it("'custom' WITHOUT an order is REJECTED (the order is required, never guessed)", () => {
@@ -473,7 +474,7 @@ describe('v3 — the forward-written persist shape (U8, the first v3 writer)', (
         partBStandardMonthly: 123.45, // shape-only fixture value (the codec validates types, not the CMS figure)
       },
     }
-    expect(decodeScenario(encodeScenario(withU11))).toEqual({ ok: true, scenario: withU11 })
+    expect(decodeScenario(encodeScenario(withU11))).toEqual({ ok: true, scenario: withU11, droppedAtoms: [] })
   })
 
   it('enhancedSubsidies must be the LITERAL true — false/1/"yes" are writer bugs named corrupt (the writer strips the key on revert; absence IS the reverted regime)', () => {
@@ -511,8 +512,8 @@ describe('v3 — the forward-written persist shape (U8, the first v3 writer)', (
       { ...V3, medicareExtrasByPerson: [{ kind: 'typical', adoptionVintage: 'extras-2026a' }, { kind: 'unanswered' }] },
       { ...V3, medicareExtrasByPerson: [{ kind: 'entered', monthly: 0 }, { kind: 'entered', monthly: 1_500 }] }, // an explicit $0 entry is honest
     ]
-    for (const s of arms) expect(decodeScenario(encodeScenario(s))).toEqual({ ok: true, scenario: s })
-    expect(decodeScenario(encodeScenario(V3))).toEqual({ ok: true, scenario: V3 }) // pre-unit vault untouched
+    for (const s of arms) expect(decodeScenario(encodeScenario(s))).toEqual({ ok: true, scenario: s, droppedAtoms: [] })
+    expect(decodeScenario(encodeScenario(V3))).toEqual({ ok: true, scenario: V3, droppedAtoms: [] }) // pre-unit vault untouched
   })
 
   it('extras corruption arms: negative/over-ceiling/NaN dollar, both biconditional directions, garbage kind, length mismatch — each corrupt (the strict needNonNegativeDollar path, never optFinite)', () => {
@@ -555,9 +556,9 @@ describe('v3 — the forward-written persist shape (U8, the first v3 writer)', (
       ...V3,
       healthcareVintage: { ...stamp, medicareExtrasTypicalVintage: 'extras-2026a' },
     }
-    expect(decodeScenario(encodeScenario(withVintage))).toEqual({ ok: true, scenario: withVintage })
+    expect(decodeScenario(encodeScenario(withVintage))).toEqual({ ok: true, scenario: withVintage, droppedAtoms: [] })
     const without: ScenarioV3 = { ...V3, healthcareVintage: stamp }
-    expect(decodeScenario(encodeScenario(without))).toEqual({ ok: true, scenario: without })
+    expect(decodeScenario(encodeScenario(without))).toEqual({ ok: true, scenario: without, droppedAtoms: [] })
     const bad = decodeScenario(mutated(V3, (o) => { o.healthcareVintage = { ...stamp, medicareExtrasTypicalVintage: 7 } }))
     expect(bad.ok).toBe(false)
     if (!bad.ok) expect(bad.reason).toBe('corrupt')
@@ -575,9 +576,9 @@ describe('v3 — the forward-written persist shape (U8, the first v3 writer)', (
       ...V3,
       healthcareVintage: { ...stamp, partBTrendVintage: 'medicare-trend-2026a' },
     }
-    expect(decodeScenario(encodeScenario(withVintage))).toEqual({ ok: true, scenario: withVintage })
+    expect(decodeScenario(encodeScenario(withVintage))).toEqual({ ok: true, scenario: withVintage, droppedAtoms: [] })
     const without: ScenarioV3 = { ...V3, healthcareVintage: stamp }
-    expect(decodeScenario(encodeScenario(without))).toEqual({ ok: true, scenario: without })
+    expect(decodeScenario(encodeScenario(without))).toEqual({ ok: true, scenario: without, droppedAtoms: [] })
     const bad = decodeScenario(mutated(V3, (o) => { o.healthcareVintage = { ...stamp, partBTrendVintage: 7 } }))
     expect(bad.ok).toBe(false)
     if (!bad.ok) expect(bad.reason).toBe('corrupt')
@@ -591,9 +592,9 @@ describe('v3 — the forward-written persist shape (U8, the first v3 writer)', (
       taxVintageDetail: { taxYear: 2026, legalBasis: 'OBBBA — One Big Beautiful Bill Act, signed 2025-07-04' },
       dateVintage: { contributionYear: 2026, blendSnapshotAsOf: '2026-04-30' },
     }
-    expect(decodeScenario(encodeScenario(withU13))).toEqual({ ok: true, scenario: withU13 })
+    expect(decodeScenario(encodeScenario(withU13))).toEqual({ ok: true, scenario: withU13, droppedAtoms: [] })
     // The legacy vault (none of the three) is untouched by the U13 vocabulary.
-    expect(decodeScenario(encodeScenario(V3))).toEqual({ ok: true, scenario: V3 })
+    expect(decodeScenario(encodeScenario(V3))).toEqual({ ok: true, scenario: V3, droppedAtoms: [] })
   })
 
   it('savedAt is RANGE-gated, not merely finite (insight 046): an epoch-MILLISECOND value, a negative, a float, and both just-out-of-range days reject; both boundaries pass', () => {
@@ -640,12 +641,12 @@ describe('v3 — the forward-written persist shape (U8, the first v3 writer)', (
     const nc: ScenarioV3 = { ...V3, retirementState: 'NC' }
     const elsewhere: ScenarioV3 = { ...V3, retirementState: 'elsewhere' }
     // A PRICED state persists as a fact.
-    expect(decodeScenario(encodeScenario(nc))).toEqual({ ok: true, scenario: nc })
+    expect(decodeScenario(encodeScenario(nc))).toEqual({ ok: true, scenario: nc, droppedAtoms: [] })
     // 'elsewhere' is an EXPLICIT vocab member — a chosen "somewhere else" persists as itself,
     // never collapsed to absence (distinct from never-asked; the advocate's trust law).
-    expect(decodeScenario(encodeScenario(elsewhere))).toEqual({ ok: true, scenario: elsewhere })
+    expect(decodeScenario(encodeScenario(elsewhere))).toEqual({ ok: true, scenario: elsewhere, droppedAtoms: [] })
     // ABSENT: the pre-unit / unanswered vault is untouched by the new vocabulary (tolerant reader).
-    expect(decodeScenario(encodeScenario(V3))).toEqual({ ok: true, scenario: V3 })
+    expect(decodeScenario(encodeScenario(V3))).toEqual({ ok: true, scenario: V3, droppedAtoms: [] })
     if (decodeScenario(encodeScenario(V3)).ok) {
       const d = decodeScenario(encodeScenario(V3))
       if (d.ok && d.scenario.schemaVersion === 3) expect(d.scenario.retirementState).toBeUndefined()
@@ -655,7 +656,7 @@ describe('v3 — the forward-written persist shape (U8, the first v3 writer)', (
   it('every DEFERRED roster state (SC/GA/DE) is a legitimate persistable value (recognised-but-unpriced), and an out-of-vocab string fails decode CALMLY (corrupt, never silently unpriced)', () => {
     for (const deferred of ['SC', 'GA', 'DE'] as const) {
       const s: ScenarioV3 = { ...V3, retirementState: deferred }
-      expect(decodeScenario(encodeScenario(s)), `${deferred} must round-trip`).toEqual({ ok: true, scenario: s })
+      expect(decodeScenario(encodeScenario(s)), `${deferred} must round-trip`).toEqual({ ok: true, scenario: s, droppedAtoms: [] })
     }
     // The needVocab rejection arm: an out-of-roster string (a typo'd state, a lowercase code, a
     // full name) is corruption named LOUD — NEVER silently treated as 'elsewhere'/unpriced (a
@@ -672,11 +673,11 @@ describe('v3 — the forward-written persist shape (U8, the first v3 writer)', (
   it('v3 WITH chosenGoal round-trips exactly — both goals persist; ABSENT (pre-U15/unset) decodes untouched; an out-of-vocab goal is corrupt (never a default)', () => {
     for (const goal of ['leave-more', 'pay-less-tax'] as const) {
       const s: ScenarioV3 = { ...V3, chosenGoal: goal }
-      expect(decodeScenario(encodeScenario(s)), `${goal} must round-trip`).toEqual({ ok: true, scenario: s })
+      expect(decodeScenario(encodeScenario(s)), `${goal} must round-trip`).toEqual({ ok: true, scenario: s, droppedAtoms: [] })
     }
     // ABSENT: the unset sentinel — a pre-U15 vault (or an unchosen goal) decodes unchanged.
     const decoded = decodeScenario(encodeScenario(V3))
-    expect(decoded).toEqual({ ok: true, scenario: V3 })
+    expect(decoded).toEqual({ ok: true, scenario: V3, droppedAtoms: [] })
     if (decoded.ok && decoded.scenario.schemaVersion === 3) expect(decoded.scenario.chosenGoal).toBeUndefined()
     // The needVocab rejection arm: a fabricated / typo'd goal is corruption named LOUD, NEVER coerced
     // to a plausible default goal (asserting a goal the user never picked is the calm-but-wrong shape).
@@ -687,13 +688,224 @@ describe('v3 — the forward-written persist shape (U8, the first v3 writer)', (
     }
   })
 
+  // ───────────────────────────────────────────────────────────────────────────────────────────
+  // Act-4 · U17 · S3 — the saved-recommendation record (the FIRST tolerated drop in this codec).
+  // ───────────────────────────────────────────────────────────────────────────────────────────
+
+  /** A complete, valid record — the shape a real S5 save-gesture mint produces. */
+  const RECORD: SavedRecommendationV3 = {
+    mintedAt: 20_500,
+    fingerprint: 'solver-run-fp/v2:{"goal"=s"leave-more"}',
+    solverCodeVersion: 1,
+    goal: 'leave-more',
+    action: { candidateId: 'baseline:taxable-first:0', policy: 'taxable-first' },
+    verdict: {
+      grade: 'just-do-it',
+      subTenthCollapse: false,
+      noChange: false,
+      surplusRegime: false,
+      noDollarRegister: false,
+    },
+    era: {
+      appDefaultVersion: 'defaults-2026-06',
+      taxVintageDetail: { taxYear: 2026, legalBasis: 'OBBBA' },
+      dateVintage: { contributionYear: 2026, blendSnapshotAsOf: '2026-01-01' },
+      stateTaxVintage: { ncProfile: '{"nc":1}', paProfile: '{"pa":1}', flProfile: '{"fl":0}' },
+      healthcareVintage: {
+        coverageYear: 2026,
+        acaStatus: 'reverted',
+        acaVerifiedOn: '2026-07-01',
+        fplGuidelineYear: 2025,
+        irmaaTopTierFrozenThrough: 2028,
+        partBStandardMonthly: 206.5,
+      },
+    },
+  }
+
+  it('v3 WITH a saved recommendation round-trips EXACTLY (every enum, the optional grade, all five era fields), reporting NO dropped atom; ABSENT decodes untouched', () => {
+    const s: ScenarioV3 = { ...V3, savedRecommendation: RECORD }
+    expect(decodeScenario(encodeScenario(s))).toEqual({ ok: true, scenario: s, droppedAtoms: [] })
+    // The WITHHELD-grade shape: `grade` ABSENT is the burned/062 sentinel (the B-floor refusal /
+    // no runner-up), and it must survive the round trip as ABSENCE — never defaulted to a letter.
+    // The QUALIFIER goes WITH IT (the biconditional): with nothing to qualify, `subTenthCollapse`
+    // is absent too — a required boolean here would force this writer to invent a `false`, the
+    // structurally-dormant disclosure fed from an empty default.
+    const withheld: ScenarioV3 = {
+      ...V3,
+      savedRecommendation: {
+        ...RECORD,
+        verdict: { noChange: true, surplusRegime: true, noDollarRegister: true },
+      },
+    }
+    const d = decodeScenario(encodeScenario(withheld))
+    expect(d).toEqual({ ok: true, scenario: withheld, droppedAtoms: [] })
+    if (d.ok && d.scenario.schemaVersion === 3) {
+      expect(d.scenario.savedRecommendation?.verdict.grade).toBeUndefined()
+      expect(d.scenario.savedRecommendation?.verdict.subTenthCollapse).toBeUndefined()
+      // …and the no-dollar register survives as its own bit — the ONLY carrier of "the live
+      // surface refused to make a dollar claim", un-derivable from anything else in the record.
+      expect(d.scenario.savedRecommendation?.verdict.noDollarRegister).toBe(true)
+    }
+    // A pre-U17 vault lacks the field entirely and decodes unchanged (the tolerant reader).
+    const none = decodeScenario(encodeScenario(V3))
+    expect(none).toEqual({ ok: true, scenario: V3, droppedAtoms: [] })
+    if (none.ok && none.scenario.schemaVersion === 3) {
+      expect(none.scenario.savedRecommendation).toBeUndefined()
+    }
+  })
+
+  it('a PARTIAL era is REFUSED — the record is born after all four stamps exist, so an absent one is a MINTER BUG, never a pre-unit vault (fail CLOSED: it would pin every rulebook clock quiet forever)', () => {
+    // THE DEFECT THIS ARM REPLACES. This test used to assert that a record carrying ONLY
+    // `appDefaultVersion` decoded CLEAN, on the scenario-level stamps' "absent = not-comparable,
+    // quiet" contract. That premise does not transplant: the SCENARIO's absent stamp means a
+    // pre-U13 build had none to write, while a RECORD is minted at U17 by a `scenarioFromDraft`
+    // that writes all four unconditionally. Every `deriveStaleness` clock is gated on
+    // `saved… !== undefined`, so the stampless record pinned `rulesMoved: false` FOREVER and
+    // re-presented as CURRENT however far the law had moved — and conjunct 1 cannot backstop it
+    // (`solverRunFingerprint` excludes the constant vintages BY DESIGN, which is the whole reason
+    // conjunct 3 exists). The tolerance had no population and failed OPEN.
+    const bareEra = mutated({ ...V3, savedRecommendation: RECORD }, (o) => {
+      ;(o.savedRecommendation as Obj).era = { appDefaultVersion: 'defaults-2026-06' }
+    })
+    const decoded = decodeScenario(bareEra)
+    // The DROP, not a bounce: the plan still opens (the non-fatal atom's charter is untouched).
+    expect(decoded.ok).toBe(true)
+    if (!decoded.ok) return
+    expect(decoded.scenario).toEqual(V3)
+    if (decoded.scenario.schemaVersion === 3) {
+      expect('savedRecommendation' in decoded.scenario).toBe(false)
+    }
+    // …and the drop is REPORTED, naming the atom AND the codec's own reason (the write side
+    // refuses on exactly this list — scenarioFromDraft).
+    expect(decoded.droppedAtoms).toHaveLength(1)
+    expect(decoded.droppedAtoms[0]).toContain('savedRecommendation')
+    expect(decoded.droppedAtoms[0]).toContain('taxVintageDetail')
+  })
+
+  /**
+   * THE NON-FATAL ATOM (U17·S3·D6). Every arm below is a way the record can be structurally bad;
+   * NONE of them may bounce the vault. TWO assertions per arm, because `.ok` alone passes
+   * VACUOUSLY — a codec that merely "ignored" the bad record would satisfy `ok:true` while the
+   * corrupt atom rode the pass-through cast into the model, into `draftFromScenario`'s `...rest`,
+   * and back onto disk at the next save. The ABSENCE assertion is the one that proves the delete.
+   */
+  const badRecordArms: ReadonlyArray<readonly [string, unknown]> = [
+    ['null', null],
+    ['not an object', 'baseline:taxable-first:0'],
+    ['an array', []],
+    ['mintedAt missing', { ...RECORD, mintedAt: undefined }],
+    ['mintedAt non-integer', { ...RECORD, mintedAt: 20_500.5 }],
+    // insight 046: an epoch-MS value is a finite integer that silently reads as year ~55000.
+    ['mintedAt in epoch-MS', { ...RECORD, mintedAt: 1_770_000_000_000 }],
+    ['mintedAt before the epoch-day floor', { ...RECORD, mintedAt: SAVED_AT_EPOCH_DAY_MIN - 1 }],
+    ['fingerprint empty', { ...RECORD, fingerprint: '' }],
+    ['fingerprint non-string', { ...RECORD, fingerprint: 12 }],
+    ['solverCodeVersion 0', { ...RECORD, solverCodeVersion: 0 }],
+    ['solverCodeVersion float', { ...RECORD, solverCodeVersion: 1.5 }],
+    ['goal out of vocab', { ...RECORD, goal: 'live-bigger-now' }],
+    ['action missing', { ...RECORD, action: undefined }],
+    ['action.candidateId empty', { ...RECORD, action: { candidateId: '', policy: 'taxable-first' } }],
+    ['action.policy out of vocab', { ...RECORD, action: { candidateId: 'x', policy: 'roth-last' } }],
+    // BOTH directions of the custom-order biconditional (the scenario.drawdownOrder precedent).
+    ['custom policy with NO order', { ...RECORD, action: { candidateId: 'x', policy: 'custom' } }],
+    [
+      'an order riding a NAMED policy',
+      { ...RECORD, action: { candidateId: 'x', policy: 'taxable-first', drawdownOrder: ['roth', 'taxable', 'pretax'] } },
+    ],
+    [
+      'a short custom order',
+      { ...RECORD, action: { candidateId: 'x', policy: 'custom', drawdownOrder: ['roth', 'taxable'] } },
+    ],
+    [
+      'a duplicated custom order',
+      { ...RECORD, action: { candidateId: 'x', policy: 'custom', drawdownOrder: ['roth', 'roth', 'taxable'] } },
+    ],
+    ['verdict missing', { ...RECORD, verdict: undefined }],
+    ['verdict.grade out of vocab', { ...RECORD, verdict: { ...RECORD.verdict, grade: 'slam-dunk' } }],
+    // BOTH directions of the QUALIFIER biconditional. A grade with no qualifier loses the
+    // demotion the engine already applied; a qualifier with no grade is unproducible (it lives
+    // inside GradeResult) and is how an invented `false` gets laundered into the vault.
+    ['verdict.subTenthCollapse missing beside a PRESENT grade', { ...RECORD, verdict: { ...RECORD.verdict, subTenthCollapse: undefined } }],
+    ['verdict.subTenthCollapse non-boolean', { ...RECORD, verdict: { ...RECORD.verdict, subTenthCollapse: 'no' } }],
+    [
+      'verdict.subTenthCollapse riding a WITHHELD grade (no grade to qualify)',
+      { ...RECORD, verdict: { subTenthCollapse: true, noChange: false, surplusRegime: false, noDollarRegister: false } },
+    ],
+    ['verdict.noChange missing', { ...RECORD, verdict: { ...RECORD.verdict, noChange: undefined } }],
+    ['verdict.surplusRegime missing', { ...RECORD, verdict: { ...RECORD.verdict, surplusRegime: undefined } }],
+    // The no-dollar register is REQUIRED and un-derivable record-side: defaulting it would let a
+    // card re-tell a run whose live surface refused any dollar claim as an ACTIVE switch.
+    ['verdict.noDollarRegister missing', { ...RECORD, verdict: { ...RECORD.verdict, noDollarRegister: undefined } }],
+    ['verdict.noDollarRegister non-boolean', { ...RECORD, verdict: { ...RECORD.verdict, noDollarRegister: 'no' } }],
+    ['era missing', { ...RECORD, era: undefined }],
+    ['era.appDefaultVersion missing', { ...RECORD, era: { ...RECORD.era, appDefaultVersion: undefined } }],
+    // ALL FOUR STAMPS ARE REQUIRED ON A RECORD (they are not on a scenario — see the partial-era
+    // arm above for why that premise does not transplant). Each ABSENT arm below is the fail-open
+    // hole: without it, that clock reads quiet forever and the record re-presents as CURRENT.
+    ['era.taxVintageDetail ABSENT', { ...RECORD, era: { ...RECORD.era, taxVintageDetail: undefined } }],
+    ['era.stateTaxVintage ABSENT', { ...RECORD, era: { ...RECORD.era, stateTaxVintage: undefined } }],
+    ['era.healthcareVintage ABSENT', { ...RECORD, era: { ...RECORD.era, healthcareVintage: undefined } }],
+    ['era.dateVintage ABSENT', { ...RECORD, era: { ...RECORD.era, dateVintage: undefined } }],
+    // The era's stamps run the SAME validators as their scenario-level originals — a partial
+    // stamp set is meaningless, so a missing member of a PRESENT stamp is corruption.
+    ['era.taxVintageDetail partial', { ...RECORD, era: { ...RECORD.era, taxVintageDetail: { taxYear: 2026 } } }],
+    ['era.dateVintage non-object', { ...RECORD, era: { ...RECORD.era, dateVintage: '2026' } }],
+    [
+      'era.stateTaxVintage DND-009 null member',
+      { ...RECORD, era: { ...RECORD.era, stateTaxVintage: { ncProfile: 'a', paProfile: null, flProfile: 'c' } } },
+    ],
+    [
+      'era.healthcareVintage partial',
+      { ...RECORD, era: { ...RECORD.era, healthcareVintage: { coverageYear: 2026, acaStatus: 'reverted' } } },
+    ],
+  ]
+
+  it.each(badRecordArms)(
+    'a saved recommendation with %s DROPS THE ATOM and keeps the model — ok:true AND the field absent from the RETURNED scenario (never a data-damaged door for a bad memory)',
+    (_label, bad) => {
+      const decoded = decodeScenario(mutated({ ...V3, savedRecommendation: RECORD }, (o) => { o.savedRecommendation = bad }))
+      // 1) The vault OPENS. A corrupt recommendation memory must never make a household's whole
+      //    plan unopenable (both unlock paths map `corrupt` to the terminal data-damaged door).
+      expect(decoded.ok).toBe(true)
+      // 2) …and the atom is GONE from the object the caller receives. This is the non-vacuous
+      //    half: the codec returns `parsed` itself (a validated pass-through cast), so a merely
+      //    "ignored" bad atom would still be sitting right here.
+      if (decoded.ok && decoded.scenario.schemaVersion === 3) {
+        expect(decoded.scenario.savedRecommendation).toBeUndefined()
+        expect('savedRecommendation' in decoded.scenario).toBe(false)
+        // 3) …and NOTHING ELSE was dropped: the rest of the plan decodes byte-identically to the
+        //    record-free vault (the drop is surgical, never a widened bail-out).
+        expect(decoded.scenario).toEqual(V3)
+      }
+      // 4) …and the drop ANNOUNCES ITSELF. Without this the read side and the WRITE side are
+      //    indistinguishable: `scenarioFromDraft` runs this same codec as its save gate, and a
+      //    silent delete there tells a household "Saved" about a record the vault does not have.
+      if (decoded.ok) {
+        expect(decoded.droppedAtoms).toHaveLength(1)
+        expect(decoded.droppedAtoms[0]).toMatch(/^savedRecommendation: /)
+      }
+    },
+  )
+
+  it('the tolerated drop is NOT a general tolerance — a corrupt SIBLING field beside a VALID record still bounces the whole vault (loud-over-silent everywhere else)', () => {
+    // insight 029: the assertion must route differently under the mutant. If the local try/catch
+    // ever widened to swallow more than the record's own check, this arm goes green-when-it-must-
+    // be-red — a corrupt person silently decoding is the calm-but-wrong reload the codec exists
+    // to prevent.
+    const d = decodeScenario(
+      mutated({ ...V3, savedRecommendation: RECORD }, (o) => { (o.people as Obj[])[0]!.pia = null }),
+    )
+    expect(d.ok).toBe(false)
+    if (!d.ok && d.reason === 'corrupt') expect(d.detail).toContain('people[0].pia')
+  })
+
   it('v3 WITH the stateTaxVintage stamp round-trips exactly; it is an ATOMIC object — a missing profile or a non-string profile rejects (the healthcareVintage precedent)', () => {
     const withStamp: ScenarioV3 = {
       ...V3,
       retirementState: 'NC',
       stateTaxVintage: { ncProfile: '{"nc":1}', paProfile: '{"pa":1}', flProfile: '{"fl":0}' },
     }
-    expect(decodeScenario(encodeScenario(withStamp))).toEqual({ ok: true, scenario: withStamp })
+    expect(decodeScenario(encodeScenario(withStamp))).toEqual({ ok: true, scenario: withStamp, droppedAtoms: [] })
     const bads: Array<(o: Obj) => void> = [
       (o) => { o.stateTaxVintage = { paProfile: 'x', flProfile: 'y' } }, // missing ncProfile
       (o) => { o.stateTaxVintage = { ncProfile: 7, paProfile: 'y', flProfile: 'z' } }, // non-string
@@ -727,14 +939,29 @@ describe('v3 — the forward-written persist shape (U8, the first v3 writer)', (
     expect(atCeiling.ok).toBe(true)
   })
 
+  /**
+   * THE ONE FIELD WHOSE CORRUPTION IS NOT A WHOLE-VAULT REJECT (U17·S3, the spec's Q5 ruling):
+   * `savedRecommendation` is a MEMORY OF A PAST RECOMMENDATION, not part of the answer — a bad
+   * record DROPS THE ATOM and keeps the model, so a household's whole plan never becomes
+   * unopenable because its recommendation record went bad. It is still fully VALIDATED (the
+   * burned/063 law holds: no field skips the checklist); its failure MODE is the tolerated drop.
+   * The carve-out is explicit rather than a widened loop assertion so that a FUTURE field cannot
+   * inherit the tolerance by accident — and the drop itself is pinned, both arms, below.
+   */
+  const NON_FATAL_V3_FIELDS: ReadonlySet<string> = new Set(['savedRecommendation'])
+
   it('EVERY v3 top-level field is validated — set each to null and the decode rejects as CORRUPT (no silent skip, burned/063)', () => {
     // NOTE: a null on a CONTAINER field (people/enteredAccounts/tickerClassifications/health/incomeStreams)
     // only trips the OUTER needArray/needObject — the inner-shape coverage is the targeted tests below.
     for (const field of SCENARIO_V3_FIELDS) {
+      if (NON_FATAL_V3_FIELDS.has(field)) continue // its own pinned failure mode — see below
       const decoded = decodeScenario(mutated(V3, (o) => { o[field] = null }))
       expect(decoded.ok, `${field}=null must be rejected`).toBe(false)
       if (!decoded.ok) expect(decoded.reason, `${field}=null is corruption, not a mis-routed reason`).toBe('corrupt')
     }
+    // The carve-out is exactly one field — a second one appearing here without its own pinned
+    // drop arms is the silent-tolerance regression this assertion exists to catch.
+    expect([...NON_FATAL_V3_FIELDS]).toEqual(['savedRecommendation'])
   })
 
   it('v3 person uses pia + birthYear (the LIVE SS fields, never legacy socialSecurityReal)', () => {

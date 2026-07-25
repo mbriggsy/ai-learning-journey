@@ -186,6 +186,10 @@ export async function restoreVault(
       if (decoded.reason === 'newer-version') return { ok: false, reason: 'newer-version', got: decoded.got }
       return { ok: false, reason: 'file-damaged' }
     }
+    // `decoded.droppedAtoms` DELIBERATELY IGNORED — the third READ-side site, same ruling as both
+    // session.ts unlock paths: a restore must not be refused because the backup's recommendation
+    // MEMORY went bad. (Note this probe decodes only to VALIDATE; the bytes restored are the
+    // originals, so a dropped atom here is not even removed from the file.)
   } catch (e) {
     if (e instanceof CipherAuthError) return { ok: false, reason: 'file-damaged' }
     throw e

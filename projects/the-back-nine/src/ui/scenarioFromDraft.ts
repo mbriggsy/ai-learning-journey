@@ -24,7 +24,32 @@ import { CURRENT_APP_DEFAULT_VERSION } from '@shared/appDefaults'
 import type { ScenarioV3 } from '@shared/model'
 
 export type SaveReady =
-  | { readonly ready: true; readonly scenario: ScenarioV3 }
+  | {
+      readonly ready: true
+      readonly scenario: ScenarioV3
+      /**
+       * ATOMS THE SAVE GATE THREW AWAY (U17) — empty when the candidate survived intact.
+       *
+       * `ready: true` with a NON-EMPTY list means: this plan is saveable and will be written, but
+       * one tolerated atom (today only the saved-recommendation record) did not survive the codec.
+       * The plan is honest; the atom is gone.
+       *
+       * WHY THE SAVE STILL PROCEEDS. See the ruling at the return site below — refusing the whole
+       * save strands the household's real edits over a defect in OUR minting code, and does it
+       * through `deriveResultSave`'s `{ kind: 'none' }`, which withdraws the CTA and the badge with
+       * no message at all. That is exactly the lying dead-end resultSave.ts's header says the
+       * edit-and-re-save machine exists to make UNREPRESENTABLE.
+       *
+       * S5'S BINDING OBLIGATION, IN TWO PARTS: (1) validate the mint with
+       * {@link validateSavedRecommendation} BEFORE putting a record on the draft, so this list
+       * stays empty by construction; (2) if it is ever non-empty at the gesture, the gesture
+       * REFUSES ALOUD — "we saved your plan, we could not save the recommendation" — and never
+       * reports a saved recommendation. A gesture that promises an affordance owes a rendered
+       * outcome (insight 100); silently completing is the failure this field exists to make
+       * impossible to miss.
+       */
+      readonly droppedAtoms: readonly string[]
+    }
   | { readonly ready: false; readonly detail: string }
 
 /** Today as a LOCAL-calendar epoch-day integer (the `savedAt` unit — DND 009: a plain small
@@ -63,7 +88,31 @@ export function scenarioFromDraft(draft: ScenarioDraft): SaveReady {
   } as ScenarioV3
   const decoded = decodeScenario(encodeScenario(candidate))
   if (decoded.ok && decoded.scenario.schemaVersion === 3) {
-    return { ready: true, scenario: decoded.scenario }
+    // A NON-FATAL DROP ON THE WRITE SIDE IS A MINTER DEFECT — REPORTED, never swallowed, and
+    // never allowed to hold the household's PLAN hostage. (U17 F-pass ruling, dated 2026-07-25.)
+    //
+    // The codec's one tolerated drop (the saved-recommendation record) is charter'd for the READ
+    // side: "a household's whole plan must never become unopenable at unlock because its
+    // recommendation memory went bad." Nothing in that charter reaches this call, which is the
+    // SAVE gate — so the drop must not pass silently: `session.save` would write a record-free
+    // scenario while the draft keeps its record, and since `deriveResultSave` compares two
+    // POST-codec operands the badge would read CLEAN. The household would be told "Saved" about a
+    // record the vault does not have.
+    //
+    // BUT REFUSING THE SAVE IS WORSE, AND WAS THE FIRST CUT OF THIS FIX. `ready: false` is the
+    // INCOMPLETE-ANSWER arm; `deriveResultSave` maps it to `{ kind: 'none' }`, which withdraws the
+    // save CTA, the saved badge, AND the aged-balances clause — with no message anywhere, and
+    // `SaveReady.detail` has no reader outside this file. A household with a complete answer, an
+    // existing vault and real unsaved edits would watch their save affordance vanish, unexplained,
+    // over a bug in OUR minting code. That is precisely the lying dead-end resultSave.ts's header
+    // says this machine exists to make UNREPRESENTABLE — so the fix must not re-introduce one.
+    //
+    // THE PROPORTIONATE ANSWER: save the plan (their edits are never collateral), report the atom,
+    // and put the refusal where the promise was made — at S5's gesture, which is the only surface
+    // that claimed a recommendation would be saved. The ROOT fix is upstream of both arms:
+    // `validateSavedRecommendation` lets S5 refuse at the MINT, so a record this gate could drop
+    // never reaches the draft. See the obligation recorded on `SaveReady.droppedAtoms`.
+    return { ready: true, scenario: decoded.scenario, droppedAtoms: decoded.droppedAtoms }
   }
   const detail = decoded.ok
     ? `unexpected schema version ${decoded.scenario.schemaVersion}`

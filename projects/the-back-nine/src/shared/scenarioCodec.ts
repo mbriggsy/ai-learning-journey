@@ -35,6 +35,7 @@ import {
   RECOMMENDATION_GOALS,
   SAVED_AT_EPOCH_DAY_MAX,
   SAVED_AT_EPOCH_DAY_MIN,
+  SAVED_RECOMMENDATION_GRADES,
   SEXES,
   SPEND_ENTRY_PERIODS,
   STATE_ROSTER,
@@ -63,7 +64,33 @@ import { COLA_PCT_MAX, COLA_PCT_MIN, colaRateInRange } from './incomeBounds'
 export const MAX_REAL_DOLLAR = 1e12
 
 export type ScenarioDecode =
-  | { readonly ok: true; readonly scenario: AnyScenario }
+  | {
+      readonly ok: true
+      readonly scenario: AnyScenario
+      /**
+       * WHAT THE DECODE THREW AWAY TO STAY OPEN — the NON-FATAL DROP, made VISIBLE (U17 F-pass).
+       *
+       * EMPTY ARRAY when nothing was dropped: an empty list IS the absence (the `incomeStreams`
+       * precedent), never `undefined`/optional — an optional field here would let a caller
+       * `if (decoded.droppedAtoms)` its way past the check on the exact codepath where a drop had
+       * happened, which is how a silent drop gets re-introduced.
+       *
+       * WHY IT EXISTS AT ALL. The tolerated drop (today: `savedRecommendation`) was charter'd for
+       * the READ side — "a household's whole plan must never become unopenable because its
+       * recommendation memory went bad". But `scenarioFromDraft` runs
+       * `decodeScenario(encodeScenario(candidate))` as its SAVE gate, so on the WRITE side the
+       * same tolerance silently DELETED a freshly-minted-but-invalid record and still reported
+       * `ready: true` — the household is told "Saved" about a record the vault does not have.
+       * Nothing in the read-side charter justifies that. The drop is now REPORTED and each caller
+       * rules on it (write side: a minter defect, refuse; read side: ignore, deliberately — see
+       * the comments at those sites).
+       *
+       * FORMAT: one entry per dropped atom, `"<field>: <the codec's own named reason>"`. The atom
+       * name leads so a caller can name WHICH memory was lost; the codec's detail rides along so
+       * the refusal can say WHY without a second validation pass.
+       */
+      readonly droppedAtoms: readonly string[]
+    }
   | { readonly ok: false; readonly reason: 'corrupt'; readonly detail: string }
   | { readonly ok: false; readonly reason: 'newer-version'; readonly got: number }
 
@@ -472,7 +499,192 @@ function checkDrawdownOrderV3(v: unknown, path: string): void {
   }
 }
 
-function checkV3Fields(o: Obj): void {
+// --- the vintage-stamp validators (ONE home each) --------------------------------------------
+// Extracted at U17·S3 because the saved-recommendation record carries the SAME four stamp
+// objects as its frozen era snapshot. Two hand-copied validators for one shape is the drift the
+// repo refuses (insight 022's per-figure-provenance sibling: a second copy that silently accepts
+// a shape the first rejects makes the two gates disagree). Each keeps its atomic-object contract
+// verbatim: a PARTIAL stamp set is meaningless, so every non-additive field is required when the
+// object is present, and the additive members stay optional (absent = not-comparable, quiet).
+
+/** P3·U11 — the healthcare vintage stamp. TWO additive-optional members ride inside it (the
+ *  extras-typical vintage and the Part-B-trend vintage) — a pre-unit stamp legitimately lacks
+ *  each, and absence reads not-comparable, never "unchanged". */
+function checkHealthcareVintageV3(v: unknown, path: string): void {
+  needObject(v, path)
+  needInteger(v, 'coverageYear', path)
+  needString(v, 'acaStatus', path)
+  needString(v, 'acaVerifiedOn', path)
+  needInteger(v, 'fplGuidelineYear', path)
+  needInteger(v, 'irmaaTopTierFrozenThrough', path)
+  needFinite(v, 'partBStandardMonthly', path)
+  if (v.medicareExtrasTypicalVintage !== undefined) needString(v, 'medicareExtrasTypicalVintage', path)
+  if (v.partBTrendVintage !== undefined) needString(v, 'partBTrendVintage', path)
+}
+
+/** P3·U13 — the structured tax vintage (one atomic object — the healthcareVintage precedent). */
+function checkTaxVintageV3(v: unknown, path: string): void {
+  needObject(v, path)
+  needInteger(v, 'taxYear', path)
+  needString(v, 'legalBasis', path)
+}
+
+/** P3·U13 — the date-surface vintage (same atomic-object contract). */
+function checkDateVintageV3(v: unknown, path: string): void {
+  needObject(v, path)
+  needInteger(v, 'contributionYear', path)
+  needString(v, 'blendSnapshotAsOf', path)
+}
+
+/** The state-tax vintage stamp. Each field is a serialized per-state profile (a plain string);
+ *  the staleness reader diffs the household's own state's string. */
+function checkStateTaxVintageV3(v: unknown, path: string): void {
+  needObject(v, path)
+  needString(v, 'ncProfile', path)
+  needString(v, 'paProfile', path)
+  needString(v, 'flProfile', path)
+}
+
+/**
+ * Act-4 · U17 — the saved-recommendation record (the spec's Q5 payload; model.ts
+ * {@link SavedRecommendationV3}). Written in this file's NORMAL throwing idiom — every failure is
+ * a named `Corrupt` — because the TOLERANCE is the CALLER's decision, not this validator's: the
+ * v3 arm wraps it in a local try/catch that DELETES the atom and continues (the one deliberate
+ * divergence from the file's loud-over-silent discipline; see the call site).
+ *
+ * Every gate here answers a specific way the record could lie if it decoded:
+ *  - `mintedAt` gets the SAME epoch-day RANGE gate as `savedAt` (insight 046): an epoch-MS value
+ *    is a finite integer that silently reads as year ~55000, and "your recommendation is from
+ *    the year 55000" is in-range garbage, worse than a reject.
+ *  - `fingerprint` must be a NON-EMPTY string. An empty one is not a fingerprint any minter
+ *    produces; leaving it would persist a value that can only ever mismatch, i.e. a record that
+ *    is silently un-re-presentable forever with no named reason.
+ *  - `solverCodeVersion` must be an integer ≥ 1 — the engine's own shape contract (a monotone
+ *    integer, never a float/sentinel). A 0 or a float means the writer violated it.
+ *  - the action's custom-order BICONDITIONAL is enforced in BOTH directions (the
+ *    `scenario.drawdownOrder` precedent): 'custom' with no order names no strategy, and an order
+ *    riding a named policy would silently NOT govern.
+ *  - `subTenthCollapse` rides a SECOND biconditional, on `grade`, also in both directions. It
+ *    lives inside the engine's `GradeResult`, so a qualifier with no grade is UNPRODUCIBLE — and
+ *    requiring it unconditionally would force the withheld-grade writer to invent a `false`, the
+ *    structurally-dormant disclosure fed from an empty default that solve.ts's phasing law names.
+ *  - `noDollarRegister` is REQUIRED and un-derivable record-side (model.ts spells out why): it is
+ *    the only carrier of "the live surface refused to make a dollar claim at all", so a decoder
+ *    that defaulted it would let a card re-tell a refusal as an active switch.
+ *  - ALL FIVE ERA FIELDS ARE REQUIRED — no presence guard anywhere in the era block. The
+ *    scenario-level stamps' absent-is-quiet contract does NOT transplant (model.ts
+ *    {@link SavedRecommendationEraV3} names the premise and where it fails): a record is born
+ *    after all four stamps exist, so absence is a minter bug that would pin `rulesMoved: false`
+ *    forever. Refusing it here is the fail-CLOSED direction — the record drops, the plan opens.
+ */
+function checkSavedRecommendationV3(v: unknown, path: string): void {
+  needObject(v, path)
+  needInteger(v, 'mintedAt', path)
+  const mintedAt = v.mintedAt as number
+  if (mintedAt < SAVED_AT_EPOCH_DAY_MIN || mintedAt > SAVED_AT_EPOCH_DAY_MAX) {
+    throw new Corrupt(
+      `${path}.mintedAt: ${mintedAt} outside the epoch-day range [${SAVED_AT_EPOCH_DAY_MIN}, ${SAVED_AT_EPOCH_DAY_MAX}] (an epoch-ms value silently reads as a far-future year)`,
+    )
+  }
+  needString(v, 'fingerprint', path)
+  if ((v.fingerprint as string).length === 0) {
+    throw new Corrupt(`${path}.fingerprint: expected a non-empty solver-run identity (an empty one can only ever mismatch)`)
+  }
+  needInteger(v, 'solverCodeVersion', path)
+  if ((v.solverCodeVersion as number) < 1) {
+    throw new Corrupt(`${path}.solverCodeVersion: expected the engine's monotone integer ≥ 1`)
+  }
+  needVocab(v, 'goal', RECOMMENDATION_GOALS, path)
+
+  const actionPath = `${path}.action`
+  const action = v.action
+  needObject(action, actionPath)
+  needString(action, 'candidateId', actionPath)
+  if ((action.candidateId as string).length === 0) {
+    throw new Corrupt(`${actionPath}.candidateId: expected a non-empty solver candidate id`)
+  }
+  needVocab(action, 'policy', DRAWDOWN_POLICIES, actionPath)
+  if (action.policy === 'custom' && action.drawdownOrder === undefined) {
+    throw new Corrupt(`${actionPath}.drawdownOrder: required when policy is 'custom'`)
+  }
+  if (action.drawdownOrder !== undefined) {
+    if (action.policy !== 'custom') {
+      throw new Corrupt(`${actionPath}.drawdownOrder: only meaningful when policy is 'custom' (it would not govern)`)
+    }
+    checkDrawdownOrderV3(action.drawdownOrder, `${actionPath}.drawdownOrder`)
+  }
+
+  const verdictPath = `${path}.verdict`
+  const verdict = v.verdict
+  needObject(verdict, verdictPath)
+  // ABSENT grade = WITHHELD (the B-floor refusal / no runner-up) — the burned/062 sentinel.
+  // A PRESENT one must be in the mirrored vocabulary; an out-of-vocab letter is corruption, never
+  // coerced to the conservative 'coin-flip' (a fabricated reading the run never made).
+  if (verdict.grade !== undefined) needVocab(verdict, 'grade', SAVED_RECOMMENDATION_GRADES, verdictPath)
+  // THE QUALIFIER'S BICONDITIONAL, both directions (the drawdownOrder-iff-'custom' idiom above).
+  if (verdict.grade !== undefined) {
+    needBoolean(verdict, 'subTenthCollapse', verdictPath)
+  } else if (verdict.subTenthCollapse !== undefined) {
+    throw new Corrupt(
+      `${verdictPath}.subTenthCollapse: only meaningful when a grade is present (it lives inside the engine's GradeResult — a qualifier with nothing to qualify is unproducible)`,
+    )
+  }
+  needBoolean(verdict, 'noChange', verdictPath)
+  needBoolean(verdict, 'surplusRegime', verdictPath)
+  needBoolean(verdict, 'noDollarRegister', verdictPath)
+
+  const eraPath = `${path}.era`
+  const era = v.era
+  needObject(era, eraPath)
+  // ALL FIVE, NO PRESENCE GUARD (see the header). An absent stamp here is not a pre-unit vault —
+  // it is a minter that failed to snapshot the era, and tolerating it would pin every rulebook
+  // clock quiet forever on a record that then re-presents as CURRENT.
+  needString(era, 'appDefaultVersion', eraPath)
+  checkTaxVintageV3(era.taxVintageDetail, `${eraPath}.taxVintageDetail`)
+  checkStateTaxVintageV3(era.stateTaxVintage, `${eraPath}.stateTaxVintage`)
+  checkHealthcareVintageV3(era.healthcareVintage, `${eraPath}.healthcareVintage`)
+  checkDateVintageV3(era.dateVintage, `${eraPath}.dateVintage`)
+}
+
+/**
+ * VALIDATE A RECORD AT THE MINT — the seam that keeps an invalid record out of the draft entirely.
+ *
+ * THE PROBLEM IT SOLVES. The record is the ONE atom `decodeScenario` drops non-fatally, and that
+ * tolerance is charter'd for the READ side ("a household's plan must never become unopenable
+ * because its recommendation memory went bad"). On the WRITE side the same tolerance is a trap:
+ * whatever `scenarioFromDraft` does about a dropped atom, it is already choosing between two bad
+ * outcomes — save the plan and lose the record silently, or refuse the save and strand the
+ * household's real edits over a defect in OUR minting code. Neither is good, because BOTH are
+ * downstream of the actual mistake.
+ *
+ * The actual mistake is letting an invalid record onto the draft in the first place. S5's save
+ * gesture mints this record from a solve payload we control, so it can — and per the obligation
+ * recorded on {@link SaveReady} MUST — validate its own mint HERE, before the record ever touches
+ * the draft. Then the write-side drop is unreachable by construction rather than handled by a
+ * consolation prize.
+ *
+ * Same validator as the decode path (never a parallel copy that could drift — the whole reason
+ * `scenarioFromDraft` round-trips the codec instead of hand-rolling a save gate), just returned
+ * rather than thrown, because a mint-time refusal is a control-flow decision at the caller and not
+ * a corrupt-vault event.
+ */
+export function validateSavedRecommendation(
+  record: unknown,
+): { readonly ok: true } | { readonly ok: false; readonly detail: string } {
+  try {
+    checkSavedRecommendationV3(record, 'savedRecommendation')
+    return { ok: true }
+  } catch (e) {
+    if (e instanceof Corrupt) return { ok: false, detail: e.detail }
+    throw e
+  }
+}
+
+/** Returns the NON-FATAL DROPS (`ScenarioDecode.droppedAtoms`) — empty when the whole payload was
+ *  accepted intact. Everything else still throws {@link Corrupt}; only the atoms enumerated at the
+ *  bottom of this function are ever tolerated, and each one REPORTS itself on the way out. */
+function checkV3Fields(o: Obj): string[] {
+  const droppedAtoms: string[] = []
   needArray(o.people, 'scenario.people')
   if (o.people.length === 0) throw new Corrupt('scenario.people: must not be empty')
   o.people.forEach((p, i) => checkPersonV3(p, `people[${i}]`))
@@ -576,21 +788,7 @@ function checkV3Fields(o: Obj): void {
   // and the Part-B-trend vintage (the trend unit) — a pre-unit stamp legitimately lacks each,
   // and absence reads not-comparable, never "unchanged").
   if (o.healthcareVintage !== undefined) {
-    const hv = o.healthcareVintage
-    const path = 'scenario.healthcareVintage'
-    needObject(hv, path)
-    needInteger(hv, 'coverageYear', path)
-    needString(hv, 'acaStatus', path)
-    needString(hv, 'acaVerifiedOn', path)
-    needInteger(hv, 'fplGuidelineYear', path)
-    needInteger(hv, 'irmaaTopTierFrozenThrough', path)
-    needFinite(hv, 'partBStandardMonthly', path)
-    if (hv.medicareExtrasTypicalVintage !== undefined) {
-      needString(hv, 'medicareExtrasTypicalVintage', path)
-    }
-    if (hv.partBTrendVintage !== undefined) {
-      needString(hv, 'partBTrendVintage', path)
-    }
+    checkHealthcareVintageV3(o.healthcareVintage, 'scenario.healthcareVintage')
   }
   // P3·U13 — the save wall-time anchor (additive-optional). RANGE-gated, not merely
   // finite (insight 046): an epoch-MILLISECOND value here is a finite integer that would
@@ -609,31 +807,18 @@ function checkV3Fields(o: Obj): void {
   // P3·U13 — the structured tax vintage (additive-optional; one atomic object — a partial
   // stamp set is meaningless, the healthcareVintage precedent).
   if (o.taxVintageDetail !== undefined) {
-    const tv = o.taxVintageDetail
-    const path = 'scenario.taxVintageDetail'
-    needObject(tv, path)
-    needInteger(tv, 'taxYear', path)
-    needString(tv, 'legalBasis', path)
+    checkTaxVintageV3(o.taxVintageDetail, 'scenario.taxVintageDetail')
   }
   // P3·U13 — the date-surface vintage (additive-optional; same atomic-object contract).
   if (o.dateVintage !== undefined) {
-    const dv = o.dateVintage
-    const path = 'scenario.dateVintage'
-    needObject(dv, path)
-    needInteger(dv, 'contributionYear', path)
-    needString(dv, 'blendSnapshotAsOf', path)
+    checkDateVintageV3(o.dateVintage, 'scenario.dateVintage')
   }
   // The state-tax vintage stamp (the state-tax unit; additive-optional; one atomic object — a
   // partial stamp set is meaningless, so every field is required when the object is present; the
   // healthcareVintage/taxVintageDetail precedent). Each field is a serialized per-state profile
   // (a plain string); the staleness reader diffs the household's own state's string.
   if (o.stateTaxVintage !== undefined) {
-    const sv = o.stateTaxVintage
-    const path = 'scenario.stateTaxVintage'
-    needObject(sv, path)
-    needString(sv, 'ncProfile', path)
-    needString(sv, 'paProfile', path)
-    needString(sv, 'flProfile', path)
+    checkStateTaxVintageV3(o.stateTaxVintage, 'scenario.stateTaxVintage')
   }
   // Act-4 · U15 — the recommender's chosen Tier-2 goal (additive-optional). needVocab against the
   // SINGLE-SOURCED RECOMMENDATION_GOALS (model.ts) inside the tolerant-reader guard: a pre-U15
@@ -643,6 +828,47 @@ function checkV3Fields(o: Obj): void {
   if (o.chosenGoal !== undefined) {
     needVocab(o, 'chosenGoal', RECOMMENDATION_GOALS, 'scenario')
   }
+  // ─────────────────────────────────────────────────────────────────────────────────────────
+  // Act-4 · U17 — the saved-recommendation record: THE FIRST AND ONLY TOLERATED DROP IN THIS
+  // CODEC, a DELIBERATE, spec-named divergence from the file's loud-over-silent discipline
+  // (U17 build spec, Q5: "a corrupt/unknown record DROPS THE ATOM and keeps the model").
+  //
+  // WHY THE DIVERGENCE IS RIGHT HERE AND NOWHERE ELSE. Every other field in this codec is part
+  // of the ANSWER: a bad `people[0].pia` or a bad budget line means the plan we would recompute
+  // is not the plan that was saved, so refusing loudly (→ the terminal "data damaged" door,
+  // session.ts:437-441 / 507-511) is the honest outcome. This record is a MEMORY OF A PAST
+  // RECOMMENDATION — nothing in the household's plan depends on it. Bouncing the entire vault,
+  // and with it every balance, budget line and date the household entered, because their saved
+  // recommendation went bad would be a catastrophic over-reaction: the plan is the asset, the
+  // record is a note about it.
+  //
+  // THE DELETE MUST MUTATE `o`, NOT MERELY "IGNORE" THE FIELD. `o` IS the object `decodeScenario`
+  // casts and returns (`{ ok: true, scenario: parsed as … }`) — this codec constructs nothing. An
+  // atom that is validated-and-ignored would still ride the returned scenario into
+  // draftFromScenario's `...rest`, into the draft, and back onto disk at the next save: a
+  // corrupt record that survives forever and re-poisons every future read. Deleting it here is
+  // what makes "drops the atom" true rather than aspirational.
+  //
+  // ONLY `Corrupt` IS CAUGHT. A TypeError (or anything else) from a real defect in the validator
+  // must stay LOUD and propagate to decodeScenario's outer catch, which re-throws it — a
+  // programming error laundered into a calm dropped atom is exactly the silent-wrongness this
+  // whole file exists to prevent.
+  //
+  // AND THE DROP IS REPORTED, NEVER SILENT (the F-pass fix). "Tolerated" is a READ-side charter;
+  // this same function is `scenarioFromDraft`'s SAVE gate, where a dropped atom means the MINTER
+  // emitted an invalid record and the household would otherwise be told "Saved" about a record
+  // that is not on disk. The atom name + the codec's own reason ride out on `droppedAtoms`; each
+  // caller rules on it (ScenarioDecode's doc).
+  if (o.savedRecommendation !== undefined) {
+    try {
+      checkSavedRecommendationV3(o.savedRecommendation, 'scenario.savedRecommendation')
+    } catch (e) {
+      if (!(e instanceof Corrupt)) throw e
+      delete o.savedRecommendation
+      droppedAtoms.push(`savedRecommendation: ${e.detail}`)
+    }
+  }
+  return droppedAtoms
 }
 
 /**
@@ -666,17 +892,19 @@ export function decodeScenario(bytes: Uint8Array): ScenarioDecode {
   }
 
   try {
+    // The legacy ladders carry no tolerated atom — every field is fatal-or-fine, so their
+    // `droppedAtoms` is the EMPTY LIST (the absence, spelled; never `undefined`).
     if (version === 1) {
       checkV1Fields(parsed)
-      return { ok: true, scenario: parsed as unknown as Scenario }
+      return { ok: true, scenario: parsed as unknown as Scenario, droppedAtoms: [] }
     }
     if (version === 2) {
       checkV2Fields(parsed)
-      return { ok: true, scenario: parsed as unknown as ScenarioV2 }
+      return { ok: true, scenario: parsed as unknown as ScenarioV2, droppedAtoms: [] }
     }
     if (version === 3) {
-      checkV3Fields(parsed)
-      return { ok: true, scenario: parsed as unknown as ScenarioV3 }
+      const droppedAtoms = checkV3Fields(parsed)
+      return { ok: true, scenario: parsed as unknown as ScenarioV3, droppedAtoms }
     }
   } catch (e) {
     if (e instanceof Corrupt) return { ok: false, reason: 'corrupt', detail: e.detail }

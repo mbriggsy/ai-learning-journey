@@ -22,6 +22,15 @@
  *
  * U17 owns the persistence + the re-entry staleness compare; U15 only MINTS this and EMITS it
  * on the payload (S5). It is a monotone integer, never a float / sentinel (the shape test pins
- * that) — U17's compare is a plain `<`.
+ * that).
+ *
+ * U17's COMPARE IS `!==`, NOT `<` (shipped at U17·S3 — a dated correction of this file's own
+ * earlier prediction, swept here so the comment cannot become a false description of live code:
+ * insight 087). `store/savedRecommendation.ts` refuses to re-present a saved recommendation whose
+ * `solverCodeVersion` differs from this constant IN EITHER DIRECTION. A record from an OLDER
+ * build is the obvious case; a record from a NEWER build — a vault written by a later build and
+ * opened by this one, which the backup-restore and multi-device paths make real — is EQUALLY
+ * un-re-presentable, because THIS build's ranking code cannot reproduce that build's ranking. A
+ * `<` would silently bless it. Fail closed both ways.
  */
 export const SOLVER_CODE_VERSION = 1

@@ -8,7 +8,7 @@ import { appModel } from './appModel'
 import { Result } from './Result'
 import { scenarioFromDraft, currentEpochDay } from './scenarioFromDraft'
 import { draftFromScenario } from './draftFromScenario'
-import { agedBalancesYearFor, deriveResultSave, type PersistState } from './resultSave'
+import { agedBalancesYearFor, deriveResultSave, persistSeedFor, type PersistState } from './resultSave'
 import { describeSaveFailure } from './unlockCopy'
 import { PendingPanel } from './PendingPanel'
 import { ReEntry } from './ReEntry'
@@ -241,14 +241,9 @@ export default function IntakeApp({
         // re-stamps a fresh save-day, but persist.scenario's contract is "the LAST COMMITTED
         // model" — and agedBalancesYearFor reads its savedAt as the year the numbers were
         // entered (a fresh stamp here silently killed the aged-balances clause on every
-        // hydrated vault). A legacy vault (no savedAt on disk) seeds WITHOUT one — suppression
-        // over fabrication. The dirty/clean compare is savedAt-blind (scenarioIdentity), so
-        // the clean-badge law is untouched either way.
-        const { savedAt: _freshStamp, ...diskIdentity } = normalized.scenario
-        setPersist({
-          kind: 'saved',
-          scenario: model.savedAt !== undefined ? { ...diskIdentity, savedAt: model.savedAt } : diskIdentity,
-        })
+        // hydrated vault). The reconstruction is the ONE exported producer (resultSave.ts
+        // `persistSeedFor`) — never re-typed here or in a test, which is how S0's seam bug hid.
+        setPersist({ kind: 'saved', scenario: persistSeedFor(normalized.scenario, model.savedAt) })
         // The re-offer backup door: a WRITABLE return with no backup-note on record offers the
         // off-device copy. A read-only tab skips it (the standing view-only banner is disclosure
         // enough — one door is the deliberate v1 scope). A note-read hiccup must NEVER fail the

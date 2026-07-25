@@ -1745,6 +1745,226 @@ export interface ScenarioV3 {
    *  is corruption named loud (never silently coerced to a default goal — the calm-but-wrong
    *  shape of fabricating a goal the user never picked). */
   readonly chosenGoal?: RecommendationGoal
+  /** Act-4 · U17 — the SAVED RECOMMENDATION record (the spec's Q5 payload). ADDITIVE-OPTIONAL
+   *  within schemaVersion 3 (the chosenGoal/rothConversion/savedAt tolerant-reader precedent —
+   *  a pre-U17 vault lacks the field and decodes unchanged; NO schemaVersion bump). ABSENCE IS
+   *  THE UNSET SENTINEL (burned/062): a household that never saved a recommendation has NO
+   *  record, never an empty/default one.
+   *
+   *  IT IS A USER FACT, MINTED ONCE, NEVER RE-STAMPED. It rides `scenarioFromDraft` via
+   *  `...draft` (the chosenGoal/retirementState precedent) and MUST NEVER join the candidate
+   *  literal's stamped-fresh block beside the vintages — that is insight 073 verbatim: a
+   *  per-encode stamp inside a compared payload turns every identity compare into a clock
+   *  compare, and every same-day test stays green while a returning household's badge lies.
+   *  {@link scenarioIdentity} therefore keeps it (it strips ONLY the wall-time `savedAt`), and
+   *  the aged-vault witness in `draftFromScenario.test.ts` pins an OLD `mintedAt` surviving a
+   *  hydrate → re-encode byte-identically.
+   *
+   *  THE ONE TOLERATED CODEC DROP: a structurally-bad record DELETES THE ATOM and keeps the
+   *  model (`scenarioCodec.ts` — the file's only deliberate divergence from loud-over-silent).
+   *  A household's whole plan must never become unopenable because its recommendation memory
+   *  went bad; the record is a memory, the plan is the asset.
+   *
+   *  RE-PRESENTATION IS THE TRICHOTOMY'S JOB, NEVER THIS FIELD'S: presence proves a
+   *  recommendation was once saved, NOT that it is current. `src/store/savedRecommendation.ts`
+   *  decides that from (fingerprint, solver code version, the RECORD's own era). */
+  readonly savedRecommendation?: SavedRecommendationV3
+}
+
+/** The grade vocabulary MIRRORED for the persistence layer. The engine's own `Grade`
+ *  (`@engine/validation/gradeCalibration`) is unreachable from here — src/shared is a LEAF that
+ *  must not import a feature layer (the eslint layer ban), the same constraint that forced the
+ *  {@link MAX_REAL_DOLLAR} / COLA_PCT_MAX re-declarations. A SOURCE-BIND test
+ *  (`src/shared/__tests__/savedRecommendationVocab.test.ts`, which MAY import @engine) asserts
+ *  this array is the engine union's FULL extension in BOTH directions, so a new engine grade
+ *  reds the build instead of silently decoding as corruption (and dropping the atom). */
+export const SAVED_RECOMMENDATION_GRADES = ['just-do-it', 'coin-flip'] as const
+export type SavedRecommendationGrade = (typeof SAVED_RECOMMENDATION_GRADES)[number]
+
+/**
+ * THE SAVED RECOMMENDATION RECORD (U17 Q5) — a FLAT PROJECTION of one solve, carrying the
+ * identity it was solved under, the action it crowned, an ENUMERATED verdict, and the ERA that
+ * priced it.
+ *
+ * WHY NO REMEMBERED DOLLARS. Q5 ships the verdict as enums ONLY, rendered inside the record card
+ * and never hoisted into the live headline — and the spec's preserved dissent carries a SECONDARY
+ * FLIP: any read where a reader quotes a remembered figure as CURRENT drops the record to the
+ * identity triple alone. An enum cannot be misread as a current dollar; a `$412,900` can. No
+ * balance, no delta, no survival fraction is persisted here — by construction, not by discipline.
+ *
+ * WHY THE ERA RIDES THE RECORD AND NOT JUST THE SCENARIO. `scenarioFromDraft` RE-MINTS every
+ * vintage stamp at every save, so the scenario's stamps describe the LAST SAVE, not the solve.
+ * A plan whose recommendation was found under old brackets and then re-saved after a bracket
+ * change would read "no clock fired" while the remembered verdict was priced under superseded
+ * rules — the constant-blind-fingerprint hole one level up, and the calm-but-wrong sin.
+ * `savedRecommendation.ts` compares THIS era, never the scenario's.
+ */
+export interface SavedRecommendationV3 {
+  /** The epoch-DAY the record was minted (the same finite-integer unit + range gate as
+   *  {@link ScenarioV3.savedAt} — DND 009, insight 046: an epoch-MILLISECOND value here is a
+   *  finite integer that silently reads as year ~55000). DELIBERATELY NOT `scenario.savedAt`:
+   *  that stamp re-mints on every re-save, so a household that edits its budget and re-saves
+   *  would see its recommendation's age reset to today while the ranking behind it aged. */
+  readonly mintedAt: number
+  /** The `SolverRunFingerprint` of the remembered run — an OPAQUE identity string, compared with
+   *  `===` and NEVER parsed (the engine owns its format and versions it with its own embedded
+   *  schema tag, precisely so an old persisted value can never spuriously match a new recompute).
+   *
+   *  TYPED AS A PLAIN `string`, AND NOTHING ANYWHERE NARROWS IT (the honest limitation — swept at
+   *  the F-pass, insight 087: this doc used to claim "the store's trichotomy binds the two by
+   *  passing a real `SolverRunFingerprint` in", which is FALSE). The engine's alias is
+   *  `export type SolverRunFingerprint = string` (`solverRunFingerprint.ts`) — a BARE alias, not a
+   *  branded/nominal type — so passing one into `deriveSavedRecommendationStatus` narrows nothing:
+   *  an S5 writer that persisted a `candidateId`, a seed, or any other opaque engine string here
+   *  would COMPILE, LINT, and leave every trichotomy arm GREEN (both operands would simply be
+   *  strings that never match, so the record would read `inputs-changed` forever — a silent,
+   *  permanent, un-re-presentable memory with no named reason anywhere).
+   *
+   *  WHAT S5 MUST DO ABOUT IT, since the type cannot: mint this ONLY from the return value of the
+   *  SAME `buildSolverRunFingerprint(...)` call the trichotomy's `freshFingerprint` comes from,
+   *  and pin it with a test that round-trips a real built fingerprint through mint → decode →
+   *  `deriveSavedRecommendationStatus` and asserts `current` (the producer's-output bind, insights
+   *  080/081). A shared-side re-derivation is unavailable by layer law, so the bind must be a
+   *  TEST — it cannot be a type. */
+  readonly fingerprint: string
+  /** The ranking-CODE version the run was solved under (`SOLVER_CODE_VERSION`) — a monotone
+   *  integer ≥ 1. Compared with `!==`, never `<`: a record from a NEWER build (a vault written
+   *  by a later build, opened by this one) is equally un-re-presentable, because THIS build's
+   *  code cannot reproduce that ranking. Fail-closed in both directions. */
+  readonly solverCodeVersion: number
+  /** The Tier-2 goal the run ranked for. Persisted on the RECORD as well as the scenario
+   *  because the scenario's `chosenGoal` is live and editable: a household that flips the goal
+   *  picker after saving must not have its old record silently re-labelled with the new goal. */
+  readonly goal: RecommendationGoal
+  readonly action: SavedRecommendationActionV3
+  readonly verdict: SavedRecommendationVerdictV3
+  readonly era: SavedRecommendationEraV3
+}
+
+/** WHAT WAS RECOMMENDED — the crowned arm, flattened.
+ *
+ *  NO `conversion` FIELD, deliberately. `SolveArm.conversion` is documented ALWAYS NULL in the
+ *  live sequencing-only ranking (solve.ts — conversions are WITHHELD and carried as
+ *  `withheldConversionLevers`), so a persisted conversion slot would be dead weight and an
+ *  untestable branch. `candidateId` already embeds the amount, and this record extends
+ *  additively the day conversions actually rank. */
+export interface SavedRecommendationActionV3 {
+  /** The `solverCandidateId` of the winning arm — OPAQUE, never parsed into its parts (the
+   *  engine owns that grammar; a shared-side parser would be a second producer to drift). */
+  readonly candidateId: string
+  readonly policy: DrawdownPolicy
+  /** REQUIRED iff `policy === 'custom'` — the codec enforces the biconditional in BOTH
+   *  directions (the {@link ScenarioV3.drawdownOrder} precedent): a 'custom' action with no
+   *  order names nothing, and an order riding a named policy would silently NOT govern. */
+  readonly drawdownOrder?: readonly DrawdownOrderKey[]
+}
+
+/**
+ * THE REMEMBERED VERDICT — enumerated, never a dollar (see the interface header).
+ *
+ * THE GRADE'S DECISION AXIS IS **NOT** STORED HERE, DELIBERATELY (the F-pass ruling). It is a PURE
+ * FUNCTION of two fields this record already carries: the engine's own
+ * `gradeAxisFor(goal, surplusRegime)` (`@engine/solver/solve`) is the axis's SOLE producer, and
+ * `solve.ts` is its only call site. Persisting the output beside its two inputs made 8 of the 12
+ * (goal, surplusRegime, axis) triples REPRESENTABLE-BUT-IMPOSSIBLE — a decoder verified
+ * `goal:'leave-more'` + axis `'pay-less-tax'` + `surplusRegime:false` into a valid vault, which
+ * would let a card say "just do it" on the pay-less-tax axis about a run graded on SURVIVAL. The
+ * card derives the axis at render through `gradeAxisFor` instead: fidelity over duplication, the
+ * same law that keeps the per-year conversion vector out of the vault. A derived value stored
+ * beside its inputs is not redundancy — it is a second producer that can disagree with the first.
+ */
+export interface SavedRecommendationVerdictV3 {
+  /** The calibrated grade. ABSENT = the grade was WITHHELD (the B-family floor refusal, or no
+   *  runner-up to grade against) — absence IS the sentinel (burned/062), never a defaulted
+   *  'coin-flip', which would fabricate a reading the run never made. */
+  readonly grade?: SavedRecommendationGrade
+  /** The grade's own qualifier (`GradeResult.subTenthCollapse`): the advantage cleared every
+   *  band but rounds below one display tenth, so the caller routes it into the no-change state
+   *  rather than an unchanged-looking win.
+   *
+   *  PRESENT **IFF** `grade` IS PRESENT — the codec enforces the biconditional in BOTH directions
+   *  (the `action.drawdownOrder`-iff-`custom` idiom in the same file, and the
+   *  `MedicareExtrasEntryV3` precedent). It lives INSIDE the engine's `GradeResult`
+   *  (`gradeCalibration.ts`), so `{ subTenthCollapse: true }` with no grade is UNPRODUCIBLE — and
+   *  a required boolean would force the withheld arm's writer to invent a `false`, which is
+   *  precisely the structurally-dormant disclosure fed from an empty default that solve.ts's
+   *  phasing law forbids ("the figure and its disclosure land TOGETHER"). Absent grade ⇒ no
+   *  qualifier to make; present grade ⇒ the qualifier ships with it, so no card can overstate a
+   *  win the engine already demoted. */
+  readonly subTenthCollapse?: boolean
+  /** The winner IS the conventional prior — the no-change routing signal (R25). Persisted
+   *  because "we looked and your current strategy already wins" is a DIFFERENT remembered
+   *  verdict from "switch to this", and the card must not re-tell it as a switch. */
+  readonly noChange: boolean
+  /** The 10/10 → surplus pivot signal: the run was decided on the surplus goal rather than the
+   *  survival floor. Persisted for the same reason as `noChange` — it changes what the
+   *  remembered sentence MEANS, not merely how it looks. It is ALSO half of the axis derivation
+   *  above (`gradeAxisFor(goal, surplusRegime)`), so it must never be re-derived record-side. */
+  readonly surplusRegime: boolean
+  /**
+   * DID THE LIVE SURFACE REFUSE TO MAKE A DOLLAR CLAIM AT ALL? — the no-DOLLAR compose register.
+   *
+   * WHY IT CANNOT BE RE-DERIVED FROM THIS RECORD, which is the whole reason it is a stored field.
+   * Its producer is `recommendationView.ts`:
+   *     `const noDollar = isNoChange || !winnerDisplaysAhead || deltaCollapsesToZero`
+   * Only the first disjunct (`noChange || subTenthCollapse`) is reconstructible here. The other
+   * two are read off seed-B headline figures — the winner's and the no-action baseline's — that
+   * this record DELIBERATELY does not carry (no remembered dollars; see the interface header). So
+   * a record minted from a display-INVERSION run, or from a delta that formats to `'0'`, would be
+   * BYTE-IDENTICAL to a record minted from a live "switch to taxable-first, keeps ~$41k more"
+   * surface. The card would then re-tell as an ACTIVE switch a run whose own live surface refused
+   * to claim any switch at all — the exact overstatement the sub-tenth-collapse rationale exists
+   * to prevent, in the calm-but-wrong direction.
+   *
+   * IT MUST BE COPIED FROM THE VIEW'S OWN `noDollar` AT MINT (S5), NEVER RE-COMPUTED. Insight 081
+   * is binding: single-sourcing by re-deriving a producer's inputs forks at that producer's first
+   * early return — and `recommendedView` has several. The mint reads the composed view's register
+   * (`mode === 'no-change'`), it does not re-run the predicate. It carries NO dollars: it is one
+   * bit saying "the live surface spoke in the no-dollar register", nothing about magnitude.
+   */
+  readonly noDollarRegister: boolean
+}
+
+/**
+ * THE ERA THAT PRICED THE REMEMBERED RUN — a snapshot of the five vintage-bearing fields
+ * `deriveStaleness` compares, taken at MINT time and frozen there.
+ *
+ * **ALL FIVE ARE REQUIRED.** This is the one place the scenario-level stamps' famous
+ * "absent = NOT-COMPARABLE, keep that clock quiet" contract DOES NOT TRANSPLANT, and the reason
+ * is a premise, not a preference:
+ *
+ *  - THE SCENARIO'S contract has a real population. A pre-U13 vault legitimately PREDATES the
+ *    stamps: it was written by a build that had no `taxVintageDetail` to write, so absence there
+ *    means "this vault cannot describe a delta it never stamped", and judging it against a stamp
+ *    it never carried would be fabricating a comparison. Quiet is the honest answer.
+ *  - THE RECORD IS BORN AT U17, AFTER ALL FOUR STAMPS ALREADY EXIST, and its ONLY minter
+ *    (`scenarioFromDraft`, which writes every one of the four unconditionally at every save, plus
+ *    the S5 gesture that reads them off that same scenario) can always supply all five. There is
+ *    NO population of legitimately-stampless records. Absence can therefore only ever be a MINTER
+ *    BUG — and it fails OPEN in the cardinal-sin direction.
+ *
+ * WHAT FAILING OPEN LOOKED LIKE (the defect this requirement closes). Every `deriveStaleness`
+ * clock is gated on `saved… !== undefined`, so a record carrying `{ appDefaultVersion }` ALONE
+ * pins `rulesMoved: false` FOREVER: the trichotomy's conjunct 3 would answer "no rules moved"
+ * however far tax / healthcare / state-tax / date law had drifted, and the record would re-present
+ * as CURRENT. Conjunct 1 cannot backstop it — `solverRunFingerprint` EXCLUDES the constant
+ * vintages BY DESIGN (its own header says so), which is the entire reason conjunct 3 exists.
+ *
+ * SO A RECORD THAT CANNOT CARRY ITS ERA IS REFUSED AT THE CODEC AND DROPS VIA THE NON-FATAL ATOM
+ * — fail-CLOSED, matching conjunct 1's own treatment of the unanswerable case
+ * ('inputs-unavailable': an identity question we cannot answer is never answered "yes"). The
+ * household loses a memory; it never gets a stale ranking spoken in the present tense.
+ *
+ * (The overlay in `savedRecommendation.ts` writes all five keys through a
+ * `Required<Pick<ScenarioV3, keyof SavedRecommendationEraV3>>` literal, so omitting one — or
+ * re-optionalizing one here — is a COMPILE error rather than a silently-quiet clock.)
+ */
+export interface SavedRecommendationEraV3 {
+  readonly appDefaultVersion: string
+  readonly taxVintageDetail: TaxVintageV3
+  readonly stateTaxVintage: StateTaxVintageV3
+  readonly healthcareVintage: HealthcareVintageV3
+  readonly dateVintage: DateVintageV3
 }
 
 /** The three user-forkable arms of the Medicare-extras payment fork plus the honest
@@ -1824,14 +2044,92 @@ export const SAVED_AT_EPOCH_DAY_MAX = 47_482
 
 /** The ONE dirty-compare / round-trip normalizer (P3·U13). `scenarioFromDraft` stamps a
  *  fresh `savedAt` on every encode, and its output is BOTH the disk payload AND the
- *  `JSON.stringify` dirty-compare operand (resultSave.ts) — so identity is judged on the
- *  scenario MINUS the wall-time stamp, or an untouched session would read permanently dirty
- *  the day after its save. Order-preserving key strip (both operands are codec-decode
- *  outputs, so remaining-key order is stable); consumers compare `JSON.stringify` of THIS,
- *  never of the raw scenario. */
+ *  dirty-compare operand (resultSave.ts) — so identity is judged on the scenario MINUS the
+ *  wall-time stamp, or an untouched session would read permanently dirty the day after its save.
+ *
+ *  THE REMAINING KEYS' ORDER IS NOT STABLE, AND NO CONSUMER MAY DEPEND ON IT (this header
+ *  asserted the opposite until U17·S3·D5 — swept here rather than left to mislead the next
+ *  maintainer, insight 087). The old claim rested on "both operands are codec-decode outputs":
+ *  `decodeScenario` is a validated PASS-THROUGH CAST of `JSON.parse`'s output — it CONSTRUCTS
+ *  NOTHING, so the order is just the source text's, which nothing pins, and `IntakeApp`'s
+ *  persist-seed reconstruction already re-orders one operand.
+ *
+ *  A DISK-IDENTITY CONSUMER THEREFORE COMPARES {@link scenarioIdentityKey}, NEVER
+ *  `JSON.stringify` OF THIS. This function's own contract is only: the same fields, minus
+ *  `savedAt`. Deep-equality consumers (`toEqual` in the round-trip guard) are fine as they are —
+ *  it is STRING comparison that must go through the canonical key. */
 export function scenarioIdentity(scenario: ScenarioV3): Omit<ScenarioV3, 'savedAt'> {
   const { savedAt: _savedAt, ...identity } = scenario
   return identity
+}
+
+/**
+ * A KEY-ORDER-INSENSITIVE canonical serialization of {@link scenarioIdentity} — the string the
+ * dirty/clean compare (resultSave.ts) and any future disk-identity consumer compare with `===`.
+ *
+ * WHY IT EXISTS (U17 · D5 — a live latent bug, not a tidy-up). The compare used to be a raw
+ * `JSON.stringify(scenarioIdentity(a)) === JSON.stringify(scenarioIdentity(b))`, justified in
+ * resultSave.ts with *"decodeScenario builds every object."* That justification is FALSE:
+ * `scenarioCodec.ts`'s v3 arm is a validated PASS-THROUGH CAST of `JSON.parse`'s output — it
+ * constructs nothing. The compare was safe only because `JSON.parse` preserves the source text's
+ * key order, which NOTHING pins — and `IntakeApp`'s persist-seed reconstruction already
+ * destructures `savedAt` off and re-appends it, moving that key to LAST on ONE operand only.
+ * The right fix is to REMOVE the dependency on key order, not to document the accident: a future
+ * field-order change in `encodeScenario` would otherwise flip an untouched session to a
+ * permanently-dirty badge (or, worse in the other direction, make the two operands incomparable
+ * for reasons no test names).
+ *
+ * ARRAYS KEEP THEIR ELEMENT ORDER, DELIBERATELY. `people`, `budget`, `drawdownOrder`,
+ * `incomeStreams`, `enteredAccounts`, `medicareExtrasByPerson` are all order-MEANINGFUL (owner vs
+ * spouse, the drawdown sequence, the budget's own line order). Sorting them would make a REAL
+ * reorder — swapping which spouse is person 0, re-sequencing the drawdown buckets — compare
+ * CLEAN. That is a silent lie in the dangerous direction, on the one badge whose whole job is to
+ * tell the truth about the disk.
+ *
+ * NON-FINITE numbers get a DISTINCT token rather than `JSON.stringify`'s `null` coercion (DND
+ * 009): the codec already refuses to decode one, but a normalizer that collapses NaN, Infinity
+ * and null onto one encoding would hide a real difference if a hand-built operand ever carried
+ * one. `undefined` object values are OMITTED, matching absent ≡ present-undefined (both operands
+ * originate from `JSON.parse`, where the distinction cannot exist). The same canonicalization
+ * shape as `@engine/validation/solverRunFingerprint`'s `canon` — re-declared, not imported,
+ * because src/shared is a leaf that must not import the engine (the {@link MAX_REAL_DOLLAR}
+ * precedent); the two serve different consumers and are not required to agree byte-for-byte.
+ */
+export function scenarioIdentityKey(scenario: ScenarioV3): string {
+  return canonicalIdentityToken(scenarioIdentity(scenario))
+}
+
+/** {@link scenarioIdentityKey}'s recursive worker: plain objects rebuild with SORTED keys, arrays
+ *  keep element order, every primitive carries a TYPE PREFIX so a number, a numeric-looking
+ *  string and a boolean can never share an encoding at the same position. */
+function canonicalIdentityToken(v: unknown): string {
+  if (v === null) return 'N'
+  if (v === undefined) return 'U'
+  switch (typeof v) {
+    case 'number':
+      // `x` is the non-finite token: JSON.stringify would emit `null` for NaN/Infinity and
+      // collapse three distinct values onto one encoding (DND 009's silent-null trap).
+      return Number.isFinite(v) ? `n${v}` : `x${String(v)}`
+    case 'boolean':
+      return v ? 'bT' : 'bF'
+    case 'string':
+      return `s${JSON.stringify(v)}`
+    case 'object': {
+      if (Array.isArray(v)) return `[${v.map(canonicalIdentityToken).join(',')}]`
+      const o = v as Record<string, unknown>
+      const keys = Object.keys(o)
+        .filter((k) => o[k] !== undefined)
+        .sort()
+      return `{${keys.map((k) => `${JSON.stringify(k)}=${canonicalIdentityToken(o[k])}`).join(',')}}`
+    }
+    default:
+      // functions / symbols / bigint never survive a JSON round-trip, so a decoded scenario can
+      // never carry one — reaching here means a caller handed us something that never came off
+      // disk. Loud, never a silently-equal encoding.
+      throw new Error(
+        `[scenarioIdentityKey] non-serializable value of type ${typeof v} — a disk identity must be plain data`,
+      )
+  }
 }
 
 /** The persisted healthcare vintage (P3·U11 → read by U13). Each field is a compact,
@@ -1900,6 +2198,7 @@ export const SCENARIO_V3_FIELDS = [
   'dateVintage',
   'stateTaxVintage',
   'chosenGoal',
+  'savedRecommendation',
 ] as const
 
 // Compile-time: the field array exactly covers ScenarioV3 (both directions).

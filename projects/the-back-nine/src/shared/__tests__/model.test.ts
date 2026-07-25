@@ -6,6 +6,9 @@ import {
   DRAWDOWN_POLICIES,
   DRAWDOWN_ORDER_KEYS,
   expandRothConversion,
+  scenarioIdentity,
+  scenarioIdentityKey,
+  type ScenarioV3,
   type OutcomeState,
   type DepletionYear,
   type DateOffsetReading,
@@ -187,5 +190,139 @@ describe('DateSearchOutcome family — DND/009 persisted-finite round-trip (the 
     const afterFailed = JSON.parse(JSON.stringify(failed)) as typeof failed
     expect(afterFailed).toEqual(failed)
     if (afterFailed.kind === 'input-failure') expect(typeof afterFailed.reason).toBe('string')
+  })
+})
+
+/**
+ * `scenarioIdentityKey` (U17·S3·D5) — the canonical disk-identity serialization the dirty/clean
+ * compare rests on. The PRODUCER's own contract is pinned here; the CONSUMER-side arm (that
+ * `deriveResultSave` actually routes through it) lives in `src/ui/__tests__/resultSave.test.ts`,
+ * because calling a shared function from a test proves the FUNCTION, never that the consumer
+ * still calls it (insight 032/081).
+ */
+describe('scenarioIdentityKey — key-order-INSENSITIVE, array-order-SENSITIVE disk identity', () => {
+  // A minimal-but-real v3: two people (order-meaningful), a two-line budget (order-meaningful),
+  // and a custom drawdown order (order-IS-the-strategy).
+  const base = (): ScenarioV3 =>
+    JSON.parse(
+      JSON.stringify({
+        schemaVersion: 3,
+        people: [
+          { sex: 'male', currentAge: 62, birthYear: 1964, retirementAge: 65, earnedIncomeReal: 0, pia: 36_000, socialSecurityClaimAge: 67, name: 'Pat', workStatus: 'retired' },
+          { sex: 'female', currentAge: 60, birthYear: 1966, retirementAge: 64, earnedIncomeReal: 0, pia: 28_000, socialSecurityClaimAge: 67, name: 'Sam', workStatus: 'retired' },
+        ],
+        enteredAccounts: [],
+        tickerClassifications: {},
+        health: { enrolledPremiumMonthlyToday: 0, slcspMonthlyToday: 0, oopMedicalAnnual: 6_000, irmaaMagiSeed: [0, 0], workingYearInvestmentByPerson: [0, 0] },
+        annualSpendingReal: 90_000,
+        spendEntryPeriod: 'year',
+        survivorSpendingRatio: 0.75,
+        drawdownPolicy: 'custom',
+        drawdownOrder: ['taxable', 'pretax', 'roth'],
+        filing: 'mfj',
+        startCalendarYear: 2026,
+        taxVintage: 'OBBBA-2025',
+        appDefaultVersion: 'defaults-2026-06',
+        seed: 0x0badf00d,
+        incomeStreams: [],
+        budget: [
+          { category: 'housing', label: 'House', annualAmountReal: 40_000, tier: 'essentials', startYear: 0 },
+          { category: 'travel', label: 'Trips', annualAmountReal: 12_000, tier: 'nice-to-have', startYear: 0 },
+        ],
+        savedAt: 20_500,
+      }),
+    ) as ScenarioV3
+
+  /** Rebuild an object with its own keys in REVERSE order — a legal JSON re-serialization that a
+   *  raw `JSON.stringify` compare treats as a different scenario. */
+  const reverseKeys = <T,>(v: T): T => {
+    if (Array.isArray(v)) return v.map(reverseKeys) as unknown as T
+    if (v !== null && typeof v === 'object') {
+      const o = v as Record<string, unknown>
+      const out: Record<string, unknown> = {}
+      for (const k of Object.keys(o).reverse()) out[k] = reverseKeys(o[k])
+      return out as T
+    }
+    return v
+  }
+
+  it('two scenarios differing ONLY in key order (at every depth) share one identity key — and the raw stringify they replaced does NOT (the arm is non-vacuous)', () => {
+    const a = base()
+    const b = reverseKeys(base())
+    expect(scenarioIdentityKey(a)).toBe(scenarioIdentityKey(b))
+    // The witness that this pins something real: the OLD mechanism disagrees on the same pair.
+    expect(JSON.stringify(scenarioIdentity(a))).not.toBe(JSON.stringify(scenarioIdentity(b)))
+  })
+
+  it('a nested VALUE difference still separates them (the normalizer never widens into content-blindness)', () => {
+    const a = base()
+    const b = base()
+    ;(b.budget as unknown as { annualAmountReal: number }[])[1]!.annualAmountReal = 12_001
+    expect(scenarioIdentityKey(a)).not.toBe(scenarioIdentityKey(b))
+  })
+
+  it('ARRAY order is IDENTITY: reordering people, the budget, or the drawdown buckets each read DIFFERENT (sorting them would make a real reorder read clean — a lie in the dangerous direction)', () => {
+    const a = base()
+    const key = scenarioIdentityKey(a)
+    const swappedPeople = { ...base(), people: [base().people[1]!, base().people[0]!] } as ScenarioV3
+    expect(scenarioIdentityKey(swappedPeople)).not.toBe(key)
+    const swappedBudget = { ...base(), budget: [base().budget![1]!, base().budget![0]!] } as ScenarioV3
+    expect(scenarioIdentityKey(swappedBudget)).not.toBe(key)
+    // The drawdown order IS the strategy — a reversed sequence is a different plan entirely.
+    const reordered = { ...base(), drawdownOrder: ['roth', 'pretax', 'taxable'] } as ScenarioV3
+    expect(scenarioIdentityKey(reordered)).not.toBe(key)
+  })
+
+  it('it is savedAt-BLIND (it wraps scenarioIdentity) but blind to nothing else — the U13 next-day-clean law survives the rewrite', () => {
+    const a = base()
+    const b = { ...base(), savedAt: 20_530 }
+    expect(scenarioIdentityKey(a)).toBe(scenarioIdentityKey(b))
+    // …and the saved-recommendation record is IN the identity: a record present vs absent is a
+    // real difference on disk (it is a user fact carried on the draft, not a wall-time stamp).
+    const withRecord: ScenarioV3 = {
+      ...base(),
+      savedRecommendation: {
+        mintedAt: 20_500,
+        fingerprint: 'fp',
+        solverCodeVersion: 1,
+        goal: 'leave-more',
+        action: { candidateId: 'baseline:custom:0', policy: 'custom', drawdownOrder: ['taxable', 'pretax', 'roth'] },
+        verdict: { grade: 'just-do-it', subTenthCollapse: false, noChange: false, surplusRegime: false, noDollarRegister: false },
+        // ALL FIVE era fields — required on a RECORD (unlike on a scenario). model.ts
+        // `SavedRecommendationEraV3` names the premise that does not transplant.
+        era: {
+          appDefaultVersion: 'defaults-2026-06',
+          taxVintageDetail: { taxYear: 2026, legalBasis: 'OBBBA' },
+          stateTaxVintage: { ncProfile: '{"nc":1}', paProfile: '{"pa":1}', flProfile: '{"fl":0}' },
+          healthcareVintage: {
+            coverageYear: 2026,
+            acaStatus: 'reverted',
+            acaVerifiedOn: '2026-07-01',
+            fplGuidelineYear: 2025,
+            irmaaTopTierFrozenThrough: 2028,
+            partBStandardMonthly: 206.5,
+          },
+          dateVintage: { contributionYear: 2026, blendSnapshotAsOf: '2026-01-01' },
+        },
+      },
+    }
+    expect(scenarioIdentityKey(withRecord)).not.toBe(scenarioIdentityKey(a))
+    // …and an OLD mintedAt vs a fresh one is a difference too — which is precisely what makes the
+    // insight-073 aged-vault witness (draftFromScenario.test.ts) able to catch a re-stamp.
+    const reminted: ScenarioV3 = {
+      ...withRecord,
+      savedRecommendation: { ...withRecord.savedRecommendation!, mintedAt: 20_800 },
+    }
+    expect(scenarioIdentityKey(reminted)).not.toBe(scenarioIdentityKey(withRecord))
+  })
+
+  it('a non-finite number gets a DISTINCT token, never JSON.stringify’s null coercion (DND 009 — three different values must not share one encoding)', () => {
+    // The codec refuses to decode one, so this can only arrive on a hand-built operand — but a
+    // normalizer that collapsed NaN/Infinity/null onto `null` would hide a real difference.
+    const nan = { ...base(), annualSpendingReal: Number.NaN } as ScenarioV3
+    const inf = { ...base(), annualSpendingReal: Number.POSITIVE_INFINITY } as ScenarioV3
+    const nul = { ...base(), annualSpendingReal: null as unknown as number } as ScenarioV3
+    const keys = new Set([scenarioIdentityKey(nan), scenarioIdentityKey(inf), scenarioIdentityKey(nul)])
+    expect(keys.size).toBe(3)
   })
 })

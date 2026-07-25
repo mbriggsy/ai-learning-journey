@@ -177,6 +177,17 @@ export interface ScenarioDraft
       // stamped-fresh vintage. intake/GoalPicker (U16) reads+writes it; the solve precondition
       // refuses to dispatch while it is unset (no Tier-1-only tie-break crowned as advice).
       | 'chosenGoal'
+      // Act-4 · U17 — the saved-recommendation record (additive-optional; ABSENT = never saved
+      // one). A USER FACT carried via `...draft` at Save (the chosenGoal/retirementState
+      // precedent), MINTED ONCE by the S5 save gesture and NEVER re-stamped: putting it in
+      // scenarioFromDraft's stamped-fresh block beside the vintages is insight 073 verbatim (a
+      // per-encode stamp inside a compared payload turns every identity compare into a clock
+      // compare, and every same-day test stays green). It also SURVIVES `update()`'s
+      // invalidateStaleSolve untouched — that demotion is about the LIVE solve lane, while this
+      // is a memory of what was once recommended; `savedRecommendation.ts`'s trichotomy is what
+      // reports its staleness, and a draft edit silently erasing the record would destroy the
+      // very evidence the re-entry warning is built from.
+      | 'savedRecommendation'
     >
   >,
     Pick<

@@ -220,6 +220,50 @@
   }
 }
 
+/* ── U17 §S2 — the aged band's premise line + re-confirm control ──────────────────────────────────
+   ONE family home (the sheetShell precedent): both routes' band panes (.cs-band / .fod-band) mount
+   the SAME .band-premise block — a new aged-band surface joins by using these classes, never by
+   copying rules into its own file. Register mirrors the tracknote caption (quiet, subordinate to
+   the fan) — the premise is a standing honesty statement, not an alarm. The CTA is the rendered
+   half of the copy's "re-confirm" promise (insight 100) and rides the shared .btn-quiet chrome. */
+.band-premise {
+  margin: var(--space-1) 0 0;
+  max-width: var(--measure);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  line-height: var(--leading-body);
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+}
+/* The INLINE re-confirm control (the fod-retry pattern — measured at the real 1536×791 stale
+   frame: a block 44px button breached the one-frame law by 5px; inline, the promise stays
+   RENDERED (insight 100) inside the fold). Base keeps the 44px practical touch floor; the
+   two-pane laptop tier (fine pointers, the frame under the fit law) uses the WCAG 2.5.8
+   24px hard minimum. Non-color affordance: underline + weight, focus ring from base. */
+.band-premise__cta {
+  min-height: var(--tap-min);
+  border: none;
+  background: none;
+  padding: 0;
+  color: var(--ink-muted);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+  transition: color var(--dur-fast) ease;
+}
+@media (hover: hover) and (pointer: fine) {
+  .band-premise__cta:hover {
+    color: var(--ink);
+  }
+}
+@media (min-width: 68rem) {
+  .band-premise__cta {
+    min-height: 1.5rem; /* 24px — the WCAG 2.5.8 hard minimum; fine-pointer frames only */
+  }
+}
+
 /* ── the SHORT-laptop density tier (council 2026-07-08, wf_a2d93977-960) ──────────────────────────
    U10/U11 added honest content (the unpriced-Medicare disclosure, more quiet doors) to a frame that
    had ~6px of slack — the one-frame fit law (--laptop-fit-height, tokens.css) is reclaimed from

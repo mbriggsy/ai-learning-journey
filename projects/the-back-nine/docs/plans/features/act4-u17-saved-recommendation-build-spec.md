@@ -137,6 +137,22 @@ kind** (`grep control-plan__echo` → the CSS rule and the JSX, nothing else). N
 *does* receive a `savedAnchor` (`:80`, `:82`) but routes it only to `composeTwoFutures` at `:130` — the
 echo sentence three lines above never sees it.
 
+> **S1 BUILD STAMP (2026-07-25, commit e4754134 — CI green by explicit id 30136387827).** Shipped as
+> specified, with three dated build decisions:
+> 1. **"Suppress when unanchored" is satisfied STRUCTURALLY, not by a dead arm:** `savedAnchor` is
+>    REQUIRED on both render sites and `startCalendarYear` is a required `ScenarioDraft` field, so the
+>    unanchored state is unrepresentable — no suppression code exists to rot untested.
+> 2. **The write-side refusal IS the §S0.1 predicate:** a typed calendar year refuses through
+>    `offsetHasPassed(year − buildYear, plan clock)` — one strict compare covers both "before the
+>    build year" and "already passed"; no second comparator was authored. The refusal renders through
+>    the R19 `FieldError` grammar with the earliest startable year QUOTED (`errRothStartPast` joined
+>    `SlottedErrorKey`). The fresh default start seeds the WALL year (build + clock), so an aged vault
+>    never pre-fills the exact start the write side refuses.
+> 3. **`rothPlanStartFor` (bandAnnotations.ts) is the ONE start derivation** — both echo sites and the
+>    lever's applied re-seed consume it, source-bind-pinned in `planClockSeam.test.ts`. The verifier
+>    lesson applied to my own first cut: the sheet-echo test's `toBe(slots.…)` was the 081 tautology
+>    (a tense-arm swap sailed through) — literal tense regexes now pin it. 3 mutants red → reverted.
+
 ---
 
 ## S2 — Q1: the aged band geometry (the honored veto, made structural)
@@ -166,6 +182,35 @@ work-stops marker untouched at its crowned offset"* — currently pins `work-sto
 and reasons that the crowned offset *"stays in PLAN time … its x is calendar-stable."* **Rewrite it to the
 new contract.** Do not silently delete it: the replacement carries a comment naming this spec and the
 council row, so the next reader sees a decision changed, not a test lost.
+
+> **S2 BUILD STAMP (2026-07-25, same session as S1).** All five arms shipped together, with the dated
+> build decisions:
+> 1. **The withdraw** generalizes the fresh offset-0 precedent: the marker withdraws when
+>    `offsetHasPassed(crown, clock) || crown === clock` (the equality arm is Today's own column —
+>    wall-Today already marks it; two named markers would stack). Fresh derivation byte-identical.
+> 2. **The mask** is a second static luminance mask NESTED inside the cohort-fade group
+>    (`ElapsedDimGroup` — multiplicative compose, no re-trimmed `d`, morph + vertex-snapped scrub
+>    intact; the fresh DOM renders NO wrapper at all, byte-identical to pre-U17). The pure stops live
+>    beside their cohort sibling (`elapsedFadeStops` + `ELAPSED_DIM = 0.45`, bandGeometry.ts —
+>    cold-read-tunable, the ⚑ tint-vs-hatch-vs-rule question rides the arrived walk). The numeric
+>    domain gate moved to ONE home (`elapsedYearsWithin`, bandData.ts); ui's `planClockWithin`
+>    delegates.
+> 3. **The premise + control:** `.band-premise` (result.css, one family home) under BOTH routes' band
+>    panes — the OLD-SAVE arm names the `agedBalancesYearFor` vintage, the re-saver reads the
+>    build-anchor arm; residual spoken UNDETERMINED. The no-premise ⇒ no-fan law is STRUCTURAL: the
+>    resolved memo withdraws the aged fan when no `onReconfirm` route exists (both components), so an
+>    aged projection with an unstated premise is unrepresentable. `onReconfirm` routes to the guided
+>    re-walk (`onReview`).
+> 4. **§S2.5 ruled (pilot, dated):** the arrived idiom is the STRICT three-way split — strictly-past
+>    speaks "come and gone" (`dateInYearsPast` retexted; `dateFloorCoveredPast` mirror), exactly-this-
+>    year speaks "about now" (`dateInYearsNow` / `dateFloorCoveredNow`, the old text at its one true
+>    boundary — agreeing with the ladder's "stopping today" crown), future speaks the anchored count.
+>    The old non-strict `<= 0` collapsed "this year" and "three years gone" into one sentence. On a
+>    SPLIT the marker names WHICH date (`bandClockWorkStopsSplitLabel` "Essentials date" + its a11y
+>    sentence), split-ness derived via `composeDateSplit` — the renderer's own producer.
+> 5. **The artifact rewritten**, carrying this spec + the council row; the `BandSavedAnchor →
+>    BandPlanClockAnchor` rename landed across all 11 sites. 4 mutant families red → reverted
+>    (withdraw dropped · coupling dropped ×2 · mask suppressed · idiom re-collapsed).
 
 ---
 

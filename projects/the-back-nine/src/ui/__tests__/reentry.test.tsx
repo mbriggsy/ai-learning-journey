@@ -266,9 +266,12 @@ describe('heroLead — the U13 wall-time anchor (the date answer must not decay 
     )
   })
 
-  it('the arrived arm: wall time caught up — the plan states its own calendar, never a fresh "stop now" verdict', () => {
+  it('the arrived arms are STRICT (U17 §S2.5 rewrote this pin): AT the clock speaks "about now"; PAST it speaks "come and gone"', () => {
+    // The predecessor expected dateInYearsPast for BOTH — the non-strict collapse §S2.5 killed:
+    // a date exactly this year and a date two years gone are different facts, and only the first
+    // may read "about now" (agreeing with the ladder's "stopping today" crown at the boundary).
     expect(heroLead(dated, 30, { startCalendarYear: 2026, yearsSincePlanBuilt: 7 })).toBe(
-      slots.dateInYearsPast(2033),
+      slots.dateInYearsNow(2033),
     )
     expect(heroLead(dated, 30, { startCalendarYear: 2026, yearsSincePlanBuilt: 9 })).toBe(
       slots.dateInYearsPast(2033),
@@ -311,9 +314,10 @@ describe('floorLineText — the SAME anchor as the hero (ultramode 2026-07-09: o
     )
   })
 
-  it('the arrived arm: the essentials date has come around by the calendar — the plan states its own year', () => {
+  it('the arrived arms are STRICT (U17 §S2.5 rewrote this pin): AT the clock "about now"; PAST it "already behind you"', () => {
+    // Mirrors heroLead's rewritten pin — one idiom per screen, each line naming its own date.
     expect(floorLineText(split(5), 30, { startCalendarYear: 2026, yearsSincePlanBuilt: 5 })).toBe(
-      slots.dateFloorCoveredPast(2031, odds(), false),
+      slots.dateFloorCoveredNow(2031, odds(), false),
     )
     expect(floorLineText(split(5), 30, { startCalendarYear: 2026, yearsSincePlanBuilt: 8 })).toBe(
       slots.dateFloorCoveredPast(2031, odds(), false),

@@ -267,6 +267,89 @@ describe('FuckOffDate — the aged wall-time re-base', () => {
   })
 })
 
+// U17 §S2.5 — the de-mudded arrived idiom: the STRICT three-way split (past / this-year / future),
+// one idiom across hero, floor, and ladder, each line naming its own date.
+describe('FuckOffDate — the arrived idiom speaks strictly (U17 §S2.5)', () => {
+  const anchor = (yearsSincePlanBuilt: number) => ({ startCalendarYear: 2024, yearsSincePlanBuilt })
+
+  it('crown == plan clock: the heading reads the NOW arm ("about now") — agreeing with the ladder’s "stopping today" crown on the same screen', () => {
+    const { container } = render(<FuckOffDate view={dates(DATE_FIXTURES.confirmed)} dateAnchor={anchor(4)} />)
+    expect(screen.getByRole('heading', { name: slots.dateInYearsNow(2028) })).toBeInTheDocument()
+    expect(container.querySelector('.fod-headline')!.textContent).toContain('about now')
+    expect(container.querySelector('.fod-ladder')).not.toBeNull() // the agreeing crown stays
+  })
+
+  it('crown < plan clock: the heading reads the PAST arm ("come and gone") and NEVER "about now" — the literal mud pin', () => {
+    // The old non-strict `<= 0` collapsed a genuinely passed year into "that's about now" —
+    // a false statement three years on. This literal pin is what kills a re-collapsed arm
+    // (asserting the slot alone would be the 081 tautology).
+    const { container } = render(<FuckOffDate view={dates(DATE_FIXTURES.confirmed)} dateAnchor={anchor(5)} />)
+    const heading = container.querySelector('.fod-headline')!
+    expect(heading.textContent).toContain('come and gone')
+    expect(heading.textContent).not.toContain('about now')
+  })
+
+  it('the FLOOR line rides the same three-way split (one idiom per screen, each naming its date)', () => {
+    const splitView = (floor: (typeof DATE_FIXTURES)[keyof typeof DATE_FIXTURES], lifestyle: (typeof DATE_FIXTURES)[keyof typeof DATE_FIXTURES]) =>
+      ({ kind: 'dates', floor, lifestyle, windowTopYears: DATE_WINDOW_TOP }) as const
+    const odds = dateOddsText(DATE_FIXTURES.confirmed.grade.quantizedLowerBound)
+    // floor offset 4 == clock 4 → the NOW arm, naming 2028
+    const now = render(
+      <FuckOffDate view={splitView(DATE_FIXTURES.confirmed, DATE_FIXTURES.confirmedLater)} dateAnchor={anchor(4)} />,
+    )
+    expect(now.container.textContent).toContain(slots.dateFloorCoveredNow(2028, odds, false))
+    now.unmount()
+    // floor offset 4 < clock 5 → the PAST arm — "a year already behind you", never "about now"
+    const past = render(
+      <FuckOffDate view={splitView(DATE_FIXTURES.confirmed, DATE_FIXTURES.confirmedLater)} dateAnchor={anchor(5)} />,
+    )
+    expect(past.container.textContent).toContain(slots.dateFloorCoveredPast(2028, odds, false))
+    expect(past.container.querySelector('.fod-floor')!.textContent).not.toContain('about now')
+  })
+})
+
+// U17 §S2 — the aged band ships ONLY beside its premise line + the RENDERED re-confirm control
+// (insight 100); without a re-confirm route the fan structurally withdraws.
+describe('FuckOffDate — the aged band premise + the structural fan withdraw (U17 §S2)', () => {
+  const anchor = (yearsSincePlanBuilt: number) => ({ startCalendarYear: 2024, yearsSincePlanBuilt })
+  const agedBandView = {
+    ...dates(DATE_FIXTURES.confirmed),
+    band: BAND,
+    bandAnnotations: deriveDateBandAnnotations(58, 60, 6, 40, anchor(2)),
+  }
+
+  it('AGED + a re-confirm route: the fan renders WITH the vintage premise + the control, and the control fires', () => {
+    const onReconfirm = vi.fn()
+    render(
+      <FuckOffDate view={agedBandView} dateAnchor={anchor(2)} agedBalancesYear={2024} onReconfirm={onReconfirm} />,
+    )
+    expect(screen.getByRole('button', { name: copy.bandStudyRange })).toBeInTheDocument() // the fan
+    expect(screen.getByText(slots.bandAgedPremiseSaved(2024))).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: copy.bandPremiseReconfirmCta }))
+    expect(onReconfirm).toHaveBeenCalledTimes(1)
+  })
+
+  it('AGED, fresh save (a re-saver — no agedBalancesYear): the premise reads the build-anchor arm', () => {
+    render(<FuckOffDate view={agedBandView} dateAnchor={anchor(2)} onReconfirm={vi.fn()} />)
+    expect(screen.getByText(slots.bandAgedPremiseFresh(2024))).toBeInTheDocument()
+    expect(screen.queryByText(/balances you saved in/)).toBeNull()
+  })
+
+  it('AGED with NO re-confirm route: the fan WITHDRAWS ENTIRELY — never an aged projection with an unstated premise', () => {
+    render(<FuckOffDate view={agedBandView} dateAnchor={anchor(2)} />)
+    expect(screen.queryByRole('button', { name: copy.bandStudyRange })).toBeNull()
+    expect(screen.queryByText(/undetermined/)).toBeNull() // no premise either — the whole block is gone
+  })
+
+  it('FRESH (plan clock 0): no premise, no control — the band mounts as before (byte-identity)', () => {
+    const freshView = { ...dates(DATE_FIXTURES.confirmed), band: BAND, bandAnnotations: deriveDateBandAnnotations(58, 60, 6, 40) }
+    render(<FuckOffDate view={freshView} dateAnchor={anchor(0)} onReconfirm={vi.fn()} />)
+    expect(screen.getByRole('button', { name: copy.bandStudyRange })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: copy.bandPremiseReconfirmCta })).toBeNull()
+    expect(screen.queryByText(/undetermined/)).toBeNull()
+  })
+})
+
 /*
  * U9b — the floor/lifestyle SPLIT arms (council 2026-07-02). The claim assignment is the honesty
  * spine: the hero (work-optional) claim reads the LIFESTYLE track; the floor renders as the

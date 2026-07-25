@@ -25,7 +25,7 @@ import { copy, slots } from '@ui/copy'
 import { composeTwoFutures } from '@ui/twoFuturesChrome'
 import { composeRothOmissionsNote } from '@ui/stateTaxDisclosure'
 import type { PricedState } from '@engine/constants/stateTax'
-import { rothPlanStartFor, type BandSavedAnchor } from '@ui/bandAnnotations'
+import { rothPlanStartFor, type BandPlanClockAnchor } from '@ui/bandAnnotations'
 import { offsetHasPassed } from '@viz/curveMarks'
 import type { Announcer } from './a11y'
 import { ControlSheet } from './controlSheet'
@@ -47,10 +47,10 @@ interface PlanDraft {
  *  refusal is ALOUD — the FieldError below names it — and it blocks the candidate, so a past
  *  schedule can neither preview nor Apply. Re-anchoring the engine's own conversion semantics
  *  (what a mid-flight past start MEANS) is FILED, not built here (spec §S1). */
-const startYearPassed = (p: PlanDraft, anchor: BandSavedAnchor): boolean =>
+const startYearPassed = (p: PlanDraft, anchor: BandPlanClockAnchor): boolean =>
   p.startYear !== undefined && Number.isInteger(p.startYear) &&
   offsetHasPassed(p.startYear - anchor.startCalendarYear, anchor.yearsSincePlanBuilt)
-const complete = (p: PlanDraft, anchor: BandSavedAnchor): RothConversionPlan | null =>
+const complete = (p: PlanDraft, anchor: BandPlanClockAnchor): RothConversionPlan | null =>
   p.amount !== undefined && Number.isFinite(p.amount) && p.amount > 0 &&
   p.startYear !== undefined && Number.isInteger(p.startYear) &&
   !startYearPassed(p, anchor) &&
@@ -95,7 +95,7 @@ export interface RothLeverProps {
    *  calendar-year ⇄ offset conversion and the echo's named year both read it, so a lever
    *  without an anchor has no honest write side — Result mints it unconditionally
    *  (`startCalendarYear` is a required draft field), making "unanchored" unrepresentable. */
-  readonly savedAnchor: BandSavedAnchor
+  readonly savedAnchor: BandPlanClockAnchor
 }
 export function RothLever({ open, draft, preview, previewBlocking = false, onApply, onRemove, onClose, medicarePricedNote = false, statePricedNote, acaPricedNote = false, restoreFallback, savedAnchor }: RothLeverProps) {
   const announcerRef = useRef<Announcer | null>(null)

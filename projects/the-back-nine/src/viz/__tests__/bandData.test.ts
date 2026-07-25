@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   LATTICE_POINTS,
   composeReadoutLines,
+  elapsedYearsWithin,
   isFixedLattice,
   resolveBandData,
   type BandLabels,
@@ -87,6 +88,49 @@ function linearFan(): BandFan {
 }
 
 const fmt = (d: number) => `$${Math.round(d)}`
+
+// U17 §S2 — the plan clock's ONE numeric domain gate + its carry onto the resolved data (the
+// elapsed-segment demotion's producer seam; ui's planClockWithin DELEGATES here).
+describe('elapsedYearsWithin — the plan-clock drawable-domain gate (U17 §S0.2/§S2)', () => {
+  it('the fresh identity: 0, negatives, and the NON-INTEGER negative all clamp to 0 (the pinned low-end arm)', () => {
+    expect(elapsedYearsWithin(0, 30)).toBe(0)
+    expect(elapsedYearsWithin(-3, 30)).toBe(0)
+    // The S0 lesson (insight 029): only a non-integer negative can WITNESS the clamp — a negative
+    // integer is nulled downstream by the yearsSinceBuilt > 0 gate and passes vacuously.
+    expect(elapsedYearsWithin(-2.5, 30)).toBe(0)
+  })
+
+  it('an in-domain positive integer passes through', () => {
+    expect(elapsedYearsWithin(2, 30)).toBe(2)
+    expect(elapsedYearsWithin(29, 30)).toBe(29)
+  })
+
+  it('a clock AT or PAST the horizon REFUSES ALOUD — a skewed clock never redraws', () => {
+    expect(() => elapsedYearsWithin(30, 30)).toThrow(/drawable domain/)
+    expect(() => elapsedYearsWithin(31, 30)).toThrow(/drawable domain/)
+  })
+
+  it('a garbled positive claim (NaN, +∞, a fractional year) REFUSES — never a quiet zero (insight 008/010)', () => {
+    expect(() => elapsedYearsWithin(Number.NaN, 30)).toThrow(/drawable domain/)
+    expect(() => elapsedYearsWithin(Number.POSITIVE_INFINITY, 30)).toThrow(/drawable domain/)
+    expect(() => elapsedYearsWithin(2.5, 30)).toThrow(/drawable domain/)
+  })
+})
+
+describe('resolveBandData — the elapsedYears carry (U17 §S2)', () => {
+  it('defaults to 0 (byte-identical fresh sessions) and carries an in-domain clock through', () => {
+    expect(resolveBandData(linearFan(), 'on-track', { formatDollar: fmt }).elapsedYears).toBe(0)
+    expect(
+      resolveBandData(linearFan(), 'on-track', { formatDollar: fmt, elapsedYears: 2 }).elapsedYears,
+    ).toBe(2)
+  })
+
+  it('refuses a clock at/past the fan horizon at the producer seam (fail loud, never a silent redraw)', () => {
+    expect(() =>
+      resolveBandData(linearFan(), 'on-track', { formatDollar: fmt, elapsedYears: 4 }),
+    ).toThrow(/drawable domain/) // the linearFan horizon is 4
+  })
+})
 
 describe('resolveBandData — the producer seam (resample + dollarMax guard + fail-loud)', () => {
   it('produces a well-formed fixed lattice over the fan horizon (the anchor + last year preserved)', () => {

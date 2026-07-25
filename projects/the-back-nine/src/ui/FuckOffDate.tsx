@@ -51,7 +51,7 @@ import { ConfidenceBandPanel } from '@viz/ConfidenceBandPanel'
 import { OddsLadder } from '@viz/OddsLadder'
 import { agedLadderMarks, curveMarks, offsetHasPassed } from '@viz/curveMarks'
 import { resolveBandData, type XAnnotation } from '@viz/bandData'
-import type { BandSavedAnchor } from './bandAnnotations'
+import type { BandPlanClockAnchor } from './bandAnnotations'
 import { BAND_LABELS, BAND_CHROME, composeBandAtRange } from './bandPanelChrome'
 import { LADDER_LABELS } from './oddsLadderChrome'
 import { axisDollarFormatterFor, formatAxisDollar } from './money'
@@ -125,7 +125,7 @@ export interface FuckOffDateProps {
    *  draft (the round-trip guard). Absent (the preview harness) ⇒ the un-anchored legacy
    *  framing. The ONE anchor shape the band derivers take, so the hero and the chart can
    *  never grow two clocks. */
-  readonly dateAnchor?: BandSavedAnchor
+  readonly dateAnchor?: BandPlanClockAnchor
   /** The aged-balances clause's honest year (review 2026-07-10): present ⇔ the rendered
    *  answer still matches an on-disk save at least one calendar year old — derived by
    *  IntakeApp from the persist machine's OWN saved scenario's `savedAt` (never
@@ -138,6 +138,12 @@ export interface FuckOffDateProps {
    *  hero behind the open aria-modal), and the sharpen announce is skipped (the panel echo
    *  is the AT feedback — background live regions still speak under aria-modal). */
   readonly sheetOpen?: boolean
+  /** U17 §S2 — the aged band's re-confirm route (the guided re-walk, values pre-filled). The
+   *  AGED fan ships ONLY beside its premise line + this RENDERED control (insight 100) —
+   *  absent while the plan clock is positive, the fan WITHDRAWS ENTIRELY rather than render
+   *  an aged projection with no stated premise (the spec's no-fold-legal-premise arm, made
+   *  structural). Fresh sessions (plan clock 0) ignore it. */
+  readonly onReconfirm?: () => void
 }
 
 /** The hero claim's heading text — shared by the render and the polite sharpen announce, so what
@@ -148,17 +154,22 @@ export interface FuckOffDateProps {
 export function heroLead(
   hero: DateTrackOutcome,
   windowTopYears: number,
-  anchor?: BandSavedAnchor,
+  anchor?: BandPlanClockAnchor,
 ): string {
   if (hero.kind === 'no-date-in-window') return slots.noDateInWindow(windowTopYears)
   if (hero.offsetYears === 0) return copy.dateFreeToday
   if (anchor === undefined) return slots.dateInYears(hero.offsetYears)
   const calendarYear = anchor.startCalendarYear + hero.offsetYears
-  const yearsFromToday = hero.offsetYears - anchor.yearsSincePlanBuilt
-  // The arrived arm: wall time caught up to (or passed) the saved date — state the plan's
-  // own calendar, never a fresh "stop now" verdict (the recompute's word carries that).
-  if (yearsFromToday <= 0) return slots.dateInYearsPast(calendarYear)
-  return slots.dateInYearsAnchored(yearsFromToday, calendarYear)
+  // U17 §S2.5 — the STRICT three-way split (the de-mudded arrived idiom): strictly-past speaks
+  // "come and gone", exactly-this-year speaks "about now" (agreeing with the ladder's "stopping
+  // today" crown at the same boundary), future speaks the anchored count. The old non-strict
+  // `<= 0` collapsed the first two into one "about now" sentence — false for a genuinely passed
+  // year. The past test is the §S0.1 predicate, never a re-typed compare.
+  if (offsetHasPassed(hero.offsetYears, anchor.yearsSincePlanBuilt)) {
+    return slots.dateInYearsPast(calendarYear)
+  }
+  if (hero.offsetYears === anchor.yearsSincePlanBuilt) return slots.dateInYearsNow(calendarYear)
+  return slots.dateInYearsAnchored(hero.offsetYears - anchor.yearsSincePlanBuilt, calendarYear)
 }
 
 /** The subordinate essentials line (split only) — the floor's claim in its own register.
@@ -169,7 +180,7 @@ export function heroLead(
 export function floorLineText(
   split: Extract<DateSplitView, { kind: 'split' }>,
   windowTopYears: number,
-  anchor?: BandSavedAnchor,
+  anchor?: BandPlanClockAnchor,
 ): string {
   const fl = split.floor
   if (fl.kind === 'not-within-window') {
@@ -187,12 +198,18 @@ export function floorLineText(
     return slots.dateFloorCovered(fl.offsetYears, odds, fl.unconfirmed)
   }
   const calendarYear = anchor.startCalendarYear + fl.offsetYears
-  const yearsFromToday = fl.offsetYears - anchor.yearsSincePlanBuilt
-  if (yearsFromToday <= 0) return slots.dateFloorCoveredPast(calendarYear, odds, fl.unconfirmed)
-  return slots.dateFloorCoveredAnchored(yearsFromToday, calendarYear, odds, fl.unconfirmed)
+  // U17 §S2.5 — the same strict three-way split as heroLead (one idiom, each line naming its
+  // own date); the past test is the §S0.1 predicate.
+  if (offsetHasPassed(fl.offsetYears, anchor.yearsSincePlanBuilt)) {
+    return slots.dateFloorCoveredPast(calendarYear, odds, fl.unconfirmed)
+  }
+  if (fl.offsetYears === anchor.yearsSincePlanBuilt) {
+    return slots.dateFloorCoveredNow(calendarYear, odds, fl.unconfirmed)
+  }
+  return slots.dateFloorCoveredAnchored(fl.offsetYears - anchor.yearsSincePlanBuilt, calendarYear, odds, fl.unconfirmed)
 }
 
-export function FuckOffDate({ view, focusSignal, actionsSlot, medicarePricedNote = false, medicareExtrasTypicalNote, statePricedNote, stalenessNote = false, dateAnchor, agedBalancesYear, sheetOpen = false }: FuckOffDateProps) {
+export function FuckOffDate({ view, focusSignal, actionsSlot, medicarePricedNote = false, medicareExtrasTypicalNote, statePricedNote, stalenessNote = false, dateAnchor, agedBalancesYear, sheetOpen = false, onReconfirm }: FuckOffDateProps) {
   const headingRef = useRef<HTMLHeadingElement>(null)
   // Announce on the FIRST landing only (the undefined→defined edge). The date route is TIERED: the
   // provisional→final sharpen can crown a DIFFERENT offset, which flips focusSignal — but re-firing
@@ -239,15 +256,24 @@ export function FuckOffDate({ view, focusSignal, actionsSlot, medicarePricedNote
   // wrong band). Presence is the engine's own iff (band exists ⇔ the floor crowned), so the guard
   // reads the band itself — in the mixed floor-dated/lifestyle-no-date arm the band still draws,
   // named by its track note; in the extreme inversion (floor no-date) there is no band to draw.
+  // U17 §S2 — the aged-fan coupling, made structural: a positive plan clock means the fan's
+  // first years are already history, and it ships ONLY beside its premise line + the RENDERED
+  // re-confirm control. No re-confirm route ⇒ the aged fan WITHDRAWS ENTIRELY (never an aged
+  // projection with an unstated premise). Fresh sessions (plan clock 0) are byte-identical.
+  const bandElapsedYears = dateAnchor?.yearsSincePlanBuilt ?? 0
+  const agedFanBlocked = bandElapsedYears > 0 && onReconfirm === undefined
   const resolved = useMemo(() => {
-    if (view.kind !== 'dates' || !view.band) return null
+    if (view.kind !== 'dates' || !view.band || agedFanBlocked) return null
     return resolveBandData(view.band.fan, view.band.outcomeState, {
       formatDollar: formatAxisDollar,
       tickFormatterFor: axisDollarFormatterFor,
       annotations: view.bandAnnotations,
       formatAges: view.bandAges,
+      // The elapsed-segment demotion (the honored veto): the same plan clock the annotations
+      // re-base on, gated at the producer seam by elapsedYearsWithin.
+      elapsedYears: bandElapsedYears,
     })
-  }, [view])
+  }, [view, agedFanBlocked, bandElapsedYears])
 
   // The screen-reader-only band range sentence (AT parity, council 2026-06-29). Composed off the SAME
   // resolved data, so it re-renders WITH the band on the date route's provisional→final scale re-key
@@ -384,6 +410,27 @@ export function FuckOffDate({ view, focusSignal, actionsSlot, medicarePricedNote
                   lifestyle track — name the band's own track so the two can never silently disagree. */}
               {split !== null && split.kind === 'split' && (
                 <p className="fod-band__tracknote">{copy.bandFollowsFloorNote}</p>
+              )}
+              {/* U17 §S2 — the aged fan's premise line + RENDERED re-confirm control (the fan is
+                  structurally unable to render aged without them — the resolved memo withdraws it).
+                  The vintage arm names the save year when the save itself is old; the fresh-save
+                  re-saver reads the build-anchor truth. Residual spoken UNDETERMINED, never
+                  "conservative" (the dead-copy law). */}
+              {bandElapsedYears > 0 && onReconfirm !== undefined && (
+                <p className="band-premise">
+                  {/* The CTA rides INLINE after the sentence (the fod-retry pattern) — measured
+                      at the real 1536×791 stale frame: a block-level 44px button was the 5px fold
+                      breach; the inline control keeps the promise RENDERED (insight 100) inside
+                      the one-frame law. The span keeps the sentence its own text node. */}
+                  <span>
+                    {agedBalancesYear !== undefined
+                      ? slots.bandAgedPremiseSaved(agedBalancesYear)
+                      : slots.bandAgedPremiseFresh(dateAnchor!.startCalendarYear)}
+                  </span>{' '}
+                  <button type="button" className="band-premise__cta" onClick={onReconfirm}>
+                    {copy.bandPremiseReconfirmCta}
+                  </button>
+                </p>
               )}
             </div>
           )}

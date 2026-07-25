@@ -275,6 +275,38 @@ export function cohortFadeStops(
   }))
 }
 
+// ── the AGED-plan elapsed-segment de-emphasis (U17 §S2, council wf_f4ced3c8-2f6) ───────────────
+// On a plan-clock-aged vault the fan's first `elapsedYears` are years that have ALREADY HAPPENED,
+// drawn as if they were projection — the honored hawk veto: that segment must never read as
+// today's forward picture. It is RETAINED and DEMOTED (clipping is rejected on the record: a fan
+// clipped to Today reads as a projection from a KNOWN current balance — precisely the optimistic
+// misread), via a STATIC luminance mask in the same channel as the cohort fade (opacity, never
+// hue — colour is never the only signal; the wall-Today rule marks the boundary geometrically and
+// the adjacent premise line states it in text). Static like its sibling: part of the final
+// rendered state, byte-identical with motion on or off.
+
+/** The elapsed segment's flat demotion opacity (cold-read-TUNABLE — Briggsy's ⚑: tint vs hatch
+ *  vs rule rides the arrived-vault walk). Above the cohort floor (0.12) — demoted, never erased. */
+export const ELAPSED_DIM = 0.45
+
+/** Gradient stops for the elapsed-segment mask: a HARD step at x = elapsedYears/horizonYears —
+ *  demoted left of the wall-Today boundary, full right of it. Pure tuning math (unit-tested),
+ *  consumed as SVG-mask gradient stops by ConfidenceBand exactly like {@link cohortFadeStops}.
+ *  elapsedYears ≤ 0 returns no stops (no mask — the fresh identity). */
+export function elapsedFadeStops(
+  elapsedYears: number,
+  horizonYears: number,
+): { readonly offset: number; readonly opacity: number }[] {
+  if (!(elapsedYears > 0) || !(horizonYears > 0)) return []
+  const frac = roundCoord(clamp01(elapsedYears / horizonYears))
+  return [
+    { offset: 0, opacity: ELAPSED_DIM },
+    { offset: frac, opacity: ELAPSED_DIM },
+    { offset: frac, opacity: 1 },
+    { offset: 1, opacity: 1 },
+  ]
+}
+
 // ── AT (screen-reader) range column selection (back-nine-design §2; council 2026-06-29) ────────
 // The sighted reader gets the full fan + the hover/scrub readout; a SCREEN-READER reader — no y-axis,
 // no visual fade, no $0 picture — must still hear ONE honest dollar range. The trap (model.ts

@@ -41,7 +41,7 @@ import {
 import { COHORT_FADE } from '@viz/bandGeometry'
 import { copy, slots } from './copy'
 import { composeTwoFutures, type TwoFuturesView } from './twoFuturesChrome'
-import type { BandSavedAnchor } from './bandAnnotations'
+import type { BandPlanClockAnchor } from './bandAnnotations'
 
 /** Humane rounding for a readout dollar (the `~$X` grammar owns the imprecision). */
 const roundDollar = (v: number): number => Math.round(v / 100) * 100
@@ -266,7 +266,7 @@ export function composeRegimeFutures(
   outcome: TwoArmOutcome,
   pickedEnhanced: boolean,
   ages?: readonly [number, number],
-  savedAnchor?: BandSavedAnchor,
+  savedAnchor?: BandPlanClockAnchor,
 ): TwoFuturesView | null {
   const base = composeTwoFutures(
     outcome,

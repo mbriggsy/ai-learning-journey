@@ -215,7 +215,16 @@ describe('deriveDateBandAnnotations — the date band markers (the FUTURE work-s
   })
 
   // ── the AGED-plan arm (the `?vault=datestale` shape: floor crown 1, plan clock 2) ─────────
-  it('AGED: "Plan built" at 0 + wall-Today at the plan clock, the work-stops marker untouched at its crowned offset', () => {
+  //
+  // THE DECISION CHANGED HERE — this is a rewrite, not a lost test (U17 build spec §S2 "the
+  // artifact that changes"; council wf_f4ced3c8-2f6, 2026-07-24). The predecessor pinned the
+  // work-stops marker "untouched at its crowned offset" and reasoned its x was calendar-stable —
+  // which drew the future-tense "Work stops" marker LEFT of wall-Today (the five-reader stumble,
+  // one grading it optimistic). A test that pins a defect is the defect's second copy: the new
+  // contract is the honored hawk veto — NO future-tense named marker may render left of Today,
+  // and a passed crowned offset withdraws AT THE ARRAY (it leaves the a11y tree with the
+  // geometry, never a clamp).
+  it('AGED: a PASSED crowned offset WITHDRAWS the work-stops marker at the array (the honored veto — never drawn left of Today)', () => {
     const a = deriveDateBandAnnotations(58, 59, 1, 40, { startCalendarYear: 2024, yearsSincePlanBuilt: 2 })
     expect(a[0]!.id).toBe('built')
     expect(a[0]!.label).toBe(copy.bandClockBuiltLabel)
@@ -224,12 +233,36 @@ describe('deriveDateBandAnnotations — the date band markers (the FUTURE work-s
     const today = a.find((m) => m.id === 'today')!
     expect(today.yearsFromNow).toBe(2)
     expect(today.ages).toBe(slots.bandClockAges(60, 61)) // current ages
-    // The band's own crowned offset stays in PLAN time (its x is calendar-stable) — the
-    // named markers "Plan built"(0) / work-stops(1) / Today(2) tell the arrived-floor story.
-    const ws = a.find((m) => m.id === 'work-stops')!
-    expect(ws.yearsFromNow).toBe(1)
+    // Crown 1 < plan clock 2: the stop-year is HISTORY — the marker is GONE from the array
+    // (and with it the a11y tree), so no marker sits left of the wall-Today boundary.
+    expect(a.some((m) => m.id === 'work-stops')).toBe(false)
+    expect(a.every((m) => m.yearsFromNow >= 0)).toBe(true)
     const xs = a.map((m) => m.yearsFromNow)
     expect([...xs].sort((p, q) => p - q)).toEqual(xs) // ascending with the insertions
+  })
+
+  it('AGED boundary: a crown AT the plan clock is Today’s own column — omitted (the offset-0 precedent generalized), while a FUTURE crown survives at its plan x', () => {
+    // crown == clock (2): wall-Today already marks that x — a second named marker would stack.
+    const atToday = deriveDateBandAnnotations(58, 59, 2, 40, { startCalendarYear: 2024, yearsSincePlanBuilt: 2 })
+    expect(atToday.some((m) => m.id === 'work-stops')).toBe(false)
+    expect(atToday.find((m) => m.id === 'today')!.yearsFromNow).toBe(2)
+    // crown 6 > clock 2: still genuinely in the future of wall-today — it renders, RIGHT of Today,
+    // at its plan-time x (the axis is the fan's own; no marker is ever re-based or clamped).
+    const future = deriveDateBandAnnotations(58, 59, 6, 40, { startCalendarYear: 2024, yearsSincePlanBuilt: 2 })
+    const ws = future.find((m) => m.id === 'work-stops')!
+    expect(ws.yearsFromNow).toBe(6)
+    expect(ws.yearsFromNow).toBeGreaterThan(future.find((m) => m.id === 'today')!.yearsFromNow)
+    expect(ws.label).toBe(copy.bandClockWorkStopsLabel)
+  })
+
+  it('SPLIT (U17 §S2.5): the marker names the essentials date the band follows — label AND a11y sentence, never the generic "Work stops"', () => {
+    const a = deriveDateBandAnnotations(58, 60, 6, 40, undefined, true)
+    const ws = a.find((m) => m.id === 'work-stops')!
+    expect(ws.label).toBe(copy.bandClockWorkStopsSplitLabel)
+    expect(ws.description).toBe(slots.bandClockWorkStopsSplitDesc(64, 66))
+    // The single-track reading keeps the plain marker (byte-identical to the pre-S2 shape).
+    const single = deriveDateBandAnnotations(58, 60, 6, 40)
+    expect(single.find((m) => m.id === 'work-stops')!.label).toBe(copy.bandClockWorkStopsLabel)
   })
 
   it('AGED: elapsed 0 derives byte-identically to the un-anchored call (the no-drift pin)', () => {

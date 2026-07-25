@@ -35,6 +35,7 @@ function makeResolved(opts: {
   }
   return {
     kind: 'resolved',
+    elapsedYears: 0,
     outcomeState: 'on-track',
     dollarMax: 1_000,
     horizonYears: 40,

@@ -519,6 +519,7 @@ export function Result({
             dateAnchor={dateAnchor}
             agedBalancesYear={agedBalancesYear}
             sheetOpen={sheetOpen}
+            onReconfirm={onReview}
           />
         )}
         {elevated.kind === 'spine' && (
@@ -532,6 +533,8 @@ export function Result({
             stalenessNote={stalenessNote}
             sheetOpen={sheetOpen}
             savedAnchor={dateAnchor}
+            agedBalancesYear={agedBalancesYear}
+            onReconfirm={onReview}
           />
         )}
         {elevated.kind === 'fallback' && (

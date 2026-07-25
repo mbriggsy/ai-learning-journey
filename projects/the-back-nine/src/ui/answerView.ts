@@ -27,8 +27,9 @@ import {
   deriveBandAgesAt,
   deriveDateBandAnnotations,
   deriveSpineBandAnnotations,
-  type BandSavedAnchor,
+  type BandPlanClockAnchor,
 } from './bandAnnotations'
+import { composeDateSplit } from './dateSplit'
 import type { FuckOffDateView } from './FuckOffDate'
 import type { ConfidenceStatementView } from './ConfidenceStatement'
 
@@ -63,7 +64,7 @@ export type ElevatedAnswer =
 function spineBand(
   result: SimulationResult,
   draft: MemoryModelSnapshot['draft'],
-  savedAnchor?: BandSavedAnchor,
+  savedAnchor?: BandPlanClockAnchor,
 ): {
   readonly band?: BandFan
   readonly bandAnnotations?: readonly XAnnotation[]
@@ -102,7 +103,7 @@ function spineBand(
 function dateBand(
   outcome: Extract<DateSearchOutcome, { kind: 'dates' }>,
   draft: MemoryModelSnapshot['draft'],
-  savedAnchor?: BandSavedAnchor,
+  savedAnchor?: BandPlanClockAnchor,
 ): {
   readonly band?: DateBand
   readonly bandAnnotations?: readonly XAnnotation[]
@@ -124,8 +125,13 @@ function dateBand(
   // still-working member(s) retire at currentAge + offset. The readout-ages closure shares the same
   // currentAge guard + slot as the annotations, so the scrub ages and the axis ticks agree.
   const haveAges = ageA !== undefined && ageB !== undefined
+  // U17 §S2.5 — a SPLIT reading's marker names the essentials date (the band is floor-crowned
+  // while the hero speaks lifestyle). Derived through composeDateSplit — the SAME producer the
+  // renderer composes its two-track view from (insight 081: never a re-derivation that forks at
+  // the producer's first special case; renderEqual's degenerate collapse rides along free).
+  const splitFloorCrowned = composeDateSplit(outcome.floor, outcome.lifestyle).kind === 'split'
   const bandAnnotations = haveAges
-    ? deriveDateBandAnnotations(ageA, ageB, band.offsetYears, last.yearsFromNow, savedAnchor)
+    ? deriveDateBandAnnotations(ageA, ageB, band.offsetYears, last.yearsFromNow, savedAnchor, splitFloorCrowned)
     : undefined
   const bandAges = haveAges ? deriveBandAgesAt(ageA, ageB) : undefined
   return { band, bandAnnotations, bandAges }
@@ -142,7 +148,7 @@ function dateBand(
 export function selectElevatedAnswer(
   snapshot: MemoryModelSnapshot,
   onRetry: () => void,
-  savedAnchor?: BandSavedAnchor,
+  savedAnchor?: BandPlanClockAnchor,
 ): ElevatedAnswer {
   const { answer, draft } = snapshot
   const dateRoute = isDateRoute(draft)

@@ -9,7 +9,7 @@
  */
 import { copy, slots } from './copy'
 import { formatAxisDollar } from './money'
-import type { BandSavedAnchor } from './bandAnnotations'
+import type { BandPlanClockAnchor } from './bandAnnotations'
 import type { BandLabels, ResolvedBandData } from '@viz/bandData'
 import type { BandPanelChrome } from '@viz/ConfidenceBandPanel'
 import { selectAtRangeColumn, AT_RANGE_COHORT_MIN } from '@viz/bandGeometry'
@@ -63,7 +63,7 @@ export const BAND_CHROME: BandPanelChrome = {
  */
 export function composeBandAtRange(
   resolved: ResolvedBandData,
-  savedAnchor?: BandSavedAnchor,
+  savedAnchor?: BandPlanClockAnchor,
 ): string | null {
   const i = selectAtRangeColumn(resolved.samples, AT_RANGE_COHORT_MIN)
   if (i === null) return null

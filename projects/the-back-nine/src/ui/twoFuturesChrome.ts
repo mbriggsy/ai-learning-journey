@@ -32,7 +32,7 @@ import { COHORT_FADE } from '@viz/bandGeometry'
 import { copy, slots } from './copy'
 import { OUTCOME_PRESENTATION } from './outcomeStates'
 import { axisDollarFormatterFor, formatAxisDollar } from './money'
-import { deriveBandAgesAt, deriveDecadeAgeTicks, type BandSavedAnchor } from './bandAnnotations'
+import { deriveBandAgesAt, deriveDecadeAgeTicks, type BandPlanClockAnchor } from './bandAnnotations'
 
 /** The verdict WORD for a state (null for indeterminate — a two-arm outcome's arms are never
  *  indeterminate by construction, so a null here simply withholds the transition rider). */
@@ -113,7 +113,7 @@ export function composeTwoFutures(
   withoutLabel: string,
   deltaSlot: (withOdds: string, withoutOdds: string) => string,
   ages?: readonly [number, number],
-  savedAnchor?: BandSavedAnchor,
+  savedAnchor?: BandPlanClockAnchor,
 ): TwoFuturesView | null {
   if (outcome.kind !== 'two-arm') return null
   const survivorBasis = outcome.deltaBasis === 'survivor'

@@ -167,6 +167,39 @@ export interface ResolvedBandData {
    *  `ages` is '' when no `formatAges` closure was supplied. The renderer reads `tooltipRows[i]` for the
    *  pre-formatted strings and `samples[i]` for the position + cohort-fade gate at the scrubbed index. */
   readonly tooltipRows: readonly BandTooltipRow[]
+  /** U17 §S2 — calendar years already elapsed since the plan was BUILT (0 on every fresh session).
+   *  Positive ⇒ the fan's first `elapsedYears` are years that have already happened, and the
+   *  renderer demotes that segment with a static luminance mask ({@link elapsedFadeStops} in
+   *  bandGeometry) — retained, never clipped (the honored hawk veto). Domain-gated at the
+   *  producer seam by {@link elapsedYearsWithin}. */
+  readonly elapsedYears: number
+}
+
+/**
+ * The plan clock resolved against a drawn horizon — the ONE numeric domain gate every aged
+ * x-axis re-base and every elapsed-segment demotion passes through (U17 §S0.2/§S2). The ui
+ * layer's `planClockWithin` (bandAnnotations.ts) DELEGATES here; re-typing this logic at a
+ * second seam is the drift the §S0 source-bind exists to kill.
+ *
+ * `[0, horizonYears)` is the whole drawable domain: at N ≥ horizon, today itself is off the
+ * right edge — no honest picture to re-base — so a clock landing there is SKEWED and REFUSES
+ * ALOUD (the fail-loud-at-the-producer-seam idiom). The LOW end clamps to the fresh identity
+ * instead (a device clock behind the build year is a broken clock, not a household state;
+ * clamping to 0 IS the refusal to redraw). Only a POSITIVE claim can be out of domain, so only
+ * a positive claim throws — the pilot ruling, dated 2026-07-24.
+ */
+export function elapsedYearsWithin(years: number, horizonYears: number): number {
+  // ≤ 0 (incl. −∞ and the non-integer negatives the S0 clamp arm pins) → the fresh identity.
+  // NaN falls THROUGH both compares into the refusal below (insight 008/010 — a NaN clock is a
+  // garbled positive claim, never a quiet zero).
+  if (years <= 0) return 0
+  if (!Number.isInteger(years) || years >= horizonYears) {
+    throw new RangeError(
+      `elapsedYearsWithin: plan clock ${String(years)} is outside the drawable domain ` +
+        `[0, ${String(horizonYears)}) — a skewed plan clock refuses, it never redraws (U17 §S0.2).`,
+    )
+  }
+  return years
 }
 
 /** The INDETERMINATE placeholder — the expected first answer. A deliberately WIDE, low-emphasis
@@ -296,6 +329,11 @@ export function resolveBandData(
      *  currentAge (string-free: viz never owns the copy slot or the age math). Absent ⇒ every row's
      *  `ages` is '' (the band still resolves; the readout simply omits the ages line). */
     readonly formatAges?: (yearsFromNow: number) => string
+    /** U17 §S2 — the plan clock (calendar years since the plan was BUILT; the caller passes the
+     *  anchor's own `yearsSincePlanBuilt`, never a second clock read). Gated through
+     *  {@link elapsedYearsWithin} against THIS fan's horizon — a skewed clock refuses at the
+     *  producer seam. Absent ⇒ 0 (every fresh session; byte-identical output). */
+    readonly elapsedYears?: number
   },
 ): ResolvedBandData {
   const grid = fan.byYear
@@ -392,6 +430,7 @@ export function resolveBandData(
     annotations: opts.annotations ?? [],
     callouts: opts.callouts ?? [],
     tooltipRows,
+    elapsedYears: elapsedYearsWithin(opts.elapsedYears ?? 0, horizonYears),
   }
 }
 

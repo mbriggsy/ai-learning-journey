@@ -581,3 +581,58 @@ describe('P3-U11 follow-up — the priced-Medicare disclosure on the verdict sur
     expect(residual.textContent).toBe(copy.verdictMedicareResidual)
   })
 })
+
+// U17 §S2 — the aged band ships ONLY beside its premise line + the RENDERED re-confirm control
+// (insight 100); without a re-confirm route the fan structurally withdraws (mirrors FuckOffDate).
+describe('ConfidenceStatement — the aged band premise + the structural fan withdraw (U17 §S2)', () => {
+  const anchor = (yearsSincePlanBuilt: number) => ({ startCalendarYear: 2024, yearsSincePlanBuilt })
+
+  it('AGED + a re-confirm route: the fan renders WITH the vintage premise + the control, and the control fires', () => {
+    const onReconfirm = vi.fn()
+    const { getByRole, getByText } = render(
+      <ConfidenceStatement
+        view={{ kind: 'reading', ...READING_FIXTURES['on-track'] }}
+        savedAnchor={anchor(2)}
+        agedBalancesYear={2024}
+        onReconfirm={onReconfirm}
+      />,
+    )
+    expect(getByRole('button', { name: copy.bandStudyRange })).toBeInTheDocument() // the fan
+    expect(getByText(slots.bandAgedPremiseSaved(2024))).toBeInTheDocument()
+    fireEvent.click(getByRole('button', { name: copy.bandPremiseReconfirmCta }))
+    expect(onReconfirm).toHaveBeenCalledTimes(1)
+  })
+
+  it('AGED, fresh save (a re-saver — no agedBalancesYear): the premise reads the build-anchor arm', () => {
+    const { getByText, queryByText } = render(
+      <ConfidenceStatement
+        view={{ kind: 'reading', ...READING_FIXTURES['on-track'] }}
+        savedAnchor={anchor(2)}
+        onReconfirm={vi.fn()}
+      />,
+    )
+    expect(getByText(slots.bandAgedPremiseFresh(2024))).toBeInTheDocument()
+    expect(queryByText(/balances you saved in/)).toBeNull()
+  })
+
+  it('AGED with NO re-confirm route: the fan WITHDRAWS ENTIRELY — never an aged projection with an unstated premise', () => {
+    const { queryByRole, queryByText } = render(
+      <ConfidenceStatement view={{ kind: 'reading', ...READING_FIXTURES['on-track'] }} savedAnchor={anchor(2)} />,
+    )
+    expect(queryByRole('button', { name: copy.bandStudyRange })).toBeNull()
+    expect(queryByText(/undetermined/)).toBeNull() // no premise either — the whole block is gone
+  })
+
+  it('FRESH (plan clock 0): no premise, no control — the band mounts as before (byte-identity)', () => {
+    const { getByRole, queryByRole, queryByText } = render(
+      <ConfidenceStatement
+        view={{ kind: 'reading', ...READING_FIXTURES['on-track'] }}
+        savedAnchor={anchor(0)}
+        onReconfirm={vi.fn()}
+      />,
+    )
+    expect(getByRole('button', { name: copy.bandStudyRange })).toBeInTheDocument()
+    expect(queryByRole('button', { name: copy.bandPremiseReconfirmCta })).toBeNull()
+    expect(queryByText(/undetermined/)).toBeNull()
+  })
+})

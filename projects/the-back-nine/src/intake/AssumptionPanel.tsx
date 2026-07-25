@@ -38,7 +38,7 @@
 import { useRef, useState, type ReactNode } from 'react'
 import type { MemoryModelSnapshot, ScenarioDraft, StickyDisplay } from '@store/memoryModel'
 import { copy, slots, type CopyKey } from '@ui/copy'
-import { rothPlanStartFor, type BandSavedAnchor } from '@ui/bandAnnotations'
+import { rothPlanStartFor, type BandPlanClockAnchor } from '@ui/bandAnnotations'
 import { composeVerdictReading } from '@ui/verdictSentence'
 import { METHODOLOGY_DISCLOSURES, type AssumptionSeat } from '@ui/assumptionRegistry'
 import { productionMarket } from '@engine/reference/methodology'
@@ -63,7 +63,7 @@ export interface AssumptionPanelProps {
   /** U17 §S1 — Result's ONE plan-clock anchor (never a second clock read): the Roth row's echo
    *  names the conversion's CALENDAR year through `rothPlanStartFor`, so an aged vault's row
    *  can never misstate the start by the plan clock the way "in about N years" did. */
-  readonly savedAnchor: BandSavedAnchor
+  readonly savedAnchor: BandPlanClockAnchor
   /** THE one commit seam: the caller applies `mutate` atomically (reading the store's CURRENT
    *  draft inside the update — insight 036) and runs the route-aware recompute. */
   readonly onCommitEdit: (mutate: (d: ScenarioDraft) => ScenarioDraft) => void

@@ -21,7 +21,7 @@
  * through typed slots (numerals never inline) — both gated by copyGuard.
  */
 import { copy, slots } from './copy'
-import type { XAnnotation } from '@viz/bandData'
+import { elapsedYearsWithin, type XAnnotation } from '@viz/bandData'
 import { offsetHasPassed } from '@viz/curveMarks'
 
 /**
@@ -69,7 +69,7 @@ const HORIZON_TICK_PAD_YEARS = 3
  * (FILED, not done here: the type name still says "Saved". Renaming it touches eight import
  * sites across three layers and is not this stage's decided scope — U17 §S0 renames the field.)
  */
-export interface BandSavedAnchor {
+export interface BandPlanClockAnchor {
   /** The plan's BUILD year — `startCalendarYear`, the calendar the fan's year 0 sits in. */
   readonly startCalendarYear: number
   /** Calendar years since the plan was BUILT (wall year − `startCalendarYear`), clamped at 0
@@ -93,7 +93,7 @@ export interface BandSavedAnchor {
  * The HIGH end refuses aloud instead — see {@link planClockWithin} — because only a POSITIVE
  * claim ("this plan is N years old") can be out of the drawable domain.
  */
-export function planClockAnchor(startCalendarYear: number, wallCalendarYear: number): BandSavedAnchor {
+export function planClockAnchor(startCalendarYear: number, wallCalendarYear: number): BandPlanClockAnchor {
   return {
     startCalendarYear,
     yearsSincePlanBuilt: Math.max(0, wallCalendarYear - startCalendarYear),
@@ -127,7 +127,7 @@ export interface RothPlanStart {
   /** True iff that year is already behind the wall clock (the §S0.1 predicate, strict). */
   readonly passed: boolean
 }
-export function rothPlanStartFor(anchor: BandSavedAnchor, startYearOffset: number): RothPlanStart {
+export function rothPlanStartFor(anchor: BandPlanClockAnchor, startYearOffset: number): RothPlanStart {
   return {
     year: anchor.startCalendarYear + startYearOffset,
     passed: offsetHasPassed(startYearOffset, anchor.yearsSincePlanBuilt),
@@ -152,21 +152,16 @@ export function rothPlanStartFor(anchor: BandSavedAnchor, startYearOffset: numbe
  * identity, not a re-based picture. Only a POSITIVE claim ("this plan is N years old") can be
  * out of the drawable domain, so only a positive claim can refuse.
  */
-function planClockWithin(anchor: BandSavedAnchor | undefined, horizonYears: number): number {
-  const years = anchor?.yearsSincePlanBuilt ?? 0
-  if (years <= 0) return 0 // the fresh identity — nothing is re-based, no domain question arises
-  if (!Number.isInteger(years) || years >= horizonYears) {
-    throw new Error(
-      `bandAnnotations: yearsSincePlanBuilt ${String(years)} is outside the drawable domain ` +
-        `[0, ${String(horizonYears)}) — a skewed plan clock refuses, it never redraws (U17 §S0.2).`,
-    )
-  }
-  return years
+function planClockWithin(anchor: BandPlanClockAnchor | undefined, horizonYears: number): number {
+  // DELEGATES to the ONE numeric domain gate (@viz/bandData `elapsedYearsWithin` — U17 §S2 moved
+  // the arithmetic there so the elapsed-segment mask and the axis re-base share a single refusal;
+  // a re-typed copy here is exactly the drift the §S0 source-bind discipline kills).
+  return elapsedYearsWithin(anchor?.yearsSincePlanBuilt ?? 0, horizonYears)
 }
 
 /** The year-0 endpoint: "Today" on a fresh session; "Plan built" (the BUILD year + the ages the
  *  household entered then) on an aged plan — never a claim about the SAVE (U17 §S0.2). */
-function yearZeroMarker(ageA: number, ageB: number, aged: BandSavedAnchor | null): XAnnotation {
+function yearZeroMarker(ageA: number, ageB: number, aged: BandPlanClockAnchor | null): XAnnotation {
   return aged !== null
     ? {
         id: 'built',
@@ -259,7 +254,7 @@ export function deriveSpineBandAnnotations(
   currentAgeA: number,
   currentAgeB: number,
   horizonYears: number,
-  savedAnchor?: BandSavedAnchor,
+  savedAnchor?: BandPlanClockAnchor,
 ): readonly XAnnotation[] {
   const yearsSinceBuilt = planClockWithin(savedAnchor, horizonYears)
   const aged = yearsSinceBuilt > 0 && savedAnchor !== undefined ? savedAnchor : null
@@ -310,14 +305,19 @@ export function deriveSpineBandAnnotations(
  * @param currentAgeB  spouse B's current whole-year age
  * @param offsetYears  the crowned fuck-off offset — years from today the household stops working
  * @param horizonYears the fan's actual last `yearsFromNow`
- * @param savedAnchor  the aged-vault wall-time anchor (see {@link BandSavedAnchor})
+ * @param savedAnchor  the aged-vault wall-time anchor (see {@link BandPlanClockAnchor})
+ * @param splitFloorCrowned  U17 §S2.5 — TRUE on a SPLIT reading (the band follows the essentials
+ *   track while the hero speaks the lifestyle date): the marker then NAMES the essentials date,
+ *   never a generic "Work stops" a reader would bind to the headline. The caller derives it from
+ *   `composeDateSplit` — the same producer the renderer composes from, never a re-derivation.
  */
 export function deriveDateBandAnnotations(
   currentAgeA: number,
   currentAgeB: number,
   offsetYears: number,
   horizonYears: number,
-  savedAnchor?: BandSavedAnchor,
+  savedAnchor?: BandPlanClockAnchor,
+  splitFloorCrowned = false,
 ): readonly XAnnotation[] {
   const yearsSinceBuilt = planClockWithin(savedAnchor, horizonYears)
   const aged = yearsSinceBuilt > 0 && savedAnchor !== undefined ? savedAnchor : null
@@ -327,21 +327,31 @@ export function deriveDateBandAnnotations(
       ? wallTodayMarker(currentAgeA, currentAgeB, yearsSinceBuilt, horizonYears)
       : null
   if (wallToday !== null) markers.push(wallToday)
-  // The FUTURE work-stops moment (the fuck-off date) — only when strictly in the future AND clear of
-  // the horizon endpoint. At offset 0 the household stops TODAY (already marked by Today). When the
-  // crowned offset lands within the horizon pad, the HERO marker itself is dropped (not just bare
-  // ticks) to avoid colliding with Plan horizon — a SHALLOW-horizon residual reachable only by a
-  // near-window-top offset on an unusually short fan (inside dateSearch's disclosed shallow-window
-  // envelope); for realistic working ages the fan horizon is decades out, so it always renders.
+  // The work-stops moment (the fuck-off date) — only when strictly in the FUTURE OF WALL-TODAY
+  // and clear of the horizon endpoint. U17 §S2.1 (the honored hawk veto, council wf_f4ced3c8-2f6):
+  // a crowned offset the plan clock has PASSED withdraws AT THE ARRAY — it leaves the a11y tree
+  // with the geometry, and no future-tense named marker can ever render left of Today (the old
+  // "calendar-stable" reasoning drew "Work stops" BEFORE "Today", the five-reader stumble). The
+  // honesty half is the §S0.1 predicate; the equality arm is the fresh offset-0 precedent
+  // generalized — a stop AT the wall year is Today's own column, already marked. When the
+  // surviving offset lands within the horizon pad, the HERO marker itself is dropped (not just
+  // bare ticks) to avoid colliding with Plan horizon — a SHALLOW-horizon residual (inside
+  // dateSearch's disclosed shallow-window envelope).
+  const stopsBehindOrAtToday =
+    offsetHasPassed(offsetYears, yearsSinceBuilt) || offsetYears === yearsSinceBuilt
   const workStops =
-    offsetYears > 0 && offsetYears < horizonYears - HORIZON_TICK_PAD_YEARS ? offsetYears : undefined
+    !stopsBehindOrAtToday && offsetYears < horizonYears - HORIZON_TICK_PAD_YEARS ? offsetYears : undefined
   if (workStops !== undefined) {
     markers.push({
       id: 'work-stops',
       yearsFromNow: workStops,
-      label: copy.bandClockWorkStopsLabel,
+      // §S2.5: on a split the marker names WHICH date it marks (the essentials date the band
+      // follows) — label and a11y sentence together, never color or position alone.
+      label: splitFloorCrowned ? copy.bandClockWorkStopsSplitLabel : copy.bandClockWorkStopsLabel,
       ages: slots.bandClockAges(currentAgeA + workStops, currentAgeB + workStops),
-      description: slots.bandClockWorkStopsDesc(currentAgeA + workStops, currentAgeB + workStops),
+      description: splitFloorCrowned
+        ? slots.bandClockWorkStopsSplitDesc(currentAgeA + workStops, currentAgeB + workStops)
+        : slots.bandClockWorkStopsDesc(currentAgeA + workStops, currentAgeB + workStops),
     })
   }
   // Intermediate decade-age reference ticks (the ONE canonical rule — deriveDecadeAgeTicks),

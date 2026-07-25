@@ -154,6 +154,10 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     bandClockTodayDesc: slots.bandClockTodayDesc(63, 61),
     bandClockHorizonDesc: slots.bandClockHorizonDesc(93, 91),
     bandClockWorkStopsDesc: slots.bandClockWorkStopsDesc(64, 62),
+    // U17 §S2.5 — the split marker names the essentials date; §S2 — the aged premise pair.
+    bandClockWorkStopsSplitDesc: slots.bandClockWorkStopsSplitDesc(64, 62),
+    bandAgedPremiseSaved: slots.bandAgedPremiseSaved(2024),
+    bandAgedPremiseFresh: slots.bandAgedPremiseFresh(2024),
     bandClockAgesDesc: slots.bandClockAgesDesc(80, 78),
     // The aged-plan year-0 endpoint (U13 one-time-base law on the chart, 2026-07-10; re-aimed
     // at the BUILD year by U17 §S0.2 — it never described the save).
@@ -243,9 +247,11 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     stalenessBudgetLine: slots.stalenessBudgetLine(2028),
     dateInYearsAnchored: slots.dateInYearsAnchored(7, 2033),
     dateInYearsPast: slots.dateInYearsPast(2031),
+    dateInYearsNow: slots.dateInYearsNow(2026),
     // The floor line's anchored/arrived arms (ultramode 2026-07-09 — one screen, one time base).
     dateFloorCoveredAnchored: slots.dateFloorCoveredAnchored(4, 2031, 'about 8 of 10 odds', true),
     dateFloorCoveredPast: slots.dateFloorCoveredPast(2031, 'about 8 of 10 odds', false),
+    dateFloorCoveredNow: slots.dateFloorCoveredNow(2026, 'about 8 of 10 odds', false),
     // Act-4 · U16 §S3 — the delta-as-hero + skew + state-cert slots (control-swept by their prefixes;
     // the require-hedge control sweep below reaches these rendered samples). Figures pre-formatted.
     recDeltaLeaveMore: slots.recDeltaLeaveMore('48,000'),

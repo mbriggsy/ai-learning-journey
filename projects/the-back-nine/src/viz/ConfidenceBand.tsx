@@ -23,7 +23,7 @@
  * STRING-FREE: every label arrives via the `labels` / data props (src/viz imports only @shared).
  */
 
-import { useEffect, useId, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
 import { motion, useReducedMotion } from 'motion/react'
 import { bandStopCss } from './scale'
 import { BAND_FILL_INNER_P, BAND_FILL_OUTER_P } from './palette'
@@ -36,6 +36,7 @@ import {
   VIEWBOX,
   areaPath,
   cohortFadeStops,
+  elapsedFadeStops,
   isThinCohort,
   linePath,
   nearestLatticeIndex,
@@ -206,6 +207,16 @@ function ResolvedFan({
   const fadeGradId = `cohort-fade-grad-${uid}`
   const fadeMaskId = `cohort-fade-mask-${uid}`
   const fadeStops = cohortFadeStops(data.samples)
+  // U17 §S2 — the AGED elapsed-segment demotion: a SECOND static luminance mask, nested inside
+  // the cohort-fade group so the two compose multiplicatively (same channel, same discipline —
+  // opacity never hue; static, so motion-on and motion-off paint identically). NEVER a re-trimmed
+  // `d` (that breaks the morph's constant point-count AND the vertex-snapped scrub) and never a
+  // clip (a fan clipped to Today reads as a projection from a KNOWN current balance — the exact
+  // optimistic misread the council rejected on the record). Empty stops (fresh session) ⇒ no
+  // nested mask at all — the DOM is byte-identical to pre-U17.
+  const elapsedGradId = `elapsed-fade-grad-${uid}`
+  const elapsedMaskId = `elapsed-fade-mask-${uid}`
+  const elapsedStops = elapsedFadeStops(data.elapsedYears, data.horizonYears)
 
   return (
     <>
@@ -220,10 +231,23 @@ function ResolvedFan({
         <mask id={fadeMaskId} maskUnits="userSpaceOnUse" x="0" y="0" width={VIEWBOX.width} height={VIEWBOX.height}>
           <rect x="0" y="0" width={VIEWBOX.width} height={VIEWBOX.height} fill={`url(#${fadeGradId})`} />
         </mask>
+        {elapsedStops.length > 0 && (
+          <>
+            <linearGradient id={elapsedGradId} gradientUnits="userSpaceOnUse" x1={PLOT.left} y1={0} x2={PLOT.right} y2={0}>
+              {elapsedStops.map((s, i) => (
+                <stop key={i} offset={s.offset} stopColor="#fff" stopOpacity={s.opacity} />
+              ))}
+            </linearGradient>
+            <mask id={elapsedMaskId} maskUnits="userSpaceOnUse" x="0" y="0" width={VIEWBOX.width} height={VIEWBOX.height}>
+              <rect x="0" y="0" width={VIEWBOX.width} height={VIEWBOX.height} fill={`url(#${elapsedGradId})`} />
+            </mask>
+          </>
+        )}
       </defs>
       {/* The fan (fills + median) rides the cohort-fade mask; the callouts (labels) do NOT — text
           stays full-strength. */}
       <g mask={`url(#${fadeMaskId})`}>
+        <ElapsedDimGroup maskId={elapsedStops.length > 0 ? elapsedMaskId : null}>
         {/* OUTER p10–p90 (lightest, lowest emphasis). Fill is a DYNAMIC presentation attribute from
             the palette ramp (CSP-safe). The `d` is carried in BOTH initial + animate so the path is
             NEVER rendered with an undefined `d` — on first draw only opacity fades in (no `d`
@@ -252,10 +276,18 @@ function ResolvedFan({
           animate={{ opacity: 1, d: medianD }}
           transition={doDraw ? { ...fillTransition } : morphTransition}
         />
+        </ElapsedDimGroup>
       </g>
       <Callouts data={data} />
     </>
   )
+}
+
+/** The U17 §S2 nesting seam: with a mask id, wraps the fan paths in a second masked group (the
+ *  elapsed demotion composes with the cohort fade); with null, renders the children UNWRAPPED —
+ *  the fresh session's DOM stays byte-identical to pre-U17 (no empty <g> in every snapshot). */
+function ElapsedDimGroup({ maskId, children }: { maskId: string | null; children: ReactNode }) {
+  return maskId === null ? <>{children}</> : <g className="band-elapsed-dim" mask={`url(#${maskId})`}>{children}</g>
 }
 
 function Callouts({ data }: { data: Extract<BandViewData, { kind: 'resolved' }> }) {

@@ -28,7 +28,7 @@ import { copy } from '@ui/copy'
 import { composeHealthSheet, composeMedicareExtrasLines, composeRegimeFutures } from '@ui/healthSheetChrome'
 import { composeControlHealthOmissionsNote } from '@ui/stateTaxDisclosure'
 import type { PricedState } from '@engine/constants/stateTax'
-import type { BandSavedAnchor } from '@ui/bandAnnotations'
+import type { BandPlanClockAnchor } from '@ui/bandAnnotations'
 
 import type { Announcer } from './a11y'
 import { ControlSheet } from './controlSheet'
@@ -89,7 +89,7 @@ export interface HealthcareSheetProps {
   /** P3·U13 — the aged-plan wall-time anchor: the TwoFutures year-0 endpoint renames
    *  "Today" → "Plan built" when the plan clock > 0 (one time base per screen; U17 §S0.2 —
    *  the clock measures the BUILD, never the save). */
-  readonly savedAnchor?: BandSavedAnchor
+  readonly savedAnchor?: BandPlanClockAnchor
 }
 
 export function HealthcareSheet({ open, draft, readout, preview, previewBlocking = false, statePricedNote, onApply, onClose, restoreFallback, savedAnchor }: HealthcareSheetProps) {

@@ -12,8 +12,10 @@ import {
   READOUT_W,
   VIEWBOX,
   areaPath,
+  ELAPSED_DIM,
   cohortFadeOpacity,
   cohortFadeStops,
+  elapsedFadeStops,
   isThinCohort,
   linePath,
   nearestLatticeIndex,
@@ -338,6 +340,41 @@ describe('cohortFadeStops — the mask gradient stops along the lattice', () => 
   it('an absent cohortFraction (a hand-built fixture) reads as a full cohort — full opacity', () => {
     const stops = cohortFadeStops([{}, {}, {}])
     for (const s of stops) expect(s.opacity).toBe(1)
+  })
+})
+
+// U17 §S2 — the aged elapsed-segment demotion (council wf_f4ced3c8-2f6, the honored hawk veto):
+// the fan's already-elapsed years draw DEMOTED (retained, never clipped) via a HARD-step static
+// luminance mask in the cohort fade's own channel.
+describe('elapsedFadeStops — the aged elapsed-segment mask stops (U17 §S2)', () => {
+  it('a positive plan clock yields a HARD step at elapsed/horizon: dim left, full right', () => {
+    const stops = elapsedFadeStops(5, 25)
+    expect(stops).toEqual([
+      { offset: 0, opacity: ELAPSED_DIM },
+      { offset: 0.2, opacity: ELAPSED_DIM },
+      { offset: 0.2, opacity: 1 },
+      { offset: 1, opacity: 1 },
+    ])
+  })
+
+  it('elapsed ≤ 0 (every fresh session) yields NO stops — the renderer mounts no mask at all', () => {
+    expect(elapsedFadeStops(0, 30)).toEqual([])
+    expect(elapsedFadeStops(-2, 30)).toEqual([])
+  })
+
+  it('the demotion is a DEMOTION, not an erasure: the dim sits above the cohort floor', () => {
+    // Hiding the elapsed segment would fabricate a picture that starts at Today — the exact
+    // optimistic misread the council rejected. Demoted ⇒ visible; above the cohort floor ⇒ it
+    // never reads as the dead-cohort whisper either.
+    expect(ELAPSED_DIM).toBeGreaterThan(COHORT_FADE.floor)
+    expect(ELAPSED_DIM).toBeLessThan(1)
+  })
+
+  it('a degenerate horizon or an over-horizon clock never escapes [0,1] offsets (clamped fraction)', () => {
+    expect(elapsedFadeStops(5, 0)).toEqual([]) // no drawable axis, no stops
+    const clamped = elapsedFadeStops(40, 30) // upstream elapsedYearsWithin refuses this; belt-and-suspenders
+    for (const s of clamped) expect(s.offset).toBeGreaterThanOrEqual(0)
+    for (const s of clamped) expect(s.offset).toBeLessThanOrEqual(1)
   })
 })
 

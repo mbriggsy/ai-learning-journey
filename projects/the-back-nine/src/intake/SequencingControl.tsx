@@ -26,7 +26,7 @@ import type { ScenarioDraft } from '@store/memoryModel'
 import type { ControlPreview } from '@store/controlPreview'
 import { copy, slots, type CopyKey } from '@ui/copy'
 import { composeTwoFutures } from '@ui/twoFuturesChrome'
-import type { BandSavedAnchor } from '@ui/bandAnnotations'
+import type { BandPlanClockAnchor } from '@ui/bandAnnotations'
 
 import type { Announcer } from './a11y'
 import { ControlSheet } from './controlSheet'
@@ -76,7 +76,7 @@ export interface SequencingControlProps {
    *  year-0 endpoint renames "Today" → "Plan built" when the plan clock > 0 (one time base per
    *  screen; the ultramode caller-lens caught this chart as the sibling the band fix missed.
    *  U17 §S0.2 — the clock measures the BUILD, never the save). */
-  readonly savedAnchor?: BandSavedAnchor
+  readonly savedAnchor?: BandPlanClockAnchor
 }
 
 export function SequencingControl({ open, draft, preview, previewBlocking = false, onApply, onClose, restoreFallback, savedAnchor }: SequencingControlProps) {

@@ -504,6 +504,15 @@ export const copy = {
   bandClockTodayLabel: 'Today',
   bandClockHorizonLabel: 'Plan horizon',
   bandClockWorkStopsLabel: 'Work stops',
+  // U17 §S2.5 — on a SPLIT reading the band follows the essentials-covered track while the hero
+  // speaks the lifestyle date; the marker itself names WHICH date it marks, so the fan can never
+  // silently borrow the headline's date (the corroborated "fan carries only the essentials date
+  // while the hero speaks 2032" facet — five readers).
+  bandClockWorkStopsSplitLabel: 'Essentials date',
+  // U17 §S2 — the aged band's re-confirm control (the RENDERED half of the premise's promise —
+  // insight 100: a copy string that promises an affordance is a UI contract). Routes to the
+  // guided re-walk (values pre-filled).
+  bandPremiseReconfirmCta: 'Re-confirm your numbers',
   // The AGED-vault year-0 endpoint (U13 follow-up — caught live on the first `?vault=datestale`
   // walk, 2026-07-10): a re-opened old plan's fan starts where the PLAN does, not today, and
   // calling that column "Today" put two time bases on one screen (the exact class the U13
@@ -1501,6 +1510,26 @@ export const slots = {
    *  household's last earner stops). Color-blind law: the marker's meaning reaches the a11y tree as text. */
   bandClockWorkStopsDesc: (ageA: number, ageB: number): string =>
     `Work stops — ages ${ageA} and ${ageB}`,
+  /** The SPLIT variant (U17 §S2.5): the marker names the essentials-covered date the band follows,
+   *  never a generic "work stops" a reader would bind to the headline's lifestyle date. */
+  bandClockWorkStopsSplitDesc: (ageA: number, ageB: number): string =>
+    `The essentials-covered date this range follows — ages ${ageA} and ${ageB}`,
+  // --- U17 §S2 — the aged band's premise line (the fan ships ONLY beside one of these + the
+  // rendered re-confirm control; no fold-legal premise ⇒ the fan withdraws entirely). The
+  // residual is spoken as UNDETERMINED — never "conservative": only the fan's WIDTH is
+  // conservative, its LOCATION is unknown for a household that overspent or ate a drawdown
+  // (the dead-copy law's U17 clause). Craftsman's-lead wording; his eye reads it at the
+  // arrived-vault walk (the council's ⚑ #2). ---
+  /** The OLD-SAVE arm: the balances behind the fan were saved in a named past year. (Tightened
+   *  at the measured 1536×791 frame — all three facts kept: the vintage, not-today's-accounts,
+   *  and the undetermined residual; the re-confirm CTA rides INLINE after this sentence.) */
+  bandAgedPremiseSaved: (savedYear: number): string =>
+    `Drawn from the balances you saved in ${savedYear} — not today’s accounts. Where you sit now is undetermined until you re-confirm.`,
+  /** The FRESH-SAVE arm (a re-saver: plan years old, save minutes old): the balances are the
+   *  latest saved, but the picture still runs from the plan's own build year — its elapsed
+   *  years are modeled, not records. */
+  bandAgedPremiseFresh: (buildYear: number): string =>
+    `This range runs from ${buildYear}, when the plan was built — its first years are modeled, not records. Where today sits on it is undetermined until you re-confirm.`,
   /** An intermediate decade-age tick's accessible sentence (the reference marks between Today and
    *  the horizon — just the ages, no named moment). */
   bandClockAgesDesc: (ageA: number, ageB: number): string => `Ages ${ageA} and ${ageB}`,
@@ -1935,11 +1964,18 @@ export const slots = {
     n === 1
       ? `Your fuck-off date is about a year out — around ${calendarYear}`
       : `Your fuck-off date is about ${n} years out — around ${calendarYear}`,
-  /** The arrived arm (wall time has caught up to a saved date): a statement of the plan's
-   *  own calendar, never a fresh "stop now" verdict — the recompute's word carries that.
-   *  Unreachable live today (every vault is same-day); pinned for the day it isn't. */
-  dateInYearsPast: (calendarYear: number): string =>
+  /** The ARRIVED-THIS-YEAR arm (U17 §S2.5 — the strict three-way split): wall time has caught
+   *  up to the saved date EXACTLY (offset == plan clock). "That's about now" is true here and
+   *  agrees with the ladder's "stopping today" crown — one idiom, each surface naming its date. */
+  dateInYearsNow: (calendarYear: number): string =>
     `Your plan penciled the fuck-off date around ${calendarYear} — by the calendar, that’s about now`,
+  /** The STRICTLY-PAST arm (U17 §S2.5): the penciled year is genuinely behind the wall clock —
+   *  "about now" would be false (the old non-strict arm collapsed "this year" and "three years
+   *  gone" into one sentence). A statement of the plan's own calendar, never a fresh "stop now"
+   *  verdict, and never a future-tense claim about a passed date (the dead-copy law); the aged
+   *  band's premise line + re-confirm control carry the "what now". */
+  dateInYearsPast: (calendarYear: number): string =>
+    `Your plan penciled the fuck-off date around ${calendarYear} — that year has already come and gone`,
   /** The floor line's ANCHORED arm (ultramode 2026-07-09 — the hero and the floor share one
    *  screen, so they must share one time base): count re-derived from TODAY, calendar label
    *  wall-time-stable, the same odds + window-edge hedge as the un-anchored line. */
@@ -1951,11 +1987,18 @@ export const slots = {
     const edge = unconfirmed ? ' That sits at the edge of what this window can confirm.' : ''
     return `${when} — ${oddsText}.${edge}`
   },
-  /** The floor's arrived arm (mirrors dateInYearsPast): the essentials date has come around
-   *  by the calendar — state the plan's own year, never a fresh verdict. */
-  dateFloorCoveredPast: (calendarYear: number, oddsText: string, unconfirmed: boolean): string => {
+  /** The floor's ARRIVED-THIS-YEAR arm (mirrors dateInYearsNow — U17 §S2.5): the essentials
+   *  date is exactly this year by the calendar — state the plan's own year, never a fresh verdict. */
+  dateFloorCoveredNow: (calendarYear: number, oddsText: string, unconfirmed: boolean): string => {
     const edge = unconfirmed ? ' That sits at the edge of what this window can confirm.' : ''
     return `The essentials alone were penciled as covered around ${calendarYear} — by the calendar, that’s about now — ${oddsText}.${edge}`
+  },
+  /** The floor's STRICTLY-PAST arm (mirrors dateInYearsPast — U17 §S2.5): the essentials year
+   *  is genuinely behind the wall clock; the odds quoted are the plan's own read, never a fresh
+   *  verdict about today. */
+  dateFloorCoveredPast: (calendarYear: number, oddsText: string, unconfirmed: boolean): string => {
+    const edge = unconfirmed ? ' That sits at the edge of what this window can confirm.' : ''
+    return `The essentials alone were penciled as covered around ${calendarYear} — a year already behind you — ${oddsText}.${edge}`
   },
 
   // --- Act-4 · U16 §S3 — the delta-as-hero + skew + state-cert SLOTS (the numeric channel; every

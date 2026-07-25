@@ -6,7 +6,7 @@ import { readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { ConfidenceBand } from '../ConfidenceBand'
-import { PLOT, areaPath, linePath } from '../bandGeometry'
+import { ELAPSED_DIM, PLOT, areaPath, linePath } from '../bandGeometry'
 
 // prefers-reduced-motion is read by `useReducedMotion()` from a `matchMedia` query. jsdom has no
 // matchMedia, so provide a controllable stub; flip REDUCE to drive the reduced-motion path.
@@ -66,6 +66,7 @@ function resolved(over: Partial<ResolvedBandData> = {}): ResolvedBandData {
   })
   return {
     kind: 'resolved',
+    elapsedYears: 0,
     outcomeState: 'borderline',
     dollarMax: 1_500_000,
     horizonYears: 30,
@@ -164,6 +165,45 @@ describe('ConfidenceBand — resolved fan', () => {
     for (const cls of ['band-median', 'band-area', 'band-placeholder-edge']) {
       expect(ruleHas(cls, 'vector-effect: non-scaling-stroke')).toBe(true)
     }
+  })
+})
+
+// U17 §S2 — the aged elapsed-segment demotion (council wf_f4ced3c8-2f6): a STATIC second
+// luminance mask nested in the cohort-fade group, never a re-trimmed `d` and never a clip.
+describe('ConfidenceBand — the AGED elapsed-segment mask (U17 §S2)', () => {
+  it('a positive elapsedYears nests the fan paths in the .band-elapsed-dim masked group with the hard-step stops', () => {
+    const { container } = render(<ConfidenceBand data={resolved({ elapsedYears: 6 })} labels={labels} />)
+    const dim = container.querySelector('.band-elapsed-dim')
+    expect(dim).not.toBeNull()
+    expect(dim!.getAttribute('mask')).toMatch(/^url\(#elapsed-fade-mask-/)
+    // The fan paths live INSIDE the nested group — the demotion composes with the cohort fade.
+    expect(dim!.querySelectorAll('.band-area')).toHaveLength(2)
+    expect(dim!.querySelector('.band-median')).not.toBeNull()
+    // The gradient carries the pure helper's hard step (ELAPSED_DIM left, full right) — STATIC
+    // stops, part of the final rendered state (no signal lives only in animation).
+    // Attribute-only selector: jsdom's camelCase SVG type matching (linearGradient) is unreliable.
+    const stops = [...container.querySelectorAll('[id^="elapsed-fade-grad-"] stop')]
+    expect(stops.map((s) => s.getAttribute('stop-opacity'))).toEqual([
+      String(ELAPSED_DIM),
+      String(ELAPSED_DIM),
+      '1',
+      '1',
+    ])
+    // 6 of 30 horizon years → the step sits at offset 0.2.
+    expect(stops[1]!.getAttribute('offset')).toBe('0.2')
+    expect(stops[2]!.getAttribute('offset')).toBe('0.2')
+    // Never a re-trimmed `d`: both areas + the median still span the FULL lattice (the morph's
+    // constant point count survives — a clipped/re-trimmed path would change its vertex count).
+    const d = container.querySelector('.band-median')!.getAttribute('d') ?? ''
+    expect((d.match(/L/g) ?? []).length).toBe(48) // LATTICE_POINTS − 1 line segments
+  })
+
+  it('elapsedYears 0 renders NO nested group and NO elapsed gradient — the fresh DOM is byte-identical to pre-U17', () => {
+    const { container } = render(<ConfidenceBand data={resolved({ elapsedYears: 0 })} labels={labels} />)
+    expect(container.querySelector('.band-elapsed-dim')).toBeNull()
+    expect(container.querySelector('[id^="elapsed-fade-grad-"]')).toBeNull()
+    // …and the fan still draws in full (the wrapper is a pass-through, not a conditional mount).
+    expect(container.querySelectorAll('.band-area')).toHaveLength(2)
   })
 })
 

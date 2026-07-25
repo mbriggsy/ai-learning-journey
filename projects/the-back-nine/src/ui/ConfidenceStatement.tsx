@@ -35,7 +35,7 @@
  * (confidence.css), never an inline style attribute.
  */
 import { useEffect, useMemo, useRef, type ReactNode } from 'react'
-import { copy } from './copy'
+import { copy, slots } from './copy'
 import { OUTCOME_PRESENTATION } from './outcomeStates'
 import { VerdictIcon } from './verdictSignal'
 import { SurvivorReadout } from './SurvivorReadout'
@@ -54,7 +54,7 @@ import {
   type XAnnotation,
 } from '@viz/bandData'
 import { BAND_LABELS, BAND_CHROME, composeBandAtRange } from './bandPanelChrome'
-import type { BandSavedAnchor } from './bandAnnotations'
+import type { BandPlanClockAnchor } from './bandAnnotations'
 import type { BandFan, DollarAdjustment, Headline, SurvivorReading } from '@shared/model'
 import type { StickyDisplay } from '@store/memoryModel'
 import './styles/confidence.css'
@@ -149,7 +149,15 @@ export interface ConfidenceStatementProps {
    *  the plan-time count read ~elapsed years LONG on an aged vault (optimistic direction;
    *  ultramode 2026-07-10). Absent / elapsed 0 (fresh sessions, the preview harness) is
    *  byte-identical. */
-  readonly savedAnchor?: BandSavedAnchor
+  readonly savedAnchor?: BandPlanClockAnchor
+  /** U17 §S2 — the aged-balances vintage year (IntakeApp's `agedBalancesYearFor` — the persist
+   *  machine's own savedAt rail, never the build year): present ⇒ the aged band's premise line
+   *  names it; absent on an aged plan ⇒ the fresh-save (re-saver) premise arm. */
+  readonly agedBalancesYear?: number
+  /** U17 §S2 — the aged band's re-confirm route (the guided re-walk). The AGED fan ships ONLY
+   *  beside its premise line + this RENDERED control (insight 100) — absent while the plan
+   *  clock is positive, the fan WITHDRAWS ENTIRELY. Fresh sessions ignore it. */
+  readonly onReconfirm?: () => void
 }
 
 /** The indeterminate placeholder band — a wide low-emphasis envelope (no median, no precise band)
@@ -169,7 +177,7 @@ function buildPlaceholderBand(annotations: readonly XAnnotation[]): Indeterminat
   }
 }
 
-export function ConfidenceStatement({ view, focusSignal, actionsSlot, medicarePricedNote = false, medicareExtrasTypicalNote, statePricedNote, stalenessNote = false, sheetOpen = false, savedAnchor }: ConfidenceStatementProps) {
+export function ConfidenceStatement({ view, focusSignal, actionsSlot, medicarePricedNote = false, medicareExtrasTypicalNote, statePricedNote, stalenessNote = false, sheetOpen = false, savedAnchor, agedBalancesYear, onReconfirm }: ConfidenceStatementProps) {
   const headingRef = useRef<HTMLHeadingElement>(null)
   // Announce on the FIRST landing only (the undefined→defined edge) — the shared once-per-landing
   // contract (mirrors FuckOffDate). The spine's two recomputes are byte-identical, so its key never
@@ -248,12 +256,17 @@ export function ConfidenceStatement({ view, focusSignal, actionsSlot, medicarePr
   // The producer seam: resolve the per-year fan into drawable geometry ONCE per view. resolveBandData
   // owns the fail-loud honesty guards (malformed fan ⇒ throw — never a silently-wrong band). Only a
   // worded reading with a fan carries a band; indeterminate / pending / error never do.
+  // U17 §S2 — the aged-fan coupling, made structural (mirrors FuckOffDate): a positive plan
+  // clock means the fan's first years are already history; it ships ONLY beside its premise
+  // line + the RENDERED re-confirm control, else it withdraws entirely.
+  const bandElapsedYears = savedAnchor?.yearsSincePlanBuilt ?? 0
+  const agedFanBlocked = bandElapsedYears > 0 && onReconfirm === undefined
   const resolved = useMemo(() => {
     // Align the resolve guard with the RENDER guard: only a WORDED reading with a fan draws a band.
     // An indeterminate reading renders the placeholder (never `resolved`), so resolving — and possibly
     // throwing on — a fan it would never draw is both wasted and a latent render-throw on a never-shown
     // band (the engine emits no fan for indeterminate today; this keeps the guards from drifting apart).
-    if (view.kind !== 'reading' || !view.band || view.headline.outcomeState === 'indeterminate') {
+    if (view.kind !== 'reading' || !view.band || view.headline.outcomeState === 'indeterminate' || agedFanBlocked) {
       return null
     }
     return resolveBandData(view.band, view.headline.outcomeState, {
@@ -261,8 +274,11 @@ export function ConfidenceStatement({ view, focusSignal, actionsSlot, medicarePr
       tickFormatterFor: axisDollarFormatterFor,
       annotations: view.bandAnnotations,
       formatAges: view.bandAges,
+      // The elapsed-segment demotion (the honored veto) — the same plan clock the annotations
+      // re-base on, gated at the producer seam by elapsedYearsWithin.
+      elapsedYears: bandElapsedYears,
     })
-  }, [view])
+  }, [view, agedFanBlocked, bandElapsedYears])
 
   // The screen-reader-only band range sentence (AT parity, council 2026-06-29). Composed off the SAME
   // resolved data, so it re-renders WITH the band on a provisional→final scale re-key (insight 047) and
@@ -363,6 +379,22 @@ export function ConfidenceStatement({ view, focusSignal, actionsSlot, medicarePr
               chrome={BAND_CHROME}
               atRangeSentence={atRangeSentence}
             />
+            {/* U17 §S2 — the aged fan's premise line + RENDERED re-confirm control (mirrors
+                FuckOffDate; the resolved memo structurally withdraws an aged fan without them).
+                Residual spoken UNDETERMINED, never "conservative". */}
+            {bandElapsedYears > 0 && onReconfirm !== undefined && (
+              <p className="band-premise">
+                {/* Inline CTA — mirrors FuckOffDate; see the measured-fold comment there. */}
+                <span>
+                  {agedBalancesYear !== undefined
+                    ? slots.bandAgedPremiseSaved(agedBalancesYear)
+                    : slots.bandAgedPremiseFresh(savedAnchor!.startCalendarYear)}
+                </span>{' '}
+                <button type="button" className="band-premise__cta" onClick={onReconfirm}>
+                  {copy.bandPremiseReconfirmCta}
+                </button>
+              </p>
+            )}
           </div>
         )}
         {/* THE SUBORDINATE READOUTS — one wrapper so the two-pane grid stays two rows and the band

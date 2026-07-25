@@ -1000,6 +1000,14 @@ test.describe(`the vault return (?vault=stale) — the gate + the staleness-echo
     // The frame under measure IS the echoed one — the standing staleness line is visible
     // (rules moved: tax + healthcare) with the R13 disclaimer still in-frame beside it.
     await expect(page.locator('.cs-staleness-note')).toBeVisible()
+    // U17 §S2 — the aged band ships ONLY beside its premise + the RENDERED re-confirm control
+    // (insight 100; the no-premise ⇒ no-fan law is structural in the component, and this arm
+    // pins the pair VISIBLE inside the measured frame — the fold-legality half). The elapsed
+    // segment's demotion mask rides the same clock (the honored hawk veto: drawn-as-history,
+    // never clipped, never full-strength).
+    await expect(page.locator('.band-premise')).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Re-confirm your numbers' })).toBeVisible()
+    await expect(page.locator('.band-elapsed-dim')).toBeAttached()
     // THE ECHO WHITESPACE BUDGET IS APPLIED, not just survived (insight 075 — the standing
     // encoding of the measured-delta rule; U13 post-fold review advisory 6): the only other
     // guard on the `:has(.cs-staleness-note)` step-down is assertFrameFits GEOMETRY, which a
@@ -1225,6 +1233,11 @@ test.describe(`the aged date return (?vault=datestale) — one clock across hero
     await expect(page.locator('.fod-band')).toBeVisible()
     await expect(page.locator('.fod-ladder')).toBeVisible()
     await expect(page.getByText(/penciled as covered/)).toBeVisible()
+    // U17 §S2 — the DATE route's aged band carries the same premise + rendered re-confirm pair
+    // and the elapsed-segment demotion (one law, both routes).
+    await expect(page.locator('.band-premise')).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Re-confirm your numbers' })).toBeVisible()
+    await expect(page.locator('.band-elapsed-dim')).toBeAttached()
     expect(await page.locator('.result-quiet-row button').count()).toBeGreaterThanOrEqual(2)
     await assertOneVisibleDisclaimer(page, 'laptop')
 

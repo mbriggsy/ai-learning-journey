@@ -22,6 +22,7 @@
  */
 import { copy, slots } from './copy'
 import type { XAnnotation } from '@viz/bandData'
+import { offsetHasPassed } from '@viz/curveMarks'
 
 /**
  * The household-ages closure for the band's hover/scrub readout: maps a lattice year (years-from-now,
@@ -96,6 +97,40 @@ export function planClockAnchor(startCalendarYear: number, wallCalendarYear: num
   return {
     startCalendarYear,
     yearsSincePlanBuilt: Math.max(0, wallCalendarYear - startCalendarYear),
+  }
+}
+
+/**
+ * The Roth plan's start, in CALENDAR terms — the ONE derivation both echo render sites consume
+ * (the AssumptionPanel row and the RothLever sheet echo; U17 §S1, council wf_f4ced3c8-2f6).
+ *
+ * `startYearOffset` is sim-year-0-indexed and passes straight into `overlay.conversions`
+ * (model.ts → roth.ts) — on an aged vault "starting in about N years" misstated the start by
+ * exactly the plan clock, and BOTH re-bases were vetoed (a presentation re-base states a start
+ * the engine does not price; a persisted re-base makes the same vault price a different schedule
+ * on a different day). The calendar year is the fixed point: `startCalendarYear + offset` never
+ * moves, no matter what day the sentence is read.
+ *
+ * `passed` rides the SAME arrived predicate as the ladder/band/tradeoff (§S0.1) — strict, so a
+ * start in the current wall year reads as upcoming, not history. Consumers use it to pick the
+ * "started in"/"starting in" tense (never a future-tense claim about a passed date — the U17
+ * dead-copy law) and to REFUSE a past start on the write side.
+ *
+ * Unanchored is UNREPRESENTABLE by construction, not suppressed: `startCalendarYear` is a
+ * required `ScenarioDraft` field (minted with the model), and every mount of both render sites
+ * sits under Result, which mints the anchor unconditionally — so the §S1 "suppress when
+ * unanchored" arm has no reachable state and deliberately no dead code.
+ */
+export interface RothPlanStart {
+  /** The conversion's first calendar year — `startCalendarYear + startYearOffset`, wall-time-stable. */
+  readonly year: number
+  /** True iff that year is already behind the wall clock (the §S0.1 predicate, strict). */
+  readonly passed: boolean
+}
+export function rothPlanStartFor(anchor: BandSavedAnchor, startYearOffset: number): RothPlanStart {
+  return {
+    year: anchor.startCalendarYear + startYearOffset,
+    passed: offsetHasPassed(startYearOffset, anchor.yearsSincePlanBuilt),
   }
 }
 

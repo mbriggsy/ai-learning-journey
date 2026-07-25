@@ -6,7 +6,9 @@ import { RothLever } from '../RothLever'
 import { createMemoryModel, type MemoryModel, type ScenarioDraft } from '@store/memoryModel'
 import type { EngineClient } from '@store/engineClient'
 import type { ControlPreview } from '@store/controlPreview'
-import { copy } from '@ui/copy'
+import { copy, slots } from '@ui/copy'
+import { planClockAnchor } from '@ui/bandAnnotations'
+import { fieldErrorText } from '../FieldError'
 import type { EnteredAccount, OutcomeState, TwoArmControl } from '@shared/model'
 
 /**
@@ -123,6 +125,14 @@ function okPreview(
   }
 }
 
+/** The FRESH anchor (plan built this wall year — every organic session today). The draft
+ *  fixtures mint `startCalendarYear: 2026`; the anchor mirrors it through the ONE producer
+ *  (U17 §S0/§S1 — never a hand-typed {2026, 0} literal that could drift from the mint). */
+const ANCHOR = planClockAnchor(2026, 2026)
+/** The AGED anchor (built 2024, wall 2026 — the `?vault=stale` shape): the write side must
+ *  refuse a start year the plan clock has already passed. */
+const AGED_ANCHOR = planClockAnchor(2024, 2026)
+
 const commitField = (input: HTMLElement, value: string) => {
   fireEvent.focus(input)
   fireEvent.change(input, { target: { value } })
@@ -135,7 +145,7 @@ const noop = () => {}
 describe('RothLever — the $0-pre-tax closed face', () => {
   it('with nothing to convert: the calm sentence, no fields, no Apply', () => {
     render(
-      <RothLever open draft={draftWith()} preview={vi.fn()} onApply={noop} onRemove={noop} onClose={noop} />,
+      <RothLever open savedAnchor={ANCHOR} draft={draftWith()} preview={vi.fn()} onApply={noop} onRemove={noop} onClose={noop} />,
     )
     expect(screen.getByText(copy.leverRothClosedNothing)).toBeInTheDocument()
     expect(screen.queryByRole('textbox')).toBeNull()
@@ -147,11 +157,13 @@ describe('RothLever — previewing a committed plan', () => {
   it('a COMPLETE plan previews the expanded {kind:"conversion", plan:{…}} control', () => {
     const preview = deferredPreview()
     render(
-      <RothLever open draft={draftWith(withPretax)} preview={preview.fn} onApply={noop} onRemove={noop} onClose={noop} />,
+      <RothLever open savedAnchor={ANCHOR} draft={draftWith(withPretax)} preview={preview.fn} onApply={noop} onRemove={noop} onClose={noop} />,
     )
-    // Fields exist (there IS pre-tax money to convert). Seeded start=0, years=5; amount is the hole.
+    // Fields exist (there IS pre-tax money to convert). Seeded start=this year, years=5; amount
+    // is the hole. The start field speaks the CALENDAR YEAR (U17 §S1) — "2029" against the 2026
+    // build year commits offset 3; the persisted plan stays sim-year-0-indexed.
     commitField(screen.getByLabelText(copy.leverRothAmountLabel), '50,000')
-    commitField(screen.getByLabelText(copy.leverRothStartLabel), '3')
+    commitField(screen.getByLabelText(copy.leverRothStartLabel), '2029')
     commitField(screen.getByLabelText(copy.leverRothYearsLabel), '10')
     expect(preview.calls.at(-1)).toEqual({
       kind: 'conversion',
@@ -163,7 +175,7 @@ describe('RothLever — previewing a committed plan', () => {
     const preview = deferredPreview()
     const onApply = vi.fn()
     render(
-      <RothLever open draft={draftWith(withPretax)} preview={preview.fn} onApply={onApply} onRemove={noop} onClose={noop} />,
+      <RothLever open savedAnchor={ANCHOR} draft={draftWith(withPretax)} preview={preview.fn} onApply={onApply} onRemove={noop} onClose={noop} />,
     )
     expect(preview.fn).not.toHaveBeenCalled() // seeded start/years but no amount ⇒ no candidate
     const apply = screen.getByRole('button', { name: copy.leverRothApply })
@@ -176,7 +188,7 @@ describe('RothLever — previewing a committed plan', () => {
   it('the no-anchor face (preview returns null) shows the calm no-date line', () => {
     const nullPreview = vi.fn(() => null)
     render(
-      <RothLever open draft={draftWith(withPretax)} preview={nullPreview} onApply={noop} onRemove={noop} onClose={noop} />,
+      <RothLever open savedAnchor={ANCHOR} draft={draftWith(withPretax)} preview={nullPreview} onApply={noop} onRemove={noop} onClose={noop} />,
     )
     commitField(screen.getByLabelText(copy.leverRothAmountLabel), '40,000')
     expect(nullPreview).toHaveBeenCalled()
@@ -188,7 +200,7 @@ describe('RothLever — a landed reading discloses funding + omissions beside th
   it('shows the delta line AND both disclosures once a preview lands', async () => {
     const preview = deferredPreview()
     render(
-      <RothLever open draft={draftWith(withPretax)} preview={preview.fn} onApply={noop} onRemove={noop} onClose={noop} />,
+      <RothLever open savedAnchor={ANCHOR} draft={draftWith(withPretax)} preview={preview.fn} onApply={noop} onRemove={noop} onClose={noop} />,
     )
     commitField(screen.getByLabelText(copy.leverRothAmountLabel), '50,000')
     await act(async () => {
@@ -205,7 +217,7 @@ describe('RothLever — a landed reading discloses funding + omissions beside th
   it('a priced household drops the state-tax omission from the landed reading (the unpriced note is gone)', async () => {
     const preview = deferredPreview()
     render(
-      <RothLever open draft={draftWith(withPretax)} preview={preview.fn} onApply={noop} onRemove={noop} onClose={noop} statePricedNote="NC" />,
+      <RothLever open savedAnchor={ANCHOR} draft={draftWith(withPretax)} preview={preview.fn} onApply={noop} onRemove={noop} onClose={noop} statePricedNote="NC" />,
     )
     commitField(screen.getByLabelText(copy.leverRothAmountLabel), '50,000')
     await act(async () => {
@@ -222,7 +234,7 @@ describe('RothLever — a landed reading discloses funding + omissions beside th
   it('an all-65+ household drops the pre-65 clause from the omissions note (state item stays while unpriced)', async () => {
     const preview = deferredPreview()
     render(
-      <RothLever open draft={draftWith((d) => all65(withPretax(d)))} preview={preview.fn} onApply={noop} onRemove={noop} onClose={noop} />,
+      <RothLever open savedAnchor={ANCHOR} draft={draftWith((d) => all65(withPretax(d)))} preview={preview.fn} onApply={noop} onRemove={noop} onClose={noop} />,
     )
     commitField(screen.getByLabelText(copy.leverRothAmountLabel), '50,000')
     await act(async () => {
@@ -236,7 +248,7 @@ describe('RothLever — a landed reading discloses funding + omissions beside th
   it('an all-65+ PRICED household reads the single-item note (state dropped by pricing, pre-65 by age)', async () => {
     const preview = deferredPreview()
     render(
-      <RothLever open draft={draftWith((d) => all65(withPretax(d)))} preview={preview.fn} onApply={noop} onRemove={noop} onClose={noop} statePricedNote="NC" />,
+      <RothLever open savedAnchor={ANCHOR} draft={draftWith((d) => all65(withPretax(d)))} preview={preview.fn} onApply={noop} onRemove={noop} onClose={noop} statePricedNote="NC" />,
     )
     commitField(screen.getByLabelText(copy.leverRothAmountLabel), '50,000')
     await act(async () => {
@@ -254,7 +266,7 @@ describe('RothLever — a landed reading discloses funding + omissions beside th
   it('an ACA-priced household reads the narrowed cost-sharing residual, never the blanket pre-65 claim', async () => {
     const preview = deferredPreview()
     render(
-      <RothLever open draft={draftWith(withPretax)} preview={preview.fn} onApply={noop} onRemove={noop} onClose={noop} acaPricedNote />,
+      <RothLever open savedAnchor={ANCHOR} draft={draftWith(withPretax)} preview={preview.fn} onApply={noop} onRemove={noop} onClose={noop} acaPricedNote />,
     )
     commitField(screen.getByLabelText(copy.leverRothAmountLabel), '50,000')
     await act(async () => {
@@ -268,7 +280,7 @@ describe('RothLever — a landed reading discloses funding + omissions beside th
   it('an ACA-priced STATE-priced household composes both axes (state dropped by pricing, the pre-65 clause narrowed by ACA)', async () => {
     const preview = deferredPreview()
     render(
-      <RothLever open draft={draftWith(withPretax)} preview={preview.fn} onApply={noop} onRemove={noop} onClose={noop} statePricedNote="NC" acaPricedNote />,
+      <RothLever open savedAnchor={ANCHOR} draft={draftWith(withPretax)} preview={preview.fn} onApply={noop} onRemove={noop} onClose={noop} statePricedNote="NC" acaPricedNote />,
     )
     commitField(screen.getByLabelText(copy.leverRothAmountLabel), '50,000')
     await act(async () => {
@@ -289,7 +301,7 @@ describe('RothLever — Remove is present only when a conversion is applied', ()
     }))
     // The applied plan seeds a COMPLETE candidate on open, so the preview fires immediately; honor
     // the seam's `Promise | null` contract (a bare vi.fn() would return undefined and crash the .then).
-    render(<RothLever open draft={draft} preview={vi.fn(() => null)} onApply={noop} onRemove={onRemove} onClose={noop} />)
+    render(<RothLever open savedAnchor={ANCHOR} draft={draft} preview={vi.fn(() => null)} onApply={noop} onRemove={onRemove} onClose={noop} />)
     const remove = screen.getByRole('button', { name: copy.leverRothRemove })
     fireEvent.click(remove)
     expect(onRemove).toHaveBeenCalledTimes(1)
@@ -297,7 +309,7 @@ describe('RothLever — Remove is present only when a conversion is applied', ()
 
   it('with no applied conversion there is no Remove button', () => {
     render(
-      <RothLever open draft={draftWith(withPretax)} preview={vi.fn()} onApply={noop} onRemove={noop} onClose={noop} />,
+      <RothLever open savedAnchor={ANCHOR} draft={draftWith(withPretax)} preview={vi.fn()} onApply={noop} onRemove={noop} onClose={noop} />,
     )
     expect(screen.queryByRole('button', { name: copy.leverRothRemove })).toBeNull()
   })
@@ -307,7 +319,7 @@ describe('RothLever — the calm error face', () => {
   it('a preview resolving {kind:"error"} renders leverPreviewError', async () => {
     const preview = deferredPreview()
     render(
-      <RothLever open draft={draftWith(withPretax)} preview={preview.fn} onApply={noop} onRemove={noop} onClose={noop} />,
+      <RothLever open savedAnchor={ANCHOR} draft={draftWith(withPretax)} preview={preview.fn} onApply={noop} onRemove={noop} onClose={noop} />,
     )
     commitField(screen.getByLabelText(copy.leverRothAmountLabel), '50,000')
     await act(async () => {
@@ -320,7 +332,7 @@ describe('RothLever — the calm error face', () => {
   it('an engine-indeterminate outcome maps to the SAME calm error face', async () => {
     const preview = deferredPreview()
     render(
-      <RothLever open draft={draftWith(withPretax)} preview={preview.fn} onApply={noop} onRemove={noop} onClose={noop} />,
+      <RothLever open savedAnchor={ANCHOR} draft={draftWith(withPretax)} preview={preview.fn} onApply={noop} onRemove={noop} onClose={noop} />,
     )
     commitField(screen.getByLabelText(copy.leverRothAmountLabel), '50,000')
     await act(async () => {
@@ -335,7 +347,7 @@ describe('RothLever — a cleared plan withdraws the comparison (the stale-delta
   it('clearing the amount after a ready view drops the delta back to idle', async () => {
     const preview = deferredPreview()
     render(
-      <RothLever open draft={draftWith(withPretax)} preview={preview.fn} onApply={noop} onRemove={noop} onClose={noop} />,
+      <RothLever open savedAnchor={ANCHOR} draft={draftWith(withPretax)} preview={preview.fn} onApply={noop} onRemove={noop} onClose={noop} />,
     )
     commitField(screen.getByLabelText(copy.leverRothAmountLabel), '50,000')
     await act(async () => {
@@ -356,7 +368,7 @@ describe('RothLever — the without-arm is named honestly when a conversion is a
       ...withPretax(d),
       rothConversion: { annualAmountReal: 40_000, startYearOffset: 2, years: 5 },
     }))
-    render(<RothLever open draft={draft} preview={preview.fn} onApply={noop} onRemove={noop} onClose={noop} />)
+    render(<RothLever open savedAnchor={ANCHOR} draft={draft} preview={preview.fn} onApply={noop} onRemove={noop} onClose={noop} />)
     // The applied plan seeds a COMPLETE candidate on open, so a preview fires immediately.
     await act(async () => {
       preview.resolvers.at(-1)!(okPreview(8, 6, { withSeries: true }))
@@ -366,17 +378,119 @@ describe('RothLever — the without-arm is named honestly when a conversion is a
   })
 })
 
+describe('RothLever — the start speaks the CALENDAR YEAR on read and write (U17 §S1)', () => {
+  it('the sheet echo names the start year — never "in about N years" (first-ever echo assertions)', () => {
+    const preview = deferredPreview()
+    render(
+      <RothLever open savedAnchor={ANCHOR} draft={draftWith(withPretax)} preview={preview.fn} onApply={noop} onRemove={noop} onClose={noop} />,
+    )
+    commitField(screen.getByLabelText(copy.leverRothAmountLabel), '50,000')
+    commitField(screen.getByLabelText(copy.leverRothStartLabel), '2028')
+    const echo = document.querySelector('.control-plan__echo')
+    expect(echo).not.toBeNull()
+    expect(echo!.textContent).toBe(slots.rothPlanEcho('50,000', 2028, false, 5))
+    // LITERAL tense pin (insight 081 — comparing against the slot's own output alone is a
+    // tautology that a tense-arm swap sails through; this line is what killed that mutant).
+    expect(echo!.textContent).toMatch(/starting in 2028/)
+    expect(echo!.textContent).not.toMatch(/years from now|in about|started in/)
+  })
+
+  it('the fresh default start is THIS year, spoken as the year', () => {
+    render(
+      <RothLever open savedAnchor={ANCHOR} draft={draftWith(withPretax)} preview={vi.fn(() => null)} onApply={noop} onRemove={noop} onClose={noop} />,
+    )
+    expect(screen.getByLabelText(copy.leverRothStartLabel)).toHaveValue('2026')
+  })
+
+  it('AGED: the default start seeds the WALL year, never the build year (the past-start pre-fill trap)', () => {
+    render(
+      <RothLever open savedAnchor={AGED_ANCHOR} draft={draftWith(withPretax)} preview={vi.fn(() => null)} onApply={noop} onRemove={noop} onClose={noop} />,
+    )
+    // Built 2024, wall 2026: seeding 2024 would pre-fill the exact start the write side refuses.
+    expect(screen.getByLabelText(copy.leverRothStartLabel)).toHaveValue('2026')
+  })
+
+  it('AGED: a PAST year refuses ALOUD — R19 error naming the earliest startable year; no preview, no Apply', () => {
+    const preview = deferredPreview()
+    const onApply = vi.fn()
+    render(
+      <RothLever open savedAnchor={AGED_ANCHOR} draft={draftWith(withPretax)} preview={preview.fn} onApply={onApply} onRemove={noop} onClose={noop} />,
+    )
+    // The past year lands FIRST (the seeded default is valid — committing the amount first
+    // would fire a legitimate preview and blur this arm's not-called assertion).
+    commitField(screen.getByLabelText(copy.leverRothStartLabel), '2025') // plan year 1 — already gone
+    commitField(screen.getByLabelText(copy.leverRothAmountLabel), '50,000')
+    // The refusal is aloud: role="alert", the earliest year QUOTED (dont-make-users-think).
+    const alert = screen.getByRole('alert')
+    expect(alert.textContent).toContain(fieldErrorText({ messageKey: 'errRothStartPast', params: { limitFormatted: '2026' } }))
+    expect(screen.getByLabelText(copy.leverRothStartLabel)).toHaveAttribute('aria-invalid', 'true')
+    // …and it BLOCKS: a past schedule neither previews nor commits.
+    expect(preview.fn).not.toHaveBeenCalled()
+    const apply = screen.getByRole('button', { name: copy.leverRothApply })
+    expect(apply).toHaveAttribute('aria-disabled', 'true')
+    fireEvent.click(apply)
+    expect(onApply).not.toHaveBeenCalled()
+    // A valid year clears the refusal and the candidate goes through with the TRUE offset.
+    commitField(screen.getByLabelText(copy.leverRothStartLabel), '2027')
+    expect(screen.queryByRole('alert')).toBeNull()
+    expect(preview.calls.at(-1)).toEqual({
+      kind: 'conversion',
+      plan: { annualAmountReal: 50_000, startYearOffset: 3, years: 5 }, // 2027 − 2024 build
+    })
+  })
+
+  it('a year before the BUILD year is the same refusal (the offset itself goes negative)', () => {
+    const preview = deferredPreview()
+    render(
+      <RothLever open savedAnchor={ANCHOR} draft={draftWith(withPretax)} preview={preview.fn} onApply={noop} onRemove={noop} onClose={noop} />,
+    )
+    commitField(screen.getByLabelText(copy.leverRothStartLabel), '2020') // before amount — see above
+    commitField(screen.getByLabelText(copy.leverRothAmountLabel), '50,000')
+    expect(screen.getByRole('alert')).toBeInTheDocument()
+    expect(preview.fn).not.toHaveBeenCalled()
+  })
+
+  it('AGED: an applied plan re-seeds its start as the CALENDAR year through the same anchor (exact round trip)', () => {
+    const draft = draftWith((d) => ({
+      ...withPretax(d),
+      rothConversion: { annualAmountReal: 40_000, startYearOffset: 3, years: 5 },
+    }))
+    render(
+      <RothLever open savedAnchor={AGED_ANCHOR} draft={draft} preview={vi.fn(() => null)} onApply={noop} onRemove={noop} onClose={noop} />,
+    )
+    expect(screen.getByLabelText(copy.leverRothStartLabel)).toHaveValue('2027') // 2024 build + offset 3
+    expect(screen.queryByRole('alert')).toBeNull() // a future start — nothing to refuse
+  })
+
+  it('AGED: an applied MID-FLIGHT plan (start already passed) re-opens onto the honest refusal face', () => {
+    const draft = draftWith((d) => ({
+      ...withPretax(d),
+      rothConversion: { annualAmountReal: 40_000, startYearOffset: 1, years: 10 },
+    }))
+    render(
+      <RothLever open savedAnchor={AGED_ANCHOR} draft={draft} preview={vi.fn(() => null)} onApply={noop} onRemove={noop} onClose={noop} />,
+    )
+    // Built 2024 + offset 1 = 2025, behind the 2026 wall: the field shows the truth and the
+    // refusal stands — re-committing a schedule the engine would re-price from a passed year is
+    // the filed re-anchoring fork, not a silent write (spec §S1). Remove stays available.
+    expect(screen.getByLabelText(copy.leverRothStartLabel)).toHaveValue('2025')
+    expect(screen.getByRole('alert')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: copy.leverRothApply })).toHaveAttribute('aria-disabled', 'true')
+    expect(screen.getByRole('button', { name: copy.leverRothRemove })).toBeInTheDocument()
+  })
+})
+
 describe('RothLever — close-then-reopen discards an in-flight preview (open-edge generation bump)', () => {
   it('a run held across a close never paints into the reopened sheet', async () => {
     const preview = deferredPreview()
     const draft = draftWith(withPretax) // no applied conversion ⇒ reopen re-seeds an incomplete plan
     const { rerender } = render(
-      <RothLever open draft={draft} preview={preview.fn} onApply={noop} onRemove={noop} onClose={noop} />,
+      <RothLever open savedAnchor={ANCHOR} draft={draft} preview={preview.fn} onApply={noop} onRemove={noop} onClose={noop} />,
     )
     commitField(screen.getByLabelText(copy.leverRothAmountLabel), '50,000') // run A (resolvers[0]) in flight
-    rerender(<RothLever open={false} draft={draft} preview={preview.fn} onApply={noop} onRemove={noop} onClose={noop} />)
+    rerender(<RothLever open={false} savedAnchor={ANCHOR} draft={draft} preview={preview.fn} onApply={noop} onRemove={noop} onClose={noop} />)
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
-    rerender(<RothLever open draft={draft} preview={preview.fn} onApply={noop} onRemove={noop} onClose={noop} />)
+    rerender(<RothLever open savedAnchor={ANCHOR} draft={draft} preview={preview.fn} onApply={noop} onRemove={noop} onClose={noop} />)
     await waitFor(() => expect(screen.getByRole('dialog')).toBeInTheDocument())
 
     await act(async () => {

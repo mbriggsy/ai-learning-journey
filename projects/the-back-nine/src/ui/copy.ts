@@ -771,8 +771,12 @@ export const copy = {
   leverRothIntro:
     'A conversion moves money from your pre-tax account into your Roth on purpose — you pay the tax now, and what’s inside grows tax-free afterward. Set an amount and a window; both futures update.',
   leverRothAmountLabel: 'Amount, dollars a year',
-  leverRothStartLabel: 'Starting how many years from now',
-  leverRothStartHelp: '0 means starting this year.',
+  // U17 §S1: the start field asks for the CALENDAR YEAR — the old "how many years from now"
+  // wore wall-time words over a plan-time value, so a returning user's "start in 2 years" could
+  // write a plan year already gone. The commit converts year → offset against the plan's build
+  // year (rothConversion stays sim-year-0-indexed on disk — no persisted re-base, hawk veto).
+  leverRothStartLabel: 'Starting in which year',
+  leverRothStartHelp: 'The calendar year the conversions begin — this year or later.',
   leverRothYearsLabel: 'For how many years',
   leverRothApply: 'Add this to my plan',
   leverRothRemove: 'Take the conversion back out',
@@ -1356,12 +1360,14 @@ export type CopyKey = keyof typeof copy
  * `slots[messageKey](params.limitFormatted)`, and every param-less violation renders
  * `copy[messageKey]` byte-identically to before.
  */
-export type SlottedErrorKey = 'errContributionCeiling' | 'errAdditionsCeiling'
+export type SlottedErrorKey = 'errContributionCeiling' | 'errAdditionsCeiling' | 'errRothStartPast'
 export interface SlottedErrorParams {
-  /** The statutory limit, PRE-formatted by the intake money formatter (digits + grouping,
-   *  no `$` — the slot template supplies the glyph), computed AT FIRE TIME from the canonical
-   *  year-keyed constants (the ceiling is age-dependent; catch-up bands exist). Never a
-   *  re-typed dollar. */
+  /** The quoted bound, PRE-formatted at fire time — for the two ceiling errors the statutory
+   *  limit dollar (intake money formatter: digits + grouping, no `$` — the slot template
+   *  supplies the glyph), computed from the canonical year-keyed constants (age-dependent;
+   *  catch-up bands exist), never a re-typed dollar. For `errRothStartPast` (U17 §S1) it is the
+   *  earliest startable CALENDAR YEAR (the wall year, from Result's one anchor — never a second
+   *  clock read), plain digits. */
   readonly limitFormatted: string
 }
 export type CatalogMessage =
@@ -1683,6 +1689,13 @@ export const slots = {
    *  bare cap — annualAdditionsCeilingFor owns that composition, never this template). */
   errAdditionsCeiling: (limitFormatted: string): string =>
     `Together, the contribution and employer match are above what one plan can legally receive in a year — $${limitFormatted} at this age.`,
+  /** U17 §S1 — the Roth start field's past-year refusal (the write side of the calendar-year
+   *  ruling). The earliest startable year is QUOTED in-sentence (the dont-make-users-think law);
+   *  it arrives as a param from the ONE plan-clock anchor, never a template-typed year (which
+   *  would go stale every January). The refusal predicate is `offsetHasPassed` — the same strict
+   *  arrived test the ladder and band consume (§S0.1). */
+  errRothStartPast: (yearFormatted: string): string =>
+    `That year has already passed — this plan can start the conversions in ${yearFormatted} or later.`,
   // --- U7 verdict grammar (the confidence statement's magnitude clause) -----------------
   // The second line of the verdict, keyed off the engine's dollar DIRECTION
   // (DollarAdjustment.direction — NEVER re-derived UI-side) + the humane-rounded $/month figure
@@ -1765,15 +1778,15 @@ export const slots = {
   sequencingDelta: (withOdds: string, withoutOdds: string): string =>
     `With this order, the money could last in about ${withOdds} futures instead of ${withoutOdds}.`,
   /** The user-echoed conversion plan (their own figures back at them — an echo, not a claim).
-   *  Start pluralizes like the duration ("in about a year", never "1 years" — Caddie panel
-   *  2026-07-10, caught on a driven lever preview). */
-  rothPlanEcho: (amountFormatted: string, startYearsFromNow: number, years: number): string => {
-    const start =
-      startYearsFromNow === 0
-        ? 'starting this year'
-        : startYearsFromNow === 1
-          ? 'starting in about a year'
-          : `starting in about ${startYearsFromNow} years`
+   *  THE START SPEAKS THE CALENDAR YEAR (U17 §S1, council wf_f4ced3c8-2f6): `startYearOffset` is
+   *  sim-year-0-indexed, so the old "starting in about N years" misstated the start by exactly
+   *  the plan clock on any aged vault. The calendar year is wall-time-stable — the sentence stays
+   *  true no matter what day it is read. `startPassed` picks the tense: a start already behind
+   *  the wall clock reads "started in", never a future-tense claim about a passed date (the U17
+   *  dead-copy law). Both args arrive from `rothPlanStartFor` — the ONE derivation
+   *  (bandAnnotations.ts); render sites never re-type the year arithmetic. */
+  rothPlanEcho: (amountFormatted: string, startYear: number, startPassed: boolean, years: number): string => {
+    const start = startPassed ? `started in ${startYear}` : `starting in ${startYear}`
     return `Converting ~$${amountFormatted} a year for ${years} year${years === 1 ? '' : 's'}, ${start}.`
   },
 

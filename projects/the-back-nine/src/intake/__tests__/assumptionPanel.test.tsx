@@ -7,6 +7,7 @@ import { createMemoryModel, type MemoryModel, type MemoryModelSnapshot, type Sce
 import type { EngineClient } from '@store/engineClient'
 import { requiredSeats } from '@ui/assumptionRegistry'
 import { copy, slots } from '@ui/copy'
+import { planClockAnchor } from '@ui/bandAnnotations'
 import { formatMoney } from '../fields'
 import type { BudgetLineItem, SimulationResult } from '@shared/model'
 
@@ -131,12 +132,18 @@ const snap = (draft: ScenarioDraft, over: Partial<MemoryModelSnapshot> = {}): Me
 })
 
 function renderPanel(
-  over: { snapshot?: MemoryModelSnapshot; missing?: AssumptionPanelProps['missing'] } = {},
+  over: {
+    snapshot?: MemoryModelSnapshot
+    missing?: AssumptionPanelProps['missing']
+    savedAnchor?: AssumptionPanelProps['savedAnchor']
+  } = {},
 ) {
   const props = {
     open: true,
     snapshot: over.snapshot ?? snap(mixedDraft),
     missing: over.missing ?? ([] as AssumptionPanelProps['missing']),
+    // U17 §S1 — the fresh anchor mirrors the fixtures' 2026 mint through the ONE producer.
+    savedAnchor: over.savedAnchor ?? planClockAnchor(2026, 2026),
     onCommitEdit: vi.fn<(mutate: (d: ScenarioDraft) => ScenarioDraft) => void>(),
     onOpenBudget: vi.fn(),
     onOpenSequencing: vi.fn(),
@@ -412,13 +419,41 @@ describe('via-sheet and via-intake rows', () => {
     expect(props.onCommitEdit).not.toHaveBeenCalled() // routing writes nothing
   })
 
-  it('an applied conversion echoes through the ONE plan-echo slot', () => {
+  it('an applied conversion echoes through the ONE plan-echo slot, naming the CALENDAR year (U17 §S1)', () => {
     const withPlan = draftWith(() => ({
       ...mixedDraft,
       rothConversion: { annualAmountReal: 40_000, startYearOffset: 2, years: 5 },
     }))
     renderPanel({ snapshot: snap(withPlan) })
-    expect(screen.getByText(slots.rothPlanEcho(formatMoney(40_000), 2, 5))).toBeInTheDocument()
+    // Fresh anchor (built 2026, wall 2026): offset 2 = 2028, upcoming.
+    expect(screen.getByText(slots.rothPlanEcho(formatMoney(40_000), 2028, false, 5))).toBeInTheDocument()
+    expect(screen.getByText(/starting in 2028/)).toBeInTheDocument()
+  })
+
+  it('AGED: a mid-flight conversion reads "started in <year>" — never a future-tense claim about a passed date', () => {
+    // Built 2024, wall 2026 (the ?vault=stale shape): offset 1 = 2025, already behind the wall.
+    // The old "starting in about a year" misstated this start by exactly the plan clock — the
+    // U17 §S1 defect this arm witnesses. Mutation-proven: flipping the slot's tense arms or
+    // handing the echo the raw offset reds it.
+    const withPlan = draftWith(() => ({
+      ...mixedDraft,
+      rothConversion: { annualAmountReal: 40_000, startYearOffset: 1, years: 10 },
+    }))
+    renderPanel({ snapshot: snap(withPlan), savedAnchor: planClockAnchor(2024, 2026) })
+    expect(screen.getByText(slots.rothPlanEcho(formatMoney(40_000), 2025, true, 10))).toBeInTheDocument()
+    expect(screen.getByText(/started in 2025/)).toBeInTheDocument()
+    expect(screen.queryByText(/starting in/)).toBeNull()
+    expect(screen.queryByText(/in about/)).toBeNull()
+  })
+
+  it('AGED boundary: a start in the CURRENT wall year is upcoming, not history (the strict predicate)', () => {
+    const withPlan = draftWith(() => ({
+      ...mixedDraft,
+      rothConversion: { annualAmountReal: 40_000, startYearOffset: 2, years: 5 },
+    }))
+    // Built 2024, wall 2026: offset 2 IS this year — "starting in 2026", present tense.
+    renderPanel({ snapshot: snap(withPlan), savedAnchor: planClockAnchor(2024, 2026) })
+    expect(screen.getByText(slots.rothPlanEcho(formatMoney(40_000), 2026, false, 5))).toBeInTheDocument()
   })
 
   it('the regime row stays VISIBLE but drops its edit affordance outside the priced domain (no hollow door)', () => {

@@ -635,6 +635,7 @@ export function Result({
         open={assumptionsOpen}
         snapshot={snapshot}
         missing={missing}
+        savedAnchor={dateAnchor}
         onCommitEdit={commitAssumptionEdit}
         onOpenBudget={() => {
           setAssumptionsOpen(false)

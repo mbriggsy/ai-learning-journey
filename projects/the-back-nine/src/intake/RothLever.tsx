@@ -25,23 +25,37 @@ import { copy, slots } from '@ui/copy'
 import { composeTwoFutures } from '@ui/twoFuturesChrome'
 import { composeRothOmissionsNote } from '@ui/stateTaxDisclosure'
 import type { PricedState } from '@engine/constants/stateTax'
-import type { BandSavedAnchor } from '@ui/bandAnnotations'
+import { rothPlanStartFor, type BandSavedAnchor } from '@ui/bandAnnotations'
+import { offsetHasPassed } from '@viz/curveMarks'
 import type { Announcer } from './a11y'
 import { ControlSheet } from './controlSheet'
 import { ControlPreviewReadout, useControlPreview } from './controlPreview'
 import { CurrencyField, IntegerField, formatMoney } from './fields'
+import { FieldError } from './FieldError'
 import { draftPretaxTotal, medicareOnlyPriced } from './intakeMap'
-/** The draft plan mid-entry: fields optional until committed (the intake hole-tolerance rule). */
+/** The draft plan mid-entry: fields optional until committed (the intake hole-tolerance rule).
+ *  `startYear` is the CALENDAR year as typed (U17 §S1) — the commit converts it to the
+ *  sim-year-0 offset the engine prices; the calendar never persists (no persisted re-base). */
 interface PlanDraft {
   readonly amount?: number
-  readonly start?: number
+  readonly startYear?: number
   readonly years?: number
 }
-const complete = (p: PlanDraft): RothConversionPlan | null =>
+/** U17 §S1 — a start year already behind the wall clock REFUSES (the same strict arrived
+ *  predicate the ladder/band consume, §S0.1: `year < wall` ⇔ `offset < yearsSincePlanBuilt`;
+ *  it also covers a year before the build year, where the offset itself goes negative). The
+ *  refusal is ALOUD — the FieldError below names it — and it blocks the candidate, so a past
+ *  schedule can neither preview nor Apply. Re-anchoring the engine's own conversion semantics
+ *  (what a mid-flight past start MEANS) is FILED, not built here (spec §S1). */
+const startYearPassed = (p: PlanDraft, anchor: BandSavedAnchor): boolean =>
+  p.startYear !== undefined && Number.isInteger(p.startYear) &&
+  offsetHasPassed(p.startYear - anchor.startCalendarYear, anchor.yearsSincePlanBuilt)
+const complete = (p: PlanDraft, anchor: BandSavedAnchor): RothConversionPlan | null =>
   p.amount !== undefined && Number.isFinite(p.amount) && p.amount > 0 &&
-  p.start !== undefined && Number.isInteger(p.start) && p.start >= 0 &&
+  p.startYear !== undefined && Number.isInteger(p.startYear) &&
+  !startYearPassed(p, anchor) &&
   p.years !== undefined && Number.isInteger(p.years) && p.years >= 1
-    ? { annualAmountReal: p.amount, startYearOffset: p.start, years: p.years }
+    ? { annualAmountReal: p.amount, startYearOffset: p.startYear - anchor.startCalendarYear, years: p.years }
     : null
 export interface RothLeverProps {
   readonly open: boolean
@@ -77,8 +91,11 @@ export interface RothLeverProps {
   readonly restoreFallback?: () => HTMLElement | null
   /** P3·U13 — the aged-plan wall-time anchor: the TwoFutures year-0 endpoint renames
    *  "Today" → "Plan built" when the plan clock > 0 (one time base per screen; U17 §S0.2 —
-   *  the clock measures the BUILD, never the save). */
-  readonly savedAnchor?: BandSavedAnchor
+   *  the clock measures the BUILD, never the save). REQUIRED since U17 §S1: the start field's
+   *  calendar-year ⇄ offset conversion and the echo's named year both read it, so a lever
+   *  without an anchor has no honest write side — Result mints it unconditionally
+   *  (`startCalendarYear` is a required draft field), making "unanchored" unrepresentable. */
+  readonly savedAnchor: BandSavedAnchor
 }
 export function RothLever({ open, draft, preview, previewBlocking = false, onApply, onRemove, onClose, medicarePricedNote = false, statePricedNote, acaPricedNote = false, restoreFallback, savedAnchor }: RothLeverProps) {
   const announcerRef = useRef<Announcer | null>(null)
@@ -90,21 +107,31 @@ export function RothLever({ open, draft, preview, previewBlocking = false, onApp
   // those no-new-preview transitions.
   const { previewState, resetForOpen, run } = useControlPreview({ preview, announcerRef })
   // Open-edge re-seed (the BudgetBuilder rule): the applied plan pre-fills; defaults otherwise.
+  // U17 §S1 — the start seeds in CALENDAR terms: the fresh default is the WALL year (build year
+  // + plan clock — on an aged vault, seeding the build year would pre-fill the exact past start
+  // the write side refuses), and an applied plan's offset maps back through the same anchor the
+  // commit converts through, so the round trip is exact.
   useEffect(() => {
     if (!open) return
     resetForOpen()
     setPlan(
       applied === undefined
-        ? { start: 0, years: 5 }
-        : { amount: applied.annualAmountReal, start: applied.startYearOffset, years: applied.years },
+        ? { startYear: savedAnchor.startCalendarYear + savedAnchor.yearsSincePlanBuilt, years: 5 }
+        : { amount: applied.annualAmountReal, startYear: rothPlanStartFor(savedAnchor, applied.startYearOffset).year, years: applied.years },
     )
-    // (deps deliberately narrow: open-edge re-seed only — the BudgetBuilder precedent)
+    // (deps deliberately narrow: open-edge re-seed only — the BudgetBuilder precedent; the
+    // anchor cannot change while the sheet is open, same as the draft)
   }, [open])
   // Preview on every COMPLETE committed plan (fields commit on blur — discrete, never per-drag).
   // A cleared/incomplete plan WITHDRAWS the comparison (request null) — a stale delta over no
   // entered plan is a confident readout of nothing (ultramode 2026-07-03).
-  const candidate = complete(plan)
+  const candidate = complete(plan, savedAnchor)
   const candidateKey = candidate === null ? '' : `${candidate.annualAmountReal}:${candidate.startYearOffset}:${candidate.years}`
+  // The past-start refusal, ALOUD (U17 §S1): a committed year behind the wall clock renders the
+  // R19 error grammar (role="alert" announces it) with the earliest startable year QUOTED from
+  // the one anchor. Derived state — it clears the moment a valid year commits.
+  const startPast = startYearPassed(plan, savedAnchor)
+  const earliestStartYear = savedAnchor.startCalendarYear + savedAnchor.yearsSincePlanBuilt
   // The chart's household ages — the chrome derives the fan-dialect axis ticks AND the scrub
   // closure from this ONE pair (composeTwoFutures → deriveDecadeAgeTicks/deriveBandAgesAt), so a
   // scrubbed age can never disagree with a tick. Ages are stable while a sheet is open (the draft
@@ -160,9 +187,17 @@ export function RothLever({ open, draft, preview, previewBlocking = false, onApp
               labelKey="leverRothStartLabel"
               helpKey="leverRothStartHelp"
               field="rothConversion.start"
-              value={plan.start}
-              onCommit={(v) => setPlan((p) => ({ ...p, start: v }))}
+              value={plan.startYear}
+              invalid={startPast}
+              onCommit={(v) => setPlan((p) => ({ ...p, startYear: v }))}
             />
+            {startPast && (
+              <FieldError
+                field="rothConversion.start"
+                messageKey="errRothStartPast"
+                params={{ limitFormatted: String(earliestStartYear) }}
+              />
+            )}
             <IntegerField
               labelKey="leverRothYearsLabel"
               field="rothConversion.years"
@@ -172,7 +207,10 @@ export function RothLever({ open, draft, preview, previewBlocking = false, onApp
           </div>
           {candidate !== null && (
             <p className="control-plan__echo">
-              {slots.rothPlanEcho(formatMoney(candidate.annualAmountReal), candidate.startYearOffset, candidate.years)}
+              {(() => {
+                const start = rothPlanStartFor(savedAnchor, candidate.startYearOffset)
+                return slots.rothPlanEcho(formatMoney(candidate.annualAmountReal), start.year, start.passed, candidate.years)
+              })()}
             </p>
           )}
           <ControlPreviewReadout

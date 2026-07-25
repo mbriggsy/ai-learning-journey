@@ -38,6 +38,7 @@
 import { useRef, useState, type ReactNode } from 'react'
 import type { MemoryModelSnapshot, ScenarioDraft, StickyDisplay } from '@store/memoryModel'
 import { copy, slots, type CopyKey } from '@ui/copy'
+import { rothPlanStartFor, type BandSavedAnchor } from '@ui/bandAnnotations'
 import { composeVerdictReading } from '@ui/verdictSentence'
 import { METHODOLOGY_DISCLOSURES, type AssumptionSeat } from '@ui/assumptionRegistry'
 import { productionMarket } from '@engine/reference/methodology'
@@ -59,6 +60,10 @@ export interface AssumptionPanelProps {
   readonly snapshot: MemoryModelSnapshot
   /** The still-missing required facts (Result's memo) — the echo's incomplete arm names them. */
   readonly missing: readonly MissingFact[]
+  /** U17 §S1 — Result's ONE plan-clock anchor (never a second clock read): the Roth row's echo
+   *  names the conversion's CALENDAR year through `rothPlanStartFor`, so an aged vault's row
+   *  can never misstate the start by the plan clock the way "in about N years" did. */
+  readonly savedAnchor: BandSavedAnchor
   /** THE one commit seam: the caller applies `mutate` atomically (reading the store's CURRENT
    *  draft inside the update — insight 036) and runs the route-aware recompute. */
   readonly onCommitEdit: (mutate: (d: ScenarioDraft) => ScenarioDraft) => void
@@ -126,6 +131,7 @@ export function AssumptionPanel({
   open,
   snapshot,
   missing,
+  savedAnchor,
   onCommitEdit,
   onOpenBudget,
   onOpenSequencing,
@@ -138,6 +144,10 @@ export function AssumptionPanel({
   const { draft, answer, displayed } = snapshot
   const governs = budgetGoverns(draft.budget)
   const dateRoute = isDateRoute(draft)
+  // U17 §S1 — the Roth row's start in CALENDAR terms, derived ONCE through the shared producer
+  // (never inline year arithmetic — the §S0 source-bind discipline).
+  const rothStart =
+    draft.rothConversion === undefined ? undefined : rothPlanStartFor(savedAnchor, draft.rothConversion.startYearOffset)
 
   // ── panel-session state ────────────────────────────────────────────────────────────────
   // Per-editor touched set (the BudgetBuilder pattern): errors show only for fields committed
@@ -372,11 +382,14 @@ export function AssumptionPanel({
             seat="roth-conversion"
             nameKey="assumptionRothName"
             value={
-              draft.rothConversion === undefined
+              draft.rothConversion === undefined || rothStart === undefined
                 ? copy.assumptionNoneApplied
                 : slots.rothPlanEcho(
                     formatMoney(draft.rothConversion.annualAmountReal),
-                    draft.rothConversion.startYearOffset,
+                    // The calendar year is wall-time-stable; `passed` picks the "started in"
+                    // tense for an applied conversion already under way on an aged vault.
+                    rothStart.year,
+                    rothStart.passed,
                     draft.rothConversion.years,
                   )
             }

@@ -215,16 +215,20 @@ export type DrawdownOrderKey = (typeof DRAWDOWN_ORDER_KEYS)[number]
  *  TUNABLE facts persist; the per-year `OverlayParams.conversions` vector is DERIVED at the
  *  params builder (fidelity-over-duplication, the budget precedent). ABSENT ⇒ no conversions
  *  ⇒ reduce-to-spine byte-identity (presence-keyed — an all-zero vector is NEVER written).
- *  Offsets are sim-years from `startCalendarYear` (t = 0 = today), Y-INVARIANT on the date
- *  route (the same absolute schedule rides every swept candidate — dateSearch's existing
- *  `...overlayBase` semantics): "starting N years from now, convert $X a year for M years."
+ *  Offsets are sim-years from `startCalendarYear` — t = 0 is the plan's BUILD year, which is
+ *  "today" only in the year the plan was built (U17 §S1: every render surface speaks the
+ *  CALENDAR year, `startCalendarYear + offset`, for exactly this reason). Y-INVARIANT on the
+ *  date route (the same absolute schedule rides every swept candidate — dateSearch's existing
+ *  `...overlayBase` semantics): "starting in calendar year startCalendarYear + N, convert
+ *  $X a year for M years."
  *  All fields finite (DND-009); the engine clamps each year to the legal pool net of the
  *  non-convertible RMD (`[0, priorYearEndPretax − RMD]`) — magnitude is structurally safe. */
 export interface RothConversionPlan {
   /** Requested conversion per active year (real $, > 0 — a zero plan is written as ABSENCE,
    *  never a present-but-empty lever; the codec rejects 0 so present ⟹ meaningful). */
   readonly annualAmountReal: number
-  /** First active sim-year offset from `startCalendarYear` (integer ≥ 0; 0 = this year). */
+  /** First active sim-year offset from `startCalendarYear` (integer ≥ 0; 0 = the BUILD year —
+   *  NOT "this year" on an aged vault; the write side refuses an offset behind the plan clock). */
   readonly startYearOffset: number
   /** Consecutive active years (integer ≥ 1). Years past the horizon are inert. */
   readonly years: number

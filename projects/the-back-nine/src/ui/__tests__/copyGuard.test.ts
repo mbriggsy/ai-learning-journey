@@ -206,7 +206,8 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     rothStateShift: slots.rothStateShift('Off track', 'On track'),
     rothYearsSecondary: slots.rothYearsSecondary(3, 'more'),
     sequencingDelta: slots.sequencingDelta(slots.xOfTen(8), slots.xOfTen(7)),
-    rothPlanEcho: slots.rothPlanEcho('40,000', 2, 5),
+    // U17 §S1 — the start names the CALENDAR year (wall-time-stable), tense picked by `passed`.
+    rothPlanEcho: slots.rothPlanEcho('40,000', 2028, false, 5),
     // P3·U11 — the Healthcare sheet's readout slots (require-hedge-swept by their prefixes).
     acaCostStatus: slots.acaCostStatus('July 3, 2026'),
     acaCostStatusEnhanced: slots.acaCostStatusEnhanced('July 3, 2026'),
@@ -229,6 +230,8 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     // F10 — the R19 ceiling errors quote the statutory limit (pre-formatted by intake).
     errContributionCeiling: slots.errContributionCeiling('32,250'),
     errAdditionsCeiling: slots.errAdditionsCeiling('83,250'),
+    // U17 §S1 — the Roth start's past-year refusal quotes the earliest startable year.
+    errRothStartPast: slots.errRothStartPast('2026'),
     // P3·U12 — the AssumptionPanel's market disclosure figures (read from productionMarket
     // at render; the % strings arrive pre-formatted — the templates stay numeral-free).
     assumptionMarketStocks: slots.assumptionMarketStocks('5%', '18%'),
@@ -300,6 +303,7 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     for (const rendered of [
       slots.errContributionCeiling(S),
       slots.errAdditionsCeiling(S),
+      slots.errRothStartPast(S),
       slots.budgetMedicalExceedsTotal(S, S),
     ]) {
       expect(lintCopy(rendered, ['free-numeral']), rendered).toEqual([])

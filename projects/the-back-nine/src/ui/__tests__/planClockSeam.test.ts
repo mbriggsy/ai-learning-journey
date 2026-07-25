@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { offsetHasPassed, agedLadderMarks, curveMarks } from '@viz/curveMarks'
-import { deriveDateBandAnnotations, deriveSpineBandAnnotations, planClockAnchor } from '../bandAnnotations'
+import { deriveDateBandAnnotations, deriveSpineBandAnnotations, planClockAnchor, rothPlanStartFor } from '../bandAnnotations'
 import { agedBalancesYearFor, type PersistState, type ResultSaveView } from '../resultSave'
 import { scenarioFromDraft } from '../scenarioFromDraft'
 import { DEV_SEEDS } from '../devSeeds'
@@ -185,6 +185,51 @@ describe('U17 §S0.1 — ONE exported arrived predicate, consumed (never re-type
     )
     expect(src, 'never a re-typed inline compare against the plan clock').not.toMatch(
       /offsetYears\s*-\s*(years|elapsed)\w*\s*[<>]=?/,
+    )
+  })
+
+  it('the Roth echo start rides the SAME predicate + the anchor arithmetic, in ONE producer (U17 §S1)', () => {
+    // Behavior: the calendar year is the anchor's build year + the sim-year-0 offset —
+    // wall-time-stable (the sentence never changes as time passes) — and `passed` is the strict
+    // §S0.1 arrived test, so a start in the current wall year is upcoming, never history.
+    const fresh = planClockAnchor(2026, 2026)
+    expect(rothPlanStartFor(fresh, 2)).toEqual({ year: 2028, passed: false })
+    expect(rothPlanStartFor(fresh, 0)).toEqual({ year: 2026, passed: false })
+    const aged = planClockAnchor(2024, 2026) // the ?vault=stale shape: plan clock 2
+    expect(rothPlanStartFor(aged, 1)).toEqual({ year: 2025, passed: true }) // behind the wall — history
+    expect(rothPlanStartFor(aged, 2)).toEqual({ year: 2026, passed: false }) // THIS year — strict boundary
+    expect(rothPlanStartFor(aged, 4)).toEqual({ year: 2028, passed: false })
+    // A negative offset (a year before the build year) is passed too — the write side leans on
+    // this to refuse pre-build starts through the ONE predicate, no second compare.
+    expect(rothPlanStartFor(fresh, -6)).toEqual({ year: 2020, passed: true })
+  })
+
+  it('BOTH echo render sites consume the ONE start producer — never re-typed year arithmetic (U17 §S1)', () => {
+    // The §S0 lesson applied forward: the slot speaking (year, passed) proves nothing about the
+    // CALLERS — a render site could re-type `startCalendarYear + offset` and drift. Bind both.
+    const producer = read('../bandAnnotations.ts')
+    expect((producer.match(/export function rothPlanStartFor/g) ?? []).length, 'exactly ONE producer').toBe(1)
+    expect(producer, 'the producer rides the §S0.1 predicate, not its own compare').toMatch(
+      /passed: offsetHasPassed\(startYearOffset, anchor\.yearsSincePlanBuilt\)/,
+    )
+
+    const panel = read('../../intake/AssumptionPanel.tsx')
+    expect(panel, 'the panel row derives through the producer').toMatch(
+      /rothPlanStartFor\(savedAnchor, draft\.rothConversion\.startYearOffset\)/,
+    )
+    expect(panel, 'the panel never hands the echo a raw offset or its own year sum').not.toMatch(
+      /rothPlanEcho\([^)]*startYearOffset/,
+    )
+
+    const lever = read('../../intake/RothLever.tsx')
+    expect(lever, 'the sheet echo derives through the producer').toMatch(
+      /rothPlanStartFor\(savedAnchor, candidate\.startYearOffset\)/,
+    )
+    expect(lever, 'the applied re-seed maps offset → year through the SAME producer').toMatch(
+      /rothPlanStartFor\(savedAnchor, applied\.startYearOffset\)\.year/,
+    )
+    expect(lever, 'the write-side past refusal rides the §S0.1 predicate').toMatch(
+      /offsetHasPassed\(p\.startYear - anchor\.startCalendarYear, anchor\.yearsSincePlanBuilt\)/,
     )
   })
 

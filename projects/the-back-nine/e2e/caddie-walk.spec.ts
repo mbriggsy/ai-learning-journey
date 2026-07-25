@@ -387,11 +387,15 @@ async function driveLeverPreview(
     return true
   }
   // The Roth plan grammar (RothLever): amount / start / years — a COMPLETE plan fires the
-  // preview. Values are small-but-real (a $20k, 4-year plan starting next year).
+  // preview. Values are small-but-real (a $20k, 4-year plan starting next year). U17 §S1: the
+  // start field speaks the CALENDAR YEAR now — a bare offset ('1' = year 1 AD) is a past start
+  // the write side REFUSES aloud, so the drive types next wall year (valid on every vault, aged
+  // or fresh, and never rots across a New Year).
+  const nextYear = String(new Date().getFullYear() + 1)
   const plan = dialog.locator('.control-plan input')
   if ((await plan.count()) >= 3) {
     await typeFieldValue(plan.nth(0), '20000', '20,000')
-    await typeFieldValue(plan.nth(1), '1', '1')
+    await typeFieldValue(plan.nth(1), nextYear, nextYear)
     await typeFieldValue(plan.nth(2), '4', '4')
     await expect(
       dialog.locator('svg.tf'),

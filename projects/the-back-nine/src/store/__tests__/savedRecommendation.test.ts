@@ -20,6 +20,7 @@ import { describe, expect, it } from 'vitest'
 import { deriveSavedRecommendationStatus } from '../savedRecommendation'
 import { deriveStaleness } from '../staleness'
 import { scenarioFromDraft, currentEpochDay } from '@ui/scenarioFromDraft'
+import { exposureForDraft } from '@ui/stalenessExposure'
 import { DEV_SEEDS } from '@ui/devSeeds'
 import { SOLVER_CODE_VERSION } from '@engine/solver/solverCodeVersion'
 import { decodeScenario, encodeScenario } from '@shared/scenarioCodec'
@@ -74,11 +75,19 @@ function recordFor(scenario: ScenarioV3, over: Partial<SavedRecommendationV3> = 
   }
 }
 
+// U17 §S4 — the REAL exposure records for the two households this file drives. A saved
+// recommendation is ALWAYS a spine-route household (`solveDispatch.ts:67-68` refuses
+// 'spine-unready' whenever `buildSpineParams` is null, which is exactly the date route), so both
+// of these take `exposureForDraft`'s spine arm, where every read is exact.
+const EXPOSURE = exposureForDraft(DEV_SEEDS.retired)
+const NC_EXPOSURE = exposureForDraft(DEV_SEEDS.nc)
+
 const statusOf = (
   scenario: ScenarioV3,
   record: SavedRecommendationV3,
   freshFingerprint: string | null = FINGERPRINT,
-) => deriveSavedRecommendationStatus({ record, scenario, freshFingerprint, todayEpochDay: TODAY })
+  exposure = EXPOSURE,
+) => deriveSavedRecommendationStatus({ record, scenario, freshFingerprint, todayEpochDay: TODAY, exposure })
 
 describe('the trichotomy — all three conjuncts hold', () => {
   it('a matching fingerprint + a matching solver version + a record era equal to the live constants ⇒ CURRENT, with NO causes', () => {
@@ -89,7 +98,7 @@ describe('the trichotomy — all three conjuncts hold', () => {
     // Non-vacuity: the era report really ran (it is a full StalenessReport, not a stub), and it
     // agrees with the live comparator on a fresh save.
     expect(status.eraStaleness.rulesMoved).toBe(false)
-    expect(status.eraStaleness.wallYear).toBe(deriveStaleness(s, TODAY).wallYear)
+    expect(status.eraStaleness.wallYear).toBe(deriveStaleness(s, TODAY, EXPOSURE).wallYear)
   })
 })
 
@@ -140,7 +149,7 @@ describe('the trichotomy — conjunct 3: the rulebooks, judged against the RECOR
       era: { ...eraOf(s), taxVintageDetail: { taxYear: s.taxVintageDetail!.taxYear - 1, legalBasis: 'TCJA (pre-OBBBA)' } },
     })
     // The scenario-level reader is silent — the exact false-clean this conjunct closes.
-    expect(deriveStaleness(s, TODAY).rulesMoved).toBe(false)
+    expect(deriveStaleness(s, TODAY, EXPOSURE).rulesMoved).toBe(false)
     const status = statusOf(s, record)
     expect(status.current).toBe(false)
     expect(status.causes).toEqual(['rules-changed'])
@@ -156,24 +165,34 @@ describe('the trichotomy — conjunct 3: the rulebooks, judged against the RECOR
     const s = freshSave()
     const nc = scenarioFromDraft(DEV_SEEDS.nc)
     if (!nc.ready) throw new Error('DEV_SEEDS.nc should be save-ready')
-    // The state-tax clock is route-gated on the household's OWN priced state (a stateless seed
-    // prices no state tax and legitimately never fires), so that arm runs on the NC household.
-    const drifts: ReadonlyArray<readonly [string, ScenarioV3, Partial<ScenarioV3>]> = [
-      ['appDefaultVersion', s, { appDefaultVersion: 'p0-ancient' }],
-      ['taxVintageDetail', s, { taxVintageDetail: { ...s.taxVintageDetail!, taxYear: s.taxVintageDetail!.taxYear - 1 } }],
+    // The state-tax clock is exposure-gated on the state the RUN priced (a stateless seed prices
+    // no state tax and legitimately never fires), so that arm runs on the NC household with the
+    // NC household's own exposure record.
+    const drifts: ReadonlyArray<
+      readonly [string, ScenarioV3, Partial<ScenarioV3>, typeof EXPOSURE]
+    > = [
+      ['appDefaultVersion', s, { appDefaultVersion: 'p0-ancient' }, EXPOSURE],
+      ['taxVintageDetail', s, { taxVintageDetail: { ...s.taxVintageDetail!, taxYear: s.taxVintageDetail!.taxYear - 1 } }, EXPOSURE],
       [
         'stateTaxVintage',
         nc.scenario,
         { stateTaxVintage: { ncProfile: '{"old":1}', paProfile: '{"old":1}', flProfile: '{"old":1}' } },
+        NC_EXPOSURE,
       ],
-      ['healthcareVintage', s, { healthcareVintage: { ...s.healthcareVintage!, coverageYear: s.healthcareVintage!.coverageYear - 1 } }],
-      ['dateVintage', s, { dateVintage: { ...s.dateVintage!, blendSnapshotAsOf: '2019-01-01' } }],
+      // U17 §S4 — the healthcare row moved from `coverageYear` to `partBStandardMonthly`, and it
+      // STAYS there through the F-pass. Not because the coverage year could no longer carry the
+      // pin (the F1 correction restored its naming — it dates the ACA/IRMAA tables), but because
+      // Part B is the SHARPEST witness available here: it belongs to exactly one family, so this
+      // row cannot pass on a mis-mapped clock. This household (all-65+, Medicare-only) is
+      // PROVABLY exposed to it.
+      ['healthcareVintage', s, { healthcareVintage: { ...s.healthcareVintage!, partBStandardMonthly: s.healthcareVintage!.partBStandardMonthly + 10 } }, EXPOSURE],
+      ['dateVintage', s, { dateVintage: { ...s.dateVintage!, blendSnapshotAsOf: '2019-01-01' } }, EXPOSURE],
     ]
     let firedCount = 0
-    for (const [label, base, drift] of drifts) {
+    for (const [label, base, drift, exposure] of drifts) {
       const driftedScenario: ScenarioV3 = { ...base, ...drift }
-      const viaScenario = deriveStaleness(driftedScenario, TODAY)
-      const viaRecord = statusOf(base, recordFor(driftedScenario))
+      const viaScenario = deriveStaleness(driftedScenario, TODAY, exposure)
+      const viaRecord = statusOf(base, recordFor(driftedScenario), FINGERPRINT, exposure)
       expect(viaRecord.eraStaleness, `${label}: the era overlay must reproduce the scenario-side report`).toEqual(
         viaScenario,
       )
@@ -181,9 +200,15 @@ describe('the trichotomy — conjunct 3: the rulebooks, judged against the RECOR
       if (viaScenario.rulesMoved) firedCount += 1
     }
     // NON-VACUITY, STATED HONESTLY — this comment used to claim more than the test delivers.
-    // FOUR of the five are pinned BEHAVIOURALLY here: their drift fires `rules-changed` through
-    // the record path exactly as it does through the scenario path, so a key that failed to reach
-    // the comparator reds on that key.
+    // FOUR of the five are pinned BEHAVIOURALLY here by the `eraStaleness` EQUALITY above: a key
+    // that failed to reach the comparator leaves the era scenario wearing the base's fresh stamp,
+    // so the two reports differ on exactly that key's clock and the `toEqual` reds. THREE of
+    // those four additionally drive the `rules-changed` cause (tax, state-tax, Part B); the
+    // `dateVintage` row's blend clock demotes NOTHING since U17 §S4 — this household's accounts
+    // carry manual blends, so the dated ticker table never enters its answer and the clock is
+    // SILENCED (`date.blendMoved` still flips, which is what makes the equality a real pin). That
+    // is deliberate, not a weakened arm: neither a silenced clock nor a nameless re-base may ever
+    // demote a saved recommendation.
     //
     // `appDefaultVersion` IS NOT — and cannot be, today. staleness.ts keys the spine clock on the
     // SAVED era being a KNOWN one (`appDefaultEraFor`), and `ERAS` holds exactly ONE entry
@@ -195,7 +220,29 @@ describe('the trichotomy — conjunct 3: the rulebooks, judged against the RECOR
     // error (TS2741), not a green run. A behavioural arm for it can only exist once a SECOND era
     // ships; until then the compiler is the only honest gate, and pretending otherwise here would
     // be the vacuous-assertion class this file exists to refuse.
-    expect(firedCount).toBe(4)
+    expect(firedCount).toBe(3)
+  })
+
+  it('U17 §S4 — a clock the household was NOT EXPOSED to can never demote the record: the same moved acaStatus era demotes an ACA-priced household and leaves the all-65+ one CURRENT', () => {
+    // The defect this closes at the record layer: `healthcare.moved` fed `rulesMoved` fed
+    // conjunct 3, so an all-65+ household's still-valid recommendation would have been demoted
+    // to 'rules-changed' — for a rulebook they price zero of, and (post-split) with no sentence
+    // allowed to name it. Both arms, or the gate proves nothing.
+    const s = freshSave() // ages 66 + 65 — Medicare-only, ACA structurally unpriced
+    const movedEra: SavedRecommendationEraV3 = {
+      ...eraOf(s),
+      healthcareVintage: { ...s.healthcareVintage!, acaStatus: 'enhanced subsidies restored (no cliff)' },
+    }
+    const record = recordFor(s, { era: movedEra })
+    const silent = statusOf(s, record)
+    expect(silent.causes, 'the unexposed household keeps its recommendation').toEqual([])
+    expect(silent.current).toBe(true)
+    // Non-vacuity: the clock genuinely fired and was silenced by the exposure gate.
+    expect(silent.eraStaleness.healthcare.silencedClocks).toEqual(['aca-status'])
+    // The SAME record era against a household whose run prices ACA ⇒ demoted, as it must be.
+    const exposed = statusOf(s, record, FINGERPRINT, exposureForDraft(DEV_SEEDS.health))
+    expect(exposed.causes).toEqual(['rules-changed'])
+    expect(exposed.eraStaleness.healthcare.movedClocks).toEqual(['aca-status'])
   })
 
   it('household FACTS still come from the CURRENT scenario — only the five era fields are overlaid (the record does not freeze who the household is)', () => {
@@ -203,7 +250,7 @@ describe('the trichotomy — conjunct 3: the rulebooks, judged against the RECOR
     // budget windows, people and start year that gate the clocks are TODAY's.
     const s = freshSave()
     const status = statusOf(s, recordFor(s))
-    const live = deriveStaleness(s, TODAY)
+    const live = deriveStaleness(s, TODAY, EXPOSURE)
     expect(status.eraStaleness.wallYear).toBe(live.wallYear)
     expect(status.eraStaleness.elapsed).toEqual(live.elapsed)
     expect(status.eraStaleness.budget.expiredLines).toEqual(live.budget.expiredLines)
@@ -219,12 +266,12 @@ describe('the trichotomy — conjunct 3: the rulebooks, judged against the RECOR
       startCalendarYear: s.startCalendarYear - 40,
       budget: (s.budget ?? []).map((line, i) => (i === 0 ? { ...line, endYear: 1 } : line)),
     }
-    const live = deriveStaleness(lapsed, TODAY)
+    const live = deriveStaleness(lapsed, TODAY, exposureForDraft(DEV_SEEDS.budget))
     // The fixture must actually raise anyStale WITHOUT rulesMoved, or this arm proves nothing.
     expect(live.budget.expiredLines.length).toBeGreaterThan(0)
     expect(live.anyStale).toBe(true)
     expect(live.rulesMoved).toBe(false)
-    const status = statusOf(lapsed, recordFor(lapsed))
+    const status = statusOf(lapsed, recordFor(lapsed), FINGERPRINT, exposureForDraft(DEV_SEEDS.budget))
     expect(status.current).toBe(true)
     expect(status.causes).toEqual([])
   })
@@ -365,8 +412,8 @@ describe('the trichotomy — purity', () => {
   it('is a deterministic function of its inputs: the same (record, scenario, fingerprint, day) yields an equal status twice, and a DIFFERENT injected day is honored', () => {
     const s = freshSave()
     const record = recordFor(s)
-    const a = deriveSavedRecommendationStatus({ record, scenario: s, freshFingerprint: FINGERPRINT, todayEpochDay: TODAY })
-    const b = deriveSavedRecommendationStatus({ record, scenario: s, freshFingerprint: FINGERPRINT, todayEpochDay: TODAY })
+    const a = deriveSavedRecommendationStatus({ record, scenario: s, freshFingerprint: FINGERPRINT, todayEpochDay: TODAY, exposure: EXPOSURE })
+    const b = deriveSavedRecommendationStatus({ record, scenario: s, freshFingerprint: FINGERPRINT, todayEpochDay: TODAY, exposure: EXPOSURE })
     expect(a).toEqual(b)
     // The injected clock genuinely reaches the era report (no hidden `new Date()` inside).
     const future = deriveSavedRecommendationStatus({
@@ -374,6 +421,7 @@ describe('the trichotomy — purity', () => {
       scenario: s,
       freshFingerprint: FINGERPRINT,
       todayEpochDay: TODAY + 4_000,
+      exposure: EXPOSURE,
     })
     expect(future.eraStaleness.wallYear).toBeGreaterThan(a.eraStaleness.wallYear)
   })

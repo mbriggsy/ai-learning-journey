@@ -14,6 +14,7 @@ import { PendingPanel } from './PendingPanel'
 import { ReEntry } from './ReEntry'
 import { composeReentry, type ReentryView } from './reentryChrome'
 import { deriveStaleness } from '@store/staleness'
+import { exposureForDraft } from './stalenessExposure'
 import { copy } from './copy'
 import './styles/save.css'
 
@@ -262,7 +263,13 @@ export default function IntakeApp({
         // re-save could re-stamp them — and the balance confirm resolves BEFORE the result
         // phase mounts or any recompute dispatches: the verdict never renders on
         // unconfirmed balances and then asks. The recompute moves to the affirm handler.
-        const report = deriveStaleness(model, currentEpochDay())
+        //
+        // U17 §S4 — the EXPOSURE record is built HERE, at the ui/intake seam, off the HYDRATED
+        // draft's own built params (`exposureForDraft` → `buildSpineParams`/`buildDateInput`).
+        // The store cannot make this read (layer law), and re-deriving it from ages/geography
+        // is the insight-080/081 defect class. The draft is the round-trip inverse of the same
+        // `model` the stamps come from, so the exposure and the stamps describe one household.
+        const report = deriveStaleness(model, currentEpochDay(), exposureForDraft(hydrated.draft))
         setReentry({ view: composeReentry(model, report), rulesMoved: report.rulesMoved })
         setPhase('reentry')
       } catch {

@@ -969,13 +969,34 @@ test.describe(`the vault return (?vault=stale) — the gate + the staleness-echo
       'the affirm CTA sits below the first frame at the real window',
     ).toBeLessThanOrEqual(REAL.height)
     // The aged vault's own disclosures rendered (the frame under test is not vacuous —
-    // insight 029): the plant moves the tax + healthcare stamps + the blend snapshot →
-    // exactly their three lines, and the ~760-day-old savedAt → the two-year elapsed line
-    // (coherent with the seed's -2 startCalendarYear — a real save mints both together).
-    // (The blend line is named, not just counted: an all-retired household must get the
-    // route-true spine wording, never stalenessDate's "behind your date".)
-    await expect(page.locator('.reentry-notes p')).toHaveCount(3)
-    await expect(page.getByText('The fund data we read your accounts against')).toBeVisible()
+    // insight 029), and the ~760-day-old savedAt → the two-year elapsed line (coherent with the
+    // seed's -2 startCalendarYear — a real save mints both together).
+    //
+    // U17 §S4 RE-DERIVED THIS COUNT FROM WHAT THE SURFACE HONESTLY SHOWS — 3 → 2, never relaxed
+    // to make a run pass. The plant moves four stamps: taxVintageDetail, coverageYear,
+    // partBStandardMonthly and blendSnapshotAsOf. Under the exposure three-way this household
+    // (all-65+ ⇒ Medicare-only, one manual-blend account ⇒ no dated ticker row, both retired ⇒ no
+    // contribution stream) gets exactly two lines:
+    //   · the federal tax line NAMED (their run builds an overlay ⇒ `taxEnabled` ⇒ the `tax.`
+    //     family is consumed);
+    //   · ONE Medicare cost line NAMED, carrying BOTH `part-b` and the Medicare half of
+    //     `coverage-year` (which dates the ACA/IRMAA tables — they price the IRMAA ladder and
+    //     zero marketplace years, so the marketplace line must stay dark).
+    // The blend re-date reaches NO line at all: `resolveBlend` never consults the dated table for
+    // a manual-blend account, so "we can't tell whether it touches your numbers" would be false —
+    // we can. The old "fund data we read your accounts against" line is likewise gone.
+    // The count is derived in a unit arm — `devSeeds.test.ts` "'stale' composes EXACTLY the two
+    // lines…" — so a re-bucketing fails there first, in a second, not here in ninety.
+    await expect(page.locator('.reentry-notes p')).toHaveCount(2)
+    await expect(page.getByText('Medicare cost figures have been updated')).toBeVisible()
+    await expect(
+      page.getByText('Marketplace health-plan rules have been updated'),
+      'they price zero marketplace years — the ACA line must be dark',
+    ).toHaveCount(0)
+    await expect(
+      page.getByText('Reference data this tool reads has been updated since your save'),
+      'the nameless aggregate must be dark — the blend re-date is provably inert here',
+    ).toHaveCount(0)
     await expect(page.getByText('You saved this about 2 years ago.')).toBeVisible()
 
     // Affirm → the gate releases the held recompute pair; wait out the FINAL tier like every
@@ -998,7 +1019,8 @@ test.describe(`the vault return (?vault=stale) — the gate + the staleness-echo
 
     await assertResolvedSpine(page)
     // The frame under measure IS the echoed one — the standing staleness line is visible
-    // (rules moved: tax + healthcare) with the R13 disclaimer still in-frame beside it.
+    // (rules moved: the federal tax vintage + the Medicare cost figures, all EXPOSURE-PROVEN for
+    // this household) with the R13 disclaimer still in-frame beside it.
     await expect(page.locator('.cs-staleness-note')).toBeVisible()
     // U17 §S2 — the aged band ships ONLY beside its premise + the RENDERED re-confirm control
     // (insight 100; the no-premise ⇒ no-fan law is structural in the component, and this arm
@@ -1101,15 +1123,21 @@ test.describe(`the state-tax staleness return (?vault=statestale) — the isolat
     await expect(notes, 'the one fired note is the state-tax clock, by name').toContainText(
       'State tax rules have been updated since your save',
     )
-    // The two distinctively-worded sibling clocks are demonstrably dark (belt-and-suspenders on the
-    // count): healthcare + blend never fire on a stamps-fresh save.
+    // The distinctively-worded sibling lines are demonstrably dark (belt-and-suspenders on the
+    // count): neither healthcare family nor the nameless aggregate fires on a stamps-fresh save.
+    // (U17 §S4 re-pointed these from the retired `stalenessHealthcare` / `stalenessBlendSpine`
+    // keys — insight 086: a negative aimed at a deleted string is vacuously green forever.)
     await expect(
-      page.getByText('Health-coverage rules have been updated'),
-      'the healthcare clock must be dark (stamp fresh)',
+      page.getByText('Marketplace health-plan rules have been updated'),
+      'the ACA family must be dark (stamp fresh)',
     ).toHaveCount(0)
     await expect(
-      page.getByText('The fund data we read your accounts against'),
-      'the blend clock must be dark (stamp fresh)',
+      page.getByText('Medicare cost figures have been updated'),
+      'the Medicare family must be dark (stamp fresh)',
+    ).toHaveCount(0)
+    await expect(
+      page.getByText('Reference data this tool reads has been updated since your save'),
+      'the nameless aggregate must be dark (no unattributable clock fired)',
     ).toHaveCount(0)
     // At ~150d elapsed no "You saved this … ago" line renders (O6 floor-rounding — verified live),
     // so none is pinned; the isolated state note is the whole gate disclosure.

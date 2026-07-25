@@ -21,8 +21,10 @@ import { dateOddsText } from '../dateOdds'
 import type { DateSplitView } from '../dateSplit'
 import { scenarioFromDraft, currentEpochDay } from '../scenarioFromDraft'
 import { DEV_SEEDS } from '../devSeeds'
-import { deriveStaleness } from '@store/staleness'
+import { deriveStaleness, type StalenessExposure } from '@store/staleness'
+import { exposureForDraft } from '../stalenessExposure'
 import { copy, slots } from '../copy'
+import type { PricedState } from '@engine/constants/stateTax'
 import type { ScenarioV3 } from '@shared/model'
 import type { DateTrackOutcome } from '@shared/model'
 
@@ -33,8 +35,34 @@ const freshSave = (): ScenarioV3 => {
   if (!r.ready) throw new Error('retired seed must be save-ready')
   return r.scenario
 }
+const scenarioFor = (key: keyof typeof DEV_SEEDS): ScenarioV3 => {
+  const r = scenarioFromDraft(DEV_SEEDS[key])
+  if (!r.ready) throw new Error(`${key} seed must be save-ready`)
+  return r.scenario
+}
 const TODAY = currentEpochDay()
-const reportFor = (s: ScenarioV3) => deriveStaleness(s, TODAY)
+// U17 §S4 — the REAL exposure records, derived from the same seeds these scenarios come from.
+// Never hand-written literals here: this file's job is the end-to-end read (seed → built params
+// → exposure → report → rendered sentence), and a literal would cut the chain at its middle.
+// `retired` is the all-65+ Medicare-only household — Medicare priced, ACA structurally unpriced.
+const RETIRED_EXPOSURE = exposureForDraft(DEV_SEEDS.retired)
+/** The pre-65 marketplace-quoted household — the naming half of the witness pair. */
+const ACA_PRICED_EXPOSURE = exposureForDraft(DEV_SEEDS.health)
+const DATE_EXPOSURE = exposureForDraft(DEV_SEEDS.date)
+/** THE ONE non-seed exposure in this file: `exposureForDraft`'s missing-facts arm — the
+ *  cross-build vault whose draft a newer build can no longer build. No seed can express it (a
+ *  seed is buildable by construction), and it is the only production state that puts more than
+ *  one clock in the nameless bucket, so the "pushed at most once" arm needs it. */
+const UNBUILDABLE_RESIDUAL: StalenessExposure = exposureForDraft({
+  ...DEV_SEEDS.retired,
+  annualSpendingReal: undefined,
+} as unknown as typeof DEV_SEEDS.retired)
+const pricing = (e: StalenessExposure, s: PricedState | undefined): StalenessExposure => ({
+  ...e,
+  pricedState: s,
+})
+const reportFor = (s: ScenarioV3, exposure: StalenessExposure = RETIRED_EXPOSURE) =>
+  deriveStaleness(s, TODAY, exposure)
 
 describe('composeReentry — the read-back', () => {
   it('sums balances per ENGINE bucket and omits empty buckets (retired: pretax only; date: pretax + roth — never a noise "$0 Roth" row)', () => {
@@ -49,7 +77,7 @@ describe('composeReentry — the read-back', () => {
     // The date seed carries a 401k + a roth-ira — two rows, grouped by the engine's own map.
     const d = scenarioFromDraft(DEV_SEEDS.date)
     if (!d.ready) throw new Error('date seed must be save-ready')
-    const dView = composeReentry(d.scenario, reportFor(d.scenario))
+    const dView = composeReentry(d.scenario, reportFor(d.scenario, DATE_EXPOSURE))
     expect(dView.balanceRows.map((r) => r.label)).toEqual([
       copy.reentryBucketPretax,
       copy.reentryBucketRoth,
@@ -92,11 +120,163 @@ describe('composeReentry — the read-back', () => {
     } as ScenarioV3
     const view = composeReentry(doctored, reportFor(doctored))
     expect(view.noteLines).toContain(copy.stalenessTax)
-    expect(view.noteLines).toContain(copy.stalenessHealthcare)
+    // U17 §S4 — `coverageYear` dates the ACA/IRMAA tables (model.ts:2140), so for THIS all-65+
+    // household it names the Medicare half and only that: they price the IRMAA ladder every
+    // year and zero marketplace years. Not the old collapsed "Health-coverage rules" line, and
+    // not the nameless aggregate the first cut mis-bucketed it to.
+    expect(view.noteLines).toContain(copy.stalenessMedicare)
+    expect(view.noteLines).not.toContain(copy.stalenessAca)
+    expect(view.noteLines).not.toContain(copy.stalenessReferenceTables)
     expect(
       view.noteLines.some((l) => l === slots.stalenessBudgetLine(doctored.startCalendarYear)),
     ).toBe(true)
     expect(view.elapsedLine).toBe(slots.reentryElapsedYears(2))
+  })
+
+  // ── THE WITNESS PAIR, END TO END (U17 §S4) ────────────────────────────────────────────────
+  // The same moved `acaStatus` stamp, the same code path, two households. Both arms or the gate
+  // proves nothing: a gate that silenced everything would satisfy the first alone.
+  it('THE WITNESS (silence): an all-65+ Medicare-only household whose acaStatus moved gets NO healthcare line and NO hero echo — they price zero ACA', () => {
+    const s = freshSave() // ages 66 + 65, no marketplace quote pair
+    const moved: ScenarioV3 = {
+      ...s,
+      healthcareVintage: { ...s.healthcareVintage!, acaStatus: 'enhanced subsidies restored (no cliff)' },
+    }
+    const report = reportFor(moved)
+    const view = composeReentry(moved, report)
+    expect(view.noteLines, 'not one line — the gate is total for this household').toEqual([])
+    expect(view.noteLines).not.toContain(copy.stalenessAca)
+    expect(view.noteLines).not.toContain(copy.stalenessMedicare)
+    expect(view.noteLines).not.toContain(copy.stalenessReferenceTables)
+    expect(report.rulesMoved, 'the standing hero echo must stay dark').toBe(false)
+    // Non-vacuity: the clock genuinely FIRED and was silenced by the exposure gate.
+    expect(report.healthcare.silencedClocks).toEqual(['aca-status'])
+  })
+
+  it('THE WITNESS (naming): the SAME moved acaStatus on a pre-65 marketplace-quoted household DOES get the named ACA line and the hero echo', () => {
+    const s = scenarioFor('health') // both retired at 61 + 59, quote pair entered
+    const moved: ScenarioV3 = {
+      ...s,
+      healthcareVintage: { ...s.healthcareVintage!, acaStatus: 'enhanced subsidies restored (no cliff)' },
+    }
+    const report = reportFor(moved, ACA_PRICED_EXPOSURE)
+    const view = composeReentry(moved, report)
+    expect(view.noteLines).toContain(copy.stalenessAca)
+    expect(view.noteLines).not.toContain(copy.stalenessMedicare)
+    expect(report.rulesMoved).toBe(true)
+  })
+
+  it('the Medicare family gets its OWN line, distinct from the ACA family’s (the split is real, not an alias)', () => {
+    const s = freshSave()
+    const moved: ScenarioV3 = {
+      ...s,
+      healthcareVintage: { ...s.healthcareVintage!, partBStandardMonthly: s.healthcareVintage!.partBStandardMonthly + 10 },
+    }
+    const view = composeReentry(moved, reportFor(moved))
+    expect(view.noteLines).toEqual([copy.stalenessMedicare])
+    expect(copy.stalenessMedicare).not.toBe(copy.stalenessAca)
+  })
+
+  it('the AGGREGATE is pushed AT MOST ONCE even when several unattributable clocks fire together (ReEntry keys each note <p> by its own TEXT — a second push collides on the React key)', () => {
+    // THE ONE PLACE THIS FILE OVERRIDES A REAL EXPOSURE, and why: after the F-pass the aggregate's
+    // only reachable-from-a-seed member is the BLEND clock, so no dev seed can put three clocks in
+    // bucket 3 at once. The multi-member state IS reachable in production — a cross-build vault
+    // whose draft is no longer buildable reads `'unknown'` on every axis (`exposureForDraft`'s
+    // missing-facts arm), which is exactly what is injected here. The override is that residual,
+    // spelled out, not a convenience.
+    const s = scenarioFor('date')
+    const hv = s.healthcareVintage!
+    const dv = s.dateVintage!
+    const moved: ScenarioV3 = {
+      ...s,
+      taxVintageDetail: { ...s.taxVintageDetail!, taxYear: s.taxVintageDetail!.taxYear - 1 },
+      healthcareVintage: { ...hv, acaStatus: 'enhanced subsidies restored (no cliff)' },
+      dateVintage: {
+        ...dv,
+        contributionYear: dv.contributionYear - 1,
+        blendSnapshotAsOf: '2019-01-01',
+      },
+    }
+    const report = reportFor(moved, UNBUILDABLE_RESIDUAL)
+    expect(report.unattributed.clocks, 'four separate clocks fired, none attributable').toEqual([
+      'tax',
+      'aca-status',
+      'contribution',
+      'blend',
+    ])
+    const view = composeReentry(moved, report)
+    expect(view.noteLines.filter((l) => l === copy.stalenessReferenceTables)).toHaveLength(1)
+    expect(view.noteLines, 'the nameless line is the WHOLE disclosure — no clock is named').toEqual([
+      copy.stalenessReferenceTables,
+    ])
+    expect(new Set(view.noteLines).size, 'every rendered line is unique — no React key collision').toBe(
+      view.noteLines.length,
+    )
+    // And it never enters the "rules changed" register.
+    expect(report.rulesMoved).toBe(false)
+    expect(report.anyStale).toBe(true)
+  })
+
+  // ── F7b — THE STRUCTURAL INVARIANT (the general kill for the whole self-contradiction class) ──
+  // `rulesMoved` is read by the hero's standing echo AND `savedRecommendation`'s conjunct 3. If it
+  // can be true while `composeReentry` renders nothing, the household gets an alarm no sentence is
+  // allowed to explain — strictly worse than either arm of the three-way. Before this arm the
+  // mapping was under-pinned: deleting one clock from the family derivation left the suite green.
+  it('INVARIANT: rulesMoved === true ⟹ composeReentry produces at least one line — swept over EVERY clock, both routes', () => {
+    const spine = freshSave()
+    const date = scenarioFor('date')
+    const hvS = spine.healthcareVintage!
+    const hvD = date.healthcareVintage!
+    /** Every clock the reader can fire, each as a minimal scenario mutation + the household it
+     *  fires for. Adding a clock without adding a row here leaves the sweep incomplete — the
+     *  per-clock family table in `staleness.test.ts` is the compile-time half of that guard. */
+    const cases: ReadonlyArray<readonly [string, ScenarioV3, StalenessExposure]> = [
+      ['tax', { ...spine, taxVintageDetail: { ...spine.taxVintageDetail!, taxYear: 2019 } }, RETIRED_EXPOSURE],
+      [
+        'state-tax',
+        {
+          ...spine,
+          retirementState: 'NC',
+          stateTaxVintage: { ...spine.stateTaxVintage!, ncProfile: '{"drifted":"nc"}' },
+        },
+        pricing(RETIRED_EXPOSURE, 'NC'),
+      ],
+      ['coverage-year (medicare half)', { ...spine, healthcareVintage: { ...hvS, coverageYear: hvS.coverageYear - 1 } }, RETIRED_EXPOSURE],
+      ['coverage-year (both halves)', { ...date, healthcareVintage: { ...hvD, coverageYear: hvD.coverageYear - 1 } }, DATE_EXPOSURE],
+      ['aca-status', { ...date, healthcareVintage: { ...hvD, acaStatus: 'enhanced subsidies restored (no cliff)' } }, DATE_EXPOSURE],
+      ['fpl-guideline', { ...date, healthcareVintage: { ...hvD, fplGuidelineYear: hvD.fplGuidelineYear + 1 } }, DATE_EXPOSURE],
+      ['irmaa-freeze', { ...spine, healthcareVintage: { ...hvS, irmaaTopTierFrozenThrough: hvS.irmaaTopTierFrozenThrough + 1 } }, RETIRED_EXPOSURE],
+      ['part-b', { ...spine, healthcareVintage: { ...hvS, partBStandardMonthly: hvS.partBStandardMonthly + 10 } }, RETIRED_EXPOSURE],
+      ['part-b-trend', { ...spine, healthcareVintage: { ...hvS, partBTrendVintage: 'part-b-trend-2025x' } }, RETIRED_EXPOSURE],
+      [
+        'extras-typical',
+        (() => {
+          const b = { ...spine, healthcareVintage: { ...hvS, medicareExtrasTypicalVintage: 'extras-2024x' } } as Record<string, unknown>
+          delete b.medicareExtrasByPerson
+          return b as unknown as ScenarioV3
+        })(),
+        RETIRED_EXPOSURE,
+      ],
+      [
+        'contribution',
+        { ...date, dateVintage: { ...date.dateVintage!, contributionYear: date.dateVintage!.contributionYear - 1 } },
+        DATE_EXPOSURE,
+      ],
+    ]
+    let fired = 0
+    for (const [label, scenario, exposure] of cases) {
+      const report = deriveStaleness(scenario, TODAY, exposure)
+      const view = composeReentry(scenario, report)
+      if (report.rulesMoved) {
+        fired += 1
+        expect(view.noteLines.length, `${label}: rulesMoved with NO line — an alarm nothing may explain`).toBeGreaterThan(0)
+      }
+      // The converse half, same sweep: a line at the gate is never rendered off nothing.
+      if (view.noteLines.length > 0) expect(report.anyStale, `${label}: a line with no staleness`).toBe(true)
+    }
+    // NON-VACUITY: the sweep must actually exercise the true branch for every row, or the
+    // implication holds trivially (burned/070).
+    expect(fired, 'every case must raise rulesMoved — otherwise the invariant is vacuous').toBe(cases.length)
   })
 
   // S5.4 — the state-tax staleness clock's own named line: a PRICED household (NC) whose own
@@ -109,7 +289,7 @@ describe('composeReentry — the read-back', () => {
       retirementState: 'NC',
       stateTaxVintage: { ...s.stateTaxVintage!, ncProfile: '{"drifted":"nc"}' },
     }
-    const report = reportFor(drifted)
+    const report = reportFor(drifted, pricing(RETIRED_EXPOSURE, 'NC'))
     expect(report.controls.stateTaxMoved, 'the state clock fired').toBe(true)
     const view = composeReentry(drifted, report)
     expect(view.noteLines).toContain(copy.stalenessStateTax)
@@ -122,7 +302,9 @@ describe('composeReentry — the read-back', () => {
       retirementState: 'elsewhere',
       stateTaxVintage: { ...s.stateTaxVintage!, ncProfile: '{"drifted":"nc"}' },
     }
-    const view = composeReentry(drifted, reportFor(drifted))
+    // U17 §S4: the gate now reads the RUN's priced state, and an 'elsewhere' household's run
+    // prices none — `pricedStateForRun` roster-filters it to undefined.
+    const view = composeReentry(drifted, reportFor(drifted, pricing(RETIRED_EXPOSURE, undefined)))
     expect(view.noteLines).not.toContain(copy.stalenessStateTax)
   })
 
@@ -145,19 +327,44 @@ describe('composeReentry — the read-back', () => {
     ])
   })
 
-  it('the fund-snapshot clock on an all-retired household speaks the ROUTE-TRUE line — never "your date" to a household with no date (ultramode 2026-07-09)', () => {
-    const s = freshSave() // all-retired
+  it('the BLEND clock: SILENT for the manual-blend household, NAMELESS for the table-reading one — two households, one moved stamp, both sentences true (U17 §S4 F5)', () => {
+    // The predecessor named the blend table on both routes (`stalenessBlendSpine` / the fund
+    // clause inside `stalenessDate`) — false for a household holding none of the re-dated funds,
+    // since `BLEND_SNAPSHOT_AS_OF` is the MAX asOf across ALL ticker rows. Both keys are gone.
+    // The F-pass then closed the second half: the nameless line says "we can't tell whether any
+    // of them touches your own numbers", and for the `retired` seed WE CAN — its one account
+    // carries a manual blend, so `resolveBlend` never reaches the table. It goes silent.
+    const s = freshSave() // all-retired, manual blends only
     const blendMoved = { ...s, dateVintage: { ...s.dateVintage!, blendSnapshotAsOf: '2019-01-01' } }
     const view = composeReentry(blendMoved, reportFor(blendMoved))
-    expect(view.noteLines).toContain(copy.stalenessBlendSpine)
-    expect(view.noteLines).not.toContain(copy.stalenessDate)
-    // The date-route household keeps the date wording.
+    expect(view.noteLines, 'provably inert ⇒ not one line').toEqual([])
+    expect(RETIRED_EXPOSURE.blend, 'and the silence is the REAL seed’s own read').toBe('unpriced')
+    // The date household holds VTI + VFIFX — its stockWeight DOES read the dated table, so the
+    // stamp genuinely could have moved its answer and no per-row compare can say. Nameless.
     const d = scenarioFromDraft(DEV_SEEDS.date)
     if (!d.ready) throw new Error('date seed must be save-ready')
     const dMoved = { ...d.scenario, dateVintage: { ...d.scenario.dateVintage!, blendSnapshotAsOf: '2019-01-01' } }
-    const dView = composeReentry(dMoved, reportFor(dMoved))
-    expect(dView.noteLines).toContain(copy.stalenessDate)
-    expect(dView.noteLines).not.toContain(copy.stalenessBlendSpine)
+    const dView = composeReentry(dMoved, reportFor(dMoved, DATE_EXPOSURE))
+    expect(DATE_EXPOSURE.blend).toBe('priced')
+    expect(dView.noteLines).toEqual([copy.stalenessReferenceTables])
+    expect(dView.noteLines).not.toContain(copy.stalenessDate)
+  })
+
+  it('the CONTRIBUTION clock keeps its own named line, route-gated to a household that actually has a date', () => {
+    const d = scenarioFor('date')
+    const bumped: ScenarioV3 = {
+      ...d,
+      dateVintage: { ...d.dateVintage!, contributionYear: d.dateVintage!.contributionYear - 1 },
+    }
+    const view = composeReentry(bumped, reportFor(bumped, DATE_EXPOSURE))
+    expect(view.noteLines).toEqual([copy.stalenessDate])
+    // The all-retired household is quiet on the same move (its answer reads no limit).
+    const s = freshSave()
+    const retiredBumped: ScenarioV3 = {
+      ...s,
+      dateVintage: { ...s.dateVintage!, contributionYear: s.dateVintage!.contributionYear - 1 },
+    }
+    expect(composeReentry(retiredBumped, reportFor(retiredBumped)).noteLines).toEqual([])
   })
 
   it('the wall-time line is SUPPRESSED without savedAt and under a year — never fabricated', () => {
@@ -177,7 +384,7 @@ describe('composeReentry — the read-back', () => {
     // The still-working date household keeps the original register.
     const d = scenarioFromDraft(DEV_SEEDS.date)
     if (!d.ready) throw new Error('date seed must be save-ready')
-    expect(composeReentry(d.scenario, reportFor(d.scenario)).introKey).toBe('reentryIntro')
+    expect(composeReentry(d.scenario, reportFor(d.scenario, DATE_EXPOSURE)).introKey).toBe('reentryIntro')
   })
 
   it('the wall-time line rounds HALF, never floors (Caddie O6): a 700-day save reads "about 2 years", not the rosier "about a year"', () => {

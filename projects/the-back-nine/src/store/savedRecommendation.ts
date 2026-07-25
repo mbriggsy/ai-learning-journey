@@ -30,7 +30,7 @@
 import type { ScenarioV3, SavedRecommendationV3, SavedRecommendationEraV3 } from '@shared/model'
 import { SOLVER_CODE_VERSION } from '@engine/solver/solverCodeVersion'
 import type { SolverRunFingerprint } from '@engine/validation/solverRunFingerprint'
-import { deriveStaleness, type StalenessReport } from './staleness'
+import { deriveStaleness, type StalenessExposure, type StalenessReport } from './staleness'
 
 /** Why a saved recommendation may no longer be re-presented as current. Each names a DIFFERENT
  *  repair: re-solve (inputs), finish the answer (unavailable), re-solve under this build
@@ -78,12 +78,27 @@ export interface SavedRecommendationStatusInput {
   readonly freshFingerprint: SolverRunFingerprint | null
   /** Wall-clock epoch-day, injected (this module reads no clock). */
   readonly todayEpochDay: number
+  /** What the run this household would get TODAY actually prices — the producer's-output
+   *  exposure record `deriveStaleness` gates every clock on (U17 §S4; built at the ui/intake
+   *  seam by `exposureForDraft`, because the store may not import intake). REQUIRED, not
+   *  optional-with-a-default: a defaulted exposure would silently restore the OR-collapse this
+   *  closed, and omitting it must be a compile error — the same structural-bind reasoning the
+   *  era overlay below spells out.
+   *
+   *  A SAVED RECOMMENDATION IS ALWAYS A SPINE-ROUTE HOUSEHOLD, verified in source:
+   *  `solveDispatch.ts:67-68` returns the typed refusal 'spine-unready' whenever
+   *  `buildSpineParams(draft)` is null, and it is null exactly on the date route
+   *  (`intakeMap.ts:634`) — so no record can exist for a date-route household. That is why no
+   *  crowned offset is needed here and insight 088's date trap cannot arise: `exposureForDraft`
+   *  takes its spine arm, where both reads come from the SAME `buildSpineParams` the headline
+   *  run uses and are therefore EXACT. */
+  readonly exposure: StalenessExposure
 }
 
 export function deriveSavedRecommendationStatus(
   input: SavedRecommendationStatusInput,
 ): SavedRecommendationStatus {
-  const { record, scenario, freshFingerprint, todayEpochDay } = input
+  const { record, scenario, freshFingerprint, todayEpochDay, exposure } = input
 
   // ── conjunct 3's basis: the scenario re-dressed in the RECORD's era ───────────────────────
   // THE OVERLAY IS TYPED SO THAT OMITTING ANY ERA-BEARING KEY IS A COMPILE ERROR.
@@ -112,7 +127,7 @@ export function deriveSavedRecommendationStatus(
     dateVintage: record.era.dateVintage,
   }
   const eraScenario: ScenarioV3 = { ...scenario, ...overlay }
-  const eraStaleness = deriveStaleness(eraScenario, todayEpochDay)
+  const eraStaleness = deriveStaleness(eraScenario, todayEpochDay, exposure)
 
   const causes: SavedRecommendationSupersededCause[] = []
 
@@ -137,6 +152,11 @@ export function deriveSavedRecommendationStatus(
   // two-predicate split). Letting a lapsed travel budget demote a still-valid recommendation
   // would be alarm-when-fine: a lie in the safe direction, still a lie, and it would push the
   // household into a multi-minute re-solve that could only reproduce the same answer.
+  //
+  // U17 §S4 narrowed `rulesMoved` under this line WITHOUT touching it: a clock the household was
+  // not exposed to no longer enters the predicate, and the unattributed re-base bucket never
+  // did. Both narrowings are in the same direction as the note above — a record demoted for a
+  // reason nothing is allowed to name would be the worst of the three states.
   if (eraStaleness.rulesMoved) causes.push('rules-changed')
 
   return { current: causes.length === 0, causes, eraStaleness }

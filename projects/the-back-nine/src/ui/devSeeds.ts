@@ -982,11 +982,16 @@ export function plantDevVault(key: string): Promise<PlantResult> {
  * years must agree or the fixture describes an impossible household — the first Caddie chair
  * pass caught the old -400/-2 mismatch reading "about a year ago" over a 2024 anchor), the
  * tax + healthcare stamps one vintage back (their clocks fire), the blend snapshot one year
- * back (the blend clock — without this, `stalenessBlendSpine`/`stalenessDate` are unreachable
- * live: every save stamps `dateVintage` fresh, so the U13 cold-read batch's blend line would
- * silently never render for anyone's eye), the plan anchor back 2 calendar years (the
- * wall-time framing). The ONLY way to see the re-entry staleness surfaces live today — every
- * organic save is same-day fresh. appDefaultVersion stays CURRENT deliberately: the Q7
+ * back, the plan anchor back 2 calendar years (the wall-time framing). The ONLY way to see the
+ * re-entry staleness surfaces live today — every organic save is same-day fresh.
+ *
+ * THE BLEND AGING IS INERT ON EVERY PLANT THIS DOCTOR SERVES (U17 §S4, insight 087 — swept when
+ * the exposure gate landed): the clock still fires, but `blendTableReadForRun` reads FALSE for
+ * both bases (`retired` and `datesplit` carry per-account MANUAL blends, never a table ticker),
+ * so the household is provably inert under a `BLEND_SNAPSHOT_AS_OF` bump and the reader silences
+ * it. The decrement stays — it costs nothing and becomes live the day a plant's base holds a
+ * classified ticker, which is also what the nameless aggregate line needs for a cold-read path.
+ * appDefaultVersion stays CURRENT deliberately: the Q7
  * saved-era map has one era, so that note is v1-inert by design (a fake era in the shipped
  * map would be a lie to render one). EXPORTED for the devSeeds battery — the aged plants'
  * outcome pins drive the doctored scenario through the REAL draft→input→search chain.
@@ -1119,10 +1124,26 @@ export function doctorStateStaleVault(s: ScenarioV3, todayEpochDay: number): Sce
  *  date household (`datesplit` — floor crowns ≈1, lifestyle ≈8 at design time), the only
  *  live route to the floor's ARRIVED arm (`dateFloorCoveredPast`: elapsed 2 ≥ the floor
  *  offset — "penciled as covered … that's about now") beside a RE-DERIVED aged hero count
- *  (`dateInYearsAnchored` with n = offset − elapsed), plus the date-route gate wording
- *  (`stalenessDate`) no walk had ever rendered. The hero's own arrived arm
+ *  (`dateInYearsAnchored` with n = offset − elapsed). The hero's own arrived arm
  *  (`dateInYearsPast`) needs elapsed ≥ the lifestyle crown (≈8y); savedAt's codec floor is
- *  2020 (~6y back), so it is NOT coherently mintable — it stays unit-pinned, never faked. */
+ *  2020 (~6y back), so it is NOT coherently mintable — it stays unit-pinned, never faked.
+ *
+ *  THE `stalenessDate` CLAIM IS GONE (U17 §S4 sweep, insight 087 — its sibling at the doctor
+ *  above was swept in the same change and this one was missed). That line USED to fire off the
+ *  blend clock, which {@link doctorStaleVault} does move; the S4 split narrowed it to the
+ *  CONTRIBUTION clock alone, and no doctor ages `dateVintage.contributionYear`. So the reworded
+ *  contribution sentence has NO cold-read path today — a filed gap, not a silent one: minting one
+ *  means a doctor that decrements `contributionYear` on a base seed whose working owner actually
+ *  contributes, and it must not disturb the outcome pins those plants carry.
+ *
+ *  THE CONTRIBUTING SEEDS ARE `date` (stillWorking), `date65` (stillWorkingAllMedicare) and
+ *  `datedip` (dateDipSeed) — verified by their accounts' `annualContribution`. NOT `datesplit`:
+ *  `stillWorkingBorderline` carries no `annualContribution`/`employerMatchAnnual`/`hsaEmployerAnnual`
+ *  on either account and `dateSplitSeed` overrides only `valueToday`, so `anyContributions` is
+ *  false, no `accumulation` reaches the base overlay, and `contributionsPricedForRun` reads false.
+ *  A doctor built on THAT plant renders nothing and reads as a broken gate. (An earlier draft of
+ *  this note named `datesplit`; a reviewer caught it — a prescription that names the wrong fixture
+ *  costs its reader the whole debugging session.) */
 /** One aged plant: the base seed it doctors + WHICH doctor (the state-tax unit split the single
  *  doctor into two — the spine/date stale plants ride the full {@link doctorStaleVault}; a
  *  priced-state stale plant rides the light {@link doctorStateStaleVault}, which never trips the

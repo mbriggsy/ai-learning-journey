@@ -52,8 +52,9 @@ const BUCKET_LABEL_KEY: Readonly<Record<'pretax' | 'roth' | 'taxable' | 'hsa', C
 }
 
 export function composeReentry(scenario: ScenarioV3, report: StalenessReport): ReentryView {
-  // ONE all-retired predicate feeds the intro's register AND the blend note's route-true
-  // wording below — the two can never disagree about what household they address.
+  // The intro's register (Caddie card #1). It USED to double as the blend note's route-true
+  // wording selector; U17 §S4 made the blend clock nameless on both routes, so this predicate
+  // now has exactly one consumer (insight 087 — the comment is swept with the code it described).
   const allRetired = scenario.people.every((p) => p.workStatus === 'retired')
 
   // ── the per-bucket read-back ─────────────────────────────────────────────────────────
@@ -77,20 +78,37 @@ export function composeReentry(scenario: ScenarioV3, report: StalenessReport): R
     p.pia > 0 ? [{ label: p.name, value: slots.reentryBenefitMonthly(formatDollar(p.pia / 12)) }] : [],
   )
 
-  // ── the staleness note lines (every fired clock, named) ─────────────────────────────
+  // ── the staleness note lines (U17 §S4 — the three-way, rendered) ────────────────────
+  // EVERY named line below rides a predicate `deriveStaleness` has already EXPOSURE-GATED: the
+  // clock fired AND the run this report describes actually priced the thing that moved. The
+  // silenced bucket reaches no line at all, and the unattributed bucket speaks exactly once,
+  // namelessly, at the end. Nothing here re-derives a gate — a second copy of the decision is
+  // precisely the drift the split was written to kill.
   const noteLines: string[] = []
   if (report.spine.appDefaultMoved) noteLines.push(copy.stalenessAppDefault)
   if (report.controls.taxMoved) noteLines.push(copy.stalenessTax)
-  // S4/S5.4 — the state-tax clock's own line (fires only for a PRICED household whose own state
-  // profile drifted; `deriveStaleness` gates the per-state comparison, so a non-priced/'elsewhere'
-  // vault never reaches this). Its OWN line, never aliased onto stalenessTax.
+  // S4/S5.4 — the state-tax clock's own line (fires only for a household whose RUN priced a
+  // state whose own profile drifted; `deriveStaleness` gates on the injected producer's-output
+  // priced state, so a non-priced/'elsewhere'/degenerate-overlay vault never reaches this).
+  // Its OWN line, never aliased onto stalenessTax.
   if (report.controls.stateTaxMoved) noteLines.push(copy.stalenessStateTax)
-  if (report.healthcare.moved) noteLines.push(copy.stalenessHealthcare)
-  if (report.date.contributionMoved || report.date.blendMoved) {
-    // Route-true wording: an all-retired household has no fuck-off date to reference (and
-    // its contribution clock is reader-gated quiet) — only the blend line speaks.
-    noteLines.push(allRetired ? copy.stalenessBlendSpine : copy.stalenessDate)
-  }
+  // The two healthcare families, each on its own exposure read (insight 086: this is the
+  // re-point of the former single `stalenessHealthcare` push, landed in the same commit as the
+  // key split). A household exposed to both gets both lines — each is true on its own terms,
+  // and a clock that dates BOTH tables (`coverage-year`) raises only the families the run
+  // actually priced. THE STRUCTURAL PROMISE these two lines carry: `deriveStaleness` derives
+  // both booleans from the same clock→family mapping that bucketed the clock, so a named clock
+  // ALWAYS has a line here — `rulesMoved` can never fire an alarm nothing is allowed to explain.
+  if (report.healthcare.acaMoved) noteLines.push(copy.stalenessAca)
+  if (report.healthcare.medicareMoved) noteLines.push(copy.stalenessMedicare)
+  // The contribution clock only, twice-gated upstream: route (this household HAS a date, so the
+  // "behind your date" wording is true) and exposure (their run actually prices a contribution
+  // stream). (The blend clause left this line — it aggregates or goes silent now.)
+  if (report.date.contributionMoved) noteLines.push(copy.stalenessDate)
+  // THE AGGREGATE, pushed AT MOST ONCE — `ReEntry.tsx:75` keys each note <p> by its own TEXT,
+  // so a second push of the same sentence would collide on the React key. One `if` over the
+  // whole bucket is the structural guarantee (never a per-clock loop over `.clocks`).
+  if (report.unattributed.moved) noteLines.push(copy.stalenessReferenceTables)
   // One line per boundary YEAR: the copy quotes only the calendar year, so two lines
   // sharing an endYear would render byte-identical sentences (and collide on the render
   // key) — the year carries the whole message once.

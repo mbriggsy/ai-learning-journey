@@ -1137,19 +1137,59 @@ export const copy = {
   stalenessStateTax: 'State tax rules have been updated since your save — this reading uses today’s.',
   // (stalenessSeniorBonus was REMOVED by the U13 ultramode review 2026-07-09: the crossing
   // changes nothing about a saved answer — see the supersession note in staleness.ts.)
-  stalenessHealthcare:
-    'Health-coverage rules have been updated since your save — this reading uses today’s.',
-  // "fund snapshots" PURGED (Caddie card #2's top flag, pilot-cleared with a fix 2026-07-10:
-  // three lenses stumbled independently — "is that MY money?"). The honest referent is the
-  // fund-classification data (the blend table), spoken plainly as "the fund data we read
-  // your accounts against" (the card's own candidate) — never "market data" (it is not
-  // prices) and never the jargon word.
+  //
+  // U17 §S4 — `stalenessHealthcare` (ONE line off the OR-collapse of all seven healthcare
+  // clocks) is SPLIT into the two families, each behind its own exposure read. The collapsed
+  // line told an all-65+ household "Health-coverage rules have been updated" on a moved
+  // acaStatus stamp — they price ZERO ACA (the Medicare-only overlay branch ships no quote
+  // pair), so the sentence was false for them: insight 101 inverted. Insight 086 binds the
+  // rename — both renderers (`reentryChrome.ts`, and its assertion in `reentry.test.tsx`) are
+  // re-pointed in this same commit.
+  //
+  // The ACA family (`aca-status`, `fpl-guideline`, and the ACA half of `coverage-year`): the
+  // marketplace rulebook. Named ONLY where the run priced a marketplace year.
+  stalenessAca:
+    'Marketplace health-plan rules have been updated since your save — this reading uses today’s.',
+  // The Medicare family (`part-b`, `part-b-trend`, `extras-typical`, `irmaa-freeze`, and the
+  // Medicare half of `coverage-year`). These are COST FIGURES, not rules — the premium dollar,
+  // the cost-growth table, the typical Part D/Medigap figure, the IRMAA surcharge ladder — so
+  // the line says "cost figures", never "rules". No direction is claimed: the answer itself
+  // carries the verdict.
+  stalenessMedicare:
+    'Medicare cost figures have been updated since your save — this reading uses today’s.',
+  // U17 §S4 — narrowed to the CONTRIBUTION clock alone. The fund-data (blend) clause moved out
+  // to the nameless aggregate below: `BLEND_SNAPSHOT_AS_OF` is one MAX date over the whole
+  // ticker table, so it fires for a household holding none of the re-dated funds, and naming
+  // "the fund data we read your accounts against" to a household reading manual blends is the
+  // same falsehood the healthcare split kills. (The Caddie card #2 fix that purged "fund
+  // snapshots" stands — the jargon word never returns.) `stalenessBlendSpine`, the all-retired
+  // sibling of that clause, is REMOVED with it: the blend clock no longer names itself on
+  // either route, so a household with no date is now covered by the aggregate line.
   stalenessDate:
-    'The contribution limits or the fund data behind your date have been updated since your save — this reading uses today’s.',
-  // The all-retired (spine) household's blend line: no date to reference, and contribution
-  // limits never touch a decumulation-only answer — only the blend clock speaks.
-  stalenessBlendSpine:
-    'The fund data we read your accounts against has been updated since your save — this reading uses today’s.',
+    'The retirement-account contribution limits behind your date have been updated since your save — this reading uses today’s.',
+  // THE AGGREGATE (U17 §S4, bucket 3) — the ONE nameless sentence for every clock that fired
+  // where no producer read can attribute it to THIS household. Its members after the F-pass
+  // correction: the BLEND snapshot for a household that DOES read the ticker table (the stamp is
+  // one MAX `asOf` across all rows, so even there it cannot say WHICH fund moved), plus the
+  // unbuildable-draft residual. NOT the vintage markers: `coverage-year` and `irmaa-freeze` date
+  // tables the run genuinely consumes, so they name their family — see staleness.ts's header.
+  //
+  // IT MUST BE TRUE OF EVERY MEMBER OF THAT SET, so it may say ONLY that a reference table the
+  // app reads has a newer version than the save was figured under. It names no rulebook; it
+  // never claims the household's answer moved; and it deliberately does NOT carry the
+  // "this reading uses today's" clause the named lines carry — that clause invites the
+  // inference this line exists to refuse. It stays OUT of the "rules changed" register
+  // (`unattributed` feeds `anyStale` only), which is why the second sentence says plainly what
+  // we cannot tell. Silencing this set instead would open a silent-stale hole — the opposite sin.
+  // NUMBER-NEUTRAL ON PURPOSE (a reviewer's catch, 2026-07-25): after the exposure split pulled
+  // `coverage-year`/`irmaa-freeze` out to their families and the inert-household gate silenced the
+  // manual-blend case, the only production-reachable member of this bucket is the blend snapshot
+  // ALONE. "Some of the reference tables … any of them" is a BREADTH claim, and it was false for
+  // every household that could actually hear it — a plural about a singleton, which no copyGuard
+  // arm can see. The wording below is true whether the bucket holds one member or several, so it
+  // stays honest as the set changes rather than needing a re-count each time.
+  stalenessReferenceTables:
+    'Reference data this tool reads has been updated since your save. We can’t tell from here whether it touches your own numbers.',
   // Act-4 · U16 §S1 — the SOLVE channel's invalidation card (the `SolveAnswer` stale/re-solve arm,
   // machine label 'inputs-changed'). A draft edit changed a ranking-affecting input since the last
   // strategy read (source-bound to solverRunFingerprint), so that read no longer describes the current

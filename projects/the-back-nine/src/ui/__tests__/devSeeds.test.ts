@@ -22,6 +22,9 @@ import { epochDayFromIsoDate } from '@engine/validation/oracleToken'
 import { acaEnhancedSubsidyStatus } from '@engine/constants'
 import { stateTaxVintageStamp } from '@engine/constants/stateTax'
 import { deriveStaleness } from '@store/staleness'
+import { exposureForDraft } from '../stalenessExposure'
+import { composeReentry } from '../reentryChrome'
+import { copy, slots } from '../copy'
 import {
   buildCandidateParams,
   runDateSearch,
@@ -480,7 +483,9 @@ describe('the statestale aged plant (the state-tax gate note; light doctor, F2 s
     expect(aged.stateTaxVintage!.paProfile, 'only the household OWN state (NC) was touched — PA is fresh').toBe(
       stateTaxVintageStamp().paProfile,
     )
-    const report = deriveStaleness(aged, TODAY)
+    // U17 §S4 — the exposure record is the REAL one for this seed (`pricedStateForRun` reads NC
+    // off the built overlay), so the clock is proven to fire through the producer's-output gate.
+    const report = deriveStaleness(aged, TODAY, exposureForDraft(DEV_SEEDS.nc))
     expect(report.controls.stateTaxMoved, "the NC household's own profile moved ⇒ the state-tax clock fires").toBe(true)
     expect(report.rulesMoved, 'a rulebook moved ⇒ the hero echo may ride').toBe(true)
     // ISOLATION — the fresh vintages leave every OTHER clock dark.
@@ -558,9 +563,10 @@ describe('the statestale aged plant (the state-tax gate note; light doctor, F2 s
     expect(aged.stateTaxVintage, 'doctorStaleVault leaves the state stamp untouched — the fresh current stamp').toEqual(
       statelessBuilt.scenario.stateTaxVintage,
     )
-    expect(deriveStaleness(aged, TODAY).controls.stateTaxMoved, 'a stateless household never fires the clock').toBe(
-      false,
-    )
+    expect(
+      deriveStaleness(aged, TODAY, exposureForDraft(DEV_SEEDS.datesplit)).controls.stateTaxMoved,
+      'a stateless household never fires the clock',
+    ).toBe(false)
   })
 
   // Arm 5 — the review's fold (6-lens convergence): the fail-loud pair is COMPLETE. (a) FL passes
@@ -710,5 +716,69 @@ describe('the no-pretax steer witness seed (engine-proven refusal regime)', () =
     expect(params, 'the degenerate household still RESOLVES a spine answer').not.toBeNull()
     expect(params!.overlay, 'no overlay — the line-74 arm discriminator').toBeUndefined()
     expect(buildSolveRequest(degenerate, FRESH_STEER), 'the no-overlay arm refuses no-pretax too').toBe('no-pretax')
+  })
+})
+
+// ===========================================================================
+// The `?vault=stale` aged plant — the RETIRED spine household through the FULL doctor. U17 §S4
+// adds this arm: the vertical-fit gate HARD-PINS this plant's gate-note COUNT, and until now that
+// count was hand-derived from the copy layer. Deriving it here — through the real
+// doctor → hydrate → exposure → reader → composer chain — means the fit arm's number has a unit
+// source, and a future clock re-bucketing fails HERE (fast) instead of only in the 90-second
+// Chromium run (the insight-051 tell: `statestale` had its reader arm, `stale` did not). It
+// earned that keep immediately: the F-pass moved this count TWICE (3 → 3 → 2) and this arm named
+// the new number both times before the browser ever ran.
+// ===========================================================================
+describe('the stale aged plant (the re-entry gate notes, exposure-gated)', () => {
+  const TODAY = currentEpochDay()
+
+  it("'stale' composes EXACTLY the two lines its doctored stamps can honestly support — tax NAMED, the Medicare family NAMED, the blend re-date SILENT", () => {
+    const built = scenarioFromDraft(DEV_SEEDS.retired)
+    expect(built.ready, 'retired must be save-ready').toBe(true)
+    if (!built.ready) return
+    const aged = doctorStaleVault(built.scenario, TODAY)
+    const rehydrated = draftFromScenario(aged)
+    expect(rehydrated.ok, 'the hydrator must accept the doctored shape').toBe(true)
+    if (!rehydrated.ok) return
+
+    // The EXPOSURE comes from the hydrated draft's own built params — the shipped path.
+    const exposure = exposureForDraft(rehydrated.draft)
+    // The all-65+ household: the overlay IS built (one $1.055M IRA ⇒ tax priced), Medicare priced
+    // through buildOverlay's Medicare-only branch, ACA structurally unpriced (no quote pair ⇒ the
+    // engine's ACA gate can never open), no contributions (both retired), and NO blend-table read
+    // (its single account carries a per-account manual blend, never a ticker). The aging does NOT
+    // move any of this — `currentAge` is persisted per person and rides the strip verbatim.
+    expect(exposure).toEqual({
+      overlayBuilt: 'priced',
+      medicare: 'priced',
+      aca: 'unpriced',
+      contributions: 'unpriced',
+      blend: 'unpriced',
+      pricedState: undefined,
+    })
+
+    const report = deriveStaleness(aged, TODAY, exposure)
+    // What the doctor moved (devSeeds.ts): taxVintageDetail, coverageYear −1,
+    // partBStandardMonthly −10, blendSnapshotAsOf −1y; the extras vintage is STRIPPED (a
+    // pre-extras-era save ⇒ not-comparable ⇒ quiet).
+    expect(report.controls.taxMoved).toBe(true)
+    expect(
+      report.healthcare.movedClocks,
+      'coverage-year (the Medicare half of the ACA/IRMAA key) + Part B both NAME themselves',
+    ).toEqual(['coverage-year', 'part-b'])
+    expect(report.healthcare.medicareMoved).toBe(true)
+    expect(report.healthcare.acaMoved, 'they price zero marketplace years — that line would be false').toBe(false)
+    expect(
+      report.unattributed.clocks,
+      'NOTHING is nameless here: the blend re-date is provably inert for a manual-blend household',
+    ).toEqual([])
+    expect(report.date.blendMoved, 'and the blend stamp DID move — the silence is the gate biting').toBe(true)
+    expect(report.rulesMoved, 'the hero echo may ride — tax + the Medicare figures genuinely moved').toBe(true)
+
+    const view = composeReentry(aged, report)
+    // THE FIT ARM'S NUMBER, derived rather than decreed. `e2e/vertical-fit.spec.ts` pins
+    // `.reentry-notes p` at exactly this length for `?vault=stale`.
+    expect(view.noteLines).toEqual([copy.stalenessTax, copy.stalenessMedicare])
+    expect(view.elapsedLine, 'the ~760-day save reads "about 2 years ago"').toBe(slots.reentryElapsedYears(2))
   })
 })

@@ -120,6 +120,80 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     expect(budget, 'the conservative tail contradicts the “all in” prime').toContain('most budgets don’t')
   })
 
+  // --- U17 §S4 — the `staleness*` WARNING REGISTER. The prefix's hedge/verdict EXEMPTION is
+  //     documented law (copy.ts: chrome/note prefixes carry no odds and recommend nothing), which
+  //     makes it the WEAKEST net in the catalog — and these are the strings that tell a household
+  //     their saved answer may have moved. This arm sweeps every one of them through the two
+  //     SCOPED gates the prefix exempts them from (superlative + free-numeral) on top of the two
+  //     universal gates the catalog enumeration already applies, and then pins the aggregate
+  //     line's specific promises. ---
+  it('U17 §S4: every staleness* warning string clears the SCOPED gates too, not just the universal pair', () => {
+    const staleness = entries.filter(([k]) => k.startsWith('staleness'))
+    expect(staleness.length, 'there IS staleness copy to guard').toBeGreaterThan(4)
+    // Control arm (burned/070 — the exemption must be REAL, or this sweep is theatre): these keys
+    // are genuinely outside the verdict + control scopes, so nothing else reaches them.
+    expect(isVerdictKey('stalenessDate'), 'the prefix is verdict-EXEMPT (the documented law)').toBe(false)
+    expect(isControlKey('stalenessAca'), 'the prefix is control-EXEMPT').toBe(false)
+    for (const [k, v] of staleness) {
+      expect(
+        lintCopy(v, ['false-certainty', 'advice-verb', 'superlative', 'free-numeral']),
+        `${k}: "${v}"`,
+      ).toEqual([])
+    }
+    // The one SLOTTED staleness string rides the sanctioned numeric channel (a calendar year), so
+    // it is swept without free-numeral — the same split the SLOT_RENDER loop below applies.
+    expect(lintCopy(SLOT_RENDER.stalenessBudgetLine, ['false-certainty', 'advice-verb', 'superlative'])).toEqual([])
+  })
+
+  it('U17 §S4: the AGGREGATE line claims nothing it cannot support — no rulebook named, no "rules changed" register, no answer-moved claim', () => {
+    // Bucket 3's sentence must be TRUE OF EVERY MEMBER of a heterogeneous set (the ticker-blend
+    // snapshot for a table-reading household, plus every clock of an unbuildable cross-build
+    // draft). It may say ONLY that a reference table has a newer version than the save was
+    // figured under. Insight 101 in its positive form.
+    const line = copy.stalenessReferenceTables
+    expect(line, 'never enters the "rules changed" register').not.toMatch(/rules? (have |has )?(been )?(changed|updated)/i)
+    // THE NEGATIVE IS WIDER THAN THE WORDS WE HAPPENED TO AVOID (the F-pass nit): the first cut
+    // enumerated eight nouns, so a rewrite reaching for "Part B", "premium", "subsidy" or
+    // "fund-blend" would have passed every assertion while naming a rulebook. Every term below is
+    // a thing a re-written aggregate could plausibly claim and MUST NOT — checked against the
+    // shipped sentence, which contains none of them.
+    expect(line, 'names no rulebook').not.toMatch(
+      /\b(tax|medicare|medigap|marketplace|health|coverage|contribution|IRMAA|state|part\s*[a-d]|premiums?|subsidy|subsidies|bracket|deduction|limits?|funds?|ticker|blend|stocks?|bonds?|roth|social security)\b/i,
+    )
+    expect(line, 'never claims THEIR answer moved').not.toMatch(
+      /your (answer|numbers|reading|plan) (has|have|is|are)? ?(changed|moved|updated)/i,
+    )
+    // …and the positive anchor (non-vacuity): it DOES disclose the re-base and DOES say plainly
+    // that attribution is unavailable — silencing this set would be the opposite sin.
+    expect(line).toMatch(/updated since your save/i)
+    expect(line).toMatch(/can’t tell/i)
+    // NUMBER-NEUTRAL (the re-verify nit): the bucket's only production-reachable member today is
+    // the blend snapshot ALONE, so a plural breadth claim ("some of the tables … any of them")
+    // was false for every household that could hear it. Pin the neutrality, since no other arm
+    // can see a plural-about-a-singleton.
+    expect(line, 'claims no breadth the bucket cannot support').not.toMatch(/\b(some of|several|any of them|a number of)\b/i)
+    // The named family lines, by contrast, DO name their rulebook — so the negatives above are
+    // measuring the aggregate's own discipline, not a property every staleness string has.
+    expect(copy.stalenessAca).toMatch(/marketplace/i)
+    expect(copy.stalenessMedicare).toMatch(/medicare/i)
+    expect(copy.stalenessAca).not.toBe(copy.stalenessMedicare)
+  })
+
+  it('U17 §S4: the split killed the collapsed healthcare sentence and the two blend-naming clauses (insight 086 — no orphaned key, no resurrected falsehood)', () => {
+    const all = Object.values(copy)
+    // The old collapsed line told an all-65+ household "Health-coverage rules have been updated"
+    // on an ACA-only move. It must not come back under any key.
+    expect(all.some((v) => /health-coverage rules/i.test(v)), 'the collapsed healthcare line is dead').toBe(false)
+    // The blend clock is unattributable now, so no string may claim the fund table is read
+    // against THIS household's accounts (`BLEND_SNAPSHOT_AS_OF` is one MAX date over all rows).
+    expect(
+      all.some((v) => /fund data we read your accounts against/i.test(v)),
+      'the blend-naming clause is dead on both routes',
+    ).toBe(false)
+    // …and the Caddie card #2 purge still holds: the jargon word never returns.
+    expect(all.some((v) => /fund snapshots?/i.test(v)), 'the purged jargon stays purged').toBe(false)
+  })
+
   // --- F-B (U16 chair fix, cold-read panel): the STALE card's body drift-pin. Two falsehoods the
   //     cold read killed must stay dead: (1) "since we found this" — FALSE when the predecessor was the
   //     HELD card (nothing is "found" on a hold), so the body must never claim a find; (2) the body must

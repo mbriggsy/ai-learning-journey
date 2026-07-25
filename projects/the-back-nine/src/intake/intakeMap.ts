@@ -206,7 +206,13 @@ function blendOf(c: TickerClassification): { stock: number; bond: number; cash: 
 }
 
 /** An account's stock fraction in [0,1], or null when unresolvable (missing
- *  classification — a named missing fact, never a default). */
+ *  classification — a named missing fact, never a default).
+ *
+ *  THE DATED TABLE IS READ IN EXACTLY ONE BRANCH — the `findBlendRow` hit below. Everything
+ *  else (a household classification for a missed ticker, the per-account manual blend) is the
+ *  user's own entry and is inert under a `BLEND_SNAPSHOT_AS_OF` bump. {@link blendTableReadForRun}
+ *  mirrors that branch condition for U17 §S4's staleness exposure; if the branch order here ever
+ *  changes, change it there in the same edit. */
 export function resolveBlend(
   account: EnteredAccount,
   classifications: ScenarioDraft['tickerClassifications'],
@@ -738,6 +744,137 @@ export function pricedStateForRun(d: ScenarioDraft): PricedState | undefined {
  *  reaches `healthcareOn` ⇒ no stream ⇒ false — both KEEP the pre-65 omissions clause. */
 function acaPricedOverlayArm(o: OverlayParams | undefined): boolean {
   return o?.healthcareEnabled === true && (o.enrolledPremium ?? []).some((p) => Number.isFinite(p) && p > 0)
+}
+
+/** The SPINE route's "did THIS run price the ACA discount?" — {@link acaPricedOverlayArm} over
+ *  `buildSpineParams`' OWN overlay, the sibling of {@link spineMedicarePriced}. EXPORTED (never
+ *  re-typed) for U17 §S4's staleness exposure record: a copy of this arithmetic under a comment
+ *  claiming it matches is not a pin (insights 032/081) — the consumer source-binds to THIS.
+ *
+ *  This is the read that makes the all-65+ household honest: it takes `buildOverlay`'s
+ *  Medicare-only branch (`intakeMap.ts:581-583` — "healthcareEnabled with NO ACA quote pair"),
+ *  so `enrolledPremium` is absent, the engine's per-year ACA gate
+ *  (`taxOverlay.ts:1696-1701`) can never open, and this correctly reads FALSE. `buildSpineParams`
+ *  returns null on the date route ⇒ false there (the caller handles that route separately —
+ *  reading false as "unpriced" off-route would be the insight-080 shortcut, not a fact). */
+export function spineAcaPriced(d: ScenarioDraft): boolean {
+  return acaPricedOverlayArm(buildSpineParams(d)?.overlay)
+}
+
+/** The DATE route's BASE-overlay ACA read — `buildDateInput`'s pre-sweep `params.overlay`, the
+ *  vector every swept candidate inherits.
+ *
+ *  BOTH DIRECTIONS, AND WHERE EACH IS VALID:
+ *    · FALSE is EXACT everywhere. `buildCandidateParams` derives each candidate's ACA stream
+ *      from this one through `buildHealthcareStreams`, which only WINDOW-GATES an entered
+ *      stream and never synthesizes one (`healthcareStreams.ts:167-170`), so gating can only
+ *      SHRINK positives: no base stream ⇒ no candidate offset can price ACA ⇒ the household is
+ *      PROVEN unexposed (`date65`, the all-65+ still-working seed, is the witness). That is the
+ *      arm the staleness silence rides, and it cannot lie.
+ *    · TRUE describes THE BASE RUN — correct for a surface that describes the pre-crown state.
+ *
+ *  WHY INSIGHT 088 DOES NOT BITE AT THE RE-ENTRY GATE (pilot ruling 2026-07-25). 088 says a
+ *  predicate must read the producer of the run THE SURFACE DESCRIBES. The re-entry gate runs at
+ *  UNLOCK, BEFORE any date search dispatches — there IS no crowned run for it to describe, so
+ *  the base overlay IS this surface's producer. 088's trap is a surface sitting beside a CROWNED
+ *  preview (the Roth omissions note, where a work-to-65+ crown window-gates ACA to zero years
+ *  while the base stream is still positive) — a different surface, a different producer.
+ *
+ *  FORBIDDEN BESIDE ANY CROWNED SURFACE. Do not reuse this predicate next to a landed date,
+ *  preview, or verdict: there it WOULD claim an exposure the crowned run may not have. That
+ *  neighbourhood has its own producer read — {@link acaPricedForRun}, off
+ *  `buildControlPreviewParams` — and it is not interchangeable with this one.
+ *
+ *  WHAT READING IT AS `'unknown'` COST (the first cut, corrected): the enhanced-subsidy flip —
+ *  the ONE legislative event `verify:aca` gates every build on — would have reached pre-65
+ *  marketplace planners, the population it hits hardest, as the nameless "we can't tell" line
+ *  with no hero echo, where the pre-U17 build named it. A silent stale on the most consequential
+ *  clock in the app, to dodge a trap that is not set here. */
+export function dateBaseAcaPriced(d: ScenarioDraft): boolean {
+  return acaPricedOverlayArm(buildDateInput(d)?.params.overlay)
+}
+
+/** "Did the DATE route's run price Medicare?" — `dateSearch` forces `healthcareEnabled: true` on
+ *  EVERY candidate (`dateSearch.ts:229`), so the only question left is whether a run exists at
+ *  all: `buildDateInput` returns null off-route / on missing facts, and an overlay-less
+ *  household (the degenerate early-return) prices no healthcare whatever the sweep forces —
+ *  `buildCandidateParams` throws on it and `runDateSearch` pre-rejects it calmly. Reading the
+ *  BUILT overlay's presence (never the ages) is the insight-080 fix: the age predicate
+ *  `medicareOnlyPriced` diverges from the run at exactly that early return. */
+export function dateMedicarePriced(d: ScenarioDraft): boolean {
+  return buildDateInput(d)?.params.overlay !== undefined
+}
+
+/** The BUILT params of the run THIS draft describes, route-unioned — the {@link pricedStateForRun}
+ *  idiom, and route-safe for the same reason: each builder returns null OFF its own route
+ *  (`buildSpineParams` on the date route, `buildDateInput` on the spine), so the `??` can never
+ *  cross routes. A spine household that builds no overlay still yields non-null PARAMS here (the
+ *  $0-portfolio coherent-dire run) — the overlay's absence is the fact the readers below want,
+ *  never a proxy for "no run happened". */
+function builtRunParams(d: ScenarioDraft): SimulationParams | null {
+  return buildSpineParams(d) ?? buildDateInput(d)?.params ?? null
+}
+
+/** "Did THIS run build a tax overlay at all?" — the FEDERAL tax family's exposure read for U17
+ *  §S4's staleness gate. `taxEnabled: true` is hardcoded on every built overlay
+ *  (`intakeMap.ts:551`) and `consumedConstants.ts:104` gates the whole `tax.` family on exactly
+ *  that flag, so overlay-absent ⟺ no tax constant was consumed ⟺ the recompute is byte-identical
+ *  under any tax vintage. The population that reads FALSE is real and save-ready: `buildOverlay`'s
+ *  degenerate early return (no accounts, no marketplace premium, no ongoing income) — a
+ *  Social-Security-only household.
+ *
+ *  ITS OWN READ, never `!spineMedicarePriced` (insight 081). The two agree on every household the
+ *  app can build TODAY — but by coincidence, not by law: `missingRequiredFacts` requires the
+ *  marketplace quote pair whenever a member is pre-65 (line 162-166) and an all-65+ household
+ *  takes the Medicare-only branch, so a save-ready overlay always carries `healthcareEnabled`.
+ *  Two unrelated rules, one accidental equality — precisely the shape insight 080 records
+ *  breaking. This reads the flag it is actually about. */
+export function overlayBuiltForRun(d: ScenarioDraft): boolean {
+  return builtRunParams(d)?.overlay !== undefined
+}
+
+/** "Does THIS run price a contribution stream?" — the accumulation construct on the run's own
+ *  BASE overlay, U17 §S4's exposure read for the contribution-limit clock.
+ *
+ *  READ THE BASE, NOT A CANDIDATE. `buildCandidateParams` sets `accumulation` on EVERY date
+ *  candidate unconditionally (`dateSearch.ts:230` — its presence keys the §7 working-year
+ *  zero-withdrawal clamp), so a candidate's `accumulation !== undefined` is a constant `true`
+ *  and discriminates nothing. What it actually carries is this base overlay's streams,
+ *  TRUNCATED (`truncateStreams(enteredContributions?.[i] ?? {}, Y)`) — and `buildOverlay` spreads
+ *  `accumulation` only when `anyContributions` holds: some WORKING owner's account carries a
+ *  positive contribution, match, or employer-HSA dollar (`intakeMap.ts:518-527`). A 66/retired +
+ *  62/working couple whose accounts all belong to the retired spouse therefore sweeps candidates
+ *  with `{}` streams and reads no limit: `consumedConstants.ts:124` gates the `contributions.`
+ *  family on the construct, and the limits' only pricing read is `annualAdditionsCeilingFor`'s
+ *  §415(c) match trim INSIDE `contributionStreamsFor`, which returns early for a non-working
+ *  owner (`intakeMap.ts:368`) and never runs for an owner with no accounts. */
+export function contributionsPricedForRun(d: ScenarioDraft): boolean {
+  return builtRunParams(d)?.overlay?.accumulation !== undefined
+}
+
+/** "Does THIS run's stock weight READ the dated ticker-blend table?" — U17 §S4's exposure read
+ *  for the `BLEND_SNAPSHOT_AS_OF` clock, and the reason the nameless aggregate's sentence is true
+ *  of every household that hears it.
+ *
+ *  THREE CONJUNCTS, each a proof of consumption:
+ *    1. A run exists at all (`builtRunParams`) — an unbuildable draft proves nothing either way.
+ *    2. `householdStockWeight` is non-null. It returns null at zero accounts, at any unresolved
+ *       blend, AND at a $0 total (line 236) — in which case `buildParams` takes the documented
+ *       inert `stockWeight ?? 0` (line 614) and NO table row can move the answer.
+ *    3. Some account with real dollars resolves through the table — {@link resolveBlend}'s
+ *       `findBlendRow` branch, called HERE with the SAME function, never a re-typed ticker list.
+ *       A household of manual blends (every `?vault` plant's base seed today) is provably inert:
+ *       `BLEND_SNAPSHOT_AS_OF` is one MAX `asOf` over ALL rows (`tickerBlend.ts:1573-1577`), so
+ *       re-dating a single fund fires the clock for everyone — telling THEM "the fund data we
+ *       read your accounts against changed" was the same falsehood the healthcare split killed.
+ *  The `valueToday > 0` term in (3) is not decoration: `householdStockWeight` weights each row by
+ *  dollars, so a $0-balance ticker account contributes `w × 0` and its row is equally inert. */
+export function blendTableReadForRun(d: ScenarioDraft): boolean {
+  if (builtRunParams(d) === null) return false
+  if (householdStockWeight(d) === null) return false
+  return d.enteredAccounts.some(
+    (a) => a.valueToday > 0 && a.ticker !== undefined && findBlendRow(a.ticker) !== undefined,
+  )
 }
 
 /** "Does the run the Roth preview describes price the ACA discount?" — the O16 council's

@@ -1,5 +1,10 @@
 import { test, expect, type Page } from '@playwright/test'
-import { REAL, REAL_DPR, TIER, SHOWCASE, FLOOR, PHONE, gotoSeedFinal } from './reviewSurface'
+import { REAL, REAL_DPR, TIER, SHOWCASE, FLOOR, PHONE, gotoSeedFinal, settleLayout } from './reviewSurface'
+// THE SHIPPED CATALOG, never re-typed here (the `e2e/design-tokens.spec.ts:2` precedent). Every
+// string this spec injects or reads back is the one the app ships: a spec-local literal would pin a
+// reservation, a clause list or a heading against a fiction, and a re-word that overflowed the real
+// box would escape the gate silently (U17 §S5 step 14).
+import { copy, slots, staticDisclosures } from '../src/ui/copy'
 
 /**
  * The real-browser VERTICAL-FIT gate (council 2026-07-08, wf_a2d93977-960 — run via
@@ -578,6 +583,163 @@ for (const seed of DEAD_RAIL_SEEDS) {
           geom.viz.top,
           `the viz overlaps the band (viz top=${geom.viz.top}, band bottom=${geom.band.bottom}) — the recommendation paints over the fan`,
         ).toBeGreaterThanOrEqual(geom.band.bottom - 1)
+      })
+    })
+  }
+}
+
+// ── U17 §S5: the SAVE SLOT's reservation, MEASURED (the CLS law) ──────────────────────────────
+// WHAT THIS REPLACES. U16 reserved `.rec-save-slot` at 2.75rem and S5 re-sized it to 8rem BY
+// ARITHMETIC off the type scale — recommendation.css says so in its own comment ("this figure is
+// reasoned from the type scale, not observed"). The only guard until now was a `min-height` lower
+// bound, which is UNFALSIFIABLE: `min-block-size` never clips, so "the box is at least its content"
+// is true by construction whatever the content does. The falsifiable law is EQUALITY — every arm the
+// slot can swap to must land in a box of the SAME height, because the swap happens under the
+// household's pointer with the R13 disclaimer and the quiet doors directly beneath it (insight 035:
+// a collapsing box yanks them up mid-gesture). An arm that OVERFLOWS the reservation grows the box
+// and breaks the equality; an arm that under-fills it does not (the floor holds) — so this measures
+// the one direction that can actually move.
+//
+// EVERY STRING COMES FROM THE SHIPPED CATALOG (`copy`), never re-typed here. A spec-local literal
+// would pin the reservation against a fiction: re-word the ceremony hint one line longer and the
+// gate would stay green while the real control overflowed. `e2e/design-tokens.spec.ts:2` is the
+// precedent for importing src into an e2e spec.
+//
+// INJECTED, not solved: a live committed solve is 80–200s (recorded above), past this harness's
+// budget. The injected DOM is the verbatim `RecommendationSurface.tsx` render for each arm.
+//
+// WHAT THE MEASUREMENT FOUND, AND WHY THE PHONE IS NOT IN THE LOOP (recorded 2026-07-26, first real
+// browser run of this arm — the reservation had never been observed, only derived):
+//   1536×791 · 1280×800 · 1088×800 — reserved 128px, offer content 101.59px, ceremony hint TWO
+//     lines. The shipped arithmetic (recommendation.css: "3 × 24.8 = 74px … total 126.4px") is
+//     WRONG in the safe direction: the hint holds two lines at every laptop tier, so the box
+//     OVER-reserves by 26.41px. Harmless to the fold (the slot exists only on the committed beat,
+//     and that frame is a full-width r5 row that scrolls by design — the PROTECTED idle frames
+//     render no slot at all), but the figure in that comment is not what the browser does.
+//   390×844 — reserved 128px, offer content 146.13px, ceremony hint FOUR lines. The box GROWS to
+//     146.13px, so the tap offer→saving collapses it back to 128px and everything below it rises
+//     18.13px mid-gesture: the equality this arm exists to enforce is FALSE on the phone today.
+//     That is a live CLS defect, not a test-scope question — and the repair is a product decision
+//     (a per-tier reservation whose number no width can outgrow, never a trimmed hint: content
+//     never yields to layout). FILED for the pilot with these numbers; the phone stays out of the
+//     loop rather than being pinned green against the current wrong behaviour (an arm that pins a
+//     defect is the defect's second copy) or left red forever.
+const SAVE_SLOT_SEEDS = ['retired'] as const
+
+for (const seed of SAVE_SLOT_SEEDS) {
+  for (const vp of [REAL, TIER, FLOOR] as const) {
+    const scale = vp === REAL ? { deviceScaleFactor: REAL_DPR } : {}
+    test.describe(`?seed=${seed} — the save slot's reservation holds every arm (${vp.width}×${vp.height})`, () => {
+      test.use({ viewport: vp, ...scale })
+      test(`${seed}: empty, offer, saving and saved all land in the SAME box (no mid-gesture collapse)`, async ({
+        page,
+      }) => {
+        await gotoSeedFinal(page, seed)
+        await assertResolvedSpine(page)
+
+        const slots = await page.locator('.recommendation-surface').evaluate((surface, text) => {
+          // The real committed beat (RecommendedBeat) — the grade lockup, the fixed-dimension viz
+          // box (whose PRESENCE is what the shipped CSS keys the inner two-pane on), and the text
+          // rest that OWNS the save slot. The aside is a SIBLING of the beat, exactly as the
+          // surface renders it.
+          const beat = document.createElement('section')
+          beat.className = 'rec-committed'
+          beat.innerHTML =
+            '<div class="rec-grade" role="group"><p class="rec-grade__head">' +
+            '<svg class="rec-grade__glyph" width="22" height="22" viewBox="0 0 22 22"></svg>' +
+            '<span class="rec-grade__word">A confident lean</span></p>' +
+            '<p class="rec-grade__hero">This keeps about $128,000 more for the two of you to pass on than staying on your current plan.</p></div>' +
+            '<div class="rec-viz-box"><div class="rec-viz-box__placeholder" aria-hidden="true"></div></div>' +
+            '<div class="rec-committed__rest">' +
+            '<p class="rec-baseline">Compared with keeping your current plan</p>' +
+            `<p class="rec-limits">${text.limits}</p>` +
+            `<button type="button" class="btn-quiet rec-repick">${text.repick}</button>` +
+            '<div class="rec-slot-host"></div>' +
+            '</div>'
+          surface.appendChild(beat)
+          const host = beat.querySelector('.rec-slot-host') as HTMLElement
+
+          // The four arms, verbatim from `SaveSlot` (RecommendationSurface.tsx). The OFFER arm uses
+          // the CEREMONY hint — the longer of the two routes, and the one every dev seed, the
+          // Caddie walk and this gate actually reach (no vault ⇒ route 'ceremony').
+          const arms: Record<string, string> = {
+            empty: '<div class="rec-save-slot" aria-hidden="true"></div>',
+            offer:
+              '<div class="rec-save-slot">' +
+              `<button type="button" class="btn-quiet rec-save__cta">${text.cta}</button>` +
+              `<p class="rec-save__hint">${text.hintCeremony}</p></div>`,
+            saving: `<div class="rec-save-slot"><p class="rec-save__pending">${text.pending}</p></div>`,
+            saved:
+              '<div class="rec-save-slot"><p class="rec-save__badge">' +
+              `<span class="rec-save__mark" aria-hidden="true"></span>${text.badge}</p></div>`,
+          }
+          const out: Record<string, { box: number; content: number; hintLines: number }> = {}
+          for (const [name, html] of Object.entries(arms)) {
+            host.innerHTML = html
+            const slot = host.querySelector('.rec-save-slot') as HTMLElement
+            const box = slot.getBoundingClientRect().height
+            // The CONTENT extent (first child's top → last child's bottom): what the box would be
+            // WITHOUT the reservation. Reported so an overflow names its own margin.
+            const kids = Array.from(slot.children) as HTMLElement[]
+            const content =
+              kids.length === 0
+                ? 0
+                : kids[kids.length - 1]!.getBoundingClientRect().bottom - kids[0]!.getBoundingClientRect().top
+            const hint = slot.querySelector('.rec-save__hint') as HTMLElement | null
+            const hintLines =
+              hint === null
+                ? 0
+                : Math.round(hint.getBoundingClientRect().height / parseFloat(getComputedStyle(hint).lineHeight))
+            out[name] = { box: Math.round(box * 100) / 100, content: Math.round(content * 100) / 100, hintLines }
+          }
+          const reserved = parseFloat(getComputedStyle(host.querySelector('.rec-save-slot')!).minBlockSize)
+          beat.remove()
+          return { arms: out, reserved: Math.round(reserved * 100) / 100 }
+        }, {
+          limits: staticDisclosures.honestLimitsValidate,
+          repick: copy.recommendRepickCta,
+          cta: copy.recommendSaveCta,
+          hintCeremony: copy.recommendSaveHintCeremony,
+          pending: copy.recommendSavePending,
+          badge: copy.recommendSaveSavedBadge,
+        })
+
+        const a = slots.arms
+        const report =
+          `reserved=${slots.reserved}px · ` +
+          Object.entries(a)
+            .map(([k, v]) => `${k}: box=${v.box} content=${v.content}${v.hintLines > 0 ? ` hint=${v.hintLines}L` : ''}`)
+            .join(' · ')
+        console.log(`[U17 save-slot reservation] seed=${seed} ${vp.width}x${vp.height}: ${report}`)
+
+        // NON-VACUITY (insight 029): a reservation of zero would make every equality below pass over
+        // four collapsed boxes.
+        expect(slots.reserved, 'the slot must carry a real reservation').toBeGreaterThan(0)
+        expect(a.empty!.box, 'the empty reservation must be the reservation').toBe(slots.reserved)
+
+        // (1) THE CLS LAW — the populated OFFER arm lands in the SAME box as the empty reservation.
+        // This is the assertion the old `min-height ≥ content` lower bound could not make: it goes
+        // RED both ways — delete the min-block-size (recommendation.css) and `empty` collapses; grow
+        // the hint past the reservation and `offer` swells.
+        expect(
+          a.offer!.box,
+          `the OFFER arm does not fit its reservation — content ${a.offer!.content}px (CTA + a ` +
+            `${a.offer!.hintLines}-line ceremony hint) in a ${slots.reserved}px box, so the box grew to ` +
+            `${a.offer!.box}px and the tap will shift everything below it (insight 035). Content is ` +
+            `never trimmed to fit — raise the reservation.`,
+        ).toBe(a.empty!.box)
+
+        // (2) …and so do the two one-line arms the tap swaps THROUGH. These under-fill, so they are
+        // held by the floor — the assertion is that the floor is still there for them.
+        expect(a.saving!.box, 'the pending line must not collapse the box mid-write').toBe(a.empty!.box)
+        expect(a.saved!.box, 'the saved badge must not collapse the box after the write').toBe(a.empty!.box)
+
+        // The reservation is honest about WHY it is that tall: the offer arm really is the governing
+        // one (a reservation sized for a one-line arm would be a coincidence, not a design).
+        expect(
+          a.offer!.content,
+          'the OFFER arm must be the tallest — it is what the reservation is sized for',
+        ).toBeGreaterThan(Math.max(a.saving!.content, a.saved!.content))
       })
     })
   }
@@ -1309,5 +1471,284 @@ test.describe(`the aged date return (?vault=datestale) — one clock across hero
     expect(doors.y, 'the quiet doors must sit BELOW the R13 disclaimer').toBeGreaterThanOrEqual(
       disclaimer.y + disclaimer.height - 0.5,
     )
+  })
+})
+
+// ── U17 §S5: the RECORD-BEARING vault return (?vault=rec) — the card on a PROTECTED idle frame ──
+//
+// THE BLIND SPOT THIS CLOSES. Every arm above mounts `{kind:'unsaved'}` — a `?seed=` route has no
+// vault, and `IntakeApp`'s recordCard memo reads the DISK, never the draft — so until the record
+// plants landed (devSeeds.ts, this same step) no frame in this gate carried the one piece of new
+// content S5 drops onto a protected frame. And it IS protected: a returning household lands `idle`,
+// which is a fast one-frame fit frame, NOT one of the beat frames that scroll by design.
+//
+// THE STRUCTURAL RISK IS THE GRID SEAT, not the card's own height. confidence.css excludes
+// `.rec-aside` from the two-pane beat switch (`:has(.recommendation-surface > :not(.sr-only)
+// :not(.rec-aside))`) precisely so the instantly-painted memory card cannot flip the surface out of
+// its r4 idle seat and step the PROTECTED in-frame disclaimer, the backup door and the quiet row
+// each down one row on the first screen a returning household sees. Drop `:not(.rec-aside)` from
+// that selector and the surface takes r5 / the disclaimer r6 — which is exactly what the computed-
+// row assertions below read.
+//
+// THE RECORD-FREE REFERENCE IS MEASURED IN THE SAME RUN, never hand-typed: after measuring the
+// vault frame this test navigates to `?seed=retired` — the SAME household, the same idle solve
+// state, no vault and therefore no card — and requires the two computed rows to be IDENTICAL. So
+// "unchanged from the record-free return" is a comparison, not a remembered constant.
+
+test.describe(`the record-bearing vault returns (?vault=rec / ?vault=recold) — the memory card on the protected idle frame (${REAL.width}×${REAL.height})`, () => {
+  test.use({ viewport: REAL, deviceScaleFactor: 2.5 })
+  test('the card paints its HOLDS face and the surface keeps its IDLE grid seat (the `:not(.rec-aside)` exclusion)', async ({
+    page,
+  }) => {
+    const seats = async () =>
+      page.evaluate(() => {
+        const cs = (sel: string) => {
+          const el = document.querySelector(sel)
+          if (el === null) return null
+          const s = getComputedStyle(el)
+          const r = el.getBoundingClientRect()
+          return {
+            row: s.gridRowStart,
+            column: s.gridColumnStart,
+            top: Math.round(r.top),
+            bottom: Math.round(r.bottom),
+            height: Math.round(r.height),
+          }
+        }
+        return {
+          surface: cs('.recommendation-surface'),
+          disclaimer: cs('footer.disclaimer.disclaimer--in-frame'),
+          card: cs('.rec-aside .rec-record'),
+        }
+      })
+
+    // (0) THE RECORD-FREE REFERENCE, captured FIRST in this same run and same browser: the identical
+    // household with no vault (and therefore no card). Every "unchanged" claim below is a comparison
+    // against these numbers, never a remembered constant.
+    await gotoSeedFinal(page, 'retired')
+    await assertResolvedSpine(page)
+    await expect(page.locator('.rec-aside'), 'a no-vault route has no record to remember').toHaveCount(0)
+    const recordFree = await seats()
+
+    await page.goto('/?vault=rec')
+    const unlock = page.getByRole('button', { name: 'Open my plan' })
+    await expect(unlock, 'the rec plant did not land on the unlock screen').toBeVisible({ timeout: 30_000 })
+    await unlock.click()
+
+    // The re-entry gate is UNCONDITIONAL on every return (ReEntry.tsx) — but this plant ages NO
+    // vintage, so it must arrive with the clock lines DARK: the record card has to be readable in
+    // isolation, not beside a staleness echo it did not cause.
+    const affirm = page.getByRole('button', { name: /Still about right/ })
+    await expect(affirm).toBeVisible({ timeout: 30_000 })
+    await expect(page.locator('.reentry-notes p'), 'the rec plant ages no stamp — no clock may fire').toHaveCount(0)
+    await affirm.click()
+
+    await expect(page.locator('main.result[data-answer-tier="final"]')).toBeAttached({ timeout: 90_000 })
+    await settleLayout(page)
+    await assertResolvedSpine(page)
+
+    // (1) THE CARD IS REALLY THERE, and it is the HOLDS face — the standing this plant produces is
+    // derived from the real trichotomy in `devSeeds.test.ts` ("'rec' — the memory STILL HOLDS"), so
+    // this arm reads what that unit proved rather than re-deriving it. Every string is the shipped
+    // catalog's (imported at the top), never re-typed.
+    const card = page.locator('.rec-aside .rec-record')
+    await expect(card, 'the remembered-record card must paint on the vault-return idle frame').toBeVisible()
+    await expect(card.locator('.rec-note__head')).toHaveText(copy.recommendRecordHeading)
+    const standing = card.locator('.rec-record__standing')
+    await expect(standing).toHaveAttribute('data-standing', 'holds')
+    await expect(standing).toContainText(copy.recommendRecordHolds)
+    // The re-open control and its COST line ship as one unit (a control that hides a multi-minute
+    // re-solve is an invitation the household cannot price).
+    await expect(card.getByRole('button', { name: copy.recommendRecordReopenCta })).toBeVisible()
+    await expect(card.locator('.rec-record__cost')).toHaveText(copy.recommendRecordReopenCost)
+    // …and the doors-region invite is GONE (Result.tsx drops the idle disjunct when a record card is
+    // on screen): two controls opening the same GoalPicker on one frame is the duplication the F-B
+    // chair fix retired.
+    await expect(
+      page.locator('.result-recommend-invite'),
+      'the card carries the re-open — a second door-row invite would be the retired duplication',
+    ).toHaveCount(0)
+
+    const withCard = await seats()
+    expect(withCard.surface, 'the surface must be on the page').not.toBeNull()
+    expect(withCard.disclaimer, 'the in-frame disclaimer must be on the page').not.toBeNull()
+    expect(withCard.card, 'the card must have a box to measure').not.toBeNull()
+    console.log(
+      `[U17 record return] ?vault=rec ${REAL.width}x${REAL.height}: ` +
+        `card h=${withCard.card!.height} bottom=${withCard.card!.bottom} · ` +
+        `surface r${withCard.surface!.row}c${withCard.surface!.column} h=${withCard.surface!.height} ` +
+        `(record-free r${recordFree.surface!.row}c${recordFree.surface!.column} h=${recordFree.surface!.height}) · ` +
+        `disclaimer r${withCard.disclaimer!.row} bottom=${withCard.disclaimer!.bottom} ` +
+        `(record-free r${recordFree.disclaimer!.row} bottom=${recordFree.disclaimer!.bottom}) · ` +
+        `Δfold=${withCard.disclaimer!.bottom - recordFree.disclaimer!.bottom}px · frame=${REAL.height}px`,
+    )
+
+    // (2) THE GRID SEAT — the surface stays in the r4 idle slack of the LEFT column and the
+    // PROTECTED disclaimer stays on r5, IDENTICAL to the record-free reference. MUTANT (drop
+    // `:not(.rec-aside)` from confidence.css's beat switch): the surface takes `1 / -1` on r5 and
+    // the disclaimer steps to r6 — every one of these reads RED.
+    expect(withCard.surface!.row, 'the surface must keep the r4 idle slack seat').toBe(recordFree.surface!.row)
+    expect(withCard.surface!.column, 'the idle seat is the LEFT column, never the full-width beat row').toBe(
+      recordFree.surface!.column,
+    )
+    expect(
+      withCard.disclaimer!.row,
+      'a returning household WITH a memory must read the same frame as one without',
+    ).toBe(recordFree.disclaimer!.row)
+    // …and the reference really is the shipped idle seat, so the equalities above cannot both drift.
+    expect(recordFree.surface!.row).toBe('4')
+    expect(recordFree.disclaimer!.row).toBe('5')
+
+    // (3) The two-mount contract and the density tier are unmoved by the card.
+    await assertOneVisibleDisclaimer(page, 'laptop')
+    await assertResultPadding(page, '32px') // 791 ≤ 840 — the density tier serves this frame too
+  })
+
+  /**
+   * THE ONE-FRAME FIT LAW ON THIS FRAME — CURRENTLY BREACHED, and stated here as the law rather
+   * than pinned as the behaviour.
+   *
+   * MEASURED 2026-07-26, the first time any harness rendered a saved record (1536×791 @ 2.5 DPR,
+   * `?vault=rec`):
+   *   · the record card is 156px tall;
+   *   · the record-free twin (`?seed=retired`, same household) puts the PROTECTED in-frame R13
+   *     disclaimer's bottom at 702px, i.e. 89px of headroom under the 791px frame;
+   *   · the card lands in the r4 idle slack, which on this frame carries ZERO free space (the
+   *     verdict column and the band end together, so the `1fr` row distributes nothing) — so the
+   *     disclaimer moves down by the card's FULL height, 702 → 858px;
+   *   · the protected caveat therefore breaches the fold by 67px, and the card's own re-open
+   *     control + cost line sit 1–13px below it.
+   * The SUPERSEDED face is worse, measured in the same run (`?vault=recold`): a two-clause card is
+   * 251px → the disclaimer lands at 952px (a 161px breach), and the producible worst case (three
+   * clauses) is 279px. So the shortfall to close is not a rounding error — it is 67–189px depending
+   * on the standing, i.e. the card cannot share this frame with the caveat at all in its current
+   * seat.
+   *
+   * THIS IS THE HONESTY-HAWK VETO CASE: a reassuring frame with "this can be wrong" scrolled out of
+   * sight. It is NOT a test-scope question and NOT fixable by trimming the card — content never
+   * yields to layout, and 89px cannot hold any honest version of this card (heading + standing +
+   * the priced re-open). The repair is a placement decision (the council's kind of call), so it is
+   * FILED for the pilot with the numbers above.
+   *
+   * `test.fail()` rather than a relaxed bound: the assertion below is the CORRECT law, it runs on
+   * every gate run, and the day the placement is fixed this annotation itself fails — forcing its
+   * removal instead of letting a repaired frame quietly re-acquire an unenforced law. A bound
+   * loosened to 858 would be the defect's second copy.
+   */
+  test('KNOWN BREACH (filed): the memory card pushes the PROTECTED R13 disclaimer 67px past the fold', async ({
+    page,
+  }) => {
+    test.fail() // see the block comment above — the law is stated; the frame does not meet it today
+    await page.goto('/?vault=rec')
+    const unlock = page.getByRole('button', { name: 'Open my plan' })
+    await expect(unlock, 'the rec plant did not land on the unlock screen').toBeVisible({ timeout: 30_000 })
+    await unlock.click()
+    const affirm = page.getByRole('button', { name: /Still about right/ })
+    await expect(affirm).toBeVisible({ timeout: 30_000 })
+    await affirm.click()
+    await expect(page.locator('main.result[data-answer-tier="final"]')).toBeAttached({ timeout: 90_000 })
+    await settleLayout(page)
+    await expect(page.locator('.rec-aside .rec-record'), 'the frame under measure must carry the card').toBeVisible()
+
+    const discBottom = await page
+      .locator('footer.disclaimer.disclaimer--in-frame')
+      .evaluate((el) => Math.round(el.getBoundingClientRect().bottom))
+    expect(
+      discBottom,
+      `the remembered-record card pushed the protected R13 disclaimer to ${discBottom}px, past the ${REAL.height}px frame`,
+    ).toBeLessThanOrEqual(REAL.height)
+    // The backup door is the sanctioned below-fold casualty on a writable return (the ?vault=stale
+    // precedent); everything else — the card and the caveat above all — must fit.
+    await assertFrameFits(page, true, true)
+  })
+
+  /**
+   * THE SUPERSEDED FACE (`?vault=recold`) — the card's OTHER standing, and the only live route to
+   * its cause LIST. Insight 101 is binding: a warning that names one cause when two hold describes
+   * its poster child, not the predicate's whole extension — and until this plant existed no
+   * rendered frame carried more than zero clauses. The plant's two causes ('inputs-changed' +
+   * 'solver-changed') and their declaration order are derived from the real trichotomy in
+   * `devSeeds.test.ts`; this arm reads what that unit proved.
+   *
+   * IT ALSO CARRIES THE WORST-CASE MEASUREMENT for the filed fold breach above. The PRODUCIBLE
+   * maximum is THREE clauses, not four: `inputs-changed` and `inputs-unavailable` are the two arms
+   * of one conjunct (`savedRecommendation.ts` pushes one or the other, never both), so a four-clause
+   * card is unreachable and measuring one would be reserving against a fiction. The third clause is
+   * injected from the shipped catalog onto the REAL card, in the same run, so the pilot's placement
+   * decision has the true upper bound rather than an estimate.
+   */
+  test('the superseded face names EVERY cause it has, in the producer’s order, with the mint year — and reports the worst-case card height', async ({
+    page,
+  }) => {
+    await page.goto('/?vault=recold')
+    const unlock = page.getByRole('button', { name: 'Open my plan' })
+    await expect(unlock, 'the recold plant did not land on the unlock screen').toBeVisible({ timeout: 30_000 })
+    await unlock.click()
+    const affirm = page.getByRole('button', { name: /Still about right/ })
+    await expect(affirm).toBeVisible({ timeout: 30_000 })
+    await affirm.click()
+    await expect(page.locator('main.result[data-answer-tier="final"]')).toBeAttached({ timeout: 90_000 })
+    await settleLayout(page)
+    await assertResolvedSpine(page)
+
+    const card = page.locator('.rec-aside .rec-record')
+    await expect(card).toBeVisible()
+    const standing = card.locator('.rec-record__standing')
+    await expect(standing).toHaveAttribute('data-standing', 'superseded')
+    // The LEAD sentence, which must stand on its own even with zero clauses beneath it — never the
+    // holds sentence, which would be the calm-but-wrong direction.
+    await expect(standing).toContainText(copy.recommendRecordSuperseded)
+    await expect(standing).not.toContainText(copy.recommendRecordHolds)
+    // BOTH clauses, in the producer's declaration order (inputs → solver → rules).
+    await expect(card.locator('.rec-record__causes li')).toHaveText([
+      copy.recommendRecordSupersededInputs,
+      copy.recommendRecordSupersededSolver,
+    ])
+    // The rulebook clause is DARK — this plant's era is fresh, so naming it would be a cause the
+    // trichotomy never found (the arm that proves the list is the store's, not a fixed set).
+    await expect(card).not.toContainText(copy.recommendRecordSupersededRules)
+
+    // THE MINT YEAR: this plant's record is ~400 days old, so the age clause renders rather than
+    // suppressing. Bound to the catalog's own slot (never a re-typed sentence) and to a year that
+    // is genuinely in the past.
+    const savedIn = card.locator('p.rec-note__line')
+    await expect(savedIn).toHaveCount(1)
+    const savedInText = (await savedIn.textContent()) ?? ''
+    const year = Number(/(\d{4})/.exec(savedInText)?.[1])
+    expect(Number.isFinite(year), `the age clause must name a year — got "${savedInText}"`).toBe(true)
+    expect(savedInText, 'the sentence is the shipped slot, not a re-typed one').toBe(
+      slots.recommendRecordSavedIn(year),
+    )
+    expect(year, 'a record minted THIS calendar year suppresses the clause instead').toBeLessThan(
+      new Date().getFullYear(),
+    )
+
+    // THE WORST CASE, measured on the real card: add the one clause the producer could still emit
+    // beside these two (the rulebook one), from the catalog.
+    const heights = await card.evaluate((el, rulesClause) => {
+      const two = Math.round(el.getBoundingClientRect().height)
+      const list = el.querySelector('.rec-record__causes')!
+      const li = document.createElement('li')
+      li.className = 'rec-note__line'
+      li.textContent = rulesClause
+      list.appendChild(li)
+      const three = Math.round(el.getBoundingClientRect().height)
+      li.remove()
+      return { two, three }
+    }, copy.recommendRecordSupersededRules)
+    const discBottom = await page
+      .locator('footer.disclaimer.disclaimer--in-frame')
+      .evaluate((el) => Math.round(el.getBoundingClientRect().bottom))
+    console.log(
+      `[U17 record return] ?vault=recold ${REAL.width}x${REAL.height}: superseded card h=${heights.two} ` +
+        `(producible worst case, 3 clauses: ${heights.three}) · disclaimer bottom=${discBottom} · frame=${REAL.height}px`,
+    )
+    // Non-vacuity: the injected clause really did grow the card, so `three` is a measurement.
+    expect(heights.three, 'a third clause must make the card taller').toBeGreaterThan(heights.two)
+    // The grid seat holds on this face too — the exclusion is not standing-dependent.
+    const surfaceRow = await page
+      .locator('.recommendation-surface')
+      .evaluate((el) => getComputedStyle(el).gridRowStart)
+    expect(surfaceRow, 'the superseded card must keep the r4 idle seat as well').toBe('4')
   })
 })

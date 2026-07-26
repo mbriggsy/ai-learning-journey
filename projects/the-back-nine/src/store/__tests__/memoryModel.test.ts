@@ -8,7 +8,9 @@ import type { CandidateStrategy } from '@engine/solver/candidates'
 import { solverRunFingerprint } from '@engine/validation/solverRunFingerprint'
 import { engineApi } from '@engine/engineProtocol'
 import { productionMarket } from '@engine/reference/methodology'
-import type { SimulationParams } from '@shared/model'
+import type { SavedRecommendationV3, SimulationParams } from '@shared/model'
+import { DEV_SEEDS, doctorRecordHolds } from '@ui/devSeeds'
+import { scenarioFromDraft, currentEpochDay } from '@ui/scenarioFromDraft'
 
 /**
  * memoryModel orchestration mechanics (phase-2 contract #1 (a)–(f) + C3 forward
@@ -743,6 +745,19 @@ const fingerprintSensitiveDispatch = (d: ScenarioDraft): SolveRequest | SolveBlo
   return realRequest({ tieTolerance: d.retirementState === 'NC' ? 1 : 0 })
 }
 
+/** A REAL saved-recommendation record (the `?vault=rec` plant's own doctor — the shipped
+ *  `mintSavedRecommendation` over the engine's own run-identity producer). Real rather than a stub
+ *  so the arm that carries it asserts about a FULLY POPULATED record — fifteen dated era fields and
+ *  a canon-serialized identity — and not about a placeholder the draft happens to hold. Lazy: it
+ *  costs a candidate enumeration, and only one arm needs it. */
+function aRealSavedRecord(): SavedRecommendationV3 {
+  const built = scenarioFromDraft(DEV_SEEDS.retired)
+  if (!built.ready) throw new Error('the retired dev seed must be save-ready')
+  const record = doctorRecordHolds(built.scenario, currentEpochDay()).savedRecommendation
+  if (record === undefined) throw new Error('the record plant exists to produce a record')
+  return record
+}
+
 /** Bring a model to a COMMITTED solve over the fingerprint-sensitive builder (spine committed, goal
  *  set, one solve resolved to `refused`). Returns the model + fakes for the follow-on edit. */
 async function committedSolveModel() {
@@ -850,6 +865,42 @@ describe('memoryModel — fingerprint invalidation (§S1)', () => {
     // spendEntryPeriod is not read by the builder → the request (and its fingerprint) is unchanged.
     model.update((d) => ({ ...d, spendEntryPeriod: 'year' }))
     expect(model.getSnapshot().solve.kind).toBe('committed')
+  })
+
+  /**
+   * U17 §S5 — the STORE half of "minting a record must not demote the read it describes".
+   *
+   * WHAT THIS ARM PROVES, EXACTLY: `update()` puts the record on the draft, LEAVES it there, and
+   * runs `invalidateStaleSolve` without demoting. That is the store-side obligation S5's gesture
+   * depends on (`IntakeApp` step 6 writes the record onto the draft between the mint and the
+   * write) — and the "leaves it there" half is not implied by anything else: `update` takes a whole
+   * new draft from its caller, so a mutation seam that reconstructed the draft from known fields
+   * would silently drop the record on the very next commit-on-blur.
+   *
+   * WHAT IT DOES NOT PROVE, AND SAYS SO: that the SHIPPED builder is blind to the record. This
+   * file's dispatches are the in-file fakes above (`realRequest` / `fingerprintSensitiveDispatch`),
+   * which ignore `savedRecommendation` BY CONSTRUCTION — so a "still committed" assertion here can
+   * only ever witness its own fixture. The real builder's blindness is pinned where the real builder
+   * runs: `ui/__tests__/solveDispatch.test.ts`, "a saved recommendation on the draft does NOT move
+   * the run identity".
+   */
+  it('`update()` carrying a saved recommendation onto the draft KEEPS it there and leaves the committed rec standing (the store half — the builder half is in solveDispatch.test.ts)', async () => {
+    const { model } = await committedSolveModel()
+    const before = model.getSnapshot().solve
+    if (before.kind !== 'committed') throw new Error('unreachable')
+    const record = aRealSavedRecord()
+    model.update((d) => ({ ...d, savedRecommendation: record }))
+    const after = model.getSnapshot().solve
+    expect(after.kind, 'saving a strategy read must not demote the strategy read').toBe('committed')
+    if (after.kind !== 'committed') return
+    expect(after.fingerprint, 'and the run identity is untouched').toBe(before.fingerprint)
+    // THE OTHER HALF: the record survived the mutation seam (a reconstructing `update` would have
+    // dropped it, and the gesture's very next `session.save` would write a record-free scenario).
+    expect(model.getSnapshot().draft.savedRecommendation).toBe(record)
+    // NON-VACUITY: this same model DOES demote on a genuinely ranking-affecting edit, so the
+    // "still committed" above is the record being inert, not the demotion being broken.
+    model.update((d) => ({ ...d, retirementState: 'NC' }))
+    expect(model.getSnapshot().solve.kind).toBe('stale')
   })
 
   it('a draft edit that makes the request UNBUILDABLE (cleared goal) is itself an invalidation → `stale`', async () => {

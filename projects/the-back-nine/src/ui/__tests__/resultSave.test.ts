@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { agedBalancesYearFor, deriveResultSave, type PersistState } from '../resultSave'
-import { scenarioFromDraft, type SaveReady } from '../scenarioFromDraft'
-import { DEV_SEEDS } from '../devSeeds'
-import { scenarioIdentity, type ScenarioV3 } from '@shared/model'
+import { scenarioFromDraft, currentEpochDay, type SaveReady } from '../scenarioFromDraft'
+import { DEV_SEEDS, doctorRecordHolds, doctorRecordSuperseded } from '../devSeeds'
+import { scenarioIdentity, type SavedRecommendationV3, type ScenarioV3 } from '@shared/model'
 
 /**
  * The edit-and-re-save machine (resultSave.ts) — the pure seam that retires the U8-review ②
@@ -22,6 +22,32 @@ function readyFor(seed: keyof typeof DEV_SEEDS): Extract<SaveReady, { ready: tru
 const retired = readyFor('retired')
 const borderline = readyFor('borderline')
 const notReady: SaveReady = { ready: false, detail: 'incomplete' }
+
+/**
+ * TWO REAL SAVED-RECOMMENDATION RECORDS for this same household — lifted off the shipped `?vault=rec`
+ * / `?vault=recold` plants, i.e. minted by `mintSavedRecommendation` over a `solverRunFingerprint`
+ * the engine's own producer computed for this draft. NOT hand-typed (DND 012): the era snapshot is
+ * fifteen dated fields and the fingerprint is an opaque canon serialization, so a literal would pin
+ * a fiction the moment either producer moved — and both are inside the identity key this file's
+ * compare walks. They differ in the two fields the plants differ in (identity + ranking-code
+ * version), which is what makes A-vs-B a real edit rather than a typo.
+ */
+function recordFromPlant(doctor: (s: ScenarioV3, today: number) => ScenarioV3): SavedRecommendationV3 {
+  const record = doctor(retired.scenario, currentEpochDay()).savedRecommendation
+  if (record === undefined) throw new Error('the record plants exist to produce a record')
+  return record
+}
+const recordA = recordFromPlant(doctorRecordHolds)
+const recordB = recordFromPlant(doctorRecordSuperseded)
+
+/** The LIVE operand, built the way a real save builds it: the record goes on the DRAFT and the
+ *  whole thing goes through `scenarioFromDraft`'s codec round-trip. Hand-assembling a `SaveReady`
+ *  here would bypass the codec entirely — see the dropped-record block's header. */
+function liveWith(record: SavedRecommendationV3): Extract<SaveReady, { ready: true }> {
+  const r = scenarioFromDraft({ ...DEV_SEEDS.retired, savedRecommendation: record })
+  if (!r.ready) throw new Error(`the retired draft must stay save-ready with a record on it: ${r.detail}`)
+  return r
+}
 
 describe('deriveResultSave — the edit-and-re-save machine', () => {
   it('no vault yet + a ready answer → the firstSave ceremony CTA', () => {
@@ -235,33 +261,89 @@ describe('deriveResultSave — the dirty compare is key-order-INSENSITIVE (never
   })
 
   it('the saved-recommendation record participates in the compare: same plan, a DIFFERENT remembered record reads DIRTY (a mint is a real change to what is on disk)', () => {
-    const record = {
-      mintedAt: 20_500,
-      fingerprint: 'fp-a',
-      solverCodeVersion: 1,
-      goal: 'leave-more',
-      action: { candidateId: 'baseline:taxable-first:0', policy: 'taxable-first' },
-      verdict: { grade: 'just-do-it', subTenthCollapse: false, noChange: false, surplusRegime: false, noDollarRegister: false },
-      era: {
-        appDefaultVersion: 'defaults-2026-06',
-        taxVintageDetail: { taxYear: 2026, legalBasis: 'OBBBA' },
-        stateTaxVintage: { ncProfile: '{"nc":1}', paProfile: '{"pa":1}', flProfile: '{"fl":0}' },
-        healthcareVintage: {
-          coverageYear: 2026,
-          acaStatus: 'reverted',
-          acaVerifiedOn: '2026-07-01',
-          fplGuidelineYear: 2025,
-          irmaaTopTierFrozenThrough: 2028,
-          partBStandardMonthly: 206.5,
-        },
-        dateVintage: { contributionYear: 2026, blendSnapshotAsOf: '2026-01-01' },
-      },
-    } as const
-    const onDisk: ScenarioV3 = { ...retired.scenario, savedRecommendation: record }
-    const live: SaveReady = { ready: true, droppedAtoms: [], scenario: { ...retired.scenario, savedRecommendation: { ...record, fingerprint: 'fp-b' } } }
+    // BOTH records are REAL MINTS (the `?vault=rec` / `?vault=recold` plants' own doctors — the
+    // shipped `mintSavedRecommendation` over the engine's own run-identity producer). A hand-typed
+    // literal here would prove the codec's SHAPE gate and nothing about the era snapshot or the
+    // identity string the compare actually walks (DND 012).
+    const onDisk: ScenarioV3 = { ...retired.scenario, savedRecommendation: recordA }
+    const live = liveWith(recordB)
+    expect(live.droppedAtoms, 'the differing record must SURVIVE — a dropped one proves nothing here').toEqual([])
     expect(deriveResultSave({ kind: 'saved', scenario: onDisk }, live)).toEqual({ kind: 'dirty' })
     // …and an identical record on both sides (in a different key order) reads clean.
-    const sameLive: SaveReady = { ready: true, droppedAtoms: [], scenario: { ...retired.scenario, savedRecommendation: record } }
+    const sameLive = liveWith(recordA)
     expect(deriveResultSave({ kind: 'saved', scenario: reverseKeys(onDisk) }, sameLive)).toEqual({ kind: 'clean' })
+  })
+})
+
+/**
+ * THE DROPPED-RECORD TRICHOTOMY (U17 §S5 step 14) — the badge's answer when the codec DELETES the
+ * record on the way to the compare.
+ *
+ * WHY THE OPERAND IS BUILT THROUGH THE REAL PIPELINE AND NEVER HAND-WRITTEN. `deriveResultSave` does
+ * not run the codec — it compares two `scenarioIdentityKey`s (resultSave.ts:63-64) — so a
+ * hand-assembled `SaveReady` whose scenario simply LACKS a record would make every assertion below
+ * pass against a hand-typed ABSENCE, while the mutant that matters (removing
+ * `delete o.savedRecommendation`, scenarioCodec.ts:867) stayed green. Driving the live operand
+ * through `scenarioFromDraft` — the SAME round-trip the real save runs — makes the delete itself the
+ * thing under test: `droppedAtoms.length === 1` witnesses the codec REPORTING the drop, and the
+ * absence assertion witnesses it MUTATING the object it returns.
+ *
+ * AND BOTH DIRECTIONS MATTER. "An invalid mint reads CLEAN" is TRUE — but only on a record-free
+ * disk, where nothing was lost. Put a GOOD record on disk and the same invalid mint reads DIRTY,
+ * and the reason is the data-loss case `IntakeApp`'s gesture header names: the codec deleted the
+ * good record from the LIVE side only, so the household's next plan-save would write a record-FREE
+ * scenario over it. Pinning only the calm direction would read as "a dropped record is harmless".
+ */
+describe('deriveResultSave — a record the codec DROPS, in all three disk states', () => {
+  /** The same real mint with its epoch-DAY stamp replaced by epoch-MILLISECONDS: a finite integer
+   *  that silently reads as year ~55000, which the codec's range gate refuses (insight 046). A
+   *  REJECTED-BY-A-REAL-RULE record, never a shape this codec was never going to accept anyway. */
+  const brokenRecord: SavedRecommendationV3 = { ...recordA, mintedAt: recordA.mintedAt * 86_400_000 }
+
+  const dropped = liveWith(brokenRecord)
+  const kept = liveWith(recordA)
+
+  it('the codec REPORTS the drop and DELETES the atom from the object it returns (the witness the rest of this block rests on)', () => {
+    // The save still PROCEEDS — the plan is never held hostage to a defect in our minting code
+    // (scenarioFromDraft's own ruling) — but the atom is named on the way out…
+    expect(dropped.ready, 'a bad record must never make the whole plan unsaveable').toBe(true)
+    if (!dropped.ready) return
+    expect(dropped.droppedAtoms, 'exactly one atom, named').toHaveLength(1)
+    expect(dropped.droppedAtoms[0]).toContain('savedRecommendation')
+    expect(dropped.droppedAtoms[0]).toContain('mintedAt')
+    // …and it is GONE from the returned scenario. MUTANT (delete the `delete` at
+    // scenarioCodec.ts:867): the report still fires, this line reds, and case (b) below flips.
+    expect(dropped.scenario.savedRecommendation).toBeUndefined()
+    // NON-VACUITY: the SAME pipeline keeps a valid record, so the drop above is the record being
+    // bad — not this pipeline losing records.
+    expect(kept.droppedAtoms).toEqual([])
+    expect(kept.scenario.savedRecommendation).toEqual(recordA)
+  })
+
+  it('(a) a record-free disk + a VALID live record reads DIRTY — a mint IS a change to what the vault would hold', () => {
+    expect(deriveResultSave({ kind: 'saved', scenario: retired.scenario }, kept)).toEqual({ kind: 'dirty' })
+    // The disk operand really is record-free (the arm is not passing on a shared record).
+    expect(retired.scenario.savedRecommendation).toBeUndefined()
+  })
+
+  it('(b) a record-free disk + a DROPPED live record reads CLEAN — nothing was lost, so nothing is unsaved', () => {
+    // The calm direction, and it is honest ONLY here: the vault has no record, the codec threw the
+    // bad one away, and the two post-codec operands genuinely describe the same plan. The gesture —
+    // not this compare — is what owes the household the "we could not save the recommendation"
+    // refusal (insight 100); the badge must not invent a second, contradictory claim about the plan.
+    expect(deriveResultSave({ kind: 'saved', scenario: retired.scenario }, dropped)).toEqual({ kind: 'clean' })
+  })
+
+  it('(c) a disk HOLDING a valid record + a DROPPED live record reads DIRTY — because the GOOD record was deleted from the LIVE side, never because the mint landed', () => {
+    // THE DATA-LOSS CASE. The vault holds a good record; the new mint is invalid, so the codec
+    // deletes it from the live operand — and the two identity keys now differ by exactly that good
+    // record. The badge reading DIRTY is what keeps the plan rail's re-save CTA on screen; what it
+    // must never do is read CLEAN and let the household believe the vault still matches, one
+    // plan-save away from a record-FREE scenario written over the record they had.
+    const onDisk: ScenarioV3 = { ...retired.scenario, savedRecommendation: recordA }
+    expect(deriveResultSave({ kind: 'saved', scenario: onDisk }, dropped)).toEqual({ kind: 'dirty' })
+    // …and the direction is the record's, not the plan's: the same disk against the live operand
+    // that KEPT that very record reads clean.
+    expect(deriveResultSave({ kind: 'saved', scenario: onDisk }, kept)).toEqual({ kind: 'clean' })
   })
 })

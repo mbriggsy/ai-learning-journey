@@ -192,22 +192,32 @@
    the tap would collapse ~100px and yank the in-frame disclaimer + the quiet doors up under the
    pointer mid-gesture (insight 035).
 
-   THE ARITHMETIC, mirroring `.result-save-slot`'s own (result.css:113-120 — --field-h 52 + --space-2
-   8 + one --text-sm line ≈ 24 = 84px = 5.25rem):
+   THE ARITHMETIC THIS WAS SIZED BY, mirroring `.result-save-slot`'s own (result.css:113-120):
      .btn-quiet CTA   --tap-min                 44px   (its one-line --text-sm label is ~25px, so the
                                                         44px touch floor is what actually governs)
      row gap          --space-2                  8px
      the hint         3 × (--text-sm @1rem × --leading-body 1.55 = 24.8px)   74px
-                        — the CEREMONY hint is the taller of the two (~168 chars); at the --measure
-                          36rem reading column that is three lines at every plausible advance width
-                          (it would need ≥0.64em average advance to reach four).
      ────────────────────────────────────────────────────────────────────
      total                                     126.4px  →  8rem (128px)
 
+   MEASURED IN REAL CHROMIUM 2026-07-26 (step 14, `e2e/vertical-fit.spec.ts` — "the save slot's
+   reservation holds every arm"; the figure above had been reasoned from the type scale, never
+   observed):
+     · 1536×791 · 1280×800 · 1088×800 — the ceremony hint holds TWO lines, not three, at the inner
+       two-pane reading column, so the tallest arm is 101.59px of content in the 128px box. Every
+       arm (empty / offer / saving / saved) lands in the SAME 128px box: the CLS law holds, with
+       26.41px of over-reservation. The arithmetic was not wrong about a THREE-line hint — a
+       re-worded 3-line hint measures 126.39px, 1.6px inside the box — the SHIPPED hint is simply
+       shorter than assumed at this measure.
+     · 390×844 (phone) — the hint takes FOUR lines: 146.13px of content in the 128px box. The box
+       GROWS to 146.13px on the offer arm while every other arm stays at 128px, so the tap
+       offer→saving collapses it and everything below rises 18.13px mid-gesture. THAT IS THE TRAP
+       THIS RESERVATION EXISTS TO PREVENT, still open on the phone. FILED for the pilot: the repair
+       is a per-tier reservation no width can outgrow — never a trimmed hint (content does not yield
+       to layout), and the fit gate deliberately does not pin the phone green against it.
+
    `min-`, NEVER fixed — the same law as the sibling: growth is safe, collapse is the mid-gesture
-   trap. A narrower column (the phone) wraps the hint further and the box GROWS to fit; the refusal
-   card is not in here at all (it lives in the aside, free to exceed). Step 14 measures this against a
-   real browser — this figure is reasoned from the type scale, not observed. */
+   trap. The refusal card is not in here at all (it lives in the aside, free to exceed). */
 .rec-save-slot {
   display: flex;
   flex-direction: column;

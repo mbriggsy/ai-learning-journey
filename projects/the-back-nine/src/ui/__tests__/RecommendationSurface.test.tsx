@@ -4,13 +4,34 @@ import '@testing-library/jest-dom/vitest'
 import { act, cleanup, render, screen, fireEvent } from '@testing-library/react'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
-import { RecommendationSurface } from '../RecommendationSurface'
-import { copy, staticDisclosures } from '../copy'
+import { RecommendationSurface, type RecommendationSaveProp } from '../RecommendationSurface'
+import { copy, slots, staticDisclosures } from '../copy'
+import {
+  savedRecordCardView,
+  type RecommendationSaveRefusal,
+  type RecommendationSaveView,
+  type SavedRecordCardView,
+  type SavedRecordCopy,
+} from '../recommendationSaveView'
+import { currentEpochDay, scenarioFromDraft } from '../scenarioFromDraft'
+import { exposureForDraft } from '../stalenessExposure'
+import { DEV_SEEDS } from '../devSeeds'
 import type { SolveAnswer } from '@store/memoryModel'
-import { NEVER_DEPLETED, type Distribution } from '@shared/model'
+import {
+  deriveSavedRecommendationStatus,
+  type SavedRecommendationStatus,
+} from '@store/savedRecommendation'
+import {
+  NEVER_DEPLETED,
+  type Distribution,
+  type SavedRecommendationEraV3,
+  type SavedRecommendationV3,
+  type ScenarioV3,
+} from '@shared/model'
 import { headlineStatisticFromDistribution } from '@engine/solver/objectiveHeadline'
 import type { SolveArm, SolveRecommendation } from '@engine/solver/solve'
 import type { SolveTokenWithheld } from '@engine/solver/solveEntry'
+import { SOLVER_CODE_VERSION } from '@engine/solver/solverCodeVersion'
 import type { GradeResult } from '@engine/validation/gradeCalibration'
 import type { SolverRunFingerprint } from '@engine/validation/solverRunFingerprint'
 
@@ -124,6 +145,11 @@ function leaveMoreArm(id: string, policy: SolveArm['policy'], taxable: number[],
   const dist = taxAwareDist(taxable, pretax)
   return { id, policy, conversion: null, distributionB: dist, headlineStatisticB: headlineStatisticFromDistribution(dist, 'leave-more', HB), survivalB: 0.99 }
 }
+/** The COMMITTED run's identity — an INPUT, shared by the solve fixture and (below) the ticket the
+ *  gesture is expected to carry. Never a hand-typed expected value: the ticket arm asserts the tap
+ *  forwards THIS run's fingerprint, so the two sides must read the same const or the bind is a
+ *  coincidence. */
+const COMMITTED_FP = 'solver-run-fp/v2:{surface-committed}' as SolverRunFingerprint
 function committedRec(over: Partial<SolveRecommendation> = {}): SolveAnswer {
   const winner = leaveMoreArm('taxable-first', 'taxable-first', [500_000, 700_000], [100_000, 100_000])
   const baseline = leaveMoreArm('proportional', 'proportional', [400_000, 500_000], [100_000, 100_000])
@@ -139,8 +165,106 @@ function committedRec(over: Partial<SolveRecommendation> = {}): SolveAnswer {
     withheldConversionLevers: [], disclosedDirectional: [], solverCodeVersion: 1,
     ...over,
   }
-  return { kind: 'committed', payload, fingerprint: 'fp' as SolverRunFingerprint }
+  return { kind: 'committed', payload, fingerprint: COMMITTED_FP }
 }
+
+// ---- U17 §S5 fixtures — the save gesture's arms + the remembered-record card -------------------
+
+/** The gesture prop with inert defaults; each arm overrides only what it exercises. */
+function saveProp(
+  view: RecommendationSaveView,
+  over: Partial<RecommendationSaveProp> = {},
+): RecommendationSaveProp {
+  return { view, onSave: () => {}, landed: false, onAnnounced: () => {}, ...over }
+}
+
+const TODAY = currentEpochDay()
+/** The RECORD's run identity — again an INPUT on both sides of the store's trichotomy: passing it
+ *  as `freshFingerprint` makes conjunct 1 hold, passing anything else makes it fire. Deliberately
+ *  NOT `COMMITTED_FP`: the card is driven by its OWN disk-derived data, never by the live solve. */
+const RECORD_FP = 'solver-run-fp/v2:{surface-record}' as SolverRunFingerprint
+
+/** A real save-ready scenario — the status operands below are the REAL producer's output
+ *  (`deriveSavedRecommendationStatus`), never a hand-typed `{current}` literal (the sibling
+ *  `recommendationSaveView.test.ts` header states the rule; the render side inherits it). */
+const readySave = (() => {
+  const r = scenarioFromDraft(DEV_SEEDS.retired)
+  if (!r.ready) throw new Error('DEV_SEEDS.retired should be save-ready — this fixture is not a real save')
+  return r
+})()
+const EXPOSURE = exposureForDraft(DEV_SEEDS.retired)
+
+/** The five era-bearing fields of a REAL save. THROWS rather than `!`-asserting: a fixture that
+ *  quietly built a stampless era would exercise the fail-open shape the codec refuses outright. */
+function eraOf(s: ScenarioV3): SavedRecommendationEraV3 {
+  const { taxVintageDetail, stateTaxVintage, healthcareVintage, dateVintage } = s
+  if (
+    taxVintageDetail === undefined ||
+    stateTaxVintage === undefined ||
+    healthcareVintage === undefined ||
+    dateVintage === undefined
+  ) {
+    throw new Error('scenarioFromDraft stamps all four vintages at every save — this fixture is not a real save')
+  }
+  return { appDefaultVersion: s.appDefaultVersion, taxVintageDetail, stateTaxVintage, healthcareVintage, dateVintage }
+}
+
+function recordFor(over: Partial<SavedRecommendationV3> = {}): SavedRecommendationV3 {
+  return {
+    mintedAt: TODAY - 10,
+    fingerprint: RECORD_FP,
+    solverCodeVersion: SOLVER_CODE_VERSION,
+    goal: 'leave-more',
+    action: { candidateId: 'taxable-first', policy: 'taxable-first' },
+    verdict: { noChange: false, surplusRegime: false, noDollarRegister: false },
+    era: eraOf(readySave.scenario),
+    ...over,
+  }
+}
+
+const statusOf = (
+  record: SavedRecommendationV3,
+  freshFingerprint: string | null = RECORD_FP,
+): SavedRecommendationStatus =>
+  deriveSavedRecommendationStatus({
+    record,
+    scenario: readySave.scenario,
+    freshFingerprint,
+    todayEpochDay: TODAY,
+    exposure: EXPOSURE,
+  })
+
+/** The card's copy, assembled from the SWEPT catalog exactly as `Result.tsx` assembles it — so every
+ *  string the card renders is a `copy`/`slots` entry and NOTHING in this file is a hand-typed
+ *  sentence that could drift from what ships. */
+const RECORD_COPY: SavedRecordCopy = {
+  heading: copy.recommendRecordHeading,
+  stillHolds: copy.recommendRecordHolds,
+  causes: {
+    'inputs-changed': copy.recommendRecordSupersededInputs,
+    'inputs-unavailable': copy.recommendRecordSupersededUnavailable,
+    'solver-changed': copy.recommendRecordSupersededSolver,
+    'rules-changed': copy.recommendRecordSupersededRules,
+  },
+  savedIn: slots.recommendRecordSavedIn,
+  reopenLabel: copy.recommendRecordReopenCta,
+  reopenCostLine: copy.recommendRecordReopenCost,
+}
+
+const cardOf = (
+  status: SavedRecommendationStatus,
+  record: SavedRecommendationV3 = recordFor(),
+): SavedRecordCardView => savedRecordCardView(status, record, TODAY, RECORD_COPY)
+
+/** The memory that STILL HOLDS — every conjunct of the store's trichotomy satisfied. */
+const holdsCard = (): SavedRecordCardView => cardOf(statusOf(recordFor()))
+/** TWO causes hold at once (conjunct 1 by a moved fingerprint, conjunct 2 by a foreign build) —
+ *  insight 101's operand: a card naming one of them describes its poster child, not the truth. */
+const twoCauseCard = (): SavedRecordCardView =>
+  cardOf(
+    statusOf(recordFor({ solverCodeVersion: SOLVER_CODE_VERSION + 1 }), 'solver-run-fp/v2:{moved}'),
+    recordFor({ solverCodeVersion: SOLVER_CODE_VERSION + 1 }),
+  )
 
 describe('RecommendationSurface — the committed active beat', () => {
   it('renders the grade WORD + its non-color glyph, the delta-as-hero, the baseline nameplate, and the disclosures', () => {
@@ -209,18 +333,39 @@ describe('RecommendationSurface — §S4 comparative depth + honest-limits + re-
     expect(screen.queryByRole('button', { name: copy.recommendRepickCta })).toBeNull()
   })
 
-  it('THE RESERVED SAVE SLOT is layout space ONLY — no live/interactive save control ships in U16 (mutant b)', () => {
-    const { container } = render(<RecommendationSurface solve={committedRec()} onRepick={vi.fn()} />)
-    const slot = container.querySelector('.rec-save-slot')
+  /**
+   * THE U16 RESERVED-SLOT PIN, REPLACED — NOT DELETED.
+   *
+   * U16 pinned the slot as layout space "ONLY, forever": aria-hidden, zero children, nothing
+   * interactive. U17 §S5 filled it, so that sentence could not survive as written — but deleting the
+   * arm would drop the CLS guarantee it bought, which is the whole reason the reservation exists (a
+   * tap must never slide the R13 disclaimer and the quiet doors below it up into the pointer). So
+   * the three structural asserts survive VERBATIM under the arms that still draw nothing, and the
+   * POPULATED counterpart — a real control, and the `aria-hidden` DROPPED — lives in the §S5
+   * battery below. `onRepick === undefined ⇒ no dead door` (:207-209) is the precedent.
+   */
+  it('THE RESERVED SAVE SLOT is the verbatim empty reservation on every arm that draws no control (CLS)', () => {
+    const unwired = render(<RecommendationSurface solve={committedRec()} onRepick={vi.fn()} />)
+    const slot = unwired.container.querySelector('.rec-save-slot')
     expect(slot, "the slot reserves U17's Save footprint (kills the CLS relayout)").not.toBeNull()
     expect(slot!.getAttribute('aria-hidden'), 'nothing to announce in an empty reservation').toBe('true')
-    // NOTHING interactive lives in the slot — a gesture whose commit does not persist is a lie (the
-    // security seat's writable()-refuses finding). A planted live save control (a <button> in the slot)
-    // makes BOTH of these RED.
     expect(slot!.querySelector('button, a, input, select, textarea, [role]'), 'no interactive element').toBeNull()
     expect(slot!.children.length, 'reserved layout space only — no rendered content').toBe(0)
-    // and NO save-looking control anywhere in the committed beat — U16 ships NO save; U17 lands it.
-    expect(screen.queryByRole('button', { name: /save/i }), 'U16 ships no Save control at all').toBeNull()
+    // UNWIRED (the P2/P3 shells, the in-isolation mounts): no dead Save control anywhere.
+    expect(screen.queryByRole('button', { name: copy.recommendSaveCta }), 'unwired ⇒ no save control').toBeNull()
+    cleanup()
+    // WIRED but with NOTHING TO CLAIM (`{kind:'none'}` — a read-only tab, an unencodable answer):
+    // the box must be IDENTICAL to the unwired one. Keying the reservation on the PROP's presence
+    // rather than on the VIEW would collapse it here.
+    const none = render(
+      <RecommendationSurface solve={committedRec()} onRepick={vi.fn()} recSave={saveProp({ kind: 'none' })} />,
+    )
+    const noneSlot = none.container.querySelector('.rec-save-slot')
+    expect(noneSlot, 'a wired-but-silent gesture still reserves the box').not.toBeNull()
+    expect(noneSlot!.getAttribute('aria-hidden')).toBe('true')
+    expect(noneSlot!.querySelector('button, a, input, select, textarea, [role]')).toBeNull()
+    expect(noneSlot!.children.length).toBe(0)
+    expect(screen.queryByRole('button', { name: copy.recommendSaveCta }), 'no claim ⇒ no control').toBeNull()
   })
 })
 
@@ -387,6 +532,419 @@ describe('RecommendationSurface — the blocked steers are SPOKEN (review wf_6f8
       const second = render(<RecommendationSurface solve={IDLE} />)
       second.rerender(<RecommendationSurface solve={{ kind: 'blocked', gap: 'goal-unset', label: 'goal-unset' }} />)
       expect(liveRegion()?.textContent, 'goal-unset never speaks here — the picker owns focus + announcement').toBe('')
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+})
+
+// ================================================================================================
+// U17 §S5 — THE SAVE GESTURE AT THE SURFACE
+//
+// The pure machines are pinned next door (`recommendationSaveView.test.ts`). Insight 032/081 is why
+// this file exists anyway: a test calling a shared function proves the FUNCTION, never that the
+// component CALLS it — so every arm below mounts the real component and reads the real DOM. The
+// P0 the header of `RecommendationSurface.tsx` names (the aside must NOT live inside the beats) is
+// only detectable this way: a pure-function battery stays green with the whole JSX mount deleted.
+// ================================================================================================
+
+describe('RecommendationSurface — §S5 the save slot: the OFFER arms (R1 + R2)', () => {
+  it('the CEREMONY route (R1, the no-vault path) ships a real ENABLED control, drops aria-hidden, and discloses the escalation BEFORE the tap', () => {
+    const onSave = vi.fn()
+    const { container } = render(
+      <RecommendationSurface
+        solve={committedRec()}
+        recSave={saveProp({ kind: 'offer', route: 'ceremony' }, { onSave })}
+      />,
+    )
+    const slot = container.querySelector('.rec-save-slot')
+    expect(slot, 'the reservation is still the box — now populated').not.toBeNull()
+    // R1 — the no-vault tap ROUTES INTO THE CEREMONY rather than going dead. This is the path every
+    // dev seed, the Caddie walk and the fit gate actually take, so a control that renders nothing
+    // here is the dead end the whole machine exists to make unrepresentable.
+    const cta = screen.getByRole('button', { name: copy.recommendSaveCta })
+    expect(slot!.contains(cta), 'the control lives INSIDE the reservation (no second box, no reflow)').toBe(true)
+    expect(cta, 'a live offer is tappable, never an inert lookalike').toBeEnabled()
+    expect(
+      slot!.querySelectorAll('button, a, input, select, textarea, [role]').length,
+      'exactly ONE interactive control in the slot',
+    ).toBe(1)
+    // An AT-invisible Save button would still pass "the reservation is hidden". It must not survive.
+    expect(slot!.hasAttribute('aria-hidden'), 'a POPULATED slot drops aria-hidden').toBe(false)
+    // R2 — compared by EQUALITY, never `toContain`: `recommendSaveHintCeremony` is a strict superset
+    // of the update hint, so a containment assert would pass on the WRONG route.
+    expect(container.querySelector('.rec-save__hint')?.textContent).toBe(copy.recommendSaveHintCeremony)
+    fireEvent.click(cta)
+    expect(onSave, 'one tap, one write').toHaveBeenCalledTimes(1)
+    // The TICKET is composed HERE, from the two producers on screen — never re-derived downstream.
+    expect(onSave, 'the ticket carries THIS committed run’s identity').toHaveBeenCalledWith({
+      fingerprint: COMMITTED_FP,
+      noDollarRegister: false,
+    })
+  })
+
+  it('the UPDATE route renders ITS OWN R2 hint — the vault exists, so no ceremony is promised', () => {
+    // The guard that makes the equality asserts meaningful: two DIFFERENT sentences ship, so a
+    // hard-coded single hint is detectable at all.
+    expect(copy.recommendSaveHintUpdate, 'the two routes disclose different truths').not.toBe(
+      copy.recommendSaveHintCeremony,
+    )
+    const { container } = render(
+      <RecommendationSurface solve={committedRec()} recSave={saveProp({ kind: 'offer', route: 'update' })} />,
+    )
+    expect(screen.getByRole('button', { name: copy.recommendSaveCta })).toBeEnabled()
+    expect(container.querySelector('.rec-save__hint')?.textContent).toBe(copy.recommendSaveHintUpdate)
+  })
+
+  it('the ticket’s noDollarRegister is READ from the rendered register, never hard-coded', () => {
+    const onSave = vi.fn()
+    render(
+      <RecommendationSurface
+        solve={committedRec({ noChange: true })}
+        recSave={saveProp({ kind: 'offer', route: 'update' }, { onSave })}
+      />,
+    )
+    fireEvent.click(screen.getByRole('button', { name: copy.recommendSaveCta }))
+    // The no-dollar register is what the household SAW; a record stamped with the other one would
+    // remember a verdict the screen never spoke. The paired `false` rides the ceremony arm above.
+    expect(onSave).toHaveBeenCalledWith({ fingerprint: COMMITTED_FP, noDollarRegister: true })
+  })
+
+  it('a payload whose displayed statistic disagrees with what RANKED offers NO save control at all (Q6)', () => {
+    // `assertObjectiveMatchesHeadline` throws on the render path → the view degrades to a calm
+    // `unavailable`, so there is no crowned winner to mint a record from. An `offer` view arriving
+    // beside it must NOT conjure a control: the slot lives inside `RecommendedBeat` by design.
+    const liar = leaveMoreArm('taxable-first', 'taxable-first', [500_000, 700_000], [100_000, 100_000])
+    const { container } = render(
+      <RecommendationSurface
+        solve={committedRec({ winner: { ...liar, headlineStatisticB: liar.headlineStatisticB + 1_000_000 } })}
+        recSave={saveProp({ kind: 'offer', route: 'ceremony' })}
+      />,
+    )
+    expect(container.querySelector('.rec-note--unavailable'), 'the calm degrade renders').not.toBeNull()
+    expect(container.querySelector('.rec-save-slot'), 'no slot outside the crowned beat').toBeNull()
+    expect(screen.queryByRole('button', { name: copy.recommendSaveCta }), 'nothing mintable ⇒ no offer').toBeNull()
+  })
+})
+
+describe('RecommendationSurface — §S5 THE CARDINAL SIN: only the SAVED arm may claim a completed save', () => {
+  it('the SAVING arm renders the pending line and NEVER the saved badge', () => {
+    const { container } = render(
+      <RecommendationSurface solve={committedRec()} recSave={saveProp({ kind: 'saving' })} />,
+    )
+    expect(container.querySelector('.rec-save__pending')?.textContent).toBe(copy.recommendSavePending)
+    // THE ONE ASSERT THIS WHOLE FILE EXISTS FOR. A write in flight has reached nothing; a surface
+    // reporting a save that did not happen is the worst defect this codebase can ship.
+    expect(container.querySelector('.rec-save__badge'), 'an in-flight write is not a save').toBeNull()
+    expect(container.textContent, 'the saved sentence appears nowhere while the write is in flight').not.toContain(
+      copy.recommendSaveSavedBadge,
+    )
+  })
+
+  it('the SAVED arm DOES render the badge, as TEXT in the a11y tree with a decorative mark', () => {
+    // The paired positive (burned/070): without it, an arm that rendered the badge NOWHERE would
+    // pass every negative above and the sweep below would be vacuous.
+    const { container } = render(
+      <RecommendationSurface solve={committedRec()} recSave={saveProp({ kind: 'saved' })} />,
+    )
+    const badge = container.querySelector('.rec-save__badge')
+    expect(badge, 'the disk-derived claim renders').not.toBeNull()
+    expect(badge!.textContent, 'the badge TEXT carries the state — colour is never the signal').toBe(
+      copy.recommendSaveSavedBadge,
+    )
+    expect(badge!.querySelector('.rec-save__mark'), 'the mark is redundant reinforcement').toHaveAttribute(
+      'aria-hidden',
+      'true',
+    )
+    expect(container.querySelector('.rec-save-slot')!.hasAttribute('aria-hidden'), 'a claim is never AT-hidden').toBe(
+      false,
+    )
+  })
+
+  it('NO other arm — wired or unwired — puts the saved sentence on screen (the swept negative)', () => {
+    const arms: readonly (RecommendationSaveView | undefined)[] = [
+      undefined,
+      { kind: 'none' },
+      { kind: 'offer', route: 'ceremony' },
+      { kind: 'offer', route: 'update' },
+      { kind: 'saving' },
+      { kind: 'refused', reason: 'record-invalid' },
+      { kind: 'refused', reason: 'write' },
+      { kind: 'refused', reason: 'recovery-locked' },
+    ]
+    // Non-vacuity (burned/070): a sweep over an accidentally-empty list passes silently.
+    expect(arms.length, 'every non-saved arm is swept').toBe(8)
+    for (const view of arms) {
+      const { container } = render(
+        <RecommendationSurface
+          solve={committedRec()}
+          recSave={view === undefined ? undefined : saveProp(view)}
+        />,
+      )
+      expect(container.textContent, `${view?.kind ?? 'unwired'} must not claim a completed save`).not.toContain(
+        copy.recommendSaveSavedBadge,
+      )
+      cleanup()
+    }
+  })
+})
+
+describe('RecommendationSurface — §S5 the refusal card (a promised affordance owes a rendered outcome)', () => {
+  const REFUSALS: readonly {
+    readonly reason: RecommendationSaveRefusal
+    readonly heading: string
+    readonly body: string
+  }[] = [
+    {
+      reason: 'record-invalid',
+      heading: copy.recommendSaveRefusalRecordInvalidHeading,
+      body: copy.recommendSaveRefusalRecordInvalidBody,
+    },
+    { reason: 'write', heading: copy.recommendSaveRefusalWriteHeading, body: copy.recommendSaveRefusalWriteBody },
+    {
+      reason: 'recovery-locked',
+      heading: copy.recommendSaveRefusalRecoveryLockedHeading,
+      body: copy.recommendSaveRefusalRecoveryLockedBody,
+    },
+  ]
+
+  it('every refusal reason renders ITS OWN alert card in the aside, with the slot back to the empty reservation', () => {
+    expect(REFUSALS.length, 'all three reasons are swept').toBe(3)
+    for (const { reason, heading, body } of REFUSALS) {
+      const { container } = render(
+        <RecommendationSurface solve={committedRec()} recSave={saveProp({ kind: 'refused', reason })} />,
+      )
+      const aside = container.querySelector('.rec-aside')
+      expect(aside, `${reason}: the aside mounts for a standing refusal`).not.toBeNull()
+      const note = aside!.querySelector('.rec-note--refused')
+      expect(note, `${reason}: the card renders`).not.toBeNull()
+      // role='alert' announces on insertion by design (the `.result-save-error` precedent).
+      expect(note).toHaveAttribute('role', 'alert')
+      expect(note!.querySelector('.rec-note__head')?.textContent).toBe(heading)
+      expect(note!.querySelector('.rec-note__line')?.textContent).toBe(body)
+      // The card is composed from `reason` ALONE — no developer text can reach the screen.
+      expect(note!.textContent).not.toMatch(/savedRecommendation\.|scenario\.|undefined|\[object/)
+      // The slot itself has already spoken in the aside: back to the verbatim reservation, and NO
+      // retry CTA (a deterministic mint that re-fails is the lying-remedy shape).
+      const slot = container.querySelector('.rec-save-slot')
+      expect(slot!.getAttribute('aria-hidden'), `${reason}: nothing to announce in the slot`).toBe('true')
+      expect(slot!.children.length).toBe(0)
+      expect(screen.queryByRole('button', { name: copy.recommendSaveCta })).toBeNull()
+      cleanup()
+    }
+  })
+
+  it('a refusal SURVIVES the commit-on-blur demotion — it renders beside the STALE card, not instead of it', () => {
+    // The store demotes committed → stale on every draft mutation, and a commit-on-blur fires one
+    // the instant focus leaves a field. If the aside were mounted inside the beats, the outcome of
+    // a gesture the household actually performed would evaporate on an unrelated keystroke.
+    const { container } = render(
+      <RecommendationSurface
+        solve={{ kind: 'stale', label: 'inputs-changed' }}
+        recSave={saveProp({ kind: 'refused', reason: 'write' })}
+      />,
+    )
+    const stale = container.querySelector('.rec-note--stale')
+    const refused = container.querySelector('.rec-aside .rec-note--refused')
+    expect(stale, 'the stale card still renders').not.toBeNull()
+    expect(refused, 'and the refusal outlives the demotion').not.toBeNull()
+    expect(stale!.contains(refused), 'two separate cards, never one nested in the other').toBe(false)
+  })
+})
+
+describe('RecommendationSurface — §S5 the remembered-record aside (the returning household)', () => {
+  it('the card paints on the returning household’s FIRST screen — an IDLE solve, with no beat at all', () => {
+    // THE P0. A vault return lands `idle` (memoryModel seeds it; the hydrate effect only replaces
+    // the draft), and `CommittedBeat`'s `case 'idle'` returns null — so a card gated on the beat
+    // could paint only its CURRENT arm, seconds after a save, the one moment it is useless.
+    const card = holdsCard()
+    const { container } = render(<RecommendationSurface solve={{ kind: 'idle' }} card={{ view: card }} />)
+    expect(container.querySelector('.rec-committed'), 'no committed beat exists on this frame').toBeNull()
+    const aside = container.querySelector('.rec-aside')
+    expect(aside, 'the aside is gated on ITS OWN data, never on view.kind').not.toBeNull()
+    expect(aside!.querySelector('.rec-record'), 'the memory renders').not.toBeNull()
+    expect(container.textContent).toContain(copy.recommendRecordHeading)
+    expect(container.textContent).toContain(copy.recommendRecordHolds)
+  })
+
+  it('the card also paints on the STALE frame — the other frame it exists for', () => {
+    const { container } = render(
+      <RecommendationSurface solve={{ kind: 'stale', label: 'inputs-changed' }} card={{ view: holdsCard() }} />,
+    )
+    expect(container.querySelector('.rec-note--stale')).not.toBeNull()
+    expect(container.querySelector('.rec-aside .rec-record'), 'a draft edit demotes the beat, not the memory').not.toBeNull()
+  })
+
+  it('on a COMMITTED frame the card sits BELOW the beat and OUTSIDE it (the aside is the surface’s own body)', () => {
+    const { container } = render(
+      <RecommendationSurface solve={committedRec()} card={{ view: holdsCard() }} />,
+    )
+    const beat = container.querySelector('.rec-committed')
+    const aside = container.querySelector('.rec-aside')
+    expect(beat).not.toBeNull()
+    expect(aside).not.toBeNull()
+    // OUTSIDE: mounting it inside `RecommendedBeat` would make the two arms above unreachable.
+    expect(beat!.contains(aside), 'the aside never nests inside the beat').toBe(false)
+    // BELOW: a memory reads after the answer, never over it.
+    expect(
+      Boolean(beat!.compareDocumentPosition(aside!) & Node.DOCUMENT_POSITION_FOLLOWING),
+      'the memory follows the answer in DOM order',
+    ).toBe(true)
+  })
+
+  it('no record and no refusal ⇒ NO aside node at all (the record-free frame is byte-identical to before)', () => {
+    const { container } = render(
+      <RecommendationSurface solve={committedRec()} recSave={saveProp({ kind: 'offer', route: 'update' })} />,
+    )
+    expect(container.querySelector('.rec-aside'), 'nothing to remember ⇒ no container').toBeNull()
+    expect(container.querySelector('.rec-record')).toBeNull()
+  })
+
+  it('a SUPERSEDED card with ZERO causes still renders a standing marker carrying TEXT (the fail-closed split)', () => {
+    // The broken-contract output: the store demoted the record without reporting a cause. A card
+    // that were nothing but a heading over `clauses.map(...)` draws a blank exactly where the
+    // disclosure belongs — and a decorative shape alone is not reachable in the a11y tree.
+    const base = statusOf(recordFor())
+    expect(base.current, 'the operand starts from a REAL producer verdict').toBe(true)
+    const broken: SavedRecommendationStatus = { ...base, current: false, causes: [] }
+    const view = cardOf(broken)
+    expect(view.standing.kind, 'fail-closed: the quieter claim').toBe('superseded')
+    const { container } = render(<RecommendationSurface solve={{ kind: 'idle' }} card={{ view }} />)
+    const standing = container.querySelector('.rec-record__standing')
+    expect(standing, 'the standing line renders on BOTH arms').not.toBeNull()
+    expect(standing).toHaveAttribute('data-standing', 'superseded')
+    expect(standing!.textContent, 'the meaning is TEXT, not a glyph').toBe(copy.recommendRecordSuperseded)
+    expect(standing!.querySelector('.rec-record__mark'), 'the shape is redundant reinforcement').toHaveAttribute(
+      'aria-hidden',
+      'true',
+    )
+    expect(container.querySelector('.rec-record__causes'), 'no empty list where no cause was reported').toBeNull()
+  })
+
+  it('EVERY cause clause renders, in the producer’s DECLARATION ORDER (insight 101)', () => {
+    const view = twoCauseCard()
+    // Non-vacuity: the fixture really does hold two causes at once.
+    expect(view.standing.clauses.length, 'two causes hold on this record').toBe(2)
+    const { container } = render(<RecommendationSurface solve={{ kind: 'idle' }} card={{ view }} />)
+    const clauses = [...container.querySelectorAll('.rec-record__causes .rec-note__line')].map((li) => li.textContent)
+    // A card naming ONE cause when two hold describes its poster child, not the truth.
+    expect(clauses).toEqual([copy.recommendRecordSupersededInputs, copy.recommendRecordSupersededSolver])
+    expect(clauses, 'the rendered order IS the producer’s order — never sorted, filtered or truncated').toEqual([
+      ...view.standing.clauses,
+    ])
+    expect(container.textContent, 'the superseded lead still leads').toContain(copy.recommendRecordSuperseded)
+  })
+
+  it('the RE-OPEN control and its cost line appear and vanish TOGETHER (no dead door, no dead promise)', () => {
+    const onReopen = vi.fn()
+    const wired = render(
+      <RecommendationSurface solve={{ kind: 'idle' }} card={{ view: holdsCard(), onReopen }} />,
+    )
+    const btn = screen.getByRole('button', { name: copy.recommendRecordReopenCta })
+    fireEvent.click(btn)
+    expect(onReopen, 'the way back is a real door').toHaveBeenCalledTimes(1)
+    expect(wired.container.querySelector('.rec-record__cost')?.textContent, 'the door names its cost').toBe(
+      copy.recommendRecordReopenCost,
+    )
+    cleanup()
+    // Unwired (the date route, a frame this screen refuses to invite on): BOTH halves gone.
+    const unwired = render(<RecommendationSurface solve={{ kind: 'idle' }} card={{ view: holdsCard() }} />)
+    expect(screen.queryByRole('button', { name: copy.recommendRecordReopenCta }), 'never a dead door').toBeNull()
+    expect(unwired.container.querySelector('.rec-record__cost'), 'never a cost line beside no control').toBeNull()
+    expect(unwired.container.textContent, 'the cost sentence leaves with its control').not.toContain(
+      copy.recommendRecordReopenCost,
+    )
+  })
+
+  it('the age clause renders when the record is genuinely old, and quotes NO remembered verdict (R3)', () => {
+    const aged = recordFor({ mintedAt: TODAY - 800 })
+    const view = cardOf(statusOf(aged), aged)
+    expect(view.savedIn, 'the fixture is old enough to have an age').not.toBeUndefined()
+    const { container } = render(<RecommendationSurface solve={{ kind: 'idle' }} card={{ view }} />)
+    expect(container.textContent).toContain(view.savedIn)
+    // MINIMAL BY RULING: the remembered grade / verdict enums stay persisted and UNQUOTED — an enum
+    // on screen is one refactor away from being read as a current figure.
+    expect(container.querySelector('.rec-record')!.textContent).not.toMatch(
+      /just-do-it|coin-flip|surplusRegime|noChange|noDollarRegister|taxable-first/,
+    )
+  })
+})
+
+describe('RecommendationSurface — §S5 the gesture’s announcements (burned/045)', () => {
+  it('the tap→in-flight transition SPEAKS the pending line through the persistent region, then self-clears', () => {
+    vi.useFakeTimers()
+    try {
+      const { rerender } = render(
+        <RecommendationSurface solve={committedRec()} recSave={saveProp({ kind: 'offer', route: 'update' })} />,
+      )
+      expect(liveRegion()?.textContent).toBe('')
+      rerender(<RecommendationSurface solve={committedRec()} recSave={saveProp({ kind: 'saving' })} />)
+      expect(liveRegion()?.textContent, 'the sighted pending line and the spoken one are the SAME sentence').toBe(
+        copy.recommendSavePending,
+      )
+      act(() => {
+        vi.advanceTimersByTime(2000)
+      })
+      expect(liveRegion()?.textContent, 'clear-after-announce').toBe('')
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('THE LANDING is announced off the durability event and acknowledged exactly ONCE', () => {
+    vi.useFakeTimers()
+    try {
+      const onAnnounced = vi.fn()
+      const { rerender } = render(
+        <RecommendationSurface
+          solve={committedRec()}
+          recSave={saveProp({ kind: 'saving' }, { landed: false, onAnnounced })}
+        />,
+      )
+      expect(liveRegion()?.textContent, 'nothing has landed yet').toBe('')
+      expect(onAnnounced).not.toHaveBeenCalled()
+      rerender(
+        <RecommendationSurface
+          solve={committedRec()}
+          recSave={saveProp({ kind: 'saved' }, { landed: true, onAnnounced })}
+        />,
+      )
+      expect(liveRegion()?.textContent, 'an AT user hears the save land').toBe(copy.recommendSaveSavedBadge)
+      expect(onAnnounced, 'clear-after-announce: the event is acknowledged').toHaveBeenCalledTimes(1)
+      act(() => {
+        vi.advanceTimersByTime(2000)
+      })
+      expect(liveRegion()?.textContent).toBe('')
+      // A re-render at the same standing flag must not re-speak (the ref makes it once per episode).
+      rerender(
+        <RecommendationSurface
+          solve={committedRec()}
+          recSave={saveProp({ kind: 'saved' }, { landed: true, onAnnounced })}
+        />,
+      )
+      expect(liveRegion()?.textContent, 'no re-announce loop').toBe('')
+      expect(onAnnounced).toHaveBeenCalledTimes(1)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('landed:true on the FIRST render still announces — the CEREMONY route remounts this whole subtree', () => {
+    vi.useFakeTimers()
+    try {
+      const onAnnounced = vi.fn()
+      // IntakeApp's `phase === 'save'` branch returns before Result renders, so on the no-vault
+      // route the surface is BRAND NEW when the write lands. A watcher seeded from the current view
+      // kind sees `saved` on both sides of the remount and stays silent about the very save it
+      // mounted to announce — which is why the flag, not the transition, is the trigger.
+      render(
+        <RecommendationSurface
+          solve={committedRec()}
+          recSave={saveProp({ kind: 'saved' }, { landed: true, onAnnounced })}
+        />,
+      )
+      expect(liveRegion()?.textContent, 'the post-ceremony landing still speaks').toBe(copy.recommendSaveSavedBadge)
+      expect(onAnnounced).toHaveBeenCalledTimes(1)
     } finally {
       vi.useRealTimers()
     }

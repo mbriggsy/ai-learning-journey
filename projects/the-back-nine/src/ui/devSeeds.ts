@@ -22,7 +22,7 @@
  * intake AND the Save ceremony every time. It is equally DEV-gated + DCE'd.
  */
 import type { ScenarioDraft } from '@store/memoryModel'
-import type { BudgetLineItem, ScenarioV3 } from '@shared/model'
+import type { BudgetLineItem, RecommendationGoal, ScenarioV3 } from '@shared/model'
 import {
   STATE_TAX_PROFILES,
   isPricedState,
@@ -30,6 +30,14 @@ import {
   type PricedState,
   type StateTaxProfile,
 } from '@engine/constants/stateTax'
+import { solverAssumedHeirBracket } from '@engine/constants'
+import type { SolveArm, SolveRecommendation } from '@engine/solver/solve'
+import { SOLVER_CODE_VERSION } from '@engine/solver/solverCodeVersion'
+import { solverRunFingerprint } from '@engine/validation/solverRunFingerprint'
+import { buildSolveRequest } from '@intake/solveDispatch'
+import { mintSavedRecommendation } from '@store/savedRecommendationMint'
+import { decodeScenario, encodeScenario } from '@shared/scenarioCodec'
+import { draftFromScenario } from './draftFromScenario'
 import { scenarioFromDraft, currentEpochDay } from './scenarioFromDraft'
 
 /** A fixed dev CRN seed → the same fan every drive (a reproducible cold-read).
@@ -959,7 +967,17 @@ export const DEV_VAULT_RECOVERY = 'lattice harbor cinder vellum 48 thicket'
  * Returns the seed's `ScenarioV3` on success (App pre-fills the passphrase + shows the unlock screen)
  * or a reason string for the (dev-only) failure log.
  */
-type PlantResult = 'ok' | 'unknown-seed' | 'not-ready' | 'floor-fail' | 'write-failed'
+type PlantResult =
+  | 'ok'
+  | 'unknown-seed'
+  | 'not-ready'
+  | 'floor-fail'
+  | 'write-failed'
+  /** A DOCTORED atom did not survive the codec's tolerated-drop channel (today: the saved
+   *  recommendation). U17 §S5 — see the guard in `runPlantDevVault`. */
+  | 'record-dropped'
+  /** A doctored scenario the codec REFUSES outright — a doctor that broke the plan itself. */
+  | 'doctored-corrupt'
 
 // Memoize the in-flight plant per key so React StrictMode's dev double-invoke of the `?vault` effect
 // runs the plant exactly ONCE. Two concurrent plants race the session epoch (the second's lock()
@@ -1118,6 +1136,179 @@ export function doctorStateStaleVault(s: ScenarioV3, todayEpochDay: number): Sce
   }
 }
 
+// ── U17 §S5 — THE RECORD-BEARING PLANTS (`?vault=rec` / `?vault=recold`) ───────────────────────
+//
+// THE GAP THEY CLOSE: before them, NO `?seed=` or `?vault=` route in this repo carried a saved
+// recommendation, so the one piece of new content S5 drops onto a protected IDLE frame — the
+// remembered-record card — could be neither cold-read by a human nor measured by `pnpm verify:fit`.
+// A vault return is the ONLY live route to it: the card is derived from the DISK
+// (`IntakeApp`'s recordCard memo reads `persist.scenario.savedRecommendation`, never the draft),
+// and a `?seed=` mount is `{kind:'unsaved'}` forever.
+//
+// THE RECORD IS MINTED, NEVER TYPED. A hand-written `SavedRecommendationV3` literal proves the
+// TYPE and nothing else (DND 012), and it would be wrong in the two places that decide what the
+// card SAYS: the `era` snapshot (five stamps, ~15 dated fields — a typed copy pins the record's
+// rulebook clocks against a fiction the moment any constant moves) and the `fingerprint` (an
+// opaque canon-serialization of the whole solve request — unforgeable by hand, and the trichotomy's
+// conjunct 1 reads it). So both come from their REAL producers: the build's four stamp functions
+// through `mintSavedRecommendation`, and `buildSolveRequest` → `solverRunFingerprint` over the
+// plant's OWN hydrated draft. The mint then runs the SAME `validateSavedRecommendation` the decode
+// path runs, so a malformed fixture fails at the plant, loudly, instead of vanishing at unlock.
+//
+// WHAT IS STILL DEV-AUTHORED, AND WHY IT MUST BE: the RANKING facts (the winning arm's id/policy,
+// the grade word, the two verdict flags). Only a real solve can produce those, and a live solve is
+// 80–200s (measured — `vertical-fit.spec.ts` records it), so a plant that ran one would never land.
+// They are the same tier of dev-authored fact as every household number in this file — and the card
+// quotes NONE of them (`savedRecordCardView` reads only `mintedAt`; the standing comes from the
+// store's trichotomy), so no fabricated figure can reach a screen through this seam.
+
+/** The goal the planted run ranked for. A saved recommendation only exists for a household that
+ *  PICKED one (`buildSolveRequest` refuses 'spine-unready' without it), and `chosenGoal` is a
+ *  persisted scenario field — so the plant writes it beside the record, exactly as a real save would. */
+const RECORD_GOAL: RecommendationGoal = 'leave-more'
+
+/** How far back `?vault=recold`'s record was minted. Past a calendar-year boundary from ANY drive
+ *  day, so the card's `Saved in <year>` slot actually renders (the age clause suppresses inside the
+ *  mint's own calendar year rather than fabricating provenance) — and far inside the codec's
+ *  epoch-day floor. `mintedAt` is deliberately OLDER than the scenario's fresh `savedAt`: that is
+ *  the documented organic case (a re-save re-stamps `savedAt`; the memory keeps its own age). */
+const RECORD_AGED_DAYS = 400
+
+/** The edit `?vault=recold`'s household made AFTER the record was minted — +$500/mo of real spend
+ *  on a ranking-affecting field. It is what makes the FRESH run identity differ from the record's,
+ *  and the doctor PROVES the divergence rather than assuming it. */
+const RECORD_SPEND_EDIT = 6_000
+
+/** One displayed arm of the dev fixture's ranking. The mint reads `id` and `policy` and NOTHING
+ *  else from an arm, so the sample is left genuinely EMPTY and its scalars zero — an obviously
+ *  un-sampled stub, never a plausible-looking fan a reader could mistake for a real distribution
+ *  (burned/062's refuse-rather-than-default posture applied to a fixture). */
+function devSolveArm(id: string, policy: SolveArm['policy']): SolveArm {
+  return {
+    id,
+    policy,
+    conversion: null,
+    distributionB: { terminalValuesReal: [], depletionYears: [], survivalFraction: 0 },
+    headlineStatisticB: 0,
+    survivalB: 0,
+  }
+}
+
+/** The committed payload the plant mints from — the sequencing switch a `leave-more` household
+ *  would keep. `solverCodeVersion` is a PARAMETER because it is the one field the two plants
+ *  differ on: conjunct 2 of the re-entry trichotomy compares it to this build's live constant. */
+function devRecommendationPayload(solverCodeVersion: number): SolveRecommendation {
+  const winner = devSolveArm('grid:taxable-first:0', 'taxable-first')
+  const runnerUp = devSolveArm('grid:bracket-fill:0', 'bracket-fill')
+  const noActionBaseline = devSolveArm('baseline:proportional:0', 'proportional')
+  return {
+    kind: 'recommended',
+    goal: RECORD_GOAL,
+    heirBracket: solverAssumedHeirBracket.value,
+    seedA: DEV_CRN_SEED,
+    seedB: DEV_CRN_SEED + 1,
+    winner,
+    runnerUp,
+    noActionBaseline,
+    rankedIds: [winner.id, runnerUp.id, noActionBaseline.id],
+    prunedScores: [],
+    noChange: false,
+    surplusRegime: false,
+    grade: { grade: 'just-do-it', memberMargins: [], demotionFired: false, subTenthCollapse: false },
+    gradeStatistic: 'leave-more',
+    gradeUnavailable: undefined,
+    namedDriver: 'sampling-noise-near-tie',
+    skewDisclosure: undefined,
+    deltaSkew: undefined,
+    withheldConversionLevers: [],
+    disclosedDirectional: [],
+    solverCodeVersion,
+  }
+}
+
+/** The REAL run identity for a scenario's own household — `buildSolveRequest` over the HYDRATED
+ *  draft (the exact production path `appModel.currentDraftFingerprint()` takes at read time), then
+ *  the engine's own fingerprint producer. Fails LOUD rather than returning a placeholder: a plant
+ *  whose fingerprint could never match is a plant whose card can only ever say "your numbers
+ *  changed", which is the broken-gate symptom, not a fixture. */
+function recordFingerprintFor(s: ScenarioV3, todayEpochDay: number): string {
+  const hydrated = draftFromScenario(s)
+  if (!hydrated.ok) throw new Error(`the record plant's base is not a two-person household: ${hydrated.detail}`)
+  const request = buildSolveRequest(hydrated.draft, todayEpochDay)
+  if (typeof request === 'string') {
+    throw new Error(
+      `the record plant's base cannot build a solve run (${request}) — a saved recommendation is ` +
+        `always a spine-route household with a picked goal and a minted CRN seed.`,
+    )
+  }
+  return solverRunFingerprint(request.base, request.candidates, request.ranking, {
+    seedA: request.seedA,
+    tieTolerance: request.tieTolerance,
+  })
+}
+
+/** Put a freshly-minted record on a built scenario. `chosenGoal` lands FIRST — the fingerprint is
+ *  computed over the draft that carries it, which is the draft the app hydrates. */
+function withMintedRecord(s: ScenarioV3, mintedAt: number, solverCodeVersion: number, todayEpochDay: number): ScenarioV3 {
+  const goaled: ScenarioV3 = { ...s, chosenGoal: RECORD_GOAL }
+  const minted = mintSavedRecommendation(
+    devRecommendationPayload(solverCodeVersion),
+    recordFingerprintFor(goaled, todayEpochDay),
+    false,
+    mintedAt,
+  )
+  // The mint runs the codec's OWN validator, so this arm is the fixture's fail-loud: a dev record
+  // the vault would silently drop never reaches disk.
+  if (!minted.ok) throw new Error(`the dev record fixture is invalid — the codec refused it: ${minted.detail}`)
+  return { ...goaled, savedRecommendation: minted.record }
+}
+
+/**
+ * `?vault=rec` — the memory that STILL HOLDS. Every conjunct of the re-entry trichotomy passes: the
+ * fingerprint is this very household's, the version is this build's live constant, and the era is
+ * the same four stamps `scenarioFromDraft` just wrote — so no rulebook clock can fire against it.
+ * Minted TODAY, so the card's age clause suppresses (the minimal `holds` face: heading + standing +
+ * the re-open door).
+ */
+export function doctorRecordHolds(s: ScenarioV3, todayEpochDay: number): ScenarioV3 {
+  return withMintedRecord(s, todayEpochDay, SOLVER_CODE_VERSION, todayEpochDay)
+}
+
+/**
+ * `?vault=recold` — the memory that no longer holds, for TWO reasons at once (insight 101: a card
+ * that names one cause when two hold describes its poster child, not the truth — the only live
+ * route that proves the clause LIST renders rather than a single line).
+ *
+ *  · `inputs-changed` — the household raised their spend AFTER the save. The record keeps the
+ *    fingerprint of the run it actually described; the fresh one is over the edited draft.
+ *  · `solver-changed` — the record was written by a LATER build (`SOLVER_CODE_VERSION + 1`, the
+ *    backup-restore / multi-device case `solverCodeVersion.ts` names by hand: the compare is `!==`,
+ *    fail-closed in BOTH directions). `− 1` is unavailable: the live constant is 1 and the codec
+ *    floors the field at ≥ 1, so an older-build fixture is not currently mintable.
+ *
+ * The era stays FRESH — deliberately. Ageing it would fire `rules-changed` too, but only by
+ * hand-doctoring the one field of this record no hand should touch (the stamp snapshot), and the
+ * two causes above are both produced by real producers. The rulebook clause keeps its unit arms.
+ *
+ * Minted ~400 days back, so this plant is ALSO the live route to the card's `Saved in <year>` slot.
+ */
+export function doctorRecordSuperseded(s: ScenarioV3, todayEpochDay: number): ScenarioV3 {
+  const withRecord = withMintedRecord(s, todayEpochDay - RECORD_AGED_DAYS, SOLVER_CODE_VERSION + 1, todayEpochDay)
+  const edited: ScenarioV3 = { ...withRecord, annualSpendingReal: withRecord.annualSpendingReal + RECORD_SPEND_EDIT }
+  // NEVER A SILENT NO-OP (the `agedStateProfile` law): if the edit did not actually move the run
+  // identity, `inputs-changed` could not fire and this plant would quietly become a one-cause
+  // fixture that still LOOKS like the two-cause one. Prove the divergence against the real producer.
+  const fresh = recordFingerprintFor(edited, todayEpochDay)
+  if (fresh === withRecord.savedRecommendation?.fingerprint) {
+    throw new Error(
+      `doctorRecordSuperseded: the +${RECORD_SPEND_EDIT} spend edit left the solver-run fingerprint ` +
+        `UNCHANGED, so 'inputs-changed' can never fire — this plant would render a one-cause card ` +
+        `while claiming to be the two-cause one. Pick a field the run identity actually reads.`,
+    )
+  }
+  return edited
+}
+
 /** The AGED plants: `?vault=<key>` → a doctor over a base seed (each key names BOTH — the state-tax
  *  unit split the one doctor into two, so the dispatch carries the pairing). `stale` =
  *  the retired spine (the U13 staleness batch's original surface); `datestale` = the SPLIT
@@ -1169,6 +1360,13 @@ const AGED_PLANTS: Readonly<Partial<Record<string, AgedPlant>>> = {
   // (simulate.ts:640) → R19 indeterminate, so this plant rides `doctorStateStaleVault` (savedAt-only,
   // startCalendarYear + all vintages fresh) → the `stalenessStateTax` gate note fires in ISOLATION.
   statestale: { base: 'nc', doctor: doctorStateStaleVault },
+  // U17 §S5 — the two record-bearing plants, over the retired SPINE spine household (a saved
+  // recommendation is always spine-route: `solveDispatch.ts` refuses 'spine-unready' on the date
+  // route, so no record can exist for a date household). `rec` = the memory that still holds;
+  // `recold` = superseded for TWO causes, with the aged mint year. Neither doctor ages a vintage,
+  // so the re-entry gate's own staleness lines stay dark and the record card reads in isolation.
+  rec: { base: 'retired', doctor: doctorRecordHolds },
+  recold: { base: 'retired', doctor: doctorRecordSuperseded },
 }
 
 async function runPlantDevVault(key: string): Promise<PlantResult> {
@@ -1182,6 +1380,19 @@ async function runPlantDevVault(key: string): Promise<PlantResult> {
   // here, but the plant feeds cold-reads and its elapsed line must agree with the app's).
   const scenario =
     aged !== undefined ? aged.doctor(built.scenario, currentEpochDay()) : built.scenario
+  // U17 §S5 — A DOCTORED ATOM MUST FAIL AT THE PLANT, NEVER AT THE SCREEN. `scenarioFromDraft` ran
+  // ABOVE, BEFORE the doctor, so anything a doctor ADDS has never met the codec. That matters for
+  // exactly one field: the saved recommendation is the codec's ONE tolerated non-fatal drop, so an
+  // invalid record would be DELETED on the way back in at unlock and the plant would land a
+  // record-FREE vault — a fixture that reads as a broken CARD instead of a broken FIXTURE, which
+  // costs its reader the whole debugging session. The mint already validates in memory; this
+  // round-trip is what covers the values `JSON.stringify` transforms on the way to disk (DND 009).
+  // Doctored plants only — an undoctored scenario IS `built.scenario`, already round-tripped.
+  if (aged !== undefined) {
+    const round = decodeScenario(encodeScenario(scenario))
+    if (!round.ok) return 'doctored-corrupt'
+    if (round.droppedAtoms.length > 0) return 'record-dropped'
+  }
   const [{ getVaultSession }, { checkPassphraseFloor }, { clearVault, openVaultDb }] = await Promise.all([
     import('./vaultSession'),
     import('@crypto/kdf'),

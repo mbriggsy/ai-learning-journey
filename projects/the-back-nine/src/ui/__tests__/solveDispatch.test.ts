@@ -31,7 +31,8 @@ import { engineApi } from '@engine/engineProtocol'
 import { solverRunFingerprint } from '@engine/validation/solverRunFingerprint'
 import { solverAssumedHeirBracket, solverMinBPaths, acaEnhancedSubsidyStatus } from '@engine/constants'
 import { epochDayFromIsoDate } from '@engine/validation/oracleToken'
-import { resolveDevSeed } from '../devSeeds'
+import { doctorRecordHolds, resolveDevSeed } from '../devSeeds'
+import { scenarioFromDraft } from '../scenarioFromDraft'
 
 // Within the ACA freshness window so a clean household MINTS (the solveEntry.test convention).
 const TODAY = epochDayFromIsoDate(acaEnhancedSubsidyStatus.value.verifiedOn) + 5
@@ -78,6 +79,53 @@ describe('buildSolveRequest — the typed-refusal convention', () => {
     expect(req.ranking.heirBracket).toBe(solverAssumedHeirBracket.value) // the R7 default
     expect(req.candidates.some((c) => c.conversion !== null)).toBe(true) // an anchored conversion exists
     expect(req.candidates.some((c) => c.provenance === 'conventional-baseline')).toBe(true)
+  })
+
+  /**
+   * U17 §S5 — THE RECORD IS NOT PART OF THE RUN IDENTITY, and this is the only file that can prove
+   * it. `memoryModel.test.ts`'s solve arms dispatch through IN-FILE fakes (`realRequest` /
+   * `fingerprintSensitiveDispatch`), which ignore `savedRecommendation` BY CONSTRUCTION — an arm
+   * there would witness its own fixture. Here the REAL builder runs.
+   *
+   * WHAT IT COSTS TO GET WRONG: the store demotes a committed solve the instant
+   * `currentDraftFingerprint()` moves (`invalidateStaleSolve`), and S5's gesture puts the freshly
+   * minted record ON THE DRAFT (`IntakeApp` step 6). If the builder read the record, the very act of
+   * saving a strategy read would demote it — the household would tap "Keep this strategy read" and
+   * watch "This strategy read is out of date" replace the thing they just saved.
+   */
+  it('a saved recommendation on the draft does NOT move the run identity — the save that mints one must not demote the read it describes', () => {
+    const draft = withGoalSeed('fl', 'leave-more')
+    // A REAL record for this same household (the `?vault=rec` plant's own doctor — the shipped mint
+    // over the engine's own fingerprint producer), never a hand-typed stand-in: the point of the arm
+    // is that a FULLY POPULATED record changes nothing.
+    const built = scenarioFromDraft(draft)
+    expect(built.ready, 'the fl draft must be save-ready').toBe(true)
+    if (!built.ready) return
+    const record = doctorRecordHolds(built.scenario, TODAY).savedRecommendation
+    expect(record, 'the plant exists to produce a record').not.toBeUndefined()
+    if (record === undefined) return
+
+    const fpOf = (d: ScenarioDraft): string => {
+      const req = buildSolveRequest(d, TODAY)
+      expect(typeof req, 'both drafts must BUILD — a refusal here would prove nothing').not.toBe('string')
+      if (typeof req === 'string') throw new Error('unreachable')
+      return solverRunFingerprint(req.base, req.candidates, req.ranking, {
+        seedA: req.seedA,
+        tieTolerance: req.tieTolerance,
+      })
+    }
+    const bare = fpOf(draft)
+    const withRecord = fpOf({ ...draft, savedRecommendation: record })
+    expect(withRecord, 'the record rides the draft; the RUN is unchanged').toBe(bare)
+
+    // NON-VACUITY, both halves. (1) The record really was on the second draft and really is
+    // substantial — not an `undefined` that trivially changes nothing.
+    expect(record.fingerprint.length).toBeGreaterThan(200)
+    expect(Object.keys(record.era)).toHaveLength(5)
+    // (2) This fingerprint is not simply insensitive to the draft: a genuinely ranking-affecting
+    // edit on the SAME builder moves it. Without this, the equality above could pass over a
+    // constant.
+    expect(fpOf({ ...draft, annualSpendingReal: draft.annualSpendingReal! + 6_000 })).not.toBe(bare)
   })
 
   it('pay-less-tax carries NO heir bracket (leave-more only)', () => {

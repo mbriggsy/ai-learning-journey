@@ -1,6 +1,18 @@
 import { describe, expect, it } from 'vitest'
-import { DEV_SEEDS, doctorStaleVault, doctorStateStaleVault } from '../devSeeds'
+import {
+  DEV_SEEDS,
+  doctorRecordHolds,
+  doctorRecordSuperseded,
+  doctorStaleVault,
+  doctorStateStaleVault,
+} from '../devSeeds'
 import type { ScenarioDraft } from '@store/memoryModel'
+import type { ScenarioV3 } from '@shared/model'
+import { decodeScenario, encodeScenario } from '@shared/scenarioCodec'
+import { SOLVER_CODE_VERSION } from '@engine/solver/solverCodeVersion'
+import { solverRunFingerprint } from '@engine/validation/solverRunFingerprint'
+import { deriveSavedRecommendationStatus } from '@store/savedRecommendation'
+import { epochDayToCalendarYear } from '@store/staleness'
 import { scenarioFromDraft, currentEpochDay } from '../scenarioFromDraft'
 import { draftFromScenario } from '../draftFromScenario'
 import { floorRelief } from '../twoTier'
@@ -780,5 +792,139 @@ describe('the stale aged plant (the re-entry gate notes, exposure-gated)', () =>
     // `.reentry-notes p` at exactly this length for `?vault=stale`.
     expect(view.noteLines).toEqual([copy.stalenessTax, copy.stalenessMedicare])
     expect(view.elapsedLine, 'the ~760-day save reads "about 2 years ago"').toBe(slots.reentryElapsedYears(2))
+  })
+})
+
+// ===========================================================================
+// U17 §S5 — the RECORD-BEARING plants (`?vault=rec` / `?vault=recold`). Before them NO route in
+// this repo carried a saved recommendation, so `pnpm verify:fit` mounted the vault-return frame
+// WITHOUT the one piece of new content S5 drops onto it, and the human reviewer could not cold-read
+// the card at all. The fit arm over `?vault=rec` measures what these plants render — and (the
+// insight-051 tell: `stale` shipped its fit pin before it had a unit source) the STANDING each
+// plant produces is derived HERE, through the real doctor → hydrate → builder → fingerprint →
+// trichotomy chain, so a plant that quietly stopped holding fails in a second instead of only in
+// the ninety-second Chromium run.
+// ===========================================================================
+describe('the record-bearing plants (the remembered recommendation the fit gate measures)', () => {
+  const TODAY = currentEpochDay()
+
+  /** The plant's own chain, up to the point the app takes over: build the seed, doctor it, run the
+   *  vault round-trip, and hydrate exactly as unlock does. Returns both halves the trichotomy needs. */
+  function plant(doctor: (s: ScenarioV3, today: number) => ScenarioV3) {
+    const built = scenarioFromDraft(DEV_SEEDS.retired)
+    expect(built.ready, 'retired must be save-ready').toBe(true)
+    if (!built.ready) throw new Error('unreachable — asserted above')
+    const doctored = doctor(built.scenario, TODAY)
+    // THE PLANT'S OWN GUARD, re-run here: a doctor adds its atom AFTER the save gate ran, and the
+    // record is the codec's ONE tolerated non-fatal drop — an invalid one would be DELETED at
+    // unlock and the plant would land a record-FREE vault (which reads as a broken CARD, not a
+    // broken FIXTURE, and costs its reader the whole debugging session).
+    const round = decodeScenario(encodeScenario(doctored))
+    expect(round.ok, 'the doctored scenario must survive the codec').toBe(true)
+    if (!round.ok) throw new Error('unreachable — asserted above')
+    expect(round.droppedAtoms, 'the planted record must NEVER be a tolerated drop').toEqual([])
+    expect(round.scenario.schemaVersion).toBe(3)
+    if (round.scenario.schemaVersion !== 3) throw new Error('unreachable — asserted above')
+    const scenario = round.scenario
+    const record = scenario.savedRecommendation
+    expect(record, 'the plant exists to carry a record').not.toBeUndefined()
+    const hydrated = draftFromScenario(scenario)
+    expect(hydrated.ok, 'the hydrator must accept the planted shape').toBe(true)
+    if (!hydrated.ok || record === undefined) throw new Error('unreachable — asserted above')
+    // The FRESH run identity, off the HYDRATED draft — the exact production path
+    // `appModel.currentDraftFingerprint()` takes (`buildSolveRequest` → `solverRunFingerprint`),
+    // never a value read back off the record it is about to be compared to.
+    const request = buildSolveRequest(hydrated.draft, TODAY)
+    expect(typeof request, 'a planted household must still build a solve run').not.toBe('string')
+    if (typeof request === 'string') throw new Error('unreachable — asserted above')
+    const freshFingerprint = solverRunFingerprint(request.base, request.candidates, request.ranking, {
+      seedA: request.seedA,
+      tieTolerance: request.tieTolerance,
+    })
+    return {
+      scenario,
+      record,
+      freshFingerprint,
+      status: deriveSavedRecommendationStatus({
+        record,
+        scenario,
+        freshFingerprint,
+        todayEpochDay: TODAY,
+        exposure: exposureForDraft(hydrated.draft),
+      }),
+    }
+  }
+
+  it("'rec' — the memory STILL HOLDS: every conjunct passes, and the identity is the engine's own product for THIS household", () => {
+    const { record, status, freshFingerprint } = plant(doctorRecordHolds)
+
+    // Conjunct 1, and the reason this record cannot be hand-typed: the persisted identity IS what
+    // this build's own producer computes for the planted household.
+    expect(record.fingerprint).toBe(freshFingerprint)
+    expect(record.fingerprint, "the engine's own schema tag rides INSIDE the canon form").toContain(
+      '"fp"=s"solver-run-fp/v2"',
+    )
+    expect(record.fingerprint.length, 'a real canon serialization, never a placeholder').toBeGreaterThan(200)
+
+    // Conjunct 2: the RUN's ranking-code version is this build's.
+    expect(record.solverCodeVersion).toBe(SOLVER_CODE_VERSION)
+
+    // Conjunct 3: the era is the LIVE stamp set, so no rulebook clock can fire against it. Compared
+    // against a REAL save's stamps, not against the stamp producers this fixture also calls.
+    const freshSave = scenarioFromDraft(DEV_SEEDS.retired)
+    expect(freshSave.ready).toBe(true)
+    if (!freshSave.ready) return
+    expect(record.era).toEqual({
+      appDefaultVersion: freshSave.scenario.appDefaultVersion,
+      taxVintageDetail: freshSave.scenario.taxVintageDetail,
+      stateTaxVintage: freshSave.scenario.stateTaxVintage,
+      healthcareVintage: freshSave.scenario.healthcareVintage,
+      dateVintage: freshSave.scenario.dateVintage,
+    })
+    expect(status.eraStaleness.rulesMoved, 'a live-stamped era cannot be stale').toBe(false)
+
+    // THE STANDING the fit arm reads: holds, with NO cause clause beneath it.
+    expect(status.causes).toEqual([])
+    expect(status.current).toBe(true)
+
+    // …and the age clause SUPPRESSES (minted today) — the minimal holds face.
+    expect(epochDayToCalendarYear(record.mintedAt)).toBe(epochDayToCalendarYear(TODAY))
+  })
+
+  it("'recold' — SUPERSEDED for TWO causes at once, each from a real producer (insight 101: the clause LIST, never one poster child)", () => {
+    const { record, status, freshFingerprint } = plant(doctorRecordSuperseded)
+
+    // Cause 1 — the household raised their spend AFTER the save, so the fresh run identity is a
+    // DIFFERENT real fingerprint (not a doctored string: both sides come from the same producer).
+    expect(record.fingerprint).not.toBe(freshFingerprint)
+    expect(freshFingerprint).toContain('"fp"=s"solver-run-fp/v2"')
+    // Cause 2 — the record was written by a LATER build (the compare is `!==`, fail-closed BOTH
+    // ways; `− 1` is unmintable today, the live constant being 1 and the codec flooring at ≥ 1).
+    expect(record.solverCodeVersion).toBe(SOLVER_CODE_VERSION + 1)
+
+    // Both causes, in the producer's own declaration order (inputs → solver → rules).
+    expect(status.causes).toEqual(['inputs-changed', 'solver-changed'])
+    expect(status.current).toBe(false)
+    // The rulebook cause is deliberately DARK — the era stays fresh (the one field of this record
+    // no hand should doctor), so its absence is the clock working, never the clock broken.
+    expect(status.eraStaleness.rulesMoved).toBe(false)
+
+    // The aged mint — this plant is also the only live route to the card's "Saved in <year>" slot.
+    expect(epochDayToCalendarYear(record.mintedAt)).toBeLessThan(epochDayToCalendarYear(TODAY))
+    expect(TODAY - record.mintedAt, 'aged, but far inside the codec epoch-day floor').toBe(400)
+  })
+
+  it('the two plants differ ONLY in what they claim to differ in (the twin guard: two frames that must stay comparable)', () => {
+    const holds = plant(doctorRecordHolds)
+    const superseded = plant(doctorRecordSuperseded)
+    const strip = (s: ScenarioV3) => {
+      const { savedRecommendation: _record, annualSpendingReal: _spend, ...rest } = s
+      return rest
+    }
+    expect(strip(superseded.scenario)).toEqual(strip(holds.scenario))
+    expect(superseded.scenario.annualSpendingReal).toBe(holds.scenario.annualSpendingReal + 6_000)
+    // Both carry the picked goal — a saved recommendation only exists for a household that ran one.
+    expect(holds.scenario.chosenGoal).toBe('leave-more')
+    expect(superseded.scenario.chosenGoal).toBe('leave-more')
   })
 })

@@ -2,11 +2,17 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import '@testing-library/jest-dom/vitest'
 import { cleanup, render, screen, fireEvent, within } from '@testing-library/react'
-import { Result } from '../Result'
+import { Result, type RecommendationRecordProp } from '../Result'
 import { appModel } from '../appModel'
 import { resolvedFocusKey } from '../answerView'
 import { copy } from '@ui/copy'
 import { resolveDevSeed } from '../devSeeds'
+import { exposureForDraft } from '../stalenessExposure'
+import { currentEpochDay, scenarioFromDraft } from '../scenarioFromDraft'
+import { SOLVER_CODE_VERSION } from '@engine/solver/solverCodeVersion'
+import type { SolverRunFingerprint } from '@engine/validation/solverRunFingerprint'
+import { deriveSavedRecommendationStatus } from '@store/savedRecommendation'
+import type { SavedRecommendationV3 } from '@shared/model'
 import type { SolveAnswer } from '@store/memoryModel'
 
 // U16 §S1 — the solve builder is now WIRED live into appModel. A goal pick therefore reaches the REAL
@@ -61,12 +67,26 @@ afterEach(() => {
   vi.restoreAllMocks()
 })
 
-const renderResult = () => render(<Result onReview={vi.fn()} save={{ kind: 'none' }} computing={false} />)
+const renderResult = (recordCard?: RecommendationRecordProp) =>
+  render(<Result onReview={vi.fn()} save={{ kind: 'none' }} computing={false} recordCard={recordCard} />)
 const plantResolved = () => mockFocusKey.mockReturnValue('planted-focus-key')
 const invite = () => screen.queryByRole('button', { name: copy.recommendInviteCta })
 /** F-B — the STALE card's IN-CARD re-open control (its own control home; the door-row invite is retired
  *  for `stale`). Queried by its own copy, so a stale channel never depends on the door-row invite. */
 const staleReopen = () => screen.queryByRole('button', { name: copy.recommendStaleReopenCta })
+/** U17 §S5 — the RECORD card's own re-open control (its third home). Its own copy again, so no arm
+ *  below can pass by finding one of the other two. */
+const recordReopen = () => screen.queryByRole('button', { name: copy.recommendRecordReopenCta })
+/**
+ * EVERY control on this screen that opens the GoalPicker, enumerated STRUCTURALLY rather than by name.
+ * The three homes are the door-row invite (`.result-recommend-invite`) and the two in-card re-opens
+ * (`.rec-note__reopen` — the stale card's and the record card's), and each one's onClick is a
+ * `setGoalOpen(true)`. Counting the union is what makes "exactly ONE control opens one picker" a real
+ * claim: a by-name assertion that the record's re-open exists would stay green with a second door
+ * standing beside it, which is precisely the duplication the F-B chair fix retired.
+ */
+const pickerDoors = (container: HTMLElement) =>
+  Array.from(container.querySelectorAll<HTMLButtonElement>('.result-recommend-invite, .rec-note__reopen'))
 
 describe('the recommend-second invited affordance', () => {
   it('is offered as a quiet-row door on a resolved reading, STATIC (present immediately, no entrance)', () => {
@@ -211,5 +231,152 @@ describe('the recommend-second RE-invite (F2 stale/compute-error) + the date-rou
     expect(container.querySelector('.rec-note--stale'), 'the stale card renders on the spine route').not.toBeNull()
     expect(staleReopen(), 'the in-card re-open control returns').toBeInTheDocument()
     void spy
+  })
+})
+
+/**
+ * U17 §S5 — THE RETURNING HOUSEHOLD'S ONE DOOR (the F-B chair fix, applied to the record card).
+ *
+ * A vault return lands `idle` WITH a record on disk, and the record card carries its OWN re-open
+ * control (label + cost line + onClick minted as one, Result.tsx). So `solveInvitable`'s idle disjunct
+ * is narrowed by `recordCard === undefined`: without it that one frame would carry TWO controls opening
+ * the same GoalPicker — exactly the duplication the stale chair fix retired.
+ *
+ * THE MUTANT THESE ARMS KILL: revert the idle conjunct to a bare `solve.kind === 'idle'`. The
+ * suppression arm reds on the second door. The paired record-FREE and the OTHER-invitable-channel arms
+ * pin the direction, so the fix can never be over-applied into a blanket "a record silences the invite"
+ * (hoisting `recordCard === undefined` out to conjoin the whole disjunction reds there instead).
+ */
+const RECORD_FINGERPRINT = 'solver-run-fp/v2:{"goal"=s"leave-more"}' as SolverRunFingerprint
+
+/** The remembered record + the store's verdict on it, both through the REAL producers: the record is a
+ *  real save's era (`scenarioFromDraft`'s own four stamps — it THROWS rather than `!`-asserting, since a
+ *  stampless era is the fail-open shape the codec refuses outright), and the status is
+ *  `deriveSavedRecommendationStatus`'s output, never a hand-typed `{current}` literal. The fingerprint is
+ *  handed to BOTH sides, so the trichotomy holds and the card reads its calm still-holds standing. */
+function savedRecord(): RecommendationRecordProp {
+  const draft = completeRetired()
+  const ready = scenarioFromDraft(draft)
+  if (!ready.ready) throw new Error('recommendInvite: the fl dev seed must build a persistable scenario')
+  const { appDefaultVersion, taxVintageDetail, stateTaxVintage, healthcareVintage, dateVintage } = ready.scenario
+  if (
+    taxVintageDetail === undefined ||
+    stateTaxVintage === undefined ||
+    healthcareVintage === undefined ||
+    dateVintage === undefined
+  ) {
+    throw new Error('scenarioFromDraft stamps all four vintages at every save — this fixture is not a real save')
+  }
+  const today = currentEpochDay()
+  const record: SavedRecommendationV3 = {
+    mintedAt: today - 10,
+    fingerprint: RECORD_FINGERPRINT,
+    solverCodeVersion: SOLVER_CODE_VERSION,
+    goal: 'leave-more',
+    action: { candidateId: 'baseline:taxable-first:0', policy: 'taxable-first' },
+    verdict: { noChange: false, surplusRegime: false, noDollarRegister: false },
+    era: { appDefaultVersion, taxVintageDetail, stateTaxVintage, healthcareVintage, dateVintage },
+  }
+  return {
+    record,
+    status: deriveSavedRecommendationStatus({
+      record,
+      scenario: ready.scenario,
+      freshFingerprint: RECORD_FINGERPRINT,
+      todayEpochDay: today,
+      exposure: exposureForDraft(draft),
+    }),
+  }
+}
+
+const goalPicker = () => within(screen.getByRole('dialog')).queryByRole('heading', { name: copy.goalPickerTitle })
+
+describe('U17 §S5 — the record card’s re-open is the returning household’s ONE door', () => {
+  it('IDLE + a record: the door-row invite is SUPPRESSED and the CARD’s re-open is the single picker door', () => {
+    plantResolved()
+    appModel.update(completeRetired) // a buildable all-retired draft; the real solve channel is idle
+    const { container } = renderResult(savedRecord())
+    // The card is really on screen (an absent card would make the suppression below vacuous).
+    expect(container.querySelector('.rec-record'), 'the remembered record card renders').not.toBeNull()
+    expect(invite(), 'the door-row invite is retired once the card carries its own re-open').toBeNull()
+    const doors = pickerDoors(container)
+    expect(doors, 'exactly ONE control opens the GoalPicker on the returning frame').toHaveLength(1)
+    expect(doors[0], 'and it is the card’s own re-open').toBe(recordReopen())
+    expect(container.textContent, 'the cost line rides with the control it prices').toContain(
+      copy.recommendRecordReopenCost,
+    )
+    // It is a REAL door: it opens the picker (a suppressed invite beside a dead card would be worse
+    // than the duplication — the returning household would have no way back to a fresh solve at all).
+    fireEvent.click(doors[0]!)
+    expect(goalPicker()).toBeInTheDocument()
+
+    // THE PAIRED DIRECTION (non-vacuity). The very same frame with NO record on disk is byte-identical
+    // to today: the door-row invite returns, and there is still exactly one picker door.
+    cleanup()
+    const bare = renderResult()
+    expect(invite(), 'record-FREE idle still offers the door-row invite').toBeInTheDocument()
+    expect(bare.container.querySelector('.rec-record'), 'and there is no card to carry a second one').toBeNull()
+    expect(pickerDoors(bare.container)).toHaveLength(1)
+  })
+
+  it('STALE + a record: the STALE card owns the re-open; the record card carries NO control and NO cost line', () => {
+    plantResolved()
+    appModel.update(completeRetired)
+    plantSnapshot(staleSolve)
+    const { container } = renderResult(savedRecord())
+    expect(container.querySelector('.rec-record'), 'the memory is still shown').not.toBeNull()
+    expect(pickerDoors(container), 'one picker door across BOTH cards').toHaveLength(1)
+    expect(staleReopen(), 'and it is the stale card’s — the channel that went stale owns the remedy').toBeInTheDocument()
+    expect(recordReopen(), 'the record card adds no second door beside it').toBeNull()
+    expect(container.textContent, 'and no orphaned cost line pricing a control that isn’t there').not.toContain(
+      copy.recommendRecordReopenCost,
+    )
+    expect(invite()).toBeNull()
+  })
+
+  it('PENDING / BLOCKED{no-pretax} + a record: NO re-open at all — `pickGoal` would deterministically re-refuse', () => {
+    // Result wires the card's re-open on the POSITIVE `idle` predicate, not on `!solveInvitable`: these
+    // are frames where the dispatch cannot deliver a fresh solve, so a door here would be a promise the
+    // re-dispatch breaks. A cost line with no control beside it is the same dead promise, spelled out.
+    for (const solve of [
+      { kind: 'pending', label: 'solving' },
+      { kind: 'blocked', gap: 'no-pretax', label: 'no-pretax' },
+    ] as const satisfies readonly SolveAnswer[]) {
+      plantResolved()
+      appModel.update(completeRetired)
+      plantSnapshot(solve)
+      const { container } = renderResult(savedRecord())
+      expect(container.querySelector('.rec-record'), `${solve.kind}: the memory still renders`).not.toBeNull()
+      expect(pickerDoors(container), `${solve.kind}: no control opens the picker`).toHaveLength(0)
+      expect(container.textContent, `${solve.kind}: no cost line without a control`).not.toContain(
+        copy.recommendRecordReopenCost,
+      )
+      cleanup()
+      appModel.update(() => pristineDraft)
+      vi.restoreAllMocks()
+      mockFocusKey.mockReset()
+    }
+  })
+
+  it('the narrowing is IDLE-ONLY: compute-error and goal-unset keep the DOOR-ROW invite, and the card adds none', () => {
+    // Kills the over-broad twin of the fix (hoisting `recordCard === undefined` out to conjoin the whole
+    // disjunction): those two channels' own promises — the unavailable note's "you can re-open", the
+    // picker steer — must survive a record sitting on disk, and the card must not double them.
+    for (const solve of [
+      { kind: 'compute-error', reason: 'worker died' },
+      { kind: 'blocked', gap: 'goal-unset', label: 'goal-unset' },
+    ] as const satisfies readonly SolveAnswer[]) {
+      plantResolved()
+      appModel.update(completeRetired)
+      plantSnapshot(solve)
+      const { container } = renderResult(savedRecord())
+      expect(invite(), `${solve.kind}: the door-row invite survives the record`).toBeInTheDocument()
+      expect(recordReopen(), `${solve.kind}: the card adds no second door`).toBeNull()
+      expect(pickerDoors(container), `${solve.kind}: still exactly one picker door`).toHaveLength(1)
+      cleanup()
+      appModel.update(() => pristineDraft)
+      vi.restoreAllMocks()
+      mockFocusKey.mockReset()
+    }
   })
 })

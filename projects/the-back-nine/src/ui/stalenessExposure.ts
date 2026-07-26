@@ -100,9 +100,21 @@ const read = (priced: boolean): ExposureRead => (priced ? 'priced' : 'unpriced')
  * stale on the app's most consequential clock beats an over-present provenance note on a narrower
  * one, so the trade was taken knowingly.
  *
- * THE CLEAN FIX, when someone wants it: the echo renders AFTER a crown exists, so it can gate on
- * `acaPricedForRun(d, crownedOffset)` rather than inheriting the gate's pre-crown boolean. That
- * needs the crown threaded to the echo, which is a data-flow change this stage did not take.
+ * THE FIX THIS COMMENT USED TO PRESCRIBE IS WRONG — CORRECTED 2026-07-26. It said: "the echo
+ * renders AFTER a crown exists, so it can gate on `acaPricedForRun(d, crownedOffset)` rather than
+ * inheriting the gate's pre-crown boolean." Executing that would SILENCE more than it fixes.
+ * `rulesMoved` reaches the echo as ONE OR-collapsed boolean with no clock attribution
+ * (`staleness.ts`: appDefault ∨ tax ∨ stateTax ∨ movedClocks ∨ contribution), so gating THAT on
+ * ACA pricing also suppresses the echo for a household whose FEDERAL-TAX or MEDICARE clock moved
+ * while the crowned run happens to price zero ACA years — trading a bounded over-alarm for a
+ * silent stale on the more consequential clock. That is precisely the trade the paragraph above
+ * says was rejected, and precisely insight 103's shape (a rule written to kill an over-alarm must
+ * be checked in the SILENCING direction). `acaPricedForRun` already exists and is exported
+ * (`intakeMap.ts:896`) — the predicate was never the missing piece.
+ *
+ * THE ACTUAL FIX needs the exposure re-derived against the CROWNED offset (or per-clock
+ * attribution carried to the echo so the ACA line can withdraw on its own without taking the tax
+ * and Medicare lines with it). Either is a real data-flow change; neither is a one-line gate.
  *
  * NO RUN AT ALL (`missingRequiredFacts` non-empty ⇒ every builder returns null): `'unknown'` on
  * every family, NOT `'unpriced'`. Silence has to be EARNED by a proof that the run priced

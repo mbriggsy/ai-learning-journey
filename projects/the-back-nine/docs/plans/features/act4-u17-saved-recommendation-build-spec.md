@@ -107,6 +107,15 @@ deliberately, for save-moment coherence). This is insight 073's class exactly.
   `agedBalancesYear` clause simultaneously absent (a fresh save has no aged balances). Planted-fail: revert
   the label and it goes red.
 
+> **S0 BUILD STAMP (2026-07-24, commit `102416af` — retro-stamped 2026-07-26).** `offsetHasPassed` exported
+> ONCE from `curveMarks.ts` with THREE consumers bound + source-bind-pinned (the ladder filter, the hero
+> crown-arrived withdraw, and `dateTradeoff.ts`'s offer filter — a third re-typing this spec had not
+> enumerated); `elapsedPlanYears` → `yearsSincePlanBuilt` with zero orphans; `bandClockSavedLabel` →
+> `bandClockBuiltLabel` with BOTH renderers moved in the same change (insight 086). The verifier failed the
+> first cut TWICE and was right both times: the seam test had COPIED the mint under a comment claiming it
+> matched `Result.tsx` (planting `+3` left 1096 tests green), and the low-end clamp arm never exercised the
+> clamp it named (only a NON-INTEGER negative routes differently — insight 029).
+
 ---
 
 ## S1 — Q2: the Roth echo speaks the calendar year, on READ and WRITE
@@ -246,6 +255,18 @@ headline, where it would read as current).
   pass-through cast. The behavior is safe today only because `JSON.parse` preserves `encodeScenario`'s
   insertion order. A future reorder breaks dirty-detection silently.
 
+> **S3 BUILD STAMP (2026-07-25, commit `374299c9`, CI green by explicit id 30163571502 — retro-stamped
+> 2026-07-26).** THE RULING THIS SPEC WAS SILENT ON, and the reason the stage is correct: `scenarioFromDraft`
+> re-mints all five vintage stamps at EVERY save, so a plan re-saved after a bracket change reads "no clock
+> fired" while its remembered verdict was priced under superseded rules. `savedRecommendation.ts` snapshots
+> the record's OWN era and runs the SAME `deriveStaleness` against it — one comparator, two subjects, overlay
+> typed `Required<Pick<…>>` so dropping a key is TS2741. All five era fields REQUIRED: the scenario's
+> absent-is-quiet contract has a real population (a pre-U13 vault predates the stamps) but a record born at
+> U17 does not, so the identical rule fails OPEN — `rulesMoved:false` forever. Verdict ENUMERATED, never a
+> remembered dollar. The carry-into-review item above is CLOSED: `scenarioIdentityKey` removed the dependency
+> rather than documenting the accident. 4 adversarial seats found 6 real defects in the first build (the
+> fail-open era caught independently by TWO); 12 mutant families red→restored.
+
 ---
 
 ## S4 — Q4: the action-warning copy register (exposure-gated naming)
@@ -259,6 +280,21 @@ the household never had).
 - The quiet set (`acaVerifiedOn`, the RMD-age rule) **stays quiet**.
 - **Fold-measure the MAXIMAL variant** (insight 097: a copy swap on a fold-law frame is a layout change the
   metrics run alone can see).
+
+> **S4 BUILD STAMP (2026-07-25, commits `0c2fe6cb` + the flake fix `bd4ebcf8`, CI green by explicit id
+> 30170575831 — retro-stamped 2026-07-26).** **THE STAGE'S CONTENT TURNED OUT TO BE A SHIPPED DEFECT, NOT A
+> PROSPECTIVE REGISTER.** The scout proved the record card cannot render at all (nothing calls the
+> trichotomy, no seed carries a record, no fit arm covers it), so authoring its copy here would have been
+> dead code — **the copy register moved to S5**, and this heading's promise is the one thing in the spec
+> that did not survive contact. Meanwhile `reentryChrome` was pushing ONE healthcare line off the OR-collapse
+> of all seven clocks: an all-65+ household takes the Medicare-only branch, ships no `enrolledPremium`, can
+> never open the engine's ACA gate — it prices ZERO ACA and was told "Health-coverage rules have been
+> updated." Never only copy: `healthcare.moved` fed `rulesMoved` → both hero echoes AND S3's conjunct 3, so
+> the same falsehood would have DEMOTED a still-valid saved recommendation. Exposure is INJECTED from the
+> run's own built params (`stalenessExposure.ts` — six reads, six producers, never one derived from another).
+> **THE PILOT'S OWN GOVERNING RULE WAS WRONG AND A VERIFIER CAUGHT IT** — the first rule ("no run-layer
+> reader ⇒ aggregate") would have shipped a SILENT STALE on the 2028 IRMAA re-index while fixing a false
+> alarm. Insight 103: a rule written to kill an over-alarm must be checked in the SILENCING direction.
 
 ---
 
@@ -275,6 +311,37 @@ pinned at `RecommendationSurface.test.tsx:212-224`) and a **no-auto-save pin**
   (`session.ts:305`). A gesture whose commit cannot persist is a lie — the control must refuse honestly in
   that state, never present an inert "saved."
 
+> **AMENDED 2026-07-26 — what S3/S4 handed this stage that the original 13 lines could not name.** S3 built
+> the whole substrate and S4 deliberately declined the copy; both created obligations that are NOT inferable
+> from the text above. A builder working from the original spec alone would ship S5 missing all of it.
+>
+> - **THE COPY REGISTER LANDS HERE, not in S4** (see S4's stamp for why). Model it on
+>   `recommendStale{Heading,Body,ReopenCta}` — `copy.ts` for the strings AND
+>   `RecommendationSurface.tsx:127-137` for the render shape (the `role="status"` card with heading, body,
+>   and the re-open button); name the re-open's cost the way `recommendPendingLabel` does. **Key PREFIX picks
+>   the copyGuard gates:** `staleness*`/`reentry*` are hedge-, verdict- AND control-EXEMPT by documented law,
+>   the weakest net in the catalog, so a `savedRec*` warning key needs its own explicit guard arm (S4 added
+>   three; copy that pattern).
+> - **THE FOUR MINT OBLIGATIONS.** (1) Call `validateSavedRecommendation` (`scenarioCodec.ts:671`) BEFORE the
+>   record touches the draft — it has ZERO product callers today. (2) A non-empty `droppedAtoms` at the
+>   gesture must REFUSE ALOUD and must never report a saved recommendation (insight 100: the gesture promised
+>   an affordance, so it owes a rendered outcome). (3) `noDollarRegister` is COPIED from the composed view,
+>   never re-derived record-side — and the reachable register is **`RecommendedView.mode === 'no-change'`**
+>   (`recommendationView.ts:162`, assigned `:407`), NOT the module-local `noDollar` const at `:377`. (4) The
+>   `fingerprint` has no type bind and cannot get one (`solverRunFingerprint.ts:61` is a bare
+>   `export type … = string`), so the bind must be a TEST: mint from a REAL `solverRunFingerprint(...)` call
+>   → encode → decode → the trichotomy reads `current`.
+> - **TWO CORRECTIONS to how this stage has been described.** (a) S5 does NOT build a fresh-fingerprint seam
+>   — `memoryModel.ts:623-638` already has `fingerprintOf`/`currentDraftFingerprint` in exactly the
+>   `SolverRunFingerprint | null` shape the trichotomy wants, and `:620-622` explicitly bans a second
+>   definition. Consume it. (b) The mint is NOT independent of the plan-save machine: the record participates
+>   in the dirty/clean compare (`resultSave.test.ts:237-266` pins it by name), so a mint necessarily flips
+>   `deriveResultSave` to `'dirty'` and must be sequenced against it.
+> - **Sweep while you are in `session.ts`:** `:443-444` claims `scenarioFromDraft` "REFUSES on a non-empty
+>   list." It does not (`scenarioFromDraft.ts:115` returns `ready:true`, and `draftFromScenario.test.ts:556`
+>   pins that a dropped atom never refuses the whole save). Stale from the pre-F-pass cut; the recovery-path
+>   twin at `:518-520` does not repeat the error.
+
 ---
 
 ## S6 — The plant: `?vault=datearrived`
@@ -288,9 +355,18 @@ A **new, stateless** plant for the arrived household — the aged surface's cold
 - **Required engine-acceptance pin:** hydrate → `buildSpineParams` → `validateParams` accepts → the run
   resolves to a **real** `outcomeState`, never the R19 indeterminate. (Model it on
   `devSeeds.test.ts:500-524`, the `statestale` arm.)
-- **Pre-existing gap to close while here:** the `stale` plant (full doctor, spine route) has **no
+- **Pre-existing gap to close while here:** the `stale` plant (full doctor, spine route) has **no FAST
   engine-acceptance pin** — its `−2y startCalendarYear` aging is the exact mutation that broke `statestale`
-  and produced insight 085. Its sibling has the pin; it doesn't. That is the insight-051 tell.
+  and produced insight 085. Its sibling has the unit pin; it doesn't. That is the insight-051 tell.
+  **CORRECTED 2026-07-26 (the earlier flat "no engine-acceptance pin" was overstated):** two witnesses DO
+  exist — `e2e/vertical-fit.spec.ts:951-1020` drives `?vault=stale` through a real unlock and asserts
+  `assertResolvedSpine`, which requires `.confidence-reveal[data-twopane]`, emitted only when the run
+  resolves (never on R19 indeterminate); and `devSeeds.test.ts:202-228` runs the SAME doctor's output through
+  `runDateSearch` (which calls `validateParams` internally) on the `datestale` base. So the plant is proven
+  — by a ~90-second browser gate and by a differently-named wrapper on the other route. The real gap is the
+  missing FAST `buildSpineParams → validateParams → runEngine → outcomeState` unit arm on the spine path,
+  which is what `devSeeds.test.ts:727-730`'s own header asks for ("fails HERE (fast) instead of only in the
+  90-second Chromium run"). Add that; do not write it up as uncovered.
 - **Walk both seeds** (`datearrived` + the existing aged plant) in the Caddie walk.
 - **File** from the walk: the arrived-walk's state-tax blindness.
 - **No fit arm asserts the aged band's x-axis today** — zero `'Your save'` hits anywhere in `e2e/`. The new

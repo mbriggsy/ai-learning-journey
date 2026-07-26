@@ -212,6 +212,80 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     expect(copy.recommendStaleHeading, 'the heading names the strategy read out of date').toContain('out of date')
   })
 
+  // --- U17 §S5: the save GESTURE + the saved-record CARD. Unlike staleness*, these prefixes are
+  //     verdict-SCOPED (the 'recommend' entry in VERDICT_KEY_PREFIXES), so the scoped gates already
+  //     reach them — this sweep proves that rather than assuming it, then pins the two things a
+  //     presence-only assertion cannot see: that no line CLAIMS a save that did not happen, and
+  //     that the CTA hints actually carry their rulings' content. ---
+  const s5Keys = entries.filter(([k]) => k.startsWith('recommendSave') || k.startsWith('recommendRecord'))
+
+  it('U17 §S5: every recommendSave*/recommendRecord* string clears the SCOPED gates too', () => {
+    expect(s5Keys.length, 'there IS S5 gesture + card copy to guard').toBeGreaterThan(10)
+    // Control arms (burned/070 — the scope must be REAL, or the sweep is theatre). These inherit
+    // VERDICT scope from the existing 'recommend' prefix and must NOT be swept as controls (the
+    // record carries enums, never a figure). The mortality arm is the substring landmine: the
+    // matcher is /survivor/i, and "RecoveryLocked" must not be mistaken for it.
+    expect(isVerdictKey('recommendSaveCta'), 'inherits verdict scope from the recommend prefix').toBe(true)
+    expect(isControlKey('recommendSaveCta'), 'correctly OUTSIDE control scope').toBe(false)
+    expect(
+      isMortalityKey('recommendSaveRefusalRecoveryLockedHeading'),
+      'recovery is not survivorship — the catastrophe net must not claim this key',
+    ).toBe(false)
+    for (const [k, v] of s5Keys) {
+      expect(lintCopy(v, ['false-certainty', 'advice-verb', 'superlative', 'free-numeral']), `${k}: "${v}"`).toEqual([])
+    }
+    // The one SLOTTED line rides the sanctioned numeric channel (a calendar year), so it is swept
+    // without free-numeral — the same split the staleness arm and SLOT_RENDER apply.
+    expect(lintCopy(SLOT_RENDER.recommendRecordSavedIn, ['false-certainty', 'advice-verb', 'superlative'])).toEqual([])
+  })
+
+  it('U17 §S5: EXACTLY ONE key may claim a completed save, and every refusal says nothing reached the device', () => {
+    // The cardinal rule, made a test. The gesture RETURNS before the store is touched, so on both
+    // routes a refusal means nothing was written — a refusal that says "we saved your plan" would
+    // be a save reported that never happened. Purely NEGATIVE by design: an earlier draft pinned
+    // the positive sentence "we saved your plan", which pinned a FALSEHOOD.
+    const claimsASave = /\b(is|was|we|we’ve|we've)\s+\S*\s*(saved|kept|stored)\b/i
+    for (const [k, v] of s5Keys) {
+      if (k === 'recommendSaveSavedBadge') continue
+      expect(claimsASave.test(v), `${k} must not assert a completed save: "${v}"`).toBe(false)
+    }
+    // Non-vacuity (burned/070): the permitted key really does make the claim the others may not,
+    // so the exclusion above is load-bearing rather than a filter over an empty set.
+    expect(copy.recommendSaveSavedBadge, 'the badge is the one key that DOES claim the save').toMatch(/saved/i)
+    // And the record-invalid refusal positively carries the nothing-was-written clause.
+    expect(
+      copy.recommendSaveRefusalRecordInvalidBody,
+      'the refusal states outright that nothing reached the device',
+    ).toMatch(/nothing reached this device/i)
+  })
+
+  it('U17 §S5: the CTA hints carry R1 and R2 by CONTENT — the whole-plan truth, and the vault escalation', () => {
+    // A presence-only assertion ("a hint renders") cannot see a hint trimmed to
+    // "Keep this strategy read on this device". These pin the RULINGS: the write is whole-plan and
+    // the reader is told BEFORE the tap, and the no-vault route names the ceremony it escalates
+    // into. Each pinned across a SYNONYM set so a reword cannot quietly drop the disclosure.
+    const wholePlan = /everything you(’|')ve entered|your whole plan|all of your|everything you entered/i
+    const vaultSetup = /passphrase/i
+    const backupCopy = /backup/i
+
+    expect(copy.recommendSaveHintCeremony, 'R2: names the whole-plan write').toMatch(wholePlan)
+    expect(copy.recommendSaveHintCeremony, 'R1: names the passphrase escalation').toMatch(vaultSetup)
+    expect(copy.recommendSaveHintCeremony, 'R1: names the backup copy').toMatch(backupCopy)
+    expect(copy.recommendSaveHintUpdate, 'R2: the update route still names the whole-plan write').toMatch(wholePlan)
+    // The update route must NOT promise a ceremony it will not open.
+    expect(copy.recommendSaveHintUpdate, 'no vault ceremony on the already-saved route').not.toMatch(vaultSetup)
+  })
+
+  it('U17 §S5: no line is a verbatim lift of a staleness* string', () => {
+    // The staleness lines end "— this reading uses today's", which is TRUE about a live recompute
+    // and FALSE about a remembered one. Reuse would import that falsehood wholesale.
+    const stalenessValues = new Set(entries.filter(([k]) => k.startsWith('staleness')).map(([, v]) => v))
+    expect(stalenessValues.size, 'there ARE staleness strings to collide with').toBeGreaterThan(4)
+    for (const [k, v] of s5Keys) {
+      expect(stalenessValues.has(v), `${k} must not reuse a staleness line verbatim`).toBe(false)
+    }
+  })
+
   // --- slots: render with representative args, then scan. Slots are the SANCTIONED numeric channel,
   //     so they are NOT free-numeral scanned; the verdict voice still must hold. Record<keyof typeof
   //     slots, …> makes a new slot without a sample a COMPILE error (no silent no-op — burned/070). ---
@@ -345,6 +419,7 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     // sentence (recViz* — NOT control-scoped; universal-gate-swept only). Figures pre-formatted.
     recDiscHeirBracket: slots.recDiscHeirBracket('24'),
     recVizAria: slots.recVizAria('Your plan today', '740,000', 'The recommended strategy', '788,000', '48,000'),
+    recommendRecordSavedIn: slots.recommendRecordSavedIn(2026),
   }
 
   it('every U10 delta-readout slot WEARS a hedge (the control readouts are slot-composed, so the require-hedge sweep must reach the rendered samples here)', () => {

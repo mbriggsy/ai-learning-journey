@@ -1213,6 +1213,66 @@ export const copy = {
   // button leads to (the goal choice precedes the solve, the invite/re-pick precedent), never an
   // imperative — "see" is not a directive verb, so no copyGuard trip.
   recommendStaleReopenCta: 'See the current strategy',
+
+  // --- Act-4 · U17 §S5 — the save GESTURE (`recommendSave*`) + the saved-record CARD
+  //     (`recommendRecord*`) ---
+  // SCOPE: both families inherit VERDICT scope from `VERDICT_KEY_PREFIXES`' existing 'recommend'
+  // entry (copyGuard.ts:63-65) — no gate-source edit — and correctly stay OUTSIDE control scope
+  // (the record carries enums, never a figure). Every line here is DIGIT-FREE: the free-numeral
+  // gate is /\d/, so "two passphrases" is spelled out and the mint year rides
+  // `slots.recommendRecordSavedIn`.
+  //
+  // `recommendSaveSavedBadge` IS THE ONLY KEY IN EITHER FAMILY PERMITTED TO CLAIM A COMPLETED SAVE.
+  // Every refusal below claims NOTHING about a save, and that is a CORRECTION, not a style call:
+  // the gesture returns before `appModel.update` and before the write, so on BOTH routes nothing
+  // reached the device. The obligation as originally filed — "we saved your plan, we could not save
+  // the recommendation" — was drafted for a save-proceeds-then-drops-the-atom flow that
+  // scenarioCodec.ts:660-664 instructs S5 to make UNREACHABLE. Shipping that sentence would have
+  // been the cardinal sin pointed the other way: a save reported that never happened.
+  recommendSaveCta: 'Keep this strategy read',
+  // R1 AND R2, both named BEFORE the tap. The no-vault route escalates a "keep this" tap into vault
+  // setup, and the write is whole-plan either way (`session.save()` commits the entire scenario) —
+  // so the CONTROL says both, rather than letting a confirmation explain what already happened.
+  // Two sentences by design; step 14 measures the fold, and content is never trimmed to fit layout.
+  recommendSaveHintCeremony:
+    'This keeps everything you’ve entered, along with this strategy read. It also sets up your vault on this device — you’ll pick two passphrases and download a backup copy.',
+  // R2 alone — the vault already exists, but the write is still the whole plan, not a note.
+  recommendSaveHintUpdate: 'This keeps everything you’ve entered, along with this strategy read.',
+  recommendSavePending: 'Keeping your plan and this strategy read…',
+  recommendSaveSavedBadge: 'Saved to this device — your plan and this strategy read',
+  // THE REFUSALS. None carries a retry control: the mint is deterministic, so a retry re-fails
+  // identically, and an affordance that cannot succeed is the lying-remedy shape
+  // (Result.tsx:364-372). Each says what did NOT happen, in the reader's frame.
+  recommendSaveRefusalRecordInvalidHeading: 'This strategy read couldn’t be kept',
+  recommendSaveRefusalRecordInvalidBody:
+    'We couldn’t build a record of it, so nothing reached this device — your plan here is exactly as you left it. The answer above is still current.',
+  recommendSaveRefusalWriteHeading: 'Nothing reached this device',
+  recommendSaveRefusalWriteBody:
+    'The write didn’t go through, so your plan here is exactly as you left it. The answer above is still current.',
+  // The recovery-unlocked state: the passphrase wrap is not current, so no write can land at all.
+  // Names the state and the way out — never a dead control with no explanation.
+  recommendSaveRefusalRecoveryLockedHeading: 'This device is open with your recovery passphrase',
+  recommendSaveRefusalRecoveryLockedBody:
+    'Nothing new can be written here until you pick a new everyday passphrase. Once you have, this strategy read can go with your plan.',
+
+  // THE CARD (R3 — minimal by ruling): that a saved read exists, how old it is, whether it still
+  // holds, and the way back. The remembered grade/verdict enums stay PERSISTED BUT UNQUOTED — a
+  // card that quotes a remembered figure as if it were current is precisely what the preserved
+  // council dissent aims at, and leaving them out means the card can grow later with no schema
+  // change.
+  recommendRecordHeading: 'Your saved strategy read',
+  recommendRecordHolds: 'It still matches your plan as it stands today.',
+  // ONE clause per `SavedRecommendationSupersededCause`. Each names WHAT moved, in the reader's
+  // frame, with no blame register — "your numbers have changed" is neutral, never a fault.
+  recommendRecordSupersededInputs: 'Your numbers have changed since then.',
+  recommendRecordSupersededUnavailable:
+    'There isn’t enough in your plan right now to line it up against.',
+  recommendRecordSupersededSolver: 'The way strategies are worked out has changed since then.',
+  recommendRecordSupersededRules: 'The tax and health-cost rules have moved since then.',
+  recommendRecordReopenCta: 'Work out the current strategy',
+  // The cost, worded the way `recommendPendingLabel` does — a real duration in plain words, never a
+  // spinner, a percentage, or a fabricated progress clock.
+  recommendRecordReopenCost: 'This can take a few minutes.',
   // The standing hero note (renders WITH the first verdict when any clock fired — never
   // after it; the answer is already recomputed under today's rules, this line says so).
   // DELIBERATELY ONE LINE at the reading measure: the full per-clock disclosure lives at
@@ -2120,6 +2180,13 @@ export const slots = {
    *  hedge; every figure arrives pre-formatted (the axis dialect), so the sentence carries no bare numeral. */
   recVizAria: (withoutLabel: string, withoutFig: string, withLabel: string, withFig: string, deltaFig: string): string =>
     `${withoutLabel} lands near about $${withoutFig}; ${withLabel} about $${withFig} — a difference of about $${deltaFig}.`,
+  // --- Act-4 · U17 §S5 — the saved record's AGE on the card. ---
+  /** The mint year, spoken as a calendar year rather than a day count. It rides a SLOT because the
+   *  free-numeral gate (/\d/) reds any digit written into a static `recommend*` line — and because
+   *  the year is derived from `record.mintedAt` through the one local-calendar chain, never from a
+   *  second clock read. R3 keeps the card to existence + age + standing, so this is the only figure
+   *  it ever speaks. */
+  recommendRecordSavedIn: (year: number): string => `Saved in ${year}.`,
 } as const
 
 /**

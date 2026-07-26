@@ -73,7 +73,7 @@ const factOf = (view: ReturnType<typeof composeHealthSheet>, id: string) =>
 describe('composeHealthSheet', () => {
   it('with NO series (the date route / pre-resolve) it composes the dated status line alone', () => {
     const view = composeHealthSheet(undefined, draft())
-    expect(view.statusLine).toBe(slots.acaCostStatus('July 3, 2026'))
+    expect(view.statusLine).toBe(slots.acaCostStatus('July 26, 2026'))
     expect(view.facts).toEqual([])
   })
 
@@ -91,7 +91,7 @@ describe('composeHealthSheet', () => {
       ],
     }
     const view = composeHealthSheet(readout, draft({ enhanced: true }))
-    expect(view.statusLine).toBe(slots.acaCostStatusEnhanced('July 3, 2026'))
+    expect(view.statusLine).toBe(slots.acaCostStatusEnhanced('July 26, 2026'))
     expect(factOf(view, 'discount')).toBeUndefined() // no cliff exists → no discount fact at all
     expect(factOf(view, 'coverage')).toBeDefined() // the cost fact still quotes — only the cliff vanished
   })

@@ -1870,6 +1870,17 @@ export const slots = {
    *  current law — the ColdStart-restore marker rides this same slot). */
   acaCostStatusEnhanced: (checkedOn: string): string =>
     `Figured under the ENHANCED subsidy rules — a what-if, not current law. Congress may yet restore them; as of the last check, ${checkedOn}, it hadn’t.`,
+  /** The OVERDUE variants of the two status notes. Past the re-verify window the recommendation
+   *  beside this sheet already refuses to rank ("past their re-check date" — `recHoldAcaUnverified`);
+   *  before these keys existed this line went on speaking as though the check were current, so the
+   *  sheet that EXPLAINS the healthcare model was the one surface that didn't repeat the warning.
+   *  The overdue-ness is attributed to US, never to the reader — there is nothing they can do about
+   *  it, and an alarm they cannot act on is just noise. The figures themselves are not disowned:
+   *  they remain the last CONFIRMED reading of the rules, which is exactly what they are. */
+  acaCostStatusOverdue: (checkedOn: string): string =>
+    `Figured under this year’s rules: the enhanced subsidies expired, so help fades as income rises and stops at the cliff. Congress could still restore them — and our check is overdue, last done ${checkedOn}, so these figures are our last confirmed reading of the rules rather than a fresh one.`,
+  acaCostStatusEnhancedOverdue: (checkedOn: string): string =>
+    `Figured under the ENHANCED subsidy rules — a what-if, not current law. Congress may yet restore them; as of ${checkedOn} it hadn’t, and that check is now overdue, so this what-if rests on our last confirmed reading rather than a fresh one.`,
   /** The middle-of-the-road pre-65 net coverage cost (the empirical median, humane-rounded).
    *  Round 7 (cold-read 2026-07-03: "Household? Where is the number coming from?"): the figure's
    *  SOURCE is named — it is the user's own entered marketplace plan (the household-premium

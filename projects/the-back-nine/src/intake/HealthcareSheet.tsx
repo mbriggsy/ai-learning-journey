@@ -90,9 +90,15 @@ export interface HealthcareSheetProps {
    *  "Today" → "Plan built" when the plan clock > 0 (one time base per screen; U17 §S0.2 —
    *  the clock measures the BUILD, never the save). */
   readonly savedAnchor?: BandPlanClockAnchor
+  /** Today, as an epoch-day, INJECTED by the caller (this sheet is presentational and reads no
+   *  clock — the ui layer owns `currentEpochDay()`). It decides ONE thing: whether the dated
+   *  legislative status line may still speak as though the ACA check were current. REQUIRED, not
+   *  optional-with-a-default — a missing clock would silently pick the reassuring branch, and an
+   *  in-range default standing in for an absent fact is the burned/062 shape this repo bans. */
+  readonly todayEpochDay: number
 }
 
-export function HealthcareSheet({ open, draft, readout, preview, previewBlocking = false, statePricedNote, onApply, onClose, restoreFallback, savedAnchor }: HealthcareSheetProps) {
+export function HealthcareSheet({ open, draft, readout, preview, previewBlocking = false, statePricedNote, onApply, onClose, restoreFallback, savedAnchor, todayEpochDay }: HealthcareSheetProps) {
   const announcerRef = useRef<Announcer | null>(null)
   const applied: Regime = draft.enhancedSubsidies === true ? 'enhanced' : 'reverted'
   const [picked, setPicked] = useState<Regime>(applied)
@@ -100,7 +106,7 @@ export function HealthcareSheet({ open, draft, readout, preview, previewBlocking
 
   // The composed readout lines — PURE, decided in healthSheetChrome (regime-aware: an applied
   // enhanced regime swaps the dated status note to the what-if variant and drops the cliff lines).
-  const view = composeHealthSheet(readout, draft)
+  const view = composeHealthSheet(readout, draft, todayEpochDay)
   // The extras door-home lines (F5): BUILT dollars + draft provenance + the name fallback
   // (medicareExtrasDisclosureView — the ONE assembly both F5 homes consume, insight 081).
   const extrasLines = composeMedicareExtrasLines(medicareExtrasDisclosureView(draft))

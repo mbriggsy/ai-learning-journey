@@ -18,7 +18,24 @@ import {
   quotableYears,
 } from '../healthSheetChrome'
 import { copy, slots } from '../copy'
+import {
+  epochDayFromIsoDate,
+  evaluateAcaFreshnessClause,
+  acaCheckOverdue,
+} from '@engine/validation/oracleToken'
+import { acaEnhancedSubsidyStatus } from '@engine/constants/health'
+import { solverAcaFreshnessWindowDays } from '@engine/constants/solver'
 import type { HealthReadout, HealthReadoutYear, TwoArmOutcome } from '@shared/model'
+
+/** The injected clock, expressed RELATIVE to the live record rather than as a literal date —
+ *  a re-verify moves `verifiedOn` roughly monthly and must never churn this file (nor tempt
+ *  anyone into bumping a date they did not think about). These are test INPUTS, never the
+ *  assertion, so deriving them from the producer is not the insight-081 tautology. */
+const CHECKED_ON = epochDayFromIsoDate(acaEnhancedSubsidyStatus.value.verifiedOn)
+const WINDOW = solverAcaFreshnessWindowDays.value
+const FRESH = CHECKED_ON + 1
+const AT_WINDOW = CHECKED_ON + WINDOW
+const OVERDUE = CHECKED_ON + WINDOW + 1
 
 const year = (over: Partial<HealthReadoutYear>): HealthReadoutYear => ({
   yearsFromNow: 1,
@@ -72,7 +89,7 @@ const factOf = (view: ReturnType<typeof composeHealthSheet>, id: string) =>
 
 describe('composeHealthSheet', () => {
   it('with NO series (the date route / pre-resolve) it composes the dated status line alone', () => {
-    const view = composeHealthSheet(undefined, draft())
+    const view = composeHealthSheet(undefined, draft(), FRESH)
     expect(view.statusLine).toBe(slots.acaCostStatus('July 26, 2026'))
     expect(view.facts).toEqual([])
   })
@@ -90,10 +107,57 @@ describe('composeHealthSheet', () => {
         }),
       ],
     }
-    const view = composeHealthSheet(readout, draft({ enhanced: true }))
+    const view = composeHealthSheet(readout, draft({ enhanced: true }), FRESH)
     expect(view.statusLine).toBe(slots.acaCostStatusEnhanced('July 26, 2026'))
     expect(factOf(view, 'discount')).toBeUndefined() // no cliff exists → no discount fact at all
     expect(factOf(view, 'coverage')).toBeDefined() // the cost fact still quotes — only the cliff vanished
+  })
+
+  // ── the OVERDUE status line ────────────────────────────────────────────────────────────────
+  // Past the re-verify window the recommendation beside this sheet already refuses to rank
+  // ("past their re-check date"). This line used to go on speaking as though the check were
+  // current — the sheet that EXPLAINS the model was the one surface not repeating the warning.
+  it('PAST the re-verify window both status notes swap to their overdue variants (the sheet stops speaking as though the check were current)', () => {
+    expect(composeHealthSheet(undefined, draft(), OVERDUE).statusLine).toBe(
+      slots.acaCostStatusOverdue('July 26, 2026'),
+    )
+    expect(composeHealthSheet(undefined, draft({ enhanced: true }), OVERDUE).statusLine).toBe(
+      slots.acaCostStatusEnhancedOverdue('July 26, 2026'),
+    )
+    // The figures are NOT disowned — the line still names the regime it priced under.
+    expect(composeHealthSheet(undefined, draft(), OVERDUE).statusLine).toContain('stops at the cliff')
+  })
+
+  it('the boundary is STRICT: exactly at the window still reads fresh, one day later reads overdue', () => {
+    // Insight 029's class — the input has to ROUTE DIFFERENTLY, so the arm must straddle the
+    // exact edge. `>= WINDOW` would pass every test that only probed CHECKED_ON+WINDOW+1.
+    expect(composeHealthSheet(undefined, draft(), AT_WINDOW).statusLine).toBe(
+      slots.acaCostStatus('July 26, 2026'),
+    )
+    expect(composeHealthSheet(undefined, draft(), AT_WINDOW + 1).statusLine).toBe(
+      slots.acaCostStatusOverdue('July 26, 2026'),
+    )
+  })
+
+  it('THE BIND: the sheet and the token never disagree about the same fact — one calendar, two consumers', () => {
+    // The defect this closes was not a wrong string; it was TWO surfaces reading one record with
+    // only one of them owning a calendar. Pin the biconditional across the edge, so a future
+    // change to either side's window fails HERE rather than shipping a calm sheet beside a
+    // refusing recommendation.
+    const acaRun = {
+      overlay: { enrolledPremium: 12_000 },
+    } as unknown as Parameters<typeof evaluateAcaFreshnessClause>[0]
+
+    for (const today of [FRESH, AT_WINDOW - 1, AT_WINDOW, AT_WINDOW + 1, OVERDUE + 400]) {
+      const tokenRefuses = evaluateAcaFreshnessClause(acaRun, today) !== null
+      const sheetSaysOverdue =
+        composeHealthSheet(undefined, draft(), today).statusLine ===
+        slots.acaCostStatusOverdue('July 26, 2026')
+      expect(sheetSaysOverdue, `today=${today}: sheet and token must agree`).toBe(tokenRefuses)
+      expect(acaCheckOverdue(today), `today=${today}: the shared predicate is the one source`).toBe(
+        tokenRefuses,
+      )
+    }
   })
 
   it('the reverted regime composes every ACA line with the hand-derived figures (cost / cliff odds / 22¢ shadow / 18,000 headroom)', () => {
@@ -109,7 +173,7 @@ describe('composeHealthSheet', () => {
         }),
       ],
     }
-    const view = composeHealthSheet(readout, draft())
+    const view = composeHealthSheet(readout, draft(), FRESH)
     // The coverage fact: figure anchor + the source-named sentence (9,950 humane-rounds).
     expect(factOf(view, 'coverage')).toEqual({
       id: 'coverage',
@@ -156,8 +220,8 @@ describe('composeHealthSheet', () => {
         }),
       ],
     }
-    const at2028 = composeHealthSheet(readout, draft({ ages: [61, 63], slcsp: 0, startYear: 2025 }))
-    const at2029 = composeHealthSheet(readout, draft({ ages: [61, 63], slcsp: 0, startYear: 2026 }))
+    const at2028 = composeHealthSheet(readout, draft({ ages: [61, 63], slcsp: 0, startYear: 2025 }), FRESH)
+    const at2029 = composeHealthSheet(readout, draft({ ages: [61, 63], slcsp: 0, startYear: 2026 }), FRESH)
     expect(factOf(at2028, 'conversion')?.figure).toBe(slots.healthFigCents(12))
     expect(factOf(at2029, 'conversion')?.figure).toBe(slots.healthFigCents(22))
   })
@@ -166,7 +230,7 @@ describe('composeHealthSheet', () => {
     const readout: HealthReadout = {
       byYear: [year({ acaPricedFraction: 1, acaNetPremiumP50: 20_000, acaMagiP50: 90_000, irmaaMagiP50: 85_000, overCliffFraction: 0.62 })],
     }
-    const discount = factOf(composeHealthSheet(readout, draft()), 'discount')
+    const discount = factOf(composeHealthSheet(readout, draft(), FRESH), 'discount')
     expect(discount?.figure).toBeUndefined() // no room to quote past the cutoff
     expect(discount?.lines).toEqual([slots.acaCostCliffOverCliff(6, '84,600')])
   })
@@ -176,7 +240,7 @@ describe('composeHealthSheet', () => {
     const headroomReadout: HealthReadout = {
       byYear: [year({ acaPricedFraction: 1, acaNetPremiumP50: 12_000, acaMagiP50: 66_600, irmaaMagiP50: 60_000, overCliffFraction: 0.97 })],
     }
-    const headroomLines = factOf(composeHealthSheet(headroomReadout, draft()), 'discount')?.lines ?? []
+    const headroomLines = factOf(composeHealthSheet(headroomReadout, draft(), FRESH), 'discount')?.lines ?? []
     const cliffLine = headroomLines[headroomLines.length - 1]!
     expect(cliffLine).toBe(slots.acaCostCliff(10))
     expect(cliffLine).toContain('In more than 9 in 10 futures')
@@ -188,7 +252,7 @@ describe('composeHealthSheet', () => {
     const overReadout: HealthReadout = {
       byYear: [year({ acaPricedFraction: 1, acaNetPremiumP50: 20_000, acaMagiP50: 90_000, irmaaMagiP50: 85_000, overCliffFraction: 0.96 })],
     }
-    const overLine = factOf(composeHealthSheet(overReadout, draft()), 'discount')?.lines[0]
+    const overLine = factOf(composeHealthSheet(overReadout, draft(), FRESH), 'discount')?.lines[0]
     expect(overLine).toBe(slots.acaCostCliffOverCliff(10, '84,600'))
     expect(overLine).toContain('In more than 9 in 10 futures')
     expect(overLine).not.toContain('better than')
@@ -199,7 +263,7 @@ describe('composeHealthSheet', () => {
     const readout: HealthReadout = {
       byYear: [year({ acaPricedFraction: 1, acaNetPremiumP50: 9_000, acaMagiP50: 50_000, irmaaMagiP50: 45_000, overCliffFraction: 0.04 })],
     }
-    const discount = factOf(composeHealthSheet(readout, draft()), 'discount')
+    const discount = factOf(composeHealthSheet(readout, draft(), FRESH), 'discount')
     expect(discount?.lines).toHaveLength(1) // the context sentence alone — no odds line
     expect(discount?.lines[0]).toBe(slots.shadowRateHeadroom('50,000', '84,600', '34,600'))
   })
@@ -208,7 +272,7 @@ describe('composeHealthSheet', () => {
     const readout: HealthReadout = {
       byYear: [year({ yearsFromNow: 1, medicareBaseP50: 4_870, irmaaMagiP50: 150_000 })],
     }
-    const view = composeHealthSheet(readout, draft({ ages: [66, 66] }))
+    const view = composeHealthSheet(readout, draft({ ages: [66, 66] }), FRESH)
     // The Medicare fact: story + the before-any-step anchor (base 4,870 + surcharge 0 → '4,900').
     expect(factOf(view, 'medicare')).toEqual({
       id: 'medicare',
@@ -230,7 +294,7 @@ describe('composeHealthSheet', () => {
     const readout: HealthReadout = {
       byYear: [year({ yearsFromNow: 1, medicareBaseP50: 2_435, irmaaMagiP50: 150_000 })],
     }
-    const view = composeHealthSheet(readout, draft({ ages: [66, 62] }))
+    const view = composeHealthSheet(readout, draft({ ages: [66, 62] }), FRESH)
     // 66 is enrolled, 62 is not: per-person 95.7 × 12 = 1,148.4 → '1,100', bothEnrolled=false.
     expect(factOf(view, 'step')?.lines).toEqual([
       slots.irmaaStepNext('218,000', '150,000', '68,000', '1,100', false),
@@ -243,7 +307,7 @@ describe('composeHealthSheet', () => {
         year({ yearsFromNow: 1, medicareBaseP50: 4_870, irmaaSurchargeP50: 2_400, irmaaMagiP50: 230_000 }),
       ],
     }
-    const view = composeHealthSheet(readout, draft({ ages: [66, 66] }))
+    const view = composeHealthSheet(readout, draft({ ages: [66, 66] }), FRESH)
     // 4,870 + 2,400 = 7,270 → '7,300'; the surcharge itself quoted at '2,400'.
     expect(factOf(view, 'medicare')?.lines[1]).toBe(slots.irmaaStepNowSurcharged('7,300', '2,400'))
   })

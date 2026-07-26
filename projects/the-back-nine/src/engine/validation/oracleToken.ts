@@ -153,6 +153,32 @@ export function epochDayFromIsoDate(iso: string): number {
   return era * 146097 + doe - 719468
 }
 
+/** How many days old the ACA legislative check is, against the injected clock. THE one age
+ *  derivation — every surface that speaks about this record's freshness reads it here rather
+ *  than re-typing `today − verifiedOn` (and, worse, its own copy of the window). */
+export function acaCheckAgeDays(todayEpochDay: number): number {
+  if (!Number.isFinite(todayEpochDay) || !Number.isInteger(todayEpochDay)) {
+    throw new Error('[oracleToken] todayEpochDay must be an integer epoch-day (injected, finite)')
+  }
+  return todayEpochDay - epochDayFromIsoDate(acaEnhancedSubsidyStatus.value.verifiedOn)
+}
+
+/**
+ * Is the ACA legislative check past its re-verify window? THE one calendar, now read by THREE
+ * enforcement layers that must never disagree about the same fact: the `verify:aca` CI gate
+ * (build time), this token clause (run time, below), and the Healthcare sheet's dated status
+ * line (`healthSheetChrome.composeHealthSheet`) — which past this boundary stops speaking as
+ * though the check were current. Before the split, the sheet had no calendar at all and stayed
+ * calm while the recommendation beside it refused; the window is deliberately NOT re-typed.
+ *
+ * (The CI gate compares float-ms and so flips ~one day earlier than this integer-epoch-day
+ * compare. That ordering is the safe one — the build goes red before the app changes what it
+ * says — and it is the reason this is a boolean here, not a shared instant.)
+ */
+export function acaCheckOverdue(todayEpochDay: number): boolean {
+  return acaCheckAgeDays(todayEpochDay) > solverAcaFreshnessWindowDays.value
+}
+
 /**
  * The ACA legislative status can flip the whole pre-65 model (and therefore which strategy
  * wins), so the token enforces the SAME freshness calendar as the verify:aca CI gate. Fires
@@ -164,15 +190,12 @@ export function evaluateAcaFreshnessClause(
   params: SimulationParams,
   todayEpochDay: number,
 ): WithheldReason | null {
-  if (!Number.isFinite(todayEpochDay) || !Number.isInteger(todayEpochDay)) {
-    throw new Error('[oracleToken] todayEpochDay must be an integer epoch-day (injected, finite)')
-  }
+  // The clock is validated BEFORE the domain gate on purpose: a malformed injected today is a
+  // caller defect and must fail loud even for a household this clause would not fire for.
+  const ageDays = acaCheckAgeDays(todayEpochDay)
   if (params.overlay?.enrolledPremium === undefined) return null
-  const verifiedOn = epochDayFromIsoDate(acaEnhancedSubsidyStatus.value.verifiedOn)
-  const ageDays = todayEpochDay - verifiedOn
-  const window = solverAcaFreshnessWindowDays.value
-  if (ageDays > window) return { kind: 'aca-unverified', ageDays }
-  return null
+  if (!acaCheckOverdue(todayEpochDay)) return null
+  return { kind: 'aca-unverified', ageDays }
 }
 
 // ---- Clause 4: the ε / calibration sentinel clause (burned/062; insights 008/010/039) -------

@@ -617,6 +617,7 @@ export function Result({
         statePricedNote={statePricedNote}
         restoreFallback={restoreToAssumptionsDoor}
         savedAnchor={dateAnchor}
+        todayEpochDay={currentEpochDay()}
         onApply={(enhanced) => {
           // THE SINGLE-KEY WRITE FENCE (insight 058): exactly one key moves — set the literal
           // `true`, or STRIP the key entirely (absence ≡ the statutory reverted regime — never

@@ -32,6 +32,7 @@ import {
 } from '@engine/magiLandscape'
 import { deductionStack } from '@engine/taxCore'
 import { fplForHousehold } from '@engine/healthOverlay'
+import { acaCheckOverdue } from '@engine/validation/oracleToken'
 import {
   acaApplicablePercentage,
   acaApplicablePercentageEnhanced,
@@ -105,6 +106,12 @@ export interface HealthSheetView {
  * Compose the sheet's readout lines from the wire series + the draft's categorical facts.
  * `readout` undefined (the date route / a pre-resolve open) composes the status line alone —
  * the sheet still teaches, it just quotes no empirical figures.
+ *
+ * `todayEpochDay` is INJECTED (this module reads no clock — the ui composition layer supplies
+ * it, exactly as `appModel` does for the solve dispatch). It decides ONE thing: whether the
+ * dated status line may still speak as though the legislative check were current. The window
+ * itself is NOT re-derived here — `acaCheckOverdue` is the same predicate the token's refusal
+ * rides, so this sheet and the recommendation beside it can never disagree about the fact.
  */
 export function composeHealthSheet(
   readout: HealthReadout | undefined,
@@ -112,12 +119,14 @@ export function composeHealthSheet(
     readonly people: ReadonlyArray<{ readonly currentAge?: number }>
     readonly health: { readonly slcspMonthlyToday?: number }
   },
+  todayEpochDay: number,
 ): HealthSheetView {
   const enhancedApplied = draft.enhancedSubsidies === true
   const checkedOn = verifiedOnFormatted()
+  const overdue = acaCheckOverdue(todayEpochDay)
   const statusLine = enhancedApplied
-    ? slots.acaCostStatusEnhanced(checkedOn)
-    : slots.acaCostStatus(checkedOn)
+    ? (overdue ? slots.acaCostStatusEnhancedOverdue(checkedOn) : slots.acaCostStatusEnhanced(checkedOn))
+    : (overdue ? slots.acaCostStatusOverdue(checkedOn) : slots.acaCostStatus(checkedOn))
   if (readout === undefined) return { statusLine, facts: [] }
 
   const facts: HealthFact[] = []

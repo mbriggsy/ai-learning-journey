@@ -7,6 +7,8 @@ import { createMemoryModel, type MemoryModel, type ScenarioDraft } from '@store/
 import type { EngineClient } from '@store/engineClient'
 import type { ControlPreview } from '@store/controlPreview'
 import { copy, slots } from '@ui/copy'
+import { epochDayFromIsoDate } from '@engine/validation/oracleToken'
+import { acaEnhancedSubsidyStatus } from '@engine/constants/health'
 import type { HealthReadout, TwoArmControl } from '@shared/model'
 import { medicareExtrasView } from '../intakeMap'
 import { medicareExtrasTypicalMonthly } from '@engine/constants/health'
@@ -98,6 +100,10 @@ const READOUT: HealthReadout = {
   ],
 }
 
+/** A clock inside the re-verify window, relative to the LIVE record (never a literal date — a
+ *  re-verify must not churn this file). The overdue branch is driven in healthSheetChrome.test. */
+const FRESH_CLOCK = epochDayFromIsoDate(acaEnhancedSubsidyStatus.value.verifiedOn) + 1
+
 function renderSheet(
   opts: { enhanced?: boolean; readout?: HealthReadout; statePricedNote?: import('@engine/constants/stateTax').PricedState } = {},
 ) {
@@ -119,6 +125,7 @@ function renderSheet(
       statePricedNote={opts.statePricedNote}
       onApply={onApply}
       onClose={onClose}
+      todayEpochDay={FRESH_CLOCK}
     />,
   )
   return { preview, onApply, onClose, ...utils }
@@ -208,7 +215,7 @@ describe('HealthcareSheet — the readout lines', () => {
       enteredAccounts: [{ ownerIndex: 0, kind: 'hsa', valueToday: 40_000 }],
     }))
     render(
-      <HealthcareSheet open draft={draft} readout={undefined} preview={preview.fn} onApply={vi.fn()} onClose={vi.fn()} />,
+      <HealthcareSheet open draft={draft} readout={undefined} preview={preview.fn} onApply={vi.fn()} onClose={vi.fn()} todayEpochDay={FRESH_CLOCK} />,
     )
     expect(screen.getByText(copy.controlHealthHsaNote)).toBeInTheDocument()
   })
@@ -246,7 +253,7 @@ describe('HealthcareSheet — the Medicare-extras door home (F5)', () => {
     const draft = doorDraft()
     expect(medicareExtrasView(draft), 'precondition: the run prices a Medicare-bearing overlay').not.toBeNull()
     render(
-      <HealthcareSheet open draft={draft} readout={undefined} preview={deferredPreview().fn} onApply={vi.fn()} onClose={vi.fn()} />,
+      <HealthcareSheet open draft={draft} readout={undefined} preview={deferredPreview().fn} onApply={vi.fn()} onClose={vi.fn()} todayEpochDay={FRESH_CLOCK} />,
     )
     const fig = Math.round(medicareExtrasTypicalMonthly()).toLocaleString('en-US')
     expect(screen.getByText(copy.medicareExtrasSheetLead)).toBeInTheDocument()
@@ -265,7 +272,7 @@ describe('HealthcareSheet — the Medicare-extras door home (F5)', () => {
       ],
     }))
     render(
-      <HealthcareSheet open draft={draft} readout={undefined} preview={deferredPreview().fn} onApply={vi.fn()} onClose={vi.fn()} />,
+      <HealthcareSheet open draft={draft} readout={undefined} preview={deferredPreview().fn} onApply={vi.fn()} onClose={vi.fn()} todayEpochDay={FRESH_CLOCK} />,
     )
     expect(screen.getByText(slots.medicareExtrasFactEntered('A', '185'))).toBeInTheDocument()
     expect(screen.getByText(slots.medicareExtrasFactNone('B'))).toBeInTheDocument()

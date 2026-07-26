@@ -289,6 +289,11 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     // P3·U11 — the Healthcare sheet's readout slots (require-hedge-swept by their prefixes).
     acaCostStatus: slots.acaCostStatus('July 3, 2026'),
     acaCostStatusEnhanced: slots.acaCostStatusEnhanced('July 3, 2026'),
+    // The OVERDUE twins. They ride the same `acaCost*` prefix, so require-hedge (the STRONGEST
+    // net in the catalog) already bites them — unlike a `staleness*`/`reentry*` warning key,
+    // which is hedge- AND verdict-exempt and would need its own arm.
+    acaCostStatusOverdue: slots.acaCostStatusOverdue('July 3, 2026'),
+    acaCostStatusEnhancedOverdue: slots.acaCostStatusEnhancedOverdue('July 3, 2026'),
     acaCostNet: slots.acaCostNet('11,200'),
     acaCostCliff: slots.acaCostCliff(3),
     acaCostCliffOverCliff: slots.acaCostCliffOverCliff(3, '84,600'),

@@ -307,9 +307,19 @@ pinned at `RecommendationSurface.test.tsx:212-224`) and a **no-auto-save pin**
 - The reserved slot becomes the real control; its "layout space only" test is **replaced**, not deleted.
 - **The no-auto-save law survives:** saving stays an explicit gesture. Re-point the existing pin rather
   than dropping it.
-- **The survivor case is a hard constraint:** `writable()` is false for the recovery-unlocked session
-  (`session.ts:305`). A gesture whose commit cannot persist is a lie — the control must refuse honestly in
-  that state, never present an inert "saved."
+- **The survivor case is a hard constraint:** the recovery-unlocked session cannot persist. A gesture whose
+  commit cannot persist is a lie — the control must refuse honestly in that state, never present an inert
+  "saved."
+  **⚠️ CORRECTED 2026-07-26 — `writable()` is NOT the seam.** `writable` is a module-PRIVATE closure
+  (`session.ts:305`) and is absent from the `VaultSession` interface (`session.ts:139-183`); the UI cannot
+  call it. Detect the two non-writable states separately:
+  - **recovery-unlocked survivor** → `session.status()`. `recoveryUnlock` sets `passphraseWrapCurrent = false`
+    (`:534`) and returns a bare `{ ok: true }` — `RecoveryUnlockResult` (`:117-118`) carries **no** `readOnly`,
+    so `deriveResultSave`'s `readOnly` parameter does **not** cover this state.
+  - **read-only second tab** → the existing `UnlockResult.readOnly` (`:466`), already threaded into
+    `deriveResultSave(persist, ready, readOnly)` (`resultSave.ts:66`).
+
+  `save()`'s `{ ok:false, reason:'not-writable' }` (`session.ts:594`) is the last-resort backstop, never the gate.
 
 > **AMENDED 2026-07-26 — what S3/S4 handed this stage that the original 13 lines could not name.** S3 built
 > the whole substrate and S4 deliberately declined the copy; both created obligations that are NOT inferable
@@ -321,7 +331,11 @@ pinned at `RecommendationSurface.test.tsx:212-224`) and a **no-auto-save pin**
 >   and the re-open button); name the re-open's cost the way `recommendPendingLabel` does. **Key PREFIX picks
 >   the copyGuard gates:** `staleness*`/`reentry*` are hedge-, verdict- AND control-EXEMPT by documented law,
 >   the weakest net in the catalog, so a `savedRec*` warning key needs its own explicit guard arm (S4 added
->   three; copy that pattern).
+>   three; copy that pattern). **⚠️ Where to look, corrected 2026-07-26:** "the three S4 added" are arms in
+>   the TEST file (`copyGuard.test.ts:130-136`), **not** in `copyGuard.ts` — there is nothing named
+>   `staleness`/`reentry`/`savedRec` in the gate SOURCE at all, so grepping `copyGuard.ts` for the pattern
+>   returns zero hits and must NOT be read as "already handled." The lists a `savedRec*` key is measured
+>   against are `VERDICT_KEY_PREFIXES` (`copyGuard.ts:63-65`) and `CONTROL_KEY_PREFIXES` (`:102-116`).
 > - **THE FOUR MINT OBLIGATIONS.** (1) Call `validateSavedRecommendation` (`scenarioCodec.ts:671`) BEFORE the
 >   record touches the draft — it has ZERO product callers today. (2) A non-empty `droppedAtoms` at the
 >   gesture must REFUSE ALOUD and must never report a saved recommendation (insight 100: the gesture promised
@@ -331,12 +345,22 @@ pinned at `RecommendationSurface.test.tsx:212-224`) and a **no-auto-save pin**
 >   `fingerprint` has no type bind and cannot get one (`solverRunFingerprint.ts:61` is a bare
 >   `export type … = string`), so the bind must be a TEST: mint from a REAL `solverRunFingerprint(...)` call
 >   → encode → decode → the trichotomy reads `current`.
-> - **TWO CORRECTIONS to how this stage has been described.** (a) S5 does NOT build a fresh-fingerprint seam
->   — `memoryModel.ts:623-638` already has `fingerprintOf`/`currentDraftFingerprint` in exactly the
->   `SolverRunFingerprint | null` shape the trichotomy wants, and `:620-622` explicitly bans a second
->   definition. Consume it. (b) The mint is NOT independent of the plan-save machine: the record participates
->   in the dirty/clean compare (`resultSave.test.ts:237-266` pins it by name), so a mint necessarily flips
->   `deriveResultSave` to `'dirty'` and must be sequenced against it.
+> - **TWO CORRECTIONS to how this stage has been described** — *both were themselves partly wrong and are
+>   re-corrected 2026-07-26; read the amended form.* (a) S5 must not **DEFINE** a second fingerprint
+>   computation — `memoryModel.ts:623-638` already has `fingerprintOf`/`currentDraftFingerprint` in exactly
+>   the `SolverRunFingerprint | null` shape the trichotomy wants, and `:620-622` explicitly bans a re-typed
+>   subset. **But this does NOT mean "no seam work here":** both are private closures inside
+>   `createMemoryModel` (`:513`) and **neither is on the returned surface (`:654`)**, so S5's seam work is
+>   **EXPOSING `currentDraftFingerprint()` on `MemoryModel`** — not re-deriving it. (The committed
+>   `SolveAnswer.fingerprint` at `:292` is the MINT basis, *not* the trichotomy's `freshFingerprint`.)
+>   (b) The mint is NOT independent of the plan-save machine: the record participates in the dirty/clean
+>   compare (`resultSave.test.ts:237-266` pins it by name), so it must be sequenced against it. **⚠️ But
+>   "a mint NECESSARILY flips `deriveResultSave` to `'dirty'`" is FALSE for the exact case obligation 1
+>   exists to prevent.** `scenarioFromDraft` runs the candidate through `decodeScenario(encodeScenario(…))`;
+>   the codec DELETES an invalid record; `deriveResultSave` then compares two POST-codec operands — a disk
+>   scenario with no record vs a live scenario whose record was just dropped. **Those are identical, so an
+>   invalid mint reads CLEAN.** The dirty flip holds only for a VALID record — never use it as evidence the
+>   mint landed.
 > - **Sweep while you are in `session.ts`:** `:443-444` claims `scenarioFromDraft` "REFUSES on a non-empty
 >   list." It does not (`scenarioFromDraft.ts:115` returns `ready:true`, and `draftFromScenario.test.ts:556`
 >   pins that a dropped atom never refuses the whole save). Stale from the pre-F-pass cut; the recovery-path

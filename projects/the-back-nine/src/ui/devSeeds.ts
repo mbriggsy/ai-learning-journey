@@ -1136,8 +1136,12 @@ export function doctorStateStaleVault(s: ScenarioV3, todayEpochDay: number): Sce
  *  means a doctor that decrements `contributionYear` on a base seed whose working owner actually
  *  contributes, and it must not disturb the outcome pins those plants carry.
  *
- *  THE CONTRIBUTING SEEDS ARE `date` (stillWorking), `date65` (stillWorkingAllMedicare) and
- *  `datedip` (dateDipSeed) — verified by their accounts' `annualContribution`. NOT `datesplit`:
+ *  THE CONTRIBUTING SEEDS ARE `date` (stillWorking), `date65` (stillWorkingAllMedicare),
+ *  `dip` (dateDipSeed) and `datenc` (dateNcSeed, a pure spread of stillWorkingAllMedicare
+ *  overriding only `retirementState`, so it inherits the contributing accounts) — verified by
+ *  their accounts' `annualContribution`. The registry key is `dip`, NOT `datedip` (see
+ *  {@link DEV_SEEDS}) — a doctor keyed on `datedip` resolves to null and renders nothing, the
+ *  same broken-gate symptom the `datesplit` slip below costs. NOT `datesplit`:
  *  `stillWorkingBorderline` carries no `annualContribution`/`employerMatchAnnual`/`hsaEmployerAnnual`
  *  on either account and `dateSplitSeed` overrides only `valueToday`, so `anyContributions` is
  *  false, no `accumulation` reaches the base overlay, and `contributionsPricedForRun` reads false.

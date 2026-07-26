@@ -47,6 +47,12 @@ jobs:
       - run: pnpm verify:state-tax
       - run: pnpm lint
       - run: pnpm typecheck
+      # The doc test-count DRIFT gate. It was local-only until 2026-07-26, which is exactly how a
+      # commit adding 2 test arms without touching README/roadmap went GREEN through this workflow:
+      # the law says every stat surface updates in ONE pass, and the gate enforcing it was the one
+      # gate CI never ran. `vitest list` only enumerates (it does not execute), so this is cheap and
+      # belongs here, ahead of the slow suite, to fail fast.
+      - run: pnpm verify:doc-stats
       - run: pnpm test
       - run: pnpm build
       # Needs dist/ — runs after build.

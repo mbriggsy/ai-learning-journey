@@ -29,11 +29,13 @@ import { previewRunsInWorker, runControlPreview } from '@store/controlPreview'
 import { epochDayToCalendarYear } from '@store/staleness'
 import { planClockAnchor } from './bandAnnotations'
 import type { ScenarioDraft } from '@store/memoryModel'
+import type { SavedRecommendationStatus } from '@store/savedRecommendation'
 import { currentEpochDay } from './scenarioFromDraft'
-import type { RecommendationGoal, TwoArmControl } from '@shared/model'
+import type { RecommendationGoal, SavedRecommendationV3, TwoArmControl } from '@shared/model'
 import { GoalPicker } from '@intake/GoalPicker'
-import { RecommendationSurface } from './RecommendationSurface'
-import { copy } from './copy'
+import { RecommendationSurface, type RecommendationSaveProp } from './RecommendationSurface'
+import { savedRecordCardView, type SavedRecordCopy } from './recommendationSaveView'
+import { copy, slots } from './copy'
 import { appModel } from './appModel'
 import { Disclaimer } from './Disclaimer'
 import { FuckOffDate } from './FuckOffDate'
@@ -57,16 +59,54 @@ export type ResultSaveProp =
  *  subordinate line + CTA that opens the export step; absent (undefined) ⇒ no door at all. */
 export type ResultBackupProp = { readonly onSave: () => void }
 
+/** U17 §S5 — THE RAW PAIR the store's trichotomy produced, never a composed view. This screen alone
+ *  owns `solveInvitable` and `isDateRoute`, so it alone can mint the card's label, its cost line and
+ *  its onClick TOGETHER — a view composed upstream would arrive beside a wiring decision made here
+ *  and could ship a dead door (or an unreachable arm). */
+export type RecommendationRecordProp = {
+  readonly status: SavedRecommendationStatus
+  readonly record: SavedRecommendationV3
+}
+
+/**
+ * The record card's copy, assembled ONCE at module scope from the swept catalog.
+ *
+ * `savedRecordCardView` takes its strings as a parameter rather than reading `copy.ts` (its own
+ * header explains why), and the cause map is typed `Record<SavedRecommendationSupersededCause,
+ * string>` — EXHAUSTIVE, so the day the store adds a fifth supersession cause THIS literal fails to
+ * compile (TS2741) instead of the composer silently emitting a card with a missing clause.
+ */
+const SAVED_RECORD_COPY: SavedRecordCopy = {
+  heading: copy.recommendRecordHeading,
+  stillHolds: copy.recommendRecordHolds,
+  causes: {
+    'inputs-changed': copy.recommendRecordSupersededInputs,
+    'inputs-unavailable': copy.recommendRecordSupersededUnavailable,
+    'solver-changed': copy.recommendRecordSupersededSolver,
+    'rules-changed': copy.recommendRecordSupersededRules,
+  },
+  savedIn: slots.recommendRecordSavedIn,
+  reopenLabel: copy.recommendRecordReopenCta,
+  reopenCostLine: copy.recommendRecordReopenCost,
+}
+
 export function Result({
   onReview,
   save,
   backup,
+  recSave,
+  recordCard,
   computing = false,
   stalenessNote = false,
   agedBalancesYear,
 }: {
   readonly onReview: () => void
   readonly save: ResultSaveProp
+  /** U17 §S5 — the strategy slot's derived view + the gesture (IntakeApp owns both machines). */
+  readonly recSave?: RecommendationSaveProp
+  /** U17 §S5 — the DISK's remembered recommendation + the store's re-entry trichotomy over it, or
+   *  undefined when there is no record to judge (or the route cannot answer honestly). */
+  readonly recordCard?: RecommendationRecordProp
   /** The re-offer backup door (U8-tail). Present ⇒ render the quiet subordinate line + CTA;
    *  undefined ⇒ no door. Withheld with the whole actions row while computing (an affordance
    *  we don't want used on a non-answer shouldn't exist — the same rule as the quiet doors). */
@@ -312,11 +352,42 @@ export function Result({
   // (both open the GoalPicker). A builder-refusal `blocked` (no-pretax / spine-unready) deliberately
   // does NOT invite — the gap is never the goal, so its own calm named-reason note carries the steer
   // (§Q5, F3; the steer-seed increment split the reasons).
+  //
+  // U17 §S5 — THE SAME F-B MOVE, FOR THE RETURNING HOUSEHOLD. A vault return lands `idle` WITH a
+  // record on disk, and the record card carries its OWN re-open control (label + cost line + onClick
+  // minted as one below) — so an un-amended `idle` disjunct would put TWO controls opening the same
+  // GoalPicker on that one frame, which is exactly the duplication the stale chair fix retired. With
+  // NO record the predicate is byte-identical to today, so every dev seed, the doors-order contract
+  // and the measured idle frames are untouched.
   const solveInvitable =
     !isDateRoute(snapshot.draft) &&
-    (solve.kind === 'idle' ||
+    ((solve.kind === 'idle' && recordCard === undefined) ||
       solve.kind === 'compute-error' ||
       (solve.kind === 'blocked' && solve.gap === 'goal-unset'))
+
+  // THE CARD AND ITS DOOR, MINTED IN ONE EXPRESSION — the fork the F-B chair fix closed: label, cost
+  // line and onClick are inseparable, and the surface's dead-button law (no handler ⇒ no control)
+  // makes divergence unrepresentable.
+  //
+  // THE RE-OPEN WIRES ON THE POSITIVE `idle` PREDICATE, not on `!solveInvitable`. `pending`, and both
+  // builder-refusal `blocked` gaps, are frames this screen deliberately refuses to invite on (see the
+  // gate above) and where `pickGoal` → `dispatchSolve` deterministically re-refuses — a door there
+  // would promise a re-solve the dispatch cannot deliver. `stale` is excluded for the opposite
+  // reason: it already carries the stale card's own re-open, and a second door beside it is the
+  // duplication F-B retired. `todayEpochDay` rides the ONE local-calendar chain this file already
+  // reads (currentEpochDay → epochDayToCalendarYear), never a second ad-hoc clock.
+  const card =
+    recordCard === undefined
+      ? undefined
+      : {
+          view: savedRecordCardView(
+            recordCard.status,
+            recordCard.record,
+            currentEpochDay(),
+            SAVED_RECORD_COPY,
+          ),
+          onReopen: solve.kind === 'idle' ? () => setGoalOpen(true) : undefined,
+        }
   // A CONFIRMED goal pick: write `chosenGoal`, close the picker, dispatch the solve. A re-pick writes
   // the new goal and re-dispatches — the store's invalidateStaleSolve + the solve request-epoch carry
   // the visible re-solve. NO auto-save: `chosenGoal` rides the draft in-session (the explicit-resave
@@ -403,7 +474,12 @@ export function Result({
           an orphaned rec note inside the date hero. Idle renders nothing here anyway; the gate drops
           the non-idle body the store still holds. A flip back re-mounts the surface + invite. */}
       {!isDateRoute(snapshot.draft) && (
-        <RecommendationSurface solve={snapshot.solve} onRepick={() => setGoalOpen(true)} />
+        <RecommendationSurface
+          solve={snapshot.solve}
+          onRepick={() => setGoalOpen(true)}
+          recSave={recSave}
+          card={card}
+        />
       )}
       {/* The IN-FRAME R13 disclaimer (council 2026-07-08, "buttons drop below" — Briggsy's fork
           call): DOM-ordered ABOVE the backup door AND the quiet doors (the Medicare-pricing unit's

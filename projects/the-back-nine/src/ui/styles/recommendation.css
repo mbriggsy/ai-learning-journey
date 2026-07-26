@@ -185,11 +185,103 @@
   align-self: flex-start;
 }
 
-/* §S4 — the RESERVED save slot: layout space ONLY, so U17's Save control lands WITHOUT a CLS relayout.
-   It reserves the control's vertical footprint now and holds NOTHING interactive (an inert "saved"
-   would be a lie — U17 ships the gesture + the persistent write together). Empty + aria-hidden. */
+/* ── U17 §S5 — THE SAVE SLOT, filled ────────────────────────────────────────────────────────────
+   U16 reserved this box so the gesture could land without a CLS relayout; S5 puts the control in it,
+   and the reservation is now genuinely load-bearing: the offer arm is a CTA + a two-sentence
+   disclosure, and the arms it swaps to (pending line, saved badge) are ONE line each. Without a floor
+   the tap would collapse ~100px and yank the in-frame disclaimer + the quiet doors up under the
+   pointer mid-gesture (insight 035).
+
+   THE ARITHMETIC, mirroring `.result-save-slot`'s own (result.css:113-120 — --field-h 52 + --space-2
+   8 + one --text-sm line ≈ 24 = 84px = 5.25rem):
+     .btn-quiet CTA   --tap-min                 44px   (its one-line --text-sm label is ~25px, so the
+                                                        44px touch floor is what actually governs)
+     row gap          --space-2                  8px
+     the hint         3 × (--text-sm @1rem × --leading-body 1.55 = 24.8px)   74px
+                        — the CEREMONY hint is the taller of the two (~168 chars); at the --measure
+                          36rem reading column that is three lines at every plausible advance width
+                          (it would need ≥0.64em average advance to reach four).
+     ────────────────────────────────────────────────────────────────────
+     total                                     126.4px  →  8rem (128px)
+
+   `min-`, NEVER fixed — the same law as the sibling: growth is safe, collapse is the mid-gesture
+   trap. A narrower column (the phone) wraps the hint further and the box GROWS to fit; the refusal
+   card is not in here at all (it lives in the aside, free to exceed). Step 14 measures this against a
+   real browser — this figure is reasoned from the type scale, not observed. */
 .rec-save-slot {
-  min-height: 2.75rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+  min-block-size: 8rem;
+}
+
+/* The offer arm's CTA — the SAME calm door as every other control in this surface (.rec-repick,
+   .rec-note__reopen), deliberately NOT a second .btn-primary: the plan rail's own "Keep this plan"
+   is on screen at the same time, and two dominant CTAs make the household choose between two saves.
+   The shipped precedent for a subordinate durability affordance is .result-backup-door's btn-quiet.
+   btn-quiet carries the --tap-min target + the visible non-color focus ring; this only un-centers it
+   into the reading column. */
+.rec-save__cta {
+  align-self: flex-start;
+}
+
+/* R2 — the pre-tap disclosure. --text-sm (the `.result-keep__hint` register, NOT fine print): it is
+   the honesty half of the control, not a footnote, and content is never trimmed to fit the box. */
+.rec-save__hint {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  color: var(--ink-muted);
+  text-wrap: pretty;
+}
+
+.rec-save__pending {
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  color: var(--ink-muted);
+  /* The breathe is the shared base.css family, keyed on .solve-pending — this line is the calm
+     durability tell, not the thinking tell, so it deliberately does NOT pulse. */
+}
+
+/* The saved badge — mirrors the shipped `.result-saved` lockup so the two badges read as ONE idiom
+   (declared here rather than borrowed so this surface owns its own chrome). Mark + TEXT: the words
+   carry the claim into the a11y tree, the shape reinforces, colour is never the signal. */
+.rec-save__badge {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  font-weight: var(--weight-medium);
+  color: var(--ink);
+  text-wrap: pretty;
+  opacity: 1;
+  transition: opacity var(--dur-fast) var(--ease-out);
+}
+
+@starting-style {
+  /* Opacity ONLY, no movement and no scale — a durable-write receipt is not a delight moment, and
+     the final rendered state is identical with motion on or off (so reduced-motion needs no arm). */
+  .rec-save__badge {
+    opacity: 0;
+  }
+}
+
+.rec-save__mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  inline-size: 1.5em;
+  block-size: 1.5em;
+  border-radius: var(--radius-pill);
+  background: var(--brand-tint);
+  color: var(--brand);
+  font-size: 0.75em;
+}
+
+.rec-save__mark::before {
+  content: '\2713'; /* ✓ — decorative; the badge text carries the meaning */
 }
 
 /* The conversion-only hold + the whole-solve HOLD — calm-competent, never an alarm (no red badge). */
@@ -255,4 +347,107 @@
    the --dur-press resting press), left-aligned below the body. */
 .rec-note__reopen {
   align-self: flex-start;
+}
+
+/* ── U17 §S5 — THE ASIDE: the remembered record + the gesture's refusal ─────────────────────────
+   A MEMORY, not a beat. It is a direct child of .recommendation-surface and lands on the vault-return
+   IDLE frame, so confidence.css EXCLUDES it from the two-pane beat switch (`:not(.rec-aside)`) — see
+   the comment there: an unexcluded child would flip the surface out of its r4 idle seat and step the
+   protected in-frame disclaimer down a row on the returning household's first screen. `min-inline-size:
+   0` keeps it from forcing that grid column wider than its track; the measure cap keeps it a calm
+   reading card in the full-width row too. */
+.rec-aside {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-inline-size: 0;
+  max-inline-size: var(--measure);
+}
+
+/* The remembered-record card + the refusal card ride the shared `.rec-note` chrome (calm status
+   register, never an error one) and add only the opacity-ONLY entrance: no movement, no scale, so the
+   final state is identical with motion on or off. */
+.rec-record,
+.rec-note--refused {
+  opacity: 1;
+  transition: opacity var(--dur-fast) var(--ease-out);
+}
+
+@starting-style {
+  .rec-record,
+  .rec-note--refused {
+    opacity: 0;
+  }
+}
+
+/* THE STANDING LINE — whether the memory still holds. THE TEXT IS THE SIGNAL (it is the one thing
+   that must survive with ZERO cause clauses beneath it, which the fail-closed superseded arm permits);
+   the mark is a redundant SHAPE channel, and colour is redundant to both. --text-base + --ink rather
+   than the muted note register: this is the card's actual finding, not a footnote to it. */
+.rec-record__standing {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  color: var(--ink);
+  text-wrap: pretty;
+}
+
+.rec-record__mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  inline-size: 1.5em;
+  block-size: 1.5em;
+  border-radius: var(--radius-pill);
+  font-size: 0.75em;
+}
+
+/* Two channels apart, neither of them hue: the GLYPH (a check vs a bar — distinct overall
+   silhouettes, the GradeSignal law applied to a two-state mark) and the FILL (a tinted disc vs an
+   outlined ring). A greyscale print of these two marks is still unambiguous. */
+.rec-record__standing[data-standing='holds'] .rec-record__mark {
+  background: var(--brand-tint);
+  color: var(--brand);
+}
+
+.rec-record__standing[data-standing='holds'] .rec-record__mark::before {
+  content: '\2713'; /* ✓ — decorative; the standing sentence carries the meaning */
+}
+
+.rec-record__standing[data-standing='superseded'] .rec-record__mark {
+  border: 1px solid var(--line-control);
+  color: var(--ink-muted);
+}
+
+.rec-record__standing[data-standing='superseded'] .rec-record__mark::before {
+  content: '\2013'; /* – — a bar, not an alarm glyph: the card is calm, never a warning badge */
+}
+
+/* EVERY cause that holds, in the producer's declaration order (insight 101). A plain list — the
+   markers are suppressed because each clause is a whole sentence, not a bullet fragment. */
+.rec-record__causes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+/* The re-open control + the cost line — ONE unit, so a door can never appear without its price. */
+.rec-record__reopen {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-1);
+}
+
+.rec-record__cost {
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  color: var(--ink-muted);
+  text-wrap: pretty;
 }

@@ -1262,6 +1262,19 @@ export const copy = {
   // change.
   recommendRecordHeading: 'Your saved strategy read',
   recommendRecordHolds: 'It still matches your plan as it stands today.',
+  // THE SUPERSEDED LEAD — the negative mirror of `recommendRecordHolds`, and it exists because the
+  // superseded arm's cause clauses MAY BE EMPTY (`SavedRecordStanding`, recommendationSaveView.ts:237-242:
+  // the fail-closed output of the broken-contract split, where the store demoted the record without
+  // reporting a cause). Without a lead the card would draw a heading over nothing — a blank exactly
+  // where the disclosure belongs — so this line is what the non-colour marker stands on with zero
+  // clauses beneath it.
+  //
+  // IT NAMES THE STATE, NOT A REASON, and that is the honest wording rather than the tidy one. The
+  // obvious mirror ("It no longer matches your plan") is FALSE on the 'inputs-unavailable' cause,
+  // which says the opposite — that we cannot line it up at all — so a card carrying both sentences
+  // would contradict itself. "We can no longer show this as current" is true on all four causes AND
+  // on the un-named one, and it claims no knowledge the trichotomy does not have.
+  recommendRecordSuperseded: 'We can no longer show this as current.',
   // ONE clause per `SavedRecommendationSupersededCause`. Each names WHAT moved, in the reader's
   // frame, with no blame register — "your numbers have changed" is neutral, never a fault.
   recommendRecordSupersededInputs: 'Your numbers have changed since then.',

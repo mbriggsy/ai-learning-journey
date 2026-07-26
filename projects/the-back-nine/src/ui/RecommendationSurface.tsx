@@ -13,6 +13,19 @@
  * group — never a fresh grade beside a stale hedge). Motion is transform/opacity/SVG-attribute only
  * (CSP: no injected keyframes, no MotionConfig). The RecommendationViz is lazy-chunked behind a
  * fixed-dimension box so the beat never reflows on land (CLS).
+ *
+ * U17 §S5 lands TWO more things here, and WHERE each mounts is the load-bearing decision.
+ *
+ *  1. THE SAVE SLOT fills the U16 reservation, INSIDE `RecommendedBeat` — structurally correct, because
+ *     a payload the view degraded to `unavailable`/`held` has no crowned winner to mint a record from.
+ *  2. THE ASIDE (the remembered-record card + the gesture's refusal card) mounts in THIS component's
+ *     OWN body, and NEVER inside `CommittedBeat`/`RecommendedBeat`. That is a P0, not a preference:
+ *     `RecommendedBeat` has ONE call site (`case 'recommended'`), and `case 'idle'` returns null — so a
+ *     card mounted there could paint only its CURRENT arm, seconds after a save, which is the one
+ *     moment it is useless. A RETURNING household is IDLE (memoryModel seeds `{kind:'idle'}` and the
+ *     hydrate effect only replaces the draft), and a draft edit demotes committed → `stale` — the two
+ *     frames the card exists for. So the aside is gated on ITS OWN data (the disk-derived record, the
+ *     standing refusal) and on nothing else.
  */
 import { Suspense, lazy, useEffect, useRef } from 'react'
 import type { SolveAnswer } from '@store/memoryModel'
@@ -20,8 +33,60 @@ import { useLiveAnnouncer } from '@intake/a11y'
 import type { ConfidenceStatementView } from './ConfidenceStatement'
 import { GradeSignal } from './GradeSignal'
 import { recommendationView, type RecommendedView, type RecommendationView } from './recommendationView'
+// TYPE-ONLY, and deliberately so: `IntakeApp` imports `Result` which imports THIS module, so a VALUE
+// import would close a runtime cycle (and drag the lazy intake chunk's entry into this one). `import
+// type` is erased at build, so the ticket's shape is shared without any module edge at all.
+import type { RecommendationSaveTicket } from './IntakeApp'
+import type {
+  RecommendationSaveRefusal,
+  RecommendationSaveView,
+  SavedRecordCardView,
+} from './recommendationSaveView'
 import { copy, staticDisclosures } from './copy'
 import './styles/recommendation.css'
+
+/** The strategy slot's save state + the callbacks the caller attaches (`deriveRecommendationSave` is
+ *  the tested machine; this surface is dumb wiring over its five arms). */
+export interface RecommendationSaveProp {
+  readonly view: RecommendationSaveView
+  /** The tap. The TICKET is composed HERE, from the two producers on screen — never re-derived by the
+   *  gesture (insight 081); see the narrowing at the call site below. */
+  readonly onSave: (ticket: RecommendationSaveTicket) => void
+  /** THE DURABILITY EVENT — "a write carrying this record reached disk". A flag rather than a view
+   *  transition because the ceremony route UNMOUNTS this whole subtree (IntakeApp's `phase === 'save'`
+   *  branch returns before `Result` renders), so a ref seeded from the current view sees `saved` on
+   *  BOTH sides of the remount and stays silent about the very save it mounted to announce. */
+  readonly landed: boolean
+  /** Acknowledge the event so it fires once (clear-after-announce, burned/045). */
+  readonly onAnnounced: () => void
+}
+
+/** The remembered record's card + its re-open handler, composed by `Result` — which alone owns the
+ *  invite predicate. `onReopen === undefined` ⇒ no control at all, never a dead one. */
+export interface SavedRecordProp {
+  readonly view: SavedRecordCardView
+  readonly onReopen?: () => void
+}
+
+/** The refusal cards' copy, keyed BY THE UNION — so a fourth refusal reason is a compile error here
+ *  (TS2741) rather than a promised affordance that renders nothing (insight 100's dead-arm shape).
+ *  The reason is a bare string precisely so no developer text can reach this table. */
+const REFUSAL_CARD: Readonly<
+  Record<RecommendationSaveRefusal, { readonly heading: string; readonly body: string }>
+> = {
+  'record-invalid': {
+    heading: copy.recommendSaveRefusalRecordInvalidHeading,
+    body: copy.recommendSaveRefusalRecordInvalidBody,
+  },
+  write: {
+    heading: copy.recommendSaveRefusalWriteHeading,
+    body: copy.recommendSaveRefusalWriteBody,
+  },
+  'recovery-locked': {
+    heading: copy.recommendSaveRefusalRecoveryLockedHeading,
+    body: copy.recommendSaveRefusalRecoveryLockedBody,
+  },
+}
 
 // Lazy-chunked (the U16 viz is below the grade lockup, and only the committed-active beat needs it) —
 // behind a fixed-dimension box so the split-chunk load never reflows the lockup (CLS).
@@ -33,6 +98,8 @@ export function RecommendationSurface({
   solve,
   spineConfidence,
   onRepick,
+  recSave,
+  card,
 }: {
   readonly solve: SolveAnswer
   /** The spine's rendered confidence object (Q1 source-bind) — threaded to the view model so the
@@ -43,6 +110,12 @@ export function RecommendationSurface({
    *  re-pick VISIBLY re-solves and both futures update). Optional — a surface mounted WITHOUT it (the
    *  P2/P3 shells; the in-isolation unit tests) renders no re-pick door, never a dead one. */
   readonly onRepick?: () => void
+  /** U17 §S5 — the strategy save slot. Optional: a surface mounted WITHOUT it (the P2/P3 shells, the
+   *  in-isolation unit tests) keeps U16's empty reservation, never a dead Save control. */
+  readonly recSave?: RecommendationSaveProp
+  /** U17 §S5 — the remembered record's card. Driven SOLELY by the disk-derived record, so it paints
+   *  on the returning household's `idle` first screen and on `stale` — see the header's P0. */
+  readonly card?: SavedRecordProp
 }) {
   // ONE persistent polite live region for the solve channel. Always mounted from the first resolved
   // answer so the idle→pending transition is observable (a region mounted only WHEN pending would seed
@@ -66,6 +139,64 @@ export function RecommendationSurface({
 
   const view = recommendationView(solve, spineConfidence !== undefined ? { spineConfidence } : undefined)
 
+  // §S5 (a) — the save gesture's START, through the SAME region the solve channel uses, for the same
+  // reason: the slot swaps whole nodes per arm, so a `role='status'` that mounts already-populated
+  // may never announce (burned/045). Mirrors Result.tsx's plan-rail announcer.
+  //
+  // ⚠️ "PERSISTENT" IS TRUE ONLY ON THE UPDATE ROUTE. On the CEREMONY route (R1's no-vault path)
+  // IntakeApp's `phase === 'save'` branch returns before Result renders, so this whole subtree
+  // unmounts and the region node is BRAND NEW on the remount — the landing announce then lands in
+  // the same commit as the node's own insertion, which is precisely the burned/045 may-not-fire
+  // shape this indirection exists to avoid. The flow is correct either way (the badge is disk-
+  // derived and cannot lie); what is unproven is whether the first-save landing SPEAKS. That needs
+  // a real AT check on the real ceremony route — jsdom cannot answer it. Filed for step 14; if it
+  // does not fire, seed the region empty for one frame before consuming `landed` rather than
+  // changing the flow.
+  const saveKind = recSave?.view.kind
+  const prevSaveKind = useRef(saveKind)
+  useEffect(() => {
+    const prev = prevSaveKind.current
+    prevSaveKind.current = saveKind
+    if (saveKind === prev) return
+    if (saveKind === 'saving') announcer.announce(copy.recommendSavePending)
+  }, [saveKind, announcer])
+
+  // §S5 (b) — THE LANDING, announced off the DURABILITY EVENT and never off a view transition. The
+  // ceremony route unmounts this whole subtree between the tap and the landing (IntakeApp's
+  // `phase === 'save'` branch returns before Result renders), so `prevSaveKind` is re-seeded at
+  // `saved` on the remount and a transition watcher stays silent exactly on the route that most needs
+  // the announcement. The ref makes the event fire ONCE per episode even though `onAnnounced` is a
+  // fresh closure each render (and across StrictMode's double-invoke); the badge itself keeps
+  // rendering — it is derived from the DISK, not from this flag.
+  const landed = recSave?.landed === true
+  const onAnnounced = recSave?.onAnnounced
+  const announcedLanding = useRef(false)
+  useEffect(() => {
+    if (!landed) {
+      announcedLanding.current = false
+      return
+    }
+    if (announcedLanding.current) return
+    announcedLanding.current = true
+    announcer.announce(copy.recommendSaveSavedBadge)
+    onAnnounced?.()
+  }, [landed, onAnnounced, announcer])
+
+  // §S5 (c) — THE TICKET, composed where BOTH producers are in scope and NARROWED rather than cast.
+  // `solve` is a `SolveAnswer` and `fingerprint` exists only on its committed arm; `view` is a
+  // `RecommendationView` and `mode` only on `RecommendedView` — both reads are TS2339 unwrapped, and a
+  // cast here would compile, lint, and leave every trichotomy arm green while stamping a record with
+  // the wrong run (model.ts:1813-1820 documents that exact shape). The two values are lifted into
+  // CONSTS so the handler closes over already-narrowed data — parameter narrowing does not survive
+  // into a closure.
+  const ticket: RecommendationSaveTicket | undefined =
+    solve.kind === 'committed' && view.kind === 'recommended'
+      ? { fingerprint: solve.fingerprint, noDollarRegister: view.mode === 'no-change' }
+      : undefined
+  const fire = recSave?.onSave
+  const onSave = fire !== undefined && ticket !== undefined ? () => fire(ticket) : undefined
+  const refusal = recSave?.view.kind === 'refused' ? recSave.view.reason : undefined
+
   return (
     <div className="recommendation-surface">
       <div ref={announcer.ref} className="sr-only" role="status" aria-live="polite" aria-atomic="true" />
@@ -74,15 +205,106 @@ export function RecommendationSurface({
           <p className="solve-pending">{copy.recommendPendingLabel}</p>
         </section>
       )}
-      <CommittedBeat view={view} onRepick={onRepick} />
+      <CommittedBeat view={view} onRepick={onRepick} save={recSave} onSave={onSave} />
+      {/* THE ASIDE — the surface's OWN body, below the beat, gated on ITS OWN data and never on
+          `view.kind` (the header's P0: every arm that matters is unreachable inside the beats). A
+          MEMORY, not a beat — confidence.css excludes `.rec-aside` from the two-pane beat switch so a
+          returning household's INSTANT record card cannot flip the surface out of its r4 idle seat and
+          step the protected in-frame disclaimer down a row. Omitted entirely when both halves are
+          absent, so the record-free frame is byte-identical to today. */}
+      {(card !== undefined || refusal !== undefined) && (
+        <div className="rec-aside">
+          {card !== undefined && <SavedRecordCard card={card} />}
+          {refusal !== undefined && (
+            // role='alert' (the `.result-save-error` precedent), NOT the persistent region: an alert
+            // announces on insertion BY DESIGN, and routing it through the announcer too would
+            // double-speak it. The card is composed from `reason` ALONE — the mint's and the codec's
+            // developer text never left IntakeApp's console (recommendationSaveView.ts's type-level
+            // leak proof), so there is nothing here that could interpolate it.
+            <section className="rec-note rec-note--refused" role="alert">
+              <h3 className="rec-note__head">{REFUSAL_CARD[refusal].heading}</h3>
+              <p className="rec-note__line">{REFUSAL_CARD[refusal].body}</p>
+            </section>
+          )}
+        </div>
+      )}
     </div>
+  )
+}
+
+/**
+ * THE REMEMBERED RECORD'S CARD — minimal by ruling (R3): that a saved read exists, its age, whether
+ * it still holds, and the re-open CTA naming its cost. It quotes NO remembered grade or verdict enum.
+ *
+ * THE STANDING LINE IS THE NON-COLOUR SIGNAL, AND IT CARRIES ITS OWN TEXT. The `superseded` arm's
+ * cause clauses may legitimately be EMPTY (recommendationSaveView.ts:237-242 — the fail-closed output
+ * of the broken-contract split), so a card that were nothing but a heading over `clauses.map(...)`
+ * would draw a blank exactly where the disclosure belongs. The lead sentence renders on BOTH arms —
+ * the holds arm's own clause, or `recommendRecordSuperseded` — with a decorative shape mark beside
+ * it: the meaning is reachable as TEXT in the a11y tree, the shape is redundant reinforcement, and
+ * colour is never even the third channel.
+ *
+ * EVERY cause clause renders, in the producer's declaration order (insight 101) — a card naming one
+ * cause when two hold describes its poster child, not the truth.
+ */
+function SavedRecordCard({ card }: { readonly card: SavedRecordProp }) {
+  const { standing } = card.view
+  // NO `role="status"` on the section below. This card is DURABLE DISK STATE sitting in normal
+  // reading order, not a transient status update, and an implicit polite live region over disk state
+  // misfires twice: (a) its content changes whenever the standing flips holds→superseded on an
+  // ordinary draft edit, so a routine edit re-announces the entire card; (b) on the first-save frame
+  // it would double-speak with the landing announcement, which the region already owns. The heading
+  // names it, and it is reachable in the a11y tree by being real text in the document. `role="alert"`
+  // STAYS on the refusal card — that one IS transient and IS the rendered outcome of a gesture.
+  return (
+    <section className="rec-note rec-record">
+      <h3 className="rec-note__head">{card.view.heading}</h3>
+      <p className="rec-record__standing" data-standing={standing.kind}>
+        <span className="rec-record__mark" aria-hidden="true" />
+        {standing.kind === 'holds' ? standing.clauses[0] : copy.recommendRecordSuperseded}
+      </p>
+      {standing.kind === 'superseded' && standing.clauses.length > 0 && (
+        <ul className="rec-record__causes">
+          {standing.clauses.map((clause, i) => (
+            <li key={i} className="rec-note__line">
+              {clause}
+            </li>
+          ))}
+        </ul>
+      )}
+      {/* The age, suppressed rather than fabricated for a record minted this calendar year. */}
+      {card.view.savedIn !== undefined && <p className="rec-note__line">{card.view.savedIn}</p>}
+      {/* The re-open control and the cost line are ONE unit, rendered IFF the caller wired the
+          handler (the shipped no-dead-door law): a control that hides a multi-minute re-solve is an
+          invitation the household cannot price, and a cost line beside no control is a dead promise. */}
+      {card.onReopen !== undefined && (
+        <div className="rec-record__reopen">
+          <button type="button" className="btn-quiet rec-note__reopen" onClick={card.onReopen}>
+            {card.view.reopen.label}
+          </button>
+          <p className="rec-record__cost">{card.view.reopen.costLine}</p>
+        </div>
+      )}
+    </section>
   )
 }
 
 /** Route the resolved view to its render. `idle` / `blocked` / `pending` carry no committed body here —
  *  the entry affordance (Result's doors region) owns the invite + the goal steer; pending is drawn
  *  above. Every COMMITTED shape gets a render (a shape without one is a broken state). */
-function CommittedBeat({ view, onRepick }: { readonly view: RecommendationView; readonly onRepick?: () => void }) {
+function CommittedBeat({
+  view,
+  onRepick,
+  save,
+  onSave,
+}: {
+  readonly view: RecommendationView
+  readonly onRepick?: () => void
+  /** Threaded to `RecommendedBeat` only — the slot's five arms are the crowned winner's. */
+  readonly save?: RecommendationSaveProp
+  /** The narrowed tap (undefined ⇒ nothing mintable ⇒ no control). */
+  readonly onSave?: () => void
+}) {
   switch (view.kind) {
     case 'idle':
     case 'pending':
@@ -156,7 +378,7 @@ function CommittedBeat({ view, onRepick }: { readonly view: RecommendationView; 
         </section>
       )
     case 'recommended':
-      return <RecommendedBeat view={view} onRepick={onRepick} />
+      return <RecommendedBeat view={view} onRepick={onRepick} save={save} onSave={onSave} />
     default: {
       // The exhaustiveness guard (the shipped gradeWord / gradeSignalState idiom): a future
       // RecommendationView arm fails tsc HERE rather than silently rendering nothing — a payload shape
@@ -170,7 +392,17 @@ function CommittedBeat({ view, onRepick }: { readonly view: RecommendationView; 
 /** The committed RECOMMENDATION (active / surplus / no-change) — the grade lockup + delta viz +
  *  disclosures + runner-up + the conversion-only hold + the S4 honest-limits note, re-pick door, and
  *  the reserved save slot. Every string is pre-resolved by the view model. */
-function RecommendedBeat({ view, onRepick }: { readonly view: RecommendedView; readonly onRepick?: () => void }) {
+function RecommendedBeat({
+  view,
+  onRepick,
+  save,
+  onSave,
+}: {
+  readonly view: RecommendedView
+  readonly onRepick?: () => void
+  readonly save?: RecommendationSaveProp
+  readonly onSave?: () => void
+}) {
   const g = view.grade
   return (
     <section className="rec-committed">
@@ -295,13 +527,87 @@ function RecommendedBeat({ view, onRepick }: { readonly view: RecommendedView; r
           </button>
         )}
 
-        {/* §S4 — the RESERVED save slot: layout space ONLY (kills the U17 CLS relayout). NO live Save
-            control ships in U16 — a gesture whose commit doesn't persist is a lie (the security seat's
-            `writable()`-refuses finding: an inert "saved" in the recovery-unlocked/no-vault survivor
-            state is data loss at the widow-cliff). The gesture + the v3 write land TOGETHER in U17; here
-            the slot is an EMPTY reservation (aria-hidden — nothing to announce), never interactive. */}
-        <div className="rec-save-slot" aria-hidden="true" />
+        {/* U17 §S5 — the save slot, filling U16's reservation. The box is the SAME in every arm (the
+            reservation is what kills the CLS relayout: a tap must never slide the disclaimer + the
+            quiet doors below up into the pointer). A surface mounted WITHOUT the prop — the P2/P3
+            shells, the in-isolation unit tests — keeps the verbatim empty reservation. */}
+        {save === undefined ? (
+          <div className="rec-save-slot" aria-hidden="true" />
+        ) : (
+          <SaveSlot view={save.view} onSave={onSave} />
+        )}
       </div>
     </section>
   )
+}
+
+/**
+ * The five save arms in ONE reserved box.
+ *
+ * KEYED ON THE VIEW, NEVER ON THE PROP'S PRESENCE. `readOnly` and an unencodable answer BOTH derive
+ * `{kind:'none'}` while this beat still renders, and IntakeApp always passes a view — so "is the prop
+ * there?" is not the question. `none` and `refused` render the VERBATIM empty reservation: `none`
+ * makes no claim about a disk state it cannot compare, and `refused` has already spoken, in the
+ * aside, where the card is free to exceed this box's height.
+ *
+ * `aria-hidden` survives ONLY on the empty arms. Leaving it on a populated one would ship an
+ * AT-invisible Save button that still passes a "the reservation is hidden" test.
+ */
+function SaveSlot({
+  view,
+  onSave,
+}: {
+  readonly view: RecommendationSaveView
+  readonly onSave?: () => void
+}) {
+  switch (view.kind) {
+    case 'none':
+    case 'refused':
+      return <div className="rec-save-slot" aria-hidden="true" />
+    case 'offer':
+      // No handler ⇒ no control (the shipped dead-button law). Unreachable in practice — this beat
+      // renders only for a committed `recommended` payload, which is exactly when the ticket mints —
+      // but the alternative is a button whose tap does nothing.
+      return onSave === undefined ? (
+        <div className="rec-save-slot" aria-hidden="true" />
+      ) : (
+        <div className="rec-save-slot">
+          <button type="button" className="btn-quiet rec-save__cta" onClick={onSave}>
+            {copy.recommendSaveCta}
+          </button>
+          {/* R2 — the disclosure lands BEFORE the tap, and `route` picks WHICH truth: the no-vault
+              tap escalates into the ceremony (two passphrases + a backup copy), and either way the
+              write is the whole plan. A confirmation explaining what already happened is too late. */}
+          <p className="rec-save__hint">
+            {view.route === 'ceremony' ? copy.recommendSaveHintCeremony : copy.recommendSaveHintUpdate}
+          </p>
+        </div>
+      )
+    case 'saving':
+      // Announced by the persistent region above (a status inserted already-populated may not fire,
+      // burned/045) — this node is the VISIBLE pending line only.
+      return (
+        <div className="rec-save-slot">
+          <p className="rec-save__pending">{copy.recommendSavePending}</p>
+        </div>
+      )
+    case 'saved':
+      // The ONE arm permitted to claim a completed save, and it is derived from the DISK. The mark is
+      // decorative — the badge TEXT carries the state into the a11y tree (the `.result-saved__mark`
+      // precedent), so colour is never the signal.
+      return (
+        <div className="rec-save-slot">
+          <p className="rec-save__badge">
+            <span className="rec-save__mark" aria-hidden="true" />
+            {copy.recommendSaveSavedBadge}
+          </p>
+        </div>
+      )
+    default: {
+      // A future save arm fails tsc HERE rather than rendering an empty exposed box where a claim
+      // belongs (the shipped exhaustiveness idiom).
+      const _exhaustive: never = view
+      throw new Error(`[RecommendationSurface] unhandled save arm — declare its render (${String(_exhaustive)})`)
+    }
+  }
 }

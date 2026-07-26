@@ -1,13 +1,19 @@
-import { lazy, Suspense, useCallback, useEffect, useMemo, useState, useSyncExternalStore } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import { IntakeFlow } from '@intake/flow'
 import { intakeSteps } from '@intake/questions'
 import { AnswerStrip } from '@intake/AnswerStrip'
-import { missingRequiredFacts } from '@intake/intakeMap'
+import { isDateRoute, missingRequiredFacts } from '@intake/intakeMap'
 import { validateDraft, type FieldPath } from '@intake/sanity'
+import type { SolverRunFingerprint } from '@engine/validation/solverRunFingerprint'
+import type { ScenarioDraft } from '@store/memoryModel'
+import { deriveSavedRecommendationStatus, type SavedRecommendationStatus } from '@store/savedRecommendation'
+import { mintSavedRecommendation } from '@store/savedRecommendationMint'
+import type { SavedRecommendationV3 } from '@shared/model'
 import { appModel } from './appModel'
 import { Result } from './Result'
 import { scenarioFromDraft, currentEpochDay } from './scenarioFromDraft'
 import { draftFromScenario } from './draftFromScenario'
+import { deriveRecommendationSave, type RecommendationSaveRefusal } from './recommendationSaveView'
 import { agedBalancesYearFor, deriveResultSave, persistSeedFor, type PersistState } from './resultSave'
 import { describeSaveFailure } from './unlockCopy'
 import { PendingPanel } from './PendingPanel'
@@ -31,6 +37,23 @@ const BackupStep = lazy(() => import('./BackupStep').then((m) => ({ default: m.B
  *  with no touches and no provenance?" asked through the rule's OWN predicate (sanity.ts
  *  `spend-period-unconfirmed`), never a re-typed copy of its ambiguity math. */
 const PERIOD_PROBE_TOUCHED: ReadonlySet<FieldPath> = new Set(['annualSpendingReal'])
+
+/**
+ * U17 §S5 — WHAT THE TAP CARRIES, and why it is two values and not zero.
+ *
+ * The gesture cannot read either of these for itself. `fingerprint` is the identity of the
+ * COMMITTED run the household is looking at, read off `SolveAnswer` at the surface that renders
+ * it — this component re-reads the store after its own awaits and REFUSES on a mismatch, which is
+ * only a check if the tap says which run it meant. `noDollarRegister` is the COMPOSED view's own
+ * `mode === 'no-change'` register: two of its three disjuncts read seed-B headline dollars the
+ * record deliberately does not carry, so re-deriving it here would silently re-tell a run whose
+ * live surface refused to claim any switch AS an active switch (`savedRecommendationMint.ts`'s
+ * @param note). Both are COPIED from the producer on screen — never re-derived (insight 081).
+ */
+export interface RecommendationSaveTicket {
+  readonly fingerprint: SolverRunFingerprint
+  readonly noDollarRegister: boolean
+}
 
 /**
  * The intake subtree — the LAZY half of the App split (default export for
@@ -112,12 +135,134 @@ export default function IntakeApp({
   // that household). Mount-lifetime like devSeedApplied; never persisted (the vault round-trip
   // carries its own provenance via hydrateFromVault).
   const [periodAnswerProven, setPeriodAnswerProven] = useState(false)
+
+  // ── U17 §S5 — THE RECOMMENDATION SAVE GESTURE'S OWN STATE ──────────────────────────────────
+  // Five values, none of which the plan rail's machine can carry: `resultSave.ts` describes the
+  // PLAN's relationship to disk, and the strategy slot makes a narrower claim about ONE atom
+  // riding that plan (`recommendationSaveView.ts`).
+  //
+  // THIS gesture's write is in flight — deliberately NOT `persist.kind === 'saving'`. The plan
+  // rail's own re-save sets that too, and the recommendation's pending line must speak only for
+  // the tap that asked for it (`deriveRecommendationSave` ranks `inFlight` ABOVE its saved arm
+  // because during an update the disk still holds the PREVIOUS commit — "saved" there would be a
+  // claim about the wrong record).
+  const [recSaveInFlight, setRecSaveInFlight] = useState(false)
+  // THE STANDING REFUSAL, PAIRED WITH THE DRAFT IT WAS MINTED AGAINST — so "a refusal clears on a
+  // draft change" is COMPUTED, never raced. The obvious shape (a bare union cleared by an effect
+  // keyed on `snapshot.draft`) LOSES A REAL REFUSAL: the write arm mutates the draft (it puts the
+  // record on it) and only learns the write failed several awaits later, so the draft-change
+  // effect and the `'write'` set land in an order React does not order for us — flush the effect
+  // last and it erases the rendered outcome of a write that genuinely failed (insight 100). Keying
+  // the refusal to its own draft makes a superseded entry UNRENDERABLE instead of racing to delete
+  // it, which is `resultSave.ts`'s law applied here: the honest states are DERIVED from an
+  // operand, never tracked in a flag somebody has to remember to clear at the right instant. The
+  // `reason` stays the bare string union — the developer text (the mint's failing field path, the
+  // codec's dropped atom) goes to the `console` and never enters React state that a surface could
+  // interpolate (`recommendationSaveView.ts`'s type-level leak proof).
+  const [recSaveRefusal, setRecSaveRefusal] = useState<{
+    readonly reason: RecommendationSaveRefusal
+    readonly draft: ScenarioDraft
+  } | null>(null)
+  // THIS gesture opened the firstSave ceremony (R1: the no-vault tap MINTS and routes into the
+  // ceremony rather than going dead — that path is every dev seed, the Caddie walk and the fit
+  // gate). It disambiguates the ceremony's TWO entrances: the plan rail's own "Keep this plan"
+  // minted no record, so its cancel must restore nothing and its completion must announce no
+  // saved recommendation.
+  const [recSaveCeremony, setRecSaveCeremony] = useState(false)
+  // THE DURABILITY EVENT — "a write carrying this record reached disk" — carried as a flag the
+  // surface consumes and acknowledges, NOT as a view transition. The ceremony route unmounts this
+  // whole subtree (the `phase === 'save'` branch returns before Result renders), so a consumer
+  // comparing its previous view to its current one sees `saved` on BOTH sides of the remount and
+  // stays silent about the very save it was mounted to announce.
+  const [recSaveLanded, setRecSaveLanded] = useState(false)
+  // The record the draft carried BEFORE this gesture minted over it (undefined = none). A REF, not
+  // state: nothing renders it, and the ceremony's cancel must read the value captured at the TAP.
+  const recSavePrevRecord = useRef<SavedRecommendationV3 | undefined>(undefined)
+  // THE POST-AWAIT PERSIST AUTHORITY. `saveRecommendation` reads `persist.kind` twice: once at its
+  // entry guard, and again several awaits later to choose the ceremony vs update route. The second
+  // read must NOT come from the closure. The plan rail's own save control is on screen at the same
+  // time, so `unsaved → saving → saved` can complete inside this gesture's DB-open window; a stale
+  // `'unsaved'` would then route an existing vault into the firstSave ceremony — the "not-locked"
+  // lying dead-end recorded when U8 closed. A ref re-read at the branch cannot go stale.
+  const persistRef = useRef<PersistState>(persist)
+  persistRef.current = persist
+
   const snapshot = useSyncExternalStore(appModel.subscribe, appModel.getSnapshot)
   const steps = useMemo(() => intakeSteps(snapshot.draft), [snapshot.draft])
   const missing = useMemo(() => missingRequiredFacts(snapshot.draft), [snapshot.draft])
   // The Save beat appears only when the draft is genuinely persistable (an indeterminate answer
   // can reach the result screen — the gate, not the screen, decides saveability).
   const saveReady = useMemo(() => scenarioFromDraft(snapshot.draft), [snapshot.draft])
+  /**
+   * U17 §S5 — THE REMEMBERED RECOMMENDATION'S TRICHOTOMY, DERIVED ONCE PER FRAME.
+   *
+   * THE OPERAND IS THE DISK, NEVER THE DRAFT. `persist.scenario` is documented as "the LAST
+   * COMMITTED model" (resultSave.ts:41-42) and is the only value with an on-disk guarantee; the
+   * DRAFT carries a record from the instant the gesture mints one, several awaits BEFORE any write
+   * lands (and forever, if the write fails). Reading it here would render a
+   * minted-but-never-persisted record as a remembered one — the cardinal calm-but-wrong sin, in
+   * the exact direction `recommendationSaveView.ts`'s header says this whole machine exists to make
+   * unrepresentable. It also needs no `savedRecommendation` validity check: the codec DELETES an
+   * invalid record from the very object `decodeScenario` returns, so a record our minter got wrong
+   * is ABSENT from this operand rather than present-and-bad.
+   *
+   * THE SHORT-CIRCUIT DOES ZERO WORK, AND THAT IS THE FIT-FRAME CONTRACT. Both reads below are
+   * expensive: `currentDraftFingerprint()` runs the injected solve builder (→ `buildSpineParams` →
+   * the candidate enumeration) and canon-serializes the whole params object plus the roster, and
+   * `exposureForDraft` calls SIX separate params producers. On a `{kind:'unsaved'}` mount — every
+   * `?seed=` route, the Caddie walk, `pnpm verify:fit` — there is no record to judge, so the honest
+   * answer costs nothing and must COST nothing. `currentDraftFingerprint()` is never called bare in
+   * a render body for the same reason.
+   *
+   * `!saveReady.ready ⇒ undefined` mirrors `deriveResultSave`'s own `!ready.ready ⇒ none`
+   * (resultSave.ts:77): conjunct 3 needs a normalized household scenario to overlay the record's
+   * era onto, and an unencodable answer has none.
+   *
+   * THE DATE-ROUTE CONJUNCT IS THE STRUCTURAL FORM OF Result.tsx's OWN SUPPRESSION.
+   * `exposureForDraft` carries a hard prohibition — "DO NOT LIFT THIS FUNCTION TO A CROWNED
+   * SURFACE… the base read WOULD lie there" (stalenessExposure.ts:81-84) — and on a date route it
+   * takes exactly the arm that reads the PRE-SWEEP base ACA overlay (:150-155), while the result
+   * screen it would feed sits beside a CROWNED date. `savedRecommendation.ts:88-94` proves no
+   * record can be BORN on a date route, but the frame is reachable the other way round (a
+   * household saves a record, then a spouse un-retires), and Result already refuses to render the
+   * recommendation surface there at all. Making the refusal structural HERE — at the producer —
+   * means the lying exposure read is never taken, rather than taken and then discarded.
+   */
+  const recordCard = useMemo(():
+    | { readonly status: SavedRecommendationStatus; readonly record: SavedRecommendationV3 }
+    | undefined => {
+    // PHASE FIRST — this memo's zero-work contract has to hold during INTAKE too, and nothing
+    // consumes it there. Without this conjunct, a returning household with a save-ready draft pays
+    // a full `currentDraftFingerprint()` (buildSolveRequest → buildSpineParams → candidate
+    // enumeration → canon serialize) PLUS `exposureForDraft`'s six params producers on every single
+    // keystroke-committed edit of the intake — for a card that cannot render until `result`.
+    if (phase !== 'result') return undefined
+    if (persist.kind === 'unsaved') return undefined
+    const record = persist.scenario.savedRecommendation
+    if (record === undefined) return undefined
+    if (!saveReady.ready) return undefined
+    if (isDateRoute(snapshot.draft)) return undefined
+    return {
+      record,
+      status: deriveSavedRecommendationStatus({
+        record,
+        // The HOUSEHOLD basis is today's answer (the clock's exposure gates and budget windows
+        // describe the household NOW); only the five era-bearing fields are overlaid from the
+        // record, inside the store's own comparator.
+        scenario: saveReady.scenario,
+        // The OTHER operand: what the draft would solve now. The record's own `fingerprint` is the
+        // COMMITTED run's — the two are equal at the mint and diverge after, and that divergence
+        // IS the mechanism (memoryModel.ts's `currentDraftFingerprint` doc).
+        freshFingerprint: appModel.currentDraftFingerprint(),
+        todayEpochDay: currentEpochDay(),
+        exposure: exposureForDraft(snapshot.draft),
+      }),
+    }
+  }, [phase, persist, saveReady, snapshot.draft])
+  /** The refusal that still stands FOR THE DRAFT ON SCREEN — see the paired state above. A
+   *  superseded entry is simply not this draft's, so it cannot render. */
+  const recSaveRefusalStanding: RecommendationSaveRefusal | null =
+    recSaveRefusal !== null && recSaveRefusal.draft === snapshot.draft ? recSaveRefusal.reason : null
   const retry = useCallback(() => void appModel.recompute(), [])
   // The reveal cadence, ONE seam (ultramode 2026-07-09 — it was open-coded at three sites):
   // reveal the magic moment on the FAST provisional tier, then sharpen to the final IN
@@ -157,9 +302,20 @@ export default function IntakeApp({
   // edit and this click can share a task). `session.save` is total over typed results and its
   // {ok:true} arm has no post-commit throw window (session.ts:574-593), so the catch below only
   // ever speaks for a save that did NOT land — "didn't finish" stays honest (insight 052).
-  const resave = useCallback(async () => {
+  //
+  // U17 §S5 — IT IS THE ONE WRITE PRODUCER, AND IT NOW RETURNS ITS OUTCOME. There is exactly one
+  // `session.save()` call for the whole result screen: the plan rail's CTA/retry and the
+  // recommendation gesture's update route both land here, so the two can never disagree about
+  // what reached disk, and the recommendation's `'write'` refusal has a REAL producer (a declared
+  // refusal nobody can produce renders NOTHING on a failure — the dead-arm shape). The body,
+  // every `setPersist` transition and the `describeSaveFailure` mapping are UNCHANGED: the plan
+  // rail's behaviour is byte-identical to the `resave` this replaces.
+  const saveNow = useCallback(async (): Promise<
+    | { readonly ok: true }
+    | { readonly ok: false; readonly reason: 'not-ready' | 'not-writable' | 'quota' | 'write-failed' }
+  > => {
     const ready = scenarioFromDraft(appModel.getSnapshot().draft)
-    if (!ready.ready) return
+    if (!ready.ready) return { ok: false, reason: 'not-ready' }
     setPersist((p) => (p.kind === 'unsaved' ? p : { kind: 'saving', scenario: p.scenario }))
     try {
       const { getVaultSession } = await import('./vaultSession')
@@ -167,16 +323,177 @@ export default function IntakeApp({
       const result = await session.save(ready.scenario)
       if (result.ok) {
         setPersist({ kind: 'saved', scenario: ready.scenario })
-      } else {
-        const errorKey = describeSaveFailure(result)
-        setPersist((p) => (p.kind === 'unsaved' ? p : { kind: 'save-failed', scenario: p.scenario, errorKey }))
+        // A REFUSAL MUST NEVER OUTLIVE THE WRITE THAT LANDED THE VERY RECORD IT DISOWNS. The
+        // recommendation gesture deliberately LEAVES its record on the draft when a write fails
+        // (see the restore rule below), so the plan rail's own retry carries that record to disk —
+        // and this scenario IS record-bearing (`ready` re-read the current draft). Without this
+        // clear the screen would hold two contradictory claims about one vault: the strategy slot
+        // reporting a save that failed, over a plan rail reporting the save that succeeded.
+        //
+        // GATED ON THE SCENARIO ACTUALLY CARRYING A RECORD — a `'record-invalid'` refusal is NOT
+        // repaired by this write and must survive it. That arm returns BEFORE the draft is ever
+        // touched, so no record exists to carry; clearing unconditionally would let an unrelated
+        // plan-rail save silently erase a standing refusal, leaving the household believing a
+        // strategy read was kept that was never built. The `'write'` arm always leaves its record on
+        // the draft, so this predicate is true in exactly the case the clear is for.
+        if (ready.scenario.savedRecommendation !== undefined) setRecSaveRefusal(null)
+        return { ok: true }
       }
+      const errorKey = describeSaveFailure(result)
+      setPersist((p) => (p.kind === 'unsaved' ? p : { kind: 'save-failed', scenario: p.scenario, errorKey }))
+      return { ok: false, reason: result.reason }
     } catch {
       setPersist((p) =>
         p.kind === 'unsaved' ? p : { kind: 'save-failed', scenario: p.scenario, errorKey: 'saveErrorFailed' },
       )
+      return { ok: false, reason: 'write-failed' }
     }
   }, [])
+
+  /**
+   * U17 §S5 — THE SAVE GESTURE FOR THE RECOMMENDATION ON SCREEN.
+   *
+   * THE ORDER IS THE WHOLE DESIGN: the mint is PROBED AND REFUSED BEFORE THE STORE IS TOUCHED, and
+   * the store is touched before anything reaches disk. `scenarioCodec.ts:660-664` names this
+   * function as the seam that "MUST validate its own mint HERE, before the record ever touches the
+   * draft", and the reason is a DATA-LOSS case, not tidiness: if the disk already holds a VALID
+   * record and a new mint is invalid, the codec deletes the bad record from the LIVE operand only,
+   * the two `scenarioIdentityKey`s diverge, `deriveResultSave` reads DIRTY, and the household's
+   * next plan-save writes a record-FREE scenario over the good record. Both checks are kept —
+   * `validateSavedRecommendation` (inside the mint) judges an in-memory object, while the
+   * `scenarioFromDraft` probe is the only one covering the values `JSON.stringify` transforms
+   * (DND 009).
+   */
+  const saveRecommendation = useCallback(
+    async (ticket: RecommendationSaveTicket): Promise<void> => {
+      // (1) THE SYNCHRONOUS GUARDS. Each returns SILENTLY, and that is honest rather than a missing
+      // outcome (insight 100): nothing was minted, nothing was written, and nothing was promised
+      // that these states break. A read-only tab derives no CTA at all (the standing View-only
+      // banner is the whole disclosure); a plan-rail write already in flight has its own pending
+      // line on screen; a second tap during our own write would race two writes for one vault.
+      if (readOnly || persist.kind === 'saving' || recSaveInFlight) return
+
+      // (2) THE SESSION — the FIRST and ONLY read of it in this feature, and it happens ON THE TAP.
+      // `getVaultSession()` IS the IndexedDB open (vaultSession.ts:28-29), and the module's own
+      // contract is that the dev `?seed` / `?preview` paths "pay nothing" — App skips even the
+      // startup probe on them, and they are exactly what the Caddie walk and `pnpm verify:fit` run.
+      // A mount-time status read would open the DB on every one of those routes.
+      //
+      // A RECOVERY-UNLOCKED SESSION CANNOT PERSIST AT ALL, and no existing parameter covers it:
+      // `recoveryUnlock` clears `passphraseWrapCurrent` (session.ts:537) which `writable()`
+      // requires (:305), and `RecoveryUnlockResult` carries no `readOnly` bit for
+      // `deriveResultSave`'s parameter to have been threaded from. Refuse ALOUD here rather than
+      // mint a record and discover it at the write. Never reachable on the no-vault path — a fresh
+      // session initialises 'locked' (session.ts:216) — so R1's ceremony route stays live.
+      // THE DB OPEN CAN REJECT, AND A GESTURE THAT PROMISED AN AFFORDANCE OWES A RENDERED OUTCOME
+      // (insight 100). `getVaultSession()` → `openVaultDb()` → idb's `openDB()` (db.ts:61-67) REJECTS
+      // on a blocked / unavailable / version-errored IndexedDB — a storage policy, Firefox private
+      // browsing, a corrupt DB. Left bare, that rejection escapes the `void saveRecommendation(…)`
+      // call site as an unhandled promise rejection and the household sees NOTHING happen: the one
+      // arm of this gesture that could produce no outcome at all. It refuses as `'write'` because
+      // that is precisely what failed — nothing could be written — and because at this point nothing
+      // has been minted, probed, or put on the draft, so no stronger claim would be true.
+      let recoveryLocked: boolean
+      try {
+        const { getVaultSession } = await import('./vaultSession')
+        recoveryLocked = (await getVaultSession()).status() === 'recovery-unlocked'
+      } catch {
+        setRecSaveRefusal({ reason: 'write', draft: appModel.getSnapshot().draft })
+        return
+      }
+      if (recoveryLocked) {
+        setRecSaveRefusal({ reason: 'recovery-locked', draft: appModel.getSnapshot().draft })
+        return
+      }
+
+      // (3) RE-READ THE STORE AFTER THE AWAIT (insight 036) AND RE-CONFIRM THE RUN. Steps 3→4→5
+      // contain NO await, so what is checked here is what is minted. A mismatch RETURNS silently
+      // and owes nothing: the store demotes a committed solve to `stale` on every draft mutation,
+      // so the surface has ALREADY re-rendered off that demotion — the rendered outcome insight 100
+      // asks for is on screen before this line runs. The fingerprint compare is what makes the
+      // ticket a check rather than a courier: it pins the record to the run the household tapped.
+      const s = appModel.getSnapshot()
+      if (
+        s.solve.kind !== 'committed' ||
+        s.solve.payload.kind !== 'recommended' ||
+        s.solve.fingerprint !== ticket.fingerprint
+      ) {
+        return
+      }
+
+      // (4) THE MINT — the COMMITTED fingerprint, never a fresh one (a fresh basis would stamp the
+      // record with inputs the recommendation was never computed against, making a stale memory
+      // calm-but-wrong instead of detectable). It validates itself and hands back the codec's own
+      // failing field path, which goes to the `console` and NOWHERE near the surface.
+      const minted = mintSavedRecommendation(
+        s.solve.payload,
+        s.solve.fingerprint,
+        ticket.noDollarRegister,
+        currentEpochDay(),
+      )
+      if (!minted.ok) {
+        console.error(`[u17/s5] saved-recommendation mint refused: ${minted.detail}`)
+        setRecSaveRefusal({ reason: 'record-invalid', draft: s.draft })
+        return
+      }
+
+      // (5) THE SAVE-GATE PROBE — the same round-trip the real save runs, over the draft this
+      // gesture is ABOUT to build, so a record that would be dropped on the way to disk is caught
+      // while the draft is still clean. A dropped atom here is a defect of OURS, so it refuses with
+      // the same one word the household can act on (none of these three states has a different
+      // repair). NOTE the drop check lives HERE and must not migrate into scenarioFromDraft.ts:
+      // that file must keep saving the plan when an atom drops (refusing the whole save would
+      // strand real edits over our bug), and `draftFromScenario.test.ts` greps it to prove so.
+      const probe = scenarioFromDraft({ ...s.draft, savedRecommendation: minted.record })
+      if (!probe.ready || probe.droppedAtoms.length > 0) {
+        console.error(
+          `[u17/s5] saved-recommendation dropped by the save gate: ${probe.ready ? probe.droppedAtoms[0] : probe.detail}`,
+        )
+        setRecSaveRefusal({ reason: 'record-invalid', draft: s.draft })
+        return
+      }
+
+      // (6) NOW the store may be touched. Capture what the draft carried first — the ceremony's
+      // cancel restores it (see the restore rule at the save phase below).
+      recSavePrevRecord.current = s.draft.savedRecommendation
+      appModel.update((d) => ({ ...d, savedRecommendation: minted.record }))
+
+      // (7) ROUTE. NO VAULT ⇒ THE CEREMONY, NEVER A DEAD CONTROL (R1). `deriveResultSave` maps
+      // `unsaved → first`, the ceremony is how a first vault is made, and the record is already on
+      // the draft — so `saveReady` (memoized on the draft the store just replaced) hands SaveFlow a
+      // record-BEARING scenario and one ceremony writes the whole plan including this memory.
+      // It deliberately does NOT clear a standing refusal (the update route below must): a standing
+      // refusal renders `{kind:'refused'}`, which draws NO save control at all, so there is no tap
+      // that can reach this line with one outstanding.
+      // Read through the REF, never the closure — see `persistRef` above. A vault created during
+      // this gesture's own awaits must route to the update write, not a second ceremony.
+      if (persistRef.current.kind === 'unsaved') {
+        setRecSaveCeremony(true)
+        setPhase('save')
+        return
+      }
+      // A VAULT EXISTS ⇒ the update write. Clearing the refusal in the SAME state update that sets
+      // `inFlight` is mandatory, not tidiness: the standing refusal deliberately OUTRANKS `inFlight`
+      // in `deriveRecommendationSave`'s guard order (so an unrelated commit-on-blur can never erase
+      // a real outcome), which means a stale refusal left standing here would render a dead card
+      // over live work.
+      setRecSaveInFlight(true)
+      setRecSaveRefusal(null)
+      const written = await saveNow()
+      setRecSaveInFlight(false)
+      if (written.ok) {
+        setRecSaveLanded(true)
+        return
+      }
+      // THE RECORD STAYS ON THE DRAFT. Stripping it here was proposed and is REJECTED as a
+      // data-loss bug: where the disk already holds a valid R_old, a strip makes the plan rail's
+      // own live retry — which re-reads the CURRENT draft — write a record-free scenario that WIPES
+      // R_old. The household authorized exactly this whole-plan commit, that retry carries the
+      // record, and `saveNow`'s {ok:true} arm clears this refusal when it lands.
+      setRecSaveRefusal({ reason: 'write', draft: appModel.getSnapshot().draft })
+    },
+    [readOnly, persist, recSaveInFlight, saveNow],
+  )
 
   // DEV-only `?seed=<key>`: apply a COMPLETE fixture to the in-memory appModel and
   // run the SAME terminal-advance path `complete()` runs (apply → result →
@@ -334,11 +651,39 @@ export default function IntakeApp({
       <Suspense fallback={null}>
         <SaveFlow
           scenario={saveReady.scenario}
-          onCancel={() => setPhase('result')}
+          onCancel={() => {
+            // U17 §S5 — THE RESTORE RULE, and it is a RESTORE, never a strip. Nothing was written,
+            // and R2 forbids a later plan-save carrying to disk a record whose own CTA never named
+            // it — so the record this gesture minted comes back off. Restoring the PRIOR value (not
+            // deleting the key) is what makes it safe in every direction: an unconditional strip
+            // would erase a record the household saved earlier and never touched today. Gated on
+            // `recSaveCeremony` because the plan rail's own "Keep this plan" enters this same
+            // ceremony having minted nothing — it must not perturb the draft at all.
+            if (recSaveCeremony) {
+              const prev = recSavePrevRecord.current
+              recSavePrevRecord.current = undefined
+              setRecSaveCeremony(false)
+              appModel.update((d) => {
+                if (prev !== undefined) return { ...d, savedRecommendation: prev }
+                const { savedRecommendation: _minted, ...withoutRecord } = d
+                return withoutRecord
+              })
+            }
+            setPhase('result')
+          }}
           onComplete={() => {
             // Record what the ceremony COMMITTED — the same render-captured scenario passed as
             // its prop (the save phase renders no edit surface, so it cannot have drifted).
             setPersist({ kind: 'saved', scenario: saveReady.scenario })
+            // The record rode that scenario to disk, so the recommendation's save LANDED. It is
+            // recorded as an EVENT rather than left to a view transition because this whole subtree
+            // unmounts across the ceremony (the branch above returns before Result renders), so
+            // nothing downstream can observe the change it would need to announce.
+            if (recSaveCeremony) {
+              recSavePrevRecord.current = undefined
+              setRecSaveCeremony(false)
+              setRecSaveLanded(true)
+            }
             setPhase('result')
           }}
         />
@@ -381,14 +726,38 @@ export default function IntakeApp({
           view.kind === 'first'
             ? { kind: 'first', onKeep: () => setPhase('save') }
             : view.kind === 'dirty'
-              ? { kind: 'dirty', onSave: () => void resave() }
+              ? { kind: 'dirty', onSave: () => void saveNow() }
               : view.kind === 'failed'
-                ? { ...view, onRetry: () => void resave() }
+                ? { ...view, onRetry: () => void saveNow() }
                 : view
         }
         // The re-offer backup door — present only when the hydrate armed it (writable + no note on
         // record). Tapping opens the 'backup' phase; the door dissolves once the ceremony records.
         backup={needsBackup ? { onSave: () => setPhase('backup') } : undefined}
+        // U17 §S5 — THE STRATEGY SLOT. The view is DERIVED every frame from the seven operands, never
+        // tracked: there is no success parameter in `deriveRecommendationSave`, so the only route to a
+        // "saved" claim runs through the record the disk actually carries. `status` rides
+        // `recordCard?.status` — the SAME trichotomy the card reads, so the slot and the card can never
+        // disagree about one record. `landed` is the durability EVENT (the ceremony unmounts this whole
+        // subtree, so the surface cannot observe the transition it must announce); acknowledging it
+        // clears the flag, never the badge — the badge is disk-derived.
+        recSave={{
+          view: deriveRecommendationSave({
+            persist,
+            solve: snapshot.solve,
+            ready: saveReady,
+            readOnly,
+            status: recordCard?.status,
+            inFlight: recSaveInFlight,
+            refusal: recSaveRefusalStanding,
+          }),
+          onSave: (ticket) => void saveRecommendation(ticket),
+          landed: recSaveLanded,
+          onAnnounced: () => setRecSaveLanded(false),
+        }}
+        // The DISK's remembered recommendation + the store's verdict on it. Result composes the card
+        // (it alone owns the invite predicate that decides whether a re-open door may exist at all).
+        recordCard={recordCard}
         // P3·U13 — the standing hero staleness echo (session-lifetime once the gate derived
         // it). RULES-moved only — the gate's budget re-confirm lines never claim "rules changed".
         stalenessNote={reentry?.rulesMoved === true}

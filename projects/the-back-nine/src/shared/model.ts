@@ -1820,12 +1820,22 @@ export interface SavedRecommendationV3 {
    *  strings that never match, so the record would read `inputs-changed` forever — a silent,
    *  permanent, un-re-presentable memory with no named reason anywhere).
    *
-   *  WHAT S5 MUST DO ABOUT IT, since the type cannot: mint this ONLY from the return value of the
-   *  SAME `buildSolverRunFingerprint(...)` call the trichotomy's `freshFingerprint` comes from,
-   *  and pin it with a test that round-trips a real built fingerprint through mint → decode →
-   *  `deriveSavedRecommendationStatus` and asserts `current` (the producer's-output bind, insights
-   *  080/081). A shared-side re-derivation is unavailable by layer law, so the bind must be a
-   *  TEST — it cannot be a type. */
+   *  WHAT S5 MUST DO ABOUT IT, since the type cannot: mint this from the COMMITTED
+   *  `SolveAnswer.fingerprint` (`memoryModel.ts:292`, produced by the private `fingerprintOf` at
+   *  `:623-627`) — the identity of the run this record actually describes — and NEVER from a fresh
+   *  recompute taken at save time. The trichotomy's `freshFingerprint` is the OTHER operand,
+   *  `MemoryModel.currentDraftFingerprint()` (`memoryModel.ts:633-638`): what the draft WOULD solve
+   *  now. The two are equal at the mint and diverge afterwards, and that divergence IS the mechanism
+   *  — so minting from the fresh side instead would stamp the record with inputs the recommendation
+   *  was never computed against, which on a stale draft is a calm-but-wrong memory rather than a
+   *  detectable one. Pin it with a test that round-trips a REAL built fingerprint through
+   *  mint → encode → decode → `deriveSavedRecommendationStatus` and asserts `current` (the
+   *  producer's-output bind, insights 080/081). A shared-side re-derivation is unavailable by layer
+   *  law, so the bind must be a TEST — it cannot be a type.
+   *
+   *  (An earlier draft of this note instructed S5 to mint from `buildSolverRunFingerprint(...)` — a
+   *  symbol that has never existed anywhere in this repo. Insight 087: a phantom pointer sends its
+   *  reader hunting for a seam that was never missing.) */
   readonly fingerprint: string
   /** The ranking-CODE version the run was solved under (`SOLVER_CODE_VERSION`) — a monotone
    *  integer ≥ 1. Compared with `!==`, never `<`: a record from a NEWER build (a vault written

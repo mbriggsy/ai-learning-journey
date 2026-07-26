@@ -791,6 +791,50 @@ describe('memoryModel — fingerprint invalidation (§S1)', () => {
     expect(solve.fingerprint).toBe(expected)
   })
 
+  it('EXPOSES the fresh fingerprint the draft WOULD solve — the same derivation the demotion uses (U17 §S5)', async () => {
+    // The trichotomy's `freshFingerprint` operand, surfaced. TWO arms, and the second is the one
+    // doing the work: a member that returned the COMMITTED `solveAnswer.fingerprint` instead keeps
+    // arm (a) green forever (the two are byte-equal AT the commit by construction) and only parts
+    // company once the draft moves. Both expectations recompute INDEPENDENTLY — calling the model's
+    // own producer on both sides would prove the FUNCTION, never that the member is wired to it
+    // (insights 032 + 081).
+    const { model } = await committedSolveModel()
+    const solve = model.getSnapshot().solve
+    if (solve.kind !== 'committed') throw new Error('unreachable')
+
+    // (a) AT the commit — equal to the committed identity and to an independent recompute.
+    const atCommit = solverRunFingerprint(
+      SPINE_PARAMS,
+      [REAL_CANDIDATE],
+      { goal: 'leave-more' },
+      { seedA: 7, tieTolerance: 0 },
+    )
+    expect(model.currentDraftFingerprint()).toBe(atCommit)
+    expect(model.currentDraftFingerprint()).toBe(solve.fingerprint)
+
+    // (b) AFTER a ranking-affecting edit — the committed value is gone (demoted), but the FRESH
+    // build still exists and has moved. This is the arm the committed-value mutant reds on.
+    model.update((d) => ({ ...d, retirementState: 'NC' }))
+    const afterEdit = solverRunFingerprint(
+      SPINE_PARAMS,
+      [REAL_CANDIDATE],
+      { goal: 'leave-more' },
+      { seedA: 7, tieTolerance: 1 },
+    )
+    expect(model.getSnapshot().solve.kind).toBe('stale')
+    expect(model.currentDraftFingerprint()).toBe(afterEdit)
+    expect(model.currentDraftFingerprint()).not.toBe(atCommit)
+  })
+
+  it('the fresh fingerprint is NULL — fail-CLOSED — when the draft can no longer build a solve request', async () => {
+    // `null` must read as `inputs-unavailable`, never as "nothing changed". A member that swallowed
+    // the builder's typed refusal into a stale-but-non-null string would let S5's record report
+    // itself current against a draft that can no longer even be solved.
+    const { model } = await committedSolveModel()
+    model.update((d) => ({ ...d, chosenGoal: undefined }))
+    expect(model.currentDraftFingerprint()).toBeNull()
+  })
+
   it('a draft edit that CHANGES the fingerprint demotes the committed rec to `stale` (the killer for fix a)', async () => {
     // Moves retirementState (a ranking-affecting field) with the goal HELD FIXED. The full run
     // fingerprint changes; a coarse goal-mirror would not — reverting fix (a) (a bespoke goal-keyed

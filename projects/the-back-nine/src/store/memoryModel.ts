@@ -376,6 +376,18 @@ export interface MemoryModel {
    *  reconstructed payload if newer (the epoch-discard discipline). No-op if no solve builder is
    *  wired (P2/P3 models). */
   dispatchSolve(): Promise<void>
+  /** U17 §S5 — the solve fingerprint the CURRENT draft WOULD produce, or `null` when the draft can
+   *  no longer build a solve request (a defaulted bucket / a removed required fact). `null` is
+   *  fail-CLOSED: it reads as `inputs-unavailable`, NEVER as "nothing changed".
+   *
+   *  THIS IS NOT THE RECORD'S MINT BASIS, and the distinction is load-bearing. A saved
+   *  recommendation stamps the COMMITTED `SolveAnswer.fingerprint` — the identity of the run it
+   *  actually describes. This method is the OTHER operand of
+   *  `deriveSavedRecommendationStatus`: what the draft would solve NOW. The two are equal at the
+   *  mint and diverge afterwards, and that divergence IS the staleness mechanism. Minting from
+   *  this side instead would stamp the record with inputs the recommendation was never computed
+   *  against — on a stale draft, a calm-but-wrong memory rather than a detectable one. */
+  currentDraftFingerprint(): SolverRunFingerprint | null
 }
 
 // ---------------------------------------------------------------------------
@@ -857,5 +869,9 @@ export function createMemoryModel(deps: MemoryModelDeps): MemoryModel {
         commitSolve(epoch, { kind: 'compute-error', reason: 'engine-unavailable' })
       }
     },
+
+    // Surfaced, never re-defined: the ONE fresh-fingerprint derivation lives at the closure above
+    // (`:620-622` bans a re-typed subset). S5's trichotomy consumes it through this member.
+    currentDraftFingerprint,
   }
 }

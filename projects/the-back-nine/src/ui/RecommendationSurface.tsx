@@ -99,7 +99,6 @@ export function RecommendationSurface({
   spineConfidence,
   onRepick,
   recSave,
-  card,
 }: {
   readonly solve: SolveAnswer
   /** The spine's rendered confidence object (Q1 source-bind) — threaded to the view model so the
@@ -113,9 +112,6 @@ export function RecommendationSurface({
   /** U17 §S5 — the strategy save slot. Optional: a surface mounted WITHOUT it (the P2/P3 shells, the
    *  in-isolation unit tests) keeps U16's empty reservation, never a dead Save control. */
   readonly recSave?: RecommendationSaveProp
-  /** U17 §S5 — the remembered record's card. Driven SOLELY by the disk-derived record, so it paints
-   *  on the returning household's `idle` first screen and on `stale` — see the header's P0. */
-  readonly card?: SavedRecordProp
 }) {
   // ONE persistent polite live region for the solve channel. Always mounted from the first resolved
   // answer so the idle→pending transition is observable (a region mounted only WHEN pending would seed
@@ -207,14 +203,20 @@ export function RecommendationSurface({
       )}
       <CommittedBeat view={view} onRepick={onRepick} save={recSave} onSave={onSave} />
       {/* THE ASIDE — the surface's OWN body, below the beat, gated on ITS OWN data and never on
-          `view.kind` (the header's P0: every arm that matters is unreachable inside the beats). A
-          MEMORY, not a beat — confidence.css excludes `.rec-aside` from the two-pane beat switch so a
-          returning household's INSTANT record card cannot flip the surface out of its r4 idle seat and
-          step the protected in-frame disclaimer down a row. Omitted entirely when both halves are
-          absent, so the record-free frame is byte-identical to today. */}
-      {(card !== undefined || refusal !== undefined) && (
+          `view.kind` (the header's P0: every arm that matters is unreachable inside the beats).
+          Omitted entirely when absent, so the refusal-free frame is byte-identical to today.
+
+          THE REFUSAL LIVES HERE; THE RECORD CARD DOES NOT (Briggsy's ruling, 2026-07-26). A refusal
+          is the rendered OUTCOME of a tap the household just made, so it belongs beside the control
+          that made the promise (insight 100) — and it cannot appear on an idle frame at all, so it
+          never competes for the fold. The remembered-record card is the opposite on both counts:
+          durable, and present on the returning household's FIRST frame. MEASURED at 1536×791, it
+          pushed the PROTECTED R13 disclaimer 67px (holds) to 161px (superseded) below the fold — the
+          idle frame carries only 89px of headroom, so no honest version of it fits this seat. It now
+          renders in `Result.tsx` BELOW `<Disclaimer inFrame/>`, joining the doors as a sanctioned
+          below-fold casualty. Content was never trimmed; the placement moved. */}
+      {refusal !== undefined && (
         <div className="rec-aside">
-          {card !== undefined && <SavedRecordCard card={card} />}
           {refusal !== undefined && (
             // role='alert' (the `.result-save-error` precedent), NOT the persistent region: an alert
             // announces on insertion BY DESIGN, and routing it through the announcer too would
@@ -247,7 +249,7 @@ export function RecommendationSurface({
  * EVERY cause clause renders, in the producer's declaration order (insight 101) — a card naming one
  * cause when two hold describes its poster child, not the truth.
  */
-function SavedRecordCard({ card }: { readonly card: SavedRecordProp }) {
+export function SavedRecordCard({ card }: { readonly card: SavedRecordProp }) {
   const { standing } = card.view
   // NO `role="status"` on the section below. This card is DURABLE DISK STATE sitting in normal
   // reading order, not a transient status update, and an implicit polite live region over disk state

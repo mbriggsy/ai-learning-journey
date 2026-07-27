@@ -4,7 +4,7 @@ import '@testing-library/jest-dom/vitest'
 import { act, cleanup, render, screen, fireEvent } from '@testing-library/react'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
-import { RecommendationSurface, type RecommendationSaveProp } from '../RecommendationSurface'
+import { RecommendationSurface, SavedRecordCard, type RecommendationSaveProp } from '../RecommendationSurface'
 import { copy, slots, staticDisclosures } from '../copy'
 import {
   savedRecordCardView,
@@ -750,56 +750,45 @@ describe('RecommendationSurface — §S5 the refusal card (a promised affordance
     expect(refused, 'and the refusal outlives the demotion').not.toBeNull()
     expect(stale!.contains(refused), 'two separate cards, never one nested in the other').toBe(false)
   })
-})
 
-describe('RecommendationSurface — §S5 the remembered-record aside (the returning household)', () => {
-  it('the card paints on the returning household’s FIRST screen — an IDLE solve, with no beat at all', () => {
-    // THE P0. A vault return lands `idle` (memoryModel seeds it; the hydrate effect only replaces
-    // the draft), and `CommittedBeat`'s `case 'idle'` returns null — so a card gated on the beat
-    // could paint only its CURRENT arm, seconds after a save, the one moment it is useless.
-    const card = holdsCard()
-    const { container } = render(<RecommendationSurface solve={{ kind: 'idle' }} card={{ view: card }} />)
-    expect(container.querySelector('.rec-committed'), 'no committed beat exists on this frame').toBeNull()
-    const aside = container.querySelector('.rec-aside')
-    expect(aside, 'the aside is gated on ITS OWN data, never on view.kind').not.toBeNull()
-    expect(aside!.querySelector('.rec-record'), 'the memory renders').not.toBeNull()
-    expect(container.textContent).toContain(copy.recommendRecordHeading)
-    expect(container.textContent).toContain(copy.recommendRecordHolds)
-  })
-
-  it('the card also paints on the STALE frame — the other frame it exists for', () => {
-    const { container } = render(
-      <RecommendationSurface solve={{ kind: 'stale', label: 'inputs-changed' }} card={{ view: holdsCard() }} />,
-    )
-    expect(container.querySelector('.rec-note--stale')).not.toBeNull()
-    expect(container.querySelector('.rec-aside .rec-record'), 'a draft edit demotes the beat, not the memory').not.toBeNull()
-  })
-
-  it('on a COMMITTED frame the card sits BELOW the beat and OUTSIDE it (the aside is the surface’s own body)', () => {
-    const { container } = render(
-      <RecommendationSurface solve={committedRec()} card={{ view: holdsCard() }} />,
-    )
-    const beat = container.querySelector('.rec-committed')
-    const aside = container.querySelector('.rec-aside')
-    expect(beat).not.toBeNull()
-    expect(aside).not.toBeNull()
-    // OUTSIDE: mounting it inside `RecommendedBeat` would make the two arms above unreachable.
-    expect(beat!.contains(aside), 'the aside never nests inside the beat').toBe(false)
-    // BELOW: a memory reads after the answer, never over it.
-    expect(
-      Boolean(beat!.compareDocumentPosition(aside!) & Node.DOCUMENT_POSITION_FOLLOWING),
-      'the memory follows the answer in DOM order',
-    ).toBe(true)
-  })
-
-  it('no record and no refusal ⇒ NO aside node at all (the record-free frame is byte-identical to before)', () => {
+  /**
+   * THE PAIRED NEGATIVE, NARROWED — NOT DELETED. This arm was written when the aside held TWO
+   * tenants (the remembered record and the refusal), so its title named both. Briggsy's 2026-07-26
+   * placement ruling moved the record card out to `Result`, and the aside is now the refusal's
+   * alone — so the arm now says exactly what it can still witness. It stays because without it a
+   * mutant that mounted an EMPTY `.rec-aside` on every frame would pass the whole battery above
+   * (burned/070: a sweep of positives needs its negative), and because that empty div is a real
+   * layout node on the one frame the fold measurement is tightest.
+   */
+  it('no standing refusal ⇒ NO aside node at all (the refusal-free frame is byte-identical to before)', () => {
     const { container } = render(
       <RecommendationSurface solve={committedRec()} recSave={saveProp({ kind: 'offer', route: 'update' })} />,
     )
-    expect(container.querySelector('.rec-aside'), 'nothing to remember ⇒ no container').toBeNull()
-    expect(container.querySelector('.rec-record')).toBeNull()
+    expect(container.querySelector('.rec-aside'), 'nothing refused ⇒ no container').toBeNull()
+    // And the aside never conjures the OTHER tenant it no longer hosts: the record card reaches the
+    // screen through `Result` (below the disclaimer), never through this surface.
+    expect(container.querySelector('.rec-record'), 'the surface never mounts the record card').toBeNull()
   })
+})
 
+/**
+ * §S5 — THE REMEMBERED RECORD'S CARD: WHAT THE MEMORY SAYS.
+ *
+ * `SavedRecordCard` is rendered DIRECTLY here, not through the surface, because the surface no
+ * longer owns it. Briggsy's placement ruling (2026-07-26) moved the card OUT of `.rec-aside` and
+ * into `Result`, below the protected in-frame R13 disclaimer: MEASURED at his real 1536×791 the
+ * card in its old seat pushed that caveat 67px (holds, 156px card) to 161px (superseded with two
+ * causes, 251px) below the fold, against an idle frame carrying only 89px of headroom. No honest
+ * version of the card fits that seat — so the PLACEMENT moved and not one word was trimmed, which
+ * is why every content arm below survives verbatim on the other side of the seam.
+ *
+ * THE PLACEMENT ARMS MOVED WITH THE CARD, to `recommendInvite.test.tsx`'s Result battery — the v1
+ * P0 ("gated on ITS OWN disk data, never on `solve.kind`": it paints on the vault-return `idle`
+ * frame and on the draft-edit `stale` one) plus the RULING itself (the card follows the disclaimer
+ * in DOM order). They cannot live here any more: mounting a component in isolation proves the
+ * COMPONENT, never that its parent mounts it where the fold law requires (insights 032/081).
+ */
+describe('RecommendationSurface — §S5 the remembered-record card (the returning household)', () => {
   it('a SUPERSEDED card with ZERO causes still renders a standing marker carrying TEXT (the fail-closed split)', () => {
     // The broken-contract output: the store demoted the record without reporting a cause. A card
     // that were nothing but a heading over `clauses.map(...)` draws a blank exactly where the
@@ -809,7 +798,7 @@ describe('RecommendationSurface — §S5 the remembered-record aside (the return
     const broken: SavedRecommendationStatus = { ...base, current: false, causes: [] }
     const view = cardOf(broken)
     expect(view.standing.kind, 'fail-closed: the quieter claim').toBe('superseded')
-    const { container } = render(<RecommendationSurface solve={{ kind: 'idle' }} card={{ view }} />)
+    const { container } = render(<SavedRecordCard card={{ view }} />)
     const standing = container.querySelector('.rec-record__standing')
     expect(standing, 'the standing line renders on BOTH arms').not.toBeNull()
     expect(standing).toHaveAttribute('data-standing', 'superseded')
@@ -825,7 +814,7 @@ describe('RecommendationSurface — §S5 the remembered-record aside (the return
     const view = twoCauseCard()
     // Non-vacuity: the fixture really does hold two causes at once.
     expect(view.standing.clauses.length, 'two causes hold on this record').toBe(2)
-    const { container } = render(<RecommendationSurface solve={{ kind: 'idle' }} card={{ view }} />)
+    const { container } = render(<SavedRecordCard card={{ view }} />)
     const clauses = [...container.querySelectorAll('.rec-record__causes .rec-note__line')].map((li) => li.textContent)
     // A card naming ONE cause when two hold describes its poster child, not the truth.
     expect(clauses).toEqual([copy.recommendRecordSupersededInputs, copy.recommendRecordSupersededSolver])
@@ -837,9 +826,7 @@ describe('RecommendationSurface — §S5 the remembered-record aside (the return
 
   it('the RE-OPEN control and its cost line appear and vanish TOGETHER (no dead door, no dead promise)', () => {
     const onReopen = vi.fn()
-    const wired = render(
-      <RecommendationSurface solve={{ kind: 'idle' }} card={{ view: holdsCard(), onReopen }} />,
-    )
+    const wired = render(<SavedRecordCard card={{ view: holdsCard(), onReopen }} />)
     const btn = screen.getByRole('button', { name: copy.recommendRecordReopenCta })
     fireEvent.click(btn)
     expect(onReopen, 'the way back is a real door').toHaveBeenCalledTimes(1)
@@ -848,7 +835,7 @@ describe('RecommendationSurface — §S5 the remembered-record aside (the return
     )
     cleanup()
     // Unwired (the date route, a frame this screen refuses to invite on): BOTH halves gone.
-    const unwired = render(<RecommendationSurface solve={{ kind: 'idle' }} card={{ view: holdsCard() }} />)
+    const unwired = render(<SavedRecordCard card={{ view: holdsCard() }} />)
     expect(screen.queryByRole('button', { name: copy.recommendRecordReopenCta }), 'never a dead door').toBeNull()
     expect(unwired.container.querySelector('.rec-record__cost'), 'never a cost line beside no control').toBeNull()
     expect(unwired.container.textContent, 'the cost sentence leaves with its control').not.toContain(
@@ -860,7 +847,7 @@ describe('RecommendationSurface — §S5 the remembered-record aside (the return
     const aged = recordFor({ mintedAt: TODAY - 800 })
     const view = cardOf(statusOf(aged), aged)
     expect(view.savedIn, 'the fixture is old enough to have an age').not.toBeUndefined()
-    const { container } = render(<RecommendationSurface solve={{ kind: 'idle' }} card={{ view }} />)
+    const { container } = render(<SavedRecordCard card={{ view }} />)
     expect(container.textContent).toContain(view.savedIn)
     // MINIMAL BY RULING: the remembered grade / verdict enums stay persisted and UNQUOTED — an enum
     // on screen is one refactor away from being read as a current figure.

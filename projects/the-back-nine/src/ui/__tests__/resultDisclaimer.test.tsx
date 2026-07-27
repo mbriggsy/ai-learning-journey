@@ -14,7 +14,10 @@ import { staticDisclosures } from '../copy'
  *  1. ORDER — the in-frame disclaimer precedes the quiet-door row in DOM order, so the doors
  *     (never the honesty caveat) are what any overflow pushes past the fold. The page-trailing
  *     App mount is the structural FIRST casualty of overflow; this mount is why it never comes
- *     to that on the result screen.
+ *     to that on the result screen. THE DEGRADABLE TAIL BELOW IT HAS THREE MEMBERS, not one: the
+ *     quiet-door row (here), the backup door, and — since Briggsy's 2026-07-26 placement ruling —
+ *     the remembered-record card, which needs a `recordCard` fixture this file does not carry, so
+ *     its order arm lives beside that fixture in `recommendInvite.test.tsx` ("THE RULING").
  *  2. MIRROR — `data-inframe-disclaimer` on main.result is present exactly when the in-frame
  *     mount is rendered (both ride the withheld-while-computing actions row). app.css hides the
  *     trailing mount behind that attribute at the laptop tier, so the attribute-without-mount

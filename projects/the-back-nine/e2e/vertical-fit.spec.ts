@@ -84,6 +84,17 @@ type FrameReport = {
   readonly offenders: ReadonlyArray<{ readonly desc: string; readonly bottom: number }>
 }
 
+/** The UNPROTECTED affordances an arm may sanction as below-fold casualties, BEYOND the always-
+ *  sanctioned quiet-door row. Named rather than positional: `(page, true, true, true)` reads as
+ *  nothing, and each flag has to be justified at its call site — the default is that everything
+ *  fits. */
+type SanctionedDoors = {
+  /** `.result-backup-door` — the off-device-copy offer (2026-07-10). */
+  readonly backupDoor?: boolean
+  /** `.rec-record` — the remembered-record card (2026-07-26, Briggsy's placement ruling). */
+  readonly recordCard?: boolean
+}
+
 /**
  * Walk every rendered element and report the ones whose box ends below the viewport.
  *
@@ -99,12 +110,15 @@ type FrameReport = {
 async function frameReport(
   page: Page,
   excludeQuietRow: boolean,
-  excludeBackupDoor = false,
+  sanctioned: SanctionedDoors = {},
 ): Promise<FrameReport> {
-  return page.evaluate(({ excludeQuiet, excludeBackup }) => {
+  const excludeBackupDoor = sanctioned.backupDoor === true
+  const excludeRecordCard = sanctioned.recordCard === true
+  return page.evaluate(({ excludeQuiet, excludeBackup, excludeRecord }) => {
     const vh = window.innerHeight
     const quiet = document.querySelector('.result-quiet-row')
     const backup = document.querySelector('.result-backup-door')
+    const record = document.querySelector('.rec-record')
     const offenders: Array<{ desc: string; bottom: number }> = []
     let counted = 0
     for (const el of Array.from(document.querySelectorAll('body *'))) {
@@ -116,6 +130,12 @@ async function frameReport(
       // PROTECTED disclaimer is a SIBLING <footer>, never an ancestor of the door, so it stays
       // measured — this arm still fails if the caveat itself breaches the fold.
       if (excludeBackup && backup !== null && (backup.contains(el) || el.contains(backup))) continue
+      // The remembered-record card joined that same degradable tail on 2026-07-26 (Briggsy's
+      // ruling, on the numbers the KNOWN-BREACH arm below used to file): it is DOM-ordered under
+      // the disclaimer and seats one row above the backup door, so it degrades with the doors
+      // instead of pushing the protected caveat off the frame. Excluded on exactly the same terms
+      // — subtree AND ancestor chain — and, like the door, only where an arm names it.
+      if (excludeRecord && record !== null && (record.contains(el) || el.contains(record))) continue
       const style = window.getComputedStyle(el)
       if (style.display === 'none' || style.visibility === 'hidden') continue
       // Viewport-anchored chrome (the update toast) sits outside document flow — not a fit fact.
@@ -133,7 +153,11 @@ async function frameReport(
       }
     }
     return { counted, offenders }
-  }, { excludeQuiet: excludeQuietRow, excludeBackup: excludeBackupDoor })
+  }, {
+    excludeQuiet: excludeQuietRow,
+    excludeBackup: excludeBackupDoor,
+    excludeRecord: excludeRecordCard,
+  })
 }
 
 /** A resolved two-pane answer renders hundreds of elements; a walk that counted fewer than this
@@ -143,9 +167,9 @@ const WALK_FLOOR = 60
 async function assertFrameFits(
   page: Page,
   excludeQuietRow: boolean,
-  excludeBackupDoor = false,
+  sanctioned: SanctionedDoors = {},
 ): Promise<void> {
-  const report = await frameReport(page, excludeQuietRow, excludeBackupDoor)
+  const report = await frameReport(page, excludeQuietRow, sanctioned)
   expect(report.counted, 'frame walk counted too few elements — page did not render').toBeGreaterThan(
     WALK_FLOOR,
   )
@@ -1239,7 +1263,7 @@ test.describe(`the vault return (?vault=stale) — the gate + the staleness-echo
     // The backup door is the sanctioned below-fold casualty on THIS composite frame (decision (b) —
     // it stays measured on every other arm; here it may degrade past the fold). The disclaimer is a
     // sibling <footer>, so it stays measured — the arm still fails if the caveat itself breaches.
-    await assertFrameFits(page, true, true)
+    await assertFrameFits(page, true, { backupDoor: true })
   })
 })
 
@@ -1367,7 +1391,7 @@ test.describe(`the state-tax staleness return (?vault=statestale) — the isolat
 
     // The backup door is the sanctioned below-fold casualty on THIS composite frame (the disclaimer
     // is a sibling <footer>, so it stays measured — the arm still fails if the caveat itself breaches).
-    await assertFrameFits(page, true, true)
+    await assertFrameFits(page, true, { backupDoor: true })
   })
 })
 
@@ -1497,7 +1521,7 @@ test.describe(`the aged date return (?vault=datestale) — one clock across hero
 
 test.describe(`the record-bearing vault returns (?vault=rec / ?vault=recold) — the memory card on the protected idle frame (${REAL.width}×${REAL.height})`, () => {
   test.use({ viewport: REAL, deviceScaleFactor: 2.5 })
-  test('the card paints its HOLDS face and the surface keeps its IDLE grid seat (the `:not(.rec-aside)` exclusion)', async ({
+  test('the card paints its HOLDS face and leaves the spine above it byte-identical (surface r4, caveat r5)', async ({
     page,
   }) => {
     const seats = async () =>
@@ -1518,7 +1542,7 @@ test.describe(`the record-bearing vault returns (?vault=rec / ?vault=recold) —
         return {
           surface: cs('.recommendation-surface'),
           disclaimer: cs('footer.disclaimer.disclaimer--in-frame'),
-          card: cs('.rec-aside .rec-record'),
+          card: cs('.rec-record'),
         }
       })
 
@@ -1527,7 +1551,7 @@ test.describe(`the record-bearing vault returns (?vault=rec / ?vault=recold) —
     // against these numbers, never a remembered constant.
     await gotoSeedFinal(page, 'retired')
     await assertResolvedSpine(page)
-    await expect(page.locator('.rec-aside'), 'a no-vault route has no record to remember').toHaveCount(0)
+    await expect(page.locator('.rec-record'), 'a no-vault route has no record to remember').toHaveCount(0)
     const recordFree = await seats()
 
     await page.goto('/?vault=rec')
@@ -1551,8 +1575,15 @@ test.describe(`the record-bearing vault returns (?vault=rec / ?vault=recold) —
     // derived from the real trichotomy in `devSeeds.test.ts` ("'rec' — the memory STILL HOLDS"), so
     // this arm reads what that unit proved rather than re-deriving it. Every string is the shipped
     // catalog's (imported at the top), never re-typed.
-    const card = page.locator('.rec-aside .rec-record')
+    const card = page.locator('.rec-record')
     await expect(card, 'the remembered-record card must paint on the vault-return idle frame').toBeVisible()
+    // …and it is OUTSIDE the surface's aside now (Briggsy's 2026-07-26 placement ruling): the aside
+    // keeps the refusal alone. A card that crept back inside would re-acquire the fold breach the
+    // arm below retired, so pin the seam here rather than only in the unit suite.
+    await expect(
+      page.locator('.rec-aside .rec-record'),
+      'the card must NOT be inside the surface aside — that seat breaches the protected caveat',
+    ).toHaveCount(0)
     await expect(card.locator('.rec-note__head')).toHaveText(copy.recommendRecordHeading)
     const standing = card.locator('.rec-record__standing')
     await expect(standing).toHaveAttribute('data-standing', 'holds')
@@ -1584,9 +1615,11 @@ test.describe(`the record-bearing vault returns (?vault=rec / ?vault=recold) —
     )
 
     // (2) THE GRID SEAT — the surface stays in the r4 idle slack of the LEFT column and the
-    // PROTECTED disclaimer stays on r5, IDENTICAL to the record-free reference. MUTANT (drop
-    // `:not(.rec-aside)` from confidence.css's beat switch): the surface takes `1 / -1` on r5 and
-    // the disclaimer steps to r6 — every one of these reads RED.
+    // PROTECTED disclaimer stays on r5, IDENTICAL to the record-free reference: everything the
+    // household reads BEFORE the caveat is byte-identical with or without a memory, and the card
+    // is purely additive below it. MUTANT (seat the card at `grid-row: 4` — the seat it shipped
+    // from, inside the idle slack): the r4 row grows by the card's full height and the disclaimer
+    // steps down with it, so the bottoms diverge and the fold arm below reads RED at 857px.
     expect(withCard.surface!.row, 'the surface must keep the r4 idle slack seat').toBe(recordFree.surface!.row)
     expect(withCard.surface!.column, 'the idle seat is the LEFT column, never the full-width beat row').toBe(
       recordFree.surface!.column,
@@ -1598,6 +1631,19 @@ test.describe(`the record-bearing vault returns (?vault=rec / ?vault=recold) —
     // …and the reference really is the shipped idle seat, so the equalities above cannot both drift.
     expect(recordFree.surface!.row).toBe('4')
     expect(recordFree.disclaimer!.row).toBe('5')
+    // THE SPINE ABOVE THE CAVEAT IS UNMOVED IN PIXELS, not just in row numbers (the row equality
+    // alone would survive a re-sized track). ±1px absorbs sub-pixel rounding between the two
+    // navigations, nothing more — the breach this replaced was 67px.
+    expect(
+      Math.abs(withCard.disclaimer!.bottom - recordFree.disclaimer!.bottom),
+      `the caveat moved ${withCard.disclaimer!.bottom - recordFree.disclaimer!.bottom}px between the ` +
+        `record-free and record-bearing frames — the card must be purely additive BELOW it`,
+    ).toBeLessThanOrEqual(1)
+    // The card's own seat: the row DIRECTLY below the protected caveat, in the LEFT reading column
+    // (confidence.css pins it — auto-placement would drop it into the dead right rail, and would
+    // move it to the left column only when the household happens to have no backup door).
+    expect(withCard.card!.row, 'the card seats on the row below the caveat').toBe('6')
+    expect(withCard.card!.column, 'the card reads in the LEFT column with the other doors').toBe('1')
 
     // (3) The two-mount contract and the density tier are unmoved by the card.
     await assertOneVisibleDisclaimer(page, 'laptop')
@@ -1605,40 +1651,168 @@ test.describe(`the record-bearing vault returns (?vault=rec / ?vault=recold) —
   })
 
   /**
-   * THE ONE-FRAME FIT LAW ON THIS FRAME — CURRENTLY BREACHED, and stated here as the law rather
-   * than pinned as the behaviour.
+   * THE ONE-FRAME FIT LAW ON THE RECORD-BEARING FRAME — the Honesty-Hawk veto case, RESOLVED
+   * 2026-07-26 and asserted here positively on BOTH standings.
    *
-   * MEASURED 2026-07-26, the first time any harness rendered a saved record (1536×791 @ 2.5 DPR,
-   * `?vault=rec`):
-   *   · the record card is 156px tall;
-   *   · the record-free twin (`?seed=retired`, same household) puts the PROTECTED in-frame R13
-   *     disclaimer's bottom at 702px, i.e. 89px of headroom under the 791px frame;
-   *   · the card lands in the r4 idle slack, which on this frame carries ZERO free space (the
-   *     verdict column and the band end together, so the `1fr` row distributes nothing) — so the
-   *     disclaimer moves down by the card's FULL height, 702 → 858px;
-   *   · the protected caveat therefore breaches the fold by 67px, and the card's own re-open
-   *     control + cost line sit 1–13px below it.
-   * The SUPERSEDED face is worse, measured in the same run (`?vault=recold`): a two-clause card is
-   * 251px → the disclaimer lands at 952px (a 161px breach), and the producible worst case (three
-   * clauses) is 279px. So the shortfall to close is not a rounding error — it is 67–189px depending
-   * on the standing, i.e. the card cannot share this frame with the caveat at all in its current
-   * seat.
+   * WHAT WAS FILED (measured 1536×791 @ 2.5 DPR, the first run that ever rendered a saved record):
+   * the card shipped inside the surface's r4 idle slack, and that slack carries ZERO free space on
+   * this frame (the verdict column and the band end together, so the `1fr` row distributes
+   * nothing). The PROTECTED in-frame R13 disclaimer therefore moved down by the card's FULL height
+   * — 702 → 858px with the 156px `holds` card, 702 → 952px with the 251px two-clause `superseded`
+   * one, against 89px of headroom. A 67–161px breach: a reassuring frame with "this can be wrong"
+   * scrolled out of sight. Not fixable by trimming (content never yields to layout — no honest
+   * version of heading + standing + the priced re-open fits 89px), so it was filed as a PLACEMENT
+   * decision for the pilot.
    *
-   * THIS IS THE HONESTY-HAWK VETO CASE: a reassuring frame with "this can be wrong" scrolled out of
-   * sight. It is NOT a test-scope question and NOT fixable by trimming the card — content never
-   * yields to layout, and 89px cannot hold any honest version of this card (heading + standing +
-   * the priced re-open). The repair is a placement decision (the council's kind of call), so it is
-   * FILED for the pilot with the numbers above.
+   * THE RULING (Briggsy, on those numbers): the card moves BELOW the disclaimer, into the doors
+   * region — already the only sanctioned below-fold casualty under this law. Result.tsx renders it
+   * after `<Disclaimer inFrame/>`; confidence.css seats it on the row directly beneath the caveat
+   * in the left reading column, stepping the backup door and the quiet row one row down. Content
+   * was never trimmed; every word survives, one flick away.
    *
-   * `test.fail()` rather than a relaxed bound: the assertion below is the CORRECT law, it runs on
-   * every gate run, and the day the placement is fixed this annotation itself fails — forcing its
-   * removal instead of letting a repaired frame quietly re-acquire an unenforced law. A bound
-   * loosened to 858 would be the defect's second copy.
+   * RE-MEASURED THE SAME DAY, same viewport, after the move: the disclaimer's bottom is 701px on
+   * BOTH plants — 90px inside the frame and within 1px of the record-free twin (`?seed=retired`,
+   * 702px), i.e. the card is purely additive below the caveat. The card itself runs 705 → 862px
+   * (`rec`) and 705 → 956px (`recold`): below the fold BY DESIGN, sanctioned exactly as the doors
+   * are, and its top edge is on screen so the scroll is invited rather than hidden.
+   *
+   * THE `test.fail()` ANNOTATION THIS REPLACES was written to fail the day the placement was fixed
+   * — forcing its own removal instead of letting a repaired frame quietly re-acquire an unenforced
+   * law. It did its job. What is left is the law itself, falsifiable two ways (both watched RED
+   * 2026-07-26 before this landed): seat the card back at `grid-row: 4` and the fold assertion
+   * reads 857px; re-hoist it above `<Disclaimer inFrame/>` in Result.tsx and the document-order
+   * assertion fails while the pixels stay put — which is exactly the CSS-only reorder (WCAG 2.4.3)
+   * that a geometry-only gate would wave through.
    */
-  test('KNOWN BREACH (filed): the memory card pushes the PROTECTED R13 disclaimer 67px past the fold', async ({
+  for (const { plant, face } of [
+    { plant: 'rec', face: 'HOLDS' },
+    // The superseded face is the tall one — two cause clauses plus the mint year. If the law holds
+    // here it holds on every standing the producer can emit (the recold arm below measures the
+    // three-clause producible maximum on the same frame).
+    { plant: 'recold', face: 'SUPERSEDED' },
+  ] as const) {
+    test(`?vault=${plant} — the ${face} card reads BELOW the PROTECTED R13 disclaimer, which keeps the frame`, async ({
+      page,
+    }) => {
+      await page.goto(`/?vault=${plant}`)
+      const unlock = page.getByRole('button', { name: 'Open my plan' })
+      await expect(unlock, `the ${plant} plant did not land on the unlock screen`).toBeVisible({
+        timeout: 30_000,
+      })
+      await unlock.click()
+      const affirm = page.getByRole('button', { name: /Still about right/ })
+      await expect(affirm).toBeVisible({ timeout: 30_000 })
+      await affirm.click()
+      await expect(page.locator('main.result[data-answer-tier="final"]')).toBeAttached({ timeout: 90_000 })
+      await settleLayout(page)
+      // NON-VACUITY (insight 029): every claim below is about a frame that carries the card, so a
+      // frame that quietly stopped rendering one must fail here, never pass an empty walk.
+      await expect(page.locator('.rec-record'), 'the frame under measure must carry the card').toBeVisible()
+
+      const geometry = await page.evaluate(() => {
+        const disc = document.querySelector('footer.disclaimer.disclaimer--in-frame')!
+        const card = document.querySelector('.rec-record')!
+        const d = disc.getBoundingClientRect()
+        const c = card.getBoundingClientRect()
+        return {
+          discBottom: Math.round(d.bottom),
+          cardTop: Math.round(c.top),
+          cardBottom: Math.round(c.bottom),
+          cardHeight: Math.round(c.height),
+          // Node.DOCUMENT_POSITION_FOLLOWING — the card comes AFTER the caveat in the DOM, so
+          // focus order matches the visual order the pixels below assert.
+          cardFollowsInDom: (disc.compareDocumentPosition(card) & 4) !== 0,
+          vh: window.innerHeight,
+        }
+      })
+      console.log(
+        `[U17 record return] ?vault=${plant} ${REAL.width}x${REAL.height}: ` +
+          `disclaimer bottom=${geometry.discBottom} (frame=${geometry.vh}, headroom=${geometry.vh - geometry.discBottom}) · ` +
+          `card h=${geometry.cardHeight} top=${geometry.cardTop} bottom=${geometry.cardBottom}`,
+      )
+
+      // (1) THE LAW: the protected caveat is IN FRAME. This is the assertion the filed annotation
+      // stated and could not meet; it is met now.
+      expect(
+        geometry.discBottom,
+        `the protected R13 disclaimer ends at ${geometry.discBottom}px, past the ${REAL.height}px frame`,
+      ).toBeLessThanOrEqual(REAL.height)
+
+      // (2) THE RULING: the card is BELOW the caveat — in the pixels AND in the DOM. Either check
+      // alone is escapable (an explicit grid row survives a DOM re-hoist; a DOM order survives a
+      // CSS re-seat), and the pair is precisely the no-CSS-only-reorder law the doors already obey.
+      expect(
+        geometry.cardTop,
+        `the card starts at ${geometry.cardTop}px, above the caveat's ${geometry.discBottom}px bottom — ` +
+          `it must never share or precede the protected row`,
+      ).toBeGreaterThanOrEqual(geometry.discBottom)
+      expect(
+        geometry.cardFollowsInDom,
+        'the card must FOLLOW the in-frame disclaimer in document order — a CSS-only reorder breaks ' +
+          'focus order (WCAG 2.4.3) even while the pixels look right',
+      ).toBe(true)
+
+      // (3) THE SANCTION IS NARROW (burned/070 — a sweep needs a guard, and an exclusion that
+      // quietly swallowed a neighbour would be the defect's next home). `recordCard` skips the
+      // card's SUBTREE *and*, like the quiet row and the backup door before it, its ANCESTOR chain
+      // — an ancestor's bottom is driven by the box it contains. That ancestor arm is the blind
+      // spot: it is only honest while every ancestor it hides was already sanctioned by the
+      // always-excluded quiet row. Checked structurally by containment, never by class-name
+      // spelling, so a rename cannot turn the guard vacuous.
+      const overBroad = await page.evaluate(() => {
+        const quiet = document.querySelector('.result-quiet-row')
+        const backup = document.querySelector('.result-backup-door')
+        const record = document.querySelector('.rec-record')!
+        const extra: string[] = []
+        for (const el of Array.from(document.querySelectorAll('body *'))) {
+          if (el === record || !el.contains(record)) continue // subtree + non-ancestors: not the risk
+          const alreadySanctioned =
+            (quiet !== null && (quiet.contains(el) || el.contains(quiet))) ||
+            (backup !== null && (backup.contains(el) || el.contains(backup)))
+          if (alreadySanctioned) continue
+          const cls = el.getAttribute('class')
+          extra.push(`${el.tagName.toLowerCase()}${cls !== null && cls !== '' ? `.${cls.split(/\s+/).join('.')}` : ''}`)
+        }
+        return extra
+      })
+      expect(
+        overBroad,
+        'sanctioning the record card must not newly blind the walk to any ancestor the doors had not ' +
+          'already sanctioned — the card would be hiding an overflow that is not its own',
+      ).toEqual([])
+      // The backup door is the sanctioned casualty on a writable return (the ?vault=stale
+      // precedent) and the card joins it; the caveat is a sibling <footer>, never an ancestor of
+      // either, so it stays measured — this still fails if the caveat itself breaches.
+      await assertFrameFits(page, true, { backupDoor: true, recordCard: true })
+
+      // (4) BELOW THE FOLD IS NOT LOST: the card is one flick away with its re-open control and the
+      // cost line that prices it intact. A door the household cannot reach would be a worse answer
+      // than the breach.
+      const card = page.locator('.rec-record')
+      await card.scrollIntoViewIfNeeded()
+      const reopen = card.getByRole('button', { name: copy.recommendRecordReopenCta })
+      await expect(reopen, 'the re-open control must be reachable by scrolling').toBeInViewport()
+      await expect(reopen).toBeEnabled()
+      await expect(card.locator('.rec-record__cost')).toHaveText(copy.recommendRecordReopenCost)
+    })
+  }
+
+  /**
+   * THE CARD'S SEAT WHEN A BEAT IS ALSO ON SCREEN — the state the household reaches by tapping the
+   * card's OWN re-open control, and the one this harness cannot drive: a live solve is 80–200s, past
+   * any fit budget. So the beat is INJECTED, exactly as the recold arm injects its third cause clause
+   * onto the real card — confidence.css's switch keys on the surface having any direct child that is
+   * neither `.sr-only` nor `.rec-aside`, so one appended child reaches the real rule.
+   *
+   * WHY THIS ARM EXISTS: the beat switch and the record seat each step the degradable tail down one
+   * row, and CSS cannot add — the combination needs its own `:has():has()` rules at a specificity
+   * above both. Get that wrong and two elements share a grid cell and paint on top of each other.
+   * Without this arm that branch ships ungated, which is precisely the unenforced law the retired
+   * `test.fail()` annotation was written to prevent.
+   */
+  test('a BEAT beside the record steps the whole tail down one more row, with no two elements sharing a cell', async ({
     page,
   }) => {
-    test.fail() // see the block comment above — the law is stated; the frame does not meet it today
     await page.goto('/?vault=rec')
     const unlock = page.getByRole('button', { name: 'Open my plan' })
     await expect(unlock, 'the rec plant did not land on the unlock screen').toBeVisible({ timeout: 30_000 })
@@ -1648,18 +1822,72 @@ test.describe(`the record-bearing vault returns (?vault=rec / ?vault=recold) —
     await affirm.click()
     await expect(page.locator('main.result[data-answer-tier="final"]')).toBeAttached({ timeout: 90_000 })
     await settleLayout(page)
-    await expect(page.locator('.rec-aside .rec-record'), 'the frame under measure must carry the card').toBeVisible()
 
-    const discBottom = await page
-      .locator('footer.disclaimer.disclaimer--in-frame')
-      .evaluate((el) => Math.round(el.getBoundingClientRect().bottom))
+    const rows = async () =>
+      page.evaluate(() => {
+        const row = (sel: string) => {
+          const el = document.querySelector(sel)
+          return el === null ? null : getComputedStyle(el).gridRowStart
+        }
+        return {
+          surface: row('.recommendation-surface'),
+          disclaimer: row('footer.disclaimer.disclaimer--in-frame'),
+          record: row('.rec-record'),
+          backupDoor: row('.result-backup-door'),
+          quietRow: row('.result-quiet-row'),
+        }
+      })
+
+    // (1) THE SHIPPED IDLE RETURN — the baseline the two arms above measure in pixels, read here as
+    // rows so the step below is a delta against a witnessed state rather than a remembered one.
+    expect(await rows(), 'the idle vault return seats caveat → card → backup door → quiet row').toEqual({
+      surface: '4',
+      disclaimer: '5',
+      record: '6',
+      backupDoor: '7',
+      quietRow: '8',
+    })
+
+    // (2) THE BEAT LANDS. Everything below the two panes steps down exactly one row, DOM order intact.
+    const beatChild = await page.evaluate(() => {
+      const surface = document.querySelector('.recommendation-surface')!
+      const beat = document.createElement('div')
+      beat.className = 'rec-committed'
+      beat.textContent = 'injected beat'
+      surface.appendChild(beat)
+      return surface.children.length
+    })
+    expect(beatChild, 'the injected beat must really be a child of the surface').toBeGreaterThan(1)
+    await settleLayout(page)
     expect(
-      discBottom,
-      `the remembered-record card pushed the protected R13 disclaimer to ${discBottom}px, past the ${REAL.height}px frame`,
-    ).toBeLessThanOrEqual(REAL.height)
-    // The backup door is the sanctioned below-fold casualty on a writable return (the ?vault=stale
-    // precedent); everything else — the card and the caveat above all — must fit.
-    await assertFrameFits(page, true, true)
+      await rows(),
+      'with a beat AND a record every row steps once more — a missing `:has():has()` rule collides two of them',
+    ).toEqual({
+      surface: '5',
+      disclaimer: '6',
+      record: '7',
+      backupDoor: '8',
+      quietRow: '9',
+    })
+    // No two of them share a cell (the collision this arm exists to catch reads as a duplicate row).
+    const seated = Object.values(await rows())
+    expect(new Set(seated).size, 'every element must own its own grid row').toBe(seated.length)
+
+    // (3) THE CONTROL ARM (burned/070 — the step must be caused by the RECORD, not by the beat
+    // alone): drop the card and the tail returns to the pre-2026-07-26 beat numbers exactly. Without
+    // this, a rule that shifted the tail unconditionally would read green above.
+    await page.evaluate(() => document.querySelector('.rec-record')!.remove())
+    await settleLayout(page)
+    expect(
+      await rows(),
+      'a beat WITHOUT a record must read the numbers it read before the card existed',
+    ).toEqual({
+      surface: '5',
+      disclaimer: '6',
+      record: null,
+      backupDoor: '7',
+      quietRow: '8',
+    })
   })
 
   /**
@@ -1670,12 +1898,14 @@ test.describe(`the record-bearing vault returns (?vault=rec / ?vault=recold) —
    * 'solver-changed') and their declaration order are derived from the real trichotomy in
    * `devSeeds.test.ts`; this arm reads what that unit proved.
    *
-   * IT ALSO CARRIES THE WORST-CASE MEASUREMENT for the filed fold breach above. The PRODUCIBLE
+   * IT ALSO CARRIES THE WORST-CASE HEIGHT MEASUREMENT. That number sized the placement ruling above
+   * and it still earns its keep: the card is now the LAST thing between the protected caveat and the
+   * doors, so its producible maximum is what the tail below the fold has to absorb. The PRODUCIBLE
    * maximum is THREE clauses, not four: `inputs-changed` and `inputs-unavailable` are the two arms
    * of one conjunct (`savedRecommendation.ts` pushes one or the other, never both), so a four-clause
    * card is unreachable and measuring one would be reserving against a fiction. The third clause is
-   * injected from the shipped catalog onto the REAL card, in the same run, so the pilot's placement
-   * decision has the true upper bound rather than an estimate.
+   * injected from the shipped catalog onto the REAL card, in the same run, so the number is measured
+   * rather than estimated.
    */
   test('the superseded face names EVERY cause it has, in the producer’s order, with the mint year — and reports the worst-case card height', async ({
     page,
@@ -1691,7 +1921,7 @@ test.describe(`the record-bearing vault returns (?vault=rec / ?vault=recold) —
     await settleLayout(page)
     await assertResolvedSpine(page)
 
-    const card = page.locator('.rec-aside .rec-record')
+    const card = page.locator('.rec-record')
     await expect(card).toBeVisible()
     const standing = card.locator('.rec-record__standing')
     await expect(standing).toHaveAttribute('data-standing', 'superseded')
@@ -1724,31 +1954,51 @@ test.describe(`the record-bearing vault returns (?vault=rec / ?vault=recold) —
     )
 
     // THE WORST CASE, measured on the real card: add the one clause the producer could still emit
-    // beside these two (the rulebook one), from the catalog.
-    const heights = await card.evaluate((el, rulesClause) => {
+    // beside these two (the rulebook one), from the catalog. The protected caveat's bottom is read
+    // in the SAME frame as the injected clause — the card seats below it now, so a tallest-possible
+    // card must move the caveat by nothing at all. If some future seat ever re-coupled them, this
+    // reads it directly rather than inferring it from a row number.
+    const worst = await card.evaluate((el, rulesClause) => {
+      const disc = () =>
+        Math.round(
+          document
+            .querySelector('footer.disclaimer.disclaimer--in-frame')!
+            .getBoundingClientRect().bottom,
+        )
       const two = Math.round(el.getBoundingClientRect().height)
+      const discTwo = disc()
       const list = el.querySelector('.rec-record__causes')!
       const li = document.createElement('li')
       li.className = 'rec-note__line'
       li.textContent = rulesClause
       list.appendChild(li)
       const three = Math.round(el.getBoundingClientRect().height)
+      const discThree = disc()
       li.remove()
-      return { two, three }
+      return { two, three, discTwo, discThree }
     }, copy.recommendRecordSupersededRules)
-    const discBottom = await page
-      .locator('footer.disclaimer.disclaimer--in-frame')
-      .evaluate((el) => Math.round(el.getBoundingClientRect().bottom))
     console.log(
-      `[U17 record return] ?vault=recold ${REAL.width}x${REAL.height}: superseded card h=${heights.two} ` +
-        `(producible worst case, 3 clauses: ${heights.three}) · disclaimer bottom=${discBottom} · frame=${REAL.height}px`,
+      `[U17 record return] ?vault=recold ${REAL.width}x${REAL.height}: superseded card h=${worst.two} ` +
+        `(producible worst case, 3 clauses: ${worst.three}) · disclaimer bottom=${worst.discTwo} ` +
+        `(worst case: ${worst.discThree}) · frame=${REAL.height}px`,
     )
     // Non-vacuity: the injected clause really did grow the card, so `three` is a measurement.
-    expect(heights.three, 'a third clause must make the card taller').toBeGreaterThan(heights.two)
-    // The grid seat holds on this face too — the exclusion is not standing-dependent.
-    const surfaceRow = await page
-      .locator('.recommendation-surface')
-      .evaluate((el) => getComputedStyle(el).gridRowStart)
-    expect(surfaceRow, 'the superseded card must keep the r4 idle seat as well').toBe('4')
+    expect(worst.three, 'a third clause must make the card taller').toBeGreaterThan(worst.two)
+    // …and growing it moved the PROTECTED caveat not one pixel, on either count.
+    expect(worst.discThree, 'the tallest producible card must not move the protected caveat').toBe(
+      worst.discTwo,
+    )
+    expect(
+      worst.discThree,
+      `the caveat ends at ${worst.discThree}px on the worst-case card, past the ${REAL.height}px frame`,
+    ).toBeLessThanOrEqual(REAL.height)
+    // The surface keeps its r4 idle seat on this face too, and the card keeps the row below the
+    // caveat: the placement is standing-independent, not tuned to the short card.
+    const rows = await page.evaluate(() => ({
+      surface: getComputedStyle(document.querySelector('.recommendation-surface')!).gridRowStart,
+      card: getComputedStyle(document.querySelector('.rec-record')!).gridRowStart,
+    }))
+    expect(rows.surface, 'the superseded card must keep the r4 idle seat as well').toBe('4')
+    expect(rows.card, 'the superseded card seats on the row below the caveat, like the holds face').toBe('6')
   })
 })

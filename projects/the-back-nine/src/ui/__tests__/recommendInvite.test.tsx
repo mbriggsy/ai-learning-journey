@@ -380,3 +380,117 @@ describe('U17 §S5 — the record card’s re-open is the returning household’
     }
   })
 })
+
+/**
+ * U17 §S5 — WHERE THE REMEMBERED-RECORD CARD RENDERS (Briggsy's placement ruling, 2026-07-26).
+ *
+ * The first three arms were born in `RecommendationSurface.test.tsx`, pinning the v1 P0: the card is
+ * gated on ITS OWN disk-derived data and NEVER on `solve.kind`, so it paints on exactly the frames it
+ * exists for — the vault-return `idle` (memoryModel seeds it; the hydrate effect only replaces the
+ * draft, and no beat renders at all) and the draft-edit `stale` demotion — and it never nests inside
+ * the beat. THAT FACT DID NOT CHANGE WHEN THE CARD MOVED; ITS OWNER DID. `Result` mounts it now, so
+ * only a `Result` render can witness it: mounting `SavedRecordCard` in isolation proves the COMPONENT
+ * and says nothing about where the screen puts it (insights 032/081). The content half of that old
+ * battery — what the card SAYS — stayed behind and renders the card directly.
+ *
+ * THE FOURTH ARM IS THE RULING ITSELF, and it is the one with teeth. MEASURED at Briggsy's real
+ * 1536×791, the card in its old seat inside `.rec-aside` pushed the PROTECTED in-frame R13 disclaimer
+ * from 702px to 858px (holds, a 156px card) and to 952px (superseded with two causes, 251px) — a
+ * 67–161px breach of the one-frame fit law, against an idle frame carrying only 89px of headroom. The
+ * remedy was PLACEMENT, never a trim: the card joins the backup door and the quiet row BELOW the
+ * disclaimer, in the one sanctioned below-fold region, so the unprotected affordance degrades past the
+ * fold first and the honesty caveat wins the frame (the Hawk's veto, council 2026-07-08). Nothing else
+ * in this repo notices a re-hoist above `<Disclaimer inFrame/>` — jsdom cannot measure a fold and the
+ * real-Chromium fit gate seeds no record-bearing vault — so the DOM ORDER is the standing guard.
+ */
+
+/** A COMMITTED solve that needs no 250-line recommendation fixture: the token-withheld payload is a
+ *  real committed arm (`SolvePayload`) and renders the `.rec-held` beat. What the arm below needs is
+ *  a frame where `solve.kind === 'committed'` — the one kind the old surface-level card COULD have
+ *  been gated behind — not a particular verdict. */
+const heldSolve: SolveAnswer = {
+  kind: 'committed',
+  payload: {
+    kind: 'token-withheld',
+    reasons: [{ kind: 'state-certification-pending', state: 'NC' }],
+    disclosedDirectional: [],
+    solverCodeVersion: 1,
+  },
+  fingerprint: 'solver-run-fp/v2:{held}' as SolverRunFingerprint,
+}
+
+const recordCardNode = (container: HTMLElement) => container.querySelector('main.result .rec-record')
+/** The PROTECTED node, queried exactly as `resultDisclaimer.test.tsx` queries it (the Hawk order
+ *  contract's own selector — so this arm and that file can never diverge on what they are protecting). */
+const inFrameDisclaimer = (container: HTMLElement) =>
+  container.querySelector('main.result .disclaimer--in-frame')
+
+describe('U17 §S5 — WHERE the remembered-record card renders (the placement ruling)', () => {
+  it('it paints on the returning household’s FIRST screen — an IDLE solve, with no beat at all', () => {
+    plantResolved()
+    appModel.update(completeRetired) // a buildable all-retired draft; the real solve channel is idle
+    const { container } = renderResult(savedRecord())
+    // Non-vacuity in the other direction (burned/070): prove there is genuinely NO beat on this frame,
+    // so "the card renders anyway" is a claim about the card's own gate and not about a beat carrying it.
+    expect(container.querySelector('.rec-committed'), 'no committed beat exists on this frame').toBeNull()
+    expect(container.querySelector('.rec-held'), 'nor a held one').toBeNull()
+    expect(container.querySelector('.rec-note--stale'), 'nor a stale one').toBeNull()
+    expect(recordCardNode(container), 'the memory is gated on ITS OWN data, never on solve.kind').not.toBeNull()
+    expect(container.textContent).toContain(copy.recommendRecordHeading)
+    expect(container.textContent).toContain(copy.recommendRecordHolds)
+  })
+
+  it('it also paints on the STALE frame — a draft edit demotes the beat, never the memory', () => {
+    plantResolved()
+    appModel.update(completeRetired)
+    plantSnapshot(staleSolve)
+    const { container } = renderResult(savedRecord())
+    expect(container.querySelector('.rec-note--stale'), 'the beat went stale').not.toBeNull()
+    expect(recordCardNode(container), 'and the memory outlived the demotion').not.toBeNull()
+  })
+
+  it('it paints on a COMMITTED frame too, BELOW the beat and OUTSIDE the surface that used to own it', () => {
+    plantResolved()
+    appModel.update(completeRetired)
+    plantSnapshot(heldSolve)
+    const { container } = renderResult(savedRecord())
+    const beat = container.querySelector('.rec-held')
+    const record = recordCardNode(container)
+    expect(beat, 'the committed payload really did render a beat (non-vacuity)').not.toBeNull()
+    expect(record, 'and the memory renders on the same frame').not.toBeNull()
+    const surface = container.querySelector('.recommendation-surface')
+    expect(surface, 'the surface is mounted on this all-retired route').not.toBeNull()
+    // OUTSIDE: the card is `Result`'s own child now. Re-parenting it back under the surface is the
+    // move the fold measurement forbade, and it would take the card back above the disclaimer.
+    expect(surface!.contains(record!), 'the card no longer lives inside the surface').toBe(false)
+    // BELOW: a memory reads after the answer, never over it.
+    expect(
+      Boolean(beat!.compareDocumentPosition(record!) & Node.DOCUMENT_POSITION_FOLLOWING),
+      'the memory follows the answer in DOM order',
+    ).toBe(true)
+  })
+
+  it('THE RULING: the card renders AFTER the protected in-frame R13 disclaimer (the Hawk’s fold priority)', () => {
+    plantResolved()
+    appModel.update(completeRetired)
+    const { container } = renderResult(savedRecord())
+    const disclaimer = inFrameDisclaimer(container)
+    const record = recordCardNode(container)
+    // Non-vacuity (burned/070): an order assertion over a missing node is green by accident.
+    expect(disclaimer, 'the protected caveat is on this frame').not.toBeNull()
+    expect(record, 'and so is the card whose seat the ruling decided').not.toBeNull()
+    // FOLLOWING = the argument comes AFTER the receiver (resultDisclaimer.test.tsx's idiom).
+    expect(
+      Boolean(disclaimer!.compareDocumentPosition(record!) & Node.DOCUMENT_POSITION_FOLLOWING),
+      'a re-hoist above the disclaimer silently re-breaches a Hawk-vetoed protection',
+    ).toBe(true)
+    // The SAME claim as an index over ONE ordered sweep of both selectors — document order, both
+    // nodes, exactly once each, so neither a second mount nor a vanished one can leave this green.
+    const seats = [
+      ...container.querySelectorAll('main.result .disclaimer--in-frame, main.result .rec-record'),
+    ]
+    expect(seats, 'exactly the two nodes under judgment, each mounted once').toHaveLength(2)
+    expect(seats[0], 'the protected caveat wins the frame').toBe(disclaimer)
+    expect(seats[1], 'the card degrades past the fold before the caveat does').toBe(record)
+  })
+})

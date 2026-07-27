@@ -359,19 +359,32 @@
   align-self: flex-start;
 }
 
-/* ── U17 §S5 — THE ASIDE: the remembered record + the gesture's refusal ─────────────────────────
-   A MEMORY, not a beat. It is a direct child of .recommendation-surface and lands on the vault-return
-   IDLE frame, so confidence.css EXCLUDES it from the two-pane beat switch (`:not(.rec-aside)`) — see
-   the comment there: an unexcluded child would flip the surface out of its r4 idle seat and step the
-   protected in-frame disclaimer down a row on the returning household's first screen. `min-inline-size:
-   0` keeps it from forcing that grid column wider than its track; the measure cap keeps it a calm
-   reading card in the full-width row too. */
+/* ── U17 §S5 — THE ASIDE: the gesture's refusal ─────────────────────────────────────────────────
+   NOT a beat. It is a direct child of .recommendation-surface, so confidence.css EXCLUDES it from the
+   two-pane beat switch (`:not(.rec-aside)`) — see the comment there: an unexcluded child would flip
+   the surface out of its r4 idle seat and step the protected in-frame disclaimer down a row.
+   `min-inline-size: 0` keeps it from forcing that grid column wider than its track; the measure cap
+   keeps it a calm reading card in the full-width row too.
+   The remembered-record card was the aside's other half until 2026-07-26; it now renders from
+   Result.tsx BELOW the in-frame disclaimer (its measured fold breach + Briggsy's ruling are recorded
+   there and in confidence.css). What is left here is the refusal alone — the rendered outcome of a
+   tap, which belongs beside the control that made the promise. */
 .rec-aside {
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
   min-inline-size: 0;
   max-inline-size: var(--measure);
+}
+
+/* THE RECORD CARD'S OWN BOX, now that it is a sibling of the doors rather than a stretched child of
+   the aside. In the single column `.result-actions` is a centring flex column, so without this the
+   card would shrink-wrap to its longest line while `.result-keep` and `.result-backup-door` beside it
+   claim the full reading measure — a ragged doors stack. At the laptop two-pane that chain is
+   `display: contents` and this is a grid item, where the declaration is simply the stretch it already
+   had. `.rec-note` above owns the measure cap for both tiers. */
+.rec-record {
+  width: 100%;
 }
 
 /* The remembered-record card + the refusal card ride the shared `.rec-note` chrome (calm status

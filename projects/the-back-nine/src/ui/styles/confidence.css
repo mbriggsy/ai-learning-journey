@@ -406,12 +406,14 @@
      free; the idle seat above stays byte-identical. The `:has()` keys on the surface's OWN content, so
      the switch is scoped to exactly the frames that carry a beat.
      `:not(.rec-aside)` IS PART OF THAT SCOPING, NOT A TIDY-UP (U17 §S5). The switch keys on a BEAT,
-     and the aside is a MEMORY: the remembered-record card is derived from disk and paints INSTANTLY on
-     the vault-return frame — which is `idle`, i.e. one of the fast idle fit frames this seat was
-     written to leave untouched, and the one frame here that does NOT scroll by design. Without the
-     exclusion a returning household's card would flip the surface to the full-width r5 row and step
-     the PROTECTED in-frame disclaimer, the backup door and the quiet row each down one row on the
-     first screen they see. The aside seats inside the r4 slack with the surface, at the reading
+     and the aside is not one: it is the REFUSAL card's home — the rendered outcome of a gesture, which
+     belongs beside the control that made the promise (insight 100) rather than in the beat row. The
+     exclusion says so structurally, so a refusal can never widen the surface out of its r4 idle seat
+     and step the PROTECTED in-frame disclaimer, the backup door and the quiet row each down one row.
+     (Today a refusal is only reachable on a frame that already carries a beat, so the switch would
+     fire either way — the exclusion is the standing guarantee, not a live branch. The remembered-record
+     card left the aside on 2026-07-26 and is no longer in this selector's reach at all; its seat is
+     the block below.) The aside itself sits inside the r4 slack with the surface, at the reading
      measure (recommendation.css owns `.rec-aside`). */
   .confidence-reveal[data-twopane]:has(.recommendation-surface > :not(.sr-only):not(.rec-aside)) {
     grid-template-rows: auto auto auto 1fr auto auto auto auto;
@@ -428,6 +430,48 @@
   }
   .confidence-reveal[data-twopane]:has(.recommendation-surface > :not(.sr-only):not(.rec-aside)) .result-quiet-row {
     grid-row: 8;
+  }
+
+  /* ── U17 §S5 — THE REMEMBERED-RECORD CARD'S SEAT, BELOW THE CAVEAT (Briggsy's ruling 2026-07-26) ──
+     The card used to ride inside the surface's r4 idle slack, and MEASURED at his real 1536×791 that
+     slack carries ZERO free space (the verdict column and the band end together, so the `1fr` row
+     distributes nothing): the PROTECTED disclaimer moved 702 → 858px with the 156px holds card and
+     → 952px with the 251px superseded one — a 67–161px breach against 89px of headroom. The PLACEMENT
+     moved, never the content: the card is now DOM-ordered below `<Disclaimer inFrame/>` (Result.tsx),
+     so it degrades past the fold with the doors and the caveat wins the frame (the Hawk's veto).
+     IT NEEDS AN EXPLICIT SEAT HERE. Auto-placed it takes the first FREE cell of the explicit grid,
+     which is r6 COLUMN 2 — the dead rail beside the backup door — and it jumps to r6 column 1 the
+     moment a household already holds an off-device copy (no backup door occupying that cell). A seat
+     that depends on an unrelated durability fact is a defect waiting to be reported, so this pins the
+     card to the LEFT reading column in DOM order and steps the degradable tail one row down (card 6,
+     backup door 7, quiet row 8) — focus order matches visual order, no CSS-only reorder (WCAG 2.4.3,
+     the 2026-07-10 fold-priority law).
+     ROW 8 IS IMPLICIT ON PURPOSE: the base template above stays SEVEN explicit rows, so a record-free
+     frame is byte-identical (an eighth explicit track would add one row-gap to every frame the
+     one-frame law gates, including the doors-inclusive showcase arm). */
+  .confidence-reveal[data-twopane] .rec-record {
+    grid-column: 1;
+    grid-row: 6;
+    align-self: start;
+  }
+  .confidence-reveal[data-twopane]:has(.rec-record) .result-backup-door {
+    grid-row: 7;
+  }
+  .confidence-reveal[data-twopane]:has(.rec-record) .result-quiet-row {
+    grid-row: 8;
+  }
+  /* …and one row further again when a BEAT is also on screen (the household tapped the card's own
+     re-open, so the surface has taken the full-width r5 row): card 7, backup door 8, quiet row 9.
+     BOTH `:has()` are required on the tail rows — the beat rule alone (higher specificity) would put
+     the backup door back on the card's row, and the record rule alone loses to it. */
+  .confidence-reveal[data-twopane]:has(.recommendation-surface > :not(.sr-only):not(.rec-aside)) .rec-record {
+    grid-row: 7;
+  }
+  .confidence-reveal[data-twopane]:has(.recommendation-surface > :not(.sr-only):not(.rec-aside)):has(.rec-record) .result-backup-door {
+    grid-row: 8;
+  }
+  .confidence-reveal[data-twopane]:has(.recommendation-surface > :not(.sr-only):not(.rec-aside)):has(.rec-record) .result-quiet-row {
+    grid-row: 9;
   }
   /* the pending well + the calm held/stale notes keep the reading measure inside the full-width row
      (a calm well, never a wall-wide bar); the pending well's reserved HEIGHT is untouched, so the

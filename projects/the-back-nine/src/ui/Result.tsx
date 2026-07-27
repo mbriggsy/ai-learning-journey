@@ -33,7 +33,7 @@ import type { SavedRecommendationStatus } from '@store/savedRecommendation'
 import { currentEpochDay } from './scenarioFromDraft'
 import type { RecommendationGoal, SavedRecommendationV3, TwoArmControl } from '@shared/model'
 import { GoalPicker } from '@intake/GoalPicker'
-import { RecommendationSurface, type RecommendationSaveProp } from './RecommendationSurface'
+import { RecommendationSurface, SavedRecordCard, type RecommendationSaveProp } from './RecommendationSurface'
 import { savedRecordCardView, type SavedRecordCopy } from './recommendationSaveView'
 import { copy, slots } from './copy'
 import { appModel } from './appModel'
@@ -478,7 +478,6 @@ export function Result({
           solve={snapshot.solve}
           onRepick={() => setGoalOpen(true)}
           recSave={recSave}
-          card={card}
         />
       )}
       {/* The IN-FRAME R13 disclaimer (council 2026-07-08, "buttons drop below" — Briggsy's fork
@@ -490,6 +489,23 @@ export function Result({
           display:none below that width — the phone renders byte-identically (same words, one
           visible mount, Disclaimer.tsx has the contract). */}
       <Disclaimer inFrame />
+      {/* THE REMEMBERED-RECORD CARD — DOM-ordered BELOW the disclaimer, joining the doors as a
+          sanctioned below-fold casualty (Briggsy's ruling, 2026-07-26, on measured numbers).
+          It began life inside RecommendationSurface, above this line, and MEASURED at his real
+          1536×791 it pushed the protected R13 disclaimer from 702px to 858px (holds, 156px card) and
+          to 952px (superseded with two causes, 251px) — a 67-161px breach of the one-frame fit law,
+          against an idle frame carrying only 89px of headroom. No honest version of the card fits
+          that seat, so this was a PLACEMENT decision and never a trim: every word survives.
+          It sits here for the same reason the backup door does — unprotected affordances degrade
+          past the fold FIRST so the protected honesty caveat wins the frame (the Hawk's veto). Focus
+          order matches visual order; no CSS-only reorder. DOM ORDER ALONE DOES NOT PIN THE PIXELS at
+          the laptop two-pane: the actions chain is `display: contents` there, so this card is a grid
+          item and confidence.css must seat it (`.rec-record`, the row directly under the caveat).
+          Auto-placed it would take the dead RIGHT rail instead — verify:fit's `?vault=rec` /
+          `?vault=recold` arms assert both the document order and the seat. The date route is already excluded at the
+          producer (IntakeApp's `recordCard` memo returns undefined on `isDateRoute`), so this needs
+          no route gate of its own — a crowned-date surface can never carry a record. */}
+      {card !== undefined && <SavedRecordCard card={card} />}
       {/* The re-offer backup door (U8-tail): a QUIET, subordinate durability affordance — the plan
           is already saved to this device (the slot above says so); this only offers the off-device
           second copy when none is on record. Reads under the verdict, never a primary CTA, never

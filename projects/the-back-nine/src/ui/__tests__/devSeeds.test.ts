@@ -1,11 +1,14 @@
 import { describe, expect, it } from 'vitest'
 import {
   DEV_SEEDS,
+  doctorArrivedVault,
   doctorRecordHolds,
   doctorRecordSuperseded,
   doctorStaleVault,
   doctorStateStaleVault,
 } from '../devSeeds'
+import { floorLineText, heroLead } from '../FuckOffDate'
+import { planClockAnchor } from '../bandAnnotations'
 import type { ScenarioDraft } from '@store/memoryModel'
 import type { ScenarioV3 } from '@shared/model'
 import { decodeScenario, encodeScenario } from '@shared/scenarioCodec'
@@ -793,6 +796,58 @@ describe('the stale aged plant (the re-entry gate notes, exposure-gated)', () =>
     expect(view.noteLines).toEqual([copy.stalenessTax, copy.stalenessMedicare])
     expect(view.elapsedLine, 'the ~760-day save reads "about 2 years ago"').toBe(slots.reentryElapsedYears(2))
   })
+
+  // THE ENGINE-ACCEPTANCE PIN (insight 085) — and until now the ONE aged plant that lacked a fast
+  // one. `statestale` got this arm the day the −2y aging demoted it to the R19 calm indeterminate;
+  // its SPINE sibling, which rides the very doctor that caused that bug, never did. Its only
+  // witnesses were a ~90-second Chromium fit arm (`vertical-fit.spec.ts` drives `?vault=stale`
+  // through a real unlock and asserts a resolved spine) and a DIFFERENT plant's date-route arm over
+  // a DIFFERENT base — `retired` is all-retired and `dateSearch.ts:389` refuses such a household
+  // outright, so no date-route arm can ever cover it. This is the insight-051 tell: the plant
+  // shipped its fit pin before it had a unit source. Now a doctored shape the engine would refuse
+  // fails HERE, in under a second.
+  it("'stale' is ENGINE-ACCEPTED on the SPINE path and resolves to a real verdict — the fast arm its Chromium-only coverage was standing in for", () => {
+    const built = scenarioFromDraft(DEV_SEEDS.retired)
+    expect(built.ready, 'retired must be save-ready').toBe(true)
+    if (!built.ready) return
+    const aged = doctorStaleVault(built.scenario, TODAY)
+    const hydrated = draftFromScenario(aged)
+    expect(hydrated.ok, 'the hydrator accepts the doctored aged spine vault').toBe(true)
+    if (!hydrated.ok) return
+    const params = buildSpineParams(hydrated.draft)
+    expect(params, 'stale: buildSpineParams').not.toBeNull()
+    expect(
+      validateParams(params!),
+      'the engine ACCEPTS the doctored household — a stateless base has no priced-state year bound to trip',
+    ).toBeNull()
+    const wire = runEngine(params!, hydrated.draft.seed!)
+    expect(wire.kind, 'a feasible, RESOLVED run — never the R19 calm indeterminate').toBe('resolved')
+    if (wire.kind !== 'resolved') return
+
+    // ⚑ PINNED AS FOUND, NOT AS EXPECTED — and the difference is the point. Fresh `retired` is
+    // ON-TRACK (0.8555, the documented knife-edge sitting on the 0.85 band edge); this plant reads
+    // BORDERLINE. The cause is MEASURED: `doctorStaleVault` ages `startCalendarYear` alone, so the
+    // overlay's DERIVED birth year (`startCalendarYear − currentAge`, simulate.ts:1346) forks from
+    // each person's STATED `birthYear` — here 1958/1959 derived against 1960/1961 stated, which
+    // straddles the SECURE-2.0 RMD band edge (`bornThrough: 1959 → 73` vs `null → 75`) for BOTH
+    // people. The doctored household is therefore forced into RMDs two years earlier than the
+    // household it claims to represent, and `PersonInputs` (model.ts:98) documents
+    // `currentAge === startCalendarYear − birthYear` as an invariant that fresh scenarios hold
+    // (verified: fresh derives 1960/1961, exactly its stated pair).
+    //
+    // NOT REPAIRED HERE, deliberately, and the obvious repair is a trap: aging `currentAge` by the
+    // same depth makes `buildSpineParams` return NULL outright, because a `'retired'` person owes
+    // `retirementAge <= currentAge` (sanity.ts:11-14) and 64 < 65 breaks it. Aging `birthYear`
+    // instead — the lever `doctorArrivedVault` uses — moves this seed's FRA band too (1960 is the
+    // first year of the 67y0m band; 1958 reads 66y8m), and `retired` is documented KNIFE-EDGE. So
+    // any correction is a real engine-input change to a knife-edge fixture with its own re-tune,
+    // never a ride-along. Filed. If a future pass fixes the doctor, THIS LINE MUST CHANGE
+    // CONSCIOUSLY — that is what pinning the actual value buys.
+    expect(
+      wire.headline.outcomeState,
+      'BORDERLINE — the doctored build year forks the derived birth year across the RMD band edge (see above); pinned as found',
+    ).toBe('borderline')
+  })
 })
 
 // ===========================================================================
@@ -926,5 +981,149 @@ describe('the record-bearing plants (the remembered recommendation the fit gate 
     // Both carry the picked goal — a saved recommendation only exists for a household that ran one.
     expect(holds.scenario.chosenGoal).toBe('leave-more')
     expect(superseded.scenario.chosenGoal).toBe('leave-more')
+  })
+})
+
+// ===========================================================================
+// U17 §S6 — the ARRIVED plant (`?vault=datearrived`). The hero's arrived arm (`dateInYearsPast`)
+// shipped in §S2.5 with UNIT arms only: every aged fixture in this repo crowns its lifestyle track
+// BEYOND the elapsed window (`datesplit` at 10 against an elapsed 2), so no live route reached the
+// sentence and the four parked aged-surface tone calls had nothing to cold-read. This plant is that
+// route. Its properties are MEASURED here through the real doctor → hydrate → date-search chain
+// rather than decreed, because every one of them is a claim a crown drift can silently falsify —
+// and a plant whose hero quietly reverts to the anchored count reads as a broken FEATURE rather
+// than a broken FIXTURE, which costs its reader the whole session.
+// ===========================================================================
+describe('the arrived aged plant (the first live route to the hero\'s dateInYearsPast arm)', () => {
+  const TODAY = currentEpochDay()
+
+  function plantArrived(): { fresh: ScenarioV3; aged: ScenarioV3; depth: number } {
+    const built = scenarioFromDraft(DEV_SEEDS.dip)
+    expect(built.ready, 'dip must be save-ready').toBe(true)
+    if (!built.ready) throw new Error('dip is not save-ready — the arrived plant has no base')
+    const aged = doctorArrivedVault(built.scenario, TODAY)
+    return { fresh: built.scenario, aged, depth: built.scenario.startCalendarYear - aged.startCalendarYear }
+  }
+
+  // Arm 1 — THE MODEL INVARIANT THIS DOCTOR EXISTS TO HOLD. `PersonInputs` (model.ts:98) documents
+  // `currentAge === startCalendarYear − birthYear`, and the engine reads a birth year through TWO
+  // paths that must agree: the SS sub-engine's stated `p.birthYear` (FRA / DRC / deemed-filing) and
+  // the tax overlay's DERIVED `startCalendarYear − currentAge` (simulate.ts:1346). Aging the build
+  // clock ALONE forks them by the full depth — silently, because nothing in the codec, the hydrator
+  // or the sanity layer enforces the invariant. The arm pins all three halves: currentAge frozen
+  // (so the engine sees the same household), birthYear moved by the SAME depth, invariant intact.
+  it('moves BOTH birth-year clocks together — the model invariant survives the aging, so the engine\'s two birth-year reads cannot fork', () => {
+    const { fresh, aged, depth } = plantArrived()
+    expect(depth, 'the build clock actually moved (never a silent no-op)').toBeGreaterThan(0)
+    expect(aged.people.length).toBe(fresh.people.length)
+    aged.people.forEach((p, i) => {
+      const before = fresh.people[i]
+      expect(before, `person ${i} exists in the fresh scenario`).toBeDefined()
+      if (before === undefined) return
+      expect(p.currentAge, `person ${i}: currentAge is UNTOUCHED — the engine sees the same household`).toBe(
+        before.currentAge,
+      )
+      expect(p.birthYear, `person ${i}: birthYear moved by the SAME depth as the build clock`).toBe(
+        before.birthYear - depth,
+      )
+      expect(p.currentAge, `person ${i}: currentAge === startCalendarYear − birthYear still holds AFTER aging`).toBe(
+        aged.startCalendarYear - p.birthYear,
+      )
+    })
+    // The TWO CLOCKS ARE INDEPENDENT BY DESIGN (§S0): the build year is written once and survives
+    // every re-save; `savedAt` is the LAST save. This plant exercises that split deliberately —
+    // built six years ago, saved recently — so the save-elapsed line stays under a year and every
+    // vintage is legitimately fresh, leaving the BUILD clock as the frame's only aged signal.
+    expect(aged.savedAt, 'the last save is RECENT — inside the year').toBeGreaterThan(TODAY - 365)
+    expect(aged.savedAt, 'and is genuinely in the past').toBeLessThan(TODAY)
+  })
+
+  // Arm 2 — THE ENGINE-ACCEPTANCE PIN (insight 085): a doctored fixture is a new producer of
+  // persisted state, and the engine's fail-loud gates are part of its consumer chain. Driven
+  // through the REAL date search, so a crown drift, a hydrator refusal, or a year-bound rejection
+  // fails HERE (seconds) instead of at a ninety-second Chromium run or, worse, at his cold read.
+  it("'datearrived' is ENGINE-ACCEPTED and crowns lifestyle STRICTLY BEHIND the elapsed window — the arrived precondition, measured", async () => {
+    const { aged, depth } = plantArrived()
+    const hydrated = draftFromScenario(aged)
+    expect(hydrated.ok, 'the hydrator accepts the doctored arrived shape').toBe(true)
+    if (!hydrated.ok) return
+    const input = buildDateInput(hydrated.draft)
+    expect(input, 'datearrived: buildDateInput').not.toBeNull()
+    const out = await runDateSearch(input!, hydrated.draft.seed!, { tier: 'provisional' })
+    expect(out.kind, 'a real dates outcome — never the R19 calm indeterminate').toBe('dates')
+    if (out.kind !== 'dates') return
+    expect(['confirmed-date', 'window-edge-unconfirmed'], 'lifestyle crowned').toContain(out.lifestyle.kind)
+    if (!('offsetYears' in out.lifestyle) || !('offsetYears' in out.floor)) return
+    expect(
+      out.lifestyle.offsetYears,
+      'the lifestyle crown sits STRICTLY behind the elapsed window — the whole precondition for dateInYearsPast',
+    ).toBeLessThan(depth)
+    // NOT an incidental observation: the floor crowning at 0 is exactly why this plant lights ONE
+    // arrived arm and not two. `floorLineText` short-circuits offset 0 BEFORE the three-way split
+    // (FuckOffDate.tsx:197, mirroring heroLead's free-today precedence), so `dateFloorCoveredPast`
+    // cannot fire here — its live route is and remains `?vault=datestale`. Arm 3 proves the
+    // consequence on the renderer rather than leaving it as a comment.
+    expect(out.floor.offsetYears, 'the floor crowns at 0 — the plain covered line, never the Past arm').toBe(0)
+  }, 120_000)
+
+  // Arm 3 — THE RENDERED IDIOM. The crown NUMBERS are not the deliverable; the SENTENCE is. Arm 2
+  // could stay green while a renderer change quietly stopped reaching the past arm, so this drives
+  // the real exported renderers over the real search output (insight 032: a test that re-derives a
+  // producer's arithmetic proves the arithmetic, never that the surface still calls it).
+  it('renders the ARRIVED hero sentence and the SHORT-CIRCUITED floor line through the real renderers', async () => {
+    const { aged, depth } = plantArrived()
+    const hydrated = draftFromScenario(aged)
+    if (!hydrated.ok) return
+    const input = buildDateInput(hydrated.draft)
+    if (input === null) return
+    const out = await runDateSearch(input, hydrated.draft.seed!, { tier: 'provisional' })
+    if (out.kind !== 'dates') return
+    const view = composeDateSplit(out.floor, out.lifestyle)
+    expect(view.kind, 'the arrived plant composes a SPLIT').toBe('split')
+    if (view.kind !== 'split') return
+    if (!('offsetYears' in out.lifestyle)) return
+
+    // The anchor comes from the SHIPPED producer, against the same local-calendar wall year the app
+    // reads — never a hand-built literal (the §S0 lesson: a copy of a producer's arithmetic is not
+    // a pin, and this arm's whole claim is that the plant's depth reaches the app's predicate).
+    const anchor = planClockAnchor(aged.startCalendarYear, epochDayToCalendarYear(TODAY))
+    expect(anchor.yearsSincePlanBuilt, 'the app-side clock agrees with the doctor\'s depth').toBe(depth)
+
+    expect(
+      heroLead(view.lifestyle, DATE_OFFSET_WINDOW_TOP, anchor),
+      'the hero takes the STRICTLY-PAST arm — "that year has already come and gone"',
+    ).toBe(slots.dateInYearsPast(aged.startCalendarYear + out.lifestyle.offsetYears))
+
+    // The floor's short-circuit stated as an EQUIVALENCE rather than a re-typed string: under a
+    // zero offset the anchored render must be byte-identical to the un-anchored one, which IS what
+    // "offset 0 short-circuits before the three-way split" means. Re-typing the covered sentence
+    // here would pin the copy, not the branch.
+    expect(
+      floorLineText(view, DATE_OFFSET_WINDOW_TOP, anchor),
+      'offset 0 renders the plain covered line — anchored and un-anchored agree exactly',
+    ).toBe(floorLineText(view, DATE_OFFSET_WINDOW_TOP, undefined))
+  }, 120_000)
+
+  // Arm 4 — THE FAIL-LOUD GUARD IS REACHABLE. The doctor refuses a base that already violates the
+  // invariant, because over such a base shifting birthYear by the depth would PRESERVE the fork
+  // rather than close it. A guard nothing exercises is a comment (insight 048).
+  it('REFUSES a base that already breaks the invariant, rather than propagating the fork', () => {
+    const built = scenarioFromDraft(DEV_SEEDS.dip)
+    if (!built.ready) return
+    const broken: ScenarioV3 = {
+      ...built.scenario,
+      people: built.scenario.people.map((p, i) => (i === 0 ? { ...p, birthYear: p.birthYear - 3 } : p)),
+    }
+    expect(() => doctorArrivedVault(broken, TODAY)).toThrow(/model invariant/i)
+  })
+
+  // Arm 5 — THE STATELESS REQUIREMENT IS ENFORCED, not merely documented. A priced-state base
+  // rejects at any depth ≥1 on the engine's priced-state year bound (simulate.ts:640-643), which is
+  // insight 085's own origin story — so the doctor fail-louds at the plant instead of shipping a
+  // fixture that renders the R19 calm indeterminate and reads as a broken feature.
+  it('REFUSES a priced-state base (the insight-085 bound), rather than minting an R19 fixture', () => {
+    const built = scenarioFromDraft(DEV_SEEDS.nc)
+    if (!built.ready) return
+    expect(() => doctorArrivedVault(built.scenario, TODAY)).toThrow(/priced-state base/i)
   })
 })

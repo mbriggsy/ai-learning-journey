@@ -1136,6 +1136,89 @@ export function doctorStateStaleVault(s: ScenarioV3, todayEpochDay: number): Sce
   }
 }
 
+/** How many calendar years back `?vault=datearrived`'s plan was BUILT. It must exceed the base's
+ *  lifestyle crown so `offsetHasPassed(crown, yearsSincePlanBuilt)` is true and the hero takes its
+ *  ARRIVED arm — `dip` crowns lifestyle at 5, MEASURED through the real date search (the arm below
+ *  re-measures it every run, so a crown drift fails HERE rather than at a cold read). 6 is the
+ *  smallest depth that clears 5, which keeps the fabricated history as short as the face needs. */
+const ARRIVED_PLAN_YEARS = 6
+
+/** How recently `?vault=datearrived` was LAST SAVED. Deliberately RECENT and deliberately not the
+ *  build clock: the whole point of this plant is the two-clock split U17 §S0 shipped
+ *  (`startCalendarYear` is written once at BUILD and survives every re-save; `savedAt` is the LAST
+ *  save). Under a year, so the save-elapsed line suppresses and every vintage stays legitimately
+ *  fresh — leaving the BUILD clock as the ONLY aged signal on the frame, which is what makes the
+ *  arrived idiom cold-readable in isolation (the `rec`/`recold` plants' same discipline). */
+const ARRIVED_SAVED_DAYS_AGO = 30
+
+/**
+ * `?vault=datearrived` — THE ARRIVED HOUSEHOLD (U17 §S6): a plan BUILT six years ago whose lifestyle
+ * date has since come and gone. It is the only live route to the hero's arrived arm
+ * (`dateInYearsPast`, "that year has already come and gone" — the §S2.5 strict three-way split's
+ * past member), and the four parked aged-surface tone calls ride it: how hard the elapsed segment is
+ * de-emphasised, the premise line's wording, the de-mudded arrived idiom, and the SILENCE where the
+ * work-stops marker used to sit (§S2.1 killed a named marker left of Today under the honoured hawk
+ * veto — the call is now whether that silence reads honest or missing).
+ *
+ * WHY `dip` AND NOT `datesplit` (the note above {@link AGED_PLANTS} carries the full measurement):
+ * the hero's arrived arm needs `yearsSincePlanBuilt` to EXCEED the lifestyle crown, and `datesplit`
+ * crowns at 10. `dip` crowns at 5 and HOLDS there under aging — it does not chase its own tail —
+ * so depth 6 clears it. The base must also be STATELESS: a priced-state base rejects at any depth
+ * ≥1 on the engine's priced-state year bound (`simulate.ts:640-643`), which is the real constraint
+ * the spec's `earliestPricedRateYear` probe was reaching for. `dip` carries no `retirementState`.
+ *
+ * IT AGES `birthYear` ALONGSIDE `startCalendarYear`, AND THAT IS LOAD-BEARING. `PersonInputs`
+ * (`model.ts:98`) documents `currentAge === startCalendarYear − birthYear` as a model invariant, and
+ * the engine reads a birth year through TWO paths that must agree: the SS sub-engine's stated
+ * `p.birthYear` (FRA / DRC / deemed-filing lookups) and the tax overlay's DERIVED
+ * `startCalendarYear − currentAge` (`simulate.ts:1346`). Aging the build clock ALONE forks them by
+ * the full depth and fabricates a household that is organically impossible — in 2020 this couple
+ * would have been 51, not 57. Aging `birthYear` by the same depth restores the invariant exactly,
+ * keeps `currentAge` (so the engine sees the SAME household and the crown does not move — MEASURED:
+ * floor 0 / lifestyle 5 with and without the birth-year shift, byte-identical), and describes a real
+ * arrived household: born 1963, planned at 57 to stop at offset 5, and that year is now behind them.
+ *
+ * ⚠️ THIS PLANT LIGHTS **ONE** ARRIVED ARM, NOT TWO. The floor crowns at 0, and `floorLineText`
+ * (`FuckOffDate.tsx:197`) SHORT-CIRCUITS offset 0 to the plain `dateFloorCovered` line BEFORE the
+ * three-way split — mirroring `heroLead`'s free-today precedence, deliberately ("covered from the
+ * plan's own start ⇒ still covered now"). So `dateFloorCoveredPast` does NOT fire here; its live
+ * route is and remains `?vault=datestale`, whose floor crown sits strictly inside its window. (An
+ * earlier filing claimed "both arms arrived on one plant" — it was read off the crown numbers
+ * without opening the renderer.)
+ *
+ * EXPORTED for the devSeeds battery, like its sibling doctors.
+ */
+export function doctorArrivedVault(s: ScenarioV3, todayEpochDay: number): ScenarioV3 {
+  if (s.retirementState !== undefined && isPricedState(s.retirementState)) {
+    throw new Error(
+      `doctorArrivedVault must never take a priced-state base (got ${s.retirementState}): its ` +
+        `-${ARRIVED_PLAN_YEARS}y startCalendarYear aging precedes the state's earliest rate row, and ` +
+        `the engine's priced-state lower bound (simulate.ts:640) demotes the recompute to the R19 ` +
+        `calm indeterminate — no verdict renders, and the arrived hero never draws.`,
+    )
+  }
+  // NEVER A SILENT NO-OP (the `agedStateProfile` law), and the reason this doctor ages two fields:
+  // if the BASE already violates the model invariant, shifting `birthYear` by the depth would
+  // preserve the violation rather than the invariant, and the fork would ride to the engine unseen.
+  for (const [i, p] of s.people.entries()) {
+    if (p.currentAge !== s.startCalendarYear - p.birthYear) {
+      throw new Error(
+        `doctorArrivedVault: person ${i} breaks the model invariant currentAge === startCalendarYear ` +
+          `− birthYear (${p.currentAge} !== ${s.startCalendarYear} − ${p.birthYear}) BEFORE aging. ` +
+          `This doctor shifts both clocks to KEEP that invariant; over a base that already violates ` +
+          `it, the engine's two birth-year reads (p.birthYear for the SS FRA lookup vs ` +
+          `simulate.ts:1346's derived startCalendarYear − currentAge) stay forked and nothing says so.`,
+      )
+    }
+  }
+  return {
+    ...s,
+    savedAt: todayEpochDay - ARRIVED_SAVED_DAYS_AGO,
+    startCalendarYear: s.startCalendarYear - ARRIVED_PLAN_YEARS,
+    people: s.people.map((p) => ({ ...p, birthYear: p.birthYear - ARRIVED_PLAN_YEARS })),
+  }
+}
+
 // ── U17 §S5 — THE RECORD-BEARING PLANTS (`?vault=rec` / `?vault=recold`) ───────────────────────
 //
 // THE GAP THEY CLOSE: before them, NO `?seed=` or `?vault=` route in this repo carried a saved
@@ -1324,15 +1407,17 @@ export function doctorRecordSuperseded(s: ScenarioV3, todayEpochDay: number): Sc
  *  stop, off the ≈8y figure for THIS base. That is false as a general claim and it would send the
  *  next builder away from a plant that exists. MEASURED through the real date search (provisional
  *  tier), lifestyle crowns are: `dip` 5 · `date` 9 · `datesplit` 10 · `dateborder` 10 ·
- *  `date65`/`datenc` 0 · `datemixed` no-date-in-window. **`dip` is the arrived base: its crown
- *  stays 5 at every aging depth probed (0/3/5/6/7/8 — it does NOT chase its own tail), so depth 6
- *  puts elapsed 6 past it and the search still returns a real `dates` outcome.** Depth 6 also
- *  clears savedAt's 2020 codec floor, and the two clocks are legitimately independent anyway
- *  (`startCalendarYear` is written once at BUILD and survives every re-save — U17 §S0; `savedAt` is
- *  the LAST save), so "built 6y ago, last saved since" needs no fudging. NOTE the base must be
- *  STATELESS: `datenc` rejects at any depth ≥1 with "startCalendarYear precedes the priced state
- *  rate schedule" (`simulate.ts:640-643`), which is the real bound the S6 spec's
- *  `earliestPricedRateYear` probe was reaching for.
+ *  `date65`/`datenc` 0 · `datemixed` no-date-in-window. **`dip` is the arrived base**, and U17 §S6
+ *  MINTED the plant on it: `datearrived` below, depth 6, {@link doctorArrivedVault} — which owns
+ *  the two corrections this note's first draft got wrong (it ages `birthYear` alongside
+ *  `startCalendarYear` to hold the `currentAge === startCalendarYear − birthYear` model invariant,
+ *  and it lights ONE arrived arm rather than two, because a floor crown of 0 short-circuits past
+ *  the three-way split at `FuckOffDate.tsx:197`). The base must be STATELESS: `datenc` rejects at
+ *  any depth ≥1 with "startCalendarYear precedes the priced state rate schedule"
+ *  (`simulate.ts:640-643`), which is the real bound the S6 spec's `earliestPricedRateYear` probe
+ *  was reaching for — and that probe is VACUOUS on a stateless base (the gate is `isPricedState`-
+ *  gated), so the honest constructibility probe is the date search itself, which is what the
+ *  `datearrived` engine-acceptance arm runs on every suite.
  *
  *  THE `stalenessDate` CLAIM IS GONE (U17 §S4 sweep, insight 087 — its sibling at the doctor
  *  above was swept in the same change and this one was missed). That line USED to fire off the
@@ -1382,6 +1467,12 @@ const AGED_PLANTS: Readonly<Partial<Record<string, AgedPlant>>> = {
   // so the re-entry gate's own staleness lines stay dark and the record card reads in isolation.
   rec: { base: 'retired', doctor: doctorRecordHolds },
   recold: { base: 'retired', doctor: doctorRecordSuperseded },
+  // U17 §S6 — the ARRIVED household: the `dip` date couple whose plan was BUILT 6 years ago, so the
+  // lifestyle crown (5) now sits BEHIND the elapsed window and the hero takes `dateInYearsPast`. The
+  // base is stateless by requirement (a priced base rejects on the engine's year bound at any depth
+  // ≥1). See {@link doctorArrivedVault} for why it ages `birthYear` alongside `startCalendarYear`
+  // and why this plant lights ONE arrived arm, not two.
+  datearrived: { base: 'dip', doctor: doctorArrivedVault },
 }
 
 async function runPlantDevVault(key: string): Promise<PlantResult> {

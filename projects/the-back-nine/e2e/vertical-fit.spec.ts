@@ -1502,6 +1502,113 @@ test.describe(`the aged date return (?vault=datestale) — one clock across hero
   })
 })
 
+// ── U17 §S6: the ARRIVED vault return (?vault=datearrived) — the aged band's X-AXIS, and the
+// silence where a marker used to be ───────────────────────────────────────────────────────────
+// TWO THINGS HAD NO REAL-BROWSER WITNESS BEFORE THIS PLANT EXISTED.
+//
+// (1) THE AGED BAND'S YEAR-0 LABEL. U17 §S0 renamed it `bandClockBuiltLabel` — the band had been
+// calling the BUILD year "Your save", false for any re-saver and contradicted by the fresh "Saved
+// to this device" badge on the same screen. That rename shipped with unit arms only: no e2e arm
+// asserts the aged axis at all, so a regression to the fresh "Today" endpoint on an aged plan —
+// the exact class §S0 fixed — would draw in a real browser with a green suite.
+//
+// (2) THE WITHDRAWN WORK-STOPS MARKER. §S2.1's honored hawk veto: a crowned offset the plan clock
+// has PASSED withdraws AT THE ARRAY, so no future-tense named marker can ever render left of
+// Today. On `?vault=datestale` the crown sits BEYOND the elapsed window, so the marker renders and
+// the withdrawal never fires. THIS is the first live surface where it does — which makes the arm
+// below the only structural guard on a silence that is otherwise indistinguishable, in a
+// screenshot, from a marker someone forgot to draw. (Whether that silence READS honest or missing
+// is Briggsy's parked tone call; this arm only holds the mechanism still while he rules.)
+test.describe(`the arrived date return (?vault=datearrived) — the aged x-axis + the withdrawn marker (${REAL.width}×${REAL.height})`, () => {
+  test.use({ viewport: REAL, deviceScaleFactor: 2.5 })
+  test('the year-0 endpoint names the BUILD year, wall-time Today is marked, and no named marker renders left of Today', async ({
+    page,
+  }) => {
+    await page.goto('/?vault=datearrived')
+    const unlock = page.getByRole('button', { name: 'Open my plan' })
+    await expect(unlock, 'the datearrived plant did not land on the unlock screen').toBeVisible({
+      timeout: 30_000,
+    })
+    await unlock.click()
+
+    const affirm = page.getByRole('button', { name: /Still about right/ })
+    await expect(affirm).toBeVisible({ timeout: 30_000 })
+    await affirm.click()
+
+    await expect(page.locator('main.result[data-answer-tier="final"]')).toBeAttached({
+      timeout: 90_000,
+    })
+    await page.evaluate(() => document.fonts.ready)
+    await page.waitForFunction(() =>
+      document.getAnimations().every((a) => {
+        const timing = a.effect?.getTiming()
+        return timing?.iterations === Infinity || a.playState !== 'running'
+      }),
+    )
+    await page.evaluate(
+      () => new Promise<void>((r) => requestAnimationFrame(() => requestAnimationFrame(() => r()))),
+    )
+    await page.evaluate(() => window.scrollTo(0, 0))
+
+    // PRESENCE COMPANIONS (insight 029) — a fresh page, or a plant that quietly stopped arriving,
+    // would pass every absence assertion below vacuously. The hero sentence is the discriminator:
+    // it is the §S2.5 STRICTLY-PAST arm, and it exists on no other live route.
+    await expect(page.locator('.fod-reveal[data-twopane]')).toBeVisible()
+    await expect(page.locator('.fod-band')).toBeVisible()
+    await expect(page.getByText(/that year has already come and gone/)).toBeVisible()
+    await expect(page.locator('.band-premise')).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Re-confirm your numbers' })).toBeVisible()
+    await expect(page.locator('.band-elapsed-dim')).toBeAttached()
+
+    // THE X-AXIS. Read the band's own named labels rather than a screenshot: `Plan built` is the
+    // aged year-0 endpoint, and `Today` is the wall-time marker §S2 places at x = years-elapsed.
+    // Both must be present — asserting only the first would pass on a band that lost its wall
+    // clock entirely, which is the two-time-bases defect in its other direction.
+    // `allTextContents`, never `allInnerTexts`: these are SVG <text> nodes and `innerText` is an
+    // HTMLElement property — it comes back null for every one of them, which reads as "the band
+    // drew no labels" when the band drew six.
+    const strongLabels = await page.locator('.fod-band .band-droppable-label.is-strong').allTextContents()
+    expect(
+      strongLabels,
+      `the aged band must name the BUILD year at year 0, never "Today" (U17 §S0). Labels: ${JSON.stringify(strongLabels)}`,
+    ).toContain('Plan built')
+    expect(
+      strongLabels,
+      `the aged band must still mark WALL-TIME today. Labels: ${JSON.stringify(strongLabels)}`,
+    ).toContain('Today')
+
+    // THE SILENCE (§S2.1). The crowned offset is behind the wall clock here, so NEITHER named
+    // work-stops label may render — not the plain one, not the split one. Both are checked because
+    // the split arm picks between them at the array, and pinning one leaves the other free.
+    expect(
+      strongLabels,
+      `no future-tense marker may render left of Today. Labels: ${JSON.stringify(strongLabels)}`,
+    ).not.toContain('Work stops')
+    expect(
+      strongLabels,
+      `nor the split variant. Labels: ${JSON.stringify(strongLabels)}`,
+    ).not.toContain('Essentials date')
+
+    await assertOneVisibleDisclaimer(page, 'laptop')
+
+    // ORDER (the date route's honesty contract): graphs → in-frame disclaimer → doors, doors last.
+    const box = async (selector: string) => {
+      const b = await page.locator(selector).boundingBox()
+      expect(b, `${selector} must render with a real box`).not.toBeNull()
+      return b as NonNullable<typeof b>
+    }
+    const graphs = await box('.fod-graphs')
+    const disclaimer = await box('footer.disclaimer.disclaimer--in-frame')
+    const doors = await box('.result-quiet-row')
+    expect(disclaimer.y, 'the R13 disclaimer must sit BELOW both graphs').toBeGreaterThanOrEqual(
+      graphs.y + graphs.height - 0.5,
+    )
+    expect(doors.y, 'the quiet doors must sit BELOW the R13 disclaimer').toBeGreaterThanOrEqual(
+      disclaimer.y + disclaimer.height - 0.5,
+    )
+  })
+})
+
 // ── U17 §S5: the RECORD-BEARING vault return (?vault=rec) — the card on a PROTECTED idle frame ──
 //
 // THE BLIND SPOT THIS CLOSES. Every arm above mounts `{kind:'unsaved'}` — a `?seed=` route has no

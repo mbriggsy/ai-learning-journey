@@ -18,8 +18,9 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { checkPassphraseFloor, type FloorCheckedPassphrase } from '../../crypto/kdf'
 import { loadVault, openVaultDb } from '@store/db'
 import { createSession } from '@store/session'
-import { scenarioFromDraft } from '../scenarioFromDraft'
-import { DEV_SEEDS } from '../devSeeds'
+import { currentEpochDay, scenarioFromDraft } from '../scenarioFromDraft'
+import { DEV_SEEDS, doctorRecordHolds } from '../devSeeds'
+import type { AnyScenario, ScenarioV3 } from '@shared/model'
 
 const PASSPHRASE = 'plinth otter vivid casket 92 lampoon'
 const RECOVERY_PASSPHRASE = 'lattice harbor cinder vellum 48 thicket'
@@ -28,6 +29,18 @@ async function floorPass(p: string): Promise<FloorCheckedPassphrase> {
   const r = await checkPassphraseFloor(p)
   if (!r.ok) throw new Error('test passphrase unexpectedly below floor')
   return r.passphrase
+}
+
+/**
+ * `currentModel()` returns the `AnyScenario` MIGRATION UNION (v1 | v2 | v3), and
+ * `savedRecommendation` exists on v3 alone. Narrow with a real assertion rather than a cast: a
+ * reopened vault that came back as anything but v3 would be a genuine finding about the store, and
+ * a bare `as ScenarioV3` would hide exactly that finding to buy a green compile.
+ */
+function reopenedV3(model: AnyScenario | null): ScenarioV3 {
+  expect(model, 'the reopened vault carried no model at all').not.toBeNull()
+  expect(model?.schemaVersion, 'the reopened model must be v3 — the record exists on no other shape').toBe(3)
+  return model as ScenarioV3
 }
 
 /** A real, complete ScenarioV3 — the canonical "ready to save" form the ceremony persists. */
@@ -83,6 +96,68 @@ describe('the full-store round-trip on the REAL v3 scenario shape (field fidelit
     expect((await reopened.unlock(PASSPHRASE)).ok).toBe(true)
     expect(reopened.currentModel()).toEqual(altered)
     expect(reopened.currentModel()).not.toEqual(scenario) // the changed field really traveled
+    await reopened.lock()
+  })
+
+  // U17 §S6 — THE SAVED RECOMMENDATION'S FIRST TRIP THROUGH DISK. S3 built the record and S5 mints
+  // it, but until now it was proven at the CODEC and HYDRATION layers only: every arm above rides
+  // `DEV_SEEDS.retired`, which carries no `savedRecommendation`, so the richest sub-object in the
+  // v3 shape had never met real WebCrypto or IndexedDB.
+  //
+  // WHY THAT GAP HAS TEETH RATHER THAN BEING BELT-AND-BRACES: the record is the codec's ONE
+  // TOLERATED NON-FATAL DROP — a record the decoder dislikes is DELETED and the rest of the vault
+  // opens normally. So the failure mode here is not a thrown error, it is a scenario that comes
+  // back SILENTLY RECORD-FREE, which renders as an absent card rather than a broken vault. And the
+  // transport is exactly where DND 009 bites: `JSON.stringify` nulls the values a structured field
+  // can carry, and the record is dense with numbers (epoch days, a solver version, the era stamps).
+  it('a scenario CARRYING a saved recommendation survives the REAL crypto + IndexedDB round-trip — record included', async () => {
+    const scenario = doctorRecordHolds(builtScenario(), currentEpochDay())
+    // FIXTURE GUARD, never decoration: without a record on the way IN, every assertion below is
+    // vacuously true and this arm would pass forever while proving nothing (insight 048).
+    expect(scenario.savedRecommendation, 'the fixture must actually carry a record').toBeDefined()
+
+    const db = await openVaultDb()
+    const session = createSession(db)
+    expect(
+      (await session.firstSave(scenario, await floorPass(PASSPHRASE), await floorPass(RECOVERY_PASSPHRASE))).ok,
+    ).toBe(true)
+    await session.lock()
+
+    const reopened = createSession(db)
+    expect((await reopened.unlock(PASSPHRASE)).ok).toBe(true)
+    const back = reopenedV3(reopened.currentModel())
+    // Named FIRST and on its own, so a tolerated drop reports itself as "the record vanished"
+    // rather than as an opaque whole-object inequality the next reader has to diff by hand.
+    expect(back.savedRecommendation, 'the record survived the vault — never silently dropped').toBeDefined()
+    expect(back.savedRecommendation, 'and every field of it, byte-for-byte').toEqual(scenario.savedRecommendation)
+    expect(back, 'and the scenario around it is untouched').toEqual(scenario)
+    await reopened.lock()
+  })
+
+  it('PLANTED DROP (record) — the round-trip is field-sensitive INSIDE the record, not just around it', async () => {
+    // The companion that makes the arm above non-vacuous in the other direction: whole-object
+    // equality could hold through a codec that re-minted the record from defaults. Move one field
+    // the record identifies itself by and prove THAT value is what came back.
+    const scenario = doctorRecordHolds(builtScenario(), currentEpochDay())
+    const record = scenario.savedRecommendation
+    expect(record, 'the fixture must actually carry a record').toBeDefined()
+    if (record === undefined) return
+    const altered = { ...scenario, savedRecommendation: { ...record, mintedAt: record.mintedAt - 77 } }
+
+    const db = await openVaultDb()
+    const session = createSession(db)
+    expect(
+      (await session.firstSave(altered, await floorPass(PASSPHRASE), await floorPass(RECOVERY_PASSPHRASE))).ok,
+    ).toBe(true)
+    await session.lock()
+
+    const reopened = createSession(db)
+    expect((await reopened.unlock(PASSPHRASE)).ok).toBe(true)
+    expect(
+      reopenedV3(reopened.currentModel()).savedRecommendation?.mintedAt,
+      'the altered mint date really traveled',
+    ).toBe(record.mintedAt - 77)
+    expect(reopened.currentModel()).not.toEqual(scenario)
     await reopened.lock()
   })
 })

@@ -866,11 +866,20 @@ for (const target of TARGETS) {
           // NC-clause hero, and the Assumptions door opens the panel on the ANSWERED
           // retirement-state seat (the priced/answered picker-row face — face #2 of the
           // state-carrying increment, uncapturable on any non-door state).
+          // U17 §S6: `datearrived` JOINS the door walk, for increment 4's own stated reason —
+          // it is an aged DATE household, so its sheets are exactly where a driven lever preview
+          // inherits (or fails to inherit) the elapsed timeline. It is the STRONGER case than
+          // `datestale`: on the arrived plant the crowned date is BEHIND the wall clock, so any
+          // lever preview that still speaks in future tense about it is wrong in a way no
+          // already-covered face can show. Left out, the one plant this stage exists to
+          // cold-read would have been chaired on its landing alone — and the tape's costliest
+          // lesson (2026-07-10) is that he finds real defects on the surfaces the walk skipped.
           await walkVaultReturn(page, target.key, outDir, {
             doors:
               target.key === 'stale' ||
               target.key === 'datestale' ||
-              target.key === 'statestale',
+              target.key === 'statestale' ||
+              target.key === 'datearrived',
           })
         } else if (target.kind === 'intake') {
           if (target.key !== 'fork') {

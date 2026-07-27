@@ -1316,8 +1316,23 @@ export function doctorRecordSuperseded(s: ScenarioV3, todayEpochDay: number): Sc
  *  live route to the floor's ARRIVED arm (`dateFloorCoveredPast`: elapsed 2 ≥ the floor
  *  offset — "penciled as covered … that's about now") beside a RE-DERIVED aged hero count
  *  (`dateInYearsAnchored` with n = offset − elapsed). The hero's own arrived arm
- *  (`dateInYearsPast`) needs elapsed ≥ the lifestyle crown (≈8y); savedAt's codec floor is
- *  2020 (~6y back), so it is NOT coherently mintable — it stays unit-pinned, never faked.
+ *  (`dateInYearsPast`) needs elapsed > the lifestyle crown, which THIS base cannot reach:
+ *  `datesplit` crowns lifestyle at 10 (2 for the floor), and re-running the real search over an
+ *  aged copy only drifts it to 9 — never below the elapsed window.
+ *
+ *  ⚠️ CORRECTED 2026-07-27 — the old note generalised that to "NOT coherently mintable", full
+ *  stop, off the ≈8y figure for THIS base. That is false as a general claim and it would send the
+ *  next builder away from a plant that exists. MEASURED through the real date search (provisional
+ *  tier), lifestyle crowns are: `dip` 5 · `date` 9 · `datesplit` 10 · `dateborder` 10 ·
+ *  `date65`/`datenc` 0 · `datemixed` no-date-in-window. **`dip` is the arrived base: its crown
+ *  stays 5 at every aging depth probed (0/3/5/6/7/8 — it does NOT chase its own tail), so depth 6
+ *  puts elapsed 6 past it and the search still returns a real `dates` outcome.** Depth 6 also
+ *  clears savedAt's 2020 codec floor, and the two clocks are legitimately independent anyway
+ *  (`startCalendarYear` is written once at BUILD and survives every re-save — U17 §S0; `savedAt` is
+ *  the LAST save), so "built 6y ago, last saved since" needs no fudging. NOTE the base must be
+ *  STATELESS: `datenc` rejects at any depth ≥1 with "startCalendarYear precedes the priced state
+ *  rate schedule" (`simulate.ts:640-643`), which is the real bound the S6 spec's
+ *  `earliestPricedRateYear` probe was reaching for.
  *
  *  THE `stalenessDate` CLAIM IS GONE (U17 §S4 sweep, insight 087 — its sibling at the doctor
  *  above was swept in the same change and this one was missed). That line USED to fire off the

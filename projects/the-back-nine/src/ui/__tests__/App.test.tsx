@@ -139,12 +139,30 @@ describe('App — the entry router threads the unlock read-only verdict into the
 describe('App — the survivor door composes into the re-entry gate (J1, ultramode 2026-07-09)', () => {
   it('unlock → forgot → RecoveryFlow.onRecovered lands in IntakeApp WITH hydrate=true and writable — the one link (App.tsx onRecovered) that arms the U13 gate for the wiped-device survivor', async () => {
     await driveToUnlockScreen()
+
+    // DETERMINISM FIRST, NOT A BIGGER NUMBER — and the history here is the argument.
+    //
+    // `RecoveryFlow` is reached through `React.lazy`, so clicking the forgot door STARTS a dynamic
+    // import and the wait below races module resolution + a Suspense flush against a wall clock.
+    // That budget was already raised once for exactly this reason (1s → 5s, 2026-07-18) and CI blew
+    // through 5s anyway on 2026-07-27 (run 30310885497, `Unable to find an element by:
+    // [data-testid="recovery-flow"]` at 5033ms). Raising it a second time is the move the
+    // macrotask-budget landmine forbids: the wait is inherently racy and a bigger number only
+    // relocates the failure to the next unlucky runner.
+    //
+    // The prior prescription missed because it bumped the WRONG CLOCK. `vite.config.ts` raised
+    // vitest's per-test `testTimeout` 5s → 20s, but the failure is this INNER `findBy` budget
+    // expiring first — an outer budget can never rescue an inner wait that has already given up.
+    //
+    // So take the variable out instead. The module is `vi.mock`'d already, so resolving it here
+    // puts it in the registry before anything depends on timing; what remains is a render flush.
+    // The surviving budget is a HANG GUARD, not a performance budget — the same philosophy the
+    // `testTimeout` bump was reaching for, applied to the clock that actually governs.
+    await import('../RecoveryFlow')
+
     // The forgot door replaces the unlock screen with the recovery flow.
     fireEvent.click(screen.getByRole('button', { name: copy.unlockForgot }))
-    // Explicit wait budget: RecoveryFlow is a LAZY chunk — under a loaded full-suite run the
-    // default 1s findBy window can miss the import (seen locally 2026-07-18; the burned/055
-    // near-ceiling discipline applied to waitFor).
-    await screen.findByTestId('recovery-flow', undefined, { timeout: 5_000 })
+    await screen.findByTestId('recovery-flow', undefined, { timeout: 20_000 })
     expect(screen.queryByLabelText(copy.unlockLabel)).toBeNull()
     // Recovery completes → the began entry must carry hydrate:true (the gate's arming flag —
     // the survivor with the longest gap and the stalest balances is WHO the gate exists for)

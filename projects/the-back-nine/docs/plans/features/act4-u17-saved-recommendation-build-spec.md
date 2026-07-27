@@ -378,7 +378,9 @@ A **new, stateless** plant for the arrived household — the aged surface's cold
   domain the engine prices.
 - **Required engine-acceptance pin:** hydrate → `buildSpineParams` → `validateParams` accepts → the run
   resolves to a **real** `outcomeState`, never the R19 indeterminate. (Model it on
-  `devSeeds.test.ts:500-524`, the `statestale` arm.)
+  `devSeeds.test.ts:517-536`, the `statestale` arm — the `it(` is `:517`, its rationale comment
+  `:511-516`. **Corrected 2026-07-27: this line read `:500-524`, which lands a builder inside the
+  neighbouring staleness-clock arm (`it(` at `:483`) and yields the wrong pin.**)
 - **Pre-existing gap to close while here:** the `stale` plant (full doctor, spine route) has **no FAST
   engine-acceptance pin** — its `−2y startCalendarYear` aging is the exact mutation that broke `statestale`
   and produced insight 085. Its sibling has the unit pin; it doesn't. That is the insight-051 tell.

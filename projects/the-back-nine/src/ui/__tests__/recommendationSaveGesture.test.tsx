@@ -139,6 +139,7 @@ import { copy } from '../copy'
 import { DEV_SEEDS } from '../devSeeds'
 import { draftFromScenario } from '../draftFromScenario'
 import { exposureForDraft } from '../stalenessExposure'
+import { isDateRoute } from '@intake/intakeMap'
 import { currentEpochDay, scenarioFromDraft } from '../scenarioFromDraft'
 import { mintSavedRecommendation } from '@store/savedRecommendationMint'
 import { READING_FIXTURES } from '../preview/fixtures'
@@ -168,6 +169,9 @@ const LIVE_DRAFT: ScenarioDraft = HYDRATED.draft
 appModel.update(() => LIVE_DRAFT)
 const RUN_FINGERPRINT = appModel.currentDraftFingerprint()
 if (RUN_FINGERPRINT === null) throw new Error('the fixture household must build a solve request')
+/** The REAL implementation, bound before `vi.spyOn` replaces the property below — so `beforeEach`
+ *  can hand every arm a genuine pass-through. See the reset note on `fingerprintSpy`. */
+const realCurrentDraftFingerprint = appModel.currentDraftFingerprint.bind(appModel)
 
 // ---- the committed recommendation on screen -----------------------------------------------------
 
@@ -388,7 +392,13 @@ beforeEach(() => {
   appModel.update(() => LIVE_DRAFT)
   recomputeSpy.mockClear()
   updateSpy.mockClear()
+  // `mockClear()` clears CALL HISTORY ONLY — it does not drain a queued one-shot and does not undo
+  // a `mockReturnValue`. That asymmetry cost this repo a red CI run in S4 (30169928294) and it bit
+  // again here the moment an arm diverged this spy on purpose: the stub leaked forward and took two
+  // LATER arms with it. So the implementation is re-seeded to the real producer every arm — a
+  // diverging test owns its divergence for exactly its own duration.
   fingerprintSpy.mockClear()
+  fingerprintSpy.mockImplementation(realCurrentDraftFingerprint)
   exposureSpy.mockClear()
   consoleSpy.mockClear()
 })
@@ -550,6 +560,43 @@ describe('the save gesture — R1: with no vault the tap MINTS and opens the cer
     expect(savedBadge()?.textContent).toContain(copy.recommendSaveSavedBadge)
   })
 
+  it('mints from the COMMITTED fingerprint, not a fresh draft read — proven with the two forced apart', async () => {
+    /**
+     * THE ASYMMETRY THIS CLOSES. Every other arm asserts `record.fingerprint === RUN_FINGERPRINT`
+     * (`:529`), which CANNOT discriminate: on a healthy frame the committed run's fingerprint and
+     * `currentDraftFingerprint()` are equal by construction, so swapping the mint's basis from
+     * `s.solve.fingerprint` to `appModel.currentDraftFingerprint()` leaves the whole suite green.
+     * The swap is a structural no-op TODAY (step 3 re-confirms `committed` with no await before the
+     * mint, and the store demotes a committed solve on every draft mutation) — but `type
+     * SolverRunFingerprint = string` is a BARE alias (`solverRunFingerprint.ts:61`), so a wrong
+     * basis compiles, lints, and reads `inputs-changed` forever at the trichotomy. Insight 087: a
+     * bind the type cannot carry has to be a test.
+     *
+     * So this arm FORCES the two apart — the only way the difference becomes observable — by
+     * making the fresh read return a sentinel no committed run could produce. The gesture consumes
+     * `currentDraftFingerprint()` nowhere (`IntakeApp.tsx:415-433` reads only the snapshot), so the
+     * mock cannot perturb the path under test.
+     *
+     * MUTANT: `s.solve.fingerprint` → `appModel.currentDraftFingerprint()` at the mint — this reds.
+     */
+    const SENTINEL = 'solver-run-fp/v2:a-FRESH-draft-read' as NonNullable<typeof RUN_FINGERPRINT>
+    expect(SENTINEL, 'the sentinel really is distinguishable from the committed identity').not.toBe(RUN_FINGERPRINT)
+
+    await mountFresh()
+    fingerprintSpy.mockReturnValue(SENTINEL)
+    await tapSave()
+
+    const record = draftRecord()
+    expect(record, 'the tap still mints with the fresh read diverged').not.toBeUndefined()
+    expect(record!.fingerprint, 'the record is stamped with the run the household TAPPED').toBe(RUN_FINGERPRINT)
+    expect(record!.fingerprint, 'never the fresh draft read').not.toBe(SENTINEL)
+
+    // NON-VACUITY — the mock really was live across the tap, so the assertion above had a genuine
+    // wrong answer available to it. Without this, a mock that silently failed to install would make
+    // the arm pass for the same reason the mutant does.
+    expect(appModel.currentDraftFingerprint(), 'the fresh read was diverged for real').toBe(SENTINEL)
+  })
+
   it('CANCELLING the ceremony restores the record the draft carried BEFORE the tap (never a strip)', async () => {
     // A household that saved a record earlier and has not touched it today must not lose it to a
     // ceremony they backed out of. MUTANT: strip the key unconditionally on cancel — this reds.
@@ -679,6 +726,74 @@ describe('the record-card memo — a record-free mount does ZERO expensive work'
     await mountReturning({ ...DISK_READY.scenario, savedRecommendation: diskRecord() })
     expect(fingerprintSpy).toHaveBeenCalled()
     expect(exposureSpy).toHaveBeenCalled()
+  })
+})
+
+// =================================================================================================
+// (4b) THE DATE-ROUTE STRUCTURAL REFUSAL — the memo never TAKES the lying exposure read
+// =================================================================================================
+
+describe('the record-card memo — a DATE route refuses the card structurally', () => {
+  it('draws the card on a spine route and REFUSES it on the date twin — one variable apart', async () => {
+    /**
+     * WHY THE CONJUNCT EXISTS. `exposureForDraft` carries a hard in-source prohibition — "DO NOT
+     * LIFT THIS FUNCTION TO A CROWNED SURFACE… the base read WOULD lie there"
+     * (`stalenessExposure.ts:81-84`) — because on a date route it takes the arm that reads the
+     * PRE-SWEEP base ACA overlay, while the screen it would feed sits beside a CROWNED date. So
+     * IntakeApp refuses at the PRODUCER (`isDateRoute(snapshot.draft) ⇒ undefined`): the lying read
+     * is never TAKEN, rather than taken and then discarded.
+     *
+     * WHY THE FRAME IS REACHABLE AT ALL. No record can be BORN on a date route
+     * (`savedRecommendation.ts:88-94`) — but it is reachable the other way round: a household saves
+     * a record while retired, then a spouse un-retires. That is exactly this fixture.
+     *
+     * WHY THE CONJUNCT IS THE ONLY THING STANDING THERE — the reason a mutant here is dangerous
+     * rather than redundant. `Result.tsx` gates the whole RECOMMENDATION SURFACE off on a date route
+     * (`:476`), but `SavedRecordCard` mounts OUTSIDE that gate (`:508`). So Result's own date
+     * suppression does NOT cover the card: delete the memo's conjunct and a crowned-date frame draws
+     * a record card fed by an exposure read its own producer forbids.
+     *
+     * WHY BOTH HALVES LIVE IN ONE ARM. The memo has five conjuncts and only one is under test, so an
+     * absent card proves nothing on its own. The control below runs the SAME helper over the SAME
+     * record and differs in exactly one variable — the route — which is what makes the negative
+     * attributable (the zero-work arm above uses the same cleanup-and-remount idiom).
+     *
+     * MUTANT: delete `if (isDateRoute(snapshot.draft)) return undefined` from the memo — this reds.
+     */
+    const record = diskRecord()
+
+    // (a) CONTROL FIRST — the spine route, so the mount is known to reach a card-DRAWING state.
+    // This is what licenses reading the date twin's silence as a refusal rather than a dead frame.
+    await mountReturning({ ...DISK_READY.scenario, savedRecommendation: record })
+    expect(isDateRoute(LIVE_DRAFT), 'the control is NOT a date route').toBe(false)
+    expect(savedBadge()?.textContent, 'the control reached `result` over a saved persist').toContain(
+      copy.recommendSaveSavedBadge,
+    )
+    expect(savedRecordCard()?.textContent, 'and it DRAWS the card').toContain(copy.recommendRecordHeading)
+
+    // (b) THE DATE TWIN — same helper, same record, same everything but the route.
+    cleanup()
+    const dateDraft: ScenarioDraft = { ...DEV_SEEDS.date, chosenGoal: 'leave-more' }
+    const built = scenarioFromDraft(dateDraft)
+    expect(isDateRoute(dateDraft), 'the twin really is a date route (the conjunct under test)').toBe(true)
+    expect(built.ready, "conjunct 4 holds: `scenarioFromDraft` is the memo's own `saveReady` producer").toBe(true)
+    if (!built.ready) return
+
+    await mountReturning({ ...built.scenario, savedRecommendation: record })
+
+    // The surviving conjuncts, witnessed on THIS frame: the phase really is `result`…
+    expect(document.querySelector('main.result'), 'conjunct 1: the result phase was reached').not.toBeNull()
+    // …and the record really is live on the hydrated draft.
+    expect(draftRecord(), 'conjunct 3: the vault carries a record').not.toBeUndefined()
+    // Result's own date gate is visibly in force — and it is NOT what suppresses the card (:508
+    // mounts outside it), which is precisely why the memo's conjunct has to.
+    expect(
+      document.querySelector('.recommendation-surface'),
+      "Result's date gate withholds the recommendation surface (but not the card)",
+    ).toBeNull()
+
+    // …so the only conjunct left that can explain the silence is the date route.
+    expect(savedRecordCard(), 'the crowned-date frame refuses the card at the producer').toBeNull()
   })
 })
 

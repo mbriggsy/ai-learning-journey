@@ -78,5 +78,23 @@ export default defineConfig(({ mode }) => ({
     // not try to run a Playwright spec (it has no page fixture → it would fail). Run it
     // via `pnpm verify:csp`.
     exclude: [...configDefaults.exclude, 'e2e/**'],
+    // A HANG GUARD, NOT A PERFORMANCE BUDGET — and deliberately not the "blanket bump" the queue
+    // warns against. That warning was CONDITIONED on the culprit being the Monte-Carlo battery, in
+    // which case a per-file timeout is right (and those files already carry explicit 120s-900s
+    // timeouts declaring their real cost). It is not that. Vitest's 5000ms default governed every
+    // arm that did not opt out, and across FOUR sightings it took down a DIFFERENT file each time —
+    // heavy engine tests that pass in isolation, two different MC goldens, and finally
+    // `App.test.tsx`'s survivor-door arm (CI run 30285582342), a jsdom test whose only crime is
+    // driving PBKDF2-600k twice through a real recovery flow. Nothing links them but CPU contention
+    // in a 3164-test parallel run on a shared runner.
+    //
+    // 5s is simply the wrong ceiling for that: it is short enough that scheduling noise reads as
+    // failure, which is how this cost three sessions of "capture it next time" without ever being
+    // named. 20s still fails a genuinely STUCK test — it just stops calling a starved one broken.
+    // A test that is slow for a REAL reason must still say so with its own explicit `{ timeout }`;
+    // this changes nothing about that contract, and `slowTestThreshold` keeps the signal visible in
+    // the reporter rather than hiding it behind a pass.
+    testTimeout: 20_000,
+    slowTestThreshold: 3_000,
   },
 }))

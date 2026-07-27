@@ -366,25 +366,50 @@ async function typeFieldValue(
  * preview driven so the TwoFutures chart states bundle — the rule-36 one-dialect check was
  * honestly un-verifiable while the doors captured only their pre-commit input state.
  * PREVIEW-ONLY by construction: radios/fields change local sheet state and the preview seam;
- * nothing is Applied, so the scenario every later state captures is untouched. Returns true
- * if a preview was driven (the caller then captures the `-preview` state). A driven lever
- * whose chart never arrives FAILS red — never a silent no-chart bundle (insight 029).
+ * nothing is Applied, so the scenario every later state captures is untouched. Returns which
+ * terminal state landed, so the caller can NAME the capture (the caller then captures the
+ * `-preview` state). A driven lever that reaches NEITHER terminal state FAILS red — never a
+ * silent no-chart bundle (insight 029).
+ *
+ * ⚑ THE `no-anchor` ARM (added 2026-07-27, U17 §S6's walk — and it is why `seed:datemixed` had
+ * never been cold-read by ANY oracle). `ControlPreviewReadout` is a FIVE-arm union, and one of
+ * those arms renders no chart AT ALL by design: a household with no crowned work-optional date
+ * lands `no-anchor` and speaks `copy.leverPreviewNoDate` instead ("This comparison anchors to
+ * your work-optional date, so it needs one on the board first"). `datemixed` is the only face in
+ * the repo that reaches it — lifestyle `no-date-in-window` by construction — so demanding a chart
+ * here failed the walk red at BOTH viewports, on correct product behaviour.
+ *
+ * That is a self-reinforcing blind spot worth naming: the face was never walked because the walk
+ * crashed on it, and the crash went unnoticed because the face was never walked. The chartless
+ * arm is not a degraded capture — it is a REAL cold-read surface (a door that opens and calmly
+ * explains why it has nothing to show), so it gets its own capture name rather than being folded
+ * into `-preview` where a reader would mistake it for a screenshot that failed.
  */
+type PreviewDrive = 'chart' | 'no-anchor' | false
+
 async function driveLeverPreview(
   page: Page,
   dialog: ReturnType<Page['getByRole']>,
   name: string,
-): Promise<boolean> {
+): Promise<PreviewDrive> {
+  /** The race every driven lever runs: the chart, or the structurally-chartless no-anchor line.
+   *  Waiting on their `.or()` keeps the insight-029 teeth — reaching NEITHER still fails red —
+   *  while refusing to call correct behaviour a failure. */
+  const settleToTerminal = async (why: string): Promise<PreviewDrive> => {
+    const chart = dialog.locator('svg.tf')
+    const noAnchor = dialog.getByText(/This comparison anchors to your work-optional date/)
+    await expect(chart.or(noAnchor), why).toBeVisible({ timeout: 120_000 })
+    return (await chart.isVisible()) ? 'chart' : 'no-anchor'
+  }
+
   // The policy/regime radio grammar (SequencingControl + HealthcareSheet): pick the first
   // NON-current option — picking the applied one deliberately withdraws the comparison.
   const uncheckedRadio = dialog.locator('.control-policies input[type="radio"]:not(:checked)')
   if ((await uncheckedRadio.count()) > 0) {
     await uncheckedRadio.first().check()
-    await expect(
-      dialog.locator('svg.tf'),
-      `door "${name}": the driven preview never rendered its TwoFutures chart`,
-    ).toBeVisible({ timeout: 120_000 })
-    return true
+    return settleToTerminal(
+      `door "${name}": the driven preview reached neither its TwoFutures chart nor the no-anchor line`,
+    )
   }
   // The Roth plan grammar (RothLever): amount / start / years — a COMPLETE plan fires the
   // preview. Values are small-but-real (a $20k, 4-year plan starting next year). U17 §S1: the
@@ -397,11 +422,11 @@ async function driveLeverPreview(
     await typeFieldValue(plan.nth(0), '20000', '20,000')
     await typeFieldValue(plan.nth(1), nextYear, nextYear)
     await typeFieldValue(plan.nth(2), '4', '4')
-    await expect(
-      dialog.locator('svg.tf'),
-      `door "${name}": the driven Roth preview never rendered its TwoFutures chart`,
-    ).toBeVisible({ timeout: 120_000 })
-    return true
+    // Same race: the Roth lever shares `ControlPreviewReadout`, so it reaches `no-anchor` on the
+    // same households the sequencing sheet does.
+    return settleToTerminal(
+      `door "${name}": the driven Roth preview reached neither its TwoFutures chart nor the no-anchor line`,
+    )
   }
   return false // no lever on this sheet (the budget builder, the assumptions panel)
 }
@@ -424,8 +449,13 @@ async function walkDoors(page: Page, outDir: string): Promise<void> {
     const dialog = page.getByRole('dialog')
     await expect(dialog, `door "${name}" opened no dialog`).toBeVisible()
     await captureState(page, path.join(outDir, `door-${i + 1}-${slugify(name)}`))
-    if (await driveLeverPreview(page, dialog, name)) {
-      await captureState(page, path.join(outDir, `door-${i + 1}-${slugify(name)}-preview`))
+    const drive = await driveLeverPreview(page, dialog, name)
+    if (drive !== false) {
+      // The chartless `no-anchor` arm gets its OWN suffix: a `-preview` capture with no chart in
+      // it reads to a card's reader as a screenshot that failed, when it is in fact the surface
+      // under review — a door that opens and calmly explains why it has nothing to compare.
+      const suffix = drive === 'chart' ? 'preview' : 'preview-no-anchor'
+      await captureState(page, path.join(outDir, `door-${i + 1}-${slugify(name)}-${suffix}`))
     }
     await dialog.getByRole('button', { name: /^(Close|Cancel)$/ }).first().click()
     await expect(dialog).toBeHidden()

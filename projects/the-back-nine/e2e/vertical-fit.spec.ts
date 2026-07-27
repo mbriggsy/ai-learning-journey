@@ -640,18 +640,22 @@ for (const seed of DEAD_RAIL_SEEDS) {
 //     OVER-reserves by 26.41px. Harmless to the fold (the slot exists only on the committed beat,
 //     and that frame is a full-width r5 row that scrolls by design — the PROTECTED idle frames
 //     render no slot at all), but the figure in that comment is not what the browser does.
-//   390×844 — reserved 128px, offer content 146.13px, ceremony hint FOUR lines. The box GROWS to
-//     146.13px, so the tap offer→saving collapses it back to 128px and everything below it rises
-//     18.13px mid-gesture: the equality this arm exists to enforce is FALSE on the phone today.
-//     That is a live CLS defect, not a test-scope question — and the repair is a product decision
-//     (a per-tier reservation whose number no width can outgrow, never a trimmed hint: content
-//     never yields to layout). FILED for the pilot with these numbers; the phone stays out of the
-//     loop rather than being pinned green against the current wrong behaviour (an arm that pins a
-//     defect is the defect's second copy) or left red forever.
+//   390×844 — reserved 128px, offer content 146.13px, ceremony hint FOUR lines. The box GREW to
+//     146.13px, so the tap offer→saving collapsed it back to 128px and everything below it rose
+//     18.13px mid-gesture: a live CLS defect, and the equality this arm exists to enforce was FALSE
+//     on the phone. The phone was deliberately held OUT of the loop rather than pinned green against
+//     that wrong behaviour (an arm that pins a defect is the defect's second copy) or left red.
+//
+// ✓ THE PHONE IS IN THE LOOP AS OF 2026-07-27 — the defect is fixed, so the arm can hold it honestly.
+// `recommendation.css` now reserves PER TIER (10rem base / 8rem at the 68rem laptop seam), sized off
+// a re-measurement across the sub-laptop range: 390×844 is the governing width at 146.13px of offer
+// content, and 320×844 is slightly SHORTER (145.25px — the hint is 4L at both, and the one-line arms
+// rewrap at 320), so narrower is not monotonically taller. The hint was NOT trimmed: content never
+// yields to layout. This loop is what keeps that true — a reword that outgrows 10rem reds here.
 const SAVE_SLOT_SEEDS = ['retired'] as const
 
 for (const seed of SAVE_SLOT_SEEDS) {
-  for (const vp of [REAL, TIER, FLOOR] as const) {
+  for (const vp of [REAL, TIER, FLOOR, PHONE] as const) {
     const scale = vp === REAL ? { deviceScaleFactor: REAL_DPR } : {}
     test.describe(`?seed=${seed} — the save slot's reservation holds every arm (${vp.width}×${vp.height})`, () => {
       test.use({ viewport: vp, ...scale })

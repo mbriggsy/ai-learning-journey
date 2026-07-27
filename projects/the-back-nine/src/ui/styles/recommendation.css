@@ -210,11 +210,26 @@
        re-worded 3-line hint measures 126.39px, 1.6px inside the box — the SHIPPED hint is simply
        shorter than assumed at this measure.
      · 390×844 (phone) — the hint takes FOUR lines: 146.13px of content in the 128px box. The box
-       GROWS to 146.13px on the offer arm while every other arm stays at 128px, so the tap
-       offer→saving collapses it and everything below rises 18.13px mid-gesture. THAT IS THE TRAP
-       THIS RESERVATION EXISTS TO PREVENT, still open on the phone. FILED for the pilot: the repair
-       is a per-tier reservation no width can outgrow — never a trimmed hint (content does not yield
-       to layout), and the fit gate deliberately does not pin the phone green against it.
+       GREW to 146.13px on the offer arm while every other arm stayed at 128px, so the tap
+       offer→saving collapsed it and everything below rose 18.13px mid-gesture — the exact trap this
+       reservation exists to prevent (insight 035).
+
+   ✓ CLOSED 2026-07-27 by the PER-TIER reservation below, with the hint untrimmed (content does not
+   yield to layout — R2's disclosure is the honesty half of the control, not a footnote). Re-measured
+   across the sub-laptop range in the same real-Chromium arm before choosing the number:
+     · 390×844 — offer content 146.13px, hint 4L  ← THE GOVERNING WIDTH
+     · 320×844 — offer content 145.25px, hint 4L (narrower is NOT monotonically taller: the hint is
+       4L at both, and the one-line arms rewrap at 320, so 390 is the true worst case)
+   10rem = 160px clears 146.13px by 13.87px — the same order of headroom the laptop tier carries
+   (128px over 101.59px). The number is not a guess with padding: `verify:fit` now pins ALL FOUR arms
+   at the phone, so a hint reword that outgrows the box goes RED and the next builder raises the
+   reservation rather than discovering the shift on a real phone.
+
+   MOBILE-FIRST, and that is why the override runs DOWNWARD. This codebase has no phone breakpoint —
+   the base rule IS the phone and `@media (min-width: 68rem)` is the laptop tier (the same 1088px
+   `--bp-laptop` seam the rest of the surface two-panes on). So the taller reservation is the BASE
+   and the laptop narrows to its own measured figure; writing it the other way round would have left
+   every width below 68rem on the wrong number.
 
    `min-`, NEVER fixed — the same law as the sibling: growth is safe, collapse is the mid-gesture
    trap. The refusal card is not in here at all (it lives in the aside, free to exceed). */
@@ -223,7 +238,16 @@
   flex-direction: column;
   align-items: flex-start;
   gap: var(--space-2);
-  min-block-size: 8rem;
+  min-block-size: 10rem;
+}
+
+/* The laptop tier's own measured reservation: the ceremony hint holds TWO lines at the inner
+   two-pane reading column (101.59px of content), so 8rem is the honest box there. Base-then-override
+   order matters — same specificity, so this must follow the rule above. */
+@media (min-width: 68rem) {
+  .rec-save-slot {
+    min-block-size: 8rem;
+  }
 }
 
 /* The offer arm's CTA — the SAME calm door as every other control in this surface (.rec-repick,

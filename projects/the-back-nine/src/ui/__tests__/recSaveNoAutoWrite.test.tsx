@@ -110,12 +110,25 @@ async function databaseNames(): Promise<string[]> {
  * A write launched from a render is fire-and-forget: a dynamic `import()`, then `openVaultDb()`, whose
  * IndexedDB open event lands several MACROTASKS later. A probe that reads too early sees an empty
  * database list and calls it a refusal — the silent no-op burned/070 warns about. So the negative arms
- * cannot pick their own budget: they use exactly this one, and the TAP arm (which uses the identical
- * `settle()` and asserts the mint DID fire) is what proves the budget is long enough for a real write
- * path to complete inside it. Lower it and the CONTROL arm goes red first — measured: the tap's own
- * `import()` → `openVaultDb()` → session chain needs ~8-10 turns, and 7 reds it. 30 is the margin.
+ * cannot pick their own budget: they use exactly this one, and the TAP arm is what proves the budget
+ * is long enough for a real write path to complete inside it.
+ *
+ * 30 → 60, AND THE TAP ARM NO LONGER TRUSTS THE NUMBER (2026-07-27, CI run 30277757106). The chain
+ * measures 7-9 turns on Windows, so 30 looked like 3x margin — and ubuntu still red the tap arm at
+ * zero mints inside it. Under a 3163-test parallel run the macrotask turns are starved by CPU
+ * contention, which is the same shape this repo already files against its heavy engine battery; a
+ * budget calibrated on one machine is a race on another (burned/055 — a green local run is not
+ * proof). So the tap arm now POLLS to a 4x ceiling and asserts the measured cost against this
+ * constant, which turns the sweep's soundness from an assumption into a per-run measurement: if the
+ * chain ever outgrows what the sweep waits, the tap arm reds loudly instead of the sweep going
+ * quietly vacuous.
+ *
+ * WHY 60 AND NOT MORE: each round pays a full `act()`, ~8ms. At 150 the lifecycle arm blew vitest's
+ * 5s default outright. 60 keeps ~7x margin over the measured cost while the three settle-heavy arms
+ * carry an explicit `30_000` timeout — the repo's documented idiom for an arm whose local runtime
+ * nears the default (CI runs slower, and this file burns its turns serially).
  */
-const FLUSH_ROUNDS = 30
+const FLUSH_ROUNDS = 60
 
 /** Let React's effects, the dynamic imports (`devSeeds`, `vaultSession`) and any fire-and-forget
  *  IndexedDB open complete before a probe reads. Macrotask turns, not microtask flushes. */
@@ -287,7 +300,7 @@ describe('U17 §S5 — no render, mount, recompute, solve commit or draft edit e
     expect(await databaseNames(), 'the probe CAN fail').not.toEqual([])
     await clearVault(db)
     db.close()
-  })
+  }, 30_000)
 
   it('the whole lifecycle — mount, the spine beat, a COMMITTED recommendation, a re-render, a draft edit, a re-solve — mints nothing and opens no vault', async () => {
     expect(await databaseNames()).toEqual([])
@@ -332,7 +345,7 @@ describe('U17 §S5 — no render, mount, recompute, solve commit or draft edit e
     await settle()
     expect(mint, 're-entering the committed beat mints nothing').not.toHaveBeenCalled()
     expect(await databaseNames(), 'the whole lifecycle left IndexedDB untouched').toEqual([])
-  })
+  }, 30_000)
 
   it('CONTROL: the TAP the sweep withheld reaches the mint and the REAL vault session (the silence above is a refusal, not an absent door)', async () => {
     expect(await databaseNames()).toEqual([])
@@ -342,10 +355,36 @@ describe('U17 §S5 — no render, mount, recompute, solve commit or draft edit e
     expect(mint).not.toHaveBeenCalled()
 
     fireEvent.click(cta!)
-    await settle() // the SAME budget the sweep above flushed with — that is the point of this arm
+
+    // MEASURE the chain instead of assuming it. A fixed `settle()` here was CI-only RED (ubuntu,
+    // run 30277757106) while Windows ran green: the gesture's cold `import('./vaultSession')` →
+    // `openVaultDb()` chain is environment-timed, so a turn budget picked on one machine is a race
+    // on another (burden/055 — a green local run is not proof). Bumping FLUSH_ROUNDS would only move
+    // the threshold; the wait is inherently racy, so the arm now polls to a bounded ceiling.
+    //
+    // Pre-warming is NOT available as a fix: every arm asserts an empty IndexedDB as its first line,
+    // and warming the session would create the database.
+    let turns = 0
+    const CEILING = FLUSH_ROUNDS * 4
+    while (mint.mock.calls.length === 0 && turns < CEILING) {
+      await act(async () => {
+        await new Promise<void>((r) => setTimeout(r, 0))
+      })
+      turns++
+    }
 
     // The gesture — and ONLY the gesture — mints. Once: a tap is one record, never a retry storm.
     expect(mint, 'the explicit gesture mints exactly once').toHaveBeenCalledTimes(1)
+    // AND THE SYMMETRY THAT KEEPS THE SWEEP HONEST, now measured rather than asserted. The sweep
+    // above flushes exactly FLUSH_ROUNDS turns and concludes from silence that nothing mints. That
+    // conclusion is only sound if the door would have OPENED inside that budget — so this records
+    // what the chain actually cost on THIS machine and fails if it exceeds what the sweep waits.
+    // The day the chain outgrows the sweep, this reds loudly instead of the sweep going quietly
+    // vacuous, which is the failure mode a fixed budget on both sides could never surface.
+    expect(
+      turns,
+      `the mint landed in ${turns} turns; the sweep concludes from silence after ${FLUSH_ROUNDS}`,
+    ).toBeLessThanOrEqual(FLUSH_ROUNDS)
     // …carrying the identity of the run ON SCREEN, read off the live snapshot rather than re-typed (a
     // hand-typed expected value would make the bind tautological). SCOPE, stated honestly: this kills a
     // mint handed the WRONG value, NOT the committed-vs-fresh-fingerprint distinction — the two are
@@ -364,7 +403,7 @@ describe('U17 §S5 — no render, mount, recompute, solve commit or draft edit e
       await databaseNames(),
       'the tap opens the real vault DB — the probe above was watching a live door',
     ).not.toEqual([])
-  })
+  }, 30_000)
 
   it('SOURCE-BIND: the mint and the gesture each have exactly ONE call site, and it is the tap (insight 032/081)', () => {
     // The sweep can only speak for the frames it drives. This arm covers the rest of them: the named

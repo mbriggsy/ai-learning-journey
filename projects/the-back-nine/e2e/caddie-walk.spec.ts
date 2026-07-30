@@ -2,6 +2,11 @@ import { test, expect, type Page } from '@playwright/test'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
 import { REAL, REAL_DPR, PHONE, PHONE_DPR, gotoSeedFinal, settleLayout } from './reviewSurface'
+/* The no-anchor arm's handle reads the CATALOG, never a re-typed sentence (the `design-tokens`
+ * spec's precedent). A hardcoded literal here is a second copy of the product's words: U17 §S6
+ * reworded this exact string, and a literal would have re-broken the only walk that reaches the
+ * face — the same blind spot `c55913b0` had just repaired. */
+import { copy } from '../src/ui/copy'
 
 /**
  * The Caddie's WALK (own harness: playwright.caddie.config.ts, `pnpm caddie:walk`) — captures
@@ -373,11 +378,15 @@ async function typeFieldValue(
  *
  * ⚑ THE `no-anchor` ARM (added 2026-07-27, U17 §S6's walk — and it is why `seed:datemixed` had
  * never been cold-read by ANY oracle). `ControlPreviewReadout` is a FIVE-arm union, and one of
- * those arms renders no chart AT ALL by design: a household with no crowned work-optional date
- * lands `no-anchor` and speaks `copy.leverPreviewNoDate` instead ("This comparison anchors to
- * your work-optional date, so it needs one on the board first"). `datemixed` is the only face in
+ * those arms renders no chart AT ALL by design: a household with no crowned FULL-LIFESTYLE date
+ * lands `no-anchor` and speaks `copy.leverPreviewNoDate` instead. `datemixed` is the only face in
  * the repo that reaches it — lifestyle `no-date-in-window` by construction — so demanding a chart
  * here failed the walk red at BOTH viewports, on correct product behaviour.
+ *
+ * (The sentence is NOT quoted here any more. It was, and §S6's cold read then found the quoted
+ * wording itself false on this face — it denied a date the same screen plots, under a term the
+ * product never uses — so the string moved and a quoted copy would now be a third stale echo.
+ * The handle below reads `copy.leverPreviewNoDate` directly; insight 086.)
  *
  * That is a self-reinforcing blind spot worth naming: the face was never walked because the walk
  * crashed on it, and the crash went unnoticed because the face was never walked. The chartless
@@ -397,7 +406,7 @@ async function driveLeverPreview(
    *  while refusing to call correct behaviour a failure. */
   const settleToTerminal = async (why: string): Promise<PreviewDrive> => {
     const chart = dialog.locator('svg.tf')
-    const noAnchor = dialog.getByText(/This comparison anchors to your work-optional date/)
+    const noAnchor = dialog.getByText(copy.leverPreviewNoDate, { exact: false })
     await expect(chart.or(noAnchor), why).toBeVisible({ timeout: 120_000 })
     return (await chart.isVisible()) ? 'chart' : 'no-anchor'
   }

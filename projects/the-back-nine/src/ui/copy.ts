@@ -794,8 +794,27 @@ export const copy = {
   leverPreviewPending: 'Working out both futures…',
   leverPreviewError:
     'That comparison didn’t come together. Adjust a field — or close and reopen — to try again.',
+  /* U17 §S6 — THE REFUSAL USED TO DENY A DATE THE SAME SCREEN PLOTS, IN A TERM THE PRODUCT NEVER
+   * USES. It read: "This comparison anchors to your work-optional date, so it needs one on the
+   * board first." Cold-read live on `?seed=datemixed` (S6 Card 5, re-driven 2026-07-30 before this
+   * reword — a source read had cleared this string once already and was wrong):
+   *   - the landing headline states, in the product's OWN words, "No fuck-off date within the next
+   *     10 years — with what you've entered so far"; the refusal then re-asks the answered question
+   *     under a NEW NAME. `grep -c "work-optional date"` over the rendered landing copy = 0 — the
+   *     reader has never met the term. The product says FUCK-OFF DATE (`dateRegionLabel`).
+   *   - "it needs one on the board first" is FALSE ON ITS FACE here: the board carries a plotted,
+   *     labelled "Essentials date" (aria: "…ages 65 and 66") and the prose dates it — "The
+   *     essentials alone are covered about 7 years out — around 2033". A date IS on the board; the
+   *     one this comparison wants is a different date, and the old sentence never said which.
+   * The replacement names the product's own date, and states the true absence rather than an empty
+   * board. It is also SHORTER than what it replaces (131 vs 137 chars) — deliberate: the same
+   * batch's panel-raw list flagged this string clipping mid-sentence at the phone sheet edge.
+   * THE KEY NAME MUST NOT CHANGE. `leverPreviewNoDate` leads with `lever`, so it rides the two
+   * universal gates only. The instinctive rename once the fix is "say fuck-off date" — anything
+   * carrying `fuckoff`/`workoptional` — trips isVerdictKey's SUBSTRING net (copyGuard.ts:72) and
+   * silently promotes this line into free-numeral/superlative scope. */
   leverPreviewNoDate:
-    'This comparison anchors to your work-optional date, so it needs one on the board first. Applying a change still updates the answer above.',
+    'This comparison anchors to your fuck-off date, and this plan doesn’t have one yet. Applying a change still updates the answer above.',
   leverNoWorkerNote:
     'On this device the comparison computes when you finish a field — it can take a moment.',
   leverCancel: 'Close',

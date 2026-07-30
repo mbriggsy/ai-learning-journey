@@ -1656,12 +1656,31 @@ export const slots = {
    *  at the measured 1536×791 frame — all three facts kept: the vintage, not-today's-accounts,
    *  and the undetermined residual; the re-confirm CTA rides INLINE after this sentence.) */
   bandAgedPremiseSaved: (savedYear: number): string =>
-    `Drawn from the balances you saved in ${savedYear} — not today’s accounts. Where you sit now is undetermined until you re-confirm.`,
+    `Drawn from the balances you saved in ${savedYear} — not today’s accounts. What you actually hold now is undetermined until you re-confirm.`,
   /** The FRESH-SAVE arm (a re-saver: plan years old, save minutes old): the balances are the
    *  latest saved, but the picture still runs from the plan's own build year — its elapsed
-   *  years are modeled, not records. */
+   *  years are modeled, not records.
+   *
+   *  ⚑ U17 §S6 — THE SUBJECT OF "UNDETERMINED" IS THE BALANCE, NEVER THE DATE. Both arms used to
+   *  end "Where today sits on it / Where you sit now is undetermined", which names a HORIZONTAL
+   *  position — and the same frame draws that position, labels it "Today" (`bandClockTodayLabel`),
+   *  prints the ages under it, and gives it the accessible name "Today — ages 63 and 63". Cold-read
+   *  live on `?vault=datearrived` (S6 Card 4): three channels contradicting one sentence, and the
+   *  error runs the ROSY way — readers took the sentence for a bug, trusted the tick, and then read
+   *  the six modeled elapsed years as LIVED HISTORY, which is the exact misreading the premise
+   *  exists to prevent.
+   *
+   *  The intent was never in doubt — the section comment above already says only the fan's WIDTH is
+   *  conservative while "its LOCATION is unknown". Location means the VERTICAL axis: the balance a
+   *  household that overspent or ate a drawdown is actually standing on. "What you actually hold"
+   *  names that and nothing the chart draws.
+   *
+   *  ⚠️ DO NOT "FIX" THIS BY DROPPING THE TODAY TICK. That inverts the contradiction into the
+   *  defect U13/§S0 already fixed — `bandAnnotations.ts:51-56` records it live from the first
+   *  `?vault=datestale` walk, and `e2e/vertical-fit.spec.ts:1565-1566` forbids a band that loses
+   *  its wall clock BY NAME. The tick is right; the sentence was wrong. */
   bandAgedPremiseFresh: (buildYear: number): string =>
-    `This range runs from ${buildYear}, when the plan was built — its first years are modeled, not records. Where today sits on it is undetermined until you re-confirm.`,
+    `This range runs from ${buildYear}, when the plan was built — the years since are modeled, not records. What you actually hold today is undetermined until you re-confirm.`,
   /** An intermediate decade-age tick's accessible sentence (the reference marks between Today and
    *  the horizon — just the ages, no named moment). */
   bandClockAgesDesc: (ageA: number, ageB: number): string => `Ages ${ageA} and ${ageB}`,

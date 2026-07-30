@@ -256,3 +256,49 @@ describe('U17 §S0.1 — ONE exported arrived predicate, consumed (never re-type
     expect(agedLadderMarks(curveMarks(track), 5).some((m) => m.isCrown)).toBe(false)
   })
 })
+
+describe('U17 §S6 — the aged premise and the Today tick must not contradict each other', () => {
+  /*
+   * S6 Card 4, cold-read live on `?vault=datearrived`. Both premise arms used to end "Where today
+   * sits on it / Where you sit now is UNDETERMINED" — a claim about the HORIZONTAL position — while
+   * the very same frame draws that position, labels it `bandClockTodayLabel` ("Today"), prints the
+   * ages beneath it, and hands AT the name "Today — ages 63 and 63". One sentence, three channels
+   * against it.
+   *
+   * WHY THIS ARM HAD TO BE WRITTEN RATHER THAN ASSUMED: every existing consumer renders THROUGH the
+   * slot — `FuckOffDate.test.tsx:327,334`, `ConfidenceStatement.test.tsx:601,614`,
+   * `copyGuard.test.ts:307-308` all call `slots.bandAgedPremise*(...)` and compare to its own
+   * output. They follow ANY reword silently, in both directions. Without the arm below, the §S6 fix
+   * passes green and so does a future revert of it — the wording would be pinned by nothing at all.
+   *
+   * THE FAILURE DIRECTION IS THE ROSY ONE, which is why this is a correctness arm and not taste:
+   * readers took the sentence for a bug, trusted the labelled tick, and read the modeled elapsed
+   * years as LIVED HISTORY — precisely the misreading the premise exists to prevent.
+   */
+  const arms = [
+    ['bandAgedPremiseSaved', slots.bandAgedPremiseSaved(2024)],
+    ['bandAgedPremiseFresh', slots.bandAgedPremiseFresh(2020)],
+  ] as const
+
+  it.each(arms)('%s does not call the CALENDAR POSITION undetermined — the axis labels it', (_name, sentence) => {
+    // The old formulations, and the family they belong to: any "where <subject> sit(s)" reading
+    // points at the x-axis. A reverting author reaches for exactly these words.
+    expect(sentence).not.toMatch(/where\s+(today|you)\b[^.]*\bsits?\b/i)
+    expect(sentence).not.toMatch(/where you sit\b/i)
+  })
+
+  it.each(arms)('%s names the BALANCE as the unknown — the axis the chart genuinely cannot show', (_name, sentence) => {
+    // The section's own intent comment: only the fan's WIDTH is conservative, its LOCATION is
+    // unknown — and location means the VERTICAL axis, the dollars a household actually stands on.
+    expect(sentence).toMatch(/what you actually hold\b/i)
+    expect(sentence).toMatch(/undetermined until you re-confirm/i)
+  })
+
+  it('the contradiction is REAL — the Today label the premise must not contest still ships', () => {
+    // The other half of the pair. If this ever goes away the premise wording is no longer the
+    // constraint it is here — and losing the wall clock is itself the U13/§S0 defect
+    // (`bandAnnotations.ts:51-56`), which `e2e/vertical-fit.spec.ts` forbids by name. Asserting it
+    // here keeps the two halves from drifting apart silently in either direction.
+    expect(copy.bandClockTodayLabel).toBe('Today')
+  })
+})

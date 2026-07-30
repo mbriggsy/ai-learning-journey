@@ -501,47 +501,80 @@ export async function runDateSearch(
   // The sweep ran every candidate fan-OFF (perf + wire payload); this single targeted re-run at
   // the crowned offset is the decided cost (2026-06-28), not fattening every candidate.
   //
-  // P3·U9 (council 2026-07-02): the band crowns off the FLOOR track — the load-bearing survival
-  // claim — and ALL THREE band fields ride that one track: the fan observes the FLOOR pass
-  // (`bandFanTrack: 'floor'`), the state is the FLOOR reading, the offset is the floor's crown.
-  // A mixed pairing would lie in one direction or the other (an "on-track" tag over a full-spend
-  // fan that dips, or a full-track state that breaks the on-track-or-better contract at a
-  // floor-only offset). on-track-or-over-funded still holds by construction: the floor curve's
-  // quantized lower bound cleared the bar at this offset, and the re-run is CRN-identical.
-  // A can't-fund-the-full-lifestyle tier is a no-date lifestyle track + words — never a hidden
-  // red band. The un-itemized degenerate keeps the headline state (the tracks coincide).
-  const crownedOffset =
-    floor.kind === 'confirmed-date' || floor.kind === 'window-edge-unconfirmed'
-      ? floor.offsetYears
+  // P3·U9 (council 2026-07-02) ruled the band crowns off the FLOOR track. ⚑ OVERTURNED by the
+  // council of 2026-07-30 (docs/council-log.md top row) on field evidence Q3 could not have had:
+  // Q3 justified the floor-crowned band on the grounds that a track-naming note would keep the
+  // range and the hero claim from silently disagreeing. The note could not do that job (it named a
+  // DATE, never a SPENDING LEVEL), and the U17 §S6 cold read caught the result as a calm-but-wrong
+  // BLOCKER — the reader binds a rising median and an $8M plume to their FULL life while the
+  // picture prices the ESSENTIALS one. The band now rides the track the HERO CLAIM names.
+  //
+  // ⚑ WHAT SURVIVES Q3 VERBATIM, AND IS THE ONLY THING STANDING BETWEEN THIS FLIP AND A NEW LIE:
+  // ALL THREE band fields ride ONE track. Q3's reasoning about mixed pairings was exactly right;
+  // only its choice of WHICH track was wrong. So the track is decided ONCE, here, published on the
+  // band as `track`, and the fan/state/offset each read that one decision — never three sibling
+  // conditionals (insight 056). The measured worst case for getting this wrong: keying the state to
+  // the full track while the fan stays floor-keyed renders an `on-track` tag over a median that
+  // flatlines to $0 (full-track terminal $0 vs floor-track $4,366,017 on the floor-dated /
+  // lifestyle-no-date shape) — the honest tag vouching for a ruined picture, worse than the defect
+  // this flip repairs.
+  //
+  // THE INVARIANT HOLDS ON BOTH ARMS, and it is a proof rather than an assertion: a crowned reading
+  // satisfies `clears: quantizedLowerBound >= BANDS.onTrack` (:300); `lower <= p` since
+  // DATE_SEARCH_Z > 0 and se >= 0; `quantizeSurvival` is monotone non-decreasing; and the band's
+  // state comes from `buildHeadline` reading the SAME statistic through the SAME quantizer against
+  // the SAME `BANDS.onTrack` reference. So `outcomeState` stays in {on-track, over-funded} —
+  // model.ts's `never a fail state` promise — whichever track crowned.
+  //
+  // FLOOR IS THE FALLBACK, NOT THE DEFAULT: a household whose full-lifestyle date never lands in
+  // the window (`datemixed`) has no lifestyle band to draw, so the band stays floor-keyed and the
+  // surface owes a first-class "no full-lifestyle date in this window" tell. A can't-fund-the-full-
+  // lifestyle tier is still words, never a hidden red band. The degenerate (tracks coincide) is
+  // unaffected — both arms name the same offset.
+  const dated = (t: DateTrackOutcome): boolean =>
+    t.kind === 'confirmed-date' || t.kind === 'window-edge-unconfirmed'
+  // THE ONE DECISION. Everything below reads `bandTrack`; nothing re-derives it.
+  const bandTrack: 'floor' | 'lifestyle' | undefined = dated(lifestyle)
+    ? 'lifestyle'
+    : dated(floor)
+      ? 'floor'
       : undefined
+  const crownedOffset =
+    bandTrack === 'lifestyle'
+      ? (lifestyle as Extract<DateTrackOutcome, { offsetYears: number }>).offsetYears
+      : bandTrack === 'floor'
+        ? (floor as Extract<DateTrackOutcome, { offsetYears: number }>).offsetYears
+        : undefined
   // The crowned candidate already simulated cleanly in the sweep (it produced the crowning
   // reading), and bandFan/summarize perturb no feasibility — so a clean fan-ON re-run is
   // guaranteed. Guard defensively (indeterminate, then infeasible — mirroring the sweep grammar):
   // an indeterminate/infeasible here would be an engine inconsistency, so leave the band absent
   // rather than crash the crowned date.
   let band: DateBand | undefined
-  if (crownedOffset !== undefined) {
+  if (crownedOffset !== undefined && bandTrack !== undefined) {
     // Honor the cooperative-cancellation seam before the most expensive single op (one final-tier
     // run): a newer/locked request arriving after the last sweep candidate must preempt it, exactly
     // as the sweep loop gates every candidate (the module's "async ONLY for cancellation" contract).
     if (!(await shouldContinue())) return { kind: 'cancelled' }
     const crownedParams = candidates[crownedOffset]!
+    // ONE branch, read from the ONE decision. The fan observes the floor pass iff the band is
+    // floor-keyed; anything else re-creates the mixed pairing Q3 correctly forbade.
     const crownedOut = simulate(crownedParams, seed, {
       bandFan: true,
-      ...(hasBudget ? { bandFanTrack: 'floor' as const } : {}),
+      ...(hasBudget && bandTrack === 'floor' ? { bandFanTrack: 'floor' as const } : {}),
     })
     if (!crownedOut.indeterminate && !crownedOut.infeasible) {
       const fan = crownedOut.distribution.bandFan
       if (fan !== undefined) {
         const summary = summarize(crownedOut, crownedParams, seed)
-        band = {
-          fan,
-          outcomeState:
-            hasBudget && summary.floorReading !== undefined
-              ? summary.floorReading.outcomeState
-              : summary.headline.outcomeState,
-          offsetYears: crownedOffset,
-        }
+        // …and the state rides the SAME decision. `floorReading` is the essentials reading of this
+        // run; `headline` is the full-spend one. Keying this to anything but `bandTrack` is the
+        // $0-median-under-an-on-track-tag failure the header describes.
+        const trackedState =
+          hasBudget && bandTrack === 'floor' && summary.floorReading !== undefined
+            ? summary.floorReading.outcomeState
+            : summary.headline.outcomeState
+        band = { fan, outcomeState: trackedState, offsetYears: crownedOffset, track: bandTrack }
       }
     }
   }

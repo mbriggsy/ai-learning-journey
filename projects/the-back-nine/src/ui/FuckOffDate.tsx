@@ -406,10 +406,17 @@ export function FuckOffDate({ view, focusSignal, actionsSlot, medicarePricedNote
                 chrome={BAND_CHROME}
                 atRangeSentence={atRangeSentence}
               />
-              {/* In a split reading the single band is FLOOR-crowned while the hero claim reads the
-                  lifestyle track — name the band's own track so the two can never silently disagree. */}
-              {split !== null && split.kind === 'split' && (
-                <p className="fod-band__tracknote">{copy.bandPricesEssentialsNote}</p>
+              {/* NAME THE WORLD THE RANGE PRICES — gated on the band's OWN published track, never on
+                  split-ness. Pre-flip this asked `split.kind === 'split'`, which was right only while
+                  every band was floor-crowned; post-flip a both-dated split rides LIFESTYLE and that
+                  question would have kept the essentials sentence on a full-budget picture — the same
+                  false-label class as the axis marker, one element down (council 2026-07-30).
+                  On the lifestyle arm the range and the hero claim finally price the same world, so
+                  the note AFFIRMS rather than contrasts; on the floor-keyed fallback it still warns. */}
+              {view.band !== undefined && (
+                <p className="fod-band__tracknote">
+                  {view.band.track === 'floor' ? copy.bandPricesEssentialsNote : copy.bandPricesFullBudgetNote}
+                </p>
               )}
               {/* U17 §S2 — the aged fan's premise line + RENDERED re-confirm control (the fan is
                   structurally unable to render aged without them — the resolved memo withdraws it).

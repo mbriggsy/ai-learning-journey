@@ -29,7 +29,8 @@ import {
   deriveSpineBandAnnotations,
   type BandPlanClockAnchor,
 } from './bandAnnotations'
-import { composeDateSplit } from './dateSplit'
+// (`composeDateSplit` is deliberately NOT imported here any more — the 2026-07-30 flip removed this
+//  module's last re-derivation of which track the band draws; it reads `band.track` from the engine.)
 import type { FuckOffDateView } from './FuckOffDate'
 import type { ConfidenceStatementView } from './ConfidenceStatement'
 
@@ -125,13 +126,22 @@ function dateBand(
   // still-working member(s) retire at currentAge + offset. The readout-ages closure shares the same
   // currentAge guard + slot as the annotations, so the scrub ages and the axis ticks agree.
   const haveAges = ageA !== undefined && ageB !== undefined
-  // U17 §S2.5 — a SPLIT reading's marker names the essentials date (the band is floor-crowned
-  // while the hero speaks lifestyle). Derived through composeDateSplit — the SAME producer the
-  // renderer composes its two-track view from (insight 081: never a re-derivation that forks at
-  // the producer's first special case; renderEqual's degenerate collapse rides along free).
-  const splitFloorCrowned = composeDateSplit(outcome.floor, outcome.lifestyle).kind === 'split'
+  // U17 §S2.5 gave the marker its "Essentials date" name by asking `composeDateSplit(...).kind ===
+  // 'split'`. ⚑ THAT DERIVATION IS WRONG AS OF THE 2026-07-30 FLIP and had to move: a both-dated
+  // household is STILL `'split'`, but its band now rides the LIFESTYLE crown — so the old question
+  // answered `true` and painted "Essentials date" onto a marker sitting at the lifestyle year. The
+  // marker's TEXT and its POSITION are decided in different layers, and only the position had been
+  // read from the engine.
+  //
+  // The name now reads the band's OWN published track — the same authority tag the offset one line
+  // below already reads, and the same "UI re-derives nothing" law the comment above states. Note
+  // this is insight 081 in its sharper form: the old code DID consume the shared producer, and was
+  // still wrong, because it asked that producer a question about SPLIT-NESS when the thing it
+  // needed to know was WHICH TRACK THE BAND DREW. Consuming the right producer is not enough —
+  // it has to be asked the right question.
+  const bandFloorKeyed = band.track === 'floor'
   const bandAnnotations = haveAges
-    ? deriveDateBandAnnotations(ageA, ageB, band.offsetYears, last.yearsFromNow, savedAnchor, splitFloorCrowned)
+    ? deriveDateBandAnnotations(ageA, ageB, band.offsetYears, last.yearsFromNow, savedAnchor, bandFloorKeyed)
     : undefined
   const bandAges = haveAges ? deriveBandAgesAt(ageA, ageB) : undefined
   return { band, bandAnnotations, bandAges }

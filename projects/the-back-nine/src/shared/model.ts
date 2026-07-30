@@ -1272,6 +1272,32 @@ export interface DateBand {
    *  equals `floor.offsetYears`; once U9 splits the tracks, a band crowned off one track still names
    *  its own offset. */
   readonly offsetYears: number
+  /** WHICH TRACK ALL THREE FIELDS ABOVE RIDE (council 2026-07-30 — the FLIP).
+   *
+   *  ⚑ THE ONE-BRANCH LAW, and it is load-bearing: `fan`, `outcomeState` and `offsetYears` are
+   *  chosen by a SINGLE track decision, and this field IS that decision, published. Writing the
+   *  three as independent conditionals is the failure insight 056 names — and it has a measured
+   *  worst case here: a band whose `outcomeState` keys to the full track while its `fan` keys to
+   *  the floor renders an `on-track` tag over a median that flatlines to $0 (full-track terminal
+   *  $0 vs floor-track $4,366,017 on the floor-dated/lifestyle-no-date shape). The honest tag
+   *  would actively vouch for a ruined picture.
+   *
+   *  WHY IT IS PUBLISHED RATHER THAN INFERRED: the UI used to re-derive "is the band floor-crowned"
+   *  from `composeDateSplit(...).kind === 'split'` (answerView.ts). That derivation is WRONG under
+   *  the flip — a both-dated split is still `'split'` while its band now rides lifestyle — and the
+   *  symptom is an x-axis marker reading "Essentials date" while sitting at the lifestyle year
+   *  (chair-verified, S6 Card 2's family). The renderer must read the engine's authority tag, never
+   *  re-derive it: the same law the `offsetYears` doc above already states.
+   *
+   *  `'lifestyle'` whenever the lifestyle track crowned — the band then draws the world the hero
+   *  claim actually names. `'floor'` is the fallback for a household whose full-lifestyle date does
+   *  not land inside the window (the `datemixed` shape), where a lifestyle band is undefined; that
+   *  face owes a first-class "no full-lifestyle date in this window" tell rather than a silent
+   *  essentials picture under a lifestyle headline.
+   *
+   *  The on-track-or-better invariant above survives on BOTH arms because the state is keyed to the
+   *  same track as the fan, and a crowned reading on either track cleared the bar by construction. */
+  readonly track: 'floor' | 'lifestyle'
 }
 
 /** The run-level date-search outcome. `input-failure` is the indeterminate-CLASS variant

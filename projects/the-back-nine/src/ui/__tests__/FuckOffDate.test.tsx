@@ -47,6 +47,7 @@ const BAND: DateBand = {
   },
   outcomeState: 'on-track',
   offsetYears: 6,
+  track: 'lifestyle',
 }
 
 afterEach(cleanup)
@@ -398,8 +399,12 @@ describe('FuckOffDate — the U9b two-track split', () => {
       floor: DATE_FIXTURES.confirmed,
       lifestyle: DATE_FIXTURES.noDate,
       windowTopYears: DATE_WINDOW_TOP,
-      band: BAND,
-      bandAnnotations: deriveDateBandAnnotations(58, 60, 4, 40),
+      // FLOOR-keyed by construction: this household's full-lifestyle date never lands in the window,
+      // so there is no lifestyle band to draw. Stated explicitly rather than inherited from BAND's
+      // 'lifestyle' default — the whole point of the flip is that WHICH track the band rides is a
+      // decision, and an arm that means "the fallback" must say so (council 2026-07-30).
+      band: { ...BAND, track: 'floor' as const },
+      bandAnnotations: deriveDateBandAnnotations(58, 60, 4, 40, undefined, true),
     }
     const { container } = render(<FuckOffDate view={view} />)
     expect(screen.getByRole('heading', { name: slots.noDateInWindow(DATE_WINDOW_TOP) })).toBeInTheDocument()

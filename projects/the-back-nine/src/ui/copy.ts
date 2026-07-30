@@ -487,6 +487,15 @@ export const copy = {
   // haste is the calm-but-wrong sin in the surface built to cure it. Words fix the falsehood today;
   // the sizable gap rides the full unit with its planted-fail.
   bandPricesEssentialsNote: 'This range prices your essentials only, not your full budget.',
+  /** THE LIFESTYLE-KEYED TWIN (council 2026-07-30 — the FLIP). When the band rides the full-lifestyle
+   *  crown the picture and the headline finally price the SAME world, so this sentence AFFIRMS the
+   *  agreement instead of warning about a gap. It exists because silence would be worse than either:
+   *  a reader who met the essentials warning on one household and NOTHING on the next cannot tell
+   *  whether the second picture is the full budget or just an unlabelled one. Every band says whose
+   *  world it draws — that universality IS the council's naming layer.
+   *  Deliberately does NOT re-state the date; the x-axis marker already names it, and one fact per
+   *  sentence is the copy law on a load-bearing figure. */
+  bandPricesFullBudgetNote: 'This range prices your full budget — the same life the date above is measured against.',
   // --- D2c odds-ladder drawer (the date route's secondary "how your odds shift by WHEN you stop").
   //     LADDER-scoped: chart chrome, not a verdict claim, so the universal gates apply (no certainty,
   //     no imperative). Odds counts ride slots.xOfTen (never a bare numeral / "10 of 10"). The

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { COHORT_FADE, truncateFanAtThinCohort } from '@viz/bandGeometry'
 import { selectElevatedAnswer, resolvedFocusKey } from '../answerView'
+import { copy } from '../copy'
 import { READING_FIXTURES, SURVIVOR_FIXTURES } from '../preview/fixtures'
 import { DATE_FIXTURES, DATE_WINDOW_TOP } from '../preview/dateFixtures'
 import type { MemoryModelSnapshot, ModelAnswer, ScenarioDraft, StickyDisplay } from '@store/memoryModel'
@@ -73,7 +74,15 @@ const confirmedAt = (offsetYears: number): DateTrackOutcome => ({
 
 // A minimal crowned DateBand: a fan from today to `lastYear` (positive p90 ⇒ not $0-screened), the
 // engine tag, and the crowned offset the marker reads (the band is self-describing — A6).
-const dateBandTo = (lastYear: number, offsetYears: number, p90 = 1_000_000): DateBand => ({
+// `track` defaults to 'lifestyle' — the post-flip NORMAL case (council 2026-07-30): the band rides
+// the track the hero claim names. Floor-keying is the FALLBACK for a household whose full-lifestyle
+// date never lands in the window, and an arm that means it must say so explicitly.
+const dateBandTo = (
+  lastYear: number,
+  offsetYears: number,
+  p90 = 1_000_000,
+  track: DateBand['track'] = 'lifestyle',
+): DateBand => ({
   fan: {
     byYear: Array.from({ length: lastYear + 1 }, (_, t) => ({
       yearsFromNow: t,
@@ -87,6 +96,7 @@ const dateBandTo = (lastYear: number, offsetYears: number, p90 = 1_000_000): Dat
   },
   outcomeState: 'on-track',
   offsetYears,
+  track,
 })
 
 // A 'dates' outcome from the shared DateTrackOutcome fixture (v1 degenerate budget: floor ≡ lifestyle).
@@ -168,6 +178,40 @@ describe('selectElevatedAnswer — D2 state-adaptive routing', () => {
     })
   })
 
+  /* ⚑ THE MARKER NAMES THE BAND'S OWN TRACK — and this arm exists because its absence was PROVEN,
+   * not suspected (council 2026-07-30, the FLIP). Before it, reverting `answerView`'s
+   * `band.track === 'floor'` back to the old `composeDateSplit(...).kind === 'split'` re-derivation
+   * left the ENTIRE suite green — 96 arms across answerView, FuckOffDate and bandAnnotations all
+   * passed with the mutant planted. `verify:fit` could not see it either: `grep 'Essentials date'`
+   * over `e2e/` returns exactly one hit, on the `datearrived` arm, whose marker is withdrawn anyway.
+   *
+   * WHAT WOULD HAVE SHIPPED: a both-dated household is STILL `kind === 'split'`, so the old question
+   * answered `true` while the band now rides LIFESTYLE — painting "Essentials date" onto a marker
+   * sitting at the lifestyle year. That is the chair-verified S6 defect exactly, re-created by the
+   * fix meant to cure it, on `?seed=dip` (the date route's own fit fixture) where the offset moves
+   * 0 → 5 and a named marker renders for the first time.
+   *
+   * THE LESSON, worth more than the arm: consuming the shared producer is NOT the same as asking it
+   * the right question. The old code obeyed insight 081 to the letter — it DID call `composeDateSplit`
+   * rather than re-typing its logic — and was still wrong, because split-ness and which-track-drew-the-
+   * band are different facts that happened to coincide until the flip. */
+  it('the work-stops marker names the BAND\'s track: a LIFESTYLE-keyed band never wears the "Essentials date" label', () => {
+    const lifestyleBand = dateBandTo(40, 6, 1_000_000, 'lifestyle')
+    const r = selectElevatedAnswer(snap(datesAnswer(confirmedAt(6), lifestyleBand), workingWithAges), noop)
+    if (r.kind !== 'date' || r.view.kind !== 'dates') throw new Error('expected a date dates view')
+    const workStops = r.view.bandAnnotations?.find((m) => m.id === 'work-stops')
+    expect(workStops?.label).toBe(copy.bandClockWorkStopsLabel)
+    expect(workStops?.label).not.toBe(copy.bandClockWorkStopsSplitLabel)
+  })
+
+  it('…and a FLOOR-keyed band (no full-lifestyle date in the window) still DOES wear it — the label follows the track, not the flip', () => {
+    const floorBand = dateBandTo(40, 6, 1_000_000, 'floor')
+    const r = selectElevatedAnswer(snap(datesAnswer(confirmedAt(6), floorBand), workingWithAges), noop)
+    if (r.kind !== 'date' || r.view.kind !== 'dates') throw new Error('expected a date dates view')
+    const workStops = r.view.bandAnnotations?.find((m) => m.id === 'work-stops')
+    expect(workStops?.label).toBe(copy.bandClockWorkStopsSplitLabel)
+  })
+
   it('a "dates" outcome WITH a crowned band → the view carries the band + the FUTURE work-stops annotations', () => {
     const bandData = dateBandTo(40, 6)
     const r = selectElevatedAnswer(snap(datesAnswer(confirmedAt(6), bandData), workingWithAges), noop)
@@ -209,6 +253,7 @@ describe('selectElevatedAnswer — D2 state-adaptive routing', () => {
         ],
       },
       outcomeState: 'on-track',
+      track: 'lifestyle',
       offsetYears: 6,
     }
     const r = selectElevatedAnswer(snap(datesAnswer(confirmedAt(6), zeroBand), workingWithAges), noop)

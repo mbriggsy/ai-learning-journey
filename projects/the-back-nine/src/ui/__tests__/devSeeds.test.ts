@@ -244,6 +244,7 @@ describe('dev seeds reach a worded (engine-accepted) answer', () => {
 
   // The U9b 'datemixed' seed exists to cold-read the MIXED arm (floor dated, lifestyle not within
   // the window — the words + how-close hero with the "essentials covered" beat). The R27 INVERSION
+  // (the datemixed band-pairing arm is added below — see 'the FLOOR-KEYED FALLBACK')
   // seed ('dateinvert') deliberately does NOT exist: unreachable in v1 (see the derivation +
   // 121-reading probe record in devSeeds.ts — reactivates with U10's Roth conversions).
   it("'datemixed' lands floor-dated + lifestyle-no-date through the real date search", async () => {
@@ -258,6 +259,26 @@ describe('dev seeds reach a worded (engine-accepted) answer', () => {
     expect(view.kind, 'the render composes a SPLIT').toBe('split')
     if (view.kind !== 'split') return
     expect(view.inverted, 'floor-dated + lifestyle-no-date is the EXPECTED ordering, not R27').toBe(false)
+
+    // ⚑ THE FLOOR-KEYED FALLBACK — the arm that did not exist, on the ONE household in the repo that
+    // reaches it (council 2026-07-30). `datemixed` is the only shape whose lifestyle never crowns, so
+    // it is the only live witness that the band falls back to the floor with ALL THREE fields on that
+    // one track. Before this arm, nothing in the suite touched `out.band` on this shape at all.
+    //
+    // WHY IT MATTERS MORE THAN IT LOOKS: the measured worst case for keying the state and the fan to
+    // different tracks here is an `on-track` tag over a median that flatlines to $0 (the full-track
+    // terminal is $0 where the floor track holds ~$4.4M) — the honest tag vouching for a ruined
+    // picture. And it would ship SILENTLY: `band.outcomeState` has no production reader today, so no
+    // cold read, no fit arm and no a11y check can see it. A test is the only witness there is.
+    expect(out.band, 'the floor crowned, so a band is emitted').toBeDefined()
+    expect(out.band!.track, 'no lifestyle date in the window ⇒ the band falls back to the FLOOR').toBe('floor')
+    expect(out.band!.offsetYears, 'the offset rides the same track as the tag').toBe(
+      (out.floor as Extract<typeof out.floor, { offsetYears: number }>).offsetYears,
+    )
+    expect(
+      ['on-track', 'over-funded'],
+      'model.ts: a crowned band is on-track-or-better — never a fail state',
+    ).toContain(out.band!.outcomeState)
   }, 120_000)
 
   // U10 — the 'dip' seed IS the hard pre-ship gate's engine half (council 2026-06-29): a REAL

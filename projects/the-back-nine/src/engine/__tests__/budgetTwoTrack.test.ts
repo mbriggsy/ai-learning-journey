@@ -504,7 +504,7 @@ describe('U9 · the date-search two-track split (build-gate c)', () => {
     expect(profile.ratioVsSingle).toBeLessThan(40)
   })
 
-  it('emits two INDEPENDENTLY-derived tracks (never the degenerate alias), floor per-candidate survival ≥ lifestyle, floor date ≤ lifestyle date, and the band rides the FLOOR crown', { timeout: 120_000 }, async () => {
+  it('emits two INDEPENDENTLY-derived tracks (never the degenerate alias), floor per-candidate survival ≥ lifestyle, floor date ≤ lifestyle date, and the band rides the LIFESTYLE crown with ALL THREE fields on that one track', { timeout: 120_000 }, async () => {
     const outcome = await runDateSearch(input, 20260702, { tier: 'provisional' })
     expect(outcome.kind).toBe('dates')
     if (outcome.kind !== 'dates') return
@@ -523,14 +523,35 @@ describe('U9 · the date-search two-track split (build-gate c)', () => {
     ) {
       expect(outcome.floor.offsetYears).toBeLessThanOrEqual(outcome.lifestyle.offsetYears)
     }
-    // The band crowns off the FLOOR track (council 2026-07-02): its offset is the floor's,
-    // and its state is on-track-or-better by the floor curve's own clearing.
-    if (outcome.floor.kind === 'confirmed-date' || outcome.floor.kind === 'window-edge-unconfirmed') {
+    // ⚑ THE BAND NOW CROWNS OFF THE LIFESTYLE TRACK (council 2026-07-30, overturning 2026-07-02).
+    // The old arm asserted `band.offsetYears === floor.offsetYears`, and its title said "rides the
+    // FLOOR crown" — both moved with the ruling rather than being patched, so this arm cannot read
+    // as a lying test name.
+    //
+    // ⚠️ THE PRECONDITION IS ASSERTED, NOT ASSUMED. The scout that mapped this change warned that
+    // both band assertions sit behind `if` branches which can silently take the other arm — so a
+    // fixture whose lifestyle never crowned would make every line below VACUOUS while looking green
+    // (insight 029's class). Pin the shape first, then assert against it.
+    expect(
+      outcome.lifestyle.kind,
+      'this fixture must crown a LIFESTYLE date or every band assertion below is vacuous',
+    ).toBe('confirmed-date')
+    expect(outcome.floor.kind).toBe('confirmed-date')
+    if (
+      (outcome.lifestyle.kind === 'confirmed-date' || outcome.lifestyle.kind === 'window-edge-unconfirmed') &&
+      (outcome.floor.kind === 'confirmed-date' || outcome.floor.kind === 'window-edge-unconfirmed')
+    ) {
       expect(outcome.band).toBeDefined()
-      expect(outcome.band!.offsetYears).toBe(outcome.floor.offsetYears)
+      // ALL THREE fields ride ONE track — the law that survives the flip verbatim. `track` is the
+      // published decision; the offset must agree with it, and must NOT be the floor's (which this
+      // fixture makes discriminating: floor and lifestyle crown at different offsets — asserted
+      // above by `floor.offsetYears <= lifestyle.offsetYears` plus the inequality below).
+      expect(outcome.band!.track).toBe('lifestyle')
+      expect(outcome.band!.offsetYears).toBe(outcome.lifestyle.offsetYears)
+      expect(outcome.band!.offsetYears).not.toBe(outcome.floor.offsetYears)
+      // The on-track-or-better invariant (model.ts) survives on the lifestyle arm: a crowned reading
+      // cleared the bar by construction, and the state is keyed to the SAME track as the fan.
       expect(['on-track', 'over-funded']).toContain(outcome.band!.outcomeState)
-    } else {
-      expect(outcome.band).toBeUndefined()
     }
   })
 })

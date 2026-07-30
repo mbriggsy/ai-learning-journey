@@ -883,12 +883,26 @@ for (const target of TARGETS) {
           // already-covered face can show. Left out, the one plant this stage exists to
           // cold-read would have been chaired on its landing alone — and the tape's costliest
           // lesson (2026-07-10) is that he finds real defects on the surfaces the walk skipped.
+          // U17 §S6 follow-up (2026-07-30): `rec` and `recold` JOIN the door walk, closing a
+          // coverage gap the queue had recorded as CLOSED. A 2026-07-27 audit concluded "there
+          // IS no route list… only `intake` has a key whitelist" — it read the CADDIE_TARGETS
+          // env plumbing (which genuinely is key-agnostic) and generalised to this file without
+          // opening THIS line. The door walk has always been an explicit allowlist, and the two
+          // record plants were never on it, so S6 chaired Cards 6-7 on their LANDINGS alone and
+          // no oracle has ever seen the five sheets behind them. That is the same defect
+          // `ed6432cd` had already diagnosed and fixed for `datearrived` — on the same day.
+          // The record plants earn doors on the standing criterion: their sheets are where a
+          // driven lever preview meets a REMEMBERED recommendation, and `recold`'s superseded
+          // card is the only face where a lever can contradict a verdict the household was
+          // already shown. A grep that finds no list is not proof there is no list.
           await walkVaultReturn(page, target.key, outDir, {
             doors:
               target.key === 'stale' ||
               target.key === 'datestale' ||
               target.key === 'statestale' ||
-              target.key === 'datearrived',
+              target.key === 'datearrived' ||
+              target.key === 'rec' ||
+              target.key === 'recold',
           })
         } else if (target.kind === 'intake') {
           if (target.key !== 'fork') {

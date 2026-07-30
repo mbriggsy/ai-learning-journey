@@ -410,7 +410,7 @@ describe('FuckOffDate — the U9b two-track split', () => {
     // The single FLOOR-crowned band still draws (the engine emitted it — the floor crowned), and
     // the track note names what the range follows so it can never contradict the no-date hero.
     expect(screen.getByRole('button', { name: copy.bandStudyRange })).toBeInTheDocument()
-    expect(container.textContent).toContain(copy.bandFollowsFloorNote)
+    expect(container.textContent).toContain(copy.bandPricesEssentialsNote)
     // A no-date HERO still plots no ladder (the Hawk veto rides the claim, not the band).
     expect(screen.queryByText(copy.ladderDisclosure)).not.toBeInTheDocument()
   })
@@ -433,7 +433,7 @@ describe('FuckOffDate — the U9b two-track split', () => {
   it('the degenerate (value-coincident tracks) renders NO floor line and NO track note — the single composition verbatim', () => {
     const { container } = render(<FuckOffDate view={dates(DATE_FIXTURES.confirmed)} />)
     expect(container.textContent).not.toContain('essentials')
-    expect(container.textContent).not.toContain(copy.bandFollowsFloorNote)
+    expect(container.textContent).not.toContain(copy.bandPricesEssentialsNote)
   })
 
   it('the SPLIT ladder reads the LIFESTYLE track (it explains the work-optional claim), not the floor', () => {

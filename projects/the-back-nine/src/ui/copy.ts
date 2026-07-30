@@ -469,7 +469,24 @@ export const copy = {
   // U9b: in a SPLIT date reading the single band is FLOOR-crowned (council 2026-07-02) while the
   // hero claim reads the lifestyle track — this one-line note names the band's own track so the
   // range and the headline can never silently disagree about what they follow.
-  bandFollowsFloorNote: 'This range follows the essentials-covered date.',
+  //
+  // ⚑ U17 §S6 / council 2026-07-30 — Q3 OVERTURNED, AND THIS STRING IS WHY. Q3 justified the single
+  // FLOOR-crowned band on the grounds that this note would ensure "the range and the hero claim can
+  // never silently disagree." It could not: it named a DATE and never a SPENDING LEVEL, so a reader
+  // on `?seed=datesplit` bound a rising median and an $8M plume to their FULL life while the picture
+  // priced the ESSENTIALS one (S6 Cards 1+2, chair-verified BLOCKERS — the note's own promise,
+  // undischarged; insight 100). The date half was never the load-bearing fact anyway: the x-axis
+  // already carries a labelled "Essentials date" marker (`bandClockWorkStopsSplitLabel`), so the
+  // spending level is the ONE thing no other channel states.
+  //
+  // THIS IS LAYER 1 OF 3 AND DELIBERATELY THE WORDS-ONLY HALF. The council's full ruling moves this
+  // to a TITLE above the figure carrying the first-year DOLLARS, re-keys the fan to the LIFESTYLE
+  // crown, and overlays the essentials median at that one offset. The dollars are NOT shipped here
+  // on purpose: the naive line-sum is a known trap (OOP medical is netted — the 2026-07-02 council's
+  // build-gate 1: `target = max(0, S−M)`, and compileBudget re-injects M), so a figure typed here in
+  // haste is the calm-but-wrong sin in the surface built to cure it. Words fix the falsehood today;
+  // the sizable gap rides the full unit with its planted-fail.
+  bandPricesEssentialsNote: 'This range prices your essentials only, not your full budget.',
   // --- D2c odds-ladder drawer (the date route's secondary "how your odds shift by WHEN you stop").
   //     LADDER-scoped: chart chrome, not a verdict claim, so the universal gates apply (no certainty,
   //     no imperative). Odds counts ride slots.xOfTen (never a bare numeral / "10 of 10"). The

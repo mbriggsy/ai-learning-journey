@@ -409,7 +409,7 @@ export function FuckOffDate({ view, focusSignal, actionsSlot, medicarePricedNote
               {/* In a split reading the single band is FLOOR-crowned while the hero claim reads the
                   lifestyle track — name the band's own track so the two can never silently disagree. */}
               {split !== null && split.kind === 'split' && (
-                <p className="fod-band__tracknote">{copy.bandFollowsFloorNote}</p>
+                <p className="fod-band__tracknote">{copy.bandPricesEssentialsNote}</p>
               )}
               {/* U17 §S2 — the aged fan's premise line + RENDERED re-confirm control (the fan is
                   structurally unable to render aged without them — the resolved memo withdraws it).

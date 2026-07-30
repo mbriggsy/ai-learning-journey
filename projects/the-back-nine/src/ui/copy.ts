@@ -1932,6 +1932,38 @@ export const slots = {
     return `Converting ~$${amountFormatted} a year for ${years} year${years === 1 ? '' : 's'}, ${start}.`
   },
 
+  /** U17 §S6 — THE APPLIED CONVERSION'S OWN PASSED START, STATED RATHER THAN REFUSED.
+   *  §S1 shipped a past-start refusal that is right for a year the reader TYPED and wrong for the
+   *  household's own executed history: re-opening the door on an applied mid-flight plan fired the
+   *  R19 alert at them about their own conversion while the Assumption panel stated the same plan
+   *  as live fact one door over (the S6 cold read, Card 3 — "calls the household's own executed
+   *  conversion a typo"). This slot is what renders in the refusal's place.
+   *
+   *  WHY IT CANNOT SAY "under way": `startYearPassed` proves only that the START is behind the wall
+   *  clock — a 4-year schedule begun in 2024 is FINISHED by 2029, and "already under way" would be
+   *  false there. Every clause here is true whether the schedule is running or complete; deciding
+   *  what a mid-flight start MEANS to the engine is the re-anchoring fork FILED at RothLever.tsx:48-49,
+   *  and this copy deliberately does not pre-empt it.
+   *
+   *  IT PROMISES ONLY WHAT EXISTS (insight 100). Apply is genuinely unreachable here — `complete()`
+   *  returns null on a passed start — so the sentence names the ONE live control, `leverRothRemove`
+   *  ("Take the conversion back out"), which is structurally guaranteed to be on screen beside it
+   *  (its render gate `applied !== undefined` is implied by this slot's own gate). It does NOT
+   *  invite editing the amount or the window: both fields stay editable in the DOM but cannot
+   *  commit while the start is past, and inviting an edit that can't land is the promise/affordance
+   *  breach this whole fix exists to close.
+   *
+   *  NAMING IS DELIBERATE, AND THE GATE SET TURNS ON IT (verified 2026-07-30): `isControlKey` is a
+   *  LEAD-prefix `startsWith` over CONTROL_KEY_PREFIXES, which carries `'roth'` — so a `roth*` name
+   *  would be control-scoped and require-hedge would FIRE. That would be actively wrong here: the
+   *  start year is a known fact read from the reader's own saved plan, and hedging it ("about 2025")
+   *  would manufacture uncertainty the tool does not have. `leverRoth*` keeps it on the two
+   *  universal gates (no false certainty, no advice verb), which is the correct scope for a
+   *  statement of the reader's own history. `copyGuard.test.ts:711` pins this same prefix trap for
+   *  `assumptionRothName` — the escape is known, and taken on purpose rather than by accident. */
+  leverRothAlreadyApplied: (startYear: number): string =>
+    `This conversion is already part of your plan and started in ${startYear}. That’s why it can’t be added again from here — taking it back out is still available below.`,
+
   // --- P3·U11 — the Healthcare sheet's readout slots (every figure pre-formatted by the chrome;
   // each template wears its hedge by construction — the four U11 prefixes are require-hedge-swept).
   // FIRST-DRAFT craftsman's-lead wording (the cold-read's call). ---

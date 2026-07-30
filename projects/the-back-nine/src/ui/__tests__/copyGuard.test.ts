@@ -360,6 +360,11 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     sequencingDelta: slots.sequencingDelta(slots.xOfTen(8), slots.xOfTen(7)),
     // U17 §S1 — the start names the CALENDAR year (wall-time-stable), tense picked by `passed`.
     rothPlanEcho: slots.rothPlanEcho('40,000', 2028, false, 5),
+    // U17 §S6 — the applied conversion's own passed start, STATED where §S1's refusal used to fire.
+    // Named `leverRoth*` on purpose: a `roth*` spelling would be control-scoped and require-hedge
+    // would demand a modal on a year read straight from the reader's saved plan (see the slot's
+    // own note). It rides the two universal gates, which is the right scope for a plain fact.
+    leverRothAlreadyApplied: slots.leverRothAlreadyApplied(2025),
     // P3·U11 — the Healthcare sheet's readout slots (require-hedge-swept by their prefixes).
     acaCostStatus: slots.acaCostStatus('July 3, 2026'),
     acaCostStatusEnhanced: slots.acaCostStatusEnhanced('July 3, 2026'),

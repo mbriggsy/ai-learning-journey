@@ -462,7 +462,18 @@ describe('RothLever — the start speaks the CALENDAR YEAR on read and write (U1
     expect(screen.queryByRole('alert')).toBeNull() // a future start — nothing to refuse
   })
 
-  it('AGED: an applied MID-FLIGHT plan (start already passed) re-opens onto the honest refusal face', () => {
+  /* U17 §S6 — THE TWO BRANCHES OF A PASSED START. §S1 shipped ONE predicate (`startPast`) and
+   * refused on all of it, so re-opening the door on an applied plan fired the R19 alert at the
+   * household about their OWN executed conversion — "That year has already passed" — while the
+   * Assumption panel stated the same plan as live fact one door over (S6 cold read, Card 3).
+   * The discriminator is the applied plan's own start year. Both arms below are required: the
+   * suppression is only correct if the refusal still bites a year the reader actually TYPED.
+   *
+   * THIS ARM REPLACES a pre-§S6 test titled "…re-opens onto the honest refusal face", whose body
+   * asserted `getByRole('alert')` and whose comment read "the refusal stands". That ruling is
+   * superseded, not accidentally broken — the title and the comment moved with the assertion so
+   * the arm cannot read as a lying test name. */
+  it('AGED: an applied plan whose start has PASSED is STATED, never refused — the alert is gone and the true note takes its place', () => {
     const draft = draftWith((d) => ({
       ...withPretax(d),
       rothConversion: { annualAmountReal: 40_000, startYearOffset: 1, years: 10 },
@@ -470,13 +481,55 @@ describe('RothLever — the start speaks the CALENDAR YEAR on read and write (U1
     render(
       <RothLever open savedAnchor={AGED_ANCHOR} draft={draft} preview={vi.fn(() => null)} onApply={noop} onRemove={noop} onClose={noop} />,
     )
-    // Built 2024 + offset 1 = 2025, behind the 2026 wall: the field shows the truth and the
-    // refusal stands — re-committing a schedule the engine would re-price from a passed year is
-    // the filed re-anchoring fork, not a silent write (spec §S1). Remove stays available.
+    // Built 2024 + offset 1 = 2025, behind the 2026 wall — the household's own executed history.
     expect(screen.getByLabelText(copy.leverRothStartLabel)).toHaveValue('2025')
-    expect(screen.getByRole('alert')).toBeInTheDocument()
+    expect(screen.queryByRole('alert')).toBeNull()
+    expect(screen.getByText(slots.leverRothAlreadyApplied(2025))).toBeInTheDocument()
+    // THE AT CHANNEL, which a text-only assertion would miss entirely: gating the FieldError alone
+    // leaves `aria-invalid="true"` on the field plus an `aria-describedby` pointing at a node that
+    // no longer renders — the same slander, surviving where only a screen reader would meet it.
+    const startField = screen.getByLabelText(copy.leverRothStartLabel)
+    expect(startField).not.toHaveAttribute('aria-invalid')
+    expect(startField.getAttribute('aria-describedby') ?? '').not.toContain('err-rothConversion-start')
+    // Apply is genuinely unreachable (`complete()` returns null on a passed start), so the note's
+    // promise must be the control that DOES exist — and it is on screen beside it.
     expect(screen.getByRole('button', { name: copy.leverRothApply })).toHaveAttribute('aria-disabled', 'true')
     expect(screen.getByRole('button', { name: copy.leverRothRemove })).toBeInTheDocument()
+  })
+
+  it('AGED: a past year the READER TYPED still refuses aloud — the suppression is scoped to the applied start, not to past-ness', () => {
+    const draft = draftWith((d) => ({
+      ...withPretax(d),
+      rothConversion: { annualAmountReal: 40_000, startYearOffset: 1, years: 10 },
+    }))
+    render(
+      <RothLever open savedAnchor={AGED_ANCHOR} draft={draft} preview={vi.fn(() => null)} onApply={noop} onRemove={noop} onClose={noop} />,
+    )
+    // 2024 is the BUILD year — also past, but not the applied plan's 2025. The reader typed it.
+    commitField(screen.getByLabelText(copy.leverRothStartLabel), '2024')
+    expect(screen.getByRole('alert')).toBeInTheDocument()
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      fieldErrorText({ messageKey: 'errRothStartPast', params: { limitFormatted: '2026' } }),
+    )
+    expect(screen.getByLabelText(copy.leverRothStartLabel)).toHaveAttribute('aria-invalid', 'true')
+    // …and the true note is NOT co-rendered: exactly one of the two faces is live at a time.
+    expect(screen.queryByText(slots.leverRothAlreadyApplied(2025))).toBeNull()
+  })
+
+  it('AGED: tapping the advisory-disabled Apply on the applied-passed-start face announces the TRUE reason, never "working out both futures"', () => {
+    const draft = draftWith((d) => ({
+      ...withPretax(d),
+      rothConversion: { annualAmountReal: 40_000, startYearOffset: 1, years: 10 },
+    }))
+    render(
+      <RothLever open savedAnchor={AGED_ANCHOR} draft={draft} preview={vi.fn(() => null)} onApply={noop} onRemove={noop} onClose={noop} />,
+    )
+    // `aria-disabled` is ADVISORY — the button is still clickable, so the tap owes a true reason.
+    // Nothing will ever be worked out here (the preview is withdrawn), so the pending line would
+    // contradict the rendered sentence one tap away.
+    fireEvent.click(screen.getByRole('button', { name: copy.leverRothApply }))
+    expect(sheetLive()).toHaveTextContent(slots.leverRothAlreadyApplied(2025))
+    expect(sheetLive()).not.toHaveTextContent(copy.leverPreviewPending)
   })
 })
 

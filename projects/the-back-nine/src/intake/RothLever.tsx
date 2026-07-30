@@ -132,6 +132,23 @@ export function RothLever({ open, draft, preview, previewBlocking = false, onApp
   // the one anchor. Derived state — it clears the moment a valid year commits.
   const startPast = startYearPassed(plan, savedAnchor)
   const earliestStartYear = savedAnchor.startCalendarYear + savedAnchor.yearsSincePlanBuilt
+  // U17 §S6 — WHOSE PAST YEAR IS IT? `startPast` alone cannot tell a TYPO from HISTORY, and §S1
+  // treated every passed start as the former: re-opening the door on an applied mid-flight plan
+  // fired the R19 alert at the household about their own executed conversion, while the Assumption
+  // panel stated that same plan as live fact one door over (S6 cold read, Card 3). The applied
+  // plan's own start year is the discriminator, derived through the ONE producer — never re-typed.
+  //
+  // ⚠️ The open-edge re-seed above keeps its OWN `rothPlanStartFor(savedAnchor, applied.startYearOffset).year`
+  // call on purpose: `planClockSeam.test.ts:228-230` source-binds that exact text. Folding the two
+  // call sites into one const deletes the pinned substring and reds the seam arm with a failure that
+  // reads as a source-bind violation and says nothing about this fix. Do not "simplify" them.
+  const appliedStartYear = applied === undefined ? undefined : rothPlanStartFor(savedAnchor, applied.startYearOffset).year
+  // The refusal is for a year the READER TYPED. (When nothing is applied, `appliedStartYear` is
+  // undefined and `plan.startYear` is necessarily a number wherever `startPast` holds — see
+  // `startYearPassed`'s own `!== undefined` guard — so this is exactly `startPast`, no regression.)
+  const typedPastYear = startPast && plan.startYear !== appliedStartYear
+  // …and its exhaustive complement: a passed start that IS the applied plan's own. Stated, never refused.
+  const appliedStartHasPassed = startPast && !typedPastYear
   // The chart's household ages — the chrome derives the fan-dialect axis ticks AND the scrub
   // closure from this ONE pair (composeTwoFutures → deriveDecadeAgeTicks/deriveBandAgesAt), so a
   // scrubbed age can never disagree with a tick. Ages are stable while a sheet is open (the draft
@@ -188,15 +205,24 @@ export function RothLever({ open, draft, preview, previewBlocking = false, onApp
               helpKey="leverRothStartHelp"
               field="rothConversion.start"
               value={plan.startYear}
-              invalid={startPast}
+              invalid={typedPastYear}
               onCommit={(v) => setPlan((p) => ({ ...p, startYear: v }))}
             />
-            {startPast && (
+            {typedPastYear && (
               <FieldError
                 field="rothConversion.start"
                 messageKey="errRothStartPast"
                 params={{ limitFormatted: String(earliestStartYear) }}
               />
+            )}
+            {/* The applied plan's own passed start: the TRUE slot that renders where the refusal
+                used to. `invalid` above is gated on the same predicate deliberately — leaving it on
+                `startPast` would keep `aria-invalid="true"` on the field AND point `aria-describedby`
+                at a FieldError node that no longer renders (fields.tsx `describedBy`), so a screen
+                reader would still be told the household's own executed year is invalid, over a
+                dangling reference. The defect must not survive in the AT channel. */}
+            {appliedStartHasPassed && appliedStartYear !== undefined && (
+              <p className="field-help">{slots.leverRothAlreadyApplied(appliedStartYear)}</p>
             )}
             <IntegerField
               labelKey="leverRothYearsLabel"
@@ -236,7 +262,19 @@ export function RothLever({ open, draft, preview, previewBlocking = false, onApp
               aria-disabled={candidate === null}
               onClick={() => {
                 if (candidate === null) {
-                  announcerRef.current?.announce(copy.leverPreviewPending)
+                  // U17 §S6 — `aria-disabled` is ADVISORY: this button stays clickable by design
+                  // (the disabled-attribute alternative removes it from the tab order and takes its
+                  // reason with it). So the tap owes a TRUE reason. On the applied-passed-start face
+                  // nothing will ever be worked out — `complete()` returns null and the preview is
+                  // withdrawn — and announcing "Working out both futures…" there is the rendered
+                  // sentence's own contradiction one tap away. Speak the same true fact the surface
+                  // shows; the pending line survives for every other incomplete plan, where a
+                  // committed field genuinely does start a run.
+                  announcerRef.current?.announce(
+                    appliedStartHasPassed && appliedStartYear !== undefined
+                      ? slots.leverRothAlreadyApplied(appliedStartYear)
+                      : copy.leverPreviewPending,
+                  )
                   return
                 }
                 onApply(candidate)

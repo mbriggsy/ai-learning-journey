@@ -34,7 +34,45 @@ await screen.findByTestId('recovery-flow', undefined, { timeout: 5_000 })
 never gets the chance to matter. The prescription raised a bound that *cannot fire first*, so it was
 a no-op against this failure — while reading, to every future reader, like a closed ticket.
 
-The diagnosis underneath it had been **right**: CPU contention starving a wait in a parallel run.
+> ## ⚠️ UPDATE 2026-07-31 — THE DIAGNOSIS BELOW WAS ALSO WRONG. THE HEADLINE LESSON SURVIVES INTACT.
+>
+> This page said *"The diagnosis underneath it had been **right**: CPU contention starving a wait in a
+> parallel run."* **It was not.** The arm was never slow and was never starved. `vi.mock('../RecoveryFlow')`
+> was being **BYPASSED**, and App mounted the **REAL** `RecoveryFlow` — which carries no
+> `data-testid="recovery-flow"`, so the wait could never succeed and burned whatever budget it was
+> given. Every "timeout" reading was the symptom of a component-identity bug.
+>
+> **Chain:** `App.tsx` imported each lazy chunk from TWO sites (the `lazy()` initializer and the warm
+> effect). Vite gives a module ONE mutable callstack array for its lifetime
+> (`vite/dist/node/module-runner.js:1214-1218`); Vitest push/splices the mocked id around an await
+> (`startVitestModuleRunner…js:393-403`, carrying its own warning *"this will not work if user does
+> `Promise.all(import(), import())`"*); a second arrival inside that window trips `isSelfImport` and is
+> served `_vitest_original` (`:560-563`); and `React.lazy` caches that resolution permanently, so one
+> lost race pins the real component for the whole file.
+>
+> **Proof, deterministic and public-API-only:** two `import()` call sites in one module, module
+> `vi.mock`'d, fired concurrently → `['STUB','REAL']`. The memoized-loader shape → `['STUB','STUB']`.
+> Corroborating evidence was sitting in CI all along: run **30310885497**, the ONLY red whose inner
+> budget was smaller than the outer, printed a DOM containing "Use your recovery word" and "Open with
+> my recovery word" (`RecoveryFlow.tsx:176`/`:231`) — the real component, never the stub.
+>
+> **THE BITTER RIDE-ALONG, and it is this page's own lesson eating itself:** raising the inner budget
+> to 20s made it EQUAL to `testTimeout`, so the outer clock always fired first and the DOM dump was
+> suppressed. The fix-that-raised-a-bound didn't just fail to bind — **it destroyed the only
+> diagnostic that had ever named the bug.**
+>
+> **FIX:** one memoized loader per chunk in `App.tsx` (single-flight ⇒ the overlap is
+> unrepresentable), with a `.catch` that clears the slot so a failed warm still leaves the click a
+> retry — `ErrorBoundary.tsx:2-8`'s offline-survivor case. The redundant pre-import was removed and
+> the inner budget returned below `testTimeout` so it can print its DOM again.
+>
+> **What survives, and why this page still earns its place:** the title lesson is unchanged and was
+> vindicated twice over — *a fix that raises a bound must prove that bound is the one that BINDS.*
+> Add its corollary: **when three prescriptions in a row all adjust clocks, stop adjusting clocks.**
+> A budget that keeps expiring on work that should take milliseconds is evidence the wait is
+> impossible, not slow.
+
+~~The diagnosis underneath it had been **right**: CPU contention starving a wait in a parallel run.~~
 Only the prescription was wrong, and it was wrong in the most expensive way — it named a real
 mechanism, changed real code, and left the defect untouched.
 

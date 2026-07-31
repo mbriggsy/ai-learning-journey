@@ -140,29 +140,33 @@ describe('App — the survivor door composes into the re-entry gate (J1, ultramo
   it('unlock → forgot → RecoveryFlow.onRecovered lands in IntakeApp WITH hydrate=true and writable — the one link (App.tsx onRecovered) that arms the U13 gate for the wiped-device survivor', async () => {
     await driveToUnlockScreen()
 
-    // DETERMINISM FIRST, NOT A BIGGER NUMBER — and the history here is the argument.
+    // IT WAS NEVER A TIMEOUT — and three prescriptions in a row treated it as one (1s → 5s → 20s).
     //
-    // `RecoveryFlow` is reached through `React.lazy`, so clicking the forgot door STARTS a dynamic
-    // import and the wait below races module resolution + a Suspense flush against a wall clock.
-    // That budget was already raised once for exactly this reason (1s → 5s, 2026-07-18) and CI blew
-    // through 5s anyway on 2026-07-27 (run 30310885497, `Unable to find an element by:
-    // [data-testid="recovery-flow"]` at 5033ms). Raising it a second time is the move the
-    // macrotask-budget landmine forbids: the wait is inherently racy and a bigger number only
-    // relocates the failure to the next unlucky runner.
+    // This arm's intermittent CI red was `vi.mock('../RecoveryFlow')` being BYPASSED: App mounted the
+    // REAL `RecoveryFlow`, which carries no `data-testid`, so the wait below could never succeed and
+    // burned whatever budget it was given. `App.tsx` imported each lazy chunk from TWO places (the
+    // `lazy()` initializer and the warm effect), those calls could overlap, and an overlapping second
+    // import of a mocked module is deliberately served `_vitest_original` — see the loader block at
+    // the top of `src/ui/App.tsx` for the full chain and its Vite/Vitest citations. `React.lazy` then
+    // cached the real component for the rest of the file.
     //
-    // The prior prescription missed because it bumped the WRONG CLOCK. `vite.config.ts` raised
-    // vitest's per-test `testTimeout` 5s → 20s, but the failure is this INNER `findBy` budget
-    // expiring first — an outer budget can never rescue an inner wait that has already given up.
+    // THE FIX LIVES IN `App.tsx`, NOT HERE: one memoized loader per chunk, so only one `import()` is
+    // ever in flight and the overlap is unrepresentable. Proven with a standalone probe — the
+    // two-call-site shape resolves `['STUB','REAL']`, the memoized shape `['STUB','STUB']`.
     //
-    // So take the variable out instead. The module is `vi.mock`'d already, so resolving it here
-    // puts it in the registry before anything depends on timing; what remains is a render flush.
-    // The surviving budget is a HANG GUARD, not a performance budget — the same philosophy the
-    // `testTimeout` bump was reaching for, applied to the clock that actually governs.
-    await import('../RecoveryFlow')
-
-    // The forgot door replaces the unlock screen with the recovery flow.
+    // WHAT USED TO SIT HERE, AND WHY IT IS GONE: an `await import('../RecoveryFlow')` added as a
+    // "determinism first, not a bigger number" fix. It was neither. `App.tsx:79` already warms this
+    // exact chunk the moment `entry.kind === 'unlock'`, and `driveToUnlockScreen()` above awaits that
+    // screen — so the module was warm before that line ever ran. It changed nothing, and the only
+    // real edit in the commit that added it was the budget raise its own comment forbade.
     fireEvent.click(screen.getByRole('button', { name: copy.unlockForgot }))
-    await screen.findByTestId('recovery-flow', undefined, { timeout: 20_000 })
+    // THE BUDGET MUST STAY STRICTLY BELOW `testTimeout` (vite.config.ts, 20s). At 20s it EQUALLED the
+    // outer clock, so the outer always fired first and this wait never got to print its DOM — which
+    // suppressed the one diagnostic that ever named this bug. Run 30310885497 is the only red whose
+    // inner budget was smaller than the outer, and it is the only one that dumped the real
+    // RecoveryFlow's markup. This is a hang guard, not a performance budget: the arm costs
+    // milliseconds, and if it ever fails again the DOM must be in the log.
+    await screen.findByTestId('recovery-flow', undefined, { timeout: 5_000 })
     expect(screen.queryByLabelText(copy.unlockLabel)).toBeNull()
     // Recovery completes → the began entry must carry hydrate:true (the gate's arming flag —
     // the survivor with the longest gap and the stalest balances is WHO the gate exists for)

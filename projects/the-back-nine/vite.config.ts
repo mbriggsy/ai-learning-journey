@@ -88,6 +88,20 @@ export default defineConfig(({ mode }) => ({
     // driving PBKDF2-600k twice through a real recovery flow. Nothing links them but CPU contention
     // in a 3164-test parallel run on a shared runner.
     //
+    // ⚠️ CORRECTED 2026-07-31 — THE `App.test.tsx` HALF OF THAT STORY IS FALSE, and the sentence above
+    // was accidentally describing the BUG rather than the test. That arm mocks `../vaultSession`,
+    // `../RecoveryFlow`, `../IntakeApp` and the PWA hook: on the healthy path it drives NO crypto at
+    // all and finishes in milliseconds. It only "drove PBKDF2-600k through a real recovery flow" on
+    // the runs where a mock-bypass mounted the REAL RecoveryFlow — which was the defect itself (see
+    // insight 106's 2026-07-31 update and the loader block in src/ui/App.tsx). Fixed at the source;
+    // that arm is no longer evidence for anything here.
+    //
+    // `testTimeout` STAYS at 20s on the strength of the OTHER three sightings — heavy engine tests
+    // and two MC goldens, where contention on a shared runner is real and 5s is genuinely the wrong
+    // ceiling. It remains a HANG GUARD. A test slow for a real reason still owes its own explicit
+    // `{ timeout }`, and an INNER wait must stay strictly below this value or the outer clock
+    // pre-empts it and swallows its diagnostic — the trap that hid the bug above for three cycles.
+    //
     // 5s is simply the wrong ceiling for that: it is short enough that scheduling noise reads as
     // failure, which is how this cost three sessions of "capture it next time" without ever being
     // named. 20s still fails a genuinely STUCK test — it just stops calling a starved one broken.

@@ -27,13 +27,64 @@ import type { UnlockCopyKey } from './unlockCopy'
  * the 300 KiB budget; it warms during the cold-start / probe read so Begin/Unlock never visibly wait.
  * The Suspense fallback is deliberately EMPTY — the warm chunk makes it a sub-frame flash at worst.
  */
-const IntakeApp = lazy(() => import('./IntakeApp'))
+/**
+ * ONE MEMOIZED LOADER PER CHUNK — a CORRECTNESS constraint, not a tidy-up. Do not inline these back
+ * into the `lazy()` calls, and do not call `import()` for these three anywhere else.
+ *
+ * Every chunk below is imported from TWO places: the `lazy()` initializer, and the warm effect that
+ * fires when its launching surface shows. Those two calls can OVERLAP — and under Vitest an
+ * overlapping second import of a `vi.mock`'d module is silently served the REAL module. Vite hands a
+ * module ONE mutable callstack array for its whole lifetime (`vite/dist/node/module-runner.js`
+ * :1214-1218, bound as the ssr import keys at :1247-1248); Vitest push/splices the mocked id around
+ * an await (`startVitestModuleRunner…js:393-403`, carrying its own warning on line 395 — *"this will
+ * not work if user does Promise.all(import(), import())"*); and a second arrival inside that window
+ * trips the `isSelfImport` bail-out straight to `_vitest_original` (:560-563). `React.lazy` then
+ * caches that resolution permanently, so ONE lost race pins the real component for the whole file.
+ *
+ * That is how `App.test.tsx`'s survivor-door arm intermittently mounted the REAL `RecoveryFlow` — no
+ * `data-testid`, so its `findBy` could never succeed and burned the entire budget instead. CI run
+ * 30310885497 is the only one whose inner budget was smaller than the outer, so it is the only one
+ * that printed the DOM: "Use your recovery word" / "Open with my recovery word"
+ * (`RecoveryFlow.tsx:176`/`:231`). Three sibling runs read as bare timeouts and cost two wrong
+ * prescriptions, both of which raised a clock. Memoizing makes the overlap UNREPRESENTABLE rather
+ * than unlikely — there is only ever one `import()` in flight per chunk.
+ *
+ * THE `.catch` IS LOAD-BEARING, NOT DEFENSIVE. A bare `??=` would cache a REJECTED promise. Today the
+ * two call sites are independent, so a warm that fails does NOT poison the click — it still gets a
+ * fresh fetch. Clearing the slot on failure preserves exactly that retry. `ErrorBoundary.tsx:2-8`
+ * names the case this protects ("offline + SW-cache eviction, version skew after an update … worst on
+ * the offline survivor's restore door"), and silently deleting a retry there is the calm-but-wrong
+ * direction. The clear runs only after the promise has settled, never concurrently, so the
+ * single-flight guarantee above is untouched.
+ */
+let intakeAppChunk: Promise<typeof import('./IntakeApp')> | null = null
+const loadIntakeApp = (): Promise<typeof import('./IntakeApp')> =>
+  (intakeAppChunk ??= import('./IntakeApp').catch((err: unknown) => {
+    intakeAppChunk = null
+    throw err
+  }))
+
+let recoveryFlowChunk: Promise<typeof import('./RecoveryFlow')> | null = null
+const loadRecoveryFlow = (): Promise<typeof import('./RecoveryFlow')> =>
+  (recoveryFlowChunk ??= import('./RecoveryFlow').catch((err: unknown) => {
+    recoveryFlowChunk = null
+    throw err
+  }))
+
+let restoreFlowChunk: Promise<typeof import('./RestoreFlow')> | null = null
+const loadRestoreFlow = (): Promise<typeof import('./RestoreFlow')> =>
+  (restoreFlowChunk ??= import('./RestoreFlow').catch((err: unknown) => {
+    restoreFlowChunk = null
+    throw err
+  }))
+
+const IntakeApp = lazy(loadIntakeApp)
 
 /** Lazy for the ENTRY BUDGET, not rarity: both flows statically pull PassphraseStep → the
  *  zxcvbn floor seam, which must not ride the entry chunk. Each is warmed when its launching
  *  surface shows, so the click into it never visibly waits. */
-const RecoveryFlow = lazy(() => import('./RecoveryFlow').then((m) => ({ default: m.RecoveryFlow })))
-const RestoreFlow = lazy(() => import('./RestoreFlow').then((m) => ({ default: m.RestoreFlow })))
+const RecoveryFlow = lazy(() => loadRecoveryFlow().then((m) => ({ default: m.RecoveryFlow })))
+const RestoreFlow = lazy(() => loadRestoreFlow().then((m) => ({ default: m.RestoreFlow })))
 
 /** Where the entry router is. `began` mounts IntakeApp — `hydrate` distinguishes a decrypt-on-return
  *  (read the unlocked vault's model) from a cold/seed start (hydrate from ColdStart or the dev seed);
@@ -69,15 +120,15 @@ export function App({ seed, vaultSeed }: { seed?: string | null; vaultSeed?: str
   const [devPrefill, setDevPrefill] = useState<string | undefined>(undefined)
 
   useEffect(() => {
-    void import('./IntakeApp') // warm the chunk behind the cold-start / probe frame
+    void loadIntakeApp() // warm the chunk behind the cold-start / probe frame
   }, [])
 
   // Warm each flow chunk once its launching surface is up — the forgot link's destination, and the
   // restore surface behind BOTH its doors: the damaged branch AND ColdStart's quiet restore whisper
   // (warm on `cold` so the wiped user's tap into restore-cold never visibly waits).
   useEffect(() => {
-    if (entry.kind === 'unlock') void import('./RecoveryFlow')
-    if (entry.kind === 'damaged' || entry.kind === 'cold') void import('./RestoreFlow')
+    if (entry.kind === 'unlock') void loadRecoveryFlow()
+    if (entry.kind === 'damaged' || entry.kind === 'cold') void loadRestoreFlow()
   }, [entry.kind])
 
   // The startup vault probe (skipped when a dev seed/vault drives the mount). Dynamic import keeps the

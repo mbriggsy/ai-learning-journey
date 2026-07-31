@@ -185,7 +185,11 @@ describe('dev seeds reach a worded (engine-accepted) answer', () => {
 
   // The U9b 'datesplit' seed exists to cold-read the floor/lifestyle SPLIT (council 2026-07-02 Q3):
   // both tracks dated, the floor EARLIER (the expected ordering — no R27 inversion note). Provisional
-  // tier for suite speed; the wide crown gap (≈1 vs ≈8 at design time) makes the arm tier-robust.
+  // tier for suite speed; the wide crown gap makes the arm tier-robust — MEASURED 2026-07-31 through
+  // the real search: floor 2 at BOTH tiers, lifestyle 10 provisional / 9 final, so `floor < lifestyle`
+  // holds either way. (This comment used to read "≈1 vs ≈8 at design time"; both figures were stale and
+  // matched nothing the engine returns. The arm only ever asserted the ORDERING, which is why nothing
+  // caught them — the numbers lived in prose, never in an expectation.)
   it("'datesplit' lands a dated floor<lifestyle split through the real date search", async () => {
     const input = buildDateInput(DEV_SEEDS.datesplit)
     expect(input, 'datesplit: buildDateInput').not.toBeNull()
@@ -211,9 +215,13 @@ describe('dev seeds reach a worded (engine-accepted) answer', () => {
   // REAL return chain — doctor → draftFromScenario → buildDateInput → the real date search —
   // so a drift in ANY link (a doctored shape the hydrator refuses; a crown shift out of the
   // window under the 2024 year-0 tax anchoring) fails HERE, not at his cold read. Provisional
-  // tier for suite speed (the ≈1-vs-≈8 design-time crown gap is tier-robust, the datesplit
-  // arm above). The hero's own arrived arm (`dateInYearsPast`) stays unit-pinned only —
-  // documented on the plant as NOT coherently mintable (savedAt codec floor 2020).
+  // tier for suite speed — the crown gap is tier-robust (MEASURED 2026-07-31: floor 2 at BOTH tiers,
+  // lifestyle 10 provisional / 9 final). ⚠️ The floor sits EXACTLY ON the `<= ELAPSED_PLAN_YEARS`
+  // boundary asserted below, not inside it: a re-tune pushing it to 3 kills this plant's whole reason
+  // to exist. The hero's own arrived arm (`dateInYearsPast`) is not reachable from THIS base — but it
+  // is no longer unmintable anywhere: U17 §S6 minted it on `dip` as `?vault=datearrived` (the
+  // "NOT coherently mintable" line this comment used to cite was scoped to `datesplit` and read as
+  // universal — see the plant registry's own 2026-07-27 correction).
   it("'datestale' (the aged datesplit plant) keeps the floor crown INSIDE the 2-year window and the lifestyle crown beyond it — the dateFloorCoveredPast + anchored-hero pair the plant exists to render", async () => {
     const built = scenarioFromDraft(DEV_SEEDS.datesplit)
     expect(built.ready, 'datesplit must be save-ready').toBe(true)

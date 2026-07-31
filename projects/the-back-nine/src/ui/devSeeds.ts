@@ -418,8 +418,16 @@ const retiredBudget: ScenarioDraft = {
 /**
  * The FLOOR<LIFESTYLE date split (U9b Q3 — both tracks dated, floor earlier):
  * `dateborder`'s working couple with a budget whose discretionary share separates the
- * tracks. Engine-proven (probe 2026-07-11 under the extras engine, provisional tier): floor
- * crowns at offset 1, lifestyle at 8 — the hero stays the LIFESTYLE date, the floor rides the
+ * tracks. **RE-MEASURED 2026-07-31 through the real date search, BOTH tiers — quote these WITH the
+ * tier or you will file the wrong number (this block previously read "floor crowns at offset 1,
+ * lifestyle at 8", labelled Engine-proven, and both figures were wrong):**
+ *   provisional (2,000 paths) — floor **2** `confirmed-date` · lifestyle **10** `window-edge-unconfirmed`
+ *   final       (16,000 paths) — floor **2** `confirmed-date` · lifestyle **9** `confirmed-date`
+ * The LIVE surface runs `final` (`IntakeApp.tsx:278`, `Result.tsx:275`/`:289`), so the shipped hero is
+ * the 9 — and it is a CONFIRMED date, i.e. the band owes no edge hedge there. The 10 is real but is a
+ * provisional-tier reading, and it is `window-edge-unconfirmed`: during entry the hedge RENDERS and
+ * then WITHDRAWS when final lands. That transient has never been cold-read.
+ * The hero stays the LIFESTYLE date, the floor rides the
  * subordinate "essentials covered by ~year X" line, no inversion note. Reconciled: Σlines@0
  * (66,000) + M (8,000) = 74,000 (the same full total `dateborder` proved borderline-dated).
  *
@@ -428,8 +436,13 @@ const retiredBudget: ScenarioDraft = {
  * The post-65 extras the absent field funds sank the lifestyle track below the clearing bar
  * (it fell to no-date-in-window), so this seed OVERRIDES its OWN accounts (trad 800k→900k,
  * roth 140k→158k — NOT `stillWorkingBorderline`'s, which `dateborder`/`datemixed` share) to
- * re-crown floor@1 / lifestyle@8. `datestale` (the aged plant) rides these accounts, so the
- * override also keeps its floor crown INSIDE the 2-year window (@1) with the hero beyond (@8).
+ * re-crown the split. `datestale` (the aged plant) rides these accounts, so the override also keeps
+ * its floor crown inside the 2-year elapsed window with the hero beyond it.
+ * **⚠️ MEASURED 2026-07-31, and the margin is thinner than the old "@1" suggested: the floor crowns
+ * at 2, and `devSeeds.test.ts`'s aged arm asserts `floor.offsetYears <= ELAPSED_PLAN_YEARS` where
+ * ELAPSED_PLAN_YEARS is 2. The plant therefore sits EXACTLY ON the boundary, not inside it — any
+ * re-tune that pushes the floor to 3 reds that arm and kills `dateFloorCoveredPast`'s only live
+ * route.** The override's PURPOSE still holds; only its numbers were wrong.
  */
 const dateSplitSeed: ScenarioDraft = {
   ...stillWorkingBorderline,
@@ -1395,13 +1408,18 @@ export function doctorRecordSuperseded(s: ScenarioV3, todayEpochDay: number): Sc
 /** The AGED plants: `?vault=<key>` → a doctor over a base seed (each key names BOTH — the state-tax
  *  unit split the one doctor into two, so the dispatch carries the pairing). `stale` =
  *  the retired spine (the U13 staleness batch's original surface); `datestale` = the SPLIT
- *  date household (`datesplit` — floor crowns ≈1, lifestyle ≈8 at design time), the only
+ *  date household (`datesplit` — floor crowns 2, lifestyle 10 provisional / 9 final, MEASURED
+ *  2026-07-31; the "≈1 / ≈8 at design time" this line used to carry was stale and matched nothing
+ *  the engine returns at either tier), the only
  *  live route to the floor's ARRIVED arm (`dateFloorCoveredPast`: elapsed 2 ≥ the floor
  *  offset — "penciled as covered … that's about now") beside a RE-DERIVED aged hero count
  *  (`dateInYearsAnchored` with n = offset − elapsed). The hero's own arrived arm
  *  (`dateInYearsPast`) needs elapsed > the lifestyle crown, which THIS base cannot reach:
- *  `datesplit` crowns lifestyle at 10 (2 for the floor), and re-running the real search over an
- *  aged copy only drifts it to 9 — never below the elapsed window.
+ *  `datesplit` crowns lifestyle at 10 **at the PROVISIONAL tier** (2 for the floor), and the FINAL
+ *  tier — the one the live surface runs — reads 9. Either way it never falls below the elapsed
+ *  window. **ALWAYS quote a crown from this file WITH ITS TIER**: the bare "10" in this sentence was
+ *  read as the shipped value during the 2026-07-31 session and sent a reader hunting a contradiction
+ *  against a surface that legitimately renders 9.
  *
  *  ⚠️ CORRECTED 2026-07-27 — the old note generalised that to "NOT coherently mintable", full
  *  stop, off the ≈8y figure for THIS base. That is false as a general claim and it would send the

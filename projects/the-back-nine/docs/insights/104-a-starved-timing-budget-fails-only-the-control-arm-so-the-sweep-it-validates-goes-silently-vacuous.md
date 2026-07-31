@@ -2,7 +2,7 @@
 title: A starved timing budget fails only the CONTROL arm — the sweep it validates goes silently vacuous
 date: 2026-07-27
 phase: Act 4 · U17 §S5
-modules: [src/ui/__tests__/recSaveNoAutoWrite.test.ts, src/ui/IntakeApp.tsx]
+modules: [src/ui/__tests__/recSaveNoAutoWrite.test.tsx, src/ui/IntakeApp.tsx]
 tags: [test-vacuity, burned-070, ci-only-failure, flush-budget, macrotask, non-vacuity-control, act]
 ---
 
@@ -45,8 +45,41 @@ because every round pays a full `act()` at ~8ms.
 2. **30 → 60**, with an explicit `{ timeout: 30_000 }` on each settle-heavy arm — the repo's own
    documented idiom for an arm whose local runtime nears the default.
 
-Pre-warming the module was considered and rejected: every arm asserts an empty IndexedDB as its first
-line, so warming the session would create the database.
+> ## ⚠️ UPDATE 2026-07-31 — THIS FIX DID NOT HOLD, AND THE SENTENCE THAT FOLLOWED IT WAS FALSE
+>
+> CI run `30599862965` red the same control again: **63 turns against the raised 60-turn budget.** The
+> arm did its job — it announced that the sweep beside it had gone vacuous for that run — but the
+> repair above only bought one cycle, because it re-priced the budget instead of removing what the
+> budget was racing.
+>
+> **STRUCK: _"Pre-warming the module was considered and rejected: every arm asserts an empty IndexedDB
+> as its first line, so warming the session would create the database."_** That is false, and believing
+> it is what kept the real fix off the table for two cycles. Importing `vaultSession` resolves a
+> MODULE; it opens nothing. Proof, all read end to end: `vaultSession.ts:19-20` declares
+> `dbPromise`/`sessionPromise` as bare uninitialized bindings and the open lives in `getDb()` (`:23-25`);
+> `db.ts`'s module scope holds only a string const, an arrow and `realmWriteChain = Promise.resolve()`;
+> `session.ts`'s `new BroadcastChannel` is inside `createSession` (`:261`); `backup.ts` declares only
+> functions. The test file already depended on this before the repair — it imports `openVaultDb`
+> statically and its planted control asserts an EMPTY database list *before* calling it.
+>
+> **THE REAL FIX:** resolve the chunk in `beforeEach`, so the wall-clock stage leaves the timed window
+> entirely. Measured on one Windows box, serially: **7 / 8 / 9 turns before, 1 turn after.** The poll
+> and the `<= FLUSH_ROUNDS` certificate STAY — they are what will catch the next regression — but they
+> now certify a residual instead of a chunk resolution.
+>
+> **TWO CLAIMS ABOVE ARE DEMOTED, NOT DELETED.** (a) The `~8ms` per-round price is regime-dependent:
+> an *idle* `settle()` runs ≈16 ms/turn (a Windows timer-tick artifact), while the poll loop that
+> actually times the import runs ≈4–6 ms/turn, because libuv has pending work. A single figure cannot
+> describe both, and the budget is spent in the second regime. (b) **"CPU contention starved the
+> turns" is now at most a contributing cause, not the established one** — the CI control arm is 293 ms
+> total and carries no per-turn instrumentation, so the log is consistent BOTH with cheap CI turns
+> (import ≈60 ms) and with contention making turns dearer. Do not close this as "starvation, solved";
+> insight 106 exists to punish exactly that. What IS established is structural and machine-independent:
+> **the budget was denominated in macrotask turns while the dominant stage was wall-clock, so no
+> constant was ever portable.**
+>
+> The Key Insight below is untouched and still correct — only the mechanism and the rejected remedy
+> were wrong.
 
 ## Key Insight
 

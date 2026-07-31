@@ -18,8 +18,11 @@ import { resolve } from 'node:path'
  * WHY THIS FILE EXISTS AS A `.tsx` HERE RATHER THAN AS ARMS THERE: the store seam test runs in NODE (no
  * `@vitest-environment` docblock), and `src/store/__tests__/` holds no `.tsx` at all. Landing a
  * `@ui/IntakeApp` mount there would force a rename plus a docblock that silently changes the runtime of
- * that file's nine existing arms — including its `indexedDB.databases()` probe and its macrotask flush,
- * both load-bearing.
+ * that file's TWO existing arms — including its `indexedDB.databases()` probe and its macrotask flush,
+ * both load-bearing. *(Corrected 2026-07-31: this said "nine existing arms". `solveNoAutoSave.test.ts`
+ * has two `it(`s — a planted control and one sweep. The nine counted FILES in `src/store/__tests__/`,
+ * via `act4-u17-s5-execution-plan.md:128`, and the miscount made that file's coverage look ~4× deeper
+ * than it is. Its macrotask flush is ONE turn, which is its own filed defect — see TODO.md.)*
  *
  * THE MUTANT IT KILLS: a `useEffect` in IntakeApp that mints (or re-enters the gesture) on
  * `solve.kind === 'committed'`. A silent auto-write of an un-saved hypothetical leaves the ENTIRE
@@ -261,11 +264,32 @@ async function landCommittedRecommendation(): Promise<ReturnType<typeof render>>
 
 const saveCta = () => screen.queryByRole('button', { name: copy.recommendSaveCta })
 
-beforeEach(() => {
+beforeEach(async () => {
   wires.date = DATE_WIRE
   wires.run = RUN_WIRE
   wires.solve = SOLVE_WIRE
   mint.mockClear()
+  // RESOLVE THE CHUNK BEFORE THE WINDOW OPENS — the repair for CI run 30599862965, where the tap
+  // measured 63 turns against a 60-turn sweep and the whole no-auto-write law went vacuous for that
+  // run. The budget is denominated in MACROTASK TURNS while the dominant stage in the timed window is
+  // WALL-CLOCK: the gesture's cold `import('./vaultSession')` pulls the crypto/KDF graph
+  // (@store/session → ../crypto/*, @store/backup). No turn count is portable across machines while
+  // that import sits inside the window, so the fix is to take it OUT of the window rather than to
+  // raise the constant — which the landmine forbids, and which at 150 blew vitest's default outright.
+  //
+  // THE FILED REASON THIS WAS "NOT AVAILABLE" IS FALSE, and that is why it went unfixed for two
+  // cycles. It read: "warming the session would create the database." It does not. `vaultSession.ts`
+  // declares `dbPromise`/`sessionPromise` at :19-20 as BARE, uninitialized bindings — the open happens
+  // in `getDb()` (:23-25), never at module scope — and neither `@store/db`, `@store/session` nor
+  // `@store/backup` runs an executable statement at module scope (session's `new BroadcastChannel`
+  // is INSIDE `createSession`, :261). This file already relied on that fact before this change:
+  // `openVaultDb` is a STATIC import at the top, and the planted control asserts an EMPTY database
+  // list and only THEN calls it. Every arm below re-proves it as its first line, so a warm that did
+  // create a database would fail loudly here rather than be tolerated.
+  //
+  // This strictly IMPROVES mutant-catching: every arm now faces the identical WARM chain, so a
+  // planted auto-write can no longer hide behind a cold import that the sweep never waited out.
+  await import('../vaultSession')
 })
 
 afterEach(async () => {
@@ -362,8 +386,15 @@ describe('U17 §S5 — no render, mount, recompute, solve commit or draft edit e
     // on another (burden/055 — a green local run is not proof). Bumping FLUSH_ROUNDS would only move
     // the threshold; the wait is inherently racy, so the arm now polls to a bounded ceiling.
     //
-    // Pre-warming is NOT available as a fix: every arm asserts an empty IndexedDB as its first line,
-    // and warming the session would create the database.
+    // ⚠️ THIS COMMENT USED TO SAY pre-warming was "NOT available as a fix … warming the session would
+    // create the database." THAT WAS FALSE, and believing it cost this arm a second CI red (run
+    // 30599862965: 63 turns against a 60-turn sweep). Importing `vaultSession` resolves a MODULE; it
+    // opens nothing — see the beforeEach above for the source proof. The warm now happens there, so
+    // what this loop measures is the residual chain, not the chunk resolution.
+    //
+    // The poll STAYS. It is the certificate, not the workaround: it converts the sweep's soundness
+    // from an assumption into a per-run measurement, and it must keep doing so on machines slower
+    // than any we have measured.
     let turns = 0
     const CEILING = FLUSH_ROUNDS * 4
     while (mint.mock.calls.length === 0 && turns < CEILING) {

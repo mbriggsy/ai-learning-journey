@@ -18,11 +18,25 @@
  * lower spend can mean less health-insurance help) rides an explicit plain-language disclosure,
  * never reordered or hidden.
  *
- * THE BAND stays SINGLE and FLOOR-crowned (engine-emitted iff the floor crowned; its outcomeState is
- * {on-track, over-funded} by construction). In a split reading a one-line note names the band's own
- * track so the range and the hero claim can never silently disagree. No second band — a same-hue
- * overlay is a measured CVD lockout (insight 038), and a plotted lifestyle curve re-opens the
- * standing no-date-curve veto.
+ * THE BAND stays SINGLE, and as of the council of 2026-07-30 it rides the LIFESTYLE crown — the
+ * track the hero claim names — falling back to the FLOOR only where no full-lifestyle date lands in
+ * the window. It is engine-emitted with its own `track` tag, and ALL THREE of its fields (fan, state,
+ * offset) ride that ONE decision; its outcomeState is {on-track, over-funded} by construction on
+ * either arm (a crowned reading cleared the bar, and the state is keyed to the same track as the fan).
+ * A note beside it NAMES THE SPENDING LEVEL it prices — and, when a budget exists, quotes BOTH levels,
+ * because the gap between them is why this household has two dates at all.
+ *   ⚑ Q3's 2026-07-02 ruling (floor-crowned + a track-naming note) was overturned on field evidence:
+ *   the note it relied on named a DATE and never a SPENDING LEVEL, so the promise that "the range and
+ *   the hero claim can never silently disagree" went undischarged, and the U17 §S6 cold read caught
+ *   the result as a calm-but-wrong BLOCKER. What SURVIVES Q3 verbatim is the all-three-ride-one-track
+ *   law — only its choice of which track was wrong.
+ * STILL NO SECOND BAND. A second percentile FAN stays vetoed and the veto was re-affirmed on
+ * measurement, not on precedent: the only ramp clearing the numeric floor separates by oklab-L 0.0000
+ * at every p, so a color-blind reader sees one undifferentiated mass and reads the UNION of two
+ * envelopes as a single world's range — wider and safer than either world truly is. Overlapping
+ * translucent fills additionally invert the ink-density ordering contract (palette.ts), and a second
+ * fan is structurally undefined where lifestyle never crowns. A single labeled MEDIAN LINE is a
+ * different object and is sanctioned (the Hawk re-ranked to it in rebuttal) — see docs/council-log.md.
  *
  * THE THREE FIRST-CLASS OUTCOMES (C3) render HONESTLY per track (R25 — calm-but-wrong is the sin):
  * confirmed-date · window-edge-unconfirmed (the edge disclosure, never silently crowned) ·
@@ -54,7 +68,7 @@ import { resolveBandData, type XAnnotation } from '@viz/bandData'
 import type { BandPlanClockAnchor } from './bandAnnotations'
 import { BAND_LABELS, BAND_CHROME, composeBandAtRange } from './bandPanelChrome'
 import { LADDER_LABELS } from './oddsLadderChrome'
-import { axisDollarFormatterFor, formatAxisDollar } from './money'
+import { axisDollarFormatterFor, formatAbsoluteDollar, formatAxisDollar } from './money'
 import type { DateBand, DateTrackOutcome } from '@shared/model'
 import './styles/fuckOffDate.css'
 
@@ -82,6 +96,21 @@ export type FuckOffDateView =
       /** Maps a lattice year to the household ages string for the band's hover/scrub readout (the same
        *  slot the annotations use). Absent ⇒ the readout omits its ages line. */
       readonly bandAges?: (yearsFromNow: number) => string
+      /** THE TWO SPENDING LEVELS THIS HOUSEHOLD'S SPLIT COMES FROM (council 2026-07-30).
+       *
+       *  Why it exists: a two-date household has two dates BECAUSE it has two spend levels, and
+       *  before this the surface showed the two dates, two sets of odds and a balance picture while
+       *  never naming either figure — every dollar on the landing was a portfolio BALANCE. A reader
+       *  could see that the answers differed and had no way to see what made them differ. (Found by
+       *  Briggsy on the real surface, 2026-07-30: "I need to see what my essential spend looks like
+       *  along with what my desired spend looks like.")
+       *
+       *  Both are FIRST-YEAR (retirement-year 0) totals in today's dollars, derived through
+       *  `budgetYearZeroEssentialsTotal` / `budgetYearZeroFullTotal` — the compiled routing, never a
+       *  line-sum (which omits the injected OOP medical and mis-tiers). Absent when the household
+       *  never built a budget: there is no second level to name, and the copy that would quote it
+       *  must not render rather than invent one. */
+      readonly spendLevels?: { readonly essentials: number; readonly full: number }
     }
   | { readonly kind: 'pending' }
   | { readonly kind: 'compute-error'; readonly onRetry: () => void }
@@ -415,7 +444,22 @@ export function FuckOffDate({ view, focusSignal, actionsSlot, medicarePricedNote
                   the note AFFIRMS rather than contrasts; on the floor-keyed fallback it still warns. */}
               {view.band !== undefined && (
                 <p className="fod-band__tracknote">
-                  {view.band.track === 'floor' ? copy.bandPricesEssentialsNote : copy.bandPricesFullBudgetNote}
+                  {(() => {
+                    const t = view.band.track
+                    // With a budget, NAME BOTH LEVELS — the gap is the whole reason this household
+                    // has two dates, and it was the one quantity the surface never stated. Without
+                    // one there is no second level to name, so the level-free sentence stands (never
+                    // a fabricated figure — burned/062: absence is absence, not a default).
+                    const s = view.spendLevels
+                    if (s === undefined) {
+                      return t === 'floor' ? copy.bandPricesEssentialsNote : copy.bandPricesFullBudgetNote
+                    }
+                    const full = formatAbsoluteDollar(s.full)
+                    const essentials = formatAbsoluteDollar(s.essentials)
+                    return t === 'floor'
+                      ? slots.bandPricesEssentialsWithLevels(essentials, full)
+                      : slots.bandPricesFullBudgetWithLevels(full, essentials)
+                  })()}
                 </p>
               )}
               {/* U17 §S2 — the aged fan's premise line + RENDERED re-confirm control (the fan is

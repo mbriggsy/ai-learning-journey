@@ -1678,6 +1678,43 @@ export const slots = {
   // conservative, its LOCATION is unknown for a household that overspent or ate a drawdown
   // (the dead-copy law's U17 clause). Craftsman's-lead wording; his eye reads it at the
   // arrived-vault walk (the council's ⚑ #2). ---
+  /** ⚑ THE TWO SPENDING LEVELS, NAMED TOGETHER (council 2026-07-30's naming layer; the gap Briggsy
+   *  found on the real surface 2026-07-30: "I need to see what my essential spend looks like along
+   *  with what my desired spend looks like").
+   *
+   *  A two-date household has two dates BECAUSE it has two spending levels — and the landing showed
+   *  two dates, two sets of odds and a balance picture while naming NEITHER figure. Every dollar on
+   *  that screen was a portfolio balance, so the quantity that explains the whole split was the one
+   *  quantity absent. These two slots put both levels beside the picture that prices one of them.
+   *
+   *  WHOSE WORLD IS DRAWN LEADS; the other rides as the contrast, so the sentence always answers
+   *  "what am I looking at?" before "what is the alternative?".
+   *
+   *  "to start" IS LOAD-BEARING, not filler: both figures are retirement-year-0 totals, and a ramped
+   *  budget's later years genuinely differ. A bare "$X a year" would be a quiet over-claim on every
+   *  ramped plan — the same class of unqualified figure the copy law forbids elsewhere. Saying it
+   *  unconditionally beats branching on `isRampedBudget`, because the qualification is TRUE either
+   *  way and a reader never has to know which kind of budget they built.
+   *
+   *  ⚑ "MEDICAL INCLUDED" IS NOT FILLER — IT PREVENTS A CROSS-SURFACE COLLISION, caught live on
+   *  ?seed=datesplit 2026-07-30. The budget door states "Essentials about $46,000" (the reader's
+   *  TYPED lines) while separately naming "$8,000 a year of out-of-pocket medical carried
+   *  automatically". The floor the ENGINE spends is the sum of both — $54,000 — because compileBudget
+   *  injects OOP medical into the STICKY floor. So the honest figure here is $54,000 and it does NOT
+   *  match the door's "essentials" number by construction. Quoting the door's $46,000 instead would
+   *  understate what the essentials world actually costs — calm-but-wrong in the optimistic
+   *  direction, on the survival track. Quoting $54,000 bare would give a reader who opens both
+   *  screens two different "essentials" totals with no way to reconcile them. The three-word
+   *  qualifier is what makes the two surfaces legible together (Briggsy's copy law: a same-named
+   *  quantity quoted twice with different values wears its definition on EACH mention).
+   *
+   *  Figures arrive PRE-FORMATTED from the compiled-budget producers (never re-typed, never summed
+   *  at the call site — `budgetYearZeroEssentialsTotal` omits neither the injected OOP medical nor
+   *  the scalable-essentials tier; both failure modes are mutation-pinned). */
+  bandPricesFullBudgetWithLevels: (fullFormatted: string, essentialsFormatted: string): string =>
+    `This range prices your full budget — about $${fullFormatted} a year to start. Your essentials alone, medical included, would be about $${essentialsFormatted}.`,
+  bandPricesEssentialsWithLevels: (essentialsFormatted: string, fullFormatted: string): string =>
+    `This range prices your essentials only — about $${essentialsFormatted} a year to start, medical included. Your full budget would be about $${fullFormatted}.`,
   /** The OLD-SAVE arm: the balances behind the fan were saved in a named past year. (Tightened
    *  at the measured 1536×791 frame — all three facts kept: the vintage, not-today's-accounts,
    *  and the undetermined residual; the re-confirm CTA rides INLINE after this sentence.) */

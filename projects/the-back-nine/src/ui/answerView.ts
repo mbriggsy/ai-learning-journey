@@ -29,6 +29,8 @@ import {
   deriveSpineBandAnnotations,
   type BandPlanClockAnchor,
 } from './bandAnnotations'
+import { budgetGoverns } from '@budget/budgetModel'
+import { budgetYearZeroEssentialsTotal, budgetYearZeroFullTotal } from '@budget/budgetToSpending'
 // (`composeDateSplit` is deliberately NOT imported here any more — the 2026-07-30 flip removed this
 //  module's last re-derivation of which track the band draws; it reads `band.track` from the engine.)
 import type { FuckOffDateView } from './FuckOffDate'
@@ -109,6 +111,7 @@ function dateBand(
   readonly band?: DateBand
   readonly bandAnnotations?: readonly XAnnotation[]
   readonly bandAges?: (yearsFromNow: number) => string
+  readonly spendLevels?: { readonly essentials: number; readonly full: number }
 } {
   const rawBand = outcome.band
   if (!rawBand || rawBand.fan.byYear.length < 2) return {}
@@ -144,7 +147,17 @@ function dateBand(
     ? deriveDateBandAnnotations(ageA, ageB, band.offsetYears, last.yearsFromNow, savedAnchor, bandFloorKeyed)
     : undefined
   const bandAges = haveAges ? deriveBandAgesAt(ageA, ageB) : undefined
-  return { band, bandAnnotations, bandAges }
+  // THE TWO SPENDING LEVELS — derived through the compiled-budget producers, never summed here
+  // (the line-sum omits the injected OOP medical and mis-tiers; both failures are mutation-pinned
+  // in budgetToSpending.test.ts). Absent without a budget: a household with one spending level has
+  // no gap to name, and inventing a second figure is worse than staying quiet.
+  const spendLevels = budgetGoverns(draft.budget)
+    ? {
+        essentials: budgetYearZeroEssentialsTotal(draft.budget, draft.health.oopMedicalAnnual),
+        full: budgetYearZeroFullTotal(draft.budget, draft.health.oopMedicalAnnual),
+      }
+    : undefined
+  return { band, bandAnnotations, bandAges, spendLevels }
 }
 
 /**

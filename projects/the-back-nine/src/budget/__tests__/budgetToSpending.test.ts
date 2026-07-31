@@ -3,6 +3,7 @@ import type { BudgetLineItem } from '@shared/model'
 import {
   anchorTarget,
   budgetDraftPatch,
+  budgetYearZeroEssentialsTotal,
   budgetYearZeroFullTotal,
   commitBudgetPatch,
   compileBudget,
@@ -169,5 +170,56 @@ describe('budgetYearZeroFullTotal — the reconciliation figure', () => {
 
   it('with no items and no OOP the anchor is 0 (the upstream no-line-at-year-zero warning owns surfacing this)', () => {
     expect(budgetYearZeroFullTotal([], undefined)).toBe(0)
+  })
+})
+
+describe('budgetYearZeroEssentialsTotal — the floor twin, and the two silent ways to get it wrong', () => {
+  /* The 2026-07-30 council required the two spending levels to reach the surface, and required the
+   * figure be derived from the compiled routing rather than a hand-sum, behind a planted-fail. This
+   * fixture is built so BOTH wrong implementations produce a WRONG NUMBER rather than a coincidence:
+   *   sticky/scalable essentials typed = 30,000 + 8,000 = 38,000
+   *   injected OOP medical             =            5,000   (compileBudget adds it to STICKY)
+   *   discretionary                    =           15,000   (NOT essentials)
+   *   inactive-at-0 line               =           99,000   (window starts at year 3)
+   * ⇒ essentials = 43,000 · full = 58,000. Every pair is distinct, so no arithmetic slip lands on
+   * the right answer by luck: a raw line-sum gives 38,000 (omits M), a discretionary-inclusive sum
+   * gives 58,000 (the full total), and an isSurvivorSticky-only filter gives 35,000 (drops the
+   * scalable half). None of those equals 43,000. */
+  const world = [
+    line({ annualAmountReal: 30_000 }),
+    line({ tier: 'essentials', annualAmountReal: 8_000 }),
+    line({ tier: 'discretionary', annualAmountReal: 15_000 }),
+    line({ startYear: 3, annualAmountReal: 99_000 }),
+  ]
+
+  it('sums the NON-discretionary lines active at k=0 plus the injected medical', () => {
+    expect(budgetYearZeroEssentialsTotal(world, 5_000)).toBe(43_000)
+  })
+
+  it('is strictly below its full-total sibling by exactly the discretionary spend — the GAP the two dates come from', () => {
+    const essentials = budgetYearZeroEssentialsTotal(world, 5_000)
+    const full = budgetYearZeroFullTotal(world, 5_000)
+    expect(full).toBe(58_000)
+    expect(full - essentials).toBe(15_000)
+  })
+
+  it('INCLUDES the injected out-of-pocket medical — the omission that would understate essentials by exactly M', () => {
+    // The failure this pins: summing the user's TYPED lines. compileBudget adds M to the sticky
+    // floor on top of them, so a line-sum understates the floor the engine actually spends.
+    expect(budgetYearZeroEssentialsTotal(world, 5_000) - budgetYearZeroEssentialsTotal(world, undefined)).toBe(5_000)
+    expect(budgetYearZeroEssentialsTotal(world, undefined)).toBe(38_000)
+  })
+
+  it('agrees with compileBudget’s own year-0 routing — the producer this figure must never fork from', () => {
+    // The real anti-drift arm: assert against the ARRAYS the engine spends, not against a re-typed
+    // expectation. If compileBudget's tier routing ever changes, this reds instead of the surface
+    // quietly quoting a number the engine no longer uses.
+    const compiled = compileBudget(world, 5_000, 10)
+    expect(budgetYearZeroEssentialsTotal(world, 5_000)).toBe(
+      compiled.sticky[0]! + compiled.scalableEssentials[0]!,
+    )
+    expect(budgetYearZeroFullTotal(world, 5_000)).toBe(
+      compiled.sticky[0]! + compiled.scalableEssentials[0]! + compiled.discretionary[0]!,
+    )
   })
 })

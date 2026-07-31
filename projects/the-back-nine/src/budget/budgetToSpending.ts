@@ -98,6 +98,40 @@ export function budgetYearZeroFullTotal(
   return total
 }
 
+/** THE ESSENTIALS TWIN of {@link budgetYearZeroFullTotal} — the floor track's year-0 spend, for
+ *  surfaces that must name BOTH spending levels (the 2026-07-30 council's naming layer: a reader
+ *  looking at a two-date household cannot size the gap that CAUSES the two dates unless both
+ *  figures are on screen).
+ *
+ *  ⚑ WHY THIS IS DERIVED HERE AND NOT AT THE CALL SITE, which is the whole correctness story: the
+ *  obvious computation — sum the user's typed lines — is WRONG in two independent ways, and both
+ *  fail SILENTLY toward a rosier or a scarier number.
+ *    1. It omits the INJECTED out-of-pocket medical. `compileBudget` adds `oopMedicalAnnual` to the
+ *       STICKY floor on top of the typed lines (see :79-81), because a survivor's qualified medical
+ *       neither scales by the couple ratio nor ends. A raw line-sum therefore UNDERSTATES essentials
+ *       by exactly M — the mirror of the double-count `anchorTarget` exists to prevent.
+ *    2. It ignores tiering. Essentials is everything NOT discretionary — `compileBudget` routes a
+ *       line to `discretionary` only on `tier === 'discretionary'`, and BOTH other destinations
+ *       (`sticky` and `scalableEssentials`) are floor spend. Filtering on `isSurvivorSticky` instead
+ *       would silently drop the scalable half.
+ *  The predicate below mirrors `compileBudget`'s routing exactly, and shares `isActiveAt` with its
+ *  full-total sibling rather than re-typing the window arithmetic (insight 081 — a re-derivation
+ *  forks at the producer's first special case).
+ *
+ *  Both totals are FIRST-YEAR (retirement-year 0) figures in today's dollars. A surface quoting them
+ *  owes that qualification in words: a ramped budget's later years differ, and an unqualified
+ *  "$X a year" over a ramped plan is its own calm-but-wrong. */
+export function budgetYearZeroEssentialsTotal(
+  items: readonly BudgetLineItem[],
+  oopMedicalAnnual: number | undefined,
+): number {
+  let total = oopMedicalAnnual ?? 0
+  for (const item of items) {
+    if (item.tier !== 'discretionary' && isActiveAt(item, 0)) total += item.annualAmountReal
+  }
+  return total
+}
+
 /** THE RECONCILIATION INVARIANT, made atomic (council 2026-07-02): a budget edit and its
  *  reconciled `annualSpendingReal` land in ONE draft update, so no consumer can ever
  *  observe the items and the scalar disagreeing. Callers apply it as

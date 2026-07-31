@@ -140,7 +140,7 @@ different schedule on a different day.
 - **File** (do NOT build here): re-anchoring the engine's own conversion semantics.
 
 **Coverage note:** `rothPlanEcho` has **zero** aged coverage today — both its tests run at elapsed 0
-(`AssumptionPanel.test.tsx:415-422` compares the slot against its own output, pinning routing not the
+(`assumptionPanel.test.tsx:415-422` compares the slot against its own output, pinning routing not the
 sentence; `copyGuard.test.ts:208` is a bare string). **The `RothLever` sheet echo has no assertions of any
 kind** (`grep control-plan__echo` → the CSS rule and the JSX, nothing else). Note also that `RothLever`
 *does* receive a `savedAnchor` (`:80`, `:82`) but routes it only to `composeTwoFutures` at `:130` — the

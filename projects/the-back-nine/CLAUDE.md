@@ -28,6 +28,8 @@ Precedence on conflict: the **roadmap's You-Are-Here table** wins on build statu
 | `pnpm lint` | ESLint (layer boundaries + engine purity) |
 | `pnpm verify:bundle` | Initial-JS **byte budget** sentinel (≤ 300 KiB entry JS) |
 | `pnpm verify:aca` | ACA enhanced-subsidy **re-verify** gate (fails if `aca-last-verified.json` is stale/unconfirmed) |
+| `pnpm verify:state-tax` | State-income-tax **re-verify** gate for the priced roster {NC, PA, FL} (mirrors `verify:aca`; NC's record carries the ~Aug-2026 rate-certification checkpoint) |
+| `pnpm verify:csp` | Real-Chromium **CSP enforcement** gate (`e2e/csp.spec.ts` serves `dist/` through `vercel.json`'s headers — a blocked inline script + a blocked cross-origin fetch, each with a no-CSP control arm) |
 | `pnpm verify:fit` | Real-Chromium **vertical-fit** gate (`e2e/vertical-fit.spec.ts` on `pnpm dev` — the one-frame fit law + the date-route order contract; own harness `playwright.fit.config.ts`) |
 | `pnpm verify:doc-stats` | Doc test-count **drift** gate (README + roadmap must match the live `vitest` suite) |
 

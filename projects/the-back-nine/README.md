@@ -109,6 +109,7 @@ pnpm lint           # ESLint — layer boundaries + engine purity
 pnpm build          # typecheck + production build
 pnpm verify:bundle  # initial-JS byte-budget sentinel (≤ 300 KiB entry)
 pnpm verify:aca     # fails if the ACA enhanced-subsidy status is stale/unconfirmed
+pnpm verify:state-tax  # fails if a priced state's {NC, PA, FL} tax record is stale/unconfirmed
 pnpm verify:csp     # real-Chromium CSP enforcement walk (Playwright)
 pnpm verify:fit     # real-Chromium vertical-fit gate — the one-frame fit law on the dev server
 pnpm verify:doc-stats  # README + roadmap test counts must match the live suite

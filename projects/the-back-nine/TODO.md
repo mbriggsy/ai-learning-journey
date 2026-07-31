@@ -8,7 +8,7 @@
 
 ⏭️ **THE LIVE QUEUE — 2026-07-31, THE FLAKE SESSION. The suite's verdict was not trustworthy and now is.**
 
-**STATE — 2026-07-31, every figure re-run by hand: 3188 tests / 163 files · verify:fit 52/52 · bundle 259.7 KiB ≤ 300 on a FRESH `pnpm build` · typecheck / lint / doc-stats / aca / state-tax all clean. SIX COMMITS, ALL CI-GREEN BY EXPLICIT ID:** `92c18a59`/**30642471365** · `707b75ae`/**30643183447** · `edd4cf91`/**30643823691** · `b743ecc6`/**30643922417** · `200128b5` · `8556960e` *(the last two are docs/comment-only and were pushed after the id check — verify them first next session, as this line's own convention demands).*
+**STATE — 2026-07-31, every figure re-run by hand: 3188 tests / 163 files · verify:fit 52/52 · bundle 259.7 KiB ≤ 300 on a FRESH `pnpm build` · typecheck / lint / doc-stats / aca / state-tax all clean. SIX COMMITS, ALL CI-GREEN BY EXPLICIT ID:** `92c18a59`/**30642471365** · `707b75ae`/**30643183447** · `edd4cf91`/**30643823691** · `b743ecc6`/**30643922417** · `200128b5`/**30658482079** · `8556960e`/**30659729705** · `1a2b7397`/**30659903803**. **Seven for seven.** *(Only the commit carrying THIS line is unverified, and by construction — it is written before it is pushed. That lag is a property of the convention, not drift: read it as "verified through", never "HEAD is".)*
 
 **WHY THIS SESSION HAPPENED: the prior queue's first instruction was "⚑ CHECK CI ON `8d4d4e58` AND `d2f4782c` FIRST." Both were RED**, on TWO DIFFERENT nondeterministic arms, and the squeaky commit above them was green by luck. Nothing in the repo said so.
 

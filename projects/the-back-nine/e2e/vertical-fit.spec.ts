@@ -1823,13 +1823,17 @@ test.describe(`the record-bearing vault returns (?vault=rec / ?vault=recold) —
       const geometry = await page.evaluate(() => {
         const disc = document.querySelector('footer.disclaimer.disclaimer--in-frame')!
         const card = document.querySelector('.rec-record')!
+        const standing = document.querySelector('.rec-record__standing')!
         const d = disc.getBoundingClientRect()
         const c = card.getBoundingClientRect()
+        const s = standing.getBoundingClientRect()
         return {
           discBottom: Math.round(d.bottom),
           cardTop: Math.round(c.top),
           cardBottom: Math.round(c.bottom),
           cardHeight: Math.round(c.height),
+          standingBottom: Math.round(s.bottom),
+          standingText: (standing.textContent ?? '').trim(),
           // Node.DOCUMENT_POSITION_FOLLOWING — the card comes AFTER the caveat in the DOM, so
           // focus order matches the visual order the pixels below assert.
           cardFollowsInDom: (disc.compareDocumentPosition(card) & 4) !== 0,
@@ -1839,7 +1843,8 @@ test.describe(`the record-bearing vault returns (?vault=rec / ?vault=recold) —
       console.log(
         `[U17 record return] ?vault=${plant} ${REAL.width}x${REAL.height}: ` +
           `disclaimer bottom=${geometry.discBottom} (frame=${geometry.vh}, headroom=${geometry.vh - geometry.discBottom}) · ` +
-          `card h=${geometry.cardHeight} top=${geometry.cardTop} bottom=${geometry.cardBottom}`,
+          `card h=${geometry.cardHeight} top=${geometry.cardTop} bottom=${geometry.cardBottom} · ` +
+          `standing bottom=${geometry.standingBottom} (slack=${geometry.vh - geometry.standingBottom})`,
       )
 
       // (1) THE LAW: the protected caveat is IN FRAME. This is the assertion the filed annotation
@@ -1862,6 +1867,22 @@ test.describe(`the record-bearing vault returns (?vault=rec / ?vault=recold) —
         'the card must FOLLOW the in-frame disclaimer in document order — a CSS-only reorder breaks ' +
           'focus order (WCAG 2.4.3) even while the pixels look right',
       ).toBe(true)
+
+      // (2b) THE STANDING LINE KEEPS THE FRAME — the one part of the card that is NOT a sanctioned
+      // below-fold casualty. The cause clauses may scroll (they are the detail); the lead sentence is
+      // the card's whole MEANING, and on the superseded face it is the only thing telling a household
+      // still executing the saved conversions that the advice itself may no longer fit. If it wraps
+      // out of frame, the card degrades to a heading over nothing — strictly worse than the defect the
+      // wording fixes, and invisible to every jsdom arm because it is a pure reflow outcome.
+      //
+      // The bound is TIGHT BY CONSTRUCTION (~10px at 1536×791), so this is a live constraint on the
+      // copy rather than a formality: it is what makes the length note in copy.ts:1310-1332 enforceable
+      // instead of advisory. Text is captured so a red names the sentence that outgrew the slack.
+      expect(
+        geometry.standingBottom,
+        `the card's standing line ends at ${geometry.standingBottom}px, past the ${REAL.height}px frame — ` +
+          `the meaning-bearing sentence must never be the scroll casualty (line: "${geometry.standingText}")`,
+      ).toBeLessThanOrEqual(REAL.height)
 
       // (3) THE SANCTION IS NARROW (burned/070 — a sweep needs a guard, and an exclusion that
       // quietly swallowed a neighbour would be the defect's next home). `recordCard` skips the

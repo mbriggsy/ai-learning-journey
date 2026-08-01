@@ -1314,12 +1314,36 @@ export const copy = {
   // where the disclosure belongs — so this line is what the non-colour marker stands on with zero
   // clauses beneath it.
   //
-  // IT NAMES THE STATE, NOT A REASON, and that is the honest wording rather than the tidy one. The
-  // obvious mirror ("It no longer matches your plan") is FALSE on the 'inputs-unavailable' cause,
-  // which says the opposite — that we cannot line it up at all — so a card carrying both sentences
-  // would contradict itself. "We can no longer show this as current" is true on all four causes AND
-  // on the un-named one, and it claims no knowledge the trichotomy does not have.
-  recommendRecordSuperseded: 'We can no longer show this as current.',
+  // ⚠️ THE VERB IS ABOUT THE ADVICE, NEVER ABOUT THE DISPLAY — and it must never become a showing-verb
+  // again. This line shipped for a while as "We can no longer show this as current", which reads as a
+  // claim about OUR RENDERING: the household infers the display is stale and the strategy still
+  // stands. On `?vault=recold` every cause clause sits BELOW the 791px fold, so that sentence was the
+  // only thing in frame — a reader still executing the saved conversions was told, in effect, to carry
+  // on. That is the cardinal calm-but-wrong sin wearing a calm face (cold-read-log.md card 7,
+  // HARD-FLAG/BLOCKER). Naming the STATE was the right instinct; naming the state of the SCREEN was
+  // not.
+  //
+  // WHY "may … fit" AND NOT THE TIDY MIRROR. "It no longer matches your plan" is FALSE on the
+  // 'inputs-unavailable' cause, which says the opposite — that we cannot line it up at all. The hedge
+  // is therefore load-bearing rather than soft: this sentence must be true across FIVE arms, not four
+  // — the four named causes plus the fail-CLOSED broken-contract arm (recommendationSaveView.ts:305-308),
+  // where the card renders this line ALONE over an empty list. "May no longer fit" is honest on all
+  // five, including the one where the honest content is our own uncertainty, and it claims no
+  // knowledge the trichotomy does not have. It speaks the household's frame ("the two of you"), never
+  // the mechanism's.
+  //
+  // LENGTH IS A CONSTRAINT HERE, and the constraint is ONE LINE — never a character count. MEASURED at
+  // the real 1536×791 frame (`verify:fit`, both plants): this line's bottom sits at 774px with 17px of
+  // frame left, and a second line costs ~27px. So ANY wrap puts the card's whole meaning below the
+  // fold and re-creates the defect this wording fixes. `vertical-fit.spec.ts` asserts this line's own
+  // bottom against the frame on BOTH plants — mutation-proven RED at 801px with a two-line variant.
+  //
+  // ⚠️ DO NOT RE-REJECT A CANDIDATE ON A GUESSED WIDTH. "It may no longer be the right read for the two
+  // of you." (54 chars) was filed as being "one wrap from eating the fold slack"; measured, it wraps
+  // not at all and lands on the SAME 774px. It lost on tone, not on pixels — the shipped line names the
+  // consequence to the household rather than to the reading, which is the whole point of the fix. The
+  // gate is the arbiter of width; prose estimates of it have been wrong here before.
+  recommendRecordSuperseded: 'It may no longer fit the two of you.',
   // ONE clause per `SavedRecommendationSupersededCause`. Each names WHAT moved, in the reader's
   // frame, with no blame register — "your numbers have changed" is neutral, never a fault.
   recommendRecordSupersededInputs: 'Your numbers have changed since then.',

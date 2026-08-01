@@ -153,8 +153,14 @@ describe('U17 §S0.1 — ONE exported arrived predicate, consumed (never re-type
     expect(src, 'the anchor is minted by the shared producer').toMatch(
       /planClockAnchor\(\s*snapshot\.draft\.startCalendarYear,\s*epochDayToCalendarYear\(currentEpochDay\(\)\),?\s*\)/,
     )
+    // The member path must be admitted or the negative can never fire: `Result.tsx` spells it
+    // `snapshot.draft.startCalendarYear` (:177/:178) and carries NO bare identifier in code —
+    // the U17 §S0 refactor deleted the local binding this regex was originally shaped against
+    // (`102416af^` had `const startCalendarYear = snapshot.draft.startCalendarYear`). So the
+    // realistic mutant, `… - snapshot.draft.startCalendarYear + 3`, walked straight past it.
+    // Same discipline as the clock arm below, which tolerates its own intervening paren.
     expect(src, 'never a re-typed subtraction against the build year').not.toMatch(
-      /-\s*startCalendarYear/,
+      /-\s*(?:[\w$.]+\.)?startCalendarYear/,
     )
   })
 
@@ -243,9 +249,17 @@ describe('U17 §S0.1 — ONE exported arrived predicate, consumed (never re-type
     expect(panel, 'the panel row derives through the producer').toMatch(
       /rothPlanStartFor\(savedAnchor, draft\.rothConversion\.startYearOffset\)/,
     )
-    expect(panel, 'the panel never hands the echo a raw offset or its own year sum').not.toMatch(
-      /rothPlanEcho\([^)]*startYearOffset/,
-    )
+    // ⚠️ THIS WAS `/rothPlanEcho\([^)]*startYearOffset/` and could never fire: `[^)]*` halts at
+    // the `)` of `formatMoney(...)`, which is argument ONE, so arguments 2+ — exactly where a
+    // raw offset or a re-typed year sum would be handed in — were unreachable by it. An
+    // occurrence count over the same source is both simpler and stronger: the panel reads the
+    // raw offset EXACTLY once, at the producer call (`AssumptionPanel.tsx:150`), so any second
+    // read — handed to the echo, or re-summed against the anchor — reds regardless of argument
+    // position or nesting depth.
+    expect(
+      (panel.match(/startYearOffset/g) ?? []).length,
+      'the panel reads the raw offset EXACTLY once — at the producer call; never handed to the echo, never re-summed',
+    ).toBe(1)
 
     const lever = read('../../intake/RothLever.tsx')
     expect(lever, 'the sheet echo derives through the producer').toMatch(

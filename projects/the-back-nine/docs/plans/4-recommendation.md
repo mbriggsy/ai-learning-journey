@@ -10,7 +10,7 @@ sources: [docs/research/engine-validation-and-tax.md, docs/research/pre65-health
 
 # Act 4 — Solver & Recommendation
 
-> **Status: U14 SHIPPED (2026-07-18); U15–U17 ahead.** `src/engine/solver/` holds the shared candidate enumerator + apply seam; `src/engine/validation/` holds the full harness (oracle, stability, grades, held-out defense, the oracle-cleared token). Each remaining unit fires its own pre-build council (U16 inherits the hawk's surplus-pivot veto verbatim; U17's council decides the six-rider charter).
+> **Status: U14–U16 SHIPPED; U17 closed at S6 (S7 deferred by Briggsy's ruling — Q7a re-filed as its own unit).** `docs/roadmap.md`'s You-Are-Here table wins on build status and carries the per-stage detail; this line is a pointer, deliberately kept coarse so it does not rot between sessions. `src/engine/solver/` holds the shared candidate enumerator + apply seam; `src/engine/validation/` holds the full harness (oracle, stability, grades, held-out defense, the oracle-cleared token). Both remaining units fired their pre-build councils and both are on the record in `docs/council-log.md`: U16 inherited the hawk's surplus-pivot veto verbatim (and it is now enforced in `copyGuard`, not just written down), and U17's council (wf_f4ced3c8-2f6) ruled the six-rider charter.
 
 > ## RECONCILIATION SUPERSESSION — 2026-07-18 (council-ratified, EXECUTE high 8/10)
 >
@@ -208,10 +208,12 @@ sources: [docs/research/engine-validation-and-tax.md, docs/research/pre65-health
 > fired + honored into the shape — delta-as-hero, survival context source-bound to the spine's
 > rendered confidence object, never a fresh absolute). The executable shape is
 > **`docs/plans/features/act4-u16-recommendation-surface-build-spec.md`**, which supersedes this
-> section where they conflict — including its binding **DEAD COPY list**: the "safe either way" /
-> "more than enough" absolutes at :222/:224/:243 and contract #6's phrasing, and the dead
-> tax-blind→tax-aware reframe at :225/:239 (supersession item 2), must never be implemented from
-> a grep of this body. The near-tie inversion stress test is RECORDED as a U14/U15
+> section where they conflict — including its binding **DEAD COPY list**: the "safe either way"
+> absolutes at :232/:234/:253/**:256** and contract #6's phrasing (`:52`), and the dead
+> tax-blind→tax-aware reframe at :235/:249 (supersession item 2), must never be implemented from
+> a grep of this body. *(Anchors corrected 2026-08-01 — every one was stale by +10, and `:256` was
+> never listed. The spec's list is the binding copy and keys on the PHRASE; treat these numbers as
+> hints. `:171`/`:189` also contain the phrase but NEGATIVELY — they are correct, not dead.)* The near-tie inversion stress test is RECORDED as a U14/U15
 > grade-calibration gate (spec §S0.2), never a U16 assumption.
 
 *Recommend-second, confidence-graded, comparative, hedge-on-headline, the surplus pivot.*

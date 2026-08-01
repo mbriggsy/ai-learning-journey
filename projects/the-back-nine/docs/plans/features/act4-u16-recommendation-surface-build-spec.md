@@ -371,14 +371,35 @@ carries `SolveComputeTier` on the payload — never a tier the fit gate can see 
 The plan body is deliberately un-rewritten; these lines are SUPERSEDED and must never be
 implemented from a grep of the body (the hawk's reconcile-before-code condition):
 
-1. `4-recommendation.md:222` — the "safe either way, and you're already on the best surplus path"
-   compose ABSOLUTE → S3.Q1's compose state (no-dollar, inherited frame).
-2. `:224` — "you're safe either way; this keeps ~$X more from the IRS" → delta-as-hero comparative.
-3. `:225` — the ENTIRE tax-blind→tax-aware reframe paragraph (premise dead, supersession item 2).
-4. `:239` — the tax-aware-baseline-vs-tax-blind-spine test scenario (same dead premise).
-5. `:243` — the surplus+no-change compose test scenario's "safe either way" wording.
-6. Contract #6's (`:52`) "you're safe either way; it keeps more from the IRS" phrasing — the
-   PIVOT survives; the absolute does not.
+**⚠️ THE QUOTED PHRASE IS THE PRIMARY KEY; THE LINE NUMBER IS ONLY A HINT.** Every anchor below was
+stale by exactly +10 until 2026-08-01 (the body shifted; the list did not), which is the failure mode
+a line-keyed list has by construction. Grep the phrase, then confirm the line — never the reverse.
+
+1. `4-recommendation.md:232` (was `:222`) — **"you're safe either way, and you're already on the best
+   surplus path we found"**, the compose ABSOLUTE → S3.Q1's compose state (no-dollar, inherited frame).
+2. `:234` (was `:224`) — **"you're safe either way; this keeps ~$X more from the IRS"** →
+   delta-as-hero comparative.
+3. `:235` (was `:225`) — the ENTIRE tax-blind→tax-aware reframe paragraph, opening
+   **"Tax-blind→tax-aware reframe, inherited from Act 3"** (premise dead, supersession item 2).
+4. `:249` (was `:239`) — the test scenario **"Edge case (tax-aware baseline, not the tax-blind
+   spine)"** (same dead premise).
+5. `:253` (was `:243`) — the test scenario **"Edge case (surplus + no-change compose)"** and its
+   "safe either way" wording.
+6. Contract #6's (`:52`) **"you're safe either way; this keeps more from the IRS"** phrasing — the
+   PIVOT survives; the absolute does not. *(This entry previously misquoted the body as "**it** keeps
+   more from the IRS"; under the phrase-as-primary-key rule above that key greps to zero hits, so the
+   one anchor that never drifted was the one that could not be found. Corrected 2026-08-01.)*
+7. **ADDED 2026-08-01, never listed before:** `:256` — the test scenario **"Edge case (surplus
+   pivot)"**, whose `("safe either way; keeps ~$X more from the IRS")` is the same absolute. Both
+   prior copies of this list stopped at `:253`.
+
+**NOT dead copy — do not "sweep" these:** `:25` (the council record that *states* the veto), and
+`:171` / `:189`, which use the phrase NEGATIVELY ("no false 'safe either way'") to describe when the
+pivot must **not** trip. Those are correct as written; deleting them would remove the guard.
+
+**The gate is now enforced in code, not just here** (2026-08-01): `copyGuard.ts`'s false-certainty
+clause catches both the contracted and uncontracted forms, so authoring any of the above reds the
+build. `docs/product.md` §6 + R21 — which used to PRESCRIBE the phrase — now carry the veto.
 
 ## The dissent (preserved verbatim, with its flip condition)
 

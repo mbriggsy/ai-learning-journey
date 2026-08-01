@@ -8,7 +8,9 @@
  * makes the omission a BUILD ERROR instead:
  *
  *  - {@link DRAFT_DISPOSITIONS} is a `Record<keyof ScenarioDraft, AssumptionDisposition>`
- *    (the ScenarioDraft⟷ScenarioV3 tie precedent, memoryModel.ts:133-155): a future draft
+ *    (the ScenarioDraft⟷ScenarioV3 tie precedent — memoryModel.ts's `_DraftKeysAreV3Keys` /
+ *    `_V3KeysAreDraftKeys` / `_draftShapeTied` block, cited by NAME because the old `:133-155`
+ *    line cite had drifted onto unrelated prose): a future draft
  *    field WITHOUT a declared disposition fails `tsc`, and an entry for a REMOVED field
  *    fails as an excess property. The registry can never lag the model.
  *  - {@link METHODOLOGY_DISCLOSURES} carries the NON-draft methodology constants — the
@@ -71,6 +73,36 @@ export type AssumptionDisposition =
  * EVERY ScenarioDraft key, mapped. `Record<keyof ScenarioDraft, …>` is the compile gate:
  * a new draft field (which, by the memoryModel shape tie, is a new persisted v3 field)
  * cannot ship without deciding — and declaring — how the user sees it.
+ *
+ * ⚠️ GATE-SCOPE — THE GATE IS EXACTLY ONE LEVEL DEEP, AND NOTHING WARNS YOU AT THE BOUNDARY.
+ * `keyof` sees only ScenarioDraft's OWN keys. Five of them are CONTAINERS — `people`,
+ * `enteredAccounts`, `incomeStreams`, `tickerClassifications`, `health` — and each already
+ * has its entry below. So a new sub-field on `HealthDraft`, `PersonDraft`, `EnteredAccount`,
+ * `IncomeStream`, or a `tickerClassifications` value is a new user-facing assumption at
+ * `draft.health.*` / `draft.people[].*` that compiles GREEN with no disposition, no seat, and
+ * an unchanged `requiredSeats()` — the container's single entry already satisfies the Record.
+ * NEST A USER FACT AND YOU HAVE SILENTLY OPTED OUT OF R7.
+ *
+ * This is why `medicareExtrasByPerson` and `retirementState` are TOP-LEVEL by deliberate
+ * design rather than tucked under `health`/`people`. Read that as precedent, not accident:
+ * when a new fact is a user assumption, hoisting it to a top-level key is what buys it the
+ * gate. If it genuinely must nest, the disposition has to be argued in a review — the
+ * compiler will not ask.
+ *
+ * A FULLY RECURSIVE MAPPED TYPE IS NOT AVAILABLE (checked in the types, not assumed): it
+ * degenerates on two of the five, and on one of them it would give FALSE assurance — which is
+ * worse than the honest gap this warning names.
+ *   - `tickerClassifications` is `Readonly<Record<string, TickerClassification>>`; its `keyof`
+ *     is `string`, so recursion there enforces nothing at all.
+ *   - `IncomeStream` is `{…} & IncomeTaxTreatment`, and `IncomeTaxTreatment` is a discriminated
+ *     union whose arms share exactly ONE key: `type`. So `keyof` silently drops every
+ *     arm-specific field — including `executedAfter2018`, whose own doc calls it "the
+ *     highest-leverage field in the feature — NEVER defaulted (intake asks it)", plus
+ *     `modifiedAdoptsPost2018Rules`, `qualified` and `taxableFraction`. A recursive gate would
+ *     report full coverage while missing the most consequential user answer in the union.
+ * Sibling FLAT records (`Record<keyof HealthDraft, …>`, `Record<keyof PersonDraft, …>`) WOULD
+ * work — both are plain object types — and are cheap. They are not shipped here because that
+ * is a scope decision to be argued, not a comment to be written.
  */
 export const DRAFT_DISPOSITIONS: Record<keyof ScenarioDraft, AssumptionDisposition> = {
   people: {

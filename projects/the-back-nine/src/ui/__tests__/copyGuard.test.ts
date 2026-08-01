@@ -271,9 +271,30 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
       isMortalityKey('recommendSaveRefusalRecoveryLockedHeading'),
       'recovery is not survivorship — the catastrophe net must not claim this key',
     ).toBe(false)
+    // --- THE DISPLAY-REGISTER BAN (cold-read Card 7's BLOCKER, until now comment-only). The
+    //     killed line was "We can no longer show this as current." — a claim about SHOWING that a
+    //     household reads as "the advice still stands, we just can't display it". The fix shipped
+    //     in `532cad82` ("It may no longer fit the two of you.") was defended by a comment beside
+    //     the string and by NOTHING ELSE: no lexicon entry, no drift-pin, no rendered-text arm.
+    //     Swept across ALL s5Keys rather than the one key, so the sin cannot migrate to a
+    //     neighbour — measured, all 20 shipped values are already clean. ---
+    const DISPLAY_REGISTER =
+      /\b(show|shows|showing|shown|display|displays|displayed|displaying|render|renders|rendered|rendering|present|presents|presented)\b/i
     for (const [k, v] of s5Keys) {
       expect(lintCopy(v, ['false-certainty', 'advice-verb', 'superlative', 'free-numeral']), `${k}: "${v}"`).toEqual([])
+      expect(v, `${k}: the verb is about the ADVICE, never the DISPLAY (Card 7 BLOCKER): "${v}"`).not.toMatch(
+        DISPLAY_REGISTER,
+      )
     }
+    // NON-VACUITY: the killed sentence — and the SHORTER evasion of it — must both trip the net.
+    // The shorter one matters: at 6 characters under the shipped line it clears any width gate,
+    // so a pixel budget provably cannot catch it and only the register can.
+    expect('We can no longer show this as current.', 'the killed BLOCKER must trip the register').toMatch(DISPLAY_REGISTER)
+    expect('We can’t show this as current.', 'the shorter evasion trips it too — width gates cannot').toMatch(DISPLAY_REGISTER)
+    // POSITIVE ANCHOR: silencing the line is not a pass — it must still name the ADVICE fitting
+    // the household, in the reader's own frame.
+    expect(copy.recommendRecordSuperseded, 'the lead still names the advice FITTING them').toMatch(/\bfit\b/)
+    expect(copy.recommendRecordSuperseded, "the reader's frame survives").toContain('the two of you')
     // The one SLOTTED line rides the sanctioned numeric channel (a calendar year), so it is swept
     // without free-numeral — the same split the staleness arm and SLOT_RENDER apply.
     expect(lintCopy(SLOT_RENDER.recommendRecordSavedIn, ['false-certainty', 'advice-verb', 'superlative'])).toEqual([])

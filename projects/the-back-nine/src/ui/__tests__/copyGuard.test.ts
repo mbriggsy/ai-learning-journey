@@ -305,14 +305,30 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     // routes a refusal means nothing was written — a refusal that says "we saved your plan" would
     // be a save reported that never happened. Purely NEGATIVE by design: an earlier draft pinned
     // the positive sentence "we saved your plan", which pinned a FALSEHOOD.
-    const claimsASave = /\b(is|was|we|we’ve|we've)\s+\S*\s*(saved|kept|stored)\b/i
+    // ⚠️ THIS REGEX USED TO MISS THE ONLY STRING IN THE CATALOG THAT ACTUALLY CLAIMS A SAVE.
+    // It was `/\b(is|was|we|we’ve|we've)\s+\S*\s*(saved|kept|stored)\b/i` — auxiliary-led only —
+    // and the permitted key reads "Saved to this device — …", a PARTICIPIAL lead with no
+    // auxiliary. So it matched 0 of 20 keys: the loop below was a filter over an empty set, and
+    // the `continue` exclusion protected a string that would have passed anyway. Widened to
+    // cover the participial lead (at the start or after terminal punctuation) plus the perfect
+    // and passive auxiliaries. Measured after widening: EXACTLY ONE key matches — the badge —
+    // so the loop stays green and the exclusion is load-bearing for the first time.
+    const claimsASave =
+      /(^|[—.!?]\s*)(saved|kept|stored)\b|\b(is|was|are|were|we|we’ve|we've|has been|have been|had been)\s+\S*\s*(saved|kept|stored)\b/i
     for (const [k, v] of s5Keys) {
       if (k === 'recommendSaveSavedBadge') continue
       expect(claimsASave.test(v), `${k} must not assert a completed save: "${v}"`).toBe(false)
     }
     // Non-vacuity (burned/070): the permitted key really does make the claim the others may not,
     // so the exclusion above is load-bearing rather than a filter over an empty set.
-    expect(copy.recommendSaveSavedBadge, 'the badge is the one key that DOES claim the save').toMatch(/saved/i)
+    // ⚠️ THIS MUST TEST `claimsASave` ITSELF. It used to assert `/saved/i` — a DIFFERENT and much
+    // weaker regex — which is why the gap above stayed invisible: the control passed on a word
+    // match while the regex under test matched nothing at all. A non-vacuity receipt that
+    // exercises a different predicate than the one it certifies is not a receipt.
+    expect(
+      claimsASave.test(copy.recommendSaveSavedBadge),
+      'the badge is the one key that DOES claim the save — proven with the SAME regex the loop uses',
+    ).toBe(true)
     // And the record-invalid refusal positively carries the nothing-was-written clause.
     expect(
       copy.recommendSaveRefusalRecordInvalidBody,

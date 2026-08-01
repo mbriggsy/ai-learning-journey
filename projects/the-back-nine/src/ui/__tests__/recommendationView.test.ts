@@ -194,6 +194,9 @@ describe('recommendationView — the committed beat (Q1 delta-as-hero + source-b
     const v = asRec(recommendationView(committed(payload), { spineConfidence: spine }))
     const expectedDelta = formatDeltaDollar(baseline.headlineStatisticB - winner.headlineStatisticB)
     expect(v.grade.heroLine).toBe(slots.recDeltaPayLessTax(expectedDelta))
+    // NOT subsumed by the toBe above — that pins the WIRING (both sides call the same slot), so a
+    // reword of the slot TEMPLATE moves both sides together and stays green. This arm reads the
+    // rendered text, and is the reason a vetoed phrase cannot enter through the template.
     expect(v.grade.heroLine).not.toMatch(/safe either way/)
     expect(v.skew, 'pay-less-tax has no skew disclosure').toBeUndefined()
   })

@@ -171,7 +171,11 @@ export const FALSE_CERTAINTY: readonly RegExp[] = [
   /\bout-?lasts?\b/i,
   /\blasts? (forever|a lifetime|the rest of your life)\b/i,
   /\blast a lifetime\b/i,
-  /\b(is|are|will be|stays?|remains?) (secure|safe|locked)\b/i,
+  // The CONTRACTED arms ('re / 'd be) close the council 2026-07-18 hawk-veto hole: the veto is on
+  // the surplus-pivot absolute, and "you're safe either way" walked past the uncontracted-only
+  // clause while "you are safe either way" was caught. lintCopy normalizes ’ → ' before matching,
+  // so the optional-apostrophe arm covers both apostrophe glyphs.
+  /\b(is|are|'?re|will be|'?d be|stays?|remains?) (secure|safe|locked)\b/i,
   /\ba (safe|sure) bet\b/i,
   /\b(count|rely|depend) on (this|it|that|your|the)\b/i,
   /\b(sleep|rest|breathe) (easy|easily|soundly|at night)\b/i,

@@ -574,6 +574,11 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
       'There is no scenario where you run out.',
       'Money in the bank.',
       'You are home free.',
+      // round-4: the surplus-pivot absolute (council 2026-07-18 HAWK VETO, docs/council-log.md).
+      // The UNCONTRACTED arm was already caught by the '(is|are) safe' clause; the CONTRACTED arm
+      // walked straight past it. Both are pinned so a lexicon reword cannot re-open the hole.
+      'You are safe either way.',
+      'You’re safe either way.',
     ]
     for (const s of mustCatch) {
       expect(lintCopy(s, ['false-certainty']).length, `MUST catch: "${s}"`).toBeGreaterThan(0)

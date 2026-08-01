@@ -343,8 +343,21 @@ describe('CVD self-test — the state-signal glyphs are pairwise-DISTINCT silhou
   it('PLANTED: an aliased glyph (one state reusing another’s silhouette) COLLAPSES the signature — the probe is not vacuous', () => {
     // The exact regression the gate guards: someone points 'coin-flip' at the 'confident' glyph. The
     // signatures must then be EQUAL — proving the pairwise-distinctness arms above can actually fail.
-    const aliased: VerdictGlyph = GRADE_GLYPH.confident
-    expect(glyphSignature(aliased)).toBe(glyphSignature(GRADE_GLYPH.confident))
+    //
+    // ⚠️ THE PROBE MUST BE A DISTINCT OBJECT, NOT AN ALIAS. Until 2026-08-01 this read
+    // `const aliased = GRADE_GLYPH.confident` and then compared `glyphSignature(aliased)` to
+    // `glyphSignature(GRADE_GLYPH.confident)` — the SAME function on the SAME reference. That
+    // assertion is a tautology: it holds for ANY implementation, including an identity-keyed or
+    // constant-returning one, so the non-vacuity RECEIPT was itself vacuous. And it could not
+    // model the real regression, which is a COPIED silhouette (a duplicated path list), not a
+    // reused reference. A structural copy proves the signature is VALUE-based.
+    const source = GRADE_GLYPH.confident
+    const aliased: VerdictGlyph = {
+      paths: [...source.paths],
+      ...(source.dots ? { dots: source.dots.map((d) => [d[0], d[1]] as const) } : {}),
+    }
+    expect(aliased, 'the probe is a distinct object — comparing a reference to itself proves nothing').not.toBe(source)
+    expect(glyphSignature(aliased)).toBe(glyphSignature(source))
     // …and a genuinely different form does NOT collapse (the probe is not trivially-equal either).
     expect(glyphSignature(GRADE_GLYPH.confident)).not.toBe(glyphSignature(GRADE_GLYPH['coin-flip']))
   })

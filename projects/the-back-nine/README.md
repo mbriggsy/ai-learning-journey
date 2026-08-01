@@ -69,9 +69,11 @@ The MVP is four acts. Each is a real milestone with its own plan, gates, and ver
 | Act | What it is | State |
 |---|---|---|
 | **1 — The Engine** | The deterministic engine + tax & healthcare overlays + accumulation projection + the date-search + the encrypted store | ✅ **Complete, reviewed, pinned** |
-| **2 — Where You Stand** | The guided account-level intake → the headline that adapts to where you stand (the date, or the confidence statement) → confidence viz → first Save | 🔨 **In progress** — the guided intake is built & reviewed and other income in retirement has shipped; the confidence-band render is built (review + wire-in pending); the confidence statement, state-adaptive lead, and first Save are next |
-| **3 — The Levers You Hold** | The budget builder + manual sequencing & Roth controls + healthcare-cost screens + returning-user re-entry (your saved plan, re-derived not replayed) | ⬜ Planned |
-| **4 — The Recommended Route** | The validation harness → the solver → the recommendation surface | 🟨 U14 shipped (the oracle that gates the solver); U15–U17 ahead |
+| **2 — Where You Stand** | The guided account-level intake → the headline that adapts to where you stand (the date, or the confidence statement) → confidence viz → first Save | ✅ **Complete** (2026-07-02) |
+| **3 — The Levers You Hold** | The budget builder + manual sequencing & Roth controls + healthcare-cost screens + returning-user re-entry (your saved plan, re-derived not replayed) | ✅ **Complete** — U9–U13 shipped |
+| **4 — The Recommended Route** | The validation harness → the solver → the recommendation surface | 🟨 **Underway** — per-unit status lives in [the roadmap's You-Are-Here table](docs/roadmap.md#the-you-are-here-table), which is the authority |
+
+> ⚠️ **Do not re-type per-unit build status in this table.** Three of these four rows were false on 2026-08-01 — Act 2 read "In progress" and Act 3 "Planned" long after both completed, and Act 4 claimed only U14 had shipped — while line 78 of *this same file* correctly described U15/U16/U17 work as shipped. Nothing gates this table (`verify:doc-stats` reads only the test-count claim), so every hand-typed status here is a copy that rots silently. Point at the roadmap instead.
 
 Act 1's engine is pinned against primary sources: every dated tax and healthcare figure carries an IRS / CMS / HHS / SSA / eCFR citation (and a directional-until-pinned flag where one isn't yet locked), and cohort mortality re-derived from the SSA Trustees-Report survival tables for the household's actual birth cohorts. The guided intake delivers a **live, provisional Monte Carlo reading that sharpens as you answer each question**, proven end-to-end in real Chromium under the enforced CSP.
 

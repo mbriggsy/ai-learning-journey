@@ -158,6 +158,32 @@ describe('U17 §S0.1 — ONE exported arrived predicate, consumed (never re-type
     )
   })
 
+  it('the CLOCK ITSELF is LOCAL-calendar — the getTimezoneOffset term IS the invariant, and only a source-bind can hold it', () => {
+    // THE MUTANT THIS KILLS: deleting `- now.getTimezoneOffset() * 60_000` from
+    // `currentEpochDay` (scenarioFromDraft.ts:62-65), making the basis UTC. Its documented
+    // cost is real and dated: "a UTC day here expired budget windows a few hours early every
+    // Dec 31 for any household behind UTC" — i.e. it fails for Briggsy's own timezone, on New
+    // Year's Eve, silently.
+    //
+    // ⚑ WHY THIS IS A SOURCE-BIND AND NOT A BEHAVIOURAL ARM — the reason is the whole point.
+    // Every fixture in the suite derives TODAY from this same function and compares only
+    // relative deltas, so a uniform shift of the basis is invisible to all of them. And a
+    // behavioural arm could not rescue it: the mutant's effect is EXACTLY ZERO wherever the
+    // local offset is zero, and CI runs UTC. An arm that asserts the returned day would pass
+    // on CI under the mutant on every machine that matters — it would be a gate that reports
+    // green precisely where it is needed. The text of the line is the only witness that
+    // survives a UTC runner.
+    const src = read('../scenarioFromDraft.ts')
+    expect(src, 'the local-calendar offset is SUBTRACTED — not dropped, not sign-flipped').toMatch(
+      /Math\.floor\(\(now\.getTime\(\) - now\.getTimezoneOffset\(\) \* 60_000\) \/ 86_400_000\)/,
+    )
+    // The negative must tolerate the paren the mutant leaves behind: deleting the offset term
+    // yields `Math.floor((now.getTime()) / 86_400_000)`, and a naive /getTime\(\)\s*\/…/ does
+    // NOT match that — it would be a negative that can never fire.
+    expect(src, 'never a raw UTC epoch-day').not.toMatch(/getTime\(\)\s*\)?\s*\/\s*86_400_000/)
+    expect((src.match(/new Date\(\)/g) ?? []).length, 'exactly ONE clock read in this module').toBe(1)
+  })
+
   it('the BAND/HERO crown-arrived withdraw consumes the SAME export — never its own compare', () => {
     const src = read('../FuckOffDate.tsx')
     expect(src, 'the predicate is imported from the ladder module, not re-declared').toMatch(

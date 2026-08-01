@@ -8,6 +8,15 @@ describe('bundle byte-budget sentinel', () => {
   })
 
   it('FAILS when initial JS exceeds budget (the planted-oversize case)', () => {
+    // ⚠️ THE BUDGET'S VALUE IS PINNED HERE, and it must be — every other arm in this file is
+    // BUDGET-RELATIVE (`BUNDLE_BUDGET_BYTES + 1`, or a literal well under it), so raising the
+    // constant to 3 MiB would leave the whole sentinel GREEN while the gate it names is
+    // effectively disarmed. 300 KiB is a documented contract (CLAUDE.md's commands table:
+    // "Initial-JS byte budget sentinel (≤ 300 KiB entry JS)"), not an implementation detail —
+    // a deliberate raise must edit this line and say why in the commit.
+    expect(BUNDLE_BUDGET_BYTES, 'the shipped budget is 300 KiB — loosening it is a decision, never a silent edit').toBe(
+      300 * 1024,
+    )
     const r = checkBundleBudget([{ name: '/assets/huge.js', bytes: BUNDLE_BUDGET_BYTES + 1 }])
     expect(r.ok).toBe(false)
     expect(r.totalBytes).toBeGreaterThan(r.budgetBytes)

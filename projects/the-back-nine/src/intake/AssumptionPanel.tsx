@@ -49,7 +49,7 @@ import { ControlSheet } from './controlSheet'
 import { CurrencyField, IntegerField, PercentField, SegmentedControl, formatMoney, formatPercent } from './fields'
 import { FieldError } from './FieldError'
 import { validateField, personField, type SanityViolation } from './sanity'
-import { healthcarePriced, isDateRoute, spendHelpKeyFor, type MissingFact } from './intakeMap'
+import { anyPre65OrUnknown, healthcarePriced, isDateRoute, spendHelpKeyFor, type MissingFact } from './intakeMap'
 import { MedicareExtrasFork, StateResidencePicker, writeWorkingYearInvestment } from './questions'
 import './assumptions.css'
 
@@ -277,7 +277,7 @@ export function AssumptionPanel({
   })()
 
   const total = draft.enteredAccounts.reduce((s, a) => s + (a.valueToday || 0), 0)
-  const anyPre65 = draft.people.some((p) => p.currentAge !== undefined && p.currentAge < 65)
+  const showHealthQuote = anyPre65OrUnknown(draft)
   const spendDisplayed =
     draft.annualSpendingReal === undefined
       ? undefined
@@ -637,8 +637,11 @@ export function AssumptionPanel({
             />
           </Row>
 
-          {/* The ACA quote pair — pre-65 households (the engine's priced domain). */}
-          {anyPre65 && (
+          {/* The ACA quote pair — pre-65 AND not-yet-known-age households: the SAME predicate
+              missingRequiredFacts gates on (intakeMap.anyPre65OrUnknown), so the panel can never
+              name this pair as missing while hiding its editor. This is the HOMING domain, NOT
+              the priced one — healthcarePriced is known-ages-only and must not be used here. */}
+          {showHealthQuote && (
             <Row seat="health-quote">
               <CurrencyField
                 labelKey="enrolledPremiumLabel"

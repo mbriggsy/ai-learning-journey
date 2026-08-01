@@ -9,6 +9,7 @@ import { requiredSeats } from '@ui/assumptionRegistry'
 import { copy, slots } from '@ui/copy'
 import { planClockAnchor } from '@ui/bandAnnotations'
 import { formatMoney } from '../fields'
+import { missingRequiredFacts } from '../intakeMap'
 import type { BudgetLineItem, SimulationResult } from '@shared/model'
 
 /*
@@ -114,6 +115,25 @@ const LINES: readonly BudgetLineItem[] = [
 ]
 const governedDraft = draftWith(() => ({ ...mixedDraft, budget: LINES, annualSpendingReal: 44_000 }))
 
+/** The UNKNOWN-AGE household: mixedDraft with both birth years (and their derived ages) cleared
+ *  and the quote pair cleared. LIVE-REACHABLE, not a synthetic state — resolve once, open
+ *  Assumptions, take "edit in the walk-through", and blank a birth year in the names step: the
+ *  walk's field writes `undefined` through and no sanity rule fires on an ABSENT value (both
+ *  age rules guard on `!== undefined`). The recompute then commits `inputs-incomplete`, which is
+ *  the arm that renders the missing-fact line. */
+const unknownAgeDraft = draftWith(() => ({
+  ...mixedDraft,
+  people: [
+    { ...mixedDraft.people[0], birthYear: undefined, currentAge: undefined },
+    { ...mixedDraft.people[1], birthYear: undefined, currentAge: undefined },
+  ] as ScenarioDraft['people'],
+  health: {
+    ...mixedDraft.health,
+    enrolledPremiumMonthlyToday: undefined,
+    slcspMonthlyToday: undefined,
+  },
+}))
+
 const shown = (xOfTen: number, over: Partial<StickyDisplay> = {}): StickyDisplay => ({
   xOfTen,
   outcomeState: 'on-track',
@@ -181,6 +201,26 @@ describe('the R7 registry completeness walk (the compile gate’s runtime half)'
     for (const seat of requiredSeats()) {
       expect([...rendered], `seat "${seat}" must have a rendering home in the panel`).toContain(seat)
     }
+  })
+})
+
+// ─── the unknown-age homing pin (every NAMED fact has a rendered editor) ──────────────────
+
+describe('an unknown-age household — the panel HOMES every fact it names', () => {
+  it('names the ACA quote pair AND renders its row (never a required fact with no editor)', () => {
+    // Asserted against missingRequiredFacts DIRECTLY, not against the rendered missing-fact
+    // sentence: that line truncates to the first three names, and this fixture is missing more
+    // than three facts, so a string assertion could pass or fail for reasons unrelated to homing.
+    const named = missingRequiredFacts(unknownAgeDraft).map((m) => m.labelKey)
+    expect(named).toContain('enrolledPremiumLabel')
+    expect(named).toContain('slcspLabel')
+    // The `missing` prop is INJECTED (it defaults to [] in this harness), so it is fed from the
+    // same producer Result.tsx feeds it from — otherwise the arm is vacuous.
+    renderPanel({
+      snapshot: snap(unknownAgeDraft, { answer: { kind: 'inputs-incomplete' } }),
+      missing: missingRequiredFacts(unknownAgeDraft),
+    })
+    expect(document.querySelector('[data-assumption-seat="health-quote"]')).not.toBeNull()
   })
 })
 

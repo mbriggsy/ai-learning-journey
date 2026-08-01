@@ -6,7 +6,7 @@ import { fraMonthsForBirthYear } from '@engine/constants/socialSecurity'
 import { medicareExtrasTypical, medicareExtrasTypicalMonthly } from '@engine/constants/health'
 import { budgetGoverns, isActiveAt, isRampedBudget } from '@budget/budgetModel'
 import { budgetYearZeroFullTotal, commitBudgetPatch } from '@budget/budgetToSpending'
-import { spendHelpKeyFor } from './intakeMap'
+import { anyPre65OrUnknown, spendHelpKeyFor } from './intakeMap'
 import { BudgetBuilder } from './BudgetBuilder'
 import { CurrencyField, IntegerField, NameField, SegmentedControl, formatMoney, type SegmentOption } from './fields'
 import { FieldError } from './FieldError'
@@ -1137,9 +1137,6 @@ const otherIncomeStep: StepDef = {
 
 const anyWorking = (d: ScenarioDraft): boolean =>
   d.people.some((p) => p.workStatus === 'working')
-
-const anyPre65OrUnknown = (d: ScenarioDraft): boolean =>
-  d.people.some((p) => p.currentAge === undefined || p.currentAge < 65)
 
 const anyNearMedicare = (d: ScenarioDraft): boolean =>
   d.people.some((p) => p.currentAge !== undefined && p.currentAge >= 64)

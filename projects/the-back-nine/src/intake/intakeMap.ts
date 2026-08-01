@@ -84,8 +84,14 @@ export interface MissingFact {
   readonly personIndex?: 0 | 1
 }
 
-const anyPre65 = (d: ScenarioDraft): boolean =>
-  d.people.some((p) => p.currentAge !== undefined && p.currentAge < 65)
+/** Pre-65 OR not-yet-KNOWN age — the ONE ACA-question domain (asked until proven 65+).
+ *  EXPORTED because three surfaces must gate on the SAME predicate: this missing-fact list,
+ *  the intake step (questions.tsx), and the AssumptionPanel row. A panel that NAMES a fact it
+ *  does not HOME is the R7 completeness break this export closes.
+ *  NOT interchangeable with `healthcarePriced` below — that one is known-ages-only by design
+ *  (an unknown age is not a claim), so do not collapse them. */
+export const anyPre65OrUnknown = (d: ScenarioDraft): boolean =>
+  d.people.some((p) => p.currentAge === undefined || p.currentAge < 65)
 
 const anyNear65 = (d: ScenarioDraft): boolean =>
   d.people.some((p) => p.currentAge !== undefined && p.currentAge >= 64)
@@ -156,10 +162,10 @@ export function missingRequiredFacts(d: ScenarioDraft): readonly MissingFact[] {
       out.push({ labelKey: 'classifierLegend', personIndex: a.ownerIndex as 0 | 1 })
   })
 
-  // The ACA quote pair: REQUIRED for any household with a pre-65 member —
-  // absent coverage prices healthcare at zero, the optimistic cardinal
-  // direction (and unknowable ages keep the question shown, not required).
-  if (anyPre65(d) || d.people.some((p) => p.currentAge === undefined)) {
+  // The ACA quote pair: REQUIRED for any household with a pre-65 member, and equally for a
+  // not-yet-KNOWN age (the question is asked until the household is proven 65+) — absent
+  // coverage prices healthcare at zero, the optimistic cardinal direction.
+  if (anyPre65OrUnknown(d)) {
     if (d.health.enrolledPremiumMonthlyToday === undefined)
       out.push({ labelKey: 'enrolledPremiumLabel' })
     if (d.health.slcspMonthlyToday === undefined) out.push({ labelKey: 'slcspLabel' })

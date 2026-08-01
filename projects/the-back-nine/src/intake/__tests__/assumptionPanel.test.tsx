@@ -5,7 +5,7 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { AssumptionPanel, type AssumptionPanelProps } from '../AssumptionPanel'
 import { createMemoryModel, type MemoryModel, type MemoryModelSnapshot, type ScenarioDraft, type StickyDisplay } from '@store/memoryModel'
 import type { EngineClient } from '@store/engineClient'
-import { requiredSeats } from '@ui/assumptionRegistry'
+import { requiredSeats, METHODOLOGY_DISCLOSURES } from '@ui/assumptionRegistry'
 import { copy, slots } from '@ui/copy'
 import { planClockAnchor } from '@ui/bandAnnotations'
 import { formatMoney } from '../fields'
@@ -198,7 +198,17 @@ describe('the R7 registry completeness walk (the compile gate’s runtime half)'
     first.unmount()
     renderPanel({ snapshot: snap(governedDraft) })
     collect()
-    for (const seat of requiredSeats()) {
+    // ⚠️ NON-VACUITY CENSUS — the only assertion in this arm lives INSIDE the loop, so an empty
+    // (or silently-shrunken) roster passes GREEN while proving nothing, and the R7 completeness
+    // claim evaporates with the gate still reporting OK. `requiredSeats()` derives from TWO
+    // sources (`assumptionRegistry.ts:238-245`: the non-`internal` DRAFT_DISPOSITIONS, plus
+    // METHODOLOGY_DISCLOSURES), so census BOTH — either half dropping out would otherwise be
+    // invisible here.
+    const seats = requiredSeats()
+    expect(seats.length, 'the seat roster is non-empty — an empty loop proves no completeness').toBeGreaterThanOrEqual(20)
+    expect(seats, 'the DRAFT_DISPOSITIONS half is represented').toContain('spend')
+    expect(seats, 'the METHODOLOGY_DISCLOSURES half is represented').toContain(METHODOLOGY_DISCLOSURES[0]!.seat)
+    for (const seat of seats) {
       expect([...rendered], `seat "${seat}" must have a rendering home in the panel`).toContain(seat)
     }
   })

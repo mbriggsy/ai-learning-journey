@@ -169,7 +169,23 @@ export function displayBand(pB: number, nB: number): number {
 
 /** The A-side SELECTION score marker (insight 056's every-field law, minted here as the
  *  output contract): a value carrying this type is the curse-biased in-sample read and must
- *  NEVER reach a rendered surface — U16's test asserts the wire carries none of these. */
+ *  NEVER reach a rendered surface.
+ *
+ *  ⚠️ THIS DOCSTRING USED TO CLAIM "U16's test asserts the wire carries none of these", WHICH IS
+ *  THE CONVERSE OF WHAT THAT TEST PROVES. The wire DOES carry these — by structured clone, and
+ *  deliberately: `worker.test.ts` asserts `wire.prunedScores[0]?.selectionScoreA?.neverRendered`
+ *  is `true`, i.e. that the MARKER survives the pack, under its own comment "the pruned scalars
+ *  are NOT buffers — they cross by structured clone, marked never-rendered". So the wire is the
+ *  wrong place to look for this law, and nothing there ever enforced it.
+ *
+ *  ⚠️ AND THE TYPE CANNOT HOLD IT EITHER: `neverRendered: true` is a type-forced literal, so
+ *  every `toBe(true)` on it passes by construction and can never fail. That is precisely why the
+ *  existing checks looked like enforcement and were not.
+ *
+ *  THE LAW IS HELD BY A RENDER-SURFACE SOURCE BIND — see `recommendationView.test.ts`'s
+ *  objective≡headline guard, which scans every file under `src/ui` and `src/viz` for
+ *  `selectionScoreA` and requires zero hits (with a non-vacuity companion so a wrong glob cannot
+ *  pass silently). Do NOT "strengthen" this by adding another assertion on `neverRendered`. */
 export interface SelectionScore {
   readonly neverRendered: true
   readonly value: number

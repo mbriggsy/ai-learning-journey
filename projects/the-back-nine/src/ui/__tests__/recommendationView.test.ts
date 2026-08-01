@@ -1,3 +1,5 @@
+import { readFileSync, readdirSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { describe, it, expect } from 'vitest'
 import { NEVER_DEPLETED, type Distribution, type TaxAwareDistribution, type RecommendationGoal } from '@shared/model'
 import { headlineStatisticFromDistribution } from '@engine/solver/objectiveHeadline'
@@ -278,6 +280,35 @@ describe('recommendationView — the committed beat (Q1 delta-as-hero + source-b
     const lying: SolveRecommendation = { ...good, winner: { ...good.winner, headlineStatisticB: good.winner.headlineStatisticB + 999_999 } }
     const v = recommendationView(committed(lying), { spineConfidence: spine })
     expect(v.kind, 'a payload that disagrees with what ranked never renders a lockup').toBe('unavailable')
+
+    // ⚑ THE NEVER-RENDERED LAW ON THE CURSE-BIASED A-SIDE SCORE LIVES HERE — and it must be a
+    // SOURCE BIND, because the two things that LOOKED like enforcement cannot fail:
+    //   · `SelectionScore.neverRendered` is a type-forced `true`, so every `toBe(true)` on it
+    //     passes by construction;
+    //   · the wire deliberately CARRIES these by structured clone — `worker.test.ts` proves the
+    //     MARKER survives the pack, not that the value is absent (heldOutSeed.ts's docstring
+    //     claimed the converse until 2026-08-01).
+    // A render-layer file that so much as names `selectionScoreA` is one dereference away from
+    // showing a household the in-sample, optimizer's-curse-biased score as if it were the answer.
+    const walk = (dir: string, out: string[] = []): string[] => {
+      for (const e of readdirSync(dir, { withFileTypes: true })) {
+        const p = resolve(dir, e.name)
+        if (e.isDirectory()) {
+          if (e.name !== '__tests__') walk(p, out)
+        } else if (/\.tsx?$/.test(e.name)) out.push(p)
+      }
+      return out
+    }
+    const renderSources = [
+      ...walk(resolve(__dirname, '../../ui')),
+      ...walk(resolve(__dirname, '../../viz')),
+    ]
+    const leaks = renderSources.filter((f) => readFileSync(f, 'utf8').includes('selectionScoreA'))
+    expect(leaks, 'no render-layer file may even NAME the curse-biased A-side selection score').toEqual([])
+    // NON-VACUITY (insight 104's starved-control lesson): the SAME scan must find a token the
+    // render layer legitimately reads, or a wrong directory / broken walk passes silently.
+    const control = renderSources.filter((f) => readFileSync(f, 'utf8').includes('headlineStatisticB'))
+    expect(control.length, 'the scan really reaches the render layer — otherwise the sweep above is vacuous').toBeGreaterThan(0)
   })
 })
 

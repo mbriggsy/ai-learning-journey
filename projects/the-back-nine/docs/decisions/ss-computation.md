@@ -79,7 +79,13 @@ The §1–§12 decisions below rest on the verified SSA rule-set — FRA-by-birt
 
 **SPOUSAL_RATE carries the `reVerifyEveryBuild` flag** — a scored-but-unenacted proposal to phase 50%→33% by 2042 exists, so the figure is on the re-verify watch list.
 
-> ⚠️ **NOT YET ENFORCED (audited 2026-08-01).** This line previously read *"the constant must catch enactment at build time, not drift silently"* — that was a statement of intent written as if it were a shipped mechanism, and it was false. The flag is inert: `spousalRate` is the **only** `reVerifyEveryBuild` entry in `src/engine/constants/` with **no** last-verified record, **no** CI gate and **no** runtime clause. (Compare `acaEnhancedSubsidyStatus`: `verify:aca` + a runtime withhold + a record↔constant bind test; and `ncRateSchedule`: `verify:state-tax` + the certification-pinned oracle token.) A dated tripwire would force an annual **human** re-verify; nothing available to us detects *enactment* at build time, so no future wording should claim it does. The gate's shape — CI-only tripwire vs CI **plus** a runtime withhold — is an open ruling; see `TODO.md`.
+> **HOW IT IS ENFORCED (2026-08-01).** This line previously read *"the constant must catch enactment at build time, not drift silently"* — intent written as if it were a shipped mechanism, and false at the time: an audit found `spousalRate` was the **only** `reVerifyEveryBuild` entry in `src/engine/constants/` with no last-verified record, no CI gate and no runtime clause.
+>
+> It is now enforced by **`src/engine/constants/__tests__/spousalRate.reverify.tripwire.test.ts`** — a dated wall-clock arm that reds one year after its recorded re-verify date, riding `pnpm test` (already in CI) rather than a bespoke `verify:ss` script. Its premise is the flag itself, so removing the flag reds the tripwire and forces a conscious retirement.
+>
+> ⚠️ **What it does: forces a HUMAN re-verify at least annually. What it cannot do: detect an enactment at build time** — nothing available to us can. Do not reintroduce that wording anywhere.
+>
+> **The gate is deliberately CI-only, not CI + a runtime withhold** (the shape `acaEnhancedSubsidyStatus` uses). `consumedConstants.ts` pulls the whole `socialSecurity.*` family whenever any person has `pia > 0` — essentially every household — where ACA's clause fires only for pre-65 Marketplace runs and NC's for one state. A stale-stamp withhold would refuse the recommendation to *everyone* over a statute nobody had touched, which is alarm-when-fine at maximum scale and its own breach of the cardinal rule. A runtime clause remains fully additive if that judgement ever changes.
 
 ### §3 — Own-benefit reduction & delayed credit (pure)
 

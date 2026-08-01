@@ -120,6 +120,46 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     expect(budget, 'the conservative tail contradicts the “all in” prime').toContain('most budgets don’t')
   })
 
+  // --- U9b: the budget AXIS copy is DIRECTION-NEUTRAL BY VETO, and until this arm the ONLY
+  //     thing enforcing it was a prose comment in copy.ts keyed "DIRECTION-NEUTRAL by veto".
+  //     The ruling is the council row dated 2026-07-03, "The budget side-quest cold-read"
+  //     (docs/council-log.md — cited by DATE + TITLE on purpose: that log is reverse-
+  //     chronological, so every new row pushes the line number down, and TODO.md has already
+  //     rotted this pointer to `:31` twice). Its HONESTY-HAWK HARD VETO (conf 9) fired on
+  //     directional-D "as EVERY elder first drafted it" — the vetoed drafts being "the
+  //     essentials date comes forward / the two dates split apart".
+  //
+  //     WHY IT IS A HONESTY DEFECT AND NOT A STYLE ONE: the R27 100%-FPL/PTC inversion is
+  //     REACHABLE post-U10-conversions, and the engine already ships the OPPOSITE claim —
+  //     `dateFloorInversionNote`: "Here the essentials-only version lands later than the full
+  //     plan." A directional promise at the ASK manufactures the exact sin the module exists
+  //     to prevent, on precisely the pre-65 cliff households U11 protects.
+  //
+  //     ⚠️ "split" IS NOT BANNED AND MUST NOT BE. The vetoed phrase is the two DATES splitting
+  //     apart; `budgetCta`'s "Split what must hold from what could give" is the AXIS sense —
+  //     splitting the budget LINES. Same verb, opposite object. Banning the lexeme would kill
+  //     the veto-cleared, measured single-line CTA the council itself shipped.
+  //
+  //     ⚠️ KEY-SCOPED BY NAME, deliberately. A `budget`-PREFIX sweep would red
+  //     `dateFloorInversionNote`'s honest inversion; a CONTROL_KEY_PREFIXES entry arms
+  //     require-hedge (a modal), which is a different gate and would mush the CTA. ---
+  it('U9b: the budget AXIS copy promises no DIRECTION — the 2026-07-03 hawk veto, enforced (drift-pin)', () => {
+    const DIRECTIONAL = /sooner|earlier|later|faster|safer|sharper|comes? forward/i
+    for (const k of ['budgetCta', 'budgetSheetTitle', 'budgetSheetIntro'] as const) {
+      expect(copy[k], `${k}: "${copy[k]}" promises a direction the engine can invert`).not.toMatch(DIRECTIONAL)
+    }
+    // NON-VACUITY, two ways. (1) The axis must still be NAMED — silencing the copy is not a
+    // pass, or the gate would reward deleting the strings it guards.
+    expect(copy.budgetCta, 'the axis survives: what could give').toContain('what could give')
+    expect(copy.budgetSheetTitle, 'the axis survives: must hold').toContain('must hold')
+    expect(copy.budgetSheetIntro, 'the axis survives: each on its own terms').toContain('on its own terms')
+    // (2) The regex must be able to BITE. `dateFloorInversionNote` is the engine's own
+    // opposite-direction disclosure — it MUST match, proving this is a live net and not a
+    // pattern that happens to find nothing. It is also why the sweep is key-scoped: directional
+    // truth is sanctioned in the gated POST-split disclosure, never in the pre-split ask.
+    expect(copy.dateFloorInversionNote, 'the control: a real directional claim trips the regex').toMatch(DIRECTIONAL)
+  })
+
   // --- U17 §S4 — the `staleness*` WARNING REGISTER. The prefix's hedge/verdict EXEMPTION is
   //     documented law (copy.ts: chrome/note prefixes carry no odds and recommend nothing), which
   //     makes it the WEAKEST net in the catalog — and these are the strings that tell a household

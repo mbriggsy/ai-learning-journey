@@ -252,13 +252,50 @@ describe('gradeRecommendation — the real engine at the calibrated floor (16k �
   it('THE MEASURED NEAR-TIE (the Q4d proving case, real engine, MEDICARE-BEARING per the calibration ruling): the conversion winner clears every band yet sits inside the SE-multiple — DEMOTED to coin-flip', () => {
     // The Q4d calibration world (wf_c673339e-257, measured 2026-07-19 at 16k × 5): all-65+
     // MFJ, trended Part B + scaled IRMAA surcharges live, a 30k×3yr conversion winner over
-    // conversion-0 — measured member margins 0.0021–0.0028 at margin/SE ratios ≤ 3.2, every
-    // member beyondBand (CRN resolves the margin; the demotion is the shape-residual caution,
-    // never sampling noise). The pre-flip Medicare-BLIND proving world (62yo, no healthcare,
-    // margins ~0.011 at ratios ~12–14) now sits OUTSIDE the width — the re-calibration's
-    // point: the Medicare-bearing class defines the demotion regime, per the U15 Q4d ruling.
+    // conversion-0 — measured member margins 0.0021–0.0028 at margin/BAND ratios ≤ 3.2,
+    // every member beyondBand (CRN resolves the margin; the demotion is the shape-residual
+    // caution, never sampling noise).
+    //
+    // ⚠️ THE UNIT IS THE WHOLE CLAIM — this line said "margin/SE ratios ≤ 3.2" from its
+    // authoring (ca41256f, 2026-07-19) until 2026-08-01, which contradicted solver.ts:95's
+    // class-wide "max margin/SE ratio ≈ 8.1" written the SAME DAY. Both numbers were right;
+    // one named the wrong denominator. `band = solverSelectionTieZ · se` (gradeCalibration.ts
+    // :113), so the two ratios differ by exactly z = 1.96 and either reads as plausible in
+    // prose. RE-MEASURED by running this very arm (2026-08-01, deterministic — seedA 0xca11b,
+    // pure engine, ~15s; the 900_000 below is a hang guard, not a runtime):
+    //   margin / se / band ⇒ margin/SE, margin/band
+    //   0.0025625 / 0.00042801 / 0.00083890 ⇒ 5.99, 3.05
+    //   0.0021250 / 0.00040471 / 0.00079323 ⇒ 5.25, 2.68
+    //   0.0022500 / 0.00037459 / 0.00073420 ⇒ 6.01, 3.06   ← the class max on BOTH ratios
+    //   0.0026875 / 0.00046304 / 0.00090756 ⇒ 5.80, 2.96
+    //   0.0023750 / 0.00043262 / 0.00084793 ⇒ 5.49, 2.80
+    // Max margin/band 3.05 ≤ 3.2 ✓; max margin/SE 6.01, nowhere near 3.2. The ratio pins
+    // below make the mislabel unrepresentable — a prose-only number is what rotted here.
+    //
+    // ⚑ SOLVER.TS IS VINDICATED, NOT IMPLICATED — do not "fix" it to these numbers. Its
+    // range is CLASS-WIDE over two variants (spend 124k AND 112k); this arm drives the 124k
+    // world only (nearTieInversion.ts:61) and 112k HAS NO FIXTURE anywhere in the repo, so
+    // it can never be re-measured here. Its low SE 0.00037 is this world's measured minimum
+    // (0.00037459), and its 8.1 closes on the 112k end (0.0041 / 0.00051 = 8.04; 4.15 × 1.96
+    // = 8.13) — so "the multiple = 10 = the measured class + ~23% headroom" (solver.ts:96)
+    // holds. Rewriting solver.ts to the five rows above would DELETE the class-wide record.
+    //
+    // The pre-flip Medicare-BLIND proving world (62yo, no healthcare, margins ~0.011 at
+    // ratios ~12–14) now sits OUTSIDE the width — the re-calibration's point: the
+    // Medicare-bearing class defines the demotion regime, per the U15 Q4d ruling.
+    // ⚠️ That last ratio pair was NOT re-measured on 2026-08-01 (its world is pre-flip and
+    // has no fixture reachable from here) and it was written in the same sentence as the
+    // mislabel above — treat its denominator as UNVERIFIED, not as attested.
     const out = gradeRecommendation({ base: q4dWorld(16_000), winner: conv30, runnerUp: conv0, seedA: 0xca11b, statistic: 'survival' })
     expect(out.memberMargins.every((m) => m.beyondBand), 'CRN resolves the margin — demotion is the ONLY conservative force').toBe(true)
+    // THE UNIT PINS — the comment's "≤ 3.2" is now load-bearing instead of decorative. The
+    // defect these make unrepresentable is naming 3.2 as an SE ratio: the third assertion
+    // fails the moment anyone does, because margin/SE cannot be ≤ 3.2 on this world.
+    const maxOverBand = Math.max(...out.memberMargins.map((m) => m.margin / m.band))
+    const maxOverSe = Math.max(...out.memberMargins.map((m) => m.margin / m.se))
+    expect(maxOverBand, 'margin/BAND — the ≤ 3.2 the comment above names (measured 3.05)').toBeLessThanOrEqual(3.2)
+    expect(maxOverSe, 'margin/SE is z=1.96× larger — 3.2 was NEVER an SE ratio (measured 6.01)').toBeGreaterThan(3.2)
+    expect(maxOverSe, "and it stays under solver.ts:95's class-wide max margin/SE ≈ 8.1").toBeLessThanOrEqual(8.1)
     const k = solverConversionNearTieDemotionSeMultiple.value
     expect(
       out.memberMargins.some((m) => m.margin < k * m.se),

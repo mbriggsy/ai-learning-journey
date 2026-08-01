@@ -41,8 +41,18 @@ describe('bundle byte-budget sentinel', () => {
     expect(initialJsFromHtml(html).sort()).toEqual(['/assets/dep-def.js', '/assets/index-abc.js'])
   })
 
-  it('excludes the worker chunk (it is not referenced in index.html)', () => {
-    const html = '<script type="module" src="/assets/index-abc.js"></script>'
-    expect(initialJsFromHtml(html)).not.toContain('/assets/engine.worker-xyz.js')
+  it('excludes the worker chunk even when index.html DOES reference it (prefetch is not initial JS)', () => {
+    // ⚠️ THIS ARM WAS UNFALSIFIABLE. It asserted `.not.toContain('/assets/engine.worker-xyz.js')`
+    // over a fixture that never mentioned the worker at all — trivially true for ANY
+    // implementation, including one that returned every path it found. An absence assertion whose
+    // subject is absent from its own input proves nothing.
+    // The real contract: the worker chunk IS emitted and CAN be referenced from index.html, but
+    // only `<script src>` and `<link rel="modulepreload">` count as INITIAL JS against the byte
+    // budget. So put it in the fixture, in a non-initial position, and assert the exact output.
+    const html =
+      '<script type="module" crossorigin src="/assets/index-abc.js"></script>' +
+      '<link rel="modulepreload" href="/assets/dep-def.js">' +
+      '<link rel="prefetch" href="/assets/engine.worker-xyz.js">'
+    expect(initialJsFromHtml(html).sort()).toEqual(['/assets/dep-def.js', '/assets/index-abc.js'])
   })
 })

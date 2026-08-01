@@ -3,6 +3,22 @@
   "status": "reverted",
   "statusConfirmed": true,
   "maxAgeDays": 30,
+  "attests": {
+    "applicablePercentage": {
+      "source": "IRS Rev. Proc. 2025-25 §3.01 (plan year 2026). Figures cross-checked 2026-08-01 against independent secondary summaries (currentfederaltaxdevelopments.com, healthinsurance.org, healthreformbeyondthebasics.org) which reproduced the table cell-for-cell — band edges 133/150/200/250/300/400 and percentages 2.10 / 3.14-4.19 / 4.19-6.60 / 6.60-8.44 / 8.44-9.96 / 9.96. ⚠️ THE PRIMARY PDF (irs.gov/pub/irs-drop/rp-25-25.pdf) WAS NOT RE-OPENED ON THAT DATE — the next re-verify owes a primary read, per howToClear.",
+      "bandCount": 6,
+      "floorPct": 2.1,
+      "ceilingPct": 9.96,
+      "cliffFplFraction": 4
+    },
+    "enhancedPercentage": {
+      "source": "IRC §36B(b)(3)(A)(iii) as added by ARPA 2021 §9661 and extended by IRA 2022 §12001 — the 2021-2025 temporary percentages. Clause (ii) inflation indexing does NOT apply, so unlike the reverted table these figures are FIXED until Congress acts. Not independently re-read 2026-08-01; carried from the constant's own cited transcription (Cornell LII).",
+      "bandCount": 6,
+      "floorPct": 0,
+      "ceilingPct": 8.5,
+      "cliffFplFraction": null
+    }
+  },
   "pinTo": "enacted statute / IRS notice",
   "summary": "Enhanced ARPA/IRA ACA premium subsidies EXPIRED 2025-12-31 and NOTHING has been enacted to restore them. 2026 prices on the pre-ARPA regime: the 400% FPL cliff is back and the contribution percentages are higher. Re-verified 2026-07-26 against the statute itself plus a full-text sweep of every 2026 public law — over-determined, not a news read. The House bill is PARKED, not defeated (see pendingExtension), and any later enactment WOULD be retroactive to all of 2026 by its own drafted effective date.",
   "discriminatingProof": [
@@ -21,5 +37,5 @@
   "adjacentButSharp": "Pub. L. 119-21 §71305 struck §36B(f)(2)(B), REMOVING the excess-APTC repayment cap for tax years beginning after 2025-12-31. It does not change the credit formula the engine models (the overlay prices from actual-year MAGI; there is no advance/reconcile split). It DOES remove the ceiling on the downside of a mis-estimated year — which lands directly on a recommendation that sizes a conversion near the cliff. Neither pending bill restores the cap: both amend only (b)(3)(A)(iii) and (c)(1)(E). Do not file this as merely 'adjacent'.",
   "forwardClock": "The realistic flip window is 2026-12-04 — the H.R. 9770 CR funding expiry (CR passed House 2026-07-21, 220-205; received in Senate 07-22; its engrossed text verified clean of §36B). The FY2026 reconciliation lane is SPENT (Pub. L. 119-98, 2026-06-10, verified clean). The FY2027 lane is open but does NOT carry §36B as passed: H.Con.Res. 113 §201 (Senate Calendar No. 468 since 2026-07-23) instructs Agriculture, Armed Services, Intelligence and House Administration — Ways and Means: 0 hits, Finance: 0 hits. Lighter checks ~2026-09-30 (FY2027 appropriations) and Jan-Apr 2027 (TY2026 filing season, where a late retroactive fix still lands).",
   "strickenCitations": "FS-2026-19 was cited by the 2026-07-03 record and DOES NOT EXIST (irs.gov/pub/taxpros/fs-2026-19.pdf → HTTP 404; the IRS 2026 fact-sheet series runs FS-2026-01 through FS-2026-12). A fabricated citation survives a staleness gate — the next reader assumes link rot and moves on — so it conferred unearned confidence on statusConfirmed. Replaced by the primary sources above. FS-2025-10 (Dec. 2025) is real and on-topic; Rev. Proc. 2025-25 and 2026-26 were both retrieved and read.",
-  "howToClear": "Re-verify the CURRENT ACA enhanced-subsidy status against an enacted statute / IRS notice, then update verifiedOn + status + summary. Do NOT just bump the date — the law can flip the whole pre-65 model. THE CHAIN THAT WORKS (each link independent): (1) read §36B(b)(3)(A)(iii) and (c)(1)(E) at uscode.house.gov and note the granule's currentthrough marker; (2) full-text sweep every public law ABOVE that marker from govinfo, checking BODIES not status codes; (3) confirm the law ceiling the same way; (4) check congress.gov presented-to-president.xml is empty; (5) find the newest Rev. Proc. applicable-percentage table and confirm whether it terminates at 400%. Step 5 is affirmative evidence and is worth more than any number of absent-news searches. Every citation you write down must be retrieved and opened — see strickenCitations."
+  "howToClear": "Re-verify the CURRENT ACA enhanced-subsidy status against an enacted statute / IRS notice, then update verifiedOn + status + summary. Do NOT just bump the date — the law can flip the whole pre-65 model. THE CHAIN THAT WORKS (each link independent): (1) read §36B(b)(3)(A)(iii) and (c)(1)(E) at uscode.house.gov and note the granule's currentthrough marker; (2) full-text sweep every public law ABOVE that marker from govinfo, checking BODIES not status codes; (3) confirm the law ceiling the same way; (4) check congress.gov presented-to-president.xml is empty; (5) find the newest Rev. Proc. applicable-percentage table and confirm whether it terminates at 400%. Step 5 is affirmative evidence and is worth more than any number of absent-news searches. (6) NEW 2026-08-01 — RE-TYPE attests.applicablePercentage FROM the Rev. Proc. you opened in step 5, by hand, NEVER by copying src/engine/constants/health.ts. That table is re-issued ANNUALLY and clause (ii) indexing applies to it, so a new Rev. Proc. silently supersedes the shipped one; the bind arms in scripts/__tests__/verify-aca-status.test.ts compare your transcription against the constant and go RED on a one-sided edit. Copying from the constant makes that bind circular and defeats the gate. attests.enhancedPercentage is FIXED statute (clause (ii) does not apply) and only moves if Congress acts. Every citation you write down must be retrieved and opened — see strickenCitations."
 }

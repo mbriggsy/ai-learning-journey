@@ -2,7 +2,13 @@ import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { checkAcaStatus, type AcaRecord } from '../verify-aca-status'
-import { acaEnhancedSubsidyStatus, solverAcaFreshnessWindowDays } from '@engine/constants'
+import {
+  acaApplicablePercentage,
+  acaApplicablePercentageEnhanced,
+  acaEnhancedSubsidyStatus,
+  solverAcaFreshnessWindowDays,
+  type AcaApplicablePercentageTable,
+} from '@engine/constants'
 
 const base: AcaRecord = {
   verifiedOn: '2026-06-04',
@@ -11,6 +17,22 @@ const base: AcaRecord = {
   maxAgeDays: 30,
   pinTo: 'enacted statute / IRS notice',
   summary: 'reverted to pre-ARPA cliff regime',
+  attests: {
+    applicablePercentage: {
+      source: 'IRS Rev. Proc. 2025-25 §3.01 (fixture)',
+      bandCount: 6,
+      floorPct: 2.1,
+      ceilingPct: 9.96,
+      cliffFplFraction: 4.0,
+    },
+    enhancedPercentage: {
+      source: 'IRC §36B(b)(3)(A)(iii) (fixture)',
+      bandCount: 6,
+      floorPct: 0,
+      ceilingPct: 8.5,
+      cliffFplFraction: null,
+    },
+  },
 }
 const dayAfter = Date.parse('2026-06-05')
 
@@ -30,6 +52,42 @@ describe('ACA enhanced-subsidy re-verify gate logic', () => {
 
   it('FAILS an invalid verifiedOn date', () => {
     expect(checkAcaStatus({ ...base, verifiedOn: 'not-a-date' }, dayAfter).length).toBeGreaterThan(0)
+  })
+
+  // --- the HOLLOW-RECORD arms: a status-only record is not a re-verify of the TABLES ---
+
+  it('FAILS a status-only record (no attests at all) — the pre-2026-08-01 record shape', () => {
+    const { attests: _dropped, ...statusOnly } = base
+    expect(checkAcaStatus(statusOnly, dayAfter).some((p) => p.includes('attests is missing'))).toBe(
+      true,
+    )
+  })
+
+  it('FAILS a record attesting a table with no source (never cite what you did not open)', () => {
+    const rec = { ...base, attests: { ...base.attests, applicablePercentage: { ...base.attests.applicablePercentage, source: '' } } }
+    expect(checkAcaStatus(rec, dayAfter).some((p) => p.includes('source is empty'))).toBe(true)
+  })
+
+  it('FAILS an inverted band (floorPct above ceilingPct — a transcription slip)', () => {
+    const rec = { ...base, attests: { ...base.attests, applicablePercentage: { ...base.attests.applicablePercentage, floorPct: 12 } } }
+    expect(checkAcaStatus(rec, dayAfter).some((p) => p.includes('exceeds ceilingPct'))).toBe(true)
+  })
+
+  it('ACCEPTS a null cliff — "no cliff" is MEANINGFUL, not missing (the enhanced open top band)', () => {
+    // The guard must not treat the enhanced regime's absent cliff as an incomplete record; only a
+    // non-null non-number may fail. Getting this backwards would red the gate on a correct record.
+    expect(checkAcaStatus(base, dayAfter)).toEqual([])
+    // The checker's REAL input is `JSON.parse` output, which no type can constrain — `Partial`
+    // loosens only the top level. This cast models the malformed file the gate exists to reject;
+    // without it TypeScript forbids writing the very shape being tested.
+    const undef = {
+      ...base,
+      attests: {
+        ...base.attests,
+        enhancedPercentage: { ...base.attests.enhancedPercentage, cliffFplFraction: undefined },
+      },
+    } as unknown as Partial<AcaRecord>
+    expect(checkAcaStatus(undef, dayAfter).some((p) => p.includes('cliffFplFraction'))).toBe(true)
   })
 })
 
@@ -88,6 +146,59 @@ describe('the shipped ACA record binds to the engine constants (the unguarded dr
       Object.hasOwn(record, 'maxAgeDays'),
       'the record must state its own window rather than inherit the `?? 30` fallback',
     ).toBe(true)
+  })
+
+  /**
+   * THE TABLE BIND (added 2026-08-01). The arms above bind the record's LEGISLATIVE facts — the
+   * date, the window, the enactment prose. They say nothing about the two applicable-percentage
+   * TABLES the engine actually prices every pre-65 Marketplace household with, and both of those
+   * carry `reVerifyEveryBuild: true` while being gated by PROXY ONLY: they rode this record's
+   * freshness clock without the record ever asserting a single one of their figures.
+   *
+   * ⏰ THIS IS ANNUAL DRIFT, NOT A HYPOTHETICAL. `acaApplicablePercentage` comes from an IRS Rev.
+   * Proc. re-issued EVERY YEAR (2025-25 governs plan-year 2026) and clause (ii) indexing applies to
+   * it — the enhanced table's own note records that indexing does NOT apply *there*, which is
+   * precisely what makes the base table the indexed one. So the shipped table has a known, dated
+   * way of going quietly stale, and before these arms nothing compared it to anything.
+   *
+   * The figures are DERIVED from the constant here and compared to a HAND-TYPED transcription in
+   * the record. That is the whole design: if the next re-verifier copies the record's numbers out
+   * of `health.ts` instead of out of the Rev. Proc., the bind is circular and buys nothing —
+   * `howToClear` step 6 says so in the record itself.
+   */
+  const derive = (t: AcaApplicablePercentageTable) => ({
+    bandCount: t.bands.length,
+    floorPct: Math.min(...t.bands.map((b) => b.applicablePctLow)),
+    ceilingPct: Math.max(...t.bands.map((b) => b.applicablePctHigh)),
+    cliffFplFraction: t.cliffFplFraction,
+  })
+
+  it('the REVERTED table matches what the record attests (the annually re-indexed one)', () => {
+    const { source: _s, ...attested } = record.attests.applicablePercentage
+    expect(
+      derive(acaApplicablePercentage.value),
+      'src/engine/constants/health.ts and aca-last-verified.json now each state this table. The ' +
+        'IRS re-issues it ANNUALLY, so the dangerous direction is a new Rev. Proc. landing while ' +
+        'the shipped table stays put and `verify:aca` keeps passing on a status string. Re-type ' +
+        'the record FROM the document (howToClear step 6), then move whichever side is wrong.',
+    ).toEqual(attested)
+  })
+
+  it('the ENHANCED toggle table matches what the record attests (fixed statute, no cliff)', () => {
+    const { source: _s, ...attested } = record.attests.enhancedPercentage
+    expect(
+      derive(acaApplicablePercentageEnhanced.value),
+      'clause (ii) indexing does NOT apply to the enhanced percentages, so this table moves only ' +
+        'if Congress acts — but the pending 2026 extension is exactly such an act, and it is the ' +
+        'regime the engine TOGGLES to. A silent edit here re-prices every enhanced-regime run.',
+    ).toEqual(attested)
+  })
+
+  it('the two tables disagree on the CLIFF, and that difference is the whole regime split', () => {
+    // A non-vacuity guard on the pair above: if a careless edit ever made the two attestations
+    // identical, both binds would still pass while the record stopped describing two regimes.
+    expect(record.attests.applicablePercentage.cliffFplFraction).toBe(4.0)
+    expect(record.attests.enhancedPercentage.cliffFplFraction).toBeNull()
   })
 
   it('the engine prose dates its own enactment check to the SAME day it was verified', () => {

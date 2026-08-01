@@ -854,6 +854,14 @@ function checkV3Fields(o: Obj): string[] {
   // programming error laundered into a calm dropped atom is exactly the silent-wrongness this
   // whole file exists to prevent.
   //
+  // BOTH RE-THROWS ARE PINNED (2026-08-01) — this one and the outer `throw e` in decodeScenario,
+  // by the single arm "a NON-Corrupt throw from INSIDE a validator ESCAPES decodeScenario" in
+  // `__tests__/scenarioCodec.test.ts`; they chain, so one arm kills both mutants. They had been
+  // filed as untestable ("seam-less") on the reasoning that the input is a `JSON.parse` product
+  // with no getters — TRUE of the input, but the modelled failure is a defect in the VALIDATOR,
+  // and `needInteger` calls `Number.isInteger`, which a value-targeted spy can make throw.
+  // Do NOT re-file this branch as unreachable.
+  //
   // AND THE DROP IS REPORTED, NEVER SILENT (the F-pass fix). "Tolerated" is a READ-side charter;
   // this same function is `scenarioFromDraft`'s SAVE gate, where a dropped atom means the MINTER
   // emitted an invalid record and the household would otherwise be told "Saved" about a record

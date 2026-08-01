@@ -8,7 +8,7 @@
  * decoded scenario still passes the R19 gate before any answer renders, so the codec
  * never re-implements (and can never drift from) the engine's domain rules.
  */
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 import { ENGINE_MAX_DOLLAR } from '@engine/simulate'
 
@@ -886,6 +886,53 @@ describe('v3 — the forward-written persist shape (U8, the first v3 writer)', (
       }
     },
   )
+
+  it('a NON-Corrupt throw from INSIDE a validator ESCAPES decodeScenario — a programming defect is never laundered into a calm dropped atom', () => {
+    // THE TWO RE-THROWS THIS COVERS, and they CHAIN, so one arm holds both:
+    //   `scenarioCodec.ts:866`  `if (!(e instanceof Corrupt)) throw e`  (the record's try/catch)
+    //   `scenarioCodec.ts:911`  `throw e`                              (decodeScenario's outer catch)
+    // Both were UNEXERCISED. They were filed as "correct-by-inspection but SEAM-LESS" on the
+    // reasoning that decodeScenario builds its input from `JSON.parse` — data properties only,
+    // no getters — and that no validator here recurses or calls a method on an unchecked value.
+    // That reasoning is CORRECT ABOUT THE INPUT and wrong about the seam. The failure being
+    // modelled is a defect in the VALIDATOR, not a hostile payload, and a validator's own
+    // dependency can be made to fail: `needInteger` (:122-127) calls `Number.isInteger`.
+    // Spying THAT — value-targeted, so nothing else in this ~100-arm file can see it — reaches
+    // :866 through the REAL decodeScenario with no prototype pollution and no injection seam
+    // added to shipping code.
+    const SENTINEL = 777_777_777 // unique in V3; an integer, and outside the epoch-day range
+    const bytes = mutated({ ...V3, savedRecommendation: RECORD }, (o) => {
+      ;(o.savedRecommendation as Obj).mintedAt = SENTINEL
+    })
+    // CONTROL — and it is a STRONG one, not a formality. Un-spied, this exact record is the
+    // TOLERATED drop, and the detail proves execution reached :584's RANGE check, i.e. it got
+    // PAST :582's `needInteger` — so the arm below is provably injecting at a line the decode
+    // really executes, not passing because the record died earlier for some other reason.
+    const tolerated = decodeScenario(bytes)
+    expect(tolerated.ok, 'control: a bad record is tolerated, the vault still opens').toBe(true)
+    if (tolerated.ok) {
+      expect(tolerated.droppedAtoms).toHaveLength(1)
+      expect(tolerated.droppedAtoms[0]).toContain('mintedAt')
+      expect(tolerated.droppedAtoms[0], 'control: the sentinel reached the RANGE gate below needInteger').toContain(
+        'outside the epoch-day range',
+      )
+    }
+    // Capture the real implementation BEFORE spying — calling `Number.isInteger` from inside the
+    // mock would recurse into the mock.
+    const realIsInteger = Number.isInteger
+    const spy = vi.spyOn(Number, 'isInteger').mockImplementation((n) => {
+      if (n === SENTINEL) throw new TypeError('injected validator defect')
+      return realIsInteger(n)
+    })
+    try {
+      expect(
+        () => decodeScenario(bytes),
+        'a validator defect must stay LOUD — never a calm dropped atom, never ok:true',
+      ).toThrow(TypeError)
+    } finally {
+      spy.mockRestore()
+    }
+  })
 
   it('the tolerated drop is NOT a general tolerance — a corrupt SIBLING field beside a VALID record still bounces the whole vault (loud-over-silent everywhere else)', () => {
     // insight 029: the assertion must route differently under the mutant. If the local try/catch

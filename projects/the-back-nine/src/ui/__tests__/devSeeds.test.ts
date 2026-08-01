@@ -201,11 +201,63 @@ describe('dev seeds reach a worded (engine-accepted) answer', () => {
     expect(datedKinds, 'lifestyle crowned').toContain(out.lifestyle.kind)
     if (!('offsetYears' in out.floor) || !('offsetYears' in out.lifestyle)) return
     expect(out.floor.offsetYears, 'floor strictly earlier').toBeLessThan(out.lifestyle.offsetYears)
+    // THE CROWNS THEMSELVES, NOT JUST THEIR ORDER. Six prose copies of this pair were wrong for 22
+    // engine commits — one labelled "Engine-proven" — precisely because the arm asserted an ORDERING
+    // and a RANGE and never a VALUE. A figure that matters lives in an expectation or it drifts.
+    // PROVISIONAL tier (2,000 paths): the coarser haircut errs later, so lifestyle crowns one year
+    // LATER here than it does on the tier the live surface runs. See the final-tier arm below.
+    expect(out.floor.offsetYears, 'provisional floor crown').toBe(2)
+    expect(out.floor.kind, 'provisional floor kind').toBe('confirmed-date')
+    expect(out.lifestyle.offsetYears, 'provisional lifestyle crown').toBe(10)
+    expect(out.lifestyle.kind, 'provisional lifestyle kind — the weakest-evidence crown').toBe(
+      'window-edge-unconfirmed',
+    )
     const view = composeDateSplit(out.floor, out.lifestyle)
     expect(view.kind, 'the render composes a SPLIT, not the degenerate single date').toBe('split')
     if (view.kind !== 'split') return
     expect(view.inverted, 'the expected ordering must NOT cry the inversion note').toBe(false)
   }, 120_000)
+
+  /**
+   * THE TIER THE LIVE SURFACE ACTUALLY RUNS — and the tier no arm had ever pinned.
+   *
+   * `IntakeApp.tsx` awaits a provisional commit and THEN dispatches final, so the result screen
+   * settles on FINAL (`Result.tsx`). Every existing datesplit arm runs `provisional` for suite
+   * speed, which means the crowns a household actually reads were backed by nothing but a comment.
+   *
+   * The pair is the point: floor holds at 2 across both tiers, but lifestyle moves 10 → 9 AND its
+   * kind strengthens `window-edge-unconfirmed` → `confirmed-date`. That difference is a live,
+   * never-cold-read surface — during the reveal the edge hedge (`copy.dateWindowEdgeNote`) RENDERS
+   * off the provisional reading and then WITHDRAWS when final lands, with no provisional marker on
+   * the hero. Pinning both tiers here turns that transient from prose into a contract, so a re-tune
+   * that quietly collapses or widens it fails in the suite instead of in front of a reader.
+   *
+   * The number is never optimistic in either direction: `dateSearch.ts:31` records that the coarse
+   * haircut "errs later/conservative", so provisional shows the LATER date. The defect this pins is
+   * REGISTER (a provisional reading rendered in the final register), never an over-promise.
+   */
+  it("'datesplit' at the FINAL tier — the crowns the live surface renders, and the edge hedge that withdraws", async () => {
+    const input = buildDateInput(DEV_SEEDS.datesplit)
+    expect(input, 'datesplit: buildDateInput').not.toBeNull()
+    const out = await runDateSearch(input!, DEV_SEEDS.datesplit.seed!, { tier: 'final' })
+    expect(out.kind, 'datesplit: a dates outcome').toBe('dates')
+    if (out.kind !== 'dates') return
+    // THE KINDS ARE ASSERTED BEFORE THE NARROWING GUARD, DELIBERATELY (insight 029). An
+    // `offsetYears`-absent crown would otherwise hit the `return` below and pass this arm GREEN
+    // without evaluating a single crown — the arm would report that the live tier is pinned while
+    // pinning nothing. Asserting the kinds first makes that state fail loudly, and a dated kind
+    // carries `offsetYears` by construction, so the guard becomes type narrowing rather than a
+    // silent exit.
+    expect(out.floor.kind, 'final floor kind').toBe('confirmed-date')
+    expect(
+      out.lifestyle.kind,
+      'final lifestyle kind — the hedge the provisional tier owed is DISCHARGED here, which is why ' +
+        'it visibly withdraws mid-reveal',
+    ).toBe('confirmed-date')
+    if (!('offsetYears' in out.floor) || !('offsetYears' in out.lifestyle)) return
+    expect(out.floor.offsetYears, 'the floor crown is TIER-ROBUST — 2 at both tiers').toBe(2)
+    expect(out.lifestyle.offsetYears, 'final lifestyle crown — one year EARLIER than provisional').toBe(9)
+  }, 300_000)
 
   // P3·U13 follow-up (the Caddie card-#4 unblock, 2026-07-10): the '?vault=datestale' AGED
   // plant — the datesplit household doctored 2 calendar years stale. The plant exists to render

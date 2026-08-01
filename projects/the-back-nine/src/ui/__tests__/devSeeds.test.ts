@@ -305,8 +305,11 @@ describe('dev seeds reach a worded (engine-accepted) answer', () => {
   // The U9b 'datemixed' seed exists to cold-read the MIXED arm (floor dated, lifestyle not within
   // the window — the words + how-close hero with the "essentials covered" beat). The R27 INVERSION
   // (the datemixed band-pairing arm is added below — see 'the FLOOR-KEYED FALLBACK')
-  // seed ('dateinvert') deliberately does NOT exist: unreachable in v1 (see the derivation +
-  // 121-reading probe record in devSeeds.ts — reactivates with U10's Roth conversions).
+  // seed ('dateinvert') does NOT exist YET — and is now OWED rather than unreachable. ⚠️ CORRECTED
+  // 2026-08-01 (086: the twin comment in devSeeds.ts moved in the same commit): this used to read
+  // "unreachable in v1 … reactivates with U10's Roth conversions". U10 SHIPPED, so that trigger has
+  // already fired. The pre-U10 impossibility probe is a dated record, not a standing bound — see
+  // the corrected R27 NOTE in devSeeds.ts for what is hypothesis vs what is proven.
   it("'datemixed' lands floor-dated + lifestyle-no-date through the real date search", async () => {
     const input = buildDateInput(DEV_SEEDS.datemixed)
     expect(input, 'datemixed: buildDateInput').not.toBeNull()

@@ -472,17 +472,28 @@ const dateSplitSeed: ScenarioDraft = {
  * inversion (floor earlier = the expected ordering; no disclosure note). Reconciled:
  * Σlines@0 (90,000) + M (8,000) = 98,000.
  *
- * R27 NOTE (the fourth prescribed seed, `dateinvert`, deliberately does NOT exist): the
- * floor>lifestyle inversion is UNREACHABLE in v1 — under proportional drawdown the bucket
- * ratios are preserved path-for-path, so ACA-MAGI is the SAME monotone function of total
- * outflow on both tracks, and the inversion needs {floor MAGI < 100% FPL ≤ lifestyle MAGI}
- * with floor outflow ABOVE lifestyle — jointly unsatisfiable. Probed empirically 2026-07-02
- * (11 configs × 11 offsets across trad-share straddle / near-cliff brokerage drift /
- * SS-claimed-bridge families: floor strictly stronger at EVERY offset). The render arm
- * stays fixture-pinned (FuckOffDate.test.tsx + dateSplit.test.ts). REACTIVATION TRIGGER:
- * U10's Roth-conversion lever adds MAGI with zero outflow — the coupling breaks by
- * construction, so a real `dateinvert` seed becomes owed the moment conversions ship
- * (the same trigger family as the parked ACA-cliff ladder dip).
+ * R27 NOTE (the fourth prescribed seed, `dateinvert`, still does NOT exist — but it is now OWED,
+ * not unreachable). ⚠️ CORRECTED 2026-08-01: the two sentences that used to head this note said
+ * the inversion was "UNREACHABLE in v1" and would "reactivate with U10". U10 HAS SHIPPED — the
+ * Roth-conversion lever is live (`rothConversion` on the draft, `expandRothConversion` wired in
+ * intakeMap), and a roth-first `custom` order seed already exists in this file. Both sentences
+ * were describing a world that ended; read as present tense they say the opposite of the truth.
+ *
+ * WHY IT WAS UNREACHABLE, and why that reasoning EXPIRED: under proportional drawdown the bucket
+ * ratios are preserved path-for-path, so ACA-MAGI is the SAME monotone function of total outflow
+ * on both tracks, and the inversion needs {floor MAGI < 100% FPL ≤ lifestyle MAGI} with floor
+ * outflow ABOVE lifestyle — jointly unsatisfiable. Probed empirically 2026-07-02, PRE-U10 (11
+ * configs × 11 offsets across trad-share straddle / near-cliff brokerage drift / SS-claimed-bridge
+ * families: floor strictly stronger at EVERY offset) — that probe is a dated pre-U10 record and
+ * does not bound the post-U10 world. A conversion adds MAGI with ZERO outflow, so the coupling
+ * the impossibility argument rested on is broken by construction.
+ *
+ * ⚠️ OWED, NOT DERIVED — do not read the above as a recipe. The mechanism (roth-first `custom`
+ * order + a small conversion pinning the FLOOR track under 100% FPL while lifestyle stays
+ * subsidized) is a HYPOTHESIS; landing it is a dip-class parameter hunt, each probe costing a real
+ * date search. Prerequisites are BINDING (`docs/council-log.md`): derive EXTERNALLY (DND 012),
+ * engine-verify before any cold read, and extend the CVD probe for a new cue. Filed, never faked.
+ * Until it is minted the render arm stays fixture-pinned (FuckOffDate.test.tsx + dateSplit.test.ts).
  */
 const dateMixedSeed: ScenarioDraft = {
   ...stillWorkingBorderline,

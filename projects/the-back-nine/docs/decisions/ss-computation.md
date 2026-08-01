@@ -77,7 +77,9 @@ The §1–§12 decisions below rest on the verified SSA rule-set — FRA-by-birt
 - `RIB_LIM` — `{ floorPctOfDeathPia: 0.825 }` (the "larger-of" logic lives in code; the constant is the floor).
 - `SPOUSAL_RATE = 0.50`; `DEEMED_FILING_DOB_CUTOFF = 1954-01-02`.
 
-**SPOUSAL_RATE carries `reVerifyEveryBuild`-class monitoring** (like the ACA legislative entry): a scored-but-unenacted proposal to phase 50%→33% by 2042 exists, so the constant must catch enactment at build time, not drift silently.
+**SPOUSAL_RATE carries the `reVerifyEveryBuild` flag** — a scored-but-unenacted proposal to phase 50%→33% by 2042 exists, so the figure is on the re-verify watch list.
+
+> ⚠️ **NOT YET ENFORCED (audited 2026-08-01).** This line previously read *"the constant must catch enactment at build time, not drift silently"* — that was a statement of intent written as if it were a shipped mechanism, and it was false. The flag is inert: `spousalRate` is the **only** `reVerifyEveryBuild` entry in `src/engine/constants/` with **no** last-verified record, **no** CI gate and **no** runtime clause. (Compare `acaEnhancedSubsidyStatus`: `verify:aca` + a runtime withhold + a record↔constant bind test; and `ncRateSchedule`: `verify:state-tax` + the certification-pinned oracle token.) A dated tripwire would force an annual **human** re-verify; nothing available to us detects *enactment* at build time, so no future wording should claim it does. The gate's shape — CI-only tripwire vs CI **plus** a runtime withhold — is an open ruling; see `TODO.md`.
 
 ### §3 — Own-benefit reduction & delayed credit (pure)
 

@@ -708,9 +708,15 @@ describe('canonical constants — shape & provenance (contract #6)', () => {
 
     it('the spousal rate is 50% of PIA and carries the reVerifyEveryBuild watch (the 50→33% proposal)', () => {
       expect(socialSecurityConstants.spousalRate.value).toBe(0.5)
+      // ⚠️ THE FLAG IS THE ONLY ENFORCEMENT THIS FIGURE HAS. Unlike the ACA legislative entry
+      // (verify:aca + a runtime withhold + a record↔constant bind) and ncRateSchedule
+      // (verify:state-tax + the certification-pinned token), spousalRate has NO last-verified
+      // record, NO CI gate and NO runtime clause — it is the only reVerifyEveryBuild entry in
+      // this directory with none. This arm pins that the WATCH is declared; it does not and
+      // cannot detect enactment. Do not reword it into a claim that it does.
       expect(
         socialSecurityConstants.spousalRate.reVerifyEveryBuild,
-        'the unenacted 50→33% phase-down must be caught at build',
+        'the unenacted 50→33% phase-down keeps this figure on the re-verify watch list',
       ).toBe(true)
     })
 

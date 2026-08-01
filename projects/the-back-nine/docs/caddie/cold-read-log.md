@@ -20,6 +20,24 @@ one-way doors, framing-level forks, or genuine pilot doubt — reason logged) ·
 
 ---
 
+## 2026-08-01 — THE `rec` / `recold` DOOR WALK, the two plants whose doors no oracle had ever opened — `vault:rec` · `vault:recold`, both viewports (walk 4/4 green; bundle `temp/caddie/2026-08-01-02-52-21`, **since cleared at squeaky — the verbatims below are the durable record, transcribed BEFORE deletion**)
+
+**Why it existed:** the door-walk allowlist gained `'rec'`/`'recold'` in `7e131330`, but the walk itself had never run, so S6's Cards 6–7 could judge the record card's landing verb and **nothing behind its doors**. The queue had flagged this as a live coverage gap and explicitly cautioned against guessing the door set.
+
+**Two measured answers to questions the queue left open** — both had been filed as unverifiable by inspection, and both are now measured rather than assumed: `recold`'s door set is **IDENTICAL** to `rec`'s (parity, not divergence — the caution that the superseded card might reseat the quiet row did not bear out), and it is **FOUR** doors, not the unverified "five": split · withdrawal-order · roth · assumptions. **No health door on this base.**
+
+**Card 8 — `vault:rec`, THE HOLDS CARD READS AS AN EXECUTION CLAIM THE DOOR BENEATH IT REFUTES: HARD-FLAG, lane `both`, severity BLOCKER (calm-but-wrong).** Verified verbatim, same frame: the record card states *"It still matches your plan as it stands today."* while **door 2, one flick below, labels the household's current order *"A little from each — your current order"*** (proportional). The saved record's winner is **`taxable-first` with `noChange: false`** (`devSeeds.ts:1297-1311`) — so the remembered advice was **SWITCH to Brokerage first, and the household never did it.**
+
+*"Still matches" is engine-true* — it means the record remains RE-PRESENTABLE (fingerprint + solver version + era all unmoved). **But a household reads "matches your plan" as "I am doing this", and the next door shows they are not.** The error direction is the rosy one: a couple who never executed the conversion reads confirmation that they did.
+
+**This is the exact MIRROR of the verb fixed in `532cad82`.** There, a claim about SHOWING (*"We can no longer show this as current"*) read as *the advice still stands*. Here, a claim about RE-PRESENTABILITY reads as *already executed*. Same family, opposite arm — and **`recold` is CLEAN on this axis**, which is why one fix could not have caught both.
+
+**disposition: HARD-FLAG — does not ship.** It sharpens the case for the record card's **half (2)** (naming the saved strategy in frame), which is a **BRIGGSY RULING, not a pilot fix**, because it amends his own written ruling 3 (`act4-u17-s5-execution-plan.md:19-21`). Filed in `TODO.md` under the record-card prescription. **⚠️ Note for whoever builds it: the chaired "names no conversion" complaint is NOT buildable and NOT a gap** — `SavedRecommendationActionV3` carries no conversion field by design (`model.ts:1880-1886`) and the live ranking is sequencing-only.
+
+**evidence:** commit `292cf9bd` (CI 30681007801 green) carries the walk's own report; bundle cleared at the 2026-08-01 squeaky, **deliberately transcribed here first** — the 2026-07-27 batch lost its rendered verbatims to exactly that deletion and the lesson is now paid twice.
+
+---
+
 ## 2026-07-27 — U17 §S6: THE ARRIVED SURFACE'S FIRST COLD READ + FOUR FACES NO ORACLE HAD EVER SEEN — `vault:datearrived` (new plant) · `vault:datestale` · `vault:rec` · `vault:recold` · `seed:datesplit` · `seed:datemixed`, both viewports (panel wf_efc3968f-cf5 — **140 agents, ZERO crashes**; bundle `temp/caddie/2026-07-27-22-37-39`)
 
 **⚠️ ALL SIX CARDS ARE HARD-FLAG. NONE SHIPS.** The batched-oracle grant clears *readable* surfaces; it has never covered **calm-but-wrong**, and this batch found that class on three faces. The findings below are **pre-existing product defects**, not S6 regressions — S6's contribution was building the plant that finally made them visible. The stage's value turned out to be the *looking*, not the artifact.

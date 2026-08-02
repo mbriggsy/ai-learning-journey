@@ -37,6 +37,29 @@ const FRESH = CHECKED_ON + 1
 const AT_WINDOW = CHECKED_ON + WINDOW
 const OVERDUE = CHECKED_ON + WINDOW + 1
 
+/**
+ * The formatted verified date the status slots interpolate.
+ *
+ * ⚠️ DELIBERATELY A SECOND IMPLEMENTATION — never an import of `healthSheetChrome`'s own
+ * `verifiedOnFormatted`. The header above draws exactly this line: deriving an INPUT from the
+ * producer is fine, deriving the EXPECTATION from it is the insight-081 tautology. Written
+ * independently, this still reds if the sheet changes `dateStyle` or reads a different date,
+ * while surviving a re-verify that only moves the day.
+ *
+ * ⏰ WHY IT EXISTS (2026-08-02): this was the literal `'July 26, 2026'`, typed SEVEN times here
+ * and once in `src/intake/__tests__/healthcareSheet.test.tsx`. So a CORRECT ACA re-verify — which
+ * `aca-last-verified.json`'s own `howToClear` requires roughly monthly, and which moves
+ * `verifiedOn` by construction — turned six arms RED, and the cheapest way back to green was to
+ * not move the date at all. That is the one thing `howToClear` explicitly forbids ("Do NOT just
+ * bump the date"). A gate that punishes the honest action is worse than no gate: it does not fail
+ * safe, it lobbies. Both files already stated this law in their own headers and broke it nine
+ * lines later.
+ */
+const VERIFIED_ON_LONG = ((): string => {
+  const [y, m, d] = acaEnhancedSubsidyStatus.value.verifiedOn.split('-').map(Number)
+  return new Intl.DateTimeFormat('en-US', { dateStyle: 'long' }).format(new Date(y!, m! - 1, d!))
+})()
+
 const year = (over: Partial<HealthReadoutYear>): HealthReadoutYear => ({
   yearsFromNow: 1,
   acaNetPremiumP50: 0,
@@ -90,7 +113,18 @@ const factOf = (view: ReturnType<typeof composeHealthSheet>, id: string) =>
 describe('composeHealthSheet', () => {
   it('with NO series (the date route / pre-resolve) it composes the dated status line alone', () => {
     const view = composeHealthSheet(undefined, draft(), FRESH)
-    expect(view.statusLine).toBe(slots.acaCostStatus('July 26, 2026'))
+    // NON-VACUITY RECEIPT for the derivation above, and the reason it is not a weaker predicate
+    // than the literal it replaced: the expectation must still be a HUMANE LONG date. A `dateStyle`
+    // slip renders "Aug 2, 2026" (`medium`) or "8/2/26" (`short`), and a lazy "fix" to this file
+    // would interpolate the raw ISO "2026-08-02" — the full month name kills all three, so the
+    // format stays pinned exactly as tightly as the hardcoded string pinned it.
+    expect(
+      VERIFIED_ON_LONG,
+      'the dated status line speaks a full-month-name long date; medium/short/ISO must all fail here',
+    ).toMatch(
+      /^(January|February|March|April|May|June|July|August|September|October|November|December) \d{1,2}, \d{4}$/,
+    )
+    expect(view.statusLine).toBe(slots.acaCostStatus(VERIFIED_ON_LONG))
     expect(view.facts).toEqual([])
   })
 
@@ -108,7 +142,7 @@ describe('composeHealthSheet', () => {
       ],
     }
     const view = composeHealthSheet(readout, draft({ enhanced: true }), FRESH)
-    expect(view.statusLine).toBe(slots.acaCostStatusEnhanced('July 26, 2026'))
+    expect(view.statusLine).toBe(slots.acaCostStatusEnhanced(VERIFIED_ON_LONG))
     expect(factOf(view, 'discount')).toBeUndefined() // no cliff exists → no discount fact at all
     expect(factOf(view, 'coverage')).toBeDefined() // the cost fact still quotes — only the cliff vanished
   })
@@ -119,10 +153,10 @@ describe('composeHealthSheet', () => {
   // current — the sheet that EXPLAINS the model was the one surface not repeating the warning.
   it('PAST the re-verify window both status notes swap to their overdue variants (the sheet stops speaking as though the check were current)', () => {
     expect(composeHealthSheet(undefined, draft(), OVERDUE).statusLine).toBe(
-      slots.acaCostStatusOverdue('July 26, 2026'),
+      slots.acaCostStatusOverdue(VERIFIED_ON_LONG),
     )
     expect(composeHealthSheet(undefined, draft({ enhanced: true }), OVERDUE).statusLine).toBe(
-      slots.acaCostStatusEnhancedOverdue('July 26, 2026'),
+      slots.acaCostStatusEnhancedOverdue(VERIFIED_ON_LONG),
     )
     // The figures are NOT disowned — the line still names the regime it priced under.
     expect(composeHealthSheet(undefined, draft(), OVERDUE).statusLine).toContain('stops at the cliff')
@@ -132,10 +166,10 @@ describe('composeHealthSheet', () => {
     // Insight 029's class — the input has to ROUTE DIFFERENTLY, so the arm must straddle the
     // exact edge. `>= WINDOW` would pass every test that only probed CHECKED_ON+WINDOW+1.
     expect(composeHealthSheet(undefined, draft(), AT_WINDOW).statusLine).toBe(
-      slots.acaCostStatus('July 26, 2026'),
+      slots.acaCostStatus(VERIFIED_ON_LONG),
     )
     expect(composeHealthSheet(undefined, draft(), AT_WINDOW + 1).statusLine).toBe(
-      slots.acaCostStatusOverdue('July 26, 2026'),
+      slots.acaCostStatusOverdue(VERIFIED_ON_LONG),
     )
   })
 
@@ -152,7 +186,7 @@ describe('composeHealthSheet', () => {
       const tokenRefuses = evaluateAcaFreshnessClause(acaRun, today) !== null
       const sheetSaysOverdue =
         composeHealthSheet(undefined, draft(), today).statusLine ===
-        slots.acaCostStatusOverdue('July 26, 2026')
+        slots.acaCostStatusOverdue(VERIFIED_ON_LONG)
       expect(sheetSaysOverdue, `today=${today}: sheet and token must agree`).toBe(tokenRefuses)
       expect(acaCheckOverdue(today), `today=${today}: the shared predicate is the one source`).toBe(
         tokenRefuses,

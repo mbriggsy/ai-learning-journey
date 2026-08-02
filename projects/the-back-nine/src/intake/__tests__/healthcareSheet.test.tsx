@@ -104,6 +104,17 @@ const READOUT: HealthReadout = {
  *  re-verify must not churn this file). The overdue branch is driven in healthSheetChrome.test. */
 const FRESH_CLOCK = epochDayFromIsoDate(acaEnhancedSubsidyStatus.value.verifiedOn) + 1
 
+/** The formatted verified date the status note renders. Same law as `FRESH_CLOCK` above, applied
+ *  to the EXPECTATION rather than the input — and deliberately a SECOND implementation of the
+ *  format, never an import of the sheet's own formatter, so it still reds on a `dateStyle` change
+ *  (importing it would assert the producer against itself). Until 2026-08-02 this was the literal
+ *  `'July 26, 2026'`: the header two lines up already forbade that, and a correct ACA re-verify —
+ *  which moves `verifiedOn` by construction — reddened this arm every time. */
+const VERIFIED_ON_LONG = ((): string => {
+  const [y, m, d] = acaEnhancedSubsidyStatus.value.verifiedOn.split('-').map(Number)
+  return new Intl.DateTimeFormat('en-US', { dateStyle: 'long' }).format(new Date(y!, m! - 1, d!))
+})()
+
 function renderSheet(
   opts: { enhanced?: boolean; readout?: HealthReadout; statePricedNote?: import('@engine/constants/stateTax').PricedState } = {},
 ) {
@@ -177,7 +188,7 @@ describe('HealthcareSheet — the regime lever', () => {
 describe('HealthcareSheet — the readout lines', () => {
   it('the dated status note ALWAYS renders (live constants); the empirical lines only when a series rides in', () => {
     renderSheet()
-    expect(screen.getByText(slots.acaCostStatus('July 26, 2026'))).toBeInTheDocument()
+    expect(screen.getByText(slots.acaCostStatus(VERIFIED_ON_LONG))).toBeInTheDocument()
     expect(screen.queryByText(slots.acaCostNet('10,000'))).toBeNull()
     cleanup()
     renderSheet({ readout: READOUT })

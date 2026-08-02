@@ -61,6 +61,14 @@ export interface AcaRecord {
     /** The ARPA/IRA ENHANCED toggle table — fixed statutory percentages, NO cliff. */
     enhancedPercentage: AcaAttestedTable
   }
+  /**
+   * The re-verify chain the gate's Fix line points at (mirrors `StateTaxRecord.howToClear`,
+   * `verify-state-tax.ts:53`, where it is likewise the final member). `main()` prints
+   * "(see howToClear)" — so before this field existed the gate's own repair instruction named a
+   * key that nothing required the record to carry, and `pinTo`/`summary` above were declared
+   * required and read by nothing at all.
+   */
+  howToClear: string
 }
 
 const MS_PER_DAY = 86_400_000
@@ -98,6 +106,15 @@ export function checkAcaStatus(rec: Partial<AcaRecord>, nowMs: number): string[]
     checkTable('applicablePercentage', rec.attests.applicablePercentage)
     checkTable('enhancedPercentage', rec.attests.enhancedPercentage)
   }
+
+  // The record's own operator-facing attestations — the mirror of `verify-state-tax.ts:86-88`,
+  // which pushes a problem for an empty `primarySources`. All three are DECLARED on `AcaRecord`
+  // and none was read; `main()` below prints "(see howToClear)", so the gate's own repair
+  // instruction pointed at a field nothing required to exist. Falsy, NOT trimmed — the state-tax
+  // mirror is falsy too (`if (!rec.status)`), and the two gates must fail on the same inputs.
+  if (!rec.pinTo) problems.push('pinTo is empty (name the enacted statute / IRS notice this record pins to)')
+  if (!rec.summary) problems.push('summary is empty (state in one line what the record attests)')
+  if (!rec.howToClear) problems.push('howToClear is empty (the Fix line this gate prints sends the re-verifier to that field)')
 
   const verifiedMs = rec.verifiedOn ? Date.parse(rec.verifiedOn) : Number.NaN
   if (Number.isNaN(verifiedMs)) {

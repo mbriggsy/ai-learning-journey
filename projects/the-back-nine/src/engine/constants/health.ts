@@ -31,8 +31,8 @@ export const acaEnhancedSubsidyStatus = sourced(
     enhancedExpired: '2025-12-31',
     regime2026: 'reverted to pre-ARPA (400% FPL cliff back; higher contribution %s)',
     pendingExtension:
-      'H.R. 1834 (a shell vehicle; the ACA substance arrived by substitute) passed the House 2026-01-08 (230–196) and has sat on Senate Legislative Calendar No. 319 since 2026-02-10 — THE SENATE HAS NEVER VOTED ON IT (the S 3385 cloture failure, 51–48, PREDATES it by four weeks and is not the answer to it). NOT enacted as of 2026-07-26; a later enactment WOULD be retroactive to all of 2026 (H.R. 1834 §1(c) is tax-year based), but only for months the household actually PAID a Marketplace premium (§36B(c)(2)(A))',
-    verifiedOn: '2026-07-26',
+      'H.R. 1834 (a shell vehicle; the ACA substance arrived by substitute) passed the House 2026-01-08 (230–196) and has sat on Senate Legislative Calendar No. 319 since 2026-02-10 — THE SENATE HAS NEVER VOTED ON IT (the S 3385 cloture failure, 51–48, PREDATES it by four weeks and is not the answer to it). NOT enacted as of 2026-08-02; a later enactment WOULD be retroactive to all of 2026 (H.R. 1834 §1(c) is tax-year based), but only for months the household actually PAID a Marketplace premium (§36B(c)(2)(A)), and it runs only THROUGH TAX YEAR 2028 — §1(a)/(b) substitute “before January 1, 2029”, so the toggle it would flip is a three-year extension, never a permanent restoration',
+    verifiedOn: '2026-08-02',
   },
   {
     citation: 'pre65-healthcare doc',
@@ -96,7 +96,7 @@ export const acaApplicablePercentageEnhanced = sourced<AcaApplicablePercentageTa
   },
   {
     citation:
-      'IRC §36B(b)(3)(A)(iii) (ARPA 2021 §9661, extended by IRA 2022 §12001), read verbatim from Cornell LII (law.cornell.edu/uscode/text/26/36B) + cross-verified vs KFF / healthinsurance.org / IRS (gemini-grounding) — zero disagreement; clause (ii) indexing does NOT apply (fixed statutory percentages)',
+      'IRC §36B(b)(3)(A)(iii) (ARPA 2021 §9661, extended by IRA 2022 §12001), read verbatim from Cornell LII (law.cornell.edu/uscode/text/26/36B) + cross-verified vs KFF / healthinsurance.org / IRS (gemini-grounding) — zero disagreement; clause (ii) indexing does NOT apply (fixed statutory percentages). ✓ RE-CONFIRMED 2026-08-02 AGAINST THE PRIMARY, twice independently: the OLRC granule (uscode.house.gov, USC-prelim-title26-section36B) serves clause (iii) with these six bands and the open “400.0 percent and higher” top band. The original transcription was SECONDARY; it now has a primary behind it',
     directionalUntilPinned: false,
     pinTo: 'IRC §36B(b)(3)(A)(iii) — the enacted ARPA/IRA statute (+ any 2026 extension notice)',
     reVerifyEveryBuild: true,

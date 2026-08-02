@@ -33,6 +33,7 @@ const base: AcaRecord = {
       cliffFplFraction: null,
     },
   },
+  howToClear: 're-verify against an enacted statute / IRS notice, then re-type attests from it (fixture)',
 }
 const dayAfter = Date.parse('2026-06-05')
 
@@ -56,11 +57,27 @@ describe('ACA enhanced-subsidy re-verify gate logic', () => {
 
   // --- the HOLLOW-RECORD arms: a status-only record is not a re-verify of the TABLES ---
 
-  it('FAILS a status-only record (no attests at all) — the pre-2026-08-01 record shape', () => {
+  it('FAILS a status-only record (no attests — the pre-2026-08-01 shape), and FAILS an EMPTY pinTo / summary / howToClear', () => {
     const { attests: _dropped, ...statusOnly } = base
     expect(checkAcaStatus(statusOnly, dayAfter).some((p) => p.includes('attests is missing'))).toBe(
       true,
     )
+    // The three fields the interface DECLARES and `main()`'s Fix line POINTS AT — declared and
+    // never read until 2026-08-02. Each is EMPTIED alone (never deleted) and the WHOLE problem
+    // list is asserted: the emptied field must be the only complaint, so a check that fires on
+    // ABSENCE rather than EMPTINESS (`rec.pinTo === undefined`) returns [] here and goes RED.
+    // Emptiness is the routing that matters — a `delete` / `Object.hasOwn` probe would sail
+    // straight through that mutant. The `toEqual([])` on this same fixture at the top of the
+    // describe is the non-vacuity receipt, and it is the SAME predicate strength, not a weaker one.
+    expect(checkAcaStatus({ ...base, pinTo: '' }, dayAfter)).toEqual([
+      'pinTo is empty (name the enacted statute / IRS notice this record pins to)',
+    ])
+    expect(checkAcaStatus({ ...base, summary: '' }, dayAfter)).toEqual([
+      'summary is empty (state in one line what the record attests)',
+    ])
+    expect(checkAcaStatus({ ...base, howToClear: '' }, dayAfter)).toEqual([
+      'howToClear is empty (the Fix line this gate prints sends the re-verifier to that field)',
+    ])
   })
 
   it('FAILS a record attesting a table with no source (never cite what you did not open)', () => {
@@ -137,15 +154,30 @@ describe('the shipped ACA record binds to the engine constants (the unguarded dr
     ).toBe(record.maxAgeDays)
   })
 
-  it('the record CARRIES maxAgeDays — the `?? 30` fallback must never silently supply it', () => {
-    // verify-aca-status.ts:39/:65 default to 30 when the field is absent, so a record that LOSES
-    // the key still passes at 30 days while the file no longer states its own window — the gate
-    // would be enforcing a number nobody wrote down. PRESENCE is this arm's whole job; the VALUE
-    // is the arm above, kept separate so the two failures name different repairs.
+  it('the record CARRIES maxAgeDays (never the `?? 30` fallback) and PASSES the checker that reads it', () => {
+    // verify-aca-status.ts defaults to 30 in BOTH places it reads the window (`rec.maxAgeDays ?? 30`
+    // in the checker, and again in main()'s OK log), so a record that LOSES the key still passes at
+    // 30 days while the file no longer states its own window — the gate would be enforcing a number
+    // nobody wrote down. PRESENCE is this half's job; the VALUE is the arm above, kept separate so
+    // the two failures name different repairs. (Cited by NAME, not by line: the previous ":39/:65"
+    // anchor here had rotted by ~67 lines.)
     expect(
       Object.hasOwn(record, 'maxAgeDays'),
       'the record must state its own window rather than inherit the `?? 30` fallback',
     ).toBe(true)
+    // …and the SHIPPED record must satisfy the checker that reads it — the state-tax mirror
+    // (`it('every PRICED_STATES record file exists and passes the checker just after verifiedOn')`
+    // in verify-state-tax.test.ts) has always asserted this and the ACA side never did. This guards
+    // a DATA regression, NOT a code mutant: no one-line source change is killed by this arm alone —
+    // inverting any check reds the fixture arms above first. It catches a re-verifier who empties
+    // pinTo / summary / howToClear in aca-last-verified.json while every fixture arm stays green.
+    // Evaluated at a FIXED instant DERIVED from the record's own date (never Date.now(), never a
+    // hard-coded day): one day after verifiedOn is inside the record's stated 30-day window, so this
+    // isolates SHAPE from FRESHNESS and can never become a time bomb.
+    expect(
+      checkAcaStatus(record, Date.parse(record.verifiedOn) + 86_400_000),
+      'aca-last-verified.json must satisfy the gate that reads it — shape, independent of staleness',
+    ).toEqual([])
   })
 
   /**

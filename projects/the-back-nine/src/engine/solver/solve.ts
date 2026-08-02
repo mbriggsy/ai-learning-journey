@@ -98,7 +98,9 @@ export interface SolveInput {
 export interface SolveArm {
   readonly id: string
   readonly policy: DrawdownPolicy
-  /** The conversion plan (always `null` in the live sequencing-only ranking — carried for shape). */
+  /** The conversion plan. ⚠️ NOT always `null` — this comment used to say "always null in the live
+   *  sequencing-only ranking", a premise that EXPIRED 2026-07-19 when Part B went `'trended'` and the
+   *  trend clause cleared. Conversion candidates rank live now, so consumers must handle a real plan. */
   readonly conversion: RothConversionPlan | null
   /** Present iff `policy === 'custom'` (the shipped biconditional) — the user's out-of-grid order. */
   readonly drawdownOrder?: readonly DrawdownOrderKey[]
@@ -145,7 +147,9 @@ export interface SolveRefused {
 }
 
 /** The demotion-axis structured withhold (§S4.5) routed up from `select.ts` — never an uncaught
- *  throw. Unreachable in a live sequencing-only solve (conversions blocked), planted-seam-tested. */
+ *  throw. ⚠️ The "unreachable in a live sequencing-only solve (conversions blocked)" premise EXPIRED
+ *  2026-07-19; conversions rank live. This state is reachable on `pay-less-tax`, and the `leave-more`
+ *  arm reaches a THROW instead of this — the filed Tier-0 defect. */
 export interface SolveWithheld {
   readonly kind: 'withheld'
   readonly reason: 'demotion-axis-uncalibrated'
@@ -473,7 +477,10 @@ export function solve(token: OracleClearedToken, input: SolveInput, shouldAbort?
   })
 
   // (5) Select: shrinkage + deterministic crown. A demotion-axis refusal routes to a structured
-  // withheld state (never a throw); unreachable live (sequencing-only ⇒ no conversion winner).
+  // withheld state (never a throw) — but only on `pay-less-tax`.
+  // ⚠️ EXPIRED PREMISE (was: "unreachable live — sequencing-only ⇒ no conversion winner"). Conversions
+  // rank live since 2026-07-19, and a `leave-more` conversion winner reaches a THROW that lands as a
+  // generic "unavailable" card — the calm-but-wrong sin the catch below warns about. Filed Tier-0.
   const selection = selectRecommendation(search)
   if (selection.kind === 'withheld') {
     return {

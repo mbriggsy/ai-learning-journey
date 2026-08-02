@@ -2356,9 +2356,17 @@ export const slots = {
   // --- Act-4 · U16 §S3b — the heir-bracket disclosure (leave-more) + the viz aria sentence (AT parity:
   //     every disclosed figure reachable inside the role="img" name). Figures PRE-FORMATTED (money.ts). ---
   /** The leave-more heir-bracket note — the assumed IRD bracket the after-tax bequest is computed at
-   *  (recDisc* ⇒ require-hedge-swept; "Assumes" + "roughly" carry it). The percent arrives pre-formatted. */
+   *  (recDisc* ⇒ require-hedge-swept; "Assumes" + "roughly" carry it). The percent arrives pre-formatted.
+   *
+   *  ⚠️ THE "adjust it in your assumptions if that's off" CLAUSE WAS DROPPED 2026-08-02 — it was a
+   *  DEAD END. No heir-bracket seat exists in `assumptionRegistry.ts` or `AssumptionPanel.tsx`, so the
+   *  sentence sent the reader hunting for a control we never built. Sending someone looking for
+   *  something that isn't there is worse than saying nothing: they conclude they missed it.
+   *  The R7 obligation is unchanged and still OPEN — this assumption moves the leave-more ranking and
+   *  genuinely should be editable (template: `survivor-ratio`, `AssumptionPanel.tsx:322-348`).
+   *  **Restore the clause in the SAME change that ships the seat — never before it.** */
   recDiscHeirBracket: (percentFormatted: string): string =>
-    `Assumes your heirs are in roughly the ${percentFormatted}% tax bracket when they inherit — adjust it in your assumptions if that’s off.`,
+    `Assumes your heirs are in roughly the ${percentFormatted}% tax bracket when they inherit.`,
   /** The RecommendationViz accessible sentence (the role="img" name): both arms' magnitudes AND the
    *  delta, so the whole comparison is reachable in the a11y tree (A2 AT-parity). "about" carries the
    *  hedge; every figure arrives pre-formatted (the axis dialect), so the sentence carries no bare numeral. */

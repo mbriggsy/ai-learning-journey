@@ -76,10 +76,11 @@ deadlines silently misses it. It has been filed a notch late twice, both times i
    'unavailable' (the calm-but-wrong cardinal sin)" — which is precisely what happens.
    ⚑ **Audit corrections 2026-08-02:** (a) the terminal state was misstated — it does **not** land as
    `engine-unavailable`; `engineProtocol.ts:260-266` converts the throw to `calm-error` → `compute-error`
-   → the generic card at `copy.ts:1461-1462`. Fix the right surface. (b) **FIVE comments repo-wide still
-   assert the expired trend-block premise** and will mislead whoever executes this — `select.ts:279`,
-   `select.ts:112-114`, `solve.ts:101`, `solve.ts:147-148`, `solve.ts:475-476`. Sweep them in the same
-   change. (c) No fixture proves the crash fires OR that it can't; `select.ts:236-250`'s shrinkage
+   → the generic card at `copy.ts:1461-1462`. Fix the right surface. (b) ✅ **SWEPT 2026-08-02** — the five
+   comments that asserted the expired trend-block premise (`select.ts:279`, `select.ts:112-114`,
+   `solve.ts:101`, `solve.ts:147-148`, `solve.ts:475-476`) now each say the premise expired and that the
+   `leave-more` arm reaches a THROW. They were the traps that would have told you this branch is dead code.
+   (c) No fixture proves the crash fires OR that it can't; `select.ts:236-250`'s shrinkage
    tie-break can naturally crown a conversion winner, so treat it as live-possible until a probe says
    otherwise.
 
@@ -129,10 +130,10 @@ deadlines silently misses it. It has been filed a notch late twice, both times i
 
 6. **Smaller, each self-contained** *(all four re-anchored by the 2026-08-02 audit)*:
 
-   - **Post-65 non-qualified HSA money is silently forfeited.** ⚑ `healthOverlay.ts:747` calls it
-     *"(conservative, **disclosed**)"* — **no such disclosure exists anywhere in the UI.** The comment is
-     false today and will tell the next reader the job is done. Fix the comment in the same change as the
-     disclosure, or it re-rots.
+   - **Post-65 non-qualified HSA money is silently forfeited.** ✅ The false *"(conservative, disclosed)"*
+     claim at `healthOverlay.ts:747` is **corrected 2026-08-02** — it now says the direction is safe but
+     the disclosure does **not** exist, and asks whoever adds it to fix the comment in the same change.
+     **The disclosure itself is still OWED** (candidate home: the new "What this leaves out" section below).
    - **Account balances have no magnitude sanity rule** while spend and PIA each got one
      (`sanity.ts:51-72`). ⚑ **Size is M, not S, and a ceiling is the wrong instrument:** a 10× slip on
      $500k is $5M — a perfectly coherent household, so no threshold catches it. The shape that works is
@@ -150,11 +151,13 @@ deadlines silently misses it. It has been filed a notch late twice, both times i
    offsets (`dateSearch.ts:425/450/457`) and candidate Y=0 carries the base ACA stream **ungated**
    (`healthcareStreams.ts:149` → `windowStart = 0`, so the window gate is a pass-through). So
    `exposure.aca === 'priced'` *proves* the ACA tables were consumed — the clock is load-bearing, not
-   spurious. **⚠️ AND THE FILED FIX IS A TRAP: do not execute it.** The prescription still sitting in
-   `stalenessExposure.ts:115-117` ("re-derive the exposure against the CROWNED offset") would **silence**
-   the ACA clock for exactly the household whose date a subsidy flip moved — insight 103's shape recurring
-   inside the comment that cites insight 103. Its render-chain anchors are 20–60 lines stale too. Rewrite
-   `stalenessExposure.ts:86-117` to record the sweep argument and delete the trap.
+   spurious. ✅ **THE TRAP IS DELETED 2026-08-02.** `stalenessExposure.ts` no longer prescribes
+   "re-derive against the CROWNED offset" — that arm would have **silenced** the ACA clock for exactly the
+   household whose crown a subsidy flip moved (insight 103's shape, for the THIRD time in that one
+   comment). The file now records the sweep argument and keeps only the sound arm: **per-clock attribution,
+   so the ACA line can withdraw without taking the tax and Medicare lines with it** — which requires
+   `rulesMoved` to stop being one OR-collapsed boolean. Nothing here is urgent: the residual over-alarm is
+   bounded and knowingly accepted, and the clock is load-bearing.
 
 7. ⏰ **The 2027-01-01 annual roll has no tripwire at all.** `TAX_YEAR` / `COVERAGE_YEAR` /
    `CONTRIBUTION_YEAR` go a year stale in silence. Cheap to arm, and the deadline is fixed.
@@ -215,18 +218,27 @@ deadlines silently misses it. It has been filed a notch late twice, both times i
     perturbation. So dispatching the sequencing-only field would surface `mint-failed{roster}` **live** —
     the exact state `solveDispatch.ts:76` forbids in its own comment. Making it real needs a second
     validation law (a sequencing perturbation) under every shipped recommendation, which is a one-way door
-    on what "validated" means. **Near-term: fix the COPY only** — `copy.ts:1408` says a *withdrawal
-    strategy* needs more pre-tax when only the **conversion** half does; sequencing across taxable and Roth
-    is real and rankable. XS, honest, no new law.
+    on what "validated" means.
+    ⚑⚑ **AND THE "CHEAP COPY FIX" IS ITSELF A TRAP — found 2026-08-02 while attempting it.** The filed
+    near-term move was to reword `copy.ts:1408` so it blames only the **conversion** half rather than "a
+    withdrawal strategy." **Do not.** The code still returns `'no-pretax'` and runs NO solve, so a sentence
+    saying only conversions are blocked would promise a withdrawal-order answer we never deliver — trading
+    a false CAUSE for a false PROMISE, which is strictly worse. Any honest rewording must ALSO say we are
+    not ranking an order here, and that sentence is a real drafting call (the current wording was chosen
+    deliberately — `copy.ts:1404-1406` records that naming "a withdrawal strategy" cures the panel's
+    unglossed-"order" stumble). **Briggsy's words, or ship the engine half first.**
 
 12. **The assumed heir bracket (0.24) — the shipped copy sends the reader to a control that does not exist.**
     ⚑ **The filed claim ("cannot be seen or edited") is HALF FALSE, and the truth is worse.** It IS
     disclosed — `recommendationView.ts:78-81` → `copy.ts:2352-2353` → `RecommendationSurface.tsx:469-477` —
     and the sentence ends *"— adjust it in your assumptions if that's off."* **There is no heir seat in
     `assumptionRegistry.ts` or `AssumptionPanel.tsx`** (grepped 2026-08-02: zero rows). A dead-end
-    instruction is worse than silence, and it is **live right now** — visible in the `?seed=nc` capture.
-    Two halves: **(XS, this week)** drop the dead-end clause from `copy.ts:2353`; **(M)** add a real
-    editable row using `survivor-ratio` (`AssumptionPanel.tsx:322-348`) as a line-for-line template.
+    instruction is worse than silence — it was **live**, visible in the 2026-08-02 `?seed=nc` capture.
+    ✅ **XS half SHIPPED 2026-08-02** — the dead-end clause is gone; the sentence states the assumption and
+    stops. **(M) still OPEN:** the real editable row, using `survivor-ratio`
+    (`AssumptionPanel.tsx:322-348`) as a line-for-line template. ⚠️ The copy's own comment carries the
+    coupling — **restore the "adjust it in your assumptions" clause in the SAME change that ships the seat,
+    never before it.**
     **Panel only — never asked in intake** ("what bracket will your kids be in?" invites a confidently-wrong
     guess worse than the 24% default). Also open: the third locked Tier-2 goal (`live-bigger-now`) does not
     exist, so R21 ships 2 of 3 · the U17 S7 riders, **neither buildable as filed** (Q7a's gating premise is

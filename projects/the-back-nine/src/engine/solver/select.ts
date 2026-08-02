@@ -110,8 +110,11 @@ export interface SelectionSelected {
 }
 
 /** The refusal shape (§S4.5): a fail-closed structured withheld state the solve path routes the
- *  demotion-axis refusal into — never an uncaught worker throw. UNREACHABLE in a live sequencing-only
- *  solve (conversions stay trend-blocked), but planted-seam-tested. */
+ *  demotion-axis refusal into — never an uncaught worker throw.
+ *  ⚠️ The "UNREACHABLE live (conversions stay trend-blocked)" premise this comment used to assert
+ *  EXPIRED 2026-07-19: `PART_B_PRICING_MODE` is `'trended'` (`taxOverlay.ts:916`) and the trend
+ *  constant is sourced, so conversion candidates rank live. Only the `pay-less-tax` arm routes here;
+ *  `leave-more` still falls through to a throw — a filed Tier-0 defect, NOT a dead branch. */
 export interface SelectionWithheld {
   readonly kind: 'withheld'
   readonly reason: 'demotion-axis-uncalibrated'
@@ -276,7 +279,11 @@ export function selectCore(input: SelectCoreInput): SelectionResult {
   // is a scale-free SE-multiple calibrated ONLY on a Medicare-bearing post-trend-flip world, so it
   // CANNOT be calibrated in U15 (the trend constant is unsourced — insight 091). A conversion winner
   // over a non-conversion runner-up on that axis would trip `gradeCalibration`'s fail-closed throw;
-  // we route it here instead. UNREACHABLE live (conversions stay trend-blocked), planted-seam-tested.
+  // we route it here instead.
+  // ⚠️ EXPIRED PREMISE (was: "UNREACHABLE live — conversions stay trend-blocked"). Since 2026-07-19
+  // Part B prices trended and conversions rank live, so this IS reachable. Worse, the `leave-more`
+  // arm is not covered by this branch at all and falls through to `gradeCalibration`'s throw — filed
+  // Tier-0. Do not read this guard as dead code.
   if (
     surplusRegime &&
     goal === 'pay-less-tax' &&

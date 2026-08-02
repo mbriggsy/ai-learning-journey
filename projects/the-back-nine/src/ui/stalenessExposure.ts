@@ -112,9 +112,25 @@ const read = (priced: boolean): ExposureRead => (priced ? 'priced' : 'unpriced')
  * be checked in the SILENCING direction). `acaPricedForRun` already exists and is exported
  * (`intakeMap.ts:896`) — the predicate was never the missing piece.
  *
- * THE ACTUAL FIX needs the exposure re-derived against the CROWNED offset (or per-clock
- * attribution carried to the echo so the ACA line can withdraw on its own without taking the tax
- * and Medicare lines with it). Either is a real data-flow change; neither is a one-line gate.
+ * THE ACTUAL FIX — AND ONE OF ITS TWO ARMS IS ALSO A TRAP (corrected 2026-08-02, the second time
+ * this comment's own prescription has had to be withdrawn).
+ *
+ * ✗ "Re-derive the exposure against the CROWNED offset" — DO NOT. It is the same insight-103 shape a
+ *   third time. The date route SWEEPS every offset (`dateSearch.ts:425/450/457`) and candidate Y=0
+ *   carries the base ACA stream UNGATED (`healthcareStreams.ts:149` → `windowStart = 0`, so
+ *   `windowGate` is a pass-through). So `exposure.aca === 'priced'` PROVES the ACA tables were
+ *   consumed somewhere in the sweep — it is not an over-read. Re-deriving against the crown alone
+ *   would silence the ACA line for a household whose crown sits at 65+ *precisely because* a subsidy
+ *   flip pushed it there — the one household the clock exists to warn.
+ *
+ * ✓ PER-CLOCK ATTRIBUTION carried to the echo, so the ACA line can withdraw on its own without
+ *   taking the tax and Medicare lines with it. This is the sound arm and the only one left. It is a
+ *   real data-flow change (`rulesMoved` must stop being one OR-collapsed boolean), never a one-line
+ *   gate.
+ *
+ * ⚑ THE OVER-ALARM ITSELF IS NOT A DEFECT — the residual above is bounded and knowingly accepted.
+ * Anyone arriving here to "fix the ACA clock" should read the two paragraphs above first: the clock
+ * is load-bearing, and every cheap gate proposed for it so far has been a silencing bug.
  *
  * NO RUN AT ALL (`missingRequiredFacts` non-empty ⇒ every builder returns null): `'unknown'` on
  * every family, NOT `'unpriced'`. Silence has to be EARNED by a proof that the run priced

@@ -744,7 +744,11 @@ export function medicareAnnualCost(
  * `MagiComponents.nonSSordinary` at its producer (`solveGrossWithdrawal`), raising BOTH MAGIs.
  * The M5 engine never produces one — HSA outflow is qualified-only (this cap) and the general
  * drawdown structurally cannot reach the bucket (`GeneralBucketKey`); the engine instead
- * declares general-depletion with a stranded HSA (conservative, disclosed). FORWARD LANDMINE:
+ * declares general-depletion with a stranded HSA — conservative, and ⚠️ **NOT disclosed**: this
+ * comment claimed "(conservative, disclosed)" until 2026-08-02, when a sweep found NO user-facing
+ * disclosure anywhere for the stranded HSA. The direction is safe; the claim of disclosure was
+ * false. Filed Tier-0 — fix this comment in the SAME change that adds the disclosure, or it re-rots.
+ * FORWARD LANDMINE:
  * any future consumer that routes non-qualified HSA spend (the P4 solver's last-resort draw)
  * MUST add it to `nonSSordinary` in the SAME change — an MAGI-free general draw from the HSA is
  * the named income-laundering bug.

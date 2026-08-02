@@ -148,12 +148,32 @@ describe('BudgetBuilder — the Q5 structural shell', () => {
     expect(applyBtn()).toHaveAttribute('aria-disabled', 'true')
     expect(applyBtn()).not.toBeDisabled()
 
+    // THE EMPHASIS FLIP (Briggsy's call, 2026-08-02). Blocking the CTA was only half the fix: the
+    // frame still pointed its weight at the control that cannot act while the one real path forward
+    // ("Add a line") was a small underlined link beneath it. On the empty frame the two trade
+    // places. Asserted as CLASS rather than computed style on purpose — jsdom does not load the
+    // stylesheets, so a computed-opacity assertion here would be vacuously green; the real pixel
+    // proof is the Chromium run recorded in the commit.
+    expect(addBtn(), 'the only path forward wears the primary on the empty frame').toHaveClass('btn-primary')
+    expect(applyBtn(), 'and the CTA that cannot act drops to quiet').toHaveClass('btn-quiet')
+
     // The BEHAVIOURAL half — the mutant-killer: pressing it is not a close.
     fireEvent.click(applyBtn())
     expect(onClose).not.toHaveBeenCalled()
     expect(onApply).not.toHaveBeenCalled()
     expect(onEscape).not.toHaveBeenCalled()
     expect(sheetLiveRegion()!.textContent).toBe(copy.budgetApplyEmpty)
+
+    // …AND THE FLIP REVERSES THE MOMENT IT SHOULD — the same predicate, driven the other way, so
+    // neither half can be satisfied by a component that simply hardcodes one arrangement. Adding a
+    // line makes "Use this budget" the genuine next step and it takes the primary back.
+    fireEvent.click(addBtn())
+    expect(applyBtn(), 'a line exists — the CTA is the real next step again').toHaveClass('btn-primary')
+    expect(addBtn(), 'and "Add a line" returns to quiet').toHaveClass('btn-quiet')
+    // Still aria-disabled, for a DIFFERENT and honest reason: the fresh line carries NaN until an
+    // amount is typed (freshLine's "never a silent 0"). Blocked-because-empty and
+    // blocked-because-invalid are different states and must not be conflated.
+    expect(applyBtn()).toHaveAttribute('aria-disabled', 'true')
 
     // NON-VACUITY, on the SAME predicate the assertion above negates: the onClose spy DOES fire,
     // and the way out is still one tap (R8's never-a-gate).

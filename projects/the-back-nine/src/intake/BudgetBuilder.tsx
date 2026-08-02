@@ -393,14 +393,27 @@ export function BudgetBuilder({ open, draft, onApply, onEscape, onClose, variant
           />
         ))}
       </ul>
-      <button type="button" className="btn-quiet budget-sheet__add" onClick={addLine}>
+      {/* Card 9, the EMPHASIS FLIP (Briggsy's call, 2026-08-02). On the empty first-open frame the
+          only real path forward is "Add a line", and it was a small underlined link sitting under a
+          full-width filled button that could not act — the emphasis pointed at the wrong control.
+          The two swap on `nothingToCommit` and nothing else: as soon as a line exists, "Use this
+          budget" is genuinely the next step and takes the primary back. DOM ORDER IS UNCHANGED, so
+          focus order never moves — only the visual weight does. NOT ANIMATED, deliberately: the
+          swap rides the user's own click and lands beside a whole new row appearing, so a button
+          growing prominent would compete with the thing that actually happened, and a primary
+          "arriving" is the reward flourish the calm law forbids. */}
+      <button
+        type="button"
+        className={`${nothingToCommit ? 'btn-primary' : 'btn-quiet'} budget-sheet__add`}
+        onClick={addLine}
+      >
         {copy.budgetAddLine}
       </button>
 
       <div className="budget-sheet__actions">
         <button
           type="button"
-          className="btn-primary"
+          className={nothingToCommit ? 'btn-quiet' : 'btn-primary'}
           aria-disabled={hasErrors || nothingToCommit}
           onClick={apply}
         >

@@ -166,6 +166,16 @@
   opacity: 0.55;
 }
 
+/* The QUIET sibling of the same idiom — ONE home for both, so a blocked control mutes the same way
+   whichever weight it is currently wearing (Card 9's emphasis flip, 2026-08-02: on the empty budget
+   frame "Use this budget" drops to .btn-quiet, and a quiet button that CANNOT act would otherwise be
+   pixel-identical to the actionable Cancel sitting beside it). Opacity is a LIGHTNESS cue, never hue
+   — the colour-blind law — and it is the ONLY channel that separates these two, since the demotion
+   already spent weight and fill. Still operable, so the announced reason fires on press. */
+.btn-quiet[aria-disabled='true'] {
+  opacity: 0.55;
+}
+
 /* ----- the recovery phrase ----- */
 .save-phrase {
   list-style: none;

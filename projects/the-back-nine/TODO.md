@@ -6,7 +6,13 @@
 > `d5df3609` made pointing the rule).
 >
 > **The full open register is [`docs/backlog.md`](docs/backlog.md)** — 43 items, each traced to the raw
-> obligations behind it. This file ranks only what is next.
+> obligations behind it. This file ranks only what is next; **a queue of ~17 is not the open surface, so
+> read the register before filing anything as new.**
+>
+> ⚠️ **NEVER cite "TODO item N."** These numbers are re-ranked every session, so a citation written today
+> silently resolves to a *different* live item later — worse than dangling. (Live examples: `council-log.md`
+> and `cold-read-log.md` cite "TODO item 11" meaning the state-tax unit, shipped 2026-07-15; item 11 is now
+> the heir-bracket entry. Others cite "item 0", which no longer exists.) Cite the register entry's **title**.
 
 **Where we are:** all four acts are built; Act 4 closed at U17·S6 (S7 deferred, Briggsy's ruling). What is
 left is not units. It is the gap between *the build is done* and *a friend can bet real money on this*.
@@ -164,10 +170,18 @@ deadlines silently misses it. It has been filed a notch late twice, both times i
 ### Tier 4 — hygiene
 
 17. **The gates that don't bite (14 filed items)** — R7's registry is one level deep, copyGuard's scope is
-    a prefix allowlist with no forcing function on new keys, the CVD crops prove presence only, and several
-    arms still cannot fail. None can produce a wrong answer today; all mean the net is thinner than it
-    reads. Plus the Medicare-trend riders, the open copy obligations, the deferred richer market draw, and
-    the `dateinvert` (c) mint — its own session, a size-L parameter hunt.
+    a prefix allowlist with no forcing function on new keys, and several arms still cannot fail. None can
+    produce a wrong answer today; all mean the net is thinner than it reads. Plus the Medicare-trend
+    riders, the open copy obligations, the deferred richer market draw, and the `dateinvert` (c) mint —
+    its own session, a size-L parameter hunt.
+    ⚑ **The CVD half of this cluster is PARKED, not owed — do not re-propose it.** The filed gap ("the CVD
+    crops prove PRESENCE only") is real, and a `verify:cvd` pixel-regression gate was designed for it on
+    2026-08-02. **Briggsy declined it on the only authority that can:** *"I'm pretty color blind and I think
+    b9 looks great."* Per `caddie/SKILL.md:235` the colour lane can only flag, never pass — his eyes own the
+    verdict, so that IS the pass (taste-corpus rule 40 + exemplar E14). Rule 18 still binds every NEW
+    surface; this covers what he has seen. **Being colour-blind qualifies him as the oracle rather than
+    disqualifying him** — he is the failure mode, not a judge of prettiness, and a simulated-CVD PNG is only
+    a model of him. Reach for the human before building the simulator.
 
 ---
 

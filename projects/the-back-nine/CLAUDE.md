@@ -15,7 +15,11 @@ Start at [`docs/README.md`](docs/README.md). The documentation is story-first:
 3. **Architecture — *what you must never break*** (the load-bearing engine invariants, one canonical home): [`docs/architecture.md`](docs/architecture.md).
 4. **Act plans** [`docs/plans/`](docs/plans/) (`1-engine` … `4-recommendation` + `features/`) · **decision records** [`docs/decisions/`](docs/decisions/) · **research** [`docs/research/`](docs/research/) · **glossary** [`docs/glossary.md`](docs/glossary.md) · **insights** [`docs/insights/`](docs/insights/).
 
-Precedence on conflict: the **roadmap's You-Are-Here table** wins on build status; **`docs/architecture.md`** wins on an invariant; **`docs/product.md`** wins on the *why*/*what*. `TODO.md` is the volatile work queue.
+5. **Backlog — *everything still open*** (the full tiered register — 43 items, consolidated 2026-08-02 from a source audit + an archive salvage; each traced to its raw obligations): [`docs/backlog.md`](docs/backlog.md).
+
+Precedence on conflict: the **roadmap's You-Are-Here table** wins on build status; **`docs/architecture.md`** wins on an invariant; **`docs/product.md`** wins on the *why*/*what*.
+
+**The work queue is two files, and the split is load-bearing.** `TODO.md` is the volatile RANKED queue — what is next, ~17 entries, re-ranked every session. [`docs/backlog.md`](docs/backlog.md) is the full open REGISTER — everything still open, whether or not it is ranked. **Read the register before filing anything as new**: a queue of 17 is not the open surface, and TODO's numbers are re-ranked per session, so **never cite "TODO item N"** — it will silently resolve to a different item later. Cite the register entry's title instead.
 
 ## Commands
 

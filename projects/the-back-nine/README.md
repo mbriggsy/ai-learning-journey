@@ -134,5 +134,3 @@ The full index and reading map is [`docs/README.md`](docs/README.md). The three 
 - **[`docs/architecture.md`](docs/architecture.md)** — *what you must never break*: the load-bearing engine invariants.
 
 Build conventions + landmines live in [`CLAUDE.md`](CLAUDE.md); the live work queue is [`TODO.md`](TODO.md).
-</content>
-</invoke>

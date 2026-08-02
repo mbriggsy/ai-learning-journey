@@ -452,11 +452,22 @@ describe('the state-tax seed faces (the state-carrying seed increment)', () => {
   // nc — the PRICED flagship. Pin `pricedStateForRun === 'NC'` (the producer's output) + the engine
   // INEQUALITY (NC prices a HIGHER lifetime tax than the twin: the flat rate taxes the pretax draw AND
   // the realized gains on the taxable bucket this household forms from reinvested RMD surplus) + the
-  // engine-PROVEN outcomeState. The drag crosses the on-track band edge: the twin is on-track
-  // (survival 0.8585 — post-trend-re-tune 2026-07-19) and NC is BORDERLINE (0.8425). Recorded, not
-  // assumed (the seed comment names it); re-tune the account knob on drift, never loosen the pin (the
-  // standing C3 law — no existing seed is touched here, so no existing pin should move).
-  it("'nc' prices NC and NC tax moves lifetime tax up, crossing on-track → BORDERLINE vs the twin", () => {
+  // engine-PROVEN outcomeState.
+  //
+  // ⚠️ THE BAND CROSSING IS GONE, AND IT WAS NOT A REGRESSION. Until 2026-08-02 the NC drag pushed
+  // this household across the on-track edge to BORDERLINE (0.8425 vs the twin's 0.8585). S.L.
+  // 2026-41 § 44.1(a) cut NC's 2027+ rate from the held-forward 3.99% to 3.49/3.24/2.99 — a real,
+  // enacted tax cut — so the drag no longer reaches the edge and the household lands ON-TRACK.
+  // The INEQUALITY below is the load-bearing pin and still bites; only its magnitude moved.
+  //
+  // The standing C3 law says "re-tune the account knob on drift, never loosen the pin" — but it
+  // CANNOT be applied here, and that is deliberate, not laziness: `ncAffirmation` is a pure spread
+  // of `retiredOnTrack` (devSeeds.ts) with ONE field changed, and this test's twin IS
+  // `DEV_SEEDS.retired`. Giving `nc` its own accounts to force a crossing would destroy the
+  // same-household-one-difference invariant that makes the twin comparison honest — a worse trade
+  // than losing the crossing. Restoring a band-crossing state face needs a NEW purpose-built seed
+  // with its own state-off twin; filed for Briggsy's call, not silently invented here.
+  it("'nc' prices NC and NC tax moves lifetime tax up — the drag no longer crosses the band (post S.L. 2026-41)", () => {
     expect(pricedStateForRun(DEV_SEEDS.nc)).toBe('NC')
     const twin = twinWire()
     const nc = spineWire('nc')
@@ -464,10 +475,10 @@ describe('the state-tax seed faces (the state-carrying seed increment)', () => {
       sumF64(nc.taxAware!.lifetimeTaxPaidReal),
       'NC prices a strictly HIGHER lifetime tax than the state-absent twin',
     ).toBeGreaterThan(sumF64(twin.taxAware!.lifetimeTaxPaidReal))
-    expect(nc.headline.outcomeState, 'engine-proven: NC bites enough to cross on-track → borderline').toBe(
-      'borderline',
+    expect(nc.headline.outcomeState, 'engine-proven: the cut NC schedule leaves this household on-track').toBe(
+      'on-track',
     )
-    expect(twin.headline.outcomeState, 'the twin (state-absent) stays on-track — the drag is NC').toBe('on-track')
+    expect(twin.headline.outcomeState, 'the twin (state-absent) is on-track too — NC no longer moves the band').toBe('on-track')
   })
 
   // pa — the DERIVED "usually a small piece". Working memory GUESSED byte-identity; the engine refutes
@@ -599,9 +610,11 @@ describe('the statestale aged plant (the state-tax gate note; light doctor, F2 s
   // doctored statestale vault, hydrated and re-built, must be ACCEPTED by the real engine validator
   // and RESOLVE to a real worded answer — never the R19 calm indeterminate. Because the light doctor
   // leaves `startCalendarYear` at 2026 (≥ NC's 2026 rate row), validateParams accepts and the run
-  // lands the SAME engine-proven verdict as `?seed=nc`: BORDERLINE (only savedAt + the state stamp
-  // moved, neither of which the engine reads).
-  it("'statestale' is ENGINE-ACCEPTED and resolves to a real verdict (borderline) — never the R19 indeterminate (the pin that would have caught the superseded −2y bug)", () => {
+  // lands the SAME engine-proven verdict as `?seed=nc` (only savedAt + the state stamp moved,
+  // neither of which the engine reads). That verdict is ON-TRACK since the 2026-08-02 S.L. 2026-41
+  // rate cut — see the `nc` arm above for why the old BORDERLINE face is gone. The coupling to
+  // `nc` is the real invariant here; the literal below must always match that arm's expectation.
+  it("'statestale' is ENGINE-ACCEPTED and resolves to a real verdict — never the R19 indeterminate (the pin that would have caught the superseded −2y bug)", () => {
     const built = scenarioFromDraft(DEV_SEEDS.nc)
     if (!built.ready) return
     const aged = doctorStateStaleVault(built.scenario, TODAY)
@@ -618,7 +631,7 @@ describe('the statestale aged plant (the state-tax gate note; light doctor, F2 s
     expect(wire.kind, 'statestale: a feasible, resolved run — never the R19 indeterminate').toBe('resolved')
     if (wire.kind !== 'resolved') return
     expect(wire.headline.outcomeState, 'the same engine-proven verdict as fresh nc — savedAt/stamp do not move it').toBe(
-      'borderline',
+      'on-track',
     )
   })
 

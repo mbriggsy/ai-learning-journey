@@ -280,8 +280,10 @@ export type MintOutcome =
  *  - K-candidate ranking stability → the branded {@link RankingStabilityReport} likewise;
  *  - grade calibration (incl. the conversion-near-tie demotion case) + the held-out defense
  *    → the ε clause: every calibration constant calibrated (sentinel absent), enforced live;
- *  - the per-run-consumed pinning clause for THIS household (NC blocks to ~Aug-2026 while
- *    FL/PA mint on the same build; methodology substrate ships DISCLOSED, never laundered);
+ *  - the per-run-consumed pinning clause for THIS household (a household whose state carries a
+ *    directional rate entry blocks while its siblings mint on the same build — no priced state
+ *    is directional since the 2026-08-02 NC pin, so this leg is seam-driven; methodology
+ *    substrate ships DISCLOSED, never laundered);
  *  - the Medicare-trend block for any candidate set containing conversions;
  *  - the ACA legislative freshness window (injected today — the engine reads no clock).
  *
@@ -303,6 +305,14 @@ export function mintOracleToken(inputs: {
    *  CLEAR (sourced + consumed) — without it, deleting the trend push below would stay green on
    *  every live test (the exact `_epsilonRequired` precedent). The live binding never passes this. */
   readonly _trendOverride?: { readonly entry: ConstantEntry; readonly mode: 'real-flat' | 'trended' }
+  /** TEST-SEAM ONLY (insight 048, the NC pin of 2026-08-02): overrides the pinning clause's live
+   *  result so the MINT's state-blocking leg can be driven red now that the priced roster is
+   *  FULLY PINNED. S.L. 2026-41 retired `ncRateSchedule` — the last directional entry — so NO
+   *  live household blocks here any more, and without this seam deleting the
+   *  `...pinning.blocking` push below would stay green on every live test (the exact
+   *  `_trendOverride` precedent, minted for the same reason when the trend clause cleared).
+   *  The live binding never passes this. */
+  readonly _pinningOverride?: PinningEvaluation
 }): MintOutcome {
   const { params, candidateConversionAmounts, todayEpochDay, oracleReport, stabilityReport } = inputs
   if (oracleReport.caseIds.length === 0) {
@@ -310,7 +320,7 @@ export function mintOracleToken(inputs: {
     // reaching here requires a deliberate cast, and the mint still fails loud, never green).
     throw new Error('[oracleToken] an oracle report over ZERO cases cannot clear a token — a vacuous gate is theater')
   }
-  const pinning = evaluatePinningClause(params)
+  const pinning = inputs._pinningOverride ?? evaluatePinningClause(params)
   const withheld: WithheldReason[] = [...pinning.blocking]
   const trend =
     inputs._trendOverride === undefined

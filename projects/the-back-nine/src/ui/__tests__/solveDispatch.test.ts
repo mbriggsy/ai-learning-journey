@@ -10,7 +10,8 @@
  *
  *  2. STORE INTEGRATION — from a real devSeed draft, a goal pick drives idle → pending → committed
  *     against the REAL in-process engine (engineApi.runSolve — the memoryModel real-engine precedent):
- *       (a) the NC household commits token-withheld{state-certification-pending} (the Q5 held render);
+ *       (a) the NC household commits a REAL recommendation (the Q5 held render retired 2026-08-02
+ *           when S.L. 2026-41 pinned NC's rate schedule — this arm used to be the withhold);
  *       (b) a priced-state (FL) household commits a real recommendation whose carried fingerprint
  *           EQUALS solverRunFingerprint of the dispatched request (source-bound, wall #1);
  *       (c) a fingerprint-moving draft edit mid-flight lands stale, never committed-as-current (the S1
@@ -202,7 +203,11 @@ const realBuilders = (opts?: { readonly fast?: boolean }): ParamsBuilders => ({
 })
 
 describe('the live recommend-second arc — real draft → real engine', () => {
-  it('the NC household commits token-withheld{state-certification-pending} (the Q5 held render)', async () => {
+  it('the NC household commits a REAL recommendation — the Q5 held render is retired with the certification block', async () => {
+    // The end-to-end inversion of the flagship withhold, driven through the real draft → real
+    // engine arc. Until 2026-08-02 an NC household committed token-withheld and rendered the Q5
+    // held card promising an answer "around August"; S.L. 2026-41 § 44.1(a) enacted the rate
+    // schedule, so the household now gets the recommendation it was being refused.
     const model = createMemoryModel({ client: realClient, builders: realBuilders({ fast: true }) })
     model.update(() => withGoalSeed('nc', 'leave-more'))
     await model.recompute() // the spine beat commits first (recommend-second ordering)
@@ -210,9 +215,7 @@ describe('the live recommend-second arc — real draft → real engine', () => {
     const solve = model.getSnapshot().solve
     expect(solve.kind).toBe('committed')
     if (solve.kind !== 'committed') throw new Error('unreachable')
-    expect(solve.payload.kind).toBe('token-withheld')
-    if (solve.payload.kind !== 'token-withheld') throw new Error('unreachable')
-    expect(solve.payload.reasons).toContainEqual({ kind: 'state-certification-pending', state: 'NC' })
+    expect(solve.payload.kind).toBe('recommended')
   }, 120_000)
 
   it('a priced-state (FL) household commits a real recommendation whose fingerprint EQUALS the dispatched run', async () => {

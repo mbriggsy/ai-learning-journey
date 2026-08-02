@@ -92,16 +92,22 @@ describe('the shipped roster records — one per PRICED_STATE, well-formed (the 
     expect(recordFileFor('FL')).toBe('state-tax-fl-last-verified.json')
   })
 
-  it('NC carries the ~Aug-2026 certification checkpoint (nextDue 2026-09-01) + names BOTH re-checks', () => {
+  it('NC re-verifies on the ANNUAL cadence post-pin (nextDue 2027-08-02) and records the pin, its successor checkpoint, and the stale-source trap', () => {
     const rec = JSON.parse(
       readFileSync(join(process.cwd(), recordFileFor('NC')), 'utf-8'),
     ) as StateTaxRecord
-    expect(rec.nextDue, 'the certification checkpoint, not the annual cadence').toBe('2026-09-01')
-    // Both re-checks named: the revenue certification AND a codified-statute re-fetch.
-    expect(rec.note, 'names the FY2025-26 revenue certification').toMatch(/certification/i)
-    expect(rec.note, 'names the codified-statute / session-law re-fetch').toMatch(/statute|session law|budget-deal/i)
-    // The veto law stated: holds 3.99% until a lower rate pins; a pin stales saved vaults.
-    expect(rec.note, 'states the hold-until-pinned veto law').toMatch(/held forward|holds 3\.99/i)
+    expect(rec.nextDue, 'the annual cadence — the ~Aug-2026 certification checkpoint is retired').toBe('2027-08-02')
+    // WHY it is retired, by name: S.L. 2026-41 enacted the schedule and struck the trigger rows
+    // the FY2025-26 certification fed. Provenance must be in the record, not just the constant.
+    expect(rec.note, 'names the enacting session law').toMatch(/2026-41/)
+    expect(rec.note, 'explains what became of the certification').toMatch(/certification/i)
+    // A retired checkpoint must be REPLACED, never merely deleted — the next real flip event is
+    // the Office of the State Controller's August-2034 accounting (the first surviving trigger row).
+    expect(rec.note, 'names the successor live-flip checkpoint (OSC August 2034)').toMatch(/2034/)
+    // The stale-source trap: two official-looking pages still show the STRUCK 3.99% row, so the
+    // next re-verifier will meet apparent contradictions and must not "correct" the table back.
+    expect(rec.note, 'warns that NCDOR + the codified G.S. page lag the session law').toMatch(/NCDOR/i)
+    // A pinned change stales saved vaults (StateTaxVintageV3).
     expect(rec.note, 'a pinned change stales saved vaults (StateTaxVintageV3)').toMatch(/StateTaxVintageV3|stale/i)
   })
 

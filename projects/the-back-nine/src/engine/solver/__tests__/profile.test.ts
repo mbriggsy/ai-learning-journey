@@ -97,10 +97,36 @@ describe('profileSolve — measures a full worker-side solve against its baselin
   }, 120_000)
 
   it('SURFACES a short-circuited solve honestly — a withheld-token household never passes as a full solve', () => {
-    // An NC household withholds the token (state-certification-pending) — solveWithMint returns
-    // token-withheld BEFORE the search/grade. The profile's baseline still measured (NC is runnable),
-    // but payloadKind exposes that solveMs is NOT a full-solve worst case (the outcomeKind discipline).
-    const profile = profileSolve(requestFor({ base: baseFor({}, 'NC') }), () => performance.now())
+    // THE DRIVER CHANGED 2026-08-02, THE POINT DID NOT. An NC household used to withhold
+    // (state-certification-pending) until S.L. 2026-41 pinned the rate schedule; no priced state
+    // withholds any more, so this arm now rides the ACA legislative-freshness clause, which is
+    // still live-drivable: an enrolled-premium stream puts the run inside the clause's domain
+    // (insight 027) and an injected today past the window fires it. What must never be lost is
+    // the assertion itself — the baseline still measures, but payloadKind exposes that solveMs is
+    // NOT a full-solve worst case (the outcomeKind discipline).
+    //
+    // Safe by construction: both members are already retired with zero earned income, so this
+    // household has NO bridge years and cannot trip simulate.ts's wage-blind ACA rejection arm
+    // (which fires only when someone is still working — `isBridgeYear`, simulate.ts:895-897).
+    // `irmaaMagiSeed` is REQUIRED once healthcare prices: the 66-year-old is Medicare-enrolled at
+    // t=0 and IRMAA reads MAGI on a 2-year lookback, so the two pre-simulation years must be given
+    // rather than computed as a silent ≈$0 (which would understate the surcharge). Without it the
+    // baseline is INDETERMINATE and profileSolve refuses it — validation cost is not compute cost.
+    const b = baseFor()
+    const onAca: SimulationParams = {
+      ...b,
+      overlay: {
+        ...b.overlay!,
+        healthcareEnabled: true,
+        enrolledPremium: [12_000],
+        slcsp: [12_000],
+        irmaaMagiSeed: [120_000, 120_000],
+      },
+    }
+    const profile = profileSolve(
+      requestFor({ base: onAca, todayEpochDay: TODAY + 400 }),
+      () => performance.now(),
+    )
     expect(profile.payloadKind).toBe('token-withheld')
   }, 120_000)
 

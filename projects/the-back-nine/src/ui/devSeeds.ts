@@ -881,17 +881,25 @@ const noPretaxSteer: ScenarioDraft = {
 // ---------------------------------------------------------------------------
 
 /**
- * THE NC-PRICED AFFIRMATION FLAGSHIP — `retiredOnTrack`'s couple in North Carolina. NC's 3.99%
- * flat tax genuinely BITES: the private-sector Traditional-IRA draw is fully taxed at the flat rate
+ * THE NC-PRICED AFFIRMATION FLAGSHIP — `retiredOnTrack`'s couple in North Carolina. NC's flat tax
+ * genuinely BITES: the private-sector Traditional-IRA draw is fully taxed at the flat rate
  * (SS exempt, no age carve-out), AND — because this all-retired household develops a taxable
  * brokerage bucket from reinvested RMD surplus in the RMD years — NC also taxes those realized gains
- * as ordinary income (no LTCG preference). The drag is real enough to PUSH the state-absent twin's
- * on-track (survival 0.8585 — post-trend-re-tune 2026-07-19; 0.8555 pre-trend) DOWN across the
- * on-track band edge to BORDERLINE (survival 0.8425; 0.838 pre-trend) —
- * engine-proven in devSeeds.test.ts, recorded not assumed. This is the seed the priced verdict
- * affirmation + narrowed residual ("… North Carolina …") cold-reads on BOTH mounts; the pin is the
- * lifetime-tax INEQUALITY vs the twin plus the found borderline state (re-tune the knob on drift,
- * never loosen the pin — the standing C3 law).
+ * as ordinary income (no LTCG preference). This is the seed the priced verdict affirmation +
+ * narrowed residual ("… North Carolina …") cold-reads on BOTH mounts; the pin is the lifetime-tax
+ * INEQUALITY vs the twin, engine-proven in devSeeds.test.ts, recorded not assumed.
+ *
+ * ⚠️ THE BAND CROSSING THIS SEED USED TO SHOW IS GONE (2026-08-02) — not a regression. The drag
+ * once pushed the twin's on-track (survival 0.8585) DOWN across the edge to BORDERLINE (0.8425);
+ * S.L. 2026-41 § 44.1(a) cut NC's 2027+ rate from a held-forward 3.99% to 3.49/3.24/2.99, so the
+ * drag no longer reaches the edge and this household lands ON-TRACK. NC still prices strictly more
+ * lifetime tax than the twin — only the magnitude moved.
+ *
+ * The C3 "re-tune the knob on drift" law does NOT apply here: this seed is a PURE spread of
+ * `retiredOnTrack` with one field changed, and devSeeds.test.ts uses `DEV_SEEDS.retired` as its
+ * twin. Giving it its own accounts to force a crossing would break the same-household-one-
+ * difference invariant that makes the comparison honest. A band-crossing state face needs a NEW
+ * seed carrying its own state-off twin — Briggsy's call, not a silent fixture edit.
  */
 const ncAffirmation: ScenarioDraft = { ...retiredOnTrack, retirementState: 'NC' }
 

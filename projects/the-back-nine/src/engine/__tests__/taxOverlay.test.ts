@@ -4569,11 +4569,20 @@ describe('taxOverlay — state income tax (the state-tax unit)', () => {
       const crossState = run(cfgNC, crossingYears) - run(cfgNone, crossingYears)
       const ctrlState = run(cfgNC, controlYears) - run(cfgNone, controlYears)
 
+      // THE YEAR MATTERS NOW. The conversion lands at t=1 → tax year 2027, and since S.L. 2026-41
+      // NC's 2027 rate (3.49%) DIFFERS from 2026's (3.99%). The file-level `ncRate` is 2026's; it
+      // was only ever correct here because the schedule used to be flat forever, which made this
+      // assertion silently insensitive to which year the engine priced. Reading the conversion
+      // year's own rate makes this the schedule's first real per-year witness — if the overlay
+      // ever froze the rate at t=0 (the insight-014 failure mode this describe block exists to
+      // catch, in its rate dimension rather than its deduction dimension), these now go red.
+      const ncRateConvYear = stateRateForYear('NC', 2027)
+      expect(ncRateConvYear, 'non-vacuity: 2027 must really differ from the t=0 rate').not.toBe(ncRate)
       // The survivor year taxes the conversion on the SINGLE SD; the control (no death) on the MFJ SD.
-      expect(crossState).toBeCloseTo((C - ncSdSingle) * ncRate, 3)
-      expect(ctrlState).toBeCloseTo((C - ncSdMfj) * ncRate, 3)
+      expect(crossState).toBeCloseTo((C - ncSdSingle) * ncRateConvYear, 3)
+      expect(ctrlState).toBeCloseTo((C - ncSdMfj) * ncRateConvYear, 3)
       // The widow's state cliff: the SAME conversion costs (SD_mfj − SD_single) × rate MORE as a survivor.
-      expect(crossState - ctrlState).toBeCloseTo((ncSdMfj - ncSdSingle) * ncRate, 3)
+      expect(crossState - ctrlState).toBeCloseTo((ncSdMfj - ncSdSingle) * ncRateConvYear, 3)
     })
   })
 

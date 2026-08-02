@@ -1,17 +1,23 @@
 /**
  * U14 S0 — the oracle-token per-run clauses (the mint predicate's four legs).
  *
- * The flagship pair is the council's Attack-5 requirement: an NC household's token is BLOCKED
- * (state-certification-pending — ncRateSchedule's out-years wait on the ~Aug-2026 FY2025-26
- * certification) while an FL and a PA household MINT on the SAME build. Every clause also has
- * its pure-seam planted arms (insight 048): fail-closed on an unclassified directional entry,
- * the lying-mirror trend arm (fake-sourced entry + unmoved pricing mode still blocks), the
- * planted ε sentinel, and the NaN-injected today.
+ * The council's Attack-5 requirement was a flagship PAIR: an NC household's token BLOCKED
+ * (state-certification-pending) while FL and PA MINT on the SAME build. **That pair went live-
+ * unreachable on 2026-08-02**, when S.L. 2026-41 § 44.1(a) pinned `ncRateSchedule` to an enacted
+ * statutory schedule and retired the last directional entry on the priced roster — so every
+ * priced state now mints, and Attack-5's per-household DIFFERENTIATION is proven through the
+ * pure seam instead (`classifyConsumedConstants` with a planted directional `state.*` row) plus
+ * the mint's own `_pinningOverride` seam. This is the trend clause's history repeating: a clause
+ * that CLEARS must grow a seam, or deleting its leg stays green forever (insight 048).
+ *
+ * Every clause also has its pure-seam planted arms: fail-closed on an unclassified directional
+ * entry, the lying-mirror trend arm (fake-sourced entry + unmoved pricing mode still blocks),
+ * the planted ε sentinel, and the NaN-injected today.
  */
 import { describe, it, expect } from 'vitest'
 import type { OverlayParams, PersonInputs, SimulationParams } from '@shared/model'
 import { sourced, unsourced } from '@engine/constants/types'
-import { acaEnhancedSubsidyStatus } from '@engine/constants'
+import { acaEnhancedSubsidyStatus, PRICED_STATES } from '@engine/constants'
 import { productionMarket } from '../../reference/methodology'
 import {
   candidateSetHasConversions,
@@ -59,10 +65,26 @@ const overlayFor = (state?: 'NC' | 'PA' | 'FL'): OverlayParams => ({
   ...(state !== undefined ? { retirementState: state } : {}),
 })
 
-describe('the pinning clause — NC-blocks / FL-mints on the SAME build (S0.2, Attack-5)', () => {
-  it('an NC household is BLOCKED: state-certification-pending(NC) — the ~Aug-2026 certification', () => {
+describe('the pinning clause — the priced roster is FULLY PINNED, so every state mints (S0.2, Attack-5)', () => {
+  it('an NC household MINTS free — S.L. 2026-41 pinned the rate schedule, retiring the certification block', () => {
+    // THE INVERSION OF THE ORIGINAL ATTACK-5 ARM. Until 2026-08-02 this household was BLOCKED
+    // (state-certification-pending) because ncRateSchedule's out-years waited on a revenue
+    // certification. S.L. 2026-41 § 44.1(a) enacted the schedule outright AND struck every
+    // trigger row through FY2032-33, so the certification gates nothing — the honest posture
+    // is now to mint. Blocking here would withhold a recommendation we can actually stand behind.
     const { blocking } = evaluatePinningClause(makeParams({ overlay: overlayFor('NC') }))
-    expect(blocking).toContainEqual({ kind: 'state-certification-pending', state: 'NC' })
+    expect(blocking).toEqual([])
+  })
+
+  it('NO priced state is directional — the property behind the three mint arms (fail-loud if one regresses)', () => {
+    // Non-vacuity for the three arms above: they would all pass trivially if the state branch
+    // stopped being consumed at all. This asserts the REASON they pass — every priced state's
+    // rate schedule is pinned — so a future directional state re-arms the block instead of
+    // silently minting, and this test names which one broke.
+    for (const state of PRICED_STATES) {
+      const { blocking } = evaluatePinningClause(makeParams({ overlay: overlayFor(state) }))
+      expect(blocking, `${state} must be pinned or its household must block`).toEqual([])
+    }
   })
 
   it('an FL household MINTS free on the same build (the constitutional $0 is pinned)', () => {
@@ -308,7 +330,7 @@ describe('S6 — mintOracleToken: the assembled gate (reports required, clauses 
     expect('token' in out, 'token' in out ? '' : JSON.stringify((out as { withheld: unknown }).withheld)).toBe(true)
   })
 
-  it('an NC household is WITHHELD on the SAME build with the SAME reports — state-certification-pending(NC) ALONE (the trend reason is gone)', () => {
+  it('an NC household now MINTS on the SAME build with the SAME reports — the certification block is retired (S.L. 2026-41)', () => {
     const out = mintOracleToken({
       params: makeParams({ overlay: overlayFor('NC') }),
       candidateConversionAmounts: [undefined, 20_000],
@@ -316,11 +338,30 @@ describe('S6 — mintOracleToken: the assembled gate (reports required, clauses 
       oracleReport,
       stabilityReport,
     })
-    expect('token' in out).toBe(false)
+    // The INVERTED flagship arm. Every leg is now clear for this household: the trend clause was
+    // lifted by the sourcing unit, and the pinning clause by the 2026-08-02 statutory pin. An NC
+    // household that still withheld here would be refusing an answer we can stand behind.
+    expect('token' in out, 'token' in out ? '' : JSON.stringify((out as { withheld: unknown }).withheld)).toBe(true)
+  })
+
+  it('the MINT’s state-blocking leg goes red through the seam (the leg the live roster can no longer drive)', () => {
+    // THE POINT OF THE SEAM (insight 048, the `_trendOverride` precedent): with the roster fully
+    // pinned, DELETING the `...pinning.blocking` push inside mintOracleToken would stay green on
+    // every live test in this file. The planted evaluation proves the leg is still wired — and
+    // that its reason reaches the withheld list verbatim, so U17's gate-red branch can name it.
+    const out = mintOracleToken({
+      params: makeParams({ overlay: overlayFor('NC') }),
+      candidateConversionAmounts: [undefined, 20_000],
+      todayEpochDay: today,
+      oracleReport,
+      stabilityReport,
+      _pinningOverride: {
+        blocking: [{ kind: 'state-certification-pending', state: 'NC' }],
+        disclosedDirectional: [],
+      },
+    })
+    expect('withheld' in out).toBe(true)
     if ('withheld' in out) {
-      // EXACTLY the certification reason: the trend clause no longer fires on a conversion-bearing
-      // set (sourced + consumed), and the withheld-reason enum names only TRUE reasons — a stale
-      // trend reason here would blame the wrong gate (the S6.3 contract).
       expect(out.withheld).toEqual([{ kind: 'state-certification-pending', state: 'NC' }])
     }
   })
@@ -343,6 +384,10 @@ describe('S6 — mintOracleToken: the assembled gate (reports required, clauses 
     // The trend leg rides `_trendOverride` (the `_epsilonRequired` precedent, insight 048): the
     // LIVE clause is clear post-sourcing, so without the seam, deleting the mint's trend push
     // would stay green on every live test — the planted unsourced entry proves the leg is wired.
+    // The STATE leg now rides `_pinningOverride` for the same reason the trend leg rides
+    // `_trendOverride`: both live clauses are CLEAR (the trend by sourcing, the state by the
+    // 2026-08-02 statutory pin), so the union could no longer be driven to three reasons from
+    // live constants alone. Only the ACA leg is still live-driven, by the +400-day today.
     const out = mintOracleToken({
       params,
       candidateConversionAmounts: [30_000],
@@ -350,6 +395,10 @@ describe('S6 — mintOracleToken: the assembled gate (reports required, clauses 
       oracleReport,
       stabilityReport,
       _trendOverride: { entry: unsourced('planted pinTo'), mode: 'trended' },
+      _pinningOverride: {
+        blocking: [{ kind: 'state-certification-pending', state: 'NC' }],
+        disclosedDirectional: [],
+      },
     })
     expect('withheld' in out).toBe(true)
     if ('withheld' in out) {

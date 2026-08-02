@@ -382,25 +382,32 @@ describe('canonical constants — shape & provenance (contract #6)', () => {
       }
     })
 
-    it('the U14 S0 pin split: ncRateSchedule is the ONE directional state entry (certification-pinnable, ~Aug-2026); every other entry is PINNED (2026-07-18)', () => {
+    it('the roster is FULLY PINNED — ncRateSchedule was the last directional entry and pinned 2026-08-02 (S.L. 2026-41)', () => {
       // Transcribed from the primaries 2026-07-15; pinned at the U14 S0 pass on the primary
-      // fetches + the verify:state-tax attestation records. The NC rate schedule's 2027+
-      // out-years wait on the FY2025-26 revenue certification — a DATED pin event, so the
-      // entry is certification-pinnable: an NC household's oracle-cleared token is BLOCKED
-      // (state-certification-pending) while FL/PA households mint on the same build. Flipping
-      // this flag without the certification is the laundering REJECT (the hawk's veto).
-      expect(stateTaxConstants.ncRateSchedule.directionalUntilPinned, 'NC out-years uncertified').toBe(true)
-      expect(stateTaxConstants.ncRateSchedule.directionalKind).toBe('certification-pinnable')
+      // fetches + the verify:state-tax attestation records. `ncRateSchedule` was the ONE
+      // holdout — its 2027+ out-years waited on the FY2025-26 revenue certification, so it was
+      // certification-pinnable and BLOCKED an NC household's token. S.L. 2026-41 § 44.1(a)
+      // enacted the schedule outright and struck the trigger rows the certification fed, so the
+      // entry pinned to primary session law on 2026-08-02 and NO state entry is directional now.
+      //
+      // ⚠️ THE LAUNDERING REJECT STILL BINDS. This flag may flip to false ONLY against a named
+      // primary — never to clear a red gate. The 2026-07-15 hawk veto refused this exact flip
+      // when the schedule was merely *reported*; what changed is the session law, not the bar.
       for (const [key, entry] of Object.entries(stateTaxConstants)) {
-        if (key === 'ncRateSchedule') continue
-        expect(entry.directionalUntilPinned, `${key} pinned at the U14 S0 pass`).toBe(false)
+        expect(entry.directionalUntilPinned, `${key} must be pinned to a primary`).toBe(false)
       }
+      // Non-vacuity: the loop must actually have walked the NC rate entry (a renamed or dropped
+      // key would make the sweep pass over nothing and read as a clean bill of health).
+      expect(Object.keys(stateTaxConstants)).toContain('ncRateSchedule')
+      expect(stateTaxConstants.ncRateSchedule.directionalKind, 'a pinned entry declares no kind').toBeUndefined()
     })
 
-    it('the NC rate schedule carries reVerifyEveryBuild — the live-flip watch the verify:state-tax gate hooks (the ACA/spousalRate precedent)', () => {
-      // NC holds 3.99% flat under the hawk veto; the Aug-2026 certification / budget-deal re-fetch
-      // could pin a LOWER 2027+ rate at any build, so the NC rate entry is the every-build flip
-      // watch — verify:state-tax gates its state-tax-nc-last-verified.json record every build.
+    it('the NC rate schedule KEEPS reVerifyEveryBuild past the pin — the budget-act flip watch (the ACA/spousalRate precedent)', () => {
+      // DELIBERATELY RETAINED after the 2026-08-02 pin. NC just demonstrated that a BUDGET ACT
+      // (S.L. 2026-41) can rewrite the rate table mid-session with no trigger and no notice —
+      // and this table ran four weeks stale before anyone looked. A fully-enacted schedule is
+      // still a live-flip risk in the ACA sense, so verify:state-tax keeps hooking NC's record
+      // every build. Dropping this flag because "the schedule is settled now" is the mistake.
       expect(stateTaxConstants.ncRateSchedule.reVerifyEveryBuild).toBe(true)
       // PA (flat 3.07% since 2004) and FL (constitutional $0) have NO live-flip risk — their
       // records re-verify ANNUALLY for drift, but the every-build flip flag is NC-only.
@@ -409,18 +416,33 @@ describe('canonical constants — shape & provenance (contract #6)', () => {
     })
 
     /**
-     * THE HAWK-VETO TRAP (wf_d04148cb-1e5, §V; the spirit of insight 022's trap tests): the
-     * codified NC 2027+ step-downs are revenue-trigger-conditional on a certification that does
-     * not yet exist, and the reported budget-deal schedule is unlocated at primary. Pricing
-     * 3.49% for TY2027 is the OPTIMISTIC cardinal-sin direction (understates out-year tax). The
-     * rate is HELD FORWARD at 3.99% for 2026 AND every later year; a 2027 lookup returning
-     * 0.0349 (the exact wrong derivation) must fail here.
+     * THE ENACTED NC SCHEDULE, transcribed cell-for-cell from S.L. 2026-41 (SB 257) § 44.1(a),
+     * which rewrote G.S. 105-153.7(a) — struck "After 2025 — 3.99%" and substituted dated rows.
+     * Signed 2026-07-07, effective on becoming law.
+     *
+     * THIS TEST REPLACES THE HAWK-VETO TRAP (wf_d04148cb-1e5 §V), and the trap now points the
+     * OTHER WAY. The veto correctly refused 3.49%/2027 while the schedule was merely *reported*;
+     * once it was enacted, holding 3.99% forward became the wrong number — overstating every NC
+     * household's out-year tax and, worse, keeping their whole recommendation withheld. So the
+     * stale held-forward value is what must fail here (the spirit of insight 022's trap tests:
+     * pin the boundary a plausible-but-wrong derivation would land on).
      */
-    it('NC rate is HELD at 3.99% for 2026 AND all later years — the 3.49%/2027 veto (never price the unpinned step-down)', () => {
+    it('NC rate steps on the ENACTED S.L. 2026-41 schedule — 2026 3.99 / 2027-29 3.49 / 2030-32 3.24 / 2033+ 2.99', () => {
       expect(stateRateForYear('NC', 2026)).toBe(0.0399)
-      expect(stateRateForYear('NC', 2027), 'the veto: 2027 holds 3.99%, NOT the unpinned 3.49%').toBe(0.0399)
-      expect(stateRateForYear('NC', 2050), 'held forward indefinitely until a lower rate pins').toBe(0.0399)
-      expect(stateRateForYear('NC', 2027)).not.toBe(0.0349)
+      expect(stateRateForYear('NC', 2027)).toBe(0.0349)
+      expect(stateRateForYear('NC', 2029), 'the 3.49% band runs through 2029').toBe(0.0349)
+      expect(stateRateForYear('NC', 2030)).toBe(0.0324)
+      expect(stateRateForYear('NC', 2032), 'the 3.24% band runs through 2032').toBe(0.0324)
+      expect(stateRateForYear('NC', 2033)).toBe(0.0299)
+      expect(stateRateForYear('NC', 2050), '2.99% holds forward — only a future trigger can cut it').toBe(0.0299)
+      // THE TRAP, inverted: the pre-2026-08-02 held-forward value must never come back. Both the
+      // NCDOR rate page and the codified G.S. page still showed the struck 3.99% row at pin date,
+      // so a future "correction" against either of them would land exactly here.
+      expect(stateRateForYear('NC', 2027), 'never the stale held-forward 3.99%').not.toBe(0.0399)
+      expect(stateRateForYear('NC', 2033), 'never the stale held-forward 3.99%').not.toBe(0.0399)
+      // The band EDGES, both sides — an off-by-one in a step's fromYear is the live failure mode.
+      expect(stateRateForYear('NC', 2028)).toBe(0.0349)
+      expect(stateRateForYear('NC', 2031)).toBe(0.0324)
       // A query BEFORE the earliest step is fail-loud (never a silent 0 — burned/062);
       // a non-integer tax year is fail-loud (insight 020).
       expect(() => stateRateForYear('NC', 2025)).toThrow(/no rate step/)

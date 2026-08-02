@@ -31,10 +31,12 @@
  * byte-identity is the state unit's "PA usually a small piece" honesty, witnessed at the
  * whole-distribution level.
  *
- * The oracle's NC household TOKEN note: `ncRateSchedule` is still directional
- * (certification-pinnable) — the ORACLE ranks this fixture fine (fixtures gate correctness,
- * not minting) while the S0 pinning clause independently BLOCKS an NC household's
- * oracle-cleared token until ~Aug-2026. Two different gates, deliberately orthogonal.
+ * The oracle's NC household TOKEN note (UPDATED 2026-08-02): `ncRateSchedule` used to be
+ * directional (certification-pinnable), so the S0 pinning clause BLOCKED an NC household's
+ * oracle-cleared token even though the ORACLE ranked this fixture fine — two gates, deliberately
+ * orthogonal. S.L. 2026-41 § 44.1(a) pinned the schedule, so the block is retired and an NC
+ * household now mints. The orthogonality is unchanged and still load-bearing: fixtures gate
+ * CORRECTNESS, the pinning clause gates MINTING, and a future directional state re-splits them.
  */
 import type { SimulationParams } from '@shared/model'
 import { stateRateForYear, stateStandardDeductionFor } from '@engine/constants'

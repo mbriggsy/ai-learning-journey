@@ -25,19 +25,35 @@
 
 - The biggest number the couple enters — an account balance — has no magnitude defense, while spend and Social Security each got one
 
-### NC rate certification + the dated re-verify gates (ACA and NC, both red 2026-09-01)
+### ~~NC rate certification~~ — **CLOSED 2026-08-02** (the NC half; the ACA half moved below)
 
-`M` · **pilot** · filed 9× — `A10`, `A22`, `A25`, `A26`, `S12`, `S17`, `S24`, `S37`, `S65`
+~~`M`~~ · **pilot** · filed 9× — `A10`, `A22`, `A25`, `A26`, `S12`, `S17`, `S24`, `S37`, `S65`
 
-- NC household: strategy recommendation is HARD-WITHHELD today (state-certification-pending)
-- R9/R10 — an NC household gets NO recommendation at all today (state-certification block is live)
-- NC certification withhold — ALREADY FIRING today, no nextDue bump clears it
-- verify:state-tax NC nextDue red — 2026-09-01
-- The dated re-verify gates re-arm — ACA and NC state tax both go red 2026-09-01
-- `AcaRecord` has no top-level `primarySources` array where `StateTaxRecord` requires one
-- The ~Aug-2026 NC rate certification is the ONLY thing that clears the live NC recommendation withhold
-- ~Aug-2026 NC rate-certification checkpoint — the ONLY thing that clears the live NC recommendation withhold
-- U16 §Q5's NC contract is 1-of-3 delivered and the docs claim otherwise — HIS call between (A) and (B)
+**Resolved by primary, not by a date bump.** **S.L. 2026-41 (SB 257) § 44.1(a)** — ratified 2026-07-02,
+signed 2026-07-07 — rewrote G.S. 105-153.7: it struck the open-ended "After 2025 — 3.99%" row for the
+enacted steps **2026 3.99 · 2027-2029 3.49 · 2030-2032 3.24 · after 2032 2.99**, *and* struck every
+revenue-trigger row through FY2032-33. So the FY2025-26 certification this cluster waited on gates
+nothing, and the first surviving trigger row is FY2033-34 → TY2035 (OSC **August 2034**).
+
+- ✅ NC household strategy recommendation — **the hard withhold is LIFTED**; an NC household now mints
+  and gets a real recommendation (`state-certification-pending` has no live producer).
+- ✅ `verify:state-tax` NC `nextDue` — moved off the dead 2026-09-01 checkpoint to the annual cadence
+  (**2027-08-02**). NC keeps `reVerifyEveryBuild`: a budget act rewrote this table mid-session once.
+- ✅ U16 §Q5's NC contract — **moot, not delivered.** The withheld render it specified has no live
+  household. The copy survives for a future directional state, minus its "around August" promise.
+- ⚠️ **Landmine recorded in the constant + the record:** NCDOR's rate page and ncleg's *codified* G.S.
+  page both still showed the STRUCK 3.99% row at pin date. They will read as contradicting our table
+  until they recompile — session law wins; do not "correct" it back.
+
+### The dated ACA re-verify gate re-arms (rolling window, 2026-09-02)
+
+`S` · **pilot** · filed 2× — `A26`, `S65`
+
+- ACA's deadline is a **ROLLING** window (`verifiedOn` + `maxAgeDays: 30`), never an absolute
+  `nextDue` — grepping `nextDue` to inventory deadlines silently misses it. Re-verified 2026-08-02,
+  so it next reds **2026-09-02**.
+- `AcaRecord` has no top-level `primarySources` array where `StateTaxRecord` requires one — the two
+  record shapes should converge on the stricter one.
 
 ### The saved-record card claims the advice still holds when the couple never took it
 

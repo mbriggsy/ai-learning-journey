@@ -2338,12 +2338,20 @@ export const slots = {
    *  carry require-hedge. */
   recDeltaTypicalBehind: (deltaFormatted: string, behindFormatted: string): string =>
     `The “$${deltaFormatted} more” above is an average across the futures we tested. In about half of them, this change likely comes out about $${behindFormatted} or more behind.`,
-  /** The withheld reason for `state-certification-pending` (Q5, LIVE for the NC household): the STATE
-   *  by name, the TRUE reason (rates not officially set), the DIRECTION honestly, the ~August timeframe,
-   *  framed as REFUSING to guess. "could" + "around" carry require-hedge. `stateName` arrives from the
-   *  existing stateOption* copy (no re-typed state name). */
+  /** The withheld reason for `state-certification-pending` (Q5): the STATE by name, the TRUE reason
+   *  (rates not officially set), the DIRECTION honestly, framed as REFUSING to guess. "could" carries
+   *  require-hedge on its own. `stateName` arrives from the existing stateOption* copy (no re-typed
+   *  state name).
+   *
+   *  ⚠️ NO LONGER LIVE FOR NC (2026-08-02) — S.L. 2026-41 § 44.1(a) enacted NC's rate schedule, so
+   *  that household mints. The reason kind stays because the machinery is generic and any future
+   *  directional state re-arms it; the mint leg is seam-proven (oracleToken `_pinningOverride`).
+   *  THE "around August" CLAUSE WAS DROPPED WITH THE PIN: it promised a specific month tied to NC's
+   *  FY2025-26 certification, which no longer gates anything — and a withhold that names a date it
+   *  cannot keep is exactly the promise this product must not make. A future state's pin event may
+   *  have any timing, so this sentence commits to none. */
   recHoldStateCert: (stateName: string): string =>
-    `${stateName} hasn’t officially set its upcoming income-tax rates yet, so we’re holding off rather than guess — converting could help or hurt depending on the final rate, and we won’t call it until it’s certified, which we expect around August.`,
+    `${stateName} hasn’t officially set its upcoming income-tax rates yet, so we’re holding off rather than guess — converting could help or hurt depending on the final rate, and we won’t call it until those rates are settled.`,
 
   // --- Act-4 · U16 §S3b — the heir-bracket disclosure (leave-more) + the viz aria sentence (AT parity:
   //     every disclosed figure reachable inside the role="img" name). Figures PRE-FORMATTED (money.ts). ---

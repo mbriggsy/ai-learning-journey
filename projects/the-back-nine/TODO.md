@@ -23,12 +23,13 @@ left is not units. It is the gap between *the build is done* and *a friend can b
 
 | Fires | What | What breaks |
 |---|---|---|
-| **NOW** | NC FY2025-26 revenue certification (`~Aug 2026`) | **Every NC household's recommendation is withheld** — and `recHoldStateCert` promises "around August" |
-| **2026-09-01** | NC `nextDue`, `state-tax-nc-last-verified.json` | `pnpm verify:state-tax` reds → CI red |
+| ~~NOW~~ | ~~NC FY2025-26 revenue certification~~ | ✅ **CLOSED 2026-08-02** — S.L. 2026-41 § 44.1(a) enacted the rate schedule *and* struck the trigger rows the certification fed. Withhold lifted, checkpoint retired. |
 | **2026-09-02 00:00 UTC** (09-01 20:00 ET) | ACA rolling window (`verifiedOn: 2026-08-02` + `maxAgeDays: 30`) | `pnpm verify:aca` reds → CI red |
+| **2027-08-02** | NC `nextDue`, `state-tax-nc-last-verified.json` (annual drift cadence now, not a pending event) | `pnpm verify:state-tax` reds → CI red |
 | **2027-01-01** | `TAX_YEAR` / `COVERAGE_YEAR` / `CONTRIBUTION_YEAR` roll | **No gate exists** — every figure silently goes a year stale |
 | **2027-01-01** | Every organic vault crosses `elapsed ≥ 1` | The aged surfaces stop being dev-plant-only and go live on real households — **the four aged tone calls are due before this** |
 | **2028-01-01** | IRMAA top-tier re-index tripwire | Test reds by design |
+| **2034-08** | NC's successor flip event — the Office of the State Controller's FY2033-34 final accounting (trigger $40,258,000,000 → TY2035, 0.25pp step, 2.49% floor) | Nothing breaks; it is the only mechanism left that can move NC's rates, and it can only CUT |
 
 ⚠️ **The ACA deadline is a ROLLING window, never an absolute `nextDue`** — grepping `nextDue` to inventory
 deadlines silently misses it. It has been filed a notch late twice, both times in the unsafe direction.
@@ -77,8 +78,12 @@ deadlines silently misses it. It has been filed a notch late twice, both times i
 4. **A household outside {NC, PA, FL} gets a confident winner computed with zero state income tax.**
    Reduce-to-spine `+0` is keyed on `PRICED_STATES` membership, so an unpriced state ranks strategies with
    the state term absent — and that term is proven to **flip the optimal anchor** (U14's own NC oracle
-   fixture moves it 22%→12%-top). Disclosed in prose only. Decide: refuse outside the roster (mirrors the
-   NC withhold, honest), or widen it. **His scope call.**
+   fixture moves it 22%→12%-top). Disclosed in prose only. Decide: refuse outside the roster, or widen it.
+   **His scope call.** ⚑ Two corrections from the 2026-08-02 audit: (a) the honest-withhold precedent it
+   used to cite — the NC certification block — **is retired**, so a refusal arm must be built, not copied;
+   (b) the withhold machinery gates `solve()` ONLY, so a withhold-only fix still ships a **state-blind
+   headline / fuck-off date**. Cheap partial: the 8 no-income-tax states are sourced structural $0 (FL's
+   exact shape), so widening to them is honest and leaves refusal for taxing states only.
 
 5. **The record card says the advice still holds when the household never took it.**
    `copy.ts:1315` — *"It still matches your plan as it stands today."* On `?vault=rec` the saved winner is

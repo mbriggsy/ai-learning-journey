@@ -12,9 +12,9 @@
  *  - Every figure is `Sourced` with its citation + `directionalUntilPinned` marker. Transcribed
  *    from the primaries 2026-07-15; PINNED at the U14 S0 pin pass (2026-07-18) on the strength
  *    of the primary fetches + the verify:state-tax attestation records (statusConfirmed, all
- *    three axes attested, CI-gated). The ONE exception is `ncRateSchedule` — its 2027+
- *    out-years wait on the ~Aug-2026 FY2025-26 revenue certification (a dated pin event →
- *    `directionalKind: 'certification-pinnable'`; the hawk veto holds 3.99% until then).
+ *    three axes attested, CI-gated). `ncRateSchedule` was the last directional holdout and
+ *    PINNED 2026-08-02 to enacted session law (S.L. 2026-41 § 44.1(a)) — so the roster now
+ *    carries NO directional entry and no priced state blocks its household's oracle token.
  *    A figure the research names-but-doesn't-value would be an `Unsourced` throw,
  *    never a plausible default.
  *  - Per-figure citations are SPLIT statute-vs-DOR (insight 022): the load-bearing statute
@@ -57,32 +57,55 @@ export const isPricedState = (code: string): code is PricedState =>
 // ---- North Carolina (Briggsy's household; TY2026 primary-pinned) -------------
 
 /**
- * NC flat rate BY YEAR — 3.99% for 2026 AND ALL LATER YEARS (the hawk veto,
- * wf_d04148cb-1e5). THE codified 2027+ cuts (G.S. 105-153.7(a1)) are revenue-TRIGGER-
- * conditional on an FY2025-26 certification that does NOT exist until ~Aug 2026, and the
- * reported July-2026 budget-deal schedule could not be located to primary session law.
- * Holding the higher rate OVERSTATES out-year tax on the RMD/withdrawal stream =
- * conservative; pricing 3.49%/2027 is the optimistic cardinal-sin direction.
+ * NC flat rate BY YEAR — the STATUTORY SCHEDULE enacted by **S.L. 2026-41 (SB 257)**, the base
+ * budget act (ratified 2026-07-02, signed 2026-07-07). § 44.1(a) rewrote G.S. 105-153.7: it
+ * STRUCK the old open-ended "After 2025 — 3.99%" row and replaced it with dated steps —
+ * 2026 3.99% · 2027-2029 3.49% · 2030-2032 3.24% · after 2032 2.99% — effective when the act
+ * became law.
+ *
+ * This RETIRES the hawk veto (wf_d04148cb-1e5). The veto held 3.99% forward for exactly one
+ * reason: the reported budget-deal schedule "could not be located to primary session law." It
+ * is located. Pricing the cuts is now transcription, not prediction — the direction that was
+ * the cardinal sin on 2026-07-15 is the merely-correct one today.
+ *
+ * The 2027+ rates are NO LONGER revenue-trigger-conditional. § 44.1(a) also struck every
+ * trigger row through FY2032-33; the first SURVIVING row is FY2033-34 → TY2035, and the step
+ * shrank 0.50pp → 0.25pp (floor 2.49% unchanged). So the next live-flip event is the Office of
+ * the State Controller's **August-2034** final accounting — a decade out, not this month.
+ *
+ * The 2033+ tail holds 2.99% and is PINNED, not directional: the only surviving mechanism that
+ * can move it is that trigger table, which can only CUT. Holding the higher rate is therefore
+ * both the statutory rate as written AND the conservative direction on the RMD/withdrawal
+ * stream — the two agree here, so the tail needs no directional flag.
+ *
+ * ⚠️ SOURCE LANDMINE — for NC the ENACTED SESSION LAW is currently the only trustworthy
+ * primary. NCDOR's tax-rate-schedules page still shows the struck "after 2025 — 3.99%" and
+ * cites SL 2023-134, and ncleg's CODIFIED G.S. 105-153.7 page had not recompiled at pin date.
+ * Both read as CONTRADICTING this table until they catch up — do NOT "correct" it back.
  */
 export const ncRateSchedule = sourced<StateFlatRateSchedule>(
-  { steps: [{ fromYear: 2026, rate: 0.0399 }] },
+  {
+    steps: [
+      { fromYear: 2026, rate: 0.0399 },
+      { fromYear: 2027, rate: 0.0349 },
+      { fromYear: 2030, rate: 0.0324 },
+      { fromYear: 2033, rate: 0.0299 },
+    ],
+  },
   {
     citation:
-      'N.C.G.S. § 105-153.7 (individual income-tax rate; codified schedule "After 2025 — 3.99%") · trigger provision § 105-153.7(a1) (SL 2023-134), codified statute fetched from ncleg.gov 2026-07-15 · NCDOR tax-rate page (corroboration)',
-    directionalUntilPinned: true,
-    // The ONE state entry still directional after the U14 S0 pin pass: the 2027+ out-years are
-    // revenue-trigger-conditional on a certification that does not exist until ~Aug 2026. A
-    // dated pin event exists → certification-pinnable: an NC household's oracle-cleared token
-    // is BLOCKED (state-certification-pending) until the certification pins the schedule.
-    directionalKind: 'certification-pinnable',
-    // The live-flip watch: the Aug-2026 certification / budget-deal re-fetch could pin a lower
-    // 2027+ rate at any build. `reVerifyEveryBuild` is the ACA/spousalRate precedent — the
-    // verify:state-tax CI gate (scripts/verify-state-tax.ts) hooks this flag's NC record every
-    // build. PA (flat since 2004) and FL (constitutional $0) are NOT flagged — annual drift only.
+      'S.L. 2026-41 (SB 257) § 44.1(a) — rewrites N.C.G.S. § 105-153.7(a) rate table (2026 3.99% / 2027-2029 3.49% / 2030-2032 3.24% / after 2032 2.99%), effective when the act became law; ratified 2026-07-02, signed by the Governor 2026-07-07; enacted session-law text fetched from ncleg.gov 2026-08-02 · same section rewrites the § 105-153.7(a1) trigger table (first surviving row FY2033-34 → TY2035; step 0.50pp → 0.25pp; floor 2.49%) · NCDOR rate page and the codified G.S. page BOTH still pre-date the act (not usable as corroboration yet)',
+    directionalUntilPinned: false,
+    legalBasis: 'S.L. 2026-41 (SB 257) § 44.1(a)',
+    // KEPT past the pin, deliberately. NC just demonstrated that a BUDGET ACT can rewrite the
+    // rate table mid-session with no trigger and no notice — and this table ran 4 weeks stale
+    // before anyone looked. That is a live-flip risk in the ACA/spousalRate sense even though
+    // the schedule is now fully enacted, so the verify:state-tax CI gate keeps hooking NC's
+    // record every build. PA (flat since 2004) and FL (constitutional $0) stay unflagged.
     reVerifyEveryBuild: true,
-    pinTo: 'ncleg.gov codified G.S. 105-153.7 + the FY2025-26 revenue certification (~Aug 2026 Office of State Controller)',
+    pinTo: 'ncleg.gov enacted session law S.L. 2026-41 § 44.1(a) (the codified G.S. 105-153.7 page and the NCDOR rate page LAG it — session law wins until they recompile)',
     note:
-      'NEVER price 3.49%/2027 until the FY2025-26 certification or a primary session law pins it — hawk veto 2026-07-15; holding 3.99% overstates tax = conservative. The codified 2027+ step-downs are revenue-trigger-conditional (a certification that does not yet exist); the reported budget-deal schedule is UNLOCATED at primary (SL 2026-31 / SB 595 is only the IRC-conformity bill and does not touch § 105-153.7). Held forward: a 2027 lookup returns 3.99%. The S6 verify:state-tax re-verify hook carries the Aug-2026 checkpoint in state-tax-nc-last-verified.json; the instant a lower rate pins, add a step and stale saved vaults.',
+      'PINNED 2026-08-02 to enacted session law, retiring the 2026-07-15 hawk veto. The schedule is transcribed exactly as enacted (2026 3.99 / 2027-2029 3.49 / 2030-2032 3.24 / 2033+ 2.99); a 2027 lookup now correctly returns 3.49%, NOT the old held-forward 3.99%. This step addition MOVES the StateTaxVintageV3 stamp (it fingerprints the whole serialized schedule, not a current-year scalar), so saved NC vaults stale on unlock by design — the out-years they priced really did change. Next live-flip checkpoint: the Office of the State Controller August-2034 final accounting, the first surviving trigger row (FY2033-34 → TY2035, 0.25pp step, 2.49% floor); nothing before then can move these rates except another session law. Re-verify cadence is now ANNUAL drift (the PA/FL posture), carried in state-tax-nc-last-verified.json.',
   },
 )
 
@@ -360,8 +383,8 @@ export function flatStateRateForYear(
   return chosen.rate
 }
 
-/** The flat state income-tax rate for a priced state + tax year (the NC hawk-veto posture
- *  means a 2027+ NC query returns 3.99% until a lower rate pins). FL → 0. */
+/** The flat state income-tax rate for a priced state + tax year (NC steps down on the enacted
+ *  S.L. 2026-41 schedule — a 2027 query returns 3.49%, a 2033 query 2.99%). FL → 0. */
 export function stateRateForYear(state: PricedState, taxYear: number): number {
   return flatStateRateForYear(STATE_TAX_PROFILES[state].rateSchedule, taxYear)
 }
@@ -380,10 +403,10 @@ export function stateStandardDeductionFor(state: PricedState, filing: 'mfj' | 's
  * clock producer; the taxVintageStamp/healthcareVintageStamp mirror). Each field is one
  * v1-PRICED state's COMPLETE decumulation profile, serialized from `STATE_TAX_PROFILES[state]`
  * (source-bound — the profiles reference the sourced `.value`s, so a drifted producer here is a
- * clock that never fires; insight 022). The WHOLE profile, not a current-year rate scalar: the
- * held-forward flat rates mean a FUTURE pinned step (NC's expected 3.49% self-correction) changes
- * an out-year the household still prices while the current-year rate is unchanged — the serialized
- * schedule catches that; a scalar would miss it. The save path writes it fresh
+ * clock that never fires; insight 022). The WHOLE profile, not a current-year rate scalar: a
+ * FUTURE step changes an out-year the household still prices while the CURRENT-year rate is
+ * unchanged — exactly what S.L. 2026-41 did on 2026-08-02 (2026 stayed 3.99%, 2027+ dropped),
+ * and the serialized schedule caught it where a scalar would have missed it. The save path writes it fresh
  * (`scenarioFromDraft`); `src/store/staleness.ts` diffs a persisted stamp against THIS at unlock,
  * per-state (the household's own state's field only — an NC change never alarms a PA/FL vault).
  * Deterministic within a build (the dirty-compare / round-trip guard depend on it).

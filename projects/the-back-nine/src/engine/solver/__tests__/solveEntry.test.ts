@@ -96,11 +96,16 @@ describe('solveWithMint — the named bins (insight 092)', () => {
     expect(out.noActionBaseline.id).toBe('conventional:taxable-first:0')
   }, 120_000)
 
-  it('WITHHOLDS the token for an NC household — state-certification-pending(NC), never a wrong recommendation', () => {
+  it('RECOMMENDS for an NC household — S.L. 2026-41 pinned the rate schedule and retired the certification withhold', () => {
+    // INVERTED 2026-08-02. This household was `token-withheld{state-certification-pending}` while
+    // ncRateSchedule's out-years waited on a revenue certification. The session law enacted those
+    // out-years outright, so withholding here would now refuse an answer the engine can stand
+    // behind — the honest-withhold machinery is still wired, it just has no live state to fire on
+    // (proven through the mint's `_pinningOverride` seam in oracleToken.test.ts).
     const out = solveWithMint(requestFor({ base: baseFor('NC'), ranking: RANKING }))
-    expect(out.kind).toBe('token-withheld')
-    if (out.kind !== 'token-withheld') throw new Error('unreachable')
-    expect(out.reasons).toContainEqual({ kind: 'state-certification-pending', state: 'NC' })
+    expect(out.kind).toBe('recommended')
+    if (out.kind !== 'recommended') throw new Error('unreachable')
+    expect(out.rankedIds.length, 'a real ranked field, not an empty pass-through').toBeGreaterThan(0)
   }, 120_000)
 
   it('MINT-FAILS on a roster with no conversion candidate (ranking stability cannot run)', () => {

@@ -135,7 +135,7 @@ describe('recommendationView — refusals / mint-failures / demotions route to O
 // ---- the withheld HOLD (Q5) — the NC household is Briggsy's own -----------------------------------
 
 describe('recommendationView — the honesty-gate HOLD names the true reason (Q5)', () => {
-  it('a token withheld on NC certification renders the STATE by name, the direction, ~August, refusing to guess', () => {
+  it('a state-certification hold renders the STATE by name, the direction, and refuses to guess — WITHOUT promising a date', () => {
     const payload: SolveTokenWithheld = { kind: 'token-withheld', reasons: [{ kind: 'state-certification-pending', state: 'NC' }], disclosedDirectional: [], solverCodeVersion: 1 }
     const v = recommendationView(committed(payload))
     expect(v.kind).toBe('held')
@@ -145,7 +145,14 @@ describe('recommendationView — the honesty-gate HOLD names the true reason (Q5
       const r = v.reasons[0]!
       expect(r, 'the state is named').toContain('North Carolina')
       expect(r, 'refuses to guess, direction honest').toMatch(/could help or hurt/)
-      expect(r, 'the ~August timeframe').toMatch(/August/)
+      // THE MONTH PROMISE IS GONE (2026-08-02) AND MUST NOT COME BACK. This sentence used to end
+      // "…which we expect around August", naming NC's FY2025-26 certification. S.L. 2026-41 struck
+      // the trigger rows that certification fed, so the date became one the app could not keep —
+      // and a withhold that promises a date it cannot keep is the calm-but-wrong sin wearing a
+      // helpful face. The reason kind survives for a future directional state, whose pin event may
+      // have ANY timing, so the copy must commit to none.
+      expect(r, 'no month is promised').not.toMatch(/January|February|March|April|May|June|July|August|September|October|November|December/)
+      expect(r, 'no year is promised either').not.toMatch(/\b20\d\d\b/)
     }
   })
 

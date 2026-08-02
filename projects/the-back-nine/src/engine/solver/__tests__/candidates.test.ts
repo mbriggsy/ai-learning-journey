@@ -86,7 +86,53 @@ describe('anchoredConversionAmounts — the cliff-anchored grid', () => {
     // engine's own piecewise ramp — the property, not a re-derived dollar, is the pin.
     const coupled: CommittedYearIncome = { ...linearWorld, ssBenefit: 40_000, ongoingTaxable: 30_000 }
     const anchor = anchorWith({ committed: coupled, acaCliffMagi: 120_000, irmaaSchedule: irmaa.value })
-    for (const { amountReal, rail } of anchoredConversionAmounts(anchor)) {
+    // RAIL CENSUS BEFORE THE LOOP (the c5e27180 shape, aimed at this arm's real hazard) — both
+    // assertions below live INSIDE the loop. The list cannot go EMPTY in THIS world (the
+    // bracket-edge branch, candidates.ts:263, is unguarded AND this household's 8,900 taxable
+    // baseline sits under every finite edge — a baseline in the open top band would yield none,
+    // and a sub-$1 amount is dropped), so the danger is not zero iterations: it is an anchor set
+    // that silently LOSES A WHOLE RAIL, keeps iterating over the rails it still has, and reports
+    // GREEN with this arm's titular subject — the SS-COUPLED IRMAA ramp — never touched. Nothing
+    // else in the suite can catch that: this file is the only TEST that ENUMERATES a non-null
+    // `irmaaSchedule`. The SHIPPED caller sets it for real — `solveAnchor.ts:176-180` assigns
+    // `irmaa.value` for any healthcare-priced household with someone Medicare-enrolled at the bill
+    // year, driven live by `solveDispatch.ts:73` — so this loss reaches the PRODUCT, not just the
+    // suite; `solveAnchor.test.ts:122-128` asserts the anchor FIELD and never enumerates, and the
+    // sibling arms are strictly weaker predicates (ascending / deduped / integer, lines 117-119)
+    // which all survive a missing rail. So census the three INDEPENDENT branches (candidates.ts:235
+    // ACA, :247 IRMAA, :263 bracket) by KIND, with counts read from the canonical year-keyed tables
+    // rather than from the enumerator under test.
+    const anchors = anchoredConversionAmounts(anchor)
+    const kinds = anchors.map((a) => a.rail.kind)
+    const edgeCount = (ordinaryBracketsMFJ.value as ReadonlyArray<{ upTo: number | null }>).filter(
+      (b) => b.upTo !== null,
+    ).length
+    expect(
+      anchors.length,
+      'every rail is enumerated: 1 ACA cliff + one per IRMAA tier + one per finite bracket edge',
+    ).toBeGreaterThanOrEqual(1 + irmaa.value.tiers.length + edgeCount)
+    expect(kinds.filter((k) => k === 'aca-cliff'), 'the ACA-cliff rail is represented').toHaveLength(1)
+    expect(
+      kinds.filter((k) => k === 'irmaa-step'),
+      'the SS-COUPLED IRMAA rail — this arm’s titular subject — is represented on EVERY tier (all mfj thresholds sit above the 41,100 coupled IRMAA-MAGI baseline)',
+    ).toHaveLength(irmaa.value.tiers.length)
+    expect(
+      kinds.filter((k) => k === 'bracket-edge'),
+      'the bracket-edge rail is represented on every finite edge above the 8,900 taxable baseline',
+    ).toHaveLength(edgeCount)
+    // AND the Pub-915 coupling is genuinely in its SLOPED region on at least one anchor. TRUTH OF
+    // THIS WORLD, recorded so the title is not read as more than it proves: every IRMAA anchor here
+    // (≥ 154,000) sits ABOVE the 85%-cap knee (a ≈ 26,941), where the inclusion is FLAT (slope 1);
+    // the 1.85 ramp is ridden by the SMALLEST anchor — the 24,800 bracket edge at 8,594. Measured
+    // through the SHIPPED producer, never re-derived arithmetic.
+    const magiAt = (a: number): number =>
+      irmaaMagiAtFill({ ...coupled, conversion: coupled.conversion + a }, 0)
+    const smallest = anchors[0]!.amountReal
+    expect(
+      magiAt(smallest + 1) - magiAt(smallest),
+      'at least one anchor rides the SLOPED Pub-915 inclusion (slope > 1), not the post-85%-cap flat (slope exactly 1)',
+    ).toBeGreaterThan(1.5)
+    for (const { amountReal, rail } of anchors) {
       const at = (a: number): number => {
         const c = { ...coupled, conversion: coupled.conversion + a }
         if (rail.kind === 'aca-cliff') return acaMagiAtFill(c, 0)

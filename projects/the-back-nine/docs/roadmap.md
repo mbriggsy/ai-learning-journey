@@ -179,7 +179,7 @@ Solver-blocking gates (Act 4, not yet live): the **optimality oracle** (hand-com
 
 **ALL FOUR ACTS ARE BUILT (2026-08-02).** Act 1 closed 2026-06-11, Act 2 2026-07-02, Act 3 2026-07-10, and Act 4 closed at **U17·S6** — S7 DEFERRED by Briggsy's ruling (close U17 at S6, re-file Q7a as its own unit). Per-unit truth is the You-Are-Here table above, which is the authority; this section says only what comes next.
 
-**What remains is not units.** It is the gap between *the build is done* and *a friend can bet real money on it* — and it is substantial. A 2026-08-02 source audit of the shipped code plus a salvage sweep of the old work-queue archive consolidated **136 raw obligations into a 43-item register**, tiered by worst consequence:
+**What remains is not units.** It is the gap between *the build is done* and *a friend can bet real money on it* — and it is substantial. A 2026-08-02 source audit of the shipped code plus a salvage sweep of the old work-queue archive consolidated **136 raw obligations into a 44-item open register**, tiered by worst consequence (re-anchored the same day against the shipped code — one item closed by primary source, one closed as a phantom, and four filed prescriptions marked do-not-execute):
 
 - **Tier 0 — calm-but-wrong (12).** Shipped code that can answer WRONG: a mixed household's already-retired spouse priced at $0 healthcare for the whole working window (optimistic, on the flagship date route); a well-funded converting winner throwing into a calm "unavailable"; pre-65 ACA priced real-flat, the exact sin ruled solver-BLOCKING for Part B.
 - **Tier 1 — the differentiator does not land (8).** The recommendation never names the winning strategy; the whole still-working audience gets no strategy *and* no refusal.

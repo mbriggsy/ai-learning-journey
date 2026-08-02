@@ -1,8 +1,15 @@
 # The Back Nine — Open Backlog
 
-> The complete open register: **43 items** consolidated from **136 raw obligations** (a source
-> audit of the shipped code + a salvage sweep of the 246 KB `TODO.md` archive it replaced). Every raw
-> obligation is accounted for — the `ids` on each entry are its provenance.
+> The complete open register: **44 open items** (45 entries, 1 closed and kept as a record) consolidated
+> from **136 raw obligations** (a source audit of the shipped code + a salvage sweep of the 246 KB
+> `TODO.md` archive it replaced). Every raw obligation is accounted for — the `ids` on each entry are its
+> provenance.
+>
+> **Re-anchored 2026-08-02** by a 17-agent audit that opened every cited line rather than trusting it.
+> One entry CLOSED by primary source (NC rate certification), one CLOSED AS PHANTOM (the date-route ACA
+> clock), two entries RETITLED because the filed claim was false, and **four filed prescriptions marked
+> DO-NOT-EXECUTE** — they would each have introduced a new defect. The measured hit rate on filed
+> prescriptions in this repo is ~25–40%; budget accordingly and open the lines first.
 >
 > **This file is the register, not the queue.** The ranked next-actions live in [`TODO.md`](../TODO.md).
 > Tiers are by worst consequence, never by size — the cardinal rule is that calm-but-wrong is the sin.
@@ -88,7 +95,15 @@ nothing, and the first surviving trigger row is FY2033-34 → TY2035 (OSC **Augu
 
 `M` · **pilot** · filed 4× — `S44`, `S45`, `S46`, `S47`
 
-- ⚠️ Date-route ACA clock over-alarms — the FILED fix is WRONG, the real fix is still owed
+- ✅ **Date-route ACA clock over-alarm — CLOSED AS PHANTOM (2026-08-02).** It does not over-alarm: the date
+  route simulates all 11 offsets (`dateSearch.ts:425/450/457`) and candidate Y=0 carries the base ACA
+  stream **ungated** (`healthcareStreams.ts:149` → `windowStart = 0`, a pass-through), so
+  `exposure.aca === 'priced'` *proves* the ACA tables were consumed. The clock is load-bearing.
+- ⚠️ **BUT THE FILED FIX IS A LIVE TRAP — do not execute it.** The prescription still sitting in
+  `stalenessExposure.ts:115-117` ("re-derive the exposure against the CROWNED offset") would **silence**
+  the ACA clock for exactly the household whose date a subsidy flip moved — insight 103's shape recurring
+  inside the comment that cites insight 103. Rewrite `stalenessExposure.ts:86-117` to record the sweep
+  argument and delete the trap; its render-chain anchors are 20–60 lines stale as well.
 - ⚠️ THE STATE-TAX AGGREGATE ARM — council-shaped, parked behind a trigger; DO NOT BUILD AS FILED
 - Council fork: state-tax exposure — widen `pricedState` vs add a 7th `stateTax: ExposureRead` field
 - Standing trigger — the state clock's unknown arm (unreachable in-build today)
@@ -105,6 +120,9 @@ nothing, and the first surviving trigger row is FY2033-34 → TY2035 (OSC **Augu
 `L` · **pilot** · filed 2× — `A39`, `S25`
 
 - Pre-65 ACA premiums are priced REAL-FLAT — the exact sin the Medicare council ruled solver-BLOCKING, with no trend, no oracle clause, and no disclosure
+- ⚠️ **The fix is NOT a Part B copy-paste.** Part B’s schedule is built INSIDE the engine, which is why the oracle token can witness it; the ACA escalator lives in **intake** (`intakeMap.ts:271-291`), which the engine cannot import — so an `ACA_PRICING_MODE` flag bolted onto intakeMap would be the exact lying-mirror `oracleToken.ts:113-119` warns about. The honest fix moves the schedule build to an engine-owned `buildAcaPricingSchedule` beside `partBPricingByT` (`taxOverlay.ts:1110`).
+- ⚠️ Anchor corrections: `healthOverlay.ts:296` is a **closing brace**, not a consumer (real seam `taxOverlay.ts:1689` + `:1731-1738` → `healthOverlay.ts:270`); the strings claiming the coupling is priced are `copy.ts:894-897`, not `copy.ts:924`.
+- ⚠️ **Re-tag: BLOCKED ON RESEARCH.** No sourced ACA cost-trend primary exists in the repo, so a solver block would hold for months over the whole pre-65 population. Near-term move is the copy swap at `copy.ts:894-897`. The excess-APTC field moved to `aca-last-verified.json:41` and `scripts/verify-aca-status.ts:40-72` never declares the key — **it is inert prose, not a gate.**
 - Uncapped excess-APTC clawback — the gate never reads the field, and the copy call is unmade
 
 ### Mixed household — the already-retired spouse is priced at zero health cost while the other works
@@ -112,6 +130,8 @@ nothing, and the first surviving trigger row is FY2033-34 → TY2035 (OSC **Augu
 `L` · **pilot** · filed 1× — `A40`
 
 - A mixed household's already-retired pre-65 spouse is silently priced at $0 healthcare during the working window — never asked about, never disclosed
+- ⛑ **BRIGGSY RULED 2026-08-02: ask + refuse** — one employer-coverage question in intake; refuse the date when the answer is no. Honors the ruling the engine already made for itself at `simulate.ts:908-912` ("rejection beats disclosure").
+- ⚠️ **The obvious fix is REJECTED by shipped code — do NOT simply un-gate the premium.** `simulate.ts:913-919` refuses any finite-positive `enrolledPremium[t]` on a bridge year, so un-gating makes every date candidate fail: no answer at all, rather than a later one. `acaMagi` (`healthOverlay.ts:99-101`) also carries no wage term, so a priced year would be optimistic a NEW way. Scope is wider than filed — the gate zeroes `oopMedical` too (`healthcareStreams.ts:168-170`). And `healthcareStreams.test.ts:64` promises a pre-65 case that **does not exist in the file**, so the genuinely-broken case is untested.
 
 ### Unpriced states — a confident winner computed with zero state income tax
 
@@ -145,12 +165,21 @@ nothing, and the first surviving trigger row is FY2033-34 → TY2035 (OSC **Augu
 
 ## Tier 1 — the differentiator does not land
 
-### The assumed heir tax bracket — drives the "leave more" answer, cannot be seen or changed
+### The assumed heir tax bracket — the shipped copy sends the reader to a control that does not exist
 
 `M` · **pilot** · filed 2× — `A23`, `A8`
 
-- R7 — the assumed heir tax bracket drives the leave-more hero but is read-only and unpersisted
-- The heir-bracket R7 editor — a solver assumption that moves the ranking and cannot be edited
+- ⚑ **RETITLED 2026-08-02 — the filed claim ("cannot be seen") is HALF FALSE and the truth is worse.**
+  It IS disclosed: `recommendationView.ts:78-81` → `copy.ts:2352-2353` → `RecommendationSurface.tsx:469-477`.
+  The shipped sentence ends *"— adjust it in your assumptions if that's off"* and **there is no heir seat
+  in `assumptionRegistry.ts` or `AssumptionPanel.tsx`** (grepped: zero rows). We send the reader hunting
+  for a control we never built. A dead-end instruction is worse than silence — and it is **live now**,
+  visible in the 2026-08-02 `?seed=nc` capture.
+- **(XS)** drop the dead-end clause from `copy.ts:2353`; **(M)** add the real editable row, using
+  `survivor-ratio` (`AssumptionPanel.tsx:322-348`) as a line-for-line template.
+- **Panel only — never asked in intake.** "What bracket will your kids be in?" invites a
+  confidently-wrong guess worse than the 24% default. This also sets the precedent for every future
+  methodology knob (`market` sits in the same limbo).
 
 ### The third goal — "live bigger now" doesn't exist
 
@@ -184,12 +213,15 @@ nothing, and the first surviving trigger row is FY2033-34 → TY2035 (OSC **Augu
 `L` · **pilot** · filed 1× — `A13`
 
 - Modest-pre-tax household: refused a SEQUENCING recommendation the engine could actually compute
+- ⚠️ **DOWN-RANKED — the filed fix is UNSHIPPABLE as written.** `solveEntry.ts:140-147` mint-fails the roster *before* `solve()` runs, and `rankingStability.ts:145-153` knows only a conversion-**amount** perturbation — so dispatching the sequencing-only field would surface `mint-failed{roster}` **live**, the exact state `solveDispatch.ts:76` forbids in its own comment. Doing it properly needs a second validation law under every shipped recommendation, a one-way door on what "validated" means.
+- **Near-term, honest, XS:** fix `copy.ts:1408` only — it says a *withdrawal strategy* needs more pre-tax when only the **conversion** half does. Sequencing across taxable and Roth is real and rankable.
 
 ### The recommendation never names the winning strategy, the runner-up, or what to do
 
 `L` · **pilot** · filed 2× — `A16`, `A20`
 
 - R9/R10 — the recommendation never says what to DO (winning strategy is computed but never rendered)
+- ⚠️ **Instruction card only — no store write.** Writing the winner into the draft moves the solver fingerprint and would instantly DEMOTE the recommendation the household just accepted (`recommendationView.ts:289-290`). Name the winner, point at the sequencing sheet. Most of the gap is already ON the payload and needs only rendering — that half is cheap and needs zero engine work.
 - R23 — the runner-up is retained but never IDENTIFIED, and the 'why' is one content-free constant
 
 ### Date-route recommend-second parity — the working household gets no strategy at all
@@ -199,6 +231,7 @@ nothing, and the first surviving trigger row is FY2033-34 → TY2035 (OSC **Augu
 - Date-route recommend-second parity gap — the entire still-working audience gets NO strategy recommendation, silently
 - Not-yet-retired (working) household: the recommendation surface does not exist at all
 - R10/R29 — recommend-second is entirely absent for a not-yet-retired (date-route) household
+- ⚠️ **The filed "cheap interim" is WRONG — do NOT drop the `Result.tsx:476` gate alone.** It renders an **empty `<div>`**, not the refusal. And reusing `recommendSpineUnreadyNote` would tell a household with a COMPLETE answer that its answer is incomplete — a new false claim, worse than the silence it replaces. The honest interim is a route-true one-liner admitting the v1 limit, seated and re-measured under `verify:fit` (~89px headroom); **Briggsy blesses the words.**
 - DATE-ROUTE RECOMMEND-SECOND PARITY (+ Q1 survivalContext + heir bracket)
 
 ### The detail-door era — nowhere to see how a number was reached

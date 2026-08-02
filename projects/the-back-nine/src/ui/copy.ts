@@ -110,7 +110,7 @@ export const copy = {
     // BOTH taxes while pricing only the federal one — a taxed-state household's state bill
     // landed NOWHERE (the optimistic direction). Federal leaves (the tool prices it); state
     // STAYS INSIDE the figure until the filed state-tax engine unit prices it for real.
-    'Everything — housing, food, fun, and the medical costs you pay out of pocket. Leave Medicare premiums out entirely: Part B, its income surcharge, and any Part D, Medigap, or Medicare Advantage premium — the tool handles those separately and adds them on top itself. Leave out federal income tax: the tool works that out from your withdrawals itself. State income tax isn’t priced yet — if your state taxes retirement income, keep that bill inside this figure so it still counts. The whole household, not just the bills that feel like retirement.',
+    'Everything — housing, food, fun, and the medical costs you pay out of pocket. Leave out the Medicare premiums the tool prices itself: Part B, its income surcharge, and any Part D, Medigap, or Medicare Advantage premium — the tool handles those separately and adds them on top itself. Part A is the exception: almost nobody pays a premium for it, but if you do, keep that premium inside this figure — the tool doesn’t price it. Leave out federal income tax: the tool works that out from your withdrawals itself. State income tax isn’t priced yet — if your state taxes retirement income, keep that bill inside this figure so it still counts. The whole household, not just the bills that feel like retirement.',
   // S5.1 — the state-aware spendHelp twin (the state-tax unit). The state step precedes spend,
   // so a household that named a PRICED state is told the OPPOSITE of the verbatim line above:
   // leave the state bill OUT (the tool now prices it), exactly like the federal one — keeping it
@@ -124,7 +124,7 @@ export const copy = {
   // never "your state's income tax"/"that bill" — Florida households have NO such tax or bill,
   // and the old wording told them to leave out a bill that doesn't exist.
   spendHelpStatePriced:
-    'Everything — housing, food, fun, and the medical costs you pay out of pocket. Leave Medicare premiums out entirely: Part B, its income surcharge, and any Part D, Medigap, or Medicare Advantage premium — the tool handles those separately and adds them on top itself. Leave out federal income tax: the tool works that out from your withdrawals itself. State income tax is priced by the tool too — leave it out of this figure, the same as the federal one. The whole household, not just the bills that feel like retirement.',
+    'Everything — housing, food, fun, and the medical costs you pay out of pocket. Leave out the Medicare premiums the tool prices itself: Part B, its income surcharge, and any Part D, Medigap, or Medicare Advantage premium — the tool handles those separately and adds them on top itself. Part A is the exception: almost nobody pays a premium for it, but if you do, keep that premium inside this figure — the tool doesn’t price it. Leave out federal income tax: the tool works that out from your withdrawals itself. State income tax is priced by the tool too — leave it out of this figure, the same as the federal one. The whole household, not just the bills that feel like retirement.',
   periodMonth: 'Each month',
   periodYear: 'Each year',
   periodLegend: 'That figure is…',
@@ -984,7 +984,7 @@ export const copy = {
   // bill stays "a real yearly bill", never a rounding hedge. Final sentence swapped 2026-07-19
   // (the trend unit — see the Tail's note; the drift-pin keeps monolith ≡ Lead…Tail).
   verdictMedicareResidual:
-    'Those are the pieces this tool adds by itself. The rare Part A premium stays inside the spending you gave us. State income tax isn’t priced yet. In a taxing state, that’s a real yearly bill. The extra-coverage premiums are held flat in today’s dollars, so their true cost could run higher than shown.',
+    'Those are the pieces this tool adds by itself. The rare Part A premium belongs in the spending you gave us. State income tax isn’t priced yet. In a taxing state, that’s a real yearly bill. The extra-coverage premiums are held flat in today’s dollars, so their true cost could run higher than shown.',
   // S5.2/S5.3 — the verdict residual SPLIT into clause-parts (the monolith above stays as the
   // UNPRICED render, verbatim). For a state-PRICED household the embedded "state income tax isn’t
   // counted" clause DIES and is REPLACED by the outcome-scoped affirmation naming the state,
@@ -996,7 +996,7 @@ export const copy = {
   // starts with `…Lead` and ends with `…Tail`, so the split can't silently diverge from the
   // shipped monolith. `verdict` prefix ⇒ free-numeral-gated: NAME the state, never a rate.
   verdictResidualLead:
-    'Those are the pieces this tool adds by itself. The rare Part A premium stays inside the spending you gave us.',
+    'Those are the pieces this tool adds by itself. The rare Part A premium belongs in the spending you gave us.',
   // The Tail now opens with a period graft (was an em-dash): every priced affirmation ends
   // mid-clause ("…reflected in these numbers" / "…no state bill on your withdrawals"), so the
   // Tail closes that sentence and starts its own — one fact per sentence on both compositions.

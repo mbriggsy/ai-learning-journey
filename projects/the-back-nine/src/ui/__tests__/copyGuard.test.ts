@@ -64,7 +64,7 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
   //     found the claim false against source and mandated the real guard land BEFORE any twin
   //     reword (a comment claiming an absent guardrail bites the very next edit). Anchors are
   //     deliberate literals — the pin's job is friction on exactly these shared sentences. ---
-  it('the spendHelp twins share prefix + suffix verbatim — only the state sentence differs (S5.1 drift-pin)', () => {
+  it('the spendHelp twins share prefix + suffix verbatim; Part A is carved OUT of the leave-out set and the verdict points it at the spending figure (S5.1 drift-pin + Card 10(b))', () => {
     const unpriced = copy.spendHelp
     const priced = copy.spendHelpStatePriced
     // The shared SUFFIX (the closing household sentence) — identical, verbatim.
@@ -83,6 +83,69 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     expect(stateUnpriced, 'the unpriced arm keeps the family frame').toContain('isn’t priced yet')
     expect(statePriced, 'the priced arm names the tool as the payer').toContain('priced by the tool')
     expect(stateUnpriced).not.toBe(statePriced)
+    // --- Card 10(b), the Part A carve-out (lane `correctness`). The verdict page states a RULE —
+    //     "The rare Part A premium belongs in the spending you gave us" — that is only reachable if
+    //     the ASK carved Part A out of the leave-out set. It did not: the shipped line read "Leave
+    //     Medicare premiums out ENTIRELY: Part B, …", and the engine prices NO Part A premium for
+    //     anyone (healthOverlay's medicareAnnualCost scope note: "purchased Part A premiums
+    //     (partA2026) are out of scope"; `health.partA2026` sits in consumedConstants'
+    //     NOT_RUN_CONSUMED). So a 40-quarter-short household that obeyed "entirely" dropped
+    //     $311–$565/month out of BOTH the figure and the engine (2026 tiers,
+    //     `health.partA2026.purchasedPremiumsMonthly`) — the optimistic direction, the cardinal
+    //     sin. The drift-pin above only forces the twins to AGREE; it cannot see whether what they
+    //     agree on is TRUE, so a symmetric reword sails straight through it. Both halves are bound
+    //     here — the ask must carve it out AND the verdict must keep pointing at the spending
+    //     figure — so neither can drift alone. ---
+    const EXHAUSTIVE_MEDICARE =
+      /(Medicare premiums? out entirely|out entirely: Part B|leave (out )?(all|every) Medicare premiums?)/i
+    const PART_A_KEPT_INSIDE = /Part A[^.]*\bkeep\b[^.]*\bthis figure\b/i
+    for (const [name, twin] of [['spendHelp', unpriced], ['spendHelpStatePriced', priced]] as const) {
+      expect(twin, `${name}: the exhaustiveness signal is dead — Part A is NOT in the leave-out set`).not.toMatch(
+        EXHAUSTIVE_MEDICARE,
+      )
+      expect(twin, `${name}: the ask names Part A and sends it INSIDE the spending figure`).toMatch(
+        PART_A_KEPT_INSIDE,
+      )
+      expect(twin, `${name}: and says outright the tool does not price it`).toMatch(/tool doesn’t price it/)
+      // DELETION GUARDS. Without these the negative above is REWARDED by deleting the whole
+      // tool-priced sentence: EXHAUSTIVE_MEDICARE stops matching, every other arm here stays
+      // green, and the F4 premium boundary silently vanishes from the ask.
+      expect(twin, `${name}: the tool-priced set is still NAMED — killing the sentence must not satisfy the negative above`).toMatch(
+        /Part B[^.]*income surcharge[^.]*Medicare Advantage premium/,
+      )
+      expect(twin, `${name}: …and is still told to be added on top`).toContain('adds them on top itself')
+    }
+    // NON-VACUITY, with the SAME predicates the assertions use (never a weaker one — the receipt
+    // law the `EXACTLY ONE key may claim a completed save` arm in this file enforces): the sentence
+    // that SHIPPED before this fix must trip the negative AND fail the positive, so both arms are
+    // proven live rather than merely satisfied.
+    const SHIPPED_BEFORE =
+      'Leave Medicare premiums out entirely: Part B, its income surcharge, and any Part D, Medigap, or Medicare Advantage premium — the tool handles those separately and adds them on top itself.'
+    expect(SHIPPED_BEFORE, 'the killed exhaustive instruction trips the negative').toMatch(EXHAUSTIVE_MEDICARE)
+    expect(PART_A_KEPT_INSIDE.test(SHIPPED_BEFORE), 'and it carries no Part A carve-out').toBe(false)
+    // THE OTHER HALF. If the verdict clause is deleted or reworded off the spending figure, the ask
+    // above becomes orphaned instruction — so pin the pair where both are visible. (The lead is a
+    // verbatim prefix of the shipped monolith; stateTaxDisclosure.test holds that.)
+    const FLAT_INCLUSION_CLAIM =
+      /Part A premium\b[^.]*\b(is|are|was|were|stays?|sits?|remains?|lives?)\s+(in|inside|within|included|counted|part)\b/i
+    expect(copy.verdictResidualLead, 'the verdict still names the Part A premium').toContain('Part A premium')
+    expect(copy.verdictResidualLead, 'and still points at the figure the ask now instructs').toContain(
+      'the spending you gave us',
+    )
+    // …and it may never claim as FACT that the household actually put it there — the O16 ruling in
+    // the `assumptionStateUnsetNote twins condition inclusion on the reader's action` arm below:
+    // inclusion is never flatly asserted for a population the tool cannot observe.
+    expect(copy.verdictResidualLead, 'no flat inclusion claim about an unobservable action').not.toMatch(
+      FLAT_INCLUSION_CLAIM,
+    )
+    expect(
+      'The rare Part A premium stays inside the spending you gave us.',
+      'the killed flat-inclusion claim trips the same net',
+    ).toMatch(FLAT_INCLUSION_CLAIM)
+    expect(
+      'The rare Part A premium is included in the spending you gave us.',
+      'the one-word synonym evasion trips the same net — the narrow (stays|sits|is)+(inside|in) form did not',
+    ).toMatch(FLAT_INCLUSION_CLAIM)
   })
 
   // --- the panel-note ↔ spendHelp reconciliation (O16 Fork A, council 2026-07-17,

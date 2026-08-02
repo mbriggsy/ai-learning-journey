@@ -23,8 +23,9 @@ import type { BudgetLineItem } from '@shared/model'
  *  - Blocked Apply: aria-disabled (never native disabled) + the ANNOUNCED reason —
  *    tested from the app's real closed-at-mount shape (the announcer must survive
  *    the sheet's conditional portal — insight 047's consumer-#2 shape).
- *  - Q5 structural shell: opening persists nothing; an empty Apply routes to
- *    escape (governing) or close (not governing) — never `budget: []`.
+ *  - Q5 structural shell: opening persists nothing; an empty Apply is the escape
+ *    when a budget GOVERNS, and BLOCKS with the announced reason when none does
+ *    (Card 9: a silent close made the primary a second Cancel) — never `budget: []`.
  *  - Build-gate 1: the lines-target NETS the injected OOP medical (max(0, S−M));
  *    absent/zero M withholds the target+carried lines, never fabricates.
  *  - Close-without-apply preserves local edits; a clean reopen re-seeds from the
@@ -127,15 +128,37 @@ describe('BudgetBuilder — the Q5 structural shell', () => {
     expect(onApply).not.toHaveBeenCalled()
   })
 
-  it('an empty Apply while NO budget governs routes to CLOSE — never onApply([]), never an escape', () => {
+  it('an empty Apply while NO budget governs BLOCKS and SPEAKS — never a silent second Cancel (Card 9, 2026-08-01)', () => {
+    // The cold-read panel's 7-of-7 convergence, and it is the UNIVERSAL first-open frame: `rows`
+    // seeds from `draft.budget ?? []`, nothing in the store ever writes `budget`, and there is no
+    // essentials template anywhere in the repo — so every first open of this sheet is empty.
+    // "Use this budget" is the filled primary over that empty list; falling through to onClose()
+    // made it functionally identical to the quiet Cancel link beside it, with nothing on screen
+    // saying so (the insight-100 family — a promise verb owes a rendered outcome). It now rides
+    // the file's ONE blocked-commit idiom: aria-disabled (never native disabled, so it stays
+    // focusable to speak) + the announced reason. Build-gate 2 is untouched — `[]` still never
+    // reaches the store. The EMPTY+GOVERNING escape is a different arm and keeps its own test below.
     const onApply = vi.fn()
     const onEscape = vi.fn()
     const onClose = vi.fn()
     render(<Host draft={draftWith()} onApply={onApply} onEscape={onEscape} onClose={onClose} />)
+
+    // The RENDERED half — the muted, operable state (save.css's global opacity 0.55 rule, a
+    // LIGHTNESS cue and never hue, so the colour-blind law is satisfied).
+    expect(applyBtn()).toHaveAttribute('aria-disabled', 'true')
+    expect(applyBtn()).not.toBeDisabled()
+
+    // The BEHAVIOURAL half — the mutant-killer: pressing it is not a close.
     fireEvent.click(applyBtn())
-    expect(onClose).toHaveBeenCalledTimes(1)
+    expect(onClose).not.toHaveBeenCalled()
     expect(onApply).not.toHaveBeenCalled()
     expect(onEscape).not.toHaveBeenCalled()
+    expect(sheetLiveRegion()!.textContent).toBe(copy.budgetApplyEmpty)
+
+    // NON-VACUITY, on the SAME predicate the assertion above negates: the onClose spy DOES fire,
+    // and the way out is still one tap (R8's never-a-gate).
+    fireEvent.click(screen.getByRole('button', { name: copy.budgetCancel }))
+    expect(onClose).toHaveBeenCalledTimes(1)
   })
 
   it('an empty Apply while a budget GOVERNS routes to ESCAPE (rows all removed = back to a single number)', () => {

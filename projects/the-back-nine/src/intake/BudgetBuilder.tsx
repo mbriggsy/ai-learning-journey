@@ -17,8 +17,12 @@
  * already mounts AnswerStrip).
  *
  * THE STRUCTURAL SHELL (Q5): opening the sheet persists NOTHING — `draft.budget` stays strictly
- * undefined until the first real Apply (build-gate 2: `[]` is never written; an empty Apply is the
- * escape/cancel, never an empty budget). The reduce-to-spine byte-identity is structural, not
+ * undefined until the first real Apply (build-gate 2: `[]` is never written). An empty Apply is
+ * the ESCAPE when a budget governs — real lines are being let go, and the button moves the plan.
+ * With NO governing budget there is nothing to commit, so it BLOCKS with the announced reason
+ * (Card 9, 2026-08-01, 7/7 lenses): the filled primary silently doing what the quiet Cancel link
+ * does is the insight-100 family — a promise verb that owes a rendered outcome. Both shells: the
+ * sheet AND the in-flow spend step. The reduce-to-spine byte-identity is structural, not
  * arithmetic: no seeded line exists to double-count.
  *
  * THE RECONCILIATION READOUT (build-gate 1): the lines-target NETS the injected OOP medical —
@@ -247,17 +251,26 @@ export function BudgetBuilder({ open, draft, onApply, onEscape, onClose, variant
   const validation = useMemo(() => validateBudgetItems(items), [items])
   const hasErrors = validation.errors.length > 0
   const governs = budgetGoverns(draft.budget)
+  // Card 9: the empty sheet's CTA is not a second Cancel. `nothingToCommit` is the SINGLE source
+  // read by both apply()'s first arm and the aria-disabled attribute below, so the visible state
+  // and the behaviour cannot drift apart. The EMPTY+GOVERNING case is deliberately excluded —
+  // there a budget really is being let go and the button does move the plan (the escape, unchanged).
+  const nothingToCommit = items.length === 0 && !governs
 
   const apply = () => {
+    if (nothingToCommit) {
+      // Nothing typed and no budget governing: there is nothing to commit, so the CTA SPEAKS
+      // rather than closing silently — a silent close is byte-identical to the quiet Cancel beside
+      // it. Cancel / Escape / the backdrop still leave in one tap (R8's never-a-gate holds), and
+      // the inline mount's Back/Next are untouched, so this blocks nobody.
+      announcer.announce(copy.budgetApplyEmpty)
+      return
+    }
     if (items.length === 0) {
-      // An empty Apply is never `budget: []` (build-gate 2): with a governing budget it is the
-      // escape; with none it is simply a close (there is nothing to commit).
-      if (governs) {
-        dirtyRef.current = false
-        onEscape()
-      } else {
-        onClose()
-      }
+      // An empty Apply is never `budget: []` (build-gate 2): a budget GOVERNS and every line was
+      // removed, so this is the escape back to a single number.
+      dirtyRef.current = false
+      onEscape()
       return
     }
     if (hasErrors) {
@@ -388,7 +401,7 @@ export function BudgetBuilder({ open, draft, onApply, onEscape, onClose, variant
         <button
           type="button"
           className="btn-primary"
-          aria-disabled={hasErrors}
+          aria-disabled={hasErrors || nothingToCommit}
           onClick={apply}
         >
           {copy.budgetApply}

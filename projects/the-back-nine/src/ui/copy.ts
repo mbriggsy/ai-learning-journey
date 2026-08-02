@@ -191,6 +191,12 @@ export const copy = {
   budgetWarnNoYearZero:
     'No line covers the first retirement year yet, so the starting figure reads as zero.',
   budgetApplyBlocked: 'A line needs attention before this budget can be used.',
+  // The EMPTY-sheet block (Card 9, cold-read panel 2026-08-01 — 7/7 lenses): with no line typed
+  // and no budget governing there is nothing to commit, so the primary SPEAKS instead of falling
+  // through to a silent close. Deliberately NOT budgetApplyBlocked — "a line needs attention"
+  // names a line that does not exist, which is the calm-but-wrong sin one level down.
+  budgetApplyEmpty:
+    'There are no lines yet, so there is nothing to use — add a line, or Cancel to keep the single figure.',
   qHealthHeading: 'Health coverage before Medicare',
   enrolledPremiumLabel: 'Your household’s combined monthly premium',
   slcspLabel: 'Benchmark Silver plan, monthly (whole household)',

@@ -11,6 +11,8 @@ import { join } from 'node:path'
 import { describe, it, expect } from 'vitest'
 import type { SimulationParams } from '@shared/model'
 import { buildDraws, simulate } from '@engine/simulate'
+import { applyCandidate, type CandidateStrategy } from '@engine/solver/candidates'
+import { collectCandidateOutcome } from '@engine/validation/evaluate'
 import {
   buildBootstrapDraws,
   lag1Autocorrelation,
@@ -184,6 +186,42 @@ describe('the near-tie inversion probe (mechanism at CI scale — the FIRES verd
       expect(Number.isFinite(r.control.advantage)).toBe(true)
       expect(Number.isFinite(r.bootstrap.advantage)).toBe(true)
     }
+    // THE CONTROL ARM IS A PLAIN SHIPPED RUN — recomputed, not asserted by adjective (the arm
+    // name's "matches the direct shipped computation" clause, made an assertion; the comment
+    // above promised this recompute and no line performed it). Rep 0's control reading is rebuilt
+    // end-to-end through the SAME shipped seams — applyCandidate → simulate WITHOUT
+    // `_injectedDraws` → collectCandidateOutcome — at that rep's OWN seed, and ALL FIVE
+    // ArmReading columns are bound, not the advantage alone. Why all five: at 400 paths the
+    // survival fraction lands on a 1/400 = 0.0025 grid (simulate.ts — `survivors / paths`),
+    // while this class's control mean advantage measured +0.00264 at FULL SCALE (16k paths × 12
+    // seeds — the §S0.2 record in the U16 build spec), i.e. an effect about ONE grid step wide.
+    // A rep's advantage is therefore a small multiple of 0.0025, so a mis-routed control arm MAY
+    // land the same advantage by coincidence and an advantage-only pin may not bite. The two
+    // lifetime-tax columns are means over 400 paths — continuous, so they bite.
+    expect(a.readings.map((r) => r.seed)).toEqual(spec.seeds)
+    const rep0 = a.readings[0]
+    if (rep0 === undefined) throw new Error('[test] the probe returned no reps')
+    const shippedScore = (c: CandidateStrategy) => {
+      const collected = collectCandidateOutcome(c, simulate(applyCandidate(base, c), rep0.seed))
+      if (collected.kind !== 'scored') {
+        throw new Error(`[test] the control recompute went ${collected.kind} — the probe would have thrown too`)
+      }
+      return collected.score
+    }
+    const wDirect = shippedScore(nearTieWinner)
+    const rDirect = shippedScore(nearTieRunnerUp)
+    const directControl = {
+      winnerSurvival: wDirect.survival,
+      runnerUpSurvival: rDirect.survival,
+      advantage: wDirect.survival - rDirect.survival,
+      winnerLifetimeTax: wDirect.lifetimeTaxMeanReal,
+      runnerUpLifetimeTax: rDirect.lifetimeTaxMeanReal,
+    }
+    expect(rep0.control).toStrictEqual(directControl)
+    // NON-VACUITY at the SAME predicate, not a weaker one: the bootstrap arm differs from the
+    // control ONLY by the injected draw source, and it does NOT satisfy the equality — so the
+    // match above is a real match, not one any arm would pass.
+    expect(rep0.bootstrap).not.toStrictEqual(directControl)
     expect(typeof a.fires).toBe('boolean')
   }, 240_000)
 

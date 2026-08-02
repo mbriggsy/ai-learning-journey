@@ -119,6 +119,29 @@ nothing, and the first surviving trigger row is FY2033-34 → TY2035 (OSC **Augu
 
 - Household outside {NC, PA, FL}: the state-tax half of the answer is withheld and only disclosed in prose
 - Deferred state-tax roster {SC, GA, DE} — and the 47 other unpriced states
+- ⚑ The withhold machinery gates `solve()` ONLY — a withhold-only fix still ships a **state-blind
+  headline / fuck-off date**. And the honest-withhold precedent this used to cite (the NC certification
+  block) is **retired**, so a refusal arm must be built, not copied.
+- Cheap partial: the 8 no-income-tax states are a sourced structural $0 (FL's exact shape), so widening
+  to them is honest and leaves refusal for taxing states only.
+
+### The recommendation tells a priced-state household we can't price their state
+
+`M` · **pilot** · filed 1× — `A66` (found live in Chromium 2026-08-02, `?seed=nc`)
+
+- `recDiscStateTax` (`src/ui/copy.ts:1531`) — *"Where we can't yet price a state's income tax, this
+  compares federal tax only"* — is an **ALWAYS-ON** disclosure (`recommendationView.ts:75`, the one
+  `DISCLOSURE_BUILDERS` entry with no condition). On an NC household it **contradicts the spine three
+  inches above it**, which says *"Your North Carolina state income tax is reflected in these numbers."*
+- **NOT a regression — newly REACHABLE.** Until the 2026-08-02 NC pin, no priced-state household could
+  reach the recommendation surface at all (NC withheld; PA/FL had no seed path through it), so this
+  sentence had never co-rendered with a priced-state spine.
+- Direction is CONSERVATIVE (it understates our own capability), so it is not the cardinal sin — but a
+  one-screen self-contradiction is cold-read blocker class.
+- **The fix is not a copy tweak.** `SolveRecommendation` (`src/engine/solver/solve.ts:159-201`) carries
+  NO retirement state, so the builder cannot gate on it today. Needs the priced state threaded onto the
+  payload (engine + worker wire + tests), then `'state-tax'` returns `null` when the state is priced —
+  the exact shape `heir-bracket`/`aca-slcsp` already use.
 
 ## Tier 1 — the differentiator does not land
 

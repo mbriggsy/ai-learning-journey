@@ -105,6 +105,16 @@ deadlines silently misses it. It has been filed a notch late twice, both times i
    `CONTRIBUTION_YEAR` go a year stale in silence. Every other dated constant here carries a gate; these
    do not. Cheap to arm, and the deadline is fixed.
 
+8. **The recommendation tells an NC household we can't price their state — while the spine three inches
+   above says we did.** `copy.ts:1531` (`recDiscStateTax`) is the ONE `DISCLOSURE_BUILDERS` entry with no
+   condition (`recommendationView.ts:75`), so it renders on priced-state households too. **Newly reachable,
+   not a regression:** before the 2026-08-02 NC pin no priced-state household could reach this surface, so
+   it had never co-rendered with a priced-state spine. Found live in Chromium on `?seed=nc`. Direction is
+   conservative (it understates us), so not the cardinal sin — but a one-screen self-contradiction is
+   cold-read blocker class. **Not a copy tweak:** `SolveRecommendation` (`solve.ts:159-201`) carries no
+   retirement state, so the payload needs it threaded (engine + worker wire + tests) before the builder can
+   return `null` — the shape `heir-bracket`/`aca-slcsp` already use.
+
 ### Tier 1 — the differentiator does not land
 
 8. **The recommendation never says what to DO.** `recommendationView.ts:410` computes `winnerStrategyKey`;

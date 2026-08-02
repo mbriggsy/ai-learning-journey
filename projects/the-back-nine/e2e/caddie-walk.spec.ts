@@ -172,6 +172,48 @@ const CVD_CHART_TARGETS = [
   { name: 'recviz', selector: 'svg.rv' },
 ] as const
 
+/**
+ * The ASSUMPTIONS panel's SELECTED-CONTROL faces that live BELOW the sheet's OWN internal scroll
+ * (Card 11, 2026-08-01 — routed to the oracle, not a tone finding). `role="dialog"` sits ON the
+ * scroll container itself (controlSheet.tsx:160-161 puts it on `.control-sheet`, and
+ * sheetShell.css:34-35 gives that element `max-height:88dvh; overflow-y:auto` — RAISED to 94dvh
+ * at the laptop tier, sheetShell.css:84+94, so 88dvh is the PHONE/base rule and never the REAL
+ * arm's). BOTH the viewport-scoped `cvd-*.png` arms AND the `crop-panel` element crop therefore
+ * stop at that container's visible box — the scrolled-out content is never painted into either.
+ * MEASURED on the retired base at REAL (1536×791): the door-4 `fold.json` puts the dialog at
+ * 24→767px, i.e. a 743px visible box (= 94dvh; docs/caddie/cold-read-log.md, Card 10c). The panel
+ * carries 24 radio/textbox controls and only about THREE fit that box, so ~21 were captured in no
+ * arm at all, normal or simulated. The unscreened set is exactly the segmented controls the
+ * never-color-alone law exists for.
+ *
+ * A locator screenshot scrolls its target's ANCESTORS into view (the sheet's internal scroller
+ * included), so each fieldset is cropped where it actually renders — the increment-5 shape
+ * (captureCvdRegion), not a new mechanism.
+ *
+ * SCOPED to `[role="dialog"]` on purpose: `StateResidencePicker` / `MedicareExtrasFork`
+ * (questions.tsx) are the SAME components the intake steps mount, so the bare `name$=` suffixes
+ * increment 5 uses are not unique once a panel can open over an intake surface.
+ *
+ * The person forks are cropped as two SEPARATE fieldsets rather than one `medicare-extras` row:
+ * the row (name + two persons + a revealed dollar field + the standing note) can exceed the
+ * sheet's visible box on the phone arm, and a crop taller than its own scroll container comes
+ * back clipped — which is the defect this table exists to close, not a way to close it.
+ */
+const PANEL_CVD_REGIONS = [
+  {
+    name: 'state-picker',
+    selector: '[role="dialog"] fieldset.segmented:has(input[name$="-retirement-state"])',
+  },
+  {
+    name: 'medicare-extras-0',
+    selector: '[role="dialog"] fieldset.segmented:has(input[name$="-medicare-extras-0"])',
+  },
+  {
+    name: 'medicare-extras-1',
+    selector: '[role="dialog"] fieldset.segmented:has(input[name$="-medicare-extras-1"])',
+  },
+] as const
+
 /** Regions whose boxes land in fold.json so readers know what sits above/below the fold. */
 const FOLD_TARGETS = [
   'main.result',
@@ -451,14 +493,40 @@ async function walkDoors(page: Page, outDir: string): Promise<void> {
   const doors = page.locator('.result-quiet-row button')
   const count = await doors.count()
   expect(count, 'no quiet-row doors on a resolved verdict — a vacuous door walk').toBeGreaterThan(0)
+  // Card 11's non-vacuity receipt — see the assertion after the loop.
+  let panelScreened = false
   for (let i = 0; i < count; i++) {
     const door = doors.nth(i)
     const name = (await door.innerText()).trim()
+    // The assumptions door by its OWN stable stamp (Result.tsx:576), never by index: the
+    // `.result-recommend-invite` door (Result.tsx:536) is conditional, so door-4 is door-4 only
+    // on the plants where the solve is un-invitable. Read BEFORE the click — the row survives the
+    // open, but nothing here should depend on that.
+    const isAssumptions = (await door.getAttribute('data-door')) === 'assumptions'
+    // ⚑ THE RECOMMEND-INVITE DOOR IS NOT A LEVER SHEET, and treating it as one broke this walk on
+    // its own DEFAULT target. `driveLeverPreview` classifies a sheet STRUCTURALLY — "does it carry
+    // `.control-policies` radios" — and `GoalPicker.tsx:78` renders its goal radiogroup with that
+    // exact class, the same one `SequencingControl`/`HealthcareSheet` use. So on every target where
+    // `solveInvitable` holds, the walk opened this door, CHECKED A GOAL RADIO as a side effect, then
+    // waited 120s for a TwoFutures `svg.tf` that the GoalPicker never renders — and this door is
+    // FIRST in the doors DOM order (Result.tsx:530-544), so the walk died before reaching any other
+    // door, including the assumptions panel the Card 11 crops below live on. Measured RED at both
+    // viewports on `seed:retired`, which is the walk's DEFAULT target.
+    // This is the `datemixed` shape at a new site, and the header comment above already names it:
+    // demanding a chart from a state that renders none BY DESIGN. The solve arc is deliberately
+    // owned by the `solve:<seed>` targets (walkSolve drives the goal, the pending breathe and the
+    // committed frame at full precision); driving it from inside a door walk would dispatch a
+    // multi-minute solve and mutate the scenario every later state captures. The sheet is still
+    // CAPTURED — captureState runs before this — it simply is not DRIVEN.
+    const isRecommendInvite = await door.evaluate((el) =>
+      el.classList.contains('result-recommend-invite'),
+    )
     await door.click()
     const dialog = page.getByRole('dialog')
     await expect(dialog, `door "${name}" opened no dialog`).toBeVisible()
-    await captureState(page, path.join(outDir, `door-${i + 1}-${slugify(name)}`))
-    const drive = await driveLeverPreview(page, dialog, name)
+    const stateDir = path.join(outDir, `door-${i + 1}-${slugify(name)}`)
+    await captureState(page, stateDir)
+    const drive = isRecommendInvite ? false : await driveLeverPreview(page, dialog, name)
     if (drive !== false) {
       // The chartless `no-anchor` arm gets its OWN suffix: a `-preview` capture with no chart in
       // it reads to a card's reader as a screenshot that failed, when it is in fact the surface
@@ -466,9 +534,39 @@ async function walkDoors(page: Page, outDir: string): Promise<void> {
       const suffix = drive === 'chart' ? 'preview' : 'preview-no-anchor'
       await captureState(page, path.join(outDir, `door-${i + 1}-${slugify(name)}-${suffix}`))
     }
-    await dialog.getByRole('button', { name: /^(Close|Cancel)$/ }).first().click()
+    // Card 11 — the panel's below-the-internal-scroll CVD crops. LAST, by the same
+    // scroll-side-effect law as captureState's stages 3-4: a locator screenshot scrolls the
+    // sheet's own scroller, so running this before either captureState would bundle a
+    // mid-scroll "above-fold" frame. Gated on the assumptions door because captureCvdRegion
+    // hard-fails on an absent region (insight-029) — unguarded it would red doors 1-3 on
+    // correct behaviour, the `no-anchor` mistake this file already paid for once.
+    if (isAssumptions) {
+      for (const { name: regionName, selector } of PANEL_CVD_REGIONS) {
+        await captureCvdRegion(page, stateDir, selector, regionName)
+      }
+      panelScreened = true
+    }
+    if (isRecommendInvite) {
+      // The GoalPicker renders NO Close/Cancel button — it is confirm-or-leave, and `ControlSheet`'s
+      // own contract dismisses it on Escape / backdrop (controlSheet.tsx:119,151). Every OTHER sheet
+      // in the family carries the button, so the assertion below keeps its teeth everywhere it can
+      // actually bite; this door is closed the way the product closes it. (Worth an eye: a sheet
+      // with no VISIBLE dismiss affordance is a family inconsistency — filed, not fixed here.)
+      await page.keyboard.press('Escape')
+    } else {
+      await dialog.getByRole('button', { name: /^(Close|Cancel)$/ }).first().click()
+    }
     await expect(dialog).toBeHidden()
   }
+  // The receipt tests the SAME predicate the crops do, not a weaker one: it fails iff the loop
+  // never entered the branch that writes them. `hatchReachable` (Result.tsx:318-323) is satisfied
+  // by `focusKey`, and every walkDoors caller has already awaited
+  // `main.result[data-answer-tier="final"]` — so a missing assumptions door means the door row
+  // changed shape under the harness, which is exactly when a silent skip would be worst.
+  expect(
+    panelScreened,
+    'the door walk never reached the assumptions door — the panel CVD crops silently wrote nothing',
+  ).toBe(true)
 }
 
 /**

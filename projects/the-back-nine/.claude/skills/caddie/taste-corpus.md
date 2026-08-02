@@ -114,6 +114,15 @@ supersedes anything derived from this file.
     does NOT satisfy this.
 19. **Describe what he should be seeing.** `[briggsy-general]` When presenting a screenshot, say what the reader
     should see — never assume the image speaks for itself to a color-blind reader.
+40. **The shipped color encoding has PASSED his eyes — stop re-litigating it.** `[product]` 2026-08-02,
+    unprompted, declining a proposed CVD pixel-regression gate: *"That one is minor - I'm pretty color
+    blind and I think b9 looks great."* Per SKILL.md's own law the color lane can only flag, never pass,
+    and **his eyes own the verdict** — so this IS the pass, on the only authority that can give one.
+    **How to apply:** a CVD screener finding on an ALREADY-SHIPPED surface is now a low-prior flag, not a
+    blocker; it needs a specific broken channel named (which meaning lost its shape/word/position), never
+    "color may be doing too much work." Rule 18 is UNCHANGED and still binds every NEW surface — this
+    verdict covers what he has seen, not what has not been built. **Direction of error to fear now:
+    over-flagging burns his attention on a lane he has already cleared.**
 
 ### Layout & density (his real viewport: 1536×791 CSS px @ 2.5 DPR — never the 1871×917 screen number)
 
@@ -326,3 +335,12 @@ supersedes anything derived from this file.
   trust-building ("it hedges honestly") — civilian ownership-mechanics are a distinct failure
   axis from tone (the FALSE-PASS that minted rules 37/39); (c) his comprehension questions
   are PRODUCT signals, not copy nits — two engine-unit filings came out of one paragraph.
+- **E14 — the color lane cleared itself (2026-08-02).** Trigger: the pilot proposed a CVD
+  pixel-regression gate (`verify:cvd`), arguing the never-color-alone law was guarded only by
+  screenshots nobody asserts on, and that Briggsy could not be its oracle *because* the law is about
+  hue. His read: *"That one is minor - I'm pretty color blind and I think b9 looks great. So I think
+  we're in good shape."* Resolution: gate PARKED, rule 40 minted. **The pilot's premise was half
+  wrong in a way worth remembering — being color-blind does not disqualify him as the oracle, it is
+  exactly what QUALIFIES him.** He is not judging whether the palette is pretty; he is the failure
+  mode, reporting that it does not fire. A simulated deuteranopia PNG is a model of him; he is the
+  ground truth. **Reach for the human before building the simulator.**

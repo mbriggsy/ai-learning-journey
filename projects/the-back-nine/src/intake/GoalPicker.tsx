@@ -94,10 +94,23 @@ export function GoalPicker({
         ))}
       </fieldset>
       {/* Disabled until a goal is chosen — the unset sentinel made visible (never a silent default).
-          A confirmed pick (not an arrow-key move through the radios) is what dispatches the solve. */}
-      <button type="button" className="btn-primary" disabled={selected === undefined} onClick={confirm}>
-        {copy.goalPickerConfirmCta}
-      </button>
+          A confirmed pick (not an arrow-key move through the radios) is what dispatches the solve.
+          THE QUIET CLOSE beside it (2026-08-02, found while repairing the Caddie door walk): this
+          sheet rendered NO visible dismiss affordance at all. `ControlSheet` does dismiss it on
+          Escape and on a backdrop tap, so nobody was ever trapped — but every OTHER sheet in the
+          family pairs its primary with a quiet Close (`control-sheet__actions`, the
+          SequencingControl / HealthcareSheet shape), and ON A PHONE there is no Escape key: the
+          only exit was an undiscoverable tap on the backdrop. "Mobile must SHINE, not survive."
+          The walk found it the honest way — its family-wide `/^(Close|Cancel)$/` close could not
+          match here, and hung. */}
+      <div className="control-sheet__actions">
+        <button type="button" className="btn-primary" disabled={selected === undefined} onClick={confirm}>
+          {copy.goalPickerConfirmCta}
+        </button>
+        <button type="button" className="btn-quiet" onClick={onClose}>
+          {copy.leverCancel}
+        </button>
+      </div>
     </ControlSheet>
   )
 }

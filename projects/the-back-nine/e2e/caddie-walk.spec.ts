@@ -546,16 +546,12 @@ async function walkDoors(page: Page, outDir: string): Promise<void> {
       }
       panelScreened = true
     }
-    if (isRecommendInvite) {
-      // The GoalPicker renders NO Close/Cancel button — it is confirm-or-leave, and `ControlSheet`'s
-      // own contract dismisses it on Escape / backdrop (controlSheet.tsx:119,151). Every OTHER sheet
-      // in the family carries the button, so the assertion below keeps its teeth everywhere it can
-      // actually bite; this door is closed the way the product closes it. (Worth an eye: a sheet
-      // with no VISIBLE dismiss affordance is a family inconsistency — filed, not fixed here.)
-      await page.keyboard.press('Escape')
-    } else {
-      await dialog.getByRole('button', { name: /^(Close|Cancel)$/ }).first().click()
-    }
+    // The family-wide close, and it applies to EVERY door again as of 2026-08-02. It briefly did
+    // not: the GoalPicker rendered no visible dismiss affordance at all, so this click could never
+    // match there and hung to the timeout. That was worth a product fix rather than a harness
+    // special-case — the sheet now carries the family's quiet Close — so the assertion keeps its
+    // teeth on every door instead of exempting the one door that failed it.
+    await dialog.getByRole('button', { name: /^(Close|Cancel)$/ }).first().click()
     await expect(dialog).toBeHidden()
   }
   // The receipt tests the SAME predicate the crops do, not a weaker one: it fails iff the loop

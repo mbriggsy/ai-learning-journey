@@ -61,7 +61,7 @@ describe('GoalPicker — the dialog + radio grammar', () => {
     expect(screen.getByText(copy.goalPayLessTaxGloss)).toBeInTheDocument()
   })
 
-  it('focuses the heading on open (never the input — the phone-keyboard law) and Escape closes', async () => {
+  it('focuses the heading on open (never the input — the phone-keyboard law); Escape closes, AND so does a VISIBLE Close', async () => {
     const onClose = vi.fn()
     // Mount CLOSED then open (the app's real shape — the announcer/focus effects must fire on the
     // open TRANSITION, not only a mounted-open first render).
@@ -74,6 +74,14 @@ describe('GoalPicker — the dialog + radio grammar', () => {
     expect(screen.getByRole('heading', { name: copy.goalPickerTitle })).toHaveFocus()
     fireEvent.keyDown(screen.getByRole('dialog'), { key: 'Escape' })
     expect(onClose).toHaveBeenCalledTimes(1)
+    // …and a VISIBLE way out, which this sheet did not have until 2026-08-02. Escape and the
+    // backdrop always dismissed it, so nobody was trapped — but ON A PHONE there is no Escape key
+    // and the only exit was an undiscoverable backdrop tap, while every other sheet in the family
+    // pairs its primary with a quiet Close. Asserted through the SAME `copy.leverCancel` handle the
+    // family uses, so a reword moves all of them together and this arm cannot go stale against a
+    // re-typed literal.
+    fireEvent.click(screen.getByRole('button', { name: copy.leverCancel }))
+    expect(onClose).toHaveBeenCalledTimes(2)
   })
 })
 

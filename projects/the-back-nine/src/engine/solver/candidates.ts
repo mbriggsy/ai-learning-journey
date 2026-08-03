@@ -135,6 +135,49 @@ export type AnchoredRail =
 export const solverCandidateId = (c: CandidateStrategy): string =>
   `${candidateProvenanceArm(c.provenance)}:${c.policy}:${c.conversion?.annualAmountReal ?? 0}`
 
+/**
+ * Do two candidates describe the SAME PLAN — the same decumulation order and the same conversion?
+ *
+ * DELIBERATELY PROVENANCE-BLIND, which is exactly what {@link solverCandidateId} is not. The id is
+ * injective BY provenance (see above) because two arms with different JOBS must score separately;
+ * this predicate answers the opposite question — "is the crowned plan the one the household is
+ * already running?" — where provenance is precisely the thing that must not matter.
+ *
+ * ⚠️ THE REASON THIS EXISTS, AND WHY INDEX EQUALITY IS WRONG FOR IT. The injected user baseline is
+ * ALWAYS a strategic duplicate of some enumerated arm unless the policy is `custom`: a
+ * `taxable-first` household duplicates the conventional baseline, and every other `SEARCHED_POLICIES`
+ * household (including the `proportional` DEFAULT) duplicates that policy's own conversion-0 grid
+ * point. Ties between duplicates are broken toward the conventional incumbent / the earlier
+ * enumeration index, so the crowned index is routinely NOT the user-baseline index even when the
+ * crowned PLAN is bit-identical to the household's own. Comparing indices would tell a household
+ * already running the winning strategy that we are recommending a change — a fresh calm-but-wrong
+ * claim of exactly the kind the baseline re-anchoring exists to remove.
+ *
+ * Also lossless where the id is lossy: `drawdownOrder` is compared element-wise, so two different
+ * custom orders (which share the id `baseline:custom:0`) are correctly NOT the same plan.
+ */
+export function sameDecumulationPlan(a: CandidateStrategy, b: CandidateStrategy): boolean {
+  if (a.policy !== b.policy) return false
+
+  const ac = a.conversion
+  const bc = b.conversion
+  if ((ac === null) !== (bc === null)) return false
+  if (ac !== null && bc !== null) {
+    if (ac.annualAmountReal !== bc.annualAmountReal) return false
+    if (ac.startYearOffset !== bc.startYearOffset) return false
+    if (ac.years !== bc.years) return false
+  }
+
+  const ao = a.drawdownOrder
+  const bo = b.drawdownOrder
+  if ((ao === undefined) !== (bo === undefined)) return false
+  if (ao !== undefined && bo !== undefined) {
+    if (ao.length !== bo.length) return false
+    for (let i = 0; i < ao.length; i++) if (ao[i] !== bo[i]) return false
+  }
+  return true
+}
+
 /** Map the provenance to its id arm — an EXHAUSTIVE switch so a new provenance value forces a
  *  new arm at COMPILE time (the `never` default), never a silent collision into an existing arm. */
 function candidateProvenanceArm(p: CandidateStrategy['provenance']): 'grid' | 'conventional' | 'baseline' {

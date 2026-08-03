@@ -496,9 +496,25 @@ export function solve(token: OracleClearedToken, input: SolveInput, shouldAbort?
   }
 
   // (6) Build the displayed arms from seed-set B (contract #2 — never the seed-A selection score).
+  //
+  // ⚠️ THE DISPLAYED BASELINE IS THE HOUSEHOLD'S OWN PLAN (re-anchored 2026-08-03), falling back to
+  // the conventional arm only when no user baseline was enumerated (every oracle fixture, so the
+  // goldens are untouched). It used to be `search.conventionalBaseline` unconditionally — the FIXED
+  // `taxable-first`/conversion-0 candidate — while the shipped nameplate read "Compared with your
+  // plan today" and the hero read "than today's plan". For any household whose entered order is not
+  // `taxable-first` (including the DEFAULT `proportional` draft) the dollar hero was measured
+  // against a plan they never chose, under a label saying it was theirs.
+  //
+  // `plans/4-recommendation.md` already ratified this: "the rendered delta is current→recommended,
+  // NEVER conventional-default→recommended". This is a regression being closed, not a new choice.
+  //
+  // SELECTION IS UNTOUCHED. `search.userBaseline` feeds the DISPLAY only; the shrinkage prior and
+  // the incumbent tie-break still anchor on the conventional arm (`select.ts`), so no ranking moves
+  // and the household's own habit is still never laundered into advice.
   const winnerEval = search.evaluations[selection.winnerIndex]!
   const winner = armOfB(winnerEval, goal)
-  const baseline = armOfB(search.conventionalBaseline, goal)
+  const displayedBaselineEval = search.userBaseline ?? search.conventionalBaseline
+  const baseline = armOfB(displayedBaselineEval, goal)
   if (winner === undefined || baseline === undefined) {
     return refused(
       'held-out-infeasible',
@@ -513,7 +529,9 @@ export function solve(token: OracleClearedToken, input: SolveInput, shouldAbort?
   const armIndices = new Set<number>([
     selection.winnerIndex,
     ...(selection.runnerUpIndex !== undefined ? [selection.runnerUpIndex] : []),
-    search.evaluations.indexOf(search.conventionalBaseline),
+    // The DISPLAYED baseline (not necessarily the conventional one since 2026-08-03) — this set is
+    // "arms that render", and the pruned field is by definition what does not.
+    search.evaluations.indexOf(displayedBaselineEval),
   ])
   const prunedScores: SolvePrunedScore[] = []
   selection.rankedIndices.forEach((candIndex, rankIndex) => {
@@ -591,7 +609,10 @@ export function solve(token: OracleClearedToken, input: SolveInput, shouldAbort?
   // The DELTA hero's skew (the median-advantage increment): the paired winner-vs-no-action per-path
   // goal differences on seed-set B — the same outcomes the displayed arms were built from, so the
   // disclosed mean IS the hero's delta (linearity; the committed-fixture coherence arm pins it).
-  const deltaSkew = deltaSkewFor(winnerEval.b, search.conventionalBaseline.b, goal, heirBracket)
+  // Paired against the DISPLAYED baseline, so the disclosed mean IS the hero's delta (linearity).
+  // Re-anchoring the hero without re-anchoring this would have made the skew describe a different
+  // subtraction than the number it sits beside — the committed-fixture coherence arm pins the pair.
+  const deltaSkew = deltaSkewFor(winnerEval.b, displayedBaselineEval.b, goal, heirBracket)
 
   return {
     kind: 'recommended',

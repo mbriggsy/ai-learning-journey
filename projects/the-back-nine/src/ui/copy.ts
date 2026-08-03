@@ -1526,6 +1526,21 @@ export const copy = {
   recommendGradeConfident: 'A confident lean',
   recommendGradeCoinFlip: 'A close call',
   // The no-action baseline nameplate (Q7) — a STATIC label, NO number, the A↔B residual never rendered.
+  //
+  // ⚠️ THIS SENTENCE WAS FALSE UNTIL 2026-08-03, AND THE FIX WAS IN THE ENGINE, NOT HERE. `solve.ts`
+  // built the displayed baseline from `search.conventionalBaseline` — the FIXED
+  // `taxable-first`/conversion-0 candidate, never the household's entered order — so for anyone whose
+  // order was not `taxable-first` (including the DEFAULT `proportional` draft) the dollar hero was
+  // measured against a plan they never chose, under a label saying it was theirs. It now builds from
+  // `search.userBaseline` (unconditionally injected by `enumerateSolveCandidates`), so the label is
+  // true as written.
+  //
+  // FOUR STRINGS RIDE THAT ONE SEAM: this nameplate, `recVizWithoutLabel` ("Your plan today"), and
+  // BOTH hero slots (`recDeltaLeaveMore` / `recDeltaPayLessTax`, "than today's plan"). They are worded
+  // as claims about the READER'S OWN plan and are only true while the engine displays the user
+  // baseline. ⛔ IF YOU EVER RE-ANCHOR `solve.ts`'s displayed baseline back to the conventional arm,
+  // ALL FOUR BECOME LIES IN THE SAME COMMIT — rename them in that commit or do not make the change.
+  // `solve.test.ts` pins the seam so this cannot drift silently.
   recommendBaselineNameplate: 'Compared with your plan today',
   // The calm couldn't-work-it-out state (a solve refusal / mint-failure / demotion-withhold — each a
   // structured bin, surfaced as ONE honest retry line, never a raw reason code or a blank).
@@ -1541,6 +1556,11 @@ export const copy = {
   // The compose state (surplus + no-change): NO-dollar reassurance, the word "already" carrying the
   // relief, the inherited confidence carrying the honesty. Never a fabricated dollar hero, never "safe
   // either way" (DEAD COPY). recCompose* ⇒ require-hedge-swept ("likely" carries it).
+  // ⚠️ GATED ON `noChange`, WHICH CHANGED MEANING 2026-08-03. It used to mean "the winner is the
+  // CONVENTIONAL default", so this line told a `proportional` household they were "already on one of
+  // the strongest paths" while the actual recommendation was to switch off their order. `noChange` now
+  // means "the crowned plan IS the one you already run" (compared by PLAN, not index — see
+  // `select.ts`'s `isNoChange`), which is the only reading under which the word "already" is true.
   recComposeAlready:
     'You’re already on one of the strongest paths we tested — nothing else we tried looks likely to pull clearly ahead.',
 
@@ -1616,6 +1636,8 @@ export const copy = {
     'This leans on your marketplace benchmark and cost-sharing figures; if those shift, the edge here could move.',
   // The viz arm labels (string-free viz; DIRECT end-of-line labels, never a color legend). Plain nouns.
   recVizWithLabel: 'The recommended strategy',
+  // Names the household's OWN plan — true only while `solve.ts` displays `search.userBaseline`.
+  // See the coupling warning on `recommendBaselineNameplate`; all four strings move together.
   recVizWithoutLabel: 'Your plan today',
   // Act-4 · U16 §S4 — the RUNNER-UP comparison viz arm label (winner vs runner-up, one tap down). A
   // plain noun (not a plan-moving claim — the hedged claim is `recRunnerUpWhy`); the recommended arm
@@ -2375,7 +2397,9 @@ export const slots = {
   //     control-scoped by their recDelta*/recSkew*/recHold* prefixes ⇒ require-hedge-swept (the sample
   //     renders in copyGuard.test.ts's SLOT_RENDER must WEAR a modal — each does). ---
   /** The delta-as-hero for `leave-more`: the goal-dollar DELTA as a comparative, the WORD ("more")
-   *  carrying direction so the magnitude reads sign-free. "about" is the require-hedge modal. */
+   *  carrying direction so the magnitude reads sign-free. "about" is the require-hedge modal.
+   *  ⚠️ "today's plan" names the READER'S OWN order — true only while `solve.ts` displays
+   *  `search.userBaseline`. See the coupling warning on `recommendBaselineNameplate`. */
   recDeltaLeaveMore: (deltaFormatted: string): string =>
     `Leaves about $${deltaFormatted} more to your heirs than today’s plan, after taxes.`,
   /** The delta-as-hero for `pay-less-tax` (the surviving pivot: "keeps ~$X more" — the DEAD "safe

@@ -594,6 +594,43 @@ describe('§S4 the shrinkage prior is the CONVENTIONAL baseline — NEVER the us
     // conventional-incumbent wins. Anchored (wrongly) on the user baseline (tax mean 95), U would win.
     expect(result.winnerId).toBe('conventional:taxable-first:0')
     expect(result.winnerId).not.toBe('baseline:custom:0')
-    expect(result.noChange).toBe(true)
+    // ⚠️ `noChange` FLIPPED true → false on 2026-08-03, and this fixture is the defect's own witness.
+    //
+    // The crown is UNCHANGED (asserted above) — the shrinkage prior and the incumbent tie-break still
+    // anchor on the conventional arm, which is what this test exists to protect. What changed is the
+    // QUESTION `noChange` answers. It used to mean "the winner is the conventional default"; it now
+    // means "the winner is the plan this household already runs".
+    //
+    // Here the household runs U (`baseline:custom:0`) and we crown C (`conventional:taxable-first:0`).
+    // That IS a change — we are telling them to switch off their custom order. The old `true` made the
+    // surface say "You're already on one of the strongest paths" to a household whose recommendation
+    // was to move, which is precisely the calm-but-wrong the re-anchoring removes.
+    expect(result.noChange, 'the winner is NOT the household’s own custom order — this is a change').toBe(false)
+  })
+
+  it('noChange is TRUE when the crown IS the household’s plan — even though the crowned INDEX is not theirs', () => {
+    // The duplicate case, and the reason `noChange` compares PLANS rather than indices. A household
+    // already on the conventional order injects a user baseline that is strategically identical to the
+    // conventional arm; the incumbent tie-break crowns the CONVENTIONAL index, so an index comparison
+    // would report "here is a change" to a household that is already doing exactly the winning thing.
+    const userIsConventional: CandidateStrategy = { policy: 'taxable-first', conversion: null, provenance: 'user-baseline' }
+    const dupEvaluations: readonly CandidateEvaluation[] = [
+      evalOf(C, [100, 100, 100, 100]),
+      evalOf(userIsConventional, [100, 100, 100, 100]),
+      evalOf(X_PROP, [98, 102, 90, 98]),
+    ]
+    const result = selectRecommendation({
+      ...search,
+      evaluations: dupEvaluations,
+      rankedA: dupEvaluations.map((e) => e.a),
+      conventionalBaseline: dupEvaluations[0]!,
+      userBaseline: dupEvaluations[1]!,
+    })
+    expect(result.kind).toBe('selected')
+    if (result.kind !== 'selected') throw new Error('unreachable')
+    // The crowned INDEX is the conventional arm, not the user's…
+    expect(result.winnerId).toBe('conventional:taxable-first:0')
+    // …and `noChange` is still TRUE, because the crowned PLAN is the one they already run.
+    expect(result.noChange, 'same plan, different provenance — never call that a change').toBe(true)
   })
 })

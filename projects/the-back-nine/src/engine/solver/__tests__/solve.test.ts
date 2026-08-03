@@ -17,6 +17,7 @@ import { runRankingStability } from '../../validation/rankingStability'
 import { mintOracleToken, epochDayFromIsoDate, type OracleClearedToken } from '../../validation/oracleToken'
 import { acaEnhancedSubsidyStatus, isUnsourced, medicareCostTrend } from '@engine/constants'
 import { deriveSeedB } from '../../validation/heldOutSeed'
+import { SOLVER_CODE_VERSION } from '../solverCodeVersion'
 import { solverRunFingerprint, type SolverRunRanking } from '../../validation/solverRunFingerprint'
 import { SOLVER_CASES } from '../../reference/solver-cases'
 import { evaluateCandidates } from '../../validation/evaluate'
@@ -138,7 +139,7 @@ describe('solve() — the gate (§S5 (1))', () => {
       expect(Number.isFinite(arm.headlineStatisticB)).toBe(true)
     }
     expect(out.seedB).toBe(deriveSeedB(SEED_A))
-    expect(out.solverCodeVersion).toBe(1)
+    expect(out.solverCodeVersion).toBe(SOLVER_CODE_VERSION)
     expect(out.rankedIds.length).toBe(5) // the WHOLE field ranks — conversions included (the trend clause clear)
   }, 120_000)
 
@@ -418,7 +419,7 @@ describe('solve() → the wire round-trip (§S5 (4))', () => {
       deltaSkew: { meanReal: 12_345, medianReal: 4_000, p10Real: -1_000, p90Real: 30_000, skewDirection: 'upside', meanMinusMedianReal: 8_345 },
       withheldConversionLevers: [],
       disclosedDirectional: [],
-      solverCodeVersion: 1,
+      solverCodeVersion: SOLVER_CODE_VERSION,
     }
     const view = solveFromWire(packSolveWire(payload))
     expect(view.ok).toBe(true)
@@ -549,4 +550,103 @@ describe('solve() — the DELTA skew disclosure (the median-advantage increment)
     } as unknown as Parameters<typeof deltaSkewFor>[0]
     expect(deltaSkewFor(taxed, taxed, 'leave-more', undefined)).toBeUndefined()
   })
+})
+
+/**
+ * THE DISPLAYED BASELINE IS THE HOUSEHOLD'S OWN PLAN (re-anchored 2026-08-03) — the seam four shipped
+ * strings depend on and none of them can check.
+ *
+ * `copy.ts` renders "Compared with your plan today", "Your plan today", and BOTH dollar heroes as
+ * "…than today's plan". Those are claims about the READER'S OWN order. Until this change `solve.ts`
+ * built the displayed arm from `search.conventionalBaseline` — the FIXED `taxable-first`/conversion-0
+ * candidate — so for every household whose entered order was not `taxable-first` (including the
+ * DEFAULT `proportional` draft) the hero was measured against a plan they never chose, under a label
+ * saying it was theirs. `plans/4-recommendation.md` had already ratified the opposite ("the rendered
+ * delta is current→recommended, NEVER conventional-default→recommended"), so this was a regression.
+ *
+ * The main roster above cannot witness it: its household IS `taxable-first`, so the two arms coincide.
+ * This one enters `proportional` — the shipped default — and the arms genuinely differ.
+ */
+describe('solve() — the displayed baseline is the household’s OWN entered strategy', () => {
+  const BASE_UB: SimulationParams = { ...BASE, drawdownPolicy: 'proportional' }
+  // The live roster shape: the grid + the conventional prior + the user's own order carried as the
+  // out-of-grid labeled baseline (what `enumerateSolveCandidates` injects UNCONDITIONALLY).
+  const CANDIDATES_UB: readonly CandidateStrategy[] = [
+    { policy: 'taxable-first', conversion: null, provenance: 'conventional-baseline' },
+    { policy: 'pre-tax-first', conversion: null, provenance: 'grid' },
+    { policy: 'proportional', conversion: null, provenance: 'grid' },
+    conv(20_000),
+    conv(40_000),
+    { policy: 'proportional', conversion: null, provenance: 'user-baseline' },
+  ]
+
+  function mintTokenUB(): OracleClearedToken {
+    const oracleOut = runOptimalityOracle(SOLVER_CASES)
+    if (!('report' in oracleOut)) throw new Error('the committed oracle roster must pass')
+    const stabilityOut = runRankingStability({
+      base: BASE_UB,
+      candidates: CANDIDATES_UB,
+      seedA: SEED_A,
+      seedB: deriveSeedB(SEED_A),
+      perturbIndex: 3,
+      siblingIndex: 0,
+      ranking: RANKING,
+      tieTolerance: 0,
+    })
+    if (!('report' in stabilityOut)) {
+      throw new Error(`stability must pass: ${(stabilityOut as { violations: readonly string[] }).violations.join(' | ')}`)
+    }
+    const mint = mintOracleToken({
+      params: BASE_UB,
+      candidateConversionAmounts: [undefined, undefined, undefined, 20_000, 40_000, undefined],
+      todayEpochDay: TODAY,
+      oracleReport: oracleOut.report,
+      stabilityReport: stabilityOut.report,
+    })
+    if (!('token' in mint)) throw new Error(`token must mint: ${JSON.stringify((mint as { withheld: unknown }).withheld)}`)
+    return mint.token
+  }
+
+  it('displays the USER baseline arm, never the conventional one (the mutant-killer for the four copy strings)', () => {
+    const out = solve(mintTokenUB(), {
+      base: BASE_UB,
+      candidates: CANDIDATES_UB,
+      seedA: SEED_A,
+      ranking: RANKING,
+      tieTolerance: 0,
+      _gradeMinPaths: 50,
+    })
+    expect(out.kind).toBe('recommended')
+    if (out.kind !== 'recommended') throw new Error('unreachable')
+    // ⛔ Re-anchoring `solve.ts` step (6) back to `search.conventionalBaseline` reds HERE — and that
+    // is the whole point: the four copy strings would silently become lies in the same commit.
+    expect(
+      out.noActionBaseline.id,
+      'the arm labelled "your plan today" must BE the household’s entered order',
+    ).toBe('baseline:proportional:0')
+    expect(out.noActionBaseline.id).not.toBe('conventional:taxable-first:0')
+    // Non-vacuity: the conventional arm really IS a different, present candidate — so the assertion
+    // above is a genuine choice between two available arms, not the only thing solve could return.
+    expect(CANDIDATES_UB.some((c) => c.provenance === 'conventional-baseline')).toBe(true)
+    expect(out.rankedIds).toContain('conventional:taxable-first:0')
+    // …and it carries a real displayed distribution like any other rendered arm.
+    expect(out.noActionBaseline.distributionB.terminalValuesReal.length).toBe(BASE_UB.paths)
+  }, 120_000)
+
+  it('noChange is FALSE when the crown is not the household’s own order — and the copy depends on it', () => {
+    const out = solve(mintTokenUB(), {
+      base: BASE_UB,
+      candidates: CANDIDATES_UB,
+      seedA: SEED_A,
+      ranking: RANKING,
+      tieTolerance: 0,
+      _gradeMinPaths: 50,
+    })
+    if (out.kind !== 'recommended') throw new Error('unreachable')
+    // `noChange` gates `recComposeAlready` — "You're already on one of the strongest paths". It is
+    // true ONLY when the crowned PLAN is the one the household already runs. Whatever wins here, the
+    // flag must agree with the crowned id rather than with the conventional arm's identity.
+    const winnerIsTheirs = out.winner.id === 'baseline:proportional:0' || out.winner.id === 'grid:proportional:0'
+    expect(out.noChange, `crown=${out.winner.id} — "already" must track the household’s own plan`).toBe(winnerIsTheirs)
+  }, 120_000)
 })

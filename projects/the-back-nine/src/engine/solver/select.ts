@@ -13,7 +13,18 @@
  * improvement over the prior exceed z · SE of that paired difference?".
  *
  * THE PRIOR IS THE CONVENTIONAL TAXABLE-FIRST ORDERING, NEVER THE USER'S CUSTOM (shrinking toward the
- * user's own habit would launder the status quo into advice — §S4). A-SIDE ONLY: the advantage AND
+ * user's own habit would launder the status quo into advice — §S4).
+ *
+ * ⚠️ BUT `noChange` IS ANCHORED ON THE USER'S OWN STRATEGY, AND THAT IS NOT A CONTRADICTION (2026-08-03).
+ * Two anchors, two jobs. The SHRINKAGE PRIOR and the INCUMBENT TIE-BREAK stay conventional — that is
+ * the sentence above, and moving them would let a household's habit win near-ties and manufacture a
+ * "stay put" recommendation. `noChange` answers a different question entirely — "is the crowned plan
+ * the one they already run?" — which is what the shipped copy ("You're already on one of the strongest
+ * paths") actually claims. It used to be keyed on the conventional index, so a `proportional`
+ * household was told it was already on a strong path while the real recommendation was to switch.
+ * Read `isNoChange` before assuming this module is conventional-keyed throughout.
+ *
+ * A-SIDE ONLY: the advantage AND
  * its CRN-difference SE are both read from seed-set A (the selection side); seed-set B carries the
  * surplus-regime agreement check and (downstream, S5) every displayed figure + the grade — never the
  * crown (crowning on B would re-contaminate the held-out).
@@ -40,7 +51,7 @@ import {
   type CandidateOutcome,
   type OracleGoal,
 } from '../validation/evaluate'
-import { solverCandidateId, type CandidateStrategy } from './candidates'
+import { sameDecumulationPlan, solverCandidateId, type CandidateStrategy } from './candidates'
 import type { SolverSearchResult } from './search'
 
 // ---- (1) the shrinkage primitive (a pure exported seam — insight 048) -----------------------------
@@ -97,10 +108,17 @@ export interface SelectionSelected {
    *  infeasible candidates ranked worst, never dropped — the R21 comparative field). */
   readonly rankedIndices: readonly number[]
   readonly rankedIds: readonly string[]
-  /** The winner IS the conventional prior — the no-change routing signal (plan R25): no candidate's
-   *  advantage survived the shrinkage, so the recommendation is "you're already on the best path we
-   *  found", never a fabricated active move. A structured flag, no copy (Q6). `false` when no prior
-   *  was present (an oracle-fixture subset without the conventional baseline). */
+  /**
+   * The winner IS THE HOUSEHOLD'S OWN ENTERED STRATEGY — the no-change routing signal (plan R25):
+   * the recommendation is "you're already on the best path we found", never a fabricated active move.
+   * A structured flag, no copy (Q6).
+   *
+   * ⚠️ RE-ANCHORED 2026-08-03 — this used to mean "the winner is the CONVENTIONAL prior", which is a
+   * different claim, because the conventional arm is the fixed `taxable-first`/conversion-0
+   * candidate and never the household's entered order. Compared by PLAN, not index (see
+   * `isNoChange` / `sameDecumulationPlan`). Falls back to the conventional test when no user
+   * baseline was enumerated (the oracle fixtures), and is `false` when neither is present.
+   */
   readonly noChange: boolean
   /** The 10/10→surplus pivot signal (§S4.4): the winner is over-funded on seed-set A AND seed-set B
    *  (raw pre-clamp survival, quantize-then-compare ≥ the over-funded band). Trips ONLY on A/B
@@ -142,6 +160,22 @@ export interface SelectCoreInput {
   /** Enumeration index of the conventional prior (the shrinkage anchor). `undefined` ⇒ no prior in
    *  the set (a fixture subset) ⇒ no shrinkage (the raw reference ranking; the identity still holds). */
   readonly conventionalIndex?: number
+  /**
+   * Enumeration index of the HOUSEHOLD'S OWN entered strategy (`provenance: 'user-baseline'`) — read
+   * for `noChange` ONLY, and never for the crown.
+   *
+   * ⚠️ THE SEPARATION IS THE WHOLE POINT (2026-08-03). The shrinkage prior and the incumbent
+   * tie-break stay anchored on `conventionalIndex` — council-ratified, and pinned by the
+   * "the user's habit is not laundered into advice" arm in `select.test.ts`. Moving THOSE onto the
+   * household's own habit would let it win near-ties and manufacture a "stay put" recommendation:
+   * a new calm-but-wrong in the opposite direction. What was wrong was only the QUESTION `noChange`
+   * answers — it asked "is the winner the conventional default?" while the shipped copy says
+   * "compared with your plan today". Two anchors, two jobs.
+   *
+   * `undefined` ⇒ no user baseline was enumerated (every oracle fixture) ⇒ `noChange` falls back to
+   * the conventional index, byte-identically to the pre-2026-08-03 behaviour, so the goldens hold.
+   */
+  readonly userBaselineIndex?: number
   /** `'off'` forces the shrinkage term to zero (the identity mode). Default `'on'`. */
   readonly shrinkage?: 'on' | 'off'
 }
@@ -185,7 +219,7 @@ interface RankRecord {
  * default is robust), then `candidateTieBreak`. Infeasible candidates rank WORST (never dropped).
  */
 export function selectCore(input: SelectCoreInput): SelectionResult {
-  const { outcomesA, outcomesB, goal, tieTolerance, heirBracket, conventionalIndex, shrinkage } = input
+  const { outcomesA, outcomesB, goal, tieTolerance, heirBracket, conventionalIndex, userBaselineIndex, shrinkage } = input
   if (!(Number.isFinite(tieTolerance) && tieTolerance >= 0)) {
     throw new Error(`[select] tieTolerance must be finite ≥ 0 (got ${tieTolerance}) — a NaN admits everything (insight 010)`)
   }
@@ -323,9 +357,42 @@ export function selectCore(input: SelectCoreInput): SelectionResult {
     runnerUpId,
     rankedIndices,
     rankedIds,
-    noChange: conventionalIndex !== undefined && winner.index === conventionalIndex,
+    noChange: isNoChange(winner, outcomesA, userBaselineIndex, conventionalIndex),
     surplusRegime,
   }
+}
+
+/**
+ * `noChange` — "the crowned plan IS what the household already runs."
+ *
+ * ANCHORED ON THE USER BASELINE, not the conventional default (2026-08-03). It used to read
+ * `winner.index === conventionalIndex`, which answers a different question than the shipped copy
+ * asks: the conventional arm is the FIXED `taxable-first`/conversion-0 candidate, never the
+ * household's entered order. For any household whose order is not `taxable-first` — including the
+ * DEFAULT `proportional` draft — that told them "you're already on one of the strongest paths"
+ * while the real recommendation was to switch.
+ *
+ * COMPARED BY PLAN, NEVER BY INDEX (`sameDecumulationPlan`, whose comment carries the full reason).
+ * The user-baseline candidate is a strategic duplicate of an enumerated arm for every non-`custom`
+ * policy, and ties resolve toward the incumbent / the earlier index, so the crowned INDEX is often
+ * not the user-baseline index even when the crowned PLAN is theirs.
+ *
+ * FALLBACK: with no user baseline in the set (every oracle fixture) this is byte-identically the
+ * old conventional-index test, so `caseNoChange` and the goldens are untouched.
+ */
+function isNoChange(
+  // The common shape of BOTH ranked arms — `rankedRecords` concatenates scored `RankRecord`s with
+  // the infeasible `{index, candidate}` pairs, and an infeasible winner must answer this too.
+  winner: { readonly index: number; readonly candidate: CandidateStrategy },
+  outcomesA: readonly CandidateOutcome[],
+  userBaselineIndex: number | undefined,
+  conventionalIndex: number | undefined,
+): boolean {
+  const userBaseline = userBaselineIndex !== undefined ? outcomesA[userBaselineIndex]?.candidate : undefined
+  if (userBaseline !== undefined) return sameDecumulationPlan(winner.candidate, userBaseline)
+  // The pre-2026-08-03 test, VERBATIM — index equality against the conventional prior. Reached only
+  // when no user baseline was enumerated (the oracle fixtures), so the goldens see no change at all.
+  return conventionalIndex !== undefined && winner.index === conventionalIndex
 }
 
 // ---- the live entry (S5 consumes this) ------------------------------------------------------------
@@ -340,6 +407,9 @@ export function selectRecommendation(search: SolverSearchResult, opts?: { readon
   const outcomesA = search.evaluations.map((e) => e.a)
   const outcomesB = search.evaluations.map((e) => e.b)
   const conventionalIndex = search.evaluations.findIndex((e) => e.candidate.provenance === 'conventional-baseline')
+  // The household's own entered strategy — `noChange`'s anchor, NEVER the shrinkage prior's.
+  // `runSearch` already refuses a set carrying more than one, so `findIndex` cannot be ambiguous.
+  const userBaselineIndex = search.evaluations.findIndex((e) => e.candidate.provenance === 'user-baseline')
   return selectCore({
     outcomesA,
     outcomesB,
@@ -347,6 +417,7 @@ export function selectRecommendation(search: SolverSearchResult, opts?: { readon
     tieTolerance: search.tieTolerance,
     ...(search.heirBracket !== undefined ? { heirBracket: search.heirBracket } : {}),
     ...(conventionalIndex >= 0 ? { conventionalIndex } : {}),
+    ...(userBaselineIndex >= 0 ? { userBaselineIndex } : {}),
     ...(opts?.shrinkage !== undefined ? { shrinkage: opts.shrinkage } : {}),
   })
 }

@@ -33,4 +33,15 @@
  * un-re-presentable, because THIS build's ranking code cannot reproduce that build's ranking. A
  * `<` would silently bless it. Fail closed both ways.
  */
-export const SOLVER_CODE_VERSION = 1
+/*
+ * VERSION 2 (2026-08-03) — the displayed baseline and `noChange` were re-anchored from the
+ * CONVENTIONAL arm onto the HOUSEHOLD'S OWN entered strategy (`solve.ts` step (6), `select.ts`'s
+ * `isNoChange`). The candidate RANKING did not move — the shrinkage prior and the incumbent
+ * tie-break still anchor on the conventional arm — but `noChange` is PERSISTED on
+ * `SavedRecommendationV3`, and a v1 record's `noChange` was computed against a different question
+ * ("is the winner the conventional default?") than a v2 record's ("is the winner what you already
+ * run?"). Re-presenting a v1 flag under v2 copy would say "you're already on one of the strongest
+ * paths" on exactly the households this change exists to stop lying to. Bumped under this file's
+ * own when-in-doubt rule: an over-cautious re-run is honest; a stale flag read as current is not.
+ */
+export const SOLVER_CODE_VERSION = 2

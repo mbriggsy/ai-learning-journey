@@ -9,6 +9,7 @@ import { describe, expect, it } from 'vitest'
 import type { SimulationParams } from '@shared/model'
 import type { CandidateStrategy } from '../candidates'
 import { abortRequested, shouldCommitSolve, solveAborted, type ShouldAbort } from '../cancel'
+import { SOLVER_CODE_VERSION } from '../solverCodeVersion'
 import { runOptimalityOracle } from '../../validation/optimalityOracle'
 import { runRankingStability } from '../../validation/rankingStability'
 import { mintOracleToken, epochDayFromIsoDate, type OracleClearedToken } from '../../validation/oracleToken'
@@ -51,7 +52,11 @@ describe('solveAborted — the named bin (insight 092)', () => {
     const a = solveAborted('why')
     expect(a.kind).toBe('aborted')
     expect(a.detail).toBe('why')
-    expect(a.solverCodeVersion).toBe(1)
+    // Read from the constant, never re-typed: this arm's job is "the aborted bin CARRIES the version
+    // rather than a silent nothing", and a hard-coded literal made every legitimate bump look like a
+    // regression here (it did, at v2). The presence guard below is what keeps it non-vacuous.
+    expect(a.solverCodeVersion).toBe(SOLVER_CODE_VERSION)
+    expect(Number.isInteger(a.solverCodeVersion) && a.solverCodeVersion >= 1).toBe(true)
   })
 })
 

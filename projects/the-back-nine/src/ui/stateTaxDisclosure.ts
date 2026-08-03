@@ -3,10 +3,19 @@
  *
  * PURE chrome (insight 048): the honesty decision — which state clause a household reads — lives
  * HERE and is tested HERE, never in a render path. Every consumer (the verdict hero, the Roth
- * lever, the Healthcare door sheet) reads a boolean/`PricedState` off the ONE producer's-output
- * predicate (`pricedStateForRun`, intakeMap) and calls a compose function below — so the four
- * disclosure homes swap their state clause by the SAME rule (insight 078 — a defect-class sweep by
- * meaning, not by string), each gated independently at its own home.
+ * lever, the Healthcare door sheet, the recommendation's R7 disclosure rail) reads a
+ * boolean/`PricedState` off the ONE producer's-output predicate (`pricedStateForRun`, intakeMap)
+ * and calls a compose function below — so the disclosure homes swap their state clause by the SAME
+ * rule (insight 078 — a defect-class sweep by meaning, not by string), each gated independently at
+ * its own home.
+ *
+ * FIVE HOMES, not the spec's four. state-tax-build-spec.md:208 pins "×4 homes" — the three composed
+ * below plus the spend-help branch (`spendHelpKeyFor`, intakeMap:913). The RECOMMENDATION surface's
+ * disclosure rail is the FIFTH, and it was born unguarded: `recDiscStateTax` shipped as the only
+ * household-DEPENDENT builder with no condition, so an NC household read "this compares federal tax
+ * only" three inches under a spine that had just named their state. Before the 2026-08-02 NC lift no
+ * priced-state household could reach a committed recommendation, so it had never co-rendered — the
+ * contradiction was newly reachable, not a regression.
  *
  * THE MONOLITHIC-STRING TRAP (the spec's named landmine): the state-tax mention was embedded
  * mid-sentence (`verdictMedicareResidual`) and mid-comma-list (`rothOmissionsNote`,
@@ -89,4 +98,37 @@ export function composeRothOmissionsNote(
  *  chrome). */
 export function composeControlHealthOmissionsNote(statePriced: boolean): string {
   return statePriced ? copy.controlHealthOmissionsNoteStatePriced : copy.controlHealthOmissionsNote
+}
+
+/** The recommendation surface's state-tax disclosure (home #5): the shipped scope note, or `null`
+ *  when THIS run priced the household's state. A DROP, not a swap — matching homes #2/#3 (both
+ *  omission LISTS, as the R7 disclosure rail is) rather than home #1's affirm+narrow, so it needs no
+ *  new copy and no new require-hedge sweep. `recDiscStateTax` says the delta "compares federal tax
+ *  only"; for a priced household `lifetimeTaxPaidReal` carries the state layer, so the sentence is
+ *  simply false there and the honest move is to stop saying it.
+ *
+ *  EXHAUSTIVE by construction, for the reason {@link composeVerdictMedicareResidual} is: the drop is
+ *  honest only because the v1 roster is FLAT-or-zero, which makes the federal-only bracket-fill rails
+ *  provably neutral — no state term can move the optimal fill point when the state rate is the same
+ *  on every marginal dollar. A GRADUATED state (SC) joining `PricedState` breaks that proof and owes
+ *  a replacement caveat naming the residual, NOT this silence. Widening `PricedState` fails tsc here
+ *  until someone answers that.
+ *
+ *  ⚠️ KNOWN RESIDUAL, deliberately not covered here: neutrality is CROSS-SECTIONAL. NC's flat rate
+ *  STEPS DOWN by schedule (3.49 → 3.24 → 2.99), so converting later is cheaper in state tax — a
+ *  TIMING signal the federal-only rails cannot see. That is a ranking gap, not a disclosure gap, and
+ *  a scope note has never been the honest instrument for a mis-ranking (oracleToken.ts:112-133).
+ *  Filed in the register; do not "fix" it by restoring this sentence. */
+export function composeRecStateTaxDisclosure(pricedState: PricedState | undefined): string | null {
+  if (pricedState === undefined) return copy.recDiscStateTax
+  switch (pricedState) {
+    case 'NC':
+    case 'PA':
+    case 'FL':
+      return null
+    default: {
+      const never: never = pricedState
+      throw new Error(`unhandled priced state ${String(never)}`)
+    }
+  }
 }

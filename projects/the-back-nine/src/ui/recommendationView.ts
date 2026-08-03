@@ -38,6 +38,7 @@ import type { ConfidenceStatementView } from './ConfidenceStatement'
 import type { GradeSignalState } from './GradeSignal'
 import { copy, slots, type CopyKey } from './copy'
 import { formatAbsoluteDollar, formatAxisDollar, formatBracketPercent, formatDeltaDollar } from './money'
+import { composeRecStateTaxDisclosure } from './stateTaxDisclosure'
 
 // ---- the disclosures adjacent to the delta (§S3 "its nets" — R7 on the recommendation surface) ----
 
@@ -62,17 +63,26 @@ export interface RecommendationDisclosure {
 /** Compile-enforced completeness: EVERY disclosure id maps to a builder that returns its resolved
  *  disclosure or `null` when it does not apply to this payload. A new id fails `tsc` here until its
  *  builder (and its copy) is authored — the R7 "every assumption visible or accounted for" spirit, on
- *  the surface's own closed vocabulary. Pure; strings from copy.ts, the heir-bracket percent pre-formatted. */
+ *  the surface's own closed vocabulary. Pure; strings from copy.ts, the heir-bracket percent pre-formatted.
+ *
+ *  `pricedState` is the run's OWN priced-state read (`pricedStateForRun`, threaded from Result — never
+ *  `draft.retirementState`, insight 081). It rides beside the payload because the solve payload does
+ *  not carry retirement state; the state-tax builder is the only consumer today. */
 const DISCLOSURE_BUILDERS: Record<
   RecommendationDisclosureId,
-  (p: SolveRecommendation) => RecommendationDisclosure | null
+  (p: SolveRecommendation, pricedState: PricedState | undefined) => RecommendationDisclosure | null
 > = {
   // Always: the Social Security claim ages are held FIXED (not optimized in the comparison).
   'ss-claim-fixed': () => ({ id: 'ss-claim-fixed', text: copy.recDiscSsClaimFixed, disposition: 'disclosure' }),
   // Always: the delta's federal-tax scope (the 3.8% NIIT surtax caveat).
   niit: () => ({ id: 'niit', text: copy.recDiscNiit, disposition: 'disclosure' }),
-  // Always: state tax is priced only for the roster states — outside them the delta is federal-only.
-  'state-tax': () => ({ id: 'state-tax', text: copy.recDiscStateTax, disposition: 'disclosure' }),
+  // Priced-state households DROP it (home #5 — `composeRecStateTaxDisclosure` owns the decision and its
+  // exhaustive roster gate): the note says the delta "compares federal tax only", which is FALSE once the
+  // run priced their state, and it co-rendered with a spine that had just named that state.
+  'state-tax': (_p, pricedState) => {
+    const text = composeRecStateTaxDisclosure(pricedState)
+    return text === null ? null : { id: 'state-tax', text, disposition: 'disclosure' }
+  },
   // leave-more ONLY (mutant b): the assumed heir bracket the after-tax bequest is computed at. An
   // r7-editable SEAT (its editable home is the assumptions surface); the note names the assumed bracket.
   'heir-bracket': (p) =>
@@ -96,9 +106,17 @@ export const DISCLOSURE_ORDER: readonly RecommendationDisclosureId[] = [
   'aca-slcsp',
 ]
 
-/** The applicable disclosures for a committed recommendation, in render order. Pure. */
-export function disclosuresFor(payload: SolveRecommendation): readonly RecommendationDisclosure[] {
-  return DISCLOSURE_ORDER.map((id) => DISCLOSURE_BUILDERS[id](payload)).filter(
+/** The applicable disclosures for a committed recommendation, in render order. Pure.
+ *
+ *  `pricedState` is REQUIRED (explicitly `undefined` for not-priced / 'elsewhere' / unbuilt) — not
+ *  optional. This whole defect existed because a value that WAS computed (`Result.tsx`'s
+ *  `statePricedNote`) was simply never handed down; an optional parameter would rebuild that exact
+ *  trapdoor, where forgetting to pass it silently restores the false sentence. */
+export function disclosuresFor(
+  payload: SolveRecommendation,
+  pricedState: PricedState | undefined,
+): readonly RecommendationDisclosure[] {
+  return DISCLOSURE_ORDER.map((id) => DISCLOSURE_BUILDERS[id](payload, pricedState)).filter(
     (d): d is RecommendationDisclosure => d !== null,
   )
 }
@@ -275,6 +293,11 @@ export interface RecommendationViewOpts {
    *  context; never re-derived, never a second survival claim. Absent on a route with no confidence
    *  reading (the date route). */
   readonly spineConfidence?: ConfidenceStatementView
+  /** The PricedState THIS run priced (`pricedStateForRun`, intakeMap) — `undefined` for not-priced /
+   *  'elsewhere' / unbuilt. Drops the state-tax scope note, which is false for a priced household.
+   *  Optional HERE (many in-isolation arms drive the view with no draft in hand) but REQUIRED at the
+   *  pure composer `disclosuresFor`, which is where the honesty decision actually lands. */
+  readonly pricedState?: PricedState
 }
 
 /** Map the store's solve channel to the recommend-second view. Pure; every string resolved. */
@@ -417,7 +440,7 @@ function recommendedView(payload: SolveRecommendation, opts: RecommendationViewO
         : undefined,
     skew: skewQuote(payload),
     withheldConversion: withheldConversionView(payload),
-    disclosures: disclosuresFor(payload),
+    disclosures: disclosuresFor(payload, opts?.pricedState),
     // The two-arm comparison viz — ACTIVE mode only (no-change AND the seed-B display inversion show no
     // fabricated delta bars; the inversion would otherwise paint the winner AHEAD, contradicting the
     // ranking). The winner/baseline seed-B headline magnitudes + pre-formatted string-free labels; the

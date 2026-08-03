@@ -232,8 +232,8 @@ export function Result({
   // route's OWN built-params overlay decision (never draft.retirementState — insight 081; never a
   // bare isDateRoute disjunct — insight 080). undefined for not-priced / 'elsewhere' / unbuilt /
   // the degenerate-overlay household. Threaded to every disclosure home (the verdict residual's
-  // affirmation names the state; the Roth lever + Healthcare sheet drop the state-tax omission),
-  // each gating on `!== undefined`.
+  // affirmation names the state; the Roth lever + Healthcare sheet drop the state-tax omission; the
+  // RECOMMENDATION surface drops its federal-only scope note), each gating on `!== undefined`.
   const statePricedNote = useMemo(() => pricedStateForRun(snapshot.draft), [snapshot.draft])
   const enhancedApplied = snapshot.draft.enhancedSubsidies === true
   // The wire's per-year healthcare series (spine headline runs only — presence-keyed).
@@ -476,6 +476,7 @@ export function Result({
       {!isDateRoute(snapshot.draft) && (
         <RecommendationSurface
           solve={snapshot.solve}
+          pricedState={statePricedNote}
           onRepick={() => setGoalOpen(true)}
           recSave={recSave}
         />

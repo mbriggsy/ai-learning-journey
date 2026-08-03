@@ -29,6 +29,7 @@
  */
 import { Suspense, lazy, useEffect, useRef } from 'react'
 import type { SolveAnswer } from '@store/memoryModel'
+import type { PricedState } from '@engine/constants/stateTax'
 import { useLiveAnnouncer } from '@intake/a11y'
 import type { ConfidenceStatementView } from './ConfidenceStatement'
 import { GradeSignal } from './GradeSignal'
@@ -97,6 +98,7 @@ const RecommendationViz = lazy(() =>
 export function RecommendationSurface({
   solve,
   spineConfidence,
+  pricedState,
   onRepick,
   recSave,
 }: {
@@ -104,6 +106,11 @@ export function RecommendationSurface({
   /** The spine's rendered confidence object (Q1 source-bind) — threaded to the view model so the
    *  survival context is REUSED by reference, never a second authored survival claim. */
   readonly spineConfidence?: ConfidenceStatementView
+  /** The PricedState THIS run priced (`pricedStateForRun`, threaded from Result) — drops the
+   *  state-tax scope note, which claims the delta is federal-only and is FALSE for a priced
+   *  household. Optional: an in-isolation surface (the unit tests) has no draft, and `undefined`
+   *  keeps the shipped not-priced words. */
+  readonly pricedState?: PricedState
   /** §S4 — the goal RE-PICK affordance: the committed beat's calm "aim at a different goal" door
    *  (the caller owns the GoalPicker + the dispatch; the un-saved hypothetical is freely re-aimable, a
    *  re-pick VISIBLY re-solves and both futures update). Optional — a surface mounted WITHOUT it (the
@@ -133,7 +140,10 @@ export function RecommendationSurface({
     }
   }, [solve, announcer])
 
-  const view = recommendationView(solve, spineConfidence !== undefined ? { spineConfidence } : undefined)
+  // Both opts are pass-through-optional (`exactOptionalPropertyTypes` is off, so an undefined member
+  // reads identically to an absent one) — the object is always built now that a SECOND field rides it,
+  // so adding a third can never be silently dropped by a stale one-field guard.
+  const view = recommendationView(solve, { spineConfidence, pricedState })
 
   // §S5 (a) — the save gesture's START, through the SAME region the solve channel uses, for the same
   // reason: the slot swaps whole nodes per arm, so a `role='status'` that mounts already-populated

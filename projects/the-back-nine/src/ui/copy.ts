@@ -1532,15 +1532,26 @@ export const copy = {
   // `taxable-first`/conversion-0 candidate, never the household's entered order — so for anyone whose
   // order was not `taxable-first` (including the DEFAULT `proportional` draft) the dollar hero was
   // measured against a plan they never chose, under a label saying it was theirs. It now builds from
-  // `search.userBaseline` (unconditionally injected by `enumerateSolveCandidates`), so the label is
-  // true as written.
+  // `search.userBaseline` (unconditionally injected by `enumerateSolveCandidates`).
+  //
+  // ⚠️ AND IT TOOK TWO FIXES, BECAUSE THE PLAN HAS TWO CONTROLS. The first pass re-anchored the
+  // WITHDRAWAL ORDER and left the other coupled control behind: `enumerateCandidates` had no field in
+  // which a conversion could be expressed, so the baseline was minted `conversion: null` and
+  // `applyCandidate` stripped the base's schedule — for a household running the shipped Roth lever,
+  // "your plan today" was their order with their conversion DELETED, a different "today" from the one
+  // the spine band directly above it draws. Closed the same day: the household's own
+  // `draft.rothConversion` is threaded through `solveDispatch` → `enumerateSolveCandidates` →
+  // the baseline arm, and `solveAnchor.test.ts` pins the identity as a REDUCE-TO-SPINE assertion
+  // (`applyCandidate(base, userBaseline)` deep-equals the household's own params).
   //
   // FOUR STRINGS RIDE THAT ONE SEAM: this nameplate, `recVizWithoutLabel` ("Your plan today"), and
   // BOTH hero slots (`recDeltaLeaveMore` / `recDeltaPayLessTax`, "than today's plan"). They are worded
-  // as claims about the READER'S OWN plan and are only true while the engine displays the user
-  // baseline. ⛔ IF YOU EVER RE-ANCHOR `solve.ts`'s displayed baseline back to the conventional arm,
-  // ALL FOUR BECOME LIES IN THE SAME COMMIT — rename them in that commit or do not make the change.
-  // `solve.test.ts` pins the seam so this cannot drift silently.
+  // as claims about the READER'S OWN plan and are only true while the displayed baseline is the user
+  // baseline AND that baseline carries BOTH of the household's controls. ⛔ IF YOU EVER RE-ANCHOR
+  // `solve.ts`'s displayed baseline back to the conventional arm — OR DROP EITHER CONTROL FROM THE
+  // INJECTED BASELINE — ALL FOUR BECOME LIES IN THE SAME COMMIT: rename them in that commit or do not
+  // make the change. `solve.test.ts` pins the display seam and `solveAnchor.test.ts` pins the
+  // baseline's contents, so neither half can drift silently.
   recommendBaselineNameplate: 'Compared with your plan today',
   // The calm couldn't-work-it-out state (a solve refusal / mint-failure / demotion-withhold — each a
   // structured bin, surfaced as ONE honest retry line, never a raw reason code or a blank).

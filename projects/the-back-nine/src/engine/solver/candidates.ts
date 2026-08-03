@@ -144,10 +144,14 @@ export const solverCandidateId = (c: CandidateStrategy): string =>
  * already running?" — where provenance is precisely the thing that must not matter.
  *
  * ⚠️ THE REASON THIS EXISTS, AND WHY INDEX EQUALITY IS WRONG FOR IT. The injected user baseline is
- * ALWAYS a strategic duplicate of some enumerated arm unless the policy is `custom`: a
- * `taxable-first` household duplicates the conventional baseline, and every other `SEARCHED_POLICIES`
- * household (including the `proportional` DEFAULT) duplicates that policy's own conversion-0 grid
- * point. Ties between duplicates are broken toward the conventional incumbent / the earlier
+ * a strategic duplicate of some enumerated arm whenever the household runs no conversion and the
+ * policy is not `custom`: a `taxable-first` household duplicates the conventional baseline, and
+ * every other `SEARCHED_POLICIES` household (including the `proportional` DEFAULT) duplicates that
+ * policy's own conversion-0 grid point. (Since 2026-08-03 the baseline also CARRIES the household's
+ * own conversion when they run one — an amount the rail-anchored grid has no reason to contain — so
+ * a converting household's baseline is typically a genuinely new point rather than a duplicate. That
+ * widens the duplicate-free case; it does not touch the argument below, which is about the ties the
+ * duplicate case produces.) Ties between duplicates are broken toward the conventional incumbent / the earlier
  * enumeration index, so the crowned index is routinely NOT the user-baseline index even when the
  * crowned PLAN is bit-identical to the household's own. Comparing indices would tell a household
  * already running the winning strategy that we are recommending a change — a fresh calm-but-wrong
@@ -341,6 +345,22 @@ export function enumerateCandidates(opts: {
   readonly userBaseline?: {
     readonly policy: DrawdownPolicy
     readonly drawdownOrder?: readonly DrawdownOrderKey[]
+    /** THE HOUSEHOLD'S OWN CONVERSION, absent when they run none.
+     *
+     *  ⚠️ THIS FIELD EXISTS BECAUSE ITS ABSENCE WAS A CALM-BUT-WRONG DEFECT. Until 2026-08-03 the
+     *  injected baseline was minted `conversion: null` UNCONDITIONALLY and there was no way to say
+     *  otherwise — so for a household that had applied the shipped Roth lever, the arm the whole
+     *  recommendation surface labels *"your plan today"* (`copy.ts` recommendBaselineNameplate /
+     *  recVizWithoutLabel / recDeltaLeaveMore / recDeltaPayLessTax) was their withdrawal order with
+     *  their conversion DELETED — a plan they were not running, and a different "today" from the one
+     *  the spine band above it draws. It is the same shape as the drawdown-order defect `2652b7a6`
+     *  closed, on the other of the two coupled tax controls.
+     *
+     *  UNSCREENED BY DESIGN. The grid's legality filter (RMD-first headroom) governs amounts the
+     *  SOLVER proposes; this one is the household's own standing plan, already simulated on the
+     *  spine, so it is carried as entered exactly the way their `custom` order is. Screening it
+     *  would put a baseline on screen that no one is running. */
+    readonly conversion?: RothConversionPlan
   }
 }): CandidateSet {
   const { anchor, window, userBaseline } = opts
@@ -401,8 +421,11 @@ export function enumerateCandidates(opts: {
       throw new Error('[candidates] drawdownOrder rides ONLY the custom policy (the shipped biconditional)')
     }
     candidates.push({
+      // `?? null` — absence stays the conversion-0 arm (the reduce-to-spine signal), never a
+      // zero-fill; a PRESENT plan rides through so `applyCandidate` re-expands the household's own
+      // schedule instead of dropping it.
+      conversion: userBaseline.conversion ?? null,
       policy: userBaseline.policy,
-      conversion: null,
       provenance: 'user-baseline',
       ...(isCustom ? { drawdownOrder: userBaseline.drawdownOrder } : {}),
     })

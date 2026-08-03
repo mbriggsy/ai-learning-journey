@@ -31,9 +31,10 @@
  * with no headroom yields a conversion-free roster ⇒ the caller returns null (the bucket precondition —
  * the solver cannot validate a household with no anchored conversion grid).
  *
- * PURE (engine-purity lint): no clock, entropy, or environment — a deterministic function of `base`.
+ * PURE (engine-purity lint): no clock, entropy, or environment — a deterministic function of its
+ * arguments.
  */
-import type { SimulationParams } from '@shared/model'
+import { expandRothConversion, type RothConversionPlan, type SimulationParams } from '@shared/model'
 import { householdBenefits } from '@engine/socialSecurityBenefit'
 import { rmdStartAgeForBirthYear, selectRmdDivisor } from '@engine/rmd'
 import { cliffMagiFor, type CommittedYearIncome } from '@engine/magiLandscape'
@@ -213,16 +214,38 @@ export function conversionWindowFor(base: SimulationParams): { readonly startYea
  * their standing choice is always scored beside the grid). `null` when the run carries no tax overlay
  * (no split to sequence). The caller separately refuses a roster with no conversion candidate (no
  * pre-tax headroom) — the solver cannot validate ranking stability without one.
+ *
+ * `userConversion` IS THE HOUSEHOLD'S STANDING ROTH LEVER (`draft.rothConversion`), and it is BOTH
+ * halves of "their current strategy" that this baseline exists to represent — the withdrawal order
+ * AND the conversion. It is threaded rather than read off `base.overlay.conversions` because that
+ * field is the EXPANDED per-year vector: recovering `{annualAmountReal, startYearOffset, years}` from
+ * it would be a reconstruction that can only ever agree with the plan by inference, while the plan
+ * itself is sitting one frame up the call stack. The identity is pinned instead — `applyCandidate` on
+ * this arm reproduces `base.overlay.conversions` byte-for-byte (`solveAnchor.test.ts`).
  */
-export function enumerateSolveCandidates(base: SimulationParams): CandidateSet | null {
+export function enumerateSolveCandidates(
+  base: SimulationParams,
+  userConversion?: RothConversionPlan,
+): CandidateSet | null {
   const anchor = deriveConversionAnchor(base)
   if (anchor === null) return null
+  // PRESENT-IFF-THE-BASE-RUN-CARRIES-IT. `intakeMap`'s `buildOverlay` writes `overlay.conversions`
+  // through THIS SAME expander at THIS SAME horizon (`maxHorizonYears` IS the `horizonYears` it
+  // expanded against), and drops the key when the window lies entirely past the horizon. Re-running
+  // the expander here reproduces that decision exactly, so the baseline arm carries the household's
+  // conversion on precisely the runs where their own spine does — and `applyCandidate`'s past-horizon
+  // throw (a caller bug by its own contract) is unreachable from this seam rather than merely unlikely.
+  const carried =
+    userConversion !== undefined && expandRothConversion(userConversion, base.maxHorizonYears) !== undefined
+      ? userConversion
+      : undefined
   return enumerateCandidates({
     anchor,
     window: conversionWindowFor(base),
     userBaseline: {
       policy: base.drawdownPolicy,
       ...(base.drawdownOrder !== undefined ? { drawdownOrder: base.drawdownOrder } : {}),
+      ...(carried !== undefined ? { conversion: carried } : {}),
     },
   })
 }

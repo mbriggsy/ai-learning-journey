@@ -751,7 +751,7 @@ describe('the recommend-second witness seed (engine-proven solve regime)', () =>
   const FRESH = epochDayFromIsoDate(acaEnhancedSubsidyStatus.value.verifiedOn) + 5
 
   /** Drive a witness seed + goal through the REAL builder → REAL engine at the fast test counts. */
-  const solveWitness = (key: 'surplus' | 'buckets', goal: 'leave-more' | 'pay-less-tax') => {
+  const solveWitness = (key: 'surplus' | 'buckets' | 'health', goal: 'leave-more' | 'pay-less-tax') => {
     const draft: ScenarioDraft = { ...DEV_SEEDS[key], chosenGoal: goal }
     const req0 = buildSolveRequest(draft, FRESH)
     expect(typeof req0, `${key}: buildSolveRequest must BUILD (a typed refusal here is a broken seed)`).not.toBe('string')
@@ -768,6 +768,41 @@ describe('the recommend-second witness seed (engine-proven solve regime)', () =>
   // real engine: surplusRegime TRUE (over-funded on both seed sets) and noChange FALSE (the crown is an
   // active move — an over-funded household still has a beneficial conversion, so the conventional never
   // wins). The mutant killer lives on the noChange pin: inverting it to `.toBe(true)` goes red.
+  // ── "YOUR PLAN TODAY" MUST BE THEIR WHOLE PLAN — the 2026-08-03 conversion half ─────────────────
+  //
+  // `retiredHealth` (`?seed=health`) is the ONLY already-retired seed carrying an applied Roth lever
+  // ($20k/yr for 4 years from offset 0), so it is the repo's only live witness for the other of the two
+  // coupled tax controls. Until this fix, `enumerateCandidates` had no field in which the household's
+  // conversion could be expressed: the injected baseline was minted `conversion: null` and
+  // `applyCandidate` stripped the base's schedule, so the arm the surface labels "Compared with your
+  // plan today" was their withdrawal order with their conversion DELETED — a different "today" from
+  // the one the spine band directly above it draws from the same draft.
+  //
+  // The pin is `noActionBaseline.id` (the `?seed=buckets` precedent, and precision-independent — the
+  // id is derived from the candidate, not from any sampled figure): `baseline:proportional:20000`, in
+  // which the trailing amount IS the household's own lever. The unit seam is pinned in
+  // `solveAnchor.test.ts` as a reduce-to-spine identity; THIS is the same claim end-to-end through the
+  // real intake builder and the real engine, on a real seeded household.
+  it("'health' — the injected baseline carries the household's OWN conversion, end-to-end through the real builder + engine", () => {
+    const p = solveWitness('health', 'leave-more')
+    expect(p.kind, 'the seed must mint a real recommendation').toBe('recommended')
+    if (p.kind !== 'recommended') throw new Error('unreachable')
+
+    // The whole defect in one assertion: `:20000`, not `:0`.
+    expect(p.noActionBaseline.id, "the displayed baseline is the household's order AND their lever").toBe(
+      'baseline:proportional:20000',
+    )
+    // Non-vacuity — this would pass for the wrong reason if the seed ever lost its lever or its order.
+    expect(DEV_SEEDS.health.rothConversion, 'the seed still carries the lever this witness needs').toEqual({
+      annualAmountReal: 20_000,
+      startYearOffset: 0,
+      years: 4,
+    })
+    expect(DEV_SEEDS.health.drawdownPolicy, 'the seed still runs a non-conventional order').toBe('proportional')
+    // …and the arm really is the household's plan, not a re-anchored grid amount that happens to match.
+    expect(p.noActionBaseline.conversion).toEqual(DEV_SEEDS.health.rothConversion)
+  })
+
   it("'surplus' lands an OVER-FUNDED active recommendation (surplusRegime true, noChange false) through the real solve", () => {
     const p = solveWitness('surplus', 'leave-more')
     expect(p.kind, 'the over-funded household MINTS a real recommendation (stateless + fresh ACA)').toBe(
@@ -871,6 +906,28 @@ describe('the no-pretax steer witness seed (engine-proven refusal regime)', () =
     expect(params?.overlay, 'the overlay is PRESENT — dollars were entered').toBeDefined()
     expect(params!.overlay!.buckets.pretax, 'the entered pre-tax pool').toBe(25_000)
     expect(buildSolveRequest(smallIra, FRESH_STEER), 'entered-but-under-every-rail refuses no-pretax').toBe('no-pretax')
+  })
+
+  // The SAME household, now with the shipped Roth lever APPLIED — the arm the 2026-08-03 baseline fix
+  // could have silently narrowed. The injected user baseline carries the household's own conversion
+  // from that day forward, and it is deliberately UNSCREENED, so a `conversion !== null` gate would
+  // read it as proof of a rail-anchored grid and hand this household a solve the validation harness
+  // was never given a grid to perturb. `solveDispatch` screens on `anchoredRail` for exactly this
+  // reason; the refusal must be unmoved by an applied lever.
+  it("the small-IRA household still refuses 'no-pretax' WITH a conversion applied — the user baseline is not an anchored grid", () => {
+    const blend = { kind: 'exact', stockPct: 60, bondPct: 30, cashPct: 10 } as const
+    const withLever: ScenarioDraft = {
+      ...DEV_SEEDS.steer,
+      enteredAccounts: [
+        ...DEV_SEEDS.steer.enteredAccounts,
+        { ownerIndex: 0, kind: 'traditional-ira', valueToday: 25_000, manualBlend: blend },
+      ],
+      rothConversion: { annualAmountReal: 10_000, startYearOffset: 0, years: 3 },
+      chosenGoal: 'leave-more',
+    }
+    // The lever REALLY IS live on the params (else this pin would pass for the wrong reason).
+    expect(buildSpineParams(withLever)?.overlay?.conversions, 'the applied lever reaches the overlay').toBeDefined()
+    expect(buildSolveRequest(withLever, FRESH_STEER), 'an applied lever does not buy a solve').toBe('no-pretax')
   })
 
   it("the DEGENERATE no-overlay arm (solveDispatch line set===null) also maps to 'no-pretax' through the REAL builder", () => {

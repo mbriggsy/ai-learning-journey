@@ -44,4 +44,16 @@
  * paths" on exactly the households this change exists to stop lying to. Bumped under this file's
  * own when-in-doubt rule: an over-cautious re-run is honest; a stale flag read as current is not.
  */
-export const SOLVER_CODE_VERSION = 2
+/*
+ * VERSION 3 (2026-08-03) — the injected user baseline now carries the household's OWN ROTH
+ * CONVERSION, not just their withdrawal order. v2 re-anchored the displayed arm onto the household's
+ * entered strategy but `enumerateCandidates` had no field in which a conversion could be expressed,
+ * so the arm was minted `conversion: null` and `applyCandidate` stripped the base's schedule — the
+ * plan labelled "your plan today" was theirs with their conversion deleted. This one DOES move the
+ * ranking (unlike v2): the roster gains a candidate the rail-anchored grid never contained, that
+ * candidate can be crowned, `solverCandidateId` for the baseline arm is no longer always `:0`, and
+ * `sameDecumulationPlan` — hence the persisted `noChange` — now compares a conversion that used to be
+ * unconditionally absent. Every saved record therefore re-runs. Bumped on the enumerator clause of
+ * the discipline above, not the when-in-doubt clause.
+ */
+export const SOLVER_CODE_VERSION = 3

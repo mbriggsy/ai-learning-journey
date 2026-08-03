@@ -70,13 +70,25 @@ export function buildSolveRequest(draft: ScenarioDraft, todayEpochDay: number): 
   // Full precision (S5 deferred): the seed-A search AND the grade B-family run at `solverMinBPaths`.
   const base = { ...spine, paths: solverMinBPaths.value }
 
-  const set = enumerateSolveCandidates(base)
+  // `draft.rothConversion` rides along so the injected user baseline is the household's WHOLE current
+  // strategy — their withdrawal order AND their standing conversion. Passing only the order (through
+  // `base.drawdownPolicy`) is what made the arm the surface labels "your plan today" a plan with their
+  // conversion deleted; see the field's own note in `candidates.ts`.
+  const set = enumerateSolveCandidates(base, draft.rothConversion)
   if (set === null) return 'no-pretax' // no tax overlay — no per-person split (no pre-tax dollars at all)
   // No anchored conversion candidate ⇒ ranking stability cannot run ⇒ the honest bucket precondition
   // (never a mint-failed{roster} surfaced live). WIDER than pretax===0: an entered-but-small pre-tax
   // pool below every rail-anchored amount (candidates.ts:323) lands here too — the note speaks "not
   // enough entered", true on both.
-  if (!set.candidates.some((c) => c.conversion !== null)) return 'no-pretax'
+  //
+  // ⚠️ `anchoredRail !== undefined`, NOT merely `conversion !== null`, AND THAT IS NOT A TIGHTENING —
+  // it is what this line meant before the baseline carried a conversion. The injected user baseline is
+  // deliberately UNSCREENED (it is the household's standing plan, not an amount the solver proposes),
+  // so a bare `conversion !== null` would let it satisfy a gate that exists to prove the SOLVER has a
+  // rail-anchored grid to perturb — silently narrowing this refusal for a household with an applied
+  // lever but no headroom, a scope change nobody decided. `anchoredRail` rides grid conversions only
+  // (candidates.ts), so this restores the predicate's original meaning exactly.
+  if (!set.candidates.some((c) => c.conversion !== null && c.anchoredRail !== undefined)) return 'no-pretax'
 
   const ranking: SolverRunRanking =
     goal === 'leave-more' ? { goal, heirBracket: solverAssumedHeirBracket.value } : { goal }

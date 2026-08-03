@@ -10,8 +10,9 @@
  * anchor CALLS `cliffMagiFor`/`irmaa`/`selectRmdDivisor`, never a re-typed threshold.
  */
 import { describe, expect, it } from 'vitest'
-import type { SimulationParams } from '@shared/model'
+import { expandRothConversion, type SimulationParams } from '@shared/model'
 import { deriveConversionAnchor, conversionWindowFor, enumerateSolveCandidates } from '../solveAnchor'
+import { applyCandidate, sameDecumulationPlan, solverCandidateId } from '../candidates'
 import { cliffMagiFor } from '@engine/magiLandscape'
 import { fplForHousehold } from '@engine/healthOverlay'
 import { acaApplicablePercentage, irmaa } from '@engine/constants'
@@ -142,6 +143,70 @@ describe('enumerateSolveCandidates — a valid live roster', () => {
     expect(set.candidates.some((c) => c.provenance === 'conventional-baseline')).toBe(true)
     expect(set.candidates.some((c) => c.conversion !== null)).toBe(true) // bracket-edge headroom exists
     expect(set.candidates.some((c) => c.provenance === 'user-baseline')).toBe(true)
+  })
+
+  // ── THE BASELINE ARM IS THE HOUSEHOLD'S OWN PLAN (the 2026-08-03 calm-but-wrong fix) ───────────
+  //
+  // The surface calls this arm "your plan today" in four shipped strings. Until this fix the injected
+  // baseline was minted `conversion: null` unconditionally — there was no field in which a conversion
+  // could even be expressed — so a household running the shipped Roth lever was measured against
+  // their order with their conversion DELETED. These pin both halves of the repair, and the first is
+  // the whole claim in one line: applying the baseline candidate must land back on the household's
+  // own spine params, byte-for-byte.
+  it("the user baseline REDUCES TO THE SPINE — applying it reproduces the household's own params exactly", () => {
+    const plan = { annualAmountReal: 40_000, startYearOffset: 0, years: 5 }
+    const base = baseRetired({ overlay: { conversions: expandRothConversion(plan, 40) } })
+    const set = enumerateSolveCandidates(base, plan)
+    if (set === null) throw new Error('unreachable')
+    const user = set.candidates.find((c) => c.provenance === 'user-baseline')
+    if (user === undefined) throw new Error('the user baseline is injected unconditionally')
+
+    // (a) the plan RIDES the candidate — not `null`, and not a re-anchored grid amount.
+    expect(user.conversion).toEqual(plan)
+    // (b) …and it survives the shared apply seam as the household's own schedule. `toEqual(base)` is
+    //     the load-bearing assertion: the arm on screen beside "your plan today" IS today's plan.
+    //     (`drawdownPolicy` already matches; `applyCandidate` strips-then-re-expands the conversions.)
+    expect(applyCandidate(base, user)).toEqual(base)
+  })
+
+  it('a household running NO conversion keeps the conversion-0 arm — absence, never a zero-fill', () => {
+    const base = baseRetired()
+    const set = enumerateSolveCandidates(base, undefined)
+    if (set === null) throw new Error('unreachable')
+    const user = set.candidates.find((c) => c.provenance === 'user-baseline')!
+    expect(user.conversion).toBeNull()
+    // Reduce-to-spine holds on this side too, and `conversions` is ABSENT rather than an all-zero
+    // vector (the presence-keyed reduce-to-spine signal, model.ts's expander contract).
+    const applied = applyCandidate(base, user)
+    expect(applied).toEqual(base)
+    expect('conversions' in applied.overlay!).toBe(false)
+  })
+
+  it('a plan entirely past the horizon is DROPPED — the same decision `intakeMap` makes, so no throw', () => {
+    // `expandRothConversion` returns undefined for a window past the horizon, so `buildOverlay` writes
+    // no `conversions` key at all. The seam must mirror that: carrying the plan here would hand
+    // `applyCandidate` a conversion it refuses by contract (a loud throw on a live solve).
+    const pastHorizon = { annualAmountReal: 40_000, startYearOffset: 40, years: 5 }
+    expect(expandRothConversion(pastHorizon, 40)).toBeUndefined()
+    const base = baseRetired() // no `conversions` on the overlay — exactly what buildOverlay produces
+    const set = enumerateSolveCandidates(base, pastHorizon)
+    if (set === null) throw new Error('unreachable')
+    const user = set.candidates.find((c) => c.provenance === 'user-baseline')!
+    expect(user.conversion).toBeNull()
+    expect(() => applyCandidate(base, user)).not.toThrow()
+  })
+
+  it('the baseline arm is now IDENTIFIABLE by amount — the candidate id stops being always `:0`', () => {
+    // `solverCandidateId` is `provenance:policy:amount`, and the run fingerprint serializes the
+    // candidate's full fields. A converting baseline that still minted `:0` would collide in id with
+    // the conversion-free arm it is no longer equivalent to.
+    const plan = { annualAmountReal: 40_000, startYearOffset: 0, years: 5 }
+    const base = baseRetired({ overlay: { conversions: expandRothConversion(plan, 40) } })
+    const user = enumerateSolveCandidates(base, plan)!.candidates.find((c) => c.provenance === 'user-baseline')!
+    expect(solverCandidateId(user)).toBe('baseline:proportional:40000')
+    // …and it is NOT the same plan as its conversion-free twin (what `noChange` reads).
+    const bare = enumerateSolveCandidates(baseRetired())!.candidates.find((c) => c.provenance === 'user-baseline')!
+    expect(sameDecumulationPlan(user, bare)).toBe(false)
   })
 
   it('the pre-RMD conversion window: years = min runway to the first RMD start age, clamped ≥ 1', () => {

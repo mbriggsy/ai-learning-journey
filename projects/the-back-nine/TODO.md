@@ -256,16 +256,29 @@ deadlines silently misses it. It has been filed a notch late twice, both times i
    multi-account witness plant exists**, and another open register entry is blocked on the same gap.
    </details>
 
-4b. ⚠️ **NEW, AND IT NOW BLOCKS RUNTIME VERIFICATION OF TWO SHIPPED FIXES — mint a multi-account
-   witness seed.** Confirmed 2026-08-03 by walking every seed: **no dev seed can witness a withdrawal
-   ORDER mattering.** `retiredOnTrack` (and therefore `rec`/`recold`/`surplus`) holds ONE traditional
+4b. ✅ **SEED MINTED 2026-08-03 — `?seed=buckets`.** Three real buckets (pre-tax $700k + brokerage $450k
+   with a $150k embedded gain + Roth $200k) on `retiredOnTrack`'s unchanged 66/65 couple, inheriting the
+   `proportional` default. Pinned through the REAL builder + REAL engine at the shipped fast counts
+   (`devSeeds.test.ts`): `noActionBaseline.id === 'baseline:proportional:0'`, with non-vacuity guards on
+   bucket count and policy so a later "simplification" fails loudly instead of passing for the wrong
+   reason. **Mutation-proven** — re-anchoring `solve.ts` reds it. Carries **no regime knob**, so the C3
+   re-tune-on-drift law does not bite: the displayed baseline is the household's own order whatever wins.
+   ⚠️ **STILL OWED: the human eyeball.** The seed makes the render *reachable*; nobody has looked at it.
+   Drive `http://localhost:5173/?seed=buckets` → GoalPicker → confirm, and budget **~11 minutes** for the
+   dev solve. That is the remaining verification debt on entries 4 and 6.
+   <details><summary>why it had to exist</summary>
+
+   Confirmed 2026-08-03 by walking every seed: **no dev seed could witness a withdrawal ORDER
+   mattering.** `retiredOnTrack` (and therefore `rec`/`recold`/`surplus`) holds ONE traditional
    IRA, so every order is the identical decumulation; `surplus` adds a $3M IRA but still one bucket at
    t=0; `?vault=rec` renders a HAND-PLANTED payload (`headlineStatisticB: 0`, no solve at all).
    **Requirements:** ≥2 buckets at t=0 (pre-tax + taxable with a basis, ideally + Roth), a
    `drawdownPolicy` that is NOT `taxable-first`, and a household whose crown is a SEQUENCING arm rather
    than a conversion. Then the baseline re-anchoring (entry 6) and the record card (entry 4) become
    eyeball-verifiable, and the register's own "no multi-account witness" blocker closes with it.
-   ⚑ Budget the walk, don't be surprised by it: a dev-build live solve measured **~11 minutes**.
+   ⚑ The crown requirement turned out to be **unnecessary** — the displayed baseline is the household's
+   own order regardless of what wins, so the seed needed no tuning and carries no drift knob.
+   </details>
 
 5. **Smaller, each self-contained** *(all four re-anchored by the 2026-08-02 audit)*:
 
@@ -634,6 +647,7 @@ These are the mechanical ones that keep costing hours.*
 | `health` | the healthcare door/sheet |
 | `date65` | all-65+ still working — Medicare priced, no false "unpriced" note |
 | `surplus` | the over-funded ACTIVE recommendation — delta-as-hero + the median qualifier |
+| `buckets` | **the ordering witness** — 3 real buckets (pre-tax + taxable-with-gain + Roth) on the `proportional` default, so `taxable-first` and the household's own order finally DIVERGE. The only seed on which "your plan today" is observably their plan. Live solve (~11 min in dev) |
 | `steer` | the `no-pretax` typed refusal — invite → GoalPicker → calm refusal, no solve |
 | `nc` · `pa` · `fl` · `elsewhere` | the state faces — NC bites, PA is small, FL is $0, elsewhere unpriced |
 | `datenc` | the date-route NC witness |

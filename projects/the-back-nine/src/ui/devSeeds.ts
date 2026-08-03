@@ -841,6 +841,60 @@ const surplusWitness: ScenarioDraft = {
 }
 
 /**
+ * THE MULTI-BUCKET WITNESS (2026-08-03) — the first seed on which the WITHDRAWAL ORDER MATTERS AT ALL.
+ *
+ * ⚠️ WHY IT HAD TO EXIST. Every other household here holds effectively ONE drawable bucket:
+ * `retiredOnTrack` (and therefore `rec` / `recold` / `surplus`, which spread it) carries a single
+ * Traditional IRA, so `taxable-first`, `proportional` and every other policy are the IDENTICAL
+ * decumulation and no ordering claim can be observed. `?vault=rec` is worse for this purpose — it
+ * plants a HAND-BUILT payload whose arms all carry `headlineStatisticB: 0`, so no solve runs at all.
+ * That gap is why the baseline-nameplate defect (the hero measured against the CONVENTIONAL arm while
+ * the label said "your plan today") survived every seed, every plant and every walk until it was found
+ * by reading `solve.ts`. A defect no fixture can express is a defect nothing can catch.
+ *
+ * THREE REAL BUCKETS — pre-tax, taxable (with a genuine embedded gain, so ordering has a tax
+ * consequence rather than just a label), and Roth — against `retiredOnTrack`'s unchanged 66/65 couple
+ * and $78k spend, so it stays a coherent household rather than a contrived one. `drawdownPolicy` is
+ * INHERITED as `proportional` — the shipped DEFAULT and deliberately NOT `taxable-first`, because the
+ * whole point is a household whose own order differs from the conventional arm. Do not "simplify" it to
+ * taxable-first: that collapses the witness back to the blind spot it exists to cover.
+ *
+ * WHAT IT PINS (devSeeds.test.ts, through the REAL builder + REAL engine): `noActionBaseline.id` is
+ * `baseline:proportional:0` — the arm the surface labels "your plan today" IS the household's entered
+ * order. Re-anchoring `solve.ts` to `search.conventionalBaseline` reds it.
+ *
+ * NOT tuned to force a particular CROWN, and that is deliberate: the displayed baseline is the
+ * household's own order whatever wins, so this seed carries no regime knob to drift. The C3
+ * "re-tune on drift" law therefore does not bite here — if the crown moves, the pin still holds.
+ */
+const multiBucketWitness: ScenarioDraft = {
+  ...retiredOnTrack,
+  enteredAccounts: [
+    {
+      ownerIndex: 0,
+      kind: 'traditional-ira',
+      valueToday: 700_000,
+      manualBlend: { kind: 'exact', stockPct: 60, bondPct: 30, cashPct: 10 },
+    },
+    {
+      // A real embedded gain ($150k over basis) — without it the taxable bucket is a cash-equivalent
+      // and the ordering question loses its tax teeth.
+      ownerIndex: 1,
+      kind: 'brokerage',
+      valueToday: 450_000,
+      basis: 300_000,
+      manualBlend: { kind: 'exact', stockPct: 60, bondPct: 30, cashPct: 10 },
+    },
+    {
+      ownerIndex: 0,
+      kind: 'roth-ira',
+      valueToday: 200_000,
+      manualBlend: { kind: 'exact', stockPct: 60, bondPct: 30, cashPct: 10 },
+    },
+  ],
+}
+
+/**
  * THE NO-PRETAX STEER WITNESS (the steer-seed increment, 2026-07-23 — the first walkable face of
  * `blocked{no-pretax}`). `retiredOnTrack`'s 66/65 couple whose split savings hold NO pre-tax
  * dollars: Alex's Roth IRA + Sam's brokerage account (basis entered) — a REALISTIC shape (a couple
@@ -961,6 +1015,7 @@ export const DEV_SEEDS = {
   health: retiredHealth,
   date65: stillWorkingAllMedicare,
   surplus: surplusWitness,
+  buckets: multiBucketWitness,
   steer: noPretaxSteer,
   nc: ncAffirmation,
   pa: paAffirmation,

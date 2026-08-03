@@ -733,7 +733,7 @@ describe('the recommend-second witness seed (engine-proven solve regime)', () =>
   const FRESH = epochDayFromIsoDate(acaEnhancedSubsidyStatus.value.verifiedOn) + 5
 
   /** Drive a witness seed + goal through the REAL builder → REAL engine at the fast test counts. */
-  const solveWitness = (key: 'surplus', goal: 'leave-more' | 'pay-less-tax') => {
+  const solveWitness = (key: 'surplus' | 'buckets', goal: 'leave-more' | 'pay-less-tax') => {
     const draft: ScenarioDraft = { ...DEV_SEEDS[key], chosenGoal: goal }
     const req0 = buildSolveRequest(draft, FRESH)
     expect(typeof req0, `${key}: buildSolveRequest must BUILD (a typed refusal here is a broken seed)`).not.toBe('string')
@@ -761,6 +761,43 @@ describe('the recommend-second witness seed (engine-proven solve regime)', () =>
       p.noChange,
       'the crown is an ACTIVE move (a beneficial conversion beats the conventional) — never no-change',
     ).toBe(false)
+  }, 60_000)
+
+  /**
+   * THE MULTI-BUCKET WITNESS — the first seed on which the withdrawal ORDER is observable at all, and
+   * the only live proof that the arm labelled "your plan today" IS the household's entered order.
+   *
+   * Every other seed holds effectively one drawable bucket (`retiredOnTrack` and its spreads carry a
+   * single Traditional IRA), so `taxable-first` and `proportional` are the identical decumulation and
+   * the two candidate arms COINCIDE — which is exactly why the baseline-nameplate defect survived every
+   * seed and every walk. `?vault=rec` cannot help: it plants a hand-built payload and runs no solve.
+   *
+   * THE MUTANT KILLER: re-anchoring `solve.ts` step (6) to `search.conventionalBaseline` reds the id
+   * assertion here (`baseline:proportional:0` → `conventional:taxable-first:0`), and with it the four
+   * shipped copy strings that call this arm the reader's own plan.
+   */
+  it("'buckets' displays the household's OWN order as the no-action baseline (the ordering witness)", () => {
+    const draft = DEV_SEEDS.buckets
+    // Non-vacuity FIRST — the pin below is only meaningful if this household's order can actually
+    // diverge from the conventional one. Two guards: ≥2 drawable buckets, and an order that is NOT
+    // `taxable-first`. A future "simplification" of the seed that breaks either makes the id
+    // assertion pass for the wrong reason, so it must fail HERE instead.
+    expect(draft.enteredAccounts.length, 'a one-bucket household cannot witness an ordering claim').toBeGreaterThanOrEqual(2)
+    expect(draft.drawdownPolicy, 'the witness must NOT be on the conventional order').not.toBe('taxable-first')
+    expect(draft.drawdownPolicy).toBe('proportional')
+
+    const p = solveWitness('buckets', 'leave-more')
+    expect(p.kind, 'the multi-bucket household MINTS a real recommendation').toBe('recommended')
+    if (p.kind !== 'recommended') return
+    expect(
+      p.noActionBaseline.id,
+      'the arm the surface labels "your plan today" must BE the household’s entered order — not the ' +
+        'fixed conventional taxable-first candidate (that mismatch WAS the shipped defect)',
+    ).toBe('baseline:proportional:0')
+    expect(p.noActionBaseline.policy).toBe('proportional')
+    // The conventional arm is genuinely present and genuinely different — so the assertion above is a
+    // real choice between two available arms, never the only thing the solve could have returned.
+    expect(p.rankedIds, 'the conventional arm must exist to be chosen AGAINST').toContain('conventional:taxable-first:0')
   }, 60_000)
 })
 

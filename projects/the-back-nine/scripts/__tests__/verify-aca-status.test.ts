@@ -33,6 +33,16 @@ const base: AcaRecord = {
       cliffFplFraction: null,
     },
   },
+  // THE EVIDENCE BODY — required since 2026-08-03. Adding these to the interface without adding
+  // them here would red the `toEqual([])` arm below, which is the forcing function working: the
+  // fixture cannot silently describe a shape the shipped record no longer has.
+  discriminatingProof: ['§36B(b)(3)(A)(iii) reads "before January 1, 2026" (fixture)'],
+  nothingEnactedChain: ['every public law above the prior ceiling swept, positive control fired (fixture)'],
+  pendingExtension: 'H.R. 1834 — passed House, parked on the Senate calendar (fixture)',
+  retroactivity: 'drafted in; applies to taxable years beginning after 2025-12-31 (fixture)',
+  adjacentButSharp: 'Pub. L. 119-21 §71305 struck the excess-APTC repayment cap (fixture)',
+  forwardClock: 'next realistic flip window 2026-12-04 (fixture)',
+  strickenCitations: 'FS-2026-19 does not exist; replaced by primary sources (fixture)',
   howToClear: 're-verify against an enacted statute / IRS notice, then re-type attests from it (fixture)',
 }
 const dayAfter = Date.parse('2026-06-05')
@@ -78,6 +88,45 @@ describe('ACA enhanced-subsidy re-verify gate logic', () => {
     expect(checkAcaStatus({ ...base, howToClear: '' }, dayAfter)).toEqual([
       'howToClear is empty (the Fix line this gate prints sends the re-verifier to that field)',
     ])
+  })
+
+  /**
+   * THE EVIDENCE BODY (added 2026-08-03) — seven fields the shipped record has always carried and
+   * that `AcaRecord` did not DECLARE, so `checkAcaStatus` could not read them and a record dropping
+   * any of them shipped a GREEN gate. Same class as pinTo/summary/howToClear one layer out: those
+   * were declared-and-unread, these were never declared.
+   *
+   * Each field is EMPTIED alone (never deleted) and the WHOLE list is asserted, so a check written
+   * against ABSENCE (`rec.x === undefined`) returns [] here and goes RED — the same mutant-routing
+   * discipline as the pinTo/summary/howToClear arm above. `toEqual([])` on the untouched fixture is
+   * the non-vacuity receipt.
+   */
+  it('FAILS an EMPTY field anywhere in the evidence body (the seven never-declared keys)', () => {
+    const cases: ReadonlyArray<[keyof AcaRecord, string]> = [
+      ['pendingExtension', 'pendingExtension is empty'],
+      ['retroactivity', 'retroactivity is empty'],
+      ['adjacentButSharp', 'adjacentButSharp is empty'],
+      ['forwardClock', 'forwardClock is empty'],
+      ['strickenCitations', 'strickenCitations is empty'],
+    ]
+    for (const [key, prefix] of cases) {
+      const problems = checkAcaStatus({ ...base, [key]: '' }, dayAfter)
+      expect(problems, `emptying ${key} must be the ONLY complaint`).toHaveLength(1)
+      expect(problems[0]?.startsWith(prefix), `expected "${prefix}…", got "${String(problems[0])}"`).toBe(true)
+    }
+  })
+
+  it('FAILS an EMPTY ARRAY in the evidence chains — `[]` is truthy and attests nothing', () => {
+    // The trap this arm exists for: `if (!rec.discriminatingProof)` passes an empty array, so a
+    // record that lost every link would ship green while claiming to carry a proof chain.
+    for (const key of ['discriminatingProof', 'nothingEnactedChain'] as const) {
+      const problems = checkAcaStatus({ ...base, [key]: [] }, dayAfter)
+      expect(problems, `an empty ${key} must be the ONLY complaint`).toHaveLength(1)
+      expect(problems[0]?.startsWith(`${key} is empty`)).toBe(true)
+      // …and a chain whose LINKS are blank is hollow in the same way, one level down.
+      const blank = checkAcaStatus({ ...base, [key]: ['ok', ''] }, dayAfter)
+      expect(blank.some((p) => p.startsWith(`${key} carries a blank link`))).toBe(true)
+    }
   })
 
   it('FAILS a record attesting a table with no source (never cite what you did not open)', () => {

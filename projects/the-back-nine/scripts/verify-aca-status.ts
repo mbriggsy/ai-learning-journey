@@ -62,6 +62,37 @@ export interface AcaRecord {
     enhancedPercentage: AcaAttestedTable
   }
   /**
+   * THE EVIDENCE BODY — seven fields the shipped record has always carried and that this interface
+   * DID NOT DECLARE until 2026-08-03, so `checkAcaStatus` could not read them and a record that
+   * dropped any of them shipped a green gate.
+   *
+   * This is the SAME defect the 2026-08-02 pass fixed for `pinTo`/`summary`/`howToClear` (see the
+   * comment on `howToClear`), one layer out: that pass fixed *declared and never read*; these were
+   * *never even declared*. `adjacentButSharp` is the sharpest instance and the one the queue named —
+   * it records enacted-but-unmodelled §36B changes, including Pub. L. 119-21 §71305's removal of the
+   * excess-APTC repayment cap, which lands directly on a recommendation that sizes a conversion near
+   * the 400%-FPL cliff. But fixing one instance of a class and leaving six is how the class survives,
+   * so all seven are declared and all seven are required.
+   *
+   * ⚠️ REQUIRED, NOT OPTIONAL, EVEN WHEN THE HONEST ANSWER IS "NOTHING". A re-verifier who found no
+   * adjacent enactment must WRITE that they looked. An absent key and an unlooked-at question are
+   * indistinguishable to the next reader, which is precisely the confidence a stale record steals.
+   */
+  /** Why the evidence discriminates the REGIME, not merely the figures (DND 012's independent path). */
+  discriminatingProof: string[]
+  /** The negative-space sweep: every enacted law above the prior ceiling, checked and empty. */
+  nothingEnactedChain: string[]
+  /** The live vehicle that could flip the regime, and what it would actually do. */
+  pendingExtension: string
+  /** Whether a later enactment reaches back, and the condition a household must meet to benefit. */
+  retroactivity: string
+  /** Enacted-but-unmodelled §36B changes — the ones the engine prices AROUND rather than with. */
+  adjacentButSharp: string
+  /** When the next realistic flip window opens, so the re-verify cadence is not guesswork. */
+  forwardClock: string
+  /** Citations found to be fabricated or un-auditable — a dead cite confers unearned confidence. */
+  strickenCitations: string
+  /**
    * The re-verify chain the gate's Fix line points at (mirrors `StateTaxRecord.howToClear`,
    * `verify-state-tax.ts:53`, where it is likewise the final member). `main()` prints
    * "(see howToClear)" — so before this field existed the gate's own repair instruction named a
@@ -115,6 +146,29 @@ export function checkAcaStatus(rec: Partial<AcaRecord>, nowMs: number): string[]
   if (!rec.pinTo) problems.push('pinTo is empty (name the enacted statute / IRS notice this record pins to)')
   if (!rec.summary) problems.push('summary is empty (state in one line what the record attests)')
   if (!rec.howToClear) problems.push('howToClear is empty (the Fix line this gate prints sends the re-verifier to that field)')
+
+  // THE EVIDENCE BODY (added 2026-08-03). Seven fields the record has always carried and that the
+  // interface did not DECLARE, so nothing could read them. Same class as the three above, one layer
+  // out — those were declared-and-unread; these were never declared. The messages name what an
+  // honest EMPTY finding looks like, because the required answer to "did anything adjacent get
+  // enacted?" is sometimes "no" — and "no, I looked" is the answer that has to be written down.
+  const needProse = (key: 'pendingExtension' | 'retroactivity' | 'adjacentButSharp' | 'forwardClock' | 'strickenCitations', hint: string): void => {
+    if (!rec[key]) problems.push(`${key} is empty (${hint})`)
+  }
+  const needChain = (key: 'discriminatingProof' | 'nothingEnactedChain', hint: string): void => {
+    const v = rec[key]
+    // Falsy OR empty-array OR any blank link. A `[]` satisfies `!v === false` and would sail
+    // through a truthiness check while attesting nothing at all — the hollow-record shape again.
+    if (!Array.isArray(v) || v.length === 0) problems.push(`${key} is empty (${hint})`)
+    else if (v.some((s) => !s || typeof s !== 'string')) problems.push(`${key} carries a blank link (${hint})`)
+  }
+  needChain('discriminatingProof', 'name the evidence that identifies the REGIME, not just the figures — a Rev. Proc. shape LAGS the statute')
+  needChain('nothingEnactedChain', 'record the enacted-law sweep above the prior ceiling, with its positive control')
+  needProse('pendingExtension', 'name the live vehicle that could flip this, and what it would do — or state that none exists')
+  needProse('retroactivity', 'state whether a later enactment reaches back, and the condition a household must meet')
+  needProse('adjacentButSharp', 'name the enacted-but-unmodelled §36B changes the engine prices AROUND — write "none found" only after looking')
+  needProse('forwardClock', 'name the next realistic flip window, so the re-verify cadence is not guesswork')
+  needProse('strickenCitations', 'record any citation found fabricated or un-auditable — write "none" only after checking')
 
   const verifiedMs = rec.verifiedOn ? Date.parse(rec.verifiedOn) : Number.NaN
   if (Number.isNaN(verifiedMs)) {

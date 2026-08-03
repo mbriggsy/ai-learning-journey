@@ -17,6 +17,16 @@
 **Where we are:** all four acts are built; Act 4 closed at U17·S6 (S7 deferred, Briggsy's ruling). What is
 left is not units. It is the gap between *the build is done* and *a friend can bet real money on this*.
 
+▶ **THE NEXT BUILD is Tier 1's *"The recommendation never says what to DO"*** — it was blocked on the
+baseline nameplate, which shipped 2026-08-03 (`2652b7a6`), and `?seed=buckets` now exists as a live
+surface to build it against. It is a **user-facing surface**, so load the four-skill UI loadout
+(CLAUDE.md) before touching a pixel. Read that entry's ⚑ blocks before trusting any line number in the
+prose above them — the prose is the original filing and its anchors have drifted.
+
+⚠️ **The one verification debt still open from 2026-08-03:** the record card's HOLDS face has never been
+seen. `?vault=rec` cannot show it (single bucket, planted payload); it needs a save + re-entry on
+`?seed=buckets`, which costs a **~25-minute** solve.
+
 ---
 
 ## Dated — these fire on a clock

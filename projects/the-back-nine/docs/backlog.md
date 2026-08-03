@@ -20,6 +20,25 @@
 > two re-sized on evidence (the mixed-household healthcare item `L`→`XL` — the defective household IS the
 > flagship `?seed=date` fixture; account balances `S`→`M`).
 >
+> ⚠️ **PARTIALLY STALE AS OF 2026-08-03 — READ THIS BEFORE RE-OPENING ANYTHING BELOW.** A second
+> double-blind pass (16 agents, 8 verify→skeptic pairs; **7 of 8 verifiers refuted on material points**)
+> shipped four Tier-0 fixes that entries below still describe as open. **Closed, with `TODO.md` carrying
+> the full post-refutation reasoning:**
+> - **the baseline nameplate** (the hero measured against a plan the household never chose) — `2652b7a6`.
+>   NOT the fork this register files it as: `plans/4-recommendation.md:166,:190` had already ratified
+>   `current→recommended`, so it was a regression. Also **de-blocks** the "recommendation never says what
+>   to DO" entry, which is now the next build.
+> - **the record card's "still matches your plan"** — `bd851f24`.
+> - **the ACA record's inert prose** — `a436caee`. It was **seven** undeclared fields, not just
+>   `adjacentButSharp`.
+> - **the health sheet's "benchmark premium" false negation** — `bd851f24`.
+>
+> Also corrected: the "widening the state roster bricks every saved vault" blocker is **FALSE**, and its
+> prescribed remedy would have re-opened the hole `stateTax.ts:421-25` was minted to close. And the heir
+> entry (`:370`) still asserts present-tense a clause the XS half removed on 2026-08-02.
+>
+> **Anchors throughout this file are pre-2026-08-03 and have drifted** — open every cited line.
+>
 > **This file is the register, not the queue.** The ranked next-actions live in [`TODO.md`](../TODO.md).
 > Tiers are by worst consequence, never by size — the cardinal rule is that calm-but-wrong is the sin.
 >

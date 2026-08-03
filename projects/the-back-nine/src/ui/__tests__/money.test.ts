@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { axisDollarFormatterFor, formatAbsoluteDollar, formatAxisDollar, formatPerMonth } from '../money'
+import { axisDollarFormatterFor, formatAbsoluteDollar, formatActionableDollar, formatAxisDollar, formatDeltaDollar, formatPerMonth } from '../money'
 import { buildYTicks } from '@viz/bandData'
 
 /**
@@ -151,5 +151,52 @@ describe('formatPerMonth — the $10-step humane verdict figure (pinned behavior
     expect(formatPerMonth(427.13)).toBe('430')
     expect(formatPerMonth(-427.13)).toBe('430')
     expect(formatPerMonth(0)).toBe('0')
+  })
+})
+
+/* ---------------------------------------------------------------------------------------------
+ * formatActionableDollar — the RE-TYPEABLE dialect. These are correctness tests, not formatting
+ * ones: the figure this dialect renders is a conversion amount the reader can enter into the Roth
+ * lever, and every solver-proposed amount is the LARGEST whole dollar keeping an ACA-cliff /
+ * IRMAA-step / bracket-edge metric at-or-under its rail. Rounding to nearest (what the delta
+ * dialect does, and what this surface would otherwise have used) quotes a number PAST the rail.
+ * ------------------------------------------------------------------------------------------- */
+describe('formatActionableDollar — rounds DOWN so a re-typed figure never crosses the rail it was anchored under', () => {
+  it('NEVER renders above its input — the whole reason this dialect exists', () => {
+    // The paired arm is the point: the same inputs through the delta dialect round UP and over.
+    const overRail = [43_600, 9_960, 104_000, 187_500]
+    for (const a of overRail) {
+      const shown = Number(formatActionableDollar(a).replace(/,/g, ''))
+      expect(shown, `${a} must not be quoted above itself`).toBeLessThanOrEqual(a)
+    }
+    // …and the delta dialect really does round up on these, so the test is not vacuous.
+    expect(Number(formatDeltaDollar(43_600).replace(/,/g, ''))).toBeGreaterThan(43_600)
+    expect(Number(formatDeltaDollar(9_960).replace(/,/g, ''))).toBeGreaterThan(9_960)
+  })
+
+  it('the cliff case, concretely: an anchored $43,600 quotes $43,000 — never the $44,000 that crosses', () => {
+    expect(formatActionableDollar(43_600)).toBe('43,000')
+    expect(formatDeltaDollar(43_600)).toBe('44,000') // the unsafe sibling, pinned so the contrast cannot rot
+  })
+
+  it('shares the delta dialect step ladder ($100 / $1,000 / $10,000) so the surface speaks one dialect', () => {
+    expect(formatActionableDollar(9_960)).toBe('9,900')
+    expect(formatActionableDollar(43_600)).toBe('43,000')
+    expect(formatActionableDollar(187_500)).toBe('180,000')
+  })
+
+  it('a round figure the household entered itself floors to itself — the safe branch costs nothing', () => {
+    expect(formatActionableDollar(20_000)).toBe('20,000')
+    expect(formatActionableDollar(40_000)).toBe('40,000')
+  })
+
+  it('never renders a falsehood for a figure smaller than its own step (would floor to "0")', () => {
+    expect(formatActionableDollar(60)).toBe('60')
+    expect(formatActionableDollar(99)).toBe('99')
+    expect(formatActionableDollar(0)).toBe('0')
+  })
+
+  it('is BARE of the "$" glyph — the copy SLOT supplies it', () => {
+    expect(formatActionableDollar(43_600).startsWith('$')).toBe(false)
   })
 })

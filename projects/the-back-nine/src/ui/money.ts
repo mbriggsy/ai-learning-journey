@@ -62,6 +62,38 @@ export function formatAbsoluteDollar(dollars: number): string {
   return `${(v / 1_000_000).toFixed(1).replace(/\.0$/, '')}M`
 }
 
+/**
+ * THE ACTIONABLE dialect — a dollar the reader may RE-TYPE INTO A CONTROL, rounded DOWN.
+ *
+ * ⚠️ ROUNDING DOWN IS A CORRECTNESS RULE HERE, NOT A PRESENTATION CHOICE, AND IT IS THE ONLY
+ * DIFFERENCE FROM {@link formatDeltaDollar}. Every conversion amount the solver proposes is built by
+ * `largestWholeDollarWithin(metric, rail, …)` — the LARGEST WHOLE DOLLAR keeping an ACA-cliff /
+ * IRMAA-step / bracket-edge metric AT OR UNDER its threshold. One dollar more crosses the rail. The
+ * delta dialect rounds to NEAREST, so an anchored $43,600 renders "$44,000" — four hundred dollars
+ * PAST the cliff the solver constructed that candidate to sit under, quoted to a household that can
+ * type it straight into the Roth lever and eat a full unsubsidized premium for the year. A calm,
+ * plausible figure whose only defect is that acting on it costs money: the cardinal sin exactly.
+ *
+ * FLOORING IS SAFE BY CONSTRUCTION, not by luck: each rail metric is MONOTONE in the amount, so every
+ * value at or below the anchor clears the same rail the anchor clears.
+ *
+ * UNCONDITIONAL, and that is forced rather than preferred: `SolveArm` carries no `anchoredRail`, so a
+ * renderer cannot tell a rail-anchored grid amount from the household's own unscreened figure. On the
+ * household's own (already round) amount the floor is a no-op, so the safe branch costs nothing and
+ * the unsafe branch cannot be reached by mistake.
+ *
+ * Same humane step ladder as the delta dialect, so the surface still speaks ONE small-figure dialect;
+ * bare of the "$" glyph, which the copy slot supplies (copy.ts SLOT DISCIPLINE). The sub-step guard is
+ * not defensive dressing — without it a figure smaller than its own step floors to "$0", which would
+ * be a rendered falsehood rather than a rounding.
+ */
+export function formatActionableDollar(dollars: number): string {
+  const v = Math.max(0, dollars)
+  const step = v < 10_000 ? 100 : v < 100_000 ? 1_000 : 10_000
+  const stepped = Math.floor(v / step) * step
+  return grouped.format(stepped >= 1 ? stepped : Math.floor(v))
+}
+
 /** The heir-bracket disclosure percent — the assumed IRD bracket (a fraction in [0,1)) as a whole
  *  percent for the leave-more heir-bracket note ("about 24%"). Humane: rounded to a whole percent (a
  *  bequest bracket is a coarse assumption, never spuriously precise — back-nine-design §3). Sign-free

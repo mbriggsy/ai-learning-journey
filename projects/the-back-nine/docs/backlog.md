@@ -1,6 +1,6 @@
 # The Back Nine — Open Backlog
 
-> The complete open register: **43 open items** (48 entries, 5 closed and kept as records) consolidated
+> The complete open register: **42 open items** (48 entries, 6 closed and kept as records) consolidated
 > from **136 raw obligations** (a source audit of the shipped code + a salvage sweep of the 246 KB
 > `TODO.md` archive it replaced). Every raw obligation is accounted for — the `ids` on each entry are its
 > provenance.
@@ -110,25 +110,40 @@
   under today's machinery. A synthetic household-total `FieldPath` is not optional. 6 edits, enumerated
   in the fleet transcript.
 
-### The hero's baseline nameplate names "your plan today" — but the baseline is never your plan
+### ~~The hero's baseline nameplate names "your plan today" — but the baseline is never your plan~~ — **CLOSED 2026-08-03, in two commits**
 
-`S` · **pilot** · filed 2026-08-03 (verification fleet; found while auditing "the recommendation never
+~~`S`~~ · **pilot** · filed 2026-08-03 (verification fleet; found while auditing "the recommendation never
 says what to do", filed nowhere before)
 
-- `copy.ts:1458` — **`recommendBaselineNameplate: 'Compared with your plan today'`**, and the same words
-  label the viz arm (`recVizWithoutLabel`, `copy.ts:1537`).
-- **The arm it labels is NOT the household's plan.** `noChange` is `winner.index === conventionalIndex`
-  (`select.ts:313`), and `conventionalIndex` is located by provenance `'conventional-baseline'` — the
-  FIXED `taxable-first` / conversion-0 candidate, *"NEVER the user's custom baseline"* (`select.ts:324`,
-  `:329`). `solve.ts:500` displays that arm. `search.userBaseline` (`search.ts:179`) **is computed and
-  consumed nowhere.**
-- So for any household whose entered order is not `taxable-first` — including the **default
-  `proportional` draft** — the dollar delta is measured against a plan they never chose, under a label
-  saying it is theirs. Direction is unbounded either way.
-- Couples with a single pre-tax account are immune (every order is the same decumulation), which is
-  likely why no cold read caught it — `?vault=rec`'s household is exactly that shape.
-- Fix shape is undecided: rename the nameplate to what the arm actually is, or start ranking against
-  `userBaseline` (already computed, never consumed). **The second is a real product decision.**
+**It took TWO fixes because the plan has TWO coupled tax controls, and the first one shipped believing
+it was whole.** The register's own fix-shape question ("rename the nameplate, or rank against
+`userBaseline`") was answered by `plans/4-recommendation.md:190`, which had already ratified *"the
+rendered delta is current→recommended, **never** conventional-default→recommended"* — so this was a
+regression against a ratified acceptance criterion, not a product decision.
+
+- **The ORDER half — `2652b7a6`.** The displayed baseline moved from `search.conventionalBaseline` to
+  `search.userBaseline`; `noChange` re-anchored and compares **plans, not indices**
+  (`sameDecumulationPlan`). The shrinkage prior and the incumbent tie-break deliberately **stayed**
+  conventional (Council Q3) so a household's own habit is never laundered into advice.
+  `SOLVER_CODE_VERSION` 1→2.
+- **The CONVERSION half — `94ea8d00`.** `enumerateCandidates` had **no field in which a conversion
+  could be expressed**, so the injected baseline was minted `conversion: null` and `applyCandidate`
+  strips the base's schedule: for a household running the shipped Roth lever, "your plan today" was
+  their order with their conversion **deleted**. `draft.rothConversion` now threads through to the
+  baseline arm, unscreened by the grid's legality filter (it is their standing plan, already simulated
+  on the spine). Pinned as a **reduce-to-spine identity** — `applyCandidate(base, userBaseline)`
+  deep-equals the household's own params. `SOLVER_CODE_VERSION` 2→3; this one **moves the ranking**.
+- **Measured, full precision, `?seed=health`:** pre-fix `baseline:proportional:0` / `noChange: true` /
+  delta **$0** — the surface reassured a household whose real recommendation is to take their
+  conversion back out. Post-fix `baseline:proportional:20000` / `noChange: false` / delta **$12,530**.
+- ⚠️ **The single-bucket immunity note above was right and is worth keeping:** couples with one pre-tax
+  account are immune on the ORDER half (every order is the same decumulation), which is why no cold
+  read caught it — `?vault=rec`'s household is exactly that shape. `?seed=buckets` was minted to close
+  that witness gap; `?seed=health` is the conversion-half witness.
+- ⚠️ **The four strings on this seam are load-bearing and now carry a coupling comment**
+  (`copy.ts` `recommendBaselineNameplate`): they are true only while the displayed baseline is the user
+  baseline **AND** that baseline carries **both** controls. Dropping either half makes all four lies in
+  the same commit.
 
 ### ~~NC rate certification~~ — **CLOSED 2026-08-02** (the NC half; the ACA half moved below)
 

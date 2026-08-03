@@ -5,7 +5,7 @@
 > the roadmap carry the test count under `verify:doc-stats` (this file re-typing it rotted twice, so
 > `d5df3609` made pointing the rule).
 >
-> **The full open register is [`docs/backlog.md`](docs/backlog.md)** — 43 open items, each traced to the raw
+> **The full open register is [`docs/backlog.md`](docs/backlog.md)** — 42 open items, each traced to the raw
 > obligations behind it. This file ranks only what is next; **a queue of ~16 is not the open surface, so
 > read the register before filing anything as new.**
 >

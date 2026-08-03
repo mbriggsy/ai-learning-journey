@@ -132,7 +132,15 @@ deadlines silently misses it. It has been filed a notch late twice, both times i
    `medicare-pricing-build-spec.md:43` bans the false unidirectional. Draft to append to BOTH strings:
    *"One modeling choice: these prices step up with your ages, not with the way plan prices themselves climb
    — so a conversion that crosses the income line could cost more than shown."*
-   ⚑ **TWO SEPARABLE XS WINS, both fully decided, no research needed:**
+   ✅ **BOTH XS WINS SHIPPED 2026-08-03** — the clawback gate (`a436caee`) and the false negation
+   (`bd851f24`). The gate turned out to be **seven** undeclared fields, not one (`discriminatingProof`,
+   `nothingEnactedChain`, `pendingExtension`, `retroactivity`, `adjacentButSharp`, `forwardClock`,
+   `strickenCitations`) — all now declared + required, with array arms that reject `[]` (truthy) and
+   blank links; mutation-proven against the shipped record. And `copy.ts:945/951` no longer list the
+   benchmark premium as uncounted — it is the §36B PTC basis. **What REMAINS open here: the
+   cliff-scoped disclosure sentence, and the withhold-vs-disclose fork below.**
+   <details><summary>the two shipped XS entries</summary>
+
    - **Make the clawback field bite (XS, 4 touches).** `adjacentButSharp` appears ONLY at
      `aca-last-verified.json:41`; `AcaRecord` (`scripts/verify-aca-status.ts:40-72`) never declares it and
      `checkAcaStatus` (`:77-130`) never reads it — **inert prose, confirmed twice.** Declare the key after
@@ -143,6 +151,8 @@ deadlines silently misses it. It has been filed a notch late twice, both times i
    - **A false negation on the health sheet (XS).** `copy.ts:945/951` list *"the benchmark premium itself"*
      under "Not counted here" while the entered benchmark **is** priced (`intakeMap.ts:582` →
      `healthOverlay.ts:213-223`) — the same false-negation shape O16 fixed on the Roth strings.
+   </details>
+
    ⚑ **The open fork is his, and it is not the copy.** The Medicare council's standing law
    (`oracleToken.ts:117`) is *"disclose-and-ship is FORBIDDEN — a disclosure fixes a number, never a
    mis-ranking,"* written about exactly this shape. Does the pre-65 Marketplace population get the
@@ -194,7 +204,15 @@ deadlines silently misses it. It has been filed a notch late twice, both times i
    the state step is deliberately **non-blocking** (`questions.tsx:569-575`), so refusing on ABSENT walls
    every household that skipped it.
 
-4. **The record card says the advice still holds when the household never took it.**
+4. ✅ **SHIPPED 2026-08-03 (`bd851f24`) — the record card no longer implies the household acted.**
+   `copy.ts` `recommendRecordHolds` now reads *"It still lines up with the numbers you've entered."*
+   (50 chars, width MEASURED under `verify:fit` — `standing bottom=774`, slack 17, one line). It claims
+   conjunct 1 (fingerprint identity) and nothing else, and a defending comment — there was none — states
+   what it does NOT claim and **bans every "nothing has moved" universal-negative form**. Kept below as
+   the record of the reasoning; do not re-open.
+   <details><summary>original entry</summary>
+
+   **The record card says the advice still holds when the household never took it.**
    `copy.ts:1315` — *"It still matches your plan as it stands today."* On `?vault=rec` the saved winner is
    `taxable-first` with `noChange: false` (`devSeeds.ts:1322`; the winner literal is at `:1308`) while the
    live order is labelled proportional. Cold-read Card 8 grades it HARD-FLAG/BLOCKER. Its sibling was fixed
@@ -236,6 +254,18 @@ deadlines silently misses it. It has been filed a notch late twice, both times i
    ⚑ `?vault=rec` **cannot witness this** — its base is `retiredOnTrack` (`devSeeds.ts:951`), a single
    $1.055M traditional IRA, so `taxable-first` and `proportional` are the identical decumulation. **No
    multi-account witness plant exists**, and another open register entry is blocked on the same gap.
+   </details>
+
+4b. ⚠️ **NEW, AND IT NOW BLOCKS RUNTIME VERIFICATION OF TWO SHIPPED FIXES — mint a multi-account
+   witness seed.** Confirmed 2026-08-03 by walking every seed: **no dev seed can witness a withdrawal
+   ORDER mattering.** `retiredOnTrack` (and therefore `rec`/`recold`/`surplus`) holds ONE traditional
+   IRA, so every order is the identical decumulation; `surplus` adds a $3M IRA but still one bucket at
+   t=0; `?vault=rec` renders a HAND-PLANTED payload (`headlineStatisticB: 0`, no solve at all).
+   **Requirements:** ≥2 buckets at t=0 (pre-tax + taxable with a basis, ideally + Roth), a
+   `drawdownPolicy` that is NOT `taxable-first`, and a household whose crown is a SEQUENCING arm rather
+   than a conversion. Then the baseline re-anchoring (entry 6) and the record card (entry 4) become
+   eyeball-verifiable, and the register's own "no multi-account witness" blocker closes with it.
+   ⚑ Budget the walk, don't be surprised by it: a dev-build live solve measured **~11 minutes**.
 
 5. **Smaller, each self-contained** *(all four re-anchored by the 2026-08-02 audit)*:
 
@@ -296,7 +326,20 @@ deadlines silently misses it. It has been filed a notch late twice, both times i
    `rulesMoved` to stop being one OR-collapsed boolean. Nothing here is urgent: the residual over-alarm is
    bounded and knowingly accepted, and the clock is load-bearing.
 
-6. **The hero says "Compared with your plan today" — and the baseline is never their plan.** *(Found
+6. ✅ **SHIPPED 2026-08-03 (`2652b7a6`) — the hero is measured against the household's own plan now.**
+   `solve.ts` displays `search.userBaseline ?? search.conventionalBaseline`; the delta skew moved with
+   it; `noChange` re-anchored and **compares PLANS, not indices** (`sameDecumulationPlan` — the injected
+   user baseline is always a strategic duplicate of some grid arm unless the policy is `custom`, and
+   ties resolve toward the incumbent, so index equality would have told a household already running the
+   winner that we recommend a change). The shrinkage prior + incumbent tie-break **stayed** conventional
+   (Council Q3). `SOLVER_CODE_VERSION` 1→2 because `noChange` is persisted. All four copy strings became
+   true with **no rename** and now carry the coupling. **Both arms mutation-proven**; goldens untouched
+   (oracle fixtures take a fallback that is the old test verbatim).
+   ⚠️ **RUNTIME NOT EYEBALLED — see 4b.** Proven at the engine seam through the real token/oracle/grade
+   path and every gate, but no dev seed can render a case where the two arms differ. Kept below.
+   <details><summary>original entry</summary>
+
+   **The hero says "Compared with your plan today" — and the baseline is never their plan.** *(Found
    2026-08-03 by the verification fleet; filed nowhere before.)* `copy.ts:1458` (and the viz arm label
    `copy.ts:1537`) name the compared-against arm as the household's own plan. It is not: `noChange` is
    `winner.index === conventionalIndex` (`select.ts:313`), and `conventionalIndex` is the FIXED
@@ -331,6 +374,7 @@ deadlines silently misses it. It has been filed a notch late twice, both times i
    ⚑ `?vault=rec` could never have caught this: it renders a **hand-planted** payload
    (`devSeeds.ts:1315-1342`) whose arms all carry `headlineStatisticB: 0` — no real solve, no dollar hero.
    (Filed same-day at `docs/backlog.md:94-112` with the same drifted anchors — newly filed, not unfiled.)
+   </details>
 
 ### Tier 1 — the differentiator does not land
 
@@ -346,13 +390,14 @@ deadlines silently misses it. It has been filed a notch late twice, both times i
    accepted** — the mechanism is `invalidateStaleSolve` (`store/memoryModel.ts:658-664`) fired by `update()`
    at `:679`, **not** `recommendationView.ts:289-290` (a comment banner). Name the winner and point at the
    sequencing sheet; no apply-seam mutation.
-   ⚑ **2026-08-03 double-blind — BLOCKED ON ENTRY 6. Do not start this first.** The *"needs only rendering,
-   zero engine work"* bet **fails on its own gate.** Rendering `alreadyYours` — or even just **naming the
-   winner** — to a `proportional` household paints the winner beside an ACTIVE hero reading *"Keeps about $X
-   more … than today's plan"* under *"Compared with your plan today"*: **one card, two contradictory
-   claims.** Naming the winner is precisely what makes entry 6's false baseline **reader-visible**. Either
-   sequence this behind entry 6, or ship name + conversion line **only** once `copy.ts:1481/2331/2335` stop
-   saying "today's plan."
+   ⚑ **2026-08-03 double-blind — WAS blocked on entry 6; ENTRY 6 SHIPPED (`2652b7a6`), SO THIS IS NOW
+   THE TOP OF THE QUEUE.** The block was real: rendering `alreadyYours` — or even just **naming the
+   winner** — to a `proportional` household would have painted the winner beside an ACTIVE hero reading
+   *"Keeps about $X more … than today's plan"* under *"Compared with your plan today"*, one card with two
+   contradictory claims. Naming the winner is precisely what made entry 6's false baseline
+   reader-visible. **That contradiction is gone**: the hero now compares against the household's own
+   plan and `noChange` tracks whether the crown IS their plan, so `alreadyYours` and the strategy name
+   are both truthful. Take the render half.
    ⚑ **Worse than filed, in the good direction: conversions rank LIVE.** `taxOverlay.ts:916`
    `PART_B_PRICING_MODE='trended'` + sourced `medicareCostTrend` ⇒ `enumerateWithheldConversionLevers`
    returns `[]` ⇒ the **whole roster ranks** (`solve.ts:456-461`), and `select.ts:296-298` calls a

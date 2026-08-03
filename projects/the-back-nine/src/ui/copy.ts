@@ -1533,6 +1533,17 @@ export const copy = {
     'One of the tool’s own calibration numbers isn’t set, so we’re holding the recommendation rather than risk a ranking that could be off.',
   recHoldGeneric:
     'We’re holding this recommendation back for now — leaning on a number we can’t yet stand behind could mislead, and we’d rather wait than guess.',
+  // The DEMOTION-AXIS hold (the Tier-0 crash fix, 2026-08-03). Before this key existed, a well-funded
+  // household whose winning strategy converts hit `gradeCalibration`'s plain throw, which `solve.ts`
+  // rethrows — landing them on the GENERIC compute-error card, indistinguishable from "the worker
+  // died". Both goals now route to a structured withhold, and this is its humane face.
+  // ⚠️ It is NOT about the two strategies being CLOSE. The guard fires on the shape alone (a
+  // converting winner over a non-converting runner-up on a dollar axis) BEFORE any margin is read —
+  // the honest claim is that we cannot tell how close the call is, never that it IS close. Wording
+  // that says "these two are neck and neck" would be a fabricated finding.
+  // Names the direction honestly (it may well be the right move) — a hold is not a warning against it.
+  recHoldDemotionAxis:
+    'We’re holding this recommendation back — the strategy that came out ahead uses a Roth conversion, and on this goal we can’t yet tell how close that call really is. It could well be the better path; we’d rather wait than hand you a confidence we haven’t earned.',
   // The COUPLING caveat (Q5, from the red team's Attack 4): withdrawal order and conversions rank
   // JOINTLY, so a sequencing-only winner is a coupled sub-solution — the read for now, not the last word.
   recHoldCoupling:

@@ -25,6 +25,7 @@ import { selectCore, selectRecommendation, survivingAdvantage } from '../select'
 import { runSearch, type CandidateEvaluation, type SolverSearchResult } from '../search'
 import { enumerateCandidates, solverCandidateId, type CandidateStrategy } from '../candidates'
 import { evaluateCandidates, rankCandidates, type CandidateOutcome } from '../../validation/evaluate'
+import { gradeOnFamily } from '../../validation/gradeCalibration'
 import { deriveSeedB } from '../../validation/heldOutSeed'
 import { SOLVER_CASES } from '../../reference/solver-cases'
 
@@ -291,7 +292,10 @@ describe('§S4 byte-reproducibility — the winner + retained runner-up reproduc
       const second = selectRecommendation(runSearch(input))
       expect(first.kind).toBe('selected')
       expect(second).toEqual(first) // full byte-identity: winner, runner-up, full order, flags
-      if (first.kind !== 'selected') throw new Error('unreachable — leave-more never routes to withheld')
+      // NOT "leave-more never routes to withheld" — since 2026-08-03 it can (the goal-agnostic
+      // demotion guard). It does not HERE because this world's crown does not pair a converting
+      // winner with a non-converting runner-up; the withheld arm is proven in its own describe below.
+      if (first.kind !== 'selected') throw new Error('unreachable — this world crowns no lone conversion winner')
       expect(first.winnerId).toBeDefined()
       expect(first.runnerUpId).toBeDefined() // R23 — the runner-up is retained
       expect(first.winnerId).not.toBe(first.runnerUpId)
@@ -382,6 +386,135 @@ describe('§S4.5 the demotion-margin refusal → a STRUCTURED withheld state (ne
     if (result.kind !== 'selected') throw new Error('unreachable')
     expect(result.surplusRegime).toBe(false)
     expect(result.winnerId).toBe('grid:proportional:30000')
+  })
+})
+
+// ── THE LEAVE-MORE ARM OF THE SAME REFUSAL (the Tier-0 crash, fixed 2026-08-03) ───────────────────
+//
+// `demotionAxisCalibrated` is goal-AGNOSTIC — it refuses any non-`survival` statistic where the
+// winner converts and the runner-up does not. The §S4.5 guard above hard-coded `pay-less-tax` in BOTH
+// the goal test and the statistic argument, so a `leave-more` household walked straight past it,
+// returned `kind:'selected'`, and hit `assertDemotionAxisCalibrated`'s PLAIN Error inside
+// `gradeOnFamily`. `solve.ts`'s catch narrows to `GradeFloorRefusal` and rethrows, so it surfaced as
+// `calm-error` → `compute-error` → the GENERIC "unavailable" card — the exact laundering
+// `solve.ts`'s own comment calls the calm-but-wrong cardinal sin.
+//
+// This is NOT an exotic shape. `select.ts`'s conventional-incumbent tie-break crowns the
+// non-converting baseline as runner-up whenever only one conversion's advantage survives shrinkage,
+// so "winner converts, runner-up doesn't" is the NATURAL outcome for a well-funded leave-more
+// household — the modal target user for that goal.
+describe('§S4.5 the demotion refusal covers LEAVE-MORE too (the arm that used to crash)', () => {
+  const X_CONV: CandidateStrategy = { policy: 'proportional', conversion: conv(30_000), provenance: 'grid' }
+  const Z_CONV: CandidateStrategy = { policy: 'pre-tax-first', conversion: conv(20_000), provenance: 'grid' }
+
+  /** A synthetic leave-more scored outcome. The whole bequest sits in the ROTH bucket on purpose:
+   *  `afterTaxBequestPerPath` passes Roth through untouched, so the fixture's after-tax bequest is
+   *  EXACTLY this vector at any `heirBracket` — the arm proves the demotion routing, never the IRD
+   *  arithmetic (which `objectiveHeadline` owns and pins separately). */
+  function bequestOutcome(candidate: CandidateStrategy, rothPerPath: readonly number[], survival: number): CandidateOutcome {
+    const n = rothPerPath.length
+    const zeros: readonly number[] = new Array(n).fill(0)
+    const depletionYears: readonly DepletionYear[] = new Array(n).fill(NEVER_DEPLETED)
+    return {
+      kind: 'scored',
+      candidate,
+      score: {
+        survival,
+        lifetimeTaxMeanReal: 0,
+        terminalGrossMeanReal: mean(rothPerPath),
+        afterTaxBequestMeanReal: mean(rothPerPath),
+      },
+      distribution: {
+        terminalValuesReal: rothPerPath,
+        depletionYears,
+        survivalFraction: survival,
+        taxAware: {
+          lifetimeTaxPaidReal: zeros,
+          terminalTaxableReal: zeros,
+          terminalPretaxReal: zeros,
+          terminalRothReal: rothPerPath,
+          terminalHsaReal: zeros,
+          terminalTaxableBasisReal: zeros,
+          lifetimeNetPremiumReal: zeros,
+          lifetimeMedicareCostReal: zeros,
+        },
+      },
+    }
+  }
+
+  const leaveMore = (outcomes: readonly CandidateOutcome[], outcomesB?: readonly CandidateOutcome[]) =>
+    selectCore({
+      outcomesA: outcomes,
+      outcomesB: outcomesB ?? outcomes,
+      goal: 'leave-more',
+      tieTolerance: 0,
+      heirBracket: 0.24,
+      conventionalIndex: 0,
+      shrinkage: 'on',
+    })
+
+  it('routes to WITHHELD when a conversion winner tops a non-conversion runner-up (it used to crash here)', () => {
+    // C (conventional, no conversion) leaves 100k; X (conversion) leaves 500k ⇒ X crowns, C is runner-up.
+    const world = [bequestOutcome(C, [100_000, 100_000, 100_000, 100_000], 1), bequestOutcome(X_CONV, [500_000, 500_000, 500_000, 500_000], 1)]
+    let result!: ReturnType<typeof selectCore>
+    expect(() => {
+      result = leaveMore(world)
+    }).not.toThrow()
+    expect(result.kind, 'leave-more must refuse structurally, exactly as pay-less-tax does').toBe('withheld')
+    if (result.kind !== 'withheld') throw new Error('unreachable')
+    expect(result.reason).toBe('demotion-axis-uncalibrated')
+    expect(result.winnerId).toBe('grid:proportional:30000')
+    expect(result.runnerUpId).toBe('conventional:taxable-first:0')
+    expect(result.surplusRegime).toBe(true)
+    // The detail must NAME the goal it refused on — a shared string that says "pay-less-tax" on a
+    // leave-more household is the same class of lie this whole entry exists to close.
+    expect(result.detail, 'the refusal names its own axis').toContain('leave-more')
+    expect(result.detail, 'and never mislabels it as the other goal').not.toContain('pay-less-tax')
+  })
+
+  // THE CRASH ITSELF, pinned at its source: were `selectCore` ever to hand this triple back as
+  // `selected`, THIS is what the grade path does with it. The two arms together are the whole defect.
+  it('the grade path really does THROW on that triple — so returning `selected` guarantees the crash', () => {
+    const dollarFamily = Array.from({ length: 5 }, () => Array.from({ length: 200 }, () => 1_200))
+    expect(() =>
+      gradeOnFamily({
+        family: dollarFamily,
+        statistic: 'leave-more',
+        winnerHasConversion: true,
+        runnerUpHasConversion: false,
+        minPathsOverride: 100,
+      }),
+    ).toThrow(/SURVIVAL axis only/)
+    // CONTROL — the throw is specific to the uncalibrated triple, not to `leave-more` as such.
+    const ok = gradeOnFamily({
+      family: dollarFamily,
+      statistic: 'leave-more',
+      winnerHasConversion: false,
+      runnerUpHasConversion: false,
+      minPathsOverride: 100,
+    })
+    expect(ok.demotionFired).toBe(false)
+  })
+
+  it('does NOT route when the runner-up ALSO converts (the demotion axis is calibrated)', () => {
+    const world = [
+      bequestOutcome(C, [100_000, 100_000, 100_000, 100_000], 1),
+      bequestOutcome(X_CONV, [500_000, 500_000, 500_000, 500_000], 1),
+      bequestOutcome(Z_CONV, [400_000, 400_000, 400_000, 400_000], 1),
+    ]
+    const result = leaveMore(world)
+    expect(result.kind).toBe('selected')
+    if (result.kind !== 'selected') throw new Error('unreachable')
+    expect(result.winnerId).toBe('grid:proportional:30000')
+    expect(result.runnerUpId).toBe('grid:pre-tax-first:20000')
+  })
+
+  it('does NOT route when the household is not over-funded (the grade rides the calibrated survival axis)', () => {
+    const world = [bequestOutcome(C, [100_000, 100_000, 100_000, 100_000], 0.9), bequestOutcome(X_CONV, [500_000, 500_000, 500_000, 500_000], 0.9)]
+    const result = leaveMore(world)
+    expect(result.kind).toBe('selected')
+    if (result.kind !== 'selected') throw new Error('unreachable')
+    expect(result.surplusRegime).toBe(false)
   })
 })
 

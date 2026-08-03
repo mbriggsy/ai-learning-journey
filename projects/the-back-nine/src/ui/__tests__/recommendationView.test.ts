@@ -6,6 +6,7 @@ import { headlineStatisticFromDistribution } from '@engine/solver/objectiveHeadl
 import type { SolveArm, SolveRecommendation } from '@engine/solver/solve'
 import type { SolvePayload, SolveTokenWithheld } from '@engine/solver/solveEntry'
 import type { GradeResult } from '@engine/validation/gradeCalibration'
+import { lintCopy } from '../copyGuard'
 import type { WithheldReason } from '@engine/validation/oracleToken'
 import type { SolverRunFingerprint } from '@engine/validation/solverRunFingerprint'
 import type { SolveAnswer } from '@store/memoryModel'
@@ -113,11 +114,13 @@ describe('recommendationView — the entry + non-committed states', () => {
 
 // ---- the committed non-recommendation payloads ----------------------------------------------------
 
-describe('recommendationView — refusals / mint-failures / demotions route to ONE calm unavailable', () => {
-  it('refused / withheld(demotion) / mint-failed / aborted all become the calm retry line, reason hidden', () => {
+describe('recommendationView — refusals / mint-failures route to ONE calm unavailable', () => {
+  it('refused / mint-failed / aborted all become the calm retry line, reason hidden', () => {
+    // NOTE the absentee: `withheld` USED to sit in this list, and that was the second half of the
+    // Tier-0 crash. These three are genuine "something went wrong" states with nothing sayable to
+    // offer; the demotion withhold is a DELIBERATE, explainable decision and now renders as one.
     const shapes: SolvePayload[] = [
       { kind: 'refused', reason: 'fingerprint-mismatch', detail: 'stale token', solverCodeVersion: 1 },
-      { kind: 'withheld', reason: 'demotion-axis-uncalibrated', detail: 'no width', winnerId: 'w', runnerUpId: 'r', surplusRegime: false, solverCodeVersion: 1 },
       { kind: 'mint-failed', stage: 'oracle', detail: 'wrong-best', solverCodeVersion: 1 },
       { kind: 'aborted', detail: 'superseded', solverCodeVersion: 1 },
     ]
@@ -126,9 +129,45 @@ describe('recommendationView — refusals / mint-failures / demotions route to O
       expect(v.kind).toBe('unavailable')
       if (v.kind === 'unavailable') {
         expect(v.note, 'the user sees ONE calm line, never the raw reason').toBe(copy.recommendUnavailable)
-        expect(v.note).not.toMatch(/fingerprint|demotion|wrong-best|superseded/)
+        expect(v.note).not.toMatch(/fingerprint|wrong-best|superseded/)
       }
     }
+  })
+
+  // THE TIER-0 CRASH, UI HALF (fixed 2026-08-03). A well-funded household whose winning strategy
+  // converts used to hit a plain throw in `gradeCalibration`, which `solve.ts` rethrows — landing on
+  // `compute-error` and the generic card. Widening the engine guard alone would have converted that
+  // crash into the IDENTICAL generic card, because this arm returned the same string as "the worker
+  // died". Both halves had to ship together, so both are pinned together.
+  it('the demotion withhold renders the HUMANE HOLD, never the generic "something went wrong" card', () => {
+    const withheld: SolvePayload = {
+      kind: 'withheld',
+      reason: 'demotion-axis-uncalibrated',
+      detail: 'the leave-more dollar-axis conversion-near-tie demotion margin is uncalibrated in U15',
+      winnerId: 'w',
+      runnerUpId: 'r',
+      surplusRegime: true,
+      solverCodeVersion: 1,
+    }
+    const v = recommendationView(committed(withheld))
+    expect(v.kind, 'a decision we can explain is never dressed as a malfunction').toBe('held')
+    if (v.kind !== 'held') throw new Error('unreachable')
+    expect(v.heading).toBe(copy.recommendHeldHeading)
+    expect(v.reasons).toEqual([copy.recHoldDemotionAxis])
+    // NON-VACUITY: it must be DISTINCT from the generic card, or the fix is cosmetic.
+    expect(v.reasons[0]).not.toBe(copy.recommendUnavailable)
+    expect(v.reasons[0]).not.toBe(copy.recHoldGeneric)
+    // The engine's diagnostic `detail` stays INTERNAL — the household reads the humane reason only.
+    expect(v.reasons[0]).not.toMatch(/uncalibrated|dollar-axis|U15|demotion/i)
+    // It names the mechanism the household can act on (a conversion) and hedges — recHold* is
+    // control-scoped, so require-hedge binds here.
+    expect(v.reasons[0]).toMatch(/conversion/i)
+    expect(lintCopy(copy.recHoldDemotionAxis, ['require-hedge', 'false-certainty', 'advice-verb', 'superlative'])).toEqual([])
+    // AND it must not fabricate a finding the guard never made: the refusal fires on SHAPE, before any
+    // margin is read, so claiming the two strategies are close would be an invented result.
+    expect(copy.recHoldDemotionAxis, 'never asserts a near-tie the guard did not measure').not.toMatch(
+      /\b(neck and neck|close call|near-?tie|dead heat|too close to call)\b/i,
+    )
   })
 })
 

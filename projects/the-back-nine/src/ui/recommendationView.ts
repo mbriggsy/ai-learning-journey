@@ -336,8 +336,15 @@ function committedView(payload: SolvePayload, opts: RecommendationViewOpts | und
     case 'token-withheld':
       return heldView(payload)
     case 'withheld':
-      // The demotion-axis fail-closed withhold (unreachable in a live sequencing-only solve) — calm.
-      return { kind: 'unavailable', note: copy.recommendUnavailable, detail: `${payload.reason}: ${payload.detail}` }
+      // The demotion-axis fail-closed withhold → the HUMANE HOLD shape, not the generic card.
+      // ⚠️ Two stale premises died here on 2026-08-03. (1) "Unreachable in a live sequencing-only
+      // solve" expired 2026-07-19 when Part B went 'trended' and conversions began ranking live.
+      // (2) This arm returned the SAME `copy.recommendUnavailable` as `compute-error` and `aborted`
+      // — so a household whose winner converts read a card meaning "something broke", with its real,
+      // sayable reason discarded into a `detail` string the UI never renders. Fixing the engine's
+      // leave-more crash alone would only have converted a crash into that identical generic card,
+      // which is why the two halves shipped together.
+      return { kind: 'held', heading: copy.recommendHeldHeading, reasons: [copy.recHoldDemotionAxis] }
     case 'refused':
       return { kind: 'unavailable', note: copy.recommendUnavailable, detail: `${payload.reason}: ${payload.detail}` }
     case 'mint-failed':

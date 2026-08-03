@@ -113,8 +113,9 @@ export interface SelectionSelected {
  *  demotion-axis refusal into — never an uncaught worker throw.
  *  ⚠️ The "UNREACHABLE live (conversions stay trend-blocked)" premise this comment used to assert
  *  EXPIRED 2026-07-19: `PART_B_PRICING_MODE` is `'trended'` (`taxOverlay.ts:916`) and the trend
- *  constant is sourced, so conversion candidates rank live. Only the `pay-less-tax` arm routes here;
- *  `leave-more` still falls through to a throw — a filed Tier-0 defect, NOT a dead branch. */
+ *  constant is sourced, so conversion candidates rank live. BOTH goals route here as of 2026-08-03 —
+ *  `leave-more` used to fall through to `gradeCalibration`'s plain throw (the Tier-0 crash) and no
+ *  longer does. `detail` names the refused axis, so it is never a shared literal. */
 export interface SelectionWithheld {
   readonly kind: 'withheld'
   readonly reason: 'demotion-axis-uncalibrated'
@@ -281,19 +282,31 @@ export function selectCore(input: SelectCoreInput): SelectionResult {
   // over a non-conversion runner-up on that axis would trip `gradeCalibration`'s fail-closed throw;
   // we route it here instead.
   // ⚠️ EXPIRED PREMISE (was: "UNREACHABLE live — conversions stay trend-blocked"). Since 2026-07-19
-  // Part B prices trended and conversions rank live, so this IS reachable. Worse, the `leave-more`
-  // arm is not covered by this branch at all and falls through to `gradeCalibration`'s throw — filed
-  // Tier-0. Do not read this guard as dead code.
+  // Part B prices trended and conversions rank live, so this IS reachable. Do not read it as dead code.
+  //
+  // GOAL-AGNOSTIC SINCE 2026-08-03 (the Tier-0 crash fix). This guard used to test `goal ===
+  // 'pay-less-tax'` AND pass that literal as the statistic, so a `leave-more` household walked past
+  // it, returned `selected`, and hit `assertDemotionAxisCalibrated`'s PLAIN Error inside
+  // `gradeOnFamily` — which `solve.ts` rethrows (its catch narrows to `GradeFloorRefusal`), landing
+  // the household on the GENERIC "unavailable" card. `demotionAxisCalibrated` never cared about the
+  // goal; it refuses any non-`survival` statistic with a converting winner over a non-converting
+  // runner-up. `OracleGoal` is a strict subset of `GradeStatistic`, so `goal` passes with no cast,
+  // and the axis is now read from the household's ACTUAL goal rather than assumed.
+  //
+  // Not an exotic shape: the conventional-incumbent tie-break above crowns the non-converting
+  // baseline as runner-up whenever a single conversion's advantage survives shrinkage, so this is the
+  // NATURAL outcome for a well-funded leave-more household.
   if (
     surplusRegime &&
-    goal === 'pay-less-tax' &&
-    !demotionAxisCalibrated('pay-less-tax', winner.candidate.conversion !== null, runnerUp?.candidate.conversion != null)
+    !demotionAxisCalibrated(goal, winner.candidate.conversion !== null, runnerUp?.candidate.conversion != null)
   ) {
     return {
       kind: 'withheld',
       reason: 'demotion-axis-uncalibrated',
+      // The axis is INTERPOLATED, never a shared literal — a refusal that says "pay-less-tax" to a
+      // leave-more household is the same class of false statement this fix exists to remove.
       detail:
-        'the pay-less-tax dollar-axis conversion-near-tie demotion margin is uncalibrated in U15 ' +
+        `the ${goal} dollar-axis conversion-near-tie demotion margin is uncalibrated in U15 ` +
         '(calibrated only on a Medicare-bearing post-trend-flip world — insight 091); the conversion ' +
         'recommendation is withheld rather than graded on an uncalibrated axis',
       winnerId,

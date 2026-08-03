@@ -148,8 +148,8 @@ export interface SolveRefused {
 
 /** The demotion-axis structured withhold (§S4.5) routed up from `select.ts` — never an uncaught
  *  throw. ⚠️ The "unreachable in a live sequencing-only solve (conversions blocked)" premise EXPIRED
- *  2026-07-19; conversions rank live. This state is reachable on `pay-less-tax`, and the `leave-more`
- *  arm reaches a THROW instead of this — the filed Tier-0 defect. */
+ *  2026-07-19; conversions rank live. Reachable on BOTH goals since 2026-08-03 — the `leave-more`
+ *  arm used to reach a plain throw instead (the Tier-0 crash) and now routes here like its twin. */
 export interface SolveWithheld {
   readonly kind: 'withheld'
   readonly reason: 'demotion-axis-uncalibrated'
@@ -477,10 +477,11 @@ export function solve(token: OracleClearedToken, input: SolveInput, shouldAbort?
   })
 
   // (5) Select: shrinkage + deterministic crown. A demotion-axis refusal routes to a structured
-  // withheld state (never a throw) — but only on `pay-less-tax`.
+  // withheld state (never a throw), on EITHER goal.
   // ⚠️ EXPIRED PREMISE (was: "unreachable live — sequencing-only ⇒ no conversion winner"). Conversions
-  // rank live since 2026-07-19, and a `leave-more` conversion winner reaches a THROW that lands as a
-  // generic "unavailable" card — the calm-but-wrong sin the catch below warns about. Filed Tier-0.
+  // rank live since 2026-07-19. Until 2026-08-03 a `leave-more` conversion winner reached a THROW that
+  // landed as a generic "unavailable" card — the exact calm-but-wrong laundering the catch above warns
+  // about. `select.ts`'s guard is goal-agnostic now; both arms return this structured state.
   const selection = selectRecommendation(search)
   if (selection.kind === 'withheld') {
     return {

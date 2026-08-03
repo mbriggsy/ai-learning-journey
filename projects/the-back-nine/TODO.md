@@ -263,9 +263,22 @@ deadlines silently misses it. It has been filed a notch late twice, both times i
    bucket count and policy so a later "simplification" fails loudly instead of passing for the wrong
    reason. **Mutation-proven** — re-anchoring `solve.ts` reds it. Carries **no regime knob**, so the C3
    re-tune-on-drift law does not bite: the displayed baseline is the household's own order whatever wins.
-   ⚠️ **STILL OWED: the human eyeball.** The seed makes the render *reachable*; nobody has looked at it.
-   Drive `http://localhost:5173/?seed=buckets` → GoalPicker → confirm, and budget **~11 minutes** for the
-   dev solve. That is the remaining verification debt on entries 4 and 6.
+   ✅ **DRIVEN END-TO-END IN REAL CHROMIUM 2026-08-03 at 1536×791 — the verification debt on entry 6 is
+   PAID.** `?seed=buckets` → GoalPicker → leave-more → committed recommendation. It renders *"You're
+   already on one of the strongest paths we tested"* under *"Compared with your plan today"*, which is
+   **the fix stated in one frame**: this household's own `proportional` order IS the winner, so the old
+   conventional-keyed `noChange` would have been FALSE and the surface would have shown an ACTIVE dollar
+   hero urging them to switch **to the plan they are already on**, measured against an arm labelled
+   "your plan today" that was not theirs. Only console error on the route is the missing favicon (the
+   known Tier-2 no-icons item). **This is also the first LIVE `noChange` witness the repo has ever had**
+   — `devSeeds.test.ts` carried a note saying one was unachievable; corrected in place, since its
+   premise was about the OLD meaning of the flag.
+   ⚑ **MEASURED: the dev solve took ~25 MINUTES, not ~11.** The landmine figure below was taken on the
+   single-bucket `?seed=nc`; a three-bucket household is materially slower (CPU pinned on one core the
+   whole time — checked twice, so this is compute, not a hang). Budget accordingly.
+   ⚠️ **Entry 4's record card is still un-eyeballed** — this walk did not save + re-enter, so the HOLDS
+   face was not seen. `?vault=rec` cannot show it either (single bucket, planted payload). Reaching it
+   needs a save + re-entry on THIS seed.
    <details><summary>why it had to exist</summary>
 
    Confirmed 2026-08-03 by walking every seed: **no dev seed could witness a withdrawal ORDER
@@ -600,7 +613,9 @@ These are the mechanical ones that keep costing hours.*
   1536×791 measure. And the *"~89px headroom"* number is the SPINE idle frame (`:1773`), a once-measured
   prose figure the spec never asserts — **never budget a different surface against it.**
 - **A live solve is minutes, not seconds — budget for it.** A dev-build `?seed=nc` solve measured **~11
-  minutes** (2026-08-03). Prod DCEs the dev seeds, so a browser walk that needs a committed
+  minutes** (2026-08-03) — but that is the SINGLE-BUCKET figure and it does not generalize: the
+  three-bucket `?seed=buckets` measured **~25 minutes** the same day. Bucket count moves this a lot;
+  quote the figure for the household you are actually driving. Prod DCEs the dev seeds, so a browser walk that needs a committed
   recommendation has no fast path. Before calling one frozen, measure CPU on the Playwright renderer
   (`Get-CimInstance Win32_Process | ? CommandLine -match 'ms-playwright'`, then sample `.CPU` twice) —
   a pinned core means it is computing, and Briggsy's own Chrome PIDs will read 0% and mislead you.

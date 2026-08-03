@@ -728,6 +728,24 @@ describe('the statestale aged plant (the state-tax gate note; light doctor, F2 s
 // witness belongs — RecommendationSurface.test.tsx / recommendationView.test.ts drive a synthetic
 // `noChange`/`subTenthCollapse` payload — the correct home for a shape the live engine can't reach at
 // test cost. The SURPLUS render (this witness) covers the committed `recommended` path live.
+//
+// ⚠️ CORRECTED 2026-08-03 — THE CONCLUSION ABOVE IS NO LONGER TRUE, THOUGH ITS REASONING STILL IS.
+// Premise (1) remains correct as written: the CONVENTIONAL taxable-first/conv-0 arm winning really is
+// structurally unreachable for a natural live household. But `noChange` STOPPED MEANING THAT. It now
+// means "the crowned plan is the one the household already runs" (select.ts's `isNoChange`), and that
+// is not only reachable, it fired on the FIRST multi-bucket household tried: `?seed=buckets` was driven
+// end-to-end in real Chromium at full precision on 2026-08-03 and landed the compose state —
+// "You're already on one of the strongest paths we tested" — with the nameplate "Compared with your
+// plan today" above it. So a LIVE no-change witness now exists and this seed is it.
+//
+// That run is also the clearest statement of the defect the re-anchoring fixed: this household's own
+// `proportional` order IS the winner, so under the old conventional-keyed flag `noChange` would have
+// been FALSE and the surface would have rendered an ACTIVE dollar hero urging them to switch — to the
+// plan they are already on — measured against an arm labelled "your plan today" that was not theirs.
+//
+// NOT pinned as a fast-count assertion here ON PURPOSE: the browser run is 16k-path full precision, and
+// premise (2)'s warning about fast-count convergence still applies, so pinning `noChange` at 256 paths
+// would be the loosened-knob failure the C3 law forbids. The id pin below is precision-independent.
 // ===========================================================================
 describe('the recommend-second witness seed (engine-proven solve regime)', () => {
   const FRESH = epochDayFromIsoDate(acaEnhancedSubsidyStatus.value.verifiedOn) + 5

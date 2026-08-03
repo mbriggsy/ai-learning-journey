@@ -211,8 +211,22 @@ export function AssumptionPanel({
   // the spend period was explicitly answered — the same downstream proof IntakeApp's
   // periodAnswerProven rests on. Without it, editing the spend AMOUNT here re-fired the
   // '$/month or $/year?' force-confirm on a household that already answered it (the panel's
-  // `touched` starts empty every open). The panel's own period toggle RE-LABELS, never
-  // re-bases, so the 12× misentry the rule guards is structurally impossible on this surface.
+  // `touched` starts empty every open).
+  //
+  // ⚠️ CORRECTED 2026-08-03 — this used to end "…the panel's own period toggle RE-LABELS, never
+  // re-bases, so the 12× misentry the rule guards is structurally impossible on this surface."
+  // THAT WAS FALSE, and it was the load-bearing half of the justification. The toggle does only
+  // re-label (it writes `spendEntryPeriod` alone), but the spend commit below (:500-510, the
+  // `entered * 12` arm at :507) multiplies by 12 under 'month' — so a 12× misentry is entirely
+  // possible here, and the re-label is what INVITES it: `spendDisplayed` (:295-300) jumps 12× on a
+  // flip, and the reader's natural repair is to retype the digits they remember under the new
+  // unit. `assumptionPeriodHelp` was rewritten the same day to name both halves, and pinned.
+  //
+  // The disarm still HOLDS, but on the first clause alone (completing intake IS the receipt that
+  // the period was answered). Re-arming would not have caught the case above anyway: the rule
+  // needs `entered >= SPEND_AMBIGUOUS_MIN` (sanity.ts:74, 8,000), and the misentry that matters is
+  // a household typing a MONTHLY figure under 'year' — below that floor by construction. The
+  // defense here is the copy, not the rule.
   const PANEL_PROVENANCE = { periodConfirmed: true } as const
 
   /** Validate the PATCHED draft for `field`; a firing rule REFUSES the commit (true

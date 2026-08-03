@@ -15,7 +15,7 @@ Start at [`docs/README.md`](docs/README.md). The documentation is story-first:
 3. **Architecture — *what you must never break*** (the load-bearing engine invariants, one canonical home): [`docs/architecture.md`](docs/architecture.md).
 4. **Act plans** [`docs/plans/`](docs/plans/) (`1-engine` … `4-recommendation` + `features/`) · **decision records** [`docs/decisions/`](docs/decisions/) · **research** [`docs/research/`](docs/research/) · **glossary** [`docs/glossary.md`](docs/glossary.md) · **insights** [`docs/insights/`](docs/insights/).
 
-5. **Backlog — *everything still open*** (the full tiered register — 45 open items, consolidated 2026-08-02 from a source audit + an archive salvage and re-anchored the same day against the shipped code; each traced to its raw obligations): [`docs/backlog.md`](docs/backlog.md).
+5. **Backlog — *everything still open*** (the full tiered register — 44 open items, consolidated 2026-08-02 from a source audit + an archive salvage and re-anchored the same day against the shipped code; each traced to its raw obligations): [`docs/backlog.md`](docs/backlog.md).
 
 Precedence on conflict: the **roadmap's You-Are-Here table** wins on build status; **`docs/architecture.md`** wins on an invariant; **`docs/product.md`** wins on the *why*/*what*.
 

@@ -991,4 +991,44 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     expect(lintCopy(slots.verdictRoomClause('430'), ['require-hedge'])).toEqual([])
     expect(lintCopy(slots.verdictTrimClause('280'), ['require-hedge'])).toEqual([])
   })
+
+  // --- THE UNIT-INERTNESS BAN (Tier-0, fixed 2026-08-03; until now the string had NO pin at all).
+  //     The killed line was "…switching this never changes the amount." The panel toggle really
+  //     does leave `annualSpendingReal` alone — but the SHOWN figure jumps exactly 12×
+  //     (`spendDisplayed`, AssumptionPanel.tsx:281-286) while the sentence says nothing moved, and
+  //     the panel's own commit (:486-496) multiplies by 12 under 'month'. So the reader's natural
+  //     repair — retype the digits they remember — commits a plan off by 12× in the UNSAFE
+  //     direction, and nothing downstream catches it (PANEL_PROVENANCE disarms the force-confirm;
+  //     the resulting figure is under SPEND_AMBIGUOUS_MIN regardless). The copy IS the defense
+  //     here, so it gets a pin. ---
+  it('the spend-period help never claims the switch is inert, and still names the ENTRY-unit half', () => {
+    const INERTNESS_CLAIM =
+      /\b(never|does not|doesn'?t|won'?t|will not|no)\b[^.!?]*\b(change|changes|changing|affect|affects|alter|alters|move|moves)\b[^.!?]*\b(amount|figure|number|money|spending)\b/i
+    const help = copy.assumptionPeriodHelp
+    expect(help, `the inertness claim is the defect: "${help}"`).not.toMatch(INERTNESS_CLAIM)
+    // NON-VACUITY: the killed sentence must trip the net, and so must a terser evasion of it —
+    // a width or length gate provably cannot catch either, which is why the claim itself is banned.
+    expect(
+      'Only how that figure is entered and shown — the plan is figured in yearly terms underneath, and switching this never changes the amount.',
+      'the killed Tier-0 line must trip the ban',
+    ).toMatch(INERTNESS_CLAIM)
+    expect('Switching this never changes the amount.', 'the terser evasion trips it too').toMatch(INERTNESS_CLAIM)
+    expect('The same money either way — it does not change your spending.', 'and the paraphrase').toMatch(
+      INERTNESS_CLAIM,
+    )
+    // POSITIVE ANCHOR: silence is not a pass. Deleting the inertness claim without naming what the
+    // unit governs would leave the 12× retype trap wide open and unexplained, so the string must
+    // still say that the NEXT figure entered is read in the chosen unit.
+    expect(help, 'the entry-unit half is the whole point of the rewrite').toMatch(
+      /\b(enter|entered|type|typed|put in)\b/i,
+    )
+    expect(help, 'and it still says the committed money is unchanged').toMatch(/\bsame\b/i)
+    // ANTI-ANAPHORA: a draft that ended "…is read the same way" was correct but made the reader
+    // resolve a pointer to the previous clause — and the N=1 cold read stopped to ask what it
+    // pointed at, which is the same force-the-reader-to-derive failure as the original line. The
+    // unit must be NAMED, by quoting the toggle's own visible label rather than gesturing at it.
+    expect(help, 'the unit is named outright, not referred back to').toContain(copy.periodMonth)
+    // The universal gates still bind (it is intake help, so free-numeral is out of scope).
+    expect(lintCopy(help, ['false-certainty', 'advice-verb', 'superlative']), help).toEqual([])
+  })
 })

@@ -1121,8 +1121,31 @@ export const copy = {
   // The panel's period toggle RE-LABELS the committed figure; it never re-bases it (the
   // intake segment re-bases mid-entry, where the typed digits are the truth — here the
   // canonical annual is the truth, and a silent 12× re-base would be the cardinal sin).
+  //
+  // ⚠️ THE TOGGLE SETS THE ENTRY UNIT TOO, AND THE OLD SENTENCE HID IT (fixed 2026-08-03).
+  // It read "switching this never changes the amount" — but the SHOWN figure jumps exactly 12×
+  // (`spendDisplayed`, AssumptionPanel.tsx:295-300), so the reader watches the number move while
+  // being told nothing moved. The natural repair is to retype the old digits, and the panel's own
+  // commit (AssumptionPanel.tsx:500-510, the `entered * 12` arm at :507) then multiplies by 12
+  // under 'month' — so a household "correcting" 78,000 back to 6,500 under 'Each year' commits a
+  // $6,500/yr plan. Nothing catches it: PANEL_PROVENANCE (AssumptionPanel.tsx:230) hard-disarms
+  // `spend-period-unconfirmed` (sanity.ts:329-352, the disarm read at :340) on this surface, and
+  // 6,500 is under SPEND_AMBIGUOUS_MIN (sanity.ts:74) regardless — so the rule could not have
+  // caught it even armed. The replacement must therefore say BOTH halves — the money is
+  // unchanged AND the next figure you enter is read in the unit you just picked. A draft that said
+  // only "the same money either way" was REJECTED for exactly that omission.
+  //
+  // THE THIRD SENTENCE IS LOAD-BEARING; DO NOT COMPRESS IT BACK. A second draft ended "…and
+  // anything you enter next is read the same way" — correct, but "the same way" is an ANAPHOR the
+  // reader must resolve against the previous clause, and Briggsy's cold read stopped to ask what it
+  // pointed at (2026-08-03). That stumble IS the defect class this whole entry exists to close, so
+  // the unit is now named OUTRIGHT and quotes the toggle's own visible label (`periodMonth`) rather
+  // than gesturing at it. Three sentences under a control is chattier than house style on purpose:
+  // terseness is what produced the original trap.
+  // No spatial referent ("the figure below") — U12 dropped it because this control sits ABOVE the
+  // spend field in the panel and BELOW it in intake (see `periodConfirmPrompt`).
   assumptionPeriodHelp:
-    'Only how that figure is entered and shown — the plan is figured in yearly terms underneath, and switching this never changes the amount.',
+    'This sets the unit, not the money. Your plan keeps running on the same yearly spending — the figure here just shows as one month’s worth or a full year’s. With “Each month” showing, a number you type is read as dollars a month.',
   assumptionMarketName: 'Market returns',
   assumptionMarketProvenance:
     'A deliberately conservative default — the high-valuation planning assumptions (Pfau/Kitces), figured in today’s dollars.',

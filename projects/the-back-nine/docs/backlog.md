@@ -1,6 +1,6 @@
 # The Back Nine — Open Backlog
 
-> The complete open register: **45 open items** (48 entries, 3 closed and kept as records) consolidated
+> The complete open register: **44 open items** (48 entries, 4 closed and kept as records) consolidated
 > from **136 raw obligations** (a source audit of the shipped code + a salvage sweep of the 246 KB
 > `TODO.md` archive it replaced). Every raw obligation is accounted for — the `ids` on each entry are its
 > provenance.
@@ -28,12 +28,33 @@
 
 ## Tier 0 — calm-but-wrong (shipped code can answer WRONG)
 
-### The assumptions panel's monthly/yearly help line contradicts itself
+### ~~The assumptions panel's monthly/yearly help line contradicts itself~~ — **CLOSED 2026-08-03**
 
 `S` · **pilot** · filed 2× — `A35`, `S7`
 
 - Card 10(a) — the assumptions panel's unit toggle contradicts itself in one sentence, and the contradiction runs 12×
 - Door 4's month/year sentence still owed a rewording
+- ✅ **FIXED.** `assumptionPeriodHelp` now reads *"This sets the unit, not the money. Your plan keeps
+  running on the same yearly spending — the figure here just shows as one month's worth or a full year's.
+  With "Each month" showing, a number you type is read as dollars a month."* Both halves are named: the
+  committed money is unchanged AND the next figure entered is read in the chosen unit.
+- **Reproduced live before and after** (`?seed=retired` → assumptions panel, 1536×791): flipping the
+  toggle moves the spend field **6,500 → 78,000** while the verdict holds at "On track — 9 of 10". The
+  killed sentence claimed *"switching this never changes the amount"* while the reader watched that jump.
+- **A SECOND, WORSE DEFECT WAS FOUND AND FIXED WITH IT.** `AssumptionPanel.tsx` justified permanently
+  disarming the 12× force-confirm with *"the 12× misentry the rule guards is structurally impossible on
+  this surface."* **False** — the toggle only re-labels, but the panel's own spend commit (`:507`)
+  multiplies by 12 under `'month'`, so the misentry is entirely possible and the re-label INVITES it. The
+  disarm still holds on its first clause alone; re-arming would not have caught this case anyway (the
+  dangerous figure lands under `SPEND_AMBIGUOUS_MIN`, `sanity.ts:74`). **The copy is the defense here,
+  not the rule** — which is why the string is now pinned.
+- Pinned by a two-armed drift-pin (`copyGuard.test.ts`): an inertness-claim ban and an anti-anaphora
+  anchor requiring the toggle's own visible label be quoted. Each arm mutation-proven against its own
+  regression (the killed line reds the first; the *"read the same way"* draft reds the second).
+- ⚑ **The anti-anaphora arm exists because of a cold-read stumble, not a theory.** A draft ending
+  *"…and anything you enter next is read the same way"* was true but made the reader resolve a pointer;
+  Briggsy stopped to ask what it referred to. That IS the force-the-reader-to-derive failure this entry
+  exists to close, so the unit is named outright now.
 - ⚑ **RE-SEVERITY 2026-08-03 (verification fleet) — this is a three-tap path to a wrong plan, not a copy
   nit.** Anchor drift first: the cold-read log cites `copy.ts:1119`; the live string is
   **`copy.ts:1124-1125`**. The panel toggle (`AssumptionPanel.tsx:364-366`) writes `spendEntryPeriod`

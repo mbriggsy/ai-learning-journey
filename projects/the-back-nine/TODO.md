@@ -17,15 +17,25 @@
 **Where we are:** all four acts are built; Act 4 closed at U17·S6 (S7 deferred, Briggsy's ruling). What is
 left is not units. It is the gap between *the build is done* and *a friend can bet real money on this*.
 
-▶ **THE NEXT BUILD is Tier 1's *"The recommendation never says what to DO"*** — it was blocked on the
-baseline nameplate, which shipped 2026-08-03 (`2652b7a6`), and `?seed=buckets` now exists as a live
-surface to build it against. It is a **user-facing surface**, so load the four-skill UI loadout
-(CLAUDE.md) before touching a pixel. Read that entry's ⚑ blocks before trusting any line number in the
+▶ **THE NEXT BUILD is Tier 1's *"The recommendation never says what to DO"*** — and it is now
+**designed, not just filed.** A 16-agent design panel (4 independent proposals × 3 adversarial judges,
+2026-08-03) found **five hard problems, and no proposal was shippable as written**; all five are written
+into that entry as ⚑ blocks. **The sharpest one is already CLOSED** — `formatActionableDollar`
+(`9527067f`), because rendering the winner's conversion amount through any shipped dialect quotes a
+figure *past* the cliff it was anchored under. It is a **user-facing surface**, so load the four-skill
+UI loadout (CLAUDE.md) before touching a pixel. Read the ⚑ blocks before trusting any line number in the
 prose above them — the prose is the original filing and its anchors have drifted.
 
 ⚠️ **The one verification debt still open from 2026-08-03:** the record card's HOLDS face has never been
 seen. `?vault=rec` cannot show it (single bucket, planted payload); it needs a save + re-entry on
 `?seed=buckets`, which costs a **~25-minute** solve.
+
+⚠️ **`mode: 'no-change'` HAS FOUR DISJUNCTS, NOT ONE — this cost a real diagnosis 2026-08-03 and will
+cost the next one.** `recommendationView.ts:175-180`: `noChange` **OR** the grade's `subTenthCollapse`
+**OR** a seed-B display inversion **OR** a delta that formats to $0. So *"the surface says **You're
+already on one of the strongest paths**"* is **NOT** evidence that `noChange` is true, and a browser
+frame can be byte-identical before and after a change that genuinely flipped the flag. Read the payload,
+never the words, when the question is about a flag.
 
 ---
 
@@ -412,6 +422,30 @@ deadlines silently misses it. It has been filed a notch late twice, both times i
    (Filed same-day at `docs/backlog.md:94-112` with the same drifted anchors — newly filed, not unfiled.)
    </details>
 
+6b. ✅ **SHIPPED 2026-08-03 (`94ea8d00`) — the OTHER coupled control. Entry 6 fixed one of the plan's
+   two tax controls; this is the half it left behind.** `enumerateCandidates` had **no field in which a
+   conversion could be expressed**, so the injected user baseline was minted `conversion: null`
+   unconditionally and `applyCandidate` strips the base's schedule — for a household running the
+   shipped Roth lever, the arm four strings call *"your plan today"* was their order with their
+   conversion **DELETED**, a different "today" from the one the spine band directly above it draws from
+   the same draft. `draft.rothConversion` now threads `solveDispatch` → `enumerateSolveCandidates` →
+   the baseline arm, present-iff-the-base-run-carries-it. The baseline stays **UNSCREENED** by the
+   grid's legality filter by design (it is their standing plan, already simulated on the spine).
+   `SOLVER_CODE_VERSION` **2→3** — unlike v2 this genuinely **moves the ranking**. Three mutants
+   planted and killed.
+   ⚑ **MEASURED, full precision, real builder + real engine, `?seed=health` (the repo's ONLY
+   already-retired seed carrying an applied lever, $20k/yr × 4):** pre-fix `noActionBaseline.id =
+   baseline:proportional:0`, `noChange = true`, delta **$0** — the surface reassured a household whose
+   actual recommendation is to take their conversion back out. Post-fix `baseline:proportional:20000`,
+   `noChange = false`, delta **$12,530**. *The tool was comparing them against the fix.*
+   ⚑ **The visible frame did NOT change, and that is not a failure** — the $12,530 collapses at display
+   precision (both arms render "$2.3M"), so `subTenthCollapse` routes it to the same compose words. See
+   the four-disjunct warning at the top of this file. **The proof is the payload, not the pixel.**
+   ⚑ **A silent scope change was caught in-flight and closed in the same commit:** `solveDispatch`'s
+   `no-pretax` gate now screens on `anchoredRail`, which is what it MEANT before the baseline could
+   carry a conversion. A bare `conversion !== null` let the unscreened baseline satisfy a gate that
+   exists to prove the SOLVER has a rail-anchored grid to perturb. Mutation-proven both ways.
+
 ### Tier 1 — the differentiator does not land
 
 7. **The recommendation never says what to DO.** `recommendationView.ts:410` computes `winnerStrategyKey`;
@@ -448,10 +482,43 @@ deadlines silently misses it. It has been filed a notch late twice, both times i
    `draft.startCalendarYear` + `rothPlanStartFor`, never a re-based offset. Space is ~90-120px inside
    `.rec-committed__rest`, which is `display:contents` single-column and a real flex column at the two-pane,
    so a new child needs **no** grid rule.
-   ⚑ **His call when it comes up:** following the card's own pointer **destroys the card** — applying a
-   policy in the sheet fires `invalidateStaleSolve` → *"This strategy read is out of date"* → a re-solve
-   costing 80-200s. Ship the door anyway (act → demote → re-solve), or does v1 **name** the winner with no
-   door at all?
+   ✅ **BRIGGSY RULED 2026-08-03: NAME IT, NO DOOR.** The card states the winning strategy and stops —
+   no control into the sequencing/Roth sheets, because following the pointer fires
+   `invalidateStaleSolve` and demotes the very card that pointed there. **Do not re-propose the door.**
+   (Original fork, kept for the reasoning: act → demote → re-solve, vs name-with-no-door.)
+
+   ⚑⚑ **DESIGN PANEL 2026-08-03 (4 proposals × 3 adversarial judges, 16 agents): NO PROPOSAL WAS
+   SHIPPABLE AS WRITTEN.** Five problems, every one of which a naive "just render `winnerStrategyKey`"
+   would have shipped. **Build against these five, not against the prose above.**
+   1. ✅ **CLOSED (`9527067f`) — the quoted amount would have crossed the cliff.** Grid conversion
+      amounts are `largestWholeDollarWithin(metric, rail, …)` (`candidates.ts:229-238`), the largest
+      whole dollar keeping an ACA-cliff / IRMAA-step / bracket-edge metric AT OR UNDER its rail; every
+      shipped dialect rounds to NEAREST, so an anchored $43,600 renders "$44,000" — $400 past the rail,
+      to a reader who can type it into the Roth lever. **Use `formatActionableDollar` (`money.ts`) for
+      this figure. Never `formatDeltaDollar`/`formatAbsoluteDollar`.**
+   2. **The winner's conversion REPLACES theirs — it does not add to it.** `applyCandidate`
+      (`candidates.ts:443`) strips the base's conversions before installing the candidate's. So
+      "alongside"/"also" framing is a false implicature. **The card must read
+      `payload.noActionBaseline.conversion` and state a DIFF** — five arms: neither converts · winner
+      only · baseline only · both-and-different · both-and-same. (Reading the baseline's conversion is
+      only *possible* since `94ea8d00`; before it, that field was always null.)
+   3. **The DURATION carries the same defect the start year was rejected for.** `conversionWindowFor`
+      (`solveAnchor.ts`) measures `years` from the plan's BUILD year, and the live window pins at
+      offset 0 — so on an aged vault the window has partly elapsed. Refusing the start year while
+      quoting "for 6 years" is inconsistent. **Decide both together.** Shipped voice for the past
+      tense: `copy.ts leverRothAlreadyApplied`.
+   4. **Gate on the render mode, NOT on `noChange`.** `mode: 'no-change'` has four disjuncts
+      (`recommendationView.ts:175-180`); gating the card on `noChange` alone paints it on three arms
+      where `recComposeAlready` already says *"nothing else we tried looks likely to pull clearly
+      ahead."* **Use the same predicate the hero and the viz use.**
+   5. **`custom` must never render as "My own order"** (`leverPolicyCustom`) — a first-person radio
+      caption inside a card whose whole job is saying what the order IS. `SolveArm.drawdownOrder` is
+      on the payload (`solve.ts:105`, present iff `policy === 'custom'`); name the buckets with the
+      shipped `leverOrderBucketTaxable` / `…Pretax` / `…Roth` labels.
+   ⚑ **Reuse, never re-type:** the order half is the sequencing sheet's own shipped `leverPolicy*`
+   label + its `leverPolicy*Help` gloss (`copy.ts:784-796`). A new name would be a second vocabulary.
+   ⚑ **Runtime witness:** `?seed=health` renders the COMPOSE frame (see 6b), so it cannot show this
+   card. The ACTIVE witness is **`?seed=surplus`** — budget a full solve.
 
 8. **The whole still-working audience gets no strategy — silently.** `Result.tsx:476` gates
    `RecommendationSurface` off for the date route entirely and `:362` gates the invite door. The

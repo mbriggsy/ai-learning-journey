@@ -5,8 +5,8 @@
 > the roadmap carry the test count under `verify:doc-stats` (this file re-typing it rotted twice, so
 > `d5df3609` made pointing the rule).
 >
-> **The full open register is [`docs/backlog.md`](docs/backlog.md)** — 44 open items, each traced to the raw
-> obligations behind it. This file ranks only what is next; **a queue of ~17 is not the open surface, so
+> **The full open register is [`docs/backlog.md`](docs/backlog.md)** — 43 open items, each traced to the raw
+> obligations behind it. This file ranks only what is next; **a queue of ~16 is not the open surface, so
 > read the register before filing anything as new.**
 >
 > ⚠️ **NEVER cite "TODO item N."** These numbers are re-ranked every session, so a citation written today
@@ -62,29 +62,7 @@ deadlines silently misses it. It has been filed a notch late twice, both times i
    reading" — **that case does not exist in the file.** The gate is pinned only by a fixture whose retiree
    is 66 (Medicare-side, where zeroing is harmless); **the genuinely-broken pre-65 case is untested today.**
 
-2. **A well-funded household whose winning strategy converts crashes into a calm "unavailable."**
-   `select.ts:280-284` routes the uncalibrated demotion axis to a structured withhold **only** when
-   `goal === 'pay-less-tax'`; `gradeCalibration.ts:154-160` returns false for *any* non-survival axis, so
-   the leave-more arm falls through to the throw at `:166-178`. `solve.ts:342` narrows its catch to
-   `GradeFloorRefusal` and rethrows. The guard comment at `select.ts:279` still reads *"UNREACHABLE live
-   (conversions stay trend-blocked)"*; **that premise expired 2026-07-19** — `taxOverlay.ts:916` is
-   `PART_B_PRICING_MODE = 'trended'` and `health.ts:204` is sourced, so the whole roster ranks WITH
-   conversions today.
-   Minimum fix: route leave-more to the same structured withheld state, and give both arms a humane named
-   reason instead of the generic card. Full fix: calibrate the demotion width on the goal-dollar axes.
-   ⚑ `solve.ts:342`'s own comment says a fail-closed guard "must never be laundered into a calm
-   'unavailable' (the calm-but-wrong cardinal sin)" — which is precisely what happens.
-   ⚑ **Audit corrections 2026-08-02:** (a) the terminal state was misstated — it does **not** land as
-   `engine-unavailable`; `engineProtocol.ts:260-266` converts the throw to `calm-error` → `compute-error`
-   → the generic card at `copy.ts:1461-1462`. Fix the right surface. (b) ✅ **SWEPT 2026-08-02** — the five
-   comments that asserted the expired trend-block premise (`select.ts:279`, `select.ts:112-114`,
-   `solve.ts:101`, `solve.ts:147-148`, `solve.ts:475-476`) now each say the premise expired and that the
-   `leave-more` arm reaches a THROW. They were the traps that would have told you this branch is dead code.
-   (c) No fixture proves the crash fires OR that it can't; `select.ts:236-250`'s shrinkage
-   tie-break can naturally crown a conversion winner, so treat it as live-possible until a probe says
-   otherwise.
-
-3. **Pre-65 ACA premiums are priced real-flat — the sin the Medicare council ruled solver-BLOCKING.**
+2. **Pre-65 ACA premiums are priced real-flat — the sin the Medicare council ruled solver-BLOCKING.**
    `intakeMap.ts:271-291` (`escalateQuote`) builds both the enrolled premium and the SLCSP benchmark from
    `acaAgeRatingCurve` factors alone — **no cost-trend term**. Part B was fixed for exactly this reason;
    `oracleToken.ts:112-133` writes the argument out (*"disclose-and-ship is FORBIDDEN — a disclosure fixes
@@ -106,7 +84,7 @@ deadlines silently misses it. It has been filed a notch late twice, both times i
    block would hold for months over the whole pre-65 population. Near-term move is the **copy swap** at
    `copy.ts:894-897` so it stops claiming the coupling is fully priced.
 
-4. **A household outside {NC, PA, FL} gets a confident winner computed with zero state income tax.**
+3. **A household outside {NC, PA, FL} gets a confident winner computed with zero state income tax.**
    Reduce-to-spine `+0` is keyed on `PRICED_STATES` membership, so an unpriced state ranks strategies with
    the state term absent — and that term is proven to **flip the optimal anchor** (U14's own NC oracle
    fixture moves it 22%→12%-top). Disclosed in prose only. Decide: refuse outside the roster, or widen it.
@@ -116,7 +94,7 @@ deadlines silently misses it. It has been filed a notch late twice, both times i
    headline / fuck-off date**. Cheap partial: the 8 no-income-tax states are sourced structural $0 (FL's
    exact shape), so widening to them is honest and leaves refusal for taxing states only.
 
-5. **The record card says the advice still holds when the household never took it.**
+4. **The record card says the advice still holds when the household never took it.**
    `copy.ts:1315` — *"It still matches your plan as it stands today."* On `?vault=rec` the saved winner is
    `taxable-first` with `noChange: false` (`devSeeds.ts:1322`; the winner literal is at `:1308`) while the
    live order is labelled proportional. Cold-read Card 8 grades it HARD-FLAG/BLOCKER. Its sibling was fixed
@@ -128,7 +106,7 @@ deadlines silently misses it. It has been filed a notch late twice, both times i
    card's own sentence is still false on its own terms, which is what actually needs fixing. Do the
    defending comment at `copy.ts:1309-1313` in the same edit (the `532cad82` discipline).
 
-6. **Smaller, each self-contained** *(all four re-anchored by the 2026-08-02 audit)*:
+5. **Smaller, each self-contained** *(all four re-anchored by the 2026-08-02 audit)*:
 
    - **Post-65 non-qualified HSA money is silently forfeited.** ✅ The false *"(conservative, disclosed)"*
      claim at `healthOverlay.ts:747` is **corrected 2026-08-02** — it now says the direction is safe but
@@ -163,7 +141,7 @@ deadlines silently misses it. It has been filed a notch late twice, both times i
    `rulesMoved` to stop being one OR-collapsed boolean. Nothing here is urgent: the residual over-alarm is
    bounded and knowingly accepted, and the clock is load-bearing.
 
-7. **The hero says "Compared with your plan today" — and the baseline is never their plan.** *(Found
+6. **The hero says "Compared with your plan today" — and the baseline is never their plan.** *(Found
    2026-08-03 by the verification fleet; filed nowhere before.)* `copy.ts:1458` (and the viz arm label
    `copy.ts:1537`) name the compared-against arm as the household's own plan. It is not: `noChange` is
    `winner.index === conventionalIndex` (`select.ts:313`), and `conventionalIndex` is the FIXED
@@ -177,7 +155,7 @@ deadlines silently misses it. It has been filed a notch late twice, both times i
 
 ### Tier 1 — the differentiator does not land
 
-8. **The recommendation never says what to DO.** `recommendationView.ts:410` computes `winnerStrategyKey`;
+7. **The recommendation never says what to DO.** `recommendationView.ts:410` computes `winnerStrategyKey`;
    repo-wide it has **exactly two other references — its own type declaration and one unit test.** Zero
    render consumers, and `RecommendationSurface.tsx` contains no strategy name anywhere. The hero is a bare
    dollar delta (`copy.ts:2297/2301`); the winner's conversion amount and years render nowhere; there is
@@ -190,7 +168,7 @@ deadlines silently misses it. It has been filed a notch late twice, both times i
    apply-seam mutation. Most of what's missing is already ON the payload and needs only rendering — that
    half is cheap and answers "it never says what to do" with zero engine work.
 
-9. **The whole still-working audience gets no strategy — silently.** `Result.tsx:476` gates
+8. **The whole still-working audience gets no strategy — silently.** `Result.tsx:476` gates
    `RecommendationSurface` off for the date route entirely and `:362` gates the invite door. The
    `blocked{spine-unready}` note that would explain it lives *inside* the gated-off component, so a working
    couple sees the date answer and **zero words** about strategy. `Result.tsx:340`'s comment claims "the
@@ -204,7 +182,7 @@ deadlines silently misses it. It has been filed a notch late twice, both times i
    committed answer, not the draft, and anchoring candidates at a future retirement year is a real ranking
    question.
 
-10. **A modest-pre-tax household is refused a withdrawal-order answer the engine could compute.**
+9. **A modest-pre-tax household is refused a withdrawal-order answer the engine could compute.**
     `solveDispatch.ts:79` returns `'no-pretax'` when no *conversion* candidate survives — but a
     conversion-free candidate survives for **every entry in `SEARCHED_POLICIES`** (`candidates.ts:331-337`),
     and `solve.ts:452-457` already implements that exact partition for the trend-blocked case.
@@ -223,7 +201,7 @@ deadlines silently misses it. It has been filed a notch late twice, both times i
     deliberately — `copy.ts:1404-1406` records that naming "a withdrawal strategy" cures the panel's
     unglossed-"order" stumble). **Briggsy's words, or ship the engine half first.**
 
-11. **The assumed heir bracket (0.24) — the shipped copy sends the reader to a control that does not exist.**
+10. **The assumed heir bracket (0.24) — the shipped copy sends the reader to a control that does not exist.**
     ⚑ **The filed claim ("cannot be seen or edited") is HALF FALSE, and the truth is worse.** It IS
     disclosed — `recommendationView.ts:78-81` → `copy.ts:2352-2353` → `RecommendationSurface.tsx:469-477` —
     and the sentence ends *"— adjust it in your assumptions if that's off."* **There is no heir seat in
@@ -241,18 +219,18 @@ deadlines silently misses it. It has been filed a notch late twice, both times i
 
 ### Tier 2 — what breaks on someone else's device
 
-12. **The surfaces a friend actually hits have never been walked or cold-read by anyone.** The vault
+11. **The surfaces a friend actually hits have never been walked or cold-read by anyone.** The vault
     credential ceremonies (Passphrase, Backup, Save, Export), `RecoveryFlow` and `RestoreFlow` — the two
     *"I lost access to my retirement plan"* screens — plus ColdStart and 10 of 13 intake steps, including
     **Accounts, where the couple enters their entire net worth.** No dev seed reaches most of them.
 
-13. **The couple's own data.** An interrupted intake loses the whole household (13 steps, zero persistence,
+12. **The couple's own data.** An interrupted intake loses the whole household (13 steps, zero persistence,
     no `beforeunload`, and one step tells them to fetch a number from healthcare.gov **in a new tab**) · the
     `schemaVersion` migration ladder **does not exist as code** — `IntakeApp.tsx:537` refuses anything but
     v3, so the first v4 bump bricks every saved plan *and its backup* · there is **no way to delete the
     vault** (`clearVault` exists; its only caller is the dev seed planter).
 
-14. **Also:** no icons at all, so the "local-first PWA" is not installable · Chromium-only verification
+13. **Also:** no icons at all, so the "local-first PWA" is not installable · Chromium-only verification
     while the durability story is explicitly about Safari eviction · the fit law is never checked at
     enlarged text · no single-person household (a solo friend is withheld forever or must invent a spouse)
     · **no document a friend reads** — the in-app honest-limits total is two sentences, and the app tells
@@ -261,7 +239,7 @@ deadlines silently misses it. It has been filed a notch late twice, both times i
 
 ### Tier 3 — Briggsy's call
 
-15. **His eye, the standing block.** The stacked tape rows (07-08 → 07-23, which also score the
+14. **His eye, the standing block.** The stacked tape rows (07-08 → 07-23, which also score the
     Opus-vs-Sonnet Caddie flip) · the four aged-surface tone calls, **due before 2027-01-01** · the chart
     framing forks (whose range is shaded, which odds the ladder quotes, the axis units) · `?vault=stale`'s
     MEANING ruling (both obvious repairs are measured dead ends) · the three-doors rhythm on `datemixed` ·
@@ -270,14 +248,14 @@ deadlines silently misses it. It has been filed a notch late twice, both times i
     ⚑ **On-surface re-audit owed** for the two Card 9 / GoalPicker fixes that shipped without it — a
     chat-approved change does not survive his re-read on the surface (the 2026-07-11 false-PASS lesson).
 
-16. **Verify-owed, and it needs him.** The OOP-medical figures (`src/intake/referenceData.ts` →
+15. **Verify-owed, and it needs him.** The OOP-medical figures (`src/intake/referenceData.ts` →
     `OOP_MEDICAL_TYPICAL_HOUSEHOLD`) are grounded-search-sourced, **not** primary-table-verified
     (`directionalUntilPinned`). BLS bot-walls `curl`, so this is the sanctioned exception to
     no-manual-steps: ask Briggsy to pull the CE "Age of reference person" table and pin them cell-by-cell.
 
 ### Tier 4 — hygiene
 
-17. **The gates that don't bite (14 filed items)** — R7's registry is one level deep, copyGuard's scope is
+16. **The gates that don't bite (14 filed items)** — R7's registry is one level deep, copyGuard's scope is
     a prefix allowlist with no forcing function on new keys, and several arms still cannot fail. None can
     produce a wrong answer today; all mean the net is thinner than it reads. Plus the Medicare-trend
     riders, the open copy obligations, the deferred richer market draw, and the `dateinvert` (c) mint —

@@ -1,6 +1,6 @@
 # The Back Nine — Open Backlog
 
-> The complete open register: **44 open items** (48 entries, 4 closed and kept as records) consolidated
+> The complete open register: **43 open items** (48 entries, 5 closed and kept as records) consolidated
 > from **136 raw obligations** (a source audit of the shipped code + a salvage sweep of the 246 KB
 > `TODO.md` archive it replaced). Every raw obligation is accounted for — the `ids` on each entry are its
 > provenance.
@@ -71,7 +71,7 @@
   `'month'`, and `spendEntryPeriod` is **persisted** (`scenarioCodec.ts:700`), so the toggle sets the unit
   for the NEXT typed figure, across sessions. Any rewrite must keep the entry-unit disclosure. Also fix
   the now-overbroad comments at `copy.ts:1121-1123` and `AssumptionPanel.tsx:214-215`
-  ("structurally impossible"). No test pins the string — add one.
+  ("structurally impossible"). No test pinned the string — one was added with the fix above.
 
 ### Account balances have no typo defense
 
@@ -164,9 +164,41 @@ nothing, and the first surviving trigger row is FY2033-34 → TY2035 (OSC **Augu
   (not `:1308`). `copy.ts:1309-1313` is the card-FAMILY header — nothing defends the holds sentence
   today, so the fix must **add** a comment, not rewrite one.
 
-### Well-funded household with a converting winner crashes into a calm "unavailable"
+### ~~Well-funded household with a converting winner crashes into a calm "unavailable"~~ — **CLOSED 2026-08-03** (`e7bf0485`)
 
 `M` · **pilot** · filed 2× — `A12`, `A18`
+
+- ✅ **BOTH HALVES SHIPPED.** Engine: `select.ts`'s §S4.5 guard is goal-agnostic now (it tested
+  `goal === 'pay-less-tax'` AND passed that literal as the statistic, so `leave-more` walked past it
+  into `assertDemotionAxisCalibrated`'s plain throw → rethrown by `solve.ts` → the generic card). UI:
+  `recommendationView`'s `withheld` arm returned the SAME string as `compute-error`, so the engine fix
+  alone would have converted a crash into an identical generic card — it now routes to the humane HOLD
+  with a new `recHoldDemotionAxis`.
+- **Reproduced before fixing** (the new `select.test.ts` arm failed first), then both halves
+  mutation-proven independently. Four stale "falls through to a THROW" comments swept.
+- ⚑ **The `detail` string was a trap the audit missed:** it hard-coded `pay-less-tax`. Widening the
+  guard without interpolating the axis would have told a leave-more household we refused on the OTHER
+  goal — a new false statement inside the fix for a false statement. It interpolates `goal` now, and a
+  test asserts the refusal never names the wrong axis.
+- ⚑ **Copy constraint, load-bearing:** the guard fires on SHAPE (converting winner over a
+  non-converting runner-up) **before any margin is read**. So the string says we cannot tell how close
+  the call is — never that the strategies ARE close, which would be a fabricated finding. A regression
+  arm bans the near-tie vocabulary outright.
+- **MEASURED FREQUENCY (2026-08-03 probe, 27 well-funded leave-more worlds):** the hold fires
+  **3–4 of 27 (11–15%)** — 15% at 400 paths, **11% at 1600**. It did NOT rise with path count, so the
+  "low paths under-count this" reasoning was **wrong in direction**; the rate is stable and modest.
+  Structural reason it is not modal: conversions win OFTEN (17 of 24 crowns convert), but the runner-up
+  almost always converts too (`pre-tax-first:57000` over `bracket-fill:57000` — same conversion,
+  different sequencing), which keeps the axis calibrated. The withhold needs a conversion-**zero**
+  runner-up. All three 1600-path withholds sat in the HIGHEST spend tier ($120k).
+- **OPEN, and it is Briggsy's call:** ship the hold (current behavior — ~1 in 8 well-funded leave-more
+  couples get a hold instead of an answer), or calibrate the conversion-near-tie demotion width on the
+  DOLLAR axes so they get a graded answer. Calibration is a correctness-critical measurement (the width
+  governs when a "confident" grade demotes to "coin-flip"), so it is not a quick follow-up.
+- ⚠️ **NOT YET SEEN IN A BROWSER.** No dev seed crowns a lone conversion winner; `?seed=surplus` +
+  leave-more lands on the ACTIVE arm (verified live 2026-08-03 — no crash). The `held` render branch is
+  payload-agnostic and already ships for token withholds, so the unproven link is narrow. Mint a seed
+  from the probe's `2.5M/120k/pretax30%` world to close it.
 
 - Over-funded (≥98% survival) household whose winning strategy converts: generic "unavailable" or a calm-error, not a named refusal — and the code comments say this is unreachable when it is NOT
 - R22/R9 — a leave-more surplus household with a conversion winner CRASHES to 'engine-unavailable' instead of an honest withhold

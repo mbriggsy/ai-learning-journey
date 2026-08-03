@@ -941,14 +941,32 @@ export const copy = {
   // 'step' belongs to Medicare — one word per mechanism, everywhere on the sheet.
   irmaaStepStory:
     'Medicare premiums look back two years at your income — money converted at 63 can show up in the premium bill at 65. Each step is sharp: one dollar over it and the higher charge applies for that whole year.',
+  // ⚠️ "the benchmark premium itself" WAS IN BOTH LISTS AND WAS FALSE — struck 2026-08-03.
+  // The benchmark (SLCSP) is not merely counted, it is the ANCHOR of the whole credit:
+  // `intakeMap.ts:582` builds `slcsp` into the overlay params, `taxOverlay.ts:264` calls it "the
+  // §36B PTC basis", and `slidingScalePtc` (healthOverlay.ts:213-223) computes
+  // `max(0, slcsp − applicable% × MAGI)` FROM it. Telling the reader the tool ignores the one
+  // figure the discount is calculated from is the same false-negation shape O16 fixed on the Roth
+  // strings (`rothOmissionsNoteAcaPriced` above) — a "not counted" claim about something that is.
+  //
+  // STRUCK, NOT REPLACED WITH AN AFFIRMATION, and that is deliberate. The O16 house pattern is
+  // affirm-with-residual, but these two strings are gated on `statePriced` ALONE
+  // (`stateTaxDisclosure.ts:100`) — they carry no ACA-priced axis, so the identical sentence also
+  // ships to a Medicare-only household (`intakeMap.ts:587-590`) that has no benchmark at all.
+  // "The benchmark is already in these numbers" would be a NEW false claim for that population.
+  // Affirming here needs the three-state gate the Roth strings have; until then, silence is true.
+  //
+  // What is genuinely unmodelled about the benchmark is the COST TREND (`escalateQuote` climbs with
+  // the age-rating curve and nothing else) — a separate, cliff-scoped disclosure that belongs on the
+  // Roth strings, NOT smuggled in here as a vaguer version of a claim that was already wrong.
   controlHealthOmissionsNote:
-    'Not counted here: state income tax, the net-investment-income tax, differences in plan cost-sharing, the benchmark premium itself, state-level subsidy top-ups, and a surviving spouse’s chance to have the Medicare surcharge rechecked sooner — each could move this picture.',
+    'Not counted here: state income tax, the net-investment-income tax, differences in plan cost-sharing, state-level subsidy top-ups, and a surviving spouse’s chance to have the Medicare surcharge rechecked sooner — each could move this picture.',
   // S5.2 — the state-priced twin (the state-tax unit), gated INDEPENDENTLY of the other homes
   // (insight 078 — different population, own chrome): the state-tax item DROPS for a priced
-  // household. Everything else (NIIT, cost-sharing, benchmark, top-ups, the survivor recheck)
-  // stays. 'control' prefix ⇒ require-hedge-swept: keeps "could move this picture".
+  // household. Everything else (NIIT, cost-sharing, top-ups, the survivor recheck) stays.
+  // 'control' prefix ⇒ require-hedge-swept: keeps "could move this picture".
   controlHealthOmissionsNoteStatePriced:
-    'Not counted here: the net-investment-income tax, differences in plan cost-sharing, the benchmark premium itself, state-level subsidy top-ups, and a surviving spouse’s chance to have the Medicare surcharge rechecked sooner — each could move this picture.',
+    'Not counted here: the net-investment-income tax, differences in plan cost-sharing, state-level subsidy top-ups, and a surviving spouse’s chance to have the Medicare surcharge rechecked sooner — each could move this picture.',
   // The extras block's lead (the ask-for-Medicare-extras unit, F5's door home). Deliberately
   // NOT a control* key (the require-hedge sweep is for plan-moving readouts; this is a
   // mechanism disclosure — the universal gates still apply). Mechanism-named (rule 37):
@@ -1335,7 +1353,37 @@ export const copy = {
   // council dissent aims at, and leaving them out means the card can grow later with no schema
   // change.
   recommendRecordHeading: 'Your saved strategy read',
-  recommendRecordHolds: 'It still matches your plan as it stands today.',
+  // ⚠️ THE HOLDS LINE — REWORDED 2026-08-03, and nothing defended it before that. It read
+  // "It still matches your plan as it stands today." Cold-read Card 8 graded that HARD-FLAG.
+  //
+  // WHAT IT IS ALLOWED TO CLAIM: conjunct 1 ONLY — fingerprint identity. The household's
+  // ranking-affecting inputs hash the same as when the record was minted (`intakeMap.ts` builds the
+  // params, `solveAnchor.ts` the candidate roster, `solverRunFingerprint.ts` serializes both).
+  // That is the sole COMPUTED guarantee behind this face, so it is the only thing the sentence says.
+  //
+  // WHAT IT MUST NOT CLAIM, AND WHY THE OBVIOUS REWRITE IS BANNED: "Nothing has moved since then
+  // that would change it" — and every universal-negative of that shape — is broader than the three
+  // conjuncts can support, i.e. ROSIER than the sentence it would be replacing. The fingerprint
+  // EXCLUDES constant vintages BY DESIGN (`savedRecommendation.ts` header), and `blendMoved` is
+  // DELIBERATELY absent from `rulesMoved` (`staleness.ts` — a nameless re-base may not demote a
+  // record). So a rulebook can move, params stay byte-identical, and this card would assert
+  // "nothing has moved" in the same session that the re-entry gate says we cannot tell whether it
+  // touched their numbers. Never write the universal negative here.
+  //
+  // NOR DOES IT CLAIM ANYONE EXECUTED ANYTHING. `drawdownPolicy` IS inside the fingerprint, so a
+  // household that ACTS on a sequencing recommendation trips 'inputs-changed' and gets the
+  // SUPERSEDED card. This face is therefore reachable only for a household whose sequencing has NOT
+  // moved: taking the advice demotes the memory, ignoring it earns the reassurance. "Matches your
+  // plan" invited exactly the inference that reassurance was about their PLAN OF ACTION. "The
+  // numbers you've entered" cannot be read that way — it names the data, which is what was checked.
+  //
+  // ⚠️ NEVER DEFEND THIS LINE WITH `noChange`. `select.ts` keys `noChange` on the CONVENTIONAL
+  // baseline's provenance, never on the entered `drawdownPolicy` — citing it here would attach a
+  // true-sounding proof that is about a different comparison entirely.
+  //
+  // WIDTH IS GATE-ARBITRATED, NEVER GUESSED (the sibling's own law at `recommendRecordSuperseded`
+  // below): 50 chars, one line, verified under `pnpm verify:fit` on the `rec` plant.
+  recommendRecordHolds: 'It still lines up with the numbers you’ve entered.',
   // THE SUPERSEDED LEAD — the negative mirror of `recommendRecordHolds`, and it exists because the
   // superseded arm's cause clauses MAY BE EMPTY (`SavedRecordStanding`, recommendationSaveView.ts:237-242:
   // the fail-closed output of the broken-contract split, where the store demoted the record without

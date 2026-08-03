@@ -5,7 +5,7 @@
 > the roadmap carry the test count under `verify:doc-stats` (this file re-typing it rotted twice, so
 > `d5df3609` made pointing the rule).
 >
-> **The full open register is [`docs/backlog.md`](docs/backlog.md)** — 44 open items, each traced to the raw
+> **The full open register is [`docs/backlog.md`](docs/backlog.md)** — 43 open items, each traced to the raw
 > obligations behind it. This file ranks only what is next; **a queue of ~17 is not the open surface, so
 > read the register before filing anything as new.**
 >
@@ -26,7 +26,7 @@ left is not units. It is the gap between *the build is done* and *a friend can b
 | ~~NOW~~ | ~~NC FY2025-26 revenue certification~~ | ✅ **CLOSED 2026-08-02** — S.L. 2026-41 § 44.1(a) enacted the rate schedule *and* struck the trigger rows the certification fed. Withhold lifted, checkpoint retired. |
 | **2026-09-02 00:00 UTC** (09-01 20:00 ET) | ACA rolling window (`verifiedOn: 2026-08-02` + `maxAgeDays: 30`) | `pnpm verify:aca` reds → CI red |
 | **2027-08-02** | NC `nextDue`, `state-tax-nc-last-verified.json` (annual drift cadence now, not a pending event) | `pnpm verify:state-tax` reds → CI red |
-| **2027-01-01** | `TAX_YEAR` / `COVERAGE_YEAR` / `CONTRIBUTION_YEAR` roll | **No gate exists** — every figure silently goes a year stale |
+| **2027-01-01** | `TAX_YEAR` / `COVERAGE_YEAR` / `CONTRIBUTION_YEAR` roll | ✅ **ARMED 2026-08-02** — `annualRoll.tripwire.test.ts` reds the suite (both arms mutation-proven). Clearing it is a **re-sourcing job, never a date bump**; `scaffold.smoke.test.ts:10-13` + `constants.shape.test.ts` red alongside by design |
 | **2027-01-01** | Every organic vault crosses `elapsed ≥ 1` | The aged surfaces stop being dev-plant-only and go live on real households — **the four aged tone calls are due before this** |
 | **2028-01-01** | IRMAA top-tier re-index tripwire | Test reds by design |
 | **2034-08** | NC's successor flip event — the Office of the State Controller's FY2033-34 final accounting (trigger $40,258,000,000 → TY2035, 0.25pp step, 2.49% floor) | Nothing breaks; it is the only mechanism left that can move NC's rates, and it can only CUT |
@@ -159,18 +159,7 @@ deadlines silently misses it. It has been filed a notch late twice, both times i
    `rulesMoved` to stop being one OR-collapsed boolean. Nothing here is urgent: the residual over-alarm is
    bounded and knowingly accepted, and the clock is load-bearing.
 
-7. ⏰ **The 2027-01-01 annual roll has no tripwire at all.** `TAX_YEAR` / `COVERAGE_YEAR` /
-   `CONTRIBUTION_YEAR` go a year stale in silence. Cheap to arm, and the deadline is fixed.
-   ⚑ **Audit corrections 2026-08-02:** (a) *"every other dated constant carries a gate"* is **false** —
-   `federalPovertyGuidelines` (`health.ts:113-114`, `guidelineYear: 2025`) is dated, annual and equally
-   ungated, so include it in scope. *(Check the coverage-year mapping before calling it stale — ACA
-   deliberately applies the PRIOR year's guidelines to a coverage year, so 2025 in a 2026 build may be
-   correct. Do not assert staleness without confirming that rule.)* (b) Mirror
-   `irmaaTopTierReindex.tripwire.test.ts` — it is the working template. (c) **Know what it buys:** a red
-   tripwire reds the GitHub check but does **not** block a Vercel deploy. That is true of all three
-   existing tripwires, so it is the house posture, not a new gap — don't "fix" it here.
-
-8. **The recommendation tells an NC household we can't price their state — while the spine three inches
+7. **The recommendation tells an NC household we can't price their state — while the spine three inches
    above says we did.** `copy.ts:1531` (`recDiscStateTax`) is the ONE `DISCLOSURE_BUILDERS` entry with no
    condition (`recommendationView.ts:75`), so it renders on priced-state households too. **Newly reachable,
    not a regression:** before the 2026-08-02 NC pin no priced-state household could reach this surface, so
@@ -182,7 +171,7 @@ deadlines silently misses it. It has been filed a notch late twice, both times i
 
 ### Tier 1 — the differentiator does not land
 
-9. **The recommendation never says what to DO.** `recommendationView.ts:410` computes `winnerStrategyKey`;
+8. **The recommendation never says what to DO.** `recommendationView.ts:410` computes `winnerStrategyKey`;
    repo-wide it has **exactly two other references — its own type declaration and one unit test.** Zero
    render consumers, and `RecommendationSurface.tsx` contains no strategy name anywhere. The hero is a bare
    dollar delta (`copy.ts:2297/2301`); the winner's conversion amount and years render nowhere; there is
@@ -195,7 +184,7 @@ deadlines silently misses it. It has been filed a notch late twice, both times i
    apply-seam mutation. Most of what's missing is already ON the payload and needs only rendering — that
    half is cheap and answers "it never says what to do" with zero engine work.
 
-10. **The whole still-working audience gets no strategy — silently.** `Result.tsx:476` gates
+9. **The whole still-working audience gets no strategy — silently.** `Result.tsx:476` gates
    `RecommendationSurface` off for the date route entirely and `:362` gates the invite door. The
    `blocked{spine-unready}` note that would explain it lives *inside* the gated-off component, so a working
    couple sees the date answer and **zero words** about strategy. `Result.tsx:340`'s comment claims "the
@@ -209,7 +198,7 @@ deadlines silently misses it. It has been filed a notch late twice, both times i
    committed answer, not the draft, and anchoring candidates at a future retirement year is a real ranking
    question.
 
-11. **A modest-pre-tax household is refused a withdrawal-order answer the engine could compute.**
+10. **A modest-pre-tax household is refused a withdrawal-order answer the engine could compute.**
     `solveDispatch.ts:79` returns `'no-pretax'` when no *conversion* candidate survives — but a
     conversion-free candidate survives for **every entry in `SEARCHED_POLICIES`** (`candidates.ts:331-337`),
     and `solve.ts:452-457` already implements that exact partition for the trend-blocked case.
@@ -228,7 +217,7 @@ deadlines silently misses it. It has been filed a notch late twice, both times i
     deliberately — `copy.ts:1404-1406` records that naming "a withdrawal strategy" cures the panel's
     unglossed-"order" stumble). **Briggsy's words, or ship the engine half first.**
 
-12. **The assumed heir bracket (0.24) — the shipped copy sends the reader to a control that does not exist.**
+11. **The assumed heir bracket (0.24) — the shipped copy sends the reader to a control that does not exist.**
     ⚑ **The filed claim ("cannot be seen or edited") is HALF FALSE, and the truth is worse.** It IS
     disclosed — `recommendationView.ts:78-81` → `copy.ts:2352-2353` → `RecommendationSurface.tsx:469-477` —
     and the sentence ends *"— adjust it in your assumptions if that's off."* **There is no heir seat in
@@ -246,18 +235,18 @@ deadlines silently misses it. It has been filed a notch late twice, both times i
 
 ### Tier 2 — what breaks on someone else's device
 
-13. **The surfaces a friend actually hits have never been walked or cold-read by anyone.** The vault
+12. **The surfaces a friend actually hits have never been walked or cold-read by anyone.** The vault
     credential ceremonies (Passphrase, Backup, Save, Export), `RecoveryFlow` and `RestoreFlow` — the two
     *"I lost access to my retirement plan"* screens — plus ColdStart and 10 of 13 intake steps, including
     **Accounts, where the couple enters their entire net worth.** No dev seed reaches most of them.
 
-14. **The couple's own data.** An interrupted intake loses the whole household (13 steps, zero persistence,
+13. **The couple's own data.** An interrupted intake loses the whole household (13 steps, zero persistence,
     no `beforeunload`, and one step tells them to fetch a number from healthcare.gov **in a new tab**) · the
     `schemaVersion` migration ladder **does not exist as code** — `IntakeApp.tsx:537` refuses anything but
     v3, so the first v4 bump bricks every saved plan *and its backup* · there is **no way to delete the
     vault** (`clearVault` exists; its only caller is the dev seed planter).
 
-15. **Also:** no icons at all, so the "local-first PWA" is not installable · Chromium-only verification
+14. **Also:** no icons at all, so the "local-first PWA" is not installable · Chromium-only verification
     while the durability story is explicitly about Safari eviction · the fit law is never checked at
     enlarged text · no single-person household (a solo friend is withheld forever or must invent a spouse)
     · **no document a friend reads** — the in-app honest-limits total is two sentences, and the app tells
@@ -266,7 +255,7 @@ deadlines silently misses it. It has been filed a notch late twice, both times i
 
 ### Tier 3 — Briggsy's call
 
-16. **His eye, the standing block.** The stacked tape rows (07-08 → 07-23, which also score the
+15. **His eye, the standing block.** The stacked tape rows (07-08 → 07-23, which also score the
     Opus-vs-Sonnet Caddie flip) · the four aged-surface tone calls, **due before 2027-01-01** · the chart
     framing forks (whose range is shaded, which odds the ladder quotes, the axis units) · `?vault=stale`'s
     MEANING ruling (both obvious repairs are measured dead ends) · the three-doors rhythm on `datemixed` ·
@@ -275,14 +264,14 @@ deadlines silently misses it. It has been filed a notch late twice, both times i
     ⚑ **On-surface re-audit owed** for the two Card 9 / GoalPicker fixes that shipped without it — a
     chat-approved change does not survive his re-read on the surface (the 2026-07-11 false-PASS lesson).
 
-17. **Verify-owed, and it needs him.** The OOP-medical figures (`src/intake/referenceData.ts` →
+16. **Verify-owed, and it needs him.** The OOP-medical figures (`src/intake/referenceData.ts` →
     `OOP_MEDICAL_TYPICAL_HOUSEHOLD`) are grounded-search-sourced, **not** primary-table-verified
     (`directionalUntilPinned`). BLS bot-walls `curl`, so this is the sanctioned exception to
     no-manual-steps: ask Briggsy to pull the CE "Age of reference person" table and pin them cell-by-cell.
 
 ### Tier 4 — hygiene
 
-18. **The gates that don't bite (14 filed items)** — R7's registry is one level deep, copyGuard's scope is
+17. **The gates that don't bite (14 filed items)** — R7's registry is one level deep, copyGuard's scope is
     a prefix allowlist with no forcing function on new keys, and several arms still cannot fail. None can
     produce a wrong answer today; all mean the net is thinner than it reads. Plus the Medicare-trend
     riders, the open copy obligations, the deferred richer market draw, and the `dateinvert` (c) mint —

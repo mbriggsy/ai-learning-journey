@@ -1,6 +1,6 @@
 # The Back Nine — Open Backlog
 
-> The complete open register: **44 open items** (45 entries, 1 closed and kept as a record) consolidated
+> The complete open register: **43 open items** (45 entries, 2 closed and kept as records) consolidated
 > from **136 raw obligations** (a source audit of the shipped code + a salvage sweep of the 246 KB
 > `TODO.md` archive it replaced). Every raw obligation is accounted for — the `ids` on each entry are its
 > provenance.
@@ -108,12 +108,23 @@ nothing, and the first surviving trigger row is FY2033-34 → TY2035 (OSC **Augu
 - Council fork: state-tax exposure — widen `pricedState` vs add a 7th `stateTax: ExposureRead` field
 - Standing trigger — the state clock's unknown arm (unreachable in-build today)
 
-### Annual tax-year roll on 2027-01-01 with no tripwire
+### ~~Annual tax-year roll on 2027-01-01 with no tripwire~~ — **ARMED 2026-08-02**
 
-`L` · **pilot** · filed 2× — `A27`, `S79`
+~~`L`~~ · **pilot** · filed 2× — `A27`, `S79`
 
-- TAX_YEAR / COVERAGE_YEAR / CONTRIBUTION_YEAR annual roll — 2027-01-01, NO gate exists
-- TWO UNPINNED GATES (incl. the dated 2027-01-01 tax-vintage tripwire)
+- ✅ `src/engine/constants/__tests__/annualRoll.tripwire.test.ts` — mirrors the
+  `irmaaTopTierReindex.tripwire` idiom. **Both arms mutation-proven red in isolation** before landing.
+- Arm 1 reds when the wall clock passes `TAX_YEAR`, and refuses a **partial** roll (the three years must
+  move together, cross-checked against `CONSTANTS_VINTAGE`).
+- Arm 2 pins the FPL relationship **structurally** — `guidelineYear === COVERAGE_YEAR − 1` (ACA's
+  prior-year rule) — rather than a literal. This closes the correction the audit raised: the FPL table
+  IS dated and was equally ungated, and the roll can desync it in **either** direction (forget it and
+  the offset becomes 2, understating income vs poverty and OVERSTATING subsidies — the optimistic
+  direction; "fix" the apparent staleness by syncing them and the cliff moves against every pre-65
+  household). A hardcoded year only pins today; the relationship keeps biting after the roll.
+- Enforced in CI — `pnpm test` runs at `.github/workflows/verify-the-back-nine.yml:56`.
+- ⚠️ Known and unchanged: a red tripwire reds the GitHub check but does **not** block a Vercel deploy.
+  True of all three pre-existing tripwires — the house posture, not a gap this introduced.
 
 ### Pre-65 health insurance is priced with no cost growth, and the subsidy clawback is unmodeled
 

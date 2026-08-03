@@ -313,6 +313,13 @@ These are the mechanical ones that keep costing hours.*
   recommendation has no fast path. Before calling one frozen, measure CPU on the Playwright renderer
   (`Get-CimInstance Win32_Process | ? CommandLine -match 'ms-playwright'`, then sample `.CPU` twice) —
   a pinned core means it is computing, and Briggsy's own Chrome PIDs will read 0% and mislead you.
+- **`console.log` in a vitest run is SWALLOWED here** — a measurement probe that prints its answer
+  produces a green run and no output, which reads as a silent failure. Write results to a file
+  (`writeFileSync` to the scratchpad) and `cat` it. Cost one full 78-second run to discover.
+- **A directional caveat is a CLAIM — measure it or drop it.** Writing "low path counts under-count
+  this, read it as a floor" on the demotion-frequency probe sounded obviously right and was **backwards**
+  (15% at 400 paths → 11% at 1600). Re-running at 4× cost five minutes and inverted the conclusion. If a
+  caveat is worth writing next to a number, it is worth one more run.
 - **Verify a planted mutant landed, and hit the right occurrence.** A no-op edit goes green and reads as a
   surviving mutant; a replace on the wrong line produces a real-looking red for the wrong reason. Match on
   a unique anchor, then `grep` the file back. **And run the baseline before diagnosing your own change** —

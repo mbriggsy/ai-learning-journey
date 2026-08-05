@@ -490,13 +490,19 @@ function RecommendedBeat({
             conversion to the one the household already runs (the winner's conversion REPLACES theirs). */}
         {view.winnerAction !== undefined && (
           <div className="rec-action">
-            <p className="rec-action__heading" id={actionHeadingId}>
+            {/* A real HEADING, not a styled <p>: it titles a block inside the beat, which is exactly
+                what `.rec-conv-hold__head` (h4) does one sibling down and what `ReEntry`'s h3 does above
+                its own <dl>. A <p> left the card unreachable from a screen reader's heading list. */}
+            <h4 className="rec-action__heading" id={actionHeadingId}>
               {copy.recommendActionHeading}
-            </p>
+            </h4>
             <dl className="rec-action__list" aria-labelledby={actionHeadingId}>
               <dt className="rec-action__term">{copy.recommendActionOrderLabel}</dt>
+              {/* The explicit {' '} is load-bearing, not formatting: `display:block` on the gloss makes
+                  the LINE break visually, but the two text nodes stay adjacent in the accessibility tree
+                  and in copied text ("Low-tax room firstPulls from pre-tax only…"). */}
               <dd className="rec-action__value">
-                {view.winnerAction.orderLabel}
+                {view.winnerAction.orderLabel}{' '}
                 <span className="rec-action__gloss">{view.winnerAction.orderGloss}</span>
               </dd>
               {view.winnerAction.conversionLine !== undefined && (
@@ -505,7 +511,10 @@ function RecommendedBeat({
                   <dd className="rec-action__value">
                     {view.winnerAction.conversionLine}
                     {view.winnerAction.conversionNote !== undefined && (
-                      <span className="rec-action__gloss">{view.winnerAction.conversionNote}</span>
+                      <>
+                        {' '}
+                        <span className="rec-action__gloss">{view.winnerAction.conversionNote}</span>
+                      </>
                     )}
                   </dd>
                 </>

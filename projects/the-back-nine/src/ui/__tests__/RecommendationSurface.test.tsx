@@ -972,7 +972,30 @@ describe('RecommendationSurface — the winning-plan card', () => {
     expect(values[0]).toContain(copy.leverPolicyTaxableFirst)
     expect(values[0]).toContain(copy.leverPolicyTaxableFirstHelp)
     // The CONVERSION half quotes the crowned amount FLOORED, through the shipped duration vocabulary.
-    expect(values[1]).toBe(slots.rothPlanEcho('43,000', 2026, false, 9))
+    expect(values[1]).toBe(slots.rothPlanRanked('43,000', 9, 2026, false))
+  })
+
+  it('SEATS the replacement clause in the DOM — deleting its JSX must not leave the suite green', () => {
+    // The view model built `conversionNote` and nothing downstream ever read it: every assertion lived
+    // on the composer, so removing the render branch was invisible to the whole suite (ultramode
+    // 2026-08-05, the testing lens). Their figure is un-round so the two dialects genuinely differ and
+    // the note is not suppressed by the display-collision guard.
+    const { container } = render(
+      <RecommendationSurface
+        solve={converting({
+          noActionBaseline: {
+            ...leaveMoreArm('proportional', 'proportional', [400_000, 500_000], [100_000, 100_000]),
+            conversion: { annualAmountReal: 20_450, startYearOffset: 0, years: 4 },
+          },
+        })}
+        planClock={CLOCK}
+      />,
+    )
+    const conversionValue = [...container.querySelectorAll('.rec-action__value')][1]?.textContent ?? ''
+    expect(conversionValue).toContain(slots.rothPlanReplaces('20,450'))
+    // The two clauses are separate readable text, not one run-on token (the gloss's `display:block`
+    // breaks the LINE but leaves the nodes adjacent in the a11y tree and in copied text).
+    expect(conversionValue).not.toMatch(/2026\.That/)
   })
 
   it('the list carries its heading as its accessible name (one named group, no double announcement)', () => {

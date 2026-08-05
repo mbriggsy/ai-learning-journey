@@ -142,11 +142,18 @@
   color: var(--ink);
 }
 
+/* PAIRING IS THE WHOLE POINT OF A <dl>, and a uniform gap destroys it: at one spacing every term sat
+   exactly as close to the gloss ABOVE it as to the value it labels, so the eye read a flat list of six
+   lines instead of two labelled settings. The term hugs its value; the separation lives BETWEEN pairs. */
 .rec-action__list {
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: var(--space-1);
+}
+
+.rec-action__list > dd + dt {
+  margin-block-start: var(--space-4);
 }
 
 /* The term carries --weight-medium so it reads as a LABEL, not as more prose: it shares its size and

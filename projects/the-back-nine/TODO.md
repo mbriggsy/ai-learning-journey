@@ -721,6 +721,20 @@ deadlines silently misses it. It has been filed a notch late twice, both times i
    (`engineProtocol.ts:180-189`, the one that silently drops), `armFromWire`. Out of scope; omit the why.
    </details>
 
+7c. **The crowned conversion is anchored to the plan's BUILD year, so on an aged vault it cannot be
+   enacted as priced.** *(Found 2026-08-05 by the ultramode review — seven lenses converged on its COPY
+   symptom; this is the cause underneath, and it is engine-level.)* `conversionWindowFor`
+   (`solveAnchor.ts:201-208`) returns `{ startYearOffset: 0, years }`, and offset 0 is the plan's build
+   year. A household who saved in 2026 and re-solves in 2029 is therefore crowned a window whose first
+   three years are already gone — and **`RothLever`'s `complete()` refuses a passed start**
+   (`RothLever.tsx:53-56`), so the one control that could apply the recommendation rejects the very year
+   it was priced from. ✅ **The card no longer LIES about it** (`rothPlanRanked` makes no commencement
+   claim on the passed arm) — but the recommendation is still not enactable, and the reader is not told
+   so. **Do NOT fix this in copy**: the honest repairs are engine-side (re-anchor the window to the wall
+   year, which moves the ranking and needs a `SOLVER_CODE_VERSION` bump, or refuse to crown a conversion
+   whose window has partly elapsed). Both are real ranking decisions. Witness: any `?vault=`-aged plant
+   driven to a committed ACTIVE recommendation.
+
 7b. **`?seed=failing` mint-fails — the bad-news household gets a "something went wrong" card.** *(Found
    2026-08-05 by the witness probe; filed nowhere before.)* Both goals return
    `{kind:'mint-failed', stage:'stability'}` with detail *"perturbation arm VACUOUS: the +1,000
@@ -932,6 +946,14 @@ These are the mechanical ones that keep costing hours.*
   fan-out; never ask one agent for dozens of long fields at once.
 - **`?vault=` / unlock / save need a secure context** (`crypto.subtle`) — localhost or https, never a bare
   LAN IP over http.
+- **`verify:fit`'s `?seed=dip` arm is LOAD-SENSITIVE and can red the whole gate on a busy machine.**
+  Measured 2026-08-05: it PASSES isolated at 1.1m and FAILED at 1.5m inside the full parallel run, on
+  `gotoSeedFinal`'s 90s wait for the FINAL engine tier (`reviewSurface.ts:74`) — the heaviest date seed
+  sweeping 11 offsets at final precision. **Do NOT just raise the 90s** (insight 106: a fix that raises a
+  bound must prove that bound is the one that binds, and three prescriptions in a row adjusting a clock
+  means the wait is the wrong instrument). The wait is on REAL compute, so it is slow rather than
+  impossible — which is the opposite of 106's case and needs its own diagnosis. Re-run the arm alone
+  before believing a red: `pnpm exec playwright test --config=playwright.fit.config.ts -g "seed=dip"`.
 
 ---
 

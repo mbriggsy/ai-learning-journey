@@ -293,6 +293,11 @@ const WINNER_STRATEGY_KEY: Record<DrawdownPolicy, CopyKey> = {
 /** The same policy → its shipped `leverPolicy*Help` GLOSS key. A second exhaustive `Record` rather than
  *  a `${key}Help` string concatenation on purpose: concatenation produces a `string`, not a `CopyKey`,
  *  so a renamed or missing gloss would fail at RUNTIME with a blank line instead of at `tsc`. */
+/** The ONE resolution of "what is the winning order called" — read by the view field AND by the
+ *  winning-plan card, so the card can never name a different strategy than `winnerStrategyKey` does. */
+const winnerStrategyKeyFor = (payload: SolveRecommendation): CopyKey =>
+  WINNER_STRATEGY_KEY[payload.winner.policy]
+
 const WINNER_STRATEGY_GLOSS: Record<DrawdownPolicy, CopyKey> = {
   proportional: 'leverPolicyProportionalHelp',
   'taxable-first': 'leverPolicyTaxableFirstHelp',
@@ -432,6 +437,17 @@ function heldView(payload: SolveTokenWithheld): RecommendationView {
  *  ACTIVE ⇒ `noDollar` false ⇒ `payload.noChange` false ⇒ `sameDecumulationPlan(winner, userBaseline)`
  *  false ⇒ THE CROWNED PLAN IS NOT THE HOUSEHOLD'S OWN ⇒ the winner is a GRID arm. Therefore:
  *
+ *  ⚠️ THE THIRD STEP HAS A PRECONDITION, AND IT IS NOT STATED IN `select.ts`. `isNoChange` compares
+ *  plans ONLY when a user-baseline candidate is in the set; with none it falls back to
+ *  `winner.index === conventionalIndex`, under which `noChange === false` does NOT imply the crowned
+ *  plan differs from theirs — and this whole proof loses its first link. Two things keep that fallback
+ *  off the production path today: `enumerateSolveCandidates` injects the baseline unconditionally, and
+ *  the one route that would DROP it (`solve.ts`'s `rankable` filter, when a conversion lever is
+ *  withheld) is unreachable because `solveWithMint` evaluates the SAME trend clause FIRST and returns
+ *  `token-withheld` before `solve()` runs. **Re-arm that clause without re-checking this and the card
+ *  will start flooring a figure the household typed.** (Traced 2026-08-05; two review lenses called it
+ *  live, the hop-by-hop trace showed it is not — yet.)
+ *
  *  (1) THE AMOUNT IS RAIL-ANCHORED, so `formatActionableDollar`'s unconditional floor is safe — every
  *      grid amount already sits at or under its ACA-cliff / IRMAA-step / bracket-edge rail, and
  *      flooring a monotone metric can only move further under it. On the household's OWN unscreened
@@ -470,13 +486,13 @@ function winnerActionView(
   let conversionLine: string | undefined
   let conversionNote: string | undefined
   if (ours !== null) {
+    // NOT `rothPlanEcho` — the echo describes a schedule the household OWNS, where its passed arm
+    // ("started in 2026") is TRUE. This card describes a plan they have never adopted, and every grid
+    // conversion anchors at offset 0 = the plan's BUILD year, so that arm fires on EVERY vault more
+    // than a year old. `rothPlanRanked` makes no commencement claim on the passed side.
     const start = rothPlanStartFor(planClock, ours.startYearOffset)
-    conversionLine = slots.rothPlanEcho(
-      formatActionableDollar(ours.annualAmountReal),
-      start.year,
-      start.passed,
-      ours.years,
-    )
+    const oursFormatted = formatActionableDollar(ours.annualAmountReal)
+    conversionLine = slots.rothPlanRanked(oursFormatted, ours.years, start.year, start.passed)
     if (theirs !== null) {
       // FIELD BY FIELD, never through `sameDecumulationPlan`: that helper short-circuits on POLICY
       // before it reads a single conversion field, so a byte-identical conversion under a different
@@ -486,7 +502,15 @@ function winnerActionView(
         theirs.annualAmountReal !== ours.annualAmountReal ||
         theirs.startYearOffset !== ours.startYearOffset ||
         theirs.years !== ours.years
-      if (scheduleDiffers) conversionNote = slots.rothPlanReplaces(formatEnteredDollar(theirs.annualAmountReal))
+      // …AND the two amounts must actually LOOK different. The crowned figure floors and theirs renders
+      // exact (the provenance split), so a rail-anchored $21,900 against a typed $21,000 renders
+      // "~$21,000" TWICE — a sentence announcing a change the reader cannot see, which is the
+      // don't-make-them-think law inverted. Source-bound to the DISPLAYED strings, the same discipline
+      // `deltaCollapsesToZero` and `runnerUpVizFor`'s gap check already use on this layer.
+      const theirsFormatted = formatEnteredDollar(theirs.annualAmountReal)
+      if (scheduleDiffers && theirsFormatted !== oursFormatted) {
+        conversionNote = slots.rothPlanReplaces(theirsFormatted)
+      }
     }
   } else if (theirs !== null) {
     // The winner converts nothing and the household does — the recommendation IS the removal. Silence
@@ -496,7 +520,10 @@ function winnerActionView(
   }
 
   return {
-    orderLabel: copy[WINNER_STRATEGY_KEY[payload.winner.policy]],
+    // Resolved THROUGH `winnerStrategyKey`'s own map, not beside it — one fact, one source. Reading
+    // `WINNER_STRATEGY_KEY` here and on the view field would be two independent lookups of the same
+    // thing, free to drift (insight 020's shape, one layer down).
+    orderLabel: copy[winnerStrategyKeyFor(payload)],
     orderGloss: copy[WINNER_STRATEGY_GLOSS[payload.winner.policy]],
     conversionLine,
     conversionNote,
@@ -576,7 +603,7 @@ function recommendedView(payload: SolveRecommendation, opts: RecommendationViewO
     mode: noDollar ? 'no-change' : 'active',
     surplusRegime: payload.surplusRegime,
     goal,
-    winnerStrategyKey: WINNER_STRATEGY_KEY[payload.winner.policy],
+    winnerStrategyKey: winnerStrategyKeyFor(payload),
     winnerAction: winnerActionView(payload, noDollar, opts?.planClock),
     grade,
     survivalContext: opts?.spineConfidence,

@@ -505,6 +505,9 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     // dialect would have misquoted, kept here so the provenance split stays visible in the guard.
     rothPlanTakenOut: slots.rothPlanTakenOut('43,617'),
     rothPlanReplaces: slots.rothPlanReplaces('43,617'),
+    // The CROWNED schedule (not the echo — different speech act). Sampled on its PASSED arm, which is
+    // the one every aged vault renders and the one that used to claim the plan had "started".
+    rothPlanRanked: slots.rothPlanRanked('43,000', 9, 2026, true),
     // Council 2026-07-30 — the band note naming BOTH spending levels. Sampled with a REAL gap
     // (74,000 vs 46,000, the datesplit shape) rather than equal figures, so the guard reads the
     // sentence a household actually meets. `band*` leads neither prefix list, so these ride the two

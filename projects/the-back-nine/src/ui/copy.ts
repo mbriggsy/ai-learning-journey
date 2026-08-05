@@ -2233,9 +2233,14 @@ export const slots = {
    *  typed number on a surface that calls it their plan is a misquote (money.ts, the provenance split).
    *  Names the live vocabulary the Roth sheet already uses for this move (`leverRothRemove`, "Take the
    *  conversion back out") rather than minting a second way to say it — but in the THIRD person, since
-   *  this card carries no control and must promise only what exists (insight 100). */
+   *  this card carries no control and must promise only what exists (insight 100).
+   *  ⚑ TENSELESS ABOUT THEIR SCHEDULE (corrected 2026-08-05, ultramode P2): it used to say their plan
+   *  "converts ~$X a year TODAY", which is false in both directions — their standing lever may start in
+   *  a FUTURE year, or may have ELAPSED entirely (`years` past the horizon is inert). This states what
+   *  their PLAN CONTAINS, which is true whenever the arm can render at all. The sibling
+   *  `leverRothAlreadyApplied` below records the same trap on the same field. */
   rothPlanTakenOut: (theirAmountFormatted: string): string =>
-    `None. Your plan converts ~$${theirAmountFormatted} a year today, and this one takes that back out.`,
+    `None. Your plan has a ~$${theirAmountFormatted} a year conversion in it, and this one takes that back out.`,
 
   /** The winning-plan card's second conversion line when BOTH plans convert and the schedules differ.
    *  `applyCandidate` strips the base's conversions before installing the candidate's, so the crowned
@@ -2243,9 +2248,42 @@ export const slots = {
    *  panel's problem 2 exactly. Their figure again renders EXACTLY (`formatEnteredDollar`).
    *  Quotes only the AMOUNT, never their window: `years` carries no upper bound in the codec or the
    *  lever and the engine truncates past the horizon, so a household's nominal 40-year plan against a
-   *  25-year horizon would quote a length nothing was priced over. */
+   *  25-year horizon would quote a length nothing was priced over.
+   *  ⚑ TENSELESS, same correction as the sibling above: "your plan converts … today" was false for a
+   *  future-start or already-elapsed schedule. And it renders ONLY when the two amounts DISPLAY
+   *  differently — see `winnerActionView`, where the floored crowned figure and this exact one can land
+   *  on the same string and would otherwise announce a change the reader cannot see. */
   rothPlanReplaces: (theirAmountFormatted: string): string =>
-    `That replaces the ~$${theirAmountFormatted} a year your plan converts today.`,
+    `That replaces the ~$${theirAmountFormatted} a year already in your plan.`,
+
+  /**
+   * THE CROWNED conversion schedule — the winning-plan card's own sentence, and NOT `rothPlanEcho`.
+   *
+   * ⚠️ THE REUSE WAS THE BUG (ultramode 2026-08-05, seven lenses converged; P1). `rothPlanEcho` echoes
+   * a schedule the household OWNS, so its passed arm — "started in 2026" — is TRUE there. The card
+   * describes a plan they have NEVER ADOPTED, and every grid conversion anchors at `startYearOffset: 0`
+   * (the plan's BUILD year), so `offsetHasPassed(0, yearsSincePlanBuilt)` is true on ANY vault more than
+   * a year old — i.e. every ordinary returning household was told a recommendation was already under
+   * way. Worse, `RothLever` REFUSES a passed start (`complete()` returns null), so the one control that
+   * could enact it rejects the very year the card named. Same words, different speech act, opposite
+   * truth value: that is why one honest home splits in two here rather than one vocabulary stretching.
+   *
+   * BOTH ARMS ARE TRUE. The un-passed arm is the echo's wording verbatim (nothing was wrong with it).
+   * The passed arm makes NO commencement claim: it states the window's LENGTH and says what the window
+   * is counted from, which holds whatever the wall clock reads. Two sentences, one fact each — the
+   * em-dash apposition that would have fitted it on one line is banned on load-bearing figures.
+   */
+  rothPlanRanked: (
+    amountFormatted: string,
+    years: number,
+    firstYear: number,
+    firstYearPassed: boolean,
+  ): string => {
+    const window = `Converting ~$${amountFormatted} a year for ${years} year${years === 1 ? '' : 's'}`
+    return firstYearPassed
+      ? `${window}. Those years are counted from ${firstYear}, the first year of this plan.`
+      : `${window}, starting in ${firstYear}.`
+  },
 
   /** U17 §S6 — THE APPLIED CONVERSION'S OWN PASSED START, STATED RATHER THAN REFUSED.
    *  §S1 shipped a past-start refusal that is right for a year the reader TYPED and wrong for the

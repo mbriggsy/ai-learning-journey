@@ -700,7 +700,7 @@ for (const seed of SAVE_SLOT_SEEDS) {
             `<dt class="rec-action__term">${text.actionOrder}</dt>` +
             `<dd class="rec-action__value">${text.orderLabel}<span class="rec-action__gloss">${text.orderGloss}</span></dd>` +
             `<dt class="rec-action__term">${text.actionConversion}</dt>` +
-            `<dd class="rec-action__value">${text.conversionLine}</dd>` +
+            `<dd class="rec-action__value">${text.conversionLine} <span class="rec-action__gloss">${text.conversionNote}</span></dd>` +
             '</dl></div>' +
             `<p class="rec-limits">${text.limits}</p>` +
             `<button type="button" class="btn-quiet rec-repick">${text.repick}</button>` +
@@ -759,7 +759,11 @@ for (const seed of SAVE_SLOT_SEEDS) {
           // core seed, so the card is measured at its tallest real content, never a friendly one.
           orderLabel: copy.leverPolicyBracketFill,
           orderGloss: copy.leverPolicyBracketFillHelp,
-          conversionLine: slots.rothPlanEcho('72,000', 2026, false, 9),
+          // The PASSED arm and the replacement clause together — the card's tallest producible content,
+          // not its friendliest. The passed arm is two sentences (the aged vault, which is the ordinary
+          // returning household), and the note only renders when both plans convert.
+          conversionLine: slots.rothPlanRanked('72,000', 9, 2026, true),
+          conversionNote: slots.rothPlanReplaces('20,450'),
         })
 
         const a = slotBoxes.arms

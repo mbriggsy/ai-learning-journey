@@ -27,7 +27,13 @@ import {
   type WinnerActionView,
 } from '../recommendationView'
 import { copy, slots } from '../copy'
-import { formatAbsoluteDollar, formatBracketPercent, formatDeltaDollar } from '../money'
+import {
+  formatAbsoluteDollar,
+  formatActionableDollar,
+  formatBracketPercent,
+  formatDeltaDollar,
+  formatEnteredDollar,
+} from '../money'
 
 /*
  * recommendationView — the U16 §S3a STATES layer. Every payload shape gets a render; the survival
@@ -795,7 +801,7 @@ describe('recommendationView — the winning-plan card (what the crowned plan SE
   it('states the crowned conversion through the shipped duration vocabulary — one home, not a second phrasing', () => {
     const base = leaveMoreRec()
     const card = cardOf({ ...base, winner: withConversion(base.winner, conv(43_617, 0, 9)) })
-    expect(card.conversionLine).toBe(slots.rothPlanEcho('43,000', 2026, false, 9))
+    expect(card.conversionLine).toBe(slots.rothPlanRanked('43,000', 9, 2026, false))
     expect(card.conversionNote, 'the household converts nothing, so nothing is being replaced').toBeUndefined()
   })
 
@@ -828,12 +834,34 @@ describe('recommendationView — the winning-plan card (what the crowned plan SE
 
   it('both convert on different schedules: the crowned one REPLACES theirs (applyCandidate strips the base’s)', () => {
     const base = leaveMoreRec()
+    // THEIRS IS DELIBERATELY UN-ROUND. The first cut sampled 20,000, which floors to ITSELF — so both
+    // dialects returned '20,000' and the assertion proved nothing about which one the note uses
+    // (ultramode 2026-08-05, the testing lens). 20,450 separates them.
     const card = cardOf({
       ...base,
       winner: withConversion(base.winner, conv(43_617, 0, 9)),
-      noActionBaseline: withConversion(base.noActionBaseline, conv(20_000, 0, 4)),
+      noActionBaseline: withConversion(base.noActionBaseline, conv(20_450, 0, 4)),
     })
-    expect(card.conversionNote).toBe(slots.rothPlanReplaces('20,000'))
+    expect(card.conversionNote).toBe(slots.rothPlanReplaces('20,450'))
+    expect(card.conversionNote, 'their figure is quoted whole, never floored').toContain('~$20,450')
+    expect(formatActionableDollar(20_450), 'the dialect the note must NOT use').toBe('20,000')
+  })
+
+  it('MUTANT KILLER — a change the two dialects would render IDENTICALLY says nothing about replacing', () => {
+    // The crowned amount floors and theirs renders exact, so a rail-anchored $21,900 against a typed
+    // $21,000 both display "~$21,000" — and the note would announce a $900/yr change with two identical
+    // figures, which is the don't-make-them-think law inverted. Gate on the DISPLAYED strings, the same
+    // source-bound discipline `deltaCollapsesToZero` uses one function up.
+    const base = leaveMoreRec()
+    const card = cardOf({
+      ...base,
+      winner: withConversion(base.winner, conv(21_900, 0, 9)),
+      noActionBaseline: withConversion(base.noActionBaseline, conv(21_000, 0, 4)),
+    })
+    expect(formatActionableDollar(21_900), 'the two really do collide at display precision').toBe('21,000')
+    expect(formatEnteredDollar(21_000)).toBe('21,000')
+    expect(card.conversionLine, 'the crowned schedule still states itself').toContain('~$21,000')
+    expect(card.conversionNote, 'two identical figures can never carry a replacement claim').toBeUndefined()
   })
 
   it('MUTANT KILLER — an identical schedule under a different ORDER says nothing about replacing it', () => {
@@ -849,7 +877,7 @@ describe('recommendationView — the winning-plan card (what the crowned plan SE
       noActionBaseline: withConversion(base.noActionBaseline, { ...same }),
     })
     expect(card.conversionLine, 'the crowned schedule still states itself').toBe(
-      slots.rothPlanEcho('20,000', 2026, false, 4),
+      slots.rothPlanRanked('20,000', 4, 2026, false),
     )
     expect(card.conversionNote, 'nothing about the conversion is changing — so say nothing about it').toBeUndefined()
   })
@@ -861,17 +889,36 @@ describe('recommendationView — the winning-plan card (what the crowned plan SE
     expect(card.orderLabel, 'the order half still answers "by doing what?"').toBe(copy.leverPolicyTaxableFirst)
   })
 
-  it('an AGED vault reads the tense off the plan clock — never "starting" a year already gone', () => {
+  it('an AGED vault NEVER says the recommendation has started — a plan nobody adopted began nothing', () => {
     const base = leaveMoreRec()
-    // Grid windows always pin `startYearOffset: 0`, which is the plan's BUILD year — so on any aged
-    // vault the recommended start is already behind the wall clock, and `rothPlanStartFor` flips tense.
+    // Grid windows always pin `startYearOffset: 0` = the plan's BUILD year, so `offsetHasPassed(0, n>0)`
+    // is TRUE on every vault more than a year old — i.e. every ordinary returning household. Reusing
+    // `rothPlanEcho` here shipped "started in 2026" for a schedule they had never run (ultramode 2026-08-05,
+    // seven lenses); the echo owns that wording because IT describes a plan the household already holds.
     const card = cardOf({ ...base, winner: withConversion(base.winner, conv(43_617, 0, 9)) }, {
       spineConfidence: spine,
       planClock: { startCalendarYear: 2026, yearsSincePlanBuilt: 3 },
     })
-    expect(card.conversionLine).toBe(slots.rothPlanEcho('43,000', 2026, true, 9))
-    expect(card.conversionLine).toContain('started in 2026')
+    expect(card.conversionLine).toBe(slots.rothPlanRanked('43,000', 9, 2026, true))
+    // THE DEFECT, pinned directly: no commencement claim in any tense.
+    expect(card.conversionLine, 'nothing has started — they have not adopted this plan').not.toContain('started')
+    expect(card.conversionLine, 'and it must not promise a start that is already behind them').not.toContain(
+      'starting',
+    )
+    // …while still carrying the two facts the row exists for, and the plan's own first year.
+    expect(card.conversionLine).toContain('~$43,000')
+    expect(card.conversionLine).toContain('9 years')
+    expect(card.conversionLine).toContain('2026')
     expect(card.conversionLine, 'the build year is never re-based onto the wall clock').not.toContain('2029')
+    // NON-VACUITY: the echo's passed arm — the string this used to ship — really does claim a start,
+    // so the assertions above are a real choice between two available wordings.
+    expect(slots.rothPlanEcho('43,000', 2026, true, 9)).toContain('started in 2026')
+  })
+
+  it('a FRESH plan still reads as plainly as the echo did — the fix costs the common case nothing', () => {
+    const base = leaveMoreRec()
+    const card = cardOf({ ...base, winner: withConversion(base.winner, conv(43_617, 0, 9)) })
+    expect(card.conversionLine).toContain('starting in 2026')
   })
 
   it('NO-CHANGE register: the card does not render, even when the crowned plan converts', () => {

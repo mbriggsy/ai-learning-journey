@@ -35,6 +35,12 @@ before touching a pixel, and read a ⚑ block before trusting any line number in
 seen. `?vault=rec` cannot show it (single bucket, planted payload); it needs a save + re-entry on
 `?seed=buckets`, which costs a **~25-minute** solve.
 
+⚠️ **A REAL-BROWSER LOOK IS NOT OPTIONAL ON A COPY CHANGE, and 2026-08-05 proved it twice in one day.**
+Two defects shipped past a fully green suite and died on the rendered frame: a heading whose *"there"*
+had no referent, and a formatter quoting `~$140,000` for a $148,300 anchor. A third — the card telling an
+aged vault its recommendation had *"started in 2026"* — needed a 20-agent review to surface, and a test
+had been written PINNING it. **Read the frame as a user, not as the author of the assertions.**
+
 ⚠️ **`mode: 'no-change'` HAS FOUR DISJUNCTS, NOT ONE — this cost a real diagnosis 2026-08-03 and will
 cost the next one.** `recommendationView.ts:175-180`: `noChange` **OR** the grade's `subTenthCollapse`
 **OR** a seed-B display inversion **OR** a delta that formats to $0. So *"the surface says **You're
@@ -63,18 +69,20 @@ deadlines silently misses it. It has been filed a notch late twice, both times i
 
 ## Next, in priority order
 
-> **Re-verified 2026-08-03 (second pass) — 16 agents, 8 verify→skeptic pairs, every cited line re-opened.
-> 7 of the 8 skeptics refuted their own verifier on a material point.** Two "obvious" fixes would have
-> shipped NEW false claims (the record card's replacement sentence; the HSA disclosure's own wording), one
-> filed blocker was false in the dangerous direction (widening states does *not* brick vaults — but the
-> prescribed remedy would have re-opened a hole a compile tie was minted to close), one entry was
-> **de-forked** (entry 6 is a regression against a ratified acceptance criterion, not a judgment call), and
-> one was **re-sequenced** (entry 7 is blocked on entry 6 — naming the winner is what makes 6's false
-> baseline reader-visible). **Entry 10 is the only one no skeptic could refute.**
+> **Re-verified 2026-08-05 (third pass) — 14 agents, 7 verify→skeptic pairs. ALL SEVEN skeptics refuted
+> their verifier on a material point,** and the queue's own block headed *"Anchors, all drifted"* had
+> itself drifted ~80 lines in `copy.ts` (two of its four anchors landed on unrelated Medicare strings,
+> one on a comment). Every anchor in entry 7 was re-opened and corrected before that build started.
 >
-> The measured hit rate on filed prescriptions here is now **four-times-confirmed at ~25-40%.** Every ⚑
-> block below dated 2026-08-03 is post-refutation; the prose above it is the original filing, kept so the
-> drift is visible.
+> **The measured hit rate on filed prescriptions here is five-times-confirmed at ~25-40%.** Every ⚑ block
+> dated 2026-08-03 or later is post-refutation; the prose above it is the original filing, kept so the
+> drift stays visible. **Open every cited line before executing it.**
+>
+> ⚑ **Entries 2, 3, 5 (the account-total confirm) and 14/15 are BRIGGSY'S, not builds** — do not start
+> them. Entries 1 and 10 are the two that are decided AND executable.
+>
+> ⚑ **The 2026-08-03 second pass** (16 agents) is what de-forked entry 6 and re-sequenced entry 7; its
+> findings are folded into those entries. Entry 10 is still the only one no skeptic has ever refuted.
 
 ### Tier 0 — calm-but-wrong (shipped code can answer WRONG)
 

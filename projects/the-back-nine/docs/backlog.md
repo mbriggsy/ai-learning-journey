@@ -400,13 +400,20 @@ nothing, and the first surviving trigger row is FY2033-34 → TY2035 (OSC **Augu
 `M` · **pilot** · filed 2× — `A23`, `A8`
 
 - ⚑ **RETITLED 2026-08-02 — the filed claim ("cannot be seen") is HALF FALSE and the truth is worse.**
-  It IS disclosed: `recommendationView.ts:78-81` → `copy.ts:2352-2353` → `RecommendationSurface.tsx:469-477`.
-  The shipped sentence ends *"— adjust it in your assumptions if that's off"* and **there is no heir seat
-  in `assumptionRegistry.ts` or `AssumptionPanel.tsx`** (grepped: zero rows). We send the reader hunting
-  for a control we never built. A dead-end instruction is worse than silence — and it is **live now**,
-  visible in the 2026-08-02 `?seed=nc` capture.
-- **(XS)** drop the dead-end clause from `copy.ts:2353`; **(M)** add the real editable row, using
-  `survivor-ratio` (`AssumptionPanel.tsx:322-348`) as a line-for-line template.
+  It IS disclosed: `recommendationView.ts:88-91` → `copy.ts:2485-2486` → `RecommendationSurface.tsx:477-487`.
+  The shipped sentence USED TO end *"— adjust it in your assumptions if that's off"* while **there is no
+  heir seat in `assumptionRegistry.ts` or `AssumptionPanel.tsx`** (re-grepped 2026-08-05: still zero
+  rows). We sent the reader hunting for a control we never built — a dead-end instruction worse than
+  silence, live in the 2026-08-02 `?seed=nc` capture.
+- ✅ **(XS) SHIPPED 2026-08-02 — the dead-end clause is GONE.** `copy.ts:2485-2486` now states the
+  assumption and stops; its comment (`:2478-2484`) carries the coupling: **restore the clause in the SAME
+  change that ships the seat, never before it.** (This bullet asserted the clause was still live until
+  2026-08-05; corrected against the source.)
+- **(M) STILL OPEN** — add the real editable row. ⚠️ `survivor-ratio` (`AssumptionPanel.tsx:336-362`) is
+  **not** a line-for-line template: it is a REQUIRED v3 field, and copying that shape bricks every
+  existing vault at `needFinite`. `heirBracket` must be additive-OPTIONAL, and the control a
+  `SegmentedControl` over the statutory ladder, not a `PercentField`. Full prescription lives in
+  `TODO.md`'s heir-bracket entry — the only 2026-08-03 entry no skeptic could refute.
 - **Panel only — never asked in intake.** "What bracket will your kids be in?" invites a
   confidently-wrong guess worse than the 24% default. This also sets the precedent for every future
   methodology knob (`market` sits in the same limbo).

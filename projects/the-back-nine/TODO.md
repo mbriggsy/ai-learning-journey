@@ -473,10 +473,14 @@ deadlines silently misses it. It has been filed a notch late twice, both times i
    returns `[]` ⇒ the **whole roster ranks** (`solve.ts:456-461`), and `select.ts:296-298` calls a
    converting winner *"the natural outcome."* So `winner.conversion {annualAmountReal, startYearOffset,
    years}` is a **live modal case that renders nowhere.**
-   ⚑ **Anchors, all drifted:** `winnerStrategyKey` is declared `recommendationView.ts:188` and built `:440`
-   (`:410` is `deltaFigure`); the hero slots are `copy.ts:2331/2335` (`:2297/2301` are `dateInYearsNow/Past`);
-   `recRunnerUpWhy` is `copy.ts:1520`; there is **no `runnerUpId` on `SolveRecommendation`** (that field is
-   on `SolveWithheld`) — the unused values are `payload.runnerUp.id`/`.policy`.
+   ⚑ **Anchors — RE-OPENED AND CORRECTED 2026-08-05 (the block below had itself drifted ~+80 lines in
+   `copy.ts`, and two of its four anchors landed on unrelated Medicare-extras strings).** `winnerStrategyKey`
+   is declared `recommendationView.ts:188` and built `:440` (**`:409`** is `deltaFigure`; `:410` is blank);
+   the hero slots are **`copy.ts:2414` `recDeltaLeaveMore` / `:2418` `recDeltaPayLessTax`** (`:2331/2335` are
+   `medicareExtrasFact*`; `dateInYearsNow/Past` are **`:2372`/`:2379`**); **`recRunnerUpWhy` is `copy.ts:1599`**
+   (`:1520` is a comment) and `recComposeAlready` — the no-dollar hero this card must not contradict — is
+   **`copy.ts:1575`**; there is **no `runnerUpId` on `SolveRecommendation`** (that field is on `SolveWithheld`)
+   — the unused values are `payload.runnerUp.id`/`.policy`.
    ⚑ **Two hard gates on the render:** `anchoredRail` is **absent from `SolveArm`** (`solve.ts:98-113`), so
    "why this amount" needs engine work — omit it; and **no calendar anchor rides the payload** — derive via
    `draft.startCalendarYear` + `rothPlanStartFor`, never a re-based offset. Space is ~90-120px inside
@@ -496,29 +500,178 @@ deadlines silently misses it. It has been filed a notch late twice, both times i
       shipped dialect rounds to NEAREST, so an anchored $43,600 renders "$44,000" — $400 past the rail,
       to a reader who can type it into the Roth lever. **Use `formatActionableDollar` (`money.ts`) for
       this figure. Never `formatDeltaDollar`/`formatAbsoluteDollar`.**
+      ⚑ **2026-08-05 — THE FLOOR IS ONLY SAFE ON THE *WINNER*, AND ONLY IN THE ACTIVE REGISTER. Applying
+      it to the BASELINE's amount writes a NEW false claim** of exactly the family `94ea8d00` closed.
+      `formatActionableDollar` floors UNCONDITIONALLY (`money.ts:90-95`) on the stated premise that "the
+      household's own (already round) amount" makes the floor a no-op (`money.ts:81-82`) — **nothing
+      enforces that**: `RothLever.tsx:54` takes any finite positive number and `fields.tsx:37` accepts a
+      decimal fraction, so a typed $43,617 would render "$43,000" — a $617 downward misquote of their own
+      figure, on a card whose sibling nameplate says *"your plan today."* Safe on the winner because
+      ACTIVE ⇒ `noChange` false ⇒ `sameDecumulationPlan(winner, userBaseline)` false ⇒ the crowned plan is
+      NOT theirs ⇒ it is a grid arm, and every grid amount is rail-floored. **So: quote the winner's
+      amount; state the baseline's conversion RELATIONALLY (present/absent/different) without re-quoting
+      its dollar** — which also dodges the second-vocabulary problem, since their own figure already has
+      one honest home in `slots.rothPlanEcho`.
+      ⚑ Two false sentences in that docstring to sweep in-pass: `money.ts:68-69` says flooring is *"THE
+      ONLY DIFFERENCE FROM formatDeltaDollar"* (also `Math.max(0,…)` vs `Math.abs`, and the sub-step
+      fallback — pinned live at `money.test.ts:194`), and `money.ts:69-71` says *"Every conversion amount
+      the solver proposes is built by `largestWholeDollarWithin`"* — the **ACA arm** is a closed-form
+      floor (`candidates.ts:285` → `flooredOrNull` `:220-223`) and the **user-baseline arm has no rail at
+      all** (`candidates.ts:427`, unscreened).
    2. **The winner's conversion REPLACES theirs — it does not add to it.** `applyCandidate`
-      (`candidates.ts:443`) strips the base's conversions before installing the candidate's. So
+      (function at **`candidates.ts:453`**; the strip is **`:467`**, the re-install **`:483`**; `:443` is
+      a doc-comment line) strips the base's conversions before installing the candidate's. So
       "alongside"/"also" framing is a false implicature. **The card must read
       `payload.noActionBaseline.conversion` and state a DIFF** — five arms: neither converts · winner
       only · baseline only · both-and-different · both-and-same. (Reading the baseline's conversion is
       only *possible* since `94ea8d00`; before it, that field was always null.)
+      ⚑ **2026-08-05 — the five-arm partition is INCOMPLETE, and the obvious gate is the wrong one.**
+      (a) Amount equality is not plan equality: the grid's window is FIXED (`solveAnchor.ts:208`
+      `{startYearOffset: 0, years}`) while the baseline carries the household's ENTERED window
+      unscreened, so "both convert $20,000" can be two different schedules — a **sixth arm** (same
+      amount, different start/duration). (b) **Do NOT gate the conversion sentence on
+      `sameDecumulationPlan`** — it short-circuits on POLICY first (`candidates.ts:164`), so a
+      byte-identical conversion under a different order returns false and the card would announce a Roth
+      change that isn't happening. Compare the three `RothConversionPlan` fields directly. (c) A
+      **seventh** arm: the winner arm IS the baseline arm (identical plan, zero delta) — but that is
+      `noChange`, i.e. the no-change register, not an ACTIVE diff.
+      ⚑ `solve.ts:461`'s conversion-0 filter is a **dead branch today** (its ternary condition at `:458`
+      is true on every live dispatch — `solveDispatch.ts:91` refuses the run unless a rail-anchored
+      conversion candidate exists, and the trend clause clears). It is a forward landmine, not a shipped
+      fact — do not file it as a live defect.
    3. **The DURATION carries the same defect the start year was rejected for.** `conversionWindowFor`
-      (`solveAnchor.ts`) measures `years` from the plan's BUILD year, and the live window pins at
+      (**`solveAnchor.ts:201-208`**) measures `years` from the plan's BUILD year, and the live window pins at
       offset 0 — so on an aged vault the window has partly elapsed. Refusing the start year while
       quoting "for 6 years" is inconsistent. **Decide both together.** Shipped voice for the past
       tense: `copy.ts leverRothAlreadyApplied`.
+      ⚑ **2026-08-05 — DECIDED SHAPE, and there is already ONE honest home: don't author a second.**
+      `slots.rothPlanEcho` (**`copy.ts:2176-2179`**) is the shipped duration vocabulary — *"Converting
+      ~$X a year for N years, starting/started in YYYY."* — and it clears the gates only by accident of
+      wording (`~` satisfies require-hedge; "Converting" escapes `advice-verb`, which bans the base form
+      `convert` clause-initially, `copyGuard.ts:250-256`). **Reuse its grammar.** The tense comes from
+      `rothPlanStartFor(anchor, offset)` (**`bandAnnotations.ts:130-135`** → `{year, passed}`), which
+      needs the plan clock: `planClockAnchor(...)` is already minted one component up as `dateAnchor`
+      (`Result.tsx:175-179`) but is **not** threaded to the surface — seat it in **`RecommendationViewOpts`**
+      (`recommendationView.ts:291`), the same bag as `spineConfidence`/`pricedState`, never as a raw
+      prop read in JSX.
+      ⚑ **Do NOT copy `leverRothAlreadyApplied` verbatim** — its final clause promises *"taking it back
+      out is still available below,"* a control that does not exist on the no-door card; its own comment
+      makes promising-only-what-exists the reason it was worded that way.
+      ⚑ **CLAMP the duration.** `years` has **no upper bound** anywhere (codec checks integer ≥ 1 only,
+      `scenarioCodec.ts:477-480`; the lever field has no max) and the engine truncates at the horizon
+      (`model.ts:249`). Only the GRID window is horizon-clamped (`solveAnchor.ts:207`). So a
+      user-baseline arm can carry a nominal 40 years against a 25-year horizon — quote the PRICED
+      length, and never render `startCalendarYear + years − 1` as a span end (it would name a year the
+      engine never simulated).
    4. **Gate on the render mode, NOT on `noChange`.** `mode: 'no-change'` has four disjuncts
-      (`recommendationView.ts:175-180`); gating the card on `noChange` alone paints it on three arms
-      where `recComposeAlready` already says *"nothing else we tried looks likely to pull clearly
-      ahead."* **Use the same predicate the hero and the viz use.**
-   5. **`custom` must never render as "My own order"** (`leverPolicyCustom`) — a first-person radio
-      caption inside a card whose whole job is saying what the order IS. `SolveArm.drawdownOrder` is
-      on the payload (`solve.ts:105`, present iff `policy === 'custom'`); name the buckets with the
-      shipped `leverOrderBucketTaxable` / `…Pretax` / `…Roth` labels.
+      (`recommendationView.ts:175-179` is the DOC COMMENT; the disjuncts are computed at **`:372`**
+      `isNoChange`, **`:382-385`** `winnerDisplaysAhead`, **`:401`** `deltaCollapsesToZero`); gating the
+      card on `noChange` alone paints it on three arms where `recComposeAlready` already says *"nothing
+      else we tried looks likely to pull clearly ahead."* **Use the same predicate the hero and the viz
+      use.**
+      ⚑ **2026-08-05 — the predicate has a NAME: `noDollar` (`recommendationView.ts:407`).** It is the
+      single const behind `deltaFigure` (`:409`), `heroLine` (`:411`), `mode` (`:437`) and `viz` (`:456`);
+      at the surface its only visible form is `view.mode` (already read that way at
+      `RecommendationSurface.tsx:200`).
+      ⚑ **But `mode` is NOT "the winner is the order you already run" — and that matters for the card's
+      WORDS, not just its gate.** `noDollar` also fires on the seed-B display inversion and the
+      $0-collapse, where the crowned plan genuinely DIFFERS from the household's. So a card that gates
+      on `mode === 'no-change'` and speaks *"the order you already run"* would be false on two of the
+      three no-dollar arms. **Read `payload.noChange` for the WORDS; use `view.mode` only for the
+      register.** (Both are needed — this is why a single boolean cannot drive this card.)
+   5. **`custom` must never render as "My own order"** (`leverPolicyCustom`, `copy.ts:795`) — a
+      first-person radio caption inside a card whose whole job is saying what the order IS.
+      `SolveArm.drawdownOrder` is on the payload (**`solve.ts:106`**; `:105` is its comment — present iff
+      `policy === 'custom'`, runtime-enforced both ways at `candidates.ts:417-422`); name the buckets with
+      the shipped `leverOrderBucketTaxable` / `…Pretax` / `…Roth` labels (**`copy.ts:802-804`**).
+      ⚑ **2026-08-05 — a `custom` winner is reachable in EXACTLY ONE register, and it is the no-change
+      one.** `custom` is excluded from the searched grid (`candidates.ts:65-67`), so the only custom
+      candidate in the set is the injected user baseline; if that candidate is crowned,
+      `sameDecumulationPlan` compares it with itself ⇒ `noChange` true ⇒ `noDollar` ⇒ `mode:'no-change'`.
+      So the custom branch never renders beside an ACTIVE dollar hero, and there the honest words are
+      *"the order you already run"* — not a neutral strategy name. `noActionBaseline` can be custom too
+      (`solve.ts:516`), so the same bucket-list treatment is owed wherever the card names "your plan today."
+      ⚑ **The bucket map must be NEW, not imported.** `SequencingControl.tsx:54`'s `BUCKET_LABEL` is
+      module-private **and in the intake layer**, which `src/ui` does not reach into (`money.ts:6-7`
+      states the convention). `src/ui` already has a *different* bucket map pointing at *different*
+      strings (`reentryChrome.ts:47` → `copy.ts:1213` *"Pre-tax accounts — 401(k), 403(b), traditional
+      IRA"*), so this would be the **third** — declare it in `recommendationView.ts` against the shipped
+      `leverOrderBucket*` keys and pin it, or the second-vocabulary risk is live.
+      ⚑ `WINNER_STRATEGY_KEY` (`recommendationView.ts:243-249`) is an exhaustive
+      `Record<DrawdownPolicy, CopyKey>` — its own comment says a new policy fails `tsc` there — so the
+      `custom` row **cannot be deleted**. Branch in the composer (a discriminated view field), and pin the
+      custom arm: `recommendationView.test.ts` has **zero** custom coverage today (`:231` pins
+      `taxable-first` only).
    ⚑ **Reuse, never re-type:** the order half is the sequencing sheet's own shipped `leverPolicy*`
    label + its `leverPolicy*Help` gloss (`copy.ts:784-796`). A new name would be a second vocabulary.
-   ⚑ **Runtime witness:** `?seed=health` renders the COMPOSE frame (see 6b), so it cannot show this
-   card. The ACTIVE witness is **`?seed=surplus`** — budget a full solve.
+   (Note the SIXTH key one line past that range — `copy.ts:797` `leverPolicyCurrentTag: '— your current
+   order'` — picker-only, second person, also wrong inside the card.)
+
+   ⚑⚑ **SECOND VERIFICATION PASS 2026-08-05 — 14 agents, 7 verify→skeptic pairs, every cited line
+   re-opened. All 7 skeptics refuted their verifier on a material point.** Four findings above are new;
+   these five are structural and decide the build shape:
+
+   **(i) THIS IS NOT A RENDER-ONLY TASK, and the payload must not be read in JSX.**
+   `RecommendationSurface.tsx:4-5` declares itself *"A DOWNSTREAM RENDERER (insight 020) … NEVER
+   re-derives anything."* The whole `SolvePayload` **is** in scope on the props (`solve` is a
+   `SolveAnswer` whose committed arm carries it, `memoryModel.ts:292`) — so nothing *stops* a raw read;
+   the law does. `RecommendedView` (`recommendationView.ts:173-218`) carries `winnerStrategyKey` and
+   **nothing else about the strategy** — no conversion amount, no offset, no years, no order. So the
+   build is: **new view fields + builders in `recommendedView()` first, JSX second.** The shipped
+   precedent is `winnerStrategyKey` itself, minted in the composer.
+
+   **(ii) THE COPY-KEY NAME DECIDES THE GATES, AND BOTH OBVIOUS NAMES ARE TRAPS.** Scope is a bare
+   `startsWith` (`copyGuard.ts:71`/`:129`). `recStrategy*` / `recWinner*` / `recRoth*` match **neither**
+   `VERDICT_KEY_PREFIXES` (`:63-65`) nor `CONTROL_KEY_PREFIXES` (`:102-116`) — so a plan-moving dollar
+   would ship green past **both** free-numeral and require-hedge (live precedent for an unscoped `rec`
+   key: `recSeeRunnerUp`). Nothing forces a new key into a scope: the scope tests are hand-listed names,
+   not a catalog sweep. **Pick a prefix already in `CONTROL_KEY_PREFIXES`, or add the prefix AND a canary
+   at `copyGuard.test.ts:920-931`.** Every figure must ride a **slot** (`copy.ts:1749`) with a matching
+   `SLOT_RENDER` sample — `Record<keyof typeof slots, …>` makes a missing sample a **compile** error, and
+   `copyGuard.test.ts:587` reds too. And `advice-verb` is **universal**: clause-initial
+   `convert`/`withdraw`/`draw`/`spend` is banned (`copyGuard.ts:250-256`) — that is why every shipped
+   gloss is third-person (*"Spends the brokerage account down…"*). Write in that voice.
+   Inline strings are ESLint-fenced in **three** selectors — visible text **and**
+   `aria-label`/`aria-description`/`placeholder`/`alt`/`title` (`eslint.config.js:87-101`, proven
+   non-vacuous by `copyFence.test.ts`); the committed beat already carries a catalog aria-label
+   (`RecommendationSurface.test.tsx:276`), so budget one.
+
+   **(iii) NOTHING AUTOMATED CAN MEASURE THIS CARD — and the fit gate will go quietly stale.** There is
+   no exclusion *rule* to remove: `vertical-fit.spec.ts:390-401` is a comment, and every `.rec-committed`
+   arm **injects hand-typed HTML** (`:474`, `:558`, `:674`, **`:1984`** — four sites, not three) because a
+   live solve is 80–200s against a 120s budget. Those strings assert they are *"the verbatim
+   `RecommendationSurface.tsx` render"* (`:632-633`), so **adding a child without updating them turns a
+   green gate into a lie.** Update the injected strings in the same commit. The *"~89px headroom"* figure
+   does **not** apply here at all — that is the idle frame; `confidence.css:404-406` records that the
+   committed frame **scrolls by design**, so vertical room is not the constraint. The real geometry fork:
+   a child of `.rec-committed__rest` auto-flows in both registers (`display:contents` in one column;
+   flex column at ≥68rem **only when a `.rec-viz-box` is a direct child** — i.e. ACTIVE mode), whereas a
+   direct child of `.rec-committed` auto-places into an **implicit third grid row** the viz's
+   `grid-row: 1 / -1` does not span. **Seat it inside `__rest`.**
+
+   **(iv) THE ACTIVE WITNESS IS UNPROVEN — `?seed=surplus` may be exactly the state the engine
+   WITHHOLDS.** `select.ts:333-350`: in the **surplus regime**, a converting winner over a
+   NON-converting runner-up routes to `kind: 'withheld'` (`demotion-axis-uncalibrated`) — and its own
+   comment calls that *"the NATURAL outcome for a well-funded leave-more household,"* which is what
+   `surplus` is. No shipped assertion anywhere pins `winner.conversion !== null`
+   (`devSeeds.test.ts:813-816` pins `noChange === false`, which a bare POLICY difference already
+   satisfies). Both record plants mint hand-built payloads with `conversion: null`. **So before the
+   conversion half is built, run a vitest probe through the real builder + real engine at the shipped
+   fast counts** — the `?seed=buckets` pattern — to find (or mint) a seed that yields an ACTIVE
+   recommendation with a non-null winner conversion. Building the render first risks designing a card
+   for a frame the engine never emits.
+
+   **(v) The persisted record cannot reproduce the timing.** `savedRecommendationMint.ts:114-122` stores
+   only `candidateId` + `policy` (+ `drawdownOrder` iff custom), and the id encodes the conversion's
+   **annual amount only** (`candidates.ts:135-136`). A re-opened saved record therefore has no
+   `startYearOffset`/`years` to re-render. Decide what the card shows on re-entry before shipping the
+   timing clause.
+   ⚑ Also true, and useful: `formatActionableDollar` has **zero consumers today** (`money.ts:90` + its
+   test only) — this card is its first. And `anchoredRail` is a discriminated union of **objects**
+   carrying the rail's dollar (`candidates.ts:112-115`), not a string union; it lives on
+   `CandidateStrategy` and is **dropped** at `armOfB` (`solve.ts:232-236`). Surfacing "just under the ACA
+   cliff" would need **five** seams widened — `SolveArm`, `armOfB`, `SolveArmWire`, `packArm`
+   (`engineProtocol.ts:180-189`, the one that silently drops), `armFromWire`. Out of scope; omit the why.
 
 8. **The whole still-working audience gets no strategy — silently.** `Result.tsx:476` gates
    `RecommendationSurface` off for the date route entirely and `:362` gates the invite door. The

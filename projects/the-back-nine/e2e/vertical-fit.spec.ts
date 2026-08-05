@@ -554,6 +554,14 @@ for (const seed of DEAD_RAIL_SEEDS) {
           // the fixed-dimension viz box (its placeholder holds the RV_VIEW aspect), and the text
           // rest wrapper. Injected (no live solve — 80–200s+) exactly as the CLS arm injects its
           // grade lockup; the viz box's presence triggers the inner two-pane.
+          //
+          // ⚠️ IT MODELS THE COLUMN STRUCTURE, NOT THE COPY. This arm asserts where the two columns
+          // START AND END — the inner text is a stand-in and has drifted from the catalog (the shipped
+          // nameplate is "Compared with your plan today"), which costs nothing because no assertion
+          // below reads it. Children that cannot move a column boundary are therefore deliberately NOT
+          // injected here, including the 2026-08-05 winning-plan card: it is a flow child of `__rest`
+          // with no width of its own. The SAVE-SLOT arm below is the one that must stay content-true —
+          // it measures heights — and it carries the card, sourced from `copy` like everything else.
           const el = document.createElement('section')
           el.className = 'rec-committed'
           el.innerHTML =
@@ -665,7 +673,10 @@ for (const seed of SAVE_SLOT_SEEDS) {
         await gotoSeedFinal(page, seed)
         await assertResolvedSpine(page)
 
-        const slots = await page.locator('.recommendation-surface').evaluate((surface, text) => {
+        // RENAMED from `slots` 2026-08-05: the winning-plan card's conversion line comes from the
+        // copy-catalog `slots` import, and a local `const slots` puts that import in the temporal dead
+        // zone for this whole block — the catalog could not be read at all while the shadow stood.
+        const slotBoxes = await page.locator('.recommendation-surface').evaluate((surface, text) => {
           // The real committed beat (RecommendedBeat) — the grade lockup, the fixed-dimension viz
           // box (whose PRESENCE is what the shipped CSS keys the inner two-pane on), and the text
           // rest that OWNS the save slot. The aside is a SIBLING of the beat, exactly as the
@@ -680,6 +691,17 @@ for (const seed of SAVE_SLOT_SEEDS) {
             '<div class="rec-viz-box"><div class="rec-viz-box__placeholder" aria-hidden="true"></div></div>' +
             '<div class="rec-committed__rest">' +
             '<p class="rec-baseline">Compared with keeping your current plan</p>' +
+            // The winning-plan card (2026-08-05) — a real child of `__rest` on every ACTIVE beat, so it
+            // rides above the slot here too. Its content comes from the catalog like everything else;
+            // the conversion line is the shipped slot rendered with the widest live figure shape.
+            '<div class="rec-action">' +
+            `<p class="rec-action__heading">${text.actionHeading}</p>` +
+            '<dl class="rec-action__list">' +
+            `<dt class="rec-action__term">${text.actionOrder}</dt>` +
+            `<dd class="rec-action__value">${text.orderLabel}<span class="rec-action__gloss">${text.orderGloss}</span></dd>` +
+            `<dt class="rec-action__term">${text.actionConversion}</dt>` +
+            `<dd class="rec-action__value">${text.conversionLine}</dd>` +
+            '</dl></div>' +
             `<p class="rec-limits">${text.limits}</p>` +
             `<button type="button" class="btn-quiet rec-repick">${text.repick}</button>` +
             '<div class="rec-slot-host"></div>' +
@@ -730,11 +752,19 @@ for (const seed of SAVE_SLOT_SEEDS) {
           hintCeremony: copy.recommendSaveHintCeremony,
           pending: copy.recommendSavePending,
           badge: copy.recommendSaveSavedBadge,
+          actionHeading: copy.recommendActionHeading,
+          actionOrder: copy.recommendActionOrderLabel,
+          actionConversion: copy.recommendActionConversionLabel,
+          // `bracket-fill` is the LONGEST shipped gloss by a wide margin and is a live crown on the
+          // core seed, so the card is measured at its tallest real content, never a friendly one.
+          orderLabel: copy.leverPolicyBracketFill,
+          orderGloss: copy.leverPolicyBracketFillHelp,
+          conversionLine: slots.rothPlanEcho('72,000', 2026, false, 9),
         })
 
-        const a = slots.arms
+        const a = slotBoxes.arms
         const report =
-          `reserved=${slots.reserved}px · ` +
+          `reserved=${slotBoxes.reserved}px · ` +
           Object.entries(a)
             .map(([k, v]) => `${k}: box=${v.box} content=${v.content}${v.hintLines > 0 ? ` hint=${v.hintLines}L` : ''}`)
             .join(' · ')
@@ -742,8 +772,8 @@ for (const seed of SAVE_SLOT_SEEDS) {
 
         // NON-VACUITY (insight 029): a reservation of zero would make every equality below pass over
         // four collapsed boxes.
-        expect(slots.reserved, 'the slot must carry a real reservation').toBeGreaterThan(0)
-        expect(a.empty!.box, 'the empty reservation must be the reservation').toBe(slots.reserved)
+        expect(slotBoxes.reserved, 'the slot must carry a real reservation').toBeGreaterThan(0)
+        expect(a.empty!.box, 'the empty reservation must be the reservation').toBe(slotBoxes.reserved)
 
         // (1) THE CLS LAW — the populated OFFER arm lands in the SAME box as the empty reservation.
         // This is the assertion the old `min-height ≥ content` lower bound could not make: it goes
@@ -752,7 +782,7 @@ for (const seed of SAVE_SLOT_SEEDS) {
         expect(
           a.offer!.box,
           `the OFFER arm does not fit its reservation — content ${a.offer!.content}px (CTA + a ` +
-            `${a.offer!.hintLines}-line ceremony hint) in a ${slots.reserved}px box, so the box grew to ` +
+            `${a.offer!.hintLines}-line ceremony hint) in a ${slotBoxes.reserved}px box, so the box grew to ` +
             `${a.offer!.box}px and the tap will shift everything below it (insight 035). Content is ` +
             `never trimmed to fit — raise the reservation.`,
         ).toBe(a.empty!.box)

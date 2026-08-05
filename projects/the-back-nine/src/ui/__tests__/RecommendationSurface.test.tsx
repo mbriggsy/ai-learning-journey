@@ -937,3 +937,73 @@ describe('RecommendationSurface — §S5 the gesture’s announcements (burned/0
     }
   })
 })
+
+// ---- the WINNING-PLAN card (2026-08-05) ------------------------------------------------------------
+//
+// The render half of "the recommendation never says what to DO". The view model owns every DECISION
+// (register, dialect, diff) and is pinned in recommendationView.test.ts; these arms pin that the beat
+// actually SEATS it, in the right column, with the right semantics.
+describe('RecommendationSurface — the winning-plan card', () => {
+  const CLOCK = { startCalendarYear: 2026, yearsSincePlanBuilt: 0 }
+  const converting = (over: Partial<SolveRecommendation> = {}): SolveAnswer =>
+    committedRec({
+      winner: {
+        ...leaveMoreArm('taxable-first', 'taxable-first', [500_000, 700_000], [100_000, 100_000]),
+        conversion: { annualAmountReal: 43_617, startYearOffset: 0, years: 9 },
+      },
+      ...over,
+    })
+
+  it('names both coupled controls, inside the reading-measure column, as a definition list', () => {
+    const { container } = render(<RecommendationSurface solve={converting()} planClock={CLOCK} />)
+    const card = container.querySelector('.rec-action')
+    expect(card, 'the card renders in the ACTIVE register').not.toBeNull()
+    // SEATED INSIDE `.rec-committed__rest`, never as a direct child of `.rec-committed`: at the laptop
+    // two-pane the beat's inner grid places exactly three children explicitly, so a fourth direct child
+    // would auto-place into an implicit row the viz's `grid-row: 1 / -1` does not span.
+    expect(container.querySelector('.rec-committed__rest .rec-action'), 'seated in the text column').not.toBeNull()
+
+    expect(container.textContent).toContain(copy.recommendActionHeading)
+    const terms = [...container.querySelectorAll('.rec-action__term')].map((t) => t.textContent)
+    expect(terms).toEqual([copy.recommendActionOrderLabel, copy.recommendActionConversionLabel])
+
+    const values = [...container.querySelectorAll('.rec-action__value')].map((d) => d.textContent ?? '')
+    // The ORDER half is the sequencing sheet's own shipped label + gloss — never a re-typed name.
+    expect(values[0]).toContain(copy.leverPolicyTaxableFirst)
+    expect(values[0]).toContain(copy.leverPolicyTaxableFirstHelp)
+    // The CONVERSION half quotes the crowned amount FLOORED, through the shipped duration vocabulary.
+    expect(values[1]).toBe(slots.rothPlanEcho('43,000', 2026, false, 9))
+  })
+
+  it('the list carries its heading as its accessible name (one named group, no double announcement)', () => {
+    const { container } = render(<RecommendationSurface solve={converting()} planClock={CLOCK} />)
+    const heading = container.querySelector('.rec-action__heading')
+    const list = container.querySelector('.rec-action__list')
+    expect(heading?.id, 'the heading owns a real id').toBeTruthy()
+    expect(list).toHaveAttribute('aria-labelledby', heading?.id ?? '')
+    // The name is the VISIBLE heading, not a duplicated aria-label — AT reads it once.
+    expect(list).not.toHaveAttribute('aria-label')
+  })
+
+  it('does not render in the NO-CHANGE register — the hero already says the honest thing there', () => {
+    const { container } = render(<RecommendationSurface solve={converting({ noChange: true })} planClock={CLOCK} />)
+    expect(container.textContent).toContain(copy.recComposeAlready)
+    expect(container.querySelector('.rec-action')).toBeNull()
+  })
+
+  it('does not render without the plan clock — absent beats a conversion start it cannot date', () => {
+    const { container } = render(<RecommendationSurface solve={converting()} />)
+    expect(container.querySelector('.rec-viz-box'), 'the rest of the ACTIVE beat is unchanged').not.toBeNull()
+    expect(container.querySelector('.rec-action')).toBeNull()
+  })
+
+  it('WIRING — Result really passes the plan clock, so the degrade above can never become the shipped state', () => {
+    // A source assertion, and its limits are the point: it proves the PROP IS WIRED at the one
+    // production mount, not that the anchor's value is right (recommendationView.test.ts pins the
+    // arithmetic, and `planClockAnchor` is the single shipped derivation). Without it, dropping the
+    // prop would turn the card off everywhere while every render test above still passed.
+    const src = readFileSync(resolve(__dirname, '../Result.tsx'), 'utf8')
+    const mount = src.slice(src.indexOf('<RecommendationSurface'), src.indexOf('/>', src.indexOf('<RecommendationSurface')))
+    expect(mount, 'the committed-beat mount passes the anchor Result already mints').toContain('planClock={dateAnchor}')
+  })
+})

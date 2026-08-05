@@ -1,7 +1,13 @@
 import { readFileSync, readdirSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { describe, it, expect } from 'vitest'
-import { NEVER_DEPLETED, type Distribution, type TaxAwareDistribution, type RecommendationGoal } from '@shared/model'
+import {
+  NEVER_DEPLETED,
+  type Distribution,
+  type TaxAwareDistribution,
+  type RecommendationGoal,
+  type RothConversionPlan,
+} from '@shared/model'
 import { headlineStatisticFromDistribution } from '@engine/solver/objectiveHeadline'
 import type { SolveArm, SolveRecommendation } from '@engine/solver/solve'
 import type { SolvePayload, SolveTokenWithheld } from '@engine/solver/solveEntry'
@@ -11,12 +17,14 @@ import type { WithheldReason } from '@engine/validation/oracleToken'
 import type { SolverRunFingerprint } from '@engine/validation/solverRunFingerprint'
 import type { SolveAnswer } from '@store/memoryModel'
 import type { ConfidenceStatementView } from '../ConfidenceStatement'
+import type { BandPlanClockAnchor } from '../bandAnnotations'
 import {
   recommendationView,
   withheldReasonText,
   disclosuresFor,
   DISCLOSURE_ORDER,
   type RecommendedView,
+  type WinnerActionView,
 } from '../recommendationView'
 import { copy, slots } from '../copy'
 import { formatAbsoluteDollar, formatBracketPercent, formatDeltaDollar } from '../money'
@@ -745,5 +753,160 @@ describe('recommendationView — the delta heros median qualification (deltaSkew
     const v = asRec(recommendationView(committed(payload), { spineConfidence: spine }))
     expect(v.skew, 'the LEVEL quote fires').toBeDefined()
     expect(v.grade.deltaQualifier, 'the DELTA qualifier stays quiet — different vector, different channel').toBeUndefined()
+  })
+})
+
+// ---- the WINNING-PLAN card (2026-08-05) ------------------------------------------------------------
+//
+// The card that closes "the recommendation never says what to DO". Its scoping to the ACTIVE register
+// IS the correctness argument (the full proof is on `winnerActionView`), so these arms pin the
+// CONSEQUENCES of that proof, not merely the strings: the crowned amount floors, the household's own
+// amount does not, and the two conversions are compared FIELD BY FIELD, never via `sameDecumulationPlan`.
+describe('recommendationView — the winning-plan card (what the crowned plan SETS)', () => {
+  const CLOCK: BandPlanClockAnchor = { startCalendarYear: 2026, yearsSincePlanBuilt: 0 }
+  const opts = { spineConfidence: spine, planClock: CLOCK }
+  const conv = (annualAmountReal: number, startYearOffset: number, years: number): RothConversionPlan => ({
+    annualAmountReal,
+    startYearOffset,
+    years,
+  })
+  const withConversion = (arm: SolveArm, c: RothConversionPlan | null): SolveArm => ({ ...arm, conversion: c })
+  /** The card, asserted present — the arms that expect it ABSENT read `winnerAction` directly. */
+  const cardOf = (
+    payload: SolveRecommendation,
+    o: Parameters<typeof recommendationView>[1] = opts,
+  ): WinnerActionView => {
+    const card = asRec(recommendationView(committed(payload), o)).winnerAction
+    expect(card, 'this arm expects the card to render').toBeDefined()
+    if (card === undefined) throw new Error('unreachable')
+    return card
+  }
+
+  it('names the ORDER with the sequencing sheet’s own shipped label + gloss, never a re-typed strategy name', () => {
+    const base = leaveMoreRec()
+    const card = cardOf({ ...base, winner: withConversion(base.winner, conv(43_617, 0, 9)) })
+    expect(card.orderLabel).toBe(copy.leverPolicyTaxableFirst)
+    expect(card.orderGloss).toBe(copy.leverPolicyTaxableFirstHelp)
+    // The reused gloss is why no imperative had to be authored: every shipped one is third-person, so
+    // it clears the UNIVERSAL advice-verb gate that a "Draw your brokerage down first" would trip.
+    expect(lintCopy(card.orderGloss, ['advice-verb'])).toEqual([])
+  })
+
+  it('states the crowned conversion through the shipped duration vocabulary — one home, not a second phrasing', () => {
+    const base = leaveMoreRec()
+    const card = cardOf({ ...base, winner: withConversion(base.winner, conv(43_617, 0, 9)) })
+    expect(card.conversionLine).toBe(slots.rothPlanEcho('43,000', 2026, false, 9))
+    expect(card.conversionNote, 'the household converts nothing, so nothing is being replaced').toBeUndefined()
+  })
+
+  it('the crowned amount ROUNDS DOWN — the hero’s dialect would quote it PAST the rail it was anchored under', () => {
+    const base = leaveMoreRec()
+    const card = cardOf({ ...base, winner: withConversion(base.winner, conv(43_617, 0, 9)) })
+    expect(card.conversionLine).toContain('~$43,000')
+    // NON-VACUITY, and the whole reason the actionable dialect exists: the sibling formatter this very
+    // surface uses for the hero renders the SAME input as 44,000 — $383 ABOVE the anchor, quoted to a
+    // reader who can type it into the Roth lever and cross the cliff the candidate was built under.
+    expect(formatDeltaDollar(43_617)).toBe('44,000')
+    expect(card.conversionLine, 'the unsafe dialect must never reach this figure').not.toContain('44,000')
+  })
+
+  it('the HOUSEHOLD’S own amount renders EXACTLY — flooring their typed figure would be a misquote', () => {
+    const base = leaveMoreRec()
+    // The winner converts nothing and they do: the recommendation IS the removal. Silence here would
+    // leave a card rendering only an order row while looking complete (the `?seed=health` shape, where
+    // winner and baseline run the SAME order and the conversion is the entire recommendation).
+    const card = cardOf({
+      ...base,
+      winner: withConversion(base.winner, null),
+      noActionBaseline: withConversion(base.noActionBaseline, conv(43_617, 0, 4)),
+    })
+    expect(card.conversionLine).toBe(slots.rothPlanTakenOut('43,617'))
+    expect(card.conversionLine).toContain('~$43,617')
+    // NON-VACUITY: the actionable dialect — correct for OUR figure — would have shaved $617 off THEIRS.
+    expect(card.conversionLine, 'the reader’s own number is never floored').not.toContain('43,000')
+  })
+
+  it('both convert on different schedules: the crowned one REPLACES theirs (applyCandidate strips the base’s)', () => {
+    const base = leaveMoreRec()
+    const card = cardOf({
+      ...base,
+      winner: withConversion(base.winner, conv(43_617, 0, 9)),
+      noActionBaseline: withConversion(base.noActionBaseline, conv(20_000, 0, 4)),
+    })
+    expect(card.conversionNote).toBe(slots.rothPlanReplaces('20,000'))
+  })
+
+  it('MUTANT KILLER — an identical schedule under a different ORDER says nothing about replacing it', () => {
+    // `sameDecumulationPlan` short-circuits on POLICY before it reads a single conversion field, so
+    // gating the replacement clause on it would announce a Roth change to a household whose conversion
+    // is byte-identical and whose withdrawal ORDER is the only thing moving. Winner `taxable-first`,
+    // baseline `proportional` — different plans, identical conversions.
+    const base = leaveMoreRec()
+    const same = conv(20_000, 0, 4)
+    const card = cardOf({
+      ...base,
+      winner: withConversion(base.winner, same),
+      noActionBaseline: withConversion(base.noActionBaseline, { ...same }),
+    })
+    expect(card.conversionLine, 'the crowned schedule still states itself').toBe(
+      slots.rothPlanEcho('20,000', 2026, false, 4),
+    )
+    expect(card.conversionNote, 'nothing about the conversion is changing — so say nothing about it').toBeUndefined()
+  })
+
+  it('neither plan converts: the conversion row is OMITTED, never a "none" said to a household that has none', () => {
+    const card = cardOf(leaveMoreRec())
+    expect(card.conversionLine).toBeUndefined()
+    expect(card.conversionNote).toBeUndefined()
+    expect(card.orderLabel, 'the order half still answers "by doing what?"').toBe(copy.leverPolicyTaxableFirst)
+  })
+
+  it('an AGED vault reads the tense off the plan clock — never "starting" a year already gone', () => {
+    const base = leaveMoreRec()
+    // Grid windows always pin `startYearOffset: 0`, which is the plan's BUILD year — so on any aged
+    // vault the recommended start is already behind the wall clock, and `rothPlanStartFor` flips tense.
+    const card = cardOf({ ...base, winner: withConversion(base.winner, conv(43_617, 0, 9)) }, {
+      spineConfidence: spine,
+      planClock: { startCalendarYear: 2026, yearsSincePlanBuilt: 3 },
+    })
+    expect(card.conversionLine).toBe(slots.rothPlanEcho('43,000', 2026, true, 9))
+    expect(card.conversionLine).toContain('started in 2026')
+    expect(card.conversionLine, 'the build year is never re-based onto the wall clock').not.toContain('2029')
+  })
+
+  it('NO-CHANGE register: the card does not render, even when the crowned plan converts', () => {
+    const base = leaveMoreRec()
+    const payload = { ...base, noChange: true, winner: withConversion(base.winner, conv(43_617, 0, 9)) }
+    const v = asRec(recommendationView(committed(payload), opts))
+    expect(v.mode).toBe('no-change')
+    expect(v.winnerAction, 'the hero already says the honest thing there').toBeUndefined()
+    expect(v.grade.heroLine).toBe(copy.recComposeAlready)
+  })
+
+  it('NO PLAN CLOCK: the card degrades to absent rather than stating a year it cannot know', () => {
+    const base = leaveMoreRec()
+    const payload = { ...base, winner: withConversion(base.winner, conv(43_617, 0, 9)) }
+    const v = asRec(recommendationView(committed(payload), { spineConfidence: spine }))
+    expect(v.mode, 'the register is unchanged — only the card drops').toBe('active')
+    expect(v.winnerAction).toBeUndefined()
+  })
+
+  it('a `custom` winner fails CLOSED — "My own order" can never BE the named recommendation', () => {
+    // Unreachable in the engine: `custom` is excluded from SEARCHED_POLICIES, so the only custom
+    // candidate is the injected user baseline, and crowning THAT makes `sameDecumulationPlan` compare
+    // it with itself ⇒ noChange ⇒ the no-change register. This arm pins the BELT to that proof — were
+    // the anchoring ever to move underneath us, rendering a first-person radio caption AS the
+    // recommendation would be worse than rendering nothing.
+    const base = leaveMoreRec()
+    const payload = {
+      ...base,
+      winner: { ...base.winner, policy: 'custom' as const, drawdownOrder: ['taxable', 'pretax', 'roth'] as const },
+    }
+    const v = asRec(recommendationView(committed(payload), opts))
+    expect(v.mode).toBe('active')
+    expect(v.winnerAction).toBeUndefined()
+    // …and the un-rendered key really is the first-person caption the card must never speak.
+    expect(copy[v.winnerStrategyKey]).toBe(copy.leverPolicyCustom)
+    expect(copy.leverPolicyCustom).toMatch(/\bmy\b/i)
   })
 })

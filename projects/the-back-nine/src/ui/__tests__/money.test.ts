@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { axisDollarFormatterFor, formatAbsoluteDollar, formatActionableDollar, formatAxisDollar, formatDeltaDollar, formatPerMonth } from '../money'
+import { axisDollarFormatterFor, formatAbsoluteDollar, formatActionableDollar, formatAxisDollar, formatDeltaDollar, formatEnteredDollar, formatPerMonth } from '../money'
 import { buildYTicks } from '@viz/bandData'
 
 /**
@@ -157,9 +157,15 @@ describe('formatPerMonth — the $10-step humane verdict figure (pinned behavior
 /* ---------------------------------------------------------------------------------------------
  * formatActionableDollar — the RE-TYPEABLE dialect. These are correctness tests, not formatting
  * ones: the figure this dialect renders is a conversion amount the reader can enter into the Roth
- * lever, and every solver-proposed amount is the LARGEST whole dollar keeping an ACA-cliff /
- * IRMAA-step / bracket-edge metric at-or-under its rail. Rounding to nearest (what the delta
- * dialect does, and what this surface would otherwise have used) quotes a number PAST the rail.
+ * lever, and every amount the solver's GRID proposes sits at or under a rail (the IRMAA-step and
+ * bracket-edge arms via `largestWholeDollarWithin`, the ACA-cliff arm via a closed-form floor).
+ * Rounding to nearest (what the delta dialect does, and what this surface would otherwise have
+ * used) quotes a number PAST the rail.
+ *
+ * ⚠️ SCOPE, corrected 2026-08-05: this block used to say EVERY solver-proposed amount came from
+ * `largestWholeDollarWithin`. It does not — the ACA arm inverts in closed form, and the injected
+ * USER-BASELINE candidate carries the household's own unscreened figure with no rail at all. That
+ * third source is why {@link formatEnteredDollar} exists and why the two are split by PROVENANCE.
  * ------------------------------------------------------------------------------------------- */
 describe('formatActionableDollar — rounds DOWN so a re-typed figure never crosses the rail it was anchored under', () => {
   it('NEVER renders above its input — the whole reason this dialect exists', () => {
@@ -185,9 +191,17 @@ describe('formatActionableDollar — rounds DOWN so a re-typed figure never cros
     expect(formatActionableDollar(187_500)).toBe('180,000')
   })
 
-  it('a round figure the household entered itself floors to itself — the safe branch costs nothing', () => {
+  it('a round figure floors to itself — the flooring costs nothing when the amount is already on a step', () => {
     expect(formatActionableDollar(20_000)).toBe('20,000')
     expect(formatActionableDollar(40_000)).toBe('40,000')
+  })
+
+  it('⛔ but it is NOT safe on an UN-round figure, which is why it never renders one the household typed', () => {
+    // The premise this dialect's docblock used to lean on — "on the household's own (already round)
+    // amount the floor is a no-op" — is unenforced: the Roth lever takes any finite positive number.
+    // A typed $43,617 through THIS dialect is a $617 downward misquote of the reader's own figure.
+    expect(formatActionableDollar(43_617)).toBe('43,000')
+    expect(formatEnteredDollar(43_617), 'the provenance sibling quotes it back whole').toBe('43,617')
   })
 
   it('never renders a falsehood for a figure smaller than its own step (would floor to "0")', () => {
@@ -198,5 +212,40 @@ describe('formatActionableDollar — rounds DOWN so a re-typed figure never cros
 
   it('is BARE of the "$" glyph — the copy SLOT supplies it', () => {
     expect(formatActionableDollar(43_600).startsWith('$')).toBe(false)
+  })
+})
+
+/* ---------------------------------------------------------------------------------------------
+ * formatEnteredDollar — the PROVENANCE sibling. A figure the READER typed is quoted back whole;
+ * both humane dialects move a number off its true value, which is right for a figure the TOOL
+ * produced and a misquote for one the household did. Expectations are hand-derived (DND 012).
+ * ------------------------------------------------------------------------------------------- */
+describe('formatEnteredDollar — the household’s own figure, quoted back exactly', () => {
+  it('renders an un-round entered amount whole, where BOTH humane dialects would move it', () => {
+    expect(formatEnteredDollar(43_617)).toBe('43,617')
+    // Non-vacuity, both directions: one dialect shaves $617 off, the other adds $383 on.
+    expect(formatActionableDollar(43_617)).toBe('43,000')
+    expect(formatDeltaDollar(43_617)).toBe('44,000')
+  })
+
+  it('groups thousands and shows no cents (the model carries whole dollars)', () => {
+    expect(formatEnteredDollar(20_000)).toBe('20,000')
+    expect(formatEnteredDollar(1_234_567)).toBe('1,234,567')
+    expect(formatEnteredDollar(999)).toBe('999')
+    expect(formatEnteredDollar(43_617.4)).toBe('43,617')
+  })
+
+  it('matches the intake layer’s own exact dialect, so one entered plan reads identically in both places', () => {
+    // `src/intake/fields.tsx`'s `formatMoney` is `Intl.NumberFormat('en-US', {maximumFractionDigits: 0})`.
+    // ui does not import across the layer boundary (the copy.ts convention), so the agreement is
+    // restated here rather than shared — and pinned, so a drift in either place is visible.
+    const intakeDialect = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 })
+    for (const v of [43_617, 20_000, 999, 1_234_567]) {
+      expect(formatEnteredDollar(v)).toBe(intakeDialect.format(v))
+    }
+  })
+
+  it('is BARE of the "$" glyph, like the rest of the family — the copy SLOT supplies it', () => {
+    expect(formatEnteredDollar(43_617).startsWith('$')).toBe(false)
   })
 })

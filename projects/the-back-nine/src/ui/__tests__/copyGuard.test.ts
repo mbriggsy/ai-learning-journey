@@ -500,6 +500,11 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     sequencingDelta: slots.sequencingDelta(slots.xOfTen(8), slots.xOfTen(7)),
     // U17 §S1 — the start names the CALENDAR year (wall-time-stable), tense picked by `passed`.
     rothPlanEcho: slots.rothPlanEcho('40,000', 2028, false, 5),
+    // The winning-plan card's other two conversion arms (2026-08-05). Both quote the HOUSEHOLD'S own
+    // figure, so both are sampled with a deliberately UN-round amount — the exact shape the actionable
+    // dialect would have misquoted, kept here so the provenance split stays visible in the guard.
+    rothPlanTakenOut: slots.rothPlanTakenOut('43,617'),
+    rothPlanReplaces: slots.rothPlanReplaces('43,617'),
     // Council 2026-07-30 — the band note naming BOTH spending levels. Sampled with a REAL gap
     // (74,000 vs 46,000, the datesplit shape) rather than equal figures, so the guard reads the
     // sentence a household actually meets. `band*` leads neither prefix list, so these ride the two

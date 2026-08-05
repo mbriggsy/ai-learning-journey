@@ -1553,6 +1553,34 @@ export const copy = {
   // make the change. `solve.test.ts` pins the display seam and `solveAnchor.test.ts` pins the
   // baseline's contents, so neither half can drift silently.
   recommendBaselineNameplate: 'Compared with your plan today',
+
+  // ── THE WINNING-PLAN CARD (2026-08-05) — the answer to "…by doing what?" ───────────────────────
+  // The hero states a dollar and, until this card, nothing on the surface said what earns it:
+  // `winnerStrategyKey` was computed and had ZERO render consumers, the winner's conversion figures
+  // rendered nowhere, and `RecommendationSurface` contained no strategy name at all.
+  // BRIGGSY RULED 2026-08-03: NAME IT, NO DOOR. No control back into the sequencing/Roth sheets —
+  // following one fires `invalidateStaleSolve` and demotes the very card that pointed there.
+  //
+  // A SETTINGS LIST, NOT AN INSTRUCTION LIST, AND THAT FRAMING IS LOAD-BEARING. `applyCandidate`
+  // STRIPS the base's conversions before installing the candidate's, so the winner's conversion
+  // REPLACES the household's rather than adding to it — every "also"/"alongside"/"on top of" phrasing
+  // is a false implicature. A row that NAMES a control and STATES its setting cannot carry that
+  // implicature, and it needs no imperative (which the universal advice-verb gate bans outright, and
+  // which is why every shipped `leverPolicy*Help` gloss is third-person).
+  //
+  // ⚠️ ACTIVE REGISTER ONLY — and that is what makes the figures safe. See `winnerActionView`
+  // (recommendationView.ts) for the three-part proof; the short version is that in ACTIVE mode the
+  // crowned plan is provably NOT the household's own, so the winner is always a grid arm: its amount
+  // is rail-floored, its window horizon-clamped, and its policy can never be `custom`.
+  //
+  // These three are `recommend*` ⇒ VERDICT-scoped, so free-numeral reds any digit written into them
+  // and the superlative gate reds a crowned "best". Every figure rides a `roth*` SLOT instead.
+  // DELIBERATE: a `recAction*` spelling would have matched NEITHER prefix list (`isVerdictKey` needs
+  // the full `recommend`; `isControlKey` needs one of the enumerated `recDelta`/`recSkew`/… stems),
+  // so a plan-moving dollar would have shipped past free-numeral AND require-hedge both.
+  recommendActionHeading: 'How this plan gets there',
+  recommendActionOrderLabel: 'Which accounts you spend first',
+  recommendActionConversionLabel: 'Roth conversions',
   // The calm couldn't-work-it-out state (a solve refusal / mint-failure / demotion-withhold — each a
   // structured bin, surfaced as ONE honest retry line, never a raw reason code or a blank).
   recommendUnavailable:
@@ -2173,10 +2201,42 @@ export const slots = {
    *  the wall clock reads "started in", never a future-tense claim about a passed date (the U17
    *  dead-copy law). Both args arrive from `rothPlanStartFor` — the ONE derivation
    *  (bandAnnotations.ts); render sites never re-type the year arithmetic. */
+  /*  SECOND SPEECH ACT SINCE 2026-08-05 — it now also states the RECOMMENDED schedule on the
+   *  winning-plan card (`recommendActionConversionLabel`). The sentence is speech-act-NEUTRAL (it
+   *  describes a schedule; it neither claims the reader chose it nor tells them to), so one
+   *  vocabulary serves both — which is the point: a second phrasing for the same fact would be the
+   *  second-vocabulary breach the one-honest-home law forbids. WHAT DIFFERS IS THE DIALECT OF THE
+   *  AMOUNT, and it must: the echo sites pass the household's own figure through the intake layer's
+   *  exact `formatMoney`, while the card passes the solver's through `formatActionableDollar`, which
+   *  ROUNDS DOWN so a re-typed figure can never cross the rail its candidate was anchored under.
+   *  Never swap them (money.ts states the provenance split in full). */
   rothPlanEcho: (amountFormatted: string, startYear: number, startPassed: boolean, years: number): string => {
     const start = startPassed ? `started in ${startYear}` : `starting in ${startYear}`
     return `Converting ~$${amountFormatted} a year for ${years} year${years === 1 ? '' : 's'}, ${start}.`
   },
+
+  /** The winning-plan card's conversion row when the crowned plan converts NOTHING and the household
+   *  DOES — i.e. the recommendation is to take their standing lever back out. Silence here would be
+   *  the calm-but-wrong reading: on `?seed=health`'s leave-more solve the winner and the baseline run
+   *  the SAME withdrawal order, so the conversion is the entire recommendation, and a card that showed
+   *  only the order row would say nothing at all while looking complete.
+   *  THE FIGURE IS THEIRS, SO IT RENDERS EXACTLY (`formatEnteredDollar`) — flooring the reader's own
+   *  typed number on a surface that calls it their plan is a misquote (money.ts, the provenance split).
+   *  Names the live vocabulary the Roth sheet already uses for this move (`leverRothRemove`, "Take the
+   *  conversion back out") rather than minting a second way to say it — but in the THIRD person, since
+   *  this card carries no control and must promise only what exists (insight 100). */
+  rothPlanTakenOut: (theirAmountFormatted: string): string =>
+    `None. Your plan converts ~$${theirAmountFormatted} a year today, and this one takes that back out.`,
+
+  /** The winning-plan card's second conversion line when BOTH plans convert and the schedules differ.
+   *  `applyCandidate` strips the base's conversions before installing the candidate's, so the crowned
+   *  amount REPLACES theirs — without this line the row reads as an addition, which is the design
+   *  panel's problem 2 exactly. Their figure again renders EXACTLY (`formatEnteredDollar`).
+   *  Quotes only the AMOUNT, never their window: `years` carries no upper bound in the codec or the
+   *  lever and the engine truncates past the horizon, so a household's nominal 40-year plan against a
+   *  25-year horizon would quote a length nothing was priced over. */
+  rothPlanReplaces: (theirAmountFormatted: string): string =>
+    `That replaces the ~$${theirAmountFormatted} a year your plan converts today.`,
 
   /** U17 §S6 — THE APPLIED CONVERSION'S OWN PASSED START, STATED RATHER THAN REFUSED.
    *  §S1 shipped a past-start refusal that is right for a year the reader TYPED and wrong for the

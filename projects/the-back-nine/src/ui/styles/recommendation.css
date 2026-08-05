@@ -121,6 +121,62 @@
   color: var(--ink-muted);
 }
 
+/* THE WINNING-PLAN CARD — what the crowned plan sets, control by control (2026-08-05).
+   NO BOX AND NO RULE, deliberately. The surface already spends its emphasis on the hero figure, and
+   the disclosures below own the one hairline in this column; a second frame here would read as a
+   dashboard tile on a product whose whole tone is the opposite. The grouping is TYPOGRAPHIC — a
+   semibold heading over muted terms, with the settings themselves in primary ink.
+   THE HIERARCHY IS WEIGHT AND LUMINANCE, NEVER HUE: the values are the answer, so they carry --ink
+   against the --ink-muted terms and gloss around them. Nothing here encodes meaning in colour, so it
+   survives the reader's CVD and a greyscale print identically (back-nine-design §2). */
+.rec-action {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.rec-action__heading {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--ink);
+}
+
+.rec-action__list {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.rec-action__term {
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  color: var(--ink-muted);
+}
+
+/* `margin-inline-start: 0` resets the UA's default <dd> indent — the term/value pair reads as a stack,
+   not a nested outline. Tabular figures because the conversion line carries a dollar amount and a year
+   (back-nine-design §5: every financial figure, token-level, so nothing jitters or misaligns). */
+.rec-action__value {
+  margin-inline-start: 0;
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+  text-wrap: pretty;
+}
+
+/* The order's shipped gloss, and the replacement clause — a block inside the <dd> so it sits under the
+   setting it qualifies rather than running on after it. */
+.rec-action__gloss {
+  display: block;
+  margin-block-start: var(--space-1);
+  font-size: var(--text-xs);
+  color: var(--ink-muted);
+  text-wrap: pretty;
+}
+
 .rec-skew {
   font-family: var(--font-body);
   font-size: var(--text-sm);

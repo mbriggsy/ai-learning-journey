@@ -27,11 +27,12 @@
  *     frames the card exists for. So the aside is gated on ITS OWN data (the disk-derived record, the
  *     standing refusal) and on nothing else.
  */
-import { Suspense, lazy, useEffect, useRef } from 'react'
+import { Suspense, lazy, useEffect, useId, useRef } from 'react'
 import type { SolveAnswer } from '@store/memoryModel'
 import type { PricedState } from '@engine/constants/stateTax'
 import { useLiveAnnouncer } from '@intake/a11y'
 import type { ConfidenceStatementView } from './ConfidenceStatement'
+import type { BandPlanClockAnchor } from './bandAnnotations'
 import { GradeSignal } from './GradeSignal'
 import { recommendationView, type RecommendedView, type RecommendationView } from './recommendationView'
 // TYPE-ONLY, and deliberately so: `IntakeApp` imports `Result` which imports THIS module, so a VALUE
@@ -99,10 +100,18 @@ export function RecommendationSurface({
   solve,
   spineConfidence,
   pricedState,
+  planClock,
   onRepick,
   recSave,
 }: {
   readonly solve: SolveAnswer
+  /** The household's plan clock, minted ONCE by Result (`planClockAnchor`) and threaded by reference —
+   *  this layer reads no clock of its own. The winning-plan card's conversion start speaks the CALENDAR
+   *  year off it, because `startYearOffset` is sim-year-0-indexed and offset 0 is the plan's BUILD year,
+   *  which is "today" only in the year the plan was built. ⚠️ WITHOUT IT THE CARD DOES NOT RENDER — a
+   *  dropped prop costs the whole card, never a wrong year. `RecommendationSurface.test.tsx` pins that
+   *  Result actually passes it, so the degrade cannot become the shipped state by omission. */
+  readonly planClock?: BandPlanClockAnchor
   /** The spine's rendered confidence object (Q1 source-bind) — threaded to the view model so the
    *  survival context is REUSED by reference, never a second authored survival claim. */
   readonly spineConfidence?: ConfidenceStatementView
@@ -140,10 +149,10 @@ export function RecommendationSurface({
     }
   }, [solve, announcer])
 
-  // Both opts are pass-through-optional (`exactOptionalPropertyTypes` is off, so an undefined member
-  // reads identically to an absent one) — the object is always built now that a SECOND field rides it,
-  // so adding a third can never be silently dropped by a stale one-field guard.
-  const view = recommendationView(solve, { spineConfidence, pricedState })
+  // All three opts are pass-through-optional (`exactOptionalPropertyTypes` is off, so an undefined
+  // member reads identically to an absent one) — the object is always built, so adding a fourth can
+  // never be silently dropped by a stale guard.
+  const view = recommendationView(solve, { spineConfidence, pricedState, planClock })
 
   // §S5 (a) — the save gesture's START, through the SAME region the solve channel uses, for the same
   // reason: the slot swaps whole nodes per arm, so a `role='status'` that mounts already-populated
@@ -416,6 +425,7 @@ function RecommendedBeat({
   readonly onSave?: () => void
 }) {
   const g = view.grade
+  const actionHeadingId = useId()
   return (
     <section className="rec-committed">
       {/* The grade lockup — ONE semantic group, ONE crossfade key (a grade change repaints the whole
@@ -470,6 +480,39 @@ function RecommendedBeat({
       <div className="rec-committed__rest">
         {/* Q7 — the baseline nameplate: a STATIC label, NO number (the A↔B residual never renders). */}
         <p className="rec-baseline">{view.baselineNameplate}</p>
+
+        {/* THE WINNING-PLAN CARD — the answer to the question the hero's dollar provokes: "by doing
+            what?" Seated directly under the nameplate so the reader learns the comparison frame and
+            then what the recommended side actually IS. Present iff the view model built it (ACTIVE
+            register + a plan clock); every string arrives resolved — this renderer decides nothing.
+            A DEFINITION LIST because the content genuinely is a pair of named controls with their
+            settings, which is also what keeps the card from reading as an instruction to ADD the
+            conversion to the one the household already runs (the winner's conversion REPLACES theirs). */}
+        {view.winnerAction !== undefined && (
+          <div className="rec-action">
+            <p className="rec-action__heading" id={actionHeadingId}>
+              {copy.recommendActionHeading}
+            </p>
+            <dl className="rec-action__list" aria-labelledby={actionHeadingId}>
+              <dt className="rec-action__term">{copy.recommendActionOrderLabel}</dt>
+              <dd className="rec-action__value">
+                {view.winnerAction.orderLabel}
+                <span className="rec-action__gloss">{view.winnerAction.orderGloss}</span>
+              </dd>
+              {view.winnerAction.conversionLine !== undefined && (
+                <>
+                  <dt className="rec-action__term">{copy.recommendActionConversionLabel}</dt>
+                  <dd className="rec-action__value">
+                    {view.winnerAction.conversionLine}
+                    {view.winnerAction.conversionNote !== undefined && (
+                      <span className="rec-action__gloss">{view.winnerAction.conversionNote}</span>
+                    )}
+                  </dd>
+                </>
+              )}
+            </dl>
+          </div>
+        )}
 
         {/* Q6 — the leave-more skew median quote (present iff disclosure-worthy). */}
         {view.skew !== undefined && <p className="rec-skew">{view.skew.medianQuote}</p>}

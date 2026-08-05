@@ -65,22 +65,33 @@ export function formatAbsoluteDollar(dollars: number): string {
 /**
  * THE ACTIONABLE dialect — a dollar the reader may RE-TYPE INTO A CONTROL, rounded DOWN.
  *
- * ⚠️ ROUNDING DOWN IS A CORRECTNESS RULE HERE, NOT A PRESENTATION CHOICE, AND IT IS THE ONLY
- * DIFFERENCE FROM {@link formatDeltaDollar}. Every conversion amount the solver proposes is built by
- * `largestWholeDollarWithin(metric, rail, …)` — the LARGEST WHOLE DOLLAR keeping an ACA-cliff /
- * IRMAA-step / bracket-edge metric AT OR UNDER its threshold. One dollar more crosses the rail. The
- * delta dialect rounds to NEAREST, so an anchored $43,600 renders "$44,000" — four hundred dollars
- * PAST the cliff the solver constructed that candidate to sit under, quoted to a household that can
- * type it straight into the Roth lever and eat a full unsubsidized premium for the year. A calm,
- * plausible figure whose only defect is that acting on it costs money: the cardinal sin exactly.
+ * ⚠️ ROUNDING DOWN IS A CORRECTNESS RULE HERE, NOT A PRESENTATION CHOICE. Every conversion amount
+ * the solver's GRID proposes sits at or under a rail: the IRMAA-step and bracket-edge arms are built
+ * by `largestWholeDollarWithin(metric, rail, …)`, and the ACA-cliff arm by a closed-form floor
+ * (`flooredOrNull`, the MAGI inversion being linear). One dollar more crosses the rail. The delta
+ * dialect rounds to NEAREST, so an anchored $43,600 renders "$44,000" — four hundred dollars PAST the
+ * cliff the solver constructed that candidate to sit under, quoted to a household that can type it
+ * straight into the Roth lever and eat a full unsubsidized premium for the year. A calm, plausible
+ * figure whose only defect is that acting on it costs money: the cardinal sin exactly. (Corrected
+ * 2026-08-05: this block used to say flooring was "THE ONLY DIFFERENCE" from the delta dialect and
+ * that EVERY solver amount came from `largestWholeDollarWithin`. Neither was true — see the
+ * divergences below, and the two non-`largestWholeDollarWithin` sources named here.)
  *
- * FLOORING IS SAFE BY CONSTRUCTION, not by luck: each rail metric is MONOTONE in the amount, so every
- * value at or below the anchor clears the same rail the anchor clears.
+ * FLOORING IS SAFE BY CONSTRUCTION on a grid amount, not by luck: each rail metric is MONOTONE in the
+ * amount, so every value at or below the anchor clears the same rail the anchor clears.
  *
- * UNCONDITIONAL, and that is forced rather than preferred: `SolveArm` carries no `anchoredRail`, so a
- * renderer cannot tell a rail-anchored grid amount from the household's own unscreened figure. On the
- * household's own (already round) amount the floor is a no-op, so the safe branch costs nothing and
- * the unsafe branch cannot be reached by mistake.
+ * ⛔ IT IS NOT SAFE ON THE HOUSEHOLD'S OWN FIGURE — USE {@link formatEnteredDollar} THERE. This block
+ * used to argue the floor was safe unconditionally because "on the household's own (already round)
+ * amount the floor is a no-op." NOTHING ENFORCES THAT ROUNDNESS: `RothLever` accepts any finite
+ * positive number and the money field parses a decimal fraction, so a typed $43,617 would render
+ * "$43,000" — a $617 downward misquote of a figure the reader typed themselves, on a surface that
+ * calls it their plan. The third source of a solver amount is the injected USER-BASELINE candidate,
+ * which carries that unscreened figure and no rail at all. The two dialects are therefore split by
+ * PROVENANCE: a figure WE propose floors; a figure THEY entered renders exactly.
+ *
+ * THREE DIVERGENCES FROM {@link formatDeltaDollar}, not one: the floor, the negative handling
+ * (`Math.max(0, …)` clamps where the delta dialect's `Math.abs` mirrors), and the sub-step fallback
+ * below (which the delta dialect has no analog for — `formatDeltaDollar(60)` is "100").
  *
  * Same humane step ladder as the delta dialect, so the surface still speaks ONE small-figure dialect;
  * bare of the "$" glyph, which the copy slot supplies (copy.ts SLOT DISCIPLINE). The sub-step guard is
@@ -92,6 +103,32 @@ export function formatActionableDollar(dollars: number): string {
   const step = v < 10_000 ? 100 : v < 100_000 ? 1_000 : 10_000
   const stepped = Math.floor(v / step) * step
   return grouped.format(stepped >= 1 ? stepped : Math.floor(v))
+}
+
+/**
+ * THE ENTERED dialect — a dollar the household TYPED, quoted back EXACTLY.
+ *
+ * The provenance sibling of {@link formatActionableDollar}, and the reason that one is not applied
+ * everywhere. Both of the humane dialects move a figure off its true value — the delta dialect to the
+ * nearest step, the actionable dialect DOWN to it — and both are correct for a figure the TOOL
+ * produced (a comparative magnitude; a re-typeable amount that must not cross its rail). Neither is
+ * correct for a figure the READER produced: $43,617 typed into the Roth lever must read back as
+ * "$43,617". Rounding the reader's own number, on a surface that calls it their plan, is a misquote —
+ * the same defect family as `94ea8d00` ("your plan today" was their plan with their conversion
+ * deleted), one decimal place down.
+ *
+ * NOT spurious precision (back-nine-design §3): the no-false-precision law bans a figure more precise
+ * than the ESTIMATE behind it, and there is no estimate here — this is the reader's own input, whose
+ * true value is known to the dollar. It matches the intake layer's `formatMoney` (src/intake/fields.tsx)
+ * by construction, so the same entered plan reads identically on the Roth lever and here; ui does not
+ * import across the layer boundary (the copy.ts convention), so the dialect is restated, not shared.
+ *
+ * Whole dollars (the model carries no cents), bare of the "$" glyph like the rest of the family — the
+ * copy SLOT supplies it (copy.ts SLOT DISCIPLINE). Sign-agnostic for symmetry with the family; an
+ * entered amount is `> 0` by codec (a zero plan is written as ABSENCE).
+ */
+export function formatEnteredDollar(dollars: number): string {
+  return grouped.format(Math.abs(dollars))
 }
 
 /** The heir-bracket disclosure percent — the assumed IRD bracket (a fraction in [0,1)) as a whole

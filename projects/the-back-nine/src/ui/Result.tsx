@@ -477,6 +477,10 @@ export function Result({
         <RecommendationSurface
           solve={snapshot.solve}
           pricedState={statePricedNote}
+          // The SAME anchor the band annotations and the record card read — minted once above, passed
+          // by reference. The winning-plan card's conversion start speaks `startCalendarYear + offset`
+          // off it; drop this prop and the card silently stops rendering (never a wrong year).
+          planClock={dateAnchor}
           onRepick={() => setGoalOpen(true)}
           recSave={recSave}
         />

@@ -37,7 +37,15 @@ import type { RecommendationVizLabels } from '@viz/RecommendationViz'
 import type { ConfidenceStatementView } from './ConfidenceStatement'
 import type { GradeSignalState } from './GradeSignal'
 import { copy, slots, type CopyKey } from './copy'
-import { formatAbsoluteDollar, formatAxisDollar, formatBracketPercent, formatDeltaDollar } from './money'
+import {
+  formatAbsoluteDollar,
+  formatActionableDollar,
+  formatAxisDollar,
+  formatBracketPercent,
+  formatDeltaDollar,
+  formatEnteredDollar,
+} from './money'
+import { rothPlanStartFor, type BandPlanClockAnchor } from './bandAnnotations'
 import { composeRecStateTaxDisclosure } from './stateTaxDisclosure'
 
 // ---- the disclosures adjacent to the delta (§S3 "its nets" — R7 on the recommendation surface) ----
@@ -169,6 +177,35 @@ export interface RecommendationVizProps {
   readonly labels: RecommendationVizLabels
 }
 
+/**
+ * THE WINNING-PLAN CARD — what the crowned plan actually SETS, control by control (2026-08-05).
+ *
+ * The gap this closes: `winnerStrategyKey` was computed here and had ZERO render consumers repo-wide,
+ * the winner's conversion figures rendered nowhere, and the hero quoted a dollar no sentence explained.
+ * Briggsy's 2026-08-03 ruling is NAME IT, NO DOOR — so this is TEXT, resolved here, with no control
+ * back into the sequencing/Roth sheets (following one fires `invalidateStaleSolve` and demotes the very
+ * card that pointed there).
+ *
+ * Every string is RESOLVED here, never a key: the surface is a downstream renderer and does not read the
+ * payload (insight 020). `conversionLine`/`conversionNote` are `undefined` when neither plan converts —
+ * the row does not render rather than saying "none" to a household that has none.
+ */
+export interface WinnerActionView {
+  /** The winning withdrawal order's plain-language name — the sequencing sheet's own shipped
+   *  `leverPolicy*` label, never a re-typed strategy name. */
+  readonly orderLabel: string
+  /** That order's shipped `leverPolicy*Help` gloss — third-person by construction, which is also what
+   *  keeps it clear of the universal advice-verb gate. */
+  readonly orderGloss: string
+  /** The crowned conversion schedule, or the take-it-back-out line when the winner converts nothing and
+   *  the household does. `undefined` when NEITHER converts (a pure sequencing crown). */
+  readonly conversionLine: string | undefined
+  /** The replacement clause — present ONLY when both plans convert on different schedules, where the
+   *  row would otherwise read as an addition (the crowned conversion REPLACES theirs; `applyCandidate`
+   *  strips the base's first). */
+  readonly conversionNote: string | undefined
+}
+
 /** The committed RECOMMENDATION view — active / surplus / no-change share ONE lockup shape, mode-keyed. */
 export interface RecommendedView {
   readonly kind: 'recommended'
@@ -186,6 +223,11 @@ export interface RecommendedView {
   /** The winning strategy's plain-language label key (the `leverPolicy*` copy the sequencing sheet
    *  already ships — never a re-typed strategy name). */
   readonly winnerStrategyKey: CopyKey
+  /** The winning-plan card — what the crowned plan SETS. Present iff `mode === 'active'` AND the plan
+   *  clock rode in on the opts (the conversion line speaks a CALENDAR year and there is no honest
+   *  fallback for one). `undefined` in the no-change register, where the hero already says the honest
+   *  thing and naming a strategy would be a different, weaker claim. */
+  readonly winnerAction: WinnerActionView | undefined
   readonly grade: RecommendationGradeView
   /** The survival context, SOURCE-BOUND to the spine's rendered confidence object BY REFERENCE (Q1) —
    *  never authored here. `undefined` on a route with no rendered confidence object (the delta hero +
@@ -248,6 +290,17 @@ const WINNER_STRATEGY_KEY: Record<DrawdownPolicy, CopyKey> = {
   custom: 'leverPolicyCustom',
 }
 
+/** The same policy → its shipped `leverPolicy*Help` GLOSS key. A second exhaustive `Record` rather than
+ *  a `${key}Help` string concatenation on purpose: concatenation produces a `string`, not a `CopyKey`,
+ *  so a renamed or missing gloss would fail at RUNTIME with a blank line instead of at `tsc`. */
+const WINNER_STRATEGY_GLOSS: Record<DrawdownPolicy, CopyKey> = {
+  proportional: 'leverPolicyProportionalHelp',
+  'taxable-first': 'leverPolicyTaxableFirstHelp',
+  'pre-tax-first': 'leverPolicyPreTaxFirstHelp',
+  'bracket-fill': 'leverPolicyBracketFillHelp',
+  custom: 'leverPolicyCustomHelp',
+}
+
 /** A priced state → its full-name copy key (the existing `stateOption*` labels — never a re-typed name). */
 const STATE_NAME_KEY: Record<PricedState, CopyKey> = {
   NC: 'stateOptionNC',
@@ -298,6 +351,13 @@ export interface RecommendationViewOpts {
    *  Optional HERE (many in-isolation arms drive the view with no draft in hand) but REQUIRED at the
    *  pure composer `disclosuresFor`, which is where the honesty decision actually lands. */
   readonly pricedState?: PricedState
+  /** The household's plan clock (`planClockAnchor(draft.startCalendarYear, wallCalendarYear)`) — the
+   *  ONE derivation, minted by the caller and passed by reference, never re-derived here (this layer
+   *  reads no clock). Feeds the winning-plan card's conversion start, which must speak the CALENDAR
+   *  year: `startYearOffset` is sim-year-0-indexed and 0 is the plan's BUILD year, so on an aged vault
+   *  "starting this year" is simply false (U17 §S1 — the same defect the start-year render was
+   *  rejected for). ABSENT ⇒ the card does not render; there is no honest fallback for a year. */
+  readonly planClock?: BandPlanClockAnchor
 }
 
 /** Map the store's solve channel to the recommend-second view. Pure; every string resolved. */
@@ -361,6 +421,85 @@ function heldView(payload: SolveTokenWithheld): RecommendationView {
     kind: 'held',
     heading: copy.recommendHeldHeading,
     reasons: payload.reasons.map(withheldReasonText),
+  }
+}
+
+/**
+ * The WINNING-PLAN card — ACTIVE register only, and that scoping is the correctness argument itself,
+ * not a scope cut. Three of the 2026-08-03 design panel's five problems are settled here by
+ * CONSTRUCTION rather than by branching, because ACTIVE mode proves what the winner IS:
+ *
+ *  ACTIVE ⇒ `noDollar` false ⇒ `payload.noChange` false ⇒ `sameDecumulationPlan(winner, userBaseline)`
+ *  false ⇒ THE CROWNED PLAN IS NOT THE HOUSEHOLD'S OWN ⇒ the winner is a GRID arm. Therefore:
+ *
+ *  (1) THE AMOUNT IS RAIL-ANCHORED, so `formatActionableDollar`'s unconditional floor is safe — every
+ *      grid amount already sits at or under its ACA-cliff / IRMAA-step / bracket-edge rail, and
+ *      flooring a monotone metric can only move further under it. On the household's OWN unscreened
+ *      figure that same floor would be a misquote, which is why the two lines quoting THEIR amount use
+ *      `formatEnteredDollar` instead (money.ts states the provenance split in full).
+ *  (2) THE WINDOW IS HORIZON-CLAMPED and starts at offset 0 (`conversionWindowFor`), so the card can
+ *      never quote a length nothing was priced over. The user-baseline arm rides the household's window
+ *      UNSCREENED and its `years` has no upper bound anywhere — the codec checks integer ≥ 1 and the
+ *      lever field carries no max — so their window is never quoted at all.
+ *  (3) `custom` CANNOT REACH THIS CARD. It is excluded from `SEARCHED_POLICIES`, so the only custom
+ *      candidate in the set is the injected user baseline; crowning that makes `sameDecumulationPlan`
+ *      compare it with ITSELF ⇒ `noChange` ⇒ the no-change register. The first-person radio caption
+ *      `leverPolicyCustom` ("My own order") therefore cannot render inside a card whose whole job is
+ *      naming the order — no branch to write, no second bucket vocabulary to mint.
+ *
+ * The no-change register is DELIBERATELY not served: there the hero already says the honest thing
+ * ("You're already on one of the strongest paths we tested"), and naming a strategy beside it is a
+ * different, weaker claim — plus `mode === 'no-change'` is NOT "the winner is the plan you run" (it
+ * also fires on a seed-B display inversion and a $0 collapse, where the crowned plan genuinely
+ * differs), so a single register-gated sentence could not be true on all three arms.
+ */
+function winnerActionView(
+  payload: SolveRecommendation,
+  noDollar: boolean,
+  planClock: BandPlanClockAnchor | undefined,
+): WinnerActionView | undefined {
+  if (noDollar || planClock === undefined) return undefined
+  // Unreachable by (3). Kept as the belt to that proof's braces and FAILING CLOSED like every other
+  // wall on this layer: were the no-change anchoring ever to change underneath us, rendering "My own
+  // order" AS the recommendation would be worse than rendering nothing at all.
+  if (payload.winner.policy === 'custom') return undefined
+
+  const ours = payload.winner.conversion
+  const theirs = payload.noActionBaseline.conversion
+
+  let conversionLine: string | undefined
+  let conversionNote: string | undefined
+  if (ours !== null) {
+    const start = rothPlanStartFor(planClock, ours.startYearOffset)
+    conversionLine = slots.rothPlanEcho(
+      formatActionableDollar(ours.annualAmountReal),
+      start.year,
+      start.passed,
+      ours.years,
+    )
+    if (theirs !== null) {
+      // FIELD BY FIELD, never through `sameDecumulationPlan`: that helper short-circuits on POLICY
+      // before it reads a single conversion field, so a byte-identical conversion under a different
+      // withdrawal order would come back "different" and this card would announce a Roth change that
+      // is not happening.
+      const scheduleDiffers =
+        theirs.annualAmountReal !== ours.annualAmountReal ||
+        theirs.startYearOffset !== ours.startYearOffset ||
+        theirs.years !== ours.years
+      if (scheduleDiffers) conversionNote = slots.rothPlanReplaces(formatEnteredDollar(theirs.annualAmountReal))
+    }
+  } else if (theirs !== null) {
+    // The winner converts nothing and the household does — the recommendation IS the removal. Silence
+    // here is the calm-but-wrong reading: on `?seed=health`'s leave-more solve both arms run the SAME
+    // withdrawal order, so without this line the card would render only a row saying nothing changed.
+    conversionLine = slots.rothPlanTakenOut(formatEnteredDollar(theirs.annualAmountReal))
+  }
+
+  return {
+    orderLabel: copy[WINNER_STRATEGY_KEY[payload.winner.policy]],
+    orderGloss: copy[WINNER_STRATEGY_GLOSS[payload.winner.policy]],
+    conversionLine,
+    conversionNote,
   }
 }
 
@@ -438,6 +577,7 @@ function recommendedView(payload: SolveRecommendation, opts: RecommendationViewO
     surplusRegime: payload.surplusRegime,
     goal,
     winnerStrategyKey: WINNER_STRATEGY_KEY[payload.winner.policy],
+    winnerAction: winnerActionView(payload, noDollar, opts?.planClock),
     grade,
     survivalContext: opts?.spineConfidence,
     baselineNameplate: copy.recommendBaselineNameplate,

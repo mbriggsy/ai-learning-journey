@@ -750,7 +750,15 @@ describe('the statestale aged plant (the state-tax gate note; light doctor, F2 s
 describe('the recommend-second witness seed (engine-proven solve regime)', () => {
   const FRESH = epochDayFromIsoDate(acaEnhancedSubsidyStatus.value.verifiedOn) + 5
 
-  /** Drive a witness seed + goal through the REAL builder → REAL engine at the fast test counts. */
+  /**
+   * Drive a witness seed + goal through the REAL builder → REAL engine at the fast test counts.
+   *
+   * ⚠️ EVERY CALLER MUST PASS AN EXPLICIT `60_000` TIMEOUT. Vitest's default is 20s, and one call
+   * measured **18.0s alone on an idle machine** (2026-08-05) — a ~2s margin that the full suite's
+   * file-level parallelism erases. The `'health'` witness shipped in `94ea8d00` WITHOUT the argument
+   * and reddened `pnpm test` from that commit onward while passing in isolation every time it was
+   * checked, which is exactly how it got through. Green-when-filtered is not green.
+   */
   const solveWitness = (key: 'surplus' | 'buckets' | 'health', goal: 'leave-more' | 'pay-less-tax') => {
     const draft: ScenarioDraft = { ...DEV_SEEDS[key], chosenGoal: goal }
     const req0 = buildSolveRequest(draft, FRESH)
@@ -801,7 +809,7 @@ describe('the recommend-second witness seed (engine-proven solve regime)', () =>
     expect(DEV_SEEDS.health.drawdownPolicy, 'the seed still runs a non-conventional order').toBe('proportional')
     // …and the arm really is the household's plan, not a re-anchored grid amount that happens to match.
     expect(p.noActionBaseline.conversion).toEqual(DEV_SEEDS.health.rothConversion)
-  })
+  }, 60_000)
 
   it("'surplus' lands an OVER-FUNDED active recommendation (surplusRegime true, noChange false) through the real solve", () => {
     const p = solveWitness('surplus', 'leave-more')

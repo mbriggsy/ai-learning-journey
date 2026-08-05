@@ -453,13 +453,31 @@ nothing, and the first surviving trigger row is FY2033-34 → TY2035 (OSC **Augu
 - ⚠️ **DOWN-RANKED — the filed fix is UNSHIPPABLE as written.** `solveEntry.ts:140-147` mint-fails the roster *before* `solve()` runs, and `rankingStability.ts:145-153` knows only a conversion-**amount** perturbation — so dispatching the sequencing-only field would surface `mint-failed{roster}` **live**, the exact state `solveDispatch.ts:76` forbids in its own comment. Doing it properly needs a second validation law under every shipped recommendation, a one-way door on what "validated" means.
 - **Near-term, honest, XS:** fix `copy.ts:1408` only — it says a *withdrawal strategy* needs more pre-tax when only the **conversion** half does. Sequencing across taxable and Roth is real and rankable.
 
-### The recommendation never names the winning strategy, the runner-up, or what to do
+### ~~The recommendation never names the winning strategy, the runner-up, or what to do~~ — **the STRATEGY half CLOSED 2026-08-05 (`db371655`); the RUNNER-UP half stays open**
 
-`L` · **pilot** · filed 2× — `A16`, `A20`
+~~`L`~~ → `S` · **pilot** · filed 2× — `A16`, `A20`
 
-- R9/R10 — the recommendation never says what to DO (winning strategy is computed but never rendered)
-- ⚠️ **Instruction card only — no store write.** Writing the winner into the draft moves the solver fingerprint and would instantly DEMOTE the recommendation the household just accepted (`recommendationView.ts:289-290`). Name the winner, point at the sequencing sheet. Most of the gap is already ON the payload and needs only rendering — that half is cheap and needs zero engine work.
-- R23 — the runner-up is retained but never IDENTIFIED, and the 'why' is one content-free constant
+- ✅ **R9/R10 — the winning-plan card ships.** `.rec-action` in `.rec-committed__rest` states the crowned
+  plan CONTROL BY CONTROL: the withdrawal order (the sequencing sheet's own `leverPolicy*` label + gloss)
+  and the Roth conversion (the shipped `rothPlanEcho` slot, its amount through the round-DOWN
+  `formatActionableDollar`). A **settings list, not an instruction list** — the crowned conversion
+  REPLACES the household's, so any "also/alongside" framing was a false implicature, and a row that
+  names a control and states its setting cannot carry one.
+- ✅ **No store write, and no door at all** — Briggsy ruled NAME IT, NO DOOR (2026-08-03). The filed
+  "point at the sequencing sheet" half was dropped for the reason the ⚠️ below gives: following the
+  pointer fires `invalidateStaleSolve` and demotes the card that pointed there.
+- ⚑ **"Most of the gap is already ON the payload and needs only rendering" was FALSE.** The surface is a
+  declared downstream renderer (insight 020) and `RecommendedView` carried `winnerStrategyKey` and
+  nothing else about the strategy — no conversion amount, offset or years, no order. It needed new view
+  fields, a new composer, a plan-clock thread through `RecommendationViewOpts`, a new money dialect
+  (`formatEnteredDollar` — the household's own figure must NOT be floored), and three new copy strings.
+- ⚑ **Scoped to the ACTIVE register**, which settled three of the 2026-08-03 design panel's five
+  problems by construction. **The no-change register still does not name the plan** — that is the one
+  increment left, and it is specified in `TODO.md`'s entry 7 (it needs a `custom` branch, a third ui
+  bucket map, and a seed that can witness a custom winner, which none exists).
+- **STILL OPEN — R23: the runner-up is retained but never IDENTIFIED**, and its `why` is one
+  content-free constant (`copy.ts:1599`) naming neither arm, while `payload.runnerUp.id`/`.policy` sit
+  unused. The winning-plan card's own vocabulary is now the obvious material for it.
 
 ### Date-route recommend-second parity — the working household gets no strategy at all
 

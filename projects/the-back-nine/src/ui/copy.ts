@@ -1578,7 +1578,16 @@ export const copy = {
   // DELIBERATE: a `recAction*` spelling would have matched NEITHER prefix list (`isVerdictKey` needs
   // the full `recommend`; `isControlKey` needs one of the enumerated `recDelta`/`recSkew`/… stems),
   // so a plan-moving dollar would have shipped past free-numeral AND require-hedge both.
-  recommendActionHeading: 'How this plan gets there',
+  // ⚠️ NOT "How this plan gets there" (the first draft, killed on its own real-browser frame
+  // 2026-08-05): "there" has NO REFERENT on this surface. The undefined-referent ban is copy LAW here
+  // — the reader is never wrong — and the anaphora a heading like that leans on is broken by the
+  // nameplate, which sits between the hero's dollar and this card. Worse on a close call, where "gets
+  // there" implies arrival at a destination nothing ever named. This states what the list IS and makes
+  // the rows do the work. Equally NOT "…does differently": the crowned plan differs from theirs in at
+  // least one control (that is what ACTIVE mode proves), but not necessarily in EVERY row — a
+  // household whose order already matches and whose conversion is the whole recommendation would read
+  // a false claim over the order row.
+  recommendActionHeading: 'What this plan does',
   recommendActionOrderLabel: 'Which accounts you spend first',
   recommendActionConversionLabel: 'Roth conversions',
   // The calm couldn't-work-it-out state (a solve refusal / mint-failure / demotion-withhold — each a

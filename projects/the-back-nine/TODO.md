@@ -17,14 +17,19 @@
 **Where we are:** all four acts are built; Act 4 closed at U17·S6 (S7 deferred, Briggsy's ruling). What is
 left is not units. It is the gap between *the build is done* and *a friend can bet real money on this*.
 
-▶ **THE NEXT BUILD is Tier 1's *"The recommendation never says what to DO"*** — and it is now
-**designed, not just filed.** A 16-agent design panel (4 independent proposals × 3 adversarial judges,
-2026-08-03) found **five hard problems, and no proposal was shippable as written**; all five are written
-into that entry as ⚑ blocks. **The sharpest one is already CLOSED** — `formatActionableDollar`
-(`9527067f`), because rendering the winner's conversion amount through any shipped dialect quotes a
-figure *past* the cliff it was anchored under. It is a **user-facing surface**, so load the four-skill
-UI loadout (CLAUDE.md) before touching a pixel. Read the ⚑ blocks before trusting any line number in the
-prose above them — the prose is the original filing and its anchors have drifted.
+✅ **Tier 1's *"The recommendation never says what to DO"* SHIPPED 2026-08-05** — the winning-plan card
+names the crowned withdrawal order and the crowned Roth conversion, and stops. Witnessed live in real
+Chromium at 1536×791 on two seeds. See that entry for what it settled and the ONE increment it left.
+
+▶ **THE NEXT BUILD is Tier 0 entry 1** — *the mixed household's retired spouse priced at $0 healthcare*.
+It is the only remaining Tier-0 defect with a **ruling AND an executable shape**: Briggsy ruled ask +
+refuse (2026-08-02), the 2026-08-03 double-blind found the refusal channel already exists
+(`missingRequiredFacts` is the shipped ONE authority), and the size came DOWN to M-L. **Entry 10** (the
+heir-bracket seat) is the clean alternative — the only 2026-08-03 entry no skeptic could refute, zero
+engine change, fully specified. Entries 2 and 3 are **his forks**, not builds.
+
+⚠️ **Every "next build" here is a user-facing surface — load the four-skill UI loadout (CLAUDE.md)
+before touching a pixel, and read a ⚑ block before trusting any line number in the prose above it.**
 
 ⚠️ **The one verification debt still open from 2026-08-03:** the record card's HOLDS face has never been
 seen. `?vault=rec` cannot show it (single bucket, planted payload); it needs a save + re-entry on
@@ -448,7 +453,49 @@ deadlines silently misses it. It has been filed a notch late twice, both times i
 
 ### Tier 1 — the differentiator does not land
 
-7. **The recommendation never says what to DO.** `recommendationView.ts:410` computes `winnerStrategyKey`;
+7. ✅ **SHIPPED 2026-08-05 (`db371655` + the ladder fix) — the recommendation names the plan now.**
+   The winning-plan card sits in `.rec-committed__rest` under the baseline nameplate and states the
+   crowned plan CONTROL BY CONTROL: the withdrawal order (the sequencing sheet's own `leverPolicy*`
+   label + gloss) and the Roth conversion (the shipped `rothPlanEcho` slot). No door — Briggsy's ruling.
+   **A SETTINGS LIST, NOT AN INSTRUCTION LIST**, which is what kills panel problem 2 (the crowned
+   conversion REPLACES theirs, so "also/alongside" is a false implicature) and what removes the need for
+   any imperative the advice-verb gate would ban.
+   ⚑ **ACTIVE REGISTER ONLY — and that scoping settled panel problems 1, 3 and 5 by CONSTRUCTION.**
+   ACTIVE ⇒ `noChange` false ⇒ `sameDecumulationPlan(winner, userBaseline)` false ⇒ the crowned plan is
+   provably NOT the household's own ⇒ the winner is a GRID arm. So its amount is rail-anchored (the
+   floor is safe), its window is horizon-clamped at offset 0 (no unbounded `years`), and `custom` is
+   unreachable (so `leverPolicyCustom`'s first-person "My own order" can never render as the
+   recommendation) — no branches to write, no third bucket vocabulary to mint. The full proof lives on
+   `winnerActionView` (`recommendationView.ts`).
+   ⚑ **The dialects are now split by PROVENANCE, and this was a real hole.** `formatActionableDollar`
+   floors unconditionally on the premise that the household's own amount is "already round" — nothing
+   enforces it, so quoting a typed $43,617 as "$43,000" on a card whose nameplate says *"your plan
+   today"* is the `94ea8d00` misquote family one decimal down. New `formatEnteredDollar` renders a
+   figure THEY entered exactly; a figure WE propose still floors.
+   ⚑ **TWO DEFECTS THE REAL FRAME CAUGHT THAT EVERY GREEN TEST MISSED** (the reason the walk is not
+   optional): (a) the first heading, *"How this plan gets there"*, had **no referent for "there"** — and
+   the anaphora it leaned on is broken by the nameplate sitting between the hero and the card; now
+   *"What this plan does"*. (b) `formatActionableDollar` inherited the delta hero's **$10,000 top step**,
+   so a conversion anchored at ~$148,300 rendered *"~$140,000"* — **up to $9,999 a year across a
+   nine-year window of the crowned move, discarded by a display choice** and unrecoverable by a reader
+   who types what they are shown. Step size does not affect SAFETY (flooring a monotone metric clears
+   its rail at any granularity), so the shared ladder bought nothing. Ladder now stops at $1,000.
+   ⚑ **WITNESSED LIVE** in real Chromium at 1536×791 @2.5 DPR, full precision: `?seed=retired`
+   leave-more renders the ORDER row only (the 16k crown carries no conversion — the 256-path probe's did,
+   so **precision moves the crown; never quote a fast-count figure as seen**), and `?seed=surplus`
+   renders BOTH rows — *"Low-tax room first"* + *"Converting ~$148,000 a year for 9 years, starting in
+   2026."* Five mutants planted and killed.
+   ⚑ **THE ONE INCREMENT LEFT: the no-change register still does not name the plan.** A household on
+   `?seed=health` + pay-less-tax reads *"You're already on one of the strongest paths we tested"* and
+   never learns WHICH path. Deliberately out of scope: the proof above holds only in ACTIVE, so the
+   no-change arm needs the `custom` branch (with a THIRD ui bucket map — `SequencingControl`'s is
+   intake-private and `reentryChrome.ts:47`'s points at different strings) and different words, since
+   `mode === 'no-change'` is NOT "the winner is the plan you run" (it also fires on a seed-B display
+   inversion and a $0 collapse). **No seed produces a `custom` winner**, so that branch would ship
+   unwitnessable — mint the seed first or leave it.
+   <details><summary>original entry</summary>
+
+   **The recommendation never says what to DO.** `recommendationView.ts:410` computes `winnerStrategyKey`;
    repo-wide it has **exactly two other references — its own type declaration and one unit test.** Zero
    render consumers, and `RecommendationSurface.tsx` contains no strategy name anywhere. The hero is a bare
    dollar delta (`copy.ts:2297/2301`); the winner's conversion amount and years render nowhere; there is
@@ -672,6 +719,22 @@ deadlines silently misses it. It has been filed a notch late twice, both times i
    `CandidateStrategy` and is **dropped** at `armOfB` (`solve.ts:232-236`). Surfacing "just under the ACA
    cliff" would need **five** seams widened — `SolveArm`, `armOfB`, `SolveArmWire`, `packArm`
    (`engineProtocol.ts:180-189`, the one that silently drops), `armFromWire`. Out of scope; omit the why.
+   </details>
+
+7b. **`?seed=failing` mint-fails — the bad-news household gets a "something went wrong" card.** *(Found
+   2026-08-05 by the witness probe; filed nowhere before.)* Both goals return
+   `{kind:'mint-failed', stage:'stability'}` with detail *"perturbation arm VACUOUS: the +1,000
+   conversion perturbation left the varied candidate's own decision surface byte-identical — nothing
+   moved, so sibling-identity proves no decoupling (insight 029)"*. `recommendationView` routes a
+   mint-failure to `kind:'unavailable'` → `recommendUnavailable` (*"We couldn't work out a
+   recommendation just now — adjust a number, or re-open this, to try again"*), which invites a retry
+   that **cannot succeed**: the household is failing, so the perturbation is inert by CONSTRUCTION, not
+   transiently. Same family as `e7bf0485` (the well-funded household whose best move was a conversion),
+   opposite end of the distribution. **Reproduce in seconds, not a browser walk** — drive
+   `DEV_SEEDS.failing` through `buildSolveRequest` → `engineApi.runSolve` at `paths: 256`,
+   `_gradeMinPaths: 50` (the `devSeeds.test.ts` `solveWitness` pattern). Decide whether an inert
+   perturbation on an already-failing household is a MINT failure at all, or a typed refusal with its
+   own honest words.
 
 8. **The whole still-working audience gets no strategy — silently.** `Result.tsx:476` gates
    `RecommendationSurface` off for the date route entirely and `:362` gates the invite door. The

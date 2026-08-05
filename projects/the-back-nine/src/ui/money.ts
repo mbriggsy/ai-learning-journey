@@ -93,14 +93,28 @@ export function formatAbsoluteDollar(dollars: number): string {
  * (`Math.max(0, …)` clamps where the delta dialect's `Math.abs` mirrors), and the sub-step fallback
  * below (which the delta dialect has no analog for — `formatDeltaDollar(60)` is "100").
  *
- * Same humane step ladder as the delta dialect, so the surface still speaks ONE small-figure dialect;
- * bare of the "$" glyph, which the copy slot supplies (copy.ts SLOT DISCIPLINE). The sub-step guard is
+ * ⚠️ THE LADDER STOPS AT $1,000 — IT DOES NOT SHARE THE DELTA DIALECT'S $10,000 TOP STEP, and that
+ * divergence was bought on a real frame (2026-08-05). The first cut shared the whole ladder so "the
+ * surface speaks ONE small-figure dialect", which is an AESTHETIC argument; flooring is a correctness
+ * one, and above $100k the two collided. `?seed=surplus` crowned a conversion anchored in
+ * [$140k, $150k) and the shared ladder rendered it "~$140,000" — up to $9,999 A YEAR, across a
+ * nine-year window, of the very move the solver crowned, discarded by a DISPLAY choice and never
+ * recoverable by the reader (they type what they are shown). Step size does not affect SAFETY at all —
+ * flooring a monotone metric clears the rail at any granularity — so the coarse step bought nothing
+ * and cost most of a recommendation. At $1,000 the worst case is $999.
+ *
+ * This is not the spurious precision back-nine-design §3 bans: that rule forbids a figure MORE precise
+ * than the estimate behind it, and the anchored amount is an exact whole dollar. $148,000 is LESS
+ * precise than the truth, and the slot's `~` carries the hedge. The delta hero keeps its own coarse
+ * ladder because it is a comparative magnitude nobody types; this figure is an instruction.
+ *
+ * Bare of the "$" glyph, which the copy slot supplies (copy.ts SLOT DISCIPLINE). The sub-step guard is
  * not defensive dressing — without it a figure smaller than its own step floors to "$0", which would
  * be a rendered falsehood rather than a rounding.
  */
 export function formatActionableDollar(dollars: number): string {
   const v = Math.max(0, dollars)
-  const step = v < 10_000 ? 100 : v < 100_000 ? 1_000 : 10_000
+  const step = v < 10_000 ? 100 : 1_000
   const stepped = Math.floor(v / step) * step
   return grouped.format(stepped >= 1 ? stepped : Math.floor(v))
 }

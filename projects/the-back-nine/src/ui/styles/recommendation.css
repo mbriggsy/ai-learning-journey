@@ -149,9 +149,14 @@
   gap: var(--space-3);
 }
 
+/* The term carries --weight-medium so it reads as a LABEL, not as more prose: it shares its size and
+   colour with the gloss two lines below (both --text-xs / --ink-muted), and on the real frame that made
+   a control's NAME and a control's EXPLANATION look like the same kind of text. Weight, not colour —
+   the reader is colour-blind and this hierarchy has to survive greyscale (back-nine-design §2). */
 .rec-action__term {
   font-family: var(--font-body);
   font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
   color: var(--ink-muted);
 }
 

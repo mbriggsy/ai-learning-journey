@@ -185,10 +185,28 @@ describe('formatActionableDollar — rounds DOWN so a re-typed figure never cros
     expect(formatDeltaDollar(43_600)).toBe('44,000') // the unsafe sibling, pinned so the contrast cannot rot
   })
 
-  it('shares the delta dialect step ladder ($100 / $1,000 / $10,000) so the surface speaks one dialect', () => {
+  it('the ladder STOPS at $1,000 — it does not inherit the delta dialect’s $10,000 top step', () => {
     expect(formatActionableDollar(9_960)).toBe('9,900')
     expect(formatActionableDollar(43_600)).toBe('43,000')
-    expect(formatActionableDollar(187_500)).toBe('180,000')
+    expect(formatActionableDollar(187_500)).toBe('187,000')
+  })
+
+  it('the worst-case under-quote is $999, not $9,999 — a display step must not eat the recommendation', () => {
+    // Bought on a real frame (2026-08-05): `?seed=surplus` crowns a conversion anchored in
+    // [$140k, $150k), and the shared $10,000 top step rendered it "~$140,000" — up to $9,999 a year,
+    // over a nine-year window, of the crowned move discarded by a formatter. Step size does not affect
+    // SAFETY (flooring a monotone metric clears the rail at any granularity), so the coarse step bought
+    // nothing. These are the cases the old ladder got wrong.
+    expect(formatActionableDollar(148_300)).toBe('148,000')
+    expect(formatActionableDollar(104_000)).toBe('104,000')
+    expect(formatActionableDollar(109_999)).toBe('109,000')
+    // Still never above its input — the safety property is unchanged by the finer step.
+    for (const a of [148_300, 104_000, 109_999, 187_500, 1_000_500]) {
+      expect(Number(formatActionableDollar(a).replace(/,/g, '')), `${a}`).toBeLessThanOrEqual(a)
+    }
+    // NON-VACUITY: the delta dialect still coarsens these — it is a magnitude nobody types.
+    expect(formatDeltaDollar(148_300)).toBe('150,000')
+    expect(formatDeltaDollar(104_000)).toBe('100,000')
   })
 
   it('a round figure floors to itself — the flooring costs nothing when the amount is already on a step', () => {

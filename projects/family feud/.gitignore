@@ -1,0 +1,17 @@
+# Scratch — screenshots Briggsy drops for review, agent debris. Never committed.
+temp/
+temp-*
+
+# Discarded Imagen rolls + superseded avatar variants. Kept on disk as the visual
+# record of how the logos got made; too heavy (30MB of 2-3MB PNGs) to carry in history.
+# The two keepers — logo/deez-nuts/ and logo/hunter-maker/ — ARE tracked.
+logo/archive/
+
+# Mule cargo is a CACHE, not source: the hourly job overwrites every file in inbox/
+# (the two RSS feeds alone churn ~1.2MB an hour) and the newsletter build drains it
+# into data/archive/. Committing either would rewrite the repo every hour for zero value.
+# Both directories keep a .gitkeep so a clean clone still has somewhere to land cargo.
+newsletter/data/inbox/*
+!newsletter/data/inbox/.gitkeep
+newsletter/data/archive/*
+!newsletter/data/archive/.gitkeep

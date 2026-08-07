@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Nightly Feud — Aug 6, 2026 (Preview Edition #0)</title>
+<style>
+  :root {
+    --bg: #10141b; --panel: #181e28; --panel2: #1e2634;
+    --ink: #e8e6e1; --ink-dim: #9aa3b2; --ink-faint: #6b7280;
+    --gold: #d4a53f; --green: #4eba6f; --red: #d95c5c; --blue: #5b9bd5;
+    --rule: #2a3342;
+  }
+  html[data-theme="light"] {
+    --bg: #f5f1e8; --panel: #fffdf7; --panel2: #ece5d3;
+    --ink: #1e242e; --ink-dim: #5a6372; --ink-faint: #8f8878;
+    --gold: #a0761c; --green: #2e7d4f; --red: #b23b3b; --blue: #2f6da8;
+    --rule: #d9d2c2;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg); color: var(--ink);
+    font-family: Georgia, 'Times New Roman', serif;
+    line-height: 1.55; padding: 32px 16px 64px;
+    transition: background-color .25s ease, color .25s ease;
+  }
+  #themeBtn {
+    position: fixed; top: 14px; right: 14px; z-index: 9;
+    background: var(--panel); color: var(--ink-dim);
+    border: 1px solid var(--rule); border-radius: 20px;
+    padding: 6px 14px; cursor: pointer;
+    font-family: Verdana, Geneva, sans-serif; font-size: 11px;
+    letter-spacing: 1px; text-transform: uppercase;
+  }
+  #themeBtn:hover { color: var(--gold); border-color: var(--gold); }
+  .paper { max-width: 780px; margin: 0 auto; }
+
+  /* Masthead */
+  .masthead { text-align: center; border-bottom: 3px double var(--rule); padding-bottom: 18px; margin-bottom: 6px; }
+  .masthead h1 {
+    font-size: 52px; letter-spacing: 2px; font-weight: 900;
+    font-family: 'Playfair Display', Georgia, serif; color: var(--ink);
+  }
+  .masthead h1 .accent { color: var(--gold); }
+  .tagline { font-style: italic; color: var(--ink-dim); font-size: 14px; margin-top: 2px; }
+  .dateline {
+    display: flex; justify-content: space-between; font-size: 12px;
+    text-transform: uppercase; letter-spacing: 1px; color: var(--ink-faint);
+    border-bottom: 1px solid var(--rule); padding: 8px 2px; margin-bottom: 22px;
+    font-family: Verdana, Geneva, sans-serif;
+  }
+
+  /* Stat tiles */
+  .tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 28px; }
+  .tile {
+    background: var(--panel); border: 1px solid var(--rule); border-radius: 8px;
+    padding: 12px 10px; text-align: center;
+  }
+  .tile .num { font-size: 26px; font-weight: 700; color: var(--gold); font-family: Verdana, sans-serif; }
+  .tile .lbl { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--ink-dim); margin-top: 3px; font-family: Verdana, sans-serif; }
+
+  /* Sections */
+  section { margin-bottom: 30px; }
+  h2 {
+    font-family: Verdana, Geneva, sans-serif; font-size: 13px; letter-spacing: 2px;
+    text-transform: uppercase; color: var(--gold);
+    border-bottom: 1px solid var(--rule); padding-bottom: 6px; margin-bottom: 12px;
+  }
+  h2 .sec-icon { margin-right: 6px; }
+  p { margin-bottom: 10px; font-size: 15.5px; }
+  .lede { font-size: 17px; }
+  .item { background: var(--panel); border-left: 3px solid var(--rule); border-radius: 0 6px 6px 0; padding: 10px 14px; margin-bottom: 10px; }
+  .item.good { border-left-color: var(--green); }
+  .item.bad  { border-left-color: var(--red); }
+  .item.watch{ border-left-color: var(--gold); }
+  .item .hd { font-weight: 700; font-size: 15px; }
+  .item .bd { font-size: 14px; color: var(--ink-dim); margin-top: 2px; }
+  .tag {
+    display: inline-block; font-family: Verdana, sans-serif; font-size: 10px;
+    padding: 1px 7px; border-radius: 10px; margin-left: 6px; vertical-align: middle;
+    background: var(--panel2); color: var(--ink-dim); letter-spacing: .5px;
+  }
+  .tag.up { color: var(--green); } .tag.down { color: var(--red); } .tag.hot { color: var(--gold); }
+  ul.actions { list-style: none; }
+  ul.actions li { padding: 8px 12px; background: var(--panel); border: 1px solid var(--rule); border-radius: 6px; margin-bottom: 8px; font-size: 15px; }
+  ul.actions li::before { content: "☐  "; color: var(--gold); }
+  .spotlight { background: linear-gradient(135deg, var(--panel), var(--panel2)); border: 1px solid var(--rule); border-radius: 10px; padding: 16px 18px; }
+
+  /* Footer */
+  .colophon {
+    border-top: 3px double var(--rule); margin-top: 40px; padding-top: 12px;
+    font-size: 11.5px; color: var(--ink-faint); text-align: center;
+    font-family: Verdana, Geneva, sans-serif;
+  }
+  .preview-banner {
+    background: var(--panel2); border: 1px dashed var(--gold); color: var(--gold);
+    border-radius: 8px; padding: 8px 14px; text-align: center; font-size: 13px;
+    font-family: Verdana, sans-serif; margin-bottom: 24px;
+  }
+</style>
+</head>
+<body>
+<button id="themeBtn" title="Toggle light/dark">☀ daylight</button>
+<div class="paper">
+
+  <div class="masthead">
+    <h1>THE NIGHTLY <span class="accent">FEUD</span></h1>
+    <div class="tagline">All the news that's fit to draft. — Family Feud League, est. 2026</div>
+  </div>
+  <div class="dateline">
+    <span>Edition #0 — Preview</span>
+    <span>Thursday, August 6, 2026</span>
+    <span>Press time: 12:15 PM ET</span>
+  </div>
+
+  <div class="preview-banner">🗞️ PREVIEW EDITION — laid out by hand so you can see the format. Edition #1 auto-publishes at 7:00 PM ET.</div>
+
+  <div class="tiles">
+    <div class="tile"><div class="num">4/8</div><div class="lbl">Seats Filled</div></div>
+    <div class="tile"><div class="num">~23</div><div class="lbl">Days to Draft*</div></div>
+    <div class="tile"><div class="num">—</div><div class="lbl">Your Slot</div></div>
+    <div class="tile"><div class="num">Aug 5</div><div class="lbl">Board Version</div></div>
+  </div>
+
+  <section>
+    <h2><span class="sec-icon">🏛️</span>League Desk</h2>
+    <p class="lede">The Family Feud sits at <strong>4 of 8 seats</strong> — briggsy007 (the Commissioner-child), RMonk9, MattiICE23, and your own Saquon Deez Nuts. Draft remains <strong>unscheduled</strong>; the ~Aug 29 target is still gentleman's-agreement territory. No draft order posted. *Countdown assumes the target holds.</p>
+    <div class="item watch">
+      <div class="hd">Four seats still open <span class="tag hot">WATCH</span></div>
+      <div class="bd">Hunter's recruiting pipeline is your scouting window: every name that fills a seat is a tendencies file waiting to be built.</div>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="sec-icon">🚑</span>The Wire</h2>
+    <p class="lede">Injuries, signings, and role news that touch our 174-player board. (Sample layout — Edition #1 fills this from tonight's feeds.)</p>
+    <div class="item bad">
+      <div class="hd">Example: RB Somebody Important (T2) — soft-tissue scare <span class="tag down">BOARD HIT</span></div>
+      <div class="bd">What happened, what the beat writers say, and what it does to his tier. If he lands on IR-stash radar, the § flag gets called out here — we own two IR slots and we will abuse them.</div>
+    </div>
+    <div class="item good">
+      <div class="hd">Example: WR Camp Darling (T4) — first-team reps piling up <span class="tag up">RISER</span></div>
+      <div class="bd">Role clarity notes, and whether he's outplaying his board rank.</div>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="sec-icon">📈</span>Market Watch</h2>
+    <p class="lede">Sleeper's trending adds/drops cross-referenced against our tiers and VORP, plus directional ranking movement worth caring about. Material moves get named; noise gets ignored. Your board is the benchmark — the market is just gossip until it isn't.</p>
+  </section>
+
+  <section>
+    <h2><span class="sec-icon">🔦</span>Spotlight</h2>
+    <div class="spotlight">
+      <p class="lede" style="margin-bottom:4px;"><strong>What the fantasy world is loudest about today.</strong></p>
+      <p style="color: var(--ink-dim); font-size:14px; margin-bottom:0;">One story per night, told straight, with the "what it means for the Feud" angle. If the whole industry is arguing about a player we can draft — or one we can bait Hunter into reaching for — it lives here.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="sec-icon">📋</span>Owner's Action Items</h2>
+    <ul class="actions">
+      <li>Install the Feud Mule (one command) so Edition #1 has cargo to haul.</li>
+      <li>Bookmark this page in Chrome — same file, fresh edition every night at 7.</li>
+      <li>Nothing else. That's the point of having staff, Briggsy.</li>
+    </ul>
+  </section>
+
+  <div class="colophon">
+    THE NIGHTLY FEUD · compiled nightly at 7:00 PM ET by Claude · league data &amp; wire copy via the Feud Mule (local scheduler)<br>
+    Back issues in <span style="color:var(--ink-dim);">newsletter_archive\</span> · debug trail in <span style="color:var(--ink-dim);">data\archive\</span> · Beat Hunter. 🏈
+  </div>
+
+</div>
+<script>
+(function () {
+  var KEY = "feud_theme";
+  var root = document.documentElement;
+  var btn = document.getElementById("themeBtn");
+  var saved = null;
+  try { saved = localStorage.getItem(KEY); } catch (e) {}
+  function apply(t) {
+    root.setAttribute("data-theme", t);
+    btn.textContent = (t === "light") ? "☾ night desk" : "☀ daylight";
+  }
+  apply(saved === "light" ? "light" : "dark");
+  btn.onclick = function () {
+    var next = (root.getAttribute("data-theme") === "light") ? "dark" : "light";
+    apply(next);
+    try { localStorage.setItem(KEY, next); } catch (e) {}
+  };
+})();
+</script>
+</body>
+</html>

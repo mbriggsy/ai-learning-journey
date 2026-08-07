@@ -1,6 +1,6 @@
 # The Board: Ranking Methodology — Family Feud 2026
 
-*Why the board says what it says. Companion to `players_data.json` (the board itself), `DRAFT_DAY_RUNBOOK.md` (draft-day operations), and the `family-feud-draft-board` artifact.*
+*Why the board says what it says. Companion to [`../draft-kit/players_data.json`](../draft-kit/players_data.json) (the board itself), [`draft-day-runbook.md`](draft-day-runbook.md) (draft-day operations), [`league.md`](league.md) (the rules all of this is bent around), and [`../draft-kit/family-feud-draft-board.html`](../draft-kit/family-feud-draft-board.html).*
 
 *Rankings snapshot: August 5, 2026. The ranks expire — the method doesn't. Read this as many times as you want, Briggsy; the numbers get refreshed before draft day.*
 
@@ -163,6 +163,6 @@ The **pure-VBD bot edged the doctrine bot 53.8%** head-to-head, worth about +33 
 
 **The baselines are estimates.** QB12/RB41/WR47/TE12 come from typical roster construction; real leaguemates hoard weirdly.
 
-**The August 5 snapshot expires.** Camp battles resolve, players get hurt, ADP moves daily in August. Before the real draft the full board gets rebuilt: re-research rankings/injuries/ADP, regenerate `players_data.json`, update the draft-board artifact, the cheat-sheet PDF, and the date-stamped file. Never draft off stale data — the method survives the refresh; the ranks don't.
+**The August 5 snapshot expires.** Camp battles resolve, players get hurt, ADP moves daily in August. Before the real draft the full board gets rebuilt: re-research rankings/injuries/ADP, regenerate `players_data.json`, then update **every** surface in one pass — the date-stamped copy, `family-feud-draft-board.html`, and the cheat-sheet PDF. Never draft off stale data — the method survives the refresh; the ranks don't.
 
 **The mission survives everything:** beat Hunter.

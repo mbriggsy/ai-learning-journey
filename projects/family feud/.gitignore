@@ -2,6 +2,12 @@
 temp/
 temp-*
 
+# War-room scratch, written into draft-kit/ during a live draft or mock and read by
+# draft_engine.py from its cwd. Per-draft state, worthless the moment the draft ends.
+draft-kit/picks.json
+draft-kit/new_picks.json
+draft-kit/slot_names.json
+
 # Discarded Imagen rolls + superseded avatar variants. Kept on disk as the visual
 # record of how the logos got made; too heavy (30MB of 2-3MB PNGs) to carry in history.
 # The two keepers — logo/deez-nuts/ and logo/hunter-maker/ — ARE tracked.

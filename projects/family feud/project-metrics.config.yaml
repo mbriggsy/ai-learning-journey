@@ -1,0 +1,10 @@
+# project-metrics per-project config — editorial for the ai-journey-stats showcase site.
+editorial:
+  oneLiner: "A draft-day co-pilot that clicks the picks itself."
+  hookStat:
+    label: "MOCK PICKS"
+    value: "15/15"
+  liveUrl: null
+  repoUrl: "https://github.com/mbriggsy/ai-learning-journey/tree/main/projects/family-feud"
+  status: "active"
+  description: "Fantasy football war room for an 8-team Sleeper league. A 174-player board built on empirical VORP, a live engine that hard-exits rather than advise off a corrupt picks feed, and an executor mode where Claude drives the browser and drafts on the clock — 15/15 manual picks, zero clock misses. The mission is beating his son."

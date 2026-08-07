@@ -1,35 +1,51 @@
 # DRAFT DAY RUNBOOK — Family Feud 2026
-*Operational manual for any Claude session shadowing Briggsy's draft (mock or real). The `family-feud-league` skill has league identity/context; this file is the machine's operating instructions. Both live in Briggsy's local "Family Feud" folder — this file and the whole draft arsenal in the `Draft Kit\` subfolder.*
+*Operational manual for any Claude session shadowing Briggsy's draft (mock or real). [`league.md`](league.md) has the identity and rules; this file is the machine's operating instructions. The draft arsenal — engine, board, cheat sheet — lives in [`../draft-kit/`](../draft-kit/).*
 
 **The sections below are current doctrine — Mock #1's lessons (Aug 5), Mock #2's (Aug 6, first executor-mode run), and Mock #3's (Aug 6, first CLEAN executor run: 15/15 manual, zero misses) are already folded in.** The changelog at the bottom records what changed and why; it never overrides the instructions.
 
 **Two operating modes.** *Advisor:* Claude computes THE CALL, Briggsy clicks. *Executor:* Claude also drives Briggsy's logged-in Chrome (claude-in-chrome tools) and clicks the picks himself — proven in Mock #2. Executor mode adds the "Executor mode" section's rules on top of everything else; the biggest difference is cadence math (see Step 3).
 
-## Files you need (stage from the connected folder's `Draft Kit\` subfolder into your workspace)
+## Files you need — run the engine from inside `draft-kit/`
+
+The engine opens its inputs by literal name from the **current working directory**, so `cd` into
+`draft-kit/` and work there. (Under Cowork these had to be staged into a sandbox workspace; that
+step is gone — the files are just local now.) Your `picks.json` and optional `slot_names.json`
+get written there during the draft; both are gitignored scratch.
+
 - `draft_engine.py` — the analysis engine (tier cliffs incl. K/DEF, run watch, diminutive-alias name matching)
 - `players_data.json` — the board: **174 entries** (150 skill players + 10 K + 14 DEF), tiers, badges — and since the Aug 5 VBD war game, `vorp`/`vbdRank`/`vbdDelta` on every entry (VORP = pts/season over waiver replacement; 4-yr empirical curves, our exact scoring; baselines waiver QB12/RB41/WR47/TE12, last starters QB8/RB21/WR27/TE8). Engine expects this exact filename in cwd.
 - This runbook.
 
-Note: `draft_rankings_data_2026-08-05.json` is the same data, date-stamped (kept in sync through the Aug 5 K/DEF patch). Rankings are an **Aug 5 snapshot** — fine for mocks; MUST be refreshed before the real draft (re-research rankings/injuries/ADP, regenerate players_data.json, update the Draft Kit copies — players_data.json, the date-stamped file, board HTML, cheat sheet — and the `family-feud-draft-board` desktop artifact). The Aug 26 one-shot trigger drops `REFRESH_BRIEF_2026-08-26.md` into `Draft Kit\` as the starting point for that refresh.
+Note: `draft_rankings_data_2026-08-05.json` is the same data, date-stamped (kept in sync through the Aug 5 K/DEF patch). Rankings are an **Aug 5 snapshot** — fine for mocks; MUST be refreshed before the real draft (re-research rankings/injuries/ADP, regenerate players_data.json, then update every surface in one pass — players_data.json, the date-stamped file, `family-feud-draft-board.html`, the cheat-sheet PDF, and the `family-feud-draft-board` desktop artifact).
+
+⚠️ **Nothing will remind you.** A Cowork one-shot trigger used to drop a `REFRESH_BRIEF` into the
+draft kit on Aug 26 as the starting gun for this. That trigger did not survive the migration and
+**no longer exists** — the refresh is now a `TODO.md` item and nothing else. Check the board's date
+before you trust a single rank.
 
 ## Step 1 — Find the draft
 - **Real league draft:** draft_id `1390509994847240192` (league `1390509993844809728`).
-- **Mock draft:** pull `https://api.sleeper.app/v1/user/1390750540631150592/drafts/nfl/2026` via WebFetch — take the most recent entry with status `drafting` (or `pre_draft` about to start). Mocks Briggsy creates himself may be the only reliable thing here; public mock lobbies may never appear on this endpoint — if nothing shows, ask him to paste the draft room URL (contains the draft_id). He often pre-creates the room hours early (Mock #2's was built ~5h before go time) — check the web app's Mock Drafts tab ("In progress" list) and the draft room URL: `sleeper.com/draft/nfl/<draft_id>`.
-- All Sleeper reads go through **WebFetch** (bash curl to api.sleeper.app is proxy-blocked). WebFetch caches 15 min — append an incrementing junk param: `?cb=1`, `?cb=2`, ...
-- **WebFetch prompt rules** (the summarizer is a small model — protect yourself):
-  - "Output the complete raw JSON verbatim, no commentary." for config fetches.
-  - For pick filtering, NEVER use bare "greater than N" — it has returned a false `[]` while admitting the data existed. Use **inclusive ranges** ("picks with pick_no from X to Y") or "the last N picks".
+- **Mock draft:** `curl -sL --max-time 15 "https://api.sleeper.app/v1/user/1390750540631150592/drafts/nfl/2026"` — take the most recent entry with status `drafting` (or `pre_draft` about to start). Mocks Briggsy creates himself may be the only reliable thing here; public mock lobbies may never appear on this endpoint — if nothing shows, ask him to paste the draft room URL (contains the draft_id). He often pre-creates the room hours early (Mock #2's was built ~5h before go time) — check the web app's Mock Drafts tab ("In progress" list) and the draft room URL: `sleeper.com/draft/nfl/<draft_id>`.
+- **All Sleeper reads go through `curl`** — see [`data-access.md`](data-access.md). Always pass `--max-time 15`.
+
+> **Obsolete since the Cowork migration — do not reintroduce.** This step used to mandate WebFetch
+> and a `?cb=N` cache-buster, because Cowork's sandbox proxy-blocked curl and WebFetch cached for
+> 15 minutes. Here curl works, has no cache, and returns raw JSON — while **WebFetch is banned
+> outright** (no timeout, hangs agents; a hook blocks it). The old "never say *greater than N*, use
+> inclusive ranges" rule was prompt-engineering aimed at WebFetch's small summarizer model and is
+> equally moot. The *substance* underneath it is not moot — see Step 3 on merging and leapfrogging.
 
 ## Step 2 — Lock the config
-Fetch `https://api.sleeper.app/v1/draft/<draft_id>?cb=N`:
+`curl -sL --max-time 15 "https://api.sleeper.app/v1/draft/<draft_id>"`:
 - `settings.teams`, `settings.rounds`, `settings.pick_timer` — **read rounds from the API, never assume 16** (Mocks #1 and #2 both ran 15; the real league is 16).
 - `draft_order` — map of user_id → slot. Briggsy = user_id `1390750540631150592`. **His slot is the engine's first argument.** draft_order can be null until near start — re-verify ON draft day, before the first advisory. Slot changes strategy hard: turn slots (1/8) draft in pairs and plan 14 picks ahead; middle slots don't. Slot 2 (Mock #2) is a near-turn: picks come in loose pairs with 3 picks between (e.g. 15/18, 31/34) and 13-pick droughts after — plan both picks of a pair as one decision, including who the between-teams will eat (denial forecasting won Egbuka→Kyren and Skattebo→Daniels).
 - Confirm scoring context (real league = full PPR; make mocks 8-team PPR to mirror it — verify `metadata.scoring_type` via API; Mock #1's lobby was accidentally created as Standard first, Mock #2 verified `ppr` ✓).
 - **Slot names:** the draft object's `metadata.slot_name_<N>` fields name the human in each slot, and they populate even with `show_team_names: 0` (verified live on Mock #1: DIego/Hunter/Ryan in slots 2-4). Write them to `slot_names.json` in cwd as `{"2": "DIego", "3": "Hunter", ...}` — the engine then names every roster ("slot 3 (Hunter)"), which makes denial plays readable at a glance. Registered accounts appear in `draft_order` instead (Briggsy's slot comes from there). All-CPU mock rooms have no slot names — skip the file.
 
 ## Step 3 — The loop (repeat until draft complete)
-1. WebFetch `https://api.sleeper.app/v1/draft/<draft_id>/picks?cb=N` (N increments every call; inclusive-range prompt).
-2. **Every fetch that returns picks gets written to `new_picks.json` and merged into `picks.json` — including "just checking" fetches.** A skipped merge silently drops picks (it briefly lost pick 96 in Mock #1). Keep a merge script keyed on pick_no. **When using "from pick N onward" range prompts to keep WebFetch responses small, N must be last-merged+1 — never leapfrog** (Mock #3: consecutive fetches "from 62" then "from 83" skipped 78-82; the integrity gate caught it and one patch fetch fixed it, but on a real clock that's a stall).
+1. `curl -sL --max-time 15 "https://api.sleeper.app/v1/draft/<draft_id>/picks" > new_picks.json` — the endpoint is **cumulative**, so this always returns every pick made so far.
+2. **Every fetch that returns picks gets merged into `picks.json` — including "just checking" fetches.** A skipped merge silently drops picks (it briefly lost pick 96 in Mock #1). Keep a merge script keyed on pick_no.
+   *Historical note: under Cowork, responses had to be trimmed with "from pick N onward" range prompts to fit through WebFetch, and leapfrogging N skipped picks 78-82 in Mock #3. **curl returns the whole array, so there is no range to get wrong** — the failure mode is retired, but the merge discipline and the integrity gate below are what caught it, and both stay.*
    The engine now enforces this: it **hard-fails (exit 1) on interior gaps or duplicate pick_nos** in picks.json and refuses to emit board state. If it screams, re-fetch /picks, re-merge, rerun — NEVER advise off a screaming engine. (A missing *newest* pick is undetectable — a tail hole looks identical to "draft is only this far along" — but /picks is cumulative, so that's staleness bounded by poll cadence, not corruption.)
 3. Run: `python3 draft_engine.py <briggsy_slot> <teams> <rounds>`
 4. Read the output; compose the advisory (format below); send it. In executor mode, execute the pick instead when it's our clock.
@@ -82,8 +98,8 @@ Fallbacks: J.Love (same logic, more variance) · Egbuka if both RBs vanish.
 
 ## After the draft
 - Full-roster recap: his team, grade, best value, biggest reach avoided, waiver-watch names for week 1.
-- **If this was a mock:** debrief what to tune, then **fold the lessons INTO the instruction sections above** (instructions stay current truth — never leave contradictions between a lesson and a step) and add a changelog entry. Update this file in the connected folder via the device bridge.
-- **If this was the real draft:** stand up in-season automation per the skill's Season Operations section and the project doc `claude/in-season-tasks.md` (Tue waivers, Thu/Sun lineups, Monday extras in The Nightly Feud).
+- **If this was a mock:** debrief what to tune, then **fold the lessons INTO the instruction sections above** (instructions stay current truth — never leave contradictions between a lesson and a step) and add a changelog entry. Edit this file directly and commit it.
+- **If this was the real draft:** stand up the in-season cadence — Tuesday waiver report, Thursday and Sunday morning lineup checks, trade evaluation on demand. **The pre-written prompts for these did not survive Cowork** (they lived in a project doc that could not be exported); they need rebuilding as real scheduled scripts. Tracked in `TODO.md`.
 
 ## Engine quick-reference
 `python3 draft_engine.py <my_slot> [teams=8] [rounds=16]` reading `picks.json` + `players_data.json` (+ optional `slot_names.json`) from cwd.

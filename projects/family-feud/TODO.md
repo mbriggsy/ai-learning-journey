@@ -4,8 +4,10 @@
 > Items are **re-ranked every session**, so never cite "item N" anywhere; cite the title.
 
 **Where we are:** the arsenal works and is verified on this machine — engine, board, mule, curl,
-executor mode. What's left splits three ways: one item the calendar forces, one thing that was
-never actually built, and one feature whose blocking unknown just cleared.
+merge script. **Executor mode is the exception**: its only evidence is Mock #3 on Aug 6 under
+Cowork, and the browser-driving half has not run in this environment. What's left splits three
+ways: one item the calendar forces, one thing that was never actually built, and one feature whose
+blocking unknown just cleared.
 
 **⏳ The draft is ~Aug 29. That is ~3 weeks out and it does not move.**
 
@@ -86,11 +88,32 @@ On draft morning, before the first advisory, re-pull and confirm:
 - `/draft/1390509994847240192` — **`draft_order` is `null` today.** Briggsy's slot is the engine's
   first argument and is genuinely unknown until near go time. Nothing else can start without it.
 - `/draft/.../traded_picks` — returned `[]`; one check covers a *pre-draft* trade
-- `metadata.slot_name_<N>` → write `draft-kit/slot_names.json` so the engine names every roster
+- `metadata.slot_name_<N>` → write `draft-kit/slot_names.json` so the engine names every roster.
+  **Expect these to be absent.** Checked Aug 7: the real draft's `metadata` has exactly four keys
+  (`description`, `league_type`, `name`, `scoring_type`) and zero `slot_name_*`. Those populate for
+  unregistered/CPU seats; registered humans come through `draft_order` instead. In a full league of
+  eight real accounts, `draft_order` is the source and `slot_names.json` may simply not apply.
 
 ---
 
-## 5. Confirm the waiver day against a live cycle
+## 5. Delete the empty husk — 10 seconds, first thing next session
+
+`C:\Users\brigg\ai-learning-journey\projects\family feud` (with the space) is an **empty
+directory** left over from the Aug 7 rename. Everything moved out; nothing is in it.
+
+It could not be removed during that session because Windows pins a process's working directory
+and the session was running inside it — not Explorer, not the desktop app, both were ruled out by
+control test. Any session **not** rooted there can delete it:
+
+```powershell
+Remove-Item -LiteralPath "C:\Users\brigg\ai-learning-journey\projects\family feud" -Force
+```
+
+Git never saw it — git doesn't track empty directories — so this is filesystem tidiness only.
+
+---
+
+## 6. Confirm the waiver day against a live cycle
 
 `docs/league.md` records `waiver_day_of_week: 2` from the API. The older notes read that as
 Wednesday processing with a Tuesday report — **plausible but unconfirmed**, and Sleeper's day
@@ -99,7 +122,7 @@ says "unconfirmed" and should keep saying so.
 
 ---
 
-## 6. Stand up the in-season cadence (post-draft)
+## 7. Stand up the in-season cadence (post-draft)
 
 Tuesday waiver report · Thursday and Sunday morning lineup checks · trade evaluation on demand.
 The pre-written prompts for these lived in a Cowork project doc that could not be exported —

@@ -4,7 +4,7 @@
 **STATUS (updated Aug 7): Mock #3 PASSED — the executor gate is cleared. Step zero is now also cleared (below). The next session builds the board; there is nothing left to probe first.**
 
 ## The sequence
-1. ~~Mock #3 first~~ — **✅ PASSED Aug 6, a day ahead of schedule** (executor mode per runbook, now v3.2): 15/15 manual picks, zero clock misses, zero AUTO-PICK flips, roster VORP 1225.8. Full recap in the runbook changelog + project ops-log. Pass criteria RETIRED. Note: the lab room `1390923383440424960` is **SPENT** (ran to completion) — any future mock needs a fresh 2-click room (Sleeper remembers settings). The spent room's `/picks` endpoint still serves all 120 picks, which makes it a perfect **static test feed** for the board build.
+1. ~~Mock #3 first~~ — **✅ PASSED Aug 6, a day ahead of schedule** (executor mode per runbook, now v3.2): 15/15 manual picks, zero clock misses, zero AUTO-PICK flips, roster VORP 1225.8. Full recap in [`draft-day-runbook.md`](draft-day-runbook.md)'s changelog. Pass criteria RETIRED. Note: the lab room `1390923383440424960` is **SPENT** (ran to completion) — any future mock needs a fresh 2-click room (Sleeper remembers settings). The spent room's `/picks` endpoint still serves all 120 picks, which makes it a perfect **static test feed** for the board build.
 2. **NEXT SESSION: build the live board** — step zero is the CORS probe.
 3. Real draft ~Aug 29 gets both: a lethal executor (proven) AND a self-updating wall display.
 

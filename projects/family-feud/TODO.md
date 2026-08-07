@@ -9,7 +9,10 @@ Cowork, and the browser-driving half has not run in this environment. What's lef
 ways: one item the calendar forces, one thing that was never actually built, and one feature whose
 blocking unknown just cleared.
 
-**⏳ The draft is ~Aug 29. That is ~3 weeks out and it does not move.**
+**⏳ The draft date does not exist yet.** `start_time` is `null` on the draft object and Sleeper's
+own UI reads "Draft time has not yet set" (both verified Aug 7). `~Aug 29` is a handshake, not an
+API fact — **it can move earlier.** Nothing here should assume three weeks of slack. The
+draft-state watcher in the rebuild plan exists precisely because this date has no source.
 
 ---
 
@@ -25,10 +28,20 @@ not survive the migration and no longer exists.** This TODO is now the only remi
 [`docs/ranking-methodology.md`](docs/ranking-methodology.md) Layer 1), rebuild the board, then
 update **every surface in one pass** — it is currently spread across four files:
 
-- `draft-kit/players_data.json` — the board the engine reads
-- `draft-kit/draft_rankings_data_2026-08-05.json` — the date-stamped twin (rename to the new date)
-- `draft-kit/family-feud-draft-board.html`
-- `draft-kit/family-feud-cheat-sheet.pdf`
+- `draft-kit/players_data.json` — the board the engine reads. **The only correct surface.**
+- `draft-kit/draft_rankings_data_2026-08-05.json` — ⛔ **DO NOT RENAME THIS FORWARD.** It is not a
+  twin. It forked on Aug 7 and still carries all three bugs that audit fixed: `dst[6]` Jaguars
+  (board says Vikings), `dst[8]` Vikings (board says Steelers), and `strategy.kickers` still reads
+  "No kicker board needed in August". It has **zero readers**. Renaming it resurrects three fixed
+  draft-day bugs.
+- `draft-kit/family-feud-draft-board.html` — carries a full duplicate of the board at line 200
+- `draft-kit/family-feud-cheat-sheet.pdf` — ⛔ **WRONG TODAY, not merely stale.** Generated Aug 5
+  before the audit; prints "6 Jaguars" and the retired "I'll call the kicker live", and is missing
+  all 24 K/DEF rows (150 of 174). Do not print this and draft off it.
+
+**Superseded by** [`docs/plans/2026-08-07-001-refactor-rebuild-the-machinery-plan.md`](docs/plans/2026-08-07-001-refactor-rebuild-the-machinery-plan.md) — hand-updating four surfaces is the
+mechanism that caused the drift above. The plan replaces it with one generated source behind a
+schema gate.
 
 Keep the method, replace the numbers. VORP baselines (QB12/RB41/WR47/TE12) are league-structural
 and only change if the league does. **Re-verify injuries by web search at rebuild time** — a
@@ -113,12 +126,25 @@ Git never saw it — git doesn't track empty directories — so this is filesyst
 
 ---
 
-## 6. Confirm the waiver day against a live cycle
+## 6. ~~Confirm the waiver day against a live cycle~~ — ✅ RESOLVED Aug 7, no waiting required
 
-`docs/league.md` records `waiver_day_of_week: 2` from the API. The older notes read that as
-Wednesday processing with a Tuesday report — **plausible but unconfirmed**, and Sleeper's day
-indexing isn't documented in what we pulled. One look during week 1 settles it. Until then the doc
-says "unconfirmed" and should keep saying so.
+The premise was wrong: this never needed a live week-1 cycle. `copy_from_league_id` chains the
+league to Briggsy's completed **2025** seasons, whose transaction history is public and already
+answers it.
+
+**Waivers process Wednesday ~03:10 AM ET.** Evidence: 111 completed waiver transactions across two
+2025 leagues; 101 cluster on Wednesday at 03:09–03:10 ET, week after week. Corroborated on a second
+league with the same `waiver_day_of_week: 2` but a *different* `waiver_type` and `waiver_clear_days`.
+The non-Wednesday stragglers are all off-cycle rolling clears ~1 day after a mid-week drop — that is
+`waiver_clear_days` working, not a competing pattern.
+
+**So the Tuesday-report / Wednesday-processing doctrine is correct.** Two caveats worth keeping:
+the *integer's label* stays ambiguous (both Sunday=0 and Monday=0 indexings fit the observed
+behavior, and no clean control league exists to break the tie) — but the **behavior** is what a
+Tuesday report depends on, and that is nailed. Also `waiver_budget: 100` is **inert**: FAAB only
+applies when `waiver_type` is FAAB, and this league is `0` (rolling priority).
+
+*Remaining work is a `docs/league.md` edit — it still says "unconfirmed." Covered by U8 in the plan.*
 
 ---
 

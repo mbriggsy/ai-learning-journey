@@ -43,13 +43,55 @@ def load_existing():
                  f"Move it aside and re-run -- do NOT hand-repair it mid-draft.")
 
 
-def main():
-    if len(sys.argv) < 2:
-        sys.exit("usage: merge_picks.py <draft_id> [--check]\n"
-                 "  real league draft_id: 1390509994847240192")
-    draft_id = sys.argv[1]
+def foreign_draft_ids(picks, draft_id):
+    """draft_ids present in `picks` that are not `draft_id`, plus a marker for picks carrying none.
 
-    before = {p["pick_no"]: p for p in load_existing()}
+    Every Sleeper pick object carries draft_id at the top level -- it is in the documented response
+    shape. A pick without one did not come from this API and cannot be vouched for.
+    """
+    seen = set()
+    for p in picks:
+        got = p.get("draft_id")
+        seen.add("<no draft_id>" if got is None else str(got))
+    return sorted(seen - {str(draft_id)})
+
+
+def refuse_contaminated(where, foreign, draft_id, n):
+    print("!" * 70)
+    print(f"!! {where} HOLDS PICKS FROM A DIFFERENT DRAFT -- REFUSING TO MERGE")
+    print(f"!! requested draft_id : {draft_id}")
+    print(f"!! also found         : {', '.join(foreign)}   ({n} picks total)")
+    print("!!")
+    print("!! This is the failure mode nothing else can catch. Union-on-pick_no does not care")
+    print("!! where a pick came from, so a spent mock's picks merge in cleanly: the pick_nos stay")
+    print("!! contiguous and unique, the engine's integrity gate passes, and it advises off a")
+    print("!! board where every elite player is already 'drafted'. Exit code 0. No warning.")
+    print("!!")
+    print(f"!! FIX: move {PICKS} aside and re-run. Do not hand-merge it.")
+    print("!" * 70)
+
+
+def main():
+    argv = sys.argv[1:]
+    check_only = "--check" in argv
+    argv = [a for a in argv if a != "--check"]
+    if not argv:
+        sys.exit("usage: merge_picks.py <draft_id> [--check]\n"
+                 "  --check merges and reports WITHOUT writing picks.json\n"
+                 "  real league draft_id: 1390509994847240192")
+    draft_id = argv[0]
+
+    existing = load_existing()
+
+    # --- contamination gate: refuse before the network call, so a poisoned file fails instantly.
+    # picks.json is gitignored, so a spent mock's picks sit there invisibly -- git status never
+    # shows them and no other guard in the system looks. Reproduced end to end on Aug 7.
+    foreign = foreign_draft_ids(existing, draft_id)
+    if foreign:
+        refuse_contaminated("picks.json", foreign, draft_id, len(existing))
+        return 2
+
+    before = {p["pick_no"]: p for p in existing}
     try:
         incoming = fetch(draft_id)
     except Exception as e:
@@ -58,13 +100,21 @@ def main():
     if not isinstance(incoming, list):
         sys.exit(f"unexpected response shape: {type(incoming).__name__}. picks.json left untouched.")
 
+    # Belt and braces: the endpoint is keyed on draft_id so this should be impossible. If it ever
+    # fires, the API surprised us and writing the file would be the wrong move.
+    foreign = foreign_draft_ids(incoming, draft_id)
+    if foreign:
+        refuse_contaminated("THE SLEEPER RESPONSE", foreign, draft_id, len(incoming))
+        return 2
+
     merged = dict(before)
     merged.update({p["pick_no"]: p for p in incoming})   # union; newest wins, nothing is dropped
     picks = [merged[k] for k in sorted(merged)]
 
-    os.makedirs(KIT, exist_ok=True)
-    with open(PICKS, "w", encoding="utf-8") as f:
-        json.dump(picks, f, ensure_ascii=False)
+    if not check_only:
+        os.makedirs(KIT, exist_ok=True)
+        with open(PICKS, "w", encoding="utf-8") as f:
+            json.dump(picks, f, ensure_ascii=False)
 
     # Same gate the engine enforces, reported here so a hole is visible BEFORE the clock matters.
     nos = [p["pick_no"] for p in picks]
@@ -73,7 +123,8 @@ def main():
     gaps = [i for i in range(1, n + 1) if i not in set(nos)]
 
     added = len(merged) - len(before)
-    print(f"picks.json: {len(picks)} picks, highest pick_no {n} ({added} new this fetch)")
+    where = "picks.json (DRY RUN, not written)" if check_only else "picks.json"
+    print(f"{where}: {len(picks)} picks, highest pick_no {n} ({added} new this fetch)")
     if picks:
         last = picks[-1]
         md = last.get("metadata") or {}

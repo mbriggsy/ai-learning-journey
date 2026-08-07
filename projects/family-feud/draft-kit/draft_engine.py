@@ -61,9 +61,19 @@ def norm(s):
     if parts: parts[0] = ALIASES.get(parts[0], parts[0])
     return "".join(parts)
 
+def surname(s):
+    """Last name token after norm()'s cleaning. Only used to spot near-misses in the unmatched
+    report below -- never for matching itself."""
+    s = unicodedata.normalize("NFKD", s).encode("ascii", "ignore").decode()
+    s = re.sub(r"\b(jr|sr|ii|iii|iv|v)\b\.?", "", s.lower())
+    parts = re.sub(r"[^a-z ]", "", s).split()
+    return parts[-1] if parts else ""
+
 board_by_name = {}
+board_by_surname = defaultdict(list)
 for p in BOARD:
     board_by_name[norm(p["name"])] = p
+    board_by_surname[surname(p["name"])].append(p)
 
 def slot_of(pick_no):
     r = (pick_no - 1) // TEAMS + 1
@@ -80,6 +90,7 @@ def my_picks():
 taken_keys = set()
 rosters = defaultdict(list)          # slot -> [(pos, name, pick_no)]
 seq = []                             # chronological (pick_no, slot, pos, name, board_r)
+unmatched = []                       # (pick_no, name, pos, [board suspects sharing a surname])
 for pk in sorted(PICKS, key=lambda x: x["pick_no"]):
     md = pk.get("metadata") or {}
     name = f"{md.get('first_name','')} {md.get('last_name','')}".strip()
@@ -89,6 +100,14 @@ for pk in sorted(PICKS, key=lambda x: x["pick_no"]):
     key = norm(name)
     taken_keys.add(key)
     b = board_by_name.get(key)
+    if b is None:
+        # A pick that does not resolve to a board row is usually harmless -- most drafted players
+        # simply are not on our 174. But it is ALSO the second, unguarded route to the failure the
+        # integrity gate exists to prevent: taken_keys is keyed on the SLEEPER spelling while
+        # availability filters on the BOARD spelling, so when those diverge for the same man he
+        # stays on BEST AVAILABLE after being drafted. pick_nos stay contiguous, so the gate below
+        # sees nothing wrong. Surfacing every miss is the only way that becomes visible.
+        unmatched.append((pk["pick_no"], name, pos, board_by_surname.get(surname(name), [])))
     rosters[slot].append((pos, name, pk["pick_no"]))
     seq.append((pk["pick_no"], slot, pos, name, b["r"] if b else None))
 
@@ -124,6 +143,46 @@ def needs(slot):
     return cnt, need
 
 # ---- output ----
+# Unmatched picks, reported BEFORE anything else. Most are simply not on our 174 and are noise;
+# the eye learns to skip them. So one is escalated only when it looks like a real matching failure
+# rather than a coincidence. Three filters, all required:
+#   1. same position  -- a WR pick cannot be a QB row
+#   2. board row NOT already claimed by some other pick. This is the load-bearing one. If the man
+#      is the same, his BOARD spelling never entered taken_keys (that set holds SLEEPER spellings),
+#      so he is still unclaimed. If he is a different man who was drafted correctly under his own
+#      name, he is claimed, and drops out. This alone kills Michael Wilson vs Garrett Wilson.
+#   3. first names share a 3-char prefix -- Kenny/Kenneth does, Michael/Garrett does not.
+# Crying wolf on a 120-second clock is its own failure mode, so the bar to interrupt is high.
+def suspect(cand, ps):
+    out = []
+    for b in cand:
+        if ps != "?" and b["pos"] != ps:
+            continue
+        if norm(b["name"]) in taken_keys:          # someone already matched this row
+            continue
+        out.append(b)
+    return out
+
+if unmatched:
+    def first_tok(s):
+        t = re.sub(r"[^a-z ]", "", unicodedata.normalize("NFKD", s)
+                   .encode("ascii", "ignore").decode().lower()).split()
+        return t[0] if t else ""
+    suspects = [(pn, nm, ps, [b for b in suspect(cand, ps)
+                              if first_tok(b["name"])[:3] == first_tok(nm)[:3]])
+                for pn, nm, ps, cand in unmatched]
+    real = [s for s in suspects if s[3]]
+    print(f"--- {len(unmatched)} pick(s) did not match the board "
+          f"({len(real)} suspicious) ---")
+    for pn, nm, ps, cand in suspects:
+        if cand:
+            hit = ", ".join(f"#{b['r']} {b['name']}" for b in cand[:2])
+            print(f"  ⚠ #{pn} {nm} {ps} — board has {hit}. If that is the same man, he is STILL")
+            print(f"      listed as available below and the advisory is wrong. Check before acting.")
+        else:
+            print(f"    #{pn} {nm} {ps} — not on our board (expected for most picks)")
+    print()
+
 print(f"=== BOARD STATE: {n} picks in · next is pick {next_pick_no}", end="")
 if on_clock_slot: print(f" ({sname(on_clock_slot)}{' = YOU' if on_clock_slot==MY_SLOT else ''})", end="")
 print(" ===")

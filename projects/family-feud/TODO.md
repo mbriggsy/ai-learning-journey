@@ -18,6 +18,18 @@ Assume no slack.
 
 ---
 
+## 0. Start with `/brief`
+
+Seven insight docs now exist and four landed on 2026-08-07. Three of them
+([`004`](docs/insights/004-name-similarity-could-not-separate-the-two-populations-at-any-threshold.md),
+[`006`](docs/insights/006-four-verification-steps-that-could-silently-do-nothing.md),
+[`007`](docs/insights/007-presence-is-not-health-the-third-instance-of-one-pattern.md)) directly
+constrain how the next three units get built — the normalizer, the schema gate, and the mule's
+health check each have a documented wrong answer that looks right. Read them before designing, not
+after debugging.
+
+---
+
 ## 1. Deepen the plan before building any of it
 
 `ce:plan` wrote the plan but its confidence-check-and-deepen phase never ran. Standing rule is

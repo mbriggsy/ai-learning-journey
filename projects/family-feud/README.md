@@ -24,28 +24,39 @@ docs/            all prose — start here
   ranking-methodology.md why the board ranks what it ranks
   live-board-plan.md     the next feature: a self-updating wall board
   nightly-feud.md        the newsletter — what works, what has never run
+  insights/              hard-won lessons, one per file. Read before debugging
+                         something that smells familiar.
+  plans/                 implementation plans. The machinery rebuild lives here.
 
 draft-kit/       the draft-day arsenal (run the engine from in here)
   draft_engine.py                    players_data.json
   family-feud-draft-board.html       family-feud-cheat-sheet.pdf
-  draft_rankings_data_2026-08-05.json
+  draft_rankings_data_2026-08-05.json   ⛔ drifted — see TODO, do not carry forward
 
 newsletter/      The Nightly Feud machinery + the mule
-scripts/         install-mule.ps1 — registers and verifies the hourly task
+scripts/         install-mule.ps1  — registers and verifies the hourly task
+                 merge_picks.py    — fetches /picks and merges into picks.json;
+                                     refuses picks from a different draft
+tests/           46 tests: python -m unittest discover -s tests  (run from the root)
 logo/            team art. deez-nuts/ is Briggsy's; hunter-maker/ is Hunter's.
 ```
 
 ## Running the engine
 
 ```bash
+python3 scripts/merge_picks.py <draft_id>            # from the repo ROOT — refreshes picks.json
 cd draft-kit
-python3 draft_engine.py <briggsy_slot> [teams=8] [rounds=16]
+python3 draft_engine.py <briggsy_slot> [teams=8] [rounds=16] [draft_id]
 ```
 
-It reads `players_data.json` plus a `picks.json` you maintain during the draft (and an optional
-`slot_names.json`), all by literal name **from the current directory** — so run it from inside
-`draft-kit/`. The merge loop and cadence rules are in
+Two directories, deliberately: the merge script runs from the repo root, the engine from
+`draft-kit/` (it opens `players_data.json`, `picks.json` and an optional `slot_names.json` by
+literal name from the current directory). The merge loop and cadence rules are in
 [`docs/draft-day-runbook.md`](docs/draft-day-runbook.md); do not improvise them.
+
+**Pass the `draft_id` as argument 4.** It is optional only so the engine still runs without it —
+supply it and the engine refuses a `picks.json` belonging to a different draft, which is otherwise
+invisible (`picks.json` is gitignored, so `git status` never shows a spent mock sitting there).
 
 **The engine refuses to guess.** It derives board state from `max(pick_no)` and hard-exits on an
 interior gap or a duplicate. If it screams, re-fetch and re-merge — never advise off a picks file

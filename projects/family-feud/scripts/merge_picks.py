@@ -32,15 +32,30 @@ def fetch(draft_id):
         return json.loads(r.read().decode("utf-8"))
 
 
+BAD_SHAPE = ("picks.json exists but is not a Sleeper picks array ({why}).\n"
+             "Move it aside and re-run -- do NOT hand-repair it mid-draft.")
+
+
 def load_existing():
     if not os.path.exists(PICKS):
         return []
     try:
         with open(PICKS, encoding="utf-8") as f:   # cp1252 default would crash on accented names
-            return json.load(f)
+            data = json.load(f)
     except (json.JSONDecodeError, ValueError) as e:
         sys.exit(f"picks.json exists but is not valid JSON ({e}).\n"
                  f"Move it aside and re-run -- do NOT hand-repair it mid-draft.")
+
+    # Shape, not just syntax. `curl` on a bogus draft id returns the literal string `null`, and the
+    # runbook pushes curl as the reading tool -- so a null file is a live draft-day scenario, and it
+    # used to reach the guard and traceback before a single draft_id was read. A hand-repaired file
+    # can also land as a bare object. Fail with the message that was written for this moment.
+    if not isinstance(data, list):
+        sys.exit(BAD_SHAPE.format(why=f"top level is {type(data).__name__}, expected a list"))
+    bad = next((i for i, p in enumerate(data) if not isinstance(p, dict)), None)
+    if bad is not None:
+        sys.exit(BAD_SHAPE.format(why=f"entry {bad} is {type(data[bad]).__name__}, expected an object"))
+    return data
 
 
 def foreign_draft_ids(picks, draft_id):
@@ -72,14 +87,27 @@ def refuse_contaminated(where, foreign, draft_id, n):
 
 
 def main():
+    USAGE = ("usage: merge_picks.py <draft_id> [--check]\n"
+             "  --check merges and reports WITHOUT writing picks.json\n"
+             "  real league draft_id: 1390509994847240192")
     argv = sys.argv[1:]
     check_only = "--check" in argv
+    # Reject unknown flags rather than ignoring them. Swallowing `--dry-run` or a mistyped `-check`
+    # and then WRITING is the same belief-mismatch that made the fake --check dangerous: the
+    # operator thinks nothing happened to disk and is wrong.
+    unknown = [a for a in argv if a.startswith("-") and a != "--check"]
+    if unknown:
+        sys.exit(f"unrecognised option(s): {' '.join(unknown)}\n"
+                 f"Refusing to run rather than guess -- did you mean --check?\n{USAGE}")
     argv = [a for a in argv if a != "--check"]
     if not argv:
-        sys.exit("usage: merge_picks.py <draft_id> [--check]\n"
-                 "  --check merges and reports WITHOUT writing picks.json\n"
-                 "  real league draft_id: 1390509994847240192")
-    draft_id = argv[0]
+        sys.exit(USAGE)
+    # A pasted id often arrives with a trailing newline or slash. Comparing that raw against the
+    # draft_id on each pick fired the contamination alarm on a perfectly clean file, and printed
+    # two ids that look identical because the difference is invisible. Worse than useless.
+    draft_id = argv[0].strip().rstrip("/")
+    if not draft_id.isdigit():
+        sys.exit(f"draft_id {draft_id!r} is not numeric -- check what you pasted.\n{USAGE}")
 
     existing = load_existing()
 
@@ -142,7 +170,13 @@ def main():
         print("!" * 62)
         return 1
 
-    print("  no gaps, no duplicates -- engine will accept this file")
+    if check_only:
+        # Never sign off on disk state we did not create. "engine will accept this file" read as
+        # "you are clear to run the engine" -- while the engine would go on reading the OLD file.
+        print("  no gaps, no duplicates -- but NOTHING WAS WRITTEN (--check).")
+        print("  picks.json on disk is unchanged; the engine will read whatever was already there.")
+    else:
+        print("  no gaps, no duplicates -- engine will accept this file")
     return 0
 
 

@@ -61,19 +61,11 @@ def norm(s):
     if parts: parts[0] = ALIASES.get(parts[0], parts[0])
     return "".join(parts)
 
-def surname(s):
-    """Last name token after norm()'s cleaning. Only used to spot near-misses in the unmatched
-    report below -- never for matching itself."""
-    s = unicodedata.normalize("NFKD", s).encode("ascii", "ignore").decode()
-    s = re.sub(r"\b(jr|sr|ii|iii|iv|v)\b\.?", "", s.lower())
-    parts = re.sub(r"[^a-z ]", "", s).split()
-    return parts[-1] if parts else ""
-
 board_by_name = {}
-board_by_surname = defaultdict(list)
+board_by_slot = defaultdict(list)     # (team, pos) -> board rows; the unmatched-pick index
 for p in BOARD:
     board_by_name[norm(p["name"])] = p
-    board_by_surname[surname(p["name"])].append(p)
+    board_by_slot[(p.get("team"), p.get("pos"))].append(p)
 
 def slot_of(pick_no):
     r = (pick_no - 1) // TEAMS + 1
@@ -107,7 +99,7 @@ for pk in sorted(PICKS, key=lambda x: x["pick_no"]):
         # availability filters on the BOARD spelling, so when those diverge for the same man he
         # stays on BEST AVAILABLE after being drafted. pick_nos stay contiguous, so the gate below
         # sees nothing wrong. Surfacing every miss is the only way that becomes visible.
-        unmatched.append((pk["pick_no"], name, pos, board_by_surname.get(surname(name), [])))
+        unmatched.append((pk["pick_no"], name, pos, md.get("team")))
     rosters[slot].append((pos, name, pk["pick_no"]))
     seq.append((pk["pick_no"], slot, pos, name, b["r"] if b else None))
 
@@ -143,44 +135,53 @@ def needs(slot):
     return cnt, need
 
 # ---- output ----
-# Unmatched picks, reported BEFORE anything else. Most are simply not on our 174 and are noise;
-# the eye learns to skip them. So one is escalated only when it looks like a real matching failure
-# rather than a coincidence. Three filters, all required:
-#   1. same position  -- a WR pick cannot be a QB row
-#   2. board row NOT already claimed by some other pick. This is the load-bearing one. If the man
-#      is the same, his BOARD spelling never entered taken_keys (that set holds SLEEPER spellings),
-#      so he is still unclaimed. If he is a different man who was drafted correctly under his own
-#      name, he is claimed, and drops out. This alone kills Michael Wilson vs Garrett Wilson.
-#   3. first names share a 3-char prefix -- Kenny/Kenneth does, Michael/Garrett does not.
-# Crying wolf on a 120-second clock is its own failure mode, so the bar to interrupt is high.
-def suspect(cand, ps):
-    out = []
-    for b in cand:
-        if ps != "?" and b["pos"] != ps:
-            continue
-        if norm(b["name"]) in taken_keys:          # someone already matched this row
-            continue
-        out.append(b)
-    return out
+# Unmatched picks, reported BEFORE anything else. Most are simply not on our 174 and are noise.
+# One is escalated when an UNCLAIMED board row shares the pick's (team, position).
+#
+# Why (team, pos) and not name similarity -- this was measured on the real board, not assumed:
+#   most similar pair of DIFFERENT board players  0.800  Javonte Williams vs Jameson Williams
+#   least similar pair of SAME-man renderings     0.370  Hollywood Brown  vs Marquise Brown
+# The floors are inverted, so NO similarity threshold separates them. A rendered name is the one
+# field that drifts -- nicknames (CeeDee/Cedarian, Puka/Kealoha), suffixes, compound surnames, and
+# every spelling of a team defense. Sleeper supplies team and position on every pick and neither
+# drifts that way. Measured against the 120-pick lab feed: 0 false candidates on 4 unmatched picks.
+#
+# "Already claimed" is the second half: if the man is the same, his BOARD spelling never entered
+# taken_keys (that set holds SLEEPER spellings), so his row is still unclaimed. A different man
+# drafted correctly under his own name IS claimed and drops out.
+def tokens(s):
+    """Cleaned name tokens -- {first, last}. Nicknames replace the FIRST name and leave the
+    surname (Hollywood/Marquise Brown); re-renderings change the SURNAME and leave the first
+    (Jaxon Smith-Njigba / Jaxon Njigba). Requiring either one to survive keeps both, while
+    excluding two different men who merely share a team and position."""
+    s = unicodedata.normalize("NFKD", str(s)).encode("ascii", "ignore").decode()
+    s = re.sub(r"\b(jr|sr|ii|iii|iv|v)\b\.?", "", s.lower())
+    t = re.sub(r"[^a-z ]", "", s).split()
+    return {t[0], t[-1]} if t else set()
 
 if unmatched:
-    def first_tok(s):
-        t = re.sub(r"[^a-z ]", "", unicodedata.normalize("NFKD", s)
-                   .encode("ascii", "ignore").decode().lower()).split()
-        return t[0] if t else ""
-    suspects = [(pn, nm, ps, [b for b in suspect(cand, ps)
-                              if first_tok(b["name"])[:3] == first_tok(nm)[:3]])
-                for pn, nm, ps, cand in unmatched]
-    real = [s for s in suspects if s[3]]
-    print(f"--- {len(unmatched)} pick(s) did not match the board "
-          f"({len(real)} suspicious) ---")
-    for pn, nm, ps, cand in suspects:
-        if cand:
-            hit = ", ".join(f"#{b['r']} {b['name']}" for b in cand[:2])
-            print(f"  ⚠ #{pn} {nm} {ps} — board has {hit}. If that is the same man, he is STILL")
-            print(f"      listed as available below and the advisory is wrong. Check before acting.")
-        else:
-            print(f"    #{pn} {nm} {ps} — not on our board (expected for most picks)")
+    scored = []
+    for pn, nm, ps, tm in unmatched:
+        want = tokens(nm)
+        cand = [b for b in board_by_slot.get((tm, ps), [])
+                if norm(b.get("name", "")) not in taken_keys
+                and tokens(b.get("name", "")) & want]
+        scored.append((pn, nm, ps, tm, cand))
+    hot = [s for s in scored if s[4]]
+    cold = [s for s in scored if not s[4]]
+
+    print(f"--- {len(unmatched)} pick(s) did not match the board ---")
+    # Escalations first. The block is cumulative and grows all draft; a late warning buried at
+    # line 13 of 14, directly above the board state, is a warning nobody reads.
+    for pn, nm, ps, tm, cand in hot:
+        who = ", ".join(f"#{b.get('r')} {b.get('name')}" for b in cand[:3])
+        more = f" (+{len(cand) - 3} more)" if len(cand) > 3 else ""
+        print(f"  >> #{pn} {nm} ({ps}/{tm}) did not match, but {who}{more} is on {tm} at {ps}")
+        print(f"     and is UNCLAIMED. If that is the same man he is STILL being recommended.")
+    for pn, nm, ps, tm, cand in cold:
+        print(f"     #{pn} {nm} ({ps}/{tm}) — not on our board")
+    if not hot:
+        print("     no unclaimed board row shares a team and position with any of them.")
     print()
 
 print(f"=== BOARD STATE: {n} picks in · next is pick {next_pick_no}", end="")

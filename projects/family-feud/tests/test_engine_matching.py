@@ -40,15 +40,17 @@ def pick(no, first, last, pos, team, slot=None):
 
 
 class EngineCase(unittest.TestCase):
-    def run_engine(self, board_obj, picks, slot=3, teams=8, rounds=16):
+    def run_engine(self, board_obj, picks, slot=3, teams=8, rounds=16, draft_id=None):
         with tempfile.TemporaryDirectory() as d:
             with open(os.path.join(d, "players_data.json"), "w", encoding="utf-8") as f:
                 json.dump(board_obj, f, ensure_ascii=False)
             with open(os.path.join(d, "picks.json"), "w", encoding="utf-8") as f:
                 json.dump(picks, f, ensure_ascii=False)
             env = dict(os.environ, PYTHONUTF8="1", PYTHONIOENCODING="utf-8")
-            p = subprocess.run([sys.executable, ENGINE, str(slot), str(teams), str(rounds)],
-                               cwd=d, capture_output=True, text=True, encoding="utf-8", env=env)
+            argv = [sys.executable, ENGINE, str(slot), str(teams), str(rounds)]
+            if draft_id is not None:
+                argv.append(str(draft_id))
+            p = subprocess.run(argv, cwd=d, capture_output=True, text=True, encoding="utf-8", env=env)
             return p.returncode, (p.stdout or "") + (p.stderr or "")
 
     def real_board(self):
@@ -208,6 +210,80 @@ class TestReportLegibility(EngineCase):
         b = board([row(1, "Joseph Burrow", "QB", "CIN", 1)])
         _, out = self.run_engine(b, [pick(1, "Joe", "Burrow", "QB", "CIN")])
         self.assertNotIn("⚠", self.warning_block(out), "escalation must not reuse the CLIFF glyph")
+
+
+class TestDraftIdAwareness(EngineCase):
+    """REVIEW FINDING: the contamination guard lives only in the WRITER. merge_picks.py refuses
+    and exits 2 -- then leaves the poisoned file on disk, and the engine reads it with no draft_id
+    awareness at all and produces a confident exit-0 advisory. Exit 2 is consumed by nothing; it
+    only ever reaches a human eye, under a 120-second clock, past a wall of '!'.
+
+    This project already duplicates the gaps/dupes gate in BOTH writer and reader. The draft_id
+    gate was the odd one out."""
+
+    def board3(self):
+        return board([row(i, f"P{i} L{i}", "RB", "KC", i) for i in range(1, 6)])
+
+    def test_draft_id_is_stated_so_a_wrong_one_is_visible(self):
+        picks = [pick(1, "A", "B", "RB", "KC")]
+        picks[0]["draft_id"] = "1390923383440424960"
+        _, out = self.run_engine(self.board3(), picks)
+        self.assertIn("1390923383440424960", out, "the advisory must say which draft it is advising off")
+
+    def test_mixed_draft_ids_are_refused(self):
+        """Unambiguous corruption -- no legitimate picks.json holds two drafts."""
+        a, b = pick(1, "A", "B", "RB", "KC"), pick(2, "C", "D", "RB", "KC")
+        a["draft_id"], b["draft_id"] = "111", "222"
+        code, out = self.run_engine(self.board3(), [a, b])
+        self.assertEqual(code, 1)
+        self.assertIn("111", out)
+        self.assertIn("222", out)
+
+    def test_expected_draft_id_mismatch_is_refused(self):
+        picks = [pick(1, "A", "B", "RB", "KC")]
+        picks[0]["draft_id"] = "1390923383440424960"
+        code, out = self.run_engine(self.board3(), picks, draft_id="1390509994847240192")
+        self.assertEqual(code, 1, f"a stale mock's picks must not advise a live draft:\n{out}")
+        self.assertIn("1390509994847240192", out)
+
+    def test_expected_draft_id_match_runs_clean(self):
+        picks = [pick(1, "A", "B", "RB", "KC")]
+        picks[0]["draft_id"] = "1390509994847240192"
+        code, _ = self.run_engine(self.board3(), picks, draft_id="1390509994847240192")
+        self.assertEqual(code, 0)
+
+    def test_empty_picks_with_expected_id_still_runs(self):
+        code, _ = self.run_engine(self.real_board(), [], draft_id="1390509994847240192")
+        self.assertEqual(code, 0, "nothing drafted yet is the normal pre-draft state")
+
+
+class TestEscalationTellsYouWhereToLook(EngineCase):
+    """REVIEW FINDING: the alarm said 'he is STILL listed as available below', but 'below' is
+    BEST AVAILABLE (top 12) plus the first 5 names of the two shallowest tiers per position. A
+    suspect outside that window was named and then printed nowhere -- so the operator burns clock
+    hunting, finds nothing, and concludes the warning is broken. That disarms the next one."""
+
+    def test_says_shown_when_the_suspect_appears_below(self):
+        b = self.real_board()
+        chase = next(p for p in b["players"] if "Chase" in p["name"])
+        _, out = self.run_engine(b, [pick(1, "JaMarr", "Chase-Higgins", chase["pos"], chase["team"])])
+        block = self.warning_block(out)
+        self.assertIn(chase["name"], out.split("BEST AVAILABLE")[1], "precondition: he is shown")
+        self.assertIn("below", block.lower())
+        self.assertNotIn("not shown", block.lower())
+
+    def test_says_not_shown_when_the_suspect_is_too_deep(self):
+        """Share the SURNAME so the token rule surfaces the row, but diverge the first name so
+        norm() cannot reconcile it -- then assert the row genuinely is not printed anywhere below."""
+        b = self.real_board()
+        deep = max((p for p in b["players"] if p["pos"] == "K"), key=lambda p: p["r"])
+        surname = deep["name"].split()[-1]
+        _, out = self.run_engine(b, [pick(1, "Zzquentin", surname, "K", deep["team"])])
+        block, below = self.warning_block(out), out.split("BOARD STATE", 1)[1]
+        self.assertIn(deep["name"], block, "precondition: the deep row must be surfaced as a suspect")
+        self.assertNotIn(deep["name"], below, "precondition: and must NOT appear anywhere below")
+        self.assertIn("not shown", block.lower(),
+                      f"must not send the operator hunting for a line that is not printed:\n{block}")
 
 
 class TestNoRegression(EngineCase):

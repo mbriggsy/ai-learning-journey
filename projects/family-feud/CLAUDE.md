@@ -13,6 +13,7 @@ Draft ~Aug 29, 2026. Mission: beat Hunter. [`README.md`](README.md) is the map.
 | [`docs/ranking-methodology.md`](docs/ranking-methodology.md) | Why the board ranks what it ranks |
 | [`docs/live-board-plan.md`](docs/live-board-plan.md) | The live auto-updating board (next feature) |
 | [`docs/nightly-feud.md`](docs/nightly-feud.md) | The newsletter — and which half of it has never run |
+| [`docs/insights/`](docs/insights/) | Hard-won lessons, one per file. Read before debugging something that smells familiar. |
 | `TODO.md` | What's next, ranked |
 
 **Precedence:** the runbook's instruction sections are current doctrine; its changelog is history

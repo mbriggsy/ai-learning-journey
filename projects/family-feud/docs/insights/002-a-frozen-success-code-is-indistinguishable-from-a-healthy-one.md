@@ -56,3 +56,11 @@ claims, and most monitoring surfaces only answer the first while appearing to an
   IDE run configs, deploy hooks — a move breaks them and nothing announces it
 - Cache/ETL pipelines that "succeed" over an empty input set
 - Heartbeats derived from process liveness rather than from work completed
+
+---
+
+**This was the first of three.** Two more instances of the identical shape turned up on 2026-08-07
+— `NumberOfMissedRuns` reset by the installer's own `-Force`, and the mule reporting a feed `ok`
+because it only checks `size > 50`. See
+[`007`](007-presence-is-not-health-the-third-instance-of-one-pattern.md), which generalizes this
+from a war story into a rule for writing any health check in this project.

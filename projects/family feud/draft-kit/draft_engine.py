@@ -9,15 +9,31 @@ Output: compact war-room advisory: board state, rosters/needs, runs,
 import json, re, sys, unicodedata
 from collections import defaultdict, Counter
 
+# --- Windows encoding guard. Do not remove; this file is draft-day critical. ---
+# Python on Windows defaults BOTH file reads and stdout to the locale codepage (cp1252 on
+# Briggsy's laptop, Python 3.14). Two consequences, each fatal and neither visible under
+# Cowork's Linux sandbox where this engine was written:
+#   1. players_data.json is UTF-8 and carries emoji badge icons, so a bare open() dies with
+#      UnicodeDecodeError on byte 0x8f before a single rank is read.
+#   2. this script prints the U+26A0 cliff warning, which cp1252 cannot ENCODE, so even a
+#      clean load would die on the first tier-cliff line.
+# Every open() below therefore passes encoding="utf-8" explicitly, and stdout is forced to
+# UTF-8 here. Python 3.15 makes UTF-8 the default (PEP 686) and will render this redundant,
+# not wrong.
+try:
+    sys.stdout.reconfigure(encoding="utf-8")
+except Exception:  # non-reconfigurable stream (piped/redirected oddly) — glyphs degrade, no crash
+    pass
+
 MY_SLOT = int(sys.argv[1]) if len(sys.argv) > 1 else 3
 TEAMS   = int(sys.argv[2]) if len(sys.argv) > 2 else 8
 ROUNDS  = int(sys.argv[3]) if len(sys.argv) > 3 else 16
 STARTERS = {"QB":1, "RB":2, "WR":2, "TE":1, "K":1, "DEF":1}  # + 2 FLEX
 
-BOARD = json.load(open("players_data.json"))["players"]
-PICKS = json.load(open("picks.json"))
+BOARD = json.load(open("players_data.json", encoding="utf-8"))["players"]
+PICKS = json.load(open("picks.json", encoding="utf-8"))
 try:  # optional: {"2": "DIego", "3": "Hunter", ...} from draft metadata.slot_name_<N>
-    SLOT_NAMES = {int(k): str(v) for k, v in json.load(open("slot_names.json")).items()}
+    SLOT_NAMES = {int(k): str(v) for k, v in json.load(open("slot_names.json", encoding="utf-8")).items()}
 except Exception:
     SLOT_NAMES = {}
 def sname(s):

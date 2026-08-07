@@ -2511,7 +2511,7 @@
   },
   {
    "rank": 6,
-   "team": "Jacksonville Jaguars"
+   "team": "Minnesota Vikings"
   },
   {
    "rank": 7,
@@ -2519,12 +2519,12 @@
   },
   {
    "rank": 8,
-   "team": "Minnesota Vikings"
+   "team": "Pittsburgh Steelers"
   }
  ],
  "strategy": {
   "rules": [
-   "First four picks: RB/WR (or elite TE) only. Allen/Lamar are the lone QB exception, and only if one slides to Round 3+.",
+   "First four picks: RB/WR (or elite TE) only. Allen/Lamar are the lone QB exception — and only PAST pick 24. Round 3 (picks 17-24) is their fair VBD price, not a steal; a six-spot slide is retail with a coupon.",
    "6 of 8 make the playoffs — regular-season safety is overrated. Draft ceilings. Build a team that peaks in December.",
    "Two FLEX spots + full PPR = you start 4-5 pass-catchers weekly. Hammer WR depth in rounds 4-8.",
    "QB in rounds 6-9. The Tier-3 QBs (Caleb, Dak, Herbert) are basically free. Never roster 2 QBs before round 14, if at all.",
@@ -2576,6 +2576,6 @@
     "note": "The turn: two picks back-to-back. Pair a WR1 + RB1 (e.g., Jefferson + Cook), then you pick again at 24-25 — perfect for McBride/Bowers or an Allen/Lamar heist."
    }
   ],
-  "kickers": "No kicker board needed in August. Final round: take the kicker attached to the best offense still available — early consensus says Cowboys, Chargers, Texans, Ravens, Bears kickers lead the pack. I'll hand you the exact name live on draft day."
+  "kickers": "Kickers are ON the board now — 10 of them, tiered (added by the Aug 5 K/DEF patch). Elite trio: Aubrey (DAL), Fairbairn (HOU), Dicker (LAC). Take from the best tier still standing in the final two rounds; the engine's cliff display shows the run coming. Both bots and humans hoard skill players late, so Tier-1 kickers routinely survive past pick 110. Re-verify the names on draft day — kicker situations move in camp."
  }
 }

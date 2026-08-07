@@ -25,9 +25,20 @@ try:
 except Exception:  # non-reconfigurable stream (piped/redirected oddly) — glyphs degrade, no crash
     pass
 
-MY_SLOT = int(sys.argv[1]) if len(sys.argv) > 1 else 3
+# my_slot is REQUIRED and has no safe default. It decides which picks are ours, how far away our
+# turn is, and therefore every line of advice below. It used to default to 3, which meant running
+# the engine with no arguments produced a complete, confident, WRONG advisory -- indistinguishable
+# from a correct one. The real draft's draft_order is null until near go time, so "I forgot to pass
+# the slot" is a live draft-day scenario, not a hypothetical. Fail loudly instead.
+if len(sys.argv) < 2:
+    sys.exit("usage: draft_engine.py <my_slot> [teams=8] [rounds=16]\n"
+             "  my_slot is REQUIRED -- read it from the draft's draft_order for user_id\n"
+             "  1390750540631150592. Guessing it produces a confident wrong advisory.")
+MY_SLOT = int(sys.argv[1])
 TEAMS   = int(sys.argv[2]) if len(sys.argv) > 2 else 8
 ROUNDS  = int(sys.argv[3]) if len(sys.argv) > 3 else 16
+if not 1 <= MY_SLOT <= TEAMS:
+    sys.exit(f"my_slot {MY_SLOT} is outside 1..{TEAMS} -- check draft_order before advising.")
 STARTERS = {"QB":1, "RB":2, "WR":2, "TE":1, "K":1, "DEF":1}  # + 2 FLEX
 
 BOARD = json.load(open("players_data.json", encoding="utf-8"))["players"]

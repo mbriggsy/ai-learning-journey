@@ -5,7 +5,7 @@
 
 ## The sequence
 1. ~~Mock #3 first~~ — **✅ PASSED Aug 6, a day ahead of schedule** (executor mode per runbook, now v3.2): 15/15 manual picks, zero clock misses, zero AUTO-PICK flips, roster VORP 1225.8. Full recap in [`draft-day-runbook.md`](draft-day-runbook.md)'s changelog. Pass criteria RETIRED. Note: the lab room `1390923383440424960` is **SPENT** (ran to completion) — any future mock needs a fresh 2-click room (Sleeper remembers settings). The spent room's `/picks` endpoint still serves all 120 picks, which makes it a perfect **static test feed** for the board build.
-2. **NEXT SESSION: build the live board** — step zero is the CORS probe.
+2. **NEXT SESSION: build the live board.** Step zero is CLEARED as of Aug 7 (below) — there is nothing left to probe, start writing the poll loop.
 3. Real draft ~Aug 29 gets both: a lethal executor (proven) AND a self-updating wall display.
 
 ## Step zero — CLEARED 2026-08-07, no probe required
@@ -31,7 +31,7 @@ sends. Same header on `/draft/<id>/picks`. A browser can fetch this API from a l
 
 **Gate 2 — the artifact container's CSP: no longer applies.** That gate existed because the board
 was a Claude desktop *artifact*, sandboxed. Here the board is a local HTML file opened in Chrome —
-the same `file://` pattern as the newsletter bookmark. There is no artifact CSP in the path.
+the same `file://` pattern as the newsletter page. There is no artifact CSP in the path.
 
 **→ Option A is GO.** Client-side polling, zero backend, genuinely automagic.
 

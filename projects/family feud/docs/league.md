@@ -50,9 +50,15 @@ OUT parks for free, a merely doubtful one does not.
 | Passing | 0.04/yd · **4** per TD · −1 INT · 2 per 2PT |
 | Rushing / Receiving | 0.1/yd · **6** per TD · 2 per 2PT |
 | Fumbles | −2 lost (0 for the fumble itself) |
-| **Long-TD bonuses** | **+1** at 40+ yds, **+2** at 50+ yds — on pass, rush AND receiving TDs |
+| **Long-TD bonuses** | **+1** at 40+ yds and **+2** at 50+ yds — on pass, rush AND receiving TDs. **They STACK.** |
 
-The long-TD bonuses are real and easy to miss in the raw JSON: they are keyed `pass_td_40p`,
+**Stacking matters.** Sleeper's support documentation states the 40+ and 50+ TD bonuses "will
+stack," so a 55-yard receiving TD scores 6 + 1 + 2 = **9 points**, not 8. (Yardage bonuses do
+*not* stack — only the highest tier applies — but this league has none, so the distinction never
+comes up here.) A long-TD threat is therefore worth slightly more than the raw table suggests,
+which cuts the same direction as ceiling-over-floor.
+
+The bonuses are also easy to miss in the raw JSON: they are keyed `pass_td_40p`,
 `rush_td_50p`, `rec_td_40p` and so on — the word "bonus" appears nowhere in the key names.
 They are part of the exact scoring the VORP projections were built against, and they quietly
 reward the boom archetype that [`ranking-methodology.md`](ranking-methodology.md) argues for.

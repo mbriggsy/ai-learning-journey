@@ -53,11 +53,15 @@ deleted script it *also* read 0 — frozen at the last good pre-move run. **Alwa
 timestamp** in `mule_status.json` (or the log's last line) against the clock. That is the only
 signal that distinguishes healthy from dead.
 
-## The bookmark
+## Opening the paper
 
 ```
 file:///C:/Users/brigg/ai-learning-journey/projects/family-feud/newsletter/family-feud-newsletter.html
 ```
+
+**No bookmark required** — Briggsy's call, Aug 7. Chrome's URL autocomplete gets there after the
+first visit, and double-clicking the file in Explorer works just as well. Recorded here so the
+path is written down somewhere, not because anything depends on it.
 
 Right now that page is the Preview Edition — the unmodified template, with its ☀/☾ theme toggle.
 It will stay that way until the build half exists.
@@ -66,7 +70,7 @@ It will stay that way until the build half exists.
 
 ```
 newsletter/
-  family-feud-newsletter.html   <- the live edition (bookmark this)
+  family-feud-newsletter.html   <- the live edition (this is the page you open)
   newsletter-template.html      <- the design the build clones
   feud_mule.ps1                 <- the data mule (Task Scheduler runs this hourly)
   archive/                      <- dated back issues        (empty; nothing built yet)

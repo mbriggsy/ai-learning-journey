@@ -54,8 +54,12 @@ already-drafted players on the available list.
 
 ## State of play
 
-**Working, verified 2026-08-07:** the engine (all glyphs, exit 0), the board, the mule
-(10 sources, 0 failed), curl to Sleeper, executor mode.
+**Verified on this machine 2026-08-07:** the engine (all glyphs, exit 0), the board, the mule
+(10 sources, 0 failed), curl to Sleeper.
+
+**Proven, but not since the migration:** executor mode. Its evidence is Mock #3 on Aug 6, run
+under Cowork — 15/15 manual picks, zero clock misses. The browser-driving half has **not** been
+exercised in this environment. Treat it as unproven here until a mock says otherwise.
 
 **Not working:** The Nightly Feud's build half has never run once — see
 [`docs/nightly-feud.md`](docs/nightly-feud.md). The live auto-updating board isn't built yet,

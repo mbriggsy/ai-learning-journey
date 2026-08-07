@@ -7,9 +7,14 @@
 $ErrorActionPreference = "Continue"
 try { [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12 } catch {}
 
-$base  = "C:\Users\brigg\Family Feud"
-$inbox = Join-Path $base "Newsletter\data\inbox"
-$logf  = Join-Path $base "Newsletter\data\mule_log.txt"
+# Locate ourselves instead of hardcoding. The Aug 7 move out of C:\Users\brigg\Family Feud
+# silently killed this script -- $base pointed at a folder that no longer existed, so the
+# hourly task kept "succeeding" into a path Windows recreated from nothing. Deriving from
+# $PSScriptRoot means the mule survives any future move with zero edits.
+# (The fallback covers being dot-sourced or run via -Command, where $PSScriptRoot is empty.)
+$here  = if ($PSScriptRoot) { $PSScriptRoot } else { Split-Path -Parent $MyInvocation.MyCommand.Path }
+$inbox = Join-Path $here "data\inbox"
+$logf  = Join-Path $here "data\mule_log.txt"
 New-Item -ItemType Directory -Force -Path $inbox | Out-Null
 
 $stamp   = Get-Date -Format "yyyy-MM-dd HH:mm:ss"

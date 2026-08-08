@@ -11,12 +11,17 @@ plan  ✅ → deepen  ✅ → work  ◀ YOU ARE HERE → ultramode ⬜ (at the P
 
 **Units shipped:** U1, U2 (Phase 0 gates) · **U9** (draft-state watcher) · **U3** (one normalizer,
 proven equal in two runtimes) · **U14** (`sleeperId` frozen — 174 ids, 0 unresolved) ·
-**U4** (the board schema gate, born red on 12 real findings, 2026-08-08).
+**U4** (board schema gate, born red on 12 real findings) · **U5** (scoring as code + the empirical
+curve; oracle exact at 2469/2469) — the last two on 2026-08-08.
 
-**Next action:
+**Next action: **U6, the generator** —
 [`docs/plans/2026-08-07-001-refactor-rebuild-the-machinery-plan.md`](docs/plans/2026-08-07-001-refactor-rebuild-the-machinery-plan.md)
-at **U5 (VORP pipeline)**, then U6 — the generator that regenerates every surface U4 currently
-reports as drifted.**
+(§ U6). It is the unit that FIXES what U4 currently reports: regenerate `players_data.json`, the
+HTML and the PDF from one source, stamp the frozen ids onto the rows, render `meta.vbd`'s numbers
+from data instead of literals, and put all 174 rows in the cheat sheet instead of 150.
+**Write-all-or-write-none** — stage every surface, run the gate, and emit only on pass; the plan
+forecasts its own crash (a badge glyph Helvetica cannot encode kills the PDF *after* the HTML is
+written, leaving new HTML + old PDF + a green gate + a non-zero exit nobody reads).**
 
 **The planning phase is CLOSED.** The plan was deepened 2026-08-07 and does not get another pass.
 If something in it turns out to be wrong, fix it inside `/ce-work` — do not reopen a deepening

@@ -2,7 +2,10 @@
 
 *Why the board says what it says. Companion to [`../draft-kit/players_data.json`](../draft-kit/players_data.json) (the board itself), [`draft-day-runbook.md`](draft-day-runbook.md) (draft-day operations), [`league.md`](league.md) (the rules all of this is bent around), and [`../draft-kit/family-feud-draft-board.html`](../draft-kit/family-feud-draft-board.html).*
 
-*Rankings snapshot: August 5, 2026. The ranks expire — the method doesn't. Read this as many times as you want, Briggsy; the numbers get refreshed before draft day.*
+<!-- BEGIN GENERATED snapshot-date — rewritten by scripts/build_board.py. Do not hand-edit. -->
+*Rankings snapshot: August 8, 2026.*
+<!-- END GENERATED snapshot-date -->
+*The ranks expire — the method doesn't. Read this as many times as you want, Briggsy; the numbers get refreshed before draft day.*
 
 ---
 
@@ -50,7 +53,18 @@ One idea drives all the numbers: **a player's value isn't his points — it's hi
 
 ### How it's computed
 
-For each player, we project a season point total in our *exact* scoring (full PPR, 4-point passing TDs, 0.04/passing yard, 0.1/rushing and receiving yard, −2 fumbles lost, −1 INT, 40+/50+ yard TD bonuses). The projections come from four years (2022–2025) of empirical positional scoring curves built from nflverse play-by-play data — what the RB5, the WR20, the TE8 have actually scored in this scoring environment — mapped onto the current rank order.
+For each player, we project a season point total in our *exact* scoring (full PPR, 4-point passing TDs, 0.04/passing yard, 0.1/rushing and receiving yard, −2 fumbles lost, −1 INT). The projections come from four years of empirical positional scoring curves — what the RB5, the WR20, the TE8 have actually scored in this scoring environment — mapped onto the current rank order.
+
+<!-- BEGIN GENERATED curve-provenance — rewritten by scripts/build_board.py. Do not hand-edit. -->
+**Curve provenance:** seasons 2021–2024, built from nflverse weekly player stats, excluding `long_td_bonus`.
+<!-- END GENERATED curve-provenance -->
+
+> **Two corrections, found by reproducing this pipeline (Aug 2026).** This section previously
+> claimed the scoring included 40+/50+ yard TD bonuses and that the curves came from
+> play-by-play data. Neither was true: the reproduction matched to 0.1 points *without* the
+> bonuses, so they were never applied, and the curves are built from weekly stats — play-by-play
+> was never used. The generated line above now states the real provenance and is rewritten on
+> every refresh, so it cannot drift again.
 
 Then we subtract the **replacement level**: the best player at that position sitting on the waiver wire, free, all season.
 
@@ -58,12 +72,14 @@ Then we subtract the **replacement level**: the best player at that position sit
 
 Eight teams each start QB / 2 RB / 2 WR / TE / 2 FLEX. History says the league's 16 flex slots fill roughly 11 WR / 5 RB in this format. That pins the last actual starters league-wide, and adding typical bench-hoarding pins the first guy who's genuinely *free*:
 
+<!-- BEGIN GENERATED baselines — rewritten by scripts/build_board.py. Do not hand-edit. -->
 | Pos | Last starter league-wide | Waiver replacement (VORP baseline) |
 |-----|--------------------------|-------------------------------------|
-| QB  | QB8  | **QB12** |
+| QB  | QB8 | **QB12** |
 | RB  | RB21 | **RB41** |
 | WR  | WR27 | **WR47** |
-| TE  | TE8  | **TE12** |
+| TE  | TE8 | **TE12** |
+<!-- END GENERATED baselines -->
 
 **VORP = projected season points above that baseline player.**
 
@@ -71,11 +87,17 @@ Eight teams each start QB / 2 RB / 2 WR / TE / 2 FLEX. History says the league's
 
 Three numbers from the board:
 
+<!-- BEGIN GENERATED worked-example — rewritten by scripts/build_board.py. Do not hand-edit. -->
 | Player | VORP | Read as |
 |--------|------|---------|
-| Jahmyr Gibbs | **268.4** | 268 points/season better than the free RB (RB41 is roadkill) |
-| Ja'Marr Chase | **242.7** | 243 points better than the free WR |
-| Josh Allen | **129.6** | only 130 points better than the free QB — because QB12 is *already good* |
+| Jahmyr Gibbs | **268.4** | 268 points/season better than the free RB (RB41 is the bar) |
+| Ja'Marr Chase | **242.7** | 243 points better than the free WR (WR47 is the bar) |
+| Josh Allen | **129.6** | 130 points better than the free QB (QB12 is the bar) |
+<!-- END GENERATED worked-example -->
+
+*The two tables above are generated from `draft-kit/players_data.json` on every board refresh. If
+a number here disagrees with the board, the board is right and this file was hand-edited — run
+`python scripts/build_board.py`.*
 
 Josh Allen will outscore Jahmyr Gibbs this season. Doesn't matter. Gibbs clears his replacement bar by twice as much, and the bar is the only thing your lineup actually feels — you don't play "Allen's points," you play "Allen's points minus the points of the QB you could have had for free." That is the entire QB-in-rounds-6-9 doctrine in one table.
 

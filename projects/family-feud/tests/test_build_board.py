@@ -302,6 +302,68 @@ class TestOneGlyphSource(unittest.TestCase):
         self.assertEqual(used - declared, set())
 
 
+class TestGeneratedDocs(unittest.TestCase):
+    """docs/ranking-methodology.md carried board figures as hand-typed prose."""
+
+    def test_every_generated_block_matches_the_live_board(self):
+        source = real_source()
+        with open(B.METHODOLOGY, encoding="utf-8") as f:
+            text = f.read()
+        for name, body in B.methodology_blocks(source).items():
+            self.assertIn(body, text, f"the {name!r} block is stale; run build_board.py")
+
+    def test_a_missing_block_is_refused_rather_than_silently_skipped(self):
+        """A block someone deleted would take its numbers back to hand-maintained without
+        anything saying so."""
+        d = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, d, True)
+        path = os.path.join(d, "doc.md")
+        with open(path, "w", encoding="utf-8") as f:
+            f.write("no blocks here\n")
+        with self.assertRaises(B.Refuse):
+            B.write_methodology(real_source(), path=path)
+
+    def test_the_worked_example_follows_the_board_rather_than_named_players(self):
+        source = real_source()
+        picked = {p["pos"]: p["name"] for p in B._headline_rows(source)}
+        for pos, name in picked.items():
+            best = max((p for p in source["players"] if p["pos"] == pos),
+                       key=lambda p: p["vorp"])
+            self.assertEqual(name, best["name"])
+
+
+class TestOldValueSweep(unittest.TestCase):
+    """Only possible because the generator holds the previous AND the new value."""
+
+    def test_an_unchanged_refresh_reports_nothing(self):
+        board = B.read_board()
+        self.assertEqual(B.old_value_sweep(board, board), [])
+
+    def test_a_changed_baseline_is_found_in_the_docs_that_quote_it(self):
+        import copy
+        before = B.read_board()
+        after = copy.deepcopy(before)
+        after["meta"]["vbd"]["baselineWaiver"]["RB"] = 44
+        hits = B.old_value_sweep(before, after)
+        self.assertTrue(hits, "the sweep did not notice RB41 surviving in prose")
+        self.assertTrue(any("ranking-methodology.md" in h for h in hits), hits)
+
+    def test_history_is_never_swept(self):
+        """docs/insights/ and docs/plans/ quote past values on purpose. Insight 005 records
+        Gibbs at 268.4 as the measurement it was; rewriting it would destroy the evidence."""
+        import copy
+        before = B.read_board()
+        after = copy.deepcopy(before)
+        for p in after["players"]:
+            if p["name"] == "Jahmyr Gibbs":
+                p["vorp"] = 999.9
+        hits = B.old_value_sweep(before, after)
+        self.assertTrue(hits, "control failed: the sweep found nothing at all")
+        for h in hits:
+            self.assertNotIn("insights", h)
+            self.assertNotIn("plans", h)
+
+
 class TestVerifyOnly(unittest.TestCase):
     def test_verify_only_passes_against_the_shipped_surfaces(self):
         self.assertEqual(B.verify_only(full=False), [])

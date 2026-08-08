@@ -531,6 +531,155 @@ def _recompute_preview(source, curve_path):
 # ---------------------------------------------------------------- CLI
 
 
+# ---------------------------------------------------------------- generated documentation
+
+
+METHODOLOGY = os.path.join(ROOT, "docs", "ranking-methodology.md")
+
+
+def _headline_rows(source):
+    """The highest-VORP row in each of RB, WR, QB -- the three the worked example explains.
+
+    Chosen by position rather than named, so the table follows the board instead of pinning
+    whoever happened to lead it in August.
+    """
+    out = []
+    for pos in ("RB", "WR", "QB"):
+        rows = [p for p in source["players"] if p["pos"] == pos and p.get("vorp") is not None]
+        if rows:
+            out.append(max(rows, key=lambda p: p["vorp"]))
+    return out
+
+
+def methodology_blocks(source, curve_path=CURVE):
+    """The GENERATED block bodies, keyed by block name."""
+    vbd = (source["meta"].get("vbd") or {})
+    base, last = vbd.get("baselineWaiver") or {}, vbd.get("lastStarter") or {}
+
+    rows = ["| Pos | Last starter league-wide | Waiver replacement (VORP baseline) |",
+            "|-----|--------------------------|-------------------------------------|"]
+    for pos in ("QB", "RB", "WR", "TE"):
+        rows.append(f"| {pos}  | {pos}{last.get(pos, '?')} | **{pos}{base.get(pos, '?')}** |")
+
+    ex = ["| Player | VORP | Read as |", "|--------|------|---------|"]
+    reads = {"RB": "points/season better than the free RB", "WR": "points better than the free WR",
+             "QB": "points better than the free QB"}
+    for p in _headline_rows(source):
+        ex.append(f"| {p['name']} | **{p['vorp']}** | {round(p['vorp'])} "
+                  f"{reads.get(p['pos'], 'points over replacement')} "
+                  f"({p['pos']}{base.get(p['pos'], '?')} is the bar) |")
+
+    seasons, excludes, built_from = "unknown", "nothing", "nflverse weekly player stats"
+    if os.path.exists(curve_path):
+        with open(curve_path, encoding="utf-8") as f:
+            cm = (json.load(f).get("meta") or {})
+        yrs = cm.get("seasons") or []
+        if yrs:
+            seasons = f"{min(yrs)}–{max(yrs)}"
+        excludes = ", ".join(f"`{e}`" for e in (cm.get("excludes") or [])) or "nothing"
+    prov = (f"**Curve provenance:** seasons {seasons}, built from {built_from}, "
+            f"excluding {excludes}.")
+
+    updated = str(source["meta"].get("updated", ""))
+    when = _dt.date.fromisoformat(updated) if updated else None
+    snapshot = (f"*Rankings snapshot: {when:%B} {when.day}, {when.year}.*" if when
+                else "*Rankings snapshot: unknown.*")
+
+    return {"baselines": "\n".join(rows),
+            "worked-example": "\n".join(ex),
+            "curve-provenance": prov,
+            "snapshot-date": snapshot}
+
+
+def write_methodology(source, path=METHODOLOGY, curve_path=CURVE):
+    """Rewrite every BEGIN/END GENERATED block. Refuses if a block it owns has gone missing --
+    a silently vanished block is a number that quietly reverted to hand-maintained."""
+    with open(path, encoding="utf-8") as f:
+        text = f.read()
+    for name, body in methodology_blocks(source, curve_path).items():
+        pattern = re.compile(rf"(<!-- BEGIN GENERATED {re.escape(name)}[^>]*-->\n).*?"
+                             rf"(\n<!-- END GENERATED {re.escape(name)} -->)", re.S)
+        if not pattern.search(text):
+            raise Refuse(f"{os.path.basename(path)} has no GENERATED block named {name!r}; the "
+                         f"figures it carried would silently go back to being hand-typed")
+        text = pattern.sub(lambda m: m.group(1) + body + m.group(2), text, count=1)
+    with open(path, "w", encoding="utf-8", newline="\n") as f:
+        f.write(text)
+    return path
+
+
+# ---------------------------------------------------------------- the old-value sweep
+
+
+SWEEP_SKIP = {".git", "__pycache__", "temp", "node_modules", ".last_good", "cache", "archive"}
+
+#: Directories that legitimately quote PAST values and must never be "corrected".
+#: `docs/insights/` are worked historical cases -- insight 005 records Gibbs at 268.4 as the
+#: measurement it was, and rewriting it would destroy the evidence. `docs/plans/` is a decision
+#: artifact, frozen by the same logic. `newsletter/data/` is hauled cargo and runtime state.
+#: A sweep that flags these reports a dozen false positives on every build, and a check that
+#: cries wolf gets switched off -- which is worse than not having it.
+SWEEP_EXEMPT = (os.path.join("docs", "insights"), os.path.join("docs", "plans"),
+                os.path.join("newsletter", "data"))
+
+
+def board_quantities(d):
+    """Every board-derived figure that appears as a literal in prose somewhere in this repo."""
+    vbd = ((d.get("meta") or {}).get("vbd") or {})
+    q = {}
+    for group in ("baselineWaiver", "lastStarter"):
+        for pos, val in (vbd.get(group) or {}).items():
+            q[f"meta.vbd.{group}.{pos}"] = f"{pos}{val}"
+    for p in _headline_rows(d):
+        q[f"vorp[{p['name']}]"] = str(p["vorp"])
+
+    # meta.updated is deliberately NOT swept. A date is not a distinctive token -- every doc in
+    # this repo carries dates for unrelated reasons, so sweeping it produced eight hits and not
+    # one of them was a stale board figure. The board's visible dates are covered properly
+    # instead: the HTML header is checked by the gate against meta.updated, and the methodology
+    # doc's snapshot line is a GENERATED block.
+    return q
+
+
+def old_value_sweep(before, after, root=ROOT):
+    """Grep the repo for the PREVIOUS value of every quantity that changed.
+
+    Only possible because the generator holds both sides. This is the mechanical form of the
+    stats-single-source rule: a refresh that updates the board and leaves an old number in a doc
+    has not finished, and nobody notices until the number is read under time pressure.
+
+    The generated surfaces are skipped -- they are rewritten from the source by definition, and
+    the previous value legitimately appears in git history rather than on disk.
+    """
+    old, new = board_quantities(before), board_quantities(after)
+    stale = {k: v for k, v in old.items() if k in new and new[k] != v and v}
+    if not stale:
+        return []
+
+    problems = []
+    for dirpath, dirnames, filenames in os.walk(root):
+        dirnames[:] = [d for d in dirnames if d not in SWEEP_SKIP]
+        rel_dir = os.path.relpath(dirpath, root)
+        if any(rel_dir == e or rel_dir.startswith(e + os.sep) for e in SWEEP_EXEMPT):
+            continue
+        for fn in filenames:
+            # Prose surfaces only. Code holds these numbers as data read from the board, never as
+            # literals, and a .json under draft-kit/ is either a generated surface or a cache.
+            if not fn.endswith((".md", ".html")) or fn in SURFACES:
+                continue
+            path = os.path.join(dirpath, fn)
+            try:
+                with open(path, encoding="utf-8") as f:
+                    text = f.read()
+            except (UnicodeDecodeError, OSError):
+                continue
+            for key, was in sorted(stale.items()):
+                if re.search(rf"(?<![\w.]){re.escape(was)}(?![\w.])", text):
+                    problems.append(f"{os.path.relpath(path, root)} still says {was!r} for {key}, "
+                                    f"which is now {new[key]!r}")
+    return problems
+
+
 def _without_build(d):
     meta = {k: v for k, v in (d.get("meta") or {}).items() if k != "build"}
     return {"meta": meta, "players": d.get("players"),
@@ -584,6 +733,17 @@ def build(allow_dirty=False, full=True, now=None):
         emit(staging)
 
     write_manifest()
+
+    # The docs carry board figures as prose. Regenerate the blocks that own them, THEN sweep the
+    # repo for the previous value of anything that moved -- a refresh that updates the board and
+    # leaves a stale number in a doc has not finished, and nobody finds out until someone reads
+    # that number on draft morning.
+    write_methodology(source)
+    stale = old_value_sweep(before, source)
+    if stale:
+        raise Refuse("the surfaces were written, but these files still carry a PREVIOUS value:\n"
+                     "  - " + "\n  - ".join(stale) +
+                     "\n\nUpdate them and re-run; the board and the docs now disagree.")
     return before, source
 
 

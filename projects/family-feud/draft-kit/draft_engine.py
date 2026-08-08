@@ -6,8 +6,15 @@ Usage:  python3 draft_engine.py <my_slot> [teams] [rounds]
 Output: compact war-room advisory: board state, rosters/needs, runs,
         tier cliffs, picks-until-mine, naive queue (Claude overlays judgment).
 """
-import json, re, sys, unicodedata
+import json, sys
 from collections import defaultdict, Counter
+
+# The name normalizer lives in ONE place -- draft-kit/normalize.py -- because six things want it
+# (this engine twice, the live board's JS, the schema gate, the Wire matcher, the id resolver).
+# It used to live here twice: norm() and tokens() repeated three of four cleaning steps verbatim.
+# This is an import, never a literal-name file read: Python puts THIS script's directory on
+# sys.path regardless of cwd, so the engine still runs from wherever the operator is standing.
+from normalize import norm, tokens  # noqa: E402
 
 # --- Windows encoding guard. Do not remove; this file is draft-day critical. ---
 # Python on Windows defaults BOTH file reads and stdout to the locale codepage (cp1252 on
@@ -52,17 +59,6 @@ except Exception:
     SLOT_NAMES = {}
 def sname(s):
     return f"slot {s} ({SLOT_NAMES[s]})" if s in SLOT_NAMES else f"slot {s}"
-
-ALIASES = {"kenny":"kenneth","cam":"cameron","mike":"michael","matt":"matthew",
-           "josh":"joshua","chris":"christopher","jon":"jonathan","jonathon":"jonathan",
-           "zach":"zachary","alex":"alexander","nick":"nicholas","jeff":"jeffrey",
-           "dan":"daniel","dave":"david","rob":"robert","will":"william","tony":"anthony"}
-def norm(s):
-    s = unicodedata.normalize("NFKD", s).encode("ascii","ignore").decode()
-    s = re.sub(r"\b(jr|sr|ii|iii|iv|v)\b\.?", "", s.lower())
-    parts = re.sub(r"[^a-z ]", "", s).split()
-    if parts: parts[0] = ALIASES.get(parts[0], parts[0])
-    return "".join(parts)
 
 # --- contamination gate: the SECOND half of the guard in scripts/merge_picks.py ---
 # That script refuses to merge foreign picks -- and then leaves the file on disk. Its exit code is
@@ -190,16 +186,8 @@ def needs(slot):
 # "Already claimed" is the second half: if the man is the same, his BOARD spelling never entered
 # taken_keys (that set holds SLEEPER spellings), so his row is still unclaimed. A different man
 # drafted correctly under his own name IS claimed and drops out.
-def tokens(s):
-    """Cleaned name tokens -- {first, last}. Nicknames replace the FIRST name and leave the
-    surname (Hollywood/Marquise Brown); re-renderings change the SURNAME and leave the first
-    (Jaxon Smith-Njigba / Jaxon Njigba). Requiring either one to survive keeps both, while
-    excluding two different men who merely share a team and position."""
-    s = unicodedata.normalize("NFKD", str(s)).encode("ascii", "ignore").decode()
-    s = re.sub(r"\b(jr|sr|ii|iii|iv|v)\b\.?", "", s.lower())
-    t = re.sub(r"[^a-z ]", "", s).split()
-    return {t[0], t[-1]} if t else set()
-
+#
+# tokens() itself now lives in normalize.py beside norm(), sharing one cleaning prefix.
 if unmatched:
     scored = []
     for pn, nm, ps, tm in unmatched:

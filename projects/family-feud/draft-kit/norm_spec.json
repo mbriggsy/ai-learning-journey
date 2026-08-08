@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "aliases": {
+    "kenny": "kenneth",
+    "cam": "cameron",
+    "mike": "michael",
+    "matt": "matthew",
+    "josh": "joshua",
+    "chris": "christopher",
+    "jon": "jonathan",
+    "jonathon": "jonathan",
+    "zach": "zachary",
+    "alex": "alexander",
+    "nick": "nicholas",
+    "jeff": "jeffrey",
+    "dan": "daniel",
+    "dave": "david",
+    "rob": "robert",
+    "will": "william",
+    "tony": "anthony"
+  },
+  "steps": [
+    {
+      "op": "nfkd_ascii"
+    },
+    {
+      "op": "lower"
+    },
+    {
+      "op": "regex_remove",
+      "pattern": "\\b(jr|sr|ii|iii|iv|v)\\b\\.?"
+    },
+    {
+      "op": "regex_remove",
+      "pattern": "[^a-z ]"
+    },
+    {
+      "op": "split_ws"
+    }
+  ]
+}

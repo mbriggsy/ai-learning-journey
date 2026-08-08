@@ -29,6 +29,20 @@ newsletter/data/inbox/*
 newsletter/data/archive/*
 !newsletter/data/archive/.gitkeep
 
+# Back issues, ignored 2026-08-08 by Briggsy's call, and the argument is the two lines above:
+# the CARGO each edition was built from is already ignored "for zero value", so committing the
+# edition while ignoring its own inputs was backwards. Each is 20,494 bytes of standalone HTML
+# with the whole stylesheet inlined -- ~7.5MB a year of near-duplicate markup nobody reopens,
+# plus a commit every morning on the branch this project uses as its session log.
+# THE CURRENT EDITION STAYS TRACKED at newsletter/family-feud-newsletter.html, the way every
+# generated surface in draft-kit/ is tracked. Only the pile is ignored, not the paper.
+# Consequence, accepted deliberately: edition numbering is derived from the back issues on disk
+# (build_newsletter.edition_number), so a clean clone restarts at #1. Briggsy does not want a
+# number nobody reads to survive a laptop death, and the alternative was a tracked counter --
+# a hand-maintained duplicate, which is the class this rebuild exists to kill.
+newsletter/archive/*
+!newsletter/archive/.gitkeep
+
 # nflverse weekly stats are a CACHE, not source: ~1.6MB per season, six seasons on disk, and
 # every byte is re-downloadable from a versioned GitHub release. `draft-kit/cache/` itself is
 # NOT ignored -- sleeper_players.json.gz lives there and IS committed, because U14's frozen ids

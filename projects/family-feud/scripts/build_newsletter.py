@@ -356,9 +356,50 @@ def market_watch(players):
     return out
 
 
-def edition_number(archive=ARCHIVE):
-    """Self-healing: the count of back issues on disk, +1. No state file to lose or corrupt."""
-    return len(glob.glob(os.path.join(archive, "*.html"))) + 1
+BACK_ISSUE_RE = re.compile(r"^(\d{4}-\d{2}-\d{2})-edition-(\d+)\.html$")
+DATE_PREFIX_RE = re.compile(r"^(\d{4}-\d{2}-\d{2})")
+
+
+def edition_number(date_slug, archive=ARCHIVE, warn=print):
+    """The edition number, and it is IDEMPOTENT for a given day.
+
+    The first version was `count of *.html + 1`. That is self-healing against a lost state
+    file -- and wrong about the case that actually happens: building twice in one day. The
+    second build saw one file, called itself #2, and wrote a SECOND back issue carrying the
+    same date -- a paper claiming to be the next edition on the day the previous one
+    published, and a permanent +1 to every edition after it.
+
+    U12 turns that from an edge case into the normal one. `install-newsletter.ps1` force-runs
+    the job to prove the registration works (presence is not health -- insight 007), so
+    installing on a day the paper already built would mint the phantom itself.
+
+    So: if today already has a back issue, REPUBLISH it -- same number, same filename,
+    overwritten in place. Otherwise it is one past the number of DISTINCT DAYS published, not
+    one past the file count, so a stray duplicate can never inflate every future edition.
+
+    `date_slug` is first and has no default deliberately: a default would let a caller silently
+    fall back to the counting bug, which is the failure this exists to remove.
+    """
+    published = {}
+    for path in sorted(glob.glob(os.path.join(archive, "*.html"))):
+        name = os.path.basename(path)
+        m = BACK_ISSUE_RE.match(name)
+        if m:
+            published.setdefault(m.group(1), []).append(int(m.group(2)))
+            continue
+        # An issue this function did not name still occupies its day, and an undated stray
+        # still occupies a slot -- key it by filename so it counts once and only once.
+        d = DATE_PREFIX_RE.match(name)
+        published.setdefault(d.group(1) if d else name, [])
+
+    todays = sorted(published.get(date_slug) or [])
+    if todays:
+        if len(todays) > 1:
+            warn(f"  [warn] {date_slug} already carries {len(todays)} back issues "
+                 f"(#{', #'.join(str(n) for n in todays)}) -- republishing #{todays[0]} and "
+                 f"leaving the others untouched. Delete the strays by hand if they are junk.")
+        return todays[0]
+    return len(published) + 1
 
 
 # ------------------------------------------------------------------ the design
@@ -406,12 +447,13 @@ def build_context(now=None, board_path=BOARD, archive=ARCHIVE):
     css, script = frozen_parts()
     market = market_watch(players)
     items = wire(players)
+    date_slug = f"{now:%Y-%m-%d}"
 
     return {
-        "edition_no": edition_number(archive),
+        "edition_no": edition_number(date_slug, archive),
         "date_long": f"{now:%A, %B} {now.day}, {now.year}",
         "date_short": f"{now:%b} {now.day}, {now.year}",
-        "date_slug": f"{now:%Y-%m-%d}",
+        "date_slug": date_slug,
         "press_time": f"{now:%I:%M %p}".lstrip("0"),
         "tiles": tiles,
         "draft_note": draft_note,

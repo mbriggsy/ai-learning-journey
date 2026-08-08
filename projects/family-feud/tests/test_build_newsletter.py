@@ -306,22 +306,88 @@ class TestTheDesignIsCarriedNotCopied(unittest.TestCase):
 
 
 class TestEditionNumber(unittest.TestCase):
-    def test_it_is_the_count_of_back_issues_plus_one(self):
-        """Self-healing: no state file to lose, corrupt, or forget to commit."""
-        tmp = tempfile.mkdtemp()
-        self.addCleanup(shutil.rmtree, tmp, True)
-        self.assertEqual(N.edition_number(tmp), 1)
-        for i in range(3):
-            with open(os.path.join(tmp, f"2026-08-0{i}.html"), "w", encoding="utf-8") as f:
-                f.write("x")
-        self.assertEqual(N.edition_number(tmp), 4)
+    """The number is derived from disk with no state file -- and it is IDEMPOTENT for a day.
+
+    `count of files + 1` was the first version. It is self-healing against a lost state file and
+    wrong about the case that actually happens: a second build on the same day, which U12's
+    installer performs deliberately when it force-runs the job to verify the registration.
+    """
+
+    def setUp(self):
+        self.tmp = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, self.tmp, True)
+
+    def issue(self, name):
+        with open(os.path.join(self.tmp, name), "w", encoding="utf-8") as f:
+            f.write("x")
+
+    def test_an_empty_archive_starts_at_one(self):
+        self.assertEqual(N.edition_number("2026-08-08", self.tmp), 1)
+
+    def test_it_is_one_past_the_number_of_days_already_published(self):
+        for d in ("06", "07", "08"):
+            self.issue(f"2026-08-{d}-edition-{int(d) - 5}.html")
+        self.assertEqual(N.edition_number("2026-08-09", self.tmp), 4)
 
     def test_non_html_files_do_not_count(self):
-        tmp = tempfile.mkdtemp()
-        self.addCleanup(shutil.rmtree, tmp, True)
-        with open(os.path.join(tmp, ".gitkeep"), "w", encoding="utf-8") as f:
-            f.write("")
-        self.assertEqual(N.edition_number(tmp), 1)
+        self.issue(".gitkeep")
+        self.assertEqual(N.edition_number("2026-08-08", self.tmp), 1)
+
+    def test_rebuilding_the_same_day_republishes_rather_than_advancing(self):
+        """THE regression this function exists for. Two builds on 2026-08-08 must both be #1,
+        so the second overwrites the first file instead of writing a same-dated #2."""
+        self.issue("2026-08-08-edition-1.html")
+        self.assertEqual(N.edition_number("2026-08-08", self.tmp), 1)
+        self.assertEqual(N.edition_number("2026-08-08", self.tmp), 1)
+
+    def test_a_rebuild_does_not_advance_later_editions_either(self):
+        """The old bug was not just a duplicate file -- it was a permanent +1 to every edition
+        after it, because the count included the phantom."""
+        self.issue("2026-08-06-edition-1.html")
+        self.issue("2026-08-07-edition-2.html")
+        self.assertEqual(N.edition_number("2026-08-07", self.tmp), 2)   # republish
+        self.assertEqual(N.edition_number("2026-08-08", self.tmp), 3)   # tomorrow is unmoved
+
+    def test_a_pre_existing_same_day_duplicate_collapses_onto_the_lowest_and_says_so(self):
+        """Cleaning up somebody else's mess silently is how a project loses a file it wanted.
+        Republish the first one, leave the strays, and NAME them."""
+        self.issue("2026-08-08-edition-1.html")
+        self.issue("2026-08-08-edition-2.html")
+        said = []
+        self.assertEqual(N.edition_number("2026-08-08", self.tmp, warn=said.append), 1)
+        self.assertEqual(len(said), 1)
+        self.assertIn("2 back issues", said[0])
+        self.assertIn("#1, #2", said[0])
+
+    def test_a_clean_day_warns_about_nothing(self):
+        """A warning that fires on the happy path is a warning nobody reads."""
+        self.issue("2026-08-07-edition-1.html")
+        said = []
+        N.edition_number("2026-08-08", self.tmp, warn=said.append)
+        self.assertEqual(said, [])
+
+    def test_an_undated_stray_counts_once_and_does_not_crash(self):
+        self.issue("notes.html")
+        self.assertEqual(N.edition_number("2026-08-08", self.tmp), 2)
+
+
+class TestEditionNumberIsWiredToTheBuild(InboxCase):
+    """Insight 013: every guard tested as a FUNCTION and never at its CALL SITE. The idempotent
+    number is worthless if `build_context` still asks for it without today's date."""
+
+    def test_build_context_reuses_todays_number_instead_of_advancing(self):
+        archive = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, archive, True)
+        now = _dt.datetime(2026, 8, 8, 19, 0)
+        with open(os.path.join(archive, "2026-08-06-edition-1.html"), "w", encoding="utf-8") as f:
+            f.write("x")
+        first = N.build_context(now=now, archive=archive)["edition_no"]
+        self.assertEqual(first, 2)
+        # Publish it, the way main() does, then rebuild the same evening.
+        with open(os.path.join(archive, f"2026-08-08-edition-{first}.html"), "w",
+                  encoding="utf-8") as f:
+            f.write("x")
+        self.assertEqual(N.build_context(now=now, archive=archive)["edition_no"], 2)
 
 
 class TestItPublishesWhateverArrived(InboxCase):

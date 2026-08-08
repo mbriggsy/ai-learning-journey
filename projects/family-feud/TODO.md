@@ -6,7 +6,7 @@
 ## ▶ WHERE WE ARE — read this first, update it when it changes
 
 ```
-plan ✅ → deepen ✅ → work ✅ (U6) → ultramode ✅ → work ✅ (U15·U7·U8·U10·U11)  ◀ HERE (U12)
+plan ✅ → deepen ✅ → work ✅ (U6) → ultramode ✅ → work ✅ (U15·U7·U8·U10·U11·U12)  ◀ HERE
 ```
 
 **Units shipped:** U1, U2 (Phase 0 gates) · **U9** (draft-state watcher) · **U3** (one normalizer,
@@ -15,18 +15,21 @@ proven equal in two runtimes) · **U14** (`sleeperId` frozen — 174 ids, 0 unre
 curve; oracle exact at 2469/2469) · **U6** (the generator — one source, every surface) ·
 **U15** (the engine wrapper — shape read from the draft, not typed) · **U7** (the board polls the
 live draft) · **U8** (the runbook's draft loop is executable again) · **U10** (the mule validates
-what it caught) · **U11** (The Nightly Feud publishes) — the last eight on 2026-08-08.
+what it caught) · **U11** (The Nightly Feud publishes) · **U12** (it publishes without a human) —
+the last nine on 2026-08-08.
 
-**Phase 2 closed; U8, U10 and U11 done.** **Next action: U12** — schedule the newsletter. Edition #1
-exists but only because a human typed the command; a nightly paper that needs a human is not a
-nightly paper. Mirror `install-mule.ps1`: derive from `$PSScriptRoot`, register, force a run,
-verify, throw if not green, `-StartWhenAvailable` so a run missed while the laptop sleeps fires on
-wake. **Health is proven by output freshness, never by `Last Result`** — both are frozen signals.
+**Phase 2 closed; U8, U10, U11 and U12 done.** **Next action: review residue #4** (the `strategy`
+prose, the last open item from the ultramode pass — full prescription in §0.5), then the **engine's
+`sleeperId` join**, then **U13**, which is a planning document (`docs/in-season-plan.md`), not code.
 
-⚠️ **One thing to decide before U12 runs unattended:** each build writes a back issue into
-`newsletter/archive/`, which is **tracked**, so a nightly job leaves an uncommitted file every
-night and `git status` is never clean again. Either gitignore back issues (the edition number
-self-heals from disk, so numbering still works) or have the job commit them. Briggsy's call.
+**The archive question is DECIDED (Briggsy, 2026-08-08): back issues are gitignored.** The
+deciding argument was his: `newsletter/data/archive/` — the cargo each edition is built from — was
+already ignored "for zero value", so committing the edition while ignoring its own inputs was
+backwards. `newsletter/family-feud-newsletter.html` **stays tracked**, the way every generated
+surface in `draft-kit/` is. Accepted consequence, written into `.gitignore`: a clean clone restarts
+edition numbering at #1. The nightly job leaves exactly one modified tracked file, which is
+meaningful — *tonight's paper is newer than what's committed* — and it gets committed at squeaky.
+**No auto-commit in the scheduled job**, deliberately: no unattended process writes to git here.
 
 **The ultramode review RAN 2026-08-08** (13 reviewers, 4-angle adversary panel, 3 refuters per
 finding, `real`/`material` aggregated separately). 77 confirmed after verification, 22 correctly
@@ -53,9 +56,10 @@ round labels with no invented rounds.
 [`docs/plans/2026-08-07-001-refactor-rebuild-the-machinery-plan.md`](docs/plans/2026-08-07-001-refactor-rebuild-the-machinery-plan.md).
 The plan owns *what to build*; this file owns *what's next*.
 
-**⏳ The draft date STILL does not exist.** Re-pulled from cargo stamped **2026-08-08 14:29**:
-`status: pre_draft`, `start_time: null`, `draft_order: null`, **6 of 8 seats filled**, and the
-watcher has raised no alert. `~Aug 29` is a handshake — **it can move earlier.** Assume no slack.
+**⏳ The draft date STILL does not exist.** Re-pulled from cargo stamped **2026-08-08 17:29**
+(all 10 sources `ok`): `status: pre_draft`, `start_time: null`, `draft_order: null`, **6 of 8 seats
+filled**, `type: snake`, `reversal_round: 0`. The watcher ran 17:35 and has written no
+`DRAFT_ALERTS.md`. `~Aug 29` is a handshake — **it can move earlier.** Assume no slack.
 The board's header now says "Draft date not set" rather than asserting a date the draft object
 does not carry.
 
@@ -266,12 +270,14 @@ U9  →  U3  →  U14  →  { U4 ∥ U5 }  →  U6  →  { U7 ∥ U15 }  →  U8
   lab feed at prefixes 1, 2, **3**, 4, **5**, ... — the reproduced `vbdDelta` break fires at a
   SINGLE-DIGIT prefix, so deciles of a 120-pick feed, the first of which is 12, would have missed
   it. It was 3 on the Aug 5 board and is 5 since U6 recomputed VORP and the VBD ranks moved; the
-  test pins the property, not the number). **BORN RED with 13 findings, all real drift** — all
-  thirteen fixed by U6; the gate is green today
-  (re-measured 2026-08-08; `--fast` and `--full` both exit 1): `meta.updated` claims Aug 5 while its
-  inputs are dated Aug 7-8 (**4** — U5's `vorp_curve.json` became a fourth stale-input witness the
-  moment it shipped) · eight `meta.vbd` numbers hardcoded as literals in the board HTML's prose (8) ·
-  the cheat sheet holds 150 of 174 rows, missing every K and DEF (1).
+  test pins the property, not the number). **BORN RED with 13 findings, all real drift**:
+  `meta.updated` claimed Aug 5 while its inputs were dated Aug 7-8 (**4** — U5's `vorp_curve.json`
+  became a fourth stale-input witness the moment it shipped) · eight `meta.vbd` numbers hardcoded as
+  literals in the board HTML's prose (8) · the cheat sheet held 150 of 174 rows, missing every K and
+  DEF (1). **All thirteen fixed by U6.**
+  **Re-measured 2026-08-08 18:00 — `--fast` and `--full` BOTH exit 0**, each printing
+  `174 rows, every check passed`, preceded by
+  `[checked] meta.shape against live draft 1390509994847240192 (cargo 30 min old)`.
   **Fix the surface, never the gate.** U6 regenerates them.
 - ~~**U5 VORP**~~ ✅ **SHIPPED 2026-08-08.** `scripts/scoring.py` (league.md as ONE pure
   function) + `scripts/build_curves.py` → `draft-kit/vorp_curve.json`, 22 tests.
@@ -339,6 +345,25 @@ U9  →  U3  →  U14  →  { U4 ∥ U5 }  →  U6  →  { U7 ∥ U15 }  →  U8
     the watcher.
   - **The `ok` prefix is a contract** with `watch_draft_state.py`, which keys on it. Tested at the
     call site, not just as a string.
+- ~~**U12 schedule the newsletter**~~ ✅ **SHIPPED 2026-08-08.** `scripts/install-newsletter.ps1`,
+  task **Family Feud Newsletter**, **daily at 21:45** — sixteen minutes behind the mule's :29 haul
+  and ten behind the watcher's :35, so it races neither. Verified registered and green; next run
+  21:45 tonight. Re-register after any folder move:
+  `powershell -NoProfile -ExecutionPolicy Bypass -File scripts\install-newsletter.ps1`
+  - **A prerequisite defect was found and fixed first.** `edition_number()` was
+    `count of *.html + 1`, so a second build in one day wrote a same-dated `-edition-2` AND added a
+    permanent +1 to every edition after it. **U12's own installer force-runs the job to verify it**,
+    so U12 would have minted the phantom itself on install day. It is now idempotent per day:
+    today's issue is republished in place, and the count is over **distinct days**, not files.
+    Proven by running the real build **three times on 2026-08-08** — still Edition #1, still one
+    file in the archive. Two mutants killed, 4 tests each, including the call-site test (insight 013).
+  - **Health is proven by OUTPUT FRESHNESS, not `Last Result`** — and that probe has a
+    **positive control**, not just a comment. A throwaway task that exits 0 while writing nothing
+    was registered and run: it reported `Last Result: 0` (the lie reproduced) and the edition's
+    mtime did not move, so the installer's `$after -le $before` throw fires. Insight 007's exact
+    shape, tested rather than asserted. The number is also read back out of the rendered page, so a
+    green run proves the file on disk is the one this run produced.
+  - **The nightly job does not touch git.** See the archive decision above.
 - ~~**U8 correct the misleading docs**~~ ✅ **SHIPPED 2026-08-08.** Runbook, `league.md`,
   `ranking-methodology.md`, `README.md`, `CLAUDE.md`.
   - **The headline defect is gone: the draft loop is executable.** The runbook said `cd draft-kit/`
@@ -444,9 +469,9 @@ and template paths have their dependencies.
 
 Re-pull and confirm — **never quote these from a doc**:
 
-- `/league/1390509993844809728/users` — **6 of 8** seats filled as of Aug 7 19:32 (live pull and the
-  mule's 19:29 cargo agree). Was 4 earlier the same day — **the room is filling**
-- `/draft/1390509994847240192` — **`draft_order` is `null`.** Read your slot from
+- `/league/1390509993844809728/users` — **6 of 8** seats filled (mule cargo 2026-08-08 17:29). Was
+  4 earlier on Aug 7 — **the room is filling**, and it has been parked at 6 for ~22 hours
+- `/draft/1390509994847240192` — **`draft_order` is still `null`** (17:29 cargo). Read your slot from
   `draft_order["1390750540631150592"]` and **nothing else**
 - `/league/.../rosters` — proves which roster_id is whose (Briggsy = roster 3)
 - `/draft/.../traded_picks` — `[]` on Aug 7

@@ -96,8 +96,22 @@ def pdf_strings(source):
     """
     out = []
     meta = source["meta"]
+    shape = meta.get("shape") or {}
+
+    # HEADER, FOOTER AND LEGEND. These were missed on the first pass, and the guard passed clean
+    # on a board whose league name, format line, owner and badge labels all carried characters
+    # Helvetica cannot print -- reportlab silently drew them from ZapfDingbats and Symbol. The
+    # docstring promises EVERY string this module draws; that promise is what stage() relies on,
+    # so anything drawn below must be listed here.
+    out.append(("meta.league", meta.get("league", "")))
+    out.append(("meta.format", meta.get("format", "")))
+    out.append(("meta.owner", meta.get("owner", "")))
+    out.append(("meta.updated", meta.get("updated", "")))
+    out.append(("meta.shape.season", shape.get("season", "")))
+
     for code, spec in (meta.get("badges") or {}).items():
         out.append((f"meta.badges[{code}].glyph", spec.get("glyph", "")))
+        out.append((f"meta.badges[{code}].label", spec.get("label", "")))
     for p in source["players"]:
         out.append((f"players[{p['r']}].name", p["name"]))
         out.append((f"players[{p['r']}].team", p["team"]))
@@ -108,7 +122,11 @@ def pdf_strings(source):
     for i, e in enumerate(source["strategy"].get("slotNotes") or []):
         out.append((f"strategy.slotNotes[{i}]", f"{e.get('slot', '')} {e.get('note', '')}"))
     out.append(("strategy.kickers", source["strategy"].get("kickers", "")))
-    out.append(("meta.vbd.note", (meta.get("vbd") or {}).get("note", "")))
+    vbd = meta.get("vbd") or {}
+    out.append(("meta.vbd.note", vbd.get("note", "")))
+    for group in ("baselineWaiver", "lastStarter"):
+        for pos, val in (vbd.get(group) or {}).items():
+            out.append((f"meta.vbd.{group}.{pos}", f"{pos}{val}"))
     for e in source.get("dst") or []:
         out.append((f"dst[{e['rank']}]", str(e.get("team", ""))))
     return out

@@ -266,24 +266,53 @@ class TestNormalizerEquivalence(unittest.TestCase):
             rows = json.load(f)["players"]
         self.assertEqual(V.check_normalizer_equivalence(rows), [])
 
+    def mutated_html(self, replace_pair):
+        """A copy of the SHIPPED board with one edit inside its generated normalizer block."""
+        with open(V.HTML, encoding="utf-8") as f:
+            page = f.read()
+        old, new = replace_pair
+        self.assertIn(old, page, "the plant site is not in the board HTML")
+        d = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, d, True)
+        p = os.path.join(d, "board.html")
+        with open(p, "w", encoding="utf-8") as f:
+            f.write(page.replace(old, new, 1))
+        return p
+
     def test_the_check_can_actually_fail(self):
-        """Positive control. This check reported a ReferenceError as a BOARD failure while it
-        was really a bug in the bridge -- a false red, which is the more dangerous direction."""
-        import normalize
-        real = normalize.js_source
-        normalize.js_source = lambda: real().replace('return t.join("");',
-                                                     'return t.join("") + "ZZ";', 1)
-        try:
-            problems = V.check_normalizer_equivalence([{"name": "Alpha One"}])
-        finally:
-            normalize.js_source = real
+        """Positive control. This check once reported a ReferenceError as a BOARD failure while it
+        was really a bug in the bridge -- a false red, the more dangerous direction.
+
+        The mutation goes into the HTML, not into normalize.py, because the check reads the JS
+        the board actually SHIPS. Mutating the generator would prove nothing about the artifact.
+        """
+        html = self.mutated_html(('return t.join("");', 'return t.join("") + "ZZ";'))
+        problems = V.check_normalizer_equivalence([{"name": "Alpha One"}], html=html)
         self.assertTrue(problems and "disagrees" in problems[0], problems)
+
+    def test_a_hand_edited_normalizer_in_the_board_is_caught(self):
+        """The whole reason the check reads the HTML rather than regenerating from normalize.py:
+        a board whose JS was edited by hand must not pass a check that exists to catch that."""
+        html = self.mutated_html(('v = v.toLowerCase();', 'v = v.toUpperCase();'))
+        problems = V.check_normalizer_equivalence(
+            [{"name": "Alpha One"}, {"name": "Bravo Two"}], html=html)
+        self.assertTrue(problems, "a hand-edited board normalizer passed the equivalence check")
+
+    def test_a_board_with_no_normalizer_block_is_reported(self):
+        d = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, d, True)
+        p = os.path.join(d, "board.html")
+        with open(p, "w", encoding="utf-8") as f:
+            f.write("<html><body>const DATA = {}</body></html>")
+        problems = V.check_normalizer_equivalence([{"name": "Alpha One"}], html=p)
+        self.assertTrue(problems)
 
 
 class TestHtmlCrossSurface(GateCase):
     def write_html(self, blob, prose=""):
         d = tempfile.mkdtemp()
-        self.addCleanup(lambda: None)
+        self.addCleanup(shutil.rmtree, d, True)   # was `lambda: None` -- a cleanup that cleaned
+                                                  # nothing, leaking a temp dir per test
         p = os.path.join(d, "board.html")
         with open(p, "w", encoding="utf-8") as f:
             f.write("<html><body>\n" + prose + "\nconst DATA = "

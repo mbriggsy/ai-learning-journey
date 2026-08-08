@@ -93,7 +93,18 @@ VORP_KDEF = "carried:kdef-tier-flat"
 
 
 class Refuse(Exception):
-    """Raised for every condition that must stop the build before anything is written."""
+    """Raised for every condition that must stop the build BEFORE anything is written."""
+
+
+class Incomplete(Exception):
+    """Raised when the surfaces landed but a follow-on step failed.
+
+    Distinct from `Refuse` because the operator's next move is opposite. `Refuse` means nothing
+    changed and the board on disk is the one you had. This means the surfaces ARE new and
+    something downstream of them -- a doc block, the old-value sweep -- still disagrees. Printing
+    "REFUSED TO EMIT" for this would tell a person at 7am that their board was untouched when it
+    had in fact just been replaced.
+    """
 
 
 # ---------------------------------------------------------------- byte-exact serialization
@@ -160,10 +171,23 @@ def assert_no_dated_snapshot(kit=KIT):
 
 
 def git_dirty(paths=("draft-kit",)):
-    out = subprocess.run(["git", "status", "--porcelain", "--"] + list(paths),
-                         cwd=ROOT, capture_output=True, text=True, encoding="utf-8")
+    """Uncommitted work in draft-kit/, or a hard refusal if git cannot answer.
+
+    Returning [] when git FAILS would report a clean tree on no evidence and silently disable the
+    only guard standing between a rebuild and unrecoverable hand edits -- the shape insight 007
+    names: a health signal that reports success for something it never checked.
+    """
+    try:
+        out = subprocess.run(["git", "status", "--porcelain", "--"] + list(paths),
+                             cwd=ROOT, capture_output=True, text=True, encoding="utf-8",
+                             timeout=30)
+    except (OSError, subprocess.SubprocessError) as e:
+        raise Refuse(f"could not run git to check for uncommitted work ({e}). The dirty guard is "
+                     f"what stops a rebuild destroying hand edits, so this refuses rather than "
+                     f"assuming the tree is clean. Pass --allow-dirty if you accept the risk.")
     if out.returncode != 0:
-        return []
+        raise Refuse(f"git status exited {out.returncode}: {(out.stderr or '').strip()[:200]}. "
+                     f"Refusing rather than assuming draft-kit/ is clean.")
     return [ln for ln in (out.stdout or "").splitlines() if ln.strip()]
 
 
@@ -394,21 +418,34 @@ def emit(staging, kit=KIT, last_good=LAST_GOOD):
     if os.path.isdir(last_good):
         shutil.rmtree(last_good)
     os.makedirs(last_good)
-    saved = []
+    saved, absent = [], []
     for name in SURFACES:
         live = os.path.join(kit, name)
         if os.path.exists(live):
             shutil.copy2(live, os.path.join(last_good, name))
             saved.append(name)
+        else:
+            # A surface that did not exist cannot be restored by copying something back -- the
+            # rollback has to DELETE it. Without this the "or none of them" half is false on a
+            # first build or after a surface is removed: the replace lands, a later one fails,
+            # and the new file survives a "successful" restore.
+            absent.append(name)
 
     done = []
     try:
         for name in SURFACES:
             os.replace(os.path.join(staging, name), os.path.join(kit, name))
             done.append(name)
-    except Exception:
+    except BaseException:
+        # BaseException, not Exception: KeyboardInterrupt and SystemExit do not inherit from
+        # Exception, and Ctrl-C between two replaces is exactly the moment the surfaces are torn.
+        # Restoring is the one thing that must still happen on the way out.
         for name in saved:
             shutil.copy2(os.path.join(last_good, name), os.path.join(kit, name))
+        for name in absent:
+            live = os.path.join(kit, name)
+            if os.path.exists(live):
+                os.remove(live)
         raise
     return done
 
@@ -739,12 +776,14 @@ def build(allow_dirty=False, full=True, now=None):
     # repo for the previous value of anything that moved -- a refresh that updates the board and
     # leaves a stale number in a doc has not finished, and nobody finds out until someone reads
     # that number on draft morning.
-    write_methodology(source)
+    try:
+        write_methodology(source)
+    except Refuse as e:
+        raise Incomplete(str(e))
     stale = old_value_sweep(before, source)
     if stale:
-        raise Refuse("the surfaces were written, but these files still carry a PREVIOUS value:\n"
-                     "  - " + "\n  - ".join(stale) +
-                     "\n\nUpdate them and re-run; the board and the docs now disagree.")
+        raise Incomplete("these files still carry a PREVIOUS value:\n  - " + "\n  - ".join(stale)
+                         + "\n\nUpdate them; the board and the docs now disagree.")
     return before, source
 
 
@@ -775,7 +814,11 @@ def main(argv=None):
     try:
         before, after = build(allow_dirty=a.allow_dirty, full=not a.fast)
     except Refuse as e:
-        print(f"!! REFUSED TO EMIT\n\n{e}")
+        print(f"!! REFUSED TO EMIT -- nothing was written; the board on disk is unchanged.\n\n{e}")
+        return 1
+    except Incomplete as e:
+        print(f"!! THE SURFACES WERE WRITTEN, BUT THE REFRESH IS NOT COMPLETE.\n"
+              f"   {', '.join(SURFACES)} are new and valid. What follows is downstream of them.\n\n{e}")
         return 1
     print("wrote " + ", ".join(SURFACES) + "\n")
     print(diff_report(before, after))

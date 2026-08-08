@@ -93,9 +93,35 @@ his eye rather than a quiet refactor. Everything else below is done.
      NOT re-checked…`). A clean clone must not go red (insight 009).
    - **The call-site test was missing and the mutation found it:** cutting the check out of
      `validate()` left all nine unit tests green. Insight 013's exact shape, caught this time.
-4. **`strategy` prose still hardcodes both baselines and league shape**, inside the source
-   (KTD-1 + KTD-7). `rules[10]` embeds `QB12/RB41/WR47/TE12`; `slotNotes` embed `Picks 1-3` etc.
-   The old-value sweep cannot see them because they are not a quantity it tracks.
+4. **OPEN — `strategy` prose hardcodes baselines and league shape** (KTD-1 + KTD-7). Left for
+   Briggsy's eye on purpose: it rewrites sentences he has read, which is a **content** change, not
+   a machinery one. Everything needed to do it is below.
+
+   **What is actually hardcoded** (re-measured 2026-08-08):
+   - `strategy.slotNotes[0..2].slot` = `"Picks 1-3"`, `"Picks 4-6"`, `"Picks 7-8"` — three literal
+     seat ranges over `meta.shape.teams` (8). A 10-team league silently mislabels every one.
+   - `strategy.rules[10]` names the VBD baselines in prose. The live values are
+     `meta.vbd.baselineWaiver = {QB:12, RB:41, WR:47, TE:12}` and
+     `lastStarter = {QB:8, RB:21, WR:27, TE:8}` — already data, already on the board, quoted a
+     second time in a sentence nothing checks.
+
+   **The prescription** — same shape as `meta.format`, which this session already did (item 2):
+   1. Add `strategy_slot_ranges(shape)` to `scripts/shape.py`, beside `format_line()`. Split
+      `shape["teams"]` into three near-equal bands and return the `"Picks a-b"` labels. For 8 that
+      must reproduce `1-3 / 4-6 / 7-8` exactly — assert it, the way `format_line` was proven to
+      reproduce its hand-typed string byte-for-byte before being trusted.
+   2. In `enrich()` (`scripts/build_board.py`, right after `meta["format"] = format_line(shape)`),
+      overwrite each `slotNotes[i]["slot"]` from that function. **Leave `note` alone** — the prose
+      is judgment and is Briggsy's.
+   3. For `rules[10]`, do NOT template the sentence. Make the gate check it instead: extend
+      `check_strategy` in `scripts/validate_board.py` to assert every `QB\d+/RB\d+/WR\d+/TE\d+`
+      run found in `rules` matches `meta.vbd`. Deriving the sentence would put an f-string in the
+      one place the voice lives; checking it keeps the prose human and still cannot drift.
+   4. Test both against a 10-team synthetic shape, and mutate each to prove it goes red.
+
+   **Why the old-value sweep never caught these:** it sweeps *quantities that changed between two
+   builds*. These have not changed, so there is nothing to compare — they are wrong only in the
+   sense that nothing would notice if the league moved underneath them.
 5. ~~**The PDF prints a VBD arrow on every K and DEF row.**~~ ✅ **FIXED 2026-08-08.** All 24 cleared
    |8| and all 24 drew a green ▲ on the one page you hold, hiding the real steals. The rule is now
    the named predicate `render_pdf.draws_vbd_chip()` rather than a condition buried in a draw call,

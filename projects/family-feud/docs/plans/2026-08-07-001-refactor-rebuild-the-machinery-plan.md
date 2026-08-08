@@ -448,7 +448,7 @@ end to end; doc corrections.
 > **1 — Tests live in `tests/`, never in `draft-kit/`.** Every unit's `Files:` list named
 > `draft-kit/test_*.py`. `python -m unittest discover -s tests` **will never find those**, and a
 > suite that is never discovered is green because it never ran — [`006`](../insights/006-four-verification-steps-that-could-silently-do-nothing.md)
-> at the plan level. The 46 shipped tests already live in `tests/`; U1 and U2's file lists were
+> at the plan level. The shipped tests already live in `tests/`; U1 and U2's file lists were
 > simply wrong. All new suites go to `tests/test_<unit>.py`.
 >
 > **2 — Placement rule.** Anything the engine imports lives beside the engine in `draft-kit/`;
@@ -482,10 +482,12 @@ end to end; doc corrections.
 
 ### Phase 0 — Gates (block everything downstream)
 
-> **U1 and U2 are SHIPPED** (2026-08-07, commits `519e4bb3` and `21c22ce7`) — 46 tests passing via
+> **U1, U2 and U9 are SHIPPED** (2026-08-07 — U1/U2 in `519e4bb3` and `21c22ce7` with 46 tests;
+> U9 in `0b907a13` adding 26). The suite now reports **72 passing, 0 skipped** via
 > `python -m unittest discover -s tests` from the repo root. Their `Files:` lists below name
 > `draft-kit/test_*.py`; the real suites live in `tests/test_merge_picks.py` and
-> `tests/test_engine_matching.py`. **U9 joins this phase and is built first** (see amendment 3 above).
+> `tests/test_engine_matching.py`. **U9 joined this phase and was built first** (see amendment 3
+> above); its own section is further down under the old Phase 3 heading and is marked accordingly.
 > U1 has one reopened item: the `slot_names.json` guard recorded in Risks.
 
 #### U1. Close cross-draft contamination

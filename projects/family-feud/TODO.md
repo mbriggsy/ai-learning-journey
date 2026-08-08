@@ -19,15 +19,14 @@ starting with U3 (shared normalizer), then U14 (`sleeperId`).**
 **The planning phase is CLOSED.** The plan was deepened 2026-08-07 and does not get another pass.
 If something in it turns out to be wrong, fix it inside `/ce-work` — do not reopen a deepening
 cycle. Reopening is how this project loses its thread: analysis that spawns analysis has no
-stopping condition, and the plan is already outgrowing the code (10 commits, 3 of which changed
-code; 15 units planned, 2 built).
+stopping condition, and the plan still outweighs the code (**13 commits, 5 of which changed code;
+15 units planned, 3 built**).
 
 **Ultramode fires once, after U6** — one review of a working spine, not six reviews of fragments.
 
-**Where we are:** the machinery rebuild is planned and Phase 0 is shipped. The two silent paths to
-advising an already-drafted player are closed and covered by **72 tests** (`python -m unittest
-discover -s tests`). What remains is the spine: one source that generates every surface, and
-consumers for a hauler that currently hauls into a void.
+**State:** both silent paths to advising an already-drafted player are closed, and the hauler now
+has its first consumer. **72 tests**, zero skips (`python -m unittest discover -s tests` from the
+root). What remains is the spine: one source that generates every surface.
 
 **Everything below is detailed in**
 [`docs/plans/2026-08-07-001-refactor-rebuild-the-machinery-plan.md`](docs/plans/2026-08-07-001-refactor-rebuild-the-machinery-plan.md).
@@ -71,10 +70,11 @@ by Briggsy's decision and two by measurement.
 U9  →  U3  →  U14  →  { U4 ∥ U5 }  →  U6  →  { U7 ∥ U15 }  →  U8  →  U10 → U11 → U12 → U13
 ```
 
-- **U9 first.** Zero dependencies, reads cargo that already arrives hourly. The plan *claimed* it was
-  "deliberately early" while it sat in Phase 3 behind nine units. The room went **4 → 6 of 8 seats in
-  one day** and `start_time` is still null. Its missing guard: a frozen mule makes "no change" look
-  identical to a quiet league — check `run_at` freshness before trusting any diff.
+- ~~**U9 draft-state watcher**~~ ✅ **SHIPPED 2026-08-07.** Scheduled task *Family Feud Draft Watcher*
+  runs hourly at :35, six minutes behind the mule. Writes to `newsletter/data/state/DRAFT_ALERTS.md`
+  (gitignored). **Nothing to do here — but know it exists**, because it is what tells you the draft
+  date appeared or moved. If it ever needs re-registering after a folder move:
+  `powershell -NoProfile -ExecutionPolicy Bypass -File scripts\install-watcher.ps1`
 - **U3 normalizer** — extract the shared cleaning prefix, **not just `norm()`**. `tokens()` is a
   second normalizer in the same file repeating three of four steps. Spec owns both; JS is *generated*,
   not hand-ported.
@@ -124,8 +124,11 @@ Aug 7 rename. Not empty as previously recorded — it holds one 79-byte
 **Blocked:** the permission classifier refused `Remove-Item` *and* `rm -rf` again on 2026-08-07
 (third refusal, two sessions). Needs a settings rule or Briggsy running the line below.
 
+**`-Recurse` is required** — the folder is not empty (it holds `.claude\settings.local.json`), and
+the previously recorded command omitted it, which fails on a directory with children:
+
 ```powershell
-Remove-Item -LiteralPath "C:\Users\brigg\ai-learning-journey\projects\family feud" -Force
+Remove-Item -LiteralPath "C:\Users\brigg\ai-learning-journey\projects\family feud" -Recurse -Force
 ```
 
 ---
@@ -143,5 +146,9 @@ The four that bite hardest under time pressure:
 - **Presence is not health.** `Last Result: 0`, `NumberOfMissedRuns`, and the mule's `10/10 ok` are
   all untrustworthy. Only the cargo timestamp in `mule_status.json` proves life.
   ([`007`](docs/insights/007-presence-is-not-health-the-third-instance-of-one-pattern.md))
-- **`rss_nbc_edge` is not RSS.** 813 KB of HTML, zero `<item>` elements, reported `ok` because
-  `Fetch-Source` only checks `size > 50`. The wire has 4 working feeds, not 5. (U10)
+- **`rss_nbc_edge` is not RSS.** Re-measured 2026-08-07 at the mule's real URL: HTTP 200,
+  **803,573 bytes, `Content-Type: text/html`, zero `<item>` elements** — it fails content-type,
+  parse *and* item count while passing the only check `Fetch-Source` runs (`size > 50`). The wire
+  has **4 working feeds, not 5** (yahoo 50 · cbs 36 · espn 23 · rotowire 5 = 114 items).
+  Replacement decided and measured: **ProFootballTalk** (`https://profootballtalk.nbcsports.com/feed/`
+  — 30 items, 9 naming board players). (U10)
